@@ -1,4 +1,5 @@
 import { Anthropic } from "@anthropic-ai/sdk"
+import * as diff from "diff"
 import cloneDeep from "clone-deep"
 import delay from "delay"
 import fs from "fs/promises"
@@ -749,7 +750,7 @@ export class Cline {
 	}
 
 	async *attemptApiRequest(previousApiReqIndex: number): ApiStream {
-		const systemPrompt = await SYSTEM_PROMPT(cwd, this.api.getModel().info.supportsComputerUse ?? false) + await addCustomInstructions(this.customInstructions ?? '', cwd)
+		const systemPrompt = await SYSTEM_PROMPT(cwd, this.api.getModel().info.supportsComputerUse ?? false, true) + await addCustomInstructions(this.customInstructions ?? '', cwd)
 
 		// If the previous API request's total token usage is close to the context window, truncate the conversation history to free up space for the new request
 		if (previousApiReqIndex >= 0) {
@@ -875,6 +876,8 @@ export class Cline {
 						case "read_file":
 							return `[${block.name} for '${block.params.path}']`
 						case "write_to_file":
+							return `[${block.name} for '${block.params.path}']`
+						case "apply_diff":
 							return `[${block.name} for '${block.params.path}']`
 						case "search_files":
 							return `[${block.name} for '${block.params.regex}'${
@@ -1146,6 +1149,99 @@ export class Cline {
 							}
 						} catch (error) {
 							await handleError("writing file", error)
+							await this.diffViewProvider.reset()
+							break
+						}
+					}
+					case "apply_diff": {
+						const relPath: string | undefined = block.params.path
+						const diffContent: string | undefined = block.params.diff
+
+						const sharedMessageProps: ClineSayTool = {
+							tool: "appliedDiff",
+							path: getReadablePath(cwd, removeClosingTag("path", relPath)),
+						}
+
+						try {
+							if (block.partial) {
+								// update gui message
+								const partialMessage = JSON.stringify(sharedMessageProps)
+								await this.ask("tool", partialMessage, block.partial).catch(() => {})
+								break
+							} else {
+								if (!relPath) {
+									this.consecutiveMistakeCount++
+									pushToolResult(await this.sayAndCreateMissingParamError("apply_diff", "path"))
+									break
+								}
+								if (!diffContent) {
+									this.consecutiveMistakeCount++
+									pushToolResult(await this.sayAndCreateMissingParamError("apply_diff", "diff"))
+									break
+								}
+								this.consecutiveMistakeCount = 0
+
+								const absolutePath = path.resolve(cwd, relPath)
+								const fileExists = await fileExistsAtPath(absolutePath)
+
+								if (!fileExists) {
+									await this.say("error", `File does not exist at path: ${absolutePath}`)
+									pushToolResult(`Error: File does not exist at path: ${absolutePath}`)
+									break
+								}
+
+								const originalContent = await fs.readFile(absolutePath, "utf-8")
+
+								// Apply the diff to the original content
+								let newContent = diff.applyPatch(originalContent, diffContent) as string | false
+								if (newContent === false) {
+									await this.say("error", `Error applying diff to file: ${absolutePath}`)
+									pushToolResult(`Error applying diff to file: ${absolutePath}`)
+									break
+								}
+
+								if (originalContent.endsWith("\n") && !newContent.endsWith("\n")) {
+									newContent += "\n"
+								}
+
+								// Create a diff for display purposes
+								const diffRepresentation = diff
+									.diffLines(originalContent, newContent)
+									.map((part) => {
+										const prefix = part.added ? "+" : part.removed ? "-" : " "
+										return (part.value || "")
+											.split("\n")
+											.map((line) => (line ? prefix + line : ""))
+											.join("\n")
+									})
+									.join("")
+
+								// Show diff view before asking for approval
+								await this.diffViewProvider.open(relPath);
+								await this.diffViewProvider.update(newContent, true);
+								await delay(300);
+								await this.diffViewProvider.scrollToFirstDiff();
+
+								const completeMessage = JSON.stringify({
+									...sharedMessageProps,
+									diff: diffRepresentation,
+								} satisfies ClineSayTool)
+
+								const didApprove = await askApproval("tool", completeMessage)
+								if (!didApprove) {
+									await this.diffViewProvider.revertChanges() // This likely handles closing the diff view
+									break
+								}
+
+								await fs.writeFile(absolutePath, newContent)
+								await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), { preview: false })
+								await this.diffViewProvider.reset()
+
+								pushToolResult(`Changes successfully applied to ${relPath.toPosix()}:\n\n${diffRepresentation}`)
+								break
+							}
+						} catch (error) {
+							await handleError("applying diff", error)
 							await this.diffViewProvider.reset()
 							break
 						}

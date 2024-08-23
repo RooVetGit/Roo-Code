@@ -86,6 +86,7 @@ export type ClineSay =
 export interface ClineSayTool {
 	tool:
 		| "editedExistingFile"
+		| "appliedDiff"
 		| "newFileCreated"
 		| "readFile"
 		| "listFilesTopLevel"
