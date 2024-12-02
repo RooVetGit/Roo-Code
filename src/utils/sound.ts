@@ -2,17 +2,17 @@ import * as vscode from "vscode"
 import * as path from "path"
 
 /**
- * 連続再生を防ぐための最小インターバル（ミリ秒）
+ * Minimum interval (in milliseconds) to prevent continuous playback
  */
 const MIN_PLAY_INTERVAL = 500
 
 /**
- * 最後に音声を再生した時刻
+ * Timestamp of when sound was last played
  */
 let lastPlayedTime = 0
 
 /**
- * WAVファイルかどうかを判定する
+ * Determine if a file is a WAV file
  * @param filepath string
  * @returns boolean
  */
@@ -23,7 +23,7 @@ export const isWAV = (filepath: string): boolean => {
 let isSoundEnabled = true
 
 /**
- * 音声設定を設定する
+ * Set sound configuration
  * @param enabled boolean
  */
 export const setSoundEnabled = (enabled: boolean): void => {
@@ -31,7 +31,7 @@ export const setSoundEnabled = (enabled: boolean): void => {
 }
 
 /**
- * 音声を再生する
+ * Play a sound file
  * @param filepath string
  * @return void
  */
@@ -51,7 +51,7 @@ export const playSound = (filepath: string): void => {
 
 		const currentTime = Date.now()
 		if (currentTime - lastPlayedTime < MIN_PLAY_INTERVAL) {
-			return // 連続再生を防ぐため、最小インターバル内の再生をスキップ
+			return // Skip playback within minimum interval to prevent continuous playback
 		}
 
 		const player = require("play-sound")()

@@ -468,12 +468,12 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	}, [modifiedMessages])
 	useEffect(() => {
 		if (isStreaming) {
-			// 一度でも request が開始されたら true にする
+			// Set to true once any request has started
 			setHasStarted(true)
 		}
-		// isStreaming が true から false に変わった時のみ処理を実行
+		// Only execute when isStreaming changes from true to false
 		if (wasStreaming && !isStreaming && lastMessage) {
-			// lastMessage の内容に基づいて適切な音を再生
+			// Play appropriate sound based on lastMessage content
 			if (lastMessage.type === "ask") {
 				switch (lastMessage.ask) {
 					case "api_req_failed":
@@ -493,7 +493,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				}
 			}
 		}
-		// 前回の値を更新
+		// Update previous value
 		setWasStreaming(isStreaming)
 	}, [isStreaming, lastMessage])
 

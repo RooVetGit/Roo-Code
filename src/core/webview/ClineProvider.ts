@@ -531,7 +531,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 					case "soundEnabled":
 						const enabled = message.bool ?? true
 						await this.updateGlobalState("soundEnabled", enabled)
-						setSoundEnabled(enabled) // sound.tsから import
+						setSoundEnabled(enabled)
 						await this.postStateToWebview()
 						break
 				}
