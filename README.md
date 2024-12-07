@@ -1,13 +1,12 @@
 # Roo-Cline
 
-## Roo Packaging and Installation
-
-### Updating Version (for a new release)
-
-1. Bump the version in `package.json`
-2. Update the version number in the `files` list in `package.json`
-
-After installation, Roo Cline will appear in your VSCode-compatible editor's installed extensions list. You can verify this by opening your editor's Extensions panel (Cmd/Ctrl+Shift+X) and checking under the "Installed" section.
+A fork of Cline, an autonomous coding agent, with some added experimental configuration and automation features.
+- Auto-approval capabilities for commands, write, and browser operations
+- Support for .clinerules per-project custom instructions
+- Ability to run side-by-side with Cline
+- Support for playing sound effects
+- Support for OpenRouter compression
+- Support for editing through diffs
 
 ---
 
