@@ -65,6 +65,7 @@ export class Cline {
 	private browserSession: BrowserSession
 	private didEditFile: boolean = false
 	customInstructions?: string
+	diffEnabled?: boolean
 
 	apiConversationHistory: Anthropic.MessageParam[] = []
 	clineMessages: ClineMessage[] = []
@@ -94,6 +95,7 @@ export class Cline {
 		provider: ClineProvider,
 		apiConfiguration: ApiConfiguration,
 		customInstructions?: string,
+		diffEnabled?: boolean,
 		task?: string,
 		images?: string[],
 		historyItem?: HistoryItem,
@@ -105,7 +107,7 @@ export class Cline {
 		this.browserSession = new BrowserSession(provider.context)
 		this.diffViewProvider = new DiffViewProvider(cwd)
 		this.customInstructions = customInstructions
-
+		this.diffEnabled = diffEnabled
 		if (historyItem) {
 			this.taskId = historyItem.id
 			this.resumeTaskFromHistory()
@@ -750,7 +752,7 @@ export class Cline {
 	}
 
 	async *attemptApiRequest(previousApiReqIndex: number): ApiStream {
-		const systemPrompt = await SYSTEM_PROMPT(cwd, this.api.getModel().info.supportsComputerUse ?? false, true) + await addCustomInstructions(this.customInstructions ?? '', cwd)
+		const systemPrompt = await SYSTEM_PROMPT(cwd, this.api.getModel().info.supportsComputerUse ?? false, !!this.diffEnabled) + await addCustomInstructions(this.customInstructions ?? '', cwd)
 
 		// If the previous API request's total token usage is close to the context window, truncate the conversation history to free up space for the new request
 		if (previousApiReqIndex >= 0) {
@@ -1200,10 +1202,6 @@ export class Cline {
 									break
 								}
 
-								if (originalContent.endsWith("\n") && !newContent.endsWith("\n")) {
-									newContent += "\n"
-								}
-
 								// Create a diff for display purposes
 								const diffRepresentation = diff
 									.diffLines(originalContent, newContent)
@@ -1217,9 +1215,9 @@ export class Cline {
 									.join("")
 
 								// Show diff view before asking for approval
+								this.diffViewProvider.editType = "modify"
 								await this.diffViewProvider.open(relPath);
 								await this.diffViewProvider.update(newContent, true);
-								await delay(300);
 								await this.diffViewProvider.scrollToFirstDiff();
 
 								const completeMessage = JSON.stringify({
