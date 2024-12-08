@@ -46,7 +46,7 @@ import { formatResponse } from "./prompts/responses"
 import { addCustomInstructions, SYSTEM_PROMPT } from "./prompts/system"
 import { truncateHalfConversation } from "./sliding-window"
 import { ClineProvider, GlobalFileNames } from "./webview/ClineProvider"
-import { showOmissionWarning } from "../integrations/editor/detect-omission"
+import { detectCodeOmission } from "../integrations/editor/detect-omission"
 import { BrowserSession } from "../services/browser/BrowserSession"
 
 const cwd =
@@ -1101,7 +1101,32 @@ export class Cline {
 								await this.diffViewProvider.update(newContent, true)
 								await delay(300) // wait for diff view to update
 								this.diffViewProvider.scrollToFirstDiff()
-								showOmissionWarning(this.diffViewProvider.originalContent || "", newContent)
+
+								// Check for code omissions before proceeding
+								if (detectCodeOmission(this.diffViewProvider.originalContent || "", newContent)) {
+									if (this.diffEnabled) {
+										await this.diffViewProvider.revertChanges()
+										pushToolResult(formatResponse.toolError(
+											"Content appears to be truncated. Found comments indicating omitted code (e.g., '// rest of code unchanged', '/* previous code */'). Please provide the complete file content without any omissions if possible, or otherwise use the 'apply_diff' tool to apply the diff to the original file."
+										))
+										break
+									} else {
+										vscode.window
+											.showWarningMessage(
+												"Potential code truncation detected. This happens when the AI reaches its max output limit.",
+												"Follow this guide to fix the issue",
+											)
+											.then((selection) => {
+												if (selection === "Follow this guide to fix the issue") {
+													vscode.env.openExternal(
+														vscode.Uri.parse(
+															"https://github.com/cline/cline/wiki/Troubleshooting-%E2%80%90-Cline-Deleting-Code-with-%22Rest-of-Code-Here%22-Comments",
+														),
+													)
+												}
+											})
+									}
+								}
 
 								const completeMessage = JSON.stringify({
 									...sharedMessageProps,
