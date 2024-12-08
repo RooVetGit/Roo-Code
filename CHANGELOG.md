@@ -1,5 +1,9 @@
 # Roo Cline Changelog
 
+## [2.1.14]
+
+- Fix bug where diffs were not being applied correctly and try Aider's unified diff prompt
+
 ## [2.1.13]
 
 - Fix https://github.com/RooVetGit/Roo-Cline/issues/50 where sound effects were not respecting settings
