@@ -71,23 +71,60 @@ ${diffEnabled ? `
 ## apply_diff
 Description: Apply a diff to a file at the specified path. The diff should be in unified format ('diff -U0') and can be used to apply changes to a file. This tool is useful when you need to make specific modifications to a file based on a set of changes provided in a diff.
 
-- Make sure you include the first 2 lines with the file paths.
-- Don't include timestamps with the file paths.
-- Start each hunk of changes with a '@@ ... @@' line. Don't include line numbers like 'diff -U0' does. The user's patch tool doesn't need them.
-- The user's patch tool needs CORRECT patches that apply cleanly against the current contents of the file!
-- Think carefully and make sure you include and mark all lines that need to be removed or changed as '-' lines.
-- Make sure you mark all new or modified lines with '+'.
-- Don't leave out any lines or the diff patch won't apply correctly.
-- Indentation matters in the diffs!
-- Start a new hunk for each section of the file that needs changes.
-- Only output hunks that specify changes with '+' or '-' lines.
-- Skip any hunks that are entirely unchanging ' ' lines.
-- Output hunks in whatever order makes the most sense.
-- Hunks don't need to be in any particular order.
-- When editing a function, method, loop, etc use a hunk to replace the *entire* code block.
-- Delete the entire existing version with '-' lines and then add a new, updated version with '+' lines.
-- This will help you generate correct code and correct diffs.
-- To move code within a file, use 2 hunks: 1 to delete it from its current location, 1 to insert it in the new location.
+Diff Format Requirements:
+
+1. Header (REQUIRED):
+   \`\`\`
+   --- path/to/original/file
+   +++ path/to/modified/file
+   \`\`\`
+   - Must include both lines exactly as shown
+   - Use actual file paths
+   - NO timestamps after paths
+
+2. Hunks:
+   \`\`\`
+   @@ -lineStart,lineCount +lineStart,lineCount @@
+   -removed line
+   +added line
+   \`\`\`
+   - Each hunk starts with @@ showing line numbers for changes
+   - Format: @@ -originalStart,originalCount +newStart,newCount @@
+   - Use - for removed/changed lines
+   - Use + for new/modified lines
+   - Indentation must match exactly
+
+Complete Example:
+\`\`\`
+--- src/utils/helper.ts
++++ src/utils/helper.ts
+@@ -10,3 +10,4 @@
+-function oldFunction(x: number): number {
+-  return x + 1;
+-}
++function newFunction(x: number): number {
++  const result = x + 2;
++  return result;
++}
+\`\`\`
+
+Common Pitfalls:
+1. Missing or incorrect header lines
+2. Incorrect line numbers in @@ lines
+3. Wrong indentation in changed lines
+4. Incomplete context (missing lines that need changing)
+5. Not marking all modified lines with - and +
+
+Best Practices:
+1. Replace entire code blocks:
+   - Remove complete old version with - lines
+   - Add complete new version with + lines
+   - Include correct line numbers
+2. Moving code requires two hunks:
+   - First hunk: Remove from old location
+   - Second hunk: Add to new location
+3. One hunk per logical change
+4. Verify line numbers match the file
 
 Parameters:
 - path: (required) The path of the file to apply the diff to (relative to the current working directory ${cwd.toPosix()})
