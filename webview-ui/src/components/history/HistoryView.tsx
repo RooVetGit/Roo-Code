@@ -39,9 +39,13 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 
 	const handleCopyTask = async (e: React.MouseEvent, task: string) => {
 		e.stopPropagation()
-		await navigator.clipboard.writeText(task)
-		setShowCopyModal(true)
-		setTimeout(() => setShowCopyModal(false), 2000)
+		try {
+			await navigator.clipboard.writeText(task)
+			setShowCopyModal(true)
+			setTimeout(() => setShowCopyModal(false), 2000)
+		} catch (error) {
+			console.error('Failed to copy to clipboard:', error)
+		}
 	}
 
 	const formatDate = (timestamp: number) => {
@@ -261,12 +265,14 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 										<div style={{ display: "flex", gap: "4px" }}>
 											<VSCodeButton
 												appearance="icon"
+												title="Copy Prompt"
 												className="copy-button"
 												onClick={(e) => handleCopyTask(e, item.task)}>
 												<span className="codicon codicon-copy"></span>
 											</VSCodeButton>
 											<VSCodeButton
 												appearance="icon"
+												title="Delete Task"
 												onClick={(e) => {
 													e.stopPropagation()
 													handleDeleteHistoryItem(item.id)
