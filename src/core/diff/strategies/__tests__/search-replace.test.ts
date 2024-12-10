@@ -83,6 +83,29 @@ function example() {
 `)
         })
 
+        it('should match content with different indentation in search block', () => {
+            const originalContent = `    function test() {
+        return true;
+    }
+`
+            const diffContent = `test.ts
+<<<<<<< SEARCH
+function test() {
+    return true;
+}
+=======
+function test() {
+    return false;
+}
+>>>>>>> REPLACE`
+
+            const result = strategy.applyDiff(originalContent, diffContent)
+            expect(result).toBe(`    function test() {
+        return false;
+    }
+`)
+        })
+
         it('should return false if search content does not match', () => {
             const originalContent = `function hello() {
     console.log("hello")

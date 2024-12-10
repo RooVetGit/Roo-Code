@@ -70,19 +70,59 @@ Your search/replace content here
 
         const [_, searchContent, replaceContent] = match;
         
-        // Trim both search and replace content
-        const trimmedSearch = searchContent.trim();
-        const trimmedReplace = replaceContent.trim();
+        // Split content into lines
+        const searchLines = searchContent.trim().split('\n');
+        const replaceLines = replaceContent.trim().split('\n');
+        const originalLines = originalContent.split('\n');
         
-        // Trim the original content for comparison
-        const trimmedOriginal = originalContent.trim();
+        // Find the search content in the original
+        let matchIndex = -1;
         
-        // Verify the search content exists in the trimmed original
-        if (!trimmedOriginal.includes(trimmedSearch)) {
+        for (let i = 0; i <= originalLines.length - searchLines.length; i++) {
+            let found = true;
+            
+            for (let j = 0; j < searchLines.length; j++) {
+                const originalLine = originalLines[i + j];
+                const searchLine = searchLines[j];
+                
+                // Compare lines after removing leading/trailing whitespace
+                if (originalLine.trim() !== searchLine.trim()) {
+                    found = false;
+                    break;
+                }
+            }
+            
+            if (found) {
+                matchIndex = i;
+                break;
+            }
+        }
+        
+        if (matchIndex === -1) {
             return false;
         }
-
-        // Replace the content, maintaining original whitespace
-        return originalContent.replace(trimmedSearch, trimmedReplace);
+        
+        // Get the matched lines from the original content
+        const matchedLines = originalLines.slice(matchIndex, matchIndex + searchLines.length);
+        
+        // For each line in the match, get its indentation
+        const indentations = matchedLines.map(line => {
+            const match = line.match(/^(\s*)/);
+            return match ? match[1] : '';
+        });
+        
+        // Apply the replacement while preserving indentation
+        const indentedReplace = replaceLines.map((line, i) => {
+            // Use the indentation from the corresponding line in the matched block
+            // If we have more lines than the original, use the last indentation
+            const indent = indentations[Math.min(i, indentations.length - 1)];
+            return indent + line.trim();
+        });
+        
+        // Construct the final content
+        const beforeMatch = originalLines.slice(0, matchIndex);
+        const afterMatch = originalLines.slice(matchIndex + searchLines.length);
+        
+        return [...beforeMatch, ...indentedReplace, ...afterMatch].join('\n');
     }
 }
