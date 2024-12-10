@@ -17,13 +17,13 @@ Parameters:
 Format:
 1. First line must be the file path
 2. Followed by search/replace blocks:
-   \`\`\`
-   <<<<<<< SEARCH
-   [exact content to find including whitespace]
-   =======
-   [new content to replace with]
-   >>>>>>> REPLACE
-   \`\`\`
+    \`\`\`
+    <<<<<<< SEARCH
+    [exact content to find including whitespace]
+    =======
+    [new content to replace with]
+    >>>>>>> REPLACE
+    \`\`\`
 
 Example:
 
@@ -105,18 +105,38 @@ Your search/replace content here
         // Get the matched lines from the original content
         const matchedLines = originalLines.slice(matchIndex, matchIndex + searchLines.length);
         
-        // For each line in the match, get its indentation
-        const indentations = matchedLines.map(line => {
-            const match = line.match(/^(\s*)/);
-            return match ? match[1] : '';
+        // Get the exact indentation (preserving tabs/spaces) of each line
+        const originalIndents = matchedLines.map(line => {
+            const match = line.match(/^[\t ]*/);
+            return match ? match[0] : '';
         });
         
-        // Apply the replacement while preserving indentation
+        // Get the exact indentation of each line in the search block
+        const searchIndents = searchLines.map(line => {
+            const match = line.match(/^[\t ]*/);
+            return match ? match[0] : '';
+        });
+        
+        // Apply the replacement while preserving exact indentation
         const indentedReplace = replaceLines.map((line, i) => {
-            // Use the indentation from the corresponding line in the matched block
-            // If we have more lines than the original, use the last indentation
-            const indent = indentations[Math.min(i, indentations.length - 1)];
-            return indent + line.trim();
+            // Get the corresponding original and search indentations
+            const originalIndent = originalIndents[Math.min(i, originalIndents.length - 1)];
+            const searchIndent = searchIndents[Math.min(i, searchIndents.length - 1)];
+            
+            // Get the current line's indentation
+            const currentIndentMatch = line.match(/^[\t ]*/);
+            const currentIndent = currentIndentMatch ? currentIndentMatch[0] : '';
+            
+            // If this line has the same indentation level as the search block,
+            // use the original indentation. Otherwise, calculate the difference
+            // and preserve the exact type of whitespace characters
+            if (currentIndent.length === searchIndent.length) {
+                return originalIndent + line.trim();
+            } else {
+                // Calculate additional indentation needed
+                const additionalIndent = currentIndent.slice(searchIndent.length);
+                return originalIndent + additionalIndent + line.trim();
+            }
         });
         
         // Construct the final content

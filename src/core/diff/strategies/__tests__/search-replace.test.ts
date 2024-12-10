@@ -106,6 +106,81 @@ function test() {
 `)
         })
 
+        it('should handle tab-based indentation', () => {
+            const originalContent = "function test() {\n\treturn true;\n}\n"
+            const diffContent = `test.ts
+<<<<<<< SEARCH
+function test() {
+\treturn true;
+}
+=======
+function test() {
+\treturn false;
+}
+>>>>>>> REPLACE`
+
+            const result = strategy.applyDiff(originalContent, diffContent)
+            expect(result).toBe("function test() {\n\treturn false;\n}\n")
+        })
+
+        it('should preserve mixed tabs and spaces', () => {
+            const originalContent = "\tclass Example {\n\t    constructor() {\n\t\tthis.value = 0;\n\t    }\n\t}"
+            const diffContent = `test.ts
+<<<<<<< SEARCH
+\tclass Example {
+\t    constructor() {
+\t\tthis.value = 0;
+\t    }
+\t}
+=======
+\tclass Example {
+\t    constructor() {
+\t\tthis.value = 1;
+\t    }
+\t}
+>>>>>>> REPLACE`
+
+            const result = strategy.applyDiff(originalContent, diffContent)
+            expect(result).toBe("\tclass Example {\n\t    constructor() {\n\t\tthis.value = 1;\n\t    }\n\t}")
+        })
+
+        it('should handle additional indentation with tabs', () => {
+            const originalContent = "\tfunction test() {\n\t\treturn true;\n\t}"
+            const diffContent = `test.ts
+<<<<<<< SEARCH
+function test() {
+\treturn true;
+}
+=======
+function test() {
+\t// Add comment
+\treturn false;
+}
+>>>>>>> REPLACE`
+
+            const result = strategy.applyDiff(originalContent, diffContent)
+            expect(result).toBe("\tfunction test() {\n\t\t// Add comment\n\t\treturn false;\n\t}")
+        })
+
+        it('should preserve exact indentation characters when adding lines', () => {
+            const originalContent = "\tfunction test() {\n\t\treturn true;\n\t}"
+            const diffContent = `test.ts
+<<<<<<< SEARCH
+\tfunction test() {
+\t\treturn true;
+\t}
+=======
+\tfunction test() {
+\t\t// First comment
+\t\t// Second comment
+\t\treturn true;
+\t}
+>>>>>>> REPLACE`
+
+            const result = strategy.applyDiff(originalContent, diffContent)
+            expect(result).toBe("\tfunction test() {\n\t\t// First comment\n\t\t// Second comment\n\t\treturn true;\n\t}")
+        })
+
         it('should return false if search content does not match', () => {
             const originalContent = `function hello() {
     console.log("hello")
