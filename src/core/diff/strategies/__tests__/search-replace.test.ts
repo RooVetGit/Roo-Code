@@ -268,6 +268,221 @@ Invalid diff format`
             const result = strategy.applyDiff(originalContent, diffContent)
             expect(result).toBe("    modified\n        still indented\n    end\n")
         })
+
+        it('should handle complex refactoring with multiple functions', () => {
+            const originalContent = `export async function extractTextFromFile(filePath: string): Promise<string> {
+	try {
+		await fs.access(filePath)
+	} catch (error) {
+		throw new Error(\`File not found: \${filePath}\`)
+	}
+	const fileExtension = path.extname(filePath).toLowerCase()
+	switch (fileExtension) {
+		case ".pdf":
+			return extractTextFromPDF(filePath)
+		case ".docx":
+			return extractTextFromDOCX(filePath)
+		case ".ipynb":
+			return extractTextFromIPYNB(filePath)
+		default:
+			const isBinary = await isBinaryFile(filePath).catch(() => false)
+			if (!isBinary) {
+				return addLineNumbers(await fs.readFile(filePath, "utf8"))
+			} else {
+				throw new Error(\`Cannot read text for file type: \${fileExtension}\`)
+			}
+	}
+}
+
+export function addLineNumbers(content: string): string {
+	const lines = content.split('\\n')
+	const maxLineNumberWidth = String(lines.length).length
+	return lines
+		.map((line, index) => {
+			const lineNumber = String(index + 1).padStart(maxLineNumberWidth, ' ')
+			return \`\${lineNumber} | \${line}\`
+		}).join('\\n')
+}`
+
+            const diffContent = `test.ts
+<<<<<<< SEARCH
+export async function extractTextFromFile(filePath: string): Promise<string> {
+	try {
+		await fs.access(filePath)
+	} catch (error) {
+		throw new Error(\`File not found: \${filePath}\`)
+	}
+	const fileExtension = path.extname(filePath).toLowerCase()
+	switch (fileExtension) {
+		case ".pdf":
+			return extractTextFromPDF(filePath)
+		case ".docx":
+			return extractTextFromDOCX(filePath)
+		case ".ipynb":
+			return extractTextFromIPYNB(filePath)
+		default:
+			const isBinary = await isBinaryFile(filePath).catch(() => false)
+			if (!isBinary) {
+				return addLineNumbers(await fs.readFile(filePath, "utf8"))
+			} else {
+				throw new Error(\`Cannot read text for file type: \${fileExtension}\`)
+			}
+	}
+}
+
+export function addLineNumbers(content: string): string {
+	const lines = content.split('\\n')
+	const maxLineNumberWidth = String(lines.length).length
+	return lines
+		.map((line, index) => {
+			const lineNumber = String(index + 1).padStart(maxLineNumberWidth, ' ')
+			return \`\${lineNumber} | \${line}\`
+		}).join('\\n')
+}
+=======
+function extractLineRange(content: string, startLine?: number, endLine?: number): string {
+	const lines = content.split('\\n')
+	const start = startLine ? Math.max(1, startLine) : 1
+	const end = endLine ? Math.min(lines.length, endLine) : lines.length
+	
+	if (start > end || start > lines.length) {
+		throw new Error(\`Invalid line range: start=\${start}, end=\${end}, total lines=\${lines.length}\`)
+	}
+	
+	return lines.slice(start - 1, end).join('\\n')
+}
+
+export async function extractTextFromFile(filePath: string, startLine?: number, endLine?: number): Promise<string> {
+	try {
+		await fs.access(filePath)
+	} catch (error) {
+		throw new Error(\`File not found: \${filePath}\`)
+	}
+	const fileExtension = path.extname(filePath).toLowerCase()
+	let content: string
+	
+	switch (fileExtension) {
+		case ".pdf": {
+			const dataBuffer = await fs.readFile(filePath)
+			const data = await pdf(dataBuffer)
+			content = extractLineRange(data.text, startLine, endLine)
+			break
+		}
+		case ".docx": {
+			const result = await mammoth.extractRawText({ path: filePath })
+			content = extractLineRange(result.value, startLine, endLine)
+			break
+		}
+		case ".ipynb": {
+			const data = await fs.readFile(filePath, "utf8")
+			const notebook = JSON.parse(data)
+			let extractedText = ""
+			
+			for (const cell of notebook.cells) {
+				if ((cell.cell_type === "markdown" || cell.cell_type === "code") && cell.source) {
+					extractedText += cell.source.join("\\n") + "\\n"
+				}
+			}
+			content = extractLineRange(extractedText, startLine, endLine)
+			break
+		}
+		default: {
+			const isBinary = await isBinaryFile(filePath).catch(() => false)
+			if (!isBinary) {
+				const fileContent = await fs.readFile(filePath, "utf8")
+				content = extractLineRange(fileContent, startLine, endLine)
+			} else {
+				throw new Error(\`Cannot read text for file type: \${fileExtension}\`)
+			}
+		}
+	}
+	
+	return addLineNumbers(content, startLine)
+}
+
+export function addLineNumbers(content: string, startLine: number = 1): string {
+	const lines = content.split('\\n')
+	const maxLineNumberWidth = String(startLine + lines.length - 1).length
+	return lines
+		.map((line, index) => {
+			const lineNumber = String(startLine + index).padStart(maxLineNumberWidth, ' ')
+			return \`\${lineNumber} | \${line}\`
+		}).join('\\n')
+}
+>>>>>>> REPLACE`
+
+            const result = strategy.applyDiff(originalContent, diffContent)
+            const expected = `function extractLineRange(content: string, startLine?: number, endLine?: number): string {
+	const lines = content.split('\\n')
+	const start = startLine ? Math.max(1, startLine) : 1
+	const end = endLine ? Math.min(lines.length, endLine) : lines.length
+	
+	if (start > end || start > lines.length) {
+		throw new Error(\`Invalid line range: start=\${start}, end=\${end}, total lines=\${lines.length}\`)
+	}
+	
+	return lines.slice(start - 1, end).join('\\n')
+}
+
+export async function extractTextFromFile(filePath: string, startLine?: number, endLine?: number): Promise<string> {
+	try {
+		await fs.access(filePath)
+	} catch (error) {
+		throw new Error(\`File not found: \${filePath}\`)
+	}
+	const fileExtension = path.extname(filePath).toLowerCase()
+	let content: string
+	
+	switch (fileExtension) {
+		case ".pdf": {
+			const dataBuffer = await fs.readFile(filePath)
+			const data = await pdf(dataBuffer)
+			content = extractLineRange(data.text, startLine, endLine)
+			break
+		}
+		case ".docx": {
+			const result = await mammoth.extractRawText({ path: filePath })
+			content = extractLineRange(result.value, startLine, endLine)
+			break
+		}
+		case ".ipynb": {
+			const data = await fs.readFile(filePath, "utf8")
+			const notebook = JSON.parse(data)
+			let extractedText = ""
+			
+			for (const cell of notebook.cells) {
+				if ((cell.cell_type === "markdown" || cell.cell_type === "code") && cell.source) {
+					extractedText += cell.source.join("\\n") + "\\n"
+				}
+			}
+			content = extractLineRange(extractedText, startLine, endLine)
+			break
+		}
+		default: {
+			const isBinary = await isBinaryFile(filePath).catch(() => false)
+			if (!isBinary) {
+				const fileContent = await fs.readFile(filePath, "utf8")
+				content = extractLineRange(fileContent, startLine, endLine)
+			} else {
+				throw new Error(\`Cannot read text for file type: \${fileExtension}\`)
+			}
+		}
+	}
+	
+	return addLineNumbers(content, startLine)
+}
+
+export function addLineNumbers(content: string, startLine: number = 1): string {
+	const lines = content.split('\\n')
+	const maxLineNumberWidth = String(startLine + lines.length - 1).length
+	return lines
+		.map((line, index) => {
+			const lineNumber = String(startLine + index).padStart(maxLineNumberWidth, ' ')
+			return \`\${lineNumber} | \${line}\`
+		}).join('\\n')
+}`
+            expect(result).toBe(expected)
+        })
     })
 
     describe('getToolDescription', () => {

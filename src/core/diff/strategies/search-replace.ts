@@ -133,9 +133,32 @@ Your search/replace content here
             if (currentIndent.length === searchIndent.length) {
                 return originalIndent + line.trim();
             } else {
-                // Calculate additional indentation needed
-                const additionalIndent = currentIndent.slice(searchIndent.length);
-                return originalIndent + additionalIndent + line.trim();
+                // Get the corresponding search line's indentation
+                const searchLineIndex = Math.min(i, searchLines.length - 1);
+                const searchLineIndent = searchIndents[searchLineIndex];
+
+                // Get the corresponding original line's indentation
+                const originalLineIndex = Math.min(i, originalIndents.length - 1);
+                const originalLineIndent = originalIndents[originalLineIndex];
+
+                // If this line has the same indentation as its corresponding search line,
+                // use the original indentation
+                if (currentIndent === searchLineIndent) {
+                    return originalLineIndent + line.trim();
+                }
+
+                // Otherwise, preserve the original indentation structure
+                const indentChar = originalLineIndent.charAt(0) || '\t';
+                const indentLevel = Math.floor(originalLineIndent.length / indentChar.length);
+
+                // Calculate the relative indentation from the search line
+                const searchLevel = Math.floor(searchLineIndent.length / indentChar.length);
+                const currentLevel = Math.floor(currentIndent.length / indentChar.length);
+                const relativeLevel = currentLevel - searchLevel;
+
+                // Apply the relative indentation to the original level
+                const targetLevel = Math.max(0, indentLevel + relativeLevel);
+                return indentChar.repeat(targetLevel) + line.trim();
             }
         });
         
