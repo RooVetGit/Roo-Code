@@ -1,8 +1,8 @@
 # Roo Cline Changelog
 
-## 2.2.0
+## 2.1.21
 
-### Minor Changes
+### Patch Changes
 
 -   8dbd019: Larger Promp Text Input
 
