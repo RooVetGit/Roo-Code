@@ -8,5 +8,3 @@ node_modules
 # Builds
 bin/
 roo-cline-*.vsix
-
-.clinerules
