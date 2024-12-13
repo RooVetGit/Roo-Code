@@ -1,10 +1,12 @@
 # Roo Cline Changelog
 
-## 2.1.21
+## [2.2.0]
 
-### Patch Changes
+-   Incorporate MCP changes from Cline 2.2.0
 
--   8dbd019: Larger Promp Text Input
+## [2.1.21]
+
+-   Larger text area input + ability to drag images into it
 
 ## [2.1.20]
 

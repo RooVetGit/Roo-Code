@@ -3,7 +3,7 @@
   "displayName": "Roo Cline",
   "description": "A fork of Cline, an autonomous coding agent, with some added experimental configuration and automation features.",
   "publisher": "RooVeterinaryInc",
-  "version": "2.1.21",
+  "version": "2.2.0",
   "icon": "assets/icons/rocket.png",
   "galleryBanner": {
     "color": "#617A91",
@@ -70,10 +70,10 @@
         "icon": "$(add)"
       },
       {
-				"command": "roo-cline.mcpButtonClicked",
-				"title": "MCP Servers",
-				"icon": "$(server)"
-			},
+        "command": "roo-cline.mcpButtonClicked",
+        "title": "MCP Servers",
+        "icon": "$(server)"
+      },
       {
         "command": "roo-cline.historyButtonClicked",
         "title": "History",
@@ -103,10 +103,10 @@
           "when": "view == roo-cline.SidebarProvider"
         },
         {
-					"command": "roo-cline.mcpButtonClicked",
-					"group": "navigation@2",
-					"when": "view == roo-cline.SidebarProvider"
-				},
+          "command": "roo-cline.mcpButtonClicked",
+          "group": "navigation@2",
+          "when": "view == roo-cline.SidebarProvider"
+        },
         {
           "command": "roo-cline.historyButtonClicked",
           "group": "navigation@3",
