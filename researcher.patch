@@ -1,0 +1,135 @@
+diff --git a/package.json b/package.json
+index 9fda9aa..fd6acc4 100644
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,6 @@
+ {
+-  "name": "roo-cline",
+-  "displayName": "Roo Cline",
++  "name": "roo-cline-research",
++  "displayName": "Roo Cline Research",
+   "description": "A fork of Cline, an autonomous coding agent, with some added experimental configuration and automation features.",
+   "publisher": "RooVeterinaryInc",
+   "version": "2.2.7",
+@@ -17,9 +17,9 @@
+   },
+   "repository": {
+     "type": "git",
+-    "url": "https://github.com/RooVetGit/Roo-Cline"
++    "url": "https://github.com/RooVetGit/Roo-Cline-Research"
+   },
+-  "homepage": "https://github.com/RooVetGit/Roo-Cline",
++  "homepage": "https://github.com/RooVetGit/Roo-Cline-Research",
+   "categories": [
+     "AI",
+     "Chat",
+@@ -48,86 +48,86 @@
+     "viewsContainers": {
+       "activitybar": [
+         {
+-          "id": "roo-cline-ActivityBar",
+-          "title": "Roo Cline",
++          "id": "roo-cline-research-ActivityBar",
++          "title": "Roo Cline Research",
+           "icon": "$(rocket)"
+         }
+       ]
+     },
+     "views": {
+-      "roo-cline-ActivityBar": [
++      "roo-cline-research-ActivityBar": [
+         {
+           "type": "webview",
+-          "id": "roo-cline.SidebarProvider",
++          "id": "roo-cline-research.SidebarProvider",
+           "name": ""
+         }
+       ]
+     },
+     "commands": [
+       {
+-        "command": "roo-cline.plusButtonClicked",
++        "command": "roo-cline-research.plusButtonClicked",
+         "title": "New Task",
+         "icon": "$(add)"
+       },
+       {
+-        "command": "roo-cline.mcpButtonClicked",
++        "command": "roo-cline-research.mcpButtonClicked",
+         "title": "MCP Servers",
+         "icon": "$(server)"
+       },
+       {
+-        "command": "roo-cline.historyButtonClicked",
++        "command": "roo-cline-research.historyButtonClicked",
+         "title": "History",
+         "icon": "$(history)"
+       },
+       {
+-        "command": "roo-cline.popoutButtonClicked",
++        "command": "roo-cline-research.popoutButtonClicked",
+         "title": "Open in Editor",
+         "icon": "$(link-external)"
+       },
+       {
+-        "command": "roo-cline.settingsButtonClicked",
++        "command": "roo-cline-research.settingsButtonClicked",
+         "title": "Settings",
+         "icon": "$(settings-gear)"
+       },
+       {
+-        "command": "roo-cline.openInNewTab",
++        "command": "roo-cline-research.openInNewTab",
+         "title": "Open In New Tab",
+-        "category": "Roo Cline"
++        "category": "Roo Cline Research"
+       }
+     ],
+     "menus": {
+       "view/title": [
+         {
+-          "command": "roo-cline.plusButtonClicked",
++          "command": "roo-cline-research.plusButtonClicked",
+           "group": "navigation@1",
+-          "when": "view == roo-cline.SidebarProvider"
++          "when": "view == roo-cline-research.SidebarProvider"
+         },
+         {
+-          "command": "roo-cline.mcpButtonClicked",
++          "command": "roo-cline-research.mcpButtonClicked",
+           "group": "navigation@2",
+-          "when": "view == roo-cline.SidebarProvider"
++          "when": "view == roo-cline-research.SidebarProvider"
+         },
+         {
+-          "command": "roo-cline.historyButtonClicked",
++          "command": "roo-cline-research.historyButtonClicked",
+           "group": "navigation@3",
+-          "when": "view == roo-cline.SidebarProvider"
++          "when": "view == roo-cline-research.SidebarProvider"
+         },
+         {
+-          "command": "roo-cline.popoutButtonClicked",
++          "command": "roo-cline-research.popoutButtonClicked",
+           "group": "navigation@4",
+-          "when": "view == roo-cline.SidebarProvider"
++          "when": "view == roo-cline-research.SidebarProvider"
+         },
+         {
+-          "command": "roo-cline.settingsButtonClicked",
++          "command": "roo-cline-research.settingsButtonClicked",
+           "group": "navigation@5",
+-          "when": "view == roo-cline.SidebarProvider"
++          "when": "view == roo-cline-research.SidebarProvider"
+         }
+       ]
+     },
+     "configuration": {
+-      "title": "RooCline",
++      "title": "RooClincResearch",
+       "properties": {
+-        "roo-cline.allowedCommands": {
++        "roo-cline-research.allowedCommands": {
+           "type": "array",
+           "items": {
+             "type": "string"
