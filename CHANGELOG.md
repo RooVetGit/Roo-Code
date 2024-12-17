@@ -1,5 +1,12 @@
 # Roo Cline Changelog
 
+## 2.2.16
+
+### Patch Changes
+
+-   Add volume slider in settings and change sound effects to only trigger when user intervention is required, an error occurs, or a task is completed.
+-   Fix lint errors and change npm run lint to also run on webview-ui
+
 ## [2.2.14 - 2.2.15]
 
 -   Make diff editing more robust to transient errors / fix bugs
