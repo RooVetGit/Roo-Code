@@ -79,6 +79,7 @@ type GlobalStateKey =
 	| "writeDelayMs"
 	| "terminalOutputLineLimit"
 	| "mcpEnabled"
+	| "openAiNativeBaseUrl" // to handle o1-series models for openai compatible providers
 export const GlobalFileNames = {
 	apiConversationHistory: "api_conversation_history.json",
 	uiMessages: "ui_messages.json",
@@ -421,6 +422,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								anthropicBaseUrl,
 								geminiApiKey,
 								openAiNativeApiKey,
+								openAiNativeBaseUrl,
 								azureApiVersion,
 								includeStreamOptions,
 								openRouterModelId,
@@ -454,6 +456,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							await this.updateGlobalState("openRouterModelId", openRouterModelId)
 							await this.updateGlobalState("openRouterModelInfo", openRouterModelInfo)
 							await this.updateGlobalState("openRouterUseMiddleOutTransform", openRouterUseMiddleOutTransform)
+							await this.updateGlobalState("openAiNativeBaseUrl", openAiNativeBaseUrl)
 							if (this.cline) {
 								this.cline.api = buildApiHandler(message.apiConfiguration)
 							}
@@ -1196,6 +1199,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			screenshotQuality,
 			terminalOutputLineLimit,
 			mcpEnabled,
+			openAiNativeBaseUrl,
 		] = await Promise.all([
 			this.getGlobalState("apiProvider") as Promise<ApiProvider | undefined>,
 			this.getGlobalState("apiModelId") as Promise<string | undefined>,
@@ -1243,6 +1247,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("screenshotQuality") as Promise<number | undefined>,
 			this.getGlobalState("terminalOutputLineLimit") as Promise<number | undefined>,
 			this.getGlobalState("mcpEnabled") as Promise<boolean | undefined>,
+			this.getGlobalState("openAiNativeBaseUrl") as Promise<string | undefined>, // Add this line
 		])
 
 		let apiProvider: ApiProvider
@@ -1288,6 +1293,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				openRouterModelId,
 				openRouterModelInfo,
 				openRouterUseMiddleOutTransform,
+				openAiNativeBaseUrl
 			},
 			lastShownAnnouncementId,
 			customInstructions,

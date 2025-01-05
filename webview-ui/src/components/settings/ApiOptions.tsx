@@ -203,6 +203,14 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage }: 
 						placeholder="Enter API Key...">
 						<span style={{ fontWeight: 500 }}>OpenAI API Key</span>
 					</VSCodeTextField>
+					<VSCodeTextField
+						value={apiConfiguration?.openAiNativeBaseUrl || "https://api.openai.com/v1"}
+						style={{ width: "100%" }}
+						type="url"
+						onInput={handleInputChange("openAiNativeBaseUrl")}
+						placeholder="https://api.openai.com/v1">
+						<span style={{ fontWeight: 500 }}>OpenAI Base URL</span>
+					</VSCodeTextField>
 					<p
 						style={{
 							fontSize: "12px",

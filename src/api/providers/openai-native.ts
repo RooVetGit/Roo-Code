@@ -19,6 +19,7 @@ export class OpenAiNativeHandler implements ApiHandler {
 		this.options = options
 		this.client = new OpenAI({
 			apiKey: this.options.openAiNativeApiKey,
+			baseURL: this.options.openAiNativeBaseUrl, // Uses the updated base URL
 		})
 	}
 
