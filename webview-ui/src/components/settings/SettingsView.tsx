@@ -324,13 +324,13 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 									<span style={{ fontWeight: "500", minWidth: '100px' }}>Match Precision</span>
 									<input
 										type="range"
-										min="0"
+										min="80"
 										max="100"
 										step="1"
 										value={Math.round((fuzzyMatchThreshold ?? 1) * 100)}
 										onChange={(e) => {
 											const value = parseInt(e.target.value)
-											setFuzzyMatchThreshold(Math.max(0.8, value / 100))
+											setFuzzyMatchThreshold(value / 100)
 										}}
 										style={{
 											flexGrow: 1,
