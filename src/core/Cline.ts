@@ -108,14 +108,22 @@ export class Cline {
 	) {
 		this.providerRef = new WeakRef(provider)
 		this.api = buildApiHandler(apiConfiguration)
+		this.customInstructions = customInstructions
+		this.diffEnabled = enableDiff ?? false
 		this.terminalManager = new TerminalManager()
 		this.urlContentFetcher = new UrlContentFetcher(provider.context)
 		this.browserSession = new BrowserSession(provider.context)
 		this.diffViewProvider = new DiffViewProvider(cwd)
-		this.customInstructions = customInstructions
-		this.diffEnabled = enableDiff ?? false
+
 		if (this.diffEnabled && this.api.getModel().id) {
-			this.diffStrategy = getDiffStrategy(this.api.getModel().id, fuzzyMatchThreshold ?? 1.0)
+
+			this.diffStrategy = getDiffStrategy(this.api.getModel().id, fuzzyMatchThreshold ?? 1.0, 'search-replace')
+
+			provider.getState().then(({ diffStrategy: selectedStrategy }) => {
+				if (selectedStrategy && this.diffEnabled && this.api.getModel().id) {
+					this.diffStrategy = getDiffStrategy(this.api.getModel().id, fuzzyMatchThreshold ?? 1.0, selectedStrategy)
+				}
+			})
 		}
 		if (historyItem) {
 			this.taskId = historyItem.id
