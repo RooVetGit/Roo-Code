@@ -139,8 +139,8 @@ jest.mock('../../../integrations/misc/extract-text', () => ({
 
 // Spy on console.error and console.log to suppress expected messages
 beforeAll(() => {
-    jest.spyOn(console, 'error').mockImplementation(() => {})
-    jest.spyOn(console, 'log').mockImplementation(() => {})
+    jest.spyOn(console, 'error').mockImplementation(() => { })
+    jest.spyOn(console, 'log').mockImplementation(() => { })
 })
 
 afterAll(() => {
@@ -223,7 +223,7 @@ describe('ClineProvider', () => {
 
     test('resolveWebviewView sets up webview correctly', () => {
         provider.resolveWebviewView(mockWebviewView)
-        
+
         expect(mockWebviewView.webview.options).toEqual({
             enableScripts: true,
             localResourceRoots: [mockContext.extensionUri]
@@ -233,7 +233,7 @@ describe('ClineProvider', () => {
 
     test('postMessageToWebview sends message to webview', async () => {
         provider.resolveWebviewView(mockWebviewView)
-        
+
         const mockState: ExtensionState = {
             version: '1.0.0',
             preferredLanguage: 'English',
@@ -256,14 +256,16 @@ describe('ClineProvider', () => {
             browserViewportSize: "900x600",
             fuzzyMatchThreshold: 1.0,
             mcpEnabled: true,
+            alwaysApproveResubmit: false,
+            requestDelaySeconds: 5,
         }
-        
-        const message: ExtensionMessage = { 
-            type: 'state', 
+
+        const message: ExtensionMessage = {
+            type: 'state',
             state: mockState
         }
         await provider.postMessageToWebview(message)
-        
+
         expect(mockPostMessage).toHaveBeenCalledWith(message)
     })
 
@@ -294,7 +296,7 @@ describe('ClineProvider', () => {
 
     test('getState returns correct initial state', async () => {
         const state = await provider.getState()
-        
+
         expect(state).toHaveProperty('apiConfiguration')
         expect(state.apiConfiguration).toHaveProperty('apiProvider')
         expect(state).toHaveProperty('customInstructions')
@@ -311,7 +313,7 @@ describe('ClineProvider', () => {
     test('preferredLanguage defaults to VSCode language when not set', async () => {
         // Mock VSCode language as Spanish
         (vscode.env as any).language = 'es-ES';
-        
+
         const state = await provider.getState();
         expect(state.preferredLanguage).toBe('Spanish');
     })
@@ -319,7 +321,7 @@ describe('ClineProvider', () => {
     test('preferredLanguage defaults to English for unsupported VSCode language', async () => {
         // Mock VSCode language as an unsupported language
         (vscode.env as any).language = 'unsupported-LANG';
-        
+
         const state = await provider.getState();
         expect(state.preferredLanguage).toBe('English');
     })
@@ -327,9 +329,9 @@ describe('ClineProvider', () => {
     test('diffEnabled defaults to true when not set', async () => {
         // Mock globalState.get to return undefined for diffEnabled
         (mockContext.globalState.get as jest.Mock).mockReturnValue(undefined)
-        
+
         const state = await provider.getState()
-        
+
         expect(state.diffEnabled).toBe(true)
     })
 
@@ -341,7 +343,7 @@ describe('ClineProvider', () => {
             }
             return null
         })
-        
+
         const state = await provider.getState()
         expect(state.writeDelayMs).toBe(1000)
     })
@@ -349,9 +351,9 @@ describe('ClineProvider', () => {
     test('handles writeDelayMs message', async () => {
         provider.resolveWebviewView(mockWebviewView)
         const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
-        
+
         await messageHandler({ type: 'writeDelayMs', value: 2000 })
-        
+
         expect(mockContext.globalState.update).toHaveBeenCalledWith('writeDelayMs', 2000)
         expect(mockPostMessage).toHaveBeenCalled()
     })
@@ -372,6 +374,42 @@ describe('ClineProvider', () => {
         await messageHandler({ type: 'soundEnabled', bool: false })
         expect(setSoundEnabled).toHaveBeenCalledWith(false)
         expect(mockContext.globalState.update).toHaveBeenCalledWith('soundEnabled', false)
+        expect(mockPostMessage).toHaveBeenCalled()
+    })
+
+    test('requestDelaySeconds defaults to 5 seconds', async () => {
+        // Mock globalState.get to return undefined for requestDelaySeconds
+        (mockContext.globalState.get as jest.Mock).mockImplementation((key: string) => {
+            if (key === 'requestDelaySeconds') {
+                return undefined
+            }
+            return null
+        })
+
+        const state = await provider.getState()
+        expect(state.requestDelaySeconds).toBe(5)
+    })
+
+    test('alwaysApproveResubmit defaults to false', async () => {
+        // Mock globalState.get to return undefined for alwaysApproveResubmit
+        (mockContext.globalState.get as jest.Mock).mockReturnValue(undefined)
+
+        const state = await provider.getState()
+        expect(state.alwaysApproveResubmit).toBe(false)
+    })
+
+    test('handles request delay settings messages', async () => {
+        provider.resolveWebviewView(mockWebviewView)
+        const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+
+        // Test alwaysApproveResubmit
+        await messageHandler({ type: 'alwaysApproveResubmit', bool: true })
+        expect(mockContext.globalState.update).toHaveBeenCalledWith('alwaysApproveResubmit', true)
+        expect(mockPostMessage).toHaveBeenCalled()
+
+        // Test requestDelaySeconds
+        await messageHandler({ type: 'requestDelaySeconds', value: 10 })
+        expect(mockContext.globalState.update).toHaveBeenCalledWith('requestDelaySeconds', 10)
         expect(mockPostMessage).toHaveBeenCalled()
     })
 
