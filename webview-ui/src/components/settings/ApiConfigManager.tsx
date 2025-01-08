@@ -1,5 +1,5 @@
 import { VSCodeButton, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
-import { memo, useEffect, useRef, useState } from "react"
+import { memo, useCallback, useEffect, useRef, useState } from "react"
 import { ApiConfigMeta } from "../../../../src/shared/ExtensionMessage"
 
 interface ApiConfigManagerProps {
@@ -36,9 +36,30 @@ const ApiConfigManager = ({
         setInputValue("");
     }, [currentApiConfigName]);
 
+    const handleSave = useCallback(() => {
+        const trimmedValue = inputValue.trim();
+        if (!trimmedValue) return;
+
+        if (editState === 'new') {
+            onUpsertConfig(trimmedValue);
+        } else if (editState === 'rename' && currentApiConfigName) {
+            onRenameConfig(currentApiConfigName, trimmedValue);
+        }
+
+        setEditState(null);
+        setInputValue("");
+    }, [currentApiConfigName, editState, inputValue, onRenameConfig, onUpsertConfig]);
+
+    useEffect(() => {
+        return () => {
+            // handle hit done without save or cancel
+            handleSave()
+        }
+    }, [handleSave, inputValue])
+
     const handleStartNew = () => {
         setEditState('new');
-        setInputValue("");
+        setInputValue(currentApiConfigName + "(copy)");
     };
 
     const handleStartRename = () => {
@@ -51,23 +72,9 @@ const ApiConfigManager = ({
         setInputValue("");
     };
 
-    const handleSave = () => {
-        const trimmedValue = inputValue.trim();
-        if (!trimmedValue) return;
-
-        if (editState === 'new') {
-            onUpsertConfig(trimmedValue);
-        } else if (editState === 'rename' && currentApiConfigName) {
-            onRenameConfig(currentApiConfigName, trimmedValue);
-        }
-
-        setEditState(null);
-        setInputValue("");
-    };
-
     const handleDelete = () => {
         if (!currentApiConfigName || !listApiConfigMeta || listApiConfigMeta.length <= 1) return;
-        
+
         // Let the extension handle both deletion and selection
         onDeleteConfig(currentApiConfigName);
     };
@@ -76,8 +83,8 @@ const ApiConfigManager = ({
 
     return (
         <div style={{ marginBottom: 5 }}>
-            <div style={{ 
-                display: "flex", 
+            <div style={{
+                display: "flex",
                 flexDirection: "column",
                 gap: "2px"
             }}>
@@ -152,8 +159,8 @@ const ApiConfigManager = ({
                                 }}
                             >
                                 {listApiConfigMeta?.map((config) => (
-                                    <option 
-                                        key={config.name} 
+                                    <option
+                                        key={config.name}
                                         value={config.name}
                                     >
                                         {config.name}
