@@ -118,7 +118,6 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		const message: ExtensionMessage = event.data
 		switch (message.type) {
 			case "state": {
-				console.log("[DEBUG] Received state update from extension:", message.state?.messagingConfig)
 				setState(message.state!)
 				const config = message.state?.apiConfiguration
 				const hasKey = checkExistKey(config)

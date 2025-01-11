@@ -8,7 +8,6 @@ type NotificationsViewProps = {
 
 const NotificationsView = ({ onDone }: NotificationsViewProps) => {
     const handleSubmit = () => {
-        console.log("[DEBUG] Submitting notifications settings. Current messagingConfig:", messagingConfig);
         vscode.postMessage({ type: "messagingConfig", messagingConfig });
         onDone();
     };
@@ -51,8 +50,7 @@ const NotificationsView = ({ onDone }: NotificationsViewProps) => {
                     <VSCodeCheckbox
                         checked={messagingConfig?.notificationsEnabled ?? false}
                         onChange={(e: any) => setMessagingConfig({
-                            telegramBotToken: messagingConfig?.telegramBotToken ?? undefined,
-                            telegramChatId: messagingConfig?.telegramChatId ?? undefined,
+                            ...messagingConfig,
                             notificationsEnabled: e.target.checked
                         })}>
                         <span style={{ fontWeight: "500" }}>Enable external notifications</span>
@@ -77,9 +75,8 @@ const NotificationsView = ({ onDone }: NotificationsViewProps) => {
                                 placeholder="Bot Token"
                                 style={{ width: "100%", marginBottom: 5 }}
                                 onInput={(e: any) => setMessagingConfig({
-                                    telegramBotToken: e.target.value,
-                                    telegramChatId: messagingConfig?.telegramChatId,
-                                    notificationsEnabled: messagingConfig?.notificationsEnabled ?? false
+                                    ...messagingConfig,
+                                    telegramBotToken: e.target.value
                                 })}
                             />
                             <VSCodeTextField
@@ -87,9 +84,8 @@ const NotificationsView = ({ onDone }: NotificationsViewProps) => {
                                 placeholder="Chat ID"
                                 style={{ width: "100%" }}
                                 onInput={(e: any) => setMessagingConfig({
-                                    telegramBotToken: messagingConfig?.telegramBotToken,
-                                    telegramChatId: e.target.value,
-                                    notificationsEnabled: messagingConfig?.notificationsEnabled ?? false
+                                    ...messagingConfig,
+                                    telegramChatId: e.target.value
                                 })}
                             />
                             <p style={{

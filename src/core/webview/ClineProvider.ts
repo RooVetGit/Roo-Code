@@ -133,9 +133,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		this.configManager = new ConfigManager(this.context)
 		
 		// Initialize messaging service
-		this.initializeMessagingService().catch(error => {
-			console.error("[DEBUG] Error initializing messaging service:", error);
-		});
+		this.initializeMessagingService().catch(console.error);
 	}
 
 	/*
@@ -1841,13 +1839,16 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	// Notifications
-	async sendTaskCompletionNotification(task: string, taskId?: string) {
+	async sendTaskCompletionNotification(task: string, taskId?: string, result?: string) {
 		const state = await this.getState();
 		const config = state.messagingConfig;
 		if (config?.notificationsEnabled && this.messagingService) {
-			const message = taskId ?
-				`Task completed!\nID: ${taskId}\nTask: ${task}` :
-				`Task completed!\nTask: ${task}`;
+			const message = [
+				"🚀 *Task Completed!*",
+				`📝 Task: ${task}`,
+				taskId ? `🔍 ID: ${taskId}` : null,
+				result ? `\n✅ Result:\n${result}` : null
+			].filter(Boolean).join("\n");
 			await this.messagingService.notifyAll(message);
 		}
 	}
