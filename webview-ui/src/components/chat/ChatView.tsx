@@ -353,7 +353,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		// setPrimaryButtonText(undefined)
 		// setSecondaryButtonText(undefined)
 		disableAutoScrollRef.current = false
-	}, [clineAsk, startNewTask])
+	}, [clineAsk, startNewTask, messages])
 
 	const handleSecondaryButtonClick = useCallback(() => {
 		if (isStreaming) {
