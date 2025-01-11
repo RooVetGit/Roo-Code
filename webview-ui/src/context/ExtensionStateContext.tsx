@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react"
 import { useEvent } from "react-use"
-import { ApiConfigMeta, ExtensionMessage, ExtensionState } from "../../../src/shared/ExtensionMessage"
+import { ApiConfigMeta, ExtensionMessage, ExtensionState, MessagingConfig } from "../../../src/shared/ExtensionMessage"
 import {
 	ApiConfiguration,
 	ModelInfo,
@@ -56,6 +56,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setCurrentApiConfigName: (value: string) => void
 	setListApiConfigMeta: (value: ApiConfigMeta[]) => void
 	onUpdateApiConfig: (apiConfig: ApiConfiguration) => void
+	messagingConfig?: MessagingConfig
+	setMessagingConfig: (value: MessagingConfig) => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -81,6 +83,11 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		requestDelaySeconds: 5,
 		currentApiConfigName: 'default',
 		listApiConfigMeta: [],
+		messagingConfig: {
+			telegramBotToken: undefined,
+			telegramChatId: undefined,
+			notificationsEnabled: false
+		}
 	})
 	const [didHydrateState, setDidHydrateState] = useState(false)
 	const [showWelcome, setShowWelcome] = useState(false)
@@ -111,6 +118,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		const message: ExtensionMessage = event.data
 		switch (message.type) {
 			case "state": {
+				console.log("[DEBUG] Received state update from extension:", message.state?.messagingConfig)
 				setState(message.state!)
 				const config = message.state?.apiConfiguration
 				const hasKey = checkExistKey(config)
@@ -220,7 +228,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setRequestDelaySeconds: (value) => setState((prevState) => ({ ...prevState, requestDelaySeconds: value })),
 		setCurrentApiConfigName: (value) => setState((prevState) => ({ ...prevState, currentApiConfigName: value })),
 		setListApiConfigMeta,
-		onUpdateApiConfig
+		onUpdateApiConfig,
+		setMessagingConfig: (value) => setState((prevState) => ({ ...prevState, messagingConfig: value }))
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

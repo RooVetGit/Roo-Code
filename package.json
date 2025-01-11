@@ -75,6 +75,11 @@
         "icon": "$(server)"
       },
       {
+        "command": "roo-cline.notificationsButtonClicked",
+        "title": "Notifications",
+        "icon": "$(bell)"
+      },
+      {
         "command": "roo-cline.historyButtonClicked",
         "title": "History",
         "icon": "$(history)"
@@ -104,17 +109,22 @@
         },
         {
           "command": "roo-cline.mcpButtonClicked",
-          "group": "navigation@2",
+          "group": "navigation@4",
           "when": "view == roo-cline.SidebarProvider"
         },
         {
-          "command": "roo-cline.historyButtonClicked",
+          "command": "roo-cline.notificationsButtonClicked",
           "group": "navigation@3",
           "when": "view == roo-cline.SidebarProvider"
         },
         {
+          "command": "roo-cline.historyButtonClicked",
+          "group": "navigation@2",
+          "when": "view == roo-cline.SidebarProvider"
+        },
+        {
           "command": "roo-cline.popoutButtonClicked",
-          "group": "navigation@4",
+          "group": "navigation@6",
           "when": "view == roo-cline.SidebarProvider"
         },
         {

@@ -21,6 +21,7 @@ A fork of Cline, an autonomous coding agent, with some additional experimental f
 - Support for Glama
 - Support for listing models from OpenAI-compatible providers
 - Support for adding OpenAI-compatible models with or without streaming
+- External notifications through Telegram, Discord, and WhatsApp
 - Per-tool MCP auto-approval
 - Enable/disable individual MCP servers
 - Enable/disable the MCP feature overall
@@ -67,6 +68,67 @@ To contribute to the project, start by exploring [open issues](https://github.co
     ```
 
 5. Launch by pressing `F5` (or `Run`->`Start Debugging`) to open a new VSCode window with the extension loaded. (You may need to install the [esbuild problem matchers extension](https://marketplace.visualstudio.com/items?itemName=connor4312.esbuild-problem-matchers) if you run into issues building the project.)
+
+</details>
+
+<details>
+<summary>Setting Up Notifications</summary>
+
+Roo-Cline can send notifications through Telegram when tasks are completed. Here's how to set it up:
+
+### Setting Up Telegram Notifications (Beta)
+1. Create a Telegram bot:
+   - Open Telegram and search for [@BotFather](https://t.me/botfather)
+   - Send `/newbot` and follow the instructions
+   - Copy the bot token (looks like `123456789:ABCdefGHIjklmNOPQrstUVwxyz`)
+
+2. Get your chat ID:
+   - Start a conversation with your bot by sending it a message in Telegram
+   - Replace `<YourBOTToken>` with your actual bot token and visit:
+     ```
+     https://api.telegram.org/bot<YourBOTToken>/getUpdates
+     ```
+   - If you see an empty result (`"result":[]`), send another message to your bot and refresh the page
+   - After sending a message, you should see a JSON response containing your chat ID in the format:
+     ```json
+     {
+       "ok": true,
+       "result": [{
+         "message": {
+           "chat": {
+             "id": 123456789,  // This is your chat ID
+             "type": "private",
+             ...
+           }
+         }
+       }]
+     }
+     ```
+   - Copy the chat ID number (it may be negative for group chats)
+
+3. Enable notifications in Roo-Cline:
+1. Open VSCode
+2. Click the Roo Cline icon in the activity bar
+3. Open Settings (gear icon)
+4. Scroll to "Notification Settings"
+5. Enable "External notifications"
+6. Enter your Telegram Bot Token and Chat ID
+7. Click "Done" to save settings
+
+You will now receive notifications through Telegram when:
+- A task is completed
+- A task is added to history
+
+Each notification includes:
+- Task description
+- Timestamp
+7. Click "Done" to save
+
+Once configured, you'll receive notifications when:
+- A task is completed via attempt_completion
+- A task is added to history
+
+Each notification includes the task ID and description for easy tracking.
 
 </details>
 
