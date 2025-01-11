@@ -57,7 +57,6 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		currentApiConfigName,
 		listApiConfigMeta,
 		messagingConfig,
-		setMessagingConfig,
 	} = useExtensionState()
 	const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>(undefined)
 	const [modelIdErrorMessage, setModelIdErrorMessage] = useState<string | undefined>(undefined)
