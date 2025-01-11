@@ -2008,10 +2008,10 @@ export class Cline {
 								// we already sent completion_result says, an empty string asks relinquishes control over button and field
 								const { response, text, images } = await this.ask("completion_result", "", false)
 								if (response === "yesButtonClicked") {
-									pushToolResult("") // signals to recursive loop to stop (for now this never happens since yesButtonClicked will trigger a new task)
-									// Send notification when task is completed via attempt_completion
+									// Only send notification when user accepts the completion
 									const taskMessage = this.clineMessages[0]; // first message is always the task
 									await this.providerRef.deref()?.sendTaskCompletionNotification(taskMessage.text ?? "", this.taskId, result);
+									pushToolResult("") // signals to recursive loop to stop
 									break
 								}
 								await this.say("user_feedback", text ?? "", images)
