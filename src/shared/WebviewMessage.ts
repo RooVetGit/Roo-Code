@@ -63,7 +63,10 @@ export interface WebviewMessage {
 		| "requestDelaySeconds"
 		| "setApiConfigPassword"
 		| "messagingConfig"
+		| "sendTaskCompletionNotification"
 	text?: string
+	taskId?: string
+	task?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
 	apiConfiguration?: ApiConfiguration

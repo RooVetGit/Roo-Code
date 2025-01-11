@@ -330,10 +330,22 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				vscode.postMessage({ type: "askResponse", askResponse: "yesButtonClicked" })
 				break
 			case "completion_result":
-			case "resume_completed_task":
+			case "resume_completed_task": {
+				// Send notification when task is actually completed
+				const taskMessage = messages[0]; // first message is always the task
+				const lastMessage = messages[messages.length - 1];
+				if (lastMessage?.text) {
+					vscode.postMessage({
+						type: "sendTaskCompletionNotification",
+						task: taskMessage.text ?? "",
+						taskId: taskMessage.ts.toString(),
+						text: lastMessage.text
+					});
+				}
 				// extension waiting for feedback. but we can just present a new task button
 				startNewTask()
 				break
+			}
 		}
 		setTextAreaDisabled(true)
 		setClineAsk(undefined)
@@ -579,14 +591,34 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 						case "completion_result":
 						case "resume_completed_task":
 							playSound("celebration")
+							// Send notification when task is actually completed
+							if (lastMessage.text && task?.text) {
+								vscode.postMessage({
+									type: "sendTaskCompletionNotification",
+									task: task.text,
+									taskId: task.ts.toString(),
+									text: lastMessage.text
+								})
+							}
 							break
 					}
+				}
+			} else if (lastMessage.type === "say" && lastMessage.say === "completion_result") {
+				playSound("celebration")
+				// Send notification when task is actually completed
+				if (lastMessage.text && task?.text) {
+					vscode.postMessage({
+						type: "sendTaskCompletionNotification",
+						task: task.text,
+						taskId: task.ts.toString(),
+						text: lastMessage.text
+					})
 				}
 			}
 		}
 		// Update previous value
 		setWasStreaming(isStreaming)
-	}, [isStreaming, lastMessage, wasStreaming, isAutoApproved])
+	}, [isStreaming, lastMessage, wasStreaming, isAutoApproved, task])
 
 	const isBrowserSessionMessage = (message: ClineMessage): boolean => {
 		// which of visible messages are browser session messages, see above

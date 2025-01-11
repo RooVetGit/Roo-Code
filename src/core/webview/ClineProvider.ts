@@ -114,12 +114,47 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	private messagingService?: MessagingService
 
 	private async initializeMessagingService() {
-		const savedConfig = await this.getGlobalState("messagingConfig");
-		this.messagingService = new MessagingService(savedConfig ?? {
-			telegramBotToken: undefined,
-			telegramChatId: undefined,
-			notificationsEnabled: false
-		});
+		try {
+			const savedConfig = await this.getGlobalState("messagingConfig") as MessagingConfig | undefined;
+			console.log("[DEBUG] Initializing MessagingService with saved config:", savedConfig);
+			
+			// If we have a saved config with valid values, use it
+			if (savedConfig?.telegramBotToken && savedConfig?.telegramChatId) {
+				this.messagingService = new MessagingService(savedConfig);
+				console.log("[DEBUG] MessagingService initialized with saved config");
+			} else {
+				// Otherwise initialize with default disabled config
+				const defaultConfig: MessagingConfig = {
+					telegramBotToken: undefined,
+					telegramChatId: undefined,
+					notificationsEnabled: false
+				};
+				this.messagingService = new MessagingService(defaultConfig);
+				console.log("[DEBUG] MessagingService initialized with default config");
+			}
+			
+			// Only send test message if this is a new configuration
+			const currentConfig = this.messagingService?.config;
+			const isNewConfig = savedConfig?.notificationsEnabled &&
+				savedConfig?.telegramBotToken &&
+				savedConfig?.telegramChatId &&
+				(!currentConfig ||
+				 currentConfig.telegramBotToken !== savedConfig.telegramBotToken ||
+				 currentConfig.telegramChatId !== savedConfig.telegramChatId);
+
+			if (isNewConfig) {
+				await this.messagingService.sendTelegramMessage("Cline notification system configured successfully");
+			}
+		} catch (error) {
+			console.error("[ERROR] Failed to initialize MessagingService:", error);
+			// Create a disabled service as fallback
+			const defaultConfig: MessagingConfig = {
+				telegramBotToken: undefined,
+				telegramChatId: undefined,
+				notificationsEnabled: false
+			};
+			this.messagingService = new MessagingService(defaultConfig);
+		}
 	}
 
 	constructor(
@@ -706,13 +741,18 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.postStateToWebview()
 						break
 					case "messagingConfig":
-						await this.updateGlobalState("messagingConfig", message.messagingConfig);
-						this.messagingService = new MessagingService(message.messagingConfig ?? {
-							telegramBotToken: undefined,
-							telegramChatId: undefined,
-							notificationsEnabled: false
-						});
-						await this.postStateToWebview();
+						try {
+							console.log("[DEBUG] Received new messaging config:", message.messagingConfig);
+							await this.updateGlobalState("messagingConfig", message.messagingConfig);
+							
+							// Reinitialize messaging service with new config
+							await this.initializeMessagingService();
+							
+							await this.postStateToWebview();
+						} catch (error) {
+							console.error("[ERROR] Failed to update messaging config:", error);
+							vscode.window.showErrorMessage("Failed to save notification settings. Please check the configuration.");
+						}
 						break
 					case "preferredLanguage":
 						await this.updateGlobalState("preferredLanguage", message.text)
@@ -1786,11 +1826,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		}
 		await this.updateGlobalState("taskHistory", history)
 		
-		// Send notification for new tasks that are being added to history
-		if (isNewTask) {
-			await this.sendTaskCompletionNotification(item.task, item.id);
-		}
-		
 		return history
 	}
 
@@ -1840,16 +1875,32 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	// Notifications
 	async sendTaskCompletionNotification(task: string, taskId?: string, result?: string) {
-		const state = await this.getState();
-		const config = state.messagingConfig;
-		if (config?.notificationsEnabled && this.messagingService) {
-			const message = [
-				"🚀 *Task Completed!*",
-				`📝 Task: ${task}`,
-				taskId ? `🔍 ID: ${taskId}` : null,
-				result ? `\n✅ Result:\n${result}` : null
-			].filter(Boolean).join("\n");
-			await this.messagingService.notifyAll(message);
+		try {
+			const state = await this.getState();
+			const config = state.messagingConfig;
+			
+			console.log("[DEBUG] Sending task completion notification:", {
+				hasConfig: !!config,
+				notificationsEnabled: config?.notificationsEnabled,
+				hasService: !!this.messagingService,
+				hasToken: !!config?.telegramBotToken,
+				hasChatId: !!config?.telegramChatId
+			});
+			
+			// Only send if notifications are enabled and we have both a messaging service and valid config
+			if (config?.notificationsEnabled &&
+				this.messagingService &&
+				config.telegramBotToken &&
+				config.telegramChatId) {
+				const message = `Task: ${task}\n\nResult:\n${result}`;
+				await this.messagingService.notifyAll(message);
+				console.log("[DEBUG] Task completion notification sent successfully");
+			} else {
+				console.log("[DEBUG] Skipping notification - missing required config");
+			}
+		} catch (error) {
+			console.error("[ERROR] Failed to send task completion notification:", error);
+			// Don't throw the error - we don't want to interrupt the task completion flow
 		}
 	}
 

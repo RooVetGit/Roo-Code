@@ -2008,9 +2008,11 @@ export class Cline {
 								// we already sent completion_result says, an empty string asks relinquishes control over button and field
 								const { response, text, images } = await this.ask("completion_result", "", false)
 								if (response === "yesButtonClicked") {
-									// Only send notification when user accepts the completion
+									// Send notification before any sound effects
 									const taskMessage = this.clineMessages[0]; // first message is always the task
 									await this.providerRef.deref()?.sendTaskCompletionNotification(taskMessage.text ?? "", this.taskId, result);
+									
+									// Signal completion after notification is sent
 									pushToolResult("") // signals to recursive loop to stop
 									break
 								}

@@ -13,13 +13,20 @@ const NotificationsView = ({ onDone }: NotificationsViewProps) => {
     };
 
     const {
-        messagingConfig,
+        messagingConfig: rawMessagingConfig,
         setMessagingConfig,
         soundEnabled,
         setSoundEnabled,
         soundVolume,
         setSoundVolume
     } = useExtensionState();
+
+    // Ensure we always have a valid config object
+    const messagingConfig = rawMessagingConfig ?? {
+        telegramBotToken: undefined,
+        telegramChatId: undefined,
+        notificationsEnabled: false
+    };
 
     return (
         <div
@@ -50,7 +57,8 @@ const NotificationsView = ({ onDone }: NotificationsViewProps) => {
                     <VSCodeCheckbox
                         checked={messagingConfig?.notificationsEnabled ?? false}
                         onChange={(e: any) => setMessagingConfig({
-                            ...messagingConfig,
+                            telegramBotToken: messagingConfig.telegramBotToken,
+                            telegramChatId: messagingConfig.telegramChatId,
                             notificationsEnabled: e.target.checked
                         })}>
                         <span style={{ fontWeight: "500" }}>Enable external notifications</span>
@@ -75,8 +83,9 @@ const NotificationsView = ({ onDone }: NotificationsViewProps) => {
                                 placeholder="Bot Token"
                                 style={{ width: "100%", marginBottom: 5 }}
                                 onInput={(e: any) => setMessagingConfig({
-                                    ...messagingConfig,
-                                    telegramBotToken: e.target.value
+                                    telegramBotToken: e.target.value,
+                                    telegramChatId: messagingConfig.telegramChatId,
+                                    notificationsEnabled: messagingConfig.notificationsEnabled
                                 })}
                             />
                             <VSCodeTextField
@@ -84,8 +93,9 @@ const NotificationsView = ({ onDone }: NotificationsViewProps) => {
                                 placeholder="Chat ID"
                                 style={{ width: "100%" }}
                                 onInput={(e: any) => setMessagingConfig({
-                                    ...messagingConfig,
-                                    telegramChatId: e.target.value
+                                    telegramBotToken: messagingConfig.telegramBotToken,
+                                    telegramChatId: e.target.value,
+                                    notificationsEnabled: messagingConfig.notificationsEnabled
                                 })}
                             />
                             <p style={{
