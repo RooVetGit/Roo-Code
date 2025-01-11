@@ -2010,7 +2010,8 @@ export class Cline {
 								if (response === "yesButtonClicked") {
 									pushToolResult("") // signals to recursive loop to stop (for now this never happens since yesButtonClicked will trigger a new task)
 									// Send notification when task is completed via attempt_completion
-									await this.providerRef.deref()?.sendTaskCompletionNotification(result, this.taskId);
+									const taskMessage = this.clineMessages[0]; // first message is always the task
+									await this.providerRef.deref()?.sendTaskCompletionNotification(taskMessage.text ?? "", this.taskId, result);
 									break
 								}
 								await this.say("user_feedback", text ?? "", images)
