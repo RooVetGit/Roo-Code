@@ -30,9 +30,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		alwaysAllowMcp,
 		setAlwaysAllowMcp,
 		soundEnabled,
-		setSoundEnabled,
 		soundVolume,
-		setSoundVolume,
 		diffEnabled,
 		setDiffEnabled,
 		browserViewportSize,
@@ -66,7 +64,6 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 	const [commandInput, setCommandInput] = useState("")
 
 	const handleSubmit = () => {
-		console.log("[DEBUG] Submitting settings. Current messagingConfig:", messagingConfig)
 		const apiValidationResult = validateApiConfiguration(apiConfiguration)
 		const modelIdValidationResult = validateModelId(apiConfiguration, glamaModels, openRouterModels)
 
