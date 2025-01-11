@@ -1883,6 +1883,22 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	// Notifications
+	async sendNotification(message: string, type: 'task_completion' | 'error_state' | 'request_failed' | 'shell_warning' | 'followup_question' | 'user_feedback' | 'diff_feedback') {
+		try {
+			const state = await this.getState();
+			const config = state.messagingConfig;
+			
+			if (config?.notificationsEnabled &&
+				this.messagingService &&
+				config.telegramBotToken &&
+				config.telegramChatId) {
+				await this.messagingService.notifyAll(message, type);
+			}
+		} catch (error) {
+			console.error(`[ERROR] Failed to send ${type} notification:`, error);
+		}
+	}
+
 	async sendTaskCompletionNotification(task: string, taskId?: string, result?: string) {
 		try {
 			const state = await this.getState();

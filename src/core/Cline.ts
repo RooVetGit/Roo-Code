@@ -723,6 +723,10 @@ export class Cline {
 
 		process.once("no_shell_integration", async () => {
 			await this.say("shell_integration_warning")
+			await this.providerRef.deref()?.sendNotification(
+				"Shell integration warning: Shell integration is not available. Some features may be limited.",
+				'shell_warning'
+			)
 		})
 
 		await process
@@ -832,8 +836,13 @@ export class Cline {
 			yield firstChunk.value
 		} catch (error) {
 			// note that this api_req_failed ask is unique in that we only present this option if the api hasn't streamed any content yet (ie it fails on the first chunk due), as it would allow them to hit a retry button. However if the api failed mid-stream, it could be in any arbitrary state where some tools may have executed, so that error is handled differently and requires cancelling the task entirely.
+			const errorMsg = error.message ?? "Unknown error"
+			await this.providerRef.deref()?.sendNotification(
+				`API request failed: ${errorMsg}`,
+				'request_failed'
+			)
+
 			if (alwaysApproveResubmit) {
-				const errorMsg = error.message ?? "Unknown error"
 				const requestDelay = requestDelaySeconds || 5
 				// Automatically retry with delay
 				// Show countdown timer in error color
@@ -1017,6 +1026,10 @@ export class Cline {
 					if (response !== "yesButtonClicked") {
 						if (response === "messageResponse") {
 							await this.say("user_feedback", text, images)
+							await this.providerRef.deref()?.sendNotification(
+								`User provided feedback: ${text}`,
+								'user_feedback'
+							)
 							pushToolResult(
 								formatResponse.toolResult(formatResponse.toolDeniedWithFeedback(text), images),
 							)
@@ -1049,10 +1062,9 @@ export class Cline {
 
 				const handleError = async (action: string, error: Error) => {
 					const errorString = `Error ${action}: ${JSON.stringify(serializeError(error))}`
-					await this.say(
-						"error",
-						`Error ${action}:\n${error.message ?? JSON.stringify(serializeError(error), null, 2)}`,
-					)
+					const errorMessage = `Error ${action}:\n${error.message ?? JSON.stringify(serializeError(error), null, 2)}`;
+					await this.say("error", errorMessage);
+					await this.providerRef.deref()?.sendNotification(errorMessage, 'error_state');
 					// this.toolResults.push({
 					// 	type: "tool_result",
 					// 	tool_use_id: toolUseId,
@@ -1233,6 +1245,10 @@ export class Cline {
 											path: getReadablePath(cwd, relPath),
 											diff: userEdits,
 										} satisfies ClineSayTool),
+									)
+									await this.providerRef.deref()?.sendNotification(
+										`User provided diff feedback for ${relPath}:\n${userEdits}`,
+										'diff_feedback'
 									)
 									pushToolResult(
 										`The user made the following updates to your content:\n\n${userEdits}\n\n` +
@@ -1900,6 +1916,10 @@ export class Cline {
 								this.consecutiveMistakeCount = 0
 								const { text, images } = await this.ask("followup", question, false)
 								await this.say("user_feedback", text ?? "", images)
+								await this.providerRef.deref()?.sendNotification(
+									`Follow-up Question: ${question}\n\nAnswer: ${text}`,
+									'followup_question'
+								)
 								pushToolResult(formatResponse.toolResult(`<answer>\n${text}\n</answer>`, images))
 								break
 							}
