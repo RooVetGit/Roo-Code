@@ -228,7 +228,11 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setCurrentApiConfigName: (value) => setState((prevState) => ({ ...prevState, currentApiConfigName: value })),
 		setListApiConfigMeta,
 		onUpdateApiConfig,
-		setMessagingConfig: (value) => setState((prevState) => ({ ...prevState, messagingConfig: value }))
+		setMessagingConfig: (value) => {
+			setState((prevState) => ({ ...prevState, messagingConfig: value }));
+			// Ensure the extension gets the update
+			vscode.postMessage({ type: "messagingConfig", messagingConfig: value });
+		}
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

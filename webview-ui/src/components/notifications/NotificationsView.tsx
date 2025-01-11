@@ -8,7 +8,7 @@ type NotificationsViewProps = {
 
 const NotificationsView = ({ onDone }: NotificationsViewProps) => {
     const handleSubmit = () => {
-        vscode.postMessage({ type: "messagingConfig", messagingConfig });
+        // State update is now handled by setMessagingConfig in the context
         onDone();
     };
 
