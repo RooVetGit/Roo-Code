@@ -86,7 +86,15 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		messagingConfig: {
 			telegramBotToken: undefined,
 			telegramChatId: undefined,
-			notificationsEnabled: false
+			notificationsEnabled: false,
+			// Default values for notification toggles
+			notifyOnTaskCompletion: true,
+			notifyOnErrorStates: true,
+			notifyOnRequestFailed: false,
+			notifyOnShellWarnings: false,
+			notifyOnFollowupQuestions: false,
+			notifyOnUserFeedback: false,
+			notifyOnDiffFeedback: false
 		}
 	})
 	const [didHydrateState, setDidHydrateState] = useState(false)

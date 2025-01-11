@@ -27,7 +27,8 @@ import { checkExistKey } from "../../shared/checkExistApiConfig"
 import { enhancePrompt } from "../../utils/enhance-prompt"
 import { getCommitInfo, searchCommits, getWorkingState } from "../../utils/git"
 import { ConfigManager } from "../config/ConfigManager"
-import { MessagingService, MessagingConfig } from "../../services/messaging/MessagingService"
+import { MessagingService } from "../../services/messaging/MessagingService"
+import { MessagingConfig } from "../../shared/ExtensionMessage"
 
 /*
 https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -1806,10 +1807,18 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			requestDelaySeconds: requestDelaySeconds ?? 5,
 			currentApiConfigName: currentApiConfigName ?? "default",
 			listApiConfigMeta: listApiConfigMeta ?? [],
-			messagingConfig: messagingConfig ?? {
-				telegramBotToken: undefined,
-				telegramChatId: undefined,
-				notificationsEnabled: false
+			messagingConfig: {
+				telegramBotToken: messagingConfig?.telegramBotToken,
+				telegramChatId: messagingConfig?.telegramChatId,
+				notificationsEnabled: messagingConfig?.notificationsEnabled ?? false,
+				// Default values for notification toggles
+				notifyOnTaskCompletion: messagingConfig?.notifyOnTaskCompletion ?? true,
+				notifyOnErrorStates: messagingConfig?.notifyOnErrorStates ?? true,
+				notifyOnRequestFailed: messagingConfig?.notifyOnRequestFailed ?? false,
+				notifyOnShellWarnings: messagingConfig?.notifyOnShellWarnings ?? false,
+				notifyOnFollowupQuestions: messagingConfig?.notifyOnFollowupQuestions ?? false,
+				notifyOnUserFeedback: messagingConfig?.notifyOnUserFeedback ?? false,
+				notifyOnDiffFeedback: messagingConfig?.notifyOnDiffFeedback ?? false
 			}
 		}
 	}
@@ -1893,7 +1902,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				config.telegramBotToken &&
 				config.telegramChatId) {
 				const message = `Task: ${task}\n\nResult:\n${result}`;
-				await this.messagingService.notifyAll(message);
+				await this.messagingService.notifyAll(message, 'task_completion');
 				console.log("[DEBUG] Task completion notification sent successfully");
 			} else {
 				console.log("[DEBUG] Skipping notification - missing required config");

@@ -1,11 +1,6 @@
 import axios from 'axios';
 import * as vscode from 'vscode';
-
-export interface MessagingConfig {
-    telegramBotToken?: string;
-    telegramChatId?: string;  // Keep as string in config, convert to number when sending
-    notificationsEnabled?: boolean;
-}
+import { MessagingConfig } from '../../shared/ExtensionMessage';
 
 export class MessagingService {
     private _config: MessagingConfig;
@@ -89,7 +84,7 @@ export class MessagingService {
         return formattedMessage;
     }
 
-    async notifyAll(message: string): Promise<void> {
+    async notifyAll(message: string, type: 'task_completion' | 'error_state' | 'request_failed' | 'shell_warning' | 'followup_question' | 'user_feedback' | 'diff_feedback'): Promise<void> {
         if (!this._config.notificationsEnabled) {
             console.log("[DEBUG] Notifications are disabled, skipping notification");
             return;
@@ -97,6 +92,31 @@ export class MessagingService {
 
         if (!this._config.telegramBotToken || !this._config.telegramChatId) {
             console.log("[DEBUG] Missing Telegram configuration, skipping notification");
+            return;
+        }
+
+        // Check if this notification type is enabled
+        const shouldNotify = (() => {
+            switch (type) {
+                case 'task_completion':
+                    return this._config.notifyOnTaskCompletion ?? true;
+                case 'error_state':
+                    return this._config.notifyOnErrorStates ?? true;
+                case 'request_failed':
+                    return this._config.notifyOnRequestFailed ?? false;
+                case 'shell_warning':
+                    return this._config.notifyOnShellWarnings ?? false;
+                case 'followup_question':
+                    return this._config.notifyOnFollowupQuestions ?? false;
+                case 'user_feedback':
+                    return this._config.notifyOnUserFeedback ?? false;
+                case 'diff_feedback':
+                    return this._config.notifyOnDiffFeedback ?? false;
+            }
+        })();
+
+        if (!shouldNotify) {
+            console.log(`[DEBUG] Notifications for ${type} are disabled, skipping notification`);
             return;
         }
 

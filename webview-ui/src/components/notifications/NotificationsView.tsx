@@ -73,40 +73,118 @@ const NotificationsView = ({ onDone }: NotificationsViewProps) => {
                 </div>
 
                 {messagingConfig?.notificationsEnabled && (
-                    <div style={{ marginLeft: 20, marginBottom: 15 }}>
-                        <h4 style={{ margin: "0 0 10px 0" }}>Messaging Services</h4>
-                        
-                        <div style={{ marginBottom: 10 }}>
-                            <label style={{ fontWeight: "500", display: "block", marginBottom: 5 }}>Telegram</label>
-                            <VSCodeTextField
-                                value={messagingConfig?.telegramBotToken ?? ""}
-                                placeholder="Bot Token"
-                                style={{ width: "100%", marginBottom: 5 }}
-                                onInput={(e: any) => setMessagingConfig({
-                                    telegramBotToken: e.target.value,
-                                    telegramChatId: messagingConfig.telegramChatId,
-                                    notificationsEnabled: messagingConfig.notificationsEnabled
-                                })}
-                            />
-                            <VSCodeTextField
-                                value={messagingConfig?.telegramChatId ?? ""}
-                                placeholder="Chat ID"
-                                style={{ width: "100%" }}
-                                onInput={(e: any) => setMessagingConfig({
-                                    telegramBotToken: messagingConfig.telegramBotToken,
-                                    telegramChatId: e.target.value,
-                                    notificationsEnabled: messagingConfig.notificationsEnabled
-                                })}
-                            />
-                            <p style={{
-                                fontSize: "12px",
-                                marginTop: "5px",
-                                color: "var(--vscode-descriptionForeground)",
-                            }}>
-                                Visit the README for instructions on how to set up Telegram notifications.
-                            </p>
+                    <>
+                        <div style={{ marginLeft: 20, marginBottom: 15 }}>
+                            <h4 style={{ margin: "0 0 10px 0" }}>Messaging Services</h4>
+                            
+                            <div style={{ marginBottom: 10 }}>
+                                <label style={{ fontWeight: "500", display: "block", marginBottom: 5 }}>Telegram</label>
+                                <VSCodeTextField
+                                    value={messagingConfig?.telegramBotToken ?? ""}
+                                    placeholder="Bot Token"
+                                    style={{ width: "100%", marginBottom: 5 }}
+                                    onInput={(e: any) => setMessagingConfig({
+                                        ...messagingConfig,
+                                        telegramBotToken: e.target.value
+                                    })}
+                                />
+                                <VSCodeTextField
+                                    value={messagingConfig?.telegramChatId ?? ""}
+                                    placeholder="Chat ID"
+                                    style={{ width: "100%" }}
+                                    onInput={(e: any) => setMessagingConfig({
+                                        ...messagingConfig,
+                                        telegramChatId: e.target.value
+                                    })}
+                                />
+                                <p style={{
+                                    fontSize: "12px",
+                                    marginTop: "5px",
+                                    color: "var(--vscode-descriptionForeground)",
+                                }}>
+                                    Visit the README for instructions on how to set up Telegram notifications.
+                                </p>
+                            </div>
                         </div>
-                    </div>
+
+                        <div style={{
+                            marginLeft: 20,
+                            marginBottom: 15,
+                            border: "1px solid var(--vscode-input-border)",
+                            borderRadius: "4px",
+                            padding: "10px"
+                        }}>
+                            <h4 style={{ margin: "0 0 10px 0" }}>Notification Types</h4>
+                            
+                            <div style={{ marginBottom: 15 }}>
+                                <h5 style={{ margin: "0 0 5px 0", color: "var(--vscode-descriptionForeground)" }}>Task Status</h5>
+                                <VSCodeCheckbox
+                                    checked={messagingConfig?.notifyOnTaskCompletion ?? true}
+                                    onChange={(e: any) => setMessagingConfig({
+                                        ...messagingConfig,
+                                        notifyOnTaskCompletion: e.target.checked
+                                    })}>
+                                    Task completion
+                                </VSCodeCheckbox>
+                                <VSCodeCheckbox
+                                    checked={messagingConfig?.notifyOnErrorStates ?? true}
+                                    onChange={(e: any) => setMessagingConfig({
+                                        ...messagingConfig,
+                                        notifyOnErrorStates: e.target.checked
+                                    })}>
+                                    Error states (mistake limit, API failures)
+                                </VSCodeCheckbox>
+                            </div>
+
+                            <div style={{ marginBottom: 15 }}>
+                                <h5 style={{ margin: "0 0 5px 0", color: "var(--vscode-descriptionForeground)" }}>System Events</h5>
+                                <VSCodeCheckbox
+                                    checked={messagingConfig?.notifyOnRequestFailed ?? false}
+                                    onChange={(e: any) => setMessagingConfig({
+                                        ...messagingConfig,
+                                        notifyOnRequestFailed: e.target.checked
+                                    })}>
+                                    Request failed
+                                </VSCodeCheckbox>
+                                <VSCodeCheckbox
+                                    checked={messagingConfig?.notifyOnShellWarnings ?? false}
+                                    onChange={(e: any) => setMessagingConfig({
+                                        ...messagingConfig,
+                                        notifyOnShellWarnings: e.target.checked
+                                    })}>
+                                    Shell integration warnings
+                                </VSCodeCheckbox>
+                            </div>
+
+                            <div>
+                                <h5 style={{ margin: "0 0 5px 0", color: "var(--vscode-descriptionForeground)" }}>User Interaction</h5>
+                                <VSCodeCheckbox
+                                    checked={messagingConfig?.notifyOnFollowupQuestions ?? false}
+                                    onChange={(e: any) => setMessagingConfig({
+                                        ...messagingConfig,
+                                        notifyOnFollowupQuestions: e.target.checked
+                                    })}>
+                                    Follow-up questions
+                                </VSCodeCheckbox>
+                                <VSCodeCheckbox
+                                    checked={messagingConfig?.notifyOnUserFeedback ?? false}
+                                    onChange={(e: any) => setMessagingConfig({
+                                        ...messagingConfig,
+                                        notifyOnUserFeedback: e.target.checked
+                                    })}>
+                                    User feedback
+                                </VSCodeCheckbox>
+                                <VSCodeCheckbox
+                                    checked={messagingConfig?.notifyOnDiffFeedback ?? false}
+                                    onChange={(e: any) => setMessagingConfig({
+                                        ...messagingConfig,
+                                        notifyOnDiffFeedback: e.target.checked
+                                    })}>
+                                    User feedback on diffs
+                                </VSCodeCheckbox>
+                            </div>
+                        </div>
+                    </>
                 )}
 
                 <div style={{ marginTop: 20 }}>

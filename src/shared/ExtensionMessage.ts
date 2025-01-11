@@ -56,6 +56,14 @@ export interface MessagingConfig {
     telegramBotToken?: string;
     telegramChatId?: string;
     notificationsEnabled?: boolean;
+    // Notification type toggles
+    notifyOnTaskCompletion?: boolean;
+    notifyOnErrorStates?: boolean;
+    notifyOnRequestFailed?: boolean;
+    notifyOnShellWarnings?: boolean;
+    notifyOnFollowupQuestions?: boolean;
+    notifyOnUserFeedback?: boolean;
+    notifyOnDiffFeedback?: boolean;
 }
 
 export interface ExtensionState {
