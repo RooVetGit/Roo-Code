@@ -31,6 +31,7 @@ export interface ExtensionMessage {
 		| "settingsButtonClicked"
 		| "historyButtonClicked"
 		| "didBecomeVisible"
+		| "notificationsButtonClicked"
 	invoke?: "sendMessage" | "primaryButtonClick" | "secondaryButtonClick"
 	state?: ExtensionState
 	images?: string[]
@@ -51,6 +52,20 @@ export interface ApiConfigMeta {
 	apiProvider?: ApiProvider
 }
 
+export interface MessagingConfig {
+    notificationsEnabled?: boolean;
+    telegramBotToken?: string;
+    telegramChatId?: string;
+    // Notification type toggles
+    notifyOnTaskCompletion?: boolean;
+    notifyOnErrorStates?: boolean;
+    notifyOnRequestFailed?: boolean;
+    notifyOnShellWarnings?: boolean;
+    notifyOnFollowupQuestions?: boolean;
+    notifyOnUserFeedback?: boolean;
+    notifyOnDiffFeedback?: boolean;
+}
+
 export interface ExtensionState {
 	version: string
 	clineMessages: ClineMessage[]
@@ -59,6 +74,7 @@ export interface ExtensionState {
 	apiConfiguration?: ApiConfiguration
 	currentApiConfigName?: string
 	listApiConfigMeta?: ApiConfigMeta[]
+	lastShownAnnouncementId?: string
 	customInstructions?: string
 	alwaysAllowReadOnly?: boolean
 	alwaysAllowWrite?: boolean
@@ -79,6 +95,7 @@ export interface ExtensionState {
 	writeDelayMs: number
 	terminalOutputLineLimit?: number
 	mcpEnabled: boolean
+	messagingConfig?: MessagingConfig
 }
 
 export interface ClineMessage {

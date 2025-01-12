@@ -14,7 +14,7 @@ import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 import { McpHub } from "../../services/mcp/McpHub"
 import { ApiConfiguration, ApiProvider, ModelInfo } from "../../shared/api"
 import { findLast } from "../../shared/array"
-import { ApiConfigMeta, ExtensionMessage } from "../../shared/ExtensionMessage"
+import { ApiConfigMeta, ExtensionMessage, ExtensionState } from "../../shared/ExtensionMessage"
 import { HistoryItem } from "../../shared/HistoryItem"
 import { WebviewMessage } from "../../shared/WebviewMessage"
 import { fileExistsAtPath } from "../../utils/fs"
@@ -27,6 +27,8 @@ import { checkExistKey } from "../../shared/checkExistApiConfig"
 import { enhancePrompt } from "../../utils/enhance-prompt"
 import { getCommitInfo, searchCommits, getWorkingState } from "../../utils/git"
 import { ConfigManager } from "../config/ConfigManager"
+import { MessagingService } from "../../services/messaging/MessagingService"
+import { MessagingConfig } from "../../shared/ExtensionMessage"
 
 /*
 https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -89,6 +91,7 @@ type GlobalStateKey =
 	| "requestDelaySeconds"
 	| "currentApiConfigName"
 	| "listApiConfigMeta"
+	| "messagingConfig"
 
 export const GlobalFileNames = {
 	apiConversationHistory: "api_conversation_history.json",
@@ -109,6 +112,51 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	mcpHub?: McpHub
 	private latestAnnouncementId = "dec-10-2024" // update to some unique identifier when we add a new announcement
 	configManager: ConfigManager
+	private messagingService?: MessagingService
+
+	private async initializeMessagingService() {
+		try {
+			const savedConfig = await this.getGlobalState("messagingConfig") as MessagingConfig | undefined;
+			console.log("[DEBUG] Initializing MessagingService with saved config:", savedConfig);
+			
+			// If we have a saved config with valid values, use it
+			if (savedConfig?.telegramBotToken && savedConfig?.telegramChatId) {
+				this.messagingService = new MessagingService(savedConfig);
+				console.log("[DEBUG] MessagingService initialized with saved config");
+			} else {
+				// Otherwise initialize with default disabled config
+				const defaultConfig: MessagingConfig = {
+					telegramBotToken: undefined,
+					telegramChatId: undefined,
+					notificationsEnabled: false
+				};
+				this.messagingService = new MessagingService(defaultConfig);
+				console.log("[DEBUG] MessagingService initialized with default config");
+			}
+			
+			// Only send test message if this is a new configuration
+			const currentConfig = this.messagingService?.config;
+			const isNewConfig = savedConfig?.notificationsEnabled &&
+				savedConfig?.telegramBotToken &&
+				savedConfig?.telegramChatId &&
+				(!currentConfig ||
+				 currentConfig.telegramBotToken !== savedConfig.telegramBotToken ||
+				 currentConfig.telegramChatId !== savedConfig.telegramChatId);
+
+			if (isNewConfig) {
+				await this.messagingService.sendTelegramMessage("Cline notification system configured successfully");
+			}
+		} catch (error) {
+			console.error("[ERROR] Failed to initialize MessagingService:", error);
+			// Create a disabled service as fallback
+			const defaultConfig: MessagingConfig = {
+				telegramBotToken: undefined,
+				telegramChatId: undefined,
+				notificationsEnabled: false
+			};
+			this.messagingService = new MessagingService(defaultConfig);
+		}
+	}
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
@@ -119,6 +167,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		this.workspaceTracker = new WorkspaceTracker(this)
 		this.mcpHub = new McpHub(this)
 		this.configManager = new ConfigManager(this.context)
+		
+		// Initialize messaging service
+		this.initializeMessagingService().catch(console.error);
 	}
 
 	/*
@@ -152,13 +203,16 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		return findLast(Array.from(this.activeInstances), (instance) => instance.view?.visible === true)
 	}
 
-	resolveWebviewView(
+	async resolveWebviewView(
 		webviewView: vscode.WebviewView | vscode.WebviewPanel,
 		//context: vscode.WebviewViewResolveContext<unknown>, used to recreate a deallocated webview, but we don't need this since we use retainContextWhenHidden
 		//token: vscode.CancellationToken
-	): void | Thenable<void> {
+	): Promise<void> {
 		this.outputChannel.appendLine("Resolving webview view")
 		this.view = webviewView
+
+		// Ensure messaging service is initialized
+		await this.initializeMessagingService();
 
 		// Initialize sound enabled state
 		this.getState().then(({ soundEnabled }) => {
@@ -243,6 +297,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			fuzzyMatchThreshold
 		} = await this.getState()
 
+		if (!apiConfiguration) {
+			throw new Error("API configuration is required");
+		}
 		this.cline = new Cline(
 			this,
 			apiConfiguration,
@@ -263,6 +320,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			fuzzyMatchThreshold
 		} = await this.getState()
 
+		if (!apiConfiguration) {
+			throw new Error("API configuration is required");
+		}
 		this.cline = new Cline(
 			this,
 			apiConfiguration,
@@ -390,7 +450,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							if (openRouterModels) {
 								// update model info in state (this needs to be done here since we don't want to update state while settings is open, and we may refresh models there)
 								const { apiConfiguration } = await this.getState()
-								if (apiConfiguration.openRouterModelId) {
+								if (apiConfiguration?.openRouterModelId) {
 									await this.updateGlobalState(
 										"openRouterModelInfo",
 										openRouterModels[apiConfiguration.openRouterModelId],
@@ -408,7 +468,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							if (glamaModels) {
 								// update model info in state (this needs to be done here since we don't want to update state while settings is open, and we may refresh models there)
 								const { apiConfiguration } = await this.getState()
-								if (apiConfiguration.glamaModelId) {
+								if (apiConfiguration?.glamaModelId) {
 									await this.updateGlobalState(
 										"glamaModelInfo",
 										glamaModels[apiConfiguration.glamaModelId],
@@ -431,6 +491,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 									const {
 										apiConfiguration,
 									} = await this.getState()
+									if (!apiConfiguration) {
+										throw new Error("API configuration is required");
+									}
 									await this.configManager.SaveConfig(listApiConfig[0].name ?? "default", apiConfiguration)
 									listApiConfig[0].apiProvider = apiConfiguration.apiProvider
 								}
@@ -677,6 +740,20 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 					case "requestDelaySeconds":
 						await this.updateGlobalState("requestDelaySeconds", message.value ?? 5)
 						await this.postStateToWebview()
+						break
+					case "messagingConfig":
+						try {
+							console.log("[DEBUG] Received new messaging config:", message.messagingConfig);
+							await this.updateGlobalState("messagingConfig", message.messagingConfig);
+							
+							// Reinitialize messaging service with new config
+							await this.initializeMessagingService();
+							
+							await this.postStateToWebview();
+						} catch (error) {
+							console.error("[ERROR] Failed to update messaging config:", error);
+							vscode.window.showErrorMessage("Failed to save notification settings. Please check the configuration.");
+						}
 						break
 					case "preferredLanguage":
 						await this.updateGlobalState("preferredLanguage", message.text)
@@ -1397,11 +1474,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	async postStateToWebview() {
-		const state = await this.getStateToPostToWebview()
-		this.postMessageToWebview({ type: "state", state })
+		const state = await this.getStateToPostToWebview();
+		await this.postMessageToWebview({ type: "state", state });
 	}
 
-	async getStateToPostToWebview() {
+	async getStateToPostToWebview(): Promise<ExtensionState> {
 		const {
 			apiConfiguration,
 			lastShownAnnouncementId,
@@ -1426,6 +1503,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			requestDelaySeconds,
 			currentApiConfigName,
 			listApiConfigMeta,
+			messagingConfig,
 		} = await this.getState()
 
 		const allowedCommands = vscode.workspace
@@ -1443,9 +1521,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			alwaysAllowMcp: alwaysAllowMcp ?? false,
 			uriScheme: vscode.env.uriScheme,
 			clineMessages: this.cline?.clineMessages || [],
-			taskHistory: (taskHistory || [])
-				.filter((item) => item.ts && item.task)
-				.sort((a, b) => b.ts - a.ts),
+			taskHistory: ((taskHistory ?? [])
+				.filter((item): item is HistoryItem => Boolean(item?.ts && item?.task))
+				.sort((a, b) => b.ts - a.ts)),
 			soundEnabled: soundEnabled ?? false,
 			diffEnabled: diffEnabled ?? true,
 			shouldShowAnnouncement: lastShownAnnouncementId !== this.latestAnnouncementId,
@@ -1462,6 +1540,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			requestDelaySeconds: requestDelaySeconds ?? 5,
 			currentApiConfigName: currentApiConfigName ?? "default",
 			listApiConfigMeta: listApiConfigMeta ?? [],
+			messagingConfig: messagingConfig,
 		}
 	}
 
@@ -1516,7 +1595,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	https://www.eliostruyf.com/devhack-code-extension-storage-options/
 	*/
 
-	async getState() {
+	async getState(): Promise<ExtensionState> {
 		const [
 			storedApiProvider,
 			apiModelId,
@@ -1571,6 +1650,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			requestDelaySeconds,
 			currentApiConfigName,
 			listApiConfigMeta,
+			messagingConfig,
 		] = await Promise.all([
 			this.getGlobalState("apiProvider") as Promise<ApiProvider | undefined>,
 			this.getGlobalState("apiModelId") as Promise<string | undefined>,
@@ -1625,6 +1705,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("requestDelaySeconds") as Promise<number | undefined>,
 			this.getGlobalState("currentApiConfigName") as Promise<string | undefined>,
 			this.getGlobalState("listApiConfigMeta") as Promise<ApiConfigMeta[] | undefined>,
+			this.getGlobalState("messagingConfig") as Promise<MessagingConfig | undefined>,
 		])
 
 		let apiProvider: ApiProvider
@@ -1642,6 +1723,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		}
 
 		return {
+			version: this.context.extension?.packageJSON?.version ?? "",
+			clineMessages: [],
+			shouldShowAnnouncement: lastShownAnnouncementId !== this.latestAnnouncementId,
 			apiConfiguration: {
 				apiProvider,
 				apiModelId,
@@ -1681,7 +1765,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			alwaysAllowExecute: alwaysAllowExecute ?? false,
 			alwaysAllowBrowser: alwaysAllowBrowser ?? false,
 			alwaysAllowMcp: alwaysAllowMcp ?? false,
-			taskHistory,
+			taskHistory: taskHistory ?? [],
 			allowedCommands,
 			soundEnabled: soundEnabled ?? false,
 			diffEnabled: diffEnabled ?? true,
@@ -1723,29 +1807,45 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			requestDelaySeconds: requestDelaySeconds ?? 5,
 			currentApiConfigName: currentApiConfigName ?? "default",
 			listApiConfigMeta: listApiConfigMeta ?? [],
+			messagingConfig: {
+				telegramBotToken: messagingConfig?.telegramBotToken,
+				telegramChatId: messagingConfig?.telegramChatId,
+				notificationsEnabled: messagingConfig?.notificationsEnabled ?? false,
+				// Default values for notification toggles
+				notifyOnTaskCompletion: messagingConfig?.notifyOnTaskCompletion ?? true,
+				notifyOnErrorStates: messagingConfig?.notifyOnErrorStates ?? true,
+				notifyOnRequestFailed: messagingConfig?.notifyOnRequestFailed ?? false,
+				notifyOnShellWarnings: messagingConfig?.notifyOnShellWarnings ?? false,
+				notifyOnFollowupQuestions: messagingConfig?.notifyOnFollowupQuestions ?? false,
+				notifyOnUserFeedback: messagingConfig?.notifyOnUserFeedback ?? false,
+				notifyOnDiffFeedback: messagingConfig?.notifyOnDiffFeedback ?? false
+			}
 		}
 	}
 
 	async updateTaskHistory(item: HistoryItem): Promise<HistoryItem[]> {
 		const history = ((await this.getGlobalState("taskHistory")) as HistoryItem[]) || []
 		const existingItemIndex = history.findIndex((h) => h.id === item.id)
+		const isNewTask = existingItemIndex === -1;
+		
 		if (existingItemIndex !== -1) {
 			history[existingItemIndex] = item
 		} else {
 			history.push(item)
 		}
 		await this.updateGlobalState("taskHistory", history)
+		
 		return history
 	}
 
 	// global
 
 	async updateGlobalState(key: GlobalStateKey, value: any) {
-		await this.context.globalState.update(key, value)
+		await this.context.globalState.update(key, value);
 	}
 
 	async getGlobalState(key: GlobalStateKey) {
-		return await this.context.globalState.get(key)
+		return await this.context.globalState.get(key);
 	}
 
 	// workspace
@@ -1780,6 +1880,53 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	private async getSecret(key: SecretKey) {
 		return await this.context.secrets.get(key)
+	}
+
+	// Notifications
+	async sendNotification(message: string, type: 'task_completion' | 'error_state' | 'request_failed' | 'shell_warning' | 'followup_question' | 'user_feedback' | 'diff_feedback') {
+		try {
+			const state = await this.getState();
+			const config = state.messagingConfig;
+			
+			if (config?.notificationsEnabled &&
+				this.messagingService &&
+				config.telegramBotToken &&
+				config.telegramChatId) {
+				await this.messagingService.notifyAll(message, type);
+			}
+		} catch (error) {
+			console.error(`[ERROR] Failed to send ${type} notification:`, error);
+		}
+	}
+
+	async sendTaskCompletionNotification(task: string, taskId?: string, result?: string) {
+		try {
+			const state = await this.getState();
+			const config = state.messagingConfig;
+			
+			console.log("[DEBUG] Sending task completion notification:", {
+				hasConfig: !!config,
+				notificationsEnabled: config?.notificationsEnabled,
+				hasService: !!this.messagingService,
+				hasToken: !!config?.telegramBotToken,
+				hasChatId: !!config?.telegramChatId
+			});
+			
+			// Only send if notifications are enabled and we have both a messaging service and valid config
+			if (config?.notificationsEnabled &&
+				this.messagingService &&
+				config.telegramBotToken &&
+				config.telegramChatId) {
+				const message = `Task: ${task}\n\nResult:\n${result}`;
+				await this.messagingService.notifyAll(message, 'task_completion');
+				console.log("[DEBUG] Task completion notification sent successfully");
+			} else {
+				console.log("[DEBUG] Skipping notification - missing required config");
+			}
+		} catch (error) {
+			console.error("[ERROR] Failed to send task completion notification:", error);
+			// Don't throw the error - we don't want to interrupt the task completion flow
+		}
 	}
 
 	// dev

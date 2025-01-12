@@ -722,6 +722,10 @@ export class Cline {
 		})
 
 		process.once("no_shell_integration", async () => {
+			await this.providerRef.deref()?.sendNotification(
+				"Shell integration warning: Shell integration is not available. Some features may be limited.",
+				'shell_warning'
+			)
 			await this.say("shell_integration_warning")
 		})
 
@@ -832,8 +836,8 @@ export class Cline {
 			yield firstChunk.value
 		} catch (error) {
 			// note that this api_req_failed ask is unique in that we only present this option if the api hasn't streamed any content yet (ie it fails on the first chunk due), as it would allow them to hit a retry button. However if the api failed mid-stream, it could be in any arbitrary state where some tools may have executed, so that error is handled differently and requires cancelling the task entirely.
+			const errorMsg = error.message ?? "Unknown error"
 			if (alwaysApproveResubmit) {
-				const errorMsg = error.message ?? "Unknown error"
 				const requestDelay = requestDelaySeconds || 5
 				// Automatically retry with delay
 				// Show countdown timer in error color
@@ -846,9 +850,14 @@ export class Cline {
 				yield* this.attemptApiRequest(previousApiReqIndex)
 				return
 			} else {
+				const errorMsg = error.message ?? JSON.stringify(serializeError(error), null, 2);
+				await this.providerRef.deref()?.sendNotification(
+					`API request failed: ${errorMsg}`,
+					'request_failed'
+				);
 				const { response } = await this.ask(
 					"api_req_failed",
-					error.message ?? JSON.stringify(serializeError(error), null, 2),
+					errorMsg
 				)
 				if (response !== "yesButtonClicked") {
 					// this will never happen since if noButtonClicked, we will clear current task, aborting this instance
@@ -1016,6 +1025,10 @@ export class Cline {
 					const { response, text, images } = await this.ask(type, partialMessage, false)
 					if (response !== "yesButtonClicked") {
 						if (response === "messageResponse") {
+							await this.providerRef.deref()?.sendNotification(
+								`User provided feedback: ${text}`,
+								'user_feedback'
+							)
 							await this.say("user_feedback", text, images)
 							pushToolResult(
 								formatResponse.toolResult(formatResponse.toolDeniedWithFeedback(text), images),
@@ -1049,10 +1062,9 @@ export class Cline {
 
 				const handleError = async (action: string, error: Error) => {
 					const errorString = `Error ${action}: ${JSON.stringify(serializeError(error))}`
-					await this.say(
-						"error",
-						`Error ${action}:\n${error.message ?? JSON.stringify(serializeError(error), null, 2)}`,
-					)
+					const errorMessage = `Error ${action}:\n${error.message ?? JSON.stringify(serializeError(error), null, 2)}`;
+					await this.providerRef.deref()?.sendNotification(errorMessage, 'error_state');
+					await this.say("error", errorMessage);
 					// this.toolResults.push({
 					// 	type: "tool_result",
 					// 	tool_use_id: toolUseId,
@@ -1226,6 +1238,10 @@ export class Cline {
 									await this.diffViewProvider.saveChanges()
 								this.didEditFile = true // used to determine if we should wait for busy terminal to update before sending api request
 								if (userEdits) {
+									await this.providerRef.deref()?.sendNotification(
+										`User provided diff feedback for ${relPath}:\n${userEdits}`,
+										'diff_feedback'
+									)
 									await this.say(
 										"user_feedback_diff",
 										JSON.stringify({
@@ -1898,6 +1914,10 @@ export class Cline {
 									break
 								}
 								this.consecutiveMistakeCount = 0
+								await this.providerRef.deref()?.sendNotification(
+									`Follow-up Question: ${question}`,
+									'followup_question'
+								)
 								const { text, images } = await this.ask("followup", question, false)
 								await this.say("user_feedback", text ?? "", images)
 								pushToolResult(formatResponse.toolResult(`<answer>\n${text}\n</answer>`, images))
@@ -2006,9 +2026,13 @@ export class Cline {
 								}
 
 								// we already sent completion_result says, an empty string asks relinquishes control over button and field
+								// Send notification before asking for user response
+								const taskMessage = this.clineMessages[0]; // first message is always the task
+								await this.providerRef.deref()?.sendTaskCompletionNotification(taskMessage.text ?? "", this.taskId, result);
+
 								const { response, text, images } = await this.ask("completion_result", "", false)
 								if (response === "yesButtonClicked") {
-									pushToolResult("") // signals to recursive loop to stop (for now this never happens since yesButtonClicked will trigger a new task)
+									pushToolResult("") // signals to recursive loop to stop
 									break
 								}
 								await this.say("user_feedback", text ?? "", images)

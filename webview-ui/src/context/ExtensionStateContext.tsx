@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react"
 import { useEvent } from "react-use"
-import { ApiConfigMeta, ExtensionMessage, ExtensionState } from "../../../src/shared/ExtensionMessage"
+import { ApiConfigMeta, ExtensionMessage, ExtensionState, MessagingConfig } from "../../../src/shared/ExtensionMessage"
 import {
 	ApiConfiguration,
 	ModelInfo,
@@ -56,6 +56,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setCurrentApiConfigName: (value: string) => void
 	setListApiConfigMeta: (value: ApiConfigMeta[]) => void
 	onUpdateApiConfig: (apiConfig: ApiConfiguration) => void
+	messagingConfig?: MessagingConfig
+	setMessagingConfig: (value: MessagingConfig) => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -81,6 +83,19 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		requestDelaySeconds: 5,
 		currentApiConfigName: 'default',
 		listApiConfigMeta: [],
+		messagingConfig: {
+			telegramBotToken: undefined,
+			telegramChatId: undefined,
+			notificationsEnabled: false,
+			// Default values for notification toggles
+			notifyOnTaskCompletion: true,
+			notifyOnErrorStates: true,
+			notifyOnRequestFailed: false,
+			notifyOnShellWarnings: false,
+			notifyOnFollowupQuestions: false,
+			notifyOnUserFeedback: false,
+			notifyOnDiffFeedback: false
+		}
 	})
 	const [didHydrateState, setDidHydrateState] = useState(false)
 	const [showWelcome, setShowWelcome] = useState(false)
@@ -220,7 +235,12 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setRequestDelaySeconds: (value) => setState((prevState) => ({ ...prevState, requestDelaySeconds: value })),
 		setCurrentApiConfigName: (value) => setState((prevState) => ({ ...prevState, currentApiConfigName: value })),
 		setListApiConfigMeta,
-		onUpdateApiConfig
+		onUpdateApiConfig,
+		setMessagingConfig: (value) => {
+			setState((prevState) => ({ ...prevState, messagingConfig: value }));
+			// Ensure the extension gets the update
+			vscode.postMessage({ type: "messagingConfig", messagingConfig: value });
+		}
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

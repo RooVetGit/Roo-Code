@@ -1,0 +1,242 @@
+import { VSCodeButton, VSCodeCheckbox, VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
+import { useExtensionState } from "../../context/ExtensionStateContext";
+import { vscode } from "../../utils/vscode";
+
+type NotificationsViewProps = {
+    onDone: () => void
+}
+
+const NotificationsView = ({ onDone }: NotificationsViewProps) => {
+    const handleSubmit = () => {
+        // State update is now handled by setMessagingConfig in the context
+        onDone();
+    };
+
+    const {
+        messagingConfig: rawMessagingConfig,
+        setMessagingConfig,
+        soundEnabled,
+        setSoundEnabled,
+        soundVolume,
+        setSoundVolume
+    } = useExtensionState();
+
+    // Ensure we always have a valid config object
+    const messagingConfig = rawMessagingConfig ?? {
+        telegramBotToken: undefined,
+        telegramChatId: undefined,
+        notificationsEnabled: false,
+        notifyOnTaskCompletion: true,
+        notifyOnErrorStates: true,
+        notifyOnRequestFailed: false,
+        notifyOnShellWarnings: false,
+        notifyOnFollowupQuestions: false,
+        notifyOnUserFeedback: false,
+        notifyOnDiffFeedback: false
+    };
+
+    return (
+        <div
+            style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                padding: "10px 0px 0px 20px",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+            }}>
+            <div style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "17px",
+                paddingRight: 17,
+            }}>
+                <h3 style={{ color: "var(--vscode-foreground)", margin: 0 }}>Notification Settings</h3>
+                <VSCodeButton onClick={handleSubmit}>Done</VSCodeButton>
+            </div>
+            <div style={{ marginBottom: 15 }}>
+                
+                <div style={{ marginBottom: 15 }}>
+                    <VSCodeCheckbox
+                        checked={messagingConfig?.notificationsEnabled ?? false}
+                        onChange={(e: any) => setMessagingConfig({
+                            ...messagingConfig,
+                            notificationsEnabled: e.target.checked
+                        })}>
+                        <span style={{ fontWeight: "500" }}>Enable external notifications</span>
+                    </VSCodeCheckbox>
+                    <p style={{
+                        fontSize: "12px",
+                        marginTop: "5px",
+                        color: "var(--vscode-descriptionForeground)",
+                    }}>
+                        When enabled, Cline will send notifications to Telegram when tasks are completed.
+                    </p>
+                </div>
+
+                {messagingConfig?.notificationsEnabled && (
+                    <>
+                        <div style={{ marginLeft: 20, marginBottom: 15 }}>
+                            <h4 style={{ margin: "0 0 10px 0" }}>Telegram Settings</h4>
+                            
+                            <div style={{ marginBottom: 10 }}>
+                                <VSCodeTextField
+                                    value={messagingConfig?.telegramBotToken ?? ""}
+                                    placeholder="Bot Token"
+                                    style={{ width: "100%", marginBottom: 5 }}
+                                    onInput={(e: any) => setMessagingConfig({
+                                        ...messagingConfig,
+                                        telegramBotToken: e.target.value
+                                    })}
+                                />
+                                <VSCodeTextField
+                                    value={messagingConfig?.telegramChatId ?? ""}
+                                    placeholder="Chat ID"
+                                    style={{ width: "100%" }}
+                                    onInput={(e: any) => setMessagingConfig({
+                                        ...messagingConfig,
+                                        telegramChatId: e.target.value
+                                    })}
+                                />
+                                <p style={{
+                                    fontSize: "12px",
+                                    marginTop: "5px",
+                                    color: "var(--vscode-descriptionForeground)",
+                                }}>
+                                    Visit the README for instructions on how to set up Telegram notifications.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div style={{
+                            marginLeft: 20,
+                            marginBottom: 15,
+                            border: "1px solid var(--vscode-input-border)",
+                            borderRadius: "4px",
+                            padding: "10px"
+                        }}>
+                            <h4 style={{ margin: "0 0 10px 0" }}>Notification Types</h4>
+                            
+                            <div style={{ marginBottom: 15 }}>
+                                <h5 style={{ margin: "0 0 5px 0", color: "var(--vscode-descriptionForeground)" }}>Task Status</h5>
+                                <VSCodeCheckbox
+                                    checked={messagingConfig?.notifyOnTaskCompletion ?? true}
+                                    onChange={(e: any) => setMessagingConfig({
+                                        ...messagingConfig,
+                                        notifyOnTaskCompletion: e.target.checked
+                                    })}>
+                                    Task completion
+                                </VSCodeCheckbox>
+                                <VSCodeCheckbox
+                                    checked={messagingConfig?.notifyOnErrorStates ?? true}
+                                    onChange={(e: any) => setMessagingConfig({
+                                        ...messagingConfig,
+                                        notifyOnErrorStates: e.target.checked
+                                    })}>
+                                    Error states (mistake limit, API failures)
+                                </VSCodeCheckbox>
+                            </div>
+
+                            <div style={{ marginBottom: 15 }}>
+                                <h5 style={{ margin: "0 0 5px 0", color: "var(--vscode-descriptionForeground)" }}>System Events</h5>
+                                <VSCodeCheckbox
+                                    checked={messagingConfig?.notifyOnRequestFailed ?? false}
+                                    onChange={(e: any) => setMessagingConfig({
+                                        ...messagingConfig,
+                                        notifyOnRequestFailed: e.target.checked
+                                    })}>
+                                    Request failed
+                                </VSCodeCheckbox>
+                                <VSCodeCheckbox
+                                    checked={messagingConfig?.notifyOnShellWarnings ?? false}
+                                    onChange={(e: any) => setMessagingConfig({
+                                        ...messagingConfig,
+                                        notifyOnShellWarnings: e.target.checked
+                                    })}>
+                                    Shell integration warnings
+                                </VSCodeCheckbox>
+                            </div>
+
+                            <div>
+                                <h5 style={{ margin: "0 0 5px 0", color: "var(--vscode-descriptionForeground)" }}>User Interaction</h5>
+                                <VSCodeCheckbox
+                                    checked={messagingConfig?.notifyOnFollowupQuestions ?? false}
+                                    onChange={(e: any) => setMessagingConfig({
+                                        ...messagingConfig,
+                                        notifyOnFollowupQuestions: e.target.checked
+                                    })}>
+                                    Follow-up questions
+                                </VSCodeCheckbox>
+                                <VSCodeCheckbox
+                                    checked={messagingConfig?.notifyOnUserFeedback ?? false}
+                                    onChange={(e: any) => setMessagingConfig({
+                                        ...messagingConfig,
+                                        notifyOnUserFeedback: e.target.checked
+                                    })}>
+                                    User feedback
+                                </VSCodeCheckbox>
+                                <VSCodeCheckbox
+                                    checked={messagingConfig?.notifyOnDiffFeedback ?? false}
+                                    onChange={(e: any) => setMessagingConfig({
+                                        ...messagingConfig,
+                                        notifyOnDiffFeedback: e.target.checked
+                                    })}>
+                                    User feedback on diffs
+                                </VSCodeCheckbox>
+                            </div>
+                        </div>
+                    </>
+                )}
+
+                <div style={{ marginTop: 20 }}>
+                    <VSCodeCheckbox checked={soundEnabled} onChange={(e: any) => {
+                        setSoundEnabled(e.target.checked);
+                        vscode.postMessage({ type: "soundEnabled", bool: e.target.checked });
+                    }}>
+                        <span style={{ fontWeight: "500" }}>Enable sound effects</span>
+                    </VSCodeCheckbox>
+                    <p style={{
+                        fontSize: "12px",
+                        marginTop: "5px",
+                        color: "var(--vscode-descriptionForeground)",
+                    }}>
+                        When enabled, Cline will play sound effects for notifications and events.
+                    </p>
+                </div>
+            </div>
+            {soundEnabled && (
+                <div style={{ marginLeft: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <span style={{ fontWeight: "500", minWidth: '100px' }}>Volume</span>
+                        <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.01"
+                            value={soundVolume ?? 0.5}
+                            onChange={(e) => {
+                                setSoundVolume(parseFloat(e.target.value));
+                                vscode.postMessage({ type: "soundVolume", value: parseFloat(e.target.value) });
+                            }}
+                            style={{
+                                flexGrow: 1,
+                                accentColor: 'var(--vscode-button-background)',
+                                height: '2px'
+                            }}
+                            aria-label="Volume"
+                        />
+                        <span style={{ minWidth: '35px', textAlign: 'left' }}>
+                            {((soundVolume ?? 0.5) * 100).toFixed(0)}%
+                        </span>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default NotificationsView;

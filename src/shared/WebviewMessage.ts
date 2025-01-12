@@ -1,4 +1,5 @@
 import { ApiConfiguration, ApiProvider } from "./api"
+import { MessagingConfig } from "./ExtensionMessage"
 
 export type AudioType = "notification" | "celebration" | "progress_loop"
 
@@ -61,7 +62,11 @@ export interface WebviewMessage {
 		| "alwaysApproveResubmit"
 		| "requestDelaySeconds"
 		| "setApiConfigPassword"
+		| "messagingConfig"
+		| "sendTaskCompletionNotification"
 	text?: string
+	taskId?: string
+	task?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
 	apiConfiguration?: ApiConfiguration
@@ -76,6 +81,7 @@ export interface WebviewMessage {
 	dataUrls?: string[]
 	values?: Record<string, any>
 	query?: string
+	messagingConfig?: MessagingConfig
 }
 
 export type ClineAskResponse = "yesButtonClicked" | "noButtonClicked" | "messageResponse"

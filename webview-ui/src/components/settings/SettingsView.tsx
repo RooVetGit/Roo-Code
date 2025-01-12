@@ -30,9 +30,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		alwaysAllowMcp,
 		setAlwaysAllowMcp,
 		soundEnabled,
-		setSoundEnabled,
 		soundVolume,
-		setSoundVolume,
 		diffEnabled,
 		setDiffEnabled,
 		browserViewportSize,
@@ -58,6 +56,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		setRequestDelaySeconds,
 		currentApiConfigName,
 		listApiConfigMeta,
+		messagingConfig,
 	} = useExtensionState()
 	const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>(undefined)
 	const [modelIdErrorMessage, setModelIdErrorMessage] = useState<string | undefined>(undefined)
@@ -94,6 +93,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 			vscode.postMessage({ type: "alwaysApproveResubmit", bool: alwaysApproveResubmit })
 			vscode.postMessage({ type: "requestDelaySeconds", value: requestDelaySeconds })
 			vscode.postMessage({ type: "currentApiConfigName", text: currentApiConfigName })
+			vscode.postMessage({ type: "messagingConfig", messagingConfig })
 			vscode.postMessage({
 				type: "upsertApiConfiguration",
 				text: currentApiConfigName,
@@ -602,46 +602,6 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 						</div>
 					</div>
 
-					<div style={{ marginBottom: 5 }}>
-						<div style={{ marginBottom: 10 }}>
-							<h3 style={{ color: "var(--vscode-foreground)", margin: 0, marginBottom: 15 }}>Notification Settings</h3>
-							<VSCodeCheckbox checked={soundEnabled} onChange={(e: any) => setSoundEnabled(e.target.checked)}>
-								<span style={{ fontWeight: "500" }}>Enable sound effects</span>
-							</VSCodeCheckbox>
-							<p
-								style={{
-									fontSize: "12px",
-									marginTop: "5px",
-									color: "var(--vscode-descriptionForeground)",
-								}}>
-								When enabled, Cline will play sound effects for notifications and events.
-							</p>
-						</div>
-						{soundEnabled && (
-							<div style={{ marginLeft: 0 }}>
-								<div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-									<span style={{ fontWeight: "500", minWidth: '100px' }}>Volume</span>
-									<input
-										type="range"
-										min="0"
-										max="1"
-										step="0.01"
-										value={soundVolume ?? 0.5}
-										onChange={(e) => setSoundVolume(parseFloat(e.target.value))}
-										style={{
-											flexGrow: 1,
-											accentColor: 'var(--vscode-button-background)',
-											height: '2px'
-										}}
-										aria-label="Volume"
-									/>
-									<span style={{ minWidth: '35px', textAlign: 'left' }}>
-										{((soundVolume ?? 0.5) * 100).toFixed(0)}%
-									</span>
-								</div>
-							</div>
-						)}
-					</div>
 				</div>
 
 				{IS_DEV && (
