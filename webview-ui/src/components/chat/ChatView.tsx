@@ -584,15 +584,6 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				}
 			} else if (lastMessage.type === "say" && lastMessage.say === "completion_result") {
 				playSound("celebration")
-				// Send notification when task is actually completed
-				if (lastMessage.text && task?.text) {
-					vscode.postMessage({
-						type: "sendTaskCompletionNotification",
-						task: task.text,
-						taskId: task.ts.toString(),
-						text: lastMessage.text
-					})
-				}
 			}
 		}
 		// Update previous value
