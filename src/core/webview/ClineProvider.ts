@@ -117,12 +117,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	private async initializeMessagingService() {
 		try {
 			const savedConfig = await this.getGlobalState("messagingConfig") as MessagingConfig | undefined;
-			console.log("[DEBUG] Initializing MessagingService with saved config:", savedConfig);
 			
 			// If we have a saved config with valid values, use it
 			if (savedConfig?.telegramBotToken && savedConfig?.telegramChatId) {
 				this.messagingService = new MessagingService(savedConfig);
-				console.log("[DEBUG] MessagingService initialized with saved config");
 			} else {
 				// Otherwise initialize with default disabled config
 				const defaultConfig: MessagingConfig = {
@@ -131,7 +129,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 					notificationsEnabled: false
 				};
 				this.messagingService = new MessagingService(defaultConfig);
-				console.log("[DEBUG] MessagingService initialized with default config");
 			}
 			
 			// Only send test message if this is a new configuration
@@ -743,7 +740,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						break
 					case "messagingConfig":
 						try {
-							console.log("[DEBUG] Received new messaging config:", message.messagingConfig);
 							await this.updateGlobalState("messagingConfig", message.messagingConfig);
 							
 							// Reinitialize messaging service with new config
@@ -1904,13 +1900,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			const state = await this.getState();
 			const config = state.messagingConfig;
 			
-			console.log("[DEBUG] Sending task completion notification:", {
-				hasConfig: !!config,
-				notificationsEnabled: config?.notificationsEnabled,
-				hasService: !!this.messagingService,
-				hasToken: !!config?.telegramBotToken,
-				hasChatId: !!config?.telegramChatId
-			});
 			
 			// Only send if notifications are enabled and we have both a messaging service and valid config
 			if (config?.notificationsEnabled &&
@@ -1919,9 +1908,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				config.telegramChatId) {
 				const message = `Task: ${task}\n\nResult:\n${result}`;
 				await this.messagingService.notifyAll(message, 'task_completion');
-				console.log("[DEBUG] Task completion notification sent successfully");
-			} else {
-				console.log("[DEBUG] Skipping notification - missing required config");
 			}
 		} catch (error) {
 			console.error("[ERROR] Failed to send task completion notification:", error);

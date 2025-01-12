@@ -6,7 +6,6 @@ export class MessagingService {
     private _config: MessagingConfig;
 
     constructor(config: MessagingConfig) {
-        console.log("[DEBUG] Initializing MessagingService with config:", config);
         this._config = config;
     }
 
@@ -16,10 +15,6 @@ export class MessagingService {
 
     async sendTelegramMessage(message: string): Promise<boolean> {
         if (!this._config.telegramBotToken || !this._config.telegramChatId) {
-            console.log("[DEBUG] Skipping Telegram message - missing config:", {
-                hasToken: !!this._config.telegramBotToken,
-                hasChatId: !!this._config.telegramChatId
-            });
             return false;
         }
 
@@ -46,7 +41,6 @@ export class MessagingService {
                 parse_mode: 'HTML'
             });
 
-            console.log("[DEBUG] Telegram message sent successfully:", response.status);
             return true;
         } catch (error) {
             if (axios.isAxiosError(error)) {
@@ -84,7 +78,6 @@ export class MessagingService {
 
     async notifyAll(message: string, type: 'task_completion' | 'error_state' | 'request_failed' | 'shell_warning' | 'followup_question' | 'user_feedback' | 'diff_feedback'): Promise<void> {
         if (!this._config.notificationsEnabled) {
-            console.log("[DEBUG] Notifications are disabled, skipping notification");
             return;
         }
 
@@ -109,7 +102,6 @@ export class MessagingService {
         })();
 
         if (!shouldNotify) {
-            console.log(`[DEBUG] Notifications for ${type} are disabled, skipping notification`);
             return;
         }
 
@@ -119,7 +111,6 @@ export class MessagingService {
             // Send via Telegram
             await this.sendTelegramMessage(formattedMessage);
             
-            console.log("[DEBUG] Notification sent successfully");
         } catch (error) {
             console.error('[ERROR] Failed to send notification:', error);
             // Don't throw the error - we don't want to interrupt the task completion flow
