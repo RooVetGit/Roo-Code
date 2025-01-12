@@ -1,6 +1,6 @@
 import axios from 'axios';
 import * as vscode from 'vscode';
-import { MessagingConfig } from '../../shared/ExtensionMessage';
+import { MessagingConfig, NotificationType } from '../../shared/ExtensionMessage';
 
 export class MessagingService {
     private _config: MessagingConfig;
@@ -15,11 +15,10 @@ export class MessagingService {
     }
 
     async sendTelegramMessage(message: string): Promise<boolean> {
-        if (!this._config.telegramBotToken || !this._config.telegramChatId || !this._config.notificationsEnabled) {
+        if (!this._config.telegramBotToken || !this._config.telegramChatId) {
             console.log("[DEBUG] Skipping Telegram message - missing config:", {
                 hasToken: !!this._config.telegramBotToken,
-                hasChatId: !!this._config.telegramChatId,
-                notificationsEnabled: !!this._config.notificationsEnabled
+                hasChatId: !!this._config.telegramChatId
             });
             return false;
         }
@@ -66,7 +65,39 @@ export class MessagingService {
                 }
             }
             
-            // Re-throw the error to be handled by the caller
+            throw error;
+        }
+    }
+
+    async sendDiscordMessage(message: string): Promise<boolean> {
+        if (!this._config.discordWebhookUrl) {
+            console.log("[DEBUG] Skipping Discord message - missing webhook URL");
+            return false;
+        }
+
+        try {
+            const response = await axios.post(this._config.discordWebhookUrl, {
+                content: message,
+                // You can customize the webhook name and avatar if needed
+                // username: "Cline Bot",
+                // avatar_url: "https://your-avatar-url.png"
+            });
+
+            console.log("[DEBUG] Discord message sent successfully:", response.status);
+            return true;
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                console.error('[ERROR] Failed to send Discord message:', {
+                    status: error.response?.status,
+                    data: error.response?.data,
+                    message: error.message
+                });
+
+                if (error.response?.status === 404) {
+                    throw new Error('Invalid webhook URL - please check your configuration');
+                }
+            }
+            
             throw error;
         }
     }
@@ -77,7 +108,7 @@ export class MessagingService {
         const task = taskPart.replace('Task: ', '');
         const timestamp = new Date().toLocaleString();
         
-        let formattedMessage = `🚀 *Task Completed!*\n\n📝 Task: ${task}\n\n⏰ Time: ${timestamp}`;
+        let formattedMessage = `🚀 **Task Completed!**\n\n📝 Task: ${task}\n\n⏰ Time: ${timestamp}`;
         if (resultPart) {
             formattedMessage += `\n\n✅ Result:\n${resultPart}`;
         }
@@ -87,11 +118,6 @@ export class MessagingService {
     async notifyAll(message: string, type: 'task_completion' | 'error_state' | 'request_failed' | 'shell_warning' | 'followup_question' | 'user_feedback' | 'diff_feedback'): Promise<void> {
         if (!this._config.notificationsEnabled) {
             console.log("[DEBUG] Notifications are disabled, skipping notification");
-            return;
-        }
-
-        if (!this._config.telegramBotToken || !this._config.telegramChatId) {
-            console.log("[DEBUG] Missing Telegram configuration, skipping notification");
             return;
         }
 
@@ -122,7 +148,20 @@ export class MessagingService {
 
         try {
             const formattedMessage = this.formatMessage(message);
-            await this.sendTelegramMessage(formattedMessage);
+            
+            // Send to the configured service
+            switch (this._config.notificationType) {
+                case 'telegram':
+                    await this.sendTelegramMessage(formattedMessage);
+                    break;
+                case 'discord':
+                    await this.sendDiscordMessage(formattedMessage);
+                    break;
+                default:
+                    console.log("[DEBUG] No notification service configured");
+                    return;
+            }
+            
             console.log("[DEBUG] Notification sent successfully");
         } catch (error) {
             console.error('[ERROR] Failed to send notification:', error);

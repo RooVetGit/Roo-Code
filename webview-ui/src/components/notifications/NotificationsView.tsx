@@ -75,36 +75,81 @@ const NotificationsView = ({ onDone }: NotificationsViewProps) => {
                 {messagingConfig?.notificationsEnabled && (
                     <>
                         <div style={{ marginLeft: 20, marginBottom: 15 }}>
-                            <h4 style={{ margin: "0 0 10px 0" }}>Messaging Services</h4>
+                            <h4 style={{ margin: "0 0 10px 0" }}>Messaging Service</h4>
                             
-                            <div style={{ marginBottom: 10 }}>
-                                <label style={{ fontWeight: "500", display: "block", marginBottom: 5 }}>Telegram</label>
-                                <VSCodeTextField
-                                    value={messagingConfig?.telegramBotToken ?? ""}
-                                    placeholder="Bot Token"
-                                    style={{ width: "100%", marginBottom: 5 }}
-                                    onInput={(e: any) => setMessagingConfig({
+                            <div style={{ marginBottom: 15 }}>
+                                <label style={{ fontWeight: "500", display: "block", marginBottom: 5 }}>Service Type</label>
+                                <select
+                                    value={messagingConfig?.notificationType ?? 'telegram'}
+                                    onChange={(e) => setMessagingConfig({
                                         ...messagingConfig,
-                                        telegramBotToken: e.target.value
+                                        notificationType: e.target.value as 'telegram' | 'discord'
                                     })}
-                                />
-                                <VSCodeTextField
-                                    value={messagingConfig?.telegramChatId ?? ""}
-                                    placeholder="Chat ID"
-                                    style={{ width: "100%" }}
-                                    onInput={(e: any) => setMessagingConfig({
-                                        ...messagingConfig,
-                                        telegramChatId: e.target.value
-                                    })}
-                                />
-                                <p style={{
-                                    fontSize: "12px",
-                                    marginTop: "5px",
-                                    color: "var(--vscode-descriptionForeground)",
-                                }}>
-                                    Visit the README for instructions on how to set up Telegram notifications.
-                                </p>
+                                    style={{
+                                        width: "100%",
+                                        padding: "4px 8px",
+                                        backgroundColor: "var(--vscode-input-background)",
+                                        color: "var(--vscode-input-foreground)",
+                                        border: "1px solid var(--vscode-input-border)",
+                                        borderRadius: "2px"
+                                    }}>
+                                    <option value="telegram">Telegram</option>
+                                    <option value="discord">Discord</option>
+                                </select>
                             </div>
+
+                            {messagingConfig?.notificationType === 'telegram' && (
+                                <div style={{ marginBottom: 10 }}>
+                                    <label style={{ fontWeight: "500", display: "block", marginBottom: 5 }}>Telegram Settings</label>
+                                    <VSCodeTextField
+                                        value={messagingConfig?.telegramBotToken ?? ""}
+                                        placeholder="Bot Token"
+                                        style={{ width: "100%", marginBottom: 5 }}
+                                        onInput={(e: any) => setMessagingConfig({
+                                            ...messagingConfig,
+                                            telegramBotToken: e.target.value
+                                        })}
+                                    />
+                                    <VSCodeTextField
+                                        value={messagingConfig?.telegramChatId ?? ""}
+                                        placeholder="Chat ID"
+                                        style={{ width: "100%" }}
+                                        onInput={(e: any) => setMessagingConfig({
+                                            ...messagingConfig,
+                                            telegramChatId: e.target.value
+                                        })}
+                                    />
+                                    <p style={{
+                                        fontSize: "12px",
+                                        marginTop: "5px",
+                                        color: "var(--vscode-descriptionForeground)",
+                                    }}>
+                                        Visit the README for instructions on how to set up Telegram notifications.
+                                    </p>
+                                </div>
+                            )}
+
+                            {messagingConfig?.notificationType === 'discord' && (
+                                <div style={{ marginBottom: 10 }}>
+                                    <label style={{ fontWeight: "500", display: "block", marginBottom: 5 }}>Discord Settings</label>
+                                    <VSCodeTextField
+                                        value={messagingConfig?.discordWebhookUrl ?? ""}
+                                        placeholder="Webhook URL"
+                                        style={{ width: "100%" }}
+                                        onInput={(e: any) => setMessagingConfig({
+                                            ...messagingConfig,
+                                            discordWebhookUrl: e.target.value
+                                        })}
+                                    />
+                                    <p style={{
+                                        fontSize: "12px",
+                                        marginTop: "5px",
+                                        color: "var(--vscode-descriptionForeground)",
+                                    }}>
+                                        Visit the README for instructions on how to set up Discord notifications.
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
                         <div style={{

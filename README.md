@@ -76,7 +76,21 @@ To contribute to the project, start by exploring [open issues](https://github.co
 
 Roo-Cline can send notifications through Telegram when tasks are completed. Here's how to set it up:
 
-### Setting Up Telegram Notifications (Beta)
+Roo-Cline supports sending notifications through either Telegram or Discord. Here's how to set up each service:
+
+### Setting Up Notifications
+
+1. Enable notifications in Roo-Cline:
+   1. Open VSCode
+   2. Click the Roo Cline icon in the activity bar
+   3. Open Settings (gear icon)
+   4. Scroll to "Notification Settings"
+   5. Enable "External notifications"
+   6. Select your preferred service (Telegram or Discord)
+   7. Configure the service-specific settings as described below
+   8. Click "Done" to save settings
+
+### Telegram Setup
 1. Create a Telegram bot:
    - Open Telegram and search for [@BotFather](https://t.me/botfather)
    - Send `/newbot` and follow the instructions
@@ -106,29 +120,33 @@ Roo-Cline can send notifications through Telegram when tasks are completed. Here
      ```
    - Copy the chat ID number (it may be negative for group chats)
 
-3. Enable notifications in Roo-Cline:
-1. Open VSCode
-2. Click the Roo Cline icon in the activity bar
-3. Open Settings (gear icon)
-4. Scroll to "Notification Settings"
-5. Enable "External notifications"
-6. Enter your Telegram Bot Token and Chat ID
-7. Click "Done" to save settings
+3. Enter your Telegram Bot Token and Chat ID in Roo-Cline's notification settings
 
-You will now receive notifications through Telegram when:
-- A task is completed
-- A task is added to history
+### Discord Setup
+1. Create a Discord webhook:
+   - Open your Discord server settings
+   - Go to "Integrations" → "Webhooks"
+   - Click "New Webhook"
+   - Give it a name (e.g., "Roo-Cline Notifications")
+   - Choose the channel where you want to receive notifications
+   - Click "Copy Webhook URL"
+
+2. Enter the webhook URL in Roo-Cline's notification settings
+
+### Notification Types
+Once configured, you'll receive notifications for:
+- Task completion
+- Error states
+- Request failures (optional)
+- Shell warnings (optional)
+- Follow-up questions (optional)
+- User feedback (optional)
+- Diff feedback (optional)
 
 Each notification includes:
 - Task description
 - Timestamp
-7. Click "Done" to save
-
-Once configured, you'll receive notifications when:
-- A task is completed via attempt_completion
-- A task is added to history
-
-Each notification includes the task ID and description for easy tracking.
+- Result (for task completions)
 
 </details>
 
