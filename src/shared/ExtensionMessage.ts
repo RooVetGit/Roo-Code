@@ -52,16 +52,10 @@ export interface ApiConfigMeta {
 	apiProvider?: ApiProvider
 }
 
-export type NotificationType = 'telegram' | 'discord';
-
 export interface MessagingConfig {
-    notificationType?: NotificationType;
     notificationsEnabled?: boolean;
-    // Telegram config
     telegramBotToken?: string;
     telegramChatId?: string;
-    // Discord config
-    discordWebhookUrl?: string;
     // Notification type toggles
     notifyOnTaskCompletion?: boolean;
     notifyOnErrorStates?: boolean;

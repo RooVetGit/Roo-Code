@@ -1,6 +1,6 @@
 import axios from 'axios';
 import * as vscode from 'vscode';
-import { MessagingConfig, NotificationType } from '../../shared/ExtensionMessage';
+import { MessagingConfig } from '../../shared/ExtensionMessage';
 
 export class MessagingService {
     private _config: MessagingConfig;
@@ -69,39 +69,6 @@ export class MessagingService {
         }
     }
 
-    async sendDiscordMessage(message: string): Promise<boolean> {
-        if (!this._config.discordWebhookUrl) {
-            console.log("[DEBUG] Skipping Discord message - missing webhook URL");
-            return false;
-        }
-
-        try {
-            const response = await axios.post(this._config.discordWebhookUrl, {
-                content: message,
-                // You can customize the webhook name and avatar if needed
-                // username: "Cline Bot",
-                // avatar_url: "https://your-avatar-url.png"
-            });
-
-            console.log("[DEBUG] Discord message sent successfully:", response.status);
-            return true;
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                console.error('[ERROR] Failed to send Discord message:', {
-                    status: error.response?.status,
-                    data: error.response?.data,
-                    message: error.message
-                });
-
-                if (error.response?.status === 404) {
-                    throw new Error('Invalid webhook URL - please check your configuration');
-                }
-            }
-            
-            throw error;
-        }
-    }
-
     private formatMessage(message: string): string {
         // Message format is: "Task: <task>\n\nResult:\n<result>"
         const [taskPart, resultPart] = message.split('\n\nResult:\n');
@@ -149,18 +116,8 @@ export class MessagingService {
         try {
             const formattedMessage = this.formatMessage(message);
             
-            // Send to the configured service
-            switch (this._config.notificationType) {
-                case 'telegram':
-                    await this.sendTelegramMessage(formattedMessage);
-                    break;
-                case 'discord':
-                    await this.sendDiscordMessage(formattedMessage);
-                    break;
-                default:
-                    console.log("[DEBUG] No notification service configured");
-                    return;
-            }
+            // Send via Telegram
+            await this.sendTelegramMessage(formattedMessage);
             
             console.log("[DEBUG] Notification sent successfully");
         } catch (error) {
