@@ -722,11 +722,11 @@ export class Cline {
 		})
 
 		process.once("no_shell_integration", async () => {
-			await this.say("shell_integration_warning")
 			await this.providerRef.deref()?.sendNotification(
 				"Shell integration warning: Shell integration is not available. Some features may be limited.",
 				'shell_warning'
 			)
+			await this.say("shell_integration_warning")
 		})
 
 		await process
@@ -1025,11 +1025,11 @@ export class Cline {
 					const { response, text, images } = await this.ask(type, partialMessage, false)
 					if (response !== "yesButtonClicked") {
 						if (response === "messageResponse") {
-							await this.say("user_feedback", text, images)
 							await this.providerRef.deref()?.sendNotification(
 								`User provided feedback: ${text}`,
 								'user_feedback'
 							)
+							await this.say("user_feedback", text, images)
 							pushToolResult(
 								formatResponse.toolResult(formatResponse.toolDeniedWithFeedback(text), images),
 							)
@@ -1238,6 +1238,10 @@ export class Cline {
 									await this.diffViewProvider.saveChanges()
 								this.didEditFile = true // used to determine if we should wait for busy terminal to update before sending api request
 								if (userEdits) {
+									await this.providerRef.deref()?.sendNotification(
+										`User provided diff feedback for ${relPath}:\n${userEdits}`,
+										'diff_feedback'
+									)
 									await this.say(
 										"user_feedback_diff",
 										JSON.stringify({
@@ -1245,10 +1249,6 @@ export class Cline {
 											path: getReadablePath(cwd, relPath),
 											diff: userEdits,
 										} satisfies ClineSayTool),
-									)
-									await this.providerRef.deref()?.sendNotification(
-										`User provided diff feedback for ${relPath}:\n${userEdits}`,
-										'diff_feedback'
 									)
 									pushToolResult(
 										`The user made the following updates to your content:\n\n${userEdits}\n\n` +
