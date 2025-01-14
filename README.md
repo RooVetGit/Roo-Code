@@ -2,15 +2,40 @@
 
 A fork of Cline, an autonomous coding agent, with some additional experimental features. It’s been mainly writing itself recently, with a light touch of human guidance here and there.
 
+## New in 3.0 - chat modes!
+
+You can now choose between different prompts for Roo Cline to better suit your workflow. Here’s what’s available:
+
+- **Code:** (existing behavior): The default mode where Cline helps you write code and execute tasks.
+
+- **Architect:** "You are Cline, a software architecture expert..." Ideal for thinking through high-level technical design and system architecture. Can’t write code or run commands.
+
+- **Ask:** "You are Cline, a knowledgeable technical assistant..." Perfect for asking questions about the codebase or digging into concepts. Also can’t write code or run commands.
+
+**Switching Modes:**
+It’s super simple! There’s a dropdown in the bottom left of the chat input to switch modes. Right next to it, you’ll find a way to switch between the API configuration profiles associated with the current mode (configured on the settings screen).
+
+**Why Add This?**
+- It keeps Cline from being overly eager to jump into solving problems when you just want to think or ask questions.
+- Each mode remembers the API configuration you last used with it. For example, you can use more thoughtful models like OpenAI o1 for Architect and Ask, while sticking with Sonnet or DeepSeek for coding tasks.
+- It builds on research suggesting better results when separating "thinking" from "coding," explained well in this very thoughtful [article](https://aider.chat/2024/09/26/architect.html) from aider.
+
+Right now, switching modes is a manual process. In the future, we’d love to give Cline the ability to suggest mode switches based on context. For now, we’d really appreciate your feedback on this feature.
+
+Give it a try and let us know what you think in the reddit: https://www.reddit.com/r/roocline 🚀
+
 ## Experimental Features
 
+- Different chat modes for coding, architecting code, and asking questions about the codebase
 - Drag and drop images into chats
 - Delete messages from chats
 - @-mention Git commits to include their context in the chat
+- Save different API configurations to quickly switch between providers and settings
 - "Enhance prompt" button (OpenRouter models only for now)
 - Sound effects for feedback
 - Option to use browsers of different sizes and adjust screenshot quality
 - Quick prompt copying from history
+- Copy markdown from chat messages
 - OpenRouter compression support
 - Includes current time in the system prompt
 - Uses a file system watcher to more reliably watch for file system changes
@@ -23,6 +48,7 @@ A fork of Cline, an autonomous coding agent, with some additional experimental f
 - Per-tool MCP auto-approval
 - Enable/disable individual MCP servers
 - Enable/disable the MCP feature overall
+- Automatically retry failed API requests with a configurable delay
 - Configurable delay after auto-writes to allow diagnostics to detect potential problems
 - Control the number of terminal output lines to pass to the model when executing commands
 - Runs alongside the original Cline
@@ -38,7 +64,7 @@ Here's an example of Roo-Cline autonomously creating a snake game with "Always a
 https://github.com/user-attachments/assets/c2bb31dc-e9b2-4d73-885d-17f1471a4987
 
 ## Contributing
-To contribute to the project, start by exploring [open issues](https://github.com/RooVetGit/Roo-Cline/issues) or checking our [feature request board](https://github.com/cline/cline/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop). We'd also love to have you join our [Discord](https://discord.gg/cline) to share ideas and connect with other contributors.
+To contribute to the project, start by exploring [open issues](https://github.com/RooVetGit/Roo-Cline/issues) or checking our [feature request board](https://github.com/cline/cline/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop). We'd also love to have you join the [Roo Cline Reddit](https://www.reddit.com/r/roocline/) and the [Cline Discord](https://discord.gg/cline) to share ideas and connect with other contributors.
 
 <details>
 <summary>Local Setup</summary>

@@ -1,9 +1,10 @@
 // type that represents json data that is sent from extension to webview, called ExtensionMessage and has 'type' enum which can be 'plusButtonClicked' or 'settingsButtonClicked' or 'hello'
 
-import { ApiConfiguration, ModelInfo } from "./api"
+import { ApiConfiguration, ApiProvider, ModelInfo } from "./api"
 import { HistoryItem } from "./HistoryItem"
 import { McpServer } from "./mcp"
 import { GitCommit } from "../utils/git"
+import { Mode } from "../core/prompts/types"
 
 // webview will hold state
 export interface ExtensionMessage {
@@ -23,6 +24,7 @@ export interface ExtensionMessage {
 		| "mcpServers"
 		| "enhancedPrompt"
 		| "commitSearchResults"
+		| "listApiConfig"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -42,6 +44,13 @@ export interface ExtensionMessage {
 	openAiModels?: string[]
 	mcpServers?: McpServer[]
 	commits?: GitCommit[]
+	listApiConfig?: ApiConfigMeta[]
+}
+
+export interface ApiConfigMeta {
+	id: string
+	name: string
+	apiProvider?: ApiProvider
 }
 
 export interface ExtensionState {
@@ -50,12 +59,16 @@ export interface ExtensionState {
 	taskHistory: HistoryItem[]
 	shouldShowAnnouncement: boolean
 	apiConfiguration?: ApiConfiguration
+	currentApiConfigName?: string
+	listApiConfigMeta?: ApiConfigMeta[]
 	customInstructions?: string
 	alwaysAllowReadOnly?: boolean
 	alwaysAllowWrite?: boolean
 	alwaysAllowExecute?: boolean
 	alwaysAllowBrowser?: boolean
 	alwaysAllowMcp?: boolean
+	alwaysApproveResubmit?: boolean
+	requestDelaySeconds: number
 	uriScheme?: string
 	allowedCommands?: string[]
 	soundEnabled?: boolean
@@ -68,6 +81,8 @@ export interface ExtensionState {
 	writeDelayMs: number
 	terminalOutputLineLimit?: number
 	mcpEnabled: boolean
+	mode: Mode
+	modeApiConfigs?: Record<Mode, string>;
 }
 
 export interface ClineMessage {
@@ -103,6 +118,7 @@ export type ClineSay =
 	| "user_feedback"
 	| "user_feedback_diff"
 	| "api_req_retried"
+	| "api_req_retry_delayed"
 	| "command_output"
 	| "tool"
 	| "shell_integration_warning"

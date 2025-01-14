@@ -1,6 +1,7 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import cloneDeep from "clone-deep"
 import { DiffStrategy, getDiffStrategy, UnifiedDiffStrategy } from "./diff/DiffStrategy"
+import { validateToolUse, isToolAllowedForMode } from "./mode-validator"
 import delay from "delay"
 import fs from "fs/promises"
 import os from "os"
@@ -44,7 +45,7 @@ import { arePathsEqual, getReadablePath } from "../utils/path"
 import { parseMentions } from "./mentions"
 import { AssistantMessageContent, parseAssistantMessage, ToolParamName, ToolUseName } from "./assistant-message"
 import { formatResponse } from "./prompts/responses"
-import { addCustomInstructions, SYSTEM_PROMPT } from "./prompts/system"
+import { addCustomInstructions, codeMode, SYSTEM_PROMPT } from "./prompts/system"
 import { truncateHalfConversation } from "./sliding-window"
 import { ClineProvider, GlobalFileNames } from "./webview/ClineProvider"
 import { detectCodeOmission } from "../integrations/editor/detect-omission"
@@ -104,7 +105,7 @@ export class Cline {
 		fuzzyMatchThreshold?: number,
 		task?: string | undefined,
 		images?: string[] | undefined,
-		historyItem?: HistoryItem | undefined,
+		historyItem?: HistoryItem | undefined
 	) {
 		this.providerRef = new WeakRef(provider)
 		this.api = buildApiHandler(apiConfiguration)
@@ -766,7 +767,7 @@ export class Cline {
 	async *attemptApiRequest(previousApiReqIndex: number): ApiStream {
 		let mcpHub: McpHub | undefined
 
-		const { mcpEnabled } = await this.providerRef.deref()?.getState() ?? {}
+		const { mcpEnabled, alwaysApproveResubmit, requestDelaySeconds } = await this.providerRef.deref()?.getState() ?? {}
 
 		if (mcpEnabled ?? true) {
 			mcpHub = this.providerRef.deref()?.mcpHub
@@ -779,8 +780,15 @@ export class Cline {
 			})
 		}
 
-		const { browserViewportSize, preferredLanguage } = await this.providerRef.deref()?.getState() ?? {}
-		const systemPrompt = await SYSTEM_PROMPT(cwd, this.api.getModel().info.supportsComputerUse ?? false, mcpHub, this.diffStrategy, browserViewportSize) + await addCustomInstructions(this.customInstructions ?? '', cwd, preferredLanguage)
+		const { browserViewportSize, preferredLanguage, mode } = await this.providerRef.deref()?.getState() ?? {}
+		const systemPrompt = await SYSTEM_PROMPT(
+			cwd,
+			this.api.getModel().info.supportsComputerUse ?? false,
+			mcpHub,
+			this.diffStrategy,
+			browserViewportSize,
+			mode
+		) + await addCustomInstructions(this.customInstructions ?? '', cwd, preferredLanguage)
 
 		// If the previous API request's total token usage is close to the context window, truncate the conversation history to free up space for the new request
 		if (previousApiReqIndex >= 0) {
@@ -799,8 +807,30 @@ export class Cline {
 			}
 		}
 
-		// Convert to Anthropic.MessageParam by spreading only the API-required properties
-		const cleanConversationHistory = this.apiConversationHistory.map(({ role, content }) => ({ role, content }))
+		// Clean conversation history by:
+		// 1. Converting to Anthropic.MessageParam by spreading only the API-required properties
+		// 2. Converting image blocks to text descriptions if model doesn't support images
+		const cleanConversationHistory = this.apiConversationHistory.map(({ role, content }) => {
+			// Handle array content (could contain image blocks)
+			if (Array.isArray(content)) {
+				if (!this.api.getModel().info.supportsImages) {
+					// Convert image blocks to text descriptions
+					content = content.map(block => {
+						if (block.type === 'image') {
+							// Convert image blocks to text descriptions
+							// Note: We can't access the actual image content/url due to API limitations,
+							// but we can indicate that an image was present in the conversation
+							return {
+								type: 'text',
+								text: '[Referenced image in conversation]'
+							};
+						}
+						return block;
+					});
+				}
+			}
+			return { role, content }
+		})
 		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory)
 		const iterator = stream[Symbol.asyncIterator]()
 
@@ -810,18 +840,33 @@ export class Cline {
 			yield firstChunk.value
 		} catch (error) {
 			// note that this api_req_failed ask is unique in that we only present this option if the api hasn't streamed any content yet (ie it fails on the first chunk due), as it would allow them to hit a retry button. However if the api failed mid-stream, it could be in any arbitrary state where some tools may have executed, so that error is handled differently and requires cancelling the task entirely.
-			const { response } = await this.ask(
-				"api_req_failed",
-				error.message ?? JSON.stringify(serializeError(error), null, 2),
-			)
-			if (response !== "yesButtonClicked") {
-				// this will never happen since if noButtonClicked, we will clear current task, aborting this instance
-				throw new Error("API request failed")
+			if (alwaysApproveResubmit) {
+				const errorMsg = error.message ?? "Unknown error"
+				const requestDelay = requestDelaySeconds || 5
+				// Automatically retry with delay
+				// Show countdown timer in error color
+				for (let i = requestDelay; i > 0; i--) {
+					await this.say("api_req_retry_delayed", `${errorMsg}\n\nRetrying in ${i} seconds...`, undefined, true)
+					await delay(1000)
+				}
+				await this.say("api_req_retry_delayed", `${errorMsg}\n\nRetrying now...`, undefined, false)
+				// delegate generator output from the recursive call
+				yield* this.attemptApiRequest(previousApiReqIndex)
+				return
+			} else {
+				const { response } = await this.ask(
+					"api_req_failed",
+					error.message ?? JSON.stringify(serializeError(error), null, 2),
+				)
+				if (response !== "yesButtonClicked") {
+					// this will never happen since if noButtonClicked, we will clear current task, aborting this instance
+					throw new Error("API request failed")
+				}
+				await this.say("api_req_retried")
+				// delegate generator output from the recursive call
+				yield* this.attemptApiRequest(previousApiReqIndex)
+				return
 			}
-			await this.say("api_req_retried")
-			// delegate generator output from the recursive call
-			yield* this.attemptApiRequest(previousApiReqIndex)
-			return
 		}
 
 		// no error, so we can continue to yield all remaining chunks
@@ -1047,6 +1092,16 @@ export class Cline {
 
 				if (block.name !== "browser_action") {
 					await this.browserSession.closeBrowser()
+				}
+
+				// Validate tool use based on current mode
+				const { mode } = await this.providerRef.deref()?.getState() ?? {}
+				try {
+					validateToolUse(block.name, mode ?? codeMode)
+				} catch (error) {
+					this.consecutiveMistakeCount++
+					pushToolResult(formatResponse.toolError(error.message))
+					break
 				}
 
 				switch (block.name) {
@@ -2323,22 +2378,30 @@ export class Cline {
 			// 2. ToolResultBlockParam's content/context text arrays if it contains "<feedback>" (see formatToolDeniedFeedback, attemptCompletion, executeCommand, and consecutiveMistakeCount >= 3) or "<answer>" (see askFollowupQuestion), we place all user generated content in these tags so they can effectively be used as markers for when we should parse mentions)
 			Promise.all(
 				userContent.map(async (block) => {
+					const shouldProcessMentions = (text: string) =>
+						text.includes("<task>") || text.includes("<feedback>");
+
 					if (block.type === "text") {
-						return {
-							...block,
-							text: await parseMentions(block.text, cwd, this.urlContentFetcher),
-						}
-					} else if (block.type === "tool_result") {
-						const isUserMessage = (text: string) => text.includes("<feedback>") || text.includes("<answer>")
-						if (typeof block.content === "string" && isUserMessage(block.content)) {
+						if (shouldProcessMentions(block.text)) {
 							return {
 								...block,
-								content: await parseMentions(block.content, cwd, this.urlContentFetcher),
+								text: await parseMentions(block.text, cwd, this.urlContentFetcher),
 							}
+						}
+						return block;
+					} else if (block.type === "tool_result") {
+						if (typeof block.content === "string") {
+							if (shouldProcessMentions(block.content)) {
+								return {
+									...block,
+									content: await parseMentions(block.content, cwd, this.urlContentFetcher),
+								}
+							}
+							return block;
 						} else if (Array.isArray(block.content)) {
 							const parsedContent = await Promise.all(
 								block.content.map(async (contentBlock) => {
-									if (contentBlock.type === "text" && isUserMessage(contentBlock.text)) {
+									if (contentBlock.type === "text" && shouldProcessMentions(contentBlock.text)) {
 										return {
 											...contentBlock,
 											text: await parseMentions(contentBlock.text, cwd, this.urlContentFetcher),
@@ -2352,6 +2415,7 @@ export class Cline {
 								content: parsedContent,
 							}
 						}
+						return block;
 					}
 					return block
 				}),
@@ -2489,6 +2553,16 @@ export class Cline {
 		const timeZoneOffset = -now.getTimezoneOffset() / 60 // Convert to hours and invert sign to match conventional notation
 		const timeZoneOffsetStr = `${timeZoneOffset >= 0 ? '+' : ''}${timeZoneOffset}:00`
 		details += `\n\n# Current Time\n${formatter.format(now)} (${timeZone}, UTC${timeZoneOffsetStr})`
+
+		// Add current mode and any mode-specific warnings
+		const { mode } = await this.providerRef.deref()?.getState() ?? {}
+		const currentMode = mode ?? codeMode
+		details += `\n\n# Current Mode\n${currentMode}`
+		
+		// Add warning if not in code mode
+		if (!isToolAllowedForMode('write_to_file', currentMode) || !isToolAllowedForMode('execute_command', currentMode)) {
+			details += `\n\nNOTE: You are currently in '${currentMode}' mode which only allows read-only operations. To write files or execute commands, the user will need to switch to 'code' mode. Note that only the user can switch modes.`
+		}
 
 		if (includeFileDetails) {
 			details += `\n\n# Current Working Directory (${cwd.toPosix()}) Files\n`
