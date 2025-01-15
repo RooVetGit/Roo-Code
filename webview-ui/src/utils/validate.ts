@@ -57,6 +57,11 @@ export function validateApiConfiguration(apiConfiguration?: ApiConfiguration): s
 					return "You must provide a valid model ID."
 				}
 				break
+			case "vscode-lm":
+				if (!apiConfiguration.vsCodeLmModelSelector) {
+					return "You must provide a valid model selector."
+				}
+				break
 		}
 	}
 	return undefined
@@ -65,7 +70,7 @@ export function validateApiConfiguration(apiConfiguration?: ApiConfiguration): s
 export function validateModelId(
 	apiConfiguration?: ApiConfiguration,
 	glamaModels?: Record<string, ModelInfo>,
-	openRouterModels?: Record<string, ModelInfo>,
+	openRouterModels?: Record<string, ModelInfo>
 ): string | undefined {
 	if (apiConfiguration) {
 		switch (apiConfiguration.apiProvider) {

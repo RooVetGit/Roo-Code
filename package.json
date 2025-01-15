@@ -264,7 +264,7 @@
 		],
 		"src/**/*.{ts,tsx}": [
 			"prettier --write",
-			"npx eslint -c .eslintrc.json --fix"
+			"npx eslint -c .eslintrc.json"
 		]
 	}
 }

@@ -1,3 +1,5 @@
+import * as vscode from "vscode"
+
 export type ApiProvider =
 	| "anthropic"
 	| "glama"
@@ -10,11 +12,13 @@ export type ApiProvider =
 	| "gemini"
 	| "openai-native"
 	| "deepseek"
+	| "vscode-lm"
 
 export interface ApiHandlerOptions {
 	apiModelId?: string
 	apiKey?: string // anthropic
 	anthropicBaseUrl?: string
+	vsCodeLmModelSelector?: vscode.LanguageModelChatSelector
 	glamaModelId?: string
 	glamaModelInfo?: ModelInfo
 	glamaApiKey?: string
@@ -58,7 +62,7 @@ export type ApiConfiguration = ApiHandlerOptions & {
 
 export interface ModelInfo {
 	maxTokens?: number
-	contextWindow?: number
+	contextWindow: number
 	supportsImages?: boolean
 	supportsComputerUse?: boolean
 	supportsPromptCache: boolean // this value is hardcoded for now
@@ -120,24 +124,24 @@ export const anthropicModels = {
 // AWS Bedrock
 // https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html
 export interface MessageContent {
-    type: 'text' | 'image' | 'video' | 'tool_use' | 'tool_result';
-    text?: string;
-    source?: {
-        type: 'base64';
-        data: string | Uint8Array; // string for Anthropic, Uint8Array for Bedrock
-        media_type: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp';
-    };
-    // Video specific fields
-    format?: string;
-    s3Location?: {
-        uri: string;
-        bucketOwner?: string;
-    };
-    // Tool use and result fields
-    toolUseId?: string;
-    name?: string;
-    input?: any;
-    output?: any; // Used for tool_result type
+	type: "text" | "image" | "video" | "tool_use" | "tool_result"
+	text?: string
+	source?: {
+		type: "base64"
+		data: string | Uint8Array // string for Anthropic, Uint8Array for Bedrock
+		media_type: "image/jpeg" | "image/png" | "image/gif" | "image/webp"
+	}
+	// Video specific fields
+	format?: string
+	s3Location?: {
+		uri: string
+		bucketOwner?: string
+	}
+	// Tool use and result fields
+	toolUseId?: string
+	name?: string
+	input?: any
+	output?: any // Used for tool_result type
 }
 
 export type BedrockModelId = keyof typeof bedrockModels
@@ -186,7 +190,6 @@ export const bedrockModels = {
 		outputPrice: 15.0,
 		cacheWritesPrice: 3.75, // per million tokens
 		cacheReadsPrice: 0.3, // per million tokens
-
 	},
 	"anthropic.claude-3-5-haiku-20241022-v1:0": {
 		maxTokens: 8192,
@@ -197,7 +200,6 @@ export const bedrockModels = {
 		outputPrice: 5.0,
 		cacheWritesPrice: 1.0,
 		cacheReadsPrice: 0.08,
-
 	},
 	"anthropic.claude-3-5-sonnet-20240620-v1:0": {
 		maxTokens: 8192,
@@ -231,7 +233,7 @@ export const bedrockModels = {
 		inputPrice: 0.25,
 		outputPrice: 1.25,
 	},
-	"meta.llama3-2-90b-instruct-v1:0" : {
+	"meta.llama3-2-90b-instruct-v1:0": {
 		maxTokens: 8192,
 		contextWindow: 128_000,
 		supportsImages: true,
@@ -240,7 +242,7 @@ export const bedrockModels = {
 		inputPrice: 0.72,
 		outputPrice: 0.72,
 	},
-	"meta.llama3-2-11b-instruct-v1:0" : {
+	"meta.llama3-2-11b-instruct-v1:0": {
 		maxTokens: 8192,
 		contextWindow: 128_000,
 		supportsImages: true,
@@ -249,7 +251,7 @@ export const bedrockModels = {
 		inputPrice: 0.16,
 		outputPrice: 0.16,
 	},
-	"meta.llama3-2-3b-instruct-v1:0" : {
+	"meta.llama3-2-3b-instruct-v1:0": {
 		maxTokens: 8192,
 		contextWindow: 128_000,
 		supportsImages: false,
@@ -258,7 +260,7 @@ export const bedrockModels = {
 		inputPrice: 0.15,
 		outputPrice: 0.15,
 	},
-	"meta.llama3-2-1b-instruct-v1:0" : {
+	"meta.llama3-2-1b-instruct-v1:0": {
 		maxTokens: 8192,
 		contextWindow: 128_000,
 		supportsImages: false,
@@ -267,7 +269,7 @@ export const bedrockModels = {
 		inputPrice: 0.1,
 		outputPrice: 0.1,
 	},
-	"meta.llama3-1-405b-instruct-v1:0" : {
+	"meta.llama3-1-405b-instruct-v1:0": {
 		maxTokens: 8192,
 		contextWindow: 128_000,
 		supportsImages: false,
@@ -276,7 +278,7 @@ export const bedrockModels = {
 		inputPrice: 2.4,
 		outputPrice: 2.4,
 	},
-	"meta.llama3-1-70b-instruct-v1:0" : {
+	"meta.llama3-1-70b-instruct-v1:0": {
 		maxTokens: 8192,
 		contextWindow: 128_000,
 		supportsImages: false,
@@ -285,7 +287,7 @@ export const bedrockModels = {
 		inputPrice: 0.72,
 		outputPrice: 0.72,
 	},
-	"meta.llama3-1-8b-instruct-v1:0" : {
+	"meta.llama3-1-8b-instruct-v1:0": {
 		maxTokens: 8192,
 		contextWindow: 8_000,
 		supportsImages: false,
@@ -294,8 +296,8 @@ export const bedrockModels = {
 		inputPrice: 0.22,
 		outputPrice: 0.22,
 	},
-	"meta.llama3-70b-instruct-v1:0" : {
-		maxTokens: 2048 ,
+	"meta.llama3-70b-instruct-v1:0": {
+		maxTokens: 2048,
 		contextWindow: 8_000,
 		supportsImages: false,
 		supportsComputerUse: false,
@@ -303,8 +305,8 @@ export const bedrockModels = {
 		inputPrice: 2.65,
 		outputPrice: 3.5,
 	},
-	"meta.llama3-8b-instruct-v1:0" : {
-		maxTokens: 2048 ,
+	"meta.llama3-8b-instruct-v1:0": {
+		maxTokens: 2048,
 		contextWindow: 4_000,
 		supportsImages: false,
 		supportsComputerUse: false,
@@ -482,7 +484,7 @@ export type OpenAiNativeModelId = keyof typeof openAiNativeModels
 export const openAiNativeDefaultModelId: OpenAiNativeModelId = "gpt-4o"
 export const openAiNativeModels = {
 	// don't support tool use yet
-	"o1": {
+	o1: {
 		maxTokens: 100_000,
 		contextWindow: 200_000,
 		supportsImages: true,
@@ -534,8 +536,8 @@ export const deepSeekModels = {
 		contextWindow: 64_000,
 		supportsImages: false,
 		supportsPromptCache: false,
-		inputPrice: 0.014,  // $0.014 per million tokens
-		outputPrice: 0.28,  // $0.28 per million tokens
+		inputPrice: 0.014, // $0.014 per million tokens
+		outputPrice: 0.28, // $0.28 per million tokens
 		description: `DeepSeek-V3 achieves a significant breakthrough in inference speed over previous models. It tops the leaderboard among open-source models and rivals the most advanced closed-source models globally.`,
 	},
 } as const satisfies Record<string, ModelInfo>
@@ -544,4 +546,3 @@ export const deepSeekModels = {
 // https://learn.microsoft.com/en-us/azure/ai-services/openai/api-version-deprecation
 // https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#api-specs
 export const azureOpenAiDefaultApiVersion = "2024-08-01-preview"
-
