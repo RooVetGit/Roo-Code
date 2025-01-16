@@ -60,9 +60,9 @@ export interface WebviewMessage {
 		| "searchCommits"
 		| "alwaysApproveResubmit"
 		| "requestDelaySeconds"
+		| "maxApiRetries"
 		| "setApiConfigPassword"
 		| "mode"
-	| "maxApiRetries"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
