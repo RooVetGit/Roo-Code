@@ -62,7 +62,7 @@ export interface WebviewMessage {
 		| "requestDelaySeconds"
 		| "setApiConfigPassword"
 		| "mode"
-		| "maxApiRetries"
+	| "maxApiRetries"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
