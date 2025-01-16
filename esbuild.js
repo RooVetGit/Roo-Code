@@ -4,6 +4,7 @@ const path = require("path")
 
 const production = process.argv.includes("--production")
 const watch = process.argv.includes("--watch")
+const cli = process.argv.includes("--cli")
 
 /**
  * @type {import('esbuild').Plugin}
@@ -69,7 +70,6 @@ const extensionConfig = {
 	logLevel: "silent",
 	plugins: [
 		copyWasmFiles,
-		/* add to the end of plugins array */
 		esbuildProblemMatcherPlugin,
 	],
 	entryPoints: ["src/extension.ts"],
@@ -80,13 +80,47 @@ const extensionConfig = {
 	external: ["vscode"],
 }
 
+const cliConfig = {
+	bundle: true,
+	minify: production,
+	sourcemap: !production,
+	logLevel: "silent",
+	plugins: [esbuildProblemMatcherPlugin],
+	entryPoints: ["src/cli.ts"],
+	format: "cjs",
+	sourcesContent: false,
+	platform: "node",
+	outfile: "dist/cli.js",
+	external: ["vscode"], // Still mark vscode as external to avoid build errors from other files
+	define: {
+		'process.env.VSCODE': 'undefined' // Define vscode as undefined for CLI build
+	}
+}
+
 async function main() {
-	const extensionCtx = await esbuild.context(extensionConfig)
-	if (watch) {
-		await extensionCtx.watch()
+	if (cli) {
+		const cliCtx = await esbuild.context(cliConfig)
+		if (watch) {
+			await cliCtx.watch()
+		} else {
+			await cliCtx.rebuild()
+			await cliCtx.dispose()
+			// Add shebang and make executable after build
+			const cliPath = path.join(__dirname, 'dist/cli.js')
+			const content = fs.readFileSync(cliPath, 'utf8')
+			// Remove any existing shebang line
+			const contentWithoutShebang = content.replace(/^#!.*\n/, '');
+			fs.writeFileSync(cliPath, `#!/usr/bin/env node\n${contentWithoutShebang}`);
+			fs.chmodSync(cliPath, '755')
+		}
 	} else {
-		await extensionCtx.rebuild()
-		await extensionCtx.dispose()
+		const extensionCtx = await esbuild.context(extensionConfig)
+		if (watch) {
+			await extensionCtx.watch()
+		} else {
+			await extensionCtx.rebuild()
+			await extensionCtx.dispose()
+		}
 	}
 }
 

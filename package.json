@@ -47,6 +47,9 @@
     "onStartupFinished"
   ],
   "main": "./dist/extension.js",
+  "bin": {
+    "cline": "./dist/cli.js"
+  },
   "contributes": {
     "viewsContainers": {
       "activitybar": [
@@ -163,7 +166,7 @@
               "description": "The vendor of the language model (e.g. copilot)"
             },
             "family": {
-              "type": "string", 
+              "type": "string",
               "description": "The family of the language model (e.g. gpt-4)"
             }
           },
@@ -175,6 +178,7 @@
   "scripts": {
     "build": "npm run build:webview && npm run vsix",
     "build:webview": "cd webview-ui && npm run build",
+    "build:cli": "node esbuild.js --cli",
     "changeset": "changeset",
     "check-types": "tsc --noEmit",
     "compile": "npm run check-types && npm run lint && node esbuild.js",
@@ -196,7 +200,8 @@
     "watch": "npm-run-all -p watch:*",
     "watch:esbuild": "node esbuild.js --watch",
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
-    "watch-tests": "tsc -p . -w --outDir out"
+    "watch-tests": "tsc -p . -w --outDir out",
+    "cli": "node dist/cli.js"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.10",
@@ -204,7 +209,8 @@
     "@types/diff": "^5.2.1",
     "@types/jest": "^29.5.14",
     "@types/mocha": "^10.0.7",
-    "@types/node": "20.x",
+    "@types/node": "^20.17.13",
+    "@types/vscode": "^1.96.0",
     "@typescript-eslint/eslint-plugin": "^7.14.1",
     "@typescript-eslint/parser": "^7.11.0",
     "@vscode/test-cli": "^0.0.9",
@@ -230,7 +236,6 @@
     "@types/clone-deep": "^4.0.4",
     "@types/pdf-parse": "^1.1.4",
     "@types/turndown": "^5.0.5",
-    "@types/vscode": "^1.95.0",
     "@vscode/codicons": "^0.0.36",
     "axios": "^1.7.4",
     "cheerio": "^1.0.0",
