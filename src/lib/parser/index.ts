@@ -18,11 +18,20 @@ export class MessageParser {
         // Try matching tool:prefix format first
         let toolMatch = text.match(/<tool:([a-z_]+)(?:\s+([^>]*))?>([\s\S]*?)<\/tool:\1>/);
         
-        // If no match, try standard format
+        // If no match, try self-closing tag format
+        if (!toolMatch) {
+            toolMatch = text.match(/<([a-z_]+)(?:\s+([^>]*))?\s*\/>/);
+            if (toolMatch) {
+                // Add empty content for self-closing tags
+                toolMatch[3] = '';
+            }
+        }
+        
+        // If still no match, try standard format
         if (!toolMatch) {
             toolMatch = text.match(/<([a-z_]+)(?:\s+([^>]*))?>([\s\S]*?)<\/\1>/);
         }
-        
+
         if (!toolMatch) return null;
 
         const toolName = toolMatch[1];

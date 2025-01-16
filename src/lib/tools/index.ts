@@ -63,6 +63,40 @@ export const AVAILABLE_TOOLS: Tool[] = [
                 description: 'Optional file pattern to filter files'
             }
         }
+    },
+    {
+        name: 'execute_command',
+        description: 'Execute a CLI command',
+        parameters: {
+            command: {
+                required: true,
+                description: 'The command to execute'
+            }
+        }
+    },
+    {
+        name: 'attempt_completion',
+        description: 'Attempt to complete the task',
+        parameters: {
+            result: {
+                required: true,
+                description: 'The result of the task'
+            },
+            command: {
+                required: false,
+                description: 'Optional command to execute to demonstrate the result'
+            }
+        }
+    },
+    {
+        name: 'list_code_definition_names',
+        description: 'List definition names (classes, functions, methods, etc.) used in source code files',
+        parameters: {
+            path: {
+                required: true,
+                description: 'The path of the directory to list code definitions for'
+            }
+        }
     }
 ];
 
@@ -145,6 +179,19 @@ export class BaseToolExecutor implements ToolExecutor {
             return true;
         } catch {
             return false;
+        }
+    }
+
+    async listCodeDefinitions(dirPath: string): Promise<[boolean, ToolResponse]> {
+        try {
+            const absolutePath = this.resolvePath(dirPath);
+            // This is a placeholder implementation. The actual implementation would need to:
+            // 1. Parse the source code files
+            // 2. Extract class, function, and method definitions
+            // 3. Return them in a structured format
+            return [false, 'Code definitions listing not implemented in base executor'];
+        } catch (error) {
+            return [true, `Error listing code definitions: ${error.message}`];
         }
     }
 }
