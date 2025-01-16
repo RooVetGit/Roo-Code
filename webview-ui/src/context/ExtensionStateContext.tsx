@@ -55,6 +55,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setAlwaysApproveResubmit: (value: boolean) => void
 	requestDelaySeconds: number
 	setRequestDelaySeconds: (value: number) => void
+	maxApiRetries: number
+	setMaxApiRetries: (value: number) => void
 	setCurrentApiConfigName: (value: string) => void
 	setListApiConfigMeta: (value: ApiConfigMeta[]) => void
 	onUpdateApiConfig: (apiConfig: ApiConfiguration) => void
@@ -83,6 +85,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		mcpEnabled: true,
 		alwaysApproveResubmit: false,
 		requestDelaySeconds: 5,
+		maxApiRetries: 3,
 		currentApiConfigName: 'default',
 		listApiConfigMeta: [],
 		mode: codeMode,
@@ -226,6 +229,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setMcpEnabled: (value) => setState((prevState) => ({ ...prevState, mcpEnabled: value })),
 		setAlwaysApproveResubmit: (value) => setState((prevState) => ({ ...prevState, alwaysApproveResubmit: value })),
 		setRequestDelaySeconds: (value) => setState((prevState) => ({ ...prevState, requestDelaySeconds: value })),
+		setMaxApiRetries: (value) => setState((prevState) => ({ ...prevState, maxApiRetries: value })),
 		setCurrentApiConfigName: (value) => setState((prevState) => ({ ...prevState, currentApiConfigName: value })),
 		setListApiConfigMeta,
 		onUpdateApiConfig,

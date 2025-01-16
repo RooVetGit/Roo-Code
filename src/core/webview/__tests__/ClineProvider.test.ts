@@ -274,6 +274,7 @@ describe('ClineProvider', () => {
             fuzzyMatchThreshold: 1.0,
             mcpEnabled: true,
             requestDelaySeconds: 5,
+            maxApiRetries: 3,
             mode: codeMode,
         }
         
@@ -407,6 +408,19 @@ describe('ClineProvider', () => {
         expect(state.requestDelaySeconds).toBe(5)
     })
 
+    test('maxApiRetries defaults to 3 retries', async () => {
+        // Mock globalState.get to return undefined for maxApiRetries
+        (mockContext.globalState.get as jest.Mock).mockImplementation((key: string) => {
+            if (key === 'maxApiRetries') {
+                return undefined
+            }
+            return null
+        })
+
+        const state = await provider.getState()
+        expect(state.maxApiRetries).toBe(3)
+    })
+
     test('alwaysApproveResubmit defaults to false', async () => {
         // Mock globalState.get to return undefined for alwaysApproveResubmit
         (mockContext.globalState.get as jest.Mock).mockReturnValue(undefined)
@@ -501,6 +515,11 @@ describe('ClineProvider', () => {
         // Test requestDelaySeconds
         await messageHandler({ type: 'requestDelaySeconds', value: 10 })
         expect(mockContext.globalState.update).toHaveBeenCalledWith('requestDelaySeconds', 10)
+        expect(mockPostMessage).toHaveBeenCalled()
+
+        // Test maxApiRetries
+        await messageHandler({ type: 'maxApiRetries', value: 5 })
+        expect(mockContext.globalState.update).toHaveBeenCalledWith('maxApiRetries', 5)
         expect(mockPostMessage).toHaveBeenCalled()
     })
 

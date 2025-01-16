@@ -89,6 +89,7 @@ type GlobalStateKey =
 	| "mcpEnabled"
 	| "alwaysApproveResubmit"
 	| "requestDelaySeconds"
+	| "maxApiRetries"
 	| "currentApiConfigName"
 	| "listApiConfigMeta"
 	| "mode"
@@ -679,6 +680,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						break
 					case "requestDelaySeconds":
 						await this.updateGlobalState("requestDelaySeconds", message.value ?? 5)
+						await this.postStateToWebview()
+						break
+					case "maxApiRetries":
+						await this.updateGlobalState("maxApiRetries", message.value ?? 3)
 						await this.postStateToWebview()
 						break
 					case "preferredLanguage":
@@ -1479,6 +1484,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			mcpEnabled,
 			alwaysApproveResubmit,
 			requestDelaySeconds,
+			maxApiRetries,
 			currentApiConfigName,
 			listApiConfigMeta,
 			mode,
@@ -1516,6 +1522,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			mcpEnabled: mcpEnabled ?? true,
 			alwaysApproveResubmit: alwaysApproveResubmit ?? false,
 			requestDelaySeconds: requestDelaySeconds ?? 5,
+			maxApiRetries: maxApiRetries ?? 3,
 			currentApiConfigName: currentApiConfigName ?? "default",
 			listApiConfigMeta: listApiConfigMeta ?? [],
 			mode: mode ?? codeMode,
@@ -1626,6 +1633,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			mcpEnabled,
 			alwaysApproveResubmit,
 			requestDelaySeconds,
+			maxApiRetries,
 			currentApiConfigName,
 			listApiConfigMeta,
 			mode,
@@ -1682,6 +1690,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("mcpEnabled") as Promise<boolean | undefined>,
 			this.getGlobalState("alwaysApproveResubmit") as Promise<boolean | undefined>,
 			this.getGlobalState("requestDelaySeconds") as Promise<number | undefined>,
+			this.getGlobalState("maxApiRetries") as Promise<number | undefined>,
 			this.getGlobalState("currentApiConfigName") as Promise<string | undefined>,
 			this.getGlobalState("listApiConfigMeta") as Promise<ApiConfigMeta[] | undefined>,
 			this.getGlobalState("mode") as Promise<Mode | undefined>,
@@ -1783,6 +1792,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			mcpEnabled: mcpEnabled ?? true,
 			alwaysApproveResubmit: alwaysApproveResubmit ?? false,
 			requestDelaySeconds: requestDelaySeconds ?? 5,
+			maxApiRetries: maxApiRetries ?? 3,
 			currentApiConfigName: currentApiConfigName ?? "default",
 			listApiConfigMeta: listApiConfigMeta ?? [],
 			modeApiConfigs: modeApiConfigs ?? {} as Record<Mode, string>,

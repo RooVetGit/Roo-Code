@@ -57,6 +57,8 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		setAlwaysApproveResubmit,
 		requestDelaySeconds,
 		setRequestDelaySeconds,
+		maxApiRetries,
+		setMaxApiRetries,
 		currentApiConfigName,
 		listApiConfigMeta,
 		mode,
@@ -96,6 +98,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 			vscode.postMessage({ type: "mcpEnabled", bool: mcpEnabled })
 			vscode.postMessage({ type: "alwaysApproveResubmit", bool: alwaysApproveResubmit })
 			vscode.postMessage({ type: "requestDelaySeconds", value: requestDelaySeconds })
+			vscode.postMessage({ type: "maxApiRetries", value: maxApiRetries })
 			vscode.postMessage({ type: "currentApiConfigName", text: currentApiConfigName })
 			vscode.postMessage({
 				type: "upsertApiConfiguration",
@@ -472,6 +475,29 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 								<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>
 									Delay before retrying the request
 								</p>
+								<div style={{ marginTop: 10 }}>
+									<div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+										<input
+											type="range"
+											min="1"
+											max="10"
+											step="1"
+											value={maxApiRetries}
+											onChange={(e) => setMaxApiRetries(parseInt(e.target.value))}
+											style={{
+												flex: 1,
+												accentColor: 'var(--vscode-button-background)',
+												height: '2px'
+											}}
+										/>
+										<span style={{ minWidth: '45px', textAlign: 'left' }}>
+											{maxApiRetries} tries
+										</span>
+									</div>
+									<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>
+										Maximum number of retry attempts for failed API requests
+									</p>
+								</div>
 							</div>
 						)}
 					</div>
