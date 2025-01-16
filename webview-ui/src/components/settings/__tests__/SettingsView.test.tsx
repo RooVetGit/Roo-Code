@@ -24,7 +24,7 @@ jest.mock('../ApiConfigManager', () => ({
 // Mock VSCode components
 jest.mock('@vscode/webview-ui-toolkit/react', () => ({
   VSCodeButton: ({ children, onClick, appearance }: any) => (
-    appearance === 'icon' ? 
+    appearance === 'icon' ?
       <button onClick={onClick} className="codicon codicon-close" aria-label="Remove command">
         <span className="codicon codicon-close" />
       </button> :
@@ -122,31 +122,31 @@ describe('SettingsView - Sound Settings', () => {
 
   it('initializes with sound disabled by default', () => {
     renderSettingsView()
-    
+
     const soundCheckbox = screen.getByRole('checkbox', {
       name: /Enable sound effects/i
     })
     expect(soundCheckbox).not.toBeChecked()
-    
+
     // Volume slider should not be visible when sound is disabled
     expect(screen.queryByRole('slider', { name: /volume/i })).not.toBeInTheDocument()
   })
 
   it('toggles sound setting and sends message to VSCode', () => {
     renderSettingsView()
-    
+
     const soundCheckbox = screen.getByRole('checkbox', {
       name: /Enable sound effects/i
     })
-    
+
     // Enable sound
     fireEvent.click(soundCheckbox)
     expect(soundCheckbox).toBeChecked()
-    
+
     // Click Done to save settings
     const doneButton = screen.getByText('Done')
     fireEvent.click(doneButton)
-    
+
     expect(vscode.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         type: 'soundEnabled',
@@ -157,7 +157,7 @@ describe('SettingsView - Sound Settings', () => {
 
   it('shows volume slider when sound is enabled', () => {
     renderSettingsView()
-    
+
     // Enable sound
     const soundCheckbox = screen.getByRole('checkbox', {
       name: /Enable sound effects/i
@@ -172,7 +172,7 @@ describe('SettingsView - Sound Settings', () => {
 
   it('updates volume and sends message to VSCode when slider changes', () => {
     renderSettingsView()
-    
+
     // Enable sound
     const soundCheckbox = screen.getByRole('checkbox', {
       name: /Enable sound effects/i
@@ -202,7 +202,7 @@ describe('SettingsView - API Configuration', () => {
 
   it('renders ApiConfigManagement with correct props', () => {
     renderSettingsView()
-    
+
     expect(screen.getByTestId('api-config-management')).toBeInTheDocument()
   })
 })
@@ -214,7 +214,7 @@ describe('SettingsView - Allowed Commands', () => {
 
   it('shows allowed commands section when alwaysAllowExecute is enabled', () => {
     renderSettingsView()
-    
+
     // Enable always allow execute
     const executeCheckbox = screen.getByRole('checkbox', {
       name: /Always approve allowed execute operations/i
@@ -228,7 +228,7 @@ describe('SettingsView - Allowed Commands', () => {
 
   it('adds new command to the list', () => {
     renderSettingsView()
-    
+
     // Enable always allow execute
     const executeCheckbox = screen.getByRole('checkbox', {
       name: /Always approve allowed execute operations/i
@@ -238,13 +238,13 @@ describe('SettingsView - Allowed Commands', () => {
     // Add a new command
     const input = screen.getByPlaceholderText(/Enter command prefix/i)
     fireEvent.change(input, { target: { value: 'npm test' } })
-    
+
     const addButton = screen.getByText('Add')
     fireEvent.click(addButton)
 
     // Verify command was added
     expect(screen.getByText('npm test')).toBeInTheDocument()
-    
+
     // Verify VSCode message was sent
     expect(vscode.postMessage).toHaveBeenCalledWith({
       type: 'allowedCommands',
@@ -254,7 +254,7 @@ describe('SettingsView - Allowed Commands', () => {
 
   it('removes command from the list', () => {
     renderSettingsView()
-    
+
     // Enable always allow execute
     const executeCheckbox = screen.getByRole('checkbox', {
       name: /Always approve allowed execute operations/i
@@ -273,7 +273,7 @@ describe('SettingsView - Allowed Commands', () => {
 
     // Verify command was removed
     expect(screen.queryByText('npm test')).not.toBeInTheDocument()
-    
+
     // Verify VSCode message was sent
     expect(vscode.postMessage).toHaveBeenLastCalledWith({
       type: 'allowedCommands',
@@ -283,7 +283,7 @@ describe('SettingsView - Allowed Commands', () => {
 
   it('prevents duplicate commands', () => {
     renderSettingsView()
-    
+
     // Enable always allow execute
     const executeCheckbox = screen.getByRole('checkbox', {
       name: /Always approve allowed execute operations/i
@@ -309,7 +309,7 @@ describe('SettingsView - Allowed Commands', () => {
 
   it('saves allowed commands when clicking Done', () => {
     const { onDone } = renderSettingsView()
-    
+
     // Enable always allow execute
     const executeCheckbox = screen.getByRole('checkbox', {
       name: /Always approve allowed execute operations/i
@@ -332,5 +332,47 @@ describe('SettingsView - Allowed Commands', () => {
       commands: ['npm test']
     }))
     expect(onDone).toHaveBeenCalled()
+  })
+})
+
+describe('SettingsView - API Retry Settings', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('shows "No Limit" when maxApiRetries is 0', () => {
+    renderSettingsView()
+
+    // Enable auto retry
+    const retryCheckbox = screen.getByRole('checkbox', {
+      name: /Always retry failed API requests/i
+    })
+    fireEvent.click(retryCheckbox)
+
+    // Set maxApiRetries to 0
+    const retrySlider = screen.getByRole('slider', { name: /Maximum number of retry attempts/i })
+    fireEvent.change(retrySlider, { target: { value: '0' } })
+
+    // Verify "No Limit" text is shown
+    expect(screen.getByText('No Limit')).toBeInTheDocument()
+    expect(screen.queryByText('0 tries')).not.toBeInTheDocument()
+  })
+
+  it('shows number of tries when maxApiRetries is greater than 0', () => {
+    renderSettingsView()
+
+    // Enable auto retry
+    const retryCheckbox = screen.getByRole('checkbox', {
+      name: /Always retry failed API requests/i
+    })
+    fireEvent.click(retryCheckbox)
+
+    // Set maxApiRetries to 5
+    const retrySlider = screen.getByRole('slider', { name: /Maximum number of retry attempts/i })
+    fireEvent.change(retrySlider, { target: { value: '5' } })
+
+    // Verify "5 tries" text is shown
+    expect(screen.getByText('5 tries')).toBeInTheDocument()
+    expect(screen.queryByText('Disabled')).not.toBeInTheDocument()
   })
 })

@@ -683,7 +683,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.postStateToWebview()
 						break
 					case "maxApiRetries":
-						await this.updateGlobalState("maxApiRetries", message.value ?? 3)
+						await this.updateGlobalState("maxApiRetries", message.value ?? 0)
 						await this.postStateToWebview()
 						break
 					case "preferredLanguage":
@@ -701,14 +701,14 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 					case "mode":
 						const newMode = message.text as Mode
 						await this.updateGlobalState("mode", newMode)
-						
+
 						// Load the saved API config for the new mode if it exists
 						const savedConfigId = await this.configManager.GetModeConfigId(newMode)
 						const listApiConfig = await this.configManager.ListConfig()
-						
+
 						// Update listApiConfigMeta first to ensure UI has latest data
 						await this.updateGlobalState("listApiConfigMeta", listApiConfig)
-						
+
 						// If this mode has a saved config, use it
 						if (savedConfigId) {
 							const config = listApiConfig?.find(c => c.id === savedConfigId)
@@ -729,7 +729,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								}
 							}
 						}
-						
+
 						await this.postStateToWebview()
 						break
 					case "deleteMessage": {
@@ -744,16 +744,16 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							const timeCutoff = message.value - 1000; // 1 second buffer before the message to delete
 							const messageIndex = this.cline.clineMessages.findIndex(msg => msg.ts && msg.ts >= timeCutoff)
 							const apiConversationHistoryIndex = this.cline.apiConversationHistory.findIndex(msg => msg.ts && msg.ts >= timeCutoff)
-							
+
 							if (messageIndex !== -1) {
 								const { historyItem } = await this.getTaskWithId(this.cline.taskId)
-								
+
 								if (answer === "Just this message") {
 									// Find the next user message first
 									const nextUserMessage = this.cline.clineMessages
 										.slice(messageIndex + 1)
 										.find(msg => msg.type === "say" && msg.say === "user_feedback")
-									
+
 									// Handle UI messages
 									if (nextUserMessage) {
 										// Find absolute index of next user message
@@ -769,7 +769,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 											this.cline.clineMessages.slice(0, messageIndex)
 										)
 									}
-									
+
 									// Handle API messages
 									if (apiConversationHistoryIndex !== -1) {
 										if (nextUserMessage && nextUserMessage.ts) {
@@ -792,7 +792,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 										await this.cline.overwriteApiConversationHistory(this.cline.apiConversationHistory.slice(0, apiConversationHistoryIndex))
 									}
 								}
-								
+
 								await this.initClineWithHistoryItem(historyItem)
 							}
 						}
@@ -845,7 +845,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							try {
 								await this.configManager.SaveConfig(message.text, message.apiConfiguration);
 								let listApiConfig = await this.configManager.ListConfig();
-								
+
 								// Update listApiConfigMeta first to ensure UI has latest data
 								await this.updateGlobalState("listApiConfigMeta", listApiConfig);
 
@@ -871,7 +871,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 								let listApiConfig = await this.configManager.ListConfig();
 								const config = listApiConfig?.find(c => c.name === newName);
-								
+
 								// Update listApiConfigMeta first to ensure UI has latest data
 								await this.updateGlobalState("listApiConfigMeta", listApiConfig);
 
@@ -892,7 +892,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								const apiConfig = await this.configManager.LoadConfig(message.text);
 								const listApiConfig = await this.configManager.ListConfig();
 								const config = listApiConfig?.find(c => c.name === message.text);
-								
+
 								// Update listApiConfigMeta first to ensure UI has latest data
 								await this.updateGlobalState("listApiConfigMeta", listApiConfig);
 
@@ -923,7 +923,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							try {
 								await this.configManager.DeleteConfig(message.text);
 								const listApiConfig = await this.configManager.ListConfig();
-								
+
 								// Update listApiConfigMeta first to ensure UI has latest data
 								await this.updateGlobalState("listApiConfigMeta", listApiConfig);
 
@@ -1037,7 +1037,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		await this.updateGlobalState("openRouterUseMiddleOutTransform", openRouterUseMiddleOutTransform)
 		if (this.cline) {
 			this.cline.api = buildApiHandler(apiConfiguration)
-		} 
+		}
 	}
 
 	async updateCustomInstructions(instructions?: string) {
@@ -1792,7 +1792,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			mcpEnabled: mcpEnabled ?? true,
 			alwaysApproveResubmit: alwaysApproveResubmit ?? false,
 			requestDelaySeconds: requestDelaySeconds ?? 5,
-			maxApiRetries: maxApiRetries ?? 3,
+			maxApiRetries: maxApiRetries ?? 0,
 			currentApiConfigName: currentApiConfigName ?? "default",
 			listApiConfigMeta: listApiConfigMeta ?? [],
 			modeApiConfigs: modeApiConfigs ?? {} as Record<Mode, string>,

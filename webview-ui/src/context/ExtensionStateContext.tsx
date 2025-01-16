@@ -205,6 +205,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		fuzzyMatchThreshold: state.fuzzyMatchThreshold,
 		writeDelayMs: state.writeDelayMs,
 		screenshotQuality: state.screenshotQuality,
+		maxApiRetries: state.maxApiRetries ?? 3,
 		setApiConfiguration: (value) => setState((prevState) => ({
 			...prevState,
 			apiConfiguration: value

@@ -46,7 +46,7 @@ jest.mock('@modelcontextprotocol/sdk/client/stdio.js', () => ({
 // Mock fileExistsAtPath
 jest.mock('../../utils/fs', () => ({
     fileExistsAtPath: jest.fn().mockImplementation((filePath) => {
-        return filePath.includes('ui_messages.json') || 
+        return filePath.includes('ui_messages.json') ||
                filePath.includes('api_conversation_history.json');
     })
 }));
@@ -191,7 +191,7 @@ describe('Cline', () => {
     let mockApiConfig: ApiConfiguration;
     let mockOutputChannel: any;
     let mockExtensionContext: vscode.ExtensionContext;
-    
+
     beforeEach(() => {
         // Setup mock extension context
         mockExtensionContext = {
@@ -249,7 +249,7 @@ describe('Cline', () => {
 
         // Setup mock provider with output channel
         mockProvider = new ClineProvider(mockExtensionContext, mockOutputChannel) as jest.Mocked<ClineProvider>;
-        
+
         // Setup mock API configuration
         mockApiConfig = {
             apiProvider: 'anthropic',
@@ -310,7 +310,7 @@ describe('Cline', () => {
 
         it('should use provided fuzzy match threshold', () => {
             const getDiffStrategySpy = jest.spyOn(require('../diff/DiffStrategy'), 'getDiffStrategy');
-            
+
             const cline = new Cline(
                 mockProvider,
                 mockApiConfig,
@@ -323,13 +323,13 @@ describe('Cline', () => {
             expect(cline.diffEnabled).toBe(true);
             expect(cline.diffStrategy).toBeDefined();
             expect(getDiffStrategySpy).toHaveBeenCalledWith('claude-3-5-sonnet-20241022', 0.9);
-            
+
             getDiffStrategySpy.mockRestore();
         });
 
         it('should pass default threshold to diff strategy when not provided', () => {
             const getDiffStrategySpy = jest.spyOn(require('../diff/DiffStrategy'), 'getDiffStrategy');
-            
+
             const cline = new Cline(
                 mockProvider,
                 mockApiConfig,
@@ -342,7 +342,7 @@ describe('Cline', () => {
             expect(cline.diffEnabled).toBe(true);
             expect(cline.diffStrategy).toBeDefined();
             expect(getDiffStrategySpy).toHaveBeenCalledWith('claude-3-5-sonnet-20241022', 1.0);
-            
+
             getDiffStrategySpy.mockRestore();
         });
 
@@ -379,7 +379,7 @@ describe('Cline', () => {
                     return mockDate.getTime();
                 }
             }
-            
+
             global.Date = MockDate as DateConstructor;
 
             // Create a proper mock of Intl.DateTimeFormat
@@ -415,14 +415,14 @@ describe('Cline', () => {
             );
 
             const details = await cline['getEnvironmentDetails'](false);
-            
+
             // Verify timezone information is present and formatted correctly
             expect(details).toContain('America/Los_Angeles');
             expect(details).toMatch(/UTC-7:00/); // Fixed offset for America/Los_Angeles
             expect(details).toContain('# Current Time');
             expect(details).toMatch(/1\/1\/2024.*5:00:00 AM.*\(America\/Los_Angeles, UTC-7:00\)/); // Full time string format
         });
-    
+
         describe('API conversation handling', () => {
             it('should clean conversation history before sending to API', async () => {
                 const cline = new Cline(
@@ -433,7 +433,7 @@ describe('Cline', () => {
                     undefined,
                     'test task'
                 );
-    
+
                 // Mock the API's createMessage method to capture the conversation history
                 const createMessageSpy = jest.fn();
                 const mockStream = {
@@ -453,7 +453,7 @@ describe('Cline', () => {
                         // Cleanup
                     }
                 } as AsyncGenerator<ApiStreamChunk>;
-                
+
                 jest.spyOn(cline.api, 'createMessage').mockImplementation((...args) => {
                     createMessageSpy(...args);
                     return mockStream;
@@ -475,7 +475,7 @@ describe('Cline', () => {
 
                 // Get all calls to createMessage
                 const calls = createMessageSpy.mock.calls;
-                
+
                 // Find the call that includes our test message
                 const relevantCall = calls.find(call =>
                     call[1]?.some((msg: any) =>
@@ -627,132 +627,252 @@ describe('Cline', () => {
                     text: '[Referenced image in conversation]'
                 });
             });
-        
-            it('should handle API retry with countdown', async () => {
-                const cline = new Cline(
-                    mockProvider,
-                    mockApiConfig,
-                    undefined,
-                    false,
-                    undefined,
-                    'test task'
-                );
 
-                // Mock delay to track countdown timing
-                const mockDelay = jest.fn().mockResolvedValue(undefined);
-                jest.spyOn(require('delay'), 'default').mockImplementation(mockDelay);
+            describe('API retry behavior', () => {
+                let mockDelay: jest.Mock;
+                let mockError: Error;
+                let mockFailedStream: AsyncGenerator<ApiStreamChunk>;
+                let mockSuccessStream: AsyncGenerator<ApiStreamChunk>;
 
-                // Mock say to track messages
-                const saySpy = jest.spyOn(cline, 'say');
+                beforeEach(() => {
+                    // Mock delay to track countdown timing
+                    mockDelay = jest.fn().mockResolvedValue(undefined);
+                    jest.spyOn(require('delay'), 'default').mockImplementation(mockDelay);
 
-                // Create a stream that fails on first chunk
-                const mockError = new Error('API Error');
-                const mockFailedStream = {
-                    async *[Symbol.asyncIterator]() {
-                        throw mockError;
-                    },
-                    async next() {
-                        throw mockError;
-                    },
-                    async return() {
-                        return { done: true, value: undefined };
-                    },
-                    async throw(e: any) {
-                        throw e;
-                    },
-                    async [Symbol.asyncDispose]() {
-                        // Cleanup
-                    }
-                } as AsyncGenerator<ApiStreamChunk>;
+                    // Create a stream that fails on first chunk
+                    mockError = new Error('API Error');
+                    mockFailedStream = {
+                        async *[Symbol.asyncIterator]() {
+                            throw mockError;
+                        },
+                        async next() {
+                            throw mockError;
+                        },
+                        async return() {
+                            return { done: true, value: undefined };
+                        },
+                        async throw(e: any) {
+                            throw e;
+                        },
+                        async [Symbol.asyncDispose]() {
+                            // Cleanup
+                        }
+                    } as AsyncGenerator<ApiStreamChunk>;
 
-                // Create a successful stream for retry
-                const mockSuccessStream = {
-                    async *[Symbol.asyncIterator]() {
-                        yield { type: 'text', text: 'Success' };
-                    },
-                    async next() {
-                        return { done: true, value: { type: 'text', text: 'Success' } };
-                    },
-                    async return() {
-                        return { done: true, value: undefined };
-                    },
-                    async throw(e: any) {
-                        throw e;
-                    },
-                    async [Symbol.asyncDispose]() {
-                        // Cleanup
-                    }
-                } as AsyncGenerator<ApiStreamChunk>;
-
-                // Mock createMessage to fail first then succeed
-                let firstAttempt = true;
-                jest.spyOn(cline.api, 'createMessage').mockImplementation(() => {
-                    if (firstAttempt) {
-                        firstAttempt = false;
-                        return mockFailedStream;
-                    }
-                    return mockSuccessStream;
+                    // Create a successful stream
+                    mockSuccessStream = {
+                        async *[Symbol.asyncIterator]() {
+                            yield { type: 'text', text: 'Success' };
+                        },
+                        async next() {
+                            return { done: true, value: { type: 'text', text: 'Success' } };
+                        },
+                        async return() {
+                            return { done: true, value: undefined };
+                        },
+                        async throw(e: any) {
+                            throw e;
+                        },
+                        async [Symbol.asyncDispose]() {
+                            // Cleanup
+                        }
+                    } as AsyncGenerator<ApiStreamChunk>;
                 });
 
-                // Set alwaysApproveResubmit and requestDelaySeconds
-                mockProvider.getState = jest.fn().mockResolvedValue({
-                    alwaysApproveResubmit: true,
-                    requestDelaySeconds: 3
+                it('should allow unlimited retries when maxApiRetries is 0', async () => {
+                    const cline = new Cline(
+                        mockProvider,
+                        mockApiConfig,
+                        undefined,
+                        false,
+                        undefined,
+                        'test task'
+                    );
+
+                    const saySpy = jest.spyOn(cline, 'say');
+
+                    // Mock createMessage to always fail
+                    jest.spyOn(cline.api, 'createMessage').mockReturnValue(mockFailedStream);
+
+                    // Set maxApiRetries to 0 (unlimited) and enable auto retry
+                    mockProvider.getState = jest.fn().mockResolvedValue({
+                        alwaysApproveResubmit: true,
+                        requestDelaySeconds: 1,
+                        maxApiRetries: 0
+                    });
+
+                    // Mock previous API request message
+                    cline.clineMessages = [{
+                        ts: Date.now(),
+                        type: 'say',
+                        say: 'api_req_started',
+                        text: JSON.stringify({
+                            tokensIn: 100,
+                            tokensOut: 50,
+                            cacheWrites: 0,
+                            cacheReads: 0,
+                            request: 'test request'
+                        })
+                    }];
+
+                    // Trigger API request
+                    const iterator = cline.attemptApiRequest(0);
+
+                    // Let it retry several times to verify no limit
+                    for (let i = 0; i < 10; i++) {
+                        try {
+                            await iterator.next();
+                        } catch (error) {
+                            // Ignore errors as we expect them
+                        }
+                    }
+
+                    // Verify it attempted more retries than the usual limit
+                    expect(cline.api.createMessage).toHaveBeenCalledTimes(11); // Initial attempt + 10 retries
+
+                    // Verify retry messages don't mention attempt numbers
+                    expect(saySpy).toHaveBeenCalledWith(
+                        'api_req_retry_delayed',
+                        expect.stringContaining('Retrying in 1 seconds...'),
+                        undefined,
+                        true
+                    );
+                    expect(saySpy).not.toHaveBeenCalledWith(
+                        'api_req_retry_delayed',
+                        expect.stringContaining('Attempt'),
+                        undefined,
+                        true
+                    );
                 });
 
-                // Mock previous API request message
-                cline.clineMessages = [{
-                    ts: Date.now(),
-                    type: 'say',
-                    say: 'api_req_started',
-                    text: JSON.stringify({
-                        tokensIn: 100,
-                        tokensOut: 50,
-                        cacheWrites: 0,
-                        cacheReads: 0,
-                        request: 'test request'
-                    })
-                }];
+                it('should handle API retry with countdown', async () => {
+                    const cline = new Cline(
+                        mockProvider,
+                        mockApiConfig,
+                        undefined,
+                        false,
+                        undefined,
+                        'test task'
+                    );
 
-                // Trigger API request
-                const iterator = cline.attemptApiRequest(0);
-                await iterator.next();
+                    const saySpy = jest.spyOn(cline, 'say');
 
-                // Verify countdown messages
-                expect(saySpy).toHaveBeenCalledWith(
-                    'api_req_retry_delayed',
-                    expect.stringContaining('Retrying in 3 seconds'),
-                    undefined,
-                    true
-                );
-                expect(saySpy).toHaveBeenCalledWith(
-                    'api_req_retry_delayed',
-                    expect.stringContaining('Retrying in 2 seconds'),
-                    undefined,
-                    true
-                );
-                expect(saySpy).toHaveBeenCalledWith(
-                    'api_req_retry_delayed',
-                    expect.stringContaining('Retrying in 1 seconds'),
-                    undefined,
-                    true
-                );
-                expect(saySpy).toHaveBeenCalledWith(
-                    'api_req_retry_delayed',
-                    expect.stringContaining('Retrying now'),
-                    undefined,
-                    false
-                );
+                    // Mock createMessage to fail first then succeed
+                    let firstAttempt = true;
+                    jest.spyOn(cline.api, 'createMessage').mockImplementation(() => {
+                        if (firstAttempt) {
+                            firstAttempt = false;
+                            return mockFailedStream;
+                        }
+                        return mockSuccessStream;
+                    });
 
-                // Verify delay was called correctly
-                expect(mockDelay).toHaveBeenCalledTimes(3);
-                expect(mockDelay).toHaveBeenCalledWith(1000);
+                    // Set alwaysApproveResubmit and requestDelaySeconds
+                    mockProvider.getState = jest.fn().mockResolvedValue({
+                        alwaysApproveResubmit: true,
+                        requestDelaySeconds: 3,
+                        maxApiRetries: 2
+                    });
 
-                // Verify error message content
-                const errorMessage = saySpy.mock.calls.find(
-                    call => call[1]?.includes(mockError.message)
-                )?.[1];
-                expect(errorMessage).toBe(`${mockError.message}\n\nRetrying in 3 seconds...`);
+                    // Mock previous API request message
+                    cline.clineMessages = [{
+                        ts: Date.now(),
+                        type: 'say',
+                        say: 'api_req_started',
+                        text: JSON.stringify({
+                            tokensIn: 100,
+                            tokensOut: 50,
+                            cacheWrites: 0,
+                            cacheReads: 0,
+                            request: 'test request'
+                        })
+                    }];
+
+                    // Trigger API request
+                    const iterator = cline.attemptApiRequest(0);
+                    await iterator.next();
+
+                    // Verify countdown messages
+                    expect(saySpy).toHaveBeenCalledWith(
+                        'api_req_retry_delayed',
+                        expect.stringContaining('Retrying in 3 seconds... (Attempt 1 of 2)'),
+                        undefined,
+                        true
+                    );
+                    expect(saySpy).toHaveBeenCalledWith(
+                        'api_req_retry_delayed',
+                        expect.stringContaining('Retrying in 2 seconds... (Attempt 1 of 2)'),
+                        undefined,
+                        true
+                    );
+                    expect(saySpy).toHaveBeenCalledWith(
+                        'api_req_retry_delayed',
+                        expect.stringContaining('Retrying in 1 seconds... (Attempt 1 of 2)'),
+                        undefined,
+                        true
+                    );
+                    expect(saySpy).toHaveBeenCalledWith(
+                        'api_req_retry_delayed',
+                        expect.stringContaining('Retrying now'),
+                        undefined,
+                        false
+                    );
+
+                    // Verify delay was called correctly
+                    expect(mockDelay).toHaveBeenCalledTimes(3);
+                    expect(mockDelay).toHaveBeenCalledWith(1000);
+                });
+
+                it('should respect maxApiRetries limit', async () => {
+                    const cline = new Cline(
+                        mockProvider,
+                        mockApiConfig,
+                        undefined,
+                        false,
+                        undefined,
+                        'test task'
+                    );
+
+                    const saySpy = jest.spyOn(cline, 'say');
+
+                    // Mock createMessage to always fail
+                    jest.spyOn(cline.api, 'createMessage').mockReturnValue(mockFailedStream);
+
+                    // Set maxApiRetries to 2
+                    mockProvider.getState = jest.fn().mockResolvedValue({
+                        alwaysApproveResubmit: true,
+                        requestDelaySeconds: 1,
+                        maxApiRetries: 2
+                    });
+
+                    // Mock previous API request message
+                    cline.clineMessages = [{
+                        ts: Date.now(),
+                        type: 'say',
+                        say: 'api_req_started',
+                        text: JSON.stringify({
+                            tokensIn: 100,
+                            tokensOut: 50,
+                            cacheWrites: 0,
+                            cacheReads: 0,
+                            request: 'test request'
+                        })
+                    }];
+
+                    // Trigger API request and expect it to throw after maxApiRetries
+                    const iterator = cline.attemptApiRequest(0);
+                    await expect(iterator.next()).rejects.toThrow('Maximum retry attempts (2) reached');
+
+                    // Verify error message was shown
+                    expect(saySpy).toHaveBeenCalledWith(
+                        'error',
+                        expect.stringContaining('Maximum retry attempts (2) reached'),
+                        undefined
+                    );
+
+                    // Verify the correct number of retries were attempted
+                    expect(cline.api.createMessage).toHaveBeenCalledTimes(3); // Initial attempt + 2 retries
+                });
             });
 
             describe('loadContext', () => {
@@ -765,11 +885,11 @@ describe('Cline', () => {
                         undefined,
                         'test task'
                     );
-        
+
                     // Mock parseMentions to track calls
                     const mockParseMentions = jest.fn().mockImplementation(text => `processed: ${text}`);
                     jest.spyOn(require('../../core/mentions'), 'parseMentions').mockImplementation(mockParseMentions);
-        
+
                     const userContent = [
                         {
                             type: 'text',
@@ -796,14 +916,14 @@ describe('Cline', () => {
                             }]
                         } as Anthropic.ToolResultBlockParam
                     ];
-        
+
                     // Process the content
                     const [processedContent] = await cline['loadContext'](userContent);
-        
+
                     // Regular text should not be processed
                     expect((processedContent[0] as Anthropic.TextBlockParam).text)
                         .toBe('Regular text with @/some/path');
-        
+
                     // Text within task tags should be processed
                     expect((processedContent[1] as Anthropic.TextBlockParam).text)
                         .toContain('processed:');
@@ -812,7 +932,7 @@ describe('Cline', () => {
                         expect.any(String),
                         expect.any(Object)
                     );
-        
+
                     // Feedback tag content should be processed
                     const toolResult1 = processedContent[2] as Anthropic.ToolResultBlockParam;
                     const content1 = Array.isArray(toolResult1.content) ? toolResult1.content[0] : toolResult1.content;
@@ -822,7 +942,7 @@ describe('Cline', () => {
                         expect.any(String),
                         expect.any(Object)
                     );
-        
+
                     // Regular tool result should not be processed
                     const toolResult2 = processedContent[3] as Anthropic.ToolResultBlockParam;
                     const content2 = Array.isArray(toolResult2.content) ? toolResult2.content[0] : toolResult2.content;

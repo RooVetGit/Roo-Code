@@ -479,7 +479,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 									<div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
 										<input
 											type="range"
-											min="1"
+											min="0"
 											max="10"
 											step="1"
 											value={maxApiRetries}
@@ -489,9 +489,10 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 												accentColor: 'var(--vscode-button-background)',
 												height: '2px'
 											}}
+											aria-label="Maximum number of retry attempts (0 for no limit)"
 										/>
 										<span style={{ minWidth: '45px', textAlign: 'left' }}>
-											{maxApiRetries} tries
+											{maxApiRetries === 0 ? 'No Limit' : `${maxApiRetries} tries`}
 										</span>
 									</div>
 									<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>

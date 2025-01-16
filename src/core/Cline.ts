@@ -79,6 +79,7 @@ export class Cline {
 	private askResponseImages?: string[]
 	private lastMessageTs?: number
 	private consecutiveMistakeCount: number = 0
+	private apiRetryCount: number = 0
 	private consecutiveMistakeCountForApplyDiff: Map<string, number> = new Map()
 	private providerRef: WeakRef<ClineProvider>
 	private abort: boolean = false
@@ -841,12 +842,22 @@ export class Cline {
 		} catch (error) {
 			// note that this api_req_failed ask is unique in that we only present this option if the api hasn't streamed any content yet (ie it fails on the first chunk due), as it would allow them to hit a retry button. However if the api failed mid-stream, it could be in any arbitrary state where some tools may have executed, so that error is handled differently and requires cancelling the task entirely.
 			if (alwaysApproveResubmit) {
+				const { maxApiRetries } = await this.providerRef.deref()?.getState() ?? {}
+				const currentRetryCount = (this.apiRetryCount || 0) + 1
+				this.apiRetryCount = currentRetryCount
+
+				if (maxApiRetries !== undefined && maxApiRetries !== 0 && currentRetryCount > maxApiRetries) {
+					const errorMsg = `Maximum retry attempts (${maxApiRetries}) reached. ${error.message ?? "Unknown error"}`
+					await this.say("error", errorMsg)
+					throw error
+				}
+
 				const errorMsg = error.message ?? "Unknown error"
 				const requestDelay = requestDelaySeconds || 5
 				// Automatically retry with delay
 				// Show countdown timer in error color
 				for (let i = requestDelay; i > 0; i--) {
-					await this.say("api_req_retry_delayed", `${errorMsg}\n\nRetrying in ${i} seconds...`, undefined, true)
+					await this.say("api_req_retry_delayed", `${errorMsg}\n\nRetrying in ${i} seconds...${maxApiRetries !== undefined && maxApiRetries > 0 ? ` (Attempt ${currentRetryCount} of ${maxApiRetries})` : ''}`, undefined, true)
 					await delay(1000)
 				}
 				await this.say("api_req_retry_delayed", `${errorMsg}\n\nRetrying now...`, undefined, false)
@@ -1318,9 +1329,9 @@ export class Cline {
 
 								// Apply the diff to the original content
 								const diffResult = this.diffStrategy?.applyDiff(
-									originalContent, 
-									diffContent, 
-									parseInt(block.params.start_line ?? ''), 
+									originalContent,
+									diffContent,
+									parseInt(block.params.start_line ?? ''),
 									parseInt(block.params.end_line ?? '')
 								) ?? {
 									success: false,
@@ -2062,7 +2073,7 @@ export class Cline {
 		}
 
 		/*
-		Seeing out of bounds is fine, it means that the next too call is being built up and ready to add to assistantMessageContent to present. 
+		Seeing out of bounds is fine, it means that the next too call is being built up and ready to add to assistantMessageContent to present.
 		When you see the UI inactive during this, it means that a tool is breaking without presenting any UI. For example the write_to_file tool was breaking when relpath was undefined, and for invalid relpath it never presented UI.
 		*/
 		this.presentAssistantMessageLocked = false // this needs to be placed here, if not then calling this.presentAssistantMessage below would fail (sometimes) since it's locked
@@ -2558,7 +2569,7 @@ export class Cline {
 		const { mode } = await this.providerRef.deref()?.getState() ?? {}
 		const currentMode = mode ?? codeMode
 		details += `\n\n# Current Mode\n${currentMode}`
-		
+
 		// Add warning if not in code mode
 		if (!isToolAllowedForMode('write_to_file', currentMode) || !isToolAllowedForMode('execute_command', currentMode)) {
 			details += `\n\nNOTE: You are currently in '${currentMode}' mode which only allows read-only operations. To write files or execute commands, the user will need to switch to 'code' mode. Note that only the user can switch modes.`

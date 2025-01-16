@@ -69,7 +69,7 @@ export interface ExtensionState {
 	alwaysAllowMcp?: boolean
 	alwaysApproveResubmit?: boolean
 	requestDelaySeconds: number
-	maxApiRetries: number
+	maxApiRetries?: number
 	uriScheme?: string
 	allowedCommands?: string[]
 	soundEnabled?: boolean
