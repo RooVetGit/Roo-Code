@@ -97,6 +97,38 @@ export const AVAILABLE_TOOLS: Tool[] = [
                 description: 'The path of the directory to list code definitions for'
             }
         }
+    },
+    {
+        name: 'use_mcp_tool',
+        description: 'Request to use a tool provided by a connected MCP server',
+        parameters: {
+            server_name: {
+                required: true,
+                description: 'The name of the MCP server providing the tool'
+            },
+            tool_name: {
+                required: true,
+                description: 'The name of the tool to execute'
+            },
+            arguments: {
+                required: false,
+                description: 'A JSON string containing the tool\'s input parameters'
+            }
+        }
+    },
+    {
+        name: 'access_mcp_resource',
+        description: 'Request to access a resource provided by a connected MCP server',
+        parameters: {
+            server_name: {
+                required: true,
+                description: 'The name of the MCP server providing the resource'
+            },
+            uri: {
+                required: true,
+                description: 'The URI identifying the specific resource to access'
+            }
+        }
     }
 ];
 

@@ -66,3 +66,7 @@ export interface TaskExecutor {
     onError?(error: Error): void;
     onComplete?(result: string): void;
 }
+
+export interface GlobalStorageUri {
+    fsPath: string;
+}
