@@ -4,7 +4,7 @@ import { ApiConfiguration, ApiProvider, ModelInfo } from "./api"
 import { HistoryItem } from "./HistoryItem"
 import { McpServer } from "./mcp"
 import { GitCommit } from "../utils/git"
-import { Mode } from "../core/prompts/types"
+import { Mode, CustomPrompts } from "./modes"
 
 // webview will hold state
 export interface ExtensionMessage {
@@ -25,18 +25,26 @@ export interface ExtensionMessage {
 		| "enhancedPrompt"
 		| "commitSearchResults"
 		| "listApiConfig"
+		| "vsCodeLmModels"
+		| "vsCodeLmApiAvailable"
+		| "requestVsCodeLmModels"
+		| "updatePrompt"
+		| "systemPrompt"
+		| "autoApprovalEnabled"
 	text?: string
 	action?:
 		| "chatButtonClicked"
 		| "mcpButtonClicked"
 		| "settingsButtonClicked"
 		| "historyButtonClicked"
+		| "promptsButtonClicked"
 		| "didBecomeVisible"
 	invoke?: "sendMessage" | "primaryButtonClick" | "secondaryButtonClick"
 	state?: ExtensionState
 	images?: string[]
 	ollamaModels?: string[]
 	lmStudioModels?: string[]
+	vsCodeLmModels?: { vendor?: string; family?: string; version?: string; id?: string }[]
 	filePaths?: string[]
 	partialMessage?: ClineMessage
 	glamaModels?: Record<string, ModelInfo>
@@ -45,6 +53,7 @@ export interface ExtensionMessage {
 	mcpServers?: McpServer[]
 	commits?: GitCommit[]
 	listApiConfig?: ApiConfigMeta[]
+	mode?: Mode
 }
 
 export interface ApiConfigMeta {
@@ -62,6 +71,7 @@ export interface ExtensionState {
 	currentApiConfigName?: string
 	listApiConfigMeta?: ApiConfigMeta[]
 	customInstructions?: string
+	customPrompts?: CustomPrompts
 	alwaysAllowReadOnly?: boolean
 	alwaysAllowWrite?: boolean
 	alwaysAllowExecute?: boolean
@@ -83,7 +93,9 @@ export interface ExtensionState {
 	terminalOutputLineLimit?: number
 	mcpEnabled: boolean
 	mode: Mode
-	modeApiConfigs?: Record<Mode, string>;
+	modeApiConfigs?: Record<Mode, string>
+	enhancementApiConfigId?: string
+	autoApprovalEnabled?: boolean
 }
 
 export interface ClineMessage {

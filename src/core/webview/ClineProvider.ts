@@ -16,7 +16,9 @@ import { ApiConfiguration, ApiProvider, ModelInfo } from "../../shared/api"
 import { findLast } from "../../shared/array"
 import { ApiConfigMeta, ExtensionMessage } from "../../shared/ExtensionMessage"
 import { HistoryItem } from "../../shared/HistoryItem"
-import { WebviewMessage } from "../../shared/WebviewMessage"
+import { WebviewMessage, PromptMode } from "../../shared/WebviewMessage"
+import { defaultPrompts } from "../../shared/modes"
+import { SYSTEM_PROMPT, addCustomInstructions } from "../prompts/system"
 import { fileExistsAtPath } from "../../utils/fs"
 import { Cline } from "../Cline"
 import { openMention } from "../mentions"
@@ -28,7 +30,7 @@ import { enhancePrompt } from "../../utils/enhance-prompt"
 import { getCommitInfo, searchCommits, getWorkingState } from "../../utils/git"
 import { ConfigManager } from "../config/ConfigManager"
 import { Mode } from "../prompts/types"
-import { codeMode } from "../prompts/system"
+import { codeMode, CustomPrompts } from "../../shared/modes"
 
 /*
 https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -92,8 +94,12 @@ type GlobalStateKey =
 	| "maxApiRetries"
 	| "currentApiConfigName"
 	| "listApiConfigMeta"
+	| "vsCodeLmModelSelector"
 	| "mode"
 	| "modeApiConfigs"
+	| "customPrompts"
+	| "enhancementApiConfigId"
+	| "autoApprovalEnabled"
 
 export const GlobalFileNames = {
 	apiConversationHistory: "api_conversation_history.json",
@@ -112,7 +118,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	private cline?: Cline
 	private workspaceTracker?: WorkspaceTracker
 	mcpHub?: McpHub
-	private latestAnnouncementId = "dec-10-2024" // update to some unique identifier when we add a new announcement
+	private latestAnnouncementId = "jan-13-2025-custom-prompt" // update to some unique identifier when we add a new announcement
 	configManager: ConfigManager
 
 	constructor(
@@ -243,15 +249,22 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		await this.clearTask()
 		const {
 			apiConfiguration,
-			customInstructions,
+			customPrompts,
 			diffEnabled,
-			fuzzyMatchThreshold
+			fuzzyMatchThreshold,
+			mode,
+			customInstructions: globalInstructions,
 		} = await this.getState()
+
+		const modeInstructions = customPrompts?.[mode]?.customInstructions
+		const effectiveInstructions = [globalInstructions, modeInstructions]
+			.filter(Boolean)
+			.join('\n\n')
 
 		this.cline = new Cline(
 			this,
 			apiConfiguration,
-			customInstructions,
+			effectiveInstructions,
 			diffEnabled,
 			fuzzyMatchThreshold,
 			task,
@@ -263,15 +276,22 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		await this.clearTask()
 		const {
 			apiConfiguration,
-			customInstructions,
+			customPrompts,
 			diffEnabled,
-			fuzzyMatchThreshold
+			fuzzyMatchThreshold,
+			mode,
+			customInstructions: globalInstructions,
 		} = await this.getState()
+
+		const modeInstructions = customPrompts?.[mode]?.customInstructions
+		const effectiveInstructions = [globalInstructions, modeInstructions]
+			.filter(Boolean)
+			.join('\n\n')
 
 		this.cline = new Cline(
 			this,
 			apiConfiguration,
-			customInstructions,
+			effectiveInstructions,
 			diffEnabled,
 			fuzzyMatchThreshold,
 			undefined,
@@ -376,6 +396,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			async (message: WebviewMessage) => {
 				switch (message.type) {
 					case "webviewDidLaunch":
+
 						this.postStateToWebview()
 						this.workspaceTracker?.initializeFilePaths() // don't await
 						getTheme().then((theme) =>
@@ -553,8 +574,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						const lmStudioModels = await this.getLmStudioModels(message.text)
 						this.postMessageToWebview({ type: "lmStudioModels", lmStudioModels })
 						break
+					case "requestVsCodeLmModels":
+						const vsCodeLmModels = await this.getVsCodeLmModels()
+						this.postMessageToWebview({ type: "vsCodeLmModels", vsCodeLmModels })
+						break
 					case "refreshGlamaModels":
-							await this.refreshGlamaModels()
+						await this.refreshGlamaModels()
 						break
 					case "refreshOpenRouterModels":
 						await this.refreshOpenRouterModels()
@@ -569,7 +594,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						openImage(message.text!)
 						break
 					case "openFile":
-						openFile(message.text!)
+						openFile(message.text!, message.values as { create?: boolean; content?: string })
 						break
 					case "openMention":
 						openMention(message.text)
@@ -732,6 +757,56 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 						await this.postStateToWebview()
 						break
+					case "updateEnhancedPrompt":
+						const existingPrompts = await this.getGlobalState("customPrompts") || {}
+
+						const updatedPrompts = {
+							...existingPrompts,
+							enhance: message.text
+						}
+
+						await this.updateGlobalState("customPrompts", updatedPrompts)
+
+						// Get current state and explicitly include customPrompts
+						const currentState = await this.getState()
+
+						const stateWithPrompts = {
+							...currentState,
+							customPrompts: updatedPrompts
+						}
+
+						// Post state with prompts
+						this.view?.webview.postMessage({
+							type: "state",
+							state: stateWithPrompts
+						})
+						break
+					case "updatePrompt":
+						if (message.promptMode && message.customPrompt !== undefined) {
+							const existingPrompts = await this.getGlobalState("customPrompts") || {}
+
+							const updatedPrompts = {
+								...existingPrompts,
+								[message.promptMode]: message.customPrompt
+							}
+
+							await this.updateGlobalState("customPrompts", updatedPrompts)
+
+							// Get current state and explicitly include customPrompts
+							const currentState = await this.getState()
+
+							const stateWithPrompts = {
+								...currentState,
+								customPrompts: updatedPrompts
+							}
+
+							// Post state with prompts
+							this.view?.webview.postMessage({
+								type: "state",
+								state: stateWithPrompts
+							})
+						}
+						break
 					case "deleteMessage": {
 						const answer = await vscode.window.showInformationMessage(
 							"What would you like to delete?",
@@ -802,16 +877,32 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("screenshotQuality", message.value)
 						await this.postStateToWebview()
 						break
+					case "enhancementApiConfigId":
+						await this.updateGlobalState("enhancementApiConfigId", message.text)
+						await this.postStateToWebview()
+						break
+					case "autoApprovalEnabled":
+						await this.updateGlobalState("autoApprovalEnabled", message.bool ?? false)
+						await this.postStateToWebview()
+						break
 					case "enhancePrompt":
 						if (message.text) {
 							try {
-								const { apiConfiguration } = await this.getState()
-								const enhanceConfig = {
-									...apiConfiguration,
-									apiProvider: "openrouter" as const,
-									openRouterModelId: "gpt-4o",
+								const { apiConfiguration, customPrompts, listApiConfigMeta, enhancementApiConfigId } = await this.getState()
+
+								// Try to get enhancement config first, fall back to current config
+								let configToUse: ApiConfiguration = apiConfiguration
+								if (enhancementApiConfigId) {
+									const config = listApiConfigMeta?.find(c => c.id === enhancementApiConfigId)
+									if (config?.name) {
+										const loadedConfig = await this.configManager.LoadConfig(config.name)
+										if (loadedConfig.apiProvider) {
+											configToUse = loadedConfig
+										}
+									}
 								}
-								const enhancedPrompt = await enhancePrompt(enhanceConfig, message.text)
+
+								const enhancedPrompt = await enhancePrompt(configToUse, message.text, customPrompts?.enhance)
 								await this.postMessageToWebview({
 									type: "enhancedPrompt",
 									text: enhancedPrompt
@@ -819,11 +910,45 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							} catch (error) {
 								console.error("Error enhancing prompt:", error)
 								vscode.window.showErrorMessage("Failed to enhance prompt")
+								await this.postMessageToWebview({
+									type: "enhancedPrompt"
+								})
 							}
 						}
 						break
+					case "getSystemPrompt":
+						try {
+							const { apiConfiguration, customPrompts, customInstructions, preferredLanguage, browserViewportSize, mcpEnabled } = await this.getState()
+							const cwd = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) || ''
 
+							const mode = message.mode ?? codeMode
+							const instructions = await addCustomInstructions(
+								{ customInstructions, customPrompts, preferredLanguage },
+								cwd,
+								mode
+							)
 
+							const systemPrompt = await SYSTEM_PROMPT(
+								cwd,
+								apiConfiguration.openRouterModelInfo?.supportsComputerUse ?? false,
+								mcpEnabled ? this.mcpHub : undefined,
+								undefined,
+								browserViewportSize ?? "900x600",
+								mode,
+								customPrompts
+							)
+							const fullPrompt = instructions ? `${systemPrompt}${instructions}` : systemPrompt
+
+							await this.postMessageToWebview({
+								type: "systemPrompt",
+								text: fullPrompt,
+								mode: message.mode
+							})
+						} catch (error) {
+							console.error("Error getting system prompt:", error)
+							vscode.window.showErrorMessage("Failed to get system prompt")
+						}
+						break
 					case "searchCommits": {
 						const cwd = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0)
 						if (cwd) {
@@ -846,10 +971,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								await this.configManager.SaveConfig(message.text, message.apiConfiguration);
 								let listApiConfig = await this.configManager.ListConfig();
 
-								// Update listApiConfigMeta first to ensure UI has latest data
-								await this.updateGlobalState("listApiConfigMeta", listApiConfig);
-
 								await Promise.all([
+									this.updateGlobalState("listApiConfigMeta", listApiConfig),
 									this.updateApiConfiguration(message.apiConfiguration),
 									this.updateGlobalState("currentApiConfigName", message.text),
 								])
@@ -891,12 +1014,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							try {
 								const apiConfig = await this.configManager.LoadConfig(message.text);
 								const listApiConfig = await this.configManager.ListConfig();
-								const config = listApiConfig?.find(c => c.name === message.text);
-
-								// Update listApiConfigMeta first to ensure UI has latest data
-								await this.updateGlobalState("listApiConfigMeta", listApiConfig);
 
 								await Promise.all([
+									this.updateGlobalState("listApiConfigMeta", listApiConfig),
 									this.updateGlobalState("currentApiConfigName", message.text),
 									this.updateApiConfiguration(apiConfig),
 								])
@@ -1004,6 +1124,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			openRouterModelId,
 			openRouterModelInfo,
 			openRouterUseMiddleOutTransform,
+			vsCodeLmModelSelector,
 		} = apiConfiguration
 		await this.updateGlobalState("apiProvider", apiProvider)
 		await this.updateGlobalState("apiModelId", apiModelId)
@@ -1035,6 +1156,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		await this.updateGlobalState("openRouterModelId", openRouterModelId)
 		await this.updateGlobalState("openRouterModelInfo", openRouterModelInfo)
 		await this.updateGlobalState("openRouterUseMiddleOutTransform", openRouterUseMiddleOutTransform)
+		await this.updateGlobalState("vsCodeLmModelSelector", vsCodeLmModelSelector)
 		if (this.cline) {
 			this.cline.api = buildApiHandler(apiConfiguration)
 		}
@@ -1105,6 +1227,17 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		}
 	}
 
+	// VSCode LM API
+	private async getVsCodeLmModels() {
+		try {
+			const models = await vscode.lm.selectChatModels({});
+			return models || [];
+		} catch (error) {
+			console.error('Error fetching VS Code LM models:', error);
+			return [];
+		}
+	}
+
 	// OpenAi
 
 	async getOpenAiModels(baseUrl?: string, apiKey?: string) {
@@ -1161,6 +1294,33 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		const cacheDir = path.join(this.context.globalStorageUri.fsPath, "cache")
 		await fs.mkdir(cacheDir, { recursive: true })
 		return cacheDir
+	}
+
+	async handleGlamaCallback(code: string) {
+		let apiKey: string
+		try {
+			const response = await axios.post("https://glama.ai/api/gateway/v1/auth/exchange-code", { code })
+			if (response.data && response.data.apiKey) {
+				apiKey = response.data.apiKey
+			} else {
+				throw new Error("Invalid response from Glama API")
+			}
+		} catch (error) {
+			console.error("Error exchanging code for API key:", error)
+			throw error
+		}
+
+		const glama: ApiProvider = "glama"
+		await this.updateGlobalState("apiProvider", glama)
+		await this.storeSecret("glamaApiKey", apiKey)
+		await this.postStateToWebview()
+		if (this.cline) {
+			this.cline.api = buildApiHandler({
+				apiProvider: glama,
+				glamaApiKey: apiKey,
+			})
+		}
+		// await this.postMessageToWebview({ type: "action", action: "settingsButtonClicked" }) // bad ux if user is on welcome
 	}
 
 	async readGlamaModels(): Promise<Record<string, ModelInfo> | undefined> {
@@ -1488,6 +1648,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			currentApiConfigName,
 			listApiConfigMeta,
 			mode,
+			customPrompts,
+			enhancementApiConfigId,
+			autoApprovalEnabled,
 		} = await this.getState()
 
 		const allowedCommands = vscode.workspace
@@ -1506,11 +1669,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			uriScheme: vscode.env.uriScheme,
 			clineMessages: this.cline?.clineMessages || [],
 			taskHistory: (taskHistory || [])
-				.filter((item) => item.ts && item.task)
-				.sort((a, b) => b.ts - a.ts),
+				.filter((item: HistoryItem) => item.ts && item.task)
+				.sort((a: HistoryItem, b: HistoryItem) => b.ts - a.ts),
 			soundEnabled: soundEnabled ?? false,
 			diffEnabled: diffEnabled ?? true,
-			shouldShowAnnouncement: false, // lastShownAnnouncementId !== this.latestAnnouncementId,
+			shouldShowAnnouncement: lastShownAnnouncementId !== this.latestAnnouncementId,
 			allowedCommands,
 			soundVolume: soundVolume ?? 0.5,
 			browserViewportSize: browserViewportSize ?? "900x600",
@@ -1526,6 +1689,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			currentApiConfigName: currentApiConfigName ?? "default",
 			listApiConfigMeta: listApiConfigMeta ?? [],
 			mode: mode ?? codeMode,
+			customPrompts: customPrompts ?? {},
+			enhancementApiConfigId,
+			autoApprovalEnabled: autoApprovalEnabled ?? false,
 		}
 	}
 
@@ -1636,8 +1802,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			maxApiRetries,
 			currentApiConfigName,
 			listApiConfigMeta,
+			vsCodeLmModelSelector,
 			mode,
 			modeApiConfigs,
+			customPrompts,
+			enhancementApiConfigId,
+			autoApprovalEnabled,
 		] = await Promise.all([
 			this.getGlobalState("apiProvider") as Promise<ApiProvider | undefined>,
 			this.getGlobalState("apiModelId") as Promise<string | undefined>,
@@ -1693,8 +1863,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("maxApiRetries") as Promise<number | undefined>,
 			this.getGlobalState("currentApiConfigName") as Promise<string | undefined>,
 			this.getGlobalState("listApiConfigMeta") as Promise<ApiConfigMeta[] | undefined>,
+			this.getGlobalState("vsCodeLmModelSelector") as Promise<vscode.LanguageModelChatSelector | undefined>,
 			this.getGlobalState("mode") as Promise<Mode | undefined>,
 			this.getGlobalState("modeApiConfigs") as Promise<Record<Mode, string> | undefined>,
+			this.getGlobalState("customPrompts") as Promise<CustomPrompts | undefined>,
+			this.getGlobalState("enhancementApiConfigId") as Promise<string | undefined>,
+			this.getGlobalState("autoApprovalEnabled") as Promise<boolean | undefined>,
 		])
 
 		let apiProvider: ApiProvider
@@ -1743,6 +1917,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				openRouterModelId,
 				openRouterModelInfo,
 				openRouterUseMiddleOutTransform,
+				vsCodeLmModelSelector,
 			},
 			lastShownAnnouncementId,
 			customInstructions,
@@ -1796,6 +1971,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			currentApiConfigName: currentApiConfigName ?? "default",
 			listApiConfigMeta: listApiConfigMeta ?? [],
 			modeApiConfigs: modeApiConfigs ?? {} as Record<Mode, string>,
+			customPrompts: customPrompts ?? {},
+			enhancementApiConfigId,
+			autoApprovalEnabled: autoApprovalEnabled ?? false,
 		}
 	}
 

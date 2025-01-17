@@ -1,4 +1,7 @@
 import { ApiConfiguration, ApiProvider } from "./api"
+import { Mode, PromptComponent } from "./modes"
+
+export type PromptMode = Mode | 'enhance'
 
 export type AudioType = "notification" | "celebration" | "progress_loop"
 
@@ -58,11 +61,19 @@ export interface WebviewMessage {
 		| "terminalOutputLineLimit"
 		| "mcpEnabled"
 		| "searchCommits"
+		| "refreshGlamaModels"
 		| "alwaysApproveResubmit"
 		| "requestDelaySeconds"
 		| "maxApiRetries"
 		| "setApiConfigPassword"
+		| "requestVsCodeLmModels"
 		| "mode"
+		| "updatePrompt"
+		| "updateEnhancedPrompt"
+		| "getSystemPrompt"
+		| "systemPrompt"
+		| "enhancementApiConfigId"
+		| "autoApprovalEnabled"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
@@ -75,6 +86,9 @@ export interface WebviewMessage {
 	serverName?: string
 	toolName?: string
 	alwaysAllow?: boolean
+	mode?: Mode
+	promptMode?: PromptMode
+	customPrompt?: PromptComponent
 	dataUrls?: string[]
 	values?: Record<string, any>
 	query?: string
