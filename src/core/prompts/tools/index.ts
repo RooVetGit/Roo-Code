@@ -12,7 +12,8 @@ import { getAccessMcpResourceDescription } from "./access-mcp-resource"
 import { getSemanticSearchDescription } from "./semantic-search"
 import { DiffStrategy } from "../../diff/DiffStrategy"
 import { McpHub } from "../../../services/mcp/McpHub"
-import { Mode, ToolName, getModeConfig, isToolAllowedForMode } from "../../../shared/modes"
+import { Mode, ModeConfig, getModeConfig, isToolAllowedForMode } from "../../../shared/modes"
+import { ToolName, getToolName, getToolOptions, TOOL_GROUPS, ALWAYS_AVAILABLE_TOOLS } from "../../../shared/tool-groups"
 import { ToolArgs } from "./types"
 
 // Map of tool names to their description functions
@@ -40,8 +41,9 @@ export function getToolDescriptionsForMode(
 	diffStrategy?: DiffStrategy,
 	browserViewportSize?: string,
 	mcpHub?: McpHub,
+	customModes?: ModeConfig[],
 ): string {
-	const config = getModeConfig(mode)
+	const config = getModeConfig(mode, customModes)
 	const args: ToolArgs = {
 		cwd,
 		supportsComputerUse,
@@ -50,16 +52,27 @@ export function getToolDescriptionsForMode(
 		mcpHub,
 	}
 
-	// Map tool descriptions in the exact order specified in the mode's tools array
-	const descriptions = config.tools.map(([toolName, toolOptions]) => {
+	// Get all tools from the mode's groups and always available tools
+	const tools = new Set<string>()
+
+	// Add tools from mode's groups
+	config.groups.forEach((group) => {
+		TOOL_GROUPS[group].forEach((tool) => tools.add(tool))
+	})
+
+	// Add always available tools
+	ALWAYS_AVAILABLE_TOOLS.forEach((tool) => tools.add(tool))
+
+	// Map tool descriptions for all allowed tools
+	const descriptions = Array.from(tools).map((toolName) => {
 		const descriptionFn = toolDescriptionMap[toolName]
-		if (!descriptionFn || !isToolAllowedForMode(toolName as ToolName, mode)) {
+		if (!descriptionFn || !isToolAllowedForMode(toolName as ToolName, mode, customModes ?? [])) {
 			return undefined
 		}
 
 		return descriptionFn({
 			...args,
-			toolOptions,
+			toolOptions: undefined, // No tool options in group-based approach
 		})
 	})
 
