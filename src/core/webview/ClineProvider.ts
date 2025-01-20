@@ -466,7 +466,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						})
 
 						this.configManager
-							.ListConfig()
+							.listConfig()
 							.then(async (listApiConfig) => {
 								if (!listApiConfig) {
 									return
@@ -476,7 +476,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 									// check if first time init then sync with exist config
 									if (!checkExistKey(listApiConfig[0])) {
 										const { apiConfiguration } = await this.getState()
-										await this.configManager.SaveConfig(
+										await this.configManager.saveConfig(
 											listApiConfig[0].name ?? "default",
 											apiConfiguration,
 										)
@@ -487,11 +487,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								let currentConfigName = (await this.getGlobalState("currentApiConfigName")) as string
 
 								if (currentConfigName) {
-									if (!(await this.configManager.HasConfig(currentConfigName))) {
+									if (!(await this.configManager.hasConfig(currentConfigName))) {
 										// current config name not valid, get first config in list
 										await this.updateGlobalState("currentApiConfigName", listApiConfig?.[0]?.name)
 										if (listApiConfig?.[0]?.name) {
-											const apiConfig = await this.configManager.LoadConfig(
+											const apiConfig = await this.configManager.loadConfig(
 												listApiConfig?.[0]?.name,
 											)
 
@@ -746,8 +746,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("mode", newMode)
 
 						// Load the saved API config for the new mode if it exists
-						const savedConfigId = await this.configManager.GetModeConfigId(newMode)
-						const listApiConfig = await this.configManager.ListConfig()
+						const savedConfigId = await this.configManager.getModeConfigId(newMode)
+						const listApiConfig = await this.configManager.listConfig()
 
 						// Update listApiConfigMeta first to ensure UI has latest data
 						await this.updateGlobalState("listApiConfigMeta", listApiConfig)
@@ -756,7 +756,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						if (savedConfigId) {
 							const config = listApiConfig?.find((c) => c.id === savedConfigId)
 							if (config?.name) {
-								const apiConfig = await this.configManager.LoadConfig(config.name)
+								const apiConfig = await this.configManager.loadConfig(config.name)
 								await Promise.all([
 									this.updateGlobalState("currentApiConfigName", config.name),
 									this.updateApiConfiguration(apiConfig),
@@ -768,7 +768,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							if (currentApiConfigName) {
 								const config = listApiConfig?.find((c) => c.name === currentApiConfigName)
 								if (config?.id) {
-									await this.configManager.SetModeConfig(newMode, config.id)
+									await this.configManager.setModeConfig(newMode, config.id)
 								}
 							}
 						}
@@ -933,7 +933,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								if (enhancementApiConfigId) {
 									const config = listApiConfigMeta?.find((c) => c.id === enhancementApiConfigId)
 									if (config?.name) {
-										const loadedConfig = await this.configManager.LoadConfig(config.name)
+										const loadedConfig = await this.configManager.loadConfig(config.name)
 										if (loadedConfig.apiProvider) {
 											configToUse = loadedConfig
 										}
@@ -1024,8 +1024,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 					case "upsertApiConfiguration":
 						if (message.text && message.apiConfiguration) {
 							try {
-								await this.configManager.SaveConfig(message.text, message.apiConfiguration)
-								let listApiConfig = await this.configManager.ListConfig()
+								await this.configManager.saveConfig(message.text, message.apiConfiguration)
+								let listApiConfig = await this.configManager.listConfig()
 
 								await Promise.all([
 									this.updateGlobalState("listApiConfigMeta", listApiConfig),
@@ -1045,10 +1045,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							try {
 								const { oldName, newName } = message.values
 
-								await this.configManager.SaveConfig(newName, message.apiConfiguration)
-								await this.configManager.DeleteConfig(oldName)
+								await this.configManager.saveConfig(newName, message.apiConfiguration)
+								await this.configManager.deleteConfig(oldName)
 
-								let listApiConfig = await this.configManager.ListConfig()
+								let listApiConfig = await this.configManager.listConfig()
 								const config = listApiConfig?.find((c) => c.name === newName)
 
 								// Update listApiConfigMeta first to ensure UI has latest data
@@ -1066,8 +1066,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 					case "loadApiConfiguration":
 						if (message.text) {
 							try {
-								const apiConfig = await this.configManager.LoadConfig(message.text)
-								const listApiConfig = await this.configManager.ListConfig()
+								const apiConfig = await this.configManager.loadConfig(message.text)
+								const listApiConfig = await this.configManager.listConfig()
 
 								await Promise.all([
 									this.updateGlobalState("listApiConfigMeta", listApiConfig),
@@ -1095,8 +1095,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							}
 
 							try {
-								await this.configManager.DeleteConfig(message.text)
-								const listApiConfig = await this.configManager.ListConfig()
+								await this.configManager.deleteConfig(message.text)
+								const listApiConfig = await this.configManager.listConfig()
 
 								// Update listApiConfigMeta first to ensure UI has latest data
 								await this.updateGlobalState("listApiConfigMeta", listApiConfig)
@@ -1104,7 +1104,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								// If this was the current config, switch to first available
 								let currentApiConfigName = await this.getGlobalState("currentApiConfigName")
 								if (message.text === currentApiConfigName && listApiConfig?.[0]?.name) {
-									const apiConfig = await this.configManager.LoadConfig(listApiConfig[0].name)
+									const apiConfig = await this.configManager.loadConfig(listApiConfig[0].name)
 									await Promise.all([
 										this.updateGlobalState("currentApiConfigName", listApiConfig[0].name),
 										this.updateApiConfiguration(apiConfig),
@@ -1120,7 +1120,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						break
 					case "getListApiConfiguration":
 						try {
-							let listApiConfig = await this.configManager.ListConfig()
+							let listApiConfig = await this.configManager.listConfig()
 							await this.updateGlobalState("listApiConfigMeta", listApiConfig)
 							this.postMessageToWebview({ type: "listApiConfig", listApiConfig })
 						} catch (error) {
@@ -1195,10 +1195,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		const { mode } = await this.getState()
 		if (mode) {
 			const currentApiConfigName = await this.getGlobalState("currentApiConfigName")
-			const listApiConfig = await this.configManager.ListConfig()
+			const listApiConfig = await this.configManager.listConfig()
 			const config = listApiConfig?.find((c) => c.name === currentApiConfigName)
 			if (config?.id) {
-				await this.configManager.SetModeConfig(mode, config.id)
+				await this.configManager.setModeConfig(mode, config.id)
 			}
 		}
 
@@ -2159,7 +2159,16 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	// dev
 
 	async resetState() {
-		vscode.window.showInformationMessage("Resetting state...")
+		const answer = await vscode.window.showInformationMessage(
+			"Are you sure you want to reset all state and secret storage in the extension? This cannot be undone.",
+			{ modal: true },
+			"Yes",
+		)
+
+		if (answer !== "Yes") {
+			return
+		}
+
 		for (const key of this.context.globalState.keys()) {
 			await this.context.globalState.update(key, undefined)
 		}
@@ -2179,11 +2188,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		for (const key of secretKeys) {
 			await this.storeSecret(key, undefined)
 		}
+		await this.configManager.resetAllConfigs()
 		if (this.cline) {
 			this.cline.abortTask()
 			this.cline = undefined
 		}
-		vscode.window.showInformationMessage("State reset")
 		await this.postStateToWebview()
 		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 	}
