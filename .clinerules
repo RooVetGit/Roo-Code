@@ -13,3 +13,103 @@
 # Adding a New Setting
 
 To add a new setting that persists its state, follow the steps in cline_docs/settings.md
+
+# 実装するもの
+以下のステップは「Roo Cline をフォークして、webview-ui 以下の React アプリを自前 Web アプリとして運用できるようにしつつ、Roo Cline（オリジナル）からの更新も取り込めるようにする」ための具体的な手順例です。
+なお、VS Code 拡張向けに書かれている部分（vscode.postMessage や acquireVsCodeApi など）がある程度散在しているので、それらをどう置き換えるかも含めて流れをまとめています。
+
+1. GitHub上でRoo Clineをフォークする
+	1.	Roo ClineのGitHubリポジトリ（例: https://github.com/RooVetGit/Roo-Cline）にアクセスし、「Fork」ボタンをクリック。
+	2.	自分のGitHubアカウントまたは組織配下にフォークを作成する。
+
+2. フォークしたリポジトリをローカルにCloneする
+
+git clone https://github.com/<あなたのアカウント名>/Roo-Cline.git
+cd Roo-Cline
+
+	•	これでローカルにフォーク元と同じ内容が落ちてきます。
+
+3. オリジナルリポジトリを「upstream」として登録する
+
+git remote add upstream https://github.com/RooVetGit/Roo-Cline.git
+git fetch upstream
+
+	•	こうしておくと、後で git pull upstream main などでオリジナルの更新を取り込めます。
+
+4. ブランチ運用方針の検討
+	•	メインブランチ（main）で直接カスタムしても良いですが、新しいブランチ（例: feat/standalone-webapp）を切って開発する方が安全な場合もあります。
+	•	以下は main をそのまま使う例とします。
+
+5. パッケージをインストールする
+	•	Roo Cline の大元の package.json もありますが、VS Code 拡張の依存モジュールと Reactアプリの依存モジュールは別々です。
+	•	ルートディレクトリで npm install（依存がある程度インストールされる）
+	•	webview-ui ディレクトリに移動して npm install
+（あるいは npm run install:all というスクリプトで両方インストールするケースも）
+
+cd webview-ui
+npm install
+cd ..
+
+6. webview-ui のReactアプリを“スタンドアロン”で起動確認してみる
+	•	webview-ui ディレクトリで npm start すると、通常のReact開発サーバが立ち上がり（localhost:3000など）アクセスできます。
+	•	ただしこの段階では、vscode.postMessage が呼ばれたり、acquireVsCodeApi が無い環境で例外が出るかもしれません（ブラウザコンソールにエラーが出るなど）。
+
+6-1. vscode関連の呼び出しの除去 / 置換
+	•	webview-ui/src/utils/vscode.ts 辺りで acquireVsCodeApi をラップしています。ここを見直し、「ブラウザ環境ならconsole.logに置き換える」ようになっている部分もあります。
+	•	より完全に外部APIへ差し替えたい場合は、vscode.postMessage() が呼ばれる箇所をすべて検索し、独自関数（例：sendMessage）に書き換えて、そこから自分のサーバ（REST, WebSocket 等）に送るように実装し直す、などの対応をします。
+
+例：雑な置換方法（シンプル版）
+	•	まずはビルドが落ちないよう、vscode.postMessage() を「console.log()に置き換えておく」だけにしておく。
+	•	これでビルド時や実行時エラーは回避でき、Reactアプリとしては一応起動するようになる。
+	•	後で必要な箇所だけ、実際のHTTPリクエストやWebSocket通信に置き換える。
+
+例：関数抽象化
+	•	webview-ui/src/utils/vscode.ts の中で「VSCode API が有るか無いかを判定してpostMessageを行う」仕組みになっているが、
+これをもう少し細分化して
+
+export function postMessage(type: string, payload: any) {
+  if (window.isVsCodeEnv) {
+    // vscode.postMessage(type, payload)
+  } else {
+    // axiosなどでサーバへ送る or 何もしない
+  }
+}
+
+のようにして、UI側からは postMessage 関数を呼ぶだけにする。
+
+6-2. acquireVsCodeApi の参照箇所が残るとビルドが落ちる場合
+	•	webview-ui/src/utils/vscode.ts などで typeof acquireVsCodeApi === 'function' かどうかを確認している箇所があるはず。そこを “単に常にundefined” にしておくか、ビルドエラー回避する程度でもOKです。
+
+7. スタンドアロンビルドを試す
+	•	上記の修正が済んだら（あるいは仮でも済ませたら） webview-ui ディレクトリで npm run build を実行。
+	•	正常にビルドが通れば、webview-ui/build 配下に 静的なHTML/CSS/JS が生成されます。
+	•	これを your-website.com/roo-cline-ui/ のようなところへ配置すれば、Reactアプリとしてブラウザから直接アクセスできるように。
+
+8. 自前のWebアプリでどのようにUIを使うか
+	•	結局 「Reactのシングルページアプリケーションとしてそのまま使う」 か 「一部コンポーネントのみ再利用する」 かによって方針が変わります。
+	•	もし SPA として丸ごと使うなら、build フォルダをデプロイすればOK。
+	•	一部コンポーネント（チャットUIだけなど）を抜き出して使いたいなら、webview-ui/src/components 配下などを適宜取り込み、自分の React プロジェクトに組み込むアプローチになります。
+
+9. オリジナルの更新をフォークに取り込む
+	•	必要に応じて定期的に、フォーク元のRoo Clineのmainブランチを取り込みます。例えば:
+
+git fetch upstream
+git merge upstream/main
+
+または
+
+git rebase upstream/main
+
+	•	衝突（コンフリクト）が発生した場合は手動で解消し、プッシュ。
+	•	これにより、Roo Cline 側で webview-ui のファイルが更新されても自分の変更内容とマージしながら追随できます。
+
+10. 必要に応じて適宜リファクタリングや差分処理
+	•	webview-ui のアプリはさまざまな箇所で VS Code が提供する「拡張機能の内部API」を参照しているので、すべてを別のWebアプリとして動かすには不要なコードも多いかもしれません。
+	•	そこは段階的に「VS Code 拡張専用の箇所」を削ぎ落としながら、あるいは何らかのフラグを立てて分岐させる形で進めると良いでしょう（例：「useVsCodeEnvironment」という boolean を用意して分岐するなど）。
+
+補足
+	•	簡単に言うと、「VS Code 向けの通信部分」をすべて“ダミー”か“自分のサーバ通信”に置き換えればスタンドアロンのWebアプリとして動くようになります。
+	•	いきなり大きく書き換えるのではなく、まずビルドエラーにならないようにモック化しておき、少しずつAPIを置き換えていく手法が無難です。
+	•	ユーザーからの入力をどうサーバに送るのか、またサーバからのレスポンスをどうUIに反映するかなど、全体の通信フローを自前で決める必要があります（VS Code 版では拡張が担っていた部分）。
+
+これらを順に進めれば、「フォークしたRoo ClineのReact UIを自作のWebアプリとして流用しながら、必要に応じてオリジナルの更新を取り込む」形が実現できます。

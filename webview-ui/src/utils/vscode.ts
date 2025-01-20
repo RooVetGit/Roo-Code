@@ -1,79 +1,116 @@
 import { WebviewMessage } from "../../../src/shared/WebviewMessage"
-import type { WebviewApi } from "vscode-webview"
+import { CommunicationFactory } from "../services/api/communication-factory"
+import { createCommunicationConfig, CommunicationOptions } from "../services/api/types"
 
 /**
- * A utility wrapper around the acquireVsCodeApi() function, which enables
- * message passing and state management between the webview and extension
+ * A utility wrapper around the communication layer, which enables
+ * message passing and state management between the webview and server
  * contexts.
- *
- * This utility also enables webview code to be run in a web browser-based
- * dev server by using native web browser features that mock the functionality
- * enabled by acquireVsCodeApi.
  */
 class VSCodeAPIWrapper {
-	private readonly vsCodeApi: WebviewApi<unknown> | undefined
+  private readonly communicationHandler
 
-	constructor() {
-		// Check if the acquireVsCodeApi function exists in the current development
-		// context (i.e. VS Code development window or web browser)
-		if (typeof acquireVsCodeApi === "function") {
-			this.vsCodeApi = acquireVsCodeApi()
-		}
-	}
+  constructor() {
+    // Reset any existing instance to ensure clean state
+    CommunicationFactory.resetInstance()
+    const factory = CommunicationFactory.getInstance()
+    
+    // 環境に応じた通信ハンドラーを設定
+    try {
+      if (typeof acquireVsCodeApi === "function") {
+        factory.configure(createCommunicationConfig({ mode: "vscode" }))
+      } else if (process.env.COMMUNICATION_MODE === "rest") {
+        factory.configure(
+          createCommunicationConfig({
+            mode: "rest",
+            restUrl: process.env.REST_API_URL || "http://localhost:3001",
+            pollingInterval: parseInt(process.env.POLLING_INTERVAL || "1000", 10),
+          })
+        )
+      } else {
+        factory.configure(
+          createCommunicationConfig({
+            mode: "websocket",
+            wsUrl: process.env.WEBSOCKET_URL || "ws://localhost:3001",
+          })
+        )
+      }
+    } catch (error) {
+      console.error("Failed to configure communication handler:", error)
+    }
 
-	/**
-	 * Post a message (i.e. send arbitrary data) to the owner of the webview.
-	 *
-	 * @remarks When running webview code inside a web browser, postMessage will instead
-	 * log the given message to the console.
-	 *
-	 * @param message Abitrary data (must be JSON serializable) to send to the extension context.
-	 */
-	public postMessage(message: WebviewMessage) {
-		if (this.vsCodeApi) {
-			this.vsCodeApi.postMessage(message)
-		} else {
-			console.log(message)
-		}
-	}
+    // 設定後にハンドラーを取得
+    this.communicationHandler = factory.getHandler()
+  }
 
-	/**
-	 * Get the persistent state stored for this webview.
-	 *
-	 * @remarks When running webview source code inside a web browser, getState will retrieve state
-	 * from local storage (https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage).
-	 *
-	 * @return The current state or `undefined` if no state has been set.
-	 */
-	public getState(): unknown | undefined {
-		if (this.vsCodeApi) {
-			return this.vsCodeApi.getState()
-		} else {
-			const state = localStorage.getItem("vscodeState")
-			return state ? JSON.parse(state) : undefined
-		}
-	}
+  /**
+   * Post a message to the server.
+   */
+  public postMessage(message: WebviewMessage) {
+    if (this.communicationHandler) {
+      this.communicationHandler.send(message)
+    }
+  }
 
-	/**
-	 * Set the persistent state stored for this webview.
-	 *
-	 * @remarks When running webview source code inside a web browser, setState will set the given
-	 * state using local storage (https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage).
-	 *
-	 * @param newState New persisted state. This must be a JSON serializable object. Can be retrieved
-	 * using {@link getState}.
-	 *
-	 * @return The new state.
-	 */
-	public setState<T extends unknown | undefined>(newState: T): T {
-		if (this.vsCodeApi) {
-			return this.vsCodeApi.setState(newState)
-		} else {
-			localStorage.setItem("vscodeState", JSON.stringify(newState))
-			return newState
-		}
-	}
+  /**
+   * Get the persistent state.
+   */
+  public getState(): unknown | undefined {
+    return this.communicationHandler?.getState()
+  }
+
+  /**
+   * Set the persistent state.
+   */
+  public setState<T extends unknown | undefined>(newState: T): T {
+    return this.communicationHandler?.setState(newState) ?? newState
+  }
+
+  /**
+   * Configure the communication settings.
+   */
+  public static configure(partialConfig: Partial<CommunicationOptions> = {}) {
+    try {
+      const config: CommunicationOptions = {
+        mode: partialConfig.mode || "websocket",
+        wsUrl: partialConfig.wsUrl,
+        restUrl: partialConfig.restUrl,
+        pollingInterval: partialConfig.pollingInterval,
+      }
+
+      // Reset any existing instance before configuring
+      CommunicationFactory.resetInstance()
+      const factory = CommunicationFactory.getInstance()
+      factory.configure(createCommunicationConfig(config))
+    } catch (error) {
+      console.error("Failed to configure VSCode wrapper:", error)
+    }
+  }
+
+  /**
+   * Reset the communication layer.
+   */
+  public static reset() {
+    try {
+      CommunicationFactory.resetInstance()
+    } catch (error) {
+      console.error("Failed to reset VSCode wrapper:", error)
+    }
+  }
 }
 
-// Exports class singleton to prevent multiple invocations of acquireVsCodeApi.
+// シングルトンインスタンスを作成する前に既存のインスタンスをリセット
+try {
+  VSCodeAPIWrapper.reset()
+} catch (error) {
+  console.error("Failed to reset VSCode wrapper:", error)
+}
+
+// Exports class singleton to prevent multiple instances
 export const vscode = new VSCodeAPIWrapper()
+
+// Allow configuration from the application
+export const configureVSCode = VSCodeAPIWrapper.configure
+
+// Allow resetting for testing purposes
+export const resetVSCode = VSCodeAPIWrapper.reset
