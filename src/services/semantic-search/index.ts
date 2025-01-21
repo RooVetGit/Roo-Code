@@ -1,4 +1,4 @@
-import { CodeDefinition } from "./types"
+import { CodeDefinition, convertSegmentToDefinition } from "./types"
 import { PersistentVectorStore } from "./vector-store/persistent"
 import { SearchResult, Vector, VectorWithMetadata } from "./vector-store/types"
 import { WorkspaceCache } from "./cache/workspace-cache"
@@ -7,6 +7,7 @@ import * as path from "path"
 import { EmbeddingModel } from "./embeddings/types"
 import { MiniLMModel } from "./embeddings/minilm"
 import * as vscode from "vscode"
+import { TreeSitterParser } from "./parser/tree-sitter"
 
 export type ModelType = "minilm"
 
@@ -55,6 +56,7 @@ export class SemanticSearchService {
 	private readonly maxMemoryBytes: number
 	private initializationPromise: Promise<void> | null = null
 	private initializationError: Error | null = null
+	private parser: TreeSitterParser
 
 	constructor(private config: SemanticSearchConfig) {
 		const modelConfig = {
@@ -65,6 +67,7 @@ export class SemanticSearchService {
 		this.model = new MiniLMModel(modelConfig)
 		this.cache = new WorkspaceCache(config.context.globalState)
 		this.maxMemoryBytes = config.maxMemoryBytes ?? 100 * 1024 * 1024 // Default 100MB
+		this.parser = new TreeSitterParser()
 	}
 
 	async initialize(): Promise<void> {
@@ -238,85 +241,122 @@ export class SemanticSearchService {
 		}
 	}
 
-	async addToIndex(definition: CodeDefinition): Promise<void> {
+	async addToIndex(filePath: string): Promise<void> {
 		// Don't call ensureInitialized() during the initialization process
 		if (!this.initializationPromise) {
 			await this.ensureInitialized()
 		}
 
-		console.log(`Indexing file: ${definition.filePath} (${definition.type}: ${definition.name})`)
+		console.log(`Parsing file: ${filePath}`)
 
-		// Try to get vector from cache first
-		let vector = await this.cache.get(definition)
+		try {
+			// Parse the file using tree-sitter
+			const parsedFile = await this.parser.parseFile(filePath)
+			console.log(`Found ${parsedFile.segments.length} code segments in ${filePath}`)
 
-		if (!vector) {
-			// Generate new embedding if not in cache
-			vector = await this.model.embed(definition.content)
-			await this.cache.set(definition, vector)
-			console.log(`Generated new embedding for ${definition.filePath}`)
-		} else {
-			console.log(`Using cached embedding for ${definition.filePath}`)
-		}
+			// Convert segments to definitions and index them
+			for (const segment of parsedFile.segments) {
+				const definition = convertSegmentToDefinition(segment, filePath)
 
-		// Check memory usage before adding to store
-		const stats = await this.getMemoryStats()
-		const newVectorMemory =
-			MemoryMonitor.estimateVectorSize(vector) + MemoryMonitor.estimateMetadataSize(definition)
-		const totalMemory =
-			stats.totalVectorMemory + stats.totalMetadataMemory + stats.totalCacheMemory + newVectorMemory
+				// Try to get vector from cache first
+				let vector = await this.cache.get(definition)
 
-		if (totalMemory > this.maxMemoryBytes) {
-			// If we're over the limit, clear the cache first
-			if (stats.totalCacheMemory > 0) {
-				console.log("Memory limit exceeded, clearing cache")
-				await this.cache.clear()
-			}
-
-			// If still over limit, start removing old vectors
-			if (totalMemory - stats.totalCacheMemory > this.maxMemoryBytes) {
-				// For now, just clear everything - in future we could be more selective
-				this.store.clear()
-				throw new Error(
-					`Memory usage exceeded limit of ${MemoryMonitor.formatBytes(this.maxMemoryBytes)}. ` +
-						`Vector store has been cleared.`,
-				)
-			}
-		}
-
-		await this.store.add(vector, definition)
-		console.log(`Successfully indexed ${definition.filePath}`)
-	}
-
-	async addBatchToIndex(definitions: CodeDefinition[]): Promise<void> {
-		// Don't call ensureInitialized() during the initialization process
-		if (!this.initializationPromise) {
-			await this.ensureInitialized()
-		}
-
-		console.log(`Batch indexing ${definitions.length} files...`)
-
-		// Try to get vectors from cache first
-		const vectors = await Promise.all(
-			definitions.map(async (def) => {
-				const cached = await this.cache.get(def)
-				if (cached) {
-					console.log(`Using cached embedding for ${def.filePath}`)
-					return cached
+				if (!vector) {
+					// Generate new embedding if not in cache
+					vector = await this.model.embed(definition.content)
+					await this.cache.set(definition, vector)
+					console.log(
+						`Generated new embedding for ${definition.filePath} (${definition.type}: ${definition.name})`,
+					)
+				} else {
+					console.log(
+						`Using cached embedding for ${definition.filePath} (${definition.type}: ${definition.name})`,
+					)
 				}
 
-				// Generate new embedding if not in cache
-				const vector = await this.model.embed(def.content)
-				await this.cache.set(def, vector)
-				console.log(`Generated new embedding for ${def.filePath}`)
-				return vector
-			}),
-		)
+				// Check memory usage before adding to store
+				const stats = await this.getMemoryStats()
+				const newVectorMemory =
+					MemoryMonitor.estimateVectorSize(vector) + MemoryMonitor.estimateMetadataSize(definition)
+				const totalMemory =
+					stats.totalVectorMemory + stats.totalMetadataMemory + stats.totalCacheMemory + newVectorMemory
+
+				if (totalMemory > this.maxMemoryBytes) {
+					// If we're over the limit, clear the cache first
+					if (stats.totalCacheMemory > 0) {
+						console.log("Memory limit exceeded, clearing cache")
+						await this.cache.clear()
+					}
+
+					// If still over limit, start removing old vectors
+					if (totalMemory - stats.totalCacheMemory > this.maxMemoryBytes) {
+						// For now, just clear everything - in future we could be more selective
+						this.store.clear()
+						throw new Error(
+							`Memory usage exceeded limit of ${MemoryMonitor.formatBytes(this.maxMemoryBytes)}. ` +
+								`Vector store has been cleared.`,
+						)
+					}
+				}
+
+				await this.store.add(vector, definition)
+			}
+
+			console.log(`Successfully indexed ${parsedFile.segments.length} segments from ${filePath}`)
+		} catch (error) {
+			console.error(`Error indexing file ${filePath}:`, error)
+			throw error
+		}
+	}
+
+	async addBatchToIndex(filePaths: string[]): Promise<void> {
+		// Don't call ensureInitialized() during the initialization process
+		if (!this.initializationPromise) {
+			await this.ensureInitialized()
+		}
+
+		console.log(`Batch indexing ${filePaths.length} files...`)
+
+		const allSegments: { definition: CodeDefinition; vector: Vector }[] = []
+
+		// First parse all files and generate/retrieve embeddings
+		for (const filePath of filePaths) {
+			try {
+				const parsedFile = await this.parser.parseFile(filePath)
+				console.log(`Found ${parsedFile.segments.length} code segments in ${filePath}`)
+
+				for (const segment of parsedFile.segments) {
+					const definition = convertSegmentToDefinition(segment, filePath)
+
+					// Try to get vector from cache first
+					let vector = await this.cache.get(definition)
+
+					if (!vector) {
+						// Generate new embedding if not in cache
+						vector = await this.model.embed(definition.content)
+						await this.cache.set(definition, vector)
+						console.log(
+							`Generated new embedding for ${definition.filePath} (${definition.type}: ${definition.name})`,
+						)
+					} else {
+						console.log(
+							`Using cached embedding for ${definition.filePath} (${definition.type}: ${definition.name})`,
+						)
+					}
+
+					allSegments.push({ definition, vector })
+				}
+			} catch (error) {
+				console.error(`Error processing file ${filePath}:`, error)
+				// Continue with other files
+			}
+		}
 
 		// Check memory usage before adding to store
 		const stats = await this.getMemoryStats()
-		const newVectorsMemory = vectors.reduce(
-			(sum, vector, i) =>
-				sum + MemoryMonitor.estimateVectorSize(vector) + MemoryMonitor.estimateMetadataSize(definitions[i]),
+		const newVectorsMemory = allSegments.reduce(
+			(sum, { vector, definition }) =>
+				sum + MemoryMonitor.estimateVectorSize(vector) + MemoryMonitor.estimateMetadataSize(definition),
 			0,
 		)
 		const totalMemory =
@@ -340,13 +380,14 @@ export class SemanticSearchService {
 			}
 		}
 
+		// Add all segments to the store
 		await this.store.addBatch(
-			vectors.map((vector, i) => ({
+			allSegments.map(({ vector, definition }) => ({
 				vector,
-				metadata: definitions[i],
+				metadata: definition,
 			})),
 		)
-		console.log(`Successfully batch indexed ${definitions.length} files`)
+		console.log(`Successfully batch indexed ${allSegments.length} segments from ${filePaths.length} files`)
 	}
 
 	async search(query: string): Promise<SearchResult[]> {
@@ -370,7 +411,10 @@ export class SemanticSearchService {
 			console.log("Query embedding generated successfully")
 
 			console.log("Searching vector store...")
-			const results = await this.store.search(queryVector, this.config.maxResults ?? 10)
+			const results = await this.store.search(
+				queryVector,
+				this.config.maxResults ? this.config.maxResults * 2 : 20,
+			) // Get more results for better deduplication
 			console.log(`Found ${results.length} results before filtering`)
 
 			// Always log scores for debugging
@@ -382,17 +426,22 @@ export class SemanticSearchService {
 			})
 
 			// Filter by minimum score if configured
+			let filteredResults = results
 			if (this.config.minScore !== undefined) {
 				console.log(`\nFiltering results with minimum score ${this.config.minScore}`)
-
-				const filteredResults = results.filter((r) => r.score >= this.config.minScore!)
+				filteredResults = results.filter((r) => r.score >= this.config.minScore!)
 				console.log(`Filtered to ${filteredResults.length} results`)
-
-				return filteredResults
 			}
 
+			// Deduplicate results
+			const dedupedResults = this.deduplicateResults(filteredResults)
+			console.log(`Deduplicated to ${dedupedResults.length} results`)
+
+			// Limit to maxResults
+			const finalResults = dedupedResults.slice(0, this.config.maxResults ?? 10)
+
 			// Log detailed results for debugging
-			results.forEach((result, index) => {
+			finalResults.forEach((result, index) => {
 				console.log(`Result ${index + 1}:`)
 				console.log(`- Score: ${result.score}`)
 				console.log(`- File: ${result.metadata.filePath}`)
@@ -400,7 +449,7 @@ export class SemanticSearchService {
 				console.log(`- Lines: ${result.metadata.startLine}-${result.metadata.endLine}`)
 			})
 
-			return results
+			return finalResults
 		} catch (error) {
 			console.error("Error during semantic search:", error)
 			if (error instanceof Error) {
@@ -411,6 +460,39 @@ export class SemanticSearchService {
 			}
 			throw error
 		}
+	}
+
+	private deduplicateResults(results: SearchResult[]): SearchResult[] {
+		const dedupedResults: SearchResult[] = []
+		const seenRanges = new Map<string, Array<{ start: number; end: number }>>()
+
+		for (const result of results) {
+			const filePath = result.metadata.filePath
+			const currentRange = {
+				start: result.metadata.startLine,
+				end: result.metadata.endLine,
+			}
+
+			// Get existing ranges for this file
+			const fileRanges = seenRanges.get(filePath) || []
+
+			// Check if this range overlaps with any existing range
+			const hasOverlap = fileRanges.some((range) => this.rangesOverlap(currentRange, range))
+
+			if (!hasOverlap) {
+				dedupedResults.push(result)
+				seenRanges.set(filePath, [...fileRanges, currentRange])
+			} else {
+				console.log(`Skipping duplicate result in ${filePath}:${currentRange.start}-${currentRange.end}`)
+			}
+		}
+
+		return dedupedResults
+	}
+
+	private rangesOverlap(a: { start: number; end: number }, b: { start: number; end: number }): boolean {
+		// Check if range a overlaps with range b
+		return a.start <= b.end && b.start <= a.end
 	}
 
 	async getMemoryStats(): Promise<MemoryStats> {

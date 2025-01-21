@@ -27,10 +27,11 @@ describe("PersistentVectorStore", () => {
 	const createMetadata = (name: string): CodeDefinition => ({
 		type: "function",
 		name,
-		filePath: "test.ts",
-		content: `function ${name}() {}`,
+		filePath: "/test/file.ts",
+		content: "test content",
 		startLine: 1,
 		endLine: 1,
+		language: "typescript",
 	})
 
 	describe("persistence", () => {

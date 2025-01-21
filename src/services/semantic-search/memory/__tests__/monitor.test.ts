@@ -11,10 +11,11 @@ describe("MemoryMonitor", () => {
 	const createDefinition = (content: string): CodeDefinition => ({
 		type: "function",
 		name: "test",
-		filePath: "test.ts",
+		filePath: "/test/file.ts",
 		content,
 		startLine: 1,
 		endLine: 1,
+		language: "typescript",
 	})
 
 	describe("size estimation", () => {

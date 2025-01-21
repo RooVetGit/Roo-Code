@@ -8,6 +8,7 @@ import "./utils/path" // necessary to have access to String.prototype.toPosix
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
 import { SemanticSearchService } from "./services/semantic-search"
 import * as path from "path"
+import { listFiles } from "./services/glob/list-files"
 
 /*
 Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -64,29 +65,23 @@ export function activate(context: vscode.ExtensionContext) {
 
 							// Index workspace files
 							progress.report({ message: "Indexing workspace files...", increment: 40 })
-							const files = await vscode.workspace.findFiles(
-								"**/*.{ts,js,tsx,jsx,py,java,cpp,c,h,hpp}",
-								"**/node_modules/**",
-							)
-							outputChannel.appendLine(`Found ${files.length} files to index`)
 
-							// Read and index files
-							const definitions = await Promise.all(
-								files.map(async (file) => {
-									const content = await vscode.workspace.fs.readFile(file)
-									return {
-										type: "file",
-										name: path.basename(file.fsPath),
-										filePath: file.fsPath,
-										content: Buffer.from(content).toString("utf-8"),
-										startLine: 0,
-										endLine: 100, // TODO: Get actual line count
-									}
-								}),
+							// Get workspace root
+							const workspaceRoot = workspaceFolders[0].uri.fsPath
+
+							// Use listFiles which respects .gitignore
+							const [files, hasMore] = await listFiles(workspaceRoot, true, 1000)
+							const sourceFiles = files.filter((file) =>
+								/\.(ts|js|tsx|jsx|py|java|cpp|c|h|hpp)$/.test(file),
 							)
 
-							// Batch index the files
-							await semanticSearchService.addBatchToIndex(definitions)
+							outputChannel.appendLine(
+								`Found ${sourceFiles.length} files to index${hasMore ? " (limited to first 1000)" : ""}`,
+							)
+
+							// Convert paths to absolute
+							const filePaths = sourceFiles
+							await semanticSearchService.addBatchToIndex(filePaths)
 
 							// Final progress update
 							progress.report({ message: "Indexing completed successfully", increment: 100 })

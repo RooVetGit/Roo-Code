@@ -1,9 +1,10 @@
-import { SemanticSearchService } from "../index"
+import { SemanticSearchService, SemanticSearchConfig } from ".."
+import * as vscode from "vscode"
 import { MemoryMonitor } from "../memory/monitor"
+import { CodeDefinition } from "../types"
 import * as path from "path"
 import * as os from "os"
 import * as fs from "fs"
-import * as vscode from "vscode"
 
 // Mock VSCode API
 jest.mock("vscode", () => ({
@@ -14,6 +15,30 @@ jest.mock("vscode", () => ({
 		update: jest.fn().mockResolvedValue(undefined),
 	},
 }))
+
+const mockContext = {
+	globalState: {
+		get: jest.fn(),
+		update: jest.fn(),
+	},
+} as unknown as vscode.ExtensionContext
+
+describe("Memory Management", () => {
+	let service: SemanticSearchService
+
+	beforeEach(() => {
+		service = new SemanticSearchService({
+			storageDir: "/tmp",
+			maxMemoryBytes: 100, // Very small limit for testing
+			context: mockContext,
+		})
+	})
+
+	it("should throw when memory limit is exceeded", async () => {
+		const testFile = "/test/file.ts"
+		await expect(service.addToIndex(testFile)).rejects.toThrow("Memory usage exceeded limit")
+	})
+})
 
 describe("Memory monitoring", () => {
 	let tempDir: string
@@ -54,15 +79,7 @@ describe("Memory monitoring", () => {
 			values: new Array(10000).fill(1),
 			dimension: 10000,
 		}
-		const metadata = {
-			content: "test",
-			filePath: "test.ts",
-			type: "function",
-			name: "test",
-			startLine: 1,
-			endLine: 1,
-		}
-
-		await expect(service.addToIndex({ ...metadata })).rejects.toThrow("Memory usage exceeded limit")
+		const testFile = path.join(tempDir, "test.ts")
+		await expect(service.addToIndex(testFile)).rejects.toThrow("Memory usage exceeded limit")
 	})
 })
