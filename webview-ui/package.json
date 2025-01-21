@@ -10,6 +10,8 @@
     "@types/node": "^16.18.124",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "@vscode/codicons": "^0.0.35",
+    "@vscode/webview-ui-toolkit": "^1.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
@@ -17,11 +19,17 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-app-rewired start",
+    "start": "SKIP_PREFLIGHT_CHECK=true react-app-rewired start",
     "build": "SKIP_PREFLIGHT_CHECK=true react-app-rewired build",
     "test": "react-app-rewired test --watchAll=false --env=jsdom",
     "test:watch": "react-app-rewired test --env=jsdom",
     "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
   },
   "browserslist": {
     "production": [

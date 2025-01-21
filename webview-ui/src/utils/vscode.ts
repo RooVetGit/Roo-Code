@@ -1,116 +1,58 @@
-import { WebviewMessage } from "../../../src/shared/WebviewMessage"
-import { CommunicationFactory } from "../services/api/communication-factory"
-import { createCommunicationConfig, CommunicationOptions } from "../services/api/types"
+import { CommunicationFactory } from '../services/api/communication-factory'
+import { CommunicationConfig, WebviewMessage } from '../services/api/types'
 
-/**
- * A utility wrapper around the communication layer, which enables
- * message passing and state management between the webview and server
- * contexts.
- */
-class VSCodeAPIWrapper {
-  private readonly communicationHandler
+export function setupVsCodeComms(config: Partial<CommunicationConfig> = {}): void {
+  const factory = CommunicationFactory.getInstance()
 
-  constructor() {
-    // Reset any existing instance to ensure clean state
-    CommunicationFactory.resetInstance()
-    const factory = CommunicationFactory.getInstance()
-    
-    // 環境に応じた通信ハンドラーを設定
-    try {
-      if (typeof acquireVsCodeApi === "function") {
-        factory.configure(createCommunicationConfig({ mode: "vscode" }))
-      } else if (process.env.COMMUNICATION_MODE === "rest") {
-        factory.configure(
-          createCommunicationConfig({
-            mode: "rest",
-            restUrl: process.env.REST_API_URL || "http://localhost:3001",
-            pollingInterval: parseInt(process.env.POLLING_INTERVAL || "1000", 10),
-          })
-        )
-      } else {
-        factory.configure(
-          createCommunicationConfig({
-            mode: "websocket",
-            wsUrl: process.env.WEBSOCKET_URL || "ws://localhost:3001",
-          })
-        )
-      }
-    } catch (error) {
-      console.error("Failed to configure communication handler:", error)
+  const defaultConfig: CommunicationConfig = {
+    mode: 'vscode',
+    pollingInterval: 1000,
+  }
+
+  factory.configure({ ...defaultConfig, ...config })
+
+  const handler = factory.getHandler()
+
+  // エラーイベントのリッスン
+  handler.onMessage((message: WebviewMessage) => {
+    if (message.type === 'error') {
+      console.error('Error from VS Code:', message.text)
     }
+  })
+}
 
-    // 設定後にハンドラーを取得
-    this.communicationHandler = factory.getHandler()
-  }
+export function isVsCodeEnvironment(): boolean {
+  return typeof acquireVsCodeApi === 'function'
+}
 
-  /**
-   * Post a message to the server.
-   */
-  public postMessage(message: WebviewMessage) {
-    if (this.communicationHandler) {
-      this.communicationHandler.send(message)
-    }
-  }
-
-  /**
-   * Get the persistent state.
-   */
-  public getState(): unknown | undefined {
-    return this.communicationHandler?.getState()
-  }
-
-  /**
-   * Set the persistent state.
-   */
-  public setState<T extends unknown | undefined>(newState: T): T {
-    return this.communicationHandler?.setState(newState) ?? newState
-  }
-
-  /**
-   * Configure the communication settings.
-   */
-  public static configure(partialConfig: Partial<CommunicationOptions> = {}) {
-    try {
-      const config: CommunicationOptions = {
-        mode: partialConfig.mode || "websocket",
-        wsUrl: partialConfig.wsUrl,
-        restUrl: partialConfig.restUrl,
-        pollingInterval: partialConfig.pollingInterval,
-      }
-
-      // Reset any existing instance before configuring
-      CommunicationFactory.resetInstance()
-      const factory = CommunicationFactory.getInstance()
-      factory.configure(createCommunicationConfig(config))
-    } catch (error) {
-      console.error("Failed to configure VSCode wrapper:", error)
-    }
-  }
-
-  /**
-   * Reset the communication layer.
-   */
-  public static reset() {
-    try {
-      CommunicationFactory.resetInstance()
-    } catch (error) {
-      console.error("Failed to reset VSCode wrapper:", error)
-    }
+// VSCodeが利用可能な場合のみAPIを初期化
+let vscodeApi: any = null
+if (isVsCodeEnvironment()) {
+  try {
+    vscodeApi = acquireVsCodeApi()
+  } catch (error) {
+    console.warn('Failed to acquire VS Code API:', error)
   }
 }
 
-// シングルトンインスタンスを作成する前に既存のインスタンスをリセット
-try {
-  VSCodeAPIWrapper.reset()
-} catch (error) {
-  console.error("Failed to reset VSCode wrapper:", error)
+// VSCode APIのラッパー
+export const vscode = {
+  postMessage: (message: any) => {
+    if (vscodeApi) {
+      vscodeApi.postMessage(message)
+    } else {
+      console.log('Mock postMessage:', message)
+    }
+  },
+  getState: () => {
+    if (vscodeApi) {
+      return vscodeApi.getState()
+    }
+    return null
+  },
+  setState: (state: any) => {
+    if (vscodeApi) {
+      vscodeApi.setState(state)
+    }
+  },
 }
-
-// Exports class singleton to prevent multiple instances
-export const vscode = new VSCodeAPIWrapper()
-
-// Allow configuration from the application
-export const configureVSCode = VSCodeAPIWrapper.configure
-
-// Allow resetting for testing purposes
-export const resetVSCode = VSCodeAPIWrapper.reset

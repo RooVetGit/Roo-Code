@@ -1,74 +1,82 @@
 export interface WebviewMessage {
-  type: string
-  text?: string
-  [key: string]: any
+  type: string;
+  text?: string;
+  [key: string]: any;
 }
+
+export type MessageCallback = (message: WebviewMessage) => void;
 
 export interface CommunicationHandler {
-  send(message: WebviewMessage): void
-  getState(): unknown | undefined
-  setState<T>(state: T): T
-  close(): void
+  send(message: WebviewMessage): Promise<void>;
+  onMessage(callback: MessageCallback): void;
 }
 
-export interface WebSocketConfig {
-  mode: "websocket"
-  wsUrl: string
+export interface VSCodeHandler extends CommunicationHandler {
+  getState(): any;
+  setState(state: any): void;
 }
 
-export interface RestConfig {
-  mode: "rest"
-  restUrl: string
-  pollingInterval: number
-}
-
-export interface VSCodeConfig {
-  mode: "vscode"
-}
-
-export type CommunicationConfig = WebSocketConfig | RestConfig | VSCodeConfig
-
-export interface MessageCallback {
-  (message: WebviewMessage): void
-}
-
-export interface CommunicationFactory {
-  configure(config: CommunicationConfig): void
-  getHandler(): CommunicationHandler
-}
+export type CommunicationMode = 'websocket' | 'rest' | 'vscode';
 
 export interface CommunicationOptions {
-  mode: "websocket" | "rest" | "vscode"
-  wsUrl?: string
-  restUrl?: string
-  pollingInterval?: number
+  wsUrl?: string;
+  restUrl?: string;
+  pollingInterval?: number;
 }
 
-// Factory関数の型定義
-export function createCommunicationConfig(options: CommunicationOptions): CommunicationConfig {
-  switch (options.mode) {
-    case "websocket":
-      if (!options.wsUrl) {
-        throw new Error("WebSocket URL is required for websocket mode")
-      }
-      return {
-        mode: "websocket",
-        wsUrl: options.wsUrl,
-      }
-    case "rest":
-      if (!options.restUrl) {
-        throw new Error("REST URL is required for rest mode")
-      }
-      return {
-        mode: "rest",
-        restUrl: options.restUrl,
-        pollingInterval: options.pollingInterval || 1000,
-      }
-    case "vscode":
-      return {
-        mode: "vscode",
-      }
-    default:
-      throw new Error(`Unsupported communication mode: ${options.mode}`)
+export interface CommunicationConfig {
+  mode: CommunicationMode;
+  wsUrl?: string;
+  restUrl?: string;
+  pollingInterval?: number;
+}
+
+export function createCommunicationConfig(config: {
+  mode: CommunicationMode;
+  wsUrl?: string;
+  restUrl?: string;
+  pollingInterval?: number;
+}): CommunicationConfig {
+  return {
+    mode: config.mode,
+    wsUrl: config.wsUrl,
+    restUrl: config.restUrl,
+    pollingInterval: config.pollingInterval || 1000,
+  };
+}
+
+export class VSCodeAPI implements VSCodeHandler {
+  private readonly _vscode: any;
+
+  constructor() {
+    if (typeof acquireVsCodeApi === 'function') {
+      this._vscode = acquireVsCodeApi();
+    } else {
+      this._vscode = {
+        postMessage: (message: any) => {
+          console.log('Mock message:', message);
+        },
+        getState: () => null,
+        setState: () => {},
+      };
+    }
+  }
+
+  async send(message: WebviewMessage): Promise<void> {
+    this._vscode.postMessage(message);
+  }
+
+  onMessage(callback: MessageCallback): void {
+    window.addEventListener('message', (event) => {
+      callback(event.data);
+    });
+  }
+
+  getState(): any {
+    return this._vscode.getState();
+  }
+
+  setState(state: any): void {
+    this._vscode.setState(state);
   }
 }

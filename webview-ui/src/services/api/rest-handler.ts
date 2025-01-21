@@ -1,24 +1,21 @@
-import { CommunicationHandler, WebviewMessage, MessageCallback } from "./types"
+import { WebviewMessage, MessageCallback, CommunicationHandler } from './types'
 
 export class RestHandler implements CommunicationHandler {
-  private url: string
-  private pollingInterval: number
-  private pollingTimeoutId?: NodeJS.Timeout
-  private messageCallback?: MessageCallback
-  private isPolling: boolean
+  private _messageCallback: MessageCallback | null = null
+  private _isPolling = false
+  private _lastMessageId = 0
 
-  constructor(url: string, pollingInterval: number) {
-    this.url = url
-    this.pollingInterval = pollingInterval
-    this.isPolling = false
-  }
+  constructor(
+    private readonly _url: string,
+    private readonly _pollingInterval: number = 1000
+  ) {}
 
-  public async send(message: WebviewMessage): Promise<void> {
+  async send(message: WebviewMessage): Promise<void> {
     try {
-      const response = await fetch(`${this.url}/messages`, {
-        method: "POST",
+      const response = await fetch(this._url, {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'content-type': 'application/json',
         },
         body: JSON.stringify(message),
       })
@@ -27,60 +24,61 @@ export class RestHandler implements CommunicationHandler {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
     } catch (error) {
-      console.error("メッセージ送信エラー:", error)
+      console.error('Error sending message:', error)
+      throw error
     }
   }
 
-  public onMessage(callback: MessageCallback): void {
-    this.messageCallback = callback
-    if (!this.isPolling) {
-      this.startPolling()
+  onMessage(callback: MessageCallback): void {
+    this._messageCallback = callback
+    if (!this._isPolling) {
+      this._startPolling()
     }
   }
 
-  private async pollMessages(): Promise<void> {
-    if (!this.isPolling) return
+  private async _startPolling(): Promise<void> {
+    this._isPolling = true
+    while (this._isPolling) {
+      try {
+        const response = await fetch(`${this._url}?since=${this._lastMessageId}`)
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
 
-    try {
-      const response = await fetch(`${this.url}/messages`)
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const messages: WebviewMessage[] = await response.json()
+        messages.forEach((message) => {
+          if (this._messageCallback) {
+            this._messageCallback(message)
+          }
+          if (message.id && typeof message.id === 'number') {
+            this._lastMessageId = Math.max(this._lastMessageId, message.id)
+          }
+        })
+      } catch (error) {
+        console.error('Error polling messages:', error)
       }
 
-      const messages = await response.json()
-      if (Array.isArray(messages) && this.messageCallback) {
-        messages.forEach(message => this.messageCallback!(message))
-      }
-    } catch (error) {
-      console.error("メッセージ取得エラー:", error)
-    }
-
-    // 継続的なポーリング
-    if (this.isPolling) {
-      this.pollingTimeoutId = setTimeout(
-        () => this.pollMessages(),
-        this.pollingInterval
-      )
+      await new Promise((resolve) => setTimeout(resolve, this._pollingInterval))
     }
   }
 
-  private startPolling(): void {
-    this.isPolling = true
-    this.pollMessages()
+  stopPolling(): void {
+    this._isPolling = false
   }
 
-  public getState(): unknown | undefined {
-    return undefined
+  close(): void {
+    this.stopPolling()
   }
 
-  public setState<T>(state: T): T {
-    return state
+  get url(): string {
+    return this._url
   }
 
-  public close(): void {
-    this.isPolling = false
-    if (this.pollingTimeoutId) {
-      clearTimeout(this.pollingTimeoutId)
-    }
+  get pollingInterval(): number {
+    return this._pollingInterval
+  }
+
+  get isPolling(): boolean {
+    return this._isPolling
   }
 }

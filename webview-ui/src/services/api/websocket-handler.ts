@@ -1,56 +1,81 @@
-import { CommunicationHandler, WebviewMessage, MessageCallback } from "./types"
+import { WebviewMessage, MessageCallback, CommunicationHandler } from './types'
 
 export class WebSocketHandler implements CommunicationHandler {
-  private ws: WebSocket
-  private messageCallback?: MessageCallback
+  private _ws: WebSocket | null = null
+  private _reconnectAttempts = 0
+  private readonly _maxReconnectAttempts = 5
+  private readonly _reconnectDelay = 1000
+  private _messageCallback: MessageCallback | null = null
 
-  constructor(url: string) {
-    this.ws = new WebSocket(url)
-    this.setupEventListeners()
+  constructor(private readonly _url: string) {
+    this._connect()
   }
 
-  private setupEventListeners() {
-    this.ws.addEventListener("message", (event: MessageEvent) => {
-      if (this.messageCallback) {
-        try {
-          const message = JSON.parse(event.data)
-          this.messageCallback(message)
-        } catch (error) {
-          console.error("メッセージのパースエラー:", error)
+  private _connect(): void {
+    try {
+      this._ws = new WebSocket(this._url)
+
+      this._ws.onopen = () => {
+        console.log('WebSocket connected')
+        this._reconnectAttempts = 0
+      }
+
+      this._ws.onclose = () => {
+        console.log('WebSocket disconnected')
+        this._tryReconnect()
+      }
+
+      this._ws.onerror = (error) => {
+        console.error('WebSocket error:', error)
+      }
+
+      this._ws.onmessage = (event) => {
+        if (this._messageCallback) {
+          try {
+            const message = JSON.parse(event.data)
+            this._messageCallback(message)
+          } catch (error) {
+            console.error('Error parsing message:', error)
+          }
         }
       }
-    })
-
-    this.ws.addEventListener("error", (event: Event) => {
-      console.error("WebSocket接続エラー:", event)
-    })
-
-    this.ws.addEventListener("close", (event: CloseEvent) => {
-      console.error("WebSocket接続が閉じられました:", event)
-    })
-  }
-
-  public send(message: WebviewMessage): void {
-    if (this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(message))
-    } else {
-      console.error("WebSocket接続が確立されていません")
+    } catch (error) {
+      console.error('Error connecting to WebSocket:', error)
+      this._tryReconnect()
     }
   }
 
-  public onMessage(callback: MessageCallback): void {
-    this.messageCallback = callback
+  private _tryReconnect(): void {
+    if (this._reconnectAttempts < this._maxReconnectAttempts) {
+      this._reconnectAttempts++
+      console.log(
+        `Attempting to reconnect (${this._reconnectAttempts}/${this._maxReconnectAttempts})`
+      )
+      setTimeout(() => this._connect(), this._reconnectDelay)
+    }
   }
 
-  public getState(): unknown | undefined {
-    return undefined
+  async send(message: WebviewMessage): Promise<void> {
+    if (!this._ws || this._ws.readyState !== WebSocket.OPEN) {
+      throw new Error('WebSocket is not connected')
+    }
+    return new Promise((resolve, reject) => {
+      try {
+        this._ws!.send(JSON.stringify(message))
+        resolve()
+      } catch (error) {
+        reject(error)
+      }
+    })
   }
 
-  public setState<T>(state: T): T {
-    return state
+  onMessage(callback: MessageCallback): void {
+    this._messageCallback = callback
   }
 
-  public close(): void {
-    this.ws.close()
+  close(): void {
+    if (this._ws) {
+      this._ws.close()
+    }
   }
 }
