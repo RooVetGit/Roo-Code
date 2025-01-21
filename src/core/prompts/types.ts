@@ -15,6 +15,7 @@ export type ToolName =
 	| "access_mcp_resource"
 	| "ask_followup_question"
 	| "attempt_completion"
+	| "semantic_search"
 
 export const CODE_TOOLS: ToolName[] = [
 	"execute_command",
@@ -29,6 +30,7 @@ export const CODE_TOOLS: ToolName[] = [
 	"access_mcp_resource",
 	"ask_followup_question",
 	"attempt_completion",
+	"semantic_search",
 ]
 
 export const ARCHITECT_TOOLS: ToolName[] = [
@@ -38,6 +40,7 @@ export const ARCHITECT_TOOLS: ToolName[] = [
 	"list_code_definition_names",
 	"ask_followup_question",
 	"attempt_completion",
+	"semantic_search",
 ]
 
 export const ASK_TOOLS: ToolName[] = [
@@ -49,4 +52,5 @@ export const ASK_TOOLS: ToolName[] = [
 	"access_mcp_resource",
 	"ask_followup_question",
 	"attempt_completion",
+	"semantic_search",
 ]

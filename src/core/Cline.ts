@@ -49,7 +49,7 @@ import { calculateApiCost } from "../utils/cost"
 import { fileExistsAtPath } from "../utils/fs"
 import { arePathsEqual, getReadablePath } from "../utils/path"
 import { parseMentions } from "./mentions"
-import { AssistantMessageContent, parseAssistantMessage, ToolParamName, ToolUseName } from "./assistant-message"
+import { AssistantMessageContent, ToolParamName, ToolUseName } from "./assistant-message"
 import { formatResponse } from "./prompts/responses"
 import { addCustomInstructions, SYSTEM_PROMPT } from "./prompts/system"
 import { modes, defaultModeSlug } from "../shared/modes"
@@ -60,6 +60,8 @@ import { BrowserSession } from "../services/browser/BrowserSession"
 import { OpenRouterHandler } from "../api/providers/openrouter"
 import { McpHub } from "../services/mcp/McpHub"
 import crypto from "crypto"
+import { SemanticSearchService } from "../services/semantic-search"
+import { parseAssistantMessage } from "./assistant-message/parse-assistant-message"
 
 const cwd =
 	vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop") // may or may not exist but fs checking existence would immediately ask for permission which would be bad UX, need to come up with a better solution
@@ -1019,6 +1021,10 @@ export class Cline {
 						case "ask_followup_question":
 							return `[${block.name} for '${block.params.question}']`
 						case "attempt_completion":
+							return `[${block.name}]`
+						case "semantic_search":
+							return `[${block.name} for '${block.params.query}']`
+						default:
 							return `[${block.name}]`
 					}
 				}
@@ -2124,6 +2130,44 @@ export class Cline {
 							break
 						}
 					}
+					case "semantic_search": {
+						const query: string | undefined = block.params.query
+						const sharedMessageProps: ClineSayTool = {
+							tool: "semanticSearch",
+							query: removeClosingTag("query", query),
+						}
+						try {
+							if (block.partial) {
+								const partialMessage = JSON.stringify({
+									...sharedMessageProps,
+									content: "",
+								} satisfies ClineSayTool)
+								await this.ask("tool", partialMessage, block.partial).catch(() => {})
+								break
+							} else {
+								if (!query) {
+									this.consecutiveMistakeCount++
+									pushToolResult(await this.sayAndCreateMissingParamError("semantic_search", "query"))
+									break
+								}
+								this.consecutiveMistakeCount = 0
+								const result = await this.handleSemanticSearch(query)
+								const completeMessage = JSON.stringify({
+									...sharedMessageProps,
+									content: result,
+								} satisfies ClineSayTool)
+								const didApprove = await askApproval("tool", completeMessage)
+								if (!didApprove) {
+									break
+								}
+								pushToolResult(result)
+								break
+							}
+						} catch (error) {
+							await handleError("semantic search", error)
+							break
+						}
+					}
 				}
 				break
 		}
@@ -2648,5 +2692,40 @@ export class Cline {
 		}
 
 		return `<environment_details>\n${details.trim()}\n</environment_details>`
+	}
+
+	private async handleSemanticSearch(query: string): Promise<string> {
+		// Check if the API handler supports completion
+		if (!("completePrompt" in this.api)) {
+			return "Semantic search requires a model that supports completion. Please configure a model that supports completion."
+		}
+
+		const provider = this.providerRef.deref()
+		if (!provider) {
+			return "Provider reference lost"
+		}
+
+		const { semanticSearchMaxMemory, semanticSearchMinScore, semanticSearchMaxResults } = await provider.getState()
+
+		const searcher = new SemanticSearchService({
+			storageDir: await provider.ensureCacheDirectoryExists(),
+			context: provider.context,
+			maxMemoryBytes: semanticSearchMaxMemory ?? 100 * 1024 * 1024, // Default 100MB
+			minScore: semanticSearchMinScore ?? 0.7, // Default 0.7
+			maxResults: semanticSearchMaxResults ?? 10, // Default 10
+		})
+
+		const results = await searcher.search(query)
+
+		if (results.length === 0) {
+			return "No relevant code found."
+		}
+
+		return results
+			.map(
+				(result) =>
+					`Found ${result.metadata.type} '${result.metadata.name}' in ${result.metadata.filePath}:${result.metadata.startLine}\n${result.metadata.content}`,
+			)
+			.join("\n\n")
 	}
 }

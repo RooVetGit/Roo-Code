@@ -141,21 +141,23 @@ export type ClineSay =
 	| "mcp_server_request_started"
 	| "mcp_server_response"
 
-export interface ClineSayTool {
+export type ClineSayTool = {
 	tool:
 		| "editedExistingFile"
-		| "appliedDiff"
 		| "newFileCreated"
+		| "appliedDiff"
 		| "readFile"
 		| "listFilesTopLevel"
 		| "listFilesRecursive"
 		| "listCodeDefinitionNames"
 		| "searchFiles"
+		| "semanticSearch"
 	path?: string
 	diff?: string
 	content?: string
 	regex?: string
 	filePattern?: string
+	query?: string
 }
 
 // must keep in sync with system prompt

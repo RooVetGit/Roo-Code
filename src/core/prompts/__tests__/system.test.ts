@@ -146,7 +146,7 @@ describe("SYSTEM_PROMPT", () => {
 			new SearchReplaceDiffStrategy(), // Use actual diff strategy from the codebase
 			undefined,
 		)
-
+		console.log(prompt)
 		expect(prompt).toMatchSnapshot()
 	})
 

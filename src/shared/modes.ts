@@ -46,6 +46,7 @@ export const modes: readonly ModeConfig[] = [
 			["access_mcp_resource"],
 			["ask_followup_question"],
 			["attempt_completion"],
+			["semantic_search"],
 		] as const,
 	},
 	{
@@ -63,6 +64,7 @@ export const modes: readonly ModeConfig[] = [
 			["access_mcp_resource"],
 			["ask_followup_question"],
 			["attempt_completion"],
+			["semantic_search"],
 		] as const,
 	},
 	{
@@ -80,6 +82,7 @@ export const modes: readonly ModeConfig[] = [
 			["access_mcp_resource"],
 			["ask_followup_question"],
 			["attempt_completion"],
+			["semantic_search"],
 		] as const,
 	},
 ] as const

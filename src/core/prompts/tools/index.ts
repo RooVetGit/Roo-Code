@@ -9,6 +9,7 @@ import { getAskFollowupQuestionDescription } from "./ask-followup-question"
 import { getAttemptCompletionDescription } from "./attempt-completion"
 import { getUseMcpToolDescription } from "./use-mcp-tool"
 import { getAccessMcpResourceDescription } from "./access-mcp-resource"
+import { getSemanticSearchDescription } from "./semantic-search"
 import { DiffStrategy } from "../../diff/DiffStrategy"
 import { McpHub } from "../../../services/mcp/McpHub"
 import { Mode, ToolName, getModeConfig, isToolAllowedForMode } from "../../../shared/modes"
@@ -29,6 +30,7 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 	access_mcp_resource: (args) => getAccessMcpResourceDescription(args),
 	apply_diff: (args) =>
 		args.diffStrategy ? args.diffStrategy.getToolDescription({ cwd: args.cwd, toolOptions: args.toolOptions }) : "",
+	semantic_search: () => getSemanticSearchDescription(),
 }
 
 export function getToolDescriptionsForMode(

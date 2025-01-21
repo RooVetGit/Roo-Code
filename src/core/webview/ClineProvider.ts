@@ -100,6 +100,9 @@ type GlobalStateKey =
 	| "enhancementApiConfigId"
 	| "experimentalDiffStrategy"
 	| "autoApprovalEnabled"
+	| "semanticSearchMaxMemory"
+	| "semanticSearchMinScore"
+	| "semanticSearchMaxResults"
 
 export const GlobalFileNames = {
 	apiConversationHistory: "api_conversation_history.json",
@@ -1333,7 +1336,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		// await this.postMessageToWebview({ type: "action", action: "settingsButtonClicked" }) // bad ux if user is on welcome
 	}
 
-	private async ensureCacheDirectoryExists(): Promise<string> {
+	async ensureCacheDirectoryExists(): Promise<string> {
 		const cacheDir = path.join(this.context.globalStorageUri.fsPath, "cache")
 		await fs.mkdir(cacheDir, { recursive: true })
 		return cacheDir
@@ -1844,6 +1847,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			enhancementApiConfigId,
 			experimentalDiffStrategy,
 			autoApprovalEnabled,
+			semanticSearchMaxMemory,
+			semanticSearchMinScore,
+			semanticSearchMaxResults,
 		] = await Promise.all([
 			this.getGlobalState("apiProvider") as Promise<ApiProvider | undefined>,
 			this.getGlobalState("apiModelId") as Promise<string | undefined>,
@@ -1906,6 +1912,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("enhancementApiConfigId") as Promise<string | undefined>,
 			this.getGlobalState("experimentalDiffStrategy") as Promise<boolean | undefined>,
 			this.getGlobalState("autoApprovalEnabled") as Promise<boolean | undefined>,
+			this.getGlobalState("semanticSearchMaxMemory") as Promise<number | undefined>,
+			this.getGlobalState("semanticSearchMinScore") as Promise<number | undefined>,
+			this.getGlobalState("semanticSearchMaxResults") as Promise<number | undefined>,
 		])
 
 		let apiProvider: ApiProvider
@@ -2014,6 +2023,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			enhancementApiConfigId,
 			experimentalDiffStrategy: experimentalDiffStrategy ?? false,
 			autoApprovalEnabled: autoApprovalEnabled ?? false,
+			semanticSearchMaxMemory,
+			semanticSearchMinScore,
+			semanticSearchMaxResults,
 		}
 	}
 

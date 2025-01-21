@@ -62,22 +62,30 @@ const copyWasmFiles = {
 	},
 }
 
+// Plugin to handle native .node files
+const nativeNodeModulesPlugin = {
+	name: "native-node-modules",
+	setup(build) {
+		// Mark .node files as external to prevent esbuild from trying to bundle them
+		build.onResolve({ filter: /\.node$/ }, (args) => ({
+			path: args.path,
+			external: true,
+		}))
+	},
+}
+
 const extensionConfig = {
 	bundle: true,
 	minify: production,
 	sourcemap: !production,
 	logLevel: "silent",
-	plugins: [
-		copyWasmFiles,
-		/* add to the end of plugins array */
-		esbuildProblemMatcherPlugin,
-	],
+	plugins: [copyWasmFiles, nativeNodeModulesPlugin, esbuildProblemMatcherPlugin],
 	entryPoints: ["src/extension.ts"],
 	format: "cjs",
 	sourcesContent: false,
 	platform: "node",
 	outfile: "dist/extension.js",
-	external: ["vscode"],
+	external: ["vscode", "onnxruntime-node"],
 }
 
 async function main() {

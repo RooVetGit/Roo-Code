@@ -70,6 +70,9 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 	const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>(undefined)
 	const [modelIdErrorMessage, setModelIdErrorMessage] = useState<string | undefined>(undefined)
 	const [commandInput, setCommandInput] = useState("")
+	const [maxMemoryMB, setMaxMemoryMB] = useState<number>(100) // Default 100MB
+	const [minScore, setMinScore] = useState<number>(0.7) // Default 0.7
+	const [maxResults, setMaxResults] = useState<number>(10) // Default 10
 
 	const handleSubmit = () => {
 		const apiValidationResult = validateApiConfiguration(apiConfiguration)
@@ -108,6 +111,9 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 				apiConfiguration,
 			})
 			vscode.postMessage({ type: "experimentalDiffStrategy", bool: experimentalDiffStrategy })
+			vscode.postMessage({ type: "semanticSearchMaxMemory", value: maxMemoryMB * 1024 * 1024 }) // Convert to bytes
+			vscode.postMessage({ type: "semanticSearchMinScore", value: minScore })
+			vscode.postMessage({ type: "semanticSearchMaxResults", value: maxResults })
 			onDone()
 		}
 	}
@@ -616,58 +622,70 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 
 				<div style={{ marginBottom: 5 }}>
 					<div style={{ marginBottom: 10 }}>
-						<div style={{ marginBottom: 15 }}>
-							<h3 style={{ color: "var(--vscode-foreground)", margin: 0, marginBottom: 15 }}>
-								Browser Settings
-							</h3>
-							<label style={{ fontWeight: "500", display: "block", marginBottom: 5 }}>
-								Viewport size
-							</label>
-							<select
-								value={browserViewportSize}
-								onChange={(e) => setBrowserViewportSize(e.target.value)}
-								style={{
-									width: "100%",
-									padding: "4px 8px",
-									backgroundColor: "var(--vscode-input-background)",
-									color: "var(--vscode-input-foreground)",
-									border: "1px solid var(--vscode-input-border)",
-									borderRadius: "2px",
-									height: "28px",
-								}}>
-								<option value="1280x800">Large Desktop (1280x800)</option>
-								<option value="900x600">Small Desktop (900x600)</option>
-								<option value="768x1024">Tablet (768x1024)</option>
-								<option value="360x640">Mobile (360x640)</option>
-							</select>
-							<p
-								style={{
-									fontSize: "12px",
-									marginTop: "5px",
-									color: "var(--vscode-descriptionForeground)",
-								}}>
-								Select the viewport size for browser interactions. This affects how websites are
-								displayed and interacted with.
-							</p>
+						<h3 style={{ color: "var(--vscode-foreground)", margin: 0, marginBottom: 15 }}>
+							Notification Settings
+						</h3>
+						<VSCodeCheckbox checked={soundEnabled} onChange={(e: any) => setSoundEnabled(e.target.checked)}>
+							<span style={{ fontWeight: "500" }}>Enable sound effects</span>
+						</VSCodeCheckbox>
+						<p
+							style={{
+								fontSize: "12px",
+								marginTop: "5px",
+								color: "var(--vscode-descriptionForeground)",
+							}}>
+							When enabled, Cline will play sound effects for notifications and events.
+						</p>
+					</div>
+					{soundEnabled && (
+						<div style={{ marginLeft: 0 }}>
+							<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+								<span style={{ fontWeight: "500", minWidth: "100px" }}>Volume</span>
+								<input
+									type="range"
+									min="0"
+									max="1"
+									step="0.01"
+									value={soundVolume ?? 0.5}
+									onChange={(e) => setSoundVolume(parseFloat(e.target.value))}
+									style={{
+										flexGrow: 1,
+										accentColor: "var(--vscode-button-background)",
+										height: "2px",
+									}}
+									aria-label="Volume"
+								/>
+								<span style={{ minWidth: "35px", textAlign: "left" }}>
+									{((soundVolume ?? 0.5) * 100).toFixed(0)}%
+								</span>
+							</div>
 						</div>
+					)}
+				</div>
+
+				<div style={{ marginBottom: 5 }}>
+					<div style={{ marginBottom: 15 }}>
+						<h3 style={{ color: "var(--vscode-foreground)", margin: 0, marginBottom: 15 }}>
+							Semantic Search Settings
+						</h3>
 
 						<div style={{ marginBottom: 15 }}>
 							<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-								<span style={{ fontWeight: "500", minWidth: "100px" }}>Screenshot quality</span>
+								<span style={{ fontWeight: "500", minWidth: "150px" }}>Maximum Memory</span>
 								<input
 									type="range"
-									min="1"
-									max="100"
-									step="1"
-									value={screenshotQuality ?? 75}
-									onChange={(e) => setScreenshotQuality(parseInt(e.target.value))}
+									min="50"
+									max="1000"
+									step="50"
+									value={maxMemoryMB}
+									onChange={(e) => setMaxMemoryMB(parseInt(e.target.value))}
 									style={{
 										flexGrow: 1,
 										accentColor: "var(--vscode-button-background)",
 										height: "2px",
 									}}
 								/>
-								<span style={{ minWidth: "35px", textAlign: "left" }}>{screenshotQuality ?? 75}%</span>
+								<span style={{ minWidth: "60px", textAlign: "left" }}>{maxMemoryMB} MB</span>
 							</div>
 							<p
 								style={{
@@ -675,55 +693,133 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 									marginTop: "5px",
 									color: "var(--vscode-descriptionForeground)",
 								}}>
-								Adjust the WebP quality of browser screenshots. Higher values provide clearer
-								screenshots but increase token usage.
+								Maximum memory usage for semantic search index and cache. When exceeded, older entries
+								will be removed.
+							</p>
+						</div>
+
+						<div style={{ marginBottom: 15 }}>
+							<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+								<span style={{ fontWeight: "500", minWidth: "150px" }}>Minimum Score</span>
+								<input
+									type="range"
+									min="0"
+									max="1"
+									step="0.05"
+									value={minScore}
+									onChange={(e) => setMinScore(parseFloat(e.target.value))}
+									style={{
+										flexGrow: 1,
+										accentColor: "var(--vscode-button-background)",
+										height: "2px",
+									}}
+								/>
+								<span style={{ minWidth: "60px", textAlign: "left" }}>
+									{(minScore * 100).toFixed(0)}%
+								</span>
+							</div>
+							<p
+								style={{
+									fontSize: "12px",
+									marginTop: "5px",
+									color: "var(--vscode-descriptionForeground)",
+								}}>
+								Minimum similarity score threshold for search results. Higher values return more
+								relevant but fewer results.
+							</p>
+						</div>
+
+						<div style={{ marginBottom: 15 }}>
+							<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+								<span style={{ fontWeight: "500", minWidth: "150px" }}>Maximum Results</span>
+								<input
+									type="range"
+									min="5"
+									max="50"
+									step="5"
+									value={maxResults}
+									onChange={(e) => setMaxResults(parseInt(e.target.value))}
+									style={{
+										flexGrow: 1,
+										accentColor: "var(--vscode-button-background)",
+										height: "2px",
+									}}
+								/>
+								<span style={{ minWidth: "60px", textAlign: "left" }}>{maxResults}</span>
+							</div>
+							<p
+								style={{
+									fontSize: "12px",
+									marginTop: "5px",
+									color: "var(--vscode-descriptionForeground)",
+								}}>
+								Maximum number of results to return from each search query.
 							</p>
 						</div>
 					</div>
+				</div>
 
-					<div style={{ marginBottom: 5 }}>
-						<div style={{ marginBottom: 10 }}>
-							<h3 style={{ color: "var(--vscode-foreground)", margin: 0, marginBottom: 15 }}>
-								Notification Settings
-							</h3>
-							<VSCodeCheckbox
-								checked={soundEnabled}
-								onChange={(e: any) => setSoundEnabled(e.target.checked)}>
-								<span style={{ fontWeight: "500" }}>Enable sound effects</span>
-							</VSCodeCheckbox>
-							<p
+				<div style={{ marginBottom: 5 }}>
+					<div style={{ marginBottom: 10 }}>
+						<h3 style={{ color: "var(--vscode-foreground)", margin: 0, marginBottom: 15 }}>
+							Browser Settings
+						</h3>
+						<label style={{ fontWeight: "500", display: "block", marginBottom: 5 }}>Viewport size</label>
+						<select
+							value={browserViewportSize}
+							onChange={(e) => setBrowserViewportSize(e.target.value)}
+							style={{
+								width: "100%",
+								padding: "4px 8px",
+								backgroundColor: "var(--vscode-input-background)",
+								color: "var(--vscode-input-foreground)",
+								border: "1px solid var(--vscode-input-border)",
+								borderRadius: "2px",
+								height: "28px",
+							}}>
+							<option value="1280x800">Large Desktop (1280x800)</option>
+							<option value="900x600">Small Desktop (900x600)</option>
+							<option value="768x1024">Tablet (768x1024)</option>
+							<option value="360x640">Mobile (360x640)</option>
+						</select>
+						<p
+							style={{
+								fontSize: "12px",
+								marginTop: "5px",
+								color: "var(--vscode-descriptionForeground)",
+							}}>
+							Select the viewport size for browser interactions. This affects how websites are displayed
+							and interacted with.
+						</p>
+					</div>
+
+					<div style={{ marginBottom: 15 }}>
+						<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+							<span style={{ fontWeight: "500", minWidth: "100px" }}>Screenshot quality</span>
+							<input
+								type="range"
+								min="1"
+								max="100"
+								step="1"
+								value={screenshotQuality ?? 75}
+								onChange={(e) => setScreenshotQuality(parseInt(e.target.value))}
 								style={{
-									fontSize: "12px",
-									marginTop: "5px",
-									color: "var(--vscode-descriptionForeground)",
-								}}>
-								When enabled, Cline will play sound effects for notifications and events.
-							</p>
+									flexGrow: 1,
+									accentColor: "var(--vscode-button-background)",
+									height: "2px",
+								}}
+							/>
+							<span style={{ minWidth: "35px", textAlign: "left" }}>{screenshotQuality ?? 75}%</span>
 						</div>
-						{soundEnabled && (
-							<div style={{ marginLeft: 0 }}>
-								<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-									<span style={{ fontWeight: "500", minWidth: "100px" }}>Volume</span>
-									<input
-										type="range"
-										min="0"
-										max="1"
-										step="0.01"
-										value={soundVolume ?? 0.5}
-										onChange={(e) => setSoundVolume(parseFloat(e.target.value))}
-										style={{
-											flexGrow: 1,
-											accentColor: "var(--vscode-button-background)",
-											height: "2px",
-										}}
-										aria-label="Volume"
-									/>
-									<span style={{ minWidth: "35px", textAlign: "left" }}>
-										{((soundVolume ?? 0.5) * 100).toFixed(0)}%
-									</span>
-								</div>
-							</div>
-						)}
+						<p
+							style={{
+								fontSize: "12px",
+								marginTop: "5px",
+								color: "var(--vscode-descriptionForeground)",
+							}}>
+							Adjust the WebP quality of browser screenshots. Higher values provide clearer screenshots
+							but increase token usage.
+						</p>
 					</div>
 				</div>
 
