@@ -45,7 +45,7 @@ interface ApiOptionsProps {
 }
 
 const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) => {
-	const { apiConfiguration, setApiConfiguration, uriScheme, handleInputChange } = useExtensionState()
+	const { apiConfiguration, uriScheme, handleInputChange } = useExtensionState()
 	const [ollamaModels, setOllamaModels] = useState<string[]>([])
 	const [lmStudioModels, setLmStudioModels] = useState<string[]>([])
 	const [vsCodeLmModels, setVsCodeLmModels] = useState<vscodemodels.LanguageModelChatSelector[]>([])
@@ -597,7 +597,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 							{
 								iconName: "refresh",
 								onClick: () =>
-									handleInputChange("openAiCusModelInfo")({
+									handleInputChange("openAiCustomModelInfo")({
 										target: { value: openAiModelInfoSaneDefaults },
 									}),
 							},
@@ -639,7 +639,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 									<div className="token-config-field">
 										<VSCodeTextField
 											value={
-												apiConfiguration?.openAiCusModelInfo?.maxTokens?.toString() ||
+												apiConfiguration?.openAiCustomModelInfo?.maxTokens?.toString() ||
 												openAiModelInfoSaneDefaults.maxTokens?.toString() ||
 												""
 											}
@@ -647,7 +647,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 											style={{
 												width: "100%",
 												borderColor: (() => {
-													const value = apiConfiguration?.openAiCusModelInfo?.maxTokens
+													const value = apiConfiguration?.openAiCustomModelInfo?.maxTokens
 													if (!value) return "var(--vscode-input-border)"
 													return value > 0
 														? "var(--vscode-charts-green)"
@@ -657,10 +657,10 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 											title="Maximum number of tokens the model can generate in a single response"
 											onChange={(e: any) => {
 												const value = parseInt(e.target.value)
-												handleInputChange("openAiCusModelInfo")({
+												handleInputChange("openAiCustomModelInfo")({
 													target: {
 														value: {
-															...(apiConfiguration?.openAiCusModelInfo ||
+															...(apiConfiguration?.openAiCustomModelInfo ||
 																openAiModelInfoSaneDefaults),
 															maxTokens: isNaN(value) ? undefined : value,
 														},
@@ -690,7 +690,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 									<div className="token-config-field">
 										<VSCodeTextField
 											value={
-												apiConfiguration?.openAiCusModelInfo?.contextWindow?.toString() ||
+												apiConfiguration?.openAiCustomModelInfo?.contextWindow?.toString() ||
 												openAiModelInfoSaneDefaults.contextWindow?.toString() ||
 												""
 											}
@@ -698,7 +698,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 											style={{
 												width: "100%",
 												borderColor: (() => {
-													const value = apiConfiguration?.openAiCusModelInfo?.contextWindow
+													const value = apiConfiguration?.openAiCustomModelInfo?.contextWindow
 													if (!value) return "var(--vscode-input-border)"
 													return value > 0
 														? "var(--vscode-charts-green)"
@@ -708,10 +708,10 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 											title="Total number of tokens (input + output) the model can process in a single request"
 											onChange={(e: any) => {
 												const parsed = parseInt(e.target.value)
-												handleInputChange("openAiCusModelInfo")({
+												handleInputChange("openAiCustomModelInfo")({
 													target: {
 														value: {
-															...(apiConfiguration?.openAiCusModelInfo ||
+															...(apiConfiguration?.openAiCustomModelInfo ||
 																openAiModelInfoSaneDefaults),
 															contextWindow:
 																e.target.value === ""
@@ -768,14 +768,14 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 												<div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
 													<Checkbox
 														checked={
-															apiConfiguration?.openAiCusModelInfo?.supportsImages ??
+															apiConfiguration?.openAiCustomModelInfo?.supportsImages ??
 															openAiModelInfoSaneDefaults.supportsImages
 														}
 														onChange={(checked: boolean) => {
-															handleInputChange("openAiCusModelInfo")({
+															handleInputChange("openAiCustomModelInfo")({
 																target: {
 																	value: {
-																		...(apiConfiguration?.openAiCusModelInfo ||
+																		...(apiConfiguration?.openAiCustomModelInfo ||
 																			openAiModelInfoSaneDefaults),
 																		supportsImages: checked,
 																	},
@@ -816,14 +816,14 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 												<div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
 													<Checkbox
 														checked={
-															apiConfiguration?.openAiCusModelInfo?.supportsComputerUse ??
-															false
+															apiConfiguration?.openAiCustomModelInfo
+																?.supportsComputerUse ?? false
 														}
 														onChange={(checked: boolean) => {
-															handleInputChange("openAiCusModelInfo")({
+															handleInputChange("openAiCustomModelInfo")({
 																target: {
 																	value: {
-																		...(apiConfiguration?.openAiCusModelInfo ||
+																		...(apiConfiguration?.openAiCustomModelInfo ||
 																			openAiModelInfoSaneDefaults),
 																		supportsComputerUse: checked,
 																	},
@@ -900,7 +900,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 									<div className="price-input">
 										<VSCodeTextField
 											value={
-												apiConfiguration?.openAiCusModelInfo?.inputPrice?.toString() ??
+												apiConfiguration?.openAiCustomModelInfo?.inputPrice?.toString() ??
 												openAiModelInfoSaneDefaults.inputPrice?.toString() ??
 												""
 											}
@@ -908,7 +908,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 											style={{
 												width: "100%",
 												borderColor: (() => {
-													const value = apiConfiguration?.openAiCusModelInfo?.inputPrice
+													const value = apiConfiguration?.openAiCustomModelInfo?.inputPrice
 													if (!value && value !== 0) return "var(--vscode-input-border)"
 													return value >= 0
 														? "var(--vscode-charts-green)"
@@ -917,10 +917,10 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 											}}
 											onChange={(e: any) => {
 												const parsed = parseFloat(e.target.value)
-												handleInputChange("openAiCusModelInfo")({
+												handleInputChange("openAiCustomModelInfo")({
 													target: {
 														value: {
-															...(apiConfiguration?.openAiCusModelInfo ??
+															...(apiConfiguration?.openAiCustomModelInfo ??
 																openAiModelInfoSaneDefaults),
 															inputPrice:
 																e.target.value === ""
@@ -951,7 +951,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 									<div className="price-input">
 										<VSCodeTextField
 											value={
-												apiConfiguration?.openAiCusModelInfo?.outputPrice?.toString() ||
+												apiConfiguration?.openAiCustomModelInfo?.outputPrice?.toString() ||
 												openAiModelInfoSaneDefaults.outputPrice?.toString() ||
 												""
 											}
@@ -959,7 +959,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 											style={{
 												width: "100%",
 												borderColor: (() => {
-													const value = apiConfiguration?.openAiCusModelInfo?.outputPrice
+													const value = apiConfiguration?.openAiCustomModelInfo?.outputPrice
 													if (!value && value !== 0) return "var(--vscode-input-border)"
 													return value >= 0
 														? "var(--vscode-charts-green)"
@@ -968,10 +968,10 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 											}}
 											onChange={(e: any) => {
 												const parsed = parseFloat(e.target.value)
-												handleInputChange("openAiCusModelInfo")({
+												handleInputChange("openAiCustomModelInfo")({
 													target: {
 														value: {
-															...(apiConfiguration?.openAiCusModelInfo ||
+															...(apiConfiguration?.openAiCustomModelInfo ||
 																openAiModelInfoSaneDefaults),
 															outputPrice:
 																e.target.value === ""
@@ -1486,7 +1486,7 @@ export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
 			return {
 				selectedProvider: provider,
 				selectedModelId: apiConfiguration?.openAiModelId || "",
-				selectedModelInfo: apiConfiguration?.openAiCusModelInfo || openAiModelInfoSaneDefaults,
+				selectedModelInfo: apiConfiguration?.openAiCustomModelInfo || openAiModelInfoSaneDefaults,
 			}
 		case "ollama":
 			return {
