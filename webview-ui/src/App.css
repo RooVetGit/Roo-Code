@@ -1,0 +1,98 @@
+.app {
+  text-align: center;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--vscode-editor-background, #1e1e1e);
+  color: var(--vscode-editor-foreground, #d4d4d4);
+}
+
+.app-header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--vscode-panel-border, #333);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: normal;
+}
+
+.app-main {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+/* ダークモードのデフォルトスタイル */
+:root {
+  --background-color: #1e1e1e;
+  --foreground-color: #d4d4d4;
+  --border-color: #333;
+  --primary-color: #0078d4;
+  --hover-color: #2b2b2b;
+}
+
+/* ライトモードのスタイル */
+@media (prefers-color-scheme: light) {
+  :root {
+    --background-color: #ffffff;
+    --foreground-color: #000000;
+    --border-color: #e0e0e0;
+    --primary-color: #0078d4;
+    --hover-color: #f5f5f5;
+  }
+}
+
+/* 基本的なスタイルのリセット */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background-color);
+  color: var(--foreground-color);
+}
+
+/* ボタンのベーススタイル */
+.button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.button:hover {
+  background-color: var(--hover-color);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* インプット要素のベーススタイル */
+.input {
+  background-color: var(--background-color);
+  color: var(--foreground-color);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 100%;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
