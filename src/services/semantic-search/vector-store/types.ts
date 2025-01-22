@@ -7,12 +7,12 @@ export interface Vector {
 
 export interface VectorWithMetadata {
 	vector: Vector
-	metadata: any
+	metadata: CodeDefinition
+	score?: number
 }
 
-export interface SearchResult {
+export interface SearchResult extends VectorWithMetadata {
 	score: number
-	metadata: any
 }
 
 export interface VectorStore {

@@ -1,6 +1,13 @@
-import { CodeDefinition, convertSegmentToDefinition } from "./types"
+import {
+	CodeDefinition,
+	convertSegmentToDefinition,
+	SearchResult,
+	SearchResultType,
+	FileSearchResult,
+	CodeSearchResult,
+} from "./types"
 import { PersistentVectorStore } from "./vector-store/persistent"
-import { SearchResult, Vector, VectorWithMetadata } from "./vector-store/types"
+import { Vector, VectorWithMetadata } from "./vector-store/types"
 import { WorkspaceCache } from "./cache/workspace-cache"
 import { MemoryMonitor, MemoryStats } from "./memory/monitor"
 import * as path from "path"
@@ -404,95 +411,101 @@ export class SemanticSearchService {
 				return []
 			}
 
-			console.log("Service initialization verified")
-
-			console.log("Generating query embedding...")
 			const queryVector = await this.model.embed(query)
-			console.log("Query embedding generated successfully")
 
-			console.log("Searching vector store...")
 			const results = await this.store.search(
 				queryVector,
 				this.config.maxResults ? this.config.maxResults * 2 : 20,
-			) // Get more results for better deduplication
+			)
 			console.log(`Found ${results.length} results before filtering`)
 
-			// Always log scores for debugging
-			console.log("\nAll results with scores:")
-			results.forEach((r, i) => {
-				console.log(
-					`${i + 1}. Score: ${r.score.toFixed(4)} - ${r.metadata.type} '${r.metadata.name}' in ${r.metadata.filePath}:${r.metadata.startLine}`,
-				)
-			})
-
-			// Filter by minimum score if configured
 			let filteredResults = results
 			if (this.config.minScore !== undefined) {
-				console.log(`\nFiltering results with minimum score ${this.config.minScore}`)
+				console.log(`Filtering results with minimum score ${this.config.minScore}`)
 				filteredResults = results.filter((r) => r.score >= this.config.minScore!)
 				console.log(`Filtered to ${filteredResults.length} results`)
 			}
 
-			// Deduplicate results
 			const dedupedResults = this.deduplicateResults(filteredResults)
 			console.log(`Deduplicated to ${dedupedResults.length} results`)
 
-			// Limit to maxResults
-			const finalResults = dedupedResults.slice(0, this.config.maxResults ?? 10)
+			const finalResults = dedupedResults
+				.slice(0, this.config.maxResults ?? 10)
+				.map((result) => this.formatResult(result))
 
-			// Log detailed results for debugging
-			finalResults.forEach((result, index) => {
-				console.log(`Result ${index + 1}:`)
-				console.log(`- Score: ${result.score}`)
-				console.log(`- File: ${result.metadata.filePath}`)
-				console.log(`- Type: ${result.metadata.type}`)
-				console.log(`- Lines: ${result.metadata.startLine}-${result.metadata.endLine}`)
-			})
-
+			console.log("Final results:", finalResults)
 			return finalResults
 		} catch (error) {
 			console.error("Error during semantic search:", error)
-			if (error instanceof Error) {
-				console.error("Error details:")
-				console.error(`- Name: ${error.name}`)
-				console.error(`- Message: ${error.message}`)
-				console.error(`- Stack: ${error.stack}`)
-			}
 			throw error
 		}
 	}
 
-	private deduplicateResults(results: SearchResult[]): SearchResult[] {
-		const dedupedResults: SearchResult[] = []
-		const seenRanges = new Map<string, Array<{ start: number; end: number }>>()
+	private formatResult(result: VectorWithMetadata): SearchResult {
+		if (!result.metadata || !result.metadata.filePath) {
+			throw new Error("Invalid metadata in search result")
+		}
 
+		if (result.metadata.type === "file") {
+			return {
+				type: "file",
+				score: result.score ?? 0,
+				filePath: result.metadata.filePath,
+				name: result.metadata.name,
+			} as FileSearchResult
+		}
+
+		// Only return code result if we have all required properties
+		if (
+			result.metadata.content &&
+			result.metadata.startLine !== undefined &&
+			result.metadata.endLine !== undefined &&
+			result.metadata.name &&
+			result.metadata.type
+		) {
+			return {
+				type: "code",
+				score: result.score ?? 0,
+				filePath: result.metadata.filePath,
+				content: result.metadata.content,
+				startLine: result.metadata.startLine,
+				endLine: result.metadata.endLine,
+				name: result.metadata.name,
+				codeType: result.metadata.type,
+				metadata: result.metadata,
+			} as CodeSearchResult
+		}
+
+		// Default to file result if missing any required code properties
+		return {
+			type: "file",
+			score: result.score ?? 0,
+			filePath: result.metadata.filePath,
+		} as FileSearchResult
+	}
+
+	private deduplicateResults(results: VectorWithMetadata[]): VectorWithMetadata[] {
+		const dedupedResults: VectorWithMetadata[] = []
+		const seenPaths = new Set<string>()
+		const seenContent = new Set<string>()
 		for (const result of results) {
 			const filePath = result.metadata.filePath
-			const currentRange = {
-				start: result.metadata.startLine,
-				end: result.metadata.endLine,
-			}
+			if (!filePath) continue
 
-			// Get existing ranges for this file
-			const fileRanges = seenRanges.get(filePath) || []
-
-			// Check if this range overlaps with any existing range
-			const hasOverlap = fileRanges.some((range) => this.rangesOverlap(currentRange, range))
-
-			if (!hasOverlap) {
-				dedupedResults.push(result)
-				seenRanges.set(filePath, [...fileRanges, currentRange])
+			if (result.metadata.type === "file") {
+				if (!seenPaths.has(filePath)) {
+					dedupedResults.push(result)
+					seenPaths.add(filePath)
+				}
 			} else {
-				console.log(`Skipping duplicate result in ${filePath}:${currentRange.start}-${currentRange.end}`)
+				if (!seenContent.has(result.metadata.content)) {
+					dedupedResults.push(result)
+					seenContent.add(result.metadata.content)
+				}
 			}
 		}
 
 		return dedupedResults
-	}
-
-	private rangesOverlap(a: { start: number; end: number }, b: { start: number; end: number }): boolean {
-		// Check if range a overlaps with range b
-		return a.start <= b.end && b.start <= a.end
 	}
 
 	async getMemoryStats(): Promise<MemoryStats> {

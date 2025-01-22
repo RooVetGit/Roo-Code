@@ -1,4 +1,5 @@
 import { CodeSegment } from "./parser/types"
+import { Vector } from "./vector-store/types"
 
 export interface CodeDefinition {
 	type: string
@@ -34,3 +35,33 @@ export function convertSegmentToDefinition(segment: CodeSegment, filePath: strin
 		returnType: segment.returnType,
 	}
 }
+
+export type SearchResultType = "file" | "code"
+
+export interface BaseSearchResult {
+	score: number
+}
+
+export interface FileSearchResult {
+	type: "file"
+	filePath: string
+	vector: Vector
+	score: number
+	name: string
+	metadata: CodeDefinition
+}
+
+export interface CodeSearchResult {
+	type: "code"
+	filePath: string
+	content: string
+	startLine: number
+	endLine: number
+	name: string
+	codeType: string
+	vector: Vector
+	score: number
+	metadata: CodeDefinition
+}
+
+export type SearchResult = FileSearchResult | CodeSearchResult

@@ -1,4 +1,4 @@
-import { CodeDefinition } from "../types"
+import { CodeDefinition, CodeSearchResult, FileSearchResult } from "../types"
 import { Vector, VectorStore, VectorWithMetadata, SearchResult } from "./types"
 
 export class InMemoryVectorStore implements VectorStore {
@@ -25,6 +25,7 @@ export class InMemoryVectorStore implements VectorStore {
 		const scores = this.vectors.map((item, index) => ({
 			score: this.cosineSimilarity(queryVector, item.vector),
 			metadata: item.metadata,
+			vector: item.vector,
 			index,
 		}))
 
@@ -32,7 +33,11 @@ export class InMemoryVectorStore implements VectorStore {
 		return scores
 			.sort((a, b) => b.score - a.score)
 			.slice(0, k)
-			.map(({ score, metadata }) => ({ score, metadata }))
+			.map(({ score, metadata, vector }) => ({
+				score,
+				metadata,
+				vector,
+			}))
 	}
 
 	size(): number {
