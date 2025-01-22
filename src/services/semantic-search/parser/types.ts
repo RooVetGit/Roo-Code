@@ -10,6 +10,13 @@ export interface CodeSegment {
 	docstring?: string
 	params?: Array<{ name: string; type?: string }>
 	returnType?: string
+	relationships?: {
+		imports: string[]
+		inheritedFrom?: string
+		implementedInterfaces?: string[]
+		usedIn: string[]
+		dependencies: string[]
+	}
 }
 
 export interface ParsedFile {

@@ -66,15 +66,26 @@ export class SemanticSearchService {
 	private parser: TreeSitterParser
 
 	constructor(private config: SemanticSearchConfig) {
+		const workspaceId = this.getWorkspaceId(config.context)
 		const modelConfig = {
 			modelPath: path.join(config.storageDir, "models"),
 			normalize: config.normalizeEmbeddings ?? true,
 		}
 
 		this.model = new MiniLMModel(modelConfig)
-		this.cache = new WorkspaceCache(config.context.globalState)
+		this.cache = new WorkspaceCache(config.context.globalState, workspaceId)
 		this.maxMemoryBytes = config.maxMemoryBytes ?? 100 * 1024 * 1024 // Default 100MB
 		this.parser = new TreeSitterParser()
+	}
+
+	private getWorkspaceId(context: vscode.ExtensionContext): string {
+		// Use the workspace folder path as the ID
+		const workspaceFolders = vscode.workspace.workspaceFolders
+		if (workspaceFolders && workspaceFolders.length > 0) {
+			return workspaceFolders[0].uri.fsPath
+		}
+		// Fallback to extension context storage path
+		return context.storagePath || "global"
 	}
 
 	async initialize(): Promise<void> {
@@ -95,8 +106,9 @@ export class SemanticSearchService {
 			try {
 				console.log("Starting semantic search service initialization")
 
-				// Initialize store first
-				this.store = await PersistentVectorStore.create(this.config.context.globalState)
+				// Initialize store with workspace ID
+				const workspaceId = this.getWorkspaceId(this.config.context)
+				this.store = await PersistentVectorStore.create(this.config.context.globalState, workspaceId)
 				console.log("Vector store initialized")
 
 				// Initialize model first
@@ -270,10 +282,14 @@ export class SemanticSearchService {
 
 				if (!vector) {
 					// Generate new embedding if not in cache
-					vector = await this.model.embed(definition.content)
+					vector = await (this.model as any).embedWithContext(definition)
+					if (!vector) {
+						console.error(`Failed to generate embedding for ${definition.filePath}`)
+						continue
+					}
 					await this.cache.set(definition, vector)
 					console.log(
-						`Generated new embedding for ${definition.filePath} (${definition.type}: ${definition.name})`,
+						`Generated new contextual embedding for ${definition.filePath} (${definition.type}: ${definition.name})`,
 					)
 				} else {
 					console.log(
@@ -311,8 +327,7 @@ export class SemanticSearchService {
 
 			console.log(`Successfully indexed ${parsedFile.segments.length} segments from ${filePath}`)
 		} catch (error) {
-			console.error(`Error indexing file ${filePath}:`, error)
-			throw error
+			console.error(`Error processing file ${filePath}:`, error)
 		}
 	}
 
@@ -332,27 +347,46 @@ export class SemanticSearchService {
 				const parsedFile = await this.parser.parseFile(filePath)
 				console.log(`Found ${parsedFile.segments.length} code segments in ${filePath}`)
 
-				for (const segment of parsedFile.segments) {
-					const definition = convertSegmentToDefinition(segment, filePath)
+				const definitions = parsedFile.segments.map((segment) => convertSegmentToDefinition(segment, filePath))
 
-					// Try to get vector from cache first
-					let vector = await this.cache.get(definition)
+				// Try to get vectors from cache first
+				const vectors = await Promise.all(definitions.map((def) => this.cache.get(def)))
 
-					if (!vector) {
-						// Generate new embedding if not in cache
-						vector = await this.model.embed(definition.content)
-						await this.cache.set(definition, vector)
-						console.log(
-							`Generated new embedding for ${definition.filePath} (${definition.type}: ${definition.name})`,
-						)
-					} else {
-						console.log(
-							`Using cached embedding for ${definition.filePath} (${definition.type}: ${definition.name})`,
-						)
+				// Generate new embeddings for uncached definitions
+				const uncachedDefinitions = definitions.filter((_, i) => !vectors[i])
+				let newVectors: Vector[] = []
+
+				if (uncachedDefinitions.length > 0) {
+					newVectors = await (this.model as any).embedBatchWithContext(uncachedDefinitions)
+					if (!newVectors.every((v) => v)) {
+						console.error("Failed to generate some embeddings")
+						continue
 					}
 
-					allSegments.push({ definition, vector })
+					// Cache the new vectors
+					await Promise.all(uncachedDefinitions.map((def, i) => this.cache.set(def, newVectors[i])))
 				}
+
+				// Combine cached and new vectors, ensuring all vectors are defined
+				const allVectors = vectors
+					.map((v, i) => {
+						if (v) return v
+						const newVector = newVectors[definitions.indexOf(definitions[i])]
+						if (!newVector) {
+							console.error(`Missing vector for ${definitions[i].filePath}`)
+							return null
+						}
+						return newVector
+					})
+					.filter((v): v is Vector => v !== null)
+
+				// Add to segments array, only for definitions with valid vectors
+				definitions.forEach((def, i) => {
+					const vector = allVectors[i]
+					if (vector) {
+						allSegments.push({ definition: def, vector })
+					}
+				})
 			} catch (error) {
 				console.error(`Error processing file ${filePath}:`, error)
 				// Continue with other files

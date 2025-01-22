@@ -18,6 +18,14 @@ import {
 	swiftQuery,
 } from "../../tree-sitter/queries"
 
+interface RelationshipInfo {
+	imports: string[]
+	inheritedFrom?: string
+	implementedInterfaces?: string[]
+	usedIn: string[]
+	dependencies: string[]
+}
+
 export class TreeSitterParser implements SemanticParser {
 	private languageParsers: Record<string, { parser: Parser; query: Parser.Query }> = {}
 	private initialized = false
@@ -97,6 +105,7 @@ export class TreeSitterParser implements SemanticParser {
 	private async parseSegments(tree: Parser.Tree, fileContent: string, language: string): Promise<CodeSegment[]> {
 		const segments: CodeSegment[] = []
 		const lines = fileContent.split("\n")
+		const relationships = new Map<string, RelationshipInfo>()
 
 		// Get all captures from the tree
 		const ext = Object.entries(this.getLanguageMap()).find(([_, lang]) => lang === language)?.[0]
@@ -111,18 +120,53 @@ export class TreeSitterParser implements SemanticParser {
 		const captures = query.captures(tree.rootNode)
 		console.log(`Found ${captures.length} captures`)
 
-		captures.forEach((capture) => {
-			console.log(`Capture: ${capture.name} - ${capture.node.type} - ${capture.node.text}`)
-		})
+		// First pass: Collect all definitions and their relationships
+		for (const capture of captures) {
+			const { node, name } = capture
 
-		// Sort captures by position
-		captures.sort((a, b) => {
-			if (a.node.startPosition.row === b.node.startPosition.row) {
-				return a.node.startPosition.column - b.node.startPosition.column
+			if (name.includes("name") && name.includes("definition")) {
+				const symbolName = node.text
+				relationships.set(symbolName, {
+					imports: [],
+					usedIn: [],
+					dependencies: [],
+				})
+
+				// Extract inheritance relationships
+				if (name.includes("class")) {
+					const extendsNode = node.parent?.childForFieldName("extends")
+					if (extendsNode) {
+						relationships.get(symbolName)!.inheritedFrom = extendsNode.text
+					}
+
+					const implementsNode = node.parent?.childForFieldName("implements")
+					if (implementsNode) {
+						relationships.get(symbolName)!.implementedInterfaces = implementsNode.children.map(
+							(n) => n.text,
+						)
+					}
+				}
 			}
-			return a.node.startPosition.row - b.node.startPosition.row
-		})
 
+			// Track symbol usage
+			if (name.includes("reference")) {
+				const referencedSymbol = node.text
+				const parentCapture = captures.find(
+					(c) =>
+						c.node.startPosition.row <= node.startPosition.row &&
+						c.node.endPosition.row >= node.endPosition.row &&
+						c.name.includes("definition"),
+				)
+
+				if (parentCapture) {
+					const parentSymbol = parentCapture.node.text
+					relationships.get(parentSymbol)?.dependencies.push(referencedSymbol)
+					relationships.get(referencedSymbol)?.usedIn.push(parentSymbol)
+				}
+			}
+		}
+
+		// Second pass: Create segments with relationship info
 		let currentContext: string | undefined
 
 		for (const capture of captures) {
@@ -134,9 +178,10 @@ export class TreeSitterParser implements SemanticParser {
 			}
 
 			if (name.includes("name") && name.includes("definition")) {
-				const type = name.split(".")[2] as CodeSegment["type"] // e.g., 'name.definition.function' -> 'function'
+				const type = name.split(".")[2] as CodeSegment["type"]
 				const startLine = node.startPosition.row
 				const endLine = node.endPosition.row
+				const symbolName = node.text
 
 				// Get the full content
 				const content = lines.slice(startLine, endLine + 1).join("\n")
@@ -147,9 +192,12 @@ export class TreeSitterParser implements SemanticParser {
 				// Extract params and return type for functions/methods
 				const { params, returnType } = this.extractFunctionSignature(node)
 
+				// Get relationship info
+				const relationshipInfo = relationships.get(symbolName)
+
 				segments.push({
 					type,
-					name: node.text,
+					name: symbolName,
 					content,
 					context: currentContext,
 					startLine,
@@ -159,6 +207,11 @@ export class TreeSitterParser implements SemanticParser {
 					docstring,
 					params,
 					returnType,
+					relationships: relationshipInfo || {
+						imports: [],
+						usedIn: [],
+						dependencies: [],
+					},
 				})
 			}
 		}
@@ -264,11 +317,42 @@ export class TreeSitterParser implements SemanticParser {
 	}
 
 	async getImportGraph(filePath: string): Promise<{ imports: string[]; importedBy: string[] }> {
-		// TODO: Implement import graph analysis
-		return {
-			imports: [],
-			importedBy: [],
+		await this.initialize(filePath)
+
+		const fileContent = await fs.readFile(filePath, "utf8")
+		const ext = path.extname(filePath).toLowerCase().slice(1)
+		const language = this.getLanguageFromExt(ext)
+
+		const { parser } = this.languageParsers[language]
+		if (!parser) {
+			throw new Error(`Unsupported language: ${language}`)
 		}
+
+		const tree = parser.parse(fileContent)
+		const imports: string[] = []
+		const importedBy: string[] = []
+
+		// Find import statements in the AST
+		const importNodes = this.findNodesOfType(tree.rootNode, "import_statement")
+		for (const node of importNodes) {
+			const importPath = node.childForFieldName("source")?.text
+			if (importPath) {
+				imports.push(importPath)
+			}
+		}
+
+		return { imports, importedBy }
+	}
+
+	private findNodesOfType(node: Parser.SyntaxNode, type: string): Parser.SyntaxNode[] {
+		const nodes: Parser.SyntaxNode[] = []
+		if (node.type === type) {
+			nodes.push(node)
+		}
+		for (const child of node.children) {
+			nodes.push(...this.findNodesOfType(child, type))
+		}
+		return nodes
 	}
 
 	async getSymbolContext(filePath: string, line: number, column: number): Promise<string> {

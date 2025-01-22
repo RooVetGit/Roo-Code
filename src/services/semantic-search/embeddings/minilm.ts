@@ -1,6 +1,7 @@
 import { pipeline, FeatureExtractionPipeline } from "@huggingface/transformers"
 import { EmbeddingModel, ModelConfig } from "./types"
 import { Vector } from "../vector-store/types"
+import { CodeDefinition } from "../types"
 
 const MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
@@ -117,6 +118,50 @@ export class MiniLMModel implements EmbeddingModel {
 		return this.normalizeVector(result)
 	}
 
+	private generateContextualText(definition: CodeDefinition): string {
+		const parts: string[] = []
+
+		// Add basic code info
+		parts.push(`${definition.type} ${definition.name}`)
+
+		// Add docstring if available
+		if (definition.docstring) {
+			parts.push(definition.docstring)
+		}
+
+		// Add function signature info
+		if (definition.params?.length) {
+			const paramsText = definition.params.map((p) => `${p.name}${p.type ? `: ${p.type}` : ""}`).join(", ")
+			parts.push(`Parameters: ${paramsText}`)
+		}
+		if (definition.returnType) {
+			parts.push(`Returns: ${definition.returnType}`)
+		}
+
+		// Add relationship context
+		if (definition.relationships) {
+			const { inheritedFrom, implementedInterfaces, usedIn, dependencies } = definition.relationships
+
+			if (inheritedFrom) {
+				parts.push(`Inherits from: ${inheritedFrom}`)
+			}
+			if (implementedInterfaces?.length) {
+				parts.push(`Implements: ${implementedInterfaces.join(", ")}`)
+			}
+			if (dependencies.length) {
+				parts.push(`Uses: ${dependencies.join(", ")}`)
+			}
+			if (usedIn.length) {
+				parts.push(`Used by: ${usedIn.join(", ")}`)
+			}
+		}
+
+		// Add the actual code content
+		parts.push(definition.content)
+
+		return parts.join("\n")
+	}
+
 	async embed(text: string): Promise<Vector> {
 		if (!this.initialized || !this.pipe) {
 			throw new Error("Model not initialized")
@@ -149,5 +194,15 @@ export class MiniLMModel implements EmbeddingModel {
 			console.error("Failed to generate batch embeddings:", error)
 			throw error
 		}
+	}
+
+	async embedWithContext(definition: CodeDefinition): Promise<Vector> {
+		const contextualText = this.generateContextualText(definition)
+		return this.embed(contextualText)
+	}
+
+	async embedBatchWithContext(definitions: CodeDefinition[]): Promise<Vector[]> {
+		const contextualTexts = definitions.map((def) => this.generateContextualText(def))
+		return this.embedBatch(contextualTexts)
 	}
 }

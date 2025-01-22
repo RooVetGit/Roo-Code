@@ -13,6 +13,13 @@ export interface CodeDefinition {
 	docstring?: string
 	params?: Array<{ name: string; type?: string }>
 	returnType?: string
+	relationships?: {
+		imports: string[]
+		inheritedFrom?: string
+		implementedInterfaces?: string[]
+		usedIn: string[]
+		dependencies: string[]
+	}
 }
 
 export interface Storage {
@@ -33,6 +40,7 @@ export function convertSegmentToDefinition(segment: CodeSegment, filePath: strin
 		docstring: segment.docstring,
 		params: segment.params,
 		returnType: segment.returnType,
+		relationships: segment.relationships,
 	}
 }
 
