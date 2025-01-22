@@ -219,6 +219,8 @@ export interface ClineApiReqInfo {
 	cost?: number
 	cancelReason?: ClineApiReqCancelReason
 	streamingFailedMessage?: string
+	provider?: string
+	model?: string
 }
 
 export type ClineApiReqCancelReason = "streaming_failed" | "user_cancelled"
