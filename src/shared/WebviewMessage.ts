@@ -1,5 +1,5 @@
 import { ApiConfiguration, ApiProvider } from "./api"
-import { Mode, PromptComponent } from "./modes"
+import { Mode, PromptComponent, ModeConfig } from "./modes"
 
 export type PromptMode = Mode | "enhance"
 
@@ -75,6 +75,9 @@ export interface WebviewMessage {
 		| "enhancementApiConfigId"
 		| "experimentalDiffStrategy"
 		| "autoApprovalEnabled"
+		| "updateCustomMode"
+		| "deleteCustomMode"
+		| "setopenAiCustomModelInfo"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
@@ -93,6 +96,8 @@ export interface WebviewMessage {
 	dataUrls?: string[]
 	values?: Record<string, any>
 	query?: string
+	slug?: string
+	modeConfig?: ModeConfig
 }
 
 export type ClineAskResponse = "yesButtonClicked" | "noButtonClicked" | "messageResponse"

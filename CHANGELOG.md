@@ -1,4 +1,24 @@
-# Roo Cline Changelog
+# Roo Code Changelog
+
+## [3.2.4]
+
+- Only allow use of the diff tool if it's enabled in settings
+
+## [3.2.3]
+
+- Fix bug where language selector wasn't working
+
+## [3.2.0 - 3.2.2]
+
+- **Name Change From Roo Cline to Roo Code:** We're excited to announce our new name! After growing beyond 50,000 installations, we've rebranded from Roo Cline to Roo Code to better reflect our identity as we chart our own course.
+
+- **Custom Modes:** Create your own personas for Roo Code! While our built-in modes (Code, Architect, Ask) are still here, you can now shape entirely new ones:
+    - Define custom prompts
+    - Choose which tools each mode can access
+    - Create specialized assistants for any workflow
+    - Just type "Create a new mode for <X>" or visit the Prompts tab in the top menu to get started
+
+Join us at https://www.reddit.com/r/RooCode to share your custom modes and be part of our next chapter!
 
 ## [3.1.7]
 
@@ -51,7 +71,7 @@
 
 ## [3.0.0]
 
-- This release adds chat modes! Now you can ask Roo Cline questions about system architecture or the codebase without immediately jumping into writing code. You can even assign different API configuration profiles to each mode if you prefer to use different models for thinking vs coding. Would love feedback in the new Roo Cline Reddit! https://www.reddit.com/r/roocline
+- This release adds chat modes! Now you can ask Roo Code questions about system architecture or the codebase without immediately jumping into writing code. You can even assign different API configuration profiles to each mode if you prefer to use different models for thinking vs coding. Would love feedback in the new Roo Code Reddit! https://www.reddit.com/r/RooCode
 
 ## [2.2.46]
 
