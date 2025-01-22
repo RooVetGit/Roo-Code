@@ -3,14 +3,18 @@ import { Vector, VectorWithMetadata } from "./types"
 import { Storage } from "../types"
 
 export class PersistentVectorStore extends InMemoryVectorStore {
-	private readonly storageKey = "semantic-search-vectors"
+	private readonly storageKey: string
 
-	private constructor(private storage: Storage) {
+	private constructor(
+		private storage: Storage,
+		workspaceId: string,
+	) {
 		super()
+		this.storageKey = `semantic-search-vectors-${workspaceId}`
 	}
 
-	static async create(storage: Storage): Promise<PersistentVectorStore> {
-		const store = new PersistentVectorStore(storage)
+	static async create(storage: Storage, workspaceId: string): Promise<PersistentVectorStore> {
+		const store = new PersistentVectorStore(storage, workspaceId)
 		await store.load()
 		return store
 	}

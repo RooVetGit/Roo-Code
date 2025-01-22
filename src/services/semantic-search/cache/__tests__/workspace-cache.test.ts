@@ -32,6 +32,7 @@ describe("WorkspaceCache", () => {
 	let storage: MockStorage
 	let vector: Vector
 	let definition: CodeDefinition
+	const workspaceId = "test-workspace"
 
 	beforeEach(() => {
 		mockContext = {
@@ -41,7 +42,7 @@ describe("WorkspaceCache", () => {
 			},
 		}
 		storage = new MockStorage()
-		cache = new WorkspaceCache(storage)
+		cache = new WorkspaceCache(storage, workspaceId)
 		vector = { values: [1, 2, 3], dimension: 3 }
 		definition = {
 			type: "function",

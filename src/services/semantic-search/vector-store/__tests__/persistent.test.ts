@@ -16,7 +16,7 @@ describe("PersistentVectorStore", () => {
 			get: getMock,
 			update: updateMock,
 		}
-		store = await PersistentVectorStore.create(mockStorage)
+		store = await PersistentVectorStore.create(mockStorage, "semantic-search-vectors")
 	})
 
 	const createVector = (values: number[]): Vector => ({
@@ -75,7 +75,7 @@ describe("PersistentVectorStore", () => {
 			}
 			mockStorage.get = jest.fn().mockReturnValue([{ vector, metadata }])
 
-			store = await PersistentVectorStore.create(mockStorage)
+			store = await PersistentVectorStore.create(mockStorage, "semantic-search-vectors")
 			expect(store.size()).toBe(1)
 		})
 
@@ -100,7 +100,7 @@ describe("PersistentVectorStore", () => {
 			expect(store.size()).toBe(1)
 
 			// Create new instance with same storage
-			const newStore = await PersistentVectorStore.create(mockStorage)
+			const newStore = await PersistentVectorStore.create(mockStorage, "semantic-search-vectors")
 			expect(newStore.size()).toBe(1)
 
 			const results = await newStore.search(vector, 1)
@@ -125,7 +125,7 @@ describe("PersistentVectorStore", () => {
 			// Update mock to return empty array after clearing
 			getMock.mockReturnValue([])
 
-			const newStore = await PersistentVectorStore.create(mockStorage)
+			const newStore = await PersistentVectorStore.create(mockStorage, "semantic-search-vectors")
 			expect(newStore.size()).toBe(0)
 		})
 	})

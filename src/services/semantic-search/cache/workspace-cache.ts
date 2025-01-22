@@ -2,8 +2,6 @@ import { Vector } from "../vector-store/types"
 import { CodeDefinition, Storage } from "../types"
 import * as crypto from "crypto"
 
-const CACHE_KEY = "semantic-search-cache"
-
 interface CacheEntry {
 	vector: Vector
 	metadata: CodeDefinition
@@ -14,7 +12,14 @@ interface CacheData {
 }
 
 export class WorkspaceCache {
-	constructor(private storage: Storage) {}
+	constructor(
+		private storage: Storage,
+		private workspaceId: string,
+	) {}
+
+	private getCacheKey(): string {
+		return `semantic-search-cache-${this.workspaceId}`
+	}
 
 	private getHash(definition: CodeDefinition): string {
 		const hash = crypto.createHash("sha256")
@@ -24,11 +29,11 @@ export class WorkspaceCache {
 	}
 
 	private getCacheData(): CacheData {
-		return this.storage.get<CacheData>(CACHE_KEY) || { entries: {} }
+		return this.storage.get<CacheData>(this.getCacheKey()) || { entries: {} }
 	}
 
 	private async saveCacheData(data: CacheData): Promise<void> {
-		await this.storage.update(CACHE_KEY, data)
+		await this.storage.update(this.getCacheKey(), data)
 	}
 
 	async get(definition: CodeDefinition): Promise<Vector | undefined> {
@@ -52,6 +57,6 @@ export class WorkspaceCache {
 	}
 
 	async clear(): Promise<void> {
-		await this.storage.update(CACHE_KEY, { entries: {} })
+		await this.storage.update(this.getCacheKey(), { entries: {} })
 	}
 }
