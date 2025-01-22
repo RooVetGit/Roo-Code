@@ -11,6 +11,8 @@ export const toolUseNames = [
 	"read_file",
 	"write_to_file",
 	"apply_diff",
+	"insert_code_block",
+	"search_and_replace",
 	"search_files",
 	"list_files",
 	"list_code_definition_names",
@@ -49,6 +51,7 @@ export const toolParamNames = [
 	"end_line",
 	"mode_slug",
 	"reason",
+	"operations",
 	"query",
 ] as const
 
@@ -76,6 +79,11 @@ export interface ReadFileToolUse extends ToolUse {
 export interface WriteToFileToolUse extends ToolUse {
 	name: "write_to_file"
 	params: Partial<Pick<Record<ToolParamName, string>, "path" | "content" | "line_count">>
+}
+
+export interface InsertCodeBlockToolUse extends ToolUse {
+	name: "insert_code_block"
+	params: Partial<Pick<Record<ToolParamName, string>, "path" | "operations">>
 }
 
 export interface SearchFilesToolUse extends ToolUse {
