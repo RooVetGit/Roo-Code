@@ -556,7 +556,7 @@ describe("ClineProvider", () => {
 			architect: "existing architect prompt",
 		}
 		;(mockContext.globalState.get as jest.Mock).mockImplementation((key: string) => {
-			if (key === "customPrompts") {
+			if (key === "customModePrompts") {
 				return existingPrompts
 			}
 			return undefined
@@ -570,7 +570,7 @@ describe("ClineProvider", () => {
 		})
 
 		// Verify state was updated correctly
-		expect(mockContext.globalState.update).toHaveBeenCalledWith("customPrompts", {
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("customModePrompts", {
 			...existingPrompts,
 			code: "new code prompt",
 		})
@@ -580,7 +580,7 @@ describe("ClineProvider", () => {
 			expect.objectContaining({
 				type: "state",
 				state: expect.objectContaining({
-					customPrompts: {
+					customModePrompts: {
 						...existingPrompts,
 						code: "new code prompt",
 					},
@@ -589,17 +589,17 @@ describe("ClineProvider", () => {
 		)
 	})
 
-	test("customPrompts defaults to empty object", async () => {
-		// Mock globalState.get to return undefined for customPrompts
+	test("customModePrompts defaults to empty object", async () => {
+		// Mock globalState.get to return undefined for customModePrompts
 		;(mockContext.globalState.get as jest.Mock).mockImplementation((key: string) => {
-			if (key === "customPrompts") {
+			if (key === "customModePrompts") {
 				return undefined
 			}
 			return null
 		})
 
 		const state = await provider.getState()
-		expect(state.customPrompts).toEqual({})
+		expect(state.customModePrompts).toEqual({})
 	})
 
 	test("uses mode-specific custom instructions in Cline initialization", async () => {
@@ -612,7 +612,7 @@ describe("ClineProvider", () => {
 
 		jest.spyOn(provider, "getState").mockResolvedValue({
 			apiConfiguration: mockApiConfig,
-			customPrompts: {
+			customModePrompts: {
 				code: { customInstructions: modeCustomInstructions },
 			},
 			mode: "code",
@@ -652,7 +652,7 @@ describe("ClineProvider", () => {
 			},
 		}
 		mockContext.globalState.get = jest.fn((key: string) => {
-			if (key === "customPrompts") {
+			if (key === "customModePrompts") {
 				return existingPrompts
 			}
 			return undefined
@@ -669,7 +669,7 @@ describe("ClineProvider", () => {
 		})
 
 		// Verify state was updated correctly
-		expect(mockContext.globalState.update).toHaveBeenCalledWith("customPrompts", {
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("customModePrompts", {
 			code: {
 				roleDefinition: "Code role",
 				customInstructions: "New instructions",
@@ -979,7 +979,7 @@ describe("ClineProvider", () => {
 					apiModelId: "test-model",
 					openRouterModelInfo: { supportsComputerUse: true },
 				},
-				customPrompts: {},
+				customModePrompts: {},
 				mode: "code",
 				mcpEnabled: false,
 				browserViewportSize: "900x600",
@@ -1008,7 +1008,7 @@ describe("ClineProvider", () => {
 				}),
 				"900x600", // browserViewportSize
 				"code", // mode
-				{}, // customPrompts
+				{}, // customModePrompts
 				{}, // customModes
 				undefined, // effectiveInstructions
 				undefined, // preferredLanguage
@@ -1028,7 +1028,7 @@ describe("ClineProvider", () => {
 					apiModelId: "test-model",
 					openRouterModelInfo: { supportsComputerUse: true },
 				},
-				customPrompts: {},
+				customModePrompts: {},
 				mode: "code",
 				mcpEnabled: false,
 				browserViewportSize: "900x600",
@@ -1057,7 +1057,7 @@ describe("ClineProvider", () => {
 				}),
 				"900x600", // browserViewportSize
 				"code", // mode
-				{}, // customPrompts
+				{}, // customModePrompts
 				{}, // customModes
 				undefined, // effectiveInstructions
 				undefined, // preferredLanguage
@@ -1072,7 +1072,7 @@ describe("ClineProvider", () => {
 					apiProvider: "openrouter",
 					openRouterModelInfo: { supportsComputerUse: true },
 				},
-				customPrompts: {
+				customModePrompts: {
 					architect: { customInstructions: "Architect mode instructions" },
 				},
 				mode: "architect",
