@@ -30,6 +30,7 @@ describe("ConversationSaver", () => {
 
 	beforeEach(() => {
 		jest.clearAllMocks()
+		// Initialize conversation saver with test folder
 		saver = new ConversationSaver(testFolder)
 		// Setup Date mock
 		const mockDate = new Date("2025-01-20T12:00:00Z")
@@ -60,7 +61,7 @@ describe("ConversationSaver", () => {
 			// Verify file was written with correct path and content
 			expect(fs.writeFile).toHaveBeenCalledWith(
 				expect.stringContaining(testFolder),
-				expect.stringContaining('"messages":'),
+				expect.stringContaining("# Conversation saved at"),
 				"utf-8",
 			)
 
@@ -86,7 +87,7 @@ describe("ConversationSaver", () => {
 
 			expect(fs.writeFile).toHaveBeenCalledWith(
 				expect.any(String),
-				expect.stringContaining('"messages":'),
+				expect.stringContaining("# Conversation saved at"),
 				"utf-8",
 			)
 		})
@@ -113,7 +114,7 @@ describe("ConversationSaver", () => {
 			await saver.updateConversation(updatedMessages)
 
 			// Should write to same file
-			expect(fs.writeFile).toHaveBeenCalledWith(firstSavePath, expect.stringContaining('"New message"'), "utf-8")
+			expect(fs.writeFile).toHaveBeenCalledWith(firstSavePath, expect.stringContaining("New message"), "utf-8")
 		})
 
 		it("throws error if update fails", async () => {
