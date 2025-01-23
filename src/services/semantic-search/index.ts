@@ -56,6 +56,32 @@ export interface SemanticSearchConfig {
 }
 
 export class SemanticSearchService {
+	// Supported file extensions for semantic search
+	private static readonly SUPPORTED_EXTENSIONS = new Set([
+		"js",
+		"jsx",
+		"ts",
+		"tsx", // JavaScript/TypeScript
+		"py", // Python
+		"rs", // Rust
+		"go", // Go
+		"cpp",
+		"hpp", // C++
+		"c",
+		"h", // C
+		"cs", // C#
+		"rb", // Ruby
+		"java", // Java
+		"php", // PHP
+		"swift", // Swift
+	])
+
+	// Check if a file is supported for indexing
+	public static isFileSupported(filePath: string): boolean {
+		const ext = path.extname(filePath).toLowerCase().slice(1)
+		return this.SUPPORTED_EXTENSIONS.has(ext)
+	}
+
 	private model: EmbeddingModel
 	private store!: PersistentVectorStore
 	private cache: WorkspaceCache
@@ -337,12 +363,19 @@ export class SemanticSearchService {
 			await this.ensureInitialized()
 		}
 
-		console.log(`Batch indexing ${filePaths.length} files...`)
+		// Filter out unsupported files
+		const supportedFiles = filePaths.filter((file) => SemanticSearchService.isFileSupported(file))
+		if (supportedFiles.length === 0) {
+			console.log("No supported files to index")
+			return
+		}
+
+		console.log(`Batch indexing ${supportedFiles.length} supported files out of ${filePaths.length} total files...`)
 
 		const allSegments: { definition: CodeDefinition; vector: Vector }[] = []
 
 		// First parse all files and generate/retrieve embeddings
-		for (const filePath of filePaths) {
+		for (const filePath of supportedFiles) {
 			try {
 				const parsedFile = await this.parser.parseFile(filePath)
 				console.log(`Found ${parsedFile.segments.length} code segments in ${filePath}`)

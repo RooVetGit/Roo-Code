@@ -73,6 +73,25 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 	const [maxMemoryMB, setMaxMemoryMB] = useState<number>(100) // Default 100MB
 	const [minScore, setMinScore] = useState<number>(0.7) // Default 0.7
 	const [maxResults, setMaxResults] = useState<number>(10) // Default 10
+	const [indexingProgress, setIndexingProgress] = useState<
+		{ current: number; total: number; status: string } | undefined
+	>()
+
+	useEffect(() => {
+		// Listen for indexing progress messages
+		const messageListener = (event: MessageEvent) => {
+			const message = event.data
+			if (message.type === "indexingProgress") {
+				setIndexingProgress(message.indexingProgress)
+				if (message.indexingProgress.current === message.indexingProgress.total) {
+					// Clear progress after 2 seconds when complete
+					setTimeout(() => setIndexingProgress(undefined), 2000)
+				}
+			}
+		}
+		window.addEventListener("message", messageListener)
+		return () => window.removeEventListener("message", messageListener)
+	}, [])
 
 	const handleSubmit = () => {
 		const apiValidationResult = validateApiConfiguration(apiConfiguration)
@@ -664,7 +683,71 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 				</div>
 
 				<div style={{ marginBottom: 5 }}>
+					<div style={{ marginBottom: 10 }}>
+						<h3 style={{ color: "var(--vscode-foreground)", margin: 0, marginBottom: 15 }}>
+							Browser Settings
+						</h3>
+						<label style={{ fontWeight: "500", display: "block", marginBottom: 5 }}>Viewport size</label>
+						<select
+							value={browserViewportSize}
+							onChange={(e) => setBrowserViewportSize(e.target.value)}
+							style={{
+								width: "100%",
+								padding: "4px 8px",
+								backgroundColor: "var(--vscode-input-background)",
+								color: "var(--vscode-input-foreground)",
+								border: "1px solid var(--vscode-input-border)",
+								borderRadius: "2px",
+								height: "28px",
+							}}>
+							<option value="1280x800">Large Desktop (1280x800)</option>
+							<option value="900x600">Small Desktop (900x600)</option>
+							<option value="768x1024">Tablet (768x1024)</option>
+							<option value="360x640">Mobile (360x640)</option>
+						</select>
+						<p
+							style={{
+								fontSize: "12px",
+								marginTop: "5px",
+								color: "var(--vscode-descriptionForeground)",
+							}}>
+							Select the viewport size for browser interactions. This affects how websites are displayed
+							and interacted with.
+						</p>
+					</div>
+
 					<div style={{ marginBottom: 15 }}>
+						<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+							<span style={{ fontWeight: "500", minWidth: "100px" }}>Screenshot quality</span>
+							<input
+								type="range"
+								min="1"
+								max="100"
+								step="1"
+								value={screenshotQuality ?? 75}
+								onChange={(e) => setScreenshotQuality(parseInt(e.target.value))}
+								style={{
+									flexGrow: 1,
+									accentColor: "var(--vscode-button-background)",
+									height: "2px",
+								}}
+							/>
+							<span style={{ minWidth: "35px", textAlign: "left" }}>{screenshotQuality ?? 75}%</span>
+						</div>
+						<p
+							style={{
+								fontSize: "12px",
+								marginTop: "5px",
+								color: "var(--vscode-descriptionForeground)",
+							}}>
+							Adjust the WebP quality of browser screenshots. Higher values provide clearer screenshots
+							but increase token usage.
+						</p>
+					</div>
+				</div>
+
+				<div style={{ marginBottom: 5 }}>
+					<div style={{ marginBottom: 10 }}>
 						<h3 style={{ color: "var(--vscode-foreground)", margin: 0, marginBottom: 15 }}>
 							Semantic Search Settings
 						</h3>
@@ -756,70 +839,66 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 								Maximum number of results to return from each search query.
 							</p>
 						</div>
-					</div>
-				</div>
 
-				<div style={{ marginBottom: 5 }}>
-					<div style={{ marginBottom: 10 }}>
-						<h3 style={{ color: "var(--vscode-foreground)", margin: 0, marginBottom: 15 }}>
-							Browser Settings
-						</h3>
-						<label style={{ fontWeight: "500", display: "block", marginBottom: 5 }}>Viewport size</label>
-						<select
-							value={browserViewportSize}
-							onChange={(e) => setBrowserViewportSize(e.target.value)}
-							style={{
-								width: "100%",
-								padding: "4px 8px",
-								backgroundColor: "var(--vscode-input-background)",
-								color: "var(--vscode-input-foreground)",
-								border: "1px solid var(--vscode-input-border)",
-								borderRadius: "2px",
-								height: "28px",
-							}}>
-							<option value="1280x800">Large Desktop (1280x800)</option>
-							<option value="900x600">Small Desktop (900x600)</option>
-							<option value="768x1024">Tablet (768x1024)</option>
-							<option value="360x640">Mobile (360x640)</option>
-						</select>
-						<p
-							style={{
-								fontSize: "12px",
-								marginTop: "5px",
-								color: "var(--vscode-descriptionForeground)",
-							}}>
-							Select the viewport size for browser interactions. This affects how websites are displayed
-							and interacted with.
-						</p>
-					</div>
-
-					<div style={{ marginBottom: 15 }}>
-						<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-							<span style={{ fontWeight: "500", minWidth: "100px" }}>Screenshot quality</span>
-							<input
-								type="range"
-								min="1"
-								max="100"
-								step="1"
-								value={screenshotQuality ?? 75}
-								onChange={(e) => setScreenshotQuality(parseInt(e.target.value))}
+						<div style={{ marginBottom: 15 }}>
+							<div style={{ display: "flex", gap: "10px" }}>
+								<VSCodeButton
+									onClick={() => {
+										vscode.postMessage({ type: "reindexSemantic" })
+									}}
+									disabled={indexingProgress !== undefined}>
+									{indexingProgress ? "Indexing..." : "Reindex Workspace"}
+								</VSCodeButton>
+								<VSCodeButton
+									onClick={() => {
+										vscode.postMessage({ type: "deleteSemanticIndex" })
+									}}
+									disabled={indexingProgress !== undefined}>
+									Clear Index
+								</VSCodeButton>
+							</div>
+							{indexingProgress && (
+								<div style={{ marginTop: 10 }}>
+									<div
+										style={{
+											width: "100%",
+											height: "2px",
+											backgroundColor: "var(--vscode-progressBar-background)",
+											position: "relative",
+											overflow: "hidden",
+										}}>
+										<div
+											style={{
+												position: "absolute",
+												top: 0,
+												left: 0,
+												height: "100%",
+												width: `${(indexingProgress.current / indexingProgress.total) * 100}%`,
+												backgroundColor: "var(--vscode-progressBar-foreground)",
+												transition: "width 0.2s ease-out",
+											}}
+										/>
+									</div>
+									<p
+										style={{
+											fontSize: "12px",
+											marginTop: "5px",
+											color: "var(--vscode-descriptionForeground)",
+										}}>
+										{indexingProgress.status}
+									</p>
+								</div>
+							)}
+							<p
 								style={{
-									flexGrow: 1,
-									accentColor: "var(--vscode-button-background)",
-									height: "2px",
-								}}
-							/>
-							<span style={{ minWidth: "35px", textAlign: "left" }}>{screenshotQuality ?? 75}%</span>
+									fontSize: "12px",
+									marginTop: "5px",
+									color: "var(--vscode-descriptionForeground)",
+								}}>
+								Manage the semantic search index. Reindexing will rebuild the index for all files in the
+								workspace.
+							</p>
 						</div>
-						<p
-							style={{
-								fontSize: "12px",
-								marginTop: "5px",
-								color: "var(--vscode-descriptionForeground)",
-							}}>
-							Adjust the WebP quality of browser screenshots. Higher values provide clearer screenshots
-							but increase token usage.
-						</p>
 					</div>
 				</div>
 

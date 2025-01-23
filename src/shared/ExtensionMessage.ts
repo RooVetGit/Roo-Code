@@ -31,6 +31,7 @@ export interface ExtensionMessage {
 		| "updatePrompt"
 		| "systemPrompt"
 		| "autoApprovalEnabled"
+		| "indexingProgress"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -54,6 +55,11 @@ export interface ExtensionMessage {
 	commits?: GitCommit[]
 	listApiConfig?: ApiConfigMeta[]
 	mode?: Mode
+	indexingProgress?: {
+		current: number
+		total: number
+		status: string
+	}
 }
 
 export interface ApiConfigMeta {

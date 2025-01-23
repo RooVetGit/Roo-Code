@@ -77,6 +77,9 @@ export interface WebviewMessage {
 		| "semanticSearchMaxMemory"
 		| "semanticSearchMinScore"
 		| "semanticSearchMaxResults"
+		| "indexingProgress"
+		| "deleteSemanticIndex"
+		| "reindexSemantic"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
