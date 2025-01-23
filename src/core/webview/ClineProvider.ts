@@ -674,6 +674,13 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						}
 						break
 					}
+					case "openCustomModesSettings": {
+						const customModesFilePath = await this.customModesManager.getCustomModesFilePath()
+						if (customModesFilePath) {
+							openFile(customModesFilePath)
+						}
+						break
+					}
 					case "restartMcpServer": {
 						try {
 							await this.mcpHub?.restartConnection(message.text!)
