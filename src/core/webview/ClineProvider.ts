@@ -1241,7 +1241,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		)
 	}
 
-	private async updateApiConfiguration(apiConfiguration: ApiConfiguration) {
+	public async updateApiConfiguration(apiConfiguration: ApiConfiguration) {
 		// Update mode's default config
 		const { mode } = await this.getState()
 		if (mode) {

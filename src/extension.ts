@@ -7,6 +7,7 @@ import { createClineAPI } from "./exports"
 import "./utils/path" // necessary to have access to String.prototype.toPosix
 import { ACTION_NAMES, CodeActionProvider } from "./core/CodeActionProvider"
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
+import { ApiConfiguration } from "./shared/api"
 
 /*
 Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -110,6 +111,27 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand("roo-cline.historyButtonClicked", () => {
 			sidebarProvider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
+		}),
+	)
+
+	// Command to programmatically add a new API provider
+	context.subscriptions.push(
+		vscode.commands.registerCommand("roo-cline.addApiProvider", async (config: ApiConfiguration) => {
+			if (!config.apiProvider) {
+				throw new Error("API provider is required")
+			}
+			const configName = `${config.apiProvider}-${Date.now()}`
+			await sidebarProvider.configManager.saveConfig(configName, config)
+			const listApiConfig = await sidebarProvider.configManager.listConfig()
+			
+			await Promise.all([
+				sidebarProvider.updateGlobalState("listApiConfigMeta", listApiConfig),
+				sidebarProvider.updateGlobalState("currentApiConfigName", configName),
+				sidebarProvider.updateApiConfiguration(config)
+			])
+
+			await sidebarProvider.postStateToWebview()
+			return configName
 		}),
 	)
 
