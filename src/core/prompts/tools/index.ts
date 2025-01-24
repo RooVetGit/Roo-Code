@@ -12,7 +12,7 @@ import { getAccessMcpResourceDescription } from "./access-mcp-resource"
 import { getSemanticSearchDescription } from "./semantic-search"
 import { DiffStrategy } from "../../diff/DiffStrategy"
 import { McpHub } from "../../../services/mcp/McpHub"
-import { Mode, ModeConfig, getModeConfig, isToolAllowedForMode } from "../../../shared/modes"
+import { Mode, ModeConfig, getModeConfig, isToolAllowedForMode, getGroupName } from "../../../shared/modes"
 import { ToolName, getToolName, getToolOptions, TOOL_GROUPS, ALWAYS_AVAILABLE_TOOLS } from "../../../shared/tool-groups"
 import { ToolArgs } from "./types"
 
@@ -55,19 +55,33 @@ export function getToolDescriptionsForMode(
 	const tools = new Set<string>()
 
 	// Add tools from mode's groups
-	config.groups.forEach((group) => {
-		TOOL_GROUPS[group].forEach((tool) => {
-			if (isToolAllowedForMode(tool as ToolName, mode, customModes ?? [])) {
-				tools.add(tool)
-			}
-		})
+	config.groups.forEach((groupEntry) => {
+		const groupName = getGroupName(groupEntry)
+		const toolGroup = TOOL_GROUPS[groupName]
+		if (toolGroup) {
+			toolGroup.forEach((tool) => {
+				if (isToolAllowedForMode(tool as ToolName, mode, customModes ?? [])) {
+					tools.add(tool)
+				}
+			})
+		}
 	})
+
+	// Filter out apply_diff if diffStrategy is not provided
+	if (!diffStrategy) {
+		tools.delete("apply_diff")
+	}
 
 	// Add always available tools
 	ALWAYS_AVAILABLE_TOOLS.forEach((tool) => tools.add(tool))
 
 	// Map tool descriptions for allowed tools
 	const descriptions = Array.from(tools).map((toolName) => {
+		// Skip apply_diff tool description if diffStrategy is not provided
+		if (toolName === "apply_diff" && !diffStrategy) {
+			return undefined
+		}
+
 		const descriptionFn = toolDescriptionMap[toolName]
 		if (!descriptionFn) {
 			return undefined
