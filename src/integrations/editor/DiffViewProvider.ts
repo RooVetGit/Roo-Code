@@ -80,62 +80,22 @@ export class DiffViewProvider {
 	}
 
 	async update(accumulatedContent: string, isFinal: boolean) {
-		if (!this.relPath || !this.activeLineController || !this.fadedOverlayController) {
-			throw new Error("Required values not set")
-		}
-		this.newContent = accumulatedContent
-		const accumulatedLines = accumulatedContent.split("\n")
-		if (!isFinal) {
-			accumulatedLines.pop() // remove the last partial line only if it's not the final update
-		}
-		const diffLines = accumulatedLines.slice(this.streamedLines.length)
-
-		const diffEditor = this.activeDiffEditor
-		const document = diffEditor?.document
-		if (!diffEditor || !document) {
-			throw new Error("User closed text editor, unable to edit file...")
-		}
-
-		// Place cursor at the beginning of the diff editor to keep it out of the way of the stream animation
-		const beginningOfDocument = new vscode.Position(0, 0)
-		diffEditor.selection = new vscode.Selection(beginningOfDocument, beginningOfDocument)
-
-		for (let i = 0; i < diffLines.length; i++) {
-			const currentLine = this.streamedLines.length + i
-			// Replace all content up to the current line with accumulated lines
-			// This is necessary (as compared to inserting one line at a time) to handle cases where html tags on previous lines are auto closed for example
-			const edit = new vscode.WorkspaceEdit()
-			const rangeToReplace = new vscode.Range(0, 0, currentLine + 1, 0)
-			const contentToReplace = accumulatedLines.slice(0, currentLine + 1).join("\n") + "\n"
-			edit.replace(document.uri, rangeToReplace, contentToReplace)
-			await vscode.workspace.applyEdit(edit)
-			// Update decorations
-			this.activeLineController.setActiveLine(currentLine)
-			this.fadedOverlayController.updateOverlayAfterLine(currentLine, document.lineCount)
-			// Scroll to the current line
-			this.scrollEditorToLine(currentLine)
-		}
-		// Update the streamedLines with the new accumulated content
-		this.streamedLines = accumulatedLines
+		// Instead of the streaming line-by-line updates, 
+		// simply apply the entire content in one go.
 		if (isFinal) {
-			// Handle any remaining lines if the new content is shorter than the original
-			if (this.streamedLines.length < document.lineCount) {
-				const edit = new vscode.WorkspaceEdit()
-				edit.delete(document.uri, new vscode.Range(this.streamedLines.length, 0, document.lineCount, 0))
-				await vscode.workspace.applyEdit(edit)
+			const diffEditor = this.activeDiffEditor;
+			const document = diffEditor?.document;
+	
+			if (diffEditor && document) {
+				const edit = new vscode.WorkspaceEdit();
+				// Replace entire document
+				edit.replace(
+				document.uri,
+				new vscode.Range(0, 0, document.lineCount, 0),
+				accumulatedContent
+				);
+				await vscode.workspace.applyEdit(edit);
 			}
-			// Preserve empty last line if original content had one
-			const hasEmptyLastLine = this.originalContent?.endsWith("\n")
-			if (hasEmptyLastLine && !accumulatedContent.endsWith("\n")) {
-				accumulatedContent += "\n"
-			}
-			// Apply the final content
-			const finalEdit = new vscode.WorkspaceEdit()
-			finalEdit.replace(document.uri, new vscode.Range(0, 0, document.lineCount, 0), accumulatedContent)
-			await vscode.workspace.applyEdit(finalEdit)
-			// Clear all decorations at the end (after applying final edit)
-			this.fadedOverlayController.clear()
-			this.activeLineController.clear()
 		}
 	}
 
