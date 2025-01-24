@@ -19,6 +19,7 @@ export const toolUseNames = [
 	"access_mcp_resource",
 	"ask_followup_question",
 	"attempt_completion",
+	"switch_mode",
 	"semantic_search",
 ] as const
 
@@ -46,6 +47,8 @@ export const toolParamNames = [
 	"diff",
 	"start_line",
 	"end_line",
+	"mode_slug",
+	"reason",
 	"query",
 ] as const
 
@@ -113,6 +116,11 @@ export interface AskFollowupQuestionToolUse extends ToolUse {
 export interface AttemptCompletionToolUse extends ToolUse {
 	name: "attempt_completion"
 	params: Partial<Pick<Record<ToolParamName, string>, "result" | "command">>
+}
+
+export interface SwitchModeToolUse extends ToolUse {
+	name: "switch_mode"
+	params: Partial<Pick<Record<ToolParamName, string>, "mode_slug" | "reason">>
 }
 
 export interface SemanticSearchToolUse extends ToolUse {
