@@ -53,6 +53,10 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		listApiConfigMeta,
 		experimentalDiffStrategy,
 		setExperimentalDiffStrategy,
+		experimentalInsertBlockTool,
+		setExperimentalInsertBlockTool,
+		experimentalSearchAndReplaceTool,
+		setExperimentalSearchAndReplaceTool,
 	} = useExtensionState()
 	const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>(undefined)
 	const [modelIdErrorMessage, setModelIdErrorMessage] = useState<string | undefined>(undefined)
@@ -621,6 +625,42 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 								</p>
 							</div>
 						)}
+						<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+							<span style={{ color: "var(--vscode-errorForeground)" }}>⚠️</span>
+							<VSCodeCheckbox
+								checked={experimentalInsertBlockTool}
+								onChange={(e: any) => setExperimentalInsertBlockTool(e.target.checked)}>
+								<span style={{ fontWeight: "500" }}>Use experimental insert block tool</span>
+							</VSCodeCheckbox>
+						</div>
+						<p
+							style={{
+								fontSize: "12px",
+								marginTop: "5px",
+								color: "var(--vscode-descriptionForeground)",
+							}}>
+							Enable the experimental insert block tool. This tool allows Roo to insert code blocks into
+							files. <br />
+							Can be insert multiple blocks at once.
+						</p>
+						<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+							<span style={{ color: "var(--vscode-errorForeground)" }}>⚠️</span>
+							<VSCodeCheckbox
+								checked={experimentalSearchAndReplaceTool}
+								onChange={(e: any) => setExperimentalSearchAndReplaceTool(e.target.checked)}>
+								<span style={{ fontWeight: "500" }}>Use experimental search and replace tool</span>
+							</VSCodeCheckbox>
+						</div>
+						<p
+							style={{
+								fontSize: "12px",
+								marginTop: "5px",
+								color: "var(--vscode-descriptionForeground)",
+							}}>
+							Enable the experimental Search and Replace tool. This tool allows Roo to search and replace
+							term. <br />
+							Can be run multiple search and replace in sequence at once request.
+						</p>
 					</div>
 				</div>
 
