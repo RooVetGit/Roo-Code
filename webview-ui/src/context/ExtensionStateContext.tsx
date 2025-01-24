@@ -64,7 +64,10 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setEnhancementApiConfigId: (value: string) => void
 	experimentalDiffStrategy: boolean
 	setExperimentalDiffStrategy: (value: boolean) => void
-	autoApprovalEnabled?: boolean
+	experimentalSearchAndReplaceTool?: boolean
+	setExperimentalSearchAndReplaceTool: (value: boolean) => void
+	experimentalInsertBlockTool?: boolean
+	setExperimentalInsertBlockTool: (value: boolean) => void
 	setAutoApprovalEnabled: (value: boolean) => void
 	handleInputChange: (field: keyof ApiConfiguration) => (event: any) => void
 	customModes: ModeConfig[]
@@ -279,6 +282,10 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			setState((prevState) => ({ ...prevState, enhancementApiConfigId: value })),
 		setExperimentalDiffStrategy: (value) =>
 			setState((prevState) => ({ ...prevState, experimentalDiffStrategy: value })),
+		setExperimentalSearchAndReplaceTool: (value) =>
+			setState((prevState) => ({ ...prevState, experimentalSearchAndReplaceTool: value })),
+		setExperimentalInsertBlockTool: (value) =>
+			setState((prevState) => ({ ...prevState, experimentalInsertBlockTool: value })),
 		setAutoApprovalEnabled: (value) => setState((prevState) => ({ ...prevState, autoApprovalEnabled: value })),
 		handleInputChange,
 		setCustomModes: (value) => setState((prevState) => ({ ...prevState, customModes: value })),

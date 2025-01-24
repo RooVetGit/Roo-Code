@@ -108,6 +108,8 @@ export interface ExtensionState {
 	modeApiConfigs?: Record<Mode, string>
 	enhancementApiConfigId?: string
 	experimentalDiffStrategy?: boolean
+	experimentalSearchAndReplaceTool?: boolean
+	experimentalInsertBlockTool?: boolean
 	autoApprovalEnabled?: boolean
 	customModes: ModeConfig[]
 	toolRequirements?: Record<string, boolean> // Map of tool names to their requirements (e.g. {"apply_diff": true} if diffEnabled)
