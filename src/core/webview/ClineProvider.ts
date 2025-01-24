@@ -130,6 +130,16 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	public static readonly sideBarId = "roo-cline.SidebarProvider" // used in package.json as the view's id. This value cannot be changed due to how vscode caches views based on their id, and updating the id would break existing instances of the extension.
 	public static readonly tabPanelId = "roo-cline.TabPanelProvider"
 	private static activeInstances: Set<ClineProvider> = new Set()
+
+	public static getActiveInstances(): Set<ClineProvider> {
+		return this.activeInstances
+	}
+
+	public async updateConversationSaveFolder(folder?: string) {
+		if (this.cline) {
+			await this.cline.updateConversationSaveFolder(folder)
+		}
+	}
 	private disposables: vscode.Disposable[] = []
 	private view?: vscode.WebviewView | vscode.WebviewPanel
 	private cline?: Cline
@@ -1215,6 +1225,17 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							await this.postStateToWebview()
 						}
 						break
+					case "conversationSaveFolder":
+						// Update workspace configuration
+						await vscode.workspace
+							.getConfiguration("roo-cline")
+							.update("conversationSaveFolder", message.text, vscode.ConfigurationTarget.Workspace)
+						// Update conversation saver in current Cline instance if it exists
+						if (this.cline) {
+							await this.cline.updateConversationSaveFolder(message.text)
+						}
+						await this.postStateToWebview()
+						break
 					case "deleteCustomMode":
 						if (message.slug) {
 							const answer = await vscode.window.showInformationMessage(
@@ -1322,7 +1343,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		await this.updateGlobalState("vsCodeLmModelSelector", vsCodeLmModelSelector)
 		await this.storeSecret("mistralApiKey", mistralApiKey)
 		if (this.cline) {
-			this.cline.api = buildApiHandler(apiConfiguration)
+			const newApi = buildApiHandler(apiConfiguration)
+			this.cline.api = newApi
+			this.cline.apiProvider = apiConfiguration.apiProvider ?? "anthropic"
 		}
 	}
 
@@ -1449,7 +1472,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		await this.storeSecret("openRouterApiKey", apiKey)
 		await this.postStateToWebview()
 		if (this.cline) {
-			this.cline.api = buildApiHandler({ apiProvider: openrouter, openRouterApiKey: apiKey })
+			const newApi = buildApiHandler({ apiProvider: openrouter, openRouterApiKey: apiKey })
+			this.cline.api = newApi
+			this.cline.apiProvider = openrouter
 		}
 		// await this.postMessageToWebview({ type: "action", action: "settingsButtonClicked" }) // bad ux if user is on welcome
 	}
@@ -1479,10 +1504,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		await this.storeSecret("glamaApiKey", apiKey)
 		await this.postStateToWebview()
 		if (this.cline) {
-			this.cline.api = buildApiHandler({
+			const newApi = buildApiHandler({
 				apiProvider: glama,
 				glamaApiKey: apiKey,
 			})
+			this.cline.api = newApi
+			this.cline.apiProvider = glama
 		}
 		// await this.postMessageToWebview({ type: "action", action: "settingsButtonClicked" }) // bad ux if user is on welcome
 	}
@@ -2040,6 +2067,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.customModesManager.getCustomModes(),
 		])
 
+		// Read conversation save folder from workspace config
+		const conversationSaveFolder = vscode.workspace.getConfiguration("roo-cline").get("conversationSaveFolder")
+
 		let apiProvider: ApiProvider
 		if (storedApiProvider) {
 			apiProvider = storedApiProvider
@@ -2149,6 +2179,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			enhancementApiConfigId,
 			experimentalDiffStrategy: experimentalDiffStrategy ?? false,
 			autoApprovalEnabled: autoApprovalEnabled ?? false,
+			conversationSaveFolder,
 			customModes,
 		}
 	}

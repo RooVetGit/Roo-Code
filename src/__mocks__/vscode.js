@@ -9,6 +9,11 @@ const vscode = {
 	workspace: {
 		onDidSaveTextDocument: jest.fn(),
 	},
+	ConfigurationTarget: {
+		Global: 1,
+		Workspace: 2,
+		WorkspaceFolder: 3,
+	},
 	Disposable: class {
 		dispose() {}
 	},
