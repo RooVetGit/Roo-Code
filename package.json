@@ -240,7 +240,6 @@
 		"@types/diff": "^5.2.1",
 		"@types/diff-match-patch": "^1.0.36",
 		"@types/jest": "^29.5.14",
-		"@types/mocha": "^10.0.7",
 		"@types/node": "20.x",
 		"@types/string-similarity": "^4.0.2",
 		"@typescript-eslint/eslint-plugin": "^7.14.1",
