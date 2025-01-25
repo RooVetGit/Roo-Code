@@ -82,6 +82,7 @@ export class Cline {
 	diffStrategy?: DiffStrategy
 	diffEnabled: boolean = false
 	fuzzyMatchThreshold: number = 1.0
+	private semanticSearchService?: SemanticSearchService
 
 	apiConversationHistory: (Anthropic.MessageParam & { ts?: number })[] = []
 	clineMessages: ClineMessage[] = []
@@ -140,6 +141,11 @@ export class Cline {
 
 		// Initialize diffStrategy based on current state
 		this.updateDiffStrategy(experimentalDiffStrategy)
+
+		// Initialize semantic search in the background
+		this.initializeSemanticSearch().catch((error) => {
+			console.error("Failed to initialize semantic search:", error)
+		})
 
 		if (task || images) {
 			this.startTask(task, images)
@@ -2694,20 +2700,19 @@ export class Cline {
 		return `<environment_details>\n${details.trim()}\n</environment_details>`
 	}
 
-	private async handleSemanticSearch(query: string): Promise<string> {
-		// Check if the API handler supports completion
-		if (!("completePrompt" in this.api)) {
-			return "Semantic search requires a model that supports completion. Please configure a model that supports completion."
+	private async initializeSemanticSearch() {
+		if (this.semanticSearchService) {
+			return this.semanticSearchService
 		}
 
 		const provider = this.providerRef.deref()
 		if (!provider) {
-			return "Provider reference lost"
+			throw new Error("Provider reference lost")
 		}
 
 		const { semanticSearchMaxMemory, semanticSearchMinScore, semanticSearchMaxResults } = await provider.getState()
 
-		const searcher = new SemanticSearchService({
+		this.semanticSearchService = new SemanticSearchService({
 			storageDir: await provider.ensureCacheDirectoryExists(),
 			context: provider.context,
 			maxMemoryBytes: semanticSearchMaxMemory ?? 100 * 1024 * 1024, // Default 100MB
@@ -2715,17 +2720,109 @@ export class Cline {
 			maxResults: semanticSearchMaxResults ?? 10, // Default 10
 		})
 
-		const results = await searcher.search(query)
+		try {
+			// Check if workspace is already indexed
+			const workspaceFolders = vscode.workspace.workspaceFolders
+			if (workspaceFolders && workspaceFolders.length > 0) {
+				// Create a progress notification
+				await vscode.window.withProgress(
+					{
+						location: vscode.ProgressLocation.Notification,
+						title: "Semantic Search Indexing",
+						cancellable: false,
+					},
+					async (progress) => {
+						try {
+							// Update progress at the start
+							progress.report({ message: "Starting indexing...", increment: 10 })
 
-		if (results.length === 0) {
-			return "No relevant code found."
+							// Initialize model
+							progress.report({ message: "Initializing model...", increment: 20 })
+							await this.semanticSearchService!.initialize()
+
+							// Index workspace files
+							progress.report({ message: "Indexing workspace files...", increment: 40 })
+
+							// Get workspace root
+							const workspaceRoot = workspaceFolders[0].uri.fsPath
+
+							// Use listFiles which respects .gitignore
+							const [files, hasMore] = await listFiles(workspaceRoot, true, 1000, true, false)
+
+							// Convert paths to absolute
+							const filePaths = files
+							await this.semanticSearchService!.addBatchToIndex(filePaths)
+
+							// Final progress update
+							progress.report({ message: "Indexing completed successfully", increment: 100 })
+
+							// Give time for the success message to be visible
+							await delay(1500)
+						} catch (error) {
+							console.error("Error initializing semantic search:", error)
+							// Update progress to show failure
+							progress.report({ message: "Indexing failed", increment: 100 })
+
+							// If initialization fails, show a warning but don't block
+							const selection = await vscode.window.showWarningMessage(
+								"Semantic search initialization encountered an issue. Some features may be limited.",
+								"Retry",
+								"Ignore",
+							)
+
+							if (selection === "Retry") {
+								try {
+									progress.report({ message: "Retrying indexing...", increment: 10 })
+									await this.semanticSearchService!.initialize()
+									progress.report({ message: "Retry successful", increment: 100 })
+									await delay(1500)
+								} catch (retryError) {
+									progress.report({ message: "Retry failed", increment: 100 })
+									vscode.window.showWarningMessage(
+										"Could not initialize semantic search after retry.",
+									)
+									throw retryError
+								}
+							}
+
+							throw error
+						}
+					},
+				)
+			}
+		} catch (error) {
+			vscode.window.showWarningMessage("Unexpected error initializing semantic search.")
+			throw error
 		}
 
-		return results
-			.map(
-				(result) =>
-					`Found ${result.metadata.type} '${result.metadata.name}' in ${result.metadata.filePath}:${result.metadata.startLine}\n${result.metadata.content}`,
-			)
-			.join("\n\n")
+		return this.semanticSearchService
+	}
+
+	private async handleSemanticSearch(query: string): Promise<string> {
+		// Check if the API handler supports completion
+		if (!("completePrompt" in this.api)) {
+			return "Semantic search requires a model that supports completion. Please configure a model that supports completion."
+		}
+
+		try {
+			// Use the already initialized service or wait for initialization
+			if (!this.semanticSearchService) {
+				this.semanticSearchService = await this.initializeSemanticSearch()
+			}
+			const results = await this.semanticSearchService.search(query)
+
+			if (results.length === 0) {
+				return "No relevant code found."
+			}
+
+			return results
+				.map((result) => {
+					const content = result.metadata.content ? `\n${result.metadata.content}` : ""
+					return `Found ${result.metadata.type} '${result.metadata.name}' in ${result.metadata.filePath}:${result.metadata.startLine}${content}`
+				})
+				.join("\n\n")
+		} catch (error) {
+			return `Error performing semantic search: ${error instanceof Error ? error.message : String(error)}`
+		}
 	}
 }
