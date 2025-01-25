@@ -20,6 +20,7 @@ export interface CodeDefinition {
 		usedIn: string[]
 		dependencies: string[]
 	}
+	contentHash?: string
 }
 
 export interface Storage {

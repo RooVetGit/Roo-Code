@@ -15,6 +15,8 @@ import { EmbeddingModel } from "./embeddings/types"
 import { MiniLMModel } from "./embeddings/minilm"
 import * as vscode from "vscode"
 import { TreeSitterParser } from "./parser/tree-sitter"
+import { LanceDBVectorStore } from "./vector-store/lancedb"
+import * as crypto from "crypto"
 
 export type ModelType = "minilm"
 
@@ -56,8 +58,12 @@ export interface SemanticSearchConfig {
 }
 
 export class SemanticSearchService {
+	// Scores for code and file search results
+	private static readonly CODE_SEARCH_SCORE = 0.8
+	private static readonly FILE_SEARCH_SCORE = 0.5
+
 	// Supported file extensions for semantic search
-	private static readonly SUPPORTED_EXTENSIONS = new Set([
+	private static readonly SUPPORTED_CODE_EXTENSIONS = new Set([
 		"js",
 		"jsx",
 		"ts",
@@ -76,14 +82,74 @@ export class SemanticSearchService {
 		"swift", // Swift
 	])
 
+	// Maximum size for text files (5MB)
+	private static readonly MAX_TEXT_FILE_SIZE = 5 * 1024 * 1024
+
+	private static async isTextFile(filePath: string): Promise<boolean> {
+		const stats = await vscode.workspace.fs.stat(vscode.Uri.file(filePath))
+
+		// Check if path is a directory
+		if (stats.type === vscode.FileType.Directory) {
+			return false
+		}
+
+		if (stats.size > this.MAX_TEXT_FILE_SIZE) {
+			return false
+		}
+
+		const fileContent = await vscode.workspace.fs.readFile(vscode.Uri.file(filePath))
+
+		// Check for null bytes and other control characters (except common ones like newline, tab)
+		const sampleSize = Math.min(4096, fileContent.length)
+		for (let i = 0; i < sampleSize; i++) {
+			if (fileContent[i] === 0 || (fileContent[i] < 32 && ![9, 10, 13].includes(fileContent[i]))) {
+				return false
+			}
+		}
+
+		// Check if the buffer is valid UTF-8
+		if (!this.isValidUtf8(fileContent)) {
+			return false
+		}
+
+		// Heuristic check for ASCII printable characters
+		let validBytes = 0
+		for (let i = 0; i < fileContent.length; i++) {
+			const byte = fileContent[i]
+			if (
+				byte === 0x09 || // Tab
+				byte === 0x0a || // Line Feed
+				byte === 0x0d || // Carriage Return
+				(byte >= 0x20 && byte <= 0x7e) // Printable ASCII
+			) {
+				validBytes++
+			}
+		}
+
+		const ratio = validBytes / fileContent.length
+		return ratio >= 0.95 // 95% threshold
+	}
+
+	private static isValidUtf8(buffer: Uint8Array): boolean {
+		// Check if buffer can be converted to UTF-8 without replacement characters
+		const str = new TextDecoder().decode(buffer)
+		return !str.includes("\ufffd") // No replacement characters found
+	}
+
 	// Check if a file is supported for indexing
-	public static isFileSupported(filePath: string): boolean {
+	public static async isFileSupported(filePath: string): Promise<boolean> {
 		const ext = path.extname(filePath).toLowerCase().slice(1)
-		return this.SUPPORTED_EXTENSIONS.has(ext)
+		return this.SUPPORTED_CODE_EXTENSIONS.has(ext) || (await this.isTextFile(filePath))
+	}
+
+	// Check if a file should be treated as a code file (parsed with tree-sitter)
+	private static isCodeFile(filePath: string): boolean {
+		const ext = path.extname(filePath).toLowerCase().slice(1)
+		return this.SUPPORTED_CODE_EXTENSIONS.has(ext)
 	}
 
 	private model: EmbeddingModel
-	private store!: PersistentVectorStore
+	private store!: LanceDBVectorStore
 	private cache: WorkspaceCache
 	private initialized = false
 	private readonly maxMemoryBytes: number
@@ -134,7 +200,8 @@ export class SemanticSearchService {
 
 				// Initialize store with workspace ID
 				const workspaceId = this.getWorkspaceId(this.config.context)
-				this.store = await PersistentVectorStore.create(this.config.context.globalState, workspaceId)
+				this.store = new LanceDBVectorStore(path.join(this.config.storageDir, "lancedb"), workspaceId)
+				await this.store.initialize()
 				console.log("Vector store initialized")
 
 				// Initialize model first
@@ -286,189 +353,111 @@ export class SemanticSearchService {
 		}
 	}
 
-	async addToIndex(filePath: string): Promise<void> {
-		// Don't call ensureInitialized() during the initialization process
-		if (!this.initializationPromise) {
-			await this.ensureInitialized()
-		}
-
-		console.log(`Parsing file: ${filePath}`)
-
+	private async processFileWithHash(filePath: string): Promise<void> {
+		// Check if path is a directory
 		try {
-			// Parse the file using tree-sitter
-			const parsedFile = await this.parser.parseFile(filePath)
-			console.log(`Found ${parsedFile.segments.length} code segments in ${filePath}`)
-
-			// Convert segments to definitions and index them
-			for (const segment of parsedFile.segments) {
-				const definition = convertSegmentToDefinition(segment, filePath)
-
-				// Try to get vector from cache first
-				let vector = await this.cache.get(definition)
-
-				if (!vector) {
-					// Generate new embedding if not in cache
-					vector = await (this.model as any).embedWithContext(definition)
-					if (!vector) {
-						console.error(`Failed to generate embedding for ${definition.filePath}`)
-						continue
-					}
-					await this.cache.set(definition, vector)
-					console.log(
-						`Generated new contextual embedding for ${definition.filePath} (${definition.type}: ${definition.name})`,
-					)
-				} else {
-					console.log(
-						`Using cached embedding for ${definition.filePath} (${definition.type}: ${definition.name})`,
-					)
-				}
-
-				// Check memory usage before adding to store
-				const stats = await this.getMemoryStats()
-				const newVectorMemory =
-					MemoryMonitor.estimateVectorSize(vector) + MemoryMonitor.estimateMetadataSize(definition)
-				const totalMemory =
-					stats.totalVectorMemory + stats.totalMetadataMemory + stats.totalCacheMemory + newVectorMemory
-
-				if (totalMemory > this.maxMemoryBytes) {
-					// If we're over the limit, clear the cache first
-					if (stats.totalCacheMemory > 0) {
-						console.log("Memory limit exceeded, clearing cache")
-						await this.cache.clear()
-					}
-
-					// If still over limit, start removing old vectors
-					if (totalMemory - stats.totalCacheMemory > this.maxMemoryBytes) {
-						// For now, just clear everything - in future we could be more selective
-						this.store.clear()
-						throw new Error(
-							`Memory usage exceeded limit of ${MemoryMonitor.formatBytes(this.maxMemoryBytes)}. ` +
-								`Vector store has been cleared.`,
-						)
-					}
-				}
-
-				await this.store.add(vector, definition)
+			const stat = await vscode.workspace.fs.stat(vscode.Uri.file(filePath))
+			if (stat.type === vscode.FileType.Directory) {
+				console.log(`Skipping directory: ${filePath}`)
+				return
 			}
-
-			console.log(`Successfully indexed ${parsedFile.segments.length} segments from ${filePath}`)
 		} catch (error) {
-			console.error(`Error processing file ${filePath}:`, error)
-		}
-	}
-
-	async addBatchToIndex(filePaths: string[]): Promise<void> {
-		// Don't call ensureInitialized() during the initialization process
-		if (!this.initializationPromise) {
-			await this.ensureInitialized()
-		}
-
-		// Filter out unsupported files
-		const supportedFiles = filePaths.filter((file) => SemanticSearchService.isFileSupported(file))
-		if (supportedFiles.length === 0) {
-			console.log("No supported files to index")
+			console.error(`Error checking file stats for ${filePath}:`, error)
 			return
 		}
 
-		console.log(`Batch indexing ${supportedFiles.length} supported files out of ${filePaths.length} total files...`)
+		const fileContent = await vscode.workspace.fs.readFile(vscode.Uri.file(filePath))
+		const textContent = new TextDecoder().decode(fileContent)
 
-		const allSegments: { definition: CodeDefinition; vector: Vector }[] = []
+		// Create hash of file content
+		const hash = crypto.createHash("sha256").update(textContent).digest("hex")
 
-		// First parse all files and generate/retrieve embeddings
-		for (const filePath of supportedFiles) {
-			try {
-				const parsedFile = await this.parser.parseFile(filePath)
-				console.log(`Found ${parsedFile.segments.length} code segments in ${filePath}`)
+		// Check if file exists in DB and get its hash
+		const { exists: hasExisting, hash: prevHash } = await this.store.hasFileSegments(filePath)
 
-				const definitions = parsedFile.segments.map((segment) => convertSegmentToDefinition(segment, filePath))
+		// If hash matches and has existing segments, skip entirely
+		if (hasExisting && hash === prevHash) {
+			console.log(`Skipping unchanged file: ${filePath}`)
+			return
+		}
 
-				// Try to get vectors from cache first
-				const vectors = await Promise.all(definitions.map((def) => this.cache.get(def)))
+		// Delete old segments if needed
+		if (hasExisting) {
+			console.log(`File ${filePath} changed, deleting old segments`)
+			await this.store.deleteByFilePath(filePath)
+		}
 
-				// Generate new embeddings for uncached definitions
-				const uncachedDefinitions = definitions.filter((_, i) => !vectors[i])
-				let newVectors: Vector[] = []
-
-				if (uncachedDefinitions.length > 0) {
-					newVectors = await (this.model as any).embedBatchWithContext(uncachedDefinitions)
-					if (!newVectors.every((v) => v)) {
-						console.error("Failed to generate some embeddings")
-						continue
-					}
-
-					// Cache the new vectors
-					await Promise.all(uncachedDefinitions.map((def, i) => this.cache.set(def, newVectors[i])))
+		// Only process if we passed the checks
+		if (SemanticSearchService.isCodeFile(filePath)) {
+			const parsedFile = await this.parser.parseFile(filePath, hash) // Pass hash to parser
+			for (const segment of parsedFile.segments) {
+				const definition = {
+					...convertSegmentToDefinition(segment, filePath),
+					contentHash: hash,
 				}
-
-				// Combine cached and new vectors, ensuring all vectors are defined
-				const allVectors = vectors
-					.map((v, i) => {
-						if (v) return v
-						const newVector = newVectors[definitions.indexOf(definitions[i])]
-						if (!newVector) {
-							console.error(`Missing vector for ${definitions[i].filePath}`)
-							return null
-						}
-						return newVector
-					})
-					.filter((v): v is Vector => v !== null)
-
-				// Add to segments array, only for definitions with valid vectors
-				definitions.forEach((def, i) => {
-					const vector = allVectors[i]
-					if (vector) {
-						allSegments.push({ definition: def, vector })
-					}
-				})
-			} catch (error) {
-				console.error(`Error processing file ${filePath}:`, error)
-				// Continue with other files
+				await this.indexDefinition(definition)
 			}
+		} else {
+			const definition: CodeDefinition = {
+				type: "file",
+				name: path.basename(filePath),
+				filePath: filePath,
+				content: textContent,
+				startLine: 1,
+				endLine: textContent.split("\n").length,
+				language: path.extname(filePath).slice(1) || "text",
+				contentHash: hash,
+			}
+			await this.indexDefinition(definition)
+		}
+	}
+
+	async addToIndex(filePath: string): Promise<void> {
+		await this.ensureInitialized()
+		await this.processFileWithHash(filePath)
+	}
+
+	async addBatchToIndex(filePaths: string[]): Promise<void> {
+		await this.ensureInitialized()
+		for (const filePath of filePaths) {
+			await this.processFileWithHash(filePath)
+		}
+	}
+
+	// Helper method to index a single definition
+	private async indexDefinition(definition: CodeDefinition): Promise<void> {
+		// Try to get vector from cache first
+		let vector = await this.cache.get(definition)
+
+		if (!vector) {
+			// Generate new embedding if not in cache
+			vector = await (this.model as any).embedWithContext(definition)
+			if (!vector) {
+				console.error(`Failed to generate embedding for ${definition.filePath}`)
+				return
+			}
+			await this.cache.set(definition, vector)
+			console.log(
+				`Generated new contextual embedding for ${definition.filePath} (${definition.type}: ${definition.name})`,
+			)
+		} else {
+			console.log(`Using cached embedding for ${definition.filePath} (${definition.type}: ${definition.name})`)
 		}
 
 		// Check memory usage before adding to store
-		const stats = await this.getMemoryStats()
-		const newVectorsMemory = allSegments.reduce(
-			(sum, { vector, definition }) =>
-				sum + MemoryMonitor.estimateVectorSize(vector) + MemoryMonitor.estimateMetadataSize(definition),
-			0,
-		)
-		const totalMemory =
-			stats.totalVectorMemory + stats.totalMetadataMemory + stats.totalCacheMemory + newVectorsMemory
+		await this.checkMemoryUsage()
 
-		if (totalMemory > this.maxMemoryBytes) {
-			// If we're over the limit, clear the cache first
-			if (stats.totalCacheMemory > 0) {
-				console.log("Memory limit exceeded, clearing cache")
-				await this.cache.clear()
-			}
-
-			// If still over limit, start removing old vectors
-			if (totalMemory - stats.totalCacheMemory > this.maxMemoryBytes) {
-				// For now, just clear everything - in future we could be more selective
-				this.store.clear()
-				throw new Error(
-					`Memory usage exceeded limit of ${MemoryMonitor.formatBytes(this.maxMemoryBytes)}. ` +
-						`Vector store has been cleared.`,
-				)
-			}
-		}
-
-		// Add all segments to the store
-		await this.store.addBatch(
-			allSegments.map(({ vector, definition }) => ({
-				vector,
-				metadata: definition,
-			})),
-		)
-		console.log(`Successfully batch indexed ${allSegments.length} segments from ${filePaths.length} files`)
+		await this.store.add(vector, definition)
 	}
 
 	async search(query: string): Promise<SearchResult[]> {
 		console.log(`Starting semantic search for query: "${query}"`)
+		console.log(`Current workspace ID: ${this.getWorkspaceId(this.config.context)}`)
+		console.log(`Store instance: ${this.store?.constructor.name}`)
 
 		try {
 			await this.ensureInitialized()
+			console.log("Store after initialization:", this.store)
 
 			const storeSize = this.size()
 			console.log(`Current vector store size: ${storeSize} documents`)
@@ -486,22 +475,32 @@ export class SemanticSearchService {
 			)
 			console.log(`Found ${results.length} results before filtering`)
 
-			let filteredResults = results
-			if (this.config.minScore !== undefined) {
-				console.log(`Filtering results with minimum score ${this.config.minScore}`)
-				filteredResults = results.filter((r) => r.score >= this.config.minScore!)
-				console.log(`Filtered to ${filteredResults.length} results`)
-			}
-
-			const dedupedResults = this.deduplicateResults(filteredResults)
+			const dedupedResults = this.deduplicateResults(results)
 			console.log(`Deduplicated to ${dedupedResults.length} results`)
 
-			const finalResults = dedupedResults
-				.slice(0, this.config.maxResults ?? 10)
-				.map((result) => this.formatResult(result))
+			const codeResults = dedupedResults.filter((r) => r.metadata?.type !== "file")
+			const fileResults = dedupedResults.filter((r) => r.metadata?.type === "file")
+
+			//Assume that all results are already ranked by score
+			/*let filteredCodeResults = codeResults.filter(
+				(r) => r.score && r.score >= SemanticSearchService.CODE_SEARCH_SCORE,
+			)
+			let filteredFileResults = fileResults.filter(
+				(r) => r.score && r.score >= SemanticSearchService.FILE_SEARCH_SCORE,
+			)
+
+			console.log(`Filtering code results with minimum score ${SemanticSearchService.CODE_SEARCH_SCORE}`)
+			console.log(`Filtering file results with minimum score ${SemanticSearchService.FILE_SEARCH_SCORE}`)
+
+			const sortedCodeResults = filteredCodeResults.sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+			const sortedFileResults = filteredFileResults.sort((a, b) => (b.score ?? 0) - (a.score ?? 0))*/
+
+			const finalResults = codeResults
+				.slice(0, this.config.maxResults ?? 10 / 2)
+				.concat(fileResults.slice(0, this.config.maxResults ?? 10 / 2))
 
 			console.log("Final results:", finalResults)
-			return finalResults
+			return finalResults.map((r) => this.formatResult(r))
 		} catch (error) {
 			console.error("Error during semantic search:", error)
 			throw error
@@ -514,11 +513,13 @@ export class SemanticSearchService {
 		}
 
 		if (result.metadata.type === "file") {
+			const { content, ...restMetadata } = result.metadata
 			return {
 				type: "file",
 				score: result.score ?? 0,
 				filePath: result.metadata.filePath,
 				name: result.metadata.name,
+				metadata: restMetadata,
 			} as FileSearchResult
 		}
 
@@ -544,10 +545,13 @@ export class SemanticSearchService {
 		}
 
 		// Default to file result if missing any required code properties
+		// Remove content from metadata before returning it
+		const { content, ...restMetadata } = result.metadata
 		return {
 			type: "file",
 			score: result.score ?? 0,
 			filePath: result.metadata.filePath,
+			metadata: restMetadata,
 		} as FileSearchResult
 	}
 
