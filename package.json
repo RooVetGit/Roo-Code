@@ -213,6 +213,7 @@
 		"compile-tests": "tsc -p . --outDir out",
 		"install:all": "npm install && cd webview-ui && npm install",
 		"lint": "eslint \"src/**/*.{js,jsx,ts,tsx}\"",
+		"lint:fix": "eslint \"src/**/*.{js,jsx,ts,tsx}\" --fix",
 		"package": "npm run build:webview && node esbuild.js --production",
 		"start:webview": "cd webview-ui && npm run start",
 		"test": "npm run test:backend",
