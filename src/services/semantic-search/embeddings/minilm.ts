@@ -3,7 +3,7 @@ import { EmbeddingModel, ModelConfig } from "./types"
 import { Vector } from "../vector-store/types"
 import { CodeDefinition } from "../types"
 
-const MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+const MODEL_NAME = "sentence-transformers/all-MiniLM-L12-v2"
 
 export class MiniLMModel implements EmbeddingModel {
 	private pipe?: FeatureExtractionPipeline
