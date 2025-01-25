@@ -1149,7 +1149,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 							// Create config
 							const config: SemanticSearchConfig = {
-								storageDir: path.join(await this.ensureCacheDirectoryExists(), "semantic-search"),
+								storageDir: await this.ensureCacheDirectoryExists(),
 								context: this.context,
 								maxMemoryBytes:
 									((await this.getGlobalState("semanticSearchMaxMemory")) as number | undefined) ??
@@ -1241,16 +1241,13 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 										// Use listFiles which respects .gitignore
 										const [files, hasMore] = await listFiles(workspaceRoot, true, 1000)
-										const sourceFiles = files.filter((file: string) =>
-											SemanticSearchService.isFileSupported(file),
-										)
 
 										console.log(
-											`Found ${sourceFiles.length} supported files to index${hasMore ? " (limited to first 1000)" : ""}`,
+											`Found ${files.length} files to index${hasMore ? " (limited to first 1000)" : ""}`,
 										)
 
 										// Convert paths to absolute
-										await service.addBatchToIndex(sourceFiles)
+										await service.addBatchToIndex(files)
 
 										// Final progress update
 										progress.report({ message: "Indexing completed successfully" })
