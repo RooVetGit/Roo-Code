@@ -80,6 +80,13 @@
 			"label": "tasks: watch-tests",
 			"dependsOn": ["npm: watch", "npm: watch-tests"],
 			"problemMatcher": []
+		},
+		{
+			"type": "npm",
+			"script": "lint",
+			"problemMatcher": ["$eslint-stylish"],
+			"label": "npm: lint",
+			"detail": "eslint \"src/**/*.{js,jsx,ts,tsx}\""
 		}
 	]
 }

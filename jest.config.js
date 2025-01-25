@@ -18,7 +18,7 @@ module.exports = {
 			},
 		],
 	},
-	testMatch: ["**/__tests__/**/*.test.ts"],
+	testMatch: ["**/src/**/__tests__/**/*.test.ts", "**/src/**/*.test.ts"],
 	moduleNameMapper: {
 		"^vscode$": "<rootDir>/src/__mocks__/vscode.js",
 		"@modelcontextprotocol/sdk$": "<rootDir>/src/__mocks__/@modelcontextprotocol/sdk/index.js",
@@ -35,6 +35,23 @@ module.exports = {
 		"node_modules/(?!(@modelcontextprotocol|delay|p-wait-for|globby|serialize-error|strip-ansi|default-shell|os-name)/)",
 	],
 	modulePathIgnorePatterns: [".vscode-test"],
-	reporters: [["jest-simple-dot-reporter", {}]],
-	setupFiles: [],
+	rootDir: ".",
+	verbose: false,
+	silent: true,
+	noStackTrace: true,
+	reporters: [
+		[
+			"jest-silent-reporter",
+			{
+				useDots: false,
+				showPaths: true,
+				showWarnings: false,
+				showFailures: true,
+				showFailuresSummary: false,
+				showInlineStatus: false,
+			},
+		],
+		"<rootDir>/jest-custom-reporter.js",
+	],
+	setupFiles: ["<rootDir>/jest.setup.js"],
 }
