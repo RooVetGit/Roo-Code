@@ -85,7 +85,7 @@ const extensionConfig = {
 	sourcesContent: false,
 	platform: "node",
 	outfile: "dist/extension.js",
-	external: ["vscode", "onnxruntime-node"],
+	external: ["vscode", "onnxruntime-node", "@lancedb/lancedb-linux-x64-gnu"],
 }
 
 async function main() {
