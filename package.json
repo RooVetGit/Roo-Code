@@ -218,6 +218,7 @@
 		"start:webview": "cd webview-ui && npm run start",
 		"test": "npm run test:backend",
 		"test:backend": "cross-env NODE_NO_WARNINGS=1 jest --no-verbose --silent",
+		"test:debug-file": "cross-env DEBUG=true NODE_NO_WARNINGS=1 jest -c jest.debug.config.js",
 		"test:webview": "cd webview-ui && cross-env NODE_NO_WARNINGS=1 npm run test --no-verbose --silent",
 		"test:extension": "cross-env NODE_NO_WARNINGS=1 vscode-test",
 		"test:watch": "tsc -p . -w --outDir out",
