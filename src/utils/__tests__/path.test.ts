@@ -93,42 +93,48 @@ describe("Path Utilities", () => {
 		const homeDir = os.homedir()
 		const desktop = path.join(homeDir, "Desktop")
 
+		// Helper function to create platform-specific paths
+		const createPath = (...segments: string[]) => {
+			return path.join(...segments).toPosix()
+		}
+
 		it("should return basename when path equals cwd", () => {
-			const cwd = "/Users/test/project"
+			const cwd = createPath("C:", "Users", "test", "project")
 			expect(getReadablePath(cwd, cwd)).toBe("project")
 		})
 
 		it("should return relative path when inside cwd", () => {
-			const cwd = "/Users/test/project"
-			const filePath = "/Users/test/project/src/file.txt"
+			const cwd = createPath("C:", "Users", "test", "project")
+			const filePath = createPath("C:", "Users", "test", "project", "src", "file.txt")
 			expect(getReadablePath(cwd, filePath)).toBe("src/file.txt")
 		})
 
 		it("should return absolute path when outside cwd", () => {
-			const cwd = "/Users/test/project"
-			const filePath = "/Users/test/other/file.txt"
-			expect(getReadablePath(cwd, filePath)).toBe("/Users/test/other/file.txt")
+			const cwd = createPath("C:", "Users", "test", "project")
+			const filePath = createPath("C:", "Users", "test", "other", "file.txt")
+			expect(getReadablePath(cwd, filePath)).toBe(filePath)
 		})
 
 		it("should handle Desktop as cwd", () => {
 			const filePath = path.join(desktop, "file.txt")
-			expect(getReadablePath(desktop, filePath)).toBe(filePath.toPosix())
+			expect(getReadablePath(desktop, filePath)).toBe(createPath(filePath))
 		})
 
 		it("should handle undefined relative path", () => {
-			const cwd = "/Users/test/project"
+			const cwd = createPath("C:", "Users", "test", "project")
 			expect(getReadablePath(cwd)).toBe("project")
 		})
 
 		it("should handle parent directory traversal", () => {
-			const cwd = "/Users/test/project"
+			const cwd = createPath("C:", "Users", "test", "project")
 			const filePath = "../../other/file.txt"
-			expect(getReadablePath(cwd, filePath)).toBe("/Users/other/file.txt")
+			const expected = createPath("C:", "Users", "other", "file.txt")
+			expect(getReadablePath(cwd, filePath)).toBe(expected)
 		})
 
 		it("should normalize paths with redundant segments", () => {
-			const cwd = "/Users/test/project"
-			const filePath = "/Users/test/project/./src/../src/file.txt"
+			const cwd = createPath("C:", "Users", "test", "project")
+			const filePath = createPath("C:", "Users", "test", "project", ".", "src", "..", "src", "file.txt")
 			expect(getReadablePath(cwd, filePath)).toBe("src/file.txt")
 		})
 	})
