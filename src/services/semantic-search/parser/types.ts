@@ -1,5 +1,5 @@
 export interface CodeSegment {
-	type: "function" | "class" | "method" | "module" | "interface" | "enum" | "type"
+	type: "function" | "class" | "method" | "variable" | "other"
 	name: string
 	content: string
 	context?: string // parent class/module/namespace if any

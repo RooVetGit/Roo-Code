@@ -3,20 +3,8 @@ import * as path from "path"
 import { loadRequiredLanguageParsers } from "../../tree-sitter/languageParser"
 import type Parser from "web-tree-sitter"
 import { CodeSegment, ParsedFile, SemanticParser, IMPORTANCE_WEIGHTS } from "./types"
-import {
-	javascriptQuery,
-	typescriptQuery,
-	pythonQuery,
-	rustQuery,
-	goQuery,
-	cppQuery,
-	cQuery,
-	csharpQuery,
-	rubyQuery,
-	javaQuery,
-	phpQuery,
-	swiftQuery,
-} from "../../tree-sitter/queries"
+import typescript from "./queries/typescript"
+import crypto from "crypto"
 
 interface RelationshipInfo {
 	imports: string[]
@@ -35,7 +23,9 @@ export class TreeSitterParser implements SemanticParser {
 			try {
 				// Create dummy files for all supported languages to ensure parsers are loaded
 				const dummyFiles = Object.entries(this.getLanguageMap()).map(([ext]) => `dummy.${ext}`)
-				this.languageParsers = await loadRequiredLanguageParsers([filePath, ...dummyFiles])
+				this.languageParsers = await loadRequiredLanguageParsers([filePath, ...dummyFiles], {
+					ts: typescript,
+				})
 				this.initialized = true
 			} catch (error) {
 				console.warn(`Failed to load parser for ${filePath}, will skip parsing: ${error}`)
@@ -71,37 +61,6 @@ export class TreeSitterParser implements SemanticParser {
 		return this.getLanguageMap()[ext] || ext
 	}
 
-	private getQueryForLanguage(language: string): string {
-		switch (language) {
-			case "javascript":
-				return javascriptQuery
-			case "typescript":
-				return typescriptQuery
-			case "python":
-				return pythonQuery
-			case "rust":
-				return rustQuery
-			case "go":
-				return goQuery
-			case "cpp":
-				return cppQuery
-			case "c":
-				return cQuery
-			case "c_sharp":
-				return csharpQuery
-			case "ruby":
-				return rubyQuery
-			case "java":
-				return javaQuery
-			case "php":
-				return phpQuery
-			case "swift":
-				return swiftQuery
-			default:
-				throw new Error(`No query available for language: ${language}`)
-		}
-	}
-
 	private async parseSegments(tree: Parser.Tree, fileContent: string, language: string): Promise<CodeSegment[]> {
 		const segments: CodeSegment[] = []
 		const lines = fileContent.split("\n")
@@ -120,100 +79,57 @@ export class TreeSitterParser implements SemanticParser {
 		const captures = query.captures(tree.rootNode)
 		console.log(`Found ${captures.length} captures`)
 
-		// First pass: Collect all definitions and their relationships
+		let currentContext = ""
+
+		// Single pass processing for all captures
 		for (const capture of captures) {
 			const { node, name } = capture
+			const startLine = node.startPosition.row
+			const endLine = node.endPosition.row
 
-			if (name.includes("name") && name.includes("definition")) {
-				const symbolName = node.text
-				relationships.set(symbolName, {
-					imports: [],
-					usedIn: [],
-					dependencies: [],
-				})
-
-				// Extract inheritance relationships
-				if (name.includes("class")) {
-					const extendsNode = node.parent?.childForFieldName("extends")
-					if (extendsNode) {
-						relationships.get(symbolName)!.inheritedFrom = extendsNode.text
-					}
-
-					const implementsNode = node.parent?.childForFieldName("implements")
-					if (implementsNode) {
-						relationships.get(symbolName)!.implementedInterfaces = implementsNode.children.map(
-							(n) => n.text,
-						)
-					}
-				}
-			}
-
-			// Track symbol usage
-			if (name.includes("reference")) {
-				const referencedSymbol = node.text
-				const parentCapture = captures.find(
-					(c) =>
-						c.node.startPosition.row <= node.startPosition.row &&
-						c.node.endPosition.row >= node.endPosition.row &&
-						c.name.includes("definition"),
-				)
-
-				if (parentCapture) {
-					const parentSymbol = parentCapture.node.text
-					relationships.get(parentSymbol)?.dependencies.push(referencedSymbol)
-					relationships.get(referencedSymbol)?.usedIn.push(parentSymbol)
-				}
-			}
-		}
-
-		// Second pass: Create segments with relationship info
-		let currentContext: string | undefined
-
-		for (const capture of captures) {
-			const { node, name } = capture
-
-			// Update context for nested definitions
+			// Update context for structural elements
 			if (name.includes("class") || name.includes("module")) {
 				currentContext = node.text
 			}
 
-			if (name.includes("name") && name.includes("definition")) {
-				const type = name.split(".")[2] as CodeSegment["type"]
-				const startLine = node.startPosition.row
-				const endLine = node.endPosition.row
-				const symbolName = node.text
+			// Determine type from capture name patterns
+			const type = (["class", "function", "variable", "method", "import", "type"].find((t) => name.includes(t)) ||
+				"other") as CodeSegment["type"]
 
-				// Get the full content
-				const content = lines.slice(startLine, endLine + 1).join("\n")
+			// Extract symbol name from appropriate node property
+			const symbolName = node.type === "string" ? node.text.slice(1, -1) : node.text
 
-				// Extract docstring if available
-				const docstring = this.extractDocstring(node, lines)
+			// Get full content for this segment
+			const content = lines.slice(startLine, endLine + 1).join("\n")
 
-				// Extract params and return type for functions/methods
-				const { params, returnType } = this.extractFunctionSignature(node)
+			// Extract docstring if available
+			const docstring = this.extractDocstring(node, lines)
 
-				// Get relationship info
-				const relationshipInfo = relationships.get(symbolName)
+			// Extract params and return type for functions/methods
+			const { params, returnType } = this.extractFunctionSignature(node)
 
-				segments.push({
-					type,
-					name: symbolName,
-					content,
-					context: currentContext,
-					startLine,
-					endLine,
-					importance: IMPORTANCE_WEIGHTS[type.toUpperCase() as keyof typeof IMPORTANCE_WEIGHTS] || 0.5,
-					language,
-					docstring,
-					params,
-					returnType,
-					relationships: relationshipInfo || {
-						imports: [],
-						usedIn: [],
-						dependencies: [],
-					},
-				})
-			}
+			// Get relationship info
+			const relationshipInfo = relationships.get(symbolName)
+
+			segments.push({
+				type,
+				name: symbolName,
+				content,
+				startLine,
+				endLine,
+				context: currentContext,
+				importance: IMPORTANCE_WEIGHTS[type.toUpperCase() as keyof typeof IMPORTANCE_WEIGHTS] || 0.5,
+				language,
+				docstring,
+				params,
+				returnType,
+				relationships: {
+					imports: [],
+					usedIn: [],
+					dependencies: [],
+					...(relationshipInfo || {}),
+				},
+			})
 		}
 
 		return segments
@@ -259,10 +175,24 @@ export class TreeSitterParser implements SemanticParser {
 		return { params, returnType }
 	}
 
-	async parseFile(filePath: string): Promise<ParsedFile> {
+	async parseFile(filePath: string, expectedHash?: string): Promise<ParsedFile> {
+		// Check hash before any processing
+		const fileContent = await fs.readFile(filePath, "utf8")
+		const currentHash = crypto.createHash("sha256").update(fileContent).digest("hex")
+
+		if (expectedHash && currentHash !== expectedHash) {
+			console.log(`Hash mismatch during parsing, skipping: ${filePath}`)
+			return {
+				path: filePath,
+				segments: [],
+				imports: [],
+				exports: [],
+				summary: "Skipped due to hash mismatch",
+			}
+		}
+
 		await this.initialize(filePath)
 
-		const fileContent = await fs.readFile(filePath, "utf8")
 		const ext = path.extname(filePath).toLowerCase().slice(1)
 		const language = this.getLanguageFromExt(ext)
 
