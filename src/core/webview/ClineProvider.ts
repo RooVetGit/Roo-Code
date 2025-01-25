@@ -33,6 +33,9 @@ import { Mode, modes, CustomPrompts, PromptComponent, enhance } from "../../shar
 import { SemanticSearchConfig, SemanticSearchService } from "../../services/semantic-search"
 import { listFiles } from "../../services/glob/list-files"
 
+// Add delay function at the top of the imports section
+const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms))
+
 /*
 https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
 
@@ -125,6 +128,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	mcpHub?: McpHub
 	private latestAnnouncementId = "jan-13-2025-custom-prompt" // update to some unique identifier when we add a new announcement
 	configManager: ConfigManager
+	semanticSearchService?: SemanticSearchService
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
@@ -135,6 +139,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		this.workspaceTracker = new WorkspaceTracker(this)
 		this.mcpHub = new McpHub(this)
 		this.configManager = new ConfigManager(this.context)
+
+		// Initialize semantic search service in the background
+		this.initializeSemanticSearch().catch((error) => {
+			console.error("Failed to initialize semantic search:", error)
+		})
 	}
 
 	/*
@@ -276,6 +285,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			images,
 			undefined,
 			experimentalDiffStrategy,
+			this.semanticSearchService,
 		)
 	}
 
@@ -305,6 +315,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			undefined,
 			historyItem,
 			experimentalDiffStrategy,
+			this.semanticSearchService,
 		)
 	}
 
@@ -1206,76 +1217,63 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								async (progress) => {
 									try {
 										// Update progress at the start
-										progress.report({ message: "Starting indexing..." })
-										await this.postMessageToWebview({
-											type: "indexingProgress",
-											indexingProgress: {
-												current: 0,
-												total: 100,
-												status: "Starting indexing...",
-											},
-										})
+										progress.report({ message: "Starting indexing...", increment: 10 })
 
 										// Initialize model
-										progress.report({ message: "Initializing model..." })
-										await this.postMessageToWebview({
-											type: "indexingProgress",
-											indexingProgress: {
-												current: 20,
-												total: 100,
-												status: "Initializing model...",
-											},
-										})
+										progress.report({ message: "Initializing model...", increment: 20 })
 										await service.initialize()
 
 										// Index workspace files
-										progress.report({ message: "Indexing workspace files..." })
-										await this.postMessageToWebview({
-											type: "indexingProgress",
-											indexingProgress: {
-												current: 40,
-												total: 100,
-												status: "Indexing workspace files...",
-											},
-										})
+										progress.report({ message: "Indexing workspace files...", increment: 40 })
+
+										// Get workspace root
+										const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
+
+										if (!workspaceRoot) {
+											vscode.window.showErrorMessage("No workspace folder open")
+											return
+										}
 
 										// Use listFiles which respects .gitignore
-										const [files, hasMore] = await listFiles(workspaceRoot, true, 1000)
-
-										console.log(
-											`Found ${files.length} files to index${hasMore ? " (limited to first 1000)" : ""}`,
-										)
+										const [files, hasMore] = await listFiles(workspaceRoot, true, 1000, true, false)
 
 										// Convert paths to absolute
-										await service.addBatchToIndex(files)
+										const filePaths = files
+										await service.addBatchToIndex(filePaths)
 
 										// Final progress update
-										progress.report({ message: "Indexing completed successfully" })
-										await this.postMessageToWebview({
-											type: "indexingProgress",
-											indexingProgress: {
-												current: 100,
-												total: 100,
-												status: "Indexing completed successfully",
-											},
-										})
+										progress.report({ message: "Indexing completed successfully", increment: 100 })
 
 										// Give time for the success message to be visible
-										await new Promise((resolve) => setTimeout(resolve, 1500))
-									} catch (initError) {
+										await delay(1500)
+									} catch (error) {
+										console.error("Error initializing semantic search:", error)
 										// Update progress to show failure
-										progress.report({ message: "Indexing failed" })
-										await this.postMessageToWebview({
-											type: "indexingProgress",
-											indexingProgress: {
-												current: 100,
-												total: 100,
-												status: "Indexing failed: " + initError.message,
-											},
-										})
+										progress.report({ message: "Indexing failed", increment: 100 })
 
-										console.error("Error during semantic search indexing:", initError)
-										throw initError
+										// If initialization fails, show a warning but don't block
+										const selection = await vscode.window.showWarningMessage(
+											"Semantic search initialization encountered an issue. Some features may be limited.",
+											"Retry",
+											"Ignore",
+										)
+
+										if (selection === "Retry") {
+											try {
+												progress.report({ message: "Retrying indexing...", increment: 10 })
+												await service.initialize()
+												progress.report({ message: "Retry successful", increment: 100 })
+												await delay(1500)
+											} catch (retryError) {
+												progress.report({ message: "Retry failed", increment: 100 })
+												vscode.window.showWarningMessage(
+													"Could not initialize semantic search after retry.",
+												)
+												throw retryError
+											}
+										}
+
+										throw error
 									}
 								},
 							)
@@ -2285,5 +2283,94 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		vscode.window.showInformationMessage("State reset")
 		await this.postStateToWebview()
 		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
+	}
+
+	private async initializeSemanticSearch() {
+		const { semanticSearchMaxMemory, semanticSearchMinScore, semanticSearchMaxResults } = await this.getState()
+
+		this.semanticSearchService = new SemanticSearchService({
+			storageDir: await this.ensureCacheDirectoryExists(),
+			context: this.context,
+			maxMemoryBytes: semanticSearchMaxMemory ?? 100 * 1024 * 1024, // Default 100MB
+			minScore: semanticSearchMinScore ?? 0.7, // Default 0.7
+			maxResults: semanticSearchMaxResults ?? 10, // Default 10
+		})
+
+		try {
+			// Check if workspace is already indexed
+			const workspaceFolders = vscode.workspace.workspaceFolders
+			if (workspaceFolders && workspaceFolders.length > 0) {
+				const workspaceFolder = workspaceFolders[0]
+				const workspaceRoot = workspaceFolder.uri.fsPath as string
+
+				// Create a progress notification
+				await vscode.window.withProgress(
+					{
+						location: vscode.ProgressLocation.Notification,
+						title: "Semantic Search Indexing",
+						cancellable: false,
+					},
+					async (progress) => {
+						try {
+							// Update progress at the start
+							progress.report({ message: "Starting indexing...", increment: 10 })
+
+							// Initialize model
+							progress.report({ message: "Initializing model...", increment: 20 })
+							await this.semanticSearchService!.initialize()
+
+							// Index workspace files
+							progress.report({ message: "Indexing workspace files...", increment: 40 })
+
+							// Use listFiles which respects .gitignore
+							const [files, hasMore] = await listFiles(workspaceRoot, true, 1000, true, false)
+
+							// Convert paths to absolute
+							const filePaths = files
+							await this.semanticSearchService!.addBatchToIndex(filePaths)
+
+							// Final progress update
+							progress.report({ message: "Indexing completed successfully", increment: 100 })
+
+							// Give time for the success message to be visible
+							await delay(1500)
+						} catch (error) {
+							console.error("Error initializing semantic search:", error)
+							// Update progress to show failure
+							progress.report({ message: "Indexing failed", increment: 100 })
+
+							// If initialization fails, show a warning but don't block
+							const selection = await vscode.window.showWarningMessage(
+								"Semantic search initialization encountered an issue. Some features may be limited.",
+								"Retry",
+								"Ignore",
+							)
+
+							if (selection === "Retry") {
+								try {
+									progress.report({ message: "Retrying indexing...", increment: 10 })
+									await this.semanticSearchService!.initialize()
+									progress.report({ message: "Retry successful", increment: 100 })
+									await delay(1500)
+								} catch (retryError) {
+									progress.report({ message: "Retry failed", increment: 100 })
+									vscode.window.showWarningMessage(
+										"Could not initialize semantic search after retry.",
+									)
+									throw retryError
+								}
+							}
+
+							throw error
+						}
+					},
+				)
+			}
+		} catch (error) {
+			vscode.window.showWarningMessage("Unexpected error initializing semantic search.")
+			throw error
+		}
+
+		return this.semanticSearchService
 	}
 }
