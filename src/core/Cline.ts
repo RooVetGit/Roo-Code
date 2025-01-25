@@ -750,8 +750,10 @@ export class Cline {
 			completed = true
 		})
 
-		process.once("no_shell_integration", async () => {
-			await this.say("shell_integration_warning")
+		process.once("no_shell_integration", () => {
+			this.say("shell_integration_warning").catch((error) => {
+				console.error("Error in shell integration warning:", error)
+			})
 		})
 
 		await process
@@ -2219,7 +2221,7 @@ export class Cline {
 		}
 
 		/*
-		Seeing out of bounds is fine, it means that the next too call is being built up and ready to add to assistantMessageContent to present. 
+		Seeing out of bounds is fine, it means that the next too call is being built up and ready to add to assistantMessageContent to present.
 		When you see the UI inactive during this, it means that a tool is breaking without presenting any UI. For example the write_to_file tool was breaking when relpath was undefined, and for invalid relpath it never presented UI.
 		*/
 		this.presentAssistantMessageLocked = false // this needs to be placed here, if not then calling this.presentAssistantMessage below would fail (sometimes) since it's locked
@@ -2527,7 +2529,7 @@ export class Cline {
 	}
 
 	async loadContext(userContent: UserContent, includeFileDetails: boolean = false) {
-		return await Promise.all([
+		return Promise.all([
 			// Process userContent array, which contains various block types:
 			// TextBlockParam, ImageBlockParam, ToolUseBlockParam, and ToolResultBlockParam.
 			// We need to apply parseMentions() to:

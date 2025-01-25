@@ -2192,7 +2192,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	async getGlobalState(key: GlobalStateKey) {
-		return await this.context.globalState.get(key)
+		return this.context.globalState.get(key)
 	}
 
 	// workspace
@@ -2202,7 +2202,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	private async getWorkspaceState(key: string) {
-		return await this.context.workspaceState.get(key)
+		return this.context.workspaceState.get(key)
 	}
 
 	// private async clearState() {
@@ -2226,7 +2226,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	private async getSecret(key: SecretKey) {
-		return await this.context.secrets.get(key)
+		return this.context.secrets.get(key)
 	}
 
 	// dev
