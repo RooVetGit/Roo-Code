@@ -53,6 +53,8 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		listApiConfigMeta,
 		experimentalDiffStrategy,
 		setExperimentalDiffStrategy,
+		renameApiConfiguration,
+		duplicateApiConfig,
 	} = useExtensionState()
 	const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>(undefined)
 	const [modelIdErrorMessage, setModelIdErrorMessage] = useState<string | undefined>(undefined)
@@ -172,18 +174,10 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 								})
 							}}
 							onRenameConfig={(oldName: string, newName: string) => {
-								vscode.postMessage({
-									type: "renameApiConfiguration",
-									values: { oldName, newName },
-									apiConfiguration,
-								})
+								renameApiConfiguration(oldName, newName)
 							}}
-							onUpsertConfig={(configName: string) => {
-								vscode.postMessage({
-									type: "upsertApiConfiguration",
-									text: configName,
-									apiConfiguration,
-								})
+							onDuplicateConfig={(configName: string) => {
+								duplicateApiConfig(configName)
 							}}
 						/>
 						<ApiOptions apiErrorMessage={apiErrorMessage} modelIdErrorMessage={modelIdErrorMessage} />

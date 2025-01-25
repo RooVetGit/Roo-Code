@@ -8,7 +8,7 @@ interface ApiConfigManagerProps {
 	onSelectConfig: (configName: string) => void
 	onDeleteConfig: (configName: string) => void
 	onRenameConfig: (oldName: string, newName: string) => void
-	onUpsertConfig: (configName: string) => void
+	onDuplicateConfig: (configName: string) => void
 }
 
 const ApiConfigManager = ({
@@ -17,7 +17,7 @@ const ApiConfigManager = ({
 	onSelectConfig,
 	onDeleteConfig,
 	onRenameConfig,
-	onUpsertConfig,
+	onDuplicateConfig,
 }: ApiConfigManagerProps) => {
 	const [editState, setEditState] = useState<"new" | "rename" | null>(null)
 	const [inputValue, setInputValue] = useState("")
@@ -36,9 +36,9 @@ const ApiConfigManager = ({
 		setInputValue("")
 	}, [currentApiConfigName])
 
-	const handleAdd = () => {
+	const handleDuplicate = () => {
 		const newConfigName = currentApiConfigName + " (copy)"
-		onUpsertConfig(newConfigName)
+		onDuplicateConfig(newConfigName)
 	}
 
 	const handleStartRename = () => {
@@ -56,7 +56,7 @@ const ApiConfigManager = ({
 		if (!trimmedValue) return
 
 		if (editState === "new") {
-			onUpsertConfig(trimmedValue)
+			onDuplicateConfig(trimmedValue)
 		} else if (editState === "rename" && currentApiConfigName) {
 			onRenameConfig(currentApiConfigName, trimmedValue)
 		}
@@ -157,7 +157,7 @@ const ApiConfigManager = ({
 							</select>
 							<VSCodeButton
 								appearance="icon"
-								onClick={handleAdd}
+								onClick={handleDuplicate}
 								title="Add profile"
 								style={{
 									padding: 0,

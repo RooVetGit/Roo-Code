@@ -23,15 +23,18 @@ describe("ApiConfigManager", () => {
 	const mockOnSelectConfig = jest.fn()
 	const mockOnDeleteConfig = jest.fn()
 	const mockOnRenameConfig = jest.fn()
-	const mockOnUpsertConfig = jest.fn()
+	const mockOnDuplicateConfig = jest.fn()
 
 	const defaultProps = {
 		currentApiConfigName: "Default Config",
-		listApiConfigMeta: [{ name: "Default Config" }, { name: "Another Config" }],
+		listApiConfigMeta: [
+			{ name: "Default Config", id: "default" },
+			{ name: "Another Config", id: "another" },
+		],
 		onSelectConfig: mockOnSelectConfig,
 		onDeleteConfig: mockOnDeleteConfig,
 		onRenameConfig: mockOnRenameConfig,
-		onUpsertConfig: mockOnUpsertConfig,
+		onDuplicateConfig: mockOnDuplicateConfig,
 	}
 
 	beforeEach(() => {
@@ -45,9 +48,9 @@ describe("ApiConfigManager", () => {
 		const addButton = screen.getByTitle("Add profile")
 		fireEvent.click(addButton)
 
-		// Verify that onUpsertConfig was called with the correct name
-		expect(mockOnUpsertConfig).toHaveBeenCalledTimes(1)
-		expect(mockOnUpsertConfig).toHaveBeenCalledWith("Default Config (copy)")
+		// Verify that onDuplicateConfig was called with the correct name
+		expect(mockOnDuplicateConfig).toHaveBeenCalledTimes(1)
+		expect(mockOnDuplicateConfig).toHaveBeenCalledWith("Default Config (copy)")
 	})
 
 	it("creates copy with correct name when current config has spaces", () => {
@@ -56,7 +59,7 @@ describe("ApiConfigManager", () => {
 		const addButton = screen.getByTitle("Add profile")
 		fireEvent.click(addButton)
 
-		expect(mockOnUpsertConfig).toHaveBeenCalledWith("My Test Config (copy)")
+		expect(mockOnDuplicateConfig).toHaveBeenCalledWith("My Test Config (copy)")
 	})
 
 	it("handles empty current config name gracefully", () => {
@@ -65,7 +68,7 @@ describe("ApiConfigManager", () => {
 		const addButton = screen.getByTitle("Add profile")
 		fireEvent.click(addButton)
 
-		expect(mockOnUpsertConfig).toHaveBeenCalledWith(" (copy)")
+		expect(mockOnDuplicateConfig).toHaveBeenCalledWith(" (copy)")
 	})
 
 	it("allows renaming the current config", () => {
@@ -106,7 +109,7 @@ describe("ApiConfigManager", () => {
 	})
 
 	it("disables delete button when only one config exists", () => {
-		render(<ApiConfigManager {...defaultProps} listApiConfigMeta={[{ name: "Default Config" }]} />)
+		render(<ApiConfigManager {...defaultProps} listApiConfigMeta={[{ name: "Default Config", id: "default" }]} />)
 
 		const deleteButton = screen.getByTitle("Cannot delete the only profile")
 		expect(deleteButton).toHaveAttribute("disabled")
