@@ -59,6 +59,7 @@ import { detectCodeOmission } from "../integrations/editor/detect-omission"
 import { BrowserSession } from "../services/browser/BrowserSession"
 import { OpenRouterHandler } from "../api/providers/openrouter"
 import { McpHub } from "../services/mcp/McpHub"
+import { ConversationSaver } from "./conversation-saver"
 import crypto from "crypto"
 import { insertGroups } from "./diff/insert-groups"
 import { EXPERIMENT_IDS, experiments as Experiments } from "../shared/experiments"
@@ -77,6 +78,7 @@ export class Cline {
 	private terminalManager: TerminalManager
 	private urlContentFetcher: UrlContentFetcher
 	private browserSession: BrowserSession
+	private conversationSaver?: ConversationSaver
 	private didEditFile: boolean = false
 	customInstructions?: string
 	diffStrategy?: DiffStrategy
@@ -142,6 +144,11 @@ export class Cline {
 		// Initialize diffStrategy based on current state
 		this.updateDiffStrategy(Experiments.isEnabled(experiments ?? {}, EXPERIMENT_IDS.DIFF_STRATEGY))
 
+		// Initialize conversation saver if folder is set
+		this.initializeConversationSaver(provider).catch((error) => {
+			console.error("Failed to initialize conversation saver:", error)
+		})
+
 		if (task || images) {
 			this.startTask(task, images)
 		} else if (historyItem) {
@@ -149,7 +156,41 @@ export class Cline {
 		}
 	}
 
+	private async initializeConversationSaver(provider: ClineProvider) {
+		const conversationSaveFolder = vscode.workspace.getConfiguration("roo-cline").get("conversationSaveFolder")
+		console.log("[Cline] Checking conversation save folder from workspace config:", conversationSaveFolder)
+
+		if (typeof conversationSaveFolder === "string" && conversationSaveFolder.length > 0) {
+			console.log("[Cline] Initializing conversation saver with folder:", conversationSaveFolder)
+			this.conversationSaver = new ConversationSaver(conversationSaveFolder)
+			// Verify folder can be created
+			await this.conversationSaver.saveConversation([])
+			console.log("[Cline] Successfully initialized conversation saver")
+		} else {
+			console.log("[Cline] No valid conversation save folder configured")
+			this.conversationSaver = undefined
+		}
+	}
+
 	// Add method to update diffStrategy
+	async updateConversationSaveFolder(folder?: string) {
+		// Update workspace configuration
+		await vscode.workspace
+			.getConfiguration("roo-cline")
+			.update("conversationSaveFolder", folder, vscode.ConfigurationTarget.Workspace)
+
+		// Update conversation saver instance
+		if (typeof folder === "string" && folder.length > 0) {
+			if (!this.conversationSaver) {
+				this.conversationSaver = new ConversationSaver(folder)
+			} else {
+				this.conversationSaver.updateSaveFolder(folder)
+			}
+		} else {
+			this.conversationSaver = undefined
+		}
+	}
+
 	async updateDiffStrategy(experimentalDiffStrategy?: boolean) {
 		// If not provided, get from current state
 		if (experimentalDiffStrategy === undefined) {
@@ -251,6 +292,15 @@ export class Cline {
 				cacheReads: apiMetrics.totalCacheReads,
 				totalCost: apiMetrics.totalCost,
 			})
+
+			// Save conversation if folder is set
+			if (this.conversationSaver) {
+				try {
+					await this.conversationSaver.updateConversation(this.clineMessages)
+				} catch (error) {
+					console.error("Failed to save conversation to folder:", error)
+				}
+			}
 		} catch (error) {
 			console.error("Failed to save cline messages:", error)
 		}

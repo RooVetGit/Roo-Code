@@ -112,6 +112,7 @@ export interface ExtensionState {
 	enhancementApiConfigId?: string
 	experiments: Record<ExperimentId, boolean> // Map of experiment IDs to their enabled state
 	autoApprovalEnabled?: boolean
+	conversationSaveFolder?: string // Project-specific folder path for saving conversations
 	customModes: ModeConfig[]
 	toolRequirements?: Record<string, boolean> // Map of tool names to their requirements (e.g. {"apply_diff": true} if diffEnabled)
 }

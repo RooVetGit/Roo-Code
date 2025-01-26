@@ -61,6 +61,8 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		setExperimentEnabled,
 		alwaysAllowModeSwitch,
 		setAlwaysAllowModeSwitch,
+		conversationSaveFolder,
+		setConversationSaveFolder,
 	} = useExtensionState()
 	const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>(undefined)
 	const [modelIdErrorMessage, setModelIdErrorMessage] = useState<string | undefined>(undefined)
@@ -108,6 +110,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 			})
 
 			vscode.postMessage({ type: "alwaysAllowModeSwitch", bool: alwaysAllowModeSwitch })
+			vscode.postMessage({ type: "conversationSaveFolder", text: conversationSaveFolder })      
 			onDone()
 		}
 	}
@@ -574,7 +577,40 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 				</div>
 
 				<div style={{ marginBottom: 40 }}>
-					<h3 style={{ color: "var(--vscode-foreground)", margin: "0 0 15px 0" }}>Advanced Settings</h3>
+					<h3 style={{ color: "var(--vscode-foreground)", margin: "0 0 15px 0" }}>Conversation Settings</h3>
+					<div style={{ marginBottom: 15 }}>
+						<label style={{ fontWeight: "500", display: "block", marginBottom: 5 }}>Save folder path</label>
+						<VSCodeTextField
+							value={conversationSaveFolder ?? ""}
+							onInput={(e: any) => setConversationSaveFolder(e.target.value)}
+							placeholder="Enter folder path to save conversations"
+							style={{ width: "100%" }}
+						/>
+						<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>
+							Specify a folder path where conversations will be automatically saved and updated. Leave
+							empty to disable conversation saving.
+						</p>
+					</div>
+				</div>
+
+				<div style={{ marginBottom: 40 }}>
+          <div style={{ marginBottom: 15 }}>
+						<label style={{ fontWeight: "500", display: "block", marginBottom: 5 }}>
+							Conversation save folder
+						</label>
+						<VSCodeTextField
+							value={conversationSaveFolder ?? ""}
+							onInput={(e: any) => setConversationSaveFolder(e.target.value)}
+							placeholder="Enter folder path to save conversations"
+							style={{ width: "100%" }}
+						/>
+						<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>
+							Specify a folder path where conversations will be automatically saved and updated. Leave
+							empty to disable conversation saving.
+						</p>
+					</div>
+
+					<h3 style={{ color: "var(--vscode-foreground)", margin: "0 0 15px 0" }}>Advanced Settings</h3>          
 					<div style={{ marginBottom: 15 }}>
 						<div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
 							<span style={{ fontWeight: "500" }}>Rate limit</span>

@@ -81,6 +81,7 @@ export interface WebviewMessage {
 		| "updateCustomMode"
 		| "deleteCustomMode"
 		| "setopenAiCustomModelInfo"
+		| "conversationSaveFolder"
 		| "openCustomModesSettings"
 	text?: string
 	disabled?: boolean
