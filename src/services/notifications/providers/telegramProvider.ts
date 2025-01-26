@@ -53,11 +53,28 @@ export class TelegramProvider implements NotificationProvider {
             logger.info('Telegram webhook set up successfully');
         } catch (error) {
             logger.warn('Failed to set up Telegram webhook, falling back to polling:', error);
-            this.startPolling();
+            await this.startPolling();
         }
     }
 
-    private startPolling(): void {
+    private async startPolling(): Promise<void> {
+        // Check for Python3 and requests
+        try {
+            await new Promise((resolve, reject) => {
+                const check = spawn('python3', ['-c', 'import requests']);
+                check.on('close', (code) => {
+                    if (code === 0) {
+                        resolve(undefined);
+                    } else {
+                        reject(new Error('Python3 or requests library not found. Please install with: pip3 install requests'));
+                    }
+                });
+            });
+        } catch (error) {
+            logger.error('Failed to start polling:', error);
+            throw error;
+        }
+
         // Create a simple Python script for polling
         const script = `
 import os
