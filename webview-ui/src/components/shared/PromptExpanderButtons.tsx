@@ -10,18 +10,16 @@ interface PromptExpanderButtonsProps {
 
 export const PromptExpanderButtons: React.FC<PromptExpanderButtonsProps> = ({ onPromptSelect, showTitle = false }) => {
 	const { promptExpanderPrompts = [] } = useExtensionState()
-
 	// Default settings
-	const { promptExpanderSettings } = useExtensionState()
-		() => ({
+	const {
+		promptExpanderSettings: settings = {
 			enableShortcuts: true,
 			defaultShortcutPattern: "Alt+$N",
-		}),
-		[],
-	)
+		},
+	} = useExtensionState()
 
 	const isMac = useMemo(() => navigator.platform.toLowerCase().includes("mac"), [])
-	const modifierKey = "Ctrl" // Always use Ctrl, even on Mac
+	const modifierKey = "Ctrl" // Always use Ctrl, even on Mac (i.e. to ensure Control would work)
 	const altKey = useMemo(() => (isMac ? "⌥" : "Alt"), [isMac])
 
 	const handlePromptClick = useCallback(
