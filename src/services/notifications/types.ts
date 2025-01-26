@@ -1,61 +1,41 @@
-import { ClineAsk } from "../../shared/ExtensionMessage"
+import { ClineAsk } from '../../shared/ExtensionMessage';
 
-export type NotificationType = 'approval' | 'question' | 'completion'
+export type NotificationType = 'approval' | 'question';
 
 export interface NotificationRequest {
-    type: NotificationType
-    message: string
-    requestId: string
+    type: NotificationType;
+    message: string;
+    requestId: string;
     metadata?: {
-        toolName?: string
-        path?: string
-        command?: string
-    }
+        toolName?: string;
+        path?: string;
+        command?: string;
+    };
 }
 
 export interface NotificationResponse {
-    requestId: string
-    type: 'approve' | 'deny' | 'text'
-    text?: string
+    requestId: string;
+    type: 'approve' | 'deny' | 'text';
+    text?: string;
 }
 
 export interface NotificationProvider {
-    /**
-     * Initialize the notification provider with any necessary setup
-     */
-    initialize(): Promise<void>
-
-    /**
-     * Send a notification through this provider
-     */
-    sendNotification(request: NotificationRequest): Promise<void>
-
-    /**
-     * Register a callback to handle responses from this provider
-     */
-    onResponse(callback: (response: NotificationResponse) => void): void
-
-    /**
-     * Clean up any resources used by this provider
-     */
-    dispose(): Promise<void>
-}
-
-export interface NotificationSettings {
-    enabled: boolean
-    [key: string]: any
+    initialize(): Promise<void>;
+    sendNotification(request: NotificationRequest): Promise<void>;
+    onResponse(callback: (response: NotificationResponse) => void): void;
+    dispose(): Promise<void>;
 }
 
 export function mapClineAskToNotificationType(askType: ClineAsk): NotificationType {
     switch (askType) {
-        case 'tool':
         case 'command':
+        case 'tool':
         case 'browser_action_launch':
         case 'use_mcp_server':
-            return 'approval'
+            return 'approval';
         case 'followup':
-            return 'question'
+            return 'question';
         default:
-            return 'approval'
+            return 'question';
     }
 }

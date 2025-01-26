@@ -42,6 +42,8 @@ export interface ExtensionMessage {
 		| "updateCustomMode"
 		| "deleteCustomMode"
 		| "notificationSettings"
+		| "updateNotificationSettings"
+		| "notification_sent"
 	text?: string
 	action?:
 		| "chatButtonClicked"

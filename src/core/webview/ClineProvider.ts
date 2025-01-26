@@ -41,6 +41,8 @@ import { getCommitInfo, searchCommits, getWorkingState } from "../../utils/git"
 import { ConfigManager } from "../config/ConfigManager"
 import { CustomModesManager } from "../config/CustomModesManager"
 import { CustomSupportPrompts, supportPrompt } from "../../shared/support-prompt"
+import { TelegramProvider } from "../../services/notifications/providers/telegramProvider"
+import { NotificationProvider } from "../../services/notifications/types"
 
 import { ACTION_NAMES } from "../CodeActionProvider"
 
@@ -120,6 +122,16 @@ type GlobalStateKey =
 	| "experimentalDiffStrategy"
 	| "autoApprovalEnabled"
 	| "customModes" // Array of custom modes
+	| "notificationSettings" // Notification settings including Telegram configuration
+
+interface NotificationSettings {
+	telegram?: {
+		enabled: boolean;
+		botToken: string;
+		chatId: string;
+		pollingInterval: number;
+	};
+}
 
 export const GlobalFileNames = {
 	apiConversationHistory: "api_conversation_history.json",
@@ -141,6 +153,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	private latestAnnouncementId = "jan-21-2025-custom-modes" // update to some unique identifier when we add a new announcement
 	configManager: ConfigManager
 	customModesManager: CustomModesManager
+	private notificationProvider?: NotificationProvider
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
@@ -180,6 +193,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		this.mcpHub?.dispose()
 		this.mcpHub = undefined
 		this.customModesManager?.dispose()
+		if (this.notificationProvider) {
+			await this.notificationProvider.dispose()
+			this.notificationProvider = undefined
+		}
 		this.outputChannel.appendLine("Disposed all disposables")
 		ClineProvider.activeInstances.delete(this)
 	}
@@ -222,9 +239,23 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		this.outputChannel.appendLine("Resolving webview view")
 		this.view = webviewView
 
-		// Initialize sound enabled state
-		this.getState().then(({ soundEnabled }) => {
+		// Initialize sound enabled state and notification provider
+		this.getState().then(({ soundEnabled, notificationSettings }) => {
 			setSoundEnabled(soundEnabled ?? false)
+			
+			// Initialize notification provider if enabled
+			if (notificationSettings?.telegram?.enabled) {
+				const provider = new TelegramProvider({
+					botToken: notificationSettings.telegram.botToken,
+					chatId: notificationSettings.telegram.chatId,
+					pollingInterval: notificationSettings.telegram.pollingInterval
+				});
+				provider.initialize().then(() => {
+					this.notificationProvider = provider;
+				}).catch(error => {
+					console.error('Failed to initialize notification provider:', error);
+				});
+			}
 		})
 
 		webviewView.webview.options = {
@@ -559,8 +590,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.initClineWithTask(message.text, message.images)
 						break
 					case "apiConfiguration":
-						if (message.apiConfiguration) {
-							await this.updateApiConfiguration(message.apiConfiguration)
+						if (message.configuration) {
+							await this.updateApiConfiguration(message.configuration)
 						}
 						await this.postStateToWebview()
 						break
@@ -1063,100 +1094,90 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						break
 					}
 					case "upsertApiConfiguration":
-						if (message.text && message.apiConfiguration) {
-							try {
-								await this.configManager.saveConfig(message.text, message.apiConfiguration)
-								let listApiConfig = await this.configManager.listConfig()
+						try {
+							await this.configManager.saveConfig(message.configuration.name, message.configuration)
+							let listApiConfig = await this.configManager.listConfig()
 
-								await Promise.all([
-									this.updateGlobalState("listApiConfigMeta", listApiConfig),
-									this.updateApiConfiguration(message.apiConfiguration),
-									this.updateGlobalState("currentApiConfigName", message.text),
-								])
+							await Promise.all([
+								this.updateGlobalState("listApiConfigMeta", listApiConfig),
+								this.updateApiConfiguration(message.configuration),
+								this.updateGlobalState("currentApiConfigName", message.configuration.name),
+							])
 
-								await this.postStateToWebview()
-							} catch (error) {
-								console.error("Error create new api configuration:", error)
-								vscode.window.showErrorMessage("Failed to create api configuration")
-							}
+							await this.postStateToWebview()
+						} catch (error) {
+							console.error("Error create new api configuration:", error)
+							vscode.window.showErrorMessage("Failed to create api configuration")
 						}
 						break
 					case "renameApiConfiguration":
-						if (message.values && message.apiConfiguration) {
-							try {
-								const { oldName, newName } = message.values
+						try {
+							await this.configManager.saveConfig(message.newName, message.configuration)
+							await this.configManager.deleteConfig(message.oldName)
 
-								await this.configManager.saveConfig(newName, message.apiConfiguration)
-								await this.configManager.deleteConfig(oldName)
+							let listApiConfig = await this.configManager.listConfig()
+							const config = listApiConfig?.find((c) => c.name === message.newName)
 
-								let listApiConfig = await this.configManager.listConfig()
-								const config = listApiConfig?.find((c) => c.name === newName)
+							// Update listApiConfigMeta first to ensure UI has latest data
+							await this.updateGlobalState("listApiConfigMeta", listApiConfig)
 
-								// Update listApiConfigMeta first to ensure UI has latest data
-								await this.updateGlobalState("listApiConfigMeta", listApiConfig)
+							await Promise.all([this.updateGlobalState("currentApiConfigName", message.newName)])
 
-								await Promise.all([this.updateGlobalState("currentApiConfigName", newName)])
-
-								await this.postStateToWebview()
-							} catch (error) {
-								console.error("Error create new api configuration:", error)
-								vscode.window.showErrorMessage("Failed to create api configuration")
-							}
+							await this.postStateToWebview()
+						} catch (error) {
+							console.error("Error create new api configuration:", error)
+							vscode.window.showErrorMessage("Failed to create api configuration")
 						}
 						break
 					case "loadApiConfiguration":
-						if (message.text) {
-							try {
-								const apiConfig = await this.configManager.loadConfig(message.text)
-								const listApiConfig = await this.configManager.listConfig()
+						try {
+							const apiConfig = await this.configManager.loadConfig(message.name)
+							const listApiConfig = await this.configManager.listConfig()
 
-								await Promise.all([
-									this.updateGlobalState("listApiConfigMeta", listApiConfig),
-									this.updateGlobalState("currentApiConfigName", message.text),
-									this.updateApiConfiguration(apiConfig),
-								])
+							await Promise.all([
+								this.updateGlobalState("listApiConfigMeta", listApiConfig),
+								this.updateGlobalState("currentApiConfigName", message.name),
+								this.updateApiConfiguration(apiConfig),
+							])
 
-								await this.postStateToWebview()
-							} catch (error) {
-								console.error("Error load api configuration:", error)
-								vscode.window.showErrorMessage("Failed to load api configuration")
-							}
+							await this.postStateToWebview()
+						} catch (error) {
+							console.error("Error load api configuration:", error)
+							vscode.window.showErrorMessage("Failed to load api configuration")
 						}
 						break
 					case "deleteApiConfiguration":
-						if (message.text) {
-							const answer = await vscode.window.showInformationMessage(
-								"Are you sure you want to delete this configuration profile?",
-								{ modal: true },
-								"Yes",
-							)
+						const answer = await vscode.window.showInformationMessage(
+							"Are you sure you want to delete this configuration profile?",
+							{ modal: true },
+							"Yes",
+						)
 
-							if (answer !== "Yes") {
-								break
+						if (answer !== "Yes") {
+							break
+						}
+
+						try {
+							await this.configManager.deleteConfig(message.name)
+							const listApiConfig = await this.configManager.listConfig()
+
+							// Update listApiConfigMeta first to ensure UI has latest data
+							await this.updateGlobalState("listApiConfigMeta", listApiConfig)
+
+							// If this was the current config, switch to first available
+							let currentApiConfigName = await this.getGlobalState("currentApiConfigName")
+							if (message.name === currentApiConfigName && listApiConfig?.[0]?.name) {
+								const apiConfig = await this.configManager.loadConfig(listApiConfig[0].name)
+								await Promise.all([
+									this.updateGlobalState("currentApiConfigName", listApiConfig[0].name),
+									this.updateApiConfiguration(apiConfig),
+								])
 							}
 
-							try {
-								await this.configManager.deleteConfig(message.text)
-								const listApiConfig = await this.configManager.listConfig()
-
-								// Update listApiConfigMeta first to ensure UI has latest data
-								await this.updateGlobalState("listApiConfigMeta", listApiConfig)
-
-								// If this was the current config, switch to first available
-								let currentApiConfigName = await this.getGlobalState("currentApiConfigName")
-								if (message.text === currentApiConfigName && listApiConfig?.[0]?.name) {
-									const apiConfig = await this.configManager.loadConfig(listApiConfig[0].name)
-									await Promise.all([
-										this.updateGlobalState("currentApiConfigName", listApiConfig[0].name),
-										this.updateApiConfiguration(apiConfig),
-									])
-								}
-
-								await this.postStateToWebview()
-							} catch (error) {
-								console.error("Error delete api configuration:", error)
-								vscode.window.showErrorMessage("Failed to delete api configuration")
-							}
+							await this.postStateToWebview()
+						} catch (error) {
+							console.error("Error delete api configuration:", error)
+							vscode.window.showErrorMessage("Failed to delete api configuration")
 						}
 						break
 					case "getListApiConfiguration":
@@ -1176,6 +1197,57 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							await this.cline.updateDiffStrategy(message.bool ?? false)
 						}
 						await this.postStateToWebview()
+						break
+					case "updateNotificationSettings":
+						await this.updateGlobalState("notificationSettings", message.settings)
+						// Initialize or update notification provider
+						if (message.settings?.telegram?.enabled) {
+							const provider = new TelegramProvider({
+								botToken: message.settings.telegram.botToken,
+								chatId: message.settings.telegram.chatId,
+								pollingInterval: message.settings.telegram.pollingInterval
+							});
+							await provider.initialize();
+							// Set up response handler
+							provider.onResponse(async (response) => {
+								if (this.cline) {
+									await this.cline.handleWebviewAskResponse(
+										'notification_response',
+										response.type === 'text' ? response.text : response.type,
+										[`notificationId:${response.requestId}`]
+									);
+								}
+							});
+							// Store provider reference for cleanup
+							if (this.notificationProvider) {
+								await this.notificationProvider.dispose();
+							}
+							this.notificationProvider = provider;
+						} else if (this.notificationProvider) {
+							await this.notificationProvider.dispose();
+							this.notificationProvider = undefined;
+						}
+						await this.postStateToWebview()
+						break
+					case "sendNotification":
+						if (this.notificationProvider && message.notificationType && message.text) {
+							try {
+								await this.notificationProvider.sendNotification({
+									type: message.notificationType,
+									message: message.text,
+									requestId: message.requestId || 'pending',
+									metadata: message.metadata
+								});
+								// Post success message
+								await this.postMessageToWebview({
+									type: "notification_sent",
+									text: "Notification sent successfully"
+								});
+							} catch (error) {
+								console.error("Failed to send notification:", error);
+								vscode.window.showErrorMessage("Failed to send notification");
+							}
+						}
 						break
 					case "updateCustomMode":
 						if (message.modeConfig) {
@@ -1991,6 +2063,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			experimentalDiffStrategy,
 			autoApprovalEnabled,
 			customModes,
+			notificationSettings,
 		] = await Promise.all([
 			this.getGlobalState("apiProvider") as Promise<ApiProvider | undefined>,
 			this.getGlobalState("apiModelId") as Promise<string | undefined>,
@@ -2060,6 +2133,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("experimentalDiffStrategy") as Promise<boolean | undefined>,
 			this.getGlobalState("autoApprovalEnabled") as Promise<boolean | undefined>,
 			this.customModesManager.getCustomModes(),
+			this.getGlobalState("notificationSettings") as Promise<NotificationSettings | undefined>,
 		])
 
 		let apiProvider: ApiProvider
@@ -2175,6 +2249,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			experimentalDiffStrategy: experimentalDiffStrategy ?? false,
 			autoApprovalEnabled: autoApprovalEnabled ?? false,
 			customModes,
+			notificationSettings,
 		}
 	}
 

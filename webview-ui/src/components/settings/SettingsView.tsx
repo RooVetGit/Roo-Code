@@ -5,6 +5,7 @@ import { validateApiConfiguration, validateModelId } from "../../utils/validate"
 import { vscode } from "../../utils/vscode"
 import ApiOptions from "./ApiOptions"
 import ApiConfigManager from "./ApiConfigManager"
+import { NotificationSettings } from "./NotificationSettings"
 
 type SettingsViewProps = {
 	onDone: () => void
@@ -53,6 +54,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		listApiConfigMeta,
 		experimentalDiffStrategy,
 		setExperimentalDiffStrategy,
+		notificationSettings,
 	} = useExtensionState()
 	const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>(undefined)
 	const [modelIdErrorMessage, setModelIdErrorMessage] = useState<string | undefined>(undefined)
@@ -65,10 +67,13 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		setApiErrorMessage(apiValidationResult)
 		setModelIdErrorMessage(modelIdValidationResult)
 		if (!apiValidationResult && !modelIdValidationResult) {
-			vscode.postMessage({
-				type: "apiConfiguration",
-				apiConfiguration,
-			})
+			if (apiConfiguration && currentApiConfigName) {
+				const configWithName = { ...apiConfiguration, name: currentApiConfigName };
+				vscode.postMessage({
+					type: "apiConfiguration",
+					configuration: configWithName,
+				});
+			}
 			vscode.postMessage({ type: "alwaysAllowReadOnly", bool: alwaysAllowReadOnly })
 			vscode.postMessage({ type: "alwaysAllowWrite", bool: alwaysAllowWrite })
 			vscode.postMessage({ type: "alwaysAllowExecute", bool: alwaysAllowExecute })
@@ -86,13 +91,27 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 			vscode.postMessage({ type: "mcpEnabled", bool: mcpEnabled })
 			vscode.postMessage({ type: "alwaysApproveResubmit", bool: alwaysApproveResubmit })
 			vscode.postMessage({ type: "requestDelaySeconds", value: requestDelaySeconds })
-			vscode.postMessage({ type: "currentApiConfigName", text: currentApiConfigName })
-			vscode.postMessage({
-				type: "upsertApiConfiguration",
-				text: currentApiConfigName,
-				apiConfiguration,
-			})
+			if (currentApiConfigName) {
+				vscode.postMessage({ type: "currentApiConfigName", name: currentApiConfigName });
+				if (apiConfiguration) {
+					vscode.postMessage({
+						type: "upsertApiConfiguration",
+						configuration: { ...apiConfiguration, name: currentApiConfigName },
+					});
+				}
+			}
 			vscode.postMessage({ type: "experimentalDiffStrategy", bool: experimentalDiffStrategy })
+			vscode.postMessage({
+				type: "updateNotificationSettings",
+				settings: notificationSettings || {
+					telegram: {
+						enabled: false,
+						botToken: '',
+						chatId: '',
+						pollingInterval: 30
+					}
+				}
+			})
 			onDone()
 		}
 	}
@@ -162,28 +181,30 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 							onSelectConfig={(configName: string) => {
 								vscode.postMessage({
 									type: "loadApiConfiguration",
-									text: configName,
+									name: configName,
 								})
 							}}
 							onDeleteConfig={(configName: string) => {
 								vscode.postMessage({
 									type: "deleteApiConfiguration",
-									text: configName,
+									name: configName,
 								})
 							}}
 							onRenameConfig={(oldName: string, newName: string) => {
 								vscode.postMessage({
 									type: "renameApiConfiguration",
-									values: { oldName, newName },
-									apiConfiguration,
+									oldName,
+									newName,
+									configuration: { ...apiConfiguration, name: newName },
 								})
 							}}
 							onUpsertConfig={(configName: string) => {
-								vscode.postMessage({
-									type: "upsertApiConfiguration",
-									text: configName,
-									apiConfiguration,
-								})
+								if (apiConfiguration) {
+									vscode.postMessage({
+										type: "upsertApiConfiguration",
+										configuration: { ...apiConfiguration, name: configName },
+									});
+								}
 							}}
 						/>
 						<ApiOptions apiErrorMessage={apiErrorMessage} modelIdErrorMessage={modelIdErrorMessage} />
@@ -532,6 +553,24 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 							</div>
 						</div>
 					)}
+					<div style={{ marginTop: 20, paddingLeft: 10, borderLeft: "2px solid var(--vscode-button-background)" }}>
+						<NotificationSettings
+							settings={notificationSettings || {
+								telegram: {
+									enabled: false,
+									botToken: '',
+									chatId: '',
+									pollingInterval: 30
+								}
+							}}
+							onChange={(newSettings) => {
+								vscode.postMessage({
+									type: 'updateNotificationSettings',
+									settings: newSettings
+								});
+							}}
+						/>
+					</div>
 				</div>
 
 				<div style={{ marginBottom: 40 }}>

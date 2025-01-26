@@ -1,10 +1,10 @@
 import { NotificationProvider, NotificationRequest, NotificationResponse, NotificationType } from './types';
 import { TelegramProvider } from './providers/telegramProvider';
-import { logger } from '../../utils/logger';
 import { ClineAsk } from '../../shared/ExtensionMessage';
 import { mapClineAskToNotificationType } from './types';
+import { logger } from '../../utils/logger';
 
-export interface NotificationManagerConfig {
+interface NotificationSettings {
     telegram?: {
         enabled: boolean;
         botToken: string;
@@ -15,124 +15,90 @@ export interface NotificationManagerConfig {
 
 export class NotificationManager {
     private static instance: NotificationManager;
-    private providers: Map<string, NotificationProvider>;
-    private config: NotificationManagerConfig;
-    private pendingRequests: Map<string, (response: NotificationResponse) => void>;
+    private provider?: NotificationProvider;
+    private pendingRequests: Map<string, (response: NotificationResponse) => void> = new Map();
 
-    private constructor() {
-        this.providers = new Map();
-        this.config = {};
-        this.pendingRequests = new Map();
-    }
+    private constructor() {}
 
-    static getInstance(): NotificationManager {
+    public static getInstance(): NotificationManager {
         if (!NotificationManager.instance) {
             NotificationManager.instance = new NotificationManager();
         }
         return NotificationManager.instance;
     }
 
-    async initialize(config: NotificationManagerConfig): Promise<void> {
-        this.config = config;
-
-        // Clear existing providers
-        for (const provider of this.providers.values()) {
-            await provider.dispose();
+    public async initialize(settings: NotificationSettings): Promise<void> {
+        // Clean up existing provider if any
+        if (this.provider) {
+            await this.provider.dispose();
+            this.provider = undefined;
         }
-        this.providers.clear();
 
-        // Initialize Telegram provider if enabled
-        if (config.telegram?.enabled) {
+        // Initialize new provider if enabled
+        if (settings.telegram?.enabled) {
             try {
-                const telegramProvider = new TelegramProvider({
-                    botToken: config.telegram.botToken,
-                    chatId: config.telegram.chatId,
-                    pollingInterval: config.telegram.pollingInterval
+                const provider = new TelegramProvider({
+                    botToken: settings.telegram.botToken,
+                    chatId: settings.telegram.chatId,
+                    pollingInterval: settings.telegram.pollingInterval
                 });
 
-                await telegramProvider.initialize();
-                
-                // Set up response handling
-                telegramProvider.onResponse((response: NotificationResponse) => {
-                    const handler = this.pendingRequests.get(response.requestId);
-                    if (handler) {
-                        handler(response);
+                // Set up response handler
+                provider.onResponse((response) => {
+                    const resolver = this.pendingRequests.get(response.requestId);
+                    if (resolver) {
+                        resolver(response);
                         this.pendingRequests.delete(response.requestId);
                     }
                 });
 
-                this.providers.set('telegram', telegramProvider);
-                logger.info('Telegram notification provider initialized');
+                await provider.initialize();
+                this.provider = provider;
             } catch (error) {
-                logger.error('Failed to initialize Telegram provider:', error);
+                logger.error('Failed to initialize notification provider:', error);
                 throw error;
             }
         }
     }
 
-    async notify(
-        type: NotificationType,
-        message: string,
+    public async notifyFromClineAsk(
+        askType: ClineAsk,
+        text: string,
         metadata?: {
             toolName?: string;
             path?: string;
             command?: string;
         }
     ): Promise<NotificationResponse> {
-        const requestId = crypto.randomUUID();
-        const request: NotificationRequest = {
-            type,
-            message,
-            requestId,
-            metadata
-        };
-
-        // Send to all active providers
-        const errors: Error[] = [];
-        for (const [name, provider] of this.providers.entries()) {
-            try {
-                await provider.sendNotification(request);
-                logger.info(`Notification sent via ${name} provider`);
-            } catch (error) {
-                logger.error(`Failed to send notification via ${name} provider:`, error);
-                errors.push(error as Error);
-            }
+        if (!this.provider) {
+            throw new Error('No notification provider initialized');
         }
 
-        // If all providers failed, throw an error
-        if (errors.length === this.providers.size) {
-            throw new Error('All notification providers failed');
-        }
+        const notificationType = mapClineAskToNotificationType(askType);
+        const requestId = Math.random().toString(36).substring(7);
 
-        // Wait for response
-        return new Promise((resolve) => {
+        // Create a promise that will resolve when we get a response
+        const responsePromise = new Promise<NotificationResponse>((resolve) => {
             this.pendingRequests.set(requestId, resolve);
         });
+
+        // Send the notification
+        await this.provider.sendNotification({
+            type: notificationType,
+            message: text,
+            requestId,
+            metadata
+        });
+
+        // Wait for response
+        return responsePromise;
     }
 
-    async notifyFromClineAsk(
-        askType: ClineAsk,
-        message: string,
-        metadata?: {
-            toolName?: string;
-            path?: string;
-            command?: string;
+    public async dispose(): Promise<void> {
+        if (this.provider) {
+            await this.provider.dispose();
+            this.provider = undefined;
         }
-    ): Promise<NotificationResponse> {
-        const notificationType = mapClineAskToNotificationType(askType);
-        return this.notify(notificationType, message, metadata);
-    }
-
-    async dispose(): Promise<void> {
-        // Dispose all providers
-        for (const provider of this.providers.values()) {
-            await provider.dispose();
-        }
-        this.providers.clear();
         this.pendingRequests.clear();
-    }
-
-    getConfig(): NotificationManagerConfig {
-        return this.config;
     }
 }
