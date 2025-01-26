@@ -1,22 +1,21 @@
+export enum CodeSegmentType {
+	FUNCTION = "function",
+	CLASS = "class",
+	METHOD = "method",
+	VARIABLE = "variable",
+	IMPORT = "import",
+	OTHER = "other",
+}
+
 export interface CodeSegment {
-	type: "function" | "class" | "method" | "variable" | "other"
+	type: CodeSegmentType
 	name: string
 	content: string
-	context?: string // parent class/module/namespace if any
 	startLine: number
 	endLine: number
-	importance: number // semantic weight (0-1)
+	context: string
+	importance: number
 	language: string
-	docstring?: string
-	params?: Array<{ name: string; type?: string }>
-	returnType?: string
-	relationships?: {
-		imports: string[]
-		inheritedFrom?: string
-		implementedInterfaces?: string[]
-		usedIn: string[]
-		dependencies: string[]
-	}
 }
 
 export interface ParsedFile {

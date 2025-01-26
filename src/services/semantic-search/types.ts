@@ -38,10 +38,6 @@ export function convertSegmentToDefinition(segment: CodeSegment, filePath: strin
 		endLine: segment.endLine,
 		language: segment.language,
 		context: segment.context,
-		docstring: segment.docstring,
-		params: segment.params,
-		returnType: segment.returnType,
-		relationships: segment.relationships,
 	}
 }
 

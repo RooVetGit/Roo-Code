@@ -2,30 +2,32 @@ import * as fs from "fs/promises"
 import * as path from "path"
 import { loadRequiredLanguageParsers } from "../../tree-sitter/languageParser"
 import type Parser from "web-tree-sitter"
-import { CodeSegment, ParsedFile, SemanticParser, IMPORTANCE_WEIGHTS } from "./types"
+import { CodeSegment, ParsedFile, SemanticParser, IMPORTANCE_WEIGHTS, CodeSegmentType } from "./types"
 import typescript from "./queries/typescript"
 import crypto from "crypto"
-
-interface RelationshipInfo {
-	imports: string[]
-	inheritedFrom?: string
-	implementedInterfaces?: string[]
-	usedIn: string[]
-	dependencies: string[]
-}
 
 export class TreeSitterParser implements SemanticParser {
 	private languageParsers: Record<string, { parser: Parser; query: Parser.Query }> = {}
 	private initialized = false
+	private wasmDir: string
+
+	constructor(wasmDir?: string) {
+		// In tests, use the provided wasmDir, otherwise use the default
+		this.wasmDir = wasmDir || path.join(process.cwd(), "src/services/tree-sitter")
+	}
 
 	private async initialize(filePath: string) {
 		if (!this.initialized) {
 			try {
 				// Create dummy files for all supported languages to ensure parsers are loaded
 				const dummyFiles = Object.entries(this.getLanguageMap()).map(([ext]) => `dummy.${ext}`)
-				this.languageParsers = await loadRequiredLanguageParsers([filePath, ...dummyFiles], {
-					ts: typescript,
-				})
+				this.languageParsers = await loadRequiredLanguageParsers(
+					[filePath, ...dummyFiles],
+					{
+						ts: typescript,
+					},
+					this.wasmDir,
+				) // Pass wasmDir to loadRequiredLanguageParsers
 				this.initialized = true
 			} catch (error) {
 				console.warn(`Failed to load parser for ${filePath}, will skip parsing: ${error}`)
@@ -61,118 +63,112 @@ export class TreeSitterParser implements SemanticParser {
 		return this.getLanguageMap()[ext] || ext
 	}
 
+	private getSymbolNameFromCapture(type: string, node: Parser.SyntaxNode): string {
+		switch (type) {
+			case CodeSegmentType.CLASS:
+				return node.childForFieldName("name")?.text || ""
+			case CodeSegmentType.FUNCTION:
+				return node.childForFieldName("name")?.text || ""
+			case CodeSegmentType.METHOD:
+				return node.childForFieldName("name")?.text || ""
+			case CodeSegmentType.VARIABLE:
+				return node.childForFieldName("name")?.text || ""
+			case CodeSegmentType.IMPORT:
+				return node
+					.descendantsOfType("string")
+					.map((n) => n.text.replace(/['"]/g, ""))
+					.join(", ")
+			default:
+				return ""
+		}
+	}
+
 	private async parseSegments(tree: Parser.Tree, fileContent: string, language: string): Promise<CodeSegment[]> {
 		const segments: CodeSegment[] = []
-		const lines = fileContent.split("\n")
-		const relationships = new Map<string, RelationshipInfo>()
-
-		// Get all captures from the tree
 		const ext = Object.entries(this.getLanguageMap()).find(([_, lang]) => lang === language)?.[0]
+
 		if (!ext || !this.languageParsers[ext]) {
-			console.log(`No parser found for language: ${language}`)
 			return segments
 		}
 
-		const { parser, query } = this.languageParsers[ext]
-		console.log(`Querying AST for language: ${language}`)
+		const { query } = this.languageParsers[ext]
+		const processedNodeIds = new Set<number>()
 
-		const captures = query.captures(tree.rootNode)
-		console.log(`Found ${captures.length} captures`)
-
-		let currentContext = ""
-
-		// Single pass processing for all captures
-		for (const capture of captures) {
+		console.log("\n=== First Pass ===")
+		// First pass: Process class bodies and mark their methods as processed
+		for (const capture of query.captures(tree.rootNode)) {
 			const { node, name } = capture
-			const startLine = node.startPosition.row
-			const endLine = node.endPosition.row
+			if (name === "class") {
+				console.log("Found class node:", node.type)
+				const methodNodes = node.descendantsOfType(["method_definition"])
+				console.log("Method nodes found:", methodNodes.length)
 
-			// Update context for structural elements
-			if (name.includes("class") || name.includes("module")) {
-				currentContext = node.text
+				methodNodes.forEach((methodNode) => {
+					const methodName = methodNode.childForFieldName("name")?.text
+					console.log("Processing method:", methodName, "type:", methodNode.type, "id:", methodNode.id)
+					// Don't add to processedNodeIds here anymore - we want to process it in the second pass
+				})
+			}
+		}
+
+		console.log("\n=== Second Pass ===")
+		console.log(`Query captures for ${language}:`)
+		for (const capture of query.captures(tree.rootNode)) {
+			const { node, name } = capture
+			console.log(`- Capture name: ${name}, Node type: ${node.type}, Text: ${node.text.slice(0, 40)}...`)
+
+			// Only skip if we've already processed this specific node
+			if (processedNodeIds.has(node.id)) {
+				console.log("Node already processed, skipping. id:", node.id)
+				continue
 			}
 
-			// Determine type from capture name patterns
-			const type = (["class", "function", "variable", "method", "import", "type"].find((t) => name.includes(t)) ||
-				"other") as CodeSegment["type"]
+			const type = Object.values(CodeSegmentType).includes(name as CodeSegmentType)
+				? (name as CodeSegmentType)
+				: null
 
-			// Extract symbol name from appropriate node property
-			const symbolName = node.type === "string" ? node.text.slice(1, -1) : node.text
+			if (!type) {
+				console.log("No type found for capture:", name)
+				continue
+			}
 
-			// Get full content for this segment
-			const content = lines.slice(startLine, endLine + 1).join("\n")
+			// Process the node and add it to segments
+			const startLine = node.startPosition.row
+			const endLine = node.endPosition.row
+			const content = node.text
 
-			// Extract docstring if available
-			const docstring = this.extractDocstring(node, lines)
+			// Get hierarchical context
+			const contextParts: string[] = []
+			let parent: Parser.SyntaxNode | null = node.parent
+			while (parent) {
+				if (parent.type === "class_declaration") {
+					const nameNode = parent.childForFieldName("name")
+					if (nameNode) {
+						contextParts.unshift(nameNode.text)
+					}
+				}
+				parent = parent.parent
+			}
 
-			// Extract params and return type for functions/methods
-			const { params, returnType } = this.extractFunctionSignature(node)
-
-			// Get relationship info
-			const relationshipInfo = relationships.get(symbolName)
+			const symbolName = this.getSymbolNameFromCapture(type, node)
+			const context = contextParts.join(" > ")
 
 			segments.push({
-				type,
+				type: type as CodeSegmentType,
 				name: symbolName,
 				content,
 				startLine,
 				endLine,
-				context: currentContext,
+				context,
 				importance: IMPORTANCE_WEIGHTS[type.toUpperCase() as keyof typeof IMPORTANCE_WEIGHTS] || 0.5,
 				language,
-				docstring,
-				params,
-				returnType,
-				relationships: {
-					imports: [],
-					usedIn: [],
-					dependencies: [],
-					...(relationshipInfo || {}),
-				},
 			})
+
+			// Mark as processed after we've created the segment
+			processedNodeIds.add(node.id)
 		}
 
 		return segments
-	}
-
-	private extractDocstring(node: Parser.SyntaxNode, lines: string[]): string | undefined {
-		// Look for comment nodes before the current node
-		let current = node.previousSibling
-		while (current && current.type === "comment") {
-			return current.text.replace(/^\/\*|\*\/$/g, "").trim() // Clean up comment markers
-		}
-		return undefined
-	}
-
-	private extractFunctionSignature(node: Parser.SyntaxNode): {
-		params: Array<{ name: string; type?: string }>
-		returnType?: string
-	} {
-		const params: Array<{ name: string; type?: string }> = []
-		let returnType: string | undefined
-
-		// Find parameter list and return type based on language-specific AST structure
-		// This is a simplified version - would need to be expanded for each language
-		const paramList = node.parent?.childForFieldName("parameters")
-		if (paramList) {
-			for (const param of paramList.children) {
-				if (param.type === "parameter") {
-					const paramName = param.childForFieldName("name")?.text
-					const paramType = param.childForFieldName("type")?.text
-					if (paramName) {
-						params.push({ name: paramName, type: paramType })
-					}
-				}
-			}
-		}
-
-		// Try to find return type annotation
-		const returnTypeNode = node.parent?.childForFieldName("return_type")
-		if (returnTypeNode) {
-			returnType = returnTypeNode.text
-		}
-
-		return { params, returnType }
 	}
 
 	async parseFile(filePath: string, expectedHash?: string): Promise<ParsedFile> {
@@ -248,41 +244,26 @@ export class TreeSitterParser implements SemanticParser {
 
 	async getImportGraph(filePath: string): Promise<{ imports: string[]; importedBy: string[] }> {
 		await this.initialize(filePath)
-
 		const fileContent = await fs.readFile(filePath, "utf8")
 		const ext = path.extname(filePath).toLowerCase().slice(1)
-		const language = this.getLanguageFromExt(ext)
 
-		const { parser } = this.languageParsers[language]
-		if (!parser) {
-			throw new Error(`Unsupported language: ${language}`)
+		if (!this.languageParsers[ext]) {
+			return { imports: [], importedBy: [] }
 		}
 
+		const { parser, query } = this.languageParsers[ext]
 		const tree = parser.parse(fileContent)
 		const imports: string[] = []
-		const importedBy: string[] = []
 
-		// Find import statements in the AST
-		const importNodes = this.findNodesOfType(tree.rootNode, "import_statement")
-		for (const node of importNodes) {
-			const importPath = node.childForFieldName("source")?.text
-			if (importPath) {
+		// Use the existing query to find import sources
+		for (const capture of query.captures(tree.rootNode)) {
+			if (capture.name === "import-source") {
+				const importPath = capture.node.text.replace(/['"]/g, "")
 				imports.push(importPath)
 			}
 		}
 
-		return { imports, importedBy }
-	}
-
-	private findNodesOfType(node: Parser.SyntaxNode, type: string): Parser.SyntaxNode[] {
-		const nodes: Parser.SyntaxNode[] = []
-		if (node.type === type) {
-			nodes.push(node)
-		}
-		for (const child of node.children) {
-			nodes.push(...this.findNodesOfType(child, type))
-		}
-		return nodes
+		return { imports, importedBy: [] }
 	}
 
 	async getSymbolContext(filePath: string, line: number, column: number): Promise<string> {
