@@ -30,7 +30,7 @@ describe("Path Utilities", () => {
 
 	describe("platform-specific behavior", () => {
 		const platforms = ["win32", "darwin", "linux"]
-		platforms.forEach(platform => {
+		platforms.forEach((platform) => {
 			describe(`on ${platform}`, () => {
 				beforeEach(() => {
 					Object.defineProperty(process, "platform", { value: platform })
@@ -43,12 +43,10 @@ describe("Path Utilities", () => {
 				})
 
 				it("should normalize mixed separators", () => {
-					const mixedPath = platform === "win32"
-						? "C:\\Users/test\\path/file.txt"
-						: "/Users/test\\path/file.txt"
-					const normalPath = platform === "win32"
-						? "C:\\Users\\test\\path\\file.txt"
-						: "/Users/test/path/file.txt"
+					const mixedPath =
+						platform === "win32" ? "C:\\Users/test\\path/file.txt" : "/Users/test\\path/file.txt"
+					const normalPath =
+						platform === "win32" ? "C:\\Users\\test\\path\\file.txt" : "/Users/test/path/file.txt"
 					expect(arePathsEqual(mixedPath, normalPath)).toBe(true)
 				})
 
@@ -120,14 +118,8 @@ describe("Path Utilities", () => {
 			})
 
 			it("should handle UNC paths", () => {
-				expect(arePathsEqual(
-					"\\\\server\\share\\folder",
-					"\\\\SERVER\\share\\folder"
-				)).toBe(true)
-				expect(arePathsEqual(
-					"\\\\server\\share\\folder\\",
-					"\\\\server\\share\\folder"
-				)).toBe(true)
+				expect(arePathsEqual("\\\\server\\share\\folder", "\\\\SERVER\\share\\folder")).toBe(true)
+				expect(arePathsEqual("\\\\server\\share\\folder\\", "\\\\server\\share\\folder")).toBe(true)
 			})
 
 			it("should handle extended-length paths", () => {
@@ -137,16 +129,13 @@ describe("Path Utilities", () => {
 			})
 
 			it("should handle network drive paths", () => {
-				expect(arePathsEqual(
-					"Z:\\Shared\\Files",
-					"z:\\shared\\files"
-				)).toBe(true)
+				expect(arePathsEqual("Z:\\Shared\\Files", "z:\\shared\\files")).toBe(true)
 			})
 		})
 
 		describe("path segment variations", () => {
 			const platforms = ["win32", "darwin", "linux"]
-			platforms.forEach(platform => {
+			platforms.forEach((platform) => {
 				describe(`on ${platform}`, () => {
 					beforeEach(() => {
 						Object.defineProperty(process, "platform", { value: platform })
