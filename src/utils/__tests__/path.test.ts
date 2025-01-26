@@ -28,6 +28,40 @@ describe("Path Utilities", () => {
 		})
 	})
 
+	describe("platform-specific behavior", () => {
+		const platforms = ["win32", "darwin", "linux"]
+		platforms.forEach(platform => {
+			describe(`on ${platform}`, () => {
+				beforeEach(() => {
+					Object.defineProperty(process, "platform", { value: platform })
+				})
+
+				it("should handle root paths correctly", () => {
+					const root = platform === "win32" ? "C:\\" : "/"
+					expect(arePathsEqual(root, root + "/")).toBe(true)
+					expect(arePathsEqual(root, root + "//")).toBe(true)
+				})
+
+				it("should normalize mixed separators", () => {
+					const mixedPath = platform === "win32"
+						? "C:\\Users/test\\path/file.txt"
+						: "/Users/test\\path/file.txt"
+					const normalPath = platform === "win32"
+						? "C:\\Users\\test\\path\\file.txt"
+						: "/Users/test/path/file.txt"
+					expect(arePathsEqual(mixedPath, normalPath)).toBe(true)
+				})
+
+				it("should handle parent directory traversal", () => {
+					const base = platform === "win32" ? "C:\\Users\\test" : "/Users/test"
+					const path1 = path.join(base, "dir", "..", "file.txt")
+					const path2 = path.join(base, "file.txt")
+					expect(arePathsEqual(path1, path2)).toBe(true)
+				})
+			})
+		})
+	})
+
 	describe("arePathsEqual", () => {
 		describe("on Windows", () => {
 			beforeEach(() => {
@@ -72,6 +106,73 @@ describe("Path Utilities", () => {
 
 			it("should handle trailing slashes", () => {
 				expect(arePathsEqual("/Users/Test/", "/Users/Test")).toBe(true)
+			})
+		})
+
+		describe("Windows-specific paths", () => {
+			beforeEach(() => {
+				Object.defineProperty(process, "platform", { value: "win32" })
+			})
+
+			it("should handle drive letter case variations", () => {
+				expect(arePathsEqual("C:\\Users\\test", "c:\\users\\test")).toBe(true)
+				expect(arePathsEqual("D:\\Files\\test", "d:\\files\\test")).toBe(true)
+			})
+
+			it("should handle UNC paths", () => {
+				expect(arePathsEqual(
+					"\\\\server\\share\\folder",
+					"\\\\SERVER\\share\\folder"
+				)).toBe(true)
+				expect(arePathsEqual(
+					"\\\\server\\share\\folder\\",
+					"\\\\server\\share\\folder"
+				)).toBe(true)
+			})
+
+			it("should handle extended-length paths", () => {
+				const path1 = "\\\\?\\C:\\Very\\Long\\Path"
+				const path2 = "\\\\?\\C:\\Very\\Long\\Path\\"
+				expect(arePathsEqual(path1, path2)).toBe(true)
+			})
+
+			it("should handle network drive paths", () => {
+				expect(arePathsEqual(
+					"Z:\\Shared\\Files",
+					"z:\\shared\\files"
+				)).toBe(true)
+			})
+		})
+
+		describe("path segment variations", () => {
+			const platforms = ["win32", "darwin", "linux"]
+			platforms.forEach(platform => {
+				describe(`on ${platform}`, () => {
+					beforeEach(() => {
+						Object.defineProperty(process, "platform", { value: platform })
+					})
+
+					it("should handle consecutive separators", () => {
+						const base = platform === "win32" ? "C:" : ""
+						const path1 = `${base}//home///user////file.txt`
+						const path2 = `${base}/home/user/file.txt`
+						expect(arePathsEqual(path1, path2)).toBe(true)
+					})
+
+					it("should handle current directory references", () => {
+						const base = platform === "win32" ? "C:" : ""
+						const path1 = `${base}/./home/./user/./file.txt`
+						const path2 = `${base}/home/user/file.txt`
+						expect(arePathsEqual(path1, path2)).toBe(true)
+					})
+
+					it("should handle complex parent directory traversal", () => {
+						const base = platform === "win32" ? "C:" : ""
+						const path1 = `${base}/a/b/c/../../d/../e/f/../g`
+						const path2 = `${base}/a/e/g`
+						expect(arePathsEqual(path1, path2)).toBe(true)
+					})
+				})
 			})
 		})
 
