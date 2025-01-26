@@ -1,5 +1,7 @@
 export default `
-  ; Import statements
+(
+  (comment)* @doc
+  .
   (import_statement
     source: (string) @import-source
     (import_clause
@@ -11,38 +13,57 @@ export default `
         ))*
     )?
   ) @import
+  (#strip! @doc "^[\\s\\*/]+|^[\\s\\*/]$")
+  (#select-adjacent! @doc @import)
+)
 
-  ; Class declarations
+(
+  (comment)* @doc
+  .
   (class_declaration
     name: (type_identifier) @class-name
     body: (class_body
-      (method_definition
-        name: (property_identifier) @method-name
-        parameters: (formal_parameters) @method-params
-        body: (statement_block) @method-body
-      )+
+      (method_definition) @method
     )
   ) @class
+  (#strip! @doc "^[\\s\\*/]+|^[\\s\\*/]$")
+  (#select-adjacent! @doc @class)
+)
 
-  ; Function declarations
+(
+  (comment)* @doc
+  .
+  (method_definition
+    name: (property_identifier) @method-name
+    parameters: (formal_parameters) @method-params
+    body: (statement_block) @method-body
+  ) @method
+  (#strip! @doc "^[\\s\\*/]+|^[\\s\\*/]$")
+  (#select-adjacent! @doc @method)
+)
+
+(
+  (comment)* @doc
+  .
   (function_declaration
     name: (identifier) @function-name
     parameters: (formal_parameters) @function-params
     body: (statement_block) @function-body
   ) @function
+  (#strip! @doc "^[\\s\\*/]+|^[\\s\\*/]$")
+  (#select-adjacent! @doc @function)
+)
 
-  ; Variable declarations
-  (lexical_declaration
-    (variable_declarator
-      name: (identifier) @variable-name
-      value: (expression)? @variable-value
-    )+
-  ) @variable
-
+(
+  (comment)* @doc
+  .
   (variable_declaration
     (variable_declarator
       name: (identifier) @variable-name
-      value: (expression)? @variable-value
+      value: (arrow_function) @variable-value
     )+
   ) @variable
+  (#strip! @doc "^[\\s\\*/]+|^[\\s\\*/]$")
+  (#select-adjacent! @doc @variable)
+)
 `
