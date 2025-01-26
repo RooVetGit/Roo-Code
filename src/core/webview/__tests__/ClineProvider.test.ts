@@ -320,6 +320,10 @@ describe("ClineProvider", () => {
 			requestDelaySeconds: 5,
 			mode: defaultModeSlug,
 			customModes: [],
+			promptExpanderSettings: {
+				enableShortcuts: true,
+				defaultShortcutPattern: "Alt+$N",
+			},
 		}
 
 		const message: ExtensionMessage = {

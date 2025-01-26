@@ -15,6 +15,7 @@ import { findLastIndex } from "../../../src/shared/array"
 import { McpServer } from "../../../src/shared/mcp"
 import { checkExistKey } from "../../../src/shared/checkExistApiConfig"
 import { Mode, CustomModePrompts, defaultModeSlug, defaultPrompts, ModeConfig } from "../../../src/shared/modes"
+import { PromptExpanderPrompt, PromptExpanderSettings } from "../../../src/shared/WebviewMessage"
 import { CustomSupportPrompts } from "../../../src/shared/support-prompt"
 
 export interface ExtensionStateContextType extends ExtensionState {
@@ -69,39 +70,50 @@ export interface ExtensionStateContextType extends ExtensionState {
 	handleInputChange: (field: keyof ApiConfiguration) => (event: any) => void
 	customModes: ModeConfig[]
 	setCustomModes: (value: ModeConfig[]) => void
+	promptExpanderPrompts: PromptExpanderPrompt[]
+	setPromptExpanderPrompts: React.Dispatch<React.SetStateAction<PromptExpanderPrompt[]>>
+	promptExpanderSettings: PromptExpanderSettings
+	setPromptExpanderSettings: (settings: PromptExpanderSettings) => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
 
+const initialState: ExtensionState = {
+	version: "",
+	clineMessages: [],
+	taskHistory: [],
+	shouldShowAnnouncement: false,
+	allowedCommands: [],
+	soundEnabled: false,
+	soundVolume: 0.5,
+	diffEnabled: false,
+	fuzzyMatchThreshold: 1.0,
+	preferredLanguage: "English",
+	writeDelayMs: 1000,
+	browserViewportSize: "900x600",
+	screenshotQuality: 75,
+	terminalOutputLineLimit: 500,
+	mcpEnabled: true,
+	alwaysApproveResubmit: false,
+	requestDelaySeconds: 5,
+	currentApiConfigName: "default",
+	listApiConfigMeta: [],
+	mode: defaultModeSlug,
+	customModePrompts: defaultPrompts,
+	customSupportPrompts: {},
+	enhancementApiConfigId: "",
+	experimentalDiffStrategy: false,
+	autoApprovalEnabled: false,
+	customModes: [],
+	promptExpanderPrompts: [],
+	promptExpanderSettings: {
+		enableShortcuts: true,
+		defaultShortcutPattern: "Alt+$N",
+	},
+}
+
 export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-	const [state, setState] = useState<ExtensionState>({
-		version: "",
-		clineMessages: [],
-		taskHistory: [],
-		shouldShowAnnouncement: false,
-		allowedCommands: [],
-		soundEnabled: false,
-		soundVolume: 0.5,
-		diffEnabled: false,
-		fuzzyMatchThreshold: 1.0,
-		preferredLanguage: "English",
-		writeDelayMs: 1000,
-		browserViewportSize: "900x600",
-		screenshotQuality: 75,
-		terminalOutputLineLimit: 500,
-		mcpEnabled: true,
-		alwaysApproveResubmit: false,
-		requestDelaySeconds: 5,
-		currentApiConfigName: "default",
-		listApiConfigMeta: [],
-		mode: defaultModeSlug,
-		customModePrompts: defaultPrompts,
-		customSupportPrompts: {},
-		enhancementApiConfigId: "",
-		experimentalDiffStrategy: false,
-		autoApprovalEnabled: false,
-		customModes: [],
-	})
+	const [state, setState] = useState<ExtensionState>(initialState)
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
 	const [showWelcome, setShowWelcome] = useState(false)
@@ -148,14 +160,16 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 	)
 
 	const handleMessage = useCallback(
-		(event: MessageEvent) => {
+		(event: MessageEvent<any>) => {
 			const message: ExtensionMessage = event.data
+
 			switch (message.type) {
 				case "state": {
 					const newState = message.state!
 					setState((prevState) => ({
 						...prevState,
 						...newState,
+						promptExpanderSettings: newState.promptExpanderSettings || initialState.promptExpanderSettings,
 					}))
 					const config = newState.apiConfiguration
 					const hasKey = checkExistKey(config)
@@ -242,6 +256,14 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		writeDelayMs: state.writeDelayMs,
 		screenshotQuality: state.screenshotQuality,
 		experimentalDiffStrategy: state.experimentalDiffStrategy ?? false,
+		promptExpanderPrompts: state.promptExpanderPrompts ?? [],
+		promptExpanderSettings: state.promptExpanderSettings,
+		setPromptExpanderPrompts: (value) =>
+			setState((prevState) => ({
+				...prevState,
+				promptExpanderPrompts:
+					typeof value === "function" ? value(prevState.promptExpanderPrompts ?? []) : value,
+			})),
 		setApiConfiguration: (value) =>
 			setState((prevState) => ({
 				...prevState,
@@ -282,6 +304,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setAutoApprovalEnabled: (value) => setState((prevState) => ({ ...prevState, autoApprovalEnabled: value })),
 		handleInputChange,
 		setCustomModes: (value) => setState((prevState) => ({ ...prevState, customModes: value })),
+		setPromptExpanderSettings: (settings) => setState((prev) => ({ ...prev, promptExpanderSettings: settings })),
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

@@ -28,6 +28,7 @@ import TaskHeader from "./TaskHeader"
 import AutoApproveMenu from "./AutoApproveMenu"
 import { AudioType } from "../../../../src/shared/WebviewMessage"
 import { validateCommand } from "../../utils/command-validation"
+import { PromptExpanderButtons } from "../shared/PromptExpanderButtons"
 
 interface ChatViewProps {
 	isHidden: boolean
@@ -1069,6 +1070,25 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				}}
 				mode={mode}
 				setMode={setMode}
+			/>
+			<PromptExpanderButtons
+				onPromptSelect={(text) => {
+					// Insert at cursor position instead of replacing
+					const textarea = textAreaRef.current
+					if (textarea) {
+						const start = textarea.selectionStart
+						const end = textarea.selectionEnd
+						const currentValue = textarea.value
+						const newValue = currentValue.substring(0, start) + text + currentValue.substring(end)
+						setInputValue(newValue)
+						// Focus and set cursor position after inserted text
+						textarea.focus()
+						const newCursorPos = start + text.length
+						setTimeout(() => {
+							textarea.setSelectionRange(newCursorPos, newCursorPos)
+						}, 0)
+					}
+				}}
 			/>
 		</div>
 	)

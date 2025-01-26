@@ -5,6 +5,7 @@ import { validateApiConfiguration, validateModelId } from "../../utils/validate"
 import { vscode } from "../../utils/vscode"
 import ApiOptions from "./ApiOptions"
 import ApiConfigManager from "./ApiConfigManager"
+import { ShortcutInput } from "../shared/ShortcutInput"
 
 type SettingsViewProps = {
 	onDone: () => void
@@ -12,6 +13,7 @@ type SettingsViewProps = {
 
 const SettingsView = ({ onDone }: SettingsViewProps) => {
 	const {
+		promptExpanderPrompts = [],
 		apiConfiguration,
 		version,
 		alwaysAllowReadOnly,
@@ -25,6 +27,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		alwaysAllowMcp,
 		setAlwaysAllowMcp,
 		soundEnabled,
+		setPromptExpanderPrompts,
 		setSoundEnabled,
 		soundVolume,
 		setSoundVolume,
@@ -53,10 +56,26 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		listApiConfigMeta,
 		experimentalDiffStrategy,
 		setExperimentalDiffStrategy,
+		promptExpanderSettings,
+		setPromptExpanderSettings,
 	} = useExtensionState()
 	const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>(undefined)
 	const [modelIdErrorMessage, setModelIdErrorMessage] = useState<string | undefined>(undefined)
 	const [commandInput, setCommandInput] = useState("")
+	const [newPromptInput, setNewPromptInput] = useState<{ name: string; prompt: string }>({ name: "", prompt: "" })
+
+	const isMac = navigator.platform.toLowerCase().includes("mac")
+	const altKey = isMac ? "⌥" : "Alt"
+
+	const getDefaultShortcut = (index: number) => {
+		if (index < 10) {
+			return `Ctrl+${altKey}+${(index % 10) + 1}`
+		} else if (index < 20) {
+			return `Ctrl+Shift+${(index % 10) + 1}`
+		} else {
+			return `${altKey}+Shift+${(index % 10) + 1}`
+		}
+	}
 
 	const handleSubmit = () => {
 		const apiValidationResult = validateApiConfiguration(apiConfiguration)
@@ -93,6 +112,10 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 				apiConfiguration,
 			})
 			vscode.postMessage({ type: "experimentalDiffStrategy", bool: experimentalDiffStrategy })
+			vscode.postMessage({
+				type: "updatePromptExpanderSettings",
+				settings: promptExpanderSettings,
+			})
 			onDone()
 		}
 	}
@@ -125,6 +148,21 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 				commands: newCommands,
 			})
 		}
+	}
+
+	const handleAddPrompt = () => {
+		if (newPromptInput.name && newPromptInput.prompt) {
+			const updatedPrompts = [...promptExpanderPrompts, { ...newPromptInput }]
+			setPromptExpanderPrompts(updatedPrompts)
+			setNewPromptInput({ name: "", prompt: "" })
+			vscode.postMessage({ type: "updatePromptExpanderPrompts", prompts: updatedPrompts })
+		}
+	}
+
+	const handleDeletePrompt = (indexToDelete: number) => {
+		const updatedPrompts = promptExpanderPrompts.filter((_, index) => index !== indexToDelete)
+		setPromptExpanderPrompts(updatedPrompts)
+		vscode.postMessage({ type: "updatePromptExpanderPrompts", prompts: updatedPrompts })
 	}
 
 	return (
@@ -343,17 +381,17 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 
 								<div style={{ display: "flex", gap: "5px", marginTop: "10px" }}>
 									<VSCodeTextField
-										value={commandInput}
+										placeholder="Enter command prefix (e.g., 'git ')"
+										style={{ flexGrow: 1 }}
 										onInput={(e: any) => setCommandInput(e.target.value)}
 										onKeyDown={(e: any) => {
 											if (e.key === "Enter") {
 												e.preventDefault()
 												handleAddCommand()
 											}
-										}}
-										placeholder="Enter command prefix (e.g., 'git ')"
-										style={{ flexGrow: 1 }}
-									/>
+										}}>
+										{commandInput}
+									</VSCodeTextField>
 									<VSCodeButton onClick={handleAddCommand}>Add</VSCodeButton>
 								</div>
 
@@ -408,6 +446,224 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 								</div>
 							</div>
 						)}
+					</div>
+				</div>
+
+				<div style={{ marginBottom: 40 }}>
+					<h3 style={{ color: "var(--vscode-foreground)", margin: "0 0 15px 0" }}>Prompt Expander</h3>
+					<p style={{ fontSize: "12px", marginBottom: 15, color: "var(--vscode-descriptionForeground)" }}>
+						Define prompts that can be quickly inserted into the editor via buttons in the sidebar.
+					</p>
+
+					<div style={{ marginBottom: 20 }}>
+						<VSCodeCheckbox
+							checked={promptExpanderSettings.enableShortcuts}
+							onChange={(e: any) => {
+								setPromptExpanderSettings({
+									...promptExpanderSettings,
+									enableShortcuts: e.target.checked,
+								})
+							}}>
+							<span style={{ fontWeight: "500" }}>Enable keyboard shortcuts</span>
+						</VSCodeCheckbox>
+						<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>
+							When enabled, you can use keyboard shortcuts to quickly insert prompts.
+						</p>
+					</div>
+
+					<div className="prompt-list" style={{ marginBottom: 20 }}>
+						{promptExpanderPrompts.map((prompt, index) => (
+							<details
+								key={index}
+								style={{
+									marginBottom: 15,
+									backgroundColor: "var(--vscode-input-background)",
+									borderRadius: 4,
+									border: "1px solid var(--vscode-input-border)",
+								}}>
+								<summary
+									style={{
+										padding: "8px 12px",
+										cursor: "pointer",
+										display: "flex",
+										justifyContent: "space-between",
+										alignItems: "center",
+										borderBottom: "1px solid var(--vscode-input-border)",
+										backgroundColor: "var(--vscode-sideBarSectionHeader-background)",
+									}}>
+									<div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+										<span style={{ fontWeight: 500 }}>{prompt.name || "Unnamed Prompt"}</span>
+										{promptExpanderSettings.enableShortcuts && prompt.enabled !== false && (
+											<span
+												style={{
+													opacity: 0.7,
+													fontSize: "11px",
+													padding: "1px 4px",
+													backgroundColor: "var(--vscode-keybindingLabel-background)",
+													border: "1px solid var(--vscode-keybindingLabel-border)",
+													borderRadius: "3px",
+													color: "inherit",
+													fontFamily: "var(--vscode-editor-font-family)",
+													textTransform: "uppercase",
+													letterSpacing: "0.1em",
+												}}>
+												{prompt.shortcut || getDefaultShortcut(index)}
+											</span>
+										)}
+										{prompt.enabled === false && (
+											<span
+												style={{
+													fontSize: "11px",
+													opacity: 0.7,
+													color: "var(--vscode-errorForeground)",
+												}}>
+												Disabled
+											</span>
+										)}
+										{prompt.visible === false && (
+											<span
+												style={{
+													fontSize: "11px",
+													opacity: 0.7,
+													color: "var(--vscode-warningForeground)",
+												}}>
+												Hidden
+											</span>
+										)}
+									</div>
+									<VSCodeButton
+										appearance="secondary"
+										onClick={(e) => {
+											e.preventDefault()
+											handleDeletePrompt(index)
+										}}
+										style={{ padding: "4px 8px" }}>
+										<span className="codicon codicon-trash"></span>
+									</VSCodeButton>
+								</summary>
+								<div style={{ padding: 12 }}>
+									<div style={{ display: "flex", gap: "10px", marginBottom: 10 }}>
+										<VSCodeCheckbox
+											checked={prompt.enabled !== false}
+											onChange={(e: any) => {
+												const updatedPrompts = [...promptExpanderPrompts]
+												updatedPrompts[index] = { ...prompt, enabled: e.target.checked }
+												setPromptExpanderPrompts(updatedPrompts)
+												vscode.postMessage({
+													type: "updatePromptExpanderPrompts",
+													prompts: updatedPrompts,
+												})
+											}}>
+											<span style={{ fontWeight: "500" }}>Enabled</span>
+										</VSCodeCheckbox>
+										<VSCodeCheckbox
+											checked={prompt.visible !== false}
+											onChange={(e: any) => {
+												const updatedPrompts = [...promptExpanderPrompts]
+												updatedPrompts[index] = { ...prompt, visible: e.target.checked }
+												setPromptExpanderPrompts(updatedPrompts)
+												vscode.postMessage({
+													type: "updatePromptExpanderPrompts",
+													prompts: updatedPrompts,
+												})
+											}}>
+											<span style={{ fontWeight: "500" }}>Visible</span>
+										</VSCodeCheckbox>
+									</div>
+									<VSCodeTextField
+										placeholder="Prompt Name"
+										style={{ width: "100%", marginBottom: 5 }}
+										onInput={(e: any) => {
+											const updatedPrompts = [...promptExpanderPrompts]
+											updatedPrompts[index] = { ...prompt, name: e.target.value }
+											setPromptExpanderPrompts(updatedPrompts)
+											vscode.postMessage({
+												type: "updatePromptExpanderPrompts",
+												prompts: updatedPrompts,
+											})
+										}}>
+										{prompt.name}
+									</VSCodeTextField>
+									<VSCodeTextField
+										placeholder="Prompt Text"
+										style={{ width: "100%", marginBottom: 10 }}
+										onInput={(e: any) => {
+											const updatedPrompts = [...promptExpanderPrompts]
+											updatedPrompts[index] = { ...prompt, prompt: e.target.value }
+											setPromptExpanderPrompts(updatedPrompts)
+											vscode.postMessage({
+												type: "updatePromptExpanderPrompts",
+												prompts: updatedPrompts,
+											})
+										}}>
+										{prompt.prompt}
+									</VSCodeTextField>
+									<div>
+										<label
+											style={{
+												fontSize: "12px",
+												color: "var(--vscode-descriptionForeground)",
+												display: "block",
+												marginBottom: "4px",
+											}}>
+											Keyboard Shortcut (optional)
+										</label>
+										<ShortcutInput
+											value={prompt.shortcut}
+											onChange={(shortcut) => {
+												const updatedPrompts = [...promptExpanderPrompts]
+												updatedPrompts[index] = { ...prompt, shortcut }
+												setPromptExpanderPrompts(updatedPrompts)
+												vscode.postMessage({
+													type: "updatePromptExpanderPrompts",
+													prompts: updatedPrompts,
+												})
+											}}
+										/>
+										{!prompt.shortcut && (
+											<p
+												style={{
+													fontSize: "11px",
+													marginTop: "4px",
+													color: "var(--vscode-descriptionForeground)",
+													fontStyle: "italic",
+												}}>
+												Using default shortcut pattern
+											</p>
+										)}
+									</div>
+								</div>
+							</details>
+						))}
+					</div>
+
+					<div
+						className="add-prompt-form"
+						style={{
+							backgroundColor: "var(--vscode-input-background)",
+							padding: "12px",
+							borderRadius: "4px",
+							border: "1px solid var(--vscode-input-border)",
+						}}>
+						<h4 style={{ margin: "0 0 10px 0" }}>Add New Prompt</h4>
+						<VSCodeTextField
+							placeholder="Prompt Name"
+							style={{ marginBottom: 10, width: "100%" }}
+							onInput={(e: any) => setNewPromptInput({ ...newPromptInput, name: e.target.value })}>
+							{newPromptInput.name}
+						</VSCodeTextField>
+						<VSCodeTextField
+							placeholder="Prompt Text"
+							style={{ marginBottom: 10, width: "100%" }}
+							onInput={(e: any) => setNewPromptInput({ ...newPromptInput, prompt: e.target.value })}>
+							{newPromptInput.prompt}
+						</VSCodeTextField>
+						<VSCodeButton
+							appearance="primary"
+							onClick={handleAddPrompt}
+							disabled={!newPromptInput.name || !newPromptInput.prompt}>
+							Add Prompt
+						</VSCodeButton>
 					</div>
 				</div>
 

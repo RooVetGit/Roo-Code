@@ -5,9 +5,25 @@ export type PromptMode = Mode | "enhance"
 
 export type AudioType = "notification" | "celebration" | "progress_loop"
 
+export interface PromptExpanderPrompt {
+	name: string
+	prompt: string
+	shortcut?: string
+	enabled?: boolean
+	visible?: boolean
+}
+
+export interface PromptExpanderSettings {
+	enableShortcuts: boolean
+	defaultShortcutPattern: string
+}
+
 export interface WebviewMessage {
 	type:
 		| "apiConfiguration"
+		| "updatePromptExpanderPrompts"
+		| "getPromptExpanderPrompts"
+		| "insertPromptExpanderPrompt"
 		| "currentApiConfigName"
 		| "upsertApiConfiguration"
 		| "deleteApiConfiguration"
@@ -19,6 +35,9 @@ export interface WebviewMessage {
 		| "alwaysAllowReadOnly"
 		| "alwaysAllowWrite"
 		| "alwaysAllowExecute"
+		| "updatePromptExpanderPrompts"
+		| "getPromptExpanderPrompts"
+		| "insertPromptExpanderPrompt"
 		| "webviewDidLaunch"
 		| "newTask"
 		| "askResponse"
@@ -79,6 +98,10 @@ export interface WebviewMessage {
 		| "deleteCustomMode"
 		| "setopenAiCustomModelInfo"
 		| "openCustomModesSettings"
+		| "getPromptExpanderPrompts"
+		| "updatePromptExpanderPrompts"
+		| "insertPromptExpanderPrompt"
+		| "updatePromptExpanderSettings"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
@@ -99,6 +122,9 @@ export interface WebviewMessage {
 	query?: string
 	slug?: string
 	modeConfig?: ModeConfig
+	prompts?: PromptExpanderPrompt[]
+	prompt?: string
+	settings?: PromptExpanderSettings
 }
 
 export type ClineAskResponse = "yesButtonClicked" | "noButtonClicked" | "messageResponse"

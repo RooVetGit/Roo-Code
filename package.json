@@ -200,6 +200,52 @@
 						}
 					},
 					"description": "Settings for VSCode Language Model API"
+				},
+				"roo-cline.promptExpanderPrompts": {
+					"type": "array",
+					"description": "Saved prompts for the prompt expander feature",
+					"items": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string",
+								"description": "Name of the prompt (button label)"
+							},
+							"prompt": {
+								"type": "string",
+								"description": "The prompt text to expand"
+							},
+							"shortcut": {
+								"type": "string",
+								"description": "Custom keyboard shortcut for this prompt (e.g., 'Alt+1', 'Alt+Shift+1')"
+							}
+						},
+						"required": [
+							"name",
+							"prompt"
+						]
+					},
+					"default": []
+				},
+				"roo-cline.promptExpanderSettings": {
+					"type": "object",
+					"description": "Settings for the prompt expander feature",
+					"properties": {
+						"enableShortcuts": {
+							"type": "boolean",
+							"description": "Enable keyboard shortcuts for prompt expander",
+							"default": true
+						},
+						"defaultShortcutPattern": {
+							"type": "string",
+							"description": "Default keyboard shortcut pattern (e.g., 'Alt+$N', 'Alt+Shift+$N', where $N is replaced with the prompt number)",
+							"default": "Alt+$N"
+						}
+					},
+					"default": {
+						"enableShortcuts": true,
+						"defaultShortcutPattern": "Alt+$N"
+					}
 				}
 			}
 		}

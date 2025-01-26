@@ -1,6 +1,7 @@
 // type that represents json data that is sent from extension to webview, called ExtensionMessage and has 'type' enum which can be 'plusButtonClicked' or 'settingsButtonClicked' or 'hello'
 
 import { ApiConfiguration, ApiProvider, ModelInfo } from "./api"
+import { PromptExpanderPrompt } from "./WebviewMessage"
 import { HistoryItem } from "./HistoryItem"
 import { McpServer } from "./mcp"
 import { GitCommit } from "../utils/git"
@@ -41,7 +42,14 @@ export interface ExtensionMessage {
 		| "autoApprovalEnabled"
 		| "updateCustomMode"
 		| "deleteCustomMode"
+		| "updatePromptExpanderPrompts"
+		| "getPromptExpanderPrompts"
+		| "insertPromptExpanderPrompt"
+		| "updatePromptExpanderSettings"
 	text?: string
+	prompts?: PromptExpanderPrompt[]
+	prompt?: string
+	settings?: PromptExpanderSettings
 	action?:
 		| "chatButtonClicked"
 		| "mcpButtonClicked"
@@ -111,6 +119,8 @@ export interface ExtensionState {
 	autoApprovalEnabled?: boolean
 	customModes: ModeConfig[]
 	toolRequirements?: Record<string, boolean> // Map of tool names to their requirements (e.g. {"apply_diff": true} if diffEnabled)
+	promptExpanderPrompts?: PromptExpanderPrompt[]
+	promptExpanderSettings: PromptExpanderSettings
 }
 
 export interface ClineMessage {
@@ -213,3 +223,8 @@ export interface ClineApiReqInfo {
 }
 
 export type ClineApiReqCancelReason = "streaming_failed" | "user_cancelled"
+
+export interface PromptExpanderSettings {
+	enableShortcuts: boolean
+	defaultShortcutPattern: string
+}
