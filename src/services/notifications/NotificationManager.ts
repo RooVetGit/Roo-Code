@@ -1,145 +1,138 @@
-import * as vscode from 'vscode'
-import { v4 as uuid } from 'uuid'
-import { ClineAsk } from '../../shared/ExtensionMessage'
-import { ClineAskResponse } from '../../shared/WebviewMessage'
-import { NotificationProvider, NotificationRequest, NotificationResponse, mapClineAskToNotificationType } from './types'
+import { NotificationProvider, NotificationRequest, NotificationResponse, NotificationType } from './types';
+import { TelegramProvider } from './providers/telegramProvider';
+import { logger } from '../../utils/logger';
+import { ClineAsk } from '../../shared/ExtensionMessage';
+import { mapClineAskToNotificationType } from './types';
+
+export interface NotificationManagerConfig {
+    telegram?: {
+        enabled: boolean;
+        botToken: string;
+        chatId: string;
+        pollingInterval: number;
+    };
+}
 
 export class NotificationManager {
-    private providers: Map<string, NotificationProvider> = new Map()
-    private pendingRequests: Map<string, {
-        resolve: (response: {response: ClineAskResponse; text?: string}) => void
-        timestamp: number
-    }> = new Map()
+    private static instance: NotificationManager;
+    private providers: Map<string, NotificationProvider>;
+    private config: NotificationManagerConfig;
+    private pendingRequests: Map<string, (response: NotificationResponse) => void>;
 
-    constructor(
-        private readonly context: vscode.ExtensionContext,
-        private readonly outputChannel: vscode.OutputChannel
-    ) {}
+    private constructor() {
+        this.providers = new Map();
+        this.config = {};
+        this.pendingRequests = new Map();
+    }
 
-    async initialize() {
-        // Load providers from settings
-        const settings = await this.loadSettings()
-        
-        // Initialize enabled providers
-        for (const [providerId, providerSettings] of Object.entries(settings)) {
-            if (providerSettings.enabled) {
-                try {
-                    // Dynamic import of provider
-                    const provider = await this.loadProvider(providerId)
-                    if (provider) {
-                        await provider.initialize()
-                        provider.onResponse(this.handleResponse.bind(this))
-                        this.providers.set(providerId, provider)
-                        this.outputChannel.appendLine(`Initialized ${providerId} notification provider`)
+    static getInstance(): NotificationManager {
+        if (!NotificationManager.instance) {
+            NotificationManager.instance = new NotificationManager();
+        }
+        return NotificationManager.instance;
+    }
+
+    async initialize(config: NotificationManagerConfig): Promise<void> {
+        this.config = config;
+
+        // Clear existing providers
+        for (const provider of this.providers.values()) {
+            await provider.dispose();
+        }
+        this.providers.clear();
+
+        // Initialize Telegram provider if enabled
+        if (config.telegram?.enabled) {
+            try {
+                const telegramProvider = new TelegramProvider({
+                    botToken: config.telegram.botToken,
+                    chatId: config.telegram.chatId,
+                    pollingInterval: config.telegram.pollingInterval
+                });
+
+                await telegramProvider.initialize();
+                
+                // Set up response handling
+                telegramProvider.onResponse((response: NotificationResponse) => {
+                    const handler = this.pendingRequests.get(response.requestId);
+                    if (handler) {
+                        handler(response);
+                        this.pendingRequests.delete(response.requestId);
                     }
-                } catch (error) {
-                    this.outputChannel.appendLine(`Failed to initialize ${providerId} provider: ${error}`)
-                }
+                });
+
+                this.providers.set('telegram', telegramProvider);
+                logger.info('Telegram notification provider initialized');
+            } catch (error) {
+                logger.error('Failed to initialize Telegram provider:', error);
+                throw error;
             }
         }
     }
 
     async notify(
-        type: ClineAsk,
-        text: string,
-        metadata?: any,
-        resolver?: (response: {response: ClineAskResponse; text?: string}) => void
-    ) {
-        if (this.providers.size === 0) return
-
-        const requestId = uuid()
-        if (resolver) {
-            this.pendingRequests.set(requestId, {
-                resolve: resolver,
-                timestamp: Date.now()
-            })
+        type: NotificationType,
+        message: string,
+        metadata?: {
+            toolName?: string;
+            path?: string;
+            command?: string;
         }
-
+    ): Promise<NotificationResponse> {
+        const requestId = crypto.randomUUID();
         const request: NotificationRequest = {
-            type: mapClineAskToNotificationType(type),
-            message: text,
+            type,
+            message,
             requestId,
             metadata
-        }
+        };
 
-        for (const provider of this.providers.values()) {
+        // Send to all active providers
+        const errors: Error[] = [];
+        for (const [name, provider] of this.providers.entries()) {
             try {
-                await provider.sendNotification(request)
+                await provider.sendNotification(request);
+                logger.info(`Notification sent via ${name} provider`);
             } catch (error) {
-                this.outputChannel.appendLine(`Failed to send notification via provider: ${error}`)
+                logger.error(`Failed to send notification via ${name} provider:`, error);
+                errors.push(error as Error);
             }
         }
 
-        // Clean up old pending requests
-        this.cleanupOldRequests()
-    }
-
-    private handleResponse(response: NotificationResponse) {
-        const pending = this.pendingRequests.get(response.requestId)
-        if (!pending) {
-            this.outputChannel.appendLine(`Received response for unknown request: ${response.requestId}`)
-            return
+        // If all providers failed, throw an error
+        if (errors.length === this.providers.size) {
+            throw new Error('All notification providers failed');
         }
 
-        const clineResponse = this.mapResponseToClineAskResponse(response)
-        pending.resolve(clineResponse)
-        this.pendingRequests.delete(response.requestId)
+        // Wait for response
+        return new Promise((resolve) => {
+            this.pendingRequests.set(requestId, resolve);
+        });
     }
 
-    private mapResponseToClineAskResponse(response: NotificationResponse): {
-        response: ClineAskResponse
-        text?: string
-    } {
-        switch (response.type) {
-            case 'approve':
-                return { response: 'yesButtonClicked' }
-            case 'deny':
-                return { response: 'noButtonClicked' }
-            case 'text':
-                return {
-                    response: 'messageResponse',
-                    text: response.text
-                }
-            default:
-                throw new Error(`Unknown response type: ${response.type}`)
+    async notifyFromClineAsk(
+        askType: ClineAsk,
+        message: string,
+        metadata?: {
+            toolName?: string;
+            path?: string;
+            command?: string;
         }
+    ): Promise<NotificationResponse> {
+        const notificationType = mapClineAskToNotificationType(askType);
+        return this.notify(notificationType, message, metadata);
     }
 
-    private cleanupOldRequests() {
-        const now = Date.now()
-        const timeout = 1000 * 60 * 60 // 1 hour
-        
-        for (const [requestId, request] of this.pendingRequests.entries()) {
-            if (now - request.timestamp > timeout) {
-                this.pendingRequests.delete(requestId)
-            }
-        }
-    }
-
-    private async loadSettings(): Promise<Record<string, { enabled: boolean }>> {
-        return this.context.globalState.get('notificationSettings', {})
-    }
-
-    private async loadProvider(providerId: string): Promise<NotificationProvider | undefined> {
-        try {
-            const module = await import(`./providers/${providerId}Provider`)
-            const ProviderClass = module.default
-            return new ProviderClass(this.context)
-        } catch (error) {
-            this.outputChannel.appendLine(`Failed to load provider ${providerId}: ${error}`)
-            return undefined
-        }
-    }
-
-    async dispose() {
+    async dispose(): Promise<void> {
+        // Dispose all providers
         for (const provider of this.providers.values()) {
-            try {
-                await provider.dispose()
-            } catch (error) {
-                this.outputChannel.appendLine(`Error disposing provider: ${error}`)
-            }
+            await provider.dispose();
         }
-        this.providers.clear()
-        this.pendingRequests.clear()
+        this.providers.clear();
+        this.pendingRequests.clear();
+    }
+
+    getConfig(): NotificationManagerConfig {
+        return this.config;
     }
 }

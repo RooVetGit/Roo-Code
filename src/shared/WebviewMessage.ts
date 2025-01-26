@@ -1,6 +1,8 @@
 import { ApiConfiguration } from './api';
 import { HistoryItem } from './HistoryItem';
 
+export type ClineAskResponse = 'yesButtonClicked' | 'noButtonClicked' | 'messageResponse';
+
 export type WebviewMessage =
   | {
       type: 'apiConfiguration';
@@ -81,4 +83,7 @@ export type WebviewMessage =
     }
   | {
       type: 'openCustomModesSettings';
+    }
+  | {
+      type: 'webviewDidLaunch';
     };

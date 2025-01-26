@@ -69,6 +69,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	handleInputChange: (field: keyof ApiConfiguration) => (event: any) => void
 	customModes: ModeConfig[]
 	setCustomModes: (value: ModeConfig[]) => void
+	setNotificationSettings: (settings: NonNullable<ExtensionState['notificationSettings']>) => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -101,6 +102,14 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		experimentalDiffStrategy: false,
 		autoApprovalEnabled: false,
 		customModes: [],
+		notificationSettings: {
+			telegram: {
+				enabled: false,
+				botToken: '',
+				chatId: '',
+				pollingInterval: 30
+			}
+		}
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
@@ -126,8 +135,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setState((currentState) => {
 			vscode.postMessage({
 				type: "upsertApiConfiguration",
-				text: currentState.currentApiConfigName,
-				apiConfiguration: apiConfig,
+				configuration: apiConfig,
 			})
 			return currentState // No state update needed
 		})
@@ -138,8 +146,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			setState((currentState) => {
 				vscode.postMessage({
 					type: "upsertApiConfiguration",
-					text: currentState.currentApiConfigName,
-					apiConfiguration: { ...currentState.apiConfiguration, [field]: event.target.value },
+					configuration: { ...currentState.apiConfiguration, [field]: event.target.value },
 				})
 				return currentState // No state update needed
 			})
@@ -176,7 +183,6 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 				case "partialMessage": {
 					const partialMessage = message.partialMessage!
 					setState((prevState) => {
-						// worth noting it will never be possible for a more up-to-date message to be sent here or in normal messages post since the presentAssistantContent function uses lock
 						const lastIndex = findLastIndex(prevState.clineMessages, (msg) => msg.ts === partialMessage.ts)
 						if (lastIndex !== -1) {
 							const newClineMessages = [...prevState.clineMessages]
@@ -190,7 +196,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 				case "glamaModels": {
 					const updatedModels = message.glamaModels ?? {}
 					setGlamaModels({
-						[glamaDefaultModelId]: glamaDefaultModelInfo, // in case the extension sent a model list without the default model
+						[glamaDefaultModelId]: glamaDefaultModelInfo,
 						...updatedModels,
 					})
 					break
@@ -198,7 +204,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 				case "openRouterModels": {
 					const updatedModels = message.openRouterModels ?? {}
 					setOpenRouterModels({
-						[openRouterDefaultModelId]: openRouterDefaultModelInfo, // in case the extension sent a model list without the default model
+						[openRouterDefaultModelId]: openRouterDefaultModelInfo,
 						...updatedModels,
 					})
 					break
@@ -214,6 +220,13 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 				}
 				case "listApiConfig": {
 					setListApiConfigMeta(message.listApiConfig ?? [])
+					break
+				}
+				case "notificationSettings": {
+					setState((prevState) => ({
+						...prevState,
+						notificationSettings: message.settings
+					}))
 					break
 				}
 			}
@@ -282,6 +295,13 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setAutoApprovalEnabled: (value) => setState((prevState) => ({ ...prevState, autoApprovalEnabled: value })),
 		handleInputChange,
 		setCustomModes: (value) => setState((prevState) => ({ ...prevState, customModes: value })),
+		setNotificationSettings: (value) => {
+			setState((prevState) => ({ ...prevState, notificationSettings: value }))
+			vscode.postMessage({
+				type: "updateNotificationSettings",
+				settings: value
+			})
+		}
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

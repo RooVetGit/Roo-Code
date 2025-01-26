@@ -41,6 +41,7 @@ export interface ExtensionMessage {
 		| "autoApprovalEnabled"
 		| "updateCustomMode"
 		| "deleteCustomMode"
+		| "notificationSettings"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -110,7 +111,15 @@ export interface ExtensionState {
 	experimentalDiffStrategy?: boolean
 	autoApprovalEnabled?: boolean
 	customModes: ModeConfig[]
-	toolRequirements?: Record<string, boolean> // Map of tool names to their requirements (e.g. {"apply_diff": true} if diffEnabled)
+	toolRequirements?: Record<string, boolean>
+	notificationSettings?: {
+		telegram?: {
+			enabled: boolean
+			botToken: string
+			chatId: string
+			pollingInterval: number
+		}
+	}
 }
 
 export interface ClineMessage {
@@ -122,6 +131,7 @@ export interface ClineMessage {
 	images?: string[]
 	partial?: boolean
 	reasoning?: string
+	notificationId?: string // For tracking notification responses
 }
 
 export type ClineAsk =
@@ -136,6 +146,7 @@ export type ClineAsk =
 	| "mistake_limit_reached"
 	| "browser_action_launch"
 	| "use_mcp_server"
+	| "notification_response" // For handling notification responses
 
 export type ClineSay =
 	| "task"
@@ -157,6 +168,7 @@ export type ClineSay =
 	| "command"
 	| "mcp_server_request_started"
 	| "mcp_server_response"
+	| "notification_sent" // For tracking sent notifications
 
 export interface ClineSayTool {
 	tool:
@@ -169,6 +181,7 @@ export interface ClineSayTool {
 		| "listCodeDefinitionNames"
 		| "searchFiles"
 		| "switchMode"
+		| "sendNotification" // For sending notifications
 	path?: string
 	diff?: string
 	content?: string
@@ -176,6 +189,7 @@ export interface ClineSayTool {
 	filePattern?: string
 	mode?: string
 	reason?: string
+	notificationType?: "approval" | "question" // Type of notification being sent
 }
 
 // must keep in sync with system prompt

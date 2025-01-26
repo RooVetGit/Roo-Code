@@ -1,152 +1,131 @@
 import React, { useEffect, useState } from 'react';
+import { TextField, Switch, Stack, Typography } from '@mui/material';
 import { vscode } from '../../utils/vscode';
 
-interface NotificationSettings {
-  telegram?: {
+interface TelegramSettings {
     enabled: boolean;
     botToken: string;
     chatId: string;
     pollingInterval: number;
-  };
+}
+
+interface NotificationSettings {
+    telegram?: TelegramSettings;
 }
 
 export const NotificationSettings: React.FC = () => {
-  const [settings, setSettings] = useState<NotificationSettings>({});
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Load initial settings
-    vscode.postMessage({
-      type: 'getNotificationSettings'
+    const [settings, setSettings] = useState<NotificationSettings>({
+        telegram: {
+            enabled: false,
+            botToken: '',
+            chatId: '',
+            pollingInterval: 30
+        }
     });
 
-    const messageHandler = (event: MessageEvent) => {
-      const message = event.data;
-      if (message.type === 'notificationSettings') {
-        setSettings(message.settings);
-        setLoading(false);
-      }
+    useEffect(() => {
+        // Request current settings when component mounts
+        vscode.postMessage({
+            type: 'getNotificationSettings'
+        });
+    }, []);
+
+    useEffect(() => {
+        // Handle settings updates from extension
+        const messageHandler = (event: MessageEvent<any>) => {
+            const message = event.data;
+            if (message.type === 'notificationSettings') {
+                setSettings(message.settings);
+            }
+        };
+
+        window.addEventListener('message', messageHandler);
+        return () => window.removeEventListener('message', messageHandler);
+    }, []);
+
+    const handleSettingChange = (
+        path: string[],
+        value: string | boolean | number
+    ) => {
+        const newSettings = { ...settings };
+        let current: any = newSettings;
+        
+        // Navigate to the correct nested object
+        for (let i = 0; i < path.length - 1; i++) {
+            if (!current[path[i]]) {
+                current[path[i]] = {};
+            }
+            current = current[path[i]];
+        }
+        
+        // Set the value
+        current[path[path.length - 1]] = value;
+        
+        // Update local state
+        setSettings(newSettings);
+        
+        // Send update to extension
+        vscode.postMessage({
+            type: 'updateNotificationSettings',
+            settings: newSettings
+        });
     };
 
-    window.addEventListener('message', messageHandler);
-    return () => window.removeEventListener('message', messageHandler);
-  }, []);
-
-  const handleChange = (section: 'telegram', field: string, value: any) => {
-    const newSettings = {
-      ...settings,
-      [section]: {
-        ...settings[section],
-        [field]: value
-      }
-    };
-    setSettings(newSettings);
-
-    vscode.postMessage({
-      type: 'updateNotificationSettings',
-      settings: newSettings
-    });
-  };
-
-  if (loading) {
-    return <div>Loading settings...</div>;
-  }
-
-  return (
-    <div className="notification-settings">
-      <h3>Telegram Notifications</h3>
-      <div className="setting-group">
-        <label>
-          <input
-            type="checkbox"
-            checked={settings.telegram?.enabled ?? false}
-            onChange={(e) => handleChange('telegram', 'enabled', e.target.checked)}
-          />
-          Enable Telegram notifications
-        </label>
-
-        {settings.telegram?.enabled && (
-          <>
-            <div className="setting-item">
-              <label>Bot Token:</label>
-              <input
-                type="password"
-                value={settings.telegram?.botToken ?? ''}
-                onChange={(e) => handleChange('telegram', 'botToken', e.target.value)}
-                placeholder="Enter your Telegram bot token"
-              />
-              <small>
-                Create a new bot and get the token from{' '}
-                <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer">
-                  @BotFather
-                </a>
-              </small>
-            </div>
-
-            <div className="setting-item">
-              <label>Chat ID:</label>
-              <input
-                type="text"
-                value={settings.telegram?.chatId ?? ''}
-                onChange={(e) => handleChange('telegram', 'chatId', e.target.value)}
-                placeholder="Enter your Telegram chat ID"
-              />
-              <small>
-                Start a chat with your bot and send /start to get your chat ID
-              </small>
-            </div>
-
-            <div className="setting-item">
-              <label>Polling Interval (ms):</label>
-              <input
-                type="number"
-                value={settings.telegram?.pollingInterval ?? 1000}
-                onChange={(e) => handleChange('telegram', 'pollingInterval', parseInt(e.target.value))}
-                min="500"
-                max="5000"
-              />
-            </div>
-          </>
-        )}
-      </div>
-
-      <style jsx>{`
-        .notification-settings {
-          padding: 1rem;
-        }
-        .setting-group {
-          margin: 1rem 0;
-          padding: 1rem;
-          border: 1px solid var(--vscode-input-border);
-          border-radius: 4px;
-        }
-        .setting-item {
-          margin: 1rem 0;
-        }
-        label {
-          display: block;
-          margin-bottom: 0.5rem;
-        }
-        input[type="text"],
-        input[type="password"],
-        input[type="number"] {
-          width: 100%;
-          padding: 0.5rem;
-          margin-bottom: 0.25rem;
-          background: var(--vscode-input-background);
-          color: var(--vscode-input-foreground);
-          border: 1px solid var(--vscode-input-border);
-          border-radius: 2px;
-        }
-        small {
-          display: block;
-          color: var(--vscode-descriptionForeground);
-          margin-top: 0.25rem;
-        }
-        a {
-          color: var(--vscode-textLink-foreground);
-        }
-      `}</style>
-    </div>
-  );
+    return (
+        <Stack spacing={3} sx={{ padding: 2 }}>
+            <Typography variant="h6">Notification Settings</Typography>
+            
+            <Stack spacing={2}>
+                <Typography variant="subtitle1">Telegram</Typography>
+                
+                <Switch
+                    checked={settings.telegram?.enabled ?? false}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
+                        handleSettingChange(['telegram', 'enabled'], e.target.checked)
+                    }
+                    inputProps={{ 'aria-label': 'Enable Telegram notifications' }}
+                />
+                
+                {settings.telegram?.enabled && (
+                    <>
+                        <TextField
+                            label="Bot Token"
+                            value={settings.telegram?.botToken ?? ''}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
+                                handleSettingChange(['telegram', 'botToken'], e.target.value)
+                            }
+                            fullWidth
+                            type="password"
+                            helperText="Your Telegram bot token from @BotFather"
+                        />
+                        
+                        <TextField
+                            label="Chat ID"
+                            value={settings.telegram?.chatId ?? ''}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
+                                handleSettingChange(['telegram', 'chatId'], e.target.value)
+                            }
+                            fullWidth
+                            helperText="Your Telegram chat ID (message @userinfobot to get it)"
+                        />
+                        
+                        <TextField
+                            label="Polling Interval (seconds)"
+                            value={settings.telegram?.pollingInterval ?? 30}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                const value = parseInt(e.target.value);
+                                if (!isNaN(value) && value > 0) {
+                                    handleSettingChange(['telegram', 'pollingInterval'], value);
+                                }
+                            }}
+                            type="number"
+                            inputProps={{ min: 1 }}
+                            fullWidth
+                            helperText="How often to check for responses (in seconds)"
+                        />
+                    </>
+                )}
+            </Stack>
+        </Stack>
+    );
 };
