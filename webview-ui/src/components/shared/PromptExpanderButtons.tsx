@@ -12,7 +12,7 @@ export const PromptExpanderButtons: React.FC<PromptExpanderButtonsProps> = ({ on
 	const { promptExpanderPrompts = [] } = useExtensionState()
 
 	// Default settings
-	const settings = useMemo(
+	const { promptExpanderSettings } = useExtensionState()
 		() => ({
 			enableShortcuts: true,
 			defaultShortcutPattern: "Alt+$N",
