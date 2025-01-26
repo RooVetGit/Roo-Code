@@ -61,6 +61,7 @@ import { OpenRouterHandler } from "../api/providers/openrouter"
 import { McpHub } from "../services/mcp/McpHub"
 import crypto from "crypto"
 import { insertGroups } from "./diff/insert-groups"
+import { EXPERIMENT_IDS } from "../shared/experiments"
 import { SemanticSearchService } from "../services/semantic-search"
 import { parseAssistantMessage } from "./assistant-message/parse-assistant-message"
 
@@ -158,9 +159,8 @@ export class Cline {
 	async updateDiffStrategy(experimentalDiffStrategy?: boolean) {
 		// If not provided, get from current state
 		if (experimentalDiffStrategy === undefined) {
-			const { experimentalDiffStrategy: stateExperimentalDiffStrategy } =
-				(await this.providerRef.deref()?.getState()) ?? {}
-			experimentalDiffStrategy = stateExperimentalDiffStrategy ?? false
+			const { experiments: stateExperimental } = (await this.providerRef.deref()?.getState()) ?? {}
+			experimentalDiffStrategy = stateExperimental?.[EXPERIMENT_IDS.DIFF_STRATEGY] ?? false
 		}
 		this.diffStrategy = getDiffStrategy(this.api.getModel().id, this.fuzzyMatchThreshold, experimentalDiffStrategy)
 	}
@@ -817,7 +817,7 @@ export class Cline {
 			})
 		}
 
-		const { browserViewportSize, mode, customModePrompts, preferredLanguage } =
+		const { browserViewportSize, mode, customModePrompts, preferredLanguage, experiments } =
 			(await this.providerRef.deref()?.getState()) ?? {}
 		const { customModes } = (await this.providerRef.deref()?.getState()) ?? {}
 		const systemPrompt = await (async () => {
@@ -838,6 +838,7 @@ export class Cline {
 				this.customInstructions,
 				preferredLanguage,
 				this.diffEnabled,
+				experiments,
 			)
 		})()
 

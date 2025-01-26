@@ -4,6 +4,8 @@ import { useExtensionState } from "../../context/ExtensionStateContext"
 import { validateApiConfiguration, validateModelId } from "../../utils/validate"
 import { vscode } from "../../utils/vscode"
 import ApiOptions from "./ApiOptions"
+import ExperimentalFeature from "./ExperimentalFeature"
+import { experimentConfigs, EXPERIMENT_IDS, experimentConfigsMap } from "../../../../src/shared/experiments"
 import ApiConfigManager from "./ApiConfigManager"
 
 type SettingsViewProps = {
@@ -51,8 +53,8 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		setRequestDelaySeconds,
 		currentApiConfigName,
 		listApiConfigMeta,
-		experimentalDiffStrategy,
-		setExperimentalDiffStrategy,
+		experiments,
+		setExperimentEnabled,
 		alwaysAllowModeSwitch,
 		setAlwaysAllowModeSwitch,
 		semanticSearchStatus,
@@ -126,7 +128,12 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 				text: currentApiConfigName,
 				apiConfiguration,
 			})
-			vscode.postMessage({ type: "experimentalDiffStrategy", bool: experimentalDiffStrategy })
+
+			vscode.postMessage({
+				type: "updateExperimental",
+				values: experiments,
+			})
+
 			vscode.postMessage({ type: "alwaysAllowModeSwitch", bool: alwaysAllowModeSwitch })
 			vscode.postMessage({ type: "semanticSearchMaxResults", value: maxResults })
 			vscode.postMessage({ type: "semanticSearchStatus", text: semanticSearchStatus })
@@ -646,7 +653,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 								setDiffEnabled(e.target.checked)
 								if (!e.target.checked) {
 									// Reset experimental strategy when diffs are disabled
-									setExperimentalDiffStrategy(false)
+									setExperimentEnabled(EXPERIMENT_IDS.DIFF_STRATEGY, false)
 								}
 							}}>
 							<span style={{ fontWeight: "500" }}>Enable editing through diffs</span>
@@ -662,35 +669,14 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 						</p>
 
 						{diffEnabled && (
-							<div
-								style={{
-									marginTop: 10,
-									paddingLeft: 10,
-									borderLeft: "2px solid var(--vscode-button-background)",
-								}}>
-								<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-									<span style={{ color: "var(--vscode-errorForeground)" }}>⚠️</span>
-									<VSCodeCheckbox
-										checked={experimentalDiffStrategy}
-										onChange={(e: any) => setExperimentalDiffStrategy(e.target.checked)}>
-										<span style={{ fontWeight: "500" }}>
-											Use experimental unified diff strategy
-										</span>
-									</VSCodeCheckbox>
-								</div>
-								<p
-									style={{
-										fontSize: "12px",
-										marginBottom: 15,
-										color: "var(--vscode-descriptionForeground)",
-									}}>
-									Enable the experimental unified diff strategy. This strategy might reduce the number
-									of retries caused by model errors but may cause unexpected behavior or incorrect
-									edits. Only enable if you understand the risks and are willing to carefully review
-									all changes.
-								</p>
-
-								<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+							<div style={{ marginTop: 10 }}>
+								<ExperimentalFeature
+									key={EXPERIMENT_IDS.DIFF_STRATEGY}
+									{...experimentConfigsMap.DIFF_STRATEGY}
+									enabled={experiments[EXPERIMENT_IDS.DIFF_STRATEGY] ?? false}
+									onChange={(enabled) => setExperimentEnabled(EXPERIMENT_IDS.DIFF_STRATEGY, enabled)}
+								/>
+								<div style={{ display: "flex", alignItems: "center", gap: "5px", marginTop: "15px" }}>
 									<span style={{ fontWeight: "500", minWidth: "100px" }}>Match precision</span>
 									<input
 										type="range"
@@ -723,6 +709,16 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 								</p>
 							</div>
 						)}
+						{experimentConfigs
+							.filter((config) => config.id !== EXPERIMENT_IDS.DIFF_STRATEGY)
+							.map((config) => (
+								<ExperimentalFeature
+									key={config.id}
+									{...config}
+									enabled={experiments[config.id] ?? false}
+									onChange={(enabled) => setExperimentEnabled(config.id, enabled)}
+								/>
+							))}
 					</div>
           <div style={{ marginBottom: 5 }}>
             <div style={{ marginBottom: 10 }}>
