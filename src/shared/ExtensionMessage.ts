@@ -128,6 +128,7 @@ export interface ClineMessage {
 	text?: string
 	images?: string[]
 	partial?: boolean
+	reasoning?: string
 }
 
 export type ClineAsk =
@@ -149,6 +150,7 @@ export type ClineSay =
 	| "api_req_started"
 	| "api_req_finished"
 	| "text"
+	| "reasoning"
 	| "completion_result"
 	| "user_feedback"
 	| "user_feedback_diff"
