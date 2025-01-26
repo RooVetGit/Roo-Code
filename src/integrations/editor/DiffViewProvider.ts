@@ -88,7 +88,6 @@ export class DiffViewProvider {
 		if (!isFinal) {
 			accumulatedLines.pop() // remove the last partial line only if it's not the final update
 		}
-		const diffLines = accumulatedLines.slice(this.streamedLines.length)
 
 		const diffEditor = this.activeDiffEditor
 		const document = diffEditor?.document
@@ -96,27 +95,39 @@ export class DiffViewProvider {
 			throw new Error("User closed text editor, unable to edit file...")
 		}
 
-		// Place cursor at the beginning of the diff editor to keep it out of the way of the stream animation
+		// Calculate the diff between streamed lines and accumulated lines
+		const diffs = diff.diffLines(this.streamedLines.join("\n"), accumulatedLines.join("\n"))
+		let currentLine = 0
+
+		// Place cursor at the beginning of the diff editor
 		const beginningOfDocument = new vscode.Position(0, 0)
 		diffEditor.selection = new vscode.Selection(beginningOfDocument, beginningOfDocument)
 
-		for (let i = 0; i < diffLines.length; i++) {
-			const currentLine = this.streamedLines.length + i
-			// Replace all content up to the current line with accumulated lines
-			// This is necessary (as compared to inserting one line at a time) to handle cases where html tags on previous lines are auto closed for example
-			const edit = new vscode.WorkspaceEdit()
-			const rangeToReplace = new vscode.Range(0, 0, currentLine + 1, 0)
-			const contentToReplace = accumulatedLines.slice(0, currentLine + 1).join("\n") + "\n"
-			edit.replace(document.uri, rangeToReplace, contentToReplace)
-			await vscode.workspace.applyEdit(edit)
-			// Update decorations
-			this.activeLineController.setActiveLine(currentLine)
-			this.fadedOverlayController.updateOverlayAfterLine(currentLine, document.lineCount)
-			// Scroll to the current line
-			this.scrollEditorToLine(currentLine)
+		// Apply changes and update decorations only for changed sections
+		for (const part of diffs) {
+			if (part.added) {
+				const edit = new vscode.WorkspaceEdit()
+				const lines = part.value.split("\n")
+				const contentToAdd = part.value.endsWith("\n") ? part.value : part.value + "\n"
+				edit.insert(document.uri, new vscode.Position(currentLine, 0), contentToAdd)
+				await vscode.workspace.applyEdit(edit)
+
+				// Update decorations for the changed section
+				for (let i = 0; i < lines.length; i++) {
+					this.activeLineController.setActiveLine(currentLine + i)
+					this.fadedOverlayController.updateOverlayAfterLine(currentLine + i, document.lineCount)
+				}
+				// Scroll to the first line of the changed section
+				this.scrollEditorToLine(currentLine)
+				currentLine += lines.length
+			} else if (!part.removed) {
+				currentLine += part.count || 0
+			}
 		}
+
 		// Update the streamedLines with the new accumulated content
 		this.streamedLines = accumulatedLines
+
 		if (isFinal) {
 			// Handle any remaining lines if the new content is shorter than the original
 			if (this.streamedLines.length < document.lineCount) {
@@ -124,16 +135,23 @@ export class DiffViewProvider {
 				edit.delete(document.uri, new vscode.Range(this.streamedLines.length, 0, document.lineCount, 0))
 				await vscode.workspace.applyEdit(edit)
 			}
+
 			// Preserve empty last line if original content had one
+			// Add empty last line if original content had one
 			const hasEmptyLastLine = this.originalContent?.endsWith("\n")
-			if (hasEmptyLastLine && !accumulatedContent.endsWith("\n")) {
-				accumulatedContent += "\n"
+			if (hasEmptyLastLine) {
+				const accumulatedLines = accumulatedContent.split("\n")
+				if (accumulatedLines[accumulatedLines.length - 1] !== "") {
+					accumulatedContent += "\n"
+				}
 			}
+
 			// Apply the final content
 			const finalEdit = new vscode.WorkspaceEdit()
 			finalEdit.replace(document.uri, new vscode.Range(0, 0, document.lineCount, 0), accumulatedContent)
 			await vscode.workspace.applyEdit(finalEdit)
-			// Clear all decorations at the end (after applying final edit)
+
+			// Clear all decorations at the end
 			this.fadedOverlayController.clear()
 			this.activeLineController.clear()
 		}
@@ -142,19 +160,34 @@ export class DiffViewProvider {
 	async saveChanges(): Promise<{
 		newProblemsMessage: string | undefined
 		userEdits: string | undefined
+		autoFormattingEdits: string | undefined
 		finalContent: string | undefined
 	}> {
 		if (!this.relPath || !this.newContent || !this.activeDiffEditor) {
-			return { newProblemsMessage: undefined, userEdits: undefined, finalContent: undefined }
+			return {
+				newProblemsMessage: undefined,
+				userEdits: undefined,
+				autoFormattingEdits: undefined,
+				finalContent: undefined,
+			}
 		}
 		const absolutePath = path.resolve(this.cwd, this.relPath)
 		const updatedDocument = this.activeDiffEditor.document
-		const editedContent = updatedDocument.getText()
+
+		// get the contents before save operation which may do auto-formatting
+		const preSaveContent = updatedDocument.getText()
+
 		if (updatedDocument.isDirty) {
 			await updatedDocument.save()
 		}
 
-		await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), { preview: false })
+		// await delay(100)
+		// get text after save in case there is any auto-formatting done by the editor
+		const postSaveContent = updatedDocument.getText()
+
+		await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
+			preview: false,
+		})
 		await this.closeAllDiffViews()
 
 		/*
@@ -171,7 +204,7 @@ export class DiffViewProvider {
 		accepts the changes, they can always debug later using the '@problems' mention.
 		This way, Roo only becomes aware of new problems resulting from his edits
 		and can address them accordingly. If problems don't change immediately after
-		applying a fix, won't be notified, which is generally fine since the
+		applying a fix, Roo won't be notified, which is generally fine since the
 		initial fix is usually correct and it may just take time for linters to catch up.
 		*/
 		const postDiagnostics = vscode.languages.getDiagnostics()
@@ -187,20 +220,38 @@ export class DiffViewProvider {
 
 		// If the edited content has different EOL characters, we don't want to show a diff with all the EOL differences.
 		const newContentEOL = this.newContent.includes("\r\n") ? "\r\n" : "\n"
-		const normalizedEditedContent = editedContent.replace(/\r\n|\n/g, newContentEOL).trimEnd() + newContentEOL // trimEnd to fix issue where editor adds in extra new line automatically
+		const normalizedPreSaveContent = preSaveContent.replace(/\r\n|\n/g, newContentEOL).trimEnd() + newContentEOL // trimEnd to fix issue where editor adds in extra new line automatically
+		const normalizedPostSaveContent = postSaveContent.replace(/\r\n|\n/g, newContentEOL).trimEnd() + newContentEOL // this is the final content we return to the model to use as the new baseline for future edits
 		// just in case the new content has a mix of varying EOL characters
 		const normalizedNewContent = this.newContent.replace(/\r\n|\n/g, newContentEOL).trimEnd() + newContentEOL
-		if (normalizedEditedContent !== normalizedNewContent) {
-			// user made changes before approving edit
-			const userEdits = formatResponse.createPrettyPatch(
+
+		let userEdits: string | undefined
+		if (normalizedPreSaveContent !== normalizedNewContent) {
+			// user made changes before approving edit. let the model know about user made changes (not including post-save auto-formatting changes)
+			userEdits = formatResponse.createPrettyPatch(
 				this.relPath.toPosix(),
 				normalizedNewContent,
-				normalizedEditedContent,
+				normalizedPreSaveContent,
 			)
-			return { newProblemsMessage, userEdits, finalContent: normalizedEditedContent }
 		} else {
-			// no changes to cline's edits
-			return { newProblemsMessage, userEdits: undefined, finalContent: normalizedEditedContent }
+			// no changes to roo's edits
+		}
+
+		let autoFormattingEdits: string | undefined
+		if (normalizedPreSaveContent !== normalizedPostSaveContent) {
+			// auto-formatting was done by the editor
+			autoFormattingEdits = formatResponse.createPrettyPatch(
+				this.relPath.toPosix(),
+				normalizedPreSaveContent,
+				normalizedPostSaveContent,
+			)
+		}
+
+		return {
+			newProblemsMessage,
+			userEdits,
+			autoFormattingEdits,
+			finalContent: normalizedPostSaveContent,
 		}
 	}
 
