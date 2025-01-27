@@ -102,6 +102,7 @@ export interface ExtensionState {
 	enhancementApiConfigId?: string
 	experimentalDiffStrategy?: boolean
 	autoApprovalEnabled?: boolean
+	semanticSearchStatus: string
 }
 
 export interface ClineMessage {

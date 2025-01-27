@@ -96,6 +96,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		enhancementApiConfigId: "",
 		experimentalDiffStrategy: false,
 		autoApprovalEnabled: false,
+		semanticSearchStatus: "Not Indexed",
 	})
 	const [didHydrateState, setDidHydrateState] = useState(false)
 	const [showWelcome, setShowWelcome] = useState(false)

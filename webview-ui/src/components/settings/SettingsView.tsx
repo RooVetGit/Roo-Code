@@ -66,12 +66,11 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		listApiConfigMeta,
 		experimentalDiffStrategy,
 		setExperimentalDiffStrategy,
+		semanticSearchStatus,
 	} = useExtensionState()
 	const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>(undefined)
 	const [modelIdErrorMessage, setModelIdErrorMessage] = useState<string | undefined>(undefined)
 	const [commandInput, setCommandInput] = useState("")
-	const [maxMemoryMB, setMaxMemoryMB] = useState<number>(100) // Default 100MB
-	const [minScore, setMinScore] = useState<number>(0.7) // Default 0.7
 	const [maxResults, setMaxResults] = useState<number>(10) // Default 10
 	const [indexingProgress, setIndexingProgress] = useState<
 		{ current: number; total: number; status: string } | undefined
@@ -130,9 +129,8 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 				apiConfiguration,
 			})
 			vscode.postMessage({ type: "experimentalDiffStrategy", bool: experimentalDiffStrategy })
-			vscode.postMessage({ type: "semanticSearchMaxMemory", value: maxMemoryMB * 1024 * 1024 }) // Convert to bytes
-			vscode.postMessage({ type: "semanticSearchMinScore", value: minScore })
 			vscode.postMessage({ type: "semanticSearchMaxResults", value: maxResults })
+			vscode.postMessage({ type: "semanticSearchStatus", text: semanticSearchStatus })
 			onDone()
 		}
 	}
@@ -754,66 +752,6 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 
 						<div style={{ marginBottom: 15 }}>
 							<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-								<span style={{ fontWeight: "500", minWidth: "150px" }}>Maximum Memory</span>
-								<input
-									type="range"
-									min="50"
-									max="1000"
-									step="50"
-									value={maxMemoryMB}
-									onChange={(e) => setMaxMemoryMB(parseInt(e.target.value))}
-									style={{
-										flexGrow: 1,
-										accentColor: "var(--vscode-button-background)",
-										height: "2px",
-									}}
-								/>
-								<span style={{ minWidth: "60px", textAlign: "left" }}>{maxMemoryMB} MB</span>
-							</div>
-							<p
-								style={{
-									fontSize: "12px",
-									marginTop: "5px",
-									color: "var(--vscode-descriptionForeground)",
-								}}>
-								Maximum memory usage for semantic search index and cache. When exceeded, older entries
-								will be removed.
-							</p>
-						</div>
-
-						<div style={{ marginBottom: 15 }}>
-							<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-								<span style={{ fontWeight: "500", minWidth: "150px" }}>Minimum Score</span>
-								<input
-									type="range"
-									min="0"
-									max="1"
-									step="0.05"
-									value={minScore}
-									onChange={(e) => setMinScore(parseFloat(e.target.value))}
-									style={{
-										flexGrow: 1,
-										accentColor: "var(--vscode-button-background)",
-										height: "2px",
-									}}
-								/>
-								<span style={{ minWidth: "60px", textAlign: "left" }}>
-									{(minScore * 100).toFixed(0)}%
-								</span>
-							</div>
-							<p
-								style={{
-									fontSize: "12px",
-									marginTop: "5px",
-									color: "var(--vscode-descriptionForeground)",
-								}}>
-								Minimum similarity score threshold for search results. Higher values return more
-								relevant but fewer results.
-							</p>
-						</div>
-
-						<div style={{ marginBottom: 15 }}>
-							<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
 								<span style={{ fontWeight: "500", minWidth: "150px" }}>Maximum Results</span>
 								<input
 									type="range"
@@ -898,6 +836,24 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 								Manage the semantic search index. Reindexing will rebuild the index for all files in the
 								workspace.
 							</p>
+						</div>
+
+						<div style={{ marginBottom: 15 }}>
+							<div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: 10 }}>
+								<span style={{ fontWeight: "500" }}>Current Workspace Status:</span>
+								<span
+									style={{
+										color:
+											semanticSearchStatus === "Indexed"
+												? "var(--vscode-gitDecoration-untrackedResourceForeground)"
+												: semanticSearchStatus === "Indexing"
+													? "var(--vscode-problemsWarningIcon-foreground)"
+													: "var(--vscode-problemsErrorIcon-foreground)",
+										fontWeight: 500,
+									}}>
+									{semanticSearchStatus}
+								</span>
+							</div>
 						</div>
 					</div>
 				</div>

@@ -74,12 +74,11 @@ export interface WebviewMessage {
 		| "enhancementApiConfigId"
 		| "experimentalDiffStrategy"
 		| "autoApprovalEnabled"
-		| "semanticSearchMaxMemory"
-		| "semanticSearchMinScore"
 		| "semanticSearchMaxResults"
 		| "indexingProgress"
 		| "deleteSemanticIndex"
 		| "reindexSemantic"
+		| "semanticSearchStatus"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
