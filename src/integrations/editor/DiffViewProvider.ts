@@ -95,33 +95,38 @@ export class DiffViewProvider {
 			throw new Error("User closed text editor, unable to edit file...")
 		}
 
-		// Calculate the diff between streamed lines and accumulated lines
-		const diffs = diff.diffLines(this.streamedLines.join("\n"), accumulatedLines.join("\n"))
-		let currentLine = 0
+		const diffLines = accumulatedLines.slice(this.streamedLines.length)
 
-		// Place cursor at the beginning of the diff editor
+		// Place cursor at the beginning of the diff editor to keep it out of the way of the stream animation
 		const beginningOfDocument = new vscode.Position(0, 0)
 		diffEditor.selection = new vscode.Selection(beginningOfDocument, beginningOfDocument)
 
-		// Apply changes and update decorations only for changed sections
-		for (const part of diffs) {
-			if (part.added) {
-				const edit = new vscode.WorkspaceEdit()
-				const lines = part.value.split("\n")
-				const contentToAdd = part.value.endsWith("\n") ? part.value : part.value + "\n"
-				edit.insert(document.uri, new vscode.Position(currentLine, 0), contentToAdd)
-				await vscode.workspace.applyEdit(edit)
+		// Calculate chunk size based on total lines
+		const totalLines = accumulatedLines.length
+		const chunkSize = Math.max(50, Math.floor(totalLines / 20)) // Process ~20 chunks total
+		const totalChunks = Math.ceil(diffLines.length / chunkSize)
+		const delayPerChunk = 10 // 10ms between chunks
 
-				// Update decorations for the changed section
-				for (let i = 0; i < lines.length; i++) {
-					this.activeLineController.setActiveLine(currentLine + i)
-					this.fadedOverlayController.updateOverlayAfterLine(currentLine + i, document.lineCount)
-				}
-				// Scroll to the first line of the changed section
-				this.scrollEditorToLine(currentLine)
-				currentLine += lines.length
-			} else if (!part.removed) {
-				currentLine += part.count || 0
+		for (let chunk = 0; chunk < totalChunks; chunk++) {
+			const startIdx = chunk * chunkSize
+			const endIdx = Math.min(startIdx + chunkSize, diffLines.length)
+			const currentLine = this.streamedLines.length + endIdx
+
+			// Replace content up to current chunk
+			const edit = new vscode.WorkspaceEdit()
+			const rangeToReplace = new vscode.Range(0, 0, currentLine, 0)
+			const contentToReplace = accumulatedLines.slice(0, this.streamedLines.length + endIdx).join("\n") + "\n"
+			edit.replace(document.uri, rangeToReplace, contentToReplace)
+			await vscode.workspace.applyEdit(edit)
+
+			// Update decorations and scroll less frequently
+			this.activeLineController.setActiveLine(currentLine)
+			this.fadedOverlayController.updateOverlayAfterLine(currentLine, document.lineCount)
+			this.scrollEditorToLine(currentLine)
+
+			if (chunk < totalChunks - 1) {
+				// Don't delay on last chunk
+				await new Promise((resolve) => setTimeout(resolve, delayPerChunk))
 			}
 		}
 
@@ -360,10 +365,10 @@ export class DiffViewProvider {
 
 	private scrollEditorToLine(line: number) {
 		if (this.activeDiffEditor) {
-			const scrollLine = line + 4
+			const scrollLine = line + 2 // Reduced offset for smoother appearance
 			this.activeDiffEditor.revealRange(
 				new vscode.Range(scrollLine, 0, scrollLine, 0),
-				vscode.TextEditorRevealType.InCenter,
+				vscode.TextEditorRevealType.InCenterIfOutsideViewport, // Changed to only scroll if needed
 			)
 		}
 	}
