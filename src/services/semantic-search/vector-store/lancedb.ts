@@ -1,4 +1,4 @@
-import { Vector, VectorStore, VectorWithMetadata } from "./types"
+import { Vector, VectorSearchResult, VectorStore, VectorWithMetadata } from "./types"
 import * as lancedb from "@lancedb/lancedb"
 import { Connection, Table } from "@lancedb/lancedb"
 import * as arrow from "apache-arrow"
@@ -95,31 +95,18 @@ export class LanceDBVectorStore implements VectorStore {
 		await this.createIndexIfNeeded()
 	}
 
-	async search(queryVector: Vector, k: number): Promise<SearchResult[]> {
+	async search(queryVector: Vector, k: number): Promise<VectorSearchResult[]> {
 		const reranker = await lancedb.rerankers.RRFReranker.create(k)
 		const results = await this.table.vectorSearch(queryVector.values).limit(k).rerank(reranker).toArray()
 
-		console.log(JSON.stringify(results, null, 2))
-
-		return results.map((row: any) => {
-			const metadata = this.parseMetadata(row.metadata)
-			const result: CodeSearchResult = {
-				type: "code",
-				score: row.relevance || 0,
-				filePath: metadata.filePath,
-				content: metadata.content,
-				startLine: metadata.startLine,
-				endLine: metadata.endLine,
-				name: metadata.name,
-				codeType: metadata.type,
-				vector: {
-					values: row.vector,
-					dimension: this.VECTOR_DIMENSION,
-				},
-				metadata,
-			}
-			return result
-		})
+		return results.map((r) => ({
+			vector: {
+				values: r.vector,
+				dimension: r.vector.length,
+			},
+			score: r.relevance || 0,
+			metadata: this.parseMetadata(r.metadata) as CodeDefinition,
+		}))
 	}
 
 	async load(): Promise<void> {
