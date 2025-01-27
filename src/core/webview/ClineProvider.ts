@@ -44,7 +44,6 @@ import { EXPERIMENT_IDS, experiments as Experiments, experimentDefault, Experime
 import { CustomSupportPrompts, supportPrompt } from "../../shared/support-prompt"
 
 import { ACTION_NAMES } from "../CodeActionProvider"
-import { error } from "console"
 import { SemanticSearchConfig, SemanticSearchService } from "../../services/semantic-search"
 import { listFiles } from "../../services/glob/list-files"
 
@@ -723,7 +722,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							this.cline.abortTask()
 							await pWaitFor(() => this.cline === undefined || this.cline.didFinishAborting, {
 								timeout: 3_000,
-							}).catch(() => {
+							}).catch((error) => {
 								this.outputChannel.appendLine(
 									`Failed to abort task ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 								)
