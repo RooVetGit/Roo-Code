@@ -176,6 +176,7 @@ export function activate(context: vscode.ExtensionContext) {
 		context: vscode.ExtensionContext,
 		command: string,
 		promptType: keyof typeof ACTION_NAMES,
+		inNewTask: boolean,
 		inputPrompt?: string,
 		inputPlaceholder?: string,
 	) => {
@@ -205,8 +206,23 @@ export function activate(context: vscode.ExtensionContext) {
 		)
 	}
 
+	// Helper function to register both versions of a code action
+	const registerCodeActionPair = (
+		context: vscode.ExtensionContext,
+		baseCommand: string,
+		promptType: keyof typeof ACTION_NAMES,
+		inputPrompt?: string,
+		inputPlaceholder?: string,
+	) => {
+		// Register new task version
+		registerCodeAction(context, baseCommand, promptType, true, inputPrompt, inputPlaceholder)
+
+		// Register current task version
+		registerCodeAction(context, `${baseCommand}InCurrentTask`, promptType, false, inputPrompt, inputPlaceholder)
+	}
+
 	// Register code action commands
-	registerCodeAction(
+	registerCodeActionPair(
 		context,
 		"roo-cline.explainCode",
 		"EXPLAIN",
@@ -214,7 +230,7 @@ export function activate(context: vscode.ExtensionContext) {
 		"E.g. How does the error handling work?",
 	)
 
-	registerCodeAction(
+	registerCodeActionPair(
 		context,
 		"roo-cline.fixCode",
 		"FIX",
@@ -222,15 +238,7 @@ export function activate(context: vscode.ExtensionContext) {
 		"E.g. Maintain backward compatibility",
 	)
 
-	registerCodeAction(
-		context,
-		"roo-cline.fixCodeInCurrentTask",
-		"FIX", // keep this for use the same prompt with FIX command
-		"What would you like Roo to fix?",
-		"E.g. Maintain backward compatibility",
-	)
-
-	registerCodeAction(
+	registerCodeActionPair(
 		context,
 		"roo-cline.improveCode",
 		"IMPROVE",
