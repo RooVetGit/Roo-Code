@@ -105,8 +105,6 @@ type GlobalStateKey =
 	| "enhancementApiConfigId"
 	| "experimentalDiffStrategy"
 	| "autoApprovalEnabled"
-	| "semanticSearchMaxMemory"
-	| "semanticSearchMinScore"
 	| "semanticSearchMaxResults"
 
 export const GlobalFileNames = {
@@ -1132,14 +1130,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						}
 						await this.postStateToWebview()
 						break
-					case "semanticSearchMaxMemory":
-						await this.updateGlobalState("semanticSearchMaxMemory", message.value)
-						await this.postStateToWebview()
-						break
-					case "semanticSearchMinScore":
-						await this.updateGlobalState("semanticSearchMinScore", message.value)
-						await this.postStateToWebview()
-						break
 					case "semanticSearchMaxResults":
 						await this.updateGlobalState("semanticSearchMaxResults", message.value)
 						await this.postStateToWebview()
@@ -1162,10 +1152,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							const config: SemanticSearchConfig = {
 								storageDir: await this.ensureCacheDirectoryExists(),
 								context: this.context,
-								maxMemoryBytes:
-									((await this.getGlobalState("semanticSearchMaxMemory")) as number | undefined) ??
-									100 * 1024 * 1024,
-								minScore: (await this.getGlobalState("semanticSearchMinScore")) as number | undefined,
 								maxResults: (await this.getGlobalState("semanticSearchMaxResults")) as
 									| number
 									| undefined,
@@ -1196,10 +1182,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						const config: SemanticSearchConfig = {
 							storageDir: path.join(await this.ensureCacheDirectoryExists(), "semantic-search"),
 							context: this.context,
-							maxMemoryBytes:
-								((await this.getGlobalState("semanticSearchMaxMemory")) as number | undefined) ??
-								100 * 1024 * 1024,
-							minScore: (await this.getGlobalState("semanticSearchMinScore")) as number | undefined,
 							maxResults: (await this.getGlobalState("semanticSearchMaxResults")) as number | undefined,
 						}
 
@@ -1897,6 +1879,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			enhancementApiConfigId,
 			experimentalDiffStrategy: experimentalDiffStrategy ?? false,
 			autoApprovalEnabled: autoApprovalEnabled ?? false,
+			semanticSearchStatus: this.semanticSearchService?.getStatus() || "Not indexed",
 		}
 	}
 
@@ -2014,8 +1997,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			enhancementApiConfigId,
 			experimentalDiffStrategy,
 			autoApprovalEnabled,
-			semanticSearchMaxMemory,
-			semanticSearchMinScore,
 			semanticSearchMaxResults,
 		] = await Promise.all([
 			this.getGlobalState("apiProvider") as Promise<ApiProvider | undefined>,
@@ -2079,8 +2060,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("enhancementApiConfigId") as Promise<string | undefined>,
 			this.getGlobalState("experimentalDiffStrategy") as Promise<boolean | undefined>,
 			this.getGlobalState("autoApprovalEnabled") as Promise<boolean | undefined>,
-			this.getGlobalState("semanticSearchMaxMemory") as Promise<number | undefined>,
-			this.getGlobalState("semanticSearchMinScore") as Promise<number | undefined>,
 			this.getGlobalState("semanticSearchMaxResults") as Promise<number | undefined>,
 		])
 
@@ -2190,8 +2169,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			enhancementApiConfigId,
 			experimentalDiffStrategy: experimentalDiffStrategy ?? false,
 			autoApprovalEnabled: autoApprovalEnabled ?? false,
-			semanticSearchMaxMemory,
-			semanticSearchMinScore,
 			semanticSearchMaxResults,
 		}
 	}
@@ -2286,13 +2263,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	private async initializeSemanticSearch() {
-		const { semanticSearchMaxMemory, semanticSearchMinScore, semanticSearchMaxResults } = await this.getState()
+		const { semanticSearchMaxResults } = await this.getState()
 
 		this.semanticSearchService = new SemanticSearchService({
 			storageDir: await this.ensureCacheDirectoryExists(),
 			context: this.context,
-			maxMemoryBytes: semanticSearchMaxMemory ?? 100 * 1024 * 1024, // Default 100MB
-			minScore: semanticSearchMinScore ?? 0.7, // Default 0.7
 			maxResults: semanticSearchMaxResults ?? 10, // Default 10
 		})
 

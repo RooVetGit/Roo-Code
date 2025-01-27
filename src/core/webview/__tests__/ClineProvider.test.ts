@@ -297,6 +297,7 @@ describe("ClineProvider", () => {
 			mcpEnabled: true,
 			requestDelaySeconds: 5,
 			mode: defaultModeSlug,
+			semanticSearchStatus: "Not Indexed",
 		}
 
 		const message: ExtensionMessage = {
