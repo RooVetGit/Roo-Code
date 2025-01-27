@@ -6,7 +6,7 @@ import {
 	FileSearchResult,
 	CodeSearchResult,
 } from "./types"
-import { Vector, VectorWithMetadata } from "./vector-store/types"
+import { Vector, VectorSearchResult, VectorWithMetadata } from "./vector-store/types"
 import { WorkspaceCache } from "./cache/workspace-cache"
 import * as path from "path"
 import { EmbeddingModel } from "./embeddings/types"
@@ -25,11 +25,6 @@ export interface SemanticSearchConfig {
 	storageDir: string
 
 	/**
-	 * Minimum similarity score (0-1) for results
-	 */
-	minScore?: number
-
-	/**
 	 * Maximum number of results to return
 	 */
 	maxResults?: number
@@ -45,11 +40,6 @@ export interface SemanticSearchConfig {
 	context: vscode.ExtensionContext
 
 	/**
-	 * Maximum memory usage in bytes (default: 100MB)
-	 */
-	maxMemoryBytes?: number
-
-	/**
 	 * Model type to use (default: minilm)
 	 */
 	modelType?: ModelType
@@ -62,10 +52,6 @@ export enum WorkspaceIndexStatus {
 }
 
 export class SemanticSearchService {
-	// Scores for code and file search results
-	private static readonly CODE_SEARCH_SCORE = 0.8
-	private static readonly FILE_SEARCH_SCORE = 0.5
-
 	// Supported file extensions for semantic search
 	private static readonly SUPPORTED_CODE_EXTENSIONS = new Set([
 		"js",
@@ -445,29 +431,33 @@ export class SemanticSearchService {
 			const dedupedResults = this.deduplicateResults(results)
 			console.log(`Deduplicated to ${dedupedResults.length} results`)
 
+			// Modified section: Prioritize code results but maintain original order
+			const maxResults = this.config.maxResults ?? 10
+			const finalResults: VectorSearchResult[] = []
+
+			// First collect all code results in original order
 			const codeResults = dedupedResults.filter((r) => r.metadata?.type !== "file")
+			// Then collect all file results in original order
 			const fileResults = dedupedResults.filter((r) => r.metadata?.type === "file")
 
-			//Assume that all results are already ranked by score
-			/*let filteredCodeResults = codeResults.filter(
-				(r) => r.score && r.score >= SemanticSearchService.CODE_SEARCH_SCORE,
-			)
-			let filteredFileResults = fileResults.filter(
-				(r) => r.score && r.score >= SemanticSearchService.FILE_SEARCH_SCORE,
-			)
+			// Add code results first until we reach maxResults
+			for (const result of codeResults) {
+				if (finalResults.length >= maxResults) break
+				finalResults.push(result)
+			}
 
-			console.log(`Filtering code results with minimum score ${SemanticSearchService.CODE_SEARCH_SCORE}`)
-			console.log(`Filtering file results with minimum score ${SemanticSearchService.FILE_SEARCH_SCORE}`)
+			// Then add file results to fill remaining slots
+			for (const result of fileResults) {
+				if (finalResults.length >= maxResults) break
+				finalResults.push(result)
+			}
 
-			const sortedCodeResults = filteredCodeResults.sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
-			const sortedFileResults = filteredFileResults.sort((a, b) => (b.score ?? 0) - (a.score ?? 0))*/
+			// Trim to exact max results (in case both arrays had more than needed)
+			const trimmedResults = finalResults.slice(0, maxResults)
 
-			const finalResults = codeResults
-				.slice(0, this.config.maxResults ?? 10 / 2)
-				.concat(fileResults.slice(0, this.config.maxResults ?? 10 / 2))
-
-			console.log("Final results:", finalResults)
-			return finalResults.map((r) => this.formatResult(r))
+			const formattedResults = trimmedResults.map((r) => this.formatResult(r))
+			console.log("Formatted results:", formattedResults)
+			return formattedResults
 		} catch (error) {
 			console.error("Error during semantic search:", error)
 			throw error
@@ -479,58 +469,37 @@ export class SemanticSearchService {
 			throw new Error("Invalid metadata in search result")
 		}
 
-		if (result.metadata.type === "file") {
+		if (result.metadata.type === SearchResultType.File) {
 			const { content, ...restMetadata } = result.metadata
 			return {
-				type: "file",
-				score: result.score ?? 0,
+				type: SearchResultType.File,
 				filePath: result.metadata.filePath,
 				name: result.metadata.name,
 				metadata: restMetadata,
 			} as FileSearchResult
 		}
 
-		// Only return code result if we have all required properties
-		if (
-			result.metadata.content &&
-			result.metadata.startLine !== undefined &&
-			result.metadata.endLine !== undefined &&
-			result.metadata.name &&
-			result.metadata.type
-		) {
-			return {
-				type: "code",
-				score: result.score ?? 0,
-				filePath: result.metadata.filePath,
-				content: result.metadata.content,
-				startLine: result.metadata.startLine,
-				endLine: result.metadata.endLine,
-				name: result.metadata.name,
-				codeType: result.metadata.type,
-				metadata: result.metadata,
-			} as CodeSearchResult
-		}
-
-		// Default to file result if missing any required code properties
-		// Remove content from metadata before returning it
-		const { content, ...restMetadata } = result.metadata
 		return {
-			type: "file",
-			score: result.score ?? 0,
+			type: SearchResultType.Code,
 			filePath: result.metadata.filePath,
-			metadata: restMetadata,
-		} as FileSearchResult
+			content: result.metadata.content,
+			startLine: result.metadata.startLine,
+			endLine: result.metadata.endLine,
+			name: result.metadata.name,
+			codeType: result.metadata.type,
+			metadata: result.metadata,
+		} as CodeSearchResult
 	}
 
-	private deduplicateResults(results: VectorWithMetadata[]): VectorWithMetadata[] {
-		const dedupedResults: VectorWithMetadata[] = []
+	private deduplicateResults(results: VectorSearchResult[]): VectorSearchResult[] {
+		const dedupedResults: VectorSearchResult[] = []
 		const seenPaths = new Set<string>()
 		const seenContent = new Set<string>()
 		for (const result of results) {
 			const filePath = result.metadata.filePath
 			if (!filePath) continue
 
-			if (result.metadata.type === "file") {
+			if (result.metadata.type === SearchResultType.File) {
 				if (!seenPaths.has(filePath)) {
 					dedupedResults.push(result)
 					seenPaths.add(filePath)
