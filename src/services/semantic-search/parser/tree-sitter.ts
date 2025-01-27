@@ -4,6 +4,7 @@ import { loadRequiredLanguageParsers } from "../../tree-sitter/languageParser"
 import type Parser from "web-tree-sitter"
 import { CodeSegment, ParsedFile, SemanticParser, IMPORTANCE_WEIGHTS, CodeSegmentType } from "./types"
 import typescript from "./queries/typescript"
+import javascript from "./queries/javascript"
 import crypto from "crypto"
 
 export class TreeSitterParser implements SemanticParser {
@@ -13,7 +14,7 @@ export class TreeSitterParser implements SemanticParser {
 
 	constructor(wasmDir?: string) {
 		// In tests, use the provided wasmDir, otherwise use the default
-		this.wasmDir = wasmDir || path.join(process.cwd(), "src/services/tree-sitter")
+		this.wasmDir = wasmDir || __dirname
 	}
 
 	private async initialize(filePath: string) {
@@ -25,6 +26,7 @@ export class TreeSitterParser implements SemanticParser {
 					[filePath, ...dummyFiles],
 					{
 						ts: typescript,
+						js: javascript,
 					},
 					this.wasmDir,
 				) // Pass wasmDir to loadRequiredLanguageParsers
@@ -72,7 +74,8 @@ export class TreeSitterParser implements SemanticParser {
 			case CodeSegmentType.METHOD:
 				return node.childForFieldName("name")?.text || ""
 			case CodeSegmentType.VARIABLE:
-				return node.childForFieldName("name")?.text || ""
+				// First try direct name field, then look for identifier in descendants
+				return node.childForFieldName("name")?.text || node.descendantsOfType("identifier")[0]?.text || ""
 			case CodeSegmentType.IMPORT:
 				return node
 					.descendantsOfType("string")
@@ -216,9 +219,11 @@ export class TreeSitterParser implements SemanticParser {
 			const segments = await this.parseSegments(tree, fileContent, language)
 			console.log(`Found ${segments.length} segments`)
 
-			// TODO: Implement import/export extraction based on language
-			const imports: string[] = []
-			const exports: string[] = []
+			// Extract imports and exports from segments
+			const imports = segments
+				.filter((s) => s.type === CodeSegmentType.IMPORT)
+				.map((s) => s.name)
+				.filter(Boolean)
 
 			// Generate a basic summary
 			const summary = `${segments.length} code segments found: ${segments.map((s) => s.type).join(", ")}`
