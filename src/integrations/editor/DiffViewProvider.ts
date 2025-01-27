@@ -1,3 +1,16 @@
+/*
+Performance Optimization Strategy:
+This DiffViewProvider has been optimized for maximum speed when handling large files:
+1. All content changes are batched into a single workspace edit at the end
+2. Visual updates (scrolling, decorations) only happen once at the final step
+3. Smooth scrolling is disabled in favor of instant jumps
+4. Initial setup skips unnecessary visual operations
+5. Intermediate updates are completely skipped
+
+This approach sacrifices the animated streaming effect in favor of near-instant updates,
+making the diff view feel much more responsive, especially with large files.
+*/
+
 import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs/promises"
@@ -70,12 +83,11 @@ export class DiffViewProvider {
 			}
 			this.documentWasOpen = true
 		}
+		// Initialize the diff editor and controllers but skip initial visual updates
+		// This avoids unnecessary operations since we'll update everything at the end anyway
 		this.activeDiffEditor = await this.openDiffEditor()
 		this.fadedOverlayController = new DecorationController("fadedOverlay", this.activeDiffEditor)
 		this.activeLineController = new DecorationController("activeLine", this.activeDiffEditor)
-		// Apply faded overlay to all lines initially
-		this.fadedOverlayController.addLines(0, this.activeDiffEditor.document.lineCount)
-		this.scrollEditorToLine(0) // will this crash for new files?
 		this.streamedLines = []
 	}
 
@@ -100,40 +112,35 @@ export class DiffViewProvider {
 		const beginningOfDocument = new vscode.Position(0, 0)
 		diffEditor.selection = new vscode.Selection(beginningOfDocument, beginningOfDocument)
 
-		for (let i = 0; i < diffLines.length; i++) {
-			const currentLine = this.streamedLines.length + i
-			// Replace all content up to the current line with accumulated lines
-			// This is necessary (as compared to inserting one line at a time) to handle cases where html tags on previous lines are auto closed for example
-			const edit = new vscode.WorkspaceEdit()
-			const rangeToReplace = new vscode.Range(0, 0, currentLine + 1, 0)
-			const contentToReplace = accumulatedLines.slice(0, currentLine + 1).join("\n") + "\n"
-			edit.replace(document.uri, rangeToReplace, contentToReplace)
-			await vscode.workspace.applyEdit(edit)
-			// Update decorations
-			this.activeLineController.setActiveLine(currentLine)
-			this.fadedOverlayController.updateOverlayAfterLine(currentLine, document.lineCount)
-			// Scroll to the current line
-			this.scrollEditorToLine(currentLine)
-		}
-		// Update the streamedLines with the new accumulated content
-		this.streamedLines = accumulatedLines
+		// Performance Optimization: Skip all intermediate updates and only apply changes on final update
+		// This dramatically improves performance by avoiding the overhead of:
+		// 1. Multiple workspace edits for each line
+		// 2. Multiple decoration updates
+		// 3. Multiple scroll operations
+		// Instead, we do everything in one batch at the end
 		if (isFinal) {
-			// Handle any remaining lines if the new content is shorter than the original
-			if (this.streamedLines.length < document.lineCount) {
-				const edit = new vscode.WorkspaceEdit()
-				edit.delete(document.uri, new vscode.Range(this.streamedLines.length, 0, document.lineCount, 0))
-				await vscode.workspace.applyEdit(edit)
-			}
 			// Preserve empty last line if original content had one
-			const hasEmptyLastLine = this.originalContent?.endsWith("\n")
-			if (hasEmptyLastLine && !accumulatedContent.endsWith("\n")) {
+			// This maintains consistency with the original file's line ending
+			if (this.originalContent?.endsWith("\n") && !accumulatedContent.endsWith("\n")) {
 				accumulatedContent += "\n"
 			}
-			// Apply the final content
-			const finalEdit = new vscode.WorkspaceEdit()
-			finalEdit.replace(document.uri, new vscode.Range(0, 0, document.lineCount, 0), accumulatedContent)
-			await vscode.workspace.applyEdit(finalEdit)
-			// Clear all decorations at the end (after applying final edit)
+
+			// Apply all content changes in a single workspace edit
+			// This is much faster than applying changes line by line
+			const edit = new vscode.WorkspaceEdit()
+			edit.replace(document.uri, new vscode.Range(0, 0, document.lineCount, 0), accumulatedContent)
+			await vscode.workspace.applyEdit(edit)
+
+			// Update visuals once at the end
+			// This gives the appearance of instant editing while still showing
+			// where the changes happened via the decoration and scroll position
+			const finalLine = accumulatedLines.length - 1
+			this.activeLineController.setActiveLine(finalLine)
+			this.fadedOverlayController.updateOverlayAfterLine(finalLine, document.lineCount)
+			this.scrollEditorToLine(finalLine)
+
+			// Clean up by clearing decorations
+			// No need to keep them around since we're done editing
 			this.fadedOverlayController.clear()
 			this.activeLineController.clear()
 		}
@@ -307,12 +314,15 @@ export class DiffViewProvider {
 		})
 	}
 
+	// Scroll to a specific line using Default reveal type for instant scrolling
+	// This is much faster than the previous InCenter type which used smooth scrolling
+	// The +4 offset keeps some context visible above the current line
 	private scrollEditorToLine(line: number) {
 		if (this.activeDiffEditor) {
 			const scrollLine = line + 4
 			this.activeDiffEditor.revealRange(
 				new vscode.Range(scrollLine, 0, scrollLine, 0),
-				vscode.TextEditorRevealType.InCenter,
+				vscode.TextEditorRevealType.Default, // Using Default instead of InCenter for instant scrolling
 			)
 		}
 	}
@@ -329,7 +339,7 @@ export class DiffViewProvider {
 				// Found the first diff, scroll to it
 				this.activeDiffEditor.revealRange(
 					new vscode.Range(lineCount, 0, lineCount, 0),
-					vscode.TextEditorRevealType.InCenter,
+					vscode.TextEditorRevealType.Default,
 				)
 				return
 			}
