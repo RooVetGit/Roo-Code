@@ -11,7 +11,7 @@ export interface VectorWithMetadata {
 	score?: number
 }
 
-export interface SearchResult extends VectorWithMetadata {
+export interface VectorSearchResult extends VectorWithMetadata {
 	score: number
 }
 
@@ -29,7 +29,7 @@ export interface VectorStore {
 	/**
 	 * Search for the k nearest neighbors of the query vector
 	 */
-	search(queryVector: Vector, k: number): Promise<SearchResult[]>
+	search(queryVector: Vector, k: number): Promise<VectorSearchResult[]>
 
 	/**
 	 * Get the total number of vectors in the store
