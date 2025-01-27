@@ -640,7 +640,7 @@ describe("ClineProvider", () => {
 			"Test task",
 			undefined,
 			undefined,
-			false,
+			experimentDefault,
 		)
 	})
 	test("handles mode-specific custom instructions updates", async () => {
