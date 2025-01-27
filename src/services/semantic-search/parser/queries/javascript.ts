@@ -1,3 +1,9 @@
+/*
+- class definitions
+- method definitions
+- named function declarations
+- arrow functions and function expressions assigned to variables
+*/
 export default `
 (
   (comment)* @doc
@@ -21,7 +27,7 @@ export default `
   (comment)* @doc
   .
   (class_declaration
-    name: (type_identifier) @class-name
+    name: (identifier) @class-name
     body: (class_body
       (method_definition) @method
     )
@@ -60,11 +66,9 @@ export default `
   (variable_declaration
     (variable_declarator
       name: (identifier) @variable-name
-      value: (_) @variable-value
+      value: [(arrow_function) (function_expression)] @variable-value
     )
   ) @variable
-  (#strip! @doc "^[\\s\\*/]+|^[\\s\\*/]$")
-  (#select-adjacent! @doc @variable)
 )
 
 (
@@ -76,7 +80,5 @@ export default `
       value: (_)? @variable-value
     )
   ) @variable
-  (#strip! @doc "^[\\s\\*/]+|^[\\s\\*/]$")
-  (#select-adjacent! @doc @variable)
 )
 `
