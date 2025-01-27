@@ -124,38 +124,6 @@ export class MiniLMModel implements EmbeddingModel {
 		// Add basic code info
 		parts.push(`${definition.type} ${definition.name}`)
 
-		// Add docstring if available
-		if (definition.docstring) {
-			parts.push(definition.docstring)
-		}
-
-		// Add function signature info
-		if (definition.params?.length) {
-			const paramsText = definition.params.map((p) => `${p.name}${p.type ? `: ${p.type}` : ""}`).join(", ")
-			parts.push(`Parameters: ${paramsText}`)
-		}
-		if (definition.returnType) {
-			parts.push(`Returns: ${definition.returnType}`)
-		}
-
-		// Add relationship context
-		if (definition.relationships) {
-			const { inheritedFrom, implementedInterfaces, usedIn, dependencies } = definition.relationships
-
-			if (inheritedFrom) {
-				parts.push(`Inherits from: ${inheritedFrom}`)
-			}
-			if (implementedInterfaces?.length) {
-				parts.push(`Implements: ${implementedInterfaces.join(", ")}`)
-			}
-			if (dependencies.length) {
-				parts.push(`Uses: ${dependencies.join(", ")}`)
-			}
-			if (usedIn.length) {
-				parts.push(`Used by: ${usedIn.join(", ")}`)
-			}
-		}
-
 		// Add the actual code content
 		parts.push(definition.content)
 

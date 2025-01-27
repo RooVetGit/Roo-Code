@@ -1,5 +1,4 @@
 import { CodeSegment } from "./parser/types"
-import { Vector } from "./vector-store/types"
 
 export interface CodeDefinition {
 	type: string
@@ -10,16 +9,6 @@ export interface CodeDefinition {
 	endLine: number
 	language: string
 	context?: string
-	docstring?: string
-	params?: Array<{ name: string; type?: string }>
-	returnType?: string
-	relationships?: {
-		imports: string[]
-		inheritedFrom?: string
-		implementedInterfaces?: string[]
-		usedIn: string[]
-		dependencies: string[]
-	}
 	contentHash?: string
 }
 
@@ -41,32 +30,28 @@ export function convertSegmentToDefinition(segment: CodeSegment, filePath: strin
 	}
 }
 
-export type SearchResultType = "file" | "code"
-
-export interface BaseSearchResult {
-	score: number
+export enum SearchResultType {
+	File = "file",
+	Code = "code",
 }
 
-export interface FileSearchResult {
-	type: "file"
+export interface SearchResultBase {
 	filePath: string
-	vector: Vector
-	score: number
+	metadata: Omit<CodeDefinition, "contentHash">
+}
+
+export interface FileSearchResult extends SearchResultBase {
+	type: SearchResultType.File
 	name: string
-	metadata: CodeDefinition
 }
 
-export interface CodeSearchResult {
-	type: "code"
-	filePath: string
+export interface CodeSearchResult extends SearchResultBase {
+	type: SearchResultType.Code
 	content: string
 	startLine: number
 	endLine: number
 	name: string
 	codeType: string
-	vector: Vector
-	score: number
-	metadata: CodeDefinition
 }
 
 export type SearchResult = FileSearchResult | CodeSearchResult
