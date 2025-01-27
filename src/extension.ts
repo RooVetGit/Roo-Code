@@ -199,7 +199,7 @@ export function activate(context: vscode.ExtensionContext) {
 						...(userInput ? { userInput } : {}),
 					}
 
-					await ClineProvider.handleCodeAction(promptType, params)
+					await ClineProvider.handleCodeAction(command, promptType, params)
 				},
 			),
 		)
@@ -218,6 +218,14 @@ export function activate(context: vscode.ExtensionContext) {
 		context,
 		"roo-cline.fixCode",
 		"FIX",
+		"What would you like Roo to fix?",
+		"E.g. Maintain backward compatibility",
+	)
+
+	registerCodeAction(
+		context,
+		"roo-cline.fixCodeInCurrentTask",
+		"FIX", // keep this for use the same prompt with FIX command
 		"What would you like Roo to fix?",
 		"E.g. Maintain backward compatibility",
 	)
