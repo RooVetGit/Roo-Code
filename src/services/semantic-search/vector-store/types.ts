@@ -39,7 +39,7 @@ export interface VectorStore {
 	/**
 	 * Clear all vectors from the store
 	 */
-	clear(): void
+	clear(): Promise<void>
 
 	/**
 	 * Save the vector store to disk (if supported)

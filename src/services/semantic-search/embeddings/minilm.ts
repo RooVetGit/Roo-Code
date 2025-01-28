@@ -19,35 +19,25 @@ export class MiniLMModel implements EmbeddingModel {
 
 	async initialize(): Promise<void> {
 		if (this.initialized) {
-			console.log("Service already initialized")
 			return
 		}
 
 		if (this.initializationPromise) {
-			console.log("Initialization already in progress, waiting...")
 			await this.initializationPromise
 			return
 		}
 
-		console.log("Starting service initialization")
 		this.initializationPromise = (async () => {
 			try {
-				console.log("Creating pipeline...")
 				this.pipe = await pipeline("feature-extraction", MODEL_NAME, {
 					revision: "main",
 					cache_dir: this.config.modelPath,
 					device: "cpu",
 				})
-				console.log("Pipeline created successfully")
 
-				// Set initialized flag before testing
 				this.initialized = true
 
-				console.log("Testing pipeline with sample text...")
-				const testEmbedding = await this.embed("test")
-				console.log("Test embedding generated successfully:", testEmbedding.values.length)
-
-				console.log("Service initialization completed successfully")
+				console.log("Embedding model initialized successfully")
 			} catch (error) {
 				console.error("Error during initialization:", error)
 				this.initialized = false

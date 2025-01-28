@@ -34,25 +34,15 @@ export class LanceDBVectorStore implements VectorStore {
 	async initialize(): Promise<void> {
 		this.connection = await lancedb.connect(this.dbPath)
 		const tableName = `${this.tablePrefix}-${this.workspaceId}`
-		console.log(`Initializing LanceDB connection. Path: ${this.dbPath}, Table: ${tableName}`)
 
 		try {
 			this.table = await this.connection.openTable(tableName)
-			console.log(`Opened existing table: ${tableName}`)
-
-			// Add explicit count with filter to verify data
-			const rowCount = await this.table.countRows() // force exact count
-			console.log(`Direct table count: ${rowCount} records`)
-
 			await this.updateSize()
-			console.log(`Initial table size: ${this._size} records`)
 		} catch (error) {
-			console.log(
-				`Creating new table: ${tableName} (${error instanceof Error ? error.message : "Unknown error"})`,
-			)
 			this.table = await this.connection.createEmptyTable(tableName, this.schema)
+			this._size = 0
+			this.indexCreated = false
 			await this.updateSize()
-			console.log(`Created new empty table. Initial size: ${this._size}`)
 		}
 	}
 
@@ -70,7 +60,6 @@ export class LanceDBVectorStore implements VectorStore {
 	}
 
 	async addBatch(vectors: VectorWithMetadata[]): Promise<void> {
-		console.log(`Adding batch of ${vectors.length} vectors to store`)
 		const records = vectors.map(({ vector, metadata }) => ({
 			vector: vector.values,
 			id: this.generateId(metadata),
@@ -78,20 +67,8 @@ export class LanceDBVectorStore implements VectorStore {
 			contentHash: metadata.contentHash,
 		}))
 
-		console.log(
-			"Sample record IDs:",
-			records.slice(0, 3).map((r) => r.id),
-		)
-
 		await this.table.add(records)
-
 		await this.updateSize()
-		console.log(`Batch added. New store size: ${this._size} records`)
-
-		// Verify data persistence by doing a count
-		const verifyCount = await this.table.countRows()
-		console.log(`Verification count after add: ${verifyCount} records`)
-
 		await this.createIndexIfNeeded()
 	}
 
@@ -113,8 +90,23 @@ export class LanceDBVectorStore implements VectorStore {
 		// No-op for LanceDB as data is persisted automatically
 	}
 
-	clear(): void {
-		this.connection.dropTable(`${this.tablePrefix}-${this.workspaceId}`)
+	async clear(): Promise<void> {
+		const tableName = `${this.tablePrefix}-${this.workspaceId}`
+		try {
+			await this.connection.dropTable(tableName)
+			console.log(`Successfully dropped table: ${tableName}`)
+		} catch (error) {
+			if (error instanceof Error && error.message.includes("Table not found")) {
+				console.log(`Table ${tableName} already removed`)
+			} else {
+				throw error
+			}
+		}
+
+		// Reset internal state
+		this.table = null as unknown as Table
+		this._size = 0
+		this.indexCreated = false
 	}
 
 	private _size = 0
@@ -193,6 +185,11 @@ export class LanceDBVectorStore implements VectorStore {
 
 	// Add helper method to check if file has segments
 	async hasFileSegments(filePath: string): Promise<{ exists: boolean; hash?: string }> {
+		// Add null check for table
+		if (!this.table) {
+			return { exists: false, hash: undefined }
+		}
+
 		const results = await this.table
 			.query()
 			.where(`metadata LIKE '%${filePath}%'`)

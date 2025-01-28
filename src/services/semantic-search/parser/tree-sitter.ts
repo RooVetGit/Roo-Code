@@ -175,12 +175,10 @@ export class TreeSitterParser implements SemanticParser {
 	}
 
 	async parseFile(filePath: string, expectedHash?: string): Promise<ParsedFile> {
-		// Check hash before any processing
 		const fileContent = await fs.readFile(filePath, "utf8")
 		const currentHash = crypto.createHash("sha256").update(fileContent).digest("hex")
 
 		if (expectedHash && currentHash !== expectedHash) {
-			console.log(`Hash mismatch during parsing, skipping: ${filePath}`)
 			return {
 				path: filePath,
 				segments: [],
@@ -195,11 +193,7 @@ export class TreeSitterParser implements SemanticParser {
 		const ext = path.extname(filePath).toLowerCase().slice(1)
 		const language = this.getLanguageFromExt(ext)
 
-		console.log(`Parsing ${filePath} as ${language}`)
-
-		// Skip parsing if language not supported
 		if (!this.languageParsers[ext]) {
-			console.log(`No parser available for language: ${language}`)
 			return {
 				path: filePath,
 				segments: [],
@@ -211,21 +205,14 @@ export class TreeSitterParser implements SemanticParser {
 
 		try {
 			const { parser } = this.languageParsers[ext]
-			console.log(`Parser loaded for ${language}`)
-
 			const tree = parser.parse(fileContent)
-			console.log(`AST generated, root node type: ${tree.rootNode.type}`)
-
 			const segments = await this.parseSegments(tree, fileContent, language)
-			console.log(`Found ${segments.length} segments`)
 
-			// Extract imports and exports from segments
 			const imports = segments
 				.filter((s) => s.type === CodeSegmentType.IMPORT)
 				.map((s) => s.name)
 				.filter(Boolean)
 
-			// Generate a basic summary
 			const summary = `${segments.length} code segments found: ${segments.map((s) => s.type).join(", ")}`
 
 			return {
