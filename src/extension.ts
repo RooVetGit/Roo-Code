@@ -6,8 +6,8 @@ import { ClineProvider } from "./core/webview/ClineProvider"
 import { createClineAPI } from "./exports"
 import "./utils/path" // necessary to have access to String.prototype.toPosix
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
+import { SemanticSearchConfig, SemanticSearchService } from "./services/semantic-search"
 import * as path from "path"
-import { listFiles } from "./services/glob/list-files"
 import fs from "fs/promises"
 
 /*
@@ -37,7 +37,9 @@ export function activate(context: vscode.ExtensionContext) {
 		context.globalState.update("allowedCommands", defaultCommands)
 	}
 
-	const sidebarProvider = new ClineProvider(context, outputChannel)
+	const semanticSearchService = initializeSemanticSearchService(context)
+
+	const sidebarProvider = new ClineProvider(context, outputChannel, semanticSearchService)
 
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(ClineProvider.sideBarId, sidebarProvider, {
@@ -167,4 +169,21 @@ export function activate(context: vscode.ExtensionContext) {
 // This method is called when your extension is deactivated
 export function deactivate() {
 	outputChannel.appendLine("Roo-Cline extension deactivated")
+}
+
+async function initializeSemanticSearchService(context: vscode.ExtensionContext): Promise<SemanticSearchService> {
+	const cacheDir = path.join(context.globalStorageUri.fsPath, "cache")
+	await fs.mkdir(cacheDir, { recursive: true })
+
+	const config: SemanticSearchConfig = {
+		storageDir: cacheDir,
+		context: context,
+		maxResults: (await context.globalState.get("semanticSearchMaxResults")) as number | undefined,
+	}
+
+	const service = new SemanticSearchService(config)
+
+	await service.initialize()
+
+	return service
 }
