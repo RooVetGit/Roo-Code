@@ -97,6 +97,7 @@ export interface ExtensionState {
 	alwaysAllowBrowser?: boolean
 	alwaysAllowMcp?: boolean
 	alwaysApproveResubmit?: boolean
+	alwaysAllowModeSwitch?: boolean
 	requestDelaySeconds: number
 	uriScheme?: string
 	allowedCommands?: string[]
