@@ -1584,11 +1584,7 @@ export class Cline {
 								await delay(200)
 							}
 
-							const diff = formatResponse.createPrettyPatch(
-								relPath,
-								this.diffViewProvider.originalContent,
-								updatedContent,
-							)
+							const diff = formatResponse.createPrettyPatch(relPath, fileContent, updatedContent)
 
 							if (!diff) {
 								pushToolResult(`No changes needed for '${relPath}'`)
@@ -1718,6 +1714,8 @@ export class Cline {
 
 								// Read the original file content
 								const fileContent = await fs.readFile(absolutePath, "utf-8")
+								this.diffViewProvider.editType = "modify"
+								this.diffViewProvider.originalContent = fileContent
 								let lines = fileContent.split("\n")
 
 								for (const op of parsedOperations) {
@@ -1756,11 +1754,7 @@ export class Cline {
 								this.consecutiveMistakeCount = 0
 
 								// Show diff preview
-								const diff = formatResponse.createPrettyPatch(
-									relPath,
-									this.diffViewProvider.originalContent,
-									newContent,
-								)
+								const diff = formatResponse.createPrettyPatch(relPath, fileContent, newContent)
 
 								if (!diff) {
 									pushToolResult(`No changes needed for '${relPath}'`)
