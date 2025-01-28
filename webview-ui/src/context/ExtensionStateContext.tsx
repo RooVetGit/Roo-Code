@@ -66,6 +66,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	autoApprovalEnabled?: boolean
 	setAutoApprovalEnabled: (value: boolean) => void
 	handleInputChange: (field: keyof ApiConfiguration) => (event: any) => void
+	semanticSearchStatus: string
+	setSemanticSearchStatus: (status: string) => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -275,6 +277,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			setState((prevState) => ({ ...prevState, experimentalDiffStrategy: value })),
 		setAutoApprovalEnabled: (value) => setState((prevState) => ({ ...prevState, autoApprovalEnabled: value })),
 		handleInputChange,
+		semanticSearchStatus: state.semanticSearchStatus,
+		setSemanticSearchStatus: (status) => setState((prevState) => ({ ...prevState, semanticSearchStatus: status })),
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

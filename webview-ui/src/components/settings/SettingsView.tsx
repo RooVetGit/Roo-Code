@@ -67,6 +67,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		experimentalDiffStrategy,
 		setExperimentalDiffStrategy,
 		semanticSearchStatus,
+		setSemanticSearchStatus,
 	} = useExtensionState()
 	const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>(undefined)
 	const [modelIdErrorMessage, setModelIdErrorMessage] = useState<string | undefined>(undefined)
@@ -77,9 +78,19 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 	>()
 
 	useEffect(() => {
-		// Listen for indexing progress messages
+		// Request initial status
+		vscode.postMessage({ type: "getSemanticSearchStatus" })
+
 		const messageListener = (event: MessageEvent) => {
 			const message = event.data
+			if (message.type === "semanticSearchStatus") {
+				setSemanticSearchStatus(message.status)
+			}
+			// Add this case to handle initial state
+			if (message.type === "initialState") {
+				setSemanticSearchStatus(message.state.semanticSearchStatus)
+			}
+			// Keep existing indexing progress handling
 			if (message.type === "indexingProgress") {
 				setIndexingProgress(message.indexingProgress)
 				if (message.indexingProgress.current === message.indexingProgress.total) {
@@ -90,7 +101,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		}
 		window.addEventListener("message", messageListener)
 		return () => window.removeEventListener("message", messageListener)
-	}, [])
+	}, [setSemanticSearchStatus])
 
 	const handleSubmit = () => {
 		const apiValidationResult = validateApiConfiguration(apiConfiguration)
