@@ -2083,6 +2083,7 @@ export class Cline {
 										targetMode.name
 									} mode${reason ? ` because: ${reason}` : ""}.`,
 								)
+								await delay(500) // delay to allow mode change to take effect before next tool is executed
 								break
 							}
 						} catch (error) {
