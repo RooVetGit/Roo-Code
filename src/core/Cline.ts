@@ -1612,7 +1612,7 @@ export class Cline {
 
 							if (!userEdits) {
 								pushToolResult(
-									`The code block was successfully inserted in ${relPath.toPosix()}.${newProblemsMessage}`,
+									`The content was successfully inserted in ${relPath.toPosix()}.${newProblemsMessage}`,
 								)
 								await this.diffViewProvider.reset()
 								break
