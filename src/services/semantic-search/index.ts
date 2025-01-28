@@ -156,6 +156,9 @@ export class SemanticSearchService {
 		this.model = new MiniLMModel(modelConfig)
 		this.cache = new WorkspaceCache(config.context.globalState, workspaceId)
 		this.parser = new TreeSitterParser()
+
+		// Initialize status as NotIndexed
+		this.updateStatus(WorkspaceIndexStatus.NotIndexed)
 	}
 
 	private getWorkspaceId(context: vscode.ExtensionContext): string {
@@ -178,107 +181,92 @@ export class SemanticSearchService {
 		return this.statuses.get(workspaceId) || WorkspaceIndexStatus.NotIndexed
 	}
 
+	/**
+	 * Initializes the semantic search service by:
+	 * 1. Setting the workspace status to 'Indexing'
+	 * 2. Initializing the vector store with the workspace ID
+	 * 3. Initializing the embedding model with retry logic
+	 * 4. Verifying model initialization with a test embedding
+	 * 5. Loading persisted vectors from the store
+	 *
+	 * The initialization process includes robust error handling and retry mechanisms:
+	 * - Model initialization is attempted up to 3 times with increasing delays
+	 * - Detailed error logging is performed for debugging
+	 * - Status is updated appropriately based on success/failure
+	 * - Initialization errors are stored for later reference
+	 *
+	 * @throws {Error} If initialization fails after all retry attempts
+	 * @returns {Promise<void>} Resolves when initialization is complete
+	 */
 	async initialize(): Promise<void> {
 		this.updateStatus(WorkspaceIndexStatus.Indexing)
 
 		try {
-			console.log("Starting semantic search service initialization")
+			const startTime = Date.now()
+			// Keep only essential initialization logs
+			console.log("Initializing semantic search service")
 
-			// Initialize store with workspace ID
 			const workspaceId = this.getWorkspaceId(this.config.context)
 			this.store = new LanceDBVectorStore(path.join(this.config.storageDir, "lancedb"), workspaceId)
 			await this.store.initialize()
-			console.log("Vector store initialized")
 
-			// Initialize model first
-			try {
-				console.log("Initializing embedding model")
-				const startTime = Date.now()
+			const storeSize = this.store.size()
+			if (storeSize === 0) {
+				this.updateStatus(WorkspaceIndexStatus.NotIndexed)
+				return
+			}
 
-				// Detailed model initialization with multiple attempts
-				const MAX_INIT_ATTEMPTS = 3
-				let initAttempt = 0
-				let modelInitError: Error | null = null
+			// Initialize model
+			const MAX_INIT_ATTEMPTS = 3
+			let initAttempt = 0
+			let modelInitError: Error | null = null
 
-				while (initAttempt < MAX_INIT_ATTEMPTS) {
-					try {
-						await this.model.initialize()
-						modelInitError = null
-						break
-					} catch (error) {
-						initAttempt++
-						modelInitError = error instanceof Error ? error : new Error(String(error))
-
-						console.error(`Model initialization attempt ${initAttempt} failed:`, modelInitError)
-
-						// Wait before retrying
-						if (initAttempt < MAX_INIT_ATTEMPTS) {
-							await new Promise((resolve) => setTimeout(resolve, 1000 * initAttempt))
-						}
+			while (initAttempt < MAX_INIT_ATTEMPTS) {
+				try {
+					await this.model.initialize()
+					modelInitError = null
+					break
+				} catch (error) {
+					initAttempt++
+					modelInitError = error instanceof Error ? error : new Error(String(error))
+					if (initAttempt < MAX_INIT_ATTEMPTS) {
+						await new Promise((resolve) => setTimeout(resolve, 1000 * initAttempt))
 					}
 				}
+			}
 
-				// If all attempts failed, throw the last error
-				if (modelInitError) {
-					throw modelInitError
-				}
+			if (modelInitError) {
+				throw modelInitError
+			}
 
-				const initDuration = Date.now() - startTime
-				console.log(`Embedding model initialization completed in ${initDuration}ms`)
+			const initDuration = Date.now() - startTime
+			console.log(`Embedding model initialization completed in ${initDuration}ms`)
 
-				// Verify model is truly initialized
-				if (!this.model.isInitialized()) {
-					throw new Error("Model initialization failed: isInitialized() returned false")
-				}
+			// Verify model is truly initialized
+			if (!this.model.isInitialized()) {
+				throw new Error("Model initialization failed: isInitialized() returned false")
+			}
 
-				// Perform a test embedding to ensure model works
-				try {
-					const testEmbedding = await this.model.embed("Test embedding to verify initialization")
-					console.log(`Test embedding generated successfully. Dimension: ${testEmbedding.dimension}`)
-				} catch (embedError) {
-					console.error("Failed to generate test embedding:", embedError)
-					throw new Error(
-						`Model initialization verification failed: ${embedError instanceof Error ? embedError.message : String(embedError)}`,
-					)
-				}
-			} catch (modelInitError) {
-				console.error("Detailed model initialization error:", modelInitError)
-
-				// Log additional context about the error
-				if (modelInitError instanceof Error) {
-					console.error(`Error name: ${modelInitError.name}`)
-					console.error(`Error message: ${modelInitError.message}`)
-					console.error(`Error stack: ${modelInitError.stack}`)
-				}
-
+			// Perform a test embedding to ensure model works
+			try {
+				const testEmbedding = await this.model.embed("Test embedding to verify initialization")
+				console.log(`Test embedding generated successfully. Dimension: ${testEmbedding.dimension}`)
+			} catch (embedError) {
+				console.error("Failed to generate test embedding:", embedError)
 				throw new Error(
-					`Model initialization failed: ${modelInitError instanceof Error ? modelInitError.message : String(modelInitError)}`,
+					`Model initialization verification failed: ${embedError instanceof Error ? embedError.message : String(embedError)}`,
 				)
 			}
 
-			// Load persisted vectors
-			try {
-				console.log("Loading persisted vectors")
-				await this.store.load()
-			} catch (storeLoadError) {
-				console.error("Failed to load persisted vectors:", storeLoadError)
-				// Non-fatal, continue initialization
-			}
-
-			console.log("Semantic search service initialization completed successfully")
+			// Keep only essential success log
+			console.log("Semantic search service initialized successfully")
 			this.initialized = true
 			this.updateStatus(WorkspaceIndexStatus.Indexed)
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error)
 			console.error("Initialization failed:", errorMessage)
-
-			// Reset status on error
 			this.updateStatus(WorkspaceIndexStatus.NotIndexed)
-
-			// Store the initialization error
 			this.initializationError = error instanceof Error ? error : new Error(errorMessage)
-
-			// Reset initialization state to allow retry
 			this.initialized = false
 			throw error
 		}
@@ -375,8 +363,19 @@ export class SemanticSearchService {
 
 	async addBatchToIndex(filePaths: string[]): Promise<void> {
 		await this.ensureInitialized()
-		for (const filePath of filePaths) {
-			await this.processFileWithHash(filePath)
+		this.updateStatus(WorkspaceIndexStatus.Indexing)
+
+		try {
+			for (const filePath of filePaths) {
+				await this.processFileWithHash(filePath)
+			}
+
+			// Only update status to Indexed if we have vectors in the store
+			const storeSize = this.store.size()
+			this.updateStatus(storeSize > 0 ? WorkspaceIndexStatus.Indexed : WorkspaceIndexStatus.NotIndexed)
+		} catch (error) {
+			this.updateStatus(WorkspaceIndexStatus.NotIndexed)
+			throw error
 		}
 	}
 
@@ -404,60 +403,38 @@ export class SemanticSearchService {
 	}
 
 	async search(query: string): Promise<SearchResult[]> {
-		console.log(`Starting semantic search for query: "${query}"`)
-		console.log(`Current workspace ID: ${this.getWorkspaceId(this.config.context)}`)
-		console.log(`Store instance: ${this.store?.constructor.name}`)
-
 		try {
 			await this.ensureInitialized()
-			console.log("Store after initialization:", this.store)
 
 			const storeSize = this.size()
-			console.log(`Current vector store size: ${storeSize} documents`)
-
 			if (storeSize === 0) {
-				console.log("Vector store is empty, no results to return")
 				return []
 			}
 
 			const queryVector = await this.model.embed(query)
-
 			const results = await this.store.search(
 				queryVector,
 				this.config.maxResults ? this.config.maxResults * 2 : 20,
 			)
-			console.log(`Found ${results.length} results before filtering`)
 
 			const dedupedResults = this.deduplicateResults(results)
-			console.log(`Deduplicated to ${dedupedResults.length} results`)
-
-			// Modified section: Prioritize code results but maintain original order
 			const maxResults = this.config.maxResults ?? 10
 			const finalResults: VectorSearchResult[] = []
 
-			// First collect all code results in original order
 			const codeResults = dedupedResults.filter((r) => r.metadata?.type !== "file")
-			// Then collect all file results in original order
 			const fileResults = dedupedResults.filter((r) => r.metadata?.type === "file")
 
-			// Add code results first until we reach maxResults
 			for (const result of codeResults) {
 				if (finalResults.length >= maxResults) break
 				finalResults.push(result)
 			}
 
-			// Then add file results to fill remaining slots
 			for (const result of fileResults) {
 				if (finalResults.length >= maxResults) break
 				finalResults.push(result)
 			}
 
-			// Trim to exact max results (in case both arrays had more than needed)
-			const trimmedResults = finalResults.slice(0, maxResults)
-
-			const formattedResults = trimmedResults.map((r) => this.formatResult(r))
-			console.log("Formatted results:", formattedResults)
-			return formattedResults
+			return finalResults.slice(0, maxResults).map((r) => this.formatResult(r))
 		} catch (error) {
 			console.error("Error during semantic search:", error)
 			throw error
@@ -525,6 +502,7 @@ export class SemanticSearchService {
 	clear(): void {
 		this.store.clear()
 		this.cache.clear()
+		this.updateStatus(WorkspaceIndexStatus.NotIndexed)
 	}
 
 	async invalidateCache(definition: CodeDefinition): Promise<void> {
