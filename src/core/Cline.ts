@@ -194,10 +194,17 @@ export class Cline {
 
 	// Add method to update diffStrategy
 	async updateConversationSaveFolder(folder?: string) {
-		// Update workspace configuration
-		await vscode.workspace
-			.getConfiguration("roo-cline")
-			.update("conversationSaveFolder", folder, vscode.ConfigurationTarget.Workspace)
+		// Check if the value has actually changed before updating
+		const config = vscode.workspace.getConfiguration("roo-cline")
+		const currentValue = config.get<string>("conversationSaveFolder")
+		const newValue = folder || undefined
+
+		// Only update if the value has changed
+		if (currentValue !== newValue) {
+			// Update workspace configuration
+			// Pass undefined to remove the setting entirely rather than setting it to an empty string
+			await config.update("conversationSaveFolder", newValue, vscode.ConfigurationTarget.Workspace)
+		}
 
 		// Update conversation saver instance
 		if (typeof folder === "string" && folder.length > 0) {
