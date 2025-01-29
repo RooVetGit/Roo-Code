@@ -2267,75 +2267,25 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	private async indexWorkspace() {
 		try {
-			// Check if workspace is already indexed
-			const workspaceFolders = vscode.workspace.workspaceFolders
-			if (workspaceFolders && workspaceFolders.length > 0) {
-				const workspaceFolder = workspaceFolders[0]
-				const workspaceRoot = workspaceFolder.uri.fsPath as string
+			const { apiConfiguration } = await this.getState()
 
-				// Create a progress notification
-				await vscode.window.withProgress(
-					{
-						location: vscode.ProgressLocation.Notification,
-						title: "Semantic Search Indexing",
-						cancellable: false,
-					},
-					async (progress) => {
-						try {
-							// Update progress at the start
-							progress.report({ message: "Starting indexing...", increment: 10 })
-
-							// Initialize model
-							progress.report({ message: "Initializing model...", increment: 20 })
-							await this.semanticSearchService!.initialize()
-
-							// Index workspace files
-							progress.report({ message: "Indexing workspace files...", increment: 40 })
-
-							// Use listFiles which respects .gitignore
-							const [files, hasMore] = await listFiles(workspaceRoot, true, 1000, true, false)
-
-							// Convert paths to absolute
-							const filePaths = files
-							await this.semanticSearchService!.addBatchToIndex(filePaths)
-
-							// Final progress update
-							progress.report({ message: "Indexing completed successfully", increment: 100 })
-
-							// Give time for the success message to be visible
-							await delay(1500)
-						} catch (error) {
-							console.error("Error initializing semantic search:", error)
-							// Update progress to show failure
-							progress.report({ message: "Indexing failed", increment: 100 })
-
-							// If initialization fails, show a warning but don't block
-							const selection = await vscode.window.showWarningMessage(
-								"Semantic search initialization encountered an issue. Some features may be limited.",
-								"Retry",
-								"Ignore",
-							)
-
-							if (selection === "Retry") {
-								try {
-									progress.report({ message: "Retrying indexing...", increment: 10 })
-									await this.semanticSearchService!.initialize()
-									progress.report({ message: "Retry successful", increment: 100 })
-									await delay(1500)
-								} catch (retryError) {
-									progress.report({ message: "Retry failed", increment: 100 })
-									vscode.window.showWarningMessage(
-										"Could not initialize semantic search after retry.",
-									)
-									throw retryError
-								}
-							}
-
-							throw error
-						}
-					},
-				)
+			if (!apiConfiguration.openAiApiKey) {
+				vscode.window.showWarningMessage("OpenAI API key required for semantic search")
+				return
 			}
+
+			const semanticSearchConfig: SemanticSearchConfig = {
+				storageDir: path.join(this.context.globalStorageUri.fsPath, "semantic-search"),
+				context: this.context,
+			}
+
+			this.semanticSearchService = new SemanticSearchService(
+				semanticSearchConfig,
+				buildApiHandler(apiConfiguration), // Pass configured API handler
+			)
+
+			await this.semanticSearchService.initialize()
+			// ... rest of indexing logic
 		} catch (error) {
 			vscode.window.showWarningMessage("Unexpected error initializing semantic search.")
 			throw error
