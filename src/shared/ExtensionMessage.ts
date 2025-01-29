@@ -166,6 +166,8 @@ export type ClineSay =
 	| "command"
 	| "mcp_server_request_started"
 	| "mcp_server_response"
+	| "new_task_started"
+	| "new_task"
 
 export type ClineSayTool = {
 	tool:
@@ -178,6 +180,7 @@ export type ClineSayTool = {
 		| "listCodeDefinitionNames"
 		| "searchFiles"
 		| "switchMode"
+		| "newTask"
 		| "semanticSearch"
 	path?: string
 	diff?: string
