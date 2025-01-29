@@ -12,6 +12,23 @@ export interface CodeDefinition {
 	contentHash?: string
 }
 
+export interface StoreSearchResult {
+	score: number
+	metadata: CodeDefinition
+}
+
+export interface VectorStore {
+	initialize(): Promise<void>
+	add(metadata: CodeDefinition, vector: number[]): Promise<void>
+	addBatch(vectors: Array<{ metadata: CodeDefinition; vector: number[] }>): Promise<void>
+	search(queryVector: number[], k: number): Promise<StoreSearchResult[]>
+	load(): Promise<void>
+	clear(): Promise<void>
+	size(): number
+	deleteByFilePath(filePath: string): Promise<void>
+	hasFileSegments(filePath: string): Promise<{ exists: boolean; hash?: string }>
+}
+
 export interface Storage {
 	get<T>(key: string): T | undefined
 	update(key: string, value: any): Thenable<void>

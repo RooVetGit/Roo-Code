@@ -1,10 +1,9 @@
-import { Vector, VectorSearchResult, VectorStore, VectorWithMetadata } from "./types"
+import { VectorStore, StoreSearchResult } from "../types"
+import { CodeDefinition } from "../types"
 import * as lancedb from "@lancedb/lancedb"
 import { Connection, Table } from "@lancedb/lancedb"
 import * as arrow from "apache-arrow"
 import * as path from "path"
-import { CodeDefinition } from "../types"
-import { SearchResult, CodeSearchResult } from "../types"
 
 export class LanceDBVectorStore implements VectorStore {
 	private connection!: Connection
@@ -12,7 +11,7 @@ export class LanceDBVectorStore implements VectorStore {
 	private tablePrefix = "vectors"
 	private dbPath: string
 	private workspaceId: string
-	private readonly VECTOR_DIMENSION = 384
+	private readonly VECTOR_DIMENSION = 1536
 	private indexCreated = false
 
 	private readonly schema = new arrow.Schema([
@@ -46,10 +45,10 @@ export class LanceDBVectorStore implements VectorStore {
 		}
 	}
 
-	async add(vector: Vector, metadata: CodeDefinition): Promise<void> {
+	async add(metadata: CodeDefinition, vector: number[]): Promise<void> {
 		await this.table.add([
 			{
-				vector: vector.values,
+				vector: vector,
 				id: this.generateId(metadata),
 				metadata: this.serializeMetadata(metadata),
 				contentHash: metadata.contentHash,
@@ -59,9 +58,9 @@ export class LanceDBVectorStore implements VectorStore {
 		await this.createIndexIfNeeded()
 	}
 
-	async addBatch(vectors: VectorWithMetadata[]): Promise<void> {
-		const records = vectors.map(({ vector, metadata }) => ({
-			vector: vector.values,
+	async addBatch(batch: Array<{ metadata: CodeDefinition; vector: number[] }>): Promise<void> {
+		const records = batch.map(({ metadata, vector }) => ({
+			vector: vector,
 			id: this.generateId(metadata),
 			metadata: this.serializeMetadata(metadata),
 			contentHash: metadata.contentHash,
@@ -72,15 +71,11 @@ export class LanceDBVectorStore implements VectorStore {
 		await this.createIndexIfNeeded()
 	}
 
-	async search(queryVector: Vector, k: number): Promise<VectorSearchResult[]> {
+	async search(queryVector: number[], k: number): Promise<StoreSearchResult[]> {
 		const reranker = await lancedb.rerankers.RRFReranker.create(k)
-		const results = await this.table.vectorSearch(queryVector.values).limit(k).rerank(reranker).toArray()
+		const results = await this.table.vectorSearch(queryVector).limit(k).rerank(reranker).toArray()
 
 		return results.map((r) => ({
-			vector: {
-				values: r.vector,
-				dimension: r.vector.length,
-			},
 			score: r.relevance || 0,
 			metadata: this.parseMetadata(r.metadata) as CodeDefinition,
 		}))

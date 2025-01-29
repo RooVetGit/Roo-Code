@@ -6,15 +6,19 @@ import { CodeSegment, ParsedFile, SemanticParser, IMPORTANCE_WEIGHTS, CodeSegmen
 import typescript from "./queries/typescript"
 import javascript from "./queries/javascript"
 import crypto from "crypto"
+import * as vscode from "vscode"
 
 export class TreeSitterParser implements SemanticParser {
 	private languageParsers: Record<string, { parser: Parser; query: Parser.Query }> = {}
 	private initialized = false
 	private wasmDir: string
 
-	constructor(wasmDir?: string) {
-		// In tests, use the provided wasmDir, otherwise use the default
-		this.wasmDir = wasmDir || __dirname
+	constructor(
+		private extensionContext: vscode.ExtensionContext,
+		wasmDir?: string,
+	) {
+		// Use extension context's path as base directory
+		this.wasmDir = wasmDir || path.join(this.extensionContext.extensionPath, "dist")
 	}
 
 	private async initialize(filePath: string) {
@@ -86,7 +90,7 @@ export class TreeSitterParser implements SemanticParser {
 		}
 	}
 
-	private async parseSegments(tree: Parser.Tree, fileContent: string, language: string): Promise<CodeSegment[]> {
+	private async parseSegments(tree: Parser.Tree, language: string): Promise<CodeSegment[]> {
 		const segments: CodeSegment[] = []
 		const ext = Object.entries(this.getLanguageMap()).find(([_, lang]) => lang === language)?.[0]
 
@@ -174,18 +178,19 @@ export class TreeSitterParser implements SemanticParser {
 		return segments
 	}
 
-	async parseFile(filePath: string, expectedHash?: string): Promise<ParsedFile> {
+	async parseFile(filePath: string, expectedHash?: string): Promise<ParsedFile | null> {
+		// Add file size check
+		const stats = await fs.stat(filePath)
+		if (stats.size > 2 * 1024 * 1024) {
+			// 2MB limit
+			return null
+		}
+
 		const fileContent = await fs.readFile(filePath, "utf8")
 		const currentHash = crypto.createHash("sha256").update(fileContent).digest("hex")
 
 		if (expectedHash && currentHash !== expectedHash) {
-			return {
-				path: filePath,
-				segments: [],
-				imports: [],
-				exports: [],
-				summary: "Skipped due to hash mismatch",
-			}
+			return null
 		}
 
 		await this.initialize(filePath)
@@ -194,19 +199,13 @@ export class TreeSitterParser implements SemanticParser {
 		const language = this.getLanguageFromExt(ext)
 
 		if (!this.languageParsers[ext]) {
-			return {
-				path: filePath,
-				segments: [],
-				imports: [],
-				exports: [],
-				summary: `File type .${ext} not supported for parsing`,
-			}
+			return null
 		}
 
 		try {
 			const { parser } = this.languageParsers[ext]
 			const tree = parser.parse(fileContent)
-			const segments = await this.parseSegments(tree, fileContent, language)
+			const segments = await this.parseSegments(tree, language)
 
 			const imports = segments
 				.filter((s) => s.type === CodeSegmentType.IMPORT)
@@ -224,13 +223,7 @@ export class TreeSitterParser implements SemanticParser {
 			}
 		} catch (error) {
 			console.error(`Error parsing ${filePath}:`, error)
-			return {
-				path: filePath,
-				segments: [],
-				imports: [],
-				exports: [],
-				summary: `Error parsing file: ${error.message}`,
-			}
+			return null
 		}
 	}
 

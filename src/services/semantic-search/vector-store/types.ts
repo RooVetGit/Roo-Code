@@ -1,53 +1,29 @@
 import { CodeDefinition } from "../types"
+import { SearchResult as AppSearchResult } from "../types"
 
-export interface Vector {
-	values: number[]
-	dimension: number
-}
-
-export interface VectorWithMetadata {
-	vector: Vector
-	metadata: CodeDefinition
-	score?: number
-}
-
-export interface VectorSearchResult extends VectorWithMetadata {
+export interface StoreSearchResult {
 	score: number
+	metadata: CodeDefinition
 }
 
 export interface VectorStore {
 	/**
-	 * Add a vector with its associated metadata to the store
+	 * Add a document with its metadata to the store
 	 */
-	add(vector: Vector, metadata: any): Promise<void>
+	add(metadata: CodeDefinition): Promise<void>
 
 	/**
-	 * Add multiple vectors with their associated metadata to the store
+	 * Add multiple documents with their metadata to the store
 	 */
-	addBatch(items: VectorWithMetadata[]): Promise<void>
+	addBatch(items: CodeDefinition[]): Promise<void>
 
 	/**
-	 * Search for the k nearest neighbors of the query vector
+	 * Search for the k most similar documents to the query
 	 */
-	search(queryVector: Vector, k: number): Promise<VectorSearchResult[]>
+	search(query: string, k: number): Promise<StoreSearchResult[]>
 
 	/**
-	 * Get the total number of vectors in the store
-	 */
-	size(): number
-
-	/**
-	 * Clear all vectors from the store
+	 * Clear all documents from the store
 	 */
 	clear(): Promise<void>
-
-	/**
-	 * Save the vector store to disk (if supported)
-	 */
-	save?(path: string): Promise<void>
-
-	/**
-	 * Load the vector store from disk (if supported)
-	 */
-	load?(path: string): Promise<void>
 }

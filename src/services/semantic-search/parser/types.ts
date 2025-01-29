@@ -27,7 +27,7 @@ export interface ParsedFile {
 }
 
 export interface SemanticParser {
-	parseFile(filePath: string): Promise<ParsedFile>
+	parseFile(filePath: string): Promise<ParsedFile | null>
 	getImportGraph(filePath: string): Promise<{ imports: string[]; importedBy: string[] }>
 	getSymbolContext(filePath: string, line: number, column: number): Promise<string>
 }

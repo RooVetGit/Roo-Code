@@ -6,17 +6,13 @@ import {
 	FileSearchResult,
 	CodeSearchResult,
 } from "./types"
-import { Vector, VectorSearchResult, VectorWithMetadata } from "./vector-store/types"
-import { WorkspaceCache } from "./cache/workspace-cache"
 import * as path from "path"
-import { EmbeddingModel } from "./embeddings/types"
-import { MiniLMModel } from "./embeddings/minilm"
 import * as vscode from "vscode"
 import { TreeSitterParser } from "./parser/tree-sitter"
 import { LanceDBVectorStore } from "./vector-store/lancedb"
+import { StoreSearchResult } from "./vector-store/types"
 import * as crypto from "crypto"
-
-export type ModelType = "minilm"
+import { ApiHandler } from "../../api"
 
 export interface SemanticSearchConfig {
 	/**
@@ -30,19 +26,14 @@ export interface SemanticSearchConfig {
 	maxResults?: number
 
 	/**
-	 * Whether to normalize embeddings
-	 */
-	normalizeEmbeddings?: boolean
-
-	/**
 	 * Context for storage and paths
 	 */
 	context: vscode.ExtensionContext
 
 	/**
-	 * Model type to use (default: minilm)
+	 * OpenAI API key
 	 */
-	modelType?: ModelType
+	openAiApiKey?: string
 }
 
 export enum WorkspaceIndexStatus {
@@ -72,8 +63,8 @@ export class SemanticSearchService {
 		"swift", // Swift
 	])
 
-	// Maximum size for text files (5MB)
-	private static readonly MAX_TEXT_FILE_SIZE = 5 * 1024 * 1024
+	// Maximum size for text files (2MB)
+	private static readonly MAX_TEXT_FILE_SIZE = 2 * 1024 * 1024
 
 	private static async isTextFile(filePath: string): Promise<boolean> {
 		const stats = await vscode.workspace.fs.stat(vscode.Uri.file(filePath))
@@ -117,7 +108,7 @@ export class SemanticSearchService {
 		}
 
 		const ratio = validBytes / fileContent.length
-		return ratio >= 0.95 // 95% threshold
+		return ratio >= 0.98 // 98% threshold
 	}
 
 	private static isValidUtf8(buffer: Uint8Array): boolean {
@@ -138,26 +129,94 @@ export class SemanticSearchService {
 		return this.SUPPORTED_CODE_EXTENSIONS.has(ext)
 	}
 
+	// Add chunking method for text files
+	private static chunkText(text: string, maxChunkSize: number = 8000): string[] {
+		const chunks: string[] = []
+		const paragraphs = text.split("\n\n")
+		let currentChunk: string[] = []
+		let currentLength = 0
+
+		for (const paragraph of paragraphs) {
+			if (currentLength + paragraph.length > maxChunkSize) {
+				if (currentChunk.length > 0) {
+					chunks.push(currentChunk.join("\n\n"))
+					currentChunk = []
+					currentLength = 0
+				}
+				// Handle very long paragraphs by splitting into sentences
+				if (paragraph.length > maxChunkSize) {
+					const sentences = paragraph.split(/[.!?]\s+/)
+					for (const sentence of sentences) {
+						if (currentLength + sentence.length > maxChunkSize) {
+							chunks.push(sentence.substring(0, maxChunkSize))
+							currentLength = 0
+						} else {
+							currentChunk.push(sentence)
+							currentLength += sentence.length
+						}
+					}
+				} else {
+					chunks.push(paragraph)
+				}
+			} else {
+				currentChunk.push(paragraph)
+				currentLength += paragraph.length + 2 // Account for newlines
+			}
+		}
+
+		if (currentChunk.length > 0) {
+			chunks.push(currentChunk.join("\n\n"))
+		}
+
+		return chunks
+	}
+
+	// Add new chunking method for code content
+	private static chunkCodeContent(content: string, maxChunkSize: number = 32000): string[] {
+		const chunks: string[] = []
+		const lines = content.split("\n")
+		let currentChunk: string[] = []
+		let currentLength = 0
+
+		for (const line of lines) {
+			if (currentLength + line.length > maxChunkSize) {
+				// Try to find a natural split point in the last 10 lines
+				let splitIndex = currentChunk.length - 1
+				for (let i = currentChunk.length - 1; i >= Math.max(0, currentChunk.length - 10); i--) {
+					if (/[;}]$/.test(currentChunk[i]) || currentChunk[i].trim() === "") {
+						splitIndex = i + 1
+						break
+					}
+				}
+
+				chunks.push(currentChunk.slice(0, splitIndex).join("\n"))
+				currentChunk = currentChunk.slice(splitIndex)
+				currentLength = currentChunk.join("\n").length
+			}
+
+			currentChunk.push(line)
+			currentLength += line.length + 1 // +1 for newline
+		}
+
+		if (currentChunk.length > 0) {
+			chunks.push(currentChunk.join("\n"))
+		}
+
+		return chunks
+	}
+
 	private statuses = new Map<string, WorkspaceIndexStatus>()
-	private model: EmbeddingModel
 	private store!: LanceDBVectorStore
-	private cache: WorkspaceCache
 	private initialized = false
 	private initializationError: Error | null = null
 	private parser: TreeSitterParser
+	private config: SemanticSearchConfig
+	private apiHandler?: ApiHandler
 
-	constructor(private config: SemanticSearchConfig) {
-		const workspaceId = this.getWorkspaceId(config.context)
-		const modelConfig = {
-			modelPath: path.join(config.storageDir, "models"),
-			normalize: config.normalizeEmbeddings ?? true,
-		}
-
-		this.model = new MiniLMModel(modelConfig)
-		this.cache = new WorkspaceCache(config.context.globalState, workspaceId)
-		this.parser = new TreeSitterParser()
-
-		// Initialize status as NotIndexed
+	constructor(config: SemanticSearchConfig, apiHandler?: ApiHandler) {
+		this.config = config
+		this.parser = new TreeSitterParser(config.context)
+		this.apiHandler = apiHandler
 		this.updateStatus(WorkspaceIndexStatus.NotIndexed)
 	}
 
@@ -202,63 +261,12 @@ export class SemanticSearchService {
 		this.updateStatus(WorkspaceIndexStatus.Indexing)
 
 		try {
-			const startTime = Date.now()
-			// Keep only essential initialization logs
 			console.log("Initializing semantic search service")
 
 			const workspaceId = this.getWorkspaceId(this.config.context)
 			this.store = new LanceDBVectorStore(path.join(this.config.storageDir, "lancedb"), workspaceId)
 			await this.store.initialize()
 
-			const storeSize = this.store.size()
-			if (storeSize === 0) {
-				this.updateStatus(WorkspaceIndexStatus.NotIndexed)
-				return
-			}
-
-			// Initialize model
-			const MAX_INIT_ATTEMPTS = 3
-			let initAttempt = 0
-			let modelInitError: Error | null = null
-
-			while (initAttempt < MAX_INIT_ATTEMPTS) {
-				try {
-					await this.model.initialize()
-					modelInitError = null
-					break
-				} catch (error) {
-					initAttempt++
-					modelInitError = error instanceof Error ? error : new Error(String(error))
-					if (initAttempt < MAX_INIT_ATTEMPTS) {
-						await new Promise((resolve) => setTimeout(resolve, 1000 * initAttempt))
-					}
-				}
-			}
-
-			if (modelInitError) {
-				throw modelInitError
-			}
-
-			const initDuration = Date.now() - startTime
-			console.log(`Embedding model initialization completed in ${initDuration}ms`)
-
-			// Verify model is truly initialized
-			if (!this.model.isInitialized()) {
-				throw new Error("Model initialization failed: isInitialized() returned false")
-			}
-
-			// Perform a test embedding to ensure model works
-			try {
-				const testEmbedding = await this.model.embed("Test embedding to verify initialization")
-				console.log(`Test embedding generated successfully. Dimension: ${testEmbedding.dimension}`)
-			} catch (embedError) {
-				console.error("Failed to generate test embedding:", embedError)
-				throw new Error(
-					`Model initialization verification failed: ${embedError instanceof Error ? embedError.message : String(embedError)}`,
-				)
-			}
-
-			// Keep only essential success log
 			console.log("Semantic search service initialized successfully")
 			this.initialized = true
 			this.updateStatus(WorkspaceIndexStatus.Indexed)
@@ -332,8 +340,14 @@ export class SemanticSearchService {
 		}
 
 		// Only process if we passed the checks
+		console.log("Processing file", filePath, "Is code file?", SemanticSearchService.isCodeFile(filePath))
 		if (SemanticSearchService.isCodeFile(filePath)) {
 			const parsedFile = await this.parser.parseFile(filePath, hash) // Pass hash to parser
+			console.log("Parsed file", parsedFile)
+			if (!parsedFile) {
+				console.error("Failed to parse file", filePath)
+				return
+			}
 			for (const segment of parsedFile.segments) {
 				const definition = {
 					...convertSegmentToDefinition(segment, filePath),
@@ -342,17 +356,20 @@ export class SemanticSearchService {
 				await this.indexDefinition(definition)
 			}
 		} else {
-			const definition: CodeDefinition = {
-				type: "file",
-				name: path.basename(filePath),
-				filePath: filePath,
-				content: textContent,
-				startLine: 1,
-				endLine: textContent.split("\n").length,
-				language: path.extname(filePath).slice(1) || "text",
-				contentHash: hash,
+			const chunks = SemanticSearchService.chunkText(textContent)
+			for (const [index, chunk] of chunks.entries()) {
+				const definition: CodeDefinition = {
+					type: "file",
+					name: `${path.basename(filePath)} #${index + 1}`,
+					filePath: filePath,
+					content: chunk,
+					startLine: 1 + index * 100, // Approximate line numbers
+					endLine: 1 + (index + 1) * 100,
+					language: path.extname(filePath).slice(1) || "text",
+					contentHash: hash,
+				}
+				await this.indexDefinition(definition)
 			}
-			await this.indexDefinition(definition)
 		}
 	}
 
@@ -369,10 +386,7 @@ export class SemanticSearchService {
 			for (const filePath of filePaths) {
 				await this.processFileWithHash(filePath)
 			}
-
-			// Only update status to Indexed if we have vectors in the store
-			const storeSize = this.store.size()
-			this.updateStatus(storeSize > 0 ? WorkspaceIndexStatus.Indexed : WorkspaceIndexStatus.NotIndexed)
+			this.updateStatus(WorkspaceIndexStatus.Indexed)
 		} catch (error) {
 			this.updateStatus(WorkspaceIndexStatus.NotIndexed)
 			throw error
@@ -381,67 +395,67 @@ export class SemanticSearchService {
 
 	// Helper method to index a single definition
 	private async indexDefinition(definition: CodeDefinition): Promise<void> {
-		// Try to get vector from cache first
-		let vector = await this.cache.get(definition)
-
-		if (!vector) {
-			// Generate new embedding if not in cache
-			vector = await (this.model as any).embedWithContext(definition)
-			if (!vector) {
-				console.error(`Failed to generate embedding for ${definition.filePath}`)
-				return
-			}
-			await this.cache.set(definition, vector)
-			console.log(
-				`Generated new contextual embedding for ${definition.filePath} (${definition.type}: ${definition.name})`,
-			)
-		} else {
-			console.log(`Using cached embedding for ${definition.filePath} (${definition.type}: ${definition.name})`)
+		if (!this.apiHandler?.embedText) {
+			throw new Error("Embeddings not supported with current API configuration")
 		}
 
-		await this.store.add(vector, definition)
+		// Split long content into chunks
+		const maxLength = 32000 // ~8000 tokens at 4 chars/token
+		const chunks =
+			definition.type === "file"
+				? SemanticSearchService.chunkText(definition.content)
+				: SemanticSearchService.chunkCodeContent(definition.content, maxLength)
+
+		for (const [index, chunk] of chunks.entries()) {
+			const lineCount = chunk.split("\n").length
+			const chunkDefinition: CodeDefinition = {
+				...definition,
+				name: `${definition.name} [part ${index + 1}]`,
+				content: chunk,
+				startLine: definition.startLine + index * lineCount,
+				endLine: definition.startLine + (index + 1) * lineCount - 1,
+			}
+
+			const embedding = await this.apiHandler.embedText(chunkDefinition.content)
+			await this.store.add(chunkDefinition, embedding)
+		}
 	}
 
 	async search(query: string): Promise<SearchResult[]> {
-		try {
-			await this.ensureInitialized()
-
-			const storeSize = this.size()
-			if (storeSize === 0) {
-				return []
-			}
-
-			const queryVector = await this.model.embed(query)
-			const results = await this.store.search(
-				queryVector,
-				this.config.maxResults ? this.config.maxResults * 2 : 20,
-			)
-
-			const dedupedResults = this.deduplicateResults(results)
-			const maxResults = this.config.maxResults ?? 10
-			const finalResults: VectorSearchResult[] = []
-
-			const codeResults = dedupedResults.filter((r) => r.metadata?.type !== "file")
-			const fileResults = dedupedResults.filter((r) => r.metadata?.type === "file")
-
-			for (const result of codeResults) {
-				if (finalResults.length >= maxResults) break
-				finalResults.push(result)
-			}
-
-			for (const result of fileResults) {
-				if (finalResults.length >= maxResults) break
-				finalResults.push(result)
-			}
-
-			return finalResults.slice(0, maxResults).map((r) => this.formatResult(r))
-		} catch (error) {
-			console.error("Error during semantic search:", error)
-			throw error
+		if (!this.apiHandler?.embedText) {
+			throw new Error("Embeddings not supported with current API configuration")
 		}
+
+		const queryEmbedding = await this.apiHandler.embedText(query)
+
+		await this.ensureInitialized()
+
+		const results = await this.store.search(
+			queryEmbedding,
+			this.config.maxResults ? this.config.maxResults * 2 : 20,
+		)
+
+		const dedupedResults = this.deduplicateResults(results)
+		const maxResults = this.config.maxResults ?? 10
+		const finalResults: StoreSearchResult[] = []
+
+		const codeResults = dedupedResults.filter((r) => r.metadata?.type !== "file")
+		const fileResults = dedupedResults.filter((r) => r.metadata?.type === "file")
+
+		for (const result of codeResults) {
+			if (finalResults.length >= maxResults) break
+			finalResults.push(result)
+		}
+
+		for (const result of fileResults) {
+			if (finalResults.length >= maxResults) break
+			finalResults.push(result)
+		}
+
+		return finalResults.slice(0, maxResults).map((r) => this.formatResult(r))
 	}
 
-	private formatResult(result: VectorWithMetadata): SearchResult {
+	private formatResult(result: StoreSearchResult): SearchResult {
 		if (!result.metadata || !result.metadata.filePath) {
 			throw new Error("Invalid metadata in search result")
 		}
@@ -468,8 +482,8 @@ export class SemanticSearchService {
 		} as CodeSearchResult
 	}
 
-	private deduplicateResults(results: VectorSearchResult[]): VectorSearchResult[] {
-		const dedupedResults: VectorSearchResult[] = []
+	private deduplicateResults(results: StoreSearchResult[]): StoreSearchResult[] {
+		const dedupedResults: StoreSearchResult[] = []
 		const seenPaths = new Set<string>()
 		const seenContent = new Set<string>()
 		for (const result of results) {
@@ -496,16 +510,15 @@ export class SemanticSearchService {
 		if (!this.store) {
 			throw new Error("Vector store not initialized")
 		}
-		return this.store.size()
+		return 0
+	}
+
+	updateConfig(updates: Partial<SemanticSearchConfig>) {
+		this.config = { ...this.config, ...updates }
 	}
 
 	clear(): void {
 		this.store.clear()
-		this.cache.clear()
 		this.updateStatus(WorkspaceIndexStatus.NotIndexed)
-	}
-
-	async invalidateCache(definition: CodeDefinition): Promise<void> {
-		await this.cache.invalidate(definition)
 	}
 }
