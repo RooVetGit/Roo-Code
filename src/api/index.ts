@@ -22,6 +22,7 @@ export interface SingleCompletionHandler {
 export interface ApiHandler {
 	createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream
 	getModel(): { id: string; info: ModelInfo }
+	embedText?(text: string): Promise<number[]>
 }
 
 export function buildApiHandler(configuration: ApiConfiguration): ApiHandler {

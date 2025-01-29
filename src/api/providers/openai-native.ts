@@ -121,4 +121,17 @@ export class OpenAiNativeHandler implements ApiHandler, SingleCompletionHandler 
 			throw error
 		}
 	}
+
+	async embedText(text: string): Promise<number[]> {
+		const response = await this.client.embeddings.create({
+			input: text,
+			model: "text-embedding-3-small",
+		})
+
+		if (!response.data?.[0]?.embedding) {
+			throw new Error("Failed to create embeddings")
+		}
+
+		return response.data[0].embedding
+	}
 }
