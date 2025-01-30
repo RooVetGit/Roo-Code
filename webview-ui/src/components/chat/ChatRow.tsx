@@ -80,6 +80,14 @@ export const ChatRowContent = ({
 	isStreaming,
 }: ChatRowContentProps) => {
 	const { mcpServers, alwaysAllowMcp } = useExtensionState()
+	const [reasoningCollapsed, setReasoningCollapsed] = useState(false)
+
+	// Auto-collapse reasoning when new messages arrive
+	useEffect(() => {
+		if (!isLast && message.say === "reasoning") {
+			setReasoningCollapsed(true)
+		}
+	}, [isLast, message.say])
 	const [cost, apiReqCancelReason, apiReqStreamingFailedMessage] = useMemo(() => {
 		if (message.text != null && message.say === "api_req_started") {
 			const info: ClineApiReqInfo = JSON.parse(message.text)
