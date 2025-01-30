@@ -1,4 +1,5 @@
 const esbuild = require("esbuild")
+const { copy } = require("esbuild-plugin-copy")
 const fs = require("fs")
 const path = require("path")
 
@@ -25,43 +26,6 @@ const esbuildProblemMatcherPlugin = {
 	},
 }
 
-const copyWasmFiles = {
-	name: "copy-wasm-files",
-	setup(build) {
-		build.onEnd(() => {
-			// tree sitter
-			const sourceDir = path.join(__dirname, "node_modules", "web-tree-sitter")
-			const targetDir = path.join(__dirname, "dist")
-
-			// Copy tree-sitter.wasm
-			fs.copyFileSync(path.join(sourceDir, "tree-sitter.wasm"), path.join(targetDir, "tree-sitter.wasm"))
-
-			// Copy language-specific WASM files
-			const languageWasmDir = path.join(__dirname, "node_modules", "tree-sitter-wasms", "out")
-			const languages = [
-				"typescript",
-				"tsx",
-				"python",
-				"rust",
-				"javascript",
-				"go",
-				"cpp",
-				"c",
-				"c_sharp",
-				"ruby",
-				"java",
-				"php",
-				"swift",
-			]
-
-			languages.forEach((lang) => {
-				const filename = `tree-sitter-${lang}.wasm`
-				fs.copyFileSync(path.join(languageWasmDir, filename), path.join(targetDir, filename))
-			})
-		})
-	},
-}
-
 // Plugin to handle native .node files
 const nativeNodeModulesPlugin = {
 	name: "native-node-modules",
@@ -79,13 +43,35 @@ const extensionConfig = {
 	minify: production,
 	sourcemap: !production,
 	logLevel: "silent",
-	plugins: [copyWasmFiles, nativeNodeModulesPlugin, esbuildProblemMatcherPlugin],
+	plugins: [
+		copy({
+			resolveFrom: "cwd",
+			assets: [
+				{
+					from: "./node_modules/tree-sitter-wasms/out/**/*.wasm",
+					to: "./dist/",
+				},
+				{
+					from: "./node_modules/web-tree-sitter/tree-sitter.wasm",
+					to: "./dist/",
+				},
+				{
+					from: "./node_modules/lancedb/dist/*.node",
+					to: "./dist/",
+				},
+			],
+			watch: true,
+		}),
+		nativeNodeModulesPlugin,
+		esbuildProblemMatcherPlugin,
+	],
 	entryPoints: ["src/extension.ts"],
 	format: "cjs",
 	sourcesContent: false,
 	platform: "node",
 	outfile: "dist/extension.js",
-	external: ["vscode", "onnxruntime-node", "@lancedb/lancedb-linux-x64-gnu"],
+	external: ["vscode"],
+	loader: { ".node": "file" },
 }
 
 async function main() {
