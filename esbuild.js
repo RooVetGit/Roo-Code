@@ -30,10 +30,9 @@ const esbuildProblemMatcherPlugin = {
 const nativeNodeModulesPlugin = {
 	name: "native-node-modules",
 	setup(build) {
-		// Mark .node files as external to prevent esbuild from trying to bundle them
 		build.onResolve({ filter: /\.node$/ }, (args) => ({
 			path: args.path,
-			external: true,
+			external: true, // Already correctly marked as external
 		}))
 	},
 }
@@ -43,6 +42,7 @@ const extensionConfig = {
 	minify: production,
 	sourcemap: !production,
 	logLevel: "silent",
+	assetNames: "[name]",
 	plugins: [
 		copy({
 			resolveFrom: "cwd",
@@ -56,7 +56,7 @@ const extensionConfig = {
 					to: "./dist/",
 				},
 				{
-					from: "./node_modules/lancedb/dist/*.node",
+					from: "./node_modules/@lancedb/**/*.node",
 					to: "./dist/",
 				},
 			],
