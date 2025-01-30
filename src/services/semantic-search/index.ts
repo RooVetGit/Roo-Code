@@ -29,11 +29,6 @@ export interface SemanticSearchConfig {
 	 * Context for storage and paths
 	 */
 	context: vscode.ExtensionContext
-
-	/**
-	 * OpenAI API key
-	 */
-	openAiApiKey?: string
 }
 
 export enum WorkspaceIndexStatus {
@@ -264,12 +259,18 @@ export class SemanticSearchService {
 			console.log("Initializing semantic search service")
 
 			const workspaceId = this.getWorkspaceId(this.config.context)
+			console.log("Workspace ID:", workspaceId)
 			this.store = new LanceDBVectorStore(path.join(this.config.storageDir, "lancedb"), workspaceId)
 			await this.store.initialize()
 
 			console.log("Semantic search service initialized successfully")
 			this.initialized = true
-			this.updateStatus(WorkspaceIndexStatus.Indexed)
+
+			if (this.store.size() === 0) {
+				this.updateStatus(WorkspaceIndexStatus.NotIndexed)
+			} else {
+				this.updateStatus(WorkspaceIndexStatus.Indexed)
+			}
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error)
 			console.error("Initialization failed:", errorMessage)
@@ -513,8 +514,8 @@ export class SemanticSearchService {
 		return 0
 	}
 
-	updateConfig(updates: Partial<SemanticSearchConfig>) {
-		this.config = { ...this.config, ...updates }
+	provideApiHandler(apiHandler: ApiHandler) {
+		this.apiHandler = apiHandler
 	}
 
 	clear(): void {
