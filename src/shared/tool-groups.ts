@@ -17,11 +17,12 @@ export const TOOL_DISPLAY_NAMES = {
 	attempt_completion: "complete tasks",
 	switch_mode: "switch modes",
 	new_task: "create new task",
+	semantic_search: "semantic search",
 } as const
 
 // Define available tool groups
 export const TOOL_GROUPS: Record<string, ToolGroupValues> = {
-	read: ["read_file", "search_files", "list_files", "list_code_definition_names"],
+	read: ["read_file", "search_files", "list_files", "semantic_search", "list_code_definition_names"],
 	edit: ["write_to_file", "apply_diff", "insert_content", "search_and_replace"],
 	browser: ["browser_action"],
 	command: ["execute_command"],
@@ -37,6 +38,7 @@ export const ALWAYS_AVAILABLE_TOOLS = [
 	"attempt_completion",
 	"switch_mode",
 	"new_task",
+	"semantic_search",
 ] as const
 
 // Tool name types for type safety

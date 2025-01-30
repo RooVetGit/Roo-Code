@@ -60,8 +60,8 @@ import { BrowserSession } from "../services/browser/BrowserSession"
 import { OpenRouterHandler } from "../api/providers/openrouter"
 import { McpHub } from "../services/mcp/McpHub"
 import crypto from "crypto"
+import { EXPERIMENT_IDS } from "../shared/experiments"
 import { insertGroups } from "./diff/insert-groups"
-import { EXPERIMENT_IDS, experiments as Experiments } from "../shared/experiments"
 import { SemanticSearchService } from "../services/semantic-search"
 import { parseAssistantMessage } from "./assistant-message/parse-assistant-message"
 
@@ -144,7 +144,7 @@ export class Cline {
 		}
 
 		// Initialize diffStrategy based on current state
-		this.updateDiffStrategy(Experiments.isEnabled(experiments ?? {}, EXPERIMENT_IDS.DIFF_STRATEGY))
+		this.updateDiffStrategy(experiments?.diffStrategy ?? false)
 
 		this.semanticSearchService = semanticSearchService
 

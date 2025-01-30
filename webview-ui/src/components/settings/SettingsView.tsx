@@ -852,6 +852,119 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
               </div>
             </div>
           </div>
+					<div style={{ marginBottom: 5 }}>
+						<div style={{ marginBottom: 10 }}>
+							<h3 style={{ color: "var(--vscode-foreground)", margin: 0, marginBottom: 15 }}>
+								Semantic Search Settings
+							</h3>
+
+							<div style={{ marginBottom: 15 }}>
+								<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+									<span style={{ fontWeight: "500", minWidth: "150px" }}>Maximum Results</span>
+									<input
+										type="range"
+										min="5"
+										max="50"
+										step="5"
+										value={maxResults}
+										onChange={(e) => setMaxResults(parseInt(e.target.value))}
+										style={{
+											flexGrow: 1,
+											accentColor: "var(--vscode-button-background)",
+											height: "2px",
+										}}
+									/>
+									<span style={{ minWidth: "60px", textAlign: "left" }}>{maxResults}</span>
+								</div>
+								<p
+									style={{
+										fontSize: "12px",
+										marginTop: "5px",
+										color: "var(--vscode-descriptionForeground)",
+									}}>
+									Maximum number of results to return from each search query.
+								</p>
+							</div>
+
+							<div style={{ marginBottom: 15 }}>
+								<div style={{ display: "flex", gap: "10px" }}>
+									<VSCodeButton
+										onClick={() => {
+											vscode.postMessage({ type: "reindexSemantic" })
+										}}
+										disabled={indexingProgress !== undefined}>
+										{indexingProgress ? "Indexing..." : "Reindex Workspace"}
+									</VSCodeButton>
+									<VSCodeButton
+										onClick={() => {
+											vscode.postMessage({ type: "deleteSemanticIndex" })
+										}}
+										disabled={indexingProgress !== undefined}>
+										Clear Index
+									</VSCodeButton>
+								</div>
+								{indexingProgress && (
+									<div style={{ marginTop: 10 }}>
+										<div
+											style={{
+												width: "100%",
+												height: "2px",
+												backgroundColor: "var(--vscode-progressBar-background)",
+												position: "relative",
+												overflow: "hidden",
+											}}>
+											<div
+												style={{
+													position: "absolute",
+													top: 0,
+													left: 0,
+													height: "100%",
+													width: `${(indexingProgress.current / indexingProgress.total) * 100}%`,
+													backgroundColor: "var(--vscode-progressBar-foreground)",
+													transition: "width 0.2s ease-out",
+												}}
+											/>
+										</div>
+										<p
+											style={{
+												fontSize: "12px",
+												marginTop: "5px",
+												color: "var(--vscode-descriptionForeground)",
+											}}>
+											{indexingProgress.status}
+										</p>
+									</div>
+								)}
+								<p
+									style={{
+										fontSize: "12px",
+										marginTop: "5px",
+										color: "var(--vscode-descriptionForeground)",
+									}}>
+									Manage the semantic search index. Reindexing will rebuild the index for all files in
+									the workspace.
+								</p>
+							</div>
+
+							<div style={{ marginBottom: 15 }}>
+								<div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: 10 }}>
+									<span style={{ fontWeight: "500" }}>Current Workspace Status:</span>
+									<span
+										style={{
+											color:
+												semanticSearchStatus === "Indexed"
+													? "var(--vscode-gitDecoration-untrackedResourceForeground)"
+													: semanticSearchStatus === "Indexing"
+														? "var(--vscode-problemsWarningIcon-foreground)"
+														: "var(--vscode-problemsErrorIcon-foreground)",
+											fontWeight: 500,
+										}}>
+										{semanticSearchStatus}
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
 
 				<div
