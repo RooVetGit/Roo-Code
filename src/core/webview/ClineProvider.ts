@@ -47,7 +47,6 @@ import { ACTION_NAMES } from "../CodeActionProvider"
 import { SemanticSearchConfig, SemanticSearchService } from "../../services/semantic-search"
 import { listFiles } from "../../services/glob/list-files"
 
-
 /*
 https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
 
@@ -2245,7 +2244,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("enhancementApiConfigId") as Promise<string | undefined>,
 			this.getGlobalState("autoApprovalEnabled") as Promise<boolean | undefined>,
 			this.customModesManager.getCustomModes(),
-			this.getGlobalState("experiments") as Promise<Record<ExperimentId, boolean> | undefined>,
 			this.getSecret("unboundApiKey") as Promise<string | undefined>,
 			this.getGlobalState("unboundModelId") as Promise<string | undefined>,
 			this.getGlobalState("experiments") as Promise<Record<ExperimentId, boolean> | undefined>,
