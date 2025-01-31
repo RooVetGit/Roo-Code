@@ -123,7 +123,7 @@ type GlobalStateKey =
 	| "browserViewportSize"
 	| "screenshotQuality"
 	| "fuzzyMatchThreshold"
-	| "preferredLanguage" // Language setting for Cline's communication
+	| "preferredLanguage"
 	| "writeDelayMs"
 	| "terminalOutputLineLimit"
 	| "mcpEnabled"
@@ -137,11 +137,13 @@ type GlobalStateKey =
 	| "customModePrompts"
 	| "customSupportPrompts"
 	| "enhancementApiConfigId"
-	| "experiments" // Map of experiment IDs to their enabled state
+	| "experiments"
 	| "autoApprovalEnabled"
-	| "customModes" // Array of custom modes
+	| "customModes"
 	| "unboundModelId"
 	| "semanticSearchMaxResults"
+	| "semanticSearchStatus"
+	| "apiConfiguration"
 
 export const GlobalFileNames = {
 	apiConversationHistory: "api_conversation_history.json",
@@ -1340,28 +1342,59 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.postStateToWebview()
 						break
 					case "updateSemanticSearchApiKey":
-						if (message.text) {
-							await this.storeSecret("semanticSearchApiKey", message.text)
-							if (this.semanticSearchService) {
-								const apiHandler = new OpenAiNativeHandler({
-									openAiNativeApiKey: message.text,
-								})
-								await this.semanticSearchService.provideApiHandler(apiHandler)
-							}
-						} else {
-							await this.storeSecret("semanticSearchApiKey", undefined)
-							if (this.semanticSearchService) {
-								const { apiConfiguration } = await this.getState()
-								if (apiConfiguration.apiProvider === "openai-native") {
-									await this.semanticSearchService.provideApiHandler(
-										buildApiHandler(apiConfiguration),
-									)
-								} else {
-									this.semanticSearchService = undefined
+						try {
+							if (message.text) {
+								// Store the key in secrets
+								await this.storeSecret("semanticSearchApiKey", message.text)
+
+								// Update the API configuration in global state
+								const currentState = await this.getState()
+								const updatedConfig: ApiConfiguration = {
+									...currentState.apiConfiguration,
+									semanticSearchApiKey: message.text,
+								}
+								await this.updateApiConfiguration(updatedConfig)
+
+								// Update the semantic search service if it exists
+								if (this.semanticSearchService) {
+									const apiHandler = new OpenAiNativeHandler({
+										openAiNativeApiKey: message.text,
+									})
+									await this.semanticSearchService.provideApiHandler(apiHandler)
+								}
+							} else {
+								// Clear the key from secrets
+								await this.storeSecret("semanticSearchApiKey", undefined)
+
+								// Remove the key from API configuration
+								const currentState = await this.getState()
+								const updatedConfig: ApiConfiguration = {
+									...currentState.apiConfiguration,
+								}
+								delete updatedConfig.semanticSearchApiKey
+								await this.updateApiConfiguration(updatedConfig)
+
+								// Update the semantic search service if needed
+								if (this.semanticSearchService) {
+									const { apiConfiguration } = await this.getState()
+									if (apiConfiguration.apiProvider === "openai-native") {
+										await this.semanticSearchService.provideApiHandler(
+											buildApiHandler(apiConfiguration),
+										)
+									} else {
+										this.semanticSearchService = undefined
+									}
 								}
 							}
+
+							// Post updated state to webview
+							await this.postStateToWebview()
+						} catch (error) {
+							this.outputChannel.appendLine(
+								`Error updating semantic search API key: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+							)
+							vscode.window.showErrorMessage("Failed to update semantic search API key")
 						}
-						await this.postStateToWebview()
 						break
 					case "deleteSemanticIndex": {
 						const answer = await vscode.window.showInformationMessage(
@@ -1406,6 +1439,150 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							status: currentStatus,
 						})
 						break
+					case "saveAllSettings": {
+						try {
+							const settings = message.settings
+							if (!settings) {
+								throw new Error("Settings object is required")
+							}
+
+							// First save the API configuration
+							if (settings.currentApiConfigName && settings.apiConfiguration) {
+								await this.configManager.saveConfig(
+									settings.currentApiConfigName,
+									settings.apiConfiguration,
+								)
+							}
+
+							// Update all global state values in parallel
+							const updatePromises: Promise<void>[] = []
+
+							if (settings.apiConfiguration) {
+								updatePromises.push(
+									this.updateGlobalState("apiConfiguration", settings.apiConfiguration),
+								)
+							}
+							if (settings.alwaysAllowReadOnly !== undefined) {
+								updatePromises.push(
+									this.updateGlobalState("alwaysAllowReadOnly", settings.alwaysAllowReadOnly),
+								)
+							}
+							if (settings.alwaysAllowWrite !== undefined) {
+								updatePromises.push(
+									this.updateGlobalState("alwaysAllowWrite", settings.alwaysAllowWrite),
+								)
+							}
+							if (settings.alwaysAllowExecute !== undefined) {
+								updatePromises.push(
+									this.updateGlobalState("alwaysAllowExecute", settings.alwaysAllowExecute),
+								)
+							}
+							if (settings.alwaysAllowBrowser !== undefined) {
+								updatePromises.push(
+									this.updateGlobalState("alwaysAllowBrowser", settings.alwaysAllowBrowser),
+								)
+							}
+							if (settings.alwaysAllowMcp !== undefined) {
+								updatePromises.push(this.updateGlobalState("alwaysAllowMcp", settings.alwaysAllowMcp))
+							}
+							if (settings.allowedCommands !== undefined) {
+								updatePromises.push(this.updateGlobalState("allowedCommands", settings.allowedCommands))
+							}
+							if (settings.soundEnabled !== undefined) {
+								updatePromises.push(this.updateGlobalState("soundEnabled", settings.soundEnabled))
+							}
+							if (settings.soundVolume !== undefined) {
+								updatePromises.push(this.updateGlobalState("soundVolume", settings.soundVolume))
+							}
+							if (settings.diffEnabled !== undefined) {
+								updatePromises.push(this.updateGlobalState("diffEnabled", settings.diffEnabled))
+							}
+							if (settings.browserViewportSize !== undefined) {
+								updatePromises.push(
+									this.updateGlobalState("browserViewportSize", settings.browserViewportSize),
+								)
+							}
+							if (settings.fuzzyMatchThreshold !== undefined) {
+								updatePromises.push(
+									this.updateGlobalState("fuzzyMatchThreshold", settings.fuzzyMatchThreshold),
+								)
+							}
+							if (settings.writeDelayMs !== undefined) {
+								updatePromises.push(this.updateGlobalState("writeDelayMs", settings.writeDelayMs))
+							}
+							if (settings.screenshotQuality !== undefined) {
+								updatePromises.push(
+									this.updateGlobalState("screenshotQuality", settings.screenshotQuality),
+								)
+							}
+							if (settings.terminalOutputLineLimit !== undefined) {
+								updatePromises.push(
+									this.updateGlobalState("terminalOutputLineLimit", settings.terminalOutputLineLimit),
+								)
+							}
+							if (settings.mcpEnabled !== undefined) {
+								updatePromises.push(this.updateGlobalState("mcpEnabled", settings.mcpEnabled))
+							}
+							if (settings.alwaysApproveResubmit !== undefined) {
+								updatePromises.push(
+									this.updateGlobalState("alwaysApproveResubmit", settings.alwaysApproveResubmit),
+								)
+							}
+							if (settings.requestDelaySeconds !== undefined) {
+								updatePromises.push(
+									this.updateGlobalState("requestDelaySeconds", settings.requestDelaySeconds),
+								)
+							}
+							if (settings.currentApiConfigName !== undefined) {
+								updatePromises.push(
+									this.updateGlobalState("currentApiConfigName", settings.currentApiConfigName),
+								)
+							}
+							if (settings.experiments !== undefined) {
+								updatePromises.push(this.updateGlobalState("experiments", settings.experiments))
+							}
+							if (settings.alwaysAllowModeSwitch !== undefined) {
+								updatePromises.push(
+									this.updateGlobalState("alwaysAllowModeSwitch", settings.alwaysAllowModeSwitch),
+								)
+							}
+							if (settings.semanticSearchMaxResults !== undefined) {
+								updatePromises.push(
+									this.updateGlobalState(
+										"semanticSearchMaxResults",
+										settings.semanticSearchMaxResults,
+									),
+								)
+							}
+							if (settings.semanticSearchStatus !== undefined) {
+								updatePromises.push(
+									this.updateGlobalState("semanticSearchStatus", settings.semanticSearchStatus),
+								)
+							}
+
+							await Promise.all(updatePromises)
+
+							// Update workspace settings that need it
+							if (settings.allowedCommands !== undefined) {
+								await vscode.workspace
+									.getConfiguration("roo-cline")
+									.update(
+										"allowedCommands",
+										settings.allowedCommands,
+										vscode.ConfigurationTarget.Global,
+									)
+							}
+
+							// Single state update to webview
+							await this.postStateToWebview()
+						} catch (error) {
+							this.outputChannel.appendLine(
+								`Error saving settings: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+							)
+							vscode.window.showErrorMessage("Failed to save settings")
+						}
+						break
+					}
 				}
 			},
 			null,
@@ -2043,14 +2220,22 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			enhancementApiConfigId,
 			autoApprovalEnabled,
 			experiments,
-			semanticSearchApiKey,
 		} = await this.getState()
+
+		// Get the semantic search API key from secrets
+		const semanticSearchApiKey = await this.getSecret("semanticSearchApiKey")
 
 		const allowedCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
 
+		// Create API configuration with semantic search key
+		const updatedApiConfiguration = {
+			...apiConfiguration,
+			semanticSearchApiKey,
+		}
+
 		return {
 			version: this.context.extension?.packageJSON?.version ?? "",
-			apiConfiguration,
+			apiConfiguration: updatedApiConfiguration,
 			customInstructions,
 			alwaysAllowReadOnly: alwaysAllowReadOnly ?? false,
 			alwaysAllowWrite: alwaysAllowWrite ?? false,
@@ -2517,7 +2702,21 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	private async indexWorkspace() {
 		const { apiConfiguration } = await this.getState()
-		this.semanticSearchService?.provideApiHandler(buildApiHandler(apiConfiguration))
+		const provider = buildApiHandler(apiConfiguration)
+
+		if ("embedText" in provider) {
+			this.semanticSearchService?.provideApiHandler(provider)
+		} else {
+			const semanticSearchApiKey = await this.getSecret("semanticSearchApiKey")
+
+			if (!semanticSearchApiKey) {
+				vscode.window.showErrorMessage("No API key for semantic search")
+				return
+			}
+
+			const provider = new OpenAiNativeHandler({ ...apiConfiguration, openAiNativeApiKey: semanticSearchApiKey })
+			this.semanticSearchService?.provideApiHandler(provider)
+		}
 
 		const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
 		if (!workspaceRoot) {

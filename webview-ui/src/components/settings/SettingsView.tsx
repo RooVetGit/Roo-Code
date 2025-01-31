@@ -1,5 +1,5 @@
 import { VSCodeButton, VSCodeCheckbox, VSCodeLink, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
-import { memo, useEffect, useState } from "react"
+import { memo, useEffect, useState, useCallback } from "react"
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import { validateApiConfiguration, validateModelId } from "../../utils/validate"
 import { vscode } from "../../utils/vscode"
@@ -9,6 +9,7 @@ import { EXPERIMENT_IDS, experimentConfigsMap } from "../../../../src/shared/exp
 import ApiConfigManager from "./ApiConfigManager"
 import { Dropdown } from "vscrui"
 import type { DropdownOption } from "vscrui"
+import { ApiConfiguration } from "../../../../src/shared/api"
 
 type SettingsViewProps = {
 	onDone: () => void
@@ -61,6 +62,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		setAlwaysAllowModeSwitch,
 		semanticSearchStatus,
 		setSemanticSearchStatus,
+		setApiConfiguration,
 	} = useExtensionState()
 	const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>(undefined)
 	const [modelIdErrorMessage, setModelIdErrorMessage] = useState<string | undefined>(undefined)
@@ -96,50 +98,49 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		return () => window.removeEventListener("message", messageListener)
 	}, [setSemanticSearchStatus])
 
-	const handleSubmit = () => {
+	const handleSubmit = async () => {
 		const apiValidationResult = validateApiConfiguration(apiConfiguration)
 		const modelIdValidationResult = validateModelId(apiConfiguration, glamaModels, openRouterModels)
 
 		setApiErrorMessage(apiValidationResult)
 		setModelIdErrorMessage(modelIdValidationResult)
+
 		if (!apiValidationResult && !modelIdValidationResult) {
-			vscode.postMessage({
-				type: "apiConfiguration",
-				apiConfiguration,
-			})
-			vscode.postMessage({ type: "alwaysAllowReadOnly", bool: alwaysAllowReadOnly })
-			vscode.postMessage({ type: "alwaysAllowWrite", bool: alwaysAllowWrite })
-			vscode.postMessage({ type: "alwaysAllowExecute", bool: alwaysAllowExecute })
-			vscode.postMessage({ type: "alwaysAllowBrowser", bool: alwaysAllowBrowser })
-			vscode.postMessage({ type: "alwaysAllowMcp", bool: alwaysAllowMcp })
-			vscode.postMessage({ type: "allowedCommands", commands: allowedCommands ?? [] })
-			vscode.postMessage({ type: "soundEnabled", bool: soundEnabled })
-			vscode.postMessage({ type: "soundVolume", value: soundVolume })
-			vscode.postMessage({ type: "diffEnabled", bool: diffEnabled })
-			vscode.postMessage({ type: "browserViewportSize", text: browserViewportSize })
-			vscode.postMessage({ type: "fuzzyMatchThreshold", value: fuzzyMatchThreshold ?? 1.0 })
-			vscode.postMessage({ type: "writeDelayMs", value: writeDelayMs })
-			vscode.postMessage({ type: "screenshotQuality", value: screenshotQuality ?? 75 })
-			vscode.postMessage({ type: "terminalOutputLineLimit", value: terminalOutputLineLimit ?? 500 })
-			vscode.postMessage({ type: "mcpEnabled", bool: mcpEnabled })
-			vscode.postMessage({ type: "alwaysApproveResubmit", bool: alwaysApproveResubmit })
-			vscode.postMessage({ type: "requestDelaySeconds", value: requestDelaySeconds })
-			vscode.postMessage({ type: "currentApiConfigName", text: currentApiConfigName })
-			vscode.postMessage({
-				type: "upsertApiConfiguration",
-				text: currentApiConfigName,
-				apiConfiguration,
-			})
-
-			vscode.postMessage({
-				type: "updateExperimental",
-				values: experiments,
-			})
-
-			vscode.postMessage({ type: "alwaysAllowModeSwitch", bool: alwaysAllowModeSwitch })
-			vscode.postMessage({ type: "semanticSearchMaxResults", value: maxResults })
-			vscode.postMessage({ type: "semanticSearchStatus", text: semanticSearchStatus })
-			onDone()
+			try {
+				// Send all configuration updates in a single message
+				await vscode.postMessage({
+					type: "saveAllSettings",
+					settings: {
+						apiConfiguration,
+						alwaysAllowReadOnly,
+						alwaysAllowWrite,
+						alwaysAllowExecute,
+						alwaysAllowBrowser,
+						alwaysAllowMcp,
+						allowedCommands,
+						soundEnabled,
+						soundVolume,
+						diffEnabled,
+						browserViewportSize,
+						fuzzyMatchThreshold,
+						writeDelayMs,
+						screenshotQuality,
+						terminalOutputLineLimit,
+						mcpEnabled,
+						alwaysApproveResubmit,
+						requestDelaySeconds,
+						currentApiConfigName,
+						experiments,
+						alwaysAllowModeSwitch,
+						semanticSearchMaxResults: maxResults,
+						semanticSearchStatus,
+					},
+				})
+				onDone()
+			} catch (error) {
+				console.error("Failed to save settings:", error)
+				// You might want to show an error message to the user here
+			}
 		}
 	}
 
@@ -172,6 +173,25 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 			})
 		}
 	}
+
+	const handleSemanticSearchApiKeyChange = useCallback(
+		(e: any) => {
+			const newKey = e.target.value || undefined
+			// Update local state first
+			const updatedConfig: ApiConfiguration = {
+				...apiConfiguration,
+				semanticSearchApiKey: newKey,
+			}
+			setApiConfiguration(updatedConfig)
+
+			// Then notify extension
+			vscode.postMessage({
+				type: "updateSemanticSearchApiKey",
+				text: newKey,
+			})
+		},
+		[apiConfiguration, setApiConfiguration],
+	)
 
 	const sliderLabelStyle = {
 		minWidth: "45px",
@@ -840,12 +860,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 							value={apiConfiguration?.semanticSearchApiKey || ""}
 							style={{ width: "100%" }}
 							type="password"
-							onInput={(e: any) => {
-								vscode.postMessage({
-									type: "updateSemanticSearchApiKey",
-									text: e.target.value || undefined,
-								})
-							}}
+							onInput={handleSemanticSearchApiKeyChange}
 							placeholder="Enter API Key...">
 							<span style={{ fontWeight: 500 }}>OpenAI API Key for Semantic Search</span>
 						</VSCodeTextField>
