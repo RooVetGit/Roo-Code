@@ -91,6 +91,7 @@ describe("AutoApproveMenu", () => {
 		setExperimentEnabled: jest.fn(),
 		handleInputChange: jest.fn(),
 		setCustomModes: jest.fn(),
+		setConversationSaveFolder: jest.fn(),
 	}
 
 	beforeEach(() => {
