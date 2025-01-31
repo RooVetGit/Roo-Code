@@ -266,7 +266,5 @@ async function initializeSemanticSearchService(context: vscode.ExtensionContext)
 
 	const service = new SemanticSearchService(config)
 
-	await service.initialize()
-
 	return service
 }

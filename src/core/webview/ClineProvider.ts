@@ -44,8 +44,9 @@ import { EXPERIMENT_IDS, experiments as Experiments, experimentDefault, Experime
 import { CustomSupportPrompts, supportPrompt } from "../../shared/support-prompt"
 
 import { ACTION_NAMES } from "../CodeActionProvider"
-import { SemanticSearchConfig, SemanticSearchService } from "../../services/semantic-search"
+import { SemanticSearchService } from "../../services/semantic-search"
 import { listFiles } from "../../services/glob/list-files"
+import { OpenAiNativeHandler } from "../../api/providers/openai-native"
 
 /*
 https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -66,7 +67,21 @@ type SecretKey =
 	| "deepSeekApiKey"
 	| "mistralApiKey"
 	| "unboundApiKey"
+	| "semanticSearchApiKey"
 type GlobalStateKey =
+	| "apiKey"
+	| "glamaApiKey"
+	| "openRouterApiKey"
+	| "awsAccessKey"
+	| "awsSecretKey"
+	| "awsSessionToken"
+	| "openAiApiKey"
+	| "geminiApiKey"
+	| "openAiNativeApiKey"
+	| "deepSeekApiKey"
+	| "mistralApiKey"
+	| "unboundApiKey"
+	| "semanticSearchApiKey"
 	| "apiProvider"
 	| "apiModelId"
 	| "glamaModelId"
@@ -1324,6 +1339,30 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("semanticSearchMaxResults", message.value)
 						await this.postStateToWebview()
 						break
+					case "updateSemanticSearchApiKey":
+						if (message.text) {
+							await this.storeSecret("semanticSearchApiKey", message.text)
+							if (this.semanticSearchService) {
+								const apiHandler = new OpenAiNativeHandler({
+									openAiNativeApiKey: message.text,
+								})
+								await this.semanticSearchService.provideApiHandler(apiHandler)
+							}
+						} else {
+							await this.storeSecret("semanticSearchApiKey", undefined)
+							if (this.semanticSearchService) {
+								const { apiConfiguration } = await this.getState()
+								if (apiConfiguration.apiProvider === "openai-native") {
+									await this.semanticSearchService.provideApiHandler(
+										buildApiHandler(apiConfiguration),
+									)
+								} else {
+									this.semanticSearchService = undefined
+								}
+							}
+						}
+						await this.postStateToWebview()
+						break
 					case "deleteSemanticIndex": {
 						const answer = await vscode.window.showInformationMessage(
 							"Are you sure you want to clear the semantic search index?",
@@ -2004,6 +2043,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			enhancementApiConfigId,
 			autoApprovalEnabled,
 			experiments,
+			semanticSearchApiKey,
 		} = await this.getState()
 
 		const allowedCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
@@ -2047,6 +2087,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			customModes: await this.customModesManager.getCustomModes(),
 			experiments: experiments ?? experimentDefault,
 			semanticSearchStatus: this.semanticSearchService?.getStatus() || "Not indexed",
+			semanticSearchApiKey,
 		}
 	}
 
@@ -2175,6 +2216,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			unboundModelId,
 			experiments,
 			semanticSearchMaxResults,
+			semanticSearchApiKey,
 		] = await Promise.all([
 			this.getGlobalState("apiProvider") as Promise<ApiProvider | undefined>,
 			this.getGlobalState("apiModelId") as Promise<string | undefined>,
@@ -2248,6 +2290,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("unboundModelId") as Promise<string | undefined>,
 			this.getGlobalState("experiments") as Promise<Record<ExperimentId, boolean> | undefined>,
 			this.getGlobalState("semanticSearchMaxResults") as Promise<number | undefined>,
+			this.getSecret("semanticSearchApiKey") as Promise<string | undefined>,
 		])
 
 		let apiProvider: ApiProvider
@@ -2367,6 +2410,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			autoApprovalEnabled: autoApprovalEnabled ?? false,
 			customModes,
 			semanticSearchMaxResults,
+			semanticSearchApiKey,
 		}
 	}
 
@@ -2456,6 +2500,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			"deepSeekApiKey",
 			"mistralApiKey",
 			"unboundApiKey",
+			"semanticSearchApiKey",
 		]
 		for (const key of secretKeys) {
 			await this.storeSecret(key, undefined)
@@ -2502,10 +2547,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						})
 
 						console.log("Semantic search service status:", this.semanticSearchService?.getStatus())
-						if (this.semanticSearchService?.getStatus() === "Not indexed") {
-							console.log("Initializing semantic search service")
-							await this.semanticSearchService?.initialize()
-						}
 
 						progress.report({ message: "Indexing workspace files...", increment: 40 })
 						this.view?.webview.postMessage({
