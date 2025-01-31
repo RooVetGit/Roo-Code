@@ -3,10 +3,8 @@ import * as path from "path"
 import { loadRequiredLanguageParsers } from "../../tree-sitter/languageParser"
 import type Parser from "web-tree-sitter"
 import { CodeSegment, ParsedFile, SemanticParser, IMPORTANCE_WEIGHTS, CodeSegmentType } from "./types"
-import typescript from "./queries/typescript"
-import javascript from "./queries/javascript"
+import * as queries from "./queries"
 import crypto from "crypto"
-import * as vscode from "vscode"
 
 export class TreeSitterParser implements SemanticParser {
 	private languageParsers: Record<string, { parser: Parser; query: Parser.Query }> = {}
@@ -14,11 +12,11 @@ export class TreeSitterParser implements SemanticParser {
 	private wasmDir: string
 
 	constructor(
-		private extensionContext: vscode.ExtensionContext,
+		private extensionPath: string,
 		wasmDir?: string,
 	) {
 		// Use extension context's path as base directory
-		this.wasmDir = wasmDir || path.join(this.extensionContext.extensionPath, "dist")
+		this.wasmDir = wasmDir || path.join(this.extensionPath, "dist")
 	}
 
 	private async initialize(filePath: string) {
@@ -29,8 +27,9 @@ export class TreeSitterParser implements SemanticParser {
 				this.languageParsers = await loadRequiredLanguageParsers(
 					[filePath, ...dummyFiles],
 					{
-						ts: typescript,
-						js: javascript,
+						ts: queries.typescript,
+						js: queries.javascript,
+						py: queries.python,
 					},
 					this.wasmDir,
 				) // Pass wasmDir to loadRequiredLanguageParsers
@@ -81,6 +80,10 @@ export class TreeSitterParser implements SemanticParser {
 				// First try direct name field, then look for identifier in descendants
 				return node.childForFieldName("name")?.text || node.descendantsOfType("identifier")[0]?.text || ""
 			case CodeSegmentType.IMPORT:
+				// Try to get the module name from a dotted_name node
+				const dotted = node.descendantsOfType("dotted_name")[0]
+				if (dotted) return dotted.text
+				// Fallback: try to find a string literal (if any)
 				return node
 					.descendantsOfType("string")
 					.map((n) => n.text.replace(/['"]/g, ""))
@@ -101,32 +104,32 @@ export class TreeSitterParser implements SemanticParser {
 		const { query } = this.languageParsers[ext]
 		const processedNodeIds = new Set<number>()
 
-		console.log("\n=== First Pass ===")
+		//console.log("\n=== First Pass ===")
 		// First pass: Process class bodies and mark their methods as processed
 		for (const capture of query.captures(tree.rootNode)) {
 			const { node, name } = capture
 			if (name === "class") {
-				console.log("Found class node:", node.type)
+				//console.log("Found class node:", node.type)
 				const methodNodes = node.descendantsOfType(["method_definition"])
-				console.log("Method nodes found:", methodNodes.length)
+				//console.log("Method nodes found:", methodNodes.length)
 
 				methodNodes.forEach((methodNode) => {
 					const methodName = methodNode.childForFieldName("name")?.text
-					console.log("Processing method:", methodName, "type:", methodNode.type, "id:", methodNode.id)
+					//console.log("Processing method:", methodName, "type:", methodNode.type, "id:", methodNode.id)
 					// Don't add to processedNodeIds here anymore - we want to process it in the second pass
 				})
 			}
 		}
 
-		console.log("\n=== Second Pass ===")
-		console.log(`Query captures for ${language}:`)
+		//console.log("\n=== Second Pass ===")
+		//console.log(`Query captures for ${language}:`)
 		for (const capture of query.captures(tree.rootNode)) {
 			const { node, name } = capture
-			console.log(`- Capture name: ${name}, Node type: ${node.type}, Text: ${node.text.slice(0, 40)}...`)
+			//console.log(`- Capture name: ${name}, Node type: ${node.type}, Text: ${node.text.slice(0, 40)}...`)
 
 			// Only skip if we've already processed this specific node
 			if (processedNodeIds.has(node.id)) {
-				console.log("Node already processed, skipping. id:", node.id)
+				//console.log("Node already processed, skipping. id:", node.id)
 				continue
 			}
 
@@ -135,7 +138,7 @@ export class TreeSitterParser implements SemanticParser {
 				: null
 
 			if (!type) {
-				console.log("No type found for capture:", name)
+				//console.log("No type found for capture:", name)
 				continue
 			}
 
