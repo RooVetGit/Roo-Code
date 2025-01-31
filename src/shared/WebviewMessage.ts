@@ -87,6 +87,7 @@ export interface WebviewMessage {
 		| "reindexSemantic"
 		| "semanticSearchStatus"
 		| "getSemanticSearchStatus"
+		| "updateSemanticSearchApiKey"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse

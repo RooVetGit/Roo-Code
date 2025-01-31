@@ -120,6 +120,7 @@ export interface ExtensionState {
 	customModes: ModeConfig[]
 	toolRequirements?: Record<string, boolean> // Map of tool names to their requirements (e.g. {"apply_diff": true} if diffEnabled)
 	semanticSearchStatus: string
+	semanticSearchApiKey?: string
 }
 
 export interface ClineMessage {
