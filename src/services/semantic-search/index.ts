@@ -13,6 +13,7 @@ import { LanceDBVectorStore } from "./vector-store/lancedb"
 import { StoreSearchResult } from "./vector-store/types"
 import * as crypto from "crypto"
 import { ApiHandler } from "../../api"
+import { OpenAiNativeHandler } from "../../api/providers/openai-native"
 
 export interface SemanticSearchConfig {
 	/**
@@ -207,11 +208,18 @@ export class SemanticSearchService {
 	private parser: TreeSitterParser
 	private config: SemanticSearchConfig
 	private apiHandler?: ApiHandler
+	private embeddingHandler?: OpenAiNativeHandler
 
 	constructor(config: SemanticSearchConfig, apiHandler?: ApiHandler) {
 		this.config = config
-		this.parser = new TreeSitterParser(config.context)
+		this.parser = new TreeSitterParser(config.context.extensionPath)
 		this.apiHandler = apiHandler
+
+		// Initialize core components in constructor
+		const workspaceId = this.getWorkspaceId(config.context)
+		this.store = new LanceDBVectorStore(path.join(config.storageDir, "lancedb"), workspaceId)
+
+		// Set initial status
 		this.updateStatus(WorkspaceIndexStatus.NotIndexed)
 	}
 
@@ -236,73 +244,36 @@ export class SemanticSearchService {
 	}
 
 	/**
-	 * Initializes the semantic search service by:
-	 * 1. Setting the workspace status to 'Indexing'
-	 * 2. Initializing the vector store with the workspace ID
-	 * 3. Initializing the embedding model with retry logic
-	 * 4. Verifying model initialization with a test embedding
-	 * 5. Loading persisted vectors from the store
-	 *
-	 * The initialization process includes robust error handling and retry mechanisms:
-	 * - Model initialization is attempted up to 3 times with increasing delays
-	 * - Detailed error logging is performed for debugging
-	 * - Status is updated appropriately based on success/failure
-	 * - Initialization errors are stored for later reference
-	 *
-	 * @throws {Error} If initialization fails after all retry attempts
-	 * @returns {Promise<void>} Resolves when initialization is complete
+	 * Initializes workspace-specific resources including:
+	 * 1. Creating the vector store table if it doesn't exist
+	 * 2. Loading existing vectors
+	 * 3. Updating workspace status
 	 */
-	async initialize(): Promise<void> {
+	private async initializeWorkspace(): Promise<void> {
+		if (this.initialized) return
+		if (this.initializationError) throw this.initializationError
+		if (!this.store) throw new Error("Vector store not initialized")
+
 		this.updateStatus(WorkspaceIndexStatus.Indexing)
 
 		try {
-			console.log("Initializing semantic search service")
-
-			const workspaceId = this.getWorkspaceId(this.config.context)
-			console.log("Workspace ID:", workspaceId)
-			this.store = new LanceDBVectorStore(path.join(this.config.storageDir, "lancedb"), workspaceId)
 			await this.store.initialize()
-
-			console.log("Semantic search service initialized successfully")
-			this.initialized = true
 
 			if (this.store.size() === 0) {
 				this.updateStatus(WorkspaceIndexStatus.NotIndexed)
 			} else {
 				this.updateStatus(WorkspaceIndexStatus.Indexed)
 			}
+
+			this.initialized = true
+			console.log("Workspace initialized")
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error)
-			console.error("Initialization failed:", errorMessage)
+			console.error("Workspace initialization failed:", errorMessage)
 			this.updateStatus(WorkspaceIndexStatus.NotIndexed)
 			this.initializationError = error instanceof Error ? error : new Error(errorMessage)
 			this.initialized = false
 			throw error
-		}
-	}
-
-	// Modify methods that require initialization to handle potential errors
-	private async ensureInitialized(): Promise<void> {
-		// If not initialized, attempt initialization
-		if (!this.initialized) {
-			try {
-				await this.initialize()
-			} catch (error) {
-				// If initialization fails, throw a clear error
-				throw new Error(
-					`Semantic search service could not be initialized: ${error instanceof Error ? error.message : String(error)}`,
-				)
-			}
-		}
-
-		// If an initialization error occurred previously, throw it
-		if (this.initializationError) {
-			throw this.initializationError
-		}
-
-		// Verify store exists
-		if (!this.store) {
-			throw new Error("Vector store not initialized")
 		}
 	}
 
@@ -375,12 +346,12 @@ export class SemanticSearchService {
 	}
 
 	async addToIndex(filePath: string): Promise<void> {
-		await this.ensureInitialized()
+		await this.initializeWorkspace()
 		await this.processFileWithHash(filePath)
 	}
 
 	async addBatchToIndex(filePaths: string[]): Promise<void> {
-		await this.ensureInitialized()
+		await this.initializeWorkspace()
 		this.updateStatus(WorkspaceIndexStatus.Indexing)
 
 		try {
@@ -394,9 +365,25 @@ export class SemanticSearchService {
 		}
 	}
 
+	// Helper method to get the appropriate handler for embeddings
+	private getEmbeddingHandler(): ApiHandler {
+		// If we have a dedicated embedding handler, use it
+		if (this.embeddingHandler) {
+			return this.embeddingHandler
+		}
+		// Otherwise fall back to the main API handler if it's OpenAI Native
+		if (this.apiHandler && this.apiHandler instanceof OpenAiNativeHandler) {
+			return this.apiHandler
+		}
+		throw new Error(
+			"No compatible embedding handler available. Please configure OpenAI Native API key for semantic search.",
+		)
+	}
+
 	// Helper method to index a single definition
 	private async indexDefinition(definition: CodeDefinition): Promise<void> {
-		if (!this.apiHandler?.embedText) {
+		const handler = this.getEmbeddingHandler()
+		if (!handler.embedText) {
 			throw new Error("Embeddings not supported with current API configuration")
 		}
 
@@ -417,19 +404,19 @@ export class SemanticSearchService {
 				endLine: definition.startLine + (index + 1) * lineCount - 1,
 			}
 
-			const embedding = await this.apiHandler.embedText(chunkDefinition.content)
+			const embedding = await handler.embedText(chunkDefinition.content)
 			await this.store.add(chunkDefinition, embedding)
 		}
 	}
 
 	async search(query: string): Promise<SearchResult[]> {
-		if (!this.apiHandler?.embedText) {
+		const handler = this.getEmbeddingHandler()
+		if (!handler.embedText) {
 			throw new Error("Embeddings not supported with current API configuration")
 		}
 
-		const queryEmbedding = await this.apiHandler.embedText(query)
-
-		await this.ensureInitialized()
+		const queryEmbedding = await handler.embedText(query)
+		await this.initializeWorkspace()
 
 		const results = await this.store.search(
 			queryEmbedding,
@@ -516,6 +503,11 @@ export class SemanticSearchService {
 
 	provideApiHandler(apiHandler: ApiHandler) {
 		this.apiHandler = apiHandler
+		// If we don't have a dedicated embedding handler and this is an OpenAI Native handler,
+		// we'll use it for embeddings
+		if (!this.embeddingHandler && apiHandler instanceof OpenAiNativeHandler) {
+			this.updateStatus(WorkspaceIndexStatus.NotIndexed) // Reset status since handler changed
+		}
 	}
 
 	clear(): void {
