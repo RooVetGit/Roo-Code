@@ -512,7 +512,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	 *
 	 * @param webview A reference to the extension webview
 	 */
-	private setWebviewMessageListener(webview: vscode.Webview) {
+	private async setWebviewMessageListener(webview: vscode.Webview) {
 		webview.onDidReceiveMessage(
 			async (message: WebviewMessage) => {
 				switch (message.type) {
@@ -1446,7 +1446,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								throw new Error("Settings object is required")
 							}
 
-							// First save the API configuration
+							// First, save the API configuration (if needed)
 							if (settings.currentApiConfigName && settings.apiConfiguration) {
 								await this.configManager.saveConfig(
 									settings.currentApiConfigName,
@@ -1454,115 +1454,78 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								)
 							}
 
-							// Update all global state values in parallel
-							const updatePromises: Promise<void>[] = []
+							// Prepare updates for global state
+							const globalStateUpdates: Partial<Record<GlobalStateKey, any>> = {}
 
+							// Collect all global state updates
 							if (settings.apiConfiguration) {
-								updatePromises.push(
-									this.updateGlobalState("apiConfiguration", settings.apiConfiguration),
-								)
+								globalStateUpdates.apiConfiguration = settings.apiConfiguration
 							}
 							if (settings.alwaysAllowReadOnly !== undefined) {
-								updatePromises.push(
-									this.updateGlobalState("alwaysAllowReadOnly", settings.alwaysAllowReadOnly),
-								)
+								globalStateUpdates.alwaysAllowReadOnly = settings.alwaysAllowReadOnly
 							}
 							if (settings.alwaysAllowWrite !== undefined) {
-								updatePromises.push(
-									this.updateGlobalState("alwaysAllowWrite", settings.alwaysAllowWrite),
-								)
+								globalStateUpdates.alwaysAllowWrite = settings.alwaysAllowWrite
 							}
 							if (settings.alwaysAllowExecute !== undefined) {
-								updatePromises.push(
-									this.updateGlobalState("alwaysAllowExecute", settings.alwaysAllowExecute),
-								)
+								globalStateUpdates.alwaysAllowExecute = settings.alwaysAllowExecute
 							}
 							if (settings.alwaysAllowBrowser !== undefined) {
-								updatePromises.push(
-									this.updateGlobalState("alwaysAllowBrowser", settings.alwaysAllowBrowser),
-								)
+								globalStateUpdates.alwaysAllowBrowser = settings.alwaysAllowBrowser
 							}
 							if (settings.alwaysAllowMcp !== undefined) {
-								updatePromises.push(this.updateGlobalState("alwaysAllowMcp", settings.alwaysAllowMcp))
+								globalStateUpdates.alwaysAllowMcp = settings.alwaysAllowMcp
 							}
 							if (settings.allowedCommands !== undefined) {
-								updatePromises.push(this.updateGlobalState("allowedCommands", settings.allowedCommands))
+								globalStateUpdates.allowedCommands = settings.allowedCommands
 							}
 							if (settings.soundEnabled !== undefined) {
-								updatePromises.push(this.updateGlobalState("soundEnabled", settings.soundEnabled))
+								globalStateUpdates.soundEnabled = settings.soundEnabled
 							}
 							if (settings.soundVolume !== undefined) {
-								updatePromises.push(this.updateGlobalState("soundVolume", settings.soundVolume))
+								globalStateUpdates.soundVolume = settings.soundVolume
 							}
 							if (settings.diffEnabled !== undefined) {
-								updatePromises.push(this.updateGlobalState("diffEnabled", settings.diffEnabled))
+								globalStateUpdates.diffEnabled = settings.diffEnabled
 							}
 							if (settings.browserViewportSize !== undefined) {
-								updatePromises.push(
-									this.updateGlobalState("browserViewportSize", settings.browserViewportSize),
-								)
+								globalStateUpdates.browserViewportSize = settings.browserViewportSize
 							}
 							if (settings.fuzzyMatchThreshold !== undefined) {
-								updatePromises.push(
-									this.updateGlobalState("fuzzyMatchThreshold", settings.fuzzyMatchThreshold),
-								)
+								globalStateUpdates.fuzzyMatchThreshold = settings.fuzzyMatchThreshold
 							}
 							if (settings.writeDelayMs !== undefined) {
-								updatePromises.push(this.updateGlobalState("writeDelayMs", settings.writeDelayMs))
-							}
-							if (settings.screenshotQuality !== undefined) {
-								updatePromises.push(
-									this.updateGlobalState("screenshotQuality", settings.screenshotQuality),
-								)
+								globalStateUpdates.writeDelayMs = settings.writeDelayMs
 							}
 							if (settings.terminalOutputLineLimit !== undefined) {
-								updatePromises.push(
-									this.updateGlobalState("terminalOutputLineLimit", settings.terminalOutputLineLimit),
-								)
+								globalStateUpdates.terminalOutputLineLimit = settings.terminalOutputLineLimit
 							}
 							if (settings.mcpEnabled !== undefined) {
-								updatePromises.push(this.updateGlobalState("mcpEnabled", settings.mcpEnabled))
+								globalStateUpdates.mcpEnabled = settings.mcpEnabled
 							}
 							if (settings.alwaysApproveResubmit !== undefined) {
-								updatePromises.push(
-									this.updateGlobalState("alwaysApproveResubmit", settings.alwaysApproveResubmit),
-								)
+								globalStateUpdates.alwaysApproveResubmit = settings.alwaysApproveResubmit
 							}
 							if (settings.requestDelaySeconds !== undefined) {
-								updatePromises.push(
-									this.updateGlobalState("requestDelaySeconds", settings.requestDelaySeconds),
-								)
+								globalStateUpdates.requestDelaySeconds = settings.requestDelaySeconds
 							}
 							if (settings.currentApiConfigName !== undefined) {
-								updatePromises.push(
-									this.updateGlobalState("currentApiConfigName", settings.currentApiConfigName),
-								)
+								globalStateUpdates.currentApiConfigName = settings.currentApiConfigName
 							}
 							if (settings.experiments !== undefined) {
-								updatePromises.push(this.updateGlobalState("experiments", settings.experiments))
+								globalStateUpdates.experiments = settings.experiments
 							}
 							if (settings.alwaysAllowModeSwitch !== undefined) {
-								updatePromises.push(
-									this.updateGlobalState("alwaysAllowModeSwitch", settings.alwaysAllowModeSwitch),
-								)
+								globalStateUpdates.alwaysAllowModeSwitch = settings.alwaysAllowModeSwitch
 							}
 							if (settings.semanticSearchMaxResults !== undefined) {
-								updatePromises.push(
-									this.updateGlobalState(
-										"semanticSearchMaxResults",
-										settings.semanticSearchMaxResults,
-									),
-								)
+								globalStateUpdates.semanticSearchMaxResults = settings.semanticSearchMaxResults
 							}
 							if (settings.semanticSearchStatus !== undefined) {
-								updatePromises.push(
-									this.updateGlobalState("semanticSearchStatus", settings.semanticSearchStatus),
-								)
+								globalStateUpdates.semanticSearchStatus = settings.semanticSearchStatus
 							}
 
-							await Promise.all(updatePromises)
-
-							// Update workspace settings that need it
+							// Update workspace settings (if needed)
 							if (settings.allowedCommands !== undefined) {
 								await vscode.workspace
 									.getConfiguration("roo-cline")
@@ -1573,7 +1536,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 									)
 							}
 
-							// Single state update to webview
+							// Perform all global state updates at once
+							await this.updateGlobalStates(globalStateUpdates)
+
+							// Single state update to webview after all changes
 							await this.postStateToWebview()
 						} catch (error) {
 							this.outputChannel.appendLine(
@@ -1588,6 +1554,14 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			null,
 			this.disposables,
 		)
+	}
+
+	// New method to update multiple global states at once
+	async updateGlobalStates(updates: Partial<Record<GlobalStateKey, any>>) {
+		const updatePromises = Object.entries(updates).map(([key, value]) =>
+			this.updateGlobalState(key as GlobalStateKey, value),
+		)
+		await Promise.all(updatePromises)
 	}
 
 	/**
