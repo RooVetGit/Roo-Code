@@ -23,7 +23,7 @@ class WorkspaceTracker {
 		if (!cwd) {
 			return
 		}
-		const [files, _] = await listFiles(cwd, true, MAX_INITIAL_FILES)
+		const [files, _] = await listFiles(cwd, { path: cwd, recursive: true, limit: MAX_INITIAL_FILES, format: "flat" })
 		files.slice(0, MAX_INITIAL_FILES).forEach((file) => this.filePaths.add(this.normalizeFilePath(file)))
 		this.workspaceDidUpdate()
 	}

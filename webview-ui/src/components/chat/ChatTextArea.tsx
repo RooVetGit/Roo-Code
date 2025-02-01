@@ -544,55 +544,57 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					borderColor: isFocused ? "var(--vscode-focusBorder)" : "transparent",
 					borderRadius: "2px",
 				}}
-				onDrop={async (e) => {
+				onDrop={(e) => {
 					e.preventDefault()
-					const files = Array.from(e.dataTransfer.files)
-					const text = e.dataTransfer.getData("text")
-					if (text) {
-						const newValue = inputValue.slice(0, cursorPosition) + text + inputValue.slice(cursorPosition)
-						setInputValue(newValue)
-						const newCursorPosition = cursorPosition + text.length
-						setCursorPosition(newCursorPosition)
-						setIntendedCursorPosition(newCursorPosition)
-						return
-					}
-					const acceptedTypes = ["png", "jpeg", "webp"]
-					const imageFiles = files.filter((file) => {
-						const [type, subtype] = file.type.split("/")
-						return type === "image" && acceptedTypes.includes(subtype)
-					})
-					if (!shouldDisableImages && imageFiles.length > 0) {
-						const imagePromises = imageFiles.map((file) => {
-							return new Promise<string | null>((resolve) => {
-								const reader = new FileReader()
-								reader.onloadend = () => {
-									if (reader.error) {
-										console.error("Error reading file:", reader.error)
-										resolve(null)
-									} else {
-										const result = reader.result
-										resolve(typeof result === "string" ? result : null)
-									}
-								}
-								reader.readAsDataURL(file)
-							})
-						})
-						const imageDataArray = await Promise.all(imagePromises)
-						const dataUrls = imageDataArray.filter((dataUrl): dataUrl is string => dataUrl !== null)
-						if (dataUrls.length > 0) {
-							setSelectedImages((prevImages) =>
-								[...prevImages, ...dataUrls].slice(0, MAX_IMAGES_PER_MESSAGE),
-							)
-							if (typeof vscode !== "undefined") {
-								vscode.postMessage({
-									type: "draggedImages",
-									dataUrls: dataUrls,
-								})
-							}
-						} else {
-							console.warn("No valid images were processed")
+					void (async () => {
+						const files = Array.from(e.dataTransfer.files)
+						const text = e.dataTransfer.getData("text")
+						if (text) {
+							const newValue = inputValue.slice(0, cursorPosition) + text + inputValue.slice(cursorPosition)
+							setInputValue(newValue)
+							const newCursorPosition = cursorPosition + text.length
+							setCursorPosition(newCursorPosition)
+							setIntendedCursorPosition(newCursorPosition)
+							return
 						}
-					}
+						const acceptedTypes = ["png", "jpeg", "webp"]
+						const imageFiles = files.filter((file) => {
+							const [type, subtype] = file.type.split("/")
+							return type === "image" && acceptedTypes.includes(subtype)
+						})
+						if (!shouldDisableImages && imageFiles.length > 0) {
+							const imagePromises = imageFiles.map((file) => {
+								return new Promise<string | null>((resolve) => {
+									const reader = new FileReader()
+									reader.onloadend = () => {
+										if (reader.error) {
+											console.error("Error reading file:", reader.error)
+											resolve(null)
+										} else {
+											const result = reader.result
+											resolve(typeof result === "string" ? result : null)
+										}
+									}
+									reader.readAsDataURL(file)
+								})
+							})
+							const imageDataArray = await Promise.all(imagePromises)
+							const dataUrls = imageDataArray.filter((dataUrl): dataUrl is string => dataUrl !== null)
+							if (dataUrls.length > 0) {
+								setSelectedImages((prevImages) =>
+									[...prevImages, ...dataUrls].slice(0, MAX_IMAGES_PER_MESSAGE),
+								)
+								if (typeof vscode !== "undefined") {
+									vscode.postMessage({
+										type: "draggedImages",
+										dataUrls: dataUrls,
+									})
+								}
+							} else {
+								console.warn("No valid images were processed")
+							}
+						}
+					})()
 				}}
 				onDragOver={(e) => {
 					e.preventDefault()

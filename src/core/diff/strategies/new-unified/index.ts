@@ -2,6 +2,10 @@ import { Diff, Hunk, Change } from "./types"
 import { findBestMatch, prepareSearchString } from "./search-strategies"
 import { applyEdit } from "./edit-strategies"
 import { DiffResult, DiffStrategy } from "../../types"
+import { normalizeWhitespace, hashTemplateLiterals } from "../../code-normalization" // Import normalization functions
+import { loadRequiredLanguageParsers } from "../../../../services/tree-sitter/languageParser"
+
+const JS_TS_EXTENSIONS = /\.(js|jsx|ts|tsx)$/i; // Regex for JS/TS file extensions
 
 export class NewUnifiedDiffStrategy implements DiffStrategy {
 	private readonly confidenceThreshold: number
@@ -173,7 +177,7 @@ Usage:
 <diff>
 Your diff here
 </diff>
-</apply_diff>`
+		</apply_diff>`
 	}
 
 	// Helper function to split a hunk into smaller hunks based on contiguous changes
@@ -235,8 +239,28 @@ Your diff here
 		startLine?: number,
 		endLine?: number,
 	): Promise<DiffResult> {
-		const parsedDiff = this.parseUnifiedDiff(diffContent)
-		const originalLines = originalContent.split("\n")
+		// Check if the file is a JS/TS file
+		const isJSTSFile = JS_TS_EXTENSIONS.test(arguments[0]); // Assuming path is the first argument
+
+		let normalizedOriginalContent = originalContent;
+		let normalizedDiffContent = diffContent;
+		let literalMap: { [hash: string]: string } = {};
+
+		if (isJSTSFile) {
+			// Apply normalization for JS/TS files
+			normalizedOriginalContent = normalizeWhitespace(originalContent);
+			normalizedDiffContent = normalizeWhitespace(diffContent);
+			const templateLiteralResult = hashTemplateLiterals(normalizedOriginalContent);
+			normalizedOriginalContent = templateLiteralResult.code;
+			literalMap = templateLiteralResult.literalMap;
+			const diffTemplateLiteralResult = hashTemplateLiterals(normalizedDiffContent);
+			normalizedDiffContent = diffTemplateLiteralResult.code;
+			// TODO: Consider merging literalMaps if needed, or handle diffContent literals separately
+		}
+
+
+		const parsedDiff = this.parseUnifiedDiff(normalizedDiffContent)
+		const originalLines = normalizedOriginalContent.split("\n")
 		let result = [...originalLines]
 
 		if (!parsedDiff.hunks.length) {
@@ -345,6 +369,35 @@ Your diff here
 			}
 		}
 
-		return { success: true, content: result.join("\n") }
+		let finalContent = result.join("\n");
+
+		if (isJSTSFile) {
+			// Reverse template literal hashing
+			Object.keys(literalMap).forEach(hash => {
+				finalContent = finalContent.replace(hash, literalMap[hash]);
+			});
+		}
+
+
+		if (isJSTSFile) {
+			// Perform syntax check for JS/TS files
+			try {
+				const parsers = await loadRequiredLanguageParsers(["temp.ts"]); // Dummy file for parser loading
+				const parser = parsers["ts"]?.parser;
+				if (parser) {
+					parser.parse(finalContent); // Attempt to parse
+				} else {
+					console.warn("TypeScript parser not loaded, skipping syntax check.");
+				}
+			} catch (e) {
+				console.error("JS/TS parsing error after applying diff:", e);
+				return {
+					success: false,
+					error: "JS/TS syntax error introduced by diff. Rollback recommended.",
+				};
+			}
+		}
+
+		return { success: true, content: finalContent }
 	}
 }

@@ -1,20 +1,95 @@
 import { ToolArgs } from "./types"
 
 export function getListFilesDescription(args: ToolArgs): string {
-	return `## list_files
-Description: Request to list files and directories within the specified directory. If recursive is true, it will list all files and directories recursively. If recursive is false or not provided, it will only list the top-level contents. Do not use this tool to confirm the existence of files you may have created, as the user will let you know if the files were created successfully or not.
-Parameters:
-- path: (required) The path of the directory to list contents for (relative to the current working directory ${args.cwd})
-- recursive: (optional) Whether to list files recursively. Use true for recursive listing, false or omit for top-level only.
-Usage:
+	return `<tool_definition>
+    <name>list_files</name>
+    <description>Lists files and directories in the specified path, returning a JSON structure with file metadata.</description>
+
+    <output_format>
+        <json_structure>
+            <field>
+                <name>name</name>
+                <description>File or directory name</description>
+            </field>
+            <field>
+                <name>type</name>
+                <description>Either "file" or "directory"</description>
+            </field>
+            <field>
+                <name>extension</name>
+                <description>File extension (files only)</description>
+            </field>
+            <field>
+                <name>children</name>
+                <description>Nested files/directories (directories only)</description>
+            </field>
+            <field>
+                <name>hasMore</name>
+                <description>Indicates if listing was truncated</description>
+            </field>
+        </json_structure>
+    </output_format>
+
+    <parameters>
+        <parameter>
+            <name>path</name>
+            <required>true</required>
+            <description>Directory path relative to ${args.cwd}</description>
+        </parameter>
+        <parameter>
+            <name>recursive</name>
+            <required>false</required>
+            <description>When true, lists contents recursively</description>
+        </parameter>
+        <parameter>
+            <name>format</name>
+            <required>false</required>
+            <description>Format of the output. Can be "flat" or "tree". Default is "flat"</description>
+        </parameter>
+    </parameters>
+
+    <syntax_template>
 <list_files>
 <path>Directory path here</path>
 <recursive>true or false (optional)</recursive>
+<format>"flat" or "tree" (optional)</format>
 </list_files>
+    </syntax_template>
 
-Example: Requesting to list all files in the current directory
+    <example>
 <list_files>
 <path>.</path>
 <recursive>false</recursive>
-</list_files>`
+<format>tree</format>
+</list_files>
+    </example>
+
+    <example_output>
+{
+  "root": {
+    "name": "project",
+    "type": "directory",
+    "children": {
+      "src": {
+        "name": "src",
+        "type": "directory",
+        "children": {
+          "index.ts": {
+            "name": "index",
+            "type": "file",
+            "extension": ".ts",
+          }
+        }
+      },
+      "package.json": {
+        "name": "package",
+        "type": "file",
+        "extension": ".json",
+      }
+    }
+  },
+  "hasMore": false
+}
+    </example_output>
+</tool_definition>`
 }

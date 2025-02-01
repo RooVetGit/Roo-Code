@@ -136,7 +136,9 @@ Your search/replace content here
 		endLine?: number,
 	): Promise<DiffResult> {
 		// Extract the search and replace blocks
-		const match = diffContent.match(/<<<<<<< SEARCH\n([\s\S]*?)\n?=======\n([\s\S]*?)\n?>>>>>>> REPLACE/)
+		const match = diffContent.match(
+			/<<<<<<< SEARCH(?:\r?\n)([\s\S]*?)(?:\r?\n)?=======(?:\r?\n)([\s\S]*?)(?:\r?\n)?>>>>>>> REPLACE/,
+		)
 		if (!match) {
 			return {
 				success: false,
@@ -266,7 +268,6 @@ Your search/replace content here
 			const bestMatchSection = bestMatchContent
 				? `\n\nBest Match Found:\n${addLineNumbers(bestMatchContent, matchIndex + 1)}`
 				: `\n\nBest Match Found:\n(no match)`
-
 			const lineRange =
 				startLine || endLine
 					? ` at ${startLine ? `start: ${startLine}` : "start"} to ${endLine ? `end: ${endLine}` : "end"}`
