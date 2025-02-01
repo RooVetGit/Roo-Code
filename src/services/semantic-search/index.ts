@@ -14,6 +14,7 @@ import { StoreSearchResult } from "./vector-store/types"
 import * as crypto from "crypto"
 import { ApiHandler } from "../../api"
 import { OpenAiNativeHandler } from "../../api/providers/openai-native"
+import { isTextFile, isCodeFile } from "./utils/file-utils"
 
 export interface SemanticSearchConfig {
 	/**
@@ -39,167 +40,8 @@ export enum WorkspaceIndexStatus {
 }
 
 export class SemanticSearchService {
-	// Supported file extensions for semantic search
-	private static readonly SUPPORTED_CODE_EXTENSIONS = new Set([
-		"js",
-		"jsx",
-		"ts",
-		"tsx", // JavaScript/TypeScript
-		"py", // Python
-		"rs", // Rust
-		"go", // Go
-		"cpp",
-		"hpp", // C++
-		"c",
-		"h", // C
-		"cs", // C#
-		"rb", // Ruby
-		"java", // Java
-		"php", // PHP
-		"swift", // Swift
-	])
-
 	// Maximum size for text files (2MB)
 	private static readonly MAX_TEXT_FILE_SIZE = 2 * 1024 * 1024
-
-	private static async isTextFile(filePath: string): Promise<boolean> {
-		const stats = await vscode.workspace.fs.stat(vscode.Uri.file(filePath))
-
-		// Check if path is a directory
-		if (stats.type === vscode.FileType.Directory) {
-			return false
-		}
-
-		if (stats.size > this.MAX_TEXT_FILE_SIZE) {
-			return false
-		}
-
-		const fileContent = await vscode.workspace.fs.readFile(vscode.Uri.file(filePath))
-
-		// Check for null bytes and other control characters (except common ones like newline, tab)
-		const sampleSize = Math.min(4096, fileContent.length)
-		for (let i = 0; i < sampleSize; i++) {
-			if (fileContent[i] === 0 || (fileContent[i] < 32 && ![9, 10, 13].includes(fileContent[i]))) {
-				return false
-			}
-		}
-
-		// Check if the buffer is valid UTF-8
-		if (!this.isValidUtf8(fileContent)) {
-			return false
-		}
-
-		// Heuristic check for ASCII printable characters
-		let validBytes = 0
-		for (let i = 0; i < fileContent.length; i++) {
-			const byte = fileContent[i]
-			if (
-				byte === 0x09 || // Tab
-				byte === 0x0a || // Line Feed
-				byte === 0x0d || // Carriage Return
-				(byte >= 0x20 && byte <= 0x7e) // Printable ASCII
-			) {
-				validBytes++
-			}
-		}
-
-		const ratio = validBytes / fileContent.length
-		return ratio >= 0.98 // 98% threshold
-	}
-
-	private static isValidUtf8(buffer: Uint8Array): boolean {
-		// Check if buffer can be converted to UTF-8 without replacement characters
-		const str = new TextDecoder().decode(buffer)
-		return !str.includes("\ufffd") // No replacement characters found
-	}
-
-	// Check if a file is supported for indexing
-	public static async isFileSupported(filePath: string): Promise<boolean> {
-		const ext = path.extname(filePath).toLowerCase().slice(1)
-		return this.SUPPORTED_CODE_EXTENSIONS.has(ext) || (await this.isTextFile(filePath))
-	}
-
-	// Check if a file should be treated as a code file (parsed with tree-sitter)
-	private static isCodeFile(filePath: string): boolean {
-		const ext = path.extname(filePath).toLowerCase().slice(1)
-		return this.SUPPORTED_CODE_EXTENSIONS.has(ext)
-	}
-
-	// Add chunking method for text files
-	private static chunkText(text: string, maxChunkSize: number = 8000): string[] {
-		const chunks: string[] = []
-		const paragraphs = text.split("\n\n")
-		let currentChunk: string[] = []
-		let currentLength = 0
-
-		for (const paragraph of paragraphs) {
-			if (currentLength + paragraph.length > maxChunkSize) {
-				if (currentChunk.length > 0) {
-					chunks.push(currentChunk.join("\n\n"))
-					currentChunk = []
-					currentLength = 0
-				}
-				// Handle very long paragraphs by splitting into sentences
-				if (paragraph.length > maxChunkSize) {
-					const sentences = paragraph.split(/[.!?]\s+/)
-					for (const sentence of sentences) {
-						if (currentLength + sentence.length > maxChunkSize) {
-							chunks.push(sentence.substring(0, maxChunkSize))
-							currentLength = 0
-						} else {
-							currentChunk.push(sentence)
-							currentLength += sentence.length
-						}
-					}
-				} else {
-					chunks.push(paragraph)
-				}
-			} else {
-				currentChunk.push(paragraph)
-				currentLength += paragraph.length + 2 // Account for newlines
-			}
-		}
-
-		if (currentChunk.length > 0) {
-			chunks.push(currentChunk.join("\n\n"))
-		}
-
-		return chunks
-	}
-
-	// Add new chunking method for code content
-	private static chunkCodeContent(content: string, maxChunkSize: number = 32000): string[] {
-		const chunks: string[] = []
-		const lines = content.split("\n")
-		let currentChunk: string[] = []
-		let currentLength = 0
-
-		for (const line of lines) {
-			if (currentLength + line.length > maxChunkSize) {
-				// Try to find a natural split point in the last 10 lines
-				let splitIndex = currentChunk.length - 1
-				for (let i = currentChunk.length - 1; i >= Math.max(0, currentChunk.length - 10); i--) {
-					if (/[;}]$/.test(currentChunk[i]) || currentChunk[i].trim() === "") {
-						splitIndex = i + 1
-						break
-					}
-				}
-
-				chunks.push(currentChunk.slice(0, splitIndex).join("\n"))
-				currentChunk = currentChunk.slice(splitIndex)
-				currentLength = currentChunk.join("\n").length
-			}
-
-			currentChunk.push(line)
-			currentLength += line.length + 1 // +1 for newline
-		}
-
-		if (currentChunk.length > 0) {
-			chunks.push(currentChunk.join("\n"))
-		}
-
-		return chunks
-	}
 
 	private statuses = new Map<string, WorkspaceIndexStatus>()
 	private store!: LanceDBVectorStore
@@ -278,70 +120,104 @@ export class SemanticSearchService {
 	}
 
 	private async processFileWithHash(filePath: string): Promise<void> {
-		// Check if path is a directory
 		try {
+			// Check if path is a directory
 			const stat = await vscode.workspace.fs.stat(vscode.Uri.file(filePath))
 			if (stat.type === vscode.FileType.Directory) {
 				console.log(`Skipping directory: ${filePath}`)
 				return
 			}
-		} catch (error) {
-			console.error(`Error checking file stats for ${filePath}:`, error)
-			return
-		}
 
-		const fileContent = await vscode.workspace.fs.readFile(vscode.Uri.file(filePath))
-		const textContent = new TextDecoder().decode(fileContent)
+			// First check if it's a supported code file
+			const isCode = await SemanticSearchService.isCodeFile(filePath)
 
-		// Create hash of file content
-		const hash = crypto.createHash("sha256").update(textContent).digest("hex")
-
-		// Check if file exists in DB and get its hash
-		const { exists: hasExisting, hash: prevHash } = await this.store.hasFileSegments(filePath)
-
-		// If hash matches and has existing segments, skip entirely
-		if (hasExisting && hash === prevHash) {
-			console.log(`Skipping unchanged file: ${filePath}`)
-			return
-		}
-
-		// Delete old segments if needed
-		if (hasExisting) {
-			console.log(`File ${filePath} changed, deleting old segments`)
-			await this.store.deleteByFilePath(filePath)
-		}
-
-		// Only process if we passed the checks
-		console.log("Processing file", filePath, "Is code file?", SemanticSearchService.isCodeFile(filePath))
-		if (SemanticSearchService.isCodeFile(filePath)) {
-			const parsedFile = await this.parser.parseFile(filePath, hash) // Pass hash to parser
-			console.log("Parsed file", parsedFile)
-			if (!parsedFile) {
-				console.error("Failed to parse file", filePath)
+			// For non-code files, verify they're valid text files
+			if (!isCode && !(await isTextFile(filePath, SemanticSearchService.MAX_TEXT_FILE_SIZE))) {
+				console.log("Skipping non-code file", filePath, "Unsupported file type")
 				return
 			}
-			for (const segment of parsedFile.segments) {
-				const definition = {
-					...convertSegmentToDefinition(segment, filePath),
-					contentHash: hash,
-				}
-				await this.indexDefinition(definition)
+
+			const fileContent = await vscode.workspace.fs.readFile(vscode.Uri.file(filePath))
+			const textContent = new TextDecoder().decode(fileContent)
+
+			// Create hash of file content
+			const hash = crypto.createHash("sha256").update(textContent).digest("hex")
+
+			// Check if file exists in DB and get its hash
+			const { exists: hasExisting, hash: prevHash } = await this.store.hasFileSegments(filePath)
+
+			// If hash matches and has existing segments, skip entirely
+			if (hasExisting && hash === prevHash) {
+				console.log(`Skipping unchanged file: ${filePath}`)
+				return
 			}
-		} else {
-			const chunks = SemanticSearchService.chunkText(textContent)
-			for (const [index, chunk] of chunks.entries()) {
-				const definition: CodeDefinition = {
-					type: "file",
-					name: `${path.basename(filePath)} #${index + 1}`,
-					filePath: filePath,
-					content: chunk,
-					startLine: 1 + index * 100, // Approximate line numbers
-					endLine: 1 + (index + 1) * 100,
-					language: path.extname(filePath).slice(1) || "text",
-					contentHash: hash,
-				}
-				await this.indexDefinition(definition)
+
+			// Delete old segments if needed
+			if (hasExisting) {
+				console.log(`File ${filePath} changed, deleting old segments`)
+				await this.store.deleteByFilePath(filePath)
 			}
+
+			// Only process if we passed the checks
+			console.log("Processing file", filePath, "Is code file?", isCode)
+			if (isCode) {
+				const parsedFile = await this.parser.parseFile(filePath, hash)
+				console.log("Parsed file", parsedFile)
+				if (!parsedFile) {
+					console.error("Failed to parse file", filePath)
+					return
+				}
+
+				// Check if we got any segments from parsing
+				if (parsedFile.segments.length === 0) {
+					console.log(`No code segments found in ${filePath}, falling back to text processing`)
+					// Process as text file since no code segments were found
+					const chunks = SemanticSearchService.chunkText(textContent)
+					for (const [index, chunk] of chunks.entries()) {
+						const definition: CodeDefinition = {
+							type: "file",
+							name: `${path.basename(filePath)} #${index + 1}`,
+							filePath: filePath,
+							content: chunk,
+							startLine: 1 + index * 100, // Approximate line numbers
+							endLine: 1 + (index + 1) * 100,
+							language: path.extname(filePath).slice(1) || "text",
+							contentHash: hash,
+						}
+						await this.indexDefinition(definition)
+					}
+				} else {
+					// Process normally if we have code segments
+					for (const segment of parsedFile.segments) {
+						const definition = {
+							...convertSegmentToDefinition(segment, filePath),
+							contentHash: hash,
+						}
+						await this.indexDefinition(definition)
+					}
+				}
+			} else {
+				const chunks = SemanticSearchService.chunkText(textContent)
+				for (const [index, chunk] of chunks.entries()) {
+					const definition: CodeDefinition = {
+						type: "file",
+						name: `${path.basename(filePath)} #${index + 1}`,
+						filePath: filePath,
+						content: chunk,
+						startLine: 1 + index * 100, // Approximate line numbers
+						endLine: 1 + (index + 1) * 100,
+						language: path.extname(filePath).slice(1) || "text",
+						contentHash: hash,
+					}
+					await this.indexDefinition(definition)
+				}
+			}
+		} catch (error) {
+			if (error instanceof Error && error.message.includes("binary")) {
+				console.log(`Skipping binary file: ${filePath}`)
+				return
+			}
+			console.error(`Error processing file ${filePath}:`, error)
 		}
 	}
 
@@ -513,5 +389,83 @@ export class SemanticSearchService {
 	clear(): void {
 		this.store.clear()
 		this.updateStatus(WorkspaceIndexStatus.NotIndexed)
+	}
+
+	private static chunkText(text: string, maxChunkSize: number = 8000): string[] {
+		const chunks: string[] = []
+		const paragraphs = text.split("\n\n")
+		let currentChunk: string[] = []
+		let currentLength = 0
+
+		for (const paragraph of paragraphs) {
+			if (currentLength + paragraph.length > maxChunkSize) {
+				if (currentChunk.length > 0) {
+					chunks.push(currentChunk.join("\n\n"))
+					currentChunk = []
+					currentLength = 0
+				}
+				// Handle very long paragraphs by splitting into sentences
+				if (paragraph.length > maxChunkSize) {
+					const sentences = paragraph.split(/[.!?]\s+/)
+					for (const sentence of sentences) {
+						if (currentLength + sentence.length > maxChunkSize) {
+							chunks.push(sentence.substring(0, maxChunkSize))
+							currentLength = 0
+						} else {
+							currentChunk.push(sentence)
+							currentLength += sentence.length
+						}
+					}
+				} else {
+					chunks.push(paragraph)
+				}
+			} else {
+				currentChunk.push(paragraph)
+				currentLength += paragraph.length + 2 // Account for newlines
+			}
+		}
+
+		if (currentChunk.length > 0) {
+			chunks.push(currentChunk.join("\n\n"))
+		}
+
+		return chunks
+	}
+
+	private static chunkCodeContent(content: string, maxChunkSize: number = 32000): string[] {
+		const chunks: string[] = []
+		const lines = content.split("\n")
+		let currentChunk: string[] = []
+		let currentLength = 0
+
+		for (const line of lines) {
+			if (currentLength + line.length > maxChunkSize) {
+				// Try to find a natural split point in the last 10 lines
+				let splitIndex = currentChunk.length - 1
+				for (let i = currentChunk.length - 1; i >= Math.max(0, currentChunk.length - 10); i--) {
+					if (/[;}]$/.test(currentChunk[i]) || currentChunk[i].trim() === "") {
+						splitIndex = i + 1
+						break
+					}
+				}
+
+				chunks.push(currentChunk.slice(0, splitIndex).join("\n"))
+				currentChunk = currentChunk.slice(splitIndex)
+				currentLength = currentChunk.join("\n").length
+			}
+
+			currentChunk.push(line)
+			currentLength += line.length + 1 // +1 for newline
+		}
+
+		if (currentChunk.length > 0) {
+			chunks.push(currentChunk.join("\n"))
+		}
+
+		return chunks
+	}
+
+	private static async isCodeFile(filePath: string): Promise<boolean> {
+		return isCodeFile(filePath)
 	}
 }
