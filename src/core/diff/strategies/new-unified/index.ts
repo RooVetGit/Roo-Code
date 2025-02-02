@@ -177,7 +177,7 @@ Usage:
 <diff>
 Your diff here
 </diff>
-		</apply_diff>`
+</apply_diff>`
 	}
 
 	// Helper function to split a hunk into smaller hunks based on contiguous changes
