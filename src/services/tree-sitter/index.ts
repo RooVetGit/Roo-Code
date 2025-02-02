@@ -13,7 +13,12 @@ export async function parseSourceCodeForDefinitionsTopLevel(dirPath: string): Pr
 	}
 
 	// Get all files at top level (not gitignored)
-	const [allFiles, _] = await listFiles(dirPath, false, 200)
+	const [allFiles, _] = await listFiles(dirPath, {
+		path: dirPath,
+		format: "flat",
+		recursive: false,
+		limit: 200,
+	})
 
 	let result = ""
 
