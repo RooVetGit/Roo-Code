@@ -1599,8 +1599,6 @@ export class Cline {
 								? parsedOperations.operation
 								: [parsedOperations?.operation].filter((op): op is Operation => op !== undefined)
 
-							console.log("normalizedOperations", normalizedOperations)
-
 							const updatedContent = insertGroups(
 								lines,
 								normalizedOperations.map((elem) => {
@@ -1764,8 +1762,6 @@ export class Cline {
 								const normalizedOperations = Array.isArray(parsedOperations?.operation)
 									? parsedOperations.operation
 									: [parsedOperations?.operation].filter((op): op is Operation => op !== undefined)
-
-								console.log("normalizedOperations", normalizedOperations)
 
 								for (const op of normalizedOperations) {
 									const flags = op.regex_flags ?? (op.ignore_case ? "gi" : "g")
