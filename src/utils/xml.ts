@@ -7,7 +7,7 @@ import { XMLParser } from "fast-xml-parser"
  * @throws Error if the XML is invalid or parsing fails
  */
 export function parseXml(xmlString: string, stopNodes?: string[]): unknown {
-	let _stopNodes = stopNodes ?? []
+	const _stopNodes = stopNodes ?? []
 	try {
 		const parser = new XMLParser({
 			// Preserve attribute types (don't convert numbers/booleans)
