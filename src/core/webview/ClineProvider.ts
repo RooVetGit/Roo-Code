@@ -1,7 +1,7 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import delay from "delay"
 import axios from "axios"
-import fs from "fs/promises"
+import fs, { cp } from "fs/promises"
 import os from "os"
 import pWaitFor from "p-wait-for"
 import * as path from "path"
@@ -36,7 +36,8 @@ import { EXPERIMENT_IDS, experiments as Experiments, experimentDefault, Experime
 import { CustomSupportPrompts, supportPrompt } from "../../shared/support-prompt"
 
 import { ACTION_NAMES } from "../CodeActionProvider"
-
+import { spawn } from "child_process"
+import { openCursorInstance, startRooCodeTask } from "./openCursorInstance"
 /*
 https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
 
@@ -1421,6 +1422,14 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		}
 
 		await this.postStateToWebview()
+	}
+
+	public async openCursorInstance(prompt: string, mode: string, projectDir: string) {
+		const workingDir =
+			projectDir || vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) || ""
+		const instanceId = await openCursorInstance(prompt, mode, workingDir)
+		await startRooCodeTask(instanceId, prompt, mode)
+		this.outputChannel.appendLine(`Cursor instance opened in ${workingDir}`)
 	}
 
 	private async updateApiConfiguration(apiConfiguration: ApiConfiguration) {

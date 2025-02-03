@@ -348,6 +348,10 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		vscode.postMessage({ type: "clearTask" })
 	}, [])
 
+	const openCursorInstance = useCallback(() => {
+		vscode.postMessage({ type: "openCursorInstance" })
+	}, [])
+
 	/*
 	This logic depends on the useEffect[messages] above to set clineAsk, after which buttons are shown and we then send an askResponse to the extension.
 	*/

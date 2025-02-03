@@ -17,6 +17,7 @@ export const TOOL_DISPLAY_NAMES = {
 	attempt_completion: "complete tasks",
 	switch_mode: "switch modes",
 	new_task: "create new task",
+	open_cursor: "open cursor instance",
 } as const
 
 // Define available tool groups
@@ -27,6 +28,7 @@ export const TOOL_GROUPS: Record<string, ToolGroupValues> = {
 	command: ["execute_command"],
 	mcp: ["use_mcp_tool", "access_mcp_resource"],
 	modes: ["switch_mode", "new_task"],
+	open_cursor: ["open_cursor"],
 }
 
 export type ToolGroup = keyof typeof TOOL_GROUPS
@@ -37,6 +39,7 @@ export const ALWAYS_AVAILABLE_TOOLS = [
 	"attempt_completion",
 	"switch_mode",
 	"new_task",
+	"open_cursor",
 ] as const
 
 // Tool name types for type safety

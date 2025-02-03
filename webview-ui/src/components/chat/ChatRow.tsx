@@ -487,6 +487,15 @@ export const ChatRowContent = ({
 						</div>
 					</>
 				)
+			case "openCursor":
+				return (
+					<>
+						<div style={headerStyle}>
+							{toolIcon("open-cursor")}
+							<span style={{ fontWeight: "bold" }}>Roo wants to open a new Cursor instance:</span>
+						</div>
+					</>
+				)
 			default:
 				return null
 		}

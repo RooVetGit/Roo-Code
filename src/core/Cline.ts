@@ -1083,6 +1083,12 @@ export class Cline {
 							const modeName = getModeBySlug(mode, customModes)?.name ?? mode
 							return `[${block.name} in ${modeName} mode: '${message}']`
 						}
+						case "open_cursor": {
+							const prompt = block.params.prompt ?? "(no prompt)"
+							const mode = block.params.mode ?? "(no mode)"
+							const monitor = block.params.monitor ?? "(no monitor)"
+							return `[${block.name} with prompt: '${prompt}' in ${mode} mode, monitor: ${monitor}]`
+						}
 					}
 				}
 
@@ -2507,6 +2513,61 @@ export class Cline {
 							}
 						} catch (error) {
 							await handleError("creating new task", error)
+							break
+						}
+					}
+
+					case "open_cursor": {
+						const mode: string | undefined = block.params.mode
+						const prompt: string | undefined = block.params.prompt
+						const projectDir: string | undefined = block.params.projectDir
+						try {
+							if (block.partial) {
+								const partialMessage = JSON.stringify({
+									tool: "openCursor",
+									mode: removeClosingTag("mode", mode),
+									prompt: removeClosingTag("prompt", prompt),
+									projectDir: removeClosingTag("projectDir", projectDir),
+								})
+								await this.ask("tool", partialMessage, block.partial).catch(() => {})
+								break
+							} else {
+								if (!mode) {
+									this.consecutiveMistakeCount++
+									pushToolResult(await this.sayAndCreateMissingParamError("open_cursor", "mode"))
+									break
+								}
+								if (!prompt) {
+									this.consecutiveMistakeCount++
+									pushToolResult(await this.sayAndCreateMissingParamError("open_cursor", "prompt"))
+									break
+								}
+								if (!projectDir) {
+									this.consecutiveMistakeCount++
+									pushToolResult(
+										await this.sayAndCreateMissingParamError("open_cursor", "projectDir"),
+									)
+									break
+								}
+								this.consecutiveMistakeCount = 0
+
+								const provider = this.providerRef.deref()
+								if (provider) {
+									await provider.openCursorInstance(prompt, mode, projectDir)
+									pushToolResult(
+										`Successfully opened new Cursor instance in ${mode} mode with prompt: ${prompt}`,
+									)
+								} else {
+									pushToolResult(
+										formatResponse.toolError(
+											"Failed to open Cursor instance: provider not available",
+										),
+									)
+								}
+								break
+							}
+						} catch (error) {
+							await handleError("opening cursor", error)
 							break
 						}
 					}

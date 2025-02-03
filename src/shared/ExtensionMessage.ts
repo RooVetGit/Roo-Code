@@ -50,6 +50,7 @@ export interface ExtensionMessage {
 		| "historyButtonClicked"
 		| "promptsButtonClicked"
 		| "didBecomeVisible"
+		| "openCursorInstance"
 	invoke?: "sendMessage" | "primaryButtonClick" | "secondaryButtonClick" | "setChatBoxMessage"
 	state?: ExtensionState
 	images?: string[]
@@ -168,7 +169,7 @@ export type ClineSay =
 	| "mcp_server_response"
 	| "new_task_started"
 	| "new_task"
-
+	| "openCursorInstance"
 export interface ClineSayTool {
 	tool:
 		| "editedExistingFile"
@@ -181,6 +182,7 @@ export interface ClineSayTool {
 		| "searchFiles"
 		| "switchMode"
 		| "newTask"
+		| "openCursor"
 	path?: string
 	diff?: string
 	content?: string
