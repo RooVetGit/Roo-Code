@@ -20,6 +20,7 @@ import Thumbnails from "../common/Thumbnails"
 import McpResourceRow from "../mcp/McpResourceRow"
 import McpToolRow from "../mcp/McpToolRow"
 import { highlightMentions } from "./TaskHeader"
+import SemanticSearchResult from "./SemanticSearchResult"
 
 interface ChatRowProps {
 	message: ClineMessage
@@ -485,6 +486,18 @@ export const ChatRowContent = ({
 						<div style={{ paddingLeft: "26px", marginTop: "4px" }}>
 							<code>{tool.content}</code>
 						</div>
+					</>
+				)
+			case "semanticSearch":
+				return (
+					<>
+						<div style={headerStyle}>
+							{toolIcon("search")}
+							<span style={{ fontWeight: "bold" }}>
+								{message.type === "ask" ? "Roo wants to search:" : "Roo searched:"}
+							</span>
+						</div>
+						<SemanticSearchResult query={tool.query || ""} results={tool.results || []} />
 					</>
 				)
 			default:

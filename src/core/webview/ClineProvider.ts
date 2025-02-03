@@ -729,7 +729,26 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						openImage(message.text!)
 						break
 					case "openFile":
-						openFile(message.text!, message.values as { create?: boolean; content?: string })
+						const fileValue = message.value as
+							| {
+									filePath: string
+									startLine?: number
+									endLine?: number
+							  }
+							| undefined
+						if (fileValue && fileValue.filePath) {
+							const openOptions: {
+								create?: boolean
+								content?: string
+								startLine?: number
+								endLine?: number
+							} = {}
+							if (fileValue.startLine !== undefined) openOptions.startLine = fileValue.startLine
+							if (fileValue.endLine !== undefined) openOptions.endLine = fileValue.endLine
+							openFile(fileValue.filePath, openOptions)
+						} else {
+							console.error("Invalid file open message:", message)
+						}
 						break
 					case "openMention":
 						openMention(message.text)
@@ -827,7 +846,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.postStateToWebview()
 						break
 					case "soundVolume":
-						const soundVolume = message.value ?? 0.5
+						const soundVolume = typeof message.value === "number" ? message.value : 0.5
 						await this.updateGlobalState("soundVolume", soundVolume)
 						setSoundVolume(soundVolume)
 						await this.postStateToWebview()
@@ -2684,7 +2703,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			const semanticSearchApiKey = await this.getSecret("semanticSearchApiKey")
 
 			if (!semanticSearchApiKey) {
-				vscode.window.showErrorMessage("No API key for semantic search")
+				console.info("No API key for semantic search")
 				return
 			}
 
@@ -2694,7 +2713,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 		const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
 		if (!workspaceRoot) {
-			vscode.window.showErrorMessage("No workspace folder open")
+			console.info("No workspace folder open")
 			return
 		}
 
@@ -2702,48 +2721,15 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			await vscode.window.withProgress(
 				{
 					location: vscode.ProgressLocation.Notification,
-					title: "Semantic Search Indexing",
+					title: "Semantic Search Indexing - Indexing workspace...",
 					cancellable: false,
 				},
-				async (progress) => {
-					try {
-						// Send initial status
-						this.view?.webview.postMessage({
-							type: "semanticSearchStatus",
-							status: "Indexing",
-						})
-
-						progress.report({ message: "Starting indexing...", increment: 10 })
-						this.view?.webview.postMessage({
-							type: "indexingProgress",
-							indexingProgress: { current: 0, total: 100, status: "Initializing..." },
-						})
-
-						console.log("Semantic search service status:", this.semanticSearchService?.getStatus())
-
-						progress.report({ message: "Indexing workspace files...", increment: 40 })
-						this.view?.webview.postMessage({
-							type: "indexingProgress",
-							indexingProgress: { current: 50, total: 100, status: "Indexing kfiles..." },
-						})
-
-						const [files] = await listFiles(workspaceRoot, true, 1000, true, false)
-						await this.semanticSearchService?.addBatchToIndex(files)
-
-						progress.report({ message: "Indexing completed successfully", increment: 100 })
-						this.view?.webview.postMessage({
-							type: "indexingProgress",
-							indexingProgress: { current: 100, total: 100, status: "Completed" },
-						})
-
-						await delay(1500)
-						const finalStatus = this.semanticSearchService?.getStatus() || "Not indexed"
-						this.view?.webview.postMessage({ type: "semanticSearchStatus", status: finalStatus })
-					} catch (error) {
-						console.error("Error during indexing:", error)
-						this.view?.webview.postMessage({ type: "semanticSearchStatus", status: "Not indexed" })
-						throw error
-					}
+				async () => {
+					this.view?.webview.postMessage({ type: "semanticSearchStatus", status: "Indexing" })
+					const [files] = await listFiles(workspaceRoot, true, 1000, true, false)
+					await this.semanticSearchService?.addBatchToIndex(files)
+					const finalStatus = this.semanticSearchService?.getStatus() || "Not indexed"
+					this.view?.webview.postMessage({ type: "semanticSearchStatus", status: finalStatus })
 				},
 			)
 		} catch (error) {

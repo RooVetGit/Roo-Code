@@ -95,7 +95,13 @@ export interface WebviewMessage {
 	apiConfiguration?: ApiConfiguration
 	images?: string[]
 	bool?: boolean
-	value?: number
+	value?:
+		| number
+		| {
+				filePath: string
+				startLine?: number
+				endLine?: number
+		  }
 	commands?: string[]
 	audioType?: AudioType
 	serverName?: string

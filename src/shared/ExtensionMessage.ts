@@ -191,6 +191,13 @@ export type ClineSayTool = {
 	mode?: string
 	reason?: string
 	query?: string
+	results?: Array<{
+		type: "file" | "code"
+		filePath: string
+		startLine?: number
+		endLine?: number
+		name: string
+	}>
 }
 
 // must keep in sync with system prompt

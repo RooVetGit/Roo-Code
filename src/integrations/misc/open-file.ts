@@ -23,6 +23,8 @@ export async function openImage(dataUri: string) {
 interface OpenFileOptions {
 	create?: boolean
 	content?: string
+	startLine?: number
+	endLine?: number
 }
 
 export async function openFile(filePath: string, options: OpenFileOptions = {}) {
@@ -73,7 +75,31 @@ export async function openFile(filePath: string, options: OpenFileOptions = {}) 
 		} catch {} // not essential, sometimes tab operations fail
 
 		const document = await vscode.workspace.openTextDocument(uri)
-		await vscode.window.showTextDocument(document, { preview: false })
+		const editor = await vscode.window.showTextDocument(document, { preview: false })
+
+		// If startLine and endLine are provided, select and reveal those lines
+		if (options.startLine !== undefined && options.endLine !== undefined) {
+			// Validate line numbers
+			const isValidLineNumber = (line?: number) => line !== undefined && line > 0 && Number.isInteger(line)
+
+			if (isValidLineNumber(options.startLine) && isValidLineNumber(options.endLine)) {
+				const startLine = Math.max(0, options.startLine! - 1)
+				const endLine = Math.min(document.lineCount - 1, options.endLine! - 1)
+
+				const startPos = new vscode.Position(startLine, 0)
+				const endPos = new vscode.Position(endLine, document.lineAt(endLine).text.length)
+
+				const range = new vscode.Range(startPos, endPos)
+
+				// Reveal the range
+				editor.revealRange(range, vscode.TextEditorRevealType.InCenter)
+
+				// Select the range
+				editor.selection = new vscode.Selection(startPos, endPos)
+			} else {
+				console.warn(`Invalid line numbers: start=${options.startLine}, end=${options.endLine}`)
+			}
+		}
 	} catch (error) {
 		if (error instanceof Error) {
 			vscode.window.showErrorMessage(`Could not open file: ${error.message}`)

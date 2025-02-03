@@ -2628,7 +2628,7 @@ export class Cline {
 							if (block.partial) {
 								const partialMessage = JSON.stringify({
 									...sharedMessageProps,
-									content: "",
+									results: [], // Add empty results array for partial message
 								} satisfies ClineSayTool)
 								await this.ask("tool", partialMessage, block.partial).catch(() => {})
 								break
@@ -2639,16 +2639,23 @@ export class Cline {
 									break
 								}
 								this.consecutiveMistakeCount = 0
-								const result = await this.handleSemanticSearch(query)
+								const searchResults = await this.handleSemanticSearch(query)
 								const completeMessage = JSON.stringify({
 									...sharedMessageProps,
-									content: result,
+									results: searchResults,
 								} satisfies ClineSayTool)
 								const didApprove = await askApproval("tool", completeMessage)
 								if (!didApprove) {
 									break
 								}
-								pushToolResult(result)
+								// Format the results as a text block
+								const formattedResults = [
+									{
+										type: "text" as const,
+										text: JSON.stringify({ results: searchResults }),
+									},
+								]
+								pushToolResult(formattedResults)
 								break
 							}
 						} catch (error) {
@@ -3203,26 +3210,31 @@ export class Cline {
 		return `<environment_details>\n${details.trim()}\n</environment_details>`
 	}
 
-	private async handleSemanticSearch(query: string): Promise<string> {
+	private async handleSemanticSearch(query: string): Promise<
+		Array<{
+			type: "file" | "code"
+			filePath: string
+			startLine?: number
+			endLine?: number
+			name: string
+		}>
+	> {
 		if (!this.semanticSearchService || !(this.semanticSearchService instanceof SemanticSearchService)) {
-			return "Semantic search service is not available."
+			return []
 		}
 
 		try {
 			const results = await this.semanticSearchService.search(query)
-
-			if (results.length === 0) {
-				return "No relevant code found."
-			}
-
-			return results
-				.map((result) => {
-					const content = result.metadata.content ? `\n${result.metadata.content}` : ""
-					return `Found ${result.metadata.type} '${result.metadata.name}' in ${result.metadata.filePath}:${result.metadata.startLine}${content}`
-				})
-				.join("\n\n")
+			return results.map((result) => ({
+				type: result.type,
+				filePath: result.filePath,
+				startLine: result.metadata.startLine,
+				endLine: result.metadata.endLine,
+				name: result.metadata.name,
+			}))
 		} catch (error) {
-			return `Error performing semantic search: ${error instanceof Error ? error.message : String(error)}`
+			console.error("Error performing semantic search:", error)
+			return []
 		}
 	}
 }
