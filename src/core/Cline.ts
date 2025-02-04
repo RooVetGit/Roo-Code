@@ -49,10 +49,10 @@ import { calculateApiCost } from "../utils/cost"
 import { fileExistsAtPath } from "../utils/fs"
 import { arePathsEqual, getReadablePath } from "../utils/path"
 import { parseMentions } from "./mentions"
-import { AssistantMessageContent, ToolParamName, ToolUseName } from "./assistant-message"
+import { AssistantMessageContent, parseAssistantMessage, ToolParamName, ToolUseName } from "./assistant-message"
 import { formatResponse } from "./prompts/responses"
 import { SYSTEM_PROMPT } from "./prompts/system"
-import { modes, defaultModeSlug, getModeBySlug } from "../shared/modes"
+import { modes, defaultModeSlug, getModeBySlug, parseSlashCommand } from "../shared/modes"
 import { truncateHalfConversation } from "./sliding-window"
 import { ClineProvider, GlobalFileNames } from "./webview/ClineProvider"
 import { detectCodeOmission } from "../integrations/editor/detect-omission"
@@ -60,10 +60,9 @@ import { BrowserSession } from "../services/browser/BrowserSession"
 import { OpenRouterHandler } from "../api/providers/openrouter"
 import { McpHub } from "../services/mcp/McpHub"
 import crypto from "crypto"
-import { EXPERIMENT_IDS } from "../shared/experiments"
+import { EXPERIMENT_IDS, experiments as Experiments } from "../shared/experiments"
 import { insertGroups } from "./diff/insert-groups"
 import { SemanticSearchService } from "../services/semantic-search"
-import { parseAssistantMessage } from "./assistant-message/parse-assistant-message"
 
 const cwd =
 	vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop") // may or may not exist but fs checking existence would immediately ask for permission which would be bad UX, need to come up with a better solution
@@ -79,6 +78,29 @@ export class Cline {
 	private terminalManager: TerminalManager
 	private urlContentFetcher: UrlContentFetcher
 	private browserSession: BrowserSession
+
+	/**
+	 * Processes a message for slash commands and handles mode switching if needed.
+	 * @param message The message to process
+	 * @returns The processed message with slash command removed if one was present
+	 */
+	private async handleSlashCommand(message: string): Promise<string> {
+		if (!message) return message
+
+		const { customModes } = (await this.providerRef.deref()?.getState()) ?? {}
+		const slashCommand = parseSlashCommand(message, customModes)
+
+		if (slashCommand) {
+			// Switch mode before processing the remaining message
+			const provider = this.providerRef.deref()
+			if (provider) {
+				await provider.handleModeSwitch(slashCommand.modeSlug)
+				return slashCommand.remainingMessage
+			}
+		}
+
+		return message
+	}
 	private didEditFile: boolean = false
 	customInstructions?: string
 	diffStrategy?: DiffStrategy
@@ -98,6 +120,7 @@ export class Cline {
 	didFinishAborting = false
 	abandoned = false
 	private diffViewProvider: DiffViewProvider
+	private lastApiRequestTime?: number
 
 	// streaming
 	private currentStreamingContentIndex = 0
@@ -144,7 +167,7 @@ export class Cline {
 		}
 
 		// Initialize diffStrategy based on current state
-		this.updateDiffStrategy(experiments?.diffStrategy ?? false)
+		this.updateDiffStrategy(Experiments.isEnabled(experiments ?? {}, EXPERIMENT_IDS.DIFF_STRATEGY))
 
 		this.semanticSearchService = semanticSearchService
 
@@ -361,6 +384,11 @@ export class Cline {
 	}
 
 	async handleWebviewAskResponse(askResponse: ClineAskResponse, text?: string, images?: string[]) {
+		// Process slash command if present
+		if (text) {
+			text = await this.handleSlashCommand(text)
+		}
+
 		this.askResponse = askResponse
 		this.askResponseText = text
 		this.askResponseImages = images
@@ -442,6 +470,22 @@ export class Cline {
 		this.clineMessages = []
 		this.apiConversationHistory = []
 		await this.providerRef.deref()?.postStateToWebview()
+
+		// Check for slash command if task is provided
+		if (task) {
+			const { customModes } = (await this.providerRef.deref()?.getState()) ?? {}
+			const slashCommand = parseSlashCommand(task, customModes)
+
+			if (slashCommand) {
+				// Switch mode before processing the remaining message
+				const provider = this.providerRef.deref()
+				if (provider) {
+					await provider.handleModeSwitch(slashCommand.modeSlug)
+					// Update task to be just the remaining message
+					task = slashCommand.remainingMessage
+				}
+			}
+		}
 
 		await this.say("text", task, images)
 
@@ -800,11 +844,42 @@ export class Cline {
 		}
 	}
 
-	async *attemptApiRequest(previousApiReqIndex: number): ApiStream {
+	async *attemptApiRequest(previousApiReqIndex: number, retryAttempt: number = 0): ApiStream {
 		let mcpHub: McpHub | undefined
 
-		const { mcpEnabled, alwaysApproveResubmit, requestDelaySeconds } =
+		const { mcpEnabled, alwaysApproveResubmit, requestDelaySeconds, rateLimitSeconds } =
 			(await this.providerRef.deref()?.getState()) ?? {}
+
+		let finalDelay = 0
+
+		// Only apply rate limiting if this isn't the first request
+		if (this.lastApiRequestTime) {
+			const now = Date.now()
+			const timeSinceLastRequest = now - this.lastApiRequestTime
+			const rateLimit = rateLimitSeconds || 0
+			const rateLimitDelay = Math.max(0, rateLimit * 1000 - timeSinceLastRequest)
+			finalDelay = rateLimitDelay
+		}
+
+		// Add exponential backoff delay for retries
+		if (retryAttempt > 0) {
+			const baseDelay = requestDelaySeconds || 5
+			const exponentialDelay = Math.ceil(baseDelay * Math.pow(2, retryAttempt)) * 1000
+			finalDelay = Math.max(finalDelay, exponentialDelay)
+		}
+
+		if (finalDelay > 0) {
+			// Show countdown timer
+			for (let i = Math.ceil(finalDelay / 1000); i > 0; i--) {
+				const delayMessage =
+					retryAttempt > 0 ? `Retrying in ${i} seconds...` : `Rate limiting for ${i} seconds...`
+				await this.say("api_req_retry_delayed", delayMessage, undefined, true)
+				await delay(1000)
+			}
+		}
+
+		// Update last request time before making the request
+		this.lastApiRequestTime = Date.now()
 
 		if (mcpEnabled ?? true) {
 			mcpHub = this.providerRef.deref()?.mcpHub
@@ -817,8 +892,14 @@ export class Cline {
 			})
 		}
 
-		const { browserViewportSize, mode, customModePrompts, preferredLanguage, experiments } =
-			(await this.providerRef.deref()?.getState()) ?? {}
+		const {
+			browserViewportSize,
+			mode,
+			customModePrompts,
+			preferredLanguage,
+			experiments,
+			enableMcpServerCreation,
+		} = (await this.providerRef.deref()?.getState()) ?? {}
 		const { customModes } = (await this.providerRef.deref()?.getState()) ?? {}
 		const systemPrompt = await (async () => {
 			const provider = this.providerRef.deref()
@@ -839,6 +920,7 @@ export class Cline {
 				preferredLanguage,
 				this.diffEnabled,
 				experiments,
+				enableMcpServerCreation,
 			)
 		})()
 
@@ -894,21 +976,29 @@ export class Cline {
 			// note that this api_req_failed ask is unique in that we only present this option if the api hasn't streamed any content yet (ie it fails on the first chunk due), as it would allow them to hit a retry button. However if the api failed mid-stream, it could be in any arbitrary state where some tools may have executed, so that error is handled differently and requires cancelling the task entirely.
 			if (alwaysApproveResubmit) {
 				const errorMsg = error.message ?? "Unknown error"
-				const requestDelay = requestDelaySeconds || 5
-				// Automatically retry with delay
-				// Show countdown timer in error color
-				for (let i = requestDelay; i > 0; i--) {
+				const baseDelay = requestDelaySeconds || 5
+				const exponentialDelay = Math.ceil(baseDelay * Math.pow(2, retryAttempt))
+
+				// Show countdown timer with exponential backoff
+				for (let i = exponentialDelay; i > 0; i--) {
 					await this.say(
 						"api_req_retry_delayed",
-						`${errorMsg}\n\nRetrying in ${i} seconds...`,
+						`${errorMsg}\n\nRetry attempt ${retryAttempt + 1}\nRetrying in ${i} seconds...`,
 						undefined,
 						true,
 					)
 					await delay(1000)
 				}
-				await this.say("api_req_retry_delayed", `${errorMsg}\n\nRetrying now...`, undefined, false)
-				// delegate generator output from the recursive call
-				yield* this.attemptApiRequest(previousApiReqIndex)
+
+				await this.say(
+					"api_req_retry_delayed",
+					`${errorMsg}\n\nRetry attempt ${retryAttempt + 1}\nRetrying now...`,
+					undefined,
+					false,
+				)
+
+				// delegate generator output from the recursive call with incremented retry count
+				yield* this.attemptApiRequest(previousApiReqIndex, retryAttempt + 1)
 				return
 			} else {
 				const { response } = await this.ask(
@@ -1043,10 +1133,6 @@ export class Cline {
 							const modeName = getModeBySlug(mode, customModes)?.name ?? mode
 							return `[${block.name} in ${modeName} mode: '${message}']`
 						}
-						case "semantic_search":
-							return `[${block.name} for '${block.params.query}']`
-						default:
-							return `[${block.name}]`
 					}
 				}
 
@@ -1096,34 +1182,22 @@ export class Cline {
 				const askApproval = async (type: ClineAsk, partialMessage?: string) => {
 					const { response, text, images } = await this.ask(type, partialMessage, false)
 					if (response !== "yesButtonClicked") {
-						if (response === "messageResponse") {
+						// Handle both messageResponse and noButtonClicked with text
+						if (text) {
 							await this.say("user_feedback", text, images)
 							pushToolResult(
 								formatResponse.toolResult(formatResponse.toolDeniedWithFeedback(text), images),
 							)
-							// this.userMessageContent.push({
-							// 	type: "text",
-							// 	text: `${toolDescription()}`,
-							// })
-							// this.toolResults.push({
-							// 	type: "tool_result",
-							// 	tool_use_id: toolUseId,
-							// 	content: this.formatToolResponseWithImages(
-							// 		await this.formatToolDeniedFeedback(text),
-							// 		images
-							// 	),
-							// })
-							this.didRejectTool = true
-							return false
+						} else {
+							pushToolResult(formatResponse.toolDenied())
 						}
-						pushToolResult(formatResponse.toolDenied())
-						// this.toolResults.push({
-						// 	type: "tool_result",
-						// 	tool_use_id: toolUseId,
-						// 	content: await this.formatToolDenied(),
-						// })
 						this.didRejectTool = true
 						return false
+					}
+					// Handle yesButtonClicked with text
+					if (text) {
+						await this.say("user_feedback", text, images)
+						pushToolResult(formatResponse.toolResult(formatResponse.toolApprovedWithFeedback(text), images))
 					}
 					return true
 				}

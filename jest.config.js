@@ -29,6 +29,7 @@ module.exports = {
 	transformIgnorePatterns: [
 		"node_modules/(?!(@modelcontextprotocol|delay|p-wait-for|globby|serialize-error|strip-ansi|default-shell|os-name|@xenova/transformers)/)",
 	],
+	roots: ["<rootDir>/src", "<rootDir>/webview-ui/src"],
 	modulePathIgnorePatterns: [".vscode-test"],
 	reporters: [["jest-simple-dot-reporter", {}]],
 	setupFiles: [],

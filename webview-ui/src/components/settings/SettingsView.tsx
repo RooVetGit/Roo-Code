@@ -54,6 +54,8 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		setAlwaysApproveResubmit,
 		requestDelaySeconds,
 		setRequestDelaySeconds,
+		rateLimitSeconds,
+		setRateLimitSeconds,
 		currentApiConfigName,
 		listApiConfigMeta,
 		experiments,
@@ -232,14 +234,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 				<VSCodeButton onClick={handleSubmit}>Done</VSCodeButton>
 			</div>
 			<div
-				style={{
-					flexGrow: 1,
-					overflowY: "auto",
-					paddingRight: 8,
-					display: "flex",
-					flexDirection: "column",
-				}}>
-				{/* Provider Settings Section */}
+				style={{ flexGrow: 1, overflowY: "scroll", paddingRight: 8, display: "flex", flexDirection: "column" }}>
 				<div style={{ marginBottom: 40 }}>
 					<h3 style={{ color: "var(--vscode-foreground)", margin: "0 0 15px 0" }}>Provider Settings</h3>
 					<div style={{ marginBottom: 15 }}>
@@ -277,7 +272,6 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 					</div>
 				</div>
 
-				{/* Auto-Approve Settings Section */}
 				<div style={{ marginBottom: 40 }}>
 					<h3 style={{ color: "var(--vscode-foreground)", margin: "0 0 15px 0" }}>Auto-Approve Settings</h3>
 					<p style={{ fontSize: "12px", marginBottom: 15, color: "var(--vscode-descriptionForeground)" }}>
@@ -526,7 +520,6 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 					</div>
 				</div>
 
-				{/* Browser Settings Section */}
 				<div style={{ marginBottom: 40 }}>
 					<h3 style={{ color: "var(--vscode-foreground)", margin: "0 0 15px 0" }}>Browser Settings</h3>
 					<div style={{ marginBottom: 15 }}>
@@ -587,7 +580,6 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 					</div>
 				</div>
 
-				{/* Notification Settings Section */}
 				<div style={{ marginBottom: 40 }}>
 					<h3 style={{ color: "var(--vscode-foreground)", margin: "0 0 15px 0" }}>Notification Settings</h3>
 					<div style={{ marginBottom: 15 }}>
@@ -634,9 +626,28 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 					)}
 				</div>
 
-				{/* Advanced Settings Section */}
 				<div style={{ marginBottom: 40 }}>
 					<h3 style={{ color: "var(--vscode-foreground)", margin: "0 0 15px 0" }}>Advanced Settings</h3>
+					<div style={{ marginBottom: 15 }}>
+						<div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+							<span style={{ fontWeight: "500" }}>Rate limit</span>
+							<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+								<input
+									type="range"
+									min="0"
+									max="60"
+									step="1"
+									value={rateLimitSeconds}
+									onChange={(e) => setRateLimitSeconds(parseInt(e.target.value))}
+									style={{ ...sliderStyle }}
+								/>
+								<span style={{ ...sliderLabelStyle }}>{rateLimitSeconds}s</span>
+							</div>
+						</div>
+						<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>
+							Minimum time between API requests.
+						</p>
+					</div>
 					<div style={{ marginBottom: 15 }}>
 						<div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
 							<span style={{ fontWeight: "500" }}>Terminal output limit</span>
@@ -743,7 +754,6 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 					</div>
 				</div>
 
-				{/* Semantic Search Settings Section */}
 				<div style={{ marginBottom: 40 }}>
 					<h3 style={{ color: "var(--vscode-foreground)", margin: "0 0 15px 0" }}>
 						Semantic Search Settings
@@ -883,7 +893,6 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 					</div>
 				</div>
 
-				{/* Footer Section */}
 				<div
 					style={{
 						textAlign: "center",
@@ -903,7 +912,9 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 							reddit.com/r/RooCode
 						</VSCodeLink>
 					</p>
-					<p style={{ fontStyle: "italic", margin: "10px 0 0 0", padding: 0 }}>v{version}</p>
+					<p style={{ fontStyle: "italic", margin: "10px 0 0 0", padding: 0, marginBottom: 100 }}>
+						v{version}
+					</p>
 
 					<p
 						style={{
@@ -917,7 +928,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 					<VSCodeButton
 						onClick={handleResetState}
 						appearance="secondary"
-						style={{ marginTop: "5px", width: "auto", marginBottom: "20px" }}>
+						style={{ marginTop: "5px", width: "auto" }}>
 						Reset State
 					</VSCodeButton>
 				</div>
