@@ -102,7 +102,7 @@ describe("PromptsView", () => {
 		renderPromptsView()
 
 		// Get the textarea
-		const textarea = await waitFor(() => screen.getByTestId("code-prompt-textarea"))
+		const textarea = await screen.findByTestId("code-prompt-textarea")
 		fireEvent.change(textarea, {
 			target: { value: "New prompt value" },
 		})
@@ -165,7 +165,7 @@ describe("PromptsView", () => {
 		fireEvent.click(enhanceTab)
 
 		// Wait for the ENHANCE tab click to take effect
-		const dropdown = await waitFor(() => screen.getByTestId("api-config-dropdown"))
+		const dropdown = await screen.findByTestId("api-config-dropdown")
 		fireEvent.change(dropdown, {
 			target: { value: "config1" },
 		})
