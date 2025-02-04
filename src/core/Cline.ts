@@ -1125,6 +1125,8 @@ export class Cline {
 							return `[${block.name} for '${block.params.question}']`
 						case "attempt_completion":
 							return `[${block.name}]`
+						case "semantic_search":
+							return `[${block.name} for '${block.params.query}']`
 						case "switch_mode":
 							return `[${block.name} to '${block.params.mode_slug}'${block.params.reason ? ` because: ${block.params.reason}` : ""}]`
 						case "new_task": {
