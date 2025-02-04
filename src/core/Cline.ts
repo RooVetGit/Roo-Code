@@ -1133,6 +1133,8 @@ export class Cline {
 							const modeName = getModeBySlug(mode, customModes)?.name ?? mode
 							return `[${block.name} in ${modeName} mode: '${message}']`
 						}
+						default:
+							return `[${block.name}]`
 					}
 				}
 
