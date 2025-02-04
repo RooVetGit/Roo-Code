@@ -217,6 +217,75 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		return findLast(Array.from(this.activeInstances), (instance) => instance.view?.visible === true)
 	}
 
+	public static async getInstance(): Promise<ClineProvider | undefined> {
+		let visibleProvider = ClineProvider.getVisibleInstance()
+
+		// If no visible provider, try to show the sidebar view
+		if (!visibleProvider) {
+			await vscode.commands.executeCommand("roo-cline.SidebarProvider.focus")
+			// Wait briefly for the view to become visible
+			await delay(100)
+			visibleProvider = ClineProvider.getVisibleInstance()
+		}
+
+		// If still no visible provider, return
+		if (!visibleProvider) {
+			return
+		}
+
+		return visibleProvider
+	}
+
+	public static async isActiveTask(): Promise<boolean> {
+		const visibleProvider = await ClineProvider.getInstance()
+		if (!visibleProvider) {
+			return false
+		}
+
+		if (visibleProvider.cline) {
+			return true
+		}
+
+		return false
+	}
+
+	public static async handleCodeAction(
+		command: string,
+		promptType: keyof typeof ACTION_NAMES,
+		params: Record<string, string | any[]>,
+	): Promise<void> {
+		const visibleProvider = await ClineProvider.getInstance()
+		if (!visibleProvider) {
+			return
+		}
+
+		const { customSupportPrompts } = await visibleProvider.getState()
+
+		const prompt = supportPrompt.create(promptType, params, customSupportPrompts)
+
+		if (command.endsWith("addToContext")) {
+			await visibleProvider.postMessageToWebview({
+				type: "invoke",
+				invoke: "setChatBoxMessage",
+				text: prompt,
+			})
+
+			return
+		}
+
+		if (visibleProvider.cline && command.endsWith("InCurrentTask")) {
+			await visibleProvider.postMessageToWebview({
+				type: "invoke",
+				invoke: "sendMessage",
+				text: prompt,
+			})
+
+			return
+		}
+
+		await visibleProvider.initClineWithTask(prompt)
+	}
+
 	async resolveWebviewView(webviewView: vscode.WebviewView | vscode.WebviewPanel) {
 		this.outputChannel.appendLine("Resolving webview view")
 		this.view = webviewView
