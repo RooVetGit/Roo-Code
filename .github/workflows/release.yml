@@ -1,0 +1,63 @@
+# This workflow triggers on commits pushed to the origin repository (main branch) and can also be triggered manually.
+
+name: Release VS Code Extension
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  release:
+    if: github.repository == 'amazon1148/Roo-Code'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Package extension
+        run: npm run package:vsce
+
+      - name: Find VSIX File
+        id: find-vsix
+        run: |
+          VSIX_FILE=$(ls -t *.vsix | head -n 1)
+          if [ -n "$VSIX_FILE" ]; then
+            echo "VSIX file found: $VSIX_FILE"
+            echo "VSIX_PATH=$VSIX_FILE" >> $GITHUB_ENV
+          else
+            echo "No VSIX file found."
+            echo "VSIX_PATH=" >> $GITHUB_ENV
+            exit 1
+          fi
+        shell: bash
+
+      - name: Upload VSIX Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vsix-extension
+          path: ${{ env.VSIX_PATH }}
+          if-no-files-found: error
+
+      - name: Upload to Azure Blob Storage
+        uses: Azure/CLI@v1
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az storage blob upload \
+              --account-name "${{ secrets.AZURE_STORAGE_ACCOUNT }}" \
+              --container-name "${{ secrets.AZURE_CONTAINER_NAME }}" \
+              --name "$(basename ${{ env.VSIX_PATH }})" \
+              --file "${{ env.VSIX_PATH }}" \
+              --auth-mode anonymous \
+              --sas-token "${{ secrets.AZURE_SAS_TOKEN }}"
+        env: {}

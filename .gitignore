@@ -22,3 +22,8 @@ docs/_site/
 
 # Dotenv
 .env.integration
+
+# Vitest configuration files
+vitest.config.ts
+tsconfig.vitest.json
+
