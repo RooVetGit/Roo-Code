@@ -1,7 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import cloneDeep from "clone-deep"
-import { DiffStrategy, getDiffStrategy, UnifiedDiffStrategy } from "./diff/DiffStrategy"
-import { validateToolUse, isToolAllowedForMode, ToolName } from "./mode-validator"
+import crypto from "crypto"
 import delay from "delay"
 import fs from "fs/promises"
 import os from "os"
@@ -9,26 +8,30 @@ import pWaitFor from "p-wait-for"
 import * as path from "path"
 import { serializeError } from "serialize-error"
 import * as vscode from "vscode"
-import { ApiHandler, SingleCompletionHandler, buildApiHandler } from "../api"
+import { ApiHandler, buildApiHandler } from "../api"
 import { ApiStream } from "../api/transform/stream"
+import { detectCodeOmission } from "../integrations/editor/detect-omission"
 import { DiffViewProvider } from "../integrations/editor/DiffViewProvider"
 import { findToolName, formatContentBlockToMarkdown } from "../integrations/misc/export-markdown"
 import {
-	extractTextFromFile,
 	addLineNumbers,
-	stripLineNumbers,
 	everyLineHasLineNumbers,
+	extractTextFromFile,
+	stripLineNumbers,
 	truncateOutput,
 } from "../integrations/misc/extract-text"
 import { TerminalManager } from "../integrations/terminal/TerminalManager"
+import { BrowserSession } from "../services/browser/BrowserSession"
 import { UrlContentFetcher } from "../services/browser/UrlContentFetcher"
 import { listFiles } from "../services/glob/list-files"
+import { McpHub } from "../services/mcp/McpHub"
 import { regexSearchFiles } from "../services/ripgrep"
 import { parseSourceCodeForDefinitionsTopLevel } from "../services/tree-sitter"
 import { ApiConfiguration } from "../shared/api"
 import { findLastIndex } from "../shared/array"
 import { combineApiRequests } from "../shared/combineApiRequests"
 import { combineCommandSequences } from "../shared/combineCommandSequences"
+import { EXPERIMENT_IDS, experiments as Experiments } from "../shared/experiments"
 import {
 	BrowserAction,
 	BrowserActionResult,
@@ -44,24 +47,20 @@ import {
 } from "../shared/ExtensionMessage"
 import { getApiMetrics } from "../shared/getApiMetrics"
 import { HistoryItem } from "../shared/HistoryItem"
+import { defaultModeSlug, getModeBySlug } from "../shared/modes"
 import { ClineAskResponse } from "../shared/WebviewMessage"
 import { calculateApiCost } from "../utils/cost"
 import { fileExistsAtPath } from "../utils/fs"
 import { arePathsEqual, getReadablePath } from "../utils/path"
-import { parseMentions } from "./mentions"
 import { AssistantMessageContent, parseAssistantMessage, ToolParamName, ToolUseName } from "./assistant-message"
+import { DiffStrategy, getDiffStrategy } from "./diff/DiffStrategy"
+import { insertGroups } from "./diff/insert-groups"
+import { parseMentions } from "./mentions"
+import { isToolAllowedForMode, ToolName, validateToolUse } from "./mode-validator"
 import { formatResponse } from "./prompts/responses"
 import { SYSTEM_PROMPT } from "./prompts/system"
-import { modes, defaultModeSlug, getModeBySlug } from "../shared/modes"
 import { truncateHalfConversation } from "./sliding-window"
 import { ClineProvider, GlobalFileNames } from "./webview/ClineProvider"
-import { detectCodeOmission } from "../integrations/editor/detect-omission"
-import { BrowserSession } from "../services/browser/BrowserSession"
-import { OpenRouterHandler } from "../api/providers/openrouter"
-import { McpHub } from "../services/mcp/McpHub"
-import crypto from "crypto"
-import { insertGroups } from "./diff/insert-groups"
-import { EXPERIMENT_IDS, experiments as Experiments } from "../shared/experiments"
 
 const cwd =
 	vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop") // may or may not exist but fs checking existence would immediately ask for permission which would be bad UX, need to come up with a better solution
@@ -125,6 +124,7 @@ export class Cline {
 		}
 
 		this.taskId = crypto.randomUUID()
+		// Update the API handler when configuration changes
 		this.api = buildApiHandler(apiConfiguration)
 		this.terminalManager = new TerminalManager()
 		this.urlContentFetcher = new UrlContentFetcher(provider.context)
@@ -134,6 +134,19 @@ export class Cline {
 		this.fuzzyMatchThreshold = fuzzyMatchThreshold ?? 1.0
 		this.providerRef = new WeakRef(provider)
 		this.diffViewProvider = new DiffViewProvider(cwd)
+
+		// Add listener for configuration changes
+		provider.context.subscriptions.push(
+			vscode.workspace.onDidChangeConfiguration(async (e) => {
+				if (e.affectsConfiguration("roo-cline")) {
+					// Rebuild API handler with new configuration
+					const newConfig = await provider.getState()
+					if (newConfig?.apiConfiguration) {
+						this.api = buildApiHandler(newConfig.apiConfiguration)
+					}
+				}
+			}),
+		)
 
 		if (historyItem) {
 			this.taskId = historyItem.id
