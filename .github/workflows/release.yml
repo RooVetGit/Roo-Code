@@ -1,4 +1,4 @@
-# This workflow triggers only on commits pushed to the origin repository (main branch).
+# This workflow triggers on commits pushed to the origin repository (main branch) and can also be triggered manually.
 
 name: Release VS Code Extension
 
