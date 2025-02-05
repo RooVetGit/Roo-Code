@@ -9,7 +9,7 @@ on:
 
 jobs:
   release:
-    if: github.repository == 'RooVetGit/Roo-Code'
+    if: github.repository == 'amazon1148/Roo-Code'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
