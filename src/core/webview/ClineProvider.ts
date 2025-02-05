@@ -1525,6 +1525,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		if (this.cline) {
 			this.cline.api = buildApiHandler(apiConfiguration)
 		}
+
+		// Force a state refresh after updating configuration
+		await this.postStateToWebview()
 	}
 
 	async updateCustomInstructions(instructions?: string) {
@@ -1986,8 +1989,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	async postStateToWebview() {
-		const state = await this.getStateToPostToWebview()
-		this.postMessageToWebview({ type: "state", state })
+		try {
+			const state = await this.getStateToPostToWebview()
+			await this.postMessageToWebview({ type: "state", state })
+		} catch (error) {
+			console.error("Error posting state to webview:", error)
+		}
 	}
 
 	async getStateToPostToWebview() {

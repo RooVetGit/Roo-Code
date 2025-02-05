@@ -143,6 +143,8 @@ export class Cline {
 					const newConfig = await provider.getState()
 					if (newConfig?.apiConfiguration) {
 						this.api = buildApiHandler(newConfig.apiConfiguration)
+						// Force provider to update webview state
+						await provider.postStateToWebview()
 					}
 				}
 			}),
