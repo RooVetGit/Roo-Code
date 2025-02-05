@@ -350,6 +350,7 @@ describe("ClineProvider", () => {
 			mode: defaultModeSlug,
 			customModes: [],
 			experiments: experimentDefault,
+			semanticSearchStatus: "Not Indexed",
 		}
 
 		const message: ExtensionMessage = {

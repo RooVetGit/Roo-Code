@@ -12,8 +12,8 @@ export async function parseSourceCodeForDefinitionsTopLevel(dirPath: string): Pr
 		return "This directory does not exist or you do not have permission to access it."
 	}
 
-	// Get all files at top level (not gitignored)
-	const [allFiles, _] = await listFiles(dirPath, false, 200)
+	// Get all files recursively (not gitignored), but limit to 200 files to avoid performance issues
+	const [allFiles, _] = await listFiles(dirPath, true, 200)
 
 	let result = ""
 

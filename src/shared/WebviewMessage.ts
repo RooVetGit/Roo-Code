@@ -83,13 +83,27 @@ export interface WebviewMessage {
 		| "deleteCustomMode"
 		| "setopenAiCustomModelInfo"
 		| "openCustomModesSettings"
+		| "semanticSearchMaxResults"
+		| "indexingProgress"
+		| "deleteSemanticIndex"
+		| "reindexSemantic"
+		| "semanticSearchStatus"
+		| "getSemanticSearchStatus"
+		| "updateSemanticSearchApiKey"
+		| "saveAllSettings"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
 	apiConfiguration?: ApiConfiguration
 	images?: string[]
 	bool?: boolean
-	value?: number
+	value?:
+		| number
+		| {
+				filePath: string
+				startLine?: number
+				endLine?: number
+		  }
 	commands?: string[]
 	audioType?: AudioType
 	serverName?: string
@@ -104,6 +118,31 @@ export interface WebviewMessage {
 	slug?: string
 	modeConfig?: ModeConfig
 	timeout?: number
+	settings?: {
+		apiConfiguration?: ApiConfiguration
+		alwaysAllowReadOnly?: boolean
+		alwaysAllowWrite?: boolean
+		alwaysAllowExecute?: boolean
+		alwaysAllowBrowser?: boolean
+		alwaysAllowMcp?: boolean
+		allowedCommands?: string[]
+		soundEnabled?: boolean
+		soundVolume?: number
+		diffEnabled?: boolean
+		browserViewportSize?: string
+		fuzzyMatchThreshold?: number
+		writeDelayMs?: number
+		screenshotQuality?: number
+		terminalOutputLineLimit?: number
+		mcpEnabled?: boolean
+		alwaysApproveResubmit?: boolean
+		requestDelaySeconds?: number
+		currentApiConfigName?: string
+		experiments?: Record<string, boolean>
+		alwaysAllowModeSwitch?: boolean
+		semanticSearchMaxResults?: number
+		semanticSearchStatus?: string
+	}
 }
 
 export type ClineAskResponse = "yesButtonClicked" | "noButtonClicked" | "messageResponse"

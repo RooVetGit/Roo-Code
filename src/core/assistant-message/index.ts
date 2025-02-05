@@ -25,6 +25,7 @@ export const toolUseNames = [
 	"attempt_completion",
 	"switch_mode",
 	"new_task",
+	"semantic_search",
 ] as const
 
 // Converts array of tool call names into a union type ("execute_command" | "read_file" | ...)
@@ -56,6 +57,7 @@ export const toolParamNames = [
 	"operations",
 	"mode",
 	"message",
+	"query",
 ] as const
 
 export type ToolParamName = (typeof toolParamNames)[number]
@@ -137,4 +139,9 @@ export interface SwitchModeToolUse extends ToolUse {
 export interface NewTaskToolUse extends ToolUse {
 	name: "new_task"
 	params: Partial<Pick<Record<ToolParamName, string>, "mode" | "message">>
+}
+
+export interface SemanticSearchToolUse extends ToolUse {
+	name: "semantic_search"
+	params: Partial<Pick<Record<ToolParamName, string>, "query">>
 }

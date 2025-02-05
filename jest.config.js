@@ -7,14 +7,7 @@ module.exports = {
 		"^.+\\.tsx?$": [
 			"ts-jest",
 			{
-				tsconfig: {
-					module: "CommonJS",
-					moduleResolution: "node",
-					esModuleInterop: true,
-					allowJs: true,
-				},
-				diagnostics: false,
-				isolatedModules: true,
+				tsconfig: "tsconfig.json",
 			},
 		],
 	},
@@ -30,9 +23,11 @@ module.exports = {
 		"^strip-ansi$": "<rootDir>/src/__mocks__/strip-ansi.js",
 		"^default-shell$": "<rootDir>/src/__mocks__/default-shell.js",
 		"^os-name$": "<rootDir>/src/__mocks__/os-name.js",
+		"^(\\.{1,2}/.*)\\.js$": "$1",
+		"^@xenova/transformers$": "<rootDir>/src/services/semantic-search/embeddings/__mocks__/transformers.ts",
 	},
 	transformIgnorePatterns: [
-		"node_modules/(?!(@modelcontextprotocol|delay|p-wait-for|globby|serialize-error|strip-ansi|default-shell|os-name)/)",
+		"node_modules/(?!(@modelcontextprotocol|delay|p-wait-for|globby|serialize-error|strip-ansi|default-shell|os-name|@xenova/transformers)/)",
 	],
 	roots: ["<rootDir>/src", "<rootDir>/webview-ui/src"],
 	modulePathIgnorePatterns: [".vscode-test"],
