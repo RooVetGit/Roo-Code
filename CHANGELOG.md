@@ -1,5 +1,60 @@
 # Roo Code Changelog
 
+## [3.3.14]
+
+- Should have skipped floor 13 like an elevator. Hopefully this fixes the broken 3.3.13 release by reverting some internal changes to the code structure 🙏
+
+## [3.3.13]
+
+- Ensure the DeepSeek r1 model works with Ollama (thanks @sammcj!)
+- First step of a more fundamental fix to the bugs around switching API profiles. If you've been having issues with this please try again and let us know if works any better! More to come soon, including fixing the laggy text entry in provider settings.
+
+## [3.3.12]
+
+- Bug fix to changing a mode's API configuration on the prompts tab
+- Add new Gemini models
+
+## [3.3.11]
+
+- Safer shell profile path check to avoid an error on Windows
+- Autocomplete for slash commands
+
+## [3.3.10]
+
+- Add shortcuts to the currently open tabs in the "Add File" section of @-mentions (thanks @olup!)
+- Fix pricing for o1-mini (thanks @hesara!)
+- Fix context window size calculation (thanks @MuriloFP!)
+- Improvements to experimental unified diff strategy and selection logic in code actions (thanks @nissa-seru!)
+- Enable markdown formatting in o3 and o1 (thanks @nissa-seru!)
+- Improved terminal shell detection logic (thanks @canvrno for the original and @nissa-seru for the port!)
+- Fix occasional errors when switching between API profiles (thanks @samhvw8!)
+- Visual improvements to the list of modes on the prompts tab
+- Fix double-scrollbar in provider dropdown
+- Visual cleanup to the list of modes on the prompts tab
+- Improvements to the default prompts for Architect and Ask mode
+- Allow switching between modes with slash messages like `/ask why is the sky blue?`
+
+## [3.3.9]
+
+- Add o3-mini-high and o3-mini-low
+
+## [3.3.8]
+
+- Fix o3-mini in the Glama provider (thanks @Punkpeye!)
+- Add the option to omit instructions for creating MCP servers from the system prompt (thanks @samhvw8!)
+- Fix a bug where renaming API profiles without actually changing the name would delete them (thanks @samhvw8!)
+
+## [3.3.7]
+
+- Support for o3-mini (thanks @shpigunov!)
+- Code Action improvements to allow selecting code and adding it to context, plus bug fixes (thanks @samhvw8!)
+- Ability to include a message when approving or rejecting tool use (thanks @napter!)
+- Improvements to chat input box styling (thanks @psv2522!)
+- Capture reasoning from more variants of DeepSeek R1 (thanks @Szpadel!)
+- Use an exponential backoff for API retries (if delay after first error is 5s, delay after second consecutive error will be 10s, then 20s, etc)
+- Add a slider in advanced settings to enable rate limiting requests to avoid overloading providers (i.e. wait at least 10 seconds between API requests)
+- Prompt tweaks to make Roo better at creating new custom modes for you
+
 ## [3.3.6]
 
 - Add a "new task" tool that allows Roo to start new tasks with an initial message and mode

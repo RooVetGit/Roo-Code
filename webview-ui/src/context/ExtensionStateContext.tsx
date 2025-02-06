@@ -27,6 +27,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	openAiModels: string[]
 	mcpServers: McpServer[]
 	filePaths: string[]
+	openedTabs: Array<{ label: string; isActive: boolean; path?: string }>
 	setApiConfiguration: (config: ApiConfiguration) => void
 	setCustomInstructions: (value?: string) => void
 	setAlwaysAllowReadOnly: (value: boolean) => void
@@ -51,6 +52,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setTerminalOutputLineLimit: (value: number) => void
 	mcpEnabled: boolean
 	setMcpEnabled: (value: boolean) => void
+	enableMcpServerCreation: boolean
+	setEnableMcpServerCreation: (value: boolean) => void
 	alwaysApproveResubmit?: boolean
 	setAlwaysApproveResubmit: (value: boolean) => void
 	requestDelaySeconds: number
@@ -68,7 +71,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setEnhancementApiConfigId: (value: string) => void
 	setExperimentEnabled: (id: ExperimentId, enabled: boolean) => void
 	setAutoApprovalEnabled: (value: boolean) => void
-	handleInputChange: (field: keyof ApiConfiguration) => (event: any) => void
+	handleInputChange: (field: keyof ApiConfiguration, softUpdate?: boolean) => (event: any) => void
 	customModes: ModeConfig[]
 	setCustomModes: (value: ModeConfig[]) => void
 }
@@ -92,6 +95,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		screenshotQuality: 75,
 		terminalOutputLineLimit: 500,
 		mcpEnabled: true,
+		enableMcpServerCreation: true,
 		alwaysApproveResubmit: false,
 		requestDelaySeconds: 5,
 		rateLimitSeconds: 0, // Minimum time between successive requests (0 = disabled)
@@ -113,6 +117,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 	const [glamaModels, setGlamaModels] = useState<Record<string, ModelInfo>>({
 		[glamaDefaultModelId]: glamaDefaultModelInfo,
 	})
+	const [openedTabs, setOpenedTabs] = useState<Array<{ label: string; isActive: boolean; path?: string }>>([])
 	const [openRouterModels, setOpenRouterModels] = useState<Record<string, ModelInfo>>({
 		[openRouterDefaultModelId]: openRouterDefaultModelInfo,
 	})
@@ -137,14 +142,29 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 	}, [])
 
 	const handleInputChange = useCallback(
-		(field: keyof ApiConfiguration) => (event: any) => {
+		// Returns a function that handles an input change event for a specific API configuration field.
+		// The optional "softUpdate" flag determines whether to immediately update local state or send an external update.
+		(field: keyof ApiConfiguration, softUpdate?: boolean) => (event: any) => {
+			// Use the functional form of setState to ensure the latest state is used in the update logic.
 			setState((currentState) => {
-				vscode.postMessage({
-					type: "upsertApiConfiguration",
-					text: currentState.currentApiConfigName,
-					apiConfiguration: { ...currentState.apiConfiguration, [field]: event.target.value },
-				})
-				return currentState // No state update needed
+				if (softUpdate) {
+					// Return a new state object with the updated apiConfiguration.
+					// This will trigger a re-render with the new configuration value.
+					return {
+						...currentState,
+						apiConfiguration: { ...currentState.apiConfiguration, [field]: event.target.value },
+					}
+				} else {
+					// For non-soft updates, send a message to the VS Code extension with the updated config.
+					// This side effect communicates the change without updating local React state.
+					vscode.postMessage({
+						type: "upsertApiConfiguration",
+						text: currentState.currentApiConfigName,
+						apiConfiguration: { ...currentState.apiConfiguration, [field]: event.target.value },
+					})
+					// Return the unchanged state as no local state update is intended in this branch.
+					return currentState
+				}
 			})
 		},
 		[],
@@ -173,7 +193,11 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 					break
 				}
 				case "workspaceUpdated": {
-					setFilePaths(message.filePaths ?? [])
+					const paths = message.filePaths ?? []
+					const tabs = message.openedTabs ?? []
+
+					setFilePaths(paths)
+					setOpenedTabs(tabs)
 					break
 				}
 				case "partialMessage": {
@@ -240,6 +264,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		openAiModels,
 		mcpServers,
 		filePaths,
+		openedTabs,
 		soundVolume: state.soundVolume,
 		fuzzyMatchThreshold: state.fuzzyMatchThreshold,
 		writeDelayMs: state.writeDelayMs,
@@ -272,6 +297,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setTerminalOutputLineLimit: (value) =>
 			setState((prevState) => ({ ...prevState, terminalOutputLineLimit: value })),
 		setMcpEnabled: (value) => setState((prevState) => ({ ...prevState, mcpEnabled: value })),
+		setEnableMcpServerCreation: (value) =>
+			setState((prevState) => ({ ...prevState, enableMcpServerCreation: value })),
 		setAlwaysApproveResubmit: (value) => setState((prevState) => ({ ...prevState, alwaysApproveResubmit: value })),
 		setRequestDelaySeconds: (value) => setState((prevState) => ({ ...prevState, requestDelaySeconds: value })),
 		setRateLimitSeconds: (value) => setState((prevState) => ({ ...prevState, rateLimitSeconds: value })),
