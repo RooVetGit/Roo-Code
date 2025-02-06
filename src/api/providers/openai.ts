@@ -10,7 +10,7 @@ import {
 import { ApiHandler, SingleCompletionHandler } from "../index"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { convertToR1Format } from "../transform/r1-format"
-import { ApiStream } from "../transform/stream"
+import { ApiStream, ApiStreamChunk } from "../transform/stream"
 
 export class OpenAiHandler implements ApiHandler, SingleCompletionHandler {
 	protected options: ApiHandlerOptions
@@ -18,20 +18,10 @@ export class OpenAiHandler implements ApiHandler, SingleCompletionHandler {
 
 	constructor(options: ApiHandlerOptions) {
 		this.options = options
-
-		let urlHost: string
-
-		try {
-			urlHost = new URL(this.options.openAiBaseUrl ?? "").host
-		} catch (error) {
-			// Likely an invalid `openAiBaseUrl`; we're still working on
-			// proper settings validation.
-			urlHost = ""
-		}
-
+		// Azure API shape slightly differs from the core API shape:
+		// https://github.com/openai/openai-node?tab=readme-ov-file#microsoft-azure-openai
+		const urlHost = new URL(this.options.openAiBaseUrl ?? "").host
 		if (urlHost === "azure.com" || urlHost.endsWith(".azure.com") || options.openAiUseAzure) {
-			// Azure API shape slightly differs from the core API shape:
-			// https://github.com/openai/openai-node?tab=readme-ov-file#microsoft-azure-openai
 			this.client = new AzureOpenAI({
 				baseURL: this.options.openAiBaseUrl,
 				apiKey: this.options.openAiApiKey,
@@ -50,6 +40,9 @@ export class OpenAiHandler implements ApiHandler, SingleCompletionHandler {
 		const modelId = this.options.openAiModelId ?? ""
 
 		const deepseekReasoner = modelId.includes("deepseek-reasoner")
+		const thinkingParser = modelInfo.thinkTokensInResponse
+			? new ThinkingTokenSeparator()
+			: new PassThroughTokenSeparator()
 
 		if (this.options.openAiStreamingEnabled ?? true) {
 			const systemMessage: OpenAI.Chat.ChatCompletionSystemMessageParam = {
@@ -75,9 +68,8 @@ export class OpenAiHandler implements ApiHandler, SingleCompletionHandler {
 				const delta = chunk.choices[0]?.delta ?? {}
 
 				if (delta.content) {
-					yield {
-						type: "text",
-						text: delta.content,
+					for (const parsedChunk of thinkingParser.parseChunk(delta.content)) {
+						yield parsedChunk
 					}
 				}
 
@@ -95,6 +87,10 @@ export class OpenAiHandler implements ApiHandler, SingleCompletionHandler {
 					}
 				}
 			}
+
+			for (const parsedChunk of thinkingParser.flush()) {
+				yield parsedChunk
+			}
 		} else {
 			// o1 for instance doesnt support streaming, non-1 temp, or system prompt
 			const systemMessage: OpenAI.Chat.ChatCompletionUserMessageParam = {
@@ -111,9 +107,8 @@ export class OpenAiHandler implements ApiHandler, SingleCompletionHandler {
 
 			const response = await this.client.chat.completions.create(requestOptions)
 
-			yield {
-				type: "text",
-				text: response.choices[0]?.message.content || "",
+			for (const parsedChunk of thinkingParser.parseChunk(response.choices[0]?.message.content || "", true)) {
+				yield parsedChunk
 			}
 			yield {
 				type: "usage",
@@ -145,5 +140,71 @@ export class OpenAiHandler implements ApiHandler, SingleCompletionHandler {
 			}
 			throw error
 		}
+	}
+}
+
+class PassThroughTokenSeparator {
+	public parseChunk(chunk: string): ApiStreamChunk[] {
+		return [{ type: "text", text: chunk }]
+	}
+
+	public flush(): ApiStreamChunk[] {
+		return []
+	}
+}
+class ThinkingTokenSeparator {
+	private insideThinking = false
+	private buffer = ""
+
+	public parseChunk(chunk: string, flush: boolean = false): ApiStreamChunk[] {
+		let parsed: ApiStreamChunk[] = []
+		chunk = this.buffer + chunk
+		this.buffer = ""
+
+		const parseTag = (tag: string, thinking: boolean) => {
+			if (chunk.indexOf(tag) !== -1) {
+				const [before, after] = chunk.split(tag)
+				if (before.length > 0) {
+					parsed.push({ type: thinking ? "text" : "reasoning", text: before })
+				}
+				chunk = after
+				this.insideThinking = thinking
+			} else if (this.endsWithIncompleteString(chunk, tag)) {
+				this.buffer = chunk
+				chunk = ""
+			}
+		}
+
+		if (!this.insideThinking) {
+			parseTag("<think>", true)
+		}
+		if (this.insideThinking) {
+			parseTag("</think>", false)
+		}
+
+		if (flush) {
+			chunk = this.buffer + chunk
+			this.buffer = ""
+		}
+
+		if (chunk.length > 0) {
+			parsed.push({ type: this.insideThinking ? "reasoning" : "text", text: chunk })
+		}
+
+		return parsed
+	}
+
+	private endsWithIncompleteString(chunk: string, str: string): boolean {
+		// iterate from end of the str and check if we start matching from any point
+		for (let i = str.length - 1; i >= 1; i--) {
+			if (chunk.endsWith(str.slice(0, i))) {
+				return true
+			}
+		}
+		return false
+	}
+
+	public flush(): ApiStreamChunk[] {
+		return this.parseChunk("", true)
 	}
 }

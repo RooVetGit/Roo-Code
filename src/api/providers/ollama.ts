@@ -20,7 +20,7 @@ export class OllamaHandler implements ApiHandler, SingleCompletionHandler {
 
 	async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
 		const modelId = this.getModel().id
-		const useR1Format = modelId.toLowerCase().includes('deepseek-r1')
+		const useR1Format = modelId.toLowerCase().includes("deepseek-r1")
 		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
 			{ role: "system", content: systemPrompt },
 			...(useR1Format ? convertToR1Format(messages) : convertToOpenAiMessages(messages)),
@@ -53,10 +53,12 @@ export class OllamaHandler implements ApiHandler, SingleCompletionHandler {
 	async completePrompt(prompt: string): Promise<string> {
 		try {
 			const modelId = this.getModel().id
-			const useR1Format = modelId.toLowerCase().includes('deepseek-r1')
+			const useR1Format = modelId.toLowerCase().includes("deepseek-r1")
 			const response = await this.client.chat.completions.create({
 				model: this.getModel().id,
-				messages: useR1Format ? convertToR1Format([{ role: "user", content: prompt }]) : [{ role: "user", content: prompt }],
+				messages: useR1Format
+					? convertToR1Format([{ role: "user", content: prompt }])
+					: [{ role: "user", content: prompt }],
 				temperature: 0,
 				stream: false,
 			})

@@ -143,6 +143,122 @@ describe("OpenAiHandler", () => {
 			expect(textChunks).toHaveLength(1)
 			expect(textChunks[0].text).toBe("Test response")
 		})
+
+		it("should handle thinking tags in a stream", async () => {
+			const openaiOptions = {
+				...mockOptions,
+				openAiCustomModelInfo: {
+					thinkTokensInResponse: true,
+					contextWindow: 128_000,
+					supportsImages: false,
+					supportsPromptCache: false,
+				},
+			}
+			const handler = new OpenAiHandler(openaiOptions)
+			mockCreate.mockImplementationOnce(async (options) => {
+				return {
+					[Symbol.asyncIterator]: async function* () {
+						yield {
+							choices: [
+								{
+									delta: { content: "<think" },
+									index: 0,
+								},
+							],
+							usage: null,
+						}
+						yield {
+							choices: [
+								{
+									delta: { content: ">thoughts<" },
+									index: 1,
+								},
+							],
+							usage: null,
+						}
+						yield {
+							choices: [
+								{
+									delta: { content: "/think>" },
+									index: 2,
+								},
+							],
+							usage: null,
+						}
+						yield {
+							choices: [
+								{
+									delta: { content: "result<th" },
+									index: 3,
+								},
+							],
+							usage: null,
+						}
+					},
+				}
+			})
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			expect(chunks.length).toBeGreaterThan(0)
+			const textChunks = chunks.filter((chunk) => chunk.type === "text")
+			expect(textChunks).toHaveLength(1)
+			expect(textChunks[0].text).toBe("result<th")
+
+			const reasoningChunks = chunks.filter((chunk) => chunk.type === "reasoning")
+			expect(reasoningChunks).toHaveLength(1)
+			expect(reasoningChunks[0].text).toBe("thoughts")
+		})
+
+		it("should handle thinking tags when not streaming", async () => {
+			const openaiOptions = {
+				...mockOptions,
+				openAiCustomModelInfo: {
+					thinkTokensInResponse: true,
+					contextWindow: 128_000,
+					supportsImages: false,
+					supportsPromptCache: false,
+				},
+				openAiStreamingEnabled: false,
+			}
+			const handler = new OpenAiHandler(openaiOptions)
+			mockCreate.mockImplementationOnce(async (options) => {
+				return {
+					id: "custom-test-completion",
+					choices: [
+						{
+							message: { role: "assistant", content: "<think>thoughts</think>result<th" },
+							finish_reason: "stop",
+							index: 0,
+						},
+					],
+					usage: {
+						prompt_tokens: 5,
+						completion_tokens: 7,
+						total_tokens: 12,
+					},
+				}
+			})
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			expect(chunks.length).toBeGreaterThan(0)
+			const textChunks = chunks.filter((chunk) => chunk.type === "text")
+			expect(textChunks).toHaveLength(1)
+			expect(textChunks[0].text).toBe("result<th")
+
+			const reasoningChunks = chunks.filter((chunk) => chunk.type === "reasoning")
+			expect(reasoningChunks).toHaveLength(1)
+			expect(reasoningChunks[0].text).toBe("thoughts")
+		})
 	})
 
 	describe("error handling", () => {

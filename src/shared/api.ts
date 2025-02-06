@@ -80,6 +80,7 @@ export interface ModelInfo {
 	cacheWritesPrice?: number
 	cacheReadsPrice?: number
 	description?: string
+	thinkTokensInResponse?: boolean
 	reasoningEffort?: "low" | "medium" | "high"
 }
 

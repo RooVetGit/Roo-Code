@@ -896,6 +896,55 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 													This model feature is for computer use like sonnet 3.5 support
 												</p>
 											</div>
+
+											<div
+												className="feature-toggle"
+												style={{
+													borderTop: "1px solid var(--vscode-input-border)",
+													paddingTop: "12px",
+												}}>
+												<div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+													<Checkbox
+														checked={
+															apiConfiguration?.openAiCustomModelInfo
+																?.thinkTokensInResponse ?? false
+														}
+														onChange={(checked: boolean) => {
+															handleInputChange("openAiCustomModelInfo")({
+																target: {
+																	value: {
+																		...(apiConfiguration?.openAiCustomModelInfo ||
+																			openAiModelInfoSaneDefaults),
+																		thinkTokensInResponse: checked,
+																	},
+																},
+															})
+														}}>
+														<span style={{ fontWeight: 500 }}>Model Uses Tags</span>
+													</Checkbox>
+													<i
+														className="codicon codicon-info"
+														title="Enable if the model outputs &lt;Think&gt; &lt;/Think&gt; tags in a chat response. Some DeepSeek R1 providers output tokens with these tags."
+														style={{
+															fontSize: "12px",
+															color: "var(--vscode-descriptionForeground)",
+															cursor: "help",
+														}}
+													/>
+												</div>
+												<p
+													style={{
+														fontSize: "11px",
+														color: "var(--vscode-descriptionForeground)",
+														marginLeft: "24px",
+														marginTop: "4px",
+														lineHeight: "1.4",
+													}}>
+													Enable if the model outputs &lt;Think&gt; &lt;/Think&gt;tags in a
+													chat response. Some DeepSeek R1 providers output tokens with these
+													tags.
+												</p>
+											</div>
 										</div>
 									</div>
 								</div>
