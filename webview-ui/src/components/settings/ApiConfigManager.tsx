@@ -1,5 +1,5 @@
 import { VSCodeButton, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
-import { memo, useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { ApiConfigMeta } from "../../../../src/shared/ExtensionMessage"
 import { Dropdown } from "vscrui"
 import type { DropdownOption } from "vscrui"
@@ -13,7 +13,7 @@ interface ApiConfigManagerProps {
 	onUpsertConfig: (configName: string) => void
 }
 
-const ApiConfigManager = ({
+export const ApiConfigManager = ({
 	currentApiConfigName = "",
 	listApiConfigMeta = [],
 	onSelectConfig,
@@ -215,5 +215,3 @@ const ApiConfigManager = ({
 		</div>
 	)
 }
-
-export default memo(ApiConfigManager)

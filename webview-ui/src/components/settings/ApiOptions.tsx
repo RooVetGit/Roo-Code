@@ -1,8 +1,11 @@
-import { Checkbox, Dropdown, Pane } from "vscrui"
-import type { DropdownOption } from "vscrui"
+import { Checkbox, Dropdown, type DropdownOption, Pane, TextField } from "vscrui"
 import { VSCodeLink, VSCodeRadio, VSCodeRadioGroup, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
-import { Fragment, memo, useCallback, useEffect, useMemo, useState } from "react"
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react"
 import { useEvent, useInterval } from "react-use"
+import { useForm, Controller } from "react-hook-form"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+
 import {
 	ApiConfiguration,
 	ModelInfo,
@@ -46,7 +49,17 @@ interface ApiOptionsProps {
 	modelIdErrorMessage?: string
 }
 
-const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) => {
+const formDataSchema = z.object({
+	openRouterBaseUrl: z.string().url().optional(),
+	anthropicBaseUrl: z.string().url().optional(),
+	openAiBaseUrl: z.string().url().optional(),
+	lmStudioBaseUrl: z.string().url().optional(),
+	ollamaBaseUrl: z.string().url().optional(),
+})
+
+type FormData = z.infer<typeof formDataSchema>
+
+export const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) => {
 	const { apiConfiguration, uriScheme, handleInputChange } = useExtensionState()
 	const [ollamaModels, setOllamaModels] = useState<string[]>([])
 	const [lmStudioModels, setLmStudioModels] = useState<string[]>([])
@@ -70,17 +83,20 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 			vscode.postMessage({ type: "requestVsCodeLmModels" })
 		}
 	}, [selectedProvider, apiConfiguration?.ollamaBaseUrl, apiConfiguration?.lmStudioBaseUrl])
+
 	useEffect(() => {
 		if (selectedProvider === "ollama" || selectedProvider === "lmstudio" || selectedProvider === "vscode-lm") {
 			requestLocalModels()
 		}
 	}, [selectedProvider, requestLocalModels])
+
 	useInterval(
 		requestLocalModels,
 		selectedProvider === "ollama" || selectedProvider === "lmstudio" || selectedProvider === "vscode-lm"
 			? 2000
 			: null,
 	)
+
 	const handleMessage = useCallback((event: MessageEvent) => {
 		const message: ExtensionMessage = event.data
 		if (message.type === "ollamaModels" && message.ollamaModels) {
@@ -91,6 +107,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 			setVsCodeLmModels(message.vsCodeLmModels)
 		}
 	}, [])
+
 	useEvent("message", handleMessage)
 
 	const createDropdown = (models: Record<string, ModelInfo>) => {
@@ -117,6 +134,36 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 			/>
 		)
 	}
+
+	useEffect(() => {
+		console.log(`[ApiOptions] apiConfiguration changed ->`, apiConfiguration)
+	}, [apiConfiguration])
+
+	const {
+		control,
+		trigger,
+		formState: { errors },
+	} = useForm<FormData>({
+		defaultValues: {
+			openRouterBaseUrl: apiConfiguration?.openRouterBaseUrl || "https://openrouter.ai/api/v1",
+			anthropicBaseUrl: apiConfiguration?.anthropicBaseUrl || "https://api.anthropic.com",
+			openAiBaseUrl: apiConfiguration?.openAiBaseUrl || "https://api.openai.com",
+			lmStudioBaseUrl: apiConfiguration?.lmStudioBaseUrl || "http://localhost:1234",
+			ollamaBaseUrl: apiConfiguration?.ollamaBaseUrl || "http://localhost:11434",
+		},
+		resolver: zodResolver(formDataSchema),
+	})
+
+	const setApiConfigValue = useCallback(
+		async (key: keyof FormData, value: unknown) => {
+			const isValid = await trigger(key)
+
+			if (isValid) {
+				handleInputChange(key)({ target: { value } })
+			}
+		},
+		[trigger, handleInputChange],
+	)
 
 	return (
 		<div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
@@ -168,31 +215,6 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 						<span style={{ fontWeight: 500 }}>Anthropic API Key</span>
 					</VSCodeTextField>
 
-					<Checkbox
-						checked={anthropicBaseUrlSelected}
-						onChange={(checked: boolean) => {
-							setAnthropicBaseUrlSelected(checked)
-							if (!checked) {
-								handleInputChange("anthropicBaseUrl")({
-									target: {
-										value: "",
-									},
-								})
-							}
-						}}>
-						Use custom base URL
-					</Checkbox>
-
-					{anthropicBaseUrlSelected && (
-						<VSCodeTextField
-							value={apiConfiguration?.anthropicBaseUrl || ""}
-							style={{ width: "100%", marginTop: 3 }}
-							type="url"
-							onInput={handleInputChange("anthropicBaseUrl")}
-							placeholder="Default: https://api.anthropic.com"
-						/>
-					)}
-
 					<p
 						style={{
 							fontSize: "12px",
@@ -208,6 +230,37 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 							</VSCodeLink>
 						)}
 					</p>
+
+					<Checkbox
+						className="mt-1"
+						checked={anthropicBaseUrlSelected}
+						onChange={(checked: boolean) => {
+							setAnthropicBaseUrlSelected(checked)
+
+							if (!checked) {
+								handleInputChange("anthropicBaseUrl")({ target: { value: "" } })
+							}
+						}}>
+						Use custom base URL
+					</Checkbox>
+
+					{anthropicBaseUrlSelected && (
+						<Controller
+							control={control}
+							name="anthropicBaseUrl"
+							render={({ field: { name, onChange, value } }) => (
+								<>
+									<TextField
+										className="w-full mt-1"
+										value={value}
+										onChange={onChange}
+										onBlur={() => setApiConfigValue(name, value)}
+									/>
+									<FormError message={errors[name]?.message} />
+								</>
+							)}
+						/>
+					)}
 				</div>
 			)}
 
@@ -309,6 +362,16 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 						placeholder="Enter API Key...">
 						<span style={{ fontWeight: 500 }}>OpenRouter API Key</span>
 					</VSCodeTextField>
+
+					<p
+						style={{
+							fontSize: "12px",
+							marginTop: 0,
+							color: "var(--vscode-descriptionForeground)",
+						}}>
+						This key is stored locally and only used to make API requests from this extension.
+					</p>
+
 					{!apiConfiguration?.openRouterApiKey && (
 						<p>
 							<VSCodeButtonLink
@@ -319,7 +382,9 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 							</VSCodeButtonLink>
 						</p>
 					)}
+
 					<Checkbox
+						className="mt-1"
 						checked={openRouterBaseUrlSelected}
 						onChange={(checked: boolean) => {
 							setOpenRouterBaseUrlSelected(checked)
@@ -335,39 +400,36 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 					</Checkbox>
 
 					{openRouterBaseUrlSelected && (
-						<VSCodeTextField
-							value={apiConfiguration?.openRouterBaseUrl || ""}
-							style={{ width: "100%", marginTop: 3 }}
-							type="url"
-							onInput={handleInputChange("openRouterBaseUrl")}
-							placeholder="Default: https://openrouter.ai/api/v1"
+						<Controller
+							control={control}
+							name="openRouterBaseUrl"
+							render={({ field: { name, onChange, value } }) => (
+								<>
+									<TextField
+										className="w-full mt-1"
+										value={value}
+										onChange={onChange}
+										onBlur={() => setApiConfigValue(name, value)}
+									/>
+									<FormError message={errors[name]?.message} />
+								</>
+							)}
 						/>
 					)}
-					<p
-						style={{
-							fontSize: "12px",
-							marginTop: "5px",
-							color: "var(--vscode-descriptionForeground)",
-						}}>
-						This key is stored locally and only used to make API requests from this extension.{" "}
-						{/* {!apiConfiguration?.openRouterApiKey && (
-							<span style={{ color: "var(--vscode-charts-green)" }}>
-								(<span style={{ fontWeight: 500 }}>Note:</span> OpenRouter is recommended for high rate
-								limits, prompt caching, and wider selection of models.)
-							</span>
-						)} */}
-					</p>
-					<Checkbox
-						checked={apiConfiguration?.openRouterUseMiddleOutTransform || false}
-						onChange={(checked: boolean) => {
-							handleInputChange("openRouterUseMiddleOutTransform")({
-								target: { value: checked },
-							})
-						}}>
-						Compress prompts and message chains to the context size (
-						<a href="https://openrouter.ai/docs/transforms">OpenRouter Transforms</a>)
-					</Checkbox>
-					<br />
+
+					<div className="flex items-start gap-2 mt-1">
+						<Checkbox
+							checked={apiConfiguration?.openRouterUseMiddleOutTransform || false}
+							onChange={(checked: boolean) => {
+								handleInputChange("openRouterUseMiddleOutTransform")({
+									target: { value: checked },
+								})
+							}}></Checkbox>
+						<div>
+							Compress prompts and message chains to the context size (
+							<a href="https://openrouter.ai/docs/transforms">OpenRouter Transforms</a>)
+						</div>
+					</div>
 				</div>
 			)}
 
@@ -567,14 +629,22 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 
 			{selectedProvider === "openai" && (
 				<div style={{ display: "flex", flexDirection: "column", rowGap: "5px" }}>
-					<VSCodeTextField
-						value={apiConfiguration?.openAiBaseUrl || ""}
-						style={{ width: "100%" }}
-						type="url"
-						onInput={handleInputChange("openAiBaseUrl")}
-						placeholder={"Enter base URL..."}>
-						<span style={{ fontWeight: 500 }}>Base URL</span>
-					</VSCodeTextField>
+					<Controller
+						control={control}
+						name="openAiBaseUrl"
+						render={({ field: { name, onChange, value } }) => (
+							<>
+								<TextField
+									className="w-full mt-1"
+									value={value}
+									onChange={onChange}
+									onBlur={() => setApiConfigValue(name, value)}
+								/>
+								<FormError message={errors[name]?.message} />
+							</>
+						)}
+					/>
+
 					<VSCodeTextField
 						value={apiConfiguration?.openAiApiKey || ""}
 						style={{ width: "100%" }}
@@ -1068,21 +1138,33 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 
 			{selectedProvider === "lmstudio" && (
 				<div>
+					<span style={{ fontWeight: 500 }}>Base URL (optional)</span>
+
+					<Controller
+						control={control}
+						name="lmStudioBaseUrl"
+						render={({ field: { name, onChange, value } }) => (
+							<>
+								<TextField
+									className="w-full mt-1"
+									value={value}
+									onChange={onChange}
+									onBlur={() => setApiConfigValue(name, value)}
+								/>
+								<FormError message={errors[name]?.message} />
+							</>
+						)}
+					/>
+
 					<VSCodeTextField
-						value={apiConfiguration?.lmStudioBaseUrl || ""}
-						style={{ width: "100%" }}
-						type="url"
-						onInput={handleInputChange("lmStudioBaseUrl")}
-						placeholder={"Default: http://localhost:1234"}>
-						<span style={{ fontWeight: 500 }}>Base URL (optional)</span>
-					</VSCodeTextField>
-					<VSCodeTextField
+						className="mt-1"
 						value={apiConfiguration?.lmStudioModelId || ""}
 						style={{ width: "100%" }}
 						onInput={handleInputChange("lmStudioModelId")}
 						placeholder={"e.g. meta-llama-3.1-8b-instruct"}>
 						<span style={{ fontWeight: 500 }}>Model ID</span>
 					</VSCodeTextField>
+
 					{lmStudioModels.length > 0 && (
 						<VSCodeRadioGroup
 							value={
@@ -1227,21 +1309,33 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 
 			{selectedProvider === "ollama" && (
 				<div>
+					<span style={{ fontWeight: 500 }}>Base URL (optional)</span>
+
+					<Controller
+						control={control}
+						name="ollamaBaseUrl"
+						render={({ field: { name, onChange, value } }) => (
+							<>
+								<TextField
+									className="w-full mt-1"
+									value={value}
+									onChange={onChange}
+									onBlur={() => setApiConfigValue(name, value)}
+								/>
+								<FormError message={errors[name]?.message} />
+							</>
+						)}
+					/>
+
 					<VSCodeTextField
-						value={apiConfiguration?.ollamaBaseUrl || ""}
-						style={{ width: "100%" }}
-						type="url"
-						onInput={handleInputChange("ollamaBaseUrl")}
-						placeholder={"Default: http://localhost:11434"}>
-						<span style={{ fontWeight: 500 }}>Base URL (optional)</span>
-					</VSCodeTextField>
-					<VSCodeTextField
+						className="mt-1"
 						value={apiConfiguration?.ollamaModelId || ""}
 						style={{ width: "100%" }}
 						onInput={handleInputChange("ollamaModelId")}
 						placeholder={"e.g. llama3.1"}>
 						<span style={{ fontWeight: 500 }}>Model ID</span>
 					</VSCodeTextField>
+
 					{ollamaModels.length > 0 && (
 						<VSCodeRadioGroup
 							value={
@@ -1339,7 +1433,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 				selectedProvider !== "ollama" &&
 				selectedProvider !== "lmstudio" && (
 					<>
-						<div className="dropdown-container">
+						<div className="dropdown-container mt-1">
 							<label htmlFor="model-id">
 								<span style={{ fontWeight: 500 }}>Model</span>
 							</label>
@@ -1595,4 +1689,19 @@ export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
 	}
 }
 
-export default memo(ApiOptions)
+const FormError = ({ message }: { message: React.ReactNode }) => {
+	if (!message) {
+		return null
+	}
+
+	return (
+		<p
+			style={{
+				fontSize: "12px",
+				color: "var(--vscode-errorForeground)",
+				margin: "4px 0 0 0",
+			}}>
+			{message}
+		</p>
+	)
+}

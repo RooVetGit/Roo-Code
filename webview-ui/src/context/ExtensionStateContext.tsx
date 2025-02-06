@@ -132,6 +132,11 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 
 	const onUpdateApiConfig = useCallback((apiConfig: ApiConfiguration) => {
 		setState((currentState) => {
+			// TODO: This triggers the persistence of unvalidated API
+			// configuration values. We're currently working on react-hook-form
+			// and zod validation upstream, but in the meantime we should
+			// validate the API configuration before persisting it. See
+			// SettingsView#handleSubmit for an example of this.
 			vscode.postMessage({
 				type: "upsertApiConfiguration",
 				text: currentState.currentApiConfigName,
@@ -157,6 +162,12 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 				} else {
 					// For non-soft updates, send a message to the VS Code extension with the updated config.
 					// This side effect communicates the change without updating local React state.
+
+					// TODO: This triggers the persistence of unvalidated API
+					// configuration values. We're currently working on react-hook-form
+					// and zod validation upstream, but in the meantime we should
+					// validate the API configuration before persisting it. See
+					// SettingsView#handleSubmit for an example of this.
 					vscode.postMessage({
 						type: "upsertApiConfiguration",
 						text: currentState.currentApiConfigName,

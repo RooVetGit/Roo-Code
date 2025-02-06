@@ -1,20 +1,20 @@
 import { VSCodeButton, VSCodeCheckbox, VSCodeLink, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
-import { memo, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
+import { Dropdown, type DropdownOption } from "vscrui"
+
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import { validateApiConfiguration, validateModelId } from "../../utils/validate"
 import { vscode } from "../../utils/vscode"
-import ApiOptions from "./ApiOptions"
+import { ApiConfigManager } from "./ApiConfigManager"
+import { ApiOptions } from "./ApiOptions"
 import ExperimentalFeature from "./ExperimentalFeature"
 import { EXPERIMENT_IDS, experimentConfigsMap } from "../../../../src/shared/experiments"
-import ApiConfigManager from "./ApiConfigManager"
-import { Dropdown } from "vscrui"
-import type { DropdownOption } from "vscrui"
 
 type SettingsViewProps = {
 	onDone: () => void
 }
 
-const SettingsView = ({ onDone }: SettingsViewProps) => {
+export const SettingsView = ({ onDone }: SettingsViewProps) => {
 	const {
 		apiConfiguration,
 		version,
@@ -62,6 +62,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		alwaysAllowModeSwitch,
 		setAlwaysAllowModeSwitch,
 	} = useExtensionState()
+
 	const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>(undefined)
 	const [modelIdErrorMessage, setModelIdErrorMessage] = useState<string | undefined>(undefined)
 	const [commandInput, setCommandInput] = useState("")
@@ -72,11 +73,9 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 
 		setApiErrorMessage(apiValidationResult)
 		setModelIdErrorMessage(modelIdValidationResult)
+
 		if (!apiValidationResult && !modelIdValidationResult) {
-			vscode.postMessage({
-				type: "apiConfiguration",
-				apiConfiguration,
-			})
+			vscode.postMessage({ type: "apiConfiguration", apiConfiguration })
 			vscode.postMessage({ type: "alwaysAllowReadOnly", bool: alwaysAllowReadOnly })
 			vscode.postMessage({ type: "alwaysAllowWrite", bool: alwaysAllowWrite })
 			vscode.postMessage({ type: "alwaysAllowExecute", bool: alwaysAllowExecute })
@@ -96,17 +95,8 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 			vscode.postMessage({ type: "requestDelaySeconds", value: requestDelaySeconds })
 			vscode.postMessage({ type: "rateLimitSeconds", value: rateLimitSeconds })
 			vscode.postMessage({ type: "currentApiConfigName", text: currentApiConfigName })
-			vscode.postMessage({
-				type: "upsertApiConfiguration",
-				text: currentApiConfigName,
-				apiConfiguration,
-			})
-
-			vscode.postMessage({
-				type: "updateExperimental",
-				values: experiments,
-			})
-
+			vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
+			vscode.postMessage({ type: "updateExperimental", values: experiments })
 			vscode.postMessage({ type: "alwaysAllowModeSwitch", bool: alwaysAllowModeSwitch })
 			onDone()
 		}
@@ -744,5 +734,3 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		</div>
 	)
 }
-
-export default memo(SettingsView)

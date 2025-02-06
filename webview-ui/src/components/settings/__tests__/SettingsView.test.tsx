@@ -1,6 +1,6 @@
 import React from "react"
 import { render, screen, fireEvent } from "@testing-library/react"
-import SettingsView from "../SettingsView"
+import { SettingsView } from "../SettingsView"
 import { ExtensionStateContextProvider } from "../../../context/ExtensionStateContext"
 import { vscode } from "../../../utils/vscode"
 

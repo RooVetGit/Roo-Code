@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react"
-import ApiConfigManager from "../ApiConfigManager"
+import { ApiConfigManager } from "../ApiConfigManager"
 
 // Mock VSCode components
 jest.mock("@vscode/webview-ui-toolkit/react", () => ({
