@@ -188,8 +188,8 @@ describe("OpenAiHandler", () => {
 						yield {
 							choices: [
 								{
-									delta: { content: "result" },
-									index: 2,
+									delta: { content: "result<th" },
+									index: 3,
 								},
 							],
 							usage: null,
@@ -207,7 +207,7 @@ describe("OpenAiHandler", () => {
 			expect(chunks.length).toBeGreaterThan(0)
 			const textChunks = chunks.filter((chunk) => chunk.type === "text")
 			expect(textChunks).toHaveLength(1)
-			expect(textChunks[0].text).toBe("result")
+			expect(textChunks[0].text).toBe("result<th")
 
 			const reasoningChunks = chunks.filter((chunk) => chunk.type === "reasoning")
 			expect(reasoningChunks).toHaveLength(1)
@@ -231,7 +231,7 @@ describe("OpenAiHandler", () => {
 					id: "custom-test-completion",
 					choices: [
 						{
-							message: { role: "assistant", content: "<think>thoughts</think>result" },
+							message: { role: "assistant", content: "<think>thoughts</think>result<th" },
 							finish_reason: "stop",
 							index: 0,
 						},
@@ -253,7 +253,7 @@ describe("OpenAiHandler", () => {
 			expect(chunks.length).toBeGreaterThan(0)
 			const textChunks = chunks.filter((chunk) => chunk.type === "text")
 			expect(textChunks).toHaveLength(1)
-			expect(textChunks[0].text).toBe("result")
+			expect(textChunks[0].text).toBe("result<th")
 
 			const reasoningChunks = chunks.filter((chunk) => chunk.type === "reasoning")
 			expect(reasoningChunks).toHaveLength(1)

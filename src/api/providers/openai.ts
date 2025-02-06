@@ -18,20 +18,10 @@ export class OpenAiHandler implements ApiHandler, SingleCompletionHandler {
 
 	constructor(options: ApiHandlerOptions) {
 		this.options = options
-
-		let urlHost: string
-
-		try {
-			urlHost = new URL(this.options.openAiBaseUrl ?? "").host
-		} catch (error) {
-			// Likely an invalid `openAiBaseUrl`; we're still working on
-			// proper settings validation.
-			urlHost = ""
-		}
-
+		// Azure API shape slightly differs from the core API shape:
+		// https://github.com/openai/openai-node?tab=readme-ov-file#microsoft-azure-openai
+		const urlHost = new URL(this.options.openAiBaseUrl ?? "").host
 		if (urlHost === "azure.com" || urlHost.endsWith(".azure.com") || options.openAiUseAzure) {
-			// Azure API shape slightly differs from the core API shape:
-			// https://github.com/openai/openai-node?tab=readme-ov-file#microsoft-azure-openai
 			this.client = new AzureOpenAI({
 				baseURL: this.options.openAiBaseUrl,
 				apiKey: this.options.openAiApiKey,
@@ -97,6 +87,10 @@ export class OpenAiHandler implements ApiHandler, SingleCompletionHandler {
 					}
 				}
 			}
+
+			for (const parsedChunk of thinkingParser.flush()) {
+				yield parsedChunk
+			}
 		} else {
 			// o1 for instance doesnt support streaming, non-1 temp, or system prompt
 			const systemMessage: OpenAI.Chat.ChatCompletionUserMessageParam = {
@@ -113,7 +107,7 @@ export class OpenAiHandler implements ApiHandler, SingleCompletionHandler {
 
 			const response = await this.client.chat.completions.create(requestOptions)
 
-			for (const parsedChunk of thinkingParser.parseChunk(response.choices[0]?.message.content || "")) {
+			for (const parsedChunk of thinkingParser.parseChunk(response.choices[0]?.message.content || "", true)) {
 				yield parsedChunk
 			}
 			yield {
@@ -153,12 +147,16 @@ class PassThroughTokenSeparator {
 	public parseChunk(chunk: string): ApiStreamChunk[] {
 		return [{ type: "text", text: chunk }]
 	}
+
+	public flush(): ApiStreamChunk[] {
+		return []
+	}
 }
 class ThinkingTokenSeparator {
 	private insideThinking = false
 	private buffer = ""
 
-	public parseChunk(chunk: string): ApiStreamChunk[] {
+	public parseChunk(chunk: string, flush: boolean = false): ApiStreamChunk[] {
 		let parsed: ApiStreamChunk[] = []
 		chunk = this.buffer + chunk
 		this.buffer = ""
@@ -184,6 +182,11 @@ class ThinkingTokenSeparator {
 			parseTag("</think>", false)
 		}
 
+		if (flush) {
+			chunk = this.buffer + chunk
+			this.buffer = ""
+		}
+
 		if (chunk.length > 0) {
 			parsed.push({ type: this.insideThinking ? "reasoning" : "text", text: chunk })
 		}
@@ -199,5 +202,9 @@ class ThinkingTokenSeparator {
 			}
 		}
 		return false
+	}
+
+	public flush(): ApiStreamChunk[] {
+		return this.parseChunk("", true)
 	}
 }
