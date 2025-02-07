@@ -42,6 +42,7 @@ export interface ExtensionMessage {
 		| "autoApprovalEnabled"
 		| "updateCustomMode"
 		| "deleteCustomMode"
+		| "openCustomProvidersSettings"
 	text?: string
 	action?:
 		| "chatButtonClicked"

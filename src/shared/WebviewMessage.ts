@@ -83,6 +83,11 @@ export interface WebviewMessage {
 		| "deleteCustomMode"
 		| "setopenAiCustomModelInfo"
 		| "openCustomModesSettings"
+		| "openCustomProvidersSettings"
+		| "addCustomProvider"
+		| "deleteCustomProvider"
+		| "selectCustomProvider"
+		| "updateCustomProvider"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse

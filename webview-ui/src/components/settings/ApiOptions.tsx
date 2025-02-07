@@ -1,11 +1,13 @@
 import { Checkbox, Dropdown, Pane } from "vscrui"
 import type { DropdownOption } from "vscrui"
 import { VSCodeLink, VSCodeRadio, VSCodeRadioGroup, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
+import CustomProvidersSection from "./CustomProvidersSection"
 import { Fragment, memo, useCallback, useEffect, useMemo, useState } from "react"
 import { useEvent, useInterval } from "react-use"
 import {
 	ApiConfiguration,
 	ModelInfo,
+	CustomProviderConfig,
 	anthropicDefaultModelId,
 	anthropicModels,
 	azureOpenAiDefaultApiVersion,
@@ -153,6 +155,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 						{ value: "lmstudio", label: "LM Studio" },
 						{ value: "ollama", label: "Ollama" },
 						{ value: "unbound", label: "Unbound" },
+						{ value: "custom", label: "Custom" },
 					]}
 				/>
 			</div>
@@ -1288,14 +1291,98 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 					</p>
 				</div>
 			)}
+			{selectedProvider === "custom" && (
+				<div>
+					<CustomProvidersSection
+						apiConfiguration={apiConfiguration || {}}
+						providers={apiConfiguration?.customProviders || {}}
+						activeProvider={apiConfiguration?.activeCustomProvider}
+						onAddProvider={(provider: CustomProviderConfig) => {
+							if (!apiConfiguration) return
+							// Update customProviders
+							handleInputChange("customProviders")({
+								target: {
+									value: {
+										...(apiConfiguration.customProviders || {}),
+										[provider.name]: provider,
+									},
+								},
+							})
+							// Set active provider
+							handleInputChange("activeCustomProvider")({
+								target: { value: provider.name },
+							})
+							// Set current provider
+							handleInputChange("customProvider")({
+								target: { value: provider },
+							})
+						}}
+						onDeleteProvider={(name) => {
+							if (!apiConfiguration?.customProviders) return
+							const newProviders = { ...apiConfiguration.customProviders }
+							delete newProviders[name]
 
+							// Update customProviders
+							handleInputChange("customProviders")({
+								target: { value: newProviders },
+							})
+
+							// Clear active provider if it was the deleted one
+							if (apiConfiguration.activeCustomProvider === name) {
+								handleInputChange("activeCustomProvider")({
+									target: { value: "" },
+								})
+								handleInputChange("customProvider")({
+									target: { value: undefined },
+								})
+							}
+						}}
+						onSelectProvider={(name) => {
+							if (!apiConfiguration?.customProviders?.[name]) return
+
+							// Set active provider
+							handleInputChange("activeCustomProvider")({
+								target: { value: name },
+							})
+							// Set current provider
+							handleInputChange("customProvider")({
+								target: { value: apiConfiguration.customProviders[name] },
+							})
+						}}
+						handleInputChange={(field) => (event) => {
+							const value = event.target.value
+
+							// Handle setting the active custom provider
+							if (field === "activeCustomProvider") {
+								handleInputChange("activeCustomProvider")({
+									target: { value },
+								})
+								// Also set the customProvider if it exists
+								if (value && apiConfiguration?.customProviders?.[value]) {
+									handleInputChange("customProvider")({
+										target: { value: apiConfiguration.customProviders[value] },
+									})
+								}
+							} else if (field === "customProvider") {
+								handleInputChange("customProvider")({
+									target: { value },
+								})
+							}
+						}}
+						isDescriptionExpanded={false}
+						setIsDescriptionExpanded={() => {}}
+						modelIdErrorMessage={modelIdErrorMessage}
+						apiErrorMessage={apiErrorMessage}
+					/>
+				</div>
+			)}
 			{selectedProvider === "unbound" && (
 				<div>
 					<VSCodeTextField
 						value={apiConfiguration?.unboundApiKey || ""}
 						style={{ width: "100%" }}
 						type="password"
-						onChange={handleInputChange("unboundApiKey")}
+						onInput={handleInputChange("unboundApiKey")}
 						placeholder="Enter API Key...">
 						<span style={{ fontWeight: 500 }}>Unbound API Key</span>
 					</VSCodeTextField>
@@ -1332,7 +1419,6 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 			{selectedProvider === "glama" && <GlamaModelPicker />}
 
 			{selectedProvider === "openrouter" && <OpenRouterModelPicker />}
-
 			{selectedProvider !== "glama" &&
 				selectedProvider !== "openrouter" &&
 				selectedProvider !== "openai" &&
@@ -1520,6 +1606,17 @@ export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
 	const provider = apiConfiguration?.apiProvider || "anthropic"
 	const modelId = apiConfiguration?.apiModelId
 
+	const baseModelInfo: ModelInfo = {
+		maxTokens: -1,
+		contextWindow: 128000,
+		supportsImages: false,
+		supportsPromptCache: false,
+		supportsComputerUse: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "",
+	}
+
 	const getProviderData = (models: Record<string, ModelInfo>, defaultId: string) => {
 		let selectedModelId: string
 		let selectedModelInfo: ModelInfo
@@ -1532,6 +1629,40 @@ export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
 		}
 		return { selectedProvider: provider, selectedModelId, selectedModelInfo }
 	}
+
+	// Handle custom provider first to keep it separate from built-in providers
+	if (provider === "custom") {
+		const customProvider = apiConfiguration?.customProvider
+		const activeCustomProvider = apiConfiguration?.activeCustomProvider
+
+		if (!customProvider || !activeCustomProvider) {
+			return {
+				selectedProvider: provider,
+				selectedModelId: "",
+				selectedModelInfo: {
+					...baseModelInfo,
+					description: "No custom provider selected",
+				},
+			}
+		}
+
+		return {
+			selectedProvider: provider,
+			selectedModelId: activeCustomProvider,
+			selectedModelInfo: {
+				...baseModelInfo,
+				maxTokens: customProvider.maxTokens ?? -1,
+				contextWindow: customProvider.contextWindow ?? 128000,
+				supportsImages: customProvider.supportsImages ?? false,
+				supportsComputerUse: customProvider.supportsComputerUse ?? false,
+				description: customProvider.name
+					? `Custom provider: ${customProvider.name}`
+					: "Unnamed custom provider",
+			},
+		}
+	}
+
+	// Handle other providers
 	switch (provider) {
 		case "anthropic":
 			return getProviderData(anthropicModels, anthropicDefaultModelId)

@@ -1,4 +1,62 @@
 import * as vscode from "vscode"
+import { ApiStream } from "../api/transform/stream"
+
+// Custom Provider Types
+export interface CustomVariable {
+	name: string
+	value: string
+	description?: string
+}
+
+export interface RequestConfig {
+	url: string
+	method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
+	headers?: Record<string, string>
+	data?: any // Additional request data/body
+}
+
+export interface CustomProviderFormat {
+	data?: string
+	method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH"
+	messages: "array" | "string"
+}
+
+export interface ProviderVariables {
+	temperature?: number
+	stream?: boolean
+	model?: string
+	maxOutputTokens?: number
+}
+
+export interface CustomProviderConfig {
+	id: string
+	name: string
+	description?: string
+	apiKey?: string
+	model?: string
+	maxTokens?: number
+	contextWindow?: number
+	supportsImages?: boolean
+	supportsComputerUse?: boolean
+	request: RequestConfig
+	customVariables?: Record<string, CustomVariable>
+	responsePath?: string // dot notation path to extract response content
+	headers?: Record<string, string>
+	format: CustomProviderFormat
+	baseUrl?: string
+	variables?: ProviderVariables
+	inputPrice?: number // Price per 1M input tokens
+	outputPrice?: number // Price per 1M output tokens
+	usagePaths?: {
+		promptTokens?: string // Path to input token count (e.g., 'usage.prompt_tokens')
+		outputTokens?: string // Path to output token count (e.g., 'usage.completion_tokens')
+		totalTokens?: string // Path to total token count if available
+	}
+}
+
+export interface ClineProvidersConfig {
+	providers: Record<string, CustomProviderConfig>
+}
 
 export type ApiProvider =
 	| "anthropic"
@@ -15,11 +73,13 @@ export type ApiProvider =
 	| "vscode-lm"
 	| "mistral"
 	| "unbound"
+	| "custom"
 
 export interface ApiHandlerOptions {
 	apiModelId?: string
 	apiKey?: string // anthropic
 	anthropicBaseUrl?: string
+	customProvider?: CustomProviderConfig
 	vsCodeLmModelSelector?: vscode.LanguageModelChatSelector
 	glamaModelId?: string
 	glamaModelInfo?: ModelInfo
@@ -60,14 +120,42 @@ export interface ApiHandlerOptions {
 	includeMaxTokens?: boolean
 	unboundApiKey?: string
 	unboundModelId?: string
+	secrets?: vscode.SecretStorage
 }
 
-export type ApiConfiguration = ApiHandlerOptions & {
+export interface ApiConfiguration extends ApiHandlerOptions {
 	apiProvider?: ApiProvider
-	id?: string // stable unique identifier
+	id?: string
+	customProviders?: Record<string, CustomProviderConfig>
+	activeCustomProvider?: string
+	customProvider?: CustomProviderConfig
 }
 
-// Models
+export interface CommonMessage {
+	role: "user" | "assistant" | "system"
+	content: string | CommonMessageContent[]
+}
+
+export interface CommonMessageContent {
+	type: "text" | "image" | "tool_code" | "tool_result"
+	text: string
+	image_url?:
+		| string
+		| {
+				url: string
+				detail: "low" | "high" | "auto"
+		  }
+	tool_code?: string
+	output?: any
+	toolUseId?: string
+	name?: string
+	input?: any
+}
+
+export interface ApiHandler {
+	createMessage(systemPrompt: string, messages: CommonMessage[]): ApiStream
+	getModel(): { id: string; info: ModelInfo }
+}
 
 export interface ModelInfo {
 	maxTokens?: number
@@ -422,6 +510,7 @@ export const openAiModelInfoSaneDefaults: ModelInfo = {
 	contextWindow: 128_000,
 	supportsImages: true,
 	supportsPromptCache: false,
+	supportsComputerUse: false,
 	inputPrice: 0,
 	outputPrice: 0,
 }
