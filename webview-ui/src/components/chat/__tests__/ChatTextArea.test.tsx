@@ -1,5 +1,4 @@
 import { render, fireEvent, screen } from "@testing-library/react"
-import "@testing-library/jest-dom"
 import ChatTextArea from "../ChatTextArea"
 import { useExtensionState } from "../../../context/ExtensionStateContext"
 import { vscode } from "../../../utils/vscode"
@@ -41,6 +40,7 @@ describe("ChatTextArea", () => {
 		// Default mock implementation for useExtensionState
 		;(useExtensionState as jest.Mock).mockReturnValue({
 			filePaths: [],
+			openedTabs: [],
 			apiConfiguration: {
 				apiProvider: "anthropic",
 			},
@@ -51,6 +51,7 @@ describe("ChatTextArea", () => {
 		it("should be disabled when textAreaDisabled is true", () => {
 			;(useExtensionState as jest.Mock).mockReturnValue({
 				filePaths: [],
+				openedTabs: [],
 			})
 
 			render(<ChatTextArea {...defaultProps} textAreaDisabled={true} />)
@@ -68,6 +69,7 @@ describe("ChatTextArea", () => {
 
 			;(useExtensionState as jest.Mock).mockReturnValue({
 				filePaths: [],
+				openedTabs: [],
 				apiConfiguration,
 			})
 
@@ -85,6 +87,7 @@ describe("ChatTextArea", () => {
 		it("should not send message when input is empty", () => {
 			;(useExtensionState as jest.Mock).mockReturnValue({
 				filePaths: [],
+				openedTabs: [],
 				apiConfiguration: {
 					apiProvider: "openrouter",
 				},
@@ -101,6 +104,7 @@ describe("ChatTextArea", () => {
 		it("should show loading state while enhancing", () => {
 			;(useExtensionState as jest.Mock).mockReturnValue({
 				filePaths: [],
+				openedTabs: [],
 				apiConfiguration: {
 					apiProvider: "openrouter",
 				},
@@ -123,6 +127,7 @@ describe("ChatTextArea", () => {
 			// Update apiConfiguration
 			;(useExtensionState as jest.Mock).mockReturnValue({
 				filePaths: [],
+				openedTabs: [],
 				apiConfiguration: {
 					apiProvider: "openrouter",
 					newSetting: "test",

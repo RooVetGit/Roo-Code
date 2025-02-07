@@ -4,82 +4,61 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "compile",
-			"type": "npm",
-			"script": "compile",
-			"dependsOn": ["npm: build:webview"],
+			"label": "watch",
+			"dependsOn": ["npm: dev", "npm: watch:tsc", "npm: watch:esbuild"],
+			"presentation": {
+				"reveal": "never"
+			},
 			"group": {
 				"kind": "build",
 				"isDefault": true
-			},
-			"presentation": {
-				"reveal": "silent",
-				"panel": "shared"
-			},
-			"problemMatcher": ["$tsc", "$eslint-stylish"]
-		},
-		{
-			"label": "watch",
-			"dependsOn": ["npm: build:webview", "npm: watch:tsc", "npm: watch:esbuild"],
-			"presentation": {
-				"reveal": "never"
-			},
-			"group": {
-				"kind": "build",
-				"isDefault": false
 			}
 		},
 		{
+			"label": "npm: dev",
 			"type": "npm",
-			"script": "build:webview",
+			"script": "dev",
 			"group": "build",
-			"problemMatcher": [],
+			"problemMatcher": {
+				"owner": "vite",
+				"pattern": {
+					"regexp": "^$"
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": ".*VITE.*",
+					"endsPattern": ".*Local:.*"
+				}
+			},
 			"isBackground": true,
-			"label": "npm: build:webview",
 			"presentation": {
-				"group": "watch",
-				"reveal": "never"
+				"group": "webview-ui",
+				"reveal": "always"
 			}
 		},
 		{
+			"label": "npm: watch:esbuild",
 			"type": "npm",
 			"script": "watch:esbuild",
 			"group": "build",
 			"problemMatcher": "$esbuild-watch",
 			"isBackground": true,
-			"label": "npm: watch:esbuild",
 			"presentation": {
 				"group": "watch",
-				"reveal": "never"
+				"reveal": "always"
 			}
 		},
 		{
+			"label": "npm: watch:tsc",
 			"type": "npm",
 			"script": "watch:tsc",
 			"group": "build",
 			"problemMatcher": "$tsc-watch",
 			"isBackground": true,
-			"label": "npm: watch:tsc",
 			"presentation": {
 				"group": "watch",
-				"reveal": "never"
+				"reveal": "always"
 			}
-		},
-		{
-			"type": "npm",
-			"script": "watch-tests",
-			"problemMatcher": "$tsc-watch",
-			"isBackground": true,
-			"presentation": {
-				"reveal": "never",
-				"group": "watchers"
-			},
-			"group": "build"
-		},
-		{
-			"label": "tasks: watch-tests",
-			"dependsOn": ["npm: watch", "npm: watch-tests"],
-			"problemMatcher": []
 		}
 	]
 }

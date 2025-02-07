@@ -12,6 +12,7 @@ import {
 	Mode,
 	PromptComponent,
 	getRoleDefinition,
+	getCustomInstructions,
 	getAllModes,
 	ModeConfig,
 	GroupEntry,
@@ -26,8 +27,8 @@ import {
 import { TOOL_GROUPS, GROUP_DISPLAY_NAMES, ToolGroup } from "../../../../src/shared/tool-groups"
 import { vscode } from "../../utils/vscode"
 
-// Get all available groups from GROUP_DISPLAY_NAMES
-const availableGroups = Object.keys(TOOL_GROUPS) as ToolGroup[]
+// Get all available groups that should show in prompts view
+const availableGroups = (Object.keys(TOOL_GROUPS) as ToolGroup[]).filter((group) => !TOOL_GROUPS[group].alwaysAvailable)
 
 type PromptsViewProps = {
 	onDone: () => void
@@ -191,15 +192,8 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 		setNewModeRoleDefinition("")
 		setNewModeCustomInstructions("")
 		setNewModeGroups(availableGroups)
-	}, [
-		newModeName,
-		newModeSlug,
-		newModeRoleDefinition,
-		newModeCustomInstructions,
-		newModeGroups,
-		updateCustomMode,
-		switchMode,
-	])
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [newModeName, newModeSlug, newModeRoleDefinition, newModeCustomInstructions, newModeGroups, updateCustomMode])
 
 	const isNameOrSlugTaken = useCallback(
 		(name: string, slug: string) => {
@@ -278,12 +272,16 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 		})
 	}
 
-	const handleAgentReset = (modeSlug: string) => {
-		// Only reset role definition for built-in modes
+	const handleAgentReset = (modeSlug: string, type: "roleDefinition" | "customInstructions") => {
+		// Only reset for built-in modes
 		const existingPrompt = customModePrompts?.[modeSlug] as PromptComponent
-		updateAgentPrompt(modeSlug, {
-			...existingPrompt,
-			roleDefinition: undefined,
+		const updatedPrompt = { ...existingPrompt }
+		delete updatedPrompt[type] // Remove the field entirely to ensure it reloads from defaults
+
+		vscode.postMessage({
+			type: "updatePrompt",
+			promptMode: modeSlug,
+			customPrompt: updatedPrompt,
 		})
 	}
 
@@ -472,13 +470,11 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 					<div
 						style={{
 							display: "flex",
-							gap: "16px",
+							gap: "8px",
 							alignItems: "center",
 							marginBottom: "12px",
-							overflowX: "auto",
-							flexWrap: "nowrap",
-							paddingBottom: "4px",
-							paddingRight: "20px",
+							flexWrap: "wrap",
+							padding: "4px 0",
 						}}>
 						{modes.map((modeConfig) => {
 							const isActive = mode === modeConfig.slug
@@ -560,7 +556,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 									onClick={() => {
 										const currentMode = getCurrentMode()
 										if (currentMode?.slug) {
-											handleAgentReset(currentMode.slug)
+											handleAgentReset(currentMode.slug, "roleDefinition")
 										}
 									}}
 									title="Reset to default"
@@ -751,7 +747,29 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 
 					{/* Role definition for both built-in and custom modes */}
 					<div style={{ marginBottom: "8px" }}>
-						<div style={{ fontWeight: "bold", marginBottom: "4px" }}>Mode-specific Custom Instructions</div>
+						<div
+							style={{
+								display: "flex",
+								justifyContent: "space-between",
+								alignItems: "center",
+								marginBottom: "4px",
+							}}>
+							<div style={{ fontWeight: "bold" }}>Mode-specific Custom Instructions</div>
+							{!findModeBySlug(mode, customModes) && (
+								<VSCodeButton
+									appearance="icon"
+									onClick={() => {
+										const currentMode = getCurrentMode()
+										if (currentMode?.slug) {
+											handleAgentReset(currentMode.slug, "customInstructions")
+										}
+									}}
+									title="Reset to default"
+									data-testid="custom-instructions-reset">
+									<span className="codicon codicon-discard"></span>
+								</VSCodeButton>
+							)}
+						</div>
 						<div
 							style={{
 								fontSize: "13px",
@@ -764,7 +782,11 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							value={(() => {
 								const customMode = findModeBySlug(mode, customModes)
 								const prompt = customModePrompts?.[mode] as PromptComponent
-								return customMode?.customInstructions ?? prompt?.customInstructions ?? ""
+								return (
+									customMode?.customInstructions ??
+									prompt?.customInstructions ??
+									getCustomInstructions(mode, customModes)
+								)
 							})()}
 							onChange={(e) => {
 								const value =
@@ -859,13 +881,11 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 					<div
 						style={{
 							display: "flex",
-							gap: "16px",
+							gap: "8px",
 							alignItems: "center",
 							marginBottom: "12px",
-							overflowX: "auto",
-							flexWrap: "nowrap",
-							paddingBottom: "4px",
-							paddingRight: "20px",
+							flexWrap: "wrap",
+							padding: "4px 0",
 						}}>
 						{Object.keys(supportPrompt.default).map((type) => (
 							<button
