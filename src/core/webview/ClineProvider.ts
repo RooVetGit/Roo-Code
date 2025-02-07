@@ -14,7 +14,7 @@ import { getTheme } from "../../integrations/theme/getTheme"
 import { getDiffStrategy } from "../diff/DiffStrategy"
 import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 import { McpHub } from "../../services/mcp/McpHub"
-import { ApiConfiguration, ApiProvider, ModelInfo } from "../../shared/api"
+import { ApiConfiguration, ApiProvider, ModelInfo, CustomProviderConfig } from "../../shared/api"
 import { findLast } from "../../shared/array"
 import { ApiConfigMeta, ExtensionMessage } from "../../shared/ExtensionMessage"
 import { HistoryItem } from "../../shared/HistoryItem"
@@ -34,7 +34,7 @@ import { ConfigManager } from "../config/ConfigManager"
 import { CustomModesManager } from "../config/CustomModesManager"
 import { EXPERIMENT_IDS, experiments as Experiments, experimentDefault, ExperimentId } from "../../shared/experiments"
 import { CustomSupportPrompts, supportPrompt } from "../../shared/support-prompt"
-
+import { CustomProvidersFileService } from "../../services/custom-providers/CustomProvidersFileService"
 import { ACTION_NAMES } from "../CodeActionProvider"
 
 /*
@@ -56,6 +56,7 @@ type SecretKey =
 	| "deepSeekApiKey"
 	| "mistralApiKey"
 	| "unboundApiKey"
+
 type GlobalStateKey =
 	| "apiProvider"
 	| "apiModelId"
@@ -118,6 +119,8 @@ type GlobalStateKey =
 	| "autoApprovalEnabled"
 	| "customModes" // Array of custom modes
 	| "unboundModelId"
+	| "customProviders"
+	| "activeCustomProvider"
 
 export const GlobalFileNames = {
 	apiConversationHistory: "api_conversation_history.json",
@@ -125,6 +128,7 @@ export const GlobalFileNames = {
 	glamaModels: "glama_models.json",
 	openRouterModels: "openrouter_models.json",
 	mcpSettings: "cline_mcp_settings.json",
+	customProviders: "cline_custom_providers.json",
 }
 
 export class ClineProvider implements vscode.WebviewViewProvider {
@@ -140,6 +144,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	private latestAnnouncementId = "jan-21-2025-custom-modes" // update to some unique identifier when we add a new announcement
 	configManager: ConfigManager
 	customModesManager: CustomModesManager
+	private customProvidersFileService: CustomProvidersFileService
+	private customProvidersWatcher: vscode.FileSystemWatcher | undefined
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
@@ -153,6 +159,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		this.customModesManager = new CustomModesManager(this.context, async () => {
 			await this.postStateToWebview()
 		})
+
+		const storagePath = path.join(this.context.globalStorageUri.fsPath, "settings")
+		this.customProvidersFileService = new CustomProvidersFileService(storagePath, this.context.secrets)
+
+		// Initialize setup async
+		this.setupCustomProviders()
 	}
 
 	/*
@@ -179,6 +191,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		this.mcpHub?.dispose()
 		this.mcpHub = undefined
 		this.customModesManager?.dispose()
+		this.customProvidersWatcher?.dispose()
 		this.outputChannel.appendLine("Disposed all disposables")
 		ClineProvider.activeInstances.delete(this)
 	}
@@ -313,6 +326,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 		// Sets up an event listener to listen for messages passed from the webview view context
 		// and executes code based on the message that is recieved
+
 		this.setWebviewMessageListener(webviewView.webview)
 
 		// Logs show up in bottom panel > Debug Console
@@ -838,6 +852,143 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						}
 						break
 					}
+					case "openCustomProvidersSettings": {
+						try {
+							// Initialize the file if it doesn't exist
+							const providers = await this.customProvidersFileService.readProviders()
+							if (Object.keys(providers).length === 0) {
+								await this.customProvidersFileService.writeProviders({})
+							}
+
+							// Open the file for editing
+							const filePath = await this.getCustomProvidersFilePath()
+							openFile(filePath)
+
+							// Initialize providers in state if needed
+							await this.initCustomProviders()
+						} catch (error) {
+							vscode.window.showErrorMessage(`Failed to open custom providers settings: ${error}`)
+							this.outputChannel.appendLine(
+								`Error opening custom providers settings: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+							)
+						}
+						break
+					}
+
+					case "addCustomProvider": {
+						try {
+							const provider = message.values as CustomProviderConfig
+							await this.customProvidersFileService.addProvider(provider)
+
+							// Get providers with their API keys
+							const providers = await this.customProvidersFileService.getProviders()
+
+							// Get current state
+							const currentState = await this.getState()
+
+							// Prepare API configuration updates
+							const apiConfiguration = {
+								...currentState.apiConfiguration,
+								apiProvider: "custom" as const,
+								customProvider: provider,
+								customProviders: providers,
+								activeCustomProvider: provider.name,
+							}
+
+							// Batch update all state changes
+							await Promise.all([
+								this.updateGlobalState("customProviders", providers),
+								this.updateGlobalState("activeCustomProvider", provider.name),
+								this.updateApiConfiguration(apiConfiguration),
+							])
+
+							// Only notify webview after all state is updated
+							await this.postStateToWebview()
+						} catch (error) {
+							vscode.window.showErrorMessage(`Failed to add custom provider: ${error}`)
+							this.outputChannel.appendLine(
+								`Error adding custom provider: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+							)
+						}
+						break
+					}
+
+					case "deleteCustomProvider": {
+						try {
+							const name = message.text
+							if (name) {
+								await this.customProvidersFileService.deleteProvider(name)
+
+								// Get updated providers list
+								const providers = await this.customProvidersFileService.getProviders()
+
+								// Get full current state
+								const currentState = await this.getState()
+
+								// Update providers state
+								await this.updateGlobalState("customProviders", providers)
+
+								// If we're deleting the active provider
+								if (currentState.apiConfiguration.activeCustomProvider === name) {
+									// Clear active provider selection
+									await this.updateGlobalState("activeCustomProvider", undefined)
+
+									// If we were using this provider, switch to openrouter
+									if (currentState.apiConfiguration.apiProvider === "custom") {
+										const updatedConfig = {
+											...currentState.apiConfiguration,
+											apiProvider: "openrouter" as ApiProvider,
+											customProvider: undefined,
+											activeCustomProvider: undefined,
+											customProviders: providers,
+										}
+										await this.updateApiConfiguration(updatedConfig)
+									}
+								}
+
+								// Notify webview of all changes
+								await this.postStateToWebview()
+							}
+						} catch (error) {
+							vscode.window.showErrorMessage(`Failed to delete custom provider: ${error}`)
+							this.outputChannel.appendLine(
+								`Error deleting custom provider: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+							)
+						}
+						break
+					}
+
+					case "selectCustomProvider": {
+						try {
+							const name = message.text
+							if (name) {
+								const providers = await this.customProvidersFileService.getProviders()
+								if (name in providers) {
+									// Update state
+									await this.updateGlobalState("activeCustomProvider", name)
+
+									// Update API configuration with the selected provider
+									const currentConfig = await this.getState()
+									if (currentConfig.apiConfiguration) {
+										const updatedConfig = {
+											...currentConfig.apiConfiguration,
+											apiProvider: "custom" as ApiProvider,
+											customProvider: providers[name],
+										}
+										await this.updateApiConfiguration(updatedConfig)
+									}
+
+									await this.postStateToWebview()
+								}
+							}
+						} catch (error) {
+							vscode.window.showErrorMessage(`Failed to select custom provider: ${error}`)
+							this.outputChannel.appendLine(
+								`Error selecting custom provider: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+							)
+						}
+						break
+					}
 					case "openCustomModesSettings": {
 						const customModesFilePath = await this.customModesManager.getCustomModesFilePath()
 						if (customModesFilePath) {
@@ -1253,7 +1404,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								await this.postStateToWebview()
 							} catch (error) {
 								this.outputChannel.appendLine(
-									`Error create new api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+									`Error create new api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}, error: ${error}`,
 								)
 								vscode.window.showErrorMessage("Failed to create api configuration")
 							}
@@ -1465,7 +1616,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		await this.postStateToWebview()
 	}
 
-	private async updateApiConfiguration(apiConfiguration: ApiConfiguration) {
+	public async updateApiConfiguration(apiConfiguration: ApiConfiguration) {
 		// Update mode's default config
 		const { mode } = await this.getState()
 		if (mode) {
@@ -1517,6 +1668,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			mistralApiKey,
 			unboundApiKey,
 			unboundModelId,
+			customProviders,
+			activeCustomProvider,
+			customProvider,
 		} = apiConfiguration
 		await this.updateGlobalState("apiProvider", apiProvider)
 		await this.updateGlobalState("apiModelId", apiModelId)
@@ -1557,6 +1711,25 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		await this.storeSecret("mistralApiKey", mistralApiKey)
 		await this.storeSecret("unboundApiKey", unboundApiKey)
 		await this.updateGlobalState("unboundModelId", unboundModelId)
+		await this.updateGlobalState("customProviders", customProviders || {})
+		await this.updateGlobalState("activeCustomProvider", activeCustomProvider)
+
+		// Update custom provider configuration
+		if (apiConfiguration.apiProvider === "custom") {
+			const providers = await this.customProvidersFileService.getProviders()
+			if (apiConfiguration.activeCustomProvider && providers[apiConfiguration.activeCustomProvider]) {
+				apiConfiguration.customProvider = providers[apiConfiguration.activeCustomProvider]
+			} else {
+				// If no valid custom provider is selected, default to openrouter, and clear custom provider settings
+				apiConfiguration = {
+					...apiConfiguration,
+					apiProvider: "openrouter",
+					customProvider: undefined,
+					activeCustomProvider: undefined,
+				}
+			}
+		}
+
 		if (this.cline) {
 			this.cline.api = buildApiHandler(apiConfiguration)
 		}
@@ -1587,6 +1760,77 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		const settingsDir = path.join(this.context.globalStorageUri.fsPath, "settings")
 		await fs.mkdir(settingsDir, { recursive: true })
 		return settingsDir
+	}
+
+	private async setupCustomProviders(): Promise<void> {
+		try {
+			// Ensure settings directory exists
+			const settingsDir = path.dirname(this.customProvidersFileService.providersFilePath)
+			await fs.mkdir(settingsDir, { recursive: true })
+
+			// Set up file watcher
+			this.customProvidersWatcher = vscode.workspace.createFileSystemWatcher(
+				new vscode.RelativePattern(
+					settingsDir,
+					path.basename(this.customProvidersFileService.providersFilePath),
+				),
+			)
+
+			// Watch for file changes
+			this.disposables.push(
+				this.customProvidersWatcher.onDidChange(async () => {
+					try {
+						await this.initCustomProviders()
+					} catch (error) {
+						this.outputChannel.appendLine(
+							`Error handling custom providers change: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+						)
+					}
+				}),
+			)
+
+			this.disposables.push(this.customProvidersWatcher)
+
+			// Initial load
+			await this.initCustomProviders()
+		} catch (error) {
+			this.outputChannel.appendLine(
+				`Error setting up custom providers: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+			)
+		}
+	}
+
+	private async initCustomProviders(): Promise<void> {
+		try {
+			const providers = await this.customProvidersFileService.getProviders()
+
+			// Get current state
+			const currentState = await this.getState()
+			const activeProvider = currentState.apiConfiguration.activeCustomProvider
+
+			// Create updated API configuration
+			const updatedApiConfiguration = {
+				...currentState.apiConfiguration,
+				customProviders: providers,
+				customProvider: activeProvider && providers[activeProvider] ? providers[activeProvider] : undefined,
+			}
+
+			// Update state
+			await Promise.all([
+				this.updateGlobalState("customProviders", providers),
+				this.updateApiConfiguration(updatedApiConfiguration),
+			])
+
+			await this.postStateToWebview()
+		} catch (error) {
+			this.outputChannel.appendLine(
+				`Error initializing custom providers: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+			)
+		}
+	}
+
+	async getCustomProvidersFilePath(): Promise<string> {
+		return this.customProvidersFileService.providersFilePath
 	}
 
 	// Ollama
@@ -2130,9 +2374,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	*/
 
 	// getApiConversationHistory(): Anthropic.MessageParam[] {
-	// 	// const history = (await this.getGlobalState(
+	// 	// const history = await this.getGlobalState(
 	// 	// 	this.getApiConversationHistoryStateKey()
-	// 	// )) as Anthropic.MessageParam[]
+	// 	// ) as Anthropic.MessageParam[]
 	// 	// return history || []
 	// 	return this.apiConversationHistory
 	// }
@@ -2232,6 +2476,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			experiments,
 			unboundApiKey,
 			unboundModelId,
+			customProviders,
+			activeCustomProvider,
 		] = await Promise.all([
 			this.getGlobalState("apiProvider") as Promise<ApiProvider | undefined>,
 			this.getGlobalState("apiModelId") as Promise<string | undefined>,
@@ -2306,6 +2552,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("experiments") as Promise<Record<ExperimentId, boolean> | undefined>,
 			this.getSecret("unboundApiKey") as Promise<string | undefined>,
 			this.getGlobalState("unboundModelId") as Promise<string | undefined>,
+			this.getGlobalState("customProviders") as Promise<Record<string, CustomProviderConfig> | undefined>,
+			this.getGlobalState("activeCustomProvider") as Promise<string | undefined>,
 		])
 
 		let apiProvider: ApiProvider
@@ -2363,6 +2611,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				vsCodeLmModelSelector,
 				unboundApiKey,
 				unboundModelId,
+				customProviders,
+				activeCustomProvider,
+				customProvider:
+					activeCustomProvider && customProviders?.[activeCustomProvider]
+						? customProviders[activeCustomProvider]
+						: undefined,
 			},
 			lastShownAnnouncementId,
 			customInstructions,
@@ -2499,9 +2753,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			return
 		}
 
+		// Clear global state
 		for (const key of this.context.globalState.keys()) {
 			await this.context.globalState.update(key, undefined)
 		}
+
+		// Clear built-in provider API keys
 		const secretKeys: SecretKey[] = [
 			"apiKey",
 			"glamaApiKey",
@@ -2519,6 +2776,21 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		for (const key of secretKeys) {
 			await this.storeSecret(key, undefined)
 		}
+
+		// Clear custom provider API keys
+		try {
+			const providers = await this.customProvidersFileService.readProviders()
+			for (const name of Object.keys(providers)) {
+				await this.context.secrets.delete(`${name}_API_KEY`)
+			}
+			// Reset the providers file
+			await this.customProvidersFileService.writeProviders({})
+		} catch (error) {
+			this.outputChannel.appendLine(
+				`Error clearing custom providers: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+			)
+		}
+
 		await this.configManager.resetAllConfigs()
 		await this.customModesManager.resetCustomModes()
 		if (this.cline) {
