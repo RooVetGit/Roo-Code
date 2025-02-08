@@ -1,7 +1,7 @@
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import { vscode } from "../../utils/vscode"
-import { memo } from "react"
+import { memo, useState } from "react"
 import { formatLargeNumber } from "../../utils/format"
 
 type HistoryPreviewProps = {
@@ -10,8 +10,19 @@ type HistoryPreviewProps = {
 
 const HistoryPreview = ({ showHistoryView }: HistoryPreviewProps) => {
 	const { taskHistory } = useExtensionState()
+	const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+
 	const handleHistorySelect = (id: string) => {
-		vscode.postMessage({ type: "showTaskWithId", text: id })
+		setConfirmDeleteId(id)
+	}
+
+	const confirmDelete = (id: string) => {
+		vscode.postMessage({ type: "deleteTaskWithId", text: id })
+		setConfirmDeleteId(null)
+	}
+
+	const cancelDelete = () => {
+		setConfirmDeleteId(null)
 	}
 
 	const formatDate = (timestamp: number) => {
@@ -47,8 +58,36 @@ const HistoryPreview = ({ showHistoryView }: HistoryPreviewProps) => {
 						opacity: 1;
 						pointer-events: auto;
 					}
+					.confirm-delete-modal {
+						position: fixed;
+						top: 50%;
+						left: 50%;
+						transform: translate(-50%, -50%);
+						background-color: var(--vscode-notifications-background);
+						color: var(--vscode-notifications-foreground);
+						padding: 20px;
+						border-radius: 4px;
+						box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+						z-index: 1000;
+						display: flex;
+						flex-direction: column;
+						align-items: center;
+					}
+					.confirm-delete-modal button {
+						margin-top: 10px;
+					}
 				`}
 			</style>
+
+			{confirmDeleteId && (
+				<div className="confirm-delete-modal">
+					<p>Are you sure you want to delete this task?</p>
+					<div>
+						<VSCodeButton onClick={() => confirmDelete(confirmDeleteId)}>Yes</VSCodeButton>
+						<VSCodeButton onClick={cancelDelete}>No</VSCodeButton>
+					</div>
+				</div>
+			)}
 
 			<div
 				style={{

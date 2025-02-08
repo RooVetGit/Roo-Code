@@ -1,5 +1,3 @@
-// cd webview-ui && npx jest src/components/history/__tests__/HistoryView.test.ts
-
 import { render, screen, fireEvent, within, act } from "@testing-library/react"
 import HistoryView from "../HistoryView"
 import { useExtensionState } from "../../../context/ExtensionStateContext"
@@ -135,7 +133,7 @@ describe("HistoryView", () => {
 		})
 	})
 
-	it("handles task deletion", () => {
+	it("handles task deletion with confirmation prompt", () => {
 		const onDone = jest.fn()
 		render(<HistoryView onDone={onDone} />)
 
@@ -145,6 +143,13 @@ describe("HistoryView", () => {
 
 		const deleteButton = within(taskContainer).getByTitle("Delete Task")
 		fireEvent.click(deleteButton)
+
+		// Verify confirmation prompt appears
+		expect(screen.getByText("Are you sure you want to delete this task?")).toBeInTheDocument()
+
+		// Confirm deletion
+		const confirmButton = screen.getByText("Yes")
+		fireEvent.click(confirmButton)
 
 		// Verify vscode message was sent
 		expect(vscode.postMessage).toHaveBeenCalledWith({

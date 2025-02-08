@@ -19,6 +19,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 	const [sortOption, setSortOption] = useState<SortOption>("newest")
 	const [lastNonRelevantSort, setLastNonRelevantSort] = useState<SortOption | null>("newest")
 	const [showCopyModal, setShowCopyModal] = useState(false)
+	const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
 	useEffect(() => {
 		if (searchQuery && sortOption !== "mostRelevant" && !lastNonRelevantSort) {
@@ -35,7 +36,16 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 	}
 
 	const handleDeleteHistoryItem = (id: string) => {
+		setConfirmDeleteId(id)
+	}
+
+	const confirmDelete = (id: string) => {
 		vscode.postMessage({ type: "deleteTaskWithId", text: id })
+		setConfirmDeleteId(null)
+	}
+
+	const cancelDelete = () => {
+		setConfirmDeleteId(null)
 	}
 
 	const handleCopyTask = async (e: React.MouseEvent, task: string) => {
@@ -142,9 +152,36 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 						z-index: 1000;
 						transition: opacity 0.2s ease-in-out;
 					}
+					.confirm-delete-modal {
+						position: fixed;
+						top: 50%;
+						left: 50%;
+						transform: translate(-50%, -50%);
+						background-color: var(--vscode-notifications-background);
+						color: var(--vscode-notifications-foreground);
+						padding: 20px;
+						border-radius: 4px;
+						box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+						z-index: 1000;
+						display: flex;
+						flex-direction: column;
+						align-items: center;
+					}
+					.confirm-delete-modal button {
+						margin-top: 10px;
+					}
 				`}
 			</style>
 			{showCopyModal && <div className="copy-modal">Prompt Copied to Clipboard</div>}
+			{confirmDeleteId && (
+				<div className="confirm-delete-modal">
+					<p>Are you sure you want to delete this task?</p>
+					<div>
+						<VSCodeButton onClick={() => confirmDelete(confirmDeleteId)}>Yes</VSCodeButton>
+						<VSCodeButton onClick={cancelDelete}>No</VSCodeButton>
+					</div>
+				</div>
+			)}
 			<div
 				style={{
 					position: "fixed",
