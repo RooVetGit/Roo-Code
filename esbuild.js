@@ -1,4 +1,5 @@
 const esbuild = require("esbuild")
+const { copy } = require("esbuild-plugin-copy")
 const fs = require("fs")
 const path = require("path")
 
@@ -25,40 +26,14 @@ const esbuildProblemMatcherPlugin = {
 	},
 }
 
-const copyWasmFiles = {
-	name: "copy-wasm-files",
+// Plugin to handle native .node files
+const nativeNodeModulesPlugin = {
+	name: "native-node-modules",
 	setup(build) {
-		build.onEnd(() => {
-			// tree sitter
-			const sourceDir = path.join(__dirname, "node_modules", "web-tree-sitter")
-			const targetDir = path.join(__dirname, "dist")
-
-			// Copy tree-sitter.wasm
-			fs.copyFileSync(path.join(sourceDir, "tree-sitter.wasm"), path.join(targetDir, "tree-sitter.wasm"))
-
-			// Copy language-specific WASM files
-			const languageWasmDir = path.join(__dirname, "node_modules", "tree-sitter-wasms", "out")
-			const languages = [
-				"typescript",
-				"tsx",
-				"python",
-				"rust",
-				"javascript",
-				"go",
-				"cpp",
-				"c",
-				"c_sharp",
-				"ruby",
-				"java",
-				"php",
-				"swift",
-			]
-
-			languages.forEach((lang) => {
-				const filename = `tree-sitter-${lang}.wasm`
-				fs.copyFileSync(path.join(languageWasmDir, filename), path.join(targetDir, filename))
-			})
-		})
+		build.onResolve({ filter: /\.node$/ }, (args) => ({
+			path: args.path,
+			external: true, // Already correctly marked as external
+		}))
 	},
 }
 
@@ -67,9 +42,27 @@ const extensionConfig = {
 	minify: production,
 	sourcemap: !production,
 	logLevel: "silent",
+	assetNames: "[name]",
 	plugins: [
-		copyWasmFiles,
-		/* add to the end of plugins array */
+		copy({
+			resolveFrom: "cwd",
+			assets: [
+				{
+					from: "./node_modules/tree-sitter-wasms/out/**/*.wasm",
+					to: "./dist/",
+				},
+				{
+					from: "./node_modules/web-tree-sitter/tree-sitter.wasm",
+					to: "./dist/",
+				},
+				{
+					from: "./node_modules/@lancedb/**/*.node",
+					to: "./dist/",
+				},
+			],
+			watch: true,
+		}),
+		nativeNodeModulesPlugin,
 		esbuildProblemMatcherPlugin,
 	],
 	entryPoints: ["src/extension.ts"],
@@ -78,6 +71,7 @@ const extensionConfig = {
 	platform: "node",
 	outfile: "dist/extension.js",
 	external: ["vscode"],
+	loader: { ".node": "file" },
 }
 
 async function main() {

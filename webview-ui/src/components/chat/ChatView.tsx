@@ -577,6 +577,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				"listFilesRecursive",
 				"listCodeDefinitionNames",
 				"searchFiles",
+				"semanticSearch",
 			].includes(tool.tool)
 		}
 		return false

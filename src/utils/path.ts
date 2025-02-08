@@ -69,7 +69,7 @@ export function arePathsEqual(path1?: string, path2?: string): boolean {
 
 function normalizePath(p: string): string {
 	// normalize resolve ./.. segments, removes duplicate slashes, and standardizes path separators
-	let normalized = path.normalize(p)
+	let normalized = path.posix.normalize(p)
 	// however it doesn't remove trailing slashes
 	// remove trailing slash, except for root paths
 	if (normalized.length > 1 && (normalized.endsWith("/") || normalized.endsWith("\\"))) {
@@ -81,26 +81,26 @@ function normalizePath(p: string): string {
 export function getReadablePath(cwd: string, relPath?: string): string {
 	relPath = relPath || ""
 	// path.resolve is flexible in that it will resolve relative paths like '../../' to the cwd and even ignore the cwd if the relPath is actually an absolute path
-	const absolutePath = path.resolve(cwd, relPath)
-	if (arePathsEqual(cwd, path.join(os.homedir(), "Desktop"))) {
+	const absolutePath = path.posix.resolve(cwd, relPath)
+	if (arePathsEqual(cwd, path.posix.join(os.homedir(), "Desktop"))) {
 		// User opened vscode without a workspace, so cwd is the Desktop. Show the full absolute path to keep the user aware of where files are being created
-		return absolutePath.toPosix()
+		return absolutePath
 	}
-	if (arePathsEqual(path.normalize(absolutePath), path.normalize(cwd))) {
-		return path.basename(absolutePath).toPosix()
+	if (arePathsEqual(path.posix.normalize(absolutePath), path.posix.normalize(cwd))) {
+		return path.posix.basename(absolutePath)
 	} else {
 		// show the relative path to the cwd
-		const normalizedRelPath = path.relative(cwd, absolutePath)
+		const normalizedRelPath = path.posix.relative(cwd, absolutePath)
 		if (absolutePath.includes(cwd)) {
-			return normalizedRelPath.toPosix()
+			return normalizedRelPath
 		} else {
 			// we are outside the cwd, so show the absolute path (useful for when cline passes in '../../' for example)
-			return absolutePath.toPosix()
+			return absolutePath
 		}
 	}
 }
 
 export const toRelativePath = (filePath: string, cwd: string) => {
-	const relativePath = path.relative(cwd, filePath).toPosix()
+	const relativePath = path.posix.relative(cwd, filePath)
 	return filePath.endsWith("/") ? relativePath + "/" : relativePath
 }

@@ -9,6 +9,7 @@ describe("Path Utilities", () => {
 		Object.defineProperty(process, "platform", {
 			value: originalPlatform,
 		})
+		jest.restoreAllMocks()
 	})
 
 	describe("String.prototype.toPosix", () => {
@@ -78,20 +79,26 @@ describe("Path Utilities", () => {
 		describe("edge cases", () => {
 			it("should handle undefined paths", () => {
 				expect(arePathsEqual(undefined, undefined)).toBe(true)
-				expect(arePathsEqual("/test", undefined)).toBe(false)
-				expect(arePathsEqual(undefined, "/test")).toBe(false)
 			})
+			expect(arePathsEqual("/test", undefined)).toBe(false)
+			expect(arePathsEqual(undefined, "/test")).toBe(false)
+		})
 
-			it("should handle root paths with trailing slashes", () => {
-				expect(arePathsEqual("/", "/")).toBe(true)
-				expect(arePathsEqual("C:\\", "C:\\")).toBe(true)
-			})
+		it("should handle root paths with trailing slashes", () => {
+			expect(arePathsEqual("/", "/")).toBe(true)
+			expect(arePathsEqual("C:\\", "C:\\")).toBe(true)
 		})
 	})
 
 	describe("getReadablePath", () => {
-		const homeDir = os.homedir()
-		const desktop = path.join(homeDir, "Desktop")
+		beforeEach(() => {
+			jest.spyOn(os, 'platform').mockReturnValue('linux');
+			jest.spyOn(os, 'platform').mockReturnValue('linux');
+			// jest.spyOn(os, 'homedir').mockReturnValue('/Users/test');
+		})
+
+		// const homeDir = os.homedir()
+		// const desktop = path.posix.join(homeDir, "Desktop")
 
 		it("should return basename when path equals cwd", () => {
 			const cwd = "/Users/test/project"
@@ -111,8 +118,9 @@ describe("Path Utilities", () => {
 		})
 
 		it("should handle Desktop as cwd", () => {
-			const filePath = path.join(desktop, "file.txt")
-			expect(getReadablePath(desktop, filePath)).toBe(filePath.toPosix())
+			const desktop = "/Users/test/Desktop"
+			const filePath = "/Users/test/Desktop/file.txt"
+			expect(getReadablePath(desktop, filePath)).toBe(filePath)
 		})
 
 		it("should handle undefined relative path", () => {

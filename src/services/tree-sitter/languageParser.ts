@@ -22,8 +22,8 @@ export interface LanguageParser {
 	}
 }
 
-async function loadLanguage(langName: string) {
-	return await Parser.Language.load(path.join(__dirname, `tree-sitter-${langName}.wasm`))
+async function loadLanguage(langName: string, wasmDir: string) {
+	return Parser.Language.load(path.join(wasmDir, `tree-sitter-${langName}.wasm`))
 }
 
 let isParserInitialized = false
@@ -57,71 +57,107 @@ Sources:
 - https://github.com/tree-sitter/tree-sitter/blob/master/lib/binding_web/README.md
 - https://github.com/tree-sitter/tree-sitter/blob/master/lib/binding_web/test/query-test.js
 */
-export async function loadRequiredLanguageParsers(filesToParse: string[]): Promise<LanguageParser> {
+export async function loadRequiredLanguageParsers(
+	filePaths: string[],
+	queries?: Record<string, string>,
+	wasmDir?: string,
+): Promise<Record<string, { parser: Parser; query: Parser.Query }>> {
 	await initializeParser()
-	const extensionsToLoad = new Set(filesToParse.map((file) => path.extname(file).toLowerCase().slice(1)))
-	const parsers: LanguageParser = {}
+	const extensionsToLoad = new Set(filePaths.map((file) => path.extname(file).toLowerCase().slice(1)))
+	const parsers: Record<string, { parser: Parser; query: Parser.Query }> = {}
+
+	// Default queries if not provided
+	const defaultQueries = {
+		js: javascriptQuery,
+		jsx: javascriptQuery,
+		ts: typescriptQuery,
+		tsx: typescriptQuery,
+		py: pythonQuery,
+		rs: rustQuery,
+		go: goQuery,
+		cpp: cppQuery,
+		hpp: cppQuery,
+		c: cQuery,
+		h: cQuery,
+		cs: csharpQuery,
+		rb: rubyQuery,
+		java: javaQuery,
+		php: phpQuery,
+		swift: swiftQuery,
+	}
+
+	// Use wasmDir if provided, otherwise use default
+	const basePath = wasmDir || __dirname
+
+	// Update WASM loading paths to use the provided directory
+	await Parser.init({
+		locateFile(scriptName: string) {
+			return path.join(basePath, scriptName)
+		},
+	})
+
 	for (const ext of extensionsToLoad) {
 		let language: Parser.Language
 		let query: Parser.Query
 		switch (ext) {
 			case "js":
 			case "jsx":
-				language = await loadLanguage("javascript")
-				query = language.query(javascriptQuery)
+				language = await loadLanguage("javascript", basePath)
+				query = language.query(queries?.[ext] || defaultQueries[ext])
 				break
 			case "ts":
-				language = await loadLanguage("typescript")
-				query = language.query(typescriptQuery)
+				language = await loadLanguage("typescript", basePath)
+				query = language.query(queries?.[ext] || defaultQueries[ext])
 				break
 			case "tsx":
-				language = await loadLanguage("tsx")
-				query = language.query(typescriptQuery)
+				language = await loadLanguage("tsx", basePath)
+				query = language.query(queries?.[ext] || defaultQueries[ext])
 				break
 			case "py":
-				language = await loadLanguage("python")
-				query = language.query(pythonQuery)
+				language = await loadLanguage("python", basePath)
+				query = language.query(queries?.[ext] || defaultQueries[ext])
 				break
 			case "rs":
-				language = await loadLanguage("rust")
-				query = language.query(rustQuery)
+				language = await loadLanguage("rust", basePath)
+				query = language.query(queries?.[ext] || defaultQueries[ext])
 				break
 			case "go":
-				language = await loadLanguage("go")
-				query = language.query(goQuery)
+				language = await loadLanguage("go", basePath)
+				query = language.query(queries?.[ext] || defaultQueries[ext])
 				break
 			case "cpp":
 			case "hpp":
-				language = await loadLanguage("cpp")
-				query = language.query(cppQuery)
+				language = await loadLanguage("cpp", basePath)
+				query = language.query(queries?.[ext] || defaultQueries[ext])
 				break
 			case "c":
 			case "h":
-				language = await loadLanguage("c")
-				query = language.query(cQuery)
+				language = await loadLanguage("c", basePath)
+				query = language.query(queries?.[ext] || defaultQueries[ext])
 				break
 			case "cs":
-				language = await loadLanguage("c_sharp")
-				query = language.query(csharpQuery)
+				language = await loadLanguage("c_sharp", basePath)
+				query = language.query(queries?.[ext] || defaultQueries[ext])
 				break
 			case "rb":
-				language = await loadLanguage("ruby")
-				query = language.query(rubyQuery)
+				language = await loadLanguage("ruby", basePath)
+				query = language.query(queries?.[ext] || defaultQueries[ext])
 				break
 			case "java":
-				language = await loadLanguage("java")
-				query = language.query(javaQuery)
+				language = await loadLanguage("java", basePath)
+				query = language.query(queries?.[ext] || defaultQueries[ext])
 				break
 			case "php":
-				language = await loadLanguage("php")
-				query = language.query(phpQuery)
+				language = await loadLanguage("php", basePath)
+				query = language.query(queries?.[ext] || defaultQueries[ext])
 				break
 			case "swift":
-				language = await loadLanguage("swift")
-				query = language.query(swiftQuery)
+				language = await loadLanguage("swift", basePath)
+				query = language.query(queries?.[ext] || defaultQueries[ext])
 				break
 			default:
-				throw new Error(`Unsupported language: ${ext}`)
+				console.log(`Unsupported language: ${ext}`)
+				continue
 		}
 		const parser = new Parser()
 		parser.setLanguage(language)

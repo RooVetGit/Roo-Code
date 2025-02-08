@@ -36,6 +36,9 @@ import { EXPERIMENT_IDS, experiments as Experiments, experimentDefault, Experime
 import { CustomSupportPrompts, supportPrompt } from "../../shared/support-prompt"
 
 import { ACTION_NAMES } from "../CodeActionProvider"
+import { SemanticSearchService } from "../../services/semantic-search"
+import { listFiles } from "../../services/glob/list-files"
+import { OpenAiNativeHandler } from "../../api/providers/openai-native"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
 
 /*
@@ -57,7 +60,21 @@ type SecretKey =
 	| "deepSeekApiKey"
 	| "mistralApiKey"
 	| "unboundApiKey"
+	| "semanticSearchApiKey"
 type GlobalStateKey =
+	| "apiKey"
+	| "glamaApiKey"
+	| "openRouterApiKey"
+	| "awsAccessKey"
+	| "awsSecretKey"
+	| "awsSessionToken"
+	| "openAiApiKey"
+	| "geminiApiKey"
+	| "openAiNativeApiKey"
+	| "deepSeekApiKey"
+	| "mistralApiKey"
+	| "unboundApiKey"
+	| "semanticSearchApiKey"
 	| "apiProvider"
 	| "apiModelId"
 	| "glamaModelId"
@@ -99,7 +116,7 @@ type GlobalStateKey =
 	| "browserViewportSize"
 	| "screenshotQuality"
 	| "fuzzyMatchThreshold"
-	| "preferredLanguage" // Language setting for Cline's communication
+	| "preferredLanguage"
 	| "writeDelayMs"
 	| "terminalOutputLineLimit"
 	| "mcpEnabled"
@@ -117,8 +134,11 @@ type GlobalStateKey =
 	| "enhancementApiConfigId"
 	| "experiments" // Map of experiment IDs to their enabled state
 	| "autoApprovalEnabled"
-	| "customModes" // Array of custom modes
+	| "customModes"
 	| "unboundModelId"
+	| "semanticSearchMaxResults"
+	| "semanticSearchStatus"
+	| "apiConfiguration"
 
 export const GlobalFileNames = {
 	apiConversationHistory: "api_conversation_history.json",
@@ -141,10 +161,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	private latestAnnouncementId = "jan-21-2025-custom-modes" // update to some unique identifier when we add a new announcement
 	configManager: ConfigManager
 	customModesManager: CustomModesManager
+	semanticSearchService?: SemanticSearchService
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
 		private readonly outputChannel: vscode.OutputChannel,
+		private readonly semanticSearchServicePromise?: Promise<SemanticSearchService>,
 	) {
 		this.outputChannel.appendLine("ClineProvider instantiated")
 		ClineProvider.activeInstances.add(this)
@@ -154,6 +176,14 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			await this.postStateToWebview()
 		})
 
+
+		// Await for the semantic search service to be initialized
+		if (this.semanticSearchServicePromise) {
+			this.semanticSearchServicePromise.then((service) => {
+				this.semanticSearchService = service
+				this.indexWorkspace()
+			})
+		}
 		// Initialize MCP Hub through the singleton manager
 		McpServerManager.getInstance(this.context, this)
 			.then((hub) => {
@@ -410,6 +440,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			images,
 			undefined,
 			experiments,
+			this.semanticSearchService,
 		)
 	}
 
@@ -438,6 +469,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			undefined,
 			historyItem,
 			experiments,
+			this.semanticSearchService,
 		)
 	}
 
@@ -593,7 +625,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	 *
 	 * @param webview A reference to the extension webview
 	 */
-	private setWebviewMessageListener(webview: vscode.Webview) {
+	private async setWebviewMessageListener(webview: vscode.Webview) {
 		webview.onDidReceiveMessage(
 			async (message: WebviewMessage) => {
 				switch (message.type) {
@@ -820,7 +852,26 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						openImage(message.text!)
 						break
 					case "openFile":
-						openFile(message.text!, message.values as { create?: boolean; content?: string })
+						const fileValue = message.value as
+							| {
+									filePath: string
+									startLine?: number
+									endLine?: number
+							  }
+							| undefined
+						if (fileValue && fileValue.filePath) {
+							const openOptions: {
+								create?: boolean
+								content?: string
+								startLine?: number
+								endLine?: number
+							} = {}
+							if (fileValue.startLine !== undefined) openOptions.startLine = fileValue.startLine
+							if (fileValue.endLine !== undefined) openOptions.endLine = fileValue.endLine
+							openFile(fileValue.filePath, openOptions)
+						} else {
+							console.error("Invalid file open message:", message)
+						}
 						break
 					case "openMention":
 						openMention(message.text)
@@ -922,7 +973,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.postStateToWebview()
 						break
 					case "soundVolume":
-						const soundVolume = message.value ?? 0.5
+						const soundVolume = typeof message.value === "number" ? message.value : 0.5
 						await this.updateGlobalState("soundVolume", soundVolume)
 						setSoundVolume(soundVolume)
 						await this.postStateToWebview()
@@ -1410,7 +1461,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								this.outputChannel.appendLine(
 									`Failed to update timeout for ${message.serverName}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 								)
-								vscode.window.showErrorMessage("Failed to update server timeout")
+								vscode.window.showErrorMessage(`Failed to update server timeout`)
 							}
 						}
 						break
@@ -1441,11 +1492,232 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							await this.updateGlobalState("mode", defaultModeSlug)
 							await this.postStateToWebview()
 						}
+						break
+					case "semanticSearchMaxResults":
+						await this.updateGlobalState("semanticSearchMaxResults", message.value)
+						await this.postStateToWebview()
+						break
+					case "updateSemanticSearchApiKey":
+						try {
+							if (message.text) {
+								// Store the key in secrets
+								await this.storeSecret("semanticSearchApiKey", message.text)
+
+								// Update the API configuration in global state
+								const currentState = await this.getState()
+								const updatedConfig: ApiConfiguration = {
+									...currentState.apiConfiguration,
+									semanticSearchApiKey: message.text,
+								}
+								await this.updateApiConfiguration(updatedConfig)
+
+								// Update the semantic search service if it exists
+								if (this.semanticSearchService) {
+									const apiHandler = new OpenAiNativeHandler({
+										openAiNativeApiKey: message.text,
+									})
+									await this.semanticSearchService.provideApiHandler(apiHandler)
+								}
+							} else {
+								// Clear the key from secrets
+								await this.storeSecret("semanticSearchApiKey", undefined)
+
+								// Remove the key from API configuration
+								const currentState = await this.getState()
+								const updatedConfig: ApiConfiguration = {
+									...currentState.apiConfiguration,
+								}
+								delete updatedConfig.semanticSearchApiKey
+								await this.updateApiConfiguration(updatedConfig)
+
+								// Update the semantic search service if needed
+								if (this.semanticSearchService) {
+									const { apiConfiguration } = await this.getState()
+									if (apiConfiguration.apiProvider === "openai-native") {
+										await this.semanticSearchService.provideApiHandler(
+											buildApiHandler(apiConfiguration),
+										)
+									} else {
+										this.semanticSearchService = undefined
+									}
+								}
+							}
+
+							// Post updated state to webview
+							await this.postStateToWebview()
+						} catch (error) {
+							this.outputChannel.appendLine(
+								`Error updating semantic search API key: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+							)
+							vscode.window.showErrorMessage("Failed to update semantic search API key")
+						}
+						break
+					case "deleteSemanticIndex": {
+						const answer = await vscode.window.showInformationMessage(
+							"Are you sure you want to clear the semantic search index?",
+							{ modal: true },
+							"Yes",
+						)
+						if (answer === "Yes") {
+							// Get workspace root
+							const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
+							if (!workspaceRoot) {
+								vscode.window.showErrorMessage("No workspace folder open")
+								return
+							}
+
+							try {
+								await this.semanticSearchService?.clear()
+
+								// Update UI with new status
+								this.view?.webview.postMessage({
+									type: "semanticSearchStatus",
+									status: "Not indexed",
+								})
+
+								vscode.window.showInformationMessage("Semantic search index cleared")
+							} catch (error) {
+								console.error("Error clearing semantic search index:", error)
+								vscode.window.showErrorMessage("Failed to clear semantic search index")
+							}
+						}
+						break
+					}
+					case "reindexSemantic": {
+						await this.indexWorkspace()
+						break
+					}
+					case "getSemanticSearchStatus":
+						// Get current status from service
+						const currentStatus = this.semanticSearchService?.getStatus() || "Not indexed"
+						this.view?.webview.postMessage({
+							type: "semanticSearchStatus",
+							status: currentStatus,
+						})
+						break
+					case "saveAllSettings": {
+						try {
+							const settings = message.settings
+							if (!settings) {
+								throw new Error("Settings object is required")
+							}
+
+							// First, save the API configuration (if needed)
+							if (settings.currentApiConfigName && settings.apiConfiguration) {
+								await this.configManager.saveConfig(
+									settings.currentApiConfigName,
+									settings.apiConfiguration,
+								)
+							}
+
+							// Prepare updates for global state
+							const globalStateUpdates: Partial<Record<GlobalStateKey, any>> = {}
+
+							// Collect all global state updates
+							if (settings.apiConfiguration) {
+								globalStateUpdates.apiConfiguration = settings.apiConfiguration
+							}
+							if (settings.alwaysAllowReadOnly !== undefined) {
+								globalStateUpdates.alwaysAllowReadOnly = settings.alwaysAllowReadOnly
+							}
+							if (settings.alwaysAllowWrite !== undefined) {
+								globalStateUpdates.alwaysAllowWrite = settings.alwaysAllowWrite
+							}
+							if (settings.alwaysAllowExecute !== undefined) {
+								globalStateUpdates.alwaysAllowExecute = settings.alwaysAllowExecute
+							}
+							if (settings.alwaysAllowBrowser !== undefined) {
+								globalStateUpdates.alwaysAllowBrowser = settings.alwaysAllowBrowser
+							}
+							if (settings.alwaysAllowMcp !== undefined) {
+								globalStateUpdates.alwaysAllowMcp = settings.alwaysAllowMcp
+							}
+							if (settings.allowedCommands !== undefined) {
+								globalStateUpdates.allowedCommands = settings.allowedCommands
+							}
+							if (settings.soundEnabled !== undefined) {
+								globalStateUpdates.soundEnabled = settings.soundEnabled
+							}
+							if (settings.soundVolume !== undefined) {
+								globalStateUpdates.soundVolume = settings.soundVolume
+							}
+							if (settings.diffEnabled !== undefined) {
+								globalStateUpdates.diffEnabled = settings.diffEnabled
+							}
+							if (settings.browserViewportSize !== undefined) {
+								globalStateUpdates.browserViewportSize = settings.browserViewportSize
+							}
+							if (settings.fuzzyMatchThreshold !== undefined) {
+								globalStateUpdates.fuzzyMatchThreshold = settings.fuzzyMatchThreshold
+							}
+							if (settings.writeDelayMs !== undefined) {
+								globalStateUpdates.writeDelayMs = settings.writeDelayMs
+							}
+							if (settings.terminalOutputLineLimit !== undefined) {
+								globalStateUpdates.terminalOutputLineLimit = settings.terminalOutputLineLimit
+							}
+							if (settings.mcpEnabled !== undefined) {
+								globalStateUpdates.mcpEnabled = settings.mcpEnabled
+							}
+							if (settings.alwaysApproveResubmit !== undefined) {
+								globalStateUpdates.alwaysApproveResubmit = settings.alwaysApproveResubmit
+							}
+							if (settings.requestDelaySeconds !== undefined) {
+								globalStateUpdates.requestDelaySeconds = settings.requestDelaySeconds
+							}
+							if (settings.currentApiConfigName !== undefined) {
+								globalStateUpdates.currentApiConfigName = settings.currentApiConfigName
+							}
+							if (settings.experiments !== undefined) {
+								globalStateUpdates.experiments = settings.experiments
+							}
+							if (settings.alwaysAllowModeSwitch !== undefined) {
+								globalStateUpdates.alwaysAllowModeSwitch = settings.alwaysAllowModeSwitch
+							}
+							if (settings.semanticSearchMaxResults !== undefined) {
+								globalStateUpdates.semanticSearchMaxResults = settings.semanticSearchMaxResults
+							}
+							if (settings.semanticSearchStatus !== undefined) {
+								globalStateUpdates.semanticSearchStatus = settings.semanticSearchStatus
+							}
+
+							// Update workspace settings (if needed)
+							if (settings.allowedCommands !== undefined) {
+								await vscode.workspace
+									.getConfiguration("roo-cline")
+									.update(
+										"allowedCommands",
+										settings.allowedCommands,
+										vscode.ConfigurationTarget.Global,
+									)
+							}
+
+							// Perform all global state updates at once
+							await this.updateGlobalStates(globalStateUpdates)
+
+							// Single state update to webview after all changes
+							await this.postStateToWebview()
+						} catch (error) {
+							this.outputChannel.appendLine(
+								`Error saving settings: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+							)
+							vscode.window.showErrorMessage("Failed to save settings")
+						}
+						break
+					}
 				}
 			},
 			null,
 			this.disposables,
 		)
+	}
+
+	// New method to update multiple global states at once
+	async updateGlobalStates(updates: Partial<Record<GlobalStateKey, any>>) {
+		const updatePromises = Object.entries(updates).map(([key, value]) =>
+			this.updateGlobalState(key as GlobalStateKey, value),
+		)
+		await Promise.all(updatePromises)
 	}
 
 	/**
@@ -1715,7 +1987,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		// await this.postMessageToWebview({ type: "action", action: "settingsButtonClicked" }) // bad ux if user is on welcome
 	}
 
-	private async ensureCacheDirectoryExists(): Promise<string> {
+	async ensureCacheDirectoryExists(): Promise<string> {
 		const cacheDir = path.join(this.context.globalStorageUri.fsPath, "cache")
 		await fs.mkdir(cacheDir, { recursive: true })
 		return cacheDir
@@ -2082,11 +2354,20 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			experiments,
 		} = await this.getState()
 
+		// Get the semantic search API key from secrets
+		const semanticSearchApiKey = await this.getSecret("semanticSearchApiKey")
+
 		const allowedCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
+
+		// Create API configuration with semantic search key
+		const updatedApiConfiguration = {
+			...apiConfiguration,
+			semanticSearchApiKey,
+		}
 
 		return {
 			version: this.context.extension?.packageJSON?.version ?? "",
-			apiConfiguration,
+			apiConfiguration: updatedApiConfiguration,
 			customInstructions,
 			alwaysAllowReadOnly: alwaysAllowReadOnly ?? false,
 			alwaysAllowWrite: alwaysAllowWrite ?? false,
@@ -2124,6 +2405,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			autoApprovalEnabled: autoApprovalEnabled ?? false,
 			customModes: await this.customModesManager.getCustomModes(),
 			experiments: experiments ?? experimentDefault,
+			semanticSearchStatus: this.semanticSearchService?.getStatus() || "Not indexed",
+			semanticSearchApiKey,
 			mcpServers: this.mcpHub?.getServers() ?? [],
 		}
 	}
@@ -2251,9 +2534,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			enhancementApiConfigId,
 			autoApprovalEnabled,
 			customModes,
-			experiments,
 			unboundApiKey,
 			unboundModelId,
+			experiments,
+			semanticSearchMaxResults,
+			semanticSearchApiKey,
 		] = await Promise.all([
 			this.getGlobalState("apiProvider") as Promise<ApiProvider | undefined>,
 			this.getGlobalState("apiModelId") as Promise<string | undefined>,
@@ -2325,9 +2610,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("enhancementApiConfigId") as Promise<string | undefined>,
 			this.getGlobalState("autoApprovalEnabled") as Promise<boolean | undefined>,
 			this.customModesManager.getCustomModes(),
-			this.getGlobalState("experiments") as Promise<Record<ExperimentId, boolean> | undefined>,
 			this.getSecret("unboundApiKey") as Promise<string | undefined>,
 			this.getGlobalState("unboundModelId") as Promise<string | undefined>,
+			this.getGlobalState("experiments") as Promise<Record<ExperimentId, boolean> | undefined>,
+			this.getGlobalState("semanticSearchMaxResults") as Promise<number | undefined>,
+			this.getSecret("semanticSearchApiKey") as Promise<string | undefined>,
 		])
 
 		let apiProvider: ApiProvider
@@ -2448,6 +2735,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			experiments: experiments ?? experimentDefault,
 			autoApprovalEnabled: autoApprovalEnabled ?? false,
 			customModes,
+			semanticSearchMaxResults,
+			semanticSearchApiKey,
 		}
 	}
 
@@ -2505,7 +2794,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	private async getSecret(key: SecretKey) {
-		return await this.context.secrets.get(key)
+		return this.context.secrets.get(key)
 	}
 
 	// dev
@@ -2537,6 +2826,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			"deepSeekApiKey",
 			"mistralApiKey",
 			"unboundApiKey",
+			"semanticSearchApiKey",
 		]
 		for (const key of secretKeys) {
 			await this.storeSecret(key, undefined)
@@ -2560,9 +2850,56 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	get messages() {
 		return this.cline?.clineMessages || []
 	}
-
-	// Add public getter
+  
+  // Add public getter
 	public getMcpHub(): McpHub | undefined {
 		return this.mcpHub
 	}
+
+	private async indexWorkspace() {
+		const { apiConfiguration } = await this.getState()
+		const provider = buildApiHandler(apiConfiguration)
+
+		if ("embedText" in provider) {
+			this.semanticSearchService?.provideApiHandler(provider)
+		} else {
+			const semanticSearchApiKey = await this.getSecret("semanticSearchApiKey")
+
+			if (!semanticSearchApiKey) {
+				console.info("No API key for semantic search")
+				return
+			}
+
+			const provider = new OpenAiNativeHandler({ ...apiConfiguration, openAiNativeApiKey: semanticSearchApiKey })
+			this.semanticSearchService?.provideApiHandler(provider)
+		}
+
+		const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
+		if (!workspaceRoot) {
+			console.info("No workspace folder open")
+			return
+		}
+
+		try {
+			await vscode.window.withProgress(
+				{
+					location: vscode.ProgressLocation.Notification,
+					title: "Semantic Search Indexing - Indexing workspace...",
+					cancellable: false,
+				},
+				async () => {
+					this.view?.webview.postMessage({ type: "semanticSearchStatus", status: "Indexing" })
+					const [files] = await listFiles(workspaceRoot, true, 1000, true, false)
+					await this.semanticSearchService?.addBatchToIndex(files)
+					const finalStatus = this.semanticSearchService?.getStatus() || "Not indexed"
+					this.view?.webview.postMessage({ type: "semanticSearchStatus", status: finalStatus })
+				},
+			)
+		} catch (error) {
+			console.error("Error during indexing:", error)
+			vscode.window.showErrorMessage("Failed to index workspace")
+		}
+	}
 }
+
+

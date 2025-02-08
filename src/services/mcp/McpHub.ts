@@ -579,7 +579,7 @@ export class McpHub {
 		if (connection.server.disabled) {
 			throw new Error(`Server "${serverName}" is disabled`)
 		}
-		return await connection.client.request(
+		return connection.client.request(
 			{
 				method: "resources/read",
 				params: {
@@ -615,7 +615,7 @@ export class McpHub {
 			timeout = 60 * 1000
 		}
 
-		return await connection.client.request(
+		return connection.client.request(
 			{
 				method: "tools/call",
 				params: {

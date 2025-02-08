@@ -1,5 +1,5 @@
 import { VSCodeButton, VSCodeCheckbox, VSCodeLink, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
-import { memo, useEffect, useState } from "react"
+import { memo, useEffect, useState, useCallback } from "react"
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import { validateApiConfiguration, validateModelId } from "../../utils/validate"
 import { vscode } from "../../utils/vscode"
@@ -9,6 +9,7 @@ import { EXPERIMENT_IDS, experimentConfigsMap } from "../../../../src/shared/exp
 import ApiConfigManager from "./ApiConfigManager"
 import { Dropdown } from "vscrui"
 import type { DropdownOption } from "vscrui"
+import { ApiConfiguration } from "../../../../src/shared/api"
 
 type SettingsViewProps = {
 	onDone: () => void
@@ -61,54 +62,87 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		setExperimentEnabled,
 		alwaysAllowModeSwitch,
 		setAlwaysAllowModeSwitch,
+		semanticSearchStatus,
+		setSemanticSearchStatus,
+		setApiConfiguration,
 	} = useExtensionState()
 	const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>(undefined)
 	const [modelIdErrorMessage, setModelIdErrorMessage] = useState<string | undefined>(undefined)
 	const [commandInput, setCommandInput] = useState("")
+	const [maxResults, setMaxResults] = useState<number>(10) // Default 10
+	const [indexingProgress, setIndexingProgress] = useState<
+		{ current: number; total: number; status: string } | undefined
+	>()
 
-	const handleSubmit = () => {
+	useEffect(() => {
+		// Request initial status
+		vscode.postMessage({ type: "getSemanticSearchStatus" })
+
+		const messageListener = (event: MessageEvent) => {
+			const message = event.data
+			if (message.type === "semanticSearchStatus") {
+				setSemanticSearchStatus(message.status)
+			}
+			// Add this case to handle initial state
+			if (message.type === "initialState") {
+				setSemanticSearchStatus(message.state.semanticSearchStatus)
+			}
+			// Keep existing indexing progress handling
+			if (message.type === "indexingProgress") {
+				setIndexingProgress(message.indexingProgress)
+				if (message.indexingProgress.current === message.indexingProgress.total) {
+					// Clear progress after 2 seconds when complete
+					setTimeout(() => setIndexingProgress(undefined), 2000)
+				}
+			}
+		}
+		window.addEventListener("message", messageListener)
+		return () => window.removeEventListener("message", messageListener)
+	}, [setSemanticSearchStatus])
+
+	const handleSubmit = async () => {
 		const apiValidationResult = validateApiConfiguration(apiConfiguration)
 		const modelIdValidationResult = validateModelId(apiConfiguration, glamaModels, openRouterModels)
 
 		setApiErrorMessage(apiValidationResult)
 		setModelIdErrorMessage(modelIdValidationResult)
+
 		if (!apiValidationResult && !modelIdValidationResult) {
-			vscode.postMessage({
-				type: "apiConfiguration",
-				apiConfiguration,
-			})
-			vscode.postMessage({ type: "alwaysAllowReadOnly", bool: alwaysAllowReadOnly })
-			vscode.postMessage({ type: "alwaysAllowWrite", bool: alwaysAllowWrite })
-			vscode.postMessage({ type: "alwaysAllowExecute", bool: alwaysAllowExecute })
-			vscode.postMessage({ type: "alwaysAllowBrowser", bool: alwaysAllowBrowser })
-			vscode.postMessage({ type: "alwaysAllowMcp", bool: alwaysAllowMcp })
-			vscode.postMessage({ type: "allowedCommands", commands: allowedCommands ?? [] })
-			vscode.postMessage({ type: "soundEnabled", bool: soundEnabled })
-			vscode.postMessage({ type: "soundVolume", value: soundVolume })
-			vscode.postMessage({ type: "diffEnabled", bool: diffEnabled })
-			vscode.postMessage({ type: "browserViewportSize", text: browserViewportSize })
-			vscode.postMessage({ type: "fuzzyMatchThreshold", value: fuzzyMatchThreshold ?? 1.0 })
-			vscode.postMessage({ type: "writeDelayMs", value: writeDelayMs })
-			vscode.postMessage({ type: "screenshotQuality", value: screenshotQuality ?? 75 })
-			vscode.postMessage({ type: "terminalOutputLineLimit", value: terminalOutputLineLimit ?? 500 })
-			vscode.postMessage({ type: "mcpEnabled", bool: mcpEnabled })
-			vscode.postMessage({ type: "alwaysApproveResubmit", bool: alwaysApproveResubmit })
-			vscode.postMessage({ type: "requestDelaySeconds", value: requestDelaySeconds })
-			vscode.postMessage({ type: "rateLimitSeconds", value: rateLimitSeconds })
-			vscode.postMessage({ type: "currentApiConfigName", text: currentApiConfigName })
-			vscode.postMessage({
-				type: "upsertApiConfiguration",
-				text: currentApiConfigName,
-				apiConfiguration,
-			})
-
-			vscode.postMessage({
-				type: "updateExperimental",
-				values: experiments,
-			})
-
-			vscode.postMessage({ type: "alwaysAllowModeSwitch", bool: alwaysAllowModeSwitch })
-			onDone()
+			try {
+				// Send all configuration updates in a single message
+				await vscode.postMessage({
+					type: "saveAllSettings",
+					settings: {
+						apiConfiguration,
+						alwaysAllowReadOnly,
+						alwaysAllowWrite,
+						alwaysAllowExecute,
+						alwaysAllowBrowser,
+						alwaysAllowMcp,
+						allowedCommands,
+						soundEnabled,
+						soundVolume,
+						diffEnabled,
+						browserViewportSize,
+						fuzzyMatchThreshold,
+						writeDelayMs,
+						screenshotQuality,
+						terminalOutputLineLimit,
+						mcpEnabled,
+						alwaysApproveResubmit,
+						requestDelaySeconds,
+						currentApiConfigName,
+						experiments,
+						alwaysAllowModeSwitch,
+						semanticSearchMaxResults: maxResults,
+						semanticSearchStatus,
+					},
+				})
+				onDone()
+			} catch (error) {
+				console.error("Failed to save settings:", error)
+				// You might want to show an error message to the user here
+			}
 		}
 	}
 
@@ -141,6 +175,25 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 			})
 		}
 	}
+
+	const handleSemanticSearchApiKeyChange = useCallback(
+		(e: any) => {
+			const newKey = e.target.value || undefined
+			// Update local state first
+			const updatedConfig: ApiConfiguration = {
+				...apiConfiguration,
+				semanticSearchApiKey: newKey,
+			}
+			setApiConfiguration(updatedConfig)
+
+			// Then notify extension
+			vscode.postMessage({
+				type: "updateSemanticSearchApiKey",
+				text: newKey,
+			})
+		},
+		[apiConfiguration, setApiConfiguration],
+	)
 
 	const sliderLabelStyle = {
 		minWidth: "45px",
@@ -698,6 +751,145 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 									}
 								/>
 							))}
+					</div>
+				</div>
+
+				<div style={{ marginBottom: 40 }}>
+					<h3 style={{ color: "var(--vscode-foreground)", margin: "0 0 15px 0" }}>
+						Semantic Search Settings
+					</h3>
+
+					<div style={{ marginBottom: 15 }}>
+						<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+							<span style={{ fontWeight: "500", minWidth: "150px" }}>Maximum Results</span>
+							<input
+								type="range"
+								min="5"
+								max="50"
+								step="5"
+								value={maxResults}
+								onChange={(e) => setMaxResults(parseInt(e.target.value))}
+								style={{
+									flexGrow: 1,
+									accentColor: "var(--vscode-button-background)",
+									height: "2px",
+								}}
+							/>
+							<span style={{ minWidth: "60px", textAlign: "left" }}>{maxResults}</span>
+						</div>
+						<p
+							style={{
+								fontSize: "12px",
+								marginTop: "5px",
+								color: "var(--vscode-descriptionForeground)",
+							}}>
+							Maximum number of results to return from each search query.
+						</p>
+					</div>
+
+					<div style={{ marginBottom: 15 }}>
+						<div style={{ display: "flex", gap: "10px" }}>
+							<VSCodeButton
+								onClick={() => {
+									vscode.postMessage({ type: "reindexSemantic" })
+								}}
+								disabled={indexingProgress !== undefined}>
+								{indexingProgress ? "Indexing..." : "Reindex Workspace"}
+							</VSCodeButton>
+							<VSCodeButton
+								onClick={() => {
+									vscode.postMessage({ type: "deleteSemanticIndex" })
+								}}
+								disabled={indexingProgress !== undefined}>
+								Clear Index
+							</VSCodeButton>
+						</div>
+						{indexingProgress && (
+							<div style={{ marginTop: 10 }}>
+								<div
+									style={{
+										width: "100%",
+										height: "2px",
+										backgroundColor: "var(--vscode-progressBar-background)",
+										position: "relative",
+										overflow: "hidden",
+									}}>
+									<div
+										style={{
+											position: "absolute",
+											top: 0,
+											left: 0,
+											height: "100%",
+											width: `${(indexingProgress.current / indexingProgress.total) * 100}%`,
+											backgroundColor: "var(--vscode-progressBar-foreground)",
+											transition: "width 0.2s ease-out",
+										}}
+									/>
+								</div>
+								<p
+									style={{
+										fontSize: "12px",
+										marginTop: "5px",
+										color: "var(--vscode-descriptionForeground)",
+									}}>
+									{indexingProgress.status}
+								</p>
+							</div>
+						)}
+						<p
+							style={{
+								fontSize: "12px",
+								marginTop: "5px",
+								color: "var(--vscode-descriptionForeground)",
+							}}>
+							Manage the semantic search index. Reindexing will rebuild the index for all files in the
+							workspace.
+						</p>
+					</div>
+
+					<div style={{ marginBottom: 15 }}>
+						<div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: 10 }}>
+							<span style={{ fontWeight: "500" }}>Current Workspace Status:</span>
+							<span
+								style={{
+									color:
+										semanticSearchStatus === "Indexed"
+											? "var(--vscode-gitDecoration-untrackedResourceForeground)"
+											: semanticSearchStatus === "Indexing"
+												? "var(--vscode-problemsWarningIcon-foreground)"
+												: "var(--vscode-problemsErrorIcon-foreground)",
+									fontWeight: 500,
+								}}>
+								{semanticSearchStatus}
+							</span>
+						</div>
+					</div>
+
+					<div style={{ marginBottom: 15 }}>
+						<VSCodeTextField
+							value={apiConfiguration?.semanticSearchApiKey || ""}
+							style={{ width: "100%" }}
+							type="password"
+							onInput={handleSemanticSearchApiKeyChange}
+							placeholder="Enter API Key...">
+							<span style={{ fontWeight: 500 }}>OpenAI API Key for Semantic Search</span>
+						</VSCodeTextField>
+						<p
+							style={{
+								fontSize: "12px",
+								marginTop: "5px",
+								color: "var(--vscode-descriptionForeground)",
+							}}>
+							Optional: Configure a separate OpenAI API key specifically for semantic search embeddings.
+							If not provided, will use the main OpenAI Native API key if available.
+							{!apiConfiguration?.semanticSearchApiKey && (
+								<VSCodeLink
+									href="https://platform.openai.com/api-keys"
+									style={{ display: "inline", fontSize: "inherit", marginLeft: "5px" }}>
+									Get an OpenAI API key here.
+								</VSCodeLink>
+							)}
+						</p>
 					</div>
 				</div>
 

@@ -1,340 +1,368 @@
 import React from "react"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { render, screen, fireEvent, act, waitFor } from "@testing-library/react"
 import SettingsView from "../SettingsView"
 import { ExtensionStateContextProvider } from "../../../context/ExtensionStateContext"
 import { vscode } from "../../../utils/vscode"
 
 // Mock vscode API
 jest.mock("../../../utils/vscode", () => ({
-	vscode: {
-		postMessage: jest.fn(),
-	},
-}))
+  vscode: {
+    postMessage: jest.fn().mockImplementation(() => {
+      return Promise.resolve().then(() => {
+        // Call onDone after the promise resolves
+        if (onDone) {
+          onDone();
+        }
+      });
+    }),
+  },
+}));
 
 // Mock ApiConfigManager component
 jest.mock("../ApiConfigManager", () => ({
-	__esModule: true,
-	default: ({
-		currentApiConfigName,
-		listApiConfigMeta,
-		onSelectConfig,
-		onDeleteConfig,
-		onRenameConfig,
-		onUpsertConfig,
-	}: any) => (
-		<div data-testid="api-config-management">
-			<span>Current config: {currentApiConfigName}</span>
-		</div>
-	),
+  __esModule: true,
+  default: ({
+    currentApiConfigName,
+    listApiConfigMeta,
+    onSelectConfig,
+    onDeleteConfig,
+    onRenameConfig,
+    onUpsertConfig,
+  }: any) => (
+    <div data-testid="api-config-management">
+      <span>Current config: {currentApiConfigName}</span>
+    </div>
+  ),
 }))
 
 // Mock VSCode components
 jest.mock("@vscode/webview-ui-toolkit/react", () => ({
-	VSCodeButton: ({ children, onClick, appearance }: any) =>
-		appearance === "icon" ? (
-			<button onClick={onClick} className="codicon codicon-close" aria-label="Remove command">
-				<span className="codicon codicon-close" />
-			</button>
-		) : (
-			<button onClick={onClick} data-appearance={appearance}>
-				{children}
-			</button>
-		),
-	VSCodeCheckbox: ({ children, onChange, checked }: any) => (
-		<label>
-			<input
-				type="checkbox"
-				checked={checked}
-				onChange={(e) => onChange({ target: { checked: e.target.checked } })}
-				aria-label={typeof children === "string" ? children : undefined}
-			/>
-			{children}
-		</label>
-	),
-	VSCodeTextField: ({ value, onInput, placeholder }: any) => (
-		<input
-			type="text"
-			value={value}
-			onChange={(e) => onInput({ target: { value: e.target.value } })}
-			placeholder={placeholder}
-		/>
-	),
-	VSCodeTextArea: () => <textarea />,
-	VSCodeLink: ({ children, href }: any) => <a href={href || "#"}>{children}</a>,
-	VSCodeDropdown: ({ children, value, onChange }: any) => (
-		<select value={value} onChange={onChange}>
-			{children}
-		</select>
-	),
-	VSCodeOption: ({ children, value }: any) => <option value={value}>{children}</option>,
-	VSCodeRadio: ({ children, value, checked, onChange }: any) => (
-		<input type="radio" value={value} checked={checked} onChange={onChange} />
-	),
-	VSCodeRadioGroup: ({ children, value, onChange }: any) => <div onChange={onChange}>{children}</div>,
-	VSCodeSlider: ({ value, onChange }: any) => (
-		<input
-			type="range"
-			value={value}
-			onChange={(e) => onChange({ target: { value: Number(e.target.value) } })}
-			min={0}
-			max={1}
-			step={0.01}
-			style={{ flexGrow: 1, height: "2px" }}
-		/>
-	),
-}))
-
-// Mock window.postMessage to trigger state hydration
-const mockPostMessage = (state: any) => {
-	window.postMessage(
-		{
-			type: "state",
-			state: {
-				version: "1.0.0",
-				clineMessages: [],
-				taskHistory: [],
-				shouldShowAnnouncement: false,
-				allowedCommands: [],
-				alwaysAllowExecute: false,
-				soundEnabled: false,
-				soundVolume: 0.5,
-				...state,
-			},
-		},
-		"*",
-	)
-}
-
-const renderSettingsView = () => {
-	const onDone = jest.fn()
-	render(
-		<ExtensionStateContextProvider>
-			<SettingsView onDone={onDone} />
-		</ExtensionStateContextProvider>,
-	)
-	// Hydrate initial state
-	mockPostMessage({})
-	return { onDone }
+  VSCodeButton: ({ children, onClick, appearance }: any) =>
+    appearance === "icon" ? (
+      <button onClick={onClick} className="codicon codicon-close" aria-label="Remove command">
+        <span className="codicon codicon-close" />
+      </button>
+    ) : (
+      <button onClick={onClick} data-appearance={appearance}>
+        {children}
+      </button>
+    ),
+  VSCodeCheckbox: ({ children, onChange, checked }: any) => (
+    <label>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange({ target: { checked: e.target.checked } })}
+        aria-label={typeof children === "string" ? children : undefined}
+      />
+      {children}
+    </label>
+  ),
+  VSCodeTextField: ({ value, onInput, placeholder }: any) => (
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => onInput({ target: { value: e.target.value } })}
+      placeholder={placeholder}
+    />
+  ),
+  VSCodeTextArea: () => <textarea />,
+  VSCodeLink: ({ children, href }: any) => <a href={href || "#"}>{children}</a>,
+  VSCodeDropdown: ({ children, value, onChange }: any) => (
+    <select value={value} onChange={onChange}>
+      {children}
+    </select>
+  ),
+  VSCodeOption: ({ children, value }: any) => <option value={value}>{children}</option>,
+  VSCodeRadio: ({ children, value, checked, onChange }: any) => (
+    <input type="radio" value={value} checked={checked} onChange={onChange} />
+  ),
+  VSCodeRadioGroup: ({ children, value, onChange }: any) => <div onChange={onChange}>{children}</div>,
+  VSCodeSlider: ({ value, onChange }: any) => (
+    <input
+      type="range"
+      value={value}
+      onChange={(e) => onChange({ target: { value: Number(e.target.value) } })}
+      min={0}
+      max={1}
+      step={0.01}
+      style={{ flexGrow: 1, height: "2px" }}
+    />
+  ),
+}));
+let onDone : any;
+const renderSettingsView = async () => {
+    onDone = jest.fn();
+    render(
+        <ExtensionStateContextProvider>
+            <SettingsView onDone={onDone} />
+        </ExtensionStateContextProvider>
+    )
+    return { onDone };
 }
 
 describe("SettingsView - Sound Settings", () => {
-	beforeEach(() => {
-		jest.clearAllMocks()
-	})
+    beforeEach(async () => {
+        jest.clearAllMocks()
+    })
 
-	it("initializes with sound disabled by default", () => {
-		renderSettingsView()
+    it("initializes with sound disabled by default", async () => {
+        await renderSettingsView()
 
-		const soundCheckbox = screen.getByRole("checkbox", {
-			name: /Enable sound effects/i,
-		})
-		expect(soundCheckbox).not.toBeChecked()
+        const soundCheckbox = screen.getByRole("checkbox", {
+            name: /Enable sound effects/i,
+        })
+        // Expect initial getSemanticSearchStatus message
+        expect(vscode.postMessage).toHaveBeenCalledWith({
+            type: "getSemanticSearchStatus",
+        });
+        expect(soundCheckbox).not.toBeChecked()
 
-		// Volume slider should not be visible when sound is disabled
-		expect(screen.queryByRole("slider", { name: /volume/i })).not.toBeInTheDocument()
-	})
+        // Volume slider should not be visible when sound is disabled
+        expect(screen.queryByRole("slider", { name: /volume/i })).not.toBeInTheDocument()
+    })
 
-	it("toggles sound setting and sends message to VSCode", () => {
-		renderSettingsView()
+    it("toggles sound setting and sends message to VSCode", async () => {
+        const { onDone } = await renderSettingsView()
 
-		const soundCheckbox = screen.getByRole("checkbox", {
-			name: /Enable sound effects/i,
-		})
+        const soundCheckbox = screen.getByRole("checkbox", {
+            name: /Enable sound effects/i,
+        })
 
-		// Enable sound
-		fireEvent.click(soundCheckbox)
-		expect(soundCheckbox).toBeChecked()
+        // Enable sound
+        fireEvent.click(soundCheckbox);
+        await waitFor(() => expect(soundCheckbox).toBeChecked(), { timeout: 5000 });
 
-		// Click Done to save settings
-		const doneButton = screen.getByText("Done")
-		fireEvent.click(doneButton)
+        // Click Done to save settings
+        const doneButton = screen.getByText("Done");
+        fireEvent.click(doneButton);
+        await waitFor(() =>
+            expect(vscode.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: "saveAllSettings",
+                    settings: expect.objectContaining({
+                        soundEnabled: true,
+                    }),
+                }),
+            ), { timeout: 5000 }
+        );
+        expect(onDone).toHaveBeenCalled();
+    })
 
-		expect(vscode.postMessage).toHaveBeenCalledWith(
-			expect.objectContaining({
-				type: "soundEnabled",
-				bool: true,
-			}),
-		)
-	})
+    it("shows volume slider when sound is enabled", async () => {
+        await renderSettingsView()
 
-	it("shows volume slider when sound is enabled", () => {
-		renderSettingsView()
+        // Enable sound
+        const soundCheckbox = screen.getByRole("checkbox", {
+            name: /Enable sound effects/i,
+        })
+        fireEvent.click(soundCheckbox)
 
-		// Enable sound
-		const soundCheckbox = screen.getByRole("checkbox", {
-			name: /Enable sound effects/i,
-		})
-		fireEvent.click(soundCheckbox)
+        // Volume slider should be visible
+        const volumeSlider = screen.getByRole("slider", { name: /volume/i })
+        expect(volumeSlider).toBeInTheDocument()
+        expect(volumeSlider).toHaveValue("0.5")
+    })
 
-		// Volume slider should be visible
-		const volumeSlider = screen.getByRole("slider", { name: /volume/i })
-		expect(volumeSlider).toBeInTheDocument()
-		expect(volumeSlider).toHaveValue("0.5")
-	})
+    it("updates volume and sends message to VSCode when slider changes", async () => {
+        const { onDone } = await renderSettingsView();
 
-	it("updates volume and sends message to VSCode when slider changes", () => {
-		renderSettingsView()
+        // Enable sound
+        const soundCheckbox = screen.getByRole("checkbox", {
+            name: /Enable sound effects/i,
+        });
+        fireEvent.click(soundCheckbox);
+        await act(() => Promise.resolve());
 
-		// Enable sound
-		const soundCheckbox = screen.getByRole("checkbox", {
-			name: /Enable sound effects/i,
-		})
-		fireEvent.click(soundCheckbox)
+        // Change volume
+        const volumeSlider = screen.getByRole("slider", { name: /volume/i });
+        fireEvent.change(volumeSlider, { target: { value: "0.75" } });
+        await waitFor(() => expect(volumeSlider).toHaveValue("0.75"));
 
-		// Change volume
-		const volumeSlider = screen.getByRole("slider", { name: /volume/i })
-		fireEvent.change(volumeSlider, { target: { value: "0.75" } })
-
-		// Click Done to save settings
-		const doneButton = screen.getByText("Done")
-		fireEvent.click(doneButton)
-
-		// Verify message sent to VSCode
-		expect(vscode.postMessage).toHaveBeenCalledWith({
-			type: "soundVolume",
-			value: 0.75,
-		})
-	})
-})
+        // Click Done to save settings
+        const doneButton = screen.getByText("Done");
+        fireEvent.click(doneButton);
+        await waitFor(() =>
+            expect(vscode.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: "saveAllSettings",
+                    settings: expect.objectContaining({
+                        soundVolume: 0.75,
+                    }),
+                }),
+            )
+        );
+        expect(onDone).toHaveBeenCalled();
+    });
+});
 
 describe("SettingsView - API Configuration", () => {
-	beforeEach(() => {
-		jest.clearAllMocks()
-	})
+    beforeEach(async () => {
+        jest.clearAllMocks()
+    })
 
-	it("renders ApiConfigManagement with correct props", () => {
-		renderSettingsView()
+    it("renders ApiConfigManagement with correct props", async () => {
+        await renderSettingsView()
 
-		expect(screen.getByTestId("api-config-management")).toBeInTheDocument()
-	})
+        expect(screen.getByTestId("api-config-management")).toBeInTheDocument()
+    })
 })
 
 describe("SettingsView - Allowed Commands", () => {
-	beforeEach(() => {
-		jest.clearAllMocks()
-	})
+    beforeEach(async () => {
+        jest.clearAllMocks()
+    })
 
-	it("shows allowed commands section when alwaysAllowExecute is enabled", () => {
-		renderSettingsView()
+    it("shows allowed commands section when alwaysAllowExecute is enabled", async () => {
+        await renderSettingsView()
 
-		// Enable always allow execute
-		const executeCheckbox = screen.getByRole("checkbox", {
-			name: /Always approve allowed execute operations/i,
-		})
-		fireEvent.click(executeCheckbox)
+        // Enable always allow execute
+        const executeCheckbox = screen.getByRole("checkbox", {
+            name: /Always approve allowed execute operations/i,
+        })
+        fireEvent.click(executeCheckbox);
+        await waitFor(() =>
+            expect(screen.getByText(/Allowed Auto-Execute Commands/i)),
+        );
+        expect(screen.getByPlaceholderText(/Enter command prefix/i)).toBeInTheDocument()
+    })
 
-		// Verify allowed commands section appears
-		expect(screen.getByText(/Allowed Auto-Execute Commands/i)).toBeInTheDocument()
-		expect(screen.getByPlaceholderText(/Enter command prefix/i)).toBeInTheDocument()
-	})
+    it("adds new command to the list", async () => {
+        await renderSettingsView()
 
-	it("adds new command to the list", () => {
-		renderSettingsView()
+        // Enable always allow execute
+        const executeCheckbox = screen.getByRole("checkbox", {
+            name: /Always approve allowed execute operations/i,
+        })
+        fireEvent.click(executeCheckbox);
+        await waitFor(() =>
+            expect(screen.getByText(/Allowed Auto-Execute Commands/i)),
+        );
 
-		// Enable always allow execute
-		const executeCheckbox = screen.getByRole("checkbox", {
-			name: /Always approve allowed execute operations/i,
-		})
-		fireEvent.click(executeCheckbox)
+        // Add a new command
+        const input = screen.getByPlaceholderText(/Enter command prefix/i)
+          const addButton = screen.getByText("Add")
+        act(() => {
+            fireEvent.change(input, { target: { value: "npm test" } });
+            fireEvent.click(addButton);
+          });
+          await waitFor(() => expect(screen.getByText("npm test")), {
+            timeout: 10000,
+          });
 
-		// Add a new command
-		const input = screen.getByPlaceholderText(/Enter command prefix/i)
-		fireEvent.change(input, { target: { value: "npm test" } })
+        // Verify command was added
+        expect(screen.getByText("npm test")).toBeInTheDocument()
 
-		const addButton = screen.getByText("Add")
-		fireEvent.click(addButton)
+        // Verify VSCode message was sent
+        expect(vscode.postMessage).toHaveBeenCalledWith({
+            type: "allowedCommands",
+            commands: ["npm test"],
+        })
+    })
 
-		// Verify command was added
-		expect(screen.getByText("npm test")).toBeInTheDocument()
+    it("removes command from the list", async () => {
+        const { onDone } = await renderSettingsView();
 
-		// Verify VSCode message was sent
-		expect(vscode.postMessage).toHaveBeenCalledWith({
-			type: "allowedCommands",
-			commands: ["npm test"],
-		})
-	})
+        // Enable always allow execute
+        const executeCheckbox = screen.getByRole("checkbox", {
+            name: /Always approve allowed execute operations/i,
+        })
+        fireEvent.click(executeCheckbox);
+        await waitFor(() =>
+            expect(screen.getByText(/Allowed Auto-Execute Commands/i)),
+        );
 
-	it("removes command from the list", () => {
-		renderSettingsView()
+        // Add a command
+        const input = screen.getByPlaceholderText(/Enter command prefix/i)
+        fireEvent.change(input, { target: { value: "npm test" } })
+        const addButton = screen.getByText("Add")
+        fireEvent.click(addButton);
+        await waitFor(() => expect(screen.getByText("npm test")));
 
-		// Enable always allow execute
-		const executeCheckbox = screen.getByRole("checkbox", {
-			name: /Always approve allowed execute operations/i,
-		})
-		fireEvent.click(executeCheckbox)
+        // Remove the command
+        const removeButton = screen.getByRole("button", { name: "Remove command" })
+        fireEvent.click(removeButton);
+        await waitFor(() =>
+            expect(screen.queryByText("npm test")).not.toBeInTheDocument(),
+        );
 
-		// Add a command
-		const input = screen.getByPlaceholderText(/Enter command prefix/i)
-		fireEvent.change(input, { target: { value: "npm test" } })
-		const addButton = screen.getByText("Add")
-		fireEvent.click(addButton)
+        // Verify command was removed
+        expect(screen.queryByText("npm test")).not.toBeInTheDocument();
 
-		// Remove the command
-		const removeButton = screen.getByRole("button", { name: "Remove command" })
-		fireEvent.click(removeButton)
+        // Click Done to save settings
+        const doneButton = screen.getByText("Done");
+        fireEvent.click(doneButton);
+        await waitFor(() =>
+            expect(vscode.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: "saveAllSettings",
+                    settings: expect.objectContaining({
+                        allowedCommands: [],
+                    }),
+                }),
+            ),
+        );
+        await waitFor(() => expect(onDone).toHaveBeenCalled());
+    });
 
-		// Verify command was removed
-		expect(screen.queryByText("npm test")).not.toBeInTheDocument()
+    it("prevents duplicate commands", async () => {
+        const { onDone } = await renderSettingsView();
 
-		// Verify VSCode message was sent
-		expect(vscode.postMessage).toHaveBeenLastCalledWith({
-			type: "allowedCommands",
-			commands: [],
-		})
-	})
+        // Enable always allow execute
+        const executeCheckbox = screen.getByRole("checkbox", {
+            name: /Always approve allowed execute operations/i,
+        })
+        fireEvent.click(executeCheckbox)
 
-	it("prevents duplicate commands", () => {
-		renderSettingsView()
+        // Add a command twice
+        const input = screen.getByPlaceholderText(/Enter command prefix/i)
+        const addButton = screen.getByText("Add")
 
-		// Enable always allow execute
-		const executeCheckbox = screen.getByRole("checkbox", {
-			name: /Always approve allowed execute operations/i,
-		})
-		fireEvent.click(executeCheckbox)
+        // First addition
+        fireEvent.change(input, { target: { value: "npm test" } })
+        fireEvent.click(addButton)
 
-		// Add a command twice
-		const input = screen.getByPlaceholderText(/Enter command prefix/i)
-		const addButton = screen.getByText("Add")
+        // Second addition attempt
+        fireEvent.change(input, { target: { value: "npm test" } })
+        fireEvent.click(addButton)
 
-		// First addition
-		fireEvent.change(input, { target: { value: "npm test" } })
-		fireEvent.click(addButton)
+        // Verify command appears only once
+        const commands = screen.getAllByText("npm test")
+        expect(commands).toHaveLength(1)
+    })
 
-		// Second addition attempt
-		fireEvent.change(input, { target: { value: "npm test" } })
-		fireEvent.click(addButton)
+    it("saves allowed commands when clicking Done", async () => {
+        const { onDone } = await renderSettingsView()
 
-		// Verify command appears only once
-		const commands = screen.getAllByText("npm test")
-		expect(commands).toHaveLength(1)
-	})
+        // Enable always allow execute
+        const executeCheckbox = screen.getByRole("checkbox", {
+            name: /Always approve allowed execute operations/i,
+        })
+        fireEvent.click(executeCheckbox);
+        await waitFor(() =>
+            expect(screen.getByText(/Allowed Auto-Execute Commands/i)),
+        );
 
-	it("saves allowed commands when clicking Done", () => {
-		const { onDone } = renderSettingsView()
+        // Add a command
+        const input = screen.getByPlaceholderText(/Enter command prefix/i)
+        fireEvent.change(input, { target: { value: "npm test" } })
+        const addButton = screen.getByText("Add")
+        fireEvent.click(addButton);
+        await waitFor(() => expect(screen.getByText("npm test")));
 
-		// Enable always allow execute
-		const executeCheckbox = screen.getByRole("checkbox", {
-			name: /Always approve allowed execute operations/i,
-		})
-		fireEvent.click(executeCheckbox)
-
-		// Add a command
-		const input = screen.getByPlaceholderText(/Enter command prefix/i)
-		fireEvent.change(input, { target: { value: "npm test" } })
-		const addButton = screen.getByText("Add")
-		fireEvent.click(addButton)
-
-		// Click Done
-		const doneButton = screen.getByText("Done")
-		fireEvent.click(doneButton)
-
-		// Verify VSCode messages were sent
-		expect(vscode.postMessage).toHaveBeenCalledWith(
-			expect.objectContaining({
-				type: "allowedCommands",
-				commands: ["npm test"],
-			}),
-		)
-		expect(onDone).toHaveBeenCalled()
-	})
+        // Click Done
+        const doneButton = screen.getByText("Done")
+        fireEvent.click(doneButton);
+        await waitFor(() =>
+            expect(vscode.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: "saveAllSettings",
+                    settings: expect.objectContaining({
+                        allowedCommands: ["npm test"],
+                    }),
+                }),
+            ),
+        );
+        expect(onDone).toHaveBeenCalled()
+    })
 })

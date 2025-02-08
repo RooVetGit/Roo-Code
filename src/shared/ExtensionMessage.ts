@@ -42,6 +42,7 @@ export interface ExtensionMessage {
 		| "autoApprovalEnabled"
 		| "updateCustomMode"
 		| "deleteCustomMode"
+		| "indexingProgress"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -72,6 +73,11 @@ export interface ExtensionMessage {
 	mode?: Mode
 	customMode?: ModeConfig
 	slug?: string
+	indexingProgress?: {
+		current: number
+		total: number
+		status: string
+	}
 }
 
 export interface ApiConfigMeta {
@@ -120,6 +126,8 @@ export interface ExtensionState {
 	autoApprovalEnabled?: boolean
 	customModes: ModeConfig[]
 	toolRequirements?: Record<string, boolean> // Map of tool names to their requirements (e.g. {"apply_diff": true} if diffEnabled)
+	semanticSearchStatus: string
+	semanticSearchApiKey?: string
 }
 
 export interface ClineMessage {
@@ -169,11 +177,11 @@ export type ClineSay =
 	| "new_task_started"
 	| "new_task"
 
-export interface ClineSayTool {
+export type ClineSayTool = {
 	tool:
 		| "editedExistingFile"
-		| "appliedDiff"
 		| "newFileCreated"
+		| "appliedDiff"
 		| "readFile"
 		| "listFilesTopLevel"
 		| "listFilesRecursive"
@@ -181,6 +189,7 @@ export interface ClineSayTool {
 		| "searchFiles"
 		| "switchMode"
 		| "newTask"
+		| "semanticSearch"
 	path?: string
 	diff?: string
 	content?: string
@@ -188,6 +197,14 @@ export interface ClineSayTool {
 	filePattern?: string
 	mode?: string
 	reason?: string
+	query?: string
+	results?: Array<{
+		type: "file" | "code"
+		filePath: string
+		startLine?: number
+		endLine?: number
+		name: string
+	}>
 }
 
 // must keep in sync with system prompt

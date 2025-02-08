@@ -60,8 +60,9 @@ import { BrowserSession } from "../services/browser/BrowserSession"
 import { OpenRouterHandler } from "../api/providers/openrouter"
 import { McpHub } from "../services/mcp/McpHub"
 import crypto from "crypto"
-import { insertGroups } from "./diff/insert-groups"
 import { EXPERIMENT_IDS, experiments as Experiments } from "../shared/experiments"
+import { insertGroups } from "./diff/insert-groups"
+import { SemanticSearchService } from "../services/semantic-search"
 
 const cwd =
 	vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop") // may or may not exist but fs checking existence would immediately ask for permission which would be bad UX, need to come up with a better solution
@@ -109,6 +110,8 @@ export class Cline {
 	private didAlreadyUseTool = false
 	private didCompleteReadingStream = false
 
+	private semanticSearchService?: SemanticSearchService
+
 	constructor(
 		provider: ClineProvider,
 		apiConfiguration: ApiConfiguration,
@@ -119,6 +122,7 @@ export class Cline {
 		images?: string[] | undefined,
 		historyItem?: HistoryItem | undefined,
 		experiments?: Record<string, boolean>,
+		semanticSearchService?: SemanticSearchService,
 	) {
 		if (!task && !images && !historyItem) {
 			throw new Error("Either historyItem or task/images must be provided")
@@ -141,6 +145,8 @@ export class Cline {
 
 		// Initialize diffStrategy based on current state
 		this.updateDiffStrategy(Experiments.isEnabled(experiments ?? {}, EXPERIMENT_IDS.DIFF_STRATEGY))
+
+		this.semanticSearchService = semanticSearchService
 
 		if (task || images) {
 			this.startTask(task, images)
@@ -1082,6 +1088,8 @@ export class Cline {
 							return `[${block.name} for '${block.params.question}']`
 						case "attempt_completion":
 							return `[${block.name}]`
+						case "semantic_search":
+							return `[${block.name} for '${block.params.query}']`
 						case "switch_mode":
 							return `[${block.name} to '${block.params.mode_slug}'${block.params.reason ? ` because: ${block.params.reason}` : ""}]`
 						case "new_task": {
@@ -1090,6 +1098,8 @@ export class Cline {
 							const modeName = getModeBySlug(mode, customModes)?.name ?? mode
 							return `[${block.name} in ${modeName} mode: '${message}']`
 						}
+						default:
+							return `[${block.name}]`
 					}
 				}
 
@@ -2651,6 +2661,51 @@ export class Cline {
 							break
 						}
 					}
+					case "semantic_search": {
+						const query: string | undefined = block.params.query
+						const sharedMessageProps: ClineSayTool = {
+							tool: "semanticSearch",
+							query: removeClosingTag("query", query),
+						}
+						try {
+							if (block.partial) {
+								const partialMessage = JSON.stringify({
+									...sharedMessageProps,
+									results: [], // Add empty results array for partial message
+								} satisfies ClineSayTool)
+								await this.ask("tool", partialMessage, block.partial).catch(() => {})
+								break
+							} else {
+								if (!query) {
+									this.consecutiveMistakeCount++
+									pushToolResult(await this.sayAndCreateMissingParamError("semantic_search", "query"))
+									break
+								}
+								this.consecutiveMistakeCount = 0
+								const searchResults = await this.handleSemanticSearch(query)
+								const completeMessage = JSON.stringify({
+									...sharedMessageProps,
+									results: searchResults,
+								} satisfies ClineSayTool)
+								const didApprove = await askApproval("tool", completeMessage)
+								if (!didApprove) {
+									break
+								}
+								// Format the results as a text block
+								const formattedResults = [
+									{
+										type: "text" as const,
+										text: JSON.stringify({ results: searchResults }),
+									},
+								]
+								pushToolResult(formattedResults)
+								break
+							}
+						} catch (error) {
+							await handleError("semantic search", error)
+							break
+						}
+					}
 				}
 				break
 		}
@@ -2973,7 +3028,7 @@ export class Cline {
 	}
 
 	async loadContext(userContent: UserContent, includeFileDetails: boolean = false) {
-		return await Promise.all([
+		return Promise.all([
 			// Process userContent array, which contains various block types:
 			// TextBlockParam, ImageBlockParam, ToolUseBlockParam, and ToolResultBlockParam.
 			// We need to apply parseMentions() to:
@@ -3196,6 +3251,34 @@ export class Cline {
 		}
 
 		return `<environment_details>\n${details.trim()}\n</environment_details>`
+	}
+
+	private async handleSemanticSearch(query: string): Promise<
+		Array<{
+			type: "file" | "code"
+			filePath: string
+			startLine?: number
+			endLine?: number
+			name: string
+		}>
+	> {
+		if (!this.semanticSearchService || !(this.semanticSearchService instanceof SemanticSearchService)) {
+			return []
+		}
+
+		try {
+			const results = await this.semanticSearchService.search(query)
+			return results.map((result) => ({
+				type: result.type,
+				filePath: result.filePath,
+				startLine: result.metadata.startLine,
+				endLine: result.metadata.endLine,
+				name: result.metadata.name,
+			}))
+		} catch (error) {
+			console.error("Error performing semantic search:", error)
+			return []
+		}
 	}
 }
 
