@@ -441,25 +441,24 @@ export class Cline {
 	// Task lifecycle
 
 	private async startTask(task?: string, images?: string[]): Promise<void> {
-    // conversationHistory (for API) and clineMessages (for webview) need to be in sync
-    // if the extension process were killed, then on restart the clineMessages might not be empty, so we need to set it to [] when we create a new Cline client (otherwise webview would show stale messages from previous session)
-    this.clineMessages = [];
-    this.apiConversationHistory = [];
-    await this.providerRef.deref()?.postStateToWebview();
+		// conversationHistory (for API) and clineMessages (for webview) need to be in sync
+		// if the extension process were killed, then on restart the clineMessages might not be empty, so we need to set it to [] when we create a new Cline client (otherwise webview would show stale messages from previous session)
+		this.clineMessages = []
+		this.apiConversationHistory = []
+		await this.providerRef.deref()?.postStateToWebview()
 
-    await this.say("text", task, images);
-    this.isInitialized = true;
+		await this.say("text", task, images)
+		this.isInitialized = true
 
-    let imageBlocks: Anthropic.ImageBlockParam[] = formatResponse.imageBlocks(images);
-    await this.initiateTaskLoop([
-        ...imageBlocks,
-        {
-            type: "text",
-            text: `<environment_details>Loading...</environment_details>\n\n<task>\n${task}\n</task>`,
-        },
-    ]);
-}
-
+		let imageBlocks: Anthropic.ImageBlockParam[] = formatResponse.imageBlocks(images)
+		await this.initiateTaskLoop([
+			...imageBlocks,
+			{
+				type: "text",
+				text: `<environment_details>Loading...</environment_details>\n\n<task>\n${task}\n</task>`,
+			},
+		])
+	}
 
 	private async resumeTaskFromHistory() {
 		const modifiedClineMessages = await this.getSavedClineMessages()
