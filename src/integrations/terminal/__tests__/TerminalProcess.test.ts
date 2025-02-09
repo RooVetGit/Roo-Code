@@ -3,7 +3,13 @@ import * as vscode from "vscode"
 import { EventEmitter } from "events"
 
 // Mock vscode
-jest.mock("vscode")
+jest.mock("vscode", () => ({
+	...jest.requireActual("vscode"),
+	commands: {
+		...jest.requireActual("vscode").commands,
+		executeCommand: jest.fn().mockImplementation(() => Promise.resolve()),
+	},
+}))
 
 describe("TerminalProcess", () => {
 	let terminalProcess: TerminalProcess
