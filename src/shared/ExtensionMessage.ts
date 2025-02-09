@@ -126,7 +126,7 @@ export interface ExtensionState {
 	autoApprovalEnabled?: boolean
 	customModes: ModeConfig[]
 	toolRequirements?: Record<string, boolean> // Map of tool names to their requirements (e.g. {"apply_diff": true} if diffEnabled)
-	disablePowerLevel10k?: boolean // Whether to disable Powerlevel10k theme
+	disablePowerLevel10k: boolean // Whether to disable Powerlevel10k theme
 }
 
 export interface ClineMessage {

@@ -351,6 +351,7 @@ describe("ClineProvider", () => {
 			mode: defaultModeSlug,
 			customModes: [],
 			experiments: experimentDefault,
+			disablePowerLevel10k: false,
 		}
 
 		const message: ExtensionMessage = {
