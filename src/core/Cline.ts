@@ -455,7 +455,7 @@ export class Cline {
 			...imageBlocks,
 			{
 				type: "text",
-				text: `<environment_details>Loading...</environment_details>\n\n<task>\n${task}\n</task>`,
+				text: `<task>\n${task}\n</task>`,
 			},
 		])
 	}
@@ -2765,8 +2765,8 @@ export class Cline {
 
 		const [parsedUserContent, environmentDetails] = await this.loadContext(userContent, includeFileDetails)
 		userContent = parsedUserContent
-		// add environment details as its own text block, separate from tool results
-		userContent.push({ type: "text", text: environmentDetails })
+		// prepend environment details as its own text block, separate from tool results
+		userContent.unshift({ type: "text", text: environmentDetails })
 
 		await this.addToApiConversationHistory({ role: "user", content: userContent })
 
