@@ -14,6 +14,7 @@ TerminalProcess extends EventEmitter and implements Promise:
 - Emits 'line' events with output while promise is pending
 - process.continue() resolves promise and stops event emission
 - Allows real-time output handling or background execution
+- Retrieve missed output later
 
 getUnretrievedOutput() fetches latest output for ongoing commands
 

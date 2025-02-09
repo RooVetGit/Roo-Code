@@ -63,6 +63,8 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		setExperimentEnabled,
 		alwaysAllowModeSwitch,
 		setAlwaysAllowModeSwitch,
+		disablePowerLevel10k,
+		setDisablePowerLevel10k,
 	} = useExtensionState()
 	const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>(undefined)
 	const [modelIdErrorMessage, setModelIdErrorMessage] = useState<string | undefined>(undefined)
@@ -111,6 +113,9 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 			})
 
 			vscode.postMessage({ type: "alwaysAllowModeSwitch", bool: alwaysAllowModeSwitch })
+
+			vscode.postMessage({ type: "disablePowerLevel10k", bool: disablePowerLevel10k })
+
 			onDone()
 		}
 	}
@@ -734,6 +739,24 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 									}
 								/>
 							))}
+					</div>
+				</div>
+				<div style={{ marginBottom: 40 }}>
+					<h3 style={{ color: "var(--vscode-foreground)", margin: "0 0 15px 0" }}>Terminal Settings</h3>
+					<div style={{ marginBottom: 15 }}>
+						<VSCodeCheckbox
+							checked={disablePowerLevel10k}
+							onChange={(e: any) => setDisablePowerLevel10k(e.target.checked)}>
+							<span style={{ fontWeight: "500" }}>Disable PowerLevel10k</span>
+						</VSCodeCheckbox>
+						<p
+							style={{
+								fontSize: "12px",
+								marginTop: "5px",
+								color: "var(--vscode-descriptionForeground)",
+							}}>
+							When enabled, Roo will disable the PowerLevel10k theme in the terminal.
+						</p>
 					</div>
 				</div>
 

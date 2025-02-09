@@ -123,6 +123,7 @@ type GlobalStateKey =
 	| "customModes" // Array of custom modes
 	| "unboundModelId"
 	| "unboundModelInfo"
+	| "disablePowerLevel10k" // Disable Power Level 10k
 
 export const GlobalFileNames = {
 	apiConversationHistory: "api_conversation_history.json",
@@ -1472,6 +1473,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							await this.postStateToWebview()
 						}
 						break
+					case "disablePowerLevel10k":
+						await this.updateGlobalState("disablePowerLevel10k", message.bool ?? false)
+						await this.postStateToWebview()
+						break
 					case "deleteCustomMode":
 						if (message.slug) {
 							const answer = await vscode.window.showInformationMessage(
@@ -2214,6 +2219,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			enhancementApiConfigId,
 			autoApprovalEnabled,
 			experiments,
+			disablePowerLevel10k,
 		} = await this.getState()
 
 		const allowedCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
@@ -2260,6 +2266,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			customModes: await this.customModesManager.getCustomModes(),
 			experiments: experiments ?? experimentDefault,
 			mcpServers: this.mcpHub?.getServers() ?? [],
+			disablePowerLevel10k: disablePowerLevel10k ?? false,
 		}
 	}
 
@@ -2391,6 +2398,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			unboundApiKey,
 			unboundModelId,
 			unboundModelInfo,
+			disablePowerLevel10k,
 		] = await Promise.all([
 			this.getGlobalState("apiProvider") as Promise<ApiProvider | undefined>,
 			this.getGlobalState("apiModelId") as Promise<string | undefined>,
@@ -2467,6 +2475,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getSecret("unboundApiKey") as Promise<string | undefined>,
 			this.getGlobalState("unboundModelId") as Promise<string | undefined>,
 			this.getGlobalState("unboundModelInfo") as Promise<ModelInfo | undefined>,
+			this.getGlobalState("disablePowerLevel10k") as Promise<boolean | undefined>,
 		])
 
 		let apiProvider: ApiProvider
@@ -2589,6 +2598,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			experiments: experiments ?? experimentDefault,
 			autoApprovalEnabled: autoApprovalEnabled ?? false,
 			customModes,
+			disablePowerLevel10k: disablePowerLevel10k ?? false,
 		}
 	}
 

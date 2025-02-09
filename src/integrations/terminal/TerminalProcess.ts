@@ -1,6 +1,7 @@
 import { EventEmitter } from "events"
 import stripAnsi from "strip-ansi"
 import * as vscode from "vscode"
+import { ClineProvider } from "../../core/webview/ClineProvider"
 
 export interface TerminalProcessEvents {
 	line: [line: string]
@@ -27,8 +28,14 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 	// 	super()
 
 	async run(terminal: vscode.Terminal, command: string) {
+		const visibleProvider = await ClineProvider.getInstance()
+		const state = await visibleProvider?.getState()
+		const disablePowerLevel10k = state?.disablePowerLevel10k ?? false
 		if (terminal.shellIntegration && terminal.shellIntegration.executeCommand) {
-			const execution = terminal.shellIntegration.executeCommand(command)
+			const prefix = "prompt_powerlevel9k_teardown &&"
+			const execution = terminal.shellIntegration.executeCommand(
+				disablePowerLevel10k ? `${prefix} ${command}` : command,
+			)
 			const stream = execution.read()
 			// todo: need to handle errors
 			let isFirstChunk = true
