@@ -79,17 +79,22 @@ export function convertToOpenAiMessages(
 
 				// Process non-tool messages
 				if (nonToolMessages.length > 0) {
-					openAiMessages.push({
-						role: "user",
-						content: nonToolMessages.map((part) => {
-							if (part.type === "image") {
-								return {
-									type: "image_url",
-									image_url: { url: `data:${part.source.media_type};base64,${part.source.data}` },
-								}
-							}
-							return { type: "text", text: part.text }
-						}),
+					// Fix content being an array by splitting it into multiple string messages.
+					// Some providers do not recognize content of the form `content: [{xxx}, {xxx}]`, for example:
+					// - ByteDance Volcano Engine https://www.volcengine.com/
+					// - Baidu Intelligent Cloud https://cloud.baidu.com
+					nonToolMessages.forEach((part) => {
+						if (part.type === "image") {
+							openAiMessages.push({
+								role: "user",
+								content: `IMAGE: data:${part.source.media_type};base64,${part.source.data}`,
+							})
+						} else {
+							openAiMessages.push({
+								role: "user",
+								content: part.text,
+							})
+						}
 					})
 				}
 			} else if (anthropicMessage.role === "assistant") {
