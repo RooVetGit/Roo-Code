@@ -2,8 +2,14 @@ import { globby, Options } from "globby"
 import os from "os"
 import * as path from "path"
 import { arePathsEqual } from "../../utils/path"
+import { IGNORE as dirsToIgnore } from "./ignore"
 
-export async function listFiles(dirPath: string, recursive: boolean, limit: number): Promise<[string[], boolean]> {
+export async function listFiles(
+	dirPath: string,
+	recursive: boolean,
+	limit: number,
+	globbyOptions: Options = {},
+): Promise<[string[], boolean]> {
 	const absolutePath = path.resolve(dirPath)
 	// Do not allow listing files in root or home directory, which cline tends to want to do when the user's prompt is vague.
 	const root = process.platform === "win32" ? path.parse(absolutePath).root : "/"
@@ -17,25 +23,6 @@ export async function listFiles(dirPath: string, recursive: boolean, limit: numb
 		return [[homeDir], false]
 	}
 
-	const dirsToIgnore = [
-		"node_modules",
-		"__pycache__",
-		"env",
-		"venv",
-		"target/dependency",
-		"build/dependencies",
-		"dist",
-		"out",
-		"bundle",
-		"vendor",
-		"tmp",
-		"temp",
-		"deps",
-		"pkg",
-		"Pods",
-		".*", // '!**/.*' excludes hidden directories, while '!**/.*/**' excludes only their contents. This way we are at least aware of the existence of hidden directories.
-	].map((dir) => `**/${dir}/**`)
-
 	const options = {
 		cwd: dirPath,
 		dot: true, // do not ignore hidden files/directories
@@ -44,6 +31,7 @@ export async function listFiles(dirPath: string, recursive: boolean, limit: numb
 		gitignore: recursive, // globby ignores any files that are gitignored
 		ignore: recursive ? dirsToIgnore : undefined, // just in case there is no gitignore, we ignore sensible defaults
 		onlyFiles: false, // true by default, false means it will list directories on their own too
+		...globbyOptions,
 	}
 	// * globs all files in one dir, ** globs files in nested directories
 	const files = recursive ? await globbyLevelByLevel(limit, options) : (await globby("*", options)).slice(0, limit)
