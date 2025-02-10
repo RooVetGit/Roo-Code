@@ -264,18 +264,20 @@
 		}
 	},
 	"scripts": {
-		"build": "npm run build:webview && npm run vsix",
+		"build": "npm run check-types && npm run build:webview && npm run vsix",
 		"build:webview": "cd webview-ui && npm run build",
 		"changeset": "changeset",
-		"check-types": "tsc --noEmit",
+		"check-types": "tsc --noEmit && cd webview-ui && npm run check-types",
 		"compile": "tsc -p . --outDir out && node esbuild.js",
 		"compile:integration": "tsc -p tsconfig.integration.json",
 		"install:all": "npm install && cd webview-ui && npm install",
-		"lint": "eslint src --ext ts && npm run lint --prefix webview-ui",
-		"lint-fix": "eslint src --ext ts --fix && npm run lint-fix --prefix webview-ui",
+		"lint": "eslint src --ext ts && cd webview-ui && npm run lint",
+		"lint-fix": "eslint src --ext ts --fix && cd webview-ui && npm run lint-fix",
 		"package": "npm run build:webview && npm run check-types && npm run lint && node esbuild.js --production",
 		"pretest": "npm run compile && npm run compile:integration",
-		"dev": "cd webview-ui && npm run dev",
+		"dev": "npm-run-all -p dev:*",
+		"dev:extension": "npm run watch",
+		"dev:webview": "cd webview-ui && npm run dev",
 		"test": "jest && npm run test:webview",
 		"test:webview": "cd webview-ui && npm run test",
 		"test:integration": "npm run build && npm run compile:integration && npx dotenvx run -f .env.integration -- vscode-test",
@@ -290,6 +292,9 @@
 		"watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
 		"watch-tests": "tsc -p . -w --outDir out"
 	},
+	"workspaces": [
+		"webview-ui"
+	],
 	"dependencies": {
 		"@anthropic-ai/bedrock-sdk": "^0.10.2",
 		"@anthropic-ai/sdk": "^0.26.0",
