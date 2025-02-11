@@ -15,6 +15,8 @@ suite("Roo Code Extension", () => {
 
 		const expectedCommands = [
 			"roo-cline.plusButtonClicked",
+			"roo-cline.researchButtonClicked",
+			"roo-cline.promptsButtonClicked",
 			"roo-cline.mcpButtonClicked",
 			"roo-cline.historyButtonClicked",
 			"roo-cline.popoutButtonClicked",

@@ -75,14 +75,19 @@
 				"icon": "$(add)"
 			},
 			{
-				"command": "roo-cline.mcpButtonClicked",
-				"title": "MCP Servers",
-				"icon": "$(server)"
+				"command": "roo-cline.researchButtonClicked",
+				"title": "Research",
+				"icon": "$(telescope)"
 			},
 			{
 				"command": "roo-cline.promptsButtonClicked",
 				"title": "Prompts",
 				"icon": "$(notebook)"
+			},
+			{
+				"command": "roo-cline.mcpButtonClicked",
+				"title": "MCP Servers",
+				"icon": "$(server)"
 			},
 			{
 				"command": "roo-cline.historyButtonClicked",
@@ -202,28 +207,33 @@
 					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
-					"command": "roo-cline.promptsButtonClicked",
+					"command": "roo-cline.researchButtonClicked",
 					"group": "navigation@2",
 					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
-					"command": "roo-cline.mcpButtonClicked",
+					"command": "roo-cline.promptsButtonClicked",
 					"group": "navigation@3",
 					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
-					"command": "roo-cline.historyButtonClicked",
+					"command": "roo-cline.mcpButtonClicked",
 					"group": "navigation@4",
 					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
-					"command": "roo-cline.popoutButtonClicked",
+					"command": "roo-cline.historyButtonClicked",
 					"group": "navigation@5",
 					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
-					"command": "roo-cline.settingsButtonClicked",
+					"command": "roo-cline.popoutButtonClicked",
 					"group": "navigation@6",
+					"when": "view == roo-cline.SidebarProvider"
+				},
+				{
+					"command": "roo-cline.settingsButtonClicked",
+					"group": "navigation@7",
 					"when": "view == roo-cline.SidebarProvider"
 				}
 			]
