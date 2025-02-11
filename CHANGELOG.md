@@ -1,5 +1,16 @@
 # Roo Code Changelog
 
+## [3.3.17]
+
+- Fix the restore checkpoint popover
+- Unset git config that was previously set incorrectly by the checkpoints feature
+
+## [3.3.16]
+
+- Support Volcano Ark platform through the OpenAI-compatible provider
+- Fix jumpiness while entering API config by updating on blur instead of input
+- Add tooltips on checkpoint actions and fix an issue where checkpoints were overwriting existing git name/email settings - thanks for the feedback!
+
 ## [3.3.15]
 
 - Improvements to MCP initialization and server restarts (thanks @MuriloFP and @hannesrudolph!)

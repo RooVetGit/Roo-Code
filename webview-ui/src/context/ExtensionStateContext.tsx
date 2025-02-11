@@ -10,6 +10,8 @@ import {
 	openRouterDefaultModelInfo,
 	unboundDefaultModelId,
 	unboundDefaultModelInfo,
+	requestyDefaultModelId,
+	requestyDefaultModelInfo,
 } from "../../../src/shared/api"
 import { vscode } from "../utils/vscode"
 import { convertTextMateToHljs } from "../utils/textMateToHljs"
@@ -25,6 +27,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	showWelcome: boolean
 	theme: any
 	glamaModels: Record<string, ModelInfo>
+	requestyModels: Record<string, ModelInfo>
 	openRouterModels: Record<string, ModelInfo>
 	unboundModels: Record<string, ModelInfo>
 	openAiModels: string[]
@@ -133,6 +136,9 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 	const [unboundModels, setUnboundModels] = useState<Record<string, ModelInfo>>({
 		[unboundDefaultModelId]: unboundDefaultModelInfo,
 	})
+	const [requestyModels, setRequestyModels] = useState<Record<string, ModelInfo>>({
+		[requestyDefaultModelId]: requestyDefaultModelInfo,
+	})
 
 	const [openAiModels, setOpenAiModels] = useState<string[]>([])
 	const [mcpServers, setMcpServers] = useState<McpServer[]>([])
@@ -148,7 +154,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			vscode.postMessage({
 				type: "upsertApiConfiguration",
 				text: currentState.currentApiConfigName,
-				apiConfiguration: apiConfig,
+				apiConfiguration: { ...currentState.apiConfiguration, ...apiConfig },
 			})
 			return currentState // No state update needed
 		})
@@ -253,6 +259,14 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 					setUnboundModels(updatedModels)
 					break
 				}
+				case "requestyModels": {
+					const updatedModels = message.requestyModels ?? {}
+					setRequestyModels({
+						[requestyDefaultModelId]: requestyDefaultModelInfo, // in case the extension sent a model list without the default model
+						...updatedModels,
+					})
+					break
+				}
 				case "mcpServers": {
 					setMcpServers(message.mcpServers ?? [])
 					break
@@ -282,6 +296,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		showWelcome,
 		theme,
 		glamaModels,
+		requestyModels,
 		openRouterModels,
 		openAiModels,
 		unboundModels,

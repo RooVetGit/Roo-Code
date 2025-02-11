@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from "react"
 import { useEvent, useInterval } from "react-use"
 import { Checkbox, Dropdown, Pane, type DropdownOption } from "vscrui"
 import { VSCodeLink, VSCodeRadio, VSCodeRadioGroup, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
+import { TemperatureControl } from "./TemperatureControl"
 import * as vscodemodels from "vscode"
 
 import {
@@ -29,6 +30,8 @@ import {
 	vertexModels,
 	unboundDefaultModelId,
 	unboundDefaultModelInfo,
+	requestyDefaultModelId,
+	requestyDefaultModelInfo,
 } from "../../../../src/shared/api"
 import { ExtensionMessage } from "../../../../src/shared/ExtensionMessage"
 import { useExtensionState } from "../../context/ExtensionStateContext"
@@ -40,14 +43,15 @@ import { GlamaModelPicker } from "./GlamaModelPicker"
 import { UnboundModelPicker } from "./UnboundModelPicker"
 import { ModelInfoView } from "./ModelInfoView"
 import { DROPDOWN_Z_INDEX } from "./styles"
-
+import { RequestyModelPicker } from "./RequestyModelPicker"
 
 interface ApiOptionsProps {
 	apiErrorMessage?: string
 	modelIdErrorMessage?: string
+	fromWelcomeView?: boolean
 }
 
-const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) => {
+const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage, fromWelcomeView }: ApiOptionsProps) => {
 	const { apiConfiguration, uriScheme, handleInputChange } = useExtensionState()
 	const [ollamaModels, setOllamaModels] = useState<string[]>([])
 	const [lmStudioModels, setLmStudioModels] = useState<string[]>([])
@@ -84,12 +88,21 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 	)
 	const handleMessage = useCallback((event: MessageEvent) => {
 		const message: ExtensionMessage = event.data
-		if (message.type === "ollamaModels" && message.ollamaModels) {
-			setOllamaModels(message.ollamaModels)
-		} else if (message.type === "lmStudioModels" && message.lmStudioModels) {
-			setLmStudioModels(message.lmStudioModels)
-		} else if (message.type === "vsCodeLmModels" && message.vsCodeLmModels) {
-			setVsCodeLmModels(message.vsCodeLmModels)
+		if (message.type === "ollamaModels" && Array.isArray(message.ollamaModels)) {
+			const newModels = message.ollamaModels
+			setOllamaModels((prevModels) => {
+				return JSON.stringify(prevModels) === JSON.stringify(newModels) ? prevModels : newModels
+			})
+		} else if (message.type === "lmStudioModels" && Array.isArray(message.lmStudioModels)) {
+			const newModels = message.lmStudioModels
+			setLmStudioModels((prevModels) => {
+				return JSON.stringify(prevModels) === JSON.stringify(newModels) ? prevModels : newModels
+			})
+		} else if (message.type === "vsCodeLmModels" && Array.isArray(message.vsCodeLmModels)) {
+			const newModels = message.vsCodeLmModels
+			setVsCodeLmModels((prevModels) => {
+				return JSON.stringify(prevModels) === JSON.stringify(newModels) ? prevModels : newModels
+			})
 		}
 	}, [])
 	useEvent("message", handleMessage)
@@ -154,6 +167,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 						{ value: "lmstudio", label: "LM Studio" },
 						{ value: "ollama", label: "Ollama" },
 						{ value: "unbound", label: "Unbound" },
+						{ value: "requesty", label: "Requesty" },
 					]}
 				/>
 			</div>
@@ -164,7 +178,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 						value={apiConfiguration?.apiKey || ""}
 						style={{ width: "100%" }}
 						type="password"
-						onInput={handleInputChange("apiKey")}
+						onBlur={handleInputChange("apiKey")}
 						placeholder="Enter API Key...">
 						<span style={{ fontWeight: 500 }}>Anthropic API Key</span>
 					</VSCodeTextField>
@@ -189,7 +203,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 							value={apiConfiguration?.anthropicBaseUrl || ""}
 							style={{ width: "100%", marginTop: 3 }}
 							type="url"
-							onInput={handleInputChange("anthropicBaseUrl")}
+							onBlur={handleInputChange("anthropicBaseUrl")}
 							placeholder="Default: https://api.anthropic.com"
 						/>
 					)}
@@ -218,7 +232,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 						value={apiConfiguration?.glamaApiKey || ""}
 						style={{ width: "100%" }}
 						type="password"
-						onInput={handleInputChange("glamaApiKey")}
+						onBlur={handleInputChange("glamaApiKey")}
 						placeholder="Enter API Key...">
 						<span style={{ fontWeight: 500 }}>Glama API Key</span>
 					</VSCodeTextField>
@@ -241,13 +255,34 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 				</div>
 			)}
 
+			{selectedProvider === "requesty" && (
+				<div>
+					<VSCodeTextField
+						value={apiConfiguration?.requestyApiKey || ""}
+						style={{ width: "100%" }}
+						type="password"
+						onBlur={handleInputChange("requestyApiKey")}
+						placeholder="Enter API Key...">
+						<span style={{ fontWeight: 500 }}>Requesty API Key</span>
+					</VSCodeTextField>
+					<p
+						style={{
+							fontSize: "12px",
+							marginTop: "5px",
+							color: "var(--vscode-descriptionForeground)",
+						}}>
+						This key is stored locally and only used to make API requests from this extension.
+					</p>
+				</div>
+			)}
+
 			{selectedProvider === "openai-native" && (
 				<div>
 					<VSCodeTextField
 						value={apiConfiguration?.openAiNativeApiKey || ""}
 						style={{ width: "100%" }}
 						type="password"
-						onInput={handleInputChange("openAiNativeApiKey")}
+						onBlur={handleInputChange("openAiNativeApiKey")}
 						placeholder="Enter API Key...">
 						<span style={{ fontWeight: 500 }}>OpenAI API Key</span>
 					</VSCodeTextField>
@@ -275,7 +310,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 						value={apiConfiguration?.mistralApiKey || ""}
 						style={{ width: "100%" }}
 						type="password"
-						onInput={handleInputChange("mistralApiKey")}
+						onBlur={handleInputChange("mistralApiKey")}
 						placeholder="Enter API Key...">
 						<span style={{ fontWeight: 500 }}>Mistral API Key</span>
 					</VSCodeTextField>
@@ -306,7 +341,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 						value={apiConfiguration?.openRouterApiKey || ""}
 						style={{ width: "100%" }}
 						type="password"
-						onInput={handleInputChange("openRouterApiKey")}
+						onBlur={handleInputChange("openRouterApiKey")}
 						placeholder="Enter API Key...">
 						<span style={{ fontWeight: 500 }}>OpenRouter API Key</span>
 					</VSCodeTextField>
@@ -340,7 +375,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 							value={apiConfiguration?.openRouterBaseUrl || ""}
 							style={{ width: "100%", marginTop: 3 }}
 							type="url"
-							onInput={handleInputChange("openRouterBaseUrl")}
+							onBlur={handleInputChange("openRouterBaseUrl")}
 							placeholder="Default: https://openrouter.ai/api/v1"
 						/>
 					)}
@@ -391,7 +426,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 						<VSCodeTextField
 							value={apiConfiguration?.awsProfile || ""}
 							style={{ width: "100%" }}
-							onInput={handleInputChange("awsProfile")}
+							onBlur={handleInputChange("awsProfile")}
 							placeholder="Enter profile name">
 							<span style={{ fontWeight: 500 }}>AWS Profile Name</span>
 						</VSCodeTextField>
@@ -402,7 +437,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 								value={apiConfiguration?.awsAccessKey || ""}
 								style={{ width: "100%" }}
 								type="password"
-								onInput={handleInputChange("awsAccessKey")}
+								onBlur={handleInputChange("awsAccessKey")}
 								placeholder="Enter Access Key...">
 								<span style={{ fontWeight: 500 }}>AWS Access Key</span>
 							</VSCodeTextField>
@@ -410,7 +445,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 								value={apiConfiguration?.awsSecretKey || ""}
 								style={{ width: "100%" }}
 								type="password"
-								onInput={handleInputChange("awsSecretKey")}
+								onBlur={handleInputChange("awsSecretKey")}
 								placeholder="Enter Secret Key...">
 								<span style={{ fontWeight: 500 }}>AWS Secret Key</span>
 							</VSCodeTextField>
@@ -418,7 +453,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 								value={apiConfiguration?.awsSessionToken || ""}
 								style={{ width: "100%" }}
 								type="password"
-								onInput={handleInputChange("awsSessionToken")}
+								onBlur={handleInputChange("awsSessionToken")}
 								placeholder="Enter Session Token...">
 								<span style={{ fontWeight: 500 }}>AWS Session Token</span>
 							</VSCodeTextField>
@@ -486,7 +521,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 					<VSCodeTextField
 						value={apiConfiguration?.vertexProjectId || ""}
 						style={{ width: "100%" }}
-						onInput={handleInputChange("vertexProjectId")}
+						onBlur={handleInputChange("vertexProjectId")}
 						placeholder="Enter Project ID...">
 						<span style={{ fontWeight: 500 }}>Google Cloud Project ID</span>
 					</VSCodeTextField>
@@ -544,7 +579,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 						value={apiConfiguration?.geminiApiKey || ""}
 						style={{ width: "100%" }}
 						type="password"
-						onInput={handleInputChange("geminiApiKey")}
+						onBlur={handleInputChange("geminiApiKey")}
 						placeholder="Enter API Key...">
 						<span style={{ fontWeight: 500 }}>Gemini API Key</span>
 					</VSCodeTextField>
@@ -572,7 +607,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 						value={apiConfiguration?.openAiBaseUrl || ""}
 						style={{ width: "100%" }}
 						type="url"
-						onInput={handleInputChange("openAiBaseUrl")}
+						onBlur={handleInputChange("openAiBaseUrl")}
 						placeholder={"Enter base URL..."}>
 						<span style={{ fontWeight: 500 }}>Base URL</span>
 					</VSCodeTextField>
@@ -580,7 +615,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 						value={apiConfiguration?.openAiApiKey || ""}
 						style={{ width: "100%" }}
 						type="password"
-						onInput={handleInputChange("openAiApiKey")}
+						onBlur={handleInputChange("openAiApiKey")}
 						placeholder="Enter API Key...">
 						<span style={{ fontWeight: 500 }}>API Key</span>
 					</VSCodeTextField>
@@ -623,7 +658,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 						<VSCodeTextField
 							value={apiConfiguration?.azureApiVersion || ""}
 							style={{ width: "100%", marginTop: 3 }}
-							onInput={handleInputChange("azureApiVersion")}
+							onBlur={handleInputChange("azureApiVersion")}
 							placeholder={`Default: ${azureOpenAiDefaultApiVersion}`}
 						/>
 					)}
@@ -1073,14 +1108,14 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 						value={apiConfiguration?.lmStudioBaseUrl || ""}
 						style={{ width: "100%" }}
 						type="url"
-						onInput={handleInputChange("lmStudioBaseUrl")}
+						onBlur={handleInputChange("lmStudioBaseUrl")}
 						placeholder={"Default: http://localhost:1234"}>
 						<span style={{ fontWeight: 500 }}>Base URL (optional)</span>
 					</VSCodeTextField>
 					<VSCodeTextField
 						value={apiConfiguration?.lmStudioModelId || ""}
 						style={{ width: "100%" }}
-						onInput={handleInputChange("lmStudioModelId")}
+						onBlur={handleInputChange("lmStudioModelId")}
 						placeholder={"e.g. meta-llama-3.1-8b-instruct"}>
 						<span style={{ fontWeight: 500 }}>Model ID</span>
 					</VSCodeTextField>
@@ -1142,7 +1177,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 						value={apiConfiguration?.deepSeekApiKey || ""}
 						style={{ width: "100%" }}
 						type="password"
-						onInput={handleInputChange("deepSeekApiKey")}
+						onBlur={handleInputChange("deepSeekApiKey")}
 						placeholder="Enter API Key...">
 						<span style={{ fontWeight: 500 }}>DeepSeek API Key</span>
 					</VSCodeTextField>
@@ -1232,14 +1267,14 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 						value={apiConfiguration?.ollamaBaseUrl || ""}
 						style={{ width: "100%" }}
 						type="url"
-						onInput={handleInputChange("ollamaBaseUrl")}
+						onBlur={handleInputChange("ollamaBaseUrl")}
 						placeholder={"Default: http://localhost:11434"}>
 						<span style={{ fontWeight: 500 }}>Base URL (optional)</span>
 					</VSCodeTextField>
 					<VSCodeTextField
 						value={apiConfiguration?.ollamaModelId || ""}
 						style={{ width: "100%" }}
-						onInput={handleInputChange("ollamaModelId")}
+						onBlur={handleInputChange("ollamaModelId")}
 						placeholder={"e.g. llama3.1"}>
 						<span style={{ fontWeight: 500 }}>Model ID</span>
 					</VSCodeTextField>
@@ -1334,9 +1369,11 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 			{selectedProvider === "glama" && <GlamaModelPicker />}
 
 			{selectedProvider === "openrouter" && <OpenRouterModelPicker />}
+			{selectedProvider === "requesty" && <RequestyModelPicker />}
 
 			{selectedProvider !== "glama" &&
 				selectedProvider !== "openrouter" &&
+				selectedProvider !== "requesty" &&
 				selectedProvider !== "openai" &&
 				selectedProvider !== "ollama" &&
 				selectedProvider !== "lmstudio" &&
@@ -1363,6 +1400,20 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) =
 						/>
 					</>
 				)}
+
+			{!fromWelcomeView && (
+				<div style={{ marginTop: "10px" }}>
+					<TemperatureControl
+						value={apiConfiguration?.modelTemperature}
+						onChange={(value) => {
+							handleInputChange("modelTemperature")({
+								target: { value },
+							})
+						}}
+						maxValue={2}
+					/>
+				</div>
+			)}
 
 			{modelIdErrorMessage && (
 				<p
@@ -1465,6 +1516,12 @@ export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
 				selectedProvider: provider,
 				selectedModelId: apiConfiguration?.unboundModelId || unboundDefaultModelId,
 				selectedModelInfo: apiConfiguration?.unboundModelInfo || unboundDefaultModelInfo,
+			}
+		case "requesty":
+			return {
+				selectedProvider: provider,
+				selectedModelId: apiConfiguration?.requestyModelId || requestyDefaultModelId,
+				selectedModelInfo: apiConfiguration?.requestyModelInfo || requestyDefaultModelInfo,
 			}
 		default:
 			return getProviderData(anthropicModels, anthropicDefaultModelId)
