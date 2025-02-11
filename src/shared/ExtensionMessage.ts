@@ -145,6 +145,7 @@ export interface ClineMessage {
 	partial?: boolean
 	reasoning?: string
 	conversationHistoryIndex?: number
+	checkpoint?: Record<string, unknown>
 }
 
 export type ClineAsk =

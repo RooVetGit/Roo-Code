@@ -14,7 +14,6 @@ describe("CheckpointService", () => {
 	let git: SimpleGit
 	let testFile: string
 	let service: CheckpointService
-	let originalPlatform: string
 
 	const initRepo = async ({
 		baseDir,
@@ -48,19 +47,6 @@ describe("CheckpointService", () => {
 
 		return { git, testFile }
 	}
-
-	beforeAll(() => {
-		originalPlatform = process.platform
-		Object.defineProperty(process, "platform", {
-			value: "darwin",
-		})
-	})
-
-	afterAll(() => {
-		Object.defineProperty(process, "platform", {
-			value: originalPlatform,
-		})
-	})
 
 	beforeEach(async () => {
 		const baseDir = path.join(os.tmpdir(), `checkpoint-service-test-${Date.now()}`)
@@ -224,9 +210,12 @@ describe("CheckpointService", () => {
 		})
 
 		it("does not create a checkpoint if there are no pending changes", async () => {
+			const commit0 = await service.saveCheckpoint("Zeroth checkpoint")
+			expect(commit0?.commit).toBeFalsy()
+
 			await fs.writeFile(testFile, "Ahoy, world!")
-			const commit = await service.saveCheckpoint("First checkpoint")
-			expect(commit?.commit).toBeTruthy()
+			const commit1 = await service.saveCheckpoint("First checkpoint")
+			expect(commit1?.commit).toBeTruthy()
 
 			const commit2 = await service.saveCheckpoint("Second checkpoint")
 			expect(commit2?.commit).toBeFalsy()
