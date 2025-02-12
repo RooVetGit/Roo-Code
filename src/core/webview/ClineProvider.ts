@@ -127,6 +127,7 @@ type GlobalStateKey =
 	| "requestyModelInfo"
 	| "unboundModelInfo"
 	| "modelTemperature"
+	| "keepBrowserOpen"
 
 export const GlobalFileNames = {
 	apiConversationHistory: "api_conversation_history.json",
@@ -1453,6 +1454,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.postStateToWebview()
 						break
 					}
+					case "keepBrowserOpen":
+						await this.updateGlobalState("keepBrowserOpen", message.bool ?? false)
+						await this.postStateToWebview()
+						break
 					case "updateMcpTimeout":
 						if (message.serverName && typeof message.timeout === "number") {
 							try {
@@ -2377,6 +2382,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			customSupportPrompts,
 			enhancementApiConfigId,
 			autoApprovalEnabled,
+			keepBrowserOpen,
 			experiments,
 		} = await this.getState()
 
@@ -2386,6 +2392,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			version: this.context.extension?.packageJSON?.version ?? "",
 			apiConfiguration,
 			customInstructions,
+			keepBrowserOpen: keepBrowserOpen ?? false,
 			alwaysAllowReadOnly: alwaysAllowReadOnly ?? false,
 			alwaysAllowWrite: alwaysAllowWrite ?? false,
 			alwaysAllowExecute: alwaysAllowExecute ?? false,
@@ -2554,6 +2561,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			enhancementApiConfigId,
 			autoApprovalEnabled,
 			customModes,
+			keepBrowserOpen,
 			experiments,
 			unboundApiKey,
 			unboundModelId,
@@ -2634,6 +2642,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("enhancementApiConfigId") as Promise<string | undefined>,
 			this.getGlobalState("autoApprovalEnabled") as Promise<boolean | undefined>,
 			this.customModesManager.getCustomModes(),
+			this.getGlobalState("keepBrowserOpen") as Promise<boolean | undefined>,
 			this.getGlobalState("experiments") as Promise<Record<ExperimentId, boolean> | undefined>,
 			this.getSecret("unboundApiKey") as Promise<string | undefined>,
 			this.getGlobalState("unboundModelId") as Promise<string | undefined>,
@@ -2768,6 +2777,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			experiments: experiments ?? experimentDefault,
 			autoApprovalEnabled: autoApprovalEnabled ?? false,
 			customModes,
+			keepBrowserOpen: keepBrowserOpen ?? false,
 		}
 	}
 

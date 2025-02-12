@@ -22,6 +22,10 @@ Parameters:
         - Use with the \`text\` parameter to provide the string to type.
     * scroll_down: Scroll down the page by one page height.
     * scroll_up: Scroll up the page by one page height.
+    * set_viewport: Change the browser window dimensions to simulate different screen sizes. A screenshot will be captured showing the page at the new dimensions.
+       - Use with the \`viewport\` parameter to specify dimensions in "widthxheight" format (e.g., "375x667").
+       - Common sizes: Desktop (900x600), iPhone SE (375x667), iPad (768x1024), iPhone 12 Pro (390x844).
+       - The page will automatically adjust to the new dimensions and return a screenshot for verification.
     * close: Close the Puppeteer-controlled browser instance. This **must always be the final browser action**.
         - Example: \`<action>close</action>\`
 - url: (optional) Use this for providing the URL for the \`launch\` action.
@@ -30,12 +34,15 @@ Parameters:
     * Example: <coordinate>450,300</coordinate>
 - text: (optional) Use this for providing the text for the \`type\` action.
     * Example: <text>Hello, world!</text>
+- viewport: (optional) Use this for providing the viewport size for the \`set_viewport\` action in format "widthxheight".
+    * Example: <viewport>375x667</viewport>
 Usage:
 <browser_action>
-<action>Action to perform (e.g., launch, click, type, scroll_down, scroll_up, close)</action>
+<action>Action to perform (e.g., launch, click, type, scroll_down, scroll_up, set_viewport, close)</action>
 <url>URL to launch the browser at (optional)</url>
 <coordinate>x,y coordinates (optional)</coordinate>
 <text>Text to type (optional)</text>
+<viewport>Viewport size in format widthxheight (optional)</viewport>
 </browser_action>
 
 Example: Requesting to launch a browser at https://example.com
@@ -48,5 +55,11 @@ Example: Requesting to click on the element at coordinates 450,300
 <browser_action>
 <action>click</action>
 <coordinate>450,300</coordinate>
+</browser_action>
+
+Example: Requesting to set viewport to mobile size (iPhone SE)
+<browser_action>
+<action>set_viewport</action>
+<viewport>375x667</viewport>
 </browser_action>`
 }

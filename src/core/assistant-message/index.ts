@@ -56,6 +56,7 @@ export const toolParamNames = [
 	"operations",
 	"mode",
 	"message",
+	"viewport",
 ] as const
 
 export type ToolParamName = (typeof toolParamNames)[number]
@@ -106,7 +107,7 @@ export interface ListCodeDefinitionNamesToolUse extends ToolUse {
 
 export interface BrowserActionToolUse extends ToolUse {
 	name: "browser_action"
-	params: Partial<Pick<Record<ToolParamName, string>, "action" | "url" | "coordinate" | "text">>
+	params: Partial<Pick<Record<ToolParamName, string>, "action" | "url" | "coordinate" | "text" | "viewport">>
 }
 
 export interface UseMcpToolToolUse extends ToolUse {

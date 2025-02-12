@@ -92,6 +92,7 @@ export interface WebviewMessage {
 		| "openCustomModesSettings"
 		| "checkpointDiff"
 		| "checkpointRestore"
+		| "keepBrowserOpen"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse

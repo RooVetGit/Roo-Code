@@ -936,7 +936,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		// Only proceed if we have an ask and buttons are enabled
 		if (!clineAsk || !enableButtons) return
 
-		const autoApprove = async () => {
+		// Wait for state hydration
+		const timer = setTimeout(async () => {
 			if (isAutoApproved(lastMessage)) {
 				// Add delay for write operations
 				if (lastMessage?.ask === "tool" && isWriteToolAction(lastMessage)) {
@@ -944,8 +945,9 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				}
 				handlePrimaryButtonClick()
 			}
-		}
-		autoApprove()
+		}, 100) // Small delay to ensure state is hydrated
+
+		return () => clearTimeout(timer)
 	}, [
 		clineAsk,
 		enableButtons,

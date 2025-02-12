@@ -350,6 +350,7 @@ describe("ClineProvider", () => {
 			rateLimitSeconds: 0,
 			mode: defaultModeSlug,
 			customModes: [],
+			keepBrowserOpen: false,
 			experiments: experimentDefault,
 		}
 
