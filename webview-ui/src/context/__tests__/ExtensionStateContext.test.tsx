@@ -1,5 +1,6 @@
 import React from "react"
 import { render, screen, act } from "@testing-library/react"
+import { describe, it, expect, vi } from "vitest"
 import { ExtensionStateContextProvider, useExtensionState } from "../ExtensionStateContext"
 
 // Test component that consumes the context
@@ -53,7 +54,7 @@ describe("ExtensionStateContext", () => {
 
 	it("throws error when used outside provider", () => {
 		// Suppress console.error for this test since we expect an error
-		const consoleSpy = jest.spyOn(console, "error")
+		const consoleSpy = vi.spyOn(console, "error")
 		consoleSpy.mockImplementation(() => {})
 
 		expect(() => {

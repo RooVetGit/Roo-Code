@@ -1,5 +1,6 @@
 import React from "react"
 import { render, waitFor } from "@testing-library/react"
+import { describe, it, expect, beforeEach } from "vitest"
 import ChatView from "../ChatView"
 import { ExtensionStateContextProvider } from "../../../context/ExtensionStateContext"
 import { vscode } from "../../../utils/vscode"
@@ -25,28 +26,28 @@ interface ExtensionState {
 }
 
 // Mock vscode API
-jest.mock("../../../utils/vscode", () => ({
+vi.mock("../../../utils/vscode", () => ({
 	vscode: {
-		postMessage: jest.fn(),
+		postMessage: vi.fn(),
 	},
 }))
 
 // Mock components that use ESM dependencies
-jest.mock("../BrowserSessionRow", () => ({
+vi.mock("../BrowserSessionRow", () => ({
 	__esModule: true,
 	default: function MockBrowserSessionRow({ messages }: { messages: ClineMessage[] }) {
 		return <div data-testid="browser-session">{JSON.stringify(messages)}</div>
 	},
 }))
 
-jest.mock("../ChatRow", () => ({
+vi.mock("../ChatRow", () => ({
 	__esModule: true,
 	default: function MockChatRow({ message }: { message: ClineMessage }) {
 		return <div data-testid="chat-row">{JSON.stringify(message)}</div>
 	},
 }))
 
-jest.mock("../AutoApproveMenu", () => ({
+vi.mock("../AutoApproveMenu", () => ({
 	__esModule: true,
 	default: () => null,
 }))
@@ -60,7 +61,7 @@ interface ChatTextAreaProps {
 	shouldDisableImages?: boolean
 }
 
-jest.mock("../ChatTextArea", () => {
+vi.mock("../ChatTextArea", () => {
 	const mockReact = require("react")
 	return {
 		__esModule: true,
@@ -77,7 +78,7 @@ jest.mock("../ChatTextArea", () => {
 	}
 })
 
-jest.mock("../TaskHeader", () => ({
+vi.mock("../TaskHeader", () => ({
 	__esModule: true,
 	default: function MockTaskHeader({ task }: { task: ClineMessage }) {
 		return <div data-testid="task-header">{JSON.stringify(task)}</div>
@@ -85,7 +86,7 @@ jest.mock("../TaskHeader", () => ({
 }))
 
 // Mock VSCode components
-jest.mock("@vscode/webview-ui-toolkit/react", () => ({
+vi.mock("@vscode/webview-ui-toolkit/react", () => ({
 	VSCodeButton: function MockVSCodeButton({
 		children,
 		onClick,
@@ -145,7 +146,7 @@ const mockPostMessage = (state: Partial<ExtensionState>) => {
 
 describe("ChatView - Auto Approval Tests", () => {
 	beforeEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	it("does not auto-approve any actions when autoApprovalEnabled is false", () => {
@@ -598,7 +599,7 @@ describe("ChatView - Auto Approval Tests", () => {
 			]
 
 			for (const command of allowedChainedCommands) {
-				jest.clearAllMocks()
+				vi.clearAllMocks()
 
 				// First hydrate state with initial task
 				mockPostMessage({
@@ -639,7 +640,7 @@ describe("ChatView - Auto Approval Tests", () => {
 
 				// Wait for the auto-approval message
 				await waitFor(() => {
-					expect(vscode.postMessage).toHaveBeenCalledWith({
+					expect(vi.mocked(vscode.postMessage)).toHaveBeenCalledWith({
 						type: "askResponse",
 						askResponse: "yesButtonClicked",
 					})
@@ -712,7 +713,7 @@ describe("ChatView - Auto Approval Tests", () => {
 				})
 
 				// Verify no auto-approval message was sent for chained commands with disallowed parts
-				expect(vscode.postMessage).not.toHaveBeenCalledWith({
+				expect(vi.mocked(vscode.postMessage)).not.toHaveBeenCalledWith({
 					type: "askResponse",
 					askResponse: "yesButtonClicked",
 				})
@@ -747,7 +748,7 @@ describe("ChatView - Auto Approval Tests", () => {
 
 			// Test allowed PowerShell commands
 			for (const command of powershellCommands.allowed) {
-				jest.clearAllMocks()
+				vi.clearAllMocks()
 
 				mockPostMessage({
 					autoApprovalEnabled: true,
@@ -785,7 +786,7 @@ describe("ChatView - Auto Approval Tests", () => {
 				})
 
 				await waitFor(() => {
-					expect(vscode.postMessage).toHaveBeenCalledWith({
+					expect(vi.mocked(vscode.postMessage)).toHaveBeenCalledWith({
 						type: "askResponse",
 						askResponse: "yesButtonClicked",
 					})
@@ -794,7 +795,7 @@ describe("ChatView - Auto Approval Tests", () => {
 
 			// Test disallowed PowerShell commands
 			for (const command of powershellCommands.disallowed) {
-				jest.clearAllMocks()
+				vi.clearAllMocks()
 
 				mockPostMessage({
 					autoApprovalEnabled: true,
@@ -831,7 +832,7 @@ describe("ChatView - Auto Approval Tests", () => {
 					],
 				})
 
-				expect(vscode.postMessage).not.toHaveBeenCalledWith({
+				expect(vi.mocked(vscode.postMessage)).not.toHaveBeenCalledWith({
 					type: "askResponse",
 					askResponse: "yesButtonClicked",
 				})
@@ -842,7 +843,7 @@ describe("ChatView - Auto Approval Tests", () => {
 
 describe("ChatView - Sound Playing Tests", () => {
 	beforeEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	it("does not play sound for auto-approved browser actions", async () => {
@@ -900,7 +901,7 @@ describe("ChatView - Sound Playing Tests", () => {
 		})
 
 		// Verify no sound was played
-		expect(vscode.postMessage).not.toHaveBeenCalledWith({
+		expect(vi.mocked(vscode.postMessage)).not.toHaveBeenCalledWith({
 			type: "playSound",
 			audioType: expect.any(String),
 		})
@@ -962,7 +963,7 @@ describe("ChatView - Sound Playing Tests", () => {
 
 		// Verify notification sound was played
 		await waitFor(() => {
-			expect(vscode.postMessage).toHaveBeenCalledWith({
+			expect(vi.mocked(vscode.postMessage)).toHaveBeenCalledWith({
 				type: "playSound",
 				audioType: "notification",
 			})
@@ -1021,7 +1022,7 @@ describe("ChatView - Sound Playing Tests", () => {
 
 		// Verify celebration sound was played
 		await waitFor(() => {
-			expect(vscode.postMessage).toHaveBeenCalledWith({
+			expect(vi.mocked(vscode.postMessage)).toHaveBeenCalledWith({
 				type: "playSound",
 				audioType: "celebration",
 			})
@@ -1080,7 +1081,7 @@ describe("ChatView - Sound Playing Tests", () => {
 
 		// Verify progress_loop sound was played
 		await waitFor(() => {
-			expect(vscode.postMessage).toHaveBeenCalledWith({
+			expect(vi.mocked(vscode.postMessage)).toHaveBeenCalledWith({
 				type: "playSound",
 				audioType: "progress_loop",
 			})

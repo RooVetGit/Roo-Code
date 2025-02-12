@@ -1,17 +1,18 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
+import { describe, it, expect, beforeEach, vi } from "vitest"
 import SettingsView from "../SettingsView"
 import { ExtensionStateContextProvider } from "../../../context/ExtensionStateContext"
 import { vscode } from "../../../utils/vscode"
 
 // Mock vscode API
-jest.mock("../../../utils/vscode", () => ({
+vi.mock("../../../utils/vscode", () => ({
 	vscode: {
-		postMessage: jest.fn(),
+		postMessage: vi.fn(),
 	},
 }))
 
 // Mock ApiConfigManager component
-jest.mock("../ApiConfigManager", () => ({
+vi.mock("../ApiConfigManager", () => ({
 	__esModule: true,
 	default: ({ currentApiConfigName }: any) => (
 		<div data-testid="api-config-management">
@@ -21,7 +22,7 @@ jest.mock("../ApiConfigManager", () => ({
 }))
 
 // Mock VSCode components
-jest.mock("@vscode/webview-ui-toolkit/react", () => ({
+vi.mock("@vscode/webview-ui-toolkit/react", () => ({
 	VSCodeButton: ({ children, onClick, appearance }: any) =>
 		appearance === "icon" ? (
 			<button onClick={onClick} className="codicon codicon-close" aria-label="Remove command">
@@ -98,7 +99,7 @@ const mockPostMessage = (state: any) => {
 }
 
 const renderSettingsView = () => {
-	const onDone = jest.fn()
+	const onDone = vi.fn()
 	render(
 		<ExtensionStateContextProvider>
 			<SettingsView onDone={onDone} />
@@ -111,7 +112,7 @@ const renderSettingsView = () => {
 
 describe("SettingsView - Sound Settings", () => {
 	beforeEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	it("initializes with sound disabled by default", () => {
@@ -142,7 +143,7 @@ describe("SettingsView - Sound Settings", () => {
 		fireEvent.click(doneButton)
 
 		await waitFor(() => {
-			expect(vscode.postMessage).toHaveBeenCalledWith(
+			expect(vi.mocked(vscode.postMessage)).toHaveBeenCalledWith(
 				expect.objectContaining({
 					type: "soundEnabled",
 					bool: true,
@@ -185,7 +186,7 @@ describe("SettingsView - Sound Settings", () => {
 
 		// Verify message sent to VSCode
 		await waitFor(() => {
-			expect(vscode.postMessage).toHaveBeenCalledWith({
+			expect(vi.mocked(vscode.postMessage)).toHaveBeenCalledWith({
 				type: "soundVolume",
 				value: 0.75,
 			})
@@ -195,7 +196,7 @@ describe("SettingsView - Sound Settings", () => {
 
 describe("SettingsView - API Configuration", () => {
 	beforeEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	it("renders ApiConfigManagement with correct props", () => {
@@ -207,7 +208,7 @@ describe("SettingsView - API Configuration", () => {
 
 describe("SettingsView - Allowed Commands", () => {
 	beforeEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	it("shows allowed commands section when alwaysAllowExecute is enabled", () => {
@@ -244,7 +245,7 @@ describe("SettingsView - Allowed Commands", () => {
 		expect(screen.getByText("npm test")).toBeInTheDocument()
 
 		// Verify VSCode message was sent
-		expect(vscode.postMessage).toHaveBeenCalledWith({
+		expect(vi.mocked(vscode.postMessage)).toHaveBeenCalledWith({
 			type: "allowedCommands",
 			commands: ["npm test"],
 		})
@@ -273,7 +274,7 @@ describe("SettingsView - Allowed Commands", () => {
 		expect(screen.queryByText("npm test")).not.toBeInTheDocument()
 
 		// Verify VSCode message was sent
-		expect(vscode.postMessage).toHaveBeenLastCalledWith({
+		expect(vi.mocked(vscode.postMessage)).toHaveBeenLastCalledWith({
 			type: "allowedCommands",
 			commands: [],
 		})
@@ -326,7 +327,7 @@ describe("SettingsView - Allowed Commands", () => {
 
 		// Verify VSCode messages were sent
 		await waitFor(() => {
-			expect(vscode.postMessage).toHaveBeenCalledWith(
+			expect(vi.mocked(vscode.postMessage)).toHaveBeenCalledWith(
 				expect.objectContaining({
 					type: "allowedCommands",
 					commands: ["npm test"],

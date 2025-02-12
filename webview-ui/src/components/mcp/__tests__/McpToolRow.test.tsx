@@ -3,13 +3,13 @@ import { render, fireEvent, screen } from "@testing-library/react"
 import McpToolRow from "../McpToolRow"
 import { vscode } from "../../../utils/vscode"
 
-jest.mock("../../../utils/vscode", () => ({
+vi.mock("../../../utils/vscode", () => ({
 	vscode: {
-		postMessage: jest.fn(),
+		postMessage: vi.fn(),
 	},
 }))
 
-jest.mock("@vscode/webview-ui-toolkit/react", () => ({
+vi.mock("@vscode/webview-ui-toolkit/react", () => ({
 	VSCodeCheckbox: function MockVSCodeCheckbox({
 		children,
 		checked,
@@ -36,7 +36,7 @@ describe("McpToolRow", () => {
 	}
 
 	beforeEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	it("renders tool name and description", () => {
@@ -64,7 +64,7 @@ describe("McpToolRow", () => {
 		const checkbox = screen.getByRole("checkbox")
 		fireEvent.click(checkbox)
 
-		expect(vscode.postMessage).toHaveBeenCalledWith({
+		expect(vi.mocked(vscode.postMessage)).toHaveBeenCalledWith({
 			type: "toggleToolAlwaysAllow",
 			serverName: "test-server",
 			toolName: "test-tool",
@@ -85,7 +85,7 @@ describe("McpToolRow", () => {
 	})
 
 	it("prevents event propagation when clicking the checkbox", () => {
-		const mockOnClick = jest.fn()
+		const mockOnClick = vi.fn()
 		render(
 			<div onClick={mockOnClick}>
 				<McpToolRow tool={mockTool} serverName="test-server" alwaysAllowMcp={true} />
