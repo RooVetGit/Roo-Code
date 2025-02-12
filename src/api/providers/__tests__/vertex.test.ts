@@ -155,8 +155,29 @@ describe("VertexHandler", () => {
 				model: "claude-3-5-sonnet-v2@20241022",
 				max_tokens: 8192,
 				temperature: 0,
-				system: systemPrompt,
-				messages: mockMessages,
+				system: [
+					{
+						type: "text",
+						text: "You are a helpful assistant",
+						cache_control: { type: "ephemeral" },
+					},
+				],
+				messages: [
+					{
+						role: "user",
+						content: [
+							{
+								type: "text",
+								text: "Hello",
+								cache_control: { type: "ephemeral" },
+							},
+						],
+					},
+					{
+						role: "assistant",
+						content: "Hi there!",
+					},
+				],
 				stream: true,
 			})
 		})
@@ -323,17 +344,18 @@ describe("VertexHandler", () => {
 					system: [
 						{
 							type: "text",
-							text: systemPrompt,
+							text: "You are a helpful assistant",
 							cache_control: { type: "ephemeral" },
 						},
 					],
-					messages: expect.arrayContaining([
+					messages: [
 						expect.objectContaining({
 							role: "user",
 							content: [
 								{
 									type: "text",
 									text: "First message",
+									cache_control: { type: "ephemeral" },
 								},
 							],
 						}),
@@ -351,7 +373,7 @@ describe("VertexHandler", () => {
 								},
 							],
 						}),
-					]),
+					],
 				}),
 			)
 		})

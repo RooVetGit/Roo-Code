@@ -70,10 +70,12 @@ export class VertexHandler implements ApiHandler, SingleCompletionHandler {
 	}
 
 	private formatMessageForCache(message: Anthropic.Messages.MessageParam, shouldCache: boolean): VertexMessage {
-		if (!shouldCache) {
+		// Keep assistant messages as plain strings
+		if (message.role === "assistant") {
 			return message as VertexMessage
 		}
 
+		// Convert user messages to arrays with optional cache control
 		return {
 			...message,
 			content:
@@ -82,21 +84,17 @@ export class VertexHandler implements ApiHandler, SingleCompletionHandler {
 							{
 								type: "text" as const,
 								text: message.content,
-								cache_control: { type: "ephemeral" },
+								...(shouldCache && { cache_control: { type: "ephemeral" } }),
 							},
 						]
-					: message.content.map((content, contentIndex) =>
-							contentIndex === message.content.length - 1
-								? {
-										type: "text" as const,
-										text: (content as { text: string }).text,
-										cache_control: { type: "ephemeral" },
-									}
-								: {
-										type: "text" as const,
-										text: (content as { text: string }).text,
-									},
-						),
+					: message.content.map((content, contentIndex) => ({
+							type: "text" as const,
+							text: (content as { text: string }).text,
+							...(shouldCache &&
+								contentIndex === message.content.length - 1 && {
+									cache_control: { type: "ephemeral" },
+								}),
+						})),
 		}
 	}
 
