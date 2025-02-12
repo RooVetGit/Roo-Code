@@ -270,8 +270,11 @@ export class McpHub {
 	private getDefaultCwd() {
 		const paths = vscode.workspace.workspaceFolders
 		if (paths?.length === 1) {
+			// In workspaces with a single folder, we can safely use it as the default CWD for MCP servers
 			return paths[0].uri.fsPath
 		}
+		// Otherwise we return undefined, which means the MCP process will be spawned with
+		// NodeJS default CWD, i.e. process.cwd()
 		return undefined
 	}
 
