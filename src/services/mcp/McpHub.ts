@@ -170,6 +170,7 @@ export class McpHub {
 					// ...(process.env.NODE_PATH ? { NODE_PATH: process.env.NODE_PATH } : {}),
 				},
 				stderr: "pipe", // necessary for stderr to be available
+				cwd: config.cwd ?? this.getDefaultCwd(),
 			})
 
 			transport.onerror = async (error) => {
@@ -262,6 +263,14 @@ export class McpHub {
 			}
 			throw error
 		}
+	}
+
+	private getDefaultCwd() {
+		const paths = vscode.workspace.workspaceFolders
+		if (paths?.length === 1) {
+			return paths[0].uri.fsPath
+		}
+		return undefined
 	}
 
 	private appendErrorMessage(connection: McpConnection, error: string) {
