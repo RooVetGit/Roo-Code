@@ -1,6 +1,6 @@
 import { createOpenAI } from "@ai-sdk/openai"
 import FirecrawlApp from "@mendable/firecrawl-js"
-import { generateObject, LanguageModel } from "ai"
+import { generateObject, LanguageModel, streamText } from "ai"
 import { z } from "zod"
 import pLimit from "p-limit"
 
@@ -40,9 +40,9 @@ export class DeepResearchService {
 
 	constructor(
 		clineProvider: ClineProvider,
-		public readonly modelId = "o3-mini",
-		public readonly breadth = 4,
-		public readonly depth = 2,
+		public readonly modelId: string,
+		public readonly breadth: number,
+		public readonly depth: number,
 		public readonly concurrency = 2,
 	) {
 		this.providerRef = new WeakRef(clineProvider)
@@ -282,6 +282,43 @@ export class DeepResearchService {
 			learnings: [...new Set(results.flatMap((r) => r.learnings))],
 			visitedUrls: [...new Set(results.flatMap((r) => r.visitedUrls))],
 		}
+	}
+
+	public async chat(content: string) {
+		console.log("[DeepResearchService#chat] content =", content)
+
+		const { fullStream } = streamText({
+			model: this.model,
+			system: `
+				You are a general answering assistant that can comply with any request.
+
+				You always answer the with markdown formatting. You will be penalized if you do not answer with markdown when it would be possible.
+				The markdown formatting you support: headings, bold, italic, links, tables, lists, code blocks, and blockquotes.
+				You do not support images and never include images. You will be penalized if you render images.
+
+				You also support Mermaid formatting. You will be penalized if you do not render Mermaid diagrams when it would be possible.
+				The Mermaid diagrams you support: sequenceDiagram, flowChart, classDiagram, stateDiagram, erDiagram, gantt, journey, gitGraph, pie.
+			`
+				.split("\n")
+				.map((line) => line.trim())
+				.join("\n"),
+			messages: [{ role: "user", content }],
+			onChunk: (chunk) => {
+				console.log("[DeepResearchService#append] chunk =", chunk)
+			},
+			onFinish: () => {
+				console.log("[DeepResearchService#append] finished")
+			},
+		})
+
+		let fullText = ""
+
+		for await (const chunk of fullStream) {
+			fullText += chunk.type === "text-delta" ? chunk.textDelta : ""
+			console.log("[DeepResearchService#append] chunk =", chunk)
+		}
+
+		await this.postMessage({ type: "research.output", text: fullText })
 	}
 
 	public async append(content: string) {

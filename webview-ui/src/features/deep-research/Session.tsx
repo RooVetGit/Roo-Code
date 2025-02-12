@@ -23,6 +23,7 @@ export const Session = () => {
 					console.log(`[DeepResearch#onMessage] type=${type}, text=${text}`)
 					setIsLoading(text === "true")
 					break
+				case "research.output":
 				case "research.question":
 					console.log(`[DeepResearch#onMessage] type=${type}, text=${text}`)
 					append({ role: "assistant", content: text ?? "" })

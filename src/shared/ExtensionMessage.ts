@@ -47,6 +47,7 @@ export interface ExtensionMessage {
 		| "refreshUnboundModels"
 		| "currentCheckpointUpdated"
 		| "research.loading"
+		| "research.output"
 		| "research.question"
 		| "research.progress"
 		| "research.result"
