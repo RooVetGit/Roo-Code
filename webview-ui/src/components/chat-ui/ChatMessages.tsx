@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react"
-import { Loader2, PauseCircle, RefreshCw } from "lucide-react"
+import { Loader2 } from "lucide-react"
+import { StopIcon, ReloadIcon } from "@radix-ui/react-icons"
 
 import { Button } from "@/components/ui"
 
@@ -69,12 +70,12 @@ export function ChatActions() {
 		<div className="flex flex-row justify-center pt-2 border-t border-vscode-editor-background">
 			{showStop && (
 				<Button variant="ghost" size="sm" onClick={stop}>
-					<PauseCircle />
+					<StopIcon className="text-destructive" />
 				</Button>
 			)}
 			{showReload && (
 				<Button variant="ghost" size="sm" onClick={() => reload?.({ data: requestData })}>
-					<RefreshCw />
+					<ReloadIcon />
 				</Button>
 			)}
 		</div>

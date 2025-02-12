@@ -1,13 +1,13 @@
 import { create } from "zustand"
 
-import { DeepResearchSession } from "./types"
+import { Session } from "./types"
 
 interface SessionState {
-	session?: DeepResearchSession
+	session?: Session
 }
 
 interface SessionActions {
-	setSession: (session: DeepResearchSession) => void
+	setSession: (session: Session | undefined) => void
 }
 
 const defaultState: SessionState = {
@@ -16,5 +16,5 @@ const defaultState: SessionState = {
 
 export const useSession = create<SessionState & SessionActions>()((set) => ({
 	...defaultState,
-	setSession: (session: DeepResearchSession) => set({ session }),
+	setSession: (session: Session | undefined) => set({ session }),
 }))

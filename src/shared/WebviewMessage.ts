@@ -92,9 +92,11 @@ export interface WebviewMessage {
 		| "openCustomModesSettings"
 		| "checkpointDiff"
 		| "checkpointRestore"
+		| "research.task"
 		| "research.input"
 		| "research.reload"
 		| "research.stop"
+		| "research.reset"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
@@ -143,23 +145,34 @@ export type CheckpointRestorePayload = z.infer<typeof checkoutRestorePayloadSche
  * Deep Research
  */
 
-export const researchAppendPayloadSchema = z.object({
+export const researchTaskPayloadSchema = z.object({
+	session: z.object({
+		modelId: z.string(),
+		breadth: z.number(),
+		depth: z.number(),
+		query: z.string(),
+	}),
+})
+
+export type ResearchTaskPayload = z.infer<typeof researchTaskPayloadSchema>
+
+export const researchInputPayloadSchema = z.object({
 	message: z.object({
 		role: z.enum(["system", "user", "assistant", "data"]),
 		content: z.string(),
 		annotations: z.any().optional(),
 	}),
-	chatRequestOptions: z
-		.object({
-			data: z.any(),
-		})
-		.optional(),
+	chatRequestOptions: z.object({ data: z.any() }).optional(),
 })
 
-export type ResearchAppendPayload = z.infer<typeof researchAppendPayloadSchema>
+export type ResearchInputPayload = z.infer<typeof researchInputPayloadSchema>
 
 /**
  * Payload Union
  */
 
-export type WebViewMessagePayload = CheckpointDiffPayload | CheckpointRestorePayload | ResearchAppendPayload
+export type WebViewMessagePayload =
+	| CheckpointDiffPayload
+	| CheckpointRestorePayload
+	| ResearchTaskPayload
+	| ResearchInputPayload

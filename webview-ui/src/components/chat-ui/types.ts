@@ -5,8 +5,6 @@ export interface Message {
 }
 
 export type ChatHandler = {
-	isInitialized: boolean
-
 	isLoading: boolean
 	setIsLoading: (isLoading: boolean) => void
 
@@ -15,9 +13,11 @@ export type ChatHandler = {
 
 	messages: Message[]
 
-	reload?: (chatRequestOptions?: { data?: any }) => void
+	reload?: (options?: { data?: any }) => void
+	start?: (options?: { data?: any }) => void
 	stop?: () => void
-	append: (message: Message, chatRequestOptions?: { data?: any }) => Promise<string | null | undefined>
+	append: (message: Message, options?: { data?: any }) => Promise<string | null | undefined>
+	reset?: () => void
 }
 
 export enum MessageAnnotationType {

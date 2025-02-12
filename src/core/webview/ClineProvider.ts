@@ -23,7 +23,8 @@ import { HistoryItem } from "../../shared/HistoryItem"
 import {
 	checkoutDiffPayloadSchema,
 	checkoutRestorePayloadSchema,
-	researchAppendPayloadSchema,
+	researchTaskPayloadSchema,
+	researchInputPayloadSchema,
 	WebviewMessage,
 } from "../../shared/WebviewMessage"
 import { Mode, CustomModePrompts, PromptComponent, defaultModeSlug } from "../../shared/modes"
@@ -1501,16 +1502,25 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							await this.postStateToWebview()
 						}
 						break
+					case "research.task": {
+						console.log("[ClineProvider] research.task", message)
+						const result = researchTaskPayloadSchema.safeParse(message.payload)
+
+						if (result.success && !this.deepResearchService) {
+							const { modelId, breadth, depth, query } = result.data.session
+							this.deepResearchService = new DeepResearchService(this, modelId, breadth, depth)
+							this.deepResearchService.append(query)
+						}
+
+						break
+					}
 					case "research.input": {
-						const result = researchAppendPayloadSchema.safeParse(message.payload)
-						console.log("[ClineProvider] research.input", result)
+						console.log("[ClineProvider] research.input", message)
+						const result = researchInputPayloadSchema.safeParse(message.payload)
 
-						if (result.success) {
-							if (!this.deepResearchService) {
-								this.deepResearchService = new DeepResearchService(this, "o3-mini", 4, 2, 2)
-							}
-
-							this.deepResearchService.append(result.data.message.content)
+						if (result.success && this.deepResearchService) {
+							const { content } = result.data.message
+							this.deepResearchService.append(content)
 						}
 
 						break
@@ -1520,6 +1530,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						break
 					case "research.stop":
 						console.log("[ClineProvider] research.stop", message)
+						break
+					case "research.reset":
+						console.log("[ClineProvider] research.reset", message)
+						await this.deepResearchService?.abort()
+						this.deepResearchService = undefined
 						break
 				}
 			},

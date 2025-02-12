@@ -1,8 +1,7 @@
-import FirecrawlApp, { SearchResponse } from "@mendable/firecrawl-js"
+import { SearchResponse } from "@mendable/firecrawl-js"
 import { generateObject, LanguageModel } from "ai"
 import { z } from "zod"
 
-import { o3MiniModel } from "../providers"
 import { trimPrompt } from "./prompt"
 
 type SerpOptions = {

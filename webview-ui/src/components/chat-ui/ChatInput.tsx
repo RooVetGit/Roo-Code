@@ -5,6 +5,8 @@ import { Message } from "./types"
 import { ChatInputProvider } from "./ChatInputProvider"
 import { useChatUI } from "./useChatUI"
 import { useChatInput } from "./useChatInput"
+import { useChatMessages } from "./useChatMessages"
+import { StopIcon } from "@radix-ui/react-icons"
 
 /**
  * ChatInput
@@ -20,6 +22,10 @@ export function ChatInput({ annotations, resetUploadedFiles }: ChatInputProps) {
 	const isDisabled = isLoading || !input.trim()
 
 	const submit = async () => {
+		if (input.trim() === "") {
+			return
+		}
+
 		const newMessage: Omit<Message, "id"> = {
 			role: "user",
 			content: input,
@@ -28,7 +34,6 @@ export function ChatInput({ annotations, resetUploadedFiles }: ChatInputProps) {
 
 		setInput("") // Clear the input.
 		resetUploadedFiles?.() // Reset the uploaded files.
-
 		await append(newMessage, { data: requestData })
 	}
 
@@ -50,7 +55,7 @@ export function ChatInput({ annotations, resetUploadedFiles }: ChatInputProps) {
 
 	return (
 		<ChatInputProvider value={{ isDisabled, handleKeyDown, handleSubmit }}>
-			<div className="p-3">
+			<div className="border-t border-vscode-editor-background p-3">
 				<ChatInputForm />
 			</div>
 		</ChatInputProvider>
@@ -80,7 +85,7 @@ interface ChatInputFieldProps {
 	placeholder?: string
 }
 
-function ChatInputField({ placeholder = "What do you want to research?" }: ChatInputFieldProps) {
+function ChatInputField({ placeholder = "Chat" }: ChatInputFieldProps) {
 	const { input, setInput } = useChatUI()
 	const { handleKeyDown } = useChatInput()
 
@@ -129,14 +134,22 @@ function ChatInputField({ placeholder = "What do you want to research?" }: ChatI
  */
 
 function ChatInputSubmit() {
+	const { stop } = useChatUI()
+	const { showStop } = useChatMessages()
 	const { isDisabled } = useChatInput()
 
 	return (
-		<div className="absolute bottom-[1px] left-[1px] right-[1px] h-[40px] bg-input border-t border-vscode-editor-background rounded-b-md">
+		<div className="absolute bottom-[1px] left-[1px] right-[1px] h-[40px] bg-input border-t border-vscode-editor-background rounded-b-md p-1">
 			<div className="flex flex-row-reverse items-center gap-2">
-				<Button type="submit" variant="ghost" size="icon" disabled={isDisabled}>
-					<span className="codicon codicon-send" />
-				</Button>
+				{showStop ? (
+					<Button type="button" variant="ghost" size="sm" onClick={stop}>
+						<StopIcon className="text-destructive" />
+					</Button>
+				) : (
+					<Button type="submit" variant="ghost" size="icon" disabled={isDisabled}>
+						<span className="codicon codicon-send" />
+					</Button>
+				)}
 			</div>
 		</div>
 	)
