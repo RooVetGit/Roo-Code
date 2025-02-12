@@ -53,7 +53,7 @@ export const GetStarted = () => {
 			<div className="flex flex-col gap-2 bg-vscode-editor-background p-4 rounded-sm">
 				<div>Get detailed insights on any topic by synthesizing large amounts of online information.</div>
 				<div>
-					Complete multi-step research tasks that can be feed into a Roo Code task to super-charge its problem
+					Complete multi-step research tasks that can be fed into a Roo Code task to super-charge its problem
 					solving abilities.
 				</div>
 			</div>
