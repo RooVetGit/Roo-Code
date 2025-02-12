@@ -92,6 +92,7 @@ export interface WebviewMessage {
 		| "openCustomModesSettings"
 		| "checkpointDiff"
 		| "checkpointRestore"
+		| "disablePowerLevel10k"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse

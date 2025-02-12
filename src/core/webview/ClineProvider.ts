@@ -126,7 +126,11 @@ type GlobalStateKey =
 	| "requestyModelId"
 	| "requestyModelInfo"
 	| "unboundModelInfo"
+<<<<<<< feature/settings-for-disabling-powerlevel-zsh-theme
+	| "disablePowerLevel10k" // Disable Power Level 10k
+=======
 	| "modelTemperature"
+>>>>>>> main
 
 export const GlobalFileNames = {
 	apiConversationHistory: "api_conversation_history.json",
@@ -1475,6 +1479,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							await this.postStateToWebview()
 						}
 						break
+					case "disablePowerLevel10k":
+						await this.updateGlobalState("disablePowerLevel10k", message.bool ?? false)
+						await this.postStateToWebview()
+						break
 					case "deleteCustomMode":
 						if (message.slug) {
 							const answer = await vscode.window.showInformationMessage(
@@ -2358,6 +2366,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			enhancementApiConfigId,
 			autoApprovalEnabled,
 			experiments,
+			disablePowerLevel10k,
 		} = await this.getState()
 
 		const allowedCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
@@ -2403,7 +2412,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			autoApprovalEnabled: autoApprovalEnabled ?? false,
 			customModes: await this.customModesManager.getCustomModes(),
 			experiments: experiments ?? experimentDefault,
+<<<<<<< feature/settings-for-disabling-powerlevel-zsh-theme
+			mcpServers: this.mcpHub?.getServers() ?? [],
+			disablePowerLevel10k: disablePowerLevel10k ?? false,
+=======
 			mcpServers: this.mcpHub?.getAllServers() ?? [],
+>>>>>>> main
 		}
 	}
 
@@ -2535,10 +2549,14 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			unboundApiKey,
 			unboundModelId,
 			unboundModelInfo,
+<<<<<<< feature/settings-for-disabling-powerlevel-zsh-theme
+			disablePowerLevel10k,
+=======
 			requestyApiKey,
 			requestyModelId,
 			requestyModelInfo,
 			modelTemperature,
+>>>>>>> main
 		] = await Promise.all([
 			this.getGlobalState("apiProvider") as Promise<ApiProvider | undefined>,
 			this.getGlobalState("apiModelId") as Promise<string | undefined>,
@@ -2615,10 +2633,14 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getSecret("unboundApiKey") as Promise<string | undefined>,
 			this.getGlobalState("unboundModelId") as Promise<string | undefined>,
 			this.getGlobalState("unboundModelInfo") as Promise<ModelInfo | undefined>,
+<<<<<<< feature/settings-for-disabling-powerlevel-zsh-theme
+			this.getGlobalState("disablePowerLevel10k") as Promise<boolean | undefined>,
+=======
 			this.getSecret("requestyApiKey") as Promise<string | undefined>,
 			this.getGlobalState("requestyModelId") as Promise<string | undefined>,
 			this.getGlobalState("requestyModelInfo") as Promise<ModelInfo | undefined>,
 			this.getGlobalState("modelTemperature") as Promise<number | undefined>,
+>>>>>>> main
 		])
 
 		let apiProvider: ApiProvider
@@ -2745,6 +2767,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			experiments: experiments ?? experimentDefault,
 			autoApprovalEnabled: autoApprovalEnabled ?? false,
 			customModes,
+			disablePowerLevel10k: disablePowerLevel10k ?? false,
 		}
 	}
 
