@@ -143,7 +143,7 @@ export class Cline {
 		this.fuzzyMatchThreshold = fuzzyMatchThreshold ?? 1.0
 		this.providerRef = new WeakRef(provider)
 		this.diffViewProvider = new DiffViewProvider(cwd)
-		this.checkpointsEnabled = process.platform !== "win32" && !!enableCheckpoints
+		this.checkpointsEnabled = enableCheckpoints ?? false
 
 		if (historyItem) {
 			this.taskId = historyItem.id
@@ -370,7 +370,13 @@ export class Cline {
 		this.askResponseImages = images
 	}
 
-	async say(type: ClineSay, text?: string, images?: string[], partial?: boolean): Promise<undefined> {
+	async say(
+		type: ClineSay,
+		text?: string,
+		images?: string[],
+		partial?: boolean,
+		checkpoint?: Record<string, unknown>,
+	): Promise<undefined> {
 		if (this.abort) {
 			throw new Error("Roo Code instance aborted")
 		}
@@ -423,7 +429,7 @@ export class Cline {
 			// this is a new non-partial message, so add it like normal
 			const sayTs = Date.now()
 			this.lastMessageTs = sayTs
-			await this.addToClineMessages({ ts: sayTs, type: "say", say: type, text, images })
+			await this.addToClineMessages({ ts: sayTs, type: "say", say: type, text, images, checkpoint })
 			await this.providerRef.deref()?.postStateToWebview()
 		}
 	}
@@ -726,13 +732,18 @@ export class Cline {
 	}
 
 	async abortTask() {
-		this.abort = true // Will stop any autonomously running promises.
+		// Will stop any autonomously running promises.
+		this.abort = true
+
 		this.terminalManager.disposeAll()
 		this.urlContentFetcher.closeBrowser()
 		this.browserSession.closeBrowser()
-		// Need to await for when we want to make sure directories/files are
-		// reverted before re-starting the task from a checkpoint.
-		await this.diffViewProvider.revertChanges()
+
+		// If we're not streaming then `abortStream` (which reverts the diff
+		// view changes) won't be called, so we need to revert the changes here.
+		if (this.isStreaming && this.diffViewProvider.isEditing) {
+			await this.diffViewProvider.revertChanges()
+		}
 	}
 
 	// Tools
@@ -822,29 +833,21 @@ export class Cline {
 		const { mcpEnabled, alwaysApproveResubmit, requestDelaySeconds, rateLimitSeconds } =
 			(await this.providerRef.deref()?.getState()) ?? {}
 
-		let finalDelay = 0
+		let rateLimitDelay = 0
 
 		// Only apply rate limiting if this isn't the first request
 		if (this.lastApiRequestTime) {
 			const now = Date.now()
 			const timeSinceLastRequest = now - this.lastApiRequestTime
 			const rateLimit = rateLimitSeconds || 0
-			const rateLimitDelay = Math.max(0, rateLimit * 1000 - timeSinceLastRequest)
-			finalDelay = rateLimitDelay
+			rateLimitDelay = Math.ceil(Math.max(0, rateLimit * 1000 - timeSinceLastRequest) / 1000)
 		}
 
-		// Add exponential backoff delay for retries
-		if (retryAttempt > 0) {
-			const baseDelay = requestDelaySeconds || 5
-			const exponentialDelay = Math.ceil(baseDelay * Math.pow(2, retryAttempt)) * 1000
-			finalDelay = Math.max(finalDelay, exponentialDelay)
-		}
-
-		if (finalDelay > 0) {
+		// Only show rate limiting message if we're not retrying. If retrying, we'll include the delay there.
+		if (rateLimitDelay > 0 && retryAttempt === 0) {
 			// Show countdown timer
-			for (let i = Math.ceil(finalDelay / 1000); i > 0; i--) {
-				const delayMessage =
-					retryAttempt > 0 ? `Retrying in ${i} seconds...` : `Rate limiting for ${i} seconds...`
+			for (let i = rateLimitDelay; i > 0; i--) {
+				const delayMessage = `Rate limiting for ${i} seconds...`
 				await this.say("api_req_retry_delayed", delayMessage, undefined, true)
 				await delay(1000)
 			}
@@ -959,9 +962,11 @@ export class Cline {
 				const errorMsg = error.message ?? "Unknown error"
 				const baseDelay = requestDelaySeconds || 5
 				const exponentialDelay = Math.ceil(baseDelay * Math.pow(2, retryAttempt))
+				// Wait for the greater of the exponential delay or the rate limit delay
+				const finalDelay = Math.max(exponentialDelay, rateLimitDelay)
 
 				// Show countdown timer with exponential backoff
-				for (let i = exponentialDelay; i > 0; i--) {
+				for (let i = finalDelay; i > 0; i--) {
 					await this.say(
 						"api_req_retry_delayed",
 						`${errorMsg}\n\nRetry attempt ${retryAttempt + 1}\nRetrying in ${i} seconds...`,
@@ -2753,6 +2758,13 @@ export class Cline {
 		// get previous api req's index to check token usage and determine if we need to truncate conversation history
 		const previousApiReqIndex = findLastIndex(this.clineMessages, (m) => m.say === "api_req_started")
 
+		// Save checkpoint if this is the first API request.
+		const isFirstRequest = this.clineMessages.filter((m) => m.say === "api_req_started").length === 0
+
+		if (isFirstRequest) {
+			await this.checkpointSave()
+		}
+
 		// getting verbose details is an expensive operation, it uses globby to top-down build file structure of project which for large projects can take a few seconds
 		// for the best UX we show a placeholder api_req_started message with a loading spinner as this happens
 		await this.say(
@@ -2810,6 +2822,8 @@ export class Cline {
 			}
 
 			const abortStream = async (cancelReason: ClineApiReqCancelReason, streamingFailedMessage?: string) => {
+				console.log(`[Cline#abortStream] cancelReason = ${cancelReason}`)
+
 				if (this.diffViewProvider.isEditing) {
 					await this.diffViewProvider.revertChanges() // closes diff view
 				}
@@ -2864,6 +2878,7 @@ export class Cline {
 			const stream = this.attemptApiRequest(previousApiReqIndex) // yields only if the first chunk is successful, otherwise will allow the user to retry the request (most likely due to rate limit error, which gets thrown on the first chunk)
 			let assistantMessage = ""
 			let reasoningMessage = ""
+			this.isStreaming = true
 			try {
 				for await (const chunk of stream) {
 					if (!chunk) {
@@ -2896,11 +2911,13 @@ export class Cline {
 					}
 
 					if (this.abort) {
-						console.log("aborting stream...")
+						console.log(`aborting stream, this.abandoned = ${this.abandoned}`)
+
 						if (!this.abandoned) {
 							// only need to gracefully abort if this instance isn't abandoned (sometimes openrouter stream hangs, in which case this would affect future instances of cline)
 							await abortStream("user_cancelled")
 						}
+
 						break // aborts the stream
 					}
 
@@ -2933,6 +2950,8 @@ export class Cline {
 						// await this.providerRef.deref()?.postStateToWebview()
 					}
 				}
+			} finally {
+				this.isStreaming = false
 			}
 
 			// need to call here in case the stream was aborted
@@ -3294,12 +3313,7 @@ export class Cline {
 				]),
 			)
 		} catch (err) {
-			this.providerRef
-				.deref()
-				?.log(
-					`[checkpointDiff] Encountered unexpected error: $${err instanceof Error ? err.message : String(err)}`,
-				)
-
+			this.providerRef.deref()?.log("[checkpointDiff] disabling checkpoints for this task")
 			this.checkpointsEnabled = false
 		}
 	}
@@ -3310,6 +3324,7 @@ export class Cline {
 		}
 
 		try {
+			const isFirst = !this.checkpointService
 			const service = await this.getCheckpointService()
 			const commit = await service.saveCheckpoint(`Task: ${this.taskId}, Time: ${Date.now()}`)
 
@@ -3318,15 +3333,17 @@ export class Cline {
 					.deref()
 					?.postMessageToWebview({ type: "currentCheckpointUpdated", text: service.currentCheckpoint })
 
-				await this.say("checkpoint_saved", commit.commit)
+				// Checkpoint metadata required by the UI.
+				const checkpoint = {
+					isFirst,
+					from: service.baseCommitHash,
+					to: commit.commit,
+				}
+
+				await this.say("checkpoint_saved", commit.commit, undefined, undefined, checkpoint)
 			}
 		} catch (err) {
-			this.providerRef
-				.deref()
-				?.log(
-					`[checkpointSave] Encountered unexpected error: $${err instanceof Error ? err.message : String(err)}`,
-				)
-
+			this.providerRef.deref()?.log("[checkpointSave] disabling checkpoints for this task")
 			this.checkpointsEnabled = false
 		}
 	}
@@ -3396,12 +3413,7 @@ export class Cline {
 			// Cline instance.
 			this.providerRef.deref()?.cancelTask()
 		} catch (err) {
-			this.providerRef
-				.deref()
-				?.log(
-					`[restoreCheckpoint] Encountered unexpected error: $${err instanceof Error ? err.message : String(err)}`,
-				)
-
+			this.providerRef.deref()?.log("[checkpointRestore] disabling checkpoints for this task")
 			this.checkpointsEnabled = false
 		}
 	}
