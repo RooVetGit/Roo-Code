@@ -84,6 +84,7 @@ type GlobalStateKey =
 	| "openAiModelId"
 	| "openAiCustomModelInfo"
 	| "openAiUseAzure"
+	| "openAiUsageCumulation"
 	| "ollamaModelId"
 	| "ollamaBaseUrl"
 	| "lmStudioModelId"
@@ -1615,6 +1616,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			openAiModelId,
 			openAiCustomModelInfo,
 			openAiUseAzure,
+			openAiUsageCumulation,
 			ollamaModelId,
 			ollamaBaseUrl,
 			lmStudioModelId,
@@ -1660,6 +1662,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		await this.updateGlobalState("openAiModelId", openAiModelId)
 		await this.updateGlobalState("openAiCustomModelInfo", openAiCustomModelInfo)
 		await this.updateGlobalState("openAiUseAzure", openAiUseAzure)
+		await this.updateGlobalState("openAiUsageCumulation", openAiUsageCumulation)
 		await this.updateGlobalState("ollamaModelId", ollamaModelId)
 		await this.updateGlobalState("ollamaBaseUrl", ollamaBaseUrl)
 		await this.updateGlobalState("lmStudioModelId", lmStudioModelId)
@@ -2481,6 +2484,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			openAiModelId,
 			openAiCustomModelInfo,
 			openAiUseAzure,
+			openAiUsageCumulation,
 			ollamaModelId,
 			ollamaBaseUrl,
 			lmStudioModelId,
@@ -2561,6 +2565,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("openAiModelId") as Promise<string | undefined>,
 			this.getGlobalState("openAiCustomModelInfo") as Promise<ModelInfo | undefined>,
 			this.getGlobalState("openAiUseAzure") as Promise<boolean | undefined>,
+			this.getGlobalState("openAiUsageCumulation") as Promise<boolean | undefined>,
 			this.getGlobalState("ollamaModelId") as Promise<string | undefined>,
 			this.getGlobalState("ollamaBaseUrl") as Promise<string | undefined>,
 			this.getGlobalState("lmStudioModelId") as Promise<string | undefined>,
@@ -2658,6 +2663,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				openAiModelId,
 				openAiCustomModelInfo,
 				openAiUseAzure,
+				openAiUsageCumulation,
 				ollamaModelId,
 				ollamaBaseUrl,
 				lmStudioModelId,

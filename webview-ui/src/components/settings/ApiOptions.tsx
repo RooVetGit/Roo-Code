@@ -629,6 +629,15 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage, fromWelcomeView }: A
 						</Checkbox>
 					</div>
 					<Checkbox
+						checked={apiConfiguration?.openAiUsageCumulation ?? true}
+						onChange={(checked: boolean) => {
+							handleInputChange("openAiUsageCumulation")({
+								target: { value: checked },
+							})
+						}}>
+						Enable token usage cumulation
+					</Checkbox>
+					<Checkbox
 						checked={apiConfiguration?.openAiUseAzure ?? false}
 						onChange={(checked: boolean) => {
 							handleInputChange("openAiUseAzure")({

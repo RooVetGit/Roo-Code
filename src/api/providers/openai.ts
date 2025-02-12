@@ -60,6 +60,9 @@ export class OpenAiHandler implements ApiHandler, SingleCompletionHandler {
 		const deepseekReasoner = modelId.includes("deepseek-reasoner")
 		const ark = modelUrl.includes(".volces.com")
 
+		let last_prompt_tokens = 0
+		let last_completion_tokens = 0
+
 		if (this.options.openAiStreamingEnabled ?? true) {
 			const systemMessage: OpenAI.Chat.ChatCompletionSystemMessageParam = {
 				role: "system",
@@ -107,7 +110,9 @@ export class OpenAiHandler implements ApiHandler, SingleCompletionHandler {
 					}
 				}
 				if (chunk.usage) {
-					yield this.processUsageMetrics(chunk.usage)
+					yield this.processUsageMetrics(chunk.usage, last_prompt_tokens, last_completion_tokens)
+					last_prompt_tokens = chunk.usage?.prompt_tokens || 0
+					last_completion_tokens = chunk.usage?.completion_tokens || 0
 				}
 			}
 		} else {
@@ -130,15 +135,27 @@ export class OpenAiHandler implements ApiHandler, SingleCompletionHandler {
 				type: "text",
 				text: response.choices[0]?.message.content || "",
 			}
-			yield this.processUsageMetrics(response.usage)
+			yield this.processUsageMetrics(response.usage, last_prompt_tokens, last_completion_tokens)
 		}
 	}
 
-	protected processUsageMetrics(usage: any): ApiStreamUsageChunk {
+	protected processUsageMetrics(
+		usage: any,
+		last_prompt_tokens: number,
+		last_completion_tokens: number,
+	): ApiStreamUsageChunk {
+		if (this.options.openAiUsageCumulation) {
+			return {
+				type: "usage",
+				inputTokens: usage?.prompt_tokens || 0,
+				outputTokens: usage?.completion_tokens || 0,
+			}
+		}
+
 		return {
 			type: "usage",
-			inputTokens: usage?.prompt_tokens || 0,
-			outputTokens: usage?.completion_tokens || 0,
+			inputTokens: usage?.prompt_tokens - last_prompt_tokens || 0,
+			outputTokens: usage?.completion_tokens - last_completion_tokens || 0,
 		}
 	}
 
