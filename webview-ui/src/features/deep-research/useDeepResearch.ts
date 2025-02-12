@@ -2,7 +2,7 @@ import { useState } from "react"
 
 import { vscode } from "@/utils/vscode"
 
-import { ChatHandler, Message } from "@/components/chat-ui"
+import { ChatHandler, Message } from "@/components/ui/chat"
 import { Session } from "./types"
 
 export const useDeepResearch = (): ChatHandler => {

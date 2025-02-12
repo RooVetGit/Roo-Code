@@ -5,7 +5,7 @@ import { Cross2Icon } from "@radix-ui/react-icons"
 import { ExtensionMessage } from "../../../../src/shared/ExtensionMessage"
 
 import { Button } from "@/components/ui"
-import { Chat } from "@/components/chat-ui"
+import { Chat } from "@/components/ui/chat"
 
 import { useDeepResearch } from "./useDeepResearch"
 import { useSession } from "./useSession"
