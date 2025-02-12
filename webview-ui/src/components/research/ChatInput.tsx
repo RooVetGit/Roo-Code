@@ -1,10 +1,9 @@
 import { Button, AutosizeTextarea } from "@/components/ui"
 
 import { Message } from "./types"
-import { FileUploader } from "./widgets/FileUploader"
+// import { FileUploader } from "./widgets/FileUploader"
 import { ChatInputProvider } from "./providers/ChatInputProvider"
-import { useChatUI } from "./hooks/useChatUI"
-import { useChatInput } from "./hooks/useChatInput"
+import { useChatUI, useChatInput } from "./hooks"
 
 /**
  * ChatInput
@@ -15,7 +14,7 @@ type ChatInputProps = {
 	annotations?: any
 }
 
-function ChatInput({ annotations, resetUploadedFiles }: ChatInputProps) {
+export function ChatInput({ annotations, resetUploadedFiles }: ChatInputProps) {
 	const { input, setInput, append, isLoading, requestData } = useChatUI()
 	const isDisabled = isLoading || !input.trim()
 
@@ -50,7 +49,7 @@ function ChatInput({ annotations, resetUploadedFiles }: ChatInputProps) {
 
 	return (
 		<ChatInputProvider value={{ isDisabled, handleKeyDown, handleSubmit }}>
-			<div className="flex shrink-0 flex-col gap-4 p-4">
+			<div className="p-3">
 				<ChatInputForm />
 			</div>
 		</ChatInputProvider>
@@ -80,7 +79,7 @@ interface ChatInputFieldProps {
 	placeholder?: string
 }
 
-function ChatInputField({ placeholder = "Type a message" }: ChatInputFieldProps) {
+function ChatInputField({ placeholder = "What do you want to research?" }: ChatInputFieldProps) {
 	const { input, setInput } = useChatUI()
 	const { handleKeyDown } = useChatInput()
 
@@ -88,39 +87,41 @@ function ChatInputField({ placeholder = "Type a message" }: ChatInputFieldProps)
 		<AutosizeTextarea
 			name="input"
 			placeholder={placeholder}
-			// className="h-[40px] min-h-0 flex-1"
+			minHeight={75}
+			maxHeight={200}
 			value={input}
 			onChange={({ target: { value } }) => setInput(value)}
 			onKeyDown={handleKeyDown}
+			className="resize-none px-3 pt-3 pb-[50px]"
 		/>
 	)
 }
 
 /**
- * ChatInput
+ * ChatInputUpload
  */
 
-const ALLOWED_EXTENSIONS = ["png", "jpg", "jpeg", "csv", "pdf", "txt", "docx"]
+// const ALLOWED_EXTENSIONS = ["png", "jpg", "jpeg", "csv", "pdf", "txt", "docx"]
 
-interface ChatInputUploadProps {
-	onUpload?: (file: File) => Promise<void> | undefined
-	allowedExtensions?: string[]
-	multiple?: boolean
-}
+// interface ChatInputUploadProps {
+// 	onUpload?: (file: File) => Promise<void> | undefined
+// 	allowedExtensions?: string[]
+// 	multiple?: boolean
+// }
 
-function ChatInputUpload({ onUpload, allowedExtensions = ALLOWED_EXTENSIONS, multiple = true }: ChatInputUploadProps) {
-	const { requestData, setRequestData, isLoading } = useChatUI()
+// function ChatInputUpload({ onUpload, allowedExtensions = ALLOWED_EXTENSIONS, multiple = true }: ChatInputUploadProps) {
+// 	const { requestData, setRequestData, isLoading } = useChatUI()
 
-	const onFileUpload = async (file: File) => {
-		if (onUpload) {
-			await onUpload(file)
-		} else {
-			setRequestData({ ...(requestData || {}), file })
-		}
-	}
+// 	const onFileUpload = async (file: File) => {
+// 		if (onUpload) {
+// 			await onUpload(file)
+// 		} else {
+// 			setRequestData({ ...(requestData || {}), file })
+// 		}
+// 	}
 
-	return <FileUploader onFileUpload={onFileUpload} config={{ disabled: isLoading, allowedExtensions, multiple }} />
-}
+// 	return <FileUploader onFileUpload={onFileUpload} config={{ disabled: isLoading, allowedExtensions, multiple }} />
+// }
 
 /**
  * ChatInputSubmit
@@ -130,15 +131,12 @@ function ChatInputSubmit() {
 	const { isDisabled } = useChatInput()
 
 	return (
-		<Button variant="ghost" type="submit" disabled={isDisabled}>
-			<span className="codicon codicon-send" />
-		</Button>
+		<div className="absolute bottom-[1px] left-[1px] right-[1px] h-[40px] bg-input border-t border-vscode-editor-background rounded-b-md">
+			<div className="flex flex-row-reverse items-center gap-2">
+				<Button type="submit" variant="ghost" size="icon" disabled={isDisabled}>
+					<span className="codicon codicon-send" />
+				</Button>
+			</div>
+		</div>
 	)
 }
-
-ChatInput.Form = ChatInputForm
-ChatInput.Field = ChatInputField
-ChatInput.Upload = ChatInputUpload
-ChatInput.Submit = ChatInputSubmit
-
-export default ChatInput

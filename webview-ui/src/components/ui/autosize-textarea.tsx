@@ -55,20 +55,13 @@ export type AutosizeTextAreaRef = {
 }
 
 type AutosizeTextAreaProps = {
-	minHeight?: number
-	maxHeight?: number
+	minHeight: number
+	maxHeight: number
 } & React.TextareaHTMLAttributes<HTMLTextAreaElement>
 
 export const AutosizeTextarea = React.forwardRef<AutosizeTextAreaRef, AutosizeTextAreaProps>(
 	(
-		{
-			minHeight = 52,
-			maxHeight = Number.MAX_SAFE_INTEGER,
-			className,
-			onChange,
-			value,
-			...props
-		}: AutosizeTextAreaProps,
+		{ minHeight, maxHeight, className, onChange, value, ...props }: AutosizeTextAreaProps,
 		ref: React.Ref<AutosizeTextAreaRef>,
 	) => {
 		const textAreaRef = React.useRef<HTMLTextAreaElement | null>(null)
@@ -98,7 +91,7 @@ export const AutosizeTextarea = React.forwardRef<AutosizeTextAreaRef, AutosizeTe
 				value={value}
 				ref={textAreaRef}
 				className={cn(
-					"flex w-full rounded-md border border-input bg-input px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+					"flex w-full rounded-md border border-input bg-input ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 scrollbar-hide",
 					className,
 				)}
 				onChange={(e) => {

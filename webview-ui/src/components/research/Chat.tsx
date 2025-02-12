@@ -4,8 +4,10 @@ import { cn } from "@/lib/utils"
 
 import { type ChatHandler } from "./types"
 import { ChatProvider } from "./providers/ChatProvider"
-import ChatInput from "./ChatInput"
-import ChatMessages from "./ChatMessages"
+import { ChatMessagesProvider } from "./providers/ChatMessagesProvider"
+import { ChatMessages, ChatActions } from "./ChatMessages"
+import { ChatInput } from "./ChatInput"
+import { useChatUI } from "./hooks"
 
 type ChatProps = {
 	handler: ChatHandler
@@ -16,14 +18,31 @@ export const Chat = ({ handler }: ChatProps) => {
 
 	return (
 		<ChatProvider value={{ ...handler, requestData, setRequestData }}>
-			<div className={cn("flex flex-col h-[100vh]")}>
-				<div className="flex-1 overflow-auto">
-					<ChatMessages />
-				</div>
-				<div className="sticky bottom-0 border-t">
-					<ChatInput />
-				</div>
-			</div>
+			<ChatComponent />
 		</ChatProvider>
+	)
+}
+
+const ChatComponent = () => {
+	const { messages, reload, stop, isLoading } = useChatUI()
+
+	const messageLength = messages.length
+	const lastMessage = messages[messageLength - 1]
+	const isLastMessageFromAssistant = messageLength > 0 && lastMessage?.role !== "user"
+	const showReload = reload && !isLoading && isLastMessageFromAssistant
+	const showStop = stop && isLoading
+
+	// The `isPending` flag indicates that stream response is not yet received
+	// from the server, so we show a loading indicator to give a better UX.
+	const isPending = isLoading && !isLastMessageFromAssistant
+
+	return (
+		<ChatMessagesProvider value={{ isPending, showReload, showStop, lastMessage, messageLength }}>
+			<div className={cn("relative flex flex-col flex-1 min-h-0 pt-2 pr-[1px]")}>
+				<ChatMessages />
+				<ChatActions />
+				<ChatInput />
+			</div>
+		</ChatMessagesProvider>
 	)
 }

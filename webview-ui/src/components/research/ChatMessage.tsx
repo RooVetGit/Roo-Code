@@ -1,8 +1,8 @@
-import { Bot, Check, Copy, MessageCircle, User2 } from "lucide-react"
-import { Fragment, memo, useMemo } from "react"
+import { Fragment, useMemo } from "react"
+import { CopyIcon, CheckIcon } from "@radix-ui/react-icons"
+import { BrainCircuit, CircleUserRound } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui"
 
 import { ChatHandler, Message } from "./types"
 import { ChatMessageProvider } from "./providers/ChatMessageProvider"
@@ -23,26 +23,25 @@ import {
  * ChatMessage
  */
 
-interface ChatMessageProps extends React.PropsWithChildren {
-	message: Message
-	isLast: boolean
-	className?: string
+interface ChatMessageProps {
 	isLoading?: boolean
+	isLast: boolean
+	message: Message
 	append?: ChatHandler["append"]
 }
 
-function ChatMessage(props: ChatMessageProps) {
-	const children = props.children ?? (
-		<>
-			<ChatMessageAvatar />
-			<ChatMessageContent isLoading={props.isLoading} append={props.append} />
-			<ChatMessageActions />
-		</>
-	)
-
+export function ChatMessage({ isLoading, isLast, message, append }: ChatMessageProps) {
 	return (
-		<ChatMessageProvider value={{ message: props.message, isLast: props.isLast }}>
-			<div className={cn("group flex gap-4 p-3", props.className)}>{children}</div>
+		<ChatMessageProvider value={{ message, isLast }}>
+			<div
+				className={cn("relative group flex", {
+					"flex-row-reverse": message.role === "user",
+					"bg-vscode-input-background/50": message.role === "user",
+				})}>
+				<ChatMessageAvatar />
+				<ChatMessageContent isLoading={isLoading} append={append} />
+				<ChatMessageActions />
+			</div>
 		</ChatMessageProvider>
 	)
 }
@@ -51,25 +50,17 @@ function ChatMessage(props: ChatMessageProps) {
  * ChatMessageAvatar
  */
 
-interface ChatMessageAvatarProps extends React.PropsWithChildren {
-	className?: string
-}
-
-function ChatMessageAvatar(props: ChatMessageAvatarProps) {
+function ChatMessageAvatar() {
 	const { message } = useChatMessage()
 
 	const roleIconMap: Record<string, React.ReactNode> = {
-		user: <User2 className="h-4 w-4" />,
-		assistant: <Bot className="h-4 w-4" />,
+		user: <CircleUserRound className="h-4 w-4" />,
+		assistant: <BrainCircuit className="h-4 w-4" />,
 	}
 
-	const children = props.children ?? roleIconMap[message.role] ?? <MessageCircle className="h-4 w-4" />
-
-	return (
-		<div className="bg-background flex h-8 w-8 shrink-0 select-none items-center justify-center border">
-			{children}
-		</div>
-	)
+	return roleIconMap[message.role] ? (
+		<div className="shrink-0 opacity-25 select-none p-2">{roleIconMap[message.role]}</div>
+	) : null
 }
 
 /**
@@ -101,17 +92,14 @@ type ContentDisplayConfig = {
 	component: React.ReactNode | null
 }
 
-interface ChatMessageContentProps extends React.PropsWithChildren {
-	className?: string
-	content?: ContentDisplayConfig[]
+interface ChatMessageContentProps {
 	isLoading?: boolean
+	content?: ContentDisplayConfig[]
 	append?: ChatHandler["append"]
-	message?: Message // in case you want to customize the message
 }
 
-function ChatMessageContent(props: ChatMessageContentProps) {
-	const { message: defaultMessage, isLast } = useChatMessage()
-	const message = props.message ?? defaultMessage
+function ChatMessageContent({ isLoading, content, append }: ChatMessageContentProps) {
+	const { message, isLast } = useChatMessage()
 	const annotations = message.annotations as MessageAnnotation[] | undefined
 
 	const contents = useMemo<ContentDisplayConfig[]>(() => {
@@ -119,7 +107,7 @@ function ChatMessageContent(props: ChatMessageContentProps) {
 			[key in ContentPosition]?: React.ReactNode | null
 		} = {
 			[ContentPosition.CHAT_EVENTS]: (
-				<EventAnnotations message={message} showLoading={(isLast && props.isLoading) ?? false} />
+				<EventAnnotations message={message} showLoading={(isLast && isLoading) ?? false} />
 			),
 			[ContentPosition.CHAT_AGENT_EVENTS]: <AgentEventAnnotations message={message} />,
 			[ContentPosition.CHAT_IMAGE]: <ImageAnnotations message={message} />,
@@ -132,16 +120,16 @@ function ChatMessageContent(props: ChatMessageContentProps) {
 			[ContentPosition.CHAT_DOCUMENT_FILES]: <DocumentFileAnnotations message={message} />,
 			[ContentPosition.CHAT_SOURCES]: <SourceAnnotations message={message} />,
 			...(isLast &&
-				props.append && {
-					// show suggested questions only on the last message
+				append && {
+					// Show suggested questions only on the last message.
 					[ContentPosition.SUGGESTED_QUESTIONS]: (
-						<SuggestedQuestionsAnnotations message={message} append={props.append} />
+						<SuggestedQuestionsAnnotations message={message} append={append} />
 					),
 				}),
 		}
 
-		// Override the default display map with the custom content
-		props.content?.forEach((content) => {
+		// Override the default display map with the custom content.
+		content?.forEach((content) => {
 			displayMap[content.position] = content.component
 		})
 
@@ -149,61 +137,35 @@ function ChatMessageContent(props: ChatMessageContentProps) {
 			position: parseInt(position),
 			component,
 		}))
-	}, [annotations, isLast, message, props.append, props.content, props.isLoading])
+	}, [annotations, isLast, isLoading, content, append, message])
 
-	const children = props.children ?? (
-		<>
+	return (
+		<div
+			className={cn("flex flex-col gap-4 flex-1 min-w-0 px-2 pt-4 pb-6", {
+				"text-right": message.role === "user",
+			})}>
 			{contents
 				.sort((a, b) => a.position - b.position)
 				.map((content, index) => (
 					<Fragment key={index}>{content.component}</Fragment>
 				))}
-		</>
+		</div>
 	)
-
-	return <div className={cn("flex min-w-0 flex-1 flex-col gap-4", props.className)}>{children}</div>
 }
 
 /**
  * ChatMessageActions
  */
 
-interface ChatMessageActionsProps extends React.PropsWithChildren {
-	className?: string
-}
-
-function ChatMessageActions(props: ChatMessageActionsProps) {
-	const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 })
+function ChatMessageActions() {
 	const { message } = useChatMessage()
+	const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 })
 
-	const children = props.children ?? (
-		<Button onClick={() => copyToClipboard(message.content)} size="icon" variant="ghost" className="h-8 w-8">
-			{isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-		</Button>
-	)
 	return (
-		<div className={cn("flex shrink-0 flex-col gap-2 opacity-0 group-hover:opacity-100", props.className)}>
-			{children}
+		<div
+			className="absolute right-2 bottom-2 opacity-0 group-hover:opacity-25 cursor-pointer"
+			onClick={() => copyToClipboard(message.content)}>
+			{isCopied ? <CheckIcon /> : <CopyIcon />}
 		</div>
 	)
 }
-
-/**
- * ComposibleChatMessage
- */
-
-type ComposibleChatMessage = typeof ChatMessage & {
-	Avatar: typeof ChatMessageAvatar
-	Content: typeof ChatMessageContent
-	Actions: typeof ChatMessageActions
-}
-
-const PrimiviteChatMessage = memo(ChatMessage, (prevProps, nextProps) => {
-	return !nextProps.isLast && prevProps.isLast === nextProps.isLast && prevProps.message === nextProps.message
-}) as unknown as ComposibleChatMessage
-
-PrimiviteChatMessage.Avatar = ChatMessageAvatar
-PrimiviteChatMessage.Content = ChatMessageContent
-PrimiviteChatMessage.Actions = ChatMessageActions
-
-export default PrimiviteChatMessage
