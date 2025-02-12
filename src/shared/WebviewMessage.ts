@@ -92,8 +92,7 @@ export interface WebviewMessage {
 		| "openCustomModesSettings"
 		| "checkpointDiff"
 		| "checkpointRestore"
-		| "research.start"
-		| "research.append"
+		| "research.input"
 		| "research.reload"
 		| "research.stop"
 	text?: string

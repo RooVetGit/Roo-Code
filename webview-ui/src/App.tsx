@@ -10,7 +10,7 @@ import SettingsView from "./components/settings/SettingsView"
 import WelcomeView from "./components/welcome/WelcomeView"
 import McpView from "./components/mcp/McpView"
 import PromptsView from "./components/prompts/PromptsView"
-import { ResearchView } from "./components/research/ResearchView"
+import { DeepResearch } from "./features/deep-research/DeepResearch"
 
 type Tab = "settings" | "history" | "mcp" | "prompts" | "research" | "chat"
 
@@ -30,7 +30,6 @@ const App = () => {
 
 	const onMessage = useCallback((e: MessageEvent) => {
 		const message: ExtensionMessage = e.data
-		console.log(`[App#onMessage] type=${message.type}`)
 
 		if (message.type === "action" && message.action) {
 			const newTab = tabsByMessageAction[message.action]
@@ -65,7 +64,7 @@ const App = () => {
 			{tab === "history" && <HistoryView onDone={() => setTab("chat")} />}
 			{tab === "mcp" && <McpView onDone={() => setTab("chat")} />}
 			{tab === "prompts" && <PromptsView onDone={() => setTab("chat")} />}
-			<ResearchView isHidden={tab !== "research"} onDone={() => setTab("chat")} />
+			<DeepResearch isHidden={tab !== "research"} onDone={() => setTab("chat")} />
 			<ChatView
 				isHidden={tab !== "chat"}
 				showAnnouncement={showAnnouncement}

@@ -36,6 +36,7 @@ export class DeepResearchService {
 	private combinedQuery?: string
 	private questions: string[] = []
 	private answers: string[] = []
+	private status: "idle" | "feedback" | "research" | "done" = "idle"
 
 	constructor(
 		clineProvider: ClineProvider,
@@ -89,7 +90,20 @@ export class DeepResearchService {
 			.join("\n")
 	}
 
-	public async feedback({ query, count = 3 }: { query: string; count?: number }) {
+	private async withLoading<T>(operation: () => Promise<T>): Promise<T> {
+		await this.postMessage({ type: "research.loading", text: "true" })
+
+		try {
+			return await operation()
+		} finally {
+			await this.postMessage({ type: "research.loading", text: "false" })
+		}
+	}
+
+	public async generateFeedback({ query, count = 3 }: { query: string; count?: number }) {
+		this.status = "feedback"
+		this.initialQuery = query
+
 		const schema = z.object({
 			questions: z
 				.array(z.string())
@@ -98,14 +112,50 @@ export class DeepResearchService {
 
 		const {
 			object: { questions },
-		} = await generateObject({
-			model: this.model,
-			system: this.systemPrompt(),
-			prompt: this.feedbackPrompt({ query, count }),
-			schema,
-		})
+		} = await this.withLoading(() =>
+			generateObject({
+				model: this.model,
+				system: this.systemPrompt(),
+				prompt: this.feedbackPrompt({ query, count }),
+				schema,
+			}),
+		)
 
-		return questions.slice(0, count)
+		this.questions = questions.slice(0, count)
+	}
+
+	private async processFeedback(content?: string) {
+		if (content) {
+			this.answers.push(content)
+		}
+
+		const text = this.questions.shift()
+
+		if (text) {
+			await this.postMessage({ type: "research.question", text })
+		} else {
+			this.combinedQuery = `
+				Initial Query: ${this.initialQuery}
+				Follow-up Questions and Answers:
+				${this.questions.map((q: string, i: number) => `Q: ${q}\nA: ${this.answers[i]}`).join("\n")}
+			`
+				.split("\n")
+				.map((line) => line.trim())
+				.join("\n")
+
+			await this.withLoading(() =>
+				this.deepResearch({
+					query: this.combinedQuery!,
+					breadth: this.breadth,
+					depth: this.depth,
+					learnings: [],
+					visitedUrls: [],
+					onProgress: (progress) => {
+						console.log("progress", progress)
+					},
+				}),
+			)
+		}
 	}
 
 	private async deepResearch({
@@ -123,6 +173,8 @@ export class DeepResearchService {
 		visitedUrls?: string[]
 		onProgress?: (progress: ResearchProgress) => void
 	}): Promise<ResearchResult> {
+		this.status = "research"
+
 		const progress: ResearchProgress = {
 			currentDepth: depth,
 			totalDepth: depth,
@@ -232,31 +284,20 @@ export class DeepResearchService {
 		}
 	}
 
-	public async start(content: string) {
-		console.log("[DeepResearchService#start] content =", content)
-		this.initialQuery = content
-		this.questions = await this.feedback({ query: content })
-		console.log(this.questions)
-
-		const text = this.questions.shift()
-
-		if (text) {
-			await this.postMessage({ type: "research.question", text })
-		} else {
-			await this.postMessage({ type: "research.error", text: "Failed to generate follow up questions." })
-		}
-	}
-
 	public async append(content: string) {
 		console.log("[DeepResearchService#append] content =", content)
-		this.answers.push(content)
 
-		const text = this.questions.shift()
-
-		if (text) {
-			await this.postMessage({ type: "research.question", text })
-		} else {
-			console.log("Ready for deep research!")
+		switch (this.status) {
+			case "idle":
+				await this.generateFeedback({ query: content })
+				await this.processFeedback()
+				break
+			case "feedback":
+				await this.processFeedback()
+				break
+			default:
+				console.log("UNHANDLED", this.status, content)
+				break
 		}
 	}
 

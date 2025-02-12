@@ -1501,27 +1501,15 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							await this.postStateToWebview()
 						}
 						break
-
-					case "research.start": {
+					case "research.input": {
 						const result = researchAppendPayloadSchema.safeParse(message.payload)
-						console.log("[ClineProvider] research.start", result)
+						console.log("[ClineProvider] research.input", result)
 
 						if (result.success) {
-							if (this.deepResearchService) {
-								await this.deepResearchService.abort()
+							if (!this.deepResearchService) {
+								this.deepResearchService = new DeepResearchService(this, "o3-mini", 4, 2, 2)
 							}
 
-							this.deepResearchService = new DeepResearchService(this, "o3-mini", 4, 2, 2)
-							this.deepResearchService.start(result.data.message.content)
-						}
-
-						break
-					}
-					case "research.append": {
-						const result = researchAppendPayloadSchema.safeParse(message.payload)
-						console.log("[ClineProvider] research.append", result)
-
-						if (result.success && this.deepResearchService) {
 							this.deepResearchService.append(result.data.message.content)
 						}
 
