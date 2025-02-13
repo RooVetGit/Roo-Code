@@ -9,6 +9,15 @@ import { ExtensionMessage } from "../../shared/ExtensionMessage"
 import { generateSerpQueries, processSerpResult } from "./utils/serp"
 import { ClineProvider } from "../../core/webview/ClineProvider"
 
+export type ResearchStep = {
+	query: string
+	breadth: number
+	depth: number
+	learnings?: string[]
+	visitedUrls?: string[]
+	onProgress?: (progress: ResearchProgress) => void
+}
+
 export type ResearchProgress = {
 	currentDepth: number
 	totalDepth: number
@@ -56,7 +65,7 @@ export class DeepResearchService {
 	private systemPrompt() {
 		const now = new Date().toISOString()
 
-		return `
+		return this.trimPrompt(`
             You are an expert researcher. Today is ${now}. Follow these instructions when responding:
             - You may be asked to research subjects that is after your knowledge cutoff, assume the user is right when presented with news.
             - The user is a highly experienced analyst, no need to simplify it, be as detailed as possible and make sure your response is correct.
@@ -69,20 +78,14 @@ export class DeepResearchService {
             - Value good arguments over authorities, the source is irrelevant.
             - Consider new technologies and contrarian ideas, not just the conventional wisdom.
             - You may use high levels of speculation or prediction, just flag it for me.
-        `
-			.split("\n")
-			.map((line) => line.trim())
-			.join("\n")
+        `)
 	}
 
 	private feedbackPrompt({ query, count }: { query: string; count: number }) {
-		return `
+		return this.trimPrompt(`
             Given the following query from the user, ask some follow up questions to clarify the research direction.
             Return a maximum of ${count} questions, but feel free to return less if the original query is clear: <query>${query}</query>
-        `
-			.split("\n")
-			.map((line) => line.trim())
-			.join("\n")
+        `)
 	}
 
 	private async withLoading<T>(operation: () => Promise<T>): Promise<T> {
@@ -129,14 +132,11 @@ export class DeepResearchService {
 		if (text) {
 			await this.postMessage({ type: "research.question", text })
 		} else {
-			this.combinedQuery = `
+			this.combinedQuery = this.trimPrompt(`
 				Initial Query: ${this.initialQuery}
 				Follow-up Questions and Answers:
 				${this.questions.map((q: string, i: number) => `Q: ${q}\nA: ${this.answers[i]}`).join("\n")}
-			`
-				.split("\n")
-				.map((line) => line.trim())
-				.join("\n")
+			`)
 
 			await this.withLoading(() =>
 				this.deepResearch({
@@ -145,9 +145,7 @@ export class DeepResearchService {
 					depth: this.depth,
 					learnings: [],
 					visitedUrls: [],
-					onProgress: (progress) => {
-						console.log("progress", progress)
-					},
+					onProgress: (progress) => console.log("progress", progress),
 				}),
 			)
 		}
@@ -160,14 +158,7 @@ export class DeepResearchService {
 		learnings = [],
 		visitedUrls = [],
 		onProgress,
-	}: {
-		query: string
-		breadth: number
-		depth: number
-		learnings?: string[]
-		visitedUrls?: string[]
-		onProgress?: (progress: ResearchProgress) => void
-	}): Promise<ResearchResult> {
+	}: ResearchStep): Promise<ResearchResult> {
 		this.status = "research"
 
 		const progress: ResearchProgress = {
@@ -209,9 +200,8 @@ export class DeepResearchService {
 							scrapeOptions: { formats: ["markdown"] },
 						})
 
-						// Collect URLs from this search.
 						const newUrls = result.data
-							.map((item) => item.url)
+							.map(({ url }) => url)
 							.filter((url): url is string => url !== undefined)
 
 						const newBreadth = Math.ceil(breadth / 2)
@@ -238,10 +228,10 @@ export class DeepResearchService {
 								currentQuery: serpQuery.query,
 							})
 
-							const nextQuery = `
+							const nextQuery = this.trimPrompt(`
                                 Previous research goal: ${serpQuery.researchGoal}
                                 Follow-up research directions: ${newLearnings.followUpQuestions.map((q) => `\n${q}`).join("")}
-                            `.trim()
+                            `)
 
 							return this.deepResearch({
 								query: nextQuery,
@@ -339,5 +329,12 @@ export class DeepResearchService {
 
 	private postMessage(message: ExtensionMessage) {
 		this.providerRef.deref()?.postMessageToWebview(message)
+	}
+
+	private trimPrompt(prompt: string): string {
+		return prompt
+			.split("\n")
+			.map((line) => line.trim())
+			.join("\n")
 	}
 }
