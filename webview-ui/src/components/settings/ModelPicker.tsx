@@ -141,7 +141,14 @@ export const ModelPicker = ({
 	useEffect(() => setValue(selectedModelId), [selectedModelId])
 
 	return (
-		<>
+		<div
+			style={{
+				marginBottom: 15,
+				marginTop: 10,
+				paddingLeft: 10,
+				borderLeft: "2px solid",
+				borderColor: "var(--vscode-button-background)",
+			}}>
 			<div className="font-semibold">Model</div>
 			<Popover open={open} onOpenChange={setOpen}>
 				<PopoverTrigger asChild>
@@ -219,6 +226,6 @@ export const ModelPicker = ({
 					</div>
 				</div>
 			)}
-		</>
+		</div>
 	)
 }

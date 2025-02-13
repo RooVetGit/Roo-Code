@@ -162,7 +162,7 @@ describe("SettingsView - Sound Settings", () => {
 		// Volume slider should be visible
 		const volumeSlider = screen.getByRole("slider", { name: /volume/i })
 		expect(volumeSlider).toBeInTheDocument()
-		expect(volumeSlider).toHaveValue("0.5")
+		expect(volumeSlider).toHaveValue("50")
 	})
 
 	it("updates volume and sends message to VSCode when slider changes", () => {
@@ -176,7 +176,7 @@ describe("SettingsView - Sound Settings", () => {
 
 		// Change volume
 		const volumeSlider = screen.getByRole("slider", { name: /volume/i })
-		fireEvent.change(volumeSlider, { target: { value: "0.75" } })
+		fireEvent.change(volumeSlider, { target: { value: "75" } })
 
 		// Click Done to save settings
 		const doneButton = screen.getByText("Done")

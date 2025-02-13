@@ -1,14 +1,14 @@
-import { VSCodeButton, VSCodeCheckbox, VSCodeLink, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeButton, VSCodeLink, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 import { memo, useEffect, useState } from "react"
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import { validateApiConfiguration, validateModelId } from "../../utils/validate"
 import { vscode } from "../../utils/vscode"
 import ApiOptions from "./ApiOptions"
-import ExperimentalFeature from "./ExperimentalFeature"
+import SettingCheckbox from "./SettingCheckbox"
+import SettingCombo from "./SettingCombo"
+import SettingSlider from "./SettingSlider"
 import { EXPERIMENT_IDS, experimentConfigsMap } from "../../../../src/shared/experiments"
 import ApiConfigManager from "./ApiConfigManager"
-import { Dropdown } from "vscrui"
-import type { DropdownOption } from "vscrui"
 
 type SettingsViewProps = {
 	onDone: () => void
@@ -144,20 +144,6 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		}
 	}
 
-	const sliderLabelStyle = {
-		minWidth: "45px",
-		textAlign: "right" as const,
-		lineHeight: "20px",
-		paddingBottom: "2px",
-	}
-
-	const sliderStyle = {
-		flexGrow: 1,
-		maxWidth: "80%",
-		accentColor: "var(--vscode-button-background)",
-		height: "2px",
-	}
-
 	return (
 		<div
 			style={{
@@ -184,7 +170,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 			</div>
 			<div
 				style={{ flexGrow: 1, overflowY: "scroll", paddingRight: 8, display: "flex", flexDirection: "column" }}>
-				<div style={{ marginBottom: 40 }}>
+				<div style={{ marginBottom: 10 }}>
 					<h3 style={{ color: "var(--vscode-foreground)", margin: "0 0 15px 0" }}>Provider Settings</h3>
 					<div style={{ marginBottom: 15 }}>
 						<ApiConfigManager
@@ -226,7 +212,14 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 					</div>
 				</div>
 
-				<div style={{ marginBottom: 40 }}>
+				<div
+					style={{
+						marginBottom: 15,
+						marginTop: 10,
+						paddingLeft: 10,
+						borderLeft: "2px solid",
+						borderColor: "var(--vscode-button-background)",
+					}}>
 					<h3 style={{ color: "var(--vscode-foreground)", margin: "0 0 15px 0" }}>Auto-Approve Settings</h3>
 					<p style={{ fontSize: "12px", marginBottom: 15, color: "var(--vscode-descriptionForeground)" }}>
 						The following settings allow Roo to automatically perform operations without requiring approval.
@@ -234,533 +227,309 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 						risks.
 					</p>
 
-					<div style={{ marginBottom: 15 }}>
-						<VSCodeCheckbox
-							checked={alwaysAllowReadOnly}
-							onChange={(e: any) => setAlwaysAllowReadOnly(e.target.checked)}>
-							<span style={{ fontWeight: "500" }}>Always approve read-only operations</span>
-						</VSCodeCheckbox>
+					<SettingCheckbox
+						name="Always approve read-only operations"
+						description="When enabled, Roo will automatically view directory contents and read files without requiring you to click the Approve button."
+						checked={alwaysAllowReadOnly}
+						onChange={setAlwaysAllowReadOnly}
+					/>
+
+					<SettingCheckbox
+						name="Always approve write operations"
+						description="Automatically create and edit files without requiring approval"
+						checked={alwaysAllowWrite}
+						onChange={setAlwaysAllowWrite}>
+						<SettingSlider
+							name=""
+							description="Delay after writes to allow diagnostics to detect potential problems"
+							value={writeDelayMs}
+							onChange={setWriteDelayMs}
+							min={0}
+							max={5000}
+							step={100}
+							unit="ms"
+						/>
+					</SettingCheckbox>
+
+					<SettingCheckbox
+						name="Always approve browser actions"
+						description="Automatically perform browser actions without requiring approval
+Note: Only applies when the model supports computer use"
+						checked={alwaysAllowBrowser}
+						onChange={setAlwaysAllowBrowser}
+					/>
+
+					<SettingCheckbox
+						name="Always retry failed API requests"
+						description="Automatically retry failed API requests when server returns an error response"
+						checked={alwaysApproveResubmit}
+						onChange={setAlwaysApproveResubmit}>
+						<SettingSlider
+							name=""
+							description="Delay before retrying the request"
+							value={requestDelaySeconds}
+							onChange={setRequestDelaySeconds}
+							min={5}
+							max={100}
+							step={1}
+							unit="s"
+						/>
+					</SettingCheckbox>
+
+					<SettingCheckbox
+						name="Always approve MCP tools"
+						description="Enable auto-approval of individual MCP tools in the MCP Servers view (requires both this setting and the tool's individual 'Always allow' checkbox)"
+						checked={alwaysAllowMcp}
+						onChange={setAlwaysAllowMcp}
+					/>
+
+					<SettingCheckbox
+						name="Always approve mode switching & task creation"
+						description="Automatically switch between different AI modes and create new tasks without requiring approval"
+						checked={alwaysAllowModeSwitch}
+						onChange={setAlwaysAllowModeSwitch}
+					/>
+
+					<SettingCheckbox
+						name="Always approve allowed execute operations"
+						description="Automatically execute allowed terminal commands without requiring approval"
+						checked={alwaysAllowExecute}
+						onChange={setAlwaysAllowExecute}>
+						<span style={{ fontWeight: "500" }}>Allowed Auto-Execute Commands</span>
 						<p
 							style={{
 								fontSize: "12px",
 								marginTop: "5px",
 								color: "var(--vscode-descriptionForeground)",
 							}}>
-							When enabled, Roo will automatically view directory contents and read files without
-							requiring you to click the Approve button.
-						</p>
-					</div>
-
-					<div style={{ marginBottom: 15 }}>
-						<VSCodeCheckbox
-							checked={alwaysAllowWrite}
-							onChange={(e: any) => setAlwaysAllowWrite(e.target.checked)}>
-							<span style={{ fontWeight: "500" }}>Always approve write operations</span>
-						</VSCodeCheckbox>
-						<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>
-							Automatically create and edit files without requiring approval
-						</p>
-						{alwaysAllowWrite && (
-							<div
-								style={{
-									marginTop: 10,
-									paddingLeft: 10,
-									borderLeft: "2px solid var(--vscode-button-background)",
-								}}>
-								<div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-									<input
-										type="range"
-										min="0"
-										max="5000"
-										step="100"
-										value={writeDelayMs}
-										onChange={(e) => setWriteDelayMs(parseInt(e.target.value))}
-										style={{
-											flex: 1,
-											accentColor: "var(--vscode-button-background)",
-											height: "2px",
-										}}
-									/>
-									<span style={{ minWidth: "45px", textAlign: "left" }}>{writeDelayMs}ms</span>
-								</div>
-								<p
-									style={{
-										fontSize: "12px",
-										marginTop: "5px",
-										color: "var(--vscode-descriptionForeground)",
-									}}>
-									Delay after writes to allow diagnostics to detect potential problems
-								</p>
-							</div>
-						)}
-					</div>
-
-					<div style={{ marginBottom: 15 }}>
-						<VSCodeCheckbox
-							checked={alwaysAllowBrowser}
-							onChange={(e: any) => setAlwaysAllowBrowser(e.target.checked)}>
-							<span style={{ fontWeight: "500" }}>Always approve browser actions</span>
-						</VSCodeCheckbox>
-						<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>
-							Automatically perform browser actions without requiring approval
-							<br />
-							Note: Only applies when the model supports computer use
-						</p>
-					</div>
-
-					<div style={{ marginBottom: 15 }}>
-						<VSCodeCheckbox
-							checked={alwaysApproveResubmit}
-							onChange={(e: any) => setAlwaysApproveResubmit(e.target.checked)}>
-							<span style={{ fontWeight: "500" }}>Always retry failed API requests</span>
-						</VSCodeCheckbox>
-						<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>
-							Automatically retry failed API requests when server returns an error response
-						</p>
-						{alwaysApproveResubmit && (
-							<div
-								style={{
-									marginTop: 10,
-									paddingLeft: 10,
-									borderLeft: "2px solid var(--vscode-button-background)",
-								}}>
-								<div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-									<input
-										type="range"
-										min="5"
-										max="100"
-										step="1"
-										value={requestDelaySeconds}
-										onChange={(e) => setRequestDelaySeconds(parseInt(e.target.value))}
-										style={{
-											flex: 1,
-											accentColor: "var(--vscode-button-background)",
-											height: "2px",
-										}}
-									/>
-									<span style={{ minWidth: "45px", textAlign: "left" }}>{requestDelaySeconds}s</span>
-								</div>
-								<p
-									style={{
-										fontSize: "12px",
-										marginTop: "5px",
-										color: "var(--vscode-descriptionForeground)",
-									}}>
-									Delay before retrying the request
-								</p>
-							</div>
-						)}
-					</div>
-
-					<div style={{ marginBottom: 5 }}>
-						<VSCodeCheckbox
-							checked={alwaysAllowMcp}
-							onChange={(e: any) => setAlwaysAllowMcp(e.target.checked)}>
-							<span style={{ fontWeight: "500" }}>Always approve MCP tools</span>
-						</VSCodeCheckbox>
-						<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>
-							Enable auto-approval of individual MCP tools in the MCP Servers view (requires both this
-							setting and the tool's individual "Always allow" checkbox)
-						</p>
-					</div>
-
-					<div style={{ marginBottom: 15 }}>
-						<VSCodeCheckbox
-							checked={alwaysAllowModeSwitch}
-							onChange={(e: any) => setAlwaysAllowModeSwitch(e.target.checked)}>
-							<span style={{ fontWeight: "500" }}>Always approve mode switching & task creation</span>
-						</VSCodeCheckbox>
-						<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>
-							Automatically switch between different AI modes and create new tasks without requiring
-							approval
-						</p>
-					</div>
-
-					<div style={{ marginBottom: 15 }}>
-						<VSCodeCheckbox
-							checked={alwaysAllowExecute}
-							onChange={(e: any) => setAlwaysAllowExecute(e.target.checked)}>
-							<span style={{ fontWeight: "500" }}>Always approve allowed execute operations</span>
-						</VSCodeCheckbox>
-						<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>
-							Automatically execute allowed terminal commands without requiring approval
+							Command prefixes that can be auto-executed when "Always approve execute operations" is
+							enabled.
 						</p>
 
-						{alwaysAllowExecute && (
-							<div
-								style={{
-									marginTop: 10,
-									paddingLeft: 10,
-									borderLeft: "2px solid var(--vscode-button-background)",
-								}}>
-								<span style={{ fontWeight: "500" }}>Allowed Auto-Execute Commands</span>
-								<p
-									style={{
-										fontSize: "12px",
-										marginTop: "5px",
-										color: "var(--vscode-descriptionForeground)",
-									}}>
-									Command prefixes that can be auto-executed when "Always approve execute operations"
-									is enabled.
-								</p>
-
-								<div style={{ display: "flex", gap: "5px", marginTop: "10px" }}>
-									<VSCodeTextField
-										value={commandInput}
-										onInput={(e: any) => setCommandInput(e.target.value)}
-										onKeyDown={(e: any) => {
-											if (e.key === "Enter") {
-												e.preventDefault()
-												handleAddCommand()
-											}
-										}}
-										placeholder="Enter command prefix (e.g., 'git ')"
-										style={{ flexGrow: 1 }}
-									/>
-									<VSCodeButton onClick={handleAddCommand}>Add</VSCodeButton>
-								</div>
-
-								<div
-									style={{
-										marginTop: "10px",
-										display: "flex",
-										flexWrap: "wrap",
-										gap: "5px",
-									}}>
-									{(allowedCommands ?? []).map((cmd, index) => (
-										<div
-											key={index}
-											style={{
-												display: "flex",
-												alignItems: "center",
-												gap: "5px",
-												backgroundColor: "var(--vscode-button-secondaryBackground)",
-												padding: "2px 6px",
-												borderRadius: "4px",
-												border: "1px solid var(--vscode-button-secondaryBorder)",
-												height: "24px",
-											}}>
-											<span>{cmd}</span>
-											<VSCodeButton
-												appearance="icon"
-												style={{
-													padding: 0,
-													margin: 0,
-													height: "20px",
-													width: "20px",
-													minWidth: "20px",
-													display: "flex",
-													alignItems: "center",
-													justifyContent: "center",
-													color: "var(--vscode-button-foreground)",
-												}}
-												onClick={() => {
-													const newCommands = (allowedCommands ?? []).filter(
-														(_, i) => i !== index,
-													)
-													setAllowedCommands(newCommands)
-													vscode.postMessage({
-														type: "allowedCommands",
-														commands: newCommands,
-													})
-												}}>
-												<span className="codicon codicon-close" />
-											</VSCodeButton>
-										</div>
-									))}
-								</div>
-							</div>
-						)}
-					</div>
-				</div>
-
-				<div style={{ marginBottom: 40 }}>
-					<h3 style={{ color: "var(--vscode-foreground)", margin: "0 0 15px 0" }}>Browser Settings</h3>
-					<div style={{ marginBottom: 15 }}>
-						<label style={{ fontWeight: "500", display: "block", marginBottom: 5 }}>Viewport size</label>
-						<div className="dropdown-container">
-							<Dropdown
-								value={browserViewportSize}
-								onChange={(value: unknown) => {
-									setBrowserViewportSize((value as DropdownOption).value)
+						<div style={{ display: "flex", gap: "5px", marginTop: "10px" }}>
+							<VSCodeTextField
+								value={commandInput}
+								onInput={(e: any) => setCommandInput(e.target.value)}
+								onKeyDown={(e: any) => {
+									if (e.key === "Enter") {
+										e.preventDefault()
+										handleAddCommand()
+									}
 								}}
-								style={{ width: "100%" }}
-								options={[
-									{ value: "1280x800", label: "Large Desktop (1280x800)" },
-									{ value: "900x600", label: "Small Desktop (900x600)" },
-									{ value: "768x1024", label: "Tablet (768x1024)" },
-									{ value: "360x640", label: "Mobile (360x640)" },
-								]}
+								placeholder="Enter command prefix (e.g., 'git ')"
+								style={{ flexGrow: 1 }}
 							/>
+							<VSCodeButton onClick={handleAddCommand}>Add</VSCodeButton>
 						</div>
-						<p
-							style={{
-								fontSize: "12px",
-								marginTop: "5px",
-								color: "var(--vscode-descriptionForeground)",
-							}}>
-							Select the viewport size for browser interactions. This affects how websites are displayed
-							and interacted with.
-						</p>
-					</div>
 
-					<div style={{ marginBottom: 15 }}>
-						<div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-							<span style={{ fontWeight: "500" }}>Screenshot quality</span>
-							<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-								<input
-									type="range"
-									min="1"
-									max="100"
-									step="1"
-									value={screenshotQuality ?? 75}
-									onChange={(e) => setScreenshotQuality(parseInt(e.target.value))}
-									style={{
-										...sliderStyle,
-									}}
-								/>
-								<span style={{ ...sliderLabelStyle }}>{screenshotQuality ?? 75}%</span>
-							</div>
-						</div>
-						<p
-							style={{
-								fontSize: "12px",
-								marginTop: "5px",
-								color: "var(--vscode-descriptionForeground)",
-							}}>
-							Adjust the WebP quality of browser screenshots. Higher values provide clearer screenshots
-							but increase token usage.
-						</p>
-					</div>
-				</div>
-
-				<div style={{ marginBottom: 40 }}>
-					<h3 style={{ color: "var(--vscode-foreground)", margin: "0 0 15px 0" }}>Notification Settings</h3>
-					<div style={{ marginBottom: 15 }}>
-						<VSCodeCheckbox checked={soundEnabled} onChange={(e: any) => setSoundEnabled(e.target.checked)}>
-							<span style={{ fontWeight: "500" }}>Enable sound effects</span>
-						</VSCodeCheckbox>
-						<p
-							style={{
-								fontSize: "12px",
-								marginTop: "5px",
-								color: "var(--vscode-descriptionForeground)",
-							}}>
-							When enabled, Roo will play sound effects for notifications and events.
-						</p>
-					</div>
-					{soundEnabled && (
 						<div
 							style={{
-								marginLeft: 0,
-								paddingLeft: 10,
-								borderLeft: "2px solid var(--vscode-button-background)",
+								marginTop: "10px",
+								display: "flex",
+								flexWrap: "wrap",
+								gap: "5px",
 							}}>
-							<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-								<span style={{ fontWeight: "500", minWidth: "100px" }}>Volume</span>
-								<input
-									type="range"
-									min="0"
-									max="1"
-									step="0.01"
-									value={soundVolume ?? 0.5}
-									onChange={(e) => setSoundVolume(parseFloat(e.target.value))}
-									style={{
-										flexGrow: 1,
-										accentColor: "var(--vscode-button-background)",
-										height: "2px",
-									}}
-									aria-label="Volume"
-								/>
-								<span style={{ minWidth: "35px", textAlign: "left" }}>
-									{((soundVolume ?? 0.5) * 100).toFixed(0)}%
-								</span>
-							</div>
-						</div>
-					)}
-				</div>
-
-				<div style={{ marginBottom: 40 }}>
-					<h3 style={{ color: "var(--vscode-foreground)", margin: "0 0 15px 0" }}>Advanced Settings</h3>
-					<div style={{ marginBottom: 15 }}>
-						<div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-							<span style={{ fontWeight: "500" }}>Rate limit</span>
-							<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-								<input
-									type="range"
-									min="0"
-									max="60"
-									step="1"
-									value={rateLimitSeconds}
-									onChange={(e) => setRateLimitSeconds(parseInt(e.target.value))}
-									style={{ ...sliderStyle }}
-								/>
-								<span style={{ ...sliderLabelStyle }}>{rateLimitSeconds}s</span>
-							</div>
-						</div>
-						<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>
-							Minimum time between API requests.
-						</p>
-					</div>
-					<div style={{ marginBottom: 15 }}>
-						<div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-							<span style={{ fontWeight: "500" }}>Terminal output limit</span>
-							<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-								<input
-									type="range"
-									min="100"
-									max="5000"
-									step="100"
-									value={terminalOutputLineLimit ?? 500}
-									onChange={(e) => setTerminalOutputLineLimit(parseInt(e.target.value))}
-									style={{ ...sliderStyle }}
-								/>
-								<span style={{ ...sliderLabelStyle }}>{terminalOutputLineLimit ?? 500}</span>
-							</div>
-						</div>
-						<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>
-							Maximum number of lines to include in terminal output when executing commands. When exceeded
-							lines will be removed from the middle, saving tokens.
-						</p>
-					</div>
-
-					<div style={{ marginBottom: 15 }}>
-						<div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-							<span style={{ fontWeight: "500" }}>Open tabs context limit</span>
-							<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-								<input
-									type="range"
-									min="0"
-									max="500"
-									step="1"
-									value={maxOpenTabsContext ?? 20}
-									onChange={(e) => setMaxOpenTabsContext(parseInt(e.target.value))}
-									style={{ ...sliderStyle }}
-								/>
-								<span style={{ ...sliderLabelStyle }}>{maxOpenTabsContext ?? 20}</span>
-							</div>
-						</div>
-						<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>
-							Maximum number of VSCode open tabs to include in context. Higher values provide more context
-							but increase token usage.
-						</p>
-					</div>
-
-					<div style={{ marginBottom: 15 }}>
-						<VSCodeCheckbox
-							checked={diffEnabled}
-							onChange={(e: any) => {
-								setDiffEnabled(e.target.checked)
-								if (!e.target.checked) {
-									// Reset experimental strategy when diffs are disabled
-									setExperimentEnabled(EXPERIMENT_IDS.DIFF_STRATEGY, false)
-								}
-							}}>
-							<span style={{ fontWeight: "500" }}>Enable editing through diffs</span>
-						</VSCodeCheckbox>
-						<p
-							style={{
-								fontSize: "12px",
-								marginTop: "5px",
-								color: "var(--vscode-descriptionForeground)",
-							}}>
-							When enabled, Roo will be able to edit files more quickly and will automatically reject
-							truncated full-file writes. Works best with the latest Claude 3.5 Sonnet model.
-						</p>
-
-						{diffEnabled && (
-							<div style={{ marginTop: 10 }}>
+							{(allowedCommands ?? []).map((cmd, index) => (
 								<div
+									key={index}
 									style={{
 										display: "flex",
-										flexDirection: "column",
+										alignItems: "center",
 										gap: "5px",
-										marginTop: "10px",
-										marginBottom: "10px",
-										paddingLeft: "10px",
-										borderLeft: "2px solid var(--vscode-button-background)",
+										backgroundColor: "var(--vscode-button-secondaryBackground)",
+										padding: "2px 6px",
+										borderRadius: "4px",
+										border: "1px solid var(--vscode-button-secondaryBorder)",
+										height: "24px",
 									}}>
-									<span style={{ fontWeight: "500" }}>Match precision</span>
-									<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-										<input
-											type="range"
-											min="0.8"
-											max="1"
-											step="0.005"
-											value={fuzzyMatchThreshold ?? 1.0}
-											onChange={(e) => {
-												setFuzzyMatchThreshold(parseFloat(e.target.value))
-											}}
-											style={{
-												...sliderStyle,
-											}}
-										/>
-										<span style={{ ...sliderLabelStyle }}>
-											{Math.round((fuzzyMatchThreshold || 1) * 100)}%
-										</span>
-									</div>
-									<p
+									<span>{cmd}</span>
+									<VSCodeButton
+										appearance="icon"
 										style={{
-											fontSize: "12px",
-											marginTop: "5px",
-											color: "var(--vscode-descriptionForeground)",
+											padding: 0,
+											margin: 0,
+											height: "20px",
+											width: "20px",
+											minWidth: "20px",
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											color: "var(--vscode-button-foreground)",
+										}}
+										onClick={() => {
+											const newCommands = (allowedCommands ?? []).filter((_, i) => i !== index)
+											setAllowedCommands(newCommands)
+											vscode.postMessage({
+												type: "allowedCommands",
+												commands: newCommands,
+											})
 										}}>
-										This slider controls how precisely code sections must match when applying diffs.
-										Lower values allow more flexible matching but increase the risk of incorrect
-										replacements. Use values below 100% with extreme caution.
-									</p>
-									<ExperimentalFeature
-										key={EXPERIMENT_IDS.DIFF_STRATEGY}
-										{...experimentConfigsMap.DIFF_STRATEGY}
-										enabled={experiments[EXPERIMENT_IDS.DIFF_STRATEGY] ?? false}
-										onChange={(enabled) =>
-											setExperimentEnabled(EXPERIMENT_IDS.DIFF_STRATEGY, enabled)
-										}
-									/>
+										<span className="codicon codicon-close" />
+									</VSCodeButton>
 								</div>
-							</div>
-						)}
-
-						<div style={{ marginBottom: 15 }}>
-							<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-								<span style={{ color: "var(--vscode-errorForeground)" }}>⚠️</span>
-								<VSCodeCheckbox
-									checked={checkpointsEnabled}
-									onChange={(e: any) => {
-										setCheckpointsEnabled(e.target.checked)
-									}}>
-									<span style={{ fontWeight: "500" }}>Enable experimental checkpoints</span>
-								</VSCodeCheckbox>
-							</div>
-							<p
-								style={{
-									fontSize: "12px",
-									marginTop: "5px",
-									color: "var(--vscode-descriptionForeground)",
-								}}>
-								When enabled, Roo will save a checkpoint whenever a file in the workspace is modified,
-								added or deleted, letting you easily revert to a previous state.
-							</p>
-						</div>
-
-						{Object.entries(experimentConfigsMap)
-							.filter((config) => config[0] !== "DIFF_STRATEGY")
-							.map((config) => (
-								<ExperimentalFeature
-									key={config[0]}
-									{...config[1]}
-									enabled={
-										experiments[EXPERIMENT_IDS[config[0] as keyof typeof EXPERIMENT_IDS]] ?? false
-									}
-									onChange={(enabled) =>
-										setExperimentEnabled(
-											EXPERIMENT_IDS[config[0] as keyof typeof EXPERIMENT_IDS],
-											enabled,
-										)
-									}
-								/>
 							))}
+						</div>
+					</SettingCheckbox>
+				</div>
+
+				<div
+					style={{
+						marginBottom: 15,
+						marginTop: 10,
+						paddingLeft: 10,
+						borderLeft: "2px solid",
+						borderColor: "var(--vscode-button-background)",
+					}}>
+					<h3 style={{ color: "var(--vscode-foreground)", margin: "0 0 15px 0" }}>Browser Settings</h3>
+					<SettingCombo
+						name="Viewport size"
+						description="Select the viewport size for browser interactions. This affects how websites are displayed and interacted with."
+						value={browserViewportSize}
+						onChange={setBrowserViewportSize}
+						options={[
+							{ value: "1280x800", label: "Large Desktop (1280x800)" },
+							{ value: "900x600", label: "Small Desktop (900x600)" },
+							{ value: "768x1024", label: "Tablet (768x1024)" },
+							{ value: "360x640", label: "Mobile (360x640)" },
+						]}
+					/>
+
+					<div style={{ marginBottom: 15 }}>
+						<SettingSlider
+							name="Screenshot quality"
+							description="Adjust the WebP quality of browser screenshots. Higher values provide clearer screenshots but increase token usage."
+							value={screenshotQuality ?? 75}
+							onChange={setScreenshotQuality}
+							min={1}
+							max={100}
+							step={1}
+							unit="%"
+						/>
 					</div>
+				</div>
+
+				<div
+					style={{
+						marginBottom: 15,
+						marginTop: 10,
+						paddingLeft: 10,
+						borderLeft: "2px solid",
+						borderColor: "var(--vscode-button-background)",
+					}}>
+					<h3 style={{ color: "var(--vscode-foreground)", margin: "0 0 15px 0" }}>Notification Settings</h3>
+					<SettingCheckbox
+						name="Enable sound effects"
+						description="When enabled, Roo will play sound effects for notifications and events."
+						checked={soundEnabled}
+						onChange={setSoundEnabled}>
+						<SettingSlider
+							name="Volume"
+							value={(soundVolume ?? 0.5) * 100}
+							onChange={(value) => setSoundVolume(value / 100)}
+							min={0}
+							max={100}
+							step={1}
+							unit="%"
+						/>
+					</SettingCheckbox>
+				</div>
+
+				<div
+					style={{
+						marginBottom: 15,
+						marginTop: 10,
+						paddingLeft: 10,
+						borderLeft: "2px solid",
+						borderColor: "var(--vscode-button-background)",
+					}}>
+					<h3 style={{ color: "var(--vscode-foreground)", margin: "0 0 15px 0" }}>Advanced Settings</h3>
+					<SettingSlider
+						name="Rate limit"
+						description="Minimum time between API requests."
+						value={rateLimitSeconds}
+						onChange={setRateLimitSeconds}
+						min={0}
+						max={60}
+						step={1}
+						unit="s"
+					/>
+					<SettingSlider
+						name="Terminal output limit"
+						description="Maximum number of lines to include in terminal output when executing commands. When exceeded lines will be removed from the middle, saving tokens."
+						value={terminalOutputLineLimit ?? 500}
+						onChange={setTerminalOutputLineLimit}
+						min={100}
+						max={5000}
+						step={100}
+					/>
+					<SettingSlider
+						name="Open tabs context limit"
+						description="Maximum number of VSCode open tabs to include in context. Higher values provide more context but increase token usage."
+						value={maxOpenTabsContext ?? 20}
+						onChange={setMaxOpenTabsContext}
+						min={0}
+						max={500}
+						step={1}
+					/>
+					<SettingCheckbox
+						name="Enable editing through diffs"
+						description="When enabled, Roo will be able to edit files more quickly and will automatically reject truncated full-file writes. Works best with the latest Claude 3.5 Sonnet model."
+						checked={diffEnabled}
+						onChange={(checked) => {
+							setDiffEnabled(checked)
+							if (!checked) {
+								// Reset experimental strategy when diffs are disabled
+								setExperimentEnabled(EXPERIMENT_IDS.DIFF_STRATEGY, false)
+							}
+						}}>
+						<SettingSlider
+							name="Match precision"
+							description="How precisely code sections must match when applying diffs. Lower values allow more flexible matching but increase the risk of incorrect replacements. Use values below 100% with extreme caution."
+							value={(fuzzyMatchThreshold ?? 1.0) * 100}
+							onChange={(value) => {
+								setFuzzyMatchThreshold(value / 100)
+							}}
+							min={80}
+							max={100}
+							step={0.5}
+							unit="%"
+						/>
+						<SettingCheckbox
+							key={EXPERIMENT_IDS.DIFF_STRATEGY}
+							{...experimentConfigsMap.DIFF_STRATEGY}
+							checked={experiments[EXPERIMENT_IDS.DIFF_STRATEGY] ?? false}
+							onChange={(enabled) => setExperimentEnabled(EXPERIMENT_IDS.DIFF_STRATEGY, enabled)}
+							experimental={true}
+						/>
+					</SettingCheckbox>
+
+					<SettingCheckbox
+						name="Enable experimental checkpoints"
+						description="When enabled, Roo will save a checkpoint whenever a file in the workspace is modified,
+							added or deleted, letting you easily revert to a previous state."
+						checked={checkpointsEnabled}
+						onChange={(enabled) => {
+							setCheckpointsEnabled(enabled)
+						}}
+						experimental={true}
+					/>
+
+					{Object.entries(experimentConfigsMap)
+						.filter((config) => config[0] !== "DIFF_STRATEGY")
+						.map((config) => (
+							<SettingCheckbox
+								key={config[0]}
+								{...config[1]}
+								checked={experiments[EXPERIMENT_IDS[config[0] as keyof typeof EXPERIMENT_IDS]] ?? false}
+								onChange={(enabled) =>
+									setExperimentEnabled(
+										EXPERIMENT_IDS[config[0] as keyof typeof EXPERIMENT_IDS],
+										enabled,
+									)
+								}
+								experimental={true}
+							/>
+						))}
 				</div>
 
 				<div
@@ -769,7 +538,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 						color: "var(--vscode-descriptionForeground)",
 						fontSize: "12px",
 						lineHeight: "1.2",
-						marginTop: "auto",
+						marginTop: "40px",
 						padding: "10px 8px 15px 0px",
 					}}>
 					<p style={{ wordWrap: "break-word", margin: 0, padding: 0 }}>
