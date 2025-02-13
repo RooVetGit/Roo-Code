@@ -1,3 +1,5 @@
+import { PaperPlaneIcon, StopIcon } from "@radix-ui/react-icons"
+
 import { Button, AutosizeTextarea } from "@/components/ui"
 
 import { Message } from "./types"
@@ -6,7 +8,6 @@ import { ChatInputProvider } from "./ChatInputProvider"
 import { useChatUI } from "./useChatUI"
 import { useChatInput } from "./useChatInput"
 import { useChatMessages } from "./useChatMessages"
-import { StopIcon } from "@radix-ui/react-icons"
 
 /**
  * ChatInput
@@ -147,7 +148,7 @@ function ChatInputSubmit() {
 					</Button>
 				) : (
 					<Button type="submit" variant="ghost" size="icon" disabled={isDisabled}>
-						<span className="codicon codicon-send" />
+						<PaperPlaneIcon />
 					</Button>
 				)}
 			</div>
