@@ -10,36 +10,37 @@ export type RegisterCommandOptions = {
 }
 
 export const registerCommands = (options: RegisterCommandOptions) => {
-	const { context, outputChannel } = options
+	const { context } = options
 
 	for (const [command, callback] of Object.entries(getCommandsMap(options))) {
 		context.subscriptions.push(vscode.commands.registerCommand(command, callback))
 	}
 }
 
-const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOptions) => {
-	return {
-		"roo-cline.plusButtonClicked": async () => {
-			await provider.clearTask()
-			await provider.postStateToWebview()
-			await provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
-		},
-		"roo-cline.mcpButtonClicked": () => {
-			provider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
-		},
-		"roo-cline.promptsButtonClicked": () => {
-			provider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" })
-		},
-		"roo-cline.popoutButtonClicked": () => openClineInNewTab({ context, outputChannel }),
-		"roo-cline.openInNewTab": () => openClineInNewTab({ context, outputChannel }),
-		"roo-cline.settingsButtonClicked": () => {
-			provider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
-		},
-		"roo-cline.historyButtonClicked": () => {
-			provider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
-		},
-	}
-}
+const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOptions) => ({
+	"roo-cline.plusButtonClicked": async () => {
+		await provider.clearTask()
+		await provider.postStateToWebview()
+		await provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
+	},
+	"roo-cline.researchButtonClicked": () => {
+		provider.postMessageToWebview({ type: "action", action: "researchButtonClicked" })
+	},
+	"roo-cline.promptsButtonClicked": () => {
+		provider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" })
+	},
+	"roo-cline.mcpButtonClicked": () => {
+		provider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
+	},
+	"roo-cline.historyButtonClicked": () => {
+		provider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
+	},
+	"roo-cline.popoutButtonClicked": () => openClineInNewTab({ context, outputChannel }),
+	"roo-cline.settingsButtonClicked": () => {
+		provider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
+	},
+	"roo-cline.openInNewTab": () => openClineInNewTab({ context, outputChannel }),
+})
 
 const openClineInNewTab = async ({ context, outputChannel }: Omit<RegisterCommandOptions, "provider">) => {
 	outputChannel.appendLine("Opening Roo Code in new tab")

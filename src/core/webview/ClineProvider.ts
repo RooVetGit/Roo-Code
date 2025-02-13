@@ -20,11 +20,18 @@ import { ApiConfiguration, ApiProvider, ModelInfo } from "../../shared/api"
 import { findLast } from "../../shared/array"
 import { ApiConfigMeta, ExtensionMessage } from "../../shared/ExtensionMessage"
 import { HistoryItem } from "../../shared/HistoryItem"
-import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
+import {
+	checkoutDiffPayloadSchema,
+	checkoutRestorePayloadSchema,
+	researchTaskPayloadSchema,
+	researchInputPayloadSchema,
+	WebviewMessage,
+} from "../../shared/WebviewMessage"
 import { Mode, CustomModePrompts, PromptComponent, defaultModeSlug } from "../../shared/modes"
 import { SYSTEM_PROMPT } from "../prompts/system"
 import { fileExistsAtPath } from "../../utils/fs"
 import { Cline } from "../Cline"
+import { DeepResearchService } from "../../services/deep-research/DeepResearchService"
 import { openMention } from "../mentions"
 import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
@@ -40,11 +47,10 @@ import { CustomSupportPrompts, supportPrompt } from "../../shared/support-prompt
 import { ACTION_NAMES } from "../CodeActionProvider"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
 
-/*
-https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
-
-https://github.com/KumarVariable/vscode-extension-sidebar-html/blob/master/src/customSidebarViewProvider.ts
-*/
+/**
+ * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
+ * https://github.com/KumarVariable/vscode-extension-sidebar-html/blob/master/src/customSidebarViewProvider.ts
+ */
 
 type SecretKey =
 	| "apiKey"
@@ -60,6 +66,7 @@ type SecretKey =
 	| "mistralApiKey"
 	| "unboundApiKey"
 	| "requestyApiKey"
+
 type GlobalStateKey =
 	| "apiProvider"
 	| "apiModelId"
@@ -146,6 +153,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	private view?: vscode.WebviewView | vscode.WebviewPanel
 	private isViewLaunched = false
 	private cline?: Cline
+	private deepResearchService?: DeepResearchService
 	private workspaceTracker?: WorkspaceTracker
 	protected mcpHub?: McpHub // Change from private to protected
 	private latestAnnouncementId = "jan-21-2025-custom-modes" // update to some unique identifier when we add a new announcement
@@ -158,6 +166,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	) {
 		this.outputChannel.appendLine("ClineProvider instantiated")
 		ClineProvider.activeInstances.add(this)
+
 		this.workspaceTracker = new WorkspaceTracker(this)
 		this.configManager = new ConfigManager(this.context)
 		this.customModesManager = new CustomModesManager(this.context, async () => {
@@ -1488,10 +1497,54 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							}
 
 							await this.customModesManager.deleteCustomMode(message.slug)
-							// Switch back to default mode after deletion
+							// Switch back to default mode after deletion.
 							await this.updateGlobalState("mode", defaultModeSlug)
 							await this.postStateToWebview()
 						}
+						break
+					case "research.task": {
+						console.log("[ClineProvider] research.task", message)
+						const result = researchTaskPayloadSchema.safeParse(message.payload)
+
+						if (result.success && !this.deepResearchService) {
+							const { modelId, breadth, depth, query, firecrawlApiKey, openaiApiKey } =
+								result.data.session
+							this.deepResearchService = new DeepResearchService(
+								this,
+								modelId,
+								breadth,
+								depth,
+								2,
+								firecrawlApiKey,
+								openaiApiKey,
+							)
+							this.deepResearchService.append(query)
+						}
+
+						break
+					}
+					case "research.input": {
+						console.log("[ClineProvider] research.input", message)
+						const result = researchInputPayloadSchema.safeParse(message.payload)
+
+						if (result.success && this.deepResearchService) {
+							const { content } = result.data.message
+							this.deepResearchService.append(content)
+						}
+
+						break
+					}
+					case "research.reload":
+						console.log("[ClineProvider] research.reload", message)
+						break
+					case "research.stop":
+						console.log("[ClineProvider] research.stop", message)
+						break
+					case "research.reset":
+						console.log("[ClineProvider] research.reset", message)
+						await this.deepResearchService?.abort()
+						this.deepResearchService = undefined
+						break
 				}
 			},
 			null,
