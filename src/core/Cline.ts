@@ -63,7 +63,7 @@ import { OpenRouterHandler } from "../api/providers/openrouter"
 import { McpHub } from "../services/mcp/McpHub"
 import crypto from "crypto"
 import { insertGroups } from "./diff/insert-groups"
-import { EXPERIMENT_IDS, experiments as Experiments } from "../shared/experiments"
+import { EXPERIMENT_IDS, experiments as Experiments, experimentDefault } from "../shared/experiments"
 
 const cwd =
 	vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop") // may or may not exist but fs checking existence would immediately ask for permission which would be bad UX, need to come up with a better solution
@@ -72,6 +72,12 @@ type ToolResponse = string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlo
 type UserContent = Array<
 	Anthropic.TextBlockParam | Anthropic.ImageBlockParam | Anthropic.ToolUseBlockParam | Anthropic.ToolResultBlockParam
 >
+
+interface ToolUse {
+	name: string
+	params: Record<string, any>
+	toolInvocationToken?: string
+}
 
 export class Cline {
 	readonly taskId: string
@@ -1136,6 +1142,12 @@ export class Cline {
 							const modeName = getModeBySlug(mode, customModes)?.name ?? mode
 							return `[${block.name} in ${modeName} mode: '${message}']`
 						}
+						case "list_vscode_lm_tools":
+							return `[${block.name}]`
+						case "call_vscode_lm_tool":
+							return `[${block.name} for '${block.params.tool_name}']`
+						default:
+							return `[${block.name}]`
 					}
 				}
 
@@ -1251,6 +1263,7 @@ export class Cline {
 				// Validate tool use before execution
 				const { mode, customModes } = (await this.providerRef.deref()?.getState()) ?? {}
 				try {
+					const { experiments } = (await this.providerRef.deref()?.getState()) ?? {}
 					validateToolUse(
 						block.name as ToolName,
 						mode ?? defaultModeSlug,
@@ -1259,6 +1272,7 @@ export class Cline {
 							apply_diff: this.diffEnabled,
 						},
 						block.params,
+						experiments,
 					)
 				} catch (error) {
 					this.consecutiveMistakeCount++
@@ -2498,6 +2512,154 @@ export class Cline {
 							}
 						} catch (error) {
 							await handleError("switching mode", error)
+							break
+						}
+					}
+					case "list_vscode_lm_tools": {
+						try {
+							// Check if experiment is enabled
+							const { experiments = experimentDefault } =
+								(await this.providerRef.deref()?.getState()) ?? {}
+							if (!Experiments.isEnabled(experiments, EXPERIMENT_IDS.VSCODE_LM_TOOLS)) {
+								pushToolResult(
+									formatResponse.toolError(
+										"VSCode LM Tools experiment is not enabled. Enable it in Settings > Advanced Settings > Experimental Features.",
+									),
+								)
+								break
+							}
+
+							// Format tool information
+							const toolsList = vscode.lm.tools.map((tool) => ({
+								name: tool.name,
+								description: tool.description,
+								inputSchema: tool.inputSchema,
+								tags: tool.tags,
+							}))
+
+							// Format the result as a readable string
+							const formattedResult = toolsList
+								.map(
+									(tool) =>
+										`Tool: ${tool.name}\n` +
+										`Description: ${tool.description}\n` +
+										`Input Schema: ${JSON.stringify(tool.inputSchema, null, 2)}\n` +
+										`Tags: ${tool.tags.join(", ")}\n`,
+								)
+								.join("\n---\n")
+
+							pushToolResult(formattedResult)
+							break
+						} catch (error) {
+							await handleError("listing VS Code LM tools", error)
+							break
+						}
+					}
+
+					case "call_vscode_lm_tool": {
+						const tool_name: string | undefined = block.params.tool_name
+						const arguments_str: string | undefined = block.params.arguments
+
+						try {
+							// Check if experiment is enabled
+							const { experiments = experimentDefault } =
+								(await this.providerRef.deref()?.getState()) ?? {}
+							if (!Experiments.isEnabled(experiments, EXPERIMENT_IDS.VSCODE_LM_TOOLS)) {
+								pushToolResult(
+									formatResponse.toolError(
+										"VSCode LM Tools experiment is not enabled. Enable it in Settings > Advanced Settings > Experimental Features.",
+									),
+								)
+								break
+							}
+
+							if (block.partial) {
+								const partialMessage = JSON.stringify({
+									tool: "callVsCodeLmTool",
+									toolName: removeClosingTag("tool_name", tool_name),
+									arguments: removeClosingTag("arguments", arguments_str),
+								})
+								await this.ask("tool", partialMessage, block.partial).catch(() => {})
+								break
+							}
+
+							// Validate required parameters
+							if (!tool_name) {
+								this.consecutiveMistakeCount++
+								pushToolResult(
+									await this.sayAndCreateMissingParamError("call_vscode_lm_tool", "tool_name"),
+								)
+								break
+							}
+
+							// Parse and validate arguments
+							let toolArguments: object | undefined
+							if (arguments_str) {
+								try {
+									toolArguments = JSON.parse(arguments_str)
+								} catch (error) {
+									this.consecutiveMistakeCount++
+									await this.say(
+										"error",
+										`Invalid JSON arguments for tool '${tool_name}'. Retrying...`,
+									)
+									pushToolResult(
+										formatResponse.toolError(`Failed to parse arguments JSON: ${error.message}`),
+									)
+									break
+								}
+							}
+
+							this.consecutiveMistakeCount = 0
+
+							// Show what we're about to do
+							const completeMessage = JSON.stringify({
+								tool: "callVsCodeLmTool",
+								toolName: tool_name,
+								arguments: toolArguments,
+							})
+
+							const didApprove = await askApproval("tool", completeMessage)
+							if (!didApprove) {
+								break
+							}
+
+							// Execute the tool
+							try {
+								const result = await vscode.lm.invokeTool(
+									tool_name,
+									{
+										input: toolArguments || {},
+										toolInvocationToken: undefined,
+									},
+									new vscode.CancellationTokenSource().token,
+								)
+
+								// Convert tool result to string format
+								let resultText = ""
+								if (result.content) {
+									for (const part of result.content) {
+										if (part instanceof vscode.LanguageModelTextPart) {
+											resultText += part.value
+										}
+									}
+								}
+
+								pushToolResult(formatResponse.toolResult(resultText))
+							} catch (error) {
+								if (error instanceof vscode.LanguageModelError) {
+									pushToolResult(
+										formatResponse.toolError(
+											`VS Code LM Tool error: ${error.message}\nCode: ${error.code}`,
+										),
+									)
+								} else {
+									throw error
+								}
+							}
+							break
+						} catch (error) {
+							await handleError("executing VS Code LM tool", error)
 							break
 						}
 					}
