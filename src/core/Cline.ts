@@ -64,6 +64,7 @@ import { McpHub } from "../services/mcp/McpHub"
 import crypto from "crypto"
 import { insertGroups } from "./diff/insert-groups"
 import { EXPERIMENT_IDS, experiments as Experiments } from "../shared/experiments"
+import { parseXml } from "../utils/xml"
 
 const cwd =
 	vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop") // may or may not exist but fs checking existence would immediately ask for permission which would be bad UX, need to come up with a better solution
@@ -1624,20 +1625,22 @@ export class Cline {
 								break
 							}
 
-							let parsedOperations: Array<{
+							type Operation = {
 								start_line: number
 								content: string
-							}>
+							}
+							let parsedOperations: {
+								operation: Operation[] | Operation
+							}
 
 							try {
-								parsedOperations = JSON.parse(operations)
-								if (!Array.isArray(parsedOperations)) {
-									throw new Error("Operations must be an array")
+								parsedOperations = parseXml(operations, ["operation.content"]) as {
+									operation: Operation[] | Operation
 								}
 							} catch (error) {
 								this.consecutiveMistakeCount++
-								await this.say("error", `Failed to parse operations JSON: ${error.message}`)
-								pushToolResult(formatResponse.toolError("Invalid operations JSON format"))
+								await this.say("error", `Failed to parse operations: ${error.message}`)
+								pushToolResult(formatResponse.toolError("Invalid operations xml format"))
 								break
 							}
 
@@ -1649,9 +1652,13 @@ export class Cline {
 							this.diffViewProvider.originalContent = fileContent
 							const lines = fileContent.split("\n")
 
+							const normalizedOperations = Array.isArray(parsedOperations?.operation)
+								? parsedOperations.operation
+								: [parsedOperations?.operation].filter((op): op is Operation => op !== undefined)
+
 							const updatedContent = insertGroups(
 								lines,
-								parsedOperations.map((elem) => {
+								normalizedOperations.map((elem) => {
 									return {
 										index: elem.start_line - 1,
 										elements: elem.content.split("\n"),
@@ -1775,7 +1782,7 @@ export class Cline {
 									break
 								}
 
-								let parsedOperations: Array<{
+								type Operation = {
 									search: string
 									replace: string
 									start_line?: number
@@ -1783,17 +1790,23 @@ export class Cline {
 									use_regex?: boolean
 									ignore_case?: boolean
 									regex_flags?: string
-								}>
+								}
+								let parsedOperations: {
+									operation: Operation[] | Operation
+								}
 
 								try {
-									parsedOperations = JSON.parse(operations)
-									if (!Array.isArray(parsedOperations)) {
-										throw new Error("Operations must be an array")
+									parsedOperations = parseXml(operations, [
+										"operation.search",
+										"operation.replace",
+										"operation.regex_flags",
+									]) as {
+										operation: Operation[] | Operation
 									}
 								} catch (error) {
 									this.consecutiveMistakeCount++
-									await this.say("error", `Failed to parse operations JSON: ${error.message}`)
-									pushToolResult(formatResponse.toolError("Invalid operations JSON format"))
+									await this.say("error", `Failed to parse operations: ${error.message}`)
+									pushToolResult(formatResponse.toolError("Invalid operations xml format"))
 									break
 								}
 
@@ -1803,7 +1816,11 @@ export class Cline {
 								this.diffViewProvider.originalContent = fileContent
 								let lines = fileContent.split("\n")
 
-								for (const op of parsedOperations) {
+								const normalizedOperations = Array.isArray(parsedOperations?.operation)
+									? parsedOperations.operation
+									: [parsedOperations?.operation].filter((op): op is Operation => op !== undefined)
+
+								for (const op of normalizedOperations) {
 									const flags = op.regex_flags ?? (op.ignore_case ? "gi" : "g")
 									const multilineFlags = flags.includes("m") ? flags : flags + "m"
 
