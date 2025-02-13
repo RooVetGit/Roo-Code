@@ -155,8 +155,29 @@ describe("VertexHandler", () => {
 				model: "claude-3-5-sonnet-v2@20241022",
 				max_tokens: 8192,
 				temperature: 0,
-				system: systemPrompt,
-				messages: mockMessages,
+				system: [
+					{
+						type: "text",
+						text: "You are a helpful assistant",
+						cache_control: { type: "ephemeral" },
+					},
+				],
+				messages: [
+					{
+						role: "user",
+						content: [
+							{
+								type: "text",
+								text: "Hello",
+								cache_control: { type: "ephemeral" },
+							},
+						],
+					},
+					{
+						role: "assistant",
+						content: "Hi there!",
+					},
+				],
 				stream: true,
 			})
 		})
@@ -227,6 +248,135 @@ describe("VertexHandler", () => {
 				}
 			}).rejects.toThrow("Vertex API error")
 		})
+
+		it("should handle prompt caching for supported models", async () => {
+			const mockStream = [
+				{
+					type: "message_start",
+					message: {
+						usage: {
+							input_tokens: 10,
+							output_tokens: 0,
+							cache_creation_input_tokens: 3,
+							cache_read_input_tokens: 2,
+						},
+					},
+				},
+				{
+					type: "content_block_start",
+					index: 0,
+					content_block: {
+						type: "text",
+						text: "Hello",
+					},
+				},
+				{
+					type: "content_block_delta",
+					delta: {
+						type: "text_delta",
+						text: " world!",
+					},
+				},
+				{
+					type: "message_delta",
+					usage: {
+						output_tokens: 5,
+					},
+				},
+			]
+
+			const asyncIterator = {
+				async *[Symbol.asyncIterator]() {
+					for (const chunk of mockStream) {
+						yield chunk
+					}
+				},
+			}
+
+			const mockCreate = jest.fn().mockResolvedValue(asyncIterator)
+			;(handler["client"].messages as any).create = mockCreate
+
+			const stream = handler.createMessage(systemPrompt, [
+				{
+					role: "user",
+					content: "First message",
+				},
+				{
+					role: "assistant",
+					content: "Response",
+				},
+				{
+					role: "user",
+					content: "Second message",
+				},
+			])
+
+			const chunks = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Verify usage information
+			const usageChunks = chunks.filter((chunk) => chunk.type === "usage")
+			expect(usageChunks).toHaveLength(2)
+			expect(usageChunks[0]).toEqual({
+				type: "usage",
+				inputTokens: 10,
+				outputTokens: 0,
+				cacheWriteTokens: 3,
+				cacheReadTokens: 2,
+			})
+			expect(usageChunks[1]).toEqual({
+				type: "usage",
+				inputTokens: 0,
+				outputTokens: 5,
+			})
+
+			// Verify text content
+			const textChunks = chunks.filter((chunk) => chunk.type === "text")
+			expect(textChunks).toHaveLength(2)
+			expect(textChunks[0].text).toBe("Hello")
+			expect(textChunks[1].text).toBe(" world!")
+
+			// Verify cache control was added correctly
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					system: [
+						{
+							type: "text",
+							text: "You are a helpful assistant",
+							cache_control: { type: "ephemeral" },
+						},
+					],
+					messages: [
+						expect.objectContaining({
+							role: "user",
+							content: [
+								{
+									type: "text",
+									text: "First message",
+									cache_control: { type: "ephemeral" },
+								},
+							],
+						}),
+						expect.objectContaining({
+							role: "assistant",
+							content: "Response",
+						}),
+						expect.objectContaining({
+							role: "user",
+							content: [
+								{
+									type: "text",
+									text: "Second message",
+									cache_control: { type: "ephemeral" },
+								},
+							],
+						}),
+					],
+				}),
+			)
+		})
 	})
 
 	describe("completePrompt", () => {
@@ -237,7 +387,13 @@ describe("VertexHandler", () => {
 				model: "claude-3-5-sonnet-v2@20241022",
 				max_tokens: 8192,
 				temperature: 0,
-				messages: [{ role: "user", content: "Test prompt" }],
+				system: "",
+				messages: [
+					{
+						role: "user",
+						content: [{ type: "text", text: "Test prompt", cache_control: { type: "ephemeral" } }],
+					},
+				],
 				stream: false,
 			})
 		})
