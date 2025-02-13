@@ -17,7 +17,7 @@ import {
 } from "@/components/ui"
 
 const meta = {
-	title: "@shadcn/Combobox",
+	title: "primitives/Combobox",
 	component: Combobox,
 	parameters: { layout: "centered" },
 	tags: ["autodocs"],

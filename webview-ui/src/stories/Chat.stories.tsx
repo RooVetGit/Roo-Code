@@ -4,7 +4,7 @@ import type { Meta, StoryObj } from "@storybook/react"
 import { Chat, ChatHandler, Message } from "@/components/ui/chat"
 
 const meta = {
-	title: "@shadcn/Chat",
+	title: "ui/Chat",
 	component: Chat,
 	parameters: { layout: "centered" },
 	tags: ["autodocs"],

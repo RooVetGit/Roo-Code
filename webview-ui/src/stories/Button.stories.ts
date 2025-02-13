@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react"
 import { Button } from "@/components/ui"
 
 const meta = {
-	title: "@shadcn/Button",
+	title: "primitives/Button",
 	component: Button,
 	parameters: { layout: "centered" },
 	tags: ["autodocs"],
