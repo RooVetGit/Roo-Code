@@ -45,6 +45,7 @@ export interface ApiHandlerOptions {
 	openAiModelId?: string
 	openAiCustomModelInfo?: ModelInfo
 	openAiUseAzure?: boolean
+	openAiUsageCumulation?: boolean
 	ollamaModelId?: string
 	ollamaBaseUrl?: string
 	lmStudioModelId?: string
