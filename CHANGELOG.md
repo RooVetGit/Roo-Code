@@ -1,8 +1,6 @@
 # Roo Code Changelog
 
-## 3.3.20
-
-### Patch Changes
+## [3.3.20]
 
 - Disable writing in ask mode
 
