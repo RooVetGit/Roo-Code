@@ -77,6 +77,8 @@
 	--color-vscode-input-background: var(--vscode-input-background);
 	--color-vscode-input-border: var(--vscode-input-border);
 
+	--color-vscode-focusBorder: var(--vscode-focusBorder);
+
 	--color-vscode-badge-foreground: var(--vscode-badge-foreground);
 	--color-vscode-badge-background: var(--vscode-badge-background);
 
@@ -135,8 +137,13 @@
 }
 
 /* Form Element Focus States */
+
 textarea:focus {
 	outline: 1.5px solid var(--vscode-focusBorder, #007fd4);
+}
+
+.focus\:outline-0 {
+	outline: 0 !important; /* Allow tailwind to override the `textarea:focus` rule */
 }
 
 vscode-button::part(control):focus {

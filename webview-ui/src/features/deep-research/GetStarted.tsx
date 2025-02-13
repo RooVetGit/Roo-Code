@@ -19,6 +19,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 	AutosizeTextarea,
+	Input,
 } from "@/components/ui"
 
 import { useSession } from "./useSession"
@@ -34,6 +35,8 @@ export const GetStarted = () => {
 			depth: 2,
 			modelId: "o3-mini",
 			query: "",
+			firecrawlApiKey: "",
+			openaiApiKey: "",
 		},
 	})
 
@@ -58,8 +61,31 @@ export const GetStarted = () => {
 				</div>
 			</div>
 			<FormProvider {...form}>
-				<form onSubmit={handleSubmit(setSession)} className="flex flex-col gap-4">
-					<Models />
+				<form onSubmit={handleSubmit(setSession)} className="flex flex-col gap-3">
+					<div className="flex flex-col gap-1">
+						<div>OpenAI Model</div>
+						<Models />
+					</div>
+					<Controller
+						name="openaiApiKey"
+						control={control}
+						render={({ field }) => (
+							<div className="flex flex-col gap-1">
+								<div>OpenAI API Key</div>
+								<Input {...field} type="password" placeholder="sk-..." className="flex-1" />
+							</div>
+						)}
+					/>
+					<Controller
+						name="firecrawlApiKey"
+						control={control}
+						render={({ field }) => (
+							<div className="flex flex-col gap-1">
+								<div>Firecrawl API Key</div>
+								<Input {...field} type="password" placeholder="fc-..." className="flex-1" />
+							</div>
+						)}
+					/>
 					<Controller
 						name="breadth"
 						control={control}
@@ -121,15 +147,16 @@ export function Models() {
 			control={control}
 			render={({ field: { value, onChange } }) => (
 				<Popover open={open} onOpenChange={setOpen}>
-					<div className="flex flex-row items-center gap-2">
-						<div className="w-14 shrink-0">Model</div>
-						<PopoverTrigger asChild>
-							<Button variant="outline" role="combobox" aria-expanded={open} className="flex-1">
-								{value ? models.find((model) => model === value) : "Select"}
-								<ChevronsUpDown className="opacity-50" />
-							</Button>
-						</PopoverTrigger>
-					</div>
+					<PopoverTrigger asChild>
+						<Button
+							variant="combobox"
+							role="combobox"
+							aria-expanded={open}
+							className={cn(open && "border-vscode-focusBorder")}>
+							{value ? models.find((model) => model === value) : "Select"}
+							<ChevronsUpDown className="opacity-50" />
+						</Button>
+					</PopoverTrigger>
 					<PopoverContent className="max-w-[200px] p-0">
 						<Command>
 							<CommandInput placeholder="Search" className="h-9" />

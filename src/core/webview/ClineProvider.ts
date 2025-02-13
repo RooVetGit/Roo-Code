@@ -1507,8 +1507,17 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						const result = researchTaskPayloadSchema.safeParse(message.payload)
 
 						if (result.success && !this.deepResearchService) {
-							const { modelId, breadth, depth, query } = result.data.session
-							this.deepResearchService = new DeepResearchService(this, modelId, breadth, depth)
+							const { modelId, breadth, depth, query, firecrawlApiKey, openaiApiKey } =
+								result.data.session
+							this.deepResearchService = new DeepResearchService(
+								this,
+								modelId,
+								breadth,
+								depth,
+								2,
+								firecrawlApiKey,
+								openaiApiKey,
+							)
 							this.deepResearchService.append(query)
 						}
 

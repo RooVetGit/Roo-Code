@@ -151,6 +151,8 @@ export const researchTaskPayloadSchema = z.object({
 		breadth: z.number(),
 		depth: z.number(),
 		query: z.string(),
+		firecrawlApiKey: z.string(),
+		openaiApiKey: z.string(),
 	}),
 })
 

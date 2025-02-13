@@ -24,13 +24,9 @@ export type ResearchResult = {
 	visitedUrls: string[]
 }
 
-const firecrawl = new FirecrawlApp({
-	apiKey: process.env.FIRECRAWL_KEY ?? "",
-	apiUrl: process.env.FIRECRAWL_BASE_URL,
-})
-
 export class DeepResearchService {
 	private providerRef: WeakRef<ClineProvider>
+	private firecrawl: FirecrawlApp
 	private model: LanguageModel
 	private initialQuery?: string
 	private combinedQuery?: string
@@ -43,16 +39,15 @@ export class DeepResearchService {
 		public readonly modelId: string,
 		public readonly breadth: number,
 		public readonly depth: number,
-		public readonly concurrency = 2,
+		public readonly concurrency: number,
+		public readonly firecrawlApiKey: string,
+		public readonly openaiApiKey: string,
 	) {
 		this.providerRef = new WeakRef(clineProvider)
 
-		const modelProvider = createOpenAI({
-			apiKey: process.env.OPENAI_API_KEY,
-			baseURL: "https://api.openai.com/v1",
-		})
+		this.firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey })
 
-		this.model = modelProvider(modelId, {
+		this.model = createOpenAI({ apiKey: openaiApiKey })(modelId, {
 			// reasoningEffort: "medium",
 			structuredOutputs: true,
 		})
@@ -208,7 +203,7 @@ export class DeepResearchService {
 			serpQueries.map((serpQuery) =>
 				limit(async () => {
 					try {
-						const result = await firecrawl.search(serpQuery.query, {
+						const result = await this.firecrawl.search(serpQuery.query, {
 							timeout: 15000,
 							limit: 5,
 							scrapeOptions: { formats: ["markdown"] },
