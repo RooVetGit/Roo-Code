@@ -1,0 +1,32 @@
+{
+	"display": "Configuration for Exercism TypeScript Exercises",
+	"compilerOptions": {
+		// Allows you to use the newest syntax, and have access to console.log
+		// https://www.typescriptlang.org/tsconfig#lib
+		"lib": ["ES2020", "dom"],
+		// Make sure typescript is configured to output ESM
+		// https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c#how-can-i-make-my-typescript-project-output-esm
+		"module": "Node16",
+		// Since this project is using babel, TypeScript may target something very
+		// high, and babel will make sure it runs on your local Node version.
+		// https://babeljs.io/docs/en/
+		"target": "ES2020", // ESLint doesn't support this yet: "es2022",
+
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+
+		// Because jest-resolve isn't like node resolve, the absolute path must be .ts
+		"allowImportingTsExtensions": true,
+		"noEmit": true,
+
+		// Because we'll be using babel: ensure that Babel can safely transpile
+		// files in the TypeScript project.
+		//
+		// https://babeljs.io/docs/en/babel-plugin-transform-typescript/#caveats
+		"isolatedModules": true
+	},
+	"include": ["*.ts", "*.tsx", ".meta/*.ts", ".meta/*.tsx", "__typetests__/*.tst.ts"],
+	"exclude": ["node_modules"]
+}
