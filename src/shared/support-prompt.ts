@@ -92,6 +92,52 @@ Please suggest improvements for:
 
 Provide the improved code along with explanations for each enhancement.`,
 	},
+	COMMIT: {
+		label: "Generate Commit Message",
+		description:
+			"Generate a semantic commit message based on staged changes using git status and diffs. Available when staging changes in source control.",
+		template: `Create a conventional commit message following this format:
+	  <type>[optional scope]: <subject> (50 characters max)
+		
+	  <body> (bullet points with '-' if needed)
+		
+	  [optional footer]
+	  
+	  Analyze these staged changes:
+	  === FILE STATUS ===
+	  \${stagedFilesStatus}
+	  
+	  === CODE DIFFS ===
+	  \${stagedDiffs}
+	  
+	  Considerations:
+	  1. Purpose and role of each modified file
+	  2. Relationships between changed files
+	  3. Technical impact/risk of changes
+	  4. Conventional commit standards (feat, fix, chore, docs, style, refactor, test, etc.)
+	  5. Additional context provided by the user:
+		 "\${inputUser}"
+	  
+	  Requirements:
+	  - Use imperative mood ("Add" not "Added")
+	  - Subject line <= 50 characters
+	  - Body uses '-' for bullet points when needed
+	  - Return ONLY the commit message with no commentary
+	  - Format exactly as:
+		 [type][scope]: [Subject]
+		 
+		 [Body]
+		 
+		 [Footer]
+	  
+	  Example response:
+	  feat(auth): implement password strength validation
+	  
+	  - Add zxcvbn password strength meter
+	  - Enforce minimum 12 character length
+	  - Update registration validation rules
+	  `,
+	},
 	ADD_TO_CONTEXT: {
 		label: "Add to Context",
 		description:

@@ -89,6 +89,38 @@ describe("Code Action Prompts", () => {
 		})
 	})
 
+	describe("COMMIT action", () => {
+		it("should format commit message prompt correctly", () => {
+			const stagedFilesStatus = "M test/file.ts"
+			const stagedDiffs = `diff --git a/test/file.ts b/test/file.ts
+								index abc123..def456 100644
+								--- a/test/file.ts
+								+++ b/test/file.ts
+								@@ -1,4 +1,4 @@
+								 function test() {
+								-  return false;
+								+  return true;
+								 }`
+			const inputUser = "Fix return value in test function"
+
+			const prompt = supportPrompt.create("COMMIT", {
+				stagedFilesStatus: stagedFilesStatus,
+				stagedDiffs: stagedDiffs,
+				inputUser: inputUser,
+			})
+
+			expect(prompt).toContain("Create a conventional commit message")
+			expect(prompt).toContain("Analyze these staged changes:")
+			expect(prompt).toContain(stagedFilesStatus)
+			expect(prompt).toContain(stagedDiffs)
+			expect(prompt).toContain(inputUser)
+			expect(prompt).toContain("Considerations:")
+			expect(prompt).toContain("Conventional commit standards")
+			expect(prompt).toContain("Example response:")
+			expect(prompt).toContain("feat(auth): implement password strength validation")
+		})
+	})
+
 	describe("get template", () => {
 		it("should return default template when no custom prompts provided", () => {
 			const template = supportPrompt.get(undefined, "EXPLAIN")
