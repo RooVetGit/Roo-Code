@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, fireEvent, within, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, within, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import HistoryView from '../HistoryView'
 import { useExtensionState } from '../../../context/ExtensionStateContext'
@@ -41,11 +41,26 @@ const mockTaskHistory = [
 ]
 
 describe('HistoryView', () => {
+  // Suppress act() warnings
+  const originalError = console.error
+  beforeAll(() => {
+    console.error = (...args: any[]) => {
+      if (/Warning: An update to .* inside a test was not wrapped in act/.test(args[0])) {
+        return
+      }
+      originalError.call(console, ...args)
+    }
+  })
+
+  afterAll(() => {
+    console.error = originalError
+  })
+
   beforeEach(() => {
     // Reset all mocks before each test
     jest.clearAllMocks()
     jest.useFakeTimers()
-    
+
     // Mock useExtensionState implementation
     ;(useExtensionState as jest.Mock).mockReturnValue({
       taskHistory: mockTaskHistory,
@@ -74,14 +89,14 @@ describe('HistoryView', () => {
     // Get search input and radio group
     const searchInput = screen.getByPlaceholderText('Fuzzy search history...')
     const radioGroup = screen.getByRole('radiogroup')
-    
+
     // Type in search
     await userEvent.type(searchInput, 'task 1')
 
     // Check if sort option automatically changes to "Most Relevant"
     const mostRelevantRadio = within(radioGroup).getByLabelText('Most Relevant')
     expect(mostRelevantRadio).not.toBeDisabled()
-    
+
     // Click and wait for radio update
     fireEvent.click(mostRelevantRadio)
 
@@ -99,14 +114,14 @@ describe('HistoryView', () => {
     // Test changing sort options
     const oldestRadio = within(radioGroup).getByLabelText('Oldest')
     fireEvent.click(oldestRadio)
-    
+
     // Wait for oldest radio to be checked
     const checkedOldestRadio = await within(radioGroup).findByRole('radio', { name: 'Oldest', checked: true })
     expect(checkedOldestRadio).toBeInTheDocument()
 
     const mostExpensiveRadio = within(radioGroup).getByLabelText('Most Expensive')
     fireEvent.click(mostExpensiveRadio)
-    
+
     // Wait for most expensive radio to be checked
     const checkedExpensiveRadio = await within(radioGroup).findByRole('radio', { name: 'Most Expensive', checked: true })
     expect(checkedExpensiveRadio).toBeInTheDocument()
@@ -133,7 +148,7 @@ describe('HistoryView', () => {
     // Find and hover over first task
     const taskContainer = screen.getByTestId('virtuoso-item-1')
     fireEvent.mouseEnter(taskContainer)
-    
+
     const deleteButton = within(taskContainer).getByTitle('Delete Task')
     fireEvent.click(deleteButton)
 
@@ -156,13 +171,13 @@ describe('HistoryView', () => {
     // Find and hover over first task
     const taskContainer = screen.getByTestId('virtuoso-item-1')
     fireEvent.mouseEnter(taskContainer)
-    
+
     const copyButton = within(taskContainer).getByTitle('Copy Prompt')
     await userEvent.click(copyButton)
 
     // Verify clipboard API was called
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith('Test task 1')
-    
+
     // Wait for copy modal to appear
     const copyModal = await screen.findByText('Prompt Copied to Clipboard')
     expect(copyModal).toBeInTheDocument()
@@ -219,7 +234,7 @@ describe('HistoryView', () => {
     // Find and hover over second task
     const taskContainer = screen.getByTestId('virtuoso-item-2')
     fireEvent.mouseEnter(taskContainer)
-    
+
     const exportButton = within(taskContainer).getByText('EXPORT')
     fireEvent.click(exportButton)
 
