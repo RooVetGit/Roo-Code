@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, fireEvent, within, waitFor, act } from '@testing-library/react'
+import { render, screen, fireEvent, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import HistoryView from '../HistoryView'
 import { useExtensionState } from '../../../context/ExtensionStateContext'
