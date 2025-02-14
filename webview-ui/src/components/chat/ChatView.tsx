@@ -1,7 +1,7 @@
 import { VSCodeButton, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 import debounce from "debounce"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useDeepCompareEffect, useEvent, useMount } from "react-use"
+import { useEvent, useMount } from "react-use"
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
 import styled from "styled-components"
 import {
@@ -40,6 +40,90 @@ export const MAX_IMAGES_PER_MESSAGE = 20 // Anthropic limits to 20 images
 const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryView }: ChatViewProps) => {
 	const { version, clineMessages: messages, taskHistory, apiConfiguration, mcpServers, alwaysAllowBrowser, alwaysAllowReadOnly, alwaysAllowWrite, alwaysAllowExecute, alwaysAllowMcp, allowedCommands, writeDelayMs } = useExtensionState()
 
+	const isReadOnlyToolAction = useCallback((message: ClineMessage | undefined) => {
+		if (message?.type === "ask") {
+			if (!message.text) {
+				return true
+			}
+			try {
+				const tool = JSON.parse(message.text)
+				return ["readFile", "listFiles", "listFilesTopLevel", "listFilesRecursive", "listCodeDefinitionNames", "searchFiles"].includes(tool.tool)
+			} catch (error) {
+				console.error("Error parsing tool JSON:", error)
+				return false
+			}
+		}
+		return false
+	}, [])
+
+	const isWriteToolAction = useCallback((message: ClineMessage | undefined) => {
+		if (message?.type === "ask") {
+			if (!message.text) {
+				return true
+			}
+			try {
+				const tool = JSON.parse(message.text)
+				return ["editedExistingFile", "appliedDiff", "newFileCreated"].includes(tool.tool)
+			} catch (error) {
+				console.error("Error parsing tool JSON:", error)
+				return false
+			}
+		}
+		return false
+	}, [])
+
+	const isMcpToolAlwaysAllowed = useCallback((message: ClineMessage | undefined) => {
+		if (message?.type === "ask" && message.ask === "use_mcp_server") {
+			if (!message.text) {
+				return true
+			}
+			try {
+				const mcpServerUse = JSON.parse(message.text) as { type: string; serverName: string; toolName: string }
+				if (mcpServerUse.type === "use_mcp_tool") {
+					const server = mcpServers?.find((s: McpServer) => s.name === mcpServerUse.serverName)
+					const tool = server?.tools?.find((t: McpTool) => t.name === mcpServerUse.toolName)
+					return tool?.alwaysAllow || false
+				}
+			} catch (error) {
+				console.error("Error parsing MCP server use JSON:", error)
+				return false
+			}
+			return false
+		}
+		return false
+	}, [mcpServers])
+
+	// Check if a command message is allowed
+	const isAllowedCommand = useCallback((message: ClineMessage | undefined): boolean => {
+		if (message?.type !== "ask") return false
+		return validateCommand(message.text || '', allowedCommands || [])
+	}, [allowedCommands])
+
+	const isAutoApproved = useCallback(
+		(message: ClineMessage | undefined) => {
+			if (!message || message.type !== "ask") return false
+
+			return (
+				(alwaysAllowBrowser && message.ask === "browser_action_launch") ||
+				(alwaysAllowReadOnly && message.ask === "tool" && isReadOnlyToolAction(message)) ||
+				(alwaysAllowWrite && message.ask === "tool" && isWriteToolAction(message)) ||
+				(alwaysAllowExecute && message.ask === "command" && isAllowedCommand(message)) ||
+				(alwaysAllowMcp && message.ask === "use_mcp_server" && isMcpToolAlwaysAllowed(message))
+			)
+		},
+		[
+			alwaysAllowBrowser,
+			alwaysAllowReadOnly,
+			alwaysAllowWrite,
+			alwaysAllowExecute,
+			alwaysAllowMcp,
+			isReadOnlyToolAction,
+			isWriteToolAction,
+			isAllowedCommand,
+			isMcpToolAlwaysAllowed
+		]
+	)
+
 	//const task = messages.length > 0 ? (messages[0].say === "task" ? messages[0] : undefined) : undefined) : undefined
 	const task = useMemo(() => messages.at(0), [messages]) // leaving this less safe version here since if the first message is not a task, then the extension is in a bad state and needs to be debugged (see Cline.abort)
 	const modifiedMessages = useMemo(() => combineApiRequests(combineCommandSequences(messages.slice(1))), [messages])
@@ -75,7 +159,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		vscode.postMessage({ type: "playSound", audioType })
 	}
 
-	useDeepCompareEffect(() => {
+	useEffect(() => {
 		// if last message is an ask, show user ask UI
 		// if user finished a task, then start a new task with a new conversation history since in this moment that the extension is waiting for user response, the user could close the extension and the conversation history would be lost.
 		// basically as long as a task is active, the conversation history will be persisted
@@ -114,7 +198,13 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							setTextAreaDisabled(isPartial)
 							setClineAsk("tool")
 							setEnableButtons(!isPartial)
-							const tool = JSON.parse(lastMessage.text || "{}") as ClineSayTool
+							let tool: ClineSayTool;
+							try {
+								tool = JSON.parse(lastMessage.text || "{}") as ClineSayTool
+							} catch (error) {
+								console.error("Error parsing tool JSON:", error)
+								tool = {} as ClineSayTool
+							}
 							switch (tool.tool) {
 								case "editedExistingFile":
 								case "appliedDiff":
@@ -177,7 +267,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							setEnableButtons(true)
 							setPrimaryButtonText("Resume Task")
 							setSecondaryButtonText("Terminate")
-							setDidClickCancel(false) // special case where we reset the cancel button state							
+							setDidClickCancel(false) // special case where we reset the cancel button state
 							break
 						case "resume_completed_task":
 							setTextAreaDisabled(false)
@@ -225,7 +315,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			// setPrimaryButtonText(undefined)
 			// setSecondaryButtonText(undefined)
 		}
-	}, [lastMessage, secondLastMessage])
+	}, [isAutoApproved, lastMessage, secondLastMessage])
 
 	useEffect(() => {
 		if (messages.length === 0) {
@@ -255,10 +345,15 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		} else {
 			const lastApiReqStarted = findLast(modifiedMessages, (message) => message.say === "api_req_started")
 			if (lastApiReqStarted && lastApiReqStarted.text != null && lastApiReqStarted.say === "api_req_started") {
-				const cost = JSON.parse(lastApiReqStarted.text).cost
-				if (cost === undefined) {
-					// api request has not finished yet
-					return true
+				try {
+					const cost = JSON.parse(lastApiReqStarted.text).cost
+					if (cost === undefined) {
+						// api request has not finished yet
+						return true
+					}
+				} catch (error) {
+					console.error("Error parsing API request cost JSON:", error)
+					return true // Assume streaming is still in progress if we can't parse the cost
 				}
 			}
 		}
@@ -479,73 +574,6 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		})
 	}, [modifiedMessages])
 
-	const isReadOnlyToolAction = useCallback((message: ClineMessage | undefined) => {
-		if (message?.type === "ask") {
-			if (!message.text) {
-				return true
-			}
-			const tool = JSON.parse(message.text)
-			return ["readFile", "listFiles", "listFilesTopLevel", "listFilesRecursive", "listCodeDefinitionNames", "searchFiles"].includes(tool.tool)
-		}
-		return false
-	}, [])
-
-	const isWriteToolAction = useCallback((message: ClineMessage | undefined) => {
-		if (message?.type === "ask") {
-			if (!message.text) {
-				return true
-			}
-			const tool = JSON.parse(message.text)
-			return ["editedExistingFile", "appliedDiff", "newFileCreated"].includes(tool.tool)
-		}
-		return false
-	}, [])
-
-	const isMcpToolAlwaysAllowed = useCallback((message: ClineMessage | undefined) => {
-		if (message?.type === "ask" && message.ask === "use_mcp_server") {
-			if (!message.text) {
-				return true
-			}
-			const mcpServerUse = JSON.parse(message.text) as { type: string; serverName: string; toolName: string }
-			if (mcpServerUse.type === "use_mcp_tool") {
-				const server = mcpServers?.find((s: McpServer) => s.name === mcpServerUse.serverName)
-				const tool = server?.tools?.find((t: McpTool) => t.name === mcpServerUse.toolName)
-				return tool?.alwaysAllow || false
-			}
-		}
-		return false
-	}, [mcpServers])
-
-	// Check if a command message is allowed
-	const isAllowedCommand = useCallback((message: ClineMessage | undefined): boolean => {
-		if (message?.type !== "ask") return false
-		return validateCommand(message.text || '', allowedCommands || [])
-	}, [allowedCommands])
-
-	const isAutoApproved = useCallback(
-		(message: ClineMessage | undefined) => {
-			if (!message || message.type !== "ask") return false
-
-			return (
-				(alwaysAllowBrowser && message.ask === "browser_action_launch") ||
-				(alwaysAllowReadOnly && message.ask === "tool" && isReadOnlyToolAction(message)) ||
-				(alwaysAllowWrite && message.ask === "tool" && isWriteToolAction(message)) ||
-				(alwaysAllowExecute && message.ask === "command" && isAllowedCommand(message)) ||
-				(alwaysAllowMcp && message.ask === "use_mcp_server" && isMcpToolAlwaysAllowed(message))
-			)
-		},
-		[
-			alwaysAllowBrowser,
-			alwaysAllowReadOnly,
-			alwaysAllowWrite,
-			alwaysAllowExecute,
-			alwaysAllowMcp,
-			isReadOnlyToolAction,
-			isWriteToolAction,
-			isAllowedCommand,
-			isMcpToolAlwaysAllowed
-		]
-	)
 
 	useEffect(() => {
 		// Only execute when isStreaming changes from true to false
@@ -620,9 +648,16 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 					// get last api_req_started in currentGroup to check if it's cancelled. If it is then this api req is not part of the current browser session
 					const lastApiReqStarted = [...currentGroup].reverse().find((m) => m.say === "api_req_started")
 					if (lastApiReqStarted?.text != null) {
-						const info = JSON.parse(lastApiReqStarted.text)
-						const isCancelled = info.cancelReason != null
-						if (isCancelled) {
+						try {
+							const info = JSON.parse(lastApiReqStarted.text)
+							const isCancelled = info.cancelReason != null
+							if (isCancelled) {
+								endBrowserSession()
+								result.push(message)
+								return
+							}
+						} catch (error) {
+							console.error("Error parsing API request JSON:", error)
 							endBrowserSession()
 							result.push(message)
 							return
@@ -635,8 +670,13 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 
 					// Check if this is a close action
 					if (message.say === "browser_action") {
-						const browserAction = JSON.parse(message.text || "{}") as ClineSayBrowserAction
-						if (browserAction.action === "close") {
+						try {
+							const browserAction = JSON.parse(message.text || "{}") as ClineSayBrowserAction
+							if (browserAction.action === "close") {
+								endBrowserSession()
+							}
+						} catch (error) {
+							console.error("Error parsing browser action JSON:", error)
 							endBrowserSession()
 						}
 					}

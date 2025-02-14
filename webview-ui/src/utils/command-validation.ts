@@ -1,6 +1,10 @@
 import { parse } from 'shell-quote'
 
-type ShellToken = string | { op: string } | { command: string }
+/**
+ * Represents a token from shell-quote parsing
+ * Can be either a string literal, an operator, or a command
+ */
+type ShellToken = string | { op: string; type?: string } | { command: string; type?: string }
 
 /**
  * Split a command string into individual sub-commands by
@@ -11,6 +15,9 @@ type ShellToken = string | { op: string } | { command: string }
  * - Subshell commands ($(cmd) or `cmd`)
  * - PowerShell redirections (2>&1)
  * - Chain operators (&&, ||, ;, |)
+ *
+ * @param command - The command string to parse
+ * @returns An array of individual command strings
  */
 export function parseCommand(command: string): string[] {
   if (!command?.trim()) return []
@@ -89,6 +96,10 @@ export function parseCommand(command: string): string[] {
 
 /**
  * Check if a single command is allowed based on prefix matching.
+ *
+ * @param command - The command string to validate
+ * @param allowedCommands - Array of allowed command prefixes
+ * @returns boolean indicating if the command is allowed
  */
 export function isAllowedSingleCommand(
   command: string,
@@ -104,6 +115,10 @@ export function isAllowedSingleCommand(
 /**
  * Check if a command string is allowed based on the allowed command prefixes.
  * This version validates both main commands and subshell commands.
+ *
+ * @param command - The command string to validate
+ * @param allowedCommands - Array of allowed command prefixes
+ * @returns boolean indicating if all commands in the string are allowed
  */
 export function validateCommand(command: string, allowedCommands: string[]): boolean {
   if (!command?.trim()) return true
@@ -114,12 +129,12 @@ export function validateCommand(command: string, allowedCommands: string[]): boo
   // Validate each command
   return allCommands.every((cmd: string) => {
     const cmdWithoutRedirection = cmd.replace(/\d*>&\d*/, '').trim()
-    
+
     // Check if this is a subshell command that needs further parsing
     if (cmdWithoutRedirection.includes('$(') || cmdWithoutRedirection.includes('`')) {
       return validateCommand(cmdWithoutRedirection, allowedCommands)
     }
-    
+
     return isAllowedSingleCommand(cmdWithoutRedirection, allowedCommands)
   })
 }
