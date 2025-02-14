@@ -403,8 +403,8 @@ export const vertexModels = {
 		supportsPromptCache: true,
 		inputPrice: 3.0,
 		outputPrice: 15.0,
-		cacheWritesPrice: 3.75, // $3.75 per million tokens
-		cacheReadsPrice: 0.3, // $0.30 per million tokens
+		cacheWritesPrice: 3.75,
+		cacheReadsPrice: 0.3,
 	},
 	"claude-3-5-sonnet@20240620": {
 		maxTokens: 8192,
