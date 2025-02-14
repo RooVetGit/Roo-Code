@@ -45,8 +45,13 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			if (!message.text) {
 				return true
 			}
-			const tool = JSON.parse(message.text)
-			return ["readFile", "listFiles", "listFilesTopLevel", "listFilesRecursive", "listCodeDefinitionNames", "searchFiles"].includes(tool.tool)
+			try {
+				const tool = JSON.parse(message.text)
+				return ["readFile", "listFiles", "listFilesTopLevel", "listFilesRecursive", "listCodeDefinitionNames", "searchFiles"].includes(tool.tool)
+			} catch (error) {
+				console.error("Error parsing tool JSON:", error)
+				return false
+			}
 		}
 		return false
 	}, [])
@@ -56,8 +61,13 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			if (!message.text) {
 				return true
 			}
-			const tool = JSON.parse(message.text)
-			return ["editedExistingFile", "appliedDiff", "newFileCreated"].includes(tool.tool)
+			try {
+				const tool = JSON.parse(message.text)
+				return ["editedExistingFile", "appliedDiff", "newFileCreated"].includes(tool.tool)
+			} catch (error) {
+				console.error("Error parsing tool JSON:", error)
+				return false
+			}
 		}
 		return false
 	}, [])
@@ -67,12 +77,18 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			if (!message.text) {
 				return true
 			}
-			const mcpServerUse = JSON.parse(message.text) as { type: string; serverName: string; toolName: string }
-			if (mcpServerUse.type === "use_mcp_tool") {
-				const server = mcpServers?.find((s: McpServer) => s.name === mcpServerUse.serverName)
-				const tool = server?.tools?.find((t: McpTool) => t.name === mcpServerUse.toolName)
-				return tool?.alwaysAllow || false
+			try {
+				const mcpServerUse = JSON.parse(message.text) as { type: string; serverName: string; toolName: string }
+				if (mcpServerUse.type === "use_mcp_tool") {
+					const server = mcpServers?.find((s: McpServer) => s.name === mcpServerUse.serverName)
+					const tool = server?.tools?.find((t: McpTool) => t.name === mcpServerUse.toolName)
+					return tool?.alwaysAllow || false
+				}
+			} catch (error) {
+				console.error("Error parsing MCP server use JSON:", error)
+				return false
 			}
+			return false
 		}
 		return false
 	}, [mcpServers])
@@ -182,7 +198,13 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							setTextAreaDisabled(isPartial)
 							setClineAsk("tool")
 							setEnableButtons(!isPartial)
-							const tool = JSON.parse(lastMessage.text || "{}") as ClineSayTool
+							let tool: ClineSayTool;
+							try {
+								tool = JSON.parse(lastMessage.text || "{}") as ClineSayTool
+							} catch (error) {
+								console.error("Error parsing tool JSON:", error)
+								tool = {} as ClineSayTool
+							}
 							switch (tool.tool) {
 								case "editedExistingFile":
 								case "appliedDiff":
@@ -323,10 +345,15 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		} else {
 			const lastApiReqStarted = findLast(modifiedMessages, (message) => message.say === "api_req_started")
 			if (lastApiReqStarted && lastApiReqStarted.text != null && lastApiReqStarted.say === "api_req_started") {
-				const cost = JSON.parse(lastApiReqStarted.text).cost
-				if (cost === undefined) {
-					// api request has not finished yet
-					return true
+				try {
+					const cost = JSON.parse(lastApiReqStarted.text).cost
+					if (cost === undefined) {
+						// api request has not finished yet
+						return true
+					}
+				} catch (error) {
+					console.error("Error parsing API request cost JSON:", error)
+					return true // Assume streaming is still in progress if we can't parse the cost
 				}
 			}
 		}
@@ -621,9 +648,16 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 					// get last api_req_started in currentGroup to check if it's cancelled. If it is then this api req is not part of the current browser session
 					const lastApiReqStarted = [...currentGroup].reverse().find((m) => m.say === "api_req_started")
 					if (lastApiReqStarted?.text != null) {
-						const info = JSON.parse(lastApiReqStarted.text)
-						const isCancelled = info.cancelReason != null
-						if (isCancelled) {
+						try {
+							const info = JSON.parse(lastApiReqStarted.text)
+							const isCancelled = info.cancelReason != null
+							if (isCancelled) {
+								endBrowserSession()
+								result.push(message)
+								return
+							}
+						} catch (error) {
+							console.error("Error parsing API request JSON:", error)
 							endBrowserSession()
 							result.push(message)
 							return
@@ -636,8 +670,13 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 
 					// Check if this is a close action
 					if (message.say === "browser_action") {
-						const browserAction = JSON.parse(message.text || "{}") as ClineSayBrowserAction
-						if (browserAction.action === "close") {
+						try {
+							const browserAction = JSON.parse(message.text || "{}") as ClineSayBrowserAction
+							if (browserAction.action === "close") {
+								endBrowserSession()
+							}
+						} catch (error) {
+							console.error("Error parsing browser action JSON:", error)
 							endBrowserSession()
 						}
 					}
