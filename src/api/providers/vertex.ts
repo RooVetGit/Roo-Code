@@ -6,11 +6,37 @@ import { ApiHandlerOptions, ModelInfo, vertexDefaultModelId, VertexModelId, vert
 import { ApiStream } from "../transform/stream"
 
 // Types for Vertex SDK
+
+/**
+ * Vertex API has specific limitations for prompt caching:
+ * 1. Maximum of 4 blocks can have cache_control
+ * 2. Only text blocks can be cached (images and other content types cannot)
+ * 3. Cache control can only be applied to user messages, not assistant messages
+ *
+ * Our caching strategy:
+ * - Cache the system prompt (1 block)
+ * - Cache the last text block of the second-to-last user message (1 block)
+ * - Cache the last text block of the last user message (1 block)
+ * This ensures we stay under the 4-block limit while maintaining effective caching
+ * for the most relevant context.
+ */
+
 interface VertexTextBlock {
 	type: "text"
 	text: string
 	cache_control?: { type: "ephemeral" }
 }
+
+interface VertexImageBlock {
+	type: "image"
+	source: {
+		type: "base64"
+		media_type: "image/jpeg" | "image/png" | "image/gif" | "image/webp"
+		data: string
+	}
+}
+
+type VertexContentBlock = VertexTextBlock | VertexImageBlock
 
 interface VertexUsage {
 	input_tokens?: number
@@ -20,7 +46,7 @@ interface VertexUsage {
 }
 
 interface VertexMessage extends Omit<Anthropic.Messages.MessageParam, "content"> {
-	content: string | VertexTextBlock[]
+	content: string | VertexContentBlock[]
 }
 
 interface VertexMessageCreateParams {
@@ -70,7 +96,7 @@ export class VertexHandler implements ApiHandler, SingleCompletionHandler {
 	}
 
 	private formatMessageForCache(message: Anthropic.Messages.MessageParam, shouldCache: boolean): VertexMessage {
-		// Keep assistant messages as plain strings
+		// Assistant messages are kept as-is since they can't be cached
 		if (message.role === "assistant") {
 			return message as VertexMessage
 		}
@@ -84,17 +110,27 @@ export class VertexHandler implements ApiHandler, SingleCompletionHandler {
 							{
 								type: "text" as const,
 								text: message.content,
+								// For string content, we only have one block so it's always the last
 								...(shouldCache && { cache_control: { type: "ephemeral" } }),
 							},
 						]
-					: message.content.map((content, contentIndex) => ({
-							type: "text" as const,
-							text: (content as { text: string }).text,
-							...(shouldCache &&
-								contentIndex === message.content.length - 1 && {
-									cache_control: { type: "ephemeral" },
-								}),
-						})),
+					: message.content.map((content, contentIndex, array) => {
+							// Images and other non-text content are passed through unchanged
+							if (content.type === "image") {
+								return content as VertexImageBlock
+							}
+							// We only cache the last text block in each message to:
+							// 1. Stay under the 4-block cache limit
+							// 2. Cache the most relevant context (usually at the end of the message)
+							const isLastTextBlock =
+								contentIndex ===
+								array.reduce((lastIndex, c, i) => (c.type === "text" ? i : lastIndex), -1)
+							return {
+								type: "text" as const,
+								text: (content as { text: string }).text,
+								...(shouldCache && isLastTextBlock && { cache_control: { type: "ephemeral" } }),
+							}
+						}),
 		}
 	}
 
@@ -102,7 +138,9 @@ export class VertexHandler implements ApiHandler, SingleCompletionHandler {
 		const model = this.getModel()
 		const useCache = model.info.supportsPromptCache
 
-		// Find user message indices for caching
+		// Find indices of user messages that we want to cache
+		// We only cache the last two user messages to stay within the 4-block limit
+		// (1 block for system + 1 block each for last two user messages = 3 total)
 		const userMsgIndices = useCache
 			? messages.reduce((acc, msg, i) => (msg.role === "user" ? [...acc, i] : acc), [] as number[])
 			: []
@@ -110,10 +148,11 @@ export class VertexHandler implements ApiHandler, SingleCompletionHandler {
 		const secondLastMsgUserIndex = userMsgIndices[userMsgIndices.length - 2] ?? -1
 
 		// Create the stream with appropriate caching configuration
-		const params: VertexMessageCreateParams = {
+		const params = {
 			model: model.id,
 			max_tokens: model.info.maxTokens || 8192,
 			temperature: this.options.modelTemperature ?? 0,
+			// Cache the system prompt if caching is enabled
 			system: useCache
 				? [
 						{
@@ -124,6 +163,7 @@ export class VertexHandler implements ApiHandler, SingleCompletionHandler {
 					]
 				: systemPrompt,
 			messages: messages.map((message, index) => {
+				// Only cache the last two user messages
 				const shouldCache = useCache && (index === lastUserMsgIndex || index === secondLastMsgUserIndex)
 				return this.formatMessageForCache(message, shouldCache)
 			}),
@@ -131,7 +171,7 @@ export class VertexHandler implements ApiHandler, SingleCompletionHandler {
 		}
 
 		const stream = (await this.client.messages.create(
-			params,
+			params as Anthropic.Messages.MessageCreateParamsStreaming,
 		)) as unknown as AnthropicStream<VertexMessageStreamEvent>
 
 		// Process the stream chunks
@@ -204,7 +244,7 @@ export class VertexHandler implements ApiHandler, SingleCompletionHandler {
 			const model = this.getModel()
 			const useCache = model.info.supportsPromptCache
 
-			const params: Omit<VertexMessageCreateParams, "stream"> = {
+			const params = {
 				model: model.id,
 				max_tokens: model.info.maxTokens || 8192,
 				temperature: this.options.modelTemperature ?? 0,
@@ -223,12 +263,12 @@ export class VertexHandler implements ApiHandler, SingleCompletionHandler {
 							: prompt,
 					},
 				],
+				stream: false,
 			}
 
-			const response = (await this.client.messages.create({
-				...params,
-				stream: false,
-			})) as unknown as VertexMessageResponse
+			const response = (await this.client.messages.create(
+				params as Anthropic.Messages.MessageCreateParamsNonStreaming,
+			)) as unknown as VertexMessageResponse
 
 			const content = response.content[0]
 			if (content.type === "text") {
