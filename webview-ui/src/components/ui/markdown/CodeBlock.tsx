@@ -3,7 +3,7 @@ import { codeToHtml } from "shiki"
 import { CopyIcon, CheckIcon } from "@radix-ui/react-icons"
 
 import { cn } from "@/lib/utils"
-import { useClipboard } from "@/hooks/useClipboard"
+import { useClipboard } from "@/components/ui/hooks"
 import { Button } from "@/components/ui"
 
 interface CodeBlockProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "children"> {

@@ -3,13 +3,13 @@ import { CopyIcon, CheckIcon } from "@radix-ui/react-icons"
 import { BrainCircuit, CircleUserRound } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { useClipboard } from "@/hooks/useClipboard"
+import { useClipboard } from "@/components/ui/hooks"
 import { Badge } from "@/components/ui"
+import { Markdown } from "@/components/ui/markdown"
 
 import { BadgeData, ChatHandler, Message, MessageAnnotationType } from "./types"
 import { ChatMessageProvider } from "./ChatMessageProvider"
 import { useChatMessage } from "./useChatMessage"
-import { Markdown } from "./markdown"
 
 /**
  * ChatMessage
@@ -39,7 +39,7 @@ export function ChatMessage({ message, isLast, isHeaderVisible, isLoading, appen
 					"bg-vscode-input-background/50": message.role === "user",
 				})}>
 				{isHeaderVisible && <ChatMessageHeader badges={badges} />}
-				<ChatMessageContent isHeaderVisible={isHeaderVisible} isLoading={isLoading} append={append} />
+				<ChatMessageContent isHeaderVisible={isHeaderVisible} />
 				<ChatMessageActions />
 			</div>
 		</ChatMessageProvider>
