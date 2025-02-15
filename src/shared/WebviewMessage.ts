@@ -93,6 +93,7 @@ export interface WebviewMessage {
 		| "checkpointDiff"
 		| "checkpointRestore"
 		| "maxOpenTabsContext"
+		| "keepBrowserOpen"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse

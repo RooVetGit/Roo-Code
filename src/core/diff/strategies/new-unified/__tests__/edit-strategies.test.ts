@@ -1,5 +1,8 @@
 import { applyContextMatching, applyDMP, applyGitFallback } from "../edit-strategies"
 import { Hunk } from "../types"
+import simpleGit from "simple-git"
+
+jest.mock("simple-git")
 
 const testCases = [
 	{
@@ -260,6 +263,22 @@ describe("applyDMP", () => {
 
 describe("applyGitFallback", () => {
 	it("should successfully apply changes using git operations", async () => {
+		// Mock git operations to simulate success
+		const mockGit = {
+			init: jest.fn().mockResolvedValue(undefined),
+			addConfig: jest.fn().mockResolvedValue(undefined),
+			add: jest.fn().mockResolvedValue(undefined),
+			commit: jest.fn().mockResolvedValue({ commit: "mock-commit" }),
+			raw: jest.fn().mockImplementation(async (args) => {
+				if (args[0] === "checkout") {
+					return undefined
+				}
+				// On cherry-pick, simulate successful application by not throwing
+				return undefined
+			}),
+		}
+		;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+
 		const hunk = {
 			changes: [
 				{ type: "context", content: "line1", indent: "" },
@@ -278,6 +297,16 @@ describe("applyGitFallback", () => {
 	})
 
 	it("should return original content with 0 confidence when changes cannot be applied", async () => {
+		// Mock git operations to simulate failure
+		const mockGit = {
+			init: jest.fn().mockResolvedValue(undefined),
+			addConfig: jest.fn().mockResolvedValue(undefined),
+			add: jest.fn().mockResolvedValue(undefined),
+			commit: jest.fn().mockResolvedValue({ commit: "mock-commit" }),
+			raw: jest.fn().mockRejectedValue(new Error("Cherry-pick failed")),
+		}
+		;(simpleGit as jest.Mock).mockReturnValue(mockGit)
+
 		const hunk = {
 			changes: [
 				{ type: "context", content: "nonexistent", indent: "" },

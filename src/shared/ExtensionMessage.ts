@@ -46,6 +46,7 @@ export interface ExtensionMessage {
 		| "unboundModels"
 		| "refreshUnboundModels"
 		| "currentCheckpointUpdated"
+		| "keepBrowserOpen"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -129,6 +130,7 @@ export interface ExtensionState {
 	customModes: ModeConfig[]
 	toolRequirements?: Record<string, boolean> // Map of tool names to their requirements (e.g. {"apply_diff": true} if diffEnabled)
 	maxOpenTabsContext: number // Maximum number of VSCode open tabs to include in context (0-500)
+	keepBrowserOpen: boolean // Controls whether browser sessions persist between actions
 }
 
 export interface ClineMessage {
@@ -204,13 +206,14 @@ export interface ClineSayTool {
 }
 
 // must keep in sync with system prompt
-export const browserActions = ["launch", "click", "type", "scroll_down", "scroll_up", "close"] as const
+export const browserActions = ["launch", "click", "type", "scroll_down", "scroll_up", "close", "set_viewport"] as const
 export type BrowserAction = (typeof browserActions)[number]
 
 export interface ClineSayBrowserAction {
 	action: BrowserAction
 	coordinate?: string
 	text?: string
+	viewport?: string // Format: "widthxheight" e.g. "375x667"
 }
 
 export type BrowserActionResult = {

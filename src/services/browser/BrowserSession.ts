@@ -19,9 +19,38 @@ export class BrowserSession {
 	private browser?: Browser
 	private page?: Page
 	private currentMousePosition?: string
+	private sessionTimeout?: NodeJS.Timeout
+	private readonly SESSION_TIMEOUT = 30 * 60 * 1000 // 30 minutes
+	private viewportSize: string = "900x600" // Default viewport size
 
 	constructor(context: vscode.ExtensionContext) {
 		this.context = context
+	}
+
+	private async getKeepBrowserOpen(): Promise<boolean> {
+		return this.context.globalState.get<boolean>("keepBrowserOpen") ?? false
+	}
+
+	private async resetSessionTimeout() {
+		if (this.sessionTimeout) {
+			clearTimeout(this.sessionTimeout)
+		}
+
+		const keepBrowserOpen = await this.getKeepBrowserOpen()
+		if (keepBrowserOpen) {
+			this.sessionTimeout = setTimeout(() => {
+				console.log("Browser session timed out after inactivity")
+				this.browser?.close().catch(() => {})
+				this.browser = undefined
+				this.page = undefined
+				this.currentMousePosition = undefined
+			}, this.SESSION_TIMEOUT)
+		} else {
+			this.sessionTimeout = setTimeout(() => {
+				console.log("Browser session timed out after inactivity")
+				this.closeBrowser()
+			}, this.SESSION_TIMEOUT)
+		}
 	}
 
 	private async ensureChromiumExists(): Promise<PCRStats> {
@@ -47,45 +76,63 @@ export class BrowserSession {
 
 	async launchBrowser(): Promise<void> {
 		console.log("launch browser called")
-		if (this.browser) {
-			// throw new Error("Browser already launched")
+		if (this.browser || this.page) {
 			await this.closeBrowser() // this may happen when the model launches a browser again after having used it already before
 		}
 
 		const stats = await this.ensureChromiumExists()
-		this.browser = await stats.puppeteer.launch({
-			args: [
-				"--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
-			],
-			executablePath: stats.executablePath,
-			defaultViewport: (() => {
-				const size = (this.context.globalState.get("browserViewportSize") as string | undefined) || "900x600"
-				const [width, height] = size.split("x").map(Number)
-				return { width, height }
-			})(),
-			// headless: false,
-		})
-		// (latest version of puppeteer does not add headless to user agent)
-		this.page = await this.browser?.newPage()
+		if (!this.browser || !this.page) {
+			this.browser = await stats.puppeteer.launch({
+				args: [
+					"--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+					"--no-sandbox",
+				],
+				executablePath: stats.executablePath,
+				defaultViewport: (() => {
+					const [width, height] = this.viewportSize.split("x").map(Number)
+					return { width, height }
+				})(),
+				// headless: false,
+			})
+			// (latest version of puppeteer does not add headless to user agent)
+			this.page = await this.browser?.newPage()
+			await this.page?.setDefaultNavigationTimeout(15000)
+			await this.page?.setExtraHTTPHeaders({
+				Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+				"Accept-Language": "en-US,en;q=0.5",
+				Connection: "keep-alive",
+				"Upgrade-Insecure-Requests": "1",
+			})
+		}
 	}
 
 	async closeBrowser(): Promise<BrowserActionResult> {
 		if (this.browser || this.page) {
-			console.log("closing browser...")
-			await this.browser?.close().catch(() => {})
-			this.browser = undefined
-			this.page = undefined
-			this.currentMousePosition = undefined
+			const keepBrowserOpen = await this.getKeepBrowserOpen()
+			if (!keepBrowserOpen) {
+				console.log("closing browser...")
+				await this.browser?.close().catch(() => {})
+				this.browser = undefined
+				this.page = undefined
+				this.currentMousePosition = undefined
+			} else {
+				console.log("keeping browser open...")
+			}
 		}
 		return {}
 	}
 
 	async doAction(action: (page: Page) => Promise<void>): Promise<BrowserActionResult> {
-		if (!this.page) {
-			throw new Error(
-				"Browser is not launched. This may occur if the browser was automatically closed by a non-`browser_action` tool.",
-			)
+		if (!this.page || !this.browser) {
+			console.log("No browser/page found, launching new one")
+			await this.launchBrowser()
+			if (!this.page) {
+				throw new Error("Failed to launch browser")
+			}
 		}
+
+		// Reset timeout on each action
+		await this.resetSessionTimeout()
 
 		const logs: string[] = []
 		let lastLogTs = Date.now()
@@ -140,7 +187,7 @@ export class BrowserSession {
 		})
 		let screenshot = `data:image/webp;base64,${screenshotBase64}`
 
-		if (!screenshotBase64) {
+		if (!screenshotBase64 || screenshotBase64.length === 0) {
 			console.log("webp screenshot failed, trying png")
 			screenshotBase64 = await this.page.screenshot({
 				...options,
@@ -168,7 +215,7 @@ export class BrowserSession {
 	async navigateToUrl(url: string): Promise<BrowserActionResult> {
 		return this.doAction(async (page) => {
 			// networkidle2 isn't good enough since page may take some time to load. we can assume locally running dev sites will reach networkidle0 in a reasonable amount of time
-			await page.goto(url, { timeout: 7_000, waitUntil: ["domcontentloaded", "networkidle2"] })
+			await page.goto(url, { timeout: 15_000, waitUntil: "domcontentloaded" })
 			// await page.goto(url, { timeout: 10_000, waitUntil: "load" })
 			await this.waitTillHTMLStable(page) // in case the page is loading more resources
 		})
@@ -228,8 +275,8 @@ export class BrowserSession {
 				// If we detected network activity, wait for navigation/loading
 				await page
 					.waitForNavigation({
-						waitUntil: ["domcontentloaded", "networkidle2"],
-						timeout: 7000,
+						waitUntil: "domcontentloaded",
+						timeout: 15000,
 					})
 					.catch(() => {})
 				await this.waitTillHTMLStable(page)
@@ -247,8 +294,7 @@ export class BrowserSession {
 	}
 
 	async scrollDown(): Promise<BrowserActionResult> {
-		const size = ((await this.context.globalState.get("browserViewportSize")) as string | undefined) || "900x600"
-		const height = parseInt(size.split("x")[1])
+		const height = parseInt(this.viewportSize.split("x")[1])
 		return this.doAction(async (page) => {
 			await page.evaluate((scrollHeight) => {
 				window.scrollBy({
@@ -261,8 +307,7 @@ export class BrowserSession {
 	}
 
 	async scrollUp(): Promise<BrowserActionResult> {
-		const size = ((await this.context.globalState.get("browserViewportSize")) as string | undefined) || "900x600"
-		const height = parseInt(size.split("x")[1])
+		const height = parseInt(this.viewportSize.split("x")[1])
 		return this.doAction(async (page) => {
 			await page.evaluate((scrollHeight) => {
 				window.scrollBy({
@@ -272,5 +317,31 @@ export class BrowserSession {
 			}, height)
 			await delay(300)
 		})
+	}
+
+	private onViewportChange?: (viewport: string) => void
+
+	setOnViewportChange(callback: (viewport: string) => void) {
+		this.onViewportChange = callback
+	}
+
+	async setViewport(viewport: string): Promise<BrowserActionResult> {
+		// Update the instance viewport size
+		this.viewportSize = viewport
+
+		// Notify Cline of the viewport change
+		this.onViewportChange?.(viewport)
+
+		// Use doAction to update viewport and capture screenshot
+		return this.doAction(async (page) => {
+			const [width, height] = viewport.split("x").map(Number)
+			await page.setViewport({ width, height })
+			// Small delay to let the page adjust
+			await delay(300)
+		})
+	}
+
+	getViewportSize(): string {
+		return this.viewportSize
 	}
 }

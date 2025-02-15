@@ -65,6 +65,8 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		setAlwaysAllowModeSwitch,
 		maxOpenTabsContext,
 		setMaxOpenTabsContext,
+		keepBrowserOpen,
+		setKeepBrowserOpen,
 	} = useExtensionState()
 	const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>(undefined)
 	const [modelIdErrorMessage, setModelIdErrorMessage] = useState<string | undefined>(undefined)
@@ -120,6 +122,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 			})
 
 			vscode.postMessage({ type: "alwaysAllowModeSwitch", bool: alwaysAllowModeSwitch })
+			vscode.postMessage({ type: "keepBrowserOpen", bool: keepBrowserOpen })
 			onDone()
 		}
 	}
@@ -482,6 +485,17 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 				<div style={{ marginBottom: 40 }}>
 					<h3 style={{ color: "var(--vscode-foreground)", margin: "0 0 15px 0" }}>Browser Settings</h3>
 					<div style={{ marginBottom: 15 }}>
+						<VSCodeCheckbox
+							checked={keepBrowserOpen}
+							onChange={(e: any) => setKeepBrowserOpen(e.target.checked)}>
+							<span style={{ fontWeight: "500" }}>Keep browser open between actions</span>
+						</VSCodeCheckbox>
+						<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>
+							Keeps browser session active between actions for faster web development. Auto-closes after
+							30 minutes of inactivity.
+						</p>
+					</div>
+					<div style={{ marginBottom: 15 }}>
 						<label style={{ fontWeight: "500", display: "block", marginBottom: 5 }}>Viewport size</label>
 						<div className="dropdown-container">
 							<Dropdown
@@ -504,8 +518,8 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 								marginTop: "5px",
 								color: "var(--vscode-descriptionForeground)",
 							}}>
-							Select the viewport size for browser interactions. This affects how websites are displayed
-							and interacted with.
+							Default viewport size for new browser sessions. Can be temporarily changed during a session
+							using browser actions.
 						</p>
 					</div>
 
