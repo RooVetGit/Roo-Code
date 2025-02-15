@@ -73,6 +73,26 @@ const vscode = {
 		Development: 2,
 		Test: 3,
 	},
+	CodeAction: class {
+		constructor(title, kind) {
+			this.title = title
+			this.kind = kind
+			this.command = undefined
+			this.isPreferred = false
+		}
+	},
+	CodeActionKind: class {
+		constructor(value) {
+			this.value = value
+		}
+
+		append(value) {
+			return new vscode.CodeActionKind(`${this.value}.${value}`)
+		}
+
+		static QuickFix = new vscode.CodeActionKind("quickfix")
+		static RefactorRewrite = new vscode.CodeActionKind("refactor.rewrite")
+	},
 	FileType: {
 		Unknown: 0,
 		File: 1,
