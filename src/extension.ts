@@ -1,6 +1,7 @@
 import * as vscode from "vscode"
 
 import { ClineProvider } from "./core/webview/ClineProvider"
+import { ReclineIgnoreController } from "./core/ignore/ReclineIgnoreController"
 import { createClineAPI } from "./exports"
 import "./utils/path" // Necessary to have access to String.prototype.toPosix.
 import { CodeActionProvider } from "./core/CodeActionProvider"
@@ -18,6 +19,12 @@ import { McpServerManager } from "./services/mcp/McpServerManager"
 
 let outputChannel: vscode.OutputChannel
 let extensionContext: vscode.ExtensionContext
+let ignoreController: ReclineIgnoreController | undefined
+
+// Export the ignore controller instance
+export function getIgnoreController(): ReclineIgnoreController | undefined {
+	return ignoreController
+}
 
 // This method is called when your extension is activated.
 // Your extension is activated the very first time the command is executed.
@@ -25,7 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
 	extensionContext = context
 	outputChannel = vscode.window.createOutputChannel("Roo-Code")
 	context.subscriptions.push(outputChannel)
-	outputChannel.appendLine("Roo-Code extension activated")
+	outputChannel.appendLine("Roo-Code extension activated with .rooignore functionality")
 
 	// Get default commands from configuration.
 	const defaultCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
@@ -35,6 +42,20 @@ export function activate(context: vscode.ExtensionContext) {
 		context.globalState.update("allowedCommands", defaultCommands)
 	}
 
+	// Initialize the ignore controller
+	const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
+	if (cwd) {
+		ignoreController = new ReclineIgnoreController(cwd)
+		ignoreController
+			.initialize()
+			.then(() => {
+				console.log("Loaded .rooignore file")
+			})
+			.catch((error) => {
+				console.error("Failed to load .rooignore file:", error)
+			})
+		context.subscriptions.push(ignoreController)
+	}
 	const sidebarProvider = new ClineProvider(context, outputChannel)
 
 	context.subscriptions.push(

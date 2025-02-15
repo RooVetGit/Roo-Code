@@ -2,6 +2,7 @@ import * as path from "path"
 import * as os from "os"
 import * as vscode from "vscode"
 import { arePathsEqual } from "../../utils/path"
+import { getIgnoreController } from "../../extension"
 
 export async function openImage(dataUri: string) {
 	const matches = dataUri.match(/^data:image\/([a-zA-Z]+);base64,(.+)$/)
@@ -37,6 +38,15 @@ export async function openFile(filePath: string, options: OpenFileOptions = {}) 
 		const fullPath = filePath.startsWith("./") ? path.join(workspaceRoot, filePath.slice(2)) : filePath
 
 		const uri = vscode.Uri.file(fullPath)
+
+		// Check if file is ignored
+		const ignoreController = getIgnoreController()
+		if (ignoreController) {
+			const relativePath = path.relative(workspaceRoot, fullPath)
+			if (!ignoreController.validateAccess(relativePath)) {
+				throw new Error("File access blocked by .rooignore")
+			}
+		}
 
 		// Check if file exists
 		try {
