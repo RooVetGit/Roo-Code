@@ -31,7 +31,7 @@ const MentionExample = () => {
 	return (
 		<div className="w-full max-w-lg p-4">
 			<p className="mb-2 text-sm text-muted-foreground">Type @ to trigger mentions.</p>
-			<Mention placeholder="Type your message here..." suggestions={suggestions} />
+			<Mention suggestions={suggestions} />
 		</div>
 	)
 }
