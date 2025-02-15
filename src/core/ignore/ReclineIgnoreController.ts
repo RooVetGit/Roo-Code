@@ -38,7 +38,7 @@ export class ReclineIgnoreController {
 			try {
 				const content = await fs.readFile(ignorePath, "utf8")
 				this.ignoreInstance.add(content)
-				// Always ignore the .clineignore file itself.
+				// Always ignore the .rooignore file itself.
 				this.ignoreInstance.add(".rooignore")
 			} catch (error) {
 				console.error("Error loading .rooignore:", error)
