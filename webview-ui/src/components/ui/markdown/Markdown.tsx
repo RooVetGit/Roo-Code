@@ -1,8 +1,5 @@
 import { FC, memo } from "react"
 import ReactMarkdown, { Options } from "react-markdown"
-import rehypeKatex from "rehype-katex"
-import remarkGfm from "remark-gfm"
-import remarkMath from "remark-math"
 
 import { Separator } from "@/components/ui"
 
@@ -29,8 +26,6 @@ export function Markdown({ content }: { content: string }) {
 	return (
 		<MemoizedReactMarkdown
 			className="custom-markdown break-words"
-			remarkPlugins={[remarkGfm, remarkMath]}
-			rehypePlugins={[rehypeKatex]}
 			components={{
 				p({ children }) {
 					return <div className="mb-2 last:mb-0">{children}</div>
