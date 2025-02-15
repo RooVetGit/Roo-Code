@@ -17,6 +17,9 @@ import { WebviewMessage } from "../../../../src/shared/WebviewMessage"
 import { Mode, getAllModes } from "../../../../src/shared/modes"
 import { CaretIcon } from "../common/CaretIcon"
 
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui"
+
 interface ChatTextAreaProps {
 	inputValue: string
 	setInputValue: (value: string) => void
@@ -865,48 +868,24 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						</div>
 					</div>
 
-					<div
-						style={{
-							display: "flex",
-							alignItems: "center",
-							gap: "12px",
-						}}>
-						<div style={{ display: "flex", alignItems: "center" }}>
-							{isEnhancingPrompt ? (
-								<span
-									className="codicon codicon-loading codicon-modifier-spin"
-									style={{
-										color: "var(--vscode-input-foreground)",
-										opacity: 0.5,
-										fontSize: 16.5,
-										marginRight: 10,
-									}}
-								/>
-							) : (
-								<span
-									role="button"
-									aria-label="enhance prompt"
-									data-testid="enhance-prompt-button"
-									className={`input-icon-button ${
-										textAreaDisabled ? "disabled" : ""
-									} codicon codicon-sparkle`}
-									onClick={() => !textAreaDisabled && handleEnhancePrompt()}
-									style={{ fontSize: 16.5 }}
-								/>
-							)}
-						</div>
-						<span
-							className={`input-icon-button ${
-								shouldDisableImages ? "disabled" : ""
-							} codicon codicon-device-camera`}
-							onClick={() => !shouldDisableImages && onSelectImages()}
-							style={{ fontSize: 16.5 }}
-						/>
-						<span
-							className={`input-icon-button ${textAreaDisabled ? "disabled" : ""} codicon codicon-send`}
-							onClick={() => !textAreaDisabled && onSend()}
-							style={{ fontSize: 15 }}
-						/>
+					<div className={cn("flex items-center", textAreaDisabled && "disabled")}>
+						<Button
+							variant="ghost"
+							size="icon"
+							disabled={textAreaDisabled || isEnhancingPrompt}
+							onClick={handleEnhancePrompt}>
+							<span
+								className={cn(["codicon", isEnhancingPrompt ? "codicon-loading" : "codicon-sparkle"], {
+									"codicon-modifier-spin": isEnhancingPrompt,
+								})}
+							/>
+						</Button>
+						<Button variant="ghost" size="icon" disabled={textAreaDisabled} onClick={onSelectImages}>
+							<span className="codicon codicon-device-camera" />
+						</Button>
+						<Button variant="ghost" size="icon" disabled={textAreaDisabled} onClick={onSend}>
+							<span className="codicon codicon-send" />
+						</Button>
 					</div>
 				</div>
 			</div>

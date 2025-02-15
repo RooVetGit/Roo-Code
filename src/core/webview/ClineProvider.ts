@@ -20,11 +20,18 @@ import { ApiConfiguration, ApiProvider, ModelInfo } from "../../shared/api"
 import { findLast } from "../../shared/array"
 import { ApiConfigMeta, ExtensionMessage } from "../../shared/ExtensionMessage"
 import { HistoryItem } from "../../shared/HistoryItem"
-import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
+import {
+	checkoutDiffPayloadSchema,
+	checkoutRestorePayloadSchema,
+	researchTaskPayloadSchema,
+	researchInputPayloadSchema,
+	WebviewMessage,
+} from "../../shared/WebviewMessage"
 import { Mode, CustomModePrompts, PromptComponent, defaultModeSlug } from "../../shared/modes"
 import { SYSTEM_PROMPT } from "../prompts/system"
 import { fileExistsAtPath } from "../../utils/fs"
 import { Cline } from "../Cline"
+import { DeepResearchService } from "../../services/deep-research/DeepResearchService"
 import { openMention } from "../mentions"
 import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
@@ -40,11 +47,10 @@ import { CustomSupportPrompts, supportPrompt } from "../../shared/support-prompt
 import { ACTION_NAMES } from "../CodeActionProvider"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
 
-/*
-https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
-
-https://github.com/KumarVariable/vscode-extension-sidebar-html/blob/master/src/customSidebarViewProvider.ts
-*/
+/**
+ * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
+ * https://github.com/KumarVariable/vscode-extension-sidebar-html/blob/master/src/customSidebarViewProvider.ts
+ */
 
 type SecretKey =
 	| "apiKey"
@@ -60,6 +66,8 @@ type SecretKey =
 	| "mistralApiKey"
 	| "unboundApiKey"
 	| "requestyApiKey"
+	| "firecrawlApiKey"
+
 type GlobalStateKey =
 	| "apiProvider"
 	| "apiModelId"
@@ -148,6 +156,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	private view?: vscode.WebviewView | vscode.WebviewPanel
 	private isViewLaunched = false
 	private cline?: Cline
+	private deepResearchService?: DeepResearchService
 	private workspaceTracker?: WorkspaceTracker
 	protected mcpHub?: McpHub // Change from private to protected
 	private latestAnnouncementId = "jan-21-2025-custom-modes" // update to some unique identifier when we add a new announcement
@@ -160,6 +169,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	) {
 		this.outputChannel.appendLine("ClineProvider instantiated")
 		ClineProvider.activeInstances.add(this)
+
 		this.workspaceTracker = new WorkspaceTracker(this)
 		this.configManager = new ConfigManager(this.context)
 		this.customModesManager = new CustomModesManager(this.context, async () => {
@@ -1495,10 +1505,59 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							}
 
 							await this.customModesManager.deleteCustomMode(message.slug)
-							// Switch back to default mode after deletion
+							// Switch back to default mode after deletion.
 							await this.updateGlobalState("mode", defaultModeSlug)
 							await this.postStateToWebview()
 						}
+						break
+					case "research.task": {
+						const result = researchTaskPayloadSchema.safeParse(message.payload)
+
+						if (!result.success) {
+							console.warn(
+								`[ClineProvider#research.task] Invalid payload: ${JSON.stringify(message.payload)}`,
+							)
+							break
+						}
+
+						if (result.success && !this.deepResearchService) {
+							const { session } = result.data
+							this.deepResearchService = new DeepResearchService(session, this)
+							this.deepResearchService.input(session.query)
+						}
+
+						break
+					}
+					case "research.input": {
+						const result = researchInputPayloadSchema.safeParse(message.payload)
+
+						if (!result.success) {
+							console.warn(
+								`[ClineProvider#research.input] Invalid payload: ${JSON.stringify(message.payload)}`,
+							)
+							break
+						}
+
+						if (result.success && this.deepResearchService) {
+							const { content } = result.data.message
+							this.deepResearchService.input(content)
+						}
+
+						break
+					}
+					case "research.viewReport":
+						this.deepResearchService?.viewReport()
+						break
+					case "research.createTask":
+						this.deepResearchService?.createTask()
+						break
+					case "research.abort":
+						this.deepResearchService?.abort()
+						break
+					case "research.reset":
+						this.deepResearchService?.abort()
+						this.deepResearchService = undefined
+						break
 				}
 			},
 			null,
@@ -1646,6 +1705,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			requestyModelId,
 			requestyModelInfo,
 			modelTemperature,
+			firecrawlApiKey,
 		} = apiConfiguration
 		await this.updateGlobalState("apiProvider", apiProvider)
 		await this.updateGlobalState("apiModelId", apiModelId)
@@ -1692,6 +1752,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		await this.updateGlobalState("requestyModelId", requestyModelId)
 		await this.updateGlobalState("requestyModelInfo", requestyModelInfo)
 		await this.updateGlobalState("modelTemperature", modelTemperature)
+		await this.storeSecret("firecrawlApiKey", firecrawlApiKey)
 		if (this.cline) {
 			this.cline.api = buildApiHandler(apiConfiguration)
 		}
@@ -2575,6 +2636,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			requestyModelInfo,
 			modelTemperature,
 			maxOpenTabsContext,
+			firecrawlApiKey,
 		] = await Promise.all([
 			this.getGlobalState("apiProvider") as Promise<ApiProvider | undefined>,
 			this.getGlobalState("apiModelId") as Promise<string | undefined>,
@@ -2657,6 +2719,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("requestyModelInfo") as Promise<ModelInfo | undefined>,
 			this.getGlobalState("modelTemperature") as Promise<number | undefined>,
 			this.getGlobalState("maxOpenTabsContext") as Promise<number | undefined>,
+			this.getSecret("firecrawlApiKey") as Promise<string | undefined>,
 		])
 
 		let apiProvider: ApiProvider
@@ -2720,6 +2783,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				requestyModelId,
 				requestyModelInfo,
 				modelTemperature,
+				firecrawlApiKey,
 			},
 			lastShownAnnouncementId,
 			customInstructions,
@@ -2875,6 +2939,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			"mistralApiKey",
 			"unboundApiKey",
 			"requestyApiKey",
+			"firecrawlApiKey",
 		]
 		for (const key of secretKeys) {
 			await this.storeSecret(key, undefined)

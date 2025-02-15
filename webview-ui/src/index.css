@@ -77,6 +77,8 @@
 	--color-vscode-input-background: var(--vscode-input-background);
 	--color-vscode-input-border: var(--vscode-input-border);
 
+	--color-vscode-focusBorder: var(--vscode-focusBorder);
+
 	--color-vscode-badge-foreground: var(--vscode-badge-foreground);
 	--color-vscode-badge-background: var(--vscode-badge-background);
 
@@ -137,8 +139,13 @@
 }
 
 /* Form Element Focus States */
+
 textarea:focus {
 	outline: 1.5px solid var(--vscode-focusBorder, #007fd4);
+}
+
+.focus\:outline-0 {
+	outline: 0 !important; /* Allow tailwind to override the `textarea:focus` rule */
 }
 
 vscode-button::part(control):focus {
@@ -158,6 +165,7 @@ html {
 
 body {
 	margin: 0;
+	/* padding: 0; */
 	line-height: 1.25;
 }
 
@@ -201,19 +209,19 @@ body:focus-within .code-block-scrollable {
 	border-color: var(--vscode-scrollbarSlider-activeBackground);
 }
 
-/*
-Fix VSCode ignoring webkit scrollbar modifiers
-https://github.com/microsoft/vscode/issues/213045
-*/
+/**
+ * Fix VSCode ignoring webkit scrollbar modifiers
+ * https://github.com/microsoft/vscode/issues/213045
+ */
 @supports selector(::-webkit-scrollbar) {
 	html {
 		scrollbar-color: unset;
 	}
 }
 
-/*
-The above scrollbar styling uses some transparent background color magic to accomplish its animation. However this doesn't play nicely with SyntaxHighlighter, so we need to set a background color for the code blocks' horizontal scrollbar. This actually has the unintended consequence of always showing the scrollbar which I prefer since it makes it more obvious that there is more content to scroll to.
-*/
+/**
+ * The above scrollbar styling uses some transparent background color magic to accomplish its animation. However this doesn't play nicely with SyntaxHighlighter, so we need to set a background color for the code blocks' horizontal scrollbar. This actually has the unintended consequence of always showing the scrollbar which I prefer since it makes it more obvious that there is more content to scroll to.
+ */
 
 .code-block-scrollable::-webkit-scrollbar-track {
 	background: transparent;
@@ -236,6 +244,19 @@ The above scrollbar styling uses some transparent background color magic to acco
 
 .code-block-scrollable::-webkit-scrollbar-corner {
 	background-color: transparent;
+}
+
+/**
+ * Add a way to hide scrollbars.
+ */
+
+.scrollbar-hide {
+	-ms-overflow-style: none; /* IE and Edge */
+	scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+	display: none; /* Chrome, Safari and Opera */
 }
 
 /**
@@ -332,4 +353,12 @@ vscode-dropdown::part(listbox) {
 
 input[cmdk-input]:focus {
 	outline: none;
+}
+
+/**
+ * Markdown
+ */
+
+.custom-markdown > pre {
+	background-color: transparent !important;
 }

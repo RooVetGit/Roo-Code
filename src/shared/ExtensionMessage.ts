@@ -46,13 +46,20 @@ export interface ExtensionMessage {
 		| "unboundModels"
 		| "refreshUnboundModels"
 		| "currentCheckpointUpdated"
+		| "research.loading"
+		| "research.output"
+		| "research.progress"
+		| "research.status"
+		| "research.tokenUsage"
+		| "research.error"
 	text?: string
 	action?:
 		| "chatButtonClicked"
+		| "researchButtonClicked"
 		| "mcpButtonClicked"
-		| "settingsButtonClicked"
-		| "historyButtonClicked"
 		| "promptsButtonClicked"
+		| "historyButtonClicked"
+		| "settingsButtonClicked"
 		| "didBecomeVisible"
 	invoke?: "sendMessage" | "primaryButtonClick" | "secondaryButtonClick" | "setChatBoxMessage"
 	state?: ExtensionState
