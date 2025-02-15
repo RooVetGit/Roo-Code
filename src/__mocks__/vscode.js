@@ -17,9 +17,11 @@ const vscode = {
 	window: {
 		showInformationMessage: jest.fn(),
 		showErrorMessage: jest.fn(),
-		createTextEditorDecorationType: jest.fn().mockReturnValue({
+		createTextEditorDecorationType: jest.fn().mockImplementation((options) => ({
+			...options,
 			dispose: jest.fn(),
-		}),
+			key: Math.random().toString(),
+		})),
 		tabGroups: {
 			onDidChangeTabs: jest.fn(() => {
 				return {
