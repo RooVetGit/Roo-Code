@@ -1,3 +1,18 @@
+// Define CodeActionKind first
+class CodeActionKind {
+	constructor(value) {
+		this.value = value
+	}
+
+	append(value) {
+		return new CodeActionKind(`${this.value}.${value}`)
+	}
+}
+
+// Add static properties
+CodeActionKind.QuickFix = new CodeActionKind("quickfix")
+CodeActionKind.RefactorRewrite = new CodeActionKind("refactor.rewrite")
+
 const vscode = {
 	window: {
 		showInformationMessage: jest.fn(),
@@ -81,6 +96,7 @@ const vscode = {
 			this.isPreferred = false
 		}
 	},
+	CodeActionKind,
 	FileType: {
 		Unknown: 0,
 		File: 1,
@@ -93,22 +109,5 @@ const vscode = {
 		}
 	},
 }
-
-// Define CodeActionKind after vscode object is created
-class CodeActionKind {
-	constructor(value) {
-		this.value = value
-	}
-
-	append(value) {
-		return new CodeActionKind(`${this.value}.${value}`)
-	}
-}
-
-// Add static properties after class definition
-CodeActionKind.QuickFix = new CodeActionKind("quickfix")
-CodeActionKind.RefactorRewrite = new CodeActionKind("refactor.rewrite")
-
-vscode.CodeActionKind = CodeActionKind
 
 module.exports = vscode
