@@ -1,44 +1,40 @@
 import { render, fireEvent, screen } from "@testing-library/react"
+import { describe, it, expect, beforeEach, vi } from "vitest"
 import ChatTextArea from "../ChatTextArea"
 import { useExtensionState } from "../../../context/ExtensionStateContext"
 import { vscode } from "../../../utils/vscode"
 import { defaultModeSlug } from "../../../../../src/shared/modes"
 
 // Mock modules
-jest.mock("../../../utils/vscode", () => ({
+vi.mock("../../../utils/vscode", () => ({
 	vscode: {
-		postMessage: jest.fn(),
+		postMessage: vi.fn(),
 	},
 }))
-jest.mock("../../../components/common/CodeBlock")
-jest.mock("../../../components/common/MarkdownBlock")
-
-// Get the mocked postMessage function
-const mockPostMessage = vscode.postMessage as jest.Mock
-
-// Mock ExtensionStateContext
-jest.mock("../../../context/ExtensionStateContext")
+vi.mock("../../../components/common/CodeBlock")
+vi.mock("../../../components/common/MarkdownBlock")
+vi.mock("../../../context/ExtensionStateContext")
 
 describe("ChatTextArea", () => {
 	const defaultProps = {
 		inputValue: "",
-		setInputValue: jest.fn(),
-		onSend: jest.fn(),
+		setInputValue: vi.fn(),
+		onSend: vi.fn(),
 		textAreaDisabled: false,
-		onSelectImages: jest.fn(),
+		onSelectImages: vi.fn(),
 		shouldDisableImages: false,
 		placeholderText: "Type a message...",
 		selectedImages: [],
-		setSelectedImages: jest.fn(),
-		onHeightChange: jest.fn(),
+		setSelectedImages: vi.fn(),
+		onHeightChange: vi.fn(),
 		mode: defaultModeSlug,
-		setMode: jest.fn(),
+		setMode: vi.fn(),
 	}
 
 	beforeEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 		// Default mock implementation for useExtensionState
-		;(useExtensionState as jest.Mock).mockReturnValue({
+		vi.mocked(useExtensionState).mockReturnValue({
 			filePaths: [],
 			openedTabs: [],
 			apiConfiguration: {
@@ -49,7 +45,7 @@ describe("ChatTextArea", () => {
 
 	describe("enhance prompt button", () => {
 		it("should be disabled when textAreaDisabled is true", () => {
-			;(useExtensionState as jest.Mock).mockReturnValue({
+			vi.mocked(useExtensionState).mockReturnValue({
 				filePaths: [],
 				openedTabs: [],
 			})
@@ -67,7 +63,7 @@ describe("ChatTextArea", () => {
 				apiKey: "test-key",
 			}
 
-			;(useExtensionState as jest.Mock).mockReturnValue({
+			vi.mocked(useExtensionState).mockReturnValue({
 				filePaths: [],
 				openedTabs: [],
 				apiConfiguration,
@@ -78,14 +74,14 @@ describe("ChatTextArea", () => {
 			const enhanceButton = screen.getByRole("button", { name: /enhance prompt/i })
 			fireEvent.click(enhanceButton)
 
-			expect(mockPostMessage).toHaveBeenCalledWith({
+			expect(vscode.postMessage).toHaveBeenCalledWith({
 				type: "enhancePrompt",
 				text: "Test prompt",
 			})
 		})
 
 		it("should not send message when input is empty", () => {
-			;(useExtensionState as jest.Mock).mockReturnValue({
+			vi.mocked(useExtensionState).mockReturnValue({
 				filePaths: [],
 				openedTabs: [],
 				apiConfiguration: {
@@ -98,11 +94,11 @@ describe("ChatTextArea", () => {
 			const enhanceButton = screen.getByRole("button", { name: /enhance prompt/i })
 			fireEvent.click(enhanceButton)
 
-			expect(mockPostMessage).not.toHaveBeenCalled()
+			expect(vscode.postMessage).not.toHaveBeenCalled()
 		})
 
 		it("should show loading state while enhancing", () => {
-			;(useExtensionState as jest.Mock).mockReturnValue({
+			vi.mocked(useExtensionState).mockReturnValue({
 				filePaths: [],
 				openedTabs: [],
 				apiConfiguration: {
@@ -125,7 +121,7 @@ describe("ChatTextArea", () => {
 			const { rerender } = render(<ChatTextArea {...defaultProps} />)
 
 			// Update apiConfiguration
-			;(useExtensionState as jest.Mock).mockReturnValue({
+			vi.mocked(useExtensionState).mockReturnValue({
 				filePaths: [],
 				openedTabs: [],
 				apiConfiguration: {
@@ -143,7 +139,7 @@ describe("ChatTextArea", () => {
 
 	describe("enhanced prompt response", () => {
 		it("should update input value when receiving enhanced prompt", () => {
-			const setInputValue = jest.fn()
+			const setInputValue = vi.fn()
 
 			render(<ChatTextArea {...defaultProps} setInputValue={setInputValue} />)
 

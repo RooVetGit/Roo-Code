@@ -1,14 +1,15 @@
-// cd webview-ui && npx jest src/components/history/__tests__/HistoryView.test.ts
+// cd webview-ui && npx vitest src/components/history/__tests__/HistoryView.test.ts
 
 import { render, screen, fireEvent, within, act } from "@testing-library/react"
+import { describe, it, expect, beforeEach, beforeAll, afterAll, vi } from "vitest"
 import HistoryView from "../HistoryView"
 import { useExtensionState } from "../../../context/ExtensionStateContext"
 import { vscode } from "../../../utils/vscode"
 
-jest.mock("../../../context/ExtensionStateContext")
-jest.mock("../../../utils/vscode")
+vi.mock("../../../context/ExtensionStateContext")
+vi.mock("../../../utils/vscode")
 
-jest.mock("react-virtuoso", () => ({
+vi.mock("react-virtuoso", () => ({
 	Virtuoso: ({ data, itemContent }: any) => (
 		<div data-testid="virtuoso-container">
 			{data.map((item: any, index: number) => (
@@ -42,22 +43,22 @@ const mockTaskHistory = [
 
 describe("HistoryView", () => {
 	beforeAll(() => {
-		jest.useFakeTimers()
+		vi.useFakeTimers()
 	})
 
 	afterAll(() => {
-		jest.useRealTimers()
+		vi.useRealTimers()
 	})
 
 	beforeEach(() => {
-		jest.clearAllMocks()
-		;(useExtensionState as jest.Mock).mockReturnValue({
+		vi.clearAllMocks()
+		vi.mocked(useExtensionState).mockReturnValue({
 			taskHistory: mockTaskHistory,
 		})
 	})
 
 	it("renders history items correctly", () => {
-		const onDone = jest.fn()
+		const onDone = vi.fn()
 		render(<HistoryView onDone={onDone} />)
 
 		// Check if both tasks are rendered
@@ -68,7 +69,7 @@ describe("HistoryView", () => {
 	})
 
 	it("handles search functionality", () => {
-		const onDone = jest.fn()
+		const onDone = vi.fn()
 		render(<HistoryView onDone={onDone} />)
 
 		// Get search input and radio group
@@ -79,7 +80,7 @@ describe("HistoryView", () => {
 		fireEvent.input(searchInput, { target: { value: "task 1" } })
 
 		// Advance timers to process search state update
-		jest.advanceTimersByTime(100)
+		vi.advanceTimersByTime(100)
 
 		// Check if sort option automatically changes to "Most Relevant"
 		const mostRelevantRadio = within(radioGroup).getByLabelText("Most Relevant")
@@ -89,7 +90,7 @@ describe("HistoryView", () => {
 		fireEvent.click(mostRelevantRadio)
 
 		// Advance timers to process radio button state update
-		jest.advanceTimersByTime(100)
+		vi.advanceTimersByTime(100)
 
 		// Verify radio button is checked
 		const updatedRadio = within(radioGroup).getByRole("radio", { name: "Most Relevant", checked: true })
@@ -97,24 +98,34 @@ describe("HistoryView", () => {
 	})
 
 	it("handles sort options correctly", async () => {
-		const onDone = jest.fn()
+		const onDone = vi.fn()
 		render(<HistoryView onDone={onDone} />)
 
 		const radioGroup = screen.getByRole("radiogroup")
 
 		// Test changing sort options
-		const oldestRadio = within(radioGroup).getByLabelText("Oldest")
-		fireEvent.click(oldestRadio)
+		await act(async () => {
+			const oldestRadio = within(radioGroup).getByLabelText("Oldest")
+			fireEvent.click(oldestRadio)
 
-		// Wait for oldest radio to be checked
-		const checkedOldestRadio = await within(radioGroup).findByRole("radio", { name: "Oldest", checked: true })
+			// Advance timers to process state update
+			vi.advanceTimersByTime(100)
+		})
+
+		// Verify oldest radio is checked
+		const checkedOldestRadio = within(radioGroup).getByRole("radio", { name: "Oldest", checked: true })
 		expect(checkedOldestRadio).toBeInTheDocument()
 
-		const mostExpensiveRadio = within(radioGroup).getByLabelText("Most Expensive")
-		fireEvent.click(mostExpensiveRadio)
+		await act(async () => {
+			const mostExpensiveRadio = within(radioGroup).getByLabelText("Most Expensive")
+			fireEvent.click(mostExpensiveRadio)
 
-		// Wait for most expensive radio to be checked
-		const checkedExpensiveRadio = await within(radioGroup).findByRole("radio", {
+			// Advance timers to process state update
+			vi.advanceTimersByTime(100)
+		})
+
+		// Verify most expensive radio is checked
+		const checkedExpensiveRadio = within(radioGroup).getByRole("radio", {
 			name: "Most Expensive",
 			checked: true,
 		})
@@ -122,21 +133,21 @@ describe("HistoryView", () => {
 	})
 
 	it("handles task selection", () => {
-		const onDone = jest.fn()
+		const onDone = vi.fn()
 		render(<HistoryView onDone={onDone} />)
 
 		// Click on first task
 		fireEvent.click(screen.getByText("Test task 1"))
 
 		// Verify vscode message was sent
-		expect(vscode.postMessage).toHaveBeenCalledWith({
+		expect(vi.mocked(vscode.postMessage)).toHaveBeenCalledWith({
 			type: "showTaskWithId",
 			text: "1",
 		})
 	})
 
 	it("handles task deletion", () => {
-		const onDone = jest.fn()
+		const onDone = vi.fn()
 		render(<HistoryView onDone={onDone} />)
 
 		// Find and hover over first task
@@ -147,7 +158,7 @@ describe("HistoryView", () => {
 		fireEvent.click(deleteButton)
 
 		// Verify vscode message was sent
-		expect(vscode.postMessage).toHaveBeenCalledWith({
+		expect(vi.mocked(vscode.postMessage)).toHaveBeenCalledWith({
 			type: "deleteTaskWithId",
 			text: "1",
 		})
@@ -156,11 +167,11 @@ describe("HistoryView", () => {
 	it("handles task copying", async () => {
 		// Setup clipboard mock that resolves immediately
 		const mockClipboard = {
-			writeText: jest.fn().mockResolvedValue(undefined),
+			writeText: vi.fn().mockResolvedValue(undefined),
 		}
 		Object.assign(navigator, { clipboard: mockClipboard })
 
-		const onDone = jest.fn()
+		const onDone = vi.fn()
 		render(<HistoryView onDone={onDone} />)
 
 		// Find and hover over first task
@@ -183,7 +194,7 @@ describe("HistoryView", () => {
 
 		// Advance timer to trigger the setTimeout for modal disappearance
 		act(() => {
-			jest.advanceTimersByTime(2000)
+			vi.advanceTimersByTime(2000)
 		})
 
 		// Verify modal is gone
@@ -191,7 +202,7 @@ describe("HistoryView", () => {
 	})
 
 	it("formats dates correctly", () => {
-		const onDone = jest.fn()
+		const onDone = vi.fn()
 		render(<HistoryView onDone={onDone} />)
 
 		// Find first task container and check date format
@@ -203,7 +214,7 @@ describe("HistoryView", () => {
 	})
 
 	it("displays token counts correctly", () => {
-		const onDone = jest.fn()
+		const onDone = vi.fn()
 		render(<HistoryView onDone={onDone} />)
 
 		// Find first task container
@@ -216,7 +227,7 @@ describe("HistoryView", () => {
 	})
 
 	it("displays cache information when available", () => {
-		const onDone = jest.fn()
+		const onDone = vi.fn()
 		render(<HistoryView onDone={onDone} />)
 
 		// Find second task container
@@ -229,7 +240,7 @@ describe("HistoryView", () => {
 	})
 
 	it("handles export functionality", () => {
-		const onDone = jest.fn()
+		const onDone = vi.fn()
 		render(<HistoryView onDone={onDone} />)
 
 		// Find and hover over second task
@@ -240,7 +251,7 @@ describe("HistoryView", () => {
 		fireEvent.click(exportButton)
 
 		// Verify vscode message was sent
-		expect(vscode.postMessage).toHaveBeenCalledWith({
+		expect(vi.mocked(vscode.postMessage)).toHaveBeenCalledWith({
 			type: "exportTaskWithId",
 			text: "2",
 		})

@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest"
 import { parseCommand, isAllowedSingleCommand, validateCommand } from "../command-validation"
 
 describe("Command Validation", () => {

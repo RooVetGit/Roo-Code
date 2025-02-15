@@ -1,12 +1,13 @@
-// cd webview-ui && npx jest src/components/settings/__tests__/ModelPicker.test.ts
+// cd webview-ui && npx vitest src/components/settings/__tests__/ModelPicker.test.ts
 
 import { screen, fireEvent, render } from "@testing-library/react"
 import { act } from "react"
+import { describe, it, expect, beforeEach, vi } from "vitest"
 import { ModelPicker } from "../ModelPicker"
 import { useExtensionState } from "../../../context/ExtensionStateContext"
 
-jest.mock("../../../context/ExtensionStateContext", () => ({
-	useExtensionState: jest.fn(),
+vi.mock("../../../context/ExtensionStateContext", () => ({
+	useExtensionState: vi.fn(),
 }))
 
 class MockResizeObserver {
@@ -15,13 +16,13 @@ class MockResizeObserver {
 	disconnect() {}
 }
 
-global.ResizeObserver = MockResizeObserver
+global.ResizeObserver = MockResizeObserver as any
 
-Element.prototype.scrollIntoView = jest.fn()
+Element.prototype.scrollIntoView = vi.fn()
 
 describe("ModelPicker", () => {
-	const mockOnUpdateApiConfig = jest.fn()
-	const mockSetApiConfiguration = jest.fn()
+	const mockOnUpdateApiConfig = vi.fn()
+	const mockSetApiConfiguration = vi.fn()
 
 	const defaultProps = {
 		defaultModelId: "model1",
@@ -40,8 +41,8 @@ describe("ModelPicker", () => {
 	}
 
 	beforeEach(() => {
-		jest.clearAllMocks()
-		;(useExtensionState as jest.Mock).mockReturnValue({
+		vi.clearAllMocks()
+		vi.mocked(useExtensionState).mockReturnValue({
 			apiConfiguration: {},
 			setApiConfiguration: mockSetApiConfiguration,
 			glamaModels: mockModels,

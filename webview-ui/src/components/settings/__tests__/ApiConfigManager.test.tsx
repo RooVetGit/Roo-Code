@@ -1,8 +1,9 @@
 import { render, screen, fireEvent, within } from "@testing-library/react"
+import { describe, it, expect, beforeEach, vi } from "vitest"
 import ApiConfigManager from "../ApiConfigManager"
 
 // Mock VSCode components
-jest.mock("@vscode/webview-ui-toolkit/react", () => ({
+vi.mock("@vscode/webview-ui-toolkit/react", () => ({
 	VSCodeButton: ({ children, onClick, title, disabled }: any) => (
 		<button onClick={onClick} title={title} disabled={disabled}>
 			{children}
@@ -19,7 +20,7 @@ jest.mock("@vscode/webview-ui-toolkit/react", () => ({
 	),
 }))
 
-jest.mock("vscrui", () => ({
+vi.mock("vscrui", () => ({
 	Dropdown: ({ id, value, onChange, options, role }: any) => (
 		<div data-testid={`mock-dropdown-${id}`}>
 			<select value={value} onChange={(e) => onChange({ value: e.target.value })} data-testid={id} role={role}>
@@ -34,7 +35,7 @@ jest.mock("vscrui", () => ({
 }))
 
 // Mock Dialog component
-jest.mock("@/components/ui/dialog", () => ({
+vi.mock("@/components/ui/dialog", () => ({
 	Dialog: ({ children, open, onOpenChange }: any) => (
 		<div role="dialog" aria-modal="true" style={{ display: open ? "block" : "none" }} data-testid="dialog">
 			{children}
@@ -44,10 +45,10 @@ jest.mock("@/components/ui/dialog", () => ({
 }))
 
 describe("ApiConfigManager", () => {
-	const mockOnSelectConfig = jest.fn()
-	const mockOnDeleteConfig = jest.fn()
-	const mockOnRenameConfig = jest.fn()
-	const mockOnUpsertConfig = jest.fn()
+	const mockOnSelectConfig = vi.fn()
+	const mockOnDeleteConfig = vi.fn()
+	const mockOnRenameConfig = vi.fn()
+	const mockOnUpsertConfig = vi.fn()
 
 	const defaultProps = {
 		currentApiConfigName: "Default Config",
@@ -62,7 +63,7 @@ describe("ApiConfigManager", () => {
 	}
 
 	beforeEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	const getRenameForm = () => screen.getByTestId("rename-form")

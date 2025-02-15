@@ -1,66 +1,67 @@
 import React from "react"
 import { render, waitFor } from "@testing-library/react"
+import { describe, it, expect, beforeEach } from "vitest"
 import ChatView from "../ChatView"
 import { ExtensionStateContextProvider } from "../../../context/ExtensionStateContext"
 import { vscode } from "../../../utils/vscode"
 
 // Mock vscode API
-jest.mock("../../../utils/vscode", () => ({
+vi.mock("../../../utils/vscode", () => ({
 	vscode: {
-		postMessage: jest.fn(),
+		postMessage: vi.fn(),
 	},
 }))
 
 // Mock all problematic dependencies
-jest.mock("rehype-highlight", () => ({
+vi.mock("rehype-highlight", () => ({
 	__esModule: true,
 	default: () => () => {},
 }))
 
-jest.mock("hast-util-to-text", () => ({
+vi.mock("hast-util-to-text", () => ({
 	__esModule: true,
 	default: () => "",
 }))
 
 // Mock components that use ESM dependencies
-jest.mock("../BrowserSessionRow", () => ({
+vi.mock("../BrowserSessionRow", () => ({
 	__esModule: true,
 	default: function MockBrowserSessionRow({ messages }: { messages: any[] }) {
 		return <div data-testid="browser-session">{JSON.stringify(messages)}</div>
 	},
 }))
 
-jest.mock("../ChatRow", () => ({
+vi.mock("../ChatRow", () => ({
 	__esModule: true,
 	default: function MockChatRow({ message }: { message: any }) {
 		return <div data-testid="chat-row">{JSON.stringify(message)}</div>
 	},
 }))
 
-jest.mock("../TaskHeader", () => ({
+vi.mock("../TaskHeader", () => ({
 	__esModule: true,
 	default: function MockTaskHeader({ task }: { task: any }) {
 		return <div data-testid="task-header">{JSON.stringify(task)}</div>
 	},
 }))
 
-jest.mock("../AutoApproveMenu", () => ({
+vi.mock("../AutoApproveMenu", () => ({
 	__esModule: true,
 	default: () => null,
 }))
 
-jest.mock("../../common/CodeBlock", () => ({
+vi.mock("../../common/CodeBlock", () => ({
 	__esModule: true,
 	default: () => null,
 	CODE_BLOCK_BG_COLOR: "rgb(30, 30, 30)",
 }))
 
-jest.mock("../../common/CodeAccordian", () => ({
+vi.mock("../../common/CodeAccordian", () => ({
 	__esModule: true,
 	default: () => null,
 }))
 
-jest.mock("../ContextMenu", () => ({
+vi.mock("../ContextMenu", () => ({
 	__esModule: true,
 	default: () => null,
 }))
@@ -87,7 +88,7 @@ const mockPostMessage = (state: any) => {
 
 describe("ChatView - Auto Approval Tests", () => {
 	beforeEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	it("auto-approves read operations when enabled", async () => {
@@ -139,7 +140,7 @@ describe("ChatView - Auto Approval Tests", () => {
 
 		// Wait for the auto-approval message
 		await waitFor(() => {
-			expect(vscode.postMessage).toHaveBeenCalledWith({
+			expect(vi.mocked(vscode.postMessage)).toHaveBeenCalledWith({
 				type: "askResponse",
 				askResponse: "yesButtonClicked",
 			})
@@ -194,7 +195,7 @@ describe("ChatView - Auto Approval Tests", () => {
 		})
 
 		// Verify no auto-approval message was sent
-		expect(vscode.postMessage).not.toHaveBeenCalledWith({
+		expect(vi.mocked(vscode.postMessage)).not.toHaveBeenCalledWith({
 			type: "askResponse",
 			askResponse: "yesButtonClicked",
 		})
@@ -251,7 +252,7 @@ describe("ChatView - Auto Approval Tests", () => {
 
 		// Wait for the auto-approval message
 		await waitFor(() => {
-			expect(vscode.postMessage).toHaveBeenCalledWith({
+			expect(vi.mocked(vscode.postMessage)).toHaveBeenCalledWith({
 				type: "askResponse",
 				askResponse: "yesButtonClicked",
 			})
@@ -307,7 +308,7 @@ describe("ChatView - Auto Approval Tests", () => {
 
 		// Wait for the auto-approval message
 		await waitFor(() => {
-			expect(vscode.postMessage).toHaveBeenCalledWith({
+			expect(vi.mocked(vscode.postMessage)).toHaveBeenCalledWith({
 				type: "askResponse",
 				askResponse: "yesButtonClicked",
 			})
@@ -363,7 +364,7 @@ describe("ChatView - Auto Approval Tests", () => {
 
 		// Wait for the auto-approval message
 		await waitFor(() => {
-			expect(vscode.postMessage).toHaveBeenCalledWith({
+			expect(vi.mocked(vscode.postMessage)).toHaveBeenCalledWith({
 				type: "askResponse",
 				askResponse: "yesButtonClicked",
 			})
@@ -418,7 +419,7 @@ describe("ChatView - Auto Approval Tests", () => {
 		})
 
 		// Verify no auto-approval message was sent
-		expect(vscode.postMessage).not.toHaveBeenCalledWith({
+		expect(vi.mocked(vscode.postMessage)).not.toHaveBeenCalledWith({
 			type: "askResponse",
 			askResponse: "yesButtonClicked",
 		})
@@ -472,7 +473,7 @@ describe("ChatView - Auto Approval Tests", () => {
 		})
 
 		// Verify no auto-approval message was sent
-		expect(vscode.postMessage).not.toHaveBeenCalledWith({
+		expect(vi.mocked(vscode.postMessage)).not.toHaveBeenCalledWith({
 			type: "askResponse",
 			askResponse: "yesButtonClicked",
 		})
