@@ -17,22 +17,19 @@ type valueof<X> = X[keyof X]
 
 export const experimentConfigsMap: Record<ExperimentKey, ExperimentConfig> = {
 	DIFF_STRATEGY: {
-		name: "Use experimental unified diff strategy",
-		description:
-			"Enable the experimental unified diff strategy. This strategy might reduce the number of retries caused by model errors but may cause unexpected behavior or incorrect edits. Only enable if you understand the risks and are willing to carefully review all changes.",
+		name: "settings.advanced.diff.unifiedStrategy.title",
+		description: "settings.advanced.diff.unifiedStrategy.description",
 		enabled: false,
 	},
 	SEARCH_AND_REPLACE: {
-		name: "Use experimental search and replace tool",
-		description:
-			"Enable the experimental search and replace tool, allowing Roo to replace multiple instances of a search term in one request.",
+		name: "settings.advanced.searchReplace.title",
+		description: "settings.advanced.searchReplace.description",
 		enabled: false,
 	},
 	INSERT_BLOCK: {
-		name: "Use experimental insert content tool",
+		name: "settings.advanced.insertBlock.title",
 
-		description:
-			"Enable the experimental insert content tool, allowing Roo to insert content at specific line numbers without needing to create a diff.",
+		description: "settings.advanced.insertBlock.description",
 		enabled: false,
 	},
 }

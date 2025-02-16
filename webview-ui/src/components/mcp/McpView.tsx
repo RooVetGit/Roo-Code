@@ -7,6 +7,7 @@ import {
 	VSCodePanelView,
 } from "@vscode/webview-ui-toolkit/react"
 import { useState } from "react"
+import { Trans, useTranslation } from "react-i18next"
 import { vscode } from "../../utils/vscode"
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import { McpServer } from "../../../../src/shared/mcp"
@@ -19,6 +20,7 @@ type McpViewProps = {
 }
 
 const McpView = ({ onDone }: McpViewProps) => {
+	const { t } = useTranslation()
 	const {
 		mcpServers: servers,
 		alwaysAllowMcp,
@@ -45,8 +47,8 @@ const McpView = ({ onDone }: McpViewProps) => {
 					alignItems: "center",
 					padding: "10px 17px 10px 20px",
 				}}>
-				<h3 style={{ color: "var(--vscode-foreground)", margin: 0 }}>MCP Servers</h3>
-				<VSCodeButton onClick={onDone}>Done</VSCodeButton>
+				<h3 style={{ color: "var(--vscode-foreground)", margin: 0 }}>{t("mcp.title")}</h3>
+				<VSCodeButton onClick={onDone}>{t("mcp.done")}</VSCodeButton>
 			</div>
 
 			<div style={{ flex: 1, overflow: "auto", padding: "0 20px" }}>
@@ -57,17 +59,23 @@ const McpView = ({ onDone }: McpViewProps) => {
 						marginBottom: "10px",
 						marginTop: "5px",
 					}}>
-					The{" "}
-					<VSCodeLink href="https://github.com/modelcontextprotocol" style={{ display: "inline" }}>
-						Model Context Protocol
-					</VSCodeLink>{" "}
-					enables communication with locally running MCP servers that provide additional tools and resources
-					to extend Roo's capabilities. You can use{" "}
-					<VSCodeLink href="https://github.com/modelcontextprotocol/servers" style={{ display: "inline" }}>
-						community-made servers
-					</VSCodeLink>{" "}
-					or ask Roo to create new tools specific to your workflow (e.g., "add a tool that gets the latest npm
-					docs").
+					<Trans
+						i18nKey="mcpDescription"
+						components={{
+							MCPLink: (
+								<VSCodeLink
+									href="https://github.com/modelcontextprotocol"
+									style={{ display: "inline" }}
+								/>
+							),
+							CommunityServersLink: (
+								<VSCodeLink
+									href="https://github.com/modelcontextprotocol/servers"
+									style={{ display: "inline" }}
+								/>
+							),
+						}}
+					/>
 				</div>
 
 				<McpEnabledToggle />
@@ -81,7 +89,7 @@ const McpView = ({ onDone }: McpViewProps) => {
 									setEnableMcpServerCreation(e.target.checked)
 									vscode.postMessage({ type: "enableMcpServerCreation", bool: e.target.checked })
 								}}>
-								<span style={{ fontWeight: "500" }}>Enable MCP Server Creation</span>
+								<span style={{ fontWeight: "500" }}>{t("mcp.enableServerCreation.title")}</span>
 							</VSCodeCheckbox>
 							<p
 								style={{
@@ -89,9 +97,7 @@ const McpView = ({ onDone }: McpViewProps) => {
 									marginTop: "5px",
 									color: "var(--vscode-descriptionForeground)",
 								}}>
-								When enabled, Roo can help you create new MCP servers via commands like "add a new tool
-								to...". If you don't need to create MCP servers you can disable this to reduce Roo's
-								token usage.
+								{t("mcp.enableServerCreation.description")}
 							</p>
 						</div>
 
@@ -113,7 +119,7 @@ const McpView = ({ onDone }: McpViewProps) => {
 									vscode.postMessage({ type: "openMcpSettings" })
 								}}>
 								<span className="codicon codicon-edit" style={{ marginRight: "6px" }}></span>
-								Edit MCP Settings
+								{t("mcp.editSettings")}
 							</VSCodeButton>
 						</div>
 					</>
@@ -128,6 +134,7 @@ const McpView = ({ onDone }: McpViewProps) => {
 
 // Server Row Component
 const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowMcp?: boolean }) => {
+	const { t } = useTranslation()
 	const [isExpanded, setIsExpanded] = useState(false)
 	const [timeoutValue, setTimeoutValue] = useState(() => {
 		const configTimeout = JSON.parse(server.config)?.timeout
@@ -135,14 +142,14 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 	})
 
 	const timeoutOptions = [
-		{ value: 15, label: "15 seconds" },
-		{ value: 30, label: "30 seconds" },
-		{ value: 60, label: "1 minute" },
-		{ value: 300, label: "5 minutes" },
-		{ value: 600, label: "10 minutes" },
-		{ value: 900, label: "15 minutes" },
-		{ value: 1800, label: "30 minutes" },
-		{ value: 3600, label: "60 minutes" },
+		{ value: 15, label: t("mcp.networkTimeout.options.15s") },
+		{ value: 30, label: t("mcp.networkTimeout.options.30s") },
+		{ value: 60, label: t("mcp.networkTimeout.options.1m") },
+		{ value: 300, label: t("mcp.networkTimeout.options.5m") },
+		{ value: 600, label: t("mcp.networkTimeout.options.10m") },
+		{ value: 900, label: t("mcp.networkTimeout.options.15m") },
+		{ value: 1800, label: t("mcp.networkTimeout.options.30m") },
+		{ value: 3600, label: t("mcp.networkTimeout.options.60m") },
 	]
 
 	const getStatusColor = () => {
@@ -290,7 +297,7 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 						onClick={handleRestart}
 						disabled={server.status === "connecting"}
 						style={{ width: "calc(100% - 20px)", margin: "0 10px 10px 10px" }}>
-						{server.status === "connecting" ? "Retrying..." : "Retry Connection"}
+						{server.status === "connecting" ? t("mcp.retrying") : t("mcp.retryConnection")}
 					</VSCodeButton>
 				</div>
 			) : (
@@ -303,9 +310,11 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 							borderRadius: "0 0 4px 4px",
 						}}>
 						<VSCodePanels style={{ marginBottom: "10px" }}>
-							<VSCodePanelTab id="tools">Tools ({server.tools?.length || 0})</VSCodePanelTab>
+							<VSCodePanelTab id="tools">
+								{t("mcp.tools")} ({server.tools?.length || 0})
+							</VSCodePanelTab>
 							<VSCodePanelTab id="resources">
-								Resources (
+								{t("mcp.resources")} (
 								{[...(server.resourceTemplates || []), ...(server.resources || [])].length || 0})
 							</VSCodePanelTab>
 
@@ -324,7 +333,7 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 									</div>
 								) : (
 									<div style={{ padding: "10px 0", color: "var(--vscode-descriptionForeground)" }}>
-										No tools found
+										{t("mcp.noTools")}
 									</div>
 								)}
 							</VSCodePanelView>
@@ -345,7 +354,7 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 									</div>
 								) : (
 									<div style={{ padding: "10px 0", color: "var(--vscode-descriptionForeground)" }}>
-										No resources found
+										{t("mcp.noResources")}
 									</div>
 								)}
 							</VSCodePanelView>
@@ -360,7 +369,7 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 									gap: "10px",
 									marginBottom: "8px",
 								}}>
-								<span>Network Timeout</span>
+								<span>{t("mcp.networkTimeout.title")}</span>
 								<select
 									value={timeoutValue}
 									onChange={handleTimeoutChange}
@@ -387,7 +396,7 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 									color: "var(--vscode-descriptionForeground)",
 									display: "block",
 								}}>
-								Maximum time to wait for server responses
+								{t("mcp.networkTimeout.description")}
 							</span>
 						</div>
 					</div>

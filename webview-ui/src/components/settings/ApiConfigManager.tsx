@@ -4,6 +4,7 @@ import { ApiConfigMeta } from "../../../../src/shared/ExtensionMessage"
 import { Dropdown } from "vscrui"
 import type { DropdownOption } from "vscrui"
 import { Dialog, DialogContent } from "../ui/dialog"
+import { useTranslation } from "react-i18next"
 
 interface ApiConfigManagerProps {
 	currentApiConfigName?: string
@@ -22,6 +23,7 @@ const ApiConfigManager = ({
 	onRenameConfig,
 	onUpsertConfig,
 }: ApiConfigManagerProps) => {
+	const { t } = useTranslation()
 	const [isRenaming, setIsRenaming] = useState(false)
 	const [isCreating, setIsCreating] = useState(false)
 	const [inputValue, setInputValue] = useState("")
@@ -32,18 +34,18 @@ const ApiConfigManager = ({
 
 	const validateName = (name: string, isNewProfile: boolean): string | null => {
 		const trimmed = name.trim()
-		if (!trimmed) return "Name cannot be empty"
+		if (!trimmed) return t("settings.apiConfigManager.errors.nameEmpty")
 
 		const nameExists = listApiConfigMeta?.some((config) => config.name.toLowerCase() === trimmed.toLowerCase())
 
 		// For new profiles, any existing name is invalid
 		if (isNewProfile && nameExists) {
-			return "A profile with this name already exists"
+			return t("settings.apiConfigManager.errors.nameExists")
 		}
 
 		// For rename, only block if trying to rename to a different existing profile
 		if (!isNewProfile && nameExists && trimmed.toLowerCase() !== currentApiConfigName?.toLowerCase()) {
-			return "A profile with this name already exists"
+			return t("settings.apiConfigManager.errors.nameExists")
 		}
 
 		return null
@@ -149,7 +151,7 @@ const ApiConfigManager = ({
 					gap: "2px",
 				}}>
 				<label htmlFor="config-profile">
-					<span style={{ fontWeight: "500" }}>Configuration Profile</span>
+					<span style={{ fontWeight: "500" }}>{t("settings.apiConfigManager.title")}</span>
 				</label>
 
 				{isRenaming ? (
@@ -165,7 +167,7 @@ const ApiConfigManager = ({
 									setInputValue(target.target.value)
 									setError(null)
 								}}
-								placeholder="Enter new name"
+								placeholder={t("settings.apiConfigManager.enterNewName")}
 								style={{ flexGrow: 1 }}
 								onKeyDown={(e: unknown) => {
 									const event = e as { key: string }
@@ -180,7 +182,7 @@ const ApiConfigManager = ({
 								appearance="icon"
 								disabled={!inputValue.trim()}
 								onClick={handleSave}
-								title="Save"
+								title={t("settings.apiConfigManager.save")}
 								style={{
 									padding: 0,
 									margin: 0,
@@ -193,7 +195,7 @@ const ApiConfigManager = ({
 							<VSCodeButton
 								appearance="icon"
 								onClick={handleCancel}
-								title="Cancel"
+								title={t("settings.apiConfigManager.cancel")}
 								style={{
 									padding: 0,
 									margin: 0,
@@ -232,7 +234,7 @@ const ApiConfigManager = ({
 							<VSCodeButton
 								appearance="icon"
 								onClick={handleAdd}
-								title="Add profile"
+								title={t("settings.apiConfigManager.addProfile")}
 								style={{
 									padding: 0,
 									margin: 0,
@@ -247,7 +249,7 @@ const ApiConfigManager = ({
 									<VSCodeButton
 										appearance="icon"
 										onClick={handleStartRename}
-										title="Rename profile"
+										title={t("settings.apiConfigManager.renameProfile")}
 										style={{
 											padding: 0,
 											margin: 0,
@@ -260,7 +262,11 @@ const ApiConfigManager = ({
 									<VSCodeButton
 										appearance="icon"
 										onClick={handleDelete}
-										title={isOnlyProfile ? "Cannot delete the only profile" : "Delete profile"}
+										title={
+											isOnlyProfile
+												? t("settings.apiConfigManager.cannotDeleteOnly")
+												: t("settings.apiConfigManager.deleteProfile")
+										}
 										disabled={isOnlyProfile}
 										style={{
 											padding: 0,
@@ -280,7 +286,7 @@ const ApiConfigManager = ({
 								margin: "5px 0 12px",
 								color: "var(--vscode-descriptionForeground)",
 							}}>
-							Save different API configurations to quickly switch between providers and settings
+							{t("settings.apiConfigManager.description")}
 						</p>
 					</>
 				)}
@@ -299,9 +305,12 @@ const ApiConfigManager = ({
 					aria-labelledby="new-profile-title">
 					<DialogContent className="p-4 max-w-sm">
 						<h2 id="new-profile-title" className="text-lg font-semibold mb-4">
-							New Configuration Profile
+							{t("settings.apiConfigManager.newProfile")}
 						</h2>
-						<button className="absolute right-4 top-4" aria-label="Close dialog" onClick={resetCreateState}>
+						<button
+							className="absolute right-4 top-4"
+							aria-label={t("settings.apiConfigManager.closeDialog")}
+							onClick={resetCreateState}>
 							<span className="codicon codicon-close" />
 						</button>
 						<VSCodeTextField
@@ -312,7 +321,7 @@ const ApiConfigManager = ({
 								setNewProfileName(target.target.value)
 								setError(null)
 							}}
-							placeholder="Enter profile name"
+							placeholder={t("settings.apiConfigManager.enterProfileName")}
 							style={{ width: "100%" }}
 							onKeyDown={(e: unknown) => {
 								const event = e as { key: string }
@@ -330,13 +339,13 @@ const ApiConfigManager = ({
 						)}
 						<div className="flex justify-end gap-2 mt-4">
 							<VSCodeButton appearance="secondary" onClick={resetCreateState}>
-								Cancel
+								{t("settings.apiConfigManager.cancel")}
 							</VSCodeButton>
 							<VSCodeButton
 								appearance="primary"
 								disabled={!newProfileName.trim()}
 								onClick={handleNewProfileSave}>
-								Create Profile
+								{t("settings.apiConfigManager.createProfile")}
 							</VSCodeButton>
 						</div>
 					</DialogContent>

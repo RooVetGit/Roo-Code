@@ -69,9 +69,9 @@ export function getToolOptions(toolConfig: string | readonly [ToolName, ...any[]
 
 // Display names for groups in UI
 export const GROUP_DISPLAY_NAMES: Record<ToolGroup, string> = {
-	read: "Read Files",
-	edit: "Edit Files",
-	browser: "Use Browser",
-	command: "Run Commands",
-	mcp: "Use MCP",
+	read: "tools.read.description",
+	edit: "tools.edit.description",
+	browser: "tools.browser.description",
+	command: "tools.command.description",
+	mcp: "tools.mcp.description",
 }

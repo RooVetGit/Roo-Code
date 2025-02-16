@@ -1,4 +1,5 @@
 import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
+import { useTranslation } from "react-i18next"
 
 interface ExperimentalFeatureProps {
 	name: string
@@ -8,12 +9,13 @@ interface ExperimentalFeatureProps {
 }
 
 const ExperimentalFeature = ({ name, description, enabled, onChange }: ExperimentalFeatureProps) => {
+	const { t } = useTranslation()
 	return (
 		<div>
 			<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
 				<span style={{ color: "var(--vscode-errorForeground)" }}>⚠️</span>
 				<VSCodeCheckbox checked={enabled} onChange={(e: any) => onChange(e.target.checked)}>
-					<span style={{ fontWeight: "500" }}>{name}</span>
+					<span style={{ fontWeight: "500" }}>{t(name)}</span>
 				</VSCodeCheckbox>
 			</div>
 			<p
@@ -22,7 +24,7 @@ const ExperimentalFeature = ({ name, description, enabled, onChange }: Experimen
 					marginBottom: 15,
 					color: "var(--vscode-descriptionForeground)",
 				}}>
-				{description}
+				{t(description)}
 			</p>
 		</div>
 	)

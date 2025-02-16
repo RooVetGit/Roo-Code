@@ -32,17 +32,15 @@ interface SupportPromptConfig {
 
 const supportPromptConfigs: Record<string, SupportPromptConfig> = {
 	ENHANCE: {
-		label: "Enhance Prompt",
-		description:
-			"Use prompt enhancement to get tailored suggestions or improvements for your inputs. This ensures Roo understands your intent and provides the best possible responses. Available via the ✨ icon in chat.",
+		label: "supportPrompt.ENHANCE.label",
+		description: "supportPrompt.ENHANCE.description",
 		template: `Generate an enhanced version of this prompt (reply with only the enhanced prompt - no conversation, explanations, lead-in, bullet points, placeholders, or surrounding quotes):
 
 \${userInput}`,
 	},
 	EXPLAIN: {
-		label: "Explain Code",
-		description:
-			"Get detailed explanations of code snippets, functions, or entire files. Useful for understanding complex code or learning new patterns. Available in code actions (lightbulb icon in the editor) and the editor context menu (right-click on selected code).",
+		label: "supportPrompt.EXPLAIN.label",
+		description: "supportPrompt.EXPLAIN.description",
 		template: `Explain the following code from file path @/\${filePath}:
 \${userInput}
 
@@ -56,9 +54,8 @@ Please provide a clear and concise explanation of what this code does, including
 3. Important patterns or techniques used`,
 	},
 	FIX: {
-		label: "Fix Issues",
-		description:
-			"Get help identifying and resolving bugs, errors, or code quality issues. Provides step-by-step guidance for fixing problems. Available in code actions (lightbulb icon in the editor) and the editor context menu (right-click on selected code).",
+		label: "supportPrompt.FIX.label",
+		description: "supportPrompt.FIX.description",
 		template: `Fix any issues in the following code from file path @/\${filePath}
 \${diagnosticText}
 \${userInput}
@@ -74,9 +71,8 @@ Please:
 4. Explain what was fixed and why`,
 	},
 	IMPROVE: {
-		label: "Improve Code",
-		description:
-			"Receive suggestions for code optimization, better practices, and architectural improvements while maintaining functionality. Available in code actions (lightbulb icon in the editor) and the editor context menu (right-click on selected code).",
+		label: "supportPrompt.IMPROVE.label",
+		description: "supportPrompt.IMPROVE.description",
 		template: `Improve the following code from file path @/\${filePath}:
 \${userInput}
 
@@ -93,9 +89,8 @@ Please suggest improvements for:
 Provide the improved code along with explanations for each enhancement.`,
 	},
 	ADD_TO_CONTEXT: {
-		label: "Add to Context",
-		description:
-			"Add context to your current task or conversation. Useful for providing additional information or clarifications. Available in code actions (lightbulb icon in the editor). and the editor context menu (right-click on selected code).",
+		label: "supportPrompt.ADD_TO_CONTEXT.label",
+		description: "supportPrompt.ADD_TO_CONTEXT.description",
 		template: `@/\${filePath}:
 \`\`\`
 \${selectedText}
@@ -112,9 +107,8 @@ Terminal output:
 \`\`\``,
 	},
 	TERMINAL_FIX: {
-		label: "Fix Terminal Command",
-		description:
-			"Get help fixing terminal commands that failed or need improvement. Available in the terminal context menu (right-click on selected terminal content).",
+		label: "supportPrompt.TERMINAL_FIX.label",
+		description: "supportPrompt.TERMINAL_FIX.description",
 		template: `\${userInput}
 Fix this terminal command:
 \`\`\`
@@ -127,9 +121,8 @@ Please:
 3. Explain what was fixed and why`,
 	},
 	TERMINAL_EXPLAIN: {
-		label: "Explain Terminal Command",
-		description:
-			"Get detailed explanations of terminal commands and their outputs. Available in the terminal context menu (right-click on selected terminal content).",
+		label: "supportPrompt.TERMINAL_EXPLAIN.label",
+		description: "supportPrompt.TERMINAL_EXPLAIN.description",
 		template: `\${userInput}
 Explain this terminal command:
 \`\`\`
