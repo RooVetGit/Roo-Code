@@ -1,5 +1,5 @@
-import { memo, useCallback, useEffect, useMemo, useState } from "react"
-import { useEvent, useInterval } from "react-use"
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useEvent } from "react-use"
 import { Checkbox, Dropdown, Pane, type DropdownOption } from "vscrui"
 import { VSCodeLink, VSCodeRadio, VSCodeRadioGroup, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 import { TemperatureControl } from "./TemperatureControl"
@@ -65,7 +65,8 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage, fromWelcomeView }: A
 		return normalizeApiConfiguration(apiConfiguration)
 	}, [apiConfiguration])
 
-	// Poll ollama/lmstudio models
+	const requestLocalModelsTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+	// Pull ollama/lmstudio models
 	const requestLocalModels = useCallback(() => {
 		if (selectedProvider === "ollama") {
 			vscode.postMessage({ type: "requestOllamaModels", text: apiConfiguration?.ollamaBaseUrl })
@@ -75,34 +76,29 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage, fromWelcomeView }: A
 			vscode.postMessage({ type: "requestVsCodeLmModels" })
 		}
 	}, [selectedProvider, apiConfiguration?.ollamaBaseUrl, apiConfiguration?.lmStudioBaseUrl])
+	// Debounced model updates, only executed 250ms after the user stops typing
 	useEffect(() => {
-		if (selectedProvider === "ollama" || selectedProvider === "lmstudio" || selectedProvider === "vscode-lm") {
-			requestLocalModels()
+		if (requestLocalModelsTimeoutRef.current) {
+			clearTimeout(requestLocalModelsTimeoutRef.current)
 		}
-	}, [selectedProvider, requestLocalModels])
-	useInterval(
-		requestLocalModels,
-		selectedProvider === "ollama" || selectedProvider === "lmstudio" || selectedProvider === "vscode-lm"
-			? 2000
-			: null,
-	)
+		requestLocalModelsTimeoutRef.current = setTimeout(requestLocalModels, 250)
+		return () => {
+			if (requestLocalModelsTimeoutRef.current) {
+				clearTimeout(requestLocalModelsTimeoutRef.current)
+			}
+		}
+	}, [requestLocalModels])
 	const handleMessage = useCallback((event: MessageEvent) => {
 		const message: ExtensionMessage = event.data
 		if (message.type === "ollamaModels" && Array.isArray(message.ollamaModels)) {
 			const newModels = message.ollamaModels
-			setOllamaModels((prevModels) => {
-				return JSON.stringify(prevModels) === JSON.stringify(newModels) ? prevModels : newModels
-			})
+			setOllamaModels(newModels)
 		} else if (message.type === "lmStudioModels" && Array.isArray(message.lmStudioModels)) {
 			const newModels = message.lmStudioModels
-			setLmStudioModels((prevModels) => {
-				return JSON.stringify(prevModels) === JSON.stringify(newModels) ? prevModels : newModels
-			})
+			setLmStudioModels(newModels)
 		} else if (message.type === "vsCodeLmModels" && Array.isArray(message.vsCodeLmModels)) {
 			const newModels = message.vsCodeLmModels
-			setVsCodeLmModels((prevModels) => {
-				return JSON.stringify(prevModels) === JSON.stringify(newModels) ? prevModels : newModels
-			})
+			setVsCodeLmModels(newModels)
 		}
 	}, [])
 	useEvent("message", handleMessage)
@@ -1126,6 +1122,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage, fromWelcomeView }: A
 						value={apiConfiguration?.lmStudioBaseUrl || ""}
 						style={{ width: "100%" }}
 						type="url"
+						onInput={handleInputChange("lmStudioBaseUrl", true)}
 						onBlur={handleInputChange("lmStudioBaseUrl")}
 						placeholder={"Default: http://localhost:1234"}>
 						<span style={{ fontWeight: 500 }}>Base URL (optional)</span>
@@ -1285,6 +1282,7 @@ const ApiOptions = ({ apiErrorMessage, modelIdErrorMessage, fromWelcomeView }: A
 						value={apiConfiguration?.ollamaBaseUrl || ""}
 						style={{ width: "100%" }}
 						type="url"
+						onInput={handleInputChange("ollamaBaseUrl", true)}
 						onBlur={handleInputChange("ollamaBaseUrl")}
 						placeholder={"Default: http://localhost:11434"}>
 						<span style={{ fontWeight: 500 }}>Base URL (optional)</span>
