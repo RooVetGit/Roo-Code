@@ -1,0 +1,38 @@
+{
+	"name": "@exercism/typescript-flatten-array",
+	"version": "1.0.0",
+	"description": "Exercism exercises in Typescript.",
+	"private": true,
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/exercism/typescript"
+	},
+	"type": "module",
+	"engines": {
+		"node": "^18.16.0 || >=20.0.0"
+	},
+	"devDependencies": {
+		"@exercism/babel-preset-typescript": "^0.6.0",
+		"@exercism/eslint-config-typescript": "^0.8.0",
+		"@jest/globals": "^29.7.0",
+		"@types/node": "~22.7.6",
+		"babel-jest": "^29.7.0",
+		"core-js": "~3.38.1",
+		"eslint": "^9.12.0",
+		"expect": "^29.7.0",
+		"jest": "^29.7.0",
+		"prettier": "^3.3.3",
+		"tstyche": "^2.1.1",
+		"typescript": "~5.6.3",
+		"typescript-eslint": "^8.10.0"
+	},
+	"scripts": {
+		"test": "corepack yarn node test-runner.mjs",
+		"test:types": "corepack yarn tstyche",
+		"test:implementation": "corepack yarn jest --no-cache --passWithNoTests",
+		"lint": "corepack yarn lint:types && corepack yarn lint:ci",
+		"lint:types": "corepack yarn tsc --noEmit -p .",
+		"lint:ci": "corepack yarn eslint . --ext .tsx,.ts"
+	},
+	"packageManager": "yarn@4.5.1"
+}
