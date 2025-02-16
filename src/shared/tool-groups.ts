@@ -2,6 +2,7 @@
 export type ToolGroupConfig = {
 	tools: readonly string[]
 	alwaysAvailable?: boolean // Whether this group is always available and shouldn't show in prompts view
+	requireExperiment?: string // Experiment ID that must be enabled for this group to be available
 }
 
 // Map of tool slugs to their display names
@@ -20,6 +21,8 @@ export const TOOL_DISPLAY_NAMES = {
 	attempt_completion: "complete tasks",
 	switch_mode: "switch modes",
 	new_task: "create new task",
+	list_vscode_lm_tools: "list VS Code LM tools",
+	call_vscode_lm_tool: "call VS Code LM tools",
 } as const
 
 // Define available tool groups
@@ -42,6 +45,10 @@ export const TOOL_GROUPS: Record<string, ToolGroupConfig> = {
 	modes: {
 		tools: ["switch_mode", "new_task"],
 		alwaysAvailable: true,
+	},
+	vscode_lm: {
+		tools: ["list_vscode_lm_tools", "call_vscode_lm_tool"],
+		requireExperiment: "vscodeLmTools",
 	},
 }
 
@@ -74,4 +81,5 @@ export const GROUP_DISPLAY_NAMES: Record<ToolGroup, string> = {
 	browser: "Use Browser",
 	command: "Run Commands",
 	mcp: "Use MCP",
+	vscode_lm: "Use VS Code LM Tools",
 }

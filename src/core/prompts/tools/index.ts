@@ -13,6 +13,8 @@ import { getUseMcpToolDescription } from "./use-mcp-tool"
 import { getAccessMcpResourceDescription } from "./access-mcp-resource"
 import { getSwitchModeDescription } from "./switch-mode"
 import { getNewTaskDescription } from "./new-task"
+import { getListVsCodeLmToolsDescription } from "./list-vscode-lm-tools"
+import { getCallVsCodeLmToolDescription } from "./call-vscode-lm-tool"
 import { DiffStrategy } from "../../diff/DiffStrategy"
 import { McpHub } from "../../../services/mcp/McpHub"
 import { Mode, ModeConfig, getModeConfig, isToolAllowedForMode, getGroupName } from "../../../shared/modes"
@@ -38,6 +40,8 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 	search_and_replace: (args) => getSearchAndReplaceDescription(args),
 	apply_diff: (args) =>
 		args.diffStrategy ? args.diffStrategy.getToolDescription({ cwd: args.cwd, toolOptions: args.toolOptions }) : "",
+	list_vscode_lm_tools: () => getListVsCodeLmToolsDescription(),
+	call_vscode_lm_tool: () => getCallVsCodeLmToolDescription(),
 }
 
 export function getToolDescriptionsForMode(
@@ -66,6 +70,13 @@ export function getToolDescriptionsForMode(
 		const groupName = getGroupName(groupEntry)
 		const toolGroup = TOOL_GROUPS[groupName]
 		if (toolGroup) {
+			// Skip group if it requires an experiment that's not enabled
+			if (toolGroup.requireExperiment && experiments) {
+				if (!experiments[toolGroup.requireExperiment]) {
+					return
+				}
+			}
+
 			toolGroup.tools.forEach((tool) => {
 				if (isToolAllowedForMode(tool as ToolName, mode, customModes ?? [], experiments ?? {})) {
 					tools.add(tool)
@@ -109,4 +120,6 @@ export {
 	getSwitchModeDescription,
 	getInsertContentDescription,
 	getSearchAndReplaceDescription,
+	getListVsCodeLmToolsDescription,
+	getCallVsCodeLmToolDescription,
 }
