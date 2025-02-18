@@ -598,6 +598,8 @@ export class Cline {
 
 		let modifiedOldUserContent: UserContent // either the last message if its user message, or the user message before the last (assistant) message
 		let modifiedApiConversationHistory: Anthropic.Messages.MessageParam[] // need to remove the last user message to replace with new modified user message
+		modifiedOldUserContent = []
+		modifiedApiConversationHistory = []
 		if (existingApiConversationHistory.length > 0) {
 			const lastMessage = existingApiConversationHistory[existingApiConversationHistory.length - 1]
 
@@ -667,7 +669,7 @@ export class Cline {
 				throw new Error("Unexpected: Last message is not a user or assistant message")
 			}
 		} else {
-			throw new Error("Unexpected: No existing API conversation history")
+			console.debug(Error("Unexpected: No existing API conversation history"))
 		}
 
 		let newUserContent: UserContent = [...modifiedOldUserContent]
