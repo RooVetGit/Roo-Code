@@ -669,7 +669,7 @@ export class Cline {
 				throw new Error("Unexpected: Last message is not a user or assistant message")
 			}
 		} else {
-			console.debug(Error("Unexpected: No existing API conversation history"))
+			logger.debug("Unexpected: No existing API conversation history")
 		}
 
 		let newUserContent: UserContent = [...modifiedOldUserContent]
