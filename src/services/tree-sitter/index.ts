@@ -1,8 +1,8 @@
-import * as fs from "fs/promises"
 import * as path from "path"
+
 import { listFiles } from "../glob/list-files"
 import { LanguageParser, loadRequiredLanguageParsers } from "./languageParser"
-import { fileExistsAtPath } from "../../utils/fs"
+import { fileExistsAtPath, readFile } from "../../utils/fs"
 
 // TODO: implement caching behavior to avoid having to keep analyzing project for new tasks.
 export async function parseSourceCodeForDefinitionsTopLevel(dirPath: string): Promise<string> {
@@ -26,6 +26,7 @@ export async function parseSourceCodeForDefinitionsTopLevel(dirPath: string): Pr
 	// const filesWithoutDefinitions: string[] = []
 	for (const file of filesToParse) {
 		const definitions = await parseFile(file, languageParsers)
+		console.log(`file: ${file}, definitions =`, definitions)
 		if (definitions) {
 			result += `${path.relative(dirPath, file).toPosix()}\n${definitions}\n`
 		}
@@ -96,10 +97,11 @@ This approach allows us to focus on the most relevant parts of the code (defined
 - https://tree-sitter.github.io/tree-sitter/code-navigation-systems
 */
 async function parseFile(filePath: string, languageParsers: LanguageParser): Promise<string | undefined> {
-	const fileContent = await fs.readFile(filePath, "utf8")
+	const fileContent = await readFile(filePath)
 	const ext = path.extname(filePath).toLowerCase().slice(1)
 
 	const { parser, query } = languageParsers[ext] || {}
+
 	if (!parser || !query) {
 		return `Unsupported file type: ${filePath}`
 	}
@@ -109,6 +111,10 @@ async function parseFile(filePath: string, languageParsers: LanguageParser): Pro
 	try {
 		// Parse the file content into an Abstract Syntax Tree (AST), a tree-like representation of the code
 		const tree = parser.parse(fileContent)
+
+		if (!tree) {
+			throw new Error(`Failed to parse file: ${filePath}`)
+		}
 
 		// Apply the query to the AST and get the captures
 		// Captures are specific parts of the AST that match our query patterns, each capture represents a node in the AST that we're interested in.
@@ -156,5 +162,6 @@ async function parseFile(filePath: string, languageParsers: LanguageParser): Pro
 	if (formattedOutput.length > 0) {
 		return `|----\n${formattedOutput}|----\n`
 	}
+
 	return undefined
 }

@@ -45,3 +45,15 @@ export async function fileExistsAtPath(filePath: string): Promise<boolean> {
 		return false
 	}
 }
+
+/**
+ * Reads the contents of a file. Carved out specifically for testing purposes;
+ * we can easily mock fs.readFile without mocking everything in the fs module.
+ *
+ * @param filePath - The path to the file to read.
+ * @returns A promise that resolves to the file's contents.
+ */
+export async function readFile(filePath: string): Promise<string> {
+	const content = await fs.readFile(filePath, "utf-8")
+	return content
+}

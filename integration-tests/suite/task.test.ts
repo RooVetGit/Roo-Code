@@ -1,5 +1,4 @@
 import * as assert from "assert"
-import * as vscode from "vscode"
 
 suite("Roo Code Task", () => {
 	test("Should handle prompt and response correctly", async function () {

@@ -1,16 +1,7 @@
 import * as path from "path"
 import Mocha from "mocha"
 import { glob } from "glob"
-import { ClineAPI } from "../../exports/cline"
-import { ClineProvider } from "../../core/webview/ClineProvider"
 import * as vscode from "vscode"
-
-declare global {
-	var api: ClineAPI
-	var provider: ClineProvider
-	var extension: vscode.Extension<ClineAPI> | undefined
-	var panel: vscode.WebviewPanel | undefined
-}
 
 export async function run(): Promise<void> {
 	// Create the mocha test

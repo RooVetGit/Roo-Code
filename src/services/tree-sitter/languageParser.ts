@@ -1,5 +1,7 @@
 import * as path from "path"
-import Parser from "web-tree-sitter"
+
+import { Parser, Language, Query } from "web-tree-sitter"
+
 import {
 	javascriptQuery,
 	typescriptQuery,
@@ -18,12 +20,17 @@ import {
 export interface LanguageParser {
 	[key: string]: {
 		parser: Parser
-		query: Parser.Query
+		query: Query
 	}
 }
 
 async function loadLanguage(langName: string) {
-	return await Parser.Language.load(path.join(__dirname, `tree-sitter-${langName}.wasm`))
+	if (process.env.NODE_ENV === "test") {
+		const wasmPath = path.join(process.cwd(), "node_modules", "tree-sitter-wasms", "out")
+		return await Language.load(path.join(wasmPath, `tree-sitter-${langName}.wasm`))
+	}
+
+	return await Language.load(path.join(__dirname, `tree-sitter-${langName}.wasm`))
 }
 
 let isParserInitialized = false
@@ -61,71 +68,75 @@ export async function loadRequiredLanguageParsers(filesToParse: string[]): Promi
 	await initializeParser()
 	const extensionsToLoad = new Set(filesToParse.map((file) => path.extname(file).toLowerCase().slice(1)))
 	const parsers: LanguageParser = {}
+
 	for (const ext of extensionsToLoad) {
-		let language: Parser.Language
-		let query: Parser.Query
+		let language: Language
+		let query: Query
+
 		switch (ext) {
 			case "js":
 			case "jsx":
 				language = await loadLanguage("javascript")
-				query = language.query(javascriptQuery)
+				query = new Query(language, javascriptQuery)
 				break
 			case "ts":
 				language = await loadLanguage("typescript")
-				query = language.query(typescriptQuery)
+				query = new Query(language, typescriptQuery)
 				break
 			case "tsx":
 				language = await loadLanguage("tsx")
-				query = language.query(typescriptQuery)
+				query = new Query(language, typescriptQuery)
 				break
 			case "py":
 				language = await loadLanguage("python")
-				query = language.query(pythonQuery)
+				query = new Query(language, pythonQuery)
 				break
 			case "rs":
 				language = await loadLanguage("rust")
-				query = language.query(rustQuery)
+				query = new Query(language, rustQuery)
 				break
 			case "go":
 				language = await loadLanguage("go")
-				query = language.query(goQuery)
+				query = new Query(language, goQuery)
 				break
 			case "cpp":
 			case "hpp":
 				language = await loadLanguage("cpp")
-				query = language.query(cppQuery)
+				query = new Query(language, cppQuery)
 				break
 			case "c":
 			case "h":
 				language = await loadLanguage("c")
-				query = language.query(cQuery)
+				query = new Query(language, cQuery)
 				break
 			case "cs":
 				language = await loadLanguage("c_sharp")
-				query = language.query(csharpQuery)
+				query = new Query(language, csharpQuery)
 				break
 			case "rb":
 				language = await loadLanguage("ruby")
-				query = language.query(rubyQuery)
+				query = new Query(language, rubyQuery)
 				break
 			case "java":
 				language = await loadLanguage("java")
-				query = language.query(javaQuery)
+				query = new Query(language, javaQuery)
 				break
 			case "php":
 				language = await loadLanguage("php")
-				query = language.query(phpQuery)
+				query = new Query(language, phpQuery)
 				break
 			case "swift":
 				language = await loadLanguage("swift")
-				query = language.query(swiftQuery)
+				query = new Query(language, swiftQuery)
 				break
 			default:
 				throw new Error(`Unsupported language: ${ext}`)
 		}
+
 		const parser = new Parser()
 		parser.setLanguage(language)
 		parsers[ext] = { parser, query }
 	}
+
 	return parsers
 }

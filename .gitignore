@@ -23,8 +23,11 @@ docs/_site/
 # Dotenv
 .env.integration
 
-#Local lint config
+# Local lint config
 .eslintrc.local.json
 
-#Logging
+# Logging
 logs
+
+# LanceDB
+lancedb

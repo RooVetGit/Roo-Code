@@ -18,7 +18,10 @@
 		"strict": true,
 		"target": "es2022",
 		"useDefineForClassFields": true,
-		"useUnknownInCatchVariables": false
+		"useUnknownInCatchVariables": false,
+		"paths": {
+			"web-tree-sitter": ["./node_modules/web-tree-sitter/web-tree-sitter.d.ts"]
+		}
 	},
 	"include": ["src/**/*", "scripts/**/*", ".changeset/**/*"],
 	"exclude": ["node_modules", ".vscode-test", "webview-ui"]

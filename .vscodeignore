@@ -5,6 +5,7 @@
 .vscode-test/**
 out/**
 node_modules/**
+integration-tests/**
 src/**
 .gitignore
 .yarnrc
@@ -42,3 +43,6 @@ webview-ui/node_modules/**
 
 # Include icons
 !assets/icons/**
+
+# LanceDB
+lancedb/**

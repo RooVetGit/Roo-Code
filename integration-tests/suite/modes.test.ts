@@ -1,5 +1,4 @@
 import * as assert from "assert"
-import * as vscode from "vscode"
 
 suite("Roo Code Modes", () => {
 	test("Should handle switching modes correctly", async function () {

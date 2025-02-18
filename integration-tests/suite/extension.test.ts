@@ -27,7 +27,7 @@ suite("Roo Code Extension", () => {
 
 		while (Date.now() - startTime < timeout) {
 			const commands = await vscode.commands.getCommands(true)
-			const missingCommands = []
+			const missingCommands: string[] = []
 
 			for (const cmd of expectedCommands) {
 				if (!commands.includes(cmd)) {
