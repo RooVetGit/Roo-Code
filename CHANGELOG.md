@@ -1,5 +1,30 @@
 # Roo Code Changelog
 
+## [3.3.21]
+
+- Fix input box revert issue and configuration loss during profile switch (thanks @System233!)
+- Fix default preferred language for zh-cn and zh-tw (thanks @System233!)
+- Fix Mistral integration (thanks @d-oit!)
+- Feature to mention `@terminal` to pull terminal output into context (thanks Cline!)
+- Fix system prompt to make sure Roo knows about all available modes
+- Enable streaming mode for OpenAI o1
+
+## [3.3.20]
+
+- Support project-specific custom modes in a .roomodes file
+- Add more Mistral models (thanks @d-oit and @bramburn!)
+- By popular request, make it so Ask mode can't write to Markdown files and is purely for chatting with
+- Add a setting to control the number of open editor tabs to tell the model about (665 is probably too many!)
+- Fix race condition bug with entering API key on the welcome screen
+
+## [3.3.19]
+
+- Fix a bug where aborting in the middle of file writes would not revert the write
+- Honor the VS Code theme for dialog backgrounds
+- Make it possible to clear out the default custom instructions for built-in modes
+- Add a help button that links to our new documentation site (which we would love help from the community to improve!)
+- Switch checkpoints logic to use a shadow git repository to work around issues with hot reloads and polluting existing repositories (thanks Cline for the inspiration!)
+
 ## [3.3.18]
 
 - Add a per-API-configuration model temperature setting (thanks @joemanley201!)

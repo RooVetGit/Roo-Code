@@ -1,3 +1,4 @@
+import * as vscode from "vscode"
 import { TOOL_GROUPS, ToolGroup, ALWAYS_AVAILABLE_TOOLS } from "./tool-groups"
 
 // Mode types
@@ -19,6 +20,7 @@ export type ModeConfig = {
 	roleDefinition: string
 	customInstructions?: string
 	groups: readonly GroupEntry[] // Now supports both simple strings and tuples with options
+	source?: "global" | "project" // Where this mode was loaded from
 }
 
 // Mode-specific prompts only
@@ -92,9 +94,9 @@ export const modes: readonly ModeConfig[] = [
 		name: "Ask",
 		roleDefinition:
 			"You are Roo, a knowledgeable technical assistant focused on answering questions and providing information about software development, technology, and related topics.",
-		groups: ["read", ["edit", { fileRegex: "\\.md$", description: "Markdown files only" }], "browser", "mcp"],
+		groups: ["read", "browser", "mcp"],
 		customInstructions:
-			"You can analyze code, explain concepts, and access external resources. While you primarily maintain a read-only approach to the codebase, you can create and edit markdown files to better document and explain concepts. Make sure to answer the user's questions and don't rush to switch to implementing code.",
+			"You can analyze code, explain concepts, and access external resources. Make sure to answer the user's questions and don't rush to switch to implementing code.",
 	},
 ] as const
 
@@ -237,6 +239,19 @@ export const defaultPrompts: Readonly<CustomModePrompts> = Object.freeze(
 		]),
 	),
 )
+
+// Helper function to get all modes with their prompt overrides from extension state
+export async function getAllModesWithPrompts(context: vscode.ExtensionContext): Promise<ModeConfig[]> {
+	const customModes = (await context.globalState.get<ModeConfig[]>("customModes")) || []
+	const customModePrompts = (await context.globalState.get<CustomModePrompts>("customModePrompts")) || {}
+
+	const allModes = getAllModes(customModes)
+	return allModes.map((mode) => ({
+		...mode,
+		roleDefinition: customModePrompts[mode.slug]?.roleDefinition ?? mode.roleDefinition,
+		customInstructions: customModePrompts[mode.slug]?.customInstructions ?? mode.customInstructions,
+	}))
+}
 
 // Helper function to safely get role definition
 export function getRoleDefinition(modeSlug: string, customModes?: ModeConfig[]): string {

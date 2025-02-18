@@ -63,28 +63,20 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 		setExperimentEnabled,
 		alwaysAllowModeSwitch,
 		setAlwaysAllowModeSwitch,
+		maxOpenTabsContext,
+		setMaxOpenTabsContext,
 	} = useExtensionState()
 	const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>(undefined)
 	const [modelIdErrorMessage, setModelIdErrorMessage] = useState<string | undefined>(undefined)
 	const [commandInput, setCommandInput] = useState("")
 
-	const handleSubmit = async () => {
-		// Focus the active element's parent to trigger blur
-		document.activeElement?.parentElement?.focus()
-
-		// Small delay to let blur events complete
-		await new Promise((resolve) => setTimeout(resolve, 50))
-
+	const handleSubmit = () => {
 		const apiValidationResult = validateApiConfiguration(apiConfiguration)
 		const modelIdValidationResult = validateModelId(apiConfiguration, glamaModels, openRouterModels)
 
 		setApiErrorMessage(apiValidationResult)
 		setModelIdErrorMessage(modelIdValidationResult)
 		if (!apiValidationResult && !modelIdValidationResult) {
-			vscode.postMessage({
-				type: "apiConfiguration",
-				apiConfiguration,
-			})
 			vscode.postMessage({ type: "alwaysAllowReadOnly", bool: alwaysAllowReadOnly })
 			vscode.postMessage({ type: "alwaysAllowWrite", bool: alwaysAllowWrite })
 			vscode.postMessage({ type: "alwaysAllowExecute", bool: alwaysAllowExecute })
@@ -104,6 +96,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 			vscode.postMessage({ type: "alwaysApproveResubmit", bool: alwaysApproveResubmit })
 			vscode.postMessage({ type: "requestDelaySeconds", value: requestDelaySeconds })
 			vscode.postMessage({ type: "rateLimitSeconds", value: rateLimitSeconds })
+			vscode.postMessage({ type: "maxOpenTabsContext", value: maxOpenTabsContext })
 			vscode.postMessage({ type: "currentApiConfigName", text: currentApiConfigName })
 			vscode.postMessage({
 				type: "upsertApiConfiguration",
@@ -198,6 +191,11 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 							currentApiConfigName={currentApiConfigName}
 							listApiConfigMeta={listApiConfigMeta}
 							onSelectConfig={(configName: string) => {
+								vscode.postMessage({
+									type: "saveApiConfiguration",
+									text: currentApiConfigName,
+									apiConfiguration,
+								})
 								vscode.postMessage({
 									type: "loadApiConfiguration",
 									text: configName,
@@ -623,6 +621,28 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 						<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>
 							Maximum number of lines to include in terminal output when executing commands. When exceeded
 							lines will be removed from the middle, saving tokens.
+						</p>
+					</div>
+
+					<div style={{ marginBottom: 15 }}>
+						<div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+							<span style={{ fontWeight: "500" }}>Open tabs context limit</span>
+							<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+								<input
+									type="range"
+									min="0"
+									max="500"
+									step="1"
+									value={maxOpenTabsContext ?? 20}
+									onChange={(e) => setMaxOpenTabsContext(parseInt(e.target.value))}
+									style={{ ...sliderStyle }}
+								/>
+								<span style={{ ...sliderLabelStyle }}>{maxOpenTabsContext ?? 20}</span>
+							</div>
+						</div>
+						<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>
+							Maximum number of VSCode open tabs to include in context. Higher values provide more context
+							but increase token usage.
 						</p>
 					</div>
 

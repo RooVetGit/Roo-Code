@@ -6,13 +6,14 @@ import delay from "delay"
 import fs from "fs/promises"
 import os from "os"
 import pWaitFor from "p-wait-for"
+import getFolderSize from "get-folder-size"
 import * as path from "path"
 import { serializeError } from "serialize-error"
 import * as vscode from "vscode"
 import { ApiHandler, SingleCompletionHandler, buildApiHandler } from "../api"
 import { ApiStream } from "../api/transform/stream"
 import { DIFF_VIEW_URI_SCHEME, DiffViewProvider } from "../integrations/editor/DiffViewProvider"
-import { CheckpointService } from "../services/checkpoints/CheckpointService"
+import { CheckpointService, CheckpointServiceFactory } from "../services/checkpoints"
 import { findToolName, formatContentBlockToMarkdown } from "../integrations/misc/export-markdown"
 import {
 	extractTextFromFile,
@@ -239,7 +240,8 @@ export class Cline {
 
 	private async saveClineMessages() {
 		try {
-			const filePath = path.join(await this.ensureTaskDirectoryExists(), GlobalFileNames.uiMessages)
+			const taskDir = await this.ensureTaskDirectoryExists()
+			const filePath = path.join(taskDir, GlobalFileNames.uiMessages)
 			await fs.writeFile(filePath, JSON.stringify(this.clineMessages))
 			// combined as they are in ChatView
 			const apiMetrics = getApiMetrics(combineApiRequests(combineCommandSequences(this.clineMessages.slice(1))))
@@ -251,6 +253,17 @@ export class Cline {
 						(m) => !(m.ask === "resume_task" || m.ask === "resume_completed_task"),
 					)
 				]
+
+			let taskDirSize = 0
+
+			try {
+				taskDirSize = await getFolderSize.loose(taskDir)
+			} catch (err) {
+				console.error(
+					`[saveClineMessages] failed to get task directory size (${taskDir}): ${err instanceof Error ? err.message : String(err)}`,
+				)
+			}
+
 			await this.providerRef.deref()?.updateTaskHistory({
 				id: this.taskId,
 				ts: lastRelevantMessage.ts,
@@ -260,6 +273,7 @@ export class Cline {
 				cacheWrites: apiMetrics.totalCacheWrites,
 				cacheReads: apiMetrics.totalCacheReads,
 				totalCost: apiMetrics.totalCost,
+				size: taskDirSize,
 			})
 		} catch (error) {
 			console.error("Failed to save cline messages:", error)
@@ -732,13 +746,18 @@ export class Cline {
 	}
 
 	async abortTask() {
-		this.abort = true // Will stop any autonomously running promises.
+		// Will stop any autonomously running promises.
+		this.abort = true
+
 		this.terminalManager.disposeAll()
 		this.urlContentFetcher.closeBrowser()
 		this.browserSession.closeBrowser()
-		// Need to await for when we want to make sure directories/files are
-		// reverted before re-starting the task from a checkpoint.
-		await this.diffViewProvider.revertChanges()
+
+		// If we're not streaming then `abortStream` (which reverts the diff
+		// view changes) won't be called, so we need to revert the changes here.
+		if (this.isStreaming && this.diffViewProvider.isEditing) {
+			await this.diffViewProvider.revertChanges()
+		}
 	}
 
 	// Tools
@@ -2687,7 +2706,7 @@ export class Cline {
 		}
 
 		if (isCheckpointPossible) {
-			await this.checkpointSave()
+			await this.checkpointSave({ isFirst: false })
 		}
 
 		/*
@@ -2757,7 +2776,7 @@ export class Cline {
 		const isFirstRequest = this.clineMessages.filter((m) => m.say === "api_req_started").length === 0
 
 		if (isFirstRequest) {
-			await this.checkpointSave()
+			await this.checkpointSave({ isFirst: true })
 		}
 
 		// getting verbose details is an expensive operation, it uses globby to top-down build file structure of project which for large projects can take a few seconds
@@ -2817,6 +2836,8 @@ export class Cline {
 			}
 
 			const abortStream = async (cancelReason: ClineApiReqCancelReason, streamingFailedMessage?: string) => {
+				console.log(`[Cline#abortStream] cancelReason = ${cancelReason}`)
+
 				if (this.diffViewProvider.isEditing) {
 					await this.diffViewProvider.revertChanges() // closes diff view
 				}
@@ -2871,6 +2892,7 @@ export class Cline {
 			const stream = this.attemptApiRequest(previousApiReqIndex) // yields only if the first chunk is successful, otherwise will allow the user to retry the request (most likely due to rate limit error, which gets thrown on the first chunk)
 			let assistantMessage = ""
 			let reasoningMessage = ""
+			this.isStreaming = true
 			try {
 				for await (const chunk of stream) {
 					if (!chunk) {
@@ -2903,11 +2925,13 @@ export class Cline {
 					}
 
 					if (this.abort) {
-						console.log("aborting stream...")
+						console.log(`aborting stream, this.abandoned = ${this.abandoned}`)
+
 						if (!this.abandoned) {
 							// only need to gracefully abort if this instance isn't abandoned (sometimes openrouter stream hangs, in which case this would affect future instances of cline)
 							await abortStream("user_cancelled")
 						}
+
 						break // aborts the stream
 					}
 
@@ -2940,6 +2964,8 @@ export class Cline {
 						// await this.providerRef.deref()?.postStateToWebview()
 					}
 				}
+			} finally {
+				this.isStreaming = false
 			}
 
 			// need to call here in case the stream was aborted
@@ -3086,11 +3112,14 @@ export class Cline {
 		}
 
 		details += "\n\n# VSCode Open Tabs"
+		const { maxOpenTabsContext } = (await this.providerRef.deref()?.getState()) ?? {}
+		const maxTabs = maxOpenTabsContext ?? 20
 		const openTabs = vscode.window.tabGroups.all
 			.flatMap((group) => group.tabs)
 			.map((tab) => (tab.input as vscode.TabInputText)?.uri?.fsPath)
 			.filter(Boolean)
 			.map((absolutePath) => path.relative(cwd, absolutePath).toPosix())
+			.slice(0, maxTabs)
 			.join("\n")
 		if (openTabs) {
 			details += `\n${openTabs}`
@@ -3243,11 +3272,32 @@ export class Cline {
 	// Checkpoints
 
 	private async getCheckpointService() {
+		if (!this.checkpointsEnabled) {
+			throw new Error("Checkpoints are disabled")
+		}
+
 		if (!this.checkpointService) {
-			this.checkpointService = await CheckpointService.create({
-				taskId: this.taskId,
-				baseDir: vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? "",
-				log: (message) => this.providerRef.deref()?.log(message),
+			const workspaceDir = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0)
+			const shadowDir = this.providerRef.deref()?.context.globalStorageUri.fsPath
+
+			if (!workspaceDir) {
+				this.providerRef.deref()?.log("[getCheckpointService] workspace folder not found")
+				throw new Error("Workspace directory not found")
+			}
+
+			if (!shadowDir) {
+				this.providerRef.deref()?.log("[getCheckpointService] shadowDir not found")
+				throw new Error("Global storage directory not found")
+			}
+
+			this.checkpointService = await CheckpointServiceFactory.create({
+				strategy: "shadow",
+				options: {
+					taskId: this.taskId,
+					workspaceDir,
+					shadowDir,
+					log: (message) => this.providerRef.deref()?.log(message),
+				},
 			})
 		}
 
@@ -3306,29 +3356,25 @@ export class Cline {
 		}
 	}
 
-	public async checkpointSave() {
+	public async checkpointSave({ isFirst }: { isFirst: boolean }) {
 		if (!this.checkpointsEnabled) {
 			return
 		}
 
 		try {
-			const isFirst = !this.checkpointService
 			const service = await this.getCheckpointService()
+			const strategy = service.strategy
+			const version = service.version
+
 			const commit = await service.saveCheckpoint(`Task: ${this.taskId}, Time: ${Date.now()}`)
+			const fromHash = service.baseHash
+			const toHash = isFirst ? commit?.commit || fromHash : commit?.commit
 
-			if (commit?.commit) {
-				await this.providerRef
-					.deref()
-					?.postMessageToWebview({ type: "currentCheckpointUpdated", text: service.currentCheckpoint })
+			if (toHash) {
+				await this.providerRef.deref()?.postMessageToWebview({ type: "currentCheckpointUpdated", text: toHash })
 
-				// Checkpoint metadata required by the UI.
-				const checkpoint = {
-					isFirst,
-					from: service.baseCommitHash,
-					to: commit.commit,
-				}
-
-				await this.say("checkpoint_saved", commit.commit, undefined, undefined, checkpoint)
+				const checkpoint = { isFirst, from: fromHash, to: toHash, strategy, version }
+				await this.say("checkpoint_saved", toHash, undefined, undefined, checkpoint)
 			}
 		} catch (err) {
 			this.providerRef.deref()?.log("[checkpointSave] disabling checkpoints for this task")
@@ -3359,9 +3405,7 @@ export class Cline {
 			const service = await this.getCheckpointService()
 			await service.restoreCheckpoint(commitHash)
 
-			await this.providerRef
-				.deref()
-				?.postMessageToWebview({ type: "currentCheckpointUpdated", text: service.currentCheckpoint })
+			await this.providerRef.deref()?.postMessageToWebview({ type: "currentCheckpointUpdated", text: commitHash })
 
 			if (mode === "restore") {
 				await this.overwriteApiConversationHistory(

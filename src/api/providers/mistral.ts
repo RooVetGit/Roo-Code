@@ -21,23 +21,42 @@ export class MistralHandler implements ApiHandler {
 	private client: Mistral
 
 	constructor(options: ApiHandlerOptions) {
-		this.options = options
+		if (!options.mistralApiKey) {
+			throw new Error("Mistral API key is required")
+		}
+
+		// Set default model ID if not provided
+		this.options = {
+			...options,
+			apiModelId: options.apiModelId || mistralDefaultModelId,
+		}
+
+		const baseUrl = this.getBaseUrl()
+		console.debug(`[Roo Code] MistralHandler using baseUrl: ${baseUrl}`)
 		this.client = new Mistral({
-			serverURL: "https://codestral.mistral.ai",
+			serverURL: baseUrl,
 			apiKey: this.options.mistralApiKey,
 		})
 	}
 
+	private getBaseUrl(): string {
+		const modelId = this.options.apiModelId ?? mistralDefaultModelId
+		console.debug(`[Roo Code] MistralHandler using modelId: ${modelId}`)
+		if (modelId?.startsWith("codestral-")) {
+			return this.options.mistralCodestralUrl || "https://codestral.mistral.ai"
+		}
+		return "https://api.mistral.ai"
+	}
+
 	async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
-		const stream = await this.client.chat.stream({
-			model: this.getModel().id,
-			// max_completion_tokens: this.getModel().info.maxTokens,
-			temperature: this.options.modelTemperature ?? MISTRAL_DEFAULT_TEMPERATURE,
+		const response = await this.client.chat.stream({
+			model: this.options.apiModelId || mistralDefaultModelId,
 			messages: [{ role: "system", content: systemPrompt }, ...convertToMistralMessages(messages)],
-			stream: true,
+			maxTokens: this.options.includeMaxTokens ? this.getModel().info.maxTokens : undefined,
+			temperature: this.options.modelTemperature ?? MISTRAL_DEFAULT_TEMPERATURE,
 		})
 
-		for await (const chunk of stream) {
+		for await (const chunk of response) {
 			const delta = chunk.data.choices[0]?.delta
 			if (delta?.content) {
 				let content: string = ""
@@ -71,6 +90,27 @@ export class MistralHandler implements ApiHandler {
 		return {
 			id: mistralDefaultModelId,
 			info: mistralModels[mistralDefaultModelId],
+		}
+	}
+
+	async completePrompt(prompt: string): Promise<string> {
+		try {
+			const response = await this.client.chat.complete({
+				model: this.options.apiModelId || mistralDefaultModelId,
+				messages: [{ role: "user", content: prompt }],
+				temperature: this.options.modelTemperature ?? MISTRAL_DEFAULT_TEMPERATURE,
+			})
+
+			const content = response.choices?.[0]?.message.content
+			if (Array.isArray(content)) {
+				return content.map((c) => (c.type === "text" ? c.text : "")).join("")
+			}
+			return content || ""
+		} catch (error) {
+			if (error instanceof Error) {
+				throw new Error(`Mistral completion error: ${error.message}`)
+			}
+			throw error
 		}
 	}
 }

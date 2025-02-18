@@ -246,7 +246,7 @@ describe("ClineProvider", () => {
 		// Mock CustomModesManager
 		const mockCustomModesManager = {
 			updateCustomMode: jest.fn().mockResolvedValue(undefined),
-			getCustomModes: jest.fn().mockResolvedValue({}),
+			getCustomModes: jest.fn().mockResolvedValue({ customModes: [] }),
 			dispose: jest.fn(),
 		}
 
@@ -351,6 +351,7 @@ describe("ClineProvider", () => {
 			mode: defaultModeSlug,
 			customModes: [],
 			experiments: experimentDefault,
+			maxOpenTabsContext: 20,
 		}
 
 		const message: ExtensionMessage = {
@@ -1048,7 +1049,7 @@ describe("ClineProvider", () => {
 				"900x600", // browserViewportSize
 				"code", // mode
 				{}, // customModePrompts
-				{}, // customModes
+				{ customModes: [] }, // customModes
 				undefined, // effectiveInstructions
 				undefined, // preferredLanguage
 				true, // diffEnabled
@@ -1101,7 +1102,7 @@ describe("ClineProvider", () => {
 				"900x600", // browserViewportSize
 				"code", // mode
 				{}, // customModePrompts
-				{}, // customModes
+				{ customModes: [] }, // customModes
 				undefined, // effectiveInstructions
 				undefined, // preferredLanguage
 				false, // diffEnabled
@@ -1219,12 +1220,14 @@ describe("ClineProvider", () => {
 			provider.customModesManager = {
 				updateCustomMode: jest.fn().mockResolvedValue(undefined),
 				getCustomModes: jest.fn().mockResolvedValue({
-					"test-mode": {
-						slug: "test-mode",
-						name: "Test Mode",
-						roleDefinition: "Updated role definition",
-						groups: ["read"] as const,
-					},
+					customModes: [
+						{
+							slug: "test-mode",
+							name: "Test Mode",
+							roleDefinition: "Updated role definition",
+							groups: ["read"] as const,
+						},
+					],
 				}),
 				dispose: jest.fn(),
 			} as any
@@ -1250,27 +1253,29 @@ describe("ClineProvider", () => {
 			)
 
 			// Verify state was updated
-			expect(mockContext.globalState.update).toHaveBeenCalledWith(
-				"customModes",
-				expect.objectContaining({
-					"test-mode": expect.objectContaining({
+			expect(mockContext.globalState.update).toHaveBeenCalledWith("customModes", {
+				customModes: [
+					expect.objectContaining({
 						slug: "test-mode",
 						roleDefinition: "Updated role definition",
 					}),
-				}),
-			)
+				],
+			})
 
 			// Verify state was posted to webview
+			// Verify state was posted to webview with correct format
 			expect(mockPostMessage).toHaveBeenCalledWith(
 				expect.objectContaining({
 					type: "state",
 					state: expect.objectContaining({
-						customModes: expect.objectContaining({
-							"test-mode": expect.objectContaining({
-								slug: "test-mode",
-								roleDefinition: "Updated role definition",
-							}),
-						}),
+						customModes: {
+							customModes: [
+								expect.objectContaining({
+									slug: "test-mode",
+									roleDefinition: "Updated role definition",
+								}),
+							],
+						},
 					}),
 				}),
 			)
@@ -1399,6 +1404,39 @@ describe("ClineProvider", () => {
 				{ name: "test-config", id: "test-id", apiProvider: "anthropic" },
 			])
 			expect(mockContext.globalState.update).toHaveBeenCalledWith("currentApiConfigName", "test-config")
+		})
+
+		test("handles successful saveApiConfiguration", async () => {
+			provider.resolveWebviewView(mockWebviewView)
+			const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+
+			// Mock ConfigManager methods
+			provider.configManager = {
+				saveConfig: jest.fn().mockResolvedValue(undefined),
+				listConfig: jest
+					.fn()
+					.mockResolvedValue([{ name: "test-config", id: "test-id", apiProvider: "anthropic" }]),
+			} as any
+
+			const testApiConfig = {
+				apiProvider: "anthropic" as const,
+				apiKey: "test-key",
+			}
+
+			// Trigger upsertApiConfiguration
+			await messageHandler({
+				type: "saveApiConfiguration",
+				text: "test-config",
+				apiConfiguration: testApiConfig,
+			})
+
+			// Verify config was saved
+			expect(provider.configManager.saveConfig).toHaveBeenCalledWith("test-config", testApiConfig)
+
+			// Verify state updates
+			expect(mockContext.globalState.update).toHaveBeenCalledWith("listApiConfigMeta", [
+				{ name: "test-config", id: "test-id", apiProvider: "anthropic" },
+			])
 		})
 	})
 })
