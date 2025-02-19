@@ -4,6 +4,7 @@ import { useExtensionState } from "../../context/ExtensionStateContext"
 import { validateApiConfiguration } from "../../utils/validate"
 import { vscode } from "../../utils/vscode"
 import ApiOptions from "../settings/ApiOptions"
+import { Trans } from "react-i18next"
 
 const WelcomeView = () => {
 	const { apiConfiguration, currentApiConfigName } = useExtensionState()
@@ -26,15 +27,16 @@ const WelcomeView = () => {
 
 	return (
 		<div className="flex flex-col min-h-screen px-0 pb-5">
-			<h2>Hi, I'm Roo!</h2>
+			<h2>
+				<Trans i18nKey="hiImRoo">Hi, I'm Roo!</Trans>
+			</h2>
 			<p>
-				I can do all kinds of tasks thanks to the latest breakthroughs in agentic coding capabilities and access
-				to tools that let me create & edit files, explore complex projects, use the browser, and execute
-				terminal commands (with your permission, of course). I can even use MCP to create new tools and extend
-				my own capabilities.
+				<Trans i18nKey="taskDescription"></Trans>
 			</p>
 
-			<b>To get started, this extension needs an API provider.</b>
+			<b>
+				<Trans i18nKey="apiProviderNeeded"></Trans>
+			</b>
 
 			<div className="mt-3">
 				<ApiOptions fromWelcomeView />
@@ -42,7 +44,9 @@ const WelcomeView = () => {
 
 			<div className="sticky bottom-0 bg-[var(--vscode-editor-background)] py-3">
 				<div className="flex flex-col gap-1.5">
-					<VSCodeButton onClick={handleSubmit}>Let's go!</VSCodeButton>
+					<VSCodeButton onClick={handleSubmit}>
+						<Trans i18nKey="letsGoButton">Let's go!</Trans>
+					</VSCodeButton>
 					{errorMessage && <span className="text-destructive">{errorMessage}</span>}
 				</div>
 			</div>

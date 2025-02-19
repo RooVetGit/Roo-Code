@@ -1,5 +1,6 @@
 import { VSCodeButton, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 import { memo } from "react"
+import { Trans, useTranslation } from "react-i18next"
 // import VSCodeButtonLink from "./VSCodeButtonLink"
 // import { getOpenRouterAuthUrl } from "./ApiOptions"
 // import { vscode } from "../utils/vscode"
@@ -12,6 +13,8 @@ interface AnnouncementProps {
 You must update the latestAnnouncementId in ClineProvider for new announcements to show to users. This new id will be compared with whats in state for the 'last announcement shown', and if it's different then the announcement will render. As soon as an announcement is shown, the id will be updated in state. This ensures that announcements are not shown more than once, even if the user doesn't close it themselves.
 */
 const Announcement = ({ version, hideAnnouncement }: AnnouncementProps) => {
+	const { t } = useTranslation()
+
 	return (
 		<div
 			style={{
@@ -28,37 +31,24 @@ const Announcement = ({ version, hideAnnouncement }: AnnouncementProps) => {
 				style={{ position: "absolute", top: "8px", right: "8px" }}>
 				<span className="codicon codicon-close"></span>
 			</VSCodeButton>
-			<h2 style={{ margin: "0 0 8px" }}>🎉{"  "}Introducing Roo Code 3.2</h2>
+			<h2 style={{ margin: "0 0 8px" }}>{t("announcement.title")}</h2>
 
-			<p style={{ margin: "5px 0px" }}>
-				Our biggest update yet is here - we're officially changing our name from Roo Cline to Roo Code! After
-				growing beyond 50,000 installations, we're ready to chart our own course. Our heartfelt thanks to
-				everyone in the Cline community who helped us reach this milestone.
-			</p>
+			<p style={{ margin: "5px 0px" }}>{t("update")}</p>
+			<h3 style={{ margin: "12px 0 8px" }}>{t("customModesTitle")}</h3>
+			<Trans
+				i18nKey="customModesIntro"
+				components={{
+					Icon: <span className="codicon codicon-notebook" style={{ fontSize: "10px" }}></span>,
+				}}
+			/>
 
-			<h3 style={{ margin: "12px 0 8px" }}>Custom Modes: Celebrating Our New Identity</h3>
-			<p style={{ margin: "5px 0px" }}>
-				To mark this new chapter, we're introducing the power to shape Roo Code into any role you need! Create
-				specialized personas and create an entire team of agents with deeply customized prompts:
-				<ul style={{ margin: "4px 0 6px 20px", padding: 0 }}>
-					<li>QA Engineers who write thorough test cases and catch edge cases</li>
-					<li>Product Managers who excel at user stories and feature prioritization</li>
-					<li>UI/UX Designers who craft beautiful, accessible interfaces</li>
-					<li>Code Reviewers who ensure quality and maintainability</li>
-				</ul>
-				Just click the <span className="codicon codicon-notebook" style={{ fontSize: "10px" }}></span> icon to
-				get started with Custom Modes!
-			</p>
-
-			<h3 style={{ margin: "12px 0 8px" }}>Join Us for the Next Chapter</h3>
-			<p style={{ margin: "5px 0px" }}>
-				We can't wait to see how you'll push Roo Code's potential even further! Share your custom modes and join
-				the discussion at{" "}
-				<VSCodeLink href="https://www.reddit.com/r/RooCode" style={{ display: "inline" }}>
-					reddit.com/r/RooCode
-				</VSCodeLink>
-				.
-			</p>
+			<h3 style={{ margin: "12px 0 8px" }}>{t("nextChapterInvitation")}</h3>
+			<Trans
+				i18nKey="shareCustomModes"
+				components={{
+					RedditLink: <VSCodeLink href="https://www.reddit.com/r/RooCode" style={{ display: "inline" }} />,
+				}}
+			/>
 		</div>
 	)
 }

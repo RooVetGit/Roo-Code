@@ -1,0 +1,417 @@
+{
+	"hiImRoo": "你好，我是 Roo！",
+	"taskDescription": "由于最新的代理编码能力突破以及可用工具的支持，我能够完成各种任务，包括创建和编辑文件、探索复杂的项目、使用浏览器以及执行终端命令（当然，需要您的许可）。我甚至可以使用 MCP 来创建新工具并扩展我的能力。",
+	"apiProviderNeeded": "要开始使用，本扩展需要一个 API 提供者。",
+	"letsGoButton": "开始吧！",
+	"update": "我们最大的一次更新来了——我们正式将名称从 Roo Cline 更改为 Roo Code！在安装量超过 50,000 次后，我们准备好独立航行。衷心感谢 Cline 社区的每一位成员，感谢你们帮助我们达成这个里程碑。",
+	"customModesTitle": "自定义模式：庆祝我们的新身份",
+	"customModesIntro": "为标志这个新篇章，我们正在引入将 Roo Code 塑造成你所需角色的强大功能！创建专属角色，并通过深度定制的提示词组建一整个代理团队：<ul><li>编写详尽测试用例并捕捉边缘案例的 QA 工程师</li><li>擅长用户故事和功能优先级排序的产品经理</li><li>打造美观且无障碍界面的 UI/UX 设计师</li><li>确保代码质量和可维护性的代码审查员</li></ul>只需点击 <Icon></Icon> 图标即可开始使用自定义模式！",
+	"nextChapterInvitation": "加入我们，共同开启下一章",
+	"shareCustomModes": "我们迫不及待地想看看你如何进一步挖掘 Roo Code 的潜力！分享你的自定义模式并加入讨论，访问 <RedditLink>reddit.com/r/RooCode</RedditLink>。",
+	"feedbackMessage": "如果你有任何问题或反馈，请随时在 <GitHubLink>github.com/RooVetGit/Roo-Code</GitHubLink> 上提交问题，或加入 <RedditLink>reddit.com/r/RooCode</RedditLink>",
+	"mcpDescription": "<MCPLink>模型上下文协议</MCPLink> 支持与本地运行的 MCP 服务器通信，这些服务器提供了额外的工具和资源，以扩展 Roo 的功能。你可以使用 <CommunityServersLink>社区创建的服务器</CommunityServersLink>，或请求 Roo 创建特定于你工作流程的新工具（例如：\"添加一个获取最新 npm 文档的工具\"）。",
+	"chat": {
+		"intro": {
+			"title": "Roo 可以为你做些什么？",
+			"description": "借助最新的代理编码能力，我可以逐步处理复杂的软件开发任务。通过创建和编辑文件、探索复杂项目、使用浏览器和执行终端命令（在您授权后），我可以提供超出代码补全或技术支持的帮助。我甚至可以使用 MCP 创建新工具并扩展自己的能力。"
+		},
+		"input": {
+			"task": "在此输入任务...",
+			"message": "在此输入消息...",
+			"context": "@ 添加上下文，/ 切换模式",
+			"images": ", 按住 shift 拖入图片"
+		},
+		"buttons": {
+			"save": "保存",
+			"reject": "拒绝",
+			"approve": "批准",
+			"runCommand": "运行命令",
+			"proceedWhileRunning": "继续运行",
+			"startNewTask": "开始新任务",
+			"resumeTask": "恢复任务",
+			"terminate": "终止",
+			"retry": "重试",
+			"cancel": "取消"
+		}
+	},
+	"announcement": {
+		"title": "🎉  欢迎使用 Roo Code 3.2"
+	},
+	"instructionsText": "说明也可以从您的工作空间中的 <link /> 加载。",
+	"settings": {
+		"title": "设置",
+		"done": "完成",
+		"deleteApiConfiguration": "您确定要删除此配置文件吗？",
+		"deleteCustomMode": "您确定要删除此自定义模式吗？",
+		"resetState": "您确定要重置扩展中的所有状态和机密存储吗？此操作无法撤销。",
+		"language": {
+			"title": "语言设置",
+			"select": "显示语言",
+			"description": "选择您偏好的显示语言。更改将立即生效。"
+		},
+		"provider": {
+			"title": "服务提供商设置",
+			"apiConfig": "API 配置",
+			"modelConfig": "模型配置"
+		},
+		"apiConfigManager": {
+			"title": "配置文件",
+			"description": "保存不同的 API 配置以快速切换提供商和设置",
+			"newProfile": "新建配置文件",
+			"enterNewName": "输入新名称",
+			"enterProfileName": "输入配置名称",
+			"addProfile": "添加配置",
+			"renameProfile": "重命名配置",
+			"deleteProfile": "删除配置",
+			"cannotDeleteOnly": "无法删除唯一的配置",
+			"save": "保存",
+			"cancel": "取消",
+			"createProfile": "创建配置",
+			"closeDialog": "关闭对话框",
+			"errors": {
+				"nameEmpty": "名称不能为空",
+				"nameExists": "已存在同名配置文件"
+			}
+		},
+		"autoApprove": {
+			"title": "自动批准设置",
+			"description": "启用后，Roo 将自动查看目录内容并读取文件，无需您点击批准按钮。",
+			"readOnly": {
+				"title": "始终批准只读操作",
+				"description": "启用时，Roo 将自动查看目录内容并读取文件，无需您点击批准按钮。"
+			},
+			"write": {
+				"title": "始终批准写入操作",
+				"description": "自动创建和编辑文件，无需批准",
+				"delay": "写入后延迟以允许诊断检测潜在问题"
+			},
+			"browser": {
+				"title": "始终批准浏览器操作",
+				"description": "自动执行浏览器操作，无需批准\n注意：仅在模型支持计算机使用时适用"
+			},
+			"mcp": {
+				"title": "始终批准 MCP 工具",
+				"description": "启用单个 MCP 工具的自动批准（需要同时启用此设置和工具的单独\"始终允许\"复选框）"
+			},
+			"modeSwitch": {
+				"title": "始终批准模式切换和任务创建",
+				"description": "自动在不同的 AI 模式之间切换并创建新任务，无需批准"
+			},
+			"execute": {
+				"title": "始终批准允许的执行操作",
+				"description": "自动执行允许的终端命令，无需批准"
+			},
+			"retry": {
+				"title": "始终重试失败的 API 请求",
+				"description": "当服务器返回错误响应时自动重试失败的 API 请求",
+				"delay": "重试请求前的延迟时间"
+			}
+		},
+		"browser": {
+			"title": "浏览器设置",
+			"viewport": {
+				"title": "视口大小",
+				"description": "选择浏览器交互的视口大小。这会影响网站的显示和交互方式。"
+			},
+			"screenshot": {
+				"title": "截图质量",
+				"description": "调整浏览器截图的 WebP 质量。更高的值提供更清晰的截图，但会增加令牌使用量。"
+			}
+		},
+		"notification": {
+			"title": "通知设置",
+			"sound": {
+				"title": "启用音效",
+				"description": "启用后，Roo 将为通知和事件播放音效。",
+				"volume": "音量"
+			}
+		},
+		"advanced": {
+			"title": "高级设置",
+			"rateLimit": {
+				"title": "速率限制",
+				"description": "API 请求之间的最小时间间隔。"
+			},
+			"terminalOutput": {
+				"title": "终端输出限制",
+				"description": "执行命令时包含的最大行数。超过时将从中间删除行，以节省令牌。"
+			},
+			"diff": {
+				"title": "启用差异化编辑",
+				"description": "启用后，Roo 将能够更快速地编辑文件，并自动拒绝被截断的完整文件写入。最佳效果适用于最新的 Claude 3.5 Sonnet 模型。",
+				"matchPrecision": {
+					"title": "匹配精度",
+					"description": "此滑块控制应用差异时代码段必须匹配的精确度。较低的值允许更灵活的匹配，但会增加不正确替换的风险。谨慎使用低于 100% 的值。"
+				},
+				"unifiedStrategy": {
+					"title": "使用实验性统一差异策略",
+					"description": "启用实验性的统一 diff 策略。该策略可能会减少因模型错误导致的重试次数，但可能会引发意外行为或不正确的编辑。仅在您了解风险并愿意仔细审查所有更改时启用。",
+					"warning": "警告：这是一个实验性功能，可能会导致意外行为。"
+				}
+			},
+			"searchReplace": {
+				"title": "使用实验性搜索和替换工具",
+				"description": "启用实验性的查找和替换工具，允许 Roo 在一次请求中替换多个搜索词实例。",
+				"warning": "警告：这是一个实验性功能，可能会导致意外行为。"
+			},
+			"insertBlock": {
+				"title": "使用实验性插入内容工具",
+				"description": "启用实验性的插入内容工具，允许 Roo 在特定行号插入内容，而无需创建差异。"
+			},
+			"checkpoints": {
+				"title": "启用实验性检查点",
+				"description": "启用时，Roo 会在工作区中的文件被修改、添加或删除时保存一个检查点，使您可以轻松地恢复到之前的状态。"
+			},
+			"reset": {
+				"title": "重置状态",
+				"description": "这将重置扩展中的所有全局状态和本地存储。"
+			}
+		}
+	},
+	"buttons": {
+		"newTask": "新建任务",
+		"mcpServers": "MCP 服务器",
+		"prompts": "提示词",
+		"history": "历史记录",
+		"openInEditor": "在编辑器中打开",
+		"settings": "设置"
+	},
+	"commands": {
+		"explainCode": "解释代码",
+		"fixCode": "修复代码",
+		"improveCode": "改进代码",
+		"addToContext": "添加到上下文",
+		"terminalCommands": {
+			"addToContext": "添加终端内容到上下文",
+			"fixCommand": "修复此命令",
+			"explainCommand": "解释此命令",
+			"fixCommandInCurrentTask": "修复此命令（当前任务）",
+			"explainCommandInCurrentTask": "解释此命令（当前任务）"
+		}
+	},
+	"history": {
+		"promptCopied": "提示已复制到剪贴板",
+		"title": "历史任务记录",
+		"done": "完成",
+		"searchPlaceholder": "模糊搜索历史任务...",
+		"clearSearch": "清除搜索",
+		"sort": {
+			"newest": "最新",
+			"oldest": "最旧",
+			"mostExpensive": "花费最多",
+			"mostTokens": "最多 Token",
+			"mostRelevant": "最相关"
+		},
+		"copyPrompt": "复制提示",
+		"deleteTask": "删除任务",
+		"tokens": "Token 数",
+		"cache": "缓存",
+		"apiCost": "API 消耗",
+		"export": "导出当前任务",
+		"recentTasks": "最近的任务"
+	},
+	"autoApprove": {
+		"title": "自动批准：",
+		"description": "自动批准允许 Roo Code 执行操作而无需请求权限。仅在您完全信任的操作中启用此功能。",
+		"readFiles": {
+			"label": "读取文件和目录",
+			"shortName": "读取",
+			"description": "允许访问计算机上的任何文件。"
+		},
+		"editFiles": {
+			"label": "编辑文件",
+			"shortName": "编辑",
+			"description": "允许修改计算机上的任何文件。"
+		},
+		"executeCommands": {
+			"label": "执行批准的命令",
+			"shortName": "命令",
+			"description": "允许执行批准的终端命令。您可以在设置面板中进行配置。"
+		},
+		"useBrowser": {
+			"label": "使用浏览器",
+			"shortName": "浏览器",
+			"description": "允许启动和与无头浏览器中的任何网站进行交互。"
+		},
+		"useMcp": {
+			"label": "使用 MCP 服务器",
+			"shortName": "MCP",
+			"description": "允许使用配置的 MCP 服务器，这些服务器可能修改文件系统或与 API 交互。"
+		},
+		"switchModes": {
+			"label": "切换模式和创建任务",
+			"shortName": "模式",
+			"description": "允许自动在不同的 AI 模式之间切换并创建新任务，无需批准。"
+		},
+		"retryRequests": {
+			"label": "重试失败的请求",
+			"shortName": "重试",
+			"description": "当服务器返回错误响应时自动重试失败的 API 请求。"
+		}
+	},
+	"promptsView": {
+		"promptCustomInstructions": "特定于 {{modeName}} 模式的自定义说明也可以从 <span>{{fileName}}</span> 在您的工作区加载。",
+		"preferredLanguage": "首选语言",
+		"customInstructions": "所有模式的自定义指令",
+		"modeSpecificPrompts": "模式",
+		"createNewMode": "创建新模式",
+		"doneEditing": "编辑完成",
+		"editTools": "编辑工具",
+		"createModeDescription": "点击 + 创建一个新的自定义模式，或者直接在聊天中告诉 Roo 为您创建一个！",
+		"roleDefinitionDescription": "定义 Roo 在此模式下的专长和个性。这个描述决定了 Roo 如何展现自己并处理任务。",
+		"preferredLanguageDescription": "选择 Cline 用于沟通的语言。",
+		"customInstructionsDescription": "这些说明适用于所有模式。它们提供了一组基本行为，可以通过以下特定于模式的说明进行增强。",
+		"apiConfigurationDescription": "选择此模式要使用的 API 配置",
+		"toolsDescription": "内置模式的工具无法修改",
+		"editModesConfiguration": "编辑模式配置",
+		"deleteMode": "删除模式",
+		"roleDefinition": "角色定义",
+		"resetToDefault": "重置为默认",
+		"apiConfiguration": "API 配置",
+		"availableTools": "可用工具",
+		"modeSpecificCustomInstructions": "特定模式的自定义指令",
+		"previewSystemPrompt": "预览系统提示",
+		"copySystemPrompt": "复制系统提示到剪贴板",
+		"supportPrompts": "支持提示",
+		"prompt": "提示",
+		"resetPromptTitle": "将 {{activeSupportTab}} 提示重置为默认",
+		"enhancePrompt": "预览提示词增强",
+		"enhancementApiConfig": "增强提示的 API 配置",
+		"enhancementCurrentlyApiConfig": "使用当前选定的 API 配置",
+		"enhancementApiConfigDescription": "您可以选择一个 API 配置来始终用于增强提示，\n或者只使用当前选定的配置",
+		"testEnhancementPrompt": "输入提示来测试提示增强功能",
+		"createMode": "创建模式",
+		"cancel": "取消",
+		"done": "完成",
+		"name": "名称",
+		"slug": "标识符",
+		"roleDefinitionLabel": "角色定义",
+		"customInstructionsLabel": "自定义指令",
+		"tools": "工具",
+		"addBehavioralGuidelines": "为该模式添加行为准则",
+		"openFile": "打开或创建空文件",
+		"createModeDialog": {
+			"title": "创建新模式",
+			"baseNamePrefix": "新的自定义模式名字",
+			"slug": {
+				"title": "模式唯一标识符",
+				"description": "标识符用于 URL 和文件名。它应该是小写的，只包含字母、数字和连字符。"
+			},
+			"roleDefinition": {
+				"title": "角色定义",
+				"description": "定义 Roo 在此模式下的专长和个性。",
+				"global": {
+					"title": "全局",
+					"description": "在所有工作区中可用"
+				},
+				"specific": {
+					"title": "项目特定（.roomodes）",
+					"description": "仅在此工作区中可用，优先于全局设置"
+				}
+			},
+			"tools": {
+				"title": "可用工具",
+				"description": "选择此模式可以使用的工具。"
+			},
+			"customInstructions": {
+				"title": "自定义说明",
+				"description": "为该模式添加行为准则。"
+			}
+		},
+		"close": "关闭"
+	},
+	"supportPrompt": {
+		"ENHANCE": {
+			"label": "增强提示",
+			"description": "使用提示增强以获取针对您的输入的定制建议或改进。这确保 Roo 理解您的意图并提供最佳响应。通过聊天中的 ✨ 图标可用。"
+		},
+		"EXPLAIN": {
+			"label": "解释代码",
+			"description": "获取代码片段、函数或整个文件的详细解释。适用于理解复杂代码或学习新模式。在代码操作（编辑器中的灯泡图标）和编辑器上下文菜单（右键点击选定代码）中可用。"
+		},
+		"FIX": {
+			"label": "修复问题",
+			"description": "获取帮助识别和解决错误、错误或代码质量问题。提供逐步解决问题的指导。在代码操作（编辑器中的灯泡图标）和编辑器上下文菜单（右键点击选定代码）中可用。"
+		},
+		"IMPROVE": {
+			"label": "改进代码",
+			"description": "接收代码优化、最佳实践和架构改进的建议，同时保持功能。在代码操作（编辑器中的灯泡图标）和编辑器上下文菜单（右键点击选定代码）中可用。"
+		},
+		"ADD_TO_CONTEXT": {
+			"label": "添加到上下文",
+			"description": "将上下文添加到当前任务或对话中。适用于提供附加信息或澄清。在代码操作（编辑器中的灯泡图标）和编辑器上下文菜单（右键点击选定代码）中可用。"
+		},
+		"TERMINAL_ADD_TO_CONTEXT": {
+			"label": "将终端内容添加到上下文",
+			"description": "将终端输出添加到当前任务或对话中。适用于提供命令输出或日志。在终端上下文菜单（右键点击选定终端内容）中可用。"
+		},
+		"TERMINAL_FIX": {
+			"label": "修复终端命令",
+			"description": "获取帮助修复失败或需要改进的终端命令。在终端上下文菜单（右键点击选定终端内容）中可用。"
+		},
+		"TERMINAL_EXPLAIN": {
+			"label": "解释终端命令",
+			"description": "获取终端命令及其输出的详细解释。在终端上下文菜单（右键点击选定终端内容）中可用。"
+		}
+	},
+	"tools": {
+		"read": {
+			"description": "读取文件"
+		},
+		"edit": {
+			"description": "编辑文件"
+		},
+		"browser": {
+			"description": "使用浏览器"
+		},
+		"command": {
+			"description": "运行命令"
+		},
+		"mcp": {
+			"description": "使用MCP"
+		}
+	},
+	"mcp": {
+		"title": "MCP 服务器",
+		"done": "完成",
+		"enableServerCreation": {
+			"title": "启用 MCP 服务器创建",
+			"description": "启用时，Roo 可以通过类似 \"添加一个新工具到...\" 的命令帮助您创建新的 MCP 服务器。如果您不需要创建 MCP 服务器，可以禁用此功能以减少 Roo 的令牌使用。"
+		},
+		"tools": "工具",
+		"resources": "资源",
+		"noTools": "未找到工具",
+		"noResources": "未找到资源",
+		"networkTimeout": {
+			"title": "网络超时",
+			"description": "等待服务器响应的最长时间",
+			"options": {
+				"15s": "15 秒",
+				"30s": "30 秒",
+				"1m": "1 分钟",
+				"5m": "5 分钟",
+				"10m": "10 分钟",
+				"15m": "15 分钟",
+				"30m": "30 分钟",
+				"60m": "60 分钟"
+			}
+		},
+		"editSettings": "编辑 MCP 设置",
+		"retryConnection": "重试连接",
+		"retrying": "正在重试...",
+		"enableToggle": {
+			"title": "启用 MCP 服务器",
+			"description": "启用时，Roo 将能够与 MCP 服务器互动，以实现更高级的功能。如果您没有使用 MCP，可以禁用此功能以减少 Roo 的令牌使用。"
+		},
+		"resource": {
+			"noDescription": "暂无描述",
+			"returns": "返回类型",
+			"unknown": "未知"
+		},
+		"tool": {
+			"alwaysAllow": "始终允许",
+			"parameters": "参数",
+			"noDescription": "暂无描述"
+		}
+	}
+}

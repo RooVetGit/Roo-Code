@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useDeepCompareEffect, useEvent, useMount } from "react-use"
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
 import styled from "styled-components"
+import { useTranslation } from "react-i18next"
 import {
 	ClineAsk,
 	ClineMessage,
@@ -39,6 +40,7 @@ interface ChatViewProps {
 export const MAX_IMAGES_PER_MESSAGE = 20 // Anthropic limits to 20 images
 
 const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryView }: ChatViewProps) => {
+	const { t } = useTranslation()
 	const {
 		version,
 		clineMessages: messages,
@@ -878,12 +880,12 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	useEvent("wheel", handleWheel, window, { passive: true }) // passive improves scrolling performance
 
 	const placeholderText = useMemo(() => {
-		const baseText = task ? "Type a message..." : "Type your task here..."
-		const contextText = "(@ to add context, / to switch modes"
-		const imageText = shouldDisableImages ? "" : ", hold shift to drag in images"
-		const helpText = imageText ? `\n${contextText}${imageText})` : `\n${contextText})`
+		const baseText = task ? t("chat.input.message") : t("chat.input.task")
+		const contextText = t("chat.input.context")
+		const imageText = shouldDisableImages ? "" : t("chat.input.images")
+		const helpText = imageText ? `\n${contextText}${imageText}` : `\n${contextText}`
 		return baseText + helpText
-	}, [task, shouldDisableImages])
+	}, [task, shouldDisableImages, t])
 
 	const itemContent = useCallback(
 		(index: number, messageOrGroup: ClineMessage | ClineMessage[]) => {
@@ -1000,14 +1002,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 					}}>
 					{showAnnouncement && <Announcement version={version} hideAnnouncement={hideAnnouncement} />}
 					<div style={{ padding: "0 20px", flexShrink: 0 }}>
-						<h2>What can Roo do for you?</h2>
-						<p>
-							Thanks to the latest breakthroughs in agentic coding capabilities, I can handle complex
-							software development tasks step-by-step. With tools that let me create & edit files, explore
-							complex projects, use the browser, and execute terminal commands (after you grant
-							permission), I can assist you in ways that go beyond code completion or tech support. I can
-							even use MCP to create new tools and extend my own capabilities.
-						</p>
+						<h2>{t("chat.intro.title")}</h2>
+						<p>{t("chat.intro.description")}</p>
 					</div>
 					{taskHistory.length > 0 && <HistoryPreview showHistoryView={showHistoryView} />}
 				</div>

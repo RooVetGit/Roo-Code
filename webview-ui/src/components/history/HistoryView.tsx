@@ -10,6 +10,7 @@ import { formatLargeNumber } from "../../utils/format"
 import { highlightFzfMatch } from "../../utils/highlight"
 import { useCopyToClipboard } from "../../utils/clipboard"
 import { Button } from "../ui"
+import { useTranslation } from "react-i18next"
 
 type HistoryViewProps = {
 	onDone: () => void
@@ -18,6 +19,7 @@ type HistoryViewProps = {
 type SortOption = "newest" | "oldest" | "mostExpensive" | "mostTokens" | "mostRelevant"
 
 const HistoryView = ({ onDone }: HistoryViewProps) => {
+	const { t } = useTranslation()
 	const { taskHistory } = useExtensionState()
 	const [searchQuery, setSearchQuery] = useState("")
 	const [sortOption, setSortOption] = useState<SortOption>("newest")
@@ -119,14 +121,14 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 					alignItems: "center",
 					padding: "10px 17px 10px 20px",
 				}}>
-				<h3 style={{ color: "var(--vscode-foreground)", margin: 0 }}>History</h3>
-				<VSCodeButton onClick={onDone}>Done</VSCodeButton>
+				<h3 style={{ color: "var(--vscode-foreground)", margin: 0 }}>{t("history.title")}</h3>
+				<VSCodeButton onClick={onDone}>{t("history.done")}</VSCodeButton>
 			</div>
 			<div style={{ padding: "5px 17px 6px 17px" }}>
 				<div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
 					<VSCodeTextField
 						style={{ width: "100%" }}
-						placeholder="Fuzzy search history..."
+						placeholder={t("history.searchPlaceholder")}
 						value={searchQuery}
 						onInput={(e) => {
 							const newValue = (e.target as HTMLInputElement)?.value
@@ -144,7 +146,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 						{searchQuery && (
 							<div
 								className="input-icon-button codicon codicon-close"
-								aria-label="Clear search"
+								aria-label={t("history.clearSearch")}
 								onClick={() => setSearchQuery("")}
 								slot="end"
 								style={{
@@ -161,15 +163,15 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 						value={sortOption}
 						role="radiogroup"
 						onChange={(e) => setSortOption((e.target as HTMLInputElement).value as SortOption)}>
-						<VSCodeRadio value="newest">Newest</VSCodeRadio>
-						<VSCodeRadio value="oldest">Oldest</VSCodeRadio>
-						<VSCodeRadio value="mostExpensive">Most Expensive</VSCodeRadio>
-						<VSCodeRadio value="mostTokens">Most Tokens</VSCodeRadio>
+						<VSCodeRadio value="newest">{t("history.sort.newest")}</VSCodeRadio>
+						<VSCodeRadio value="oldest">{t("history.sort.oldest")}</VSCodeRadio>
+						<VSCodeRadio value="mostExpensive">{t("history.sort.mostExpensive")}</VSCodeRadio>
+						<VSCodeRadio value="mostTokens">{t("history.sort.mostTokens")}</VSCodeRadio>
 						<VSCodeRadio
 							value="mostRelevant"
 							disabled={!searchQuery}
 							style={{ opacity: searchQuery ? 1 : 0.5 }}>
-							Most Relevant
+							{t("history.sort.mostRelevant")}
 						</VSCodeRadio>
 					</VSCodeRadioGroup>
 				</div>
@@ -225,7 +227,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 										<Button
 											variant="ghost"
 											size="sm"
-											title="Delete Task"
+											title={t("history.deleteTask")}
 											onClick={(e) => {
 												e.stopPropagation()
 												handleDeleteHistoryItem(item.id)
@@ -269,7 +271,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 													fontWeight: 500,
 													color: "var(--vscode-descriptionForeground)",
 												}}>
-												Tokens:
+												{t("history.tokens")}:
 											</span>
 											<span
 												data-testid="tokens-in"
@@ -325,7 +327,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 													fontWeight: 500,
 													color: "var(--vscode-descriptionForeground)",
 												}}>
-												Cache:
+												{t("history.cache")}:
 											</span>
 											<span
 												data-testid="cache-writes"
@@ -380,7 +382,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 														fontWeight: 500,
 														color: "var(--vscode-descriptionForeground)",
 													}}>
-													API Cost:
+													{t("history.apiCost")}:
 												</span>
 												<span style={{ color: "var(--vscode-descriptionForeground)" }}>
 													${item.totalCost?.toFixed(4)}
@@ -404,26 +406,33 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 
 const CopyButton = ({ itemTask }: { itemTask: string }) => {
 	const { showCopyFeedback, copyWithFeedback } = useCopyToClipboard()
-
+	const { t } = useTranslation()
 	return (
-		<Button variant="ghost" size="icon" title="Copy Prompt" onClick={(e) => copyWithFeedback(itemTask, e)}>
+		<Button
+			variant="ghost"
+			size="icon"
+			title={t("history.copyPrompt")}
+			onClick={(e) => copyWithFeedback(itemTask, e)}>
 			{showCopyFeedback ? <span className="codicon codicon-check" /> : <span className="codicon codicon-copy" />}
 		</Button>
 	)
 }
 
-const ExportButton = ({ itemId }: { itemId: string }) => (
-	<Button
-		data-testid="export"
-		variant="ghost"
-		size="icon"
-		title="Export Task"
-		onClick={(e) => {
-			e.stopPropagation()
-			vscode.postMessage({ type: "exportTaskWithId", text: itemId })
-		}}>
-		<span className="codicon codicon-cloud-download" />
-	</Button>
-)
+const ExportButton = ({ itemId }: { itemId: string }) => {
+	const { t } = useTranslation()
+	return (
+		<Button
+			data-testid="export"
+			variant="ghost"
+			size="icon"
+			title={t("history.export")}
+			onClick={(e) => {
+				e.stopPropagation()
+				vscode.postMessage({ type: "exportTaskWithId", text: itemId })
+			}}>
+			<span className="codicon codicon-cloud-download" />
+		</Button>
+	)
+}
 
 export default memo(HistoryView)

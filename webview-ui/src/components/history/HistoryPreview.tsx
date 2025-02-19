@@ -1,4 +1,5 @@
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
+import { useTranslation } from "react-i18next"
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import { vscode } from "../../utils/vscode"
 import { memo } from "react"
@@ -10,6 +11,7 @@ type HistoryPreviewProps = {
 }
 
 const HistoryPreview = ({ showHistoryView }: HistoryPreviewProps) => {
+	const { t } = useTranslation()
 	const { taskHistory } = useExtensionState()
 	const { showCopyFeedback, copyWithFeedback } = useCopyToClipboard()
 	const handleHistorySelect = (id: string) => {
@@ -90,7 +92,7 @@ const HistoryPreview = ({ showHistoryView }: HistoryPreviewProps) => {
 						fontSize: "0.85em",
 						textTransform: "uppercase",
 					}}>
-					Recent Tasks
+					{t("history.recentTasks")}
 				</span>
 			</div>
 
