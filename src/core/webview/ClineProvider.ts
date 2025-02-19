@@ -107,6 +107,25 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			.catch((error) => {
 				this.outputChannel.appendLine(`Failed to initialize MCP Hub: ${error}`)
 			})
+
+		// 监听项目任务文件变化
+		const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.fsPath
+		if (workspaceRoot) {
+			const tasksPath = path.join(workspaceRoot, ".roocode", "tasks")
+			const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(tasksPath, "**/*.json"))
+
+			watcher.onDidChange(() => {
+				this.postStateToWebview()
+			})
+			watcher.onDidCreate(() => {
+				this.postStateToWebview()
+			})
+			watcher.onDidDelete(() => {
+				this.postStateToWebview()
+			})
+
+			this.disposables.push(watcher)
+		}
 	}
 
 	// Adds a new Cline instance to clineStack, marking the start of a new task.
@@ -2167,28 +2186,57 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		uiMessagesFilePath: string
 		apiConversationHistory: Anthropic.MessageParam[]
 	}> {
-		const history = ((await this.getGlobalState("taskHistory")) as HistoryItem[] | undefined) || []
-		const historyItem = history.find((item) => item.id === id)
-		if (historyItem) {
-			const taskDirPath = path.join(this.contextProxy.globalStorageUri.fsPath, "tasks", id)
-			const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
-			const uiMessagesFilePath = path.join(taskDirPath, GlobalFileNames.uiMessages)
-			const fileExists = await fileExistsAtPath(apiConversationHistoryFilePath)
-			if (fileExists) {
-				const apiConversationHistory = JSON.parse(await fs.readFile(apiConversationHistoryFilePath, "utf8"))
-				return {
-					historyItem,
-					taskDirPath,
-					apiConversationHistoryFilePath,
-					uiMessagesFilePath,
-					apiConversationHistory,
-				}
-			}
+		const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.fsPath
+		if (!workspaceRoot) {
+			throw new Error("No workspace folder found")
 		}
-		// if we tried to get a task that doesn't exist, remove it from state
-		// FIXME: this seems to happen sometimes when the json file doesnt save to disk for some reason
-		await this.deleteTaskFromState(id)
-		throw new Error("Task not found")
+		const taskDirPath = path.join(workspaceRoot, ".roocode", "tasks", id)
+		const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
+		const uiMessagesFilePath = path.join(taskDirPath, GlobalFileNames.uiMessages)
+
+		// 从项目任务列表中获取 historyItem
+		const projectTasks = await this.getProjectTaskHistory()
+		const historyItem = projectTasks.find((item) => item.id === id)
+		if (!historyItem) {
+			// 如果在项目任务中找不到，说明任务不存在或不属于当前项目
+			throw new Error("Task not found in current project")
+		}
+
+		// 读取 API 会话历史
+		let apiConversationHistory: Anthropic.MessageParam[] = []
+		if (await fileExistsAtPath(apiConversationHistoryFilePath)) {
+			apiConversationHistory = JSON.parse(await fs.readFile(apiConversationHistoryFilePath, "utf8"))
+		}
+
+		// 读取 UI 消息
+		//let uiMessages: ClineMessage[] = []
+		//if (await fileExistsAtPath(uiMessagesFilePath)) {
+		//	uiMessages = JSON.parse(await fs.readFile(uiMessagesFilePath, "utf8"))
+		//}
+
+		// 如果两个文件都不存在，说明任务不存在
+		if (
+			!(await fileExistsAtPath(apiConversationHistoryFilePath)) &&
+			!(await fileExistsAtPath(uiMessagesFilePath))
+		) {
+			throw new Error("Task not found")
+		}
+
+		return {
+			historyItem,
+			taskDirPath,
+			apiConversationHistoryFilePath,
+			uiMessagesFilePath,
+			apiConversationHistory,
+		}
+	}
+
+	private async getProjectTaskHistory(): Promise<HistoryItem[]> {
+		// 直接从项目状态中获取任务历史
+		const tasks = (await this.getProjectState<HistoryItem[]>("taskHistory")) || []
+
+		// 确保任务列表按时间戳排序
+		return tasks.sort((a, b) => b.ts - a.ts)
 	}
 
 	async showTaskWithId(id: string) {
@@ -2249,12 +2297,16 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	async deleteTaskFromState(id: string) {
-		// Remove the task from history
-		const taskHistory = ((await this.getGlobalState("taskHistory")) as HistoryItem[]) || []
-		const updatedTaskHistory = taskHistory.filter((task) => task.id !== id)
-		await this.updateGlobalState("taskHistory", updatedTaskHistory)
+		// 从项目状态中获取任务历史
+		const tasks = (await this.getProjectState<HistoryItem[]>("taskHistory")) || []
 
-		// Notify the webview that the task has been deleted
+		// 移除指定任务
+		const updatedTasks = tasks.filter((task) => task.id !== id)
+
+		// 更新项目状态
+		await this.updateProjectState("taskHistory", updatedTasks)
+
+		// 通知 webview 更新状态
 		await this.postStateToWebview()
 	}
 
@@ -2331,9 +2383,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				? (taskHistory || []).find((item: HistoryItem) => item.id === this.getCurrentCline()?.taskId)
 				: undefined,
 			clineMessages: this.getCurrentCline()?.clineMessages || [],
-			taskHistory: (taskHistory || [])
-				.filter((item: HistoryItem) => item.ts && item.task)
-				.sort((a: HistoryItem, b: HistoryItem) => b.ts - a.ts),
+			taskHistory: (await this.getProjectState<HistoryItem[]>("taskHistory")) || [],
 			soundEnabled: soundEnabled ?? false,
 			diffEnabled: diffEnabled ?? true,
 			enableCheckpoints: enableCheckpoints ?? true,
@@ -2531,17 +2581,63 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		}
 	}
 
-	async updateTaskHistory(item: HistoryItem): Promise<HistoryItem[]> {
-		const history = ((await this.getGlobalState("taskHistory")) as HistoryItem[] | undefined) || []
-		const existingItemIndex = history.findIndex((h) => h.id === item.id)
-
-		if (existingItemIndex !== -1) {
-			history[existingItemIndex] = item
-		} else {
-			history.push(item)
+	// 项目状态管理
+	private async getProjectStatePath(): Promise<string> {
+		const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.fsPath
+		if (!workspaceRoot) {
+			throw new Error("No workspace folder found")
 		}
-		await this.updateGlobalState("taskHistory", history)
-		return history
+		return path.join(workspaceRoot, ".roocode", "project_state.json")
+	}
+
+	private async getProjectState<T>(key: string): Promise<T | undefined> {
+		const statePath = await this.getProjectStatePath()
+		if (!(await fileExistsAtPath(statePath))) {
+			return undefined
+		}
+		const state = JSON.parse(await fs.readFile(statePath, "utf8"))
+		return state[key]
+	}
+
+	private async updateProjectState<T>(key: string, value: T): Promise<void> {
+		const statePath = await this.getProjectStatePath()
+		const stateDir = path.dirname(statePath)
+
+		// 确保目录存在
+		await fs.mkdir(stateDir, { recursive: true })
+
+		// 读取现有状态
+		let state: Record<string, any> = {}
+		if (await fileExistsAtPath(statePath)) {
+			state = JSON.parse(await fs.readFile(statePath, "utf8"))
+		}
+
+		// 更新状态
+		state[key] = value
+
+		// 写入文件
+		await fs.writeFile(statePath, JSON.stringify(state, null, 2))
+	}
+
+	async updateTaskHistory(item: HistoryItem): Promise<HistoryItem[]> {
+		// 获取现有任务历史
+		const tasks = (await this.getProjectState<HistoryItem[]>("taskHistory")) || []
+
+		// 更新或添加任务
+		const index = tasks.findIndex((t) => t.id === item.id)
+		if (index !== -1) {
+			tasks[index] = item
+		} else {
+			tasks.push(item)
+		}
+
+		// 按时间戳排序
+		tasks.sort((a, b) => b.ts - a.ts)
+
+		// 保存更新后的任务历史
+		await this.updateProjectState("taskHistory", tasks)
+
+		return tasks
 	}
 
 	// global

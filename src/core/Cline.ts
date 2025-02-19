@@ -278,11 +278,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 	// Storing task to disk for history
 
 	private async ensureTaskDirectoryExists(): Promise<string> {
-		const globalStoragePath = this.providerRef.deref()?.context.globalStorageUri.fsPath
-		if (!globalStoragePath) {
-			throw new Error("Global storage uri is invalid")
+		const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.fsPath
+		if (!workspaceRoot) {
+			throw new Error("No workspace folder found")
 		}
-		const taskDir = path.join(globalStoragePath, "tasks", this.taskId)
+		const taskDir = path.join(workspaceRoot, ".roocode", "tasks", this.taskId)
 		await fs.mkdir(taskDir, { recursive: true })
 		return taskDir
 	}
