@@ -83,6 +83,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	customModes: ModeConfig[]
 	setCustomModes: (value: ModeConfig[]) => void
 	setMaxOpenTabsContext: (value: number) => void
+	keepBrowserOpen: boolean
+	setKeepBrowserOpen: (value: boolean) => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -119,6 +121,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		autoApprovalEnabled: false,
 		customModes: [],
 		maxOpenTabsContext: 20,
+		keepBrowserOpen: false,
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
@@ -339,6 +342,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		handleInputChange,
 		setCustomModes: (value) => setState((prevState) => ({ ...prevState, customModes: value })),
 		setMaxOpenTabsContext: (value) => setState((prevState) => ({ ...prevState, maxOpenTabsContext: value })),
+		setKeepBrowserOpen: (value) => setState((prevState) => ({ ...prevState, keepBrowserOpen: value })),
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

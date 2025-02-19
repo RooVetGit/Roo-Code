@@ -95,6 +95,7 @@ export interface WebviewMessage {
 		| "checkpointRestore"
 		| "deleteMcpServer"
 		| "maxOpenTabsContext"
+		| "keepBrowserOpen"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
