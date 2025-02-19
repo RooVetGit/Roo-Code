@@ -941,6 +941,22 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						}
 						break
 					}
+					case "deleteMcpServer": {
+						if (!message.serverName) {
+							break
+						}
+
+						try {
+							this.outputChannel.appendLine(`Attempting to delete MCP server: ${message.serverName}`)
+							await this.mcpHub?.deleteServer(message.serverName)
+							this.outputChannel.appendLine(`Successfully deleted MCP server: ${message.serverName}`)
+						} catch (error) {
+							const errorMessage = error instanceof Error ? error.message : String(error)
+							this.outputChannel.appendLine(`Failed to delete MCP server: ${errorMessage}`)
+							// Error messages are already handled by McpHub.deleteServer
+						}
+						break
+					}
 					case "restartMcpServer": {
 						try {
 							await this.mcpHub?.restartConnection(message.text!)
@@ -2767,6 +2783,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						en: "English",
 						ar: "Arabic",
 						"pt-br": "Brazilian Portuguese",
+						ca: "Catalan",
 						cs: "Czech",
 						fr: "French",
 						de: "German",
