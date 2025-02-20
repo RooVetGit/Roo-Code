@@ -40,7 +40,7 @@ Using node bindings for tree-sitter is problematic in vscode extensions
 because of incompatibility with electron. Going the .wasm route has the 
 advantage of not having to build for multiple architectures.
 
-We use web-tree-sitter and tree-sitter-wasms which provides auto-updating prebuilt WASM binaries for tree-sitter's language parsers.
+We use web-tree-sitter and tree-sitter-wasms-roo which provides auto-updating prebuilt WASM binaries for tree-sitter's language parsers.
 
 This function loads WASM modules for relevant language parsers based on input files:
 1. Extracts unique file extensions
@@ -53,7 +53,7 @@ This approach optimizes performance by loading only necessary parsers once for a
 Sources:
 - https://github.com/tree-sitter/node-tree-sitter/issues/169
 - https://github.com/tree-sitter/node-tree-sitter/issues/168
-- https://github.com/Gregoor/tree-sitter-wasms/blob/main/README.md
+- https://github.com/Gregoor/tree-sitter-wasms-roo
 - https://github.com/tree-sitter/tree-sitter/blob/master/lib/binding_web/README.md
 - https://github.com/tree-sitter/tree-sitter/blob/master/lib/binding_web/test/query-test.js
 */
