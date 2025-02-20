@@ -53,7 +53,7 @@ This approach optimizes performance by loading only necessary parsers once for a
 Sources:
 - https://github.com/tree-sitter/node-tree-sitter/issues/169
 - https://github.com/tree-sitter/node-tree-sitter/issues/168
-- https://github.com/Gregoor/tree-sitter-wasms-roo
+- https://github.com/bobqianic/tree-sitter-wasms-roo
 - https://github.com/tree-sitter/tree-sitter/blob/master/lib/binding_web/README.md
 - https://github.com/tree-sitter/tree-sitter/blob/master/lib/binding_web/test/query-test.js
 */
