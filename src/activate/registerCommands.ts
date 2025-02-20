@@ -24,6 +24,9 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 			await provider.postStateToWebview()
 			await provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		},
+		"roo-cline.researchButtonClicked": () => {
+			provider.postMessageToWebview({ type: "action", action: "researchButtonClicked" })
+		},
 		"roo-cline.mcpButtonClicked": () => {
 			provider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
 		},
