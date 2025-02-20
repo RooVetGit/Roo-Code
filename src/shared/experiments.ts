@@ -2,6 +2,7 @@ export const EXPERIMENT_IDS = {
 	DIFF_STRATEGY: "experimentalDiffStrategy",
 	SEARCH_AND_REPLACE: "search_and_replace",
 	INSERT_BLOCK: "insert_content",
+	VSCODE_LM_TOOLS: "vscodeLmTools",
 } as const
 
 export type ExperimentKey = keyof typeof EXPERIMENT_IDS
@@ -30,9 +31,14 @@ export const experimentConfigsMap: Record<ExperimentKey, ExperimentConfig> = {
 	},
 	INSERT_BLOCK: {
 		name: "Use experimental insert content tool",
-
 		description:
 			"Enable the experimental insert content tool, allowing Roo to insert content at specific line numbers without needing to create a diff.",
+		enabled: false,
+	},
+	VSCODE_LM_TOOLS: {
+		name: "Use VSCode Language Model Tools",
+		description:
+			"Enable integration with VSCode's language model tools. This allows Roo to list and invoke VSCode's built-in AI capabilities.",
 		enabled: false,
 	},
 }
