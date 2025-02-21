@@ -3,6 +3,7 @@ export const EXPERIMENT_IDS = {
 	SEARCH_AND_REPLACE: "search_and_replace",
 	INSERT_BLOCK: "insert_content",
 	POWER_STEERING: "powerSteering",
+	NEXT_STEP_SUGGEST: "next_step_suggest",
 } as const
 
 export type ExperimentKey = keyof typeof EXPERIMENT_IDS
@@ -40,6 +41,12 @@ export const experimentConfigsMap: Record<ExperimentKey, ExperimentConfig> = {
 		name: 'Use experimental "power steering" mode',
 		description:
 			"When enabled, Roo will remind the model about the details of its current mode definition more frequently. This will lead to stronger adherence to role definitions and custom instructions, but will use more tokens per message.",
+		enabled: false,
+	},
+	NEXT_STEP_SUGGEST: {
+		name: "Use experimental next step suggest tool",
+		description:
+			"Enable the experimental next step suggest tool, allowing Roo to suggest prompts at task complete for you.",
 		enabled: false,
 	},
 }
