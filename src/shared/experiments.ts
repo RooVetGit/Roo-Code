@@ -2,6 +2,7 @@ export const EXPERIMENT_IDS = {
 	DIFF_STRATEGY: "experimentalDiffStrategy",
 	SEARCH_AND_REPLACE: "search_and_replace",
 	INSERT_BLOCK: "insert_content",
+	NEXT_STEP_SUGGEST: "next_step_suggest",
 } as const
 
 export type ExperimentKey = keyof typeof EXPERIMENT_IDS
@@ -33,6 +34,12 @@ export const experimentConfigsMap: Record<ExperimentKey, ExperimentConfig> = {
 
 		description:
 			"Enable the experimental insert content tool, allowing Roo to insert content at specific line numbers without needing to create a diff.",
+		enabled: false,
+	},
+	NEXT_STEP_SUGGEST: {
+		name: "Use experimental next step suggest tool",
+		description:
+			"Enable the experimental next step suggest tool, allowing Roo to suggest prompts at task complete for you.",
 		enabled: false,
 	},
 }
