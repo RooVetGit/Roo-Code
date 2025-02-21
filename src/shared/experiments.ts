@@ -4,7 +4,6 @@ export const EXPERIMENT_IDS = {
 	INSERT_BLOCK: "insert_content",
 	POWER_STEERING: "powerSteering",
 	MULTI_SEARCH_AND_REPLACE: "multi_search_and_replace",
-	NEXT_STEP_SUGGEST: "next_step_suggest",
 } as const
 
 export type ExperimentKey = keyof typeof EXPERIMENT_IDS
@@ -48,12 +47,6 @@ export const experimentConfigsMap: Record<ExperimentKey, ExperimentConfig> = {
 		name: "Use experimental multi block diff tool",
 		description:
 			"When enabled, Roo will use multi block diff tool. This will try to update multiple code blocks in the file in one request.",
-		enabled: false,
-	},
-	NEXT_STEP_SUGGEST: {
-		name: "Use experimental next step suggest tool",
-		description:
-			"Enable the experimental next step suggest tool, allowing Roo to suggest prompts at task complete for you.",
 		enabled: false,
 	},
 }
