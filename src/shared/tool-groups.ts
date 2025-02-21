@@ -20,6 +20,7 @@ export const TOOL_DISPLAY_NAMES = {
 	attempt_completion: "complete tasks",
 	switch_mode: "switch modes",
 	new_task: "create new task",
+	prompt_suggest: "suggest next steps",
 } as const
 
 // Define available tool groups
@@ -42,6 +43,9 @@ export const TOOL_GROUPS: Record<string, ToolGroupConfig> = {
 	modes: {
 		tools: ["switch_mode", "new_task"],
 		alwaysAvailable: true,
+	},
+	help_tool: {
+		tools: ["prompt_suggest"],
 	},
 }
 
@@ -74,4 +78,5 @@ export const GROUP_DISPLAY_NAMES: Record<ToolGroup, string> = {
 	browser: "Use Browser",
 	command: "Run Commands",
 	mcp: "Use MCP",
+	help_tool: "Helper Tool",
 }

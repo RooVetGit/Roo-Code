@@ -2,6 +2,7 @@ export const EXPERIMENT_IDS = {
 	DIFF_STRATEGY: "experimentalDiffStrategy",
 	SEARCH_AND_REPLACE: "search_and_replace",
 	INSERT_BLOCK: "insert_content",
+	PROMPT_SUGGEST: "prompt_suggest",
 } as const
 
 export type ExperimentKey = keyof typeof EXPERIMENT_IDS
@@ -33,6 +34,12 @@ export const experimentConfigsMap: Record<ExperimentKey, ExperimentConfig> = {
 
 		description:
 			"Enable the experimental insert content tool, allowing Roo to insert content at specific line numbers without needing to create a diff.",
+		enabled: false,
+	},
+	PROMPT_SUGGEST: {
+		name: "Use experimental prompt suggest tool",
+		description:
+			"Enable the experimental prompt suggest tool, allowing Roo to suggest prompts for you to use in your messages.",
 		enabled: false,
 	},
 }

@@ -219,6 +219,14 @@ export const ChatRowContent = ({
 						style={{ color: normalColor, marginBottom: "-1.5px" }}></span>,
 					<span style={{ color: normalColor, fontWeight: "bold" }}>Roo has a question:</span>,
 				]
+			case "prompt_suggest": {
+				return [
+					<span
+						className="codicon codicon-question" // TODO: change icon
+						style={{ color: normalColor, marginBottom: "-1.5px" }}></span>,
+					<span style={{ color: normalColor, fontWeight: "bold" }}>Roo has suggest prompt:</span>,
+				]
+			}
 			default:
 				return [null, null]
 		}
@@ -765,6 +773,8 @@ export const ChatRowContent = ({
 							checkpoint={message.checkpoint}
 						/>
 					)
+				case "prompt_suggest":
+					return null
 				default:
 					return (
 						<>
