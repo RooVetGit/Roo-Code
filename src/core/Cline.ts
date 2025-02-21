@@ -64,6 +64,7 @@ import { McpHub } from "../services/mcp/McpHub"
 import crypto from "crypto"
 import { insertGroups } from "./diff/insert-groups"
 import { EXPERIMENT_IDS, experiments as Experiments } from "../shared/experiments"
+import { parseXml } from "../utils/xml"
 
 const cwd =
 	vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop") // may or may not exist but fs checking existence would immediately ask for permission which would be bad UX, need to come up with a better solution
@@ -2593,6 +2594,7 @@ export class Cline {
 						*/
 						const result: string | undefined = block.params.result
 						const command: string | undefined = block.params.command
+						const next_step: string | undefined = block.params.next_step
 						try {
 							const lastMessage = this.clineMessages.at(-1)
 							if (block.partial) {
@@ -2641,7 +2643,43 @@ export class Cline {
 									)
 									break
 								}
+
+								if (!next_step) {
+									this.consecutiveMistakeCount++
+									pushToolResult(
+										await this.sayAndCreateMissingParamError("attempt_completion", "next_step"),
+									)
+									break
+								}
+
+								let normalizedSuggest = null
+
+								type Suggest = {
+									task: string
+									mode: string
+								}
+
+								let parsedSuggest: {
+									suggest: Suggest[] | Suggest
+								}
+
+								try {
+									parsedSuggest = parseXml(next_step, ["suggest.task", "suggest.mode"]) as {
+										suggest: Suggest[] | Suggest
+									}
+									console.log("next_step", next_step)
+								} catch (error) {
+									this.consecutiveMistakeCount++
+									await this.say("error", `Failed to parse operations: ${error.message}`)
+									pushToolResult(formatResponse.toolError("Invalid operations xml format"))
+									break
+								}
+
 								this.consecutiveMistakeCount = 0
+
+								normalizedSuggest = Array.isArray(parsedSuggest?.suggest)
+									? parsedSuggest.suggest
+									: [parsedSuggest?.suggest].filter((sug): sug is Suggest => sug !== undefined)
 
 								let commandResult: ToolResponse | undefined
 								if (command) {
@@ -2667,6 +2705,10 @@ export class Cline {
 									await this.say("completion_result", result, undefined, false)
 								}
 
+								const toolResults: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[] = []
+
+								await this.say("next_step_suggest", JSON.stringify(normalizedSuggest))
+
 								// we already sent completion_result says, an empty string asks relinquishes control over button and field
 								const { response, text, images } = await this.ask("completion_result", "", false)
 								if (response === "yesButtonClicked") {
@@ -2675,7 +2717,6 @@ export class Cline {
 								}
 								await this.say("user_feedback", text ?? "", images)
 
-								const toolResults: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[] = []
 								if (commandResult) {
 									if (typeof commandResult === "string") {
 										toolResults.push({ type: "text", text: commandResult })
