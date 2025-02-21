@@ -29,12 +29,14 @@ export async function openFile(filePath: string, options: OpenFileOptions = {}) 
 	try {
 		// Get workspace root
 		const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
-		if (!workspaceRoot) {
-			throw new Error("No workspace root found")
-		}
 
-		// If path starts with ./, resolve it relative to workspace root
-		const fullPath = filePath.startsWith("./") ? path.join(workspaceRoot, filePath.slice(2)) : filePath
+		// If path starts with ./, resolve it relative to workspace root if available
+		// Otherwise, treat it as an absolute path
+		const fullPath = filePath.startsWith("./")
+			? workspaceRoot
+				? path.join(workspaceRoot, filePath.slice(2))
+				: filePath
+			: filePath
 
 		const uri = vscode.Uri.file(fullPath)
 
