@@ -25,6 +25,8 @@ export const toolUseNames = [
 	"attempt_completion",
 	"switch_mode",
 	"new_task",
+	"list_vscode_lm_tools",
+	"call_vscode_lm_tool",
 ] as const
 
 // Converts array of tool call names into a union type ("execute_command" | "read_file" | ...)
@@ -56,6 +58,7 @@ export const toolParamNames = [
 	"operations",
 	"mode",
 	"message",
+	"toolInvocationToken",
 ] as const
 
 export type ToolParamName = (typeof toolParamNames)[number]
@@ -66,6 +69,7 @@ export interface ToolUse {
 	// params is a partial record, allowing only some or none of the possible parameters to be used
 	params: Partial<Record<ToolParamName, string>>
 	partial: boolean
+	toolInvocationToken?: string
 }
 
 export interface ExecuteCommandToolUse extends ToolUse {
@@ -137,4 +141,14 @@ export interface SwitchModeToolUse extends ToolUse {
 export interface NewTaskToolUse extends ToolUse {
 	name: "new_task"
 	params: Partial<Pick<Record<ToolParamName, string>, "mode" | "message">>
+}
+
+export interface ListVsCodeLmToolsToolUse extends ToolUse {
+	name: "list_vscode_lm_tools"
+	params: Partial<Record<ToolParamName, string>> // No parameters required
+}
+
+export interface CallVsCodeLmToolToolUse extends ToolUse {
+	name: "call_vscode_lm_tool"
+	params: Partial<Pick<Record<ToolParamName, string>, "tool_name" | "arguments">>
 }
