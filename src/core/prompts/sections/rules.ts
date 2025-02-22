@@ -36,6 +36,16 @@ function getEditingInstructions(diffStrategy?: DiffStrategy, experiments?: Recor
 		)
 	}
 
+	if (experiments?.["prompt_suggest"]) {
+		instructions.push(
+			`- You can use the prompt_suggest tool to provide contextually relevant suggestions for next steps or tasks based on the current situation. When using this tool:
+  * Ensure suggestions are relevant to the current mode (e.g., testing suggestions in Code mode, architecture considerations in Architect mode)
+  * Consider suggesting task splits using new_task when the context becomes large (>70% of context window)
+  * Make suggestions actionable and specific rather than vague or general
+  * Avoid suggesting tasks that would require significant context that has been lost`,
+		)
+	}
+
 	instructions.push(
 		"- When using the write_to_file tool to modify a file, use the tool directly with the desired content. You do not need to display the content before using the tool. ALWAYS provide the COMPLETE file content in your response. This is NON-NEGOTIABLE. Partial updates or placeholders like '// rest of code unchanged' are STRICTLY FORBIDDEN. You MUST include ALL parts of the file, even if they haven't been modified. Failure to do so will result in incomplete or broken code, severely impacting the user's project.",
 	)
@@ -70,7 +80,7 @@ ${getEditingInstructions(diffStrategy, experiments)}
 - Be sure to consider the type of project (e.g. Python, JavaScript, web application) when determining the appropriate structure and files to include. Also consider what files may be most relevant to accomplishing the task, for example looking at a project's manifest file would help you understand the project's dependencies, which you could incorporate into any code you write.
   * For example, in architect mode trying to edit app.js would be rejected because architect mode can only edit files matching "\\.md$"
 - When making changes to code, always consider the context in which the code is being used. Ensure that your changes are compatible with the existing codebase and that they follow the project's coding standards and best practices.
-- Do not ask for more information than necessary. Use the tools provided to accomplish the user's request efficiently and effectively. When you've completed your task, you must use the attempt_completion tool to present the result to the user. The user may provide feedback, which you can use to make improvements and try again.
+- Do not ask for more information than necessary. Use the tools provided to accomplish the user's request efficiently and effectively. When you've completed your task, you must use the attempt_completion tool to present the result to the user. ${experiments?.["prompt_suggest"] ? "You can also provide for user next step with attempt_completion tool. " : ""}The user may provide feedback, which you can use to make improvements and try again.
 - You are only allowed to ask the user questions using the ask_followup_question tool. Use this tool only when you need additional details to complete a task, and be sure to use a clear and concise question that will help you move forward with the task. However if you can use the available tools to avoid having to ask the user questions, you should do so. For example, if the user mentions a file that may be in an outside directory like the Desktop, you should use the list_files tool to list the files in the Desktop and check if the file they are talking about is there, rather than asking the user to provide the file path themselves.
 - When executing commands, if you don't see the expected output, assume the terminal executed the command successfully and proceed with the task. The user's terminal may be unable to stream the output back properly. If you absolutely need to see the actual terminal output, use the ask_followup_question tool to request the user to copy and paste it back to you.
 - The user may provide a file's contents directly in their message, in which case you shouldn't use the read_file tool to get the file contents again since you already have it.

@@ -64,6 +64,7 @@ import { McpHub } from "../services/mcp/McpHub"
 import crypto from "crypto"
 import { insertGroups } from "./diff/insert-groups"
 import { EXPERIMENT_IDS, experiments as Experiments } from "../shared/experiments"
+import { parseXml } from "../utils/xml"
 
 const cwd =
 	vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop") // may or may not exist but fs checking existence would immediately ask for permission which would be bad UX, need to come up with a better solution
@@ -1135,6 +1136,9 @@ export class Cline {
 							const message = block.params.message ?? "(no message)"
 							const modeName = getModeBySlug(mode, customModes)?.name ?? mode
 							return `[${block.name} in ${modeName} mode: '${message}']`
+						}
+						case "prompt_suggest": {
+							return `[${block.name}`
 						}
 					}
 				}
@@ -2434,6 +2438,64 @@ export class Cline {
 							break
 						}
 					}
+					case "prompt_suggest": {
+						const values: string | undefined = block.params.values
+						try {
+							if (block.partial) {
+								await this.ask(
+									"prompt_suggest",
+									removeClosingTag("result", values),
+									block.partial,
+								).catch(() => {})
+								break
+							} else {
+								if (!values) {
+									this.consecutiveMistakeCount++
+									pushToolResult(await this.sayAndCreateMissingParamError("prompt_suggest", "values"))
+									break
+								}
+
+								type Suggest = {
+									suggest: string
+								}
+
+								let parsedSuggest: {
+									suggest: Suggest[] | Suggest
+								}
+
+								try {
+									parsedSuggest = parseXml(values, ["suggest"]) as {
+										suggest: Suggest[] | Suggest
+									}
+								} catch (error) {
+									this.consecutiveMistakeCount++
+									await this.say("error", `Failed to parse operations: ${error.message}`)
+									pushToolResult(formatResponse.toolError("Invalid operations xml format"))
+									break
+								}
+
+								this.consecutiveMistakeCount = 0
+
+								const normalizedSuggest = Array.isArray(parsedSuggest?.suggest)
+									? parsedSuggest.suggest
+									: [parsedSuggest?.suggest].filter((sug): sug is Suggest => sug !== undefined)
+
+								const { text, images } = await this.ask(
+									"prompt_suggest",
+									JSON.stringify(normalizedSuggest),
+									false,
+								)
+								await this.say("user_feedback", text ?? "", images)
+								pushToolResult(
+									formatResponse.toolResult(`<user_feedback>\n${text}\n</user_feedback>`, images),
+								)
+								break
+							}
+						} catch (error) {
+							await handleError("prompt suggest", error)
+							break
+						}
+					}
 					case "switch_mode": {
 						const mode_slug: string | undefined = block.params.mode_slug
 						const reason: string | undefined = block.params.reason
@@ -2593,6 +2655,7 @@ export class Cline {
 						*/
 						const result: string | undefined = block.params.result
 						const command: string | undefined = block.params.command
+						const values: string | undefined = block.params.values
 						try {
 							const lastMessage = this.clineMessages.at(-1)
 							if (block.partial) {
@@ -2641,7 +2704,37 @@ export class Cline {
 									)
 									break
 								}
-								this.consecutiveMistakeCount = 0
+
+								let normalizedSuggest = null
+
+								if (values) {
+									type Suggest = {
+										suggest: string
+									}
+
+									let parsedSuggest: {
+										suggest: Suggest[] | Suggest
+									}
+
+									try {
+										parsedSuggest = parseXml(values, ["values.suggest"]) as {
+											suggest: Suggest[] | Suggest
+										}
+									} catch (error) {
+										this.consecutiveMistakeCount++
+										await this.say("error", `Failed to parse operations: ${error.message}`)
+										pushToolResult(formatResponse.toolError("Invalid operations xml format"))
+										break
+									}
+
+									this.consecutiveMistakeCount = 0
+
+									normalizedSuggest = Array.isArray(parsedSuggest?.suggest)
+										? parsedSuggest.suggest
+										: [parsedSuggest?.suggest].filter((sug): sug is Suggest => sug !== undefined)
+								} else {
+									this.consecutiveMistakeCount = 0
+								}
 
 								let commandResult: ToolResponse | undefined
 								if (command) {
@@ -2667,6 +2760,13 @@ export class Cline {
 									await this.say("completion_result", result, undefined, false)
 								}
 
+								const toolResults: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[] = []
+
+								if (normalizedSuggest) {
+									console.log("normalizedSuggest", normalizedSuggest)
+									await this.say("prompt_suggest", JSON.stringify(normalizedSuggest))
+								}
+
 								// we already sent completion_result says, an empty string asks relinquishes control over button and field
 								const { response, text, images } = await this.ask("completion_result", "", false)
 								if (response === "yesButtonClicked") {
@@ -2675,7 +2775,6 @@ export class Cline {
 								}
 								await this.say("user_feedback", text ?? "", images)
 
-								const toolResults: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[] = []
 								if (commandResult) {
 									if (typeof commandResult === "string") {
 										toolResults.push({ type: "text", text: commandResult })
@@ -2683,6 +2782,7 @@ export class Cline {
 										toolResults.push(...commandResult)
 									}
 								}
+
 								toolResults.push({
 									type: "text",
 									text: `The user has provided feedback on the results. Consider their input to continue the task, and then attempt completion again.\n<feedback>\n${text}\n</feedback>`,

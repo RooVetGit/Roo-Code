@@ -8,8 +8,10 @@ describe("mode-validator", () => {
 		describe("code mode", () => {
 			it("allows all code mode tools", () => {
 				const mode = getModeConfig(codeMode)
-				// Code mode has all groups
-				Object.entries(TOOL_GROUPS).forEach(([_, config]) => {
+				// Only check tools from groups configured for code mode
+				mode.groups.forEach((group) => {
+					const groupName = typeof group === "string" ? group : group[0]
+					const config = TOOL_GROUPS[groupName]
 					config.tools.forEach((tool: string) => {
 						expect(isToolAllowedForMode(tool, codeMode, [])).toBe(true)
 					})

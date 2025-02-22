@@ -26,6 +26,7 @@ import ChatRow from "./ChatRow"
 import ChatTextArea from "./ChatTextArea"
 import TaskHeader from "./TaskHeader"
 import AutoApproveMenu from "./AutoApproveMenu"
+import PromptSuggest from "./PromptSuggest"
 import { AudioType } from "../../../../src/shared/WebviewMessage"
 import { validateCommand } from "../../utils/command-validation"
 
@@ -83,6 +84,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	const [isAtBottom, setIsAtBottom] = useState(false)
 
 	const [wasStreaming, setWasStreaming] = useState<boolean>(false)
+	const [promptSuggest, setPromptSuggest] = useState<string[]>([])
 
 	// UI layout depends on the last 2 messages
 	// (since it relies on the content of these messages, we are deep comparing. i.e. the button state after hitting button sets enableButtons to false, and this effect otherwise would have to true again even if messages didn't change
@@ -124,6 +126,20 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							setEnableButtons(isPartial)
 							// setPrimaryButtonText(undefined)
 							// setSecondaryButtonText(undefined)
+							break
+						case "prompt_suggest":
+							setTextAreaDisabled(isPartial)
+							setClineAsk("prompt_suggest")
+							setEnableButtons(isPartial)
+							if (!isPartial) {
+								try {
+									let temp_suggest = JSON.parse(lastMessage.text ?? "[]")
+									console.log("temp_suggest", temp_suggest)
+									setPromptSuggest(temp_suggest || [])
+								} catch (error) {
+									console.error(error)
+								}
+							}
 							break
 						case "tool":
 							if (!isAutoApproved(lastMessage)) {
@@ -220,9 +236,22 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 								setTextAreaDisabled(true)
 								setSelectedImages([])
 								setClineAsk(undefined)
+								setPromptSuggest([])
 								setEnableButtons(false)
 							}
 							break
+						case "prompt_suggest": {
+							const isPartial = lastMessage.partial === true
+							if (!isPartial) {
+								try {
+									let temp_suggest = JSON.parse(lastMessage.text ?? "[]")
+									setPromptSuggest(temp_suggest || [])
+								} catch (error) {
+									console.error(error)
+								}
+							}
+							break
+						}
 						case "api_req_finished":
 						case "task":
 						case "error":
@@ -252,6 +281,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		if (messages.length === 0) {
 			setTextAreaDisabled(false)
 			setClineAsk(undefined)
+			setPromptSuggest([])
 			setEnableButtons(false)
 			setPrimaryButtonText(undefined)
 			setSecondaryButtonText(undefined)
@@ -310,6 +340,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 						case "resume_task":
 						case "resume_completed_task":
 						case "mistake_limit_reached":
+						case "prompt_suggest":
 							vscode.postMessage({
 								type: "askResponse",
 								askResponse: "messageResponse",
@@ -326,6 +357,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				setSelectedImages([])
 				setClineAsk(undefined)
 				setEnableButtons(false)
+				setPromptSuggest([])
 				// Do not reset mode here as it should persist
 				// setPrimaryButtonText(undefined)
 				// setSecondaryButtonText(undefined)
@@ -389,6 +421,11 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				case "completion_result":
 				case "resume_completed_task":
 					// extension waiting for feedback. but we can just present a new task button
+					if (inputValue.trim() !== "") {
+						vscode.postMessage({ type: "newTask", text: inputValue })
+						setInputValue("")
+						break
+					}
 					startNewTask()
 					break
 			}
@@ -396,8 +433,9 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			setClineAsk(undefined)
 			setEnableButtons(false)
 			disableAutoScrollRef.current = false
+			setPromptSuggest([])
 		},
-		[clineAsk, startNewTask],
+		[clineAsk, inputValue, startNewTask],
 	)
 
 	const handleSecondaryButtonClick = useCallback(
@@ -442,6 +480,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			setTextAreaDisabled(true)
 			setClineAsk(undefined)
 			setEnableButtons(false)
+			setPromptSuggest([])
 			disableAutoScrollRef.current = false
 		},
 		[clineAsk, startNewTask, isStreaming],
@@ -664,6 +703,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 						case "mistake_limit_reached":
 							playSound("progress_loop")
 							break
+						case "prompt_suggest":
 						case "followup":
 							if (!lastMessage.partial) {
 								playSound("notification")
@@ -1068,6 +1108,10 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 						/>
 					</div>
 					<AutoApproveMenu />
+					<PromptSuggest
+						suggestions={promptSuggest}
+						onSuggestionClick={(text: string) => setInputValue(text)}
+					/>
 					{showScrollToBottom ? (
 						<div
 							style={{
