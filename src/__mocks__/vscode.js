@@ -1,10 +1,27 @@
+// Define CodeActionKind first
+class CodeActionKind {
+	constructor(value) {
+		this.value = value
+	}
+
+	append(value) {
+		return new CodeActionKind(`${this.value}.${value}`)
+	}
+}
+
+// Add static properties
+CodeActionKind.QuickFix = new CodeActionKind("quickfix")
+CodeActionKind.RefactorRewrite = new CodeActionKind("refactor.rewrite")
+
 const vscode = {
 	window: {
 		showInformationMessage: jest.fn(),
 		showErrorMessage: jest.fn(),
-		createTextEditorDecorationType: jest.fn().mockReturnValue({
+		createTextEditorDecorationType: jest.fn().mockImplementation((options) => ({
+			...options,
 			dispose: jest.fn(),
-		}),
+			key: Math.random().toString(),
+		})),
 		tabGroups: {
 			onDidChangeTabs: jest.fn(() => {
 				return {
@@ -73,6 +90,15 @@ const vscode = {
 		Development: 2,
 		Test: 3,
 	},
+	CodeAction: class {
+		constructor(title, kind) {
+			this.title = title
+			this.kind = kind
+			this.command = undefined
+			this.isPreferred = false
+		}
+	},
+	CodeActionKind,
 	FileType: {
 		Unknown: 0,
 		File: 1,
