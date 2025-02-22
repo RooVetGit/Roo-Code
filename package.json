@@ -269,6 +269,24 @@
 						}
 					},
 					"description": "Settings for VSCode Language Model API"
+				},
+				"roo-cline.shell": {
+					"type": "object",
+					"properties": {
+						"osx": {
+							"type": "string",
+							"description": "Path to shell executable for macOS"
+						},
+						"linux": {
+							"type": "string",
+							"description": "Path to shell executable for Linux"
+						},
+						"windows": {
+							"type": "string",
+							"description": "Path to shell executable for Windows"
+						}
+					},
+					"description": "Override default shell path for different operating systems"
 				}
 			}
 		}
