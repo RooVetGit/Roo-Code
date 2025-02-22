@@ -70,7 +70,6 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setRateLimitSeconds: (value: number) => void
 	setCurrentApiConfigName: (value: string) => void
 	setListApiConfigMeta: (value: ApiConfigMeta[]) => void
-	onUpdateApiConfig: (apiConfig: ApiConfiguration) => void
 	mode: Mode
 	setMode: (value: Mode) => void
 	setCustomModePrompts: (value: CustomModePrompts) => void
@@ -146,18 +145,6 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		(value: ApiConfigMeta[]) => setState((prevState) => ({ ...prevState, listApiConfigMeta: value })),
 		[],
 	)
-
-	const onUpdateApiConfig = useCallback((apiConfig: ApiConfiguration) => {
-		setState((currentState) => {
-			vscode.postMessage({
-				type: "upsertApiConfiguration",
-				text: currentState.currentApiConfigName,
-				apiConfiguration: { ...currentState.apiConfiguration, ...apiConfig },
-			})
-			return currentState // No state update needed
-		})
-	}, [])
-
 	const handleMessage = useCallback(
 		(event: MessageEvent) => {
 			const message: ExtensionMessage = event.data
@@ -316,7 +303,6 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setRateLimitSeconds: (value) => setState((prevState) => ({ ...prevState, rateLimitSeconds: value })),
 		setCurrentApiConfigName: (value) => setState((prevState) => ({ ...prevState, currentApiConfigName: value })),
 		setListApiConfigMeta,
-		onUpdateApiConfig,
 		setMode: (value: Mode) => setState((prevState) => ({ ...prevState, mode: value })),
 		setCustomModePrompts: (value) => setState((prevState) => ({ ...prevState, customModePrompts: value })),
 		setCustomSupportPrompts: (value) => setState((prevState) => ({ ...prevState, customSupportPrompts: value })),
