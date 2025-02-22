@@ -83,6 +83,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	const [isAtBottom, setIsAtBottom] = useState(false)
 
 	const [wasStreaming, setWasStreaming] = useState<boolean>(false)
+	const [nextStepSuggest, setNextStepSuggest] = useState<{ task: string; mode: string }[]>([])
 
 	// UI layout depends on the last 2 messages
 	// (since it relies on the content of these messages, we are deep comparing. i.e. the button state after hitting button sets enableButtons to false, and this effect otherwise would have to true again even if messages didn't change
@@ -220,9 +221,31 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 								setTextAreaDisabled(true)
 								setSelectedImages([])
 								setClineAsk(undefined)
+								setNextStepSuggest([])
 								setEnableButtons(false)
 							}
 							break
+						case "next_step_suggest": {
+							const isPartial = lastMessage.partial === true
+							if (!isPartial) {
+								let suggestions: { task: string; mode: string }[] = []
+								try {
+									const parsed = JSON.parse(lastMessage.text ?? "[]")
+									if (Array.isArray(parsed)) {
+										suggestions = parsed.filter(
+											(item) => typeof item === "object" && item.task && item.mode,
+										)
+									} else {
+										console.warn("Next step suggestions must be an array of strings")
+									}
+								} catch (error) {
+									console.error("Failed to parse next step suggestions:", error)
+									suggestions = []
+								}
+								setNextStepSuggest(suggestions)
+							}
+							break
+						}
 						case "api_req_finished":
 						case "task":
 						case "error":
@@ -252,6 +275,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		if (messages.length === 0) {
 			setTextAreaDisabled(false)
 			setClineAsk(undefined)
+			setNextStepSuggest([])
 			setEnableButtons(false)
 			setPrimaryButtonText(undefined)
 			setSecondaryButtonText(undefined)
@@ -326,6 +350,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				setSelectedImages([])
 				setClineAsk(undefined)
 				setEnableButtons(false)
+				setNextStepSuggest([])
 				// Do not reset mode here as it should persist
 				// setPrimaryButtonText(undefined)
 				// setSecondaryButtonText(undefined)
@@ -389,6 +414,11 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				case "completion_result":
 				case "resume_completed_task":
 					// extension waiting for feedback. but we can just present a new task button
+					if (inputValue.trim() !== "") {
+						vscode.postMessage({ type: "newTask", text: inputValue })
+						setInputValue("")
+						break
+					}
 					startNewTask()
 					break
 			}
@@ -396,8 +426,9 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			setClineAsk(undefined)
 			setEnableButtons(false)
 			disableAutoScrollRef.current = false
+			setNextStepSuggest([])
 		},
-		[clineAsk, startNewTask],
+		[clineAsk, inputValue, startNewTask],
 	)
 
 	const handleSecondaryButtonClick = useCallback(
@@ -442,6 +473,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			setTextAreaDisabled(true)
 			setClineAsk(undefined)
 			setEnableButtons(false)
+			setNextStepSuggest([])
 			disableAutoScrollRef.current = false
 		},
 		[clineAsk, startNewTask, isStreaming],
@@ -919,6 +951,10 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 					isLast={index === groupedMessages.length - 1}
 					onHeightChange={handleRowHeightChange}
 					isStreaming={isStreaming}
+					onSuggestionClick={(task: string, mode: string) => {
+						handleSendMessage(`create new task for ${task} by using new_task tool in ${mode} mode`, [])
+					}}
+					suggestions={nextStepSuggest}
 				/>
 			)
 		},
@@ -928,7 +964,9 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			groupedMessages.length,
 			handleRowHeightChange,
 			isStreaming,
+			nextStepSuggest,
 			toggleRowExpansion,
+			handleSendMessage,
 		],
 	)
 
