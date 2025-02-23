@@ -995,61 +995,53 @@ export const ProgressIndicator = () => (
 )
 
 const Markdown = memo(({ markdown, partial }: { markdown?: string; partial?: boolean }) => {
-	const [isHovering, setIsHovering] = useState(false)
-	const { copyWithFeedback } = useCopyToClipboard(200) // shorter feedback duration for copy button flash
+	const { showCopyFeedback, copyWithFeedback } = useCopyToClipboard(2000) // longer feedback duration to make it more noticeable
 
 	return (
-		<div
-			onMouseEnter={() => setIsHovering(true)}
-			onMouseLeave={() => setIsHovering(false)}
-			style={{ position: "relative" }}>
-			<div style={{ wordBreak: "break-word", overflowWrap: "anywhere", marginBottom: -15, marginTop: -15 }}>
-				<MarkdownBlock markdown={markdown} />
-			</div>
-			{markdown && !partial && isHovering && (
+		<div style={{ position: "relative" }}>
+			{markdown && !partial && showCopyFeedback && (
 				<div
 					style={{
-						position: "absolute",
-						bottom: "-4px",
-						right: "8px",
-						opacity: 0,
-						animation: "fadeIn 0.2s ease-in-out forwards",
-						borderRadius: "4px",
+						marginBottom: "8px",
+						color: "var(--vscode-charts-green)",
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "flex-end",
+						gap: "4px",
 					}}>
-					<style>
-						{`
-							@keyframes fadeIn {
-								from { opacity: 0; }
-								to { opacity: 1.0; }
-							}
-						`}
-					</style>
-					<VSCodeButton
-						className="copy-button"
-						appearance="icon"
-						style={{
-							height: "24px",
-							border: "none",
-							background: "var(--vscode-editor-background)",
-							transition: "background 0.2s ease-in-out",
-						}}
-						onClick={async () => {
-							const success = await copyWithFeedback(markdown)
-							if (success) {
-								const button = document.activeElement as HTMLElement
-								if (button) {
-									button.style.background = "var(--vscode-button-background)"
-									setTimeout(() => {
-										button.style.background = ""
-									}, 200)
-								}
-							}
-						}}
-						title="Copy as markdown">
-						<span className="codicon codicon-copy"></span>
-					</VSCodeButton>
+					<span>Copied to Clipboard</span>
+					<span className="codicon codicon-check" style={{ marginBottom: "-1px" }} />
 				</div>
 			)}
+			<div
+				onClick={async (e) => {
+					if (markdown && !partial) {
+						await copyWithFeedback(markdown)
+					}
+				}}
+				style={{
+					cursor: markdown && !partial ? "pointer" : "default",
+					position: "relative",
+					transition: "all 0.2s ease-in-out",
+					borderRadius: "3px",
+					padding: "2px 4px",
+				}}
+				title="Click to copy message"
+				onMouseEnter={(e) => {
+					if (markdown && !partial) {
+						e.currentTarget.style.backgroundColor =
+							"color-mix(in srgb, var(--vscode-button-background) 5%, transparent)"
+					}
+				}}
+				onMouseLeave={(e) => {
+					if (markdown && !partial) {
+						e.currentTarget.style.backgroundColor = ""
+					}
+				}}>
+				<div style={{ wordBreak: "break-word", overflowWrap: "anywhere", marginBottom: -15, marginTop: -15 }}>
+					<MarkdownBlock markdown={markdown} />
+				</div>
+			</div>
 		</div>
 	)
 })
