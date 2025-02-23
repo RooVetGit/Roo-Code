@@ -336,5 +336,166 @@ describe("Context Compression", () => {
 			should(lastMsg).match(/VSCode Visible Files\s*\(No visible files\)/)
 			should(lastMsg).match(/VSCode Open Tabs\s*\(No open tabs\)/)
 		})
+
+		it("should remove all but the last task resumption message when last message is task resumption", () => {
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: [
+						{
+							type: "text",
+							text: "[TASK RESUMPTION] This task was interrupted 5 minutes ago.\nmessage 1\n<environment_details>\n# Current Time\n2/14/2025, 6:33:59 PM (America/Los_Angeles, UTC-8:00)\n</environment_details>",
+						} as Anthropic.Messages.TextBlockParam,
+					],
+				},
+				{
+					role: "user",
+					content: [
+						{
+							type: "text",
+							text: "[TASK RESUMPTION] This task was interrupted 10 minutes ago.\nmessage 2\n<environment_details>\n# Current Time\n2/14/2025, 6:34:00 PM (America/Los_Angeles, UTC-8:00)\n</environment_details>",
+						} as Anthropic.Messages.TextBlockParam,
+					],
+				},
+				{
+					role: "user",
+					content: [
+						{
+							type: "text",
+							text: "[TASK RESUMPTION] This task was interrupted 15 minutes ago.\nmessage 3\n<environment_details>\n# Current Time\n2/14/2025, 6:34:01 PM (America/Los_Angeles, UTC-8:00)\n</environment_details>",
+						} as Anthropic.Messages.TextBlockParam,
+					],
+				},
+			]
+
+			// Make a deep copy for comparison
+			const originalMessages = cloneDeep(messages)
+
+			// Compress and get serialized structures with debug files
+			const { before, after } = compressConversationHistory(
+				messages,
+				"test_task",
+				`conversation_before_compression_${Date.now()}_task_resumption.json`,
+				`conversation_after_compression_${Date.now()}_task_resumption.json`,
+			)
+
+			// Parse the structures
+			const beforeObj = JSON.parse(before)
+			const afterObj = JSON.parse(after)
+
+			// Count task resumption messages in before object
+			let beforeCount = 0
+			for (const msg of beforeObj) {
+				if (Array.isArray(msg.content)) {
+					for (const block of msg.content) {
+						if (block.type === "text" && block.text.includes("[TASK RESUMPTION]")) {
+							beforeCount++
+						}
+					}
+				}
+			}
+
+			// Count task resumption messages in after object
+			let afterCount = 0
+			let lastResumptionMsg = ""
+			for (const msg of afterObj) {
+				if (Array.isArray(msg.content)) {
+					for (const block of msg.content) {
+						if (block.type === "text" && block.text.includes("[TASK RESUMPTION]")) {
+							afterCount++
+							lastResumptionMsg = block.text
+						}
+					}
+				}
+			}
+
+			// Verify compression
+			should(beforeCount).equal(3)
+			should(afterCount).equal(1)
+			should(lastResumptionMsg).match(/\[TASK RESUMPTION\] This task was interrupted 15 minutes ago/)
+		})
+
+		it("should preserve last task resumption message when last message is not task resumption", () => {
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: [
+						{
+							type: "text",
+							text: "[TASK RESUMPTION] This task was interrupted 5 minutes ago.\nmessage 1\n<environment_details>\n# Current Time\n2/14/2025, 6:33:59 PM (America/Los_Angeles, UTC-8:00)\n</environment_details>",
+						} as Anthropic.Messages.TextBlockParam,
+					],
+				},
+				{
+					role: "user",
+					content: [
+						{
+							type: "text",
+							text: "[TASK RESUMPTION] This task was interrupted 10 minutes ago.\nmessage 2\n<environment_details>\n# Current Time\n2/14/2025, 6:34:00 PM (America/Los_Angeles, UTC-8:00)\n</environment_details>",
+						} as Anthropic.Messages.TextBlockParam,
+					],
+				},
+				{
+					role: "user",
+					content: [
+						{
+							type: "text",
+							text: "regular message\n<environment_details>\n# Current Time\n2/14/2025, 6:34:01 PM (America/Los_Angeles, UTC-8:00)\n</environment_details>",
+						} as Anthropic.Messages.TextBlockParam,
+					],
+				},
+			]
+
+			// Make a deep copy for comparison
+			const originalMessages = cloneDeep(messages)
+
+			// Compress and get serialized structures with debug files
+			const { before, after } = compressConversationHistory(
+				messages,
+				"test_task",
+				`conversation_before_compression_${Date.now()}_task_resumption_non_last.json`,
+				`conversation_after_compression_${Date.now()}_task_resumption_non_last.json`,
+			)
+
+			// Parse the structures
+			const beforeObj = JSON.parse(before)
+			const afterObj = JSON.parse(after)
+
+			// Count task resumption messages in before object
+			let beforeCount = 0
+			for (const msg of beforeObj) {
+				if (Array.isArray(msg.content)) {
+					for (const block of msg.content) {
+						if (block.type === "text" && block.text.includes("[TASK RESUMPTION]")) {
+							beforeCount++
+						}
+					}
+				}
+			}
+
+			// Count task resumption messages in after object and find last message
+			let afterCount = 0
+			let lastResumptionMsg = ""
+			let lastMsg = ""
+			for (const msg of afterObj) {
+				if (Array.isArray(msg.content)) {
+					for (const block of msg.content) {
+						if (block.type === "text") {
+							lastMsg = block.text
+							if (block.text.includes("[TASK RESUMPTION]")) {
+								afterCount++
+								lastResumptionMsg = block.text
+							}
+						}
+					}
+				}
+			}
+
+			// Verify compression
+			should(beforeCount).equal(2)
+			should(afterCount).equal(1)
+			should(lastResumptionMsg).match(/\[TASK RESUMPTION\] This task was interrupted 10 minutes ago/)
+			should(lastMsg).match(/regular message/)
+		})
 	})
 })

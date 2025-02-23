@@ -41,6 +41,66 @@ function parseTimeToUnix(timeStr: string): string {
 	}
 }
 
+function hasTaskResumption(message: Anthropic.Messages.MessageParam): boolean {
+	if (!Array.isArray(message.content)) {
+		return false
+	}
+
+	for (const block of message.content) {
+		if (block.type === "text" && block.text.includes("[TASK RESUMPTION]")) {
+			return true
+		}
+	}
+	return false
+}
+
+function findLastTaskResumption(messages: Anthropic.Messages.MessageParam[]): number {
+	let lastIndex = -1
+	for (let i = 0; i < messages.length; i++) {
+		if (hasTaskResumption(messages[i])) {
+			lastIndex = i
+		}
+	}
+	return lastIndex
+}
+
+function compressTaskResumption(messages: Anthropic.Messages.MessageParam[]): void {
+	const lastIndex = findLastTaskResumption(messages)
+	if (lastIndex === -1) {
+		return
+	}
+
+	// Remove task resumption messages except for the last one
+	for (let i = 0; i < messages.length; i++) {
+		if (i !== lastIndex && hasTaskResumption(messages[i])) {
+			// Remove the task resumption part but keep environment details
+			if (Array.isArray(messages[i].content)) {
+				const newContent: (
+					| Anthropic.Messages.TextBlockParam
+					| Anthropic.Messages.ImageBlockParam
+					| Anthropic.Messages.ToolUseBlockParam
+					| Anthropic.Messages.ToolResultBlockParam
+				)[] = []
+				for (const content of messages[i].content) {
+					if (typeof content === "string" || content.type !== "text") {
+						continue
+					}
+
+					// Extract environment details if present
+					const envMatch = content.text.match(/<environment_details>.*<\/environment_details>/s)
+					if (envMatch) {
+						newContent.push({
+							type: "text",
+							text: envMatch[0],
+						} as Anthropic.Messages.TextBlockParam)
+					}
+				}
+				messages[i].content = newContent
+			}
+		}
+	}
+}
+
 function hasEnvironmentDetails(message: Anthropic.Messages.MessageParam): boolean {
 	if (!Array.isArray(message.content)) {
 		return false
@@ -196,6 +256,9 @@ export function compressConversationHistory(
 ): { before: string; after: string } {
 	// Serialize messages BEFORE compression
 	const beforeJson = serializeMessages(messages)
+
+	// Compress task resumption messages in place
+	compressTaskResumption(messages)
 
 	// Compress environment details in place
 	compressEnvironmentDetails(messages)
