@@ -1,4 +1,5 @@
 import * as vscode from "vscode"
+import { TerminalProfile } from "../../utils/shell"
 
 export interface TerminalInfo {
 	terminal: vscode.Terminal
@@ -13,11 +14,24 @@ export class TerminalRegistry {
 	private static terminals: TerminalInfo[] = []
 	private static nextTerminalId = 1
 
+	private static getShellConfigKey(): string {
+		if (process.platform === "win32") {
+			return "windows"
+		} else if (process.platform === "darwin") {
+			return "osx"
+		} else {
+			return "linux"
+		}
+	}
+
 	static createTerminal(cwd?: string | vscode.Uri | undefined): TerminalInfo {
+		const shellConfig = this.getAutomationShellConfig()
 		const terminal = vscode.window.createTerminal({
 			cwd,
 			name: "Roo Code",
 			iconPath: new vscode.ThemeIcon("rocket"),
+			shellPath: shellConfig?.path,
+			shellArgs: shellConfig?.args,
 			env: {
 				PAGER: "cat",
 			},
@@ -60,5 +74,23 @@ export class TerminalRegistry {
 	// The exit status of the terminal will be undefined while the terminal is active. (This value is set when onDidCloseTerminal is fired.)
 	private static isTerminalClosed(terminal: vscode.Terminal): boolean {
 		return terminal.exitStatus !== undefined
+	}
+
+	// Get the shell path from the extension settings, or use the default shell path.
+	private static getAutomationShell(): string | undefined {
+		const shellOverrides = vscode.workspace.getConfiguration("roo-cline.shell") || {}
+		return shellOverrides.get<string>(this.getShellConfigKey())
+	}
+
+	// Get the shell path and args from the extension settings, or use the default shell path and args.
+	private static getAutomationShellConfig(): TerminalProfile | undefined {
+		const shell = this.getAutomationShell()
+		if (shell === undefined) {
+			return undefined
+		}
+		const shellProfiles =
+			vscode.workspace.getConfiguration(`terminal.integrated.profiles.${this.getShellConfigKey()}`) || {}
+		const selectedProfile = shellProfiles.get<TerminalProfile>(shell)
+		return selectedProfile
 	}
 }
