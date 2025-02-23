@@ -55,6 +55,8 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm run install:all
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
       - name: Run unit tests
         run: npx jest --runInBand
 
