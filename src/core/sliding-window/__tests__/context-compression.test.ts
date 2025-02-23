@@ -2,7 +2,22 @@ import { describe, it } from "mocha"
 import "should"
 import cloneDeep from "clone-deep"
 import { Anthropic } from "@anthropic-ai/sdk"
+import * as path from "path"
 import { compressConversationHistory, compressEnvironmentDetails } from "../core/sliding-window/context-compression"
+
+// Helper function to generate debug filenames
+function getDebugFilenames(testType: string): { before: string; after: string } {
+	const timestamp = Date.now()
+	const date = new Date(timestamp)
+	const dateStr = date.toISOString().split("T")[0].split("-").slice(1).join("-") // Get MM-DD format
+	const timeStr = date.toTimeString().split(" ")[0].replace(/:/g, "-") // Get HH-MM-SS format
+
+	const baseFilename = `${testType}_${timestamp}_${dateStr}--${timeStr}.json`
+	return {
+		before: path.join("debug", `conv_before_compression_${baseFilename}`),
+		after: path.join("debug", `conv_after_compression_${baseFilename}`),
+	}
+}
 
 // Helper function to get the last message with environment details
 function getLastEnvironmentMessage(messages: Anthropic.Messages.MessageParam[]): string {
@@ -124,12 +139,8 @@ describe("Context Compression", () => {
 			const originalMessages = cloneDeep(messages)
 
 			// Compress and get serialized structures with debug files
-			const { before, after } = compressConversationHistory(
-				messages,
-				"test_task",
-				`conversation_before_compression_${Date.now()}_basic_compression.json`,
-				`conversation_after_compression_${Date.now()}_basic_compression.json`,
-			)
+			const { before: beforeFile, after: afterFile } = getDebugFilenames("basic_compression")
+			const { before, after } = compressConversationHistory(messages, "test_task", beforeFile, afterFile)
 
 			// Parse the structures
 			const beforeObj = JSON.parse(before)
@@ -179,12 +190,8 @@ describe("Context Compression", () => {
 			const originalMessages = cloneDeep(messages)
 
 			// Compress and get serialized structures with debug files
-			const { before, after } = compressConversationHistory(
-				messages,
-				"test_task",
-				`conversation_before_compression_${Date.now()}_section_accumulation.json`,
-				`conversation_after_compression_${Date.now()}_section_accumulation.json`,
-			)
+			const { before: beforeFile, after: afterFile } = getDebugFilenames("section_accumulation")
+			const { before, after } = compressConversationHistory(messages, "test_task", beforeFile, afterFile)
 
 			// Parse the structures
 			const beforeObj = JSON.parse(before)
@@ -225,12 +232,8 @@ describe("Context Compression", () => {
 			const originalMessages = cloneDeep(messages)
 
 			// Compress and get serialized structures with debug files
-			const { before, after } = compressConversationHistory(
-				messages,
-				"test_task",
-				`conversation_before_compression_${Date.now()}_time_formats.json`,
-				`conversation_after_compression_${Date.now()}_time_formats.json`,
-			)
+			const { before: beforeFile, after: afterFile } = getDebugFilenames("time_formats")
+			const { before, after } = compressConversationHistory(messages, "test_task", beforeFile, afterFile)
 
 			// Parse the structures
 			const beforeObj = JSON.parse(before)
@@ -270,12 +273,8 @@ describe("Context Compression", () => {
 			const originalMessages = cloneDeep(messages)
 
 			// Compress and get serialized structures with debug files
-			const { before, after } = compressConversationHistory(
-				messages,
-				"test_task",
-				`conversation_before_compression_${Date.now()}_working_directory.json`,
-				`conversation_after_compression_${Date.now()}_working_directory.json`,
-			)
+			const { before: beforeFile, after: afterFile } = getDebugFilenames("working_directory")
+			const { before, after } = compressConversationHistory(messages, "test_task", beforeFile, afterFile)
 
 			// Parse the structures
 			const beforeObj = JSON.parse(before)
@@ -317,12 +316,8 @@ describe("Context Compression", () => {
 			const originalMessages = cloneDeep(messages)
 
 			// Compress and get serialized structures with debug files
-			const { before, after } = compressConversationHistory(
-				messages,
-				"test_task",
-				`conversation_before_compression_${Date.now()}_empty_vscode.json`,
-				`conversation_after_compression_${Date.now()}_empty_vscode.json`,
-			)
+			const { before: beforeFile, after: afterFile } = getDebugFilenames("empty_vscode")
+			const { before, after } = compressConversationHistory(messages, "test_task", beforeFile, afterFile)
 
 			// Parse the structures
 			const beforeObj = JSON.parse(before)
@@ -372,12 +367,8 @@ describe("Context Compression", () => {
 			const originalMessages = cloneDeep(messages)
 
 			// Compress and get serialized structures with debug files
-			const { before, after } = compressConversationHistory(
-				messages,
-				"test_task",
-				`conversation_before_compression_${Date.now()}_task_resumption.json`,
-				`conversation_after_compression_${Date.now()}_task_resumption.json`,
-			)
+			const { before: beforeFile, after: afterFile } = getDebugFilenames("task_resumption")
+			const { before, after } = compressConversationHistory(messages, "test_task", beforeFile, afterFile)
 
 			// Parse the structures
 			const beforeObj = JSON.parse(before)
@@ -450,12 +441,8 @@ describe("Context Compression", () => {
 			const originalMessages = cloneDeep(messages)
 
 			// Compress and get serialized structures with debug files
-			const { before, after } = compressConversationHistory(
-				messages,
-				"test_task",
-				`conversation_before_compression_${Date.now()}_task_resumption_non_last.json`,
-				`conversation_after_compression_${Date.now()}_task_resumption_non_last.json`,
-			)
+			const { before: beforeFile, after: afterFile } = getDebugFilenames("task_resumption_non_last")
+			const { before, after } = compressConversationHistory(messages, "test_task", beforeFile, afterFile)
 
 			// Parse the structures
 			const beforeObj = JSON.parse(before)
