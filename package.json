@@ -153,6 +153,11 @@
 				"command": "roo-cline.terminalExplainCommandInCurrentTask",
 				"title": "Roo Code: Explain This Command (Current Task)",
 				"category": "Terminal"
+			},
+			{
+				"command": "roo-cline.cycleModes",
+				"title": "Cycle Through Modes",
+				"category": "Roo Code"
 			}
 		],
 		"menus": {
@@ -271,7 +276,17 @@
 					"description": "Settings for VSCode Language Model API"
 				}
 			}
-		}
+		},
+		"keybindings": [
+			{
+				"command": "roo-cline.cycleModes",
+				"key": ".",
+				"win": "ctrl+.",
+				"linux": "ctrl+.",
+				"mac": "cmd+.",
+				"when": "true"
+			}
+		]
 	},
 	"scripts": {
 		"build": "npm run build:webview && npm run vsix",

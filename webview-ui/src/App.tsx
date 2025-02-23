@@ -27,6 +27,7 @@ const App = () => {
 	const [showAnnouncement, setShowAnnouncement] = useState(false)
 	const [tab, setTab] = useState<Tab>("chat")
 	const settingsRef = useRef<SettingsViewRef>(null)
+	const chatViewRef = useRef<any>(null)
 
 	const switchTab = useCallback((newTab: Tab) => {
 		if (settingsRef.current?.checkUnsaveChanges) {
@@ -47,8 +48,18 @@ const App = () => {
 					switchTab(newTab)
 				}
 			}
+
+			if (message.type === "mode" && message.text) {
+				console.log("Received mode switch message:", message.text)
+				if (tab !== "chat") {
+					switchTab("chat")
+				}
+				if (chatViewRef.current?.switchMode) {
+					chatViewRef.current.switchMode(message.text)
+				}
+			}
 		},
-		[switchTab],
+		[switchTab, tab],
 	)
 
 	useEvent("message", onMessage)
@@ -75,6 +86,7 @@ const App = () => {
 			{tab === "mcp" && <McpView onDone={() => switchTab("chat")} />}
 			{tab === "prompts" && <PromptsView onDone={() => switchTab("chat")} />}
 			<ChatView
+				ref={chatViewRef}
 				isHidden={tab !== "chat"}
 				showAnnouncement={showAnnouncement}
 				hideAnnouncement={() => setShowAnnouncement(false)}

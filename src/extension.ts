@@ -7,6 +7,7 @@ import { CodeActionProvider } from "./core/CodeActionProvider"
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
 import { handleUri, registerCommands, registerCodeActions, registerTerminalActions } from "./activate"
 import { McpServerManager } from "./services/mcp/McpServerManager"
+import { registerModeSwitchingCommands } from "./commands/mode-switching"
 
 /**
  * Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -82,6 +83,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 	registerCodeActions(context)
 	registerTerminalActions(context)
+
+	// Register mode switching commands
+	registerModeSwitchingCommands(context)
 
 	return createClineAPI(outputChannel, sidebarProvider)
 }

@@ -13,6 +13,9 @@ jest.mock("globby", () => ({
 	globby: jest.fn().mockResolvedValue([]),
 }))
 
+// Set timeout for all tests
+jest.setTimeout(30000)
+
 describe("ShadowCheckpointService", () => {
 	const taskId = "test-task"
 

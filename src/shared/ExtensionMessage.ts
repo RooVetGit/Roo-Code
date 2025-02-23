@@ -20,6 +20,7 @@ export interface ExtensionMessage {
 	type:
 		| "action"
 		| "state"
+		| "mode"
 		| "selectedImages"
 		| "ollamaModels"
 		| "lmStudioModels"
