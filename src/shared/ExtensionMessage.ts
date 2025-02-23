@@ -46,9 +46,18 @@ export interface ExtensionMessage {
 		| "unboundModels"
 		| "refreshUnboundModels"
 		| "currentCheckpointUpdated"
+		| "research.loading"
+		| "research.output"
+		| "research.progress"
+		| "research.status"
+		| "research.tokenUsage"
+		| "research.error"
+		| "research.history"
+		| "research.task"
 	text?: string
 	action?:
 		| "chatButtonClicked"
+		| "researchButtonClicked"
 		| "mcpButtonClicked"
 		| "settingsButtonClicked"
 		| "historyButtonClicked"

@@ -1,7 +1,7 @@
 import { useState } from "react"
 import type { Meta, StoryObj } from "@storybook/react"
 
-import { Chat, ChatHandler, Message } from "@/components/ui/chat"
+import { Chat, ChatHandler, Message, MessageRole } from "@/components/ui/chat"
 
 const meta = {
 	title: "ui/Chat",
@@ -40,7 +40,7 @@ const useStorybookChat = (): ChatHandler => {
 	const append = async (message: Message, options?: { data?: any }) => {
 		const echo: Message = {
 			...message,
-			role: "assistant",
+			role: MessageRole.Assistant,
 			content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
 		}
 		setMessages((prev) => [...prev, message, echo])

@@ -1,12 +1,11 @@
-export interface Message {
-	role: "system" | "user" | "assistant" | "data"
-	content: string
-	annotations?: MessageAnnotation[]
-}
+import { z } from "zod"
 
 export type ChatHandler = {
+	isDisabled?: boolean
+	setIsDisabled?: (isDisabled: boolean) => void
+
 	isLoading: boolean
-	setIsLoading: (isLoading: boolean, message?: string) => void
+	setIsLoading?: (isLoading: boolean) => void
 
 	loadingMessage?: string
 	setLoadingMessage?: (message: string) => void
@@ -15,25 +14,45 @@ export type ChatHandler = {
 	setInput: (input: string) => void
 
 	messages: Message[]
+	append: (message: Message, options?: { data?: any }) => Promise<string | null | undefined>
 
 	reload?: (options?: { data?: any }) => void
 	stop?: () => void
-	append: (message: Message, options?: { data?: any }) => Promise<string | null | undefined>
 	reset?: () => void
 }
 
+/**
+ * Message Annotation
+ */
+
 export enum MessageAnnotationType {
-	BADGE = "badge",
+	Badge = "badge",
 }
 
-export type BadgeData = {
-	label: string
-	variant?: "default" | "secondary" | "destructive" | "outline"
+export const messageAnnotationSchema = z.object({
+	type: z.nativeEnum(MessageAnnotationType),
+	data: z.object({
+		label: z.string(),
+		variant: z.enum(["default", "secondary", "destructive", "outline"]).optional(),
+	}),
+})
+
+export type MessageAnnotation = z.infer<typeof messageAnnotationSchema>
+
+/**
+ * Message
+ */
+
+export enum MessageRole {
+	System = "system",
+	User = "user",
+	Assistant = "assistant",
 }
 
-export type AnnotationData = BadgeData
+export const messageSchema = z.object({
+	role: z.nativeEnum(MessageRole),
+	content: z.string(),
+	annotations: z.array(messageAnnotationSchema).optional(),
+})
 
-export type MessageAnnotation = {
-	type: MessageAnnotationType
-	data: AnnotationData
-}
+export type Message = z.infer<typeof messageSchema>
