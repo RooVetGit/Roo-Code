@@ -234,6 +234,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 						case "next_step_suggest": {
 							const isPartial = lastMessage.partial === true
 							if (!isPartial) {
+								setNextStepSuggest([])
 								let suggestions: { task: string; mode: string }[] = []
 								try {
 									const parsed = JSON.parse(lastMessage.text ?? "[]")
