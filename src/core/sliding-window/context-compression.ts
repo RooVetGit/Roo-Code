@@ -181,19 +181,35 @@ function compressEnvironmentSection(
 		}
 
 		if (match) {
-			// Found a match - accumulate it
-			accumulatedMatches.set(section.heading, match[0])
-			console.log(`- Added to accumulated matches: ${section.heading}\n  ${match[0]}`)
+			const content = match[1].trim()
+			// Skip empty VSCode sections
+			if (section.heading.includes("VSCode") && content.match(/^\(No (?:visible files|open tabs)\)$/)) {
+				// Remove the section from accumulated matches if it exists
+				accumulatedMatches.delete(section.heading)
+				// Remove the section from current content
+				processedContent = processedContent.replace(match[0], "")
+			} else {
+				// Found a match - accumulate it
+				accumulatedMatches.set(section.heading, match[0])
+				console.log(`- Added to accumulated matches: ${section.heading}\n  ${match[0]}`)
 
-			if (!isLastMessage) {
-				processedContent = processedContent.replace(regex, (match, content) =>
-					section.handle(section.heading, content, false),
-				)
-				console.log("- Processed for non-last message")
+				if (!isLastMessage) {
+					processedContent = processedContent.replace(regex, (match, content) =>
+						section.handle(section.heading, content, false),
+					)
+					console.log("- Processed for non-last message")
+				}
 			}
 		} else if (isLastMessage && accumulatedMatches.has(section.heading)) {
 			// No match in last message but we have accumulated content - append it
-			processedContent += accumulatedMatches.get(section.heading)
+			// For VSCode sections, only append if the last known state wasn't empty
+			const lastContent = accumulatedMatches.get(section.heading)
+			if (
+				lastContent &&
+				(!section.heading.includes("VSCode") || !lastContent.match(/\(No (?:visible files|open tabs)\)/))
+			) {
+				processedContent += lastContent
+			}
 		}
 	}
 

@@ -290,7 +290,7 @@ describe("Context Compression", () => {
 			should(lastMsg).match(/dir1\/\s*subfile1\.txt\s*subfile2\.txt/)
 		})
 
-		it("should handle empty VSCode sections", () => {
+		it("should exclude empty VSCode sections", () => {
 			const messages: Anthropic.Messages.MessageParam[] = [
 				{
 					role: "user",
@@ -328,8 +328,145 @@ describe("Context Compression", () => {
 
 			// Additional verification specific to this test
 			const lastMsg = getLastEnvironmentMessage(afterObj)
-			should(lastMsg).match(/VSCode Visible Files\s*\(No visible files\)/)
-			should(lastMsg).match(/VSCode Open Tabs\s*\(No open tabs\)/)
+			should(lastMsg).not.match(/VSCode Visible Files/)
+			should(lastMsg).not.match(/VSCode Open Tabs/)
+		})
+
+		it("should remove VSCode sections that become empty", () => {
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: [
+						{
+							type: "text",
+							text: "message 1\n<environment_details>\n# Current Time\n2/14/2025, 6:33:59 PM (America/Los_Angeles, UTC-8:00)\n\n# VSCode Visible Files\nfile1.ts\n\n# VSCode Open Tabs\ntab1.ts\n</environment_details>",
+						} as Anthropic.Messages.TextBlockParam,
+					],
+				},
+				{
+					role: "user",
+					content: [
+						{
+							type: "text",
+							text: "message 2\n<environment_details>\n# Current Time\n2/14/2025, 6:34:00 PM (America/Los_Angeles, UTC-8:00)\n\n# VSCode Visible Files\n(No visible files)\n\n# VSCode Open Tabs\n(No open tabs)\n</environment_details>",
+						} as Anthropic.Messages.TextBlockParam,
+					],
+				},
+			]
+
+			// Make a deep copy for comparison
+			const originalMessages = cloneDeep(messages)
+
+			// Compress and get serialized structures with debug files
+			const { before: beforeFile, after: afterFile } = getDebugFilenames("vscode_becomes_empty")
+			const { before, after } = compressConversationHistory(messages, "test_task", beforeFile, afterFile)
+
+			// Parse the structures
+			const beforeObj = JSON.parse(before)
+			const afterObj = JSON.parse(after)
+
+			// Verify compression using helper functions
+			verifyEnvironmentCompression(beforeObj, afterObj)
+
+			// Additional verification specific to this test
+			const lastMsg = getLastEnvironmentMessage(afterObj)
+			should(lastMsg).not.match(/VSCode Visible Files/)
+			should(lastMsg).not.match(/VSCode Open Tabs/)
+		})
+
+		it("should handle mixed VSCode section states", () => {
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: [
+						{
+							type: "text",
+							text: "message 1\n<environment_details>\n# Current Time\n2/14/2025, 6:33:59 PM (America/Los_Angeles, UTC-8:00)\n\n# VSCode Visible Files\nfile1.ts\n\n# VSCode Open Tabs\n(No open tabs)\n</environment_details>",
+						} as Anthropic.Messages.TextBlockParam,
+					],
+				},
+				{
+					role: "user",
+					content: [
+						{
+							type: "text",
+							text: "message 2\n<environment_details>\n# Current Time\n2/14/2025, 6:34:00 PM (America/Los_Angeles, UTC-8:00)\n\n# VSCode Visible Files\nfile2.ts\n\n# VSCode Open Tabs\n(No open tabs)\n</environment_details>",
+						} as Anthropic.Messages.TextBlockParam,
+					],
+				},
+			]
+
+			// Make a deep copy for comparison
+			const originalMessages = cloneDeep(messages)
+
+			// Compress and get serialized structures with debug files
+			const { before: beforeFile, after: afterFile } = getDebugFilenames("mixed_vscode_states")
+			const { before, after } = compressConversationHistory(messages, "test_task", beforeFile, afterFile)
+
+			// Parse the structures
+			const beforeObj = JSON.parse(before)
+			const afterObj = JSON.parse(after)
+
+			// Verify compression using helper functions
+			verifyEnvironmentCompression(beforeObj, afterObj)
+
+			// Additional verification specific to this test
+			const lastMsg = getLastEnvironmentMessage(afterObj)
+			should(lastMsg).match(/VSCode Visible Files\s*file2\.ts/)
+			should(lastMsg).not.match(/VSCode Open Tabs/)
+		})
+
+		it("should never add empty VSCode placeholders", () => {
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: [
+						{
+							type: "text",
+							text: "message 1\n<environment_details>\n# Current Time\n2/14/2025, 6:33:59 PM (America/Los_Angeles, UTC-8:00)\n</environment_details>",
+						} as Anthropic.Messages.TextBlockParam,
+					],
+				},
+				{
+					role: "user",
+					content: [
+						{
+							type: "text",
+							text: "message 2\n<environment_details>\n# Current Time\n2/14/2025, 6:34:00 PM (America/Los_Angeles, UTC-8:00)\n\n# VSCode Visible Files\nfile1.ts\n</environment_details>",
+						} as Anthropic.Messages.TextBlockParam,
+					],
+				},
+				{
+					role: "user",
+					content: [
+						{
+							type: "text",
+							text: "message 3\n<environment_details>\n# Current Time\n2/14/2025, 6:34:01 PM (America/Los_Angeles, UTC-8:00)\n\n# VSCode Visible Files\n(No visible files)\n\n# VSCode Open Tabs\n(No open tabs)\n</environment_details>",
+						} as Anthropic.Messages.TextBlockParam,
+					],
+				},
+			]
+
+			// Make a deep copy for comparison
+			const originalMessages = cloneDeep(messages)
+
+			// Compress and get serialized structures with debug files
+			const { before: beforeFile, after: afterFile } = getDebugFilenames("no_empty_placeholders")
+			const { before, after } = compressConversationHistory(messages, "test_task", beforeFile, afterFile)
+
+			// Parse the structures
+			const beforeObj = JSON.parse(before)
+			const afterObj = JSON.parse(after)
+
+			// Verify compression using helper functions
+			verifyEnvironmentCompression(beforeObj, afterObj)
+
+			// Additional verification specific to this test
+			const lastMsg = getLastEnvironmentMessage(afterObj)
+			should(lastMsg).not.match(/\(No visible files\)/)
+			should(lastMsg).not.match(/\(No open tabs\)/)
+			should(lastMsg).not.match(/VSCode Visible Files/)
+			should(lastMsg).not.match(/VSCode Open Tabs/)
 		})
 
 		it("should remove all but the last task resumption message when last message is task resumption", () => {
