@@ -22,7 +22,7 @@ const NextStepSuggest = ({ suggestions = [], onSuggestionClick }: NextStepSugges
 
 	return (
 		<nav className="px-4 pt-2" aria-label="Next step suggestions" role="navigation">
-			<div className="overflow-y-auto pr-4 max-h-[400px] scrollbar-thin scrollbar-thumb-vscode-scrollbarSlider-background scrollbar-track-transparent">
+			<div className="pr-4 max-h-[400px] scrollbar-thin scrollbar-thumb-vscode-scrollbarSlider-background scrollbar-track-transparent">
 				<div className={cn("flex gap-2.5 pb-4 flex-col")}>
 					{suggestions.map((suggestion) => (
 						<div key={`${suggestion.task}-${suggestion.mode}`} className="w-full">
