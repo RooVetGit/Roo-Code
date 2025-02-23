@@ -3,11 +3,11 @@ import { cn } from "../../lib/utils"
 import { Button } from "../ui/button"
 
 interface NextStepSuggestProps {
-	suggestions?: { task: string; mode: string }[]
+	suggestions?: { task: string; mode: string; id?: string }[]
 	onSuggestionClick?: (task: string, mode: string) => void
 }
 
-const NextStepSuggest = ({ suggestions, onSuggestionClick }: NextStepSuggestProps) => {
+const NextStepSuggest = ({ suggestions = [], onSuggestionClick }: NextStepSuggestProps) => {
 	const handleSuggestionClick = useCallback(
 		(suggestion: { task: string; mode: string }) => {
 			onSuggestionClick?.(suggestion.task, suggestion.mode)
@@ -24,8 +24,8 @@ const NextStepSuggest = ({ suggestions, onSuggestionClick }: NextStepSuggestProp
 		<nav className="px-4 pt-2" aria-label="Next step suggestions" role="navigation">
 			<div className="overflow-y-auto pr-4 max-h-[400px] scrollbar-thin scrollbar-thumb-vscode-scrollbarSlider-background scrollbar-track-transparent">
 				<div className={cn("flex gap-2.5 pb-4 flex-col")}>
-					{suggestions.map((suggestion, index) => (
-						<div key={index} className="w-full">
+					{suggestions.map((suggestion) => (
+						<div key={`${suggestion.task}-${suggestion.mode}`} className="w-full">
 							<Button
 								variant="default"
 								size="default"
@@ -40,8 +40,6 @@ const NextStepSuggest = ({ suggestions, onSuggestionClick }: NextStepSuggestProp
 									"group",
 								)}
 								onClick={() => handleSuggestionClick(suggestion)}
-								tabIndex={0}
-								onKeyDown={(e) => e.key === "Enter" && handleSuggestionClick(suggestion)}
 								aria-label={`Execute task: ${suggestion.task} in ${suggestion.mode} mode`}>
 								<div className="flex flex-col justify-between h-full p-2">
 									<div className="text-base font-normal break-words whitespace-normal leading-relaxed group-hover:text-vscode-button-foreground">
