@@ -36,6 +36,6 @@ module.exports = {
 	],
 	roots: ["<rootDir>/src", "<rootDir>/webview-ui/src"],
 	modulePathIgnorePatterns: [".vscode-test"],
-	reporters: [["jest-simple-dot-reporter", {}]],
+	// reporters: [["jest-simple-dot-reporter", {}]],
 	setupFiles: ["<rootDir>/src/__mocks__/jest.setup.ts"],
 }

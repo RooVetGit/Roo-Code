@@ -55,8 +55,10 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm run install:all
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
       - name: Run unit tests
-        run: npx jest --silent
+        run: npx jest --runInBand
 
   test-webview:
     runs-on: ubuntu-latest
@@ -72,7 +74,7 @@ jobs:
         run: npm run install:all
       - name: Run unit tests
         working-directory: webview-ui
-        run: npx jest --silent
+        run: npx jest --runInBand
 
   unit-test:
     needs: [test-extension, test-webview]
