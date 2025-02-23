@@ -31,7 +31,7 @@ const NextStepSuggest = ({ suggestions = [], onSuggestionClick }: NextStepSugges
 								size="default"
 								className={cn(
 									"text-left transition-colors duration-200",
-									"bg-vscode-button-background/80 text-vscode-button-foreground hover:bg-vscode-button-hoverBackground",
+									"bg-vscode-button-background/80 text-vscode-button-foreground hover:bg-vscode-list-hoverBackground hover:text-vscode-list-hoverForeground",
 									"focus:outline-none focus:ring-2 focus:ring-vscode-focusBorder",
 									"shadow-sm hover:shadow-md shadow-vscode-widget-shadow/50",
 									"rounded-lg overflow-hidden",
