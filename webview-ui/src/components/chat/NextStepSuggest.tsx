@@ -1,13 +1,17 @@
-import { useCallback } from "react"
+import { useCallback, useState } from "react"
 import { cn } from "../../lib/utils"
 import { Button } from "../ui/button"
+import { ChevronDown, ChevronUp } from "lucide-react"
 
 interface NextStepSuggestProps {
 	suggestions?: { task: string; mode: string; id?: string }[]
 	onSuggestionClick?: (task: string, mode: string) => void
+	instanceId?: string
 }
 
-const NextStepSuggest = ({ suggestions = [], onSuggestionClick }: NextStepSuggestProps) => {
+const NextStepSuggest = ({ suggestions = [], onSuggestionClick, instanceId = "default" }: NextStepSuggestProps) => {
+	const [isExpanded, setIsExpanded] = useState(false)
+
 	const handleSuggestionClick = useCallback(
 		(suggestion: { task: string; mode: string }) => {
 			onSuggestionClick?.(suggestion.task, suggestion.mode)
@@ -15,17 +19,23 @@ const NextStepSuggest = ({ suggestions = [], onSuggestionClick }: NextStepSugges
 		[onSuggestionClick],
 	)
 
+	const toggleExpand = useCallback(() => {
+		setIsExpanded((prev) => !prev)
+	}, [])
+
 	// Don't render if there are no suggestions or no click handler
 	if (!suggestions?.length || !onSuggestionClick) {
 		return null
 	}
 
+	const displayedSuggestions = isExpanded ? suggestions : suggestions.slice(0, 1)
+
 	return (
 		<nav className="px-4 pt-2" aria-label="Next step suggestions" role="navigation">
 			<div className="pr-4 max-h-[400px] scrollbar-thin scrollbar-thumb-vscode-scrollbarSlider-background scrollbar-track-transparent">
 				<div className={cn("flex gap-2.5 pb-4 flex-col")}>
-					{suggestions.map((suggestion) => (
-						<div key={`${suggestion.task}-${suggestion.mode}`} className="w-full">
+					{displayedSuggestions.map((suggestion) => (
+						<div key={`${suggestion.task}-${suggestion.mode}-${instanceId}`} className="w-full">
 							<Button
 								variant="default"
 								size="default"
@@ -52,6 +62,26 @@ const NextStepSuggest = ({ suggestions = [], onSuggestionClick }: NextStepSugges
 							</Button>
 						</div>
 					))}
+					{suggestions.length > 1 && (
+						<Button
+							variant="ghost"
+							size="sm"
+							className="text-vscode-textLink hover:text-vscode-textLink-foreground flex items-center gap-1"
+							onClick={toggleExpand}
+							aria-label={isExpanded ? "Show less suggestions" : "Show more suggestions"}>
+							{isExpanded ? (
+								<>
+									<ChevronUp className="w-4 h-4" />
+									Show Less
+								</>
+							) : (
+								<>
+									<ChevronDown className="w-4 h-4" />
+									Show More ({suggestions.length - 1} more)
+								</>
+							)}
+						</Button>
+					)}
 				</div>
 			</div>
 		</nav>
