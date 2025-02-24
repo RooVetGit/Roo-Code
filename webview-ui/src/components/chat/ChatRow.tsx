@@ -22,7 +22,7 @@ import McpResourceRow from "../mcp/McpResourceRow"
 import McpToolRow from "../mcp/McpToolRow"
 import { highlightMentions } from "./TaskHeader"
 import { CheckpointSaved } from "./checkpoints/CheckpointSaved"
-import NextStepSuggest from "./NextStepSuggest"
+import NextStepSuggestionsWrapper from "./NextStepSuggestionsWrapper"
 
 interface ChatRowProps {
 	message: ClineMessage
@@ -33,7 +33,6 @@ interface ChatRowProps {
 	onToggleExpand: () => void
 	onHeightChange: (isTaller: boolean) => void
 	onSuggestionClick?: (task: string, mode: string) => void
-	suggestions?: { task: string; mode: string }[]
 }
 
 interface ChatRowContentProps extends Omit<ChatRowProps, "onHeightChange"> {}
@@ -81,7 +80,6 @@ export const ChatRowContent = ({
 	isStreaming,
 	onToggleExpand,
 	onSuggestionClick,
-	suggestions,
 }: ChatRowContentProps) => {
 	const { mcpServers, alwaysAllowMcp, currentCheckpoint } = useExtensionState()
 	const [reasoningCollapsed, setReasoningCollapsed] = useState(true)
@@ -752,7 +750,14 @@ export const ChatRowContent = ({
 						/>
 					)
 				case "next_step_suggest":
-					return <NextStepSuggest suggestions={suggestions} onSuggestionClick={onSuggestionClick} />
+					return (
+						<NextStepSuggestionsWrapper
+							suggestion={message.text!}
+							partial={message.partial!}
+							ts={message.ts}
+							onSuggestionClick={onSuggestionClick}
+						/>
+					)
 				default:
 					return (
 						<>
