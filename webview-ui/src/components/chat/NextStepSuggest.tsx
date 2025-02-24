@@ -6,10 +6,10 @@ import { ChevronDown, ChevronUp } from "lucide-react"
 interface NextStepSuggestProps {
 	suggestions?: { task: string; mode: string; id?: string }[]
 	onSuggestionClick?: (task: string, mode: string) => void
-	instanceId?: string
+	ts: number
 }
 
-const NextStepSuggest = ({ suggestions = [], onSuggestionClick, instanceId = "default" }: NextStepSuggestProps) => {
+const NextStepSuggest = ({ suggestions = [], onSuggestionClick, ts = 1 }: NextStepSuggestProps) => {
 	const [isExpanded, setIsExpanded] = useState(false)
 
 	const handleSuggestionClick = useCallback(
@@ -35,7 +35,7 @@ const NextStepSuggest = ({ suggestions = [], onSuggestionClick, instanceId = "de
 			<div className="pr-4 max-h-[400px] scrollbar-thin scrollbar-thumb-vscode-scrollbarSlider-background scrollbar-track-transparent">
 				<div className={cn("flex gap-2.5 pb-4 flex-col")}>
 					{displayedSuggestions.map((suggestion) => (
-						<div key={`${suggestion.task}-${suggestion.mode}-${instanceId}`} className="w-full">
+						<div key={`${suggestion.task}-${suggestion.mode}-${ts}`} className="w-full">
 							<Button
 								variant="default"
 								size="default"
