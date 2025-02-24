@@ -12,61 +12,49 @@ export const ModelInfoView = ({
 	setIsDescriptionExpanded,
 }: {
 	selectedModelId: string
-	modelInfo: ModelInfo
+	modelInfo: ModelInfo | null
 	isDescriptionExpanded: boolean
 	setIsDescriptionExpanded: (isExpanded: boolean) => void
 }) => {
 	const isGemini = Object.keys(geminiModels).includes(selectedModelId)
 
 	const infoItems = [
-		modelInfo.description && (
+		modelInfo?.description && (
 			<ModelDescriptionMarkdown
 				key="description"
-				markdown={modelInfo.description}
+				markdown={modelInfo?.description}
 				isExpanded={isDescriptionExpanded}
 				setIsExpanded={setIsDescriptionExpanded}
 			/>
 		),
-		<ModelInfoSupportsItem
-			isSupported={modelInfo.supportsImages ?? false}
-			supportsLabel="Supports images"
-			doesNotSupportLabel="Does not support images"
-		/>,
-		<ModelInfoSupportsItem
-			isSupported={modelInfo.supportsComputerUse ?? false}
-			supportsLabel="Supports computer use"
-			doesNotSupportLabel="Does not support computer use"
-		/>,
+		<ModelInfoSupportsItem isSupported={modelInfo?.supportsImages} label="Supports images" />,
+		<ModelInfoSupportsItem isSupported={modelInfo?.supportsComputerUse} label="Supports computer use" />,
 		!isGemini && (
-			<ModelInfoSupportsItem
-				isSupported={modelInfo.supportsPromptCache}
-				supportsLabel="Supports prompt caching"
-				doesNotSupportLabel="Does not support prompt caching"
-			/>
+			<ModelInfoSupportsItem isSupported={modelInfo?.supportsPromptCache} label="Supports prompt caching" />
 		),
-		modelInfo.maxTokens !== undefined && modelInfo.maxTokens > 0 && (
+		modelInfo?.maxTokens !== undefined && modelInfo?.maxTokens > 0 && (
 			<span key="maxTokens">
 				<span style={{ fontWeight: 500 }}>Max output:</span> {modelInfo.maxTokens?.toLocaleString()} tokens
 			</span>
 		),
-		modelInfo.inputPrice !== undefined && modelInfo.inputPrice > 0 && (
+		modelInfo?.inputPrice !== undefined && modelInfo.inputPrice > 0 && (
 			<span key="inputPrice">
 				<span style={{ fontWeight: 500 }}>Input price:</span> {formatPrice(modelInfo.inputPrice)}/million tokens
 			</span>
 		),
-		modelInfo.supportsPromptCache && modelInfo.cacheWritesPrice && (
+		modelInfo?.supportsPromptCache && modelInfo.cacheWritesPrice && (
 			<span key="cacheWritesPrice">
 				<span style={{ fontWeight: 500 }}>Cache writes price:</span>{" "}
 				{formatPrice(modelInfo.cacheWritesPrice || 0)}/million tokens
 			</span>
 		),
-		modelInfo.supportsPromptCache && modelInfo.cacheReadsPrice && (
+		modelInfo?.supportsPromptCache && modelInfo.cacheReadsPrice && (
 			<span key="cacheReadsPrice">
 				<span style={{ fontWeight: 500 }}>Cache reads price:</span>{" "}
 				{formatPrice(modelInfo.cacheReadsPrice || 0)}/million tokens
 			</span>
 		),
-		modelInfo.outputPrice !== undefined && modelInfo.outputPrice > 0 && (
+		modelInfo?.outputPrice !== undefined && modelInfo.outputPrice > 0 && (
 			<span key="outputPrice">
 				<span style={{ fontWeight: 500 }}>Output price:</span> {formatPrice(modelInfo.outputPrice)}/million
 				tokens
@@ -95,15 +83,7 @@ export const ModelInfoView = ({
 	)
 }
 
-const ModelInfoSupportsItem = ({
-	isSupported,
-	supportsLabel,
-	doesNotSupportLabel,
-}: {
-	isSupported: boolean
-	supportsLabel: string
-	doesNotSupportLabel: string
-}) => (
+const ModelInfoSupportsItem = ({ isSupported, label }: { isSupported: boolean | undefined | null; label: string }) => (
 	<span
 		style={{
 			fontWeight: 500,
@@ -113,12 +93,14 @@ const ModelInfoSupportsItem = ({
 			className={`codicon codicon-${isSupported ? "check" : "x"}`}
 			style={{
 				marginRight: 4,
-				marginBottom: isSupported ? 1 : -1,
-				fontSize: isSupported ? 11 : 13,
+				marginBottom: 1,
+				fontSize: 11,
 				fontWeight: 700,
 				display: "inline-block",
 				verticalAlign: "bottom",
 			}}></i>
-		{isSupported ? supportsLabel : doesNotSupportLabel}
+		{label}
+		{": "}
+		{isSupported == null ? "Unknown" : isSupported ? "Yes" : "No"}
 	</span>
 )

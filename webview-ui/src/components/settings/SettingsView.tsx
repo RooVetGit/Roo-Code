@@ -105,6 +105,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 					return prevState
 				}
 				setChangeDetected(true)
+
 				return {
 					...prevState,
 					apiConfiguration: {
@@ -343,7 +344,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 						/>
 						<ApiOptions
 							uriScheme={extensionState.uriScheme}
-							apiConfiguration={apiConfiguration}
+							apiConfiguration={apiConfiguration ?? {}}
 							setApiConfigurationField={setApiConfigurationField}
 							apiErrorMessage={apiErrorMessage}
 							modelIdErrorMessage={modelIdErrorMessage}
