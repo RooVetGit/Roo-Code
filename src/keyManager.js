@@ -2,6 +2,7 @@ class KeyManager {
   constructor() {
     this.apiKeys = [];
     this.rateLimitStatus = {};
+    this.usageStats = {};
   }
 
   loadApiKeys(apiKeys) {
@@ -31,6 +32,28 @@ class KeyManager {
 
   markKeyAsRateLimited(key, retryAfter) {
     this.rateLimitStatus[key] = { rateLimited: true, retryAfter };
+  }
+
+  trackUsage(key, usage) {
+    if (!this.usageStats[key]) {
+      this.usageStats[key] = { count: 0, lastUsed: 0 };
+    }
+    this.usageStats[key].count += usage;
+    this.usageStats[key].lastUsed = Date.now();
+  }
+
+  getUsageStats() {
+    return this.usageStats;
+  }
+
+  checkKeyHealth(key) {
+    // Placeholder for health check logic
+    // This could include checking if the key is expired or invalid
+    return true;
+  }
+
+  disableKey(key) {
+    this.apiKeys = this.apiKeys.filter(k => k !== key);
   }
 }
 
