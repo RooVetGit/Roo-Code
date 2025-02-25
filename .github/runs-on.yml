@@ -1,0 +1,5 @@
+runners:
+  gpu-type1:
+    family: ["g4dn", "g5"]
+    image: ubuntu22-gpu-x64
+    cpu: [4, 16]
