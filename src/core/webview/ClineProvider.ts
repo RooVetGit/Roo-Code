@@ -148,12 +148,13 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	private disposables: vscode.Disposable[] = []
 	private view?: vscode.WebviewView | vscode.WebviewPanel
 	private isViewLaunched = false
-	private cline?: Cline
+	private clineStack: Cline[] = []
 	private workspaceTracker?: WorkspaceTracker
 	protected mcpHub?: McpHub // Change from private to protected
 	private latestAnnouncementId = "jan-21-2025-custom-modes" // update to some unique identifier when we add a new announcement
 	configManager: ConfigManager
 	customModesManager: CustomModesManager
+	private lastTaskNumber = -1
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
@@ -177,6 +178,75 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			})
 	}
 
+	// Adds a new Cline instance to clineStack, marking the start of a new task.
+	// The instance is pushed to the top of the stack (LIFO order).
+	// When the task is completed, the top instance is removed, reactivating the previous task.
+	addClineToStack(cline: Cline): void {
+		// if cline.getTaskNumber() is -1, it means it is a new task
+		if (cline.getTaskNumber() === -1) {
+			// increase last cline number by 1
+			this.lastTaskNumber = this.lastTaskNumber + 1
+			cline.setTaskNumber(this.lastTaskNumber)
+		}
+		// if cline.getTaskNumber() > lastTaskNumber, set lastTaskNumber to cline.getTaskNumber()
+		else if (cline.getTaskNumber() > this.lastTaskNumber) {
+			this.lastTaskNumber = cline.getTaskNumber()
+		}
+		// push the cline instance to the stack
+		this.clineStack.push(cline)
+	}
+
+	// Removes and destroys the top Cline instance (the current finished task), activating the previous one (resuming the parent task).
+	async removeClineFromStack() {
+		// pop the top Cline instance from the stack
+		var clineToBeRemoved = this.clineStack.pop()
+		if (clineToBeRemoved) {
+			await clineToBeRemoved.abortTask()
+			// make sure no reference kept, once promises end it will be garbage collected
+			clineToBeRemoved = undefined
+		}
+		// if the stack is empty, reset the last task number
+		if (this.clineStack.length === 0) {
+			this.lastTaskNumber = -1
+		}
+	}
+
+	// remove the cline object with the received clineId, and all the cline objects bove it in the stack
+	// for each cline object removed, pop it from the stack, abort the task and set it to undefined
+	async removeClineWithIdFromStack(clineId: string) {
+		const index = this.clineStack.findIndex((c) => c.taskId === clineId)
+		if (index === -1) {
+			return
+		}
+		for (let i = this.clineStack.length - 1; i >= index; i--) {
+			this.removeClineFromStack()
+		}
+	}
+
+	// returns the current cline object in the stack (the top one)
+	// if the stack is empty, returns undefined
+	getCurrentCline(): Cline | undefined {
+		if (this.clineStack.length === 0) {
+			return undefined
+		}
+		return this.clineStack[this.clineStack.length - 1]
+	}
+
+	// returns the current clineStack length (how many cline objects are in the stack)
+	getClineStackSize(): number {
+		return this.clineStack.length
+	}
+
+	// remove the current task/cline instance (at the top of the stack), ao this task is finished
+	// and resume the previous task/cline instance (if it exists)
+	// this is used when a sub task is finished and the parent task needs to be resumed
+	async finishSubTask(lastMessage?: string) {
+		// remove the last cline instance from the stack (this is the finished sub task)
+		await this.removeClineFromStack()
+		// resume the last cline instance in the stack (if it exists - this is the 'parnt' calling task)
+		this.getCurrentCline()?.resumePausedTask(lastMessage)
+	}
+
 	/*
 	VSCode extensions use the disposable pattern to clean up resources when the sidebar/editor tab is closed by the user or system. This applies to event listening, commands, interacting with the UI, etc.
 	- https://vscode-docs.readthedocs.io/en/stable/extensions/patterns-and-principles/
@@ -184,7 +254,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	*/
 	async dispose() {
 		this.outputChannel.appendLine("Disposing ClineProvider...")
-		await this.clearTask()
+		await this.removeClineFromStack()
 		this.outputChannel.appendLine("Cleared task")
 		if (this.view && "dispose" in this.view) {
 			this.view.dispose()
@@ -237,7 +307,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			return false
 		}
 
-		if (visibleProvider.cline) {
+		// check if there is a cline instance in the stack (if this provider has an active task)
+		if (visibleProvider.getCurrentCline()) {
 			return true
 		}
 
@@ -268,7 +339,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			return
 		}
 
-		if (visibleProvider.cline && command.endsWith("InCurrentTask")) {
+		if (visibleProvider.getCurrentCline() && command.endsWith("InCurrentTask")) {
 			await visibleProvider.postMessageToWebview({
 				type: "invoke",
 				invoke: "sendMessage",
@@ -304,7 +375,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			return
 		}
 
-		if (visibleProvider.cline && command.endsWith("InCurrentTask")) {
+		if (visibleProvider.getCurrentCline() && command.endsWith("InCurrentTask")) {
 			await visibleProvider.postMessageToWebview({
 				type: "invoke",
 				invoke: "sendMessage",
@@ -393,13 +464,21 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		)
 
 		// if the extension is starting a new session, clear previous task state
-		this.clearTask()
+		await this.removeClineFromStack()
 
 		this.outputChannel.appendLine("Webview view resolved")
 	}
 
+	// a wrapper that inits a new Cline instance (Task) ans setting it as a sub task of the current task
+	public async initClineWithSubTask(task?: string, images?: string[]) {
+		await this.initClineWithTask(task, images)
+		this.getCurrentCline()?.setSubTask()
+	}
+
+	// when initializing a new task, (not from history but from a tool command new_task) there is no need to remove the previouse task
+	// since the new task is a sub task of the previous one, and when it finishes it is removed from the stack and the caller is resumed
+	// in this way we can have a chain of tasks, each one being a sub task of the previous one until the main task is finished
 	public async initClineWithTask(task?: string, images?: string[]) {
-		await this.clearTask()
 		const {
 			apiConfiguration,
 			customModePrompts,
@@ -414,7 +493,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		const modePrompt = customModePrompts?.[mode] as PromptComponent
 		const effectiveInstructions = [globalInstructions, modePrompt?.customInstructions].filter(Boolean).join("\n\n")
 
-		this.cline = new Cline({
+		const newCline = new Cline({
 			provider: this,
 			apiConfiguration,
 			customInstructions: effectiveInstructions,
@@ -425,10 +504,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			images,
 			experiments,
 		})
+		this.addClineToStack(newCline)
 	}
 
 	public async initClineWithHistoryItem(historyItem: HistoryItem) {
-		await this.clearTask()
+		await this.removeClineFromStack()
 
 		const {
 			apiConfiguration,
@@ -444,7 +524,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		const modePrompt = customModePrompts?.[mode] as PromptComponent
 		const effectiveInstructions = [globalInstructions, modePrompt?.customInstructions].filter(Boolean).join("\n\n")
 
-		this.cline = new Cline({
+		const newCline = new Cline({
 			provider: this,
 			apiConfiguration,
 			customInstructions: effectiveInstructions,
@@ -454,6 +534,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			historyItem,
 			experiments,
 		})
+		// get this cline task number id from the history item and set it to newCline
+		newCline.setTaskNumber(historyItem.number)
+		this.addClineToStack(newCline)
 	}
 
 	public async postMessageToWebview(message: ExtensionMessage) {
@@ -808,11 +891,15 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.postStateToWebview()
 						break
 					case "askResponse":
-						this.cline?.handleWebviewAskResponse(message.askResponse!, message.text, message.images)
+						this.getCurrentCline()?.handleWebviewAskResponse(
+							message.askResponse!,
+							message.text,
+							message.images,
+						)
 						break
 					case "clearTask":
 						// newTask will start a new task with a given task text, while clear task resets the current session and allows for a new task to be started
-						await this.clearTask()
+						await this.removeClineFromStack()
 						await this.postStateToWebview()
 						break
 					case "didShowAnnouncement":
@@ -824,7 +911,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.postMessageToWebview({ type: "selectedImages", images })
 						break
 					case "exportCurrentTask":
-						const currentTaskId = this.cline?.taskId
+						const currentTaskId = this.getCurrentCline()?.taskId
 						if (currentTaskId) {
 							this.exportTaskWithId(currentTaskId)
 						}
@@ -890,7 +977,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						const result = checkoutDiffPayloadSchema.safeParse(message.payload)
 
 						if (result.success) {
-							await this.cline?.checkpointDiff(result.data)
+							await this.getCurrentCline()?.checkpointDiff(result.data)
 						}
 
 						break
@@ -901,13 +988,13 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							await this.cancelTask()
 
 							try {
-								await pWaitFor(() => this.cline?.isInitialized === true, { timeout: 3_000 })
+								await pWaitFor(() => this.getCurrentCline()?.isInitialized === true, { timeout: 3_000 })
 							} catch (error) {
 								vscode.window.showErrorMessage("Timed out when attempting to restore checkpoint.")
 							}
 
 							try {
-								await this.cline?.checkpointRestore(result.data)
+								await this.getCurrentCline()?.checkpointRestore(result.data)
 							} catch (error) {
 								vscode.window.showErrorMessage("Failed to restore checkpoint.")
 							}
@@ -1143,42 +1230,43 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						)
 						if (
 							(answer === "Just this message" || answer === "This and all subsequent messages") &&
-							this.cline &&
+							this.getCurrentCline() &&
 							typeof message.value === "number" &&
 							message.value
 						) {
 							const timeCutoff = message.value - 1000 // 1 second buffer before the message to delete
-							const messageIndex = this.cline.clineMessages.findIndex(
+							const messageIndex = this.getCurrentCline()!.clineMessages.findIndex(
 								(msg) => msg.ts && msg.ts >= timeCutoff,
 							)
-							const apiConversationHistoryIndex = this.cline.apiConversationHistory.findIndex(
-								(msg) => msg.ts && msg.ts >= timeCutoff,
-							)
+							const apiConversationHistoryIndex =
+								this.getCurrentCline()?.apiConversationHistory.findIndex(
+									(msg) => msg.ts && msg.ts >= timeCutoff,
+								)
 
 							if (messageIndex !== -1) {
-								const { historyItem } = await this.getTaskWithId(this.cline.taskId)
+								const { historyItem } = await this.getTaskWithId(this.getCurrentCline()!.taskId)
 
 								if (answer === "Just this message") {
 									// Find the next user message first
-									const nextUserMessage = this.cline.clineMessages
-										.slice(messageIndex + 1)
+									const nextUserMessage = this.getCurrentCline()!
+										.clineMessages.slice(messageIndex + 1)
 										.find((msg) => msg.type === "say" && msg.say === "user_feedback")
 
 									// Handle UI messages
 									if (nextUserMessage) {
 										// Find absolute index of next user message
-										const nextUserMessageIndex = this.cline.clineMessages.findIndex(
+										const nextUserMessageIndex = this.getCurrentCline()!.clineMessages.findIndex(
 											(msg) => msg === nextUserMessage,
 										)
 										// Keep messages before current message and after next user message
-										await this.cline.overwriteClineMessages([
-											...this.cline.clineMessages.slice(0, messageIndex),
-											...this.cline.clineMessages.slice(nextUserMessageIndex),
+										await this.getCurrentCline()!.overwriteClineMessages([
+											...this.getCurrentCline()!.clineMessages.slice(0, messageIndex),
+											...this.getCurrentCline()!.clineMessages.slice(nextUserMessageIndex),
 										])
 									} else {
 										// If no next user message, keep only messages before current message
-										await this.cline.overwriteClineMessages(
-											this.cline.clineMessages.slice(0, messageIndex),
+										await this.getCurrentCline()!.overwriteClineMessages(
+											this.getCurrentCline()!.clineMessages.slice(0, messageIndex),
 										)
 									}
 
@@ -1186,30 +1274,36 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 									if (apiConversationHistoryIndex !== -1) {
 										if (nextUserMessage && nextUserMessage.ts) {
 											// Keep messages before current API message and after next user message
-											await this.cline.overwriteApiConversationHistory([
-												...this.cline.apiConversationHistory.slice(
+											await this.getCurrentCline()!.overwriteApiConversationHistory([
+												...this.getCurrentCline()!.apiConversationHistory.slice(
 													0,
 													apiConversationHistoryIndex,
 												),
-												...this.cline.apiConversationHistory.filter(
+												...this.getCurrentCline()!.apiConversationHistory.filter(
 													(msg) => msg.ts && msg.ts >= nextUserMessage.ts,
 												),
 											])
 										} else {
 											// If no next user message, keep only messages before current API message
-											await this.cline.overwriteApiConversationHistory(
-												this.cline.apiConversationHistory.slice(0, apiConversationHistoryIndex),
+											await this.getCurrentCline()!.overwriteApiConversationHistory(
+												this.getCurrentCline()!.apiConversationHistory.slice(
+													0,
+													apiConversationHistoryIndex,
+												),
 											)
 										}
 									}
 								} else if (answer === "This and all subsequent messages") {
 									// Delete this message and all that follow
-									await this.cline.overwriteClineMessages(
-										this.cline.clineMessages.slice(0, messageIndex),
+									await this.getCurrentCline()!.overwriteClineMessages(
+										this.getCurrentCline()!.clineMessages.slice(0, messageIndex),
 									)
 									if (apiConversationHistoryIndex !== -1) {
-										await this.cline.overwriteApiConversationHistory(
-											this.cline.apiConversationHistory.slice(0, apiConversationHistoryIndex),
+										await this.getCurrentCline()!.overwriteApiConversationHistory(
+											this.getCurrentCline()!.apiConversationHistory.slice(
+												0,
+												apiConversationHistoryIndex,
+											),
 										)
 									}
 								}
@@ -1479,8 +1573,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("experiments", updatedExperiments)
 
 						// Update diffStrategy in current Cline instance if it exists
-						if (message.values[EXPERIMENT_IDS.DIFF_STRATEGY] !== undefined && this.cline) {
-							await this.cline.updateDiffStrategy(
+						if (message.values[EXPERIMENT_IDS.DIFF_STRATEGY] !== undefined && this.getCurrentCline()) {
+							await this.getCurrentCline()!.updateDiffStrategy(
 								Experiments.isEnabled(updatedExperiments, EXPERIMENT_IDS.DIFF_STRATEGY),
 							)
 						}
@@ -1724,25 +1818,25 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.updateGlobalState("requestyModelInfo", requestyModelInfo),
 			this.updateGlobalState("modelTemperature", modelTemperature),
 		])
-		if (this.cline) {
-			this.cline.api = buildApiHandler(apiConfiguration)
+		if (this.getCurrentCline()) {
+			this.getCurrentCline()!.api = buildApiHandler(apiConfiguration)
 		}
 	}
 
 	async cancelTask() {
-		if (this.cline) {
-			const { historyItem } = await this.getTaskWithId(this.cline.taskId)
-			this.cline.abortTask()
+		if (this.getCurrentCline()) {
+			const { historyItem } = await this.getTaskWithId(this.getCurrentCline()!.taskId)
+			this.getCurrentCline()!.abortTask()
 
 			await pWaitFor(
 				() =>
-					this.cline === undefined ||
-					this.cline.isStreaming === false ||
-					this.cline.didFinishAbortingStream ||
+					this.getCurrentCline()! === undefined ||
+					this.getCurrentCline()!.isStreaming === false ||
+					this.getCurrentCline()!.didFinishAbortingStream ||
 					// If only the first chunk is processed, then there's no
 					// need to wait for graceful abort (closes edits, browser,
 					// etc).
-					this.cline.isWaitingForFirstChunk,
+					this.getCurrentCline()!.isWaitingForFirstChunk,
 				{
 					timeout: 3_000,
 				},
@@ -1750,11 +1844,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				console.error("Failed to abort task")
 			})
 
-			if (this.cline) {
+			if (this.getCurrentCline()) {
 				// 'abandoned' will prevent this Cline instance from affecting
 				// future Cline instances. This may happen if its hanging on a
 				// streaming request.
-				this.cline.abandoned = true
+				this.getCurrentCline()!.abandoned = true
 			}
 
 			// Clears task again, so we need to abortTask manually above.
@@ -1765,8 +1859,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	async updateCustomInstructions(instructions?: string) {
 		// User may be clearing the field
 		await this.updateGlobalState("customInstructions", instructions || undefined)
-		if (this.cline) {
-			this.cline.customInstructions = instructions || undefined
+		if (this.getCurrentCline()) {
+			this.getCurrentCline()!.customInstructions = instructions || undefined
 		}
 		await this.postStateToWebview()
 	}
@@ -1964,8 +2058,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		await this.updateGlobalState("apiProvider", openrouter)
 		await this.storeSecret("openRouterApiKey", apiKey)
 		await this.postStateToWebview()
-		if (this.cline) {
-			this.cline.api = buildApiHandler({ apiProvider: openrouter, openRouterApiKey: apiKey })
+		if (this.getCurrentCline()) {
+			this.getCurrentCline()!.api = buildApiHandler({ apiProvider: openrouter, openRouterApiKey: apiKey })
 		}
 		// await this.postMessageToWebview({ type: "action", action: "settingsButtonClicked" }) // bad ux if user is on welcome
 	}
@@ -1996,8 +2090,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		await this.updateGlobalState("apiProvider", glama)
 		await this.storeSecret("glamaApiKey", apiKey)
 		await this.postStateToWebview()
-		if (this.cline) {
-			this.cline.api = buildApiHandler({
+		if (this.getCurrentCline()) {
+			this.getCurrentCline()!.api = buildApiHandler({
 				apiProvider: glama,
 				glamaApiKey: apiKey,
 			})
@@ -2258,7 +2352,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	async showTaskWithId(id: string) {
-		if (id !== this.cline?.taskId) {
+		if (id !== this.getCurrentCline()?.taskId) {
 			// non-current task
 			const { historyItem } = await this.getTaskWithId(id)
 			await this.initClineWithHistoryItem(historyItem) // clears existing task
@@ -2271,38 +2365,25 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		await downloadTask(historyItem.ts, apiConversationHistory)
 	}
 
+	// this function deletes a task from task hidtory, and deletes it's checkpoints and delete the task folder
 	async deleteTaskWithId(id: string) {
-		if (id === this.cline?.taskId) {
-			await this.clearTask()
+		// get the task directory full path
+		const { taskDirPath } = await this.getTaskWithId(id)
+
+		// remove task from stack if it's the current task
+		if (id === this.getCurrentCline()?.taskId) {
+			await this.removeClineWithIdFromStack(id)
 		}
 
-		const { taskDirPath, apiConversationHistoryFilePath, uiMessagesFilePath } = await this.getTaskWithId(id)
-
+		// delete task from the task history state
 		await this.deleteTaskFromState(id)
 
-		// Delete the task files.
-		const apiConversationHistoryFileExists = await fileExistsAtPath(apiConversationHistoryFilePath)
-
-		if (apiConversationHistoryFileExists) {
-			await fs.unlink(apiConversationHistoryFilePath)
-		}
-
-		const uiMessagesFileExists = await fileExistsAtPath(uiMessagesFilePath)
-
-		if (uiMessagesFileExists) {
-			await fs.unlink(uiMessagesFilePath)
-		}
-
-		const legacyMessagesFilePath = path.join(taskDirPath, "claude_messages.json")
-
-		if (await fileExistsAtPath(legacyMessagesFilePath)) {
-			await fs.unlink(legacyMessagesFilePath)
-		}
-
+		// check if checkpoints are enabled
 		const { checkpointsEnabled } = await this.getState()
+		// get the base directory of the project
 		const baseDir = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0)
 
-		// Delete checkpoints branch.
+		// delete checkpoints branch from project git repo
 		if (checkpointsEnabled && baseDir) {
 			const branchSummary = await simpleGit(baseDir)
 				.branch(["-D", `roo-code-checkpoints-${id}`])
@@ -2313,22 +2394,15 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			}
 		}
 
-		// Delete checkpoints directory
-		const checkpointsDir = path.join(taskDirPath, "checkpoints")
-
-		if (await fileExistsAtPath(checkpointsDir)) {
-			try {
-				await fs.rm(checkpointsDir, { recursive: true, force: true })
-				console.log(`[deleteTaskWithId${id}] removed checkpoints repo`)
-			} catch (error) {
-				console.error(
-					`[deleteTaskWithId${id}] failed to remove checkpoints repo: ${error instanceof Error ? error.message : String(error)}`,
-				)
-			}
+		// delete the entire task directory including checkpoints and all content
+		try {
+			await fs.rm(taskDirPath, { recursive: true, force: true })
+			console.log(`[deleteTaskWithId${id}] removed task directory`)
+		} catch (error) {
+			console.error(
+				`[deleteTaskWithId${id}] failed to remove task directory: ${error instanceof Error ? error.message : String(error)}`,
+			)
 		}
-
-		// Succeeds if the dir is empty.
-		await fs.rmdir(taskDirPath)
 	}
 
 	async deleteTaskFromState(id: string) {
@@ -2397,10 +2471,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			alwaysAllowMcp: alwaysAllowMcp ?? false,
 			alwaysAllowModeSwitch: alwaysAllowModeSwitch ?? false,
 			uriScheme: vscode.env.uriScheme,
-			currentTaskItem: this.cline?.taskId
-				? (taskHistory || []).find((item) => item.id === this.cline?.taskId)
+			currentTaskItem: this.getCurrentCline()?.taskId
+				? (taskHistory || []).find((item) => item.id === this.getCurrentCline()?.taskId)
 				: undefined,
-			clineMessages: this.cline?.clineMessages || [],
+			clineMessages: this.getCurrentCline()?.clineMessages || [],
 			taskHistory: (taskHistory || [])
 				.filter((item: HistoryItem) => item.ts && item.task)
 				.sort((a: HistoryItem, b: HistoryItem) => b.ts - a.ts),
@@ -2433,11 +2507,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			mcpServers: this.mcpHub?.getAllServers() ?? [],
 			maxOpenTabsContext: maxOpenTabsContext ?? 20,
 		}
-	}
-
-	async clearTask() {
-		this.cline?.abortTask()
-		this.cline = undefined // removes reference to it, so once promises end it will be garbage collected
 	}
 
 	// Caching mechanism to keep track of webview messages + API conversation history per provider instance
@@ -2880,10 +2949,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		}
 		await this.configManager.resetAllConfigs()
 		await this.customModesManager.resetCustomModes()
-		if (this.cline) {
-			this.cline.abortTask()
-			this.cline = undefined
-		}
+		await this.removeClineFromStack()
 		await this.postStateToWebview()
 		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 	}
@@ -2901,7 +2967,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	get messages() {
-		return this.cline?.clineMessages || []
+		return this.getCurrentCline()?.clineMessages || []
 	}
 
 	// Add public getter

@@ -87,6 +87,11 @@ export type ClineOptions = {
 
 export class Cline {
 	readonly taskId: string
+	private taskNumber: number
+	// a flag that indicated if this Cline instance is a subtask (on finish return control to parent task)
+	private isSubTask: boolean = false
+	// a flag that indicated if this Cline instance is paused (waiting for provider to resume it after subtask completion)
+	private isPaused: boolean = false
 	api: ApiHandler
 	private terminalManager: TerminalManager
 	private urlContentFetcher: UrlContentFetcher
@@ -148,6 +153,7 @@ export class Cline {
 		}
 
 		this.taskId = crypto.randomUUID()
+		this.taskNumber = -1
 		this.api = buildApiHandler(apiConfiguration)
 		this.terminalManager = new TerminalManager()
 		this.urlContentFetcher = new UrlContentFetcher(provider.context)
@@ -191,6 +197,22 @@ export class Cline {
 		}
 
 		return [instance, promise]
+	}
+
+	// a helper function to set the private member isSubTask to true
+	// and by that set this Cline instance to be a subtask (on finish return control to parent task)
+	setSubTask() {
+		this.isSubTask = true
+	}
+
+	// sets the task number (sequencial number of this task from all the subtask ran from this main task stack)
+	setTaskNumber(taskNumber: number) {
+		this.taskNumber = taskNumber
+	}
+
+	// gets the task number, the sequencial number of this task from all the subtask ran from this main task stack
+	getTaskNumber() {
+		return this.taskNumber
 	}
 
 	// Add method to update diffStrategy
@@ -299,6 +321,7 @@ export class Cline {
 
 			await this.providerRef.deref()?.updateTaskHistory({
 				id: this.taskId,
+				number: this.taskNumber,
 				ts: lastRelevantMessage.ts,
 				task: taskMessage.text ?? "",
 				tokensIn: apiMetrics.totalTokensIn,
@@ -511,6 +534,39 @@ export class Cline {
 			},
 			...imageBlocks,
 		])
+	}
+
+	async resumePausedTask(lastMessage?: string) {
+		// release this Cline instance from paused state
+		this.isPaused = false
+
+		// This adds the completion message to conversation history
+		await this.say("text", `new_task finished successfully! ${lastMessage ?? "Please continue to the next task."}`)
+
+		await this.addToApiConversationHistory({
+			role: "user",
+			content: [
+				{
+					type: "text",
+					text: `[new_task completed] Result: ${lastMessage ?? "Please continue to the next task."}`,
+				},
+			],
+		})
+
+		try {
+			// Resume parent task
+			await this.ask("resume_task")
+		} catch (error) {
+			if (error.message === "Current ask promise was ignored") {
+				// ignore the ignored promise, since it was performed by launching a subtask and it probably took more then 1 sec,
+				// also set the didAlreadyUseTool flag to indicate that the tool was already used, and there is no need to relaunch it
+				this.didAlreadyUseTool = true
+			} else {
+				// Handle error appropriately
+				console.error("Failed to resume task:", error)
+				throw error
+			}
+		}
 	}
 
 	private async resumeTaskFromHistory() {
@@ -2590,10 +2646,12 @@ export class Cline {
 								const provider = this.providerRef.deref()
 								if (provider) {
 									await provider.handleModeSwitch(mode)
-									await provider.initClineWithTask(message)
+									await provider.initClineWithSubTask(message)
 									pushToolResult(
 										`Successfully created new task in ${targetMode.name} mode with message: ${message}`,
 									)
+									// pasue the current task and start the new task
+									this.isPaused = true
 								} else {
 									pushToolResult(
 										formatResponse.toolError("Failed to create new task: provider not available"),
@@ -2685,6 +2743,10 @@ export class Cline {
 									if (lastMessage && lastMessage.ask !== "command") {
 										// havent sent a command message yet so first send completion_result then command
 										await this.say("completion_result", result, undefined, false)
+										if (this.isSubTask) {
+											// tell the provider to remove the current subtask and resume the previous task in the stack
+											this.providerRef.deref()?.finishSubTask(lastMessage?.text)
+										}
 									}
 
 									// complete command message
@@ -2702,6 +2764,10 @@ export class Cline {
 									commandResult = execCommandResult
 								} else {
 									await this.say("completion_result", result, undefined, false)
+									if (this.isSubTask) {
+										// tell the provider to remove the current subtask and resume the previous task in the stack
+										this.providerRef.deref()?.finishSubTask(lastMessage?.text)
+									}
 								}
 
 								// we already sent completion_result says, an empty string asks relinquishes control over button and field
@@ -2777,6 +2843,20 @@ export class Cline {
 		}
 	}
 
+	// this function checks if this Cline instance is set to pause state and wait for being resumed,
+	// this is used when a sub-task is launched and the parent task is waiting for it to finish
+	async waitForResume() {
+		// wait until isPaused is false
+		await new Promise<void>((resolve) => {
+			const interval = setInterval(() => {
+				if (!this.isPaused) {
+					clearInterval(interval)
+					resolve()
+				}
+			}, 1000) // TBD: the 1 sec should be added to the settings, also should add a timeout to prevent infinit wait
+		})
+	}
+
 	async recursivelyMakeClineRequests(
 		userContent: UserContent,
 		includeFileDetails: boolean = false,
@@ -2814,6 +2894,12 @@ export class Cline {
 
 		if (isFirstRequest) {
 			await this.checkpointSave({ isFirst: true })
+		}
+
+		// in this Cline request loop, we need to check if this cline (Task) instance has been asked to wait
+		// for a sub-task (it has launched) to finish before continuing
+		if (this.isPaused) {
+			await this.waitForResume()
 		}
 
 		// getting verbose details is an expensive operation, it uses globby to top-down build file structure of project which for large projects can take a few seconds
