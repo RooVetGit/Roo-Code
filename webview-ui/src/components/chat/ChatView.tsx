@@ -223,6 +223,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 								setEnableButtons(false)
 							}
 							break
+						case "next_step_suggest":
 						case "api_req_finished":
 						case "task":
 						case "error":
@@ -389,6 +390,11 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				case "completion_result":
 				case "resume_completed_task":
 					// extension waiting for feedback. but we can just present a new task button
+					if (inputValue.trim() !== "") {
+						vscode.postMessage({ type: "newTask", text: inputValue })
+						setInputValue("")
+						break
+					}
 					startNewTask()
 					break
 			}
@@ -397,7 +403,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			setEnableButtons(false)
 			disableAutoScrollRef.current = false
 		},
-		[clineAsk, startNewTask],
+		[clineAsk, inputValue, startNewTask],
 	)
 
 	const handleSecondaryButtonClick = useCallback(
@@ -919,6 +925,9 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 					isLast={index === groupedMessages.length - 1}
 					onHeightChange={handleRowHeightChange}
 					isStreaming={isStreaming}
+					onSuggestionClick={(task: string, mode: string) => {
+						handleSendMessage(`create new task for ${task} by using new_task tool in ${mode} mode`, [])
+					}}
 				/>
 			)
 		},
@@ -928,7 +937,9 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			groupedMessages.length,
 			handleRowHeightChange,
 			isStreaming,
+
 			toggleRowExpansion,
+			handleSendMessage,
 		],
 	)
 
