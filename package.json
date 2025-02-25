@@ -269,6 +269,13 @@
 						}
 					},
 					"description": "Settings for VSCode Language Model API"
+					},
+				"roo-cline.openRouterApiKey": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"description": "Array of API keys for OpenRouter"
 				}
 			}
 		}

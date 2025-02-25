@@ -13,7 +13,7 @@ jest.mock("delay", () => jest.fn(() => Promise.resolve()))
 
 describe("OpenRouterHandler", () => {
 	const mockOptions: ApiHandlerOptions = {
-		openRouterApiKey: "test-key",
+		openRouterApiKey: ["test-key-1", "test-key-2"],
 		openRouterModelId: "test-model",
 		openRouterModelInfo: {
 			name: "Test Model",
@@ -35,7 +35,7 @@ describe("OpenRouterHandler", () => {
 		expect(handler).toBeInstanceOf(OpenRouterHandler)
 		expect(OpenAI).toHaveBeenCalledWith({
 			baseURL: "https://openrouter.ai/api/v1",
-			apiKey: mockOptions.openRouterApiKey,
+			apiKey: mockOptions.openRouterApiKey[0],
 			defaultHeaders: {
 				"HTTP-Referer": "https://github.com/RooVetGit/Roo-Cline",
 				"X-Title": "Roo Code",
@@ -295,5 +295,23 @@ describe("OpenRouterHandler", () => {
 		await expect(handler.completePrompt("test prompt")).rejects.toThrow(
 			"OpenRouter completion error: Unexpected error",
 		)
+	})
+
+	test("getNextAvailableApiKey returns the first available key", () => {
+		const handler = new OpenRouterHandler(mockOptions)
+		handler["rateLimitStatus"] = {
+			"test-key-1": { rateLimited: true, retryAfter: Date.now() + 60000 },
+			"test-key-2": { rateLimited: false, retryAfter: 0 },
+		}
+		const result = handler["getNextAvailableApiKey"]()
+		expect(result).toBe("test-key-2")
+	})
+
+	test("markApiKeyAsRateLimited updates rate limit status", () => {
+		const handler = new OpenRouterHandler(mockOptions)
+		const apiKey = "test-key-1"
+		const retryAfter = Date.now() + 60000
+		handler["markApiKeyAsRateLimited"](apiKey, retryAfter)
+		expect(handler["rateLimitStatus"][apiKey]).toEqual({ rateLimited: true, retryAfter })
 	})
 })
