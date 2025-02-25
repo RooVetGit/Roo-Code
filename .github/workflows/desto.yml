@@ -1,0 +1,2 @@
+job: drst
+  runs-on: runs-on=${{ github.run_id }}/cpu=4/ram=16/family=m7a+m7i-flex/image=ubuntu22-full-x64
