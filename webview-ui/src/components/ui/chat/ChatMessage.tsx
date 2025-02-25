@@ -1,13 +1,13 @@
 import { useMemo } from "react"
 import { CopyIcon, CheckIcon } from "@radix-ui/react-icons"
-import { BrainCircuit, CircleUserRound } from "lucide-react"
+import { BrainCircuit, CircleUserRound, Loader2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { useClipboard } from "@/components/ui/hooks"
 import { Badge } from "@/components/ui"
 import { Markdown } from "@/components/ui/markdown"
 
-import { BadgeData, ChatHandler, Message, MessageAnnotationType } from "./types"
+import { Message, MessageAnnotationType, MessageAnnotation } from "./types"
 import { ChatMessageProvider } from "./ChatMessageProvider"
 import { useChatUI } from "./useChatUI"
 import { useChatMessage } from "./useChatMessage"
@@ -16,16 +16,11 @@ interface ChatMessageProps {
 	message: Message
 	isLast: boolean
 	isHeaderVisible: boolean
-	isLoading?: boolean
-	append?: ChatHandler["append"]
 }
 
-export function ChatMessage({ message, isLast, isHeaderVisible, isLoading, append }: ChatMessageProps) {
+export function ChatMessage({ message, isLast, isHeaderVisible }: ChatMessageProps) {
 	const badges = useMemo(
-		() =>
-			message.annotations
-				?.filter(({ type }) => type === MessageAnnotationType.BADGE)
-				.map(({ data }) => data as BadgeData),
+		() => message.annotations?.filter(({ type }) => type === MessageAnnotationType.Badge).map(({ data }) => data),
 		[message.annotations],
 	)
 
@@ -44,7 +39,7 @@ export function ChatMessage({ message, isLast, isHeaderVisible, isLoading, appen
 }
 
 interface ChatMessageHeaderProps {
-	badges?: BadgeData[]
+	badges?: MessageAnnotation["data"][]
 }
 
 function ChatMessageHeader({ badges }: ChatMessageHeaderProps) {
@@ -100,6 +95,15 @@ function ChatMessageActions() {
 			className="absolute right-2 bottom-2 opacity-0 group-hover:opacity-25 cursor-pointer"
 			onClick={() => copy(message.content)}>
 			{isCopied ? <CheckIcon /> : <CopyIcon />}
+		</div>
+	)
+}
+
+export function ChatMessageLoading({ message = "Loading..." }: { message?: string }) {
+	return (
+		<div className="flex flex-row items-center justify-center p-5">
+			<Loader2 className="h-4 w-4 animate-spin opacity-25" />
+			{message && <div className="ml-2 text-sm text-muted-foreground">{message}</div>}
 		</div>
 	)
 }

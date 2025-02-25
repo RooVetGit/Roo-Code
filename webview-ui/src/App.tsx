@@ -11,11 +11,13 @@ import SettingsView, { SettingsViewRef } from "./components/settings/SettingsVie
 import WelcomeView from "./components/welcome/WelcomeView"
 import McpView from "./components/mcp/McpView"
 import PromptsView from "./components/prompts/PromptsView"
+import { DeepResearch } from "./features/deep-research/DeepResearch"
 
-type Tab = "settings" | "history" | "mcp" | "prompts" | "chat"
+type Tab = "settings" | "history" | "mcp" | "prompts" | "chat" | "research"
 
 const tabsByMessageAction: Partial<Record<NonNullable<ExtensionMessage["action"]>, Tab>> = {
 	chatButtonClicked: "chat",
+	researchButtonClicked: "research",
 	settingsButtonClicked: "settings",
 	promptsButtonClicked: "prompts",
 	mcpButtonClicked: "mcp",
@@ -74,6 +76,7 @@ const App = () => {
 			{tab === "history" && <HistoryView onDone={() => switchTab("chat")} />}
 			{tab === "mcp" && <McpView onDone={() => switchTab("chat")} />}
 			{tab === "prompts" && <PromptsView onDone={() => switchTab("chat")} />}
+			<DeepResearch isHidden={tab !== "research"} onDone={() => setTab("chat")} />
 			<ChatView
 				isHidden={tab !== "chat"}
 				showAnnouncement={showAnnouncement}

@@ -2,6 +2,7 @@ import { PaperPlaneIcon, StopIcon } from "@radix-ui/react-icons"
 
 import { Button, AutosizeTextarea } from "@/components/ui"
 
+import { MessageRole } from "./types"
 import { ChatInputProvider } from "./ChatInputProvider"
 import { useChatUI } from "./useChatUI"
 import { useChatInput } from "./useChatInput"
@@ -16,7 +17,7 @@ export function ChatInput() {
 		}
 
 		setInput("")
-		await append({ role: "user", content: input })
+		await append({ role: MessageRole.User, content: input })
 	}
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -60,7 +61,7 @@ interface ChatInputFieldProps {
 }
 
 function ChatInputField({ placeholder = "Chat" }: ChatInputFieldProps) {
-	const { input, setInput } = useChatUI()
+	const { isDisabled, input, setInput } = useChatUI()
 	const { handleKeyDown } = useChatInput()
 
 	return (
@@ -72,6 +73,7 @@ function ChatInputField({ placeholder = "Chat" }: ChatInputFieldProps) {
 			value={input}
 			onChange={({ target: { value } }) => setInput(value)}
 			onKeyDown={handleKeyDown}
+			disabled={!!isDisabled}
 			className="resize-none px-3 pt-3 pb-[50px]"
 		/>
 	)
