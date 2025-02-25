@@ -161,7 +161,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 			vscode.postMessage({ type: "alwaysApproveResubmit", bool: alwaysApproveResubmit })
 			vscode.postMessage({ type: "requestDelaySeconds", value: requestDelaySeconds })
 			vscode.postMessage({ type: "rateLimitSeconds", value: rateLimitSeconds })
-			vscode.postMessage({ type: "postEditDelaySeconds", value: postEditDelaySeconds})
+			vscode.postMessage({ type: "postEditDelaySeconds", value: postEditDelaySeconds })
 			vscode.postMessage({ type: "maxOpenTabsContext", value: maxOpenTabsContext })
 			vscode.postMessage({ type: "currentApiConfigName", text: currentApiConfigName })
 			vscode.postMessage({
@@ -710,8 +710,11 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 									max="60"
 									step="0.5"
 									value={postEditDelaySeconds}
-									onChange={(e) => setCachedStateField("postEditDelaySeconds", parseFloat(e.target.value))}
+									onChange={(e) =>
+										setCachedStateField("postEditDelaySeconds", parseFloat(e.target.value))
+									}
 									className="h-2 focus:outline-0 w-4/5 accent-vscode-button-background"
+									aria-label="Post edit delay in seconds"
 								/>
 								<span style={{ ...sliderLabelStyle }}>{postEditDelaySeconds}s</span>
 							</div>
