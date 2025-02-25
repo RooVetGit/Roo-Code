@@ -1,5 +1,33 @@
 import { Anthropic } from "@anthropic-ai/sdk"
-import OpenAI, { AzureOpenAI } from "openai"
+import OpenAI from "openai"
+
+class BaseURLOpenAI extends OpenAI {
+  protected model: string;
+
+  constructor(options: ConstructorParameters<typeof OpenAI>[0] & { model: string }) {
+    super(options);
+    this.model = options.model;
+  }
+
+  override buildRequest(options: import("openai/core").FinalRequestOptions<unknown>): {
+    req: RequestInit;
+    url: string;
+    timeout: number;
+  } {
+    options.path = ``;
+    return super.buildRequest(options);
+  }
+
+  protected override async prepareOptions(opts: import("openai/core").FinalRequestOptions<unknown>): Promise<void> {
+    if (opts.headers?.['api-key']) {
+      return super.prepareOptions(opts);
+    }
+    opts.headers ??= {};
+    opts.headers['api-key'] = this.apiKey;
+	
+    return super.prepareOptions(opts);
+  }
+}
 
 import {
 	ApiHandlerOptions,
@@ -42,10 +70,11 @@ export class OpenAiHandler implements ApiHandler, SingleCompletionHandler {
 		if (urlHost === "azure.com" || urlHost.endsWith(".azure.com") || options.openAiUseAzure) {
 			// Azure API shape slightly differs from the core API shape:
 			// https://github.com/openai/openai-node?tab=readme-ov-file#microsoft-azure-openai
-			this.client = new AzureOpenAI({
+			this.client = new BaseURLOpenAI({
 				baseURL,
 				apiKey,
-				apiVersion: this.options.azureApiVersion || azureOpenAiDefaultApiVersion,
+				model: this.options.openAiModelId ?? "",
+				defaultHeaders: this.options.defaultHeaders
 			})
 		} else {
 			this.client = new OpenAI({ baseURL, apiKey, defaultHeaders: this.options.defaultHeaders })
