@@ -17,10 +17,17 @@ export const COMMAND_IDS = {
 } as const
 
 export class CodeActionProvider implements vscode.CodeActionProvider {
-	public static readonly providedCodeActionKinds = [
-		vscode.CodeActionKind.QuickFix,
-		vscode.CodeActionKind.RefactorRewrite,
-	]
+	private static _providedCodeActionKinds: ReadonlyArray<vscode.CodeActionKind>
+
+	public static get providedCodeActionKinds(): ReadonlyArray<vscode.CodeActionKind> {
+		if (!this._providedCodeActionKinds) {
+			this._providedCodeActionKinds = [
+				vscode.CodeActionKind.QuickFix,
+				vscode.CodeActionKind.RefactorRewrite,
+			] as const
+		}
+		return this._providedCodeActionKinds
+	}
 
 	private createAction(title: string, kind: vscode.CodeActionKind, command: string, args: any[]): vscode.CodeAction {
 		const action = new vscode.CodeAction(title, kind)

@@ -4,6 +4,8 @@ import pdf from "pdf-parse/lib/pdf-parse"
 import mammoth from "mammoth"
 import fs from "fs/promises"
 import { isBinaryFile } from "isbinaryfile"
+import * as vscode from "vscode"
+import { getIgnoreController } from "../../extension"
 
 export async function extractTextFromFile(filePath: string): Promise<string> {
 	try {
@@ -11,6 +13,19 @@ export async function extractTextFromFile(filePath: string): Promise<string> {
 	} catch (error) {
 		throw new Error(`File not found: ${filePath}`)
 	}
+
+	// Check if file is ignored by .rooignore
+	const ignoreController = getIgnoreController()
+	if (ignoreController) {
+		const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
+		if (workspaceRoot) {
+			const relativePath = path.relative(workspaceRoot, filePath)
+			if (!ignoreController.validateAccess(relativePath)) {
+				throw new Error(`File access blocked by .rooignore: ${filePath}`)
+			}
+		}
+	}
+
 	const fileExtension = path.extname(filePath).toLowerCase()
 	switch (fileExtension) {
 		case ".pdf":

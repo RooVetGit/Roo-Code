@@ -8,10 +8,14 @@ jest.mock("vscode", () => ({
 		title,
 		kind,
 		command: undefined,
+		isPreferred: false,
 	})),
 	CodeActionKind: {
-		QuickFix: { value: "quickfix" },
-		RefactorRewrite: { value: "refactor.rewrite" },
+		QuickFix: { value: "quickfix", append: (value: string) => ({ value: `quickfix.${value}` }) },
+		RefactorRewrite: {
+			value: "refactor.rewrite",
+			append: (value: string) => ({ value: `refactor.rewrite.${value}` }),
+		},
 	},
 	Range: jest.fn().mockImplementation((startLine, startChar, endLine, endChar) => ({
 		start: { line: startLine, character: startChar },
