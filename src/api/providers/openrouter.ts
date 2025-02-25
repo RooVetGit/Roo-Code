@@ -7,6 +7,7 @@ import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStreamChunk, ApiStreamUsageChunk } from "../transform/stream"
 import delay from "delay"
 import { DEEP_SEEK_DEFAULT_TEMPERATURE } from "./openai"
+import KeyManager from "../../keyManager"
 
 const OPENROUTER_DEFAULT_TEMPERATURE = 0
 
@@ -27,47 +28,21 @@ import { convertToR1Format } from "../transform/r1-format"
 export class OpenRouterHandler implements ApiHandler, SingleCompletionHandler {
 	private options: ApiHandlerOptions
 	private client: OpenAI
-	private apiKeys: string[]
-	private rateLimitStatus: { [key: string]: { rateLimited: boolean; retryAfter: number } }
+	private keyManager: KeyManager
 
 	constructor(options: ApiHandlerOptions) {
 		this.options = options
 
 		const baseURL = this.options.openRouterBaseUrl || "https://openrouter.ai/api/v1"
-		this.apiKeys = this.options.openRouterApiKey ?? ["not-provided"]
-		this.rateLimitStatus = {}
+		this.keyManager = new KeyManager()
+		this.keyManager.loadApiKeys(this.options.openRouterApiKey ?? ["not-provided"])
 
 		const defaultHeaders = {
 			"HTTP-Referer": "https://github.com/RooVetGit/Roo-Cline",
 			"X-Title": "Roo Code",
 		}
 
-		this.client = new OpenAI({ baseURL, apiKey: this.apiKeys[0], defaultHeaders })
-	}
-
-	private getNextAvailableApiKey(): string {
-		const now = Date.now()
-		for (const apiKey of this.apiKeys) {
-			const status = this.rateLimitStatus[apiKey]
-			if (!status || !status.rateLimited || status.retryAfter <= now) {
-				return apiKey
-			}
-		}
-		// If all keys are rate-limited, return the key with the earliest retry time
-		let earliestRetryKey = this.apiKeys[0]
-		let earliestRetryTime = this.rateLimitStatus[earliestRetryKey]?.retryAfter || now
-		for (const apiKey of this.apiKeys) {
-			const retryAfter = this.rateLimitStatus[apiKey]?.retryAfter || now
-			if (retryAfter < earliestRetryTime) {
-				earliestRetryKey = apiKey
-				earliestRetryTime = retryAfter
-			}
-		}
-		return earliestRetryKey
-	}
-
-	private markApiKeyAsRateLimited(apiKey: string, retryAfter: number) {
-		this.rateLimitStatus[apiKey] = { rateLimited: true, retryAfter }
+		this.client = new OpenAI({ baseURL, apiKey: this.keyManager.getNextAvailableKey(), defaultHeaders })
 	}
 
 	async *createMessage(
@@ -166,8 +141,8 @@ export class OpenRouterHandler implements ApiHandler, SingleCompletionHandler {
 		let fullResponseText = ""
 		let stream
 		let attempt = 0
-		while (attempt++ < this.apiKeys.length) {
-			const apiKey = this.getNextAvailableApiKey()
+		while (attempt++ < this.keyManager.apiKeys.length) {
+			const apiKey = this.keyManager.getNextAvailableKey()
 			this.client = new OpenAI({ baseURL: this.client.baseURL, apiKey, defaultHeaders: this.client.defaultHeaders })
 			try {
 				stream = await this.client.chat.completions.create({
@@ -185,7 +160,7 @@ export class OpenRouterHandler implements ApiHandler, SingleCompletionHandler {
 			} catch (error) {
 				if (axios.isAxiosError(error) && error.response?.status === 429) {
 					const retryAfter = parseInt(error.response.headers["retry-after"]) * 1000 || 60 * 1000
-					this.markApiKeyAsRateLimited(apiKey, Date.now() + retryAfter)
+					this.keyManager.markKeyAsRateLimited(apiKey, Date.now() + retryAfter)
 				} else {
 					throw error
 				}
@@ -240,7 +215,7 @@ export class OpenRouterHandler implements ApiHandler, SingleCompletionHandler {
 			try {
 				const response = await axios.get(`https://openrouter.ai/api/v1/generation?id=${genId}`, {
 					headers: {
-						Authorization: `Bearer ${this.getNextAvailableApiKey()}`,
+						Authorization: `Bearer ${this.keyManager.getNextAvailableKey()}`,
 					},
 					timeout: 5_000, // this request hangs sometimes
 				})
@@ -292,7 +267,7 @@ export class OpenRouterHandler implements ApiHandler, SingleCompletionHandler {
 		} catch (error) {
 			if (axios.isAxiosError(error) && error.response?.status === 429) {
 				const retryAfter = parseInt(error.response.headers["retry-after"]) * 1000 || 60 * 1000
-				this.markApiKeyAsRateLimited(this.client.apiKey, Date.now() + retryAfter)
+				this.keyManager.markKeyAsRateLimited(this.client.apiKey, Date.now() + retryAfter)
 				return this.completePrompt(prompt)
 			} else if (error instanceof Error) {
 				throw new Error(`OpenRouter completion error: ${error.message}`)

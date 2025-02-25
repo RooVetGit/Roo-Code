@@ -218,7 +218,7 @@
 				},
 				{
 					"command": "roo-cline.historyButtonClicked",
-					"group": "navigation@4",
+						"group": "navigation@4",
 					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
