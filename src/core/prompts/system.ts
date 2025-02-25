@@ -56,7 +56,7 @@ async function generatePrompt(
 
 	// Get the full mode config to ensure we have the role definition
 	const modeConfig = getModeBySlug(mode, customModeConfigs) || modes.find((m) => m.slug === mode) || modes[0]
-	const roleDefinition = promptComponent?.roleDefinition || modeConfig.roleDefinition
+	const roleDefinition = modeConfig?.roleDefinition || promptComponent?.roleDefinition
 
 	const basePrompt = `${roleDefinition}
 
