@@ -1,0 +1,13 @@
+jobs:
+  default:
+    runs-on: "runs-on=${{ github.run_id }}/family=g4dn.xlarge/image=ubuntu22-gpu-x64"
+    steps:
+      - name: Display NVIDIA SMI details
+        run: |
+          nvidia-smi
+          nvidia-smi -L
+          nvidia-smi -q -d Memory
+      - name: Ensure Docker is available with GPU support
+        run: docker run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi
+      - name: Execute your machine learning script
+        run: echo "Running ML script..."
