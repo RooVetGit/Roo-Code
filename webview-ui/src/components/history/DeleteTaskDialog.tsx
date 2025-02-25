@@ -1,4 +1,7 @@
-import React from "react"
+import { useCallback } from "react"
+import { AlertDialogProps } from "@radix-ui/react-alert-dialog"
+
+import { vscode } from "@/utils/vscode"
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -8,24 +11,23 @@ import {
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui"
-import { vscode } from "@/utils/vscode"
+	Button,
+} from "@/components/ui"
 
-interface DeleteTaskDialogProps {
+interface DeleteTaskDialogProps extends AlertDialogProps {
 	taskId: string
-	open: boolean
-	onOpenChange: (open: boolean) => void
 }
 
-export const DeleteTaskDialog = ({ taskId, open, onOpenChange }: DeleteTaskDialogProps) => {
-	const handleDelete = () => {
+export const DeleteTaskDialog = ({ taskId, ...props }: DeleteTaskDialogProps) => {
+	const { onOpenChange } = props
+
+	const onDelete = useCallback(() => {
 		vscode.postMessage({ type: "deleteTaskWithId", text: taskId })
-		onOpenChange(false)
-	}
+		onOpenChange?.(false)
+	}, [taskId, onOpenChange])
 
 	return (
-		<AlertDialog open={open} onOpenChange={onOpenChange}>
+		<AlertDialog {...props}>
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>Delete Task</AlertDialogTitle>
@@ -38,7 +40,7 @@ export const DeleteTaskDialog = ({ taskId, open, onOpenChange }: DeleteTaskDialo
 						<Button variant="secondary">Cancel</Button>
 					</AlertDialogCancel>
 					<AlertDialogAction asChild>
-						<Button variant="destructive" onClick={handleDelete}>
+						<Button variant="destructive" onClick={onDelete}>
 							Delete
 						</Button>
 					</AlertDialogAction>

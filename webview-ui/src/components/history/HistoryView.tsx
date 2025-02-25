@@ -1,5 +1,4 @@
 import React, { memo, useMemo, useState, useEffect } from "react"
-import { DeleteTaskDialog } from "./DeleteTaskDialog"
 import { Fzf } from "fzf"
 import prettyBytes from "pretty-bytes"
 import { Virtuoso } from "react-virtuoso"
@@ -11,6 +10,7 @@ import { formatLargeNumber } from "../../utils/format"
 import { highlightFzfMatch } from "../../utils/highlight"
 import { useCopyToClipboard } from "../../utils/clipboard"
 import { Button } from "../ui"
+import { DeleteTaskDialog } from "./DeleteTaskDialog"
 
 type HistoryViewProps = {
 	onDone: () => void
@@ -34,31 +34,14 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 		}
 	}, [searchQuery, sortOption, lastNonRelevantSort])
 
-	const handleHistorySelect = (id: string) => {
-		vscode.postMessage({ type: "showTaskWithId", text: id })
-	}
+	const handleHistorySelect = (id: string) => vscode.postMessage({ type: "showTaskWithId", text: id })
 
-	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+	const [isConfirmDeleteTask, setIsConfirmDeleteTask] = useState(false)
 	const [taskToDelete, setTaskToDelete] = useState<string | null>(null)
 
 	const handleDeleteHistoryItem = (id: string) => {
 		setTaskToDelete(id)
-		setDeleteDialogOpen(true)
-	}
-
-	const formatDate = (timestamp: number) => {
-		const date = new Date(timestamp)
-		return date
-			?.toLocaleString("en-US", {
-				month: "long",
-				day: "numeric",
-				hour: "numeric",
-				minute: "2-digit",
-				hour12: true,
-			})
-			.replace(", ", " ")
-			.replace(" at", ",")
-			.toUpperCase()
+		setIsConfirmDeleteTask(true)
 	}
 
 	const presentableTasks = useMemo(() => {
@@ -406,9 +389,10 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 			{taskToDelete && (
 				<DeleteTaskDialog
 					taskId={taskToDelete}
-					open={deleteDialogOpen}
+					open={isConfirmDeleteTask}
 					onOpenChange={(open) => {
-						setDeleteDialogOpen(open)
+						setIsConfirmDeleteTask(open)
+
 						if (!open) {
 							setTaskToDelete(null)
 						}
@@ -442,5 +426,20 @@ const ExportButton = ({ itemId }: { itemId: string }) => (
 		<span className="codicon codicon-cloud-download" />
 	</Button>
 )
+
+const formatDate = (timestamp: number) => {
+	const date = new Date(timestamp)
+	return date
+		?.toLocaleString("en-US", {
+			month: "long",
+			day: "numeric",
+			hour: "numeric",
+			minute: "2-digit",
+			hour12: true,
+		})
+		.replace(", ", " ")
+		.replace(" at", ",")
+		.toUpperCase()
+}
 
 export default memo(HistoryView)
