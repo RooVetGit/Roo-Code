@@ -75,6 +75,7 @@ export interface WebviewMessage {
 		| "alwaysApproveResubmit"
 		| "requestDelaySeconds"
 		| "rateLimitSeconds"
+		| "postEditDelaySeconds"
 		| "setApiConfigPassword"
 		| "requestVsCodeLmModels"
 		| "mode"

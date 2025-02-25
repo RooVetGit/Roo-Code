@@ -106,6 +106,7 @@ export interface ExtensionState {
 	alwaysAllowModeSwitch?: boolean
 	requestDelaySeconds: number
 	rateLimitSeconds: number // Minimum time between successive requests (0 = disabled)
+	postEditDelaySeconds: number // Time to delay after any file edit (0 = disabled)
 	uriScheme?: string
 	currentTaskItem?: HistoryItem
 	allowedCommands?: string[]
