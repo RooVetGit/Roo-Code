@@ -1,5 +1,19 @@
 # Roo Code Changelog
 
+## [3.7.2]
+
+- Fix computer use and prompt caching for OpenRouter's `anthropic/claude-3.7-sonnet:beta` (thanks @cte!)
+- Fix sliding window calculations for Sonnet 3.7 that were causing a context window overflow (thanks @cte!)
+- Encourage diff editing more strongly in the system prompt (thanks @hannesrudolph!)
+
+## [3.7.1]
+
+- Add AWS Bedrock support for Sonnet 3.7 and update some defaults to Sonnet 3.7 instead of 3.5
+
+## [3.7.0]
+
+- Introducing Roo Code 3.7, with support for the new Claude Sonnet 3.7. Because who cares about skipping version numbers anymore? Thanks @lupuletic and @cte for the PRs!
+
 ## [3.3.26]
 
 - Adjust the default prompt for Debug mode to focus more on diagnosis and to require user confirmation before moving on to implementation
@@ -479,7 +493,7 @@ Join us at https://www.reddit.com/r/RooCode to share your custom modes and be pa
 ## [2.1.14]
 
 - Fix bug where diffs were not being applied correctly and try Aider's [unified diff prompt](https://github.com/Aider-AI/aider/blob/3995accd0ca71cea90ef76d516837f8c2731b9fe/aider/coders/udiff_prompts.py#L75-L105)
-- If diffs are enabled, automatically reject create_file commands that lead to truncated output
+- If diffs are enabled, automatically reject write_to_file commands that lead to truncated output
 
 ## [2.1.13]
 
