@@ -1050,6 +1050,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 					case "postEditDelaySeconds":
 						await this.updateGlobalState("postEditDelaySeconds", message.value ?? 0)
 						await this.postStateToWebview()
+						break
 					case "preferredLanguage":
 						await this.updateGlobalState("preferredLanguage", message.text)
 						await this.postStateToWebview()
