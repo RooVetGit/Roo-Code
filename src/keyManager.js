@@ -55,6 +55,14 @@ class KeyManager {
   disableKey(key) {
     this.apiKeys = this.apiKeys.filter(k => k !== key);
   }
+
+  performHealthChecks() {
+    for (const key of this.apiKeys) {
+      if (!this.checkKeyHealth(key)) {
+        this.disableKey(key);
+      }
+    }
+  }
 }
 
 module.exports = KeyManager;
