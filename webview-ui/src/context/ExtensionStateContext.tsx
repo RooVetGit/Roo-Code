@@ -68,6 +68,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setRequestDelaySeconds: (value: number) => void
 	rateLimitSeconds: number
 	setRateLimitSeconds: (value: number) => void
+	postEditDelaySeconds: number
+	setPostEditDelaySeconds: (value: number) => void
 	setCurrentApiConfigName: (value: string) => void
 	setListApiConfigMeta: (value: ApiConfigMeta[]) => void
 	onUpdateApiConfig: (apiConfig: ApiConfiguration) => void
@@ -108,6 +110,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		alwaysApproveResubmit: false,
 		requestDelaySeconds: 5,
 		rateLimitSeconds: 0, // Minimum time between successive requests (0 = disabled)
+		postEditDelaySeconds: 0, // Time to delay after editing a file (0 = disabled)
 		currentApiConfigName: "default",
 		listApiConfigMeta: [],
 		mode: defaultModeSlug,
@@ -314,6 +317,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setAlwaysApproveResubmit: (value) => setState((prevState) => ({ ...prevState, alwaysApproveResubmit: value })),
 		setRequestDelaySeconds: (value) => setState((prevState) => ({ ...prevState, requestDelaySeconds: value })),
 		setRateLimitSeconds: (value) => setState((prevState) => ({ ...prevState, rateLimitSeconds: value })),
+		setPostEditDelaySeconds: (value) => setState((prevState) => ({ ...prevState, postEditDelaySeconds: value })),
 		setCurrentApiConfigName: (value) => setState((prevState) => ({ ...prevState, currentApiConfigName: value })),
 		setListApiConfigMeta,
 		onUpdateApiConfig,

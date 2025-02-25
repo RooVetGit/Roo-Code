@@ -3149,8 +3149,9 @@ export class Cline {
 		}
 
 		details += "\n\n# VSCode Open Tabs"
-		const { maxOpenTabsContext } = (await this.providerRef.deref()?.getState()) ?? {}
+		const { maxOpenTabsContext, postEditDelaySeconds } = (await this.providerRef.deref()?.getState()) ?? {}
 		const maxTabs = maxOpenTabsContext ?? 20
+		const postEditDelay = postEditDelaySeconds ?? 0
 		const openTabs = vscode.window.tabGroups.all
 			.flatMap((group) => group.tabs)
 			.map((tab) => (tab.input as vscode.TabInputText)?.uri?.fsPath)
@@ -3167,6 +3168,11 @@ export class Cline {
 		const busyTerminals = this.terminalManager.getTerminals(true)
 		const inactiveTerminals = this.terminalManager.getTerminals(false)
 		// const allTerminals = [...busyTerminals, ...inactiveTerminals]
+	
+		if (postEditDelay > 0 && this.didEditFile)
+		{
+			await delay(postEditDelay * 1000)
+		}
 
 		if (busyTerminals.length > 0 && this.didEditFile) {
 			//  || this.didEditFile

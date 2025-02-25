@@ -60,6 +60,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 		maxOpenTabsContext,
 		mcpEnabled,
 		rateLimitSeconds,
+		postEditDelaySeconds,
 		requestDelaySeconds,
 		screenshotQuality,
 		soundEnabled,
@@ -160,6 +161,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 			vscode.postMessage({ type: "alwaysApproveResubmit", bool: alwaysApproveResubmit })
 			vscode.postMessage({ type: "requestDelaySeconds", value: requestDelaySeconds })
 			vscode.postMessage({ type: "rateLimitSeconds", value: rateLimitSeconds })
+			vscode.postMessage({ type: "postEditDelaySeconds", value: postEditDelaySeconds})
 			vscode.postMessage({ type: "maxOpenTabsContext", value: maxOpenTabsContext })
 			vscode.postMessage({ type: "currentApiConfigName", text: currentApiConfigName })
 			vscode.postMessage({
@@ -696,6 +698,26 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 						</div>
 						<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>
 							Minimum time between API requests.
+						</p>
+					</div>
+					<div style={{ marginBottom: 15 }}>
+						<div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+							<span style={{ fontWeight: "500" }}>Post Edit Delay</span>
+							<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+								<input
+									type="range"
+									min="0"
+									max="60"
+									step="0.5"
+									value={postEditDelaySeconds}
+									onChange={(e) => setCachedStateField("postEditDelaySeconds", parseFloat(e.target.value))}
+									className="h-2 focus:outline-0 w-4/5 accent-vscode-button-background"
+								/>
+								<span style={{ ...sliderLabelStyle }}>{postEditDelaySeconds}s</span>
+							</div>
+						</div>
+						<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>
+							Time to delay after any file edit.
 						</p>
 					</div>
 					<div style={{ marginBottom: 15 }}>

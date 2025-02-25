@@ -111,6 +111,7 @@ type GlobalStateKey =
 	| "alwaysApproveResubmit"
 	| "requestDelaySeconds"
 	| "rateLimitSeconds"
+	| "postEditDelaySeconds"
 	| "currentApiConfigName"
 	| "listApiConfigMeta"
 	| "vsCodeLmModelSelector"
@@ -1046,6 +1047,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("rateLimitSeconds", message.value ?? 0)
 						await this.postStateToWebview()
 						break
+					case "postEditDelaySeconds":
+						await this.updateGlobalState("postEditDelaySeconds", message.value ?? 0)
+						await this.postStateToWebview()
 					case "preferredLanguage":
 						await this.updateGlobalState("preferredLanguage", message.text)
 						await this.postStateToWebview()
@@ -2370,6 +2374,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			alwaysApproveResubmit,
 			requestDelaySeconds,
 			rateLimitSeconds,
+			postEditDelaySeconds,
 			currentApiConfigName,
 			listApiConfigMeta,
 			mode,
@@ -2418,6 +2423,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			alwaysApproveResubmit: alwaysApproveResubmit ?? false,
 			requestDelaySeconds: requestDelaySeconds ?? 10,
 			rateLimitSeconds: rateLimitSeconds ?? 0,
+			postEditDelaySeconds: postEditDelaySeconds ?? 0,
 			currentApiConfigName: currentApiConfigName ?? "default",
 			listApiConfigMeta: listApiConfigMeta ?? [],
 			mode: mode ?? defaultModeSlug,
@@ -2547,6 +2553,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			alwaysApproveResubmit,
 			requestDelaySeconds,
 			rateLimitSeconds,
+			postEditDelaySeconds,
 			currentApiConfigName,
 			listApiConfigMeta,
 			vsCodeLmModelSelector,
@@ -2629,6 +2636,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("alwaysApproveResubmit") as Promise<boolean | undefined>,
 			this.getGlobalState("requestDelaySeconds") as Promise<number | undefined>,
 			this.getGlobalState("rateLimitSeconds") as Promise<number | undefined>,
+			this.getGlobalState("postEditDelaySeconds") as Promise<number | undefined>,
 			this.getGlobalState("currentApiConfigName") as Promise<string | undefined>,
 			this.getGlobalState("listApiConfigMeta") as Promise<ApiConfigMeta[] | undefined>,
 			this.getGlobalState("vsCodeLmModelSelector") as Promise<vscode.LanguageModelChatSelector | undefined>,
@@ -2768,6 +2776,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			alwaysApproveResubmit: alwaysApproveResubmit ?? false,
 			requestDelaySeconds: Math.max(5, requestDelaySeconds ?? 10),
 			rateLimitSeconds: rateLimitSeconds ?? 0,
+			postEditDelaySeconds: postEditDelaySeconds ?? 0,
 			currentApiConfigName: currentApiConfigName ?? "default",
 			listApiConfigMeta: listApiConfigMeta ?? [],
 			modeApiConfigs: modeApiConfigs ?? ({} as Record<Mode, string>),
