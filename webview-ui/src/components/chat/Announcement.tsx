@@ -37,18 +37,22 @@ const Announcement = ({ version, hideAnnouncement }: AnnouncementProps) => {
 			</p>
 
 			<h3 style={{ margin: "12px 0 8px" }}>Custom Modes: Celebrating Our New Identity</h3>
-			<p style={{ margin: "5px 0px" }}>
-				To mark this new chapter, we're introducing the power to shape Roo Code into any role you need! Create
-				specialized personas and create an entire team of agents with deeply customized prompts:
+			<div style={{ margin: "5px 0px" }}>
+				<p style={{ margin: "0 0 8px 0" }}>
+					To mark this new chapter, we're introducing the power to shape Roo Code into any role you need!
+					Create specialized personas and create an entire team of agents with deeply customized prompts:
+				</p>
 				<ul style={{ margin: "4px 0 6px 20px", padding: 0 }}>
 					<li>QA Engineers who write thorough test cases and catch edge cases</li>
 					<li>Product Managers who excel at user stories and feature prioritization</li>
 					<li>UI/UX Designers who craft beautiful, accessible interfaces</li>
 					<li>Code Reviewers who ensure quality and maintainability</li>
 				</ul>
-				Just click the <span className="codicon codicon-notebook" style={{ fontSize: "10px" }}></span> icon to
-				get started with Custom Modes!
-			</p>
+				<p style={{ margin: "8px 0 0 0" }}>
+					Just click the <span className="codicon codicon-notebook" style={{ fontSize: "10px" }}></span> icon
+					to get started with Custom Modes!
+				</p>
+			</div>
 
 			<h3 style={{ margin: "12px 0 8px" }}>Join Us for the Next Chapter</h3>
 			<p style={{ margin: "5px 0px" }}>

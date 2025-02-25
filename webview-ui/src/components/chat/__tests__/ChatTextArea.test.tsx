@@ -115,8 +115,7 @@ describe("ChatTextArea", () => {
 			const enhanceButton = screen.getByRole("button", { name: /enhance prompt/i })
 			fireEvent.click(enhanceButton)
 
-			const loadingSpinner = screen.getByText("", { selector: ".codicon-loading" })
-			expect(loadingSpinner).toBeInTheDocument()
+			expect(enhanceButton).toHaveClass("enhancing")
 		})
 	})
 

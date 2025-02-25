@@ -1,0 +1,120 @@
+.footer {
+	display: flex;
+	margin-top: 2px;
+	padding-top: 8px;
+	padding-left: 2px;
+	border-top: 1px solid var(--vscode-widget-border);
+	gap: 10px;
+}
+
+.selections {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+	flex: 1 1 auto;
+	min-width: 0;
+	flex-wrap: wrap;
+}
+
+.actions {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+	justify-content: flex-end;
+	flex-wrap: wrap;
+}
+
+@media (min-width: 480px) {
+	.footer {
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+	}
+}
+
+.action-button {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: none;
+	outline: none;
+	opacity: 0.85;
+	padding: 6px;
+	border-radius: 6px;
+	transition: all 0.2s ease;
+	min-width: 28px;
+	min-height: 28px;
+	cursor: pointer;
+	color: var(--vscode-foreground);
+}
+
+.action-button:hover {
+	background-color: color-mix(in srgb, var(--vscode-button-hoverBackground) 40%, transparent);
+	opacity: 1;
+}
+
+.codicon-sparkle {
+	transition: all 0.3s ease;
+	z-index: 1;
+}
+
+.codicon-sparkle:hover {
+	filter: brightness(1.2);
+}
+
+.enhancing {
+	position: relative;
+	background: transparent !important;
+	opacity: 1 !important;
+}
+
+.enhancing::after {
+	content: "";
+	position: absolute;
+	inset: -2px;
+	border-radius: 8px;
+	background: linear-gradient(
+		45deg,
+		var(--vscode-button-background),
+		var(--vscode-textLink-foreground),
+		var(--vscode-symbolIcon-classForeground),
+		var(--vscode-button-background)
+	);
+	background-size: 400% 400%;
+	opacity: 0.08;
+	z-index: 0;
+	animation: border-flow 2s ease-in-out infinite;
+}
+
+@keyframes border-flow {
+	0%,
+	100% {
+		background-position: 0% 50%;
+		opacity: 0.08;
+	}
+	50% {
+		background-position: 100% 50%;
+		opacity: 0.12;
+	}
+}
+
+.disabled:not(.enhancing) {
+	opacity: 0.35;
+	cursor: not-allowed;
+	filter: grayscale(30%);
+}
+
+.disabled:not(.enhancing):hover {
+	background-color: transparent;
+}
+
+/* Desktop styles */
+@media (min-width: 1024px) {
+	.action-button {
+		padding: 5px;
+		min-width: 26px;
+		min-height: 26px;
+	}
+}

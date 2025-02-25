@@ -1,0 +1,110 @@
+/* VS Code theme variables */
+:root {
+	/* Base theme */
+	--vscode-foreground: #d1d5da;
+	--vscode-editor-background: #24292e;
+	--vscode-editor-foreground: #e1e4e8;
+
+	/* Input elements */
+	--vscode-input-background: #2f363d;
+	--vscode-input-foreground: #e1e4e8;
+	--vscode-input-border: #1b1f23;
+	--vscode-focusBorder: #005cc5;
+
+	/* Buttons */
+	--vscode-button-background: #176f2c;
+	--vscode-button-foreground: #dcffe4;
+	--vscode-button-hoverBackground: #1177bb;
+	--vscode-button-secondaryBackground: #444d56;
+	--vscode-button-secondaryForeground: #ffffff;
+
+	/* Dropdowns and Lists */
+	--vscode-dropdown-background: #2f363d;
+	--vscode-dropdown-foreground: #e1e4e8;
+	--vscode-dropdown-border: #1b1f23;
+	--vscode-list-hoverBackground: #282e34;
+	--vscode-list-hoverForeground: #e1e4e8;
+	--vscode-list-focusBackground: #044289;
+
+	/* Badges and Notifications */
+	--vscode-badge-background: #044289;
+	--vscode-badge-foreground: #c8e1ff;
+	--vscode-notifications-background: #2f363d;
+	--vscode-notifications-foreground: #e1e4e8;
+	--vscode-notifications-border: #1b1f23;
+
+	/* Editor elements */
+	--vscode-editorGroup-border: #444444;
+	--vscode-diffEditor-insertedTextBackground: #37373d;
+	--vscode-diffEditor-removedTextBackground: #3c1f1f;
+	--vscode-textCodeBlock-background: #1e1e1e;
+	--vscode-textSeparator-foreground: #424242;
+	--vscode-textPreformat-foreground: #d7ba7d;
+	--vscode-textLink-foreground: #3794ff;
+
+	/* Status indicators */
+	--vscode-errorForeground: #f97583;
+	--vscode-descriptionForeground: #959da5;
+	--vscode-charts-green: #89d185;
+	--vscode-titleBar-inactiveForeground: #cccccc99;
+
+	/* Menu (from shadcn/ui) */
+	--vscode-menu-background: #2f363d;
+	--vscode-menu-foreground: #e1e4e8;
+	--vscode-disabledForeground: #cccccc;
+
+	/* Typography */
+	--vscode-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	--vscode-font-size: 13px;
+	--vscode-editor-font-family: "SF Mono", Monaco, Menlo, Consolas, "Ubuntu Mono", "Liberation Mono",
+		"DejaVu Sans Mono", "Courier New", monospace;
+	--vscode-editor-font-size: 12px;
+	--vscode-editor-line-height: 18px;
+}
+
+/* Dark theme */
+.dark {
+	color-scheme: dark;
+	background-color: var(--vscode-editor-background);
+	color: var(--vscode-editor-foreground);
+}
+
+/* Light theme */
+.light {
+	color-scheme: light;
+	background-color: #ffffff;
+	color: #000000;
+}
+
+/* Global styles */
+body {
+	margin: 0;
+	padding: 0;
+	font-family: var(--vscode-font-family);
+	font-size: var(--vscode-font-size);
+	line-height: 1.4;
+}
+
+/* Mermaid diagram styles */
+.mermaid {
+	background: var(--vscode-editor-background);
+}
+
+/* VS Code scrollbar styles */
+::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background: #424242;
+	border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: #686868;
+}

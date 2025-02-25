@@ -877,13 +877,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	}, [])
 	useEvent("wheel", handleWheel, window, { passive: true }) // passive improves scrolling performance
 
-	const placeholderText = useMemo(() => {
-		const baseText = task ? "Type a message..." : "Type your task here..."
-		const contextText = "(@ to add context, / to switch modes"
-		const imageText = shouldDisableImages ? "" : ", hold shift to drag in images"
-		const helpText = imageText ? `\n${contextText}${imageText})` : `\n${contextText})`
-		return baseText + helpText
-	}, [task, shouldDisableImages])
+	const placeholderText = task ? "Type a message..." : "Type your task here..."
 
 	const itemContent = useCallback(
 		(index: number, messageOrGroup: ClineMessage | ClineMessage[]) => {
@@ -999,15 +993,72 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 						paddingBottom: "10px",
 					}}>
 					{showAnnouncement && <Announcement version={version} hideAnnouncement={hideAnnouncement} />}
-					<div style={{ padding: "0 20px", flexShrink: 0 }}>
-						<h2>What can Roo do for you?</h2>
-						<p>
-							Thanks to the latest breakthroughs in agentic coding capabilities, I can handle complex
-							software development tasks step-by-step. With tools that let me create & edit files, explore
-							complex projects, use the browser, and execute terminal commands (after you grant
-							permission), I can assist you in ways that go beyond code completion or tech support. I can
-							even use MCP to create new tools and extend my own capabilities.
+					<div
+						style={{
+							padding: "0 24px 18px 21px",
+							background: "var(--vscode-sideBar-background)",
+							borderBottom: "1px solid var(--vscode-sideBar-border)",
+							flexShrink: 0,
+						}}>
+						<h2
+							style={{
+								fontSize: "13px",
+								fontWeight: 600,
+								textTransform: "uppercase",
+								color: "var(--vscode-sideBarTitle-foreground)",
+								marginBottom: "16px",
+								letterSpacing: "0.04em",
+							}}>
+							What can Roo do for you?
+						</h2>
+						<p
+							style={{
+								fontSize: "13px",
+								lineHeight: "1.4",
+								color: "var(--vscode-foreground)",
+								opacity: 0.9,
+								marginBottom: "20px",
+							}}>
+							Hey developer! I'm Roo, your coding companion. I help build features, fix bugs, and improve
+							code quality with proper validation.
 						</p>
+						<div
+							style={{
+								display: "grid",
+								gridTemplateColumns: "1fr 1fr",
+								gap: "12px 24px",
+								fontSize: "10px",
+								color: "var(--vscode-foreground)",
+								opacity: 0.9,
+							}}>
+							<div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+								<span className="codicon codicon-file-code" style={{ fontSize: "14px" }} />
+								File Operations
+							</div>
+							<div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+								<span className="codicon codicon-search" style={{ fontSize: "14px" }} />
+								Project Analysis
+							</div>
+							<div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+								<span className="codicon codicon-terminal" style={{ fontSize: "14px" }} />
+								Terminal Control
+							</div>
+							<div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+								<span className="codicon codicon-browser" style={{ fontSize: "14px" }} />
+								Browser Testing
+							</div>
+							<div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+								<span
+									className="codicon codicon-extensions"
+									style={{ paddingLeft: 1, fontSize: "14px" }}
+								/>
+								MCP Extensions
+							</div>
+							<div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+								<span className="codicon codicon-tools" style={{ fontSize: "14px" }} />
+								Custom Tools
+							</div>
+						</div>
 					</div>
 					{taskHistory.length > 0 && <HistoryPreview showHistoryView={showHistoryView} />}
 				</div>
