@@ -1,8 +1,6 @@
 # Roo Code Changelog
 
-## 3.7.5
-
-### Patch Changes
+## [3.7.5]
 
 - Add drag-and-drop for files
 
