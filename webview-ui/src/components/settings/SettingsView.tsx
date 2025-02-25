@@ -245,6 +245,24 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 		paddingBottom: "2px",
 	}
 
+	const [showMultipleApiKeys, setShowMultipleApiKeys] = useState(false)
+	const [apiKeys, setApiKeys] = useState<string[]>([""])
+
+	const handleAddMultipleApiKeys = () => {
+		setShowMultipleApiKeys(true)
+		setApiKeys(["", "", "", "", ""])
+	}
+
+	const handleApiKeyChange = (index: number, value: string) => {
+		const newApiKeys = [...apiKeys]
+		newApiKeys[index] = value
+		setApiKeys(newApiKeys)
+	}
+
+	const handleSaveApiKeys = () => {
+		setApiConfigurationField("openRouterApiKey", apiKeys)
+	}
+
 	return (
 		<div
 			style={{
@@ -348,6 +366,22 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 							apiErrorMessage={apiErrorMessage}
 							modelIdErrorMessage={modelIdErrorMessage}
 						/>
+						{!showMultipleApiKeys ? (
+							<VSCodeButton onClick={handleAddMultipleApiKeys}>Add multiple API keys</VSCodeButton>
+						) : (
+							<div>
+								{apiKeys.map((key, index) => (
+									<VSCodeTextField
+										key={index}
+										value={key}
+										onInput={(e: any) => handleApiKeyChange(index, e.target.value)}
+										placeholder={`API Key ${index + 1}`}
+										style={{ marginBottom: "10px" }}
+									/>
+								))}
+								<VSCodeButton onClick={handleSaveApiKeys}>Save</VSCodeButton>
+							</div>
+						)}
 					</div>
 				</div>
 

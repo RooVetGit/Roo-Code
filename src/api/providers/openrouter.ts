@@ -27,19 +27,47 @@ import { convertToR1Format } from "../transform/r1-format"
 export class OpenRouterHandler implements ApiHandler, SingleCompletionHandler {
 	private options: ApiHandlerOptions
 	private client: OpenAI
+	private apiKeys: string[]
+	private rateLimitStatus: { [key: string]: { rateLimited: boolean; retryAfter: number } }
 
 	constructor(options: ApiHandlerOptions) {
 		this.options = options
 
 		const baseURL = this.options.openRouterBaseUrl || "https://openrouter.ai/api/v1"
-		const apiKey = this.options.openRouterApiKey ?? "not-provided"
+		this.apiKeys = this.options.openRouterApiKey ?? ["not-provided"]
+		this.rateLimitStatus = {}
 
 		const defaultHeaders = {
 			"HTTP-Referer": "https://github.com/RooVetGit/Roo-Cline",
 			"X-Title": "Roo Code",
 		}
 
-		this.client = new OpenAI({ baseURL, apiKey, defaultHeaders })
+		this.client = new OpenAI({ baseURL, apiKey: this.apiKeys[0], defaultHeaders })
+	}
+
+	private getNextAvailableApiKey(): string {
+		const now = Date.now()
+		for (const apiKey of this.apiKeys) {
+			const status = this.rateLimitStatus[apiKey]
+			if (!status || !status.rateLimited || status.retryAfter <= now) {
+				return apiKey
+			}
+		}
+		// If all keys are rate-limited, return the key with the earliest retry time
+		let earliestRetryKey = this.apiKeys[0]
+		let earliestRetryTime = this.rateLimitStatus[earliestRetryKey]?.retryAfter || now
+		for (const apiKey of this.apiKeys) {
+			const retryAfter = this.rateLimitStatus[apiKey]?.retryAfter || now
+			if (retryAfter < earliestRetryTime) {
+				earliestRetryKey = apiKey
+				earliestRetryTime = retryAfter
+			}
+		}
+		return earliestRetryKey
+	}
+
+	private markApiKeyAsRateLimited(apiKey: string, retryAfter: number) {
+		this.rateLimitStatus[apiKey] = { rateLimited: true, retryAfter }
 	}
 
 	async *createMessage(
@@ -136,17 +164,37 @@ export class OpenRouterHandler implements ApiHandler, SingleCompletionHandler {
 
 		// https://openrouter.ai/docs/transforms
 		let fullResponseText = ""
-		const stream = await this.client.chat.completions.create({
-			model: this.getModel().id,
-			max_tokens: maxTokens,
-			temperature: this.options.modelTemperature ?? defaultTemperature,
-			top_p: topP,
-			messages: openAiMessages,
-			stream: true,
-			include_reasoning: true,
-			// This way, the transforms field will only be included in the parameters when openRouterUseMiddleOutTransform is true.
-			...(this.options.openRouterUseMiddleOutTransform && { transforms: ["middle-out"] }),
-		} as OpenRouterChatCompletionParams)
+		let stream
+		let attempt = 0
+		while (attempt++ < this.apiKeys.length) {
+			const apiKey = this.getNextAvailableApiKey()
+			this.client = new OpenAI({ baseURL: this.client.baseURL, apiKey, defaultHeaders: this.client.defaultHeaders })
+			try {
+				stream = await this.client.chat.completions.create({
+					model: this.getModel().id,
+					max_tokens: maxTokens,
+					temperature: this.options.modelTemperature ?? defaultTemperature,
+					top_p: topP,
+					messages: openAiMessages,
+					stream: true,
+					include_reasoning: true,
+					// This way, the transforms field will only be included in the parameters when openRouterUseMiddleOutTransform is true.
+					...(this.options.openRouterUseMiddleOutTransform && { transforms: ["middle-out"] }),
+				} as OpenRouterChatCompletionParams)
+				break
+			} catch (error) {
+				if (axios.isAxiosError(error) && error.response?.status === 429) {
+					const retryAfter = parseInt(error.response.headers["retry-after"]) * 1000 || 60 * 1000
+					this.markApiKeyAsRateLimited(apiKey, Date.now() + retryAfter)
+				} else {
+					throw error
+				}
+			}
+		}
+
+		if (!stream) {
+			throw new Error("All API keys are rate-limited. Please try again later.")
+		}
 
 		let genId: string | undefined
 
@@ -186,13 +234,13 @@ export class OpenRouterHandler implements ApiHandler, SingleCompletionHandler {
 		}
 
 		// retry fetching generation details
-		let attempt = 0
+		attempt = 0
 		while (attempt++ < 10) {
 			await delay(200) // FIXME: necessary delay to ensure generation endpoint is ready
 			try {
 				const response = await axios.get(`https://openrouter.ai/api/v1/generation?id=${genId}`, {
 					headers: {
-						Authorization: `Bearer ${this.options.openRouterApiKey}`,
+						Authorization: `Bearer ${this.getNextAvailableApiKey()}`,
 					},
 					timeout: 5_000, // this request hangs sometimes
 				})
@@ -242,7 +290,11 @@ export class OpenRouterHandler implements ApiHandler, SingleCompletionHandler {
 			const completion = response as OpenAI.Chat.ChatCompletion
 			return completion.choices[0]?.message?.content || ""
 		} catch (error) {
-			if (error instanceof Error) {
+			if (axios.isAxiosError(error) && error.response?.status === 429) {
+				const retryAfter = parseInt(error.response.headers["retry-after"]) * 1000 || 60 * 1000
+				this.markApiKeyAsRateLimited(this.client.apiKey, Date.now() + retryAfter)
+				return this.completePrompt(prompt)
+			} else if (error instanceof Error) {
 				throw new Error(`OpenRouter completion error: ${error.message}`)
 			}
 			throw error

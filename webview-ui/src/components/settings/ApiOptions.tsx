@@ -139,6 +139,24 @@ const ApiOptions = ({
 		)
 	}
 
+	const [showMultipleApiKeys, setShowMultipleApiKeys] = useState(false)
+	const [apiKeys, setApiKeys] = useState<string[]>([""])
+
+	const handleAddMultipleApiKeys = () => {
+		setShowMultipleApiKeys(true)
+		setApiKeys(["", "", "", "", ""])
+	}
+
+	const handleApiKeyChange = (index: number, value: string) => {
+		const newApiKeys = [...apiKeys]
+		newApiKeys[index] = value
+		setApiKeys(newApiKeys)
+	}
+
+	const handleSaveApiKeys = () => {
+		setApiConfigurationField("openRouterApiKey", apiKeys)
+	}
+
 	return (
 		<div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
 			<div className="dropdown-container">
@@ -352,14 +370,32 @@ const ApiOptions = ({
 
 			{selectedProvider === "openrouter" && (
 				<div>
-					<VSCodeTextField
-						value={apiConfiguration?.openRouterApiKey || ""}
-						style={{ width: "100%" }}
-						type="password"
-						onInput={handleInputChange("openRouterApiKey")}
-						placeholder="Enter API Key...">
-						<span style={{ fontWeight: 500 }}>OpenRouter API Key</span>
-					</VSCodeTextField>
+						{!showMultipleApiKeys ? (
+							<>
+								<VSCodeTextField
+									value={apiConfiguration?.openRouterApiKey || ""}
+									style={{ width: "100%" }}
+									type="password"
+									onInput={handleInputChange("openRouterApiKey")}
+									placeholder="Enter API Key...">
+									<span style={{ fontWeight: 500 }}>OpenRouter API Key</span>
+								</VSCodeTextField>
+								<VSCodeButton onClick={handleAddMultipleApiKeys}>Add multiple API keys</VSCodeButton>
+							</>
+						) : (
+							<div>
+								{apiKeys.map((key, index) => (
+									<VSCodeTextField
+										key={index}
+										value={key}
+										onInput={(e: any) => handleApiKeyChange(index, e.target.value)}
+										placeholder={`API Key ${index + 1}`}
+										style={{ marginBottom: "10px" }}
+									/>
+								))}
+								<VSCodeButton onClick={handleSaveApiKeys}>Save</VSCodeButton>
+							</div>
+						)}
 					{!apiConfiguration?.openRouterApiKey && (
 						<p>
 							<VSCodeButtonLink
