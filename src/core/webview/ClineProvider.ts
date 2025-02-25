@@ -128,7 +128,9 @@ type GlobalStateKey =
 	| "requestyModelInfo"
 	| "unboundModelInfo"
 	| "modelTemperature"
+	| "stopToken"
 	| "mistralCodestralUrl"
+	| "mistralModelStreamingEnabled"
 	| "maxOpenTabsContext"
 
 export const GlobalFileNames = {
@@ -1668,6 +1670,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			vsCodeLmModelSelector,
 			mistralApiKey,
 			mistralCodestralUrl,
+			mistralModelStreamingEnabled,
 			unboundApiKey,
 			unboundModelId,
 			unboundModelInfo,
@@ -1675,6 +1678,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			requestyModelId,
 			requestyModelInfo,
 			modelTemperature,
+			stopToken,
 		} = apiConfiguration
 		await Promise.all([
 			this.updateGlobalState("apiProvider", apiProvider),
@@ -1709,6 +1713,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.storeSecret("deepSeekApiKey", deepSeekApiKey),
 			this.updateGlobalState("azureApiVersion", azureApiVersion),
 			this.updateGlobalState("openAiStreamingEnabled", openAiStreamingEnabled),
+			this.updateGlobalState("mistralModelStreamingEnabled", mistralModelStreamingEnabled),
 			this.updateGlobalState("openRouterModelId", openRouterModelId),
 			this.updateGlobalState("openRouterModelInfo", openRouterModelInfo),
 			this.updateGlobalState("openRouterBaseUrl", openRouterBaseUrl),
@@ -1723,6 +1728,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.updateGlobalState("requestyModelId", requestyModelId),
 			this.updateGlobalState("requestyModelInfo", requestyModelInfo),
 			this.updateGlobalState("modelTemperature", modelTemperature),
+			this.updateGlobalState("stopToken", stopToken),
 		])
 		if (this.cline) {
 			this.cline.api = buildApiHandler(apiConfiguration)
@@ -2520,6 +2526,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			deepSeekApiKey,
 			mistralApiKey,
 			mistralCodestralUrl,
+			mistralModelStreamingEnabled,
 			azureApiVersion,
 			openAiStreamingEnabled,
 			openRouterModelId,
@@ -2569,6 +2576,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			requestyModelId,
 			requestyModelInfo,
 			modelTemperature,
+			stopToken,
 			maxOpenTabsContext,
 		] = await Promise.all([
 			this.getGlobalState("apiProvider") as Promise<ApiProvider | undefined>,
@@ -2603,6 +2611,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getSecret("deepSeekApiKey") as Promise<string | undefined>,
 			this.getSecret("mistralApiKey") as Promise<string | undefined>,
 			this.getGlobalState("mistralCodestralUrl") as Promise<string | undefined>,
+			this.getGlobalState("mistralModelStreamingEnabled") as Promise<boolean | undefined>,
 			this.getGlobalState("azureApiVersion") as Promise<string | undefined>,
 			this.getGlobalState("openAiStreamingEnabled") as Promise<boolean | undefined>,
 			this.getGlobalState("openRouterModelId") as Promise<string | undefined>,
@@ -2652,6 +2661,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("requestyModelId") as Promise<string | undefined>,
 			this.getGlobalState("requestyModelInfo") as Promise<ModelInfo | undefined>,
 			this.getGlobalState("modelTemperature") as Promise<number | undefined>,
+			this.getGlobalState("stopToken") as Promise<string | undefined>,
 			this.getGlobalState("maxOpenTabsContext") as Promise<number | undefined>,
 		])
 
@@ -2703,6 +2713,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				deepSeekApiKey,
 				mistralApiKey,
 				mistralCodestralUrl,
+				mistralModelStreamingEnabled,
 				azureApiVersion,
 				openAiStreamingEnabled,
 				openRouterModelId,
@@ -2717,6 +2728,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				requestyModelId,
 				requestyModelInfo,
 				modelTemperature,
+				stopToken,
 			},
 			lastShownAnnouncementId,
 			customInstructions,

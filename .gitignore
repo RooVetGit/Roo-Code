@@ -9,6 +9,7 @@ coverage/
 # Builds
 bin/
 roo-cline-*.vsix
+tsconfig.tsbuildinfo
 
 # Local prompts and rules
 /local-prompts

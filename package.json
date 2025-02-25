@@ -269,6 +269,11 @@
 						}
 					},
 					"description": "Settings for VSCode Language Model API"
+				},
+				"roo-cline.debug.mistral": {
+					"type": "boolean",
+					"default": false,
+					"description": "Enable debug output channel 'Roo Code Mistral' for Mistral API interactions"
 				}
 			}
 		}
