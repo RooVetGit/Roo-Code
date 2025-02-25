@@ -1,5 +1,13 @@
 # Roo Code Changelog
 
+## [3.7.4]
+
+- Fix a bug that prevented the "Thinking" setting from properly updating when switching profiles.
+
+## [3.7.3]
+
+- Support for ["Thinking"](https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking) Sonnet 3.7 when using the Anthropic provider.
+
 ## [3.7.2]
 
 - Fix computer use and prompt caching for OpenRouter's `anthropic/claude-3.7-sonnet:beta` (thanks @cte!)
