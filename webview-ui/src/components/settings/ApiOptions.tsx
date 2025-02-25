@@ -566,6 +566,13 @@ const ApiOptions = ({
 							style={{ display: "inline", fontSize: "inherit" }}>
 							{"2) install the Google Cloud CLI › configure Application Default Credentials."}
 						</VSCodeLink>
+						{selectedModelId === "claude-3-7-sonnet@20250219" && (
+							<span>
+								{" "}
+								If using Claude 3.7 Sonnet, you can enable <strong>extended thinking</strong> below for
+								improved reasoning capabilities.
+							</span>
+						)}
 					</p>
 				</div>
 			)}
@@ -1270,7 +1277,8 @@ const ApiOptions = ({
 					</>
 				)}
 
-			{selectedProvider === "anthropic" && selectedModelId === "claude-3-7-sonnet-20250219" && (
+			{((selectedProvider === "anthropic" && selectedModelId === "claude-3-7-sonnet-20250219") ||
+				(selectedProvider === "vertex" && selectedModelId === "claude-3-7-sonnet@20250219")) && (
 				<div className="flex flex-col gap-2 mt-2">
 					<Checkbox
 						checked={!!anthropicThinkingBudget}
@@ -1287,7 +1295,13 @@ const ApiOptions = ({
 							<div className="flex items-center gap-2">
 								<Slider
 									min={1024}
-									max={anthropicModels["claude-3-7-sonnet-20250219"].maxTokens - 1}
+									max={
+										selectedProvider === "anthropic"
+											? anthropicModels["claude-3-7-sonnet-20250219"].maxTokens - 1
+											: selectedProvider === "vertex"
+												? vertexModels["claude-3-7-sonnet@20250219"].maxTokens - 1
+												: 32768 /* Default max if not found */
+									}
 									step={1024}
 									value={[anthropicThinkingBudget]}
 									onValueChange={(value) => setApiConfigurationField("anthropicThinking", value[0])}

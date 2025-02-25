@@ -26,6 +26,7 @@ jest.mock("@anthropic-ai/vertex-sdk", () => ({
 					async *[Symbol.asyncIterator]() {
 						yield {
 							type: "message_start",
+							index: 0,
 							message: {
 								usage: {
 									input_tokens: 10,
@@ -35,6 +36,15 @@ jest.mock("@anthropic-ai/vertex-sdk", () => ({
 						}
 						yield {
 							type: "content_block_start",
+							index: 0,
+							content_block: {
+								type: "thinking",
+								thinking: "Thinking test",
+							},
+						}
+						yield {
+							type: "content_block_start",
+							index: 1,
 							content_block: {
 								type: "text",
 								text: "Test response",
@@ -53,6 +63,7 @@ describe("VertexHandler", () => {
 	beforeEach(() => {
 		handler = new VertexHandler({
 			apiModelId: "claude-3-5-sonnet-v2@20241022",
+			anthropicThinking: undefined,
 			vertexProjectId: "test-project",
 			vertexRegion: "us-central1",
 		})
@@ -124,7 +135,7 @@ describe("VertexHandler", () => {
 				},
 			}
 
-			const mockCreate = jest.fn().mockResolvedValue(asyncIterator)
+			const mockCreate = jest.fn().mockImplementation(() => asyncIterator)
 			;(handler["client"].messages as any).create = mockCreate
 
 			const stream = handler.createMessage(systemPrompt, mockMessages)
@@ -160,8 +171,166 @@ describe("VertexHandler", () => {
 				temperature: 0,
 				system: systemPrompt,
 				messages: mockMessages,
+				thinking: undefined,
 				stream: true,
 			})
+		})
+
+		it("should include thinking configuration for supported models", async () => {
+			// Create a handler with the thinking-capable model
+			const thinkingHandler = new VertexHandler({
+				apiModelId: "claude-3-7-sonnet@20250219",
+				anthropicThinking: 16384, // Set thinking budget
+				vertexProjectId: "test-project",
+				vertexRegion: "us-central1",
+			})
+
+			const mockCreate = jest.fn().mockResolvedValue({
+				async *[Symbol.asyncIterator]() {
+					yield { type: "message_start", message: { usage: { input_tokens: 10, output_tokens: 0 } } }
+				},
+				usage: {},
+			})
+			;(thinkingHandler["client"].messages as any).create = mockCreate
+
+			const stream = thinkingHandler.createMessage(systemPrompt, mockMessages)
+			for await (const _ of stream) {
+				// Just consuming the stream
+			}
+
+			// Verify that mock was called
+			expect(mockCreate).toHaveBeenCalled()
+
+			// Get the actual call arguments
+			const callArgs = mockCreate.mock.calls[0][0]
+
+			// Verify specific properties instead of the entire object
+			expect(callArgs.model).toBe("claude-3-7-sonnet@20250219")
+			expect(callArgs.max_tokens).toBe(17408) // thinking.budget_tokens (16384) + 1024
+			expect(callArgs.temperature).toBe(1.0)
+			expect(callArgs.system).toBe(systemPrompt)
+			expect(callArgs.messages).toEqual(mockMessages)
+			expect(callArgs.stream).toBe(true)
+			expect(callArgs.thinking).toEqual({ type: "enabled", budget_tokens: 16384 })
+		})
+
+		it("should explicitly disable thinking if the option is undefined", async () => {
+			// Create a handler with the thinking-capable model but no thinking budget
+			const thinkingHandler = new VertexHandler({
+				apiModelId: "claude-3-7-sonnet@20250219",
+				anthropicThinking: undefined,
+				vertexProjectId: "test-project",
+				vertexRegion: "us-central1",
+			})
+
+			const mockCreate = jest.fn().mockResolvedValue({
+				async *[Symbol.asyncIterator]() {
+					yield { type: "message_start", message: { usage: { input_tokens: 10, output_tokens: 0 } } }
+				},
+				usage: {},
+			})
+			;(thinkingHandler["client"].messages as any).create = mockCreate
+
+			const stream = thinkingHandler.createMessage(systemPrompt, mockMessages)
+			for await (const _ of stream) {
+				// Just consuming the stream
+			}
+
+			// Verify that mock was called
+			expect(mockCreate).toHaveBeenCalled()
+
+			// Get the actual call arguments
+			const callArgs = mockCreate.mock.calls[0][0]
+
+			// Verify specific properties instead of the entire object
+			expect(callArgs.model).toBe("claude-3-7-sonnet@20250219")
+			expect(callArgs.max_tokens).toBe(8192) // Default max_tokens when thinking is disabled
+			expect(callArgs.temperature).toBe(1.0)
+			expect(callArgs.system).toBe(systemPrompt)
+			expect(callArgs.messages).toEqual(mockMessages)
+			expect(callArgs.stream).toBe(true)
+			expect(callArgs.thinking).toEqual({ type: "disabled" })
+		})
+
+		it("should handle thinking content blocks", async () => {
+			const mockStream = [
+				{
+					type: "message_start",
+					message: {
+						usage: {
+							input_tokens: 10,
+							output_tokens: 0,
+						},
+					},
+				},
+				{
+					type: "content_block_start",
+					index: 0,
+					content_block: {
+						type: "thinking",
+						thinking: "Let me reason through this step by step",
+					},
+				},
+				{
+					type: "content_block_delta",
+					delta: {
+						type: "thinking_delta",
+						thinking: ". First, I need to understand...",
+					},
+				},
+				{
+					type: "content_block_start",
+					index: 1,
+					content_block: {
+						type: "text",
+						text: "Based on my analysis,",
+					},
+				},
+				{
+					type: "content_block_delta",
+					delta: {
+						type: "text_delta",
+						text: " here is my response.",
+					},
+				},
+				{
+					type: "message_delta",
+					usage: {},
+				},
+			]
+
+			const asyncIterator = {
+				async *[Symbol.asyncIterator]() {
+					for (const chunk of mockStream) {
+						yield chunk
+					}
+				},
+			}
+
+			const mockCreate = jest.fn().mockResolvedValue(asyncIterator)
+			;(handler["client"].messages as any).create = mockCreate
+
+			const stream = handler.createMessage(systemPrompt, mockMessages)
+			const chunks = []
+
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// The actual chunks may vary depending on how the stream is handled
+			// So instead of checking the exact count, we'll check the specific chunks we care about
+			expect(chunks[0]).toEqual({ type: "usage", inputTokens: 10, outputTokens: 0 })
+
+			// Check that reasoning and text chunks exist in the output
+			expect(
+				chunks.some(
+					(chunk) => chunk.type === "reasoning" && chunk.text === "Let me reason through this step by step",
+				),
+			).toBeTruthy()
+			expect(
+				chunks.some((chunk) => chunk.type === "reasoning" && chunk.text === ". First, I need to understand..."),
+			).toBeTruthy()
+			expect(chunks.some((chunk) => chunk.type === "text" && chunk.text === "Based on my analysis,")).toBeTruthy()
 		})
 
 		it("should handle multiple content blocks with line breaks", async () => {
@@ -242,6 +411,7 @@ describe("VertexHandler", () => {
 				temperature: 0,
 				messages: [{ role: "user", content: "Test prompt" }],
 				stream: false,
+				thinking: undefined,
 			})
 		})
 
@@ -263,6 +433,38 @@ describe("VertexHandler", () => {
 
 			const result = await handler.completePrompt("Test prompt")
 			expect(result).toBe("")
+		})
+
+		it("should include thinking configuration for supported models", async () => {
+			// Create a handler with the thinking-capable model
+			const thinkingHandler = new VertexHandler({
+				apiModelId: "claude-3-7-sonnet@20250219",
+				anthropicThinking: 16384,
+				vertexProjectId: "test-project",
+				vertexRegion: "us-central1",
+			})
+
+			const mockCreate = jest.fn().mockResolvedValue({
+				content: [{ type: "text", text: "Test response with thinking" }],
+				usage: {},
+			})
+			;(thinkingHandler["client"].messages as any).create = mockCreate
+
+			await thinkingHandler.completePrompt("Test prompt")
+
+			// Verify that mock was called
+			expect(mockCreate).toHaveBeenCalled()
+
+			// Get the actual call arguments
+			const callArgs = mockCreate.mock.calls[0][0]
+
+			// Verify specific properties instead of the entire object
+			expect(callArgs.model).toBe("claude-3-7-sonnet@20250219")
+			expect(callArgs.max_tokens).toBe(17408) // thinking.budget_tokens (16384) + 1024
+			expect(callArgs.temperature).toBe(1.0)
+			expect(callArgs.thinking).toEqual({ type: "enabled", budget_tokens: 16384 })
+			expect(callArgs.messages).toEqual([{ role: "user", content: "Test prompt" }])
+			expect(callArgs.stream).toBe(false)
 		})
 
 		it("should handle empty response", async () => {
