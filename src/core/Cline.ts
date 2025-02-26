@@ -1012,7 +1012,7 @@ export class Cline {
 			if (alwaysApproveResubmit) {
 				const errorMsg = error.error?.metadata?.raw ?? error.message ?? "Unknown error"
 				const baseDelay = requestDelaySeconds || 5
-				const exponentialDelay = Math.ceil(baseDelay * Math.pow(2, retryAttempt))
+				const exponentialDelay = Math.max(baseDelay, Math.pow(1.5, retryAttempt))
 				// Wait for the greater of the exponential delay or the rate limit delay
 				const finalDelay = Math.max(exponentialDelay, rateLimitDelay)
 
