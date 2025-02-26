@@ -14,6 +14,8 @@ const badgeVariants = cva(
 				outline: "text-muted-foreground border-vscode-input-border",
 				toolkit:
 					"bg-vscode-badge-background text-vscode-badge-foreground border border-vscode-button-border rounded-full text-xs font-normal",
+				"toolkit-no-border":
+					"bg-vscode-badge-background text-vscode-badge-foreground rounded-full text-xs font-normal shadow",
 			},
 		},
 		defaultVariants: {
