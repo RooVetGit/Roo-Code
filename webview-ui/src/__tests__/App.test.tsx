@@ -55,13 +55,23 @@ jest.mock("../components/mcp/McpView", () => ({
 		)
 	},
 }))
-
 jest.mock("../components/prompts/PromptsView", () => ({
 	__esModule: true,
 	default: function PromptsView({ onDone }: { onDone: () => void }) {
 		return (
 			<div data-testid="prompts-view" onClick={onDone}>
 				Prompts View
+			</div>
+		)
+	},
+}))
+
+jest.mock("../features/deep-research/DeepResearch", () => ({
+	__esModule: true,
+	DeepResearch: function DeepResearch({ isHidden, onDone }: { isHidden: boolean; onDone: () => void }) {
+		return (
+			<div data-testid="research-view" data-hidden={isHidden} onClick={onDone}>
+				Research View
 			</div>
 		)
 	},

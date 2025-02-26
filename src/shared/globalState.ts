@@ -12,6 +12,7 @@ export type SecretKey =
 	| "mistralApiKey"
 	| "unboundApiKey"
 	| "requestyApiKey"
+	| "firecrawlApiKey"
 
 export type GlobalStateKey =
 	| "apiProvider"
