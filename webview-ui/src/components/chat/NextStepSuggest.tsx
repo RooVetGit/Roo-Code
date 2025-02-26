@@ -55,7 +55,6 @@ const NextStepSuggest = ({ suggestions = [], onSuggestionClick, ts = 1 }: NextSt
 									"w-full",
 									"group h-full",
 									"rounded-[3px]",
-									"bg-vscode-badge-background text-vscode-badge-foreground",
 									"p-[9px] whitespace-pre-wrap break-words overflow-wrap-anywhere",
 								)}
 								onClick={() => handleSuggestionClick(suggestion)}
