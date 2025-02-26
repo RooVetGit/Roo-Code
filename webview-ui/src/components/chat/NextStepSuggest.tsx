@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { cn } from "../../lib/utils"
 import { Button } from "../ui/button"
 import { ChevronDown, ChevronUp } from "lucide-react"
@@ -12,6 +12,7 @@ interface NextStepSuggestProps {
 
 const NextStepSuggest = ({ suggestions = [], onSuggestionClick, ts = 1 }: NextStepSuggestProps) => {
 	const [isExpanded, setIsExpanded] = useState(false)
+	const buttonRef = useRef<HTMLButtonElement>(null)
 
 	const handleSuggestionClick = useCallback(
 		(suggestion: { task: string; mode: string }) => {
@@ -22,6 +23,14 @@ const NextStepSuggest = ({ suggestions = [], onSuggestionClick, ts = 1 }: NextSt
 
 	const toggleExpand = useCallback(() => {
 		setIsExpanded((prev) => !prev)
+
+		// Use setTimeout to ensure the DOM has updated before scrolling
+		setTimeout(() => {
+			if (buttonRef.current) {
+				// Use scrollIntoView to ensure the button is visible
+				buttonRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" })
+			}
+		}, 100) // Increased timeout to ensure DOM updates
 	}, [])
 
 	// Don't render if there are no suggestions or no click handler
@@ -43,16 +52,16 @@ const NextStepSuggest = ({ suggestions = [], onSuggestionClick, ts = 1 }: NextSt
 									"text-left transition-colors duration-200",
 									"focus:outline-none",
 									"shadow-sm hover:shadow-md shadow-vscode-widget-shadow/50",
-									"rounded-lg overflow-hidden",
+									"overflow-hidden",
 									"w-full",
 									"min-h-[80px]",
 									"group",
 								)}
 								onClick={() => handleSuggestionClick(suggestion)}
 								aria-label={`Execute task: ${suggestion.task} in ${suggestion.mode} mode`}>
-								<div className="relative h-full p-2">
-									<div className="flex flex-col h-full">
-										<div className="text-base font-normal break-words whitespace-normal leading-relaxed mb-6">
+								<div className="relative h-full p-2 w-full">
+									<div className="flex flex-col h-full w-full">
+										<div className="text-base font-normal break-words whitespace-normal leading-relaxed mb-6 text-left w-full">
 											{suggestion.task}
 										</div>
 									</div>
@@ -67,6 +76,7 @@ const NextStepSuggest = ({ suggestions = [], onSuggestionClick, ts = 1 }: NextSt
 					))}
 					{suggestions.length > 1 && (
 						<Button
+							ref={buttonRef}
 							variant="ghost"
 							size="sm"
 							className=" flex items-center gap-1"
