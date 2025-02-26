@@ -53,7 +53,6 @@ const NextStepSuggest = ({ suggestions = [], onSuggestionClick, ts = 1 }: NextSt
 									"focus:outline-none",
 									"overflow-hidden",
 									"w-full",
-									"min-h-[80px]",
 									"group h-full",
 									"rounded-[3px]",
 									"bg-vscode-badge-background text-vscode-badge-foreground",
