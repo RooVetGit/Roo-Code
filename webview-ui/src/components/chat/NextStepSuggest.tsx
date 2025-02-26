@@ -57,7 +57,7 @@ const NextStepSuggest = ({ suggestions = [], onSuggestionClick, ts = 1 }: NextSt
 										</div>
 									</div>
 									<Badge
-										variant={"secondary"}
+										variant={"toolkit"}
 										className="absolute bottom-2 left-2 text-[9px] uppercase tracking-wide font-medium px-1 py-0">
 										{suggestion.mode}
 									</Badge>
