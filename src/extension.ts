@@ -1,6 +1,7 @@
 import * as vscode from "vscode"
 
 import { ClineProvider } from "./core/webview/ClineProvider"
+import { ClineProviderFactory } from "./core/webview/ClineProviderFactory"
 import { createClineAPI } from "./exports"
 import "./utils/path" // Necessary to have access to String.prototype.toPosix.
 import { CodeActionProvider } from "./core/CodeActionProvider"
@@ -35,7 +36,8 @@ export function activate(context: vscode.ExtensionContext) {
 		context.globalState.update("allowedCommands", defaultCommands)
 	}
 
-	const sidebarProvider = new ClineProvider(context, outputChannel)
+	// Create the ClineProvider instance using the factory
+	const sidebarProvider = ClineProviderFactory.create(context, outputChannel)
 
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(ClineProvider.sideBarId, sidebarProvider, {

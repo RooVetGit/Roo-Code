@@ -23,7 +23,6 @@ import {
 	truncateOutput,
 } from "../integrations/misc/extract-text"
 import { TerminalManager } from "../integrations/terminal/TerminalManager"
-import { UrlContentFetcher } from "../services/browser/UrlContentFetcher"
 import { listFiles } from "../services/glob/list-files"
 import { regexSearchFiles } from "../services/ripgrep"
 import { parseSourceCodeForDefinitionsTopLevel } from "../services/tree-sitter"
@@ -47,8 +46,6 @@ import {
 import { getApiMetrics } from "../shared/getApiMetrics"
 import { HistoryItem } from "../shared/HistoryItem"
 import { ClineAskResponse } from "../shared/WebviewMessage"
-import { GlobalFileNames } from "../shared/globalFileNames"
-import { defaultModeSlug, getModeBySlug, getFullModeDetails } from "../shared/modes"
 import { calculateApiCost } from "../utils/cost"
 import { fileExistsAtPath } from "../utils/fs"
 import { arePathsEqual, getReadablePath } from "../utils/path"
@@ -56,20 +53,25 @@ import { parseMentions } from "./mentions"
 import { AssistantMessageContent, parseAssistantMessage, ToolParamName, ToolUseName } from "./assistant-message"
 import { formatResponse } from "./prompts/responses"
 import { SYSTEM_PROMPT } from "./prompts/system"
+import { modes, defaultModeSlug, getModeBySlug, getFullModeDetails } from "../shared/modes"
 import { truncateConversationIfNeeded } from "./sliding-window"
 import { ClineProvider } from "./webview/ClineProvider"
+import { GlobalFileNames } from "./tasks/TaskHistoryManager"
 import { detectCodeOmission } from "../integrations/editor/detect-omission"
-import { BrowserSession } from "../services/browser/BrowserSession"
+import { OpenRouterHandler } from "../api/providers/openrouter"
 import { McpHub } from "../services/mcp/McpHub"
 import crypto from "crypto"
 import { insertGroups } from "./diff/insert-groups"
 import { EXPERIMENT_IDS, experiments as Experiments, ExperimentId } from "../shared/experiments"
+import { BrowserManager } from "./browser/BrowserManager"
 
 const cwd =
 	vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop") // may or may not exist but fs checking existence would immediately ask for permission which would be bad UX, need to come up with a better solution
 
 type ToolResponse = string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam>
-type UserContent = Array<Anthropic.Messages.ContentBlockParam>
+type UserContent = Array<
+	Anthropic.TextBlockParam | Anthropic.ImageBlockParam | Anthropic.ToolUseBlockParam | Anthropic.ToolResultBlockParam
+>
 
 export type ClineOptions = {
 	provider: ClineProvider
@@ -89,8 +91,7 @@ export class Cline {
 	readonly taskId: string
 	api: ApiHandler
 	private terminalManager: TerminalManager
-	private urlContentFetcher: UrlContentFetcher
-	private browserSession: BrowserSession
+	private browserManager: BrowserManager
 	private didEditFile: boolean = false
 	customInstructions?: string
 	diffStrategy?: DiffStrategy
@@ -150,8 +151,7 @@ export class Cline {
 		this.taskId = crypto.randomUUID()
 		this.api = buildApiHandler(apiConfiguration)
 		this.terminalManager = new TerminalManager()
-		this.urlContentFetcher = new UrlContentFetcher(provider.context)
-		this.browserSession = new BrowserSession(provider.context)
+		this.browserManager = provider.browserManager
 		this.customInstructions = customInstructions
 		this.diffEnabled = enableDiff ?? false
 		this.fuzzyMatchThreshold = fuzzyMatchThreshold ?? 1.0
@@ -659,7 +659,13 @@ export class Cline {
 					existingApiConversationHistory[existingApiConversationHistory.length - 2]
 
 				const existingUserContent: UserContent = Array.isArray(lastMessage.content)
-					? lastMessage.content
+					? (lastMessage.content.filter(
+							(block) =>
+								block.type === "text" ||
+								block.type === "image" ||
+								block.type === "tool_use" ||
+								block.type === "tool_result",
+						) as UserContent)
 					: [{ type: "text", text: lastMessage.content }]
 				if (previousAssistantMessage && previousAssistantMessage.role === "assistant") {
 					const assistantContent = Array.isArray(previousAssistantMessage.content)
@@ -787,8 +793,7 @@ export class Cline {
 		this.abort = true
 
 		this.terminalManager.disposeAll()
-		this.urlContentFetcher.closeBrowser()
-		this.browserSession.closeBrowser()
+		this.browserManager.closeBrowser()
 
 		// If we're not streaming then `abortStream` (which reverts the diff
 		// view changes) won't be called, so we need to revert the changes here.
@@ -1282,7 +1287,7 @@ export class Cline {
 				}
 
 				if (block.name !== "browser_action") {
-					await this.browserSession.closeBrowser()
+					await this.browserManager.closeBrowser()
 				}
 
 				// Validate tool use before execution
@@ -2117,7 +2122,7 @@ export class Cline {
 								// if the block is complete and we don't have a valid action this is a mistake
 								this.consecutiveMistakeCount++
 								pushToolResult(await this.sayAndCreateMissingParamError("browser_action", "action"))
-								await this.browserSession.closeBrowser()
+								await this.browserManager.closeBrowser()
 							}
 							break
 						}
@@ -2151,7 +2156,7 @@ export class Cline {
 										pushToolResult(
 											await this.sayAndCreateMissingParamError("browser_action", "url"),
 										)
-										await this.browserSession.closeBrowser()
+										await this.browserManager.closeBrowser()
 										break
 									}
 									this.consecutiveMistakeCount = 0
@@ -2164,8 +2169,8 @@ export class Cline {
 									// await this.say("inspect_site_result", "") // no result, starts the loading spinner waiting for result
 									await this.say("browser_action_result", "") // starts loading spinner
 
-									await this.browserSession.launchBrowser()
-									browserActionResult = await this.browserSession.navigateToUrl(url)
+									await this.browserManager.launchBrowser()
+									browserActionResult = await this.browserManager.navigateToUrl(url)
 								} else {
 									if (action === "click") {
 										if (!coordinate) {
@@ -2176,7 +2181,7 @@ export class Cline {
 													"coordinate",
 												),
 											)
-											await this.browserSession.closeBrowser()
+											await this.browserManager.closeBrowser()
 											break // can't be within an inner switch
 										}
 									}
@@ -2186,7 +2191,7 @@ export class Cline {
 											pushToolResult(
 												await this.sayAndCreateMissingParamError("browser_action", "text"),
 											)
-											await this.browserSession.closeBrowser()
+											await this.browserManager.closeBrowser()
 											break
 										}
 									}
@@ -2203,19 +2208,19 @@ export class Cline {
 									)
 									switch (action) {
 										case "click":
-											browserActionResult = await this.browserSession.click(coordinate!)
+											browserActionResult = await this.browserManager.click(coordinate!)
 											break
 										case "type":
-											browserActionResult = await this.browserSession.type(text!)
+											browserActionResult = await this.browserManager.type(text!)
 											break
 										case "scroll_down":
-											browserActionResult = await this.browserSession.scrollDown()
+											browserActionResult = await this.browserManager.scrollDown()
 											break
 										case "scroll_up":
-											browserActionResult = await this.browserSession.scrollUp()
+											browserActionResult = await this.browserManager.scrollUp()
 											break
 										case "close":
-											browserActionResult = await this.browserSession.closeBrowser()
+											browserActionResult = await this.browserManager.closeBrowser()
 											break
 									}
 								}
@@ -2247,7 +2252,7 @@ export class Cline {
 								break
 							}
 						} catch (error) {
-							await this.browserSession.closeBrowser() // if any error occurs, the browser session is terminated
+							await this.browserManager.closeBrowser() // if any error occurs, the browser session is terminated
 							await handleError("executing browser action", error)
 							break
 						}
@@ -3091,7 +3096,7 @@ export class Cline {
 						if (shouldProcessMentions(block.text)) {
 							return {
 								...block,
-								text: await parseMentions(block.text, cwd, this.urlContentFetcher),
+								text: await parseMentions(block.text, cwd, this.browserManager.urlContentFetcher),
 							}
 						}
 						return block
@@ -3100,7 +3105,11 @@ export class Cline {
 							if (shouldProcessMentions(block.content)) {
 								return {
 									...block,
-									content: await parseMentions(block.content, cwd, this.urlContentFetcher),
+									content: await parseMentions(
+										block.content,
+										cwd,
+										this.browserManager.urlContentFetcher,
+									),
 								}
 							}
 							return block
@@ -3110,7 +3119,11 @@ export class Cline {
 									if (contentBlock.type === "text" && shouldProcessMentions(contentBlock.text)) {
 										return {
 											...contentBlock,
-											text: await parseMentions(contentBlock.text, cwd, this.urlContentFetcher),
+											text: await parseMentions(
+												contentBlock.text,
+												cwd,
+												this.browserManager.urlContentFetcher,
+											),
 										}
 									}
 									return contentBlock

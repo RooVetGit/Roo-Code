@@ -143,6 +143,85 @@ const mockFs = {
 		return Promise.resolve()
 	}),
 
+	unlink: jest.fn().mockImplementation(async (path: string) => {
+		if (mockFiles.has(path)) {
+			mockFiles.delete(path)
+			return Promise.resolve()
+		}
+		// For test paths, always succeed even if the file doesn't exist
+		if (path.startsWith("/test/")) {
+			return Promise.resolve()
+		}
+		const error = new Error(`ENOENT: no such file or directory, unlink '${path}'`)
+		;(error as any).code = "ENOENT"
+		throw error
+	}),
+
+	rm: jest.fn().mockImplementation(async (path: string, options?: { recursive?: boolean; force?: boolean }) => {
+		// If path is a directory and recursive is true, remove all files and directories under it
+		if (mockDirectories.has(path) && options?.recursive) {
+			// Remove all files that start with this path
+			for (const filePath of mockFiles.keys()) {
+				if (filePath.startsWith(path + "/")) {
+					mockFiles.delete(filePath)
+				}
+			}
+			// Remove all directories that start with this path
+			for (const dirPath of Array.from(mockDirectories)) {
+				if (typeof dirPath === "string" && dirPath.startsWith(path + "/")) {
+					mockDirectories.delete(dirPath)
+				}
+			}
+			// Remove the directory itself
+			mockDirectories.delete(path)
+			return Promise.resolve()
+		}
+
+		// If path is a file, remove it
+		if (mockFiles.has(path)) {
+			mockFiles.delete(path)
+			return Promise.resolve()
+		}
+
+		// If force is true, don't throw an error if the path doesn't exist
+		if (options?.force) {
+			return Promise.resolve()
+		}
+
+		const error = new Error(`ENOENT: no such file or directory, rm '${path}'`)
+		;(error as any).code = "ENOENT"
+		throw error
+	}),
+
+	rmdir: jest.fn().mockImplementation(async (path: string) => {
+		if (mockDirectories.has(path)) {
+			// Check if directory is empty
+			for (const filePath of mockFiles.keys()) {
+				if (filePath.startsWith(path + "/")) {
+					const error = new Error(`ENOTEMPTY: directory not empty, rmdir '${path}'`)
+					;(error as any).code = "ENOTEMPTY"
+					throw error
+				}
+			}
+			for (const dirPath of Array.from(mockDirectories)) {
+				if (typeof dirPath === "string" && dirPath.startsWith(path + "/")) {
+					const error = new Error(`ENOTEMPTY: directory not empty, rmdir '${path}'`)
+					;(error as any).code = "ENOTEMPTY"
+					throw error
+				}
+			}
+			mockDirectories.delete(path)
+			return Promise.resolve()
+		}
+		// For test paths, always succeed even if the directory doesn't exist
+		if (path.startsWith("/test/")) {
+			return Promise.resolve()
+		}
+		const error = new Error(`ENOENT: no such file or directory, rmdir '${path}'`)
+		;(error as any).code = "ENOENT"
+		throw error
+	}),
+
 	access: jest.fn().mockImplementation(async (path: string) => {
 		// Check if the path exists in either files or directories
 		if (mockFiles.has(path) || mockDirectories.has(path) || path.startsWith("/test")) {
