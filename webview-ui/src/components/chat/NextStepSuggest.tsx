@@ -41,33 +41,35 @@ const NextStepSuggest = ({ suggestions = [], onSuggestionClick, ts = 1 }: NextSt
 	const displayedSuggestions = isExpanded ? suggestions : suggestions.slice(0, 1)
 
 	return (
-		<div className="px-4 pt-2 h-full" aria-label="Next step suggestions">
-			<div className="pr-4 h-full scrollbar-thin scrollbar-thumb-vscode-scrollbarSlider-background scrollbar-track-transparent">
+		<div className="h-full" aria-label="Next step suggestions">
+			<div className="h-full scrollbar-thin scrollbar-thumb-vscode-scrollbarSlider-background scrollbar-track-transparent">
 				<div className={cn("flex gap-2.5 pb-2 flex-col h-full")}>
 					{displayedSuggestions.map((suggestion) => (
 						<div key={`${suggestion.task}-${suggestion.mode}-${ts}`} className="w-full">
 							<Button
-								variant="ui-toolkit-primary"
+								variant="ui-toolkit-primary-no-border"
 								className={cn(
-									"text-left transition-colors duration-200",
+									"text-left",
 									"focus:outline-none",
-									"shadow-sm hover:shadow-md shadow-vscode-widget-shadow/50",
 									"overflow-hidden",
 									"w-full",
 									"min-h-[80px]",
-									"group",
+									"group h-full",
+									"rounded-[3px]",
+									"bg-vscode-badge-background text-vscode-badge-foreground",
+									"p-[9px] whitespace-pre-wrap break-words overflow-wrap-anywhere",
 								)}
 								onClick={() => handleSuggestionClick(suggestion)}
 								aria-label={`Execute task: ${suggestion.task} in ${suggestion.mode} mode`}>
-								<div className="relative h-full p-2 w-full">
-									<div className="flex flex-col h-full w-full">
-										<div className="text-base font-normal break-words whitespace-normal leading-relaxed mb-6 text-left w-full">
+								<div className="relative h-full w-full">
+									<div className="flex justify-between items-start gap-2.5 h-full w-full">
+										<span className="block flex-grow p-1 whitespace-pre-wrap break-words overflow-wrap-anywhere w-full h-full pb-6">
 											{suggestion.task}
-										</div>
+										</span>
 									</div>
 									<Badge
-										variant={"toolkit"}
-										className="absolute bottom-2 left-2 text-[9px] uppercase tracking-wide font-medium px-1 py-0">
+										variant="toolkit-no-border"
+										className="absolute bottom-0 right-2 text-[9px] uppercase tracking-wide font-medium py-0">
 										{suggestion.mode}
 									</Badge>
 								</div>
@@ -79,7 +81,7 @@ const NextStepSuggest = ({ suggestions = [], onSuggestionClick, ts = 1 }: NextSt
 							ref={buttonRef}
 							variant="ghost"
 							size="sm"
-							className=" flex items-center gap-1"
+							className="flex items-center gap-1"
 							onClick={toggleExpand}
 							aria-label={isExpanded ? "Show less suggestions" : "Show more suggestions"}>
 							{isExpanded ? (
