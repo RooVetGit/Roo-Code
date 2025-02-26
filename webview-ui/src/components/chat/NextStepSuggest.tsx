@@ -2,6 +2,7 @@ import { useCallback, useState } from "react"
 import { cn } from "../../lib/utils"
 import { Button } from "../ui/button"
 import { ChevronDown, ChevronUp } from "lucide-react"
+import { Badge } from "../ui/badge"
 
 interface NextStepSuggestProps {
 	suggestions?: { task: string; mode: string; id?: string }[]
@@ -31,18 +32,16 @@ const NextStepSuggest = ({ suggestions = [], onSuggestionClick, ts = 1 }: NextSt
 	const displayedSuggestions = isExpanded ? suggestions : suggestions.slice(0, 1)
 
 	return (
-		<nav className="px-4 pt-2" aria-label="Next step suggestions" role="navigation">
-			<div className="pr-4 max-h-[400px] scrollbar-thin scrollbar-thumb-vscode-scrollbarSlider-background scrollbar-track-transparent">
-				<div className={cn("flex gap-2.5 pb-4 flex-col")}>
+		<div className="px-4 pt-2 h-full" aria-label="Next step suggestions">
+			<div className="pr-4 h-full scrollbar-thin scrollbar-thumb-vscode-scrollbarSlider-background scrollbar-track-transparent">
+				<div className={cn("flex gap-2.5 pb-2 flex-col h-full")}>
 					{displayedSuggestions.map((suggestion) => (
 						<div key={`${suggestion.task}-${suggestion.mode}-${ts}`} className="w-full">
 							<Button
-								variant="default"
-								size="default"
+								variant="ui-toolkit-primary"
 								className={cn(
 									"text-left transition-colors duration-200",
-									"bg-vscode-button-background/80 text-vscode-button-foreground hover:bg-vscode-list-hoverBackground hover:text-vscode-list-hoverForeground",
-									"focus:outline-none focus:ring-2 focus:ring-vscode-focusBorder",
+									"focus:outline-none",
 									"shadow-sm hover:shadow-md shadow-vscode-widget-shadow/50",
 									"rounded-lg overflow-hidden",
 									"w-full",
@@ -51,13 +50,17 @@ const NextStepSuggest = ({ suggestions = [], onSuggestionClick, ts = 1 }: NextSt
 								)}
 								onClick={() => handleSuggestionClick(suggestion)}
 								aria-label={`Execute task: ${suggestion.task} in ${suggestion.mode} mode`}>
-								<div className="flex flex-col justify-between h-full p-2">
-									<div className="text-base font-normal break-words whitespace-normal leading-relaxed group-hover:text-vscode-button-foreground">
-										{suggestion.task}
+								<div className="relative h-full p-2">
+									<div className="flex flex-col h-full">
+										<div className="text-base font-normal break-words whitespace-normal leading-relaxed mb-6">
+											{suggestion.task}
+										</div>
 									</div>
-									<div className="text-xs font-medium text-vscode-badge-foreground bg-vscode-badge-background inline-flex items-center px-2 py-1 rounded self-start group-hover:bg-vscode-button-hoverBackground/90 group-hover:text-vscode-button-foreground">
-										{suggestion.mode} mode
-									</div>
+									<Badge
+										variant={"secondary"}
+										className="absolute bottom-2 left-2 text-[9px] uppercase tracking-wide font-medium px-1 py-0">
+										{suggestion.mode}
+									</Badge>
 								</div>
 							</Button>
 						</div>
@@ -66,7 +69,7 @@ const NextStepSuggest = ({ suggestions = [], onSuggestionClick, ts = 1 }: NextSt
 						<Button
 							variant="ghost"
 							size="sm"
-							className="text-vscode-textLink hover:text-vscode-textLink-foreground flex items-center gap-1"
+							className=" flex items-center gap-1"
 							onClick={toggleExpand}
 							aria-label={isExpanded ? "Show less suggestions" : "Show more suggestions"}>
 							{isExpanded ? (
@@ -84,7 +87,7 @@ const NextStepSuggest = ({ suggestions = [], onSuggestionClick, ts = 1 }: NextSt
 					)}
 				</div>
 			</div>
-		</nav>
+		</div>
 	)
 }
 
