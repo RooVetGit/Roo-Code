@@ -1,4 +1,7 @@
 {
   "image": "mcr.microsoft.com/devcontainers/universal:2",
-  "features": {}
+  "features": {
+    "cpu": 4,
+    "ram": 16
+  }
 }

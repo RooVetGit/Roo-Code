@@ -19,7 +19,7 @@ jobs:
       github.event.pull_request.base.ref == 'main' &&
       github.actor != 'R00-B0T' ) ||
       github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.run_id }}/cpu=4/ram=16/family=m7a+m7i-flex/image=ubuntu22-full-x64
     permissions:
       contents: write
       pull-requests: write
@@ -62,7 +62,7 @@ jobs:
   # Job 2: Process version bump PR created by R00-B0T
   changeset-pr-edit-approve:
     name: Auto approve and merge Bump version PRs
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.run_id }}/cpu=4/ram=16/family=m7a+m7i-flex/image=ubuntu22-full-x64
     permissions:
       contents: write
       pull-requests: write
