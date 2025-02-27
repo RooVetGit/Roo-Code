@@ -852,7 +852,9 @@ export class Cline {
 		await delay(50)
 
 		const { terminalOutputLineLimit } = (await this.providerRef.deref()?.getState()) ?? {}
-		const output = truncateOutput(lines.join("\n"), terminalOutputLineLimit)
+		// The output is already truncated by the TerminalProcess class, so we don't need to truncate it again
+		// However, we keep the truncateOutput call for backward compatibility with older versions
+		const output = lines.join("\n")
 		const result = output.trim()
 
 		if (userFeedback) {
