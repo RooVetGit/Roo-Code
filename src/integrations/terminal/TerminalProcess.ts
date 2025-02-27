@@ -127,7 +127,7 @@ export class TerminalProcess extends EventEmitter {
 				if (typeof sidebarProvider.getState === "function") {
 					this.debugLog(`Calling sidebarProvider.getState()`, true)
 					const state = await sidebarProvider.getState()
-					this.debugLog(`State returned: ${JSON.stringify(state)}`, true)
+					this.debugLog(`State retrieved. Checking for terminalOutputLineLimit...`, true)
 					if (state && typeof state.terminalOutputLineLimit === "number") {
 						// Successfully retrieved the user's setting
 						this.terminalOutputLineLimit = state.terminalOutputLineLimit
