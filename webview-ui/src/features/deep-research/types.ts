@@ -141,9 +141,26 @@ export type Provider = ProviderMetadata & {
 }
 
 /**
+ * Validates a Firecrawl API key by making a test request
+ */
+export async function validateFirecrawlApiKey(key: string): Promise<boolean> {
+	if (!key) return false
+	try {
+		const response = await fetch("https://api.firecrawl.dev/v1/team/credit-usage", {
+			method: "GET",
+			headers: {
+				Authorization: `Bearer ${key}`,
+			},
+		})
+		return response.ok
+	} catch (error) {
+		return false
+	}
+}
+
+/**
  * Research Session
  */
-
 export const researchSessionSchema = z.object({
 	providerId: z.nativeEnum(ProviderId),
 	providerApiKey: z.string().min(1, { message: "Provider API key is required." }),

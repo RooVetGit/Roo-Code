@@ -15,7 +15,13 @@ import {
 	CollapsibleTrigger,
 } from "@/components/ui"
 
-import { deepResearchModels, ProviderId, ResearchSession, researchSessionSchema } from "./types"
+import {
+	deepResearchModels,
+	ProviderId,
+	ResearchSession,
+	researchSessionSchema,
+	validateFirecrawlApiKey,
+} from "./types"
 import { useResearchSession } from "./useResearchSession"
 import { useProvider } from "./useProvider"
 import { Providers } from "./Providers"
@@ -23,6 +29,8 @@ import { Models } from "./Models"
 
 export const GetStarted = () => {
 	const [isProvidersOpen, setIsProvidersOpen] = useState(false)
+	const [isValidatingFirecrawl, setIsValidatingFirecrawl] = useState(false)
+	const [firecrawlError, setFirecrawlError] = useState<string | null>(null)
 	const { setSession } = useResearchSession()
 	const { provider, providers, setProviderValue } = useProvider()
 
@@ -44,10 +52,39 @@ export const GetStarted = () => {
 		handleSubmit,
 		control,
 		setValue,
+		getValues,
 		formState: { errors },
 	} = form
 
-	const onSubmit = useCallback((data: ResearchSession) => setSession(data), [setSession])
+	const onSubmit = useCallback(
+		async (data: ResearchSession) => {
+			// Check for empty key first
+			if (!data.firecrawlApiKey) {
+				setFirecrawlError("Firecrawl API key is required.")
+				setIsProvidersOpen(true)
+				return
+			}
+
+			// Validate Firecrawl API key before submission
+			setIsValidatingFirecrawl(true)
+			try {
+				const isValid = await validateFirecrawlApiKey(data.firecrawlApiKey)
+				if (!isValid) {
+					setFirecrawlError("Invalid Firecrawl API key. Please check your credentials.")
+					setIsProvidersOpen(true)
+					return
+				}
+				setFirecrawlError(null)
+				setSession(data)
+			} catch (error) {
+				setFirecrawlError("Failed to validate Firecrawl API key. Please try again.")
+				setIsProvidersOpen(true)
+			} finally {
+				setIsValidatingFirecrawl(false)
+			}
+		},
+		[setSession, setIsProvidersOpen],
+	)
 
 	useEffect(() => {
 		setValue("providerId", provider?.providerId ?? ProviderId.OpenRouter)
@@ -117,14 +154,80 @@ export const GetStarted = () => {
 													{...field}
 													type="password"
 													placeholder="fc-..."
-													className="flex-1"
-													onBlur={() => setProviderValue("firecrawlApiKey", field.value)}
+													className={cn(
+														"flex-1",
+														(errors.firecrawlApiKey || firecrawlError) &&
+															"border-destructive",
+													)}
+													onKeyDown={async (e) => {
+														if (e.key === "Enter") {
+															e.preventDefault() // Prevent form submission
+															if (field.value) {
+																setIsValidatingFirecrawl(true)
+																setFirecrawlError(null)
+																try {
+																	const isValid = await validateFirecrawlApiKey(
+																		field.value,
+																	)
+																	if (!isValid) {
+																		setFirecrawlError(
+																			"Invalid Firecrawl API key. Please check your credentials.",
+																		)
+																	}
+																} catch (error) {
+																	setFirecrawlError(
+																		"Failed to validate Firecrawl API key. Please try again.",
+																	)
+																} finally {
+																	setIsValidatingFirecrawl(false)
+																}
+															}
+														}
+													}}
+													onBlur={async () => {
+														setProviderValue("firecrawlApiKey", field.value)
+														if (field.value) {
+															setIsValidatingFirecrawl(true)
+															setFirecrawlError(null)
+															try {
+																const isValid = await validateFirecrawlApiKey(
+																	field.value,
+																)
+																if (!isValid) {
+																	setFirecrawlError(
+																		"Invalid Firecrawl API key. Please check your credentials.",
+																	)
+																}
+															} catch (error) {
+																setFirecrawlError(
+																	"Failed to validate Firecrawl API key. Please try again.",
+																)
+															} finally {
+																setIsValidatingFirecrawl(false)
+															}
+														}
+													}}
 												/>
+												{(errors.firecrawlApiKey || firecrawlError) && (
+													<div className="text-destructive text-sm">
+														{firecrawlError || errors.firecrawlApiKey?.message}
+													</div>
+												)}
+												{isValidatingFirecrawl && (
+													<div className="text-muted-foreground text-sm">
+														Validating API key...
+													</div>
+												)}
 												<div className="flex flex-row items-center justify-between gap-2">
 													<div className="text-muted-foreground">
 														Firecrawl turns websites into LLM-ready data.
 													</div>
-													<Button variant="outline" size="sm" asChild>
+													<Button
+														variant="outline"
+														size="sm"
+														asChild
+														tabIndex={-1} // Remove from tab order
+													>
 														<a href="https://www.firecrawl.com/">Get API Key</a>
 													</Button>
 												</div>
@@ -213,7 +316,11 @@ export const GetStarted = () => {
 							)}
 						/>
 					</Card>
-					<Button variant="default" size="lg" type="submit">
+					<Button
+						variant="default"
+						size="lg"
+						type="submit"
+						disabled={isValidatingFirecrawl || !!firecrawlError || !getValues("firecrawlApiKey")}>
 						<span className="codicon codicon-rocket" />
 						<span className="font-bold text-lg">Start</span>
 					</Button>
@@ -223,6 +330,7 @@ export const GetStarted = () => {
 								{error?.message}
 							</div>
 						))}
+						{firecrawlError && <div className="text-red-500">{firecrawlError}</div>}
 					</div>
 				</form>
 			</FormProvider>
