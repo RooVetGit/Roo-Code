@@ -1,32 +1,33 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
+import axios from "axios"
 
 class BaseURLOpenAI extends OpenAI {
-  protected model: string;
+	protected model: string
 
-  constructor(options: ConstructorParameters<typeof OpenAI>[0] & { model: string }) {
-    super(options);
-    this.model = options.model;
-  }
+	constructor(options: ConstructorParameters<typeof OpenAI>[0] & { model: string }) {
+		super(options)
+		this.model = options.model
+	}
 
-  override buildRequest(options: import("openai/core").FinalRequestOptions<unknown>): {
-    req: RequestInit;
-    url: string;
-    timeout: number;
-  } {
-    options.path = ``;
-    return super.buildRequest(options);
-  }
+	override buildRequest(options: import("openai/core").FinalRequestOptions<unknown>): {
+		req: RequestInit
+		url: string
+		timeout: number
+	} {
+		options.path = ``
+		return super.buildRequest(options)
+	}
 
-  protected override async prepareOptions(opts: import("openai/core").FinalRequestOptions<unknown>): Promise<void> {
-    if (opts.headers?.['api-key']) {
-      return super.prepareOptions(opts);
-    }
-    opts.headers ??= {};
-    opts.headers['api-key'] = this.apiKey;
-	
-    return super.prepareOptions(opts);
-  }
+	protected override async prepareOptions(opts: import("openai/core").FinalRequestOptions<unknown>): Promise<void> {
+		if (opts.headers?.["api-key"]) {
+			return super.prepareOptions(opts)
+		}
+		opts.headers ??= {}
+		opts.headers["api-key"] = this.apiKey
+
+		return super.prepareOptions(opts)
+	}
 }
 
 import {
@@ -74,7 +75,7 @@ export class OpenAiHandler implements ApiHandler, SingleCompletionHandler {
 				baseURL,
 				apiKey,
 				model: this.options.openAiModelId ?? "",
-				defaultHeaders: this.options.defaultHeaders
+				defaultHeaders: this.options.defaultHeaders,
 			})
 		} else {
 			this.client = new OpenAI({ baseURL, apiKey, defaultHeaders: this.options.defaultHeaders })
@@ -193,5 +194,29 @@ export class OpenAiHandler implements ApiHandler, SingleCompletionHandler {
 			}
 			throw error
 		}
+	}
+}
+
+export async function getOpenAiModels(baseUrl?: string, apiKey?: string) {
+	try {
+		if (!baseUrl) {
+			return []
+		}
+
+		if (!URL.canParse(baseUrl)) {
+			return []
+		}
+
+		const config: Record<string, any> = {}
+
+		if (apiKey) {
+			config["headers"] = { Authorization: `Bearer ${apiKey}` }
+		}
+
+		const response = await axios.get(`${baseUrl}/models`, config)
+		const modelsArray = response.data?.data?.map((model: any) => model.id) || []
+		return [...new Set<string>(modelsArray)]
+	} catch (error) {
+		return []
 	}
 }

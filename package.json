@@ -1,9 +1,9 @@
 {
 	"name": "roo-cline",
 	"displayName": "Roo Code (prev. Roo Cline)",
-	"description": "An AI-powered autonomous coding agent that lives in your editor.",
+	"description": "A whole dev team of AI agents in your editor.",
 	"publisher": "RooVeterinaryInc",
-	"version": "3.3.26",
+	"version": "13.7.6",
 	"icon": "assets/icons/rocket.png",
 	"galleryBanner": {
 		"color": "#617A91",
@@ -304,7 +304,7 @@
 	},
 	"dependencies": {
 		"@anthropic-ai/bedrock-sdk": "^0.10.2",
-		"@anthropic-ai/sdk": "^0.26.0",
+		"@anthropic-ai/sdk": "^0.37.0",
 		"@anthropic-ai/vertex-sdk": "^0.4.1",
 		"@aws-sdk/client-bedrock-runtime": "^3.706.0",
 		"@google/generative-ai": "^0.18.0",
