@@ -7,8 +7,8 @@ coverage/
 .DS_Store
 
 # Builds
-bin/
-roo-cline-*.vsix
+# bin/
+# roo-cline-*.vsix
 
 # Local prompts and rules
 /local-prompts
