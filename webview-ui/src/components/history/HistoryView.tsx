@@ -227,7 +227,12 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 											title="Delete Task"
 											onClick={(e) => {
 												e.stopPropagation()
-												setDeleteTaskId(item.id)
+												if (e.shiftKey) {
+													// directly delete without prompting if shift is pressed
+													vscode.postMessage({ type: "deleteTaskWithId", text: item.id })
+												} else {
+													setDeleteTaskId(item.id)
+												}
 											}}>
 											<span className="codicon codicon-trash" />
 											{item.size && prettyBytes(item.size)}
