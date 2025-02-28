@@ -123,6 +123,20 @@ describe("DeepSeekHandler", () => {
 			})
 			expect(handlerWithCustomUrl).toBeInstanceOf(DeepSeekHandler)
 			// The custom base URL is passed to OpenAI client
+
+			// Test that the custom base URL is used in API requests
+			it("should use custom base URL in API requests", async () => {
+				const customBaseUrl = "https://custom.deepseek.com/v1"
+				const handlerWithCustomUrl = new DeepSeekHandler({
+					deepSeekApiKey: "test-api-key",
+					apiModelId: "deepseek-chat",
+					deepSeekBaseUrl: customBaseUrl,
+				})
+				// Mock the OpenAI client constructor call to check if the correct base URL is passed
+				const openAICalls = mockCreate.mock.calls
+				const lastCallOptions = openAICalls[openAICalls.length - 1][0]
+				expect(lastCallOptions.baseURL).toBe(customBaseUrl)
+			})
 			expect(OpenAI).toHaveBeenCalledWith(
 				expect.objectContaining({
 					baseURL: customBaseUrl,
