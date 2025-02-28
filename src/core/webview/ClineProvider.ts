@@ -60,6 +60,7 @@ type SecretKey =
 	| "mistralApiKey"
 	| "unboundApiKey"
 	| "requestyApiKey"
+	| "arkApiKey"
 type GlobalStateKey =
 	| "apiProvider"
 	| "apiModelId"
@@ -129,6 +130,7 @@ type GlobalStateKey =
 	| "modelTemperature"
 	| "mistralCodestralUrl"
 	| "maxOpenTabsContext"
+	| "arkBaseUrl"
 
 export const GlobalFileNames = {
 	apiConversationHistory: "api_conversation_history.json",
@@ -1673,6 +1675,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			requestyModelId,
 			requestyModelInfo,
 			modelTemperature,
+			arkBaseUrl,
+			arkApiKey,
 		} = apiConfiguration
 		await Promise.all([
 			this.updateGlobalState("apiProvider", apiProvider),
@@ -1720,6 +1724,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.updateGlobalState("requestyModelId", requestyModelId),
 			this.updateGlobalState("requestyModelInfo", requestyModelInfo),
 			this.updateGlobalState("modelTemperature", modelTemperature),
+			this.updateGlobalState("arkBaseUrl", arkBaseUrl),
+			this.storeSecret("arkApiKey", arkApiKey),
 		])
 		if (this.cline) {
 			this.cline.api = buildApiHandler(apiConfiguration)
@@ -2603,6 +2609,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			requestyModelInfo,
 			modelTemperature,
 			maxOpenTabsContext,
+			arkBaseUrl,
+			arkApiKey,
 		] = await Promise.all([
 			this.getGlobalState("apiProvider") as Promise<ApiProvider | undefined>,
 			this.getGlobalState("apiModelId") as Promise<string | undefined>,
@@ -2685,6 +2693,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("requestyModelInfo") as Promise<ModelInfo | undefined>,
 			this.getGlobalState("modelTemperature") as Promise<number | undefined>,
 			this.getGlobalState("maxOpenTabsContext") as Promise<number | undefined>,
+			this.getGlobalState("arkBaseUrl") as Promise<string | undefined>,
+			this.getSecret("arkApiKey") as Promise<string | undefined>,
 		])
 
 		let apiProvider: ApiProvider
@@ -2748,6 +2758,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				requestyModelId,
 				requestyModelInfo,
 				modelTemperature,
+				arkBaseUrl,
+				arkApiKey,
 			},
 			lastShownAnnouncementId,
 			customInstructions,

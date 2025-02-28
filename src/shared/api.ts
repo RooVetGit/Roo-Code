@@ -16,6 +16,7 @@ export type ApiProvider =
 	| "mistral"
 	| "unbound"
 	| "requesty"
+	| "ark"
 
 export interface ApiHandlerOptions {
 	apiModelId?: string
@@ -29,6 +30,8 @@ export interface ApiHandlerOptions {
 	openRouterModelId?: string
 	openRouterModelInfo?: ModelInfo
 	openRouterBaseUrl?: string
+	arkApiKey?: string
+	arkBaseUrl?: string
 	awsAccessKey?: string
 	awsSecretKey?: string
 	awsSessionToken?: string

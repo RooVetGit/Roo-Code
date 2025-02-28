@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from "react"
+import { memo, useCallback, useMemo, useState, useEffect } from "react"
 import { useDebounce, useEvent } from "react-use"
 import { Checkbox, Dropdown, Pane, type DropdownOption } from "vscrui"
 import { VSCodeLink, VSCodeRadio, VSCodeRadioGroup, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
@@ -69,6 +69,14 @@ const ApiOptions = ({
 	const [openRouterBaseUrlSelected, setOpenRouterBaseUrlSelected] = useState(!!apiConfiguration?.openRouterBaseUrl)
 	const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
 
+	useEffect(() => {
+		console.log("ApiOptions rendered, Ark Base URL:", apiConfiguration?.arkBaseUrl)
+	}, [apiConfiguration?.arkBaseUrl])
+
+	useEffect(() => {
+		console.log("ApiConfiguration changed:", apiConfiguration)
+	}, [apiConfiguration])
+
 	const inputEventTransform = <E,>(event: E) => (event as { target: HTMLInputElement })?.target?.value as any
 	const noTransform = <T,>(value: T) => value
 	const dropdownEventTransform = <T,>(event: DropdownOption | string | undefined) =>
@@ -79,7 +87,9 @@ const ApiOptions = ({
 			transform: (event: E) => ApiConfiguration[K] = inputEventTransform,
 		) =>
 			(event: E | Event) => {
-				setApiConfigurationField(field, transform(event as E))
+				const value = transform(event as E)
+				console.log(`Changing ${field} to:`, value)
+				setApiConfigurationField(field, value)
 			},
 		[setApiConfigurationField],
 	)
@@ -87,6 +97,12 @@ const ApiOptions = ({
 	const { selectedProvider, selectedModelId, selectedModelInfo } = useMemo(() => {
 		return normalizeApiConfiguration(apiConfiguration)
 	}, [apiConfiguration])
+
+	useEffect(() => {
+		if (selectedProvider === "ark") {
+			console.log("Rendering Ark section, current Base URL:", apiConfiguration?.arkBaseUrl)
+		}
+	}, [selectedProvider, apiConfiguration?.arkBaseUrl])
 
 	// Pull ollama/lmstudio models
 	// Debounced model updates, only executed 250ms after the user stops typing
@@ -166,6 +182,7 @@ const ApiOptions = ({
 						{ value: "ollama", label: "Ollama" },
 						{ value: "unbound", label: "Unbound" },
 						{ value: "requesty", label: "Requesty" },
+						{ value: "ark", label: "Ark" },
 					]}
 				/>
 			</div>
@@ -1211,6 +1228,51 @@ const ApiOptions = ({
 				</div>
 			)}
 
+			{selectedProvider === "ark" && (
+				<div>
+					<VSCodeTextField
+						value={apiConfiguration?.apiKey || ""}
+						style={{ width: "100%" }}
+						type="password"
+						onInput={handleInputChange("apiKey")}
+						placeholder="Enter API Key...">
+						<span style={{ fontWeight: 500 }}>Ark API Key</span>
+					</VSCodeTextField>
+					<VSCodeTextField
+						value={apiConfiguration?.arkBaseUrl || ""}
+						style={{ width: "100%" }}
+						type="url"
+						onInput={handleInputChange("arkBaseUrl")}
+						placeholder="Enter Base URL...">
+						<span style={{ fontWeight: 500 }}>Ark Base URL</span>
+					</VSCodeTextField>
+					<VSCodeTextField
+						value={apiConfiguration?.apiModelId || ""}
+						style={{ width: "100%" }}
+						onInput={handleInputChange("apiModelId")}
+						placeholder="Enter Model ID...">
+						<span style={{ fontWeight: 500 }}>Ark Model ID</span>
+					</VSCodeTextField>
+					<p
+						style={{
+							fontSize: "12px",
+							marginTop: 3,
+							color: "var(--vscode-descriptionForeground)",
+						}}>
+						This key is stored locally and only used to make API requests from this extension.
+					</p>
+					<p
+						style={{
+							fontSize: "12px",
+							marginTop: 5,
+							color: "var(--vscode-descriptionForeground)",
+						}}>
+						Ark is an OpenAI-compatible API provider. You can use it to access various AI models through a
+						unified interface.
+					</p>
+				</div>
+			)}
+
 			{apiErrorMessage && (
 				<p
 					style={{
@@ -1376,6 +1438,12 @@ export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
 				selectedProvider: provider,
 				selectedModelId: apiConfiguration?.requestyModelId || requestyDefaultModelId,
 				selectedModelInfo: apiConfiguration?.requestyModelInfo || requestyDefaultModelInfo,
+			}
+		case "ark":
+			return {
+				selectedProvider: provider,
+				selectedModelId: apiConfiguration?.apiModelId || "",
+				selectedModelInfo: openAiModelInfoSaneDefaults,
 			}
 		default:
 			return getProviderData(anthropicModels, anthropicDefaultModelId)
