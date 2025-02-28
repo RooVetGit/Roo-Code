@@ -90,6 +90,7 @@ type GlobalStateKey =
 	| "lmStudioModelId"
 	| "lmStudioBaseUrl"
 	| "anthropicBaseUrl"
+	| "deepSeekBaseUrl"
 	| "azureApiVersion"
 	| "openAiStreamingEnabled"
 	| "openRouterModelId"
@@ -1658,6 +1659,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			anthropicBaseUrl,
 			geminiApiKey,
 			openAiNativeApiKey,
+			deepSeekBaseUrl,
 			deepSeekApiKey,
 			azureApiVersion,
 			openAiStreamingEnabled,
@@ -1707,6 +1709,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.updateGlobalState("anthropicBaseUrl", anthropicBaseUrl),
 			this.storeSecret("geminiApiKey", geminiApiKey),
 			this.storeSecret("openAiNativeApiKey", openAiNativeApiKey),
+			this.updateGlobalState("deepSeekBaseUrl", deepSeekBaseUrl),
 			this.storeSecret("deepSeekApiKey", deepSeekApiKey),
 			this.updateGlobalState("azureApiVersion", azureApiVersion),
 			this.updateGlobalState("openAiStreamingEnabled", openAiStreamingEnabled),
@@ -2556,6 +2559,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			anthropicBaseUrl,
 			geminiApiKey,
 			openAiNativeApiKey,
+			deepSeekBaseUrl,
 			deepSeekApiKey,
 			mistralApiKey,
 			mistralCodestralUrl,
@@ -2640,6 +2644,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("anthropicBaseUrl") as Promise<string | undefined>,
 			this.getSecret("geminiApiKey") as Promise<string | undefined>,
 			this.getSecret("openAiNativeApiKey") as Promise<string | undefined>,
+			this.getGlobalState("deepSeekBaseUrl") as Promise<string | undefined>,
 			this.getSecret("deepSeekApiKey") as Promise<string | undefined>,
 			this.getSecret("mistralApiKey") as Promise<string | undefined>,
 			this.getGlobalState("mistralCodestralUrl") as Promise<string | undefined>,
@@ -2741,6 +2746,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				anthropicBaseUrl,
 				geminiApiKey,
 				openAiNativeApiKey,
+				deepSeekBaseUrl,
 				deepSeekApiKey,
 				mistralApiKey,
 				mistralCodestralUrl,

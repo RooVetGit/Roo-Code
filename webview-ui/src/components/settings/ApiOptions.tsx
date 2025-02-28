@@ -1069,6 +1069,20 @@ const ApiOptions = ({
 						placeholder="Enter API Key...">
 						<span style={{ fontWeight: 500 }}>DeepSeek API Key</span>
 					</VSCodeTextField>
+					<VSCodeTextField
+						value={apiConfiguration?.deepSeekBaseUrl || ""}
+						style={{ width: "100%", marginTop: 3 }}
+						type="url"
+						onInput={handleInputChange("deepSeekBaseUrl")}
+						placeholder="Default: https://api.deepseek.com/v1"
+					/>
+					<VSCodeTextField
+						value={apiConfiguration?.apiModelId || ""}
+						style={{ width: "100%" }}
+						onInput={handleInputChange("apiModelId")}
+						placeholder="Enter Model ID...">
+						<span style={{ fontWeight: 500 }}>DeepSeek Model ID</span>
+					</VSCodeTextField>
 					<p
 						style={{
 							fontSize: "12px",
@@ -1307,7 +1321,6 @@ const ApiOptions = ({
 							{selectedProvider === "vertex" && createDropdown(vertexModels)}
 							{selectedProvider === "gemini" && createDropdown(geminiModels)}
 							{selectedProvider === "openai-native" && createDropdown(openAiNativeModels)}
-							{selectedProvider === "deepseek" && createDropdown(deepSeekModels)}
 							{selectedProvider === "mistral" && createDropdown(mistralModels)}
 						</div>
 
