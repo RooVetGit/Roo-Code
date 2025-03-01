@@ -117,7 +117,7 @@ export class OpenRouterHandler implements ApiHandler, SingleCompletionHandler {
 			// least 1024 tokens.
 			const maxBudgetTokens = Math.floor((maxTokens || 8192) * 0.8)
 			const budgetTokens = Math.max(
-				Math.min(this.options.anthropicThinking ?? maxBudgetTokens, maxBudgetTokens),
+				Math.min(this.options.modelMaxThinkingTokens ?? maxBudgetTokens, maxBudgetTokens),
 				1024,
 			)
 
@@ -278,7 +278,7 @@ export async function getOpenRouterModels() {
 					modelInfo.supportsPromptCache = true
 					modelInfo.cacheWritesPrice = 3.75
 					modelInfo.cacheReadsPrice = 0.3
-					modelInfo.maxTokens = 64_000
+					modelInfo.maxTokens = rawModel.id === "anthropic/claude-3.7-sonnet:thinking" ? 64_000 : 16_384
 					break
 				case rawModel.id.startsWith("anthropic/claude-3.5-sonnet-20240620"):
 					modelInfo.supportsPromptCache = true

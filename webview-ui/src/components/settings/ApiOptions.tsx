@@ -1538,6 +1538,12 @@ export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
 				selectedModelId: apiConfiguration?.requestyModelId || requestyDefaultModelId,
 				selectedModelInfo: apiConfiguration?.requestyModelInfo || requestyDefaultModelInfo,
 			}
+		case "ark":
+			return {
+				selectedProvider: provider,
+				selectedModelId: apiConfiguration?.apiModelId || "",
+				selectedModelInfo: openAiModelInfoSaneDefaults,
+			}
 		case "openai":
 			return {
 				selectedProvider: provider,
@@ -1566,12 +1572,6 @@ export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
 					...openAiModelInfoSaneDefaults,
 					supportsImages: false, // VSCode LM API currently doesn't support images.
 				},
-			}
-		case "ark":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.apiModelId || "",
-				selectedModelInfo: openAiModelInfoSaneDefaults,
 			}
 		default:
 			return getProviderData(anthropicModels, anthropicDefaultModelId)
