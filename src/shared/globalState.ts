@@ -12,6 +12,7 @@ export type SecretKey =
 	| "mistralApiKey"
 	| "unboundApiKey"
 	| "requestyApiKey"
+	| "arkApiKey"
 
 export type GlobalStateKey =
 	| "apiProvider"
@@ -43,6 +44,7 @@ export type GlobalStateKey =
 	| "lmStudioBaseUrl"
 	| "anthropicBaseUrl"
 	| "anthropicThinking"
+	| "deepSeekBaseUrl"
 	| "azureApiVersion"
 	| "openAiStreamingEnabled"
 	| "openRouterModelId"
@@ -84,3 +86,4 @@ export type GlobalStateKey =
 	| "modelMaxTokens"
 	| "mistralCodestralUrl"
 	| "maxOpenTabsContext"
+	| "arkBaseUrl"

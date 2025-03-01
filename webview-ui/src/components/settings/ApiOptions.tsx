@@ -12,8 +12,6 @@ import {
 	azureOpenAiDefaultApiVersion,
 	bedrockDefaultModelId,
 	bedrockModels,
-	deepSeekDefaultModelId,
-	deepSeekModels,
 	geminiDefaultModelId,
 	geminiModels,
 	glamaDefaultModelId,
@@ -50,7 +48,6 @@ const modelsByProvider: Record<string, Record<string, ModelInfo>> = {
 	vertex: vertexModels,
 	gemini: geminiModels,
 	"openai-native": openAiNativeModels,
-	deepseek: deepSeekModels,
 	mistral: mistralModels,
 }
 
@@ -109,7 +106,9 @@ const ApiOptions = ({
 			transform: (event: E) => ApiConfiguration[K] = inputEventTransform,
 		) =>
 			(event: E | Event) => {
-				setApiConfigurationField(field, transform(event as E))
+				const value = transform(event as E)
+				console.log(`Changing ${field} to:`, value)
+				setApiConfigurationField(field, value)
 			},
 		[setApiConfigurationField],
 	)
@@ -259,6 +258,7 @@ const ApiOptions = ({
 						{ value: "ollama", label: "Ollama" },
 						{ value: "unbound", label: "Unbound" },
 						{ value: "requesty", label: "Requesty" },
+						{ value: "ark", label: "Ark" },
 					]}
 				/>
 			</div>
@@ -1143,6 +1143,21 @@ const ApiOptions = ({
 						placeholder="Enter API Key...">
 						<span className="font-medium">DeepSeek API Key</span>
 					</VSCodeTextField>
+					<VSCodeTextField
+						value={apiConfiguration?.deepSeekBaseUrl || ""}
+						style={{ width: "100%", marginTop: 3 }}
+						type="url"
+						onInput={handleInputChange("deepSeekBaseUrl")}
+						placeholder="Default: https://api.deepseek.com/v1">
+						<span className="font-medium">DeepSeek Base URL</span>
+					</VSCodeTextField>
+					<VSCodeTextField
+						value={apiConfiguration?.apiModelId || ""}
+						style={{ width: "100%" }}
+						onInput={handleInputChange("apiModelId")}
+						placeholder="Enter Model ID...">
+						<span style={{ fontWeight: 500 }}>DeepSeek Model ID</span>
+					</VSCodeTextField>
 					<p
 						style={{
 							fontSize: "12px",
@@ -1307,6 +1322,51 @@ const ApiOptions = ({
 				</div>
 			)}
 
+			{selectedProvider === "ark" && (
+				<div>
+					<VSCodeTextField
+						value={apiConfiguration?.apiKey || ""}
+						style={{ width: "100%" }}
+						type="password"
+						onInput={handleInputChange("apiKey")}
+						placeholder="Enter API Key...">
+						<span style={{ fontWeight: 500 }}>Ark API Key</span>
+					</VSCodeTextField>
+					<VSCodeTextField
+						value={apiConfiguration?.arkBaseUrl || ""}
+						style={{ width: "100%" }}
+						type="url"
+						onInput={handleInputChange("arkBaseUrl")}
+						placeholder="Enter Base URL...">
+						<span style={{ fontWeight: 500 }}>Ark Base URL</span>
+					</VSCodeTextField>
+					<VSCodeTextField
+						value={apiConfiguration?.apiModelId || ""}
+						style={{ width: "100%" }}
+						onInput={handleInputChange("apiModelId")}
+						placeholder="Enter Model ID...">
+						<span style={{ fontWeight: 500 }}>Ark Model ID</span>
+					</VSCodeTextField>
+					<p
+						style={{
+							fontSize: "12px",
+							marginTop: 3,
+							color: "var(--vscode-descriptionForeground)",
+						}}>
+						This key is stored locally and only used to make API requests from this extension.
+					</p>
+					<p
+						style={{
+							fontSize: "12px",
+							marginTop: 5,
+							color: "var(--vscode-descriptionForeground)",
+						}}>
+						Ark is an OpenAI-compatible API provider. You can use it to access various AI models through a
+						unified interface.
+					</p>
+				</div>
+			)}
+
 			{selectedProvider === "openrouter" && (
 				<ModelPicker
 					apiConfiguration={apiConfiguration}
@@ -1445,7 +1505,11 @@ export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
 		case "gemini":
 			return getProviderData(geminiModels, geminiDefaultModelId)
 		case "deepseek":
-			return getProviderData(deepSeekModels, deepSeekDefaultModelId)
+			return {
+				selectedProvider: provider,
+				selectedModelId: apiConfiguration?.apiModelId || "",
+				selectedModelInfo: openAiModelInfoSaneDefaults,
+			}
 		case "openai-native":
 			return getProviderData(openAiNativeModels, openAiNativeDefaultModelId)
 		case "mistral":
@@ -1502,6 +1566,12 @@ export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
 					...openAiModelInfoSaneDefaults,
 					supportsImages: false, // VSCode LM API currently doesn't support images.
 				},
+			}
+		case "ark":
+			return {
+				selectedProvider: provider,
+				selectedModelId: apiConfiguration?.apiModelId || "",
+				selectedModelInfo: openAiModelInfoSaneDefaults,
 			}
 		default:
 			return getProviderData(anthropicModels, anthropicDefaultModelId)
