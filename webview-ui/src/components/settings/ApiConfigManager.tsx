@@ -15,6 +15,10 @@ interface ApiConfigManagerProps {
 	onUpsertConfig: (configName: string) => void
 }
 
+const sortConfigOptions = (configs: ApiConfigMeta[]) => {
+	return [...configs].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
+}
+
 const ApiConfigManager = ({
 	currentApiConfigName = "",
 	listApiConfigMeta = [],
@@ -225,7 +229,7 @@ const ApiConfigManager = ({
 									zIndex: 1002,
 								}}
 								role="combobox"
-								options={listApiConfigMeta.map((config) => ({
+								options={sortConfigOptions(listApiConfigMeta).map((config) => ({
 									value: config.name,
 									label: config.name,
 								}))}
