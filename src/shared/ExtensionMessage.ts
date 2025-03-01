@@ -4,9 +4,9 @@ import { ApiConfiguration, ApiProvider, ModelInfo } from "./api"
 import { HistoryItem } from "./HistoryItem"
 import { McpServer } from "./mcp"
 import { GitCommit } from "../utils/git"
-import { Mode, CustomModePrompts, ModeConfig } from "./modes"
+import { Mode, CustomModePrompts, ModeConfig, defaultModeSlug, defaultPrompts } from "./modes"
 import { CustomSupportPrompts } from "./support-prompt"
-import { ExperimentId } from "./experiments"
+import { ExperimentId, experimentDefault } from "./experiments"
 
 export interface LanguageModelChatSelector {
 	vendor?: string
@@ -240,3 +240,37 @@ export interface ClineApiReqInfo {
 }
 
 export type ClineApiReqCancelReason = "streaming_failed" | "user_cancelled"
+
+export const defaultExtensionState: ExtensionState = {
+	version: "",
+	clineMessages: [],
+	taskHistory: [],
+	shouldShowAnnouncement: false,
+	allowedCommands: [],
+	soundEnabled: false,
+	soundVolume: 0.5,
+	diffEnabled: false,
+	enableCheckpoints: true,
+	fuzzyMatchThreshold: 1.0,
+	preferredLanguage: "English",
+	writeDelayMs: 1000,
+	browserViewportSize: "900x600",
+	screenshotQuality: 75,
+	terminalOutputLineLimit: 500,
+	mcpEnabled: true,
+	enableMcpServerCreation: true,
+	alwaysApproveResubmit: false,
+	requestDelaySeconds: 5,
+	rateLimitSeconds: 0, // Minimum time between successive requests (0 = disabled)
+	currentApiConfigName: "default",
+	listApiConfigMeta: [],
+	mode: defaultModeSlug,
+	customModePrompts: defaultPrompts,
+	customSupportPrompts: {},
+	experiments: experimentDefault,
+	enhancementApiConfigId: "",
+	autoApprovalEnabled: false,
+	customModes: [],
+	maxOpenTabsContext: 20,
+	cwd: "",
+}

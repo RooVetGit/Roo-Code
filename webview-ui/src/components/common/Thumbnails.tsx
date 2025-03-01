@@ -66,6 +66,7 @@ const Thumbnails = ({ images, style, setImages, onHeightChange }: ThumbnailsProp
 					/>
 					{isDeletable && hoveredIndex === index && (
 						<div
+							key={index}
 							onClick={() => handleDelete(index)}
 							style={{
 								position: "absolute",

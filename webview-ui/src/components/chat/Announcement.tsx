@@ -35,15 +35,15 @@ const Announcement = ({ version, hideAnnouncement }: AnnouncementProps) => {
 			</p>
 
 			<h3 style={{ margin: "12px 0 8px" }}>What's New</h3>
-			<p style={{ margin: "5px 0px" }}>
-				Automatic Checkpoints provide you with:
+			<div style={{ margin: "5px 0px" }}>
+				<p style={{ margin: "0 0 8px 0" }}>Automatic Checkpoints provide you with:</p>
 				<ul style={{ margin: "4px 0 6px 20px", padding: 0 }}>
 					<li>Peace of mind when making significant changes</li>
 					<li>Ability to visually inspect changes between steps</li>
 					<li>Easy rollback if you're not satisfied with certain code modifications</li>
 					<li>Improved navigation through complex task execution</li>
 				</ul>
-			</p>
+			</div>
 
 			<h3 style={{ margin: "12px 0 8px" }}>Customize Your Experience</h3>
 			<p style={{ margin: "5px 0px" }}>

@@ -1,15 +1,20 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react"
 import { useEvent } from "react-use"
-import { ApiConfigMeta, ExtensionMessage, ExtensionState } from "../../../src/shared/ExtensionMessage"
-import { ApiConfiguration } from "../../../src/shared/api"
+import {
+	ApiConfigMeta,
+	ExtensionMessage,
+	ExtensionState,
+	defaultExtensionState,
+} from "../../../src/shared/ExtensionMessage"
+import { ApiConfiguration, ModelInfo } from "../../../src/shared/api"
 import { vscode } from "../utils/vscode"
 import { convertTextMateToHljs } from "../utils/textMateToHljs"
 import { findLastIndex } from "../../../src/shared/array"
 import { McpServer } from "../../../src/shared/mcp"
 import { checkExistKey } from "../../../src/shared/checkExistApiConfig"
-import { Mode, CustomModePrompts, defaultModeSlug, defaultPrompts, ModeConfig } from "../../../src/shared/modes"
+import { Mode, CustomModePrompts, ModeConfig } from "../../../src/shared/modes"
 import { CustomSupportPrompts } from "../../../src/shared/support-prompt"
-import { experimentDefault, ExperimentId } from "../../../src/shared/experiments"
+import { ExperimentId } from "../../../src/shared/experiments"
 
 export interface ExtensionStateContextType extends ExtensionState {
 	didHydrateState: boolean
@@ -58,6 +63,11 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setMode: (value: Mode) => void
 	setCustomModePrompts: (value: CustomModePrompts) => void
 	setCustomSupportPrompts: (value: CustomSupportPrompts) => void
+	glamaModels?: Record<string, ModelInfo>
+	requestyModels?: Record<string, ModelInfo>
+	openRouterModels?: Record<string, ModelInfo>
+	unboundModels?: Record<string, ModelInfo>
+	openAiModels?: string[]
 	enhancementApiConfigId?: string
 	setEnhancementApiConfigId: (value: string) => void
 	setExperimentEnabled: (id: ExperimentId, enabled: boolean) => void
@@ -70,39 +80,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
 
 export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-	const [state, setState] = useState<ExtensionState>({
-		version: "",
-		clineMessages: [],
-		taskHistory: [],
-		shouldShowAnnouncement: false,
-		allowedCommands: [],
-		soundEnabled: false,
-		soundVolume: 0.5,
-		diffEnabled: false,
-		enableCheckpoints: true,
-		fuzzyMatchThreshold: 1.0,
-		preferredLanguage: "English",
-		writeDelayMs: 1000,
-		browserViewportSize: "900x600",
-		screenshotQuality: 75,
-		terminalOutputLineLimit: 500,
-		mcpEnabled: true,
-		enableMcpServerCreation: true,
-		alwaysApproveResubmit: false,
-		requestDelaySeconds: 5,
-		rateLimitSeconds: 0, // Minimum time between successive requests (0 = disabled)
-		currentApiConfigName: "default",
-		listApiConfigMeta: [],
-		mode: defaultModeSlug,
-		customModePrompts: defaultPrompts,
-		customSupportPrompts: {},
-		experiments: experimentDefault,
-		enhancementApiConfigId: "",
-		autoApprovalEnabled: false,
-		customModes: [],
-		maxOpenTabsContext: 20,
-		cwd: "",
-	})
+	const [state, setState] = useState<ExtensionState>(defaultExtensionState)
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
 	const [showWelcome, setShowWelcome] = useState(false)
