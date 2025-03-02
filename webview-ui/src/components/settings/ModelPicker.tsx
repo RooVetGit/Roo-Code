@@ -59,21 +59,24 @@ export const ModelPicker = ({
 		[modelIdKey, modelInfoKey, models, setApiConfigurationField, defaultModelInfo],
 	)
 
-	const inputValue = apiConfiguration[modelIdKey]
-
+	/**
+	 * Set a default `apiConfiguration` value if it's not set.
+	 *
+	 * This is to ensure that the model picker is always initialized with a value.
+	 */
 	useEffect(() => {
-		if (!inputValue && !isInitialized.current) {
+		if (!apiConfiguration[modelIdKey] && !isInitialized.current) {
 			const initialValue = modelIds.includes(selectedModelId) ? selectedModelId : defaultModelId
 			setApiConfigurationField(modelIdKey, initialValue)
 		}
 
 		isInitialized.current = true
-	}, [inputValue, modelIds, setApiConfigurationField, modelIdKey, selectedModelId, defaultModelId])
+	}, [apiConfiguration, modelIdKey, modelIds, setApiConfigurationField, selectedModelId, defaultModelId])
 
 	return (
 		<>
 			<div className="font-semibold">Model</div>
-			<Combobox type="single" inputValue={inputValue} onInputValueChange={onSelect}>
+			<Combobox type="single" inputValue={selectedModelId} onInputValueChange={onSelect}>
 				<ComboboxInput placeholder="Search model..." data-testid="model-input" />
 				<ComboboxContent>
 					<ComboboxEmpty>No model found.</ComboboxEmpty>
@@ -89,7 +92,7 @@ export const ModelPicker = ({
 				setApiConfigurationField={setApiConfigurationField}
 				modelInfo={selectedModelInfo}
 			/>
-			{selectedModelId && selectedModelInfo && selectedModelId === inputValue && (
+			{selectedModelId && selectedModelInfo && (
 				<ModelInfoView
 					selectedModelId={selectedModelId}
 					modelInfo={selectedModelInfo}
