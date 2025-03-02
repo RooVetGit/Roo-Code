@@ -107,6 +107,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const contextMenuContainerRef = useRef<HTMLDivElement>(null)
 		const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false)
 		const [isFocused, setIsFocused] = useState(false)
+		const [modeSelectWidth, setModeSelectWidth] = useState(70) // Default min width for mode select
+		const [apiSelectWidth, setApiSelectWidth] = useState(100) // Default min width for API config select
 
 		// Fetch git commits when Git is selected or when typing a hash
 		useEffect(() => {
@@ -508,6 +510,42 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			setIsMouseDownOnMenu(true)
 		}, [])
 
+		// Utility function to estimate text width
+		const estimateTextWidth = useCallback((text: string, fontSize: number = 11): number => {
+			// Approximate character width based on font size (in pixels)
+			const avgCharWidth = fontSize * 0.6
+
+			// Add extra space for the caret icon and padding
+			const paddingWidth = 30
+
+			// Calculate estimated width
+			return text.length * avgCharWidth + paddingWidth
+		}, [])
+
+		// Update mode select width when mode changes
+		useEffect(() => {
+			if (!mode) return
+
+			// Get the selected mode's display name
+			const selectedMode = getAllModes(customModes).find((m) => m.slug === mode)
+			if (selectedMode) {
+				const textWidth = estimateTextWidth(selectedMode.name)
+				// Apply min/max constraints
+				const newWidth = Math.max(70, Math.min(200, textWidth))
+				setModeSelectWidth(newWidth)
+			}
+		}, [mode, customModes, estimateTextWidth])
+
+		// Update API config select width when config changes
+		useEffect(() => {
+			if (!currentApiConfigName) return
+
+			const textWidth = estimateTextWidth(currentApiConfigName)
+			// Apply min/max constraints
+			const newWidth = Math.max(100, Math.min(250, textWidth))
+			setApiSelectWidth(newWidth)
+		}, [currentApiConfigName, estimateTextWidth])
+
 		const updateHighlights = useCallback(() => {
 			if (!textAreaRef.current || !highlightLayerRef.current) return
 
@@ -554,6 +592,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			WebkitAppearance: "none" as const,
 			MozAppearance: "none" as const,
 			appearance: "none" as const,
+			transition: "width 0.2s ease-in-out", // Add smooth transition for width changes
 		}
 
 		const optionStyle = {
@@ -815,7 +854,9 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								}}
 								style={{
 									...selectStyle,
+									width: `${modeSelectWidth}px`, // Use dynamic width from state
 									minWidth: "70px",
+									maxWidth: "200px",
 									flex: "0 0 auto",
 								}}>
 								<option
@@ -851,7 +892,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								display: "inline-block",
 								flex: "1 1 auto",
 								minWidth: 0,
-								maxWidth: "150px",
+								maxWidth: "250px", // Increased max width to match our constraints
 								overflow: "hidden",
 							}}>
 							<select
@@ -871,7 +912,9 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								}}
 								style={{
 									...selectStyle,
-									width: "100%",
+									width: `${apiSelectWidth}px`, // Use dynamic width from state
+									minWidth: "100px",
+									maxWidth: "250px",
 									textOverflow: "ellipsis",
 								}}>
 								{(listApiConfigMeta || []).map((config) => (
