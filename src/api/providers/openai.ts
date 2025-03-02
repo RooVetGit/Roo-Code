@@ -15,9 +15,12 @@ import { convertToSimpleMessages } from "../transform/simple-format"
 import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
 
-export interface OpenAiHandlerOptions extends ApiHandlerOptions {
-	defaultHeaders?: Record<string, string>
+export const defaultHeaders = {
+	"HTTP-Referer": "https://github.com/RooVetGit/Roo-Cline",
+	"X-Title": "Roo Code",
 }
+
+export interface OpenAiHandlerOptions extends ApiHandlerOptions {}
 
 export class OpenAiHandler implements ApiHandler, SingleCompletionHandler {
 	protected options: OpenAiHandlerOptions
@@ -45,9 +48,10 @@ export class OpenAiHandler implements ApiHandler, SingleCompletionHandler {
 				baseURL,
 				apiKey,
 				apiVersion: this.options.azureApiVersion || azureOpenAiDefaultApiVersion,
+				defaultHeaders,
 			})
 		} else {
-			this.client = new OpenAI({ baseURL, apiKey, defaultHeaders: this.options.defaultHeaders })
+			this.client = new OpenAI({ baseURL, apiKey, defaultHeaders })
 		}
 	}
 
