@@ -874,16 +874,18 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 									width: "100%",
 									textOverflow: "ellipsis",
 								}}>
-								{(listApiConfigMeta || []).map((config) => (
-									<option
-										key={config.name}
-										value={config.name}
-										style={{
-											...optionStyle,
-										}}>
-										{config.name}
-									</option>
-								))}
+								{(listApiConfigMeta || [])
+									.sort((a, b) => a.name.localeCompare(b.name))
+									.map((config) => (
+										<option
+											key={config.name}
+											value={config.name}
+											style={{
+												...optionStyle,
+											}}>
+											{config.name}
+										</option>
+									))}
 								<option
 									disabled
 									style={{
