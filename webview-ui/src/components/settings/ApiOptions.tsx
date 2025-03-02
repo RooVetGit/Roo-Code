@@ -657,29 +657,119 @@ const ApiOptions = ({
 
 			{selectedProvider === "gemini" && (
 				<div>
-					<VSCodeTextField
-						value={apiConfiguration?.geminiApiKey || ""}
-						style={{ width: "100%" }}
-						type="password"
-						onInput={handleInputChange("geminiApiKey")}
-						placeholder="Enter API Key...">
-						<span className="font-medium">Gemini API Key</span>
-					</VSCodeTextField>
-					<p
-						style={{
-							fontSize: "12px",
-							marginTop: 3,
-							color: "var(--vscode-descriptionForeground)",
-						}}>
-						This key is stored locally and only used to make API requests from this extension.
-						{!apiConfiguration?.geminiApiKey && (
-							<VSCodeLink
-								href="https://ai.google.dev/"
-								style={{ display: "inline", fontSize: "inherit" }}>
-								You can get a Gemini API key by signing up here.
-							</VSCodeLink>
-						)}
-					</p>
+					<Checkbox
+						checked={apiConfiguration?.geminiLoadBalancingEnabled ?? false}
+						onChange={handleInputChange("geminiLoadBalancingEnabled", noTransform)}>
+						<span className="font-medium">Enable Load Balancing</span>
+					</Checkbox>
+
+					{apiConfiguration?.geminiLoadBalancingEnabled ? (
+						<>
+							<div style={{ marginTop: "10px" }}>
+								<label className="font-medium">API Keys for Load Balancing</label>
+								<div style={{ marginTop: "5px" }}>
+									{(apiConfiguration?.geminiApiKeys || []).map((key, index) => (
+										<div
+											key={index}
+											style={{ display: "flex", marginBottom: "5px", alignItems: "center" }}>
+											<VSCodeTextField
+												value={key}
+												style={{ width: "100%" }}
+												type="password"
+												onInput={(e) => {
+													const newKeys = [...(apiConfiguration?.geminiApiKeys || [])]
+													newKeys[index] = (e.target as HTMLInputElement).value
+													setApiConfigurationField("geminiApiKeys", newKeys)
+												}}
+												placeholder={`API Key ${index + 1}`}
+											/>
+											<button
+												className="codicon codicon-trash"
+												style={{
+													background: "none",
+													border: "none",
+													color: "var(--vscode-errorForeground)",
+													cursor: "pointer",
+													marginLeft: "5px",
+												}}
+												onClick={() => {
+													const newKeys = [...(apiConfiguration?.geminiApiKeys || [])]
+													newKeys.splice(index, 1)
+													setApiConfigurationField("geminiApiKeys", newKeys)
+												}}
+												title="Remove API Key"
+											/>
+										</div>
+									))}
+									<button
+										style={{
+											background: "none",
+											border: "1px solid var(--vscode-button-background)",
+											color: "var(--vscode-button-foreground)",
+											backgroundColor: "var(--vscode-button-background)",
+											padding: "4px 8px",
+											borderRadius: "2px",
+											cursor: "pointer",
+											fontSize: "12px",
+											marginTop: "5px",
+										}}
+										onClick={() => {
+											const newKeys = [...(apiConfiguration?.geminiApiKeys || []), ""]
+											setApiConfigurationField("geminiApiKeys", newKeys)
+										}}>
+										Add API Key
+									</button>
+								</div>
+							</div>
+
+							<div style={{ marginTop: "10px" }}>
+								<VSCodeTextField
+									value={apiConfiguration?.geminiLoadBalancingRequestCount?.toString() || "10"}
+									style={{ width: "100%" }}
+									onInput={handleInputChange("geminiLoadBalancingRequestCount", (e) => {
+										const value = parseInt((e.target as HTMLInputElement).value)
+										return isNaN(value) ? 10 : value
+									})}
+									placeholder="Number of requests before switching">
+									<span className="font-medium">Requests Before Switching</span>
+								</VSCodeTextField>
+								<p
+									style={{
+										fontSize: "12px",
+										marginTop: 3,
+										color: "var(--vscode-descriptionForeground)",
+									}}>
+									Number of API requests before switching to the next API key.
+								</p>
+							</div>
+						</>
+					) : (
+						<>
+							<VSCodeTextField
+								value={apiConfiguration?.geminiApiKey || ""}
+								style={{ width: "100%", marginTop: "10px" }}
+								type="password"
+								onInput={handleInputChange("geminiApiKey")}
+								placeholder="Enter API Key...">
+								<span className="font-medium">Gemini API Key</span>
+							</VSCodeTextField>
+							<p
+								style={{
+									fontSize: "12px",
+									marginTop: 3,
+									color: "var(--vscode-descriptionForeground)",
+								}}>
+								This key is stored locally and only used to make API requests from this extension.
+								{!apiConfiguration?.geminiApiKey && (
+									<VSCodeLink
+										href="https://ai.google.dev/"
+										style={{ display: "inline", fontSize: "inherit" }}>
+										You can get a Gemini API key by signing up here.
+									</VSCodeLink>
+								)}
+							</p>
+						</>
+					)}
 				</div>
 			)}
 

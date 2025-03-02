@@ -50,6 +50,11 @@ export interface ApiHandlerOptions {
 	lmStudioModelId?: string
 	lmStudioBaseUrl?: string
 	geminiApiKey?: string
+	geminiApiKeys?: string[] // Array of Gemini API keys for load balancing
+	geminiLoadBalancingEnabled?: boolean // Flag to enable/disable Gemini load balancing
+	geminiLoadBalancingRequestCount?: number // Number of requests before switching API keys
+	geminiCurrentApiKeyIndex?: number // Index of the currently used API key
+	geminiRequestCount?: number // Current request count for Gemini load balancing
 	openAiNativeApiKey?: string
 	mistralApiKey?: string
 	mistralCodestralUrl?: string // New option for Codestral URL

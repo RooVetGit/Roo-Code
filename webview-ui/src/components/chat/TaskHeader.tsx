@@ -127,6 +127,14 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 		)
 	}, [apiConfiguration?.apiProvider])
 
+	const isGeminiWithLoadBalancing = useMemo(() => {
+		return (
+			apiConfiguration?.apiProvider === "gemini" &&
+			apiConfiguration?.geminiLoadBalancingEnabled &&
+			(apiConfiguration?.geminiApiKeys?.length ?? 0) > 1
+		)
+	}, [apiConfiguration?.apiProvider, apiConfiguration?.geminiLoadBalancingEnabled, apiConfiguration?.geminiApiKeys])
+
 	const shouldShowPromptCacheInfo = doesModelSupportPromptCache && apiConfiguration?.apiProvider !== "openrouter"
 
 	return (
@@ -326,6 +334,40 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 										{formatLargeNumber(cacheReads || 0)}
 									</span>
 								</div>
+							)}
+
+							{isGeminiWithLoadBalancing && (
+								<>
+									<div className="flex items-center gap-1 flex-wrap h-[20px]">
+										<span style={{ fontWeight: "bold" }}>API Key:</span>
+										<span className="flex items-center gap-1">
+											<i
+												className="codicon codicon-key"
+												style={{ fontSize: "12px", fontWeight: "bold" }}
+											/>
+											{(apiConfiguration?.geminiCurrentApiKeyIndex ?? 0) + 1}/
+											{apiConfiguration?.geminiApiKeys?.length}
+										</span>
+									</div>
+									<div className="flex items-center gap-1 flex-wrap h-[20px]">
+										<span style={{ fontWeight: "bold" }}>Requests:</span>
+										<div className="flex items-center gap-2 flex-1 whitespace-nowrap">
+											<div>{apiConfiguration?.geminiRequestCount ?? 0}</div>
+											<div className="flex items-center gap-[3px] flex-1">
+												<div className="flex-1 h-1 rounded-[2px] overflow-hidden bg-[color-mix(in_srgb,var(--vscode-badge-foreground)_20%,transparent)]">
+													<div
+														className="h-full rounded-[2px] bg-[var(--vscode-badge-foreground)]"
+														style={{
+															width: `${((apiConfiguration?.geminiRequestCount ?? 0) / (apiConfiguration?.geminiLoadBalancingRequestCount ?? 10)) * 100}%`,
+															transition: "width 0.3s ease-out",
+														}}
+													/>
+												</div>
+											</div>
+											<div>{apiConfiguration?.geminiLoadBalancingRequestCount ?? 10}</div>
+										</div>
+									</div>
+								</>
 							)}
 
 							{isCostAvailable && (

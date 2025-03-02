@@ -42,8 +42,16 @@ export function validateApiConfiguration(apiConfiguration?: ApiConfiguration): s
 			}
 			break
 		case "gemini":
-			if (!apiConfiguration.geminiApiKey) {
-				return "You must provide a valid API key."
+			// If load balancing is enabled, validate that there are API keys in the array
+			if (apiConfiguration.geminiLoadBalancingEnabled) {
+				if (!apiConfiguration.geminiApiKeys || apiConfiguration.geminiApiKeys.length === 0) {
+					return "You must provide at least one API key for load balancing."
+				}
+			} else {
+				// If load balancing is not enabled, validate the single API key
+				if (!apiConfiguration.geminiApiKey) {
+					return "You must provide a valid API key."
+				}
 			}
 			break
 		case "openai-native":

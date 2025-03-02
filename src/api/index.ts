@@ -11,7 +11,7 @@ import { VertexHandler } from "./providers/vertex"
 import { OpenAiHandler } from "./providers/openai"
 import { OllamaHandler } from "./providers/ollama"
 import { LmStudioHandler } from "./providers/lmstudio"
-import { GeminiHandler } from "./providers/gemini"
+import { GeminiHandler, ApiKeyRotationCallback, RequestCountUpdateCallback } from "./providers/gemini"
 import { OpenAiNativeHandler } from "./providers/openai-native"
 import { DeepSeekHandler } from "./providers/deepseek"
 import { MistralHandler } from "./providers/mistral"
@@ -29,41 +29,54 @@ export interface ApiHandler {
 	getModel(): { id: string; info: ModelInfo }
 }
 
-export function buildApiHandler(configuration: ApiConfiguration): ApiHandler {
-	const { apiProvider, ...options } = configuration
+/**
+ * Callbacks that can be passed to API handlers
+ */
+export interface ApiHandlerCallbacks {
+	onGeminiApiKeyRotation?: ApiKeyRotationCallback
+	onGeminiRequestCountUpdate?: RequestCountUpdateCallback
+	geminiInitialRequestCount?: number
+}
+
+export function buildApiHandler(configuration: ApiConfiguration, callbacks?: ApiHandlerCallbacks): ApiHandler {
+	const { apiProvider, ...handlerOptions } = configuration
 	switch (apiProvider) {
 		case "anthropic":
-			return new AnthropicHandler(options)
+			return new AnthropicHandler(handlerOptions)
 		case "glama":
-			return new GlamaHandler(options)
+			return new GlamaHandler(handlerOptions)
 		case "openrouter":
-			return new OpenRouterHandler(options)
+			return new OpenRouterHandler(handlerOptions)
 		case "bedrock":
-			return new AwsBedrockHandler(options)
+			return new AwsBedrockHandler(handlerOptions)
 		case "vertex":
-			return new VertexHandler(options)
+			return new VertexHandler(handlerOptions)
 		case "openai":
-			return new OpenAiHandler(options)
+			return new OpenAiHandler(handlerOptions)
 		case "ollama":
-			return new OllamaHandler(options)
+			return new OllamaHandler(handlerOptions)
 		case "lmstudio":
-			return new LmStudioHandler(options)
+			return new LmStudioHandler(handlerOptions)
 		case "gemini":
-			return new GeminiHandler(options)
+			return new GeminiHandler(handlerOptions, {
+				onApiKeyRotation: callbacks?.onGeminiApiKeyRotation,
+				onRequestCountUpdate: callbacks?.onGeminiRequestCountUpdate,
+				initialRequestCount: callbacks?.geminiInitialRequestCount,
+			})
 		case "openai-native":
-			return new OpenAiNativeHandler(options)
+			return new OpenAiNativeHandler(handlerOptions)
 		case "deepseek":
-			return new DeepSeekHandler(options)
+			return new DeepSeekHandler(handlerOptions)
 		case "vscode-lm":
-			return new VsCodeLmHandler(options)
+			return new VsCodeLmHandler(handlerOptions)
 		case "mistral":
-			return new MistralHandler(options)
+			return new MistralHandler(handlerOptions)
 		case "unbound":
-			return new UnboundHandler(options)
+			return new UnboundHandler(handlerOptions)
 		case "requesty":
-			return new RequestyHandler(options)
+			return new RequestyHandler(handlerOptions)
 		default:
-			return new AnthropicHandler(options)
+			return new AnthropicHandler(handlerOptions)
 	}
 }
 

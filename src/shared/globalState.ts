@@ -7,6 +7,7 @@ export type SecretKey =
 	| "awsSessionToken"
 	| "openAiApiKey"
 	| "geminiApiKey"
+	| "geminiApiKeys" // Array of Gemini API keys for load balancing
 	| "openAiNativeApiKey"
 	| "deepSeekApiKey"
 	| "mistralApiKey"
@@ -84,3 +85,7 @@ export type GlobalStateKey =
 	| "anthropicThinking" // TODO: Rename to `modelMaxThinkingTokens`.
 	| "mistralCodestralUrl"
 	| "maxOpenTabsContext"
+	| "geminiLoadBalancingEnabled" // Flag to enable/disable Gemini load balancing
+	| "geminiLoadBalancingRequestCount" // Number of requests before switching API keys
+	| "geminiCurrentApiKeyIndex" // Index of the currently used API key
+	| "geminiRequestCount" // Current request count for Gemini load balancing

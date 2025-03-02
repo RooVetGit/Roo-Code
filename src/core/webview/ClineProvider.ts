@@ -1581,6 +1581,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	public async handleModeSwitch(newMode: Mode) {
 		await this.updateGlobalState("mode", newMode)
 
+		// Get current API configuration to preserve certain values
+		const { apiConfiguration } = await this.getState()
+		// Get the current Gemini API key index and request count for load balancing
+		const currentGeminiApiKeyIndex = apiConfiguration.geminiCurrentApiKeyIndex
+		const currentGeminiRequestCount = apiConfiguration.geminiRequestCount
+
 		// Load the saved API config for the new mode if it exists
 		const savedConfigId = await this.configManager.getModeConfigId(newMode)
 		const listApiConfig = await this.configManager.listConfig()
@@ -1593,6 +1599,20 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			const config = listApiConfig?.find((c) => c.id === savedConfigId)
 			if (config?.name) {
 				const apiConfig = await this.configManager.loadConfig(config.name)
+
+				// Preserve gemini-specific values if the API provider remains "gemini"
+				if (apiConfig.apiProvider === "gemini" && apiConfiguration.apiProvider === "gemini") {
+					// Preserve the current API key index
+					if (currentGeminiApiKeyIndex !== undefined) {
+						apiConfig.geminiCurrentApiKeyIndex = currentGeminiApiKeyIndex
+					}
+
+					// Preserve the current request count for load balancing
+					if (currentGeminiRequestCount !== undefined) {
+						apiConfig.geminiRequestCount = currentGeminiRequestCount
+					}
+				}
+
 				await Promise.all([
 					this.updateGlobalState("currentApiConfigName", config.name),
 					this.updateApiConfiguration(apiConfig),
@@ -1652,6 +1672,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			lmStudioBaseUrl,
 			anthropicBaseUrl,
 			geminiApiKey,
+			geminiApiKeys,
+			geminiLoadBalancingEnabled,
+			geminiLoadBalancingRequestCount,
+			geminiCurrentApiKeyIndex,
 			openAiNativeApiKey,
 			deepSeekApiKey,
 			azureApiVersion,
@@ -1701,6 +1725,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.updateGlobalState("lmStudioBaseUrl", lmStudioBaseUrl),
 			this.updateGlobalState("anthropicBaseUrl", anthropicBaseUrl),
 			this.storeSecret("geminiApiKey", geminiApiKey),
+			this.storeSecret("geminiApiKeys", geminiApiKeys ? JSON.stringify(geminiApiKeys) : undefined),
+			this.updateGlobalState("geminiLoadBalancingEnabled", geminiLoadBalancingEnabled),
+			this.updateGlobalState("geminiLoadBalancingRequestCount", geminiLoadBalancingRequestCount),
+			this.updateGlobalState("geminiCurrentApiKeyIndex", geminiCurrentApiKeyIndex),
 			this.storeSecret("openAiNativeApiKey", openAiNativeApiKey),
 			this.storeSecret("deepSeekApiKey", deepSeekApiKey),
 			this.updateGlobalState("azureApiVersion", azureApiVersion),
@@ -2158,6 +2186,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			lmStudioBaseUrl,
 			anthropicBaseUrl,
 			geminiApiKey,
+			geminiApiKeys,
+			geminiLoadBalancingEnabled,
+			geminiLoadBalancingRequestCount,
+			geminiCurrentApiKeyIndex,
 			openAiNativeApiKey,
 			deepSeekApiKey,
 			mistralApiKey,
@@ -2242,6 +2274,19 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("lmStudioBaseUrl") as Promise<string | undefined>,
 			this.getGlobalState("anthropicBaseUrl") as Promise<string | undefined>,
 			this.getSecret("geminiApiKey") as Promise<string | undefined>,
+			this.getSecret("geminiApiKeys").then(async (value) => {
+				if (value) {
+					try {
+						return JSON.parse(value) as string[]
+					} catch (e) {
+						return undefined
+					}
+				}
+				return undefined
+			}) as Promise<string[] | undefined>,
+			this.getGlobalState("geminiLoadBalancingEnabled") as Promise<boolean | undefined>,
+			this.getGlobalState("geminiLoadBalancingRequestCount") as Promise<number | undefined>,
+			this.getGlobalState("geminiCurrentApiKeyIndex") as Promise<number | undefined>,
 			this.getSecret("openAiNativeApiKey") as Promise<string | undefined>,
 			this.getSecret("deepSeekApiKey") as Promise<string | undefined>,
 			this.getSecret("mistralApiKey") as Promise<string | undefined>,
@@ -2343,6 +2388,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				lmStudioBaseUrl,
 				anthropicBaseUrl,
 				geminiApiKey,
+				geminiApiKeys,
+				geminiLoadBalancingEnabled,
+				geminiLoadBalancingRequestCount,
+				geminiCurrentApiKeyIndex,
 				openAiNativeApiKey,
 				deepSeekApiKey,
 				mistralApiKey,
@@ -2363,7 +2412,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				modelTemperature,
 				modelMaxTokens,
 				modelMaxThinkingTokens,
-			},
+			} as ApiConfiguration,
 			lastShownAnnouncementId,
 			customInstructions,
 			alwaysAllowReadOnly: alwaysAllowReadOnly ?? false,

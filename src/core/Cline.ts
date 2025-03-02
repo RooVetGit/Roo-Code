@@ -151,7 +151,17 @@ export class Cline {
 		this.taskId = historyItem ? historyItem.id : crypto.randomUUID()
 
 		this.apiConfiguration = apiConfiguration
-		this.api = buildApiHandler(apiConfiguration)
+		this.api = buildApiHandler(apiConfiguration, {
+			onGeminiApiKeyRotation: (newIndex, totalKeys, maskedKey) => {
+				// Update the global state with the new API key index
+				this.handleGeminiApiKeyRotation(newIndex, totalKeys, maskedKey)
+			},
+			onGeminiRequestCountUpdate: (newCount) => {
+				// Update the global state with the new request count
+				this.handleGeminiRequestCountUpdate(newCount)
+			},
+			geminiInitialRequestCount: apiConfiguration.geminiRequestCount,
+		})
 		this.terminalManager = new TerminalManager()
 		this.urlContentFetcher = new UrlContentFetcher(provider.context)
 		this.browserSession = new BrowserSession(provider.context)
@@ -200,6 +210,54 @@ export class Cline {
 			experimentalDiffStrategy = stateExperimental?.[EXPERIMENT_IDS.DIFF_STRATEGY] ?? false
 		}
 		this.diffStrategy = getDiffStrategy(this.api.getModel().id, this.fuzzyMatchThreshold, experimentalDiffStrategy)
+	}
+
+	/**
+	 * Handle Gemini API key rotation by updating the global state
+	 * This is called by the GeminiHandler when it rotates to a new API key
+	 */
+	private async handleGeminiApiKeyRotation(newIndex: number, totalKeys: number, maskedKey: string) {
+		console.log(`[Cline] Gemini API key rotated to index ${newIndex} of ${totalKeys} keys (${maskedKey})`)
+
+		// Update the global state with the new API key index
+		const provider = this.providerRef.deref()
+		if (provider) {
+			// Update the specific state key for the API key index
+			await provider.updateGlobalState("geminiCurrentApiKeyIndex", newIndex)
+
+			// Also update the apiConfiguration in memory to ensure UI consistency
+			this.apiConfiguration.geminiCurrentApiKeyIndex = newIndex
+
+			// Log the rotation for debugging
+			provider.log(`Gemini API key rotated to index ${newIndex} of ${totalKeys} keys`)
+
+			// Notify the user that the API key has been rotated
+			await this.say("text", `Gemini API key rotated to key #${newIndex + 1} of ${totalKeys}`)
+
+			// Force a state update to the webview to ensure the UI reflects the change
+			await provider.postStateToWebview()
+		}
+	}
+
+	/**
+	 * Handle Gemini request count update by updating the global state
+	 * This is called by the GeminiHandler when the request count changes
+	 */
+	private async handleGeminiRequestCountUpdate(newCount: number) {
+		console.log(`[Cline] Gemini request count updated to ${newCount}`)
+
+		// Update the global state with the new request count
+		const provider = this.providerRef.deref()
+		if (provider) {
+			// Update the specific state key for the request count
+			await provider.updateGlobalState("geminiRequestCount", newCount)
+
+			// Also update the apiConfiguration in memory to ensure consistency
+			this.apiConfiguration.geminiRequestCount = newCount
+
+			// Log the update for debugging
+			provider.log(`Gemini request count updated to ${newCount}`)
+		}
 	}
 
 	// Storing task to disk for history
