@@ -1078,7 +1078,7 @@ export const ChatRowContent = ({
 									overflow: "hidden",
 									backgroundColor: CODE_BLOCK_BG_COLOR,
 								}}>
-								<CodeBlock source={`${"```"}shell\n${command}\n${"```"}`} forceWrap={true} />
+								<CodeBlock source={`${"```"}shell\n${command}\n${"```"}`} />
 								{output.length > 0 && (
 									<div style={{ width: "100%" }}>
 										<div

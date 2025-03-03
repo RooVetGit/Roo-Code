@@ -1,10 +1,9 @@
 import React, { memo, useEffect } from "react"
 import { useRemark } from "react-remark"
-import rehypeHighlight, { Options } from "rehype-highlight"
 import styled from "styled-components"
 import { visit } from "unist-util-visit"
-import { useExtensionState } from "@src/context/ExtensionStateContext"
-import { CODE_BLOCK_BG_COLOR } from "./CodeBlock"
+import { useExtensionState } from "../../context/ExtensionStateContext"
+import CodeBlock from "./CodeBlock"
 import MermaidBlock from "./MermaidBlock"
 
 interface MarkdownBlockProps {
@@ -52,45 +51,6 @@ const remarkUrlToLink = () => {
 }
 
 const StyledMarkdown = styled.div`
-	pre {
-		background-color: ${CODE_BLOCK_BG_COLOR};
-		border-radius: 3px;
-		margin: 13x 0;
-		padding: 10px 10px;
-		max-width: calc(100vw - 20px);
-		overflow-x: auto;
-		overflow-y: hidden;
-		white-space: pre-wrap;
-	}
-
-	:where(h1, h2, h3, h4, h5, h6):has(code) code {
-		font-size: inherit;
-	}
-
-	pre > code {
-		.hljs-deletion {
-			background-color: var(--vscode-diffEditor-removedTextBackground);
-			display: inline-block;
-			width: 100%;
-		}
-		.hljs-addition {
-			background-color: var(--vscode-diffEditor-insertedTextBackground);
-			display: inline-block;
-			width: 100%;
-		}
-	}
-
-	code {
-		span.line:empty {
-			display: none;
-		}
-		word-wrap: break-word;
-		border-radius: 3px;
-		background-color: ${CODE_BLOCK_BG_COLOR};
-		font-size: var(--vscode-editor-font-size, var(--vscode-font-size, 12px));
-		font-family: var(--vscode-editor-font-family);
-	}
-
 	code:not(pre > code) {
 		font-family: var(--vscode-editor-font-family, monospace);
 		color: var(--vscode-textPreformat-foreground, #f78383);
@@ -153,23 +113,6 @@ const StyledMarkdown = styled.div`
 	}
 `
 
-const StyledPre = styled.pre<{ theme: any }>`
-	& .hljs {
-		color: var(--vscode-editor-foreground, #fff);
-	}
-
-	${(props) =>
-		Object.keys(props.theme)
-			.map((key) => {
-				return `
-      & ${key} {
-        color: ${props.theme[key]};
-      }
-    `
-			})
-			.join("")}
-`
-
 const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 	const { theme } = useExtensionState()
 	const [reactContent, setMarkdown] = useRemark({
@@ -187,26 +130,28 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 				}
 			},
 		],
-		rehypePlugins: [
-			rehypeHighlight as any,
-			{
-				// languages: {},
-			} as Options,
-		],
+		rehypePlugins: [],
 		rehypeReactOptions: {
 			components: {
-				pre: ({ node: _, children, ...preProps }: any) => {
+				pre: ({ node: _, children }: any) => {
+					// Check for Mermaid diagrams first
 					if (Array.isArray(children) && children.length === 1 && React.isValidElement(children[0])) {
 						const child = children[0] as React.ReactElement<{ className?: string }>
 						if (child.props?.className?.includes("language-mermaid")) {
 							return child
 						}
 					}
-					return (
-						<StyledPre {...preProps} theme={theme}>
-							{children}
-						</StyledPre>
-					)
+
+					// For all other code blocks, use CodeBlock with copy button
+					const codeNode = children?.[0]
+					if (!codeNode?.props?.children) return null
+					const language =
+						(Array.isArray(codeNode.props?.className)
+							? codeNode.props.className
+							: [codeNode.props?.className]
+						).map((c: string) => c?.replace("language-", ""))[0] || "javascript"
+					const rawText = codeNode.props.children[0] || ""
+					return <CodeBlock source={rawText} language={language} />
 				},
 				code: (props: any) => {
 					const className = props.className || ""
