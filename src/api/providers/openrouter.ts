@@ -113,6 +113,10 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			messages: openAiMessages,
 			stream: true,
 			include_reasoning: true,
+			// Only include provider if openRouterUseSpecificProvider is true.
+			...(this.options.openRouterUseSpecificProvider && {
+				provider: { order: [this.options.openRouterSpecificProvider] },
+			}),
 			// This way, the transforms field will only be included in the parameters when openRouterUseMiddleOutTransform is true.
 			...((this.options.openRouterUseMiddleOutTransform ?? true) && { transforms: ["middle-out"] }),
 		}

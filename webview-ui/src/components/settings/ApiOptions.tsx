@@ -1380,27 +1380,6 @@ const ApiOptions = ({
 						/>
 					</div>
 
-					{selectedProvider === "openrouter" && (
-						<>
-							<Checkbox
-								checked={apiConfiguration?.openRouterUseSpecificProvider || false}
-								onChange={handleInputChange("openRouterUseSpecificProvider", noTransform)}>
-								Use specific provider
-							</Checkbox>
-
-							{apiConfiguration?.openRouterUseSpecificProvider && (
-								<VSCodeTextField
-									value={apiConfiguration?.openRouterSpecificProvider || ""}
-									style={{ width: "100%", marginTop: 3 }}
-									type="text"
-									onInput={handleInputChange("openRouterSpecificProvider")}
-									placeholder="Enter specific provider...">
-									<span className="font-medium">Specific Provider</span>
-								</VSCodeTextField>
-							)}
-						</>
-					)}
-
 					<ThinkingBudget
 						key={`${selectedProvider}-${selectedModelId}`}
 						apiConfiguration={apiConfiguration}
@@ -1413,6 +1392,27 @@ const ApiOptions = ({
 						isDescriptionExpanded={isDescriptionExpanded}
 						setIsDescriptionExpanded={setIsDescriptionExpanded}
 					/>
+				</>
+			)}
+
+			{selectedProvider === "openrouter" && (
+				<>
+					<Checkbox
+						checked={apiConfiguration?.openRouterUseSpecificProvider || false}
+						onChange={handleInputChange("openRouterUseSpecificProvider", noTransform)}>
+						Use specific provider
+					</Checkbox>
+
+					{apiConfiguration?.openRouterUseSpecificProvider && (
+						<VSCodeTextField
+							value={apiConfiguration?.openRouterSpecificProvider || ""}
+							style={{ width: "100%", marginTop: 3 }}
+							type="text"
+							onInput={handleInputChange("openRouterSpecificProvider")}
+							placeholder="Enter specific provider...">
+							<span className="font-medium">Specific Provider</span>
+						</VSCodeTextField>
+					)}
 				</>
 			)}
 
