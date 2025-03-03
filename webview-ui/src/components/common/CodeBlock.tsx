@@ -18,6 +18,7 @@ minWidth: "max-content",
 
 interface CodeBlockProps {
 	source?: string
+	rawSource?: string // Add rawSource prop for copying raw text
 	language?: string
 	preStyle?: React.CSSProperties
 }
@@ -172,7 +173,7 @@ export const StyledPre = styled.pre<{ theme: any }>`
 			.join("")}
 `
 
-const CodeBlock = memo(({ source, language, preStyle }: CodeBlockProps) => {
+const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProps) => {
 	const codeBlockRef = useRef<HTMLDivElement>(null)
 	const [copied, setCopied] = useState(false)
 	const { theme } = useExtensionState()
@@ -262,11 +263,14 @@ const CodeBlock = memo(({ source, language, preStyle }: CodeBlockProps) => {
 
 	const handleCopy = (e: React.MouseEvent) => {
 		e.stopPropagation()
-		if (source) {
-			// Extract code content from markdown code block
-			const codeContent = source.replace(/^```[\s\S]*?\n([\s\S]*?)```$/m, "$1").trim()
+
+		// Use rawSource if available, otherwise extract from source
+		const textToCopy =
+			rawSource !== undefined ? rawSource : source?.replace(/^```[\s\S]*?\n([\s\S]*?)```$/m, "$1").trim()
+
+		if (textToCopy) {
 			try {
-				navigator.clipboard.writeText(codeContent)
+				navigator.clipboard.writeText(textToCopy)
 				setCopied(true)
 				setCopyError(false)
 				setTimeout(() => setCopied(false), 2000)
