@@ -510,16 +510,27 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			setIsMouseDownOnMenu(true)
 		}, [])
 
-		// Utility function to estimate text width
+		// Utility function to accurately measure text width
 		const estimateTextWidth = useCallback((text: string, fontSize: number = 11): number => {
-			// Approximate character width based on font size (in pixels)
-			const avgCharWidth = fontSize * 0.6
+			// Create a hidden canvas for text measurement
+			const canvas = document.createElement("canvas")
+			const context = canvas.getContext("2d")
 
-			// Add extra space for the caret icon and padding
+			if (!context) {
+				// Fallback if canvas context is not available
+				return text.length * 6 + 30
+			}
+
+			// Set the font to match our select element
+			context.font = `${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif`
+
+			// Measure the text width
+			const metrics = context.measureText(text)
+
+			// Add padding for the caret icon and select element padding
 			const paddingWidth = 30
 
-			// Calculate estimated width
-			return text.length * avgCharWidth + paddingWidth
+			return Math.ceil(metrics.width) + paddingWidth
 		}, [])
 
 		// Update mode select width when mode changes
