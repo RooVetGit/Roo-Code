@@ -30,6 +30,7 @@ export interface ApiHandlerOptions {
 	openRouterModelId?: string
 	openRouterModelInfo?: ModelInfo
 	openRouterBaseUrl?: string
+	openRouterSpecificProvider?: string
 	awsAccessKey?: string
 	awsSecretKey?: string
 	awsSessionToken?: string

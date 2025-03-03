@@ -5,6 +5,8 @@ node_modules
 coverage/
 
 .DS_Store
+.history/
+.aider*
 
 # Builds
 bin/

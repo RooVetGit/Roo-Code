@@ -44,6 +44,7 @@ import { TemperatureControl } from "./TemperatureControl"
 import { validateApiConfiguration, validateModelId } from "@/utils/validate"
 import { ApiErrorMessage } from "./ApiErrorMessage"
 import { ThinkingBudget } from "./ThinkingBudget"
+import { getOpenRouterProvidersForModel, OPENROUTER_DEFAULT_PROVIDER_NAME } from "../../utils/openrouter-helper"
 
 const modelsByProvider: Record<string, Record<string, ModelInfo>> = {
 	anthropic: anthropicModels,
@@ -91,6 +92,7 @@ const ApiOptions = ({
 	errorMessage,
 	setErrorMessage,
 }: ApiOptionsProps) => {
+	const [openRouterProviders, setOpenRouterProviders] = useState<Record<string, ModelInfo>>({})
 	const [ollamaModels, setOllamaModels] = useState<string[]>([])
 	const [lmStudioModels, setLmStudioModels] = useState<string[]>([])
 	const [vsCodeLmModels, setVsCodeLmModels] = useState<vscodemodels.LanguageModelChatSelector[]>([])
@@ -185,6 +187,53 @@ const ApiOptions = ({
 
 		setErrorMessage(apiValidationResult)
 	}, [apiConfiguration, glamaModels, openRouterModels, setErrorMessage, unboundModels, requestyModels])
+
+	useEffect(() => {
+		if (
+			selectedProvider === "openrouter" &&
+			apiConfiguration?.openRouterModelId &&
+			apiConfiguration.openRouterModelId in openRouterModels
+		) {
+			getOpenRouterProvidersForModel(apiConfiguration.openRouterModelId)
+				.then((providers) => {
+					setOpenRouterProviders(providers)
+				})
+				.catch((error) => {
+					console.error("Error fetching OpenRouter providers:", error)
+				})
+		}
+	}, [selectedProvider, apiConfiguration?.openRouterModelId, openRouterModels])
+
+	useEffect(() => {
+		if (selectedProvider === "openrouter" && apiConfiguration?.openRouterSpecificProvider) {
+			let targetModelInfo
+
+			if (apiConfiguration.openRouterSpecificProvider in openRouterProviders) {
+				const currentProviderInfo = openRouterProviders[apiConfiguration.openRouterSpecificProvider]
+				targetModelInfo = {
+					...apiConfiguration.openRouterModelInfo,
+					...currentProviderInfo,
+				}
+			} else {
+				targetModelInfo = openRouterModels[selectedModelId]
+			}
+
+			const currentModelInfoString = JSON.stringify(apiConfiguration.openRouterModelInfo)
+			const targetModelInfoString = JSON.stringify(targetModelInfo)
+
+			if (currentModelInfoString !== targetModelInfoString) {
+				setApiConfigurationField("openRouterModelInfo", targetModelInfo)
+			}
+		}
+	}, [
+		selectedProvider,
+		apiConfiguration.openRouterSpecificProvider,
+		openRouterProviders,
+		openRouterModels,
+		selectedModelId,
+		apiConfiguration.openRouterModelInfo,
+		setApiConfigurationField,
+	])
 
 	const onMessage = useCallback((event: MessageEvent) => {
 		const message: ExtensionMessage = event.data
@@ -1211,6 +1260,42 @@ const ApiOptions = ({
 					serviceName="OpenRouter"
 					serviceUrl="https://openrouter.ai/models"
 				/>
+			)}
+
+			{selectedProvider === "openrouter" && (
+				<>
+					<div className="dropdown-container" style={{ marginTop: 3 }}>
+						<label htmlFor="openrouter-specific-provider" className="font-medium">
+							Provider
+						</label>
+						<Dropdown
+							id="openrouter-specific-provider"
+							value={apiConfiguration?.openRouterSpecificProvider || ""}
+							onChange={handleInputChange("openRouterSpecificProvider", dropdownEventTransform)}
+							style={{ width: "100%" }}
+							options={[
+								{ value: OPENROUTER_DEFAULT_PROVIDER_NAME, label: OPENROUTER_DEFAULT_PROVIDER_NAME },
+								// Add provider options from the openRouterProviders state with more info
+								...Object.keys(openRouterProviders).map((provider) => {
+									const providerInfo = openRouterProviders[provider]
+									const contextWindow = providerInfo?.contextWindow
+										? `${Math.floor(providerInfo.contextWindow / 1000)}K`
+										: "?"
+									const inputPrice = providerInfo?.inputPrice
+										? `$${providerInfo.inputPrice.toFixed(2)}`
+										: "?"
+									const outputPrice = providerInfo?.outputPrice
+										? `$${providerInfo.outputPrice.toFixed(2)}`
+										: "?"
+									return {
+										value: provider,
+										label: `${provider} (Context: ${contextWindow}, Price: ${inputPrice} / ${outputPrice})`,
+									}
+								}),
+							]}
+						/>
+					</div>
+				</>
 			)}
 
 			{selectedProvider === "glama" && (
