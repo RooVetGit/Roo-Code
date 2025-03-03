@@ -1,10 +1,11 @@
-import { memo, useEffect, useRef, useState, useCallback } from "react"
+import { memo, useEffect, useRef, useCallback } from "react"
 import debounce from "debounce"
 import { useRemark } from "react-remark"
 import rehypeHighlight, { Options } from "rehype-highlight"
 import styled from "styled-components"
 import { visit } from "unist-util-visit"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
+import { useCopyToClipboard } from "@src/utils/clipboard"
 
 export const CODE_BLOCK_BG_COLOR = "var(--vscode-editor-background, --vscode-sideBar-background, rgb(30 30 30))"
 
@@ -175,7 +176,7 @@ export const StyledPre = styled.pre<{ theme: any }>`
 
 const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProps) => {
 	const codeBlockRef = useRef<HTMLDivElement>(null)
-	const [copied, setCopied] = useState(false)
+	const { showCopyFeedback, copyWithFeedback } = useCopyToClipboard()
 	const { theme } = useExtensionState()
 
 	const [reactContent, setMarkdownSource] = useRemark({
@@ -259,8 +260,6 @@ const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProp
 		}
 	}, [reactContent, updateCopyButtonPosition])
 
-	const [copyError, setCopyError] = useState(false)
-
 	const handleCopy = (e: React.MouseEvent) => {
 		e.stopPropagation()
 
@@ -269,16 +268,7 @@ const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProp
 			rawSource !== undefined ? rawSource : source?.replace(/^```[\s\S]*?\n([\s\S]*?)```$/m, "$1").trim()
 
 		if (textToCopy) {
-			try {
-				navigator.clipboard.writeText(textToCopy)
-				setCopied(true)
-				setCopyError(false)
-				setTimeout(() => setCopied(false), 2000)
-			} catch (error) {
-				console.error("Failed to copy to clipboard:", error)
-				setCopyError(true)
-				setTimeout(() => setCopyError(false), 2000)
-			}
+			copyWithFeedback(textToCopy, e)
 		}
 	}
 
@@ -296,7 +286,7 @@ const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProp
 				onMouseEnter={() => updateCopyButtonPosition(true)}
 				onMouseLeave={() => updateCopyButtonPosition()}>
 				<CopyButton onClick={handleCopy} title="Copy code">
-					<span className={`codicon codicon-${copied ? "check" : copyError ? "error" : "copy"}`} />
+					<span className={`codicon codicon-${showCopyFeedback ? "check" : "copy"}`} />
 				</CopyButton>
 			</CopyButtonWrapper>
 		</CodeBlockContainer>
