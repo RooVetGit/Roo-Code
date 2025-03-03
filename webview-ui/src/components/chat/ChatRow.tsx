@@ -1034,33 +1034,39 @@ export const ChatRowContent = ({
 					const splitMessage = (text: string) => {
 						const outputIndex = text.indexOf(COMMAND_OUTPUT_STRING)
 						if (outputIndex === -1) {
-							return { command: text, output: "" }
+							return { command: text, output: "", rawOutput: "" }
 						}
+
+						// Store the raw output before formatting
+						const rawOutput = text.slice(outputIndex + COMMAND_OUTPUT_STRING.length).trim()
+
+						// Format output for display
+						const formattedOutput = rawOutput
+							.split("")
+							.map((char) => {
+								switch (char) {
+									case "\t":
+										return "→   "
+									case "\b":
+										return "⌫"
+									case "\f":
+										return "⏏"
+									case "\v":
+										return "⇳"
+									default:
+										return char
+								}
+							})
+							.join("")
+
 						return {
 							command: text.slice(0, outputIndex).trim(),
-							output: text
-								.slice(outputIndex + COMMAND_OUTPUT_STRING.length)
-								.trim()
-								.split("")
-								.map((char) => {
-									switch (char) {
-										case "\t":
-											return "→   "
-										case "\b":
-											return "⌫"
-										case "\f":
-											return "⏏"
-										case "\v":
-											return "⇳"
-										default:
-											return char
-									}
-								})
-								.join(""),
+							output: formattedOutput,
+							rawOutput: rawOutput,
 						}
 					}
 
-					const { command, output } = splitMessage(message.text || "")
+					const { command, output, rawOutput } = splitMessage(message.text || "")
 					return (
 						<>
 							<div style={headerStyle}>
@@ -1096,7 +1102,12 @@ export const ChatRowContent = ({
 												className={`codicon codicon-chevron-${isExpanded ? "down" : "right"}`}></span>
 											<span style={{ fontSize: "0.8em" }}>{t("chat:commandOutput")}</span>
 										</div>
-										{isExpanded && <CodeBlock source={`${"```"}shell\n${output}\n${"```"}`} />}
+										{isExpanded && (
+											<CodeBlock
+												source={`${"```"}shell\n${output}\n${"```"}`}
+												rawSource={rawOutput}
+											/>
+										)}
 									</div>
 								)}
 							</div>
