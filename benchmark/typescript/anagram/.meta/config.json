@@ -1,0 +1,20 @@
+{
+	"authors": ["masters3d"],
+	"contributors": ["CRivasGomez", "fredrb", "lukaszklis", "SleeplessByte"],
+	"files": {
+		"solution": ["anagram.ts"],
+		"test": ["anagram.test.ts"],
+		"example": [".meta/proof.ci.ts"]
+	},
+	"blurb": "Given a word and a list of possible anagrams, select the correct sublist.",
+	"custom": {
+		"version.tests.compatibility": "jest-29",
+		"flag.tests.task-per-describe": false,
+		"flag.tests.may-run-long": false,
+		"flag.tests.includes-optional": false,
+		"flag.tests.jest": true,
+		"flag.tests.tstyche": false
+	},
+	"source": "Inspired by the Extreme Startup game",
+	"source_url": "https://github.com/rchatley/extreme_startup"
+}

@@ -1,0 +1,21 @@
+# This is an auto-generated file. Regular comments will be removed when this
+# file is regenerated. Regenerating will not touch any manually added keys,
+# so comments can be added in a "comment" key.
+
+[d268b919-963c-442d-9f07-82b93f1b518c]
+description = "no nesting"
+
+[c84440cc-bb3a-48a6-862c-94cf23f2815d]
+description = "flattens array with just integers present"
+
+[d3d99d39-6be5-44f5-a31d-6037d92ba34f]
+description = "5 level nesting"
+
+[d572bdba-c127-43ed-bdcd-6222ac83d9f7]
+description = "6 level nesting"
+
+[ef1d4790-1b1e-4939-a179-51ace0829dbd]
+description = "6 level nest list with null values"
+
+[85721643-705a-4150-93ab-7ae398e2942d]
+description = "all values in nested list are null"
