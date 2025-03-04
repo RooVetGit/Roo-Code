@@ -158,6 +158,7 @@ export type ClineAsk =
 	| "mistake_limit_reached"
 	| "browser_action_launch"
 	| "use_mcp_server"
+	| "next_step_suggest"
 
 export type ClineSay =
 	| "task"
@@ -183,6 +184,7 @@ export type ClineSay =
 	| "new_task_started"
 	| "new_task"
 	| "checkpoint_saved"
+	| "next_step_suggest"
 
 export interface ClineSayTool {
 	tool:
