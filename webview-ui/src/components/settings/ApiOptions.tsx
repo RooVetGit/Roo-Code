@@ -168,6 +168,22 @@ const ApiOptions = ({
 		setErrorMessage(apiValidationResult)
 	}, [apiConfiguration, glamaModels, openRouterModels, setErrorMessage, unboundModels, requestyModels])
 
+	useEffect(() => {
+		if (
+			selectedProvider === "openrouter" &&
+			apiConfiguration?.openRouterModelId &&
+			apiConfiguration.openRouterModelId in openRouterModels
+		) {
+			getOpenRouterProvidersForModel(apiConfiguration.openRouterModelId)
+				.then((providers) => {
+					setOpenRouterProviders(providers)
+				})
+				.catch((error) => {
+					console.error("Error fetching OpenRouter providers:", error)
+				})
+		}
+	}, [selectedProvider, apiConfiguration?.openRouterModelId, openRouterModels])
+
 	const onMessage = useCallback((event: MessageEvent) => {
 		const message: ExtensionMessage = event.data
 
@@ -1407,35 +1423,9 @@ const ApiOptions = ({
 
 					{apiConfiguration?.openRouterUseSpecificProvider && (
 						<div className="dropdown-container" style={{ marginTop: 3 }}>
-							<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-								<label htmlFor="openrouter-specific-provider" className="font-medium">
-									Specific Provider
-								</label>
-								<button
-									title="Refresh provider list"
-									onClick={() => {
-										if (apiConfiguration?.openRouterModelId) {
-											console.log(
-												"Fetching providers for model:",
-												apiConfiguration.openRouterModelId,
-											)
-											getOpenRouterProvidersForModel(apiConfiguration.openRouterModelId).then(
-												setOpenRouterProviders,
-											)
-										}
-									}}
-									className="vscode-button"
-									style={{
-										padding: "4px 8px",
-										display: "flex",
-										alignItems: "center",
-										background: "transparent",
-										border: "none",
-										cursor: "pointer",
-									}}>
-									<i className="codicon codicon-refresh" style={{ fontSize: "14px" }}></i>
-								</button>
-							</div>
+							<label htmlFor="openrouter-specific-provider" className="font-medium">
+								Specific Provider
+							</label>
 							<Dropdown
 								id="openrouter-specific-provider"
 								value={apiConfiguration?.openRouterSpecificProvider || ""}
