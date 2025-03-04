@@ -330,10 +330,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		const modePrompt = customModePrompts?.[mode] as PromptComponent
 		const effectiveInstructions = [globalInstructions, modePrompt?.customInstructions].filter(Boolean).join("\n\n")
 
-		console.log(
-			`[ClineProvider#initClineWithTask] enableCheckpoints = ${enableCheckpoints}, checkpointStorage = ${checkpointStorage}`,
-		)
-
 		this.cline = new Cline({
 			provider: this,
 			apiConfiguration,
@@ -369,10 +365,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		// TODO: The `checkpointStorage` value should be derived from the
 		// task data on disk; the current setting could be different than
 		// the setting at the time the task was created.
-
-		console.log(
-			`[ClineProvider#initClineWithHistoryItem] enableCheckpoints = ${enableCheckpoints}, checkpointStorage = ${checkpointStorage}`,
-		)
 
 		this.cline = new Cline({
 			provider: this,
