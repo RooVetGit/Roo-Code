@@ -184,6 +184,42 @@ const ApiOptions = ({
 		}
 	}, [selectedProvider, apiConfiguration?.openRouterModelId, openRouterModels])
 
+	useEffect(() => {
+		if (
+			selectedProvider === "openrouter" &&
+			apiConfiguration?.openRouterSpecificProvider &&
+			apiConfiguration?.openRouterSpecificProvider in openRouterProviders
+		) {
+			const currentProviderInfo = openRouterProviders[apiConfiguration.openRouterSpecificProvider]
+			let targetModelInfo
+
+			if (apiConfiguration?.openRouterUseSpecificProvider) {
+				targetModelInfo = {
+					...apiConfiguration.openRouterModelInfo,
+					...currentProviderInfo,
+				}
+			} else {
+				targetModelInfo = openRouterModels[selectedModelId]
+			}
+
+			const currentModelInfoString = JSON.stringify(apiConfiguration.openRouterModelInfo)
+			const targetModelInfoString = JSON.stringify(targetModelInfo)
+
+			if (currentModelInfoString !== targetModelInfoString) {
+				setApiConfigurationField("openRouterModelInfo", targetModelInfo)
+			}
+		}
+	}, [
+		selectedProvider,
+		apiConfiguration?.openRouterUseSpecificProvider,
+		apiConfiguration.openRouterSpecificProvider,
+		openRouterProviders,
+		openRouterModels,
+		selectedModelId,
+		apiConfiguration.openRouterModelInfo,
+		setApiConfigurationField,
+	])
+
 	const onMessage = useCallback((event: MessageEvent) => {
 		const message: ExtensionMessage = event.data
 
