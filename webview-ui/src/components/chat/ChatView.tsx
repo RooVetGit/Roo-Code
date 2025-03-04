@@ -396,11 +396,6 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				case "completion_result":
 				case "resume_completed_task":
 					// extension waiting for feedback. but we can just present a new task button
-					if (inputValue.trim() !== "") {
-						vscode.postMessage({ type: "newTask", text: inputValue })
-						setInputValue("")
-						break
-					}
 					startNewTask()
 					break
 			}
@@ -409,7 +404,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			setEnableButtons(false)
 			disableAutoScrollRef.current = false
 		},
-		[clineAsk, inputValue, startNewTask],
+		[clineAsk, startNewTask],
 	)
 
 	const handleSecondaryButtonClick = useCallback(
