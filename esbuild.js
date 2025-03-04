@@ -37,7 +37,7 @@ const copyWasmFiles = {
 			fs.copyFileSync(path.join(sourceDir, "tree-sitter.wasm"), path.join(targetDir, "tree-sitter.wasm"))
 
 			// Copy language-specific WASM files
-			const languageWasmDir = path.join(__dirname, "node_modules", "tree-sitter-wasms", "out")
+			const languageWasmDir = path.join(__dirname, "node_modules", "tree-sitter-wasms-roo", "out")
 			const languages = [
 				"typescript",
 				"tsx",
