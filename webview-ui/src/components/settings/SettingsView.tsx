@@ -91,7 +91,6 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 
 		setCachedState((prevCachedState) => ({ ...prevCachedState, ...extensionState }))
 		prevApiConfigName.current = currentApiConfigName
-		console.log("useEffect: currentApiConfigName changed, setChangeDetected -> false")
 		setChangeDetected(false)
 	}, [currentApiConfigName, extensionState, isChangeDetected])
 
@@ -101,7 +100,6 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 				return prevState
 			}
 
-			console.log(`setCachedStateField(${field} -> ${value}): setChangeDetected -> true`)
 			setChangeDetected(true)
 			return { ...prevState, [field]: value }
 		})
@@ -114,7 +112,6 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 					return prevState
 				}
 
-				console.log(`setApiConfigurationField(${field} -> ${value}): setChangeDetected -> true`)
 				setChangeDetected(true)
 
 				return { ...prevState, apiConfiguration: { ...prevState.apiConfiguration, [field]: value } }
@@ -129,7 +126,6 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 				return prevState
 			}
 
-			console.log("setExperimentEnabled: setChangeDetected -> true")
 			setChangeDetected(true)
 
 			return {
@@ -169,7 +165,6 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 			vscode.postMessage({ type: "updateExperimental", values: experiments })
 			vscode.postMessage({ type: "alwaysAllowModeSwitch", bool: alwaysAllowModeSwitch })
 			vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
-			console.log("handleSubmit: setChangeDetected -> false", apiConfiguration)
 			setChangeDetected(false)
 		}
 	}
