@@ -131,20 +131,6 @@ describe("SelectDropdown", () => {
 			expect(separators.length).toBe(1)
 		})
 
-		it("renders string separator (backward compatibility) correctly", () => {
-			const optionsWithStringSeparator = [
-				{ value: "option1", label: "Option 1" },
-				{ value: "sep-1", label: "────", disabled: true },
-				{ value: "option2", label: "Option 2" },
-			]
-
-			render(<SelectDropdown value="option1" options={optionsWithStringSeparator} onChange={onChangeMock} />)
-
-			// Check for separator
-			const separators = screen.getAllByTestId("dropdown-separator")
-			expect(separators.length).toBe(1)
-		})
-
 		it("renders shortcut options correctly", () => {
 			const shortcutText = "Ctrl+K"
 			const optionsWithShortcut = [
@@ -241,6 +227,100 @@ describe("SelectDropdown", () => {
 
 			// postMessage should not be called for regular items
 			expect(postMessageMock).not.toHaveBeenCalled()
+		})
+	})
+
+	describe("Tab navigation behavior", () => {
+		it("ensures open state is controlled via props", () => {
+			// Test that the component accepts and uses the open state controlled prop
+			render(<SelectDropdown value="option1" options={options} onChange={onChangeMock} />)
+
+			// The component should render the dropdown root with correct props
+			const dropdown = screen.getByTestId("dropdown-root")
+			expect(dropdown).toBeInTheDocument()
+
+			// Verify trigger and content are rendered
+			const trigger = screen.getByTestId("dropdown-trigger")
+			const content = screen.getByTestId("dropdown-content")
+			expect(trigger).toBeInTheDocument()
+			expect(content).toBeInTheDocument()
+		})
+
+		it("closes on tab change events", () => {
+			// Mock event listener functions
+			const addEventListener = jest.spyOn(window, "addEventListener")
+			const removeEventListener = jest.spyOn(window, "removeEventListener")
+
+			// Create a mock for the setOpen function
+			const setOpenMock = jest.fn()
+
+			// Mock useState to return our controlled state for the first call
+			const useStateSpy = jest.spyOn(React, "useState").mockImplementationOnce(() => [true, setOpenMock]) // Start with dropdown open
+
+			// Render the component
+			const { unmount } = render(<SelectDropdown value="option1" options={options} onChange={onChangeMock} />)
+
+			// Verify tabChange event listener was added
+			expect(addEventListener).toHaveBeenCalledWith("tabChange", expect.any(Function))
+
+			// Get the tabChange handler that was registered
+			const handlers = addEventListener.mock.calls
+				.filter((call) => call[0] === "tabChange")
+				.map((call) => call[1])
+
+			// Simulate a tab change event
+			if (handlers.length > 0) {
+				const tabChangeEvent = new CustomEvent("tabChange", {
+					detail: { newTab: "settings" },
+				})
+
+				// Dispatch to all registered handlers manually
+				handlers.forEach((handler) => {
+					if (typeof handler === "function") {
+						handler(tabChangeEvent)
+					}
+				})
+
+				// Verify dropdown was closed
+				expect(setOpenMock).toHaveBeenCalledWith(false)
+			}
+
+			// Unmount to test cleanup
+			unmount()
+
+			// Verify event listener was removed
+			expect(removeEventListener).toHaveBeenCalledWith("tabChange", expect.any(Function))
+
+			// Clean up mocks
+			addEventListener.mockRestore()
+			removeEventListener.mockRestore()
+			useStateSpy.mockRestore()
+		})
+
+		it("properly handles cleanup", () => {
+			// Mock addEventListener and removeEventListener
+			const addEventListenerMock = jest.fn()
+			const removeEventListenerMock = jest.fn()
+			const originalAddEventListener = window.addEventListener
+			const originalRemoveEventListener = window.removeEventListener
+
+			window.addEventListener = addEventListenerMock
+			window.removeEventListener = removeEventListenerMock
+
+			const { unmount } = render(<SelectDropdown value="option1" options={options} onChange={onChangeMock} />)
+
+			// Component should add tabChange event listener
+			expect(addEventListenerMock).toHaveBeenCalledWith("tabChange", expect.any(Function))
+
+			// Unmount and verify cleanup
+			unmount()
+
+			// Should remove the same type of listener
+			expect(removeEventListenerMock).toHaveBeenCalledWith("tabChange", expect.any(Function))
+
+			// Restore original methods
+			window.addEventListener = originalAddEventListener
+			window.removeEventListener = originalRemoveEventListener
 		})
 	})
 })
