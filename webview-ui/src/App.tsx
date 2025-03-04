@@ -30,9 +30,13 @@ const App = () => {
 
 	const switchTab = useCallback((newTab: Tab) => {
 		if (settingsRef.current?.checkUnsaveChanges) {
-			settingsRef.current.checkUnsaveChanges(() => setTab(newTab))
+			settingsRef.current.checkUnsaveChanges(() => {
+				setTab(newTab)
+				window.dispatchEvent(new CustomEvent("tabChange", { detail: { newTab } }))
+			})
 		} else {
 			setTab(newTab)
+			window.dispatchEvent(new CustomEvent("tabChange", { detail: { newTab } }))
 		}
 	}, [])
 

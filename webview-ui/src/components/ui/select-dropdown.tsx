@@ -57,9 +57,29 @@ export const SelectDropdown = React.forwardRef<React.ElementRef<typeof DropdownM
 		},
 		ref,
 	) => {
+		// Track open state
+		const [open, setOpen] = React.useState(false)
+
 		// Find the selected option label
 		const selectedOption = options.find((option) => option.value === value)
 		const displayText = selectedOption?.label || placeholder || ""
+
+		// Listen for tab changes and close dropdown if open
+		React.useEffect(() => {
+			// This function will directly close the dropdown on tab change
+			const handleTabChange = () => {
+				if (open) {
+					setOpen(false)
+				}
+			}
+
+			// Add event listener for tab changes
+			window.addEventListener("tabChange", handleTabChange)
+
+			return () => {
+				window.removeEventListener("tabChange", handleTabChange)
+			}
+		}, [open, setOpen])
 
 		// Handle menu item click
 		const handleSelect = (option: DropdownOption) => {
@@ -69,13 +89,15 @@ export const SelectDropdown = React.forwardRef<React.ElementRef<typeof DropdownM
 					type: "action",
 					action: option.value,
 				})
+				setOpen(false)
 				return
 			}
 			onChange(option.value)
+			setOpen(false)
 		}
 
 		return (
-			<DropdownMenu>
+			<DropdownMenu open={open} onOpenChange={setOpen}>
 				<DropdownMenuTrigger
 					ref={ref}
 					disabled={disabled}
@@ -112,13 +134,15 @@ export const SelectDropdown = React.forwardRef<React.ElementRef<typeof DropdownM
 				<DropdownMenuContent
 					align={align}
 					sideOffset={sideOffset}
+					onEscapeKeyDown={() => setOpen(false)}
+					onInteractOutside={() => setOpen(false)}
 					className={cn(
 						"bg-vscode-dropdown-background text-vscode-dropdown-foreground border border-vscode-dropdown-border z-50",
 						contentClassName,
 					)}>
 					{options.map((option, index) => {
 						// Handle separator type
-						if (option.type === DropdownOptionType.SEPARATOR || option.label.includes("────")) {
+						if (option.type === DropdownOptionType.SEPARATOR) {
 							return <DropdownMenuSeparator key={`sep-${index}`} />
 						}
 
