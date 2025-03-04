@@ -45,6 +45,8 @@ import { ApiErrorMessage } from "./ApiErrorMessage"
 import { ThinkingBudget } from "./ThinkingBudget"
 import { getOpenRouterProvidersForModel } from "../../../../src/api/providers/openrouter"
 
+const [openRouterProviders, setOpenRouterProviders] = useState<Record<string, ModelInfo>>({})
+
 const modelsByProvider: Record<string, Record<string, ModelInfo>> = {
 	anthropic: anthropicModels,
 	bedrock: bedrockModels,
@@ -1311,7 +1313,12 @@ const ApiOptions = ({
 			{selectedProvider === "openrouter" && (
 				<ModelPicker
 					apiConfiguration={apiConfiguration}
-					setApiConfigurationField={setApiConfigurationField}
+					setApiConfigurationField={(field, value) => {
+						setApiConfigurationField(field, value)
+						if (field === "openRouterModelId") {
+							getOpenRouterProvidersForModel(value).then(setOpenRouterProviders)
+						}
+					}}
 					defaultModelId={openRouterDefaultModelId}
 					defaultModelInfo={openRouterDefaultModelInfo}
 					models={openRouterModels}
