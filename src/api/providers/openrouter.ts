@@ -14,6 +14,8 @@ import { DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
 import { getModelParams, SingleCompletionHandler } from ".."
 import { BaseProvider } from "./base-provider"
 
+const OPENROUTER_DEFAULT_PROVIDER_NAME = "[default]"
+
 // Add custom interface for OpenRouter params.
 type OpenRouterChatCompletionParams = OpenAI.Chat.ChatCompletionCreateParams & {
 	transforms?: string[]
@@ -113,10 +115,12 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			messages: openAiMessages,
 			stream: true,
 			include_reasoning: true,
-			// Only include provider if openRouterUseSpecificProvider is true.
-			...(this.options.openRouterUseSpecificProvider && {
-				provider: { order: [this.options.openRouterSpecificProvider] },
-			}),
+			// Only include provider if openRouterSpecificProvider is not "[default]".
+			...(this.options.openRouterSpecificProvider &&
+				this.options.openRouterSpecificProvider !== "" &&
+				this.options.openRouterSpecificProvider !== OPENROUTER_DEFAULT_PROVIDER_NAME && {
+					provider: { order: [this.options.openRouterSpecificProvider] },
+				}),
 			// This way, the transforms field will only be included in the parameters when openRouterUseMiddleOutTransform is true.
 			...((this.options.openRouterUseMiddleOutTransform ?? true) && { transforms: ["middle-out"] }),
 		}

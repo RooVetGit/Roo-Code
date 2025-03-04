@@ -43,7 +43,7 @@ import { TemperatureControl } from "./TemperatureControl"
 import { validateApiConfiguration, validateModelId } from "@/utils/validate"
 import { ApiErrorMessage } from "./ApiErrorMessage"
 import { ThinkingBudget } from "./ThinkingBudget"
-import { getOpenRouterProvidersForModel } from "../../utils/openrouter-helper"
+import { getOpenRouterProvidersForModel, OPENROUTER_DEFAULT_PROVIDER_NAME } from "../../utils/openrouter-helper"
 
 const modelsByProvider: Record<string, Record<string, ModelInfo>> = {
 	anthropic: anthropicModels,
@@ -1382,7 +1382,7 @@ const ApiOptions = ({
 							onChange={handleInputChange("openRouterSpecificProvider", dropdownEventTransform)}
 							style={{ width: "100%" }}
 							options={[
-								{ value: "[default]", label: "[default]" },
+								{ value: OPENROUTER_DEFAULT_PROVIDER_NAME, label: OPENROUTER_DEFAULT_PROVIDER_NAME },
 								// Add provider options from the openRouterProviders state with more info
 								...Object.keys(openRouterProviders).map((provider) => {
 									const providerInfo = openRouterProviders[provider]

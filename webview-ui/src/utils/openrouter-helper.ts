@@ -2,6 +2,7 @@ import axios from "axios"
 import { ModelInfo } from "../../../src/shared/api"
 import { parseApiPrice } from "../../../src/utils/cost"
 
+export const OPENROUTER_DEFAULT_PROVIDER_NAME = "[default]"
 export async function getOpenRouterProvidersForModel(modelId: string) {
 	const models: Record<string, ModelInfo> = {}
 

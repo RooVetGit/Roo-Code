@@ -47,7 +47,6 @@ export type GlobalStateKey =
 	| "openRouterModelId"
 	| "openRouterModelInfo"
 	| "openRouterBaseUrl"
-	| "openRouterUseSpecificProvider"
 	| "openRouterSpecificProvider"
 	| "openRouterUseMiddleOutTransform"
 	| "allowedCommands"
