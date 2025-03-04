@@ -43,6 +43,7 @@ import { TemperatureControl } from "./TemperatureControl"
 import { validateApiConfiguration, validateModelId } from "@/utils/validate"
 import { ApiErrorMessage } from "./ApiErrorMessage"
 import { ThinkingBudget } from "./ThinkingBudget"
+import { getOpenRouterProvidersForModel } from "../../../../src/api/providers/openrouter"
 
 const modelsByProvider: Record<string, Record<string, ModelInfo>> = {
 	anthropic: anthropicModels,
@@ -1404,14 +1405,18 @@ const ApiOptions = ({
 					</Checkbox>
 
 					{apiConfiguration?.openRouterUseSpecificProvider && (
-						<VSCodeTextField
-							value={apiConfiguration?.openRouterSpecificProvider || ""}
-							style={{ width: "100%", marginTop: 3 }}
-							type="text"
-							onInput={handleInputChange("openRouterSpecificProvider")}
-							placeholder="Enter specific provider...">
-							<span className="font-medium">Specific Provider</span>
-						</VSCodeTextField>
+						<div className="dropdown-container" style={{ marginTop: 3 }}>
+							<label htmlFor="openrouter-specific-provider" className="font-medium">
+								Specific Provider
+							</label>
+							<Dropdown
+								id="openrouter-specific-provider"
+								value={apiConfiguration?.openRouterSpecificProvider || ""}
+								onChange={handleInputChange("openRouterSpecificProvider", dropdownEventTransform)}
+								style={{ width: "100%" }}
+								options={[{ value: "", label: "Select a provider..." }]}
+							/>
+						</div>
 					)}
 				</>
 			)}
