@@ -83,6 +83,7 @@ export interface ExtensionMessage {
 export interface ApiConfigMeta {
 	id: string
 	name: string
+	apiModelId?: string
 	apiProvider?: ApiProvider
 }
 

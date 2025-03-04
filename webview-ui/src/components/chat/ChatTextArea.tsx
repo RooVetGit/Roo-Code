@@ -881,7 +881,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 										style={{
 											...optionStyle,
 										}}>
-										{config.name}
+										{config.apiModelId ? `${config.apiModelId}(${config.name})` : config.name}
 									</option>
 								))}
 								<option

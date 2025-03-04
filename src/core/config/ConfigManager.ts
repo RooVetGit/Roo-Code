@@ -80,6 +80,7 @@ export class ConfigManager {
 				return Object.entries(config.apiConfigs).map(([name, apiConfig]) => ({
 					name,
 					id: apiConfig.id || "",
+					apiModelId: apiConfig.apiModelId,
 					apiProvider: apiConfig.apiProvider,
 				}))
 			})
