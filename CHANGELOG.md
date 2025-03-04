@@ -1,5 +1,9 @@
 # Roo Code Changelog
 
+## This branch
+
+- Select provider to use for OpenRouter
+
 ## [3.7.11]
 
 - Don't honor custom max tokens for non thinking models
