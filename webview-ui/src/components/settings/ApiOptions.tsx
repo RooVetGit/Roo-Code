@@ -185,15 +185,11 @@ const ApiOptions = ({
 	}, [selectedProvider, apiConfiguration?.openRouterModelId, openRouterModels])
 
 	useEffect(() => {
-		if (
-			selectedProvider === "openrouter" &&
-			apiConfiguration?.openRouterSpecificProvider &&
-			apiConfiguration?.openRouterSpecificProvider in openRouterProviders
-		) {
-			const currentProviderInfo = openRouterProviders[apiConfiguration.openRouterSpecificProvider]
+		if (selectedProvider === "openrouter" && apiConfiguration?.openRouterSpecificProvider) {
 			let targetModelInfo
 
-			if (apiConfiguration?.openRouterUseSpecificProvider) {
+			if (apiConfiguration.openRouterSpecificProvider in openRouterProviders) {
+				const currentProviderInfo = openRouterProviders[apiConfiguration.openRouterSpecificProvider]
 				targetModelInfo = {
 					...apiConfiguration.openRouterModelInfo,
 					...currentProviderInfo,
@@ -211,7 +207,6 @@ const ApiOptions = ({
 		}
 	}, [
 		selectedProvider,
-		apiConfiguration?.openRouterUseSpecificProvider,
 		apiConfiguration.openRouterSpecificProvider,
 		openRouterProviders,
 		openRouterModels,
@@ -1375,6 +1370,42 @@ const ApiOptions = ({
 				/>
 			)}
 
+			{selectedProvider === "openrouter" && (
+				<>
+					<div className="dropdown-container" style={{ marginTop: 3 }}>
+						<label htmlFor="openrouter-specific-provider" className="font-medium">
+							Provider
+						</label>
+						<Dropdown
+							id="openrouter-specific-provider"
+							value={apiConfiguration?.openRouterSpecificProvider || ""}
+							onChange={handleInputChange("openRouterSpecificProvider", dropdownEventTransform)}
+							style={{ width: "100%" }}
+							options={[
+								{ value: "[default]", label: "[default]" },
+								// Add provider options from the openRouterProviders state with more info
+								...Object.keys(openRouterProviders).map((provider) => {
+									const providerInfo = openRouterProviders[provider]
+									const contextWindow = providerInfo?.contextWindow
+										? `${Math.floor(providerInfo.contextWindow / 1000)}K`
+										: "?"
+									const inputPrice = providerInfo?.inputPrice
+										? `$${providerInfo.inputPrice.toFixed(2)}`
+										: "?"
+									const outputPrice = providerInfo?.outputPrice
+										? `$${providerInfo.outputPrice.toFixed(2)}`
+										: "?"
+									return {
+										value: provider,
+										label: `${provider} (Context: ${contextWindow}, Price: ${inputPrice} / ${outputPrice})`,
+									}
+								}),
+							]}
+						/>
+					</div>
+				</>
+			)}
+
 			{selectedProvider === "glama" && (
 				<ModelPicker
 					apiConfiguration={apiConfiguration}
@@ -1446,38 +1477,6 @@ const ApiOptions = ({
 						isDescriptionExpanded={isDescriptionExpanded}
 						setIsDescriptionExpanded={setIsDescriptionExpanded}
 					/>
-				</>
-			)}
-
-			{selectedProvider === "openrouter" && (
-				<>
-					<Checkbox
-						checked={apiConfiguration?.openRouterUseSpecificProvider || false}
-						onChange={handleInputChange("openRouterUseSpecificProvider", noTransform)}>
-						Use specific provider
-					</Checkbox>
-
-					{apiConfiguration?.openRouterUseSpecificProvider && (
-						<div className="dropdown-container" style={{ marginTop: 3 }}>
-							<label htmlFor="openrouter-specific-provider" className="font-medium">
-								Specific Provider
-							</label>
-							<Dropdown
-								id="openrouter-specific-provider"
-								value={apiConfiguration?.openRouterSpecificProvider || ""}
-								onChange={handleInputChange("openRouterSpecificProvider", dropdownEventTransform)}
-								style={{ width: "100%" }}
-								options={[
-									{ value: "", label: "Select a provider..." },
-									// Add provider options from the openRouterProviders state
-									...Object.keys(openRouterProviders).map((provider) => ({
-										value: provider,
-										label: provider,
-									})),
-								]}
-							/>
-						</div>
-					)}
 				</>
 			)}
 
