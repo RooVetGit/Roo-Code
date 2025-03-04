@@ -43,9 +43,7 @@ import { TemperatureControl } from "./TemperatureControl"
 import { validateApiConfiguration, validateModelId } from "@/utils/validate"
 import { ApiErrorMessage } from "./ApiErrorMessage"
 import { ThinkingBudget } from "./ThinkingBudget"
-import { getOpenRouterProvidersForModel } from "../../../../src/api/providers/openrouter"
-
-const [openRouterProviders, setOpenRouterProviders] = useState<Record<string, ModelInfo>>({})
+import { getOpenRouterProvidersForModel } from "../../utils/openrouter-helper"
 
 const modelsByProvider: Record<string, Record<string, ModelInfo>> = {
 	anthropic: anthropicModels,
@@ -74,6 +72,7 @@ const ApiOptions = ({
 	errorMessage,
 	setErrorMessage,
 }: ApiOptionsProps) => {
+	const [openRouterProviders, setOpenRouterProviders] = useState<Record<string, ModelInfo>>({})
 	const [ollamaModels, setOllamaModels] = useState<string[]>([])
 	const [lmStudioModels, setLmStudioModels] = useState<string[]>([])
 	const [vsCodeLmModels, setVsCodeLmModels] = useState<vscodemodels.LanguageModelChatSelector[]>([])
@@ -1313,12 +1312,7 @@ const ApiOptions = ({
 			{selectedProvider === "openrouter" && (
 				<ModelPicker
 					apiConfiguration={apiConfiguration}
-					setApiConfigurationField={(field, value) => {
-						setApiConfigurationField(field, value)
-						if (field === "openRouterModelId") {
-							getOpenRouterProvidersForModel(value).then(setOpenRouterProviders)
-						}
-					}}
+					setApiConfigurationField={setApiConfigurationField}
 					defaultModelId={openRouterDefaultModelId}
 					defaultModelInfo={openRouterDefaultModelInfo}
 					models={openRouterModels}
@@ -1413,15 +1407,48 @@ const ApiOptions = ({
 
 					{apiConfiguration?.openRouterUseSpecificProvider && (
 						<div className="dropdown-container" style={{ marginTop: 3 }}>
-							<label htmlFor="openrouter-specific-provider" className="font-medium">
-								Specific Provider
-							</label>
+							<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+								<label htmlFor="openrouter-specific-provider" className="font-medium">
+									Specific Provider
+								</label>
+								<button
+									title="Refresh provider list"
+									onClick={() => {
+										if (apiConfiguration?.openRouterModelId) {
+											console.log(
+												"Fetching providers for model:",
+												apiConfiguration.openRouterModelId,
+											)
+											getOpenRouterProvidersForModel(apiConfiguration.openRouterModelId).then(
+												setOpenRouterProviders,
+											)
+										}
+									}}
+									className="vscode-button"
+									style={{
+										padding: "4px 8px",
+										display: "flex",
+										alignItems: "center",
+										background: "transparent",
+										border: "none",
+										cursor: "pointer",
+									}}>
+									<i className="codicon codicon-refresh" style={{ fontSize: "14px" }}></i>
+								</button>
+							</div>
 							<Dropdown
 								id="openrouter-specific-provider"
 								value={apiConfiguration?.openRouterSpecificProvider || ""}
 								onChange={handleInputChange("openRouterSpecificProvider", dropdownEventTransform)}
 								style={{ width: "100%" }}
-								options={[{ value: "", label: "Select a provider..." }]}
+								options={[
+									{ value: "", label: "Select a provider..." },
+									// Add provider options from the openRouterProviders state
+									...Object.keys(openRouterProviders).map((provider) => ({
+										value: provider,
+										label: provider,
+									})),
+								]}
 							/>
 						</div>
 					)}
