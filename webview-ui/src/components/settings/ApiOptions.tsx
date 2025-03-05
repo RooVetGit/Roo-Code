@@ -510,16 +510,32 @@ const ApiOptions = ({
 			{selectedProvider === "bedrock" && (
 				<div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
 					<VSCodeRadioGroup
-						value={apiConfiguration?.awsUseProfile ? "profile" : "credentials"}
-						onChange={handleInputChange(
-							"awsUseProfile",
-							(e) => (e.target as HTMLInputElement).value === "profile",
-						)}>
+						value={
+							apiConfiguration?.awsUseSso
+								? "sso"
+								: apiConfiguration?.awsUseProfile
+									? "profile"
+									: "credentials"
+						}
+						onChange={(e) => {
+							const value = (e.target as HTMLInputElement).value
+							if (value === "sso") {
+								setApiConfigurationField("awsUseSso", true)
+								setApiConfigurationField("awsUseProfile", false)
+							} else if (value === "profile") {
+								setApiConfigurationField("awsUseSso", false)
+								setApiConfigurationField("awsUseProfile", true)
+							} else {
+								setApiConfigurationField("awsUseSso", false)
+								setApiConfigurationField("awsUseProfile", false)
+							}
+						}}>
 						<VSCodeRadio value="credentials">AWS Credentials</VSCodeRadio>
 						<VSCodeRadio value="profile">AWS Profile</VSCodeRadio>
+						<VSCodeRadio value="sso">AWS SSO</VSCodeRadio>
 					</VSCodeRadioGroup>
 					{/* AWS Profile Config Block */}
-					{apiConfiguration?.awsUseProfile ? (
+					{apiConfiguration?.awsUseProfile || apiConfiguration?.awsUseSso ? (
 						<VSCodeTextField
 							value={apiConfiguration?.awsProfile || ""}
 							style={{ width: "100%" }}
@@ -600,6 +616,36 @@ const ApiOptions = ({
 						i.e. ~/.aws/credentials or environment variables. These credentials are only used locally to
 						make API requests from this extension.
 					</p>
+
+					{(selectedModelId === "anthropic.claude-3-7-sonnet-20250219-v1:0" ||
+						selectedModelId === "custom") && (
+						<div
+							style={{
+								fontSize: "12px",
+								marginTop: "8px",
+								padding: "8px",
+								backgroundColor: "var(--vscode-inputValidation-infoBackground)",
+								border: "1px solid var(--vscode-inputValidation-infoBorder)",
+								borderRadius: "3px",
+								color: "var(--vscode-inputValidation-infoForeground)",
+							}}>
+							<i className="codicon codicon-info" style={{ marginRight: "5px" }}></i>
+							<strong>Note:</strong> Claude 3.7 Sonnet requires an inference profile in AWS Bedrock. If
+							you see an error about "on-demand throughput isn't supported", select "Custom ARN /
+							Inference Profile" from the model dropdown and paste your inference profile ARN.
+							<p style={{ marginTop: "5px" }}>
+								To create an inference profile:
+								<ol style={{ marginTop: "3px", paddingLeft: "20px" }}>
+									<li>Go to the AWS Bedrock console</li>
+									<li>Navigate to "Inference profiles" in the left sidebar</li>
+									<li>Click "Create inference profile"</li>
+									<li>Select "anthropic.claude-3-7-sonnet-20250219-v1:0" as the model</li>
+									<li>Configure your desired provisioned throughput</li>
+									<li>Complete the creation process and copy the ARN</li>
+								</ol>
+							</p>
+						</div>
+					)}
 				</div>
 			)}
 
@@ -1463,20 +1509,57 @@ const ApiOptions = ({
 
 			{selectedProviderModelOptions.length > 0 && (
 				<>
-					<div className="dropdown-container">
-						<label htmlFor="model-id" className="font-medium">
-							Model
-						</label>
-						<Dropdown
-							id="model-id"
-							value={selectedModelId}
-							onChange={(value) => {
-								setApiConfigurationField("apiModelId", typeof value == "string" ? value : value?.value)
-							}}
-							options={selectedProviderModelOptions}
-							className="w-full"
-						/>
-					</div>
+					{selectedProvider === "bedrock" ? (
+						<>
+							<div className="dropdown-container">
+								<label htmlFor="model-id" className="font-medium">
+									Model
+								</label>
+								<Dropdown
+									id="model-id"
+									value={selectedModelId}
+									onChange={(value) => {
+										setApiConfigurationField(
+											"apiModelId",
+											typeof value == "string" ? value : value?.value,
+										)
+									}}
+									options={[
+										...selectedProviderModelOptions,
+										{ value: "custom", label: "Custom ARN / Inference Profile" },
+									]}
+									className="w-full"
+								/>
+							</div>
+							{selectedModelId === "custom" && (
+								<VSCodeTextField
+									value={apiConfiguration?.apiModelId || ""}
+									style={{ width: "100%", marginTop: "8px" }}
+									onInput={handleInputChange("apiModelId")}
+									placeholder="Enter inference profile ARN...">
+									<span className="font-medium">Custom ARN / Inference Profile</span>
+								</VSCodeTextField>
+							)}
+						</>
+					) : (
+						<div className="dropdown-container">
+							<label htmlFor="model-id" className="font-medium">
+								Model
+							</label>
+							<Dropdown
+								id="model-id"
+								value={selectedModelId}
+								onChange={(value) => {
+									setApiConfigurationField(
+										"apiModelId",
+										typeof value == "string" ? value : value?.value,
+									)
+								}}
+								options={selectedProviderModelOptions}
+								className="w-full"
+							/>
+						</div>
+					)}
 					<ThinkingBudget
 						key={`${selectedProvider}-${selectedModelId}`}
 						apiConfiguration={apiConfiguration}
@@ -1538,6 +1621,23 @@ export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
 		case "anthropic":
 			return getProviderData(anthropicModels, anthropicDefaultModelId)
 		case "bedrock":
+			// Handle custom ARNs for inference profiles
+			if (modelId && modelId === "custom") {
+				// If "custom" is selected, use default model info but keep the custom selection
+				return {
+					selectedProvider: provider,
+					selectedModelId: "custom",
+					selectedModelInfo: bedrockModels[bedrockDefaultModelId],
+				}
+			} else if (modelId && !Object.keys(bedrockModels).includes(modelId)) {
+				// If modelId is not in bedrockModels, it's likely a custom ARN
+				// Show it as custom in the UI
+				return {
+					selectedProvider: provider,
+					selectedModelId: "custom",
+					selectedModelInfo: bedrockModels[bedrockDefaultModelId],
+				}
+			}
 			return getProviderData(bedrockModels, bedrockDefaultModelId)
 		case "vertex":
 			return getProviderData(vertexModels, vertexDefaultModelId)
