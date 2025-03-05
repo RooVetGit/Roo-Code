@@ -1,3 +1,5 @@
+// npx jest src/utils/__tests__/shell.test.ts
+
 import * as vscode from "vscode"
 import { userInfo } from "os"
 import { getShell } from "../shell"
@@ -88,6 +90,20 @@ describe("Shell Detection Tests", () => {
 				"Ubuntu WSL": {},
 			})
 			expect(getShell()).toBe("/bin/bash")
+		})
+
+		it("uses Git Bash when profile indicates Git Bash source", () => {
+			mockVsCodeConfig("windows", "Git Bash", {
+				"Git Bash": { source: "Git Bash" },
+			})
+			expect(getShell()).toBe("/usr/bin/bash")
+		})
+
+		it("uses Git Bash when profile name includes 'git bash'", () => {
+			mockVsCodeConfig("windows", "MinGW Git Bash", {
+				"MinGW Git Bash": {},
+			})
+			expect(getShell()).toBe("/usr/bin/bash")
 		})
 
 		it("defaults to cmd.exe if no special profile is matched", () => {
