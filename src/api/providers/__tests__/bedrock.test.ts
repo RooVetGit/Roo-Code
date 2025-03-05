@@ -4,13 +4,17 @@ jest.mock("@aws-sdk/credential-providers", () => ({
 		accessKeyId: "profile-access-key",
 		secretAccessKey: "profile-secret-key",
 	}),
+	fromSSO: jest.fn().mockReturnValue({
+		accessKeyId: "sso-access-key",
+		secretAccessKey: "sso-secret-key",
+	}),
 }))
 
 import { AwsBedrockHandler } from "../bedrock"
 import { MessageContent } from "../../../shared/api"
 import { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime"
 import { Anthropic } from "@anthropic-ai/sdk"
-import { fromIni } from "@aws-sdk/credential-providers"
+import { fromIni, fromSSO } from "@aws-sdk/credential-providers"
 
 describe("AwsBedrockHandler", () => {
 	let handler: AwsBedrockHandler
@@ -62,9 +66,37 @@ describe("AwsBedrockHandler", () => {
 			expect(handlerWithoutProfile["options"].awsUseProfile).toBe(true)
 			expect(handlerWithoutProfile["options"].awsProfile).toBeUndefined()
 		})
+
+		it("should initialize with AWS SSO credentials", () => {
+			const handlerWithSSO = new AwsBedrockHandler({
+				apiModelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+				awsRegion: "us-east-1",
+				awsUseSso: true,
+				awsProfile: "test-sso-profile",
+			})
+			expect(handlerWithSSO).toBeInstanceOf(AwsBedrockHandler)
+			expect(handlerWithSSO["options"].awsUseSso).toBe(true)
+			expect(handlerWithSSO["options"].awsProfile).toBe("test-sso-profile")
+		})
+
+		it("should initialize with AWS SSO enabled but no profile set", () => {
+			const handlerWithoutSSOProfile = new AwsBedrockHandler({
+				apiModelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+				awsRegion: "us-east-1",
+				awsUseSso: true,
+			})
+			expect(handlerWithoutSSOProfile).toBeInstanceOf(AwsBedrockHandler)
+			expect(handlerWithoutSSOProfile["options"].awsUseSso).toBe(true)
+			expect(handlerWithoutSSOProfile["options"].awsProfile).toBeUndefined()
+		})
 	})
 
 	describe("AWS SDK client configuration", () => {
+		beforeEach(() => {
+			// Reset mocks before each test
+			jest.clearAllMocks()
+		})
+
 		it("should configure client with profile credentials when profile mode is enabled", async () => {
 			const handlerWithProfile = new AwsBedrockHandler({
 				apiModelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
@@ -89,6 +121,61 @@ describe("AwsBedrockHandler", () => {
 			expect(fromIni).toHaveBeenCalledWith({
 				profile: "test-profile",
 			})
+		})
+
+		it("should configure client with SSO credentials when SSO mode is enabled", async () => {
+			const handlerWithSSO = new AwsBedrockHandler({
+				apiModelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+				awsRegion: "us-east-1",
+				awsUseSso: true,
+				awsProfile: "test-sso-profile",
+			})
+
+			// Mock a simple API call to verify credentials are used
+			const mockResponse = {
+				output: new TextEncoder().encode(JSON.stringify({ content: "test" })),
+			}
+			const mockSend = jest.fn().mockResolvedValue(mockResponse)
+			handlerWithSSO["client"] = {
+				send: mockSend,
+			} as unknown as BedrockRuntimeClient
+
+			await handlerWithSSO.completePrompt("test")
+
+			// Verify the client was configured with SSO credentials
+			expect(mockSend).toHaveBeenCalled()
+			expect(fromSSO).toHaveBeenCalledWith({
+				profile: "test-sso-profile",
+			})
+		})
+
+		it("should prioritize SSO over profile when both are enabled", async () => {
+			const handlerWithBoth = new AwsBedrockHandler({
+				apiModelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+				awsRegion: "us-east-1",
+				awsUseSso: true,
+				awsUseProfile: true,
+				awsProfile: "test-profile",
+			})
+
+			// Mock a simple API call to verify credentials are used
+			const mockResponse = {
+				output: new TextEncoder().encode(JSON.stringify({ content: "test" })),
+			}
+			const mockSend = jest.fn().mockResolvedValue(mockResponse)
+			handlerWithBoth["client"] = {
+				send: mockSend,
+			} as unknown as BedrockRuntimeClient
+
+			await handlerWithBoth.completePrompt("test")
+
+			// Verify the client was configured with SSO credentials (not profile)
+			expect(mockSend).toHaveBeenCalled()
+			expect(fromSSO).toHaveBeenCalledWith({
+				profile: "test-profile",
+			})
+			// fromIni should not be called
+			expect(fromIni).not.toHaveBeenCalled()
 		})
 	})
 
