@@ -84,9 +84,15 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
 		const modelConfig = this.getModel()
 
-		// Handle cross-region inference
+		// Handle model ID - could be a standard model ID or an inference profile ARN
 		let modelId: string
-		if (this.options.awsUseCrossRegionInference) {
+
+		// Check if the model ID is an ARN (inference profile)
+		if (modelConfig.id.startsWith("arn:")) {
+			// If it's an ARN, use it directly without modifications
+			modelId = modelConfig.id
+		} else if (this.options.awsUseCrossRegionInference) {
+			// Handle cross-region inference for standard model IDs
 			let regionPrefix = (this.options.awsRegion || "").slice(0, 3)
 			switch (regionPrefix) {
 				case "us-":
@@ -242,9 +248,15 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		try {
 			const modelConfig = this.getModel()
 
-			// Handle cross-region inference
+			// Handle model ID - could be a standard model ID or an inference profile ARN
 			let modelId: string
-			if (this.options.awsUseCrossRegionInference) {
+
+			// Check if the model ID is an ARN (inference profile)
+			if (modelConfig.id.startsWith("arn:")) {
+				// If it's an ARN, use it directly without modifications
+				modelId = modelConfig.id
+			} else if (this.options.awsUseCrossRegionInference) {
+				// Handle cross-region inference for standard model IDs
 				let regionPrefix = (this.options.awsRegion || "").slice(0, 3)
 				switch (regionPrefix) {
 					case "us-":

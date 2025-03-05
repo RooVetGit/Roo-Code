@@ -252,6 +252,54 @@ describe("AwsBedrockHandler", () => {
 			)
 		})
 
+		it("should handle inference profile ARNs correctly in createMessage", async () => {
+			// Create a handler with an ARN as the model ID
+			const arnHandler = new AwsBedrockHandler({
+				apiModelId: "arn:aws:bedrock:us-east-1:123456789012:inference-profile/my-claude-profile",
+				awsAccessKey: "test-access-key",
+				awsSecretKey: "test-secret-key",
+				awsRegion: "us-east-1",
+			})
+
+			// Mock AWS SDK invoke
+			const mockStream = {
+				[Symbol.asyncIterator]: async function* () {
+					yield {
+						metadata: {
+							usage: {
+								inputTokens: 10,
+								outputTokens: 5,
+							},
+						},
+					}
+				},
+			}
+
+			const mockInvoke = jest.fn().mockResolvedValue({
+				stream: mockStream,
+			})
+
+			arnHandler["client"] = {
+				send: mockInvoke,
+			} as unknown as BedrockRuntimeClient
+
+			const stream = arnHandler.createMessage(systemPrompt, mockMessages)
+			const chunks = []
+
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Verify that the ARN is used directly without modification
+			expect(mockInvoke).toHaveBeenCalledWith(
+				expect.objectContaining({
+					input: expect.objectContaining({
+						modelId: "arn:aws:bedrock:us-east-1:123456789012:inference-profile/my-claude-profile",
+					}),
+				}),
+			)
+		})
+
 		it("should handle API errors", async () => {
 			// Mock AWS SDK invoke with error
 			const mockInvoke = jest.fn().mockRejectedValue(new Error("AWS Bedrock error"))
@@ -302,6 +350,41 @@ describe("AwsBedrockHandler", () => {
 							temperature: 0.3,
 							topP: 0.1,
 						}),
+					}),
+				}),
+			)
+		})
+
+		it("should handle inference profile ARNs correctly", async () => {
+			// Create a handler with an ARN as the model ID
+			const arnHandler = new AwsBedrockHandler({
+				apiModelId: "arn:aws:bedrock:us-east-1:123456789012:inference-profile/my-claude-profile",
+				awsAccessKey: "test-access-key",
+				awsSecretKey: "test-secret-key",
+				awsRegion: "us-east-1",
+			})
+
+			const mockResponse = {
+				output: new TextEncoder().encode(
+					JSON.stringify({
+						content: "Test response",
+					}),
+				),
+			}
+
+			const mockSend = jest.fn().mockResolvedValue(mockResponse)
+			arnHandler["client"] = {
+				send: mockSend,
+			} as unknown as BedrockRuntimeClient
+
+			const result = await arnHandler.completePrompt("Test prompt")
+			expect(result).toBe("Test response")
+
+			// Verify that the ARN is used directly without modification
+			expect(mockSend).toHaveBeenCalledWith(
+				expect.objectContaining({
+					input: expect.objectContaining({
+						modelId: "arn:aws:bedrock:us-east-1:123456789012:inference-profile/my-claude-profile",
 					}),
 				}),
 			)
@@ -399,6 +482,23 @@ describe("AwsBedrockHandler", () => {
 			})
 			const modelInfo = invalidHandler.getModel()
 			expect(modelInfo.id).toBe("invalid-model") // In test env, returns whatever is passed
+			expect(modelInfo.info.maxTokens).toBe(5000)
+			expect(modelInfo.info.contextWindow).toBe(128_000)
+		})
+
+		it("should handle inference profile ARNs correctly in getModel", () => {
+			const arnHandler = new AwsBedrockHandler({
+				apiModelId: "arn:aws:bedrock:us-east-1:123456789012:inference-profile/my-claude-profile",
+				awsAccessKey: "test-access-key",
+				awsSecretKey: "test-secret-key",
+				awsRegion: "us-east-1",
+			})
+			const modelInfo = arnHandler.getModel()
+
+			// Verify that the ARN is returned as-is
+			expect(modelInfo.id).toBe("arn:aws:bedrock:us-east-1:123456789012:inference-profile/my-claude-profile")
+
+			// In test environment, it should still have the test model info
 			expect(modelInfo.info.maxTokens).toBe(5000)
 			expect(modelInfo.info.contextWindow).toBe(128_000)
 		})
