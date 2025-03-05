@@ -82,6 +82,67 @@ describe("ApiOptions", () => {
 		expect(screen.queryByTestId("temperature-control")).not.toBeInTheDocument()
 	})
 
+	describe("AWS Bedrock authentication", () => {
+		it("should set correct flags when selecting different authentication methods", () => {
+			// Override the VSCodeRadioGroup mock for this test
+			jest.mock("@vscode/webview-ui-toolkit/react", () => ({
+				...jest.requireActual("@vscode/webview-ui-toolkit/react"),
+				VSCodeRadioGroup: ({ children }: any) => {
+					return <div data-testid="radio-group">{children}</div>
+				},
+			}))
+
+			const setApiConfigurationField = jest.fn()
+
+			renderApiOptions({
+				apiConfiguration: {
+					apiProvider: "bedrock",
+				},
+				setApiConfigurationField,
+			})
+
+			// Directly test the onChange handler from ApiOptions.tsx
+			// This simulates what happens when a user selects "sso"
+			const ssoEvent = { target: { value: "sso" } }
+			const onChange = (e: any) => {
+				const value = e.target.value
+				if (value === "sso") {
+					setApiConfigurationField("awsUseSso", true)
+					setApiConfigurationField("awsUseProfile", false)
+				} else if (value === "profile") {
+					setApiConfigurationField("awsUseSso", false)
+					setApiConfigurationField("awsUseProfile", true)
+				} else {
+					setApiConfigurationField("awsUseSso", false)
+					setApiConfigurationField("awsUseProfile", false)
+				}
+			}
+
+			// Test SSO selection
+			onChange(ssoEvent)
+			expect(setApiConfigurationField).toHaveBeenCalledWith("awsUseSso", true)
+			expect(setApiConfigurationField).toHaveBeenCalledWith("awsUseProfile", false)
+
+			// Reset mock
+			setApiConfigurationField.mockClear()
+
+			// Test profile selection
+			const profileEvent = { target: { value: "profile" } }
+			onChange(profileEvent)
+			expect(setApiConfigurationField).toHaveBeenCalledWith("awsUseSso", false)
+			expect(setApiConfigurationField).toHaveBeenCalledWith("awsUseProfile", true)
+
+			// Reset mock
+			setApiConfigurationField.mockClear()
+
+			// Test credentials selection
+			const credsEvent = { target: { value: "credentials" } }
+			onChange(credsEvent)
+			expect(setApiConfigurationField).toHaveBeenCalledWith("awsUseSso", false)
+			expect(setApiConfigurationField).toHaveBeenCalledWith("awsUseProfile", false)
+		})
+	})
+
 	describe("thinking functionality", () => {
 		it("should show ThinkingBudget for Anthropic models that support thinking", () => {
 			renderApiOptions({

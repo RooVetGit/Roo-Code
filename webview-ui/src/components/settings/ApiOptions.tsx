@@ -518,16 +518,19 @@ const ApiOptions = ({
 									? "profile"
 									: "credentials"
 						}
-						onChange={handleInputChange("awsUseProfile", (e) => {
+						onChange={(e) => {
 							const value = (e.target as HTMLInputElement).value
 							if (value === "sso") {
 								setApiConfigurationField("awsUseSso", true)
-								return true // Set awsUseProfile to true for SSO
+								setApiConfigurationField("awsUseProfile", false)
+							} else if (value === "profile") {
+								setApiConfigurationField("awsUseSso", false)
+								setApiConfigurationField("awsUseProfile", true)
 							} else {
 								setApiConfigurationField("awsUseSso", false)
-								return value === "profile" // Set awsUseProfile based on selection
+								setApiConfigurationField("awsUseProfile", false)
 							}
-						})}>
+						}}>
 						<VSCodeRadio value="credentials">AWS Credentials</VSCodeRadio>
 						<VSCodeRadio value="profile">AWS Profile</VSCodeRadio>
 						<VSCodeRadio value="sso">AWS SSO</VSCodeRadio>
