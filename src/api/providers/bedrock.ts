@@ -54,7 +54,14 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	constructor(options: ApiHandlerOptions) {
 		super()
 		this.options = options
+		this.client = this.createClient()
+	}
 
+	/**
+	 * Creates a new BedrockRuntimeClient with the current options
+	 * This is useful for refreshing the client when credentials expire
+	 */
+	private createClient(): BedrockRuntimeClient {
 		const clientConfig: BedrockRuntimeClientConfig = {
 			region: this.options.awsRegion || "us-east-1",
 		}
@@ -78,7 +85,16 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			}
 		}
 
-		this.client = new BedrockRuntimeClient(clientConfig)
+		return new BedrockRuntimeClient(clientConfig)
+	}
+
+	/**
+	 * Refreshes the client with new credentials
+	 * This is useful when the SSO session expires and the user reauthenticates
+	 */
+	private refreshClient(): void {
+		console.log("Refreshing AWS Bedrock client with new credentials")
+		this.client = this.createClient()
 	}
 
 	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
@@ -131,89 +147,114 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			},
 		}
 
-		try {
-			const command = new ConverseStreamCommand(payload)
-			const response = await this.client.send(command)
+		// Try up to 2 times (original attempt + 1 retry after refreshing credentials)
+		let retryCount = 0
+		const maxRetries = 1
 
-			if (!response.stream) {
-				throw new Error("No stream available in the response")
-			}
+		while (true) {
+			try {
+				const command = new ConverseStreamCommand(payload)
+				const response = await this.client.send(command)
 
-			for await (const chunk of response.stream) {
-				// Parse the chunk as JSON if it's a string (for tests)
-				let streamEvent: StreamEvent
-				try {
-					streamEvent = typeof chunk === "string" ? JSON.parse(chunk) : (chunk as unknown as StreamEvent)
-				} catch (e) {
-					console.error("Failed to parse stream event:", e)
-					continue
+				if (!response.stream) {
+					throw new Error("No stream available in the response")
 				}
 
-				// Handle metadata events first
-				if (streamEvent.metadata?.usage) {
+				for await (const chunk of response.stream) {
+					// Parse the chunk as JSON if it's a string (for tests)
+					let streamEvent: StreamEvent
+					try {
+						streamEvent = typeof chunk === "string" ? JSON.parse(chunk) : (chunk as unknown as StreamEvent)
+					} catch (e) {
+						console.error("Failed to parse stream event:", e)
+						continue
+					}
+
+					// Handle metadata events first
+					if (streamEvent.metadata?.usage) {
+						yield {
+							type: "usage",
+							inputTokens: streamEvent.metadata.usage.inputTokens || 0,
+							outputTokens: streamEvent.metadata.usage.outputTokens || 0,
+						}
+						continue
+					}
+
+					// Handle message start
+					if (streamEvent.messageStart) {
+						continue
+					}
+
+					// Handle content blocks
+					if (streamEvent.contentBlockStart?.start?.text) {
+						yield {
+							type: "text",
+							text: streamEvent.contentBlockStart.start.text,
+						}
+						continue
+					}
+
+					// Handle content deltas
+					if (streamEvent.contentBlockDelta?.delta?.text) {
+						yield {
+							type: "text",
+							text: streamEvent.contentBlockDelta.delta.text,
+						}
+						continue
+					}
+
+					// Handle message stop
+					if (streamEvent.messageStop) {
+						continue
+					}
+				}
+
+				// If we get here, the request was successful, so we can break out of the retry loop
+				break
+			} catch (error: unknown) {
+				console.error("Bedrock Runtime API Error:", error)
+
+				// Check if this is an authentication error and we haven't exceeded max retries
+				const errorMessage = error instanceof Error ? error.message : String(error)
+				const isAuthError =
+					errorMessage.includes("SSO session") ||
+					errorMessage.includes("expired") ||
+					errorMessage.includes("auth") ||
+					errorMessage.includes("credentials")
+
+				if (isAuthError && retryCount < maxRetries) {
+					console.log("Authentication error detected, refreshing credentials and retrying...")
+					retryCount++
+					this.refreshClient()
+					continue // Retry the request
+				}
+
+				// If not an auth error or we've exceeded retries, handle the error normally
+				if (error instanceof Error) {
+					console.error("Error stack:", error.stack)
+					yield {
+						type: "text",
+						text: `Error: ${error.message}`,
+					}
 					yield {
 						type: "usage",
-						inputTokens: streamEvent.metadata.usage.inputTokens || 0,
-						outputTokens: streamEvent.metadata.usage.outputTokens || 0,
+						inputTokens: 0,
+						outputTokens: 0,
 					}
-					continue
-				}
-
-				// Handle message start
-				if (streamEvent.messageStart) {
-					continue
-				}
-
-				// Handle content blocks
-				if (streamEvent.contentBlockStart?.start?.text) {
+					throw error
+				} else {
+					const unknownError = new Error("An unknown error occurred")
 					yield {
 						type: "text",
-						text: streamEvent.contentBlockStart.start.text,
+						text: unknownError.message,
 					}
-					continue
-				}
-
-				// Handle content deltas
-				if (streamEvent.contentBlockDelta?.delta?.text) {
 					yield {
-						type: "text",
-						text: streamEvent.contentBlockDelta.delta.text,
+						type: "usage",
+						inputTokens: 0,
+						outputTokens: 0,
 					}
-					continue
+					throw unknownError
 				}
-
-				// Handle message stop
-				if (streamEvent.messageStop) {
-					continue
-				}
-			}
-		} catch (error: unknown) {
-			console.error("Bedrock Runtime API Error:", error)
-			// Only access stack if error is an Error object
-			if (error instanceof Error) {
-				console.error("Error stack:", error.stack)
-				yield {
-					type: "text",
-					text: `Error: ${error.message}`,
-				}
-				yield {
-					type: "usage",
-					inputTokens: 0,
-					outputTokens: 0,
-				}
-				throw error
-			} else {
-				const unknownError = new Error("An unknown error occurred")
-				yield {
-					type: "text",
-					text: unknownError.message,
-				}
-				yield {
-					type: "usage",
-					inputTokens: 0,
-					outputTokens: 0,
-				}
-				throw unknownError
 			}
 		}
 	}
@@ -245,69 +286,91 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	}
 
 	async completePrompt(prompt: string): Promise<string> {
-		try {
-			const modelConfig = this.getModel()
+		const modelConfig = this.getModel()
 
-			// Handle model ID - could be a standard model ID or an inference profile ARN
-			let modelId: string
+		// Handle model ID - could be a standard model ID or an inference profile ARN
+		let modelId: string
 
-			// Check if the model ID is an ARN (inference profile)
-			if (modelConfig.id.startsWith("arn:")) {
-				// If it's an ARN, use it directly without modifications
-				modelId = modelConfig.id
-			} else if (this.options.awsUseCrossRegionInference) {
-				// Handle cross-region inference for standard model IDs
-				let regionPrefix = (this.options.awsRegion || "").slice(0, 3)
-				switch (regionPrefix) {
-					case "us-":
-						modelId = `us.${modelConfig.id}`
-						break
-					case "eu-":
-						modelId = `eu.${modelConfig.id}`
-						break
-					default:
-						modelId = modelConfig.id
-						break
-				}
-			} else {
-				modelId = modelConfig.id
+		// Check if the model ID is an ARN (inference profile)
+		if (modelConfig.id.startsWith("arn:")) {
+			// If it's an ARN, use it directly without modifications
+			modelId = modelConfig.id
+		} else if (this.options.awsUseCrossRegionInference) {
+			// Handle cross-region inference for standard model IDs
+			let regionPrefix = (this.options.awsRegion || "").slice(0, 3)
+			switch (regionPrefix) {
+				case "us-":
+					modelId = `us.${modelConfig.id}`
+					break
+				case "eu-":
+					modelId = `eu.${modelConfig.id}`
+					break
+				default:
+					modelId = modelConfig.id
+					break
 			}
+		} else {
+			modelId = modelConfig.id
+		}
 
-			const payload = {
-				modelId,
-				messages: convertToBedrockConverseMessages([
-					{
-						role: "user",
-						content: prompt,
-					},
-				]),
-				inferenceConfig: {
-					maxTokens: modelConfig.info.maxTokens || 5000,
-					temperature: this.options.modelTemperature ?? BEDROCK_DEFAULT_TEMPERATURE,
-					topP: 0.1,
+		const payload = {
+			modelId,
+			messages: convertToBedrockConverseMessages([
+				{
+					role: "user",
+					content: prompt,
 				},
-			}
+			]),
+			inferenceConfig: {
+				maxTokens: modelConfig.info.maxTokens || 5000,
+				temperature: this.options.modelTemperature ?? BEDROCK_DEFAULT_TEMPERATURE,
+				topP: 0.1,
+			},
+		}
 
-			const command = new ConverseCommand(payload)
-			const response = await this.client.send(command)
+		// Try up to 2 times (original attempt + 1 retry after refreshing credentials)
+		let retryCount = 0
+		const maxRetries = 1
 
-			if (response.output && response.output instanceof Uint8Array) {
-				try {
-					const outputStr = new TextDecoder().decode(response.output)
-					const output = JSON.parse(outputStr)
-					if (output.content) {
-						return output.content
+		while (true) {
+			try {
+				const command = new ConverseCommand(payload)
+				const response = await this.client.send(command)
+
+				if (response.output && response.output instanceof Uint8Array) {
+					try {
+						const outputStr = new TextDecoder().decode(response.output)
+						const output = JSON.parse(outputStr)
+						if (output.content) {
+							return output.content
+						}
+					} catch (parseError) {
+						console.error("Failed to parse Bedrock response:", parseError)
 					}
-				} catch (parseError) {
-					console.error("Failed to parse Bedrock response:", parseError)
 				}
+				return ""
+			} catch (error) {
+				// Check if this is an authentication error and we haven't exceeded max retries
+				const errorMessage = error instanceof Error ? error.message : String(error)
+				const isAuthError =
+					errorMessage.includes("SSO session") ||
+					errorMessage.includes("expired") ||
+					errorMessage.includes("auth") ||
+					errorMessage.includes("credentials")
+
+				if (isAuthError && retryCount < maxRetries) {
+					console.log("Authentication error detected, refreshing credentials and retrying...")
+					retryCount++
+					this.refreshClient()
+					continue // Retry the request
+				}
+
+				// If not an auth error or we've exceeded retries, handle the error normally
+				if (error instanceof Error) {
+					throw new Error(`Bedrock completion error: ${error.message}`)
+				}
+				throw error
 			}
-			return ""
-		} catch (error) {
-			if (error instanceof Error) {
-				throw new Error(`Bedrock completion error: ${error.message}`)
-			}
-			throw error
 		}
 	}
 }

@@ -318,6 +318,115 @@ describe("AwsBedrockHandler", () => {
 		})
 	})
 
+	describe("credential refresh functionality", () => {
+		it("should refresh client and retry when SSO session expires", async () => {
+			// Create a handler with SSO auth
+			const handler = new AwsBedrockHandler({
+				apiModelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+				awsRegion: "us-east-1",
+				awsUseSso: true,
+				awsProfile: "test-profile",
+			})
+
+			// Create a spy for the refreshClient method but don't actually call it
+			const refreshClientSpy = jest.spyOn(handler as any, "refreshClient").mockImplementation(() => {
+				// Do nothing - we're just testing if it gets called
+			})
+
+			// Mock the client.send method to fail with an SSO error on first call, then succeed on second call
+			let callCount = 0
+			const mockSend = jest.fn().mockImplementation(() => {
+				if (callCount === 0) {
+					callCount++
+					throw new Error("The SSO session associated with this profile has expired")
+				}
+				return {
+					output: new TextEncoder().encode(JSON.stringify({ content: "Success after refresh" })),
+				}
+			})
+
+			handler["client"] = {
+				send: mockSend,
+			} as unknown as BedrockRuntimeClient
+
+			// Call completePrompt
+			const result = await handler.completePrompt("Test prompt")
+
+			// Verify that refreshClient was called
+			expect(refreshClientSpy).toHaveBeenCalledTimes(1)
+
+			// Verify that send was called twice (once before refresh, once after)
+			expect(mockSend).toHaveBeenCalledTimes(2)
+
+			// Verify the result
+			expect(result).toBe("Success after refresh")
+		})
+
+		it("should refresh client and retry when createMessage encounters SSO session expiration", async () => {
+			// Create a handler with SSO auth
+			const handler = new AwsBedrockHandler({
+				apiModelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+				awsRegion: "us-east-1",
+				awsUseSso: true,
+				awsProfile: "test-profile",
+			})
+
+			// Create a spy for the refreshClient method but don't actually call it
+			const refreshClientSpy = jest.spyOn(handler as any, "refreshClient").mockImplementation(() => {
+				// Do nothing - we're just testing if it gets called
+			})
+
+			// Mock the client.send method to fail with an SSO error on first call, then succeed on second call
+			let callCount = 0
+			const mockSend = jest.fn().mockImplementation(() => {
+				if (callCount === 0) {
+					callCount++
+					throw new Error("The SSO session associated with this profile has expired")
+				}
+				return {
+					stream: {
+						[Symbol.asyncIterator]: async function* () {
+							yield {
+								metadata: {
+									usage: {
+										inputTokens: 10,
+										outputTokens: 5,
+									},
+								},
+							}
+						},
+					},
+				}
+			})
+
+			handler["client"] = {
+				send: mockSend,
+			} as unknown as BedrockRuntimeClient
+
+			// Call createMessage
+			const stream = handler.createMessage("System prompt", [{ role: "user", content: "Test message" }])
+			const chunks = []
+
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			// Verify that refreshClient was called
+			expect(refreshClientSpy).toHaveBeenCalledTimes(1)
+
+			// Verify that send was called twice (once before refresh, once after)
+			expect(mockSend).toHaveBeenCalledTimes(2)
+
+			// Verify the result
+			expect(chunks.length).toBeGreaterThan(0)
+			expect(chunks[0]).toEqual({
+				type: "usage",
+				inputTokens: 10,
+				outputTokens: 5,
+			})
+		})
+	})
+
 	describe("completePrompt", () => {
 		it("should complete prompt successfully", async () => {
 			const mockResponse = {
