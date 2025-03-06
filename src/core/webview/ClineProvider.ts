@@ -30,6 +30,7 @@ import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { fileExistsAtPath } from "../../utils/fs"
 import { playSound, setSoundEnabled, setSoundVolume } from "../../utils/sound"
+import { playTts, setTtsEnabled } from "../../utils/tts"
 import { singleCompletionHandler } from "../../utils/single-completion-handler"
 import { searchCommits } from "../../utils/git"
 import { getDiffStrategy } from "../diff/DiffStrategy"
@@ -392,6 +393,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		// Initialize sound enabled state
 		this.getState().then(({ soundEnabled }) => {
 			setSoundEnabled(soundEnabled ?? false)
+		})
+
+		// Initialize tts enabled state
+		this.getState().then(({ ttsEnabled }) => {
+			setTtsEnabled(ttsEnabled ?? false)
 		})
 
 		webviewView.webview.options = {
@@ -1203,6 +1209,17 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("soundVolume", soundVolume)
 						setSoundVolume(soundVolume)
 						await this.postStateToWebview()
+						break
+					case "ttsEnabled":
+						const ttsEnabled = message.bool ?? true
+						await this.updateGlobalState("ttsEnabled", ttsEnabled)
+						setTtsEnabled(ttsEnabled) // Add this line to update the tts utility
+						await this.postStateToWebview()
+						break
+					case "playTts":
+						if (message.text) {
+							playTts(message.text)
+						}
 						break
 					case "diffEnabled":
 						const diffEnabled = message.bool ?? true
@@ -2125,6 +2142,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			alwaysAllowMcp,
 			alwaysAllowModeSwitch,
 			soundEnabled,
+			ttsEnabled,
 			diffEnabled,
 			enableCheckpoints,
 			checkpointStorage,
@@ -2176,6 +2194,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				.filter((item: HistoryItem) => item.ts && item.task)
 				.sort((a: HistoryItem, b: HistoryItem) => b.ts - a.ts),
 			soundEnabled: soundEnabled ?? false,
+			ttsEnabled: ttsEnabled ?? false,
 			diffEnabled: diffEnabled ?? true,
 			enableCheckpoints: enableCheckpoints ?? true,
 			checkpointStorage: checkpointStorage ?? "task",
@@ -2326,6 +2345,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			taskHistory: stateValues.taskHistory,
 			allowedCommands: stateValues.allowedCommands,
 			soundEnabled: stateValues.soundEnabled ?? false,
+			ttsEnabled: stateValues.ttsEnabled ?? false,
 			diffEnabled: stateValues.diffEnabled ?? true,
 			enableCheckpoints: stateValues.enableCheckpoints ?? false,
 			checkpointStorage: stateValues.checkpointStorage ?? "task",

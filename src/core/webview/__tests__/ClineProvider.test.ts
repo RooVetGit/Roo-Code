@@ -7,6 +7,7 @@ import { ClineProvider } from "../ClineProvider"
 import { ExtensionMessage, ExtensionState } from "../../../shared/ExtensionMessage"
 import { GlobalStateKey, SecretKey } from "../../../shared/globalState"
 import { setSoundEnabled } from "../../../utils/sound"
+import { setTtsEnabled } from "../../../utils/tts"
 import { defaultModeSlug } from "../../../shared/modes"
 import { experimentDefault } from "../../../shared/experiments"
 import { Cline } from "../../Cline"
@@ -191,6 +192,11 @@ jest.mock("vscode", () => ({
 // Mock sound utility
 jest.mock("../../../utils/sound", () => ({
 	setSoundEnabled: jest.fn(),
+}))
+
+// Mock tts utility
+jest.mock("../../../utils/tts", () => ({
+	setTtsEnabled: jest.fn(),
 }))
 
 // Mock ESM modules
@@ -423,6 +429,7 @@ describe("ClineProvider", () => {
 			alwaysAllowMcp: false,
 			uriScheme: "vscode",
 			soundEnabled: false,
+			ttsEnabled: false,
 			diffEnabled: false,
 			enableCheckpoints: false,
 			checkpointStorage: "task",
@@ -517,6 +524,7 @@ describe("ClineProvider", () => {
 		expect(state).toHaveProperty("alwaysAllowBrowser")
 		expect(state).toHaveProperty("taskHistory")
 		expect(state).toHaveProperty("soundEnabled")
+		expect(state).toHaveProperty("ttsEnabled")
 		expect(state).toHaveProperty("diffEnabled")
 		expect(state).toHaveProperty("writeDelayMs")
 	})
@@ -587,6 +595,18 @@ describe("ClineProvider", () => {
 		await messageHandler({ type: "soundEnabled", bool: false })
 		expect(setSoundEnabled).toHaveBeenCalledWith(false)
 		expect(mockContext.globalState.update).toHaveBeenCalledWith("soundEnabled", false)
+		expect(mockPostMessage).toHaveBeenCalled()
+
+		// Simulate setting tts to enabled
+		await messageHandler({ type: "ttsEnabled", bool: true })
+		expect(setTtsEnabled).toHaveBeenCalledWith(true)
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("ttsEnabled", true)
+		expect(mockPostMessage).toHaveBeenCalled()
+
+		// Simulate setting tts to disabled
+		await messageHandler({ type: "ttsEnabled", bool: false })
+		expect(setTtsEnabled).toHaveBeenCalledWith(false)
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("ttsEnabled", false)
 		expect(mockPostMessage).toHaveBeenCalled()
 	})
 

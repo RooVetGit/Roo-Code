@@ -115,6 +115,7 @@ export interface ExtensionState {
 	currentTaskItem?: HistoryItem
 	allowedCommands?: string[]
 	soundEnabled?: boolean
+	ttsEnabled?: boolean
 	soundVolume?: number
 	diffEnabled?: boolean
 	enableCheckpoints: boolean

@@ -7,12 +7,14 @@ import { SectionHeader } from "./SectionHeader"
 import { Section } from "./Section"
 
 type NotificationSettingsProps = HTMLAttributes<HTMLDivElement> & {
+	ttsEnabled?: boolean
 	soundEnabled?: boolean
 	soundVolume?: number
-	setCachedStateField: SetCachedStateField<"soundEnabled" | "soundVolume">
+	setCachedStateField: SetCachedStateField<"ttsEnabled" | "soundEnabled" | "soundVolume">
 }
 
 export const NotificationSettings = ({
+	ttsEnabled,
 	soundEnabled,
 	soundVolume,
 	setCachedStateField,
@@ -28,6 +30,16 @@ export const NotificationSettings = ({
 			</SectionHeader>
 
 			<Section>
+				<div>
+					<VSCodeCheckbox
+						checked={ttsEnabled}
+						onChange={(e: any) => setCachedStateField("ttsEnabled", e.target.checked)}>
+						<span className="font-medium">Enable text-to-speech</span>
+					</VSCodeCheckbox>
+					<p className="text-vscode-descriptionForeground text-sm mt-0">
+						When enabled, Roo will read aloud its responses using text-to-speech.
+					</p>
+				</div>
 				<div>
 					<VSCodeCheckbox
 						checked={soundEnabled}
