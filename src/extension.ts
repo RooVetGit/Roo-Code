@@ -7,6 +7,7 @@ import { CodeActionProvider } from "./core/CodeActionProvider"
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
 import { handleUri, registerCommands, registerCodeActions, registerTerminalActions } from "./activate"
 import { McpServerManager } from "./services/mcp/McpServerManager"
+import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"
 
 /**
  * Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -26,6 +27,9 @@ export function activate(context: vscode.ExtensionContext) {
 	outputChannel = vscode.window.createOutputChannel("Roo-Code")
 	context.subscriptions.push(outputChannel)
 	outputChannel.appendLine("Roo-Code extension activated")
+
+	// Initialize terminal shell execution handlers
+	TerminalRegistry.initialize()
 
 	// Get default commands from configuration.
 	const defaultCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
@@ -91,4 +95,6 @@ export async function deactivate() {
 	outputChannel.appendLine("Roo-Code extension deactivated")
 	// Clean up MCP server manager
 	await McpServerManager.cleanup(extensionContext)
+	// Clean up terminal handlers
+	TerminalRegistry.cleanup()
 }
