@@ -1,3 +1,5 @@
+import { TERMINAL_OUTPUT_LIMIT } from "../../shared/terminal"
+
 interface OutputBuilderOptions {
 	maxSize?: number // Max size of the buffer.
 	preserveStartPercent?: number // % of `maxSize` to preserve at start.
@@ -24,11 +26,12 @@ export class OutputBuilder {
 	private _cursor = 0
 
 	constructor({
-		maxSize = 100 * 1024, // 100KB
+		maxSize = TERMINAL_OUTPUT_LIMIT, // 100KB
 		preserveStartPercent = 50, // 50% of `maxSize`
 		preserveEndPercent = 50, // 50% of `maxSize`
 		truncationMessage = "\n[... OUTPUT TRUNCATED ...]\n",
 	}: OutputBuilderOptions = {}) {
+		console.log(`[OutputBuilder] maxSize: ${maxSize}`)
 		this.preserveStartSize = Math.floor((preserveStartPercent / 100) * maxSize)
 		this.preserveEndSize = Math.floor((preserveEndPercent / 100) * maxSize)
 
@@ -106,7 +109,38 @@ export class OutputBuilder {
 		}
 
 		this._cursor = this.bytesProcessed
+		return output
+	}
 
+	/**
+	 * Same as above, but read only line at a time.
+	 */
+	readLine() {
+		let output
+		let index = -1
+
+		if (!this.isTruncated) {
+			output = this.startBuffer.slice(this.cursor)
+			index = output.indexOf("\n")
+		} else if (this.cursor < this.startBuffer.length) {
+			output = this.startBuffer.slice(this.cursor)
+			index = output.indexOf("\n")
+
+			if (index === -1) {
+				output = output + this.endBuffer
+				index = output.indexOf("\n")
+			}
+		} else {
+			output = this.endBuffer.slice(Math.max(this.cursor - this.bytesRemoved - this.startBuffer.length, 0))
+			index = output.indexOf("\n")
+		}
+
+		if (index >= 0) {
+			this._cursor = this.bytesProcessed - (output.length - index) + 1
+			return output.slice(0, index + 1)
+		}
+
+		this._cursor = this.bytesProcessed
 		return output
 	}
 

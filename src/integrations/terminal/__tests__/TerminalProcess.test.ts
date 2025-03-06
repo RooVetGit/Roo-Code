@@ -2,9 +2,8 @@
 
 import * as vscode from "vscode"
 
-import { TerminalProcess, mergePromise } from "../TerminalProcess"
+import { TerminalProcess } from "../TerminalProcess"
 import { TerminalInfo, TerminalRegistry } from "../TerminalRegistry"
-import { OutputBuilder } from "../OutputBuilder"
 
 // Mock vscode.window.createTerminal
 const mockCreateTerminal = jest.fn()
@@ -35,7 +34,7 @@ describe("TerminalProcess", () => {
 	let mockStream: AsyncIterableIterator<string>
 
 	beforeEach(() => {
-		terminalProcess = new TerminalProcess()
+		terminalProcess = new TerminalProcess(100 * 1024)
 
 		// Create properly typed mock terminal
 		mockTerminal = {
@@ -172,34 +171,6 @@ describe("TerminalProcess", () => {
 
 			expect(continueSpy).toHaveBeenCalled()
 			expect(terminalProcess["isListening"]).toBe(false)
-		})
-	})
-
-	describe("getUnretrievedOutput", () => {
-		it("returns and clears unretrieved output", () => {
-			terminalProcess["outputBuilder"] = new OutputBuilder()
-			terminalProcess["outputBuilder"].append(`\x1b]633;C\x07previous\n`)
-			terminalProcess["outputBuilder"].read()
-			terminalProcess["outputBuilder"].append(`new output\x1b]633;D\x07`)
-
-			const unretrieved = terminalProcess.getUnretrievedOutput()
-			expect(unretrieved).toBe("new output")
-		})
-	})
-
-	describe("mergePromise", () => {
-		it("merges promise methods with terminal process", async () => {
-			const process = new TerminalProcess()
-			const promise = Promise.resolve()
-
-			const merged = mergePromise(process, promise)
-
-			expect(merged).toHaveProperty("then")
-			expect(merged).toHaveProperty("catch")
-			expect(merged).toHaveProperty("finally")
-			expect(merged instanceof TerminalProcess).toBe(true)
-
-			await expect(merged).resolves.toBeUndefined()
 		})
 	})
 })

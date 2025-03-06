@@ -248,4 +248,25 @@ describe("OutputBuilder", () => {
 			expect(builder.cursor).toBe(199)
 		})
 	})
+
+	describe("readLine", () => {
+		it.only("handles truncated output", () => {
+			const builder = new OutputBuilder({
+				maxSize: 60,
+				preserveStartPercent: 40,
+				preserveEndPercent: 60,
+				truncationMessage: " ... ",
+			})
+
+			builder.append("Lorem ipsum dolor sit amet.\nLibris convenire vix ei.")
+			expect(builder.content).toBe("Lorem ipsum dolor sit amet.\nLibris convenire vix ei.")
+			expect(builder.readLine()).toBe("Lorem ipsum dolor sit amet.\n")
+			expect(builder.readLine()).toBe("Libris convenire vix ei.")
+
+			builder.append("Est aliqua quis aliqua.\nAliquip culpa id cillum enim.")
+			expect(builder.content).toBe("Lorem ipsum dolor sit am ... liqua.\nAliquip culpa id cillum enim.")
+			expect(builder.readLine()).toBe("liqua.\n")
+			expect(builder.readLine()).toBe("Aliquip culpa id cillum enim.")
+		})
+	})
 })
