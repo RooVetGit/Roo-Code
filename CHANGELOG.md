@@ -1,5 +1,11 @@
 # Roo Code Changelog
 
+## 3.7.13
+
+### Patch Changes
+
+- Improved observability of openai compatible APIs, by sending x-title and http-referer headers, as per Open Router standard.
+
 ## [3.7.12]
 
 - Expand max tokens of thinking models to 128k, and max thinking budget to over 100k (thanks @monotykamary!)
