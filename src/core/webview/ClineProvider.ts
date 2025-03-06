@@ -10,17 +10,17 @@ import simpleGit from "simple-git"
 import { setPanel } from "../../activate/registerCommands"
 
 import { ApiConfiguration, ApiProvider, ModelInfo, API_CONFIG_KEYS } from "../../shared/api"
-import { CheckpointStorage } from "../../shared/checkpoints"
 import { findLast } from "../../shared/array"
-import { CustomSupportPrompts, supportPrompt } from "../../shared/support-prompt"
+import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { SecretKey, GlobalStateKey, SECRET_KEYS, GLOBAL_STATE_KEYS } from "../../shared/globalState"
 import { HistoryItem } from "../../shared/HistoryItem"
 import { ApiConfigMeta, ExtensionMessage } from "../../shared/ExtensionMessage"
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
-import { Mode, CustomModePrompts, PromptComponent, defaultModeSlug, ModeConfig } from "../../shared/modes"
+import { Mode, PromptComponent, defaultModeSlug, ModeConfig } from "../../shared/modes"
 import { checkExistKey } from "../../shared/checkExistApiConfig"
 import { EXPERIMENT_IDS, experiments as Experiments, experimentDefault, ExperimentId } from "../../shared/experiments"
+import { TERMINAL_OUTPUT_LIMIT } from "../../shared/terminal"
 import { downloadTask } from "../../integrations/misc/export-markdown"
 import { openFile, openImage } from "../../integrations/misc/open-file"
 import { selectImages } from "../../integrations/misc/process-images"
@@ -1232,7 +1232,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.postStateToWebview()
 						break
 					case "checkpointStorage":
-						console.log(`[ClineProvider] checkpointStorage: ${message.text}`)
 						const checkpointStorage = message.text ?? "task"
 						await this.updateGlobalState("checkpointStorage", checkpointStorage)
 						await this.postStateToWebview()
@@ -1266,8 +1265,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("writeDelayMs", message.value)
 						await this.postStateToWebview()
 						break
-					case "terminalOutputLineLimit":
-						await this.updateGlobalState("terminalOutputLineLimit", message.value)
+					case "terminalOutputLimit":
+						await this.updateGlobalState("terminalOutputLimit", message.value)
 						await this.postStateToWebview()
 						break
 					case "mode":
@@ -2152,7 +2151,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			screenshotQuality,
 			preferredLanguage,
 			writeDelayMs,
-			terminalOutputLineLimit,
+			terminalOutputLimit,
 			fuzzyMatchThreshold,
 			mcpEnabled,
 			enableMcpServerCreation,
@@ -2205,7 +2204,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			screenshotQuality: screenshotQuality ?? 75,
 			preferredLanguage: preferredLanguage ?? "English",
 			writeDelayMs: writeDelayMs ?? 1000,
-			terminalOutputLineLimit: terminalOutputLineLimit ?? 500,
+			terminalOutputLimit: terminalOutputLimit ?? TERMINAL_OUTPUT_LIMIT,
 			fuzzyMatchThreshold: fuzzyMatchThreshold ?? 1.0,
 			mcpEnabled: mcpEnabled ?? true,
 			enableMcpServerCreation: enableMcpServerCreation ?? true,
@@ -2354,7 +2353,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			screenshotQuality: stateValues.screenshotQuality ?? 75,
 			fuzzyMatchThreshold: stateValues.fuzzyMatchThreshold ?? 1.0,
 			writeDelayMs: stateValues.writeDelayMs ?? 1000,
-			terminalOutputLineLimit: stateValues.terminalOutputLineLimit ?? 500,
+			terminalOutputLimit: stateValues.terminalOutputLimit ?? TERMINAL_OUTPUT_LIMIT,
 			mode: stateValues.mode ?? defaultModeSlug,
 			preferredLanguage:
 				stateValues.preferredLanguage ??
@@ -2453,14 +2452,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			return
 		}
 
-		for (const key of this.context.globalState.keys()) {
-			await this.contextProxy.updateGlobalState(key, undefined)
-		}
-
-		for (const key of SECRET_KEYS) {
-			await this.storeSecret(key, undefined)
-		}
-
+		await this.contextProxy.resetAllState()
 		await this.configManager.resetAllConfigs()
 		await this.customModesManager.resetCustomModes()
 		await this.removeClineFromStack()

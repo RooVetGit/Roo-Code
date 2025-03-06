@@ -70,7 +70,7 @@ export interface WebviewMessage {
 		| "enhancedPrompt"
 		| "draggedImages"
 		| "deleteMessage"
-		| "terminalOutputLineLimit"
+		| "terminalOutputLimit"
 		| "mcpEnabled"
 		| "enableMcpServerCreation"
 		| "searchCommits"
