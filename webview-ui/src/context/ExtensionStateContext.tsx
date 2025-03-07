@@ -9,6 +9,7 @@ import { checkExistKey } from "../../../src/shared/checkExistApiConfig"
 import { Mode, CustomModePrompts, defaultModeSlug, defaultPrompts, ModeConfig } from "../../../src/shared/modes"
 import { CustomSupportPrompts } from "../../../src/shared/support-prompt"
 import { experimentDefault, ExperimentId } from "../../../src/shared/experiments"
+import { TelemetrySetting } from "../../../src/shared/TelemetrySetting"
 import { TERMINAL_OUTPUT_LIMIT } from "../../../src/shared/terminal"
 
 import { vscode } from "@/utils/vscode"
@@ -31,6 +32,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setAlwaysAllowMcp: (value: boolean) => void
 	setAlwaysAllowModeSwitch: (value: boolean) => void
 	setBrowserToolEnabled: (value: boolean) => void
+	setShowRooIgnoredFiles: (value: boolean) => void
 	setShowAnnouncement: (value: boolean) => void
 	setAllowedCommands: (value: string[]) => void
 	setSoundEnabled: (value: boolean) => void
@@ -70,6 +72,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	customModes: ModeConfig[]
 	setCustomModes: (value: ModeConfig[]) => void
 	setMaxOpenTabsContext: (value: number) => void
+	setTelemetrySetting: (value: TelemetrySetting) => void
+	machineId?: string
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -136,6 +140,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		maxOpenTabsContext: 20,
 		cwd: "",
 		browserToolEnabled: true,
+		telemetrySetting: "unset",
+		showRooIgnoredFiles: true, // Default to showing .rooignore'd files with lock symbol (current behavior)
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
@@ -274,6 +280,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setCustomModes: (value) => setState((prevState) => ({ ...prevState, customModes: value })),
 		setMaxOpenTabsContext: (value) => setState((prevState) => ({ ...prevState, maxOpenTabsContext: value })),
 		setBrowserToolEnabled: (value) => setState((prevState) => ({ ...prevState, browserToolEnabled: value })),
+		setTelemetrySetting: (value) => setState((prevState) => ({ ...prevState, telemetrySetting: value })),
+		setShowRooIgnoredFiles: (value) => setState((prevState) => ({ ...prevState, showRooIgnoredFiles: value })),
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

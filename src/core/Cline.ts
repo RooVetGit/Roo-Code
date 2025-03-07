@@ -71,6 +71,7 @@ import { McpHub } from "../services/mcp/McpHub"
 import crypto from "crypto"
 import { insertGroups } from "./diff/insert-groups"
 import { OutputBuilder } from "../integrations/terminal/OutputBuilder"
+import { telemetryService } from "../services/telemetry/TelemetryService"
 
 const cwd =
 	vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop") // may or may not exist but fs checking existence would immediately ask for permission which would be bad UX, need to come up with a better solution
@@ -189,6 +190,12 @@ export class Cline {
 		this.diffViewProvider = new DiffViewProvider(cwd)
 		this.enableCheckpoints = enableCheckpoints
 		this.checkpointStorage = checkpointStorage
+
+		if (historyItem) {
+			telemetryService.captureTaskRestarted(this.taskId)
+		} else {
+			telemetryService.captureTaskCreated(this.taskId)
+		}
 
 		// Initialize diffStrategy based on current state
 		this.updateDiffStrategy(
@@ -1446,6 +1453,10 @@ export class Cline {
 					await this.browserSession.closeBrowser()
 				}
 
+				if (!block.partial) {
+					telemetryService.captureToolUsage(this.taskId, block.name)
+				}
+
 				// Validate tool use before execution
 				const { mode, customModes } = (await this.providerRef.deref()?.getState()) ?? {}
 				try {
@@ -2212,11 +2223,13 @@ export class Cline {
 								this.consecutiveMistakeCount = 0
 								const absolutePath = path.resolve(cwd, relDirPath)
 								const [files, didHitLimit] = await listFiles(absolutePath, recursive, 200)
+								const { showRooIgnoredFiles } = (await this.providerRef.deref()?.getState()) ?? {}
 								const result = formatResponse.formatFilesList(
 									absolutePath,
 									files,
 									didHitLimit,
 									this.rooIgnoreController,
+									showRooIgnoredFiles ?? true,
 								)
 								const completeMessage = JSON.stringify({
 									...sharedMessageProps,
@@ -2897,14 +2910,6 @@ export class Cline {
 											false,
 										)
 
-										if (this.isSubTask) {
-											// tell the provider to remove the current subtask and resume the previous task in the stack (it might decide to run the command)
-											await this.providerRef
-												.deref()
-												?.finishSubTask(`new_task finished successfully! ${lastMessage?.text}`)
-											break
-										}
-
 										await this.ask(
 											"command",
 											removeClosingTag("command", command),
@@ -2936,6 +2941,7 @@ export class Cline {
 									if (lastMessage && lastMessage.ask !== "command") {
 										// havent sent a command message yet so first send completion_result then command
 										await this.say("completion_result", result, undefined, false)
+										telemetryService.captureTaskCompleted(this.taskId)
 										if (this.isSubTask) {
 											// tell the provider to remove the current subtask and resume the previous task in the stack
 											await this.providerRef
@@ -2960,6 +2966,7 @@ export class Cline {
 									commandResult = execCommandResult
 								} else {
 									await this.say("completion_result", result, undefined, false)
+									telemetryService.captureTaskCompleted(this.taskId)
 									if (this.isSubTask) {
 										// tell the provider to remove the current subtask and resume the previous task in the stack
 										await this.providerRef
@@ -3125,6 +3132,7 @@ export class Cline {
 		userContent.push({ type: "text", text: environmentDetails })
 
 		await this.addToApiConversationHistory({ role: "user", content: userContent })
+		telemetryService.captureConversationMessage(this.taskId, "user")
 
 		// since we sent off a placeholder api_req_started message to update the webview while waiting to actually start the API request (to load potential details for example), we need to update the text of that message
 		const lastApiReqIndex = findLastIndex(this.clineMessages, (m) => m.say === "api_req_started")
@@ -3326,6 +3334,7 @@ export class Cline {
 					role: "assistant",
 					content: [{ type: "text", text: assistantMessage }],
 				})
+				telemetryService.captureConversationMessage(this.taskId, "assistant")
 
 				// NOTE: this comment is here for future reference - this was a workaround for userMessageContent not getting set to true. It was due to it not recursively calling for partial blocks when didRejectTool, so it would get stuck waiting for a partial block to complete before it could continue.
 				// in case the content blocks finished
@@ -3619,7 +3628,14 @@ export class Cline {
 				details += "(Desktop files not shown automatically. Use list_files to explore if needed.)"
 			} else {
 				const [files, didHitLimit] = await listFiles(cwd, true, 200)
-				const result = formatResponse.formatFilesList(cwd, files, didHitLimit, this.rooIgnoreController)
+				const { showRooIgnoredFiles } = (await this.providerRef.deref()?.getState()) ?? {}
+				const result = formatResponse.formatFilesList(
+					cwd,
+					files,
+					didHitLimit,
+					this.rooIgnoreController,
+					showRooIgnoredFiles,
+				)
 				details += result
 			}
 		}
@@ -3672,10 +3688,14 @@ export class Cline {
 				log,
 			}
 
-			const service =
-				this.checkpointStorage === "task"
-					? RepoPerTaskCheckpointService.create(options)
-					: RepoPerWorkspaceCheckpointService.create(options)
+			// Only `task` is supported at the moment until we figure out how
+			// to fully isolate the `workspace` variant.
+			// const service =
+			// 	this.checkpointStorage === "task"
+			// 		? RepoPerTaskCheckpointService.create(options)
+			// 		: RepoPerWorkspaceCheckpointService.create(options)
+
+			const service = RepoPerTaskCheckpointService.create(options)
 
 			service.on("initialize", () => {
 				try {

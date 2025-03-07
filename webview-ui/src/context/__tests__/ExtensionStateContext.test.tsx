@@ -9,12 +9,17 @@ import { ApiConfiguration } from "../../../../src/shared/api"
 
 // Test component that consumes the context
 const TestComponent = () => {
-	const { allowedCommands, setAllowedCommands, soundEnabled } = useExtensionState()
+	const { allowedCommands, setAllowedCommands, soundEnabled, showRooIgnoredFiles, setShowRooIgnoredFiles } =
+		useExtensionState()
 	return (
 		<div>
 			<div data-testid="allowed-commands">{JSON.stringify(allowedCommands)}</div>
 			<div data-testid="sound-enabled">{JSON.stringify(soundEnabled)}</div>
+			<div data-testid="show-rooignored-files">{JSON.stringify(showRooIgnoredFiles)}</div>
 			<button data-testid="update-button" onClick={() => setAllowedCommands(["npm install", "git status"])}>
+				Update Commands
+			</button>
+			<button data-testid="toggle-rooignore-button" onClick={() => setShowRooIgnoredFiles(!showRooIgnoredFiles)}>
 				Update Commands
 			</button>
 		</div>
@@ -40,6 +45,30 @@ describe("ExtensionStateContext", () => {
 		)
 
 		expect(JSON.parse(screen.getByTestId("sound-enabled").textContent!)).toBe(false)
+	})
+
+	it("initializes with showRooIgnoredFiles set to true", () => {
+		render(
+			<ExtensionStateContextProvider>
+				<TestComponent />
+			</ExtensionStateContextProvider>,
+		)
+
+		expect(JSON.parse(screen.getByTestId("show-rooignored-files").textContent!)).toBe(true)
+	})
+
+	it("updates showRooIgnoredFiles through setShowRooIgnoredFiles", () => {
+		render(
+			<ExtensionStateContextProvider>
+				<TestComponent />
+			</ExtensionStateContextProvider>,
+		)
+
+		act(() => {
+			screen.getByTestId("toggle-rooignore-button").click()
+		})
+
+		expect(JSON.parse(screen.getByTestId("show-rooignored-files").textContent!)).toBe(false)
 	})
 
 	it("updates allowedCommands through setAllowedCommands", () => {
@@ -89,12 +118,15 @@ describe("mergeExtensionState", () => {
 			customModes: [],
 			maxOpenTabsContext: 20,
 			apiConfiguration: { providerId: "openrouter" } as ApiConfiguration,
+			telemetrySetting: "unset",
+			showRooIgnoredFiles: true,
 		}
 
 		const prevState: ExtensionState = {
 			...baseState,
 			apiConfiguration: { modelMaxTokens: 1234, modelMaxThinkingTokens: 123 },
 		}
+
 		const newState: ExtensionState = {
 			...baseState,
 			apiConfiguration: { modelMaxThinkingTokens: 456, modelTemperature: 0.3 },

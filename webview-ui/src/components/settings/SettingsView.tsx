@@ -5,6 +5,7 @@ import { CheckCheck, SquareMousePointer, Webhook, GitBranch, Bell, Cog, FlaskCon
 import { ApiConfiguration } from "../../../../src/shared/api"
 import { ExperimentId } from "../../../../src/shared/experiments"
 import { TERMINAL_OUTPUT_LIMIT } from "../../../../src/shared/terminal"
+import { TelemetrySetting } from "../../../../src/shared/TelemetrySetting"
 
 import { vscode } from "@/utils/vscode"
 import { ExtensionStateContextType, useExtensionState } from "@/context/ExtensionStateContext"
@@ -79,8 +80,10 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 		soundEnabled,
 		ttsEnabled,
 		soundVolume,
+		telemetrySetting,
 		terminalOutputLimit,
 		writeDelayMs,
+		showRooIgnoredFiles,
 	} = cachedState
 
 	// Make sure apiConfiguration is initialized and managed by SettingsView.
@@ -139,6 +142,19 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 		})
 	}, [])
 
+	const setTelemetrySetting = useCallback((setting: TelemetrySetting) => {
+		setCachedState((prevState) => {
+			if (prevState.telemetrySetting === setting) {
+				return prevState
+			}
+			setChangeDetected(true)
+			return {
+				...prevState,
+				telemetrySetting: setting,
+			}
+		})
+	}, [])
+
 	const isSettingValid = !errorMessage
 
 	const handleSubmit = () => {
@@ -166,10 +182,12 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 			vscode.postMessage({ type: "requestDelaySeconds", value: requestDelaySeconds })
 			vscode.postMessage({ type: "rateLimitSeconds", value: rateLimitSeconds })
 			vscode.postMessage({ type: "maxOpenTabsContext", value: maxOpenTabsContext })
+			vscode.postMessage({ type: "showRooIgnoredFiles", bool: showRooIgnoredFiles })
 			vscode.postMessage({ type: "currentApiConfigName", text: currentApiConfigName })
 			vscode.postMessage({ type: "updateExperimental", values: experiments })
 			vscode.postMessage({ type: "alwaysAllowModeSwitch", bool: alwaysAllowModeSwitch })
 			vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
+			vscode.postMessage({ type: "telemetrySetting", text: telemetrySetting })
 			setChangeDetected(false)
 		}
 	}
@@ -387,6 +405,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 						maxOpenTabsContext={maxOpenTabsContext}
 						diffEnabled={diffEnabled}
 						fuzzyMatchThreshold={fuzzyMatchThreshold}
+						showRooIgnoredFiles={showRooIgnoredFiles}
 						setCachedStateField={setCachedStateField}
 						setExperimentEnabled={setExperimentEnabled}
 						experiments={experiments}
@@ -401,7 +420,11 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 					/>
 				</div>
 
-				<SettingsFooter version={version} />
+				<SettingsFooter
+					version={version}
+					telemetrySetting={telemetrySetting}
+					setTelemetrySetting={setTelemetrySetting}
+				/>
 			</div>
 
 			<AlertDialog open={isDiscardDialogShow} onOpenChange={setDiscardDialogShow}>

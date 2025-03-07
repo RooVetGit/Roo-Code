@@ -7,14 +7,15 @@ import pWaitFor from "p-wait-for"
 import * as path from "path"
 import * as vscode from "vscode"
 import simpleGit from "simple-git"
-import { setPanel } from "../../activate/registerCommands"
 
+import { setPanel } from "../../activate/registerCommands"
 import { ApiConfiguration, ApiProvider, ModelInfo, API_CONFIG_KEYS } from "../../shared/api"
 import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { SecretKey, GlobalStateKey, SECRET_KEYS, GLOBAL_STATE_KEYS } from "../../shared/globalState"
 import { HistoryItem } from "../../shared/HistoryItem"
+import { CheckpointStorage } from "../../shared/checkpoints"
 import { ApiConfigMeta, ExtensionMessage } from "../../shared/ExtensionMessage"
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
 import { Mode, PromptComponent, defaultModeSlug, ModeConfig } from "../../shared/modes"
@@ -28,6 +29,7 @@ import { getTheme } from "../../integrations/theme/getTheme"
 import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
+import { ShadowCheckpointService } from "../../services/checkpoints/ShadowCheckpointService"
 import { fileExistsAtPath } from "../../utils/fs"
 import { playSound, setSoundEnabled, setSoundVolume } from "../../utils/sound"
 import { playTts, setTtsEnabled } from "../../utils/tts"
@@ -48,10 +50,12 @@ import { getOllamaModels } from "../../api/providers/ollama"
 import { getVsCodeLmModels } from "../../api/providers/vscode-lm"
 import { getLmStudioModels } from "../../api/providers/lmstudio"
 import { ACTION_NAMES } from "../CodeActionProvider"
-import { Cline } from "../Cline"
+import { Cline, ClineOptions } from "../Cline"
 import { openMention } from "../mentions"
 import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
+import { telemetryService } from "../../services/telemetry/TelemetryService"
+import { TelemetrySetting } from "../../shared/TelemetrySetting"
 
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -68,7 +72,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	private clineStack: Cline[] = []
 	private workspaceTracker?: WorkspaceTracker
 	protected mcpHub?: McpHub // Change from private to protected
-	private latestAnnouncementId = "feb-27-2025-automatic-checkpoints" // update to some unique identifier when we add a new announcement
+	private latestAnnouncementId = "mar-7-2025-3-8" // update to some unique identifier when we add a new announcement
 	private contextProxy: ContextProxy
 	configManager: ConfigManager
 	customModesManager: CustomModesManager
@@ -81,6 +85,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		this.outputChannel.appendLine("ClineProvider instantiated")
 		this.contextProxy = new ContextProxy(context)
 		ClineProvider.activeInstances.add(this)
+
+		// Register this provider with the telemetry service to enable it to add properties like mode and provider
+		telemetryService.setProvider(this)
+
 		this.workspaceTracker = new WorkspaceTracker(this)
 		this.configManager = new ConfigManager(this.context)
 		this.customModesManager = new CustomModesManager(this.context, async () => {
@@ -531,22 +539,43 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		const modePrompt = customModePrompts?.[mode] as PromptComponent
 		const effectiveInstructions = [globalInstructions, modePrompt?.customInstructions].filter(Boolean).join("\n\n")
 
-		// TODO: The `checkpointStorage` value should be derived from the
-		// task data on disk; the current setting could be different than
-		// the setting at the time the task was created.
+		const taskId = historyItem.id
+		const globalStorageDir = this.contextProxy.globalStorageUri.fsPath
+		const workspaceDir = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? ""
+
+		const checkpoints: Pick<ClineOptions, "enableCheckpoints" | "checkpointStorage"> = {
+			enableCheckpoints,
+			checkpointStorage,
+		}
+
+		if (enableCheckpoints) {
+			try {
+				checkpoints.checkpointStorage = await ShadowCheckpointService.getTaskStorage({
+					taskId,
+					globalStorageDir,
+					workspaceDir,
+				})
+
+				this.log(
+					`[ClineProvider#initClineWithHistoryItem] Using ${checkpoints.checkpointStorage} storage for ${taskId}`,
+				)
+			} catch (error) {
+				checkpoints.enableCheckpoints = false
+				this.log(`[ClineProvider#initClineWithHistoryItem] Error getting task storage: ${error.message}`)
+			}
+		}
 
 		const newCline = new Cline({
 			provider: this,
 			apiConfiguration,
 			customInstructions: effectiveInstructions,
 			enableDiff,
-			enableCheckpoints,
-			checkpointStorage,
+			...checkpoints,
 			fuzzyMatchThreshold,
 			historyItem,
 			experiments,
 		})
-		// get this cline task number id from the history item and set it to newCline
+
 		newCline.setTaskNumber(historyItem.number)
 		await this.addClineToStack(newCline)
 	}
@@ -603,8 +632,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			`font-src ${webview.cspSource}`,
 			`style-src ${webview.cspSource} 'unsafe-inline' https://* http://${localServerUrl} http://0.0.0.0:${localPort}`,
 			`img-src ${webview.cspSource} data:`,
-			`script-src 'unsafe-eval' https://* http://${localServerUrl} http://0.0.0.0:${localPort} 'nonce-${nonce}'`,
-			`connect-src https://* ws://${localServerUrl} ws://0.0.0.0:${localPort} http://${localServerUrl} http://0.0.0.0:${localPort}`,
+			`script-src 'unsafe-eval' https://* https://*.posthog.com http://${localServerUrl} http://0.0.0.0:${localPort} 'nonce-${nonce}'`,
+			`connect-src https://* https://*.posthog.com ws://${localServerUrl} ws://0.0.0.0:${localPort} http://${localServerUrl} http://0.0.0.0:${localPort}`,
 		]
 
 		return /*html*/ `
@@ -693,7 +722,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
             <meta name="theme-color" content="#000000">
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:; script-src 'nonce-${nonce}';">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:; script-src 'nonce-${nonce}' https://us-assets.i.posthog.com; connect-src https://us.i.posthog.com https://us-assets.i.posthog.com;">
             <link rel="stylesheet" type="text/css" href="${stylesUri}">
 			<link href="${codiconsUri}" rel="stylesheet" />
             <title>Roo Code</title>
@@ -907,6 +936,13 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 									`Error list api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 								),
 							)
+
+						// If user already opted in to telemetry, enable telemetry service
+						this.getStateToPostToWebview().then((state) => {
+							const { telemetrySetting } = state
+							const isOptedIn = telemetrySetting === "enabled"
+							telemetryService.updateTelemetryState(isOptedIn)
+						})
 
 						this.isViewLaunched = true
 						break
@@ -1449,6 +1485,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("browserToolEnabled", message.bool ?? true)
 						await this.postStateToWebview()
 						break
+					case "showRooIgnoredFiles":
+						await this.updateGlobalState("showRooIgnoredFiles", message.bool ?? true)
+						await this.postStateToWebview()
+						break
 					case "enhancementApiConfigId":
 						await this.updateGlobalState("enhancementApiConfigId", message.text)
 						await this.postStateToWebview()
@@ -1770,6 +1810,15 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							})
 						}
 						break
+
+					case "telemetrySetting": {
+						const telemetrySetting = message.text as TelemetrySetting
+						await this.updateGlobalState("telemetrySetting", telemetrySetting)
+						const isOptedIn = telemetrySetting === "enabled"
+						telemetryService.updateTelemetryState(isOptedIn)
+						await this.postStateToWebview()
+						break
+					}
 				}
 			},
 			null,
@@ -1829,6 +1878,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	 * @param newMode The mode to switch to
 	 */
 	public async handleModeSwitch(newMode: Mode) {
+		// Capture mode switch telemetry event
+		const currentTaskId = this.getCurrentCline()?.taskId
+		if (currentTaskId) {
+			telemetryService.captureModeSwitch(currentTaskId, newMode)
+		}
+
 		await this.updateGlobalState("mode", newMode)
 
 		// Load the saved API config for the new mode if it exists
@@ -2086,21 +2141,20 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		// delete task from the task history state
 		await this.deleteTaskFromState(id)
 
-		// check if checkpoints are enabled
-		const { enableCheckpoints } = await this.getState()
 		// get the base directory of the project
 		const baseDir = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0)
 
-		// Delete checkpoints branch.
-		// TODO: Also delete the workspace branch if it exists.
-		if (enableCheckpoints && baseDir) {
-			const branchSummary = await simpleGit(baseDir)
-				.branch(["-D", `roo-code-checkpoints-${id}`])
-				.catch(() => undefined)
+		// Delete associated shadow repository or branch.
+		// TODO: Store `workspaceDir` in the `HistoryItem` object.
+		const globalStorageDir = this.contextProxy.globalStorageUri.fsPath
+		const workspaceDir = baseDir ?? ""
 
-			if (branchSummary) {
-				console.log(`[deleteTaskWithId${id}] deleted checkpoints branch`)
-			}
+		try {
+			await ShadowCheckpointService.deleteTask({ taskId: id, globalStorageDir, workspaceDir })
+		} catch (error) {
+			console.error(
+				`[deleteTaskWithId${id}] failed to delete associated shadow repository or branch: ${error instanceof Error ? error.message : String(error)}`,
+			)
 		}
 
 		// delete the entire task directory including checkpoints and all content
@@ -2168,7 +2222,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			experiments,
 			maxOpenTabsContext,
 			browserToolEnabled,
+			telemetrySetting,
+			showRooIgnoredFiles,
 		} = await this.getState()
+		const telemetryKey = process.env.POSTHOG_API_KEY
+		const machineId = vscode.env.machineId
 
 		const allowedCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
 
@@ -2197,7 +2255,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			diffEnabled: diffEnabled ?? true,
 			enableCheckpoints: enableCheckpoints ?? true,
 			checkpointStorage: checkpointStorage ?? "task",
-			shouldShowAnnouncement: lastShownAnnouncementId !== this.latestAnnouncementId,
+			shouldShowAnnouncement:
+				telemetrySetting !== "unset" && lastShownAnnouncementId !== this.latestAnnouncementId,
 			allowedCommands,
 			soundVolume: soundVolume ?? 0.5,
 			browserViewportSize: browserViewportSize ?? "900x600",
@@ -2222,8 +2281,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			experiments: experiments ?? experimentDefault,
 			mcpServers: this.mcpHub?.getAllServers() ?? [],
 			maxOpenTabsContext: maxOpenTabsContext ?? 20,
-			cwd: cwd,
+			cwd,
 			browserToolEnabled: browserToolEnabled ?? true,
+			telemetrySetting,
+			telemetryKey,
+			machineId,
+			showRooIgnoredFiles: showRooIgnoredFiles ?? true,
 		}
 	}
 
@@ -2403,6 +2466,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			maxOpenTabsContext: stateValues.maxOpenTabsContext ?? 20,
 			openRouterUseMiddleOutTransform: stateValues.openRouterUseMiddleOutTransform ?? true,
 			browserToolEnabled: stateValues.browserToolEnabled ?? true,
+			telemetrySetting: stateValues.telemetrySetting || "unset",
+			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 		}
 	}
 
@@ -2480,5 +2545,28 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	// Add public getter
 	public getMcpHub(): McpHub | undefined {
 		return this.mcpHub
+	}
+
+	/**
+	 * Returns properties to be included in every telemetry event
+	 * This method is called by the telemetry service to get context information
+	 * like the current mode, API provider, etc.
+	 */
+	public async getTelemetryProperties(): Promise<Record<string, any>> {
+		const { mode, apiConfiguration } = await this.getState()
+
+		const properties: Record<string, any> = {}
+
+		// Add current mode
+		if (mode) {
+			properties.mode = mode
+		}
+
+		// Add API provider
+		if (apiConfiguration?.apiProvider) {
+			properties.apiProvider = apiConfiguration.apiProvider
+		}
+
+		return properties
 	}
 }

@@ -3,7 +3,7 @@
 	"displayName": "Roo Code (prev. Roo Cline)",
 	"description": "A whole dev team of AI agents in your editor.",
 	"publisher": "RooVeterinaryInc",
-	"version": "3.7.12",
+	"version": "3.8.0",
 	"icon": "assets/icons/rocket.png",
 	"galleryBanner": {
 		"color": "#617A91",
@@ -295,6 +295,7 @@
 		"os-name": "^6.0.0",
 		"p-wait-for": "^5.0.2",
 		"pdf-parse": "^1.1.1",
+		"posthog-node": "^4.7.0",
 		"pretty-bytes": "^6.1.1",
 		"puppeteer-chromium-resolver": "^23.0.0",
 		"puppeteer-core": "^23.4.0",
