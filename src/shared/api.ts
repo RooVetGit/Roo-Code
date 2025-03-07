@@ -94,6 +94,7 @@ export const API_CONFIG_KEYS: GlobalStateKey[] = [
 	"openRouterModelId",
 	"openRouterModelInfo",
 	"openRouterBaseUrl",
+	"openRouterSpecificProvider",
 	"awsRegion",
 	"awsUseCrossRegionInference",
 	// "awsUsePromptCache", // NOT exist on GlobalStateKey

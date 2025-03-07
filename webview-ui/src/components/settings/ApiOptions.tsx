@@ -221,7 +221,7 @@ const ApiOptions = ({
 			const currentModelInfoString = JSON.stringify(apiConfiguration.openRouterModelInfo)
 			const targetModelInfoString = JSON.stringify(targetModelInfo)
 
-			if (currentModelInfoString !== targetModelInfoString) {
+			if (targetModelInfoString && currentModelInfoString !== targetModelInfoString) {
 				setApiConfigurationField("openRouterModelInfo", targetModelInfo)
 			}
 		}
@@ -1266,7 +1266,8 @@ const ApiOptions = ({
 				<>
 					<div className="dropdown-container" style={{ marginTop: 3 }}>
 						<label htmlFor="openrouter-specific-provider" className="font-medium">
-							Provider
+							Provider (more infos on{" "}
+							<a href={`https://openrouter.ai/${selectedModelId}/providers`}>OpenRouter</a>)
 						</label>
 						<Dropdown
 							id="openrouter-specific-provider"
