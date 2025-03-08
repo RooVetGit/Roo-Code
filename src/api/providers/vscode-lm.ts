@@ -446,7 +446,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 
 						yield {
 							type: "text",
-							text: toolResult,
+							text: toolCallText,
 						}
 					} catch (error) {
 						console.error("Roo Code <Language Model API>: Failed to process tool call:", error)

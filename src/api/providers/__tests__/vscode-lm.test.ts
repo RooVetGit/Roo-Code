@@ -235,13 +235,56 @@ describe("VsCodeLmHandler", () => {
 					// consume stream
 				}
 			}).rejects.toThrow("API Error")
+			})
+
+		it("should execute tasks from tool calls", async () => {
+			const systemPrompt = "You are a helpful assistant"
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user" as const,
+					content: "Execute task",
+				},
+			]
+
+			const toolCallData = {
+				name: "taskExecutor",
+				arguments: { task: "exampleTask" },
+				callId: "call-2",
+			}
+
+			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
+				stream: (async function* () {
+					yield new vscode.LanguageModelToolCallPart(
+						toolCallData.callId,
+						toolCallData.name,
+						toolCallData.arguments,
+					)
+					return
+				})(),
+				text: (async function* () {
+					yield JSON.stringify({ type: "tool_call", ...toolCallData })
+					return
+				})(),
+			})
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			const chunks = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			expect(chunks).toHaveLength(2) // Tool call chunk + usage chunk
+			expect(chunks[0]).toEqual({
+				type: "text",
+				text: JSON.stringify({ type: "tool_call", ...toolCallData }),
+			})
 		})
 	})
 
 	describe("getModel", () => {
 		it("should return model info when client exists", async () => {
 			const mockModel = { ...mockLanguageModelChat }
-			;(vscode.lm.selectChatModels as jest.Mock).mockResolvedValueOnce([mockModel])
+				;(vscode.lm.selectChatModels as jest.Mock).mockResolvedValueOnce([mockModel])
 
 			// Initialize client
 			await handler["getClient"]()
@@ -290,6 +333,40 @@ describe("VsCodeLmHandler", () => {
 			await expect(handler.completePrompt("Test prompt")).rejects.toThrow(
 				"VSCode LM completion error: Completion failed",
 			)
+		})
+
+		it("should execute tasks during completion", async () => {
+			const mockModel = { ...mockLanguageModelChat }
+			;(vscode.lm.selectChatModels as jest.Mock).mockResolvedValueOnce([mockModel])
+
+			const responseText = "Completed text"
+			const toolCallData = {
+				name: "taskExecutor",
+				arguments: { task: "exampleTask" },
+				callId: "call-3",
+			}
+
+			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
+				stream: (async function* () {
+					yield new vscode.LanguageModelTextPart(responseText)
+					yield new vscode.LanguageModelToolCallPart(
+						toolCallData.callId,
+						toolCallData.name,
+						toolCallData.arguments,
+					)
+					return
+				})(),
+				text: (async function* () {
+					yield responseText
+					yield JSON.stringify({ type: "tool_call", ...toolCallData })
+					return
+				})(),
+			})
+
+			const result = await handler.completePrompt("Test prompt")
+			expect(result).toContain(responseText)
+			expect(result).toContain(JSON.stringify({ type: "tool_call", ...toolCallData }))
+			expect(mockLanguageModelChat.sendRequest).toHaveBeenCalled()
 		})
 	})
 })
