@@ -440,9 +440,13 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 							inputSize: JSON.stringify(chunk.input).length,
 						})
 
+						// Execute the tool call
+						const toolResult = await this.executeToolCall(toolCall)
+						accumulatedText += toolResult
+
 						yield {
 							type: "text",
-							text: toolCallText,
+							text: toolResult,
 						}
 					} catch (error) {
 						console.error("Roo Code <Language Model API>: Failed to process tool call:", error)
@@ -563,6 +567,41 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			for await (const chunk of response.stream) {
 				if (chunk instanceof vscode.LanguageModelTextPart) {
 					result += chunk.value
+				} else if (chunk instanceof vscode.LanguageModelToolCallPart) {
+					try {
+						// Validate tool call parameters
+						if (!chunk.name || typeof chunk.name !== "string") {
+							console.warn("Roo Code <Language Model API>: Invalid tool name received:", chunk.name)
+							continue
+						}
+
+						if (!chunk.callId || typeof chunk.callId !== "string") {
+							console.warn("Roo Code <Language Model API>: Invalid tool callId received:", chunk.callId)
+							continue
+						}
+
+						// Ensure input is a valid object
+						if (!chunk.input || typeof chunk.input !== "object") {
+							console.warn("Roo Code <Language Model API>: Invalid tool input received:", chunk.input)
+							continue
+						}
+
+						// Convert tool calls to text format with proper error handling
+						const toolCall = {
+							type: "tool_call",
+							name: chunk.name,
+							arguments: chunk.input,
+							callId: chunk.callId,
+						}
+
+						// Execute the tool call
+						const toolResult = await this.executeToolCall(toolCall)
+						result += toolResult
+					} catch (error) {
+						console.error("Roo Code <Language Model API>: Failed to process tool call:", error)
+						// Continue processing other chunks even if one fails
+						continue
+					}
 				}
 			}
 			return result
@@ -572,6 +611,13 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			}
 			throw error
 		}
+	}
+
+	private async executeToolCall(toolCall: { type: string; name: string; arguments: any; callId: string }): Promise<string> {
+		// Implement the logic to execute the tool call based on the tool name and arguments
+		// This is a placeholder implementation and should be replaced with actual tool execution logic
+		console.log(`Executing tool call: ${toolCall.name} with arguments: ${JSON.stringify(toolCall.arguments)}`)
+		return `<Executed tool call: ${toolCall.name}>`
 	}
 }
 
