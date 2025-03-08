@@ -142,12 +142,7 @@ export function activate(context: vscode.ExtensionContext) {
 	)
 
 	registerCodeActions(context)
-
-	/**
-	 * Temporary disabled until we have a better way to share the terminal
-	 * manager.
-	 */
-	// registerTerminalActions(context)
+	registerTerminalActions(context)
 
 	return createClineAPI(outputChannel, sidebarProvider)
 }
