@@ -113,7 +113,6 @@ function getMessageContent(message: Anthropic.Messages.MessageParam): string {
 
 // Elevate lastAIResponse variable to module level to maintain state between multiple calls
 let lastAIResponse: string | null = null
-let thispromptText: string | null = null
 // Add normalized cache to avoid repeatedly processing the same content
 let normalizedPrompt: string | null = null
 let normalizedLastResponse: string | null = null
@@ -150,7 +149,6 @@ function isTextEqual(str1: string | null, str2: string | null): boolean {
 async function showHumanRelayDialog(promptText: string, options?: ApiHandlerOptions): Promise<string | undefined> {
 	// Save initial clipboard content for comparison
 	const initialClipboardContent = await vscode.env.clipboard.readText()
-	thispromptText = promptText
 	// Pre-normalize prompt text to avoid repeated processing during polling
 	normalizedPrompt = normalizeText(promptText)
 
