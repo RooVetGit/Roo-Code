@@ -198,9 +198,9 @@ class TelemetryService {
 	 * Captures a telemetry event if telemetry is enabled
 	 * @param event The event to capture with its properties
 	 */
-	public capture(event: { event: string; properties?: any }): void {
+	public async capture(event: { event: string; properties?: any }) {
 		if (!this.isReady()) return
-		this.client!.capture(event)
+		await this.client!.capture(event)
 	}
 
 	/**
@@ -208,39 +208,39 @@ class TelemetryService {
 	 * @param eventName The event name to capture
 	 * @param properties The event properties
 	 */
-	public captureEvent(eventName: string, properties?: any): void {
-		this.capture({ event: eventName, properties })
+	public async captureEvent(eventName: string, properties?: any) {
+		await this.capture({ event: eventName, properties })
 	}
 
 	// Task events convenience methods
-	public captureTaskCreated(taskId: string): void {
-		this.captureEvent(PostHogClient.EVENTS.TASK.CREATED, { taskId })
+	public async captureTaskCreated(taskId: string) {
+		await this.captureEvent(PostHogClient.EVENTS.TASK.CREATED, { taskId })
 	}
 
-	public captureTaskRestarted(taskId: string): void {
-		this.captureEvent(PostHogClient.EVENTS.TASK.RESTARTED, { taskId })
+	public async captureTaskRestarted(taskId: string) {
+		await this.captureEvent(PostHogClient.EVENTS.TASK.RESTARTED, { taskId })
 	}
 
-	public captureTaskCompleted(taskId: string): void {
-		this.captureEvent(PostHogClient.EVENTS.TASK.COMPLETED, { taskId })
+	public async captureTaskCompleted(taskId: string) {
+		await this.captureEvent(PostHogClient.EVENTS.TASK.COMPLETED, { taskId })
 	}
 
-	public captureConversationMessage(taskId: string, source: "user" | "assistant"): void {
-		this.captureEvent(PostHogClient.EVENTS.TASK.CONVERSATION_MESSAGE, {
+	public async captureConversationMessage(taskId: string, source: "user" | "assistant") {
+		await this.captureEvent(PostHogClient.EVENTS.TASK.CONVERSATION_MESSAGE, {
 			taskId,
 			source,
 		})
 	}
 
-	public captureModeSwitch(taskId: string, newMode: string): void {
-		this.captureEvent(PostHogClient.EVENTS.TASK.MODE_SWITCH, {
+	public async captureModeSwitch(taskId: string, newMode: string) {
+		await this.captureEvent(PostHogClient.EVENTS.TASK.MODE_SWITCH, {
 			taskId,
 			newMode,
 		})
 	}
 
-	public captureToolUsage(taskId: string, tool: string): void {
-		this.captureEvent(PostHogClient.EVENTS.TASK.TOOL_USED, {
+	public async captureToolUsage(taskId: string, tool: string) {
+		await this.captureEvent(PostHogClient.EVENTS.TASK.TOOL_USED, {
 			taskId,
 			tool,
 		})

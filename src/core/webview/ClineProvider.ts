@@ -1864,7 +1864,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		// Capture mode switch telemetry event
 		const currentTaskId = this.getCurrentCline()?.taskId
 		if (currentTaskId) {
-			telemetryService.captureModeSwitch(currentTaskId, newMode)
+			await telemetryService.captureModeSwitch(currentTaskId, newMode)
 		}
 
 		await this.updateGlobalState("mode", newMode)
