@@ -107,7 +107,7 @@ const mockPostMessage = (state: any) => {
 				allowedCommands: [],
 				alwaysAllowExecute: false,
 				ttsEnabled: false,
-				ttsSpeed: 0.5,
+				ttsSpeed: 1,
 				soundEnabled: false,
 				soundVolume: 0.5,
 				...state,
@@ -216,7 +216,7 @@ describe("SettingsView - Sound Settings", () => {
 		// Speed slider should be visible
 		const speedSlider = screen.getByRole("slider", { name: /speed/i })
 		expect(speedSlider).toBeInTheDocument()
-		expect(speedSlider).toHaveValue("0.5")
+		expect(speedSlider).toHaveValue("1")
 	})
 
 	it("shows volume slider when sound is enabled", () => {
