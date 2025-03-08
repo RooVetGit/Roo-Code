@@ -1,4 +1,4 @@
-// npx jest src/components/settings/__tests__/ApiOptions.test.ts
+// npx jest src/components/settings/__tests__/ProviderSettings.test.tsx
 
 import { render, screen } from "@testing-library/react"
 
