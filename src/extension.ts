@@ -16,7 +16,7 @@ import { createClineAPI } from "./exports"
 import "./utils/path" // Necessary to have access to String.prototype.toPosix.
 import { CodeActionProvider } from "./core/CodeActionProvider"
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
-import { handleUri, registerCommands, registerCodeActions } from "./activate"
+import { handleUri, registerCommands, registerCodeActions, registerTerminalActions } from "./activate"
 import { McpServerManager } from "./services/mcp/McpServerManager"
 import { telemetryService } from "./services/telemetry/TelemetryService"
 
@@ -143,10 +143,16 @@ export function activate(context: vscode.ExtensionContext) {
 
 	registerCodeActions(context)
 
+	/**
+	 * Temporary disabled until we have a better way to share the terminal
+	 * manager.
+	 */
+	// registerTerminalActions(context)
+
 	return createClineAPI(outputChannel, sidebarProvider)
 }
 
-// This method is called when your extension is deactivated.
+// This method is called when your extension is deactivated
 export async function deactivate() {
 	outputChannel.appendLine("Roo-Code extension deactivated")
 	// Clean up MCP server manager
