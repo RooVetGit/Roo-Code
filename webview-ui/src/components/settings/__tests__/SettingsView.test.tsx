@@ -28,8 +28,8 @@ jest.mock("lucide-react", () => {
 	)
 })
 
-// Mock ApiConfigManager component
-jest.mock("../ApiConfigManager", () => ({
+// Mock ProfileSwitcher component
+jest.mock("../ProfileSwitcher", () => ({
 	__esModule: true,
 	default: ({ currentApiConfigName }: any) => (
 		<div data-testid="api-config-management">

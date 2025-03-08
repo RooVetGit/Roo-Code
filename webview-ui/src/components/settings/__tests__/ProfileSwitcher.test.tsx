@@ -71,7 +71,7 @@ jest.mock("@/components/ui", () => ({
 
 // We don't need a separate mock for Dialog components since they're already mocked in the UI components mock
 
-describe("ApiConfigManager", () => {
+describe("ProfileSwitcher", () => {
 	const mockOnSelectConfig = jest.fn()
 	const mockOnDeleteConfig = jest.fn()
 	const mockOnRenameConfig = jest.fn()
