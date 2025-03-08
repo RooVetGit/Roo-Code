@@ -1,6 +1,6 @@
 import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
 import { Button as VSCodeButton } from "vscrui"
-import { CheckCheck, SquareMousePointer, Webhook, GitBranch, Bell, Cog, FlaskConical } from "lucide-react"
+import { IdCard, CheckCheck, SquareMousePointer, Webhook, GitBranch, Bell, Cog, FlaskConical } from "lucide-react"
 
 import { ApiConfiguration } from "../../../../src/shared/api"
 import { ExperimentId } from "../../../../src/shared/experiments"
@@ -24,16 +24,16 @@ import {
 
 import { SetCachedStateField, SetExperimentEnabled } from "./types"
 import { SectionHeader } from "./SectionHeader"
-import ApiConfigManager from "./ApiConfigManager"
-import ApiOptions from "./ApiOptions"
+import { Section } from "./Section"
+import { ExperimentalSettings } from "./ExperimentalSettings"
+import { ProfileSwitcher } from "./ProfileSwitcher"
+import { ProviderSettings } from "./ProviderSettings"
 import { AutoApproveSettings } from "./AutoApproveSettings"
 import { BrowserSettings } from "./BrowserSettings"
 import { CheckpointSettings } from "./CheckpointSettings"
 import { NotificationSettings } from "./NotificationSettings"
 import { AdvancedSettings } from "./AdvancedSettings"
 import { SettingsFooter } from "./SettingsFooter"
-import { Section } from "./Section"
-import { ExperimentalSettings } from "./ExperimentalSettings"
 
 export interface SettingsViewRef {
 	checkUnsaveChanges: (then: () => void) => void
@@ -308,16 +308,15 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 			<div
 				className="flex flex-col flex-1 overflow-auto divide-y divide-vscode-sideBar-background"
 				onScroll={handleScroll}>
-				<div ref={providersRef}>
+				<div>
 					<SectionHeader>
 						<div className="flex items-center gap-2">
-							<Webhook className="w-4" />
-							<div>Providers</div>
+							<IdCard className="w-4" />
+							<div>Configuration Profile</div>
 						</div>
 					</SectionHeader>
-
 					<Section>
-						<ApiConfigManager
+						<ProfileSwitcher
 							currentApiConfigName={currentApiConfigName}
 							listApiConfigMeta={listApiConfigMeta}
 							onSelectConfig={(configName: string) =>
@@ -344,7 +343,18 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 								})
 							}
 						/>
-						<ApiOptions
+					</Section>
+				</div>
+
+				<div ref={providersRef}>
+					<SectionHeader>
+						<div className="flex items-center gap-2">
+							<Webhook className="w-4" />
+							<div>Provider</div>
+						</div>
+					</SectionHeader>
+					<Section>
+						<ProviderSettings
 							uriScheme={uriScheme}
 							apiConfiguration={apiConfiguration}
 							setApiConfigurationField={setApiConfigurationField}

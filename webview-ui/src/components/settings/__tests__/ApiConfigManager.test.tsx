@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, within } from "@testing-library/react"
-import ApiConfigManager from "../ApiConfigManager"
+import { ProfileSwitcher } from "../ProfileSwitcher"
 
 // Mock VSCode components
 jest.mock("@vscode/webview-ui-toolkit/react", () => ({
@@ -70,7 +70,7 @@ describe("ApiConfigManager", () => {
 	const getDialogContent = () => screen.getByTestId("dialog-content")
 
 	it("opens new profile dialog when clicking add button", () => {
-		render(<ApiConfigManager {...defaultProps} />)
+		render(<ProfileSwitcher {...defaultProps} />)
 
 		const addButton = screen.getByTitle("Add profile")
 		fireEvent.click(addButton)
@@ -80,7 +80,7 @@ describe("ApiConfigManager", () => {
 	})
 
 	it("creates new profile with entered name", () => {
-		render(<ApiConfigManager {...defaultProps} />)
+		render(<ProfileSwitcher {...defaultProps} />)
 
 		// Open dialog
 		const addButton = screen.getByTitle("Add profile")
@@ -98,7 +98,7 @@ describe("ApiConfigManager", () => {
 	})
 
 	it("shows error when creating profile with existing name", () => {
-		render(<ApiConfigManager {...defaultProps} />)
+		render(<ProfileSwitcher {...defaultProps} />)
 
 		// Open dialog
 		const addButton = screen.getByTitle("Add profile")
@@ -120,7 +120,7 @@ describe("ApiConfigManager", () => {
 	})
 
 	it("prevents creating profile with empty name", () => {
-		render(<ApiConfigManager {...defaultProps} />)
+		render(<ProfileSwitcher {...defaultProps} />)
 
 		// Open dialog
 		const addButton = screen.getByTitle("Add profile")
@@ -137,7 +137,7 @@ describe("ApiConfigManager", () => {
 	})
 
 	it("allows renaming the current config", () => {
-		render(<ApiConfigManager {...defaultProps} />)
+		render(<ProfileSwitcher {...defaultProps} />)
 
 		// Start rename
 		const renameButton = screen.getByTitle("Rename profile")
@@ -155,7 +155,7 @@ describe("ApiConfigManager", () => {
 	})
 
 	it("shows error when renaming to existing config name", () => {
-		render(<ApiConfigManager {...defaultProps} />)
+		render(<ProfileSwitcher {...defaultProps} />)
 
 		// Start rename
 		const renameButton = screen.getByTitle("Rename profile")
@@ -177,7 +177,7 @@ describe("ApiConfigManager", () => {
 	})
 
 	it("prevents renaming to empty name", () => {
-		render(<ApiConfigManager {...defaultProps} />)
+		render(<ProfileSwitcher {...defaultProps} />)
 
 		// Start rename
 		const renameButton = screen.getByTitle("Rename profile")
@@ -194,7 +194,7 @@ describe("ApiConfigManager", () => {
 	})
 
 	it("allows selecting a different config", () => {
-		render(<ApiConfigManager {...defaultProps} />)
+		render(<ProfileSwitcher {...defaultProps} />)
 
 		const select = screen.getByRole("combobox")
 		fireEvent.change(select, { target: { value: "Another Config" } })
@@ -203,7 +203,7 @@ describe("ApiConfigManager", () => {
 	})
 
 	it("allows deleting the current config when not the only one", () => {
-		render(<ApiConfigManager {...defaultProps} />)
+		render(<ProfileSwitcher {...defaultProps} />)
 
 		const deleteButton = screen.getByTitle("Delete profile")
 		expect(deleteButton).not.toBeDisabled()
@@ -213,14 +213,14 @@ describe("ApiConfigManager", () => {
 	})
 
 	it("disables delete button when only one config exists", () => {
-		render(<ApiConfigManager {...defaultProps} listApiConfigMeta={[{ id: "default", name: "Default Config" }]} />)
+		render(<ProfileSwitcher {...defaultProps} listApiConfigMeta={[{ id: "default", name: "Default Config" }]} />)
 
 		const deleteButton = screen.getByTitle("Cannot delete the only profile")
 		expect(deleteButton).toHaveAttribute("disabled")
 	})
 
 	it("cancels rename operation when clicking cancel", () => {
-		render(<ApiConfigManager {...defaultProps} />)
+		render(<ProfileSwitcher {...defaultProps} />)
 
 		// Start rename
 		const renameButton = screen.getByTitle("Rename profile")
@@ -242,7 +242,7 @@ describe("ApiConfigManager", () => {
 	})
 
 	it("handles keyboard events in new profile dialog", () => {
-		render(<ApiConfigManager {...defaultProps} />)
+		render(<ProfileSwitcher {...defaultProps} />)
 
 		// Open dialog
 		const addButton = screen.getByTitle("Add profile")
@@ -261,7 +261,7 @@ describe("ApiConfigManager", () => {
 	})
 
 	it("handles keyboard events in rename mode", () => {
-		render(<ApiConfigManager {...defaultProps} />)
+		render(<ProfileSwitcher {...defaultProps} />)
 
 		// Start rename
 		const renameButton = screen.getByTitle("Rename profile")

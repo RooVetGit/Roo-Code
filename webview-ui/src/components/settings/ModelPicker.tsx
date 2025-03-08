@@ -5,7 +5,7 @@ import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem }
 
 import { ApiConfiguration, ModelInfo } from "../../../../src/shared/api"
 
-import { normalizeApiConfiguration } from "./ApiOptions"
+import { normalizeApiConfiguration } from "./ProviderSettings"
 import { ThinkingBudget } from "./ThinkingBudget"
 import { ModelInfoView } from "./ModelInfoView"
 

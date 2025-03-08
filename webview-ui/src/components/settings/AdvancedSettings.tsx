@@ -6,6 +6,7 @@ import { EXPERIMENT_IDS, ExperimentId } from "../../../../src/shared/experiments
 import { TERMINAL_OUTPUT_LIMIT } from "../../../../src/shared/terminal"
 
 import { cn } from "@/lib/utils"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui"
 
 import { SetCachedStateField, SetExperimentEnabled } from "./types"
 import { sliderLabelStyle } from "./styles"
@@ -43,6 +44,12 @@ export const AdvancedSettings = ({
 	className,
 	...props
 }: AdvancedSettingsProps) => {
+	const diffStrategy = experiments[EXPERIMENT_IDS.DIFF_STRATEGY]
+		? "unified"
+		: experiments[EXPERIMENT_IDS.MULTI_SEARCH_AND_REPLACE]
+			? "multiBlock"
+			: "standard"
+
 	return (
 		<div className={cn("flex flex-col gap-2", className)} {...props}>
 			<SectionHeader>
@@ -122,6 +129,7 @@ export const AdvancedSettings = ({
 						checked={diffEnabled}
 						onChange={(e: any) => {
 							setCachedStateField("diffEnabled", e.target.checked)
+
 							if (!e.target.checked) {
 								// Reset both experimental strategies when diffs are disabled.
 								setExperimentEnabled(EXPERIMENT_IDS.DIFF_STRATEGY, false)
@@ -135,19 +143,12 @@ export const AdvancedSettings = ({
 						truncated full-file writes. Works best with the latest Claude 3.7 Sonnet model.
 					</p>
 					{diffEnabled && (
-						<div className="flex flex-col gap-2 mt-3 mb-2 pl-3 border-l-2 border-vscode-button-background">
-							<div className="flex flex-col gap-2">
-								<span className="font-medium">Diff strategy</span>
-								<select
-									value={
-										experiments[EXPERIMENT_IDS.DIFF_STRATEGY]
-											? "unified"
-											: experiments[EXPERIMENT_IDS.MULTI_SEARCH_AND_REPLACE]
-												? "multiBlock"
-												: "standard"
-									}
-									onChange={(e) => {
-										const value = e.target.value
+						<div className="flex flex-col gap-2 border-l-2 border-vscode-button-background pl-3">
+							<div>
+								<div className="font-medium">Diff strategy</div>
+								<Select
+									value={diffStrategy}
+									onValueChange={(value) => {
 										if (value === "standard") {
 											setExperimentEnabled(EXPERIMENT_IDS.DIFF_STRATEGY, false)
 											setExperimentEnabled(EXPERIMENT_IDS.MULTI_SEARCH_AND_REPLACE, false)
@@ -158,48 +159,52 @@ export const AdvancedSettings = ({
 											setExperimentEnabled(EXPERIMENT_IDS.DIFF_STRATEGY, false)
 											setExperimentEnabled(EXPERIMENT_IDS.MULTI_SEARCH_AND_REPLACE, true)
 										}
-									}}
-									className="p-2 rounded w-full bg-vscode-input-background text-vscode-input-foreground border border-vscode-input-border outline-none focus:border-vscode-focusBorder">
-									<option value="standard">Standard (Single block)</option>
-									<option value="multiBlock">Experimental: Multi-block diff</option>
-									<option value="unified">Experimental: Unified diff</option>
-								</select>
+									}}>
+									<SelectTrigger className="w-full mt-1">
+										<SelectValue placeholder="Select" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectGroup>
+											<SelectItem value="standard">Standard (Single block)</SelectItem>
+											<SelectItem value="multiBlock">Experimental: Multi-block diff</SelectItem>
+											<SelectItem value="unified">Experimental: Unified diff</SelectItem>
+										</SelectGroup>
+									</SelectContent>
+								</Select>
+								<p className="text-vscode-descriptionForeground text-sm mt-1">
+									{!experiments[EXPERIMENT_IDS.DIFF_STRATEGY] &&
+										!experiments[EXPERIMENT_IDS.MULTI_SEARCH_AND_REPLACE] &&
+										"Standard diff strategy applies changes to a single code block at a time."}
+									{experiments[EXPERIMENT_IDS.DIFF_STRATEGY] &&
+										"Unified diff strategy takes multiple approaches to applying diffs and chooses the best approach."}
+									{experiments[EXPERIMENT_IDS.MULTI_SEARCH_AND_REPLACE] &&
+										"Multi-block diff strategy allows updating multiple code blocks in a file in one request."}
+								</p>
 							</div>
-
-							{/* Description for selected strategy */}
-							<p className="text-vscode-descriptionForeground text-sm mt-1">
-								{!experiments[EXPERIMENT_IDS.DIFF_STRATEGY] &&
-									!experiments[EXPERIMENT_IDS.MULTI_SEARCH_AND_REPLACE] &&
-									"Standard diff strategy applies changes to a single code block at a time."}
-								{experiments[EXPERIMENT_IDS.DIFF_STRATEGY] &&
-									"Unified diff strategy takes multiple approaches to applying diffs and chooses the best approach."}
-								{experiments[EXPERIMENT_IDS.MULTI_SEARCH_AND_REPLACE] &&
-									"Multi-block diff strategy allows updating multiple code blocks in a file in one request."}
-							</p>
-
-							{/* Match precision slider */}
-							<span className="font-medium mt-3">Match precision</span>
-							<div className="flex items-center gap-2">
-								<input
-									type="range"
-									min="0.8"
-									max="1"
-									step="0.005"
-									value={fuzzyMatchThreshold ?? 1.0}
-									onChange={(e) => {
-										setCachedStateField("fuzzyMatchThreshold", parseFloat(e.target.value))
-									}}
-									className="h-2 focus:outline-0 w-4/5 accent-vscode-button-background"
-								/>
-								<span style={{ ...sliderLabelStyle }}>
-									{Math.round((fuzzyMatchThreshold || 1) * 100)}%
-								</span>
+							<div>
+								<div className="font-medium">Match precision</div>
+								<div className="flex items-center gap-2">
+									<input
+										type="range"
+										min="0.8"
+										max="1"
+										step="0.005"
+										value={fuzzyMatchThreshold ?? 1.0}
+										onChange={(e) =>
+											setCachedStateField("fuzzyMatchThreshold", parseFloat(e.target.value))
+										}
+										className="h-2 focus:outline-0 w-4/5 accent-vscode-button-background"
+									/>
+									<span style={{ ...sliderLabelStyle }}>
+										{Math.round((fuzzyMatchThreshold || 1) * 100)}%
+									</span>
+								</div>
+								<p className="text-vscode-descriptionForeground text-sm mt-1">
+									This slider controls how precisely code sections must match when applying diffs.
+									Lower values allow more flexible matching but increase the risk of incorrect
+									replacements. Use values below 100% with extreme caution.
+								</p>
 							</div>
-							<p className="text-vscode-descriptionForeground text-sm mt-0">
-								This slider controls how precisely code sections must match when applying diffs. Lower
-								values allow more flexible matching but increase the risk of incorrect replacements. Use
-								values below 100% with extreme caution.
-							</p>
 						</div>
 					)}
 				</div>

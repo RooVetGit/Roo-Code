@@ -81,7 +81,7 @@ function SelectItem({ className, children, ...props }: React.ComponentProps<type
 		<SelectPrimitive.Item
 			data-slot="select-item"
 			className={cn(
-				"focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-xs py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2 cursor-pointer",
+				"focus:bg-vscode-list-activeSelectionBackground focus:text-accent-foreground active:opacity-80 [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full items-center gap-2 rounded-xs py-0.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2 cursor-pointer",
 				className,
 			)}
 			{...props}>
@@ -109,7 +109,10 @@ function SelectScrollUpButton({ className, ...props }: React.ComponentProps<type
 	return (
 		<SelectPrimitive.ScrollUpButton
 			data-slot="select-scroll-up-button"
-			className={cn("flex cursor-default items-center justify-center py-1", className)}
+			className={cn(
+				"flex cursor-default items-center justify-center py-1 opacity-25 hover:opacity-100",
+				className,
+			)}
 			{...props}>
 			<ChevronUpIcon className="size-4" />
 		</SelectPrimitive.ScrollUpButton>
@@ -123,7 +126,10 @@ function SelectScrollDownButton({
 	return (
 		<SelectPrimitive.ScrollDownButton
 			data-slot="select-scroll-down-button"
-			className={cn("flex cursor-default items-center justify-center py-1", className)}
+			className={cn(
+				"flex cursor-default items-center justify-center py-1 opacity-25 hover:opacity-100",
+				className,
+			)}
 			{...props}>
 			<ChevronDownIcon className="size-4" />
 		</SelectPrimitive.ScrollDownButton>
