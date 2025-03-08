@@ -56,6 +56,7 @@ export const GLOBAL_STATE_KEYS = [
 	"openRouterModelId",
 	"openRouterModelInfo",
 	"openRouterBaseUrl",
+	"openRouterSpecificProvider",
 	"openRouterUseMiddleOutTransform",
 	"allowedCommands",
 	"soundEnabled",
