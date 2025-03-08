@@ -596,7 +596,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 
 						// Execute the tool call
 						const toolResult = await this.executeToolCall(toolCall)
-						result += toolResult
+						result += JSON.stringify(toolCall)
 					} catch (error) {
 						console.error("Roo Code <Language Model API>: Failed to process tool call:", error)
 						// Continue processing other chunks even if one fails
