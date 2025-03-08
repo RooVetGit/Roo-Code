@@ -1,4 +1,3 @@
-// filepath: e:\Project\Roo-Code\src\api\providers\human-relay.ts
 import { Anthropic } from "@anthropic-ai/sdk"
 import { ApiHandlerOptions, ModelInfo } from "../../shared/api"
 import { ApiHandler, SingleCompletionHandler } from "../index"
@@ -46,7 +45,7 @@ export class HumanRelayHandler implements ApiHandler, SingleCompletionHandler {
 		await vscode.env.clipboard.writeText(promptText)
 
 		// A dialog box pops up to request user action
-		const response = await showHumanRelayDialog(promptText)
+		const response = await showHumanRelayDialog(promptText, this.options)
 
 		if (!response) {
 			// The user canceled the operation
@@ -86,7 +85,7 @@ export class HumanRelayHandler implements ApiHandler, SingleCompletionHandler {
 		await vscode.env.clipboard.writeText(prompt)
 
 		// A dialog box pops up to request user action
-		const response = await showHumanRelayDialog(prompt)
+		const response = await showHumanRelayDialog(prompt, this.options)
 
 		if (!response) {
 			throw new Error("Human relay operation cancelled")
@@ -111,12 +110,50 @@ function getMessageContent(message: Anthropic.Messages.MessageParam): string {
 	}
 	return ""
 }
+
+// Elevate lastAIResponse variable to module level to maintain state between multiple calls
+let lastAIResponse: string | null = null
+let thispromptText: string | null = null
+// Add normalized cache to avoid repeatedly processing the same content
+let normalizedPrompt: string | null = null
+let normalizedLastResponse: string | null = null
+
+/**
+ * Normalize string by removing excess whitespace
+ * @param text Input string
+ * @returns Normalized string
+ */
+function normalizeText(text: string | null): string {
+	if (!text) return ""
+	// Remove all whitespace and convert to lowercase for case-insensitive comparison
+	return text.replace(/\s+/g, " ").trim()
+}
+
+/**
+ * Compare two strings, ignoring whitespace
+ * @param str1 First string
+ * @param str2 Second string
+ * @returns Whether equal
+ */
+function isTextEqual(str1: string | null, str2: string | null): boolean {
+	if (str1 === str2) return true // Fast path: same reference
+	if (!str1 || !str2) return false // One is empty
+
+	return normalizeText(str1) === normalizeText(str2)
+}
+
 /**
  * Displays the human relay dialog and waits for user response.
  * @param promptText The prompt text that needs to be copied.
  * @returns The user's input response or undefined (if canceled).
  */
-async function showHumanRelayDialog(promptText: string): Promise<string | undefined> {
+async function showHumanRelayDialog(promptText: string, options?: ApiHandlerOptions): Promise<string | undefined> {
+	// Save initial clipboard content for comparison
+	const initialClipboardContent = await vscode.env.clipboard.readText()
+	thispromptText = promptText
+	// Pre-normalize prompt text to avoid repeated processing during polling
+	normalizedPrompt = normalizeText(promptText)
+
 	return new Promise<string | undefined>((resolve) => {
 		// Create a unique request ID
 		const requestId = Date.now().toString()
@@ -126,6 +163,11 @@ async function showHumanRelayDialog(promptText: string): Promise<string | undefi
 			"roo-cline.registerHumanRelayCallback",
 			requestId,
 			(response: string | undefined) => {
+				// Clear clipboard monitoring timer
+				if (clipboardInterval) {
+					clearInterval(clipboardInterval)
+					clipboardInterval = null
+				}
 				resolve(response)
 			},
 		)
@@ -135,5 +177,69 @@ async function showHumanRelayDialog(promptText: string): Promise<string | undefi
 			requestId,
 			promptText,
 		})
+
+		// If clipboard monitoring is enabled, start polling for clipboard changes
+		let clipboardInterval: NodeJS.Timeout | null = null
+
+		if (options?.humanRelayMonitorClipboard) {
+			const monitorInterval = Math.min(Math.max(100, options?.humanRelayMonitorInterval ?? 500), 2000)
+
+			clipboardInterval = setInterval(async () => {
+				try {
+					// Check if clipboard has changed
+					const currentClipboardContent = await vscode.env.clipboard.readText()
+
+					if (!currentClipboardContent || !currentClipboardContent.trim()) {
+						return // Skip empty content
+					}
+
+					// Normalize current clipboard content to avoid repeated processing
+					const normalizedClipboard = normalizeText(currentClipboardContent)
+
+					// Validate clipboard content and check for duplicate response
+					if (
+						normalizedClipboard !== normalizeText(initialClipboardContent) &&
+						normalizedClipboard !== normalizedPrompt &&
+						normalizedClipboard !== normalizedLastResponse
+					) {
+						// Update last AI response
+						lastAIResponse = currentClipboardContent
+						normalizedLastResponse = normalizedClipboard
+
+						// Clear timer
+						if (clipboardInterval) {
+							clearInterval(clipboardInterval)
+							clipboardInterval = null
+						}
+
+						// Get current panel
+						const panel = getPanel()
+						if (panel) {
+							// Send close dialog message
+							panel.webview.postMessage({ type: "closeHumanRelayDialog" })
+						}
+
+						// Send response automatically
+						vscode.commands.executeCommand("roo-cline.handleHumanRelayResponse", {
+							requestId,
+							text: currentClipboardContent,
+						})
+					}
+
+					// New: Check if the last AI response content was copied
+					// Use improved comparison method
+					else if (
+						normalizedClipboard === normalizedLastResponse &&
+						normalizedClipboard !== normalizedPrompt
+					) {
+						// Get current panel and send warning message
+						const panel = getPanel()
+						panel?.webview.postMessage({ type: "showDuplicateResponseAlert" })
+					}
+				} catch (error) {
+					console.error("Error monitoring clipboard:", error)
+				}
+			}, monitorInterval)
+		}
 	})
 }

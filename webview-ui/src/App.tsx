@@ -25,8 +25,15 @@ const tabsByMessageAction: Partial<Record<NonNullable<ExtensionMessage["action"]
 	historyButtonClicked: "history",
 }
 const App = () => {
-	const { didHydrateState, showWelcome, shouldShowAnnouncement, telemetrySetting, telemetryKey, machineId } =
-		useExtensionState()
+	const {
+		didHydrateState,
+		showWelcome,
+		shouldShowAnnouncement,
+		telemetrySetting,
+		telemetryKey,
+		machineId,
+		apiConfiguration,
+	} = useExtensionState()
 	const [showAnnouncement, setShowAnnouncement] = useState(false)
 	const [tab, setTab] = useState<Tab>("chat")
 	const settingsRef = useRef<SettingsViewRef>(null)
@@ -139,6 +146,8 @@ const App = () => {
 				onClose={() => setHumanRelayDialogState((prev) => ({ ...prev, isOpen: false }))}
 				onSubmit={handleHumanRelaySubmit}
 				onCancel={handleHumanRelayCancel}
+				monitorClipboard={apiConfiguration?.humanRelayMonitorClipboard}
+				monitorInterval={apiConfiguration?.humanRelayMonitorInterval}
 			/>
 		</>
 	)
