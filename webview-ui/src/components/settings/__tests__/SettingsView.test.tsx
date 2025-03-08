@@ -106,6 +106,8 @@ const mockPostMessage = (state: any) => {
 				shouldShowAnnouncement: false,
 				allowedCommands: [],
 				alwaysAllowExecute: false,
+				ttsEnabled: false,
+				ttsSpeed: 1.0,
 				soundEnabled: false,
 				soundVolume: 0.5,
 				...state,
@@ -132,6 +134,18 @@ describe("SettingsView - Sound Settings", () => {
 		jest.clearAllMocks()
 	})
 
+	it("initializes with tts disabled by default", () => {
+		renderSettingsView()
+
+		const ttsCheckbox = screen.getByRole("checkbox", {
+			name: /Enable text-to-speech/i,
+		})
+		expect(ttsCheckbox).not.toBeChecked()
+
+		// Speed slider should not be visible when tts is disabled
+		expect(screen.queryByRole("slider", { name: /speed/i })).not.toBeInTheDocument()
+	})
+
 	it("initializes with sound disabled by default", () => {
 		renderSettingsView()
 
@@ -142,6 +156,29 @@ describe("SettingsView - Sound Settings", () => {
 
 		// Volume slider should not be visible when sound is disabled
 		expect(screen.queryByRole("slider", { name: /volume/i })).not.toBeInTheDocument()
+	})
+
+	it("toggles tts setting and sends message to VSCode", () => {
+		renderSettingsView()
+
+		const ttsCheckbox = screen.getByRole("checkbox", {
+			name: /Enable text-to-speech/i,
+		})
+
+		// Enable tts
+		fireEvent.click(ttsCheckbox)
+		expect(ttsCheckbox).toBeChecked()
+
+		// Click Save to save settings
+		const saveButton = screen.getByText("Save")
+		fireEvent.click(saveButton)
+
+		expect(vscode.postMessage).toHaveBeenCalledWith(
+			expect.objectContaining({
+				type: "ttsEnabled",
+				bool: true,
+			}),
+		)
 	})
 
 	it("toggles sound setting and sends message to VSCode", () => {
@@ -167,6 +204,21 @@ describe("SettingsView - Sound Settings", () => {
 		)
 	})
 
+	it("shows tts slider when sound is enabled", () => {
+		renderSettingsView()
+
+		// Enable tts
+		const ttsCheckbox = screen.getByRole("checkbox", {
+			name: /Enable text-to-speech/i,
+		})
+		fireEvent.click(ttsCheckbox)
+
+		// Speed slider should be visible
+		const speedSlider = screen.getByRole("slider", { name: /speed/i })
+		expect(speedSlider).toBeInTheDocument()
+		expect(speedSlider).toHaveValue("1.0")
+	})
+
 	it("shows volume slider when sound is enabled", () => {
 		renderSettingsView()
 
@@ -180,6 +232,30 @@ describe("SettingsView - Sound Settings", () => {
 		const volumeSlider = screen.getByRole("slider", { name: /volume/i })
 		expect(volumeSlider).toBeInTheDocument()
 		expect(volumeSlider).toHaveValue("0.5")
+	})
+
+	it("updates speed and sends message to VSCode when slider changes", () => {
+		renderSettingsView()
+
+		// Enable tts
+		const ttsCheckbox = screen.getByRole("checkbox", {
+			name: /Enable text-to-speech/i,
+		})
+		fireEvent.click(ttsCheckbox)
+
+		// Change speed
+		const speedSlider = screen.getByRole("slider", { name: /speed/i })
+		fireEvent.change(speedSlider, { target: { value: "0.75" } })
+
+		// Click Save to save settings
+		const saveButton = screen.getByText("Save")
+		fireEvent.click(saveButton)
+
+		// Verify message sent to VSCode
+		expect(vscode.postMessage).toHaveBeenCalledWith({
+			type: "ttsSpeed",
+			value: 0.75,
+		})
 	})
 
 	it("updates volume and sends message to VSCode when slider changes", () => {

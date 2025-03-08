@@ -52,6 +52,7 @@ export interface WebviewMessage {
 		| "playTts"
 		| "soundEnabled"
 		| "ttsEnabled"
+		| "ttsSpeed"
 		| "soundVolume"
 		| "diffEnabled"
 		| "enableCheckpoints"

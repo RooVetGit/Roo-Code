@@ -8,13 +8,15 @@ import { Section } from "./Section"
 
 type NotificationSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	ttsEnabled?: boolean
+	ttsSpeed?: number
 	soundEnabled?: boolean
 	soundVolume?: number
-	setCachedStateField: SetCachedStateField<"ttsEnabled" | "soundEnabled" | "soundVolume">
+	setCachedStateField: SetCachedStateField<"ttsEnabled" | "ttsSpeed" | "soundEnabled" | "soundVolume">
 }
 
 export const NotificationSettings = ({
 	ttsEnabled,
+	ttsSpeed,
 	soundEnabled,
 	soundVolume,
 	setCachedStateField,
@@ -39,6 +41,31 @@ export const NotificationSettings = ({
 					<p className="text-vscode-descriptionForeground text-sm mt-0">
 						When enabled, Roo will read aloud its responses using text-to-speech.
 					</p>
+					{ttsEnabled && (
+						<div
+							style={{
+								marginLeft: 0,
+								paddingLeft: 10,
+								borderLeft: "2px solid var(--vscode-button-background)",
+							}}>
+							<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+								<input
+									type="range"
+									min="0.1"
+									max="2.0"
+									step="0.01"
+									value={ttsSpeed ?? 1.0}
+									onChange={(e) => setCachedStateField("ttsSpeed", parseFloat(e.target.value))}
+									className="h-2 focus:outline-0 w-4/5 accent-vscode-button-background"
+									aria-label="Speed"
+								/>
+								<span style={{ minWidth: "35px", textAlign: "left" }}>
+									{((ttsSpeed ?? 1.0) * 100).toFixed(0)}%
+								</span>
+							</div>
+							<p className="text-vscode-descriptionForeground text-sm mt-1">Speed</p>
+						</div>
+					)}
 				</div>
 				<div>
 					<VSCodeCheckbox

@@ -60,6 +60,7 @@ export const GLOBAL_STATE_KEYS = [
 	"allowedCommands",
 	"soundEnabled",
 	"ttsEnabled",
+	"ttsSpeed",
 	"soundVolume",
 	"diffEnabled",
 	"enableCheckpoints",

@@ -1,6 +1,7 @@
 import * as vscode from "vscode"
 
 let isTtsEnabled = false
+let speed = 1.0
 let isSpeaking = false
 const utteranceQueue: string[] = []
 
@@ -10,6 +11,14 @@ const utteranceQueue: string[] = []
  */
 export const setTtsEnabled = (enabled: boolean): void => {
 	isTtsEnabled = enabled
+}
+
+/**
+ * Set tts speed
+ * @param speed number
+ */
+export const setTtsSpeed = (newSpeed: number): void => {
+	speed = newSpeed
 }
 
 /**
@@ -27,7 +36,7 @@ const processQueue = async (): Promise<void> => {
 
 		// Wrap say.speak in a promise to handle completion
 		await new Promise<void>((resolve, reject) => {
-			say.speak(nextUtterance, null, null, (err: Error) => {
+			say.speak(nextUtterance, null, speed, (err: Error) => {
 				if (err) {
 					reject(err)
 				} else {

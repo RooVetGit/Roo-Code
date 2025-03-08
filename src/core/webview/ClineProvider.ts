@@ -32,7 +32,7 @@ import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { ShadowCheckpointService } from "../../services/checkpoints/ShadowCheckpointService"
 import { fileExistsAtPath } from "../../utils/fs"
 import { playSound, setSoundEnabled, setSoundVolume } from "../../utils/sound"
-import { playTts, setTtsEnabled } from "../../utils/tts"
+import { playTts, setTtsEnabled, setTtsSpeed } from "../../utils/tts"
 import { singleCompletionHandler } from "../../utils/single-completion-handler"
 import { searchCommits } from "../../utils/git"
 import { getDiffStrategy } from "../diff/DiffStrategy"
@@ -1252,6 +1252,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						setTtsEnabled(ttsEnabled) // Add this line to update the tts utility
 						await this.postStateToWebview()
 						break
+					case "ttsSpeed":
+						const ttsSpeed = message.value ?? 1.0
+						await this.updateGlobalState("ttsSpeed", ttsSpeed)
+						setTtsSpeed(ttsSpeed)
+						await this.postStateToWebview()
+						break
 					case "playTts":
 						if (message.text) {
 							playTts(message.text)
@@ -2196,6 +2202,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			alwaysAllowModeSwitch,
 			soundEnabled,
 			ttsEnabled,
+			ttsSpeed,
 			diffEnabled,
 			enableCheckpoints,
 			checkpointStorage,
@@ -2252,6 +2259,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				.sort((a: HistoryItem, b: HistoryItem) => b.ts - a.ts),
 			soundEnabled: soundEnabled ?? false,
 			ttsEnabled: ttsEnabled ?? false,
+			ttsSpeed: ttsSpeed ?? 1.0,
 			diffEnabled: diffEnabled ?? true,
 			enableCheckpoints: enableCheckpoints ?? true,
 			checkpointStorage: checkpointStorage ?? "task",
@@ -2408,6 +2416,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			allowedCommands: stateValues.allowedCommands,
 			soundEnabled: stateValues.soundEnabled ?? false,
 			ttsEnabled: stateValues.ttsEnabled ?? false,
+			ttsSpeed: stateValues.ttsSpeed ?? 1.0,
 			diffEnabled: stateValues.diffEnabled ?? true,
 			enableCheckpoints: stateValues.enableCheckpoints ?? true,
 			checkpointStorage: stateValues.checkpointStorage ?? "task",
