@@ -7,6 +7,7 @@ const SHELL_PATHS = {
 	POWERSHELL_LEGACY: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
 	CMD: "C:\\Windows\\System32\\cmd.exe",
 	WSL_BASH: "/bin/bash",
+	GIT_BASH: "/usr/bin/bash",
 	// Unix paths
 	MAC_DEFAULT: "/bin/zsh",
 	LINUX_DEFAULT: "/bin/bash",
@@ -28,7 +29,7 @@ type MacTerminalProfiles = Record<string, MacTerminalProfile>
 
 interface WindowsTerminalProfile {
 	path?: string
-	source?: "PowerShell" | "WSL"
+	source?: "PowerShell" | "WSL" | "Git Bash"
 }
 
 type WindowsTerminalProfiles = Record<string, WindowsTerminalProfile>
@@ -114,6 +115,10 @@ function getWindowsShellFromVSCode(): string | null {
 		return SHELL_PATHS.WSL_BASH
 	}
 
+	if (profile?.source === "Git Bash" || defaultProfileName.toLowerCase().includes("git bash")) {
+		return SHELL_PATHS.GIT_BASH
+	}
+
 	// If nothing special detected, we assume cmd
 	return SHELL_PATHS.CMD
 }
@@ -162,66 +167,57 @@ function getShellFromEnv(): string | null {
 	const { env } = process
 
 	if (process.platform === "win32") {
-		// On Windows, COMSPEC typically holds cmd.exe
-		return env.COMSPEC || "C:\\Windows\\System32\\cmd.exe"
+		// On Windows, COMSPEC typically holds cmd.exe.
+		return env.SHELL || env.COMSPEC || "C:\\Windows\\System32\\cmd.exe"
 	}
 
 	if (process.platform === "darwin") {
-		// On macOS/Linux, SHELL is commonly the environment variable
+		// On macOS/Linux, SHELL is commonly the environment variable.
 		return env.SHELL || "/bin/zsh"
 	}
 
 	if (process.platform === "linux") {
-		// On Linux, SHELL is commonly the environment variable
+		// On Linux, SHELL is commonly the environment variable.
 		return env.SHELL || "/bin/bash"
 	}
+
 	return null
+}
+
+function fallbackShell() {
+	// On Windows, if we got here, we have no config, no COMSPEC, and one
+	// very messed up operating system. Use CMD as a last resort.
+	if (process.platform === "win32") {
+		return SHELL_PATHS.CMD
+	}
+
+	// On macOS/Linux, fallback to a POSIX shell - This is the behavior of our
+	// old shell detection method.
+	return SHELL_PATHS.FALLBACK
 }
 
 // -----------------------------------------------------
 // 4) Publicly Exposed Shell Getter
 // -----------------------------------------------------
 
-export function getShell(): string {
+export function getShell() {
 	// 1. Check VS Code config first.
-	if (process.platform === "win32") {
-		// Special logic for Windows
-		const windowsShell = getWindowsShellFromVSCode()
-		if (windowsShell) {
-			return windowsShell
-		}
-	} else if (process.platform === "darwin") {
-		// macOS from VS Code
-		const macShell = getMacShellFromVSCode()
-		if (macShell) {
-			return macShell
-		}
-	} else if (process.platform === "linux") {
-		// Linux from VS Code
-		const linuxShell = getLinuxShellFromVSCode()
-		if (linuxShell) {
-			return linuxShell
-		}
+	// 2. If no shell from VS Code, try userInfo().
+	// 3. If still nothing, try environment variable.
+	// 4. Finally, fall back to a default.
+	let vsCodeShell: string | null = null
+
+	switch (process.platform) {
+		case "win32":
+			vsCodeShell = getWindowsShellFromVSCode()
+			break
+		case "darwin":
+			vsCodeShell = getMacShellFromVSCode()
+			break
+		case "linux":
+			vsCodeShell = getLinuxShellFromVSCode()
+			break
 	}
 
-	// 2. If no shell from VS Code, try userInfo()
-	const userInfoShell = getShellFromUserInfo()
-	if (userInfoShell) {
-		return userInfoShell
-	}
-
-	// 3. If still nothing, try environment variable
-	const envShell = getShellFromEnv()
-	if (envShell) {
-		return envShell
-	}
-
-	// 4. Finally, fall back to a default
-	if (process.platform === "win32") {
-		// On Windows, if we got here, we have no config, no COMSPEC, and one very messed up operating system.
-		// Use CMD as a last resort
-		return SHELL_PATHS.CMD
-	}
-	// On macOS/Linux, fallback to a POSIX shell - This is the behavior of our old shell detection method.
-	return SHELL_PATHS.FALLBACK
+	return vsCodeShell || getShellFromUserInfo() || getShellFromEnv() || fallbackShell()
 }
