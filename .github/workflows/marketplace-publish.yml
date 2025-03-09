@@ -6,6 +6,7 @@ on:
 
 env:
   GIT_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || 'main' }}
+  NODE_VERSION: 20.18.1
 
 jobs:
   publish-extension:
@@ -22,7 +23,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: ${{ env.NODE_VERSION }}
       - run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
