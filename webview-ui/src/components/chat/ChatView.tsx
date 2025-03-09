@@ -61,6 +61,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		setMode,
 		autoApprovalEnabled,
 		alwaysAllowModeSwitch,
+		alwaysAllowSubtasks,
 		customModes,
 		telemetrySetting,
 	} = useExtensionState()
@@ -152,6 +153,10 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 								case "newFileCreated":
 									setPrimaryButtonText("Save")
 									setSecondaryButtonText("Reject")
+									break
+								case "finishTask":
+									setPrimaryButtonText("Complete Subtask and Return")
+									setSecondaryButtonText(undefined)
 									break
 								default:
 									setPrimaryButtonText("Approve")
@@ -646,8 +651,10 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				(alwaysAllowMcp && message.ask === "use_mcp_server" && isMcpToolAlwaysAllowed(message)) ||
 				(alwaysAllowModeSwitch &&
 					message.ask === "tool" &&
-					(JSON.parse(message.text || "{}")?.tool === "switchMode" ||
-						JSON.parse(message.text || "{}")?.tool === "newTask"))
+					JSON.parse(message.text || "{}")?.tool === "switchMode") ||
+				(alwaysAllowSubtasks &&
+					message.ask === "tool" &&
+					["newTask", "finishTask"].includes(JSON.parse(message.text || "{}")?.tool))
 			)
 		},
 		[
@@ -662,6 +669,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			alwaysAllowMcp,
 			isMcpToolAlwaysAllowed,
 			alwaysAllowModeSwitch,
+			alwaysAllowSubtasks,
 		],
 	)
 

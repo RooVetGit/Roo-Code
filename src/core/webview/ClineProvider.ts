@@ -990,6 +990,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("alwaysAllowModeSwitch", message.bool)
 						await this.postStateToWebview()
 						break
+					case "alwaysAllowSubtasks":
+						await this.updateGlobalState("alwaysAllowSubtasks", message.bool)
+						await this.postStateToWebview()
+						break
 					case "askResponse":
 						this.getCurrentCline()?.handleWebviewAskResponse(
 							message.askResponse!,
@@ -999,9 +1003,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						break
 					case "clearTask":
 						// clear task resets the current session and allows for a new task to be started, if this session is a subtask - it allows the parent task to be resumed
-						await this.finishSubTask(
-							`new_task finished with an error!, it was stopped and canceled by the user.`,
-						)
+						await this.finishSubTask(`Task error: It was stopped and canceled by the user.`)
 						await this.postStateToWebview()
 						break
 					case "didShowAnnouncement":
@@ -2200,6 +2202,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			alwaysAllowBrowser,
 			alwaysAllowMcp,
 			alwaysAllowModeSwitch,
+			alwaysAllowSubtasks,
 			soundEnabled,
 			ttsEnabled,
 			ttsSpeed,
@@ -2249,6 +2252,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			alwaysAllowBrowser: alwaysAllowBrowser ?? false,
 			alwaysAllowMcp: alwaysAllowMcp ?? false,
 			alwaysAllowModeSwitch: alwaysAllowModeSwitch ?? false,
+			alwaysAllowSubtasks: alwaysAllowSubtasks ?? false,
 			uriScheme: vscode.env.uriScheme,
 			currentTaskItem: this.getCurrentCline()?.taskId
 				? (taskHistory || []).find((item: HistoryItem) => item.id === this.getCurrentCline()?.taskId)
@@ -2412,6 +2416,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			alwaysAllowBrowser: stateValues.alwaysAllowBrowser ?? false,
 			alwaysAllowMcp: stateValues.alwaysAllowMcp ?? false,
 			alwaysAllowModeSwitch: stateValues.alwaysAllowModeSwitch ?? false,
+			alwaysAllowSubtasks: stateValues.alwaysAllowSubtasks ?? false,
 			taskHistory: stateValues.taskHistory,
 			allowedCommands: stateValues.allowedCommands,
 			soundEnabled: stateValues.soundEnabled ?? false,

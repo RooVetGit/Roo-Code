@@ -109,6 +109,7 @@ export interface ExtensionState {
 	alwaysAllowMcp?: boolean
 	alwaysApproveResubmit?: boolean
 	alwaysAllowModeSwitch?: boolean
+	alwaysAllowSubtasks?: boolean
 	browserToolEnabled?: boolean
 	requestDelaySeconds: number
 	rateLimitSeconds: number // Minimum time between successive requests (0 = disabled)
@@ -156,6 +157,7 @@ export interface ClineMessage {
 	reasoning?: string
 	conversationHistoryIndex?: number
 	checkpoint?: Record<string, unknown>
+	progressStatus?: ToolProgressStatus
 }
 
 export type ClineAsk =
@@ -170,6 +172,7 @@ export type ClineAsk =
 	| "mistake_limit_reached"
 	| "browser_action_launch"
 	| "use_mcp_server"
+	| "finishTask"
 
 export type ClineSay =
 	| "task"
@@ -209,6 +212,7 @@ export interface ClineSayTool {
 		| "searchFiles"
 		| "switchMode"
 		| "newTask"
+		| "finishTask"
 	path?: string
 	diff?: string
 	content?: string
@@ -273,3 +277,8 @@ export interface HumanRelayCancelMessage {
 }
 
 export type ClineApiReqCancelReason = "streaming_failed" | "user_cancelled"
+
+export type ToolProgressStatus = {
+	icon?: string
+	text?: string
+}
