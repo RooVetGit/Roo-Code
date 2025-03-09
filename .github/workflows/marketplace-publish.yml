@@ -29,7 +29,7 @@ jobs:
       - name: Install Dependencies
         run: |
           npm install -g vsce ovsx
-          npm run install:ci
+          npm run install:all
       - name: Create .env file
         run: |
           echo "# PostHog API Keys for telemetry" > .env
