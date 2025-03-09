@@ -1176,6 +1176,7 @@ describe("ClineProvider", () => {
 				diffEnabled: true,
 				fuzzyMatchThreshold: 0.8,
 				experiments: experimentDefault,
+				browserToolEnabled: true,
 			} as any)
 
 			// Mock SYSTEM_PROMPT to verify diffStrategy and diffEnabled are passed
@@ -1206,6 +1207,7 @@ describe("ClineProvider", () => {
 				experimentDefault,
 				true,
 				undefined, // rooIgnoreInstructions
+				true, // browserToolEnabled
 			)
 
 			// Run the test again to verify it's consistent
@@ -1230,6 +1232,7 @@ describe("ClineProvider", () => {
 				fuzzyMatchThreshold: 0.8,
 				experiments: experimentDefault,
 				enableMcpServerCreation: true,
+				browserToolEnabled: true,
 			} as any)
 
 			// Mock SYSTEM_PROMPT to verify diffEnabled is passed as false
@@ -1260,6 +1263,7 @@ describe("ClineProvider", () => {
 				experimentDefault,
 				true,
 				undefined, // rooIgnoreInstructions
+				true, // browserToolEnabled
 			)
 		})
 

@@ -184,7 +184,7 @@ describe("SYSTEM_PROMPT", () => {
 		expect(prompt).toMatchSnapshot()
 	})
 
-	it("should include browser actions when supportsComputerUse is true", async () => {
+	it("should include browser actions when supportsComputerUse is true and browserToolEnabled is true", async () => {
 		const prompt = await SYSTEM_PROMPT(
 			mockContext,
 			"/test/path",
@@ -200,8 +200,59 @@ describe("SYSTEM_PROMPT", () => {
 			undefined, // diffEnabled
 			experiments,
 			true, // enableMcpServerCreation
+			undefined, // rooIgnoreInstructions
+			true, // browserToolEnabled
 		)
 
+		expect(prompt).toContain("browser_action")
+		expect(prompt).toMatchSnapshot()
+	})
+
+	it("should not include browser actions when supportsComputerUse is true but browserToolEnabled is false", async () => {
+		const prompt = await SYSTEM_PROMPT(
+			mockContext,
+			"/test/path",
+			true, // supportsComputerUse
+			undefined, // mcpHub
+			undefined, // diffStrategy
+			"1280x800", // browserViewportSize
+			defaultModeSlug, // mode
+			undefined, // customModePrompts
+			undefined, // customModes,
+			undefined, // globalCustomInstructions
+			undefined, // preferredLanguage
+			undefined, // diffEnabled
+			experiments,
+			true, // enableMcpServerCreation
+			undefined, // rooIgnoreInstructions
+			false, // browserToolEnabled
+		)
+
+		expect(prompt).not.toContain("browser_action")
+		expect(prompt).toMatchSnapshot()
+	})
+
+	it("should not include browser actions when supportsComputerUse is false but browserToolEnabled is true", async () => {
+		const prompt = await SYSTEM_PROMPT(
+			mockContext,
+			"/test/path",
+			false, // supportsComputerUse
+			undefined, // mcpHub
+			undefined, // diffStrategy
+			"1280x800", // browserViewportSize
+			defaultModeSlug, // mode
+			undefined, // customModePrompts
+			undefined, // customModes,
+			undefined, // globalCustomInstructions
+			undefined, // preferredLanguage
+			undefined, // diffEnabled
+			experiments,
+			true, // enableMcpServerCreation
+			undefined, // rooIgnoreInstructions
+			true, // browserToolEnabled
+		)
+
+		expect(prompt).not.toContain("browser_action")
 		expect(prompt).toMatchSnapshot()
 	})
 
