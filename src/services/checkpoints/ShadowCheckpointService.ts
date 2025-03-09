@@ -20,12 +20,12 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 	public readonly checkpointsDir: string
 	public readonly workspaceDir: string
 
+	protected configDir: string
+	protected readonly log: (message: string) => void
+
 	protected _checkpoints: string[] = []
 	protected _baseHash?: string
-
-	protected readonly dotGitDir: string
 	protected git?: SimpleGit
-	protected readonly log: (message: string) => void
 	protected shadowGitConfigWorktree?: string
 
 	public get baseHash() {
@@ -56,8 +56,8 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		this.taskId = taskId
 		this.checkpointsDir = checkpointsDir
 		this.workspaceDir = workspaceDir
+		this.configDir = path.join(this.checkpointsDir, ".git")
 
-		this.dotGitDir = path.join(this.checkpointsDir, ".git")
 		this.log = log
 	}
 
@@ -66,47 +66,16 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			throw new Error("Shadow git repo already initialized")
 		}
 
-		await fs.mkdir(this.checkpointsDir, { recursive: true })
-		const git = simpleGit(this.checkpointsDir)
-		const gitVersion = await git.version()
-		this.log(`[${this.constructor.name}#create] git = ${gitVersion}`)
-
-		let created = false
 		const startTime = Date.now()
-
-		if (await fileExistsAtPath(this.dotGitDir)) {
-			this.log(`[${this.constructor.name}#initShadowGit] shadow git repo already exists at ${this.dotGitDir}`)
-			const worktree = await this.getShadowGitConfigWorktree(git)
-
-			if (worktree !== this.workspaceDir) {
-				throw new Error(
-					`Checkpoints can only be used in the original workspace: ${worktree} !== ${this.workspaceDir}`,
-				)
-			}
-
-			await this.writeExcludeFile()
-			this.baseHash = await git.revparse(["HEAD"])
-		} else {
-			this.log(`[${this.constructor.name}#initShadowGit] creating shadow git repo at ${this.checkpointsDir}`)
-			await git.init()
-			await git.addConfig("core.worktree", this.workspaceDir) // Sets the working tree to the current workspace.
-			await git.addConfig("commit.gpgSign", "false") // Disable commit signing for shadow repo.
-			await git.addConfig("user.name", "Roo Code")
-			await git.addConfig("user.email", "noreply@example.com")
-			await this.writeExcludeFile()
-			await this.stageAll(git)
-			const { commit } = await git.commit("initial commit", { "--allow-empty": null })
-			this.baseHash = commit
-			created = true
-		}
-
+		const { git, baseHash, created } = await this.initializeShadowRepo()
 		const duration = Date.now() - startTime
 
 		this.log(
-			`[${this.constructor.name}#initShadowGit] initialized shadow repo with base commit ${this.baseHash} in ${duration}ms`,
+			`[${this.constructor.name}#initShadowGit] initialized shadow repo with base commit ${baseHash} in ${duration}ms`,
 		)
 
 		this.git = git
+		this.baseHash = baseHash
 
 		await onInit?.()
 
@@ -121,22 +90,68 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		return { created, duration }
 	}
 
+	protected isShadowRepoAvailable() {
+		return fileExistsAtPath(this.configDir)
+	}
+
+	protected async initializeShadowRepo() {
+		await fs.mkdir(this.checkpointsDir, { recursive: true })
+		const git = simpleGit(this.checkpointsDir)
+		const gitVersion = await git.version()
+		this.log(`[${this.constructor.name}#initializeShadowRepo] git = ${gitVersion}`)
+		const exists = await this.isShadowRepoAvailable()
+		console.log(`[${this.constructor.name}#initializeShadowRepo] exists = ${exists} [${this.configDir}]`)
+		const baseHash = exists ? await this.checkShadowRepo(git) : await this.createShadowRepo(git)
+		return { git, baseHash, created: !exists }
+	}
+
+	protected async checkShadowRepo(git: SimpleGit) {
+		this.log(`[${this.constructor.name}#checkShadowRepo] checking existing shadow repo at ${this.configDir}`)
+		const worktree = await this.getShadowGitConfigWorktree(git)
+
+		if (worktree !== this.workspaceDir) {
+			throw new Error(
+				`Checkpoints can only be used in the original workspace: ${worktree} !== ${this.workspaceDir}`,
+			)
+		}
+
+		await this.writeExcludeFile()
+		return await git.revparse(["HEAD"])
+	}
+
+	protected async createShadowRepo(git: SimpleGit) {
+		this.log(`[${this.constructor.name}#createShadowRepo] creating new shadow repo at ${this.checkpointsDir}`)
+		await git.init()
+		await git.addConfig("core.worktree", this.workspaceDir) // Sets the working tree to the current workspace.
+		await git.addConfig("commit.gpgSign", "false") // Disable commit signing for shadow repo.
+		await git.addConfig("user.name", "Roo Code")
+		await git.addConfig("user.email", "noreply@example.com")
+		await this.writeExcludeFile()
+		await this.stageAll(git)
+		const result = await git.commit("initial commit", { "--allow-empty": null })
+		return result.commit
+	}
+
 	// Add basic excludes directly in git config, while respecting any
 	// .gitignore in the workspace.
 	// .git/info/exclude is local to the shadow git repo, so it's not
 	// shared with the main repo - and won't conflict with user's
 	// .gitignore.
 	protected async writeExcludeFile() {
-		await fs.mkdir(path.join(this.dotGitDir, "info"), { recursive: true })
+		await fs.mkdir(path.join(this.configDir, "info"), { recursive: true })
 		const patterns = await getExcludePatterns(this.workspaceDir)
-		await fs.writeFile(path.join(this.dotGitDir, "info", "exclude"), patterns.join("\n"))
+		await fs.writeFile(path.join(this.configDir, "info", "exclude"), patterns.join("\n"))
 	}
 
-	private async stageAll(git: SimpleGit) {
+	protected stagePath(git: SimpleGit, path: string) {
+		return git.add(path)
+	}
+
+	protected async stageAll(git: SimpleGit) {
 		await this.renameNestedGitRepos(true)
 
 		try {
-			await git.add(".")
+			await this.stagePath(git, ".")
 		} catch (error) {
 			this.log(
 				`[${this.constructor.name}#stageAll] failed to add files to git: ${error instanceof Error ? error.message : String(error)}`,
@@ -149,7 +164,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 	// Since we use git to track checkpoints, we need to temporarily disable
 	// nested git repos to work around git's requirement of using submodules for
 	// nested repos.
-	private async renameNestedGitRepos(disable: boolean) {
+	protected async renameNestedGitRepos(disable: boolean) {
 		// Find all .git directories that are not at the root level.
 		const gitPaths = await globby("**/.git" + (disable ? "" : GIT_DISABLED_SUFFIX), {
 			cwd: this.workspaceDir,
@@ -186,7 +201,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		}
 	}
 
-	private async getShadowGitConfigWorktree(git: SimpleGit) {
+	protected async getShadowGitConfigWorktree(git: SimpleGit) {
 		if (!this.shadowGitConfigWorktree) {
 			try {
 				this.shadowGitConfigWorktree = (await git.getConfig("core.worktree")).value || undefined
