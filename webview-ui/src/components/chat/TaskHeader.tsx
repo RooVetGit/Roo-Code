@@ -14,7 +14,7 @@ import { HistoryItem } from "../../../../src/shared/HistoryItem"
 
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import Thumbnails from "../common/Thumbnails"
-import { normalizeApiConfiguration } from "../settings/ApiOptions"
+import { normalizeApiConfiguration } from "../settings/ProviderSettings"
 import { DeleteTaskDialog } from "../history/DeleteTaskDialog"
 
 interface TaskHeaderProps {

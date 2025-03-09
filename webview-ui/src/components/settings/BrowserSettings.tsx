@@ -1,7 +1,8 @@
 import { HTMLAttributes } from "react"
 import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
-import { Dropdown, type DropdownOption } from "vscrui"
 import { SquareMousePointer } from "lucide-react"
+
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui"
 
 import { SetCachedStateField } from "./types"
 import { sliderLabelStyle } from "./styles"
@@ -43,53 +44,44 @@ export const BrowserSettings = ({
 						computer use.
 					</p>
 					{browserToolEnabled && (
-						<div
-							style={{
-								marginLeft: 0,
-								paddingLeft: 10,
-								borderLeft: "2px solid var(--vscode-button-background)",
-							}}>
+						<div className="flex flex-col gap-2 border-l-2 border-vscode-button-background pl-3">
 							<div>
-								<label style={{ fontWeight: "500", display: "block", marginBottom: 5 }}>
-									Viewport size
-								</label>
-								<div className="dropdown-container">
-									<Dropdown
-										value={browserViewportSize}
-										onChange={(value: unknown) => {
-											setCachedStateField("browserViewportSize", (value as DropdownOption).value)
-										}}
-										style={{ width: "100%" }}
-										options={[
-											{ value: "1280x800", label: "Large Desktop (1280x800)" },
-											{ value: "900x600", label: "Small Desktop (900x600)" },
-											{ value: "768x1024", label: "Tablet (768x1024)" },
-											{ value: "360x640", label: "Mobile (360x640)" },
-										]}
-									/>
-								</div>
-								<p className="text-vscode-descriptionForeground text-sm mt-0">
+								<label className="font-medium">Viewport size</label>
+								<Select
+									value={browserViewportSize}
+									onValueChange={(value) => setCachedStateField("browserViewportSize", value)}>
+									<SelectTrigger className="w-full mt-1">
+										<SelectValue placeholder="Select" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectGroup>
+											<SelectItem value="1280x800">Large Desktop (1280x800)</SelectItem>
+											<SelectItem value="900x600">Small Desktop (900x600)</SelectItem>
+											<SelectItem value="768x1024">Tablet (768x1024)</SelectItem>
+											<SelectItem value="360x640">Mobile (360x640)</SelectItem>
+										</SelectGroup>
+									</SelectContent>
+								</Select>
+								<p className="text-vscode-descriptionForeground text-sm mt-1">
 									Select the viewport size for browser interactions. This affects how websites are
 									displayed and interacted with.
 								</p>
 							</div>
 							<div>
-								<div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-									<span className="font-medium">Screenshot quality</span>
-									<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-										<input
-											type="range"
-											min="1"
-											max="100"
-											step="1"
-											value={screenshotQuality ?? 75}
-											className="h-2 focus:outline-0 w-4/5 accent-vscode-button-background"
-											onChange={(e) =>
-												setCachedStateField("screenshotQuality", parseInt(e.target.value))
-											}
-										/>
-										<span style={{ ...sliderLabelStyle }}>{screenshotQuality ?? 75}%</span>
-									</div>
+								<span className="font-medium">Screenshot quality</span>
+								<div className="flex items-center gap-2">
+									<input
+										type="range"
+										min="1"
+										max="100"
+										step="1"
+										value={screenshotQuality ?? 75}
+										onChange={(e) =>
+											setCachedStateField("screenshotQuality", parseInt(e.target.value))
+										}
+										className="h-2 focus:outline-0 w-4/5 accent-vscode-button-background"
+									/>
+									<span style={{ ...sliderLabelStyle }}>{screenshotQuality ?? 75}%</span>
 								</div>
 								<p className="text-vscode-descriptionForeground text-sm mt-0">
 									Adjust the WebP quality of browser screenshots. Higher values provide clearer

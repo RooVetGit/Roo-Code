@@ -1,9 +1,9 @@
-// npx jest src/components/settings/__tests__/ApiOptions.test.ts
+// npx jest src/components/settings/__tests__/ProviderSettings.test.tsx
 
 import { render, screen } from "@testing-library/react"
 
 import { ExtensionStateContextProvider } from "../../../context/ExtensionStateContext"
-import ApiOptions from "../ApiOptions"
+import { ProviderSettings } from "../ProviderSettings"
 
 // Mock VSCode components
 jest.mock("@vscode/webview-ui-toolkit/react", () => ({
@@ -89,7 +89,7 @@ describe("ApiOptions", () => {
 	const renderApiOptions = (props = {}) => {
 		render(
 			<ExtensionStateContextProvider>
-				<ApiOptions
+				<ProviderSettings
 					errorMessage={undefined}
 					setErrorMessage={() => {}}
 					uriScheme={undefined}

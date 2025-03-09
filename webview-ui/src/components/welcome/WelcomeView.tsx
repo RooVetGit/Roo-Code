@@ -1,9 +1,10 @@
-import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 import { useCallback, useState } from "react"
+import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
+
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import { validateApiConfiguration } from "../../utils/validate"
 import { vscode } from "../../utils/vscode"
-import ApiOptions from "../settings/ApiOptions"
+import { ProviderSettings } from "../settings/ProviderSettings"
 
 const WelcomeView = () => {
 	const { apiConfiguration, currentApiConfigName, setApiConfiguration, uriScheme } = useExtensionState()
@@ -35,7 +36,7 @@ const WelcomeView = () => {
 			<b>To get started, this extension needs an API provider.</b>
 
 			<div className="mt-3">
-				<ApiOptions
+				<ProviderSettings
 					fromWelcomeView
 					apiConfiguration={apiConfiguration || {}}
 					uriScheme={uriScheme}

@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { useDebounce, useEvent } from "react-use"
 import { Checkbox, Dropdown, type DropdownOption } from "vscrui"
 import { VSCodeLink, VSCodeRadio, VSCodeRadioGroup, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
@@ -74,7 +74,7 @@ const providers = [
 	{ value: "human-relay", label: "Human Relay" },
 ]
 
-interface ApiOptionsProps {
+interface ProviderSettingsProps {
 	uriScheme: string | undefined
 	apiConfiguration: ApiConfiguration
 	setApiConfigurationField: <K extends keyof ApiConfiguration>(field: K, value: ApiConfiguration[K]) => void
@@ -83,14 +83,14 @@ interface ApiOptionsProps {
 	setErrorMessage: React.Dispatch<React.SetStateAction<string | undefined>>
 }
 
-const ApiOptions = ({
+export const ProviderSettings = ({
 	uriScheme,
 	apiConfiguration,
 	setApiConfigurationField,
 	fromWelcomeView,
 	errorMessage,
 	setErrorMessage,
-}: ApiOptionsProps) => {
+}: ProviderSettingsProps) => {
 	const [ollamaModels, setOllamaModels] = useState<string[]>([])
 	const [lmStudioModels, setLmStudioModels] = useState<string[]>([])
 	const [vsCodeLmModels, setVsCodeLmModels] = useState<vscodemodels.LanguageModelChatSelector[]>([])
@@ -1397,5 +1397,3 @@ export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
 			return getProviderData(anthropicModels, anthropicDefaultModelId)
 	}
 }
-
-export default memo(ApiOptions)
