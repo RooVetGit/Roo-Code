@@ -73,6 +73,9 @@ export interface ApiHandlerOptions {
 	modelTemperature?: number | null
 	modelMaxTokens?: number
 	modelMaxThinkingTokens?: number
+	// Human relay specific options
+	humanRelayMonitorClipboard?: boolean // Whether to monitor clipboard for automatic content sending
+	humanRelayMonitorInterval?: number // Monitoring interval time (milliseconds)
 }
 
 export type ApiConfiguration = ApiHandlerOptions & {
@@ -126,6 +129,8 @@ export const API_CONFIG_KEYS: GlobalStateKey[] = [
 	"modelTemperature",
 	"modelMaxTokens",
 	"modelMaxThinkingTokens",
+	"humanRelayMonitorClipboard",
+	"humanRelayMonitorInterval",
 ]
 
 // Models

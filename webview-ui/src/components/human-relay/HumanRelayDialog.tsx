@@ -3,7 +3,8 @@ import { Button } from "../ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog"
 import { Textarea } from "../ui/textarea"
 import { useClipboard } from "../ui/hooks"
-import { Check, Copy, X } from "lucide-react"
+import { AlertTriangle, Check, Copy, X } from "lucide-react"
+import { ProgressIndicator } from "../chat/ChatRow"
 
 interface HumanRelayDialogProps {
 	isOpen: boolean
@@ -12,6 +13,8 @@ interface HumanRelayDialogProps {
 	promptText: string
 	onSubmit: (requestId: string, text: string) => void
 	onCancel: (requestId: string) => void
+	monitorClipboard?: boolean
+	monitorInterval?: number
 }
 
 /**
@@ -25,10 +28,13 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 	promptText,
 	onSubmit,
 	onCancel,
+	monitorClipboard = false,
+	monitorInterval = 500,
 }) => {
 	const [response, setResponse] = React.useState("")
 	const { copy } = useClipboard()
 	const [isCopyClicked, setIsCopyClicked] = React.useState(false)
+	const [showDuplicateWarning, setShowDuplicateWarning] = React.useState(false)
 
 	// Listen to isOpen changes, clear the input box when the dialog box is opened
 	React.useEffect(() => {
@@ -36,7 +42,29 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 			setResponse("")
 			setIsCopyClicked(false)
 		}
+		setShowDuplicateWarning(false)
 	}, [isOpen])
+
+	React.useEffect(() => {
+		// Handle messages from extension
+		const messageHandler = (event: MessageEvent) => {
+			const message = event.data
+			if (message.type === "closeHumanRelayDialog") {
+				onClose()
+			}
+			// Handle duplicate response warning
+			else if (message.type === "showDuplicateResponseAlert") {
+				// Show warning
+				setShowDuplicateWarning(true)
+			}
+		}
+
+		window.addEventListener("message", messageHandler)
+
+		return () => {
+			window.removeEventListener("message", messageHandler)
+		}
+	}, [onClose])
 
 	// Copy to clipboard and show a success message
 	const handleCopy = () => {
@@ -85,6 +113,24 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 					</div>
 
 					{isCopyClicked && <div className="text-sm text-emerald-500 font-medium">Copied to clipboard</div>}
+					{monitorClipboard && (
+						<>
+							{showDuplicateWarning && (
+								<div className="flex items-center gap-2 text-sm p-2 rounded-md bg-amber-100 dark:bg-amber-900 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300">
+									<AlertTriangle className="h-4 w-4 text-amber-500" />
+									<span className="font-medium">
+										It seems you copied the AI's response from the last interaction instead of the
+										current task. Please check your interaction with the web AI.
+									</span>
+								</div>
+							)}
+
+							<div className="flex items-center gap-2 text-sm text-vscode-descriptionForeground">
+								<ProgressIndicator />
+								<span>Monitoring clipboard for changes, interval: {monitorInterval}ms</span>
+							</div>
+						</>
+					)}
 
 					<div>
 						<div className="mb-2 font-medium">Please enter the AI's response:</div>
