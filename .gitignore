@@ -5,6 +5,7 @@ node_modules
 coverage/
 
 .DS_Store
+.history/
 
 # Builds
 bin/
