@@ -50,7 +50,7 @@ const processQueue = async (): Promise<void> => {
 		await processQueue()
 	} catch (error: any) {
 		isSpeaking = false
-		vscode.window.showErrorMessage(error.message)
+		//vscode.window.showErrorMessage(error.message)
 		// Try to continue with next item despite error
 		await processQueue()
 	}
@@ -70,6 +70,6 @@ export const playTts = async (message: string): Promise<void> => {
 		utteranceQueue.push(message)
 		await processQueue()
 	} catch (error: any) {
-		vscode.window.showErrorMessage(error.message)
+		//vscode.window.showErrorMessage(error.message)
 	}
 }
