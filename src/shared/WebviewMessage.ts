@@ -99,6 +99,8 @@ export interface WebviewMessage {
 		| "maxOpenTabsContext"
 		| "humanRelayResponse"
 		| "humanRelayCancel"
+		| "closeHumanRelayDialog"
+		| "showDuplicateResponseAlert"
 		| "browserToolEnabled"
 		| "telemetrySetting"
 		| "showRooIgnoredFiles"
