@@ -1,9 +1,9 @@
 {
-	"name": "roo-cline",
-	"displayName": "Roo Code (prev. Roo Cline)",
+	"name": "Kilo-Code",
+	"displayName": "Kilo Code",
 	"description": "A whole dev team of AI agents in your editor.",
-	"publisher": "RooVeterinaryInc",
-	"version": "3.8.4",
+	"publisher": "kilocode",
+	"version": "4.0.1",
 	"icon": "assets/icons/rocket.png",
 	"galleryBanner": {
 		"color": "#617A91",
@@ -13,13 +13,13 @@
 		"vscode": "^1.84.0"
 	},
 	"author": {
-		"name": "Roo Vet"
+		"name": "Kilo Code"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/RooVetGit/Roo-Code"
+		"url": "https://github.com/Kilo-Org/cline"
 	},
-	"homepage": "https://github.com/RooVetGit/Roo-Code",
+	"homepage": "https://kilocode.ai",
 	"categories": [
 		"AI",
 		"Chat",
@@ -192,9 +192,9 @@
 			]
 		},
 		"configuration": {
-			"title": "Roo Code",
+			"title": "Kilo Code",
 			"properties": {
-				"roo-cline.allowedCommands": {
+				"kiloCode.allowedCommands": {
 					"type": "array",
 					"items": {
 						"type": "string"
@@ -209,7 +209,7 @@
 					],
 					"description": "Commands that can be auto-executed when 'Always approve execute operations' is enabled"
 				},
-				"roo-cline.vsCodeLmModelSelector": {
+				"kiloCode.vsCodeLmModelSelector": {
 					"type": "object",
 					"properties": {
 						"vendor": {
