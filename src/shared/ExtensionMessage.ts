@@ -131,6 +131,7 @@ export interface ExtensionState {
 	terminalOutputLimit?: number
 	mcpEnabled: boolean
 	enableMcpServerCreation: boolean
+	enableCustomModeCreation?: boolean
 	mode: Mode
 	modeApiConfigs?: Record<Mode, string>
 	enhancementApiConfigId?: string
@@ -157,7 +158,6 @@ export interface ClineMessage {
 	reasoning?: string
 	conversationHistoryIndex?: number
 	checkpoint?: Record<string, unknown>
-	progressStatus?: ToolProgressStatus
 }
 
 export type ClineAsk =
@@ -277,8 +277,3 @@ export interface HumanRelayCancelMessage {
 }
 
 export type ClineApiReqCancelReason = "streaming_failed" | "user_cancelled"
-
-export type ToolProgressStatus = {
-	icon?: string
-	text?: string
-}

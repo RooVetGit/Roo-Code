@@ -1299,7 +1299,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				modeShortcutText={modeShortcutText}
 			/>
 
-			<div id="chat-view-portal" />
+			<div id="roo-portal" />
 		</div>
 	)
 }
