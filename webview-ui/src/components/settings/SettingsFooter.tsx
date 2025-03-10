@@ -22,7 +22,7 @@ export const SettingsFooter = ({
 	<div className={cn("text-vscode-descriptionForeground p-5", className)} {...props}>
 		<p style={{ wordWrap: "break-word", margin: 0, padding: 0 }}>
 			If you have any questions or feedback, feel free to open an issue at{" "}
-			<VSCodeLink href="https://github.com/RooVetGit/Roo-Code" style={{ display: "inline" }}>
+			<VSCodeLink href="https://github.com/Kilo-Org/kilocode" style={{ display: "inline" }}>
 				github.com/RooVetGit/Roo-Code
 			</VSCodeLink>{" "}
 			or join{" "}
@@ -51,7 +51,7 @@ export const SettingsFooter = ({
 					Help improve Roo Code by sending anonymous usage data and error reports. No code, prompts, or
 					personal information is ever sent. See our{" "}
 					<VSCodeLink
-						href="https://github.com/RooVetGit/Roo-Code/blob/main/PRIVACY.md"
+						href="https://github.com/Kilo-Org/kilocode/blob/main/PRIVACY.md"
 						style={{ fontSize: "inherit" }}>
 						privacy policy
 					</VSCodeLink>{" "}
