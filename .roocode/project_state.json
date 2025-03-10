@@ -1,0 +1,37 @@
+{
+	"taskHistory": [
+		{
+			"id": "eaece8cc-d874-4e46-9330-52d772f31492",
+			"ts": 1740673473813,
+			"task": "@problems",
+			"tokensIn": 3,
+			"tokensOut": 160,
+			"cacheWrites": 15791,
+			"cacheReads": 0,
+			"totalCost": 0.06162525,
+			"size": 25252
+		},
+		{
+			"id": "187700e7-7712-4d52-a24b-f4882ca71ef9",
+			"ts": 1739987273094,
+			"task": "test2",
+			"tokensIn": 7,
+			"tokensOut": 824,
+			"cacheWrites": 144614,
+			"cacheReads": 46585,
+			"totalCost": 0.568659,
+			"size": 542391
+		},
+		{
+			"id": "6a716972-c33f-444f-a8f2-613f03410ace",
+			"ts": 1739987220103,
+			"task": "test",
+			"tokensIn": 3,
+			"tokensOut": 384,
+			"cacheWrites": 16041,
+			"cacheReads": 0,
+			"totalCost": 0.06592275,
+			"size": 15275
+		}
+	]
+}
