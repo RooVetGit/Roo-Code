@@ -1,11 +1,11 @@
 import * as vscode from "vscode"
 
-import { ClineAPI } from "../../src/exports/cline"
+import { RooCodeAPI } from "../../src/exports/roo-code"
 
 import { waitFor } from "./utils"
 
 export async function run() {
-	const extension = vscode.extensions.getExtension<ClineAPI>("RooVeterinaryInc.roo-cline")
+	const extension = vscode.extensions.getExtension<RooCodeAPI>("RooVeterinaryInc.roo-cline")
 
 	if (!extension) {
 		throw new Error("Extension not found.")

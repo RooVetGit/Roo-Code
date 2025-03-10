@@ -12,7 +12,7 @@ try {
 }
 
 import { ClineProvider } from "./core/webview/ClineProvider"
-import { createClineAPI } from "./exports"
+import { createRooCodeAPI } from "./exports"
 import "./utils/path" // Necessary to have access to String.prototype.toPosix.
 import { CodeActionProvider } from "./core/CodeActionProvider"
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
@@ -143,7 +143,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	registerCodeActions(context)
 
-	return createClineAPI(outputChannel, sidebarProvider)
+	return createRooCodeAPI(outputChannel, sidebarProvider)
 }
 
 // This method is called when your extension is deactivated.
