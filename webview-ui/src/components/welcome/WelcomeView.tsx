@@ -7,6 +7,7 @@ import { vscode } from "../../utils/vscode"
 import ApiOptions from "../settings/ApiOptions"
 import { Tab, TabContent } from "../common/Tab"
 import { Alert } from "../common/Alert"
+import { Trans } from "react-i18next"
 
 const WelcomeView = () => {
 	const { apiConfiguration, currentApiConfigName, setApiConfiguration, uriScheme } = useExtensionState()
@@ -28,7 +29,11 @@ const WelcomeView = () => {
 	return (
 		<Tab>
 			<TabContent className="flex flex-col gap-5">
-				<h2 className="m-0 p-0">Hi, I'm Roo!</h2>
+				<h2>
+					<Trans className="m-0 p-0" i18nKey="welcome.greeting_roo">
+						Hi, I'm Roo!
+					</Trans>
+				</h2>
 				<div>
 					I can do all kinds of tasks thanks to the latest breakthroughs in agentic coding capabilities and
 					access to tools that let me create & edit files, explore complex projects, use the browser, and
