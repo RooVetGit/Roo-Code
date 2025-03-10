@@ -53,6 +53,7 @@ export type ClineAsk =
 	| "mistake_limit_reached"
 	| "browser_action_launch"
 	| "use_mcp_server"
+	| "finishTask"
 
 export type ClineSay =
 	| "task"
