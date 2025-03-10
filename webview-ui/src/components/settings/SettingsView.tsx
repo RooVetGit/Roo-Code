@@ -2,10 +2,9 @@ import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo,
 import { Button as VSCodeButton } from "vscrui"
 import { CheckCheck, SquareMousePointer, Webhook, GitBranch, Bell, Cog, FlaskConical } from "lucide-react"
 
-import { ApiConfiguration } from "../../../../src/shared/api"
 import { ExperimentId } from "../../../../src/shared/experiments"
-import { TERMINAL_OUTPUT_LIMIT } from "../../../../src/shared/terminal"
 import { TelemetrySetting } from "../../../../src/shared/TelemetrySetting"
+import { ApiConfiguration } from "../../../../src/shared/api"
 
 import { vscode } from "@/utils/vscode"
 import { ExtensionStateContextType, useExtensionState } from "@/context/ExtensionStateContext"
@@ -82,7 +81,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 		soundEnabled,
 		soundVolume,
 		telemetrySetting,
-		terminalOutputLimit,
+		terminalOutputLineLimit,
 		writeDelayMs,
 		showRooIgnoredFiles,
 	} = cachedState
@@ -176,7 +175,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 			vscode.postMessage({ type: "fuzzyMatchThreshold", value: fuzzyMatchThreshold ?? 1.0 })
 			vscode.postMessage({ type: "writeDelayMs", value: writeDelayMs })
 			vscode.postMessage({ type: "screenshotQuality", value: screenshotQuality ?? 75 })
-			vscode.postMessage({ type: "terminalOutputLimit", value: terminalOutputLimit ?? TERMINAL_OUTPUT_LIMIT })
+			vscode.postMessage({ type: "terminalOutputLineLimit", value: terminalOutputLineLimit ?? 500 })
 			vscode.postMessage({ type: "mcpEnabled", bool: mcpEnabled })
 			vscode.postMessage({ type: "alwaysApproveResubmit", bool: alwaysApproveResubmit })
 			vscode.postMessage({ type: "requestDelaySeconds", value: requestDelaySeconds })
@@ -390,7 +389,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 				<div ref={advancedRef}>
 					<AdvancedSettings
 						rateLimitSeconds={rateLimitSeconds}
-						terminalOutputLimit={terminalOutputLimit}
+						terminalOutputLineLimit={terminalOutputLineLimit}
 						maxOpenTabsContext={maxOpenTabsContext}
 						diffEnabled={diffEnabled}
 						fuzzyMatchThreshold={fuzzyMatchThreshold}
