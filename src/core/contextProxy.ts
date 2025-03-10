@@ -2,16 +2,26 @@ import * as vscode from "vscode"
 import { logger } from "../utils/logging"
 import { GLOBAL_STATE_KEYS, SECRET_KEYS } from "../shared/globalState"
 
+// Keys that should be stored per-window rather than globally
+export const WINDOW_SPECIFIC_KEYS = ["mode"] as const
+export type WindowSpecificKey = (typeof WINDOW_SPECIFIC_KEYS)[number]
+
 export class ContextProxy {
 	private readonly originalContext: vscode.ExtensionContext
 	private stateCache: Map<string, any>
 	private secretCache: Map<string, string | undefined>
+	private windowId: string
+	private readonly instanceCreationTime: Date = new Date()
 
 	constructor(context: vscode.ExtensionContext) {
 		// Initialize properties first
 		this.originalContext = context
 		this.stateCache = new Map()
 		this.secretCache = new Map()
+		
+		// Generate a unique ID for this window instance
+		this.windowId = this.ensureUniqueWindowId()
+		logger.debug(`ContextProxy created with windowId: ${this.windowId}`)
 
 		// Initialize state cache with all defined global state keys
 		this.initializeStateCache()
@@ -22,12 +32,125 @@ export class ContextProxy {
 		logger.debug("ContextProxy created")
 	}
 
+	/**
+	 * Ensures we have a unique window ID, with fallback mechanisms if primary generation fails
+	 * @returns A string ID unique to this VS Code window
+	 */
+	private ensureUniqueWindowId(): string {
+		// Try to get a stable ID first
+		let id = this.generateWindowId();
+		
+		// If all else fails, use a purely random ID as ultimate fallback
+		// This will not be stable across restarts but ensures uniqueness
+		if (!id) {
+			id = `random_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+			logger.warn("Failed to generate stable window ID, using random ID instead");
+		}
+		
+		return id;
+	}
+
+	/**
+	 * Generates a unique identifier for the current VS Code window
+	 * This is used to namespace certain global state values to prevent
+	 * conflicts when using multiple VS Code windows.
+	 *
+	 * The ID generation uses multiple sources to ensure uniqueness even in
+	 * environments where workspace folders might be identical (like DevContainers).
+	 *
+	 * @returns A string ID unique to this VS Code window
+	 */
+	private generateWindowId(): string {
+		try {
+			// Get all available identifying information
+			const folders = vscode.workspace.workspaceFolders || [];
+			const workspaceName = vscode.workspace.name || "unknown";
+			const folderPaths = folders.map(folder => folder.uri.toString()).join('|');
+			
+			// Generate a stable, pseudorandom ID based on the workspace information
+			// This will be consistent for the same workspace but different across workspaces
+			const baseId = `${workspaceName}|${folderPaths}`;
+			
+			// Add machine-specific information (will differ between host and containers)
+			// env.machineId is stable across VS Code sessions on the same machine
+			const machineSpecificId = vscode.env.machineId || "";
+			
+			// Add a session component that distinguishes multiple windows with the same workspace
+			// Creates a stable but reasonably unique hash
+			const sessionHash = this.createSessionHash(baseId);
+			
+			// Combine all components
+			return `${baseId}|${machineSpecificId}|${sessionHash}`;
+		} catch (error) {
+			logger.error("Error generating window ID:", error);
+			return ""; // Empty string triggers the fallback in ensureUniqueWindowId
+		}
+	}
+
+	/**
+	 * Creates a stable hash from input string and window-specific properties
+	 * that will be different for different VS Code windows even with identical projects
+	 */
+	private createSessionHash(input: string): string {
+		try {
+			// Use a combination of:
+			// 1. The extension instance creation time
+			const timestamp = this.instanceCreationTime.getTime();
+			
+			// 2. VS Code window-specific info we can derive
+			// Using vscode.env.sessionId which changes on each VS Code window startup
+			const sessionInfo = vscode.env.sessionId || "";
+			
+			// 3. Calculate a simple hash
+			const hashStr = `${input}|${sessionInfo}|${timestamp}`;
+			let hash = 0;
+			for (let i = 0; i < hashStr.length; i++) {
+				const char = hashStr.charCodeAt(i);
+				hash = ((hash << 5) - hash) + char;
+				hash = hash & hash; // Convert to 32bit integer
+			}
+			
+			// Return a hexadecimal representation
+			return Math.abs(hash).toString(16).substring(0, 8);
+		} catch (error) {
+			logger.error("Error creating session hash:", error);
+			return Math.random().toString(36).substring(2, 10); // Random fallback
+		}
+	}
+
+	/**
+	 * Checks if a key should be stored per-window
+	 * @param key The key to check
+	 * @returns True if the key should be stored per-window, false otherwise
+	 */
+	private isWindowSpecificKey(key: string): boolean {
+		return WINDOW_SPECIFIC_KEYS.includes(key as WindowSpecificKey)
+	}
+
+	/**
+	 * Converts a regular key to a window-specific key
+	 * @param key The original key
+	 * @returns The window-specific key with window ID prefix
+	 */
+	private getWindowSpecificKey(key: string): string {
+		return `window:${this.windowId}:${key}`
+	}
+
 	// Helper method to initialize state cache
 	private initializeStateCache(): void {
 		for (const key of GLOBAL_STATE_KEYS) {
 			try {
-				const value = this.originalContext.globalState.get(key)
-				this.stateCache.set(key, value)
+				if (this.isWindowSpecificKey(key)) {
+					// For window-specific keys, get the value using the window-specific key
+					const windowKey = this.getWindowSpecificKey(key)
+					const value = this.originalContext.globalState.get(windowKey)
+					this.stateCache.set(key, value)
+					logger.debug(`Loaded window-specific key ${key} as ${windowKey} with value: ${value}`)
+				} else {
+					// For global keys, use the regular key
+					const value = this.originalContext.globalState.get(key)
+					this.stateCache.set(key, value)
+				}
 			} catch (error) {
 				logger.error(`Error loading global ${key}: ${error instanceof Error ? error.message : String(error)}`)
 			}
@@ -70,13 +193,30 @@ export class ContextProxy {
 	getGlobalState<T>(key: string): T | undefined
 	getGlobalState<T>(key: string, defaultValue: T): T
 	getGlobalState<T>(key: string, defaultValue?: T): T | undefined {
-		const value = this.stateCache.get(key) as T | undefined
-		return value !== undefined ? value : (defaultValue as T | undefined)
+		// Check for window-specific key
+		if (this.isWindowSpecificKey(key)) {
+			// Use the cached value if it exists (it would have been loaded with the window-specific key)
+			const value = this.stateCache.get(key) as T | undefined
+			return value !== undefined ? value : (defaultValue as T | undefined)
+		} else {
+			// For regular global keys, use the regular cached value
+			const value = this.stateCache.get(key) as T | undefined
+			return value !== undefined ? value : (defaultValue as T | undefined)
+		}
 	}
 
 	updateGlobalState<T>(key: string, value: T): Thenable<void> {
+		// Update in-memory cache
 		this.stateCache.set(key, value)
-		return this.originalContext.globalState.update(key, value)
+
+		// Update in VSCode storage with appropriate key
+		if (this.isWindowSpecificKey(key)) {
+			const windowKey = this.getWindowSpecificKey(key)
+			logger.debug(`Updating window-specific key ${key} as ${windowKey} with value: ${JSON.stringify(value)}`)
+			return this.originalContext.globalState.update(windowKey, value)
+		} else {
+			return this.originalContext.globalState.update(key, value)
+		}
 	}
 
 	getSecret(key: string): string | undefined {
@@ -140,16 +280,27 @@ export class ContextProxy {
 		this.stateCache.clear()
 		this.secretCache.clear()
 
+		// Create an array for all reset promises
+		const resetPromises: Thenable<void>[] = []
+
 		// Reset all global state values to undefined
-		const stateResetPromises = GLOBAL_STATE_KEYS.map((key) =>
-			this.originalContext.globalState.update(key, undefined),
-		)
+		for (const key of GLOBAL_STATE_KEYS) {
+			if (this.isWindowSpecificKey(key)) {
+				// For window-specific keys, reset using the window-specific key
+				const windowKey = this.getWindowSpecificKey(key)
+				resetPromises.push(this.originalContext.globalState.update(windowKey, undefined))
+			} else {
+				resetPromises.push(this.originalContext.globalState.update(key, undefined))
+			}
+		}
 
 		// Delete all secrets
-		const secretResetPromises = SECRET_KEYS.map((key) => this.originalContext.secrets.delete(key))
+		for (const key of SECRET_KEYS) {
+			resetPromises.push(this.originalContext.secrets.delete(key))
+		}
 
 		// Wait for all reset operations to complete
-		await Promise.all([...stateResetPromises, ...secretResetPromises])
+		await Promise.all(resetPromises)
 
 		this.initializeStateCache()
 		this.initializeSecretCache()
