@@ -72,6 +72,7 @@ import crypto from "crypto"
 import { insertGroups } from "./diff/insert-groups"
 import { OutputBuilder } from "../integrations/terminal/OutputBuilder"
 import { telemetryService } from "../services/telemetry/TelemetryService"
+import { readLines } from "../integrations/misc/read-lines"
 
 const cwd =
 	vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop") // may or may not exist but fs checking existence would immediately ask for permission which would be bad UX, need to come up with a better solution
@@ -2166,6 +2167,8 @@ export class Cline {
 
 					case "read_file": {
 						const relPath: string | undefined = block.params.path
+						const startLineStr: string | undefined = block.params.start_line
+						const endLineStr: string | undefined = block.params.end_line
 						const sharedMessageProps: ClineSayTool = {
 							tool: "readFile",
 							path: getReadablePath(cwd, removeClosingTag("path", relPath)),
@@ -2185,6 +2188,45 @@ export class Cline {
 									break
 								}
 
+								// Check if we're doing a line range read
+								let isRangeRead = false
+								let startLine: number | undefined = undefined
+								let endLine: number | undefined = undefined
+
+								// Check if we have either range parameter
+								if (startLineStr || endLineStr) {
+									isRangeRead = true
+								}
+
+								// Parse start_line if provided
+								if (startLineStr) {
+									startLine = parseInt(startLineStr)
+									if (isNaN(startLine)) {
+										// Invalid start_line
+										this.consecutiveMistakeCount++
+										await this.say("error", `Failed to parse start_line: ${startLineStr}`)
+										pushToolResult(formatResponse.toolError("Invalid start_line value"))
+										break
+									}
+									startLine -= 1 // Convert to 0-based index
+								}
+
+								// Parse end_line if provided
+								if (endLineStr) {
+									endLine = parseInt(endLineStr)
+
+									if (isNaN(endLine)) {
+										// Invalid end_line
+										this.consecutiveMistakeCount++
+										await this.say("error", `Failed to parse end_line: ${endLineStr}`)
+										pushToolResult(formatResponse.toolError("Invalid end_line value"))
+										break
+									}
+
+									// Convert to 0-based index
+									endLine -= 1
+								}
+
 								const accessAllowed = this.rooIgnoreController?.validateAccess(relPath)
 								if (!accessAllowed) {
 									await this.say("rooignore_error", relPath)
@@ -2199,12 +2241,27 @@ export class Cline {
 									...sharedMessageProps,
 									content: absolutePath,
 								} satisfies ClineSayTool)
+
 								const didApprove = await askApproval("tool", completeMessage)
 								if (!didApprove) {
 									break
 								}
 								// now execute the tool like normal
-								const content = await extractTextFromFile(absolutePath)
+								let content: string
+
+								if (isRangeRead) {
+									// Read specific lines (startLine is guaranteed to be defined if isRangeRead is true)
+									console.log("Reading specific lines", startLine, endLine, startLineStr, endLineStr)
+									if (startLine === undefined) {
+										content = addLineNumbers(await readLines(absolutePath, endLine, startLine))
+									} else {
+										content = addLineNumbers(await readLines(absolutePath, endLine, startLine), startLine)
+									}
+								} else {
+									// Read entire file
+									content = await extractTextFromFile(absolutePath)
+								}
+
 								pushToolResult(content)
 								break
 							}
@@ -2213,6 +2270,7 @@ export class Cline {
 							break
 						}
 					}
+
 					case "list_files": {
 						const relDirPath: string | undefined = block.params.path
 						const recursiveRaw: string | undefined = block.params.recursive
