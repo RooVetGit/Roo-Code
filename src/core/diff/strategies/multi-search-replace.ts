@@ -379,7 +379,7 @@ Only use a single line of '=======' between search and replacement content, beca
 						text: `progressed ${searchBlockCount - result.failParts.length}/${searchBlockCount} blocks.`,
 					}
 				} else {
-					return { text: `progressed ${searchBlockCount} blocks.` }
+					return { text: `progressed ${searchBlockCount} blocks` }
 				}
 			}
 		}
