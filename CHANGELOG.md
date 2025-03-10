@@ -103,7 +103,7 @@
 
 ## [3.7.5] - 2025-02-26
 
-- Fix context window truncation math (see [#1173](https://github.com/RooVetGit/Roo-Code/issues/1173))
+- Fix context window truncation math (see [#1173](https://github.com/Kilo-Org/kilocode/issues/1173))
 - Fix various issues with the model picker (thanks @System233!)
 - Fix model input / output cost parsing (thanks @System233!)
 - Add drag-and-drop for files

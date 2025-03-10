@@ -1,9 +1,9 @@
 {
-	"name": "roo-cline",
-	"displayName": "Roo Code (prev. Roo Cline)",
+	"name": "Kilo-Code",
+	"displayName": "Kilo Code",
 	"description": "A whole dev team of AI agents in your editor.",
-	"publisher": "RooVeterinaryInc",
-	"version": "3.8.4",
+	"publisher": "kilocode",
+	"version": "4.0.1",
 	"icon": "assets/icons/rocket.png",
 	"galleryBanner": {
 		"color": "#617A91",
@@ -13,13 +13,13 @@
 		"vscode": "^1.84.0"
 	},
 	"author": {
-		"name": "Roo Vet"
+		"name": "Kilo Code"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/RooVetGit/Roo-Code"
+		"url": "https://github.com/Kilo-Org/kilocode"
 	},
-	"homepage": "https://github.com/RooVetGit/Roo-Code",
+	"homepage": "https://kilocode.ai",
 	"categories": [
 		"AI",
 		"Chat",
@@ -41,7 +41,7 @@
 		"sonnet",
 		"ai",
 		"llama",
-		"roo code",
+		"Kilo Code",
 		"roocode"
 	],
 	"activationEvents": [
@@ -54,7 +54,7 @@
 			"activitybar": [
 				{
 					"id": "roo-cline-ActivityBar",
-					"title": "Roo Code",
+					"title": "Kilo Code",
 					"icon": "$(rocket)"
 				}
 			]
@@ -107,27 +107,27 @@
 			{
 				"command": "roo-cline.openInNewTab",
 				"title": "Open In New Tab",
-				"category": "Roo Code"
+				"category": "Kilo Code"
 			},
 			{
 				"command": "roo-cline.explainCode",
-				"title": "Roo Code: Explain Code",
-				"category": "Roo Code"
+				"title": "Kilo Code: Explain Code",
+				"category": "Kilo Code"
 			},
 			{
 				"command": "roo-cline.fixCode",
-				"title": "Roo Code: Fix Code",
-				"category": "Roo Code"
+				"title": "Kilo Code: Fix Code",
+				"category": "Kilo Code"
 			},
 			{
 				"command": "roo-cline.improveCode",
-				"title": "Roo Code: Improve Code",
-				"category": "Roo Code"
+				"title": "Kilo Code: Improve Code",
+				"category": "Kilo Code"
 			},
 			{
 				"command": "roo-cline.addToContext",
-				"title": "Roo Code: Add To Context",
-				"category": "Roo Code"
+				"title": "Kilo Code: Add To Context",
+				"category": "Kilo Code"
 			}
 		],
 		"menus": {
@@ -135,22 +135,22 @@
 				{
 					"command": "roo-cline.explainCode",
 					"when": "editorHasSelection",
-					"group": "Roo Code@1"
+					"group": "Kilo Code@1"
 				},
 				{
 					"command": "roo-cline.fixCode",
 					"when": "editorHasSelection",
-					"group": "Roo Code@2"
+					"group": "Kilo Code@2"
 				},
 				{
 					"command": "roo-cline.improveCode",
 					"when": "editorHasSelection",
-					"group": "Roo Code@3"
+					"group": "Kilo Code@3"
 				},
 				{
 					"command": "roo-cline.addToContext",
 					"when": "editorHasSelection",
-					"group": "Roo Code@4"
+					"group": "Kilo Code@4"
 				}
 			],
 			"view/title": [
@@ -192,9 +192,9 @@
 			]
 		},
 		"configuration": {
-			"title": "Roo Code",
+			"title": "Kilo Code",
 			"properties": {
-				"roo-cline.allowedCommands": {
+				"kiloCode.allowedCommands": {
 					"type": "array",
 					"items": {
 						"type": "string"
@@ -209,7 +209,7 @@
 					],
 					"description": "Commands that can be auto-executed when 'Always approve execute operations' is enabled"
 				},
-				"roo-cline.vsCodeLmModelSelector": {
+				"kiloCode.vsCodeLmModelSelector": {
 					"type": "object",
 					"properties": {
 						"vendor": {

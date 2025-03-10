@@ -13,7 +13,7 @@ export const SettingsFooter = ({ version, className, ...props }: SettingsFooterP
 	<div className={cn("text-vscode-descriptionForeground p-5", className)} {...props}>
 		<p style={{ wordWrap: "break-word", margin: 0, padding: 0 }}>
 			If you have any questions or feedback, feel free to open an issue at{" "}
-			<VSCodeLink href="https://github.com/RooVetGit/Roo-Code" style={{ display: "inline" }}>
+			<VSCodeLink href="https://github.com/Kilo-Org/kilocode" style={{ display: "inline" }}>
 				github.com/RooVetGit/Roo-Code
 			</VSCodeLink>{" "}
 			or join{" "}
