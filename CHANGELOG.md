@@ -1,5 +1,9 @@
 # Roo Code Changelog
 
+## [3.8.5]
+
+- App tab layout fixes
+
 ## [3.8.4] - 2025-03-09
 
 - Roll back multi-diff progress indicator temporarily to fix a double-confirmation in saving edits
