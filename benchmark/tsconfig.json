@@ -12,5 +12,5 @@
 		"outDir": "out"
 	},
 	"include": ["src", "../src/exports/roo-code.d.ts"],
-	"exclude": [".vscode-test", "**/node_modules/**", "out"]
+	"exclude": ["**/node_modules/**", "out"]
 }

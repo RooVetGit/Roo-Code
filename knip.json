@@ -18,7 +18,8 @@
 		"src/extension.ts",
 		"e2e/.vscode-test.mjs",
 		"e2e/src/runTest.ts",
-		"e2e/src/suite/index.ts"
+		"e2e/src/suite/index.ts",
+		"benchmark/src/*.ts"
 	],
 	"workspaces": {
 		"webview-ui": {

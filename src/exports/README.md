@@ -1,13 +1,13 @@
-# Cline API
+# Roo Code API
 
-The Cline extension exposes an API that can be used by other extensions. To use this API in your extension:
+The Roo Code extension exposes an API that can be used by other extensions. To use this API in your extension:
 
-1. Copy `src/extension-api/cline.d.ts` to your extension's source directory.
-2. Include `cline.d.ts` in your extension's compilation.
+1. Copy `src/extension-api/roo-code.d.ts` to your extension's source directory.
+2. Include `roo-code.d.ts` in your extension's compilation.
 3. Get access to the API with the following code:
 
     ```ts
-    const clineExtension = vscode.extensions.getExtension<ClineAPI>("rooveterinaryinc.roo-cline")
+    const clineExtension = vscode.extensions.getExtension<RooCodeAPI>("rooveterinaryinc.roo-cline")
 
     if (!clineExtension?.isActive) {
     	throw new Error("Cline extension is not activated")
@@ -52,4 +52,4 @@ The Cline extension exposes an API that can be used by other extensions. To use 
     ]
     ```
 
-For detailed information on the available methods and their usage, refer to the `cline.d.ts` file.
+For detailed information on the available methods and their usage, refer to the `roo-code.d.ts` file.
