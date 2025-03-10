@@ -1,7 +1,8 @@
 import { ToolArgs } from "./types"
 
 export function getBrowserActionDescription(args: ToolArgs): string | undefined {
-	if (!args.supportsComputerUse) {
+	// Only include browser actions if both supportsComputerUse is true and browserToolEnabled is true
+	if (!args.supportsComputerUse || args.browserToolEnabled !== true) {
 		return undefined
 	}
 	return `## browser_action

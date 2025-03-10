@@ -1826,6 +1826,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				fuzzyMatchThreshold,
 				experiments,
 				enableMcpServerCreation,
+				browserToolEnabled,
 			} = await this.getState()
 
 			// Create diffStrategy based on current model and settings
@@ -1857,6 +1858,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				experiments,
 				enableMcpServerCreation,
 				rooIgnoreInstructions,
+				browserToolEnabled,
 			)
 			return systemPrompt
 		}

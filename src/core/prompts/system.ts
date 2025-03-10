@@ -42,6 +42,7 @@ async function generatePrompt(
 	experiments?: Record<string, boolean>,
 	enableMcpServerCreation?: boolean,
 	rooIgnoreInstructions?: string,
+	browserToolEnabled?: boolean,
 ): Promise<string> {
 	if (!context) {
 		throw new Error("Extension context is required for generating system prompt")
@@ -74,17 +75,18 @@ ${getToolDescriptionsForMode(
 	mcpHub,
 	customModeConfigs,
 	experiments,
+	browserToolEnabled,
 )}
 
 ${getToolUseGuidelinesSection()}
 
 ${mcpServersSection}
 
-${getCapabilitiesSection(cwd, supportsComputerUse, mcpHub, effectiveDiffStrategy)}
+${getCapabilitiesSection(cwd, supportsComputerUse, mcpHub, effectiveDiffStrategy, browserToolEnabled)}
 
 ${modesSection}
 
-${getRulesSection(cwd, supportsComputerUse, effectiveDiffStrategy, experiments)}
+${getRulesSection(cwd, supportsComputerUse, effectiveDiffStrategy, experiments, browserToolEnabled)}
 
 ${getSystemInfoSection(cwd, mode, customModeConfigs)}
 
@@ -111,6 +113,7 @@ export const SYSTEM_PROMPT = async (
 	experiments?: Record<string, boolean>,
 	enableMcpServerCreation?: boolean,
 	rooIgnoreInstructions?: string,
+	browserToolEnabled?: boolean,
 ): Promise<string> => {
 	if (!context) {
 		throw new Error("Extension context is required for generating system prompt")
@@ -161,5 +164,6 @@ ${await addCustomInstructions(promptComponent?.customInstructions || currentMode
 		experiments,
 		enableMcpServerCreation,
 		rooIgnoreInstructions,
+		browserToolEnabled,
 	)
 }

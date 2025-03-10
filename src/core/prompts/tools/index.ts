@@ -49,6 +49,7 @@ export function getToolDescriptionsForMode(
 	mcpHub?: McpHub,
 	customModes?: ModeConfig[],
 	experiments?: Record<string, boolean>,
+	browserToolEnabled?: boolean,
 ): string {
 	const config = getModeConfig(mode, customModes)
 	const args: ToolArgs = {
@@ -57,6 +58,7 @@ export function getToolDescriptionsForMode(
 		diffStrategy,
 		browserViewportSize,
 		mcpHub,
+		browserToolEnabled,
 	}
 
 	const tools = new Set<string>()
@@ -67,8 +69,16 @@ export function getToolDescriptionsForMode(
 		const toolGroup = TOOL_GROUPS[groupName]
 		if (toolGroup) {
 			toolGroup.tools.forEach((tool) => {
+				// Check if the tool is allowed for the mode
 				if (isToolAllowedForMode(tool as ToolName, mode, customModes ?? [], experiments ?? {})) {
-					tools.add(tool)
+					// Special case for browser_action: only add if both supportsComputerUse AND browserToolEnabled are true
+					if (tool === "browser_action") {
+						if (args.supportsComputerUse && args.browserToolEnabled === true) {
+							tools.add(tool)
+						}
+					} else {
+						tools.add(tool)
+					}
 				}
 			})
 		}
