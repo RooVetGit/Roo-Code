@@ -593,11 +593,11 @@ export class Cline {
 
 		let imageBlocks: Anthropic.ImageBlockParam[] = formatResponse.imageBlocks(images)
 		await this.initiateTaskLoop([
+			...imageBlocks,
 			{
 				type: "text",
 				text: `<task>\n${task}\n</task>`,
 			},
-			...imageBlocks,
 		])
 	}
 
@@ -3140,8 +3140,8 @@ export class Cline {
 
 		const [parsedUserContent, environmentDetails] = await this.loadContext(userContent, includeFileDetails)
 		userContent = parsedUserContent
-		// add environment details as its own text block, separate from tool results
-		userContent.push({ type: "text", text: environmentDetails })
+		// prepend environment details as its own text block, separate from tool results
+		userContent.unshift({ type: "text", text: environmentDetails })
 
 		await this.addToApiConversationHistory({ role: "user", content: userContent })
 		telemetryService.captureConversationMessage(this.taskId, "user")
