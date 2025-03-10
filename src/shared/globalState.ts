@@ -60,6 +60,8 @@ export const GLOBAL_STATE_KEYS = [
 	"openRouterUseMiddleOutTransform",
 	"allowedCommands",
 	"soundEnabled",
+	"ttsEnabled",
+	"ttsSpeed",
 	"soundVolume",
 	"diffEnabled",
 	"enableCheckpoints",

@@ -89,6 +89,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	const disableAutoScrollRef = useRef(false)
 	const [showScrollToBottom, setShowScrollToBottom] = useState(false)
 	const [isAtBottom, setIsAtBottom] = useState(false)
+	const lastTtsRef = useRef<string>("")
 
 	const [wasStreaming, setWasStreaming] = useState<boolean>(false)
 	const [showCheckpointWarning, setShowCheckpointWarning] = useState<boolean>(false)
@@ -100,6 +101,10 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 
 	function playSound(audioType: AudioType) {
 		vscode.postMessage({ type: "playSound", audioType })
+	}
+
+	function playTts(text: string) {
+		vscode.postMessage({ type: "playTts", text })
 	}
 
 	useDeepCompareEffect(() => {
@@ -669,6 +674,25 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	)
 
 	useEffect(() => {
+		// skip input message
+		if (lastMessage && messages.length > 1) {
+			let text = lastMessage?.text || ""
+
+			if (
+				lastMessage.type === "say" && // is a say message
+				!lastMessage.partial && // not a partial message
+				!text.startsWith("{") && // not a json object
+				text !== lastTtsRef.current // not the same as last TTS message
+			) {
+				try {
+					playTts(text)
+					lastTtsRef.current = text
+				} catch (error) {
+					console.error("Failed to execute text-to-speech:", error)
+				}
+			}
+		}
+
 		// Only execute when isStreaming changes from true to false
 		if (wasStreaming && !isStreaming && lastMessage) {
 			// Play appropriate sound based on lastMessage content
@@ -701,7 +725,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		}
 		// Update previous value
 		setWasStreaming(isStreaming)
-	}, [isStreaming, lastMessage, wasStreaming, isAutoApproved])
+	}, [isStreaming, lastMessage, wasStreaming, isAutoApproved, messages.length])
 
 	const isBrowserSessionMessage = (message: ClineMessage): boolean => {
 		// which of visible messages are browser session messages, see above
