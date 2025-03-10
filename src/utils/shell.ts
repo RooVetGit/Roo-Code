@@ -20,22 +20,22 @@ const SHELL_PATHS = {
 	FALLBACK: "/bin/sh",
 } as const
 
-interface MacTerminalProfile {
+export interface TerminalProfile {
 	path?: string
+	args?: string[]
 }
+
+interface MacTerminalProfile extends TerminalProfile {}
 
 type MacTerminalProfiles = Record<string, MacTerminalProfile>
 
-interface WindowsTerminalProfile {
-	path?: string
+interface WindowsTerminalProfile extends TerminalProfile {
 	source?: "PowerShell" | "WSL"
 }
 
 type WindowsTerminalProfiles = Record<string, WindowsTerminalProfile>
 
-interface LinuxTerminalProfile {
-	path?: string
-}
+interface LinuxTerminalProfile extends TerminalProfile {}
 
 type LinuxTerminalProfiles = Record<string, LinuxTerminalProfile>
 
