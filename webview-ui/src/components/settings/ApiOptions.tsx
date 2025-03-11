@@ -1198,20 +1198,9 @@ const ApiOptions = ({
 						automatically. You need to paste these to web versions of AI (such as ChatGPT or Claude), then
 						copy the AI's reply back to the dialog box and click the confirm button.
 					</div>
-					{/* Auto clipboard monitoring */}
 					<div className="mt-4">
-						<Checkbox
-							checked={apiConfiguration?.humanRelayMonitorClipboard ?? false}
-							onChange={handleInputChange("humanRelayMonitorClipboard", noTransform)}>
-							<span className="font-medium">Enable clipboard monitoring</span>
-						</Checkbox>
-						<div className="text-sm text-vscode-descriptionForeground ml-6">
-							Automatically detect when you copy the AI's response from the browser
-						</div>
-					</div>
-					{apiConfiguration?.humanRelayMonitorClipboard && (
+						<div className="font-medium">Clipboard monitoring interval (ms)</div>
 						<div className="mt-2">
-							<label className="font-medium">Monitor interval (ms)</label>
 							<input
 								type="range"
 								min="100"
@@ -1227,11 +1216,8 @@ const ApiOptions = ({
 							<span style={{ minWidth: "45px", textAlign: "left" }}>
 								{apiConfiguration?.humanRelayMonitorInterval || 500} ms
 							</span>
-							<div className="text-sm text-vscode-descriptionForeground">
-								How frequently to check for clipboard changes (100-2000ms)
-							</div>
 						</div>
-					)}
+					</div>
 				</>
 			)}
 

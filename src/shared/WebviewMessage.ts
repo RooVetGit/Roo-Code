@@ -15,6 +15,7 @@ export interface WebviewMessage {
 		| "saveApiConfiguration"
 		| "upsertApiConfiguration"
 		| "deleteApiConfiguration"
+		| "toggleHumanRelayMonitor"
 		| "loadApiConfiguration"
 		| "renameApiConfiguration"
 		| "getListApiConfiguration"

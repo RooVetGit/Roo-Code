@@ -4,7 +4,7 @@ import { ApiHandler, SingleCompletionHandler } from "../index"
 import { ApiStream } from "../transform/stream"
 import * as vscode from "vscode"
 import { ExtensionMessage } from "../../shared/ExtensionMessage"
-import { getPanel } from "../../activate/registerCommands" // Import the getPanel function
+import { getPanel } from "../../activate/registerCommands"
 
 /**
  * Human Relay API processor
@@ -23,18 +23,15 @@ export class HumanRelayHandler implements ApiHandler, SingleCompletionHandler {
 
 	/**
 	 * Create a message processing flow, display a dialog box to request human assistance
-	 * @param systemPrompt System prompt text
-	 * @param messages Message list
 	 */
 	async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
-		// Get the most recent user message
 		const latestMessage = messages[messages.length - 1]
 
 		if (!latestMessage) {
 			throw new Error("No message to relay")
 		}
 
-		// If it is the first message, concatenate the system prompt with the user message
+		// Concatenate system prompt with user message if this is the first message
 		let promptText = ""
 		if (messages.length === 1) {
 			promptText = `${systemPrompt}\n\n${getMessageContent(latestMessage)}`
@@ -49,11 +46,9 @@ export class HumanRelayHandler implements ApiHandler, SingleCompletionHandler {
 		const response = await showHumanRelayDialog(promptText, this.options)
 
 		if (!response) {
-			// The user canceled the operation
 			throw new Error("Human relay operation cancelled")
 		}
 
-		// Return the user-provided response
 		yield { type: "text", text: response }
 	}
 
@@ -61,7 +56,6 @@ export class HumanRelayHandler implements ApiHandler, SingleCompletionHandler {
 	 * Get model information
 	 */
 	getModel(): { id: string; info: ModelInfo } {
-		// Human relay does not depend on a specific model; here is a default configuration
 		return {
 			id: "human-relay",
 			info: {
@@ -79,13 +73,10 @@ export class HumanRelayHandler implements ApiHandler, SingleCompletionHandler {
 
 	/**
 	 * Implementation of a single prompt completion
-	 * @param prompt Prompt content
 	 */
 	async completePrompt(prompt: string): Promise<string> {
-		// Copy to clipboard
 		await vscode.env.clipboard.writeText(prompt)
 
-		// Display a dialog box to request user action
 		const response = await showHumanRelayDialog(prompt, this.options)
 
 		if (!response) {
@@ -98,7 +89,6 @@ export class HumanRelayHandler implements ApiHandler, SingleCompletionHandler {
 
 /**
  * Extract text content from a message object
- * @param message
  */
 function getMessageContent(message: Anthropic.Messages.MessageParam): string {
 	if (typeof message.content === "string") {
@@ -112,135 +102,165 @@ function getMessageContent(message: Anthropic.Messages.MessageParam): string {
 	return ""
 }
 
-// Elevate lastAIResponse variable to module level to maintain state between multiple calls
+// Global variables
 let lastAIResponse: string | null = null
-// Add normalized cache to avoid repeatedly processing the same content
 let normalizedPrompt: string | null = null
 let normalizedLastResponse: string | null = null
+let globalClipboardInterval: NodeJS.Timeout | null = null
+let lastMonitorOptions: ApiHandlerOptions | undefined
 
 /**
- * Normalize string by removing excess whitespace
- * @param text Input string
- * @returns Normalized string
+ * Normalize text by removing extra spaces
  */
 function normalizeText(text: string | null): string {
 	if (!text) return ""
-	// Remove all excess whitespace and convert to lowercase for case-insensitive comparison
 	return text.replace(/\s+/g, " ").trim()
 }
 
 /**
- * Compare two strings, ignoring whitespace
- * @param str1 First string
- * @param str2 Second string
- * @returns Whether they are equal
+ * Compare if two strings are equal (ignoring whitespace differences)
  */
 function isTextEqual(str1: string | null, str2: string | null): boolean {
-	if (str1 === str2) return true // Fast path: same reference
-	if (!str1 || !str2) return false // One is empty
-
+	if (str1 === str2) return true
+	if (!str1 || !str2) return false
 	return normalizeText(str1) === normalizeText(str2)
 }
 
 /**
- * Displays the human relay dialog and waits for user response.
- * @param promptText The prompt text that needs to be copied.
- * @returns The user's input response or undefined (if canceled).
+ * Stop clipboard monitoring
+ */
+function stopClipboardMonitoring() {
+	if (globalClipboardInterval) {
+		clearInterval(globalClipboardInterval)
+		globalClipboardInterval = null
+	}
+}
+
+// Store clipboard content when monitoring starts
+let clipboardContentAtMonitorStart: string | null = null
+
+/**
+ * Start clipboard monitoring
+ */
+async function startClipboardMonitoring(requestId: string, options?: ApiHandlerOptions) {
+	// Stop any existing monitoring
+	stopClipboardMonitoring()
+
+	// Start new monitoring
+	if (options?.humanRelayMonitorClipboard) {
+		const monitorInterval = Math.min(Math.max(100, options?.humanRelayMonitorInterval ?? 500), 2000)
+
+		// Read clipboard content at startup
+		clipboardContentAtMonitorStart = await vscode.env.clipboard.readText()
+
+		globalClipboardInterval = setInterval(async () => {
+			try {
+				const currentClipboardContent = await vscode.env.clipboard.readText()
+
+				if (!currentClipboardContent || !currentClipboardContent.trim()) {
+					return
+				}
+
+				const normalizedClipboard = normalizeText(currentClipboardContent)
+				const normalizedInitialClipboard = normalizeText(clipboardContentAtMonitorStart)
+
+				// Skip if current clipboard content matches content at start
+				if (normalizedClipboard === normalizedInitialClipboard) {
+					return
+				}
+
+				const panel = getPanel()
+
+				// Check if response is duplicate
+				if (normalizedClipboard === normalizedLastResponse) {
+					panel?.webview.postMessage({
+						type: "showHumanRelayResponseAlert",
+						text: "It seems you copied the AI's response from the last interaction instead of the current task. Please check your interaction with the web AI",
+					})
+					return
+				}
+				if (!containsValidTags(currentClipboardContent)) {
+					panel?.webview.postMessage({
+						type: "showHumanRelayResponseAlert",
+						text: "The AI's response does not seem to meet the RooCode format requirements. Please check your interaction with the web AI.",
+					})
+					return
+				}
+
+				// Process valid new response
+				if (normalizedClipboard !== normalizedPrompt) {
+					lastAIResponse = currentClipboardContent
+					normalizedLastResponse = normalizedClipboard
+
+					// Clear timer
+					stopClipboardMonitoring()
+
+					// Close dialog and send response
+					panel?.webview.postMessage({ type: "closeHumanRelayDialog" })
+					vscode.commands.executeCommand("roo-cline.handleHumanRelayResponse", {
+						requestId,
+						text: currentClipboardContent,
+					})
+				}
+			} catch (error) {
+				console.error("Error monitoring clipboard:", error)
+			}
+		}, monitorInterval)
+	}
+}
+
+/**
+ * Display human relay dialog and wait for user response
  */
 async function showHumanRelayDialog(promptText: string, options?: ApiHandlerOptions): Promise<string | undefined> {
-	// Pre-normalize prompt text to avoid repeated processing during polling
 	normalizedPrompt = normalizeText(promptText)
+	lastMonitorOptions = options
 
 	return new Promise<string | undefined>((resolve) => {
-		// Create a unique request ID
+		// Create unique request ID
 		const requestId = Date.now().toString()
 
-		// Register a global callback function
+		// Register global callback function
 		vscode.commands.executeCommand(
 			"roo-cline.registerHumanRelayCallback",
 			requestId,
 			(response: string | undefined) => {
-				// Clear clipboard monitoring timer
-				if (clipboardInterval) {
-					clearInterval(clipboardInterval)
-					clipboardInterval = null
-				}
+				stopClipboardMonitoring()
 				resolve(response)
 			},
 		)
 
-		// Open the dialog box directly using the current panel
+		// Get panel and register message handler
+		const panel = getPanel()
+		if (panel) {
+			panel.webview.onDidReceiveMessage((message) => {
+				if (message.type === "toggleHumanRelayMonitor" && message.requestId === requestId) {
+					if (message.bool) {
+						startClipboardMonitoring(requestId, lastMonitorOptions)
+					} else {
+						stopClipboardMonitoring()
+					}
+				}
+			})
+		}
+
+		// Open dialog
 		vscode.commands.executeCommand("roo-cline.showHumanRelayDialog", {
 			requestId,
 			promptText,
 		})
 
-		// If clipboard monitoring is enabled, start polling for clipboard changes
-		let clipboardInterval: NodeJS.Timeout | null = null
-
+		// Start polling clipboard changes if enabled
 		if (options?.humanRelayMonitorClipboard) {
-			const monitorInterval = Math.min(Math.max(100, options?.humanRelayMonitorInterval ?? 500), 2000)
-
-			clipboardInterval = setInterval(async () => {
-				try {
-					const currentClipboardContent = await vscode.env.clipboard.readText()
-
-					if (!currentClipboardContent || !currentClipboardContent.trim()) {
-						return
-					}
-
-					const normalizedClipboard = normalizeText(currentClipboardContent)
-					const panel = getPanel()
-
-					// Check if it’s a duplicate response
-					if (normalizedClipboard === normalizedLastResponse) {
-						panel?.webview.postMessage({
-							type: "showHumanRelayResponseAlert",
-							text: "It seems you copied the AI's response from the last interaction instead of the current task. Please check your interaction with the web AI",
-						})
-						return
-					}
-					if (!containsValidTags(currentClipboardContent)) {
-						panel?.webview.postMessage({
-							type: "showHumanRelayResponseAlert",
-							text: "The AI's response does not seem to meet the RooCode format requirements. Please check your interaction with the web AI.",
-						})
-						return
-					}
-
-					// Process new valid response
-					if (normalizedClipboard !== normalizedPrompt) {
-						lastAIResponse = currentClipboardContent
-						normalizedLastResponse = normalizedClipboard
-
-						// Clear timer
-						if (clipboardInterval) {
-							clearInterval(clipboardInterval)
-							clipboardInterval = null
-						}
-
-						// Close dialog and send response
-						panel?.webview.postMessage({ type: "closeHumanRelayDialog" })
-						vscode.commands.executeCommand("roo-cline.handleHumanRelayResponse", {
-							requestId,
-							text: currentClipboardContent,
-						})
-					}
-				} catch (error) {
-					console.error("Error monitoring clipboard:", error)
-				}
-			}, monitorInterval)
+			startClipboardMonitoring(requestId, options)
 		}
 	})
 }
 
 /**
- * Validate if the content contains any tag in <xxx> format
- * @param content The content to validate
- * @returns Whether the content contains a valid tag format
+ * Validate if content contains any tags in <xxx> format
  */
 function containsValidTags(content: string): boolean {
-	// Use a regular expression to match tags in <xxx> format
 	const tagPattern = /<[^>]+>/
 	return tagPattern.test(content)
 }
