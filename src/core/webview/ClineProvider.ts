@@ -1278,6 +1278,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						}
 						await this.postStateToWebview()
 						break
+					case "toggleHumanRelayMonitor":
+						await this.updateGlobalState("humanRelayMonitorClipboard", message.bool)
+						await this.postStateToWebview()
+						break
 					case "testBrowserConnection":
 						try {
 							const browserSession = new BrowserSession(this.context)

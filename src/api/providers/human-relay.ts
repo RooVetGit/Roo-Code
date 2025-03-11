@@ -147,66 +147,54 @@ async function startClipboardMonitoring(requestId: string, options?: ApiHandlerO
 	stopClipboardMonitoring()
 
 	// Start new monitoring
-	if (options?.humanRelayMonitorClipboard) {
-		const monitorInterval = Math.min(Math.max(100, options?.humanRelayMonitorInterval ?? 500), 2000)
+	const monitorInterval = Math.min(Math.max(100, options?.humanRelayMonitorInterval ?? 500), 2000)
 
-		// Read clipboard content at startup
-		clipboardContentAtMonitorStart = await vscode.env.clipboard.readText()
-
-		globalClipboardInterval = setInterval(async () => {
-			try {
-				const currentClipboardContent = await vscode.env.clipboard.readText()
-
-				if (!currentClipboardContent || !currentClipboardContent.trim()) {
-					return
-				}
-
-				const normalizedClipboard = normalizeText(currentClipboardContent)
-				const normalizedInitialClipboard = normalizeText(clipboardContentAtMonitorStart)
-
-				// Skip if current clipboard content matches content at start
-				if (normalizedClipboard === normalizedInitialClipboard) {
-					return
-				}
-
-				const panel = getPanel()
-
-				// Check if response is duplicate
-				if (normalizedClipboard === normalizedLastResponse) {
-					panel?.webview.postMessage({
-						type: "showHumanRelayResponseAlert",
-						text: "It seems you copied the AI's response from the last interaction instead of the current task. Please check your interaction with the web AI",
-					})
-					return
-				}
-				if (!containsValidTags(currentClipboardContent)) {
-					panel?.webview.postMessage({
-						type: "showHumanRelayResponseAlert",
-						text: "The AI's response does not seem to meet the RooCode format requirements. Please check your interaction with the web AI.",
-					})
-					return
-				}
-
-				// Process valid new response
-				if (normalizedClipboard !== normalizedPrompt) {
-					lastAIResponse = currentClipboardContent
-					normalizedLastResponse = normalizedClipboard
-
-					// Clear timer
-					stopClipboardMonitoring()
-
-					// Close dialog and send response
-					panel?.webview.postMessage({ type: "closeHumanRelayDialog" })
-					vscode.commands.executeCommand("roo-cline.handleHumanRelayResponse", {
-						requestId,
-						text: currentClipboardContent,
-					})
-				}
-			} catch (error) {
-				console.error("Error monitoring clipboard:", error)
+	globalClipboardInterval = setInterval(async () => {
+		try {
+			const currentClipboardContent = await vscode.env.clipboard.readText()
+			if (!currentClipboardContent) {
+				return
 			}
-		}, monitorInterval)
-	}
+
+			const normalizedClipboard = normalizeText(currentClipboardContent)
+
+			const panel = getPanel()
+
+			// Check if response is duplicate
+			if (normalizedClipboard === normalizedLastResponse) {
+				panel?.webview.postMessage({
+					type: "showHumanRelayResponseAlert",
+					text: "It seems you copied the AI's response from the last interaction instead of the current task. Please check your interaction with the web AI",
+				})
+				return
+			}
+			if (!containsValidTags(currentClipboardContent)) {
+				panel?.webview.postMessage({
+					type: "showHumanRelayResponseAlert",
+					text: "The AI's response does not seem to meet the RooCode format requirements. Please check your interaction with the web AI.",
+				})
+				return
+			}
+
+			// Process valid new response
+			if (normalizedClipboard !== normalizedPrompt) {
+				lastAIResponse = currentClipboardContent
+				normalizedLastResponse = normalizedClipboard
+
+				// Clear timer
+				stopClipboardMonitoring()
+
+				// Close dialog and send response
+				panel?.webview.postMessage({ type: "closeHumanRelayDialog" })
+				vscode.commands.executeCommand("roo-cline.handleHumanRelayResponse", {
+					requestId,
+					text: currentClipboardContent,
+				})
+			}
+		} catch (error) {
+			console.error("Error monitoring clipboard:", error)
+		}
+	}, monitorInterval)
 }
 
 /**
@@ -214,7 +202,6 @@ async function startClipboardMonitoring(requestId: string, options?: ApiHandlerO
  */
 async function showHumanRelayDialog(promptText: string, options?: ApiHandlerOptions): Promise<string | undefined> {
 	normalizedPrompt = normalizeText(promptText)
-	lastMonitorOptions = options
 
 	return new Promise<string | undefined>((resolve) => {
 		// Create unique request ID
@@ -236,7 +223,7 @@ async function showHumanRelayDialog(promptText: string, options?: ApiHandlerOpti
 			panel.webview.onDidReceiveMessage((message) => {
 				if (message.type === "toggleHumanRelayMonitor" && message.requestId === requestId) {
 					if (message.bool) {
-						startClipboardMonitoring(requestId, lastMonitorOptions)
+						startClipboardMonitoring(requestId, options)
 					} else {
 						stopClipboardMonitoring()
 					}
