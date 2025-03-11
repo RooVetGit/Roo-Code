@@ -2042,7 +2042,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	async handleKiloCodeCallback(token: string) {
-		// TODO: Implement the token handling logic here
 		console.log("KiloCode token received:", token)
 		await this.updateGlobalState("kilocodeToken", token)
 	}
