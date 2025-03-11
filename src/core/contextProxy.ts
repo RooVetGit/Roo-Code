@@ -18,7 +18,7 @@ export class ContextProxy {
 		this.originalContext = context
 		this.stateCache = new Map()
 		this.secretCache = new Map()
-		
+
 		// Generate a unique ID for this window instance
 		this.windowId = this.ensureUniqueWindowId()
 		logger.debug(`ContextProxy created with windowId: ${this.windowId}`)
@@ -38,16 +38,16 @@ export class ContextProxy {
 	 */
 	private ensureUniqueWindowId(): string {
 		// Try to get a stable ID first
-		let id = this.generateWindowId();
-		
+		let id = this.generateWindowId()
+
 		// If all else fails, use a purely random ID as ultimate fallback
 		// This will not be stable across restarts but ensures uniqueness
 		if (!id) {
-			id = `random_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-			logger.warn("Failed to generate stable window ID, using random ID instead");
+			id = `random_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+			logger.warn("Failed to generate stable window ID, using random ID instead")
 		}
-		
-		return id;
+
+		return id
 	}
 
 	/**
@@ -63,27 +63,27 @@ export class ContextProxy {
 	private generateWindowId(): string {
 		try {
 			// Get all available identifying information
-			const folders = vscode.workspace.workspaceFolders || [];
-			const workspaceName = vscode.workspace.name || "unknown";
-			const folderPaths = folders.map(folder => folder.uri.toString()).join('|');
-			
+			const folders = vscode.workspace.workspaceFolders || []
+			const workspaceName = vscode.workspace.name || "unknown"
+			const folderPaths = folders.map((folder) => folder.uri.toString()).join("|")
+
 			// Generate a stable, pseudorandom ID based on the workspace information
 			// This will be consistent for the same workspace but different across workspaces
-			const baseId = `${workspaceName}|${folderPaths}`;
-			
+			const baseId = `${workspaceName}|${folderPaths}`
+
 			// Add machine-specific information (will differ between host and containers)
 			// env.machineId is stable across VS Code sessions on the same machine
-			const machineSpecificId = vscode.env.machineId || "";
-			
+			const machineSpecificId = vscode.env.machineId || ""
+
 			// Add a session component that distinguishes multiple windows with the same workspace
 			// Creates a stable but reasonably unique hash
-			const sessionHash = this.createSessionHash(baseId);
-			
+			const sessionHash = this.createSessionHash(baseId)
+
 			// Combine all components
-			return `${baseId}|${machineSpecificId}|${sessionHash}`;
+			return `${baseId}|${machineSpecificId}|${sessionHash}`
 		} catch (error) {
-			logger.error("Error generating window ID:", error);
-			return ""; // Empty string triggers the fallback in ensureUniqueWindowId
+			logger.error("Error generating window ID:", error)
+			return "" // Empty string triggers the fallback in ensureUniqueWindowId
 		}
 	}
 
@@ -95,26 +95,26 @@ export class ContextProxy {
 		try {
 			// Use a combination of:
 			// 1. The extension instance creation time
-			const timestamp = this.instanceCreationTime.getTime();
-			
+			const timestamp = this.instanceCreationTime.getTime()
+
 			// 2. VS Code window-specific info we can derive
 			// Using vscode.env.sessionId which changes on each VS Code window startup
-			const sessionInfo = vscode.env.sessionId || "";
-			
+			const sessionInfo = vscode.env.sessionId || ""
+
 			// 3. Calculate a simple hash
-			const hashStr = `${input}|${sessionInfo}|${timestamp}`;
-			let hash = 0;
+			const hashStr = `${input}|${sessionInfo}|${timestamp}`
+			let hash = 0
 			for (let i = 0; i < hashStr.length; i++) {
-				const char = hashStr.charCodeAt(i);
-				hash = ((hash << 5) - hash) + char;
-				hash = hash & hash; // Convert to 32bit integer
+				const char = hashStr.charCodeAt(i)
+				hash = (hash << 5) - hash + char
+				hash = hash & hash // Convert to 32bit integer
 			}
-			
+
 			// Return a hexadecimal representation
-			return Math.abs(hash).toString(16).substring(0, 8);
+			return Math.abs(hash).toString(16).substring(0, 8)
 		} catch (error) {
-			logger.error("Error creating session hash:", error);
-			return Math.random().toString(36).substring(2, 10); // Random fallback
+			logger.error("Error creating session hash:", error)
+			return Math.random().toString(36).substring(2, 10) // Random fallback
 		}
 	}
 
@@ -193,29 +193,33 @@ export class ContextProxy {
 	getGlobalState<T>(key: string): T | undefined
 	getGlobalState<T>(key: string, defaultValue: T): T
 	getGlobalState<T>(key: string, defaultValue?: T): T | undefined {
-		// Check for window-specific key
-		if (this.isWindowSpecificKey(key)) {
-			// Use the cached value if it exists (it would have been loaded with the window-specific key)
-			const value = this.stateCache.get(key) as T | undefined
-			return value !== undefined ? value : (defaultValue as T | undefined)
-		} else {
-			// For regular global keys, use the regular cached value
-			const value = this.stateCache.get(key) as T | undefined
-			return value !== undefined ? value : (defaultValue as T | undefined)
-		}
+		// The cache already contains the correct value regardless of whether
+		// this is a window-specific key (handled during initialization and updates)
+		const value = this.stateCache.get(key) as T | undefined
+		return value !== undefined ? value : (defaultValue as T | undefined)
 	}
 
-	updateGlobalState<T>(key: string, value: T): Thenable<void> {
-		// Update in-memory cache
-		this.stateCache.set(key, value)
+	async updateGlobalState<T>(key: string, value: T): Promise<void> {
+		try {
+			// Determine the storage key
+			const storageKey = this.isWindowSpecificKey(key) ? this.getWindowSpecificKey(key) : key
 
-		// Update in VSCode storage with appropriate key
-		if (this.isWindowSpecificKey(key)) {
-			const windowKey = this.getWindowSpecificKey(key)
-			logger.debug(`Updating window-specific key ${key} as ${windowKey} with value: ${JSON.stringify(value)}`)
-			return this.originalContext.globalState.update(windowKey, value)
-		} else {
-			return this.originalContext.globalState.update(key, value)
+			if (this.isWindowSpecificKey(key)) {
+				logger.debug(
+					`Updating window-specific key ${key} as ${storageKey} with value: ${JSON.stringify(value)}`,
+				)
+			}
+
+			// Update in VSCode storage first
+			await this.originalContext.globalState.update(storageKey, value)
+
+			// Only update cache if storage update succeeded
+			this.stateCache.set(key, value)
+		} catch (error) {
+			logger.error(
+				`Failed to update global state for key ${key}: ${error instanceof Error ? error.message : String(error)}`,
+			)
+			throw error // Re-throw to allow callers to handle the error
 		}
 	}
 

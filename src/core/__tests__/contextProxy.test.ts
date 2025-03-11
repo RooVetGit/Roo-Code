@@ -21,7 +21,7 @@ jest.mock("vscode", () => ({
 	},
 	env: {
 		sessionId: "test-session-id",
-		machineId: "test-machine-id"
+		machineId: "test-machine-id",
 	},
 	workspace: {
 		name: "test-workspace-name",
@@ -130,8 +130,34 @@ describe("ContextProxy", () => {
 			expect(mockGlobalState.update).toHaveBeenCalledWith("test-key", "new-value")
 
 			// Should have stored the value in cache
-			const storedValue = await proxy.getGlobalState("test-key")
+			const storedValue = proxy.getGlobalState("test-key")
 			expect(storedValue).toBe("new-value")
+		})
+
+		it("should handle window-specific keys correctly", async () => {
+			// Test with a window-specific key
+			await proxy.updateGlobalState("mode", "test-mode")
+
+			// Should have called update with window-specific key
+			expect(mockGlobalState.update).toHaveBeenCalledWith(expect.stringMatching(/^window:.+:mode$/), "test-mode")
+
+			// Should have stored the value in cache with the original key
+			const storedValue = proxy.getGlobalState("mode")
+			expect(storedValue).toBe("test-mode")
+		})
+
+		it("should throw and not update cache if storage update fails", async () => {
+			// Mock a failure in the storage update
+			mockGlobalState.update.mockRejectedValueOnce(new Error("Storage update failed"))
+
+			// Set initial cache value
+			proxy["stateCache"].set("error-key", "initial-value")
+
+			// Attempt to update should fail
+			await expect(proxy.updateGlobalState("error-key", "new-value")).rejects.toThrow("Storage update failed")
+
+			// Cache should still have the initial value
+			expect(proxy.getGlobalState("error-key")).toBe("initial-value")
 		})
 	})
 
@@ -356,22 +382,22 @@ describe("ContextProxy", () => {
 		it("should use window-specific key for mode", async () => {
 			// Ensure 'mode' is in window specific keys
 			expect(WINDOW_SPECIFIC_KEYS).toContain("mode")
-			
+
 			// Test update method with 'mode' key
 			await proxy.updateGlobalState("mode", "debug")
-			
+
 			// Verify it's called with window-specific key
 			expect(mockGlobalState.update).toHaveBeenCalledWith(expect.stringMatching(/^window:.+:mode$/), "debug")
 		})
-		
+
 		it("should use regular key for non-window-specific state", async () => {
 			// Test update method with a regular key
 			await proxy.updateGlobalState("apiProvider", "test-provider")
-			
+
 			// Verify it's called with regular key
 			expect(mockGlobalState.update).toHaveBeenCalledWith("apiProvider", "test-provider")
 		})
-		
+
 		it("should consistently use same key format for get/update operations", async () => {
 			// Set mock values for testing
 			const windowKeyPattern = /^window:.+:mode$/
@@ -380,20 +406,20 @@ describe("ContextProxy", () => {
 				if (key === "mode") return "global-debug-mode"
 				return undefined
 			})
-			
+
 			// Update a window-specific value
 			await proxy.updateGlobalState("mode", "test-mode")
-			
+
 			// The key used in update should match pattern
 			const updateCallArg = mockGlobalState.update.mock.calls[0][0]
 			expect(updateCallArg).toMatch(windowKeyPattern)
-			
+
 			// Re-init to load values
 			proxy["initializeStateCache"]()
-			
+
 			// Verify we get the window-specific value back
 			const value = proxy.getGlobalState("mode")
-			
+
 			// We should get the window-specific value, not the global one
 			expect(mockGlobalState.get).toHaveBeenCalledWith(expect.stringMatching(windowKeyPattern))
 			expect(value).not.toBe("global-debug-mode")
@@ -403,61 +429,62 @@ describe("ContextProxy", () => {
 	describe("Enhanced window ID generation", () => {
 		it("should generate a window ID that includes workspace name", () => {
 			// Access the private method using type assertion
-			const generateWindowId = (proxy as any).generateWindowId.bind(proxy);
-			const windowId = generateWindowId();
-			
+			const generateWindowId = (proxy as any).generateWindowId.bind(proxy)
+			const windowId = generateWindowId()
+
 			// Should include the workspace name from our mock
-			expect(windowId).toContain("test-workspace-name");
-		});
-		
+			expect(windowId).toContain("test-workspace-name")
+		})
+
 		it("should generate a window ID that includes machine ID", () => {
 			// Access the private method using type assertion
-			const generateWindowId = (proxy as any).generateWindowId.bind(proxy);
-			const windowId = generateWindowId();
-			
+			const generateWindowId = (proxy as any).generateWindowId.bind(proxy)
+			const windowId = generateWindowId()
+
 			// Should include the machine ID from our mock
-			expect(windowId).toContain("test-machine-id");
-		});
-		
+			expect(windowId).toContain("test-machine-id")
+		})
+
 		it("should use the fallback mechanism if generateWindowId fails", () => {
 			// Create a proxy instance with a failing generateWindowId method
-			const spyOnGenerate = jest.spyOn(ContextProxy.prototype as any, "generateWindowId")
-				.mockImplementation(() => "");
-			
+			const spyOnGenerate = jest
+				.spyOn(ContextProxy.prototype as any, "generateWindowId")
+				.mockImplementation(() => "")
+
 			// Create a new proxy to trigger the constructor with our mock
-			const testProxy = new ContextProxy(mockContext);
-			
+			const testProxy = new ContextProxy(mockContext)
+
 			// Should have called ensureUniqueWindowId with a fallback
-			expect(spyOnGenerate).toHaveBeenCalled();
-			
+			expect(spyOnGenerate).toHaveBeenCalled()
+
 			// The windowId should use the fallback format (random ID)
 			// We can't test the exact value, but we can verify it's not empty
-			expect((testProxy as any).windowId).not.toBe("");
-			
+			expect((testProxy as any).windowId).not.toBe("")
+
 			// Restore original implementation
-			spyOnGenerate.mockRestore();
-		});
-		
+			spyOnGenerate.mockRestore()
+		})
+
 		it("should create consistent session hash for same input", () => {
 			// Access the private method using type assertion
-			const createSessionHash = (proxy as any).createSessionHash.bind(proxy);
-			
-			const hash1 = createSessionHash("test-input");
-			const hash2 = createSessionHash("test-input");
-			
+			const createSessionHash = (proxy as any).createSessionHash.bind(proxy)
+
+			const hash1 = createSessionHash("test-input")
+			const hash2 = createSessionHash("test-input")
+
 			// Same input should produce same hash within the same session
-			expect(hash1).toBe(hash2);
-		});
-		
+			expect(hash1).toBe(hash2)
+		})
+
 		it("should create different session hashes for different inputs", () => {
 			// Access the private method using type assertion
-			const createSessionHash = (proxy as any).createSessionHash.bind(proxy);
-			
-			const hash1 = createSessionHash("test-input-1");
-			const hash2 = createSessionHash("test-input-2");
-			
+			const createSessionHash = (proxy as any).createSessionHash.bind(proxy)
+
+			const hash1 = createSessionHash("test-input-1")
+			const hash2 = createSessionHash("test-input-2")
+
 			// Different inputs should produce different hashes
-			expect(hash1).not.toBe(hash2);
-		});
-	});
+			expect(hash1).not.toBe(hash2)
+		})
+	})
 })
