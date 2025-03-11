@@ -1266,7 +1266,7 @@ const ApiOptions = ({
 				<>
 					<div className="dropdown-container" style={{ marginTop: 3 }}>
 						<label htmlFor="openrouter-specific-provider" className="font-medium">
-							Provider (more infos on{" "}
+							Provider (more info at{" "}
 							<a href={`https://openrouter.ai/${selectedModelId}/providers`}>OpenRouter</a>)
 						</label>
 						<Dropdown
