@@ -35,6 +35,7 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 	const { copy } = useClipboard()
 	const [isCopyClicked, setIsCopyClicked] = React.useState(false)
 	const [showDuplicateWarning, setShowDuplicateWarning] = React.useState(false)
+	const [warningMessage, setWarningMessage] = React.useState("")
 
 	// Listen to isOpen changes, clear the input box when the dialog box is opened
 	React.useEffect(() => {
@@ -53,8 +54,8 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 				onClose()
 			}
 			// Handle duplicate response warning
-			else if (message.type === "showDuplicateResponseAlert") {
-				// Show warning
+			else if (message.type === "showHumanRelayResponseAlert") {
+				setWarningMessage(message.text)
 				setShowDuplicateWarning(true)
 			}
 		}
@@ -118,10 +119,7 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 							{showDuplicateWarning && (
 								<div className="flex items-center gap-2 text-sm p-2 rounded-md bg-amber-100 dark:bg-amber-900 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300">
 									<AlertTriangle className="h-4 w-4 text-amber-500" />
-									<span className="font-medium">
-										It seems you copied the AI's response from the last interaction instead of the
-										current task. Please check your interaction with the web AI.
-									</span>
+									<span className="font-medium">{warningMessage}</span>
 								</div>
 							)}
 

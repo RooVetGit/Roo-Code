@@ -101,7 +101,7 @@ export interface WebviewMessage {
 		| "humanRelayResponse"
 		| "humanRelayCancel"
 		| "closeHumanRelayDialog"
-		| "showDuplicateResponseAlert"
+		| "showHumanRelayResponseAlert"
 		| "browserToolEnabled"
 		| "telemetrySetting"
 		| "showRooIgnoredFiles"
