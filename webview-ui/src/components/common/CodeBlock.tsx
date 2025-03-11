@@ -28,13 +28,13 @@ const CopyButton = styled.button`
 	background: transparent;
 	border: none;
 	color: var(--vscode-foreground);
-	cursor: pointer;
+	cursor: var(--copy-button-cursor, default);
 	padding: 4px;
 	display: flex;
 	align-items: center;
 	opacity: 0.4;
 	border-radius: 3px;
-	pointer-events: all;
+	pointer-events: var(--copy-button-events, none);
 
 	&:hover {
 		background: var(--vscode-toolbar-hoverBackground);
@@ -63,7 +63,6 @@ const CopyButtonWrapper = styled.div`
 		position: relative;
 		top: 0;
 		right: 0;
-		pointer-events: all;
 	}
 `
 
@@ -72,7 +71,7 @@ const CodeBlockContainer = styled.div`
 	overflow: hidden;
 	background-color: ${CODE_BLOCK_BG_COLOR};
 
-	&:hover ${CopyButtonWrapper} {
+	&[data-partially-visible="true"]:hover ${CopyButtonWrapper} {
 		opacity: 1 !important;
 	}
 `
@@ -238,7 +237,7 @@ const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProp
 		}
 
 		const scrollRect = scrollContainer.getBoundingClientRect()
-		const copyButtonEdge = 32
+		const copyButtonEdge = 48
 		const isPartiallyVisible =
 			rectCodeBlock.top < scrollRect.bottom - copyButtonEdge &&
 			rectCodeBlock.bottom >= scrollRect.top + copyButtonEdge
@@ -249,8 +248,12 @@ const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProp
 		const margin =
 			paddingValue > 0 ? paddingValue : parseInt(computedStyle.getPropertyValue("padding-top") || "0", 10)
 
-		// Only show when code block is in view
-		codeBlock.style.setProperty("--copy-button-opacity", isPartiallyVisible || forceShow ? "1" : "0")
+		// Update visibility state and button interactivity
+		const isVisible = isPartiallyVisible && (forceShow || isPartiallyVisible)
+		codeBlock.setAttribute("data-partially-visible", isPartiallyVisible ? "true" : "false")
+		codeBlock.style.setProperty("--copy-button-cursor", isVisible ? "pointer" : "default")
+		codeBlock.style.setProperty("--copy-button-events", isVisible ? "all" : "none")
+		codeBlock.style.setProperty("--copy-button-opacity", isVisible ? "1" : "0")
 
 		if (isPartiallyVisible) {
 			// Keep button within code block bounds using dynamic measurements
@@ -296,6 +299,12 @@ const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProp
 
 	const handleCopy = (e: React.MouseEvent) => {
 		e.stopPropagation()
+
+		// Check if code block is partially visible before allowing copy
+		const codeBlock = codeBlockRef.current
+		if (!codeBlock || codeBlock.getAttribute("data-partially-visible") !== "true") {
+			return
+		}
 
 		// Use rawSource if available, otherwise extract from source
 		const textToCopy =
