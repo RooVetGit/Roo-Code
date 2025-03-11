@@ -1,5 +1,6 @@
 import fs from "fs/promises"
 import path from "path"
+import { SchedulableRulesManager } from "./schedulable-rules"
 
 async function safeReadFile(filePath: string): Promise<string> {
 	try {
@@ -34,6 +35,7 @@ export async function addCustomInstructions(
 	cwd: string,
 	mode: string,
 	options: { preferredLanguage?: string; rooIgnoreInstructions?: string } = {},
+	schedulableRulesManager?: SchedulableRulesManager,
 ): Promise<string> {
 	const sections = []
 
@@ -65,6 +67,7 @@ export async function addCustomInstructions(
 	const rules = []
 
 	// Add mode-specific rules first if they exist
+	// Add mode-specific rules first if they exist
 	if (modeRuleContent && modeRuleContent.trim()) {
 		const modeRuleFile = `.clinerules-${mode}`
 		rules.push(`# Rules from ${modeRuleFile}:\n${modeRuleContent}`)
@@ -74,12 +77,20 @@ export async function addCustomInstructions(
 		rules.push(options.rooIgnoreInstructions)
 	}
 
+	// Add schedulable rules if manager is provided
+	if (schedulableRulesManager) {
+		const executableRules = await schedulableRulesManager.getExecutableRules(cwd)
+		for (const rule of executableRules) {
+			rules.push(`# Rules from ${rule.fileName} (every ${rule.displayInterval}):\n${rule.content}`)
+			schedulableRulesManager.markRuleAsExecuted(rule)
+		}
+	}
+
 	// Add generic rules
 	const genericRuleContent = await loadRuleFiles(cwd)
 	if (genericRuleContent && genericRuleContent.trim()) {
 		rules.push(genericRuleContent.trim())
 	}
-
 	if (rules.length > 0) {
 		sections.push(`Rules:\n\n${rules.join("\n\n")}`)
 	}

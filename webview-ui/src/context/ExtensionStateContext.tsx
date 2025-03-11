@@ -78,6 +78,12 @@ export interface ExtensionStateContextType extends ExtensionState {
 	remoteBrowserEnabled?: boolean
 	setRemoteBrowserEnabled: (value: boolean) => void
 	machineId?: string
+	schedulableRules?: Array<{
+		fileName: string
+		displayInterval: string
+		nextExecution: number
+		lastExecuted: number
+	}>
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -206,6 +212,10 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 				}
 				case "currentCheckpointUpdated": {
 					setCurrentCheckpoint(message.text)
+					break
+				}
+				case "schedulableRules": {
+					setState((prevState) => ({ ...prevState, schedulableRules: message.schedulableRules }))
 					break
 				}
 				case "listApiConfig": {

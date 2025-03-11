@@ -1115,6 +1115,7 @@ export class Cline {
 				experiments,
 				enableMcpServerCreation,
 				rooIgnoreInstructions,
+				provider.getSchedulableRulesManager(),
 			)
 		})()
 

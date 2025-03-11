@@ -23,6 +23,7 @@ import {
 } from "@/components/ui"
 import { cn } from "@/lib/utils"
 import { useExtensionState } from "../../context/ExtensionStateContext"
+import SchedulableRulesSection from "./SchedulableRulesSection"
 import {
 	Mode,
 	PromptComponent,
@@ -54,8 +55,8 @@ type PromptsViewProps = {
 }
 
 // Helper to get group name regardless of format
-function getGroupName(group: GroupEntry): ToolGroup {
-	return Array.isArray(group) ? group[0] : group
+function getGroupName(group: GroupEntry): string {
+	return Array.isArray(group) ? group[0] : (group as string)
 }
 
 const PromptsView = ({ onDone }: PromptsViewProps) => {
@@ -74,6 +75,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 		customModes,
 		enableCustomModeCreation,
 		setEnableCustomModeCreation,
+		schedulableRules,
 	} = useExtensionState()
 
 	// Memoize modes to preserve array order
@@ -948,6 +950,11 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 						</div>
 					</div>
 				</div>
+
+				{/* Schedulable Rules Section */}
+				{schedulableRules && schedulableRules.length > 0 && (
+					<SchedulableRulesSection rules={schedulableRules} />
+				)}
 
 				<div
 					style={{

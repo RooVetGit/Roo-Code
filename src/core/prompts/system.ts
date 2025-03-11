@@ -24,6 +24,7 @@ import {
 	getModesSection,
 	addCustomInstructions,
 } from "./sections"
+import { SchedulableRulesManager } from "./sections/schedulable-rules"
 import { loadSystemPromptFile } from "./sections/custom-system-prompt"
 
 async function generatePrompt(
@@ -42,6 +43,7 @@ async function generatePrompt(
 	experiments?: Record<string, boolean>,
 	enableMcpServerCreation?: boolean,
 	rooIgnoreInstructions?: string,
+	schedulableRulesManager?: SchedulableRulesManager,
 ): Promise<string> {
 	if (!context) {
 		throw new Error("Extension context is required for generating system prompt")
@@ -90,7 +92,7 @@ ${getSystemInfoSection(cwd, mode, customModeConfigs)}
 
 ${getObjectiveSection()}
 
-${await addCustomInstructions(promptComponent?.customInstructions || modeConfig.customInstructions || "", globalCustomInstructions || "", cwd, mode, { preferredLanguage, rooIgnoreInstructions })}`
+${await addCustomInstructions(promptComponent?.customInstructions || modeConfig.customInstructions || "", globalCustomInstructions || "", cwd, mode, { preferredLanguage, rooIgnoreInstructions }, schedulableRulesManager)}`
 
 	return basePrompt
 }
@@ -111,6 +113,7 @@ export const SYSTEM_PROMPT = async (
 	experiments?: Record<string, boolean>,
 	enableMcpServerCreation?: boolean,
 	rooIgnoreInstructions?: string,
+	schedulableRulesManager?: SchedulableRulesManager,
 ): Promise<string> => {
 	if (!context) {
 		throw new Error("Extension context is required for generating system prompt")
@@ -139,7 +142,7 @@ export const SYSTEM_PROMPT = async (
 
 ${fileCustomSystemPrompt}
 
-${await addCustomInstructions(promptComponent?.customInstructions || currentMode.customInstructions || "", globalCustomInstructions || "", cwd, mode, { preferredLanguage, rooIgnoreInstructions })}`
+${await addCustomInstructions(promptComponent?.customInstructions || currentMode.customInstructions || "", globalCustomInstructions || "", cwd, mode, { preferredLanguage, rooIgnoreInstructions }, schedulableRulesManager)}`
 	}
 
 	// If diff is disabled, don't pass the diffStrategy
@@ -161,5 +164,6 @@ ${await addCustomInstructions(promptComponent?.customInstructions || currentMode
 		experiments,
 		enableMcpServerCreation,
 		rooIgnoreInstructions,
+		schedulableRulesManager,
 	)
 }

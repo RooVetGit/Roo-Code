@@ -54,6 +54,7 @@ export interface ExtensionMessage {
 		| "browserToolEnabled"
 		| "browserConnectionResult"
 		| "remoteBrowserEnabled"
+		| "schedulableRules"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -83,6 +84,12 @@ export interface ExtensionMessage {
 	mcpServers?: McpServer[]
 	commits?: GitCommit[]
 	listApiConfig?: ApiConfigMeta[]
+	schedulableRules?: Array<{
+		fileName: string
+		displayInterval: string
+		nextExecution: number
+		lastExecuted: number
+	}>
 	mode?: Mode
 	customMode?: ModeConfig
 	slug?: string
@@ -150,6 +157,12 @@ export interface ExtensionState {
 	telemetryKey?: string
 	machineId?: string
 	showRooIgnoredFiles: boolean // Whether to show .rooignore'd files in listings
+	schedulableRules?: Array<{
+		fileName: string
+		displayInterval: string
+		nextExecution: number
+		lastExecuted: number
+	}>
 }
 
 export type { ClineMessage, ClineAsk, ClineSay }
