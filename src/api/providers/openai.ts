@@ -99,6 +99,8 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 			const stream = await this.client.chat.completions.create(requestOptions)
 
+			let lastUsage
+
 			for await (const chunk of stream) {
 				const delta = chunk.choices[0]?.delta ?? {}
 
@@ -116,8 +118,12 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 					}
 				}
 				if (chunk.usage) {
-					yield this.processUsageMetrics(chunk.usage)
+					lastUsage = chunk.usage
 				}
+			}
+
+			if (lastUsage) {
+				yield this.processUsageMetrics(lastUsage, modelInfo)
 			}
 		} else {
 			// o1 for instance doesnt support streaming, non-1 temp, or system prompt
@@ -139,11 +145,11 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				type: "text",
 				text: response.choices[0]?.message.content || "",
 			}
-			yield this.processUsageMetrics(response.usage)
+			yield this.processUsageMetrics(response.usage, modelInfo)
 		}
 	}
 
-	protected processUsageMetrics(usage: any): ApiStreamUsageChunk {
+	protected processUsageMetrics(usage: any, modelInfo?: ModelInfo): ApiStreamUsageChunk {
 		return {
 			type: "usage",
 			inputTokens: usage?.prompt_tokens || 0,

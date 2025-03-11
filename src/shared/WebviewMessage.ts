@@ -57,6 +57,7 @@ export interface WebviewMessage {
 		| "checkpointStorage"
 		| "browserViewportSize"
 		| "screenshotQuality"
+		| "remoteBrowserHost"
 		| "openMcpSettings"
 		| "restartMcpServer"
 		| "toggleToolAlwaysAllow"
@@ -104,6 +105,10 @@ export interface WebviewMessage {
 		| "browserToolEnabled"
 		| "telemetrySetting"
 		| "showRooIgnoredFiles"
+		| "testBrowserConnection"
+		| "discoverBrowser"
+		| "browserConnectionResult"
+		| "remoteBrowserEnabled"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse

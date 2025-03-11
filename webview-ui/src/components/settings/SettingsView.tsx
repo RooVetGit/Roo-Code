@@ -1,6 +1,15 @@
 import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
 import { Button as VSCodeButton } from "vscrui"
-import { CheckCheck, SquareMousePointer, Webhook, GitBranch, Bell, Cog, FlaskConical } from "lucide-react"
+import {
+	CheckCheck,
+	SquareMousePointer,
+	Webhook,
+	GitBranch,
+	Bell,
+	Cog,
+	FlaskConical,
+	AlertTriangle,
+} from "lucide-react"
 
 import { ApiConfiguration } from "../../../../src/shared/api"
 import { ExperimentId } from "../../../../src/shared/experiments"
@@ -22,6 +31,7 @@ import {
 	Button,
 } from "@/components/ui"
 
+import { Tab, TabContent, TabHeader } from "../common/Tab"
 import { SetCachedStateField, SetExperimentEnabled } from "./types"
 import { SectionHeader } from "./SectionHeader"
 import ApiConfigManager from "./ApiConfigManager"
@@ -77,6 +87,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 		mcpEnabled,
 		rateLimitSeconds,
 		requestDelaySeconds,
+		remoteBrowserHost,
 		screenshotQuality,
 		soundEnabled,
 		soundVolume,
@@ -84,6 +95,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 		terminalOutputLimit,
 		writeDelayMs,
 		showRooIgnoredFiles,
+		remoteBrowserEnabled,
 	} = cachedState
 
 	// Make sure apiConfiguration is initialized and managed by SettingsView.
@@ -172,6 +184,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 			vscode.postMessage({ type: "enableCheckpoints", bool: enableCheckpoints })
 			vscode.postMessage({ type: "checkpointStorage", text: checkpointStorage })
 			vscode.postMessage({ type: "browserViewportSize", text: browserViewportSize })
+			vscode.postMessage({ type: "remoteBrowserHost", text: remoteBrowserHost })
+			vscode.postMessage({ type: "remoteBrowserEnabled", bool: remoteBrowserEnabled })
 			vscode.postMessage({ type: "fuzzyMatchThreshold", value: fuzzyMatchThreshold ?? 1.0 })
 			vscode.postMessage({ type: "writeDelayMs", value: writeDelayMs })
 			vscode.postMessage({ type: "screenshotQuality", value: screenshotQuality ?? 75 })
@@ -263,53 +277,41 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 	const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => ref.current?.scrollIntoView()
 
 	return (
-		<div className="fixed inset-0 flex flex-col overflow-hidden">
-			<div className="px-5 py-2.5 border-b border-vscode-panel-border">
-				<div className="flex flex-col">
-					<div className="flex justify-between items-center">
-						<div className="flex items-center gap-2">
-							<h3 className="text-vscode-foreground m-0">Settings</h3>
-							<div className="hidden [@media(min-width:400px)]:flex items-center">
-								{sections.map(({ id, icon: Icon, ref }) => (
-									<Button
-										key={id}
-										variant="ghost"
-										onClick={() => scrollToSection(ref)}
-										className={cn("w-6 h-6", activeSection === id ? "opacity-100" : "opacity-40")}>
-										<Icon />
-									</Button>
-								))}
-							</div>
-						</div>
-						<div className="flex gap-2">
-							<VSCodeButton
-								appearance={isSettingValid ? "primary" : "secondary"}
-								className={!isSettingValid ? "!border-vscode-errorForeground" : ""}
-								title={
-									!isSettingValid
-										? errorMessage
-										: isChangeDetected
-											? "Save changes"
-											: "Nothing changed"
-								}
-								onClick={handleSubmit}
-								disabled={!isChangeDetected || !isSettingValid}>
-								Save
-							</VSCodeButton>
-							<VSCodeButton
-								appearance="secondary"
-								title="Discard unsaved changes and close settings panel"
-								onClick={() => checkUnsaveChanges(onDone)}>
-								Done
-							</VSCodeButton>
-						</div>
+		<Tab>
+			<TabHeader className="flex justify-between items-center gap-2">
+				<div className="flex items-center gap-2">
+					<h3 className="text-vscode-foreground m-0">Settings</h3>
+					<div className="hidden [@media(min-width:400px)]:flex items-center">
+						{sections.map(({ id, icon: Icon, ref }) => (
+							<Button
+								key={id}
+								variant="ghost"
+								onClick={() => scrollToSection(ref)}
+								className={cn("w-6 h-6", activeSection === id ? "opacity-100" : "opacity-40")}>
+								<Icon />
+							</Button>
+						))}
 					</div>
 				</div>
-			</div>
+				<div className="flex gap-2">
+					<VSCodeButton
+						appearance={isSettingValid ? "primary" : "secondary"}
+						className={!isSettingValid ? "!border-vscode-errorForeground" : ""}
+						title={!isSettingValid ? errorMessage : isChangeDetected ? "Save changes" : "Nothing changed"}
+						onClick={handleSubmit}
+						disabled={!isChangeDetected || !isSettingValid}>
+						Save
+					</VSCodeButton>
+					<VSCodeButton
+						appearance="secondary"
+						title="Discard unsaved changes and close settings panel"
+						onClick={() => checkUnsaveChanges(onDone)}>
+						Done
+					</VSCodeButton>
+				</div>
+			</TabHeader>
 
-			<div
-				className="flex flex-col flex-1 overflow-auto divide-y divide-vscode-sideBar-background"
-				onScroll={handleScroll}>
+			<TabContent className="p-0 divide-y divide-vscode-sideBar-background" onScroll={handleScroll}>
 				<div ref={providersRef}>
 					<SectionHeader>
 						<div className="flex items-center gap-2">
@@ -378,6 +380,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 						browserToolEnabled={browserToolEnabled}
 						browserViewportSize={browserViewportSize}
 						screenshotQuality={screenshotQuality}
+						remoteBrowserHost={remoteBrowserHost}
+						remoteBrowserEnabled={remoteBrowserEnabled}
 						setCachedStateField={setCachedStateField}
 					/>
 				</div>
@@ -425,24 +429,26 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 					telemetrySetting={telemetrySetting}
 					setTelemetrySetting={setTelemetrySetting}
 				/>
-			</div>
+			</TabContent>
 
 			<AlertDialog open={isDiscardDialogShow} onOpenChange={setDiscardDialogShow}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>Unsaved changes</AlertDialogTitle>
-						<AlertDialogDescription>
-							<span className={`codicon codicon-warning align-middle mr-1`} />
-							Do you want to discard changes and continue?
-						</AlertDialogDescription>
+						<AlertDialogTitle>
+							<AlertTriangle className="w-5 h-5 text-yellow-500" />
+							Unsaved Changes
+						</AlertDialogTitle>
+						<AlertDialogDescription>Do you want to discard changes and continue?</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
-						<AlertDialogAction onClick={() => onConfirmDialogResult(true)}>Yes</AlertDialogAction>
-						<AlertDialogCancel onClick={() => onConfirmDialogResult(false)}>No</AlertDialogCancel>
+						<AlertDialogCancel onClick={() => onConfirmDialogResult(false)}>Cancel</AlertDialogCancel>
+						<AlertDialogAction onClick={() => onConfirmDialogResult(true)}>
+							Discard changes
+						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
-		</div>
+		</Tab>
 	)
 })
 

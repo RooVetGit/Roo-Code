@@ -48,6 +48,7 @@ import {
 	ClineSay,
 	ClineSayBrowserAction,
 	ClineSayTool,
+	ToolProgressStatus,
 } from "../shared/ExtensionMessage"
 import { getApiMetrics } from "../shared/getApiMetrics"
 import { HistoryItem } from "../shared/HistoryItem"
@@ -55,7 +56,7 @@ import { ClineAskResponse } from "../shared/WebviewMessage"
 import { GlobalFileNames } from "../shared/globalFileNames"
 import { defaultModeSlug, getModeBySlug, getFullModeDetails } from "../shared/modes"
 import { EXPERIMENT_IDS, experiments as Experiments, ExperimentId } from "../shared/experiments"
-import { calculateApiCost } from "../utils/cost"
+import { calculateApiCostAnthropic } from "../utils/cost"
 import { fileExistsAtPath } from "../utils/fs"
 import { arePathsEqual, getReadablePath } from "../utils/path"
 import { parseMentions } from "./mentions"
@@ -408,6 +409,7 @@ export class Cline {
 		type: ClineAsk,
 		text?: string,
 		partial?: boolean,
+		progressStatus?: ToolProgressStatus,
 	): Promise<{ response: ClineAskResponse; text?: string; images?: string[] }> {
 		// If this Cline instance was aborted by the provider, then the only thing keeping us alive is a promise still running in the background, in which case we don't want to send its result to the webview as it is attached to a new instance of Cline now. So we can safely ignore the result of any active promises, and this class will be deallocated. (Although we set Cline = undefined in provider, that simply removes the reference to this instance, but the instance is still alive until this promise resolves or rejects.)
 		if (this.abort) {
@@ -423,6 +425,7 @@ export class Cline {
 					// existing partial message, so update it
 					lastMessage.text = text
 					lastMessage.partial = partial
+					lastMessage.progressStatus = progressStatus
 					// todo be more efficient about saving and posting only new data or one whole message at a time so ignore partial for saves, and only post parts of partial message instead of whole array in new listener
 					// await this.saveClineMessages()
 					// await this.providerRef.deref()?.postStateToWebview()
@@ -460,6 +463,8 @@ export class Cline {
 					// lastMessage.ts = askTs
 					lastMessage.text = text
 					lastMessage.partial = false
+					lastMessage.progressStatus = progressStatus
+
 					await this.saveClineMessages()
 					// await this.providerRef.deref()?.postStateToWebview()
 					await this.providerRef
@@ -511,6 +516,7 @@ export class Cline {
 		images?: string[],
 		partial?: boolean,
 		checkpoint?: Record<string, unknown>,
+		progressStatus?: ToolProgressStatus,
 	): Promise<undefined> {
 		if (this.abort) {
 			throw new Error(`Task: ${this.taskNumber} Roo Code instance aborted (#2)`)
@@ -526,6 +532,7 @@ export class Cline {
 					lastMessage.text = text
 					lastMessage.images = images
 					lastMessage.partial = partial
+					lastMessage.progressStatus = progressStatus
 					await this.providerRef
 						.deref()
 						?.postMessageToWebview({ type: "partialMessage", partialMessage: lastMessage })
@@ -545,6 +552,7 @@ export class Cline {
 					lastMessage.text = text
 					lastMessage.images = images
 					lastMessage.partial = false
+					lastMessage.progressStatus = progressStatus
 
 					// instead of streaming partialMessage events, we do a save and post like normal to persist to disk
 					await this.saveClineMessages()
@@ -875,7 +883,7 @@ export class Cline {
 			//  The way this agentic loop works is that cline will be given a task that he then calls tools to complete. unless there's an attempt_completion call, we keep responding back to him with his tool's responses until he either attempt_completion or does not use anymore tools. If he does not use anymore tools, we ask him to consider if he's completed the task and then call attempt_completion, otherwise proceed with completing the task.
 			// There is a MAX_REQUESTS_PER_TASK limit to prevent infinite requests, but Cline is prompted to finish the task as efficiently as he can.
 
-			//const totalCost = this.calculateApiCost(totalInputTokens, totalOutputTokens)
+			//const totalCost = this.calculateApiCostAnthropic(totalInputTokens, totalOutputTokens)
 			if (didEndLoop) {
 				// For now a task never 'completes'. This will only happen if the user hits max requests and denies resetting the count.
 				//this.say("task_completed", `Task completed. Total API usage cost: ${totalCost}`)
@@ -1394,8 +1402,12 @@ export class Cline {
 					isCheckpointPossible = true
 				}
 
-				const askApproval = async (type: ClineAsk, partialMessage?: string) => {
-					const { response, text, images } = await this.ask(type, partialMessage, false)
+				const askApproval = async (
+					type: ClineAsk,
+					partialMessage?: string,
+					progressStatus?: ToolProgressStatus,
+				) => {
+					const { response, text, images } = await this.ask(type, partialMessage, false, progressStatus)
 					if (response !== "yesButtonClicked") {
 						// Handle both messageResponse and noButtonClicked with text
 						if (text) {
@@ -1703,8 +1715,16 @@ export class Cline {
 						try {
 							if (block.partial) {
 								// update gui message
+								let toolProgressStatus
+								if (this.diffStrategy && this.diffStrategy.getProgressStatus) {
+									toolProgressStatus = this.diffStrategy.getProgressStatus(block)
+								}
+
 								const partialMessage = JSON.stringify(sharedMessageProps)
-								await this.ask("tool", partialMessage, block.partial).catch(() => {})
+
+								await this.ask("tool", partialMessage, block.partial, toolProgressStatus).catch(
+									() => {},
+								)
 								break
 							} else {
 								if (!relPath) {
@@ -1799,7 +1819,12 @@ export class Cline {
 									diff: diffContent,
 								} satisfies ClineSayTool)
 
-								const didApprove = await askApproval("tool", completeMessage)
+								let toolProgressStatus
+								if (this.diffStrategy && this.diffStrategy.getProgressStatus) {
+									toolProgressStatus = this.diffStrategy.getProgressStatus(block, diffResult)
+								}
+
+								const didApprove = await askApproval("tool", completeMessage, toolProgressStatus)
 								if (!didApprove) {
 									await this.diffViewProvider.revertChanges() // This likely handles closing the diff view
 									break
@@ -3173,7 +3198,7 @@ export class Cline {
 					cacheReads: cacheReadTokens,
 					cost:
 						totalCost ??
-						calculateApiCost(
+						calculateApiCostAnthropic(
 							this.api.getModel().info,
 							inputTokens,
 							outputTokens,
@@ -3798,6 +3823,8 @@ export class Cline {
 			return
 		}
 
+		telemetryService.captureCheckpointDiffed(this.taskId)
+
 		if (!previousCommitHash && mode === "checkpoint") {
 			const previousCheckpoint = this.clineMessages
 				.filter(({ say }) => say === "checkpoint_saved")
@@ -3849,6 +3876,8 @@ export class Cline {
 			return
 		}
 
+		telemetryService.captureCheckpointCreated(this.taskId)
+
 		// Start the checkpoint process in the background.
 		service.saveCheckpoint(`Task: ${this.taskId}, Time: ${Date.now()}`).catch((err) => {
 			console.error("[Cline#checkpointSave] caught unexpected error, disabling checkpoints", err)
@@ -3879,6 +3908,8 @@ export class Cline {
 
 		try {
 			await service.restoreCheckpoint(commitHash)
+
+			telemetryService.captureCheckpointRestored(this.taskId)
 
 			await this.providerRef.deref()?.postMessageToWebview({ type: "currentCheckpointUpdated", text: commitHash })
 

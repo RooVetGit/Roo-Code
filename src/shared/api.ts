@@ -39,6 +39,7 @@ export interface ApiHandlerOptions {
 	awspromptCacheId?: string
 	awsProfile?: string
 	awsUseProfile?: boolean
+	awsCustomArn?: string
 	vertexKeyFile?: string
 	vertexJsonCredentials?: string
 	vertexProjectId?: string
@@ -102,6 +103,7 @@ export const API_CONFIG_KEYS: GlobalStateKey[] = [
 	// "awspromptCacheId", // NOT exist on GlobalStateKey
 	"awsProfile",
 	"awsUseProfile",
+	"awsCustomArn",
 	"vertexKeyFile",
 	"vertexJsonCredentials",
 	"vertexProjectId",
