@@ -141,9 +141,18 @@ export class ContextProxy {
 		for (const key of GLOBAL_STATE_KEYS) {
 			try {
 				if (this.isWindowSpecificKey(key)) {
-					// For window-specific keys, get the value using the window-specific key
+					// For window-specific keys, first try to get the value using the window-specific key
 					const windowKey = this.getWindowSpecificKey(key)
-					const value = this.originalContext.globalState.get(windowKey)
+					let value = this.originalContext.globalState.get(windowKey)
+
+					// If no window-specific value exists, try to get a global value as fallback
+					if (value === undefined) {
+						value = this.originalContext.globalState.get(key)
+						logger.debug(
+							`No window-specific value found for ${windowKey}, using global value for ${key}: ${value}`,
+						)
+					}
+
 					this.stateCache.set(key, value)
 					logger.debug(`Loaded window-specific key ${key} as ${windowKey} with value: ${value}`)
 				} else {
