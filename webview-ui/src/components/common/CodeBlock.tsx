@@ -33,7 +33,6 @@ const CopyButton = styled.button`
 	display: flex;
 	align-items: center;
 	opacity: 0.4;
-	transition: opacity 0.2s;
 	border-radius: 3px;
 	pointer-events: all;
 
@@ -53,9 +52,6 @@ const CopyButtonWrapper = styled.div`
 	overflow: visible;
 	pointer-events: none;
 	opacity: var(--copy-button-opacity, 0);
-	transition:
-		opacity 0.2s,
-		background 0.2s;
 	padding: 4px;
 	border-radius: 3px;
 
@@ -213,18 +209,9 @@ const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProp
 		const copyWrapper = copyButtonWrapperRef.current
 		if (!codeBlock) return
 
-		const rect = codeBlock.getBoundingClientRect()
+		const rectCodeBlock = codeBlock.getBoundingClientRect()
 		const scrollContainer = document.querySelector('[data-virtuoso-scroller="true"]')
 		if (!scrollContainer) return
-
-		const scrollRect = scrollContainer.getBoundingClientRect()
-		const isPartiallyVisible = rect.top < scrollRect.bottom && rect.bottom >= scrollRect.top
-
-		// Calculate margin from existing padding in the component
-		const computedStyle = window.getComputedStyle(codeBlock)
-		const paddingValue = parseInt(computedStyle.getPropertyValue("padding") || "0", 10)
-		const margin =
-			paddingValue > 0 ? paddingValue : parseInt(computedStyle.getPropertyValue("padding-top") || "0", 10)
 
 		// Get wrapper height dynamically
 		let wrapperHeight
@@ -250,6 +237,18 @@ const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProp
 			wrapperHeight = fontSize * 2.5 // Approximate button height based on font size
 		}
 
+		const scrollRect = scrollContainer.getBoundingClientRect()
+		const copyButtonEdge = 32
+		const isPartiallyVisible =
+			rectCodeBlock.top < scrollRect.bottom - copyButtonEdge &&
+			rectCodeBlock.bottom >= scrollRect.top + copyButtonEdge
+
+		// Calculate margin from existing padding in the component
+		const computedStyle = window.getComputedStyle(codeBlock)
+		const paddingValue = parseInt(computedStyle.getPropertyValue("padding") || "0", 10)
+		const margin =
+			paddingValue > 0 ? paddingValue : parseInt(computedStyle.getPropertyValue("padding-top") || "0", 10)
+
 		// Only show when code block is in view
 		codeBlock.style.setProperty("--copy-button-opacity", isPartiallyVisible || forceShow ? "1" : "0")
 
@@ -257,9 +256,9 @@ const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProp
 			// Keep button within code block bounds using dynamic measurements
 			const topPosition = Math.max(
 				scrollRect.top + margin,
-				Math.min(rect.bottom - wrapperHeight - margin, rect.top + margin),
+				Math.min(rectCodeBlock.bottom - wrapperHeight - margin, rectCodeBlock.top + margin),
 			)
-			const rightPosition = Math.max(margin, scrollRect.right - rect.right + margin)
+			const rightPosition = Math.max(margin, scrollRect.right - rectCodeBlock.right + margin)
 
 			codeBlock.style.setProperty("--copy-button-top", `${topPosition}px`)
 			codeBlock.style.setProperty("--copy-button-right", `${rightPosition}px`)
