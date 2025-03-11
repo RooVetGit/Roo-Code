@@ -113,7 +113,6 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			include_reasoning: true,
 			// Only include provider if openRouterSpecificProvider is not "[default]".
 			...(this.options.openRouterSpecificProvider &&
-				this.options.openRouterSpecificProvider !== "" &&
 				this.options.openRouterSpecificProvider !== OPENROUTER_DEFAULT_PROVIDER_NAME && {
 					provider: { order: [this.options.openRouterSpecificProvider] },
 				}),
