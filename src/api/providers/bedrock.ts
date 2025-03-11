@@ -86,6 +86,11 @@ export interface StreamEvent {
 			latencyMs: number
 		}
 	}
+	trace?: {
+		promptRouter?: {
+			invokedModelId?: string
+		}
+	}
 }
 
 export class AwsBedrockHandler extends BaseProvider implements SingleCompletionHandler {
@@ -252,10 +257,49 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 
 				// Handle metadata events first
 				if (streamEvent.metadata?.usage) {
+					// Check if this is a response from an intelligent prompt router
+					const invokedModelId = streamEvent.trace?.promptRouter?.invokedModelId
+
+					// If invokedModelId is present, extract it from the ARN format
+					let modelIdForCost: string | undefined
+					if (invokedModelId) {
+						// Extract the model name from the ARN
+						// Example ARN: arn:aws:bedrock:us-west-2:699475926481:inference-profile/us.anthropic.claude-3-5-sonnet-20240620-v1:0
+						const modelMatch = invokedModelId.match(/\/([^\/]+)(?::|$)/)
+						if (modelMatch && modelMatch[1]) {
+							const modelName = modelMatch[1]
+
+							// Map the model name to the format expected by the cost calculation function
+							if (modelName.includes("claude-3-5-sonnet")) {
+								modelIdForCost = "claude-3-5-sonnet"
+							} else if (modelName.includes("claude-3-sonnet")) {
+								modelIdForCost = "claude-3-sonnet"
+							} else if (modelName.includes("claude-3-opus")) {
+								modelIdForCost = "claude-3-opus"
+							} else if (modelName.includes("claude-3-haiku")) {
+								modelIdForCost = "claude-3-haiku"
+							} else if (modelName.includes("claude-3-5-haiku")) {
+								modelIdForCost = "claude-3-5-haiku"
+							} else if (modelName.includes("claude-3-7-sonnet")) {
+								modelIdForCost = "claude-3-7-sonnet"
+							}
+
+							logger.debug("Extracted model ID from intelligent prompt router", {
+								ctx: "bedrock",
+								originalArn: invokedModelId,
+								extractedModelId: modelIdForCost,
+							})
+						}
+					}
+
+					const inputTokens = streamEvent.metadata.usage.inputTokens || 0
+					const outputTokens = streamEvent.metadata.usage.outputTokens || 0
+
 					yield {
 						type: "usage",
-						inputTokens: streamEvent.metadata.usage.inputTokens || 0,
-						outputTokens: streamEvent.metadata.usage.outputTokens || 0,
+						inputTokens: inputTokens,
+						outputTokens: outputTokens,
+						invokedModelId: modelIdForCost,
 					}
 					continue
 				}
@@ -491,6 +535,22 @@ Please check:
 					supportsPromptCache: false,
 					supportsImages: true,
 				}
+			} else if (arnLower.includes("llama3.3") || arnLower.includes("llama-3.3")) {
+				// Llama 3.3 models
+				modelInfo = {
+					maxTokens: 8192,
+					contextWindow: 128_000,
+					supportsPromptCache: true,
+					supportsImages: true,
+				}
+			} else if (arnLower.includes("llama3.2") || arnLower.includes("llama-3.2")) {
+				// Llama 3.2 models
+				modelInfo = {
+					maxTokens: 8192,
+					contextWindow: 128_000,
+					supportsPromptCache: true,
+					supportsImages: arnLower.includes("90b") || arnLower.includes("11b"),
+				}
 			} else if (arnLower.includes("llama3") || arnLower.includes("llama-3")) {
 				// Llama 3 models typically have 8192 tokens in Bedrock
 				modelInfo = {
@@ -498,6 +558,46 @@ Please check:
 					contextWindow: 128_000,
 					supportsPromptCache: false,
 					supportsImages: arnLower.includes("90b") || arnLower.includes("11b"),
+				}
+			} else if (arnLower.includes("titan-text-lite")) {
+				// Amazon Titan Text Lite
+				modelInfo = {
+					maxTokens: 4096,
+					contextWindow: 8_000,
+					supportsPromptCache: false,
+					supportsImages: false,
+				}
+			} else if (arnLower.includes("titan-text-express")) {
+				// Amazon Titan Text Express
+				modelInfo = {
+					maxTokens: 4096,
+					contextWindow: 8_000,
+					supportsPromptCache: false,
+					supportsImages: false,
+				}
+			} else if (arnLower.includes("titan-text-embeddings")) {
+				// Amazon Titan Text Embeddings
+				modelInfo = {
+					maxTokens: 8192,
+					contextWindow: 8_000,
+					supportsPromptCache: false,
+					supportsImages: false,
+				}
+			} else if (arnLower.includes("nova-micro")) {
+				// Amazon Nova Micro
+				modelInfo = {
+					maxTokens: 4096,
+					contextWindow: 128_000,
+					supportsPromptCache: false,
+					supportsImages: false,
+				}
+			} else if (arnLower.includes("nova-lite")) {
+				// Amazon Nova Lite
+				modelInfo = {
+					maxTokens: 4096,
+					contextWindow: 128_000,
+					supportsPromptCache: false,
+					supportsImages: false,
 				}
 			} else if (arnLower.includes("nova-pro")) {
 				// Amazon Nova Pro
