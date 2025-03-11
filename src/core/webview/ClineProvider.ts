@@ -2041,6 +2041,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		// await this.postMessageToWebview({ type: "action", action: "settingsButtonClicked" }) // bad ux if user is on welcome
 	}
 
+	async handleKiloCodeCallback(token: string) {
+		// TODO: Implement the token handling logic here
+		console.log("KiloCode token received:", token)
+	}
+
 	// Task history
 
 	async getTaskWithId(id: string): Promise<{
