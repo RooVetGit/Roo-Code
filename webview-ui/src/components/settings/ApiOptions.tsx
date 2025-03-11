@@ -281,9 +281,9 @@ const ApiOptions = ({
 
 			{selectedProvider === "kilocode" && (
 				<>
-					<Button variant="secondary" onClick={handleKiloCodeLogin}>
+					<VSCodeButtonLink variant="secondary" href={getKiloCodeBackendAuthUrl()}>
 						Log in at Kilo Code
-					</Button>
+					</VSCodeButtonLink>
 				</>
 			)}
 
