@@ -176,6 +176,7 @@ export const StyledPre = styled.pre<{ theme: any }>`
 
 const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProps) => {
 	const codeBlockRef = useRef<HTMLDivElement>(null)
+	const copyButtonWrapperRef = useRef<HTMLDivElement>(null)
 	const { showCopyFeedback, copyWithFeedback } = useCopyToClipboard()
 	const { theme } = useExtensionState()
 
@@ -209,6 +210,7 @@ const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProp
 
 	const updateCopyButtonPosition = useCallback((forceShow = false) => {
 		const codeBlock = codeBlockRef.current
+		const copyWrapper = copyButtonWrapperRef.current
 		if (!codeBlock) return
 
 		const rect = codeBlock.getBoundingClientRect()
@@ -218,13 +220,46 @@ const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProp
 		const scrollRect = scrollContainer.getBoundingClientRect()
 		const isPartiallyVisible = rect.top < scrollRect.bottom && rect.bottom >= scrollRect.top
 
+		// Calculate margin from existing padding in the component
+		const computedStyle = window.getComputedStyle(codeBlock)
+		const paddingValue = parseInt(computedStyle.getPropertyValue("padding") || "0", 10)
+		const margin =
+			paddingValue > 0 ? paddingValue : parseInt(computedStyle.getPropertyValue("padding-top") || "0", 10)
+
+		// Get wrapper height dynamically
+		let wrapperHeight
+		if (copyWrapper) {
+			const copyRect = copyWrapper.getBoundingClientRect()
+			// If height is 0 due to styling, estimate from children
+			if (copyRect.height > 0) {
+				wrapperHeight = copyRect.height
+			} else if (copyWrapper.children.length > 0) {
+				// Try to get height from the button inside
+				const buttonRect = copyWrapper.children[0].getBoundingClientRect()
+				const buttonStyle = window.getComputedStyle(copyWrapper.children[0] as Element)
+				const buttonPadding =
+					parseInt(buttonStyle.getPropertyValue("padding-top") || "0", 10) +
+					parseInt(buttonStyle.getPropertyValue("padding-bottom") || "0", 10)
+				wrapperHeight = buttonRect.height + buttonPadding
+			}
+		}
+
+		// If we still don't have a height, calculate from font size
+		if (!wrapperHeight) {
+			const fontSize = parseInt(window.getComputedStyle(document.body).getPropertyValue("font-size"), 10)
+			wrapperHeight = fontSize * 2.5 // Approximate button height based on font size
+		}
+
 		// Only show when code block is in view
 		codeBlock.style.setProperty("--copy-button-opacity", isPartiallyVisible || forceShow ? "1" : "0")
 
 		if (isPartiallyVisible) {
-			// Keep button within code block bounds
-			const topPosition = Math.max(scrollRect.top + 8, Math.min(rect.bottom - 40, rect.top + 8))
-			const rightPosition = Math.max(8, scrollRect.right - rect.right + 8)
+			// Keep button within code block bounds using dynamic measurements
+			const topPosition = Math.max(
+				scrollRect.top + margin,
+				Math.min(rect.bottom - wrapperHeight - margin, rect.top + margin),
+			)
+			const rightPosition = Math.max(margin, scrollRect.right - rect.right + margin)
 
 			codeBlock.style.setProperty("--copy-button-top", `${topPosition}px`)
 			codeBlock.style.setProperty("--copy-button-right", `${rightPosition}px`)
@@ -283,6 +318,7 @@ const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProp
 				{reactContent}
 			</StyledMarkdown>
 			<CopyButtonWrapper
+				ref={copyButtonWrapperRef}
 				onMouseEnter={() => updateCopyButtonPosition(true)}
 				onMouseLeave={() => updateCopyButtonPosition()}>
 				<CopyButton onClick={handleCopy} title="Copy code">
