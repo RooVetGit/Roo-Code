@@ -7,9 +7,8 @@ import { ClineProvider } from "../ClineProvider"
 import { ExtensionMessage, ExtensionState } from "../../../shared/ExtensionMessage"
 import { GlobalStateKey, SecretKey } from "../../../shared/globalState"
 import { setSoundEnabled } from "../../../utils/sound"
-import { defaultModeSlug } from "../../../shared/modes"
 import { experimentDefault } from "../../../shared/experiments"
-import { Cline } from "../../Cline"
+import { defaultExtensionState } from "../../../shared/ExtensionMessage"
 
 // Mock setup must come before imports
 jest.mock("../../prompts/sections/custom-instructions")
@@ -417,11 +416,7 @@ describe("ClineProvider", () => {
 		await provider.resolveWebviewView(mockWebviewView)
 
 		const mockState: ExtensionState = {
-			version: "1.0.0",
-			preferredLanguage: "English",
-			clineMessages: [],
-			taskHistory: [],
-			shouldShowAnnouncement: false,
+			...defaultExtensionState,
 			apiConfiguration: {
 				apiProvider: "openrouter",
 			},
@@ -432,24 +427,10 @@ describe("ClineProvider", () => {
 			alwaysAllowBrowser: false,
 			alwaysAllowMcp: false,
 			uriScheme: "vscode",
-			soundEnabled: false,
-			diffEnabled: false,
 			enableCheckpoints: false,
-			checkpointStorage: "task",
-			writeDelayMs: 1000,
-			browserViewportSize: "900x600",
 			fuzzyMatchThreshold: 1.0,
-			mcpEnabled: true,
 			enableMcpServerCreation: false,
-			requestDelaySeconds: 5,
-			rateLimitSeconds: 0,
-			mode: defaultModeSlug,
 			customModes: [],
-			experiments: experimentDefault,
-			maxOpenTabsContext: 20,
-			browserToolEnabled: true,
-			telemetrySetting: "unset",
-			showRooIgnoredFiles: true,
 		}
 
 		const message: ExtensionMessage = {

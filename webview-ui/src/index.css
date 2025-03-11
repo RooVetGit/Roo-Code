@@ -164,6 +164,24 @@
 	code {
 		background-color: var(--vscode-textCodeBlock-background);
 	}
+	@keyframes border-flow {
+		0%,
+		100% {
+			background-position: 0% 0;
+		}
+		50% {
+			background-position: 100% 0;
+		}
+		75% {
+			background-position: 0% 0;
+		}
+	}
+}
+
+@layer utilities {
+	.animate-border-flow {
+		animation: border-flow 2s ease-in-out infinite;
+	}
 }
 
 /* Form Element Focus States */

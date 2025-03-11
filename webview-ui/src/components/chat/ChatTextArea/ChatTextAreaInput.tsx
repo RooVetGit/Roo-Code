@@ -1,102 +1,59 @@
-import React, { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import DynamicTextArea from "react-textarea-autosize"
-
-import { mentionRegex, mentionRegexGlobal } from "../../../../src/shared/context-mentions"
-import { WebviewMessage } from "../../../../src/shared/WebviewMessage"
-import { Mode, getAllModes } from "../../../../src/shared/modes"
-
-import { vscode } from "@/utils/vscode"
+import { mentionRegex, mentionRegexGlobal } from "../../../../../src/shared/context-mentions"
 import {
 	ContextMenuOptionType,
 	getContextMenuOptions,
 	insertMention,
 	removeMention,
 	shouldShowContextMenu,
-} from "@/utils/context-mentions"
-import { SelectDropdown, DropdownOptionType } from "@/components/ui"
+} from "../../../utils/context-mentions"
+import ContextMenu from "../ContextMenu"
+import Thumbnails from "../../common/Thumbnails"
+import { Mode, getAllModes } from "../../../../../src/shared/modes"
+import { MAX_IMAGES_PER_MESSAGE } from "../ChatView"
+import { convertToMentionPath } from "../../../utils/path-mentions"
+import { vscode } from "../../../utils/vscode"
 
-import { useExtensionState } from "../../context/ExtensionStateContext"
-import Thumbnails from "../common/Thumbnails"
-import { convertToMentionPath } from "../../utils/path-mentions"
-import { MAX_IMAGES_PER_MESSAGE } from "./ChatView"
-import ContextMenu from "./ContextMenu"
-
-interface ChatTextAreaProps {
+interface ChatTextAreaInputProps {
 	inputValue: string
 	setInputValue: (value: string) => void
 	textAreaDisabled: boolean
+	shouldDisableImages: boolean
 	placeholderText: string
 	selectedImages: string[]
 	setSelectedImages: React.Dispatch<React.SetStateAction<string[]>>
 	onSend: () => void
-	onSelectImages: () => void
-	shouldDisableImages: boolean
 	onHeightChange?: (height: number) => void
-	mode: Mode
 	setMode: (value: Mode) => void
-	modeShortcutText: string
+	customModes: any[]
+	filePaths: string[]
+	openedTabs: Array<{ path?: string }>
+	gitCommits: any[]
+	cwd?: string
 }
 
-const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
+const ChatTextAreaInput = React.forwardRef<HTMLTextAreaElement, ChatTextAreaInputProps>(
 	(
 		{
 			inputValue,
 			setInputValue,
 			textAreaDisabled,
+			shouldDisableImages,
 			placeholderText,
 			selectedImages,
 			setSelectedImages,
 			onSend,
-			onSelectImages,
-			shouldDisableImages,
 			onHeightChange,
-			mode,
 			setMode,
-			modeShortcutText,
+			customModes,
+			cwd,
+			filePaths,
+			openedTabs,
+			gitCommits,
 		},
 		ref,
 	) => {
-		const { filePaths, openedTabs, currentApiConfigName, listApiConfigMeta, customModes, cwd } = useExtensionState()
-		const [gitCommits, setGitCommits] = useState<any[]>([])
-		const [showDropdown, setShowDropdown] = useState(false)
-
-		// Close dropdown when clicking outside
-		useEffect(() => {
-			const handleClickOutside = (event: MouseEvent) => {
-				if (showDropdown) {
-					setShowDropdown(false)
-				}
-			}
-			document.addEventListener("mousedown", handleClickOutside)
-			return () => document.removeEventListener("mousedown", handleClickOutside)
-		}, [showDropdown])
-
-		// Handle enhanced prompt response
-		useEffect(() => {
-			const messageHandler = (event: MessageEvent) => {
-				const message = event.data
-				if (message.type === "enhancedPrompt") {
-					if (message.text) {
-						setInputValue(message.text)
-					}
-					setIsEnhancingPrompt(false)
-				} else if (message.type === "commitSearchResults") {
-					const commits = message.commits.map((commit: any) => ({
-						type: ContextMenuOptionType.Git,
-						value: commit.hash,
-						label: commit.subject,
-						description: `${commit.shortHash} by ${commit.author} on ${commit.date}`,
-						icon: "$(git-commit)",
-					}))
-					setGitCommits(commits)
-				}
-			}
-			window.addEventListener("message", messageHandler)
-			return () => window.removeEventListener("message", messageHandler)
-		}, [setInputValue])
-
-		const [thumbnailsHeight, setThumbnailsHeight] = useState(0)
-		const [textAreaBaseHeight, setTextAreaBaseHeight] = useState<number | undefined>(undefined)
 		const [showContextMenu, setShowContextMenu] = useState(false)
 		const [cursorPosition, setCursorPosition] = useState(0)
 		const [searchQuery, setSearchQuery] = useState("")
@@ -108,37 +65,10 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const [justDeletedSpaceAfterMention, setJustDeletedSpaceAfterMention] = useState(false)
 		const [intendedCursorPosition, setIntendedCursorPosition] = useState<number | null>(null)
 		const contextMenuContainerRef = useRef<HTMLDivElement>(null)
-		const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false)
+		const [thumbnailsHeight, setThumbnailsHeight] = useState(0)
+		const [textAreaBaseHeight, setTextAreaBaseHeight] = useState<number | undefined>(undefined)
+		const [isDraggingOver, setIsDraggingOver] = useState(false)
 		const [isFocused, setIsFocused] = useState(false)
-
-		// Fetch git commits when Git is selected or when typing a hash
-		useEffect(() => {
-			if (selectedType === ContextMenuOptionType.Git || /^[a-f0-9]+$/i.test(searchQuery)) {
-				const message: WebviewMessage = {
-					type: "searchCommits",
-					query: searchQuery || "",
-				} as const
-				vscode.postMessage(message)
-			}
-		}, [selectedType, searchQuery])
-
-		const handleEnhancePrompt = useCallback(() => {
-			if (!textAreaDisabled) {
-				const trimmedInput = inputValue.trim()
-				if (trimmedInput) {
-					setIsEnhancingPrompt(true)
-					const message = {
-						type: "enhancePrompt" as const,
-						text: trimmedInput,
-					}
-					vscode.postMessage(message)
-				} else {
-					const promptDescription =
-						"The 'Enhance Prompt' button helps improve your prompt by providing additional context, clarification, or rephrasing. Try typing a prompt in here and clicking the button again to see how it works."
-					setInputValue(promptDescription)
-				}
-			}
-		}, [inputValue, textAreaDisabled, setInputValue])
 
 		const queryItems = useMemo(() => {
 			return [
@@ -153,32 +83,13 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					})),
 				...filePaths
 					.map((file) => "/" + file)
-					.filter((path) => !openedTabs.some((tab) => tab.path && "/" + tab.path === path)) // Filter out paths that are already in openedTabs
+					.filter((path) => !openedTabs.some((tab) => tab.path && "/" + tab.path === path))
 					.map((path) => ({
 						type: path.endsWith("/") ? ContextMenuOptionType.Folder : ContextMenuOptionType.File,
 						value: path,
 					})),
 			]
 		}, [filePaths, gitCommits, openedTabs])
-
-		useEffect(() => {
-			const handleClickOutside = (event: MouseEvent) => {
-				if (
-					contextMenuContainerRef.current &&
-					!contextMenuContainerRef.current.contains(event.target as Node)
-				) {
-					setShowContextMenu(false)
-				}
-			}
-
-			if (showContextMenu) {
-				document.addEventListener("mousedown", handleClickOutside)
-			}
-
-			return () => {
-				document.removeEventListener("mousedown", handleClickOutside)
-			}
-		}, [showContextMenu, setShowContextMenu])
 
 		const handleMentionSelect = useCallback(
 			(type: ContextMenuOptionType, value?: string) => {
@@ -187,14 +98,9 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				}
 
 				if (type === ContextMenuOptionType.Mode && value) {
-					// Handle mode selection
 					setMode(value)
 					setInputValue("")
 					setShowContextMenu(false)
-					vscode.postMessage({
-						type: "mode",
-						text: value,
-					})
 					return
 				}
 
@@ -238,7 +144,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					setCursorPosition(newCursorPosition)
 					setIntendedCursorPosition(newCursorPosition)
 
-					// scroll to cursor
 					setTimeout(() => {
 						if (textAreaRef.current) {
 							textAreaRef.current.blur()
@@ -247,8 +152,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					}, 0)
 				}
 			},
-			// eslint-disable-next-line react-hooks/exhaustive-deps
-			[setInputValue, cursorPosition],
+			[setInputValue, cursorPosition, setMode],
 		)
 
 		const handleKeyDown = useCallback(
@@ -274,16 +178,14 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 							if (optionsLength === 0) return prevIndex
 
-							// Find selectable options (non-URL types)
 							const selectableOptions = options.filter(
 								(option) =>
 									option.type !== ContextMenuOptionType.URL &&
 									option.type !== ContextMenuOptionType.NoResults,
 							)
 
-							if (selectableOptions.length === 0) return -1 // No selectable options
+							if (selectableOptions.length === 0) return -1
 
-							// Find the index of the next selectable option
 							const currentSelectableIndex = selectableOptions.findIndex(
 								(option) => option === options[prevIndex],
 							)
@@ -292,7 +194,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								(currentSelectableIndex + direction + selectableOptions.length) %
 								selectableOptions.length
 
-							// Find the index of the selected option in the original options array
 							return options.findIndex((option) => option === selectableOptions[newSelectableIndex])
 						})
 						return
@@ -330,13 +231,11 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						charBeforeCursor === " " || charBeforeCursor === "\n" || charBeforeCursor === "\r\n"
 					const charAfterIsWhitespace =
 						charAfterCursor === " " || charAfterCursor === "\n" || charAfterCursor === "\r\n"
-					// checks if char before cusor is whitespace after a mention
 					if (
 						charBeforeIsWhitespace &&
-						inputValue.slice(0, cursorPosition - 1).match(new RegExp(mentionRegex.source + "$")) // "$" is added to ensure the match occurs at the end of the string
+						inputValue.slice(0, cursorPosition - 1).match(new RegExp(mentionRegex.source + "$"))
 					) {
 						const newCursorPosition = cursorPosition - 1
-						// if mention is followed by another word, then instead of deleting the space separating them we just move the cursor to the end of the mention
 						if (!charAfterIsWhitespace) {
 							event.preventDefault()
 							textAreaRef.current?.setSelectionRange(newCursorPosition, newCursorPosition)
@@ -349,7 +248,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						if (newText !== inputValue) {
 							event.preventDefault()
 							setInputValue(newText)
-							setIntendedCursorPosition(newPosition) // Store the new cursor position in state
+							setIntendedCursorPosition(newPosition)
 						}
 						setJustDeletedSpaceAfterMention(false)
 						setShowContextMenu(false)
@@ -374,37 +273,49 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			],
 		)
 
+		const handleBlur = useCallback(() => {
+			setIsFocused(false)
+			if (!isMouseDownOnMenu) {
+				setTimeout(() => setShowContextMenu(false), 100)
+			}
+			setIsMouseDownOnMenu(false)
+		}, [isMouseDownOnMenu])
+
 		useLayoutEffect(() => {
 			if (intendedCursorPosition !== null && textAreaRef.current) {
 				textAreaRef.current.setSelectionRange(intendedCursorPosition, intendedCursorPosition)
-				setIntendedCursorPosition(null) // Reset the state
+				setIntendedCursorPosition(null)
 			}
 		}, [inputValue, intendedCursorPosition])
 
 		const handleInputChange = useCallback(
 			(e: React.ChangeEvent<HTMLTextAreaElement>) => {
 				const newValue = e.target.value
-				const newCursorPosition = e.target.selectionStart
+				const newCursorPosition = e.target.selectionStart || 0
 				setInputValue(newValue)
 				setCursorPosition(newCursorPosition)
-				const showMenu = shouldShowContextMenu(newValue, newCursorPosition)
 
+				if (newValue === "@" || newValue === "/") {
+					setShowContextMenu(true)
+					setSearchQuery("")
+					setSelectedMenuIndex(newValue === "/" ? 0 : 3)
+					return
+				}
+
+				const showMenu = shouldShowContextMenu(newValue, newCursorPosition)
 				setShowContextMenu(showMenu)
+
 				if (showMenu) {
 					if (newValue.startsWith("/")) {
-						// Handle slash command
-						const query = newValue
+						const query = newValue.slice(1)
 						setSearchQuery(query)
 						setSelectedMenuIndex(0)
 					} else {
-						// Existing @ mention handling
 						const lastAtIndex = newValue.lastIndexOf("@", newCursorPosition - 1)
-						const query = newValue.slice(lastAtIndex + 1, newCursorPosition)
-						setSearchQuery(query)
-						if (query.length > 0) {
-							setSelectedMenuIndex(0)
-						} else {
-							setSelectedMenuIndex(3) // Set to "File" option by default
+						if (lastAtIndex !== -1) {
+							const query = newValue.slice(lastAtIndex + 1, newCursorPosition)
+							setSearchQuery(query)
+							setSelectedMenuIndex(query.length > 0 ? 0 : 3)
 						}
 					}
 				} else {
@@ -415,26 +326,11 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			[setInputValue],
 		)
 
-		useEffect(() => {
-			if (!showContextMenu) {
-				setSelectedType(null)
-			}
-		}, [showContextMenu])
-
-		const handleBlur = useCallback(() => {
-			// Only hide the context menu if the user didn't click on it
-			if (!isMouseDownOnMenu) {
-				setShowContextMenu(false)
-			}
-			setIsFocused(false)
-		}, [isMouseDownOnMenu])
-
 		const handlePaste = useCallback(
 			async (e: React.ClipboardEvent) => {
 				const items = e.clipboardData.items
 
 				const pastedText = e.clipboardData.getData("text")
-				// Check if the pasted content is a URL, add space after so user can easily delete if they don't want it
 				const urlRegex = /^\S+:\/\/\S+$/
 				if (urlRegex.test(pastedText.trim())) {
 					e.preventDefault()
@@ -447,7 +343,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					setIntendedCursorPosition(newCursorPosition)
 					setShowContextMenu(false)
 
-					// Scroll to new cursor position
 					setTimeout(() => {
 						if (textAreaRef.current) {
 							textAreaRef.current.blur()
@@ -463,7 +358,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					const [type, subtype] = item.type.split("/")
 					return type === "image" && acceptedTypes.includes(subtype)
 				})
-				if (!shouldDisableImages && imageItems.length > 0) {
+				if (imageItems.length > 0) {
 					e.preventDefault()
 					const imagePromises = imageItems.map((item) => {
 						return new Promise<string | null>((resolve) => {
@@ -478,8 +373,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 									console.error("Error reading file:", reader.error)
 									resolve(null)
 								} else {
-									const result = reader.result
-									resolve(typeof result === "string" ? result : null)
+									resolve(typeof reader.result === "string" ? reader.result : null)
 								}
 							}
 							reader.readAsDataURL(blob)
@@ -494,7 +388,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					}
 				}
 			},
-			[shouldDisableImages, setSelectedImages, cursorPosition, setInputValue, inputValue],
+			[cursorPosition, setInputValue, inputValue, setSelectedImages],
 		)
 
 		const handleThumbnailsHeightChange = useCallback((height: number) => {
@@ -518,7 +412,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 			highlightLayerRef.current.innerHTML = text
 				.replace(/\n$/, "\n\n")
-				.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c] || c)
+				.replace(/[<>&]/g, (c) => ({ "<": "<", ">": ">", "&": "&amp;" })[c] || c)
 				.replace(mentionRegexGlobal, '<mark class="mention-context-textarea-highlight">$&</mark>')
 
 			highlightLayerRef.current.scrollTop = textAreaRef.current.scrollTop
@@ -543,7 +437,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			},
 			[updateCursorPosition],
 		)
-
 		return (
 			<div
 				className="chat-text-area"
@@ -552,17 +445,18 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					position: "relative",
 					display: "flex",
 					flexDirection: "column",
-					gap: "8px",
-					backgroundColor: "var(--vscode-input-background)",
-					margin: "10px 15px",
-					padding: "8px",
-					outline: "none",
-					border: "1px solid",
-					borderColor: isFocused ? "var(--vscode-focusBorder)" : "transparent",
-					borderRadius: "2px",
+					minHeight: 0,
+					overflow: "visible",
+					border: isDraggingOver ? "2px dashed var(--vscode-focusBorder)" : "1px solid transparent",
+					borderRadius: 5,
+					transition: "border 0.2s ease-in-out, background-color 0.2s ease-in-out",
+					backgroundColor: isDraggingOver
+						? "color-mix(in srgb, var(--vscode-editor-background) 95%, var(--vscode-focusBorder))"
+						: undefined,
 				}}
 				onDrop={async (e) => {
 					e.preventDefault()
+					setIsDraggingOver(false)
 					const files = Array.from(e.dataTransfer.files)
 					const text = e.dataTransfer.getData("text")
 					if (text) {
@@ -574,7 +468,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							let newValue = inputValue.slice(0, cursorPosition)
 							let totalLength = 0
 
-							lines.forEach((line, index) => {
+							let index = 0
+							for (const line of lines) {
 								// Convert each path to a mention-friendly format
 								const mentionText = convertToMentionPath(line, cwd)
 								newValue += mentionText
@@ -585,7 +480,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 									newValue += " "
 									totalLength += 1
 								}
-							})
+								index++
+							}
 
 							// Add space after the last mention and append the rest of the input
 							newValue += " " + inputValue.slice(cursorPosition)
@@ -640,9 +536,33 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				}}
 				onDragOver={(e) => {
 					e.preventDefault()
+					setIsDraggingOver(true)
+				}}
+				onDragLeave={(e) => {
+					e.preventDefault()
+					e.stopPropagation()
+					const rect = e.currentTarget.getBoundingClientRect()
+					if (
+						e.clientX <= rect.left ||
+						e.clientX >= rect.right ||
+						e.clientY <= rect.top ||
+						e.clientY >= rect.bottom
+					) {
+						setIsDraggingOver(false)
+					}
 				}}>
 				{showContextMenu && (
-					<div ref={contextMenuContainerRef}>
+					<div
+						ref={contextMenuContainerRef}
+						style={{
+							position: "absolute",
+							bottom: "100%",
+							left: 0,
+							right: 0,
+							zIndex: 1000,
+							marginBottom: "8px",
+							filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
+						}}>
 						<ContextMenu
 							onSelect={handleMentionSelect}
 							searchQuery={searchQuery}
@@ -699,7 +619,14 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							handleInputChange(e)
 							updateHighlights()
 						}}
-						onFocus={() => setIsFocused(true)}
+						onFocus={() => {
+							setIsFocused(true)
+							if (inputValue === "@" || inputValue === "/") {
+								setShowContextMenu(true)
+								setSearchQuery("")
+								setSelectedMenuIndex(inputValue === "/" ? 0 : 3)
+							}
+						}}
 						onKeyDown={handleKeyDown}
 						onKeyUp={handleKeyUp}
 						onBlur={handleBlur}
@@ -720,9 +647,11 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							width: "100%",
 							outline: "none",
 							boxSizing: "border-box",
-							backgroundColor: "transparent",
-							color: "var(--vscode-input-foreground)",
-							borderRadius: 2,
+							backgroundColor: isFocused
+								? "color-mix(in srgb, var(--vscode-editor-background) 95%, var(--vscode-focusBorder))"
+								: "var(--vscode-editor-background)",
+							color: "var(--vscode-editor-foreground)",
+							borderRadius: 3,
 							fontFamily: "var(--vscode-font-family)",
 							fontSize: "var(--vscode-editor-font-size)",
 							lineHeight: "var(--vscode-editor-line-height)",
@@ -730,18 +659,40 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							overflowX: "hidden",
 							overflowY: "auto",
 							border: "none",
-							padding: "2px",
-							paddingRight: "8px",
+							padding: "5px",
+							paddingRight: "12px",
 							marginBottom: thumbnailsHeight > 0 ? `${thumbnailsHeight + 16}px` : 0,
-							cursor: textAreaDisabled ? "not-allowed" : undefined,
+							cursor: textAreaDisabled ? "not-allowed" : "text",
 							flex: "0 1 auto",
 							zIndex: 2,
 							scrollbarWidth: "none",
+							opacity: textAreaDisabled ? 0.5 : 1,
+							position: "relative",
+							transition: "background-color 0.2s ease-in-out",
 						}}
 						onScroll={() => updateHighlights()}
 					/>
 				</div>
-
+				{!inputValue && (
+					<div
+						style={{
+							position: "absolute",
+							left: "8px",
+							display: "flex",
+							gap: "8px",
+							fontSize: "0.7em",
+							color: "var(--vscode-descriptionForeground)",
+							opacity: 0.8,
+							pointerEvents: "none",
+							zIndex: 2,
+							bottom: thumbnailsHeight > 0 ? `${thumbnailsHeight + 22}px` : 6,
+							transition: "opacity 0.2s ease",
+						}}>
+						<span>[@ Context]</span>
+						<span>[/ Modes]</span>
+						<span>[⇧ Drag {!shouldDisableImages ? "Files/Images" : "Files"}]</span>
+					</div>
+				)}
 				{selectedImages.length > 0 && (
 					<Thumbnails
 						images={selectedImages}
@@ -749,171 +700,16 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						onHeightChange={handleThumbnailsHeightChange}
 						style={{
 							position: "absolute",
-							bottom: "36px",
-							left: "16px",
+							bottom: "0",
+							left: "2px",
 							zIndex: 2,
 							marginBottom: "4px",
 						}}
 					/>
 				)}
-
-				<div
-					style={{
-						display: "flex",
-						justifyContent: "space-between",
-						alignItems: "center",
-						marginTop: "auto",
-						paddingTop: "2px",
-					}}>
-					{/* Left side - dropdowns container */}
-					<div
-						style={{
-							display: "flex",
-							alignItems: "center",
-							gap: "4px",
-							overflow: "hidden",
-							minWidth: 0,
-						}}>
-						{/* Mode selector - fixed width */}
-						<div style={{ flexShrink: 0 }}>
-							<SelectDropdown
-								value={mode}
-								disabled={textAreaDisabled}
-								title="Select mode for interaction"
-								options={[
-									// Add the shortcut text as a disabled option at the top
-									{
-										value: "shortcut",
-										label: modeShortcutText,
-										disabled: true,
-										type: DropdownOptionType.SHORTCUT,
-									},
-									// Add all modes
-									...getAllModes(customModes).map((mode) => ({
-										value: mode.slug,
-										label: mode.name,
-										type: DropdownOptionType.ITEM,
-									})),
-									// Add separator
-									{
-										value: "sep-1",
-										label: "Separator",
-										type: DropdownOptionType.SEPARATOR,
-									},
-									// Add Edit option
-									{
-										value: "promptsButtonClicked",
-										label: "Edit...",
-										type: DropdownOptionType.ACTION,
-									},
-								]}
-								onChange={(value) => {
-									setMode(value as Mode)
-									vscode.postMessage({
-										type: "mode",
-										text: value,
-									})
-								}}
-								shortcutText={modeShortcutText}
-								triggerClassName="w-full"
-							/>
-						</div>
-
-						{/* API configuration selector - flexible width */}
-						<div
-							style={{
-								flex: "1 1 auto",
-								minWidth: 0,
-								overflow: "hidden",
-							}}>
-							<SelectDropdown
-								value={currentApiConfigName || ""}
-								disabled={textAreaDisabled}
-								title="Select API configuration"
-								options={[
-									// Add all API configurations
-									...(listApiConfigMeta || []).map((config) => ({
-										value: config.name,
-										label: config.name,
-										type: DropdownOptionType.ITEM,
-									})),
-									// Add separator
-									{
-										value: "sep-2",
-										label: "Separator",
-										type: DropdownOptionType.SEPARATOR,
-									},
-									// Add Edit option
-									{
-										value: "settingsButtonClicked",
-										label: "Edit...",
-										type: DropdownOptionType.ACTION,
-									},
-								]}
-								onChange={(value) => {
-									vscode.postMessage({
-										type: "loadApiConfiguration",
-										text: value,
-									})
-								}}
-								contentClassName="max-h-[300px] overflow-y-auto"
-								triggerClassName="w-full text-ellipsis overflow-hidden"
-							/>
-						</div>
-					</div>
-
-					{/* Right side - action buttons */}
-					<div
-						style={{
-							display: "flex",
-							alignItems: "center",
-							gap: "8px",
-							flexShrink: 0,
-						}}>
-						<div style={{ display: "flex", alignItems: "center" }}>
-							{isEnhancingPrompt ? (
-								<span
-									className="codicon codicon-loading codicon-modifier-spin"
-									style={{
-										color: "var(--vscode-input-foreground)",
-										opacity: 0.5,
-										fontSize: 16.5,
-										marginRight: 6,
-									}}
-								/>
-							) : (
-								<span
-									role="button"
-									aria-label="enhance prompt"
-									data-testid="enhance-prompt-button"
-									title="Enhance prompt with additional context"
-									className={`input-icon-button ${
-										textAreaDisabled ? "disabled" : ""
-									} codicon codicon-sparkle`}
-									onClick={() => !textAreaDisabled && handleEnhancePrompt()}
-									style={{ fontSize: 16.5 }}
-								/>
-							)}
-						</div>
-						<span
-							className={`input-icon-button ${
-								shouldDisableImages ? "disabled" : ""
-							} codicon codicon-device-camera`}
-							title="Add images to message"
-							onClick={() => !shouldDisableImages && onSelectImages()}
-							style={{ fontSize: 16.5 }}
-						/>
-						<span
-							className={`input-icon-button ${textAreaDisabled ? "disabled" : ""} codicon codicon-send`}
-							title="Send message"
-							onClick={() => !textAreaDisabled && onSend()}
-							style={{ fontSize: 15 }}
-						/>
-					</div>
-				</div>
 			</div>
 		)
 	},
 )
 
-export default ChatTextArea
+export default ChatTextAreaInput

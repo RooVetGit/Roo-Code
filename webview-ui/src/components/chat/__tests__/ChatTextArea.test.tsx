@@ -13,20 +13,11 @@ jest.mock("../../../utils/vscode", () => ({
 }))
 jest.mock("../../../components/common/CodeBlock")
 jest.mock("../../../components/common/MarkdownBlock")
-jest.mock("../../../utils/path-mentions", () => ({
-	convertToMentionPath: jest.fn((path, cwd) => {
-		// Simple mock implementation that mimics the real function's behavior
-		if (cwd && path.toLowerCase().startsWith(cwd.toLowerCase())) {
-			const relativePath = path.substring(cwd.length)
-			return "@" + (relativePath.startsWith("/") ? relativePath : "/" + relativePath)
-		}
-		return path
-	}),
-}))
-
 // Get the mocked postMessage function
 const mockPostMessage = vscode.postMessage as jest.Mock
-const mockConvertToMentionPath = pathMentions.convertToMentionPath as jest.Mock
+
+// Spy on convertToMentionPath instead of mocking it
+const mockConvertToMentionPath = jest.spyOn(pathMentions, "convertToMentionPath")
 
 // Mock ExtensionStateContext
 jest.mock("../../../context/ExtensionStateContext")
@@ -128,8 +119,7 @@ describe("ChatTextArea", () => {
 			const enhanceButton = screen.getByRole("button", { name: /enhance prompt/i })
 			fireEvent.click(enhanceButton)
 
-			const loadingSpinner = screen.getByText("", { selector: ".codicon-loading" })
-			expect(loadingSpinner).toBeInTheDocument()
+			expect(enhanceButton).toHaveClass("enhancing")
 		})
 	})
 

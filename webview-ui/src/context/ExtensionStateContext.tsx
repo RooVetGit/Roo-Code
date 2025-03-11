@@ -1,16 +1,19 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react"
 import { useEvent } from "react-use"
-
-import { ApiConfigMeta, ExtensionMessage, ExtensionState } from "../../../src/shared/ExtensionMessage"
+import {
+	ApiConfigMeta,
+	defaultExtensionState,
+	ExtensionMessage,
+	ExtensionState,
+} from "../../../src/shared/ExtensionMessage"
 import { ApiConfiguration } from "../../../src/shared/api"
 import { findLastIndex } from "../../../src/shared/array"
 import { McpServer } from "../../../src/shared/mcp"
 import { checkExistKey } from "../../../src/shared/checkExistApiConfig"
-import { Mode, CustomModePrompts, defaultModeSlug, defaultPrompts, ModeConfig } from "../../../src/shared/modes"
+import { Mode, CustomModePrompts, ModeConfig } from "../../../src/shared/modes"
 import { CustomSupportPrompts } from "../../../src/shared/support-prompt"
-import { experimentDefault, ExperimentId } from "../../../src/shared/experiments"
+import { ExperimentId } from "../../../src/shared/experiments"
 import { TelemetrySetting } from "../../../src/shared/TelemetrySetting"
-import { TERMINAL_OUTPUT_LIMIT } from "../../../src/shared/terminal"
 
 import { vscode } from "@/utils/vscode"
 import { convertTextMateToHljs } from "@/utils/textMateToHljs"
@@ -109,44 +112,7 @@ export const mergeExtensionState = (prevState: ExtensionState, newState: Extensi
 }
 
 export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-	const [state, setState] = useState<ExtensionState>({
-		version: "",
-		clineMessages: [],
-		taskHistory: [],
-		shouldShowAnnouncement: false,
-		allowedCommands: [],
-		soundEnabled: false,
-		soundVolume: 0.5,
-		diffEnabled: false,
-		enableCheckpoints: true,
-		checkpointStorage: "task",
-		fuzzyMatchThreshold: 1.0,
-		preferredLanguage: "English",
-		enableCustomModeCreation: true,
-		writeDelayMs: 1000,
-		browserViewportSize: "900x600",
-		screenshotQuality: 75,
-		terminalOutputLimit: TERMINAL_OUTPUT_LIMIT,
-		mcpEnabled: true,
-		enableMcpServerCreation: true,
-		alwaysApproveResubmit: false,
-		requestDelaySeconds: 5,
-		rateLimitSeconds: 0, // Minimum time between successive requests (0 = disabled)
-		currentApiConfigName: "default",
-		listApiConfigMeta: [],
-		mode: defaultModeSlug,
-		customModePrompts: defaultPrompts,
-		customSupportPrompts: {},
-		experiments: experimentDefault,
-		enhancementApiConfigId: "",
-		autoApprovalEnabled: false,
-		customModes: [],
-		maxOpenTabsContext: 20,
-		cwd: "",
-		browserToolEnabled: true,
-		telemetrySetting: "unset",
-		showRooIgnoredFiles: true, // Default to showing .rooignore'd files with lock symbol (current behavior)
-	})
+	const [state, setState] = useState<ExtensionState>(defaultExtensionState)
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
 	const [showWelcome, setShowWelcome] = useState(false)

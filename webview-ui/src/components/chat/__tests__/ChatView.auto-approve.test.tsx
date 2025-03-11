@@ -2,6 +2,7 @@ import React from "react"
 import { render, waitFor } from "@testing-library/react"
 import ChatView from "../ChatView"
 import { ExtensionStateContextProvider } from "../../../context/ExtensionStateContext"
+import { defaultExtensionState } from "../../../../../src/shared/ExtensionMessage"
 import { vscode } from "../../../utils/vscode"
 
 // Mock vscode API
@@ -71,13 +72,7 @@ const mockPostMessage = (state: any) => {
 		{
 			type: "state",
 			state: {
-				version: "1.0.0",
-				clineMessages: [],
-				taskHistory: [],
-				shouldShowAnnouncement: false,
-				allowedCommands: [],
-				alwaysAllowExecute: false,
-				autoApprovalEnabled: true,
+				...defaultExtensionState,
 				...state,
 			},
 		},

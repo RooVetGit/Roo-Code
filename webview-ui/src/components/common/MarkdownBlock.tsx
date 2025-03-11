@@ -63,9 +63,9 @@ const StyledMarkdown = styled.div`
 		white-space: pre-wrap;
 	}
 
- 	:where(h1, h2, h3, h4, h5, h6):has(code) code {
-    		font-size: inherit;
- 	}
+	:where(h1, h2, h3, h4, h5, h6):has(code) code {
+		font-size: inherit;
+	}
 
 	pre > code {
 		.hljs-deletion {

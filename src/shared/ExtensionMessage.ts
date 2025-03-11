@@ -2,12 +2,13 @@ import { ApiConfiguration, ApiProvider, ModelInfo } from "./api"
 import { HistoryItem } from "./HistoryItem"
 import { McpServer } from "./mcp"
 import { GitCommit } from "../utils/git"
-import { Mode, CustomModePrompts, ModeConfig } from "./modes"
+import { Mode, CustomModePrompts, ModeConfig, defaultModeSlug, defaultPrompts } from "./modes"
 import { CustomSupportPrompts } from "./support-prompt"
-import { ExperimentId } from "./experiments"
+import { experimentDefault, ExperimentId } from "./experiments"
+import { TERMINAL_OUTPUT_LIMIT } from "./terminal"
+import { ClineMessage, ClineAsk, ClineSay } from "../exports/roo-code"
 import { CheckpointStorage } from "./checkpoints"
 import { TelemetrySetting } from "./TelemetrySetting"
-import { ClineMessage, ClineAsk, ClineSay } from "../exports/roo-code"
 
 export interface LanguageModelChatSelector {
 	vendor?: string
@@ -97,6 +98,11 @@ export interface ApiConfigMeta {
 }
 
 export interface ExtensionState {
+	glamaModels?: Record<string, ModelInfo>
+	requestyModels?: Record<string, ModelInfo>
+	openRouterModels?: Record<string, ModelInfo>
+	unboundModels?: Record<string, ModelInfo>
+	openAiModels?: string[]
 	version: string
 	clineMessages: ClineMessage[]
 	taskHistory: HistoryItem[]
@@ -231,8 +237,46 @@ export interface HumanRelayCancelMessage {
 }
 
 export type ClineApiReqCancelReason = "streaming_failed" | "user_cancelled"
-
 export type ToolProgressStatus = {
 	icon?: string
 	text?: string
+}
+
+export const defaultExtensionState: ExtensionState = {
+	version: "",
+	clineMessages: [],
+	taskHistory: [],
+	shouldShowAnnouncement: false,
+	allowedCommands: [],
+	soundEnabled: false,
+	soundVolume: 0.5,
+	diffEnabled: false,
+	enableCheckpoints: true,
+	checkpointStorage: "task",
+	fuzzyMatchThreshold: 1.0,
+	preferredLanguage: "English",
+	enableCustomModeCreation: true,
+	writeDelayMs: 1000,
+	browserViewportSize: "900x600",
+	screenshotQuality: 75,
+	terminalOutputLimit: TERMINAL_OUTPUT_LIMIT,
+	mcpEnabled: true,
+	enableMcpServerCreation: true,
+	alwaysApproveResubmit: false,
+	requestDelaySeconds: 5,
+	rateLimitSeconds: 0, // Minimum time between successive requests (0 = disabled)
+	currentApiConfigName: "default",
+	listApiConfigMeta: [],
+	mode: defaultModeSlug,
+	customModePrompts: defaultPrompts,
+	customSupportPrompts: {},
+	experiments: experimentDefault,
+	enhancementApiConfigId: "",
+	autoApprovalEnabled: false,
+	customModes: [],
+	maxOpenTabsContext: 20,
+	cwd: "",
+	browserToolEnabled: true,
+	telemetrySetting: "unset",
+	showRooIgnoredFiles: true, // Default to showing .rooignore'd files with lock symbol (current behavior)
 }

@@ -2,6 +2,7 @@ import React from "react"
 import { render, waitFor } from "@testing-library/react"
 import ChatView from "../ChatView"
 import { ExtensionStateContextProvider } from "../../../context/ExtensionStateContext"
+import { defaultExtensionState } from "../../../../../src/shared/ExtensionMessage"
 import { vscode } from "../../../utils/vscode"
 
 // Define minimal types needed for testing
@@ -130,12 +131,7 @@ const mockPostMessage = (state: Partial<ExtensionState>) => {
 		{
 			type: "state",
 			state: {
-				version: "1.0.0",
-				clineMessages: [],
-				taskHistory: [],
-				shouldShowAnnouncement: false,
-				allowedCommands: [],
-				alwaysAllowExecute: false,
+				...defaultExtensionState,
 				...state,
 			},
 		},

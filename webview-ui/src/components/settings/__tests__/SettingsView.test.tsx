@@ -3,6 +3,7 @@
 import { render, screen, fireEvent } from "@testing-library/react"
 import SettingsView from "../SettingsView"
 import { ExtensionStateContextProvider } from "../../../context/ExtensionStateContext"
+import { defaultExtensionState } from "../../../../../src/shared/ExtensionMessage"
 import { vscode } from "../../../utils/vscode"
 
 // Mock vscode API
@@ -100,14 +101,7 @@ const mockPostMessage = (state: any) => {
 		{
 			type: "state",
 			state: {
-				version: "1.0.0",
-				clineMessages: [],
-				taskHistory: [],
-				shouldShowAnnouncement: false,
-				allowedCommands: [],
-				alwaysAllowExecute: false,
-				soundEnabled: false,
-				soundVolume: 0.5,
+				...defaultExtensionState,
 				...state,
 			},
 		},

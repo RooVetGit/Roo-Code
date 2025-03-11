@@ -1,0 +1,5 @@
+export { default } from "./ChatTextArea"
+export { default as ChatTextAreaActions } from "./ChatTextAreaActions"
+export { default as ChatTextAreaInput } from "./ChatTextAreaInput"
+export { default as ChatTextAreaLayout } from "./ChatTextAreaLayout"
+export { default as ChatTextAreaSelections } from "./ChatTextAreaSelections"
