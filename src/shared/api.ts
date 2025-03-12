@@ -56,6 +56,7 @@ export interface ApiHandlerOptions {
 	lmStudioDraftModelId?: string
 	lmStudioSpeculativeDecodingEnabled?: boolean
 	geminiApiKey?: string
+	googleGeminiBaseUrl?: string
 	openAiNativeApiKey?: string
 	mistralApiKey?: string
 	mistralCodestralUrl?: string // New option for Codestral URL
@@ -115,6 +116,7 @@ export const API_CONFIG_KEYS: GlobalStateKey[] = [
 	"lmStudioBaseUrl",
 	"lmStudioDraftModelId",
 	"lmStudioSpeculativeDecodingEnabled",
+	"googleGeminiBaseUrl",
 	"mistralCodestralUrl",
 	"azureApiVersion",
 	"openRouterUseMiddleOutTransform",
@@ -341,6 +343,14 @@ export const bedrockModels = {
 		supportsPromptCache: false,
 		inputPrice: 0.25,
 		outputPrice: 1.25,
+	},
+	"deepseek.r1-v1:0": {
+		maxTokens: 32_768,
+		contextWindow: 128_000,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 1.35,
+		outputPrice: 5.4,
 	},
 	"meta.llama3-3-70b-instruct-v1:0": {
 		maxTokens: 8192,

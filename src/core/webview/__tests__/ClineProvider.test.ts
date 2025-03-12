@@ -19,6 +19,8 @@ jest.mock("../../contextProxy", () => {
 	return {
 		ContextProxy: jest.fn().mockImplementation((context) => ({
 			originalContext: context,
+			isInitialized: true,
+			initialize: jest.fn(),
 			extensionUri: context.extensionUri,
 			extensionPath: context.extensionPath,
 			globalStorageUri: context.globalStorageUri,
@@ -421,7 +423,6 @@ describe("ClineProvider", () => {
 
 		const mockState: ExtensionState = {
 			version: "1.0.0",
-			preferredLanguage: "English",
 			clineMessages: [],
 			taskHistory: [],
 			shouldShowAnnouncement: false,
@@ -536,20 +537,12 @@ describe("ClineProvider", () => {
 		expect(state).toHaveProperty("writeDelayMs")
 	})
 
-	test("preferredLanguage defaults to VSCode language when not set", async () => {
+	test("language is set to VSCode language", async () => {
 		// Mock VSCode language as Spanish
 		;(vscode.env as any).language = "es-ES"
 
 		const state = await provider.getState()
-		expect(state.preferredLanguage).toBe("Spanish")
-	})
-
-	test("preferredLanguage defaults to English for unsupported VSCode language", async () => {
-		// Mock VSCode language as an unsupported language
-		;(vscode.env as any).language = "unsupported-LANG"
-
-		const state = await provider.getState()
-		expect(state.preferredLanguage).toBe("English")
+		expect(state.language).toBe("es-ES")
 	})
 
 	test("diffEnabled defaults to true when not set", async () => {
@@ -1217,7 +1210,7 @@ describe("ClineProvider", () => {
 			expect(callArgs[4]).toHaveProperty("getToolDescription") // diffStrategy
 			expect(callArgs[5]).toBe("900x600") // browserViewportSize
 			expect(callArgs[6]).toBe("code") // mode
-			expect(callArgs[11]).toBe(true) // diffEnabled
+			expect(callArgs[10]).toBe(true) // diffEnabled
 
 			// Run the test again to verify it's consistent
 			await handler({ type: "getSystemPrompt", mode: "code" })
@@ -1275,7 +1268,7 @@ describe("ClineProvider", () => {
 			expect(callArgs[4]).toHaveProperty("getToolDescription") // diffStrategy
 			expect(callArgs[5]).toBe("900x600") // browserViewportSize
 			expect(callArgs[6]).toBe("code") // mode
-			expect(callArgs[11]).toBe(false) // diffEnabled should be false
+			expect(callArgs[10]).toBe(false) // diffEnabled should be false
 		})
 
 		test("uses correct mode-specific instructions when mode is specified", async () => {
