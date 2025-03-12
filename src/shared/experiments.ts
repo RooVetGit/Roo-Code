@@ -27,14 +27,14 @@ export const experimentConfigsMap: Record<ExperimentKey, ExperimentConfig> = {
 	SEARCH_AND_REPLACE: {
 		name: "Use experimental search and replace tool",
 		description:
-			"Enable the experimental search and replace tool, allowing Roo to replace multiple instances of a search term in one request.",
+			"Enable the experimental search and replace tool, allowing Kilo Code to replace multiple instances of a search term in one request.",
 		enabled: false,
 	},
 	INSERT_BLOCK: {
 		name: "Use experimental insert content tool",
 
 		description:
-			"Enable the experimental insert content tool, allowing Roo to insert content at specific line numbers without needing to create a diff.",
+			"Enable the experimental insert content tool, allowing Kilo Code to insert content at specific line numbers without needing to create a diff.",
 		enabled: false,
 	},
 	POWER_STEERING: {
