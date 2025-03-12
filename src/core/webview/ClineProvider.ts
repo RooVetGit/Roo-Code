@@ -2042,7 +2042,22 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	async handleKiloCodeCallback(token: string) {
-		await this.updateGlobalState("kilocodeToken", token)
+		const kilocode: ApiProvider = "kilocode"
+
+		await this.storeSecret("kilocodeToken", token)
+		await this.contextProxy.setValues({
+			apiProvider: kilocode,
+			kilocodeToken: token,
+		})
+
+		await this.postStateToWebview()
+
+		if (this.getCurrentCline()) {
+			this.getCurrentCline()!.api = buildApiHandler({
+				apiProvider: kilocode,
+				kilocodeToken: token,
+			})
+		}
 	}
 
 	// Task history
