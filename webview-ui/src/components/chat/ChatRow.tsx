@@ -986,13 +986,21 @@ const Markdown = memo(({ markdown, partial }: { markdown?: string; partial?: boo
 	const [isHovering, setIsHovering] = useState(false)
 	const { copyWithFeedback } = useCopyToClipboard(200) // shorter feedback duration for copy button flash
 
+	// Remove trailing code delimiters like "```tool_code" or "```xml"
+	const cleanedMarkdown = useMemo(() => {
+		if (!markdown) return markdown
+
+		// Regex to match trailing code block delimiters at the very end of the string
+		return markdown.replace(/```[a-zA-Z0-9_-]*\s*$/g, "")
+	}, [markdown])
+
 	return (
 		<div
 			onMouseEnter={() => setIsHovering(true)}
 			onMouseLeave={() => setIsHovering(false)}
 			style={{ position: "relative" }}>
 			<div style={{ wordBreak: "break-word", overflowWrap: "anywhere", marginBottom: -15, marginTop: -15 }}>
-				<MarkdownBlock markdown={markdown} />
+				<MarkdownBlock markdown={cleanedMarkdown} />
 			</div>
 			{markdown && !partial && isHovering && (
 				<div
