@@ -30,7 +30,7 @@ import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { ShadowCheckpointService } from "../../services/checkpoints/ShadowCheckpointService"
 import { BrowserSession } from "../../services/browser/BrowserSession"
-import { discoverChromeInstances } from "../../services/browser/browserDiscovery"
+import { discoverChromeHostUrl, tryChromeHostUrl } from "../../services/browser/browserDiscovery"
 import { fileExistsAtPath } from "../../utils/fs"
 import { playSound, setSoundEnabled, setSoundVolume } from "../../utils/sound"
 import { singleCompletionHandler } from "../../utils/single-completion-handler"
@@ -1279,74 +1279,17 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.postStateToWebview()
 						break
 					case "testBrowserConnection":
-						try {
-							const browserSession = new BrowserSession(this.context)
-							// If no text is provided, try auto-discovery
-							if (!message.text) {
-								try {
-									const discoveredHost = await discoverChromeInstances()
-									if (discoveredHost) {
-										// Test the connection to the discovered host
-										const result = await browserSession.testConnection(discoveredHost)
-										// Send the result back to the webview
-										await this.postMessageToWebview({
-											type: "browserConnectionResult",
-											success: result.success,
-											text: `Auto-discovered and tested connection to Chrome at ${discoveredHost}: ${result.message}`,
-											values: { endpoint: result.endpoint },
-										})
-									} else {
-										await this.postMessageToWebview({
-											type: "browserConnectionResult",
-											success: false,
-											text: "No Chrome instances found on the network. Make sure Chrome is running with remote debugging enabled (--remote-debugging-port=9222).",
-										})
-									}
-								} catch (error) {
-									await this.postMessageToWebview({
-										type: "browserConnectionResult",
-										success: false,
-										text: `Error during auto-discovery: ${error instanceof Error ? error.message : String(error)}`,
-									})
-								}
-							} else {
-								// Test the provided URL
-								const result = await browserSession.testConnection(message.text)
-
+						// If no text is provided, try auto-discovery
+						if (!message.text) {
+							// Use testBrowserConnection for auto-discovery
+							const chromeHostUrl = await discoverChromeHostUrl()
+							if (chromeHostUrl) {
 								// Send the result back to the webview
 								await this.postMessageToWebview({
 									type: "browserConnectionResult",
-									success: result.success,
-									text: result.message,
-									values: { endpoint: result.endpoint },
-								})
-							}
-						} catch (error) {
-							await this.postMessageToWebview({
-								type: "browserConnectionResult",
-								success: false,
-								text: `Error testing connection: ${error instanceof Error ? error.message : String(error)}`,
-							})
-						}
-						break
-					case "discoverBrowser":
-						try {
-							const discoveredHost = await discoverChromeInstances()
-
-							if (discoveredHost) {
-								// Don't update the remoteBrowserHost state when auto-discovering
-								// This way we don't override the user's preference
-
-								// Test the connection to get the endpoint
-								const browserSession = new BrowserSession(this.context)
-								const result = await browserSession.testConnection(discoveredHost)
-
-								// Send the result back to the webview
-								await this.postMessageToWebview({
-									type: "browserConnectionResult",
-									success: true,
-									text: `Successfully discovered and connected to Chrome at ${discoveredHost}`,
-									values: { endpoint: result.endpoint },
+									success: !!chromeHostUrl,
+									text: `Auto-discovered and tested connection to Chrome: ${chromeHostUrl}`,
+									values: { endpoint: chromeHostUrl },
 								})
 							} else {
 								await this.postMessageToWebview({
@@ -1355,11 +1298,17 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 									text: "No Chrome instances found on the network. Make sure Chrome is running with remote debugging enabled (--remote-debugging-port=9222).",
 								})
 							}
-						} catch (error) {
+						} else {
+							// Test the provided URL
+							const customHostUrl = message.text
+							const hostIsValid = await tryChromeHostUrl(message.text)
+							// Send the result back to the webview
 							await this.postMessageToWebview({
 								type: "browserConnectionResult",
-								success: false,
-								text: `Error discovering browser: ${error instanceof Error ? error.message : String(error)}`,
+								success: hostIsValid,
+								text: hostIsValid
+									? `Successfully connected to Chrome: ${customHostUrl}`
+									: "Failed to connect to Chrome",
 							})
 						}
 						break
@@ -2393,6 +2342,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			screenshotQuality: screenshotQuality ?? 75,
 			remoteBrowserHost,
 			remoteBrowserEnabled: remoteBrowserEnabled ?? false,
+			cachedChromeHostUrl: (await this.getGlobalState("cachedChromeHostUrl")) as string | undefined,
 			preferredLanguage: preferredLanguage ?? "English",
 			writeDelayMs: writeDelayMs ?? 1000,
 			terminalOutputLineLimit: terminalOutputLineLimit ?? 500,
@@ -2548,6 +2498,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			screenshotQuality: stateValues.screenshotQuality ?? 75,
 			remoteBrowserHost: stateValues.remoteBrowserHost,
 			remoteBrowserEnabled: stateValues.remoteBrowserEnabled ?? false,
+			cachedChromeHostUrl: stateValues.cachedChromeHostUrl as string | undefined,
 			fuzzyMatchThreshold: stateValues.fuzzyMatchThreshold ?? 1.0,
 			writeDelayMs: stateValues.writeDelayMs ?? 1000,
 			terminalOutputLineLimit: stateValues.terminalOutputLineLimit ?? 500,

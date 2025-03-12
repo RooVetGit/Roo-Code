@@ -104,7 +104,6 @@ export interface WebviewMessage {
 		| "telemetrySetting"
 		| "showRooIgnoredFiles"
 		| "testBrowserConnection"
-		| "discoverBrowser"
 		| "browserConnectionResult"
 		| "remoteBrowserEnabled"
 	text?: string

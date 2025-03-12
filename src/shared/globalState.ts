@@ -103,6 +103,7 @@ export const GLOBAL_STATE_KEYS = [
 	"telemetrySetting",
 	"showRooIgnoredFiles",
 	"remoteBrowserEnabled",
+	"cachedChromeHostUrl",
 ] as const
 
 // Derive the type from the array - creates a union of string literals
