@@ -3,6 +3,7 @@ import deepEqual from "fast-deep-equal"
 import React, { memo, useEffect, useMemo, useRef, useState } from "react"
 import { useSize } from "react-use"
 import { useCopyToClipboard } from "../../utils/clipboard"
+import { cleanTrailingCodeDelimiters } from "../../utils/markdownUtils"
 import {
 	ClineApiReqInfo,
 	ClineAskUseMcpServer,
@@ -986,13 +987,8 @@ const Markdown = memo(({ markdown, partial }: { markdown?: string; partial?: boo
 	const [isHovering, setIsHovering] = useState(false)
 	const { copyWithFeedback } = useCopyToClipboard(200) // shorter feedback duration for copy button flash
 
-	// Remove trailing code delimiters like "```tool_code" or "```xml"
-	const cleanedMarkdown = useMemo(() => {
-		if (!markdown) return markdown
-
-		// Regex to match trailing code block delimiters at the very end of the string
-		return markdown.replace(/```[a-zA-Z0-9_-]*\s*$/g, "")
-	}, [markdown])
+	// Use the utility function to clean trailing code delimiters
+	const cleanedMarkdown = useMemo(() => cleanTrailingCodeDelimiters(markdown), [markdown])
 
 	return (
 		<div
