@@ -117,6 +117,7 @@ export const GLOBAL_STATE_KEYS = [
 	"showRooIgnoredFiles",
 	"remoteBrowserEnabled",
 	"maxWorkspaceFiles",
+	"maxReadFileLine",
 ] as const
 
 type CheckGlobalStateKeysExhaustiveness =

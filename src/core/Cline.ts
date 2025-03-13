@@ -27,13 +27,14 @@ import {
 	stripLineNumbers,
 	everyLineHasLineNumbers,
 } from "../integrations/misc/extract-text"
+import { countFileLines } from "../integrations/misc/line-counter"
 import { ExitCodeDetails } from "../integrations/terminal/TerminalProcess"
 import { Terminal } from "../integrations/terminal/Terminal"
 import { TerminalRegistry } from "../integrations/terminal/TerminalRegistry"
 import { UrlContentFetcher } from "../services/browser/UrlContentFetcher"
 import { listFiles } from "../services/glob/list-files"
 import { regexSearchFiles } from "../services/ripgrep"
-import { parseSourceCodeForDefinitionsTopLevel } from "../services/tree-sitter"
+import { parseSourceCodeDefinitionsForFile, parseSourceCodeForDefinitionsTopLevel } from "../services/tree-sitter"
 import { CheckpointStorage } from "../shared/checkpoints"
 import { ApiConfiguration } from "../shared/api"
 import { findLastIndex } from "../shared/array"
@@ -2283,8 +2284,22 @@ export class Cline extends EventEmitter<ClineEvents> {
 								if (!didApprove) {
 									break
 								}
+
+								// Get the maxReadFileLine setting
+								const { maxReadFileLine } = (await this.providerRef.deref()?.getState()) ?? {}
+
+								// Count total lines in the file
+								let totalLines = 0
+								try {
+									totalLines = await countFileLines(absolutePath)
+								} catch (error) {
+									console.error(`Error counting lines in file ${absolutePath}:`, error)
+								}
+
 								// now execute the tool like normal
 								let content: string
+								let isFileTruncated = false
+								let sourceCodeDef = ""
 
 								if (isRangeRead) {
 									// Read specific lines (startLine is guaranteed to be defined if isRangeRead is true)
@@ -2292,11 +2307,33 @@ export class Cline extends EventEmitter<ClineEvents> {
 									if (startLine === undefined) {
 										content = addLineNumbers(await readLines(absolutePath, endLine, startLine))
 									} else {
-										content = addLineNumbers(await readLines(absolutePath, endLine, startLine), startLine)
+										content = addLineNumbers(
+											await readLines(absolutePath, endLine, startLine),
+											startLine,
+										)
+									}
+								} else if (totalLines > maxReadFileLine) {
+									// If file is too large, only read the first maxReadFileLine lines
+									isFileTruncated = true
+
+									const res = await Promise.all([
+										readLines(absolutePath, maxReadFileLine - 1, 0),
+										parseSourceCodeDefinitionsForFile(absolutePath, this.rooIgnoreController),
+									])
+
+									content = addLineNumbers(res[0])
+									const result = res[1]
+									if (result) {
+										sourceCodeDef = `\n\n${result}`
 									}
 								} else {
 									// Read entire file
 									content = await extractTextFromFile(absolutePath)
+								}
+
+								// Add truncation notice if applicable
+								if (isFileTruncated) {
+									content += `\n\n[File truncated: showing ${maxReadFileLine} of ${totalLines} total lines]${sourceCodeDef}`
 								}
 
 								pushToolResult(content)

@@ -5,6 +5,59 @@ import { LanguageParser, loadRequiredLanguageParsers } from "./languageParser"
 import { fileExistsAtPath } from "../../utils/fs"
 import { RooIgnoreController } from "../../core/ignore/RooIgnoreController"
 
+const extensions = [
+	"js",
+	"jsx",
+	"ts",
+	"tsx",
+	"py",
+	// Rust
+	"rs",
+	"go",
+	// C
+	"c",
+	"h",
+	// C++
+	"cpp",
+	"hpp",
+	// C#
+	"cs",
+	// Ruby
+	"rb",
+	"java",
+	"php",
+	"swift",
+].map((e) => `.${e}`)
+
+export async function parseSourceCodeDefinitionsForFile(
+	filePath: string,
+	rooIgnoreController?: RooIgnoreController,
+): Promise<string | undefined> {
+	// check if the file exists
+	const fileExists = await fileExistsAtPath(path.resolve(filePath))
+	if (!fileExists) {
+		return "This file does not exist or you do not have permission to access it."
+	}
+
+	// Get file extension to determine parser
+	const ext = path.extname(filePath).toLowerCase()
+	// Check if the file extension is supported
+	if (!extensions.includes(ext)) {
+		return undefined
+	}
+
+	// Load parser for this file type
+	const languageParsers = await loadRequiredLanguageParsers([filePath])
+
+	// Parse the file if we have a parser for it
+	const definitions = await parseFile(filePath, languageParsers, rooIgnoreController)
+	if (definitions) {
+		return `${path.basename(filePath)}\n${definitions}`
+	}
+
+	return undefined
+}
+
 // TODO: implement caching behavior to avoid having to keep analyzing project for new tasks.
 export async function parseSourceCodeForDefinitionsTopLevel(
 	dirPath: string,
@@ -58,32 +111,6 @@ export async function parseSourceCodeForDefinitionsTopLevel(
 }
 
 function separateFiles(allFiles: string[]): { filesToParse: string[]; remainingFiles: string[] } {
-	const extensions = [
-		"js",
-		"jsx",
-		"ts",
-		"tsx",
-		"py",
-		// Rust
-		"rs",
-		"go",
-		// C
-		"c",
-		"h",
-		// C++
-		"cpp",
-		"hpp",
-		// C#
-		"cs",
-		// Ruby
-		"rb",
-		"java",
-		"php",
-		"swift",
-		// Kotlin
-		"kt",
-		"kts",
-	].map((e) => `.${e}`)
 	const filesToParse = allFiles.filter((file) => extensions.includes(path.extname(file))).slice(0, 50) // 50 files max
 	const remainingFiles = allFiles.filter((file) => !filesToParse.includes(file))
 	return { filesToParse, remainingFiles }

@@ -1531,6 +1531,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("showRooIgnoredFiles", message.bool ?? true)
 						await this.postStateToWebview()
 						break
+					case "maxReadFileLine":
+						await this.updateGlobalState("maxReadFileLine", message.value)
+						await this.postStateToWebview()
+						break
 					case "enhancementApiConfigId":
 						await this.updateGlobalState("enhancementApiConfigId", message.text)
 						await this.postStateToWebview()
@@ -2307,6 +2311,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			telemetrySetting,
 			showRooIgnoredFiles,
 			language,
+			maxReadFileLine,
 		} = await this.getState()
 		const telemetryKey = process.env.POSTHOG_API_KEY
 		const machineId = vscode.env.machineId
@@ -2373,6 +2378,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			machineId,
 			showRooIgnoredFiles: showRooIgnoredFiles ?? true,
 			language,
+			maxReadFileLine: maxReadFileLine ?? 500,
 		}
 	}
 
@@ -2528,6 +2534,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			browserToolEnabled: stateValues.browserToolEnabled ?? true,
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
+			maxReadFileLine: stateValues.maxReadFileLine ?? 500,
 		}
 	}
 

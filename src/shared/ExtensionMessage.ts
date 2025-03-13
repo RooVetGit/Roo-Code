@@ -54,6 +54,7 @@ export interface ExtensionMessage {
 		| "browserToolEnabled"
 		| "browserConnectionResult"
 		| "remoteBrowserEnabled"
+		| "maxReadFileLine"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -153,6 +154,7 @@ export interface ExtensionState {
 	telemetryKey?: string
 	machineId?: string
 	showRooIgnoredFiles: boolean // Whether to show .rooignore'd files in listings
+	maxReadFileLine: number // Maximum number of lines to read from a file before truncating
 }
 
 export type { ClineMessage, ClineAsk, ClineSay }
