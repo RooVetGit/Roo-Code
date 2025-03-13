@@ -1,11 +1,11 @@
 import * as React from "react"
+import { VSCodeProgressRing } from "@vscode/webview-ui-toolkit/react"
 import { Button } from "../ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog"
 import { Textarea } from "../ui/textarea"
 import { useClipboard } from "../ui/hooks"
 import { AlertTriangle, Check, Copy, Power, X } from "lucide-react"
 import { useState as useReactState } from "react"
-import { ProgressIndicator } from "../chat/ChatRow"
 import { vscode } from "../../utils/vscode"
 
 interface HumanRelayDialogProps {
@@ -184,3 +184,17 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 		</Dialog>
 	)
 }
+const ProgressIndicator = () => (
+	<div
+		style={{
+			width: "16px",
+			height: "16px",
+			display: "flex",
+			alignItems: "center",
+			justifyContent: "center",
+		}}>
+		<div style={{ transform: "scale(0.55)", transformOrigin: "center" }}>
+			<VSCodeProgressRing />
+		</div>
+	</div>
+)
