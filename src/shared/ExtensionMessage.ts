@@ -168,6 +168,11 @@ export interface ExtensionState {
 	showRooIgnoredFiles: boolean // Whether to show .rooignore'd files in listings
 	renderContext: "sidebar" | "editor"
 	maxReadFileLine: number // Maximum number of lines to read from a file before truncating
+	notebookOutputSizeLimit: number
+	notebookExecutionTimeoutSeconds: number
+	alwaysAllowReadNotebook?: boolean
+	alwaysAllowEditNotebook?: boolean
+	alwaysAllowExecuteNotebook?: boolean
 }
 
 export type { ClineMessage, ClineAsk, ClineSay }
@@ -185,6 +190,9 @@ export interface ClineSayTool {
 		| "switchMode"
 		| "newTask"
 		| "finishTask"
+		| "notebook_read"
+		| "notebook_edit"
+		| "notebook_execute"
 	path?: string
 	diff?: string
 	content?: string
@@ -192,6 +200,14 @@ export interface ClineSayTool {
 	filePattern?: string
 	mode?: string
 	reason?: string
+	action?: string
+	cell_content?: string
+	cell_index?: number
+	start_index?: number
+	end_index?: number
+	cell_type?: string
+	language_id?: string
+	noexec?: boolean
 }
 
 // Must keep in sync with system prompt.

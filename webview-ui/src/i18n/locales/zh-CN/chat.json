@@ -193,6 +193,21 @@
 				"label": "重试失败的请求",
 				"shortName": "重试",
 				"description": "当提供者返回错误响应时自动重试失败的API请求。"
+			},
+			"readNotebook": {
+				"label": "读取笔记本",
+				"shortName": "读取NB",
+				"description": "允许在不需要批准的情况下读取活跃笔记本。"
+			},
+			"editNotebook": {
+				"label": "编辑笔记本",
+				"shortName": "编辑NB",
+				"description": "允许在不需要批准的情况下编辑活跃笔记本。"
+			},
+			"executeNotebook": {
+				"label": "执行笔记本",
+				"shortName": "执行NB",
+				"description": "允许在不需要批准的情况下执行笔记本单元格。"
 			}
 		}
 	},
@@ -232,6 +247,25 @@
 			"scrollDown": "向下滚动",
 			"scrollUp": "向上滚动",
 			"close": "关闭浏览器"
+		}
+	},
+	"notebook": {
+		"actions": {
+			"readWants": "Roo想读取活跃笔记本（{{action}}）",
+			"readDid": "Roo已读取活跃笔记本（{{action}}）",
+			"editWants": "Roo想{{action}}{{indexText}}",
+			"editDid": "Roo已{{action}}{{indexText}}",
+			"executeWants": "Roo想执行笔记本单元格{{indexText}}",
+			"executeDid": "Roo已执行笔记本单元格{{indexText}}"
+		},
+		"types": {
+			"getInfo": "总体信息",
+			"getCells": "单元格详情",
+			"insertCells": "插入单元格",
+			"modifyCell": "修改单元格",
+			"replaceCells": "替换多个单元格",
+			"atIndex": "在索引 {{index}} 处",
+			"fromIndexToIndex": "从索引 {{startIndex}} 到 {{endIndex}}"
 		}
 	}
 }

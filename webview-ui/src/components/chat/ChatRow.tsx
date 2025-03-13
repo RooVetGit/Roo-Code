@@ -521,6 +521,145 @@ export const ChatRowContent = ({
 						</div>
 					</>
 				)
+			case "notebook_read":
+				return (
+					<>
+						<div style={headerStyle}>
+							{toolIcon("notebook")}
+							<span style={{ fontWeight: "bold" }}>
+								{message.type === "ask" ? (
+									<>
+										{t("chat:notebook.actions.readWants", {
+											action: t(
+												tool.action === "get_info"
+													? "chat:notebook.types.getInfo"
+													: "chat:notebook.types.getCells",
+											),
+										})}
+									</>
+								) : (
+									<>
+										{t("chat:notebook.actions.readDid", {
+											action: t(
+												tool.action === "get_info"
+													? "chat:notebook.types.getInfo"
+													: "chat:notebook.types.getCells",
+											),
+										})}
+									</>
+								)}
+							</span>
+						</div>
+					</>
+				)
+			case "notebook_edit":
+				return (
+					<>
+						<div style={headerStyle}>
+							{toolIcon("edit")}
+							<span style={{ fontWeight: "bold" }}>
+								{message.type === "ask" ? (
+									<>
+										{t("chat:notebook.actions.editWants", {
+											action: t(
+												tool.action === "insert_cells"
+													? "chat:notebook.types.insertCells"
+													: tool.action === "modify_cell_content"
+														? "chat:notebook.types.modifyCell"
+														: "chat:notebook.types.replaceCells",
+											),
+											indexText:
+												tool.action === "insert_cells" || tool.action === "modify_cell_content"
+													? t("chat:notebook.types.atIndex", { index: tool.cell_index })
+													: tool.action === "replace_cells" &&
+														  tool.start_index !== undefined &&
+														  tool.end_index !== undefined
+														? t("chat:notebook.types.fromIndexToIndex", {
+																startIndex: tool.start_index,
+																endIndex: tool.end_index - 1,
+															})
+														: tool.cell_index !== undefined
+															? t("chat:notebook.types.atIndex", {
+																	index: tool.cell_index,
+																})
+															: "",
+										})}
+									</>
+								) : (
+									<>
+										{t("chat:notebook.actions.editDid", {
+											action: t(
+												tool.action === "insert_cells"
+													? "chat:notebook.types.insertCells"
+													: tool.action === "modify_cell_content"
+														? "chat:notebook.types.modifyCell"
+														: "chat:notebook.types.replaceCells",
+											),
+											indexText:
+												tool.action === "insert_cells" || tool.action === "modify_cell_content"
+													? t("chat:notebook.types.atIndex", { index: tool.cell_index })
+													: tool.action === "replace_cells" &&
+														  tool.start_index !== undefined &&
+														  tool.end_index !== undefined
+														? t("chat:notebook.types.fromIndexToIndex", {
+																startIndex: tool.start_index,
+																endIndex: tool.end_index - 1,
+															})
+														: tool.cell_index !== undefined
+															? t("chat:notebook.types.atIndex", {
+																	index: tool.cell_index,
+																})
+															: "",
+										})}
+									</>
+								)}
+							</span>
+						</div>
+					</>
+				)
+			case "notebook_execute":
+				return (
+					<>
+						<div style={headerStyle}>
+							{toolIcon("play")}
+							<span style={{ fontWeight: "bold" }}>
+								{message.type === "ask" ? (
+									<>
+										{t("chat:notebook.actions.executeWants", {
+											indexText:
+												tool.start_index !== undefined &&
+												tool.end_index !== undefined &&
+												tool.end_index - tool.start_index === 1
+													? t("chat:notebook.types.atIndex", { index: tool.start_index })
+													: tool.start_index !== undefined && tool.end_index !== undefined
+														? t("chat:notebook.types.fromIndexToIndex", {
+																startIndex: tool.start_index,
+																endIndex: tool.end_index - 1,
+															})
+														: "",
+										})}
+									</>
+								) : (
+									<>
+										{t("chat:notebook.actions.executeDid", {
+											indexText:
+												tool.start_index !== undefined &&
+												tool.end_index !== undefined &&
+												tool.end_index - tool.start_index === 1
+													? t("chat:notebook.types.atIndex", { index: tool.start_index })
+													: tool.start_index !== undefined && tool.end_index !== undefined
+														? t("chat:notebook.types.fromIndexToIndex", {
+																startIndex: tool.start_index,
+																endIndex: tool.end_index - 1,
+															})
+														: "",
+										})}
+									</>
+								)}
+							</span>
+						</div>
+					</>
+				)
 			default:
 				return null
 		}
