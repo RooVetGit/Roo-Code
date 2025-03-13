@@ -1408,6 +1408,16 @@ export class Cline extends EventEmitter<ClineEvents> {
 							const modeName = getModeBySlug(mode, customModes)?.name ?? mode
 							return `[${block.name} in ${modeName} mode: '${message}']`
 						}
+						case "notebook_read":
+							return `[${block.name} action '${block.params.action}']`
+						case "notebook_edit":
+							return `[${block.name} action '${block.params.action}'${
+								block.params.cell_index ? ` on cell ${block.params.cell_index}` : ""
+							}]`
+						case "notebook_execute":
+							return `[${block.name} action '${block.params.action}'${
+								block.params.cell_index ? ` on cell ${block.params.cell_index}` : ""
+							}]`
 					}
 				}
 
@@ -3172,6 +3182,411 @@ export class Cline extends EventEmitter<ClineEvents> {
 							await handleError("creating new task", error)
 							break
 						}
+					}
+
+					case "notebook_read": {
+						const action: string | undefined = block.params.action
+
+						const sharedMessageProps: ClineSayTool = {
+							tool: "notebook_read",
+							action: removeClosingTag("action", action),
+						}
+
+						try {
+							if (block.partial) {
+								const partialMessage = JSON.stringify({
+									...sharedMessageProps,
+									content: "",
+								} satisfies ClineSayTool)
+								await this.ask("tool", partialMessage, block.partial).catch(() => {})
+								break
+							} else {
+								if (!action) {
+									this.consecutiveMistakeCount++
+									pushToolResult(await this.sayAndCreateMissingParamError("notebook_read", "action"))
+									break
+								}
+
+								this.consecutiveMistakeCount = 0
+
+								// Ask for approval first with just the action info and a reminder
+								const approvalMessage = JSON.stringify({
+									...sharedMessageProps,
+								} satisfies ClineSayTool)
+
+								const didApprove = await askApproval("tool", approvalMessage)
+								if (!didApprove) {
+									break
+								}
+
+								// Only read the notebook after approval
+								let result = ""
+								let success = false
+
+								try {
+									const { NotebookService } = await import("../services/notebook")
+
+									// Get notebook output settings from Roo's settings
+									const { notebookOutputSizeLimit } =
+										(await this.providerRef.deref()?.getState()) ?? {}
+
+									switch (action) {
+										case "get_info":
+											result = await NotebookService.getNotebookInfo()
+											success = true
+											break
+
+										case "get_cells":
+											result = await NotebookService.getCells(notebookOutputSizeLimit ?? 2000)
+											success = true
+											break
+
+										default:
+											result = `Unknown action: ${action}. Valid actions for notebook_read are: get_info, get_cells.`
+											success = false
+									}
+								} catch (error) {
+									result = `Error executing notebook_read tool: ${error instanceof Error ? error.message : String(error)}`
+									success = false
+								}
+
+								if (success) {
+									pushToolResult(result)
+								} else {
+									await this.say("error", result)
+									pushToolResult(formatResponse.toolError(result))
+								}
+							}
+						} catch (error) {
+							await handleError("executing notebook_read tool", error)
+							break
+						}
+						break
+					}
+
+					case "notebook_edit": {
+						// Create a typed variable to help with type checking
+						const params = block.params as Record<string, string>
+						const action: string | undefined = params.action
+						const cellIndex: string | undefined = params.cell_index
+						const startIndex: string | undefined = params.start_index
+						const endIndex: string | undefined = params.end_index
+						const cellContent: string | undefined = params.cell_content
+						const cellType: string | undefined = params.cell_type
+						const languageId: string | undefined = params.language_id
+						const noexec: string | undefined = params.noexec
+
+						const sharedMessageProps: ClineSayTool = {
+							tool: "notebook_edit",
+							action: removeClosingTag("action", action),
+							cell_index: cellIndex ? parseInt(removeClosingTag("cell_index", cellIndex)) : undefined,
+							start_index: startIndex
+								? parseInt(removeClosingTag("start_index" as ToolParamName, startIndex))
+								: undefined,
+							end_index: endIndex
+								? parseInt(removeClosingTag("end_index" as ToolParamName, endIndex))
+								: undefined,
+							cell_content: removeClosingTag("cell_content", cellContent),
+							cell_type: removeClosingTag("cell_type", cellType),
+							language_id: removeClosingTag("language_id", languageId),
+						}
+
+						try {
+							if (block.partial) {
+								const partialMessage = JSON.stringify({
+									...sharedMessageProps,
+									content: "",
+								} satisfies ClineSayTool)
+								await this.ask("tool", partialMessage, block.partial).catch(() => {})
+								break
+							} else {
+								if (!action) {
+									this.consecutiveMistakeCount++
+									pushToolResult(await this.sayAndCreateMissingParamError("notebook_edit", "action"))
+									break
+								}
+
+								this.consecutiveMistakeCount = 0
+
+								// Validate inputs before asking for approval
+								let validationError = ""
+
+								switch (action) {
+									case "insert_cells": {
+										if (!cellContent) {
+											validationError = "Missing required parameter: cell_content"
+										}
+										break
+									}
+
+									case "modify_cell_content":
+										if (!cellIndex) {
+											validationError = "Missing required parameter: cell_index"
+										} else if (!params.cell_content) {
+											validationError = "Missing required parameter: cell_content"
+										}
+										break
+
+									case "replace_cells": {
+										if (!startIndex) {
+											validationError = "Missing required parameter: start_index"
+										} else if (!endIndex) {
+											validationError = "Missing required parameter: end_index"
+										} else if (!cellContent) {
+											validationError = "Missing required parameter: cell_content"
+										}
+										break
+									}
+
+									default:
+										validationError = `Unknown action: ${action}. Valid actions for notebook_edit are: insert_cells, modify_cell_content, replace_cells.`
+								}
+
+								if (validationError) {
+									this.consecutiveMistakeCount++
+									await this.say("error", validationError)
+									pushToolResult(formatResponse.toolError(validationError))
+									break
+								}
+
+								const completeMessage = JSON.stringify({
+									...sharedMessageProps,
+								} satisfies ClineSayTool)
+
+								// Ask for approval BEFORE executing the operation
+								const didApprove = await askApproval("tool", completeMessage)
+								if (!didApprove) {
+									break
+								}
+
+								// Now actually execute the operation after approval
+								try {
+									const { NotebookService } = await import("../services/notebook")
+									let result = ""
+
+									// Convert noexec string parameter to boolean
+									// If it presents, means true unless explicitly spelled "false"
+									const skipExecution = noexec !== undefined && noexec.toLowerCase() !== "false"
+
+									// Get notebook output settings from Roo's settings
+									const { notebookOutputSizeLimit, notebookExecutionTimeoutSeconds } =
+										(await this.providerRef.deref()?.getState()) ?? {}
+
+									switch (action) {
+										case "insert_cells": {
+											// Create a cell object directly from parameters
+											const cellDefs = [
+												{
+													content: cellContent!,
+													cell_type: cellType,
+													language_id: languageId,
+												},
+											]
+
+											result = await NotebookService.insertCells(
+												cellDefs,
+												sharedMessageProps.cell_index,
+												skipExecution,
+												notebookOutputSizeLimit ?? 2000,
+												notebookExecutionTimeoutSeconds ?? 30,
+											)
+											break
+										}
+										case "modify_cell_content": {
+											// Create validation callback that validates the cell index using snake_case in error messages
+											const validateCellIndex = (cellCount: number) => {
+												const parsedCellIndex = parseInt(cellIndex!)
+
+												if (parsedCellIndex < 0 || parsedCellIndex >= cellCount) {
+													throw new Error(
+														`Invalid cell_index: ${parsedCellIndex}. Valid range is 0-${cellCount - 1}.`,
+													)
+												}
+
+												return parsedCellIndex
+											}
+
+											if (cellContent === undefined) {
+												throw new Error("cell_content is required for cell modification.")
+											}
+
+											result = await NotebookService.modifyCellContent(
+												validateCellIndex,
+												cellContent!,
+												skipExecution,
+												notebookOutputSizeLimit ?? 2000,
+												notebookExecutionTimeoutSeconds ?? 30,
+											)
+											break
+										}
+										case "replace_cells": {
+											// Create a cell object directly from parameters
+											const cellDefs = [
+												{
+													content: cellContent!,
+													cell_type: cellType,
+													language_id: languageId,
+												},
+											]
+
+											// Create validation callback that validates indices and cells using snake_case in error messages
+											const validateIndicesAndCells = (cellCount: number) => {
+												const parsedStartIndex = parseInt(startIndex!)
+												const parsedEndIndex = parseInt(endIndex!)
+
+												if (parsedStartIndex < 0 || parsedStartIndex >= cellCount) {
+													throw new Error(
+														`Invalid start_index: ${parsedStartIndex}. Valid range is 0-${cellCount - 1}.`,
+													)
+												}
+
+												if (parsedEndIndex <= parsedStartIndex || parsedEndIndex > cellCount) {
+													throw new Error(
+														`Invalid end_index: ${parsedEndIndex}. Must be > ${parsedStartIndex} and <= ${cellCount}.`,
+													)
+												}
+
+												return {
+													startIndex: parsedStartIndex,
+													endIndex: parsedEndIndex,
+													cells: cellDefs,
+												}
+											}
+
+											result = await NotebookService.replaceCells(
+												validateIndicesAndCells,
+												skipExecution,
+												notebookOutputSizeLimit ?? 2000,
+												notebookExecutionTimeoutSeconds ?? 30,
+											)
+											break
+										}
+									}
+
+									pushToolResult(result)
+								} catch (error) {
+									const errorMsg = `Error executing notebook_edit tool: ${error instanceof Error ? error.message : String(error)}`
+									await this.say("error", errorMsg)
+									pushToolResult(formatResponse.toolError(errorMsg))
+								}
+							}
+						} catch (error) {
+							await handleError("executing notebook_edit tool", error)
+							break
+						}
+						break
+					}
+
+					case "notebook_execute": {
+						const action: string | undefined = block.params.action
+						const startIndex: string | undefined = block.params.start_index
+						const endIndex: string | undefined = block.params.end_index
+
+						const sharedMessageProps: ClineSayTool = {
+							tool: "notebook_execute",
+							action: removeClosingTag("action", action),
+							start_index: startIndex ? parseInt(removeClosingTag("start_index", startIndex)) : undefined,
+							end_index: endIndex ? parseInt(removeClosingTag("end_index", endIndex)) : undefined,
+						}
+
+						try {
+							if (block.partial) {
+								const partialMessage = JSON.stringify({
+									...sharedMessageProps,
+									content: "",
+								} satisfies ClineSayTool)
+								await this.ask("tool", partialMessage, block.partial).catch(() => {})
+								break
+							} else {
+								if (!action) {
+									this.consecutiveMistakeCount++
+									pushToolResult(
+										await this.sayAndCreateMissingParamError("notebook_execute", "action"),
+									)
+									break
+								}
+
+								this.consecutiveMistakeCount = 0
+
+								// Validate inputs before asking for approval
+								let validationError = ""
+
+								switch (action) {
+									case "execute_cells":
+										if (!startIndex) {
+											validationError = "Missing required parameter: start_index"
+										} else if (!endIndex) {
+											validationError = "Missing required parameter: end_index"
+										}
+										break
+
+									default:
+										validationError = `Unknown action: ${action}. Valid actions for notebook_execute are: execute_cells.`
+								}
+
+								if (validationError) {
+									this.consecutiveMistakeCount++
+									await this.say("error", validationError)
+									pushToolResult(formatResponse.toolError(validationError))
+									break
+								}
+
+								const completeMessage = JSON.stringify({
+									...sharedMessageProps,
+								} satisfies ClineSayTool)
+
+								// Ask for approval BEFORE executing the operation
+								const didApprove = await askApproval("tool", completeMessage)
+								if (!didApprove) {
+									break
+								}
+
+								// Now actually execute the operation after approval
+								try {
+									const { NotebookService } = await import("../services/notebook")
+
+									// Get notebook output settings from Roo's settings
+									const { notebookOutputSizeLimit, notebookExecutionTimeoutSeconds } =
+										(await this.providerRef.deref()?.getState()) ?? {}
+
+									// Create validation callback that validates the indices using snake_case in error messages
+									const validateIndices = (cellCount: number) => {
+										const parsedStartIndex = parseInt(startIndex!)
+										const parsedEndIndex = parseInt(endIndex!)
+
+										if (parsedStartIndex < 0 || parsedStartIndex >= cellCount) {
+											throw new Error(
+												`Invalid start_index: ${parsedStartIndex}. Valid range is 0-${cellCount - 1}.`,
+											)
+										}
+
+										if (parsedEndIndex <= parsedStartIndex || parsedEndIndex > cellCount) {
+											throw new Error(
+												`Invalid end_index: ${parsedEndIndex}. Must be > ${parsedStartIndex} and <= ${cellCount}.`,
+											)
+										}
+
+										return { startIndex: parsedStartIndex, endIndex: parsedEndIndex }
+									}
+
+									const result = await NotebookService.executeCells(
+										validateIndices,
+										notebookOutputSizeLimit ?? 2000,
+										notebookExecutionTimeoutSeconds ?? 30,
+									)
+
+									pushToolResult(result)
+								} catch (error) {
+									const errorMsg = `Error executing notebook_execute tool: ${error instanceof Error ? error.message : String(error)}`
+									await this.say("error", errorMsg)
+									pushToolResult(formatResponse.toolError(errorMsg))
+								}
+							}
+						} catch (error) {
+							await handleError("executing notebook_execute tool", error)
+							break
+						}
+						break
 					}
 
 					case "attempt_completion": {

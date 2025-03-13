@@ -67,6 +67,9 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		autoApprovalEnabled,
 		alwaysAllowModeSwitch,
 		alwaysAllowSubtasks,
+		alwaysAllowReadNotebook,
+		alwaysAllowEditNotebook,
+		alwaysAllowExecuteNotebook,
 		customModes,
 		telemetrySetting,
 	} = useExtensionState()
@@ -609,6 +612,39 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		return false
 	}, [])
 
+	const isNotebookReadToolAction = useCallback((message: ClineMessage | undefined) => {
+		if (message?.type === "ask") {
+			if (!message.text) {
+				return false
+			}
+			const tool = JSON.parse(message.text)
+			return tool.tool === "notebook_read"
+		}
+		return false
+	}, [])
+
+	const isNotebookEditToolAction = useCallback((message: ClineMessage | undefined) => {
+		if (message?.type === "ask") {
+			if (!message.text) {
+				return false
+			}
+			const tool = JSON.parse(message.text)
+			return tool.tool === "notebook_edit"
+		}
+		return false
+	}, [])
+
+	const isNotebookExecuteToolAction = useCallback((message: ClineMessage | undefined) => {
+		if (message?.type === "ask") {
+			if (!message.text) {
+				return false
+			}
+			const tool = JSON.parse(message.text)
+			return tool.tool === "notebook_execute"
+		}
+		return false
+	}, [])
+
 	const isWriteToolAction = useCallback((message: ClineMessage | undefined) => {
 		if (message?.type === "ask") {
 			if (!message.text) {
@@ -702,6 +738,19 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				if (isWriteToolAction(message)) {
 					return alwaysAllowWrite && (!isOutsideWorkspace || alwaysAllowWriteOutsideWorkspace)
 				}
+
+				// Notebook operations from the incoming change
+				if (isNotebookReadToolAction(message)) {
+					return alwaysAllowReadNotebook
+				}
+
+				if (isNotebookEditToolAction(message)) {
+					return alwaysAllowEditNotebook
+				}
+
+				if (isNotebookExecuteToolAction(message)) {
+					return alwaysAllowExecuteNotebook
+				}
 			}
 
 			return false
@@ -721,6 +770,12 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			isMcpToolAlwaysAllowed,
 			alwaysAllowModeSwitch,
 			alwaysAllowSubtasks,
+			alwaysAllowReadNotebook,
+			isNotebookReadToolAction,
+			alwaysAllowEditNotebook,
+			isNotebookEditToolAction,
+			alwaysAllowExecuteNotebook,
+			isNotebookExecuteToolAction,
 		],
 	)
 

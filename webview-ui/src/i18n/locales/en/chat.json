@@ -198,6 +198,21 @@
 				"label": "Retry failed requests",
 				"shortName": "Retries",
 				"description": "Automatically retry failed API requests when the provider returns an error response."
+			},
+			"readNotebook": {
+				"label": "Read notebooks",
+				"shortName": "Read NB",
+				"description": "Allow reading active notebook without requiring approval."
+			},
+			"editNotebook": {
+				"label": "Edit notebooks",
+				"shortName": "Edit NB",
+				"description": "Allow editing active notebook without requiring approval."
+			},
+			"executeNotebook": {
+				"label": "Execute notebooks",
+				"shortName": "Exec NB",
+				"description": "Allow executing notebook cells without requiring approval."
 			}
 		}
 	},
@@ -237,6 +252,26 @@
 			"scrollDown": "Scroll down",
 			"scrollUp": "Scroll up",
 			"close": "Close browser"
+		}
+	},
+	"notebook": {
+		"actions": {
+			"readWants": "Roo wants to read active notebook ({{action}})",
+			"readDid": "Roo read active notebook ({{action}})",
+			"editWants": "Roo wants to {{action}} {{indexText}}",
+			"editDid": "Roo did {{action}} {{indexText}}",
+			"executeWants": "Roo wants to execute cells {{indexText}}",
+			"executeDid": "Roo executed cells {{indexText}}"
+		},
+		"types": {
+			"getInfo": "overall information",
+			"getCells": "details of cells",
+			"insertCells": "insert cells",
+			"appendCells": "append cells",
+			"modifyCell": "modify the cell",
+			"replaceCells": "replace cells",
+			"atIndex": "at index {{index}}",
+			"fromIndexToIndex": "from index {{startIndex}} to {{endIndex}}"
 		}
 	}
 }

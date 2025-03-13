@@ -35,6 +35,12 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		setAlwaysAllowSubtasks,
 		alwaysApproveResubmit,
 		setAlwaysApproveResubmit,
+		alwaysAllowReadNotebook,
+		setAlwaysAllowReadNotebook,
+		alwaysAllowEditNotebook,
+		setAlwaysAllowEditNotebook,
+		alwaysAllowExecuteNotebook,
+		setAlwaysAllowExecuteNotebook,
 		autoApprovalEnabled,
 		setAutoApprovalEnabled,
 	} = useExtensionState()
@@ -98,6 +104,27 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 			enabled: alwaysApproveResubmit ?? false,
 			description: t("chat:autoApprove.actions.retryRequests.description"),
 		},
+		{
+			id: "readNotebook",
+			label: t("chat:autoApprove.actions.readNotebook.label"),
+			shortName: t("chat:autoApprove.actions.readNotebook.shortName"),
+			enabled: alwaysAllowReadNotebook ?? false,
+			description: t("chat:autoApprove.actions.readNotebook.description"),
+		},
+		{
+			id: "editNotebook",
+			label: t("chat:autoApprove.actions.editNotebook.label"),
+			shortName: t("chat:autoApprove.actions.editNotebook.shortName"),
+			enabled: alwaysAllowEditNotebook ?? false,
+			description: t("chat:autoApprove.actions.editNotebook.description"),
+		},
+		{
+			id: "executeNotebook",
+			label: t("chat:autoApprove.actions.executeNotebook.label"),
+			shortName: t("chat:autoApprove.actions.executeNotebook.shortName"),
+			enabled: alwaysAllowExecuteNotebook ?? false,
+			description: t("chat:autoApprove.actions.executeNotebook.description"),
+		},
 	]
 
 	const toggleExpanded = useCallback(() => {
@@ -158,6 +185,25 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		vscode.postMessage({ type: "alwaysApproveResubmit", bool: newValue })
 	}, [alwaysApproveResubmit, setAlwaysApproveResubmit])
 
+	// New notebook handlers
+	const handleReadNotebookChange = useCallback(() => {
+		const newValue = !(alwaysAllowReadNotebook ?? false)
+		setAlwaysAllowReadNotebook(newValue)
+		vscode.postMessage({ type: "alwaysAllowReadNotebook", bool: newValue })
+	}, [alwaysAllowReadNotebook, setAlwaysAllowReadNotebook])
+
+	const handleEditNotebookChange = useCallback(() => {
+		const newValue = !(alwaysAllowEditNotebook ?? false)
+		setAlwaysAllowEditNotebook(newValue)
+		vscode.postMessage({ type: "alwaysAllowEditNotebook", bool: newValue })
+	}, [alwaysAllowEditNotebook, setAlwaysAllowEditNotebook])
+
+	const handleExecuteNotebookChange = useCallback(() => {
+		const newValue = !(alwaysAllowExecuteNotebook ?? false)
+		setAlwaysAllowExecuteNotebook(newValue)
+		vscode.postMessage({ type: "alwaysAllowExecuteNotebook", bool: newValue })
+	}, [alwaysAllowExecuteNotebook, setAlwaysAllowExecuteNotebook])
+
 	// Map action IDs to their specific handlers
 	const actionHandlers: Record<AutoApproveAction["id"], () => void> = {
 		readFiles: handleReadOnlyChange,
@@ -168,6 +214,9 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		switchModes: handleModeSwitchChange,
 		subtasks: handleSubtasksChange,
 		retryRequests: handleRetryChange,
+		readNotebook: handleReadNotebookChange,
+		editNotebook: handleEditNotebookChange,
+		executeNotebook: handleExecuteNotebookChange,
 	}
 
 	return (

@@ -81,6 +81,14 @@ export interface ExtensionStateContextType extends ExtensionState {
 	maxReadFileLine: number
 	setMaxReadFileLine: (value: number) => void
 	machineId?: string
+	notebookOutputSizeLimit: number
+	notebookExecutionTimeoutSeconds: number
+	alwaysAllowReadNotebook?: boolean
+	setAlwaysAllowReadNotebook: (value: boolean) => void
+	alwaysAllowEditNotebook?: boolean
+	setAlwaysAllowEditNotebook: (value: boolean) => void
+	alwaysAllowExecuteNotebook?: boolean
+	setAlwaysAllowExecuteNotebook: (value: boolean) => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -155,6 +163,11 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		showRooIgnoredFiles: true, // Default to showing .rooignore'd files with lock symbol (current behavior).
 		renderContext: "sidebar",
 		maxReadFileLine: 500, // Default max read file line limit
+		notebookOutputSizeLimit: 2000,
+		notebookExecutionTimeoutSeconds: 30,
+		alwaysAllowReadNotebook: false,
+		alwaysAllowEditNotebook: false,
+		alwaysAllowExecuteNotebook: false,
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
@@ -307,6 +320,17 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setShowRooIgnoredFiles: (value) => setState((prevState) => ({ ...prevState, showRooIgnoredFiles: value })),
 		setRemoteBrowserEnabled: (value) => setState((prevState) => ({ ...prevState, remoteBrowserEnabled: value })),
 		setMaxReadFileLine: (value) => setState((prevState) => ({ ...prevState, maxReadFileLine: value })),
+		alwaysAllowReadNotebook: state.alwaysAllowReadNotebook,
+		setAlwaysAllowReadNotebook: (value) =>
+			setState((prevState) => ({ ...prevState, alwaysAllowReadNotebook: value })),
+		alwaysAllowEditNotebook: state.alwaysAllowEditNotebook,
+		setAlwaysAllowEditNotebook: (value) =>
+			setState((prevState) => ({ ...prevState, alwaysAllowEditNotebook: value })),
+		alwaysAllowExecuteNotebook: state.alwaysAllowExecuteNotebook,
+		setAlwaysAllowExecuteNotebook: (value) =>
+			setState((prevState) => ({ ...prevState, alwaysAllowExecuteNotebook: value })),
+		notebookOutputSizeLimit: state.notebookOutputSizeLimit,
+		notebookExecutionTimeoutSeconds: state.notebookExecutionTimeoutSeconds,
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

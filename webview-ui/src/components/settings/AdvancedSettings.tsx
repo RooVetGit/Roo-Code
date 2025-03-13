@@ -16,7 +16,11 @@ type AdvancedSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	rateLimitSeconds: number
 	diffEnabled?: boolean
 	fuzzyMatchThreshold?: number
-	setCachedStateField: SetCachedStateField<"rateLimitSeconds" | "diffEnabled" | "fuzzyMatchThreshold">
+	setCachedStateField: SetCachedStateField<
+		| "rateLimitSeconds"
+		| "diffEnabled"
+		| "fuzzyMatchThreshold"
+	>
 	experiments: Record<ExperimentId, boolean>
 	setExperimentEnabled: SetExperimentEnabled
 }
