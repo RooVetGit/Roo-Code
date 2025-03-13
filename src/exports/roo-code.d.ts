@@ -198,6 +198,8 @@ export type GlobalStateKey =
 	| "telemetrySetting"
 	| "showRooIgnoredFiles"
 	| "remoteBrowserEnabled"
+	| "humanRelayMonitorClipboard"
+	| "humanRelayMonitorInterval"
 
 export type ConfigurationKey = GlobalStateKey | SecretKey
 
