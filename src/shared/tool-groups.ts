@@ -13,6 +13,7 @@ export const TOOL_DISPLAY_NAMES = {
 	search_files: "search files",
 	list_files: "list files",
 	list_code_definition_names: "list definitions",
+	get_symbol_documentation: "look up symbols",
 	browser_action: "use a browser",
 	use_mcp_tool: "use mcp tools",
 	access_mcp_resource: "access mcp resources",
@@ -25,7 +26,7 @@ export const TOOL_DISPLAY_NAMES = {
 // Define available tool groups
 export const TOOL_GROUPS: Record<string, ToolGroupConfig> = {
 	read: {
-		tools: ["read_file", "search_files", "list_files", "list_code_definition_names"],
+		tools: ["read_file", "search_files", "list_files", "list_code_definition_names", "get_symbol_documentation"],
 	},
 	edit: {
 		tools: ["apply_diff", "write_to_file", "insert_content", "search_and_replace"],

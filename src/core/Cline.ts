@@ -1364,6 +1364,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 							const modeName = getModeBySlug(mode, customModes)?.name ?? mode
 							return `[${block.name} in ${modeName} mode: '${message}']`
 						}
+						case "get_symbol_documentation":
+							const symbolName: string | undefined = block.params.symbol_name
+							const filePath: string | undefined = block.params.path
+							return `[${block.name} for '${symbolName}' in '${filePath}']`
 					}
 				}
 
@@ -2394,6 +2398,54 @@ export class Cline extends EventEmitter<ClineEvents> {
 							}
 						} catch (error) {
 							await handleError("searching files", error)
+							break
+						}
+					}
+					case "get_symbol_documentation": {
+						const symbolName: string | undefined = block.params.symbol_name
+						const relPath: string | undefined = block.params.path
+						const sharedMessageProps: ClineSayTool = {
+							tool: "getSymbolDocumentation",
+							symbolName: removeClosingTag("symbol_name", symbolName),
+							path: relPath ? getReadablePath(cwd, removeClosingTag("path", relPath)) : undefined,
+						}
+						try {
+							if (block.partial) {
+								const partialMessage = JSON.stringify({
+									...sharedMessageProps,
+									content: "",
+								} satisfies ClineSayTool)
+								await this.ask("tool", partialMessage, block.partial).catch(() => {})
+								break
+							} else {
+								if (!symbolName) {
+									this.consecutiveMistakeCount++
+									pushToolResult(
+										await this.sayAndCreateMissingParamError(
+											"get_symbol_documentation",
+											"symbol_name",
+										),
+									)
+									break
+								}
+								this.consecutiveMistakeCount = 0
+
+								const completeMessage = JSON.stringify({
+									...sharedMessageProps,
+									content: `Retrieving documentation for symbol '${symbolName}'${relPath ? ` in ${relPath}` : ""}...`,
+								} satisfies ClineSayTool)
+
+								const didApprove = await askApproval("tool", completeMessage)
+								if (!didApprove) {
+									break
+								}
+
+								const results = await this.getSymbolDocumentation(symbolName, relPath)
+								pushToolResult(results)
+								break
+							}
+						} catch (error) {
+							await handleError("getting symbol documentation", error)
 							break
 						}
 					}
@@ -3496,6 +3548,259 @@ export class Cline extends EventEmitter<ClineEvents> {
 			),
 			this.getEnvironmentDetails(includeFileDetails),
 		])
+	}
+
+	/**
+	 * Gets documentation for a symbol by name, optionally scoped to a specific file.
+	 * Uses VS Code's language services to find symbol definitions and hover information.
+	 */
+	async getSymbolDocumentation(symbolName: string, filePath?: string): Promise<string> {
+		// Show output channel
+		try {
+			console.log(`[DEBUG] getSymbolDocumentation: ${symbolName}, ${filePath}`)
+			// STEP 1: If file path is provided, try to find the symbol in that file first
+			if (filePath) {
+				const uri = vscode.Uri.file(path.resolve(cwd, filePath))
+
+				try {
+					// Try to open the document
+					const document = await vscode.workspace.openTextDocument(uri)
+
+					// STEP 1a: Check if symbol is defined in the document
+					const documentSymbols = await vscode.commands.executeCommand<vscode.DocumentSymbol[]>(
+						"vscode.executeDocumentSymbolProvider",
+						uri,
+					)
+
+					// Helper function to search recursively through DocumentSymbol hierarchy
+					const findSymbolInHierarchy = (
+						symbols?: vscode.DocumentSymbol[],
+					): vscode.DocumentSymbol | undefined => {
+						if (!symbols) return undefined
+
+						for (const symbol of symbols) {
+							if (symbol.name === symbolName) {
+								return symbol
+							}
+
+							const found = findSymbolInHierarchy(symbol.children)
+							if (found) return found
+						}
+
+						return undefined
+					}
+
+					// Look for the symbol in document symbols
+					const foundSymbol = findSymbolInHierarchy(documentSymbols)
+
+					if (foundSymbol) {
+						// Found the symbol definition in document
+						const hoverResults = await vscode.commands.executeCommand<vscode.Hover[]>(
+							"vscode.executeHoverProvider",
+							uri,
+							foundSymbol.selectionRange.start,
+						)
+
+						let hoverText = ""
+						if (hoverResults && hoverResults.length > 0) {
+							// Extract the text from hover results
+							for (const content of hoverResults[0].contents) {
+								if (typeof content === "string") {
+									hoverText += content + "\n"
+								} else {
+									// MarkdownString
+									hoverText += content.value + "\n"
+								}
+							}
+						}
+
+						return `Symbol: ${symbolName}
+Location: ${uri.fsPath}:${foundSymbol.selectionRange.start.line + 1}:${foundSymbol.selectionRange.start.character + 1}
+Kind: ${vscode.SymbolKind[foundSymbol.kind]}
+Status: Defined in file
+
+Documentation:
+${hoverText || "No documentation available for this symbol."}`
+					}
+
+					// STEP 1b: If not defined in document, search for references to the symbol
+					// Find all occurrences of the symbol in text
+					const text = document.getText()
+					const occurrences: vscode.Position[] = []
+					const regex = new RegExp(`\\b${symbolName}\\b`, "g")
+
+					console.log(`[DEBUG] Searching for symbol: ${symbolName}`)
+
+					let match
+					while ((match = regex.exec(text)) !== null) {
+						const pos = document.positionAt(match.index)
+						occurrences.push(pos)
+					}
+
+					console.log(`[DEBUG] Found ${occurrences.length} occurrences in ${filePath}`)
+
+					// Try each occurrence to see if we can get hover or definition info
+					for (const position of occurrences) {
+						// Skip occurrences in import statements
+						const line = document.lineAt(position.line).text
+						const lineText = document.lineAt(position.line).text
+						console.log(`[DEBUG] Checking occurrence at line ${position.line + 1}: ${lineText}`)
+
+						// if (/^\s*(import|from|require|use|include|using)/.test(line)) {
+						// 	continue
+						// }
+
+						// Try hover first
+						const hoverResults = await vscode.commands.executeCommand<vscode.Hover[]>(
+							"vscode.executeHoverProvider",
+							uri,
+							position,
+						)
+
+						console.log(`[DEBUG] hover results: ${hoverResults?.length}`)
+
+						if (hoverResults && hoverResults.length > 0) {
+							// Extract the text from hover results
+							let hoverText = ""
+							for (const content of hoverResults[0].contents) {
+								if (typeof content === "string") {
+									hoverText += content + "\n"
+								} else {
+									// MarkdownString
+									hoverText += content.value + "\n"
+								}
+							}
+
+							if (hoverText.trim()) {
+								// Try to get definition as well
+								const definitions = await vscode.commands.executeCommand<vscode.Location[]>(
+									"vscode.executeDefinitionProvider",
+									uri,
+									position,
+								)
+
+								console.log(`[DEBUG] definition results length: ${definitions?.length}`)
+
+								let defLocationStr = `${uri.fsPath}:${position.line + 1}:${position.character + 1}`
+								let definedInFile = "Referenced in file"
+
+								if (definitions && definitions.length > 0) {
+									const def = definitions[0]
+									defLocationStr = `${def.uri.fsPath}:${def.range.start.line + 1}:${def.range.start.character + 1}`
+									definedInFile = "Imported/Referenced"
+								}
+
+								return `Symbol: ${symbolName}
+Location: ${defLocationStr}
+Status: ${definedInFile}
+Referenced in: ${filePath}
+
+Documentation:
+${hoverText.trim()}`
+							}
+						}
+
+						// If hover didn't work, try getting the definition directly
+						const definitions = await vscode.commands.executeCommand<vscode.Location[]>(
+							"vscode.executeDefinitionProvider",
+							uri,
+							position,
+						)
+
+						if (definitions && definitions.length > 0) {
+							const def = definitions[0]
+							const defHoverResults = await vscode.commands.executeCommand<vscode.Hover[]>(
+								"vscode.executeHoverProvider",
+								def.uri,
+								def.range.start,
+							)
+
+							if (defHoverResults && defHoverResults.length > 0) {
+								// Extract the text from hover results
+								let hoverText = ""
+								for (const content of defHoverResults[0].contents) {
+									if (typeof content === "string") {
+										hoverText += content + "\n"
+									} else {
+										// MarkdownString
+										hoverText += content.value + "\n"
+									}
+								}
+
+								if (hoverText.trim()) {
+									return `Symbol: ${symbolName}
+Location: ${def.uri.fsPath}:${def.range.start.line + 1}:${def.range.start.character + 1}
+Status: Imported/Referenced
+Referenced in: ${filePath}
+
+Documentation:
+${hoverText.trim()}`
+								}
+							}
+
+							// We found a definition but no hover info
+							return `Symbol: ${symbolName}
+Location: ${def.uri.fsPath}:${def.range.start.line + 1}:${def.range.start.character + 1}
+Status: Imported/Referenced
+Referenced in: ${filePath}
+
+No documentation is available for this symbol.`
+						}
+					}
+
+					// Couldn't find the symbol in the file
+					return `No symbol '${symbolName}' found in file '${filePath}'.`
+				} catch (error) {
+					return `Error: Could not analyze file '${filePath}': ${error.message}`
+				}
+			}
+
+			// STEP 2: If no file path or symbol not found in specified file, try workspace symbols
+			const workspaceSymbols = await vscode.commands.executeCommand<vscode.SymbolInformation[]>(
+				"vscode.executeWorkspaceSymbolProvider",
+				symbolName,
+			)
+
+			if (workspaceSymbols && workspaceSymbols.length > 0) {
+				// Found at least one matching symbol in workspace
+				const symbol = workspaceSymbols[0]
+				const uri = symbol.location.uri
+				const position = symbol.location.range.start
+
+				const hoverResults = await vscode.commands.executeCommand<vscode.Hover[]>(
+					"vscode.executeHoverProvider",
+					uri,
+					position,
+				)
+
+				let hoverText = ""
+				if (hoverResults && hoverResults.length > 0) {
+					// Extract the text from hover results
+					for (const content of hoverResults[0].contents) {
+						if (typeof content === "string") {
+							hoverText += content + "\n"
+						} else {
+							// MarkdownString
+							hoverText += content.value + "\n"
+						}
+					}
+				}
+
+				return `Symbol: ${symbolName}
+Location: ${uri.fsPath}:${position.line + 1}:${position.character + 1}
+Kind: ${vscode.SymbolKind[symbol.kind]}
+Container: ${symbol.containerName || "Global Scope"}
+${filePath ? `Not directly referenced in: ${filePath}` : ""}
+
+Documentation:
+${hoverText.trim() || "No documentation available for this symbol."}`
+			}
+
+			// STEP 3: No results found
+			return `No symbol found for '${symbolName}'${filePath ? ` in or referenced by file '${filePath}'` : ""}.`
+		} catch (error) {
+			return `Error retrieving documentation for symbol '${symbolName}': ${error.message}`
+		}
 	}
 
 	async getEnvironmentDetails(includeFileDetails: boolean = false) {
