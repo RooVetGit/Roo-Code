@@ -1039,6 +1039,123 @@ describe("Cline", () => {
 					await task.catch(() => {})
 				})
 			})
+
+			describe("rate limiting", () => {
+				it("should use profile-specific rate limit when available", async () => {
+					const [cline, task] = Cline.create({
+						provider: mockProvider,
+						apiConfiguration: mockApiConfig,
+						task: "test task",
+					})
+
+					// Set the lastApiRequestTime using Object.defineProperty to bypass private access
+					Object.defineProperty(cline, "lastApiRequestTime", {
+						value: Date.now() - 2000, // 2 seconds ago
+						writable: true,
+					})
+
+					// Mock the provider's getState to return profile-specific settings
+					mockProvider.getState = jest.fn().mockResolvedValue({
+						rateLimitSeconds: 5, // Global rate limit of 5 seconds
+						currentApiConfigName: "test-profile", // Current profile
+						profileSpecificSettings: {
+							"test-profile": {
+								rateLimitSeconds: 10, // Profile-specific rate limit of 10 seconds
+							},
+						},
+					})
+
+					// Mock say to track rate limit delay messages
+					const saySpy = jest.spyOn(cline, "say")
+
+					// Create a successful stream for the API request with the correct type
+					const mockSuccessStream = (async function* () {
+						yield { type: "text" as const, text: "Success" }
+					})()
+
+					// Mock createMessage to return the success stream
+					jest.spyOn(cline.api, "createMessage").mockReturnValue(mockSuccessStream as any)
+
+					// Mock delay to track countdown timing
+					const mockDelay = jest.fn().mockResolvedValue(undefined)
+					jest.spyOn(require("delay"), "default").mockImplementation(mockDelay)
+
+					// Trigger API request
+					const iterator = cline.attemptApiRequest(0)
+					await iterator.next()
+
+					// Verify that the profile-specific rate limit was used (10 seconds)
+					// With 2 seconds elapsed, we should have an 8-second delay
+					expect(saySpy).toHaveBeenCalledWith(
+						"api_req_retry_delayed",
+						expect.stringContaining("Rate limiting for 8 seconds"),
+						undefined,
+						true,
+					)
+
+					// Clean up
+					await cline.abortTask(true)
+					await task.catch(() => {})
+				})
+
+				it("should use global rate limit when no profile-specific setting exists", async () => {
+					const [cline, task] = Cline.create({
+						provider: mockProvider,
+						apiConfiguration: mockApiConfig,
+						task: "test task",
+					})
+
+					// Set the lastApiRequestTime using Object.defineProperty to bypass private access
+					Object.defineProperty(cline, "lastApiRequestTime", {
+						value: Date.now() - 2000, // 2 seconds ago
+						writable: true,
+					})
+
+					// Mock the provider's getState to return only global settings
+					mockProvider.getState = jest.fn().mockResolvedValue({
+						rateLimitSeconds: 5, // Global rate limit of 5 seconds
+						currentApiConfigName: "test-profile", // Current profile
+						profileSpecificSettings: {
+							// No settings for test-profile
+							"other-profile": {
+								rateLimitSeconds: 10,
+							},
+						},
+					})
+
+					// Mock say to track rate limit delay messages
+					const saySpy = jest.spyOn(cline, "say")
+
+					// Create a successful stream for the API request with the correct type
+					const mockSuccessStream = (async function* () {
+						yield { type: "text" as const, text: "Success" }
+					})()
+
+					// Mock createMessage to return the success stream
+					jest.spyOn(cline.api, "createMessage").mockReturnValue(mockSuccessStream as any)
+
+					// Mock delay to track countdown timing
+					const mockDelay = jest.fn().mockResolvedValue(undefined)
+					jest.spyOn(require("delay"), "default").mockImplementation(mockDelay)
+
+					// Trigger API request
+					const iterator = cline.attemptApiRequest(0)
+					await iterator.next()
+
+					// Verify that the global rate limit was used (5 seconds)
+					// With 2 seconds elapsed, we should have a 3-second delay
+					expect(saySpy).toHaveBeenCalledWith(
+						"api_req_retry_delayed",
+						expect.stringContaining("Rate limiting for 3 seconds"),
+						undefined,
+						true,
+					)
+
+					// Clean up
+					await cline.abortTask(true)
+					await task.catch(() => {})
+				})
+			})
 		})
 	})
 })

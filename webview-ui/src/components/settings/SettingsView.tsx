@@ -98,6 +98,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 		writeDelayMs,
 		showRooIgnoredFiles,
 		remoteBrowserEnabled,
+		profileSpecificSettings,
 	} = cachedState
 
 	// Make sure apiConfiguration is initialized and managed by SettingsView.
@@ -156,6 +157,71 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 		})
 	}, [])
 
+	const setProfileSpecificSetting = useCallback((profileId: string, setting: string, value: any) => {
+		setCachedState((prevState) => {
+			const profileSpecificSettings = prevState.profileSpecificSettings || {}
+			const profileSettings = profileSpecificSettings[profileId] || {}
+
+			setChangeDetected(true)
+			return {
+				...prevState,
+				profileSpecificSettings: {
+					...profileSpecificSettings,
+					[profileId]: {
+						...profileSettings,
+						[setting]: value,
+					},
+				},
+			}
+		})
+	}, [])
+
+	const isProfileSpecific = (profileId: string, setting: string) => {
+		return (
+			cachedState.profileSpecificSettings?.[profileId]?.[
+				setting as keyof (typeof cachedState.profileSpecificSettings)[string]
+			] !== undefined
+		)
+	}
+	const toggleProfileSpecific = (profileId: string, setting: string) => {
+		setCachedState((prevState) => {
+			const profileSpecificSettings = prevState.profileSpecificSettings || {}
+			const profileSettings = profileSpecificSettings[profileId] || {}
+
+			// If it's already profile-specific, remove the setting to use global
+			if (profileSettings[setting as keyof typeof profileSettings] !== undefined) {
+				const newProfileSettings = { ...profileSettings }
+				delete newProfileSettings[setting as keyof typeof newProfileSettings]
+
+				setChangeDetected(true)
+				return {
+					...prevState,
+					profileSpecificSettings: {
+						...profileSpecificSettings,
+						[profileId]: newProfileSettings,
+					},
+				}
+			}
+			// Otherwise, make it profile-specific with the current global value
+			else {
+				// Use type assertion for the global value
+				const globalValue = prevState[setting as keyof typeof prevState]
+
+				setChangeDetected(true)
+				return {
+					...prevState,
+					profileSpecificSettings: {
+						...profileSpecificSettings,
+						[profileId]: {
+							...profileSettings,
+							[setting]: globalValue,
+						},
+					},
+				}
+			}
+		})
+	}
+
 	const setTelemetrySetting = useCallback((setting: TelemetrySetting) => {
 		setCachedState((prevState) => {
 			if (prevState.telemetrySetting === setting) {
@@ -205,6 +271,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 			vscode.postMessage({ type: "alwaysAllowSubtasks", bool: alwaysAllowSubtasks })
 			vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
 			vscode.postMessage({ type: "telemetrySetting", text: telemetrySetting })
+			vscode.postMessage({ type: "profileSpecificSettings", values: profileSpecificSettings })
 			setChangeDetected(false)
 		}
 	}
@@ -426,6 +493,11 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 						setCachedStateField={setCachedStateField}
 						setExperimentEnabled={setExperimentEnabled}
 						experiments={experiments}
+						currentApiConfigId={currentApiConfigName || ""}
+						profileSpecificSettings={profileSpecificSettings}
+						setProfileSpecificSetting={setProfileSpecificSetting}
+						isProfileSpecific={isProfileSpecific}
+						toggleProfileSpecific={toggleProfileSpecific}
 					/>
 				</div>
 

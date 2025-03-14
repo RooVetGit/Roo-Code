@@ -117,6 +117,7 @@ export const GLOBAL_STATE_KEYS = [
 	"showRooIgnoredFiles",
 	"remoteBrowserEnabled",
 	"maxWorkspaceFiles",
+	"profileSpecificSettings", // Profile-specific settings that override global settings
 ] as const
 
 type CheckGlobalStateKeysExhaustiveness =

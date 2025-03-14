@@ -75,6 +75,11 @@ export interface ExtensionStateContextType extends ExtensionState {
 	remoteBrowserEnabled?: boolean
 	setRemoteBrowserEnabled: (value: boolean) => void
 	machineId?: string
+
+	// Profile-specific settings
+	setProfileSpecificSetting: (profileId: string, setting: string, value: any) => void
+	isProfileSpecific: (profileId: string, setting: string) => boolean
+	toggleProfileSpecific: (profileId: string, setting: string) => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -85,6 +90,7 @@ export const mergeExtensionState = (prevState: ExtensionState, newState: Extensi
 		customModePrompts: prevCustomModePrompts,
 		customSupportPrompts: prevCustomSupportPrompts,
 		experiments: prevExperiments,
+		profileSpecificSettings: prevProfileSpecificSettings,
 		...prevRest
 	} = prevState
 
@@ -93,6 +99,7 @@ export const mergeExtensionState = (prevState: ExtensionState, newState: Extensi
 		customModePrompts: newCustomModePrompts,
 		customSupportPrompts: newCustomSupportPrompts,
 		experiments: newExperiments,
+		profileSpecificSettings: newProfileSpecificSettings,
 		...newRest
 	} = newState
 
@@ -100,9 +107,10 @@ export const mergeExtensionState = (prevState: ExtensionState, newState: Extensi
 	const customModePrompts = { ...prevCustomModePrompts, ...newCustomModePrompts }
 	const customSupportPrompts = { ...prevCustomSupportPrompts, ...newCustomSupportPrompts }
 	const experiments = { ...prevExperiments, ...newExperiments }
+	const profileSpecificSettings = { ...prevProfileSpecificSettings, ...newProfileSpecificSettings }
 	const rest = { ...prevRest, ...newRest }
 
-	return { ...rest, apiConfiguration, customModePrompts, customSupportPrompts, experiments }
+	return { ...rest, apiConfiguration, customModePrompts, customSupportPrompts, experiments, profileSpecificSettings }
 }
 
 export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -144,6 +152,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		browserToolEnabled: true,
 		telemetrySetting: "unset",
 		showRooIgnoredFiles: true, // Default to showing .rooignore'd files with lock symbol (current behavior)
+		profileSpecificSettings: {}, // Initialize empty profile-specific settings
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
@@ -288,6 +297,67 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setTelemetrySetting: (value) => setState((prevState) => ({ ...prevState, telemetrySetting: value })),
 		setShowRooIgnoredFiles: (value) => setState((prevState) => ({ ...prevState, showRooIgnoredFiles: value })),
 		setRemoteBrowserEnabled: (value) => setState((prevState) => ({ ...prevState, remoteBrowserEnabled: value })),
+
+		// Profile-specific settings functions
+		setProfileSpecificSetting: (profileId, setting, value) => {
+			setState((prevState) => {
+				const profileSpecificSettings = prevState.profileSpecificSettings || {}
+				const profileSettings = profileSpecificSettings[profileId] || {}
+
+				return {
+					...prevState,
+					profileSpecificSettings: {
+						...profileSpecificSettings,
+						[profileId]: {
+							...profileSettings,
+							[setting]: value,
+						},
+					},
+				}
+			})
+		},
+		isProfileSpecific: (profileId, setting) => {
+			return (
+				state.profileSpecificSettings?.[profileId]?.[
+					setting as keyof (typeof state.profileSpecificSettings)[string]
+				] !== undefined
+			)
+		},
+		toggleProfileSpecific: (profileId, setting) => {
+			setState((prevState) => {
+				const profileSpecificSettings = prevState.profileSpecificSettings || {}
+				const profileSettings = profileSpecificSettings[profileId] || {}
+
+				// If it's already profile-specific, remove the setting to use global
+				if (profileSettings[setting as keyof typeof profileSettings] !== undefined) {
+					const newProfileSettings = { ...profileSettings }
+					delete newProfileSettings[setting as keyof typeof newProfileSettings]
+
+					return {
+						...prevState,
+						profileSpecificSettings: {
+							...profileSpecificSettings,
+							[profileId]: newProfileSettings,
+						},
+					}
+				}
+				// Otherwise, make it profile-specific with the current global value
+				else {
+					const globalValue = prevState[setting as keyof typeof prevState]
+
+					return {
+						...prevState,
+						profileSpecificSettings: {
+							...profileSpecificSettings,
+							[profileId]: {
+								...profileSettings,
+								[setting]: globalValue,
+							},
+						},
+					}
+				}
+			})
+		},
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

@@ -153,6 +153,13 @@ export interface ExtensionState {
 	telemetryKey?: string
 	machineId?: string
 	showRooIgnoredFiles: boolean // Whether to show .rooignore'd files in listings
+	profileSpecificSettings?: {
+		[profileId: string]: {
+			rateLimitSeconds?: number
+			diffEnabled?: boolean
+			fuzzyMatchThreshold?: number
+		}
+	} // Profile-specific settings that override global settings
 }
 
 export type { ClineMessage, ClineAsk, ClineSay }

@@ -18,6 +18,19 @@ type AdvancedSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	setCachedStateField: SetCachedStateField<"rateLimitSeconds" | "diffEnabled" | "fuzzyMatchThreshold">
 	experiments: Record<ExperimentId, boolean>
 	setExperimentEnabled: SetExperimentEnabled
+
+	// New props for profile-specific settings
+	currentApiConfigId: string
+	profileSpecificSettings?: {
+		[profileId: string]: {
+			rateLimitSeconds?: number
+			diffEnabled?: boolean
+			fuzzyMatchThreshold?: number
+		}
+	}
+	setProfileSpecificSetting: (profileId: string, setting: string, value: any) => void
+	isProfileSpecific: (profileId: string, setting: string) => boolean
+	toggleProfileSpecific: (profileId: string, setting: string) => void
 }
 export const AdvancedSettings = ({
 	rateLimitSeconds,
@@ -26,6 +39,11 @@ export const AdvancedSettings = ({
 	setCachedStateField,
 	experiments,
 	setExperimentEnabled,
+	currentApiConfigId,
+	profileSpecificSettings,
+	setProfileSpecificSetting,
+	isProfileSpecific,
+	toggleProfileSpecific,
 	className,
 	...props
 }: AdvancedSettingsProps) => {
@@ -41,36 +59,78 @@ export const AdvancedSettings = ({
 			<Section>
 				<div>
 					<div className="flex flex-col gap-2">
-						<span className="font-medium">Rate limit</span>
+						<div className="flex items-center justify-between">
+							<span className="font-medium">Rate limit</span>
+							<VSCodeCheckbox
+								checked={isProfileSpecific(currentApiConfigId, "rateLimitSeconds")}
+								onChange={() => toggleProfileSpecific(currentApiConfigId, "rateLimitSeconds")}>
+								<span className="text-sm">Profile-Specific</span>
+							</VSCodeCheckbox>
+						</div>
 						<div className="flex items-center gap-2">
 							<input
 								type="range"
 								min="0"
 								max="60"
 								step="1"
-								value={rateLimitSeconds}
-								onChange={(e) => setCachedStateField("rateLimitSeconds", parseInt(e.target.value))}
+								value={
+									isProfileSpecific(currentApiConfigId, "rateLimitSeconds")
+										? (profileSpecificSettings?.[currentApiConfigId]?.rateLimitSeconds ??
+											rateLimitSeconds)
+										: rateLimitSeconds
+								}
+								onChange={(e) => {
+									const value = parseInt(e.target.value)
+									if (isProfileSpecific(currentApiConfigId, "rateLimitSeconds")) {
+										setProfileSpecificSetting(currentApiConfigId, "rateLimitSeconds", value)
+									} else {
+										setCachedStateField("rateLimitSeconds", value)
+									}
+								}}
 								className="h-2 focus:outline-0 w-4/5 accent-vscode-button-background"
 							/>
-							<span style={{ ...sliderLabelStyle }}>{rateLimitSeconds}s</span>
+							<span style={{ ...sliderLabelStyle }}>
+								{isProfileSpecific(currentApiConfigId, "rateLimitSeconds")
+									? (profileSpecificSettings?.[currentApiConfigId]?.rateLimitSeconds ??
+										rateLimitSeconds)
+									: rateLimitSeconds}
+								s
+							</span>
 						</div>
 					</div>
 					<p className="text-vscode-descriptionForeground text-sm mt-0">Minimum time between API requests.</p>
 				</div>
 
 				<div>
-					<VSCodeCheckbox
-						checked={diffEnabled}
-						onChange={(e: any) => {
-							setCachedStateField("diffEnabled", e.target.checked)
-							if (!e.target.checked) {
-								// Reset both experimental strategies when diffs are disabled.
-								setExperimentEnabled(EXPERIMENT_IDS.DIFF_STRATEGY, false)
-								setExperimentEnabled(EXPERIMENT_IDS.MULTI_SEARCH_AND_REPLACE, false)
+					<div className="flex items-center justify-between">
+						<VSCodeCheckbox
+							checked={
+								isProfileSpecific(currentApiConfigId, "diffEnabled")
+									? (profileSpecificSettings?.[currentApiConfigId]?.diffEnabled ?? diffEnabled)
+									: diffEnabled
 							}
-						}}>
-						<span className="font-medium">Enable editing through diffs</span>
-					</VSCodeCheckbox>
+							onChange={(e: any) => {
+								const value = e.target.checked
+								if (isProfileSpecific(currentApiConfigId, "diffEnabled")) {
+									setProfileSpecificSetting(currentApiConfigId, "diffEnabled", value)
+								} else {
+									setCachedStateField("diffEnabled", value)
+								}
+
+								if (!value) {
+									// Reset both experimental strategies when diffs are disabled.
+									setExperimentEnabled(EXPERIMENT_IDS.DIFF_STRATEGY, false)
+									setExperimentEnabled(EXPERIMENT_IDS.MULTI_SEARCH_AND_REPLACE, false)
+								}
+							}}>
+							<span className="font-medium">Enable editing through diffs</span>
+						</VSCodeCheckbox>
+						<VSCodeCheckbox
+							checked={isProfileSpecific(currentApiConfigId, "diffEnabled")}
+							onChange={() => toggleProfileSpecific(currentApiConfigId, "diffEnabled")}>
+							<span className="text-sm">Profile-Specific</span>
+						</VSCodeCheckbox>
+					</div>
 					<p className="text-vscode-descriptionForeground text-sm mt-0">
 						When enabled, Roo will be able to edit files more quickly and will automatically reject
 						truncated full-file writes. Works best with the latest Claude 3.7 Sonnet model.
@@ -119,21 +179,46 @@ export const AdvancedSettings = ({
 							</p>
 
 							{/* Match precision slider */}
-							<span className="font-medium mt-3">Match precision</span>
+							<div className="flex items-center justify-between mt-3">
+								<span className="font-medium">Match precision</span>
+								<VSCodeCheckbox
+									checked={isProfileSpecific(currentApiConfigId, "fuzzyMatchThreshold")}
+									onChange={() => toggleProfileSpecific(currentApiConfigId, "fuzzyMatchThreshold")}>
+									<span className="text-sm">Profile-Specific</span>
+								</VSCodeCheckbox>
+							</div>
 							<div className="flex items-center gap-2">
 								<input
 									type="range"
 									min="0.8"
 									max="1"
 									step="0.005"
-									value={fuzzyMatchThreshold ?? 1.0}
+									value={
+										isProfileSpecific(currentApiConfigId, "fuzzyMatchThreshold")
+											? (profileSpecificSettings?.[currentApiConfigId]?.fuzzyMatchThreshold ??
+												fuzzyMatchThreshold ??
+												1.0)
+											: (fuzzyMatchThreshold ?? 1.0)
+									}
 									onChange={(e) => {
-										setCachedStateField("fuzzyMatchThreshold", parseFloat(e.target.value))
+										const value = parseFloat(e.target.value)
+										if (isProfileSpecific(currentApiConfigId, "fuzzyMatchThreshold")) {
+											setProfileSpecificSetting(currentApiConfigId, "fuzzyMatchThreshold", value)
+										} else {
+											setCachedStateField("fuzzyMatchThreshold", value)
+										}
 									}}
 									className="h-2 focus:outline-0 w-4/5 accent-vscode-button-background"
 								/>
 								<span style={{ ...sliderLabelStyle }}>
-									{Math.round((fuzzyMatchThreshold || 1) * 100)}%
+									{Math.round(
+										(isProfileSpecific(currentApiConfigId, "fuzzyMatchThreshold")
+											? (profileSpecificSettings?.[currentApiConfigId]?.fuzzyMatchThreshold ??
+												fuzzyMatchThreshold ??
+												1.0)
+											: (fuzzyMatchThreshold ?? 1.0)) * 100,
+									)}
+									%
 								</span>
 							</div>
 							<p className="text-vscode-descriptionForeground text-sm mt-0">

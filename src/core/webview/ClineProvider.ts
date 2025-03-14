@@ -1539,6 +1539,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("enableCustomModeCreation", message.bool ?? true)
 						await this.postStateToWebview()
 						break
+					case "profileSpecificSettings":
+						await this.updateGlobalState("profileSpecificSettings", message.values)
+						await this.postStateToWebview()
+						break
 					case "autoApprovalEnabled":
 						await this.updateGlobalState("autoApprovalEnabled", message.bool ?? false)
 						await this.postStateToWebview()
@@ -2275,6 +2279,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			alwaysAllowMcp,
 			alwaysAllowModeSwitch,
 			alwaysAllowSubtasks,
+			profileSpecificSettings,
 			soundEnabled,
 			diffEnabled,
 			enableCheckpoints,
@@ -2373,6 +2378,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			machineId,
 			showRooIgnoredFiles: showRooIgnoredFiles ?? true,
 			language,
+			profileSpecificSettings: profileSpecificSettings || {},
 		}
 	}
 
@@ -2528,6 +2534,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			browserToolEnabled: stateValues.browserToolEnabled ?? true,
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
+			profileSpecificSettings: stateValues.profileSpecificSettings || {},
 		}
 	}
 
