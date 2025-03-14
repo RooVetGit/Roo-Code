@@ -1,5 +1,14 @@
 import { EventEmitter } from "events"
 
+export interface TokenUsage {
+	totalTokensIn: number
+	totalTokensOut: number
+	totalCacheWrites?: number
+	totalCacheReads?: number
+	totalCost: number
+	contextTokens: number
+}
+
 export interface RooCodeEvents {
 	message: [{ taskId: string; action: "created" | "updated"; message: ClineMessage }]
 	taskStarted: [taskId: string]
@@ -7,6 +16,7 @@ export interface RooCodeEvents {
 	taskUnpaused: [taskId: string]
 	taskAborted: [taskId: string]
 	taskSpawned: [taskId: string, childTaskId: string]
+	taskCompleted: [taskId: string, usage: TokenUsage]
 }
 
 export interface RooCodeAPI extends EventEmitter<RooCodeEvents> {
