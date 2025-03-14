@@ -14,8 +14,9 @@ type ContextManagementSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	maxOpenTabsContext: number
 	maxWorkspaceFiles: number
 	showRooIgnoredFiles?: boolean
+	maxReadFileLine?: number
 	setCachedStateField: SetCachedStateField<
-		"terminalOutputLineLimit" | "maxOpenTabsContext" | "maxWorkspaceFiles" | "showRooIgnoredFiles"
+		"terminalOutputLineLimit" | "maxOpenTabsContext" | "maxWorkspaceFiles" | "showRooIgnoredFiles" | "maxReadFileLine"
 	>
 }
 
@@ -25,6 +26,7 @@ export const ContextManagementSettings = ({
 	maxWorkspaceFiles,
 	showRooIgnoredFiles,
 	setCachedStateField,
+	maxReadFileLine,
 	className,
 	...props
 }: ContextManagementSettingsProps) => {
@@ -121,6 +123,28 @@ export const ContextManagementSettings = ({
 					<p className="text-vscode-descriptionForeground text-sm mt-0">
 						When enabled, files matching patterns in .rooignore will be shown in lists with a lock symbol.
 						When disabled, these files will be completely hidden from file lists and searches.
+					</p>
+				</div>
+
+				<div>
+					<div className="flex flex-col gap-2">
+						<span className="font-medium">File read line limit</span>
+						<div className="flex items-center gap-2">
+							<input
+								type="range"
+								min="100"
+								max="10000"
+								step="10"
+								value={maxReadFileLine}
+								onChange={(e) => setCachedStateField("maxReadFileLine", parseInt(e.target.value))}
+								className="h-2 focus:outline-0 w-4/5 accent-vscode-button-background"
+							/>
+							<span style={{ ...sliderLabelStyle }}>{maxReadFileLine}</span>
+						</div>
+					</div>
+					<p className="text-vscode-descriptionForeground text-sm mt-0">
+						Maximum number of lines to read from a file before truncating. Lower values reduce memory usage
+						but may truncate large files.
 					</p>
 				</div>
 			</Section>
