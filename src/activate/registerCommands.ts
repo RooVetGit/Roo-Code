@@ -3,7 +3,12 @@ import delay from "delay"
 
 import { ClineProvider } from "../core/webview/ClineProvider"
 
-import { registerHumanRelayCallback, unregisterHumanRelayCallback, handleHumanRelayResponse } from "./humanRelay"
+import {
+	registerHumanRelayCallback,
+	unregisterHumanRelayCallback,
+	handleHumanRelayResponse,
+	sendClipboardToHumanRelay,
+} from "./humanRelay"
 
 // Store panel references in both modes
 let sidebarPanel: vscode.WebviewView | undefined = undefined
@@ -85,6 +90,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		"roo-cline.registerHumanRelayCallback": registerHumanRelayCallback,
 		"roo-cline.unregisterHumanRelayCallback": unregisterHumanRelayCallback,
 		"roo-cline.handleHumanRelayResponse": handleHumanRelayResponse,
+		"roo-cline.sendClipboardToHumanRelay": sendClipboardToHumanRelay,
 	}
 }
 

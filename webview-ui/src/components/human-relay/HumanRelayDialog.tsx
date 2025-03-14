@@ -159,6 +159,11 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 						</Button>
 					</div>
 
+					<div className="text-sm text-vscode-descriptionForeground mt-2">
+						You can use the shortcut Ctrl/Cmd+Alt+V (default) to send the clipboard content. You can also
+						search for `Send Clipboard` in the shortcut settings to modify the hotkey.
+					</div>
+
 					<div>
 						<div className="mb-2 font-medium">Please enter the AI's response:</div>
 						<Textarea

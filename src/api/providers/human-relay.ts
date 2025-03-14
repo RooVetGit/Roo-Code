@@ -3,8 +3,8 @@ import { ApiHandlerOptions, ModelInfo } from "../../shared/api"
 import { ApiHandler, SingleCompletionHandler } from "../index"
 import { ApiStream } from "../transform/stream"
 import * as vscode from "vscode"
-import { ExtensionMessage } from "../../shared/ExtensionMessage"
 import { getPanel } from "../../activate/registerCommands"
+import { containsValidTags } from "../../activate/humanRelay"
 
 /**
  * Human Relay API processor
@@ -103,11 +103,10 @@ function getMessageContent(message: Anthropic.Messages.MessageParam): string {
 }
 
 // Global variables
-let lastAIResponse: string | null = null
 let normalizedPrompt: string | null = null
+let currentPrompt: string | null = null
 let normalizedLastResponse: string | null = null
 let globalClipboardInterval: NodeJS.Timeout | null = null
-let lastMonitorOptions: ApiHandlerOptions | undefined
 
 /**
  * Normalize text by removing extra spaces
@@ -136,15 +135,13 @@ function stopClipboardMonitoring() {
 	}
 }
 
-// Store clipboard content when monitoring starts
-let clipboardContentAtMonitorStart: string | null = null
-
 /**
  * Start clipboard monitoring
  */
 async function startClipboardMonitoring(requestId: string, options?: ApiHandlerOptions) {
 	// Stop any existing monitoring
 	stopClipboardMonitoring()
+	vscode.env.clipboard.writeText(currentPrompt ?? "")
 
 	// Start new monitoring
 	const monitorInterval = Math.min(Math.max(100, options?.humanRelayMonitorInterval ?? 500), 2000)
@@ -178,7 +175,6 @@ async function startClipboardMonitoring(requestId: string, options?: ApiHandlerO
 
 			// Process valid new response
 			if (normalizedClipboard !== normalizedPrompt) {
-				lastAIResponse = currentClipboardContent
 				normalizedLastResponse = normalizedClipboard
 
 				// Clear timer
@@ -201,11 +197,12 @@ async function startClipboardMonitoring(requestId: string, options?: ApiHandlerO
  * Display human relay dialog and wait for user response
  */
 async function showHumanRelayDialog(promptText: string, options?: ApiHandlerOptions): Promise<string | undefined> {
+	currentPrompt = promptText
 	normalizedPrompt = normalizeText(promptText)
 
 	return new Promise<string | undefined>((resolve) => {
 		// Create unique request ID
-		const requestId = Date.now().toString()
+		const requestId = "SendAIResponse"
 
 		// Register global callback function
 		vscode.commands.executeCommand(
@@ -242,12 +239,4 @@ async function showHumanRelayDialog(promptText: string, options?: ApiHandlerOpti
 			startClipboardMonitoring(requestId, options)
 		}
 	})
-}
-
-/**
- * Validate if content contains any tags in <xxx> format
- */
-function containsValidTags(content: string): boolean {
-	const tagPattern = /<[^>]+>/
-	return tagPattern.test(content)
 }
