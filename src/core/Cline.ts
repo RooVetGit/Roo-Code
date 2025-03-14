@@ -2318,7 +2318,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 									const res = await Promise.all([
 										readLines(absolutePath, maxReadFileLine - 1, 0),
-										parseSourceCodeDefinitionsForFile(absolutePath, this.rooIgnoreController),
+										parseSourceCodeDefinitionsForFile(absolutePath, this.rooIgnoreController, true),
 									])
 
 									content = addLineNumbers(res[0])

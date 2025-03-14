@@ -32,6 +32,7 @@ const extensions = [
 export async function parseSourceCodeDefinitionsForFile(
 	filePath: string,
 	rooIgnoreController?: RooIgnoreController,
+	addLineNumbers?: boolean,
 ): Promise<string | undefined> {
 	// check if the file exists
 	const fileExists = await fileExistsAtPath(path.resolve(filePath))
@@ -50,7 +51,7 @@ export async function parseSourceCodeDefinitionsForFile(
 	const languageParsers = await loadRequiredLanguageParsers([filePath])
 
 	// Parse the file if we have a parser for it
-	const definitions = await parseFile(filePath, languageParsers, rooIgnoreController)
+	const definitions = await parseFile(filePath, languageParsers, rooIgnoreController, addLineNumbers)
 	if (definitions) {
 		return `${path.basename(filePath)}\n${definitions}`
 	}
@@ -136,6 +137,7 @@ async function parseFile(
 	filePath: string,
 	languageParsers: LanguageParser,
 	rooIgnoreController?: RooIgnoreController,
+	addLineNumbers?: boolean,
 ): Promise<string | null> {
 	if (rooIgnoreController && !rooIgnoreController.validateAccess(filePath)) {
 		return null
@@ -178,12 +180,20 @@ async function parseFile(
 
 			// Add separator if there's a gap between captures
 			if (lastLine !== -1 && startLine > lastLine + 1) {
-				formattedOutput += "|----\n"
+				if (addLineNumbers) {
+					formattedOutput += "||    ||----\n"
+				} else {
+					formattedOutput += "|----\n"
+				}
 			}
 			// Only add the first line of the definition
 			// query captures includes the definition name and the definition implementation, but we only want the name (I found discrepencies in the naming structure for various languages, i.e. javascript names would be 'name' and typescript names would be 'name.definition)
 			if (name.includes("name") && lines[startLine]) {
-				formattedOutput += `│${lines[startLine]}\n`
+				if (addLineNumbers) {
+					formattedOutput += `│| ${startLine} ||${lines[startLine]}\n`
+				} else {
+					formattedOutput += `│${lines[startLine]}\n`
+				}
 			}
 			// Adds all the captured lines
 			// for (let i = startLine; i <= endLine; i++) {
