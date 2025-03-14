@@ -37,6 +37,7 @@ import { parseSourceCodeForDefinitionsTopLevel } from "../services/tree-sitter"
 import { CheckpointStorage } from "../shared/checkpoints"
 import { ApiConfiguration } from "../shared/api"
 import { findLastIndex } from "../shared/array"
+import { getSymbolDocumentation as getSymbolDocumentationUtil } from "./tools/getSymbolDocumentation"
 import { combineApiRequests } from "../shared/combineApiRequests"
 import { combineCommandSequences } from "../shared/combineCommandSequences"
 import {
@@ -1364,6 +1365,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 							const modeName = getModeBySlug(mode, customModes)?.name ?? mode
 							return `[${block.name} in ${modeName} mode: '${message}']`
 						}
+						case "get_symbol_documentation":
+							const symbolName: string | undefined = block.params.symbol_name
+							const filePath: string | undefined = block.params.path
+							return `[${block.name} for '${symbolName}' in '${filePath}']`
 					}
 				}
 
@@ -2394,6 +2399,54 @@ export class Cline extends EventEmitter<ClineEvents> {
 							}
 						} catch (error) {
 							await handleError("searching files", error)
+							break
+						}
+					}
+					case "get_symbol_documentation": {
+						const symbolName: string | undefined = block.params.symbol_name
+						const relPath: string | undefined = block.params.path
+						const sharedMessageProps: ClineSayTool = {
+							tool: "getSymbolDocumentation",
+							symbolName: removeClosingTag("symbol_name", symbolName),
+							path: relPath ? getReadablePath(cwd, removeClosingTag("path", relPath)) : undefined,
+						}
+						try {
+							if (block.partial) {
+								const partialMessage = JSON.stringify({
+									...sharedMessageProps,
+									content: "",
+								} satisfies ClineSayTool)
+								await this.ask("tool", partialMessage, block.partial).catch(() => {})
+								break
+							} else {
+								if (!symbolName) {
+									this.consecutiveMistakeCount++
+									pushToolResult(
+										await this.sayAndCreateMissingParamError(
+											"get_symbol_documentation",
+											"symbol_name",
+										),
+									)
+									break
+								}
+								this.consecutiveMistakeCount = 0
+
+								const completeMessage = JSON.stringify({
+									...sharedMessageProps,
+									content: `Retrieving documentation for symbol '${symbolName}'${relPath ? ` in ${relPath}` : ""}...`,
+								} satisfies ClineSayTool)
+
+								const didApprove = await askApproval("tool", completeMessage)
+								if (!didApprove) {
+									break
+								}
+
+								const results = await this.getSymbolDocumentation(symbolName, relPath)
+								pushToolResult(results)
+								break
+							}
+						} catch (error) {
+							await handleError("getting symbol documentation", error)
 							break
 						}
 					}
@@ -3496,6 +3549,17 @@ export class Cline extends EventEmitter<ClineEvents> {
 			),
 			this.getEnvironmentDetails(includeFileDetails),
 		])
+	}
+
+	/**
+	 * Gets documentation for a symbol by name, optionally scoped to a specific file.
+	 * Uses VS Code's language services to find symbol definitions and hover information.
+	 *
+	 * Implementation is delegated to the standalone utility function for better testability
+	 * and separation of concerns.
+	 */
+	async getSymbolDocumentation(symbolName: string, filePath?: string): Promise<string> {
+		return getSymbolDocumentationUtil(symbolName, filePath, cwd)
 	}
 
 	async getEnvironmentDetails(includeFileDetails: boolean = false) {
