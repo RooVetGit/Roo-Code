@@ -32,7 +32,6 @@ const extensions = [
 export async function parseSourceCodeDefinitionsForFile(
 	filePath: string,
 	rooIgnoreController?: RooIgnoreController,
-	addLineNumbers?: boolean,
 ): Promise<string | undefined> {
 	// check if the file exists
 	const fileExists = await fileExistsAtPath(path.resolve(filePath))
@@ -51,7 +50,7 @@ export async function parseSourceCodeDefinitionsForFile(
 	const languageParsers = await loadRequiredLanguageParsers([filePath])
 
 	// Parse the file if we have a parser for it
-	const definitions = await parseFile(filePath, languageParsers, rooIgnoreController, addLineNumbers)
+	const definitions = await parseFile(filePath, languageParsers, rooIgnoreController)
 	if (definitions) {
 		return `${path.basename(filePath)}\n${definitions}`
 	}
@@ -137,7 +136,6 @@ async function parseFile(
 	filePath: string,
 	languageParsers: LanguageParser,
 	rooIgnoreController?: RooIgnoreController,
-	addLineNumbers?: boolean,
 ): Promise<string | null> {
 	if (rooIgnoreController && !rooIgnoreController.validateAccess(filePath)) {
 		return null
@@ -181,20 +179,12 @@ async function parseFile(
 
 			// Add separator if there's a gap between captures
 			if (lastLine !== -1 && startLine > lastLine + 1) {
-				if (addLineNumbers) {
-					formattedOutput += "||    ||----\n"
-				} else {
-					formattedOutput += "|----\n"
-				}
+				formattedOutput += "||    ||----\n"
 			}
 
 			// Only add the first line of the definition with its full range
 			if (name.includes("name") && lines[startLine]) {
-				if (addLineNumbers) {
-					formattedOutput += `│| ${startLine} - ${endLine} ||${lines[startLine]}\n`
-				} else {
-					formattedOutput += `│${lines[startLine]}\n`
-				}
+				formattedOutput += `│| ${startLine} - ${endLine} ||${lines[startLine]}\n`
 			}
 			// Adds all the captured lines
 			// for (let i = startLine; i <= endLine; i++) {
