@@ -1333,6 +1333,26 @@ const ApiOptions = ({
 						automatically. You need to paste these to web versions of AI (such as ChatGPT or Claude), then
 						copy the AI's reply back to the dialog box and click the confirm button.
 					</div>
+					<div className="mt-4">
+						<div className="font-medium">Clipboard monitoring interval (ms)</div>
+						<div className="mt-2">
+							<input
+								type="range"
+								min="100"
+								max="2000"
+								step="100"
+								value={apiConfiguration?.humanRelayMonitorInterval || 500}
+								onChange={handleInputChange("humanRelayMonitorInterval", (e) => {
+									const target = e.target as HTMLInputElement
+									return parseInt(target.value)
+								})}
+								className="h-2 focus:outline-0 w-4/5 accent-vscode-button-background"
+							/>
+							<span style={{ minWidth: "45px", textAlign: "left" }}>
+								{apiConfiguration?.humanRelayMonitorInterval || 500} ms
+							</span>
+						</div>
+					</div>
 				</>
 			)}
 

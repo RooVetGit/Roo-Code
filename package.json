@@ -153,6 +153,18 @@
 				"command": "roo-cline.terminalExplainCommandInCurrentTask",
 				"title": "Roo Code: Explain This Command (Current Task)",
 				"category": "Terminal"
+			},
+			{
+				"command": "roo-cline.sendClipboardToHumanRelay",
+				"title": "Roo Code: Send Clipboard Content to Human Relay",
+				"category": "Roo Code"
+			}
+		],
+		"keybindings": [
+			{
+				"command": "roo-cline.sendClipboardToHumanRelay",
+				"key": "ctrl+alt+v",
+				"mac": "cmd+alt+v"
 			}
 		],
 		"menus": {

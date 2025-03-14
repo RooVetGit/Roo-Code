@@ -116,6 +116,8 @@ export const GLOBAL_STATE_KEYS = [
 	"telemetrySetting",
 	"showRooIgnoredFiles",
 	"remoteBrowserEnabled",
+	"humanRelayMonitorClipboard",
+	"humanRelayMonitorInterval",
 ] as const
 
 type CheckGlobalStateKeysExhaustiveness =

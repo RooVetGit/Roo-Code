@@ -31,8 +31,15 @@ const tabsByMessageAction: Partial<Record<NonNullable<ExtensionMessage["action"]
 }
 
 const App = () => {
-	const { didHydrateState, showWelcome, shouldShowAnnouncement, telemetrySetting, telemetryKey, machineId } =
-		useExtensionState()
+	const {
+		didHydrateState,
+		showWelcome,
+		shouldShowAnnouncement,
+		telemetrySetting,
+		telemetryKey,
+		machineId,
+		apiConfiguration,
+	} = useExtensionState()
 
 	const [showAnnouncement, setShowAnnouncement] = useState(false)
 	const [tab, setTab] = useState<Tab>("chat")
@@ -117,6 +124,8 @@ const App = () => {
 				onClose={() => setHumanRelayDialogState((prev) => ({ ...prev, isOpen: false }))}
 				onSubmit={(requestId, text) => vscode.postMessage({ type: "humanRelayResponse", requestId, text })}
 				onCancel={(requestId) => vscode.postMessage({ type: "humanRelayCancel", requestId })}
+				monitorClipboard={apiConfiguration?.humanRelayMonitorClipboard}
+				monitorInterval={apiConfiguration?.humanRelayMonitorInterval}
 			/>
 		</>
 	)

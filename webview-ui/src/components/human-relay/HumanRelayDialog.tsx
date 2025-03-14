@@ -1,9 +1,12 @@
 import * as React from "react"
+import { VSCodeProgressRing } from "@vscode/webview-ui-toolkit/react"
 import { Button } from "../ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog"
 import { Textarea } from "../ui/textarea"
 import { useClipboard } from "../ui/hooks"
-import { Check, Copy, X } from "lucide-react"
+import { AlertTriangle, Check, Copy, Power, X } from "lucide-react"
+import { useState as useReactState } from "react"
+import { vscode } from "../../utils/vscode"
 
 interface HumanRelayDialogProps {
 	isOpen: boolean
@@ -12,6 +15,9 @@ interface HumanRelayDialogProps {
 	promptText: string
 	onSubmit: (requestId: string, text: string) => void
 	onCancel: (requestId: string) => void
+	monitorClipboard?: boolean
+	monitorInterval?: number
+	onToggleMonitor?: (enabled: boolean) => void
 }
 
 /**
@@ -25,20 +31,66 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 	promptText,
 	onSubmit,
 	onCancel,
+	monitorClipboard = false,
+	monitorInterval = 500,
+	onToggleMonitor,
 }) => {
 	const [response, setResponse] = React.useState("")
 	const { copy } = useClipboard()
 	const [isCopyClicked, setIsCopyClicked] = React.useState(false)
+	const [showDuplicateWarning, setShowDuplicateWarning] = React.useState(false)
+	const [warningMessage, setWarningMessage] = React.useState("")
+	const [isMonitoring, setIsMonitoring] = useReactState(monitorClipboard)
 
-	// Listen to isOpen changes, clear the input box when the dialog box is opened
+	// Clear input when dialog opens
 	React.useEffect(() => {
 		if (isOpen) {
 			setResponse("")
 			setIsCopyClicked(false)
+			setIsMonitoring(monitorClipboard)
 		}
-	}, [isOpen])
+		setShowDuplicateWarning(false)
+	}, [isOpen, monitorClipboard, setIsMonitoring])
 
-	// Copy to clipboard and show a success message
+	// Handle monitor toggle
+	const handleToggleMonitor = () => {
+		const newState = !isMonitoring
+		setIsMonitoring(newState)
+
+		// Send message to backend to control clipboard monitoring
+		vscode.postMessage({
+			type: "toggleHumanRelayMonitor",
+			bool: newState,
+			requestId: requestId,
+		})
+
+		if (onToggleMonitor) {
+			onToggleMonitor(newState)
+		}
+	}
+
+	React.useEffect(() => {
+		// Handle messages from extension
+		const messageHandler = (event: MessageEvent) => {
+			const message = event.data
+			if (message.type === "closeHumanRelayDialog") {
+				onClose()
+			}
+			// Handle duplicate response warning
+			else if (message.type === "showHumanRelayResponseAlert") {
+				setWarningMessage(message.text)
+				setShowDuplicateWarning(true)
+			}
+		}
+
+		window.addEventListener("message", messageHandler)
+
+		return () => {
+			window.removeEventListener("message", messageHandler)
+		}
+	}, [onClose])
+
+	// Copy to clipboard and show success message
 	const handleCopy = () => {
 		copy(promptText)
 		setIsCopyClicked(true)
@@ -47,7 +99,7 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 		}, 2000)
 	}
 
-	// Submit the response
+	// Submit response
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault()
 		if (response.trim()) {
@@ -56,7 +108,7 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 		}
 	}
 
-	// Cancel the operation
+	// Cancel operation
 	const handleCancel = () => {
 		onCancel(requestId)
 		onClose()
@@ -85,6 +137,32 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 					</div>
 
 					{isCopyClicked && <div className="text-sm text-emerald-500 font-medium">Copied to clipboard</div>}
+					{showDuplicateWarning && (
+						<div className="flex items-center gap-2 text-sm p-2 rounded-md bg-amber-100 dark:bg-amber-900 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300">
+							<AlertTriangle className="h-4 w-4 text-amber-500" />
+							<span className="font-medium">{warningMessage}</span>
+						</div>
+					)}
+
+					<div className="flex items-center justify-between text-sm text-vscode-descriptionForeground">
+						<div className="flex items-center gap-2">
+							{isMonitoring && <ProgressIndicator />}
+							<span>Clipboard Monitoring: {isMonitoring ? "Enabled" : "Disabled"}</span>
+						</div>
+						<Button
+							size="sm"
+							variant={isMonitoring ? "outline" : "default"}
+							onClick={handleToggleMonitor}
+							className="gap-1 ml-2">
+							<Power className="h-4 w-4" />
+							{isMonitoring ? "Disable" : "Enable"}
+						</Button>
+					</div>
+
+					<div className="text-sm text-vscode-descriptionForeground mt-2">
+						You can use the shortcut Ctrl/Cmd+Alt+V (default) to send the clipboard content. You can also
+						search for `Send Clipboard` in the shortcut settings to modify the hotkey.
+					</div>
 
 					<div>
 						<div className="mb-2 font-medium">Please enter the AI's response:</div>
@@ -111,3 +189,17 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 		</Dialog>
 	)
 }
+const ProgressIndicator = () => (
+	<div
+		style={{
+			width: "16px",
+			height: "16px",
+			display: "flex",
+			alignItems: "center",
+			justifyContent: "center",
+		}}>
+		<div style={{ transform: "scale(0.55)", transformOrigin: "center" }}>
+			<VSCodeProgressRing />
+		</div>
+	</div>
+)
