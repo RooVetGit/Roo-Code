@@ -3,6 +3,7 @@ import deepEqual from "fast-deep-equal"
 import React, { memo, useEffect, useMemo, useRef, useState } from "react"
 import { useSize } from "react-use"
 import { useCopyToClipboard } from "../../utils/clipboard"
+import { cleanTrailingCodeDelimiters } from "../../utils/markdownUtils"
 import {
 	ClineApiReqInfo,
 	ClineAskUseMcpServer,
@@ -986,13 +987,16 @@ const Markdown = memo(({ markdown, partial }: { markdown?: string; partial?: boo
 	const [isHovering, setIsHovering] = useState(false)
 	const { copyWithFeedback } = useCopyToClipboard(200) // shorter feedback duration for copy button flash
 
+	// Use the utility function to clean trailing code delimiters
+	const cleanedMarkdown = useMemo(() => cleanTrailingCodeDelimiters(markdown), [markdown])
+
 	return (
 		<div
 			onMouseEnter={() => setIsHovering(true)}
 			onMouseLeave={() => setIsHovering(false)}
 			style={{ position: "relative" }}>
 			<div style={{ wordBreak: "break-word", overflowWrap: "anywhere", marginBottom: -15, marginTop: -15 }}>
-				<MarkdownBlock markdown={markdown} />
+				<MarkdownBlock markdown={cleanedMarkdown} />
 			</div>
 			{markdown && !partial && isHovering && (
 				<div
