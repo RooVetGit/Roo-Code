@@ -171,12 +171,13 @@ async function parseFile(
 
 		captures.forEach((capture) => {
 			const { node, name } = capture
-			// Get the start and end lines of the current AST node
-			const startLine = node.startPosition.row
-			const endLine = node.endPosition.row
-			// Once we've retrieved the nodes we care about through the language query, we filter for lines with definition names only.
-			// name.startsWith("name.reference.") > refs can be used for ranking purposes, but we don't need them for the output
-			// previously we did `name.startsWith("name.definition.")` but this was too strict and excluded some relevant definitions
+			// Get the parent node that contains the full definition
+			const definitionNode = name.includes("name") ? node.parent : node
+			if (!definitionNode) return
+
+			// Get the start and end lines of the full definition
+			const startLine = definitionNode.startPosition.row
+			const endLine = definitionNode.endPosition.row
 
 			// Add separator if there's a gap between captures
 			if (lastLine !== -1 && startLine > lastLine + 1) {
@@ -186,11 +187,11 @@ async function parseFile(
 					formattedOutput += "|----\n"
 				}
 			}
-			// Only add the first line of the definition
-			// query captures includes the definition name and the definition implementation, but we only want the name (I found discrepencies in the naming structure for various languages, i.e. javascript names would be 'name' and typescript names would be 'name.definition)
+
+			// Only add the first line of the definition with its full range
 			if (name.includes("name") && lines[startLine]) {
 				if (addLineNumbers) {
-					formattedOutput += `│| ${startLine} ||${lines[startLine]}\n`
+					formattedOutput += `│| ${startLine} - ${endLine} ||${lines[startLine]}\n`
 				} else {
 					formattedOutput += `│${lines[startLine]}\n`
 				}
