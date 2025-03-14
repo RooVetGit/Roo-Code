@@ -974,6 +974,15 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 					case "deleteTaskWithId":
 						this.deleteTaskWithId(message.text!)
 						break
+					case "deleteMultipleTasksWithIds": {
+						const ids = message.ids
+						if (Array.isArray(ids)) {
+							for (const id of ids) {
+								await this.deleteTaskWithId(id)
+							}
+						}
+						break
+					}
 					case "exportTaskWithId":
 						this.exportTaskWithId(message.text!)
 						break
@@ -2208,43 +2217,51 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	// this function deletes a task from task hidtory, and deletes it's checkpoints and delete the task folder
 	async deleteTaskWithId(id: string) {
-		// get the task directory full path
-		const { taskDirPath } = await this.getTaskWithId(id)
-
-		// remove task from stack if it's the current task
-		if (id === this.getCurrentCline()?.taskId) {
-			// if we found the taskid to delete - call finish to abort this task and allow a new task to be started,
-			// if we are deleting a subtask and parent task is still waiting for subtask to finish - it allows the parent to resume (this case should neve exist)
-			await this.finishSubTask(`Task failure: It was stopped and deleted by the user.`)
-		}
-
-		// delete task from the task history state
-		await this.deleteTaskFromState(id)
-
-		// get the base directory of the project
-		const baseDir = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0)
-
-		// Delete associated shadow repository or branch.
-		// TODO: Store `workspaceDir` in the `HistoryItem` object.
-		const globalStorageDir = this.contextProxy.globalStorageUri.fsPath
-		const workspaceDir = baseDir ?? ""
-
 		try {
-			await ShadowCheckpointService.deleteTask({ taskId: id, globalStorageDir, workspaceDir })
-		} catch (error) {
-			console.error(
-				`[deleteTaskWithId${id}] failed to delete associated shadow repository or branch: ${error instanceof Error ? error.message : String(error)}`,
-			)
-		}
+			// Try to get the task directory full path
+			const { taskDirPath } = await this.getTaskWithId(id)
 
-		// delete the entire task directory including checkpoints and all content
-		try {
-			await fs.rm(taskDirPath, { recursive: true, force: true })
-			console.log(`[deleteTaskWithId${id}] removed task directory`)
+			// remove task from stack if it's the current task
+			if (id === this.getCurrentCline()?.taskId) {
+				// if we found the taskid to delete - call finish to abort this task and allow a new task to be started,
+				// if we are deleting a subtask and parent task is still waiting for subtask to finish - it allows the parent to resume (this case should neve exist)
+				await this.finishSubTask(`Task failure: It was stopped and deleted by the user.`)
+			}
+
+			// delete task from the task history state
+			await this.deleteTaskFromState(id)
+
+			// get the base directory of the project
+			const baseDir = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0)
+
+			// Delete associated shadow repository or branch.
+			const globalStorageDir = this.contextProxy.globalStorageUri.fsPath
+			const workspaceDir = baseDir ?? ""
+
+			try {
+				await ShadowCheckpointService.deleteTask({ taskId: id, globalStorageDir, workspaceDir })
+			} catch (error) {
+				console.error(
+					`[deleteTaskWithId${id}] failed to delete associated shadow repository or branch: ${error instanceof Error ? error.message : String(error)}`,
+				)
+			}
+
+			// delete the entire task directory including checkpoints and all content
+			try {
+				await fs.rm(taskDirPath, { recursive: true, force: true })
+				console.log(`[deleteTaskWithId${id}] removed task directory`)
+			} catch (error) {
+				console.error(
+					`[deleteTaskWithId${id}] failed to remove task directory: ${error instanceof Error ? error.message : String(error)}`,
+				)
+			}
 		} catch (error) {
-			console.error(
-				`[deleteTaskWithId${id}] failed to remove task directory: ${error instanceof Error ? error.message : String(error)}`,
-			)
+			// If task is not found, just remove it from state
+			if (error instanceof Error && error.message === "Task not found") {
+				await this.deleteTaskFromState(id)
+				return
+			}
+			throw error
 		}
 	}
 
