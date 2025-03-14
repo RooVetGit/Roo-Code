@@ -2333,7 +2333,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 								// Add truncation notice if applicable
 								if (isFileTruncated) {
-									content += `\n\n[File truncated: showing ${maxReadFileLine} of ${totalLines} total lines]${sourceCodeDef}`
+									content += `\n\n[File truncated: showing ${maxReadFileLine} of ${totalLines} total lines. Use start_line and end_line if you need to read more.].${sourceCodeDef}`
 								}
 
 								pushToolResult(content)
