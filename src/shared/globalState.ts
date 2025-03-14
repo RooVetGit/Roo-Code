@@ -75,6 +75,8 @@ export const GLOBAL_STATE_KEYS = [
 	"googleGeminiBaseUrl",
 	"allowedCommands",
 	"soundEnabled",
+	"ttsEnabled",
+	"ttsSpeed",
 	"soundVolume",
 	"diffEnabled",
 	"enableCheckpoints",
