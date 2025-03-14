@@ -141,6 +141,11 @@ Please provide:
 2. Explanation of each part/flag
 3. Expected output and behavior`,
 	},
+	NEW_TASK: {
+		label: "Start New Task",
+		description: "Start new task with user input",
+		template: `\${userInput}`,
+	},
 } as const
 
 type SupportPromptType = keyof typeof supportPromptConfigs
