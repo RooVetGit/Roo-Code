@@ -16,7 +16,7 @@ let tabPanel: vscode.WebviewPanel | undefined = undefined
 
 /**
  * Get the currently active panel
- * @returns WebviewPanel或WebviewView
+ * @returns WebviewPanel or WebviewView
  */
 export function getPanel(): vscode.WebviewPanel | vscode.WebviewView | undefined {
 	return tabPanel || sidebarPanel
