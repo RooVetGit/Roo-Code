@@ -34,7 +34,7 @@ export const BrowserSettings = ({
 	...props
 }: BrowserSettingsProps) => {
 	const [testingConnection, setTestingConnection] = useState(false)
-	const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null)
+	const [testResult, setTestResult] = useState<{ success: boolean; text: string } | null>(null)
 	const [discovering, setDiscovering] = useState(false)
 	// We don't need a local state for useRemoteBrowser since we're using the enableRemoteBrowser prop directly
 	// This ensures the checkbox always reflects the current global state
@@ -47,7 +47,7 @@ export const BrowserSettings = ({
 			if (message.type === "browserConnectionResult") {
 				setTestResult({
 					success: message.success,
-					message: message.text,
+					text: message.text,
 				})
 				setTestingConnection(false)
 				setDiscovering(false)
@@ -74,29 +74,12 @@ export const BrowserSettings = ({
 		} catch (error) {
 			setTestResult({
 				success: false,
-				message: `Error: ${error instanceof Error ? error.message : String(error)}`,
+				text: `Error: ${error instanceof Error ? error.message : String(error)}`,
 			})
 			setTestingConnection(false)
 		}
 	}
 
-	const discoverBrowser = async () => {
-		setDiscovering(true)
-		setTestResult(null)
-
-		try {
-			// Send a message to the extension to discover Chrome instances
-			vscode.postMessage({
-				type: "discoverBrowser",
-			})
-		} catch (error) {
-			setTestResult({
-				success: false,
-				message: `Error: ${error instanceof Error ? error.message : String(error)}`,
-			})
-			setDiscovering(false)
-		}
-	}
 	return (
 		<div {...props}>
 			<SectionHeader>
@@ -204,9 +187,7 @@ export const BrowserSettings = ({
 												placeholder="Custom URL (e.g., http://localhost:9222)"
 												style={{ flexGrow: 1 }}
 											/>
-											<VSCodeButton
-												disabled={testingConnection}
-												onClick={remoteBrowserHost ? testConnection : discoverBrowser}>
+											<VSCodeButton disabled={testingConnection} onClick={testConnection}>
 												{testingConnection || discovering ? "Testing..." : "Test Connection"}
 											</VSCodeButton>
 										</div>
@@ -217,7 +198,7 @@ export const BrowserSettings = ({
 														? "bg-green-800/20 text-green-400"
 														: "bg-red-800/20 text-red-400"
 												}`}>
-												{testResult.message}
+												{testResult.text}
 											</div>
 										)}
 										<p className="text-vscode-descriptionForeground text-sm mt-2">
