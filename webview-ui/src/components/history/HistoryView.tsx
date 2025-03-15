@@ -92,6 +92,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 					}}
 					data={tasks}
 					data-testid="virtuoso-container"
+					initialTopMostItemIndex={0}
 					components={{
 						List: React.forwardRef((props, ref) => (
 							<div {...props} ref={ref} data-testid="virtuoso-item-list" />
@@ -159,6 +160,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 										wordBreak: "break-word",
 										overflowWrap: "anywhere",
 									}}
+									data-testid="task-content"
 									dangerouslySetInnerHTML={{ __html: item.task }}
 								/>
 								<div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
@@ -304,8 +306,8 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 												</span>
 											</div>
 											<div className="flex flex-row gap-1">
-												<CopyButton itemTask={item.task} />
-												<ExportButton itemId={item.id} />
+											  <CopyButton itemTask={item.task} />
+											  <ExportButton itemId={item.id} />
 											</div>
 										</div>
 									)}
