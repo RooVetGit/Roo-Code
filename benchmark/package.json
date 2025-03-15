@@ -8,7 +8,7 @@
 		"lint": "eslint src --ext ts",
 		"check-types": "tsc --noEmit",
 		"compile": "rm -rf out && tsc -p tsconfig.json",
-		"cli": "npx dotenvx run -f .env.local -- tsx src/cli.ts",
+		"cli": "npm run compile && npx dotenvx run -f .env.local -- tsx src/cli.ts",
 		"clean": "rimraf out",
 		"clean:exercises": "cd exercises && git checkout -f && git clean -fd",
 		"docker:build": "docker build -f Dockerfile -t roo-code-benchmark ..",

@@ -2979,35 +2979,41 @@ export class Cline extends EventEmitter<ClineEvents> {
 									)
 									break
 								}
+
 								this.consecutiveMistakeCount = 0
 
 								let commandResult: ToolResponse | undefined
+
 								if (command) {
 									if (lastMessage && lastMessage.ask !== "command") {
-										// havent sent a command message yet so first send completion_result then command
+										// Haven't sent a command message yet so
+										// first send completion_result then command.
 										await this.say("completion_result", result, undefined, false)
-										telemetryService.captureTaskCompleted(this.taskId)
-										this.emit("taskCompleted", this.taskId, this.getTokenUsage())
 									}
 
-									// complete command message
+									// Complete command message.
 									const didApprove = await askApproval("command", command)
+
 									if (!didApprove) {
 										break
 									}
+
 									const [userRejected, execCommandResult] = await this.executeCommandTool(command!)
+
 									if (userRejected) {
 										this.didRejectTool = true
 										pushToolResult(execCommandResult)
 										break
 									}
-									// user didn't reject, but the command may have output
+
+									// User didn't reject, but the command may have output.
 									commandResult = execCommandResult
 								} else {
 									await this.say("completion_result", result, undefined, false)
-									telemetryService.captureTaskCompleted(this.taskId)
-									this.emit("taskCompleted", this.taskId, this.getTokenUsage())
 								}
+
+								telemetryService.captureTaskCompleted(this.taskId)
+								this.emit("taskCompleted", this.taskId, this.getTokenUsage())
 
 								if (this.parentTask) {
 									const didApprove = await askFinishSubTaskApproval()
@@ -3021,15 +3027,22 @@ export class Cline extends EventEmitter<ClineEvents> {
 									break
 								}
 
-								// we already sent completion_result says, an empty string asks relinquishes control over button and field
+								// We already sent completion_result says, an
+								// empty string asks relinquishes control over
+								// button and field.
 								const { response, text, images } = await this.ask("completion_result", "", false)
+
+								// Signals to recursive loop to stop (for now
+								// this never happens since yesButtonClicked
+								// will trigger a new task).
 								if (response === "yesButtonClicked") {
-									pushToolResult("") // signals to recursive loop to stop (for now this never happens since yesButtonClicked will trigger a new task)
+									pushToolResult("")
 									break
 								}
-								await this.say("user_feedback", text ?? "", images)
 
+								await this.say("user_feedback", text ?? "", images)
 								const toolResults: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[] = []
+
 								if (commandResult) {
 									if (typeof commandResult === "string") {
 										toolResults.push({ type: "text", text: commandResult })
@@ -3037,17 +3050,20 @@ export class Cline extends EventEmitter<ClineEvents> {
 										toolResults.push(...commandResult)
 									}
 								}
+
 								toolResults.push({
 									type: "text",
 									text: `The user has provided feedback on the results. Consider their input to continue the task, and then attempt completion again.\n<feedback>\n${text}\n</feedback>`,
 								})
+
 								toolResults.push(...formatResponse.imageBlocks(images))
+
 								this.userMessageContent.push({
 									type: "text",
 									text: `${toolDescription()} Result:`,
 								})
-								this.userMessageContent.push(...toolResults)
 
+								this.userMessageContent.push(...toolResults)
 								break
 							}
 						} catch (error) {
@@ -3056,6 +3072,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 						}
 					}
 				}
+
 				break
 		}
 

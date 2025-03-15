@@ -27,7 +27,12 @@ async function runLanguage({ runId, model, language }: { runId: number; model: s
 		process.exit(1)
 	}
 
-	for (const exercise of filesystem.subdirectories(languagePath)) {
+	const exercises = filesystem
+		.subdirectories(languagePath)
+		.map((exercise) => path.basename(exercise))
+		.filter((exercise) => !exercise.startsWith("."))
+
+	for (const exercise of exercises) {
 		await runExercise({ runId, model, language, exercise })
 	}
 }
