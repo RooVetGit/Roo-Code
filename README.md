@@ -1,103 +1,78 @@
 <div align="center">
-<h1>Seawolf</h1>
-<p>An AI-powered autonomous coding agent for your editor</p>
+<h1>🐺 Seawolf</h1>
+<p>⚡ An AI-powered autonomous coding agent for your editor ⚡</p>
 </div>
 
-**Seawolf** is an AI-powered autonomous coding agent that lives in your editor. It can:
+## 🛠 What is Seawolf?
 
-- Communicate in natural language
-- Read and write files directly in your workspace
-- Run terminal commands
-- Automate browser actions
-- Integrate with any OpenAI-compatible or custom API/model
-- Adapt its capabilities through **Custom Modes**
+**Seawolf** is an AI-powered autonomous coding agent that seamlessly integrates with your editor to supercharge your development workflow. It can:
 
-Whether you are seeking a flexible coding partner, a system architect, or specialized roles like a QA engineer or product manager, Seawolf can help you build software more efficiently.
+- 🗣 **Communicate in natural language** – Describe what you need, and Seawolf gets to work!
+- 📂 **Read & write files** directly in your workspace – No more switching between windows.
+- 💻 **Run terminal commands** – Automate CLI tasks effortlessly.
+- 🌐 **Automate browser actions** – Web testing and automation made easy.
+- 🧠 **Integrate with OpenAI-compatible or custom AI models** – Use the best AI for your needs.
+- 🏗 **Adapt through Custom Modes** – Define specialized roles like a QA engineer, system architect, or security auditor.
 
-Check out the [CHANGELOG](CHANGELOG.md) for detailed updates and fixes.
+Whether you need a **flexible coding assistant, a system architect, or an automation powerhouse**, Seawolf is designed to help you build software faster and smarter! ⚡🐺
 
----
-
-## What Can Seawolf Do?
-
-- **Generate Code** from natural language descriptions
-- **Refactor & Debug** existing code
-- **Write & Update** documentation
-- **Answer Questions** about your codebase
-- **Automate** repetitive tasks
-- **Create** new files and projects
-
-## Quick Start
-
-1. Install Seawolf from the VS Code Marketplace
-2. Connect your preferred AI provider
-3. Start your first task
-
-## Key Features
-
-### Multiple Modes
-
-Seawolf adapts to your needs with specialized modes:
-
-- **Code Mode:** For general-purpose coding tasks
-- **Architect Mode:** For planning and technical leadership
-- **Ask Mode:** For answering questions and providing information
-- **Debug Mode:** For systematic problem diagnosis
-- **Custom Modes:** Create unlimited specialized personas for security auditing, performance optimization, documentation, or any other task
-
-### Smart Tools
-
-Seawolf comes with powerful tools that can:
-
-- Read and write files in your project
-- Execute commands in your VS Code terminal
-- Control a web browser
-- Use external tools via MCP (Model Context Protocol)
-
-MCP extends Seawolf capabilities by allowing you to add unlimited custom tools. Integrate with external APIs, connect to databases, or create specialized development tools - MCP provides the framework to expand Seawolf functionality to meet your specific needs.
-
-### Customization
-
-Make Seawolf work your way with:
-
-- Custom Instructions for personalized behavior
-- Custom Modes for specialized tasks
-- Local Models for offline use
-- Auto-Approval Settings for faster workflows
+🔄 Check out the [CHANGELOG](CHANGELOG.md) for the latest updates and improvements!
 
 ---
 
-## Local Setup & Development
+## 🚀 What Can Seawolf Do?
 
-1. **Clone** the repo:
+Seawolf isn't just another AI assistant—it’s an **autonomous agent** designed to make software development effortless. Here’s what it can do:
 
-    git clone https://github.com/Opensourceful/Seawolf.git
-
-2. **Install dependencies**:
-
-    npm run install:all
-
-3. **Start the webview (Vite/React app with HMR)**:
-
-    npm run dev
-
-4. **Debug**:
-   Press F5 (or **Run > Start Debugging**) in VSCode to open a new session with Seawolf loaded.
-
-Changes to the webview will appear immediately. Changes to the core extension will require a restart of the extension host.
-
-Alternatively you can build a .vsix and install it directly in VSCode:
-
-    npm run build
-
-A .vsix file will appear in the bin/ directory which can be installed with:
-
-    code --install-extension bin/Seawolf-<version>.vsix
-
-We use [changesets](https://github.com/changesets/changesets) for versioning and publishing. Check our CHANGELOG.md for release notes.
+- ✨ **Generate Code** – Write complete functions, classes, or entire apps from natural language descriptions.
+- 🔧 **Refactor & Debug** – Identify issues, optimize your code, and fix bugs autonomously.
+- 📖 **Write & Update Documentation** – Keep your codebase well-documented with minimal effort.
+- ❓ **Answer Questions** – Get insights into your codebase, API documentation, or best practices.
+- 🔄 **Automate Repetitive Tasks** – Reduce tedious manual work with smart automation.
+- 🏗 **Create New Files & Projects** – Kickstart your next big idea in seconds.
 
 ---
 
-## License
+## ⚡ Quick Start
 
-[Apache 2.0](./LICENSE)
+Getting started with Seawolf is as easy as 1-2-3:
+
+1️⃣ **Install Seawolf** from the **VS Code Marketplace**  
+2️⃣ **Connect your preferred AI provider** (OpenAI, local models, or custom API)  
+3️⃣ **Start your first task** – Just type your request and let Seawolf do the magic! 🪄
+
+---
+
+## 🔑 Key Features
+
+### 🎭 Multiple Modes
+
+Seawolf adapts to your workflow with specialized modes:
+
+- 🏗 **Code Mode** – Write, edit, and optimize code.
+- 🎯 **Architect Mode** – Plan and analyze software designs.
+- 🤖 **Ask Mode** – Answer coding questions and provide explanations.
+- 🐞 **Debug Mode** – Troubleshoot errors and suggest fixes.
+- 🛠 **Custom Modes** – Define unlimited specialized personas for security audits, performance tuning, or documentation.
+
+### 🛠 Smart Tools
+
+Seawolf is **more than just an AI chatbot**—it comes equipped with powerful automation tools:
+
+- 📂 **Read & modify files** in your project workspace.
+- 🔄 **Execute terminal commands** inside VS Code.
+- 🌍 **Control a web browser** for automation tasks.
+- 🔌 **Use external tools via MCP (Model Context Protocol)** to integrate APIs, databases, or custom development tools.
+
+> 🔗 **MCP allows Seawolf to grow with you!** Extend its capabilities by integrating third-party APIs, database queries, and more.
+
+### 🎨 Customization
+
+Make Seawolf work **your way** with:
+
+- 📝 **Custom Instructions** – Tailor responses to match your workflow.
+- 🎭 **Custom Modes** – Create AI agents for specific roles.
+- 🏠 **Local Models** – Run AI offline for privacy and security.
+- ✅ **Auto-Approval Settings** – Speed up repetitive workflows.
+
+---

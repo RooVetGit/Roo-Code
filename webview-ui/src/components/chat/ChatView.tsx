@@ -1072,6 +1072,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				flexDirection: "column",
 				overflow: "hidden",
 			}}>
+			{/* This div is intentionally left empty to preserve the original toolbar */}
+
 			{task ? (
 				<>
 					<TaskHeader

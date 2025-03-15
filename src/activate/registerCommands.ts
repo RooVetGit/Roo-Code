@@ -72,7 +72,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 			provider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
 		},
 		"Seawolf.helpButtonClicked": () => {
-			vscode.env.openExternal(vscode.Uri.parse("https://docs.roocode.com"))
+			vscode.env.openExternal(vscode.Uri.parse("https://docs.opensourceful.com"))
 		},
 		"Seawolf.showHumanRelayDialog": (params: { requestId: string; promptText: string }) => {
 			const panel = getPanel()
