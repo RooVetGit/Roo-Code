@@ -44,6 +44,7 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		cline.on("taskUnpaused", () => this.emit("taskUnpaused", cline.taskId))
 		cline.on("taskAborted", () => this.emit("taskAborted", cline.taskId))
 		cline.on("taskSpawned", (taskId) => this.emit("taskSpawned", cline.taskId, taskId))
+		cline.on("taskCompleted", (taskId, usage) => this.emit("taskCompleted", taskId, usage))
 
 		return cline.taskId
 	}

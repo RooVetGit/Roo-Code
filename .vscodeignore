@@ -1,53 +1,62 @@
 # Default
+.changeset/**
 .github/**
 .husky/**
 .vscode/**
-.vscode-test/**
-out/**
-out-integration/**
-e2e/**
+coverage/**
 node_modules/**
 src/**
-.gitignore
-.yarnrc
-esbuild.js
-vsc-extension-quickstart.md
+**/.npmrc
 **/tsconfig.json
 **/.eslintrc.json
 **/*.map
 **/*.ts
 **/.vscode-test.*
+**/.gitignore
+**/.DS_Store
 
 # Custom
-demo.gif
-.nvmrc
-.gitattributes
-.prettierignore
+ellipsis.yaml
+esbuild.js
+flake.*
+jest.config.js
+knip.json
+assets/docs/demo.gif
 .clinerules*
+.dockerignore
+.git-blame-ignore-revs
+.gitattributes
+.gitconfig
+.nvmrc
+.prettierignore
+.rooignore
 .roomodes
+benchmark/**
 cline_docs/**
-coverage/**
+e2e/**
+out/**
 
-# Ignore all webview-ui files except the build directory (https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/frameworks/hello-world-react-cra/.vscodeignore)
-webview-ui/src/**
+# Ignore all webview-ui files except the build directory.
+# https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/frameworks/hello-world-react-cra/.vscodeignore
+webview-ui/.storybook/**
 webview-ui/public/**
-webview-ui/scripts/**
+webview-ui/src/**
 webview-ui/index.html
-webview-ui/README.md
-webview-ui/package.json
+webview-ui/jest.config.cjs
 webview-ui/package-lock.json
+webview-ui/package.json
 webview-ui/node_modules/**
-**/.gitignore
 
-# Fix issue where codicons don't get packaged (https://github.com/microsoft/vscode-extension-samples/issues/692)
+# Fix issue where codicons don't get packaged.
+# https://github.com/microsoft/vscode-extension-samples/issues/692
 !node_modules/@vscode/codicons/dist/codicon.css
 !node_modules/@vscode/codicons/dist/codicon.ttf
 
-# Include default themes JSON files used in getTheme
+# Include default themes JSON files used in getTheme.
 !src/integrations/theme/default-themes/**
 
-# Include icons
+# Include icons.
 !assets/icons/**
 
-# Include .env file for telemetry
+# Include .env file for telemetry.
 !.env
