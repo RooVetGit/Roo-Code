@@ -1,9 +1,11 @@
-import { memo, useEffect } from "react"
+import { memo, useEffect, useRef, useCallback } from "react"
+import debounce from "debounce"
 import { useRemark } from "react-remark"
 import rehypeHighlight, { Options } from "rehype-highlight"
 import styled from "styled-components"
 import { visit } from "unist-util-visit"
 import { useExtensionState } from "../../context/ExtensionStateContext"
+import { useCopyToClipboard } from "../../utils/clipboard"
 
 export const CODE_BLOCK_BG_COLOR = "var(--vscode-editor-background, --vscode-sideBar-background, rgb(30 30 30))"
 
@@ -17,26 +19,83 @@ minWidth: "max-content",
 
 interface CodeBlockProps {
 	source?: string
-	forceWrap?: boolean
+	rawSource?: string // Add rawSource prop for copying raw text
+	language?: string
+	preStyle?: React.CSSProperties
 }
 
-const StyledMarkdown = styled.div<{ forceWrap: boolean }>`
-	${({ forceWrap }) =>
-		forceWrap &&
-		`
-    pre, code {
-      white-space: pre-wrap;
-      word-break: break-all;
-      overflow-wrap: anywhere;
-    }
-  `}
+const CopyButton = styled.button`
+	background: transparent;
+	border: none;
+	color: var(--vscode-foreground);
+	cursor: var(--copy-button-cursor, default);
+	padding: 4px;
+	display: flex;
+	align-items: center;
+	opacity: 0.4;
+	border-radius: 3px;
+	pointer-events: var(--copy-button-events, none);
+
+	&:hover {
+		background: var(--vscode-toolbar-hoverBackground);
+		opacity: 1;
+	}
+`
+
+const CopyButtonWrapper = styled.div`
+	position: fixed;
+	top: var(--copy-button-top);
+	right: var(--copy-button-right, 8px);
+	height: 0;
+	z-index: 100;
+	background: ${CODE_BLOCK_BG_COLOR};
+	overflow: visible;
+	pointer-events: none;
+	opacity: var(--copy-button-opacity, 0);
+	padding: 4px;
+	border-radius: 3px;
+
+	&:hover {
+		background: var(--vscode-editor-background);
+	}
+
+	${CopyButton} {
+		position: relative;
+		top: 0;
+		right: 0;
+	}
+`
+
+const CodeBlockContainer = styled.div`
+	position: relative;
+	overflow: hidden;
+	background-color: ${CODE_BLOCK_BG_COLOR};
+
+	&[data-partially-visible="true"]:hover ${CopyButtonWrapper} {
+		opacity: 1 !important;
+	}
+`
+
+const StyledMarkdown = styled.div<{ preStyle?: React.CSSProperties; wordwrap?: boolean }>`
+	overflow-x: auto;
+	width: 100%;
 
 	pre {
 		background-color: ${CODE_BLOCK_BG_COLOR};
 		border-radius: 5px;
 		margin: 0;
-		min-width: ${({ forceWrap }) => (forceWrap ? "auto" : "max-content")};
 		padding: 10px 10px;
+		display: block;
+		box-sizing: border-box;
+		width: 100%;
+		${({ preStyle }) => preStyle && { ...preStyle }}
+	}
+
+	pre,
+	code {
+		white-space: ${({ wordwrap }) => (wordwrap === false ? "pre" : "pre-wrap")};
+		word-break: ${({ wordwrap }) => (wordwrap === false ? "normal" : "normal")};
+		overflow-wrap: ${({ wordwrap }) => (wordwrap === false ? "normal" : "break-word")};
 	}
 
 	pre > code {
@@ -93,7 +152,7 @@ const StyledMarkdown = styled.div<{ forceWrap: boolean }>`
 	}
 `
 
-const StyledPre = styled.pre<{ theme: any }>`
+export const StyledPre = styled.pre<{ theme: any }>`
 	& .hljs {
 		color: var(--vscode-editor-foreground, #fff);
 	}
@@ -110,8 +169,12 @@ const StyledPre = styled.pre<{ theme: any }>`
 			.join("")}
 `
 
-const CodeBlock = memo(({ source, forceWrap = false }: CodeBlockProps) => {
+const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProps) => {
+	const codeBlockRef = useRef<HTMLDivElement>(null)
+	const copyButtonWrapperRef = useRef<HTMLDivElement>(null)
+	const { showCopyFeedback, copyWithFeedback } = useCopyToClipboard()
 	const { theme } = useExtensionState()
+
 	const [reactContent, setMarkdownSource] = useRemark({
 		remarkPlugins: [
 			() => {
@@ -140,19 +203,137 @@ const CodeBlock = memo(({ source, forceWrap = false }: CodeBlockProps) => {
 		},
 	})
 
+	const updateCopyButtonPosition = useCallback((forceShow = false) => {
+		const codeBlock = codeBlockRef.current
+		const copyWrapper = copyButtonWrapperRef.current
+		if (!codeBlock) return
+
+		const rectCodeBlock = codeBlock.getBoundingClientRect()
+		const scrollContainer = document.querySelector('[data-virtuoso-scroller="true"]')
+		if (!scrollContainer) return
+
+		// Get wrapper height dynamically
+		let wrapperHeight
+		if (copyWrapper) {
+			const copyRect = copyWrapper.getBoundingClientRect()
+			// If height is 0 due to styling, estimate from children
+			if (copyRect.height > 0) {
+				wrapperHeight = copyRect.height
+			} else if (copyWrapper.children.length > 0) {
+				// Try to get height from the button inside
+				const buttonRect = copyWrapper.children[0].getBoundingClientRect()
+				const buttonStyle = window.getComputedStyle(copyWrapper.children[0] as Element)
+				const buttonPadding =
+					parseInt(buttonStyle.getPropertyValue("padding-top") || "0", 10) +
+					parseInt(buttonStyle.getPropertyValue("padding-bottom") || "0", 10)
+				wrapperHeight = buttonRect.height + buttonPadding
+			}
+		}
+
+		// If we still don't have a height, calculate from font size
+		if (!wrapperHeight) {
+			const fontSize = parseInt(window.getComputedStyle(document.body).getPropertyValue("font-size"), 10)
+			wrapperHeight = fontSize * 2.5 // Approximate button height based on font size
+		}
+
+		const scrollRect = scrollContainer.getBoundingClientRect()
+		const copyButtonEdge = 48
+		const isPartiallyVisible =
+			rectCodeBlock.top < scrollRect.bottom - copyButtonEdge &&
+			rectCodeBlock.bottom >= scrollRect.top + copyButtonEdge
+
+		// Calculate margin from existing padding in the component
+		const computedStyle = window.getComputedStyle(codeBlock)
+		const paddingValue = parseInt(computedStyle.getPropertyValue("padding") || "0", 10)
+		const margin =
+			paddingValue > 0 ? paddingValue : parseInt(computedStyle.getPropertyValue("padding-top") || "0", 10)
+
+		// Update visibility state and button interactivity
+		const isVisible = isPartiallyVisible && (forceShow || isPartiallyVisible)
+		codeBlock.setAttribute("data-partially-visible", isPartiallyVisible ? "true" : "false")
+		codeBlock.style.setProperty("--copy-button-cursor", isVisible ? "pointer" : "default")
+		codeBlock.style.setProperty("--copy-button-events", isVisible ? "all" : "none")
+		codeBlock.style.setProperty("--copy-button-opacity", isVisible ? "1" : "0")
+
+		if (isPartiallyVisible) {
+			// Keep button within code block bounds using dynamic measurements
+			const topPosition = Math.max(
+				scrollRect.top + margin,
+				Math.min(rectCodeBlock.bottom - wrapperHeight - margin, rectCodeBlock.top + margin),
+			)
+			const rightPosition = Math.max(margin, scrollRect.right - rectCodeBlock.right + margin)
+
+			codeBlock.style.setProperty("--copy-button-top", `${topPosition}px`)
+			codeBlock.style.setProperty("--copy-button-right", `${rightPosition}px`)
+		}
+	}, [])
+
 	useEffect(() => {
-		setMarkdownSource(source || "")
-	}, [source, setMarkdownSource, theme])
+		const debouncedUpdate = debounce(updateCopyButtonPosition, 10)
+		const handleScroll = () => debouncedUpdate()
+		const handleResize = () => debouncedUpdate()
+
+		const scrollContainer = document.querySelector('[data-virtuoso-scroller="true"]')
+		if (scrollContainer) {
+			scrollContainer.addEventListener("scroll", handleScroll)
+			window.addEventListener("resize", handleResize)
+			updateCopyButtonPosition()
+		}
+
+		return () => {
+			if (scrollContainer) {
+				scrollContainer.removeEventListener("scroll", handleScroll)
+				window.removeEventListener("resize", handleResize)
+			}
+			debouncedUpdate.clear()
+		}
+	}, [updateCopyButtonPosition])
+
+	// Update button position when content changes
+	useEffect(() => {
+		if (reactContent) {
+			// Small delay to ensure content is rendered
+			setTimeout(updateCopyButtonPosition, 0)
+		}
+	}, [reactContent, updateCopyButtonPosition])
+
+	const handleCopy = (e: React.MouseEvent) => {
+		e.stopPropagation()
+
+		// Check if code block is partially visible before allowing copy
+		const codeBlock = codeBlockRef.current
+		if (!codeBlock || codeBlock.getAttribute("data-partially-visible") !== "true") {
+			return
+		}
+
+		// Use rawSource if available, otherwise extract from source
+		const textToCopy =
+			rawSource !== undefined ? rawSource : source?.replace(/^```[\s\S]*?\n([\s\S]*?)```$/m, "$1").trim()
+
+		if (textToCopy) {
+			copyWithFeedback(textToCopy, e)
+		}
+	}
+
+	useEffect(() => {
+		const markdown = language ? `\`\`\`${language}\n${source || ""}\`\`\`` : source || ""
+		setMarkdownSource(markdown)
+	}, [source, language, setMarkdownSource, theme])
 
 	return (
-		<div
-			style={{
-				overflowY: forceWrap ? "visible" : "auto",
-				maxHeight: forceWrap ? "none" : "100%",
-				backgroundColor: CODE_BLOCK_BG_COLOR,
-			}}>
-			<StyledMarkdown forceWrap={forceWrap}>{reactContent}</StyledMarkdown>
-		</div>
+		<CodeBlockContainer ref={codeBlockRef}>
+			<StyledMarkdown preStyle={preStyle} wordwrap={true}>
+				{reactContent}
+			</StyledMarkdown>
+			<CopyButtonWrapper
+				ref={copyButtonWrapperRef}
+				onMouseEnter={() => updateCopyButtonPosition(true)}
+				onMouseLeave={() => updateCopyButtonPosition()}>
+				<CopyButton onClick={handleCopy} title="Copy code">
+					<span className={`codicon codicon-${showCopyFeedback ? "check" : "copy"}`} />
+				</CopyButton>
+			</CopyButtonWrapper>
+		</CodeBlockContainer>
 	)
 })
 
