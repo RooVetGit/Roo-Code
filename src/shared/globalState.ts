@@ -118,6 +118,7 @@ export const GLOBAL_STATE_KEYS = [
 	"remoteBrowserEnabled",
 	"humanRelayMonitorClipboard",
 	"humanRelayMonitorInterval",
+	"maxWorkspaceFiles",
 ] as const
 
 type CheckGlobalStateKeysExhaustiveness =
