@@ -3,12 +3,12 @@ import * as path from "path"
 import { listFiles } from "../glob/list-files"
 import { LanguageParser, loadRequiredLanguageParsers } from "./languageParser"
 import { fileExistsAtPath } from "../../utils/fs"
-import { RooIgnoreController } from "../../core/ignore/RooIgnoreController"
+import { SeawolfIgnoreController } from "../../core/ignore/SeawolfIgnoreController"
 
 // TODO: implement caching behavior to avoid having to keep analyzing project for new tasks.
 export async function parseSourceCodeForDefinitionsTopLevel(
 	dirPath: string,
-	rooIgnoreController?: RooIgnoreController,
+	seawolfIgnoreController?: SeawolfIgnoreController,
 ): Promise<string> {
 	// check if the path exists
 	const dirExists = await fileExistsAtPath(path.resolve(dirPath))
@@ -27,12 +27,14 @@ export async function parseSourceCodeForDefinitionsTopLevel(
 	const languageParsers = await loadRequiredLanguageParsers(filesToParse)
 
 	// Filter filepaths for access if controller is provided
-	const allowedFilesToParse = rooIgnoreController ? rooIgnoreController.filterPaths(filesToParse) : filesToParse
+	const allowedFilesToParse = seawolfIgnoreController
+		? seawolfIgnoreController.filterPaths(filesToParse)
+		: filesToParse
 
 	// Parse specific files we have language parsers for
 	// const filesWithoutDefinitions: string[] = []
 	for (const file of allowedFilesToParse) {
-		const definitions = await parseFile(file, languageParsers, rooIgnoreController)
+		const definitions = await parseFile(file, languageParsers, seawolfIgnoreController)
 		if (definitions) {
 			result += `${path.relative(dirPath, file).toPosix()}\n${definitions}\n`
 		}
@@ -108,9 +110,9 @@ This approach allows us to focus on the most relevant parts of the code (defined
 async function parseFile(
 	filePath: string,
 	languageParsers: LanguageParser,
-	rooIgnoreController?: RooIgnoreController,
+	seawolfIgnoreController?: SeawolfIgnoreController,
 ): Promise<string | null> {
-	if (rooIgnoreController && !rooIgnoreController.validateAccess(filePath)) {
+	if (seawolfIgnoreController && !seawolfIgnoreController.validateAccess(filePath)) {
 		return null
 	}
 	const fileContent = await fs.readFile(filePath, "utf8")

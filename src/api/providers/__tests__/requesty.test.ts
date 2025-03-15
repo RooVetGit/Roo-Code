@@ -65,7 +65,7 @@ describe("RequestyHandler", () => {
 				apiKey: defaultOptions.requestyApiKey,
 				defaultHeaders: {
 					"HTTP-Referer": "https://github.com/RooVetGit/Roo-Cline",
-					"X-Title": "Roo Code",
+					"X-Title": "Seawolf",
 				},
 			})
 		})

@@ -3,7 +3,7 @@ import * as vscode from "vscode"
 
 import { ClineProvider } from "../core/webview/ClineProvider"
 
-import { RooCodeAPI, RooCodeEvents, ConfigurationValues } from "./roo-code"
+import { RooCodeAPI, RooCodeEvents, ConfigurationValues } from "./seawolf-code"
 import { MessageHistory } from "./message-history"
 
 export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {

@@ -1,7 +1,7 @@
 import * as assert from "assert"
 import * as vscode from "vscode"
 
-suite("Roo Code Extension", () => {
+suite("Seawolf Extension", () => {
 	test("OPENROUTER_API_KEY environment variable is set", () => {
 		if (!process.env.OPENROUTER_API_KEY) {
 			assert.fail("OPENROUTER_API_KEY environment variable is not set")
@@ -10,15 +10,15 @@ suite("Roo Code Extension", () => {
 
 	test("Commands should be registered", async () => {
 		const expectedCommands = [
-			"roo-cline.plusButtonClicked",
-			"roo-cline.mcpButtonClicked",
-			"roo-cline.historyButtonClicked",
-			"roo-cline.popoutButtonClicked",
-			"roo-cline.settingsButtonClicked",
-			"roo-cline.openInNewTab",
-			"roo-cline.explainCode",
-			"roo-cline.fixCode",
-			"roo-cline.improveCode",
+			"seawolf.plusButtonClicked",
+			"seawolf.mcpButtonClicked",
+			"seawolf.historyButtonClicked",
+			"seawolf.popoutButtonClicked",
+			"seawolf.settingsButtonClicked",
+			"seawolf.openInNewTab",
+			"seawolf.explainCode",
+			"seawolf.fixCode",
+			"seawolf.improveCode",
 		]
 
 		const commands = await vscode.commands.getCommands(true)

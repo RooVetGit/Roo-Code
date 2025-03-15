@@ -64,6 +64,7 @@ export interface RooCodeAPI extends EventEmitter<RooCodeEvents> {
 	getMessages(taskId: string): ClineMessage[]
 }
 
+export type SeawolfAPI = RooCodeAPI
 export type ClineAsk =
 	| "followup"
 	| "command"
@@ -102,7 +103,7 @@ export type ClineSay =
 	| "new_task_started"
 	| "new_task"
 	| "checkpoint_saved"
-	| "rooignore_error"
+	| "seawolfignore_error"
 
 export interface ClineMessage {
 	ts: number
@@ -215,7 +216,7 @@ export type GlobalStateKey =
 	| "lmStudioSpeculativeDecodingEnabled"
 	| "lmStudioDraftModelId"
 	| "telemetrySetting"
-	| "showRooIgnoredFiles"
+	| "showSeawolfIgnoredFiles"
 	| "remoteBrowserEnabled"
 
 export type ConfigurationKey = GlobalStateKey | SecretKey

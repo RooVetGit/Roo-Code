@@ -43,7 +43,7 @@ const TelemetryBanner = () => {
 	return (
 		<BannerContainer>
 			<div>
-				<strong>Help Improve Roo Code</strong>
+				<strong>Help Improve Seawolf</strong>
 				<div className="mt-1">
 					Send anonymous error and usage data to help us fix bugs and improve the extension. No code, prompts,
 					or personal information is ever sent.

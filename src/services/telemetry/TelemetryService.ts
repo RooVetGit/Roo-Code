@@ -1,4 +1,4 @@
-import { PostHog } from "posthog-node"
+/* import { PostHog } from "posthog-node" */
 import * as vscode from "vscode"
 import { logger } from "../../utils/logging"
 
@@ -9,7 +9,7 @@ interface ClineProviderInterface {
 }
 
 /**
- * PostHogClient handles telemetry event tracking for the Roo Code extension
+ * PostHogClient handles telemetry event tracking for the Seawolf extension
  * Uses PostHog analytics to track user interactions and system events
  * Respects user privacy settings and VSCode's global telemetry configuration
  */
@@ -29,15 +29,16 @@ class PostHogClient {
 	}
 
 	private static instance: PostHogClient
-	private client: PostHog
+	/* private client: PostHog */
 	private distinctId: string = vscode.env.machineId
 	private telemetryEnabled: boolean = false
 	private providerRef: WeakRef<ClineProviderInterface> | null = null
 
 	private constructor() {
-		this.client = new PostHog(process.env.POSTHOG_API_KEY || "", {
+		console.log("POSTHOG_API_KEY:", process.env.POSTHOG_API_KEY)
+		/* this.client = new PostHog(process.env.POSTHOG_API_KEY || "", {
 			host: "https://us.i.posthog.com",
-		})
+		}) */
 	}
 
 	/**
@@ -59,9 +60,9 @@ class PostHogClient {
 
 		// Update PostHog client state based on telemetry preference
 		if (this.telemetryEnabled) {
-			this.client.optIn()
+			/* this.client.optIn() */
 		} else {
-			this.client.optOut()
+			/* this.client.optOut() */
 		}
 	}
 
@@ -115,11 +116,11 @@ class PostHogClient {
 				...(event.properties || {}),
 			}
 
-			this.client.capture({
+			/* this.client.capture({
 				distinctId: this.distinctId,
 				event: event.event,
 				properties: mergedProperties,
-			})
+			}) */
 		}
 	}
 
@@ -135,7 +136,7 @@ class PostHogClient {
 	 * Shuts down the PostHog client
 	 */
 	public async shutdown(): Promise<void> {
-		await this.client.shutdown()
+		/* await this.client.shutdown() */
 	}
 }
 

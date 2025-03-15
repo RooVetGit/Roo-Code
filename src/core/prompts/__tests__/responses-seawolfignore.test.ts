@@ -1,7 +1,7 @@
-// npx jest src/core/prompts/__tests__/responses-rooignore.test.ts
+// npx jest src/core/prompts/__tests__/responses-seawolfignore.test.ts
 
 import { formatResponse } from "../responses"
-import { RooIgnoreController, LOCK_TEXT_SYMBOL } from "../../ignore/RooIgnoreController"
+import { SeawolfIgnoreController, LOCK_TEXT_SYMBOL } from "../../ignore/SeawolfIgnoreController"
 import * as path from "path"
 import { fileExistsAtPath } from "../../../utils/fs"
 import * as fs from "fs/promises"
@@ -24,7 +24,7 @@ jest.mock("vscode", () => {
 	}
 })
 
-describe("RooIgnore Response Formatting", () => {
+describe("SeawolfIgnore Response Formatting", () => {
 	const TEST_CWD = "/test/path"
 	let mockFileExists: jest.MockedFunction<typeof fileExistsAtPath>
 	let mockReadFile: jest.MockedFunction<typeof fs.readFile>
@@ -42,17 +42,19 @@ describe("RooIgnore Response Formatting", () => {
 		mockReadFile.mockResolvedValue("node_modules\n.git\nsecrets/**\n*.log")
 	})
 
-	describe("formatResponse.rooIgnoreError", () => {
+	describe("formatResponse.seawolfIgnoreError", () => {
 		/**
 		 * Tests the error message format for ignored files
 		 */
 		it("should format error message for ignored files", () => {
-			const errorMessage = formatResponse.rooIgnoreError("secrets/api-keys.json")
+			const errorMessage = formatResponse.seawolfIgnoreError("secrets/api-keys.json")
 
 			// Verify error message format
-			expect(errorMessage).toContain("Access to secrets/api-keys.json is blocked by the .rooignore file settings")
+			expect(errorMessage).toContain(
+				"Access to secrets/api-keys.json is blocked by the .seawolfignore file settings",
+			)
 			expect(errorMessage).toContain("continue in the task without using this file")
-			expect(errorMessage).toContain("ask the user to update the .rooignore file")
+			expect(errorMessage).toContain("ask the user to update the .seawolfignore file")
 		})
 
 		/**
@@ -63,19 +65,19 @@ describe("RooIgnore Response Formatting", () => {
 
 			// Test each path
 			for (const testPath of paths) {
-				const errorMessage = formatResponse.rooIgnoreError(testPath)
+				const errorMessage = formatResponse.seawolfIgnoreError(testPath)
 				expect(errorMessage).toContain(`Access to ${testPath} is blocked`)
 			}
 		})
 	})
 
-	describe("formatResponse.formatFilesList with RooIgnoreController", () => {
+	describe("formatResponse.formatFilesList with SeawolfIgnoreController", () => {
 		/**
-		 * Tests file listing with rooignore controller
+		 * Tests file listing with seawolfignore controller
 		 */
 		it("should format files list with lock symbols for ignored files", async () => {
 			// Create controller
-			const controller = new RooIgnoreController(TEST_CWD)
+			const controller = new SeawolfIgnoreController(TEST_CWD)
 			await controller.initialize()
 
 			// Mock validateAccess to control which files are ignored
@@ -113,11 +115,11 @@ describe("RooIgnore Response Formatting", () => {
 		})
 
 		/**
-		 * Tests formatFilesList when showRooIgnoredFiles is set to false
+		 * Tests formatFilesList when showSeawolfIgnoredFiles is set to false
 		 */
-		it("should hide ignored files when showRooIgnoredFiles is false", async () => {
+		it("should hide ignored files when showSeawolfIgnoredFiles is false", async () => {
 			// Create controller
-			const controller = new RooIgnoreController(TEST_CWD)
+			const controller = new SeawolfIgnoreController(TEST_CWD)
 			await controller.initialize()
 
 			// Mock validateAccess to control which files are ignored
@@ -137,13 +139,13 @@ describe("RooIgnore Response Formatting", () => {
 				"secrets/keys.json", // ignored
 			]
 
-			// Format with controller and showRooIgnoredFiles = false
+			// Format with controller and showSeawolfIgnoredFiles = false
 			const result = formatResponse.formatFilesList(
 				TEST_CWD,
 				files,
 				false,
 				controller as any,
-				false, // showRooIgnoredFiles = false
+				false, // showSeawolfIgnoredFiles = false
 			)
 
 			// Should contain allowed files
@@ -162,11 +164,11 @@ describe("RooIgnore Response Formatting", () => {
 		})
 
 		/**
-		 * Tests formatFilesList handles truncation correctly with RooIgnoreController
+		 * Tests formatFilesList handles truncation correctly with SeawolfIgnoreController
 		 */
-		it("should handle truncation with RooIgnoreController", async () => {
+		it("should handle truncation with SeawolfIgnoreController", async () => {
 			// Create controller
-			const controller = new RooIgnoreController(TEST_CWD)
+			const controller = new SeawolfIgnoreController(TEST_CWD)
 			await controller.initialize()
 
 			// Format with controller and truncation flag
@@ -186,9 +188,9 @@ describe("RooIgnore Response Formatting", () => {
 		/**
 		 * Tests formatFilesList handles empty results
 		 */
-		it("should handle empty file list with RooIgnoreController", async () => {
+		it("should handle empty file list with SeawolfIgnoreController", async () => {
 			// Create controller
-			const controller = new RooIgnoreController(TEST_CWD)
+			const controller = new SeawolfIgnoreController(TEST_CWD)
 			await controller.initialize()
 
 			// Format with empty files array
@@ -203,16 +205,16 @@ describe("RooIgnore Response Formatting", () => {
 		/**
 		 * Tests the instructions format
 		 */
-		it("should format .rooignore instructions for the LLM", async () => {
+		it("should format .seawolfignore instructions for the LLM", async () => {
 			// Create controller
-			const controller = new RooIgnoreController(TEST_CWD)
+			const controller = new SeawolfIgnoreController(TEST_CWD)
 			await controller.initialize()
 
 			// Get instructions
 			const instructions = controller.getInstructions()
 
 			// Verify format and content
-			expect(instructions).toContain("# .rooignore")
+			expect(instructions).toContain("# .seawolfignore")
 			expect(instructions).toContain(LOCK_TEXT_SYMBOL)
 			expect(instructions).toContain("node_modules")
 			expect(instructions).toContain(".git")
@@ -227,12 +229,12 @@ describe("RooIgnore Response Formatting", () => {
 		/**
 		 * Tests null/undefined case
 		 */
-		it("should return undefined when no .rooignore exists", async () => {
-			// Set up no .rooignore
+		it("should return undefined when no .seawolfignore exists", async () => {
+			// Set up no .seawolfignore
 			mockFileExists.mockResolvedValue(false)
 
-			// Create controller without .rooignore
-			const controller = new RooIgnoreController(TEST_CWD)
+			// Create controller without .seawolfignore
+			const controller = new SeawolfIgnoreController(TEST_CWD)
 			await controller.initialize()
 
 			// Should return undefined

@@ -450,7 +450,7 @@ describe("ClineProvider", () => {
 			maxOpenTabsContext: 20,
 			browserToolEnabled: true,
 			telemetrySetting: "unset",
-			showRooIgnoredFiles: true,
+			showSeawolfIgnoredFiles: true,
 		}
 
 		const message: ExtensionMessage = {
@@ -701,25 +701,25 @@ describe("ClineProvider", () => {
 		expect(state.browserToolEnabled).toBe(true) // Default value should be true
 	})
 
-	test("handles showRooIgnoredFiles setting", async () => {
+	test("handles showSeawolfIgnoredFiles setting", async () => {
 		await provider.resolveWebviewView(mockWebviewView)
 		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
 
-		// Test showRooIgnoredFiles with true
-		await messageHandler({ type: "showRooIgnoredFiles", bool: true })
-		expect(mockContext.globalState.update).toHaveBeenCalledWith("showRooIgnoredFiles", true)
+		// Test showSeawolfIgnoredFiles with true
+		await messageHandler({ type: "showSeawolfIgnoredFiles", bool: true })
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("showSeawolfIgnoredFiles", true)
 		expect(mockPostMessage).toHaveBeenCalled()
 
-		// Test showRooIgnoredFiles with false
+		// Test showSeawolfIgnoredFiles with false
 		jest.clearAllMocks() // Clear all mocks including mockContext.globalState.update
-		await messageHandler({ type: "showRooIgnoredFiles", bool: false })
-		expect(mockContext.globalState.update).toHaveBeenCalledWith("showRooIgnoredFiles", false)
+		await messageHandler({ type: "showSeawolfIgnoredFiles", bool: false })
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("showSeawolfIgnoredFiles", false)
 		expect(mockPostMessage).toHaveBeenCalled()
 
-		// Verify state includes showRooIgnoredFiles
+		// Verify state includes showSeawolfIgnoredFiles
 		const state = await provider.getState()
-		expect(state).toHaveProperty("showRooIgnoredFiles")
-		expect(state.showRooIgnoredFiles).toBe(true) // Default value should be true
+		expect(state).toHaveProperty("showSeawolfIgnoredFiles")
+		expect(state.showSeawolfIgnoredFiles).toBe(true) // Default value should be true
 	})
 
 	test("handles request delay settings messages", async () => {

@@ -24,6 +24,7 @@ export function setPanel(
 	newPanel: vscode.WebviewPanel | vscode.WebviewView | undefined,
 	type: "sidebar" | "tab",
 ): void {
+	console.log(`[setPanel] Setting panel type: ${type}`)
 	if (type === "sidebar") {
 		sidebarPanel = newPanel as vscode.WebviewView
 		tabPanel = undefined
@@ -39,6 +40,7 @@ export type RegisterCommandOptions = {
 	provider: ClineProvider
 }
 
+console.log("[registerCommands] Registering commands")
 export const registerCommands = (options: RegisterCommandOptions) => {
 	const { context, outputChannel } = options
 
@@ -48,30 +50,31 @@ export const registerCommands = (options: RegisterCommandOptions) => {
 }
 
 const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOptions) => {
+	console.log("[getCommandsMap] Registering commands with Seawolf prefix")
 	return {
-		"roo-cline.plusButtonClicked": async () => {
+		"Seawolf.plusButtonClicked": async () => {
 			await provider.removeClineFromStack()
 			await provider.postStateToWebview()
 			await provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		},
-		"roo-cline.mcpButtonClicked": () => {
+		"Seawolf.mcpButtonClicked": () => {
 			provider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
 		},
-		"roo-cline.promptsButtonClicked": () => {
+		"Seawolf.promptsButtonClicked": () => {
 			provider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" })
 		},
-		"roo-cline.popoutButtonClicked": () => openClineInNewTab({ context, outputChannel }),
-		"roo-cline.openInNewTab": () => openClineInNewTab({ context, outputChannel }),
-		"roo-cline.settingsButtonClicked": () => {
+		"Seawolf.popoutButtonClicked": () => openClineInNewTab({ context, outputChannel }),
+		"Seawolf.openInNewTab": () => openClineInNewTab({ context, outputChannel }),
+		"Seawolf.settingsButtonClicked": () => {
 			provider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
 		},
-		"roo-cline.historyButtonClicked": () => {
+		"Seawolf.historyButtonClicked": () => {
 			provider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
 		},
-		"roo-cline.helpButtonClicked": () => {
+		"Seawolf.helpButtonClicked": () => {
 			vscode.env.openExternal(vscode.Uri.parse("https://docs.roocode.com"))
 		},
-		"roo-cline.showHumanRelayDialog": (params: { requestId: string; promptText: string }) => {
+		"Seawolf.showHumanRelayDialog": (params: { requestId: string; promptText: string }) => {
 			const panel = getPanel()
 
 			if (panel) {
@@ -82,14 +85,14 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 				})
 			}
 		},
-		"roo-cline.registerHumanRelayCallback": registerHumanRelayCallback,
-		"roo-cline.unregisterHumanRelayCallback": unregisterHumanRelayCallback,
-		"roo-cline.handleHumanRelayResponse": handleHumanRelayResponse,
+		"Seawolf.registerHumanRelayCallback": registerHumanRelayCallback,
+		"Seawolf.unregisterHumanRelayCallback": unregisterHumanRelayCallback,
+		"Seawolf.handleHumanRelayResponse": handleHumanRelayResponse,
 	}
 }
 
 const openClineInNewTab = async ({ context, outputChannel }: Omit<RegisterCommandOptions, "provider">) => {
-	outputChannel.appendLine("Opening Roo Code in new tab")
+	outputChannel.appendLine("Opening Seawolf in new tab")
 
 	// (This example uses webviewProvider activation event which is necessary to
 	// deserialize cached webview, but since we use retainContextWhenHidden, we
@@ -109,7 +112,7 @@ const openClineInNewTab = async ({ context, outputChannel }: Omit<RegisterComman
 
 	const targetCol = hasVisibleEditors ? Math.max(lastCol + 1, 1) : vscode.ViewColumn.Two
 
-	const newPanel = vscode.window.createWebviewPanel(ClineProvider.tabPanelId, "Roo Code", targetCol, {
+	const newPanel = vscode.window.createWebviewPanel(ClineProvider.tabPanelId, "Seawolf", targetCol, {
 		enableScripts: true,
 		retainContextWhenHidden: true,
 		localResourceRoots: [context.extensionUri],
@@ -121,14 +124,15 @@ const openClineInNewTab = async ({ context, outputChannel }: Omit<RegisterComman
 	// TODO: use better svg icon with light and dark variants (see
 	// https://stackoverflow.com/questions/58365687/vscode-extension-iconpath).
 	newPanel.iconPath = {
-		light: vscode.Uri.joinPath(context.extensionUri, "assets", "icons", "rocket.png"),
-		dark: vscode.Uri.joinPath(context.extensionUri, "assets", "icons", "rocket.png"),
+		light: vscode.Uri.joinPath(context.extensionUri, "assets", "icons", "logo.svg"),
+		dark: vscode.Uri.joinPath(context.extensionUri, "assets", "icons", "logo.svg"),
 	}
 
 	await tabProvider.resolveWebviewView(newPanel)
 
 	// Handle panel closing events
 	newPanel.onDidDispose(() => {
+		console.log("[openClineInNewTab] Disposing tab panel")
 		setPanel(undefined, "tab")
 	})
 

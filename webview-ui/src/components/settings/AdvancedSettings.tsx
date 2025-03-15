@@ -17,14 +17,14 @@ type AdvancedSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	maxOpenTabsContext: number
 	diffEnabled?: boolean
 	fuzzyMatchThreshold?: number
-	showRooIgnoredFiles?: boolean
+	showSeawolfIgnoredFiles?: boolean
 	setCachedStateField: SetCachedStateField<
 		| "rateLimitSeconds"
 		| "terminalOutputLineLimit"
 		| "maxOpenTabsContext"
 		| "diffEnabled"
 		| "fuzzyMatchThreshold"
-		| "showRooIgnoredFiles"
+		| "showSeawolfIgnoredFiles"
 	>
 	experiments: Record<ExperimentId, boolean>
 	setExperimentEnabled: SetExperimentEnabled
@@ -35,7 +35,7 @@ export const AdvancedSettings = ({
 	maxOpenTabsContext,
 	diffEnabled,
 	fuzzyMatchThreshold,
-	showRooIgnoredFiles,
+	showSeawolfIgnoredFiles,
 	setCachedStateField,
 	experiments,
 	setExperimentEnabled,
@@ -131,7 +131,7 @@ export const AdvancedSettings = ({
 						<span className="font-medium">Enable editing through diffs</span>
 					</VSCodeCheckbox>
 					<p className="text-vscode-descriptionForeground text-sm mt-0">
-						When enabled, Roo will be able to edit files more quickly and will automatically reject
+						When enabled, Seawolf will be able to edit files more quickly and will automatically reject
 						truncated full-file writes. Works best with the latest Claude 3.7 Sonnet model.
 					</p>
 					{diffEnabled && (
@@ -206,15 +206,15 @@ export const AdvancedSettings = ({
 
 				<div>
 					<VSCodeCheckbox
-						checked={showRooIgnoredFiles}
+						checked={showSeawolfIgnoredFiles}
 						onChange={(e: any) => {
-							setCachedStateField("showRooIgnoredFiles", e.target.checked)
+							setCachedStateField("showSeawolfIgnoredFiles", e.target.checked)
 						}}>
-						<span className="font-medium">Show .rooignore'd files in lists and searches</span>
+						<span className="font-medium">Show .seawolfignore'd files in lists and searches</span>
 					</VSCodeCheckbox>
 					<p className="text-vscode-descriptionForeground text-sm mt-0">
-						When enabled, files matching patterns in .rooignore will be shown in lists with a lock symbol.
-						When disabled, these files will be completely hidden from file lists and searches.
+						When enabled, files matching patterns in .seawolfignore will be shown in lists with a lock
+						symbol. When disabled, these files will be completely hidden from file lists and searches.
 					</p>
 				</div>
 			</Section>

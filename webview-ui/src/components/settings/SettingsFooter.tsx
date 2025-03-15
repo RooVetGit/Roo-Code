@@ -22,15 +22,15 @@ export const SettingsFooter = ({
 	<div className={cn("text-vscode-descriptionForeground p-5", className)} {...props}>
 		<p style={{ wordWrap: "break-word", margin: 0, padding: 0 }}>
 			If you have any questions or feedback, feel free to open an issue at{" "}
-			<VSCodeLink href="https://github.com/RooVetGit/Roo-Code" style={{ display: "inline" }}>
-				github.com/RooVetGit/Roo-Code
+			<VSCodeLink href="https://github.com/SeawolfVetGit/Seawolf-Code" style={{ display: "inline" }}>
+				github.com/SeawolfVetGit/Seawolf-Code
 			</VSCodeLink>{" "}
 			or join{" "}
-			<VSCodeLink href="https://www.reddit.com/r/RooCode/" style={{ display: "inline" }}>
-				reddit.com/r/RooCode
+			<VSCodeLink href="https://www.reddit.com/r/SeawolfCode/" style={{ display: "inline" }}>
+				reddit.com/r/SeawolfCode
 			</VSCodeLink>
 		</p>
-		<p className="italic">Roo Code v{version}</p>
+		<p className="italic">Seawolf v{version}</p>
 		<div className="mt-4 mb-4">
 			<div>
 				<VSCodeCheckbox
@@ -48,10 +48,10 @@ export const SettingsFooter = ({
 						marginTop: "5px",
 						color: "var(--vscode-descriptionForeground)",
 					}}>
-					Help improve Roo Code by sending anonymous usage data and error reports. No code, prompts, or
+					Help improve Seawolf by sending anonymous usage data and error reports. No code, prompts, or
 					personal information is ever sent. See our{" "}
 					<VSCodeLink
-						href="https://github.com/RooVetGit/Roo-Code/blob/main/PRIVACY.md"
+						href="https://github.com/SeawolfVetGit/Seawolf-Code/blob/main/PRIVACY.md"
 						style={{ fontSize: "inherit" }}>
 						privacy policy
 					</VSCodeLink>{" "}

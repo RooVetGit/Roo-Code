@@ -2,7 +2,7 @@ import * as assert from "assert"
 
 import { getCompletion, getMessage, sleep, waitForCompletion, waitUntilAborted } from "./utils"
 
-suite("Roo Code Modes", () => {
+suite("Seawolf Modes", () => {
 	test("Should handle switching modes correctly", async function () {
 		const api = globalThis.api
 

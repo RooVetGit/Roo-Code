@@ -68,8 +68,8 @@ import { TelemetrySetting } from "../../shared/TelemetrySetting"
  */
 
 export class ClineProvider implements vscode.WebviewViewProvider {
-	public static readonly sideBarId = "roo-cline.SidebarProvider" // used in package.json as the view's id. This value cannot be changed due to how vscode caches views based on their id, and updating the id would break existing instances of the extension.
-	public static readonly tabPanelId = "roo-cline.TabPanelProvider"
+	public static readonly sideBarId = "Seawolf-SidebarProvider" // used in package.json as the view's id. This value cannot be changed due to how vscode caches views based on their id, and updating the id would break existing instances of the extension.
+	public static readonly tabPanelId = "Seawolf-TabPanelProvider"
 	private static activeInstances: Set<ClineProvider> = new Set()
 	private disposables: vscode.Disposable[] = []
 	private view?: vscode.WebviewView | vscode.WebviewPanel
@@ -224,7 +224,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 		// If no visible provider, try to show the sidebar view
 		if (!visibleProvider) {
-			await vscode.commands.executeCommand("roo-cline.SidebarProvider.focus")
+			await vscode.commands.executeCommand("seawolf.SidebarProvider.focus")
 			// Wait briefly for the view to become visible
 			await delay(100)
 			visibleProvider = ClineProvider.getVisibleInstance()
@@ -321,11 +321,20 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	async resolveWebviewView(webviewView: vscode.WebviewView | vscode.WebviewPanel) {
+		this.outputChannel.appendLine("[resolveWebviewView] Resolving webview view")
+		this.outputChannel.appendLine("Starting resolveWebviewView...")
 		this.outputChannel.appendLine("Resolving webview view")
+
+		this.outputChannel.appendLine(`[resolveWebviewView] sideBarId: ${ClineProvider.sideBarId}`)
+		this.outputChannel.appendLine(`[resolveWebviewView] tabPanelId: ${ClineProvider.tabPanelId}`)
 
 		if (!this.contextProxy.isInitialized) {
 			await this.contextProxy.initialize()
 		}
+
+		this.outputChannel.appendLine(
+			`[resolveWebviewView] extensionUri.fsPath: ${this.contextProxy.extensionUri.fsPath}`,
+		)
 
 		this.view = webviewView
 
@@ -413,6 +422,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		// If the extension is starting a new session, clear previous task state.
 		await this.removeClineFromStack()
 
+		this.outputChannel.appendLine("[resolveWebviewView] Finished resolving webview view")
+		this.outputChannel.appendLine("Finished resolveWebviewView.")
 		this.outputChannel.appendLine("Webview view resolved")
 	}
 
@@ -592,7 +603,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 					<meta http-equiv="Content-Security-Policy" content="${csp.join("; ")}">
 					<link rel="stylesheet" type="text/css" href="${stylesUri}">
 					<link href="${codiconsUri}" rel="stylesheet" />
-					<title>Roo Code</title>
+					<title>Seawolf</title>
 				</head>
 				<body>
 					<div id="root"></div>
@@ -617,6 +628,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	private getHtmlContent(webview: vscode.Webview): string {
 		// Get the local path to main script run in the webview,
 		// then convert it to a uri we can use in the webview.
+		this.outputChannel.appendLine("[getHtmlContent] Starting to generate HTML content")
 
 		// The CSS file from the React build output
 		const stylesUri = getUri(webview, this.contextProxy.extensionUri, [
@@ -625,6 +637,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			"assets",
 			"index.css",
 		])
+
 		// The JS file from the React build output
 		const scriptUri = getUri(webview, this.contextProxy.extensionUri, ["webview-ui", "build", "assets", "index.js"])
 
@@ -639,6 +652,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			"dist",
 			"codicon.css",
 		])
+
+		this.outputChannel.appendLine(`[getHtmlContent] stylesUri: ${stylesUri}`)
+		this.outputChannel.appendLine(`[getHtmlContent] scriptUri: ${scriptUri}`)
+		this.outputChannel.appendLine(`[getHtmlContent] codiconsUri: ${codiconsUri}`)
 
 		// const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "assets", "main.js"))
 
@@ -669,10 +686,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
             <meta name="theme-color" content="#000000">
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:; script-src 'nonce-${nonce}' https://us-assets.i.posthog.com; connect-src https://us.i.posthog.com https://us-assets.i.posthog.com;">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:; script-src ${webview.cspSource} 'nonce-${nonce}' https://us-assets.i.posthog.com; connect-src https://us.i.posthog.com https://us-assets.i.posthog.com;">
             <link rel="stylesheet" type="text/css" href="${stylesUri}">
 			<link href="${codiconsUri}" rel="stylesheet" />
-            <title>Roo Code</title>
+            <title>Seawolf</title>
           </head>
           <body>
             <noscript>You need to enable JavaScript to run this app.</noscript>
@@ -1104,8 +1121,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.context.globalState.update("allowedCommands", message.commands)
 						// Also update workspace settings
 						await vscode.workspace
-							.getConfiguration("roo-cline")
+							.getConfiguration("Seawolf")
 							.update("allowedCommands", message.commands, vscode.ConfigurationTarget.Global)
+						this.outputChannel.appendLine(
+							`[allowedCommands] Updated configuration with commands: ${message.commands}`,
+						)
 						break
 					case "openMcpSettings": {
 						const mcpSettingsFilePath = await this.mcpHub?.getMcpSettingsFilePath()
@@ -1522,8 +1542,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("browserToolEnabled", message.bool ?? true)
 						await this.postStateToWebview()
 						break
-					case "showRooIgnoredFiles":
-						await this.updateGlobalState("showRooIgnoredFiles", message.bool ?? true)
+					case "showSeawolfIgnoredFiles":
+						await this.updateGlobalState("showSeawolfIgnoredFiles", message.bool ?? true)
 						await this.postStateToWebview()
 						break
 					case "enhancementApiConfigId":
@@ -1835,7 +1855,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						break
 					case "humanRelayResponse":
 						if (message.requestId && message.text) {
-							vscode.commands.executeCommand("roo-cline.handleHumanRelayResponse", {
+							vscode.commands.executeCommand("seawolf.handleHumanRelayResponse", {
 								requestId: message.requestId,
 								text: message.text,
 								cancelled: false,
@@ -1845,7 +1865,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 					case "humanRelayCancel":
 						if (message.requestId) {
-							vscode.commands.executeCommand("roo-cline.handleHumanRelayResponse", {
+							vscode.commands.executeCommand("seawolf.handleHumanRelayResponse", {
 								requestId: message.requestId,
 								cancelled: true,
 							})
@@ -1891,7 +1911,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			const mode = message.mode ?? defaultModeSlug
 			const customModes = await this.customModesManager.getCustomModes()
 
-			const rooIgnoreInstructions = this.getCurrentCline()?.rooIgnoreController?.getInstructions()
+			const rooIgnoreInstructions = this.getCurrentCline()?.seawolfIgnoreController?.getInstructions()
 
 			// Determine if browser tools can be used based on model support and user settings
 			const modelSupportsComputerUse = this.getCurrentCline()?.api.getModel().info.supportsComputerUse ?? false
@@ -2042,21 +2062,30 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		// Get platform-specific application data directory
 		let mcpServersDir: string
 		if (process.platform === "win32") {
-			// Windows: %APPDATA%\Roo-Code\MCP
-			mcpServersDir = path.join(os.homedir(), "AppData", "Roaming", "Roo-Code", "MCP")
+			// Windows: %APPDATA%\Seawolf\MCP
+			mcpServersDir = path.join(os.homedir(), "AppData", "Roaming", "Seawolf", "MCP")
+			this.outputChannel.appendLine(`[ensureMcpServersDirectoryExists] Windows path: ${mcpServersDir}`)
 		} else if (process.platform === "darwin") {
-			// macOS: ~/Documents/Cline/MCP
-			mcpServersDir = path.join(os.homedir(), "Documents", "Cline", "MCP")
+			// macOS: ~/Documents/Seawolf/MCP
+			mcpServersDir = path.join(os.homedir(), "Documents", "Seawolf", "MCP")
+			this.outputChannel.appendLine(`[ensureMcpServersDirectoryExists] macOS path: ${mcpServersDir}`)
 		} else {
-			// Linux: ~/.local/share/Cline/MCP
-			mcpServersDir = path.join(os.homedir(), ".local", "share", "Roo-Code", "MCP")
+			// Linux: ~/.local/share/Seawolf/MCP
+			mcpServersDir = path.join(os.homedir(), ".local", "share", "Seawolf", "MCP")
+			this.outputChannel.appendLine(`[ensureMcpServersDirectoryExists] Linux path: ${mcpServersDir}`)
 		}
 
 		try {
+			this.outputChannel.appendLine(`[ensureMcpServersDirectoryExists] Creating directory: ${mcpServersDir}`)
 			await fs.mkdir(mcpServersDir, { recursive: true })
+			this.outputChannel.appendLine(`[ensureMcpServersDirectoryExists] Directory created successfully`)
 		} catch (error) {
 			// Fallback to a relative path if directory creation fails
-			return path.join(os.homedir(), ".roo-code", "mcp")
+			const fallbackPath = path.join(os.homedir(), ".seawolf", "mcp")
+			this.outputChannel.appendLine(
+				`[ensureMcpServersDirectoryExists] Error creating directory: ${error}. Using fallback path: ${fallbackPath}`,
+			)
+			return fallbackPath
 		}
 		return mcpServersDir
 	}
@@ -2254,8 +2283,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	async postStateToWebview() {
+		this.outputChannel.appendLine("Posting state to webview...")
 		const state = await this.getStateToPostToWebview()
-		this.postMessageToWebview({ type: "state", state })
+		this.outputChannel.appendLine("State posted to webview.")
+		await this.postMessageToWebview({ type: "state", state })
 	}
 
 	async getStateToPostToWebview() {
@@ -2299,13 +2330,14 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			maxOpenTabsContext,
 			browserToolEnabled,
 			telemetrySetting,
-			showRooIgnoredFiles,
+			showSeawolfIgnoredFiles,
 			language,
 		} = await this.getState()
-		const telemetryKey = process.env.POSTHOG_API_KEY
+		const telemetryKey = "phc_dummy"
+
 		const machineId = vscode.env.machineId
 
-		const allowedCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
+		const allowedCommands = vscode.workspace.getConfiguration("seawolf").get<string[]>("allowedCommands") || []
 
 		const cwd = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) || ""
 
@@ -2364,7 +2396,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			telemetrySetting,
 			telemetryKey,
 			machineId,
-			showRooIgnoredFiles: showRooIgnoredFiles ?? true,
+			showSeawolfIgnoredFiles: showSeawolfIgnoredFiles ?? true,
 			language,
 		}
 	}
@@ -2519,7 +2551,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			openRouterUseMiddleOutTransform: stateValues.openRouterUseMiddleOutTransform ?? true,
 			browserToolEnabled: stateValues.browserToolEnabled ?? true,
 			telemetrySetting: stateValues.telemetrySetting || "unset",
-			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
+			showSeawolfIgnoredFiles: stateValues.showSeawolfIgnoredFiles ?? true,
 		}
 	}
 

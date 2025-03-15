@@ -1,6 +1,7 @@
 import * as vscode from "vscode"
 
-import { RooCodeAPI } from "../../../src/exports/roo-code"
+import type { ClineMessage } from "../../../src/exports/seawolf-code"
+import { RooCodeAPI } from "../../../src/exports/seawolf-code"
 
 type WaitForOptions = {
 	timeout?: number
@@ -46,7 +47,7 @@ type WaitUntilReadyOptions = WaitForOptions & {
 }
 
 export const waitUntilReady = async ({ api, ...options }: WaitUntilReadyOptions) => {
-	await vscode.commands.executeCommand("roo-cline.SidebarProvider.focus")
+	await vscode.commands.executeCommand("seawolf.SidebarProvider.focus")
 	await waitFor(() => api.isReady(), options)
 }
 
@@ -57,7 +58,7 @@ type WaitUntilAbortedOptions = WaitForOptions & {
 
 export const waitUntilAborted = async ({ api, taskId, ...options }: WaitUntilAbortedOptions) => {
 	const set = new Set<string>()
-	api.on("taskAborted", (taskId) => set.add(taskId))
+	api.on("taskAborted", (taskId: string) => set.add(taskId))
 	await waitFor(() => set.has(taskId), options)
 }
 
@@ -70,7 +71,9 @@ export const waitForCompletion = async ({
 }) => waitFor(() => !!getCompletion({ api, taskId }), options)
 
 export const getCompletion = ({ api, taskId }: { api: RooCodeAPI; taskId: string }) =>
-	api.getMessages(taskId).find(({ say, partial }) => say === "completion_result" && partial === false)
+	api
+		.getMessages(taskId)
+		.find((message: ClineMessage) => message.say === "completion_result" && message.partial === false)
 
 type WaitForMessageOptions = WaitUntilReadyOptions & {
 	taskId: string

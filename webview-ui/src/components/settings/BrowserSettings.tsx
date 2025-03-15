@@ -114,7 +114,7 @@ export const BrowserSettings = ({
 						<span className="font-medium">Enable browser tool</span>
 					</VSCodeCheckbox>
 					<p className="text-vscode-descriptionForeground text-sm mt-0">
-						When enabled, Roo can use a browser to interact with websites when using models that support
+						When enabled, Seawolf can use a browser to interact with websites when using models that support
 						computer use.
 					</p>
 					{browserToolEnabled && (

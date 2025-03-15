@@ -3,7 +3,7 @@ import Mocha from "mocha"
 import { glob } from "glob"
 import * as vscode from "vscode"
 
-import { RooCodeAPI } from "../../../src/exports/roo-code"
+import { RooCodeAPI } from "../../../src/exports/seawolf-code"
 
 import { waitUntilReady } from "./utils"
 
@@ -12,7 +12,7 @@ declare global {
 }
 
 export async function run() {
-	const extension = vscode.extensions.getExtension<RooCodeAPI>("RooVeterinaryInc.roo-cline")
+	const extension = vscode.extensions.getExtension<RooCodeAPI>("seawolf.extension")
 
 	if (!extension) {
 		throw new Error("Extension not found")

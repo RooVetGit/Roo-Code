@@ -1,4 +1,4 @@
-import type { SecretKey, GlobalStateKey, ConfigurationKey, ConfigurationValues } from "../exports/roo-code"
+import type { SecretKey, GlobalStateKey, ConfigurationKey, ConfigurationValues } from "../exports/seawolf-code"
 
 export type { SecretKey, GlobalStateKey, ConfigurationKey, ConfigurationValues }
 
@@ -114,7 +114,7 @@ export const GLOBAL_STATE_KEYS = [
 	"lmStudioSpeculativeDecodingEnabled",
 	"lmStudioDraftModelId",
 	"telemetrySetting",
-	"showRooIgnoredFiles",
+	"showSeawolfIgnoredFiles",
 	"remoteBrowserEnabled",
 ] as const
 

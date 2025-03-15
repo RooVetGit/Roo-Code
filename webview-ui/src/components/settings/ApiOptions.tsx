@@ -738,7 +738,7 @@ const ApiOptions = ({
 					<div className="flex flex-col gap-3">
 						<div className="text-sm text-vscode-descriptionForeground">
 							Configure the capabilities and pricing for your custom OpenAI-compatible model. Be careful
-							when specifying the model capabilities, as they can affect how Roo Code performs.
+							when specifying the model capabilities, as they can affect how Seawolf performs.
 						</div>
 
 						<div>
@@ -1176,7 +1176,7 @@ const ApiOptions = ({
 						<VSCodeLink href="https://lmstudio.ai/docs/basics/server">local server</VSCodeLink> feature to
 						use it with this extension.
 						<span className="text-vscode-errorForeground ml-1">
-							<span className="font-medium">Note:</span> Roo Code uses complex prompts and works best with
+							<span className="font-medium">Note:</span> Seawolf uses complex prompts and works best with
 							Claude models. Less capable models may not work as expected.
 						</span>
 					</div>
@@ -1294,7 +1294,7 @@ const ApiOptions = ({
 						</VSCodeLink>
 						.
 						<span className="text-vscode-errorForeground ml-1">
-							<span className="font-medium">Note:</span> Roo Code uses complex prompts and works best with
+							<span className="font-medium">Note:</span> Seawolf uses complex prompts and works best with
 							Claude models. Less capable models may not work as expected.
 						</span>
 					</div>
@@ -1505,12 +1505,12 @@ const ApiOptions = ({
 }
 
 export function getGlamaAuthUrl(uriScheme?: string) {
-	const callbackUrl = `${uriScheme || "vscode"}://rooveterinaryinc.roo-cline/glama`
+	const callbackUrl = `${uriScheme || "vscode"}://opensourceful.seawolf/glama`
 	return `https://glama.ai/oauth/authorize?callback_url=${encodeURIComponent(callbackUrl)}`
 }
 
 export function getOpenRouterAuthUrl(uriScheme?: string) {
-	return `https://openrouter.ai/auth?callback_url=${uriScheme || "vscode"}://rooveterinaryinc.roo-cline/openrouter`
+	return `https://openrouter.ai/auth?callback_url=${uriScheme || "vscode"}://opensourceful.seawolf/openrouter`
 }
 
 export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {

@@ -20,7 +20,7 @@ const DEEP_SEEK_DEFAULT_TEMPERATURE = 0.6
 
 export const defaultHeaders = {
 	"HTTP-Referer": "https://github.com/RooVetGit/Roo-Cline",
-	"X-Title": "Roo Code",
+	"X-Title": "Seawolf",
 }
 
 export interface OpenAiHandlerOptions extends ApiHandlerOptions {}

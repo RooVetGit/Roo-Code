@@ -1,4 +1,4 @@
-name: Code QA Roo Code
+name: Code QA Seawolf
 
 on:
   workflow_dispatch:

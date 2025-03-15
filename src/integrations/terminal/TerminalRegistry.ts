@@ -102,8 +102,11 @@ export class TerminalRegistry {
 	static createTerminal(cwd: string | vscode.Uri): Terminal {
 		const terminal = vscode.window.createTerminal({
 			cwd,
-			name: "Roo Code",
-			iconPath: new vscode.ThemeIcon("rocket"),
+			name: "Seawolf",
+			iconPath: vscode.Uri.joinPath(
+				vscode.workspace.workspaceFolders?.[0]?.uri || vscode.Uri.file(__dirname),
+				"assets/icons/logo.svg",
+			),
 			env: {
 				PAGER: "cat",
 

@@ -26,10 +26,10 @@ const Announcement = ({ version, hideAnnouncement }: AnnouncementProps) => {
 				style={{ position: "absolute", top: "8px", right: "8px" }}>
 				<span className="codicon codicon-close"></span>
 			</VSCodeButton>
-			<h2 style={{ margin: "0 0 8px" }}>🎉{"  "}Roo Code 3.8 Released</h2>
+			<h2 style={{ margin: "0 0 8px" }}>🎉{"  "}Seawolf 3.8 Released</h2>
 
 			<p style={{ margin: "5px 0px" }}>
-				Roo Code 3.8 is out with performance boosts, new features, and bug fixes.
+				Seawolf 3.8 is out with performance boosts, new features, and bug fixes.
 			</p>
 
 			<h3 style={{ margin: "12px 0 8px" }}>What's New</h3>
@@ -38,7 +38,7 @@ const Announcement = ({ version, hideAnnouncement }: AnnouncementProps) => {
 					<li>• Faster asynchronous checkpoints</li>
 					<li>• Support for .rooignore files</li>
 					<li>• Fixed terminal & gray screen issues</li>
-					<li>• Roo Code can run in multiple windows</li>
+					<li>• Seawolf can run in multiple windows</li>
 					<li>• Experimental multi-diff editing strategy</li>
 					<li>• Subtask to parent task communication</li>
 					<li>• Updated DeepSeek provider</li>
@@ -61,11 +61,15 @@ const Announcement = ({ version, hideAnnouncement }: AnnouncementProps) => {
 				</VSCodeLink>{" "}
 				and{" "}
 				<VSCodeLink
-					href="https://reddit.com/r/RooCode"
+					href="https://reddit.com/r/SeawolfCode"
 					onClick={(e) => {
 						e.preventDefault()
 						window.postMessage(
-							{ type: "action", action: "openExternal", data: { url: "https://reddit.com/r/RooCode" } },
+							{
+								type: "action",
+								action: "openExternal",
+								data: { url: "https://reddit.com/r/SeawolfCode" },
+							},
 							"*",
 						)
 					}}>

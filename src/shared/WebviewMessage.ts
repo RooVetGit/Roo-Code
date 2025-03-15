@@ -101,7 +101,7 @@ export interface WebviewMessage {
 		| "humanRelayCancel"
 		| "browserToolEnabled"
 		| "telemetrySetting"
-		| "showRooIgnoredFiles"
+		| "showSeawolfIgnoredFiles"
 		| "testBrowserConnection"
 		| "discoverBrowser"
 		| "browserConnectionResult"

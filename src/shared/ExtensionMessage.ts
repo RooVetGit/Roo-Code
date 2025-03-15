@@ -7,7 +7,7 @@ import { CustomSupportPrompts } from "./support-prompt"
 import { ExperimentId } from "./experiments"
 import { CheckpointStorage } from "./checkpoints"
 import { TelemetrySetting } from "./TelemetrySetting"
-import type { ClineMessage, ClineAsk, ClineSay } from "../exports/roo-code"
+import type { ClineMessage, ClineAsk, ClineSay } from "../exports/seawolf-code"
 
 export interface LanguageModelChatSelector {
 	vendor?: string
@@ -151,7 +151,7 @@ export interface ExtensionState {
 	telemetrySetting: TelemetrySetting
 	telemetryKey?: string
 	machineId?: string
-	showRooIgnoredFiles: boolean // Whether to show .rooignore'd files in listings
+	showSeawolfIgnoredFiles: boolean // Whether to show .seawolfignore'd files in listings
 }
 
 export type { ClineMessage, ClineAsk, ClineSay }
