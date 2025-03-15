@@ -30,6 +30,7 @@ export interface ApiHandlerOptions {
 	openRouterModelId?: string
 	openRouterModelInfo?: ModelInfo
 	openRouterBaseUrl?: string
+	openRouterSpecificProvider?: string
 	awsAccessKey?: string
 	awsSecretKey?: string
 	awsSessionToken?: string
@@ -95,6 +96,7 @@ export const API_CONFIG_KEYS: GlobalStateKey[] = [
 	"openRouterModelId",
 	"openRouterModelInfo",
 	"openRouterBaseUrl",
+	"openRouterSpecificProvider",
 	"awsRegion",
 	"awsUseCrossRegionInference",
 	// "awsUsePromptCache", // NOT exist on GlobalStateKey
