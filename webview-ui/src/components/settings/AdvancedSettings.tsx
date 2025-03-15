@@ -13,14 +13,18 @@ import { Section } from "./Section"
 
 type AdvancedSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	rateLimitSeconds: number
+	terminalShellIntegrationTimeout: number | undefined
 	diffEnabled?: boolean
 	fuzzyMatchThreshold?: number
-	setCachedStateField: SetCachedStateField<"rateLimitSeconds" | "diffEnabled" | "fuzzyMatchThreshold">
+	setCachedStateField: SetCachedStateField<
+		"rateLimitSeconds" | "diffEnabled" | "fuzzyMatchThreshold" | "terminalShellIntegrationTimeout"
+	>
 	experiments: Record<ExperimentId, boolean>
 	setExperimentEnabled: SetExperimentEnabled
 }
 export const AdvancedSettings = ({
 	rateLimitSeconds,
+	terminalShellIntegrationTimeout,
 	diffEnabled,
 	fuzzyMatchThreshold,
 	setCachedStateField,
@@ -56,6 +60,36 @@ export const AdvancedSettings = ({
 						</div>
 					</div>
 					<p className="text-vscode-descriptionForeground text-sm mt-0">Minimum time between API requests.</p>
+				</div>
+
+				<div>
+					<div className="flex flex-col gap-2">
+						<span className="font-medium">Terminal shell integration timeout</span>
+						<div className="flex items-center gap-2">
+							<input
+								type="range"
+								min="1000"
+								max="60000"
+								step="1000"
+								value={terminalShellIntegrationTimeout}
+								onChange={(e) =>
+									setCachedStateField(
+										"terminalShellIntegrationTimeout",
+										Math.min(60000, Math.max(1000, parseInt(e.target.value))),
+									)
+								}
+								className="h-2 focus:outline-0 w-4/5 accent-vscode-button-background"
+							/>
+							<span style={{ ...sliderLabelStyle }}>
+								{(terminalShellIntegrationTimeout ?? 4000) / 1000}s
+							</span>
+						</div>
+						<p className="text-vscode-descriptionForeground text-sm mt-0">
+							Maximum time to wait for shell integration to initialize before executing commands. For
+							users with long shell startup times, this value may need to be increased if you see "Shell
+							Integration Unavailable" errors in the terminal.
+						</p>
+					</div>
 				</div>
 
 				<div>
