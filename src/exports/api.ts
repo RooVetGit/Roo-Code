@@ -48,6 +48,33 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		return cline.taskId
 	}
 
+	public async resumeTask(taskId: string): Promise<void> {
+		await this.provider.removeClineFromStack()
+		await this.provider.postStateToWebview()
+		await this.provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
+		// TODO: what message should we send to the webview before resuming an old task?
+		await this.provider.postMessageToWebview({ type: "invoke", invoke: "newChat" })
+
+		const { historyItem } = await this.provider.getTaskWithId(taskId)
+		const cline = await this.provider.initClineWithHistoryItem(historyItem)
+
+		cline.on("message", (message) => this.emit("message", { taskId: cline.taskId, ...message }))
+		cline.on("taskStarted", () => this.emit("taskStarted", cline.taskId))
+		cline.on("taskPaused", () => this.emit("taskPaused", cline.taskId))
+		cline.on("taskUnpaused", () => this.emit("taskUnpaused", cline.taskId))
+		cline.on("taskAborted", () => this.emit("taskAborted", cline.taskId))
+		cline.on("taskSpawned", (taskId) => this.emit("taskSpawned", cline.taskId, taskId))
+	}
+
+	public async isTaskInHistory(taskId: string): Promise<boolean> {
+		try {
+			await this.provider.getTaskWithId(taskId)
+			return true
+		} catch {
+			return false
+		}
+	}
+
 	public async clearCurrentTask(lastMessage?: string) {
 		await this.provider.finishSubTask(lastMessage)
 	}
