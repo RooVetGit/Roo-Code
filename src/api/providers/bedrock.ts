@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import AnthropicBedrock from "@anthropic-ai/bedrock-sdk"
 import { Anthropic } from "@anthropic-ai/sdk"
 import { withRetry } from "../retry"
@@ -5,6 +6,28 @@ import { ApiHandler } from "../"
 import { convertToR1Format } from "../transform/r1-format"
 import { ApiHandlerOptions, bedrockDefaultModelId, BedrockModelId, bedrockModels, ModelInfo } from "../../shared/api"
 import { calculateApiCostOpenAI } from "../../utils/cost"
+=======
+import {
+	BedrockRuntimeClient,
+	ConverseStreamCommand,
+	ConverseCommand,
+	BedrockRuntimeClientConfig,
+	ConverseStreamCommandOutput,
+} from "@aws-sdk/client-bedrock-runtime"
+import { STSClient, GetSessionTokenCommand } from "@aws-sdk/client-sts"
+import { fromIni } from "@aws-sdk/credential-providers"
+import { Anthropic } from "@anthropic-ai/sdk"
+import * as vscode from "vscode"
+import { SingleCompletionHandler } from "../"
+import {
+	ApiHandlerOptions,
+	BedrockModelId,
+	ModelInfo,
+	bedrockDefaultModelId,
+	bedrockModels,
+	bedrockDefaultPromptRouterModelId,
+} from "../../shared/api"
+>>>>>>> Stashed changes
 import { ApiStream } from "../transform/stream"
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers"
 import { BedrockRuntimeClient, InvokeModelWithResponseStreamCommand } from "@aws-sdk/client-bedrock-runtime"
@@ -13,8 +36,159 @@ import { BedrockRuntimeClient, InvokeModelWithResponseStreamCommand } from "@aws
 export class AwsBedrockHandler implements ApiHandler {
 	private options: ApiHandlerOptions
 
+	/**
+	 * Prompts the user for an MFA code and gets temporary credentials using AWS STS
+	 * @param region The AWS region to use
+	 * @returns Temporary credentials object with accessKeyId, secretAccessKey, and sessionToken
+	 */
+	private async getMfaCredentials(region: string): Promise<{
+		accessKeyId: string
+		secretAccessKey: string
+		sessionToken: string
+	}> {
+		// Prompt the user for the MFA code
+		const mfaCode = await vscode.window.showInputBox({
+			prompt: `Enter MFA code for device ${this.options.awsMfaDevice}`,
+			placeHolder: "123456",
+			ignoreFocusOut: true,
+			validateInput: (value: string) => {
+				// MFA codes are typically 6 digits
+				return /^\d{6}$/.test(value) ? null : "Please enter a valid 6-digit MFA code"
+			},
+		})
+
+		if (!mfaCode) {
+			throw new Error("MFA code is required")
+		}
+
+		// Create STS client
+		const stsClient = new STSClient({
+			region: region,
+			credentials: {
+				accessKeyId: this.options.awsAccessKey!,
+				secretAccessKey: this.options.awsSecretKey!,
+			},
+		})
+
+		// Get temporary credentials
+		try {
+			const command = new GetSessionTokenCommand({
+				DurationSeconds: 3600, // 1 hour
+				SerialNumber: this.options.awsMfaDevice,
+				TokenCode: mfaCode,
+			})
+
+			const response = await stsClient.send(command)
+
+			if (!response.Credentials) {
+				throw new Error("Failed to get temporary credentials")
+			}
+
+			return {
+				accessKeyId: response.Credentials.AccessKeyId!,
+				secretAccessKey: response.Credentials.SecretAccessKey!,
+				sessionToken: response.Credentials.SessionToken!,
+			}
+		} catch (error) {
+			logger.error("Failed to get temporary credentials", {
+				ctx: "bedrock",
+				error: error instanceof Error ? error : String(error),
+			})
+			throw new Error(`Failed to get temporary credentials: ${error instanceof Error ? error.message : String(error)}`)
+		}
+	}
+
 	constructor(options: ApiHandlerOptions) {
 		this.options = options
+<<<<<<< Updated upstream
+=======
+
+		// Extract region from custom ARN if provided
+		let region = this.options.awsRegion || "us-east-1"
+
+		// If using custom ARN, extract region from the ARN
+		if (this.options.awsCustomArn) {
+			const validation = validateBedrockArn(this.options.awsCustomArn, region)
+
+			if (validation.isValid && validation.arnRegion) {
+				// If there's a region mismatch warning, log it and use the ARN region
+				if (validation.errorMessage) {
+					logger.info(
+						`Region mismatch: Selected region is ${region}, but ARN region is ${validation.arnRegion}. Using ARN region.`,
+						{
+							ctx: "bedrock",
+							selectedRegion: region,
+							arnRegion: validation.arnRegion,
+						},
+					)
+					region = validation.arnRegion
+				}
+			}
+		}
+
+		const clientConfig: BedrockRuntimeClientConfig = {
+			region: region,
+		}
+
+		// Set up credentials based on the options
+		if (this.options.awsUseProfile && this.options.awsProfile) {
+			// Use profile-based credentials if enabled and profile is set
+			clientConfig.credentials = fromIni({
+				profile: this.options.awsProfile,
+			})
+		} else if (this.options.awsAccessKey && this.options.awsSecretKey) {
+			// Use direct credentials if provided
+			clientConfig.credentials = {
+				accessKeyId: this.options.awsAccessKey,
+				secretAccessKey: this.options.awsSecretKey,
+				...(this.options.awsSessionToken ? { sessionToken: this.options.awsSessionToken } : {}),
+			}
+		}
+
+		// Initialize the client with the basic credentials
+		this.client = new BedrockRuntimeClient(clientConfig)
+
+		// If MFA is enabled, we'll update the client with temporary credentials when needed
+		if (this.options.awsUseMfa && this.options.awsAccessKey && this.options.awsSecretKey && this.options.awsMfaDevice) {
+			// We'll get MFA credentials when the first request is made
+			this.updateClientWithMfaCredentials(region).catch(error => {
+				logger.error("Failed to get MFA credentials", {
+					ctx: "bedrock",
+					error: error instanceof Error ? error : String(error),
+				})
+			})
+		}
+	}
+
+	/**
+	 * Updates the Bedrock client with temporary credentials from MFA authentication
+	 * @param region The AWS region
+	 */
+	private async updateClientWithMfaCredentials(region: string): Promise<void> {
+		try {
+			const tempCredentials = await this.getMfaCredentials(region)
+			
+			// Create a new client with the temporary credentials
+			this.client = new BedrockRuntimeClient({
+				region: region,
+				credentials: {
+					accessKeyId: tempCredentials.accessKeyId,
+					secretAccessKey: tempCredentials.secretAccessKey,
+					sessionToken: tempCredentials.sessionToken,
+				},
+			})
+			
+			logger.info("Successfully updated Bedrock client with MFA credentials", {
+				ctx: "bedrock",
+			})
+		} catch (error) {
+			logger.error("Failed to update client with MFA credentials", {
+				ctx: "bedrock",
+				error: error instanceof Error ? error : String(error),
+			})
+			// We'll continue using the client with the basic credentials
+		}
+>>>>>>> Stashed changes
 	}
 
 	@withRetry()

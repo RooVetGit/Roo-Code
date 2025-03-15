@@ -38,8 +38,16 @@ export interface ApiHandlerOptions {
 	awsUseCrossRegionInference?: boolean
 	awsBedrockUsePromptCache?: boolean
 	awsUseProfile?: boolean
+<<<<<<< Updated upstream
 	awsProfile?: string
 	awsBedrockEndpoint?: string
+=======
+	awsUseMfa?: boolean
+	awsMfaDevice?: string
+	awsCustomArn?: string
+	vertexKeyFile?: string
+	vertexJsonCredentials?: string
+>>>>>>> Stashed changes
 	vertexProjectId?: string
 	vertexRegion?: string
 	openAiBaseUrl?: string
@@ -75,6 +83,61 @@ export type ApiConfiguration = ApiHandlerOptions & {
 	apiProvider?: ApiProvider
 }
 
+<<<<<<< Updated upstream
+=======
+// Import GlobalStateKey type from globalState.ts
+import { GlobalStateKey } from "./globalState"
+
+// Define API configuration keys for dynamic object building
+export const API_CONFIG_KEYS: GlobalStateKey[] = [
+	"apiModelId",
+	"anthropicBaseUrl",
+	"vsCodeLmModelSelector",
+	"glamaModelId",
+	"glamaModelInfo",
+	"openRouterModelId",
+	"openRouterModelInfo",
+	"openRouterBaseUrl",
+	"awsRegion",
+	"awsUseCrossRegionInference",
+	// "awsUsePromptCache", // NOT exist on GlobalStateKey
+	// "awspromptCacheId", // NOT exist on GlobalStateKey
+	"awsProfile",
+	"awsUseProfile",
+	"awsUseMfa",
+	"awsMfaDevice",
+	"awsCustomArn",
+	"vertexKeyFile",
+	"vertexJsonCredentials",
+	"vertexProjectId",
+	"vertexRegion",
+	"openAiBaseUrl",
+	"openAiModelId",
+	"openAiCustomModelInfo",
+	"openAiUseAzure",
+	"ollamaModelId",
+	"ollamaBaseUrl",
+	"lmStudioModelId",
+	"lmStudioBaseUrl",
+	"lmStudioDraftModelId",
+	"lmStudioSpeculativeDecodingEnabled",
+	"googleGeminiBaseUrl",
+	"mistralCodestralUrl",
+	"azureApiVersion",
+	"openRouterUseMiddleOutTransform",
+	"openAiStreamingEnabled",
+	// "deepSeekBaseUrl", //  not exist on GlobalStateKey
+	// "includeMaxTokens", // not exist on GlobalStateKey
+	"unboundModelId",
+	"unboundModelInfo",
+	"requestyModelId",
+	"requestyModelInfo",
+	"modelTemperature",
+	"modelMaxTokens",
+	"modelMaxThinkingTokens",
+]
+
+>>>>>>> Stashed changes
 // Models
 
 export interface ModelInfo {
