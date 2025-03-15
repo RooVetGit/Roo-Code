@@ -39,9 +39,12 @@ export interface ApiHandlerOptions {
 	awsBedrockUsePromptCache?: boolean
 	awsUseProfile?: boolean
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 	awsProfile?: string
 	awsBedrockEndpoint?: string
 =======
+=======
+>>>>>>> Stashed changes
 	awsUseMfa?: boolean
 	awsMfaDevice?: string
 	awsCustomArn?: string

@@ -98,6 +98,68 @@ export class AwsBedrockHandler implements ApiHandler {
 		}
 	}
 
+	/**
+	 * Prompts the user for an MFA code and gets temporary credentials using AWS STS
+	 * @param region The AWS region to use
+	 * @returns Temporary credentials object with accessKeyId, secretAccessKey, and sessionToken
+	 */
+	private async getMfaCredentials(region: string): Promise<{
+		accessKeyId: string
+		secretAccessKey: string
+		sessionToken: string
+	}> {
+		// Prompt the user for the MFA code
+		const mfaCode = await vscode.window.showInputBox({
+			prompt: `Enter MFA code for device ${this.options.awsMfaDevice}`,
+			placeHolder: "123456",
+			ignoreFocusOut: true,
+			validateInput: (value: string) => {
+				// MFA codes are typically 6 digits
+				return /^\d{6}$/.test(value) ? null : "Please enter a valid 6-digit MFA code"
+			},
+		})
+
+		if (!mfaCode) {
+			throw new Error("MFA code is required")
+		}
+
+		// Create STS client
+		const stsClient = new STSClient({
+			region: region,
+			credentials: {
+				accessKeyId: this.options.awsAccessKey!,
+				secretAccessKey: this.options.awsSecretKey!,
+			},
+		})
+
+		// Get temporary credentials
+		try {
+			const command = new GetSessionTokenCommand({
+				DurationSeconds: 3600, // 1 hour
+				SerialNumber: this.options.awsMfaDevice,
+				TokenCode: mfaCode,
+			})
+
+			const response = await stsClient.send(command)
+
+			if (!response.Credentials) {
+				throw new Error("Failed to get temporary credentials")
+			}
+
+			return {
+				accessKeyId: response.Credentials.AccessKeyId!,
+				secretAccessKey: response.Credentials.SecretAccessKey!,
+				sessionToken: response.Credentials.SessionToken!,
+			}
+		} catch (error) {
+			logger.error("Failed to get temporary credentials", {
+				ctx: "bedrock",
+				error: error instanceof Error ? error : String(error),
+			})
+			throw new Error(`Failed to get temporary credentials: ${error instanceof Error ? error.message : String(error)}`)
+		}
+	}
+
 	constructor(options: ApiHandlerOptions) {
 		this.options = options
 <<<<<<< Updated upstream
@@ -158,6 +220,39 @@ export class AwsBedrockHandler implements ApiHandler {
 				})
 			})
 		}
+<<<<<<< Updated upstream
+=======
+	}
+
+	/**
+	 * Updates the Bedrock client with temporary credentials from MFA authentication
+	 * @param region The AWS region
+	 */
+	private async updateClientWithMfaCredentials(region: string): Promise<void> {
+		try {
+			const tempCredentials = await this.getMfaCredentials(region)
+			
+			// Create a new client with the temporary credentials
+			this.client = new BedrockRuntimeClient({
+				region: region,
+				credentials: {
+					accessKeyId: tempCredentials.accessKeyId,
+					secretAccessKey: tempCredentials.secretAccessKey,
+					sessionToken: tempCredentials.sessionToken,
+				},
+			})
+			
+			logger.info("Successfully updated Bedrock client with MFA credentials", {
+				ctx: "bedrock",
+			})
+		} catch (error) {
+			logger.error("Failed to update client with MFA credentials", {
+				ctx: "bedrock",
+				error: error instanceof Error ? error : String(error),
+			})
+			// We'll continue using the client with the basic credentials
+		}
+>>>>>>> Stashed changes
 	}
 
 	/**
