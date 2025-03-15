@@ -40,9 +40,12 @@ export interface ApiHandlerOptions {
 	awsUseProfile?: boolean
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 	awsProfile?: string
 	awsBedrockEndpoint?: string
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 	awsUseMfa?: boolean
