@@ -568,7 +568,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 	async sayAndCreateMissingParamError(toolName: ToolUseName, paramName: string, relPath?: string) {
 		await this.say(
 			"error",
-			`Roo tried to use ${toolName}${
+			`Seawolf tried to use ${toolName}${
 				relPath ? ` for '${relPath.toPosix()}'` : ""
 			} without value for required parameter '${paramName}'. Retrying...`,
 		)
@@ -2633,7 +2633,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 										this.consecutiveMistakeCount++
 										await this.say(
 											"error",
-											`Roo tried to use ${tool_name} with an invalid JSON argument. Retrying...`,
+											`Seawolf tried to use ${tool_name} with an invalid JSON argument. Retrying...`,
 										)
 										pushToolResult(
 											formatResponse.toolError(
