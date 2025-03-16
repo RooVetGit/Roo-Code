@@ -32,6 +32,7 @@ export class TerminalRegistry {
 					})
 
 					if (terminalInfo) {
+						terminalInfo.running = true
 						terminalInfo.setActiveStream(stream)
 					} else {
 						console.error(
@@ -90,6 +91,7 @@ export class TerminalRegistry {
 
 					// Signal completion to any waiting processes
 					if (terminalInfo) {
+						terminalInfo.running = false
 						terminalInfo.shellExecutionComplete(exitDetails)
 					}
 				},

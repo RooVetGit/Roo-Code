@@ -67,12 +67,10 @@ export class Terminal {
 			}
 
 			this.streamClosed = false
-			this.running = true
 			this.process.emit("stream_available", stream)
 		} else {
 			// Stream is being closed
 			this.streamClosed = true
-			this.running = false
 		}
 	}
 
@@ -81,7 +79,6 @@ export class Terminal {
 	 * @param exitDetails The exit details of the shell execution
 	 */
 	public shellExecutionComplete(exitDetails: ExitCodeDetails): void {
-		this.running = false
 		this.busy = false
 
 		if (this.process) {
@@ -155,6 +152,9 @@ export class Terminal {
 	}
 
 	public runCommand(command: string): TerminalProcessResultPromise {
+		// We set busy before the command is running because the terminal may be waiting
+		// on terminal integration, and we must prevent another instance from selecting
+		// the terminal for use during that time.
 		this.busy = true
 
 		// Create process immediately

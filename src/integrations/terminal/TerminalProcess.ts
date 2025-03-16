@@ -306,10 +306,7 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 					"<VSCE shell integration stream did not start: terminal output and command execution status is unknown>",
 				)
 
-				// Ensure terminal is marked as not busy
-				if (this.terminalInfo) {
-					this.terminalInfo.busy = false
-				}
+				this.terminalInfo.busy = false
 
 				// Emit continue event to allow execution to proceed
 				this.emit("continue")
