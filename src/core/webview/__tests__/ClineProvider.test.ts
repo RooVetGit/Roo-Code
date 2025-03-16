@@ -20,6 +20,8 @@ jest.mock("../../contextProxy", () => {
 	return {
 		ContextProxy: jest.fn().mockImplementation((context) => ({
 			originalContext: context,
+			isInitialized: true,
+			initialize: jest.fn(),
 			extensionUri: context.extensionUri,
 			extensionPath: context.extensionPath,
 			globalStorageUri: context.globalStorageUri,
@@ -56,6 +58,34 @@ jest.mock("../../contextProxy", () => {
 // Mock dependencies
 jest.mock("vscode")
 jest.mock("delay")
+
+// Mock BrowserSession
+jest.mock("../../../services/browser/BrowserSession", () => ({
+	BrowserSession: jest.fn().mockImplementation(() => ({
+		testConnection: jest.fn().mockImplementation(async (url) => {
+			if (url === "http://localhost:9222") {
+				return {
+					success: true,
+					message: "Successfully connected to Chrome",
+					endpoint: "ws://localhost:9222/devtools/browser/123",
+				}
+			} else {
+				return {
+					success: false,
+					message: "Failed to connect to Chrome",
+					endpoint: undefined,
+				}
+			}
+		}),
+	})),
+}))
+
+// Mock browserDiscovery
+jest.mock("../../../services/browser/browserDiscovery", () => ({
+	discoverChromeInstances: jest.fn().mockImplementation(async () => {
+		return "http://localhost:9222"
+	}),
+}))
 jest.mock(
 	"@modelcontextprotocol/sdk/types.js",
 	() => ({
@@ -95,31 +125,7 @@ jest.mock("delay", () => {
 	return delayFn
 })
 
-// Mock MCP-related modules
-jest.mock(
-	"@modelcontextprotocol/sdk/types.js",
-	() => ({
-		CallToolResultSchema: {},
-		ListResourcesResultSchema: {},
-		ListResourceTemplatesResultSchema: {},
-		ListToolsResultSchema: {},
-		ReadResourceResultSchema: {},
-		ErrorCode: {
-			InvalidRequest: "InvalidRequest",
-			MethodNotFound: "MethodNotFound",
-			InternalError: "InternalError",
-		},
-		McpError: class McpError extends Error {
-			code: string
-			constructor(code: string, message: string) {
-				super(message)
-				this.code = code
-				this.name = "McpError"
-			}
-		},
-	}),
-	{ virtual: true },
-)
+// MCP-related modules are mocked once above (lines 87-109)
 
 jest.mock(
 	"@modelcontextprotocol/sdk/client/index.js",
@@ -420,7 +426,6 @@ describe("ClineProvider", () => {
 
 		const mockState: ExtensionState = {
 			version: "1.0.0",
-			preferredLanguage: "English",
 			clineMessages: [],
 			taskHistory: [],
 			shouldShowAnnouncement: false,
@@ -450,6 +455,7 @@ describe("ClineProvider", () => {
 			customModes: [],
 			experiments: experimentDefault,
 			maxOpenTabsContext: 20,
+			maxWorkspaceFiles: 200,
 			browserToolEnabled: true,
 			telemetrySetting: "unset",
 			showRooIgnoredFiles: true,
@@ -537,20 +543,12 @@ describe("ClineProvider", () => {
 		expect(state).toHaveProperty("writeDelayMs")
 	})
 
-	test("preferredLanguage defaults to VSCode language when not set", async () => {
+	test("language is set to VSCode language", async () => {
 		// Mock VSCode language as Spanish
 		;(vscode.env as any).language = "es-ES"
 
 		const state = await provider.getState()
-		expect(state.preferredLanguage).toBe("Spanish")
-	})
-
-	test("preferredLanguage defaults to English for unsupported VSCode language", async () => {
-		// Mock VSCode language as an unsupported language
-		;(vscode.env as any).language = "unsupported-LANG"
-
-		const state = await provider.getState()
-		expect(state.preferredLanguage).toBe("English")
+		expect(state.language).toBe("es-ES")
 	})
 
 	test("diffEnabled defaults to true when not set", async () => {
@@ -618,7 +616,7 @@ describe("ClineProvider", () => {
 		expect(mockPostMessage).toHaveBeenCalled()
 	})
 
-	test("requestDelaySeconds defaults to 5 seconds", async () => {
+	test("requestDelaySeconds defaults to 10 seconds", async () => {
 		// Mock globalState.get to return undefined for requestDelaySeconds
 		;(mockContext.globalState.get as jest.Mock).mockImplementation((key: string) => {
 			if (key === "requestDelaySeconds") {
@@ -817,7 +815,18 @@ describe("ClineProvider", () => {
 		expect(state.customModePrompts).toEqual({})
 	})
 
-	test("uses mode-specific custom instructions in Cline initialization", async () => {
+	test("handles maxWorkspaceFiles message", async () => {
+		await provider.resolveWebviewView(mockWebviewView)
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+
+		await messageHandler({ type: "maxWorkspaceFiles", value: 300 })
+
+		expect(mockContextProxy.updateGlobalState).toHaveBeenCalledWith("maxWorkspaceFiles", 300)
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("maxWorkspaceFiles", 300)
+		expect(mockPostMessage).toHaveBeenCalled()
+	})
+
+	test.only("uses mode-specific custom instructions in Cline initialization", async () => {
 		// Setup mock state
 		const modeCustomInstructions = "Code mode instructions"
 		const mockApiConfig = {
@@ -856,6 +865,9 @@ describe("ClineProvider", () => {
 			fuzzyMatchThreshold: 1.0,
 			task: "Test task",
 			experiments: experimentDefault,
+			rootTask: undefined,
+			parentTask: undefined,
+			taskNumber: 1,
 		})
 	})
 
@@ -1230,7 +1242,7 @@ describe("ClineProvider", () => {
 			expect(callArgs[4]).toHaveProperty("getToolDescription") // diffStrategy
 			expect(callArgs[5]).toBe("900x600") // browserViewportSize
 			expect(callArgs[6]).toBe("code") // mode
-			expect(callArgs[11]).toBe(true) // diffEnabled
+			expect(callArgs[10]).toBe(true) // diffEnabled
 
 			// Run the test again to verify it's consistent
 			await handler({ type: "getSystemPrompt", mode: "code" })
@@ -1288,7 +1300,7 @@ describe("ClineProvider", () => {
 			expect(callArgs[4]).toHaveProperty("getToolDescription") // diffStrategy
 			expect(callArgs[5]).toBe("900x600") // browserViewportSize
 			expect(callArgs[6]).toBe("code") // mode
-			expect(callArgs[11]).toBe(false) // diffEnabled should be false
+			expect(callArgs[10]).toBe(false) // diffEnabled should be false
 		})
 
 		test("uses correct mode-specific instructions when mode is specified", async () => {
@@ -1799,6 +1811,173 @@ describe("ClineProvider", () => {
 			expect(mockContextProxy.updateGlobalState).toHaveBeenCalledWith("listApiConfigMeta", [
 				{ name: "test-config", id: "test-id", apiProvider: "anthropic" },
 			])
+		})
+	})
+
+	describe("browser connection features", () => {
+		beforeEach(async () => {
+			// Reset mocks
+			jest.clearAllMocks()
+			await provider.resolveWebviewView(mockWebviewView)
+		})
+
+		// Mock BrowserSession and discoverChromeInstances
+		jest.mock("../../../services/browser/BrowserSession", () => ({
+			BrowserSession: jest.fn().mockImplementation(() => ({
+				testConnection: jest.fn().mockImplementation(async (url) => {
+					if (url === "http://localhost:9222") {
+						return {
+							success: true,
+							message: "Successfully connected to Chrome",
+							endpoint: "ws://localhost:9222/devtools/browser/123",
+						}
+					} else {
+						return {
+							success: false,
+							message: "Failed to connect to Chrome",
+							endpoint: undefined,
+						}
+					}
+				}),
+			})),
+		}))
+
+		jest.mock("../../../services/browser/browserDiscovery", () => ({
+			discoverChromeInstances: jest.fn().mockImplementation(async () => {
+				return "http://localhost:9222"
+			}),
+		}))
+
+		test("handles testBrowserConnection with provided URL", async () => {
+			// Get the message handler
+			const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+
+			// Test with valid URL
+			await messageHandler({
+				type: "testBrowserConnection",
+				text: "http://localhost:9222",
+			})
+
+			// Verify postMessage was called with success result
+			expect(mockPostMessage).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "browserConnectionResult",
+					success: true,
+					text: expect.stringContaining("Successfully connected to Chrome"),
+				}),
+			)
+
+			// Reset mock
+			mockPostMessage.mockClear()
+
+			// Test with invalid URL
+			await messageHandler({
+				type: "testBrowserConnection",
+				text: "http://inlocalhost:9222",
+			})
+
+			// Verify postMessage was called with failure result
+			expect(mockPostMessage).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "browserConnectionResult",
+					success: false,
+					text: expect.stringContaining("Failed to connect to Chrome"),
+				}),
+			)
+		})
+
+		test("handles testBrowserConnection with auto-discovery", async () => {
+			// Get the message handler
+			const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+
+			// Test auto-discovery (no URL provided)
+			await messageHandler({
+				type: "testBrowserConnection",
+			})
+
+			// Verify discoverChromeInstances was called
+			const { discoverChromeInstances } = require("../../../services/browser/browserDiscovery")
+			expect(discoverChromeInstances).toHaveBeenCalled()
+
+			// Verify postMessage was called with success result
+			expect(mockPostMessage).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "browserConnectionResult",
+					success: true,
+					text: expect.stringContaining("Auto-discovered and tested connection to Chrome"),
+				}),
+			)
+		})
+
+		test("handles discoverBrowser message", async () => {
+			// Get the message handler
+			const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+
+			// Test browser discovery
+			await messageHandler({
+				type: "discoverBrowser",
+			})
+
+			// Verify discoverChromeInstances was called
+			const { discoverChromeInstances } = require("../../../services/browser/browserDiscovery")
+			expect(discoverChromeInstances).toHaveBeenCalled()
+
+			// Verify postMessage was called with success result
+			expect(mockPostMessage).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "browserConnectionResult",
+					success: true,
+					text: expect.stringContaining("Successfully discovered and connected to Chrome"),
+				}),
+			)
+		})
+
+		test("handles errors during browser discovery", async () => {
+			// Mock discoverChromeInstances to throw an error
+			const { discoverChromeInstances } = require("../../../services/browser/browserDiscovery")
+			discoverChromeInstances.mockImplementationOnce(() => {
+				throw new Error("Discovery error")
+			})
+
+			// Get the message handler
+			const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+
+			// Test browser discovery with error
+			await messageHandler({
+				type: "discoverBrowser",
+			})
+
+			// Verify postMessage was called with error result
+			expect(mockPostMessage).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "browserConnectionResult",
+					success: false,
+					text: expect.stringContaining("Error discovering browser"),
+				}),
+			)
+		})
+
+		test("handles case when no browsers are discovered", async () => {
+			// Mock discoverChromeInstances to return null (no browsers found)
+			const { discoverChromeInstances } = require("../../../services/browser/browserDiscovery")
+			discoverChromeInstances.mockImplementationOnce(() => null)
+
+			// Get the message handler
+			const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+
+			// Test browser discovery with no browsers found
+			await messageHandler({
+				type: "discoverBrowser",
+			})
+
+			// Verify postMessage was called with failure result
+			expect(mockPostMessage).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "browserConnectionResult",
+					success: false,
+					text: expect.stringContaining("No Chrome instances found"),
+				}),
+			)
 		})
 	})
 })

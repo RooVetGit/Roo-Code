@@ -6,22 +6,26 @@ import os from "os"
 import pWaitFor from "p-wait-for"
 import * as path from "path"
 import * as vscode from "vscode"
-import simpleGit from "simple-git"
 
 import { setPanel } from "../../activate/registerCommands"
 import { ApiConfiguration, ApiProvider, ModelInfo, API_CONFIG_KEYS } from "../../shared/api"
 import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
-import { SecretKey, GlobalStateKey, SECRET_KEYS, GLOBAL_STATE_KEYS } from "../../shared/globalState"
+import {
+	SecretKey,
+	GlobalStateKey,
+	SECRET_KEYS,
+	GLOBAL_STATE_KEYS,
+	ConfigurationValues,
+} from "../../shared/globalState"
 import { HistoryItem } from "../../shared/HistoryItem"
-import { CheckpointStorage } from "../../shared/checkpoints"
 import { ApiConfigMeta, ExtensionMessage } from "../../shared/ExtensionMessage"
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
 import { Mode, PromptComponent, defaultModeSlug, ModeConfig } from "../../shared/modes"
 import { checkExistKey } from "../../shared/checkExistApiConfig"
 import { EXPERIMENT_IDS, experiments as Experiments, experimentDefault, ExperimentId } from "../../shared/experiments"
-import { TERMINAL_OUTPUT_LIMIT } from "../../shared/terminal"
+import { formatLanguage } from "../../shared/language"
 import { downloadTask } from "../../integrations/misc/export-markdown"
 import { openFile, openImage } from "../../integrations/misc/open-file"
 import { selectImages } from "../../integrations/misc/process-images"
@@ -30,6 +34,8 @@ import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { ShadowCheckpointService } from "../../services/checkpoints/ShadowCheckpointService"
+import { BrowserSession } from "../../services/browser/BrowserSession"
+import { discoverChromeInstances } from "../../services/browser/browserDiscovery"
 import { fileExistsAtPath } from "../../utils/fs"
 import { playSound, setSoundEnabled, setSoundVolume } from "../../utils/sound"
 import { playTts, setTtsEnabled, setTtsSpeed } from "../../utils/tts"
@@ -76,7 +82,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	private contextProxy: ContextProxy
 	configManager: ConfigManager
 	customModesManager: CustomModesManager
-	private lastTaskNumber = -1
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
@@ -109,110 +114,45 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	// The instance is pushed to the top of the stack (LIFO order).
 	// When the task is completed, the top instance is removed, reactivating the previous task.
 	async addClineToStack(cline: Cline) {
-		try {
-			if (!cline) {
-				throw new Error("Error invalid Cline instance provided.")
-			}
+		console.log(`[subtasks] adding task ${cline.taskId}.${cline.instanceId} to stack`)
 
-			// Ensure lastTaskNumber is a valid number
-			if (typeof this.lastTaskNumber !== "number") {
-				this.lastTaskNumber = -1
-			}
+		// Add this cline instance into the stack that represents the order of all the called tasks.
+		this.clineStack.push(cline)
 
-			const taskNumber = cline.getTaskNumber()
+		// Ensure getState() resolves correctly.
+		const state = await this.getState()
 
-			if (taskNumber === -1) {
-				this.lastTaskNumber += 1
-				cline.setTaskNumber(this.lastTaskNumber)
-			} else if (taskNumber > this.lastTaskNumber) {
-				this.lastTaskNumber = taskNumber
-			}
-
-			// set this cline task parent cline (the task that launched it), and the root cline (the top most task that eventually launched it)
-			if (this.clineStack.length >= 1) {
-				cline.setParentTask(this.getCurrentCline())
-				cline.setRootTask(this.clineStack[0])
-			}
-
-			// add this cline instance into the stack that represents the order of all the called tasks
-			this.clineStack.push(cline)
-
-			// Ensure getState() resolves correctly
-			const state = await this.getState()
-			if (!state || typeof state.mode !== "string") {
-				throw new Error("Error failed to retrieve current mode from state.")
-			}
-
-			this.log(`[subtasks] Task: ${cline.getTaskNumber()} started at '${state.mode}' mode`)
-		} catch (error) {
-			this.log(`Error in addClineToStack: ${error.message}`)
-			throw error
+		if (!state || typeof state.mode !== "string") {
+			throw new Error("Error failed to retrieve current mode from state.")
 		}
 	}
 
-	// Removes and destroys the top Cline instance (the current finished task), activating the previous one (resuming the parent task).
+	// Removes and destroys the top Cline instance (the current finished task),
+	// activating the previous one (resuming the parent task).
 	async removeClineFromStack() {
-		try {
-			if (!Array.isArray(this.clineStack)) {
-				throw new Error("Error clineStack is not an array.")
-			}
-
-			if (this.clineStack.length === 0) {
-				this.log("[subtasks] No active tasks to remove.")
-			} else {
-				// pop the top Cline instance from the stack
-				var clineToBeRemoved = this.clineStack.pop()
-				if (clineToBeRemoved) {
-					const removedTaskNumber = clineToBeRemoved.getTaskNumber()
-
-					try {
-						// abort the running task and set isAbandoned to true so all running promises will exit as well
-						await clineToBeRemoved.abortTask(true)
-					} catch (abortError) {
-						this.log(`Error failed aborting task ${removedTaskNumber}: ${abortError.message}`)
-					}
-
-					// make sure no reference kept, once promises end it will be garbage collected
-					clineToBeRemoved = undefined
-					this.log(`[subtasks] Task: ${removedTaskNumber} stopped`)
-				}
-
-				// if the stack is empty, reset the last task number
-				if (this.clineStack.length === 0) {
-					this.lastTaskNumber = -1
-				}
-			}
-		} catch (error) {
-			this.log(`Error in removeClineFromStack: ${error.message}`)
-			throw error
+		if (this.clineStack.length === 0) {
+			return
 		}
-	}
 
-	// remove the cline object with the received clineId, and all the cline objects bove it in the stack
-	// for each cline object removed, pop it from the stack, abort the task and set it to undefined
-	async removeClineWithIdFromStack(clineId: string) {
-		try {
-			if (typeof clineId !== "string" || !clineId.trim()) {
-				throw new Error("Error Invalid clineId provided.")
+		// Pop the top Cline instance from the stack.
+		var cline = this.clineStack.pop()
+
+		if (cline) {
+			console.log(`[subtasks] removing task ${cline.taskId}.${cline.instanceId} from stack`)
+
+			try {
+				// Abort the running task and set isAbandoned to true so
+				// all running promises will exit as well.
+				await cline.abortTask(true)
+			} catch (e) {
+				this.log(
+					`[subtasks] encountered error while aborting task ${cline.taskId}.${cline.instanceId}: ${e.message}`,
+				)
 			}
 
-			const index = this.clineStack.findIndex((c) => c.taskId === clineId)
-
-			if (index === -1) {
-				this.log(`[subtasks] No task found with ID: ${clineId}`)
-				return
-			}
-
-			for (let i = this.clineStack.length - 1; i >= index; i--) {
-				try {
-					await this.removeClineFromStack()
-				} catch (removalError) {
-					this.log(`Error removing task at stack index ${i}: ${removalError.message}`)
-				}
-			}
-		} catch (error) {
-			this.log(`Error in removeClineWithIdFromStack: ${error.message}`)
-			throw error
+			// Make sure no reference kept, once promises end it will be
+			// garbage collected.
+			cline = undefined
 		}
 	}
 
@@ -234,15 +174,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	// and resume the previous task/cline instance (if it exists)
 	// this is used when a sub task is finished and the parent task needs to be resumed
 	async finishSubTask(lastMessage?: string) {
-		try {
-			// remove the last cline instance from the stack (this is the finished sub task)
-			await this.removeClineFromStack()
-			// resume the last cline instance in the stack (if it exists - this is the 'parnt' calling task)
-			this.getCurrentCline()?.resumePausedTask(lastMessage)
-		} catch (error) {
-			this.log(`Error in finishSubTask: ${error.message}`)
-			throw error
-		}
+		console.log(`[subtasks] finishing subtask ${lastMessage}`)
+		// remove the last cline instance from the stack (this is the finished sub task)
+		await this.removeClineFromStack()
+		// resume the last cline instance in the stack (if it exists - this is the 'parnt' calling task)
+		this.getCurrentCline()?.resumePausedTask(lastMessage)
 	}
 
 	/*
@@ -254,16 +190,20 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		this.outputChannel.appendLine("Disposing ClineProvider...")
 		await this.removeClineFromStack()
 		this.outputChannel.appendLine("Cleared task")
+
 		if (this.view && "dispose" in this.view) {
 			this.view.dispose()
 			this.outputChannel.appendLine("Disposed webview")
 		}
+
 		while (this.disposables.length) {
 			const x = this.disposables.pop()
+
 			if (x) {
 				x.dispose()
 			}
 		}
+
 		this.workspaceTracker?.dispose()
 		this.workspaceTracker = undefined
 		this.mcpHub?.dispose()
@@ -319,6 +259,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		params: Record<string, string | any[]>,
 	): Promise<void> {
 		const visibleProvider = await ClineProvider.getInstance()
+
 		if (!visibleProvider) {
 			return
 		}
@@ -338,12 +279,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		}
 
 		if (visibleProvider.getCurrentCline() && command.endsWith("InCurrentTask")) {
-			await visibleProvider.postMessageToWebview({
-				type: "invoke",
-				invoke: "sendMessage",
-				text: prompt,
-			})
-
+			await visibleProvider.postMessageToWebview({ type: "invoke", invoke: "sendMessage", text: prompt })
 			return
 		}
 
@@ -387,6 +323,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	async resolveWebviewView(webviewView: vscode.WebviewView | vscode.WebviewPanel) {
 		this.outputChannel.appendLine("Resolving webview view")
+
+		if (!this.contextProxy.isInitialized) {
+			await this.contextProxy.initialize()
+		}
+
 		this.view = webviewView
 
 		// Set panel reference according to webview type
@@ -475,22 +416,20 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.disposables,
 		)
 
-		// if the extension is starting a new session, clear previous task state
+		// If the extension is starting a new session, clear previous task state.
 		await this.removeClineFromStack()
 
 		this.outputChannel.appendLine("Webview view resolved")
 	}
 
-	// a wrapper that inits a new Cline instance (Task) ans setting it as a sub task of the current task
-	public async initClineWithSubTask(task?: string, images?: string[]) {
-		await this.initClineWithTask(task, images)
-		this.getCurrentCline()?.setSubTask()
+	public async initClineWithSubTask(parent: Cline, task?: string, images?: string[]) {
+		return this.initClineWithTask(task, images, parent)
 	}
 
 	// when initializing a new task, (not from history but from a tool command new_task) there is no need to remove the previouse task
 	// since the new task is a sub task of the previous one, and when it finishes it is removed from the stack and the caller is resumed
 	// in this way we can have a chain of tasks, each one being a sub task of the previous one until the main task is finished
-	public async initClineWithTask(task?: string, images?: string[]) {
+	public async initClineWithTask(task?: string, images?: string[], parentTask?: Cline) {
 		const {
 			apiConfiguration,
 			customModePrompts,
@@ -506,7 +445,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		const modePrompt = customModePrompts?.[mode] as PromptComponent
 		const effectiveInstructions = [globalInstructions, modePrompt?.customInstructions].filter(Boolean).join("\n\n")
 
-		const newCline = new Cline({
+		const cline = new Cline({
 			provider: this,
 			apiConfiguration,
 			customInstructions: effectiveInstructions,
@@ -517,11 +456,19 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			task,
 			images,
 			experiments,
+			rootTask: this.clineStack.length > 0 ? this.clineStack[0] : undefined,
+			parentTask,
+			taskNumber: this.clineStack.length + 1,
 		})
-		await this.addClineToStack(newCline)
+
+		await this.addClineToStack(cline)
+		this.log(
+			`[subtasks] ${cline.parentTask ? "child" : "parent"} task ${cline.taskId}.${cline.instanceId} instantiated`,
+		)
+		return cline
 	}
 
-	public async initClineWithHistoryItem(historyItem: HistoryItem) {
+	public async initClineWithHistoryItem(historyItem: HistoryItem & { rootTask?: Cline; parentTask?: Cline }) {
 		await this.removeClineFromStack()
 
 		const {
@@ -565,7 +512,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			}
 		}
 
-		const newCline = new Cline({
+		const cline = new Cline({
 			provider: this,
 			apiConfiguration,
 			customInstructions: effectiveInstructions,
@@ -574,10 +521,16 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			fuzzyMatchThreshold,
 			historyItem,
 			experiments,
+			rootTask: historyItem.rootTask,
+			parentTask: historyItem.parentTask,
+			taskNumber: historyItem.number,
 		})
 
-		newCline.setTaskNumber(historyItem.number)
-		await this.addClineToStack(newCline)
+		await this.addClineToStack(cline)
+		this.log(
+			`[subtasks] ${cline.parentTask ? "child" : "parent"} task ${cline.taskId}.${cline.instanceId} instantiated`,
+		)
+		return cline
 	}
 
 	public async postMessageToWebview(message: ExtensionMessage) {
@@ -783,7 +736,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						// to OpenRouter it would be showing outdated model info
 						// if we hadn't retrieved the latest at this point
 						// (see normalizeApiConfiguration > openrouter).
-						getOpenRouterModels().then(async (openRouterModels) => {
+						const { apiConfiguration: currentApiConfig } = await this.getState()
+						getOpenRouterModels(currentApiConfig).then(async (openRouterModels) => {
 							if (Object.keys(openRouterModels).length > 0) {
 								await fs.writeFile(
 									path.join(cacheDir, GlobalFileNames.openRouterModels),
@@ -1032,8 +986,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 					case "resetState":
 						await this.resetState()
 						break
-					case "refreshOpenRouterModels":
-						const openRouterModels = await getOpenRouterModels()
+					case "refreshOpenRouterModels": {
+						const { apiConfiguration: configForRefresh } = await this.getState()
+						const openRouterModels = await getOpenRouterModels(configForRefresh)
 
 						if (Object.keys(openRouterModels).length > 0) {
 							const cacheDir = await this.ensureCacheDirectoryExists()
@@ -1045,6 +1000,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						}
 
 						break
+					}
 					case "refreshGlamaModels":
 						const glamaModels = await getGlamaModels()
 
@@ -1276,6 +1232,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.postStateToWebview()
 						break
 					case "checkpointStorage":
+						console.log(`[ClineProvider] checkpointStorage: ${message.text}`)
 						const checkpointStorage = message.text ?? "task"
 						await this.updateGlobalState("checkpointStorage", checkpointStorage)
 						await this.postStateToWebview()
@@ -1284,6 +1241,105 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						const browserViewportSize = message.text ?? "900x600"
 						await this.updateGlobalState("browserViewportSize", browserViewportSize)
 						await this.postStateToWebview()
+						break
+					case "remoteBrowserHost":
+						await this.updateGlobalState("remoteBrowserHost", message.text)
+						await this.postStateToWebview()
+						break
+					case "remoteBrowserEnabled":
+						// Store the preference in global state
+						// remoteBrowserEnabled now means "enable remote browser connection"
+						await this.updateGlobalState("remoteBrowserEnabled", message.bool ?? false)
+						// If disabling remote browser connection, clear the remoteBrowserHost
+						if (!message.bool) {
+							await this.updateGlobalState("remoteBrowserHost", undefined)
+						}
+						await this.postStateToWebview()
+						break
+					case "testBrowserConnection":
+						try {
+							const browserSession = new BrowserSession(this.context)
+							// If no text is provided, try auto-discovery
+							if (!message.text) {
+								try {
+									const discoveredHost = await discoverChromeInstances()
+									if (discoveredHost) {
+										// Test the connection to the discovered host
+										const result = await browserSession.testConnection(discoveredHost)
+										// Send the result back to the webview
+										await this.postMessageToWebview({
+											type: "browserConnectionResult",
+											success: result.success,
+											text: `Auto-discovered and tested connection to Chrome at ${discoveredHost}: ${result.message}`,
+											values: { endpoint: result.endpoint },
+										})
+									} else {
+										await this.postMessageToWebview({
+											type: "browserConnectionResult",
+											success: false,
+											text: "No Chrome instances found on the network. Make sure Chrome is running with remote debugging enabled (--remote-debugging-port=9222).",
+										})
+									}
+								} catch (error) {
+									await this.postMessageToWebview({
+										type: "browserConnectionResult",
+										success: false,
+										text: `Error during auto-discovery: ${error instanceof Error ? error.message : String(error)}`,
+									})
+								}
+							} else {
+								// Test the provided URL
+								const result = await browserSession.testConnection(message.text)
+
+								// Send the result back to the webview
+								await this.postMessageToWebview({
+									type: "browserConnectionResult",
+									success: result.success,
+									text: result.message,
+									values: { endpoint: result.endpoint },
+								})
+							}
+						} catch (error) {
+							await this.postMessageToWebview({
+								type: "browserConnectionResult",
+								success: false,
+								text: `Error testing connection: ${error instanceof Error ? error.message : String(error)}`,
+							})
+						}
+						break
+					case "discoverBrowser":
+						try {
+							const discoveredHost = await discoverChromeInstances()
+
+							if (discoveredHost) {
+								// Don't update the remoteBrowserHost state when auto-discovering
+								// This way we don't override the user's preference
+
+								// Test the connection to get the endpoint
+								const browserSession = new BrowserSession(this.context)
+								const result = await browserSession.testConnection(discoveredHost)
+
+								// Send the result back to the webview
+								await this.postMessageToWebview({
+									type: "browserConnectionResult",
+									success: true,
+									text: `Successfully discovered and connected to Chrome at ${discoveredHost}`,
+									values: { endpoint: result.endpoint },
+								})
+							} else {
+								await this.postMessageToWebview({
+									type: "browserConnectionResult",
+									success: false,
+									text: "No Chrome instances found on the network. Make sure Chrome is running with remote debugging enabled (--remote-debugging-port=9222).",
+								})
+							}
+						} catch (error) {
+							await this.postMessageToWebview({
+								type: "browserConnectionResult",
+								success: false,
+								text: `Error discovering browser: ${error instanceof Error ? error.message : String(error)}`,
+							})
+						}
 						break
 					case "fuzzyMatchThreshold":
 						await this.updateGlobalState("fuzzyMatchThreshold", message.value)
@@ -1301,16 +1357,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("rateLimitSeconds", message.value ?? 0)
 						await this.postStateToWebview()
 						break
-					case "preferredLanguage":
-						await this.updateGlobalState("preferredLanguage", message.text)
-						await this.postStateToWebview()
-						break
 					case "writeDelayMs":
 						await this.updateGlobalState("writeDelayMs", message.value)
 						await this.postStateToWebview()
 						break
-					case "terminalOutputLimit":
-						await this.updateGlobalState("terminalOutputLimit", message.value)
+					case "terminalOutputLineLimit":
+						await this.updateGlobalState("terminalOutputLineLimit", message.value)
 						await this.postStateToWebview()
 						break
 					case "mode":
@@ -1489,8 +1541,17 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("maxOpenTabsContext", tabCount)
 						await this.postStateToWebview()
 						break
+					case "maxWorkspaceFiles":
+						const fileCount = Math.min(Math.max(0, message.value ?? 200), 500)
+						await this.updateGlobalState("maxWorkspaceFiles", fileCount)
+						await this.postStateToWebview()
+						break
 					case "browserToolEnabled":
 						await this.updateGlobalState("browserToolEnabled", message.bool ?? true)
+						await this.postStateToWebview()
+						break
+					case "language":
+						await this.updateGlobalState("language", message.text)
 						await this.postStateToWebview()
 						break
 					case "showRooIgnoredFiles":
@@ -1842,7 +1903,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				apiConfiguration,
 				customModePrompts,
 				customInstructions,
-				preferredLanguage,
 				browserViewportSize,
 				diffEnabled,
 				mcpEnabled,
@@ -1880,7 +1940,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				customModePrompts,
 				customModes,
 				customInstructions,
-				preferredLanguage,
 				diffEnabled,
 				experiments,
 				enableMcpServerCreation,
@@ -1935,18 +1994,19 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	private async updateApiConfiguration(apiConfiguration: ApiConfiguration) {
-		// Update mode's default config
+		// Update mode's default config.
 		const { mode } = await this.getState()
+
 		if (mode) {
 			const currentApiConfigName = await this.getGlobalState("currentApiConfigName")
 			const listApiConfig = await this.configManager.listConfig()
 			const config = listApiConfig?.find((c) => c.name === currentApiConfigName)
+
 			if (config?.id) {
 				await this.configManager.setModeConfig(mode, config.id)
 			}
 		}
 
-		// Use the new setValues method to handle routing values to secrets or global state
 		await this.contextProxy.setValues(apiConfiguration)
 
 		if (this.getCurrentCline()) {
@@ -1955,55 +2015,80 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	async cancelTask() {
-		if (this.getCurrentCline()) {
-			const { historyItem } = await this.getTaskWithId(this.getCurrentCline()!.taskId)
-			this.getCurrentCline()!.abortTask()
+		const cline = this.getCurrentCline()
 
-			await pWaitFor(
-				() =>
-					this.getCurrentCline()! === undefined ||
-					this.getCurrentCline()!.isStreaming === false ||
-					this.getCurrentCline()!.didFinishAbortingStream ||
-					// If only the first chunk is processed, then there's no
-					// need to wait for graceful abort (closes edits, browser,
-					// etc).
-					this.getCurrentCline()!.isWaitingForFirstChunk,
-				{
-					timeout: 3_000,
-				},
-			).catch(() => {
-				console.error("Failed to abort task")
-			})
-
-			if (this.getCurrentCline()) {
-				// 'abandoned' will prevent this Cline instance from affecting
-				// future Cline instances. This may happen if its hanging on a
-				// streaming request.
-				this.getCurrentCline()!.abandoned = true
-			}
-
-			// Clears task again, so we need to abortTask manually above.
-			await this.initClineWithHistoryItem(historyItem)
+		if (!cline) {
+			return
 		}
+
+		console.log(`[subtasks] cancelling task ${cline.taskId}.${cline.instanceId}`)
+
+		const { historyItem } = await this.getTaskWithId(cline.taskId)
+		// Preserve parent and root task information for history item.
+		const rootTask = cline.rootTask
+		const parentTask = cline.parentTask
+
+		cline.abortTask()
+
+		await pWaitFor(
+			() =>
+				this.getCurrentCline()! === undefined ||
+				this.getCurrentCline()!.isStreaming === false ||
+				this.getCurrentCline()!.didFinishAbortingStream ||
+				// If only the first chunk is processed, then there's no
+				// need to wait for graceful abort (closes edits, browser,
+				// etc).
+				this.getCurrentCline()!.isWaitingForFirstChunk,
+			{
+				timeout: 3_000,
+			},
+		).catch(() => {
+			console.error("Failed to abort task")
+		})
+
+		if (this.getCurrentCline()) {
+			// 'abandoned' will prevent this Cline instance from affecting
+			// future Cline instances. This may happen if its hanging on a
+			// streaming request.
+			this.getCurrentCline()!.abandoned = true
+		}
+
+		// Clears task again, so we need to abortTask manually above.
+		await this.initClineWithHistoryItem({ ...historyItem, rootTask, parentTask })
 	}
 
 	async updateCustomInstructions(instructions?: string) {
-		// User may be clearing the field
+		// User may be clearing the field.
 		await this.updateGlobalState("customInstructions", instructions || undefined)
+
 		if (this.getCurrentCline()) {
 			this.getCurrentCline()!.customInstructions = instructions || undefined
 		}
+
 		await this.postStateToWebview()
 	}
 
 	// MCP
 
 	async ensureMcpServersDirectoryExists(): Promise<string> {
-		const mcpServersDir = path.join(os.homedir(), "Documents", "Cline", "MCP")
+		// Get platform-specific application data directory
+		let mcpServersDir: string
+		if (process.platform === "win32") {
+			// Windows: %APPDATA%\Roo-Code\MCP
+			mcpServersDir = path.join(os.homedir(), "AppData", "Roaming", "Roo-Code", "MCP")
+		} else if (process.platform === "darwin") {
+			// macOS: ~/Documents/Cline/MCP
+			mcpServersDir = path.join(os.homedir(), "Documents", "Cline", "MCP")
+		} else {
+			// Linux: ~/.local/share/Cline/MCP
+			mcpServersDir = path.join(os.homedir(), ".local", "share", "Roo-Code", "MCP")
+		}
+
 		try {
 			await fs.mkdir(mcpServersDir, { recursive: true })
 		} catch (error) {
-			return "~/Documents/Cline/MCP" // in case creating a directory in documents fails for whatever reason (e.g. permissions) - this is fine since this path is only ever used in the system prompt
+			// Fallback to a relative path if directory creation fails
+			return path.join(os.homedir(), ".roo-code", "mcp")
 		}
 		return mcpServersDir
 	}
@@ -2037,7 +2122,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	async handleOpenRouterCallback(code: string) {
 		let apiKey: string
 		try {
-			const response = await axios.post("https://openrouter.ai/api/v1/auth/keys", { code })
+			const { apiConfiguration } = await this.getState()
+			const baseUrl = apiConfiguration.openRouterBaseUrl || "https://openrouter.ai/api/v1"
+			// Extract the base domain for the auth endpoint
+			const baseUrlDomain = baseUrl.match(/^(https?:\/\/[^\/]+)/)?.[1] || "https://openrouter.ai"
+			const response = await axios.post(`${baseUrlDomain}/api/v1/auth/keys`, { code })
 			if (response.data && response.data.key) {
 				apiKey = response.data.key
 			} else {
@@ -2131,10 +2220,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	async showTaskWithId(id: string) {
 		if (id !== this.getCurrentCline()?.taskId) {
-			// non-current task
+			// Non-current task.
 			const { historyItem } = await this.getTaskWithId(id)
-			await this.initClineWithHistoryItem(historyItem) // clears existing task
+			await this.initClineWithHistoryItem(historyItem) // Clears existing task.
 		}
+
 		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 	}
 
@@ -2222,9 +2312,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			soundVolume,
 			browserViewportSize,
 			screenshotQuality,
-			preferredLanguage,
+			remoteBrowserHost,
+			remoteBrowserEnabled,
 			writeDelayMs,
-			terminalOutputLimit,
+			terminalOutputLineLimit,
 			fuzzyMatchThreshold,
 			mcpEnabled,
 			enableMcpServerCreation,
@@ -2240,9 +2331,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			autoApprovalEnabled,
 			experiments,
 			maxOpenTabsContext,
+			maxWorkspaceFiles,
 			browserToolEnabled,
 			telemetrySetting,
 			showRooIgnoredFiles,
+			language,
 		} = await this.getState()
 		const telemetryKey = process.env.POSTHOG_API_KEY
 		const machineId = vscode.env.machineId
@@ -2282,9 +2375,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			soundVolume: soundVolume ?? 0.5,
 			browserViewportSize: browserViewportSize ?? "900x600",
 			screenshotQuality: screenshotQuality ?? 75,
-			preferredLanguage: preferredLanguage ?? "English",
+			remoteBrowserHost,
+			remoteBrowserEnabled: remoteBrowserEnabled ?? false,
 			writeDelayMs: writeDelayMs ?? 1000,
-			terminalOutputLimit: terminalOutputLimit ?? TERMINAL_OUTPUT_LIMIT,
+			terminalOutputLineLimit: terminalOutputLineLimit ?? 500,
 			fuzzyMatchThreshold: fuzzyMatchThreshold ?? 1.0,
 			mcpEnabled: mcpEnabled ?? true,
 			enableMcpServerCreation: enableMcpServerCreation ?? true,
@@ -2302,12 +2396,14 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			experiments: experiments ?? experimentDefault,
 			mcpServers: this.mcpHub?.getAllServers() ?? [],
 			maxOpenTabsContext: maxOpenTabsContext ?? 20,
+			maxWorkspaceFiles: maxWorkspaceFiles ?? 200,
 			cwd,
 			browserToolEnabled: browserToolEnabled ?? true,
 			telemetrySetting,
 			telemetryKey,
 			machineId,
 			showRooIgnoredFiles: showRooIgnoredFiles ?? true,
+			language,
 		}
 	}
 
@@ -2437,41 +2533,13 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			soundVolume: stateValues.soundVolume,
 			browserViewportSize: stateValues.browserViewportSize ?? "900x600",
 			screenshotQuality: stateValues.screenshotQuality ?? 75,
+			remoteBrowserHost: stateValues.remoteBrowserHost,
+			remoteBrowserEnabled: stateValues.remoteBrowserEnabled ?? false,
 			fuzzyMatchThreshold: stateValues.fuzzyMatchThreshold ?? 1.0,
 			writeDelayMs: stateValues.writeDelayMs ?? 1000,
-			terminalOutputLimit: stateValues.terminalOutputLimit ?? TERMINAL_OUTPUT_LIMIT,
+			terminalOutputLineLimit: stateValues.terminalOutputLineLimit ?? 500,
 			mode: stateValues.mode ?? defaultModeSlug,
-			preferredLanguage:
-				stateValues.preferredLanguage ??
-				(() => {
-					// Get VSCode's locale setting
-					const vscodeLang = vscode.env.language
-					// Map VSCode locale to our supported languages
-					const langMap: { [key: string]: string } = {
-						en: "English",
-						ar: "Arabic",
-						"pt-br": "Brazilian Portuguese",
-						ca: "Catalan",
-						cs: "Czech",
-						fr: "French",
-						de: "German",
-						hi: "Hindi",
-						hu: "Hungarian",
-						it: "Italian",
-						ja: "Japanese",
-						ko: "Korean",
-						pl: "Polish",
-						pt: "Portuguese",
-						ru: "Russian",
-						zh: "Simplified Chinese",
-						"zh-cn": "Simplified Chinese",
-						es: "Spanish",
-						"zh-tw": "Traditional Chinese",
-						tr: "Turkish",
-					}
-					// Return mapped language or default to English
-					return langMap[vscodeLang] ?? langMap[vscodeLang.split("-")[0]] ?? "English"
-				})(),
+			language: stateValues.language || formatLanguage(vscode.env.language),
 			mcpEnabled: stateValues.mcpEnabled ?? true,
 			enableMcpServerCreation: stateValues.enableMcpServerCreation ?? true,
 			alwaysApproveResubmit: stateValues.alwaysApproveResubmit ?? false,
@@ -2487,6 +2555,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			autoApprovalEnabled: stateValues.autoApprovalEnabled ?? false,
 			customModes,
 			maxOpenTabsContext: stateValues.maxOpenTabsContext ?? 20,
+			maxWorkspaceFiles: stateValues.maxWorkspaceFiles ?? 200,
 			openRouterUseMiddleOutTransform: stateValues.openRouterUseMiddleOutTransform ?? true,
 			browserToolEnabled: stateValues.browserToolEnabled ?? true,
 			telemetrySetting: stateValues.telemetrySetting || "unset",
@@ -2509,11 +2578,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	// global
 
-	async updateGlobalState(key: GlobalStateKey, value: any) {
+	public async updateGlobalState(key: GlobalStateKey, value: any) {
 		await this.contextProxy.updateGlobalState(key, value)
 	}
 
-	async getGlobalState(key: GlobalStateKey) {
+	public async getGlobalState(key: GlobalStateKey) {
 		return await this.contextProxy.getGlobalState(key)
 	}
 
@@ -2525,6 +2594,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	private async getSecret(key: SecretKey) {
 		return await this.contextProxy.getSecret(key)
+	}
+
+	// global + secret
+
+	public async setValues(values: Partial<ConfigurationValues>) {
+		await this.contextProxy.setValues(values)
 	}
 
 	// dev
@@ -2576,7 +2651,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	 * like the current mode, API provider, etc.
 	 */
 	public async getTelemetryProperties(): Promise<Record<string, any>> {
-		const { mode, apiConfiguration } = await this.getState()
+		const { mode, apiConfiguration, language } = await this.getState()
 		const appVersion = this.context.extension?.packageJSON?.version
 		const vscodeVersion = vscode.version
 		const platform = process.platform
@@ -2589,6 +2664,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		// Add extension version
 		if (appVersion) {
 			properties.appVersion = appVersion
+		}
+
+		// Add language
+		if (language) {
+			properties.language = language
 		}
 
 		// Add current mode
@@ -2608,6 +2688,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			if (modelId) {
 				properties.modelId = modelId
 			}
+		}
+
+		if (currentCline?.diffStrategy) {
+			properties.diffStrategy = currentCline.diffStrategy.getName()
 		}
 
 		return properties
