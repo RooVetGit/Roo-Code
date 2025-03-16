@@ -1,4 +1,5 @@
 import { HTMLAttributes } from "react"
+import { useAppTranslation } from "@/i18n/TranslationContext"
 import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
 import { Cog } from "lucide-react"
 
@@ -13,48 +14,36 @@ import { Section } from "./Section"
 
 type AdvancedSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	rateLimitSeconds: number
-	terminalOutputLineLimit?: number
-	maxOpenTabsContext: number
 	diffEnabled?: boolean
 	fuzzyMatchThreshold?: number
-	showSeawolfIgnoredFiles?: boolean
-	setCachedStateField: SetCachedStateField<
-		| "rateLimitSeconds"
-		| "terminalOutputLineLimit"
-		| "maxOpenTabsContext"
-		| "diffEnabled"
-		| "fuzzyMatchThreshold"
-		| "showSeawolfIgnoredFiles"
-	>
+	setCachedStateField: SetCachedStateField<"rateLimitSeconds" | "diffEnabled" | "fuzzyMatchThreshold">
 	experiments: Record<ExperimentId, boolean>
 	setExperimentEnabled: SetExperimentEnabled
 }
 export const AdvancedSettings = ({
 	rateLimitSeconds,
-	terminalOutputLineLimit,
-	maxOpenTabsContext,
 	diffEnabled,
 	fuzzyMatchThreshold,
-	showSeawolfIgnoredFiles,
 	setCachedStateField,
 	experiments,
 	setExperimentEnabled,
 	className,
 	...props
 }: AdvancedSettingsProps) => {
+	const { t } = useAppTranslation()
 	return (
 		<div className={cn("flex flex-col gap-2", className)} {...props}>
 			<SectionHeader>
 				<div className="flex items-center gap-2">
 					<Cog className="w-4" />
-					<div>Advanced</div>
+					<div>{t("settings:sections.advanced")}</div>
 				</div>
 			</SectionHeader>
 
 			<Section>
 				<div>
 					<div className="flex flex-col gap-2">
-						<span className="font-medium">Rate limit</span>
+						<span className="font-medium">{t("settings:advanced.rateLimit.label")}</span>
 						<div className="flex items-center gap-2">
 							<input
 								type="range"
@@ -68,52 +57,8 @@ export const AdvancedSettings = ({
 							<span style={{ ...sliderLabelStyle }}>{rateLimitSeconds}s</span>
 						</div>
 					</div>
-					<p className="text-vscode-descriptionForeground text-sm mt-0">Minimum time between API requests.</p>
-				</div>
-
-				<div>
-					<div className="flex flex-col gap-2">
-						<span className="font-medium">Terminal output limit</span>
-						<div className="flex items-center gap-2">
-							<input
-								type="range"
-								min="100"
-								max="5000"
-								step="100"
-								value={terminalOutputLineLimit ?? 500}
-								onChange={(e) =>
-									setCachedStateField("terminalOutputLineLimit", parseInt(e.target.value))
-								}
-								className="h-2 focus:outline-0 w-4/5 accent-vscode-button-background"
-							/>
-							<span style={{ ...sliderLabelStyle }}>{terminalOutputLineLimit ?? 500}</span>
-						</div>
-					</div>
 					<p className="text-vscode-descriptionForeground text-sm mt-0">
-						Maximum number of lines to include in terminal output when executing commands. When exceeded
-						lines will be removed from the middle, saving tokens.
-					</p>
-				</div>
-
-				<div>
-					<div className="flex flex-col gap-2">
-						<span className="font-medium">Open tabs context limit</span>
-						<div className="flex items-center gap-2">
-							<input
-								type="range"
-								min="0"
-								max="500"
-								step="1"
-								value={maxOpenTabsContext ?? 20}
-								onChange={(e) => setCachedStateField("maxOpenTabsContext", parseInt(e.target.value))}
-								className="h-2 focus:outline-0 w-4/5 accent-vscode-button-background"
-							/>
-							<span style={{ ...sliderLabelStyle }}>{maxOpenTabsContext ?? 20}</span>
-						</div>
-					</div>
-					<p className="text-vscode-descriptionForeground text-sm mt-0">
-						Maximum number of VSCode open tabs to include in context. Higher values provide more context but
-						increase token usage.
+						{t("settings:advanced.rateLimit.description")}
 					</p>
 				</div>
 
@@ -128,16 +73,15 @@ export const AdvancedSettings = ({
 								setExperimentEnabled(EXPERIMENT_IDS.MULTI_SEARCH_AND_REPLACE, false)
 							}
 						}}>
-						<span className="font-medium">Enable editing through diffs</span>
+						<span className="font-medium">{t("settings:advanced.diff.label")}</span>
 					</VSCodeCheckbox>
 					<p className="text-vscode-descriptionForeground text-sm mt-0">
-						When enabled, Seawolf will be able to edit files more quickly and will automatically reject
-						truncated full-file writes. Works best with the latest Claude 3.7 Sonnet model.
+						{t("settings:advanced.diff.description")}
 					</p>
 					{diffEnabled && (
 						<div className="flex flex-col gap-2 mt-3 mb-2 pl-3 border-l-2 border-vscode-button-background">
 							<div className="flex flex-col gap-2">
-								<span className="font-medium">Diff strategy</span>
+								<span className="font-medium">{t("settings:advanced.diff.strategy.label")}</span>
 								<select
 									value={
 										experiments[EXPERIMENT_IDS.DIFF_STRATEGY]
@@ -160,9 +104,15 @@ export const AdvancedSettings = ({
 										}
 									}}
 									className="p-2 rounded w-full bg-vscode-input-background text-vscode-input-foreground border border-vscode-input-border outline-none focus:border-vscode-focusBorder">
-									<option value="standard">Standard (Single block)</option>
-									<option value="multiBlock">Experimental: Multi-block diff</option>
-									<option value="unified">Experimental: Unified diff</option>
+									<option value="standard">
+										{t("settings:advanced.diff.strategy.options.standard")}
+									</option>
+									<option value="multiBlock">
+										{t("settings:advanced.diff.strategy.options.multiBlock")}
+									</option>
+									<option value="unified">
+										{t("settings:advanced.diff.strategy.options.unified")}
+									</option>
 								</select>
 							</div>
 
@@ -170,15 +120,15 @@ export const AdvancedSettings = ({
 							<p className="text-vscode-descriptionForeground text-sm mt-1">
 								{!experiments[EXPERIMENT_IDS.DIFF_STRATEGY] &&
 									!experiments[EXPERIMENT_IDS.MULTI_SEARCH_AND_REPLACE] &&
-									"Standard diff strategy applies changes to a single code block at a time."}
+									t("settings:advanced.diff.strategy.descriptions.standard")}
 								{experiments[EXPERIMENT_IDS.DIFF_STRATEGY] &&
-									"Unified diff strategy takes multiple approaches to applying diffs and chooses the best approach."}
+									t("settings:advanced.diff.strategy.descriptions.unified")}
 								{experiments[EXPERIMENT_IDS.MULTI_SEARCH_AND_REPLACE] &&
-									"Multi-block diff strategy allows updating multiple code blocks in a file in one request."}
+									t("settings:advanced.diff.strategy.descriptions.multiBlock")}
 							</p>
 
 							{/* Match precision slider */}
-							<span className="font-medium mt-3">Match precision</span>
+							<span className="font-medium mt-3">{t("settings:advanced.diff.matchPrecision.label")}</span>
 							<div className="flex items-center gap-2">
 								<input
 									type="range"
@@ -196,26 +146,10 @@ export const AdvancedSettings = ({
 								</span>
 							</div>
 							<p className="text-vscode-descriptionForeground text-sm mt-0">
-								This slider controls how precisely code sections must match when applying diffs. Lower
-								values allow more flexible matching but increase the risk of incorrect replacements. Use
-								values below 100% with extreme caution.
+								{t("settings:advanced.diff.matchPrecision.description")}
 							</p>
 						</div>
 					)}
-				</div>
-
-				<div>
-					<VSCodeCheckbox
-						checked={showSeawolfIgnoredFiles}
-						onChange={(e: any) => {
-							setCachedStateField("showSeawolfIgnoredFiles", e.target.checked)
-						}}>
-						<span className="font-medium">Show .seawolfignore'd files in lists and searches</span>
-					</VSCodeCheckbox>
-					<p className="text-vscode-descriptionForeground text-sm mt-0">
-						When enabled, files matching patterns in .seawolfignore will be shown in lists with a lock
-						symbol. When disabled, these files will be completely hidden from file lists and searches.
-					</p>
 				</div>
 			</Section>
 		</div>
