@@ -48,6 +48,23 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(outputChannel)
 	outputChannel.appendLine("Seawolf extension activated")
 
+	// Ensure default .clinerules files are available
+	const defaultRuleFiles = [
+		{ name: ".clinerules-code", content: "# Code Mode Rules\n1. Code specific rule" },
+		{ name: ".clinerules-ask", content: "# Ask Mode Rules\n1. Ask specific rule" },
+		{ name: ".clinerules-architect", content: "# Architect Mode Rules\n1. Architect specific rule" },
+		{
+			name: ".clinerules-test",
+			content:
+				"# Test Engineer Rules\n1. Always write tests first\n2. Get approval before modifying non-test code",
+		},
+	]
+
+	defaultRuleFiles.forEach((file) => {
+		const filePath = vscode.Uri.joinPath(context.globalStorageUri, file.name)
+		vscode.workspace.fs.writeFile(filePath, Buffer.from(file.content))
+	})
+
 	console.log("Telemetry service initialized.")
 	// Initialize telemetry service after environment variables are loaded.
 	telemetryService.initialize()
