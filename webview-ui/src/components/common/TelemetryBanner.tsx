@@ -3,7 +3,6 @@ import { memo, useState } from "react"
 import styled from "styled-components"
 import { vscode } from "../../utils/vscode"
 import { TelemetrySetting } from "../../../../src/shared/TelemetrySetting"
-import { useAppTranslation } from "../../i18n/TranslationContext"
 
 const BannerContainer = styled.div`
 	background-color: var(--vscode-banner-background);
@@ -25,7 +24,6 @@ const ButtonContainer = styled.div`
 `
 
 const TelemetryBanner = () => {
-	const { t } = useAppTranslation()
 	const [hasChosen, setHasChosen] = useState(false)
 
 	const handleAllow = () => {
@@ -45,13 +43,14 @@ const TelemetryBanner = () => {
 	return (
 		<BannerContainer>
 			<div>
-				<strong>{t("welcome:telemetry.title")}</strong>
+				<strong>Help Improve Seawolf</strong>
 				<div className="mt-1">
-					{t("welcome:telemetry.anonymousTelemetry")}
+					Send anonymous error and usage data to help us fix bugs and improve the extension. No code, prompts,
+					or personal information is ever sent.
 					<div className="mt-1">
-						{t("welcome:telemetry.changeSettings")}{" "}
+						You can always change this at the bottom of the{" "}
 						<VSCodeLink href="#" onClick={handleOpenSettings}>
-							{t("welcome:telemetry.settings")}
+							settings
 						</VSCodeLink>
 						.
 					</div>
@@ -59,10 +58,10 @@ const TelemetryBanner = () => {
 			</div>
 			<ButtonContainer>
 				<VSCodeButton appearance="primary" onClick={handleAllow} disabled={hasChosen}>
-					{t("welcome:telemetry.allow")}
+					Allow
 				</VSCodeButton>
 				<VSCodeButton appearance="secondary" onClick={handleDeny} disabled={hasChosen}>
-					{t("welcome:telemetry.deny")}
+					Deny
 				</VSCodeButton>
 			</ButtonContainer>
 		</BannerContainer>

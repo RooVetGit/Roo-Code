@@ -63,7 +63,7 @@ import { calculateApiCostAnthropic } from "../utils/cost"
 import { fileExistsAtPath } from "../utils/fs"
 import { arePathsEqual, getReadablePath } from "../utils/path"
 import { parseMentions } from "./mentions"
-import { RooIgnoreController } from "./ignore/RooIgnoreController"
+import { SeawolfIgnoreController } from "./ignore/SeawolfIgnoreController"
 import { AssistantMessageContent, parseAssistantMessage, ToolParamName, ToolUseName } from "./assistant-message"
 import { formatResponse } from "./prompts/responses"
 import { SYSTEM_PROMPT } from "./prompts/system"
@@ -135,7 +135,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 	apiConversationHistory: (Anthropic.MessageParam & { ts?: number })[] = []
 	clineMessages: ClineMessage[] = []
-	rooIgnoreController?: RooIgnoreController
+	seawolfIgnoreController?: SeawolfIgnoreController
 	private askResponse?: ClineAskResponse
 	private askResponseText?: string
 	private askResponseImages?: string[]
@@ -191,9 +191,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 			throw new Error("Either historyItem or task/images must be provided")
 		}
 
-		this.rooIgnoreController = new RooIgnoreController(cwd)
-		this.rooIgnoreController.initialize().catch((error) => {
-			console.error("Failed to initialize RooIgnoreController:", error)
+		this.seawolfIgnoreController = new SeawolfIgnoreController(cwd)
+		this.seawolfIgnoreController.initialize().catch((error: Error) => {
+			console.error("Failed to initialize SeawolfIgnoreController:", error)
 		})
 
 		this.taskId = historyItem ? historyItem.id : crypto.randomUUID()
@@ -916,7 +916,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 		this.urlContentFetcher.closeBrowser()
 		this.browserSession.closeBrowser()
-		this.rooIgnoreController?.dispose()
+		this.seawolfIgnoreController?.dispose()
 
 		// If we're not streaming then `abortStream` (which reverts the diff
 		// view changes) won't be called, so we need to revert the changes here.
@@ -1096,7 +1096,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			})
 		}
 
-		const rooIgnoreInstructions = this.rooIgnoreController?.getInstructions()
+		const rooIgnoreInstructions = this.seawolfIgnoreController?.getInstructions()
 
 		const {
 			browserViewportSize,
@@ -1525,10 +1525,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 							break
 						}
 
-						const accessAllowed = this.rooIgnoreController?.validateAccess(relPath)
+						const accessAllowed = this.seawolfIgnoreController?.validateAccess(relPath)
 						if (!accessAllowed) {
-							await this.say("rooignore_error", relPath)
-							pushToolResult(formatResponse.toolError(formatResponse.rooIgnoreError(relPath)))
+							await this.say("seawolfignore_error", relPath)
+							pushToolResult(formatResponse.toolError(formatResponse.seawolf(relPath)))
 
 							break
 						}
@@ -1750,10 +1750,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 									break
 								}
 
-								const accessAllowed = this.rooIgnoreController?.validateAccess(relPath)
+								const accessAllowed = this.seawolfIgnoreController?.validateAccess(relPath)
 								if (!accessAllowed) {
-									await this.say("rooignore_error", relPath)
-									pushToolResult(formatResponse.toolError(formatResponse.rooIgnoreError(relPath)))
+									await this.say("seawolfignore_error", relPath)
+									pushToolResult(formatResponse.toolError(formatResponse.seawolf(relPath)))
 
 									break
 								}
@@ -2222,10 +2222,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 									break
 								}
 
-								const accessAllowed = this.rooIgnoreController?.validateAccess(relPath)
+								const accessAllowed = this.seawolfIgnoreController?.validateAccess(relPath)
 								if (!accessAllowed) {
-									await this.say("rooignore_error", relPath)
-									pushToolResult(formatResponse.toolError(formatResponse.rooIgnoreError(relPath)))
+									await this.say("seawolfignore_error", relPath)
+									pushToolResult(formatResponse.toolError(formatResponse.seawolf(relPath)))
 
 									break
 								}
@@ -2275,13 +2275,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 								this.consecutiveMistakeCount = 0
 								const absolutePath = path.resolve(cwd, relDirPath)
 								const [files, didHitLimit] = await listFiles(absolutePath, recursive, 200)
-								const { showRooIgnoredFiles } = (await this.providerRef.deref()?.getState()) ?? {}
+								const { showSeawolfIgnoredFiles } = (await this.providerRef.deref()?.getState()) ?? {}
 								const result = formatResponse.formatFilesList(
 									absolutePath,
 									files,
 									didHitLimit,
-									this.rooIgnoreController,
-									showRooIgnoredFiles ?? true,
+									this.seawolfIgnoreController,
+									showSeawolfIgnoredFiles ?? true,
 								)
 								const completeMessage = JSON.stringify({
 									...sharedMessageProps,
@@ -2325,7 +2325,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 								const absolutePath = path.resolve(cwd, relDirPath)
 								const result = await parseSourceCodeForDefinitionsTopLevel(
 									absolutePath,
-									this.rooIgnoreController,
+									this.seawolfIgnoreController,
 								)
 								const completeMessage = JSON.stringify({
 									...sharedMessageProps,
@@ -2379,7 +2379,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 									absolutePath,
 									regex,
 									filePattern,
-									this.rooIgnoreController,
+									this.seawolfIgnoreController,
 								)
 								const completeMessage = JSON.stringify({
 									...sharedMessageProps,
@@ -2561,13 +2561,12 @@ export class Cline extends EventEmitter<ClineEvents> {
 									break
 								}
 
-								const ignoredFileAttemptedToAccess = this.rooIgnoreController?.validateCommand(command)
+								const ignoredFileAttemptedToAccess =
+									this.seawolfIgnoreController?.validateCommand(command)
 								if (ignoredFileAttemptedToAccess) {
-									await this.say("rooignore_error", ignoredFileAttemptedToAccess)
+									await this.say("seawolfignore_error", ignoredFileAttemptedToAccess)
 									pushToolResult(
-										formatResponse.toolError(
-											formatResponse.rooIgnoreError(ignoredFileAttemptedToAccess),
-										),
+										formatResponse.toolError(formatResponse.seawolf(ignoredFileAttemptedToAccess)),
 									)
 
 									break
@@ -3136,7 +3135,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 				"mistake_limit_reached",
 				this.api.getModel().id.includes("claude")
 					? `This may indicate a failure in his thought process or inability to use a tool properly, which can be mitigated with some user guidance (e.g. "Try breaking down the task into smaller steps").`
-					: "Roo Code uses complex prompts and iterative task execution that may be challenging for less capable models. For best results, it's recommended to use Claude 3.7 Sonnet for its advanced agentic coding capabilities.",
+					: "Seawolf uses complex prompts and iterative task execution that may be challenging for less capable models. For best results, it's recommended to use Claude 3.7 Sonnet for its advanced agentic coding capabilities.",
 			)
 			if (response === "messageResponse") {
 				userContent.push(
@@ -3501,7 +3500,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 	async getEnvironmentDetails(includeFileDetails: boolean = false) {
 		let details = ""
 
-		const { terminalOutputLineLimit, maxWorkspaceFiles } = (await this.providerRef.deref()?.getState()) ?? {}
+		const { terminalOutputLineLimit } = (await this.providerRef.deref()?.getState()) ?? {}
 
 		// It could be useful for cline to know if the user went from one or no file to another between messages, so we always include this context
 		details += "\n\n# VSCode Visible Files"
@@ -3509,11 +3508,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 			?.map((editor) => editor.document?.uri?.fsPath)
 			.filter(Boolean)
 			.map((absolutePath) => path.relative(cwd, absolutePath))
-			.slice(0, maxWorkspaceFiles ?? 200)
 
-		// Filter paths through rooIgnoreController
-		const allowedVisibleFiles = this.rooIgnoreController
-			? this.rooIgnoreController.filterPaths(visibleFilePaths)
+		// Filter paths through seawolfIgnoreController
+		const allowedVisibleFiles = this.seawolfIgnoreController
+			? this.seawolfIgnoreController.filterPaths(visibleFilePaths)
 			: visibleFilePaths.map((p) => p.toPosix()).join("\n")
 
 		if (allowedVisibleFiles) {
@@ -3532,9 +3530,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 			.map((absolutePath) => path.relative(cwd, absolutePath).toPosix())
 			.slice(0, maxTabs)
 
-		// Filter paths through rooIgnoreController
-		const allowedOpenTabs = this.rooIgnoreController
-			? this.rooIgnoreController.filterPaths(openTabPaths)
+		// Filter paths through seawolfIgnoreController
+		const allowedOpenTabs = this.seawolfIgnoreController
+			? this.seawolfIgnoreController.filterPaths(openTabPaths)
 			: openTabPaths.map((p) => p.toPosix()).join("\n")
 
 		if (allowedOpenTabs) {
@@ -3716,15 +3714,14 @@ export class Cline extends EventEmitter<ClineEvents> {
 				// don't want to immediately access desktop since it would show permission popup
 				details += "(Desktop files not shown automatically. Use list_files to explore if needed.)"
 			} else {
-				const maxFiles = maxWorkspaceFiles ?? 200
-				const [files, didHitLimit] = await listFiles(cwd, true, maxFiles)
-				const { showRooIgnoredFiles } = (await this.providerRef.deref()?.getState()) ?? {}
+				const [files, didHitLimit] = await listFiles(cwd, true, 200)
+				const { showSeawolfIgnoredFiles } = (await this.providerRef.deref()?.getState()) ?? {}
 				const result = formatResponse.formatFilesList(
 					cwd,
 					files,
 					didHitLimit,
-					this.rooIgnoreController,
-					showRooIgnoredFiles,
+					this.seawolfIgnoreController,
+					showSeawolfIgnoredFiles,
 				)
 				details += result
 			}

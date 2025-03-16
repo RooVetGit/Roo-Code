@@ -16,8 +16,7 @@
 		"e2e/**",
 		"src/activate/**",
 		"src/exports/**",
-		"src/extension.ts",
-		"scripts/**"
+		"src/extension.ts"
 	],
 	"workspaces": {
 		"webview-ui": {

@@ -1,7 +1,6 @@
 import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
 import { useCallback, useState } from "react"
 import { useExtensionState } from "../../context/ExtensionStateContext"
-import { useAppTranslation } from "../../i18n/TranslationContext"
 import { vscode } from "../../utils/vscode"
 
 interface AutoApproveAction {
@@ -39,64 +38,63 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		setAutoApprovalEnabled,
 	} = useExtensionState()
 
-	const { t } = useAppTranslation()
-
 	const actions: AutoApproveAction[] = [
 		{
 			id: "readFiles",
-			label: t("chat:autoApprove.actions.readFiles.label"),
-			shortName: t("chat:autoApprove.actions.readFiles.shortName"),
+			label: "Read files and directories",
+			shortName: "Read",
 			enabled: alwaysAllowReadOnly ?? false,
-			description: t("chat:autoApprove.actions.readFiles.description"),
+			description: "Allows access to read any file on your computer.",
 		},
 		{
 			id: "editFiles",
-			label: t("chat:autoApprove.actions.editFiles.label"),
-			shortName: t("chat:autoApprove.actions.editFiles.shortName"),
+			label: "Edit files",
+			shortName: "Edit",
 			enabled: alwaysAllowWrite ?? false,
-			description: t("chat:autoApprove.actions.editFiles.description"),
+			description: "Allows modification of any files on your computer.",
 		},
 		{
 			id: "executeCommands",
-			label: t("chat:autoApprove.actions.executeCommands.label"),
-			shortName: t("chat:autoApprove.actions.executeCommands.shortName"),
+			label: "Execute approved commands",
+			shortName: "Commands",
 			enabled: alwaysAllowExecute ?? false,
-			description: t("chat:autoApprove.actions.executeCommands.description"),
+			description:
+				"Allows execution of approved terminal commands. You can configure this in the settings panel.",
 		},
 		{
 			id: "useBrowser",
-			label: t("chat:autoApprove.actions.useBrowser.label"),
-			shortName: t("chat:autoApprove.actions.useBrowser.shortName"),
+			label: "Use the browser",
+			shortName: "Browser",
 			enabled: alwaysAllowBrowser ?? false,
-			description: t("chat:autoApprove.actions.useBrowser.description"),
+			description: "Allows ability to launch and interact with any website in a headless browser.",
 		},
 		{
 			id: "useMcp",
-			label: t("chat:autoApprove.actions.useMcp.label"),
-			shortName: t("chat:autoApprove.actions.useMcp.shortName"),
+			label: "Use MCP servers",
+			shortName: "MCP",
 			enabled: alwaysAllowMcp ?? false,
-			description: t("chat:autoApprove.actions.useMcp.description"),
+			description: "Allows use of configured MCP servers which may modify filesystem or interact with APIs.",
 		},
 		{
 			id: "switchModes",
-			label: t("chat:autoApprove.actions.switchModes.label"),
-			shortName: t("chat:autoApprove.actions.switchModes.shortName"),
+			label: "Switch modes",
+			shortName: "Modes",
 			enabled: alwaysAllowModeSwitch ?? false,
-			description: t("chat:autoApprove.actions.switchModes.description"),
+			description: "Allows automatic switching between different modes without requiring approval.",
 		},
 		{
 			id: "subtasks",
-			label: t("chat:autoApprove.actions.subtasks.label"),
-			shortName: t("chat:autoApprove.actions.subtasks.shortName"),
+			label: "Create & complete subtasks",
+			shortName: "Subtasks",
 			enabled: alwaysAllowSubtasks ?? false,
-			description: t("chat:autoApprove.actions.subtasks.description"),
+			description: "Allow creation and completion of subtasks without requiring approval.",
 		},
 		{
 			id: "retryRequests",
-			label: t("chat:autoApprove.actions.retryRequests.label"),
-			shortName: t("chat:autoApprove.actions.retryRequests.shortName"),
+			label: "Retry failed requests",
+			shortName: "Retries",
 			enabled: alwaysApproveResubmit ?? false,
-			description: t("chat:autoApprove.actions.retryRequests.description"),
+			description: "Automatically retry failed API requests when the provider returns an error response.",
 		},
 	]
 
@@ -213,7 +211,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 							color: "var(--vscode-foreground)",
 							flexShrink: 0,
 						}}>
-						{t("chat:autoApprove.title")}
+						Auto-approve:
 					</span>
 					<span
 						style={{
@@ -224,7 +222,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 							flex: 1,
 							minWidth: 0,
 						}}>
-						{enabledActionsList || t("chat:autoApprove.none")}
+						{enabledActionsList || "None"}
 					</span>
 					<span
 						className={`codicon codicon-chevron-${isExpanded ? "down" : "right"}`}
@@ -243,7 +241,8 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 							color: "var(--vscode-descriptionForeground)",
 							fontSize: "12px",
 						}}>
-						{t("chat:autoApprove.description")}
+						Auto-approve allows Seawolf to perform actions without asking for permission. Only enable for
+						actions you fully trust.
 					</div>
 					{actions.map((action) => (
 						<div key={action.id} style={{ margin: "6px 0" }}>

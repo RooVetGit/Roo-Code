@@ -5,25 +5,24 @@ import { formatLargeNumber, formatDate } from "@/utils/format"
 import { Button } from "@/components/ui"
 
 import { useExtensionState } from "../../context/ExtensionStateContext"
-import { useAppTranslation } from "../../i18n/TranslationContext"
 import { CopyButton } from "./CopyButton"
 
 type HistoryPreviewProps = {
 	showHistoryView: () => void
 }
+
 const HistoryPreview = ({ showHistoryView }: HistoryPreviewProps) => {
 	const { taskHistory } = useExtensionState()
-	const { t } = useAppTranslation()
 
 	return (
 		<div className="flex flex-col gap-3 shrink-0 mx-5">
 			<div className="flex items-center justify-between text-vscode-descriptionForeground">
 				<div className="flex items-center gap-1">
 					<span className="codicon codicon-comment-discussion scale-90 mr-1" />
-					<span className="font-medium text-xs uppercase">{t("history:recentTasks")}</span>
+					<span className="font-medium text-xs uppercase">Recent Tasks</span>
 				</div>
 				<Button variant="ghost" size="sm" onClick={() => showHistoryView()} className="uppercase">
-					{t("history:viewAll")}
+					View All
 				</Button>
 			</div>
 			{taskHistory.slice(0, 3).map((item) => (
@@ -51,26 +50,22 @@ const HistoryPreview = ({ showHistoryView }: HistoryPreviewProps) => {
 						</div>
 						<div className="text-xs text-vscode-descriptionForeground">
 							<span>
-								{t("history:tokens", {
-									in: formatLargeNumber(item.tokensIn || 0),
-									out: formatLargeNumber(item.tokensOut || 0),
-								})}
+								Tokens: ↑{formatLargeNumber(item.tokensIn || 0)} ↓
+								{formatLargeNumber(item.tokensOut || 0)}
 							</span>
 							{!!item.cacheWrites && (
 								<>
 									{" • "}
 									<span>
-										{t("history:cache", {
-											writes: formatLargeNumber(item.cacheWrites || 0),
-											reads: formatLargeNumber(item.cacheReads || 0),
-										})}
+										Cache: +{formatLargeNumber(item.cacheWrites || 0)} →{" "}
+										{formatLargeNumber(item.cacheReads || 0)}
 									</span>
 								</>
 							)}
 							{!!item.totalCost && (
 								<>
 									{" • "}
-									<span>{t("history:apiCost", { cost: item.totalCost?.toFixed(4) })}</span>
+									<span>API Cost: ${item.totalCost?.toFixed(4)}</span>
 								</>
 							)}
 						</div>

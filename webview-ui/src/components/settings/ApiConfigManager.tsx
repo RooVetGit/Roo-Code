@@ -1,6 +1,5 @@
 import { VSCodeButton, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 import { memo, useEffect, useRef, useState } from "react"
-import { useAppTranslation } from "@/i18n/TranslationContext"
 import { ApiConfigMeta } from "../../../../src/shared/ExtensionMessage"
 import { Dropdown } from "vscrui"
 import type { DropdownOption } from "vscrui"
@@ -24,7 +23,6 @@ const ApiConfigManager = ({
 	onRenameConfig,
 	onUpsertConfig,
 }: ApiConfigManagerProps) => {
-	const { t } = useAppTranslation()
 	const [isRenaming, setIsRenaming] = useState(false)
 	const [isCreating, setIsCreating] = useState(false)
 	const [inputValue, setInputValue] = useState("")
@@ -35,18 +33,18 @@ const ApiConfigManager = ({
 
 	const validateName = (name: string, isNewProfile: boolean): string | null => {
 		const trimmed = name.trim()
-		if (!trimmed) return t("settings:providers.nameEmpty")
+		if (!trimmed) return "Name cannot be empty"
 
 		const nameExists = listApiConfigMeta?.some((config) => config.name.toLowerCase() === trimmed.toLowerCase())
 
 		// For new profiles, any existing name is invalid
 		if (isNewProfile && nameExists) {
-			return t("settings:providers.nameExists")
+			return "A profile with this name already exists"
 		}
 
 		// For rename, only block if trying to rename to a different existing profile
 		if (!isNewProfile && nameExists && trimmed.toLowerCase() !== currentApiConfigName?.toLowerCase()) {
-			return t("settings:providers.nameExists")
+			return "A profile with this name already exists"
 		}
 
 		return null
@@ -146,7 +144,7 @@ const ApiConfigManager = ({
 	return (
 		<div className="flex flex-col gap-1">
 			<label htmlFor="config-profile">
-				<span className="font-medium">{t("settings:providers.configProfile")}</span>
+				<span className="font-medium">Configuration Profile</span>
 			</label>
 
 			{isRenaming ? (
@@ -162,7 +160,7 @@ const ApiConfigManager = ({
 								setInputValue(target.target.value)
 								setError(null)
 							}}
-							placeholder={t("settings:providers.enterNewName")}
+							placeholder="Enter new name"
 							style={{ flexGrow: 1 }}
 							onKeyDown={(e: unknown) => {
 								const event = e as { key: string }
@@ -177,8 +175,7 @@ const ApiConfigManager = ({
 							appearance="icon"
 							disabled={!inputValue.trim()}
 							onClick={handleSave}
-							title={t("settings:common.save")}
-							data-testid="save-rename-button"
+							title="Save"
 							style={{
 								padding: 0,
 								margin: 0,
@@ -191,8 +188,7 @@ const ApiConfigManager = ({
 						<VSCodeButton
 							appearance="icon"
 							onClick={handleCancel}
-							title={t("settings:common.cancel")}
-							data-testid="cancel-rename-button"
+							title="Cancel"
 							style={{
 								padding: 0,
 								margin: 0,
@@ -228,8 +224,7 @@ const ApiConfigManager = ({
 						<VSCodeButton
 							appearance="icon"
 							onClick={handleAdd}
-							title={t("settings:providers.addProfile")}
-							data-testid="add-profile-button"
+							title="Add profile"
 							style={{
 								padding: 0,
 								margin: 0,
@@ -244,8 +239,7 @@ const ApiConfigManager = ({
 								<VSCodeButton
 									appearance="icon"
 									onClick={handleStartRename}
-									title={t("settings:providers.renameProfile")}
-									data-testid="rename-profile-button"
+									title="Rename profile"
 									style={{
 										padding: 0,
 										margin: 0,
@@ -258,12 +252,7 @@ const ApiConfigManager = ({
 								<VSCodeButton
 									appearance="icon"
 									onClick={handleDelete}
-									title={
-										isOnlyProfile
-											? t("settings:providers.cannotDeleteOnlyProfile")
-											: t("settings:providers.deleteProfile")
-									}
-									data-testid="delete-profile-button"
+									title={isOnlyProfile ? "Cannot delete the only profile" : "Delete profile"}
 									disabled={isOnlyProfile}
 									style={{
 										padding: 0,
@@ -283,7 +272,7 @@ const ApiConfigManager = ({
 							margin: "5px 0 12px",
 							color: "var(--vscode-descriptionForeground)",
 						}}>
-						{t("settings:providers.description")}
+						Save different API configurations to quickly switch between providers and settings.
 					</p>
 				</>
 			)}
@@ -301,7 +290,7 @@ const ApiConfigManager = ({
 				}}
 				aria-labelledby="new-profile-title">
 				<DialogContent className="p-4 max-w-sm">
-					<DialogTitle>{t("settings:providers.newProfile")}</DialogTitle>
+					<DialogTitle>New Configuration Profile</DialogTitle>
 					<Input
 						ref={newProfileInputRef}
 						value={newProfileName}
@@ -310,8 +299,7 @@ const ApiConfigManager = ({
 							setNewProfileName(target.target.value)
 							setError(null)
 						}}
-						placeholder={t("settings:providers.enterProfileName")}
-						data-testid="new-profile-input"
+						placeholder="Enter profile name"
 						style={{ width: "100%" }}
 						onKeyDown={(e: unknown) => {
 							const event = e as { key: string }
@@ -328,15 +316,11 @@ const ApiConfigManager = ({
 						</p>
 					)}
 					<div className="flex justify-end gap-2 mt-4">
-						<Button variant="secondary" onClick={resetCreateState} data-testid="cancel-new-profile-button">
-							{t("settings:common.cancel")}
+						<Button variant="secondary" onClick={resetCreateState}>
+							Cancel
 						</Button>
-						<Button
-							variant="default"
-							disabled={!newProfileName.trim()}
-							onClick={handleNewProfileSave}
-							data-testid="create-profile-button">
-							{t("settings:providers.createProfile")}
+						<Button variant="default" disabled={!newProfileName.trim()} onClick={handleNewProfileSave}>
+							Create Profile
 						</Button>
 					</div>
 				</DialogContent>

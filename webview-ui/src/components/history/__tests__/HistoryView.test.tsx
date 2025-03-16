@@ -7,7 +7,6 @@ import { vscode } from "../../../utils/vscode"
 
 jest.mock("../../../context/ExtensionStateContext")
 jest.mock("../../../utils/vscode")
-jest.mock("../../../i18n/TranslationContext")
 
 jest.mock("react-virtuoso", () => ({
 	Virtuoso: ({ data, itemContent }: any) => (
@@ -75,7 +74,7 @@ describe("HistoryView", () => {
 		render(<HistoryView onDone={onDone} />)
 
 		// Get search input and radio group
-		const searchInput = screen.getByTestId("history-search-input")
+		const searchInput = screen.getByPlaceholderText("Fuzzy search history...")
 		const radioGroup = screen.getByRole("radiogroup")
 
 		// Type in search
@@ -85,7 +84,7 @@ describe("HistoryView", () => {
 		jest.advanceTimersByTime(100)
 
 		// Check if sort option automatically changes to "Most Relevant"
-		const mostRelevantRadio = within(radioGroup).getByTestId("radio-most-relevant")
+		const mostRelevantRadio = within(radioGroup).getByLabelText("Most Relevant")
 		expect(mostRelevantRadio).not.toBeDisabled()
 
 		// Click the radio button
@@ -95,7 +94,7 @@ describe("HistoryView", () => {
 		jest.advanceTimersByTime(100)
 
 		// Verify radio button is checked
-		const updatedRadio = within(radioGroup).getByTestId("radio-most-relevant")
+		const updatedRadio = within(radioGroup).getByRole("radio", { name: "Most Relevant", checked: true })
 		expect(updatedRadio).toBeInTheDocument()
 	})
 
@@ -106,18 +105,21 @@ describe("HistoryView", () => {
 		const radioGroup = screen.getByRole("radiogroup")
 
 		// Test changing sort options
-		const oldestRadio = within(radioGroup).getByTestId("radio-oldest")
+		const oldestRadio = within(radioGroup).getByLabelText("Oldest")
 		fireEvent.click(oldestRadio)
 
 		// Wait for oldest radio to be checked
-		const checkedOldestRadio = within(radioGroup).getByTestId("radio-oldest")
+		const checkedOldestRadio = await within(radioGroup).findByRole("radio", { name: "Oldest", checked: true })
 		expect(checkedOldestRadio).toBeInTheDocument()
 
-		const mostExpensiveRadio = within(radioGroup).getByTestId("radio-most-expensive")
+		const mostExpensiveRadio = within(radioGroup).getByLabelText("Most Expensive")
 		fireEvent.click(mostExpensiveRadio)
 
 		// Wait for most expensive radio to be checked
-		const checkedExpensiveRadio = within(radioGroup).getByTestId("radio-most-expensive")
+		const checkedExpensiveRadio = await within(radioGroup).findByRole("radio", {
+			name: "Most Expensive",
+			checked: true,
+		})
 		expect(checkedExpensiveRadio).toBeInTheDocument()
 	})
 
@@ -145,7 +147,7 @@ describe("HistoryView", () => {
 			fireEvent.mouseEnter(taskContainer)
 
 			// Click delete button to open confirmation dialog
-			const deleteButton = within(taskContainer).getByTestId("delete-task-button")
+			const deleteButton = within(taskContainer).getByTitle("Delete Task (Shift + Click to skip confirmation)")
 			fireEvent.click(deleteButton)
 
 			// Verify dialog is shown
@@ -172,7 +174,7 @@ describe("HistoryView", () => {
 			fireEvent.mouseEnter(taskContainer)
 
 			// Shift-click delete button
-			const deleteButton = within(taskContainer).getByTestId("delete-task-button")
+			const deleteButton = within(taskContainer).getByTitle("Delete Task (Shift + Click to skip confirmation)")
 			fireEvent.click(deleteButton, { shiftKey: true })
 
 			// Verify no dialog is shown
@@ -200,7 +202,7 @@ describe("HistoryView", () => {
 		const taskContainer = screen.getByTestId("virtuoso-item-1")
 		fireEvent.mouseEnter(taskContainer)
 
-		const copyButton = within(taskContainer).getByTestId("copy-prompt-button")
+		const copyButton = within(taskContainer).getByTitle("Copy Prompt")
 
 		// Click the copy button and wait for clipboard operation
 		await act(async () => {

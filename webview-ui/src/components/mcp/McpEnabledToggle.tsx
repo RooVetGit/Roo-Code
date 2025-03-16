@@ -1,12 +1,10 @@
 import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
 import { FormEvent } from "react"
 import { useExtensionState } from "../../context/ExtensionStateContext"
-import { useAppTranslation } from "../../i18n/TranslationContext"
 import { vscode } from "../../utils/vscode"
 
 const McpEnabledToggle = () => {
 	const { mcpEnabled, setMcpEnabled } = useExtensionState()
-	const { t } = useAppTranslation()
 
 	const handleChange = (e: Event | FormEvent<HTMLElement>) => {
 		const target = ("target" in e ? e.target : null) as HTMLInputElement | null
@@ -18,7 +16,7 @@ const McpEnabledToggle = () => {
 	return (
 		<div style={{ marginBottom: "20px" }}>
 			<VSCodeCheckbox checked={mcpEnabled} onChange={handleChange}>
-				<span style={{ fontWeight: "500" }}>{t("mcp:enableToggle.title")}</span>
+				<span style={{ fontWeight: "500" }}>Enable MCP Servers</span>
 			</VSCodeCheckbox>
 			<p
 				style={{
@@ -26,7 +24,8 @@ const McpEnabledToggle = () => {
 					marginTop: "5px",
 					color: "var(--vscode-descriptionForeground)",
 				}}>
-				{t("mcp:enableToggle.description")}
+				When enabled, Roo will be able to interact with MCP servers for advanced functionality. If you're not
+				using MCP, you can disable this to reduce Roo's token usage.
 			</p>
 		</div>
 	)

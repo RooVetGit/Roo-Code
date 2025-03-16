@@ -97,7 +97,6 @@ export interface WebviewMessage {
 		| "checkpointRestore"
 		| "deleteMcpServer"
 		| "maxOpenTabsContext"
-		| "maxWorkspaceFiles"
 		| "humanRelayResponse"
 		| "humanRelayCancel"
 		| "browserToolEnabled"
@@ -107,7 +106,6 @@ export interface WebviewMessage {
 		| "discoverBrowser"
 		| "browserConnectionResult"
 		| "remoteBrowserEnabled"
-		| "language"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse

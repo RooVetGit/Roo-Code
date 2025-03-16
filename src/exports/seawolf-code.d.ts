@@ -212,14 +212,12 @@ export type GlobalStateKey =
 	| "modelMaxTokens"
 	| "mistralCodestralUrl"
 	| "maxOpenTabsContext"
-	| "maxWorkspaceFiles"
 	| "browserToolEnabled"
 	| "lmStudioSpeculativeDecodingEnabled"
 	| "lmStudioDraftModelId"
 	| "telemetrySetting"
 	| "showSeawolfIgnoredFiles"
 	| "remoteBrowserEnabled"
-	| "language"
 
 export type ConfigurationKey = GlobalStateKey | SecretKey
 

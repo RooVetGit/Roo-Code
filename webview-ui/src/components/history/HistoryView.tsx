@@ -8,7 +8,6 @@ import { vscode } from "@/utils/vscode"
 import { formatLargeNumber, formatDate } from "@/utils/format"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui"
-import { useAppTranslation } from "@/i18n/TranslationContext"
 
 import { Tab, TabContent, TabHeader } from "../common/Tab"
 import { useTaskSearch } from "./useTaskSearch"
@@ -23,7 +22,6 @@ type SortOption = "newest" | "oldest" | "mostExpensive" | "mostTokens" | "mostRe
 
 const HistoryView = ({ onDone }: HistoryViewProps) => {
 	const { tasks, searchQuery, setSearchQuery, sortOption, setSortOption, setLastNonRelevantSort } = useTaskSearch()
-	const { t } = useAppTranslation()
 
 	const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null)
 
@@ -31,15 +29,14 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 		<Tab>
 			<TabHeader className="flex flex-col gap-2">
 				<div className="flex justify-between items-center">
-					<h3 className="text-vscode-foreground m-0">{t("history:history")}</h3>
-					<VSCodeButton onClick={onDone}>{t("history:done")}</VSCodeButton>
+					<h3 className="text-vscode-foreground m-0">History</h3>
+					<VSCodeButton onClick={onDone}>Done</VSCodeButton>
 				</div>
 				<div className="flex flex-col gap-2">
 					<VSCodeTextField
 						style={{ width: "100%" }}
-						placeholder={t("history:searchPlaceholder")}
+						placeholder="Fuzzy search history..."
 						value={searchQuery}
-						data-testid="history-search-input"
 						onInput={(e) => {
 							const newValue = (e.target as HTMLInputElement)?.value
 							setSearchQuery(newValue)
@@ -73,24 +70,15 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 						value={sortOption}
 						role="radiogroup"
 						onChange={(e) => setSortOption((e.target as HTMLInputElement).value as SortOption)}>
-						<VSCodeRadio value="newest" data-testid="radio-newest">
-							{t("history:newest")}
-						</VSCodeRadio>
-						<VSCodeRadio value="oldest" data-testid="radio-oldest">
-							{t("history:oldest")}
-						</VSCodeRadio>
-						<VSCodeRadio value="mostExpensive" data-testid="radio-most-expensive">
-							{t("history:mostExpensive")}
-						</VSCodeRadio>
-						<VSCodeRadio value="mostTokens" data-testid="radio-most-tokens">
-							{t("history:mostTokens")}
-						</VSCodeRadio>
+						<VSCodeRadio value="newest">Newest</VSCodeRadio>
+						<VSCodeRadio value="oldest">Oldest</VSCodeRadio>
+						<VSCodeRadio value="mostExpensive">Most Expensive</VSCodeRadio>
+						<VSCodeRadio value="mostTokens">Most Tokens</VSCodeRadio>
 						<VSCodeRadio
 							value="mostRelevant"
 							disabled={!searchQuery}
-							data-testid="radio-most-relevant"
 							style={{ opacity: searchQuery ? 1 : 0.5 }}>
-							{t("history:mostRelevant")}
+							Most Relevant
 						</VSCodeRadio>
 					</VSCodeRadioGroup>
 				</div>
@@ -144,8 +132,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 										<Button
 											variant="ghost"
 											size="sm"
-											title={t("history:deleteTaskTitle")}
-											data-testid="delete-task-button"
+											title="Delete Task (Shift + Click to skip confirmation)"
 											onClick={(e) => {
 												e.stopPropagation()
 
@@ -194,7 +181,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 													fontWeight: 500,
 													color: "var(--vscode-descriptionForeground)",
 												}}>
-												{t("history:tokensLabel")}
+												Tokens:
 											</span>
 											<span
 												data-testid="tokens-in"
@@ -255,7 +242,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 													fontWeight: 500,
 													color: "var(--vscode-descriptionForeground)",
 												}}>
-												{t("history:cacheLabel")}
+												Cache:
 											</span>
 											<span
 												data-testid="cache-writes"
@@ -310,7 +297,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 														fontWeight: 500,
 														color: "var(--vscode-descriptionForeground)",
 													}}>
-													{t("history:apiCostLabel")}
+													API Cost:
 												</span>
 												<span style={{ color: "var(--vscode-descriptionForeground)" }}>
 													${item.totalCost?.toFixed(4)}

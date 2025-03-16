@@ -116,8 +116,6 @@ export const GLOBAL_STATE_KEYS = [
 	"telemetrySetting",
 	"showSeawolfIgnoredFiles",
 	"remoteBrowserEnabled",
-	"language",
-	"maxWorkspaceFiles",
 ] as const
 
 type CheckGlobalStateKeysExhaustiveness =

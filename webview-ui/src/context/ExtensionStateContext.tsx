@@ -69,8 +69,6 @@ export interface ExtensionStateContextType extends ExtensionState {
 	customModes: ModeConfig[]
 	setCustomModes: (value: ModeConfig[]) => void
 	setMaxOpenTabsContext: (value: number) => void
-	maxWorkspaceFiles: number
-	setMaxWorkspaceFiles: (value: number) => void
 	setTelemetrySetting: (value: TelemetrySetting) => void
 	remoteBrowserEnabled?: boolean
 	setRemoteBrowserEnabled: (value: boolean) => void
@@ -139,7 +137,6 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		autoApprovalEnabled: false,
 		customModes: [],
 		maxOpenTabsContext: 20,
-		maxWorkspaceFiles: 200,
 		cwd: "",
 		browserToolEnabled: true,
 		telemetrySetting: "unset",
@@ -284,7 +281,6 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setAutoApprovalEnabled: (value) => setState((prevState) => ({ ...prevState, autoApprovalEnabled: value })),
 		setCustomModes: (value) => setState((prevState) => ({ ...prevState, customModes: value })),
 		setMaxOpenTabsContext: (value) => setState((prevState) => ({ ...prevState, maxOpenTabsContext: value })),
-		setMaxWorkspaceFiles: (value) => setState((prevState) => ({ ...prevState, maxWorkspaceFiles: value })),
 		setBrowserToolEnabled: (value) => setState((prevState) => ({ ...prevState, browserToolEnabled: value })),
 		setTelemetrySetting: (value) => setState((prevState) => ({ ...prevState, telemetrySetting: value })),
 		setShowSeawolfIgnoredFiles: (value) =>
