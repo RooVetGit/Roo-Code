@@ -161,14 +161,14 @@ async function startClipboardMonitoring(requestId: string, options?: ApiHandlerO
 			if (normalizedClipboard === normalizedLastResponse) {
 				panel?.webview.postMessage({
 					type: "showHumanRelayResponseAlert",
-					text: "It seems you copied the AI's response from the last interaction instead of the current task. Please check your interaction with the web AI",
+					requestId: "lastInteraction",
 				})
 				return
 			}
 			if (!containsValidTags(currentClipboardContent)) {
 				panel?.webview.postMessage({
 					type: "showHumanRelayResponseAlert",
-					text: "The AI's response does not seem to meet the RooCode format requirements. Please check your interaction with the web AI.",
+					requestId: "invalidResponse",
 				})
 				return
 			}

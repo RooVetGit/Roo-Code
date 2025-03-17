@@ -78,7 +78,14 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 			}
 			// Handle duplicate response warning
 			else if (message.type === "showHumanRelayResponseAlert") {
-				setWarningMessage(message.text)
+				if (message.requestId === "lastInteraction")
+					setWarningMessage(
+						"It seems you copied the AI's response from the last interaction instead of the current task. Please check your interaction with the web AI.",
+					)
+				else if (message.requestId === "invalidResponse")
+					setWarningMessage(
+						"The AI's response does not seem to meet the RooCode format requirements. Please check your interaction with the web AI.",
+					)
 				setShowDuplicateWarning(true)
 			}
 		}
