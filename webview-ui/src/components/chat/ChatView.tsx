@@ -30,6 +30,7 @@ import { AudioType } from "../../../../src/shared/WebviewMessage"
 import { validateCommand } from "../../utils/command-validation"
 import { getAllModes } from "../../../../src/shared/modes"
 import TelemetryBanner from "../common/TelemetryBanner"
+import removeMd from "remove-markdown"
 
 interface ChatViewProps {
 	isHidden: boolean
@@ -674,21 +675,30 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	)
 
 	useEffect(() => {
-		// skip input message
+		// this ensures the first message is not read, future user messages are labelled as user_feedback
 		if (lastMessage && messages.length > 1) {
-			let text = lastMessage?.text || ""
-
+			//console.log(JSON.stringify(lastMessage))
 			if (
-				lastMessage.type === "say" && // is a say message
+				lastMessage.text && // has text
+				(lastMessage.say === "text" || lastMessage.say === "completion_result") && // is a text message
 				!lastMessage.partial && // not a partial message
-				!text.startsWith("{") && // not a json object
-				text !== lastTtsRef.current // not the same as last TTS message
+				!lastMessage.text.startsWith("{") // not a json object
 			) {
-				try {
-					playTts(text)
-					lastTtsRef.current = text
-				} catch (error) {
-					console.error("Failed to execute text-to-speech:", error)
+				let text = lastMessage?.text || ""
+				const mermaidRegex = /```mermaid[\s\S]*?```/g
+				// remove mermaid diagrams from text
+				text = text.replace(mermaidRegex, "")
+				// remove markdown from text
+				text = removeMd(text)
+
+				// ensure message is not a duplicate of last read message
+				if (text !== lastTtsRef.current) {
+					try {
+						playTts(text)
+						lastTtsRef.current = text
+					} catch (error) {
+						console.error("Failed to execute text-to-speech:", error)
+					}
 				}
 			}
 		}
