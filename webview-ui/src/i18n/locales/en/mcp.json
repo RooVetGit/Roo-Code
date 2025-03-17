@@ -17,12 +17,23 @@
 		"noDescription": "No description"
 	},
 	"tabs": {
+		"installed": "Installed",
+		"marketplace": "Marketplace",
 		"tools": "Tools",
 		"resources": "Resources"
 	},
 	"emptyState": {
 		"noTools": "No tools found",
-		"noResources": "No resources found"
+		"noResources": "No resources found",
+		"noServers": "No servers installed",
+		"browseMarketplace": "Browse Marketplace"
+	},
+	"marketplace": {
+		"loading": "Loading marketplace...",
+		"noServers": "No servers available",
+		"retry": "Retry",
+		"install": "Install",
+		"by": "by {{author}}"
 	},
 	"networkTimeout": {
 		"label": "Network Timeout",
