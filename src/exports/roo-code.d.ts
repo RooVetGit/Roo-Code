@@ -175,6 +175,8 @@ export type GlobalStateKey =
 	| "openRouterUseMiddleOutTransform"
 	| "googleGeminiBaseUrl"
 	| "allowedCommands"
+	| "ttsEnabled"
+	| "ttsSpeed"
 	| "soundEnabled"
 	| "soundVolume"
 	| "diffEnabled"
