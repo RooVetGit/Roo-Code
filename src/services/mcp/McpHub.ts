@@ -103,7 +103,7 @@ export class McpHub {
 	private disposables: vscode.Disposable[] = []
 	private settingsWatcher?: vscode.FileSystemWatcher
 	private projectMcpWatcher?: vscode.FileSystemWatcher
-	private fileWatchers: Map<string, FSWatcher> = new Map()
+	private fileWatchers: Map<string, FSWatcher[]> = new Map()
 	private isDisposed: boolean = false
 	connections: McpConnection[] = []
 	isConnecting: boolean = false
@@ -682,45 +682,68 @@ export class McpHub {
 	}
 
 	private setupFileWatcher(name: string, config: z.infer<typeof ServerConfigSchema>) {
+		// Initialize an empty array for this server if it doesn't exist
+		if (!this.fileWatchers.has(name)) {
+			this.fileWatchers.set(name, [])
+		}
+
+		const watchers = this.fileWatchers.get(name) || []
+
 		// Only stdio type has args
 		if (config.type === "stdio") {
+			// Setup watchers for custom watchPaths if defined
 			if (config.watchPaths && config.watchPaths.length > 0) {
-				console.log(`Setting up file watchers for ${name} MCP server...`)
-				const watcher = chokidar.watch(config.watchPaths, {
+				console.log(`Setting up custom path watchers for ${name} MCP server...`)
+				const watchPathsWatcher = chokidar.watch(config.watchPaths, {
 					// persistent: true,
 					// ignoreInitial: true,
 					// awaitWriteFinish: true,
 				})
 
-				watcher.on("change", (changedPath) => {
-					console.log(`Detected change in ${changedPath}. Restarting server ${name}...`)
-					this.restartConnection(name)
+				watchPathsWatcher.on("change", async (changedPath) => {
+					console.log(`Detected change in custom path ${changedPath}. Restarting server ${name}...`)
+					try {
+						await this.restartConnection(name)
+					} catch (error) {
+						console.error(`Failed to restart server ${name} after change in ${changedPath}:`, error)
+					}
 				})
 
-				this.fileWatchers.set(name, watcher)
+				watchers.push(watchPathsWatcher)
 			}
 
+			// Also setup the fallback build/index.js watcher if applicable
 			const filePath = config.args?.find((arg: string) => arg.includes("build/index.js"))
 			if (filePath) {
-				// we use chokidar instead of onDidSaveTextDocument because it doesn't require the file to be open in the editor. The settings config is better suited for onDidSave since that will be manually updated by the user or Cline (and we want to detect save events, not every file change)
-				const watcher = chokidar.watch(filePath, {
+				console.log(`Setting up build/index.js watcher for ${name} MCP server...`)
+				// we use chokidar instead of onDidSaveTextDocument because it doesn't require the file to be open in the editor
+				const indexJsWatcher = chokidar.watch(filePath, {
 					// persistent: true,
 					// ignoreInitial: true,
 					// awaitWriteFinish: true, // This helps with atomic writes
 				})
 
-				watcher.on("change", () => {
+				indexJsWatcher.on("change", async () => {
 					console.log(`Detected change in ${filePath}. Restarting server ${name}...`)
-					this.restartConnection(name)
+					try {
+						await this.restartConnection(name)
+					} catch (error) {
+						console.error(`Failed to restart server ${name} after change in ${filePath}:`, error)
+					}
 				})
 
-				this.fileWatchers.set(name, watcher)
+				watchers.push(indexJsWatcher)
+			}
+
+			// Update the fileWatchers map with all watchers for this server
+			if (watchers.length > 0) {
+				this.fileWatchers.set(name, watchers)
 			}
 		}
 	}
 
 	private removeAllFileWatchers() {
-		this.fileWatchers.forEach((watcher) => watcher.close())
+		this.fileWatchers.forEach((watchers) => watchers.forEach((watcher) => watcher.close()))
 		this.fileWatchers.clear()
 	}
 
