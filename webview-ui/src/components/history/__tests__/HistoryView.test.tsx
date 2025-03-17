@@ -106,10 +106,10 @@ describe("HistoryView", () => {
 		// Verify copy the plain text content of the task when the copy button is clicked
 		const taskContainer = screen.getByTestId("virtuoso-item-1")
 		fireEvent.mouseEnter(taskContainer)
-		const copyButton = within(taskContainer).getByTitle("Copy Prompt");
-		fireEvent.click(copyButton);
-		const taskContent = within(taskContainer).getByTestId("task-content");
-		expect(navigator.clipboard.writeText).toHaveBeenCalledWith(taskContent.textContent);
+		const copyButton = within(taskContainer).getByTestId("copy-prompt-button")
+		fireEvent.click(copyButton)
+		const taskContent = within(taskContainer).getByTestId("task-content")
+		expect(navigator.clipboard.writeText).toHaveBeenCalledWith(taskContent.textContent)
 	})
 
 	it("handles sort options correctly", async () => {
