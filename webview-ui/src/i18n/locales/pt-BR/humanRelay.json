@@ -1,0 +1,31 @@
+{
+	"dialogTitle": "Retransmissão Humana - Por favor, ajude a copiar e colar informações",
+	"dialogDescription": "Por favor, copie o seguinte prompt para a IA da web e cole a resposta da IA na caixa de texto abaixo.",
+	"copiedToClipboard": "Copiado para a área de transferência",
+	"warning": {
+		"lastInteraction": "Parece que você copiou a resposta da IA da última interação, não a resposta da tarefa atual. Por favor, verifique sua interação com a IA da web.",
+		"invalidResponse": "A resposta da IA parece não atender aos requisitos de formato do RooCode. Por favor, verifique sua interação com a IA da web."
+	},
+	"clipboardMonitoring": {
+		"label": "Monitoramento da área de transferência:",
+		"enabled": "Ativado",
+		"disabled": "Desativado",
+		"disable": "Desativar",
+		"enable": "Ativar"
+	},
+	"shortcutDescription": "Você pode usar o atalho Ctrl/Cmd+Alt+V (padrão) para enviar rapidamente o conteúdo da área de transferência. Você também pode alterar o atalho pesquisando por 'enviar área de transferência' nas configurações de atalhos de teclado.",
+	"aiResponse": {
+		"label": "Insira a resposta da IA:",
+		"placeholder": "Cole a resposta da IA aqui..."
+	},
+	"actions": {
+		"cancel": "Cancelar",
+		"submit": "Enviar"
+	},
+	"settings": {
+		"description": "Não é necessária chave de API, mas os usuários precisam ajudar a copiar e colar informações para o chat de IA baseado na web.",
+		"usage": "Ao usar, uma caixa de diálogo aparecerá e a mensagem atual será automaticamente copiada para a área de transferência. Você precisa colar esse conteúdo na IA baseada na web (como ChatGPT ou Claude), depois copiar a resposta da IA de volta para a caixa de diálogo e clicar no botão de confirmação.",
+		"monitorInterval": "Intervalo de monitoramento da área de transferência (milissegundos)",
+		"intervalValue": "{{value}} milissegundos"
+	}
+}

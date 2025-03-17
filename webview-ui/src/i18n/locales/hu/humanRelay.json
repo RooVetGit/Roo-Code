@@ -1,0 +1,31 @@
+{
+	"dialogTitle": "Emberi Közvetítés - Kérjük, segítsen másolni és beilleszteni az információkat",
+	"dialogDescription": "Kérjük, másolja a következő promptot a webes AI-ba, majd illessze be az AI válaszát az alábbi szövegdobozba.",
+	"copiedToClipboard": "Vágólapra másolva",
+	"warning": {
+		"lastInteraction": "Úgy tűnik, az előző interakció AI válaszát másolta, nem a jelenlegi feladatét. Kérjük, ellenőrizze a webes AI-val való interakcióját.",
+		"invalidResponse": "Az AI válasza nem tűnik megfelelőnek a RooCode formátum követelményeinek. Kérjük, ellenőrizze a webes AI-val való interakcióját."
+	},
+	"clipboardMonitoring": {
+		"label": "Vágólap figyelése:",
+		"enabled": "Engedélyezve",
+		"disabled": "Letiltva",
+		"disable": "Letiltás",
+		"enable": "Engedélyezés"
+	},
+	"shortcutDescription": "Használhatja a Ctrl/Cmd+Alt+V (alapértelmezett) billentyűparancsot a vágólap tartalmának gyors elküldéséhez. A billentyűparancsot módosíthatja a 'vágólap küldése' keresésével a billentyűparancs beállításokban.",
+	"aiResponse": {
+		"label": "Adja meg az AI válaszát:",
+		"placeholder": "Illessze be ide az AI válaszát..."
+	},
+	"actions": {
+		"cancel": "Mégse",
+		"submit": "Küldés"
+	},
+	"settings": {
+		"description": "Nincs szükség API kulcsra, de a felhasználóknak segíteniük kell az információk másolásában és beillesztésében a webalapú AI chatbe.",
+		"usage": "Használatkor egy párbeszédablak jelenik meg, és az aktuális üzenet automatikusan a vágólapra másolódik. Ezt a tartalmat be kell illesztenie a webalapú AI-ba (például ChatGPT vagy Claude), majd az AI válaszát vissza kell másolnia a párbeszédablakba, és kattintson a megerősítés gombra.",
+		"monitorInterval": "Vágólap figyelési intervallum (ezredmásodperc)",
+		"intervalValue": "{{value}} ezredmásodperc"
+	}
+}

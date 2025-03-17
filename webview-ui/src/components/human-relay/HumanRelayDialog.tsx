@@ -7,6 +7,7 @@ import { useClipboard } from "../ui/hooks"
 import { AlertTriangle, Check, Copy, Power, X } from "lucide-react"
 import { useState as useReactState } from "react"
 import { vscode } from "../../utils/vscode"
+import { useAppTranslation } from "@/i18n/TranslationContext"
 
 interface HumanRelayDialogProps {
 	isOpen: boolean
@@ -35,6 +36,7 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 	monitorInterval = 500,
 	onToggleMonitor,
 }) => {
+	const { t } = useAppTranslation()
 	const [response, setResponse] = React.useState("")
 	const { copy } = useClipboard()
 	const [isCopyClicked, setIsCopyClicked] = React.useState(false)
@@ -78,14 +80,9 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 			}
 			// Handle duplicate response warning
 			else if (message.type === "showHumanRelayResponseAlert") {
-				if (message.requestId === "lastInteraction")
-					setWarningMessage(
-						"It seems you copied the AI's response from the last interaction instead of the current task. Please check your interaction with the web AI.",
-					)
+				if (message.requestId === "lastInteraction") setWarningMessage(t("humanRelay:warning.lastInteraction"))
 				else if (message.requestId === "invalidResponse")
-					setWarningMessage(
-						"The AI's response does not seem to meet the RooCode format requirements. Please check your interaction with the web AI.",
-					)
+					setWarningMessage(t("humanRelay:warning.invalidResponse"))
 				setShowDuplicateWarning(true)
 			}
 		}
@@ -95,7 +92,7 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 		return () => {
 			window.removeEventListener("message", messageHandler)
 		}
-	}, [onClose])
+	}, [onClose, t])
 
 	// Copy to clipboard and show success message
 	const handleCopy = () => {
@@ -125,10 +122,8 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 		<Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
 			<DialogContent className="sm:max-w-[600px]">
 				<DialogHeader>
-					<DialogTitle>Human Relay - Please Help Copy and Paste Information</DialogTitle>
-					<DialogDescription>
-						Please copy the text below to the web AI, then paste the AI's response into the input box below.
-					</DialogDescription>
+					<DialogTitle>{t("humanRelay:dialogTitle")}</DialogTitle>
+					<DialogDescription>{t("humanRelay:dialogDescription")}</DialogDescription>
 				</DialogHeader>
 
 				<div className="grid gap-4 py-4">
@@ -143,7 +138,9 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 						</Button>
 					</div>
 
-					{isCopyClicked && <div className="text-sm text-emerald-500 font-medium">Copied to clipboard</div>}
+					{isCopyClicked && (
+						<div className="text-sm text-emerald-500 font-medium">{t("humanRelay:copiedToClipboard")}</div>
+					)}
 					{showDuplicateWarning && (
 						<div className="flex items-center gap-2 text-sm p-2 rounded-md bg-amber-100 dark:bg-amber-900 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300">
 							<AlertTriangle className="h-4 w-4 text-amber-500" />
@@ -154,7 +151,12 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 					<div className="flex items-center justify-between text-sm text-vscode-descriptionForeground">
 						<div className="flex items-center gap-2">
 							{isMonitoring && <ProgressIndicator />}
-							<span>Clipboard Monitoring: {isMonitoring ? "Enabled" : "Disabled"}</span>
+							<span>
+								{t("humanRelay:clipboardMonitoring.label")}{" "}
+								{isMonitoring
+									? t("humanRelay:clipboardMonitoring.enabled")
+									: t("humanRelay:clipboardMonitoring.disabled")}
+							</span>
 						</div>
 						<Button
 							size="sm"
@@ -162,19 +164,20 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 							onClick={handleToggleMonitor}
 							className="gap-1 ml-2">
 							<Power className="h-4 w-4" />
-							{isMonitoring ? "Disable" : "Enable"}
+							{isMonitoring
+								? t("humanRelay:clipboardMonitoring.disable")
+								: t("humanRelay:clipboardMonitoring.enable")}
 						</Button>
 					</div>
 
 					<div className="text-sm text-vscode-descriptionForeground mt-2">
-						You can use the shortcut Ctrl/Cmd+Alt+V (default) to send the clipboard content. You can also
-						search for `Send Clipboard` in the shortcut settings to modify the hotkey.
+						{t("humanRelay:shortcutDescription")}
 					</div>
 
 					<div>
-						<div className="mb-2 font-medium">Please enter the AI's response:</div>
+						<div className="mb-2 font-medium">{t("humanRelay:aiResponse.label")}</div>
 						<Textarea
-							placeholder="Paste the AI's response here..."
+							placeholder={t("humanRelay:aiResponse.placeholder")}
 							value={response}
 							onChange={(e) => setResponse(e.target.value)}
 							className="min-h-[150px]"
@@ -185,11 +188,11 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 				<DialogFooter>
 					<Button variant="outline" onClick={handleCancel} className="gap-1">
 						<X className="h-4 w-4" />
-						Cancel
+						{t("humanRelay:actions.cancel")}
 					</Button>
 					<Button onClick={handleSubmit} disabled={!response.trim()} className="gap-1">
 						<Check className="h-4 w-4" />
-						Submit
+						{t("humanRelay:actions.submit")}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

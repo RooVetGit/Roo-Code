@@ -1,0 +1,31 @@
+{
+	"dialogTitle": "人工中繼 - 請協助複製貼上資訊",
+	"dialogDescription": "請將以下提示詞複製到網頁AI，然後將AI的回覆貼到下方的輸入框中。",
+	"copiedToClipboard": "已複製到剪貼簿",
+	"warning": {
+		"lastInteraction": "看起來您複製了上一次互動的AI回覆，而不是當前任務的回覆。請檢查您與網路AI的互動。",
+		"invalidResponse": "AI的回覆似乎不符合RooCode格式要求。請檢查您與網路AI的互動。"
+	},
+	"clipboardMonitoring": {
+		"label": "剪貼簿監控：",
+		"enabled": "已啟用",
+		"disabled": "已停用",
+		"disable": "停用",
+		"enable": "啟用"
+	},
+	"shortcutDescription": "您可以使用快捷鍵Ctrl/Cmd+Alt+V（預設）快速發送剪貼簿內容。您也可以在快捷鍵設定中搜尋「發送剪貼簿」來修改快捷鍵。",
+	"aiResponse": {
+		"label": "請輸入AI的回覆：",
+		"placeholder": "在此貼上AI的回覆..."
+	},
+	"actions": {
+		"cancel": "取消",
+		"submit": "提交"
+	},
+	"settings": {
+		"description": "無需API金鑰，但使用者需要協助複製和貼上資訊到網頁版AI聊天。",
+		"usage": "使用時，會彈出一個對話框，當前訊息會自動複製到剪貼簿。您需要將這些內容貼到網頁版AI（如ChatGPT或Claude），然後將AI的回覆複製回對話框並點擊確認按鈕。",
+		"monitorInterval": "剪貼簿監控間隔（毫秒）",
+		"intervalValue": "{{value}} 毫秒"
+	}
+}

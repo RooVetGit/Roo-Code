@@ -1333,16 +1333,11 @@ const ApiOptions = ({
 			{selectedProvider === "human-relay" && (
 				<>
 					<div className="text-sm text-vscode-descriptionForeground">
-						No API key is required, but the user needs to help copy and paste the information to the web
-						chat AI.
+						{t("humanRelay:settings.description")}
 					</div>
-					<div className="text-sm text-vscode-descriptionForeground">
-						During use, a dialog box will pop up and the current message will be copied to the clipboard
-						automatically. You need to paste these to web versions of AI (such as ChatGPT or Claude), then
-						copy the AI's reply back to the dialog box and click the confirm button.
-					</div>
+					<div className="text-sm text-vscode-descriptionForeground">{t("humanRelay:settings.usage")}</div>
 					<div className="mt-4">
-						<div className="font-medium">Clipboard monitoring interval (ms)</div>
+						<div className="font-medium">{t("humanRelay:settings.monitorInterval")}</div>
 						<div className="mt-2">
 							<input
 								type="range"
@@ -1357,7 +1352,9 @@ const ApiOptions = ({
 								className="h-2 focus:outline-0 w-4/5 accent-vscode-button-background"
 							/>
 							<span style={{ minWidth: "45px", textAlign: "left" }}>
-								{apiConfiguration?.humanRelayMonitorInterval || 500} ms
+								{t("humanRelay:settings.intervalValue", {
+									value: apiConfiguration?.humanRelayMonitorInterval || 500,
+								})}
 							</span>
 						</div>
 					</div>

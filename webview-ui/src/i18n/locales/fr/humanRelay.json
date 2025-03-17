@@ -1,0 +1,31 @@
+{
+	"dialogTitle": "Relais Humain - Veuillez aider à copier et coller les informations",
+	"dialogDescription": "Veuillez copier le prompt suivant dans l'IA web, puis coller la réponse de l'IA dans la zone de texte ci-dessous.",
+	"copiedToClipboard": "Copié dans le presse-papiers",
+	"warning": {
+		"lastInteraction": "Il semble que vous ayez copié la réponse de l'IA de la dernière interaction, et non la réponse pour la tâche actuelle. Veuillez vérifier votre interaction avec l'IA web.",
+		"invalidResponse": "La réponse de l'IA ne semble pas répondre aux exigences de format de RooCode. Veuillez vérifier votre interaction avec l'IA web."
+	},
+	"clipboardMonitoring": {
+		"label": "Surveillance du presse-papiers :",
+		"enabled": "Activé",
+		"disabled": "Désactivé",
+		"disable": "Désactiver",
+		"enable": "Activer"
+	},
+	"shortcutDescription": "Vous pouvez utiliser le raccourci Ctrl/Cmd+Alt+V (par défaut) pour envoyer rapidement le contenu du presse-papiers. Vous pouvez également modifier le raccourci en recherchant 'envoyer presse-papiers' dans les paramètres des raccourcis clavier.",
+	"aiResponse": {
+		"label": "Entrez la réponse de l'IA :",
+		"placeholder": "Collez ici la réponse de l'IA..."
+	},
+	"actions": {
+		"cancel": "Annuler",
+		"submit": "Envoyer"
+	},
+	"settings": {
+		"description": "Aucune clé API n'est requise, mais les utilisateurs doivent aider à copier et coller les informations dans le chat IA basé sur le web.",
+		"usage": "Lors de l'utilisation, une boîte de dialogue apparaîtra et le message actuel sera automatiquement copié dans le presse-papiers. Vous devez coller ce contenu dans l'IA basée sur le web (comme ChatGPT ou Claude), puis copier la réponse de l'IA dans la boîte de dialogue et cliquer sur le bouton de confirmation.",
+		"monitorInterval": "Intervalle de surveillance du presse-papiers (millisecondes)",
+		"intervalValue": "{{value}} millisecondes"
+	}
+}

@@ -1,0 +1,31 @@
+{
+	"dialogTitle": "İnsan Röle - Lütfen bilgileri kopyalayıp yapıştırmaya yardımcı olun",
+	"dialogDescription": "Lütfen aşağıdaki istemi web tabanlı yapay zekaya kopyalayın ve yapay zekanın yanıtını aşağıdaki metin kutusuna yapıştırın.",
+	"copiedToClipboard": "Panoya kopyalandı",
+	"warning": {
+		"lastInteraction": "Son etkileşimden yapay zeka yanıtını kopyalamış gibi görünüyorsunuz, mevcut görevin yanıtını değil. Lütfen web tabanlı yapay zeka ile etkileşiminizi kontrol edin.",
+		"invalidResponse": "Yapay zeka yanıtı RooCode format gereksinimlerini karşılamıyor gibi görünüyor. Lütfen web tabanlı yapay zeka ile etkileşiminizi kontrol edin."
+	},
+	"clipboardMonitoring": {
+		"label": "Pano izleme:",
+		"enabled": "Etkin",
+		"disabled": "Devre dışı",
+		"disable": "Devre dışı bırak",
+		"enable": "Etkinleştir"
+	},
+	"shortcutDescription": "Pano içeriğini hızlıca göndermek için Ctrl/Cmd+Alt+V (varsayılan) kısayolunu kullanabilirsiniz. Ayrıca klavye kısayolları ayarlarında 'panoyu gönder' araması yaparak kısayolu değiştirebilirsiniz.",
+	"aiResponse": {
+		"label": "Yapay zeka yanıtını girin:",
+		"placeholder": "Yapay zeka yanıtını buraya yapıştırın..."
+	},
+	"actions": {
+		"cancel": "İptal",
+		"submit": "Gönder"
+	},
+	"settings": {
+		"description": "API anahtarı gerekli değildir, ancak kullanıcıların web tabanlı yapay zeka sohbetine bilgileri kopyalayıp yapıştırması gerekmektedir.",
+		"usage": "Kullanırken bir iletişim kutusu görünecek ve mevcut mesaj otomatik olarak panoya kopyalanacaktır. Bu içeriği web tabanlı yapay zekaya (ChatGPT veya Claude gibi) yapıştırmanız, ardından yapay zeka yanıtını iletişim kutusuna geri kopyalamanız ve onay düğmesine tıklamanız gerekiyor.",
+		"monitorInterval": "Pano izleme aralığı (milisaniye)",
+		"intervalValue": "{{value}} milisaniye"
+	}
+}

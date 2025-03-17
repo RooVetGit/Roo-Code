@@ -1,0 +1,31 @@
+{
+	"dialogTitle": "Relé Humà - Si us plau, ajudeu a copiar i enganxar informació",
+	"dialogDescription": "Si us plau, copieu el següent prompt a la IA web i després enganxeu la resposta de la IA al quadre de text de sota.",
+	"copiedToClipboard": "Copiat al porta-retalls",
+	"warning": {
+		"lastInteraction": "Sembla que heu copiat la resposta de la IA de l'última interacció, no la resposta per a la tasca actual. Si us plau, comproveu la vostra interacció amb la IA web.",
+		"invalidResponse": "La resposta de la IA no sembla complir els requisits de format de RooCode. Si us plau, comproveu la vostra interacció amb la IA web."
+	},
+	"clipboardMonitoring": {
+		"label": "Monitoratge del porta-retalls:",
+		"enabled": "Activat",
+		"disabled": "Desactivat",
+		"disable": "Desactivar",
+		"enable": "Activar"
+	},
+	"shortcutDescription": "Podeu utilitzar la drecera Ctrl/Cmd+Alt+V (per defecte) per enviar ràpidament el contingut del porta-retalls. També podeu canviar la drecera cercant 'enviar porta-retalls' a la configuració de dreceres de teclat.",
+	"aiResponse": {
+		"label": "Introduïu la resposta de la IA:",
+		"placeholder": "Enganxeu aquí la resposta de la IA..."
+	},
+	"actions": {
+		"cancel": "Cancel·lar",
+		"submit": "Enviar"
+	},
+	"settings": {
+		"description": "No es requereix clau API, però els usuaris han d'ajudar a copiar i enganxar informació al xat d'IA basat en web.",
+		"usage": "En utilitzar-lo, apareixerà un diàleg i el missatge actual es copiarà automàticament al porta-retalls. Heu d'enganxar aquest contingut a la IA basada en web (com ChatGPT o Claude), després copiar la resposta de la IA de tornada al diàleg i fer clic al botó de confirmació.",
+		"monitorInterval": "Interval de monitoratge del porta-retalls (mil·lisegons)",
+		"intervalValue": "{{value}} mil·lisegons"
+	}
+}

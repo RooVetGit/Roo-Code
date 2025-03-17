@@ -1,0 +1,31 @@
+{
+	"dialogTitle": "Relay Umano - Si prega di aiutare a copiare e incollare le informazioni",
+	"dialogDescription": "Si prega di copiare il seguente prompt nell'AI web e poi incollare la risposta dell'AI nella casella di testo sottostante.",
+	"copiedToClipboard": "Copiato negli appunti",
+	"warning": {
+		"lastInteraction": "Sembra che tu abbia copiato la risposta dell'AI dall'ultima interazione, non la risposta per l'attività corrente. Si prega di controllare la tua interazione con l'AI web.",
+		"invalidResponse": "La risposta dell'AI non sembra soddisfare i requisiti di formato di RooCode. Si prega di controllare la tua interazione con l'AI web."
+	},
+	"clipboardMonitoring": {
+		"label": "Monitoraggio degli appunti:",
+		"enabled": "Abilitato",
+		"disabled": "Disabilitato",
+		"disable": "Disabilita",
+		"enable": "Abilita"
+	},
+	"shortcutDescription": "Puoi utilizzare la scorciatoia Ctrl/Cmd+Alt+V (predefinita) per inviare rapidamente il contenuto degli appunti. Puoi anche modificare la scorciatoia cercando 'invia appunti' nelle impostazioni delle scorciatoie da tastiera.",
+	"aiResponse": {
+		"label": "Inserisci la risposta dell'AI:",
+		"placeholder": "Incolla qui la risposta dell'AI..."
+	},
+	"actions": {
+		"cancel": "Annulla",
+		"submit": "Invia"
+	},
+	"settings": {
+		"description": "Non è richiesta alcuna chiave API, ma gli utenti devono aiutare a copiare e incollare le informazioni nella chat AI basata sul web.",
+		"usage": "Durante l'utilizzo, apparirà una finestra di dialogo e il messaggio corrente verrà automaticamente copiato negli appunti. È necessario incollare questo contenuto nell'AI basata sul web (come ChatGPT o Claude), quindi copiare la risposta dell'AI di nuovo nella finestra di dialogo e fare clic sul pulsante di conferma.",
+		"monitorInterval": "Intervallo di monitoraggio degli appunti (millisecondi)",
+		"intervalValue": "{{value}} millisecondi"
+	}
+}

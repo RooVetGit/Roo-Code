@@ -1,0 +1,31 @@
+{
+	"dialogTitle": "휴먼 릴레이 - 정보 복사 및 붙여넣기에 협조해 주세요",
+	"dialogDescription": "아래 프롬프트를 웹 AI에 복사하고, AI의 응답을 아래 입력란에 붙여넣어 주세요.",
+	"copiedToClipboard": "클립보드에 복사되었습니다",
+	"warning": {
+		"lastInteraction": "이전 상호작용의 AI 응답을 복사한 것 같습니다. 현재 작업의 응답이 아닙니다. 웹 AI와의 상호작용을 확인해 주세요.",
+		"invalidResponse": "AI의 응답이 RooCode 형식 요구사항을 충족하지 않는 것 같습니다. 웹 AI와의 상호작용을 확인해 주세요."
+	},
+	"clipboardMonitoring": {
+		"label": "클립보드 모니터링:",
+		"enabled": "활성화됨",
+		"disabled": "비활성화됨",
+		"disable": "비활성화",
+		"enable": "활성화"
+	},
+	"shortcutDescription": "단축키 Ctrl/Cmd+Alt+V(기본값)를 사용하여 클립보드 내용을 빠르게 보낼 수 있습니다. 키보드 단축키 설정에서 '클립보드 보내기'를 검색하여 변경할 수도 있습니다.",
+	"aiResponse": {
+		"label": "AI의 응답을 입력해 주세요:",
+		"placeholder": "여기에 AI의 응답을 붙여넣으세요..."
+	},
+	"actions": {
+		"cancel": "취소",
+		"submit": "제출"
+	},
+	"settings": {
+		"description": "API 키가 필요하지 않지만, 사용자는 웹 버전 AI 채팅에 정보를 복사하고 붙여넣어야 합니다.",
+		"usage": "사용 시 대화 상자가 나타나고 현재 메시지가 자동으로 클립보드에 복사됩니다. 이 내용을 웹 버전 AI(ChatGPT 또는 Claude 등)에 붙여넣고, AI의 응답을 대화 상자에 복사한 다음 확인 버튼을 클릭해야 합니다.",
+		"monitorInterval": "클립보드 모니터링 간격(밀리초)",
+		"intervalValue": "{{value}} 밀리초"
+	}
+}

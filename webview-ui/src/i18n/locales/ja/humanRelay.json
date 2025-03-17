@@ -1,0 +1,31 @@
+{
+	"dialogTitle": "ヒューマンリレー - 情報のコピー＆ペーストにご協力ください",
+	"dialogDescription": "以下のプロンプトをウェブAIにコピーし、AIの応答を下のテキストボックスに貼り付けてください。",
+	"copiedToClipboard": "クリップボードにコピーしました",
+	"warning": {
+		"lastInteraction": "前回のやり取りのAI応答をコピーしたようです。現在のタスクの応答ではありません。ウェブAIとのやり取りを確認してください。",
+		"invalidResponse": "AIの応答がRooCodeの形式要件を満たしていないようです。ウェブAIとのやり取りを確認してください。"
+	},
+	"clipboardMonitoring": {
+		"label": "クリップボード監視：",
+		"enabled": "有効",
+		"disabled": "無効",
+		"disable": "無効にする",
+		"enable": "有効にする"
+	},
+	"shortcutDescription": "ショートカットキーCtrl/Cmd+Alt+V（デフォルト）を使用してクリップボードの内容をすばやく送信できます。キーボードショートカット設定で「クリップボードを送信」を検索して変更することもできます。",
+	"aiResponse": {
+		"label": "AIの応答を入力してください：",
+		"placeholder": "ここにAIの応答を貼り付けてください..."
+	},
+	"actions": {
+		"cancel": "キャンセル",
+		"submit": "送信"
+	},
+	"settings": {
+		"description": "APIキーは不要ですが、ユーザーはウェブ版AIチャットに情報をコピー＆ペーストする必要があります。",
+		"usage": "使用時にダイアログが表示され、現在のメッセージが自動的にクリップボードにコピーされます。この内容をウェブ版AI（ChatGPTやClaudeなど）に貼り付け、AIの応答をダイアログにコピーして確認ボタンをクリックする必要があります。",
+		"monitorInterval": "クリップボード監視間隔（ミリ秒）",
+		"intervalValue": "{{value}} ミリ秒"
+	}
+}

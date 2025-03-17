@@ -1,0 +1,31 @@
+{
+	"dialogTitle": "Relevo Humano - Por favor, ayude a copiar y pegar información",
+	"dialogDescription": "Por favor, copie el siguiente prompt en la IA web y luego pegue la respuesta de la IA en el cuadro de texto de abajo.",
+	"copiedToClipboard": "Copiado al portapapeles",
+	"warning": {
+		"lastInteraction": "Parece que ha copiado la respuesta de la IA de la última interacción, no la respuesta para la tarea actual. Por favor, verifique su interacción con la IA web.",
+		"invalidResponse": "La respuesta de la IA parece no cumplir con los requisitos de formato de RooCode. Por favor, verifique su interacción con la IA web."
+	},
+	"clipboardMonitoring": {
+		"label": "Monitoreo del portapapeles:",
+		"enabled": "Activado",
+		"disabled": "Desactivado",
+		"disable": "Desactivar",
+		"enable": "Activar"
+	},
+	"shortcutDescription": "Puede usar el atajo Ctrl/Cmd+Alt+V (predeterminado) para enviar rápidamente el contenido del portapapeles. También puede cambiar el atajo buscando 'enviar portapapeles' en la configuración de atajos de teclado.",
+	"aiResponse": {
+		"label": "Ingrese la respuesta de la IA:",
+		"placeholder": "Pegue aquí la respuesta de la IA..."
+	},
+	"actions": {
+		"cancel": "Cancelar",
+		"submit": "Enviar"
+	},
+	"settings": {
+		"description": "No se requiere clave de API, pero los usuarios necesitan ayudar a copiar y pegar información en el chat de IA basado en web.",
+		"usage": "Al usar, aparecerá un diálogo y el mensaje actual se copiará automáticamente al portapapeles. Debe pegar este contenido en la IA basada en web (como ChatGPT o Claude), luego copiar la respuesta de la IA de vuelta al diálogo y hacer clic en el botón de confirmación.",
+		"monitorInterval": "Intervalo de monitoreo del portapapeles (milisegundos)",
+		"intervalValue": "{{value}} milisegundos"
+	}
+}

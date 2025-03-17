@@ -1,0 +1,31 @@
+{
+	"dialogTitle": "Przekaźnik ludzki - Prosimy o pomoc w kopiowaniu i wklejaniu informacji",
+	"dialogDescription": "Proszę skopiować poniższe polecenie do AI w przeglądarce, a następnie wkleić odpowiedź AI do poniższego pola tekstowego.",
+	"copiedToClipboard": "Skopiowano do schowka",
+	"warning": {
+		"lastInteraction": "Wygląda na to, że skopiowałeś odpowiedź AI z poprzedniej interakcji, a nie z bieżącego zadania. Sprawdź swoją interakcję z AI w przeglądarce.",
+		"invalidResponse": "Odpowiedź AI wydaje się nie spełniać wymagań formatu RooCode. Sprawdź swoją interakcję z AI w przeglądarce."
+	},
+	"clipboardMonitoring": {
+		"label": "Monitorowanie schowka:",
+		"enabled": "Włączone",
+		"disabled": "Wyłączone",
+		"disable": "Wyłącz",
+		"enable": "Włącz"
+	},
+	"shortcutDescription": "Możesz użyć skrótu klawiszowego Ctrl/Cmd+Alt+V (domyślnie), aby szybko wysłać zawartość schowka. Możesz również zmienić skrót, wyszukując 'wyślij schowek' w ustawieniach skrótów klawiszowych.",
+	"aiResponse": {
+		"label": "Wprowadź odpowiedź AI:",
+		"placeholder": "Wklej tutaj odpowiedź AI..."
+	},
+	"actions": {
+		"cancel": "Anuluj",
+		"submit": "Wyślij"
+	},
+	"settings": {
+		"description": "Klucz API nie jest wymagany, ale użytkownicy muszą pomóc w kopiowaniu i wklejaniu informacji do czatu AI w przeglądarce.",
+		"usage": "Podczas użycia pojawi się okno dialogowe, a bieżąca wiadomość zostanie automatycznie skopiowana do schowka. Musisz wkleić tę treść do AI w przeglądarce (takiej jak ChatGPT lub Claude), a następnie skopiować odpowiedź AI z powrotem do okna dialogowego i kliknąć przycisk potwierdzenia.",
+		"monitorInterval": "Interwał monitorowania schowka (milisekundy)",
+		"intervalValue": "{{value}} milisekund"
+	}
+}

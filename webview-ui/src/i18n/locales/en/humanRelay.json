@@ -1,0 +1,31 @@
+{
+	"dialogTitle": "Human Relay - Please help copy and paste information",
+	"dialogDescription": "Please copy the following prompt to the web AI, and then paste the AI's response into the text box below.",
+	"copiedToClipboard": "Copied to clipboard",
+	"warning": {
+		"lastInteraction": "It looks like you copied the AI response from the last interaction, not the response for the current task. Please check your interaction with the web AI.",
+		"invalidResponse": "The AI's response doesn't seem to meet the RooCode format requirements. Please check your interaction with the web AI."
+	},
+	"clipboardMonitoring": {
+		"label": "Clipboard monitoring:",
+		"enabled": "Enabled",
+		"disabled": "Disabled",
+		"disable": "Disable",
+		"enable": "Enable"
+	},
+	"shortcutDescription": "You can use the shortcut Ctrl/Cmd+Alt+V (default) to quickly send clipboard content. You can also change the shortcut by searching for 'send clipboard' in the keyboard shortcuts settings.",
+	"aiResponse": {
+		"label": "Enter AI response:",
+		"placeholder": "Paste the AI's response here..."
+	},
+	"actions": {
+		"cancel": "Cancel",
+		"submit": "Submit"
+	},
+	"settings": {
+		"description": "No API key is required, but users need to help copy and paste information to the web-based AI chat.",
+		"usage": "When using, a dialog will appear and the current message will be automatically copied to the clipboard. You need to paste this content into the web-based AI (such as ChatGPT or Claude), then copy the AI's response back to the dialog and click the confirm button.",
+		"monitorInterval": "Clipboard monitoring interval (milliseconds)",
+		"intervalValue": "{{value}} milliseconds"
+	}
+}

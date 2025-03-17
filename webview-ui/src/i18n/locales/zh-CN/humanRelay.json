@@ -1,0 +1,31 @@
+{
+	"dialogTitle": "人工中继 - 请协助复制粘贴信息",
+	"dialogDescription": "请将以下提示词复制到网页AI，然后将AI的回复粘贴到下方的输入框中。",
+	"copiedToClipboard": "已复制到剪贴板",
+	"warning": {
+		"lastInteraction": "看起来您复制了上一次交互的AI回复，而不是当前任务的回复。请检查您与网络AI的交互。",
+		"invalidResponse": "AI的回复似乎不符合RooCode格式要求。请检查您与网络AI的交互。"
+	},
+	"clipboardMonitoring": {
+		"label": "剪贴板监控：",
+		"enabled": "已启用",
+		"disabled": "已禁用",
+		"disable": "禁用",
+		"enable": "启用"
+	},
+	"shortcutDescription": "您可以使用快捷键Ctrl/Cmd+Alt+V（默认）快捷发送剪贴板内容。您也可以在快捷键设置中搜索`发送剪贴板`来修改快捷键。",
+	"aiResponse": {
+		"label": "请输入AI的回复：",
+		"placeholder": "在此粘贴AI的回复..."
+	},
+	"actions": {
+		"cancel": "取消",
+		"submit": "提交"
+	},
+	"settings": {
+		"description": "无需API密钥，但用户需要帮助复制和粘贴信息到网页版AI聊天。",
+		"usage": "使用时，会弹出一个对话框，当前消息会自动复制到剪贴板。您需要将这些内容粘贴到网页版AI（如ChatGPT或Claude），然后将AI的回复复制回对话框并点击确认按钮。",
+		"monitorInterval": "剪贴板监控间隔（毫秒）",
+		"intervalValue": "{{value}} 毫秒"
+	}
+}
