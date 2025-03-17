@@ -308,8 +308,8 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 												</span>
 											</div>
 											<div className="flex flex-row gap-1">
-											  <CopyButton itemTask={item.task} />
-											  <ExportButton itemId={item.id} />
+												<CopyButton itemTask={item.task} />
+												<ExportButton itemId={item.id} />
 											</div>
 										</div>
 									)}
