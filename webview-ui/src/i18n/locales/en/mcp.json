@@ -31,9 +31,16 @@
 	"marketplace": {
 		"loading": "Loading marketplace...",
 		"noServers": "No servers available",
+		"noResults": "No matching servers found",
 		"retry": "Retry",
 		"install": "Install",
-		"by": "by {{author}}"
+		"by": "by {{author}}",
+		"searchPlaceholder": "Search servers...",
+		"allCategories": "All Categories",
+		"sortByStars": "Sort by Stars",
+		"sortByDownloads": "Sort by Downloads",
+		"sortByNewest": "Sort by Newest",
+		"sortByUpdated": "Sort by Last Updated"
 	},
 	"networkTimeout": {
 		"label": "Network Timeout",
