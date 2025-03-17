@@ -108,6 +108,10 @@ export interface WebviewMessage {
 		| "browserConnectionResult"
 		| "remoteBrowserEnabled"
 		| "language"
+		| "fetchMcpMarketplace"
+		| "downloadMcp"
+		| "openMcpMarketplaceServerDetails"
+		| "silentlyRefreshMcpMarketplace"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
@@ -132,6 +136,7 @@ export interface WebviewMessage {
 	payload?: WebViewMessagePayload
 	source?: "global" | "project"
 	requestId?: string
+	mcpId?: string
 }
 
 export const checkoutDiffPayloadSchema = z.object({

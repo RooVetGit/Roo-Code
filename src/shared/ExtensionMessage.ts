@@ -1,6 +1,6 @@
 import { ApiConfiguration, ApiProvider, ModelInfo } from "./api"
 import { HistoryItem } from "./HistoryItem"
-import { McpServer } from "./mcp"
+import { McpServer, McpMarketplaceCatalog, McpDownloadResponse } from "./mcp"
 import { GitCommit } from "../utils/git"
 import { Mode, CustomModePrompts, ModeConfig } from "./modes"
 import { CustomSupportPrompts } from "./support-prompt"
@@ -36,6 +36,8 @@ export interface ExtensionMessage {
 		| "requestyModels"
 		| "openAiModels"
 		| "mcpServers"
+		| "mcpMarketplaceCatalog"
+		| "mcpDownloadDetails"
 		| "enhancedPrompt"
 		| "commitSearchResults"
 		| "listApiConfig"
@@ -81,6 +83,8 @@ export interface ExtensionMessage {
 	requestyModels?: Record<string, ModelInfo>
 	openAiModels?: string[]
 	mcpServers?: McpServer[]
+	mcpMarketplaceCatalog?: McpMarketplaceCatalog
+	mcpDownloadDetails?: McpDownloadResponse
 	commits?: GitCommit[]
 	listApiConfig?: ApiConfigMeta[]
 	mode?: Mode
@@ -90,6 +94,7 @@ export interface ExtensionMessage {
 	values?: Record<string, any>
 	requestId?: string
 	promptText?: string
+	error?: string
 }
 
 export interface ApiConfigMeta {

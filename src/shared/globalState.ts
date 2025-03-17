@@ -118,6 +118,7 @@ export const GLOBAL_STATE_KEYS = [
 	"remoteBrowserEnabled",
 	"language",
 	"maxWorkspaceFiles",
+	"mcpMarketplaceCatalog",
 ] as const
 
 type CheckGlobalStateKeysExhaustiveness =

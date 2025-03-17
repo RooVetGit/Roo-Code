@@ -219,6 +219,7 @@ export type GlobalStateKey =
 	| "showRooIgnoredFiles"
 	| "remoteBrowserEnabled"
 	| "language"
+	| "mcpMarketplaceCatalog"
 
 export type ConfigurationKey = GlobalStateKey | SecretKey
 
