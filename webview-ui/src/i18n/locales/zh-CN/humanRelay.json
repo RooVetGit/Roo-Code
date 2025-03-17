@@ -3,7 +3,7 @@
 	"dialogDescription": "请将以下提示词复制到网页AI，然后将AI的回复粘贴到下方的输入框中。",
 	"copiedToClipboard": "已复制到剪贴板",
 	"warning": {
-		"lastInteraction": "看起来您复制了上一次交互的AI回复，而不是当前任务的回复。请检查您与网络AI的交互。",
+		"lastInteraction": "看起来您复制了上一次交互的AI回复，而不是当前任务的回复。请检查您与网页AI的交互。",
 		"invalidResponse": "AI的回复似乎不符合RooCode格式要求。请检查您与网络AI的交互。"
 	},
 	"clipboardMonitoring": {
