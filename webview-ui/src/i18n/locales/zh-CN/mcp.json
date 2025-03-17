@@ -17,12 +17,32 @@
 		"noDescription": "无描述"
 	},
 	"tabs": {
+		"installed": "已安装 & 设置",
+		"marketplace": "应用市场",
 		"tools": "工具",
 		"resources": "资源"
 	},
 	"emptyState": {
 		"noTools": "未找到工具",
-		"noResources": "未找到资源"
+		"noResources": "未找到资源",
+		"noServers": "未安装服务器",
+		"browseMarketplace": "浏览应用市场"
+	},
+	"marketplace": {
+		"loading": "正在加载应用市场...",
+		"noServers": "无可用服务器",
+		"noResults": "未找到匹配的服务器",
+		"retry": "重试",
+		"install": "安装",
+		"by": "作者：{{author}}",
+		"searchPlaceholder": "搜索服务器...",
+		"filter": "筛选：",
+		"allCategories": "所有类别",
+		"sort": "排序：",
+		"sortByStars": "最多星标",
+		"sortByDownloadCount": "最多安装",
+		"sortByNewest": "最新",
+		"sortByName": "名称"
 	},
 	"networkTimeout": {
 		"label": "网络超时",

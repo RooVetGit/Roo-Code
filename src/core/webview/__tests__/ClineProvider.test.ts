@@ -110,6 +110,11 @@ jest.mock(
 	{ virtual: true },
 )
 
+// Mock DiffViewProvider
+jest.mock("../../../integrations/editor/DiffViewProvider", () => ({
+	DIFF_VIEW_URI_SCHEME: "DIFF_VIEW_URI_SCHEME",
+}))
+
 // Initialize mocks
 const mockAddCustomInstructions = jest.fn().mockResolvedValue("Combined instructions")
 ;(jest.requireMock("../../prompts/sections/custom-instructions") as any).addCustomInstructions =

@@ -17,12 +17,32 @@
 		"noDescription": "설명 없음"
 	},
 	"tabs": {
+		"installed": "설치됨 & 설정",
+		"marketplace": "마켓플레이스",
 		"tools": "도구",
 		"resources": "리소스"
 	},
 	"emptyState": {
 		"noTools": "도구를 찾을 수 없음",
-		"noResources": "리소스를 찾을 수 없음"
+		"noResources": "리소스를 찾을 수 없음",
+		"noServers": "설치된 서버 없음",
+		"browseMarketplace": "마켓플레이스 둘러보기"
+	},
+	"marketplace": {
+		"loading": "마켓플레이스 로딩 중...",
+		"noServers": "사용 가능한 서버 없음",
+		"noResults": "일치하는 서버를 찾을 수 없음",
+		"retry": "재시도",
+		"install": "설치",
+		"by": "작성자: {{author}}",
+		"searchPlaceholder": "서버 검색...",
+		"filter": "필터:",
+		"allCategories": "모든 카테고리",
+		"sort": "정렬:",
+		"sortByStars": "별점순",
+		"sortByDownloadCount": "설치 횟수순",
+		"sortByNewest": "최신순",
+		"sortByName": "이름순"
 	},
 	"networkTimeout": {
 		"label": "네트워크 타임아웃",

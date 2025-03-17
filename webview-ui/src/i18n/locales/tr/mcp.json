@@ -18,11 +18,31 @@
 	},
 	"tabs": {
 		"tools": "Araçlar",
-		"resources": "Kaynaklar"
+		"resources": "Kaynaklar",
+		"installed": "Yüklü & Ayarlar",
+		"marketplace": "Pazar"
 	},
 	"emptyState": {
 		"noTools": "Araç bulunamadı",
-		"noResources": "Kaynak bulunamadı"
+		"noResources": "Kaynak bulunamadı",
+		"noServers": "Yüklü sunucu yok",
+		"browseMarketplace": "Pazarı Gözat"
+	},
+	"marketplace": {
+		"loading": "Pazar yükleniyor...",
+		"noServers": "Kullanılabilir sunucu yok",
+		"noResults": "Eşleşen sunucu bulunamadı",
+		"retry": "Tekrar dene",
+		"install": "Yükle",
+		"by": "yazar: {{author}}",
+		"searchPlaceholder": "Sunucu ara...",
+		"filter": "Filtrele:",
+		"allCategories": "Tüm Kategoriler",
+		"sort": "Sırala:",
+		"sortByStars": "En çok yıldız",
+		"sortByDownloadCount": "En çok yükleme",
+		"sortByNewest": "En yeni",
+		"sortByName": "İsim"
 	},
 	"networkTimeout": {
 		"label": "Ağ Zaman Aşımı",
