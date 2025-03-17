@@ -1,4 +1,6 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from "react"
+import { useAppTranslation } from "@/i18n/TranslationContext"
+import { Trans } from "react-i18next"
 import { useDebounce, useEvent } from "react-use"
 import { Checkbox, Dropdown, type DropdownOption } from "vscrui"
 import { VSCodeLink, VSCodeRadio, VSCodeRadioGroup, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
@@ -41,7 +43,7 @@ import { VSCodeButtonLink } from "../common/VSCodeButtonLink"
 import { ModelInfoView } from "./ModelInfoView"
 import { ModelPicker } from "./ModelPicker"
 import { TemperatureControl } from "./TemperatureControl"
-import { validateApiConfiguration, validateModelId } from "@/utils/validate"
+import { validateApiConfiguration, validateModelId, validateBedrockArn } from "@/utils/validate"
 import { ApiErrorMessage } from "./ApiErrorMessage"
 import { ThinkingBudget } from "./ThinkingBudget"
 
@@ -91,6 +93,7 @@ const ApiOptions = ({
 	errorMessage,
 	setErrorMessage,
 }: ApiOptionsProps) => {
+	const { t } = useAppTranslation()
 	const [ollamaModels, setOllamaModels] = useState<string[]>([])
 	const [lmStudioModels, setLmStudioModels] = useState<string[]>([])
 	const [vsCodeLmModels, setVsCodeLmModels] = useState<vscodemodels.LanguageModelChatSelector[]>([])
@@ -116,6 +119,9 @@ const ApiOptions = ({
 	const [anthropicBaseUrlSelected, setAnthropicBaseUrlSelected] = useState(!!apiConfiguration?.anthropicBaseUrl)
 	const [azureApiVersionSelected, setAzureApiVersionSelected] = useState(!!apiConfiguration?.azureApiVersion)
 	const [openRouterBaseUrlSelected, setOpenRouterBaseUrlSelected] = useState(!!apiConfiguration?.openRouterBaseUrl)
+	const [googleGeminiBaseUrlSelected, setGoogleGeminiBaseUrlSelected] = useState(
+		!!apiConfiguration?.googleGeminiBaseUrl,
+	)
 	const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
 
 	const noTransform = <T,>(value: T) => value
@@ -256,7 +262,7 @@ const ApiOptions = ({
 		<div className="flex flex-col gap-3">
 			<div className="dropdown-container">
 				<label htmlFor="api-provider" className="font-medium">
-					API Provider
+					{t("settings:providers.apiProvider")}
 				</label>
 				<Select
 					value={selectedProvider}
@@ -286,14 +292,14 @@ const ApiOptions = ({
 						onInput={handleInputChange("openRouterApiKey")}
 						placeholder="Enter API Key..."
 						className="w-full">
-						<span className="font-medium">OpenRouter API Key</span>
+						<span className="font-medium">{t("settings:providers.openRouterApiKey")}</span>
 					</VSCodeTextField>
 					<div className="text-sm text-vscode-descriptionForeground -mt-2">
-						This key is stored locally and only used to make API requests from this extension.
+						{t("settings:providers.apiKeyStorageNotice")}
 					</div>
 					{!apiConfiguration?.openRouterApiKey && (
 						<VSCodeButtonLink href={getOpenRouterAuthUrl(uriScheme)} appearance="secondary">
-							Get OpenRouter API Key
+							{t("settings:providers.getOpenRouterApiKey")}
 						</VSCodeButtonLink>
 					)}
 					{!fromWelcomeView && (
@@ -308,7 +314,7 @@ const ApiOptions = ({
 											setApiConfigurationField("openRouterBaseUrl", "")
 										}
 									}}>
-									Use custom base URL
+									{t("settings:providers.useCustomBaseUrl")}
 								</Checkbox>
 								{openRouterBaseUrlSelected && (
 									<VSCodeTextField
@@ -323,8 +329,13 @@ const ApiOptions = ({
 							<Checkbox
 								checked={apiConfiguration?.openRouterUseMiddleOutTransform ?? true}
 								onChange={handleInputChange("openRouterUseMiddleOutTransform", noTransform)}>
-								Compress prompts and message chains to the context size (
-								<a href="https://openrouter.ai/docs/transforms">OpenRouter Transforms</a>)
+								<Trans
+									i18nKey="settings:providers.openRouterTransformsText"
+									components={{
+										// eslint-disable-next-line jsx-a11y/anchor-has-content
+										a: <a href="https://openrouter.ai/docs/transforms" />,
+									}}
+								/>
 							</Checkbox>
 						</>
 					)}
@@ -339,14 +350,14 @@ const ApiOptions = ({
 						onInput={handleInputChange("apiKey")}
 						placeholder="Enter API Key..."
 						className="w-full">
-						<div className="font-medium">Anthropic API Key</div>
+						<div className="font-medium">{t("settings:providers.anthropicApiKey")}</div>
 					</VSCodeTextField>
 					<div className="text-sm text-vscode-descriptionForeground -mt-2">
-						This key is stored locally and only used to make API requests from this extension.
+						{t("settings:providers.apiKeyStorageNotice")}
 					</div>
 					{!apiConfiguration?.apiKey && (
 						<VSCodeButtonLink href="https://console.anthropic.com/settings/keys" appearance="secondary">
-							Get Anthropic API Key
+							{t("settings:providers.getAnthropicApiKey")}
 						</VSCodeButtonLink>
 					)}
 					<div>
@@ -359,7 +370,7 @@ const ApiOptions = ({
 									setApiConfigurationField("anthropicBaseUrl", "")
 								}
 							}}>
-							Use custom base URL
+							{t("settings:providers.useCustomBaseUrl")}
 						</Checkbox>
 						{anthropicBaseUrlSelected && (
 							<VSCodeTextField
@@ -382,14 +393,14 @@ const ApiOptions = ({
 						onInput={handleInputChange("glamaApiKey")}
 						placeholder="Enter API Key..."
 						className="w-full">
-						<span className="font-medium">Glama API Key</span>
+						<span className="font-medium">{t("settings:providers.glamaApiKey")}</span>
 					</VSCodeTextField>
 					<div className="text-sm text-vscode-descriptionForeground -mt-2">
-						This key is stored locally and only used to make API requests from this extension.
+						{t("settings:providers.apiKeyStorageNotice")}
 					</div>
 					{!apiConfiguration?.glamaApiKey && (
 						<VSCodeButtonLink href={getGlamaAuthUrl(uriScheme)} appearance="secondary">
-							Get Glama API Key
+							{t("settings:providers.getGlamaApiKey")}
 						</VSCodeButtonLink>
 					)}
 				</>
@@ -646,6 +657,28 @@ const ApiOptions = ({
 							Get Gemini API Key
 						</VSCodeButtonLink>
 					)}
+					<div>
+						<Checkbox
+							checked={googleGeminiBaseUrlSelected}
+							onChange={(checked: boolean) => {
+								setGoogleGeminiBaseUrlSelected(checked)
+
+								if (!checked) {
+									setApiConfigurationField("googleGeminiBaseUrl", "")
+								}
+							}}>
+							Use custom base URL
+						</Checkbox>
+						{googleGeminiBaseUrlSelected && (
+							<VSCodeTextField
+								value={apiConfiguration?.googleGeminiBaseUrl || ""}
+								type="url"
+								onInput={handleInputChange("googleGeminiBaseUrl")}
+								placeholder="https://generativelanguage.googleapis.com"
+								className="w-full mt-1"
+							/>
+						)}
+					</div>
 				</>
 			)}
 
@@ -819,7 +852,7 @@ const ApiOptions = ({
 									style={{ fontSize: "12px" }}
 								/>
 							</div>
-							<div className="text-sm text-vscode-descriptionForeground">
+							<div className="text-sm text-vscode-descriptionForeground pt-1">
 								Is this model capable of processing and understanding images?
 							</div>
 						</div>
@@ -842,8 +875,31 @@ const ApiOptions = ({
 									style={{ fontSize: "12px" }}
 								/>
 							</div>
-							<div className="text-sm text-vscode-descriptionForeground [pt">
+							<div className="text-sm text-vscode-descriptionForeground pt-1">
 								Is this model capable of interacting with a browser? (e.g. Claude 3.7 Sonnet).
+							</div>
+						</div>
+
+						<div>
+							<div className="flex items-center gap-1">
+								<Checkbox
+									checked={apiConfiguration?.openAiCustomModelInfo?.supportsPromptCache ?? false}
+									onChange={handleInputChange("openAiCustomModelInfo", (checked) => {
+										return {
+											...(apiConfiguration?.openAiCustomModelInfo || openAiModelInfoSaneDefaults),
+											supportsPromptCache: checked,
+										}
+									})}>
+									<span className="font-medium">Prompt Caching</span>
+								</Checkbox>
+								<i
+									className="codicon codicon-info text-vscode-descriptionForeground"
+									title="Enable if the model supports prompt caching. This can improve performance and reduce costs."
+									style={{ fontSize: "12px" }}
+								/>
+							</div>
+							<div className="text-sm text-vscode-descriptionForeground pt-1">
+								Is this model capable of caching prompts?
 							</div>
 						</div>
 
@@ -932,6 +988,93 @@ const ApiOptions = ({
 								</div>
 							</VSCodeTextField>
 						</div>
+
+						{apiConfiguration?.openAiCustomModelInfo?.supportsPromptCache && (
+							<>
+								<div>
+									<VSCodeTextField
+										value={
+											apiConfiguration?.openAiCustomModelInfo?.cacheReadsPrice?.toString() ?? "0"
+										}
+										type="text"
+										style={{
+											borderColor: (() => {
+												const value = apiConfiguration?.openAiCustomModelInfo?.cacheReadsPrice
+
+												if (!value && value !== 0) {
+													return "var(--vscode-input-border)"
+												}
+
+												return value >= 0
+													? "var(--vscode-charts-green)"
+													: "var(--vscode-errorForeground)"
+											})(),
+										}}
+										onChange={handleInputChange("openAiCustomModelInfo", (e) => {
+											const value = (e.target as HTMLInputElement).value
+											const parsed = parseFloat(value)
+
+											return {
+												...(apiConfiguration?.openAiCustomModelInfo ??
+													openAiModelInfoSaneDefaults),
+												cacheReadsPrice: isNaN(parsed) ? 0 : parsed,
+											}
+										})}
+										placeholder="e.g. 0.0001"
+										className="w-full">
+										<div className="flex items-center gap-1">
+											<span className="font-medium">Cache Reads Price</span>
+											<i
+												className="codicon codicon-info text-vscode-descriptionForeground"
+												title="Cost per million tokens for reading from the cache. This is the price charged when a cached response is retrieved."
+												style={{ fontSize: "12px" }}
+											/>
+										</div>
+									</VSCodeTextField>
+								</div>
+								<div>
+									<VSCodeTextField
+										value={
+											apiConfiguration?.openAiCustomModelInfo?.cacheWritesPrice?.toString() ?? "0"
+										}
+										type="text"
+										style={{
+											borderColor: (() => {
+												const value = apiConfiguration?.openAiCustomModelInfo?.cacheWritesPrice
+
+												if (!value && value !== 0) {
+													return "var(--vscode-input-border)"
+												}
+
+												return value >= 0
+													? "var(--vscode-charts-green)"
+													: "var(--vscode-errorForeground)"
+											})(),
+										}}
+										onChange={handleInputChange("openAiCustomModelInfo", (e) => {
+											const value = (e.target as HTMLInputElement).value
+											const parsed = parseFloat(value)
+
+											return {
+												...(apiConfiguration?.openAiCustomModelInfo ??
+													openAiModelInfoSaneDefaults),
+												cacheWritesPrice: isNaN(parsed) ? 0 : parsed,
+											}
+										})}
+										placeholder="e.g. 0.00005"
+										className="w-full">
+										<div className="flex items-center gap-1">
+											<span className="font-medium">Cache Writes Price</span>
+											<i
+												className="codicon codicon-info text-vscode-descriptionForeground"
+												title="Cost per million tokens for writing to the cache. This is the price charged when a prompt is cached for the first time."
+												style={{ fontSize: "12px" }}
+											/>
+										</div>
+									</VSCodeTextField>
+								</div>
+							</>
+						)}
 
 						<Button
 							variant="secondary"
@@ -1267,14 +1410,82 @@ const ApiOptions = ({
 						</label>
 						<Dropdown
 							id="model-id"
-							value={selectedModelId}
+							value={selectedModelId === "custom-arn" ? "custom-arn" : selectedModelId}
 							onChange={(value) => {
-								setApiConfigurationField("apiModelId", typeof value == "string" ? value : value?.value)
+								const modelValue = typeof value == "string" ? value : value?.value
+								setApiConfigurationField("apiModelId", modelValue)
+
+								// Clear custom ARN if not using custom ARN option
+								if (modelValue !== "custom-arn" && selectedProvider === "bedrock") {
+									setApiConfigurationField("awsCustomArn", "")
+								}
 							}}
-							options={selectedProviderModelOptions}
+							options={[
+								...selectedProviderModelOptions,
+								...(selectedProvider === "bedrock"
+									? [{ value: "custom-arn", label: "Use custom ARN..." }]
+									: []),
+							]}
 							className="w-full"
 						/>
 					</div>
+
+					{selectedProvider === "bedrock" && selectedModelId === "custom-arn" && (
+						<>
+							<VSCodeTextField
+								value={apiConfiguration?.awsCustomArn || ""}
+								onInput={(e) => {
+									const value = (e.target as HTMLInputElement).value
+									setApiConfigurationField("awsCustomArn", value)
+								}}
+								placeholder="Enter ARN (e.g. arn:aws:bedrock:us-east-1:123456789012:foundation-model/my-model)"
+								className="w-full">
+								<span className="font-medium">Custom ARN</span>
+							</VSCodeTextField>
+							<div className="text-sm text-vscode-descriptionForeground -mt-2">
+								Enter a valid AWS Bedrock ARN for the model you want to use. Format examples:
+								<ul className="list-disc pl-5 mt-1">
+									<li>
+										arn:aws:bedrock:us-east-1:123456789012:foundation-model/anthropic.claude-3-sonnet-20240229-v1:0
+									</li>
+									<li>
+										arn:aws:bedrock:us-west-2:123456789012:provisioned-model/my-provisioned-model
+									</li>
+									<li>
+										arn:aws:bedrock:us-east-1:123456789012:default-prompt-router/anthropic.claude:1
+									</li>
+								</ul>
+								Make sure the region in the ARN matches your selected AWS Region above.
+							</div>
+							{apiConfiguration?.awsCustomArn &&
+								(() => {
+									const validation = validateBedrockArn(
+										apiConfiguration.awsCustomArn,
+										apiConfiguration.awsRegion,
+									)
+
+									if (!validation.isValid) {
+										return (
+											<div className="text-sm text-vscode-errorForeground mt-2">
+												{validation.errorMessage ||
+													"Invalid ARN format. Please check the examples above."}
+											</div>
+										)
+									}
+
+									if (validation.errorMessage) {
+										return (
+											<div className="text-sm text-vscode-errorForeground mt-2">
+												{validation.errorMessage}
+											</div>
+										)
+									}
+
+									return null
+								})()}
+							=======
+						</>
+					)}
 					<ModelInfoView
 						selectedModelId={selectedModelId}
 						modelInfo={selectedModelInfo}
@@ -1333,6 +1544,19 @@ export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
 		case "anthropic":
 			return getProviderData(anthropicModels, anthropicDefaultModelId)
 		case "bedrock":
+			// Special case for custom ARN
+			if (modelId === "custom-arn") {
+				return {
+					selectedProvider: provider,
+					selectedModelId: "custom-arn",
+					selectedModelInfo: {
+						maxTokens: 5000,
+						contextWindow: 128_000,
+						supportsPromptCache: false,
+						supportsImages: true,
+					},
+				}
+			}
 			return getProviderData(bedrockModels, bedrockDefaultModelId)
 		case "vertex":
 			return getProviderData(vertexModels, vertexDefaultModelId)

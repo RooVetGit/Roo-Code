@@ -1,5 +1,3 @@
-// type that represents json data that is sent from extension to webview, called ExtensionMessage and has 'type' enum which can be 'plusButtonClicked' or 'settingsButtonClicked' or 'hello'
-
 import { ApiConfiguration, ApiProvider, ModelInfo } from "./api"
 import { HistoryItem } from "./HistoryItem"
 import { McpServer } from "./mcp"
@@ -9,6 +7,7 @@ import { CustomSupportPrompts } from "./support-prompt"
 import { ExperimentId } from "./experiments"
 import { CheckpointStorage } from "./checkpoints"
 import { TelemetrySetting } from "./TelemetrySetting"
+import type { ClineMessage, ClineAsk, ClineSay } from "../exports/roo-code"
 
 export interface LanguageModelChatSelector {
 	vendor?: string
@@ -17,7 +16,9 @@ export interface LanguageModelChatSelector {
 	id?: string
 }
 
-// webview will hold state
+// Represents JSON data that is sent from extension to webview, called
+// ExtensionMessage and has 'type' enum which can be 'plusButtonClicked' or
+// 'settingsButtonClicked' or 'hello'. Webview will hold state.
 export interface ExtensionMessage {
 	type:
 		| "action"
@@ -51,6 +52,8 @@ export interface ExtensionMessage {
 		| "humanRelayResponse"
 		| "humanRelayCancel"
 		| "browserToolEnabled"
+		| "browserConnectionResult"
+		| "remoteBrowserEnabled"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -59,7 +62,7 @@ export interface ExtensionMessage {
 		| "historyButtonClicked"
 		| "promptsButtonClicked"
 		| "didBecomeVisible"
-	invoke?: "sendMessage" | "primaryButtonClick" | "secondaryButtonClick" | "setChatBoxMessage"
+	invoke?: "newChat" | "sendMessage" | "primaryButtonClick" | "secondaryButtonClick" | "setChatBoxMessage"
 	state?: ExtensionState
 	images?: string[]
 	ollamaModels?: string[]
@@ -83,6 +86,10 @@ export interface ExtensionMessage {
 	mode?: Mode
 	customMode?: ModeConfig
 	slug?: string
+	success?: boolean
+	values?: Record<string, any>
+	requestId?: string
+	promptText?: string
 }
 
 export interface ApiConfigMeta {
@@ -125,12 +132,15 @@ export interface ExtensionState {
 	checkpointStorage: CheckpointStorage
 	browserViewportSize?: string
 	screenshotQuality?: number
+	remoteBrowserHost?: string
+	remoteBrowserEnabled?: boolean
 	fuzzyMatchThreshold?: number
-	preferredLanguage: string
+	language?: string
 	writeDelayMs: number
-	terminalOutputLimit?: number
+	terminalOutputLineLimit?: number
 	mcpEnabled: boolean
 	enableMcpServerCreation: boolean
+	enableCustomModeCreation?: boolean
 	mode: Mode
 	modeApiConfigs?: Record<Mode, string>
 	enhancementApiConfigId?: string
@@ -139,6 +149,7 @@ export interface ExtensionState {
 	customModes: ModeConfig[]
 	toolRequirements?: Record<string, boolean> // Map of tool names to their requirements (e.g. {"apply_diff": true} if diffEnabled)
 	maxOpenTabsContext: number // Maximum number of VSCode open tabs to include in context (0-500)
+	maxWorkspaceFiles: number // Maximum number of files to include in current working directory details (0-500)
 	cwd?: string // Current working directory
 	telemetrySetting: TelemetrySetting
 	telemetryKey?: string
@@ -146,59 +157,7 @@ export interface ExtensionState {
 	showRooIgnoredFiles: boolean // Whether to show .rooignore'd files in listings
 }
 
-export interface ClineMessage {
-	ts: number
-	type: "ask" | "say"
-	ask?: ClineAsk
-	say?: ClineSay
-	text?: string
-	images?: string[]
-	partial?: boolean
-	reasoning?: string
-	conversationHistoryIndex?: number
-	checkpoint?: Record<string, unknown>
-	progressStatus?: ToolProgressStatus
-}
-
-export type ClineAsk =
-	| "followup"
-	| "command"
-	| "command_output"
-	| "completion_result"
-	| "tool"
-	| "api_req_failed"
-	| "resume_task"
-	| "resume_completed_task"
-	| "mistake_limit_reached"
-	| "browser_action_launch"
-	| "use_mcp_server"
-	| "finishTask"
-
-export type ClineSay =
-	| "task"
-	| "error"
-	| "api_req_started"
-	| "api_req_finished"
-	| "api_req_retried"
-	| "api_req_retry_delayed"
-	| "api_req_deleted"
-	| "text"
-	| "reasoning"
-	| "completion_result"
-	| "user_feedback"
-	| "user_feedback_diff"
-	| "command_output"
-	| "tool"
-	| "shell_integration_warning"
-	| "browser_action"
-	| "browser_action_result"
-	| "command"
-	| "mcp_server_request_started"
-	| "mcp_server_response"
-	| "new_task_started"
-	| "new_task"
-	| "checkpoint_saved"
-	| "rooignore_error"
+export type { ClineMessage, ClineAsk, ClineSay }
 
 export interface ClineSayTool {
 	tool:
@@ -222,8 +181,9 @@ export interface ClineSayTool {
 	reason?: string
 }
 
-// must keep in sync with system prompt
+// Must keep in sync with system prompt.
 export const browserActions = ["launch", "click", "type", "scroll_down", "scroll_up", "close"] as const
+
 export type BrowserAction = (typeof browserActions)[number]
 
 export interface ClineSayBrowserAction {
@@ -256,24 +216,6 @@ export interface ClineApiReqInfo {
 	cost?: number
 	cancelReason?: ClineApiReqCancelReason
 	streamingFailedMessage?: string
-}
-
-// Human relay related message types
-export interface ShowHumanRelayDialogMessage {
-	type: "showHumanRelayDialog"
-	requestId: string
-	promptText: string
-}
-
-export interface HumanRelayResponseMessage {
-	type: "humanRelayResponse"
-	requestId: string
-	text: string
-}
-
-export interface HumanRelayCancelMessage {
-	type: "humanRelayCancel"
-	requestId: string
 }
 
 export type ClineApiReqCancelReason = "streaming_failed" | "user_cancelled"
