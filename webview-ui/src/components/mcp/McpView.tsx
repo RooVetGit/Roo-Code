@@ -20,7 +20,7 @@ import { Tab, TabContent, TabHeader } from "../common/Tab"
 import McpToolRow from "./McpToolRow"
 import McpResourceRow from "./McpResourceRow"
 import McpEnabledToggle from "./McpEnabledToggle"
-import McpMarketplaceView from "./McpMarketplaceView"
+import McpMarketplaceView from "./marketplace/McpMarketplaceView"
 
 type McpViewProps = {
 	onDone: () => void

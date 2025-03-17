@@ -62,6 +62,7 @@ import { getUri } from "./getUri"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { TelemetrySetting } from "../../shared/TelemetrySetting"
 import { McpMarketplaceCatalog, McpServer, McpDownloadResponse } from "../../shared/mcp"
+import { DIFF_VIEW_URI_SCHEME } from "../../integrations/editor/DiffViewProvider"
 
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -1870,6 +1871,27 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.postStateToWebview()
 						break
 					}
+
+					case "fetchMcpMarketplace": {
+						await this.fetchMcpMarketplace(message.bool)
+						break
+					}
+					case "downloadMcp": {
+						if (message.mcpId) {
+							await this.downloadMcp(message.mcpId)
+						}
+						break
+					}
+					case "silentlyRefreshMcpMarketplace": {
+						await this.silentlyRefreshMcpMarketplace()
+						break
+					}
+					case "openMcpMarketplaceServerDetails": {
+						if (message.mcpId) {
+							await this.openMcpMarketplaceServerDetails(message.mcpId)
+						}
+						break
+					}
 				}
 			},
 			null,
@@ -2786,8 +2808,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				throw new Error("Invalid response from MCP marketplace API")
 			}
 
-			console.log("[downloadMcp] Response from download API", { response })
-
 			const mcpDetails = response.data
 
 			// Validate required fields
@@ -2804,10 +2824,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				mcpDownloadDetails: mcpDetails,
 			})
 
-			// Create task with context from README
+			// Initialize task with setup instructions
 			const task = `Set up the MCP server from ${mcpDetails.githubUrl}. Use "${mcpDetails.mcpId}" as the server name in cline_mcp_settings.json. Here is the project's README to help you get started:\n\n${mcpDetails.readmeContent}\n${mcpDetails.llmsInstallationContent}`
-
-			// Initialize task and show chat view
 			await this.initClineWithTask(task)
 			await this.postMessageToWebview({
 				type: "action",
@@ -2836,6 +2854,36 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			await this.postMessageToWebview({
 				type: "mcpDownloadDetails",
 				error: errorMessage,
+			})
+		}
+	}
+
+	private async openMcpMarketplaceServerDetails(mcpId: string) {
+		const response = await fetch(`https://api.cline.bot/v1/mcp/marketplace/item?mcpId=${mcpId}`)
+		const details: McpDownloadResponse = await response.json()
+
+		if (details.readmeContent) {
+			// Disable markdown preview markers
+			const config = vscode.workspace.getConfiguration("markdown")
+			await config.update("preview.markEditorSelection", false, true)
+
+			// Create URI with base64 encoded markdown content
+			const uri = vscode.Uri.parse(
+				`${DIFF_VIEW_URI_SCHEME}:${details.name} README?${Buffer.from(details.readmeContent).toString("base64")}`,
+			)
+
+			// close existing
+			const tabs = vscode.window.tabGroups.all
+				.flatMap((tg) => tg.tabs)
+				.filter((tab) => tab.label && tab.label.includes("README") && tab.label.includes("Preview"))
+			for (const tab of tabs) {
+				await vscode.window.tabGroups.close(tab)
+			}
+
+			// Show only the preview
+			await vscode.commands.executeCommand("markdown.showPreview", uri, {
+				sideBySide: true,
+				preserveFocus: true,
 			})
 		}
 	}
