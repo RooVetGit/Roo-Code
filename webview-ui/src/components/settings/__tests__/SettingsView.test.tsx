@@ -175,7 +175,7 @@ describe("SettingsView - Sound Settings", () => {
 		expect(ttsCheckbox).toBeChecked()
 
 		// Click Save to save settings
-		const saveButton = screen.getByText("Save")
+		const saveButton = screen.getByTestId("save-button")
 		fireEvent.click(saveButton)
 
 		expect(vscode.postMessage).toHaveBeenCalledWith(
@@ -249,7 +249,7 @@ describe("SettingsView - Sound Settings", () => {
 		fireEvent.change(speedSlider, { target: { value: "0.75" } })
 
 		// Click Save to save settings
-		const saveButton = screen.getByText("Save")
+		const saveButton = screen.getByTestId("save-button")
 		fireEvent.click(saveButton)
 
 		// Verify message sent to VSCode
