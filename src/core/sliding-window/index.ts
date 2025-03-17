@@ -35,13 +35,57 @@ export function truncateConversation(
 	messages: Anthropic.Messages.MessageParam[],
 	fracToRemove: number,
 ): Anthropic.Messages.MessageParam[] {
-	const truncatedMessages = [messages[0]]
-	const rawMessagesToRemove = Math.floor((messages.length - 1) * fracToRemove)
-	const messagesToRemove = rawMessagesToRemove - (rawMessagesToRemove % 2)
-	const remainingMessages = messages.slice(messagesToRemove + 1)
-	truncatedMessages.push(...remainingMessages)
+	if (messages.length <= 5) {
+		return messages
+	}
 
-	return truncatedMessages
+	// Remove messages from the beginning (excluding the first)
+	const firstMessage = messages[0]
+	const minMessagesToKeep = Math.max(4, Math.ceil((messages.length - 1) * (1 - fracToRemove)))
+	const lastMessages = messages.slice(-minMessagesToKeep)
+
+	if (messages.length <= minMessagesToKeep + 1) {
+		return [firstMessage, ...lastMessages]
+	}
+
+	// Remove messages from the middle
+	const middleStart = 1
+	const middleEnd = messages.length - minMessagesToKeep
+	const middleMessagesCount = middleEnd - middleStart
+	const middleMessagesToKeep = Math.floor((middleMessagesCount * (1 - fracToRemove)) / 2) * 2
+
+	if (middleMessagesToKeep <= 0) {
+		console.log(
+			`Truncating aggressively: removed all ${middleMessagesCount} middle messages, keeping first message and ${lastMessages.length} last messages`,
+		)
+		return [firstMessage, ...lastMessages]
+	}
+
+	// Keep every `keepFrequency`-th message
+	const keepFrequency = Math.max(2, Math.floor(middleMessagesCount / middleMessagesToKeep))
+	const middleMessages = []
+	for (let i = middleStart; i < middleEnd; i += keepFrequency) {
+		if (i + 1 < middleEnd) {
+			middleMessages.push(messages[i], messages[i + 1])
+		} else if (i < middleEnd) {
+			middleMessages.push(messages[i])
+		}
+
+		if (middleMessages.length >= middleMessagesToKeep) {
+			break
+		}
+	}
+
+	const result = [firstMessage, ...middleMessages, ...lastMessages]
+
+	console.log(
+		`Truncation stats: original=${messages.length}, truncated=${result.length}, removed=${messages.length - result.length}`,
+	)
+	console.log(
+		`Truncation breakdown: kept first=1, middle=${middleMessages.length}/${middleMessagesCount}, last=${lastMessages.length}`,
+	)
+
+	return result
 }
 
 /**
@@ -71,6 +115,8 @@ type TruncateOptions = {
  * @param {TruncateOptions} options - The options for truncation
  * @returns {Promise<Anthropic.Messages.MessageParam[]>} The original or truncated conversation messages.
  */
+export const MAX_HISTORY_MESSAGES = 100
+
 export async function truncateConversationIfNeeded({
 	messages,
 	totalTokens,
@@ -78,6 +124,18 @@ export async function truncateConversationIfNeeded({
 	maxTokens,
 	apiHandler,
 }: TruncateOptions): Promise<Anthropic.Messages.MessageParam[]> {
+	if (messages.length > MAX_HISTORY_MESSAGES) {
+		console.log(
+			`Messages count (${messages.length}) severely exceeds threshold (${MAX_HISTORY_MESSAGES}), performing very aggressive truncation`,
+		)
+		return truncateConversation(messages, 0.8)
+	} else if (messages.length > MAX_HISTORY_MESSAGES * 0.8) {
+		console.log(
+			`Messages count (${messages.length}) approaching threshold (${MAX_HISTORY_MESSAGES}), performing preemptive truncation`,
+		)
+		return truncateConversation(messages, 0.6)
+	}
+
 	// Calculate the maximum tokens reserved for response
 	const reservedTokens = maxTokens || contextWindow * 0.2
 

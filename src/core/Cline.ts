@@ -122,6 +122,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 	// Subtasks
 	readonly rootTask: Cline | undefined = undefined
 	readonly parentTask: Cline | undefined = undefined
+
+	// A timer used to save history for anti-shake
+	private _saveApiConversationHistoryTimeout?: NodeJS.Timeout
+	private _saveClineMessagesTimeout?: NodeJS.Timeout
 	readonly taskNumber: number
 	private isPaused: boolean = false
 	private pausedModeSlug: string = defaultModeSlug
@@ -313,8 +317,85 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 	private async saveApiConversationHistory() {
 		try {
-			const filePath = path.join(await this.ensureTaskDirectoryExists(), GlobalFileNames.apiConversationHistory)
-			await fs.writeFile(filePath, JSON.stringify(this.apiConversationHistory))
+			// Add anti-shake to prevent frequent history saving
+			if (this._saveApiConversationHistoryTimeout) {
+				clearTimeout(this._saveApiConversationHistoryTimeout)
+			}
+
+			this._saveApiConversationHistoryTimeout = setTimeout(async () => {
+				const filePath = path.join(
+					await this.ensureTaskDirectoryExists(),
+					GlobalFileNames.apiConversationHistory,
+				)
+
+				// Check the history length, log and truncate
+				if (this.apiConversationHistory.length > 50) {
+					console.log(
+						`Long API conversation history detected: ${this.apiConversationHistory.length} messages, performing truncation before saving`,
+					)
+
+					// Record memory usage
+					try {
+						const memoryUsage = process.memoryUsage()
+						console.log(
+							`Memory usage before truncation: RSS=${Math.round(memoryUsage.rss / 1024 / 1024)}MB, Heap=${Math.round(memoryUsage.heapUsed / 1024 / 1024)}/${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`,
+						)
+					} catch (err) {
+						// Ignore the error, this is just diagnostic information
+					}
+
+					// Retain the earliest system messages, user instructions, and some recent messages
+					const keepFirst = 5
+					const keepLast = 50
+
+					if (this.apiConversationHistory.length > keepFirst + keepLast) {
+						const firstPart = this.apiConversationHistory.slice(0, keepFirst)
+						const lastPart = this.apiConversationHistory.slice(-keepLast)
+						const removedCount = this.apiConversationHistory.length - (firstPart.length + lastPart.length)
+						console.log(
+							`Truncating API conversation history: removed ${removedCount} messages, keeping ${firstPart.length} first and ${lastPart.length} last messages`,
+						)
+						this.apiConversationHistory = [...firstPart, ...lastPart]
+
+						// Enforce garbage collection
+						if (typeof global.gc === "function") {
+							try {
+								global.gc()
+								// The garbage collection is performed again after a delay of 100ms to ensure that the memory is completely released
+								setTimeout(() => {
+									if (typeof global.gc === "function") {
+										try {
+											global.gc()
+											console.log(
+												"Second manual garbage collection triggered to ensure memory release",
+											)
+										} catch (err) {
+											// Ignore the error, this is just diagnostic information
+										}
+									}
+								}, 100)
+								console.log("Manual garbage collection triggered after history truncation")
+							} catch (err) {
+								// Ignore the error, this is just diagnostic information
+							}
+						}
+
+						// Record memory usage
+						try {
+							const memoryUsage = process.memoryUsage()
+							console.log(
+								`Memory usage after truncation: RSS=${Math.round(memoryUsage.rss / 1024 / 1024)}MB, Heap=${Math.round(memoryUsage.heapUsed / 1024 / 1024)}/${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`,
+							)
+						} catch (err) {
+							// Ignore the error, this is just diagnostic information
+						}
+					}
+				}
+
+				await fs.writeFile(filePath, JSON.stringify(this.apiConversationHistory))
+
+				this._saveApiConversationHistoryTimeout = undefined
+			}, 100) // Further reduce debounce delay to 100ms, speeding up saves and reducing delay risks
 		} catch (error) {
 			// in the off chance this fails, we don't want to stop the task
 			console.error("Failed to save API conversation history:", error)
@@ -362,42 +443,131 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 	private async saveClineMessages() {
 		try {
-			const taskDir = await this.ensureTaskDirectoryExists()
-			const filePath = path.join(taskDir, GlobalFileNames.uiMessages)
-			await fs.writeFile(filePath, JSON.stringify(this.clineMessages))
-			// combined as they are in ChatView
-			const apiMetrics = this.getTokenUsage()
-			const taskMessage = this.clineMessages[0] // first message is always the task say
-			const lastRelevantMessage =
-				this.clineMessages[
-					findLastIndex(
-						this.clineMessages,
-						(m) => !(m.ask === "resume_task" || m.ask === "resume_completed_task"),
-					)
-				]
-
-			let taskDirSize = 0
-
-			try {
-				taskDirSize = await getFolderSize.loose(taskDir)
-			} catch (err) {
-				console.error(
-					`[saveClineMessages] failed to get task directory size (${taskDir}): ${err instanceof Error ? err.message : String(err)}`,
-				)
+			// Add anti-shake to prevent frequent saving of message history
+			if (this._saveClineMessagesTimeout) {
+				clearTimeout(this._saveClineMessagesTimeout)
 			}
 
-			await this.providerRef.deref()?.updateTaskHistory({
-				id: this.taskId,
-				number: this.taskNumber,
-				ts: lastRelevantMessage.ts,
-				task: taskMessage.text ?? "",
-				tokensIn: apiMetrics.totalTokensIn,
-				tokensOut: apiMetrics.totalTokensOut,
-				cacheWrites: apiMetrics.totalCacheWrites,
-				cacheReads: apiMetrics.totalCacheReads,
-				totalCost: apiMetrics.totalCost,
-				size: taskDirSize,
-			})
+			this._saveClineMessagesTimeout = setTimeout(async () => {
+				const taskDir = await this.ensureTaskDirectoryExists()
+				const filePath = path.join(taskDir, GlobalFileNames.uiMessages)
+
+				// Check the message history length and perform a more aggressive truncation if it is too long
+				if (this.clineMessages.length > 50) {
+					console.log(
+						`Long UI message history detected: ${this.clineMessages.length} messages, trimming messages before saving`,
+					)
+
+					// Record memory usage before truncation
+					try {
+						const memoryUsage = process.memoryUsage()
+						console.log(
+							`Memory usage before UI message truncation: RSS=${Math.round(memoryUsage.rss / 1024 / 1024)}MB, Heap=${Math.round(memoryUsage.heapUsed / 1024 / 1024)}/${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`,
+						)
+					} catch (err) {
+						// Ignore error
+					}
+
+					// Keep the earliest user commands and some recent messages
+					const keepFirst = 3
+					const keepLast = 40
+
+					if (this.clineMessages.length > keepFirst + keepLast) {
+						// Pre-truncation backups are no longer created to reduce memory usage
+						// const fullMessages = [...this.clineMessages];
+
+						const firstPart = this.clineMessages.slice(0, keepFirst)
+						const lastPart = this.clineMessages.slice(-keepLast)
+						const removedCount = this.clineMessages.length - (firstPart.length + lastPart.length)
+						console.log(
+							`Truncating UI message history: removed ${removedCount} messages, keeping ${firstPart.length} first and ${lastPart.length} last messages`,
+						)
+
+						// Update an array in memory
+						this.clineMessages = [...firstPart, ...lastPart]
+
+						// Notify the front end to update the UI to prevent UI state from being inconsistent with the back end
+						this.providerRef
+							.deref()
+							?.postStateToWebview()
+							.catch((err) => {
+								console.error("Failed to update webview after message truncation:", err)
+							})
+
+						// Force garbage collection to ensure that memory is freed
+						if (typeof global.gc === "function") {
+							try {
+								global.gc()
+								// The garbage collection is performed again after a delay of 100ms to ensure that the memory is completely released
+								setTimeout(() => {
+									if (typeof global.gc === "function") {
+										try {
+											global.gc()
+											console.log(
+												"Second manual garbage collection triggered to ensure memory release",
+											)
+										} catch (err) {
+											// Ignore error
+										}
+									}
+								}, 100)
+								console.log("Manual garbage collection triggered after UI message truncation")
+							} catch (err) {
+								// Ignore error
+							}
+						}
+
+						// Record memory usage after truncation
+						try {
+							const memoryUsage = process.memoryUsage()
+							console.log(
+								`Memory usage after UI message truncation: RSS=${Math.round(memoryUsage.rss / 1024 / 1024)}MB, Heap=${Math.round(memoryUsage.heapUsed / 1024 / 1024)}/${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`,
+							)
+						} catch (err) {
+							// Ignore error
+						}
+					}
+				}
+
+				await fs.writeFile(filePath, JSON.stringify(this.clineMessages))
+				// combined as they are in ChatView
+				const apiMetrics = getApiMetrics(
+					combineApiRequests(combineCommandSequences(this.clineMessages.slice(1))),
+				)
+				const taskMessage = this.clineMessages[0] // first message is always the task say
+				const lastRelevantMessage =
+					this.clineMessages[
+						findLastIndex(
+							this.clineMessages,
+							(m) => !(m.ask === "resume_task" || m.ask === "resume_completed_task"),
+						)
+					]
+
+				let taskDirSize = 0
+
+				try {
+					taskDirSize = await getFolderSize.loose(taskDir)
+				} catch (err) {
+					console.error(
+						`[saveClineMessages] failed to get task directory size (${taskDir}): ${err instanceof Error ? err.message : String(err)}`,
+					)
+				}
+
+				await this.providerRef.deref()?.updateTaskHistory({
+					id: this.taskId,
+					number: this.taskNumber,
+					ts: lastRelevantMessage.ts,
+					task: taskMessage.text ?? "",
+					tokensIn: apiMetrics.totalTokensIn,
+					tokensOut: apiMetrics.totalTokensOut,
+					cacheWrites: apiMetrics.totalCacheWrites,
+					cacheReads: apiMetrics.totalCacheReads,
+					totalCost: apiMetrics.totalCost,
+					size: taskDirSize,
+				})
+
+				this._saveClineMessagesTimeout = undefined
+			}, 100) // Reduce buffering latency further to 100ms to speed up saving and reduce the risk of delays
 		} catch (error) {
 			console.error("Failed to save cline messages:", error)
 		}
