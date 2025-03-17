@@ -1,8 +1,7 @@
 {
-	"title": "Ayuda a mejorar Roo Code",
-	"anonymousTelemetry": "Envía datos de uso y errores anónimos para ayudarnos a corregir errores y mejorar la extensión. Nunca se envía código, texto o información personal.",
-	"changeSettings": "Siempre puedes cambiar esto en la parte inferior de la configuración",
-	"settings": "configuración",
-	"allow": "Permitir",
-	"deny": "Denegar"
+	"number_format": {
+		"thousand_suffix": "k",
+		"million_suffix": "M",
+		"billion_suffix": "MM"
+	}
 }

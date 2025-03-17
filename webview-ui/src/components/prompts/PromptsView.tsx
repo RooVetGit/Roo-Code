@@ -22,11 +22,12 @@ import {
 import { CustomModeSchema } from "../../../../src/core/config/CustomModesSchema"
 import { supportPrompt, SupportPromptType } from "../../../../src/shared/support-prompt"
 
-import { TOOL_GROUPS, GROUP_DISPLAY_NAMES, ToolGroup } from "../../../../src/shared/tool-groups"
+import { TOOL_GROUPS, ToolGroup } from "../../../../src/shared/tool-groups"
 import { vscode } from "../../utils/vscode"
 import { Tab, TabContent, TabHeader } from "../common/Tab"
 import i18next from "i18next"
 import { useAppTranslation } from "../../i18n/TranslationContext"
+import { Trans } from "react-i18next"
 
 // Get all available groups that should show in prompts view
 const availableGroups = (Object.keys(TOOL_GROUPS) as ToolGroup[]).filter((group) => !TOOL_GROUPS[group].alwaysAvailable)
@@ -657,7 +658,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 												checked={isGroupEnabled}
 												onChange={handleGroupChange(group, Boolean(isCustomMode), customMode)}
 												disabled={!isCustomMode}>
-												{GROUP_DISPLAY_NAMES[group]}
+												{t(`prompts:tools.toolNames.${group}`)}
 												{group === "edit" && (
 													<div className="text-xs text-vscode-descriptionForeground mt-0.5">
 														{t("prompts:tools.allowedFiles")}{" "}
@@ -689,7 +690,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 										return enabledGroups
 											.map((group) => {
 												const groupName = getGroupName(group)
-												const displayName = GROUP_DISPLAY_NAMES[groupName]
+												const displayName = t(`prompts:tools.toolNames.${groupName}`)
 												if (Array.isArray(group) && group[1]?.fileRegex) {
 													const description =
 														group[1].description || `/${group[1].fileRegex}/`
@@ -781,10 +782,38 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 								color: "var(--vscode-descriptionForeground)",
 								marginTop: "5px",
 							}}>
-							{t("prompts:customInstructions.loadFromFile", {
-								modeName: getCurrentMode()?.name || "Code",
-								modeSlug: getCurrentMode()?.slug || "code",
-							})}
+							<Trans
+								i18nKey="prompts:customInstructions.loadFromFile"
+								values={{
+									mode: getCurrentMode()?.name || "Code",
+									slug: getCurrentMode()?.slug || "code",
+								}}
+								components={{
+									span: (
+										<span
+											style={{
+												color: "var(--vscode-textLink-foreground)",
+												cursor: "pointer",
+												textDecoration: "underline",
+											}}
+											onClick={() => {
+												const currentMode = getCurrentMode()
+												if (!currentMode) return
+
+												// Open or create an empty file
+												vscode.postMessage({
+													type: "openFile",
+													text: `./.clinerules-${currentMode.slug}`,
+													values: {
+														create: true,
+														content: "",
+													},
+												})
+											}}
+										/>
+									),
+								}}
+							/>
 						</div>
 					</div>
 				</div>
@@ -866,9 +895,32 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 
 						{isSystemPromptDisclosureOpen && (
 							<div className="text-xs text-vscode-descriptionForeground mt-2 ml-5">
-								{t("prompts:advancedSystemPrompt.description", {
-									modeSlug: getCurrentMode()?.slug || "code",
-								})}
+								<Trans
+									i18nKey="prompts:advancedSystemPrompt.description"
+									values={{
+										slug: getCurrentMode()?.slug || "code",
+									}}
+									components={{
+										span: (
+											<span
+												className="text-vscode-textLink-foreground cursor-pointer underline"
+												onClick={() => {
+													const currentMode = getCurrentMode()
+													if (!currentMode) return
+
+													vscode.postMessage({
+														type: "openFile",
+														text: `./.roo/system-prompt-${currentMode.slug}`,
+														values: {
+															create: true,
+															content: "",
+														},
+													})
+												}}
+											/>
+										),
+									}}
+								/>
 							</div>
 						)}
 					</div>
@@ -900,7 +952,30 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 						data-testid="global-custom-instructions-textarea"
 					/>
 					<div className="text-xs text-vscode-descriptionForeground mt-1.5 mb-10">
-						{t("prompts:globalCustomInstructions.loadFromFile")}
+						<Trans
+							i18nKey="prompts:globalCustomInstructions.loadFromFile"
+							components={{
+								span: (
+									<span
+										style={{
+											color: "var(--vscode-textLink-foreground)",
+											cursor: "pointer",
+											textDecoration: "underline",
+										}}
+										onClick={() =>
+											vscode.postMessage({
+												type: "openFile",
+												text: "./.clinerules",
+												values: {
+													create: true,
+													content: "",
+												},
+											})
+										}
+									/>
+								),
+							}}
+						/>
 					</div>
 				</div>
 
@@ -1247,7 +1322,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 													)
 												}
 											}}>
-											{GROUP_DISPLAY_NAMES[group]}
+											{t(`prompts:tools.toolNames.${group}`)}
 										</VSCodeCheckbox>
 									))}
 								</div>

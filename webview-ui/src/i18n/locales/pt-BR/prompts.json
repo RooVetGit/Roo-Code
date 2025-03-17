@@ -18,7 +18,14 @@
 		"builtInModesText": "Ferramentas para modos integrados não podem ser modificadas",
 		"editTools": "Editar ferramentas",
 		"doneEditing": "Concluir edição",
-		"allowedFiles": "Arquivos permitidos:"
+		"allowedFiles": "Arquivos permitidos:",
+		"toolNames": {
+			"read": "Ler arquivos",
+			"edit": "Editar arquivos",
+			"browser": "Usar navegador",
+			"command": "Executar comandos",
+			"mcp": "Usar MCP"
+		}
 	},
 	"roleDefinition": {
 		"title": "Definição de função",
@@ -47,10 +54,44 @@
 		"prompt": "Prompt",
 		"enhance": {
 			"apiConfiguration": "Configuração de API",
-			"apiConfigDescription": "Você pode selecionar uma configuração de API para usar sempre para aprimorar prompts, ou simplesmente usar a que está atualmente selecionada",
+			"apiConfigDescription": "Você pode selecionar uma configuração de API para usar sempre para aprimorar prompts, ou simplesmente use o que está atualmente selecionado",
 			"useCurrentConfig": "Usar configuração de API atualmente selecionada",
 			"testPromptPlaceholder": "Digite um prompt para testar o aprimoramento",
 			"previewButton": "Visualizar aprimoramento do prompt"
+		},
+		"types": {
+			"ENHANCE": {
+				"label": "Aprimorar Prompt",
+				"description": "Use prompt enhancement to get tailored suggestions or improvements for your inputs. This ensures Roo understands your intent and provides the best possible responses. Available via the ✨ icon in chat."
+			},
+			"EXPLAIN": {
+				"label": "Explicar Código",
+				"description": "Obtenha explicações detalhadas de trechos de código, funções ou arquivos inteiros. Useful for understanding complex code or learning new patterns. Available in code actions (lightbulb icon in the editor) and the editor context menu (right-click on selected code)."
+			},
+			"FIX": {
+				"label": "Corrigir Problemas",
+				"description": "Obtenha ajuda para identificar e resolver bugs, erros ou code quality issues. Provides step-by-step guidance for fixing problems. Available in code actions (lightbulb icon in the editor) and the editor context menu (right-click on selected code)."
+			},
+			"IMPROVE": {
+				"label": "Melhorar Código",
+				"description": "Receba sugestões para code optimization, better practices e architectural improvements while maintaining functionality. Available in code actions (lightbulb icon in the editor) and the editor context menu (right-click on selected code)."
+			},
+			"ADD_TO_CONTEXT": {
+				"label": "Adicionar ao Contexto",
+				"description": "Adicione contexto à sua tarefa ou conversa atual. Useful for providing additional information or clarifications. Available in code actions (lightbulb icon in the editor) and the editor context menu (right-click on selected code)."
+			},
+			"TERMINAL_ADD_TO_CONTEXT": {
+				"label": "Adicionar Conteúdo do Terminal ao Contexto",
+				"description": "Adicione a saída do terminal à sua tarefa ou conversa atual. Useful for providing command outputs or logs. Available in the terminal context menu (right-click on selected terminal content)."
+			},
+			"TERMINAL_FIX": {
+				"label": "Corrigir Comando do Terminal",
+				"description": "Obtenha ajuda para corrigir comandos de terminal que falharam ou precisam de melhorias. Available in the terminal context menu (right-click on selected terminal content)."
+			},
+			"TERMINAL_EXPLAIN": {
+				"label": "Explicar Comando do Terminal",
+				"description": "Obtenha explicações detalhadas de comandos de terminal e suas saídas. Available in the terminal context menu (right-click on selected terminal content)."
+			}
 		}
 	},
 	"customModeCreation": {
@@ -98,7 +139,7 @@
 		},
 		"buttons": {
 			"cancel": "Cancelar",
-			"create": "Criar modo"
+			"create": "Criar Modo"
 		},
 		"deleteMode": "Excluir modo"
 	},
