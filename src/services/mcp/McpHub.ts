@@ -41,6 +41,7 @@ const BaseConfigSchema = z.object({
 	disabled: z.boolean().optional(),
 	timeout: z.number().min(1).max(3600).optional().default(60),
 	alwaysAllow: z.array(z.string()).default([]),
+	watchPaths: z.array(z.string()).optional(), // paths to watch for changes and restart server
 })
 
 // Custom error messages for better user feedback
@@ -683,6 +684,22 @@ export class McpHub {
 	private setupFileWatcher(name: string, config: z.infer<typeof ServerConfigSchema>) {
 		// Only stdio type has args
 		if (config.type === "stdio") {
+			if (config.watchPaths && config.watchPaths.length > 0) {
+				console.log(`Setting up file watchers for ${name} MCP server...`)
+				const watcher = chokidar.watch(config.watchPaths, {
+					// persistent: true,
+					// ignoreInitial: true,
+					// awaitWriteFinish: true,
+				})
+
+				watcher.on("change", (changedPath) => {
+					console.log(`Detected change in ${changedPath}. Restarting server ${name}...`)
+					this.restartConnection(name)
+				})
+
+				this.fileWatchers.set(name, watcher)
+			}
+
 			const filePath = config.args?.find((arg: string) => arg.includes("build/index.js"))
 			if (filePath) {
 				// we use chokidar instead of onDidSaveTextDocument because it doesn't require the file to be open in the editor. The settings config is better suited for onDidSave since that will be manually updated by the user or Cline (and we want to detect save events, not every file change)
