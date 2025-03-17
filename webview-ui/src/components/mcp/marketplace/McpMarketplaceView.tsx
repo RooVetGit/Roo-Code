@@ -1,29 +1,61 @@
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
 	VSCodeButton,
 	VSCodeProgressRing,
+	VSCodeRadioGroup,
+	VSCodeRadio,
 	VSCodeDropdown,
 	VSCodeOption,
 	VSCodeTextField,
 } from "@vscode/webview-ui-toolkit/react"
-import { useAppTranslation } from "../../../i18n/TranslationContext"
+import { useAppTranslation } from "@/i18n/TranslationContext"
+import { McpMarketplaceItem } from "../../../../../src/shared/mcp"
 import { useExtensionState } from "../../../context/ExtensionStateContext"
 import { vscode } from "../../../utils/vscode"
-import { McpMarketplaceItem } from "../../../../../src/shared/mcp"
 import McpMarketplaceCard from "./McpMarketplaceCard"
 import McpSubmitCard from "./McpSubmitCard"
-
-type SortOption = "stars" | "downloads" | "newest" | "updated"
-
 const McpMarketplaceView = () => {
 	const { t } = useAppTranslation()
 	const { mcpServers } = useExtensionState()
+	const [items, setItems] = useState<McpMarketplaceItem[]>([])
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
-	const [items, setItems] = useState<McpMarketplaceItem[]>([])
+	const [isRefreshing, setIsRefreshing] = useState(false)
 	const [searchQuery, setSearchQuery] = useState("")
-	const [selectedCategory, setSelectedCategory] = useState<string>("all")
-	const [sortBy, setSortBy] = useState<SortOption>("stars")
+	const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+	const [sortBy, setSortBy] = useState<"downloadCount" | "stars" | "name" | "newest">("downloadCount")
+
+	const categories = useMemo(() => {
+		const uniqueCategories = new Set(items.map((item) => item.category))
+		return Array.from(uniqueCategories).sort()
+	}, [items])
+
+	const filteredItems = useMemo(() => {
+		return items
+			.filter((item) => {
+				const matchesSearch =
+					searchQuery === "" ||
+					item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+					item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+					item.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+				const matchesCategory = !selectedCategory || item.category === selectedCategory
+				return matchesSearch && matchesCategory
+			})
+			.sort((a, b) => {
+				switch (sortBy) {
+					case "downloadCount":
+						return b.downloadCount - a.downloadCount
+					case "stars":
+						return b.githubStars - a.githubStars
+					case "name":
+						return a.name.localeCompare(b.name)
+					case "newest":
+						return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+					default:
+						return 0
+				}
+			})
+	}, [items, searchQuery, selectedCategory, sortBy])
 
 	useEffect(() => {
 		const handleMessage = (event: MessageEvent) => {
@@ -31,75 +63,50 @@ const McpMarketplaceView = () => {
 			if (message.type === "mcpMarketplaceCatalog") {
 				if (message.error) {
 					setError(message.error)
-				} else if (message.mcpMarketplaceCatalog) {
+				} else {
+					setItems(message.mcpMarketplaceCatalog?.items || [])
 					setError(null)
-					setItems(message.mcpMarketplaceCatalog.items)
 				}
 				setIsLoading(false)
+				setIsRefreshing(false)
 			} else if (message.type === "mcpDownloadDetails") {
 				if (message.error) {
 					setError(message.error)
 				}
 			}
 		}
+
 		window.addEventListener("message", handleMessage)
-		vscode.postMessage({ type: "fetchMcpMarketplace" })
-		return () => window.removeEventListener("message", handleMessage)
+
+		// Fetch marketplace catalog
+		fetchMarketplace()
+
+		return () => {
+			window.removeEventListener("message", handleMessage)
+		}
 	}, [])
 
-	const categories = useMemo(() => {
-		const categorySet = new Set(items.map((item) => item.category))
-		return ["all", ...Array.from(categorySet)]
-	}, [items])
-
-	const filteredAndSortedItems = useMemo(() => {
-		let filtered = items
-
-		// Apply search filter
-		if (searchQuery) {
-			const query = searchQuery.toLowerCase()
-			filtered = filtered.filter(
-				(item) =>
-					item.name.toLowerCase().includes(query) ||
-					item.description.toLowerCase().includes(query) ||
-					item.tags.some((tag) => tag.toLowerCase().includes(query)),
-			)
+	const fetchMarketplace = (forceRefresh: boolean = false) => {
+		if (forceRefresh) {
+			setIsRefreshing(true)
+		} else {
+			setIsLoading(true)
 		}
+		setError(null)
+		vscode.postMessage({ type: "fetchMcpMarketplace", bool: forceRefresh })
+	}
 
-		// Apply category filter
-		if (selectedCategory !== "all") {
-			filtered = filtered.filter((item) => item.category === selectedCategory)
-		}
-
-		// Apply sorting
-		return [...filtered].sort((a, b) => {
-			switch (sortBy) {
-				case "stars":
-					return b.githubStars - a.githubStars
-				case "downloads":
-					return b.downloadCount - a.downloadCount
-				case "newest":
-					return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-				case "updated":
-					return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-				default:
-					return 0
-			}
-		})
-	}, [items, searchQuery, selectedCategory, sortBy])
-
-	if (isLoading) {
+	if (isLoading || isRefreshing) {
 		return (
 			<div
 				style={{
 					display: "flex",
-					flexDirection: "column",
-					alignItems: "center",
 					justifyContent: "center",
-					padding: "40px 20px",
+					alignItems: "center",
+					height: "100%",
+					padding: "20px",
 				}}>
-				<VSCodeProgressRing style={{ marginBottom: "16px" }} />
-				<span>{t("mcp:marketplace.loading")}</span>
+				<VSCodeProgressRing />
 			</div>
 		)
 	}
@@ -110,20 +117,15 @@ const McpMarketplaceView = () => {
 				style={{
 					display: "flex",
 					flexDirection: "column",
-					alignItems: "center",
 					justifyContent: "center",
-					padding: "40px 20px",
-					color: "var(--vscode-errorForeground)",
-					textAlign: "center",
+					alignItems: "center",
+					height: "100%",
+					padding: "20px",
+					gap: "12px",
 				}}>
-				<span className="codicon codicon-error" style={{ fontSize: "48px", marginBottom: "16px" }} />
-				<p style={{ margin: 0, marginBottom: "16px" }}>{error}</p>
-				<VSCodeButton
-					onClick={() => {
-						setIsLoading(true)
-						setError(null)
-						vscode.postMessage({ type: "fetchMcpMarketplace" })
-					}}>
+				<div style={{ color: "var(--vscode-errorForeground)" }}>{error}</div>
+				<VSCodeButton appearance="secondary" onClick={() => fetchMarketplace(true)}>
+					<span className="codicon codicon-refresh" style={{ marginRight: "6px" }} />
 					{t("mcp:marketplace.retry")}
 				</VSCodeButton>
 			</div>
@@ -131,65 +133,157 @@ const McpMarketplaceView = () => {
 	}
 
 	return (
-		<div style={{ padding: "0 10px" }}>
-			<div style={{ padding: "16px 0", display: "flex", gap: "16px", alignItems: "center" }}>
+		<div
+			style={{
+				display: "flex",
+				flexDirection: "column",
+				width: "100%",
+			}}>
+			<div style={{ padding: "20px 20px 5px", display: "flex", flexDirection: "column", gap: "16px" }}>
+				{/* Search row */}
 				<VSCodeTextField
-					placeholder={t("mcp:marketplace.searchPlaceholder")}
+					style={{ width: "100%" }}
+					placeholder="Search MCPs..."
 					value={searchQuery}
-					onChange={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
-					style={{ flexGrow: 1 }}
-				/>
-				<VSCodeDropdown
-					value={selectedCategory}
-					onChange={(e) => setSelectedCategory((e.target as HTMLSelectElement).value)}>
-					{categories.map((category) => (
-						<VSCodeOption key={category} value={category}>
-							{category === "all" ? t("mcp:marketplace.allCategories") : category}
-						</VSCodeOption>
-					))}
-				</VSCodeDropdown>
-				<VSCodeDropdown
-					value={sortBy}
-					onChange={(e) => setSortBy((e.target as HTMLSelectElement).value as SortOption)}>
-					<VSCodeOption value="stars">{t("mcp:marketplace.sortByStars")}</VSCodeOption>
-					<VSCodeOption value="downloads">{t("mcp:marketplace.sortByDownloads")}</VSCodeOption>
-					<VSCodeOption value="newest">{t("mcp:marketplace.sortByNewest")}</VSCodeOption>
-					<VSCodeOption value="updated">{t("mcp:marketplace.sortByUpdated")}</VSCodeOption>
-				</VSCodeDropdown>
-			</div>
+					onInput={(e) => setSearchQuery((e.target as HTMLInputElement).value)}>
+					<div
+						slot="start"
+						className="codicon codicon-search"
+						style={{
+							fontSize: 13,
+							opacity: 0.8,
+						}}
+					/>
+					{searchQuery && (
+						<div
+							className="codicon codicon-close"
+							aria-label="Clear search"
+							onClick={() => setSearchQuery("")}
+							slot="end"
+							style={{
+								display: "flex",
+								justifyContent: "center",
+								alignItems: "center",
+								height: "100%",
+								cursor: "pointer",
+							}}
+						/>
+					)}
+				</VSCodeTextField>
 
-			{filteredAndSortedItems.length === 0 ? (
+				{/* Filter row */}
 				<div
 					style={{
 						display: "flex",
-						flexDirection: "column",
 						alignItems: "center",
-						justifyContent: "center",
-						padding: "40px 20px",
-						color: "var(--vscode-descriptionForeground)",
-						textAlign: "center",
+						gap: "8px",
 					}}>
-					<span className="codicon codicon-inbox" style={{ fontSize: "48px", marginBottom: "16px" }} />
-					<p style={{ margin: 0 }}>
-						{searchQuery || selectedCategory !== "all"
-							? t("mcp:marketplace.noResults")
-							: t("mcp:marketplace.noServers")}
-					</p>
+					<span
+						style={{
+							fontSize: "11px",
+							color: "var(--vscode-descriptionForeground)",
+							textTransform: "uppercase",
+							fontWeight: 500,
+							flexShrink: 0,
+						}}>
+						{t("mcp:marketplace.filter")}
+					</span>
+					<div
+						style={{
+							position: "relative",
+							zIndex: 2,
+							flex: 1,
+						}}>
+						<VSCodeDropdown
+							style={{
+								width: "100%",
+							}}
+							value={selectedCategory || ""}
+							onChange={(e) => setSelectedCategory((e.target as HTMLSelectElement).value || null)}>
+							<VSCodeOption value="">{t("mcp:marketplace.allCategories")}</VSCodeOption>
+							{categories.map((category) => (
+								<VSCodeOption key={category} value={category}>
+									{category}
+								</VSCodeOption>
+							))}
+						</VSCodeDropdown>
+					</div>
 				</div>
-			) : (
+
+				{/* Sort row */}
 				<div
 					style={{
-						display: "grid",
-						gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-						gap: "16px",
-						padding: "16px 0",
+						display: "flex",
+						gap: "8px",
 					}}>
-					{filteredAndSortedItems.map((item) => (
-						<McpMarketplaceCard key={item.mcpId} item={item} installedServers={mcpServers} />
-					))}
-					<McpSubmitCard />
+					<span
+						style={{
+							fontSize: "11px",
+							color: "var(--vscode-descriptionForeground)",
+							textTransform: "uppercase",
+							fontWeight: 500,
+							marginTop: "3px",
+						}}>
+						{t("mcp:marketplace.sort")}
+					</span>
+					<VSCodeRadioGroup
+						style={{
+							display: "flex",
+							flexWrap: "wrap",
+							marginTop: "-2.5px",
+						}}
+						value={sortBy}
+						onChange={(e) => setSortBy((e.target as HTMLInputElement).value as typeof sortBy)}>
+						<VSCodeRadio value="downloadCount">{t("mcp:marketplace.sortByDownloadCount")}</VSCodeRadio>
+						<VSCodeRadio value="stars">{t("mcp:marketplace.sortByStars")}</VSCodeRadio>
+						<VSCodeRadio value="newest">{t("mcp:marketplace.sortByNewest")}</VSCodeRadio>
+						<VSCodeRadio value="name">{t("mcp:marketplace.sortByName")}</VSCodeRadio>
+					</VSCodeRadioGroup>
 				</div>
-			)}
+			</div>
+
+			<style>
+				{`
+				.mcp-search-input,
+				.mcp-select {
+				box-sizing: border-box;
+				}
+				.mcp-search-input {
+				min-width: 140px;
+				}
+				.mcp-search-input:focus,
+				.mcp-select:focus {
+				border-color: var(--vscode-focusBorder) !important;
+				}
+				.mcp-search-input:hover,
+				.mcp-select:hover {
+				opacity: 0.9;
+				}
+			`}
+			</style>
+			<div style={{ display: "flex", flexDirection: "column" }}>
+				{filteredItems.length === 0 ? (
+					<div
+						style={{
+							display: "flex",
+							justifyContent: "center",
+							alignItems: "center",
+							height: "100%",
+							padding: "20px",
+							color: "var(--vscode-descriptionForeground)",
+							borderBottom: "1px solid var(--vscode-list-inactiveSelectionBackground)",
+						}}>
+						{searchQuery || selectedCategory
+							? t("mcp:marketplace.noResults")
+							: t("mcp:marketplace.noServers")}
+					</div>
+				) : (
+					filteredItems.map((item) => (
+						<McpMarketplaceCard key={item.mcpId} item={item} installedServers={mcpServers} />
+					))
+				)}
+				<McpSubmitCard />
+			</div>
 		</div>
 	)
 }

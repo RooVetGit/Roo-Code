@@ -17,7 +17,7 @@
 		"noDescription": "No description"
 	},
 	"tabs": {
-		"installed": "Installed",
+		"installed": "Installed & Settings",
 		"marketplace": "Marketplace",
 		"tools": "Tools",
 		"resources": "Resources"
@@ -36,11 +36,13 @@
 		"install": "Install",
 		"by": "by {{author}}",
 		"searchPlaceholder": "Search servers...",
+		"filter": "Filter:",
 		"allCategories": "All Categories",
-		"sortByStars": "Sort by Stars",
-		"sortByDownloads": "Sort by Downloads",
-		"sortByNewest": "Sort by Newest",
-		"sortByUpdated": "Sort by Last Updated"
+		"sort": "Sort:",
+		"sortByStars": "Most Stars",
+		"sortByDownloadCount": "Most Installs",
+		"sortByNewest": "Newest",
+		"sortByName": "Name"
 	},
 	"networkTimeout": {
 		"label": "Network Timeout",
