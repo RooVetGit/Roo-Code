@@ -118,6 +118,7 @@ export const GLOBAL_STATE_KEYS = [
 	"remoteBrowserEnabled",
 	"humanRelayMonitorClipboard",
 	"humanRelayMonitorInterval",
+	"language",
 	"maxWorkspaceFiles",
 ] as const
 

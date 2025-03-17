@@ -1531,6 +1531,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("browserToolEnabled", message.bool ?? true)
 						await this.postStateToWebview()
 						break
+					case "language":
+						await this.updateGlobalState("language", message.text)
+						await this.postStateToWebview()
+						break
 					case "showRooIgnoredFiles":
 						await this.updateGlobalState("showRooIgnoredFiles", message.bool ?? true)
 						await this.postStateToWebview()
@@ -2510,8 +2514,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			writeDelayMs: stateValues.writeDelayMs ?? 1000,
 			terminalOutputLineLimit: stateValues.terminalOutputLineLimit ?? 500,
 			mode: stateValues.mode ?? defaultModeSlug,
-			// Pass the VSCode language code directly
-			language: formatLanguage(vscode.env.language),
+			language: stateValues.language || formatLanguage(vscode.env.language),
 			mcpEnabled: stateValues.mcpEnabled ?? true,
 			enableMcpServerCreation: stateValues.enableMcpServerCreation ?? true,
 			alwaysApproveResubmit: stateValues.alwaysApproveResubmit ?? false,
@@ -2623,7 +2626,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	 * like the current mode, API provider, etc.
 	 */
 	public async getTelemetryProperties(): Promise<Record<string, any>> {
-		const { mode, apiConfiguration } = await this.getState()
+		const { mode, apiConfiguration, language } = await this.getState()
 		const appVersion = this.context.extension?.packageJSON?.version
 		const vscodeVersion = vscode.version
 		const platform = process.platform
@@ -2636,6 +2639,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		// Add extension version
 		if (appVersion) {
 			properties.appVersion = appVersion
+		}
+
+		// Add language
+		if (language) {
+			properties.language = language
 		}
 
 		// Add current mode
