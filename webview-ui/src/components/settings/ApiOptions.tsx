@@ -1384,7 +1384,7 @@ const ApiOptions = ({
 					<div className="dropdown-container" style={{ marginTop: 3 }}>
 						<div className="flex items-center gap-1">
 							<label htmlFor="provider-routing" className="font-medium">
-								OpenRouter Provider Routing
+								{t("settings:providers.openRouter.providerRouting.title")}
 							</label>
 							<a href={`https://openrouter.ai/${selectedModelId}/providers`}>
 								<ExternalLinkIcon className="w-4 h-4" />
@@ -1417,10 +1417,10 @@ const ApiOptions = ({
 						/>
 					</div>
 					<div className="text-sm text-vscode-descriptionForeground">
-						OpenRouter routes requests to the best available providers for your model. By default, requests
-						are load balanced across the top providers to maximize uptime. However, you can choose a
-						specific provider to use for this model. Learn more about provider routing{" "}
-						<a href="https://openrouter.ai/docs/features/provider-routing">here</a>.
+						{t("settings:providers.openRouter.providerRouting.description")}{" "}
+						<a href="https://openrouter.ai/docs/features/provider-routing">
+							{t("settings:providers.openRouter.providerRouting.learnMore")}.
+						</a>
 					</div>
 				</>
 			)}
