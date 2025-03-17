@@ -12,6 +12,7 @@ import getFolderSize from "get-folder-size"
 import { serializeError } from "serialize-error"
 import * as vscode from "vscode"
 
+import { TokenUsage } from "../exports/roo-code"
 import { ApiHandler, buildApiHandler } from "../api"
 import { ApiStream } from "../api/transform/stream"
 import { DIFF_VIEW_URI_SCHEME, DiffViewProvider } from "../integrations/editor/DiffViewProvider"
@@ -89,8 +90,11 @@ export type ClineEvents = {
 	taskStarted: []
 	taskPaused: []
 	taskUnpaused: []
+	taskAskResponded: []
 	taskAborted: []
 	taskSpawned: [taskId: string]
+	taskCompleted: [taskId: string, usage: TokenUsage]
+	taskTokenUsageUpdated: [taskId: string, usage: TokenUsage]
 }
 
 export type ClineOptions = {
@@ -350,13 +354,19 @@ export class Cline extends EventEmitter<ClineEvents> {
 		this.emit("message", { action: "updated", message: partialMessage })
 	}
 
+	private getTokenUsage() {
+		const usage = getApiMetrics(combineApiRequests(combineCommandSequences(this.clineMessages.slice(1))))
+		this.emit("taskTokenUsageUpdated", this.taskId, usage)
+		return usage
+	}
+
 	private async saveClineMessages() {
 		try {
 			const taskDir = await this.ensureTaskDirectoryExists()
 			const filePath = path.join(taskDir, GlobalFileNames.uiMessages)
 			await fs.writeFile(filePath, JSON.stringify(this.clineMessages))
 			// combined as they are in ChatView
-			const apiMetrics = getApiMetrics(combineApiRequests(combineCommandSequences(this.clineMessages.slice(1))))
+			const apiMetrics = this.getTokenUsage()
 			const taskMessage = this.clineMessages[0] // first message is always the task say
 			const lastRelevantMessage =
 				this.clineMessages[
@@ -495,6 +505,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		this.askResponse = undefined
 		this.askResponseText = undefined
 		this.askResponseImages = undefined
+		this.emit("taskAskResponded")
 		return result
 	}
 
@@ -2923,26 +2934,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 					}
 
 					case "attempt_completion": {
-						/*
-						this.consecutiveMistakeCount = 0
-						let resultToSend = result
-						if (command) {
-							await this.say("completion_result", resultToSend)
-							// TODO: currently we don't handle if this command fails, it could be useful to let cline know and retry
-							const [didUserReject, commandResult] = await this.executeCommand(command, true)
-							// if we received non-empty string, the command was rejected or failed
-							if (commandResult) {
-								return [didUserReject, commandResult]
-							}
-							resultToSend = ""
-						}
-						const { response, text, images } = await this.ask("completion_result", resultToSend) // this prompts webview to show 'new task' button, and enable text input (which would be the 'text' here)
-						if (response === "yesButtonClicked") {
-							return [false, ""] // signals to recursive loop to stop (for now this never happens since yesButtonClicked will trigger a new task)
-						}
-						await this.say("user_feedback", text ?? "", images)
-						return [
-						*/
 						const result: string | undefined = block.params.result
 						const command: string | undefined = block.params.command
 						try {
@@ -2994,33 +2985,41 @@ export class Cline extends EventEmitter<ClineEvents> {
 									)
 									break
 								}
+
 								this.consecutiveMistakeCount = 0
 
 								let commandResult: ToolResponse | undefined
+
 								if (command) {
 									if (lastMessage && lastMessage.ask !== "command") {
-										// havent sent a command message yet so first send completion_result then command
+										// Haven't sent a command message yet so
+										// first send completion_result then command.
 										await this.say("completion_result", result, undefined, false)
-										telemetryService.captureTaskCompleted(this.taskId)
 									}
 
-									// complete command message
+									// Complete command message.
 									const didApprove = await askApproval("command", command)
+
 									if (!didApprove) {
 										break
 									}
+
 									const [userRejected, execCommandResult] = await this.executeCommandTool(command!)
+
 									if (userRejected) {
 										this.didRejectTool = true
 										pushToolResult(execCommandResult)
 										break
 									}
-									// user didn't reject, but the command may have output
+
+									// User didn't reject, but the command may have output.
 									commandResult = execCommandResult
 								} else {
 									await this.say("completion_result", result, undefined, false)
-									telemetryService.captureTaskCompleted(this.taskId)
 								}
+
+								telemetryService.captureTaskCompleted(this.taskId)
+								this.emit("taskCompleted", this.taskId, this.getTokenUsage())
 
 								if (this.parentTask) {
 									const didApprove = await askFinishSubTaskApproval()
@@ -3034,15 +3033,22 @@ export class Cline extends EventEmitter<ClineEvents> {
 									break
 								}
 
-								// we already sent completion_result says, an empty string asks relinquishes control over button and field
+								// We already sent completion_result says, an
+								// empty string asks relinquishes control over
+								// button and field.
 								const { response, text, images } = await this.ask("completion_result", "", false)
+
+								// Signals to recursive loop to stop (for now
+								// this never happens since yesButtonClicked
+								// will trigger a new task).
 								if (response === "yesButtonClicked") {
-									pushToolResult("") // signals to recursive loop to stop (for now this never happens since yesButtonClicked will trigger a new task)
+									pushToolResult("")
 									break
 								}
-								await this.say("user_feedback", text ?? "", images)
 
+								await this.say("user_feedback", text ?? "", images)
 								const toolResults: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[] = []
+
 								if (commandResult) {
 									if (typeof commandResult === "string") {
 										toolResults.push({ type: "text", text: commandResult })
@@ -3050,17 +3056,20 @@ export class Cline extends EventEmitter<ClineEvents> {
 										toolResults.push(...commandResult)
 									}
 								}
+
 								toolResults.push({
 									type: "text",
 									text: `The user has provided feedback on the results. Consider their input to continue the task, and then attempt completion again.\n<feedback>\n${text}\n</feedback>`,
 								})
+
 								toolResults.push(...formatResponse.imageBlocks(images))
+
 								this.userMessageContent.push({
 									type: "text",
 									text: `${toolDescription()} Result:`,
 								})
-								this.userMessageContent.push(...toolResults)
 
+								this.userMessageContent.push(...toolResults)
 								break
 							}
 						} catch (error) {
@@ -3069,6 +3078,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 						}
 					}
 				}
+
 				break
 		}
 
@@ -3662,7 +3672,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 		})
 		const timeZone = formatter.resolvedOptions().timeZone
 		const timeZoneOffset = -now.getTimezoneOffset() / 60 // Convert to hours and invert sign to match conventional notation
-		const timeZoneOffsetStr = `${timeZoneOffset >= 0 ? "+" : ""}${timeZoneOffset}:00`
+		const timeZoneOffsetHours = Math.floor(Math.abs(timeZoneOffset))
+		const timeZoneOffsetMinutes = Math.abs(Math.round((Math.abs(timeZoneOffset) - timeZoneOffsetHours) * 60))
+		const timeZoneOffsetStr = `${timeZoneOffset >= 0 ? "+" : "-"}${timeZoneOffsetHours}:${timeZoneOffsetMinutes.toString().padStart(2, "0")}`
 		details += `\n\n# Current Time\n${formatter.format(now)} (${timeZone}, UTC${timeZoneOffsetStr})`
 
 		// Add context tokens information
