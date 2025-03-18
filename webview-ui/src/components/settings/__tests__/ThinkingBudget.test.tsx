@@ -2,16 +2,15 @@ import { render, screen, fireEvent } from "@testing-library/react"
 import { ThinkingBudget } from "../ThinkingBudget"
 import { ModelInfo } from "../../../../../src/shared/api"
 
-// Mock Slider component
 jest.mock("@/components/ui", () => ({
-	Slider: ({ value, onValueChange, min, max }: any) => (
+	Slider: ({ value, onValueCommit, min, max }: any) => (
 		<input
 			type="range"
 			data-testid="slider"
 			min={min}
 			max={max}
 			value={value[0]}
-			onChange={(e) => onValueChange([parseInt(e.target.value)])}
+			onChange={(e) => onValueCommit([parseInt(e.target.value)])}
 		/>
 	),
 }))

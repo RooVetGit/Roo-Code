@@ -1374,7 +1374,7 @@ const ApiOptions = ({
 								))}
 							</SelectContent>
 						</Select>
-						<div className="text-sm text-vscode-descriptionForeground">
+						<div className="text-sm text-vscode-descriptionForeground mt-1">
 							{t("settings:providers.openRouter.providerRouting.description")}{" "}
 							<a href="https://openrouter.ai/docs/features/provider-routing">
 								{t("settings:providers.openRouter.providerRouting.learnMore")}.
