@@ -46,7 +46,7 @@
 		"update_server_timeout": "Failed to update server timeout",
 		"create_mcp_json": "Failed to create or open .roo/mcp.json: {{error}}",
 		"hmr_not_running": "Local development server is not running, HMR will not work. Please run 'npm run dev' before launching the extension to enable HMR.",
-		"retrieve_current_mode": "Error failed to retrieve current mode from state.",
+		"retrieve_current_mode": "Error: failed to retrieve current mode from state.",
 		"failed_delete_repo": "Failed to delete associated shadow repository or branch: {{error}}",
 		"failed_remove_directory": "Failed to remove task directory: {{error}}"
 	},
