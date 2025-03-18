@@ -30,6 +30,7 @@ export interface ApiHandlerOptions {
 	openRouterModelId?: string
 	openRouterModelInfo?: ModelInfo
 	openRouterBaseUrl?: string
+	openRouterSpecificProvider?: string
 	awsAccessKey?: string
 	awsSecretKey?: string
 	awsSessionToken?: string
@@ -88,7 +89,9 @@ export type ApiConfiguration = ApiHandlerOptions & {
 // Import GlobalStateKey type from globalState.ts
 import { GlobalStateKey } from "./globalState"
 
-// Define API configuration keys for dynamic object building
+// Define API configuration keys for dynamic object building.
+// TODO: This needs actual type safety; a type error should be thrown if
+// this is not an exhaustive list of all `GlobalStateKey` values.
 export const API_CONFIG_KEYS: GlobalStateKey[] = [
 	"apiModelId",
 	"anthropicBaseUrl",
@@ -98,6 +101,7 @@ export const API_CONFIG_KEYS: GlobalStateKey[] = [
 	"openRouterModelId",
 	"openRouterModelInfo",
 	"openRouterBaseUrl",
+	"openRouterSpecificProvider",
 	"awsRegion",
 	"awsUseCrossRegionInference",
 	// "awsUsePromptCache", // NOT exist on GlobalStateKey
