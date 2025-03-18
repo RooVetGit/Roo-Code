@@ -73,10 +73,10 @@ if (!isTestEnv) {
 
 // Initialize i18next with configuration
 i18next.init({
-	lng: "en", // Default language
+	lng: "en",
 	fallbackLng: "en",
-	debug: true, // Set to true to help with debugging
-	resources: translations, // Initialize with loaded resources
+	debug: false,
+	resources: translations,
 	interpolation: {
 		escapeValue: false,
 	},
