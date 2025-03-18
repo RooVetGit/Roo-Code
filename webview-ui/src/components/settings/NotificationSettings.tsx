@@ -38,19 +38,14 @@ export const NotificationSettings = ({
 					<VSCodeCheckbox
 						checked={ttsEnabled}
 						onChange={(e: any) => setCachedStateField("ttsEnabled", e.target.checked)}>
-						<span className="font-medium">Enable text-to-speech</span>
+						<span className="font-medium">{t("settings:notifications.tts.label")}</span>
 					</VSCodeCheckbox>
 					<p className="text-vscode-descriptionForeground text-sm mt-0">
-						When enabled, Roo will read aloud its responses using text-to-speech.
+						{t("settings:notifications.tts.description")}
 					</p>
 					{ttsEnabled && (
-						<div
-							style={{
-								marginLeft: 0,
-								paddingLeft: 10,
-								borderLeft: "2px solid var(--vscode-button-background)",
-							}}>
-							<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+						<div className="pl-[10px] ml-0 border-l-2 border-l-vscode-button-background">
+							<div className="flex items-center gap-[5px]">
 								<input
 									type="range"
 									min="0.1"
@@ -61,11 +56,11 @@ export const NotificationSettings = ({
 									className="h-2 focus:outline-0 w-4/5 accent-vscode-button-background"
 									aria-label="Speed"
 								/>
-								<span style={{ minWidth: "35px", textAlign: "left" }}>
-									{((ttsSpeed ?? 1.0) * 100).toFixed(0)}%
-								</span>
+								<span className="min-w-[35px] text-left">{((ttsSpeed ?? 1.0) * 100).toFixed(0)}%</span>
 							</div>
-							<p className="text-vscode-descriptionForeground text-sm mt-1">Speed</p>
+							<p className="text-vscode-descriptionForeground text-sm mt-1">
+								{t("settings:notifications.tts.speedLabel")}
+							</p>
 						</div>
 					)}
 				</div>
@@ -80,13 +75,8 @@ export const NotificationSettings = ({
 						{t("settings:notifications.sound.description")}
 					</p>
 					{soundEnabled && (
-						<div
-							style={{
-								marginLeft: 0,
-								paddingLeft: 10,
-								borderLeft: "2px solid var(--vscode-button-background)",
-							}}>
-							<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+						<div className="pl-[10px] ml-0 border-l-2 border-l-vscode-button-background">
+							<div className="flex items-center gap-[5px]">
 								<input
 									type="range"
 									min="0"
@@ -98,7 +88,7 @@ export const NotificationSettings = ({
 									aria-label="Volume"
 									data-testid="sound-volume-slider"
 								/>
-								<span style={{ minWidth: "35px", textAlign: "left" }}>
+								<span className="min-w-[35px] text-left">
 									{((soundVolume ?? 0.5) * 100).toFixed(0)}%
 								</span>
 							</div>
