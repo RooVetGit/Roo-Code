@@ -44,7 +44,7 @@ export const ContextManagementSettings = ({
 							max={500}
 							step={1}
 							value={[maxOpenTabsContext ?? 20]}
-							onValueCommit={([value]) => setCachedStateField("maxOpenTabsContext", value)}
+							onValueChange={([value]) => setCachedStateField("maxOpenTabsContext", value)}
 							data-testid="open-tabs-limit-slider"
 						/>
 						<span className="w-10">{maxOpenTabsContext ?? 20}</span>
@@ -64,7 +64,7 @@ export const ContextManagementSettings = ({
 							max={500}
 							step={1}
 							value={[maxWorkspaceFiles ?? 200]}
-							onValueCommit={([value]) => setCachedStateField("maxWorkspaceFiles", value)}
+							onValueChange={([value]) => setCachedStateField("maxWorkspaceFiles", value)}
 							data-testid="workspace-files-limit-slider"
 						/>
 						<span className="w-10">{maxWorkspaceFiles ?? 200}</span>

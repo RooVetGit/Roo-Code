@@ -88,11 +88,11 @@ jest.mock("@vscode/webview-ui-toolkit/react", () => ({
 // Mock Slider component
 jest.mock("@/components/ui", () => ({
 	...jest.requireActual("@/components/ui"),
-	Slider: ({ value, onValueCommit, "data-testid": dataTestId }: any) => (
+	Slider: ({ value, onValueChange, "data-testid": dataTestId }: any) => (
 		<input
 			type="range"
 			value={value[0]}
-			onChange={(e) => onValueCommit([parseFloat(e.target.value)])}
+			onChange={(e) => onValueChange([parseFloat(e.target.value)])}
 			data-testid={dataTestId}
 		/>
 	),

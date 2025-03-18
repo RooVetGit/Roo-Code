@@ -46,7 +46,7 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 						max={tokensMax}
 						step={1024}
 						value={[tokens]}
-						onValueCommit={([value]) => setApiConfigurationField("modelMaxTokens", value)}
+						onValueChange={([value]) => setApiConfigurationField("modelMaxTokens", value)}
 					/>
 					<div className="w-12 text-sm text-center">{tokens}</div>
 				</div>
@@ -59,7 +59,7 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 						max={thinkingTokensMax}
 						step={1024}
 						value={[thinkingTokens]}
-						onValueCommit={([value]) => setApiConfigurationField("modelMaxThinkingTokens", value)}
+						onValueChange={([value]) => setApiConfigurationField("modelMaxThinkingTokens", value)}
 					/>
 					<div className="w-12 text-sm text-center">{thinkingTokens}</div>
 				</div>

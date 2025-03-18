@@ -42,7 +42,7 @@ export const TerminalSettings = ({
 							max={5000}
 							step={100}
 							value={[terminalOutputLineLimit ?? 500]}
-							onValueCommit={([value]) => setCachedStateField("terminalOutputLineLimit", value)}
+							onValueChange={([value]) => setCachedStateField("terminalOutputLineLimit", value)}
 							data-testid="terminal-output-limit-slider"
 						/>
 						<span className="w-10">{terminalOutputLineLimit ?? 500}</span>
@@ -62,7 +62,7 @@ export const TerminalSettings = ({
 							max={60000}
 							step={1000}
 							value={[terminalShellIntegrationTimeout ?? 5000]}
-							onValueCommit={([value]) =>
+							onValueChange={([value]) =>
 								setCachedStateField(
 									"terminalShellIntegrationTimeout",
 									Math.min(60000, Math.max(1000, value)),

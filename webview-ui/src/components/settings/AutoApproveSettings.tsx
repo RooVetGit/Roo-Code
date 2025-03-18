@@ -98,7 +98,7 @@ export const AutoApproveSettings = ({
 									max={5000}
 									step={100}
 									value={[writeDelayMs]}
-									onValueCommit={(value) => setCachedStateField("writeDelayMs", value)}
+									onValueChange={(value) => setCachedStateField("writeDelayMs", value)}
 									data-testid="write-delay-slider"
 								/>
 								<span className="w-20">{writeDelayMs}ms</span>
@@ -144,7 +144,7 @@ export const AutoApproveSettings = ({
 									max={100}
 									step={1}
 									value={[requestDelaySeconds]}
-									onValueCommit={(value) => setCachedStateField("requestDelaySeconds", value)}
+									onValueChange={(value) => setCachedStateField("requestDelaySeconds", value)}
 									data-testid="request-delay-slider"
 								/>
 								<span className="w-20">{requestDelaySeconds}s</span>

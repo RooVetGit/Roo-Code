@@ -56,7 +56,7 @@ export const TemperatureControl = ({ value, onChange, maxValue = 1 }: Temperatur
 								max={maxValue}
 								step={0.01}
 								value={[inputValue ?? 0]}
-								onValueCommit={([value]) => setInputValue(value)}
+								onValueChange={([value]) => setInputValue(value)}
 							/>
 							<span className="w-10">{inputValue}</span>
 						</div>

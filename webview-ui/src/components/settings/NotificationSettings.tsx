@@ -59,7 +59,7 @@ export const NotificationSettings = ({
 									max={2.0}
 									step={0.01}
 									value={[ttsSpeed ?? 1.0]}
-									onValueCommit={([value]) => setCachedStateField("ttsSpeed", value)}
+									onValueChange={([value]) => setCachedStateField("ttsSpeed", value)}
 									data-testid="tts-speed-slider"
 								/>
 								<span className="w-10">{((ttsSpeed ?? 1.0) * 100).toFixed(0)}%</span>
@@ -92,7 +92,7 @@ export const NotificationSettings = ({
 									max={1}
 									step={0.01}
 									value={[soundVolume ?? 0.5]}
-									onValueCommit={([value]) => setCachedStateField("soundVolume", value)}
+									onValueChange={([value]) => setCachedStateField("soundVolume", value)}
 									data-testid="sound-volume-slider"
 								/>
 								<span className="w-10">{((soundVolume ?? 0.5) * 100).toFixed(0)}%</span>

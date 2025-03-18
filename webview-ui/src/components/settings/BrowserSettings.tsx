@@ -167,7 +167,7 @@ export const BrowserSettings = ({
 									max={100}
 									step={1}
 									value={[screenshotQuality ?? 75]}
-									onValueCommit={([value]) => setCachedStateField("screenshotQuality", value)}
+									onValueChange={([value]) => setCachedStateField("screenshotQuality", value)}
 								/>
 								<span className="w-10">{screenshotQuality ?? 75}%</span>
 							</div>

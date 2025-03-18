@@ -51,7 +51,7 @@ export const AdvancedSettings = ({
 								max={60}
 								step={1}
 								value={[rateLimitSeconds]}
-								onValueCommit={([value]) => setCachedStateField("rateLimitSeconds", value)}
+								onValueChange={([value]) => setCachedStateField("rateLimitSeconds", value)}
 							/>
 							<span className="w-10">{rateLimitSeconds}s</span>
 						</div>
@@ -141,7 +141,7 @@ export const AdvancedSettings = ({
 									max={1}
 									step={0.005}
 									value={[fuzzyMatchThreshold ?? 1.0]}
-									onValueCommit={([value]) => setCachedStateField("fuzzyMatchThreshold", value)}
+									onValueChange={([value]) => setCachedStateField("fuzzyMatchThreshold", value)}
 								/>
 								<span className="w-10">{Math.round((fuzzyMatchThreshold || 1) * 100)}%</span>
 							</div>
