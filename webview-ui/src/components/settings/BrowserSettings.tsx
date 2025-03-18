@@ -140,7 +140,7 @@ export const BrowserSettings = ({
 								value={browserViewportSize}
 								onValueChange={(value) => setCachedStateField("browserViewportSize", value)}>
 								<SelectTrigger className="w-full">
-									<SelectValue placeholder="Select" />
+									<SelectValue placeholder={t("settings:common.select")} />
 								</SelectTrigger>
 								<SelectContent>
 									<SelectGroup>

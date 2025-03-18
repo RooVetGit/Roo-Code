@@ -4,7 +4,6 @@ import { VSCodeButton, VSCodeCheckbox, VSCodeTextField } from "@vscode/webview-u
 import { CheckCheck } from "lucide-react"
 
 import { vscode } from "@/utils/vscode"
-import { ExtensionStateContextType } from "@/context/ExtensionStateContext"
 import { Slider } from "@/components/ui"
 
 import { SetCachedStateField } from "./types"
@@ -23,7 +22,19 @@ type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	alwaysAllowSubtasks?: boolean
 	alwaysAllowExecute?: boolean
 	allowedCommands?: string[]
-	setCachedStateField: SetCachedStateField<keyof ExtensionStateContextType>
+	setCachedStateField: SetCachedStateField<
+		| "alwaysAllowReadOnly"
+		| "alwaysAllowWrite"
+		| "writeDelayMs"
+		| "alwaysAllowBrowser"
+		| "alwaysApproveResubmit"
+		| "requestDelaySeconds"
+		| "alwaysAllowMcp"
+		| "alwaysAllowModeSwitch"
+		| "alwaysAllowSubtasks"
+		| "alwaysAllowExecute"
+		| "allowedCommands"
+	>
 }
 
 export const AutoApproveSettings = ({
@@ -98,7 +109,7 @@ export const AutoApproveSettings = ({
 									max={5000}
 									step={100}
 									value={[writeDelayMs]}
-									onValueChange={(value) => setCachedStateField("writeDelayMs", value)}
+									onValueChange={([value]) => setCachedStateField("writeDelayMs", value)}
 									data-testid="write-delay-slider"
 								/>
 								<span className="w-20">{writeDelayMs}ms</span>
@@ -144,7 +155,7 @@ export const AutoApproveSettings = ({
 									max={100}
 									step={1}
 									value={[requestDelaySeconds]}
-									onValueChange={(value) => setCachedStateField("requestDelaySeconds", value)}
+									onValueChange={([value]) => setCachedStateField("requestDelaySeconds", value)}
 									data-testid="request-delay-slider"
 								/>
 								<span className="w-20">{requestDelaySeconds}s</span>
