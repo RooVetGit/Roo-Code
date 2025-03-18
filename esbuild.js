@@ -69,6 +69,12 @@ function copyLocaleFiles() {
 	const destDir = path.join(__dirname, "dist", "i18n", "locales")
 	const outDir = path.join(__dirname, "out", "i18n", "locales")
 
+	// Ensure source directory exists before proceeding
+	if (!fs.existsSync(srcDir)) {
+		console.warn(`Source locales directory does not exist: ${srcDir}`)
+		return // Exit early if source directory doesn't exist
+	}
+
 	// Create destination directories
 	fs.mkdirSync(destDir, { recursive: true })
 	try {
@@ -112,6 +118,13 @@ function setupLocaleWatcher() {
 	if (!watch) return
 
 	const localesDir = path.join(__dirname, "src", "i18n", "locales")
+
+	// Ensure the locales directory exists before setting up watcher
+	if (!fs.existsSync(localesDir)) {
+		console.warn(`Cannot set up watcher: Source locales directory does not exist: ${localesDir}`)
+		return
+	}
+
 	console.log(`Setting up watcher for locale files in ${localesDir}`)
 
 	// Use a debounce mechanism
@@ -125,13 +138,17 @@ function setupLocaleWatcher() {
 	}
 
 	// Watch the locales directory
-	fs.watch(localesDir, { recursive: true }, (eventType, filename) => {
-		if (filename && filename.endsWith(".json")) {
-			console.log(`Locale file ${filename} changed, triggering copy...`)
-			debouncedCopy()
-		}
-	})
-	console.log("Watcher for locale files is set up")
+	try {
+		fs.watch(localesDir, { recursive: true }, (eventType, filename) => {
+			if (filename && filename.endsWith(".json")) {
+				console.log(`Locale file ${filename} changed, triggering copy...`)
+				debouncedCopy()
+			}
+		})
+		console.log("Watcher for locale files is set up")
+	} catch (error) {
+		console.error(`Error setting up watcher for ${localesDir}:`, error.message)
+	}
 }
 
 const copyLocalesFiles = {
