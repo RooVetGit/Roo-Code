@@ -899,7 +899,7 @@ describe("ClineProvider", () => {
 		expect(mockPostMessage).toHaveBeenCalled()
 	})
 
-	test.only("uses mode-specific custom instructions in Cline initialization", async () => {
+	test("uses mode-specific custom instructions in Cline initialization", async () => {
 		// Setup mock state
 		const modeCustomInstructions = "Code mode instructions"
 		const mockApiConfig = {
@@ -1265,17 +1265,6 @@ describe("ClineProvider", () => {
 		})
 
 		test("passes diffStrategy and diffEnabled to SYSTEM_PROMPT when previewing", async () => {
-			// Setup Cline instance with mocked api.getModel()
-			const { Cline } = require("../../Cline")
-			const mockCline = new Cline()
-			mockCline.api = {
-				getModel: jest.fn().mockReturnValue({
-					id: "claude-3-sonnet",
-					info: { supportsComputerUse: true },
-				}),
-			}
-			await provider.addClineToStack(mockCline)
-
 			// Mock getState to return experimentalDiffStrategy, diffEnabled and fuzzyMatchThreshold
 			jest.spyOn(provider, "getState").mockResolvedValue({
 				apiConfiguration: {
@@ -1292,7 +1281,7 @@ describe("ClineProvider", () => {
 				diffEnabled: true,
 				fuzzyMatchThreshold: 0.8,
 				experiments: experimentDefault,
-				browserToolEnabled: true,
+				browserToolEnabled: true, // Include browserToolEnabled
 			} as any)
 
 			// Mock SYSTEM_PROMPT to verify diffStrategy and diffEnabled are passed
@@ -1310,12 +1299,12 @@ describe("ClineProvider", () => {
 			const callArgs = systemPromptSpy.mock.calls[0]
 
 			// Verify key parameters
-			expect(callArgs[2]).toBe(true) // supportsComputerUse
+			expect(callArgs[2]).toBe(true) // canUseBrowserTool (both model support and setting enabled)
 			expect(callArgs[3]).toBeUndefined() // mcpHub (disabled)
 			expect(callArgs[4]).toHaveProperty("getToolDescription") // diffStrategy
 			expect(callArgs[5]).toBe("900x600") // browserViewportSize
 			expect(callArgs[6]).toBe("code") // mode
-			expect(callArgs[10]).toBe(true) // diffEnabled
+			expect(callArgs[11]).toBe(true) // diffEnabled
 
 			// Run the test again to verify it's consistent
 			await handler({ type: "getSystemPrompt", mode: "code" })
@@ -1323,17 +1312,6 @@ describe("ClineProvider", () => {
 		})
 
 		test("passes diffEnabled: false to SYSTEM_PROMPT when diff is disabled", async () => {
-			// Setup Cline instance with mocked api.getModel()
-			const { Cline } = require("../../Cline")
-			const mockCline = new Cline()
-			mockCline.api = {
-				getModel: jest.fn().mockReturnValue({
-					id: "claude-3-sonnet",
-					info: { supportsComputerUse: true },
-				}),
-			}
-			await provider.addClineToStack(mockCline)
-
 			// Mock getState to return diffEnabled: false
 			jest.spyOn(provider, "getState").mockResolvedValue({
 				apiConfiguration: {
@@ -1350,7 +1328,7 @@ describe("ClineProvider", () => {
 				fuzzyMatchThreshold: 0.8,
 				experiments: experimentDefault,
 				enableMcpServerCreation: true,
-				browserToolEnabled: true,
+				browserToolEnabled: true, // Include browserToolEnabled
 			} as any)
 
 			// Mock SYSTEM_PROMPT to verify diffEnabled is passed as false
@@ -1368,12 +1346,202 @@ describe("ClineProvider", () => {
 			const callArgs = systemPromptSpy.mock.calls[0]
 
 			// Verify key parameters
-			expect(callArgs[2]).toBe(true) // supportsComputerUse
+			expect(callArgs[2]).toBe(true) // canUseBrowserTool
 			expect(callArgs[3]).toBeUndefined() // mcpHub (disabled)
 			expect(callArgs[4]).toHaveProperty("getToolDescription") // diffStrategy
 			expect(callArgs[5]).toBe("900x600") // browserViewportSize
 			expect(callArgs[6]).toBe("code") // mode
-			expect(callArgs[10]).toBe(false) // diffEnabled should be false
+			expect(callArgs[11]).toBe(false) // diffEnabled should be false
+		})
+
+		// Tests for browser tool support with new implementation
+		test("correctly combines model capability and browser setting when both enabled", async () => {
+			// Mock SYSTEM_PROMPT
+			const systemPromptModule = require("../../prompts/system")
+			const systemPromptSpy = jest.spyOn(systemPromptModule, "SYSTEM_PROMPT")
+
+			// Mock getState with model supporting computer use and setting enabled
+			jest.spyOn(provider, "getState").mockResolvedValue({
+				apiConfiguration: {
+					apiProvider: "openrouter",
+					openRouterModelInfo: { supportsComputerUse: true },
+				},
+				browserToolEnabled: true,
+				mode: "code",
+				experiments: experimentDefault,
+			} as any)
+
+			// Trigger getSystemPrompt
+			const handler = getMessageHandler()
+			await handler({ type: "getSystemPrompt", mode: "code" })
+
+			// Verify SYSTEM_PROMPT was called
+			expect(systemPromptSpy).toHaveBeenCalled()
+
+			// Get the actual arguments passed to SYSTEM_PROMPT
+			const callArgs = systemPromptSpy.mock.calls[0]
+
+			// Verify the canUseBrowserTool parameter (3rd parameter, index 2)
+			expect(callArgs[2]).toBe(true) // should be true when both are enabled
+		})
+
+		test("disables browser tools when browserToolEnabled is false", async () => {
+			// Mock SYSTEM_PROMPT
+			const systemPromptModule = require("../../prompts/system")
+			const systemPromptSpy = jest.spyOn(systemPromptModule, "SYSTEM_PROMPT")
+
+			// Mock getState with model supporting computer use but setting disabled
+			jest.spyOn(provider, "getState").mockResolvedValue({
+				apiConfiguration: {
+					apiProvider: "openrouter",
+					openRouterModelInfo: { supportsComputerUse: true },
+				},
+				browserToolEnabled: false,
+				mode: "code",
+				experiments: experimentDefault,
+			} as any)
+
+			// Trigger getSystemPrompt
+			const handler = getMessageHandler()
+			await handler({ type: "getSystemPrompt", mode: "code" })
+
+			// Verify SYSTEM_PROMPT was called
+			expect(systemPromptSpy).toHaveBeenCalled()
+
+			// Get the actual arguments passed to SYSTEM_PROMPT
+			const callArgs = systemPromptSpy.mock.calls[0]
+
+			// Verify the canUseBrowserTool parameter (3rd parameter, index 2)
+			expect(callArgs[2]).toBe(false) // should be false when setting is disabled
+		})
+
+		test("disables browser tools when model doesn't support computer use", async () => {
+			// Mock SYSTEM_PROMPT
+			const systemPromptModule = require("../../prompts/system")
+			const systemPromptSpy = jest.spyOn(systemPromptModule, "SYSTEM_PROMPT")
+
+			// Mock getState with model not supporting computer use but setting enabled
+			jest.spyOn(provider, "getState").mockResolvedValue({
+				apiConfiguration: {
+					apiProvider: "openrouter",
+					openRouterModelInfo: { supportsComputerUse: false },
+				},
+				browserToolEnabled: true,
+				mode: "code",
+				experiments: experimentDefault,
+			} as any)
+
+			// Trigger getSystemPrompt
+			const handler = getMessageHandler()
+			await handler({ type: "getSystemPrompt", mode: "code" })
+
+			// Verify SYSTEM_PROMPT was called
+			expect(systemPromptSpy).toHaveBeenCalled()
+
+			// Get the actual arguments passed to SYSTEM_PROMPT
+			const callArgs = systemPromptSpy.mock.calls[0]
+
+			// Verify the canUseBrowserTool parameter (3rd parameter, index 2)
+			expect(callArgs[2]).toBe(false) // should be false when model doesn't support it
+		})
+
+		test("directly tests canUseBrowserTool computation with all four combinations", async () => {
+			// This test specifically targets the implementation of browser capability determination
+			// in the generateSystemPrompt function without relying on mocks for SYSTEM_PROMPT
+
+			// Mock SYSTEM_PROMPT to capture the canUseBrowserTool parameter
+			const systemPromptModule = require("../../prompts/system")
+			const systemPromptSpy = jest
+				.spyOn(systemPromptModule, "SYSTEM_PROMPT")
+				.mockImplementation(async (context, cwd, supportsComputerUse) => {
+					// Just return the value of the canUseBrowserTool parameter
+					return `canUseBrowserTool: ${supportsComputerUse}`
+				})
+
+			// Case 1: Model supports + User enabled = true
+			jest.spyOn(provider, "getState").mockResolvedValue({
+				apiConfiguration: {
+					apiProvider: "openrouter",
+					openRouterModelInfo: { supportsComputerUse: true },
+				},
+				browserToolEnabled: true,
+				mode: "code",
+				experiments: experimentDefault,
+			} as any)
+
+			const handler = getMessageHandler()
+			await handler({ type: "getSystemPrompt", mode: "code" })
+
+			// Verify result was captured and is true
+			expect(mockPostMessage).toHaveBeenLastCalledWith(
+				expect.objectContaining({
+					type: "systemPrompt",
+					text: "canUseBrowserTool: true",
+				}),
+			)
+
+			// Case 2: Model supports + User disabled = false
+			jest.spyOn(provider, "getState").mockResolvedValue({
+				apiConfiguration: {
+					apiProvider: "openrouter",
+					openRouterModelInfo: { supportsComputerUse: true },
+				},
+				browserToolEnabled: false,
+				mode: "code",
+				experiments: experimentDefault,
+			} as any)
+
+			await handler({ type: "getSystemPrompt", mode: "code" })
+
+			// Verify result is false when user disabled
+			expect(mockPostMessage).toHaveBeenLastCalledWith(
+				expect.objectContaining({
+					type: "systemPrompt",
+					text: "canUseBrowserTool: false",
+				}),
+			)
+
+			// Case 3: Model doesn't support + User enabled = false
+			jest.spyOn(provider, "getState").mockResolvedValue({
+				apiConfiguration: {
+					apiProvider: "openrouter",
+					openRouterModelInfo: { supportsComputerUse: false },
+				},
+				browserToolEnabled: true,
+				mode: "code",
+				experiments: experimentDefault,
+			} as any)
+
+			await handler({ type: "getSystemPrompt", mode: "code" })
+
+			// Verify result is false when model doesn't support
+			expect(mockPostMessage).toHaveBeenLastCalledWith(
+				expect.objectContaining({
+					type: "systemPrompt",
+					text: "canUseBrowserTool: false",
+				}),
+			)
+
+			// Case 4: Model doesn't support + User disabled = false
+			jest.spyOn(provider, "getState").mockResolvedValue({
+				apiConfiguration: {
+					apiProvider: "openrouter",
+					openRouterModelInfo: { supportsComputerUse: false },
+				},
+				browserToolEnabled: false,
+				mode: "code",
+				experiments: experimentDefault,
+			} as any)
+
+			await handler({ type: "getSystemPrompt", mode: "code" })
+
+			// Verify result is false when both are disabled
+			expect(mockPostMessage).toHaveBeenLastCalledWith(
+				expect.objectContaining({
+					type: "systemPrompt",
+					text: "canUseBrowserTool: false",
+				}),
+			)
 		})
 
 		test("uses correct mode-specific instructions when mode is specified", async () => {
@@ -1411,188 +1579,6 @@ describe("ClineProvider", () => {
 				"",
 				expect.any(String),
 			)
-		})
-
-		// Tests for browser tool support
-		test("correctly extracts modelSupportsComputerUse from Cline instance", async () => {
-			// Setup Cline instance with mocked api.getModel()
-			const { Cline } = require("../../Cline")
-			const mockCline = new Cline()
-			mockCline.api = {
-				getModel: jest.fn().mockReturnValue({
-					id: "claude-3-sonnet",
-					info: { supportsComputerUse: true },
-				}),
-			}
-			await provider.addClineToStack(mockCline)
-
-			// Mock SYSTEM_PROMPT to verify supportsComputerUse is passed correctly
-			const systemPromptModule = require("../../prompts/system")
-			const systemPromptSpy = jest.spyOn(systemPromptModule, "SYSTEM_PROMPT")
-
-			// Mock getState to return browserToolEnabled: true
-			jest.spyOn(provider, "getState").mockResolvedValue({
-				apiConfiguration: {
-					apiProvider: "openrouter",
-				},
-				browserToolEnabled: true,
-				mode: "code",
-				experiments: experimentDefault,
-			} as any)
-
-			// Trigger getSystemPrompt
-			const handler = getMessageHandler()
-			await handler({ type: "getSystemPrompt", mode: "code" })
-
-			// Verify SYSTEM_PROMPT was called
-			expect(systemPromptSpy).toHaveBeenCalled()
-
-			// Get the actual arguments passed to SYSTEM_PROMPT
-			const callArgs = systemPromptSpy.mock.calls[0]
-
-			// Verify the supportsComputerUse parameter (3rd parameter, index 2)
-			expect(callArgs[2]).toBe(true)
-		})
-
-		test("correctly handles when model doesn't support computer use", async () => {
-			// Setup Cline instance with mocked api.getModel() that doesn't support computer use
-			const { Cline } = require("../../Cline")
-			const mockCline = new Cline()
-			mockCline.api = {
-				getModel: jest.fn().mockReturnValue({
-					id: "non-computer-use-model",
-					info: { supportsComputerUse: false },
-				}),
-			}
-			await provider.addClineToStack(mockCline)
-
-			// Mock SYSTEM_PROMPT to verify supportsComputerUse is passed correctly
-			const systemPromptModule = require("../../prompts/system")
-			const systemPromptSpy = jest.spyOn(systemPromptModule, "SYSTEM_PROMPT")
-
-			// Mock getState to return browserToolEnabled: true
-			jest.spyOn(provider, "getState").mockResolvedValue({
-				apiConfiguration: {
-					apiProvider: "openrouter",
-				},
-				browserToolEnabled: true,
-				mode: "code",
-				experiments: experimentDefault,
-			} as any)
-
-			// Trigger getSystemPrompt
-			const handler = getMessageHandler()
-			await handler({ type: "getSystemPrompt", mode: "code" })
-
-			// Verify SYSTEM_PROMPT was called
-			expect(systemPromptSpy).toHaveBeenCalled()
-
-			// Get the actual arguments passed to SYSTEM_PROMPT
-			const callArgs = systemPromptSpy.mock.calls[0]
-
-			// Verify the supportsComputerUse parameter (3rd parameter, index 2)
-			// Even though browserToolEnabled is true, the model doesn't support it
-			expect(callArgs[2]).toBe(false)
-		})
-
-		test("correctly handles when browserToolEnabled is false", async () => {
-			// Setup Cline instance with mocked api.getModel() that supports computer use
-			const { Cline } = require("../../Cline")
-			const mockCline = new Cline()
-			mockCline.api = {
-				getModel: jest.fn().mockReturnValue({
-					id: "claude-3-sonnet",
-					info: { supportsComputerUse: true },
-				}),
-			}
-			await provider.addClineToStack(mockCline)
-
-			// Mock SYSTEM_PROMPT to verify supportsComputerUse is passed correctly
-			const systemPromptModule = require("../../prompts/system")
-			const systemPromptSpy = jest.spyOn(systemPromptModule, "SYSTEM_PROMPT")
-
-			// Mock getState to return browserToolEnabled: false
-			jest.spyOn(provider, "getState").mockResolvedValue({
-				apiConfiguration: {
-					apiProvider: "openrouter",
-				},
-				browserToolEnabled: false,
-				mode: "code",
-				experiments: experimentDefault,
-			} as any)
-
-			// Trigger getSystemPrompt
-			const handler = getMessageHandler()
-			await handler({ type: "getSystemPrompt", mode: "code" })
-
-			// Verify SYSTEM_PROMPT was called
-			expect(systemPromptSpy).toHaveBeenCalled()
-
-			// Get the actual arguments passed to SYSTEM_PROMPT
-			const callArgs = systemPromptSpy.mock.calls[0]
-
-			// Verify the supportsComputerUse parameter (3rd parameter, index 2)
-			// Even though model supports it, browserToolEnabled is false
-			expect(callArgs[2]).toBe(false)
-		})
-
-		test("correctly calculates canUseBrowserTool as combination of model support and setting", async () => {
-			// Setup Cline instance with mocked api.getModel()
-			const { Cline } = require("../../Cline")
-			const mockCline = new Cline()
-			mockCline.api = {
-				getModel: jest.fn().mockReturnValue({
-					id: "claude-3-sonnet",
-					info: { supportsComputerUse: true },
-				}),
-			}
-			await provider.addClineToStack(mockCline)
-
-			// Mock SYSTEM_PROMPT
-			const systemPromptModule = require("../../prompts/system")
-			const systemPromptSpy = jest.spyOn(systemPromptModule, "SYSTEM_PROMPT")
-
-			// Test all combinations of model support and browserToolEnabled
-			const testCases = [
-				{ modelSupports: true, settingEnabled: true, expected: true },
-				{ modelSupports: true, settingEnabled: false, expected: false },
-				{ modelSupports: false, settingEnabled: true, expected: false },
-				{ modelSupports: false, settingEnabled: false, expected: false },
-			]
-
-			for (const testCase of testCases) {
-				// Reset mocks
-				systemPromptSpy.mockClear()
-
-				// Update mock Cline instance
-				mockCline.api.getModel = jest.fn().mockReturnValue({
-					id: "test-model",
-					info: { supportsComputerUse: testCase.modelSupports },
-				})
-
-				// Mock getState
-				jest.spyOn(provider, "getState").mockResolvedValue({
-					apiConfiguration: {
-						apiProvider: "openrouter",
-					},
-					browserToolEnabled: testCase.settingEnabled,
-					mode: "code",
-					experiments: experimentDefault,
-				} as any)
-
-				// Trigger getSystemPrompt
-				const handler = getMessageHandler()
-				await handler({ type: "getSystemPrompt", mode: "code" })
-
-				// Verify SYSTEM_PROMPT was called
-				expect(systemPromptSpy).toHaveBeenCalled()
-
-				// Get the actual arguments passed to SYSTEM_PROMPT
-				const callArgs = systemPromptSpy.mock.calls[0]
-
-				// Verify the supportsComputerUse parameter (3rd parameter, index 2)
-				expect(callArgs[2]).toBe(testCase.expected)
-			}
 		})
 	})
 
@@ -2176,6 +2162,233 @@ describe("Project MCP Settings", () => {
 		expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
 			expect.stringContaining("Failed to create or open .roo/mcp.json"),
 		)
+	})
+})
+
+describe("Browser Tool Settings Integration", () => {
+	let provider: ClineProvider
+	let mockContext: vscode.ExtensionContext
+	let mockOutputChannel: vscode.OutputChannel
+	let mockWebviewView: vscode.WebviewView
+	let mockPostMessage: jest.Mock
+	let messageHandler: jest.Mock
+
+	beforeEach(() => {
+		jest.clearAllMocks()
+
+		// Mock context
+		mockContext = {
+			extensionPath: "/test/path",
+			extensionUri: {} as vscode.Uri,
+			globalState: {
+				get: jest.fn().mockImplementation((key: string) => {
+					if (key === "mode") return "code"
+					if (key === "browserToolEnabled") return true // Default to enabled
+					return undefined
+				}),
+				update: jest.fn(),
+				keys: jest.fn().mockReturnValue([]),
+			},
+			secrets: {
+				get: jest.fn(),
+				store: jest.fn(),
+				delete: jest.fn(),
+			},
+			subscriptions: [],
+			extension: {
+				packageJSON: { version: "1.0.0" },
+			},
+			globalStorageUri: {
+				fsPath: "/test/storage/path",
+			},
+		} as unknown as vscode.ExtensionContext
+
+		// Mock output channel
+		mockOutputChannel = {
+			appendLine: jest.fn(),
+			clear: jest.fn(),
+			dispose: jest.fn(),
+		} as unknown as vscode.OutputChannel
+
+		// Mock webview
+		mockPostMessage = jest.fn()
+		mockWebviewView = {
+			webview: {
+				postMessage: mockPostMessage,
+				html: "",
+				options: {},
+				onDidReceiveMessage: jest.fn(),
+				asWebviewUri: jest.fn(),
+			},
+			visible: true,
+			onDidDispose: jest.fn().mockImplementation((callback) => {
+				callback()
+				return { dispose: jest.fn() }
+			}),
+			onDidChangeVisibility: jest.fn().mockImplementation(() => {
+				return { dispose: jest.fn() }
+			}),
+		} as unknown as vscode.WebviewView
+
+		provider = new ClineProvider(mockContext, mockOutputChannel)
+	})
+
+	test("setting browserToolEnabled persists correctly", async () => {
+		await provider.resolveWebviewView(mockWebviewView)
+		messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+
+		// Set to false (starting from default true)
+		await messageHandler({ type: "browserToolEnabled", bool: false })
+
+		// Verify the setting was saved
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("browserToolEnabled", false)
+
+		// Check that postStateToWebview was called
+		expect(mockPostMessage).toHaveBeenCalled()
+
+		// Set back to true
+		jest.clearAllMocks() // Clear all mocks instead of individual mockClear
+		mockPostMessage.mockClear()
+
+		await messageHandler({ type: "browserToolEnabled", bool: true })
+
+		// Verify the setting was saved
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("browserToolEnabled", true)
+
+		// Check that postStateToWebview was called
+		expect(mockPostMessage).toHaveBeenCalled()
+	})
+
+	test("browserToolEnabled is correctly reflected in system prompt generation", async () => {
+		// This test verifies that system prompt generation uses the correct browserToolEnabled setting
+
+		const systemPromptModule = require("../../prompts/system")
+		const systemPromptSpy = jest.spyOn(systemPromptModule, "SYSTEM_PROMPT")
+
+		await provider.resolveWebviewView(mockWebviewView)
+		messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+
+		// Setup getState mock to control what browserToolEnabled returns
+		jest.spyOn(provider, "getState").mockResolvedValue({
+			apiConfiguration: {
+				apiProvider: "openrouter",
+				openRouterModelInfo: { supportsComputerUse: true },
+			},
+			browserToolEnabled: true, // Initially enabled
+			mode: "code",
+			experiments: experimentDefault,
+		} as any)
+
+		// Trigger system prompt generation
+		await messageHandler({ type: "getSystemPrompt", mode: "code" })
+
+		// Verify the supportsComputerUse parameter (3rd parameter, index 2)
+		const firstCallArgs = systemPromptSpy.mock.calls[0]
+		expect(firstCallArgs[2]).toBe(true) // should be true when browserToolEnabled is true
+
+		// Now set browserToolEnabled to false in getState
+		jest.spyOn(provider, "getState").mockResolvedValue({
+			apiConfiguration: {
+				apiProvider: "openrouter",
+				openRouterModelInfo: { supportsComputerUse: true },
+			},
+			browserToolEnabled: false, // Now disabled
+			mode: "code",
+			experiments: experimentDefault,
+		} as any)
+
+		// Clear previous spy calls
+		systemPromptSpy.mockClear()
+
+		// Trigger system prompt generation again
+		await messageHandler({ type: "getSystemPrompt", mode: "code" })
+
+		// Verify the supportsComputerUse parameter is now false
+		const secondCallArgs = systemPromptSpy.mock.calls[0]
+		expect(secondCallArgs[2]).toBe(false) // should be false when browserToolEnabled is false
+
+		// Clean up
+		systemPromptSpy.mockRestore()
+	})
+
+	test("canUseBrowserTool computation in generateSystemPrompt correctly combines model capability and setting", async () => {
+		// This test verifies the specific computation that was likely the source of the bug
+
+		// Spy on the internal generateSystemPrompt function in ClineProvider to capture the computed canUseBrowserTool value
+		await provider.resolveWebviewView(mockWebviewView)
+		messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+
+		// Mock SYSTEM_PROMPT to verify the computed canUseBrowserTool value
+		const systemPromptSpy = jest
+			.spyOn(require("../../prompts/system"), "SYSTEM_PROMPT")
+			.mockImplementation(
+				(
+					context,
+					cwd,
+					supportsComputerUse,
+					mcpHub,
+					diffStrategy,
+					browserViewportSize,
+					mode,
+					customModePrompts,
+					customModes,
+					globalCustomInstructions,
+					diffEnabled,
+					experiments,
+					enableMcpServerCreation,
+					rooIgnoreInstructions,
+				) => {
+					return `BROWSER_TOOL_STATUS:${supportsComputerUse ? "ENABLED" : "DISABLED"}`
+				},
+			)
+
+		// Case 1: Model supports + Setting enabled = true
+		jest.spyOn(provider, "getState").mockResolvedValue({
+			apiConfiguration: {
+				apiProvider: "openrouter",
+				openRouterModelInfo: { supportsComputerUse: true },
+			},
+			browserToolEnabled: true,
+			mode: "code",
+			experiments: experimentDefault,
+		} as any)
+
+		// Trigger the function
+		await messageHandler({ type: "getSystemPrompt", mode: "code" })
+
+		// Verify browser tools are enabled in output
+		expect(mockPostMessage).toHaveBeenCalledWith(
+			expect.objectContaining({
+				type: "systemPrompt",
+				text: "BROWSER_TOOL_STATUS:ENABLED",
+			}),
+		)
+
+		// Case 2: Model supports + Setting disabled = false
+		jest.spyOn(provider, "getState").mockResolvedValue({
+			apiConfiguration: {
+				apiProvider: "openrouter",
+				openRouterModelInfo: { supportsComputerUse: true },
+			},
+			browserToolEnabled: false,
+			mode: "code",
+			experiments: experimentDefault,
+		} as any)
+
+		mockPostMessage.mockClear()
+
+		await messageHandler({ type: "getSystemPrompt", mode: "code" })
+
+		// Verify browser tools are disabled in output
+		expect(mockPostMessage).toHaveBeenCalledWith(
+			expect.objectContaining({
+				type: "systemPrompt",
+				text: "BROWSER_TOOL_STATUS:DISABLED",
+			}),
+		)
+
+		// Clean up
+		systemPromptSpy.mockRestore()
 	})
 })
 

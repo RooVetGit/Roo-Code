@@ -460,10 +460,15 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			mode,
 			customInstructions: globalInstructions,
 			experiments,
+			browserToolEnabled, // Get user preference for browser tool
 		} = await this.getState()
 
 		const modePrompt = customModePrompts?.[mode] as PromptComponent
 		const effectiveInstructions = [globalInstructions, modePrompt?.customInstructions].filter(Boolean).join("\n\n")
+
+		// Check if browser tool is enabled by both model capability and user preference
+		const canUseBrowserTool =
+			(apiConfiguration.openRouterModelInfo?.supportsComputerUse ?? false) && (browserToolEnabled ?? true)
 
 		const cline = new Cline({
 			provider: this,
@@ -501,6 +506,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			mode,
 			customInstructions: globalInstructions,
 			experiments,
+			browserToolEnabled, // Make sure we also get browserToolEnabled here
 		} = await this.getState()
 
 		const modePrompt = customModePrompts?.[mode] as PromptComponent
@@ -2003,7 +2009,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				fuzzyMatchThreshold,
 				experiments,
 				enableMcpServerCreation,
-				browserToolEnabled,
+				browserToolEnabled, // Get user preference for browser tool
 			} = await this.getState()
 
 			// Create diffStrategy based on current model and settings
@@ -2019,14 +2025,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 			const rooIgnoreInstructions = this.getCurrentCline()?.rooIgnoreController?.getInstructions()
 
-			// Determine if browser tools can be used based on model support and user settings
-			const modelSupportsComputerUse = this.getCurrentCline()?.api.getModel().info.supportsComputerUse ?? false
-			const canUseBrowserTool = modelSupportsComputerUse && (browserToolEnabled ?? true)
+			// Check if browser tool is enabled by both model capability and user preference
+			const canUseBrowserTool =
+				(apiConfiguration.openRouterModelInfo?.supportsComputerUse ?? false) && (browserToolEnabled ?? true)
 
 			const systemPrompt = await SYSTEM_PROMPT(
 				this.context,
 				cwd,
-				canUseBrowserTool,
+				canUseBrowserTool, // Pass the combined value
 				mcpEnabled ? this.mcpHub : undefined,
 				diffStrategy,
 				browserViewportSize ?? "900x600",
