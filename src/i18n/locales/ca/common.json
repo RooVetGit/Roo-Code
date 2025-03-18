@@ -57,7 +57,7 @@
 	"info": {
 		"no_changes": "No s'han trobat canvis.",
 		"clipboard_copy": "Missatge del sistema copiat correctament al portapapers",
-		"history_cleanup": "S'han netejat {{count}} tasca/ques amb fitxers que falten de l'historial.",
+		"history_cleanup": "S'han netejat {{count}} tasques amb fitxers que falten de l'historial.",
 		"mcp_server_restarting": "Reiniciant el servidor MCP {{serverName}}...",
 		"mcp_server_connected": "Servidor MCP {{serverName}} connectat",
 		"mcp_server_deleted": "Servidor MCP eliminat: {{serverName}}",
