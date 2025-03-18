@@ -883,7 +883,7 @@ export const ChatRowContent = ({
 									overflow: "hidden",
 									backgroundColor: CODE_BLOCK_BG_COLOR,
 								}}>
-								<CodeBlock source={`${"```"}shell\n${command}\n${"```"}`} />
+								<CodeBlock source={command} language="shell" />
 								{output.length > 0 && (
 									<div style={{ width: "100%" }}>
 										<div
@@ -902,10 +902,7 @@ export const ChatRowContent = ({
 											<span style={{ fontSize: "0.8em" }}>{t("chat:commandOutput")}</span>
 										</div>
 										{isExpanded && (
-											<CodeBlock
-												source={`${"```"}shell\n${output}\n${"```"}`}
-												rawSource={rawOutput}
-											/>
+											<CodeBlock source={output} language="text" rawSource={rawOutput} />
 										)}
 									</div>
 								)}
