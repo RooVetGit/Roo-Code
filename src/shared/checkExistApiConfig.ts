@@ -21,9 +21,5 @@ export function checkExistKey(config: ApiConfiguration | undefined) {
 		config.vsCodeLmModelSelector,
 	].some((value) => value !== undefined)
 
-	console.log("[checkExistKey] config:", config)
-	console.log("[checkExistKey] hasSecretKey:", hasSecretKey)
-	console.log("[checkExistKey] hasOtherConfig:", hasOtherConfig)
-
 	return hasSecretKey || hasOtherConfig
 }
