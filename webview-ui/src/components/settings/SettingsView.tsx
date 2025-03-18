@@ -95,6 +95,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 		remoteBrowserHost,
 		screenshotQuality,
 		soundEnabled,
+		ttsEnabled,
+		ttsSpeed,
 		soundVolume,
 		telemetrySetting,
 		terminalOutputLineLimit,
@@ -186,6 +188,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 			vscode.postMessage({ type: "allowedCommands", commands: allowedCommands ?? [] })
 			vscode.postMessage({ type: "browserToolEnabled", bool: browserToolEnabled })
 			vscode.postMessage({ type: "soundEnabled", bool: soundEnabled })
+			vscode.postMessage({ type: "ttsEnabled", bool: ttsEnabled })
+			vscode.postMessage({ type: "ttsSpeed", value: ttsSpeed })
 			vscode.postMessage({ type: "soundVolume", value: soundVolume })
 			vscode.postMessage({ type: "diffEnabled", bool: diffEnabled })
 			vscode.postMessage({ type: "enableCheckpoints", bool: enableCheckpoints })
@@ -339,7 +343,15 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 				</div>
 			</TabHeader>
 
-			<TabContent className="p-0 divide-y divide-vscode-sideBar-background" onScroll={handleScroll}>
+			<TabContent
+				className="p-0 divide-y divide-vscode-sideBar-background will-change-scroll"
+				style={{
+					WebkitOverflowScrolling: "touch",
+					msOverflowStyle: "-ms-autohiding-scrollbar",
+					scrollbarGutter: "stable",
+				}}
+				onWheel={(e) => (e.currentTarget.scrollTop += e.deltaY)}
+				onScroll={handleScroll}>
 				<div ref={providersRef}>
 					<SectionHeader>
 						<div className="flex items-center gap-2">
@@ -424,6 +436,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 
 				<div ref={notificationsRef}>
 					<NotificationSettings
+						ttsEnabled={ttsEnabled}
+						ttsSpeed={ttsSpeed}
 						soundEnabled={soundEnabled}
 						soundVolume={soundVolume}
 						setCachedStateField={setCachedStateField}

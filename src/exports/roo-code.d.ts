@@ -1,12 +1,24 @@
 import { EventEmitter } from "events"
 
+export interface TokenUsage {
+	totalTokensIn: number
+	totalTokensOut: number
+	totalCacheWrites?: number
+	totalCacheReads?: number
+	totalCost: number
+	contextTokens: number
+}
+
 export interface RooCodeEvents {
 	message: [{ taskId: string; action: "created" | "updated"; message: ClineMessage }]
 	taskStarted: [taskId: string]
 	taskPaused: [taskId: string]
 	taskUnpaused: [taskId: string]
+	taskAskResponded: [taskId: string]
 	taskAborted: [taskId: string]
 	taskSpawned: [taskId: string, childTaskId: string]
+	taskCompleted: [taskId: string, usage: TokenUsage]
+	taskTokenUsageUpdated: [taskId: string, usage: TokenUsage]
 }
 
 export interface RooCodeAPI extends EventEmitter<RooCodeEvents> {
@@ -17,6 +29,12 @@ export interface RooCodeAPI extends EventEmitter<RooCodeEvents> {
 	 * @returns The ID of the new task.
 	 */
 	startNewTask(task?: string, images?: string[]): Promise<string>
+
+	/**
+	 * Returns the current task stack.
+	 * @returns An array of task IDs.
+	 */
+	getCurrentTaskStack(): string[]
 
 	/**
 	 * Clears the current task.
@@ -62,6 +80,19 @@ export interface RooCodeAPI extends EventEmitter<RooCodeEvents> {
 	 * @returns An array of ClineMessage objects.
 	 */
 	getMessages(taskId: string): ClineMessage[]
+
+	/**
+	 * Returns the token usage for a given task.
+	 * @param taskId The ID of the task.
+	 * @returns A TokenUsage object.
+	 */
+	getTokenUsage(taskId: string): TokenUsage
+
+	/**
+	 * Logs a message to the output channel.
+	 * @param message The message to log.
+	 */
+	log(message: string): void
 }
 
 export type ClineAsk =
@@ -172,9 +203,12 @@ export type GlobalStateKey =
 	| "openRouterModelId"
 	| "openRouterModelInfo"
 	| "openRouterBaseUrl"
+	| "openRouterSpecificProvider"
 	| "openRouterUseMiddleOutTransform"
 	| "googleGeminiBaseUrl"
 	| "allowedCommands"
+	| "ttsEnabled"
+	| "ttsSpeed"
 	| "soundEnabled"
 	| "soundVolume"
 	| "diffEnabled"

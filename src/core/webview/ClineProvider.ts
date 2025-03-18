@@ -1,6 +1,7 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import delay from "delay"
 import axios from "axios"
+import EventEmitter from "events"
 import fs from "fs/promises"
 import os from "os"
 import pWaitFor from "p-wait-for"
@@ -39,6 +40,7 @@ import { BrowserSession } from "../../services/browser/BrowserSession"
 import { discoverChromeInstances } from "../../services/browser/browserDiscovery"
 import { fileExistsAtPath } from "../../utils/fs"
 import { playSound, setSoundEnabled, setSoundVolume } from "../../utils/sound"
+import { playTts, setTtsEnabled, setTtsSpeed } from "../../utils/tts"
 import { singleCompletionHandler } from "../../utils/single-completion-handler"
 import { searchCommits } from "../../utils/git"
 import { getDiffStrategy } from "../diff/DiffStrategy"
@@ -68,7 +70,11 @@ import { TelemetrySetting } from "../../shared/TelemetrySetting"
  * https://github.com/KumarVariable/vscode-extension-sidebar-html/blob/master/src/customSidebarViewProvider.ts
  */
 
-export class ClineProvider implements vscode.WebviewViewProvider {
+export type ClineProviderEvents = {
+	clineAdded: [cline: Cline]
+}
+
+export class ClineProvider extends EventEmitter<ClineProviderEvents> implements vscode.WebviewViewProvider {
 	public static readonly sideBarId = "roo-cline.SidebarProvider" // used in package.json as the view's id. This value cannot be changed due to how vscode caches views based on their id, and updating the id would break existing instances of the extension.
 	public static readonly tabPanelId = "roo-cline.TabPanelProvider"
 	private static activeInstances: Set<ClineProvider> = new Set()
@@ -87,6 +93,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		readonly context: vscode.ExtensionContext,
 		private readonly outputChannel: vscode.OutputChannel,
 	) {
+		super()
+
 		this.outputChannel.appendLine("ClineProvider instantiated")
 		this.contextProxy = new ContextProxy(context)
 		ClineProvider.activeInstances.add(this)
@@ -118,6 +126,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 		// Add this cline instance into the stack that represents the order of all the called tasks.
 		this.clineStack.push(cline)
+
+		this.emit("clineAdded", cline)
 
 		// Ensure getState() resolves correctly.
 		const state = await this.getState()
@@ -168,6 +178,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	// returns the current clineStack length (how many cline objects are in the stack)
 	getClineStackSize(): number {
 		return this.clineStack.length
+	}
+
+	public getCurrentTaskStack(): string[] {
+		return this.clineStack.map((cline) => cline.taskId)
 	}
 
 	// remove the current task/cline instance (at the top of the stack), ao this task is finished
@@ -343,6 +357,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		this.getState().then(({ soundEnabled, terminalShellIntegrationTimeout }) => {
 			setSoundEnabled(soundEnabled ?? false)
 			Terminal.setShellIntegrationTimeout(terminalShellIntegrationTimeout ?? 4000)
+		})
+
+		// Initialize tts enabled state
+		this.getState().then(({ ttsEnabled }) => {
+			setTtsEnabled(ttsEnabled ?? false)
 		})
 
 		webviewView.webview.options = {
@@ -1116,6 +1135,28 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						}
 						break
 					}
+					case "openProjectMcpSettings": {
+						if (!vscode.workspace.workspaceFolders?.length) {
+							vscode.window.showErrorMessage("Please open a project folder first")
+							return
+						}
+
+						const workspaceFolder = vscode.workspace.workspaceFolders[0]
+						const rooDir = path.join(workspaceFolder.uri.fsPath, ".roo")
+						const mcpPath = path.join(rooDir, "mcp.json")
+
+						try {
+							await fs.mkdir(rooDir, { recursive: true })
+							const exists = await fileExistsAtPath(mcpPath)
+							if (!exists) {
+								await fs.writeFile(mcpPath, JSON.stringify({ mcpServers: {} }, null, 2))
+							}
+							await openFile(mcpPath)
+						} catch (error) {
+							vscode.window.showErrorMessage(`Failed to create or open .roo/mcp.json: ${error}`)
+						}
+						break
+					}
 					case "openCustomModesSettings": {
 						const customModesFilePath = await this.customModesManager.getCustomModesFilePath()
 						if (customModesFilePath) {
@@ -1199,6 +1240,23 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("soundVolume", soundVolume)
 						setSoundVolume(soundVolume)
 						await this.postStateToWebview()
+						break
+					case "ttsEnabled":
+						const ttsEnabled = message.bool ?? true
+						await this.updateGlobalState("ttsEnabled", ttsEnabled)
+						setTtsEnabled(ttsEnabled) // Add this line to update the tts utility
+						await this.postStateToWebview()
+						break
+					case "ttsSpeed":
+						const ttsSpeed = message.value ?? 1.0
+						await this.updateGlobalState("ttsSpeed", ttsSpeed)
+						setTtsSpeed(ttsSpeed)
+						await this.postStateToWebview()
+						break
+					case "playTts":
+						if (message.text) {
+							playTts(message.text)
+						}
 						break
 					case "diffEnabled":
 						const diffEnabled = message.bool ?? true
@@ -1993,7 +2051,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			}
 		}
 
-		await this.contextProxy.setValues(apiConfiguration)
+		await this.contextProxy.setApiConfiguration(apiConfiguration)
 
 		if (this.getCurrentCline()) {
 			this.getCurrentCline()!.api = buildApiHandler(apiConfiguration)
@@ -2182,33 +2240,51 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}> {
 		const history = ((await this.getGlobalState("taskHistory")) as HistoryItem[] | undefined) || []
 		const historyItem = history.find((item) => item.id === id)
-		if (historyItem) {
-			const taskDirPath = path.join(this.contextProxy.globalStorageUri.fsPath, "tasks", id)
-			const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
-			const uiMessagesFilePath = path.join(taskDirPath, GlobalFileNames.uiMessages)
-			const fileExists = await fileExistsAtPath(apiConversationHistoryFilePath)
-			if (fileExists) {
-				const apiConversationHistory = JSON.parse(await fs.readFile(apiConversationHistoryFilePath, "utf8"))
-				return {
-					historyItem,
-					taskDirPath,
-					apiConversationHistoryFilePath,
-					uiMessagesFilePath,
-					apiConversationHistory,
-				}
-			}
+		if (!historyItem) {
+			throw new Error("Task not found in history")
 		}
-		// if we tried to get a task that doesn't exist, remove it from state
-		// FIXME: this seems to happen sometimes when the json file doesnt save to disk for some reason
-		await this.deleteTaskFromState(id)
-		throw new Error("Task not found")
+
+		const taskDirPath = path.join(this.contextProxy.globalStorageUri.fsPath, "tasks", id)
+		const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
+		const uiMessagesFilePath = path.join(taskDirPath, GlobalFileNames.uiMessages)
+
+		const fileExists = await fileExistsAtPath(apiConversationHistoryFilePath)
+		if (!fileExists) {
+			// Instead of silently deleting, throw a specific error
+			throw new Error("TASK_FILES_MISSING")
+		}
+
+		const apiConversationHistory = JSON.parse(await fs.readFile(apiConversationHistoryFilePath, "utf8"))
+		return {
+			historyItem,
+			taskDirPath,
+			apiConversationHistoryFilePath,
+			uiMessagesFilePath,
+			apiConversationHistory,
+		}
 	}
 
 	async showTaskWithId(id: string) {
 		if (id !== this.getCurrentCline()?.taskId) {
-			// Non-current task.
-			const { historyItem } = await this.getTaskWithId(id)
-			await this.initClineWithHistoryItem(historyItem) // Clears existing task.
+			try {
+				const { historyItem } = await this.getTaskWithId(id)
+				await this.initClineWithHistoryItem(historyItem)
+			} catch (error) {
+				if (error.message === "TASK_FILES_MISSING") {
+					const response = await vscode.window.showWarningMessage(
+						"This task's files are missing. Would you like to remove it from the task list?",
+						"Remove",
+						"Keep",
+					)
+
+					if (response === "Remove") {
+						await this.deleteTaskFromState(id)
+						await this.postStateToWebview()
+					}
+					return
+				}
+				throw error
+			}
 		}
 
 		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
@@ -2289,6 +2365,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			alwaysAllowModeSwitch,
 			alwaysAllowSubtasks,
 			soundEnabled,
+			ttsEnabled,
+			ttsSpeed,
 			diffEnabled,
 			enableCheckpoints,
 			checkpointStorage,
@@ -2349,6 +2427,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				.filter((item: HistoryItem) => item.ts && item.task)
 				.sort((a: HistoryItem, b: HistoryItem) => b.ts - a.ts),
 			soundEnabled: soundEnabled ?? false,
+			ttsEnabled: ttsEnabled ?? false,
+			ttsSpeed: ttsSpeed ?? 1.0,
 			diffEnabled: diffEnabled ?? true,
 			enableCheckpoints: enableCheckpoints ?? true,
 			checkpointStorage: checkpointStorage ?? "task",
@@ -2509,6 +2589,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			taskHistory: stateValues.taskHistory,
 			allowedCommands: stateValues.allowedCommands,
 			soundEnabled: stateValues.soundEnabled ?? false,
+			ttsEnabled: stateValues.ttsEnabled ?? false,
+			ttsSpeed: stateValues.ttsSpeed ?? 1.0,
 			diffEnabled: stateValues.diffEnabled ?? true,
 			enableCheckpoints: stateValues.enableCheckpoints ?? true,
 			checkpointStorage: stateValues.checkpointStorage ?? "task",
@@ -2522,7 +2604,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			terminalOutputLineLimit: stateValues.terminalOutputLineLimit ?? 500,
 			terminalShellIntegrationTimeout: stateValues.terminalShellIntegrationTimeout ?? 4000,
 			mode: stateValues.mode ?? defaultModeSlug,
-			language: stateValues.language || formatLanguage(vscode.env.language),
+			language: stateValues.language ?? formatLanguage(vscode.env.language),
 			mcpEnabled: stateValues.mcpEnabled ?? true,
 			enableMcpServerCreation: stateValues.enableMcpServerCreation ?? true,
 			alwaysApproveResubmit: stateValues.alwaysApproveResubmit ?? false,
@@ -2678,5 +2760,31 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		}
 
 		return properties
+	}
+
+	async validateTaskHistory() {
+		const history = ((await this.getGlobalState("taskHistory")) as HistoryItem[] | undefined) || []
+		const validTasks: HistoryItem[] = []
+
+		for (const item of history) {
+			const taskDirPath = path.join(this.contextProxy.globalStorageUri.fsPath, "tasks", item.id)
+			const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
+
+			if (await fileExistsAtPath(apiConversationHistoryFilePath)) {
+				validTasks.push(item)
+			}
+		}
+
+		if (validTasks.length !== history.length) {
+			await this.updateGlobalState("taskHistory", validTasks)
+			await this.postStateToWebview()
+
+			const removedCount = history.length - validTasks.length
+			if (removedCount > 0) {
+				await vscode.window.showInformationMessage(
+					`Cleaned up ${removedCount} task(s) with missing files from history.`,
+				)
+			}
+		}
 	}
 }

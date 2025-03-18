@@ -73,10 +73,134 @@
 		"configProfile": "Profilo di configurazione",
 		"description": "Descrizione",
 		"apiProvider": "Fornitore API",
+		"model": "Modello",
+		"nameEmpty": "Il nome non può essere vuoto",
+		"nameExists": "Esiste già un profilo con questo nome",
+		"deleteProfile": "Elimina profilo",
+		"invalidArnFormat": "Formato ARN non valido. Controlla gli esempi sopra.",
+		"enterNewName": "Inserisci un nuovo nome",
+		"addProfile": "Aggiungi profilo",
+		"renameProfile": "Rinomina profilo",
+		"newProfile": "Nuovo profilo di configurazione",
+		"enterProfileName": "Inserisci il nome del profilo",
+		"createProfile": "Crea profilo",
+		"cannotDeleteOnlyProfile": "Impossibile eliminare l'unico profilo",
+		"vscodeLmDescription": "L'API del Modello di Linguaggio di VS Code consente di eseguire modelli forniti da altre estensioni di VS Code (incluso, ma non limitato a, GitHub Copilot). Il modo più semplice per iniziare è installare le estensioni Copilot e Copilot Chat dal VS Code Marketplace.",
+		"awsCustomArnUse": "Inserisci un ARN AWS Bedrock valido per il modello che desideri utilizzare. Esempi di formato:",
+		"awsCustomArnDesc": "Assicurati che la regione nell'ARN corrisponda alla regione AWS selezionata sopra.",
 		"openRouterApiKey": "Chiave API OpenRouter",
+		"getOpenRouterApiKey": "Ottieni chiave API OpenRouter",
 		"apiKeyStorageNotice": "Le chiavi API sono memorizzate in modo sicuro nell'Archivio Segreto di VSCode",
+		"glamaApiKey": "Chiave API Glama",
+		"getGlamaApiKey": "Ottieni chiave API Glama",
 		"useCustomBaseUrl": "Usa URL base personalizzato",
-		"openRouterTransformsText": "Comprimi prompt e catene di messaggi alla dimensione del contesto (<a>Trasformazioni OpenRouter</a>)"
+		"requestyApiKey": "Chiave API Requesty",
+		"getRequestyApiKey": "Ottieni chiave API Requesty",
+		"openRouterTransformsText": "Comprimi prompt e catene di messaggi alla dimensione del contesto (<a>Trasformazioni OpenRouter</a>)",
+		"anthropicApiKey": "Chiave API Anthropic",
+		"getAnthropicApiKey": "Ottieni chiave API Anthropic",
+		"deepSeekApiKey": "Chiave API DeepSeek",
+		"getDeepSeekApiKey": "Ottieni chiave API DeepSeek",
+		"geminiApiKey": "Chiave API Gemini",
+		"getGeminiApiKey": "Ottieni chiave API Gemini",
+		"openAiApiKey": "Chiave API OpenAI",
+		"openAiBaseUrl": "URL base",
+		"getOpenAiApiKey": "Ottieni chiave API OpenAI",
+		"mistralApiKey": "Chiave API Mistral",
+		"getMistralApiKey": "Ottieni chiave API Mistral / Codestral",
+		"codestralBaseUrl": "URL base Codestral (opzionale)",
+		"codestralBaseUrlDesc": "Imposta un URL opzionale per i modelli Codestral.",
+		"awsCredentials": "Credenziali AWS",
+		"awsProfile": "Profilo AWS",
+		"awsProfileName": "Nome profilo AWS",
+		"awsAccessKey": "Chiave di accesso AWS",
+		"awsSecretKey": "Chiave segreta AWS",
+		"awsSessionToken": "Token di sessione AWS",
+		"awsRegion": "Regione AWS",
+		"awsCrossRegion": "Usa inferenza cross-regione",
+		"vscodeLmModel": "Modello linguistico",
+		"vscodeLmWarning": "Nota: Questa è un'integrazione molto sperimentale e il supporto del fornitore varierà. Se ricevi un errore relativo a un modello non supportato, si tratta di un problema del fornitore.",
+		"googleCloudSetup": {
+			"title": "Per utilizzare Google Cloud Vertex AI, è necessario:",
+			"step1": "1. Creare un account Google Cloud, abilitare l'API Vertex AI e abilitare i modelli Claude desiderati.",
+			"step2": "2. Installare Google Cloud CLI e configurare le credenziali predefinite dell'applicazione.",
+			"step3": "3. Oppure creare un account di servizio con credenziali."
+		},
+		"googleCloudCredentials": "Credenziali Google Cloud",
+		"googleCloudKeyFile": "Percorso file chiave Google Cloud",
+		"googleCloudProjectId": "ID progetto Google Cloud",
+		"googleCloudRegion": "Regione Google Cloud",
+		"lmStudio": {
+			"baseUrl": "URL base (opzionale)",
+			"modelId": "ID modello",
+			"speculativeDecoding": "Abilita decodifica speculativa",
+			"draftModelId": "ID modello bozza",
+			"draftModelDesc": "Per un corretto funzionamento della decodifica speculativa, il modello bozza deve provenire dalla stessa famiglia di modelli.",
+			"selectDraftModel": "Seleziona modello bozza",
+			"noModelsFound": "Nessun modello bozza trovato. Assicurati che LM Studio sia in esecuzione con la modalità server abilitata.",
+			"description": "LM Studio ti permette di eseguire modelli localmente sul tuo computer. Per iniziare, consulta la loro <a>guida rapida</a>. Dovrai anche avviare la funzionalità <b>server locale</b> di LM Studio per utilizzarlo con questa estensione. <span>Nota:</span> Roo Code utilizza prompt complessi e funziona meglio con i modelli Claude. I modelli con capacità inferiori potrebbero non funzionare come previsto."
+		},
+		"ollama": {
+			"baseUrl": "URL base (opzionale)",
+			"modelId": "ID modello",
+			"description": "Ollama ti permette di eseguire modelli localmente sul tuo computer. Per iniziare, consulta la guida rapida.",
+			"warning": "Nota: Roo Code utilizza prompt complessi e funziona meglio con i modelli Claude. I modelli con capacità inferiori potrebbero non funzionare come previsto."
+		},
+		"unboundApiKey": "Chiave API Unbound",
+		"getUnboundApiKey": "Ottieni chiave API Unbound",
+		"humanRelay": {
+			"description": "Non è richiesta alcuna chiave API, ma l'utente dovrà aiutare a copiare e incollare le informazioni nella chat web AI.",
+			"instructions": "Durante l'uso, apparirà una finestra di dialogo e il messaggio corrente verrà automaticamente copiato negli appunti. Dovrai incollarlo nelle versioni web dell'AI (come ChatGPT o Claude), quindi copiare la risposta dell'AI nella finestra di dialogo e fare clic sul pulsante di conferma."
+		},
+		"openRouter": {
+			"providerRouting": {
+				"title": "Routing dei fornitori OpenRouter",
+				"description": "OpenRouter indirizza le richieste ai migliori fornitori disponibili per il tuo modello. Per impostazione predefinita, le richieste sono bilanciate tra i principali fornitori per massimizzare il tempo di attività. Tuttavia, puoi scegliere un fornitore specifico da utilizzare per questo modello.",
+				"learnMore": "Scopri di più sul routing dei fornitori"
+			}
+		},
+		"customModel": {
+			"capabilities": "Configura le capacità e i prezzi del tuo modello personalizzato compatibile con OpenAI. Fai attenzione quando specifichi le capacità del modello, poiché possono influenzare le prestazioni di Roo Code.",
+			"maxTokens": {
+				"label": "Token di output massimi",
+				"description": "Numero massimo di token che il modello può generare in una risposta. (Specifica -1 per lasciare che il server imposti il massimo token.)"
+			},
+			"contextWindow": {
+				"label": "Dimensione finestra di contesto",
+				"description": "Numero totale di token (input + output) che il modello può elaborare."
+			},
+			"imageSupport": {
+				"label": "Supporto immagini",
+				"description": "Il modello è in grado di elaborare e comprendere le immagini?"
+			},
+			"computerUse": {
+				"label": "Uso del computer",
+				"description": "Il modello è in grado di interagire con il browser? (es. Claude 3.7 Sonnet)."
+			},
+			"promptCache": {
+				"label": "Cache dei prompt",
+				"description": "Il modello è in grado di memorizzare in cache i prompt?"
+			},
+			"pricing": {
+				"input": {
+					"label": "Prezzo input",
+					"description": "Costo per milione di token di input/prompt. Questo influisce sul costo di invio di contesto e istruzioni al modello."
+				},
+				"output": {
+					"label": "Prezzo output",
+					"description": "Costo per milione di token della risposta del modello. Questo influisce sul costo del contenuto generato e dei completamenti."
+				},
+				"cacheReads": {
+					"label": "Prezzo letture cache",
+					"description": "Costo per milione di token per leggere dalla cache. Questo prezzo viene applicato quando si riceve una risposta memorizzata nella cache."
+				},
+				"cacheWrites": {
+					"label": "Prezzo scritture cache",
+					"description": "Costo per milione di token per scrivere nella cache. Questo prezzo viene applicato quando si memorizza un prompt nella cache per la prima volta."
+				}
+			},
+			"resetDefaults": "Ripristina valori predefiniti"
+		}
 	},
 	"browser": {
 		"enable": {
@@ -117,6 +241,11 @@
 			"label": "Abilita effetti sonori",
 			"description": "Quando abilitato, Roo riprodurrà effetti sonori per notifiche ed eventi.",
 			"volumeLabel": "Volume"
+		},
+		"tts": {
+			"label": "Abilita sintesi vocale",
+			"description": "Quando abilitato, Roo leggerà ad alta voce le sue risposte utilizzando la sintesi vocale.",
+			"speedLabel": "Velocità"
 		}
 	},
 	"contextManagement": {
@@ -205,6 +334,9 @@
 		"outputPrice": "Prezzo output",
 		"cacheReadsPrice": "Prezzo letture cache",
 		"cacheWritesPrice": "Prezzo scritture cache",
+		"enableStreaming": "Abilita streaming",
+		"useAzure": "Usa Azure",
+		"azureApiVersion": "Imposta versione API Azure",
 		"gemini": {
 			"freeRequests": "* Gratuito fino a {{count}} richieste al minuto. Dopo, la fatturazione dipende dalla dimensione del prompt.",
 			"pricingDetails": "Per maggiori informazioni, vedi i dettagli sui prezzi."

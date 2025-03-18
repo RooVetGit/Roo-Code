@@ -7,6 +7,7 @@ import { ClineProvider } from "../ClineProvider"
 import { ExtensionMessage, ExtensionState } from "../../../shared/ExtensionMessage"
 import { GlobalStateKey, SecretKey } from "../../../shared/globalState"
 import { setSoundEnabled } from "../../../utils/sound"
+import { setTtsEnabled } from "../../../utils/tts"
 import { defaultModeSlug } from "../../../shared/modes"
 import { experimentDefault } from "../../../shared/experiments"
 import { Cline } from "../../Cline"
@@ -52,6 +53,78 @@ jest.mock("../../contextProxy", () => {
 			}),
 		})),
 	}
+})
+
+describe("validateTaskHistory", () => {
+	let provider: ClineProvider
+	let mockContext: vscode.ExtensionContext
+	let mockOutputChannel: vscode.OutputChannel
+	let mockUpdate: jest.Mock
+
+	beforeEach(() => {
+		// Reset mocks
+		jest.clearAllMocks()
+
+		mockUpdate = jest.fn()
+
+		// Setup basic mocks
+		mockContext = {
+			globalState: {
+				get: jest.fn(),
+				update: mockUpdate,
+				keys: jest.fn().mockReturnValue([]),
+			},
+			secrets: { get: jest.fn(), store: jest.fn(), delete: jest.fn() },
+			extensionUri: {} as vscode.Uri,
+			globalStorageUri: { fsPath: "/test/path" },
+			extension: { packageJSON: { version: "1.0.0" } },
+		} as unknown as vscode.ExtensionContext
+
+		mockOutputChannel = { appendLine: jest.fn() } as unknown as vscode.OutputChannel
+		provider = new ClineProvider(mockContext, mockOutputChannel)
+	})
+
+	test("should remove tasks with missing files", async () => {
+		// Mock the global state with some test data
+		const mockHistory = [
+			{ id: "task1", ts: Date.now() },
+			{ id: "task2", ts: Date.now() },
+		]
+
+		// Setup mocks
+		jest.spyOn(mockContext.globalState, "get").mockReturnValue(mockHistory)
+
+		// Mock fileExistsAtPath to only return true for task1
+		const mockFs = require("../../../utils/fs")
+		mockFs.fileExistsAtPath = jest.fn().mockImplementation((path) => Promise.resolve(path.includes("task1")))
+
+		// Call validateTaskHistory
+		await provider.validateTaskHistory()
+
+		// Verify the results
+		const expectedHistory = [expect.objectContaining({ id: "task1" })]
+
+		expect(mockUpdate).toHaveBeenCalledWith("taskHistory", expect.arrayContaining(expectedHistory))
+		expect(mockUpdate.mock.calls[0][1].length).toBe(1)
+	})
+
+	test("should handle empty history", async () => {
+		// Mock empty history
+		jest.spyOn(mockContext.globalState, "get").mockReturnValue([])
+
+		await provider.validateTaskHistory()
+
+		expect(mockUpdate).toHaveBeenCalledWith("taskHistory", [])
+	})
+
+	test("should handle null history", async () => {
+		// Mock null history
+		jest.spyOn(mockContext.globalState, "get").mockReturnValue(null)
+
+		await provider.validateTaskHistory()
+
+		expect(mockUpdate).toHaveBeenCalledWith("taskHistory", [])
+	})
 })
 
 // Mock dependencies
@@ -197,6 +270,11 @@ jest.mock("vscode", () => ({
 // Mock sound utility
 jest.mock("../../../utils/sound", () => ({
 	setSoundEnabled: jest.fn(),
+}))
+
+// Mock tts utility
+jest.mock("../../../utils/tts", () => ({
+	setTtsEnabled: jest.fn(),
 }))
 
 // Mock ESM modules
@@ -434,6 +512,7 @@ describe("ClineProvider", () => {
 			alwaysAllowMcp: false,
 			uriScheme: "vscode",
 			soundEnabled: false,
+			ttsEnabled: false,
 			diffEnabled: false,
 			enableCheckpoints: false,
 			checkpointStorage: "task",
@@ -531,6 +610,7 @@ describe("ClineProvider", () => {
 		expect(state).toHaveProperty("alwaysAllowBrowser")
 		expect(state).toHaveProperty("taskHistory")
 		expect(state).toHaveProperty("soundEnabled")
+		expect(state).toHaveProperty("ttsEnabled")
 		expect(state).toHaveProperty("diffEnabled")
 		expect(state).toHaveProperty("writeDelayMs")
 	})
@@ -593,6 +673,18 @@ describe("ClineProvider", () => {
 		await messageHandler({ type: "soundEnabled", bool: false })
 		expect(setSoundEnabled).toHaveBeenCalledWith(false)
 		expect(mockContext.globalState.update).toHaveBeenCalledWith("soundEnabled", false)
+		expect(mockPostMessage).toHaveBeenCalled()
+
+		// Simulate setting tts to enabled
+		await messageHandler({ type: "ttsEnabled", bool: true })
+		expect(setTtsEnabled).toHaveBeenCalledWith(true)
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("ttsEnabled", true)
+		expect(mockPostMessage).toHaveBeenCalled()
+
+		// Simulate setting tts to disabled
+		await messageHandler({ type: "ttsEnabled", bool: false })
+		expect(setTtsEnabled).toHaveBeenCalledWith(false)
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("ttsEnabled", false)
 		expect(mockPostMessage).toHaveBeenCalled()
 	})
 
@@ -1959,6 +2051,130 @@ describe("ClineProvider", () => {
 				}),
 			)
 		})
+	})
+})
+
+describe("Project MCP Settings", () => {
+	let provider: ClineProvider
+	let mockContext: vscode.ExtensionContext
+	let mockOutputChannel: vscode.OutputChannel
+	let mockWebviewView: vscode.WebviewView
+	let mockPostMessage: jest.Mock
+
+	beforeEach(() => {
+		jest.clearAllMocks()
+
+		mockContext = {
+			extensionPath: "/test/path",
+			extensionUri: {} as vscode.Uri,
+			globalState: {
+				get: jest.fn(),
+				update: jest.fn(),
+				keys: jest.fn().mockReturnValue([]),
+			},
+			secrets: {
+				get: jest.fn(),
+				store: jest.fn(),
+				delete: jest.fn(),
+			},
+			subscriptions: [],
+			extension: {
+				packageJSON: { version: "1.0.0" },
+			},
+			globalStorageUri: {
+				fsPath: "/test/storage/path",
+			},
+		} as unknown as vscode.ExtensionContext
+
+		mockOutputChannel = {
+			appendLine: jest.fn(),
+			clear: jest.fn(),
+			dispose: jest.fn(),
+		} as unknown as vscode.OutputChannel
+
+		mockPostMessage = jest.fn()
+		mockWebviewView = {
+			webview: {
+				postMessage: mockPostMessage,
+				html: "",
+				options: {},
+				onDidReceiveMessage: jest.fn(),
+				asWebviewUri: jest.fn(),
+			},
+			visible: true,
+			onDidDispose: jest.fn(),
+			onDidChangeVisibility: jest.fn(),
+		} as unknown as vscode.WebviewView
+
+		provider = new ClineProvider(mockContext, mockOutputChannel)
+	})
+
+	test("handles openProjectMcpSettings message", async () => {
+		await provider.resolveWebviewView(mockWebviewView)
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+
+		// Mock workspace folders
+		;(vscode.workspace as any).workspaceFolders = [{ uri: { fsPath: "/test/workspace" } }]
+
+		// Mock fs functions
+		const fs = require("fs/promises")
+		fs.mkdir.mockResolvedValue(undefined)
+		fs.writeFile.mockResolvedValue(undefined)
+
+		// Trigger openProjectMcpSettings
+		await messageHandler({
+			type: "openProjectMcpSettings",
+		})
+
+		// Verify directory was created
+		expect(fs.mkdir).toHaveBeenCalledWith(
+			expect.stringContaining(".roo"),
+			expect.objectContaining({ recursive: true }),
+		)
+
+		// Verify file was created with default content
+		expect(fs.writeFile).toHaveBeenCalledWith(
+			expect.stringContaining("mcp.json"),
+			JSON.stringify({ mcpServers: {} }, null, 2),
+		)
+	})
+
+	test("handles openProjectMcpSettings when workspace is not open", async () => {
+		await provider.resolveWebviewView(mockWebviewView)
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+
+		// Mock no workspace folders
+		;(vscode.workspace as any).workspaceFolders = []
+
+		// Trigger openProjectMcpSettings
+		await messageHandler({
+			type: "openProjectMcpSettings",
+		})
+
+		// Verify error message was shown
+		expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("Please open a project folder first")
+	})
+
+	test("handles openProjectMcpSettings file creation error", async () => {
+		await provider.resolveWebviewView(mockWebviewView)
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+
+		// Mock workspace folders
+		;(vscode.workspace as any).workspaceFolders = [{ uri: { fsPath: "/test/workspace" } }]
+
+		// Mock fs functions to fail
+		const fs = require("fs/promises")
+		fs.mkdir.mockRejectedValue(new Error("Failed to create directory"))
+
+		// Trigger openProjectMcpSettings
+		await messageHandler({
+			type: "openProjectMcpSettings",
+		})
+
+		// Verify error message was shown
+		expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
+			expect.stringContaining("Failed to create or open .roo/mcp.json"),
+		)
 	})
 })
 
