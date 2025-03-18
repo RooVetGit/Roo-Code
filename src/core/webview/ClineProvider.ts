@@ -28,6 +28,7 @@ import { Mode, PromptComponent, defaultModeSlug, ModeConfig } from "../../shared
 import { checkExistKey } from "../../shared/checkExistApiConfig"
 import { EXPERIMENT_IDS, experiments as Experiments, experimentDefault, ExperimentId } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
+import { Terminal, TERMINAL_SHELL_INTEGRATION_TIMEOUT } from "../../integrations/terminal/Terminal"
 import { downloadTask } from "../../integrations/misc/export-markdown"
 import { openFile, openImage } from "../../integrations/misc/open-file"
 import { selectImages } from "../../integrations/misc/process-images"
@@ -40,6 +41,7 @@ import { BrowserSession } from "../../services/browser/BrowserSession"
 import { discoverChromeInstances } from "../../services/browser/browserDiscovery"
 import { fileExistsAtPath } from "../../utils/fs"
 import { playSound, setSoundEnabled, setSoundVolume } from "../../utils/sound"
+import { playTts, setTtsEnabled, setTtsSpeed } from "../../utils/tts"
 import { singleCompletionHandler } from "../../utils/single-completion-handler"
 import { searchCommits } from "../../utils/git"
 import { getDiffStrategy } from "../diff/DiffStrategy"
@@ -63,6 +65,7 @@ import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { TelemetrySetting } from "../../shared/TelemetrySetting"
+import { getWorkspacePath } from "../../utils/path"
 
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -87,10 +90,13 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	private contextProxy: ContextProxy
 	configManager: ConfigManager
 	customModesManager: CustomModesManager
-
+	get cwd() {
+		return getWorkspacePath()
+	}
 	constructor(
 		readonly context: vscode.ExtensionContext,
 		private readonly outputChannel: vscode.OutputChannel,
+		private readonly renderContext: "sidebar" | "editor" = "sidebar",
 	) {
 		super()
 
@@ -352,9 +358,15 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			setPanel(webviewView, "sidebar")
 		}
 
-		// Initialize sound enabled state
-		this.getState().then(({ soundEnabled }) => {
+		// Initialize out-of-scope variables that need to recieve persistent global state values
+		this.getState().then(({ soundEnabled, terminalShellIntegrationTimeout }) => {
 			setSoundEnabled(soundEnabled ?? false)
+			Terminal.setShellIntegrationTimeout(terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT)
+		})
+
+		// Initialize tts enabled state
+		this.getState().then(({ ttsEnabled }) => {
+			setTtsEnabled(ttsEnabled ?? false)
 		})
 
 		webviewView.webview.options = {
@@ -496,7 +508,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		const taskId = historyItem.id
 		const globalStorageDir = this.contextProxy.globalStorageUri.fsPath
-		const workspaceDir = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? ""
+		const workspaceDir = this.cwd
 
 		const checkpoints: Pick<ClineOptions, "enableCheckpoints" | "checkpointStorage"> = {
 			enableCheckpoints,
@@ -986,6 +998,49 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					case "deleteTaskWithId":
 						this.deleteTaskWithId(message.text!)
 						break
+					case "deleteMultipleTasksWithIds": {
+						const ids = message.ids
+						if (Array.isArray(ids)) {
+							// Process in batches of 20 (or another reasonable number)
+							const batchSize = 20
+							const results = []
+
+							// Only log start and end of the operation
+							console.log(`Batch deletion started: ${ids.length} tasks total`)
+
+							for (let i = 0; i < ids.length; i += batchSize) {
+								const batch = ids.slice(i, i + batchSize)
+
+								const batchPromises = batch.map(async (id) => {
+									try {
+										await this.deleteTaskWithId(id)
+										return { id, success: true }
+									} catch (error) {
+										// Keep error logging for debugging purposes
+										console.log(
+											`Failed to delete task ${id}: ${error instanceof Error ? error.message : String(error)}`,
+										)
+										return { id, success: false }
+									}
+								})
+
+								// Process each batch in parallel but wait for completion before starting the next batch
+								const batchResults = await Promise.all(batchPromises)
+								results.push(...batchResults)
+
+								// Update the UI after each batch to show progress
+								await this.postStateToWebview()
+							}
+
+							// Log final results
+							const successCount = results.filter((r) => r.success).length
+							const failCount = results.length - successCount
+							console.log(
+								`Batch deletion completed: ${successCount}/${ids.length} tasks successful, ${failCount} tasks failed`,
+							)
+						}
+						break
+					}
 					case "exportTaskWithId":
 						this.exportTaskWithId(message.text!)
 						break
@@ -1232,6 +1287,23 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						setSoundVolume(soundVolume)
 						await this.postStateToWebview()
 						break
+					case "ttsEnabled":
+						const ttsEnabled = message.bool ?? true
+						await this.updateGlobalState("ttsEnabled", ttsEnabled)
+						setTtsEnabled(ttsEnabled) // Add this line to update the tts utility
+						await this.postStateToWebview()
+						break
+					case "ttsSpeed":
+						const ttsSpeed = message.value ?? 1.0
+						await this.updateGlobalState("ttsSpeed", ttsSpeed)
+						setTtsSpeed(ttsSpeed)
+						await this.postStateToWebview()
+						break
+					case "playTts":
+						if (message.text) {
+							playTts(message.text)
+						}
+						break
 					case "diffEnabled":
 						const diffEnabled = message.bool ?? true
 						await this.updateGlobalState("diffEnabled", diffEnabled)
@@ -1375,6 +1447,13 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					case "terminalOutputLineLimit":
 						await this.updateGlobalState("terminalOutputLineLimit", message.value)
 						await this.postStateToWebview()
+						break
+					case "terminalShellIntegrationTimeout":
+						await this.updateGlobalState("terminalShellIntegrationTimeout", message.value)
+						await this.postStateToWebview()
+						if (message.value !== undefined) {
+							Terminal.setShellIntegrationTimeout(message.value)
+						}
 						break
 					case "mode":
 						await this.handleModeSwitch(message.text as Mode)
@@ -1663,7 +1742,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						}
 						break
 					case "searchCommits": {
-						const cwd = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0)
+						const cwd = this.cwd
 						if (cwd) {
 							try {
 								const commits = await searchCommits(message.query || "", cwd)
@@ -1931,7 +2010,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				fuzzyMatchThreshold,
 				Experiments.isEnabled(experiments, EXPERIMENT_IDS.DIFF_STRATEGY),
 			)
-			const cwd = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) || ""
+			const cwd = this.cwd
 
 			const mode = message.mode ?? defaultModeSlug
 			const customModes = await this.customModesManager.getCustomModes()
@@ -2266,43 +2345,49 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	// this function deletes a task from task hidtory, and deletes it's checkpoints and delete the task folder
 	async deleteTaskWithId(id: string) {
-		// get the task directory full path
-		const { taskDirPath } = await this.getTaskWithId(id)
-
-		// remove task from stack if it's the current task
-		if (id === this.getCurrentCline()?.taskId) {
-			// if we found the taskid to delete - call finish to abort this task and allow a new task to be started,
-			// if we are deleting a subtask and parent task is still waiting for subtask to finish - it allows the parent to resume (this case should neve exist)
-			await this.finishSubTask(t("common:tasks.deleted"))
-		}
-
-		// delete task from the task history state
-		await this.deleteTaskFromState(id)
-
-		// get the base directory of the project
-		const baseDir = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0)
-
-		// Delete associated shadow repository or branch.
-		// TODO: Store `workspaceDir` in the `HistoryItem` object.
-		const globalStorageDir = this.contextProxy.globalStorageUri.fsPath
-		const workspaceDir = baseDir ?? ""
-
 		try {
-			await ShadowCheckpointService.deleteTask({ taskId: id, globalStorageDir, workspaceDir })
-		} catch (error) {
-			console.error(
-				`[deleteTaskWithId${id}] ${t("common:errors.failed_delete_repo", { error: error instanceof Error ? error.message : String(error) })}`,
-			)
-		}
+			// get the task directory full path
+			const { taskDirPath } = await this.getTaskWithId(id)
 
-		// delete the entire task directory including checkpoints and all content
-		try {
-			await fs.rm(taskDirPath, { recursive: true, force: true })
-			console.log(`[deleteTaskWithId${id}] removed task directory`)
+			// remove task from stack if it's the current task
+			if (id === this.getCurrentCline()?.taskId) {
+				// if we found the taskid to delete - call finish to abort this task and allow a new task to be started,
+				// if we are deleting a subtask and parent task is still waiting for subtask to finish - it allows the parent to resume (this case should neve exist)
+				await this.finishSubTask(t("common:tasks.deleted"))
+			}
+
+			// delete task from the task history state
+			await this.deleteTaskFromState(id)
+
+			// Delete associated shadow repository or branch.
+			// TODO: Store `workspaceDir` in the `HistoryItem` object.
+			const globalStorageDir = this.contextProxy.globalStorageUri.fsPath
+			const workspaceDir = this.cwd
+
+			try {
+				await ShadowCheckpointService.deleteTask({ taskId: id, globalStorageDir, workspaceDir })
+			} catch (error) {
+				console.error(
+					`[deleteTaskWithId${id}] failed to delete associated shadow repository or branch: ${error instanceof Error ? error.message : String(error)}`,
+				)
+			}
+
+			// delete the entire task directory including checkpoints and all content
+			try {
+				await fs.rm(taskDirPath, { recursive: true, force: true })
+				console.log(`[deleteTaskWithId${id}] removed task directory`)
+			} catch (error) {
+				console.error(
+					`[deleteTaskWithId${id}] failed to remove task directory: ${error instanceof Error ? error.message : String(error)}`,
+				)
+			}
 		} catch (error) {
-			console.error(
-				`[deleteTaskWithId${id}] ${t("common:errors.failed_remove_directory", { error: error instanceof Error ? error.message : String(error) })}`,
-			)
+			// If task is not found, just remove it from state
+			if (error instanceof Error && error.message === "Task not found") {
+				await this.deleteTaskFromState(id)
+				return
+			}
+			throw error
 		}
 	}
 
@@ -2334,6 +2419,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			alwaysAllowModeSwitch,
 			alwaysAllowSubtasks,
 			soundEnabled,
+			ttsEnabled,
+			ttsSpeed,
 			diffEnabled,
 			enableCheckpoints,
 			checkpointStorage,
@@ -2345,6 +2432,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			remoteBrowserEnabled,
 			writeDelayMs,
 			terminalOutputLineLimit,
+			terminalShellIntegrationTimeout,
 			fuzzyMatchThreshold,
 			mcpEnabled,
 			enableMcpServerCreation,
@@ -2366,12 +2454,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			showRooIgnoredFiles,
 			language,
 		} = await this.getState()
+
 		const telemetryKey = process.env.POSTHOG_API_KEY
 		const machineId = vscode.env.machineId
-
 		const allowedCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
-
-		const cwd = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) || ""
+		const cwd = this.cwd
 
 		return {
 			version: this.context.extension?.packageJSON?.version ?? "",
@@ -2393,6 +2480,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				.filter((item: HistoryItem) => item.ts && item.task)
 				.sort((a: HistoryItem, b: HistoryItem) => b.ts - a.ts),
 			soundEnabled: soundEnabled ?? false,
+			ttsEnabled: ttsEnabled ?? false,
+			ttsSpeed: ttsSpeed ?? 1.0,
 			diffEnabled: diffEnabled ?? true,
 			enableCheckpoints: enableCheckpoints ?? true,
 			checkpointStorage: checkpointStorage ?? "task",
@@ -2406,6 +2495,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			remoteBrowserEnabled: remoteBrowserEnabled ?? false,
 			writeDelayMs: writeDelayMs ?? 1000,
 			terminalOutputLineLimit: terminalOutputLineLimit ?? 500,
+			terminalShellIntegrationTimeout: terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT,
 			fuzzyMatchThreshold: fuzzyMatchThreshold ?? 1.0,
 			mcpEnabled: mcpEnabled ?? true,
 			enableMcpServerCreation: enableMcpServerCreation ?? true,
@@ -2431,6 +2521,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			machineId,
 			showRooIgnoredFiles: showRooIgnoredFiles ?? true,
 			language,
+			renderContext: this.renderContext,
 		}
 	}
 
@@ -2552,6 +2643,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			taskHistory: stateValues.taskHistory,
 			allowedCommands: stateValues.allowedCommands,
 			soundEnabled: stateValues.soundEnabled ?? false,
+			ttsEnabled: stateValues.ttsEnabled ?? false,
+			ttsSpeed: stateValues.ttsSpeed ?? 1.0,
 			diffEnabled: stateValues.diffEnabled ?? true,
 			enableCheckpoints: stateValues.enableCheckpoints ?? true,
 			checkpointStorage: stateValues.checkpointStorage ?? "task",
@@ -2563,6 +2656,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			fuzzyMatchThreshold: stateValues.fuzzyMatchThreshold ?? 1.0,
 			writeDelayMs: stateValues.writeDelayMs ?? 1000,
 			terminalOutputLineLimit: stateValues.terminalOutputLineLimit ?? 500,
+			terminalShellIntegrationTimeout:
+				stateValues.terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT,
 			mode: stateValues.mode ?? defaultModeSlug,
 			language: stateValues.language ?? formatLanguage(vscode.env.language),
 			mcpEnabled: stateValues.mcpEnabled ?? true,
