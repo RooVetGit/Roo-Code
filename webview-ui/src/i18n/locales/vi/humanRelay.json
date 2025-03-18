@@ -1,0 +1,31 @@
+{
+	"dialogTitle": "Chuyển tiếp thủ công - Vui lòng giúp sao chép và dán thông tin",
+	"dialogDescription": "Vui lòng sao chép lời nhắc sau đây vào AI web, sau đó dán phản hồi của AI vào hộp văn bản bên dưới.",
+	"copiedToClipboard": "Đã sao chép vào bộ nhớ tạm",
+	"warning": {
+		"lastInteraction": "Có vẻ như bạn đã sao chép phản hồi AI từ lần tương tác trước, không phải phản hồi cho nhiệm vụ hiện tại. Vui lòng kiểm tra tương tác của bạn với AI web.",
+		"invalidResponse": "Phản hồi của AI dường như không đáp ứng yêu cầu định dạng RooCode. Vui lòng kiểm tra tương tác của bạn với AI web."
+	},
+	"clipboardMonitoring": {
+		"label": "Giám sát bộ nhớ tạm:",
+		"enabled": "Đã bật",
+		"disabled": "Đã tắt",
+		"disable": "Tắt",
+		"enable": "Bật"
+	},
+	"shortcutDescription": "Bạn có thể sử dụng phím tắt Ctrl/Cmd+Alt+V (mặc định) để nhanh chóng gửi nội dung bộ nhớ tạm. Bạn cũng có thể thay đổi phím tắt bằng cách tìm kiếm 'send clipboard' trong cài đặt phím tắt.",
+	"aiResponse": {
+		"label": "Nhập phản hồi AI:",
+		"placeholder": "Dán phản hồi của AI vào đây..."
+	},
+	"actions": {
+		"cancel": "Hủy",
+		"submit": "Gửi"
+	},
+	"settings": {
+		"description": "Không cần khóa API, nhưng người dùng cần giúp sao chép và dán thông tin vào trò chuyện AI trên web.",
+		"usage": "Khi sử dụng, một hộp thoại sẽ xuất hiện và tin nhắn hiện tại sẽ tự động được sao chép vào bộ nhớ tạm. Bạn cần dán nội dung này vào AI trên web (như ChatGPT hoặc Claude), sau đó sao chép phản hồi của AI trở lại hộp thoại và nhấp vào nút xác nhận.",
+		"monitorInterval": "Khoảng thời gian giám sát bộ nhớ tạm (mili giây)",
+		"intervalValue": "{{value}} mili giây"
+	}
+}
