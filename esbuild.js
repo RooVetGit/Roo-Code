@@ -63,66 +63,82 @@ const copyWasmFiles = {
 	},
 }
 
+// Simple function to copy locale files
+function copyLocaleFiles() {
+	const srcDir = path.join(__dirname, "src", "i18n", "locales")
+	const destDir = path.join(__dirname, "dist", "i18n", "locales")
+	const outDir = path.join(__dirname, "out", "i18n", "locales")
+
+	// Create destination directories
+	fs.mkdirSync(destDir, { recursive: true })
+	try {
+		fs.mkdirSync(outDir, { recursive: true })
+	} catch (e) {}
+
+	// Function to copy directory recursively
+	function copyDir(src, dest) {
+		const entries = fs.readdirSync(src, { withFileTypes: true })
+
+		for (const entry of entries) {
+			const srcPath = path.join(src, entry.name)
+			const destPath = path.join(dest, entry.name)
+
+			if (entry.isDirectory()) {
+				// Create directory and copy contents
+				fs.mkdirSync(destPath, { recursive: true })
+				copyDir(srcPath, destPath)
+			} else {
+				// Copy the file
+				fs.copyFileSync(srcPath, destPath)
+			}
+		}
+	}
+
+	// Copy files to dist directory
+	copyDir(srcDir, destDir)
+	console.log("Copied locale files to dist/i18n/locales")
+
+	// Copy to out directory for debugging
+	try {
+		copyDir(srcDir, outDir)
+		console.log("Copied locale files to out/i18n/locales")
+	} catch (e) {
+		console.warn("Could not copy to out directory:", e.message)
+	}
+}
+
+// Set up file watcher if in watch mode
+function setupLocaleWatcher() {
+	if (!watch) return
+
+	const localesDir = path.join(__dirname, "src", "i18n", "locales")
+	console.log(`Setting up watcher for locale files in ${localesDir}`)
+
+	// Use a debounce mechanism
+	let debounceTimer = null
+	const debouncedCopy = () => {
+		if (debounceTimer) clearTimeout(debounceTimer)
+		debounceTimer = setTimeout(() => {
+			console.log("Locale files changed, copying...")
+			copyLocaleFiles()
+		}, 300) // Wait 300ms after last change before copying
+	}
+
+	// Watch the locales directory
+	fs.watch(localesDir, { recursive: true }, (eventType, filename) => {
+		if (filename && filename.endsWith(".json")) {
+			console.log(`Locale file ${filename} changed, triggering copy...`)
+			debouncedCopy()
+		}
+	})
+	console.log("Watcher for locale files is set up")
+}
+
 const copyLocalesFiles = {
 	name: "copy-locales-files",
 	setup(build) {
 		build.onEnd(() => {
-			// Source directory for translations
-			const srcDir = path.join(__dirname, "src", "i18n", "locales")
-
-			// Two destination directories to handle different import paths
-			const destDirNested = path.join(__dirname, "dist", "i18n", "locales")
-			const destDirFlat = path.join(__dirname, "dist", "locales")
-
-			// Create the destination directories if they don't exist
-			fs.mkdirSync(destDirNested, { recursive: true })
-			fs.mkdirSync(destDirFlat, { recursive: true })
-
-			// Function to copy directory recursively
-			function copyDirRecursively(src, dest) {
-				// Read the source directory
-				const entries = fs.readdirSync(src, { withFileTypes: true })
-
-				// Process each entry
-				entries.forEach((entry) => {
-					const srcPath = path.join(src, entry.name)
-					const destPath = path.join(dest, entry.name)
-
-					if (entry.isDirectory()) {
-						// Create directory if it doesn't exist
-						fs.mkdirSync(destPath, { recursive: true })
-						// Recursively copy contents
-						copyDirRecursively(srcPath, destPath)
-					} else {
-						// Copy the file
-						fs.copyFileSync(srcPath, destPath)
-					}
-				})
-			}
-
-			// Copy all locales recursively if the directory exists
-			if (fs.existsSync(srcDir)) {
-				// Copy to both locations for maximum compatibility
-				copyDirRecursively(srcDir, destDirNested)
-				copyDirRecursively(srcDir, destDirFlat)
-				console.log("Copied translation files to dist/i18n/locales and dist/locales")
-
-				// Also copy to out directory for debugging (if it exists)
-				const outDirNested = path.join(__dirname, "out", "i18n", "locales")
-				const outDirFlat = path.join(__dirname, "out", "locales")
-
-				try {
-					fs.mkdirSync(outDirNested, { recursive: true })
-					fs.mkdirSync(outDirFlat, { recursive: true })
-					copyDirRecursively(srcDir, outDirNested)
-					copyDirRecursively(srcDir, outDirFlat)
-					console.log("Copied translation files to out/i18n/locales and out/locales")
-				} catch (err) {
-					console.warn("Warning: Could not copy to out directory", err.message)
-				}
-			} else {
-				console.warn("Warning: locales directory not found in src/i18n")
-			}
+			copyLocaleFiles()
 		})
 	},
 }
@@ -156,8 +172,17 @@ const extensionConfig = {
 
 async function main() {
 	const extensionCtx = await esbuild.context(extensionConfig)
+
 	if (watch) {
+		// Start the esbuild watcher
 		await extensionCtx.watch()
+
+		// Copy and watch locale files
+		console.log("Copying locale files initially...")
+		copyLocaleFiles()
+
+		// Set up the watcher for locale files
+		setupLocaleWatcher()
 	} else {
 		await extensionCtx.rebuild()
 		await extensionCtx.dispose()
