@@ -35,6 +35,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setAllowedCommands: (value: string[]) => void
 	setSoundEnabled: (value: boolean) => void
 	setSoundVolume: (value: number) => void
+	terminalShellIntegrationTimeout?: number
+	setTerminalShellIntegrationTimeout: (value: number) => void
 	setTtsEnabled: (value: boolean) => void
 	setTtsSpeed: (value: number) => void
 	setDiffEnabled: (value: boolean) => void
@@ -129,6 +131,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		browserViewportSize: "900x600",
 		screenshotQuality: 75,
 		terminalOutputLineLimit: 500,
+		terminalShellIntegrationTimeout: 4000,
 		mcpEnabled: true,
 		enableMcpServerCreation: true,
 		alwaysApproveResubmit: false,
@@ -148,7 +151,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		cwd: "",
 		browserToolEnabled: true,
 		telemetrySetting: "unset",
-		showRooIgnoredFiles: true, // Default to showing .rooignore'd files with lock symbol (current behavior)
+		showRooIgnoredFiles: true, // Default to showing .rooignore'd files with lock symbol (current behavior).
+		renderContext: "sidebar",
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
@@ -273,6 +277,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setScreenshotQuality: (value) => setState((prevState) => ({ ...prevState, screenshotQuality: value })),
 		setTerminalOutputLineLimit: (value) =>
 			setState((prevState) => ({ ...prevState, terminalOutputLineLimit: value })),
+		setTerminalShellIntegrationTimeout: (value) =>
+			setState((prevState) => ({ ...prevState, terminalShellIntegrationTimeout: value })),
 		setMcpEnabled: (value) => setState((prevState) => ({ ...prevState, mcpEnabled: value })),
 		setEnableMcpServerCreation: (value) =>
 			setState((prevState) => ({ ...prevState, enableMcpServerCreation: value })),

@@ -27,6 +27,7 @@ import { Mode, PromptComponent, defaultModeSlug, ModeConfig } from "../../shared
 import { checkExistKey } from "../../shared/checkExistApiConfig"
 import { EXPERIMENT_IDS, experiments as Experiments, experimentDefault, ExperimentId } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
+import { Terminal, TERMINAL_SHELL_INTEGRATION_TIMEOUT } from "../../integrations/terminal/Terminal"
 import { downloadTask } from "../../integrations/misc/export-markdown"
 import { openFile, openImage } from "../../integrations/misc/open-file"
 import { selectImages } from "../../integrations/misc/process-images"
@@ -94,6 +95,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	constructor(
 		readonly context: vscode.ExtensionContext,
 		private readonly outputChannel: vscode.OutputChannel,
+		private readonly renderContext: "sidebar" | "editor" = "sidebar",
 	) {
 		super()
 
@@ -355,9 +357,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			setPanel(webviewView, "sidebar")
 		}
 
-		// Initialize sound enabled state
-		this.getState().then(({ soundEnabled }) => {
+		// Initialize out-of-scope variables that need to recieve persistent global state values
+		this.getState().then(({ soundEnabled, terminalShellIntegrationTimeout }) => {
 			setSoundEnabled(soundEnabled ?? false)
+			Terminal.setShellIntegrationTimeout(terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT)
 		})
 
 		// Initialize tts enabled state
@@ -1407,6 +1410,13 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						await this.updateGlobalState("terminalOutputLineLimit", message.value)
 						await this.postStateToWebview()
 						break
+					case "terminalShellIntegrationTimeout":
+						await this.updateGlobalState("terminalShellIntegrationTimeout", message.value)
+						await this.postStateToWebview()
+						if (message.value !== undefined) {
+							Terminal.setShellIntegrationTimeout(message.value)
+						}
+						break
 					case "mode":
 						await this.handleModeSwitch(message.text as Mode)
 						break
@@ -2373,6 +2383,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			remoteBrowserEnabled,
 			writeDelayMs,
 			terminalOutputLineLimit,
+			terminalShellIntegrationTimeout,
 			fuzzyMatchThreshold,
 			mcpEnabled,
 			enableMcpServerCreation,
@@ -2394,11 +2405,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			showRooIgnoredFiles,
 			language,
 		} = await this.getState()
+
 		const telemetryKey = process.env.POSTHOG_API_KEY
 		const machineId = vscode.env.machineId
-
 		const allowedCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
-
 		const cwd = this.cwd
 
 		return {
@@ -2436,6 +2446,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			remoteBrowserEnabled: remoteBrowserEnabled ?? false,
 			writeDelayMs: writeDelayMs ?? 1000,
 			terminalOutputLineLimit: terminalOutputLineLimit ?? 500,
+			terminalShellIntegrationTimeout: terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT,
 			fuzzyMatchThreshold: fuzzyMatchThreshold ?? 1.0,
 			mcpEnabled: mcpEnabled ?? true,
 			enableMcpServerCreation: enableMcpServerCreation ?? true,
@@ -2461,6 +2472,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			machineId,
 			showRooIgnoredFiles: showRooIgnoredFiles ?? true,
 			language,
+			renderContext: this.renderContext,
 		}
 	}
 
@@ -2595,6 +2607,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			fuzzyMatchThreshold: stateValues.fuzzyMatchThreshold ?? 1.0,
 			writeDelayMs: stateValues.writeDelayMs ?? 1000,
 			terminalOutputLineLimit: stateValues.terminalOutputLineLimit ?? 500,
+			terminalShellIntegrationTimeout:
+				stateValues.terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT,
 			mode: stateValues.mode ?? defaultModeSlug,
 			language: stateValues.language ?? formatLanguage(vscode.env.language),
 			mcpEnabled: stateValues.mcpEnabled ?? true,
