@@ -130,6 +130,7 @@ export const ModelPicker = ({
 									onValueChange={setSearchValue}
 									placeholder="Search"
 									className="h-9 mr-4"
+									data-testid="model-input"
 								/>
 								{searchValue.length > 0 && (
 									<div className="absolute right-2 top-0 bottom-0 flex items-center justify-center">
