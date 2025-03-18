@@ -37,7 +37,8 @@ export const NotificationSettings = ({
 				<div>
 					<VSCodeCheckbox
 						checked={ttsEnabled}
-						onChange={(e: any) => setCachedStateField("ttsEnabled", e.target.checked)}>
+						onChange={(e: any) => setCachedStateField("ttsEnabled", e.target.checked)}
+						data-testid="tts-enabled-checkbox">
 						<span className="font-medium">{t("settings:notifications.tts.label")}</span>
 					</VSCodeCheckbox>
 					<p className="text-vscode-descriptionForeground text-sm mt-0">
@@ -55,6 +56,7 @@ export const NotificationSettings = ({
 									onChange={(e) => setCachedStateField("ttsSpeed", parseFloat(e.target.value))}
 									className="h-2 focus:outline-0 w-4/5 accent-vscode-button-background"
 									aria-label="Speed"
+									data-testid="tts-speed-slider"
 								/>
 								<span className="min-w-[35px] text-left">{((ttsSpeed ?? 1.0) * 100).toFixed(0)}%</span>
 							</div>

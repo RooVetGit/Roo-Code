@@ -153,13 +153,11 @@ describe("SettingsView - Sound Settings", () => {
 	it("initializes with tts disabled by default", () => {
 		renderSettingsView()
 
-		const ttsCheckbox = screen.getByRole("checkbox", {
-			name: /Enable text-to-speech/i,
-		})
+		const ttsCheckbox = screen.getByTestId("tts-enabled-checkbox")
 		expect(ttsCheckbox).not.toBeChecked()
 
 		// Speed slider should not be visible when tts is disabled
-		expect(screen.queryByRole("slider", { name: /speed/i })).not.toBeInTheDocument()
+		expect(screen.queryByTestId("tts-speed-slider")).not.toBeInTheDocument()
 	})
 
 	it("initializes with sound disabled by default", () => {
@@ -175,9 +173,7 @@ describe("SettingsView - Sound Settings", () => {
 	it("toggles tts setting and sends message to VSCode", () => {
 		renderSettingsView()
 
-		const ttsCheckbox = screen.getByRole("checkbox", {
-			name: /Enable text-to-speech/i,
-		})
+		const ttsCheckbox = screen.getByTestId("tts-enabled-checkbox")
 
 		// Enable tts
 		fireEvent.click(ttsCheckbox)
@@ -220,13 +216,11 @@ describe("SettingsView - Sound Settings", () => {
 		renderSettingsView()
 
 		// Enable tts
-		const ttsCheckbox = screen.getByRole("checkbox", {
-			name: /Enable text-to-speech/i,
-		})
+		const ttsCheckbox = screen.getByTestId("tts-enabled-checkbox")
 		fireEvent.click(ttsCheckbox)
 
 		// Speed slider should be visible
-		const speedSlider = screen.getByRole("slider", { name: /speed/i })
+		const speedSlider = screen.getByTestId("tts-speed-slider")
 		expect(speedSlider).toBeInTheDocument()
 		expect(speedSlider).toHaveValue("1")
 	})
@@ -248,13 +242,11 @@ describe("SettingsView - Sound Settings", () => {
 		renderSettingsView()
 
 		// Enable tts
-		const ttsCheckbox = screen.getByRole("checkbox", {
-			name: /Enable text-to-speech/i,
-		})
+		const ttsCheckbox = screen.getByTestId("tts-enabled-checkbox")
 		fireEvent.click(ttsCheckbox)
 
 		// Change speed
-		const speedSlider = screen.getByRole("slider", { name: /speed/i })
+		const speedSlider = screen.getByTestId("tts-speed-slider")
 		fireEvent.change(speedSlider, { target: { value: "0.75" } })
 
 		// Click Save to save settings
