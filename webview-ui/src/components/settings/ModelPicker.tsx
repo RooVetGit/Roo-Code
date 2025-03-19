@@ -116,7 +116,7 @@ export const ModelPicker = ({
 				<Popover open={open} onOpenChange={onOpenChange}>
 					<PopoverTrigger asChild>
 						<Button
-							variant="outline"
+							variant="combobox"
 							role="combobox"
 							aria-expanded={open}
 							className="w-full justify-between">
