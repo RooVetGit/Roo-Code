@@ -13,6 +13,7 @@ try {
 
 import "./utils/path" // Necessary to have access to String.prototype.toPosix.
 
+import { initializeI18n } from "./i18n"
 import { ClineProvider } from "./core/webview/ClineProvider"
 import { CodeActionProvider } from "./core/CodeActionProvider"
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
@@ -22,6 +23,7 @@ import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"
 import { API } from "./exports/api"
 
 import { handleUri, registerCommands, registerCodeActions, registerTerminalActions } from "./activate"
+import { formatLanguage } from "./shared/language"
 
 /**
  * Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -45,6 +47,9 @@ export function activate(context: vscode.ExtensionContext) {
 	// Initialize telemetry service after environment variables are loaded.
 	telemetryService.initialize()
 
+	// Initialize i18n for internationalization support
+	initializeI18n(context.globalState.get("language") ?? formatLanguage(vscode.env.language))
+
 	// Initialize terminal shell execution handlers.
 	TerminalRegistry.initialize()
 
@@ -56,7 +61,7 @@ export function activate(context: vscode.ExtensionContext) {
 		context.globalState.update("allowedCommands", defaultCommands)
 	}
 
-	const provider = new ClineProvider(context, outputChannel)
+	const provider = new ClineProvider(context, outputChannel, "sidebar")
 	telemetryService.setProvider(provider)
 
 	// Validate task history on extension activation

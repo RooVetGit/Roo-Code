@@ -78,28 +78,22 @@ jest.mock("@vscode/webview-ui-toolkit/react", () => ({
 			data-testid={dataTestId}
 		/>
 	),
-	VSCodeTextArea: () => <textarea />,
 	VSCodeLink: ({ children, href }: any) => <a href={href || "#"}>{children}</a>,
-	VSCodeDropdown: ({ children, value, onChange }: any) => (
-		<select value={value} onChange={onChange}>
-			{children}
-		</select>
-	),
-	VSCodeOption: ({ children, value }: any) => <option value={value}>{children}</option>,
 	VSCodeRadio: ({ children, value, checked, onChange }: any) => (
 		<input type="radio" value={value} checked={checked} onChange={onChange} />
 	),
 	VSCodeRadioGroup: ({ children, value, onChange }: any) => <div onChange={onChange}>{children}</div>,
-	VSCodeSlider: ({ value, onChange, "data-testid": dataTestId }: any) => (
+}))
+
+// Mock Slider component
+jest.mock("@/components/ui", () => ({
+	...jest.requireActual("@/components/ui"),
+	Slider: ({ value, onValueChange, "data-testid": dataTestId }: any) => (
 		<input
 			type="range"
-			value={value}
-			onChange={(e) => onChange({ target: { value: Number(e.target.value) } })}
-			min={0}
-			max={1}
+			value={value[0]}
+			onChange={(e) => onValueChange([parseFloat(e.target.value)])}
 			data-testid={dataTestId}
-			step={0.01}
-			style={{ flexGrow: 1, height: "2px" }}
 		/>
 	),
 }))
@@ -116,6 +110,8 @@ const mockPostMessage = (state: any) => {
 				shouldShowAnnouncement: false,
 				allowedCommands: [],
 				alwaysAllowExecute: false,
+				ttsEnabled: false,
+				ttsSpeed: 1,
 				soundEnabled: false,
 				soundVolume: 0.5,
 				...state,
@@ -124,6 +120,14 @@ const mockPostMessage = (state: any) => {
 		"*",
 	)
 }
+
+class MockResizeObserver {
+	observe() {}
+	unobserve() {}
+	disconnect() {}
+}
+
+global.ResizeObserver = MockResizeObserver
 
 const renderSettingsView = () => {
 	const onDone = jest.fn()
@@ -148,6 +152,16 @@ describe("SettingsView - Sound Settings", () => {
 		jest.clearAllMocks()
 	})
 
+	it("initializes with tts disabled by default", () => {
+		renderSettingsView()
+
+		const ttsCheckbox = screen.getByTestId("tts-enabled-checkbox")
+		expect(ttsCheckbox).not.toBeChecked()
+
+		// Speed slider should not be visible when tts is disabled
+		expect(screen.queryByTestId("tts-speed-slider")).not.toBeInTheDocument()
+	})
+
 	it("initializes with sound disabled by default", () => {
 		renderSettingsView()
 
@@ -156,6 +170,27 @@ describe("SettingsView - Sound Settings", () => {
 
 		// Volume slider should not be visible when sound is disabled
 		expect(screen.queryByTestId("sound-volume-slider")).not.toBeInTheDocument()
+	})
+
+	it("toggles tts setting and sends message to VSCode", () => {
+		renderSettingsView()
+
+		const ttsCheckbox = screen.getByTestId("tts-enabled-checkbox")
+
+		// Enable tts
+		fireEvent.click(ttsCheckbox)
+		expect(ttsCheckbox).toBeChecked()
+
+		// Click Save to save settings
+		const saveButton = screen.getByTestId("save-button")
+		fireEvent.click(saveButton)
+
+		expect(vscode.postMessage).toHaveBeenCalledWith(
+			expect.objectContaining({
+				type: "ttsEnabled",
+				bool: true,
+			}),
+		)
 	})
 
 	it("toggles sound setting and sends message to VSCode", () => {
@@ -179,6 +214,19 @@ describe("SettingsView - Sound Settings", () => {
 		)
 	})
 
+	it("shows tts slider when sound is enabled", () => {
+		renderSettingsView()
+
+		// Enable tts
+		const ttsCheckbox = screen.getByTestId("tts-enabled-checkbox")
+		fireEvent.click(ttsCheckbox)
+
+		// Speed slider should be visible
+		const speedSlider = screen.getByTestId("tts-speed-slider")
+		expect(speedSlider).toBeInTheDocument()
+		expect(speedSlider).toHaveValue("1")
+	})
+
 	it("shows volume slider when sound is enabled", () => {
 		renderSettingsView()
 
@@ -190,6 +238,28 @@ describe("SettingsView - Sound Settings", () => {
 		const volumeSlider = screen.getByTestId("sound-volume-slider")
 		expect(volumeSlider).toBeInTheDocument()
 		expect(volumeSlider).toHaveValue("0.5")
+	})
+
+	it("updates speed and sends message to VSCode when slider changes", () => {
+		renderSettingsView()
+
+		// Enable tts
+		const ttsCheckbox = screen.getByTestId("tts-enabled-checkbox")
+		fireEvent.click(ttsCheckbox)
+
+		// Change speed
+		const speedSlider = screen.getByTestId("tts-speed-slider")
+		fireEvent.change(speedSlider, { target: { value: "0.75" } })
+
+		// Click Save to save settings
+		const saveButton = screen.getByTestId("save-button")
+		fireEvent.click(saveButton)
+
+		// Verify message sent to VSCode
+		expect(vscode.postMessage).toHaveBeenCalledWith({
+			type: "ttsSpeed",
+			value: 0.75,
+		})
 	})
 
 	it("updates volume and sends message to VSCode when slider changes", () => {
