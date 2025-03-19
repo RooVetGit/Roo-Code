@@ -180,6 +180,7 @@ export interface ClineSayTool {
 		| "appliedDiff"
 		| "newFileCreated"
 		| "readFile"
+		| "fetchInstructions"
 		| "listFilesTopLevel"
 		| "listFilesRecursive"
 		| "listCodeDefinitionNames"
@@ -195,6 +196,7 @@ export interface ClineSayTool {
 	mode?: string
 	reason?: string
 	isOutsideWorkspace?: boolean
+	text?: string
 }
 
 // Must keep in sync with system prompt.

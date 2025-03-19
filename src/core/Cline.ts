@@ -30,6 +30,7 @@ import {
 	everyLineHasLineNumbers,
 } from "../integrations/misc/extract-text"
 import { countFileLines } from "../integrations/misc/line-counter"
+import { fetchInstructions } from "./prompts/instructions/instructions"
 import { ExitCodeDetails } from "../integrations/terminal/TerminalProcess"
 import { Terminal } from "../integrations/terminal/Terminal"
 import { TerminalRegistry } from "../integrations/terminal/TerminalRegistry"
@@ -1371,6 +1372,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 							return `[${block.name} for '${block.params.command}']`
 						case "read_file":
 							return `[${block.name} for '${block.params.path}']`
+						case "fetch_instructions":
+							return `[${block.name} for '${block.params.text}']`
 						case "write_to_file":
 							return `[${block.name} for '${block.params.path}']`
 						case "apply_diff":
@@ -2387,6 +2390,54 @@ export class Cline extends EventEmitter<ClineEvents> {
 									content += `\n\n[File truncated: showing ${maxReadFileLine} of ${totalLines} total lines. Use start_line and end_line or set auto_truncate to false if you need to read more.].${sourceCodeDef}`
 								}
 
+								pushToolResult(content)
+								break
+							}
+						} catch (error) {
+							await handleError("reading file", error)
+							break
+						}
+					}
+
+
+					case "fetch_instructions": {
+						const text: string | undefined = block.params.text
+						const sharedMessageProps: ClineSayTool = {
+							tool: "fetchInstructions",
+							text: text,
+						}
+						try {
+							if (block.partial) {
+								const partialMessage = JSON.stringify({
+									...sharedMessageProps,
+									content: undefined,
+								} satisfies ClineSayTool)
+								await this.ask("tool", partialMessage, block.partial).catch(() => {})
+								break
+							} else {
+								if (!text) {
+									this.consecutiveMistakeCount++
+									pushToolResult(
+										await this.sayAndCreateMissingParamError("fetch_instructions", "text"),
+									)
+									break
+								}
+
+								this.consecutiveMistakeCount = 0
+								const completeMessage = JSON.stringify({
+									...sharedMessageProps,
+									content: text,
+								} satisfies ClineSayTool)
+								const didApprove = await askApproval("tool", completeMessage)
+								if (!didApprove) {
+									break
+								}
+								// now execute the tool
+								const content = await fetchInstructions(text)
+								if (!content) {
+									pushToolResult(formatResponse.toolError(`Invalid instructions request: ${text}`))
+									break
+								}
 								pushToolResult(content)
 								break
 							}
