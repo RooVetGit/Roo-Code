@@ -109,7 +109,7 @@ const CommandItem = React.forwardRef<
 		ref={ref}
 		className={cn(
 			"relative flex cursor-pointer gap-2 select-none items-center rounded-sm px-2 py-1.5 text-base text-vscode-dropdown-foreground outline-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
-			"data-[selected=true]:bg-vscode-list-activeSelectionBackground data-[selected=true]:texst-vscode-list-activeSelectionForeground",
+			"data-[selected=true]:bg-vscode-list-activeSelectionBackground data-[selected=true]:text-vscode-list-activeSelectionForeground",
 			className,
 		)}
 		{...props}
