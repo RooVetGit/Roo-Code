@@ -1373,7 +1373,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 						case "read_file":
 							return `[${block.name} for '${block.params.path}']`
 						case "fetch_instructions":
-							return `[${block.name} for '${block.params.text}']`
+							return `[${block.name} for '${block.params.task}']`
 						case "write_to_file":
 							return `[${block.name} for '${block.params.path}']`
 						case "apply_diff":
@@ -2401,10 +2401,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 
 					case "fetch_instructions": {
-						const text: string | undefined = block.params.text
+						const task: string | undefined = block.params.task
 						const sharedMessageProps: ClineSayTool = {
 							tool: "fetchInstructions",
-							text: text,
+							task: task,
 						}
 						try {
 							if (block.partial) {
@@ -2415,10 +2415,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 								await this.ask("tool", partialMessage, block.partial).catch(() => {})
 								break
 							} else {
-								if (!text) {
+								if (!task) {
 									this.consecutiveMistakeCount++
 									pushToolResult(
-										await this.sayAndCreateMissingParamError("fetch_instructions", "text"),
+										await this.sayAndCreateMissingParamError("fetch_instructions", "task"),
 									)
 									break
 								}
@@ -2426,16 +2426,16 @@ export class Cline extends EventEmitter<ClineEvents> {
 								this.consecutiveMistakeCount = 0
 								const completeMessage = JSON.stringify({
 									...sharedMessageProps,
-									content: text,
+									content: task,
 								} satisfies ClineSayTool)
 								const didApprove = await askApproval("tool", completeMessage)
 								if (!didApprove) {
 									break
 								}
 								// now execute the tool
-								const content = await fetchInstructions(text)
+								const content = await fetchInstructions(task)
 								if (!content) {
-									pushToolResult(formatResponse.toolError(`Invalid instructions request: ${text}`))
+									pushToolResult(formatResponse.toolError(`Invalid instructions request: ${task}`))
 									break
 								}
 								pushToolResult(content)

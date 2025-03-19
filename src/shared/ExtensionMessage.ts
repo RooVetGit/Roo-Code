@@ -197,6 +197,7 @@ export interface ClineSayTool {
 	reason?: string
 	isOutsideWorkspace?: boolean
 	text?: string
+	task?: string
 }
 
 // Must keep in sync with system prompt.

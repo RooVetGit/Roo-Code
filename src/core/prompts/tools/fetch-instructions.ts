@@ -5,10 +5,11 @@ Parameters:
 - task: (required) The task to get instructions for.  This can take the following values:
   create_mcp_server
   create_mode
+  tell_a_joke
 
 Example: Requesting instructions to create an MCP Server
 
 <fetch_instructions>
-<text>create_mcp_server</text>
+<task>create_mcp_server</task>
 </fetch_instructions>`
 }
