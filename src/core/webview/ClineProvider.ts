@@ -1,163 +1,112 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import delay from "delay"
 import axios from "axios"
+import EventEmitter from "events"
 import fs from "fs/promises"
 import os from "os"
 import pWaitFor from "p-wait-for"
 import * as path from "path"
 import * as vscode from "vscode"
-import simpleGit from "simple-git"
 
-import { buildApiHandler } from "../../api"
+import { changeLanguage, t } from "../../i18n"
+import { setPanel } from "../../activate/registerCommands"
+import { ApiConfiguration, ApiProvider, ModelInfo, API_CONFIG_KEYS } from "../../shared/api"
+import { findLast } from "../../shared/array"
+import { supportPrompt } from "../../shared/support-prompt"
+import { GlobalFileNames } from "../../shared/globalFileNames"
+import {
+	SecretKey,
+	GlobalStateKey,
+	SECRET_KEYS,
+	GLOBAL_STATE_KEYS,
+	ConfigurationValues,
+} from "../../shared/globalState"
+import { HistoryItem } from "../../shared/HistoryItem"
+import { ApiConfigMeta, ExtensionMessage } from "../../shared/ExtensionMessage"
+import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
+import { Mode, PromptComponent, defaultModeSlug, ModeConfig } from "../../shared/modes"
+import { checkExistKey } from "../../shared/checkExistApiConfig"
+import { EXPERIMENT_IDS, experiments as Experiments, experimentDefault, ExperimentId } from "../../shared/experiments"
+import { formatLanguage } from "../../shared/language"
+import { Terminal, TERMINAL_SHELL_INTEGRATION_TIMEOUT } from "../../integrations/terminal/Terminal"
 import { downloadTask } from "../../integrations/misc/export-markdown"
 import { openFile, openImage } from "../../integrations/misc/open-file"
 import { selectImages } from "../../integrations/misc/process-images"
 import { getTheme } from "../../integrations/theme/getTheme"
-import { getDiffStrategy } from "../diff/DiffStrategy"
 import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 import { McpHub } from "../../services/mcp/McpHub"
-import { ApiConfiguration, ApiProvider, ModelInfo } from "../../shared/api"
-import { findLast } from "../../shared/array"
-import { ApiConfigMeta, ExtensionMessage } from "../../shared/ExtensionMessage"
-import { HistoryItem } from "../../shared/HistoryItem"
-import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
-import { Mode, CustomModePrompts, PromptComponent, defaultModeSlug } from "../../shared/modes"
-import { SYSTEM_PROMPT } from "../prompts/system"
+import { McpServerManager } from "../../services/mcp/McpServerManager"
+import { ShadowCheckpointService } from "../../services/checkpoints/ShadowCheckpointService"
+import { BrowserSession } from "../../services/browser/BrowserSession"
+import { discoverChromeInstances } from "../../services/browser/browserDiscovery"
 import { fileExistsAtPath } from "../../utils/fs"
-import { Cline } from "../Cline"
+import { playSound, setSoundEnabled, setSoundVolume } from "../../utils/sound"
+import { playTts, setTtsEnabled, setTtsSpeed, stopTts } from "../../utils/tts"
+import { singleCompletionHandler } from "../../utils/single-completion-handler"
+import { searchCommits } from "../../utils/git"
+import { getDiffStrategy } from "../diff/DiffStrategy"
+import { SYSTEM_PROMPT } from "../prompts/system"
+import { ConfigManager } from "../config/ConfigManager"
+import { CustomModesManager } from "../config/CustomModesManager"
+import { ContextProxy } from "../contextProxy"
+import { buildApiHandler } from "../../api"
+import { getOpenRouterModels } from "../../api/providers/openrouter"
+import { getGlamaModels } from "../../api/providers/glama"
+import { getUnboundModels } from "../../api/providers/unbound"
+import { getRequestyModels } from "../../api/providers/requesty"
+import { getOpenAiModels } from "../../api/providers/openai"
+import { getOllamaModels } from "../../api/providers/ollama"
+import { getVsCodeLmModels } from "../../api/providers/vscode-lm"
+import { getLmStudioModels } from "../../api/providers/lmstudio"
+import { ACTION_NAMES } from "../CodeActionProvider"
+import { Cline, ClineOptions } from "../Cline"
 import { openMention } from "../mentions"
 import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
-import { playSound, setSoundEnabled, setSoundVolume } from "../../utils/sound"
-import { checkExistKey } from "../../shared/checkExistApiConfig"
-import { singleCompletionHandler } from "../../utils/single-completion-handler"
-import { searchCommits } from "../../utils/git"
-import { ConfigManager } from "../config/ConfigManager"
-import { CustomModesManager } from "../config/CustomModesManager"
-import { EXPERIMENT_IDS, experiments as Experiments, experimentDefault, ExperimentId } from "../../shared/experiments"
-import { CustomSupportPrompts, supportPrompt } from "../../shared/support-prompt"
+import { telemetryService } from "../../services/telemetry/TelemetryService"
+import { TelemetrySetting } from "../../shared/TelemetrySetting"
+import { getWorkspacePath } from "../../utils/path"
 
-import { ACTION_NAMES } from "../CodeActionProvider"
-import { McpServerManager } from "../../services/mcp/McpServerManager"
+/**
+ * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
+ * https://github.com/KumarVariable/vscode-extension-sidebar-html/blob/master/src/customSidebarViewProvider.ts
+ */
 
-/*
-https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
-
-https://github.com/KumarVariable/vscode-extension-sidebar-html/blob/master/src/customSidebarViewProvider.ts
-*/
-
-type SecretKey =
-	| "apiKey"
-	| "glamaApiKey"
-	| "openRouterApiKey"
-	| "awsAccessKey"
-	| "awsSecretKey"
-	| "awsSessionToken"
-	| "openAiApiKey"
-	| "geminiApiKey"
-	| "openAiNativeApiKey"
-	| "deepSeekApiKey"
-	| "mistralApiKey"
-	| "unboundApiKey"
-	| "requestyApiKey"
-type GlobalStateKey =
-	| "apiProvider"
-	| "apiModelId"
-	| "glamaModelId"
-	| "glamaModelInfo"
-	| "awsRegion"
-	| "awsUseCrossRegionInference"
-	| "awsProfile"
-	| "awsUseProfile"
-	| "vertexProjectId"
-	| "vertexRegion"
-	| "lastShownAnnouncementId"
-	| "customInstructions"
-	| "alwaysAllowReadOnly"
-	| "alwaysAllowWrite"
-	| "alwaysAllowExecute"
-	| "alwaysAllowBrowser"
-	| "alwaysAllowMcp"
-	| "alwaysAllowModeSwitch"
-	| "taskHistory"
-	| "openAiBaseUrl"
-	| "openAiModelId"
-	| "openAiCustomModelInfo"
-	| "openAiUseAzure"
-	| "ollamaModelId"
-	| "ollamaBaseUrl"
-	| "lmStudioModelId"
-	| "lmStudioBaseUrl"
-	| "anthropicBaseUrl"
-	| "azureApiVersion"
-	| "openAiStreamingEnabled"
-	| "openRouterModelId"
-	| "openRouterModelInfo"
-	| "openRouterBaseUrl"
-	| "openRouterUseMiddleOutTransform"
-	| "allowedCommands"
-	| "soundEnabled"
-	| "soundVolume"
-	| "diffEnabled"
-	| "checkpointsEnabled"
-	| "browserViewportSize"
-	| "screenshotQuality"
-	| "fuzzyMatchThreshold"
-	| "preferredLanguage" // Language setting for Cline's communication
-	| "writeDelayMs"
-	| "terminalOutputLineLimit"
-	| "mcpEnabled"
-	| "enableMcpServerCreation"
-	| "alwaysApproveResubmit"
-	| "requestDelaySeconds"
-	| "rateLimitSeconds"
-	| "currentApiConfigName"
-	| "listApiConfigMeta"
-	| "vsCodeLmModelSelector"
-	| "mode"
-	| "modeApiConfigs"
-	| "customModePrompts"
-	| "customSupportPrompts"
-	| "enhancementApiConfigId"
-	| "experiments" // Map of experiment IDs to their enabled state
-	| "autoApprovalEnabled"
-	| "customModes" // Array of custom modes
-	| "unboundModelId"
-	| "requestyModelId"
-	| "requestyModelInfo"
-	| "unboundModelInfo"
-	| "modelTemperature"
-
-export const GlobalFileNames = {
-	apiConversationHistory: "api_conversation_history.json",
-	uiMessages: "ui_messages.json",
-	glamaModels: "glama_models.json",
-	openRouterModels: "openrouter_models.json",
-	requestyModels: "requesty_models.json",
-	mcpSettings: "cline_mcp_settings.json",
-	unboundModels: "unbound_models.json",
+export type ClineProviderEvents = {
+	clineAdded: [cline: Cline]
 }
 
-export class ClineProvider implements vscode.WebviewViewProvider {
+export class ClineProvider extends EventEmitter<ClineProviderEvents> implements vscode.WebviewViewProvider {
 	public static readonly sideBarId = "roo-cline.SidebarProvider" // used in package.json as the view's id. This value cannot be changed due to how vscode caches views based on their id, and updating the id would break existing instances of the extension.
 	public static readonly tabPanelId = "roo-cline.TabPanelProvider"
 	private static activeInstances: Set<ClineProvider> = new Set()
 	private disposables: vscode.Disposable[] = []
 	private view?: vscode.WebviewView | vscode.WebviewPanel
 	private isViewLaunched = false
-	private cline?: Cline
+	private clineStack: Cline[] = []
 	private workspaceTracker?: WorkspaceTracker
 	protected mcpHub?: McpHub // Change from private to protected
-	private latestAnnouncementId = "jan-21-2025-custom-modes" // update to some unique identifier when we add a new announcement
+	private latestAnnouncementId = "mar-18-2025-3-9" // update to some unique identifier when we add a new announcement
+	private contextProxy: ContextProxy
 	configManager: ConfigManager
 	customModesManager: CustomModesManager
-
+	get cwd() {
+		return getWorkspacePath()
+	}
 	constructor(
 		readonly context: vscode.ExtensionContext,
 		private readonly outputChannel: vscode.OutputChannel,
+		private readonly renderContext: "sidebar" | "editor" = "sidebar",
 	) {
+		super()
+
 		this.outputChannel.appendLine("ClineProvider instantiated")
+		this.contextProxy = new ContextProxy(context)
 		ClineProvider.activeInstances.add(this)
+
+		// Register this provider with the telemetry service to enable it to add properties like mode and provider
+		telemetryService.setProvider(this)
+
 		this.workspaceTracker = new WorkspaceTracker(this)
 		this.configManager = new ConfigManager(this.context)
 		this.customModesManager = new CustomModesManager(this.context, async () => {
@@ -174,6 +123,83 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			})
 	}
 
+	// Adds a new Cline instance to clineStack, marking the start of a new task.
+	// The instance is pushed to the top of the stack (LIFO order).
+	// When the task is completed, the top instance is removed, reactivating the previous task.
+	async addClineToStack(cline: Cline) {
+		console.log(`[subtasks] adding task ${cline.taskId}.${cline.instanceId} to stack`)
+
+		// Add this cline instance into the stack that represents the order of all the called tasks.
+		this.clineStack.push(cline)
+
+		this.emit("clineAdded", cline)
+
+		// Ensure getState() resolves correctly.
+		const state = await this.getState()
+
+		if (!state || typeof state.mode !== "string") {
+			throw new Error(t("common:errors.retrieve_current_mode"))
+		}
+	}
+
+	// Removes and destroys the top Cline instance (the current finished task),
+	// activating the previous one (resuming the parent task).
+	async removeClineFromStack() {
+		if (this.clineStack.length === 0) {
+			return
+		}
+
+		// Pop the top Cline instance from the stack.
+		var cline = this.clineStack.pop()
+
+		if (cline) {
+			console.log(`[subtasks] removing task ${cline.taskId}.${cline.instanceId} from stack`)
+
+			try {
+				// Abort the running task and set isAbandoned to true so
+				// all running promises will exit as well.
+				await cline.abortTask(true)
+			} catch (e) {
+				this.log(
+					`[subtasks] encountered error while aborting task ${cline.taskId}.${cline.instanceId}: ${e.message}`,
+				)
+			}
+
+			// Make sure no reference kept, once promises end it will be
+			// garbage collected.
+			cline = undefined
+		}
+	}
+
+	// returns the current cline object in the stack (the top one)
+	// if the stack is empty, returns undefined
+	getCurrentCline(): Cline | undefined {
+		if (this.clineStack.length === 0) {
+			return undefined
+		}
+		return this.clineStack[this.clineStack.length - 1]
+	}
+
+	// returns the current clineStack length (how many cline objects are in the stack)
+	getClineStackSize(): number {
+		return this.clineStack.length
+	}
+
+	public getCurrentTaskStack(): string[] {
+		return this.clineStack.map((cline) => cline.taskId)
+	}
+
+	// remove the current task/cline instance (at the top of the stack), ao this task is finished
+	// and resume the previous task/cline instance (if it exists)
+	// this is used when a sub task is finished and the parent task needs to be resumed
+	async finishSubTask(lastMessage?: string) {
+		console.log(`[subtasks] finishing subtask ${lastMessage}`)
+		// remove the last cline instance from the stack (this is the finished sub task)
+		await this.removeClineFromStack()
+		// resume the last cline instance in the stack (if it exists - this is the 'parnt' calling task)
+		this.getCurrentCline()?.resumePausedTask(lastMessage)
+	}
+
 	/*
 	VSCode extensions use the disposable pattern to clean up resources when the sidebar/editor tab is closed by the user or system. This applies to event listening, commands, interacting with the UI, etc.
 	- https://vscode-docs.readthedocs.io/en/stable/extensions/patterns-and-principles/
@@ -181,18 +207,22 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	*/
 	async dispose() {
 		this.outputChannel.appendLine("Disposing ClineProvider...")
-		await this.clearTask()
+		await this.removeClineFromStack()
 		this.outputChannel.appendLine("Cleared task")
+
 		if (this.view && "dispose" in this.view) {
 			this.view.dispose()
 			this.outputChannel.appendLine("Disposed webview")
 		}
+
 		while (this.disposables.length) {
 			const x = this.disposables.pop()
+
 			if (x) {
 				x.dispose()
 			}
 		}
+
 		this.workspaceTracker?.dispose()
 		this.workspaceTracker = undefined
 		this.mcpHub?.dispose()
@@ -234,7 +264,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			return false
 		}
 
-		if (visibleProvider.cline) {
+		// check if there is a cline instance in the stack (if this provider has an active task)
+		if (visibleProvider.getCurrentCline()) {
 			return true
 		}
 
@@ -247,6 +278,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		params: Record<string, string | any[]>,
 	): Promise<void> {
 		const visibleProvider = await ClineProvider.getInstance()
+
 		if (!visibleProvider) {
 			return
 		}
@@ -265,13 +297,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			return
 		}
 
-		if (visibleProvider.cline && command.endsWith("InCurrentTask")) {
-			await visibleProvider.postMessageToWebview({
-				type: "invoke",
-				invoke: "sendMessage",
-				text: prompt,
-			})
-
+		if (visibleProvider.getCurrentCline() && command.endsWith("InCurrentTask")) {
+			await visibleProvider.postMessageToWebview({ type: "invoke", invoke: "sendMessage", text: prompt })
 			return
 		}
 
@@ -301,7 +328,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			return
 		}
 
-		if (visibleProvider.cline && command.endsWith("InCurrentTask")) {
+		if (visibleProvider.getCurrentCline() && command.endsWith("InCurrentTask")) {
 			await visibleProvider.postMessageToWebview({
 				type: "invoke",
 				invoke: "sendMessage",
@@ -315,21 +342,46 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	async resolveWebviewView(webviewView: vscode.WebviewView | vscode.WebviewPanel) {
 		this.outputChannel.appendLine("Resolving webview view")
+
+		if (!this.contextProxy.isInitialized) {
+			await this.contextProxy.initialize()
+		}
+
 		this.view = webviewView
 
-		// Initialize sound enabled state
-		this.getState().then(({ soundEnabled }) => {
+		// Set panel reference according to webview type
+		if ("onDidChangeViewState" in webviewView) {
+			// Tag page type
+			setPanel(webviewView, "tab")
+		} else if ("onDidChangeVisibility" in webviewView) {
+			// Sidebar Type
+			setPanel(webviewView, "sidebar")
+		}
+
+		// Initialize out-of-scope variables that need to recieve persistent global state values
+		this.getState().then(({ soundEnabled, terminalShellIntegrationTimeout }) => {
 			setSoundEnabled(soundEnabled ?? false)
+			Terminal.setShellIntegrationTimeout(terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT)
+		})
+
+		// Initialize tts enabled state
+		this.getState().then(({ ttsEnabled }) => {
+			setTtsEnabled(ttsEnabled ?? false)
+		})
+
+		// Initialize tts speed state
+		this.getState().then(({ ttsSpeed }) => {
+			setTtsSpeed(ttsSpeed ?? 1)
 		})
 
 		webviewView.webview.options = {
 			// Allow scripts in the webview
 			enableScripts: true,
-			localResourceRoots: [this.context.extensionUri],
+			localResourceRoots: [this.contextProxy.extensionUri],
 		}
 
 		webviewView.webview.html =
-			this.context.extensionMode === vscode.ExtensionMode.Development
+			this.contextProxy.extensionMode === vscode.ExtensionMode.Development
 				? await this.getHMRHtmlContent(webviewView.webview)
 				: this.getHtmlContent(webviewView.webview)
 
@@ -389,19 +441,26 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.disposables,
 		)
 
-		// if the extension is starting a new session, clear previous task state
-		this.clearTask()
+		// If the extension is starting a new session, clear previous task state.
+		await this.removeClineFromStack()
 
 		this.outputChannel.appendLine("Webview view resolved")
 	}
 
-	public async initClineWithTask(task?: string, images?: string[]) {
-		await this.clearTask()
+	public async initClineWithSubTask(parent: Cline, task?: string, images?: string[]) {
+		return this.initClineWithTask(task, images, parent)
+	}
+
+	// when initializing a new task, (not from history but from a tool command new_task) there is no need to remove the previouse task
+	// since the new task is a sub task of the previous one, and when it finishes it is removed from the stack and the caller is resumed
+	// in this way we can have a chain of tasks, each one being a sub task of the previous one until the main task is finished
+	public async initClineWithTask(task?: string, images?: string[], parentTask?: Cline) {
 		const {
 			apiConfiguration,
 			customModePrompts,
-			diffEnabled,
-			checkpointsEnabled,
+			diffEnabled: enableDiff,
+			enableCheckpoints,
+			checkpointStorage,
 			fuzzyMatchThreshold,
 			mode,
 			customInstructions: globalInstructions,
@@ -411,28 +470,38 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		const modePrompt = customModePrompts?.[mode] as PromptComponent
 		const effectiveInstructions = [globalInstructions, modePrompt?.customInstructions].filter(Boolean).join("\n\n")
 
-		this.cline = new Cline(
-			this,
+		const cline = new Cline({
+			provider: this,
 			apiConfiguration,
-			effectiveInstructions,
-			diffEnabled,
-			checkpointsEnabled,
+			customInstructions: effectiveInstructions,
+			enableDiff,
+			enableCheckpoints,
+			checkpointStorage,
 			fuzzyMatchThreshold,
 			task,
 			images,
-			undefined,
 			experiments,
+			rootTask: this.clineStack.length > 0 ? this.clineStack[0] : undefined,
+			parentTask,
+			taskNumber: this.clineStack.length + 1,
+		})
+
+		await this.addClineToStack(cline)
+		this.log(
+			`[subtasks] ${cline.parentTask ? "child" : "parent"} task ${cline.taskId}.${cline.instanceId} instantiated`,
 		)
+		return cline
 	}
 
-	public async initClineWithHistoryItem(historyItem: HistoryItem) {
-		await this.clearTask()
+	public async initClineWithHistoryItem(historyItem: HistoryItem & { rootTask?: Cline; parentTask?: Cline }) {
+		await this.removeClineFromStack()
 
 		const {
 			apiConfiguration,
 			customModePrompts,
-			diffEnabled,
-			checkpointsEnabled,
+			diffEnabled: enableDiff,
+			enableCheckpoints,
+			checkpointStorage,
 			fuzzyMatchThreshold,
 			mode,
 			customInstructions: globalInstructions,
@@ -442,18 +511,51 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		const modePrompt = customModePrompts?.[mode] as PromptComponent
 		const effectiveInstructions = [globalInstructions, modePrompt?.customInstructions].filter(Boolean).join("\n\n")
 
-		this.cline = new Cline(
-			this,
+		const taskId = historyItem.id
+		const globalStorageDir = this.contextProxy.globalStorageUri.fsPath
+		const workspaceDir = this.cwd
+
+		const checkpoints: Pick<ClineOptions, "enableCheckpoints" | "checkpointStorage"> = {
+			enableCheckpoints,
+			checkpointStorage,
+		}
+
+		if (enableCheckpoints) {
+			try {
+				checkpoints.checkpointStorage = await ShadowCheckpointService.getTaskStorage({
+					taskId,
+					globalStorageDir,
+					workspaceDir,
+				})
+
+				this.log(
+					`[ClineProvider#initClineWithHistoryItem] Using ${checkpoints.checkpointStorage} storage for ${taskId}`,
+				)
+			} catch (error) {
+				checkpoints.enableCheckpoints = false
+				this.log(`[ClineProvider#initClineWithHistoryItem] Error getting task storage: ${error.message}`)
+			}
+		}
+
+		const cline = new Cline({
+			provider: this,
 			apiConfiguration,
-			effectiveInstructions,
-			diffEnabled,
-			checkpointsEnabled,
+			customInstructions: effectiveInstructions,
+			enableDiff,
+			...checkpoints,
 			fuzzyMatchThreshold,
-			undefined,
-			undefined,
 			historyItem,
 			experiments,
+			rootTask: historyItem.rootTask,
+			parentTask: historyItem.parentTask,
+			taskNumber: historyItem.number,
+		})
+
+		await this.addClineToStack(cline)
+		this.log(
+			`[subtasks] ${cline.parentTask ? "child" : "parent"} task ${cline.taskId}.${cline.instanceId} instantiated`,
 		)
+		return cline
 	}
 
 	public async postMessageToWebview(message: ExtensionMessage) {
@@ -468,16 +570,21 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		try {
 			await axios.get(`http://${localServerUrl}`)
 		} catch (error) {
-			vscode.window.showErrorMessage(
-				"Local development server is not running, HMR will not work. Please run 'npm run dev' before launching the extension to enable HMR.",
-			)
+			vscode.window.showErrorMessage(t("common:errors.hmr_not_running"))
 
 			return this.getHtmlContent(webview)
 		}
 
 		const nonce = getNonce()
-		const stylesUri = getUri(webview, this.context.extensionUri, ["webview-ui", "build", "assets", "index.css"])
-		const codiconsUri = getUri(webview, this.context.extensionUri, [
+
+		const stylesUri = getUri(webview, this.contextProxy.extensionUri, [
+			"webview-ui",
+			"build",
+			"assets",
+			"index.css",
+		])
+
+		const codiconsUri = getUri(webview, this.contextProxy.extensionUri, [
 			"node_modules",
 			"@vscode",
 			"codicons",
@@ -503,8 +610,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			`font-src ${webview.cspSource}`,
 			`style-src ${webview.cspSource} 'unsafe-inline' https://* http://${localServerUrl} http://0.0.0.0:${localPort}`,
 			`img-src ${webview.cspSource} data:`,
-			`script-src 'unsafe-eval' https://* http://${localServerUrl} http://0.0.0.0:${localPort} 'nonce-${nonce}'`,
-			`connect-src https://* ws://${localServerUrl} ws://0.0.0.0:${localPort} http://${localServerUrl} http://0.0.0.0:${localPort}`,
+			`script-src 'unsafe-eval' https://* https://*.posthog.com http://${localServerUrl} http://0.0.0.0:${localPort} 'nonce-${nonce}'`,
+			`connect-src https://* https://*.posthog.com ws://${localServerUrl} ws://0.0.0.0:${localPort} http://${localServerUrl} http://0.0.0.0:${localPort}`,
 		]
 
 		return /*html*/ `
@@ -543,15 +650,20 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		// then convert it to a uri we can use in the webview.
 
 		// The CSS file from the React build output
-		const stylesUri = getUri(webview, this.context.extensionUri, ["webview-ui", "build", "assets", "index.css"])
+		const stylesUri = getUri(webview, this.contextProxy.extensionUri, [
+			"webview-ui",
+			"build",
+			"assets",
+			"index.css",
+		])
 		// The JS file from the React build output
-		const scriptUri = getUri(webview, this.context.extensionUri, ["webview-ui", "build", "assets", "index.js"])
+		const scriptUri = getUri(webview, this.contextProxy.extensionUri, ["webview-ui", "build", "assets", "index.js"])
 
 		// The codicon font from the React build output
 		// https://github.com/microsoft/vscode-extension-samples/blob/main/webview-codicons-sample/src/extension.ts
 		// we installed this package in the extension so that we can access it how its intended from the extension (the font file is likely bundled in vscode), and we just import the css fileinto our react app we don't have access to it
 		// don't forget to add font-src ${webview.cspSource};
-		const codiconsUri = getUri(webview, this.context.extensionUri, [
+		const codiconsUri = getUri(webview, this.contextProxy.extensionUri, [
 			"node_modules",
 			"@vscode",
 			"codicons",
@@ -588,7 +700,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
             <meta name="theme-color" content="#000000">
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:; script-src 'nonce-${nonce}';">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:; script-src 'nonce-${nonce}' https://us-assets.i.posthog.com; connect-src https://openrouter.ai https://us.i.posthog.com https://us-assets.i.posthog.com;">
             <link rel="stylesheet" type="text/css" href="${stylesUri}">
 			<link href="${codiconsUri}" rel="stylesheet" />
             <title>Roo Code</title>
@@ -596,7 +708,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
           <body>
             <noscript>You need to enable JavaScript to run this app.</noscript>
             <div id="root"></div>
-            <script nonce="${nonce}" src="${scriptUri}"></script>
+            <script nonce="${nonce}" type="module" src="${scriptUri}"></script>
           </body>
         </html>
       `
@@ -619,15 +731,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 						this.postStateToWebview()
 						this.workspaceTracker?.initializeFilePaths() // don't await
+
 						getTheme().then((theme) =>
 							this.postMessageToWebview({ type: "theme", text: JSON.stringify(theme) }),
 						)
-						// post last cached models in case the call to endpoint fails
-						this.readOpenRouterModels().then((openRouterModels) => {
-							if (openRouterModels) {
-								this.postMessageToWebview({ type: "openRouterModels", openRouterModels })
-							}
-						})
 
 						// If MCP Hub is already initialized, update the webview with current server list
 						if (this.mcpHub) {
@@ -637,13 +744,38 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							})
 						}
 
-						// gui relies on model info to be up-to-date to provide the most accurate pricing, so we need to fetch the latest details on launch.
-						// we do this for all users since many users switch between api providers and if they were to switch back to openrouter it would be showing outdated model info if we hadn't retrieved the latest at this point
-						// (see normalizeApiConfiguration > openrouter)
-						this.refreshOpenRouterModels().then(async (openRouterModels) => {
+						const cacheDir = await this.ensureCacheDirectoryExists()
+
+						// Post last cached models in case the call to endpoint fails.
+						this.readModelsFromCache(GlobalFileNames.openRouterModels).then((openRouterModels) => {
 							if (openRouterModels) {
-								// update model info in state (this needs to be done here since we don't want to update state while settings is open, and we may refresh models there)
+								this.postMessageToWebview({ type: "openRouterModels", openRouterModels })
+							}
+						})
+
+						// GUI relies on model info to be up-to-date to provide
+						// the most accurate pricing, so we need to fetch the
+						// latest details on launch.
+						// We do this for all users since many users switch
+						// between api providers and if they were to switch back
+						// to OpenRouter it would be showing outdated model info
+						// if we hadn't retrieved the latest at this point
+						// (see normalizeApiConfiguration > openrouter).
+						const { apiConfiguration: currentApiConfig } = await this.getState()
+						getOpenRouterModels(currentApiConfig).then(async (openRouterModels) => {
+							if (Object.keys(openRouterModels).length > 0) {
+								await fs.writeFile(
+									path.join(cacheDir, GlobalFileNames.openRouterModels),
+									JSON.stringify(openRouterModels),
+								)
+								await this.postMessageToWebview({ type: "openRouterModels", openRouterModels })
+
+								// Update model info in state (this needs to be
+								// done here since we don't want to update state
+								// while settings is open, and we may refresh
+								// models there).
 								const { apiConfiguration } = await this.getState()
+
 								if (apiConfiguration.openRouterModelId) {
 									await this.updateGlobalState(
 										"openRouterModelInfo",
@@ -653,15 +785,23 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								}
 							}
 						})
-						this.readGlamaModels().then((glamaModels) => {
+
+						this.readModelsFromCache(GlobalFileNames.glamaModels).then((glamaModels) => {
 							if (glamaModels) {
 								this.postMessageToWebview({ type: "glamaModels", glamaModels })
 							}
 						})
-						this.refreshGlamaModels().then(async (glamaModels) => {
-							if (glamaModels) {
-								// update model info in state (this needs to be done here since we don't want to update state while settings is open, and we may refresh models there)
+
+						getGlamaModels().then(async (glamaModels) => {
+							if (Object.keys(glamaModels).length > 0) {
+								await fs.writeFile(
+									path.join(cacheDir, GlobalFileNames.glamaModels),
+									JSON.stringify(glamaModels),
+								)
+								await this.postMessageToWebview({ type: "glamaModels", glamaModels })
+
 								const { apiConfiguration } = await this.getState()
+
 								if (apiConfiguration.glamaModelId) {
 									await this.updateGlobalState(
 										"glamaModelInfo",
@@ -672,14 +812,22 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							}
 						})
 
-						this.readUnboundModels().then((unboundModels) => {
+						this.readModelsFromCache(GlobalFileNames.unboundModels).then((unboundModels) => {
 							if (unboundModels) {
 								this.postMessageToWebview({ type: "unboundModels", unboundModels })
 							}
 						})
-						this.refreshUnboundModels().then(async (unboundModels) => {
-							if (unboundModels) {
+
+						getUnboundModels().then(async (unboundModels) => {
+							if (Object.keys(unboundModels).length > 0) {
+								await fs.writeFile(
+									path.join(cacheDir, GlobalFileNames.unboundModels),
+									JSON.stringify(unboundModels),
+								)
+								await this.postMessageToWebview({ type: "unboundModels", unboundModels })
+
 								const { apiConfiguration } = await this.getState()
+
 								if (apiConfiguration?.unboundModelId) {
 									await this.updateGlobalState(
 										"unboundModelInfo",
@@ -690,15 +838,22 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							}
 						})
 
-						this.readRequestyModels().then((requestyModels) => {
+						this.readModelsFromCache(GlobalFileNames.requestyModels).then((requestyModels) => {
 							if (requestyModels) {
 								this.postMessageToWebview({ type: "requestyModels", requestyModels })
 							}
 						})
-						this.refreshRequestyModels().then(async (requestyModels) => {
-							if (requestyModels) {
-								// update model info in state (this needs to be done here since we don't want to update state while settings is open, and we may refresh models there)
+
+						getRequestyModels().then(async (requestyModels) => {
+							if (Object.keys(requestyModels).length > 0) {
+								await fs.writeFile(
+									path.join(cacheDir, GlobalFileNames.requestyModels),
+									JSON.stringify(requestyModels),
+								)
+								await this.postMessageToWebview({ type: "requestyModels", requestyModels })
+
 								const { apiConfiguration } = await this.getState()
+
 								if (apiConfiguration.requestyModelId) {
 									await this.updateGlobalState(
 										"requestyModelInfo",
@@ -761,6 +916,13 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								),
 							)
 
+						// If user already opted in to telemetry, enable telemetry service
+						this.getStateToPostToWebview().then((state) => {
+							const { telemetrySetting } = state
+							const isOptedIn = telemetrySetting === "enabled"
+							telemetryService.updateTelemetryState(isOptedIn)
+						})
+
 						this.isViewLaunched = true
 						break
 					case "newTask":
@@ -807,12 +969,20 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("alwaysAllowModeSwitch", message.bool)
 						await this.postStateToWebview()
 						break
+					case "alwaysAllowSubtasks":
+						await this.updateGlobalState("alwaysAllowSubtasks", message.bool)
+						await this.postStateToWebview()
+						break
 					case "askResponse":
-						this.cline?.handleWebviewAskResponse(message.askResponse!, message.text, message.images)
+						this.getCurrentCline()?.handleWebviewAskResponse(
+							message.askResponse!,
+							message.text,
+							message.images,
+						)
 						break
 					case "clearTask":
-						// newTask will start a new task with a given task text, while clear task resets the current session and allows for a new task to be started
-						await this.clearTask()
+						// clear task resets the current session and allows for a new task to be started, if this session is a subtask - it allows the parent task to be resumed
+						await this.finishSubTask(t("common:tasks.canceled"))
 						await this.postStateToWebview()
 						break
 					case "didShowAnnouncement":
@@ -824,7 +994,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.postMessageToWebview({ type: "selectedImages", images })
 						break
 					case "exportCurrentTask":
-						const currentTaskId = this.cline?.taskId
+						const currentTaskId = this.getCurrentCline()?.taskId
 						if (currentTaskId) {
 							this.exportTaskWithId(currentTaskId)
 						}
@@ -835,47 +1005,133 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 					case "deleteTaskWithId":
 						this.deleteTaskWithId(message.text!)
 						break
+					case "deleteMultipleTasksWithIds": {
+						const ids = message.ids
+						if (Array.isArray(ids)) {
+							// Process in batches of 20 (or another reasonable number)
+							const batchSize = 20
+							const results = []
+
+							// Only log start and end of the operation
+							console.log(`Batch deletion started: ${ids.length} tasks total`)
+
+							for (let i = 0; i < ids.length; i += batchSize) {
+								const batch = ids.slice(i, i + batchSize)
+
+								const batchPromises = batch.map(async (id) => {
+									try {
+										await this.deleteTaskWithId(id)
+										return { id, success: true }
+									} catch (error) {
+										// Keep error logging for debugging purposes
+										console.log(
+											`Failed to delete task ${id}: ${error instanceof Error ? error.message : String(error)}`,
+										)
+										return { id, success: false }
+									}
+								})
+
+								// Process each batch in parallel but wait for completion before starting the next batch
+								const batchResults = await Promise.all(batchPromises)
+								results.push(...batchResults)
+
+								// Update the UI after each batch to show progress
+								await this.postStateToWebview()
+							}
+
+							// Log final results
+							const successCount = results.filter((r) => r.success).length
+							const failCount = results.length - successCount
+							console.log(
+								`Batch deletion completed: ${successCount}/${ids.length} tasks successful, ${failCount} tasks failed`,
+							)
+						}
+						break
+					}
 					case "exportTaskWithId":
 						this.exportTaskWithId(message.text!)
 						break
 					case "resetState":
 						await this.resetState()
 						break
-					case "requestOllamaModels":
-						const ollamaModels = await this.getOllamaModels(message.text)
-						this.postMessageToWebview({ type: "ollamaModels", ollamaModels })
+					case "refreshOpenRouterModels": {
+						const { apiConfiguration: configForRefresh } = await this.getState()
+						const openRouterModels = await getOpenRouterModels(configForRefresh)
+
+						if (Object.keys(openRouterModels).length > 0) {
+							const cacheDir = await this.ensureCacheDirectoryExists()
+							await fs.writeFile(
+								path.join(cacheDir, GlobalFileNames.openRouterModels),
+								JSON.stringify(openRouterModels),
+							)
+							await this.postMessageToWebview({ type: "openRouterModels", openRouterModels })
+						}
+
 						break
-					case "requestLmStudioModels":
-						const lmStudioModels = await this.getLmStudioModels(message.text)
-						this.postMessageToWebview({ type: "lmStudioModels", lmStudioModels })
-						break
-					case "requestVsCodeLmModels":
-						const vsCodeLmModels = await this.getVsCodeLmModels()
-						this.postMessageToWebview({ type: "vsCodeLmModels", vsCodeLmModels })
-						break
+					}
 					case "refreshGlamaModels":
-						await this.refreshGlamaModels()
+						const glamaModels = await getGlamaModels()
+
+						if (Object.keys(glamaModels).length > 0) {
+							const cacheDir = await this.ensureCacheDirectoryExists()
+							await fs.writeFile(
+								path.join(cacheDir, GlobalFileNames.glamaModels),
+								JSON.stringify(glamaModels),
+							)
+							await this.postMessageToWebview({ type: "glamaModels", glamaModels })
+						}
+
 						break
-					case "refreshOpenRouterModels":
-						await this.refreshOpenRouterModels()
+					case "refreshUnboundModels":
+						const unboundModels = await getUnboundModels()
+
+						if (Object.keys(unboundModels).length > 0) {
+							const cacheDir = await this.ensureCacheDirectoryExists()
+							await fs.writeFile(
+								path.join(cacheDir, GlobalFileNames.unboundModels),
+								JSON.stringify(unboundModels),
+							)
+							await this.postMessageToWebview({ type: "unboundModels", unboundModels })
+						}
+
+						break
+					case "refreshRequestyModels":
+						const requestyModels = await getRequestyModels()
+
+						if (Object.keys(requestyModels).length > 0) {
+							const cacheDir = await this.ensureCacheDirectoryExists()
+							await fs.writeFile(
+								path.join(cacheDir, GlobalFileNames.requestyModels),
+								JSON.stringify(requestyModels),
+							)
+							await this.postMessageToWebview({ type: "requestyModels", requestyModels })
+						}
+
 						break
 					case "refreshOpenAiModels":
 						if (message?.values?.baseUrl && message?.values?.apiKey) {
-							const openAiModels = await this.getOpenAiModels(
+							const openAiModels = await getOpenAiModels(
 								message?.values?.baseUrl,
 								message?.values?.apiKey,
 							)
 							this.postMessageToWebview({ type: "openAiModels", openAiModels })
 						}
+
 						break
-					case "refreshUnboundModels":
-						await this.refreshUnboundModels()
+					case "requestOllamaModels":
+						const ollamaModels = await getOllamaModels(message.text)
+						// TODO: Cache like we do for OpenRouter, etc?
+						this.postMessageToWebview({ type: "ollamaModels", ollamaModels })
 						break
-					case "refreshRequestyModels":
-						if (message?.values?.apiKey) {
-							const requestyModels = await this.refreshRequestyModels(message?.values?.apiKey)
-							this.postMessageToWebview({ type: "requestyModels", requestyModels: requestyModels })
-						}
+					case "requestLmStudioModels":
+						const lmStudioModels = await getLmStudioModels(message.text)
+						// TODO: Cache like we do for OpenRouter, etc?
+						this.postMessageToWebview({ type: "lmStudioModels", lmStudioModels })
+						break
+					case "requestVsCodeLmModels":
+						const vsCodeLmModels = await getVsCodeLmModels()
+						// TODO: Cache like we do for OpenRouter, etc?
+						this.postMessageToWebview({ type: "vsCodeLmModels", vsCodeLmModels })
 						break
 					case "openImage":
 						openImage(message.text!)
@@ -890,7 +1146,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						const result = checkoutDiffPayloadSchema.safeParse(message.payload)
 
 						if (result.success) {
-							await this.cline?.checkpointDiff(result.data)
+							await this.getCurrentCline()?.checkpointDiff(result.data)
 						}
 
 						break
@@ -901,15 +1157,15 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							await this.cancelTask()
 
 							try {
-								await pWaitFor(() => this.cline?.isInitialized === true, { timeout: 3_000 })
+								await pWaitFor(() => this.getCurrentCline()?.isInitialized === true, { timeout: 3_000 })
 							} catch (error) {
-								vscode.window.showErrorMessage("Timed out when attempting to restore checkpoint.")
+								vscode.window.showErrorMessage(t("common:errors.checkpoint_timeout"))
 							}
 
 							try {
-								await this.cline?.checkpointRestore(result.data)
+								await this.getCurrentCline()?.checkpointRestore(result.data)
 							} catch (error) {
-								vscode.window.showErrorMessage("Failed to restore checkpoint.")
+								vscode.window.showErrorMessage(t("common:errors.checkpoint_failed"))
 							}
 						}
 
@@ -936,6 +1192,22 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						const customModesFilePath = await this.customModesManager.getCustomModesFilePath()
 						if (customModesFilePath) {
 							openFile(customModesFilePath)
+						}
+						break
+					}
+					case "deleteMcpServer": {
+						if (!message.serverName) {
+							break
+						}
+
+						try {
+							this.outputChannel.appendLine(`Attempting to delete MCP server: ${message.serverName}`)
+							await this.mcpHub?.deleteServer(message.serverName)
+							this.outputChannel.appendLine(`Successfully deleted MCP server: ${message.serverName}`)
+						} catch (error) {
+							const errorMessage = error instanceof Error ? error.message : String(error)
+							this.outputChannel.appendLine(`Failed to delete MCP server: ${errorMessage}`)
+							// Error messages are already handled by McpHub.deleteServer
 						}
 						break
 					}
@@ -1000,20 +1272,148 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						setSoundVolume(soundVolume)
 						await this.postStateToWebview()
 						break
+					case "ttsEnabled":
+						const ttsEnabled = message.bool ?? true
+						await this.updateGlobalState("ttsEnabled", ttsEnabled)
+						setTtsEnabled(ttsEnabled) // Add this line to update the tts utility
+						await this.postStateToWebview()
+						break
+					case "ttsSpeed":
+						const ttsSpeed = message.value ?? 1.0
+						await this.updateGlobalState("ttsSpeed", ttsSpeed)
+						setTtsSpeed(ttsSpeed)
+						await this.postStateToWebview()
+						break
+					case "playTts":
+						if (message.text) {
+							playTts(message.text, {
+								onStart: () => this.postMessageToWebview({ type: "ttsStart", text: message.text }),
+								onStop: () => this.postMessageToWebview({ type: "ttsStop", text: message.text }),
+							})
+						}
+						break
+					case "stopTts":
+						stopTts()
+						break
 					case "diffEnabled":
 						const diffEnabled = message.bool ?? true
 						await this.updateGlobalState("diffEnabled", diffEnabled)
 						await this.postStateToWebview()
 						break
-					case "checkpointsEnabled":
-						const checkpointsEnabled = message.bool ?? false
-						await this.updateGlobalState("checkpointsEnabled", checkpointsEnabled)
+					case "enableCheckpoints":
+						const enableCheckpoints = message.bool ?? true
+						await this.updateGlobalState("enableCheckpoints", enableCheckpoints)
+						await this.postStateToWebview()
+						break
+					case "checkpointStorage":
+						console.log(`[ClineProvider] checkpointStorage: ${message.text}`)
+						const checkpointStorage = message.text ?? "task"
+						await this.updateGlobalState("checkpointStorage", checkpointStorage)
 						await this.postStateToWebview()
 						break
 					case "browserViewportSize":
 						const browserViewportSize = message.text ?? "900x600"
 						await this.updateGlobalState("browserViewportSize", browserViewportSize)
 						await this.postStateToWebview()
+						break
+					case "remoteBrowserHost":
+						await this.updateGlobalState("remoteBrowserHost", message.text)
+						await this.postStateToWebview()
+						break
+					case "remoteBrowserEnabled":
+						// Store the preference in global state
+						// remoteBrowserEnabled now means "enable remote browser connection"
+						await this.updateGlobalState("remoteBrowserEnabled", message.bool ?? false)
+						// If disabling remote browser connection, clear the remoteBrowserHost
+						if (!message.bool) {
+							await this.updateGlobalState("remoteBrowserHost", undefined)
+						}
+						await this.postStateToWebview()
+						break
+					case "testBrowserConnection":
+						try {
+							const browserSession = new BrowserSession(this.context)
+							// If no text is provided, try auto-discovery
+							if (!message.text) {
+								try {
+									const discoveredHost = await discoverChromeInstances()
+									if (discoveredHost) {
+										// Test the connection to the discovered host
+										const result = await browserSession.testConnection(discoveredHost)
+										// Send the result back to the webview
+										await this.postMessageToWebview({
+											type: "browserConnectionResult",
+											success: result.success,
+											text: `Auto-discovered and tested connection to Chrome at ${discoveredHost}: ${result.message}`,
+											values: { endpoint: result.endpoint },
+										})
+									} else {
+										await this.postMessageToWebview({
+											type: "browserConnectionResult",
+											success: false,
+											text: "No Chrome instances found on the network. Make sure Chrome is running with remote debugging enabled (--remote-debugging-port=9222).",
+										})
+									}
+								} catch (error) {
+									await this.postMessageToWebview({
+										type: "browserConnectionResult",
+										success: false,
+										text: `Error during auto-discovery: ${error instanceof Error ? error.message : String(error)}`,
+									})
+								}
+							} else {
+								// Test the provided URL
+								const result = await browserSession.testConnection(message.text)
+
+								// Send the result back to the webview
+								await this.postMessageToWebview({
+									type: "browserConnectionResult",
+									success: result.success,
+									text: result.message,
+									values: { endpoint: result.endpoint },
+								})
+							}
+						} catch (error) {
+							await this.postMessageToWebview({
+								type: "browserConnectionResult",
+								success: false,
+								text: `Error testing connection: ${error instanceof Error ? error.message : String(error)}`,
+							})
+						}
+						break
+					case "discoverBrowser":
+						try {
+							const discoveredHost = await discoverChromeInstances()
+
+							if (discoveredHost) {
+								// Don't update the remoteBrowserHost state when auto-discovering
+								// This way we don't override the user's preference
+
+								// Test the connection to get the endpoint
+								const browserSession = new BrowserSession(this.context)
+								const result = await browserSession.testConnection(discoveredHost)
+
+								// Send the result back to the webview
+								await this.postMessageToWebview({
+									type: "browserConnectionResult",
+									success: true,
+									text: `Successfully discovered and connected to Chrome at ${discoveredHost}`,
+									values: { endpoint: result.endpoint },
+								})
+							} else {
+								await this.postMessageToWebview({
+									type: "browserConnectionResult",
+									success: false,
+									text: "No Chrome instances found on the network. Make sure Chrome is running with remote debugging enabled (--remote-debugging-port=9222).",
+								})
+							}
+						} catch (error) {
+							await this.postMessageToWebview({
+								type: "browserConnectionResult",
+								success: false,
+								text: `Error discovering browser: ${error instanceof Error ? error.message : String(error)}`,
+							})
+						}
 						break
 					case "fuzzyMatchThreshold":
 						await this.updateGlobalState("fuzzyMatchThreshold", message.value)
@@ -1031,10 +1431,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("rateLimitSeconds", message.value ?? 0)
 						await this.postStateToWebview()
 						break
-					case "preferredLanguage":
-						await this.updateGlobalState("preferredLanguage", message.text)
-						await this.postStateToWebview()
-						break
 					case "writeDelayMs":
 						await this.updateGlobalState("writeDelayMs", message.value)
 						await this.postStateToWebview()
@@ -1042,6 +1438,13 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 					case "terminalOutputLineLimit":
 						await this.updateGlobalState("terminalOutputLineLimit", message.value)
 						await this.postStateToWebview()
+						break
+					case "terminalShellIntegrationTimeout":
+						await this.updateGlobalState("terminalShellIntegrationTimeout", message.value)
+						await this.postStateToWebview()
+						if (message.value !== undefined) {
+							Terminal.setShellIntegrationTimeout(message.value)
+						}
 						break
 					case "mode":
 						await this.handleModeSwitch(message.text as Mode)
@@ -1065,7 +1468,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							this.outputChannel.appendLine(
 								`Error update support prompt: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 							)
-							vscode.window.showErrorMessage("Failed to update support prompt")
+							vscode.window.showErrorMessage(t("common:errors.update_support_prompt"))
 						}
 						break
 					case "resetSupportPrompt":
@@ -1089,7 +1492,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							this.outputChannel.appendLine(
 								`Error reset support prompt: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 							)
-							vscode.window.showErrorMessage("Failed to reset support prompt")
+							vscode.window.showErrorMessage(t("common:errors.reset_support_prompt"))
 						}
 						break
 					case "updatePrompt":
@@ -1120,49 +1523,51 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						break
 					case "deleteMessage": {
 						const answer = await vscode.window.showInformationMessage(
-							"What would you like to delete?",
+							t("common:confirmation.delete_message"),
 							{ modal: true },
-							"Just this message",
-							"This and all subsequent messages",
+							t("common:confirmation.just_this_message"),
+							t("common:confirmation.this_and_subsequent"),
 						)
 						if (
-							(answer === "Just this message" || answer === "This and all subsequent messages") &&
-							this.cline &&
+							(answer === t("common:confirmation.just_this_message") ||
+								answer === t("common:confirmation.this_and_subsequent")) &&
+							this.getCurrentCline() &&
 							typeof message.value === "number" &&
 							message.value
 						) {
 							const timeCutoff = message.value - 1000 // 1 second buffer before the message to delete
-							const messageIndex = this.cline.clineMessages.findIndex(
+							const messageIndex = this.getCurrentCline()!.clineMessages.findIndex(
 								(msg) => msg.ts && msg.ts >= timeCutoff,
 							)
-							const apiConversationHistoryIndex = this.cline.apiConversationHistory.findIndex(
-								(msg) => msg.ts && msg.ts >= timeCutoff,
-							)
+							const apiConversationHistoryIndex =
+								this.getCurrentCline()?.apiConversationHistory.findIndex(
+									(msg) => msg.ts && msg.ts >= timeCutoff,
+								)
 
 							if (messageIndex !== -1) {
-								const { historyItem } = await this.getTaskWithId(this.cline.taskId)
+								const { historyItem } = await this.getTaskWithId(this.getCurrentCline()!.taskId)
 
-								if (answer === "Just this message") {
+								if (answer === t("common:confirmation.just_this_message")) {
 									// Find the next user message first
-									const nextUserMessage = this.cline.clineMessages
-										.slice(messageIndex + 1)
+									const nextUserMessage = this.getCurrentCline()!
+										.clineMessages.slice(messageIndex + 1)
 										.find((msg) => msg.type === "say" && msg.say === "user_feedback")
 
 									// Handle UI messages
 									if (nextUserMessage) {
 										// Find absolute index of next user message
-										const nextUserMessageIndex = this.cline.clineMessages.findIndex(
+										const nextUserMessageIndex = this.getCurrentCline()!.clineMessages.findIndex(
 											(msg) => msg === nextUserMessage,
 										)
 										// Keep messages before current message and after next user message
-										await this.cline.overwriteClineMessages([
-											...this.cline.clineMessages.slice(0, messageIndex),
-											...this.cline.clineMessages.slice(nextUserMessageIndex),
+										await this.getCurrentCline()!.overwriteClineMessages([
+											...this.getCurrentCline()!.clineMessages.slice(0, messageIndex),
+											...this.getCurrentCline()!.clineMessages.slice(nextUserMessageIndex),
 										])
 									} else {
 										// If no next user message, keep only messages before current message
-										await this.cline.overwriteClineMessages(
-											this.cline.clineMessages.slice(0, messageIndex),
+										await this.getCurrentCline()!.overwriteClineMessages(
+											this.getCurrentCline()!.clineMessages.slice(0, messageIndex),
 										)
 									}
 
@@ -1170,30 +1575,36 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 									if (apiConversationHistoryIndex !== -1) {
 										if (nextUserMessage && nextUserMessage.ts) {
 											// Keep messages before current API message and after next user message
-											await this.cline.overwriteApiConversationHistory([
-												...this.cline.apiConversationHistory.slice(
+											await this.getCurrentCline()!.overwriteApiConversationHistory([
+												...this.getCurrentCline()!.apiConversationHistory.slice(
 													0,
 													apiConversationHistoryIndex,
 												),
-												...this.cline.apiConversationHistory.filter(
+												...this.getCurrentCline()!.apiConversationHistory.filter(
 													(msg) => msg.ts && msg.ts >= nextUserMessage.ts,
 												),
 											])
 										} else {
 											// If no next user message, keep only messages before current API message
-											await this.cline.overwriteApiConversationHistory(
-												this.cline.apiConversationHistory.slice(0, apiConversationHistoryIndex),
+											await this.getCurrentCline()!.overwriteApiConversationHistory(
+												this.getCurrentCline()!.apiConversationHistory.slice(
+													0,
+													apiConversationHistoryIndex,
+												),
 											)
 										}
 									}
-								} else if (answer === "This and all subsequent messages") {
+								} else if (answer === t("common:confirmation.this_and_subsequent")) {
 									// Delete this message and all that follow
-									await this.cline.overwriteClineMessages(
-										this.cline.clineMessages.slice(0, messageIndex),
+									await this.getCurrentCline()!.overwriteClineMessages(
+										this.getCurrentCline()!.clineMessages.slice(0, messageIndex),
 									)
 									if (apiConversationHistoryIndex !== -1) {
-										await this.cline.overwriteApiConversationHistory(
-											this.cline.apiConversationHistory.slice(0, apiConversationHistoryIndex),
+										await this.getCurrentCline()!.overwriteApiConversationHistory(
+											this.getCurrentCline()!.apiConversationHistory.slice(
+												0,
+												apiConversationHistoryIndex,
+											),
 										)
 									}
 								}
@@ -1207,8 +1618,35 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("screenshotQuality", message.value)
 						await this.postStateToWebview()
 						break
+					case "maxOpenTabsContext":
+						const tabCount = Math.min(Math.max(0, message.value ?? 20), 500)
+						await this.updateGlobalState("maxOpenTabsContext", tabCount)
+						await this.postStateToWebview()
+						break
+					case "maxWorkspaceFiles":
+						const fileCount = Math.min(Math.max(0, message.value ?? 200), 500)
+						await this.updateGlobalState("maxWorkspaceFiles", fileCount)
+						await this.postStateToWebview()
+						break
+					case "browserToolEnabled":
+						await this.updateGlobalState("browserToolEnabled", message.bool ?? true)
+						await this.postStateToWebview()
+						break
+					case "language":
+						changeLanguage(message.text ?? "en")
+						await this.updateGlobalState("language", message.text)
+						await this.postStateToWebview()
+						break
+					case "showRooIgnoredFiles":
+						await this.updateGlobalState("showRooIgnoredFiles", message.bool ?? true)
+						await this.postStateToWebview()
+						break
 					case "enhancementApiConfigId":
 						await this.updateGlobalState("enhancementApiConfigId", message.text)
+						await this.postStateToWebview()
+						break
+					case "enableCustomModeCreation":
+						await this.updateGlobalState("enableCustomModeCreation", message.bool ?? true)
 						await this.postStateToWebview()
 						break
 					case "autoApprovalEnabled":
@@ -1228,7 +1666,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								// Try to get enhancement config first, fall back to current config
 								let configToUse: ApiConfiguration = apiConfiguration
 								if (enhancementApiConfigId) {
-									const config = listApiConfigMeta?.find((c) => c.id === enhancementApiConfigId)
+									const config = listApiConfigMeta?.find(
+										(c: ApiConfigMeta) => c.id === enhancementApiConfigId,
+									)
 									if (config?.name) {
 										const loadedConfig = await this.configManager.loadConfig(config.name)
 										if (loadedConfig.apiProvider) {
@@ -1256,7 +1696,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								this.outputChannel.appendLine(
 									`Error enhancing prompt: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 								)
-								vscode.window.showErrorMessage("Failed to enhance prompt")
+								vscode.window.showErrorMessage(t("common:errors.enhance_prompt"))
 								await this.postMessageToWebview({
 									type: "enhancedPrompt",
 								})
@@ -1265,47 +1705,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						break
 					case "getSystemPrompt":
 						try {
-							const {
-								apiConfiguration,
-								customModePrompts,
-								customInstructions,
-								preferredLanguage,
-								browserViewportSize,
-								diffEnabled,
-								mcpEnabled,
-								fuzzyMatchThreshold,
-								experiments,
-								enableMcpServerCreation,
-							} = await this.getState()
-
-							// Create diffStrategy based on current model and settings
-							const diffStrategy = getDiffStrategy(
-								apiConfiguration.apiModelId || apiConfiguration.openRouterModelId || "",
-								fuzzyMatchThreshold,
-								Experiments.isEnabled(experiments, EXPERIMENT_IDS.DIFF_STRATEGY),
-							)
-							const cwd =
-								vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) || ""
-
-							const mode = message.mode ?? defaultModeSlug
-							const customModes = await this.customModesManager.getCustomModes()
-
-							const systemPrompt = await SYSTEM_PROMPT(
-								this.context,
-								cwd,
-								apiConfiguration.openRouterModelInfo?.supportsComputerUse ?? false,
-								mcpEnabled ? this.mcpHub : undefined,
-								diffStrategy,
-								browserViewportSize ?? "900x600",
-								mode,
-								customModePrompts,
-								customModes,
-								customInstructions,
-								preferredLanguage,
-								diffEnabled,
-								experiments,
-								enableMcpServerCreation,
-							)
+							const systemPrompt = await generateSystemPrompt(message)
 
 							await this.postMessageToWebview({
 								type: "systemPrompt",
@@ -1316,11 +1716,24 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							this.outputChannel.appendLine(
 								`Error getting system prompt:  ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 							)
-							vscode.window.showErrorMessage("Failed to get system prompt")
+							vscode.window.showErrorMessage(t("common:errors.get_system_prompt"))
+						}
+						break
+					case "copySystemPrompt":
+						try {
+							const systemPrompt = await generateSystemPrompt(message)
+
+							await vscode.env.clipboard.writeText(systemPrompt)
+							await vscode.window.showInformationMessage(t("common:info.clipboard_copy"))
+						} catch (error) {
+							this.outputChannel.appendLine(
+								`Error getting system prompt:  ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+							)
+							vscode.window.showErrorMessage(t("common:errors.get_system_prompt"))
 						}
 						break
 					case "searchCommits": {
-						const cwd = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0)
+						const cwd = this.cwd
 						if (cwd) {
 							try {
 								const commits = await searchCommits(message.query || "", cwd)
@@ -1332,11 +1745,25 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								this.outputChannel.appendLine(
 									`Error searching commits: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 								)
-								vscode.window.showErrorMessage("Failed to search commits")
+								vscode.window.showErrorMessage(t("common:errors.search_commits"))
 							}
 						}
 						break
 					}
+					case "saveApiConfiguration":
+						if (message.text && message.apiConfiguration) {
+							try {
+								await this.configManager.saveConfig(message.text, message.apiConfiguration)
+								const listApiConfig = await this.configManager.listConfig()
+								await this.updateGlobalState("listApiConfigMeta", listApiConfig)
+							} catch (error) {
+								this.outputChannel.appendLine(
+									`Error save api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+								)
+								vscode.window.showErrorMessage(t("common:errors.save_api_config"))
+							}
+						}
+						break
 					case "upsertApiConfiguration":
 						if (message.text && message.apiConfiguration) {
 							try {
@@ -1354,7 +1781,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								this.outputChannel.appendLine(
 									`Error create new api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 								)
-								vscode.window.showErrorMessage("Failed to create api configuration")
+								vscode.window.showErrorMessage(t("common:errors.create_api_config"))
 							}
 						}
 						break
@@ -1381,9 +1808,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								await this.postStateToWebview()
 							} catch (error) {
 								this.outputChannel.appendLine(
-									`Error create new api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+									`Error rename api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 								)
-								vscode.window.showErrorMessage("Failed to create api configuration")
+								vscode.window.showErrorMessage(t("common:errors.rename_api_config"))
 							}
 						}
 						break
@@ -1404,19 +1831,19 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								this.outputChannel.appendLine(
 									`Error load api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 								)
-								vscode.window.showErrorMessage("Failed to load api configuration")
+								vscode.window.showErrorMessage(t("common:errors.load_api_config"))
 							}
 						}
 						break
 					case "deleteApiConfiguration":
 						if (message.text) {
 							const answer = await vscode.window.showInformationMessage(
-								"Are you sure you want to delete this configuration profile?",
+								t("common:confirmation.delete_config_profile"),
 								{ modal: true },
-								"Yes",
+								t("common:answers.yes"),
 							)
 
-							if (answer !== "Yes") {
+							if (answer !== t("common:answers.yes")) {
 								break
 							}
 
@@ -1442,7 +1869,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								this.outputChannel.appendLine(
 									`Error delete api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 								)
-								vscode.window.showErrorMessage("Failed to delete api configuration")
+								vscode.window.showErrorMessage(t("common:errors.delete_api_config"))
 							}
 						}
 						break
@@ -1455,7 +1882,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							this.outputChannel.appendLine(
 								`Error get list api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 							)
-							vscode.window.showErrorMessage("Failed to get list api configuration")
+							vscode.window.showErrorMessage(t("common:errors.list_api_config"))
 						}
 						break
 					case "updateExperimental": {
@@ -1471,9 +1898,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("experiments", updatedExperiments)
 
 						// Update diffStrategy in current Cline instance if it exists
-						if (message.values[EXPERIMENT_IDS.DIFF_STRATEGY] !== undefined && this.cline) {
-							await this.cline.updateDiffStrategy(
+						if (message.values[EXPERIMENT_IDS.DIFF_STRATEGY] !== undefined && this.getCurrentCline()) {
+							await this.getCurrentCline()!.updateDiffStrategy(
 								Experiments.isEnabled(updatedExperiments, EXPERIMENT_IDS.DIFF_STRATEGY),
+								Experiments.isEnabled(updatedExperiments, EXPERIMENT_IDS.MULTI_SEARCH_AND_REPLACE),
 							)
 						}
 
@@ -1488,7 +1916,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								this.outputChannel.appendLine(
 									`Failed to update timeout for ${message.serverName}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 								)
-								vscode.window.showErrorMessage("Failed to update server timeout")
+								vscode.window.showErrorMessage(t("common:errors.update_server_timeout"))
 							}
 						}
 						break
@@ -1505,12 +1933,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 					case "deleteCustomMode":
 						if (message.slug) {
 							const answer = await vscode.window.showInformationMessage(
-								"Are you sure you want to delete this custom mode?",
+								t("common:confirmation.delete_custom_mode"),
 								{ modal: true },
-								"Yes",
+								t("common:answers.yes"),
 							)
 
-							if (answer !== "Yes") {
+							if (answer !== t("common:answers.yes")) {
 								break
 							}
 
@@ -1519,11 +1947,91 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							await this.updateGlobalState("mode", defaultModeSlug)
 							await this.postStateToWebview()
 						}
+						break
+					case "humanRelayResponse":
+						if (message.requestId && message.text) {
+							vscode.commands.executeCommand("roo-cline.handleHumanRelayResponse", {
+								requestId: message.requestId,
+								text: message.text,
+								cancelled: false,
+							})
+						}
+						break
+
+					case "humanRelayCancel":
+						if (message.requestId) {
+							vscode.commands.executeCommand("roo-cline.handleHumanRelayResponse", {
+								requestId: message.requestId,
+								cancelled: true,
+							})
+						}
+						break
+
+					case "telemetrySetting": {
+						const telemetrySetting = message.text as TelemetrySetting
+						await this.updateGlobalState("telemetrySetting", telemetrySetting)
+						const isOptedIn = telemetrySetting === "enabled"
+						telemetryService.updateTelemetryState(isOptedIn)
+						await this.postStateToWebview()
+						break
+					}
 				}
 			},
 			null,
 			this.disposables,
 		)
+
+		const generateSystemPrompt = async (message: WebviewMessage) => {
+			const {
+				apiConfiguration,
+				customModePrompts,
+				customInstructions,
+				browserViewportSize,
+				diffEnabled,
+				mcpEnabled,
+				fuzzyMatchThreshold,
+				experiments,
+				enableMcpServerCreation,
+				browserToolEnabled,
+				language,
+			} = await this.getState()
+
+			// Create diffStrategy based on current model and settings
+			const diffStrategy = getDiffStrategy(
+				apiConfiguration.apiModelId || apiConfiguration.openRouterModelId || "",
+				fuzzyMatchThreshold,
+				Experiments.isEnabled(experiments, EXPERIMENT_IDS.DIFF_STRATEGY),
+			)
+			const cwd = this.cwd
+
+			const mode = message.mode ?? defaultModeSlug
+			const customModes = await this.customModesManager.getCustomModes()
+
+			const rooIgnoreInstructions = this.getCurrentCline()?.rooIgnoreController?.getInstructions()
+
+			// Determine if browser tools can be used based on model support and user settings
+			const modelSupportsComputerUse = this.getCurrentCline()?.api.getModel().info.supportsComputerUse ?? false
+			const canUseBrowserTool = modelSupportsComputerUse && (browserToolEnabled ?? true)
+
+			const systemPrompt = await SYSTEM_PROMPT(
+				this.context,
+				cwd,
+				canUseBrowserTool,
+				mcpEnabled ? this.mcpHub : undefined,
+				diffStrategy,
+				browserViewportSize ?? "900x600",
+				mode,
+				customModePrompts,
+				customModes,
+				customInstructions,
+				diffEnabled,
+				experiments,
+				enableMcpServerCreation,
+				language,
+				rooIgnoreInstructions,
+			)
+			return systemPrompt
+		}
 	}
 
 	/**
@@ -1531,6 +2039,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	 * @param newMode The mode to switch to
 	 */
 	public async handleModeSwitch(newMode: Mode) {
+		// Capture mode switch telemetry event
+		const currentTaskId = this.getCurrentCline()?.taskId
+		if (currentTaskId) {
+			telemetryService.captureModeSwitch(currentTaskId, newMode)
+		}
+
 		await this.updateGlobalState("mode", newMode)
 
 		// Load the saved API config for the new mode if it exists
@@ -1565,334 +2079,127 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	private async updateApiConfiguration(apiConfiguration: ApiConfiguration) {
-		// Update mode's default config
+		// Update mode's default config.
 		const { mode } = await this.getState()
+
 		if (mode) {
 			const currentApiConfigName = await this.getGlobalState("currentApiConfigName")
 			const listApiConfig = await this.configManager.listConfig()
 			const config = listApiConfig?.find((c) => c.name === currentApiConfigName)
+
 			if (config?.id) {
 				await this.configManager.setModeConfig(mode, config.id)
 			}
 		}
 
-		const {
-			apiProvider,
-			apiModelId,
-			apiKey,
-			glamaModelId,
-			glamaModelInfo,
-			glamaApiKey,
-			openRouterApiKey,
-			awsAccessKey,
-			awsSecretKey,
-			awsSessionToken,
-			awsRegion,
-			awsUseCrossRegionInference,
-			awsProfile,
-			awsUseProfile,
-			vertexProjectId,
-			vertexRegion,
-			openAiBaseUrl,
-			openAiApiKey,
-			openAiModelId,
-			openAiCustomModelInfo,
-			openAiUseAzure,
-			ollamaModelId,
-			ollamaBaseUrl,
-			lmStudioModelId,
-			lmStudioBaseUrl,
-			anthropicBaseUrl,
-			geminiApiKey,
-			openAiNativeApiKey,
-			deepSeekApiKey,
-			azureApiVersion,
-			openAiStreamingEnabled,
-			openRouterModelId,
-			openRouterBaseUrl,
-			openRouterModelInfo,
-			openRouterUseMiddleOutTransform,
-			vsCodeLmModelSelector,
-			mistralApiKey,
-			unboundApiKey,
-			unboundModelId,
-			unboundModelInfo,
-			requestyApiKey,
-			requestyModelId,
-			requestyModelInfo,
-			modelTemperature,
-		} = apiConfiguration
-		await this.updateGlobalState("apiProvider", apiProvider)
-		await this.updateGlobalState("apiModelId", apiModelId)
-		await this.storeSecret("apiKey", apiKey)
-		await this.updateGlobalState("glamaModelId", glamaModelId)
-		await this.updateGlobalState("glamaModelInfo", glamaModelInfo)
-		await this.storeSecret("glamaApiKey", glamaApiKey)
-		await this.storeSecret("openRouterApiKey", openRouterApiKey)
-		await this.storeSecret("awsAccessKey", awsAccessKey)
-		await this.storeSecret("awsSecretKey", awsSecretKey)
-		await this.storeSecret("awsSessionToken", awsSessionToken)
-		await this.updateGlobalState("awsRegion", awsRegion)
-		await this.updateGlobalState("awsUseCrossRegionInference", awsUseCrossRegionInference)
-		await this.updateGlobalState("awsProfile", awsProfile)
-		await this.updateGlobalState("awsUseProfile", awsUseProfile)
-		await this.updateGlobalState("vertexProjectId", vertexProjectId)
-		await this.updateGlobalState("vertexRegion", vertexRegion)
-		await this.updateGlobalState("openAiBaseUrl", openAiBaseUrl)
-		await this.storeSecret("openAiApiKey", openAiApiKey)
-		await this.updateGlobalState("openAiModelId", openAiModelId)
-		await this.updateGlobalState("openAiCustomModelInfo", openAiCustomModelInfo)
-		await this.updateGlobalState("openAiUseAzure", openAiUseAzure)
-		await this.updateGlobalState("ollamaModelId", ollamaModelId)
-		await this.updateGlobalState("ollamaBaseUrl", ollamaBaseUrl)
-		await this.updateGlobalState("lmStudioModelId", lmStudioModelId)
-		await this.updateGlobalState("lmStudioBaseUrl", lmStudioBaseUrl)
-		await this.updateGlobalState("anthropicBaseUrl", anthropicBaseUrl)
-		await this.storeSecret("geminiApiKey", geminiApiKey)
-		await this.storeSecret("openAiNativeApiKey", openAiNativeApiKey)
-		await this.storeSecret("deepSeekApiKey", deepSeekApiKey)
-		await this.updateGlobalState("azureApiVersion", azureApiVersion)
-		await this.updateGlobalState("openAiStreamingEnabled", openAiStreamingEnabled)
-		await this.updateGlobalState("openRouterModelId", openRouterModelId)
-		await this.updateGlobalState("openRouterModelInfo", openRouterModelInfo)
-		await this.updateGlobalState("openRouterBaseUrl", openRouterBaseUrl)
-		await this.updateGlobalState("openRouterUseMiddleOutTransform", openRouterUseMiddleOutTransform)
-		await this.updateGlobalState("vsCodeLmModelSelector", vsCodeLmModelSelector)
-		await this.storeSecret("mistralApiKey", mistralApiKey)
-		await this.storeSecret("unboundApiKey", unboundApiKey)
-		await this.updateGlobalState("unboundModelId", unboundModelId)
-		await this.updateGlobalState("unboundModelInfo", unboundModelInfo)
-		await this.storeSecret("requestyApiKey", requestyApiKey)
-		await this.updateGlobalState("requestyModelId", requestyModelId)
-		await this.updateGlobalState("requestyModelInfo", requestyModelInfo)
-		await this.updateGlobalState("modelTemperature", modelTemperature)
-		if (this.cline) {
-			this.cline.api = buildApiHandler(apiConfiguration)
+		await this.contextProxy.setApiConfiguration(apiConfiguration)
+
+		if (this.getCurrentCline()) {
+			this.getCurrentCline()!.api = buildApiHandler(apiConfiguration)
 		}
 	}
 
 	async cancelTask() {
-		if (this.cline) {
-			const { historyItem } = await this.getTaskWithId(this.cline.taskId)
-			this.cline.abortTask()
+		const cline = this.getCurrentCline()
 
-			await pWaitFor(
-				() =>
-					this.cline === undefined ||
-					this.cline.isStreaming === false ||
-					this.cline.didFinishAbortingStream ||
-					// If only the first chunk is processed, then there's no
-					// need to wait for graceful abort (closes edits, browser,
-					// etc).
-					this.cline.isWaitingForFirstChunk,
-				{
-					timeout: 3_000,
-				},
-			).catch(() => {
-				console.error("Failed to abort task")
-			})
-
-			if (this.cline) {
-				// 'abandoned' will prevent this Cline instance from affecting
-				// future Cline instances. This may happen if its hanging on a
-				// streaming request.
-				this.cline.abandoned = true
-			}
-
-			// Clears task again, so we need to abortTask manually above.
-			await this.initClineWithHistoryItem(historyItem)
+		if (!cline) {
+			return
 		}
+
+		console.log(`[subtasks] cancelling task ${cline.taskId}.${cline.instanceId}`)
+
+		const { historyItem } = await this.getTaskWithId(cline.taskId)
+		// Preserve parent and root task information for history item.
+		const rootTask = cline.rootTask
+		const parentTask = cline.parentTask
+
+		cline.abortTask()
+
+		await pWaitFor(
+			() =>
+				this.getCurrentCline()! === undefined ||
+				this.getCurrentCline()!.isStreaming === false ||
+				this.getCurrentCline()!.didFinishAbortingStream ||
+				// If only the first chunk is processed, then there's no
+				// need to wait for graceful abort (closes edits, browser,
+				// etc).
+				this.getCurrentCline()!.isWaitingForFirstChunk,
+			{
+				timeout: 3_000,
+			},
+		).catch(() => {
+			console.error("Failed to abort task")
+		})
+
+		if (this.getCurrentCline()) {
+			// 'abandoned' will prevent this Cline instance from affecting
+			// future Cline instances. This may happen if its hanging on a
+			// streaming request.
+			this.getCurrentCline()!.abandoned = true
+		}
+
+		// Clears task again, so we need to abortTask manually above.
+		await this.initClineWithHistoryItem({ ...historyItem, rootTask, parentTask })
 	}
 
 	async updateCustomInstructions(instructions?: string) {
-		// User may be clearing the field
+		// User may be clearing the field.
 		await this.updateGlobalState("customInstructions", instructions || undefined)
-		if (this.cline) {
-			this.cline.customInstructions = instructions || undefined
+
+		if (this.getCurrentCline()) {
+			this.getCurrentCline()!.customInstructions = instructions || undefined
 		}
+
 		await this.postStateToWebview()
 	}
 
 	// MCP
 
 	async ensureMcpServersDirectoryExists(): Promise<string> {
-		const mcpServersDir = path.join(os.homedir(), "Documents", "Cline", "MCP")
+		// Get platform-specific application data directory
+		let mcpServersDir: string
+		if (process.platform === "win32") {
+			// Windows: %APPDATA%\Roo-Code\MCP
+			mcpServersDir = path.join(os.homedir(), "AppData", "Roaming", "Roo-Code", "MCP")
+		} else if (process.platform === "darwin") {
+			// macOS: ~/Documents/Cline/MCP
+			mcpServersDir = path.join(os.homedir(), "Documents", "Cline", "MCP")
+		} else {
+			// Linux: ~/.local/share/Cline/MCP
+			mcpServersDir = path.join(os.homedir(), ".local", "share", "Roo-Code", "MCP")
+		}
+
 		try {
 			await fs.mkdir(mcpServersDir, { recursive: true })
 		} catch (error) {
-			return "~/Documents/Cline/MCP" // in case creating a directory in documents fails for whatever reason (e.g. permissions) - this is fine since this path is only ever used in the system prompt
+			// Fallback to a relative path if directory creation fails
+			return path.join(os.homedir(), ".roo-code", "mcp")
 		}
 		return mcpServersDir
 	}
 
 	async ensureSettingsDirectoryExists(): Promise<string> {
-		const settingsDir = path.join(this.context.globalStorageUri.fsPath, "settings")
+		const settingsDir = path.join(this.contextProxy.globalStorageUri.fsPath, "settings")
 		await fs.mkdir(settingsDir, { recursive: true })
 		return settingsDir
 	}
 
-	// Ollama
-
-	async getOllamaModels(baseUrl?: string) {
-		try {
-			if (!baseUrl) {
-				baseUrl = "http://localhost:11434"
-			}
-			if (!URL.canParse(baseUrl)) {
-				return []
-			}
-			const response = await axios.get(`${baseUrl}/api/tags`)
-			const modelsArray = response.data?.models?.map((model: any) => model.name) || []
-			const models = [...new Set<string>(modelsArray)]
-			return models
-		} catch (error) {
-			return []
-		}
+	private async ensureCacheDirectoryExists() {
+		const cacheDir = path.join(this.contextProxy.globalStorageUri.fsPath, "cache")
+		await fs.mkdir(cacheDir, { recursive: true })
+		return cacheDir
 	}
 
-	// LM Studio
+	private async readModelsFromCache(filename: string): Promise<Record<string, ModelInfo> | undefined> {
+		const filePath = path.join(await this.ensureCacheDirectoryExists(), filename)
+		const fileExists = await fileExistsAtPath(filePath)
 
-	async getLmStudioModels(baseUrl?: string) {
-		try {
-			if (!baseUrl) {
-				baseUrl = "http://localhost:1234"
-			}
-			if (!URL.canParse(baseUrl)) {
-				return []
-			}
-			const response = await axios.get(`${baseUrl}/v1/models`)
-			const modelsArray = response.data?.data?.map((model: any) => model.id) || []
-			const models = [...new Set<string>(modelsArray)]
-			return models
-		} catch (error) {
-			return []
-		}
-	}
-
-	// VSCode LM API
-	private async getVsCodeLmModels() {
-		try {
-			const models = await vscode.lm.selectChatModels({})
-			return models || []
-		} catch (error) {
-			this.outputChannel.appendLine(
-				`Error fetching VS Code LM models: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
-			)
-			return []
-		}
-	}
-
-	// OpenAi
-
-	async getOpenAiModels(baseUrl?: string, apiKey?: string) {
-		try {
-			if (!baseUrl) {
-				return []
-			}
-
-			if (!URL.canParse(baseUrl)) {
-				return []
-			}
-
-			const config: Record<string, any> = {}
-			if (apiKey) {
-				config["headers"] = { Authorization: `Bearer ${apiKey}` }
-			}
-
-			const response = await axios.get(`${baseUrl}/models`, config)
-			const modelsArray = response.data?.data?.map((model: any) => model.id) || []
-			const models = [...new Set<string>(modelsArray)]
-			return models
-		} catch (error) {
-			return []
-		}
-	}
-
-	// Requesty
-	async readRequestyModels(): Promise<Record<string, ModelInfo> | undefined> {
-		const requestyModelsFilePath = path.join(
-			await this.ensureCacheDirectoryExists(),
-			GlobalFileNames.requestyModels,
-		)
-		const fileExists = await fileExistsAtPath(requestyModelsFilePath)
 		if (fileExists) {
-			const fileContents = await fs.readFile(requestyModelsFilePath, "utf8")
+			const fileContents = await fs.readFile(filePath, "utf8")
 			return JSON.parse(fileContents)
 		}
+
 		return undefined
-	}
-
-	async refreshRequestyModels(apiKey?: string) {
-		const requestyModelsFilePath = path.join(
-			await this.ensureCacheDirectoryExists(),
-			GlobalFileNames.requestyModels,
-		)
-
-		const models: Record<string, ModelInfo> = {}
-		try {
-			const config: Record<string, any> = {}
-			if (!apiKey) {
-				apiKey = (await this.getSecret("requestyApiKey")) as string
-			}
-			if (apiKey) {
-				config["headers"] = { Authorization: `Bearer ${apiKey}` }
-			}
-
-			const response = await axios.get("https://router.requesty.ai/v1/models", config)
-			/*
-				{
-					"id": "anthropic/claude-3-5-sonnet-20240620",
-					"object": "model",
-					"created": 1738243330,
-					"owned_by": "system",
-					"input_price": 0.000003,
-					"caching_price": 0.00000375,
-					"cached_price": 3E-7,
-					"output_price": 0.000015,
-					"max_output_tokens": 8192,
-					"context_window": 200000,
-					"supports_caching": true,
-					"description": "Anthropic's most intelligent model. Highest level of intelligence and capability"
-					},
-				}
-			*/
-			if (response.data) {
-				const rawModels = response.data.data
-				const parsePrice = (price: any) => {
-					if (price) {
-						return parseFloat(price) * 1_000_000
-					}
-					return undefined
-				}
-				for (const rawModel of rawModels) {
-					const modelInfo: ModelInfo = {
-						maxTokens: rawModel.max_output_tokens,
-						contextWindow: rawModel.context_window,
-						supportsImages: rawModel.support_image,
-						supportsComputerUse: rawModel.support_computer_use,
-						supportsPromptCache: rawModel.supports_caching,
-						inputPrice: parsePrice(rawModel.input_price),
-						outputPrice: parsePrice(rawModel.output_price),
-						description: rawModel.description,
-						cacheWritesPrice: parsePrice(rawModel.caching_price),
-						cacheReadsPrice: parsePrice(rawModel.cached_price),
-					}
-
-					models[rawModel.id] = modelInfo
-				}
-			} else {
-				this.outputChannel.appendLine("Invalid response from Requesty API")
-			}
-			await fs.writeFile(requestyModelsFilePath, JSON.stringify(models))
-			this.outputChannel.appendLine(`Requesty models fetched and saved: ${JSON.stringify(models, null, 2)}`)
-		} catch (error) {
-			this.outputChannel.appendLine(
-				`Error fetching Requesty models: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
-			)
-		}
-
-		await this.postMessageToWebview({ type: "requestyModels", requestyModels: models })
-		return models
 	}
 
 	// OpenRouter
@@ -1900,7 +2207,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	async handleOpenRouterCallback(code: string) {
 		let apiKey: string
 		try {
-			const response = await axios.post("https://openrouter.ai/api/v1/auth/keys", { code })
+			const { apiConfiguration } = await this.getState()
+			const baseUrl = apiConfiguration.openRouterBaseUrl || "https://openrouter.ai/api/v1"
+			// Extract the base domain for the auth endpoint
+			const baseUrlDomain = baseUrl.match(/^(https?:\/\/[^\/]+)/)?.[1] || "https://openrouter.ai"
+			const response = await axios.post(`${baseUrlDomain}/api/v1/auth/keys`, { code })
 			if (response.data && response.data.key) {
 				apiKey = response.data.key
 			} else {
@@ -1914,20 +2225,19 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		}
 
 		const openrouter: ApiProvider = "openrouter"
-		await this.updateGlobalState("apiProvider", openrouter)
-		await this.storeSecret("openRouterApiKey", apiKey)
+		await this.contextProxy.setValues({
+			apiProvider: openrouter,
+			openRouterApiKey: apiKey,
+		})
+
 		await this.postStateToWebview()
-		if (this.cline) {
-			this.cline.api = buildApiHandler({ apiProvider: openrouter, openRouterApiKey: apiKey })
+		if (this.getCurrentCline()) {
+			this.getCurrentCline()!.api = buildApiHandler({ apiProvider: openrouter, openRouterApiKey: apiKey })
 		}
 		// await this.postMessageToWebview({ type: "action", action: "settingsButtonClicked" }) // bad ux if user is on welcome
 	}
 
-	private async ensureCacheDirectoryExists(): Promise<string> {
-		const cacheDir = path.join(this.context.globalStorageUri.fsPath, "cache")
-		await fs.mkdir(cacheDir, { recursive: true })
-		return cacheDir
-	}
+	// Glama
 
 	async handleGlamaCallback(code: string) {
 		let apiKey: string
@@ -1946,257 +2256,18 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		}
 
 		const glama: ApiProvider = "glama"
-		await this.updateGlobalState("apiProvider", glama)
-		await this.storeSecret("glamaApiKey", apiKey)
+		await this.contextProxy.setValues({
+			apiProvider: glama,
+			glamaApiKey: apiKey,
+		})
 		await this.postStateToWebview()
-		if (this.cline) {
-			this.cline.api = buildApiHandler({
+		if (this.getCurrentCline()) {
+			this.getCurrentCline()!.api = buildApiHandler({
 				apiProvider: glama,
 				glamaApiKey: apiKey,
 			})
 		}
 		// await this.postMessageToWebview({ type: "action", action: "settingsButtonClicked" }) // bad ux if user is on welcome
-	}
-
-	private async readModelsFromCache(filename: string): Promise<Record<string, ModelInfo> | undefined> {
-		const filePath = path.join(await this.ensureCacheDirectoryExists(), filename)
-		const fileExists = await fileExistsAtPath(filePath)
-		if (fileExists) {
-			const fileContents = await fs.readFile(filePath, "utf8")
-			return JSON.parse(fileContents)
-		}
-		return undefined
-	}
-
-	async readGlamaModels(): Promise<Record<string, ModelInfo> | undefined> {
-		return this.readModelsFromCache(GlobalFileNames.glamaModels)
-	}
-
-	async refreshGlamaModels() {
-		const glamaModelsFilePath = path.join(await this.ensureCacheDirectoryExists(), GlobalFileNames.glamaModels)
-
-		const models: Record<string, ModelInfo> = {}
-		try {
-			const response = await axios.get("https://glama.ai/api/gateway/v1/models")
-			/*
-				{
-					"added": "2024-12-24T15:12:49.324Z",
-					"capabilities": [
-						"adjustable_safety_settings",
-						"caching",
-						"code_execution",
-						"function_calling",
-						"json_mode",
-						"json_schema",
-						"system_instructions",
-						"tuning",
-						"input:audio",
-						"input:image",
-						"input:text",
-						"input:video",
-						"output:text"
-					],
-					"id": "google-vertex/gemini-1.5-flash-002",
-					"maxTokensInput": 1048576,
-					"maxTokensOutput": 8192,
-					"pricePerToken": {
-						"cacheRead": null,
-						"cacheWrite": null,
-						"input": "0.000000075",
-						"output": "0.0000003"
-					}
-				}
-			*/
-			if (response.data) {
-				const rawModels = response.data
-				const parsePrice = (price: any) => {
-					if (price) {
-						return parseFloat(price) * 1_000_000
-					}
-					return undefined
-				}
-				for (const rawModel of rawModels) {
-					const modelInfo: ModelInfo = {
-						maxTokens: rawModel.maxTokensOutput,
-						contextWindow: rawModel.maxTokensInput,
-						supportsImages: rawModel.capabilities?.includes("input:image"),
-						supportsComputerUse: rawModel.capabilities?.includes("computer_use"),
-						supportsPromptCache: rawModel.capabilities?.includes("caching"),
-						inputPrice: parsePrice(rawModel.pricePerToken?.input),
-						outputPrice: parsePrice(rawModel.pricePerToken?.output),
-						description: undefined,
-						cacheWritesPrice: parsePrice(rawModel.pricePerToken?.cacheWrite),
-						cacheReadsPrice: parsePrice(rawModel.pricePerToken?.cacheRead),
-					}
-
-					models[rawModel.id] = modelInfo
-				}
-			} else {
-				this.outputChannel.appendLine("Invalid response from Glama API")
-			}
-			await fs.writeFile(glamaModelsFilePath, JSON.stringify(models))
-		} catch (error) {
-			this.outputChannel.appendLine(
-				`Error fetching Glama models: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
-			)
-		}
-
-		await this.postMessageToWebview({ type: "glamaModels", glamaModels: models })
-		return models
-	}
-
-	async readOpenRouterModels(): Promise<Record<string, ModelInfo> | undefined> {
-		return this.readModelsFromCache(GlobalFileNames.openRouterModels)
-	}
-
-	async refreshOpenRouterModels() {
-		const openRouterModelsFilePath = path.join(
-			await this.ensureCacheDirectoryExists(),
-			GlobalFileNames.openRouterModels,
-		)
-
-		const models: Record<string, ModelInfo> = {}
-		try {
-			const response = await axios.get("https://openrouter.ai/api/v1/models")
-			/*
-			{
-				"id": "anthropic/claude-3.5-sonnet",
-				"name": "Anthropic: Claude 3.5 Sonnet",
-				"created": 1718841600,
-				"description": "Claude 3.5 Sonnet delivers better-than-Opus capabilities, faster-than-Sonnet speeds, at the same Sonnet prices. Sonnet is particularly good at:\n\n- Coding: Autonomously writes, edits, and runs code with reasoning and troubleshooting\n- Data science: Augments human data science expertise; navigates unstructured data while using multiple tools for insights\n- Visual processing: excelling at interpreting charts, graphs, and images, accurately transcribing text to derive insights beyond just the text alone\n- Agentic tasks: exceptional tool use, making it great at agentic tasks (i.e. complex, multi-step problem solving tasks that require engaging with other systems)\n\n#multimodal",
-				"context_length": 200000,
-				"architecture": {
-					"modality": "text+image-\u003Etext",
-					"tokenizer": "Claude",
-					"instruct_type": null
-				},
-				"pricing": {
-					"prompt": "0.000003",
-					"completion": "0.000015",
-					"image": "0.0048",
-					"request": "0"
-				},
-				"top_provider": {
-					"context_length": 200000,
-					"max_completion_tokens": 8192,
-					"is_moderated": true
-				},
-				"per_request_limits": null
-			},
-			*/
-			if (response.data?.data) {
-				const rawModels = response.data.data
-				const parsePrice = (price: any) => {
-					if (price) {
-						return parseFloat(price) * 1_000_000
-					}
-					return undefined
-				}
-				for (const rawModel of rawModels) {
-					const modelInfo: ModelInfo = {
-						maxTokens: rawModel.top_provider?.max_completion_tokens,
-						contextWindow: rawModel.context_length,
-						supportsImages: rawModel.architecture?.modality?.includes("image"),
-						supportsPromptCache: false,
-						inputPrice: parsePrice(rawModel.pricing?.prompt),
-						outputPrice: parsePrice(rawModel.pricing?.completion),
-						description: rawModel.description,
-					}
-
-					switch (rawModel.id) {
-						case "anthropic/claude-3.5-sonnet":
-						case "anthropic/claude-3.5-sonnet:beta":
-							// NOTE: this needs to be synced with api.ts/openrouter default model info
-							modelInfo.supportsComputerUse = true
-							modelInfo.supportsPromptCache = true
-							modelInfo.cacheWritesPrice = 3.75
-							modelInfo.cacheReadsPrice = 0.3
-							break
-						case "anthropic/claude-3.5-sonnet-20240620":
-						case "anthropic/claude-3.5-sonnet-20240620:beta":
-							modelInfo.supportsPromptCache = true
-							modelInfo.cacheWritesPrice = 3.75
-							modelInfo.cacheReadsPrice = 0.3
-							break
-						case "anthropic/claude-3-5-haiku":
-						case "anthropic/claude-3-5-haiku:beta":
-						case "anthropic/claude-3-5-haiku-20241022":
-						case "anthropic/claude-3-5-haiku-20241022:beta":
-						case "anthropic/claude-3.5-haiku":
-						case "anthropic/claude-3.5-haiku:beta":
-						case "anthropic/claude-3.5-haiku-20241022":
-						case "anthropic/claude-3.5-haiku-20241022:beta":
-							modelInfo.supportsPromptCache = true
-							modelInfo.cacheWritesPrice = 1.25
-							modelInfo.cacheReadsPrice = 0.1
-							break
-						case "anthropic/claude-3-opus":
-						case "anthropic/claude-3-opus:beta":
-							modelInfo.supportsPromptCache = true
-							modelInfo.cacheWritesPrice = 18.75
-							modelInfo.cacheReadsPrice = 1.5
-							break
-						case "anthropic/claude-3-haiku":
-						case "anthropic/claude-3-haiku:beta":
-							modelInfo.supportsPromptCache = true
-							modelInfo.cacheWritesPrice = 0.3
-							modelInfo.cacheReadsPrice = 0.03
-							break
-					}
-
-					models[rawModel.id] = modelInfo
-				}
-			} else {
-				this.outputChannel.appendLine("Invalid response from OpenRouter API")
-			}
-			await fs.writeFile(openRouterModelsFilePath, JSON.stringify(models))
-		} catch (error) {
-			this.outputChannel.appendLine(
-				`Error fetching OpenRouter models: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
-			)
-		}
-
-		await this.postMessageToWebview({ type: "openRouterModels", openRouterModels: models })
-		return models
-	}
-
-	async readUnboundModels(): Promise<Record<string, ModelInfo> | undefined> {
-		return this.readModelsFromCache(GlobalFileNames.unboundModels)
-	}
-
-	async refreshUnboundModels() {
-		const unboundModelsFilePath = path.join(await this.ensureCacheDirectoryExists(), GlobalFileNames.unboundModels)
-
-		const models: Record<string, ModelInfo> = {}
-		try {
-			const response = await axios.get("https://api.getunbound.ai/models")
-
-			if (response.data) {
-				const rawModels: Record<string, any> = response.data
-
-				for (const [modelId, model] of Object.entries(rawModels)) {
-					models[modelId] = {
-						maxTokens: model.maxTokens ? parseInt(model.maxTokens) : undefined,
-						contextWindow: model.contextWindow ? parseInt(model.contextWindow) : 0,
-						supportsImages: model.supportsImages ?? false,
-						supportsPromptCache: model.supportsPromptCaching ?? false,
-						supportsComputerUse: model.supportsComputerUse ?? false,
-						inputPrice: model.inputTokenPrice ? parseFloat(model.inputTokenPrice) : undefined,
-						outputPrice: model.outputTokenPrice ? parseFloat(model.outputTokenPrice) : undefined,
-						cacheWritesPrice: model.cacheWritePrice ? parseFloat(model.cacheWritePrice) : undefined,
-						cacheReadsPrice: model.cacheReadPrice ? parseFloat(model.cacheReadPrice) : undefined,
-					}
-				}
-			}
-			await fs.writeFile(unboundModelsFilePath, JSON.stringify(models))
-		} catch (error) {
-			this.outputChannel.appendLine(
-				`Error fetching Unbound models: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
-			)
-		}
-
-		await this.postMessageToWebview({ type: "unboundModels", unboundModels: models })
-		return models
 	}
 
 	// Task history
@@ -2210,34 +2281,53 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}> {
 		const history = ((await this.getGlobalState("taskHistory")) as HistoryItem[] | undefined) || []
 		const historyItem = history.find((item) => item.id === id)
-		if (historyItem) {
-			const taskDirPath = path.join(this.context.globalStorageUri.fsPath, "tasks", id)
-			const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
-			const uiMessagesFilePath = path.join(taskDirPath, GlobalFileNames.uiMessages)
-			const fileExists = await fileExistsAtPath(apiConversationHistoryFilePath)
-			if (fileExists) {
-				const apiConversationHistory = JSON.parse(await fs.readFile(apiConversationHistoryFilePath, "utf8"))
-				return {
-					historyItem,
-					taskDirPath,
-					apiConversationHistoryFilePath,
-					uiMessagesFilePath,
-					apiConversationHistory,
-				}
-			}
+		if (!historyItem) {
+			throw new Error("Task not found in history")
 		}
-		// if we tried to get a task that doesn't exist, remove it from state
-		// FIXME: this seems to happen sometimes when the json file doesnt save to disk for some reason
-		await this.deleteTaskFromState(id)
-		throw new Error("Task not found")
+
+		const taskDirPath = path.join(this.contextProxy.globalStorageUri.fsPath, "tasks", id)
+		const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
+		const uiMessagesFilePath = path.join(taskDirPath, GlobalFileNames.uiMessages)
+
+		const fileExists = await fileExistsAtPath(apiConversationHistoryFilePath)
+		if (!fileExists) {
+			// Instead of silently deleting, throw a specific error
+			throw new Error("TASK_FILES_MISSING")
+		}
+
+		const apiConversationHistory = JSON.parse(await fs.readFile(apiConversationHistoryFilePath, "utf8"))
+		return {
+			historyItem,
+			taskDirPath,
+			apiConversationHistoryFilePath,
+			uiMessagesFilePath,
+			apiConversationHistory,
+		}
 	}
 
 	async showTaskWithId(id: string) {
-		if (id !== this.cline?.taskId) {
-			// non-current task
-			const { historyItem } = await this.getTaskWithId(id)
-			await this.initClineWithHistoryItem(historyItem) // clears existing task
+		if (id !== this.getCurrentCline()?.taskId) {
+			try {
+				const { historyItem } = await this.getTaskWithId(id)
+				await this.initClineWithHistoryItem(historyItem)
+			} catch (error) {
+				if (error.message === "TASK_FILES_MISSING") {
+					const response = await vscode.window.showWarningMessage(
+						t("common:warnings.missing_task_files"),
+						t("common:answers.remove"),
+						t("common:answers.keep"),
+					)
+
+					if (response === t("common:answers.remove")) {
+						await this.deleteTaskFromState(id)
+						await this.postStateToWebview()
+					}
+					return
+				}
+				throw error
+			}
 		}
+
 		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 	}
 
@@ -2246,43 +2336,51 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		await downloadTask(historyItem.ts, apiConversationHistory)
 	}
 
+	// this function deletes a task from task hidtory, and deletes it's checkpoints and delete the task folder
 	async deleteTaskWithId(id: string) {
-		if (id === this.cline?.taskId) {
-			await this.clearTask()
-		}
+		try {
+			// get the task directory full path
+			const { taskDirPath } = await this.getTaskWithId(id)
 
-		const { taskDirPath, apiConversationHistoryFilePath, uiMessagesFilePath } = await this.getTaskWithId(id)
+			// remove task from stack if it's the current task
+			if (id === this.getCurrentCline()?.taskId) {
+				// if we found the taskid to delete - call finish to abort this task and allow a new task to be started,
+				// if we are deleting a subtask and parent task is still waiting for subtask to finish - it allows the parent to resume (this case should neve exist)
+				await this.finishSubTask(t("common:tasks.deleted"))
+			}
 
-		await this.deleteTaskFromState(id)
+			// delete task from the task history state
+			await this.deleteTaskFromState(id)
 
-		// Delete the task files
-		const apiConversationHistoryFileExists = await fileExistsAtPath(apiConversationHistoryFilePath)
-		if (apiConversationHistoryFileExists) {
-			await fs.unlink(apiConversationHistoryFilePath)
-		}
-		const uiMessagesFileExists = await fileExistsAtPath(uiMessagesFilePath)
-		if (uiMessagesFileExists) {
-			await fs.unlink(uiMessagesFilePath)
-		}
-		const legacyMessagesFilePath = path.join(taskDirPath, "claude_messages.json")
-		if (await fileExistsAtPath(legacyMessagesFilePath)) {
-			await fs.unlink(legacyMessagesFilePath)
-		}
-		await fs.rmdir(taskDirPath) // succeeds if the dir is empty
+			// Delete associated shadow repository or branch.
+			// TODO: Store `workspaceDir` in the `HistoryItem` object.
+			const globalStorageDir = this.contextProxy.globalStorageUri.fsPath
+			const workspaceDir = this.cwd
 
-		const { checkpointsEnabled } = await this.getState()
-		const baseDir = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0)
-		const branch = `roo-code-checkpoints-${id}`
-
-		if (checkpointsEnabled && baseDir) {
 			try {
-				await simpleGit(baseDir).branch(["-D", branch])
-				console.log(`[deleteTaskWithId] Deleted branch ${branch}`)
-			} catch (err) {
+				await ShadowCheckpointService.deleteTask({ taskId: id, globalStorageDir, workspaceDir })
+			} catch (error) {
 				console.error(
-					`[deleteTaskWithId] Error deleting branch ${branch}: ${err instanceof Error ? err.message : String(err)}`,
+					`[deleteTaskWithId${id}] failed to delete associated shadow repository or branch: ${error instanceof Error ? error.message : String(error)}`,
 				)
 			}
+
+			// delete the entire task directory including checkpoints and all content
+			try {
+				await fs.rm(taskDirPath, { recursive: true, force: true })
+				console.log(`[deleteTaskWithId${id}] removed task directory`)
+			} catch (error) {
+				console.error(
+					`[deleteTaskWithId${id}] failed to remove task directory: ${error instanceof Error ? error.message : String(error)}`,
+				)
+			}
+		} catch (error) {
+			// If task is not found, just remove it from state
+			if (error instanceof Error && error.message === "Task not found") {
+				await this.deleteTaskFromState(id)
+				return
+			}
+			throw error
 		}
 	}
 
@@ -2312,16 +2410,22 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			alwaysAllowBrowser,
 			alwaysAllowMcp,
 			alwaysAllowModeSwitch,
+			alwaysAllowSubtasks,
 			soundEnabled,
+			ttsEnabled,
+			ttsSpeed,
 			diffEnabled,
-			checkpointsEnabled,
+			enableCheckpoints,
+			checkpointStorage,
 			taskHistory,
 			soundVolume,
 			browserViewportSize,
 			screenshotQuality,
-			preferredLanguage,
+			remoteBrowserHost,
+			remoteBrowserEnabled,
 			writeDelayMs,
 			terminalOutputLineLimit,
+			terminalShellIntegrationTimeout,
 			fuzzyMatchThreshold,
 			mcpEnabled,
 			enableMcpServerCreation,
@@ -2336,9 +2440,18 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			enhancementApiConfigId,
 			autoApprovalEnabled,
 			experiments,
+			maxOpenTabsContext,
+			maxWorkspaceFiles,
+			browserToolEnabled,
+			telemetrySetting,
+			showRooIgnoredFiles,
+			language,
 		} = await this.getState()
 
+		const telemetryKey = process.env.POSTHOG_API_KEY
+		const machineId = vscode.env.machineId
 		const allowedCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
+		const cwd = this.cwd
 
 		return {
 			version: this.context.extension?.packageJSON?.version ?? "",
@@ -2350,22 +2463,32 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			alwaysAllowBrowser: alwaysAllowBrowser ?? false,
 			alwaysAllowMcp: alwaysAllowMcp ?? false,
 			alwaysAllowModeSwitch: alwaysAllowModeSwitch ?? false,
+			alwaysAllowSubtasks: alwaysAllowSubtasks ?? false,
 			uriScheme: vscode.env.uriScheme,
-			clineMessages: this.cline?.clineMessages || [],
+			currentTaskItem: this.getCurrentCline()?.taskId
+				? (taskHistory || []).find((item: HistoryItem) => item.id === this.getCurrentCline()?.taskId)
+				: undefined,
+			clineMessages: this.getCurrentCline()?.clineMessages || [],
 			taskHistory: (taskHistory || [])
 				.filter((item: HistoryItem) => item.ts && item.task)
 				.sort((a: HistoryItem, b: HistoryItem) => b.ts - a.ts),
 			soundEnabled: soundEnabled ?? false,
+			ttsEnabled: ttsEnabled ?? false,
+			ttsSpeed: ttsSpeed ?? 1.0,
 			diffEnabled: diffEnabled ?? true,
-			checkpointsEnabled: checkpointsEnabled ?? false,
-			shouldShowAnnouncement: lastShownAnnouncementId !== this.latestAnnouncementId,
+			enableCheckpoints: enableCheckpoints ?? true,
+			checkpointStorage: checkpointStorage ?? "task",
+			shouldShowAnnouncement:
+				telemetrySetting !== "unset" && lastShownAnnouncementId !== this.latestAnnouncementId,
 			allowedCommands,
 			soundVolume: soundVolume ?? 0.5,
 			browserViewportSize: browserViewportSize ?? "900x600",
 			screenshotQuality: screenshotQuality ?? 75,
-			preferredLanguage: preferredLanguage ?? "English",
+			remoteBrowserHost,
+			remoteBrowserEnabled: remoteBrowserEnabled ?? false,
 			writeDelayMs: writeDelayMs ?? 1000,
 			terminalOutputLineLimit: terminalOutputLineLimit ?? 500,
+			terminalShellIntegrationTimeout: terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT,
 			fuzzyMatchThreshold: fuzzyMatchThreshold ?? 1.0,
 			mcpEnabled: mcpEnabled ?? true,
 			enableMcpServerCreation: enableMcpServerCreation ?? true,
@@ -2382,12 +2505,17 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			customModes: await this.customModesManager.getCustomModes(),
 			experiments: experiments ?? experimentDefault,
 			mcpServers: this.mcpHub?.getAllServers() ?? [],
+			maxOpenTabsContext: maxOpenTabsContext ?? 20,
+			maxWorkspaceFiles: maxWorkspaceFiles ?? 200,
+			cwd,
+			browserToolEnabled: browserToolEnabled ?? true,
+			telemetrySetting,
+			telemetryKey,
+			machineId,
+			showRooIgnoredFiles: showRooIgnoredFiles ?? true,
+			language,
+			renderContext: this.renderContext,
 		}
-	}
-
-	async clearTask() {
-		this.cline?.abortTask()
-		this.cline = undefined // removes reference to it, so once promises end it will be garbage collected
 	}
 
 	// Caching mechanism to keep track of webview messages + API conversation history per provider instance
@@ -2437,175 +2565,41 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	*/
 
 	async getState() {
-		const [
-			storedApiProvider,
-			apiModelId,
-			apiKey,
-			glamaApiKey,
-			glamaModelId,
-			glamaModelInfo,
-			openRouterApiKey,
-			awsAccessKey,
-			awsSecretKey,
-			awsSessionToken,
-			awsRegion,
-			awsUseCrossRegionInference,
-			awsProfile,
-			awsUseProfile,
-			vertexProjectId,
-			vertexRegion,
-			openAiBaseUrl,
-			openAiApiKey,
-			openAiModelId,
-			openAiCustomModelInfo,
-			openAiUseAzure,
-			ollamaModelId,
-			ollamaBaseUrl,
-			lmStudioModelId,
-			lmStudioBaseUrl,
-			anthropicBaseUrl,
-			geminiApiKey,
-			openAiNativeApiKey,
-			deepSeekApiKey,
-			mistralApiKey,
-			azureApiVersion,
-			openAiStreamingEnabled,
-			openRouterModelId,
-			openRouterModelInfo,
-			openRouterBaseUrl,
-			openRouterUseMiddleOutTransform,
-			lastShownAnnouncementId,
-			customInstructions,
-			alwaysAllowReadOnly,
-			alwaysAllowWrite,
-			alwaysAllowExecute,
-			alwaysAllowBrowser,
-			alwaysAllowMcp,
-			alwaysAllowModeSwitch,
-			taskHistory,
-			allowedCommands,
-			soundEnabled,
-			diffEnabled,
-			checkpointsEnabled,
-			soundVolume,
-			browserViewportSize,
-			fuzzyMatchThreshold,
-			preferredLanguage,
-			writeDelayMs,
-			screenshotQuality,
-			terminalOutputLineLimit,
-			mcpEnabled,
-			enableMcpServerCreation,
-			alwaysApproveResubmit,
-			requestDelaySeconds,
-			rateLimitSeconds,
-			currentApiConfigName,
-			listApiConfigMeta,
-			vsCodeLmModelSelector,
-			mode,
-			modeApiConfigs,
-			customModePrompts,
-			customSupportPrompts,
-			enhancementApiConfigId,
-			autoApprovalEnabled,
-			customModes,
-			experiments,
-			unboundApiKey,
-			unboundModelId,
-			unboundModelInfo,
-			requestyApiKey,
-			requestyModelId,
-			requestyModelInfo,
-			modelTemperature,
-		] = await Promise.all([
-			this.getGlobalState("apiProvider") as Promise<ApiProvider | undefined>,
-			this.getGlobalState("apiModelId") as Promise<string | undefined>,
-			this.getSecret("apiKey") as Promise<string | undefined>,
-			this.getSecret("glamaApiKey") as Promise<string | undefined>,
-			this.getGlobalState("glamaModelId") as Promise<string | undefined>,
-			this.getGlobalState("glamaModelInfo") as Promise<ModelInfo | undefined>,
-			this.getSecret("openRouterApiKey") as Promise<string | undefined>,
-			this.getSecret("awsAccessKey") as Promise<string | undefined>,
-			this.getSecret("awsSecretKey") as Promise<string | undefined>,
-			this.getSecret("awsSessionToken") as Promise<string | undefined>,
-			this.getGlobalState("awsRegion") as Promise<string | undefined>,
-			this.getGlobalState("awsUseCrossRegionInference") as Promise<boolean | undefined>,
-			this.getGlobalState("awsProfile") as Promise<string | undefined>,
-			this.getGlobalState("awsUseProfile") as Promise<boolean | undefined>,
-			this.getGlobalState("vertexProjectId") as Promise<string | undefined>,
-			this.getGlobalState("vertexRegion") as Promise<string | undefined>,
-			this.getGlobalState("openAiBaseUrl") as Promise<string | undefined>,
-			this.getSecret("openAiApiKey") as Promise<string | undefined>,
-			this.getGlobalState("openAiModelId") as Promise<string | undefined>,
-			this.getGlobalState("openAiCustomModelInfo") as Promise<ModelInfo | undefined>,
-			this.getGlobalState("openAiUseAzure") as Promise<boolean | undefined>,
-			this.getGlobalState("ollamaModelId") as Promise<string | undefined>,
-			this.getGlobalState("ollamaBaseUrl") as Promise<string | undefined>,
-			this.getGlobalState("lmStudioModelId") as Promise<string | undefined>,
-			this.getGlobalState("lmStudioBaseUrl") as Promise<string | undefined>,
-			this.getGlobalState("anthropicBaseUrl") as Promise<string | undefined>,
-			this.getSecret("geminiApiKey") as Promise<string | undefined>,
-			this.getSecret("openAiNativeApiKey") as Promise<string | undefined>,
-			this.getSecret("deepSeekApiKey") as Promise<string | undefined>,
-			this.getSecret("mistralApiKey") as Promise<string | undefined>,
-			this.getGlobalState("azureApiVersion") as Promise<string | undefined>,
-			this.getGlobalState("openAiStreamingEnabled") as Promise<boolean | undefined>,
-			this.getGlobalState("openRouterModelId") as Promise<string | undefined>,
-			this.getGlobalState("openRouterModelInfo") as Promise<ModelInfo | undefined>,
-			this.getGlobalState("openRouterBaseUrl") as Promise<string | undefined>,
-			this.getGlobalState("openRouterUseMiddleOutTransform") as Promise<boolean | undefined>,
-			this.getGlobalState("lastShownAnnouncementId") as Promise<string | undefined>,
-			this.getGlobalState("customInstructions") as Promise<string | undefined>,
-			this.getGlobalState("alwaysAllowReadOnly") as Promise<boolean | undefined>,
-			this.getGlobalState("alwaysAllowWrite") as Promise<boolean | undefined>,
-			this.getGlobalState("alwaysAllowExecute") as Promise<boolean | undefined>,
-			this.getGlobalState("alwaysAllowBrowser") as Promise<boolean | undefined>,
-			this.getGlobalState("alwaysAllowMcp") as Promise<boolean | undefined>,
-			this.getGlobalState("alwaysAllowModeSwitch") as Promise<boolean | undefined>,
-			this.getGlobalState("taskHistory") as Promise<HistoryItem[] | undefined>,
-			this.getGlobalState("allowedCommands") as Promise<string[] | undefined>,
-			this.getGlobalState("soundEnabled") as Promise<boolean | undefined>,
-			this.getGlobalState("diffEnabled") as Promise<boolean | undefined>,
-			this.getGlobalState("checkpointsEnabled") as Promise<boolean | undefined>,
-			this.getGlobalState("soundVolume") as Promise<number | undefined>,
-			this.getGlobalState("browserViewportSize") as Promise<string | undefined>,
-			this.getGlobalState("fuzzyMatchThreshold") as Promise<number | undefined>,
-			this.getGlobalState("preferredLanguage") as Promise<string | undefined>,
-			this.getGlobalState("writeDelayMs") as Promise<number | undefined>,
-			this.getGlobalState("screenshotQuality") as Promise<number | undefined>,
-			this.getGlobalState("terminalOutputLineLimit") as Promise<number | undefined>,
-			this.getGlobalState("mcpEnabled") as Promise<boolean | undefined>,
-			this.getGlobalState("enableMcpServerCreation") as Promise<boolean | undefined>,
-			this.getGlobalState("alwaysApproveResubmit") as Promise<boolean | undefined>,
-			this.getGlobalState("requestDelaySeconds") as Promise<number | undefined>,
-			this.getGlobalState("rateLimitSeconds") as Promise<number | undefined>,
-			this.getGlobalState("currentApiConfigName") as Promise<string | undefined>,
-			this.getGlobalState("listApiConfigMeta") as Promise<ApiConfigMeta[] | undefined>,
-			this.getGlobalState("vsCodeLmModelSelector") as Promise<vscode.LanguageModelChatSelector | undefined>,
-			this.getGlobalState("mode") as Promise<Mode | undefined>,
-			this.getGlobalState("modeApiConfigs") as Promise<Record<Mode, string> | undefined>,
-			this.getGlobalState("customModePrompts") as Promise<CustomModePrompts | undefined>,
-			this.getGlobalState("customSupportPrompts") as Promise<CustomSupportPrompts | undefined>,
-			this.getGlobalState("enhancementApiConfigId") as Promise<string | undefined>,
-			this.getGlobalState("autoApprovalEnabled") as Promise<boolean | undefined>,
-			this.customModesManager.getCustomModes(),
-			this.getGlobalState("experiments") as Promise<Record<ExperimentId, boolean> | undefined>,
-			this.getSecret("unboundApiKey") as Promise<string | undefined>,
-			this.getGlobalState("unboundModelId") as Promise<string | undefined>,
-			this.getGlobalState("unboundModelInfo") as Promise<ModelInfo | undefined>,
-			this.getSecret("requestyApiKey") as Promise<string | undefined>,
-			this.getGlobalState("requestyModelId") as Promise<string | undefined>,
-			this.getGlobalState("requestyModelInfo") as Promise<ModelInfo | undefined>,
-			this.getGlobalState("modelTemperature") as Promise<number | undefined>,
-		])
+		// Create an object to store all fetched values
+		const stateValues: Record<GlobalStateKey | SecretKey, any> = {} as Record<GlobalStateKey | SecretKey, any>
+		const secretValues: Record<SecretKey, any> = {} as Record<SecretKey, any>
 
+		// Create promise arrays for global state and secrets
+		const statePromises = GLOBAL_STATE_KEYS.map((key) => this.getGlobalState(key))
+		const secretPromises = SECRET_KEYS.map((key) => this.getSecret(key))
+
+		// Add promise for custom modes which is handled separately
+		const customModesPromise = this.customModesManager.getCustomModes()
+
+		let idx = 0
+		const valuePromises = await Promise.all([...statePromises, ...secretPromises, customModesPromise])
+
+		// Populate stateValues and secretValues
+		GLOBAL_STATE_KEYS.forEach((key, _) => {
+			stateValues[key] = valuePromises[idx]
+			idx = idx + 1
+		})
+
+		SECRET_KEYS.forEach((key, index) => {
+			secretValues[key] = valuePromises[idx]
+			idx = idx + 1
+		})
+
+		let customModes = valuePromises[idx] as ModeConfig[] | undefined
+
+		// Determine apiProvider with the same logic as before
 		let apiProvider: ApiProvider
-		if (storedApiProvider) {
-			apiProvider = storedApiProvider
+		if (stateValues.apiProvider) {
+			apiProvider = stateValues.apiProvider
 		} else {
 			// Either new user or legacy user that doesn't have the apiProvider stored in state
 			// (If they're using OpenRouter or Bedrock, then apiProvider state will exist)
-			if (apiKey) {
+			if (secretValues.apiKey) {
 				apiProvider = "anthropic"
 			} else {
 				// New users should default to openrouter
@@ -2613,116 +2607,72 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			}
 		}
 
+		// Build the apiConfiguration object combining state values and secrets
+		// Using the dynamic approach with API_CONFIG_KEYS
+		const apiConfiguration: ApiConfiguration = {
+			// Dynamically add all API-related keys from stateValues
+			...Object.fromEntries(API_CONFIG_KEYS.map((key) => [key, stateValues[key]])),
+			// Add all secrets
+			...secretValues,
+		}
+
+		// Ensure apiProvider is set properly if not already in state
+		if (!apiConfiguration.apiProvider) {
+			apiConfiguration.apiProvider = apiProvider
+		}
+
+		// Return the same structure as before
 		return {
-			apiConfiguration: {
-				apiProvider,
-				apiModelId,
-				apiKey,
-				glamaApiKey,
-				glamaModelId,
-				glamaModelInfo,
-				openRouterApiKey,
-				awsAccessKey,
-				awsSecretKey,
-				awsSessionToken,
-				awsRegion,
-				awsUseCrossRegionInference,
-				awsProfile,
-				awsUseProfile,
-				vertexProjectId,
-				vertexRegion,
-				openAiBaseUrl,
-				openAiApiKey,
-				openAiModelId,
-				openAiCustomModelInfo,
-				openAiUseAzure,
-				ollamaModelId,
-				ollamaBaseUrl,
-				lmStudioModelId,
-				lmStudioBaseUrl,
-				anthropicBaseUrl,
-				geminiApiKey,
-				openAiNativeApiKey,
-				deepSeekApiKey,
-				mistralApiKey,
-				azureApiVersion,
-				openAiStreamingEnabled,
-				openRouterModelId,
-				openRouterModelInfo,
-				openRouterBaseUrl,
-				openRouterUseMiddleOutTransform,
-				vsCodeLmModelSelector,
-				unboundApiKey,
-				unboundModelId,
-				unboundModelInfo,
-				requestyApiKey,
-				requestyModelId,
-				requestyModelInfo,
-				modelTemperature,
-			},
-			lastShownAnnouncementId,
-			customInstructions,
-			alwaysAllowReadOnly: alwaysAllowReadOnly ?? false,
-			alwaysAllowWrite: alwaysAllowWrite ?? false,
-			alwaysAllowExecute: alwaysAllowExecute ?? false,
-			alwaysAllowBrowser: alwaysAllowBrowser ?? false,
-			alwaysAllowMcp: alwaysAllowMcp ?? false,
-			alwaysAllowModeSwitch: alwaysAllowModeSwitch ?? false,
-			taskHistory,
-			allowedCommands,
-			soundEnabled: soundEnabled ?? false,
-			diffEnabled: diffEnabled ?? true,
-			checkpointsEnabled: checkpointsEnabled ?? false,
-			soundVolume,
-			browserViewportSize: browserViewportSize ?? "900x600",
-			screenshotQuality: screenshotQuality ?? 75,
-			fuzzyMatchThreshold: fuzzyMatchThreshold ?? 1.0,
-			writeDelayMs: writeDelayMs ?? 1000,
-			terminalOutputLineLimit: terminalOutputLineLimit ?? 500,
-			mode: mode ?? defaultModeSlug,
-			preferredLanguage:
-				preferredLanguage ??
-				(() => {
-					// Get VSCode's locale setting
-					const vscodeLang = vscode.env.language
-					// Map VSCode locale to our supported languages
-					const langMap: { [key: string]: string } = {
-						en: "English",
-						ar: "Arabic",
-						"pt-br": "Brazilian Portuguese",
-						cs: "Czech",
-						fr: "French",
-						de: "German",
-						hi: "Hindi",
-						hu: "Hungarian",
-						it: "Italian",
-						ja: "Japanese",
-						ko: "Korean",
-						pl: "Polish",
-						pt: "Portuguese",
-						ru: "Russian",
-						"zh-cn": "Simplified Chinese",
-						es: "Spanish",
-						"zh-tw": "Traditional Chinese",
-						tr: "Turkish",
-					}
-					// Return mapped language or default to English
-					return langMap[vscodeLang.split("-")[0]] ?? "English"
-				})(),
-			mcpEnabled: mcpEnabled ?? true,
-			enableMcpServerCreation: enableMcpServerCreation ?? true,
-			alwaysApproveResubmit: alwaysApproveResubmit ?? false,
-			requestDelaySeconds: Math.max(5, requestDelaySeconds ?? 10),
-			rateLimitSeconds: rateLimitSeconds ?? 0,
-			currentApiConfigName: currentApiConfigName ?? "default",
-			listApiConfigMeta: listApiConfigMeta ?? [],
-			modeApiConfigs: modeApiConfigs ?? ({} as Record<Mode, string>),
-			customModePrompts: customModePrompts ?? {},
-			customSupportPrompts: customSupportPrompts ?? {},
-			enhancementApiConfigId,
-			experiments: experiments ?? experimentDefault,
-			autoApprovalEnabled: autoApprovalEnabled ?? false,
+			apiConfiguration,
+			lastShownAnnouncementId: stateValues.lastShownAnnouncementId,
+			customInstructions: stateValues.customInstructions,
+			alwaysAllowReadOnly: stateValues.alwaysAllowReadOnly ?? false,
+			alwaysAllowWrite: stateValues.alwaysAllowWrite ?? false,
+			alwaysAllowExecute: stateValues.alwaysAllowExecute ?? false,
+			alwaysAllowBrowser: stateValues.alwaysAllowBrowser ?? false,
+			alwaysAllowMcp: stateValues.alwaysAllowMcp ?? false,
+			alwaysAllowModeSwitch: stateValues.alwaysAllowModeSwitch ?? false,
+			alwaysAllowSubtasks: stateValues.alwaysAllowSubtasks ?? false,
+			taskHistory: stateValues.taskHistory,
+			allowedCommands: stateValues.allowedCommands,
+			soundEnabled: stateValues.soundEnabled ?? false,
+			ttsEnabled: stateValues.ttsEnabled ?? false,
+			ttsSpeed: stateValues.ttsSpeed ?? 1.0,
+			diffEnabled: stateValues.diffEnabled ?? true,
+			enableCheckpoints: stateValues.enableCheckpoints ?? true,
+			checkpointStorage: stateValues.checkpointStorage ?? "task",
+			soundVolume: stateValues.soundVolume,
+			browserViewportSize: stateValues.browserViewportSize ?? "900x600",
+			screenshotQuality: stateValues.screenshotQuality ?? 75,
+			remoteBrowserHost: stateValues.remoteBrowserHost,
+			remoteBrowserEnabled: stateValues.remoteBrowserEnabled ?? false,
+			fuzzyMatchThreshold: stateValues.fuzzyMatchThreshold ?? 1.0,
+			writeDelayMs: stateValues.writeDelayMs ?? 1000,
+			terminalOutputLineLimit: stateValues.terminalOutputLineLimit ?? 500,
+			terminalShellIntegrationTimeout:
+				stateValues.terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT,
+			mode: stateValues.mode ?? defaultModeSlug,
+			language: stateValues.language ?? formatLanguage(vscode.env.language),
+			mcpEnabled: stateValues.mcpEnabled ?? true,
+			enableMcpServerCreation: stateValues.enableMcpServerCreation ?? true,
+			alwaysApproveResubmit: stateValues.alwaysApproveResubmit ?? false,
+			requestDelaySeconds: Math.max(5, stateValues.requestDelaySeconds ?? 10),
+			rateLimitSeconds: stateValues.rateLimitSeconds ?? 0,
+			currentApiConfigName: stateValues.currentApiConfigName ?? "default",
+			listApiConfigMeta: stateValues.listApiConfigMeta ?? [],
+			modeApiConfigs: stateValues.modeApiConfigs ?? ({} as Record<Mode, string>),
+			customModePrompts: stateValues.customModePrompts ?? {},
+			customSupportPrompts: stateValues.customSupportPrompts ?? {},
+			enhancementApiConfigId: stateValues.enhancementApiConfigId,
+			experiments: stateValues.experiments ?? experimentDefault,
+			autoApprovalEnabled: stateValues.autoApprovalEnabled ?? false,
 			customModes,
+			maxOpenTabsContext: stateValues.maxOpenTabsContext ?? 20,
+			maxWorkspaceFiles: stateValues.maxWorkspaceFiles ?? 200,
+			openRouterUseMiddleOutTransform: stateValues.openRouterUseMiddleOutTransform ?? true,
+			browserToolEnabled: stateValues.browserToolEnabled ?? true,
+			telemetrySetting: stateValues.telemetrySetting || "unset",
+			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 		}
 	}
 
@@ -2741,88 +2691,47 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	// global
 
-	async updateGlobalState(key: GlobalStateKey, value: any) {
-		await this.context.globalState.update(key, value)
+	public async updateGlobalState(key: GlobalStateKey, value: any) {
+		await this.contextProxy.updateGlobalState(key, value)
 	}
 
-	async getGlobalState(key: GlobalStateKey) {
-		return await this.context.globalState.get(key)
+	public async getGlobalState(key: GlobalStateKey) {
+		return await this.contextProxy.getGlobalState(key)
 	}
-
-	// workspace
-
-	private async updateWorkspaceState(key: string, value: any) {
-		await this.context.workspaceState.update(key, value)
-	}
-
-	private async getWorkspaceState(key: string) {
-		return await this.context.workspaceState.get(key)
-	}
-
-	// private async clearState() {
-	// 	this.context.workspaceState.keys().forEach((key) => {
-	// 		this.context.workspaceState.update(key, undefined)
-	// 	})
-	// 	this.context.globalState.keys().forEach((key) => {
-	// 		this.context.globalState.update(key, undefined)
-	// 	})
-	// 	this.context.secrets.delete("apiKey")
-	// }
 
 	// secrets
 
 	public async storeSecret(key: SecretKey, value?: string) {
-		if (value) {
-			await this.context.secrets.store(key, value)
-		} else {
-			await this.context.secrets.delete(key)
-		}
+		await this.contextProxy.storeSecret(key, value)
 	}
 
 	private async getSecret(key: SecretKey) {
-		return await this.context.secrets.get(key)
+		return await this.contextProxy.getSecret(key)
+	}
+
+	// global + secret
+
+	public async setValues(values: Partial<ConfigurationValues>) {
+		await this.contextProxy.setValues(values)
 	}
 
 	// dev
 
 	async resetState() {
 		const answer = await vscode.window.showInformationMessage(
-			"Are you sure you want to reset all state and secret storage in the extension? This cannot be undone.",
+			t("common:confirmation.reset_state"),
 			{ modal: true },
-			"Yes",
+			t("common:answers.yes"),
 		)
 
-		if (answer !== "Yes") {
+		if (answer !== t("common:answers.yes")) {
 			return
 		}
 
-		for (const key of this.context.globalState.keys()) {
-			await this.context.globalState.update(key, undefined)
-		}
-		const secretKeys: SecretKey[] = [
-			"apiKey",
-			"glamaApiKey",
-			"openRouterApiKey",
-			"awsAccessKey",
-			"awsSecretKey",
-			"awsSessionToken",
-			"openAiApiKey",
-			"geminiApiKey",
-			"openAiNativeApiKey",
-			"deepSeekApiKey",
-			"mistralApiKey",
-			"unboundApiKey",
-			"requestyApiKey",
-		]
-		for (const key of secretKeys) {
-			await this.storeSecret(key, undefined)
-		}
+		await this.contextProxy.resetAllState()
 		await this.configManager.resetAllConfigs()
 		await this.customModesManager.resetCustomModes()
-		if (this.cline) {
-			this.cline.abortTask()
-			this.cline = undefined
-		}
+		await this.removeClineFromStack()
 		await this.postStateToWebview()
 		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 	}
@@ -2831,6 +2740,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	public log(message: string) {
 		this.outputChannel.appendLine(message)
+		console.log(message)
 	}
 
 	// integration tests
@@ -2840,11 +2750,87 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	get messages() {
-		return this.cline?.clineMessages || []
+		return this.getCurrentCline()?.clineMessages || []
 	}
 
 	// Add public getter
 	public getMcpHub(): McpHub | undefined {
 		return this.mcpHub
+	}
+
+	/**
+	 * Returns properties to be included in every telemetry event
+	 * This method is called by the telemetry service to get context information
+	 * like the current mode, API provider, etc.
+	 */
+	public async getTelemetryProperties(): Promise<Record<string, any>> {
+		const { mode, apiConfiguration, language } = await this.getState()
+		const appVersion = this.context.extension?.packageJSON?.version
+		const vscodeVersion = vscode.version
+		const platform = process.platform
+
+		const properties: Record<string, any> = {
+			vscodeVersion,
+			platform,
+		}
+
+		// Add extension version
+		if (appVersion) {
+			properties.appVersion = appVersion
+		}
+
+		// Add language
+		if (language) {
+			properties.language = language
+		}
+
+		// Add current mode
+		if (mode) {
+			properties.mode = mode
+		}
+
+		// Add API provider
+		if (apiConfiguration?.apiProvider) {
+			properties.apiProvider = apiConfiguration.apiProvider
+		}
+
+		// Add model ID if available
+		const currentCline = this.getCurrentCline()
+		if (currentCline?.api) {
+			const { id: modelId } = currentCline.api.getModel()
+			if (modelId) {
+				properties.modelId = modelId
+			}
+		}
+
+		if (currentCline?.diffStrategy) {
+			properties.diffStrategy = currentCline.diffStrategy.getName()
+		}
+
+		return properties
+	}
+
+	async validateTaskHistory() {
+		const history = ((await this.getGlobalState("taskHistory")) as HistoryItem[] | undefined) || []
+		const validTasks: HistoryItem[] = []
+
+		for (const item of history) {
+			const taskDirPath = path.join(this.contextProxy.globalStorageUri.fsPath, "tasks", item.id)
+			const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
+
+			if (await fileExistsAtPath(apiConversationHistoryFilePath)) {
+				validTasks.push(item)
+			}
+		}
+
+		if (validTasks.length !== history.length) {
+			await this.updateGlobalState("taskHistory", validTasks)
+			await this.postStateToWebview()
+
+			const removedCount = history.length - validTasks.length
+			if (removedCount > 0) {
+				await vscode.window.showInformationMessage(t("common:info.history_cleanup", { count: removedCount }))
+			}
+		}
 	}
 }

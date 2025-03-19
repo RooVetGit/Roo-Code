@@ -21,7 +21,10 @@ roo-cline-*.vsix
 docs/_site/
 
 # Dotenv
-.env.integration
+.env
+.env.*
+!.env.*.sample
+
 
 #Local lint config
 .eslintrc.local.json

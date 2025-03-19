@@ -1,80 +1,71 @@
 import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
 import { useEffect, useState } from "react"
+import { useAppTranslation } from "@/i18n/TranslationContext"
+import { useDebounce } from "react-use"
+
+import { Slider } from "@/components/ui"
 
 interface TemperatureControlProps {
-	value: number | undefined
-	onChange: (value: number | undefined) => void
-	maxValue?: number // Some providers like OpenAI use 0-2 range
+	value: number | undefined | null
+	onChange: (value: number | undefined | null) => void
+	maxValue?: number // Some providers like OpenAI use 0-2 range.
 }
 
 export const TemperatureControl = ({ value, onChange, maxValue = 1 }: TemperatureControlProps) => {
+	const { t } = useAppTranslation()
 	const [isCustomTemperature, setIsCustomTemperature] = useState(value !== undefined)
-	const [inputValue, setInputValue] = useState(value?.toString() ?? "0")
+	const [inputValue, setInputValue] = useState(value)
 
-	// Sync internal state with prop changes when switching profiles
+	useDebounce(() => onChange(inputValue), 50, [onChange, inputValue])
+
+	// Sync internal state with prop changes when switching profiles.
 	useEffect(() => {
-		const hasCustomTemperature = value !== undefined
+		const hasCustomTemperature = value !== undefined && value !== null
 		setIsCustomTemperature(hasCustomTemperature)
-		setInputValue(value?.toString() ?? "0")
+		setInputValue(value)
 	}, [value])
 
 	return (
-		<div>
-			<VSCodeCheckbox
-				checked={isCustomTemperature}
-				onChange={(e: any) => {
-					const isChecked = e.target.checked
-					setIsCustomTemperature(isChecked)
-					if (!isChecked) {
-						onChange(undefined) // Unset the temperature
-					} else if (value !== undefined) {
-						onChange(value) // Use the value from apiConfiguration, if set
-					}
-				}}>
-				<span style={{ fontWeight: "500" }}>Use custom temperature</span>
-			</VSCodeCheckbox>
+		<>
+			<div>
+				<VSCodeCheckbox
+					checked={isCustomTemperature}
+					onChange={(e: any) => {
+						const isChecked = e.target.checked
+						setIsCustomTemperature(isChecked)
 
-			<p style={{ fontSize: "12px", marginTop: "5px", color: "var(--vscode-descriptionForeground)" }}>
-				Controls randomness in the model's responses.
-			</p>
+						if (!isChecked) {
+							setInputValue(null) // Unset the temperature, note that undefined is unserializable.
+						} else {
+							setInputValue(value ?? 0) // Use the value from apiConfiguration, if set.
+						}
+					}}>
+					<label className="block font-medium mb-1">{t("settings:temperature.useCustom")}</label>
+				</VSCodeCheckbox>
+				<div className="text-sm text-vscode-descriptionForeground mt-1">
+					{t("settings:temperature.description")}
+				</div>
+			</div>
 
 			{isCustomTemperature && (
-				<div
-					style={{
-						marginTop: 5,
-						marginBottom: 10,
-						paddingLeft: 10,
-						borderLeft: "2px solid var(--vscode-button-background)",
-					}}>
-					<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-						<input
-							aria-label="Temperature control text input"
-							type="text"
-							value={inputValue}
-							onChange={(e) => setInputValue(e.target.value)}
-							onBlur={(e) => {
-								const newValue = parseFloat(e.target.value)
-								if (!isNaN(newValue) && newValue >= 0 && newValue <= maxValue) {
-									onChange(newValue)
-									setInputValue(newValue.toString())
-								} else {
-									setInputValue(value?.toString() ?? "0") // Reset to last valid value
-								}
-							}}
-							style={{
-								width: "60px",
-								padding: "4px 8px",
-								border: "1px solid var(--vscode-input-border)",
-								background: "var(--vscode-input-background)",
-								color: "var(--vscode-input-foreground)",
-							}}
-						/>
+				<div className="flex flex-col gap-3 pl-3 border-l-2 border-vscode-button-background">
+					<div>
+						<div className="flex items-center gap-2">
+							<Slider
+								min={0}
+								max={maxValue}
+								step={0.01}
+								value={[inputValue ?? 0]}
+								onValueChange={([value]) => setInputValue(value)}
+							/>
+							<span className="w-10">{inputValue}</span>
+						</div>
+						<div className="text-vscode-descriptionForeground text-sm mt-1">
+							{t("settings:temperature.rangeDescription")}
+						</div>
 					</div>
-					<p style={{ fontSize: "12px", marginTop: "8px", color: "var(--vscode-descriptionForeground)" }}>
-						Higher values make output more random, lower values make it more deterministic.
-					</p>
 				</div>
 			)}
-		</div>
+		</>
 	)
 }

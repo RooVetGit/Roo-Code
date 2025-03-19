@@ -1,21 +1,29 @@
 import React, { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { useEvent } from "react-use"
 import DynamicTextArea from "react-textarea-autosize"
+
 import { mentionRegex, mentionRegexGlobal } from "../../../../src/shared/context-mentions"
-import { useExtensionState } from "../../context/ExtensionStateContext"
+import { WebviewMessage } from "../../../../src/shared/WebviewMessage"
+import { Mode, getAllModes } from "../../../../src/shared/modes"
+import { ExtensionMessage } from "../../../../src/shared/ExtensionMessage"
+
+import { vscode } from "@/utils/vscode"
+import { useExtensionState } from "@/context/ExtensionStateContext"
+import { useAppTranslation } from "@/i18n/TranslationContext"
 import {
 	ContextMenuOptionType,
 	getContextMenuOptions,
 	insertMention,
 	removeMention,
 	shouldShowContextMenu,
-} from "../../utils/context-mentions"
+} from "@/utils/context-mentions"
+import { convertToMentionPath } from "@/utils/path-mentions"
+import { SelectDropdown, DropdownOptionType, Button } from "@/components/ui"
+
+import Thumbnails from "../common/Thumbnails"
 import { MAX_IMAGES_PER_MESSAGE } from "./ChatView"
 import ContextMenu from "./ContextMenu"
-import Thumbnails from "../common/Thumbnails"
-import { vscode } from "../../utils/vscode"
-import { WebviewMessage } from "../../../../src/shared/WebviewMessage"
-import { Mode, getAllModes } from "../../../../src/shared/modes"
-import { CaretIcon } from "../common/CaretIcon"
+import { VolumeX } from "lucide-react"
 
 interface ChatTextAreaProps {
 	inputValue: string
@@ -30,6 +38,7 @@ interface ChatTextAreaProps {
 	onHeightChange?: (height: number) => void
 	mode: Mode
 	setMode: (value: Mode) => void
+	modeShortcutText: string
 }
 
 const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
@@ -47,14 +56,16 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			onHeightChange,
 			mode,
 			setMode,
+			modeShortcutText,
 		},
 		ref,
 	) => {
-		const { filePaths, openedTabs, currentApiConfigName, listApiConfigMeta, customModes } = useExtensionState()
+		const { t } = useAppTranslation()
+		const { filePaths, openedTabs, currentApiConfigName, listApiConfigMeta, customModes, cwd } = useExtensionState()
 		const [gitCommits, setGitCommits] = useState<any[]>([])
 		const [showDropdown, setShowDropdown] = useState(false)
 
-		// Close dropdown when clicking outside
+		// Close dropdown when clicking outside.
 		useEffect(() => {
 			const handleClickOutside = (event: MouseEvent) => {
 				if (showDropdown) {
@@ -65,14 +76,16 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			return () => document.removeEventListener("mousedown", handleClickOutside)
 		}, [showDropdown])
 
-		// Handle enhanced prompt response
+		// Handle enhanced prompt response.
 		useEffect(() => {
 			const messageHandler = (event: MessageEvent) => {
 				const message = event.data
+
 				if (message.type === "enhancedPrompt") {
 					if (message.text) {
 						setInputValue(message.text)
 					}
+
 					setIsEnhancingPrompt(false)
 				} else if (message.type === "commitSearchResults") {
 					const commits = message.commits.map((commit: any) => ({
@@ -82,9 +95,11 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						description: `${commit.shortHash} by ${commit.author} on ${commit.date}`,
 						icon: "$(git-commit)",
 					}))
+
 					setGitCommits(commits)
 				}
 			}
+
 			window.addEventListener("message", messageHandler)
 			return () => window.removeEventListener("message", messageHandler)
 		}, [setInputValue])
@@ -105,7 +120,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false)
 		const [isFocused, setIsFocused] = useState(false)
 
-		// Fetch git commits when Git is selected or when typing a hash
+		// Fetch git commits when Git is selected or when typing a hash.
 		useEffect(() => {
 			if (selectedType === ContextMenuOptionType.Git || /^[a-f0-9]+$/i.test(searchQuery)) {
 				const message: WebviewMessage = {
@@ -127,16 +142,16 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					}
 					vscode.postMessage(message)
 				} else {
-					const promptDescription =
-						"The 'Enhance Prompt' button helps improve your prompt by providing additional context, clarification, or rephrasing. Try typing a prompt in here and clicking the button again to see how it works."
+					const promptDescription = t("chat:enhancePromptDescription")
 					setInputValue(promptDescription)
 				}
 			}
-		}, [inputValue, textAreaDisabled, setInputValue])
+		}, [inputValue, textAreaDisabled, setInputValue, t])
 
 		const queryItems = useMemo(() => {
 			return [
 				{ type: ContextMenuOptionType.Problems, value: "problems" },
+				{ type: ContextMenuOptionType.Terminal, value: "terminal" },
 				...gitCommits,
 				...openedTabs
 					.filter((tab) => tab.path)
@@ -180,14 +195,11 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				}
 
 				if (type === ContextMenuOptionType.Mode && value) {
-					// Handle mode selection
+					// Handle mode selection.
 					setMode(value)
 					setInputValue("")
 					setShowContextMenu(false)
-					vscode.postMessage({
-						type: "mode",
-						text: value,
-					})
+					vscode.postMessage({ type: "mode", text: value })
 					return
 				}
 
@@ -206,14 +218,18 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 				setShowContextMenu(false)
 				setSelectedType(null)
+
 				if (textAreaRef.current) {
 					let insertValue = value || ""
+
 					if (type === ContextMenuOptionType.URL) {
 						insertValue = value || ""
 					} else if (type === ContextMenuOptionType.File || type === ContextMenuOptionType.Folder) {
 						insertValue = value || ""
 					} else if (type === ContextMenuOptionType.Problems) {
 						insertValue = "problems"
+					} else if (type === ContextMenuOptionType.Terminal) {
+						insertValue = "terminal"
 					} else if (type === ContextMenuOptionType.Git) {
 						insertValue = value || ""
 					}
@@ -229,7 +245,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					setCursorPosition(newCursorPosition)
 					setIntendedCursorPosition(newCursorPosition)
 
-					// scroll to cursor
+					// Scroll to cursor.
 					setTimeout(() => {
 						if (textAreaRef.current) {
 							textAreaRef.current.blur()
@@ -368,7 +384,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		useLayoutEffect(() => {
 			if (intendedCursorPosition !== null && textAreaRef.current) {
 				textAreaRef.current.setSelectionRange(intendedCursorPosition, intendedCursorPosition)
-				setIntendedCursorPosition(null) // Reset the state
+				setIntendedCursorPosition(null) // Reset the state.
 			}
 		}, [inputValue, intendedCursorPosition])
 
@@ -413,10 +429,11 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		}, [showContextMenu])
 
 		const handleBlur = useCallback(() => {
-			// Only hide the context menu if the user didn't click on it
+			// Only hide the context menu if the user didn't click on it.
 			if (!isMouseDownOnMenu) {
 				setShowContextMenu(false)
 			}
+
 			setIsFocused(false)
 		}, [isMouseDownOnMenu])
 
@@ -425,7 +442,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				const items = e.clipboardData.items
 
 				const pastedText = e.clipboardData.getData("text")
-				// Check if the pasted content is a URL, add space after so user can easily delete if they don't want it
+				// Check if the pasted content is a URL, add space after so user
+				// can easily delete if they don't want it.
 				const urlRegex = /^\S+:\/\/\S+$/
 				if (urlRegex.test(pastedText.trim())) {
 					e.preventDefault()
@@ -438,7 +456,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					setIntendedCursorPosition(newCursorPosition)
 					setShowContextMenu(false)
 
-					// Scroll to new cursor position
+					// Scroll to new cursor position.
 					setTimeout(() => {
 						if (textAreaRef.current) {
 							textAreaRef.current.blur()
@@ -450,10 +468,12 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				}
 
 				const acceptedTypes = ["png", "jpeg", "webp"]
+
 				const imageItems = Array.from(items).filter((item) => {
 					const [type, subtype] = item.type.split("/")
 					return type === "image" && acceptedTypes.includes(subtype)
 				})
+
 				if (!shouldDisableImages && imageItems.length > 0) {
 					e.preventDefault()
 					const imagePromises = imageItems.map((item) => {
@@ -466,7 +486,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							const reader = new FileReader()
 							reader.onloadend = () => {
 								if (reader.error) {
-									console.error("Error reading file:", reader.error)
+									console.error(t("chat:errorReadingFile"), reader.error)
 									resolve(null)
 								} else {
 									const result = reader.result
@@ -481,16 +501,14 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					if (dataUrls.length > 0) {
 						setSelectedImages((prevImages) => [...prevImages, ...dataUrls].slice(0, MAX_IMAGES_PER_MESSAGE))
 					} else {
-						console.warn("No valid images were processed")
+						console.warn(t("chat:noValidImages"))
 					}
 				}
 			},
-			[shouldDisableImages, setSelectedImages, cursorPosition, setInputValue, inputValue],
+			[shouldDisableImages, setSelectedImages, cursorPosition, setInputValue, inputValue, t],
 		)
 
-		const handleThumbnailsHeightChange = useCallback((height: number) => {
-			setThumbnailsHeight(height)
-		}, [])
+		const handleThumbnailsHeightChange = useCallback((height: number) => setThumbnailsHeight(height), [])
 
 		useEffect(() => {
 			if (selectedImages.length === 0) {
@@ -535,34 +553,17 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			[updateCursorPosition],
 		)
 
-		const selectStyle = {
-			fontSize: "11px",
-			cursor: textAreaDisabled ? "not-allowed" : "pointer",
-			backgroundColor: "transparent",
-			border: "none",
-			color: "var(--vscode-foreground)",
-			opacity: textAreaDisabled ? 0.5 : 0.8,
-			outline: "none",
-			paddingLeft: "20px",
-			paddingRight: "6px",
-			WebkitAppearance: "none" as const,
-			MozAppearance: "none" as const,
-			appearance: "none" as const,
-		}
+		const [isTtsPlaying, setIsTtsPlaying] = useState(false)
 
-		const optionStyle = {
-			backgroundColor: "var(--vscode-dropdown-background)",
-			color: "var(--vscode-dropdown-foreground)",
-		}
+		useEvent("message", (event: MessageEvent) => {
+			const message: ExtensionMessage = event.data
 
-		const caretContainerStyle = {
-			position: "absolute" as const,
-			left: 6,
-			top: "50%",
-			transform: "translateY(-45%)",
-			pointerEvents: "none" as const,
-			opacity: textAreaDisabled ? 0.5 : 0.8,
-		}
+			if (message.type === "ttsStart") {
+				setIsTtsPlaying(true)
+			} else if (message.type === "ttsStop") {
+				setIsTtsPlaying(false)
+			}
+		})
 
 		return (
 			<div
@@ -585,26 +586,55 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					e.preventDefault()
 					const files = Array.from(e.dataTransfer.files)
 					const text = e.dataTransfer.getData("text")
+
 					if (text) {
-						const newValue = inputValue.slice(0, cursorPosition) + text + inputValue.slice(cursorPosition)
-						setInputValue(newValue)
-						const newCursorPosition = cursorPosition + text.length
-						setCursorPosition(newCursorPosition)
-						setIntendedCursorPosition(newCursorPosition)
+						// Split text on newlines to handle multiple files
+						const lines = text.split(/\r?\n/).filter((line) => line.trim() !== "")
+
+						if (lines.length > 0) {
+							// Process each line as a separate file path
+							let newValue = inputValue.slice(0, cursorPosition)
+							let totalLength = 0
+
+							lines.forEach((line, index) => {
+								// Convert each path to a mention-friendly format
+								const mentionText = convertToMentionPath(line, cwd)
+								newValue += mentionText
+								totalLength += mentionText.length
+
+								// Add space after each mention except the last one
+								if (index < lines.length - 1) {
+									newValue += " "
+									totalLength += 1
+								}
+							})
+
+							// Add space after the last mention and append the rest of the input
+							newValue += " " + inputValue.slice(cursorPosition)
+							totalLength += 1
+
+							setInputValue(newValue)
+							const newCursorPosition = cursorPosition + totalLength
+							setCursorPosition(newCursorPosition)
+							setIntendedCursorPosition(newCursorPosition)
+						}
+
 						return
 					}
+
 					const acceptedTypes = ["png", "jpeg", "webp"]
 					const imageFiles = files.filter((file) => {
 						const [type, subtype] = file.type.split("/")
 						return type === "image" && acceptedTypes.includes(subtype)
 					})
+
 					if (!shouldDisableImages && imageFiles.length > 0) {
 						const imagePromises = imageFiles.map((file) => {
 							return new Promise<string | null>((resolve) => {
 								const reader = new FileReader()
 								reader.onloadend = () => {
 									if (reader.error) {
-										console.error("Error reading file:", reader.error)
+										console.error(t("chat:errorReadingFile"), reader.error)
 										resolve(null)
 									} else {
 										const result = reader.result
@@ -627,7 +657,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								})
 							}
 						} else {
-							console.warn("No valid images were processed")
+							console.warn(t("chat:noValidImages"))
 						}
 					}
 				}}
@@ -733,6 +763,15 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						}}
 						onScroll={() => updateHighlights()}
 					/>
+					{isTtsPlaying && (
+						<Button
+							variant="ghost"
+							size="icon"
+							className="absolute top-0 right-0 opacity-25 hover:opacity-100 z-10"
+							onClick={() => vscode.postMessage({ type: "stopTts" })}>
+							<VolumeX className="size-4" />
+						</Button>
+					)}
 				</div>
 
 				{selectedImages.length > 0 && (
@@ -758,115 +797,95 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						marginTop: "auto",
 						paddingTop: "2px",
 					}}>
+					{/* Left side - dropdowns container */}
 					<div
 						style={{
 							display: "flex",
 							alignItems: "center",
+							gap: "4px",
+							overflow: "hidden",
+							minWidth: 0,
 						}}>
-						<div style={{ position: "relative", display: "inline-block" }}>
-							<select
+						{/* Mode selector - fixed width */}
+						<div style={{ flexShrink: 0 }}>
+							<SelectDropdown
 								value={mode}
 								disabled={textAreaDisabled}
-								onChange={(e) => {
-									const value = e.target.value
-									if (value === "prompts-action") {
-										window.postMessage({ type: "action", action: "promptsButtonClicked" })
-										return
-									}
+								title={t("chat:selectMode")}
+								options={[
+									{
+										value: "shortcut",
+										label: modeShortcutText,
+										disabled: true,
+										type: DropdownOptionType.SHORTCUT,
+									},
+									...getAllModes(customModes).map((mode) => ({
+										value: mode.slug,
+										label: mode.name,
+										type: DropdownOptionType.ITEM,
+									})),
+									{
+										value: "sep-1",
+										label: t("chat:separator"),
+										type: DropdownOptionType.SEPARATOR,
+									},
+									{
+										value: "promptsButtonClicked",
+										label: t("chat:edit"),
+										type: DropdownOptionType.ACTION,
+									},
+								]}
+								onChange={(value) => {
 									setMode(value as Mode)
-									vscode.postMessage({
-										type: "mode",
-										text: value,
-									})
+									vscode.postMessage({ type: "mode", text: value })
 								}}
-								style={{
-									...selectStyle,
-									minWidth: "70px",
-									flex: "0 0 auto",
-								}}>
-								{getAllModes(customModes).map((mode) => (
-									<option key={mode.slug} value={mode.slug} style={{ ...optionStyle }}>
-										{mode.name}
-									</option>
-								))}
-								<option
-									disabled
-									style={{
-										borderTop: "1px solid var(--vscode-dropdown-border)",
-										...optionStyle,
-									}}>
-									────
-								</option>
-								<option value="prompts-action" style={{ ...optionStyle }}>
-									Edit...
-								</option>
-							</select>
-							<div style={caretContainerStyle}>
-								<CaretIcon />
-							</div>
+								shortcutText={modeShortcutText}
+								triggerClassName="w-full"
+							/>
 						</div>
 
+						{/* API configuration selector - flexible width */}
 						<div
 							style={{
-								position: "relative",
-								display: "inline-block",
 								flex: "1 1 auto",
 								minWidth: 0,
-								maxWidth: "150px",
 								overflow: "hidden",
 							}}>
-							<select
+							<SelectDropdown
 								value={currentApiConfigName || ""}
 								disabled={textAreaDisabled}
-								onChange={(e) => {
-									const value = e.target.value
-									if (value === "settings-action") {
-										window.postMessage({ type: "action", action: "settingsButtonClicked" })
-										return
-									}
-									vscode.postMessage({
-										type: "loadApiConfiguration",
-										text: value,
-									})
-								}}
-								style={{
-									...selectStyle,
-									width: "100%",
-									textOverflow: "ellipsis",
-								}}>
-								{(listApiConfigMeta || []).map((config) => (
-									<option
-										key={config.name}
-										value={config.name}
-										style={{
-											...optionStyle,
-										}}>
-										{config.name}
-									</option>
-								))}
-								<option
-									disabled
-									style={{
-										borderTop: "1px solid var(--vscode-dropdown-border)",
-										...optionStyle,
-									}}>
-									────
-								</option>
-								<option value="settings-action" style={{ ...optionStyle }}>
-									Edit...
-								</option>
-							</select>
-							<div style={caretContainerStyle}>
-								<CaretIcon />
-							</div>
+								title={t("chat:selectApiConfig")}
+								options={[
+									...(listApiConfigMeta || []).map((config) => ({
+										value: config.name,
+										label: config.name,
+										type: DropdownOptionType.ITEM,
+									})),
+									{
+										value: "sep-2",
+										label: t("chat:separator"),
+										type: DropdownOptionType.SEPARATOR,
+									},
+									{
+										value: "settingsButtonClicked",
+										label: t("chat:edit"),
+										type: DropdownOptionType.ACTION,
+									},
+								]}
+								onChange={(value) => vscode.postMessage({ type: "loadApiConfiguration", text: value })}
+								contentClassName="max-h-[300px] overflow-y-auto"
+								triggerClassName="w-full text-ellipsis overflow-hidden"
+							/>
 						</div>
 					</div>
 
+					{/* Right side - action buttons */}
 					<div
 						style={{
 							display: "flex",
 							alignItems: "center",
-							gap: "12px",
+							gap: "8px",
+							flexShrink: 0,
 						}}>
 						<div style={{ display: "flex", alignItems: "center" }}>
 							{isEnhancingPrompt ? (
@@ -876,7 +895,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 										color: "var(--vscode-input-foreground)",
 										opacity: 0.5,
 										fontSize: 16.5,
-										marginRight: 10,
+										marginRight: 6,
 									}}
 								/>
 							) : (
@@ -884,6 +903,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 									role="button"
 									aria-label="enhance prompt"
 									data-testid="enhance-prompt-button"
+									title={t("chat:enhancePrompt")}
 									className={`input-icon-button ${
 										textAreaDisabled ? "disabled" : ""
 									} codicon codicon-sparkle`}
@@ -896,11 +916,13 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							className={`input-icon-button ${
 								shouldDisableImages ? "disabled" : ""
 							} codicon codicon-device-camera`}
+							title={t("chat:addImages")}
 							onClick={() => !shouldDisableImages && onSelectImages()}
 							style={{ fontSize: 16.5 }}
 						/>
 						<span
 							className={`input-icon-button ${textAreaDisabled ? "disabled" : ""} codicon codicon-send`}
+							title={t("chat:sendMessage")}
 							onClick={() => !textAreaDisabled && onSend()}
 							style={{ fontSize: 15 }}
 						/>

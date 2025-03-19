@@ -1,31 +1,29 @@
 import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
+import { useAppTranslation } from "@/i18n/TranslationContext"
 
 interface ExperimentalFeatureProps {
-	name: string
-	description: string
 	enabled: boolean
 	onChange: (value: boolean) => void
+	// Additional property to identify the experiment
+	experimentKey?: string
 }
 
-const ExperimentalFeature = ({ name, description, enabled, onChange }: ExperimentalFeatureProps) => {
+export const ExperimentalFeature = ({ enabled, onChange, experimentKey }: ExperimentalFeatureProps) => {
+	const { t } = useAppTranslation()
+
+	// Generate translation keys based on experiment key
+	const nameKey = experimentKey ? `settings:experimental.${experimentKey}.name` : ""
+	const descriptionKey = experimentKey ? `settings:experimental.${experimentKey}.description` : ""
+
 	return (
 		<div>
-			<div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-				<span style={{ color: "var(--vscode-errorForeground)" }}>⚠️</span>
+			<div className="flex items-center gap-2">
+				<span className="text-vscode-errorForeground">{t("settings:experimental.warning")}</span>
 				<VSCodeCheckbox checked={enabled} onChange={(e: any) => onChange(e.target.checked)}>
-					<span style={{ fontWeight: "500" }}>{name}</span>
+					<span className="font-medium">{t(nameKey)}</span>
 				</VSCodeCheckbox>
 			</div>
-			<p
-				style={{
-					fontSize: "12px",
-					marginBottom: 15,
-					color: "var(--vscode-descriptionForeground)",
-				}}>
-				{description}
-			</p>
+			<p className="text-vscode-descriptionForeground text-sm mt-0">{t(descriptionKey)}</p>
 		</div>
 	)
 }
-
-export default ExperimentalFeature

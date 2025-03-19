@@ -1,12 +1,11 @@
+import { useMemo, useState, useCallback, useEffect, useRef } from "react"
 import { VSCodeLink } from "@vscode/webview-ui-toolkit/react"
-import debounce from "debounce"
-import { useMemo, useState, useCallback, useEffect } from "react"
-import { useMount } from "react-use"
-import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons"
+import { Trans } from "react-i18next"
+import { ChevronsUpDown, Check, X } from "lucide-react"
 
+import { useAppTranslation } from "@/i18n/TranslationContext"
 import { cn } from "@/lib/utils"
 import {
-	Button,
 	Command,
 	CommandEmpty,
 	CommandGroup,
@@ -16,98 +15,171 @@ import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
+	Button,
 } from "@/components/ui"
 
-import { useExtensionState } from "../../context/ExtensionStateContext"
-import { vscode } from "../../utils/vscode"
+import { ApiConfiguration, ModelInfo } from "../../../../src/shared/api"
+
 import { normalizeApiConfiguration } from "./ApiOptions"
+import { ThinkingBudget } from "./ThinkingBudget"
 import { ModelInfoView } from "./ModelInfoView"
+
+type ExtractType<T> = NonNullable<
+	{ [K in keyof ApiConfiguration]: Required<ApiConfiguration>[K] extends T ? K : never }[keyof ApiConfiguration]
+>
+
+type ModelIdKeys = NonNullable<
+	{ [K in keyof ApiConfiguration]: K extends `${string}ModelId` ? K : never }[keyof ApiConfiguration]
+>
 
 interface ModelPickerProps {
 	defaultModelId: string
-	modelsKey: "glamaModels" | "openRouterModels" | "unboundModels" | "requestyModels"
-	configKey: "glamaModelId" | "openRouterModelId" | "unboundModelId" | "requestyModelId"
-	infoKey: "glamaModelInfo" | "openRouterModelInfo" | "unboundModelInfo" | "requestyModelInfo"
-	refreshMessageType: "refreshGlamaModels" | "refreshOpenRouterModels" | "refreshUnboundModels" | "refreshRequestyModels"
+	defaultModelInfo?: ModelInfo
+	models: Record<string, ModelInfo> | null
+	modelIdKey: ModelIdKeys
+	modelInfoKey: ExtractType<ModelInfo>
 	serviceName: string
 	serviceUrl: string
-	recommendedModel: string
+	apiConfiguration: ApiConfiguration
+	setApiConfigurationField: <K extends keyof ApiConfiguration>(field: K, value: ApiConfiguration[K]) => void
 }
 
 export const ModelPicker = ({
 	defaultModelId,
-	modelsKey,
-	configKey,
-	infoKey,
-	refreshMessageType,
+	models,
+	modelIdKey,
+	modelInfoKey,
 	serviceName,
 	serviceUrl,
-	recommendedModel,
+	apiConfiguration,
+	setApiConfigurationField,
+	defaultModelInfo,
 }: ModelPickerProps) => {
-	const [open, setOpen] = useState(false)
-	const [value, setValue] = useState(defaultModelId)
-	const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
+	const { t } = useAppTranslation()
 
-	const { apiConfiguration, setApiConfiguration, [modelsKey]: models, onUpdateApiConfig } = useExtensionState()
-	const modelIds = useMemo(() => Object.keys(models).sort((a, b) => a.localeCompare(b)), [models])
+	const [open, setOpen] = useState(false)
+	const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
+	const isInitialized = useRef(false)
+	const searchInputRef = useRef<HTMLInputElement>(null)
+	const modelIds = useMemo(() => Object.keys(models ?? {}).sort((a, b) => a.localeCompare(b)), [models])
 
 	const { selectedModelId, selectedModelInfo } = useMemo(
 		() => normalizeApiConfiguration(apiConfiguration),
 		[apiConfiguration],
 	)
 
+	const [searchValue, setSearchValue] = useState(selectedModelId || "")
+
 	const onSelect = useCallback(
 		(modelId: string) => {
-			const apiConfig = { ...apiConfiguration, [configKey]: modelId, [infoKey]: models[modelId] }
-			setApiConfiguration(apiConfig)
-			onUpdateApiConfig(apiConfig)
-			setValue(modelId)
+			if (!modelId) return
+
 			setOpen(false)
+			const modelInfo = models?.[modelId]
+			setApiConfigurationField(modelIdKey, modelId)
+			setApiConfigurationField(modelInfoKey, modelInfo ?? defaultModelInfo)
+
+			// Delay to ensure the popover is closed before setting the search value.
+			setTimeout(() => setSearchValue(modelId), 100)
 		},
-		[apiConfiguration, configKey, infoKey, models, onUpdateApiConfig, setApiConfiguration],
+		[modelIdKey, modelInfoKey, models, setApiConfigurationField, defaultModelInfo],
 	)
 
-	const debouncedRefreshModels = useMemo(
-		() => debounce(() => vscode.postMessage({ type: refreshMessageType }), 50),
-		[refreshMessageType],
+	const onOpenChange = useCallback(
+		(open: boolean) => {
+			setOpen(open)
+
+			// Abandon the current search if the popover is closed.
+			if (!open) {
+				// Delay to ensure the popover is closed before setting the search value.
+				setTimeout(() => setSearchValue(selectedModelId), 100)
+			}
+		},
+		[selectedModelId],
 	)
 
-	useMount(() => {
-		debouncedRefreshModels()
-		return () => debouncedRefreshModels.clear()
-	})
+	const onClearSearch = useCallback(() => {
+		setSearchValue("")
+		searchInputRef.current?.focus()
+	}, [])
 
-	useEffect(() => setValue(selectedModelId), [selectedModelId])
+	useEffect(() => {
+		if (!selectedModelId && !isInitialized.current) {
+			const initialValue = modelIds.includes(selectedModelId) ? selectedModelId : defaultModelId
+			setApiConfigurationField(modelIdKey, initialValue)
+		}
+
+		isInitialized.current = true
+	}, [modelIds, setApiConfigurationField, modelIdKey, selectedModelId, defaultModelId])
 
 	return (
 		<>
-			<div className="font-semibold">Model</div>
-			<Popover open={open} onOpenChange={setOpen}>
-				<PopoverTrigger asChild>
-					<Button variant="combobox" role="combobox" aria-expanded={open} className="w-full justify-between">
-						{value ?? "Select model..."}
-						<CaretSortIcon className="opacity-50" />
-					</Button>
-				</PopoverTrigger>
-				<PopoverContent align="start" className="p-0">
-					<Command>
-						<CommandInput placeholder="Search model..." className="h-9" />
-						<CommandList>
-							<CommandEmpty>No model found.</CommandEmpty>
-							<CommandGroup>
-								{modelIds.map((model) => (
-									<CommandItem key={model} value={model} onSelect={onSelect}>
-										{model}
-										<CheckIcon
-											className={cn("ml-auto", value === model ? "opacity-100" : "opacity-0")}
+			<div>
+				<label className="block font-medium mb-1">{t("settings:modelPicker.label")}</label>
+				<Popover open={open} onOpenChange={onOpenChange}>
+					<PopoverTrigger asChild>
+						<Button
+							variant="combobox"
+							role="combobox"
+							aria-expanded={open}
+							className="w-full justify-between">
+							<div>{selectedModelId ?? t("settings:common.select")}</div>
+							<ChevronsUpDown className="opacity-50" />
+						</Button>
+					</PopoverTrigger>
+					<PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)]">
+						<Command>
+							<div className="relative">
+								<CommandInput
+									ref={searchInputRef}
+									value={searchValue}
+									onValueChange={setSearchValue}
+									placeholder={t("settings:modelPicker.searchPlaceholder")}
+									className="h-9 mr-4"
+									data-testid="model-input"
+								/>
+								{searchValue.length > 0 && (
+									<div className="absolute right-2 top-0 bottom-0 flex items-center justify-center">
+										<X
+											className="text-vscode-input-foreground opacity-50 hover:opacity-100 size-4 p-0.5 cursor-pointer"
+											onClick={onClearSearch}
 										/>
+									</div>
+								)}
+							</div>
+							<CommandList>
+								<CommandEmpty>
+									{searchValue && (
+										<div className="py-2 px-1 text-sm">
+											{t("settings:modelPicker.noMatchFound")}
+										</div>
+									)}
+								</CommandEmpty>
+								<CommandGroup>
+									{modelIds.map((model) => (
+										<CommandItem key={model} value={model} onSelect={onSelect}>
+											{model}
+											<Check
+												className={cn(
+													"size-4 p-0.5 ml-auto",
+													model === selectedModelId ? "opacity-100" : "opacity-0",
+												)}
+											/>
+										</CommandItem>
+									))}
+								</CommandGroup>
+							</CommandList>
+							{searchValue && !modelIds.includes(searchValue) && (
+								<div className="p-1 border-t border-vscode-input-border">
+									<CommandItem data-testid="use-custom-model" value={searchValue} onSelect={onSelect}>
+										{t("settings:modelPicker.useCustomModel", { modelId: searchValue })}
 									</CommandItem>
-								))}
-							</CommandGroup>
-						</CommandList>
-					</Command>
-				</PopoverContent>
-			</Popover>
+								</div>
+							)}
+						</Command>
+					</PopoverContent>
+				</Popover>
+			</div>
 			{selectedModelId && selectedModelInfo && (
 				<ModelInfoView
 					selectedModelId={selectedModelId}
@@ -116,15 +188,24 @@ export const ModelPicker = ({
 					setIsDescriptionExpanded={setIsDescriptionExpanded}
 				/>
 			)}
-			<p>
-				The extension automatically fetches the latest list of models available on{" "}
-				<VSCodeLink style={{ display: "inline", fontSize: "inherit" }} href={serviceUrl}>
-					{serviceName}.
-				</VSCodeLink>
-				If you're unsure which model to choose, Roo Code works best with{" "}
-				<VSCodeLink onClick={() => onSelect(recommendedModel)}>{recommendedModel}.</VSCodeLink>
-				You can also try searching "free" for no-cost options currently available.
-			</p>
+			<ThinkingBudget
+				apiConfiguration={apiConfiguration}
+				setApiConfigurationField={setApiConfigurationField}
+				modelInfo={selectedModelInfo}
+			/>
+			<div className="text-sm text-vscode-descriptionForeground">
+				<Trans
+					i18nKey="settings:modelPicker.automaticFetch"
+					components={{
+						serviceLink: <VSCodeLink href={serviceUrl} className="text-sm" />,
+						defaultModelLink: <VSCodeLink onClick={() => onSelect(defaultModelId)} className="text-sm" />,
+					}}
+					values={{
+						serviceName,
+						defaultModelId,
+					}}
+				/>
+			</div>
 		</>
 	)
 }

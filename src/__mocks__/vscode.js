@@ -1,4 +1,13 @@
 const vscode = {
+	env: {
+		language: "en", // Default language for tests
+		appName: "Visual Studio Code Test",
+		appHost: "desktop",
+		appRoot: "/test/path",
+		machineId: "test-machine-id",
+		sessionId: "test-session-id",
+		shell: "/bin/zsh",
+	},
 	window: {
 		showInformationMessage: jest.fn(),
 		showErrorMessage: jest.fn(),
@@ -82,6 +91,12 @@ const vscode = {
 	TabInputText: class {
 		constructor(uri) {
 			this.uri = uri
+		}
+	},
+	RelativePattern: class {
+		constructor(base, pattern) {
+			this.base = base
+			this.pattern = pattern
 		}
 	},
 }

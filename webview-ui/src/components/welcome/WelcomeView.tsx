@@ -1,44 +1,54 @@
+import { useCallback, useState } from "react"
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
-import { useEffect, useState } from "react"
+
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import { validateApiConfiguration } from "../../utils/validate"
 import { vscode } from "../../utils/vscode"
 import ApiOptions from "../settings/ApiOptions"
+import { Tab, TabContent } from "../common/Tab"
+import { Alert } from "../common/Alert"
+import { useAppTranslation } from "../../i18n/TranslationContext"
 
 const WelcomeView = () => {
-	const { apiConfiguration } = useExtensionState()
+	const { apiConfiguration, currentApiConfigName, setApiConfiguration, uriScheme } = useExtensionState()
+	const { t } = useAppTranslation()
 
-	const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>(undefined)
+	const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
 
-	const disableLetsGoButton = apiErrorMessage !== null && apiErrorMessage !== undefined
+	const handleSubmit = useCallback(() => {
+		const error = validateApiConfiguration(apiConfiguration)
 
-	const handleSubmit = () => {
-		vscode.postMessage({ type: "apiConfiguration", apiConfiguration })
-	}
+		if (error) {
+			setErrorMessage(error)
+			return
+		}
 
-	useEffect(() => {
-		setApiErrorMessage(validateApiConfiguration(apiConfiguration))
-	}, [apiConfiguration])
+		setErrorMessage(undefined)
+		vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
+	}, [apiConfiguration, currentApiConfigName])
 
 	return (
-		<div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, padding: "0 20px" }}>
-			<h2>Hi, I'm Roo!</h2>
-			<p>
-				I can do all kinds of tasks thanks to the latest breakthroughs in agentic coding capabilities and access
-				to tools that let me create & edit files, explore complex projects, use the browser, and execute
-				terminal commands (with your permission, of course). I can even use MCP to create new tools and extend
-				my own capabilities.
-			</p>
-
-			<b>To get started, this extension needs an API provider.</b>
-
-			<div style={{ marginTop: "10px" }}>
-				<ApiOptions />
-				<VSCodeButton onClick={handleSubmit} disabled={disableLetsGoButton} style={{ marginTop: "3px" }}>
-					Let's go!
-				</VSCodeButton>
+		<Tab>
+			<TabContent className="flex flex-col gap-5">
+				<h2 className="m-0 p-0">{t("welcome:greeting")}</h2>
+				<div>{t("welcome:introduction")}</div>
+				<Alert className="font-bold text-sm">{t("welcome:notice")}</Alert>
+				<ApiOptions
+					fromWelcomeView
+					apiConfiguration={apiConfiguration || {}}
+					uriScheme={uriScheme}
+					setApiConfigurationField={(field, value) => setApiConfiguration({ [field]: value })}
+					errorMessage={errorMessage}
+					setErrorMessage={setErrorMessage}
+				/>
+			</TabContent>
+			<div className="sticky bottom-0 bg-vscode-sideBar-background p-5">
+				<div className="flex flex-col gap-1">
+					<VSCodeButton onClick={handleSubmit}>{t("welcome:start")}</VSCodeButton>
+					{errorMessage && <div className="text-vscode-errorForeground">{errorMessage}</div>}
+				</div>
 			</div>
-		</div>
+		</Tab>
 	)
 }
 

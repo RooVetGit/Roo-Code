@@ -31,7 +31,37 @@ jobs:
       - name: Lint
         run: npm run lint
 
-  unit-test:
+  check-translations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm run install:all
+      - name: Verify all translations are complete
+        run: node scripts/find-missing-translations.js
+
+  knip:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm run install:all
+      - name: Run knip checks
+        run: npm run knip
+
+  test-extension:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -44,7 +74,30 @@ jobs:
       - name: Install dependencies
         run: npm run install:all
       - name: Run unit tests
-        run: npm test
+        run: npx jest --silent
+
+  test-webview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm run install:all
+      - name: Run unit tests
+        working-directory: webview-ui
+        run: npx jest --silent
+
+  unit-test:
+    needs: [test-extension, test-webview]
+    runs-on: ubuntu-latest
+    steps:
+      - name: NO-OP
+        run: echo "All unit tests passed."
 
   check-openrouter-api-key:
     runs-on: ubuntu-latest
@@ -73,9 +126,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      - name: Create env.integration file
-        run: echo "OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}" > .env.integration
       - name: Install dependencies
         run: npm run install:all
+      - name: Create .env.local file
+        working-directory: e2e
+        run: echo "OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}" > .env.local
       - name: Run integration tests
-        run: xvfb-run -a npm run test:integration
+        working-directory: e2e
+        run: xvfb-run -a npm run ci

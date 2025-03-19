@@ -5,19 +5,21 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-	"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 cursor-pointer active:opacity-90",
+	"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xs text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 cursor-pointer",
 	{
 		variants: {
 			variant: {
-				default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
-				secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
+				default:
+					"border border-vscode-input-border bg-primary text-primary-foreground shadow hover:bg-primary/90",
+				destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
 				outline:
-					"border border-vscode-dropdown-border bg-vscode-background shadow-sm hover:border-vscode-dropdown-border/80",
+					"border border-vscode-input-border bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+				secondary:
+					"border border-vscode-input-border bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
 				ghost: "hover:bg-accent hover:text-accent-foreground",
 				link: "text-primary underline-offset-4 hover:underline",
-				destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
 				combobox:
-					"bg-vscode-dropdown-background text-vscode-dropdown-foreground border border-vscode-dropdown-border",
+					"border border-vscode-dropdown-border focus-visible:border-vscode-focusBorder bg-vscode-dropdown-background hover:bg-transparent text-vscode-dropdown-foreground font-normal",
 			},
 			size: {
 				default: "h-7 px-3",

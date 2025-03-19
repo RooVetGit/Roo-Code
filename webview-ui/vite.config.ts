@@ -14,6 +14,7 @@ export default defineConfig({
 	},
 	build: {
 		outDir: "build",
+		reportCompressedSize: false,
 		rollupOptions: {
 			output: {
 				entryFileNames: `assets/[name].js`,
@@ -35,5 +36,6 @@ export default defineConfig({
 	},
 	define: {
 		"process.platform": JSON.stringify(process.platform),
+		"process.env.VSCODE_TEXTMATE_DEBUG": JSON.stringify(process.env.VSCODE_TEXTMATE_DEBUG),
 	},
 })

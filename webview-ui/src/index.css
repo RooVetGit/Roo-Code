@@ -23,6 +23,8 @@
 
 @theme {
 	--font-display: var(--vscode-font-family);
+
+	--text-xs: calc(var(--vscode-font-size) * 0.85);
 	--text-sm: calc(var(--vscode-font-size) * 0.9);
 	--text-base: var(--vscode-font-size);
 	--text-lg: calc(var(--vscode-font-size) * 1.1);
@@ -60,10 +62,11 @@
 	 */
 
 	--color-vscode-foreground: var(--vscode-foreground);
-	--color-vscode-background: var(--vscode-background);
 
 	--color-vscode-editor-foreground: var(--vscode-editor-foreground);
 	--color-vscode-editor-background: var(--vscode-editor-background);
+
+	--color-vscode-editorGroup-border: var(--vscode-editorGroup-border);
 
 	--color-vscode-button-foreground: var(--vscode-button-foreground);
 	--color-vscode-button-background: var(--vscode-button-background);
@@ -74,8 +77,11 @@
 	--color-vscode-dropdown-background: var(--vscode-dropdown-background);
 	--color-vscode-dropdown-border: var(--vscode-dropdown-border);
 
+	--color-vscode-input-foreground: var(--vscode-input-foreground);
 	--color-vscode-input-background: var(--vscode-input-background);
 	--color-vscode-input-border: var(--vscode-input-border);
+
+	--color-vscode-focusBorder: var(--vscode-focusBorder);
 
 	--color-vscode-badge-foreground: var(--vscode-badge-foreground);
 	--color-vscode-badge-background: var(--vscode-badge-background);
@@ -83,6 +89,34 @@
 	--color-vscode-notifications-foreground: var(--vscode-notifications-foreground);
 	--color-vscode-notifications-background: var(--vscode-notifications-background);
 	--color-vscode-notifications-border: var(--vscode-notifications-border);
+
+	--color-vscode-descriptionForeground: var(--vscode-descriptionForeground);
+	--color-vscode-errorForeground: var(--vscode-errorForeground);
+
+	--color-vscode-list-hoverForeground: var(--vscode-list-hoverForeground);
+	--color-vscode-list-hoverBackground: var(--vscode-list-hoverBackground);
+	--color-vscode-list-focusBackground: var(--vscode-list-focusBackground);
+	--color-vscode-list-activeSelectionBackground: var(--vscode-list-activeSelectionBackground);
+	--color-vscode-list-activeSelectionForeground: var(--vscode-list-activeSelectionForeground);
+
+	--color-vscode-toolbar-hoverBackground: var(--vscode-toolbar-hoverBackground);
+
+	--color-vscode-panel-border: var(--vscode-panel-border);
+
+	--color-vscode-sideBar-foreground: var(--vscode-sideBar-foreground);
+	--color-vscode-sideBar-background: var(--vscode-sideBar-background);
+	--color-vscode-sideBar-border: var(--vscode-sideBar-border);
+
+	--color-vscode-sideBarSectionHeader-foreground: var(--vscode-sideBarSectionHeader-foreground);
+	--color-vscode-sideBarSectionHeader-background: var(--vscode-sideBarSectionHeader-background);
+	--color-vscode-sideBarSectionHeader-border: var(--vscode-sideBarSectionHeader-border);
+
+	--color-vscode-charts-green: var(--vscode-charts-green);
+	--color-vscode-charts-yellow: var(--vscode-charts-yellow);
+
+	--color-vscode-inputValidation-infoForeground: var(--vscode-inputValidation-infoForeground);
+	--color-vscode-inputValidation-infoBackground: var(--vscode-inputValidation-infoBackground);
+	--color-vscode-inputValidation-infoBorder: var(--vscode-inputValidation-infoBorder);
 }
 
 @layer base {
@@ -100,7 +134,7 @@
 		--muted: var(--vscode-disabledForeground);
 		--muted-foreground: var(--vscode-descriptionForeground);
 		--accent: var(--vscode-list-hoverBackground);
-		--accent-foreground: var(--vscode-button-foreground);
+		--accent-foreground: var(--vscode-list-hoverForeground);
 		--destructive: var(--vscode-errorForeground);
 		--destructive-foreground: var(--vscode-button-foreground);
 		--border: var(--vscode-input-border);
@@ -135,8 +169,13 @@
 }
 
 /* Form Element Focus States */
+
 textarea:focus {
 	outline: 1.5px solid var(--vscode-focusBorder, #007fd4);
+}
+
+.focus\:outline-0 {
+	outline: 0 !important; /* Allow tailwind to override the `textarea:focus` rule */
 }
 
 vscode-button::part(control):focus {
@@ -199,19 +238,19 @@ body:focus-within .code-block-scrollable {
 	border-color: var(--vscode-scrollbarSlider-activeBackground);
 }
 
-/*
-Fix VSCode ignoring webkit scrollbar modifiers
-https://github.com/microsoft/vscode/issues/213045
-*/
+/**
+ * Fix VSCode ignoring webkit scrollbar modifiers
+ * https://github.com/microsoft/vscode/issues/213045
+ */
 @supports selector(::-webkit-scrollbar) {
 	html {
 		scrollbar-color: unset;
 	}
 }
 
-/*
-The above scrollbar styling uses some transparent background color magic to accomplish its animation. However this doesn't play nicely with SyntaxHighlighter, so we need to set a background color for the code blocks' horizontal scrollbar. This actually has the unintended consequence of always showing the scrollbar which I prefer since it makes it more obvious that there is more content to scroll to.
-*/
+/**
+ * The above scrollbar styling uses some transparent background color magic to accomplish its animation. However this doesn't play nicely with SyntaxHighlighter, so we need to set a background color for the code blocks' horizontal scrollbar. This actually has the unintended consequence of always showing the scrollbar which I prefer since it makes it more obvious that there is more content to scroll to.
+ */
 
 .code-block-scrollable::-webkit-scrollbar-track {
 	background: transparent;
@@ -234,6 +273,19 @@ The above scrollbar styling uses some transparent background color magic to acco
 
 .code-block-scrollable::-webkit-scrollbar-corner {
 	background-color: transparent;
+}
+
+/**
+ * Add a way to hide scrollbars.
+ */
+
+.scrollbar-hide {
+	-ms-overflow-style: none; /* IE and Edge */
+	scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+	display: none; /* Chrome, Safari and Opera */
 }
 
 /**
@@ -319,10 +371,23 @@ vscode-dropdown::part(listbox) {
 	max-height: unset !important;
 }
 
+.vscrui-checkbox svg {
+	min-width: 16px;
+	min-height: 16px;
+}
+
 /**
  * @shadcn/ui Overrides / Hacks
  */
 
 input[cmdk-input]:focus {
 	outline: none;
+}
+
+/**
+ * Markdown
+ */
+
+.custom-markdown > pre {
+	background-color: transparent !important;
 }

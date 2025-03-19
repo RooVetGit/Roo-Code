@@ -1,50 +1,13 @@
+// npx jest src/api/providers/__tests__/anthropic.test.ts
+
 import { AnthropicHandler } from "../anthropic"
 import { ApiHandlerOptions } from "../../../shared/api"
-import { ApiStream } from "../../transform/stream"
-import { Anthropic } from "@anthropic-ai/sdk"
 
-// Mock Anthropic client
-const mockBetaCreate = jest.fn()
 const mockCreate = jest.fn()
+
 jest.mock("@anthropic-ai/sdk", () => {
 	return {
 		Anthropic: jest.fn().mockImplementation(() => ({
-			beta: {
-				promptCaching: {
-					messages: {
-						create: mockBetaCreate.mockImplementation(async () => ({
-							async *[Symbol.asyncIterator]() {
-								yield {
-									type: "message_start",
-									message: {
-										usage: {
-											input_tokens: 100,
-											output_tokens: 50,
-											cache_creation_input_tokens: 20,
-											cache_read_input_tokens: 10,
-										},
-									},
-								}
-								yield {
-									type: "content_block_start",
-									index: 0,
-									content_block: {
-										type: "text",
-										text: "Hello",
-									},
-								}
-								yield {
-									type: "content_block_delta",
-									delta: {
-										type: "text_delta",
-										text: " world",
-									},
-								}
-							},
-						})),
-					},
-				},
-			},
 			messages: {
 				create: mockCreate.mockImplementation(async (options) => {
 					if (!options.stream) {
@@ -65,16 +28,26 @@ jest.mock("@anthropic-ai/sdk", () => {
 								type: "message_start",
 								message: {
 									usage: {
-										input_tokens: 10,
-										output_tokens: 5,
+										input_tokens: 100,
+										output_tokens: 50,
+										cache_creation_input_tokens: 20,
+										cache_read_input_tokens: 10,
 									},
 								},
 							}
 							yield {
 								type: "content_block_start",
+								index: 0,
 								content_block: {
 									type: "text",
-									text: "Test response",
+									text: "Hello",
+								},
+							}
+							yield {
+								type: "content_block_delta",
+								delta: {
+									type: "text_delta",
+									text: " world",
 								},
 							}
 						},
@@ -95,7 +68,6 @@ describe("AnthropicHandler", () => {
 			apiModelId: "claude-3-5-sonnet-20241022",
 		}
 		handler = new AnthropicHandler(mockOptions)
-		mockBetaCreate.mockClear()
 		mockCreate.mockClear()
 	})
 
@@ -126,17 +98,6 @@ describe("AnthropicHandler", () => {
 
 	describe("createMessage", () => {
 		const systemPrompt = "You are a helpful assistant."
-		const messages: Anthropic.Messages.MessageParam[] = [
-			{
-				role: "user",
-				content: [
-					{
-						type: "text" as const,
-						text: "Hello!",
-					},
-				],
-			},
-		]
 
 		it("should handle prompt caching for supported models", async () => {
 			const stream = handler.createMessage(systemPrompt, [
@@ -173,9 +134,8 @@ describe("AnthropicHandler", () => {
 			expect(textChunks[0].text).toBe("Hello")
 			expect(textChunks[1].text).toBe(" world")
 
-			// Verify beta API was used
-			expect(mockBetaCreate).toHaveBeenCalled()
-			expect(mockCreate).not.toHaveBeenCalled()
+			// Verify API
+			expect(mockCreate).toHaveBeenCalled()
 		})
 	})
 
@@ -193,7 +153,7 @@ describe("AnthropicHandler", () => {
 		})
 
 		it("should handle API errors", async () => {
-			mockCreate.mockRejectedValueOnce(new Error("API Error"))
+			mockCreate.mockRejectedValueOnce(new Error("Anthropic completion error: API Error"))
 			await expect(handler.completePrompt("Test prompt")).rejects.toThrow("Anthropic completion error: API Error")
 		})
 
@@ -233,6 +193,34 @@ describe("AnthropicHandler", () => {
 			expect(model.info.contextWindow).toBe(200_000)
 			expect(model.info.supportsImages).toBe(true)
 			expect(model.info.supportsPromptCache).toBe(true)
+		})
+
+		it("honors custom maxTokens for thinking models", () => {
+			const handler = new AnthropicHandler({
+				apiKey: "test-api-key",
+				apiModelId: "claude-3-7-sonnet-20250219:thinking",
+				modelMaxTokens: 32_768,
+				modelMaxThinkingTokens: 16_384,
+			})
+
+			const result = handler.getModel()
+			expect(result.maxTokens).toBe(32_768)
+			expect(result.thinking).toEqual({ type: "enabled", budget_tokens: 16_384 })
+			expect(result.temperature).toBe(1.0)
+		})
+
+		it("does not honor custom maxTokens for non-thinking models", () => {
+			const handler = new AnthropicHandler({
+				apiKey: "test-api-key",
+				apiModelId: "claude-3-7-sonnet-20250219",
+				modelMaxTokens: 32_768,
+				modelMaxThinkingTokens: 16_384,
+			})
+
+			const result = handler.getModel()
+			expect(result.maxTokens).toBe(16_384)
+			expect(result.thinking).toBeUndefined()
+			expect(result.temperature).toBe(0)
 		})
 	})
 })

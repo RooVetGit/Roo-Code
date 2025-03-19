@@ -1,7 +1,5 @@
 import styled from "styled-components"
 
-export const DROPDOWN_Z_INDEX = 1_000
-
 export const DropdownWrapper = styled.div`
 	position: relative;
 	width: 100%;

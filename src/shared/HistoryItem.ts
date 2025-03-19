@@ -1,5 +1,6 @@
 export type HistoryItem = {
 	id: string
+	number: number
 	ts: number
 	task: string
 	tokensIn: number
@@ -7,4 +8,5 @@ export type HistoryItem = {
 	cacheWrites?: number
 	cacheReads?: number
 	totalCost: number
+	size?: number
 }

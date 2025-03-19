@@ -1,9 +1,23 @@
 <div align="center">
+<sub>
+
+English • [Català](locales/ca/README.md) • [Deutsch](locales/de/README.md) • [Español](locales/es/README.md) • [Français](locales/fr/README.md) • [हिन्दी](locales/hi/README.md) • [Italiano](locales/it/README.md)
+
+</sub>
+<sub>
+
+[日本語](locales/ja/README.md) • [한국어](locales/ko/README.md) • [Polski](locales/pl/README.md) • [Português (BR)](locales/pt-BR/README.md) • [Türkçe](locales/tr/README.md) • [Tiếng Việt](locales/vi/README.md) • [简体中文](locales/zh-CN/README.md) • [繁體中文](locales/zh-TW/README.md)
+
+</sub>
+</div>
+<br>
+
+<div align="center">
   <h2>Join the Roo Code Community</h2>
   <p>Connect with developers, contribute ideas, and stay ahead with the latest AI-powered coding tools.</p>
   
-  <a href="https://discord.gg/roocode" target="_blank"><img src="https://img.shields.io/badge/Join%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join Discord" height="60"></a>
-  <a href="https://www.reddit.com/r/RooCode/" target="_blank"><img src="https://img.shields.io/badge/Join%20Reddit-FF4500?style=for-the-badge&logo=reddit&logoColor=white" alt="Join Reddit" height="60"></a>
+  <a href="https://discord.gg/roocode" target="_blank"><img src="https://img.shields.io/badge/Join%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join Discord"></a>
+  <a href="https://www.reddit.com/r/RooCode/" target="_blank"><img src="https://img.shields.io/badge/Join%20Reddit-FF4500?style=for-the-badge&logo=reddit&logoColor=white" alt="Join Reddit"></a>
   
 </div>
 <br>
@@ -15,6 +29,8 @@
 <a href="https://marketplace.visualstudio.com/items?itemName=RooVeterinaryInc.roo-cline" target="_blank"><img src="https://img.shields.io/badge/Download%20on%20VS%20Marketplace-blue?style=for-the-badge&logo=visualstudiocode&logoColor=white" alt="Download on VS Marketplace"></a>
 <a href="https://github.com/RooVetGit/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop" target="_blank"><img src="https://img.shields.io/badge/Feature%20Requests-yellow?style=for-the-badge" alt="Feature Requests"></a>
 <a href="https://marketplace.visualstudio.com/items?itemName=RooVeterinaryInc.roo-cline&ssr=false#review-details" target="_blank"><img src="https://img.shields.io/badge/Rate%20%26%20Review-green?style=for-the-badge" alt="Rate & Review"></a>
+<a href="https://docs.roocode.com" target="_blank"><img src="https://img.shields.io/badge/Documentation-6B46C1?style=for-the-badge&logo=readthedocs&logoColor=white" alt="Documentation"></a>
+
 </div>
 
 **Roo Code** is an AI-powered **autonomous coding agent** that lives in your editor. It can:
@@ -32,234 +48,117 @@ Check out the [CHANGELOG](CHANGELOG.md) for detailed updates and fixes.
 
 ---
 
-## New in 3.3: Code Actions, More Powerful Modes, and a new Discord! 🚀
+## 🎉 Roo Code 3.9 Released
 
-This release brings significant improvements to how you interact with Roo Code:
+Roo Code has gone international in 3.9!
 
-### Code Actions
-
-Roo Code now integrates directly with VS Code's native code actions system, providing quick fixes and refactoring options right in your editor. Look for the lightbulb 💡 to access Roo Code's capabilities without switching context.
-
-### Enhanced Mode Capabilities
-
-- **Markdown Editing**: Addressing one of the most requested features, Ask and Architect modes can now create and edit markdown files!
-- **Custom File Restrictions**: In general, custom modes can now be restricted to specific file patterns (for example, a technical writer who can only edit markdown files 👋). There's no UI for this yet, but who needs that when you can just ask Roo to set it up for you?
-- **Self-Initiated Mode Switching**: Modes can intelligently request to switch between each other based on the task at hand. For instance, Code mode might request to switch to Test Engineer mode once it's ready to write tests.
-
-### Join Our Discord!
-
-We've launched a new Discord community! Join us at [https://roocode.com/discord](https://roocode.com/discord) to:
-
-- Share your custom modes
-- Get help and support
-- Connect with other Roo Code users
-- Stay updated on the latest features
-
-## New in 3.2: Introducing Custom Modes, plus rebranding from Roo Cline → Roo Code! 🚀
-
-### Introducing Roo Code
-
-Our biggest update yet is here - we're officially changing our name from Roo Cline to Roo Code! After growing beyond 50,000 installations across VS Marketplace and Open VSX, we're ready to chart our own course. Our heartfelt thanks to everyone in the Cline community who helped us reach this milestone.
-
-### Custom Modes
-
-To mark this new chapter, we're introducing the power to shape Roo Code into any role you need. You can now create an entire team of agents with deeply customized prompts:
-
-- QA Engineers who write thorough test cases and catch edge cases
-- Product Managers who excel at user stories and feature prioritization
-- UI/UX Designers who craft beautiful, accessible interfaces
-- Code Reviewers who ensure quality and maintainability
-
-The best part is that Roo can help you create these new modes! Just type "Create a new mode for <X>" in the chat to get started, and go into the Prompts tab or (carefully) edit the JSON representation to customize the prompt and allowed tools to your liking.
-
-We can't wait to hear more about what you build and how we can continue to evolve the Roo Code platform to support you. Please join us in our new https://www.reddit.com/r/RooCode subreddit to share your custom modes and be part of our next chapter. 🚀
-
-## New in 3.1: Chat Mode Prompt Customization & Prompt Enhancements
-
-Hot off the heels of **v3.0** introducing Code, Architect, and Ask chat modes, one of the most requested features has arrived: **customizable prompts for each mode**! 🎉
-
-You can now tailor the **role definition** and **custom instructions** for every chat mode to perfectly fit your workflow. Want to adjust Architect mode to focus more on system scalability? Or tweak Ask mode for deeper research queries? Done. Plus, you can define these via **mode-specific `.clinerules-[mode]` files**. You’ll find all of this in the new **Prompts** tab in the top menu.
-
-The second big feature in this release is a complete revamp of **prompt enhancements**. This feature helps you craft messages to get even better results from Cline. Here’s what’s new:
-
-- Works with **any provider** and API configuration, not just OpenRouter.
-- Fully customizable prompts to match your unique needs.
-- Same simple workflow: just hit the ✨ **Enhance Prompt** button in the chat input to try it out.
-
-Whether you’re using GPT-4, other APIs, or switching configurations, this gives you total control over how your prompts are optimized.
-
-As always, we’d love to hear your thoughts and ideas! What features do you want to see in **v3.2**? Drop by https://www.reddit.com/r/roocline and join the discussion - we're building Roo Cline together. 🚀
-
-## New in 3.0 - Chat Modes!
-
-You can now choose between different prompts for Roo Cline to better suit your workflow. Here’s what’s available:
-
-- **Code:** (existing behavior) The default mode where Cline helps you write code and execute tasks.
-
-- **Architect:** "You are Cline, a software architecture expert..." Ideal for thinking through high-level technical design and system architecture. Can’t write code or run commands.
-
-- **Ask:** "You are Cline, a knowledgeable technical assistant..." Perfect for asking questions about the codebase or digging into concepts. Also can’t write code or run commands.
-
-**Switching Modes:**
-It’s super simple! There’s a dropdown in the bottom left of the chat input to switch modes. Right next to it, you’ll find a way to switch between the API configuration profiles associated with the current mode (configured on the settings screen).
-
-**Why Add This?**
-
-- It keeps Cline from being overly eager to jump into solving problems when you just want to think or ask questions.
-- Each mode remembers the API configuration you last used with it. For example, you can use more thoughtful models like OpenAI o1 for Architect and Ask, while sticking with Sonnet or DeepSeek for coding tasks.
-- It builds on research suggesting better results when separating "thinking" from "coding," explained well in this very thoughtful [article](https://aider.chat/2024/09/26/architect.html) from aider.
-
-Right now, switching modes is a manual process. In the future, we’d love to give Cline the ability to suggest mode switches based on context. For now, we’d really appreciate your feedback on this feature.
+- Roo Code has been translated into 14 different languages! To see them all and change your settings, go to Settings -> Language.
+- We now support both the stdio and SSE transports for MCP
+- By popular demand, you can now batch delete history items
+- Turn on text-to-speech in your settings to hear everything Roo has to say
+- Want more control over your OpenRouter? Now you can pick a specific provider for your model.
 
 ---
+
+## What Can Roo Code Do?
+
+- 🚀 **Generate Code** from natural language descriptions
+- 🔧 **Refactor & Debug** existing code
+- 📝 **Write & Update** documentation
+- 🤔 **Answer Questions** about your codebase
+- 🔄 **Automate** repetitive tasks
+- 🏗️ **Create** new files and projects
+
+## Quick Start
+
+1. [Install Roo Code](https://docs.roocode.com/getting-started/installing)
+2. [Connect Your AI Provider](https://docs.roocode.com/getting-started/connecting-api-provider)
+3. [Try Your First Task](https://docs.roocode.com/getting-started/your-first-task)
 
 ## Key Features
 
-### Adaptive Autonomy
+### Multiple Modes
 
-Roo Code communicates in **natural language** and proposes actions—file edits, terminal commands, browser tests, etc. You choose how it behaves:
+Roo Code adapts to your needs with specialized [modes](https://docs.roocode.com/basic-usage/modes):
 
-- **Manual Approval**: Review and approve every step to keep total control.
-- **Autonomous/Auto-Approve**: Grant Roo Code the ability to run tasks without interruption, speeding up routine workflows.
-- **Hybrid**: Auto-approve specific actions (e.g., file writes) but require confirmation for riskier tasks (like deploying code).
+- **Code Mode:** For general-purpose coding tasks
+- **Architect Mode:** For planning and technical leadership
+- **Ask Mode:** For answering questions and providing information
+- **Debug Mode:** For systematic problem diagnosis
+- **[Custom Modes](https://docs.roocode.com/advanced-usage/custom-modes):** Create unlimited specialized personas for security auditing, performance optimization, documentation, or any other task
 
-No matter your preference, you always have the final say on what Roo Code does.
+### Smart Tools
 
----
+Roo Code comes with powerful [tools](https://docs.roocode.com/basic-usage/using-tools) that can:
 
-### Supports Any API or Model
+- Read and write files in your project
+- Execute commands in your VS Code terminal
+- Control a web browser
+- Use external tools via [MCP (Model Context Protocol)](https://docs.roocode.com/advanced-usage/mcp)
 
-Use Roo Code with:
+MCP extends Roo Code's capabilities by allowing you to add unlimited custom tools. Integrate with external APIs, connect to databases, or create specialized development tools - MCP provides the framework to expand Roo Code's functionality to meet your specific needs.
 
-- **OpenRouter**, Anthropic, Glama, OpenAI, Google Gemini, AWS Bedrock, Azure, GCP Vertex, or local models (LM Studio/Ollama)—anything **OpenAI-compatible**.
-- Different models per mode. For instance, an advanced model for architecture vs. a cheaper model for daily coding tasks.
-- **Usage Tracking**: Roo Code monitors token and cost usage for each session.
+### Customization
 
----
+Make Roo Code work your way with:
 
-### Custom Modes
+- [Custom Instructions](https://docs.roocode.com/advanced-usage/custom-instructions) for personalized behavior
+- [Custom Modes](https://docs.roocode.com/advanced-usage/custom-modes) for specialized tasks
+- [Local Models](https://docs.roocode.com/advanced-usage/local-models) for offline use
+- [Auto-Approval Settings](https://docs.roocode.com/advanced-usage/auto-approving-actions) for faster workflows
 
-**Custom Modes** let you shape Roo Code’s persona, instructions, and permissions:
+## Resources
 
-- **Built-in**:
-    - **Code** – Default, multi-purpose coding assistant
-    - **Architect** – High-level system and design insights
-    - **Ask** – Research and Q&A for deeper exploration
-- **User-Created**: Type `Create a new mode for <X>` and Roo Code generates a brand-new persona for that role—complete with tailored prompts and optional tool restrictions.
+### Documentation
 
-Modes can each have unique instructions and skill sets. Manage them in the **Prompts** tab.
+- [Basic Usage Guide](https://docs.roocode.com/basic-usage/the-chat-interface)
+- [Advanced Features](https://docs.roocode.com/advanced-usage/auto-approving-actions)
+- [Frequently Asked Questions](https://docs.roocode.com/faq)
 
-**Advanced Mode Features:**
+### Community
 
-- **File Restrictions**: Modes can be restricted to specific file types (e.g., Ask and Architect modes can edit markdown files)
-- **Custom File Rules**: Define your own file access patterns (e.g., `.test.ts` for test files only)
-- **Direct Mode Switching**: Modes can request to switch to other modes when needed (e.g., switching to Code mode for implementation)
-- **Self-Creation**: Roo Code can help create new modes, complete with role definitions and file restrictions
-
----
-
-### File & Editor Operations
-
-Roo Code can:
-
-- **Create and edit** files in your project (showing you diffs).
-- **React** to linting or compile-time errors automatically (missing imports, syntax errors, etc.).
-- **Track changes** via your editor’s timeline so you can review or revert if needed.
-
----
-
-### Command Line Integration
-
-Easily run commands in your terminal—Roo Code:
-
-- Installs packages, runs builds, or executes tests.
-- Monitors output and adapts if it detects errors.
-- Lets you keep dev servers running in the background while continuing to work.
-
-You approve or decline each command, or set auto-approval for routine operations.
-
----
-
-### Browser Automation
-
-Roo Code can also open a **browser** session to:
-
-- Launch your local or remote web app.
-- Click, type, scroll, and capture screenshots.
-- Collect console logs to debug runtime or UI/UX issues.
-
-Ideal for **end-to-end testing** or visually verifying changes without constant copy-pasting.
-
----
-
-### Adding Tools with MCP
-
-Extend Roo Code with the **Model Context Protocol (MCP)**:
-
-- “Add a tool that manages AWS EC2 resources.”
-- “Add a tool that queries the company Jira.”
-- “Add a tool that pulls the latest PagerDuty incidents.”
-
-Roo Code can build and configure new tools autonomously (with your approval) to expand its capabilities instantly.
-
----
-
-### Context Mentions
-
-When you need to provide extra context:
-
-- **@file** – Embed a file’s contents in the conversation.
-- **@folder** – Include entire folder structures.
-- **@problems** – Pull in workspace errors/warnings for Roo Code to fix.
-- **@url** – Fetch docs from a URL, converting them to markdown.
-- **@git** – Supply a list of Git commits or diffs for Roo Code to analyze code history.
-
-Help Roo Code focus on the most relevant details without blowing the token budget.
-
----
-
-## Installation
-
-Roo Code is available on:
-
-- **[VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=RooVeterinaryInc.roo-cline)**
-- **[Open-VSX](https://open-vsx.org/extension/RooVeterinaryInc/roo-cline)**
-
-1. **Search “Roo Code”** in your editor’s Extensions panel to install directly.
-2. Or grab the `.vsix` file from Marketplace / Open-VSX and **drag-and-drop** into your editor.
-3. **Open** Roo Code from the Activity Bar or Command Palette to start chatting.
-
-> **Tip**: Use `Cmd/Ctrl + Shift + P` → “Roo Code: Open in New Tab” to dock the AI assistant alongside your file explorer.
+- **Discord:** [Join our Discord server](https://discord.gg/roocode) for real-time help and discussions
+- **Reddit:** [Visit our subreddit](https://www.reddit.com/r/RooCode) to share experiences and tips
+- **GitHub:** Report [issues](https://github.com/RooVetGit/Roo-Code/issues) or request [features](https://github.com/RooVetGit/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
 
 ---
 
 ## Local Setup & Development
 
 1. **Clone** the repo:
-    ```bash
-    git clone https://github.com/RooVetGit/Roo-Code.git
-    ```
+
+```sh
+git clone https://github.com/RooVetGit/Roo-Code.git
+```
+
 2. **Install dependencies**:
-    ```bash
-    npm run install:all
-    ```
-3. **Build** the extension:
-    ```bash
-    npm run build
-    ```
-    - A `.vsix` file will appear in the `bin/` directory.
-4. **Install** the `.vsix` manually if desired:
-    ```bash
-    code --install-extension bin/roo-code-4.0.0.vsix
-    ```
-5. **Start the webview (Vite/React app with HMR)**:
-    ```bash
-    npm run dev
-    ```
-6. **Debug**:
-    - Press `F5` (or **Run** → **Start Debugging**) in VSCode to open a new session with Roo Code loaded.
+
+```sh
+npm run install:all
+```
+
+3. **Start the webview (Vite/React app with HMR)**:
+
+```sh
+npm run dev
+```
+
+4. **Debug**:
+   Press `F5` (or **Run** → **Start Debugging**) in VSCode to open a new session with Roo Code loaded.
 
 Changes to the webview will appear immediately. Changes to the core extension will require a restart of the extension host.
+
+Alternatively you can build a .vsix and install it directly in VSCode:
+
+```sh
+npm run build
+```
+
+A `.vsix` file will appear in the `bin/` directory which can be installed with:
+
+```sh
+code --install-extension bin/roo-cline-<version>.vsix
+```
 
 We use [changesets](https://github.com/changesets/changesets) for versioning and publishing. Check our `CHANGELOG.md` for release notes.
 
@@ -273,14 +172,35 @@ We use [changesets](https://github.com/changesets/changesets) for versioning and
 
 ## Contributing
 
-We love community contributions! Here’s how to get involved:
-
-1. **Check Issues & Requests**: See [open issues](https://github.com/RooVetGit/Roo-Code/issues) or [feature requests](https://github.com/RooVetGit/Roo-Code/discussions/categories/feature-requests).
-2. **Fork & branch** off `main`.
-3. **Submit a Pull Request** once your feature or fix is ready.
-4. **Join** our [Reddit community](https://www.reddit.com/r/RooCode/) and [Discord](https://roocode.com/discord) for feedback, tips, and announcements.
+We love community contributions! Get started by reading our [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
+
+## Contributors
+
+Thanks to all our contributors who have helped make Roo Code better!
+
+<!-- START CONTRIBUTORS SECTION - AUTO-GENERATED, DO NOT EDIT MANUALLY -->
+
+|                <a href="https://github.com/mrubens"><img src="https://avatars.githubusercontent.com/u/2600?v=4" width="100" height="100" alt="mrubens"/><br /><sub><b>mrubens</b></sub></a>                 |       <a href="https://github.com/saoudrizwan"><img src="https://avatars.githubusercontent.com/u/7799382?v=4" width="100" height="100" alt="saoudrizwan"/><br /><sub><b>saoudrizwan</b></sub></a>        |                <a href="https://github.com/cte"><img src="https://avatars.githubusercontent.com/u/16332?v=4" width="100" height="100" alt="cte"/><br /><sub><b>cte</b></sub></a>                |            <a href="https://github.com/samhvw8"><img src="https://avatars.githubusercontent.com/u/12538214?v=4" width="100" height="100" alt="samhvw8"/><br /><sub><b>samhvw8</b></sub></a>            |    <a href="https://github.com/daniel-lxs"><img src="https://avatars.githubusercontent.com/u/57051444?v=4" width="100" height="100" alt="daniel-lxs"/><br /><sub><b>daniel-lxs</b></sub></a>    |                   <a href="https://github.com/a8trejo"><img src="https://avatars.githubusercontent.com/u/62401433?v=4" width="100" height="100" alt="a8trejo"/><br /><sub><b>a8trejo</b></sub></a>                    |
+| :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+|         <a href="https://github.com/ColemanRoo"><img src="https://avatars.githubusercontent.com/u/117104599?v=4" width="100" height="100" alt="ColemanRoo"/><br /><sub><b>ColemanRoo</b></sub></a>          |            <a href="https://github.com/stea9499"><img src="https://avatars.githubusercontent.com/u/4163795?v=4" width="100" height="100" alt="stea9499"/><br /><sub><b>stea9499</b></sub></a>            | <a href="https://github.com/joemanley201"><img src="https://avatars.githubusercontent.com/u/8299960?v=4" width="100" height="100" alt="joemanley201"/><br /><sub><b>joemanley201</b></sub></a>  |         <a href="https://github.com/System233"><img src="https://avatars.githubusercontent.com/u/20336040?v=4" width="100" height="100" alt="System233"/><br /><sub><b>System233</b></sub></a>         |   <a href="https://github.com/nissa-seru"><img src="https://avatars.githubusercontent.com/u/119150866?v=4" width="100" height="100" alt="nissa-seru"/><br /><sub><b>nissa-seru</b></sub></a>    |                  <a href="https://github.com/jquanton"><img src="https://avatars.githubusercontent.com/u/88576563?v=4" width="100" height="100" alt="jquanton"/><br /><sub><b>jquanton</b></sub></a>                  |
+|                <a href="https://github.com/NyxJae"><img src="https://avatars.githubusercontent.com/u/52313587?v=4" width="100" height="100" alt="NyxJae"/><br /><sub><b>NyxJae</b></sub></a>                |    <a href="https://github.com/hannesrudolph"><img src="https://avatars.githubusercontent.com/u/49103247?v=4" width="100" height="100" alt="hannesrudolph"/><br /><sub><b>hannesrudolph</b></sub></a>    |       <a href="https://github.com/MuriloFP"><img src="https://avatars.githubusercontent.com/u/50873657?v=4" width="100" height="100" alt="MuriloFP"/><br /><sub><b>MuriloFP</b></sub></a>       |          <a href="https://github.com/punkpeye"><img src="https://avatars.githubusercontent.com/u/108313943?v=4" width="100" height="100" alt="punkpeye"/><br /><sub><b>punkpeye</b></sub></a>          |            <a href="https://github.com/d-oit"><img src="https://avatars.githubusercontent.com/u/6849456?v=4" width="100" height="100" alt="d-oit"/><br /><sub><b>d-oit</b></sub></a>            |            <a href="https://github.com/monotykamary"><img src="https://avatars.githubusercontent.com/u/1130103?v=4" width="100" height="100" alt="monotykamary"/><br /><sub><b>monotykamary</b></sub></a>             |
+| <a href="https://github.com/vigneshsubbiah16"><img src="https://avatars.githubusercontent.com/u/51325334?v=4" width="100" height="100" alt="vigneshsubbiah16"/><br /><sub><b>vigneshsubbiah16</b></sub></a> |         <a href="https://github.com/lloydchang"><img src="https://avatars.githubusercontent.com/u/1329685?v=4" width="100" height="100" alt="lloydchang"/><br /><sub><b>lloydchang</b></sub></a>         |         <a href="https://github.com/Szpadel"><img src="https://avatars.githubusercontent.com/u/1857251?v=4" width="100" height="100" alt="Szpadel"/><br /><sub><b>Szpadel</b></sub></a>         |            <a href="https://github.com/psv2522"><img src="https://avatars.githubusercontent.com/u/87223770?v=4" width="100" height="100" alt="psv2522"/><br /><sub><b>psv2522</b></sub></a>            |       <a href="https://github.com/Premshay"><img src="https://avatars.githubusercontent.com/u/28099628?v=4" width="100" height="100" alt="Premshay"/><br /><sub><b>Premshay</b></sub></a>       | <a href="https://github.com/Smartsheet-JB-Brown"><img src="https://avatars.githubusercontent.com/u/171734120?v=4" width="100" height="100" alt="Smartsheet-JB-Brown"/><br /><sub><b>Smartsheet-JB-Brown</b></sub></a> |
+|              <a href="https://github.com/cannuri"><img src="https://avatars.githubusercontent.com/u/91494156?v=4" width="100" height="100" alt="cannuri"/><br /><sub><b>cannuri</b></sub></a>               |         <a href="https://github.com/lupuletic"><img src="https://avatars.githubusercontent.com/u/105351510?v=4" width="100" height="100" alt="lupuletic"/><br /><sub><b>lupuletic</b></sub></a>          |  <a href="https://github.com/olweraltuve"><img src="https://avatars.githubusercontent.com/u/39308405?v=4" width="100" height="100" alt="olweraltuve"/><br /><sub><b>olweraltuve</b></sub></a>   |               <a href="https://github.com/qdaxb"><img src="https://avatars.githubusercontent.com/u/4157870?v=4" width="100" height="100" alt="qdaxb"/><br /><sub><b>qdaxb</b></sub></a>                |     <a href="https://github.com/feifei325"><img src="https://avatars.githubusercontent.com/u/46489071?v=4" width="100" height="100" alt="feifei325"/><br /><sub><b>feifei325</b></sub></a>      |                <a href="https://github.com/RaySinner"><img src="https://avatars.githubusercontent.com/u/118297374?v=4" width="100" height="100" alt="RaySinner"/><br /><sub><b>RaySinner</b></sub></a>                |
+|          <a href="https://github.com/wkordalski"><img src="https://avatars.githubusercontent.com/u/3035587?v=4" width="100" height="100" alt="wkordalski"/><br /><sub><b>wkordalski</b></sub></a>           |            <a href="https://github.com/emshvac"><img src="https://avatars.githubusercontent.com/u/121588911?v=4" width="100" height="100" alt="emshvac"/><br /><sub><b>emshvac</b></sub></a>             | <a href="https://github.com/afshawnlotfi"><img src="https://avatars.githubusercontent.com/u/6283745?v=4" width="100" height="100" alt="afshawnlotfi"/><br /><sub><b>afshawnlotfi</b></sub></a>  |         <a href="https://github.com/aitoroses"><img src="https://avatars.githubusercontent.com/u/1699368?v=4" width="100" height="100" alt="aitoroses"/><br /><sub><b>aitoroses</b></sub></a>          |       <a href="https://github.com/dtrugman"><img src="https://avatars.githubusercontent.com/u/2451669?v=4" width="100" height="100" alt="dtrugman"/><br /><sub><b>dtrugman</b></sub></a>        |                      <a href="https://github.com/pdecat"><img src="https://avatars.githubusercontent.com/u/318490?v=4" width="100" height="100" alt="pdecat"/><br /><sub><b>pdecat</b></sub></a>                      |
+|                 <a href="https://github.com/sammcj"><img src="https://avatars.githubusercontent.com/u/862951?v=4" width="100" height="100" alt="sammcj"/><br /><sub><b>sammcj</b></sub></a>                 |          <a href="https://github.com/Lunchb0ne"><img src="https://avatars.githubusercontent.com/u/22198661?v=4" width="100" height="100" alt="Lunchb0ne"/><br /><sub><b>Lunchb0ne</b></sub></a>          |       <a href="https://github.com/yt3trees"><img src="https://avatars.githubusercontent.com/u/57471763?v=4" width="100" height="100" alt="yt3trees"/><br /><sub><b>yt3trees</b></sub></a>       |            <a href="https://github.com/yongjer"><img src="https://avatars.githubusercontent.com/u/54315206?v=4" width="100" height="100" alt="yongjer"/><br /><sub><b>yongjer</b></sub></a>            |   <a href="https://github.com/vincentsong"><img src="https://avatars.githubusercontent.com/u/2343574?v=4" width="100" height="100" alt="vincentsong"/><br /><sub><b>vincentsong</b></sub></a>   |          <a href="https://github.com/pugazhendhi-m"><img src="https://avatars.githubusercontent.com/u/132246623?v=4" width="100" height="100" alt="pugazhendhi-m"/><br /><sub><b>pugazhendhi-m</b></sub></a>          |
+|                 <a href="https://github.com/eonghk"><img src="https://avatars.githubusercontent.com/u/139964?v=4" width="100" height="100" alt="eonghk"/><br /><sub><b>eonghk</b></sub></a>                 |    <a href="https://github.com/arthurauffray"><img src="https://avatars.githubusercontent.com/u/51604173?v=4" width="100" height="100" alt="arthurauffray"/><br /><sub><b>arthurauffray</b></sub></a>    |         <a href="https://github.com/heyseth"><img src="https://avatars.githubusercontent.com/u/8293842?v=4" width="100" height="100" alt="heyseth"/><br /><sub><b>heyseth</b></sub></a>         |       <a href="https://github.com/anton-otee"><img src="https://avatars.githubusercontent.com/u/149477749?v=4" width="100" height="100" alt="anton-otee"/><br /><sub><b>anton-otee</b></sub></a>       |      <a href="https://github.com/benzntech"><img src="https://avatars.githubusercontent.com/u/4044180?v=4" width="100" height="100" alt="benzntech"/><br /><sub><b>benzntech</b></sub></a>      |           <a href="https://github.com/GitlyHallows"><img src="https://avatars.githubusercontent.com/u/136527758?v=4" width="100" height="100" alt="GitlyHallows"/><br /><sub><b>GitlyHallows</b></sub></a>            |
+|                <a href="https://github.com/jcbdev"><img src="https://avatars.githubusercontent.com/u/17152092?v=4" width="100" height="100" alt="jcbdev"/><br /><sub><b>jcbdev</b></sub></a>                |              <a href="https://github.com/KJ7LNW"><img src="https://avatars.githubusercontent.com/u/93454819?v=4" width="100" height="100" alt="KJ7LNW"/><br /><sub><b>KJ7LNW</b></sub></a>               |                <a href="https://github.com/mdp"><img src="https://avatars.githubusercontent.com/u/2868?v=4" width="100" height="100" alt="mdp"/><br /><sub><b>mdp</b></sub></a>                 |              <a href="https://github.com/napter"><img src="https://avatars.githubusercontent.com/u/6260841?v=4" width="100" height="100" alt="napter"/><br /><sub><b>napter</b></sub></a>              |       <a href="https://github.com/philfung"><img src="https://avatars.githubusercontent.com/u/1054593?v=4" width="100" height="100" alt="philfung"/><br /><sub><b>philfung</b></sub></a>        |                    <a href="https://github.com/AMHesch"><img src="https://avatars.githubusercontent.com/u/4777192?v=4" width="100" height="100" alt="AMHesch"/><br /><sub><b>AMHesch</b></sub></a>                    |
+|              <a href="https://github.com/bannzai"><img src="https://avatars.githubusercontent.com/u/10897361?v=4" width="100" height="100" alt="bannzai"/><br /><sub><b>bannzai</b></sub></a>               |            <a href="https://github.com/dairui1"><img src="https://avatars.githubusercontent.com/u/183250644?v=4" width="100" height="100" alt="dairui1"/><br /><sub><b>dairui1</b></sub></a>             |         <a href="https://github.com/dqroid"><img src="https://avatars.githubusercontent.com/u/192424994?v=4" width="100" height="100" alt="dqroid"/><br /><sub><b>dqroid</b></sub></a>          |             <a href="https://github.com/im47cn"><img src="https://avatars.githubusercontent.com/u/67424112?v=4" width="100" height="100" alt="im47cn"/><br /><sub><b>im47cn</b></sub></a>              |      <a href="https://github.com/kinandan"><img src="https://avatars.githubusercontent.com/u/186135699?v=4" width="100" height="100" alt="kinandan"/><br /><sub><b>kinandan</b></sub></a>       |                       <a href="https://github.com/kohii"><img src="https://avatars.githubusercontent.com/u/6891780?v=4" width="100" height="100" alt="kohii"/><br /><sub><b>kohii</b></sub></a>                       |
+|         <a href="https://github.com/lightrabbit"><img src="https://avatars.githubusercontent.com/u/1521765?v=4" width="100" height="100" alt="lightrabbit"/><br /><sub><b>lightrabbit</b></sub></a>         |                 <a href="https://github.com/olup"><img src="https://avatars.githubusercontent.com/u/13785588?v=4" width="100" height="100" alt="olup"/><br /><sub><b>olup</b></sub></a>                  |  <a href="https://github.com/moqimoqidea"><img src="https://avatars.githubusercontent.com/u/39821951?v=4" width="100" height="100" alt="moqimoqidea"/><br /><sub><b>moqimoqidea</b></sub></a>   |          <a href="https://github.com/mosleyit"><img src="https://avatars.githubusercontent.com/u/189396442?v=4" width="100" height="100" alt="mosleyit"/><br /><sub><b>mosleyit</b></sub></a>          |       <a href="https://github.com/oprstchn"><img src="https://avatars.githubusercontent.com/u/16177972?v=4" width="100" height="100" alt="oprstchn"/><br /><sub><b>oprstchn</b></sub></a>       |               <a href="https://github.com/philipnext"><img src="https://avatars.githubusercontent.com/u/81944499?v=4" width="100" height="100" alt="philipnext"/><br /><sub><b>philipnext</b></sub></a>               |
+|       <a href="https://github.com/refactorthis"><img src="https://avatars.githubusercontent.com/u/3012240?v=4" width="100" height="100" alt="refactorthis"/><br /><sub><b>refactorthis</b></sub></a>        |     <a href="https://github.com/samir-nimbly"><img src="https://avatars.githubusercontent.com/u/112695483?v=4" width="100" height="100" alt="samir-nimbly"/><br /><sub><b>samir-nimbly</b></sub></a>     |          <a href="https://github.com/shaybc"><img src="https://avatars.githubusercontent.com/u/8535905?v=4" width="100" height="100" alt="shaybc"/><br /><sub><b>shaybc</b></sub></a>           |    <a href="https://github.com/shohei-ihaya"><img src="https://avatars.githubusercontent.com/u/25131938?v=4" width="100" height="100" alt="shohei-ihaya"/><br /><sub><b>shohei-ihaya</b></sub></a>     | <a href="https://github.com/student20880"><img src="https://avatars.githubusercontent.com/u/74263488?v=4" width="100" height="100" alt="student20880"/><br /><sub><b>student20880</b></sub></a> |                <a href="https://github.com/teddyOOXX"><img src="https://avatars.githubusercontent.com/u/121077180?v=4" width="100" height="100" alt="teddyOOXX"/><br /><sub><b>teddyOOXX</b></sub></a>                |
+|     <a href="https://github.com/PretzelVector"><img src="https://avatars.githubusercontent.com/u/95664360?v=4" width="100" height="100" alt="PretzelVector"/><br /><sub><b>PretzelVector</b></sub></a>      |       <a href="https://github.com/adamwlarson"><img src="https://avatars.githubusercontent.com/u/1392315?v=4" width="100" height="100" alt="adamwlarson"/><br /><sub><b>adamwlarson</b></sub></a>        |          <a href="https://github.com/alarno"><img src="https://avatars.githubusercontent.com/u/4355547?v=4" width="100" height="100" alt="alarno"/><br /><sub><b>alarno</b></sub></a>           | <a href="https://github.com/andreastempsch"><img src="https://avatars.githubusercontent.com/u/117991125?v=4" width="100" height="100" alt="andreastempsch"/><br /><sub><b>andreastempsch</b></sub></a> |        <a href="https://github.com/Atlogit"><img src="https://avatars.githubusercontent.com/u/86947554?v=4" width="100" height="100" alt="Atlogit"/><br /><sub><b>Atlogit</b></sub></a>         |                       <a href="https://github.com/dleen"><img src="https://avatars.githubusercontent.com/u/1297964?v=4" width="100" height="100" alt="dleen"/><br /><sub><b>dleen</b></sub></a>                       |
+|            <a href="https://github.com/dbasclpy"><img src="https://avatars.githubusercontent.com/u/139889137?v=4" width="100" height="100" alt="dbasclpy"/><br /><sub><b>dbasclpy</b></sub></a>             | <a href="https://github.com/celestial-vault"><img src="https://avatars.githubusercontent.com/u/58194240?v=4" width="100" height="100" alt="celestial-vault"/><br /><sub><b>celestial-vault</b></sub></a> |         <a href="https://github.com/franekp"><img src="https://avatars.githubusercontent.com/u/9804230?v=4" width="100" height="100" alt="franekp"/><br /><sub><b>franekp</b></sub></a>         |         <a href="https://github.com/DeXtroTip"><img src="https://avatars.githubusercontent.com/u/21011087?v=4" width="100" height="100" alt="DeXtroTip"/><br /><sub><b>DeXtroTip</b></sub></a>         |          <a href="https://github.com/hesara"><img src="https://avatars.githubusercontent.com/u/1335918?v=4" width="100" height="100" alt="hesara"/><br /><sub><b>hesara</b></sub></a>           |                <a href="https://github.com/eltociear"><img src="https://avatars.githubusercontent.com/u/22633385?v=4" width="100" height="100" alt="eltociear"/><br /><sub><b>eltociear</b></sub></a>                 |
+|       <a href="https://github.com/libertyteeth"><img src="https://avatars.githubusercontent.com/u/32841567?v=4" width="100" height="100" alt="libertyteeth"/><br /><sub><b>libertyteeth</b></sub></a>       |    <a href="https://github.com/mamertofabian"><img src="https://avatars.githubusercontent.com/u/7698436?v=4" width="100" height="100" alt="mamertofabian"/><br /><sub><b>mamertofabian</b></sub></a>     | <a href="https://github.com/marvijo-code"><img src="https://avatars.githubusercontent.com/u/82562019?v=4" width="100" height="100" alt="marvijo-code"/><br /><sub><b>marvijo-code</b></sub></a> |               <a href="https://github.com/Sarke"><img src="https://avatars.githubusercontent.com/u/2719310?v=4" width="100" height="100" alt="Sarke"/><br /><sub><b>Sarke</b></sub></a>                |            <a href="https://github.com/tgfjt"><img src="https://avatars.githubusercontent.com/u/2628239?v=4" width="100" height="100" alt="tgfjt"/><br /><sub><b>tgfjt</b></sub></a>            |                <a href="https://github.com/vladstudio"><img src="https://avatars.githubusercontent.com/u/914320?v=4" width="100" height="100" alt="vladstudio"/><br /><sub><b>vladstudio</b></sub></a>                |
+|                <a href="https://github.com/aheizi"><img src="https://avatars.githubusercontent.com/u/8243770?v=4" width="100" height="100" alt="aheizi"/><br /><sub><b>aheizi</b></sub></a>                 |               <a href="https://github.com/ashktn"><img src="https://avatars.githubusercontent.com/u/6723913?v=4" width="100" height="100" alt="ashktn"/><br /><sub><b>ashktn</b></sub></a>               |                                                                                                                                                                                                 |                                                                                                                                                                                                        |                                                                                                                                                                                                 |                                                                                                                                                                                                                       |
+
+<!-- END CONTRIBUTORS SECTION -->
 
 ## License
 
@@ -288,4 +208,4 @@ We love community contributions! Here’s how to get involved:
 
 ---
 
-**Enjoy Roo Code!** Whether you keep it on a short leash or let it roam autonomously, we can’t wait to see what you build. If you have questions or feature ideas, drop by our [Reddit community](https://www.reddit.com/r/RooCode/) or [Discord](https://roocode.com/discord). Happy coding!
+**Enjoy Roo Code!** Whether you keep it on a short leash or let it roam autonomously, we can’t wait to see what you build. If you have questions or feature ideas, drop by our [Reddit community](https://www.reddit.com/r/RooCode/) or [Discord](https://discord.gg/roocode). Happy coding!

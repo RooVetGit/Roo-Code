@@ -1,10 +1,11 @@
-import { memo, useEffect } from "react"
+import React, { memo, useEffect } from "react"
 import { useRemark } from "react-remark"
 import rehypeHighlight, { Options } from "rehype-highlight"
 import styled from "styled-components"
 import { visit } from "unist-util-visit"
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import { CODE_BLOCK_BG_COLOR } from "./CodeBlock"
+import MermaidBlock from "./MermaidBlock"
 
 interface MarkdownBlockProps {
 	markdown?: string
@@ -62,6 +63,10 @@ const StyledMarkdown = styled.div`
 		white-space: pre-wrap;
 	}
 
+	:where(h1, h2, h3, h4, h5, h6):has(code) code {
+		font-size: inherit;
+	}
+
 	pre > code {
 		.hljs-deletion {
 			background-color: var(--vscode-diffEditor-removedTextBackground);
@@ -96,6 +101,14 @@ const StyledMarkdown = styled.div`
 		white-space: pre-line;
 		word-break: break-word;
 		overflow-wrap: anywhere;
+	}
+
+	/* Target only Dark High Contrast theme using the data attribute VS Code adds to the body */
+	body[data-vscode-theme-kind="vscode-high-contrast"] & code:not(pre > code) {
+		color: var(
+			--vscode-editorInlayHint-foreground,
+			var(--vscode-symbolIcon-stringForeground, var(--vscode-charts-orange, #e9a700))
+		);
 	}
 
 	font-family:
@@ -182,7 +195,27 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 		],
 		rehypeReactOptions: {
 			components: {
-				pre: ({ node, ...preProps }: any) => <StyledPre {...preProps} theme={theme} />,
+				pre: ({ node, children, ...preProps }: any) => {
+					if (Array.isArray(children) && children.length === 1 && React.isValidElement(children[0])) {
+						const child = children[0] as React.ReactElement<{ className?: string }>
+						if (child.props?.className?.includes("language-mermaid")) {
+							return child
+						}
+					}
+					return (
+						<StyledPre {...preProps} theme={theme}>
+							{children}
+						</StyledPre>
+					)
+				},
+				code: (props: any) => {
+					const className = props.className || ""
+					if (className.includes("language-mermaid")) {
+						const codeText = String(props.children || "")
+						return <MermaidBlock code={codeText} />
+					}
+					return <code {...props} />
+				},
 			},
 		},
 	})

@@ -1,12 +1,26 @@
-import { VSCodeButton, VSCodeTextField, VSCodeRadioGroup, VSCodeRadio } from "@vscode/webview-ui-toolkit/react"
-import { useExtensionState } from "../../context/ExtensionStateContext"
-import { vscode } from "../../utils/vscode"
+import React, { memo, useState } from "react"
+import { DeleteTaskDialog } from "./DeleteTaskDialog"
+import { BatchDeleteTaskDialog } from "./BatchDeleteTaskDialog"
+import prettyBytes from "pretty-bytes"
 import { Virtuoso } from "react-virtuoso"
-import React, { memo, useMemo, useState, useEffect } from "react"
-import { Fzf } from "fzf"
-import { formatLargeNumber } from "../../utils/format"
-import { highlightFzfMatch } from "../../utils/highlight"
-import { useCopyToClipboard } from "../../utils/clipboard"
+import {
+	VSCodeButton,
+	VSCodeTextField,
+	VSCodeRadioGroup,
+	VSCodeRadio,
+	VSCodeCheckbox,
+} from "@vscode/webview-ui-toolkit/react"
+
+import { vscode } from "@/utils/vscode"
+import { formatLargeNumber, formatDate } from "@/utils/format"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui"
+import { useAppTranslation } from "@/i18n/TranslationContext"
+
+import { Tab, TabContent, TabHeader } from "../common/Tab"
+import { useTaskSearch } from "./useTaskSearch"
+import { ExportButton } from "./ExportButton"
+import { CopyButton } from "./CopyButton"
 
 type HistoryViewProps = {
 	onDone: () => void
@@ -15,265 +29,222 @@ type HistoryViewProps = {
 type SortOption = "newest" | "oldest" | "mostExpensive" | "mostTokens" | "mostRelevant"
 
 const HistoryView = ({ onDone }: HistoryViewProps) => {
-	const { taskHistory } = useExtensionState()
-	const [searchQuery, setSearchQuery] = useState("")
-	const [sortOption, setSortOption] = useState<SortOption>("newest")
-	const [lastNonRelevantSort, setLastNonRelevantSort] = useState<SortOption | null>("newest")
-	const { showCopyFeedback, copyWithFeedback } = useCopyToClipboard()
+	const { tasks, searchQuery, setSearchQuery, sortOption, setSortOption, setLastNonRelevantSort } = useTaskSearch()
+	const { t } = useAppTranslation()
 
-	useEffect(() => {
-		if (searchQuery && sortOption !== "mostRelevant" && !lastNonRelevantSort) {
-			setLastNonRelevantSort(sortOption)
-			setSortOption("mostRelevant")
-		} else if (!searchQuery && sortOption === "mostRelevant" && lastNonRelevantSort) {
-			setSortOption(lastNonRelevantSort)
-			setLastNonRelevantSort(null)
+	const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null)
+	const [isSelectionMode, setIsSelectionMode] = useState(false)
+	const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
+	const [showBatchDeleteDialog, setShowBatchDeleteDialog] = useState<boolean>(false)
+
+	// Toggle selection mode
+	const toggleSelectionMode = () => {
+		setIsSelectionMode(!isSelectionMode)
+		if (isSelectionMode) {
+			setSelectedTaskIds([])
 		}
-	}, [searchQuery, sortOption, lastNonRelevantSort])
-
-	const handleHistorySelect = (id: string) => {
-		vscode.postMessage({ type: "showTaskWithId", text: id })
 	}
 
-	const handleDeleteHistoryItem = (id: string) => {
-		vscode.postMessage({ type: "deleteTaskWithId", text: id })
-	}
-
-	const formatDate = (timestamp: number) => {
-		const date = new Date(timestamp)
-		return date
-			?.toLocaleString("en-US", {
-				month: "long",
-				day: "numeric",
-				hour: "numeric",
-				minute: "2-digit",
-				hour12: true,
-			})
-			.replace(", ", " ")
-			.replace(" at", ",")
-			.toUpperCase()
-	}
-
-	const presentableTasks = useMemo(() => {
-		return taskHistory.filter((item) => item.ts && item.task)
-	}, [taskHistory])
-
-	const fzf = useMemo(() => {
-		return new Fzf(presentableTasks, {
-			selector: (item) => item.task,
-		})
-	}, [presentableTasks])
-
-	const taskHistorySearchResults = useMemo(() => {
-		let results = presentableTasks
-		if (searchQuery) {
-			const searchResults = fzf.find(searchQuery)
-			results = searchResults.map((result) => ({
-				...result.item,
-				task: highlightFzfMatch(result.item.task, Array.from(result.positions)),
-			}))
+	// Toggle selection for a single task
+	const toggleTaskSelection = (taskId: string, isSelected: boolean) => {
+		if (isSelected) {
+			setSelectedTaskIds((prev) => [...prev, taskId])
+		} else {
+			setSelectedTaskIds((prev) => prev.filter((id) => id !== taskId))
 		}
+	}
 
-		// First apply search if needed
-		const searchResults = searchQuery ? results : presentableTasks
+	// Toggle select all tasks
+	const toggleSelectAll = (selectAll: boolean) => {
+		if (selectAll) {
+			setSelectedTaskIds(tasks.map((task) => task.id))
+		} else {
+			setSelectedTaskIds([])
+		}
+	}
 
-		// Then sort the results
-		return [...searchResults].sort((a, b) => {
-			switch (sortOption) {
-				case "oldest":
-					return (a.ts || 0) - (b.ts || 0)
-				case "mostExpensive":
-					return (b.totalCost || 0) - (a.totalCost || 0)
-				case "mostTokens":
-					const aTokens = (a.tokensIn || 0) + (a.tokensOut || 0) + (a.cacheWrites || 0) + (a.cacheReads || 0)
-					const bTokens = (b.tokensIn || 0) + (b.tokensOut || 0) + (b.cacheWrites || 0) + (b.cacheReads || 0)
-					return bTokens - aTokens
-				case "mostRelevant":
-					// Keep fuse order if searching, otherwise sort by newest
-					return searchQuery ? 0 : (b.ts || 0) - (a.ts || 0)
-				case "newest":
-				default:
-					return (b.ts || 0) - (a.ts || 0)
-			}
-		})
-	}, [presentableTasks, searchQuery, fzf, sortOption])
+	// Handle batch delete button click
+	const handleBatchDelete = () => {
+		if (selectedTaskIds.length > 0) {
+			setShowBatchDeleteDialog(true)
+		}
+	}
 
 	return (
-		<>
-			<style>
-				{`
-					.history-item:hover {
-						background-color: var(--vscode-list-hoverBackground);
-					}
-					.delete-button, .export-button, .copy-button {
-						opacity: 0;
-						pointer-events: none;
-					}
-					.history-item:hover .delete-button,
-					.history-item:hover .export-button,
-					.history-item:hover .copy-button {
-						opacity: 1;
-						pointer-events: auto;
-					}
-					.history-item-highlight {
-						background-color: var(--vscode-editor-findMatchHighlightBackground);
-						color: inherit;
-					}
-					.copy-modal {
-						position: fixed;
-						top: 50%;
-						left: 50%;
-						transform: translate(-50%, -50%);
-						background-color: var(--vscode-notifications-background);
-						color: var(--vscode-notifications-foreground);
-						padding: 12px 20px;
-						border-radius: 4px;
-						box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-						z-index: 1000;
-						transition: opacity 0.2s ease-in-out;
-					}
-				`}
-			</style>
-			{showCopyFeedback && <div className="copy-modal">Prompt Copied to Clipboard</div>}
-			<div
-				style={{
-					position: "fixed",
-					top: 0,
-					left: 0,
-					right: 0,
-					bottom: 0,
-					display: "flex",
-					flexDirection: "column",
-					overflow: "hidden",
-				}}>
-				<div
-					style={{
-						display: "flex",
-						justifyContent: "space-between",
-						alignItems: "center",
-						padding: "10px 17px 10px 20px",
-					}}>
-					<h3 style={{ color: "var(--vscode-foreground)", margin: 0 }}>History</h3>
-					<VSCodeButton onClick={onDone}>Done</VSCodeButton>
-				</div>
-				<div style={{ padding: "5px 17px 6px 17px" }}>
-					<div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-						<VSCodeTextField
-							style={{ width: "100%" }}
-							placeholder="Fuzzy search history..."
-							value={searchQuery}
-							onInput={(e) => {
-								const newValue = (e.target as HTMLInputElement)?.value
-								setSearchQuery(newValue)
-								if (newValue && !searchQuery && sortOption !== "mostRelevant") {
-									setLastNonRelevantSort(sortOption)
-									setSortOption("mostRelevant")
-								}
-							}}>
-							<div
-								slot="start"
-								className="codicon codicon-search"
-								style={{ fontSize: 13, marginTop: 2.5, opacity: 0.8 }}></div>
-							{searchQuery && (
-								<div
-									className="input-icon-button codicon codicon-close"
-									aria-label="Clear search"
-									onClick={() => setSearchQuery("")}
-									slot="end"
-									style={{
-										display: "flex",
-										justifyContent: "center",
-										alignItems: "center",
-										height: "100%",
-									}}
-								/>
-							)}
-						</VSCodeTextField>
-						<VSCodeRadioGroup
-							style={{ display: "flex", flexWrap: "wrap" }}
-							value={sortOption}
-							role="radiogroup"
-							onChange={(e) => setSortOption((e.target as HTMLInputElement).value as SortOption)}>
-							<VSCodeRadio value="newest">Newest</VSCodeRadio>
-							<VSCodeRadio value="oldest">Oldest</VSCodeRadio>
-							<VSCodeRadio value="mostExpensive">Most Expensive</VSCodeRadio>
-							<VSCodeRadio value="mostTokens">Most Tokens</VSCodeRadio>
-							<VSCodeRadio
-								value="mostRelevant"
-								disabled={!searchQuery}
-								style={{ opacity: searchQuery ? 1 : 0.5 }}>
-								Most Relevant
-							</VSCodeRadio>
-						</VSCodeRadioGroup>
+		<Tab>
+			<TabHeader className="flex flex-col gap-2">
+				<div className="flex justify-between items-center">
+					<h3 className="text-vscode-foreground m-0">{t("history:history")}</h3>
+					<div className="flex gap-2">
+						<VSCodeButton
+							appearance={isSelectionMode ? "primary" : "secondary"}
+							onClick={toggleSelectionMode}
+							title={
+								isSelectionMode
+									? `${t("history:exitSelectionMode")}`
+									: `${t("history:enterSelectionMode")}`
+							}>
+							<span
+								className={`codicon ${isSelectionMode ? "codicon-check-all" : "codicon-checklist"}`}
+							/>
+							{isSelectionMode ? t("history:exitSelection") : t("history:selectionMode")}
+						</VSCodeButton>
+						<VSCodeButton onClick={onDone}>{t("history:done")}</VSCodeButton>
 					</div>
 				</div>
-				<div style={{ flexGrow: 1, overflowY: "auto", margin: 0 }}>
-					<Virtuoso
-						style={{
-							flexGrow: 1,
-							overflowY: "scroll",
-						}}
-						data={taskHistorySearchResults}
-						data-testid="virtuoso-container"
-						components={{
-							List: React.forwardRef((props, ref) => (
-								<div {...props} ref={ref} data-testid="virtuoso-item-list" />
-							)),
-						}}
-						itemContent={(index, item) => (
+				<div className="flex flex-col gap-2">
+					<VSCodeTextField
+						style={{ width: "100%" }}
+						placeholder={t("history:searchPlaceholder")}
+						value={searchQuery}
+						data-testid="history-search-input"
+						onInput={(e) => {
+							const newValue = (e.target as HTMLInputElement)?.value
+							setSearchQuery(newValue)
+							if (newValue && !searchQuery && sortOption !== "mostRelevant") {
+								setLastNonRelevantSort(sortOption)
+								setSortOption("mostRelevant")
+							}
+						}}>
+						<div
+							slot="start"
+							className="codicon codicon-search"
+							style={{ fontSize: 13, marginTop: 2.5, opacity: 0.8 }}
+						/>
+						{searchQuery && (
 							<div
-								key={item.id}
-								data-testid={`task-item-${item.id}`}
-								className="history-item"
+								className="input-icon-button codicon codicon-close"
+								aria-label="Clear search"
+								onClick={() => setSearchQuery("")}
+								slot="end"
 								style={{
-									cursor: "pointer",
-									borderBottom:
-										index < taskHistory.length - 1
-											? "1px solid var(--vscode-panel-border)"
-											: "none",
+									display: "flex",
+									justifyContent: "center",
+									alignItems: "center",
+									height: "100%",
 								}}
-								onClick={() => handleHistorySelect(item.id)}>
-								<div
-									style={{
-										display: "flex",
-										flexDirection: "column",
-										gap: "8px",
-										padding: "12px 20px",
-										position: "relative",
-									}}>
+							/>
+						)}
+					</VSCodeTextField>
+					<VSCodeRadioGroup
+						style={{ display: "flex", flexWrap: "wrap" }}
+						value={sortOption}
+						role="radiogroup"
+						onChange={(e) => setSortOption((e.target as HTMLInputElement).value as SortOption)}>
+						<VSCodeRadio value="newest" data-testid="radio-newest">
+							{t("history:newest")}
+						</VSCodeRadio>
+						<VSCodeRadio value="oldest" data-testid="radio-oldest">
+							{t("history:oldest")}
+						</VSCodeRadio>
+						<VSCodeRadio value="mostExpensive" data-testid="radio-most-expensive">
+							{t("history:mostExpensive")}
+						</VSCodeRadio>
+						<VSCodeRadio value="mostTokens" data-testid="radio-most-tokens">
+							{t("history:mostTokens")}
+						</VSCodeRadio>
+						<VSCodeRadio
+							value="mostRelevant"
+							disabled={!searchQuery}
+							data-testid="radio-most-relevant"
+							style={{ opacity: searchQuery ? 1 : 0.5 }}>
+							{t("history:mostRelevant")}
+						</VSCodeRadio>
+					</VSCodeRadioGroup>
+
+					{/* Select all control in selection mode */}
+					{isSelectionMode && tasks.length > 0 && (
+						<div className="flex items-center py-1 px-2 bg-vscode-editor-background rounded">
+							<VSCodeCheckbox
+								checked={tasks.length > 0 && selectedTaskIds.length === tasks.length}
+								onChange={(e) => toggleSelectAll((e.target as HTMLInputElement).checked)}
+							/>
+							<span className="ml-2 text-vscode-foreground">
+								{selectedTaskIds.length === tasks.length
+									? t("history:deselectAll")
+									: t("history:selectAll")}
+							</span>
+							<span className="ml-auto text-vscode-descriptionForeground text-xs">
+								{t("history:selectedItems", { selected: selectedTaskIds.length, total: tasks.length })}
+							</span>
+						</div>
+					)}
+				</div>
+			</TabHeader>
+
+			<TabContent className="p-0">
+				<Virtuoso
+					style={{
+						flexGrow: 1,
+						overflowY: "scroll",
+					}}
+					data={tasks}
+					data-testid="virtuoso-container"
+					initialTopMostItemIndex={0}
+					components={{
+						List: React.forwardRef((props, ref) => (
+							<div {...props} ref={ref} data-testid="virtuoso-item-list" />
+						)),
+					}}
+					itemContent={(index, item) => (
+						<div
+							data-testid={`task-item-${item.id}`}
+							key={item.id}
+							className={cn("cursor-pointer", {
+								"border-b border-vscode-panel-border": index < tasks.length - 1,
+								"bg-vscode-list-activeSelectionBackground":
+									isSelectionMode && selectedTaskIds.includes(item.id),
+							})}
+							onClick={(e) => {
+								if (!isSelectionMode || !(e.target as HTMLElement).closest(".task-checkbox")) {
+									vscode.postMessage({ type: "showTaskWithId", text: item.id })
+								}
+							}}>
+							<div className="flex items-start p-3 gap-2">
+								{/* Show checkbox in selection mode */}
+								{isSelectionMode && (
 									<div
-										style={{
-											display: "flex",
-											justifyContent: "space-between",
-											alignItems: "center",
+										className="task-checkbox mt-1"
+										onClick={(e) => {
+											e.stopPropagation()
 										}}>
-										<span
-											style={{
-												color: "var(--vscode-descriptionForeground)",
-												fontWeight: 500,
-												fontSize: "0.85em",
-												textTransform: "uppercase",
-											}}>
+										<VSCodeCheckbox
+											checked={selectedTaskIds.includes(item.id)}
+											onChange={(e) =>
+												toggleTaskSelection(item.id, (e.target as HTMLInputElement).checked)
+											}
+										/>
+									</div>
+								)}
+
+								<div className="flex-1">
+									<div className="flex justify-between items-center">
+										<span className="text-vscode-descriptionForeground font-medium text-sm uppercase">
 											{formatDate(item.ts)}
 										</span>
-										<div style={{ display: "flex", gap: "4px" }}>
-											<button
-												title="Copy Prompt"
-												className="copy-button"
-												data-appearance="icon"
-												onClick={(e) => copyWithFeedback(item.task, e)}>
-												<span className="codicon codicon-copy"></span>
-											</button>
-											<button
-												title="Delete Task"
-												className="delete-button"
-												data-appearance="icon"
-												onClick={(e) => {
-													e.stopPropagation()
-													handleDeleteHistoryItem(item.id)
-												}}>
-												<span className="codicon codicon-trash"></span>
-											</button>
+										<div className="flex flex-row">
+											{!isSelectionMode && (
+												<Button
+													variant="ghost"
+													size="sm"
+													title={t("history:deleteTaskTitle")}
+													data-testid="delete-task-button"
+													onClick={(e) => {
+														e.stopPropagation()
+
+														if (e.shiftKey) {
+															vscode.postMessage({
+																type: "deleteTaskWithId",
+																text: item.id,
+															})
+														} else {
+															setDeleteTaskId(item.id)
+														}
+													}}>
+													<span className="codicon codicon-trash" />
+													{item.size && prettyBytes(item.size)}
+												</Button>
+											)}
 										</div>
 									</div>
 									<div
@@ -288,6 +259,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 											wordBreak: "break-word",
 											overflowWrap: "anywhere",
 										}}
+										data-testid="task-content"
 										dangerouslySetInnerHTML={{ __html: item.task }}
 									/>
 									<div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
@@ -310,7 +282,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 														fontWeight: 500,
 														color: "var(--vscode-descriptionForeground)",
 													}}>
-													Tokens:
+													{t("history:tokensLabel")}
 												</span>
 												<span
 													data-testid="tokens-in"
@@ -349,7 +321,12 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 													{formatLargeNumber(item.tokensOut || 0)}
 												</span>
 											</div>
-											{!item.totalCost && <ExportButton itemId={item.id} />}
+											{!item.totalCost && !isSelectionMode && (
+												<div className="flex flex-row gap-1">
+													<CopyButton itemTask={item.task} />
+													<ExportButton itemId={item.id} />
+												</div>
+											)}
 										</div>
 
 										{!!item.cacheWrites && (
@@ -366,7 +343,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 														fontWeight: 500,
 														color: "var(--vscode-descriptionForeground)",
 													}}>
-													Cache:
+													{t("history:cacheLabel")}
 												</span>
 												<span
 													data-testid="cache-writes"
@@ -406,6 +383,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 												</span>
 											</div>
 										)}
+
 										{!!item.totalCost && (
 											<div
 												style={{
@@ -420,36 +398,66 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 															fontWeight: 500,
 															color: "var(--vscode-descriptionForeground)",
 														}}>
-														API Cost:
+														{t("history:apiCostLabel")}
 													</span>
 													<span style={{ color: "var(--vscode-descriptionForeground)" }}>
 														${item.totalCost?.toFixed(4)}
 													</span>
 												</div>
-												<ExportButton itemId={item.id} />
+												{!isSelectionMode && (
+													<div className="flex flex-row gap-1">
+														<CopyButton itemTask={item.task} />
+														<ExportButton itemId={item.id} />
+													</div>
+												)}
 											</div>
 										)}
 									</div>
 								</div>
 							</div>
-						)}
-					/>
+						</div>
+					)}
+				/>
+			</TabContent>
+
+			{/* Fixed action bar at bottom - only shown in selection mode with selected items */}
+			{isSelectionMode && selectedTaskIds.length > 0 && (
+				<div className="fixed bottom-0 left-0 right-0 bg-vscode-editor-background border-t border-vscode-panel-border p-2 flex justify-between items-center">
+					<div className="text-vscode-foreground">
+						{t("history:selectedItems", { selected: selectedTaskIds.length, total: tasks.length })}
+					</div>
+					<div className="flex gap-2">
+						<VSCodeButton appearance="secondary" onClick={() => setSelectedTaskIds([])}>
+							{t("history:clearSelection")}
+						</VSCodeButton>
+						<VSCodeButton appearance="primary" onClick={handleBatchDelete}>
+							{t("history:deleteSelected")}
+						</VSCodeButton>
+					</div>
 				</div>
-			</div>
-		</>
+			)}
+
+			{/* Delete dialog */}
+			{deleteTaskId && (
+				<DeleteTaskDialog taskId={deleteTaskId} onOpenChange={(open) => !open && setDeleteTaskId(null)} open />
+			)}
+
+			{/* Batch delete dialog */}
+			{showBatchDeleteDialog && (
+				<BatchDeleteTaskDialog
+					taskIds={selectedTaskIds}
+					open={showBatchDeleteDialog}
+					onOpenChange={(open) => {
+						if (!open) {
+							setShowBatchDeleteDialog(false)
+							setSelectedTaskIds([])
+							setIsSelectionMode(false)
+						}
+					}}
+				/>
+			)}
+		</Tab>
 	)
 }
-
-const ExportButton = ({ itemId }: { itemId: string }) => (
-	<VSCodeButton
-		className="export-button"
-		appearance="icon"
-		onClick={(e) => {
-			e.stopPropagation()
-			vscode.postMessage({ type: "exportTaskWithId", text: itemId })
-		}}>
-		<div style={{ fontSize: "11px", fontWeight: 500, opacity: 1 }}>EXPORT</div>
-	</VSCodeButton>
-)
 
 export default memo(HistoryView)
