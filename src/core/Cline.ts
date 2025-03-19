@@ -3697,7 +3697,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		const contextPercentage =
 			contextTokens && contextWindow ? Math.round((contextTokens / contextWindow) * 100) : undefined
 		details += `\n\n# Current Context Size (Tokens)\n${contextTokens ? `${contextTokens.toLocaleString()} (${contextPercentage}%)` : "(Not available)"}`
-		details += `\n\n# Current Cost\n${totalCost != null ? `$${totalCost.toFixed(2)}` : "(Not available)"}`
+		details += `\n\n# Current Cost\n${totalCost !== null ? `$${totalCost.toFixed(2)}` : "(Not available)"}`
 		// Add current mode and any mode-specific warnings
 		const {
 			mode,
