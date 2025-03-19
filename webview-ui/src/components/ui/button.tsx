@@ -19,7 +19,7 @@ const buttonVariants = cva(
 				ghost: "hover:bg-accent hover:text-accent-foreground",
 				link: "text-primary underline-offset-4 hover:underline",
 				combobox:
-					"border border-vscode-input-border bg-vscode-input-background text-muted-foreground shadow-sm hover:bg-transparent",
+					"border border-[var(--vscode-input-border,var(--vscode-input-background))] focus-visible:border-vscode-focusBorder bg-vscode-input-background hover:bg-transparent text-vscode-input-foreground",
 			},
 			size: {
 				default: "h-7 px-3",
