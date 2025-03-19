@@ -1,7 +1,7 @@
 import * as React from "react"
 import { PortalProps } from "@radix-ui/react-portal"
 import * as SelectPrimitive from "@radix-ui/react-select"
-import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"
+import { Check, ChevronDown, ChevronUp } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -31,7 +31,7 @@ function SelectTrigger({ className, children, ...props }: React.ComponentProps<t
 			{...props}>
 			{children}
 			<SelectPrimitive.Icon asChild>
-				<ChevronDownIcon className="size-4 opacity-50" />
+				<ChevronDown className="size-4 opacity-50" />
 			</SelectPrimitive.Icon>
 		</SelectPrimitive.Trigger>
 	)
@@ -49,7 +49,10 @@ function SelectContent({
 			<SelectPrimitive.Content
 				data-slot="select-content"
 				className={cn(
-					"bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-50 max-h-72 min-w-[8rem] overflow-hidden rounded-xs border border-vscode-focusBorder shadow-xs",
+					"data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-50 max-h-72 min-w-[8rem] overflow-hidden rounded-xs shadow-xs",
+					"bg-popover",
+					"border border-vscode-focusBorder",
+					"text-popover-foreground",
 					position === "popper" &&
 						"data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
 					className,
@@ -94,7 +97,7 @@ function SelectItem({ className, children, ...props }: React.ComponentProps<type
 			{...props}>
 			<span className="absolute right-2 flex size-3.5 items-center justify-center">
 				<SelectPrimitive.ItemIndicator>
-					<CheckIcon className="size-4" />
+					<Check className="size-4 p-0.5" />
 				</SelectPrimitive.ItemIndicator>
 			</span>
 			<SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
@@ -106,7 +109,7 @@ function SelectSeparator({ className, ...props }: React.ComponentProps<typeof Se
 	return (
 		<SelectPrimitive.Separator
 			data-slot="select-separator"
-			className={cn("bg-vscode-dropdown-border pointer-events-none -mx-1 my-1 h-px", className)}
+			className={cn("bg-vscode-dropdown-foreground/10 pointer-events-none -mx-1 my-1 h-px", className)}
 			{...props}
 		/>
 	)
@@ -118,7 +121,7 @@ function SelectScrollUpButton({ className, ...props }: React.ComponentProps<type
 			data-slot="select-scroll-up-button"
 			className={cn("flex cursor-default items-center justify-center py-1", className)}
 			{...props}>
-			<ChevronUpIcon className="size-4" />
+			<ChevronUp className="size-4" />
 		</SelectPrimitive.ScrollUpButton>
 	)
 }
@@ -132,7 +135,7 @@ function SelectScrollDownButton({
 			data-slot="select-scroll-down-button"
 			className={cn("flex cursor-default items-center justify-center py-1", className)}
 			{...props}>
-			<ChevronDownIcon className="size-4" />
+			<ChevronDown className="size-4" />
 		</SelectPrimitive.ScrollDownButton>
 	)
 }
