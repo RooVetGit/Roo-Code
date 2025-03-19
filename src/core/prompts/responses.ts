@@ -161,10 +161,9 @@ Tool uses are formatted using XML-style tags. The tool name is enclosed in openi
 
 For example:
 
-<attempt_completion>
-<result>
-I have completed the task...
-</result>
-</attempt_completion>
+Example: Requesting to read frontend-config.json
+<read_file>
+<path>frontend-config.json</path>
+</read_file>
 
 Always adhere to this format for all tool uses to ensure proper parsing and execution.`

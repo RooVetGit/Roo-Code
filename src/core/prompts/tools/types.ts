@@ -8,4 +8,5 @@ export type ToolArgs = {
 	browserViewportSize?: string
 	mcpHub?: McpHub
 	toolOptions?: any
+	experiments?: Record<string, boolean>
 }

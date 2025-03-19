@@ -12,6 +12,10 @@ const badgeVariants = cva(
 				secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
 				destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/80",
 				outline: "text-muted-foreground border-vscode-input-border",
+				toolkit:
+					"bg-vscode-badge-background text-vscode-badge-foreground border border-vscode-button-border rounded-full text-xs font-normal",
+				"toolkit-no-border":
+					"bg-vscode-badge-background text-vscode-badge-foreground rounded-full text-xs font-normal shadow",
 			},
 		},
 		defaultVariants: {

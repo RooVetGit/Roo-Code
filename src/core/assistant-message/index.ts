@@ -57,6 +57,7 @@ export const toolParamNames = [
 	"mode",
 	"message",
 	"cwd",
+	"next_step",
 ] as const
 
 export type ToolParamName = (typeof toolParamNames)[number]
@@ -127,7 +128,7 @@ export interface AskFollowupQuestionToolUse extends ToolUse {
 
 export interface AttemptCompletionToolUse extends ToolUse {
 	name: "attempt_completion"
-	params: Partial<Pick<Record<ToolParamName, string>, "result" | "command">>
+	params: Partial<Pick<Record<ToolParamName, string>, "result" | "command" | "next_step">>
 }
 
 export interface SwitchModeToolUse extends ToolUse {

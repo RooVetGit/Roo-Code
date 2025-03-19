@@ -23,6 +23,7 @@ import McpResourceRow from "../mcp/McpResourceRow"
 import McpToolRow from "../mcp/McpToolRow"
 import { highlightMentions } from "./TaskHeader"
 import { CheckpointSaved } from "./checkpoints/CheckpointSaved"
+import NextStepSuggestionsWrapper from "./NextStepSuggestionsWrapper"
 
 interface ChatRowProps {
 	message: ClineMessage
@@ -32,6 +33,7 @@ interface ChatRowProps {
 	isStreaming: boolean
 	onToggleExpand: () => void
 	onHeightChange: (isTaller: boolean) => void
+	onSuggestionClick?: (task: string, mode: string) => void
 }
 
 interface ChatRowContentProps extends Omit<ChatRowProps, "onHeightChange"> {}
@@ -78,6 +80,7 @@ export const ChatRowContent = ({
 	isLast,
 	isStreaming,
 	onToggleExpand,
+	onSuggestionClick,
 }: ChatRowContentProps) => {
 	const { t } = useTranslation()
 	const { mcpServers, alwaysAllowMcp, currentCheckpoint } = useExtensionState()
@@ -222,6 +225,14 @@ export const ChatRowContent = ({
 						style={{ color: normalColor, marginBottom: "-1.5px" }}></span>,
 					<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:questions.hasQuestion")}</span>,
 				]
+			case "next_step_suggest": {
+				return [
+					<span
+						className="codicon codicon-question" // TODO: change icon
+						style={{ color: normalColor, marginBottom: "-1.5px" }}></span>,
+					<span style={{ color: normalColor, fontWeight: "bold" }}>Roo has suggest prompt:</span>,
+				]
+			}
 			default:
 				return [null, null]
 		}
@@ -790,6 +801,15 @@ export const ChatRowContent = ({
 							commitHash={message.text!}
 							currentHash={currentCheckpoint}
 							checkpoint={message.checkpoint}
+						/>
+					)
+				case "next_step_suggest":
+					return (
+						<NextStepSuggestionsWrapper
+							suggestion={message.text!}
+							partial={message.partial!}
+							ts={message.ts}
+							onSuggestionClick={onSuggestionClick}
 						/>
 					)
 				default:

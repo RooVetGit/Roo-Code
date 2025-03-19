@@ -89,7 +89,7 @@ ${getRulesSection(cwd, supportsComputerUse, effectiveDiffStrategy, experiments)}
 
 ${getSystemInfoSection(cwd, mode, customModeConfigs)}
 
-${getObjectiveSection()}
+${getObjectiveSection(experiments)}
 
 ${await addCustomInstructions(promptComponent?.customInstructions || modeConfig.customInstructions || "", globalCustomInstructions || "", cwd, mode, { language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions })}`
 

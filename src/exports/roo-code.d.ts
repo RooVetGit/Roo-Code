@@ -108,6 +108,7 @@ export type ClineAsk =
 	| "browser_action_launch"
 	| "use_mcp_server"
 	| "finishTask"
+	| "next_step_suggest"
 
 export type ClineSay =
 	| "task"
@@ -134,6 +135,7 @@ export type ClineSay =
 	| "new_task"
 	| "checkpoint_saved"
 	| "rooignore_error"
+	| "next_step_suggest"
 
 export interface ClineMessage {
 	ts: number

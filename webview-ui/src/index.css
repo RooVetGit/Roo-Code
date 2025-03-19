@@ -116,6 +116,42 @@
 	--color-vscode-inputValidation-infoForeground: var(--vscode-inputValidation-infoForeground);
 	--color-vscode-inputValidation-infoBackground: var(--vscode-inputValidation-infoBackground);
 	--color-vscode-inputValidation-infoBorder: var(--vscode-inputValidation-infoBorder);
+
+	/* Additional VSCode WebView UI Toolkit color tokens */
+	--color-vscode-contrastActiveBorder: var(--vscode-contrastActiveBorder);
+	--color-vscode-contrastBorder: var(--vscode-contrastBorder);
+	--color-vscode-scrollbarSlider-background: var(--vscode-scrollbarSlider-background);
+	--color-vscode-scrollbarSlider-hoverBackground: var(--vscode-scrollbarSlider-hoverBackground);
+	--color-vscode-scrollbarSlider-activeBackground: var(--vscode-scrollbarSlider-activeBackground);
+	--color-vscode-checkbox-background: var(--vscode-checkbox-background);
+	--color-vscode-checkbox-border: var(--vscode-checkbox-border);
+	--color-vscode-checkbox-foreground: var(--vscode-checkbox-foreground);
+	--color-vscode-list-activeSelectionBackground: var(--vscode-list-activeSelectionBackground);
+	--color-vscode-list-activeSelectionForeground: var(--vscode-list-activeSelectionForeground);
+	--color-vscode-settings-dropdownListBorder: var(--vscode-settings-dropdownListBorder);
+	--color-vscode-progressBar-background: var(--vscode-progressBar-background);
+	--color-vscode-panelTitle-activeBorder: var(--vscode-panelTitle-activeBorder);
+	--color-vscode-panelTitle-activeForeground: var(--vscode-panelTitle-activeForeground);
+	--color-vscode-panelTitle-inactiveForeground: var(--vscode-panelTitle-inactiveForeground);
+	--color-vscode-panel-background: var(--vscode-panel-background);
+	--color-vscode-panel-border: var(--vscode-panel-border);
+
+	/* Additional VSCode WebView UI Toolkit button tokens */
+	--color-vscode-button-border: var(--vscode-button-border);
+	--color-vscode-button-hoverBackground: var(--vscode-button-hoverBackground);
+	--color-vscode-button-secondaryHoverBackground: var(--vscode-button-secondaryHoverBackground);
+	--color-vscode-button-iconBackground: var(--vscode-button-iconBackground, transparent);
+	--color-vscode-button-iconHoverBackground: var(--vscode-button-iconHoverBackground, rgba(90, 93, 94, 0.31));
+
+	/* Additional VSCode WebView UI Toolkit layout tokens */
+	--size-cornerRadiusRound: calc(var(--vscode-cornerRadiusRound, 2px) * 1px);
+	--size-borderWidth: calc(var(--vscode-borderWidth, 1px) * 1px);
+	--size-button-iconCornerRadius: var(--vscode-button-iconCornerRadius, 5px);
+	--size-button-iconFocusBorderOffset: var(--vscode-button-iconFocusBorderOffset, 0px);
+	--size-button-paddingVertical: var(--vscode-button-paddingVertical, 4px);
+	--size-button-paddingHorizontal: var(--vscode-button-paddingHorizontal, 11px);
+	--size-button-iconPadding: var(--vscode-button-iconPadding, 3px);
+	--opacity-disabled: var(--vscode-disabledOpacity, 0.4);
 }
 
 @layer base {

@@ -78,6 +78,7 @@ import { DiffStrategy, getDiffStrategy } from "./diff/DiffStrategy"
 import { insertGroups } from "./diff/insert-groups"
 import { telemetryService } from "../services/telemetry/TelemetryService"
 import { validateToolUse, isToolAllowedForMode, ToolName } from "./mode-validator"
+import { parseXml } from "../utils/xml"
 import { getWorkspacePath } from "../utils/path"
 
 type ToolResponse = string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam>
@@ -2945,6 +2946,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 					case "attempt_completion": {
 						const result: string | undefined = block.params.result
 						const command: string | undefined = block.params.command
+						const next_step: string | undefined = block.params.next_step
 						try {
 							const lastMessage = this.clineMessages.at(-1)
 							if (block.partial) {
@@ -2995,7 +2997,43 @@ export class Cline extends EventEmitter<ClineEvents> {
 									break
 								}
 
+								if (!next_step) {
+									this.consecutiveMistakeCount++
+									pushToolResult(
+										await this.sayAndCreateMissingParamError("attempt_completion", "next_step"),
+									)
+									break
+								}
+
+								let normalizedSuggest = null
+
+								type Suggest = {
+									task: string
+									mode: string
+								}
+
+								let parsedSuggest: {
+									suggest: Suggest[] | Suggest
+								}
+
+								try {
+									parsedSuggest = parseXml(next_step, ["suggest.task", "suggest.mode"]) as {
+										suggest: Suggest[] | Suggest
+									}
+									console.log("next_step", next_step)
+								} catch (error) {
+									this.consecutiveMistakeCount++
+									await this.say("error", `Failed to parse operations: ${error.message}`)
+									pushToolResult(formatResponse.toolError("Invalid operations xml format"))
+									break
+								}
+
+
 								this.consecutiveMistakeCount = 0
+
+								normalizedSuggest = Array.isArray(parsedSuggest?.suggest)
+									? parsedSuggest.suggest
+									: [parsedSuggest?.suggest].filter((sug): sug is Suggest => sug !== undefined)
 
 								let commandResult: ToolResponse | undefined
 
@@ -3042,6 +3080,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 									break
 								}
 
+								const toolResults: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[] = []
+
+								await this.say("next_step_suggest", JSON.stringify(normalizedSuggest))
+
 								// We already sent completion_result says, an
 								// empty string asks relinquishes control over
 								// button and field.
@@ -3056,7 +3098,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 								}
 
 								await this.say("user_feedback", text ?? "", images)
-								const toolResults: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[] = []
 
 								if (commandResult) {
 									if (typeof commandResult === "string") {
