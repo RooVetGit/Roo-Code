@@ -141,7 +141,7 @@ export const SelectDropdown = React.forwardRef<React.ElementRef<typeof DropdownM
 							<DropdownMenuItem
 								key={`item-${option.value}`}
 								disabled={option.disabled}
-								className="text-xs focus:bg-vscode-list-activeSelectionBackground cursor-pointer"
+								className="text-xs focus:bg-vscode-list-activeSelectionBackground focus:text-vscode-list-activeSelectionForeground cursor-pointer"
 								onClick={() => handleSelect(option)}>
 								{option.label}
 								{option.value === value && (
