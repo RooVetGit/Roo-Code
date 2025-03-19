@@ -41,7 +41,7 @@ import { BrowserSession } from "../../services/browser/BrowserSession"
 import { discoverChromeInstances } from "../../services/browser/browserDiscovery"
 import { fileExistsAtPath } from "../../utils/fs"
 import { playSound, setSoundEnabled, setSoundVolume } from "../../utils/sound"
-import { playTts, setTtsEnabled, setTtsSpeed } from "../../utils/tts"
+import { playTts, setTtsEnabled, setTtsSpeed, stopTts } from "../../utils/tts"
 import { singleCompletionHandler } from "../../utils/single-completion-handler"
 import { searchCommits } from "../../utils/git"
 import { getDiffStrategy } from "../diff/DiffStrategy"
@@ -86,7 +86,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	private clineStack: Cline[] = []
 	private workspaceTracker?: WorkspaceTracker
 	protected mcpHub?: McpHub // Change from private to protected
-	private latestAnnouncementId = "mar-7-2025-3-8" // update to some unique identifier when we add a new announcement
+	private latestAnnouncementId = "mar-18-2025-3-9" // update to some unique identifier when we add a new announcement
 	private contextProxy: ContextProxy
 	configManager: ConfigManager
 	customModesManager: CustomModesManager
@@ -367,6 +367,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		// Initialize tts enabled state
 		this.getState().then(({ ttsEnabled }) => {
 			setTtsEnabled(ttsEnabled ?? false)
+		})
+
+		// Initialize tts speed state
+		this.getState().then(({ ttsSpeed }) => {
+			setTtsSpeed(ttsSpeed ?? 1)
 		})
 
 		webviewView.webview.options = {
@@ -1183,28 +1188,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						}
 						break
 					}
-					case "openProjectMcpSettings": {
-						if (!vscode.workspace.workspaceFolders?.length) {
-							vscode.window.showErrorMessage(t("common:errors.no_workspace"))
-							return
-						}
-
-						const workspaceFolder = vscode.workspace.workspaceFolders[0]
-						const rooDir = path.join(workspaceFolder.uri.fsPath, ".roo")
-						const mcpPath = path.join(rooDir, "mcp.json")
-
-						try {
-							await fs.mkdir(rooDir, { recursive: true })
-							const exists = await fileExistsAtPath(mcpPath)
-							if (!exists) {
-								await fs.writeFile(mcpPath, JSON.stringify({ mcpServers: {} }, null, 2))
-							}
-							await openFile(mcpPath)
-						} catch (error) {
-							vscode.window.showErrorMessage(t("common:errors.create_mcp_json", { error }))
-						}
-						break
-					}
 					case "openCustomModesSettings": {
 						const customModesFilePath = await this.customModesManager.getCustomModesFilePath()
 						if (customModesFilePath) {
@@ -1303,8 +1286,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						break
 					case "playTts":
 						if (message.text) {
-							playTts(message.text)
+							playTts(message.text, {
+								onStart: () => this.postMessageToWebview({ type: "ttsStart", text: message.text }),
+								onStop: () => this.postMessageToWebview({ type: "ttsStop", text: message.text }),
+							})
 						}
+						break
+					case "stopTts":
+						stopTts()
 						break
 					case "diffEnabled":
 						const diffEnabled = message.bool ?? true
@@ -2004,6 +1993,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				experiments,
 				enableMcpServerCreation,
 				browserToolEnabled,
+				language,
 			} = await this.getState()
 
 			// Create diffStrategy based on current model and settings
@@ -2037,6 +2027,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				diffEnabled,
 				experiments,
 				enableMcpServerCreation,
+				language,
 				rooIgnoreInstructions,
 			)
 			return systemPrompt

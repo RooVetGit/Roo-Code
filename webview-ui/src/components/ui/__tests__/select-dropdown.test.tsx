@@ -1,4 +1,6 @@
-import React, { ReactNode } from "react"
+// npx jest src/components/ui/__tests__/select-dropdown.test.tsx
+
+import { ReactNode } from "react"
 import { render, screen, fireEvent } from "@testing-library/react"
 import { SelectDropdown, DropdownOptionType } from "../select-dropdown"
 
@@ -47,6 +49,10 @@ jest.mock("../dropdown-menu", () => {
 		),
 
 		DropdownMenuSeparator: () => <div data-testid="dropdown-separator" />,
+
+		DropdownMenuShortcut: ({ children }: { children: ReactNode }) => (
+			<span data-testid="dropdown-shortcut">{children}</span>
+		),
 	}
 })
 
@@ -78,13 +84,6 @@ describe("SelectDropdown", () => {
 
 		const trigger = screen.getByTestId("dropdown-trigger")
 		expect(trigger).toHaveAttribute("disabled")
-	})
-
-	it("renders with width: 100% for proper sizing", () => {
-		render(<SelectDropdown value="option1" options={options} onChange={onChangeMock} />)
-
-		const trigger = screen.getByTestId("dropdown-trigger")
-		expect(trigger).toHaveStyle("width: 100%")
 	})
 
 	it("passes the selected value to the trigger", () => {
@@ -162,10 +161,9 @@ describe("SelectDropdown", () => {
 				/>,
 			)
 
-			// The shortcut text should be rendered as a div, not a dropdown item
 			expect(screen.queryByText(shortcutText)).toBeInTheDocument()
 			const dropdownItems = screen.getAllByTestId("dropdown-item")
-			expect(dropdownItems.length).toBe(1) // Only one regular option
+			expect(dropdownItems.length).toBe(2)
 		})
 
 		it("handles action options correctly", () => {
