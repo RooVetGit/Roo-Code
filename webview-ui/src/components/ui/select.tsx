@@ -22,10 +22,10 @@ function SelectTrigger({ className, children, ...props }: React.ComponentProps<t
 		<SelectPrimitive.Trigger
 			data-slot="select-trigger"
 			className={cn(
-				"data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground aria-invalid:border-destructive flex h-7 w-fit items-center justify-between gap-2 rounded-xs px-3 py-2 whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none disabled:cursor-not-allowed disabled:opacity-50 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 cursor-pointer",
-				"border border-[var(--vscode-input-border,var(--vscode-input-background))] aria-expanded:border-vscode-focusBorder focus-visible:border-vscode-focusBorder",
-				"bg-vscode-input-background hover:bg-transparent",
-				"text-vscode-input-foreground",
+				"data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground aria-invalid:border-destructive flex h-7 w-fit items-center justify-between gap-2 rounded-xs px-3 py-2 whitespace-nowrap transition-[color,box-shadow] outline-none disabled:cursor-not-allowed disabled:opacity-50 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 cursor-pointer",
+				"border border-vscode-dropdown-border aria-expanded:border-vscode-focusBorder focus-visible:border-vscode-focusBorder",
+				"bg-vscode-dropdown-background hover:bg-transparent",
+				"text-vscode-dropdown-foreground",
 				className,
 			)}
 			{...props}>
@@ -49,7 +49,7 @@ function SelectContent({
 			<SelectPrimitive.Content
 				data-slot="select-content"
 				className={cn(
-					"bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-50 max-h-72 min-w-[8rem] overflow-hidden rounded-xs border border-vscode-focusBorder shadow-md",
+					"bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-50 max-h-72 min-w-[8rem] overflow-hidden rounded-xs border border-vscode-focusBorder shadow-xs",
 					position === "popper" &&
 						"data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
 					className,
@@ -88,6 +88,7 @@ function SelectItem({ className, children, ...props }: React.ComponentProps<type
 			className={cn(
 				"[&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full items-center gap-2 rounded-xs py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2 cursor-pointer",
 				"focus:bg-vscode-list-activeSelectionBackground focus:text-vscode-list-activeSelectionForeground",
+				"text-vscode-dropdown-foreground",
 				className,
 			)}
 			{...props}>
@@ -105,7 +106,7 @@ function SelectSeparator({ className, ...props }: React.ComponentProps<typeof Se
 	return (
 		<SelectPrimitive.Separator
 			data-slot="select-separator"
-			className={cn("bg-border pointer-events-none -mx-1 my-1 h-px", className)}
+			className={cn("bg-vscode-dropdown-border pointer-events-none -mx-1 my-1 h-px", className)}
 			{...props}
 		/>
 	)
