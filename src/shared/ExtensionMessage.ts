@@ -176,6 +176,7 @@ export interface ClineSayTool {
 		| "switchMode"
 		| "newTask"
 		| "finishTask"
+		| "getSymbolDocumentation"
 	path?: string
 	diff?: string
 	content?: string
@@ -183,6 +184,7 @@ export interface ClineSayTool {
 	filePattern?: string
 	mode?: string
 	reason?: string
+	symbolName?: string
 }
 
 // Must keep in sync with system prompt.

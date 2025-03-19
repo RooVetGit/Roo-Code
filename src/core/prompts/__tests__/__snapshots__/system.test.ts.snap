@@ -94,6 +94,24 @@ Example: Requesting to list all top level source code definitions in the current
 <path>.</path>
 </list_code_definition_names>
 
+## get_symbol_documentation
+Description: Request to retrieve documentation, type information, and other hover details for a symbol in the codebase.
+Parameters:
+- symbol_name: (required) The name of the symbol to look up (function, class, method, etc.)
+- path: (optional) Path to a file where the symbol is used/referenced, to scope the search and avoid conflicts with similarly named symbols
+
+Usage:
+<get_symbol_documentation>
+<symbol_name>MyClass</symbol_name>
+<path>src/models/user.ts</path>
+</get_symbol_documentation>
+
+Example: Requesting documentation for a class named "User" that is referenced in a specific file
+<get_symbol_documentation>
+<symbol_name>User</symbol_name>
+<path>src/controllers/auth.ts</path>
+</get_symbol_documentation>
+
 ## write_to_file
 Description: Request to write full content to a file at the specified path. If the file exists, it will be overwritten with the provided content. If the file doesn't exist, it will be created. This tool will automatically create any directories needed to write the file.
 Parameters:
@@ -428,6 +446,24 @@ Example: Requesting to list all top level source code definitions in the current
 <list_code_definition_names>
 <path>.</path>
 </list_code_definition_names>
+
+## get_symbol_documentation
+Description: Request to retrieve documentation, type information, and other hover details for a symbol in the codebase.
+Parameters:
+- symbol_name: (required) The name of the symbol to look up (function, class, method, etc.)
+- path: (optional) Path to a file where the symbol is used/referenced, to scope the search and avoid conflicts with similarly named symbols
+
+Usage:
+<get_symbol_documentation>
+<symbol_name>MyClass</symbol_name>
+<path>src/models/user.ts</path>
+</get_symbol_documentation>
+
+Example: Requesting documentation for a class named "User" that is referenced in a specific file
+<get_symbol_documentation>
+<symbol_name>User</symbol_name>
+<path>src/controllers/auth.ts</path>
+</get_symbol_documentation>
 
 ## write_to_file
 Description: Request to write full content to a file at the specified path. If the file exists, it will be overwritten with the provided content. If the file doesn't exist, it will be created. This tool will automatically create any directories needed to write the file.
@@ -853,6 +889,24 @@ Example: Requesting to list all top level source code definitions in the current
 <path>.</path>
 </list_code_definition_names>
 
+## get_symbol_documentation
+Description: Request to retrieve documentation, type information, and other hover details for a symbol in the codebase.
+Parameters:
+- symbol_name: (required) The name of the symbol to look up (function, class, method, etc.)
+- path: (optional) Path to a file where the symbol is used/referenced, to scope the search and avoid conflicts with similarly named symbols
+
+Usage:
+<get_symbol_documentation>
+<symbol_name>MyClass</symbol_name>
+<path>src/models/user.ts</path>
+</get_symbol_documentation>
+
+Example: Requesting documentation for a class named "User" that is referenced in a specific file
+<get_symbol_documentation>
+<symbol_name>User</symbol_name>
+<path>src/controllers/auth.ts</path>
+</get_symbol_documentation>
+
 ## write_to_file
 Description: Request to write full content to a file at the specified path. If the file exists, it will be overwritten with the provided content. If the file doesn't exist, it will be created. This tool will automatically create any directories needed to write the file.
 Parameters:
@@ -1241,6 +1295,24 @@ Example: Requesting to list all top level source code definitions in the current
 <path>.</path>
 </list_code_definition_names>
 
+## get_symbol_documentation
+Description: Request to retrieve documentation, type information, and other hover details for a symbol in the codebase.
+Parameters:
+- symbol_name: (required) The name of the symbol to look up (function, class, method, etc.)
+- path: (optional) Path to a file where the symbol is used/referenced, to scope the search and avoid conflicts with similarly named symbols
+
+Usage:
+<get_symbol_documentation>
+<symbol_name>MyClass</symbol_name>
+<path>src/models/user.ts</path>
+</get_symbol_documentation>
+
+Example: Requesting documentation for a class named "User" that is referenced in a specific file
+<get_symbol_documentation>
+<symbol_name>User</symbol_name>
+<path>src/controllers/auth.ts</path>
+</get_symbol_documentation>
+
 ## write_to_file
 Description: Request to write full content to a file at the specified path. If the file exists, it will be overwritten with the provided content. If the file doesn't exist, it will be created. This tool will automatically create any directories needed to write the file.
 Parameters:
@@ -1575,6 +1647,24 @@ Example: Requesting to list all top level source code definitions in the current
 <list_code_definition_names>
 <path>.</path>
 </list_code_definition_names>
+
+## get_symbol_documentation
+Description: Request to retrieve documentation, type information, and other hover details for a symbol in the codebase.
+Parameters:
+- symbol_name: (required) The name of the symbol to look up (function, class, method, etc.)
+- path: (optional) Path to a file where the symbol is used/referenced, to scope the search and avoid conflicts with similarly named symbols
+
+Usage:
+<get_symbol_documentation>
+<symbol_name>MyClass</symbol_name>
+<path>src/models/user.ts</path>
+</get_symbol_documentation>
+
+Example: Requesting documentation for a class named "User" that is referenced in a specific file
+<get_symbol_documentation>
+<symbol_name>User</symbol_name>
+<path>src/controllers/auth.ts</path>
+</get_symbol_documentation>
 
 ## write_to_file
 Description: Request to write full content to a file at the specified path. If the file exists, it will be overwritten with the provided content. If the file doesn't exist, it will be created. This tool will automatically create any directories needed to write the file.
@@ -1911,6 +2001,24 @@ Example: Requesting to list all top level source code definitions in the current
 <path>.</path>
 </list_code_definition_names>
 
+## get_symbol_documentation
+Description: Request to retrieve documentation, type information, and other hover details for a symbol in the codebase.
+Parameters:
+- symbol_name: (required) The name of the symbol to look up (function, class, method, etc.)
+- path: (optional) Path to a file where the symbol is used/referenced, to scope the search and avoid conflicts with similarly named symbols
+
+Usage:
+<get_symbol_documentation>
+<symbol_name>MyClass</symbol_name>
+<path>src/models/user.ts</path>
+</get_symbol_documentation>
+
+Example: Requesting documentation for a class named "User" that is referenced in a specific file
+<get_symbol_documentation>
+<symbol_name>User</symbol_name>
+<path>src/controllers/auth.ts</path>
+</get_symbol_documentation>
+
 ## write_to_file
 Description: Request to write full content to a file at the specified path. If the file exists, it will be overwritten with the provided content. If the file doesn't exist, it will be created. This tool will automatically create any directories needed to write the file.
 Parameters:
@@ -2245,6 +2353,24 @@ Example: Requesting to list all top level source code definitions in the current
 <list_code_definition_names>
 <path>.</path>
 </list_code_definition_names>
+
+## get_symbol_documentation
+Description: Request to retrieve documentation, type information, and other hover details for a symbol in the codebase.
+Parameters:
+- symbol_name: (required) The name of the symbol to look up (function, class, method, etc.)
+- path: (optional) Path to a file where the symbol is used/referenced, to scope the search and avoid conflicts with similarly named symbols
+
+Usage:
+<get_symbol_documentation>
+<symbol_name>MyClass</symbol_name>
+<path>src/models/user.ts</path>
+</get_symbol_documentation>
+
+Example: Requesting documentation for a class named "User" that is referenced in a specific file
+<get_symbol_documentation>
+<symbol_name>User</symbol_name>
+<path>src/controllers/auth.ts</path>
+</get_symbol_documentation>
 
 ## write_to_file
 Description: Request to write full content to a file at the specified path. If the file exists, it will be overwritten with the provided content. If the file doesn't exist, it will be created. This tool will automatically create any directories needed to write the file.
@@ -2629,6 +2755,24 @@ Example: Requesting to list all top level source code definitions in the current
 <list_code_definition_names>
 <path>.</path>
 </list_code_definition_names>
+
+## get_symbol_documentation
+Description: Request to retrieve documentation, type information, and other hover details for a symbol in the codebase.
+Parameters:
+- symbol_name: (required) The name of the symbol to look up (function, class, method, etc.)
+- path: (optional) Path to a file where the symbol is used/referenced, to scope the search and avoid conflicts with similarly named symbols
+
+Usage:
+<get_symbol_documentation>
+<symbol_name>MyClass</symbol_name>
+<path>src/models/user.ts</path>
+</get_symbol_documentation>
+
+Example: Requesting documentation for a class named "User" that is referenced in a specific file
+<get_symbol_documentation>
+<symbol_name>User</symbol_name>
+<path>src/controllers/auth.ts</path>
+</get_symbol_documentation>
 
 ## write_to_file
 Description: Request to write full content to a file at the specified path. If the file exists, it will be overwritten with the provided content. If the file doesn't exist, it will be created. This tool will automatically create any directories needed to write the file.
@@ -3419,6 +3563,24 @@ Example: Requesting to list all top level source code definitions in the current
 <path>.</path>
 </list_code_definition_names>
 
+## get_symbol_documentation
+Description: Request to retrieve documentation, type information, and other hover details for a symbol in the codebase.
+Parameters:
+- symbol_name: (required) The name of the symbol to look up (function, class, method, etc.)
+- path: (optional) Path to a file where the symbol is used/referenced, to scope the search and avoid conflicts with similarly named symbols
+
+Usage:
+<get_symbol_documentation>
+<symbol_name>MyClass</symbol_name>
+<path>src/models/user.ts</path>
+</get_symbol_documentation>
+
+Example: Requesting documentation for a class named "User" that is referenced in a specific file
+<get_symbol_documentation>
+<symbol_name>User</symbol_name>
+<path>src/controllers/auth.ts</path>
+</get_symbol_documentation>
+
 ## write_to_file
 Description: Request to write full content to a file at the specified path. If the file exists, it will be overwritten with the provided content. If the file doesn't exist, it will be created. This tool will automatically create any directories needed to write the file.
 Parameters:
@@ -3802,6 +3964,24 @@ Example: Requesting to list all top level source code definitions in the current
 <list_code_definition_names>
 <path>.</path>
 </list_code_definition_names>
+
+## get_symbol_documentation
+Description: Request to retrieve documentation, type information, and other hover details for a symbol in the codebase.
+Parameters:
+- symbol_name: (required) The name of the symbol to look up (function, class, method, etc.)
+- path: (optional) Path to a file where the symbol is used/referenced, to scope the search and avoid conflicts with similarly named symbols
+
+Usage:
+<get_symbol_documentation>
+<symbol_name>MyClass</symbol_name>
+<path>src/models/user.ts</path>
+</get_symbol_documentation>
+
+Example: Requesting documentation for a class named "User" that is referenced in a specific file
+<get_symbol_documentation>
+<symbol_name>User</symbol_name>
+<path>src/controllers/auth.ts</path>
+</get_symbol_documentation>
 
 ## apply_diff
 Description: Request to replace existing code using a search and replace block.
@@ -4200,6 +4380,24 @@ Example: Requesting to list all top level source code definitions in the current
 <path>.</path>
 </list_code_definition_names>
 
+## get_symbol_documentation
+Description: Request to retrieve documentation, type information, and other hover details for a symbol in the codebase.
+Parameters:
+- symbol_name: (required) The name of the symbol to look up (function, class, method, etc.)
+- path: (optional) Path to a file where the symbol is used/referenced, to scope the search and avoid conflicts with similarly named symbols
+
+Usage:
+<get_symbol_documentation>
+<symbol_name>MyClass</symbol_name>
+<path>src/models/user.ts</path>
+</get_symbol_documentation>
+
+Example: Requesting documentation for a class named "User" that is referenced in a specific file
+<get_symbol_documentation>
+<symbol_name>User</symbol_name>
+<path>src/controllers/auth.ts</path>
+</get_symbol_documentation>
+
 ## write_to_file
 Description: Request to write full content to a file at the specified path. If the file exists, it will be overwritten with the provided content. If the file doesn't exist, it will be created. This tool will automatically create any directories needed to write the file.
 Parameters:
@@ -4576,6 +4774,24 @@ Example: Requesting to list all top level source code definitions in the current
 <list_code_definition_names>
 <path>.</path>
 </list_code_definition_names>
+
+## get_symbol_documentation
+Description: Request to retrieve documentation, type information, and other hover details for a symbol in the codebase.
+Parameters:
+- symbol_name: (required) The name of the symbol to look up (function, class, method, etc.)
+- path: (optional) Path to a file where the symbol is used/referenced, to scope the search and avoid conflicts with similarly named symbols
+
+Usage:
+<get_symbol_documentation>
+<symbol_name>MyClass</symbol_name>
+<path>src/models/user.ts</path>
+</get_symbol_documentation>
+
+Example: Requesting documentation for a class named "User" that is referenced in a specific file
+<get_symbol_documentation>
+<symbol_name>User</symbol_name>
+<path>src/controllers/auth.ts</path>
+</get_symbol_documentation>
 
 ## write_to_file
 Description: Request to write full content to a file at the specified path. If the file exists, it will be overwritten with the provided content. If the file doesn't exist, it will be created. This tool will automatically create any directories needed to write the file.
@@ -5074,6 +5290,24 @@ Example: Requesting to list all top level source code definitions in the current
 <path>.</path>
 </list_code_definition_names>
 
+## get_symbol_documentation
+Description: Request to retrieve documentation, type information, and other hover details for a symbol in the codebase.
+Parameters:
+- symbol_name: (required) The name of the symbol to look up (function, class, method, etc.)
+- path: (optional) Path to a file where the symbol is used/referenced, to scope the search and avoid conflicts with similarly named symbols
+
+Usage:
+<get_symbol_documentation>
+<symbol_name>MyClass</symbol_name>
+<path>src/models/user.ts</path>
+</get_symbol_documentation>
+
+Example: Requesting documentation for a class named "User" that is referenced in a specific file
+<get_symbol_documentation>
+<symbol_name>User</symbol_name>
+<path>src/controllers/auth.ts</path>
+</get_symbol_documentation>
+
 ## write_to_file
 Description: Request to write full content to a file at the specified path. If the file exists, it will be overwritten with the provided content. If the file doesn't exist, it will be created. This tool will automatically create any directories needed to write the file.
 Parameters:
@@ -5485,6 +5719,24 @@ Example: Requesting to list all top level source code definitions in the current
 <path>.</path>
 </list_code_definition_names>
 
+## get_symbol_documentation
+Description: Request to retrieve documentation, type information, and other hover details for a symbol in the codebase.
+Parameters:
+- symbol_name: (required) The name of the symbol to look up (function, class, method, etc.)
+- path: (optional) Path to a file where the symbol is used/referenced, to scope the search and avoid conflicts with similarly named symbols
+
+Usage:
+<get_symbol_documentation>
+<symbol_name>MyClass</symbol_name>
+<path>src/models/user.ts</path>
+</get_symbol_documentation>
+
+Example: Requesting documentation for a class named "User" that is referenced in a specific file
+<get_symbol_documentation>
+<symbol_name>User</symbol_name>
+<path>src/controllers/auth.ts</path>
+</get_symbol_documentation>
+
 ## ask_followup_question
 Description: Ask the user a question to gather additional information needed to complete the task. This tool should be used when you encounter ambiguities, need clarification, or require more details to proceed effectively. It allows for interactive problem-solving by enabling direct communication with the user. Use this tool judiciously to maintain a balance between gathering necessary information and avoiding excessive back-and-forth.
 Parameters:
@@ -5793,6 +6045,24 @@ Example: Requesting to list all top level source code definitions in the current
 <list_code_definition_names>
 <path>.</path>
 </list_code_definition_names>
+
+## get_symbol_documentation
+Description: Request to retrieve documentation, type information, and other hover details for a symbol in the codebase.
+Parameters:
+- symbol_name: (required) The name of the symbol to look up (function, class, method, etc.)
+- path: (optional) Path to a file where the symbol is used/referenced, to scope the search and avoid conflicts with similarly named symbols
+
+Usage:
+<get_symbol_documentation>
+<symbol_name>MyClass</symbol_name>
+<path>src/models/user.ts</path>
+</get_symbol_documentation>
+
+Example: Requesting documentation for a class named "User" that is referenced in a specific file
+<get_symbol_documentation>
+<symbol_name>User</symbol_name>
+<path>src/controllers/auth.ts</path>
+</get_symbol_documentation>
 
 ## write_to_file
 Description: Request to write full content to a file at the specified path. If the file exists, it will be overwritten with the provided content. If the file doesn't exist, it will be created. This tool will automatically create any directories needed to write the file.
