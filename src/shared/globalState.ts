@@ -126,6 +126,8 @@ export const GLOBAL_STATE_KEYS = [
 	"maxWorkspaceFiles",
 ] as const
 
+export const PASS_THROUGH_STATE_KEYS = ["taskHistory"] as const
+
 type CheckGlobalStateKeysExhaustiveness =
 	Exclude<GlobalStateKey, (typeof GLOBAL_STATE_KEYS)[number]> extends never ? true : false
 
@@ -135,3 +137,6 @@ export const isSecretKey = (key: string): key is SecretKey => SECRET_KEYS.includ
 
 export const isGlobalStateKey = (key: string): key is GlobalStateKey =>
 	GLOBAL_STATE_KEYS.includes(key as GlobalStateKey)
+
+export const isPassThroughStateKey = (key: string): key is (typeof PASS_THROUGH_STATE_KEYS)[number] =>
+	PASS_THROUGH_STATE_KEYS.includes(key as (typeof PASS_THROUGH_STATE_KEYS)[number])
