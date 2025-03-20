@@ -1103,7 +1103,7 @@ export const ChatRowContent = ({
 											<span style={{ fontSize: "0.8em" }}>{t("chat:commandOutput")}</span>
 										</div>
 										{isExpanded && (
-											<CodeBlock source={output} language="text" rawSource={rawOutput} />
+											<CodeBlock source={output} language="log" rawSource={rawOutput} />
 										)}
 									</div>
 								)}
