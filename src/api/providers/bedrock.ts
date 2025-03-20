@@ -211,6 +211,9 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 				case "eu-":
 					modelId = `eu.${modelConfig.id}`
 					break
+				case "ap-":
+					modelId = `apac.${modelConfig.id}`
+					break
 				default:
 					modelId = modelConfig.id
 					break
