@@ -148,7 +148,8 @@ const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProp
 					],
 				})
 				setHighlightedCode(html)
-			} catch (e) {
+			} catch (e: any) {
+				console.error("CodeBlock highlighting error:", e, "\nStack trace:", e.stack)
 				setHighlightedCode(source || "")
 			}
 		}
