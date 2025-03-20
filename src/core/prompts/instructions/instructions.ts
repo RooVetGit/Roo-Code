@@ -10,7 +10,7 @@ interface InstructionsDetail {
 
 export async function fetchInstructions(text: string, detail: InstructionsDetail): Promise<string> {
 	switch (text) {
-		case "create_mcp": {
+		case "create_mcp_server": {
 			return await createMCPServerInstructions(detail.mcpHub, detail.diffStrategy)
 		}
 		case "create_mode": {

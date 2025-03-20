@@ -2428,11 +2428,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 									...sharedMessageProps,
 									content: task,
 								} satisfies ClineSayTool)
+
 								const didApprove = await askApproval("tool", completeMessage)
 								if (!didApprove) {
 									break
 								}
-								// now execute the tool
+
+								// now fetch the content and provide it to the agent.
 								const mcpHub = this.providerRef.deref()?.getMcpHub()
 								if (!mcpHub) {
 									throw new Error("MCP hub not available")
