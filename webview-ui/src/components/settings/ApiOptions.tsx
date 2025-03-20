@@ -1317,6 +1317,29 @@ const ApiOptions = ({
 					<div className="text-sm text-vscode-descriptionForeground">
 						{t("settings:providers.humanRelay.instructions")}
 					</div>
+					<div className="text-sm text-vscode-descriptionForeground">{t("humanRelay:settings.usage")}</div>
+					<div className="mt-4">
+						<div className="font-medium">{t("humanRelay:settings.monitorInterval")}</div>
+						<div className="mt-2">
+							<input
+								type="range"
+								min="100"
+								max="2000"
+								step="100"
+								value={apiConfiguration?.humanRelayMonitorInterval || 500}
+								onChange={handleInputChange("humanRelayMonitorInterval", (e) => {
+									const target = e.target as HTMLInputElement
+									return parseInt(target.value)
+								})}
+								className="h-2 focus:outline-0 w-4/5 accent-vscode-button-background"
+							/>
+							<span style={{ minWidth: "45px", textAlign: "left" }}>
+								{t("humanRelay:settings.intervalValue", {
+									value: apiConfiguration?.humanRelayMonitorInterval || 500,
+								})}
+							</span>
+						</div>
+					</div>
 				</>
 			)}
 

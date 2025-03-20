@@ -120,6 +120,8 @@ export const GLOBAL_STATE_KEYS = [
 	"telemetrySetting",
 	"showRooIgnoredFiles",
 	"remoteBrowserEnabled",
+	"humanRelayMonitorClipboard",
+	"humanRelayMonitorInterval",
 	"language",
 	"maxWorkspaceFiles",
 	"maxReadFileLine",
