@@ -255,6 +255,8 @@ export type GlobalStateKey =
 	| "remoteBrowserEnabled"
 	| "language"
 	| "fakeAi"
+	| "humanRelayMonitorClipboard"
+	| "humanRelayMonitorInterval"
 
 export type ConfigurationKey = GlobalStateKey | SecretKey
 
