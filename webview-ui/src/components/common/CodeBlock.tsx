@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useCallback, useState } from "react"
 import debounce from "debounce"
-import { codeToHtml } from "shiki"
+import { createHighlighter } from "shiki"
 import styled from "styled-components"
 import { useCopyToClipboard } from "@src/utils/clipboard"
 export const CODE_BLOCK_BG_COLOR = "var(--vscode-editor-background, --vscode-sideBar-background, rgb(30 30 30))"
@@ -125,21 +125,25 @@ const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProp
 	useEffect(() => {
 		const highlight = async () => {
 			try {
-				const html = await codeToHtml(source || "", {
+				const highlighter = await createHighlighter({
+					themes: ["github-dark", "github-light"],
+					langs: [language || "txt"],
+				})
+				const html = await highlighter.codeToHtml(source || "", {
 					lang: language || "txt",
 					theme: document.body.className.toLowerCase().includes("light") ? "github-light" : "github-dark",
 					transformers: [
 						{
-							pre(node) {
+							pre(node: any) {
 								node.properties.style = "padding: 0; margin: 0;"
 								return node
 							},
-							code(node) {
+							code(node: any) {
 								// Add hljs classes for consistent styling
 								node.properties.class = `hljs language-${language || "txt"}`
 								return node
 							},
-							line(node) {
+							line(node: any) {
 								// Preserve existing line handling
 								node.properties.class = node.properties.class || ""
 								return node
@@ -148,7 +152,8 @@ const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProp
 					],
 				})
 				setHighlightedCode(html)
-			} catch (e) {
+			} catch (e: any) {
+				console.error("CodeBlock highlighting error:", e, "\nStack trace:", e.stack)
 				setHighlightedCode(source || "")
 			}
 		}
