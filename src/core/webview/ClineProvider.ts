@@ -2224,15 +2224,15 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	}
 
 	async ensureSettingsDirectoryExists(): Promise<string> {
-		const settingsDir = path.join(this.contextProxy.globalStorageUri.fsPath, "settings")
-		await fs.mkdir(settingsDir, { recursive: true })
-		return settingsDir
+		const { getSettingsDirectoryPath } = await import("../../shared/storagePathManager")
+		const globalStoragePath = this.contextProxy.globalStorageUri.fsPath
+		return getSettingsDirectoryPath(globalStoragePath)
 	}
 
 	private async ensureCacheDirectoryExists() {
-		const cacheDir = path.join(this.contextProxy.globalStorageUri.fsPath, "cache")
-		await fs.mkdir(cacheDir, { recursive: true })
-		return cacheDir
+		const { getCacheDirectoryPath } = await import("../../shared/storagePathManager")
+		const globalStoragePath = this.contextProxy.globalStorageUri.fsPath
+		return getCacheDirectoryPath(globalStoragePath)
 	}
 
 	private async readModelsFromCache(filename: string): Promise<Record<string, ModelInfo> | undefined> {
@@ -2330,7 +2330,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			throw new Error("Task not found in history")
 		}
 
-		const taskDirPath = path.join(this.contextProxy.globalStorageUri.fsPath, "tasks", id)
+		// 使用storagePathManager获取任务存储目录
+		const { getTaskDirectoryPath } = await import("../../shared/storagePathManager")
+		const globalStoragePath = this.contextProxy.globalStorageUri.fsPath
+		const taskDirPath = await getTaskDirectoryPath(globalStoragePath, id)
+
 		const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
 		const uiMessagesFilePath = path.join(taskDirPath, GlobalFileNames.uiMessages)
 
@@ -2862,8 +2866,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const history = ((await this.getGlobalState("taskHistory")) as HistoryItem[] | undefined) || []
 		const validTasks: HistoryItem[] = []
 
+		const { getTaskDirectoryPath } = await import("../../shared/storagePathManager")
+		const globalStoragePath = this.contextProxy.globalStorageUri.fsPath
+
 		for (const item of history) {
-			const taskDirPath = path.join(this.contextProxy.globalStorageUri.fsPath, "tasks", item.id)
+			const taskDirPath = await getTaskDirectoryPath(globalStoragePath, item.id)
 			const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
 
 			if (await fileExistsAtPath(apiConversationHistoryFilePath)) {
