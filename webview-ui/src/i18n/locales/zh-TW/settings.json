@@ -3,7 +3,8 @@
 		"save": "儲存",
 		"done": "完成",
 		"cancel": "取消",
-		"reset": "重設"
+		"reset": "重設",
+		"select": "選擇"
 	},
 	"header": {
 		"title": "設定",
@@ -24,8 +25,11 @@
 		"checkpoints": "檢查點",
 		"notifications": "通知",
 		"contextManagement": "內容管理",
+		"terminal": "終端機",
 		"advanced": "進階",
-		"experimental": "實驗性功能"
+		"experimental": "實驗性功能",
+		"language": "語言",
+		"about": "關於 Roo Code"
 	},
 	"autoApprove": {
 		"description": "允許 Roo 自動執行操作而無需核准。僅在您完全信任 AI 並理解相關安全風險的情況下啟用這些設定。",
@@ -71,12 +75,136 @@
 	},
 	"providers": {
 		"configProfile": "設定檔案",
-		"description": "描述",
+		"description": "儲存不同的 API 設定以快速切換提供者和設定。",
 		"apiProvider": "API 提供者",
+		"model": "模型",
+		"nameEmpty": "名稱不能為空",
+		"nameExists": "已存在同名的設定檔",
+		"deleteProfile": "刪除設定檔",
+		"invalidArnFormat": "無效的 ARN 格式。請檢查上面的範例。",
+		"enterNewName": "輸入新名稱",
+		"addProfile": "新增設定檔",
+		"renameProfile": "重新命名設定檔",
+		"newProfile": "新建設定檔",
+		"enterProfileName": "輸入設定檔名稱",
+		"createProfile": "建立設定檔",
+		"cannotDeleteOnlyProfile": "無法刪除唯一的設定檔",
+		"vscodeLmDescription": "VS Code 語言模型 API 允許您運行其他 VS Code 擴展提供的模型（包括但不限於 GitHub Copilot）。最簡單的方式是從 VS Code Marketplace 安裝 Copilot 和 Copilot Chat 擴展。",
+		"awsCustomArnUse": "輸入您要使用的模型的有效 AWS Bedrock ARN。格式範例：",
+		"awsCustomArnDesc": "確保 ARN 中的區域與您上面選擇的 AWS 區域匹配。",
 		"openRouterApiKey": "OpenRouter API 金鑰",
+		"getOpenRouterApiKey": "取得 OpenRouter API 金鑰",
 		"apiKeyStorageNotice": "API 金鑰安全儲存在 VSCode 的秘密儲存中",
+		"glamaApiKey": "Glama API 金鑰",
+		"getGlamaApiKey": "取得 Glama API 金鑰",
 		"useCustomBaseUrl": "使用自訂基礎 URL",
-		"openRouterTransformsText": "將提示和訊息鏈壓縮到內容大小 (<a>OpenRouter 轉換</a>)"
+		"requestyApiKey": "Requesty API 金鑰",
+		"getRequestyApiKey": "取得 Requesty API 金鑰",
+		"openRouterTransformsText": "將提示和訊息鏈壓縮到內容大小 (<a>OpenRouter 轉換</a>)",
+		"anthropicApiKey": "Anthropic API 金鑰",
+		"getAnthropicApiKey": "取得 Anthropic API 金鑰",
+		"deepSeekApiKey": "DeepSeek API 金鑰",
+		"getDeepSeekApiKey": "取得 DeepSeek API 金鑰",
+		"geminiApiKey": "Gemini API 金鑰",
+		"getGeminiApiKey": "取得 Gemini API 金鑰",
+		"openAiApiKey": "OpenAI API 金鑰",
+		"openAiBaseUrl": "基礎 URL",
+		"getOpenAiApiKey": "取得 OpenAI API 金鑰",
+		"mistralApiKey": "Mistral API 金鑰",
+		"getMistralApiKey": "取得 Mistral / Codestral API 金鑰",
+		"codestralBaseUrl": "Codestral 基礎 URL（選用）",
+		"codestralBaseUrlDesc": "設定 Codestral 模型的替代 URL。",
+		"awsCredentials": "AWS 憑證",
+		"awsProfile": "AWS 設定檔",
+		"awsProfileName": "AWS 設定檔名稱",
+		"awsAccessKey": "AWS 存取金鑰",
+		"awsSecretKey": "AWS 秘密金鑰",
+		"awsSessionToken": "AWS 工作階段權杖",
+		"awsRegion": "AWS 區域",
+		"awsCrossRegion": "使用跨區域推論",
+		"vscodeLmModel": "VSCode LM 模型",
+		"vscodeLmWarning": "注意：這是一個非常實驗性的集成，提供者支援會有所不同。如果您收到有關不支援模型的錯誤，那麼這是提供者方面的問題。",
+		"googleCloudSetup": {
+			"title": "要使用 Google Cloud Vertex AI，您需要：",
+			"step1": "1. 建立 Google Cloud 帳戶，啟用 Vertex AI API 並啟用所需的 Claude 模型。",
+			"step2": "2. 安裝 Google Cloud CLI 並設定應用程式預設憑證。",
+			"step3": "3. 或建立具有憑證的服務帳戶。"
+		},
+		"googleCloudCredentials": "Google Cloud 憑證",
+		"googleCloudKeyFile": "Google Cloud 金鑰檔案路徑",
+		"googleCloudProjectId": "Google Cloud 專案 ID",
+		"googleCloudRegion": "Google Cloud 區域",
+		"lmStudio": {
+			"baseUrl": "基礎 URL（選用）",
+			"modelId": "模型 ID",
+			"speculativeDecoding": "啟用推測解碼",
+			"draftModelId": "草稿模型 ID",
+			"draftModelDesc": "推測解碼要正確運作，草稿模型必須來自相同的模型系列。",
+			"selectDraftModel": "選擇草稿模型",
+			"noModelsFound": "找不到草稿模型。請確保 LM Studio 已在伺服器模式下執行。",
+			"description": "LM Studio 允許您在本機電腦上執行模型。關於如何開始使用，請參閱他們的<a>快速入門指南</a>。您還需要啟動 LM Studio 的<b>本機伺服器</b>功能才能與此擴充功能一起使用。<span>注意：</span>Roo Code 使用複雜的提示，並在 Claude 模型上運作最佳。功能較弱的模型可能無法如預期運作。"
+		},
+		"ollama": {
+			"baseUrl": "基礎 URL（選用）",
+			"modelId": "模型 ID",
+			"description": "Ollama 允許您在本機電腦上執行模型。關於如何開始使用，請參閱快速入門指南。",
+			"warning": "注意：Roo Code 使用複雜的提示，並在 Claude 模型上運作最佳。功能較弱的模型可能無法如預期運作。"
+		},
+		"unboundApiKey": "Unbound API 金鑰",
+		"getUnboundApiKey": "取得 Unbound API 金鑰",
+		"humanRelay": {
+			"description": "不需要 API 金鑰，但使用者需要協助將資訊複製並貼上到網頁聊天 AI。",
+			"instructions": "使用期間會彈出對話框，並自動將目前訊息複製到剪貼簿。您需要將這些內容貼上到網頁版 AI（如 ChatGPT 或 Claude），然後將 AI 的回覆複製回對話框並點擊確認按鈕。"
+		},
+		"openRouter": {
+			"providerRouting": {
+				"title": "OpenRouter 提供者路由",
+				"description": "OpenRouter 將請求路由到適合您模型的最佳可用提供者。預設情況下，請求會在頂級提供者之間進行負載平衡以最大化正常運行時間。但是，您可以為此模型選擇特定的提供者。",
+				"learnMore": "了解更多關於提供者路由的資訊"
+			}
+		},
+		"customModel": {
+			"capabilities": "設定您的自訂 OpenAI 相容模型的功能和定價。請謹慎指定模型功能，因為它們會影響 Roo Code 的效能。",
+			"maxTokens": {
+				"label": "最大輸出權杖",
+				"description": "模型在回應中可以生成的最大權杖數。（指定 -1 以允許伺服器設定最大權杖數。）"
+			},
+			"contextWindow": {
+				"label": "內容視窗大小",
+				"description": "模型可以處理的總權杖數（輸入 + 輸出）。"
+			},
+			"imageSupport": {
+				"label": "圖像支援",
+				"description": "此模型是否能夠處理和理解圖像？"
+			},
+			"computerUse": {
+				"label": "電腦使用",
+				"description": "此模型是否能夠與瀏覽器互動？（例如 Claude 3.7 Sonnet）"
+			},
+			"promptCache": {
+				"label": "提示快取",
+				"description": "此模型是否能夠快取提示？"
+			},
+			"pricing": {
+				"input": {
+					"label": "輸入價格",
+					"description": "輸入/提示每百萬權杖的成本。這會影響向模型發送內容和指令的成本。"
+				},
+				"output": {
+					"label": "輸出價格",
+					"description": "模型回應每百萬權杖的成本。這會影響生成內容和完成的成本。"
+				},
+				"cacheReads": {
+					"label": "快取讀取價格",
+					"description": "從快取讀取每百萬權杖的成本。這是檢索快取回應時收取的價格。"
+				},
+				"cacheWrites": {
+					"label": "快取寫入價格",
+					"description": "寫入快取每百萬權杖的成本。這是首次快取提示時收取的價格。"
+				}
+			},
+			"resetDefaults": "重設為預設值"
+		}
 	},
 	"browser": {
 		"enable": {
@@ -117,14 +245,15 @@
 			"label": "啟用音效",
 			"description": "啟用後，Roo 將為通知和事件播放音效。",
 			"volumeLabel": "音量"
+		},
+		"tts": {
+			"label": "啟用文字轉語音",
+			"description": "啟用後，Roo 將使用文字轉語音功能朗讀其回應。",
+			"speedLabel": "速度"
 		}
 	},
 	"contextManagement": {
 		"description": "控制在 AI 的內容視窗中包含哪些資訊，影響 token 使用和回應品質",
-		"terminal": {
-			"label": "終端機輸出限制",
-			"description": "執行命令時在終端機輸出中包含的最大行數。超過時將從中間刪除行，節省 token。"
-		},
 		"openTabs": {
 			"label": "開啟分頁內容限制",
 			"description": "在內容中包含的 VSCode 開啟分頁的最大數量。較高的值提供更多內容，但會增加 token 使用量。"
@@ -136,6 +265,20 @@
 		"rooignore": {
 			"label": "在列表和搜尋中顯示 .rooignore 檔案",
 			"description": "啟用後，與 .rooignore 中模式匹配的檔案將在列表中顯示鎖定符號。禁用時，這些檔案將從檔案列表和搜尋中完全隱藏。"
+		},
+		"maxReadFile": {
+			"label": "從檔案讀取的最大行數",
+			"description": "一次從檔案讀取的最大行數。較低的值會減少內容/資源使用，但可能需要對大型檔案進行更多次讀取。"
+		}
+	},
+	"terminal": {
+		"outputLineLimit": {
+			"label": "終端機輸出限制",
+			"description": "執行命令時在終端機輸出中包含的最大行數。超過時將從中間刪除行，節省 token。"
+		},
+		"shellIntegrationTimeout": {
+			"label": "終端機 Shell 整合逾時",
+			"description": "執行命令前等待 Shell 整合初始化的最長時間。對於 Shell 啟動時間較長的使用者，如果在終端機中看到\"Shell Integration Unavailable\"錯誤，可能需要增加此值。"
 		}
 	},
 	"advanced": {
@@ -205,13 +348,20 @@
 		"outputPrice": "輸出價格",
 		"cacheReadsPrice": "快取讀取價格",
 		"cacheWritesPrice": "快取寫入價格",
+		"enableStreaming": "啟用串流媒體",
+		"useAzure": "使用 Azure",
+		"azureApiVersion": "設定 Azure API 版本",
 		"gemini": {
 			"freeRequests": "* 每分鐘免費 {{count}} 個請求。之後，計費取決於提示大小。",
 			"pricingDetails": "有關更多資訊，請參閱定價詳情。"
 		}
 	},
 	"modelPicker": {
-		"automaticFetch": "擴充功能會自動獲取 <serviceLink>{{serviceName}}</serviceLink> 上可用的最新模型列表。如果您不確定選擇哪個模型，Roo Code 與 <defaultModelLink>{{defaultModelId}}</defaultModelLink> 配合最佳。您還可以搜尋\"free\"以尋找目前可用的免費選項。"
+		"automaticFetch": "擴充功能會自動獲取 <serviceLink>{{serviceName}}</serviceLink> 上可用的最新模型列表。如果您不確定選擇哪個模型，Roo Code 與 <defaultModelLink>{{defaultModelId}}</defaultModelLink> 配合最佳。您還可以搜尋\"free\"以尋找目前可用的免費選項。",
+		"label": "模型",
+		"searchPlaceholder": "搜尋",
+		"noMatchFound": "未找到相符項目",
+		"useCustomModel": "使用自訂: {{modelId}}"
 	},
 	"footer": {
 		"feedback": "如果您有任何問題或反饋，請隨時在 <githubLink>github.com/RooVetGit/Roo-Code</githubLink> 上提出問題或加入 <redditLink>reddit.com/r/RooCode</redditLink> 或 <discordLink>discord.gg/roocode</discordLink>",
@@ -224,5 +374,55 @@
 			"description": "重設擴充功能中的所有全域狀態和秘密儲存。",
 			"button": "重設"
 		}
+	},
+	"thinkingBudget": {
+		"maxTokens": "最大 tokens",
+		"maxThinkingTokens": "最大思考 tokens"
+	},
+	"validation": {
+		"apiKey": "您必須提供有效的 API 金鑰。",
+		"awsRegion": "您必須選擇一個區域來使用 AWS Bedrock。",
+		"googleCloud": "您必須提供有效的 Google Cloud 專案 ID 和區域。",
+		"modelId": "您必須提供有效的模型 ID。",
+		"modelSelector": "您必須提供有效的模型選擇器。",
+		"openAi": "您必須提供有效的基礎 URL、API 金鑰和模型 ID。",
+		"arn": {
+			"invalidFormat": "ARN 格式無效。請檢查格式要求。",
+			"regionMismatch": "警告：您的 ARN 中的區域 ({{arnRegion}}) 與您選擇的區域 ({{region}}) 不符。這可能會導致存取問題。提供者將使用 ARN 中的區域。"
+		},
+		"modelAvailability": "您提供的模型 ID ({{modelId}}) 無法使用。請選擇其他模型。"
+	},
+	"placeholders": {
+		"apiKey": "請輸入 API 金鑰...",
+		"profileName": "請輸入設定檔名稱",
+		"accessKey": "請輸入存取金鑰...",
+		"secretKey": "請輸入密鑰...",
+		"sessionToken": "請輸入工作階段權杖...",
+		"credentialsJson": "請輸入憑證 JSON...",
+		"keyFilePath": "請輸入金鑰檔案路徑...",
+		"projectId": "請輸入專案 ID...",
+		"customArn": "請輸入 ARN（例：arn:aws:bedrock:us-east-1:123456789012:foundation-model/my-model）",
+		"baseUrl": "請輸入基礎 URL...",
+		"modelId": {
+			"lmStudio": "例：meta-llama-3.1-8b-instruct",
+			"lmStudioDraft": "例：lmstudio-community/llama-3.2-1b-instruct",
+			"ollama": "例：llama3.1"
+		},
+		"numbers": {
+			"maxTokens": "例：4096",
+			"contextWindow": "例：128000",
+			"inputPrice": "例：0.0001",
+			"outputPrice": "例：0.0002",
+			"cacheWritePrice": "例：0.00005"
+		}
+	},
+	"defaults": {
+		"ollamaUrl": "預設值：http://localhost:11434",
+		"lmStudioUrl": "預設值：http://localhost:1234",
+		"geminiUrl": "預設值：https://generativelanguage.googleapis.com"
+	},
+	"labels": {
+		"customArn": "自訂 ARN",
+		"useCustomArn": "使用自訂 ARN..."
 	}
 }

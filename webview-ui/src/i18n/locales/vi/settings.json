@@ -3,7 +3,8 @@
 		"save": "Lưu",
 		"done": "Hoàn thành",
 		"cancel": "Hủy",
-		"reset": "Đặt lại"
+		"reset": "Đặt lại",
+		"select": "Chọn"
 	},
 	"header": {
 		"title": "Cài đặt",
@@ -24,8 +25,11 @@
 		"checkpoints": "Điểm kiểm tra",
 		"notifications": "Thông báo",
 		"contextManagement": "Quản lý ngữ cảnh",
+		"terminal": "Terminal",
 		"advanced": "Nâng cao",
-		"experimental": "Tính năng thử nghiệm"
+		"experimental": "Tính năng thử nghiệm",
+		"language": "Ngôn ngữ",
+		"about": "Về Roo Code"
 	},
 	"autoApprove": {
 		"description": "Cho phép Roo tự động thực hiện các hoạt động mà không cần phê duyệt. Chỉ bật những cài đặt này nếu bạn hoàn toàn tin tưởng AI và hiểu rõ các rủi ro bảo mật liên quan.",
@@ -71,12 +75,136 @@
 	},
 	"providers": {
 		"configProfile": "Hồ sơ cấu hình",
-		"description": "Mô tả",
+		"description": "Lưu các cấu hình API khác nhau để nhanh chóng chuyển đổi giữa các nhà cung cấp và cài đặt.",
 		"apiProvider": "Nhà cung cấp API",
+		"model": "Mẫu",
+		"nameEmpty": "Tên không được để trống",
+		"nameExists": "Đã tồn tại một hồ sơ với tên này",
+		"deleteProfile": "Xóa hồ sơ",
+		"invalidArnFormat": "Định dạng ARN không hợp lệ. Vui lòng kiểm tra các ví dụ ở trên.",
+		"enterNewName": "Nhập tên mới",
+		"addProfile": "Thêm hồ sơ",
+		"renameProfile": "Đổi tên hồ sơ",
+		"newProfile": "Hồ sơ cấu hình mới",
+		"enterProfileName": "Nhập tên hồ sơ",
+		"createProfile": "Tạo hồ sơ",
+		"cannotDeleteOnlyProfile": "Không thể xóa hồ sơ duy nhất",
+		"vscodeLmDescription": "API Mô hình Ngôn ngữ VS Code cho phép bạn chạy các mô hình được cung cấp bởi các tiện ích mở rộng khác của VS Code (bao gồm nhưng không giới hạn ở GitHub Copilot). Cách dễ nhất để bắt đầu là cài đặt các tiện ích mở rộng Copilot và Copilot Chat từ VS Code Marketplace.",
+		"awsCustomArnUse": "Nhập một ARN AWS Bedrock hợp lệ cho mô hình bạn muốn sử dụng. Ví dụ về định dạng:",
+		"awsCustomArnDesc": "Đảm bảo rằng vùng trong ARN khớp với vùng AWS đã chọn ở trên.",
 		"openRouterApiKey": "Khóa API OpenRouter",
+		"getOpenRouterApiKey": "Lấy khóa API OpenRouter",
 		"apiKeyStorageNotice": "Khóa API được lưu trữ an toàn trong Bộ lưu trữ bí mật của VSCode",
+		"glamaApiKey": "Khóa API Glama",
+		"getGlamaApiKey": "Lấy khóa API Glama",
 		"useCustomBaseUrl": "Sử dụng URL cơ sở tùy chỉnh",
-		"openRouterTransformsText": "Nén lời nhắc và chuỗi tin nhắn theo kích thước ngữ cảnh (<a>OpenRouter Transforms</a>)"
+		"requestyApiKey": "Khóa API Requesty",
+		"getRequestyApiKey": "Lấy khóa API Requesty",
+		"anthropicApiKey": "Khóa API Anthropic",
+		"getAnthropicApiKey": "Lấy khóa API Anthropic",
+		"deepSeekApiKey": "Khóa API DeepSeek",
+		"getDeepSeekApiKey": "Lấy khóa API DeepSeek",
+		"geminiApiKey": "Khóa API Gemini",
+		"getGeminiApiKey": "Lấy khóa API Gemini",
+		"openAiApiKey": "Khóa API OpenAI",
+		"openAiBaseUrl": "URL cơ sở",
+		"getOpenAiApiKey": "Lấy khóa API OpenAI",
+		"mistralApiKey": "Khóa API Mistral",
+		"getMistralApiKey": "Lấy khóa API Mistral / Codestral",
+		"codestralBaseUrl": "URL cơ sở Codestral (Tùy chọn)",
+		"codestralBaseUrlDesc": "Đặt URL thay thế cho mô hình Codestral.",
+		"awsCredentials": "Thông tin xác thực AWS",
+		"awsProfile": "Hồ sơ AWS",
+		"awsProfileName": "Tên hồ sơ AWS",
+		"awsAccessKey": "Khóa truy cập AWS",
+		"awsSecretKey": "Khóa bí mật AWS",
+		"awsSessionToken": "Token phiên AWS",
+		"awsRegion": "Vùng AWS",
+		"awsCrossRegion": "Sử dụng suy luận liên vùng",
+		"vscodeLmModel": "Mô hình ngôn ngữ",
+		"vscodeLmWarning": "Lưu ý: Đây là tích hợp thử nghiệm và hỗ trợ nhà cung cấp có thể khác nhau. Nếu bạn nhận được lỗi về mô hình không được hỗ trợ, đó là vấn đề từ phía nhà cung cấp.",
+		"googleCloudSetup": {
+			"title": "Để sử dụng Google Cloud Vertex AI, bạn cần:",
+			"step1": "1. Tạo tài khoản Google Cloud, kích hoạt Vertex AI API và kích hoạt các mô hình Claude mong muốn.",
+			"step2": "2. Cài đặt Google Cloud CLI và cấu hình thông tin xác thực mặc định của ứng dụng.",
+			"step3": "3. Hoặc tạo tài khoản dịch vụ với thông tin xác thực."
+		},
+		"googleCloudCredentials": "Thông tin xác thực Google Cloud",
+		"googleCloudKeyFile": "Đường dẫn tệp khóa Google Cloud",
+		"googleCloudProjectId": "ID dự án Google Cloud",
+		"googleCloudRegion": "Vùng Google Cloud",
+		"lmStudio": {
+			"baseUrl": "URL cơ sở (tùy chọn)",
+			"modelId": "ID mô hình",
+			"speculativeDecoding": "Bật giải mã suy đoán",
+			"draftModelId": "ID mô hình nháp",
+			"draftModelDesc": "Mô hình nháp phải từ cùng một họ mô hình để giải mã suy đoán hoạt động chính xác.",
+			"selectDraftModel": "Chọn mô hình nháp",
+			"noModelsFound": "Không tìm thấy mô hình nháp nào. Vui lòng đảm bảo LM Studio đang chạy với chế độ máy chủ được bật.",
+			"description": "LM Studio cho phép bạn chạy các mô hình cục bộ trên máy tính của bạn. Để biết hướng dẫn về cách bắt đầu, xem <a>hướng dẫn nhanh</a> của họ. Bạn cũng sẽ cần khởi động tính năng <b>máy chủ cục bộ</b> của LM Studio để sử dụng nó với tiện ích mở rộng này. <span>Lưu ý:</span> Roo Code sử dụng các lời nhắc phức tạp và hoạt động tốt nhất với các mô hình Claude. Các mô hình kém mạnh hơn có thể không hoạt động như mong đợi."
+		},
+		"ollama": {
+			"baseUrl": "URL cơ sở (tùy chọn)",
+			"modelId": "ID mô hình",
+			"description": "Ollama cho phép bạn chạy các mô hình cục bộ trên máy tính của bạn. Để biết hướng dẫn về cách bắt đầu, xem hướng dẫn nhanh của họ.",
+			"warning": "Lưu ý: Roo Code sử dụng các lời nhắc phức tạp và hoạt động tốt nhất với các mô hình Claude. Các mô hình kém mạnh hơn có thể không hoạt động như mong đợi."
+		},
+		"openRouterTransformsText": "Nén lời nhắc và chuỗi tin nhắn theo kích thước ngữ cảnh (<a>OpenRouter Transforms</a>)",
+		"unboundApiKey": "Khóa API Unbound",
+		"getUnboundApiKey": "Lấy khóa API Unbound",
+		"humanRelay": {
+			"description": "Không cần khóa API, nhưng người dùng cần giúp sao chép và dán thông tin vào AI trò chuyện web.",
+			"instructions": "Trong quá trình sử dụng, một hộp thoại sẽ xuất hiện và tin nhắn hiện tại sẽ được tự động sao chép vào clipboard. Bạn cần dán chúng vào các phiên bản web của AI (như ChatGPT hoặc Claude), sau đó sao chép phản hồi của AI trở lại hộp thoại và nhấp vào nút xác nhận."
+		},
+		"openRouter": {
+			"providerRouting": {
+				"title": "Định tuyến nhà cung cấp OpenRouter",
+				"description": "OpenRouter chuyển hướng yêu cầu đến các nhà cung cấp tốt nhất hiện có cho mô hình của bạn. Theo mặc định, các yêu cầu được cân bằng giữa các nhà cung cấp hàng đầu để tối đa hóa thời gian hoạt động. Tuy nhiên, bạn có thể chọn một nhà cung cấp cụ thể để sử dụng cho mô hình này.",
+				"learnMore": "Tìm hiểu thêm về định tuyến nhà cung cấp"
+			}
+		},
+		"customModel": {
+			"capabilities": "Cấu hình các khả năng và giá cả cho mô hình tương thích OpenAI tùy chỉnh của bạn. Hãy cẩn thận khi chỉ định khả năng của mô hình, vì chúng có thể ảnh hưởng đến cách Roo Code hoạt động.",
+			"maxTokens": {
+				"label": "Số token đầu ra tối đa",
+				"description": "Số lượng token tối đa mà mô hình có thể tạo ra trong một phản hồi. (Chỉ định -1 để cho phép máy chủ đặt số token tối đa.)"
+			},
+			"contextWindow": {
+				"label": "Kích thước cửa sổ ngữ cảnh",
+				"description": "Tổng số token (đầu vào + đầu ra) mà mô hình có thể xử lý."
+			},
+			"imageSupport": {
+				"label": "Hỗ trợ hình ảnh",
+				"description": "Mô hình này có khả năng xử lý và hiểu hình ảnh không?"
+			},
+			"computerUse": {
+				"label": "Sử dụng máy tính",
+				"description": "Mô hình này có khả năng tương tác với trình duyệt không? (ví dụ: Claude 3.7 Sonnet)."
+			},
+			"promptCache": {
+				"label": "Bộ nhớ đệm lời nhắc",
+				"description": "Mô hình này có khả năng lưu trữ lời nhắc trong bộ nhớ đệm không?"
+			},
+			"pricing": {
+				"input": {
+					"label": "Giá đầu vào",
+					"description": "Chi phí cho mỗi triệu token trong đầu vào/lời nhắc. Điều này ảnh hưởng đến chi phí gửi ngữ cảnh và hướng dẫn đến mô hình."
+				},
+				"output": {
+					"label": "Giá đầu ra",
+					"description": "Chi phí cho mỗi triệu token trong phản hồi của mô hình. Điều này ảnh hưởng đến chi phí của nội dung được tạo ra và hoàn thành."
+				},
+				"cacheReads": {
+					"label": "Giá đọc bộ nhớ đệm",
+					"description": "Chi phí cho mỗi triệu token khi đọc từ bộ nhớ đệm. Đây là giá được tính khi một phản hồi được lưu trong bộ nhớ đệm được truy xuất."
+				},
+				"cacheWrites": {
+					"label": "Giá ghi bộ nhớ đệm",
+					"description": "Chi phí cho mỗi triệu token khi ghi vào bộ nhớ đệm. Đây là giá được tính khi một lời nhắc được lưu vào bộ nhớ đệm lần đầu tiên."
+				}
+			},
+			"resetDefaults": "Đặt lại về mặc định"
+		}
 	},
 	"browser": {
 		"enable": {
@@ -117,14 +245,15 @@
 			"label": "Bật hiệu ứng âm thanh",
 			"description": "Khi được bật, Roo sẽ phát hiệu ứng âm thanh cho thông báo và sự kiện.",
 			"volumeLabel": "Âm lượng"
+		},
+		"tts": {
+			"label": "Bật chuyển văn bản thành giọng nói",
+			"description": "Khi được bật, Roo sẽ đọc to các phản hồi của nó bằng chức năng chuyển văn bản thành giọng nói.",
+			"speedLabel": "Tốc độ"
 		}
 	},
 	"contextManagement": {
 		"description": "Kiểm soát thông tin nào được đưa vào cửa sổ ngữ cảnh của AI, ảnh hưởng đến việc sử dụng token và chất lượng phản hồi",
-		"terminal": {
-			"label": "Giới hạn đầu ra terminal",
-			"description": "Số dòng tối đa để đưa vào đầu ra terminal khi thực hiện lệnh. Khi vượt quá, các dòng sẽ bị xóa khỏi phần giữa, tiết kiệm token."
-		},
 		"openTabs": {
 			"label": "Giới hạn ngữ cảnh tab đang mở",
 			"description": "Số lượng tab VSCode đang mở tối đa để đưa vào ngữ cảnh. Giá trị cao hơn cung cấp nhiều ngữ cảnh hơn nhưng tăng sử dụng token."
@@ -136,6 +265,20 @@
 		"rooignore": {
 			"label": "Hiển thị tệp .rooignore trong danh sách và tìm kiếm",
 			"description": "Khi được bật, các tệp khớp với mẫu trong .rooignore sẽ được hiển thị trong danh sách với biểu tượng khóa. Khi bị tắt, các tệp này sẽ hoàn toàn bị ẩn khỏi danh sách tệp và tìm kiếm."
+		},
+		"maxReadFile": {
+			"label": "Số dòng tối đa để đọc từ một tệp",
+			"description": "Số dòng tối đa để đọc từ một tệp cùng một lúc. Giá trị thấp hơn giảm sử dụng ngữ cảnh/tài nguyên nhưng có thể yêu cầu đọc nhiều lần hơn cho các tệp lớn."
+		}
+	},
+	"terminal": {
+		"outputLineLimit": {
+			"label": "Giới hạn đầu ra terminal",
+			"description": "Số dòng tối đa để đưa vào đầu ra terminal khi thực hiện lệnh. Khi vượt quá, các dòng sẽ bị xóa khỏi phần giữa, tiết kiệm token."
+		},
+		"shellIntegrationTimeout": {
+			"label": "Thời gian chờ tích hợp shell terminal",
+			"description": "Thời gian tối đa để chờ tích hợp shell khởi tạo trước khi thực hiện lệnh. Đối với người dùng có thời gian khởi động shell dài, giá trị này có thể cần được tăng lên nếu bạn thấy lỗi \"Shell Integration Unavailable\" trong terminal."
 		}
 	},
 	"advanced": {
@@ -205,13 +348,20 @@
 		"outputPrice": "Giá đầu ra",
 		"cacheReadsPrice": "Giá đọc bộ nhớ đệm",
 		"cacheWritesPrice": "Giá ghi bộ nhớ đệm",
+		"enableStreaming": "Bật streaming",
+		"useAzure": "Sử dụng Azure",
+		"azureApiVersion": "Đặt phiên bản API Azure",
 		"gemini": {
 			"freeRequests": "* Miễn phí đến {{count}} yêu cầu mỗi phút. Sau đó, thanh toán phụ thuộc vào kích thước lời nhắc.",
 			"pricingDetails": "Để biết thêm thông tin, xem chi tiết giá."
 		}
 	},
 	"modelPicker": {
-		"automaticFetch": "Tiện ích mở rộng tự động lấy danh sách mới nhất các mô hình có sẵn trên <serviceLink>{{serviceName}}</serviceLink>. Nếu bạn không chắc chắn nên chọn mô hình nào, Roo Code hoạt động tốt nhất với <defaultModelLink>{{defaultModelId}}</defaultModelLink>. Bạn cũng có thể thử tìm kiếm \"free\" cho các tùy chọn miễn phí hiện có."
+		"automaticFetch": "Tiện ích mở rộng tự động lấy danh sách mới nhất các mô hình có sẵn trên <serviceLink>{{serviceName}}</serviceLink>. Nếu bạn không chắc chắn nên chọn mô hình nào, Roo Code hoạt động tốt nhất với <defaultModelLink>{{defaultModelId}}</defaultModelLink>. Bạn cũng có thể thử tìm kiếm \"free\" cho các tùy chọn miễn phí hiện có.",
+		"label": "Mô hình",
+		"searchPlaceholder": "Tìm kiếm",
+		"noMatchFound": "Không tìm thấy kết quả",
+		"useCustomModel": "Sử dụng tùy chỉnh: {{modelId}}"
 	},
 	"footer": {
 		"feedback": "Nếu bạn có bất kỳ câu hỏi hoặc phản hồi nào, vui lòng mở một vấn đề tại <githubLink>github.com/RooVetGit/Roo-Code</githubLink> hoặc tham gia <redditLink>reddit.com/r/RooCode</redditLink> hoặc <discordLink>discord.gg/roocode</discordLink>",
@@ -224,5 +374,55 @@
 			"description": "Đặt lại tất cả trạng thái toàn cầu và lưu trữ bí mật trong tiện ích mở rộng.",
 			"button": "Đặt lại"
 		}
+	},
+	"thinkingBudget": {
+		"maxTokens": "Tokens tối đa",
+		"maxThinkingTokens": "Tokens suy nghĩ tối đa"
+	},
+	"validation": {
+		"apiKey": "Bạn phải cung cấp khóa API hợp lệ.",
+		"awsRegion": "Bạn phải chọn một vùng để sử dụng AWS Bedrock.",
+		"googleCloud": "Bạn phải cung cấp ID dự án và vùng Google Cloud hợp lệ.",
+		"modelId": "Bạn phải cung cấp ID mô hình hợp lệ.",
+		"modelSelector": "Bạn phải cung cấp bộ chọn mô hình hợp lệ.",
+		"openAi": "Bạn phải cung cấp URL cơ sở, khóa API và ID mô hình hợp lệ.",
+		"arn": {
+			"invalidFormat": "Định dạng ARN không hợp lệ. Vui lòng kiểm tra yêu cầu về định dạng.",
+			"regionMismatch": "Cảnh báo: Vùng trong ARN của bạn ({{arnRegion}}) không khớp với vùng bạn đã chọn ({{region}}). Điều này có thể gây ra vấn đề truy cập. Nhà cung cấp sẽ sử dụng vùng từ ARN."
+		},
+		"modelAvailability": "ID mô hình ({{modelId}}) bạn đã cung cấp không khả dụng. Vui lòng chọn một mô hình khác."
+	},
+	"placeholders": {
+		"apiKey": "Nhập khóa API...",
+		"profileName": "Nhập tên hồ sơ",
+		"accessKey": "Nhập khóa truy cập...",
+		"secretKey": "Nhập khóa bí mật...",
+		"sessionToken": "Nhập token phiên...",
+		"credentialsJson": "Nhập JSON thông tin xác thực...",
+		"keyFilePath": "Nhập đường dẫn tệp khóa...",
+		"projectId": "Nhập ID dự án...",
+		"customArn": "Nhập ARN (vd: arn:aws:bedrock:us-east-1:123456789012:foundation-model/my-model)",
+		"baseUrl": "Nhập URL cơ sở...",
+		"modelId": {
+			"lmStudio": "vd: meta-llama-3.1-8b-instruct",
+			"lmStudioDraft": "vd: lmstudio-community/llama-3.2-1b-instruct",
+			"ollama": "vd: llama3.1"
+		},
+		"numbers": {
+			"maxTokens": "vd: 4096",
+			"contextWindow": "vd: 128000",
+			"inputPrice": "vd: 0.0001",
+			"outputPrice": "vd: 0.0002",
+			"cacheWritePrice": "vd: 0.00005"
+		}
+	},
+	"defaults": {
+		"ollamaUrl": "Mặc định: http://localhost:11434",
+		"lmStudioUrl": "Mặc định: http://localhost:1234",
+		"geminiUrl": "Mặc định: https://generativelanguage.googleapis.com"
+	},
+	"labels": {
+		"customArn": "ARN tùy chỉnh",
+		"useCustomArn": "Sử dụng ARN tùy chỉnh..."
 	}
 }

@@ -1,12 +1,14 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import delay from "delay"
 import axios from "axios"
+import EventEmitter from "events"
 import fs from "fs/promises"
 import os from "os"
 import pWaitFor from "p-wait-for"
 import * as path from "path"
 import * as vscode from "vscode"
 
+import { changeLanguage, t } from "../../i18n"
 import { setPanel } from "../../activate/registerCommands"
 import { ApiConfiguration, ApiProvider, ModelInfo, API_CONFIG_KEYS } from "../../shared/api"
 import { findLast } from "../../shared/array"
@@ -26,6 +28,7 @@ import { Mode, PromptComponent, defaultModeSlug, ModeConfig } from "../../shared
 import { checkExistKey } from "../../shared/checkExistApiConfig"
 import { EXPERIMENT_IDS, experiments as Experiments, experimentDefault, ExperimentId } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
+import { Terminal, TERMINAL_SHELL_INTEGRATION_TIMEOUT } from "../../integrations/terminal/Terminal"
 import { downloadTask } from "../../integrations/misc/export-markdown"
 import { openFile, openImage } from "../../integrations/misc/open-file"
 import { selectImages } from "../../integrations/misc/process-images"
@@ -36,8 +39,10 @@ import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { ShadowCheckpointService } from "../../services/checkpoints/ShadowCheckpointService"
 import { BrowserSession } from "../../services/browser/BrowserSession"
 import { discoverChromeInstances } from "../../services/browser/browserDiscovery"
+import { searchWorkspaceFiles } from "../../services/search/file-search"
 import { fileExistsAtPath } from "../../utils/fs"
 import { playSound, setSoundEnabled, setSoundVolume } from "../../utils/sound"
+import { playTts, setTtsEnabled, setTtsSpeed, stopTts } from "../../utils/tts"
 import { singleCompletionHandler } from "../../utils/single-completion-handler"
 import { searchCommits } from "../../utils/git"
 import { getDiffStrategy } from "../diff/DiffStrategy"
@@ -61,6 +66,7 @@ import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { TelemetrySetting } from "../../shared/TelemetrySetting"
+import { getWorkspacePath } from "../../utils/path"
 import { McpMarketplaceCatalog, McpServer, McpDownloadResponse } from "../../shared/mcp"
 import { DIFF_VIEW_URI_SCHEME } from "../../integrations/editor/DiffViewProvider"
 
@@ -69,7 +75,11 @@ import { DIFF_VIEW_URI_SCHEME } from "../../integrations/editor/DiffViewProvider
  * https://github.com/KumarVariable/vscode-extension-sidebar-html/blob/master/src/customSidebarViewProvider.ts
  */
 
-export class ClineProvider implements vscode.WebviewViewProvider {
+export type ClineProviderEvents = {
+	clineAdded: [cline: Cline]
+}
+
+export class ClineProvider extends EventEmitter<ClineProviderEvents> implements vscode.WebviewViewProvider {
 	public static readonly sideBarId = "roo-cline.SidebarProvider" // used in package.json as the view's id. This value cannot be changed due to how vscode caches views based on their id, and updating the id would break existing instances of the extension.
 	public static readonly tabPanelId = "roo-cline.TabPanelProvider"
 	private static activeInstances: Set<ClineProvider> = new Set()
@@ -79,15 +89,20 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	private clineStack: Cline[] = []
 	private workspaceTracker?: WorkspaceTracker
 	protected mcpHub?: McpHub // Change from private to protected
-	private latestAnnouncementId = "mar-7-2025-3-8" // update to some unique identifier when we add a new announcement
+	private latestAnnouncementId = "mar-18-2025-3-9" // update to some unique identifier when we add a new announcement
 	private contextProxy: ContextProxy
 	configManager: ConfigManager
 	customModesManager: CustomModesManager
-
+	get cwd() {
+		return getWorkspacePath()
+	}
 	constructor(
 		readonly context: vscode.ExtensionContext,
 		private readonly outputChannel: vscode.OutputChannel,
+		private readonly renderContext: "sidebar" | "editor" = "sidebar",
 	) {
+		super()
+
 		this.outputChannel.appendLine("ClineProvider instantiated")
 		this.contextProxy = new ContextProxy(context)
 		ClineProvider.activeInstances.add(this)
@@ -120,11 +135,13 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		// Add this cline instance into the stack that represents the order of all the called tasks.
 		this.clineStack.push(cline)
 
+		this.emit("clineAdded", cline)
+
 		// Ensure getState() resolves correctly.
 		const state = await this.getState()
 
 		if (!state || typeof state.mode !== "string") {
-			throw new Error("Error failed to retrieve current mode from state.")
+			throw new Error(t("common:errors.retrieve_current_mode"))
 		}
 	}
 
@@ -169,6 +186,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	// returns the current clineStack length (how many cline objects are in the stack)
 	getClineStackSize(): number {
 		return this.clineStack.length
+	}
+
+	public getCurrentTaskStack(): string[] {
+		return this.clineStack.map((cline) => cline.taskId)
 	}
 
 	// remove the current task/cline instance (at the top of the stack), ao this task is finished
@@ -340,9 +361,20 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			setPanel(webviewView, "sidebar")
 		}
 
-		// Initialize sound enabled state
-		this.getState().then(({ soundEnabled }) => {
+		// Initialize out-of-scope variables that need to recieve persistent global state values
+		this.getState().then(({ soundEnabled, terminalShellIntegrationTimeout }) => {
 			setSoundEnabled(soundEnabled ?? false)
+			Terminal.setShellIntegrationTimeout(terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT)
+		})
+
+		// Initialize tts enabled state
+		this.getState().then(({ ttsEnabled }) => {
+			setTtsEnabled(ttsEnabled ?? false)
+		})
+
+		// Initialize tts speed state
+		this.getState().then(({ ttsSpeed }) => {
+			setTtsSpeed(ttsSpeed ?? 1)
 		})
 
 		webviewView.webview.options = {
@@ -484,7 +516,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 		const taskId = historyItem.id
 		const globalStorageDir = this.contextProxy.globalStorageUri.fsPath
-		const workspaceDir = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? ""
+		const workspaceDir = this.cwd
 
 		const checkpoints: Pick<ClineOptions, "enableCheckpoints" | "checkpointStorage"> = {
 			enableCheckpoints,
@@ -541,20 +573,20 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		try {
 			await axios.get(`http://${localServerUrl}`)
 		} catch (error) {
-			vscode.window.showErrorMessage(
-				"Local development server is not running, HMR will not work. Please run 'npm run dev' before launching the extension to enable HMR.",
-			)
+			vscode.window.showErrorMessage(t("common:errors.hmr_not_running"))
 
 			return this.getHtmlContent(webview)
 		}
 
 		const nonce = getNonce()
+
 		const stylesUri = getUri(webview, this.contextProxy.extensionUri, [
 			"webview-ui",
 			"build",
 			"assets",
 			"index.css",
 		])
+
 		const codiconsUri = getUri(webview, this.contextProxy.extensionUri, [
 			"node_modules",
 			"@vscode",
@@ -671,7 +703,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
             <meta name="theme-color" content="#000000">
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:; script-src 'nonce-${nonce}' https://us-assets.i.posthog.com; connect-src https://us.i.posthog.com https://us-assets.i.posthog.com;">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:; script-src 'nonce-${nonce}' https://us-assets.i.posthog.com; connect-src https://openrouter.ai https://us.i.posthog.com https://us-assets.i.posthog.com;">
             <link rel="stylesheet" type="text/css" href="${stylesUri}">
 			<link href="${codiconsUri}" rel="stylesheet" />
             <title>Roo Code</title>
@@ -954,7 +986,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						break
 					case "clearTask":
 						// clear task resets the current session and allows for a new task to be started, if this session is a subtask - it allows the parent task to be resumed
-						await this.finishSubTask(`Task error: It was stopped and canceled by the user.`)
+						await this.finishSubTask(t("common:tasks.canceled"))
 						await this.postStateToWebview()
 						break
 					case "didShowAnnouncement":
@@ -977,6 +1009,49 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 					case "deleteTaskWithId":
 						this.deleteTaskWithId(message.text!)
 						break
+					case "deleteMultipleTasksWithIds": {
+						const ids = message.ids
+						if (Array.isArray(ids)) {
+							// Process in batches of 20 (or another reasonable number)
+							const batchSize = 20
+							const results = []
+
+							// Only log start and end of the operation
+							console.log(`Batch deletion started: ${ids.length} tasks total`)
+
+							for (let i = 0; i < ids.length; i += batchSize) {
+								const batch = ids.slice(i, i + batchSize)
+
+								const batchPromises = batch.map(async (id) => {
+									try {
+										await this.deleteTaskWithId(id)
+										return { id, success: true }
+									} catch (error) {
+										// Keep error logging for debugging purposes
+										console.log(
+											`Failed to delete task ${id}: ${error instanceof Error ? error.message : String(error)}`,
+										)
+										return { id, success: false }
+									}
+								})
+
+								// Process each batch in parallel but wait for completion before starting the next batch
+								const batchResults = await Promise.all(batchPromises)
+								results.push(...batchResults)
+
+								// Update the UI after each batch to show progress
+								await this.postStateToWebview()
+							}
+
+							// Log final results
+							const successCount = results.filter((r) => r.success).length
+							const failCount = results.length - successCount
+							console.log(
+								`Batch deletion completed: ${successCount}/${ids.length} tasks successful, ${failCount} tasks failed`,
+							)
+						}
+						break
+					}
 					case "exportTaskWithId":
 						this.exportTaskWithId(message.text!)
 						break
@@ -1088,13 +1163,13 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							try {
 								await pWaitFor(() => this.getCurrentCline()?.isInitialized === true, { timeout: 3_000 })
 							} catch (error) {
-								vscode.window.showErrorMessage("Timed out when attempting to restore checkpoint.")
+								vscode.window.showErrorMessage(t("common:errors.checkpoint_timeout"))
 							}
 
 							try {
 								await this.getCurrentCline()?.checkpointRestore(result.data)
 							} catch (error) {
-								vscode.window.showErrorMessage("Failed to restore checkpoint.")
+								vscode.window.showErrorMessage(t("common:errors.checkpoint_failed"))
 							}
 						}
 
@@ -1222,6 +1297,29 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("soundVolume", soundVolume)
 						setSoundVolume(soundVolume)
 						await this.postStateToWebview()
+						break
+					case "ttsEnabled":
+						const ttsEnabled = message.bool ?? true
+						await this.updateGlobalState("ttsEnabled", ttsEnabled)
+						setTtsEnabled(ttsEnabled) // Add this line to update the tts utility
+						await this.postStateToWebview()
+						break
+					case "ttsSpeed":
+						const ttsSpeed = message.value ?? 1.0
+						await this.updateGlobalState("ttsSpeed", ttsSpeed)
+						setTtsSpeed(ttsSpeed)
+						await this.postStateToWebview()
+						break
+					case "playTts":
+						if (message.text) {
+							playTts(message.text, {
+								onStart: () => this.postMessageToWebview({ type: "ttsStart", text: message.text }),
+								onStop: () => this.postMessageToWebview({ type: "ttsStop", text: message.text }),
+							})
+						}
+						break
+					case "stopTts":
+						stopTts()
 						break
 					case "diffEnabled":
 						const diffEnabled = message.bool ?? true
@@ -1367,6 +1465,13 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.updateGlobalState("terminalOutputLineLimit", message.value)
 						await this.postStateToWebview()
 						break
+					case "terminalShellIntegrationTimeout":
+						await this.updateGlobalState("terminalShellIntegrationTimeout", message.value)
+						await this.postStateToWebview()
+						if (message.value !== undefined) {
+							Terminal.setShellIntegrationTimeout(message.value)
+						}
+						break
 					case "mode":
 						await this.handleModeSwitch(message.text as Mode)
 						break
@@ -1389,7 +1494,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							this.outputChannel.appendLine(
 								`Error update support prompt: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 							)
-							vscode.window.showErrorMessage("Failed to update support prompt")
+							vscode.window.showErrorMessage(t("common:errors.update_support_prompt"))
 						}
 						break
 					case "resetSupportPrompt":
@@ -1413,7 +1518,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							this.outputChannel.appendLine(
 								`Error reset support prompt: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 							)
-							vscode.window.showErrorMessage("Failed to reset support prompt")
+							vscode.window.showErrorMessage(t("common:errors.reset_support_prompt"))
 						}
 						break
 					case "updatePrompt":
@@ -1444,13 +1549,14 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						break
 					case "deleteMessage": {
 						const answer = await vscode.window.showInformationMessage(
-							"What would you like to delete?",
+							t("common:confirmation.delete_message"),
 							{ modal: true },
-							"Just this message",
-							"This and all subsequent messages",
+							t("common:confirmation.just_this_message"),
+							t("common:confirmation.this_and_subsequent"),
 						)
 						if (
-							(answer === "Just this message" || answer === "This and all subsequent messages") &&
+							(answer === t("common:confirmation.just_this_message") ||
+								answer === t("common:confirmation.this_and_subsequent")) &&
 							this.getCurrentCline() &&
 							typeof message.value === "number" &&
 							message.value
@@ -1467,7 +1573,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							if (messageIndex !== -1) {
 								const { historyItem } = await this.getTaskWithId(this.getCurrentCline()!.taskId)
 
-								if (answer === "Just this message") {
+								if (answer === t("common:confirmation.just_this_message")) {
 									// Find the next user message first
 									const nextUserMessage = this.getCurrentCline()!
 										.clineMessages.slice(messageIndex + 1)
@@ -1514,7 +1620,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 											)
 										}
 									}
-								} else if (answer === "This and all subsequent messages") {
+								} else if (answer === t("common:confirmation.this_and_subsequent")) {
 									// Delete this message and all that follow
 									await this.getCurrentCline()!.overwriteClineMessages(
 										this.getCurrentCline()!.clineMessages.slice(0, messageIndex),
@@ -1553,11 +1659,16 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						await this.postStateToWebview()
 						break
 					case "language":
+						changeLanguage(message.text ?? "en")
 						await this.updateGlobalState("language", message.text)
 						await this.postStateToWebview()
 						break
 					case "showRooIgnoredFiles":
 						await this.updateGlobalState("showRooIgnoredFiles", message.bool ?? true)
+						await this.postStateToWebview()
+						break
+					case "maxReadFileLine":
+						await this.updateGlobalState("maxReadFileLine", message.value)
 						await this.postStateToWebview()
 						break
 					case "enhancementApiConfigId":
@@ -1615,7 +1726,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								this.outputChannel.appendLine(
 									`Error enhancing prompt: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 								)
-								vscode.window.showErrorMessage("Failed to enhance prompt")
+								vscode.window.showErrorMessage(t("common:errors.enhance_prompt"))
 								await this.postMessageToWebview({
 									type: "enhancedPrompt",
 								})
@@ -1635,7 +1746,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							this.outputChannel.appendLine(
 								`Error getting system prompt:  ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 							)
-							vscode.window.showErrorMessage("Failed to get system prompt")
+							vscode.window.showErrorMessage(t("common:errors.get_system_prompt"))
 						}
 						break
 					case "copySystemPrompt":
@@ -1643,16 +1754,16 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							const systemPrompt = await generateSystemPrompt(message)
 
 							await vscode.env.clipboard.writeText(systemPrompt)
-							await vscode.window.showInformationMessage("System prompt successfully copied to clipboard")
+							await vscode.window.showInformationMessage(t("common:info.clipboard_copy"))
 						} catch (error) {
 							this.outputChannel.appendLine(
 								`Error getting system prompt:  ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 							)
-							vscode.window.showErrorMessage("Failed to get system prompt")
+							vscode.window.showErrorMessage(t("common:errors.get_system_prompt"))
 						}
 						break
 					case "searchCommits": {
-						const cwd = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0)
+						const cwd = this.cwd
 						if (cwd) {
 							try {
 								const commits = await searchCommits(message.query || "", cwd)
@@ -1664,8 +1775,48 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								this.outputChannel.appendLine(
 									`Error searching commits: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 								)
-								vscode.window.showErrorMessage("Failed to search commits")
+								vscode.window.showErrorMessage(t("common:errors.search_commits"))
 							}
+						}
+						break
+					}
+					case "searchFiles": {
+						const workspacePath = getWorkspacePath()
+
+						if (!workspacePath) {
+							// Handle case where workspace path is not available
+							await this.postMessageToWebview({
+								type: "fileSearchResults",
+								results: [],
+								requestId: message.requestId,
+								error: "No workspace path available",
+							})
+							break
+						}
+						try {
+							// Call file search service with query from message
+							const results = await searchWorkspaceFiles(
+								message.query || "",
+								workspacePath,
+								20, // Use default limit, as filtering is now done in the backend
+							)
+
+							// Send results back to webview
+							await this.postMessageToWebview({
+								type: "fileSearchResults",
+								results,
+								requestId: message.requestId,
+							})
+						} catch (error) {
+							const errorMessage = error instanceof Error ? error.message : String(error)
+
+							// Send error response to webview
+							await this.postMessageToWebview({
+								type: "fileSearchResults",
+								results: [],
+								error: errorMessage,
+								requestId: message.requestId,
+							})
 						}
 						break
 					}
@@ -1679,7 +1830,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								this.outputChannel.appendLine(
 									`Error save api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 								)
-								vscode.window.showErrorMessage("Failed to save api configuration")
+								vscode.window.showErrorMessage(t("common:errors.save_api_config"))
 							}
 						}
 						break
@@ -1700,7 +1851,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								this.outputChannel.appendLine(
 									`Error create new api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 								)
-								vscode.window.showErrorMessage("Failed to create api configuration")
+								vscode.window.showErrorMessage(t("common:errors.create_api_config"))
 							}
 						}
 						break
@@ -1729,7 +1880,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								this.outputChannel.appendLine(
 									`Error rename api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 								)
-								vscode.window.showErrorMessage("Failed to rename api configuration")
+								vscode.window.showErrorMessage(t("common:errors.rename_api_config"))
 							}
 						}
 						break
@@ -1750,19 +1901,19 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								this.outputChannel.appendLine(
 									`Error load api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 								)
-								vscode.window.showErrorMessage("Failed to load api configuration")
+								vscode.window.showErrorMessage(t("common:errors.load_api_config"))
 							}
 						}
 						break
 					case "deleteApiConfiguration":
 						if (message.text) {
 							const answer = await vscode.window.showInformationMessage(
-								"Are you sure you want to delete this configuration profile?",
+								t("common:confirmation.delete_config_profile"),
 								{ modal: true },
-								"Yes",
+								t("common:answers.yes"),
 							)
 
-							if (answer !== "Yes") {
+							if (answer !== t("common:answers.yes")) {
 								break
 							}
 
@@ -1788,7 +1939,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								this.outputChannel.appendLine(
 									`Error delete api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 								)
-								vscode.window.showErrorMessage("Failed to delete api configuration")
+								vscode.window.showErrorMessage(t("common:errors.delete_api_config"))
 							}
 						}
 						break
@@ -1801,7 +1952,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							this.outputChannel.appendLine(
 								`Error get list api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 							)
-							vscode.window.showErrorMessage("Failed to get list api configuration")
+							vscode.window.showErrorMessage(t("common:errors.list_api_config"))
 						}
 						break
 					case "updateExperimental": {
@@ -1835,7 +1986,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								this.outputChannel.appendLine(
 									`Failed to update timeout for ${message.serverName}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 								)
-								vscode.window.showErrorMessage("Failed to update server timeout")
+								vscode.window.showErrorMessage(t("common:errors.update_server_timeout"))
 							}
 						}
 						break
@@ -1852,12 +2003,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 					case "deleteCustomMode":
 						if (message.slug) {
 							const answer = await vscode.window.showInformationMessage(
-								"Are you sure you want to delete this custom mode?",
+								t("common:confirmation.delete_custom_mode"),
 								{ modal: true },
-								"Yes",
+								t("common:answers.yes"),
 							)
 
-							if (answer !== "Yes") {
+							if (answer !== t("common:answers.yes")) {
 								break
 							}
 
@@ -1912,6 +2063,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				experiments,
 				enableMcpServerCreation,
 				browserToolEnabled,
+				language,
 			} = await this.getState()
 
 			// Create diffStrategy based on current model and settings
@@ -1920,7 +2072,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				fuzzyMatchThreshold,
 				Experiments.isEnabled(experiments, EXPERIMENT_IDS.DIFF_STRATEGY),
 			)
-			const cwd = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) || ""
+			const cwd = this.cwd
 
 			const mode = message.mode ?? defaultModeSlug
 			const customModes = await this.customModesManager.getCustomModes()
@@ -1945,6 +2097,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				diffEnabled,
 				experiments,
 				enableMcpServerCreation,
+				language,
 				rooIgnoreInstructions,
 			)
 			return systemPrompt
@@ -2009,7 +2162,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			}
 		}
 
-		await this.contextProxy.setValues(apiConfiguration)
+		await this.contextProxy.setApiConfiguration(apiConfiguration)
 
 		if (this.getCurrentCline()) {
 			this.getCurrentCline()!.api = buildApiHandler(apiConfiguration)
@@ -2400,33 +2553,51 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}> {
 		const history = ((await this.getGlobalState("taskHistory")) as HistoryItem[] | undefined) || []
 		const historyItem = history.find((item) => item.id === id)
-		if (historyItem) {
-			const taskDirPath = path.join(this.contextProxy.globalStorageUri.fsPath, "tasks", id)
-			const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
-			const uiMessagesFilePath = path.join(taskDirPath, GlobalFileNames.uiMessages)
-			const fileExists = await fileExistsAtPath(apiConversationHistoryFilePath)
-			if (fileExists) {
-				const apiConversationHistory = JSON.parse(await fs.readFile(apiConversationHistoryFilePath, "utf8"))
-				return {
-					historyItem,
-					taskDirPath,
-					apiConversationHistoryFilePath,
-					uiMessagesFilePath,
-					apiConversationHistory,
-				}
-			}
+		if (!historyItem) {
+			throw new Error("Task not found in history")
 		}
-		// if we tried to get a task that doesn't exist, remove it from state
-		// FIXME: this seems to happen sometimes when the json file doesnt save to disk for some reason
-		await this.deleteTaskFromState(id)
-		throw new Error("Task not found")
+
+		const taskDirPath = path.join(this.contextProxy.globalStorageUri.fsPath, "tasks", id)
+		const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
+		const uiMessagesFilePath = path.join(taskDirPath, GlobalFileNames.uiMessages)
+
+		const fileExists = await fileExistsAtPath(apiConversationHistoryFilePath)
+		if (!fileExists) {
+			// Instead of silently deleting, throw a specific error
+			throw new Error("TASK_FILES_MISSING")
+		}
+
+		const apiConversationHistory = JSON.parse(await fs.readFile(apiConversationHistoryFilePath, "utf8"))
+		return {
+			historyItem,
+			taskDirPath,
+			apiConversationHistoryFilePath,
+			uiMessagesFilePath,
+			apiConversationHistory,
+		}
 	}
 
 	async showTaskWithId(id: string) {
 		if (id !== this.getCurrentCline()?.taskId) {
-			// Non-current task.
-			const { historyItem } = await this.getTaskWithId(id)
-			await this.initClineWithHistoryItem(historyItem) // Clears existing task.
+			try {
+				const { historyItem } = await this.getTaskWithId(id)
+				await this.initClineWithHistoryItem(historyItem)
+			} catch (error) {
+				if (error.message === "TASK_FILES_MISSING") {
+					const response = await vscode.window.showWarningMessage(
+						t("common:warnings.missing_task_files"),
+						t("common:answers.remove"),
+						t("common:answers.keep"),
+					)
+
+					if (response === t("common:answers.remove")) {
+						await this.deleteTaskFromState(id)
+						await this.postStateToWebview()
+					}
+					return
+				}
+				throw error
+			}
 		}
 
 		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
@@ -2439,43 +2610,49 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	// this function deletes a task from task hidtory, and deletes it's checkpoints and delete the task folder
 	async deleteTaskWithId(id: string) {
-		// get the task directory full path
-		const { taskDirPath } = await this.getTaskWithId(id)
-
-		// remove task from stack if it's the current task
-		if (id === this.getCurrentCline()?.taskId) {
-			// if we found the taskid to delete - call finish to abort this task and allow a new task to be started,
-			// if we are deleting a subtask and parent task is still waiting for subtask to finish - it allows the parent to resume (this case should neve exist)
-			await this.finishSubTask(`Task failure: It was stopped and deleted by the user.`)
-		}
-
-		// delete task from the task history state
-		await this.deleteTaskFromState(id)
-
-		// get the base directory of the project
-		const baseDir = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0)
-
-		// Delete associated shadow repository or branch.
-		// TODO: Store `workspaceDir` in the `HistoryItem` object.
-		const globalStorageDir = this.contextProxy.globalStorageUri.fsPath
-		const workspaceDir = baseDir ?? ""
-
 		try {
-			await ShadowCheckpointService.deleteTask({ taskId: id, globalStorageDir, workspaceDir })
-		} catch (error) {
-			console.error(
-				`[deleteTaskWithId${id}] failed to delete associated shadow repository or branch: ${error instanceof Error ? error.message : String(error)}`,
-			)
-		}
+			// get the task directory full path
+			const { taskDirPath } = await this.getTaskWithId(id)
 
-		// delete the entire task directory including checkpoints and all content
-		try {
-			await fs.rm(taskDirPath, { recursive: true, force: true })
-			console.log(`[deleteTaskWithId${id}] removed task directory`)
+			// remove task from stack if it's the current task
+			if (id === this.getCurrentCline()?.taskId) {
+				// if we found the taskid to delete - call finish to abort this task and allow a new task to be started,
+				// if we are deleting a subtask and parent task is still waiting for subtask to finish - it allows the parent to resume (this case should neve exist)
+				await this.finishSubTask(t("common:tasks.deleted"))
+			}
+
+			// delete task from the task history state
+			await this.deleteTaskFromState(id)
+
+			// Delete associated shadow repository or branch.
+			// TODO: Store `workspaceDir` in the `HistoryItem` object.
+			const globalStorageDir = this.contextProxy.globalStorageUri.fsPath
+			const workspaceDir = this.cwd
+
+			try {
+				await ShadowCheckpointService.deleteTask({ taskId: id, globalStorageDir, workspaceDir })
+			} catch (error) {
+				console.error(
+					`[deleteTaskWithId${id}] failed to delete associated shadow repository or branch: ${error instanceof Error ? error.message : String(error)}`,
+				)
+			}
+
+			// delete the entire task directory including checkpoints and all content
+			try {
+				await fs.rm(taskDirPath, { recursive: true, force: true })
+				console.log(`[deleteTaskWithId${id}] removed task directory`)
+			} catch (error) {
+				console.error(
+					`[deleteTaskWithId${id}] failed to remove task directory: ${error instanceof Error ? error.message : String(error)}`,
+				)
+			}
 		} catch (error) {
-			console.error(
-				`[deleteTaskWithId${id}] failed to remove task directory: ${error instanceof Error ? error.message : String(error)}`,
-			)
+			// If task is not found, just remove it from state
+			if (error instanceof Error && error.message === "Task not found") {
+				await this.deleteTaskFromState(id)
+				return
+			}
+			throw error
 		}
 	}
 
@@ -2507,6 +2684,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			alwaysAllowModeSwitch,
 			alwaysAllowSubtasks,
 			soundEnabled,
+			ttsEnabled,
+			ttsSpeed,
 			diffEnabled,
 			enableCheckpoints,
 			checkpointStorage,
@@ -2518,6 +2697,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			remoteBrowserEnabled,
 			writeDelayMs,
 			terminalOutputLineLimit,
+			terminalShellIntegrationTimeout,
 			fuzzyMatchThreshold,
 			mcpEnabled,
 			enableMcpServerCreation,
@@ -2538,13 +2718,13 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			telemetrySetting,
 			showRooIgnoredFiles,
 			language,
+			maxReadFileLine,
 		} = await this.getState()
+
 		const telemetryKey = process.env.POSTHOG_API_KEY
 		const machineId = vscode.env.machineId
-
 		const allowedCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
-
-		const cwd = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) || ""
+		const cwd = this.cwd
 
 		return {
 			version: this.context.extension?.packageJSON?.version ?? "",
@@ -2566,6 +2746,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				.filter((item: HistoryItem) => item.ts && item.task)
 				.sort((a: HistoryItem, b: HistoryItem) => b.ts - a.ts),
 			soundEnabled: soundEnabled ?? false,
+			ttsEnabled: ttsEnabled ?? false,
+			ttsSpeed: ttsSpeed ?? 1.0,
 			diffEnabled: diffEnabled ?? true,
 			enableCheckpoints: enableCheckpoints ?? true,
 			checkpointStorage: checkpointStorage ?? "task",
@@ -2579,6 +2761,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			remoteBrowserEnabled: remoteBrowserEnabled ?? false,
 			writeDelayMs: writeDelayMs ?? 1000,
 			terminalOutputLineLimit: terminalOutputLineLimit ?? 500,
+			terminalShellIntegrationTimeout: terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT,
 			fuzzyMatchThreshold: fuzzyMatchThreshold ?? 1.0,
 			mcpEnabled: mcpEnabled ?? true,
 			enableMcpServerCreation: enableMcpServerCreation ?? true,
@@ -2604,6 +2787,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			machineId,
 			showRooIgnoredFiles: showRooIgnoredFiles ?? true,
 			language,
+			renderContext: this.renderContext,
+			maxReadFileLine: maxReadFileLine ?? 500,
 		}
 	}
 
@@ -2725,6 +2910,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			taskHistory: stateValues.taskHistory,
 			allowedCommands: stateValues.allowedCommands,
 			soundEnabled: stateValues.soundEnabled ?? false,
+			ttsEnabled: stateValues.ttsEnabled ?? false,
+			ttsSpeed: stateValues.ttsSpeed ?? 1.0,
 			diffEnabled: stateValues.diffEnabled ?? true,
 			enableCheckpoints: stateValues.enableCheckpoints ?? true,
 			checkpointStorage: stateValues.checkpointStorage ?? "task",
@@ -2736,8 +2923,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			fuzzyMatchThreshold: stateValues.fuzzyMatchThreshold ?? 1.0,
 			writeDelayMs: stateValues.writeDelayMs ?? 1000,
 			terminalOutputLineLimit: stateValues.terminalOutputLineLimit ?? 500,
+			terminalShellIntegrationTimeout:
+				stateValues.terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT,
 			mode: stateValues.mode ?? defaultModeSlug,
-			language: stateValues.language || formatLanguage(vscode.env.language),
+			language: stateValues.language ?? formatLanguage(vscode.env.language),
 			mcpEnabled: stateValues.mcpEnabled ?? true,
 			enableMcpServerCreation: stateValues.enableMcpServerCreation ?? true,
 			alwaysApproveResubmit: stateValues.alwaysApproveResubmit ?? false,
@@ -2758,6 +2947,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			browserToolEnabled: stateValues.browserToolEnabled ?? true,
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
+			maxReadFileLine: stateValues.maxReadFileLine ?? 500,
 		}
 	}
 
@@ -2804,12 +2994,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	async resetState() {
 		const answer = await vscode.window.showInformationMessage(
-			"Are you sure you want to reset all state and secret storage in the extension? This cannot be undone.",
+			t("common:confirmation.reset_state"),
 			{ modal: true },
-			"Yes",
+			t("common:answers.yes"),
 		)
 
-		if (answer !== "Yes") {
+		if (answer !== t("common:answers.yes")) {
 			return
 		}
 
@@ -2893,5 +3083,29 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		}
 
 		return properties
+	}
+
+	async validateTaskHistory() {
+		const history = ((await this.getGlobalState("taskHistory")) as HistoryItem[] | undefined) || []
+		const validTasks: HistoryItem[] = []
+
+		for (const item of history) {
+			const taskDirPath = path.join(this.contextProxy.globalStorageUri.fsPath, "tasks", item.id)
+			const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
+
+			if (await fileExistsAtPath(apiConversationHistoryFilePath)) {
+				validTasks.push(item)
+			}
+		}
+
+		if (validTasks.length !== history.length) {
+			await this.updateGlobalState("taskHistory", validTasks)
+			await this.postStateToWebview()
+
+			const removedCount = history.length - validTasks.length
+			if (removedCount > 0) {
+				await vscode.window.showInformationMessage(t("common:info.history_cleanup", { count: removedCount }))
+			}
+		}
 	}
 }

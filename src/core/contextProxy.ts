@@ -10,7 +10,9 @@ import {
 	ConfigurationValues,
 	isSecretKey,
 	isGlobalStateKey,
+	isPassThroughStateKey,
 } from "../shared/globalState"
+import { API_CONFIG_KEYS, ApiConfiguration } from "../shared/api"
 
 export class ContextProxy {
 	private readonly originalContext: vscode.ExtensionContext
@@ -79,11 +81,18 @@ export class ContextProxy {
 	getGlobalState<T>(key: GlobalStateKey): T | undefined
 	getGlobalState<T>(key: GlobalStateKey, defaultValue: T): T
 	getGlobalState<T>(key: GlobalStateKey, defaultValue?: T): T | undefined {
+		if (isPassThroughStateKey(key)) {
+			const value = this.originalContext.globalState.get(key)
+			return value === undefined || value === null ? defaultValue : (value as T)
+		}
 		const value = this.stateCache.get(key) as T | undefined
 		return value !== undefined ? value : (defaultValue as T | undefined)
 	}
 
 	updateGlobalState<T>(key: GlobalStateKey, value: T) {
+		if (isPassThroughStateKey(key)) {
+			return this.originalContext.globalState.update(key, value)
+		}
 		this.stateCache.set(key, value)
 		return this.originalContext.globalState.update(key, value)
 	}
@@ -101,6 +110,7 @@ export class ContextProxy {
 			? this.originalContext.secrets.delete(key)
 			: this.originalContext.secrets.store(key, value)
 	}
+
 	/**
 	 * Set a value in either secrets or global state based on key type.
 	 * If the key is in SECRET_KEYS, it will be stored as a secret.
@@ -112,12 +122,14 @@ export class ContextProxy {
 	setValue(key: ConfigurationKey, value: any) {
 		if (isSecretKey(key)) {
 			return this.storeSecret(key, value)
-		} else if (isGlobalStateKey(key)) {
-			return this.updateGlobalState(key, value)
-		} else {
-			logger.warn(`Unknown key: ${key}. Storing as global state.`)
+		}
+
+		if (isGlobalStateKey(key)) {
 			return this.updateGlobalState(key, value)
 		}
+
+		logger.warn(`Unknown key: ${key}. Storing as global state.`)
+		return this.updateGlobalState(key, value)
 	}
 
 	/**
@@ -134,6 +146,21 @@ export class ContextProxy {
 		}
 
 		await Promise.all(promises)
+	}
+
+	async setApiConfiguration(apiConfiguration: ApiConfiguration) {
+		// Explicitly clear out any old API configuration values before that
+		// might not be present in the new configuration.
+		// If a value is not present in the new configuration, then it is assumed
+		// that the setting's value should be `undefined` and therefore we
+		// need to remove it from the state cache if it exists.
+		await this.setValues({
+			...API_CONFIG_KEYS.filter((key) => !!this.stateCache.get(key)).reduce(
+				(acc, key) => ({ ...acc, [key]: undefined }),
+				{} as Partial<ConfigurationValues>,
+			),
+			...apiConfiguration,
+		})
 	}
 
 	/**

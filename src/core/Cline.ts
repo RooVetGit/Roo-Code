@@ -12,6 +12,7 @@ import getFolderSize from "get-folder-size"
 import { serializeError } from "serialize-error"
 import * as vscode from "vscode"
 
+import { TokenUsage } from "../exports/roo-code"
 import { ApiHandler, buildApiHandler } from "../api"
 import { ApiStream } from "../api/transform/stream"
 import { DIFF_VIEW_URI_SCHEME, DiffViewProvider } from "../integrations/editor/DiffViewProvider"
@@ -27,13 +28,14 @@ import {
 	stripLineNumbers,
 	everyLineHasLineNumbers,
 } from "../integrations/misc/extract-text"
+import { countFileLines } from "../integrations/misc/line-counter"
 import { ExitCodeDetails } from "../integrations/terminal/TerminalProcess"
 import { Terminal } from "../integrations/terminal/Terminal"
 import { TerminalRegistry } from "../integrations/terminal/TerminalRegistry"
 import { UrlContentFetcher } from "../services/browser/UrlContentFetcher"
 import { listFiles } from "../services/glob/list-files"
 import { regexSearchFiles } from "../services/ripgrep"
-import { parseSourceCodeForDefinitionsTopLevel } from "../services/tree-sitter"
+import { parseSourceCodeDefinitionsForFile, parseSourceCodeForDefinitionsTopLevel } from "../services/tree-sitter"
 import { CheckpointStorage } from "../shared/checkpoints"
 import { ApiConfiguration } from "../shared/api"
 import { findLastIndex } from "../shared/array"
@@ -77,9 +79,8 @@ import { DiffStrategy, getDiffStrategy } from "./diff/DiffStrategy"
 import { insertGroups } from "./diff/insert-groups"
 import { telemetryService } from "../services/telemetry/TelemetryService"
 import { validateToolUse, isToolAllowedForMode, ToolName } from "./mode-validator"
-
-const cwd =
-	vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop") // may or may not exist but fs checking existence would immediately ask for permission which would be bad UX, need to come up with a better solution
+import { readLines } from "../integrations/misc/read-lines"
+import { getWorkspacePath } from "../utils/path"
 
 type ToolResponse = string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam>
 type UserContent = Array<Anthropic.Messages.ContentBlockParam>
@@ -89,8 +90,11 @@ export type ClineEvents = {
 	taskStarted: []
 	taskPaused: []
 	taskUnpaused: []
+	taskAskResponded: []
 	taskAborted: []
 	taskSpawned: [taskId: string]
+	taskCompleted: [taskId: string, usage: TokenUsage]
+	taskTokenUsageUpdated: [taskId: string, usage: TokenUsage]
 }
 
 export type ClineOptions = {
@@ -114,7 +118,9 @@ export type ClineOptions = {
 export class Cline extends EventEmitter<ClineEvents> {
 	readonly taskId: string
 	readonly instanceId: string
-
+	get cwd() {
+		return getWorkspacePath(path.join(os.homedir(), "Desktop"))
+	}
 	// Subtasks
 	readonly rootTask: Cline | undefined = undefined
 	readonly parentTask: Cline | undefined = undefined
@@ -191,7 +197,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			throw new Error("Either historyItem or task/images must be provided")
 		}
 
-		this.rooIgnoreController = new RooIgnoreController(cwd)
+		this.rooIgnoreController = new RooIgnoreController(this.cwd)
 		this.rooIgnoreController.initialize().catch((error) => {
 			console.error("Failed to initialize RooIgnoreController:", error)
 		})
@@ -207,7 +213,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		this.diffEnabled = enableDiff ?? false
 		this.fuzzyMatchThreshold = fuzzyMatchThreshold ?? 1.0
 		this.providerRef = new WeakRef(provider)
-		this.diffViewProvider = new DiffViewProvider(cwd)
+		this.diffViewProvider = new DiffViewProvider(this.cwd)
 		this.enableCheckpoints = enableCheckpoints
 		this.checkpointStorage = checkpointStorage
 
@@ -350,13 +356,19 @@ export class Cline extends EventEmitter<ClineEvents> {
 		this.emit("message", { action: "updated", message: partialMessage })
 	}
 
+	private getTokenUsage() {
+		const usage = getApiMetrics(combineApiRequests(combineCommandSequences(this.clineMessages.slice(1))))
+		this.emit("taskTokenUsageUpdated", this.taskId, usage)
+		return usage
+	}
+
 	private async saveClineMessages() {
 		try {
 			const taskDir = await this.ensureTaskDirectoryExists()
 			const filePath = path.join(taskDir, GlobalFileNames.uiMessages)
 			await fs.writeFile(filePath, JSON.stringify(this.clineMessages))
 			// combined as they are in ChatView
-			const apiMetrics = getApiMetrics(combineApiRequests(combineCommandSequences(this.clineMessages.slice(1))))
+			const apiMetrics = this.getTokenUsage()
 			const taskMessage = this.clineMessages[0] // first message is always the task say
 			const lastRelevantMessage =
 				this.clineMessages[
@@ -495,6 +507,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		this.askResponse = undefined
 		this.askResponseText = undefined
 		this.askResponseImages = undefined
+		this.emit("taskAskResponded")
 		return result
 	}
 
@@ -833,7 +846,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		newUserContent.push({
 			type: "text",
 			text:
-				`[TASK RESUMPTION] This task was interrupted ${agoText}. It may or may not be complete, so please reassess the task context. Be aware that the project state may have changed since then. The current working directory is now '${cwd.toPosix()}'. If the task has not been completed, retry the last step before interruption and proceed with completing the task.\n\nNote: If you previously attempted a tool use that the user did not provide a result for, you should assume the tool use was not successful and assess whether you should retry. If the last tool was a browser_action, the browser has been closed and you must launch a new browser if needed.${
+				`[TASK RESUMPTION] This task was interrupted ${agoText}. It may or may not be complete, so please reassess the task context. Be aware that the project state may have changed since then. The current working directory is now '${this.cwd.toPosix()}'. If the task has not been completed, retry the last step before interruption and proceed with completing the task.\n\nNote: If you previously attempted a tool use that the user did not provide a result for, you should assume the tool use was not successful and assess whether you should retry. If the last tool was a browser_action, the browser has been closed and you must launch a new browser if needed.${
 					wasRecent
 						? "\n\nIMPORTANT: If the last tool use was a write_to_file that was interrupted, the file was reverted back to its original state before the interrupted edit, and you do NOT need to re-read the file as you already have its up-to-date contents."
 						: ""
@@ -930,11 +943,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 	async executeCommandTool(command: string, customCwd?: string): Promise<[boolean, ToolResponse]> {
 		let workingDir: string
 		if (!customCwd) {
-			workingDir = cwd
+			workingDir = this.cwd
 		} else if (path.isAbsolute(customCwd)) {
 			workingDir = customCwd
 		} else {
-			workingDir = path.resolve(cwd, customCwd)
+			workingDir = path.resolve(this.cwd, customCwd)
 		}
 
 		// Check if directory exists
@@ -1022,7 +1035,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 				),
 			]
 		} else if (completed) {
-			let exitStatus: string
+			let exitStatus: string = ""
 			if (exitDetails !== undefined) {
 				if (exitDetails.signal) {
 					exitStatus = `Process terminated by signal ${exitDetails.signal} (${exitDetails.signalName})`
@@ -1033,13 +1046,22 @@ export class Cline extends EventEmitter<ClineEvents> {
 					result += "<VSCE exit code is undefined: terminal output and command execution status is unknown.>"
 					exitStatus = `Exit code: <undefined, notify user>`
 				} else {
-					exitStatus = `Exit code: ${exitDetails.exitCode}`
+					if (exitDetails.exitCode !== 0) {
+						exitStatus += "Command execution was not successful, inspect the cause and adjust as needed.\n"
+					}
+					exitStatus += `Exit code: ${exitDetails.exitCode}`
 				}
 			} else {
 				result += "<VSCE exitDetails == undefined: terminal output and command execution status is unknown.>"
 				exitStatus = `Exit code: <undefined, notify user>`
 			}
-			const workingDirInfo = workingDir ? ` from '${workingDir.toPosix()}'` : ""
+
+			let workingDirInfo: string = workingDir ? ` within working directory '${workingDir.toPosix()}'` : ""
+			const newWorkingDir = terminalInfo.getCurrentWorkingDirectory()
+
+			if (newWorkingDir !== workingDir) {
+				workingDirInfo += `; command changed working directory for this terminal to '${newWorkingDir.toPosix()} so be aware that future commands will be executed from this directory`
+			}
 
 			const outputInfo = `\nOutput:\n${result}`
 			return [
@@ -1105,6 +1127,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			experiments,
 			enableMcpServerCreation,
 			browserToolEnabled,
+			language,
 		} = (await this.providerRef.deref()?.getState()) ?? {}
 		const { customModes } = (await this.providerRef.deref()?.getState()) ?? {}
 		const systemPrompt = await (async () => {
@@ -1114,7 +1137,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			}
 			return SYSTEM_PROMPT(
 				provider.context,
-				cwd,
+				this.cwd,
 				(this.api.getModel().info.supportsComputerUse ?? false) && (browserToolEnabled ?? true),
 				mcpHub,
 				this.diffStrategy,
@@ -1126,6 +1149,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 				this.diffEnabled,
 				experiments,
 				enableMcpServerCreation,
+				language,
 				rooIgnoreInstructions,
 			)
 		})()
@@ -1538,7 +1562,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 						if (this.diffViewProvider.editType !== undefined) {
 							fileExists = this.diffViewProvider.editType === "modify"
 						} else {
-							const absolutePath = path.resolve(cwd, relPath)
+							const absolutePath = path.resolve(this.cwd, relPath)
 							fileExists = await fileExistsAtPath(absolutePath)
 							this.diffViewProvider.editType = fileExists ? "modify" : "create"
 						}
@@ -1568,7 +1592,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 						const sharedMessageProps: ClineSayTool = {
 							tool: fileExists ? "editedExistingFile" : "newFileCreated",
-							path: getReadablePath(cwd, removeClosingTag("path", relPath)),
+							path: getReadablePath(this.cwd, removeClosingTag("path", relPath)),
 						}
 						try {
 							if (block.partial) {
@@ -1685,7 +1709,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 										"user_feedback_diff",
 										JSON.stringify({
 											tool: fileExists ? "editedExistingFile" : "newFileCreated",
-											path: getReadablePath(cwd, relPath),
+											path: getReadablePath(this.cwd, relPath),
 											diff: userEdits,
 										} satisfies ClineSayTool),
 									)
@@ -1721,7 +1745,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 						const sharedMessageProps: ClineSayTool = {
 							tool: "appliedDiff",
-							path: getReadablePath(cwd, removeClosingTag("path", relPath)),
+							path: getReadablePath(this.cwd, removeClosingTag("path", relPath)),
 						}
 
 						try {
@@ -1758,7 +1782,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 									break
 								}
 
-								const absolutePath = path.resolve(cwd, relPath)
+								const absolutePath = path.resolve(this.cwd, relPath)
 								const fileExists = await fileExistsAtPath(absolutePath)
 
 								if (!fileExists) {
@@ -1854,7 +1878,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 										"user_feedback_diff",
 										JSON.stringify({
 											tool: fileExists ? "editedExistingFile" : "newFileCreated",
-											path: getReadablePath(cwd, relPath),
+											path: getReadablePath(this.cwd, relPath),
 											diff: userEdits,
 										} satisfies ClineSayTool),
 									)
@@ -1893,7 +1917,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 						const sharedMessageProps: ClineSayTool = {
 							tool: "appliedDiff",
-							path: getReadablePath(cwd, removeClosingTag("path", relPath)),
+							path: getReadablePath(this.cwd, removeClosingTag("path", relPath)),
 						}
 
 						try {
@@ -1916,7 +1940,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 								break
 							}
 
-							const absolutePath = path.resolve(cwd, relPath)
+							const absolutePath = path.resolve(this.cwd, relPath)
 							const fileExists = await fileExistsAtPath(absolutePath)
 
 							if (!fileExists) {
@@ -2010,7 +2034,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 							const userFeedbackDiff = JSON.stringify({
 								tool: "appliedDiff",
-								path: getReadablePath(cwd, relPath),
+								path: getReadablePath(this.cwd, relPath),
 								diff: userEdits,
 							} satisfies ClineSayTool)
 
@@ -2040,7 +2064,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 						const sharedMessageProps: ClineSayTool = {
 							tool: "appliedDiff",
-							path: getReadablePath(cwd, removeClosingTag("path", relPath)),
+							path: getReadablePath(this.cwd, removeClosingTag("path", relPath)),
 						}
 
 						try {
@@ -2067,7 +2091,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 									break
 								}
 
-								const absolutePath = path.resolve(cwd, relPath)
+								const absolutePath = path.resolve(this.cwd, relPath)
 								const fileExists = await fileExistsAtPath(absolutePath)
 
 								if (!fileExists) {
@@ -2172,7 +2196,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 										"user_feedback_diff",
 										JSON.stringify({
 											tool: fileExists ? "editedExistingFile" : "newFileCreated",
-											path: getReadablePath(cwd, relPath),
+											path: getReadablePath(this.cwd, relPath),
 											diff: userEdits,
 										} satisfies ClineSayTool),
 									)
@@ -2203,9 +2227,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 					case "read_file": {
 						const relPath: string | undefined = block.params.path
+						const startLineStr: string | undefined = block.params.start_line
+						const endLineStr: string | undefined = block.params.end_line
 						const sharedMessageProps: ClineSayTool = {
 							tool: "readFile",
-							path: getReadablePath(cwd, removeClosingTag("path", relPath)),
+							path: getReadablePath(this.cwd, removeClosingTag("path", relPath)),
 						}
 						try {
 							if (block.partial) {
@@ -2222,6 +2248,45 @@ export class Cline extends EventEmitter<ClineEvents> {
 									break
 								}
 
+								// Check if we're doing a line range read
+								let isRangeRead = false
+								let startLine: number | undefined = undefined
+								let endLine: number | undefined = undefined
+
+								// Check if we have either range parameter
+								if (startLineStr || endLineStr) {
+									isRangeRead = true
+								}
+
+								// Parse start_line if provided
+								if (startLineStr) {
+									startLine = parseInt(startLineStr)
+									if (isNaN(startLine)) {
+										// Invalid start_line
+										this.consecutiveMistakeCount++
+										await this.say("error", `Failed to parse start_line: ${startLineStr}`)
+										pushToolResult(formatResponse.toolError("Invalid start_line value"))
+										break
+									}
+									startLine -= 1 // Convert to 0-based index
+								}
+
+								// Parse end_line if provided
+								if (endLineStr) {
+									endLine = parseInt(endLineStr)
+
+									if (isNaN(endLine)) {
+										// Invalid end_line
+										this.consecutiveMistakeCount++
+										await this.say("error", `Failed to parse end_line: ${endLineStr}`)
+										pushToolResult(formatResponse.toolError("Invalid end_line value"))
+										break
+									}
+
+									// Convert to 0-based index
+									endLine -= 1
+								}
+
 								const accessAllowed = this.rooIgnoreController?.validateAccess(relPath)
 								if (!accessAllowed) {
 									await this.say("rooignore_error", relPath)
@@ -2231,17 +2296,68 @@ export class Cline extends EventEmitter<ClineEvents> {
 								}
 
 								this.consecutiveMistakeCount = 0
-								const absolutePath = path.resolve(cwd, relPath)
+								const absolutePath = path.resolve(this.cwd, relPath)
 								const completeMessage = JSON.stringify({
 									...sharedMessageProps,
 									content: absolutePath,
 								} satisfies ClineSayTool)
+
 								const didApprove = await askApproval("tool", completeMessage)
 								if (!didApprove) {
 									break
 								}
+
+								// Get the maxReadFileLine setting
+								const { maxReadFileLine } = (await this.providerRef.deref()?.getState()) ?? {}
+
+								// Count total lines in the file
+								let totalLines = 0
+								try {
+									totalLines = await countFileLines(absolutePath)
+								} catch (error) {
+									console.error(`Error counting lines in file ${absolutePath}:`, error)
+								}
+
 								// now execute the tool like normal
-								const content = await extractTextFromFile(absolutePath)
+								let content: string
+								let isFileTruncated = false
+								let sourceCodeDef = ""
+
+								if (isRangeRead) {
+									// Read specific lines (startLine is guaranteed to be defined if isRangeRead is true)
+									console.log("Reading specific lines", startLine, endLine, startLineStr, endLineStr)
+									if (startLine === undefined) {
+										content = addLineNumbers(await readLines(absolutePath, endLine, startLine))
+									} else {
+										content = addLineNumbers(
+											await readLines(absolutePath, endLine, startLine),
+											startLine,
+										)
+									}
+								} else if (totalLines > maxReadFileLine) {
+									// If file is too large, only read the first maxReadFileLine lines
+									isFileTruncated = true
+
+									const res = await Promise.all([
+										readLines(absolutePath, maxReadFileLine - 1, 0),
+										parseSourceCodeDefinitionsForFile(absolutePath, this.rooIgnoreController),
+									])
+
+									content = addLineNumbers(res[0])
+									const result = res[1]
+									if (result) {
+										sourceCodeDef = `\n\n${result}`
+									}
+								} else {
+									// Read entire file
+									content = await extractTextFromFile(absolutePath)
+								}
+
+								// Add truncation notice if applicable
+								if (isFileTruncated) {
+									content += `\n\n[File truncated: showing ${maxReadFileLine} of ${totalLines} total lines. Use start_line and end_line if you need to read more.].${sourceCodeDef}`
+								}
+
 								pushToolResult(content)
 								break
 							}
@@ -2250,13 +2366,14 @@ export class Cline extends EventEmitter<ClineEvents> {
 							break
 						}
 					}
+
 					case "list_files": {
 						const relDirPath: string | undefined = block.params.path
 						const recursiveRaw: string | undefined = block.params.recursive
 						const recursive = recursiveRaw?.toLowerCase() === "true"
 						const sharedMessageProps: ClineSayTool = {
 							tool: !recursive ? "listFilesTopLevel" : "listFilesRecursive",
-							path: getReadablePath(cwd, removeClosingTag("path", relDirPath)),
+							path: getReadablePath(this.cwd, removeClosingTag("path", relDirPath)),
 						}
 						try {
 							if (block.partial) {
@@ -2273,7 +2390,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 									break
 								}
 								this.consecutiveMistakeCount = 0
-								const absolutePath = path.resolve(cwd, relDirPath)
+								const absolutePath = path.resolve(this.cwd, relDirPath)
 								const [files, didHitLimit] = await listFiles(absolutePath, recursive, 200)
 								const { showRooIgnoredFiles } = (await this.providerRef.deref()?.getState()) ?? {}
 								const result = formatResponse.formatFilesList(
@@ -2303,7 +2420,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 						const relDirPath: string | undefined = block.params.path
 						const sharedMessageProps: ClineSayTool = {
 							tool: "listCodeDefinitionNames",
-							path: getReadablePath(cwd, removeClosingTag("path", relDirPath)),
+							path: getReadablePath(this.cwd, removeClosingTag("path", relDirPath)),
 						}
 						try {
 							if (block.partial) {
@@ -2322,7 +2439,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 									break
 								}
 								this.consecutiveMistakeCount = 0
-								const absolutePath = path.resolve(cwd, relDirPath)
+								const absolutePath = path.resolve(this.cwd, relDirPath)
 								const result = await parseSourceCodeForDefinitionsTopLevel(
 									absolutePath,
 									this.rooIgnoreController,
@@ -2349,7 +2466,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 						const filePattern: string | undefined = block.params.file_pattern
 						const sharedMessageProps: ClineSayTool = {
 							tool: "searchFiles",
-							path: getReadablePath(cwd, removeClosingTag("path", relDirPath)),
+							path: getReadablePath(this.cwd, removeClosingTag("path", relDirPath)),
 							regex: removeClosingTag("regex", regex),
 							filePattern: removeClosingTag("file_pattern", filePattern),
 						}
@@ -2373,9 +2490,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 									break
 								}
 								this.consecutiveMistakeCount = 0
-								const absolutePath = path.resolve(cwd, relDirPath)
+								const absolutePath = path.resolve(this.cwd, relDirPath)
 								const results = await regexSearchFiles(
-									cwd,
+									this.cwd,
 									absolutePath,
 									regex,
 									filePattern,
@@ -2923,26 +3040,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 					}
 
 					case "attempt_completion": {
-						/*
-						this.consecutiveMistakeCount = 0
-						let resultToSend = result
-						if (command) {
-							await this.say("completion_result", resultToSend)
-							// TODO: currently we don't handle if this command fails, it could be useful to let cline know and retry
-							const [didUserReject, commandResult] = await this.executeCommand(command, true)
-							// if we received non-empty string, the command was rejected or failed
-							if (commandResult) {
-								return [didUserReject, commandResult]
-							}
-							resultToSend = ""
-						}
-						const { response, text, images } = await this.ask("completion_result", resultToSend) // this prompts webview to show 'new task' button, and enable text input (which would be the 'text' here)
-						if (response === "yesButtonClicked") {
-							return [false, ""] // signals to recursive loop to stop (for now this never happens since yesButtonClicked will trigger a new task)
-						}
-						await this.say("user_feedback", text ?? "", images)
-						return [
-						*/
 						const result: string | undefined = block.params.result
 						const command: string | undefined = block.params.command
 						try {
@@ -2994,33 +3091,41 @@ export class Cline extends EventEmitter<ClineEvents> {
 									)
 									break
 								}
+
 								this.consecutiveMistakeCount = 0
 
 								let commandResult: ToolResponse | undefined
+
 								if (command) {
 									if (lastMessage && lastMessage.ask !== "command") {
-										// havent sent a command message yet so first send completion_result then command
+										// Haven't sent a command message yet so
+										// first send completion_result then command.
 										await this.say("completion_result", result, undefined, false)
-										telemetryService.captureTaskCompleted(this.taskId)
 									}
 
-									// complete command message
+									// Complete command message.
 									const didApprove = await askApproval("command", command)
+
 									if (!didApprove) {
 										break
 									}
+
 									const [userRejected, execCommandResult] = await this.executeCommandTool(command!)
+
 									if (userRejected) {
 										this.didRejectTool = true
 										pushToolResult(execCommandResult)
 										break
 									}
-									// user didn't reject, but the command may have output
+
+									// User didn't reject, but the command may have output.
 									commandResult = execCommandResult
 								} else {
 									await this.say("completion_result", result, undefined, false)
-									telemetryService.captureTaskCompleted(this.taskId)
 								}
+
+								telemetryService.captureTaskCompleted(this.taskId)
+								this.emit("taskCompleted", this.taskId, this.getTokenUsage())
 
 								if (this.parentTask) {
 									const didApprove = await askFinishSubTaskApproval()
@@ -3034,15 +3139,22 @@ export class Cline extends EventEmitter<ClineEvents> {
 									break
 								}
 
-								// we already sent completion_result says, an empty string asks relinquishes control over button and field
+								// We already sent completion_result says, an
+								// empty string asks relinquishes control over
+								// button and field.
 								const { response, text, images } = await this.ask("completion_result", "", false)
+
+								// Signals to recursive loop to stop (for now
+								// this never happens since yesButtonClicked
+								// will trigger a new task).
 								if (response === "yesButtonClicked") {
-									pushToolResult("") // signals to recursive loop to stop (for now this never happens since yesButtonClicked will trigger a new task)
+									pushToolResult("")
 									break
 								}
-								await this.say("user_feedback", text ?? "", images)
 
+								await this.say("user_feedback", text ?? "", images)
 								const toolResults: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[] = []
+
 								if (commandResult) {
 									if (typeof commandResult === "string") {
 										toolResults.push({ type: "text", text: commandResult })
@@ -3050,17 +3162,20 @@ export class Cline extends EventEmitter<ClineEvents> {
 										toolResults.push(...commandResult)
 									}
 								}
+
 								toolResults.push({
 									type: "text",
 									text: `The user has provided feedback on the results. Consider their input to continue the task, and then attempt completion again.\n<feedback>\n${text}\n</feedback>`,
 								})
+
 								toolResults.push(...formatResponse.imageBlocks(images))
+
 								this.userMessageContent.push({
 									type: "text",
 									text: `${toolDescription()} Result:`,
 								})
-								this.userMessageContent.push(...toolResults)
 
+								this.userMessageContent.push(...toolResults)
 								break
 							}
 						} catch (error) {
@@ -3069,6 +3184,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 						}
 					}
 				}
+
 				break
 		}
 
@@ -3459,7 +3575,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 						if (shouldProcessMentions(block.text)) {
 							return {
 								...block,
-								text: await parseMentions(block.text, cwd, this.urlContentFetcher),
+								text: await parseMentions(block.text, this.cwd, this.urlContentFetcher),
 							}
 						}
 						return block
@@ -3468,7 +3584,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 							if (shouldProcessMentions(block.content)) {
 								return {
 									...block,
-									content: await parseMentions(block.content, cwd, this.urlContentFetcher),
+									content: await parseMentions(block.content, this.cwd, this.urlContentFetcher),
 								}
 							}
 							return block
@@ -3478,7 +3594,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 									if (contentBlock.type === "text" && shouldProcessMentions(contentBlock.text)) {
 										return {
 											...contentBlock,
-											text: await parseMentions(contentBlock.text, cwd, this.urlContentFetcher),
+											text: await parseMentions(
+												contentBlock.text,
+												this.cwd,
+												this.urlContentFetcher,
+											),
 										}
 									}
 									return contentBlock
@@ -3508,7 +3628,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		const visibleFilePaths = vscode.window.visibleTextEditors
 			?.map((editor) => editor.document?.uri?.fsPath)
 			.filter(Boolean)
-			.map((absolutePath) => path.relative(cwd, absolutePath))
+			.map((absolutePath) => path.relative(this.cwd, absolutePath))
 			.slice(0, maxWorkspaceFiles ?? 200)
 
 		// Filter paths through rooIgnoreController
@@ -3529,7 +3649,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			.flatMap((group) => group.tabs)
 			.map((tab) => (tab.input as vscode.TabInputText)?.uri?.fsPath)
 			.filter(Boolean)
-			.map((absolutePath) => path.relative(cwd, absolutePath).toPosix())
+			.map((absolutePath) => path.relative(this.cwd, absolutePath).toPosix())
 			.slice(0, maxTabs)
 
 		// Filter paths through rooIgnoreController
@@ -3572,7 +3692,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		for (const [uri, fileDiagnostics] of diagnostics) {
 			const problems = fileDiagnostics.filter((d) => d.severity === vscode.DiagnosticSeverity.Error)
 			if (problems.length > 0) {
-				diagnosticsDetails += `\n## ${path.relative(cwd, uri.fsPath)}`
+				diagnosticsDetails += `\n## ${path.relative(this.cwd, uri.fsPath)}`
 				for (const diagnostic of problems) {
 					// let severity = diagnostic.severity === vscode.DiagnosticSeverity.Error ? "Error" : "Warning"
 					const line = diagnostic.range.start.line + 1 // VSCode lines are 0-indexed
@@ -3662,17 +3782,19 @@ export class Cline extends EventEmitter<ClineEvents> {
 		})
 		const timeZone = formatter.resolvedOptions().timeZone
 		const timeZoneOffset = -now.getTimezoneOffset() / 60 // Convert to hours and invert sign to match conventional notation
-		const timeZoneOffsetStr = `${timeZoneOffset >= 0 ? "+" : ""}${timeZoneOffset}:00`
+		const timeZoneOffsetHours = Math.floor(Math.abs(timeZoneOffset))
+		const timeZoneOffsetMinutes = Math.abs(Math.round((Math.abs(timeZoneOffset) - timeZoneOffsetHours) * 60))
+		const timeZoneOffsetStr = `${timeZoneOffset >= 0 ? "+" : "-"}${timeZoneOffsetHours}:${timeZoneOffsetMinutes.toString().padStart(2, "0")}`
 		details += `\n\n# Current Time\n${formatter.format(now)} (${timeZone}, UTC${timeZoneOffsetStr})`
 
 		// Add context tokens information
-		const { contextTokens } = getApiMetrics(this.clineMessages)
+		const { contextTokens, totalCost } = getApiMetrics(this.clineMessages)
 		const modelInfo = this.api.getModel().info
 		const contextWindow = modelInfo.contextWindow
 		const contextPercentage =
 			contextTokens && contextWindow ? Math.round((contextTokens / contextWindow) * 100) : undefined
 		details += `\n\n# Current Context Size (Tokens)\n${contextTokens ? `${contextTokens.toLocaleString()} (${contextPercentage}%)` : "(Not available)"}`
-
+		details += `\n\n# Current Cost\n${totalCost !== null ? `$${totalCost.toFixed(2)}` : "(Not available)"}`
 		// Add current mode and any mode-specific warnings
 		const {
 			mode,
@@ -3680,12 +3802,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 			customModePrompts,
 			experiments = {} as Record<ExperimentId, boolean>,
 			customInstructions: globalCustomInstructions,
+			language,
 		} = (await this.providerRef.deref()?.getState()) ?? {}
 		const currentMode = mode ?? defaultModeSlug
 		const modeDetails = await getFullModeDetails(currentMode, customModes, customModePrompts, {
-			cwd,
+			cwd: this.cwd,
 			globalCustomInstructions,
-			language: formatLanguage(vscode.env.language),
+			language: language ?? formatLanguage(vscode.env.language),
 		})
 		details += `\n\n# Current Mode\n`
 		details += `<slug>${currentMode}</slug>\n`
@@ -3710,17 +3833,17 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 
 		if (includeFileDetails) {
-			details += `\n\n# Current Working Directory (${cwd.toPosix()}) Files\n`
-			const isDesktop = arePathsEqual(cwd, path.join(os.homedir(), "Desktop"))
+			details += `\n\n# Current Working Directory (${this.cwd.toPosix()}) Files\n`
+			const isDesktop = arePathsEqual(this.cwd, path.join(os.homedir(), "Desktop"))
 			if (isDesktop) {
 				// don't want to immediately access desktop since it would show permission popup
 				details += "(Desktop files not shown automatically. Use list_files to explore if needed.)"
 			} else {
 				const maxFiles = maxWorkspaceFiles ?? 200
-				const [files, didHitLimit] = await listFiles(cwd, true, maxFiles)
+				const [files, didHitLimit] = await listFiles(this.cwd, true, maxFiles)
 				const { showRooIgnoredFiles } = (await this.providerRef.deref()?.getState()) ?? {}
 				const result = formatResponse.formatFilesList(
-					cwd,
+					this.cwd,
 					files,
 					didHitLimit,
 					this.rooIgnoreController,
@@ -3755,7 +3878,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 
 		try {
-			const workspaceDir = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0)
+			const workspaceDir = getWorkspacePath()
 
 			if (!workspaceDir) {
 				log("[Cline#initializeCheckpoints] workspace folder not found, disabling checkpoints")

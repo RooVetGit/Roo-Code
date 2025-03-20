@@ -3,7 +3,8 @@
 		"save": "सहेजें",
 		"done": "पूर्ण",
 		"cancel": "रद्द करें",
-		"reset": "रीसेट करें"
+		"reset": "रीसेट करें",
+		"select": "चुनें"
 	},
 	"header": {
 		"title": "सेटिंग्स",
@@ -24,8 +25,11 @@
 		"checkpoints": "चेकपॉइंट",
 		"notifications": "सूचनाएँ",
 		"contextManagement": "संदर्भ प्रबंधन",
+		"terminal": "टर्मिनल",
 		"advanced": "उन्नत",
-		"experimental": "प्रायोगिक सुविधाएँ"
+		"experimental": "प्रायोगिक सुविधाएँ",
+		"language": "भाषा",
+		"about": "Roo Code के बारे में"
 	},
 	"autoApprove": {
 		"description": "Roo को अनुमोदन की आवश्यकता के बिना स्वचालित रूप से ऑपरेशन करने की अनुमति दें। इन सेटिंग्स को केवल तभी सक्षम करें जब आप AI पर पूरी तरह से भरोसा करते हों और संबंधित सुरक्षा जोखिमों को समझते हों।",
@@ -71,12 +75,136 @@
 	},
 	"providers": {
 		"configProfile": "कॉन्फिगरेशन प्रोफाइल",
-		"description": "विवरण",
+		"description": "विभिन्न API कॉन्फ़िगरेशन सहेजें ताकि प्रदाताओं और सेटिंग्स के बीच त्वरित रूप से स्विच कर सकें।",
 		"apiProvider": "API प्रदाता",
+		"model": "मॉडल",
+		"nameEmpty": "नाम खाली नहीं हो सकता",
+		"nameExists": "इस नाम वाला प्रोफ़ाइल पहले से मौजूद है",
+		"deleteProfile": "प्रोफ़ाइल हटाएं",
+		"invalidArnFormat": "अमान्य ARN प्रारूप। कृपया ऊपर दिए गए उदाहरण देखें।",
+		"enterNewName": "नया नाम दर्ज करें",
+		"addProfile": "प्रोफ़ाइल जोड़ें",
+		"renameProfile": "प्रोफ़ाइल का नाम बदलें",
+		"newProfile": "नया कॉन्फ़िगरेशन प्रोफ़ाइल",
+		"enterProfileName": "प्रोफ़ाइल नाम दर्ज करें",
+		"createProfile": "प्रोफ़ाइल बनाएं",
+		"cannotDeleteOnlyProfile": "केवल एकमात्र प्रोफ़ाइल को हटाया नहीं जा सकता",
+		"vscodeLmDescription": "VS कोड भाषा मॉडल API आपको अन्य VS कोड एक्सटेंशन (जैसे GitHub Copilot) द्वारा प्रदान किए गए मॉडल चलाने की अनुमति देता है। शुरू करने का सबसे आसान तरीका VS कोड मार्केटप्लेस से Copilot और Copilot चैट एक्सटेंशन इंस्टॉल करना है।",
+		"awsCustomArnUse": "आप जिस मॉडल का उपयोग करना चाहते हैं, उसके लिए एक वैध AWS बेडरॉक ARN दर्ज करें। प्रारूप उदाहरण:",
+		"awsCustomArnDesc": "सुनिश्चित करें कि ARN में क्षेत्र ऊपर चयनित AWS क्षेत्र से मेल खाता है।",
 		"openRouterApiKey": "OpenRouter API कुंजी",
+		"getOpenRouterApiKey": "OpenRouter API कुंजी प्राप्त करें",
 		"apiKeyStorageNotice": "API कुंजियाँ VSCode के सुरक्षित स्टोरेज में सुरक्षित रूप से संग्रहीत हैं",
+		"glamaApiKey": "Glama API कुंजी",
+		"getGlamaApiKey": "Glama API कुंजी प्राप्त करें",
 		"useCustomBaseUrl": "कस्टम बेस URL का उपयोग करें",
-		"openRouterTransformsText": "संदर्भ आकार के लिए प्रॉम्प्ट और संदेश श्रृंखलाओं को संपीड़ित करें (<a>OpenRouter ट्रांसफॉर्म</a>)"
+		"requestyApiKey": "Requesty API कुंजी",
+		"getRequestyApiKey": "Requesty API कुंजी प्राप्त करें",
+		"openRouterTransformsText": "संदर्भ आकार के लिए प्रॉम्प्ट और संदेश श्रृंखलाओं को संपीड़ित करें (<a>OpenRouter ट्रांसफॉर्म</a>)",
+		"anthropicApiKey": "Anthropic API कुंजी",
+		"getAnthropicApiKey": "Anthropic API कुंजी प्राप्त करें",
+		"deepSeekApiKey": "DeepSeek API कुंजी",
+		"getDeepSeekApiKey": "DeepSeek API कुंजी प्राप्त करें",
+		"geminiApiKey": "Gemini API कुंजी",
+		"getGeminiApiKey": "Gemini API कुंजी प्राप्त करें",
+		"openAiApiKey": "OpenAI API कुंजी",
+		"openAiBaseUrl": "बेस URL",
+		"getOpenAiApiKey": "OpenAI API कुंजी प्राप्त करें",
+		"mistralApiKey": "Mistral API कुंजी",
+		"getMistralApiKey": "Mistral / Codestral API कुंजी प्राप्त करें",
+		"codestralBaseUrl": "Codestral बेस URL (वैकल्पिक)",
+		"codestralBaseUrlDesc": "Codestral मॉडल के लिए वैकल्पिक URL सेट करें।",
+		"awsCredentials": "AWS क्रेडेंशियल्स",
+		"awsProfile": "AWS प्रोफाइल",
+		"awsProfileName": "AWS प्रोफाइल नाम",
+		"awsAccessKey": "AWS एक्सेस कुंजी",
+		"awsSecretKey": "AWS सीक्रेट कुंजी",
+		"awsSessionToken": "AWS सत्र टोकन",
+		"awsRegion": "AWS क्षेत्र",
+		"awsCrossRegion": "क्रॉस-क्षेत्र अनुमान का उपयोग करें",
+		"vscodeLmModel": "भाषा मॉडल",
+		"vscodeLmWarning": "नोट: यह एक बहुत ही प्रायोगिक एकीकरण है और प्रदाता समर्थन भिन्न होगा। यदि आपको किसी मॉडल के समर्थित न होने की त्रुटि मिलती है, तो यह प्रदाता की ओर से एक समस्या है।",
+		"googleCloudSetup": {
+			"title": "Google Cloud Vertex AI का उपयोग करने के लिए, आपको आवश्यकता है:",
+			"step1": "1. Google Cloud खाता बनाएं, Vertex AI API सक्षम करें और वांछित Claude मॉडल सक्षम करें।",
+			"step2": "2. Google Cloud CLI इंस्टॉल करें और एप्लिकेशन डिफ़ॉल्ट क्रेडेंशियल्स कॉन्फ़िगर करें।",
+			"step3": "3. या क्रेडेंशियल्स के साथ एक सर्विस अकाउंट बनाएं।"
+		},
+		"googleCloudCredentials": "Google Cloud क्रेडेंशियल्स",
+		"googleCloudKeyFile": "Google Cloud कुंजी फ़ाइल पथ",
+		"googleCloudProjectId": "Google Cloud प्रोजेक्ट ID",
+		"googleCloudRegion": "Google Cloud क्षेत्र",
+		"lmStudio": {
+			"baseUrl": "बेस URL (वैकल्पिक)",
+			"modelId": "मॉडल ID",
+			"speculativeDecoding": "स्पेक्युलेटिव डिकोडिंग सक्षम करें",
+			"draftModelId": "ड्राफ्ट मॉडल ID",
+			"draftModelDesc": "स्पेक्युलेटिव डिकोडिंग के सही काम करने के लिए ड्राफ्ट मॉडल को समान मॉडल परिवार से होना चाहिए।",
+			"selectDraftModel": "ड्राफ्ट मॉडल चुनें",
+			"noModelsFound": "कोई ड्राफ्ट मॉडल नहीं मिला। कृपया सुनिश्चित करें कि LM Studio सर्वर मोड सक्षम के साथ चल रहा है।",
+			"description": "LM Studio आपको अपने कंप्यूटर पर स्थानीय रूप से मॉडल चलाने की अनुमति देता है। आरंभ करने के निर्देशों के लिए, उनकी <a>क्विकस्टार्ट गाइड</a> देखें। आपको इस एक्सटेंशन के साथ उपयोग करने के लिए LM Studio की <b>स्थानीय सर्वर</b> सुविधा भी शुरू करनी होगी। <span>नोट:</span> Roo Code जटिल प्रॉम्प्ट्स का उपयोग करता है और Claude मॉडल के साथ सबसे अच्छा काम करता है। कम क्षमता वाले मॉडल अपेक्षित रूप से काम नहीं कर सकते हैं।"
+		},
+		"ollama": {
+			"baseUrl": "बेस URL (वैकल्पिक)",
+			"modelId": "मॉडल ID",
+			"description": "Ollama आपको अपने कंप्यूटर पर स्थानीय रूप से मॉडल चलाने की अनुमति देता है। आरंभ करने के निर्देशों के लिए, उनकी क्विकस्टार्ट गाइड देखें।",
+			"warning": "नोट: Roo Code जटिल प्रॉम्प्ट्स का उपयोग करता है और Claude मॉडल के साथ सबसे अच्छा काम करता है। कम क्षमता वाले मॉडल अपेक्षित रूप से काम नहीं कर सकते हैं।"
+		},
+		"unboundApiKey": "Unbound API कुंजी",
+		"getUnboundApiKey": "Unbound API कुंजी प्राप्त करें",
+		"humanRelay": {
+			"description": "कोई API कुंजी आवश्यक नहीं है, लेकिन उपयोगकर्ता को वेब चैट AI में जानकारी कॉपी और पेस्ट करने में मदद करनी होगी।",
+			"instructions": "उपयोग के दौरान, एक डायलॉग बॉक्स पॉप अप होगा और वर्तमान संदेश स्वचालित रूप से क्लिपबोर्ड पर कॉपी हो जाएगा। आपको इन्हें AI के वेब संस्करणों (जैसे ChatGPT या Claude) में पेस्ट करना होगा, फिर AI की प्रतिक्रिया को डायलॉग बॉक्स में वापस कॉपी करें और पुष्टि बटन पर क्लिक करें।"
+		},
+		"openRouter": {
+			"providerRouting": {
+				"title": "OpenRouter प्रदाता रूटिंग",
+				"description": "OpenRouter आपके मॉडल के लिए सर्वोत्तम उपलब्ध प्रदाताओं को अनुरोध भेजता है। डिफ़ॉल्ट रूप से, अपटाइम को अधिकतम करने के लिए अनुरोधों को शीर्ष प्रदाताओं के बीच संतुलित किया जाता है। हालांकि, आप इस मॉडल के लिए उपयोग करने के लिए एक विशिष्ट प्रदाता चुन सकते हैं।",
+				"learnMore": "प्रदाता रूटिंग के बारे में अधिक जानें"
+			}
+		},
+		"customModel": {
+			"capabilities": "अपने कस्टम OpenAI-संगत मॉडल के लिए क्षमताओं और मूल्य निर्धारण को कॉन्फ़िगर करें। मॉडल क्षमताओं को निर्दिष्ट करते समय सावधान रहें, क्योंकि वे Roo Code के प्रदर्शन को प्रभावित कर सकती हैं।",
+			"maxTokens": {
+				"label": "अधिकतम आउटपुट टोकन",
+				"description": "मॉडल एक प्रतिक्रिया में अधिकतम कितने टोकन जनरेट कर सकता है। (सर्वर को अधिकतम टोकन सेट करने की अनुमति देने के लिए -1 निर्दिष्ट करें।)"
+			},
+			"contextWindow": {
+				"label": "संदर्भ विंडो आकार",
+				"description": "कुल टोकन (इनपुट + आउटपुट) जो मॉडल प्रोसेस कर सकता है।"
+			},
+			"imageSupport": {
+				"label": "छवि समर्थन",
+				"description": "क्या यह मॉडल छवियों को प्रोसेस और समझने में सक्षम है?"
+			},
+			"computerUse": {
+				"label": "कंप्यूटर उपयोग",
+				"description": "क्या यह मॉडल ब्राउज़र के साथ इंटरैक्ट करने में सक्षम है? (उदा. Claude 3.7 Sonnet)।"
+			},
+			"promptCache": {
+				"label": "प्रॉम्प्ट कैशिंग",
+				"description": "क्या यह मॉडल प्रॉम्प्ट्स को कैश करने में सक्षम है?"
+			},
+			"pricing": {
+				"input": {
+					"label": "इनपुट मूल्य",
+					"description": "इनपुट/प्रॉम्प्ट में प्रति मिलियन टोकन की लागत। यह मॉडल को संदर्भ और निर्देश भेजने की लागत को प्रभावित करता है।"
+				},
+				"output": {
+					"label": "आउटपुट मूल्य",
+					"description": "मॉडल की प्रतिक्रिया में प्रति मिलियन टोकन की लागत। यह जनरेट की गई सामग्री और पूर्णताओं की लागत को प्रभावित करता है।"
+				},
+				"cacheReads": {
+					"label": "कैश रीड्स मूल्य",
+					"description": "कैश से पढ़ने के लिए प्रति मिलियन टोकन की लागत। यह वह मूल्य है जो कैश की गई प्रतिक्रिया प्राप्त करने पर लगाया जाता है।"
+				},
+				"cacheWrites": {
+					"label": "कैश राइट्स मूल्य",
+					"description": "कैश में लिखने के लिए प्रति मिलियन टोकन की लागत। यह वह मूल्य है जो पहली बार प्रॉम्प्ट को कैश करने पर लगाया जाता है।"
+				}
+			},
+			"resetDefaults": "डिफ़ॉल्ट पर रीसेट करें"
+		}
 	},
 	"browser": {
 		"enable": {
@@ -117,14 +245,15 @@
 			"label": "ध्वनि प्रभाव सक्षम करें",
 			"description": "जब सक्षम होता है, तो Roo सूचनाओं और घटनाओं के लिए ध्वनि प्रभाव चलाएगा।",
 			"volumeLabel": "वॉल्यूम"
+		},
+		"tts": {
+			"label": "टेक्स्ट-टू-स्पीच सक्षम करें",
+			"description": "जब सक्षम होता है, तो Roo टेक्स्ट-टू-स्पीच का उपयोग करके अपनी प्रतिक्रियाओं को बोलकर पढ़ेगा।",
+			"speedLabel": "गति"
 		}
 	},
 	"contextManagement": {
 		"description": "AI के संदर्भ विंडो में शामिल जानकारी को नियंत्रित करें, जो token उपयोग और प्रतिक्रिया गुणवत्ता को प्रभावित करता है",
-		"terminal": {
-			"label": "टर्मिनल आउटपुट सीमा",
-			"description": "कमांड निष्पादित करते समय टर्मिनल आउटपुट में शामिल करने के लिए पंक्तियों की अधिकतम संख्या। पार होने पर पंक्तियाँ मध्य से हटा दी जाएंगी, token बचाते हुए।"
-		},
 		"openTabs": {
 			"label": "खुले टैब संदर्भ सीमा",
 			"description": "संदर्भ में शामिल करने के लिए VSCode खुले टैब की अधिकतम संख्या। उच्च मान अधिक संदर्भ प्रदान करते हैं लेकिन token उपयोग बढ़ाते हैं।"
@@ -136,6 +265,20 @@
 		"rooignore": {
 			"label": "सूचियों और खोजों में .rooignore फाइलें दिखाएँ",
 			"description": "जब सक्षम होता है, .rooignore में पैटर्न से मेल खाने वाली फाइलें लॉक प्रतीक के साथ सूचियों में दिखाई जाएंगी। जब अक्षम होता है, ये फाइलें फाइल सूचियों और खोजों से पूरी तरह छिपा दी जाएंगी।"
+		},
+		"maxReadFile": {
+			"label": "फ़ाइल से पढ़ने के लिए अधिकतम लाइनें",
+			"description": "फ़ाइल से एक बार में पढ़ने के लिए अधिकतम लाइनों की संख्या। कम मान संदर्भ/संसाधन उपयोग को कम करते हैं लेकिन बड़ी फाइलों के लिए अधिक पठन की आवश्यकता हो सकती है।"
+		}
+	},
+	"terminal": {
+		"outputLineLimit": {
+			"label": "टर्मिनल आउटपुट सीमा",
+			"description": "कमांड निष्पादित करते समय टर्मिनल आउटपुट में शामिल करने के लिए पंक्तियों की अधिकतम संख्या। पार होने पर पंक्तियाँ मध्य से हटा दी जाएंगी, token बचाते हुए।"
+		},
+		"shellIntegrationTimeout": {
+			"label": "टर्मिनल शेल एकीकरण टाइमआउट",
+			"description": "कमांड निष्पादित करने से पहले शेल एकीकरण के आरंभ होने के लिए प्रतीक्षा का अधिकतम समय। लंबे शेल स्टार्टअप समय वाले उपयोगकर्ताओं के लिए, यदि आप टर्मिनल में \"Shell Integration Unavailable\" त्रुटियाँ देखते हैं तो इस मान को बढ़ाने की आवश्यकता हो सकती है।"
 		}
 	},
 	"advanced": {
@@ -205,13 +348,20 @@
 		"outputPrice": "आउटपुट मूल्य",
 		"cacheReadsPrice": "कैश रीड्स मूल्य",
 		"cacheWritesPrice": "कैश राइट्स मूल्य",
+		"enableStreaming": "स्ट्रीमिंग सक्षम करें",
+		"useAzure": "Azure का उपयोग करें",
+		"azureApiVersion": "Azure API संस्करण सेट करें",
 		"gemini": {
 			"freeRequests": "* प्रति मिनट {{count}} अनुरोधों तक मुफ्त। उसके बाद, बिलिंग प्रॉम्प्ट आकार पर निर्भर करती है।",
 			"pricingDetails": "अधिक जानकारी के लिए, मूल्य निर्धारण विवरण देखें।"
 		}
 	},
 	"modelPicker": {
-		"automaticFetch": "एक्सटेंशन <serviceLink>{{serviceName}}</serviceLink> पर उपलब्ध मॉडलों की नवीनतम सूची स्वचालित रूप से प्राप्त करता है। यदि आप अनिश्चित हैं कि कौन सा मॉडल चुनना है, तो Roo Code <defaultModelLink>{{defaultModelId}}</defaultModelLink> के साथ सबसे अच्छा काम करता है। आप वर्तमान में उपलब्ध निःशुल्क विकल्पों के लिए \"free\" भी खोज सकते हैं।"
+		"automaticFetch": "एक्सटेंशन <serviceLink>{{serviceName}}</serviceLink> पर उपलब्ध मॉडलों की नवीनतम सूची स्वचालित रूप से प्राप्त करता है। यदि आप अनिश्चित हैं कि कौन सा मॉडल चुनना है, तो Roo Code <defaultModelLink>{{defaultModelId}}</defaultModelLink> के साथ सबसे अच्छा काम करता है। आप वर्तमान में उपलब्ध निःशुल्क विकल्पों के लिए \"free\" भी खोज सकते हैं।",
+		"label": "मॉडल",
+		"searchPlaceholder": "खोजें",
+		"noMatchFound": "कोई मिलान नहीं मिला",
+		"useCustomModel": "कस्टम उपयोग करें: {{modelId}}"
 	},
 	"footer": {
 		"feedback": "यदि आपके कोई प्रश्न या प्रतिक्रिया है, तो <githubLink>github.com/RooVetGit/Roo-Code</githubLink> पर एक मुद्दा खोलने या <redditLink>reddit.com/r/RooCode</redditLink> या <discordLink>discord.gg/roocode</discordLink> में शामिल होने में संकोच न करें",
@@ -224,5 +374,55 @@
 			"description": "एक्सटेंशन में सभी वैश्विक स्थिति और गुप्त भंडारण को रीसेट करें।",
 			"button": "रीसेट करें"
 		}
+	},
+	"thinkingBudget": {
+		"maxTokens": "अधिकतम tokens",
+		"maxThinkingTokens": "अधिकतम thinking tokens"
+	},
+	"validation": {
+		"apiKey": "आपको एक मान्य API कुंजी प्रदान करनी होगी।",
+		"awsRegion": "AWS Bedrock का उपयोग करने के लिए आपको एक क्षेत्र चुनना होगा।",
+		"googleCloud": "आपको एक मान्य Google Cloud प्रोजेक्ट ID और क्षेत्र प्रदान करना होगा।",
+		"modelId": "आपको एक मान्य मॉडल ID प्रदान करनी होगी।",
+		"modelSelector": "आपको एक मान्य मॉडल चयनकर्ता प्रदान करना होगा।",
+		"openAi": "आपको एक मान्य बेस URL, API कुंजी और मॉडल ID प्रदान करनी होगी।",
+		"arn": {
+			"invalidFormat": "अमान्य ARN प्रारूप। कृपया प्रारूप आवश्यकताएं जांचें।",
+			"regionMismatch": "चेतावनी: आपके ARN में क्षेत्र ({{arnRegion}}) आपके चयनित क्षेत्र ({{region}}) से मेल नहीं खाता। इससे पहुंच संबंधी समस्याएं हो सकती हैं। प्रदाता ARN से क्षेत्र का उपयोग करेगा।"
+		},
+		"modelAvailability": "आपके द्वारा प्रदान की गई मॉडल ID ({{modelId}}) उपलब्ध नहीं है। कृपया कोई अन्य मॉडल चुनें।"
+	},
+	"placeholders": {
+		"apiKey": "API कुंजी दर्ज करें...",
+		"profileName": "प्रोफ़ाइल नाम दर्ज करें",
+		"accessKey": "एक्सेस कुंजी दर्ज करें...",
+		"secretKey": "गुप्त कुंजी दर्ज करें...",
+		"sessionToken": "सत्र टोकन दर्ज करें...",
+		"credentialsJson": "क्रेडेंशियल्स JSON दर्ज करें...",
+		"keyFilePath": "कुंजी फ़ाइल पथ दर्ज करें...",
+		"projectId": "प्रोजेक्ट ID दर्ज करें...",
+		"customArn": "ARN दर्ज करें (उदा. arn:aws:bedrock:us-east-1:123456789012:foundation-model/my-model)",
+		"baseUrl": "बेस URL दर्ज करें...",
+		"modelId": {
+			"lmStudio": "उदा. meta-llama-3.1-8b-instruct",
+			"lmStudioDraft": "उदा. lmstudio-community/llama-3.2-1b-instruct",
+			"ollama": "उदा. llama3.1"
+		},
+		"numbers": {
+			"maxTokens": "उदा. 4096",
+			"contextWindow": "उदा. 128000",
+			"inputPrice": "उदा. 0.0001",
+			"outputPrice": "उदा. 0.0002",
+			"cacheWritePrice": "उदा. 0.00005"
+		}
+	},
+	"defaults": {
+		"ollamaUrl": "डिफ़ॉल्ट: http://localhost:11434",
+		"lmStudioUrl": "डिफ़ॉल्ट: http://localhost:1234",
+		"geminiUrl": "डिफ़ॉल्ट: https://generativelanguage.googleapis.com"
+	},
+	"labels": {
+		"customArn": "कस्टम ARN",
+		"useCustomArn": "कस्टम ARN का उपयोग करें..."
 	}
 }

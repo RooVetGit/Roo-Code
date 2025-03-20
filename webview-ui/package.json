@@ -6,13 +6,16 @@
 	"scripts": {
 		"lint": "eslint src --ext ts,tsx",
 		"lint-fix": "eslint src --ext ts,tsx --fix",
-		"check-types": "tsc --noEmit",
+		"check-types": "tsc",
 		"test": "jest",
 		"dev": "vite",
-		"build": "tsc -b && vite build",
+		"tsc": "tsc -b",
+		"vite-build": "vite build",
+		"build": "npm-run-all -p tsc vite-build",
 		"preview": "vite preview",
 		"storybook": "storybook dev -p 6006",
-		"build-storybook": "storybook build"
+		"build-storybook": "storybook build",
+		"clean": "rimraf build"
 	},
 	"dependencies": {
 		"@radix-ui/react-alert-dialog": "^1.1.6",
@@ -28,6 +31,7 @@
 		"@radix-ui/react-slot": "^1.1.2",
 		"@radix-ui/react-tooltip": "^1.1.8",
 		"@tailwindcss/vite": "^4.0.0",
+		"@tanstack/react-query": "^5.68.0",
 		"@vscode/webview-ui-toolkit": "^1.4.0",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
@@ -50,12 +54,14 @@
 		"react-virtuoso": "^4.7.13",
 		"rehype-highlight": "^7.0.0",
 		"remark-gfm": "^4.0.1",
+		"remove-markdown": "^0.6.0",
 		"shell-quote": "^1.8.2",
 		"styled-components": "^6.1.13",
 		"tailwind-merge": "^2.6.0",
 		"tailwindcss": "^4.0.0",
 		"tailwindcss-animate": "^1.0.7",
-		"vscrui": "^0.2.2"
+		"vscrui": "^0.2.2",
+		"zod": "^3.24.2"
 	},
 	"devDependencies": {
 		"@storybook/addon-essentials": "^8.5.6",

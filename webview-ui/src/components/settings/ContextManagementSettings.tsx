@@ -4,28 +4,28 @@ import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
 import { Database } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { Slider } from "@/components/ui"
 
 import { SetCachedStateField } from "./types"
-import { sliderLabelStyle } from "./styles"
 import { SectionHeader } from "./SectionHeader"
 import { Section } from "./Section"
 
 type ContextManagementSettingsProps = HTMLAttributes<HTMLDivElement> & {
-	terminalOutputLineLimit?: number
 	maxOpenTabsContext: number
 	maxWorkspaceFiles: number
 	showRooIgnoredFiles?: boolean
+	maxReadFileLine?: number
 	setCachedStateField: SetCachedStateField<
-		"terminalOutputLineLimit" | "maxOpenTabsContext" | "maxWorkspaceFiles" | "showRooIgnoredFiles"
+		"maxOpenTabsContext" | "maxWorkspaceFiles" | "showRooIgnoredFiles" | "maxReadFileLine"
 	>
 }
 
 export const ContextManagementSettings = ({
-	terminalOutputLineLimit,
 	maxOpenTabsContext,
 	maxWorkspaceFiles,
 	showRooIgnoredFiles,
 	setCachedStateField,
+	maxReadFileLine,
 	className,
 	...props
 }: ContextManagementSettingsProps) => {
@@ -41,85 +41,75 @@ export const ContextManagementSettings = ({
 
 			<Section>
 				<div>
-					<div className="flex flex-col gap-2">
-						<span className="font-medium">{t("settings:contextManagement.terminal.label")}</span>
-						<div className="flex items-center gap-2">
-							<input
-								type="range"
-								min="100"
-								max="5000"
-								step="100"
-								value={terminalOutputLineLimit ?? 500}
-								onChange={(e) =>
-									setCachedStateField("terminalOutputLineLimit", parseInt(e.target.value))
-								}
-								className="h-2 focus:outline-0 w-4/5 accent-vscode-button-background"
-								data-testid="terminal-output-limit-slider"
-							/>
-							<span style={{ ...sliderLabelStyle }}>{terminalOutputLineLimit ?? 500}</span>
-						</div>
+					<span className="block font-medium mb-1">{t("settings:contextManagement.openTabs.label")}</span>
+					<div className="flex items-center gap-2">
+						<Slider
+							min={0}
+							max={500}
+							step={1}
+							value={[maxOpenTabsContext ?? 20]}
+							onValueChange={([value]) => setCachedStateField("maxOpenTabsContext", value)}
+							data-testid="open-tabs-limit-slider"
+						/>
+						<span className="w-10">{maxOpenTabsContext ?? 20}</span>
 					</div>
-					<p className="text-vscode-descriptionForeground text-sm mt-0">
-						{t("settings:contextManagement.terminal.description")}
-					</p>
-				</div>
-
-				<div>
-					<div className="flex flex-col gap-2">
-						<span className="font-medium">{t("settings:contextManagement.openTabs.label")}</span>
-						<div className="flex items-center gap-2">
-							<input
-								type="range"
-								min="0"
-								max="500"
-								step="1"
-								value={maxOpenTabsContext ?? 20}
-								onChange={(e) => setCachedStateField("maxOpenTabsContext", parseInt(e.target.value))}
-								className="h-2 focus:outline-0 w-4/5 accent-vscode-button-background"
-								data-testid="open-tabs-limit-slider"
-							/>
-							<span style={{ ...sliderLabelStyle }}>{maxOpenTabsContext ?? 20}</span>
-						</div>
-					</div>
-					<p className="text-vscode-descriptionForeground text-sm mt-0">
+					<div className="text-vscode-descriptionForeground text-sm mt-1">
 						{t("settings:contextManagement.openTabs.description")}
-					</p>
+					</div>
 				</div>
 
 				<div>
-					<div className="flex flex-col gap-2">
-						<span className="font-medium">{t("settings:contextManagement.workspaceFiles.label")}</span>
-						<div className="flex items-center gap-2">
-							<input
-								type="range"
-								min="0"
-								max="500"
-								step="1"
-								value={maxWorkspaceFiles ?? 200}
-								onChange={(e) => setCachedStateField("maxWorkspaceFiles", parseInt(e.target.value))}
-								className="h-2 focus:outline-0 w-4/5 accent-vscode-button-background"
-								data-testid="workspace-files-limit-slider"
-							/>
-							<span style={{ ...sliderLabelStyle }}>{maxWorkspaceFiles ?? 200}</span>
-						</div>
+					<span className="block font-medium mb-1">
+						{t("settings:contextManagement.workspaceFiles.label")}
+					</span>
+					<div className="flex items-center gap-2">
+						<Slider
+							min={0}
+							max={500}
+							step={1}
+							value={[maxWorkspaceFiles ?? 200]}
+							onValueChange={([value]) => setCachedStateField("maxWorkspaceFiles", value)}
+							data-testid="workspace-files-limit-slider"
+						/>
+						<span className="w-10">{maxWorkspaceFiles ?? 200}</span>
 					</div>
-					<p className="text-vscode-descriptionForeground text-sm mt-0">
+					<div className="text-vscode-descriptionForeground text-sm mt-1">
 						{t("settings:contextManagement.workspaceFiles.description")}
-					</p>
+					</div>
 				</div>
 
 				<div>
 					<VSCodeCheckbox
 						checked={showRooIgnoredFiles}
-						onChange={(e: any) => {
-							setCachedStateField("showRooIgnoredFiles", e.target.checked)
-						}}
+						onChange={(e: any) => setCachedStateField("showRooIgnoredFiles", e.target.checked)}
 						data-testid="show-rooignored-files-checkbox">
-						<span className="font-medium">{t("settings:contextManagement.rooignore.label")}</span>
+						<label className="block font-medium mb-1">
+							{t("settings:contextManagement.rooignore.label")}
+						</label>
 					</VSCodeCheckbox>
-					<p className="text-vscode-descriptionForeground text-sm mt-0">
+					<div className="text-vscode-descriptionForeground text-sm mt-1">
 						{t("settings:contextManagement.rooignore.description")}
-					</p>
+					</div>
+				</div>
+
+				<div>
+					<div className="flex flex-col gap-2">
+						<span className="font-medium">{t("settings:contextManagement.maxReadFile.label")}</span>
+						<div className="flex items-center gap-2">
+							<Slider
+								min={0}
+								max={2000}
+								step={10}
+								value={[maxReadFileLine ?? 450]}
+								onValueChange={([value]) => setCachedStateField("maxReadFileLine", value)}
+								data-testid="max-read-file-line-slider"
+							/>
+							<span className="w-10">{maxReadFileLine ?? 450}</span>
+						</div>
+					</div>
+					<div className="text-vscode-descriptionForeground text-sm mt-0">
+						{t("settings:contextManagement.maxReadFile.description")}
+					</div>
 				</div>
 			</Section>
 		</div>

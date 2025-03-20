@@ -3,7 +3,8 @@
 		"save": "Speichern",
 		"done": "Fertig",
 		"cancel": "Abbrechen",
-		"reset": "Zurücksetzen"
+		"reset": "Zurücksetzen",
+		"select": "Auswählen"
 	},
 	"header": {
 		"title": "Einstellungen",
@@ -24,8 +25,11 @@
 		"checkpoints": "Kontrollpunkte",
 		"notifications": "Benachrichtigungen",
 		"contextManagement": "Kontext-Management",
+		"terminal": "Terminal",
 		"advanced": "Erweitert",
-		"experimental": "Experimentelle Funktionen"
+		"experimental": "Experimentelle Funktionen",
+		"language": "Sprache",
+		"about": "Über Roo Code"
 	},
 	"autoApprove": {
 		"description": "Erlaubt Roo, Operationen automatisch ohne Genehmigung durchzuführen. Aktivieren Sie diese Einstellungen nur, wenn Sie der KI vollständig vertrauen und die damit verbundenen Sicherheitsrisiken verstehen.",
@@ -71,12 +75,136 @@
 	},
 	"providers": {
 		"configProfile": "Konfigurationsprofil",
-		"description": "Beschreibung",
+		"description": "Speichern Sie verschiedene API-Konfigurationen, um schnell zwischen Anbietern und Einstellungen zu wechseln.",
 		"apiProvider": "API-Anbieter",
+		"model": "Modell",
+		"nameEmpty": "Name darf nicht leer sein",
+		"nameExists": "Ein Profil mit diesem Namen existiert bereits",
+		"deleteProfile": "Profil löschen",
+		"invalidArnFormat": "Ungültiges ARN-Format. Überprüfen Sie die obigen Beispiele.",
+		"enterNewName": "Neuen Namen eingeben",
+		"addProfile": "Profil hinzufügen",
+		"renameProfile": "Profil umbenennen",
+		"newProfile": "Neues Konfigurationsprofil",
+		"enterProfileName": "Profilnamen eingeben",
+		"createProfile": "Profil erstellen",
+		"cannotDeleteOnlyProfile": "Das einzige Profil kann nicht gelöscht werden",
+		"vscodeLmDescription": "Die VS Code Language Model API ermöglicht das Ausführen von Modellen, die von anderen VS Code-Erweiterungen bereitgestellt werden (einschließlich, aber nicht beschränkt auf GitHub Copilot). Der einfachste Weg, um zu starten, besteht darin, die Erweiterungen Copilot und Copilot Chat aus dem VS Code Marketplace zu installieren.",
+		"awsCustomArnUse": "Geben Sie eine gültige AWS Bedrock ARN für das Modell ein, das Sie verwenden möchten. Formatbeispiele:",
+		"awsCustomArnDesc": "Stellen Sie sicher, dass die Region in der ARN mit Ihrer oben ausgewählten AWS-Region übereinstimmt.",
 		"openRouterApiKey": "OpenRouter API-Schlüssel",
+		"getOpenRouterApiKey": "OpenRouter API-Schlüssel erhalten",
 		"apiKeyStorageNotice": "API-Schlüssel werden sicher im VSCode Secret Storage gespeichert",
+		"glamaApiKey": "Glama API-Schlüssel",
+		"getGlamaApiKey": "Glama API-Schlüssel erhalten",
 		"useCustomBaseUrl": "Benutzerdefinierte Basis-URL verwenden",
-		"openRouterTransformsText": "Prompts und Nachrichtenketten auf Kontextgröße komprimieren (<a>OpenRouter Transformationen</a>)"
+		"requestyApiKey": "Requesty API-Schlüssel",
+		"getRequestyApiKey": "Requesty API-Schlüssel erhalten",
+		"openRouterTransformsText": "Prompts und Nachrichtenketten auf Kontextgröße komprimieren (<a>OpenRouter Transformationen</a>)",
+		"anthropicApiKey": "Anthropic API-Schlüssel",
+		"getAnthropicApiKey": "Anthropic API-Schlüssel erhalten",
+		"deepSeekApiKey": "DeepSeek API-Schlüssel",
+		"getDeepSeekApiKey": "DeepSeek API-Schlüssel erhalten",
+		"geminiApiKey": "Gemini API-Schlüssel",
+		"getGeminiApiKey": "Gemini API-Schlüssel erhalten",
+		"openAiApiKey": "OpenAI API-Schlüssel",
+		"openAiBaseUrl": "Basis-URL",
+		"getOpenAiApiKey": "OpenAI API-Schlüssel erhalten",
+		"mistralApiKey": "Mistral API-Schlüssel",
+		"getMistralApiKey": "Mistral / Codestral API-Schlüssel erhalten",
+		"codestralBaseUrl": "Codestral Basis-URL (Optional)",
+		"codestralBaseUrlDesc": "Legen Sie eine alternative URL für das Codestral-Modell fest.",
+		"awsCredentials": "AWS Anmeldedaten",
+		"awsProfile": "AWS Profil",
+		"awsProfileName": "AWS Profilname",
+		"awsAccessKey": "AWS Zugangsschlüssel",
+		"awsSecretKey": "AWS Geheimschlüssel",
+		"awsSessionToken": "AWS Sitzungstoken",
+		"awsRegion": "AWS Region",
+		"awsCrossRegion": "Regionsübergreifende Inferenz verwenden",
+		"vscodeLmModel": "Sprachmodell",
+		"vscodeLmWarning": "Hinweis: Dies ist eine sehr experimentelle Integration und die Anbieterunterstützung variiert. Wenn Sie einen Fehler über ein nicht unterstütztes Modell erhalten, liegt das Problem auf Anbieterseite.",
+		"googleCloudSetup": {
+			"title": "Um Google Cloud Vertex AI zu verwenden, müssen Sie:",
+			"step1": "1. Ein Google Cloud-Konto erstellen, die Vertex AI API aktivieren & die gewünschten Claude-Modelle aktivieren.",
+			"step2": "2. Die Google Cloud CLI installieren & Standardanmeldeinformationen für die Anwendung konfigurieren.",
+			"step3": "3. Oder ein Servicekonto mit Anmeldeinformationen erstellen."
+		},
+		"googleCloudCredentials": "Google Cloud Anmeldedaten",
+		"googleCloudKeyFile": "Google Cloud Schlüsseldateipfad",
+		"googleCloudProjectId": "Google Cloud Projekt-ID",
+		"googleCloudRegion": "Google Cloud Region",
+		"lmStudio": {
+			"baseUrl": "Basis-URL (optional)",
+			"modelId": "Modell-ID",
+			"speculativeDecoding": "Spekulatives Dekodieren aktivieren",
+			"draftModelId": "Entwurfsmodell-ID",
+			"draftModelDesc": "Das Entwurfsmodell muss aus derselben Modellfamilie stammen, damit das spekulative Dekodieren korrekt funktioniert.",
+			"selectDraftModel": "Entwurfsmodell auswählen",
+			"noModelsFound": "Keine Entwurfsmodelle gefunden. Bitte stellen Sie sicher, dass LM Studio mit aktiviertem Servermodus läuft.",
+			"description": "LM Studio ermöglicht es Ihnen, Modelle lokal auf Ihrem Computer auszuführen. Eine Anleitung zum Einstieg finden Sie in ihrem <a>Schnellstart-Guide</a>. Sie müssen auch die <b>lokale Server</b>-Funktion von LM Studio starten, um es mit dieser Erweiterung zu verwenden. <span>Hinweis:</span> Roo Code verwendet komplexe Prompts und funktioniert am besten mit Claude-Modellen. Weniger leistungsfähige Modelle funktionieren möglicherweise nicht wie erwartet."
+		},
+		"ollama": {
+			"baseUrl": "Basis-URL (optional)",
+			"modelId": "Modell-ID",
+			"description": "Ollama ermöglicht es Ihnen, Modelle lokal auf Ihrem Computer auszuführen. Eine Anleitung zum Einstieg finden Sie im Schnellstart-Guide.",
+			"warning": "Hinweis: Roo Code verwendet komplexe Prompts und funktioniert am besten mit Claude-Modellen. Weniger leistungsfähige Modelle funktionieren möglicherweise nicht wie erwartet."
+		},
+		"unboundApiKey": "Unbound API-Schlüssel",
+		"getUnboundApiKey": "Unbound API-Schlüssel erhalten",
+		"humanRelay": {
+			"description": "Es ist kein API-Schlüssel erforderlich, aber der Benutzer muss beim Kopieren und Einfügen der Informationen in den Web-Chat-KI helfen.",
+			"instructions": "Während der Verwendung wird ein Dialogfeld angezeigt und die aktuelle Nachricht wird automatisch in die Zwischenablage kopiert. Sie müssen diese in Web-Versionen von KI (wie ChatGPT oder Claude) einfügen, dann die Antwort der KI zurück in das Dialogfeld kopieren und auf die Bestätigungsschaltfläche klicken."
+		},
+		"openRouter": {
+			"providerRouting": {
+				"title": "OpenRouter Anbieter-Routing",
+				"description": "OpenRouter leitet Anfragen an die besten verfügbaren Anbieter für Ihr Modell weiter. Standardmäßig werden Anfragen über die Top-Anbieter lastverteilt, um maximale Verfügbarkeit zu gewährleisten. Sie können jedoch einen bestimmten Anbieter für dieses Modell auswählen.",
+				"learnMore": "Mehr über Anbieter-Routing erfahren"
+			}
+		},
+		"customModel": {
+			"capabilities": "Konfigurieren Sie die Fähigkeiten und Preise für Ihr benutzerdefiniertes OpenAI-kompatibles Modell. Seien Sie vorsichtig bei der Angabe der Modellfähigkeiten, da diese beeinflussen können, wie Roo Code funktioniert.",
+			"maxTokens": {
+				"label": "Maximale Ausgabe-Tokens",
+				"description": "Maximale Anzahl von Tokens, die das Modell in einer Antwort generieren kann. (Geben Sie -1 an, damit der Server die maximalen Tokens festlegt.)"
+			},
+			"contextWindow": {
+				"label": "Kontextfenstergröße",
+				"description": "Gesamte Tokens (Eingabe + Ausgabe), die das Modell verarbeiten kann."
+			},
+			"imageSupport": {
+				"label": "Bildunterstützung",
+				"description": "Ist dieses Modell in der Lage, Bilder zu verarbeiten und zu verstehen?"
+			},
+			"computerUse": {
+				"label": "Computer-Nutzung",
+				"description": "Ist dieses Modell in der Lage, mit einem Browser zu interagieren? (z.B. Claude 3.7 Sonnet)"
+			},
+			"promptCache": {
+				"label": "Prompt-Caching",
+				"description": "Ist dieses Modell in der Lage, Prompts zu cachen?"
+			},
+			"pricing": {
+				"input": {
+					"label": "Eingabepreis",
+					"description": "Kosten pro Million Tokens in der Eingabe/Prompt. Dies beeinflusst die Kosten für das Senden von Kontext und Anweisungen an das Modell."
+				},
+				"output": {
+					"label": "Ausgabepreis",
+					"description": "Kosten pro Million Tokens in der Modellantwort. Dies beeinflusst die Kosten für generierte Inhalte und Vervollständigungen."
+				},
+				"cacheReads": {
+					"label": "Cache-Lesepreis",
+					"description": "Kosten pro Million Tokens für das Lesen aus dem Cache. Dies ist der Preis, der beim Abrufen einer gecachten Antwort berechnet wird."
+				},
+				"cacheWrites": {
+					"label": "Cache-Schreibpreis",
+					"description": "Kosten pro Million Tokens für das Schreiben in den Cache. Dies ist der Preis, der beim ersten Cachen eines Prompts berechnet wird."
+				}
+			},
+			"resetDefaults": "Auf Standardwerte zurücksetzen"
+		}
 	},
 	"browser": {
 		"enable": {
@@ -117,14 +245,15 @@
 			"label": "Soundeffekte aktivieren",
 			"description": "Wenn aktiviert, spielt Roo Soundeffekte für Benachrichtigungen und Ereignisse ab.",
 			"volumeLabel": "Lautstärke"
+		},
+		"tts": {
+			"label": "Text-zu-Sprache aktivieren",
+			"description": "Wenn aktiviert, liest Roo seine Antworten mit Text-zu-Sprache laut vor.",
+			"speedLabel": "Geschwindigkeit"
 		}
 	},
 	"contextManagement": {
 		"description": "Steuern Sie, welche Informationen im KI-Kontextfenster enthalten sind, was den Token-Verbrauch und die Antwortqualität beeinflusst",
-		"terminal": {
-			"label": "Terminal-Ausgabelimit",
-			"description": "Maximale Anzahl von Zeilen, die in der Terminal-Ausgabe bei der Ausführung von Befehlen enthalten sein sollen. Bei Überschreitung werden Zeilen aus der Mitte entfernt, wodurch Token gespart werden."
-		},
 		"openTabs": {
 			"label": "Geöffnete Tabs Kontextlimit",
 			"description": "Maximale Anzahl von geöffneten VSCode-Tabs, die im Kontext enthalten sein sollen. Höhere Werte bieten mehr Kontext, erhöhen aber den Token-Verbrauch."
@@ -136,6 +265,20 @@
 		"rooignore": {
 			"label": ".rooignore-Dateien in Listen und Suchen anzeigen",
 			"description": "Wenn aktiviert, werden Dateien, die mit Mustern in .rooignore übereinstimmen, in Listen mit einem Schlosssymbol angezeigt. Wenn deaktiviert, werden diese Dateien vollständig aus Dateilisten und Suchen ausgeblendet."
+		},
+		"maxReadFile": {
+			"label": "Maximale Anzahl an Zeilen, die aus einer Datei gelesen werden",
+			"description": "Maximale Anzahl an Zeilen, die auf einmal aus einer Datei gelesen werden. Niedrigere Werte reduzieren den Kontext-/Ressourcenverbrauch, können aber mehr Lesevorgänge für große Dateien erfordern."
+		}
+	},
+	"terminal": {
+		"outputLineLimit": {
+			"label": "Terminal-Ausgabelimit",
+			"description": "Maximale Anzahl von Zeilen, die in der Terminal-Ausgabe bei der Ausführung von Befehlen enthalten sein sollen. Bei Überschreitung werden Zeilen aus der Mitte entfernt, wodurch Token gespart werden."
+		},
+		"shellIntegrationTimeout": {
+			"label": "Terminal-Shell-Integrationszeit-Limit",
+			"description": "Maximale Wartezeit für die Shell-Integration, bevor Befehle ausgeführt werden. Für Benutzer mit langen Shell-Startzeiten muss dieser Wert möglicherweise erhöht werden, wenn Sie Fehler vom Typ \"Shell Integration Unavailable\" im Terminal sehen."
 		}
 	},
 	"advanced": {
@@ -205,13 +348,20 @@
 		"outputPrice": "Ausgabepreis",
 		"cacheReadsPrice": "Cache-Lesepreis",
 		"cacheWritesPrice": "Cache-Schreibpreis",
+		"enableStreaming": "Streaming aktivieren",
+		"useAzure": "Azure verwenden",
+		"azureApiVersion": "Azure API-Version festlegen",
 		"gemini": {
 			"freeRequests": "* Kostenlos bis zu {{count}} Anfragen pro Minute. Danach hängt die Abrechnung von der Prompt-Größe ab.",
 			"pricingDetails": "Weitere Informationen finden Sie in den Preisdetails."
 		}
 	},
 	"modelPicker": {
-		"automaticFetch": "Die Erweiterung ruft automatisch die neueste Liste der verfügbaren Modelle von <serviceLink>{{serviceName}}</serviceLink> ab. Wenn Sie sich nicht sicher sind, welches Modell Sie wählen sollen, funktioniert Roo Code am besten mit <defaultModelLink>{{defaultModelId}}</defaultModelLink>. Sie können auch nach \"free\" suchen, um derzeit verfügbare kostenlose Optionen zu finden."
+		"automaticFetch": "Die Erweiterung ruft automatisch die neueste Liste der verfügbaren Modelle von <serviceLink>{{serviceName}}</serviceLink> ab. Wenn Sie sich nicht sicher sind, welches Modell Sie wählen sollen, funktioniert Roo Code am besten mit <defaultModelLink>{{defaultModelId}}</defaultModelLink>. Sie können auch nach \"free\" suchen, um derzeit verfügbare kostenlose Optionen zu finden.",
+		"label": "Modell",
+		"searchPlaceholder": "Suchen",
+		"noMatchFound": "Keine Übereinstimmung gefunden",
+		"useCustomModel": "Benutzerdefiniert verwenden: {{modelId}}"
 	},
 	"footer": {
 		"feedback": "Wenn Sie Fragen oder Feedback haben, können Sie gerne ein Issue auf <githubLink>github.com/RooVetGit/Roo-Code</githubLink> öffnen oder <redditLink>reddit.com/r/RooCode</redditLink> oder <discordLink>discord.gg/roocode</discordLink> beitreten",
@@ -224,5 +374,55 @@
 			"description": "Setzen Sie alle globalen Zustände und geheimen Speicher in der Erweiterung zurück.",
 			"button": "Zurücksetzen"
 		}
+	},
+	"thinkingBudget": {
+		"maxTokens": "Maximale Tokens",
+		"maxThinkingTokens": "Maximale Thinking-Tokens"
+	},
+	"validation": {
+		"apiKey": "Sie müssen einen gültigen API-Schlüssel angeben.",
+		"awsRegion": "Sie müssen eine Region für AWS Bedrock auswählen.",
+		"googleCloud": "Sie müssen eine gültige Google Cloud Projekt-ID und Region angeben.",
+		"modelId": "Sie müssen eine gültige Modell-ID angeben.",
+		"modelSelector": "Sie müssen einen gültigen Modell-Selektor angeben.",
+		"openAi": "Sie müssen eine gültige Basis-URL, API-Schlüssel und Modell-ID angeben.",
+		"arn": {
+			"invalidFormat": "Ungültiges ARN-Format. Bitte überprüfen Sie die Formatanforderungen.",
+			"regionMismatch": "Warnung: Die Region in Ihrer ARN ({{arnRegion}}) stimmt nicht mit Ihrer ausgewählten Region ({{region}}) überein. Dies kann zu Zugriffsproblemen führen. Der Provider wird die Region aus der ARN verwenden."
+		},
+		"modelAvailability": "Die von Ihnen angegebene Modell-ID ({{modelId}}) ist nicht verfügbar. Bitte wählen Sie ein anderes Modell."
+	},
+	"placeholders": {
+		"apiKey": "API-Schlüssel eingeben...",
+		"profileName": "Profilnamen eingeben",
+		"accessKey": "Zugriffsschlüssel eingeben...",
+		"secretKey": "Geheimschlüssel eingeben...",
+		"sessionToken": "Sitzungstoken eingeben...",
+		"credentialsJson": "Anmeldedaten-JSON eingeben...",
+		"keyFilePath": "Schlüsseldateipfad eingeben...",
+		"projectId": "Projekt-ID eingeben...",
+		"customArn": "ARN eingeben (z.B. arn:aws:bedrock:us-east-1:123456789012:foundation-model/my-model)",
+		"baseUrl": "Basis-URL eingeben...",
+		"modelId": {
+			"lmStudio": "z.B. meta-llama-3.1-8b-instruct",
+			"lmStudioDraft": "z.B. lmstudio-community/llama-3.2-1b-instruct",
+			"ollama": "z.B. llama3.1"
+		},
+		"numbers": {
+			"maxTokens": "z.B. 4096",
+			"contextWindow": "z.B. 128000",
+			"inputPrice": "z.B. 0.0001",
+			"outputPrice": "z.B. 0.0002",
+			"cacheWritePrice": "z.B. 0.00005"
+		}
+	},
+	"defaults": {
+		"ollamaUrl": "Standard: http://localhost:11434",
+		"lmStudioUrl": "Standard: http://localhost:1234",
+		"geminiUrl": "Standard: https://generativelanguage.googleapis.com"
+	},
+	"labels": {
+		"customArn": "Benutzerdefinierte ARN",
+		"useCustomArn": "Benutzerdefinierte ARN verwenden..."
 	}
 }

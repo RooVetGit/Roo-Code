@@ -7,19 +7,23 @@ import {
 	Webhook,
 	GitBranch,
 	Bell,
+	Database,
+	SquareTerminal,
 	Cog,
 	FlaskConical,
 	AlertTriangle,
+	Globe,
+	Info,
+	LucideIcon,
 } from "lucide-react"
+import { CaretSortIcon } from "@radix-ui/react-icons"
 
-import { Database } from "lucide-react"
 import { ExperimentId } from "../../../../src/shared/experiments"
 import { TelemetrySetting } from "../../../../src/shared/TelemetrySetting"
 import { ApiConfiguration } from "../../../../src/shared/api"
 
 import { vscode } from "@/utils/vscode"
 import { ExtensionStateContextType, useExtensionState } from "@/context/ExtensionStateContext"
-import { cn } from "@/lib/utils"
 import {
 	AlertDialog,
 	AlertDialogContent,
@@ -30,6 +34,10 @@ import {
 	AlertDialogHeader,
 	AlertDialogFooter,
 	Button,
+	DropdownMenu,
+	DropdownMenuTrigger,
+	DropdownMenuContent,
+	DropdownMenuItem,
 } from "@/components/ui"
 
 import { Tab, TabContent, TabHeader } from "../common/Tab"
@@ -42,14 +50,32 @@ import { BrowserSettings } from "./BrowserSettings"
 import { CheckpointSettings } from "./CheckpointSettings"
 import { NotificationSettings } from "./NotificationSettings"
 import { ContextManagementSettings } from "./ContextManagementSettings"
+import { TerminalSettings } from "./TerminalSettings"
 import { AdvancedSettings } from "./AdvancedSettings"
-import { SettingsFooter } from "./SettingsFooter"
-import { Section } from "./Section"
 import { ExperimentalSettings } from "./ExperimentalSettings"
+import { LanguageSettings } from "./LanguageSettings"
+import { About } from "./About"
+import { Section } from "./Section"
 
 export interface SettingsViewRef {
 	checkUnsaveChanges: (then: () => void) => void
 }
+
+const sectionNames = [
+	"providers",
+	"autoApprove",
+	"browser",
+	"checkpoints",
+	"notifications",
+	"contextManagement",
+	"terminal",
+	"advanced",
+	"experimental",
+	"language",
+	"about",
+] as const
+
+type SectionName = (typeof sectionNames)[number]
 
 type SettingsViewProps = {
 	onDone: () => void
@@ -57,6 +83,7 @@ type SettingsViewProps = {
 
 const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone }, ref) => {
 	const { t } = useAppTranslation()
+
 	const extensionState = useExtensionState()
 	const { currentApiConfigName, listApiConfigMeta, uriScheme, version } = extensionState
 
@@ -95,12 +122,16 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 		remoteBrowserHost,
 		screenshotQuality,
 		soundEnabled,
+		ttsEnabled,
+		ttsSpeed,
 		soundVolume,
 		telemetrySetting,
 		terminalOutputLineLimit,
+		terminalShellIntegrationTimeout,
 		writeDelayMs,
 		showRooIgnoredFiles,
 		remoteBrowserEnabled,
+		maxReadFileLine,
 	} = cachedState
 
 	// Make sure apiConfiguration is initialized and managed by SettingsView.
@@ -185,6 +216,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 			vscode.postMessage({ type: "allowedCommands", commands: allowedCommands ?? [] })
 			vscode.postMessage({ type: "browserToolEnabled", bool: browserToolEnabled })
 			vscode.postMessage({ type: "soundEnabled", bool: soundEnabled })
+			vscode.postMessage({ type: "ttsEnabled", bool: ttsEnabled })
+			vscode.postMessage({ type: "ttsSpeed", value: ttsSpeed })
 			vscode.postMessage({ type: "soundVolume", value: soundVolume })
 			vscode.postMessage({ type: "diffEnabled", bool: diffEnabled })
 			vscode.postMessage({ type: "enableCheckpoints", bool: enableCheckpoints })
@@ -196,6 +229,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 			vscode.postMessage({ type: "writeDelayMs", value: writeDelayMs })
 			vscode.postMessage({ type: "screenshotQuality", value: screenshotQuality ?? 75 })
 			vscode.postMessage({ type: "terminalOutputLineLimit", value: terminalOutputLineLimit ?? 500 })
+			vscode.postMessage({ type: "terminalShellIntegrationTimeout", value: terminalShellIntegrationTimeout })
 			vscode.postMessage({ type: "mcpEnabled", bool: mcpEnabled })
 			vscode.postMessage({ type: "alwaysApproveResubmit", bool: alwaysApproveResubmit })
 			vscode.postMessage({ type: "requestDelaySeconds", value: requestDelaySeconds })
@@ -203,6 +237,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 			vscode.postMessage({ type: "maxOpenTabsContext", value: maxOpenTabsContext })
 			vscode.postMessage({ type: "maxWorkspaceFiles", value: maxWorkspaceFiles ?? 200 })
 			vscode.postMessage({ type: "showRooIgnoredFiles", bool: showRooIgnoredFiles })
+			vscode.postMessage({ type: "maxReadFileLine", value: maxReadFileLine ?? 500 })
 			vscode.postMessage({ type: "currentApiConfigName", text: currentApiConfigName })
 			vscode.postMessage({ type: "updateExperimental", values: experiments })
 			vscode.postMessage({ type: "alwaysAllowModeSwitch", bool: alwaysAllowModeSwitch })
@@ -236,81 +271,64 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 	const providersRef = useRef<HTMLDivElement>(null)
 	const autoApproveRef = useRef<HTMLDivElement>(null)
 	const browserRef = useRef<HTMLDivElement>(null)
-	const checkpointRef = useRef<HTMLDivElement>(null)
+	const checkpointsRef = useRef<HTMLDivElement>(null)
 	const notificationsRef = useRef<HTMLDivElement>(null)
-	const contextRef = useRef<HTMLDivElement>(null)
+	const contextManagementRef = useRef<HTMLDivElement>(null)
+	const terminalRef = useRef<HTMLDivElement>(null)
 	const advancedRef = useRef<HTMLDivElement>(null)
 	const experimentalRef = useRef<HTMLDivElement>(null)
+	const languageRef = useRef<HTMLDivElement>(null)
+	const aboutRef = useRef<HTMLDivElement>(null)
 
-	const [activeSection, setActiveSection] = useState<string>("providers")
-
-	const sections = useMemo(
+	const sections: { id: SectionName; icon: LucideIcon; ref: React.RefObject<HTMLDivElement> }[] = useMemo(
 		() => [
 			{ id: "providers", icon: Webhook, ref: providersRef },
 			{ id: "autoApprove", icon: CheckCheck, ref: autoApproveRef },
 			{ id: "browser", icon: SquareMousePointer, ref: browserRef },
-			{ id: "checkpoint", icon: GitBranch, ref: checkpointRef },
+			{ id: "checkpoints", icon: GitBranch, ref: checkpointsRef },
 			{ id: "notifications", icon: Bell, ref: notificationsRef },
-			{ id: "context", icon: Database, ref: contextRef },
+			{ id: "contextManagement", icon: Database, ref: contextManagementRef },
+			{ id: "terminal", icon: SquareTerminal, ref: terminalRef },
 			{ id: "advanced", icon: Cog, ref: advancedRef },
 			{ id: "experimental", icon: FlaskConical, ref: experimentalRef },
+			{ id: "language", icon: Globe, ref: languageRef },
+			{ id: "about", icon: Info, ref: aboutRef },
 		],
 		[
 			providersRef,
 			autoApproveRef,
 			browserRef,
-			checkpointRef,
+			checkpointsRef,
 			notificationsRef,
-			contextRef,
+			contextManagementRef,
+			terminalRef,
 			advancedRef,
 			experimentalRef,
 		],
 	)
-
-	const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-		const sections = [
-			{ ref: providersRef, id: "providers" },
-			{ ref: autoApproveRef, id: "autoApprove" },
-			{ ref: browserRef, id: "browser" },
-			{ ref: checkpointRef, id: "checkpoint" },
-			{ ref: notificationsRef, id: "notifications" },
-			{ ref: contextRef, id: "context" },
-			{ ref: advancedRef, id: "advanced" },
-			{ ref: experimentalRef, id: "experimental" },
-		]
-
-		for (const section of sections) {
-			const element = section.ref.current
-
-			if (element) {
-				const { top } = element.getBoundingClientRect()
-
-				if (top >= 0 && top <= 50) {
-					setActiveSection(section.id)
-					break
-				}
-			}
-		}
-	}, [])
 
 	const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => ref.current?.scrollIntoView()
 
 	return (
 		<Tab>
 			<TabHeader className="flex justify-between items-center gap-2">
-				<div className="flex items-center gap-2">
+				<div className="flex items-center gap-1">
 					<h3 className="text-vscode-foreground m-0">{t("settings:header.title")}</h3>
-					<div className="hidden [@media(min-width:400px)]:flex items-center">
-						{sections.map(({ id, icon: Icon, ref }) => (
-							<Button
-								key={id}
-								variant="ghost"
-								onClick={() => scrollToSection(ref)}
-								className={cn("w-6 h-6", activeSection === id ? "opacity-100" : "opacity-40")}>
-								<Icon />
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button variant="ghost" size="icon" className="w-6 h-6">
+								<CaretSortIcon />
 							</Button>
-						))}
-					</div>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="start" side="bottom">
+							{sections.map(({ id, icon: Icon, ref }) => (
+								<DropdownMenuItem key={id} onClick={() => scrollToSection(ref)}>
+									<Icon />
+									<span>{t(`settings:sections.${id}`)}</span>
+								</DropdownMenuItem>
+							))}
+						</DropdownMenuContent>
+					</DropdownMenu>
 				</div>
 				<div className="flex gap-2">
 					<VSCodeButton
@@ -337,7 +355,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 				</div>
 			</TabHeader>
 
-			<TabContent className="p-0 divide-y divide-vscode-sideBar-background" onScroll={handleScroll}>
+			<TabContent className="p-0 divide-y divide-vscode-sideBar-background">
 				<div ref={providersRef}>
 					<SectionHeader>
 						<div className="flex items-center gap-2">
@@ -412,7 +430,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 					/>
 				</div>
 
-				<div ref={checkpointRef}>
+				<div ref={checkpointsRef}>
 					<CheckpointSettings
 						enableCheckpoints={enableCheckpoints}
 						checkpointStorage={checkpointStorage}
@@ -422,18 +440,28 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 
 				<div ref={notificationsRef}>
 					<NotificationSettings
+						ttsEnabled={ttsEnabled}
+						ttsSpeed={ttsSpeed}
 						soundEnabled={soundEnabled}
 						soundVolume={soundVolume}
 						setCachedStateField={setCachedStateField}
 					/>
 				</div>
 
-				<div ref={contextRef}>
+				<div ref={contextManagementRef}>
 					<ContextManagementSettings
-						terminalOutputLineLimit={terminalOutputLineLimit}
 						maxOpenTabsContext={maxOpenTabsContext}
 						maxWorkspaceFiles={maxWorkspaceFiles ?? 200}
 						showRooIgnoredFiles={showRooIgnoredFiles}
+						setCachedStateField={setCachedStateField}
+						maxReadFileLine={maxReadFileLine}
+					/>
+				</div>
+
+				<div ref={terminalRef}>
+					<TerminalSettings
+						terminalOutputLineLimit={terminalOutputLineLimit}
+						terminalShellIntegrationTimeout={terminalShellIntegrationTimeout}
 						setCachedStateField={setCachedStateField}
 					/>
 				</div>
@@ -457,13 +485,17 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 					/>
 				</div>
 
-				<SettingsFooter
-					version={version}
-					telemetrySetting={telemetrySetting}
-					setTelemetrySetting={setTelemetrySetting}
-					language={language || "en"}
-					setCachedStateField={setCachedStateField}
-				/>
+				<div ref={languageRef}>
+					<LanguageSettings language={language || "en"} setCachedStateField={setCachedStateField} />
+				</div>
+
+				<div ref={aboutRef}>
+					<About
+						version={version}
+						telemetrySetting={telemetrySetting}
+						setTelemetrySetting={setTelemetrySetting}
+					/>
+				</div>
 			</TabContent>
 
 			<AlertDialog open={isDiscardDialogShow} onOpenChange={setDiscardDialogShow}>

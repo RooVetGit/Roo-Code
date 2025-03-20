@@ -11,6 +11,7 @@ export type AudioType = "notification" | "celebration" | "progress_loop"
 export interface WebviewMessage {
 	type:
 		| "apiConfiguration"
+		| "deleteMultipleTasksWithIds"
 		| "currentApiConfigName"
 		| "saveApiConfiguration"
 		| "upsertApiConfiguration"
@@ -50,7 +51,11 @@ export interface WebviewMessage {
 		| "alwaysAllowModeSwitch"
 		| "alwaysAllowSubtasks"
 		| "playSound"
+		| "playTts"
+		| "stopTts"
 		| "soundEnabled"
+		| "ttsEnabled"
+		| "ttsSpeed"
 		| "soundVolume"
 		| "diffEnabled"
 		| "enableCheckpoints"
@@ -70,6 +75,7 @@ export interface WebviewMessage {
 		| "draggedImages"
 		| "deleteMessage"
 		| "terminalOutputLineLimit"
+		| "terminalShellIntegrationTimeout"
 		| "mcpEnabled"
 		| "enableMcpServerCreation"
 		| "enableCustomModeCreation"
@@ -108,6 +114,8 @@ export interface WebviewMessage {
 		| "browserConnectionResult"
 		| "remoteBrowserEnabled"
 		| "language"
+		| "maxReadFileLine"
+		| "searchFiles"
 		| "fetchMcpMarketplace"
 		| "downloadMcp"
 		| "openMcpMarketplaceServerDetails"
@@ -136,6 +144,7 @@ export interface WebviewMessage {
 	payload?: WebViewMessagePayload
 	source?: "global" | "project"
 	requestId?: string
+	ids?: string[]
 	mcpId?: string
 }
 
