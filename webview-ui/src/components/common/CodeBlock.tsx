@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useCallback, useState } from "react"
 import debounce from "debounce"
-import { codeToHtml } from "shiki"
+import { codeToHtml } from "shiki/dist/bundle-full.mjs"
 import styled from "styled-components"
 import { useCopyToClipboard } from "../../utils/clipboard"
 export const CODE_BLOCK_BG_COLOR = "var(--vscode-editor-background, --vscode-sideBar-background, rgb(30 30 30))"
