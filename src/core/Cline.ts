@@ -94,6 +94,11 @@ export type ClineEvents = {
 	taskCompleted: [taskId: string, usage: TokenUsage]
 	taskTokenUsageUpdated: [taskId: string, usage: TokenUsage]
 }
+/**
+ * Cline is a class that represents a single task instance in the CLINE system.
+ * It manages the conversation between the user and the AI, and provides an interface for the AI to interact with the user.
+ * It also provides a way to manage the state of the task, such as whether it is paused or completed.
+ */
 
 export type ClineOptions = {
 	provider: ClineProvider

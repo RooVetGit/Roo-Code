@@ -10,23 +10,23 @@ import * as vscode from "vscode"
 
 import { changeLanguage, t } from "../../i18n"
 import { setPanel } from "../../activate/registerCommands"
-import { ApiConfiguration, ApiProvider, ModelInfo, API_CONFIG_KEYS } from "../../shared/api"
+import { API_CONFIG_KEYS, ApiConfiguration, ApiProvider, ModelInfo } from "../../shared/api"
 import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import {
-	SecretKey,
+	ConfigurationValues,
+	GLOBAL_STATE_KEYS,
 	GlobalStateKey,
 	SECRET_KEYS,
-	GLOBAL_STATE_KEYS,
-	ConfigurationValues,
+	SecretKey,
 } from "../../shared/globalState"
 import { HistoryItem } from "../../shared/HistoryItem"
 import { ApiConfigMeta, ExtensionMessage } from "../../shared/ExtensionMessage"
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
-import { Mode, PromptComponent, defaultModeSlug, ModeConfig } from "../../shared/modes"
+import { defaultModeSlug, Mode, ModeConfig, PromptComponent } from "../../shared/modes"
 import { checkExistKey } from "../../shared/checkExistApiConfig"
-import { EXPERIMENT_IDS, experiments as Experiments, experimentDefault, ExperimentId } from "../../shared/experiments"
+import { EXPERIMENT_IDS, experimentDefault, ExperimentId, experiments as Experiments } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
 import { Terminal, TERMINAL_SHELL_INTEGRATION_TIMEOUT } from "../../integrations/terminal/Terminal"
 import { downloadTask } from "../../integrations/misc/export-markdown"
@@ -59,7 +59,8 @@ import { getOllamaModels } from "../../api/providers/ollama"
 import { getVsCodeLmModels } from "../../api/providers/vscode-lm"
 import { getLmStudioModels } from "../../api/providers/lmstudio"
 import { ACTION_NAMES } from "../CodeActionProvider"
-import { Cline, ClineOptions } from "../Cline"
+import { ClineOptions } from "../Cline"
+import { BabyCline as Cline } from "../babyCline"
 import { openMention } from "../mentions"
 import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
@@ -93,6 +94,15 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	get cwd() {
 		return getWorkspacePath()
 	}
+	/**
+	 * ClineProvider is responsible for managing multiple instances of Cline.
+	 * Each instance of ClineProvider can render a Cline instance in a sidebar or editor tab.
+	 * This class also handles global state such as the list of modes and providers.
+	 * @param context The extension context.
+	 * @param outputChannel The output channel for logging purposes.
+	 * @param renderContext The context in which the Cline instance will be rendered.
+	 *      Possible values are "sidebar" or "editor".
+	 */
 	constructor(
 		readonly context: vscode.ExtensionContext,
 		private readonly outputChannel: vscode.OutputChannel,
@@ -298,7 +308,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		}
 
 		if (visibleProvider.getCurrentCline() && command.endsWith("InCurrentTask")) {
-			await visibleProvider.postMessageToWebview({ type: "invoke", invoke: "sendMessage", text: prompt })
+			await visibleProvider.postMessageToWebview({
+				type: "invoke",
+				invoke: "sendMessage",
+				text: prompt,
+			})
 			return
 		}
 
@@ -340,6 +354,12 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		await visibleProvider.initClineWithTask(prompt)
 	}
 
+	/**
+	 * Resolves the webview view by setting up the view and posting the initial
+	 * state to the webview.
+	 *
+	 * @param webviewView The webview view to be resolved.
+	 */
 	async resolveWebviewView(webviewView: vscode.WebviewView | vscode.WebviewPanel) {
 		this.outputChannel.appendLine("Resolving webview view")
 
@@ -385,8 +405,20 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				? await this.getHMRHtmlContent(webviewView.webview)
 				: this.getHtmlContent(webviewView.webview)
 
-		// Sets up an event listener to listen for messages passed from the webview view context
-		// and executes code based on the message that is recieved
+		// Listens for messages from the webview context and executes code based on the message.
+		//
+		// Messages are passed from the webview view context to the extension context
+		// using vscode.window.webview.postMessage.
+		//
+		// The listeners are set up to listen for the following messages:
+		//
+		// - "state": Update the global state in the extension context with the
+		//   state passed from the webview context.
+		// - "ttsStart" and "ttsStop": Start and stop text-to-speech based on the
+		//   message passed from the webview context.
+		//
+		// Note: The message listener is set up using the
+		// vscode.window.webview.onDidReceiveMessage event.
 		this.setWebviewMessageListener(webviewView.webview)
 
 		// Logs show up in bottom panel > Debug Console
@@ -400,7 +432,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			webviewView.onDidChangeViewState(
 				() => {
 					if (this.view?.visible) {
-						this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
+						this.postMessageToWebview({
+							type: "action",
+							action: "didBecomeVisible",
+						})
 					}
 				},
 				null,
@@ -411,7 +446,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			webviewView.onDidChangeVisibility(
 				() => {
 					if (this.view?.visible) {
-						this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
+						this.postMessageToWebview({
+							type: "action",
+							action: "didBecomeVisible",
+						})
 					}
 				},
 				null,
@@ -434,7 +472,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			async (e) => {
 				if (e && e.affectsConfiguration("workbench.colorTheme")) {
 					// Sends latest theme name to webview
-					await this.postMessageToWebview({ type: "theme", text: JSON.stringify(await getTheme()) })
+					await this.postMessageToWebview({
+						type: "theme",
+						text: JSON.stringify(await getTheme()),
+					})
 				}
 			},
 			null,
@@ -733,7 +774,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						this.workspaceTracker?.initializeFilePaths() // don't await
 
 						getTheme().then((theme) =>
-							this.postMessageToWebview({ type: "theme", text: JSON.stringify(theme) }),
+							this.postMessageToWebview({
+								type: "theme",
+								text: JSON.stringify(theme),
+							}),
 						)
 
 						// If MCP Hub is already initialized, update the webview with current server list
@@ -749,7 +793,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						// Post last cached models in case the call to endpoint fails.
 						this.readModelsFromCache(GlobalFileNames.openRouterModels).then((openRouterModels) => {
 							if (openRouterModels) {
-								this.postMessageToWebview({ type: "openRouterModels", openRouterModels })
+								this.postMessageToWebview({
+									type: "openRouterModels",
+									openRouterModels,
+								})
 							}
 						})
 
@@ -768,7 +815,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 									path.join(cacheDir, GlobalFileNames.openRouterModels),
 									JSON.stringify(openRouterModels),
 								)
-								await this.postMessageToWebview({ type: "openRouterModels", openRouterModels })
+								await this.postMessageToWebview({
+									type: "openRouterModels",
+									openRouterModels,
+								})
 
 								// Update model info in state (this needs to be
 								// done here since we don't want to update state
@@ -788,7 +838,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 						this.readModelsFromCache(GlobalFileNames.glamaModels).then((glamaModels) => {
 							if (glamaModels) {
-								this.postMessageToWebview({ type: "glamaModels", glamaModels })
+								this.postMessageToWebview({
+									type: "glamaModels",
+									glamaModels,
+								})
 							}
 						})
 
@@ -798,7 +851,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 									path.join(cacheDir, GlobalFileNames.glamaModels),
 									JSON.stringify(glamaModels),
 								)
-								await this.postMessageToWebview({ type: "glamaModels", glamaModels })
+								await this.postMessageToWebview({
+									type: "glamaModels",
+									glamaModels,
+								})
 
 								const { apiConfiguration } = await this.getState()
 
@@ -814,7 +870,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 						this.readModelsFromCache(GlobalFileNames.unboundModels).then((unboundModels) => {
 							if (unboundModels) {
-								this.postMessageToWebview({ type: "unboundModels", unboundModels })
+								this.postMessageToWebview({
+									type: "unboundModels",
+									unboundModels,
+								})
 							}
 						})
 
@@ -824,7 +883,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 									path.join(cacheDir, GlobalFileNames.unboundModels),
 									JSON.stringify(unboundModels),
 								)
-								await this.postMessageToWebview({ type: "unboundModels", unboundModels })
+								await this.postMessageToWebview({
+									type: "unboundModels",
+									unboundModels,
+								})
 
 								const { apiConfiguration } = await this.getState()
 
@@ -840,7 +902,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 						this.readModelsFromCache(GlobalFileNames.requestyModels).then((requestyModels) => {
 							if (requestyModels) {
-								this.postMessageToWebview({ type: "requestyModels", requestyModels })
+								this.postMessageToWebview({
+									type: "requestyModels",
+									requestyModels,
+								})
 							}
 						})
 
@@ -850,7 +915,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 									path.join(cacheDir, GlobalFileNames.requestyModels),
 									JSON.stringify(requestyModels),
 								)
-								await this.postMessageToWebview({ type: "requestyModels", requestyModels })
+								await this.postMessageToWebview({
+									type: "requestyModels",
+									requestyModels,
+								})
 
 								const { apiConfiguration } = await this.getState()
 
@@ -896,7 +964,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 											await Promise.all([
 												this.updateGlobalState("listApiConfigMeta", listApiConfig),
-												this.postMessageToWebview({ type: "listApiConfig", listApiConfig }),
+												this.postMessageToWebview({
+													type: "listApiConfig",
+													listApiConfig,
+												}),
 												this.updateApiConfiguration(apiConfig),
 											])
 											await this.postStateToWebview()
@@ -907,12 +978,19 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 								await Promise.all([
 									await this.updateGlobalState("listApiConfigMeta", listApiConfig),
-									await this.postMessageToWebview({ type: "listApiConfig", listApiConfig }),
+									await this.postMessageToWebview({
+										type: "listApiConfig",
+										listApiConfig,
+									}),
 								])
 							})
 							.catch((error) =>
 								this.outputChannel.appendLine(
-									`Error list api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+									`Error list api configuration: ${JSON.stringify(
+										error,
+										Object.getOwnPropertyNames(error),
+										2,
+									)}`,
 								),
 							)
 
@@ -991,7 +1069,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						break
 					case "selectImages":
 						const images = await selectImages()
-						await this.postMessageToWebview({ type: "selectedImages", images })
+						await this.postMessageToWebview({
+							type: "selectedImages",
+							images,
+						})
 						break
 					case "exportCurrentTask":
 						const currentTaskId = this.getCurrentCline()?.taskId
@@ -1025,7 +1106,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 									} catch (error) {
 										// Keep error logging for debugging purposes
 										console.log(
-											`Failed to delete task ${id}: ${error instanceof Error ? error.message : String(error)}`,
+											`Failed to delete task ${id}: ${
+												error instanceof Error ? error.message : String(error)
+											}`,
 										)
 										return { id, success: false }
 									}
@@ -1064,7 +1147,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								path.join(cacheDir, GlobalFileNames.openRouterModels),
 								JSON.stringify(openRouterModels),
 							)
-							await this.postMessageToWebview({ type: "openRouterModels", openRouterModels })
+							await this.postMessageToWebview({
+								type: "openRouterModels",
+								openRouterModels,
+							})
 						}
 
 						break
@@ -1078,7 +1164,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								path.join(cacheDir, GlobalFileNames.glamaModels),
 								JSON.stringify(glamaModels),
 							)
-							await this.postMessageToWebview({ type: "glamaModels", glamaModels })
+							await this.postMessageToWebview({
+								type: "glamaModels",
+								glamaModels,
+							})
 						}
 
 						break
@@ -1091,7 +1180,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								path.join(cacheDir, GlobalFileNames.unboundModels),
 								JSON.stringify(unboundModels),
 							)
-							await this.postMessageToWebview({ type: "unboundModels", unboundModels })
+							await this.postMessageToWebview({
+								type: "unboundModels",
+								unboundModels,
+							})
 						}
 
 						break
@@ -1104,7 +1196,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								path.join(cacheDir, GlobalFileNames.requestyModels),
 								JSON.stringify(requestyModels),
 							)
-							await this.postMessageToWebview({ type: "requestyModels", requestyModels })
+							await this.postMessageToWebview({
+								type: "requestyModels",
+								requestyModels,
+							})
 						}
 
 						break
@@ -1114,30 +1209,48 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								message?.values?.baseUrl,
 								message?.values?.apiKey,
 							)
-							this.postMessageToWebview({ type: "openAiModels", openAiModels })
+							this.postMessageToWebview({
+								type: "openAiModels",
+								openAiModels,
+							})
 						}
 
 						break
 					case "requestOllamaModels":
 						const ollamaModels = await getOllamaModels(message.text)
 						// TODO: Cache like we do for OpenRouter, etc?
-						this.postMessageToWebview({ type: "ollamaModels", ollamaModels })
+						this.postMessageToWebview({
+							type: "ollamaModels",
+							ollamaModels,
+						})
 						break
 					case "requestLmStudioModels":
 						const lmStudioModels = await getLmStudioModels(message.text)
 						// TODO: Cache like we do for OpenRouter, etc?
-						this.postMessageToWebview({ type: "lmStudioModels", lmStudioModels })
+						this.postMessageToWebview({
+							type: "lmStudioModels",
+							lmStudioModels,
+						})
 						break
 					case "requestVsCodeLmModels":
 						const vsCodeLmModels = await getVsCodeLmModels()
 						// TODO: Cache like we do for OpenRouter, etc?
-						this.postMessageToWebview({ type: "vsCodeLmModels", vsCodeLmModels })
+						this.postMessageToWebview({
+							type: "vsCodeLmModels",
+							vsCodeLmModels,
+						})
 						break
 					case "openImage":
 						openImage(message.text!)
 						break
 					case "openFile":
-						openFile(message.text!, message.values as { create?: boolean; content?: string })
+						openFile(
+							message.text!,
+							message.values as {
+								create?: boolean
+								content?: string
+							},
+						)
 						break
 					case "openMention":
 						openMention(message.text)
@@ -1216,7 +1329,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 							await this.mcpHub?.restartConnection(message.text!)
 						} catch (error) {
 							this.outputChannel.appendLine(
-								`Failed to retry connection for ${message.text}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+								`Failed to retry connection for ${message.text}: ${JSON.stringify(
+									error,
+									Object.getOwnPropertyNames(error),
+									2,
+								)}`,
 							)
 						}
 						break
@@ -1230,7 +1347,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 							)
 						} catch (error) {
 							this.outputChannel.appendLine(
-								`Failed to toggle auto-approve for tool ${message.toolName}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+								`Failed to toggle auto-approve for tool ${message.toolName}: ${JSON.stringify(
+									error,
+									Object.getOwnPropertyNames(error),
+									2,
+								)}`,
 							)
 						}
 						break
@@ -1240,7 +1361,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 							await this.mcpHub?.toggleServerDisabled(message.serverName!, message.disabled!)
 						} catch (error) {
 							this.outputChannel.appendLine(
-								`Failed to toggle MCP server ${message.serverName}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+								`Failed to toggle MCP server ${message.serverName}: ${JSON.stringify(
+									error,
+									Object.getOwnPropertyNames(error),
+									2,
+								)}`,
 							)
 						}
 						break
@@ -1287,8 +1412,16 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					case "playTts":
 						if (message.text) {
 							playTts(message.text, {
-								onStart: () => this.postMessageToWebview({ type: "ttsStart", text: message.text }),
-								onStop: () => this.postMessageToWebview({ type: "ttsStop", text: message.text }),
+								onStart: () =>
+									this.postMessageToWebview({
+										type: "ttsStart",
+										text: message.text,
+									}),
+								onStop: () =>
+									this.postMessageToWebview({
+										type: "ttsStop",
+										text: message.text,
+									}),
 							})
 						}
 						break
@@ -1345,7 +1478,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 											type: "browserConnectionResult",
 											success: result.success,
 											text: `Auto-discovered and tested connection to Chrome at ${discoveredHost}: ${result.message}`,
-											values: { endpoint: result.endpoint },
+											values: {
+												endpoint: result.endpoint,
+											},
 										})
 									} else {
 										await this.postMessageToWebview({
@@ -1358,7 +1493,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 									await this.postMessageToWebview({
 										type: "browserConnectionResult",
 										success: false,
-										text: `Error during auto-discovery: ${error instanceof Error ? error.message : String(error)}`,
+										text: `Error during auto-discovery: ${
+											error instanceof Error ? error.message : String(error)
+										}`,
 									})
 								}
 							} else {
@@ -1377,7 +1514,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 							await this.postMessageToWebview({
 								type: "browserConnectionResult",
 								success: false,
-								text: `Error testing connection: ${error instanceof Error ? error.message : String(error)}`,
+								text: `Error testing connection: ${
+									error instanceof Error ? error.message : String(error)
+								}`,
 							})
 						}
 						break
@@ -1411,7 +1550,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 							await this.postMessageToWebview({
 								type: "browserConnectionResult",
 								success: false,
-								text: `Error discovering browser: ${error instanceof Error ? error.message : String(error)}`,
+								text: `Error discovering browser: ${
+									error instanceof Error ? error.message : String(error)
+								}`,
 							})
 						}
 						break
@@ -1466,7 +1607,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 							await this.postStateToWebview()
 						} catch (error) {
 							this.outputChannel.appendLine(
-								`Error update support prompt: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+								`Error update support prompt: ${JSON.stringify(
+									error,
+									Object.getOwnPropertyNames(error),
+									2,
+								)}`,
 							)
 							vscode.window.showErrorMessage(t("common:errors.update_support_prompt"))
 						}
@@ -1490,7 +1635,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 							await this.postStateToWebview()
 						} catch (error) {
 							this.outputChannel.appendLine(
-								`Error reset support prompt: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+								`Error reset support prompt: ${JSON.stringify(
+									error,
+									Object.getOwnPropertyNames(error),
+									2,
+								)}`,
 							)
 							vscode.window.showErrorMessage(t("common:errors.reset_support_prompt"))
 						}
@@ -1694,7 +1843,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								})
 							} catch (error) {
 								this.outputChannel.appendLine(
-									`Error enhancing prompt: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+									`Error enhancing prompt: ${JSON.stringify(
+										error,
+										Object.getOwnPropertyNames(error),
+										2,
+									)}`,
 								)
 								vscode.window.showErrorMessage(t("common:errors.enhance_prompt"))
 								await this.postMessageToWebview({
@@ -1714,7 +1867,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 							})
 						} catch (error) {
 							this.outputChannel.appendLine(
-								`Error getting system prompt:  ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+								`Error getting system prompt:  ${JSON.stringify(
+									error,
+									Object.getOwnPropertyNames(error),
+									2,
+								)}`,
 							)
 							vscode.window.showErrorMessage(t("common:errors.get_system_prompt"))
 						}
@@ -1727,7 +1884,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 							await vscode.window.showInformationMessage(t("common:info.clipboard_copy"))
 						} catch (error) {
 							this.outputChannel.appendLine(
-								`Error getting system prompt:  ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+								`Error getting system prompt:  ${JSON.stringify(
+									error,
+									Object.getOwnPropertyNames(error),
+									2,
+								)}`,
 							)
 							vscode.window.showErrorMessage(t("common:errors.get_system_prompt"))
 						}
@@ -1743,7 +1904,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								})
 							} catch (error) {
 								this.outputChannel.appendLine(
-									`Error searching commits: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+									`Error searching commits: ${JSON.stringify(
+										error,
+										Object.getOwnPropertyNames(error),
+										2,
+									)}`,
 								)
 								vscode.window.showErrorMessage(t("common:errors.search_commits"))
 							}
@@ -1758,7 +1923,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								await this.updateGlobalState("listApiConfigMeta", listApiConfig)
 							} catch (error) {
 								this.outputChannel.appendLine(
-									`Error save api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+									`Error save api configuration: ${JSON.stringify(
+										error,
+										Object.getOwnPropertyNames(error),
+										2,
+									)}`,
 								)
 								vscode.window.showErrorMessage(t("common:errors.save_api_config"))
 							}
@@ -1779,7 +1948,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								await this.postStateToWebview()
 							} catch (error) {
 								this.outputChannel.appendLine(
-									`Error create new api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+									`Error create new api configuration: ${JSON.stringify(
+										error,
+										Object.getOwnPropertyNames(error),
+										2,
+									)}`,
 								)
 								vscode.window.showErrorMessage(t("common:errors.create_api_config"))
 							}
@@ -1808,7 +1981,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								await this.postStateToWebview()
 							} catch (error) {
 								this.outputChannel.appendLine(
-									`Error rename api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+									`Error rename api configuration: ${JSON.stringify(
+										error,
+										Object.getOwnPropertyNames(error),
+										2,
+									)}`,
 								)
 								vscode.window.showErrorMessage(t("common:errors.rename_api_config"))
 							}
@@ -1829,7 +2006,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								await this.postStateToWebview()
 							} catch (error) {
 								this.outputChannel.appendLine(
-									`Error load api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+									`Error load api configuration: ${JSON.stringify(
+										error,
+										Object.getOwnPropertyNames(error),
+										2,
+									)}`,
 								)
 								vscode.window.showErrorMessage(t("common:errors.load_api_config"))
 							}
@@ -1867,7 +2048,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								await this.postStateToWebview()
 							} catch (error) {
 								this.outputChannel.appendLine(
-									`Error delete api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+									`Error delete api configuration: ${JSON.stringify(
+										error,
+										Object.getOwnPropertyNames(error),
+										2,
+									)}`,
 								)
 								vscode.window.showErrorMessage(t("common:errors.delete_api_config"))
 							}
@@ -1877,10 +2062,17 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						try {
 							const listApiConfig = await this.configManager.listConfig()
 							await this.updateGlobalState("listApiConfigMeta", listApiConfig)
-							this.postMessageToWebview({ type: "listApiConfig", listApiConfig })
+							this.postMessageToWebview({
+								type: "listApiConfig",
+								listApiConfig,
+							})
 						} catch (error) {
 							this.outputChannel.appendLine(
-								`Error get list api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+								`Error get list api configuration: ${JSON.stringify(
+									error,
+									Object.getOwnPropertyNames(error),
+									2,
+								)}`,
 							)
 							vscode.window.showErrorMessage(t("common:errors.list_api_config"))
 						}
@@ -1914,7 +2106,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								await this.mcpHub?.updateServerTimeout(message.serverName, message.timeout)
 							} catch (error) {
 								this.outputChannel.appendLine(
-									`Failed to update timeout for ${message.serverName}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+									`Failed to update timeout for ${message.serverName}: ${JSON.stringify(
+										error,
+										Object.getOwnPropertyNames(error),
+										2,
+									)}`,
 								)
 								vscode.window.showErrorMessage(t("common:errors.update_server_timeout"))
 							}
@@ -1981,6 +2177,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			this.disposables,
 		)
 
+		/**
+		 * Generates the system prompt based on the message received from the webview.
+		 * @param message The message received from the webview.
+		 */
 		const generateSystemPrompt = async (message: WebviewMessage) => {
 			const {
 				apiConfiguration,
@@ -2099,6 +2299,20 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		}
 	}
 
+	/**
+	 * Cancel the current task.
+	 *
+	 * This method can be used from the client to cancel the current task.
+	 * The task will be removed from the stack and the previous task (if any)
+	 * will be resumed.
+	 *
+	 * @example
+	 * // Cancel the current task
+	 * const clineProvider = window.clineProvider;
+	 * if (clineProvider) {
+	 *     clineProvider.cancelTask();
+	 * }
+	 */
 	async cancelTask() {
 		const cline = this.getCurrentCline()
 
@@ -2139,7 +2353,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		}
 
 		// Clears task again, so we need to abortTask manually above.
-		await this.initClineWithHistoryItem({ ...historyItem, rootTask, parentTask })
+		await this.initClineWithHistoryItem({
+			...historyItem,
+			rootTask,
+			parentTask,
+		})
 	}
 
 	async updateCustomInstructions(instructions?: string) {
@@ -2232,7 +2450,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		await this.postStateToWebview()
 		if (this.getCurrentCline()) {
-			this.getCurrentCline()!.api = buildApiHandler({ apiProvider: openrouter, openRouterApiKey: apiKey })
+			this.getCurrentCline()!.api = buildApiHandler({
+				apiProvider: openrouter,
+				openRouterApiKey: apiKey,
+			})
 		}
 		// await this.postMessageToWebview({ type: "action", action: "settingsButtonClicked" }) // bad ux if user is on welcome
 	}
@@ -2328,7 +2549,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			}
 		}
 
-		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
+		await this.postMessageToWebview({
+			type: "action",
+			action: "chatButtonClicked",
+		})
 	}
 
 	async exportTaskWithId(id: string) {
@@ -2358,10 +2582,16 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			const workspaceDir = this.cwd
 
 			try {
-				await ShadowCheckpointService.deleteTask({ taskId: id, globalStorageDir, workspaceDir })
+				await ShadowCheckpointService.deleteTask({
+					taskId: id,
+					globalStorageDir,
+					workspaceDir,
+				})
 			} catch (error) {
 				console.error(
-					`[deleteTaskWithId${id}] failed to delete associated shadow repository or branch: ${error instanceof Error ? error.message : String(error)}`,
+					`[deleteTaskWithId${id}] failed to delete associated shadow repository or branch: ${
+						error instanceof Error ? error.message : String(error)
+					}`,
 				)
 			}
 
@@ -2371,7 +2601,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				console.log(`[deleteTaskWithId${id}] removed task directory`)
 			} catch (error) {
 				console.error(
-					`[deleteTaskWithId${id}] failed to remove task directory: ${error instanceof Error ? error.message : String(error)}`,
+					`[deleteTaskWithId${id}] failed to remove task directory: ${
+						error instanceof Error ? error.message : String(error)
+					}`,
 				)
 			}
 		} catch (error) {
@@ -2733,7 +2965,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		await this.customModesManager.resetCustomModes()
 		await this.removeClineFromStack()
 		await this.postStateToWebview()
-		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
+		await this.postMessageToWebview({
+			type: "action",
+			action: "chatButtonClicked",
+		})
 	}
 
 	// logging
