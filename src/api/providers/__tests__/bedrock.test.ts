@@ -260,7 +260,7 @@ describe("AwsBedrockHandler", () => {
 			expect(result).toBe("")
 		})
 
-		it("should handle cross-region inference", async () => {
+		it("should handle cross-region inference for us-xx region", async () => {
 			handler = new AwsBedrockHandler({
 				apiModelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
 				awsAccessKey: "test-access-key",
@@ -288,6 +288,105 @@ describe("AwsBedrockHandler", () => {
 				expect.objectContaining({
 					input: expect.objectContaining({
 						modelId: "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+					}),
+				}),
+			)
+		})
+
+		it("should handle cross-region inference for eu-xx region", async () => {
+			handler = new AwsBedrockHandler({
+				apiModelId: "anthropic.claude-3-5-sonnet-20240620-v1:0",
+				awsAccessKey: "test-access-key",
+				awsSecretKey: "test-secret-key",
+				awsRegion: "eu-west-1",
+				awsUseCrossRegionInference: true,
+			})
+
+			const mockResponse = {
+				output: new TextEncoder().encode(
+					JSON.stringify({
+						content: "Test response",
+					}),
+				),
+			}
+
+			const mockSend = jest.fn().mockResolvedValue(mockResponse)
+			handler["client"] = {
+				send: mockSend,
+			} as unknown as BedrockRuntimeClient
+
+			const result = await handler.completePrompt("Test prompt")
+			expect(result).toBe("Test response")
+			expect(mockSend).toHaveBeenCalledWith(
+				expect.objectContaining({
+					input: expect.objectContaining({
+						modelId: "eu.anthropic.claude-3-5-sonnet-20240620-v1:0",
+					}),
+				}),
+			)
+		})
+
+		it("should handle cross-region inference for ap-xx region", async () => {
+			handler = new AwsBedrockHandler({
+				apiModelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+				awsAccessKey: "test-access-key",
+				awsSecretKey: "test-secret-key",
+				awsRegion: "ap-northeast-1",
+				awsUseCrossRegionInference: true,
+			})
+
+			const mockResponse = {
+				output: new TextEncoder().encode(
+					JSON.stringify({
+						content: "Test response",
+					}),
+				),
+			}
+
+			const mockSend = jest.fn().mockResolvedValue(mockResponse)
+			handler["client"] = {
+				send: mockSend,
+			} as unknown as BedrockRuntimeClient
+
+			const result = await handler.completePrompt("Test prompt")
+			expect(result).toBe("Test response")
+			expect(mockSend).toHaveBeenCalledWith(
+				expect.objectContaining({
+					input: expect.objectContaining({
+						modelId: "apac.anthropic.claude-3-5-sonnet-20241022-v2:0",
+					}),
+				}),
+			)
+		})
+
+		it("should handle cross-region inference for other regions", async () => {
+			handler = new AwsBedrockHandler({
+				apiModelId: "anthropic.claude-3-sonnet-20240229-v1:0",
+				awsAccessKey: "test-access-key",
+				awsSecretKey: "test-secret-key",
+				awsRegion: "ca-central-1",
+				awsUseCrossRegionInference: true,
+			})
+
+			const mockResponse = {
+				output: new TextEncoder().encode(
+					JSON.stringify({
+						content: "Test response",
+					}),
+				),
+			}
+
+			const mockSend = jest.fn().mockResolvedValue(mockResponse)
+			handler["client"] = {
+				send: mockSend,
+			} as unknown as BedrockRuntimeClient
+
+			const result = await handler.completePrompt("Test prompt")
+			expect(result).toBe("Test response")
+			expect(mockSend).toHaveBeenCalledWith(
+				expect.objectContaining({
+					input: expect.objectContaining({
+						modelId: "anthropic.claude-3-sonnet-20240229-v1:0",
 					}),
 				}),
 			)
