@@ -114,6 +114,8 @@ export interface WebviewMessage {
 		| "browserConnectionResult"
 		| "remoteBrowserEnabled"
 		| "language"
+		| "maxReadFileLine"
+		| "searchFiles"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
