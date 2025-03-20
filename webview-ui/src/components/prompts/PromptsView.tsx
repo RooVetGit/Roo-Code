@@ -460,10 +460,10 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 													type: "openFile",
 													text: "./.roomodes",
 													values: {
-													create: true,
-													content: JSON.stringify({ customModes: [] }, null, 2),
-													searchParents: true,
-													startFromWorkspace: true,
+														create: true,
+														content: JSON.stringify({ customModes: [] }, null, 2),
+														searchParents: true,
+														startFromWorkspace: true,
 													},
 												})
 												setShowConfigMenu(false)
@@ -808,10 +808,10 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 													type: "openFile",
 													text: `./.clinerules-${currentMode.slug}`,
 													values: {
-													create: true,
-													content: "",
-													searchParents: true,
-													startFromWorkspace: true,
+														create: true,
+														content: "",
+														searchParents: true,
+														startFromWorkspace: true,
 													},
 												})
 											}}
@@ -917,10 +917,10 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 														type: "openFile",
 														text: `./.roo/system-prompt-${currentMode.slug}`,
 														values: {
-														create: true,
-														content: "",
-														searchParents: true,
-														startFromWorkspace: true,
+															create: true,
+															content: "",
+															searchParents: true,
+															startFromWorkspace: true,
 														},
 													})
 												}}
@@ -974,10 +974,10 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 												type: "openFile",
 												text: "./.clinerules",
 												values: {
-												create: true,
-												content: "",
-												searchParents: true,
-												startFromWorkspace: true,
+													create: true,
+													content: "",
+													searchParents: true,
+													startFromWorkspace: true,
 												},
 											})
 										}
