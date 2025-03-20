@@ -1,5 +1,5 @@
 import { memo, useMemo } from "react"
-import { getLanguageFromPath } from "@src/utils/getLanguageFromPath"
+import { getLanguageFromPath } from "../../utils/getLanguageFromPath"
 import CodeBlock, { CODE_BLOCK_BG_COLOR } from "./CodeBlock"
 import { ToolProgressStatus } from "@roo/shared/ExtensionMessage"
 import { VSCodeProgressRing } from "@vscode/webview-ui-toolkit/react"
@@ -15,7 +15,6 @@ interface CodeAccordianProps {
 	onToggleExpand: () => void
 	isLoading?: boolean
 	progressStatus?: ToolProgressStatus
-	forceWrap?: boolean
 }
 
 /*
@@ -40,7 +39,6 @@ const CodeAccordian = ({
 	onToggleExpand,
 	isLoading,
 	progressStatus,
-	forceWrap,
 }: CodeAccordianProps) => {
 	const inferredLanguage = useMemo(
 		() => code && (language ?? (path ? getLanguageFromPath(path) : undefined)),
@@ -126,12 +124,8 @@ const CodeAccordian = ({
 						maxWidth: "100%",
 					}}>
 					<CodeBlock
-						source={`${"```"}${diff !== undefined ? "diff" : inferredLanguage}\n${(
-							code ??
-							diff ??
-							""
-						).trim()}\n${"```"}`}
-						forceWrap={forceWrap}
+						source={(code ?? diff ?? "").trim()}
+						language={diff !== undefined ? "diff" : inferredLanguage}
 					/>
 				</div>
 			)}
