@@ -4,6 +4,7 @@ import * as path from "path"
 import * as fs from "fs"
 import * as readline from "readline"
 import { RooIgnoreController } from "../../core/ignore/RooIgnoreController"
+import { fileExistsAtPath } from "../../utils/fs"
 /*
 This file provides functionality to perform regex searches on files using ripgrep.
 Inspired by: https://github.com/DiscreteTom/vscode-ripgrep-utils
@@ -49,13 +50,18 @@ rel/path/to/helper.ts
 const isWindows = /^win/.test(process.platform)
 const binName = isWindows ? "rg.exe" : "rg"
 
+interface ContextResult {
+	line: number
+	text: string
+}
+
 interface SearchResult {
 	file: string
 	line: number
 	column: number
-	match: string
-	beforeContext: string[]
-	afterContext: string[]
+	text: string
+	beforeContext: ContextResult[]
+	afterContext: ContextResult[]
 }
 
 // Constants
@@ -71,11 +77,13 @@ const MAX_LINE_LENGTH = 500
 export function truncateLine(line: string, maxLength: number = MAX_LINE_LENGTH): string {
 	return line.length > maxLength ? line.substring(0, maxLength) + " [truncated...]" : line
 }
-
-async function getBinPath(vscodeAppRoot: string): Promise<string | undefined> {
+/**
+ * Get the path to the ripgrep binary within the VSCode installation
+ */
+export async function getBinPath(vscodeAppRoot: string): Promise<string | undefined> {
 	const checkPath = async (pkgFolder: string) => {
 		const fullPath = path.join(vscodeAppRoot, pkgFolder, binName)
-		return (await pathExists(fullPath)) ? fullPath : undefined
+		return (await fileExistsAtPath(fullPath)) ? fullPath : undefined
 	}
 
 	return (
@@ -84,14 +92,6 @@ async function getBinPath(vscodeAppRoot: string): Promise<string | undefined> {
 		(await checkPath("node_modules.asar.unpacked/vscode-ripgrep/bin/")) ||
 		(await checkPath("node_modules.asar.unpacked/@vscode/ripgrep/bin/"))
 	)
-}
-
-async function pathExists(path: string): Promise<boolean> {
-	return new Promise((resolve) => {
-		fs.access(path, (err) => {
-			resolve(err === null)
-		})
-	})
 }
 
 async function execRipgrep(bin: string, args: string[]): Promise<string> {
@@ -177,7 +177,7 @@ export async function regexSearchFiles(
 						file: parsed.data.path.text,
 						line: parsed.data.line_number,
 						column: parsed.data.submatches[0].start,
-						match: truncatedMatch,
+						text: truncatedMatch,
 						beforeContext: [],
 						afterContext: [],
 					}
@@ -185,11 +185,15 @@ export async function regexSearchFiles(
 					// Apply the same truncation logic to context lines
 					const contextText = parsed.data.lines.text
 					const truncatedContext = truncateLine(contextText)
+					let contextResult: ContextResult = {
+						line: parsed.data.line_number,
+						text: truncatedContext,
+					}
 
 					if (parsed.data.line_number < currentResult.line!) {
-						currentResult.beforeContext!.push(truncatedContext)
+						currentResult.beforeContext!.push(contextResult)
 					} else {
-						currentResult.afterContext!.push(truncatedContext)
+						currentResult.afterContext!.push(contextResult)
 					}
 				}
 			} catch (error) {
@@ -230,20 +234,20 @@ function formatResults(results: SearchResult[], cwd: string): string {
 	})
 
 	for (const [filePath, fileResults] of Object.entries(groupedResults)) {
-		output += `${filePath.toPosix()}\n│----\n`
+		output += `${filePath.toPosix()}\n││  ││----\n`
 
 		fileResults.forEach((result, index) => {
-			const allLines = [...result.beforeContext, result.match, ...result.afterContext]
+			const allLines = [...result.beforeContext, result, ...result.afterContext]
 			allLines.forEach((line) => {
-				output += `│${line?.trimEnd() ?? ""}\n`
+				output += `││ ${line.line} ││${line.text?.trimEnd() ?? ""}\n`
 			})
 
 			if (index < fileResults.length - 1) {
-				output += "│----\n"
+				output += "││  ││----\n"
 			}
 		})
 
-		output += "│----\n\n"
+		output += "││  ││----\n\n"
 	}
 
 	return output.trim()
