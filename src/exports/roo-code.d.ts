@@ -254,8 +254,7 @@ export type GlobalStateKey =
 	| "showRooIgnoredFiles"
 	| "remoteBrowserEnabled"
 	| "language"
-	| "humanRelayMonitorClipboard"
-	| "humanRelayMonitorInterval"
+	| "fakeAi"
 
 export type ConfigurationKey = GlobalStateKey | SecretKey
 

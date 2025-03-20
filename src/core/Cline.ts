@@ -1125,6 +1125,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			experiments,
 			enableMcpServerCreation,
 			browserToolEnabled,
+			language,
 		} = (await this.providerRef.deref()?.getState()) ?? {}
 		const { customModes } = (await this.providerRef.deref()?.getState()) ?? {}
 		const systemPrompt = await (async () => {
@@ -1146,6 +1147,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 				this.diffEnabled,
 				experiments,
 				enableMcpServerCreation,
+				language,
 				rooIgnoreInstructions,
 			)
 		})()
@@ -3691,13 +3693,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 		details += `\n\n# Current Time\n${formatter.format(now)} (${timeZone}, UTC${timeZoneOffsetStr})`
 
 		// Add context tokens information
-		const { contextTokens } = getApiMetrics(this.clineMessages)
+		const { contextTokens, totalCost } = getApiMetrics(this.clineMessages)
 		const modelInfo = this.api.getModel().info
 		const contextWindow = modelInfo.contextWindow
 		const contextPercentage =
 			contextTokens && contextWindow ? Math.round((contextTokens / contextWindow) * 100) : undefined
 		details += `\n\n# Current Context Size (Tokens)\n${contextTokens ? `${contextTokens.toLocaleString()} (${contextPercentage}%)` : "(Not available)"}`
-
+		details += `\n\n# Current Cost\n${totalCost !== null ? `$${totalCost.toFixed(2)}` : "(Not available)"}`
 		// Add current mode and any mode-specific warnings
 		const {
 			mode,

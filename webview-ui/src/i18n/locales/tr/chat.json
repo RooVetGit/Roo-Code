@@ -199,5 +199,39 @@
 	"reasoning": {
 		"thinking": "Düşünüyor",
 		"seconds": "{{count}}sn"
+	},
+	"announcement": {
+		"title": "🎉 Roo Code 3.9 Yayınlandı",
+		"description": "Roo Code 3.9 sürümünde uluslararası oldu!",
+		"whatsNew": "Yenilikler",
+		"feature1": "14 dil için çeviriler",
+		"feature2": "SSE üzerinden MCP",
+		"feature3": "Toplu görev geçmişi silme",
+		"feature4": "Metinden sese dönüştürme",
+		"feature5": "OpenRouter sağlayıcı seçimi",
+		"hideButton": "Duyuruyu gizle",
+		"detailsDiscussLinks": "<discordLink>Discord</discordLink> ve <redditLink>Reddit</redditLink> üzerinde daha fazla ayrıntı edinin ve tartışmalara katılın 🚀"
+	},
+	"browser": {
+		"rooWantsToUse": "Roo tarayıcıyı kullanmak istiyor:",
+		"consoleLogs": "Konsol Kayıtları",
+		"noNewLogs": "(Yeni kayıt yok)",
+		"screenshot": "Tarayıcı ekran görüntüsü",
+		"cursor": "imleç",
+		"navigation": {
+			"step": "Adım {{current}} / {{total}}",
+			"previous": "Önceki",
+			"next": "Sonraki"
+		},
+		"sessionStarted": "Tarayıcı Oturumu Başlatıldı",
+		"actions": {
+			"title": "Tarayıcı İşlemi: ",
+			"launch": "{{url}} adresinde tarayıcı başlat",
+			"click": "Tıkla ({{coordinate}})",
+			"type": "Yaz \"{{text}}\"",
+			"scrollDown": "Aşağı kaydır",
+			"scrollUp": "Yukarı kaydır",
+			"close": "Tarayıcıyı kapat"
+		}
 	}
 }

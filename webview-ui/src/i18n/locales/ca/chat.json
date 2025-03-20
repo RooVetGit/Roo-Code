@@ -199,5 +199,39 @@
 	"reasoning": {
 		"thinking": "Pensant",
 		"seconds": "{{count}}s"
+	},
+	"announcement": {
+		"title": "🎉 Roo Code 3.9 publicat",
+		"description": "Roo Code s'ha tornat internacional a la versió 3.9!",
+		"whatsNew": "Novetats",
+		"feature1": "Traduccions per a 14 idiomes",
+		"feature2": "MCP sobre SSE",
+		"feature3": "Eliminació en lot de l'historial de tasques",
+		"feature4": "Text a veu",
+		"feature5": "Selecció de proveïdor OpenRouter",
+		"hideButton": "Amagar anunci",
+		"detailsDiscussLinks": "Obté més detalls i participa a <discordLink>Discord</discordLink> i <redditLink>Reddit</redditLink> 🚀"
+	},
+	"browser": {
+		"rooWantsToUse": "Roo vol utilitzar el navegador:",
+		"consoleLogs": "Registres de consola",
+		"noNewLogs": "(Cap registre nou)",
+		"screenshot": "Captura de pantalla del navegador",
+		"cursor": "cursor",
+		"navigation": {
+			"step": "Pas {{current}} de {{total}}",
+			"previous": "Anterior",
+			"next": "Següent"
+		},
+		"sessionStarted": "Sessió de navegador iniciada",
+		"actions": {
+			"title": "Acció de navegació: ",
+			"launch": "Iniciar navegador a {{url}}",
+			"click": "Clic ({{coordinate}})",
+			"type": "Escriure \"{{text}}\"",
+			"scrollDown": "Desplaçar avall",
+			"scrollUp": "Desplaçar amunt",
+			"close": "Tancar navegador"
+		}
 	}
 }

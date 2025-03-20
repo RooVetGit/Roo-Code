@@ -86,7 +86,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	private clineStack: Cline[] = []
 	private workspaceTracker?: WorkspaceTracker
 	protected mcpHub?: McpHub // Change from private to protected
-	private latestAnnouncementId = "mar-7-2025-3-8" // update to some unique identifier when we add a new announcement
+	private latestAnnouncementId = "mar-18-2025-3-9" // update to some unique identifier when we add a new announcement
 	private contextProxy: ContextProxy
 	configManager: ConfigManager
 	customModesManager: CustomModesManager
@@ -367,6 +367,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		// Initialize tts enabled state
 		this.getState().then(({ ttsEnabled }) => {
 			setTtsEnabled(ttsEnabled ?? false)
+		})
+
+		// Initialize tts speed state
+		this.getState().then(({ ttsSpeed }) => {
+			setTtsSpeed(ttsSpeed ?? 1)
 		})
 
 		webviewView.webview.options = {
@@ -1992,6 +1997,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				experiments,
 				enableMcpServerCreation,
 				browserToolEnabled,
+				language,
 			} = await this.getState()
 
 			// Create diffStrategy based on current model and settings
@@ -2025,6 +2031,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				diffEnabled,
 				experiments,
 				enableMcpServerCreation,
+				language,
 				rooIgnoreInstructions,
 			)
 			return systemPrompt

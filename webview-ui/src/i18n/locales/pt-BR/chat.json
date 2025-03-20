@@ -199,5 +199,39 @@
 	"reasoning": {
 		"thinking": "Pensando",
 		"seconds": "{{count}}s"
+	},
+	"announcement": {
+		"title": "🎉 Roo Code 3.9 Lançado",
+		"description": "Roo Code se tornou internacional na versão 3.9!",
+		"whatsNew": "O que há de novo",
+		"feature1": "Traduções para 14 idiomas",
+		"feature2": "MCP via SSE",
+		"feature3": "Exclusão em lote do histórico de tarefas",
+		"feature4": "Conversão de texto em fala",
+		"feature5": "Seleção de provedor OpenRouter",
+		"hideButton": "Ocultar anúncio",
+		"detailsDiscussLinks": "Obtenha mais detalhes e participe da discussão no <discordLink>Discord</discordLink> e <redditLink>Reddit</redditLink> 🚀"
+	},
+	"browser": {
+		"rooWantsToUse": "Roo quer usar o navegador:",
+		"consoleLogs": "Logs do console",
+		"noNewLogs": "(Sem novos logs)",
+		"screenshot": "Captura de tela do navegador",
+		"cursor": "cursor",
+		"navigation": {
+			"step": "Passo {{current}} de {{total}}",
+			"previous": "Anterior",
+			"next": "Próximo"
+		},
+		"sessionStarted": "Sessão do navegador iniciada",
+		"actions": {
+			"title": "Ação do navegador: ",
+			"launch": "Iniciar navegador em {{url}}",
+			"click": "Clique ({{coordinate}})",
+			"type": "Digitar \"{{text}}\"",
+			"scrollDown": "Rolar para baixo",
+			"scrollUp": "Rolar para cima",
+			"close": "Fechar navegador"
+		}
 	}
 }

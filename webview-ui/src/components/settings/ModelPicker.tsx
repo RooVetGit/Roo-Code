@@ -68,14 +68,17 @@ export const ModelPicker = ({
 		[apiConfiguration],
 	)
 
-	const [searchValue, setSearchValue] = useState(selectedModelId)
+	const [searchValue, setSearchValue] = useState(selectedModelId || "")
 
 	const onSelect = useCallback(
 		(modelId: string) => {
+			if (!modelId) return
+
 			setOpen(false)
 			const modelInfo = models?.[modelId]
 			setApiConfigurationField(modelIdKey, modelId)
 			setApiConfigurationField(modelInfoKey, modelInfo ?? defaultModelInfo)
+
 			// Delay to ensure the popover is closed before setting the search value.
 			setTimeout(() => setSearchValue(modelId), 100)
 		},
@@ -112,11 +115,11 @@ export const ModelPicker = ({
 	return (
 		<>
 			<div>
-				<label className="block font-medium mb-1">Model</label>
+				<label className="block font-medium mb-1">{t("settings:modelPicker.label")}</label>
 				<Popover open={open} onOpenChange={onOpenChange}>
 					<PopoverTrigger asChild>
 						<Button
-							variant="outline"
+							variant="combobox"
 							role="combobox"
 							aria-expanded={open}
 							className="w-full justify-between">
@@ -131,28 +134,34 @@ export const ModelPicker = ({
 									ref={searchInputRef}
 									value={searchValue}
 									onValueChange={setSearchValue}
-									placeholder="Search"
+									placeholder={t("settings:modelPicker.searchPlaceholder")}
 									className="h-9 mr-4"
 									data-testid="model-input"
 								/>
 								{searchValue.length > 0 && (
 									<div className="absolute right-2 top-0 bottom-0 flex items-center justify-center">
 										<X
-											className="opacity-25 hover:opacity-100 cursor-pointer size-4 bg-vscode-button-secondaryBackground rounded-full p-0.5"
+											className="text-vscode-input-foreground opacity-50 hover:opacity-100 size-4 p-0.5 cursor-pointer"
 											onClick={onClearSearch}
 										/>
 									</div>
 								)}
 							</div>
 							<CommandList>
-								<CommandEmpty>No model found.</CommandEmpty>
+								<CommandEmpty>
+									{searchValue && (
+										<div className="py-2 px-1 text-sm">
+											{t("settings:modelPicker.noMatchFound")}
+										</div>
+									)}
+								</CommandEmpty>
 								<CommandGroup>
 									{modelIds.map((model) => (
 										<CommandItem key={model} value={model} onSelect={onSelect}>
 											{model}
 											<Check
 												className={cn(
-													"ml-auto",
+													"size-4 p-0.5 ml-auto",
 													model === selectedModelId ? "opacity-100" : "opacity-0",
 												)}
 											/>
@@ -160,6 +169,13 @@ export const ModelPicker = ({
 									))}
 								</CommandGroup>
 							</CommandList>
+							{searchValue && !modelIds.includes(searchValue) && (
+								<div className="p-1 border-t border-vscode-input-border">
+									<CommandItem data-testid="use-custom-model" value={searchValue} onSelect={onSelect}>
+										{t("settings:modelPicker.useCustomModel", { modelId: searchValue })}
+									</CommandItem>
+								</div>
+							)}
 						</Command>
 					</PopoverContent>
 				</Popover>
