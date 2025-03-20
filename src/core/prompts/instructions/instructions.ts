@@ -1,13 +1,20 @@
 import { createMCPServerInstructions } from "./create-mcp-server"
 import { createModeInstructions } from "./create-mode"
+import { McpHub } from "../../../services/mcp/McpHub"
+import { DiffStrategy } from "../../diff/DiffStrategy"
 
-export function fetchInstructions(text: string): string {
+interface InstructionsDetail {
+	mcpHub?: McpHub
+	diffStrategy?: DiffStrategy
+}
+
+export async function fetchInstructions(text: string, detail: InstructionsDetail): Promise<string> {
 	switch (text) {
 		case "create_mcp": {
-			return createMCPServerInstructions()
+			return await createMCPServerInstructions(detail.mcpHub, detail.diffStrategy)
 		}
 		case "create_mode": {
-			return createModeInstructions()
+			return await createModeInstructions()
 		}
 		default: {
 			return ""

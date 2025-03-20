@@ -2433,7 +2433,12 @@ export class Cline extends EventEmitter<ClineEvents> {
 									break
 								}
 								// now execute the tool
-								const content = await fetchInstructions(task)
+								const mcpHub = this.providerRef.deref()?.getMcpHub()
+								if (!mcpHub) {
+									throw new Error("MCP hub not available")
+								}
+								const diffStrategy = this.diffStrategy
+								const content = await fetchInstructions(task, { mcpHub, diffStrategy })
 								if (!content) {
 									pushToolResult(formatResponse.toolError(`Invalid instructions request: ${task}`))
 									break
@@ -2442,7 +2447,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 								break
 							}
 						} catch (error) {
-							await handleError("reading file", error)
+							await handleError("fetch instructions", error)
 							break
 						}
 					}
