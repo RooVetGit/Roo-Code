@@ -79,6 +79,7 @@ import { DiffStrategy, getDiffStrategy } from "./diff/DiffStrategy"
 import { insertGroups } from "./diff/insert-groups"
 import { telemetryService } from "../services/telemetry/TelemetryService"
 import { validateToolUse, isToolAllowedForMode, ToolName } from "./mode-validator"
+import { parseXml } from "../utils/xml"
 import { readLines } from "../integrations/misc/read-lines"
 import { getWorkspacePath } from "../utils/path"
 
@@ -2325,8 +2326,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 								let sourceCodeDef = ""
 
 								if (isRangeRead) {
-									// Read specific lines (startLine is guaranteed to be defined if isRangeRead is true)
-									console.log("Reading specific lines", startLine, endLine, startLineStr, endLineStr)
 									if (startLine === undefined) {
 										content = addLineNumbers(await readLines(absolutePath, endLine, startLine))
 									} else {
@@ -2869,6 +2868,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 					}
 					case "ask_followup_question": {
 						const question: string | undefined = block.params.question
+						const follow_up: string | undefined = block.params.follow_up
 						try {
 							if (block.partial) {
 								await this.ask("followup", removeClosingTag("question", question), block.partial).catch(
@@ -2883,8 +2883,46 @@ export class Cline extends EventEmitter<ClineEvents> {
 									)
 									break
 								}
+
+								type Suggest = {
+									answer: string
+								}
+
+								let follow_up_json = {
+									question,
+									suggest: [] as Suggest[],
+								}
+
+								if (follow_up) {
+									let parsedSuggest: {
+										suggest: Suggest[] | Suggest
+									}
+
+									try {
+										parsedSuggest = parseXml(follow_up, ["suggest"]) as {
+											suggest: Suggest[] | Suggest
+										}
+									} catch (error) {
+										this.consecutiveMistakeCount++
+										await this.say("error", `Failed to parse operations: ${error.message}`)
+										pushToolResult(formatResponse.toolError("Invalid operations xml format"))
+										break
+									}
+
+									const normalizedSuggest = Array.isArray(parsedSuggest?.suggest)
+										? parsedSuggest.suggest
+										: [parsedSuggest?.suggest].filter((sug): sug is Suggest => sug !== undefined)
+
+									follow_up_json.suggest = normalizedSuggest
+								}
+
 								this.consecutiveMistakeCount = 0
-								const { text, images } = await this.ask("followup", question, false)
+
+								const { text, images } = await this.ask(
+									"followup",
+									JSON.stringify(follow_up_json),
+									false,
+								)
 								await this.say("user_feedback", text ?? "", images)
 								pushToolResult(formatResponse.toolResult(`<answer>\n${text}\n</answer>`, images))
 								break

@@ -87,7 +87,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	private clineStack: Cline[] = []
 	private workspaceTracker?: WorkspaceTracker
 	protected mcpHub?: McpHub // Change from private to protected
-	private latestAnnouncementId = "mar-18-2025-3-9" // update to some unique identifier when we add a new announcement
+	private latestAnnouncementId = "mar-20-2025-3-10" // update to some unique identifier when we add a new announcement
 	private contextProxy: ContextProxy
 	configManager: ConfigManager
 	customModesManager: CustomModesManager
@@ -2326,55 +2326,35 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	}> {
 		const history = ((await this.getGlobalState("taskHistory")) as HistoryItem[] | undefined) || []
 		const historyItem = history.find((item) => item.id === id)
-		if (!historyItem) {
-			throw new Error("Task not found in history")
+		if (historyItem) {
+			const { getTaskDirectoryPath } = await import("../../shared/storagePathManager")
+			const globalStoragePath = this.contextProxy.globalStorageUri.fsPath
+			const taskDirPath = await getTaskDirectoryPath(globalStoragePath, id)
+			const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
+			const uiMessagesFilePath = path.join(taskDirPath, GlobalFileNames.uiMessages)
+			const fileExists = await fileExistsAtPath(apiConversationHistoryFilePath)
+			if (fileExists) {
+				const apiConversationHistory = JSON.parse(await fs.readFile(apiConversationHistoryFilePath, "utf8"))
+				return {
+					historyItem,
+					taskDirPath,
+					apiConversationHistoryFilePath,
+					uiMessagesFilePath,
+					apiConversationHistory,
+				}
+			}
 		}
-
-		// 使用storagePathManager获取任务存储目录
-		const { getTaskDirectoryPath } = await import("../../shared/storagePathManager")
-		const globalStoragePath = this.contextProxy.globalStorageUri.fsPath
-		const taskDirPath = await getTaskDirectoryPath(globalStoragePath, id)
-
-		const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
-		const uiMessagesFilePath = path.join(taskDirPath, GlobalFileNames.uiMessages)
-
-		const fileExists = await fileExistsAtPath(apiConversationHistoryFilePath)
-		if (!fileExists) {
-			// Instead of silently deleting, throw a specific error
-			throw new Error("TASK_FILES_MISSING")
-		}
-
-		const apiConversationHistory = JSON.parse(await fs.readFile(apiConversationHistoryFilePath, "utf8"))
-		return {
-			historyItem,
-			taskDirPath,
-			apiConversationHistoryFilePath,
-			uiMessagesFilePath,
-			apiConversationHistory,
-		}
+		// if we tried to get a task that doesn't exist, remove it from state
+		// FIXME: this seems to happen sometimes when the json file doesnt save to disk for some reason
+		await this.deleteTaskFromState(id)
+		throw new Error("Task not found")
 	}
 
 	async showTaskWithId(id: string) {
 		if (id !== this.getCurrentCline()?.taskId) {
-			try {
-				const { historyItem } = await this.getTaskWithId(id)
-				await this.initClineWithHistoryItem(historyItem)
-			} catch (error) {
-				if (error.message === "TASK_FILES_MISSING") {
-					const response = await vscode.window.showWarningMessage(
-						t("common:warnings.missing_task_files"),
-						t("common:answers.remove"),
-						t("common:answers.keep"),
-					)
-
-					if (response === t("common:answers.remove")) {
-						await this.deleteTaskFromState(id)
-						await this.postStateToWebview()
-					}
-					return
-				}
-				throw error
-			}
+			// Non-current task.
+			const { historyItem } = await this.getTaskWithId(id)
+			await this.initClineWithHistoryItem(historyItem) // Clears existing task.
 		}
 
 		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
@@ -2860,32 +2840,5 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		}
 
 		return properties
-	}
-
-	async validateTaskHistory() {
-		const history = ((await this.getGlobalState("taskHistory")) as HistoryItem[] | undefined) || []
-		const validTasks: HistoryItem[] = []
-
-		const { getTaskDirectoryPath } = await import("../../shared/storagePathManager")
-		const globalStoragePath = this.contextProxy.globalStorageUri.fsPath
-
-		for (const item of history) {
-			const taskDirPath = await getTaskDirectoryPath(globalStoragePath, item.id)
-			const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
-
-			if (await fileExistsAtPath(apiConversationHistoryFilePath)) {
-				validTasks.push(item)
-			}
-		}
-
-		if (validTasks.length !== history.length) {
-			await this.updateGlobalState("taskHistory", validTasks)
-			await this.postStateToWebview()
-
-			const removedCount = history.length - validTasks.length
-			if (removedCount > 0) {
-				await vscode.window.showInformationMessage(t("common:info.history_cleanup", { count: removedCount }))
-			}
-		}
 	}
 }
