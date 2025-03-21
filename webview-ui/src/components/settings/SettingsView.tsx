@@ -15,6 +15,7 @@ import {
 	Globe,
 	Info,
 	LucideIcon,
+	BookOpen,
 } from "lucide-react"
 import { CaretSortIcon } from "@radix-ui/react-icons"
 
@@ -51,6 +52,7 @@ import { CheckpointSettings } from "./CheckpointSettings"
 import { NotificationSettings } from "./NotificationSettings"
 import { ContextManagementSettings } from "./ContextManagementSettings"
 import { TerminalSettings } from "./TerminalSettings"
+import { NotebookSettings } from "./NotebookSettings"
 import { AdvancedSettings } from "./AdvancedSettings"
 import { ExperimentalSettings } from "./ExperimentalSettings"
 import { LanguageSettings } from "./LanguageSettings"
@@ -69,6 +71,7 @@ const sectionNames = [
 	"notifications",
 	"contextManagement",
 	"terminal",
+	"notebook",
 	"advanced",
 	"experimental",
 	"language",
@@ -132,6 +135,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 		showRooIgnoredFiles,
 		remoteBrowserEnabled,
 		maxReadFileLine,
+		notebookOutputSizeLimit,
+		notebookExecutionTimeoutSeconds,
 	} = cachedState
 
 	// Make sure apiConfiguration is initialized and managed by SettingsView.
@@ -275,6 +280,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 	const notificationsRef = useRef<HTMLDivElement>(null)
 	const contextManagementRef = useRef<HTMLDivElement>(null)
 	const terminalRef = useRef<HTMLDivElement>(null)
+	const notebookRef = useRef<HTMLDivElement>(null)
 	const advancedRef = useRef<HTMLDivElement>(null)
 	const experimentalRef = useRef<HTMLDivElement>(null)
 	const languageRef = useRef<HTMLDivElement>(null)
@@ -289,6 +295,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 			{ id: "notifications", icon: Bell, ref: notificationsRef },
 			{ id: "contextManagement", icon: Database, ref: contextManagementRef },
 			{ id: "terminal", icon: SquareTerminal, ref: terminalRef },
+			{ id: "notebook", icon: BookOpen, ref: notebookRef },
 			{ id: "advanced", icon: Cog, ref: advancedRef },
 			{ id: "experimental", icon: FlaskConical, ref: experimentalRef },
 			{ id: "language", icon: Globe, ref: languageRef },
@@ -302,6 +309,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 			notificationsRef,
 			contextManagementRef,
 			terminalRef,
+			notebookRef,
 			advancedRef,
 			experimentalRef,
 		],
@@ -462,6 +470,14 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 					<TerminalSettings
 						terminalOutputLineLimit={terminalOutputLineLimit}
 						terminalShellIntegrationTimeout={terminalShellIntegrationTimeout}
+						setCachedStateField={setCachedStateField}
+					/>
+				</div>
+
+				<div ref={notebookRef}>
+					<NotebookSettings
+						notebookOutputSizeLimit={notebookOutputSizeLimit}
+						notebookExecutionTimeoutSeconds={notebookExecutionTimeoutSeconds}
 						setCachedStateField={setCachedStateField}
 					/>
 				</div>

@@ -25,6 +25,9 @@ export const toolUseNames = [
 	"attempt_completion",
 	"switch_mode",
 	"new_task",
+	"notebook_read",
+	"notebook_edit",
+	"notebook_execute",
 ] as const
 
 // Converts array of tool call names into a union type ("execute_command" | "read_file" | ...)
@@ -58,6 +61,12 @@ export const toolParamNames = [
 	"message",
 	"cwd",
 	"follow_up",
+	"cell_index",
+	"cell_type",
+	"cell_content",
+	"language_id",
+	"start_index",
+	"end_index",
 ] as const
 
 export type ToolParamName = (typeof toolParamNames)[number]
@@ -139,4 +148,24 @@ export interface SwitchModeToolUse extends ToolUse {
 export interface NewTaskToolUse extends ToolUse {
 	name: "new_task"
 	params: Partial<Pick<Record<ToolParamName, string>, "mode" | "message">>
+}
+
+export interface NotebookReadToolUse extends ToolUse {
+	name: "notebook_read"
+	params: Partial<Pick<Record<ToolParamName, string>, "action">>
+}
+
+export interface NotebookEditToolUse extends ToolUse {
+	name: "notebook_edit"
+	params: Partial<
+		Pick<
+			Record<ToolParamName, string>,
+			"action" | "cell_index" | "start_index" | "end_index" | "cell_content" | "cell_type" | "language_id"
+		>
+	>
+}
+
+export interface NotebookExecuteToolUse extends ToolUse {
+	name: "notebook_execute"
+	params: Partial<Pick<Record<ToolParamName, string>, "action" | "start_index" | "end_index">>
 }

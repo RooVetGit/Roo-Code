@@ -116,6 +116,11 @@ export interface WebviewMessage {
 		| "language"
 		| "maxReadFileLine"
 		| "searchFiles"
+		| "notebookOutputSizeLimit"
+		| "notebookExecutionTimeoutSeconds"
+		| "alwaysAllowReadNotebook"
+		| "alwaysAllowEditNotebook"
+		| "alwaysAllowExecuteNotebook"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse

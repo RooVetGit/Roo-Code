@@ -193,6 +193,21 @@
 				"label": "重試失敗的請求",
 				"shortName": "重試",
 				"description": "當提供者返回錯誤回應時自動重試失敗的API請求。"
+			},
+			"readNotebook": {
+				"label": "讀取筆記本",
+				"shortName": "讀取NB",
+				"description": "允許在不需要批准的情況下讀取活躍筆記本。"
+			},
+			"editNotebook": {
+				"label": "編輯筆記本",
+				"shortName": "編輯NB",
+				"description": "允許在不需要批准的情況下編輯活躍筆記本。"
+			},
+			"executeNotebook": {
+				"label": "執行筆記本",
+				"shortName": "執行NB",
+				"description": "允許在不需要批准的情況下執行筆記本儲存格。"
 			}
 		}
 	},
@@ -232,6 +247,25 @@
 			"scrollDown": "向下捲動",
 			"scrollUp": "向上捲動",
 			"close": "關閉瀏覽器"
+		}
+	},
+	"notebook": {
+		"actions": {
+			"readWants": "Roo想讀取活躍筆記本（{{action}}）",
+			"readDid": "Roo已讀取活躍筆記本（{{action}}）",
+			"editWants": "Roo想{{action}}{{indexText}}",
+			"editDid": "Roo已{{action}}{{indexText}}",
+			"executeWants": "Roo想執行筆記本儲存格{{indexText}}",
+			"executeDid": "Roo已執行筆記本儲存格{{indexText}}"
+		},
+		"types": {
+			"getInfo": "整體資訊",
+			"getCells": "儲存格詳情",
+			"insertCells": "插入儲存格",
+			"modifyCell": "修改儲存格",
+			"replaceCells": "替換多個儲存格",
+			"atIndex": "在索引 {{index}} 處",
+			"fromIndexToIndex": "從索引 {{startIndex}} 到 {{endIndex}}"
 		}
 	}
 }
