@@ -1592,6 +1592,16 @@ export class Cline extends EventEmitter<ClineEvents> {
 							}
 						}
 
+						const absolutePath = path.resolve(this.cwd, relPath)
+						if (await fileExistsAtPath(absolutePath)) {
+							pushToolResult(
+								formatResponse.toolError(
+									`File '${relPath}' already exists, write_to_file failed: You must use the 'apply_diff' tool to change an existing file.`,
+								),
+							)
+							break
+						}
+
 						const sharedMessageProps: ClineSayTool = {
 							tool: fileExists ? "editedExistingFile" : "newFileCreated",
 							path: getReadablePath(this.cwd, removeClosingTag("path", relPath)),
