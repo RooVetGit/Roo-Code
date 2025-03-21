@@ -69,6 +69,15 @@ export async function writeToFileTool(
 	const fullPath = relPath ? path.resolve(cline.cwd, removeClosingTag("path", relPath)) : ""
 	const isOutsideWorkspace = isPathOutsideWorkspace(fullPath)
 
+	if (fileExists) {
+		pushToolResult(
+			formatResponse.toolError(
+				`File '${relPath}' already exists, write_to_file failed: You must use the 'apply_diff' tool to change an existing file.`,
+			),
+		)
+		return
+	}
+
 	const sharedMessageProps: ClineSayTool = {
 		tool: fileExists ? "editedExistingFile" : "newFileCreated",
 		path: getReadablePath(cline.cwd, removeClosingTag("path", relPath)),
