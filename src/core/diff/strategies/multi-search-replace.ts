@@ -215,7 +215,7 @@ Only use a single line of '=======' between search and replacement content, beca
 			let searchEndIndex = resultLines.length
 
 			// Validate and handle line range if provided
-			if (startLine && endLine) {
+			if (false && startLine && endLine) {
 				// Convert to 0-based index
 				const exactStartIndex = startLine - 1
 				const exactEndIndex = endLine - 1
