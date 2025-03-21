@@ -79,7 +79,9 @@ export async function truncateConversationIfNeeded({
 	apiHandler,
 }: TruncateOptions): Promise<Anthropic.Messages.MessageParam[]> {
 	// Calculate the maximum tokens reserved for response
-	const reservedTokens = maxTokens || contextWindow * 0.2
+	// Ensure maxTokens is reasonable (not more than 80% of context window)
+	const reservedTokens =
+		maxTokens && maxTokens > 0 && maxTokens < contextWindow * 0.8 ? maxTokens : contextWindow * 0.2
 
 	// Estimate tokens for the last message (which is always a user message)
 	const lastMessage = messages[messages.length - 1]
