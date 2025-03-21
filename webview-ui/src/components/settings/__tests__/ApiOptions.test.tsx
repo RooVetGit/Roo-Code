@@ -71,6 +71,70 @@ jest.mock("../TemperatureControl", () => ({
 	),
 }))
 
+// Mock MinPControl component
+jest.mock("../MinPControl", () => ({
+	MinPControl: ({ value, onChange }: any) => (
+		<div data-testid="min-p-control">
+			<input
+				type="range"
+				value={value || 0}
+				onChange={(e) => onChange(parseFloat(e.target.value))}
+				min={0}
+				max={1}
+				step={0.01}
+			/>
+		</div>
+	),
+}))
+
+// Mock MaxPControl component
+jest.mock("../MaxPControl", () => ({
+	MaxPControl: ({ value, onChange }: any) => (
+		<div data-testid="max-p-control">
+			<input
+				type="range"
+				value={value || 0}
+				onChange={(e) => onChange(parseFloat(e.target.value))}
+				min={0}
+				max={1}
+				step={0.01}
+			/>
+		</div>
+	),
+}))
+
+// Mock TopKControl component
+jest.mock("../TopKControl", () => ({
+	TopKControl: ({ value, onChange }: any) => (
+		<div data-testid="top-k-control">
+			<input
+				type="range"
+				value={value || 40}
+				onChange={(e) => onChange(parseInt(e.target.value))}
+				min={1}
+				max={100}
+				step={1}
+			/>
+		</div>
+	),
+}))
+
+// Mock RepetitionPenaltyControl component
+jest.mock("../RepetitionPenaltyControl", () => ({
+	RepetitionPenaltyControl: ({ value, onChange }: any) => (
+		<div data-testid="repetition-penalty-control">
+			<input
+				type="range"
+				value={value || 1.0}
+				onChange={(e) => onChange(parseFloat(e.target.value))}
+				min={1.0}
+				max={2.0}
+				step={0.01}
+			/>
+		</div>
+	),
+}))
+
 // Mock ThinkingBudget component
 jest.mock("../ThinkingBudget", () => ({
 	ThinkingBudget: ({ apiConfiguration, setApiConfigurationField, modelInfo, provider }: any) =>

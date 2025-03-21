@@ -336,6 +336,26 @@
 		"description": "Kontroluje losowość w odpowiedziach modelu.",
 		"rangeDescription": "Wyższe wartości sprawiają, że wyjście jest bardziej losowe, niższe wartości czynią je bardziej deterministycznym."
 	},
+	"minP": {
+		"useCustom": "Użyj niestandardowego min_p",
+		"description": "Minimalny próg prawdopodobieństwa dla wyboru tokenów.",
+		"rangeDescription": "Wyższe wartości sprawiają, że wyjście jest bardziej skoncentrowane, niższe wartości pozwalają na większą różnorodność."
+	},
+	"maxP": {
+		"useCustom": "Użyj niestandardowego max_p (top_p)",
+		"description": "Parametr próbkowania jądrowego.",
+		"rangeDescription": "Wyższe wartości obejmują więcej tokenów, niższe wartości sprawiają, że wyjście jest bardziej skoncentrowane."
+	},
+	"topK": {
+		"useCustom": "Użyj niestandardowego top_k",
+		"description": "Ogranicza wybór tokenów do K najbardziej prawdopodobnych tokenów.",
+		"rangeDescription": "Wyższe wartości pozwalają na większą różnorodność, niższe wartości sprawiają, że wyjście jest bardziej skoncentrowane."
+	},
+	"repetitionPenalty": {
+		"useCustom": "Użyj niestandardowej kary za powtórzenia",
+		"description": "Karze powtarzające się tokeny, aby zmniejszyć powtarzający się tekst.",
+		"rangeDescription": "Wyższe wartości silniej redukują powtórzenia."
+	},
 	"modelInfo": {
 		"supportsImages": "Obsługuje obrazy",
 		"noImages": "Nie obsługuje obrazów",

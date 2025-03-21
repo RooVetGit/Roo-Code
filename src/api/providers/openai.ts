@@ -124,11 +124,37 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
 				model: modelId,
-				temperature: this.options.modelTemperature ?? (deepseekReasoner ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0),
+				temperature:
+					this.options.modelTemperature !== undefined && this.options.modelTemperature !== null
+						? this.options.modelTemperature
+						: deepseekReasoner
+							? DEEP_SEEK_DEFAULT_TEMPERATURE
+							: 0,
 				messages: convertedMessages,
 				stream: true as const,
 				stream_options: { include_usage: true },
 			}
+
+			// Add min_p if set
+			if (this.options.modelMinP !== undefined && this.options.modelMinP !== null) {
+				;(requestOptions as any).min_p = this.options.modelMinP
+			}
+
+			// Add max_p (top_p) if set
+			if (this.options.modelMaxP !== undefined && this.options.modelMaxP !== null) {
+				requestOptions.top_p = this.options.modelMaxP
+			}
+
+			// Add top_k if set
+			if (this.options.modelTopK !== undefined && this.options.modelTopK !== null) {
+				;(requestOptions as any).top_k = this.options.modelTopK
+			}
+
+			// Add repetition_penalty if set
+			if (this.options.modelRepetitionPenalty !== undefined && this.options.modelRepetitionPenalty !== null) {
+				requestOptions.frequency_penalty = this.options.modelRepetitionPenalty - 1.0
+			}
+
 			if (this.options.includeMaxTokens) {
 				requestOptions.max_tokens = modelInfo.maxTokens
 			}
@@ -184,6 +210,31 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				messages: deepseekReasoner
 					? convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
 					: [systemMessage, ...convertToOpenAiMessages(messages)],
+				...(this.options.modelTemperature !== undefined && this.options.modelTemperature !== null
+					? { temperature: this.options.modelTemperature }
+					: deepseekReasoner
+						? { temperature: DEEP_SEEK_DEFAULT_TEMPERATURE }
+						: {}),
+			}
+
+			// Add min_p if set
+			if (this.options.modelMinP !== undefined && this.options.modelMinP !== null) {
+				;(requestOptions as any).min_p = this.options.modelMinP
+			}
+
+			// Add max_p (top_p) if set
+			if (this.options.modelMaxP !== undefined && this.options.modelMaxP !== null) {
+				requestOptions.top_p = this.options.modelMaxP
+			}
+
+			// Add top_k if set
+			if (this.options.modelTopK !== undefined && this.options.modelTopK !== null) {
+				;(requestOptions as any).top_k = this.options.modelTopK
+			}
+
+			// Add repetition_penalty if set
+			if (this.options.modelRepetitionPenalty !== undefined && this.options.modelRepetitionPenalty !== null) {
+				requestOptions.frequency_penalty = this.options.modelRepetitionPenalty - 1.0
 			}
 
 			const response = await this.client.chat.completions.create(requestOptions)
@@ -216,6 +267,29 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
 				model: this.getModel().id,
 				messages: [{ role: "user", content: prompt }],
+				...(this.options.modelTemperature !== undefined && this.options.modelTemperature !== null
+					? { temperature: this.options.modelTemperature }
+					: {}),
+			}
+
+			// Add min_p if set
+			if (this.options.modelMinP !== undefined && this.options.modelMinP !== null) {
+				;(requestOptions as any).min_p = this.options.modelMinP
+			}
+
+			// Add max_p (top_p) if set
+			if (this.options.modelMaxP !== undefined && this.options.modelMaxP !== null) {
+				requestOptions.top_p = this.options.modelMaxP
+			}
+
+			// Add top_k if set
+			if (this.options.modelTopK !== undefined && this.options.modelTopK !== null) {
+				;(requestOptions as any).top_k = this.options.modelTopK
+			}
+
+			// Add repetition_penalty if set
+			if (this.options.modelRepetitionPenalty !== undefined && this.options.modelRepetitionPenalty !== null) {
+				requestOptions.frequency_penalty = this.options.modelRepetitionPenalty - 1.0
 			}
 
 			const response = await this.client.chat.completions.create(requestOptions)
@@ -234,7 +308,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		messages: Anthropic.Messages.MessageParam[],
 	): ApiStream {
 		if (this.options.openAiStreamingEnabled ?? true) {
-			const stream = await this.client.chat.completions.create({
+			const streamOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
 				model: "o3-mini",
 				messages: [
 					{
@@ -243,10 +317,35 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 					},
 					...convertToOpenAiMessages(messages),
 				],
-				stream: true,
+				stream: true as const,
 				stream_options: { include_usage: true },
 				reasoning_effort: this.getModel().info.reasoningEffort,
-			})
+				...(this.options.modelTemperature !== undefined && this.options.modelTemperature !== null
+					? { temperature: this.options.modelTemperature }
+					: {}),
+			} as any
+
+			// Add min_p if set
+			if (this.options.modelMinP !== undefined && this.options.modelMinP !== null) {
+				;(streamOptions as any).min_p = this.options.modelMinP
+			}
+
+			// Add max_p (top_p) if set
+			if (this.options.modelMaxP !== undefined && this.options.modelMaxP !== null) {
+				streamOptions.top_p = this.options.modelMaxP
+			}
+
+			// Add top_k if set
+			if (this.options.modelTopK !== undefined && this.options.modelTopK !== null) {
+				;(streamOptions as any).top_k = this.options.modelTopK
+			}
+
+			// Add repetition_penalty if set
+			if (this.options.modelRepetitionPenalty !== undefined && this.options.modelRepetitionPenalty !== null) {
+				streamOptions.frequency_penalty = this.options.modelRepetitionPenalty - 1.0
+			}
+
+			const stream = await this.client.chat.completions.create(streamOptions)
 
 			yield* this.handleStreamResponse(stream)
 		} else {
@@ -259,6 +358,29 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 					},
 					...convertToOpenAiMessages(messages),
 				],
+				...(this.options.modelTemperature !== undefined && this.options.modelTemperature !== null
+					? { temperature: this.options.modelTemperature }
+					: {}),
+			}
+
+			// Add min_p if set
+			if (this.options.modelMinP !== undefined && this.options.modelMinP !== null) {
+				;(requestOptions as any).min_p = this.options.modelMinP
+			}
+
+			// Add max_p (top_p) if set
+			if (this.options.modelMaxP !== undefined && this.options.modelMaxP !== null) {
+				requestOptions.top_p = this.options.modelMaxP
+			}
+
+			// Add top_k if set
+			if (this.options.modelTopK !== undefined && this.options.modelTopK !== null) {
+				;(requestOptions as any).top_k = this.options.modelTopK
+			}
+
+			// Add repetition_penalty if set
+			if (this.options.modelRepetitionPenalty !== undefined && this.options.modelRepetitionPenalty !== null) {
+				requestOptions.frequency_penalty = this.options.modelRepetitionPenalty - 1.0
 			}
 
 			const response = await this.client.chat.completions.create(requestOptions)

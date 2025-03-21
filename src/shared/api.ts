@@ -75,6 +75,10 @@ export interface ApiHandlerOptions {
 	requestyModelId?: string
 	requestyModelInfo?: ModelInfo
 	modelTemperature?: number | null
+	modelMinP?: number | null
+	modelMaxP?: number | null
+	modelTopK?: number | null
+	modelRepetitionPenalty?: number | null
 	modelMaxTokens?: number
 	modelMaxThinkingTokens?: number
 	fakeAi?: unknown
@@ -134,6 +138,10 @@ export const API_CONFIG_KEYS: GlobalStateKey[] = [
 	"requestyModelId",
 	"requestyModelInfo",
 	"modelTemperature",
+	"modelMinP",
+	"modelMaxP",
+	"modelTopK",
+	"modelRepetitionPenalty",
 	"modelMaxTokens",
 	"modelMaxThinkingTokens",
 	"fakeAi",

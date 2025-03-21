@@ -336,6 +336,26 @@
 		"description": "Controla l'aleatorietat en les respostes del model.",
 		"rangeDescription": "Valors més alts fan que la sortida sigui més aleatòria, valors més baixos la fan més determinista."
 	},
+	"minP": {
+		"useCustom": "Utilitzar min_p personalitzat",
+		"description": "Llindar mínim de probabilitat per a la selecció de tokens.",
+		"rangeDescription": "Valors més alts fan que la sortida sigui més enfocada, valors més baixos permeten més diversitat."
+	},
+	"maxP": {
+		"useCustom": "Utilitzar max_p (top_p) personalitzat",
+		"description": "Paràmetre de mostreig de nucli.",
+		"rangeDescription": "Valors més alts inclouen més tokens, valors més baixos fan que la sortida sigui més enfocada."
+	},
+	"topK": {
+		"useCustom": "Utilitzar top_k personalitzat",
+		"description": "Limita la selecció de tokens als K tokens més probables.",
+		"rangeDescription": "Valors més alts permeten més diversitat, valors més baixos fan que la sortida sigui més enfocada."
+	},
+	"repetitionPenalty": {
+		"useCustom": "Utilitzar penalització de repetició personalitzada",
+		"description": "Penalitza els tokens repetits per reduir text repetitiu.",
+		"rangeDescription": "Valors més alts redueixen la repetició més fortament."
+	},
 	"modelInfo": {
 		"supportsImages": "Suporta imatges",
 		"noImages": "No suporta imatges",

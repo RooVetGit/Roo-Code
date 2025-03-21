@@ -336,6 +336,26 @@
 		"description": "Controls randomness in the model's responses.",
 		"rangeDescription": "Higher values make output more random, lower values make it more deterministic."
 	},
+	"minP": {
+		"useCustom": "Use custom min_p",
+		"description": "Minimum probability threshold for token selection.",
+		"rangeDescription": "Higher values make output more focused, lower values allow more diversity."
+	},
+	"maxP": {
+		"useCustom": "Use custom max_p (top_p)",
+		"description": "Nucleus sampling parameter.",
+		"rangeDescription": "Higher values include more tokens, lower values make output more focused."
+	},
+	"topK": {
+		"useCustom": "Use custom top_k",
+		"description": "Limits token selection to the top K most likely tokens.",
+		"rangeDescription": "Higher values allow more diversity, lower values make output more focused."
+	},
+	"repetitionPenalty": {
+		"useCustom": "Use custom repetition penalty",
+		"description": "Penalizes repeated tokens to reduce repetitive text.",
+		"rangeDescription": "Higher values reduce repetition more strongly."
+	},
 	"modelInfo": {
 		"supportsImages": "Supports images",
 		"noImages": "Does not support images",

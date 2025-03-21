@@ -336,6 +336,26 @@
 		"description": "모델 응답의 무작위성을 제어합니다.",
 		"rangeDescription": "높은 값은 출력을 더 무작위하게, 낮은 값은 더 결정적으로 만듭니다."
 	},
+	"minP": {
+		"useCustom": "사용자 정의 min_p 사용",
+		"description": "토큰 선택을 위한 최소 확률 임계값입니다.",
+		"rangeDescription": "높은 값은 출력을 더 집중적으로 만들고, 낮은 값은 더 많은 다양성을 허용합니다."
+	},
+	"maxP": {
+		"useCustom": "사용자 정의 max_p (top_p) 사용",
+		"description": "핵 샘플링 매개변수입니다.",
+		"rangeDescription": "높은 값은 더 많은 토큰을 포함하고, 낮은 값은 출력을 더 집중적으로 만듭니다."
+	},
+	"topK": {
+		"useCustom": "사용자 정의 top_k 사용",
+		"description": "토큰 선택을 가장 가능성이 높은 K개의 토큰으로 제한합니다.",
+		"rangeDescription": "높은 값은 더 많은 다양성을 허용하고, 낮은 값은 출력을 더 집중적으로 만듭니다."
+	},
+	"repetitionPenalty": {
+		"useCustom": "사용자 정의 반복 페널티 사용",
+		"description": "반복적인 텍스트를 줄이기 위해 반복되는 토큰에 페널티를 부여합니다.",
+		"rangeDescription": "높은 값은 반복을 더 강하게 줄입니다."
+	},
 	"modelInfo": {
 		"supportsImages": "이미지 지원",
 		"noImages": "이미지 지원 안 함",

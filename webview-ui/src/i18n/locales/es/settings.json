@@ -336,6 +336,26 @@
 		"description": "Controla la aleatoriedad en las respuestas del modelo.",
 		"rangeDescription": "Valores más altos hacen que la salida sea más aleatoria, valores más bajos la hacen más determinista."
 	},
+	"minP": {
+		"useCustom": "Usar min_p personalizado",
+		"description": "Umbral mínimo de probabilidad para la selección de tokens.",
+		"rangeDescription": "Valores más altos hacen que la salida sea más enfocada, valores más bajos permiten más diversidad."
+	},
+	"maxP": {
+		"useCustom": "Usar max_p (top_p) personalizado",
+		"description": "Parámetro de muestreo de núcleo.",
+		"rangeDescription": "Valores más altos incluyen más tokens, valores más bajos hacen que la salida sea más enfocada."
+	},
+	"topK": {
+		"useCustom": "Usar top_k personalizado",
+		"description": "Limita la selección de tokens a los K tokens más probables.",
+		"rangeDescription": "Valores más altos permiten más diversidad, valores más bajos hacen que la salida sea más enfocada."
+	},
+	"repetitionPenalty": {
+		"useCustom": "Usar penalización de repetición personalizada",
+		"description": "Penaliza los tokens repetidos para reducir texto repetitivo.",
+		"rangeDescription": "Valores más altos reducen la repetición más fuertemente."
+	},
 	"modelInfo": {
 		"supportsImages": "Soporta imágenes",
 		"noImages": "No soporta imágenes",

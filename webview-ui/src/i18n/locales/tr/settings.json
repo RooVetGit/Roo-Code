@@ -336,6 +336,26 @@
 		"description": "Model yanıtlarındaki rastgeleliği kontrol eder.",
 		"rangeDescription": "Daha yüksek değerler çıktıyı daha rastgele yapar, daha düşük değerler daha deterministik hale getirir."
 	},
+	"minP": {
+		"useCustom": "Özel min_p kullan",
+		"description": "Token seçimi için minimum olasılık eşiği.",
+		"rangeDescription": "Daha yüksek değerler çıktıyı daha odaklı hale getirir, daha düşük değerler daha fazla çeşitliliğe izin verir."
+	},
+	"maxP": {
+		"useCustom": "Özel max_p (top_p) kullan",
+		"description": "Çekirdek örnekleme parametresi.",
+		"rangeDescription": "Daha yüksek değerler daha fazla token içerir, daha düşük değerler çıktıyı daha odaklı hale getirir."
+	},
+	"topK": {
+		"useCustom": "Özel top_k kullan",
+		"description": "Token seçimini en olası K token ile sınırlar.",
+		"rangeDescription": "Daha yüksek değerler daha fazla çeşitliliğe izin verir, daha düşük değerler çıktıyı daha odaklı hale getirir."
+	},
+	"repetitionPenalty": {
+		"useCustom": "Özel tekrarlama cezası kullan",
+		"description": "Tekrarlayan metni azaltmak için tekrarlanan tokenlere ceza verir.",
+		"rangeDescription": "Daha yüksek değerler tekrarlamayı daha güçlü bir şekilde azaltır."
+	},
 	"modelInfo": {
 		"supportsImages": "Görüntüleri destekler",
 		"noImages": "Görüntüleri desteklemez",
