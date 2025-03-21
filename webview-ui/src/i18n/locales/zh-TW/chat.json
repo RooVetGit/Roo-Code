@@ -105,6 +105,9 @@
 		},
 		"current": "當前"
 	},
+	"instructions": {
+		"wantsToFetch": "Roo 想要獲取詳細指示以協助目前任務"
+	},
 	"fileOperations": {
 		"wantsToRead": "Roo想讀取此檔案:",
 		"didRead": "Roo已讀取此檔案:",
