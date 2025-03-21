@@ -67,6 +67,7 @@ import { getUri } from "./getUri"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { TelemetrySetting } from "../../shared/TelemetrySetting"
 import { getWorkspacePath } from "../../utils/path"
+import { McpMarketplaceService } from "../../services/mcp/McpMarketplaceService"
 
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -91,6 +92,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	private contextProxy: ContextProxy
 	configManager: ConfigManager
 	customModesManager: CustomModesManager
+	private mcpMarketplaceService: McpMarketplaceService
 	get cwd() {
 		return getWorkspacePath()
 	}
@@ -122,6 +124,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			.catch((error) => {
 				this.outputChannel.appendLine(`Failed to initialize MCP Hub: ${error}`)
 			})
+
+		this.mcpMarketplaceService = new McpMarketplaceService(this)
 	}
 
 	// Adds a new Cline instance to clineStack, marking the start of a new task.
@@ -744,6 +748,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								mcpServers: this.mcpHub.getAllServers(),
 							})
 						}
+						this.mcpMarketplaceService.prefetchMcpMarketplace()
 
 						const cacheDir = await this.ensureCacheDirectoryExists()
 
@@ -1189,6 +1194,28 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						}
 						break
 					}
+
+					case "fetchMcpMarketplace": {
+						await this.mcpMarketplaceService.fetchMcpMarketplace(message.bool)
+						break
+					}
+					case "downloadMcp": {
+						if (message.mcpId) {
+							await this.mcpMarketplaceService.downloadMcp(this.mcpHub, message.mcpId)
+						}
+						break
+					}
+					case "silentlyRefreshMcpMarketplace": {
+						await this.mcpMarketplaceService.silentlyRefreshMcpMarketplace()
+						break
+					}
+					case "openMcpMarketplaceServerDetails": {
+						if (message.mcpId) {
+							await this.mcpMarketplaceService.openMcpMarketplaceServerDetails(message.mcpId)
+						}
+						break
+					}
+
 					case "openCustomModesSettings": {
 						const customModesFilePath = await this.customModesManager.getCustomModesFilePath()
 						if (customModesFilePath) {

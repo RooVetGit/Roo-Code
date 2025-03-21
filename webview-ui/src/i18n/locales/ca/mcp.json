@@ -17,12 +17,32 @@
 		"noDescription": "Sense descripció"
 	},
 	"tabs": {
+		"installed": "Instal·lats i Configuració",
+		"marketplace": "Mercat",
 		"tools": "Eines",
 		"resources": "Recursos"
 	},
 	"emptyState": {
 		"noTools": "No s'han trobat eines",
-		"noResources": "No s'han trobat recursos"
+		"noResources": "No s'han trobat recursos",
+		"noServers": "No hi ha servidors instal·lats",
+		"browseMarketplace": "Explorar el Mercat"
+	},
+	"marketplace": {
+		"loading": "Carregant el mercat...",
+		"noServers": "No hi ha servidors disponibles",
+		"noResults": "No s'han trobat servidors coincidents",
+		"retry": "Tornar a provar",
+		"install": "Instal·lar",
+		"by": "per {{author}}",
+		"searchPlaceholder": "Cercar servidors...",
+		"filter": "Filtre:",
+		"allCategories": "Totes les categories",
+		"sort": "Ordenar:",
+		"sortByStars": "Més estrelles",
+		"sortByDownloadCount": "Més instal·lacions",
+		"sortByNewest": "Més recents",
+		"sortByName": "Nom"
 	},
 	"networkTimeout": {
 		"label": "Temps d'espera de xarxa",

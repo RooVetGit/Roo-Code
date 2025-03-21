@@ -18,11 +18,31 @@
 	},
 	"tabs": {
 		"tools": "Herramientas",
-		"resources": "Recursos"
+		"resources": "Recursos",
+		"installed": "Instalados y Configuración",
+		"marketplace": "Marketplace"
 	},
 	"emptyState": {
 		"noTools": "No se encontraron herramientas",
-		"noResources": "No se encontraron recursos"
+		"noResources": "No se encontraron recursos",
+		"noServers": "No hay servidores instalados",
+		"browseMarketplace": "Explorar Marketplace"
+	},
+	"marketplace": {
+		"loading": "Cargando marketplace...",
+		"noServers": "No hay servidores disponibles",
+		"noResults": "No se encontraron servidores coincidentes",
+		"retry": "Reintentar",
+		"install": "Instalar",
+		"by": "por {{author}}",
+		"searchPlaceholder": "Buscar servidores...",
+		"filter": "Filtrar:",
+		"allCategories": "Todas las categorías",
+		"sort": "Ordenar:",
+		"sortByStars": "Más estrellas",
+		"sortByDownloadCount": "Más instalaciones",
+		"sortByNewest": "Más recientes",
+		"sortByName": "Nombre"
 	},
 	"networkTimeout": {
 		"label": "Tiempo de espera de red",

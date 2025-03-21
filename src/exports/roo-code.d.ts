@@ -256,6 +256,7 @@ export type GlobalStateKey =
 	| "language"
 	| "maxReadFileLine"
 	| "fakeAi"
+	| "mcpMarketplaceCatalog"
 
 export type ConfigurationKey = GlobalStateKey | SecretKey
 

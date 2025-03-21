@@ -18,11 +18,31 @@
 	},
 	"tabs": {
 		"tools": "Công cụ",
-		"resources": "Tài nguyên"
+		"resources": "Tài nguyên",
+		"installed": "Đã cài đặt & Cài đặt",
+		"marketplace": "Marketplace"
 	},
 	"emptyState": {
-		"noTools": "Không tìm thấy công cụ nào",
-		"noResources": "Không tìm thấy tài nguyên nào"
+		"noTools": "Không tìm thấy công cụ",
+		"noResources": "Không tìm thấy tài nguyên",
+		"noServers": "Chưa cài đặt máy chủ",
+		"browseMarketplace": "Duyệt Marketplace"
+	},
+	"marketplace": {
+		"loading": "Đang tải marketplace...",
+		"noServers": "Không có máy chủ khả dụng",
+		"noResults": "Không tìm thấy máy chủ phù hợp",
+		"retry": "Thử lại",
+		"install": "Cài đặt",
+		"by": "bởi {{author}}",
+		"searchPlaceholder": "Tìm kiếm máy chủ...",
+		"filter": "Lọc:",
+		"allCategories": "Tất cả danh mục",
+		"sort": "Sắp xếp:",
+		"sortByStars": "Nhiều sao nhất",
+		"sortByDownloadCount": "Nhiều lượt cài đặt nhất",
+		"sortByNewest": "Mới nhất",
+		"sortByName": "Tên"
 	},
 	"networkTimeout": {
 		"label": "Thời gian chờ mạng",

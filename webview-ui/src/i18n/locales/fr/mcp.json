@@ -17,12 +17,32 @@
 		"noDescription": "Aucune description"
 	},
 	"tabs": {
+		"installed": "Installés & Paramètres",
+		"marketplace": "Marketplace",
 		"tools": "Outils",
 		"resources": "Ressources"
 	},
 	"emptyState": {
 		"noTools": "Aucun outil trouvé",
-		"noResources": "Aucune ressource trouvée"
+		"noResources": "Aucune ressource trouvée",
+		"noServers": "Aucun serveur installé",
+		"browseMarketplace": "Parcourir la Marketplace"
+	},
+	"marketplace": {
+		"loading": "Chargement de la marketplace...",
+		"noServers": "Aucun serveur disponible",
+		"noResults": "Aucun serveur correspondant trouvé",
+		"retry": "Réessayer",
+		"install": "Installer",
+		"by": "par {{author}}",
+		"searchPlaceholder": "Rechercher des serveurs...",
+		"filter": "Filtrer :",
+		"allCategories": "Toutes les catégories",
+		"sort": "Trier :",
+		"sortByStars": "Plus d'étoiles",
+		"sortByDownloadCount": "Plus d'installations",
+		"sortByNewest": "Plus récents",
+		"sortByName": "Nom"
 	},
 	"networkTimeout": {
 		"label": "Délai d'attente réseau",

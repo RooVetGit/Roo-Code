@@ -116,6 +116,10 @@ export interface WebviewMessage {
 		| "language"
 		| "maxReadFileLine"
 		| "searchFiles"
+		| "fetchMcpMarketplace"
+		| "downloadMcp"
+		| "openMcpMarketplaceServerDetails"
+		| "silentlyRefreshMcpMarketplace"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
@@ -141,6 +145,7 @@ export interface WebviewMessage {
 	source?: "global" | "project"
 	requestId?: string
 	ids?: string[]
+	mcpId?: string
 }
 
 export const checkoutDiffPayloadSchema = z.object({

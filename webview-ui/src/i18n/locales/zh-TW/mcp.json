@@ -17,12 +17,32 @@
 		"noDescription": "無說明"
 	},
 	"tabs": {
+		"installed": "已安裝 & 設定",
+		"marketplace": "應用市集",
 		"tools": "工具",
 		"resources": "資源"
 	},
 	"emptyState": {
 		"noTools": "未找到工具",
-		"noResources": "未找到資源"
+		"noResources": "未找到資源",
+		"noServers": "未安裝伺服器",
+		"browseMarketplace": "瀏覽應用市集"
+	},
+	"marketplace": {
+		"loading": "正在載入應用市集...",
+		"noServers": "無可用伺服器",
+		"noResults": "未找到匹配的伺服器",
+		"retry": "重試",
+		"install": "安裝",
+		"by": "作者：{{author}}",
+		"searchPlaceholder": "搜尋伺服器...",
+		"filter": "篩選：",
+		"allCategories": "所有類別",
+		"sort": "排序：",
+		"sortByStars": "最多星標",
+		"sortByDownloadCount": "最多安裝",
+		"sortByNewest": "最新",
+		"sortByName": "名稱"
 	},
 	"networkTimeout": {
 		"label": "網路逾時",

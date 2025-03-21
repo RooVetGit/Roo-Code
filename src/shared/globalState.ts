@@ -124,6 +124,7 @@ export const GLOBAL_STATE_KEYS = [
 	"maxWorkspaceFiles",
 	"maxReadFileLine",
 	"fakeAi",
+	"mcpMarketplaceCatalog",
 ] as const
 
 export const PASS_THROUGH_STATE_KEYS = ["taskHistory"] as const

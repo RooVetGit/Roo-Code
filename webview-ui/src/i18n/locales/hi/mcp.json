@@ -17,12 +17,32 @@
 		"noDescription": "कोई विवरण नहीं"
 	},
 	"tabs": {
+		"installed": "स्थापित और सेटिंग्स",
+		"marketplace": "मार्केटप्लेस",
 		"tools": "उपकरण",
 		"resources": "संसाधन"
 	},
 	"emptyState": {
 		"noTools": "कोई उपकरण नहीं मिला",
-		"noResources": "कोई संसाधन नहीं मिला"
+		"noResources": "कोई संसाधन नहीं मिला",
+		"noServers": "कोई सर्वर स्थापित नहीं है",
+		"browseMarketplace": "मार्केटप्लेस ब्राउज़ करें"
+	},
+	"marketplace": {
+		"loading": "मार्केटप्लेस लोड हो रहा है...",
+		"noServers": "कोई सर्वर उपलब्ध नहीं है",
+		"noResults": "कोई मिलान करने वाला सर्वर नहीं मिला",
+		"retry": "पुनः प्रयास करें",
+		"install": "स्थापित करें",
+		"by": "{{author}} द्वारा",
+		"searchPlaceholder": "सर्वर खोजें...",
+		"filter": "फ़िल्टर:",
+		"allCategories": "सभी श्रेणियां",
+		"sort": "क्रमबद्ध करें:",
+		"sortByStars": "सर्वाधिक स्टार",
+		"sortByDownloadCount": "सर्वाधिक स्थापना",
+		"sortByNewest": "नवीनतम",
+		"sortByName": "नाम"
 	},
 	"networkTimeout": {
 		"label": "नेटवर्क टाइमआउट",
