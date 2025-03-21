@@ -423,8 +423,10 @@ Only use a single line of '=======' between search and replacement content, beca
 			let searchStartIndex = 0
 			let searchEndIndex = resultLines.length
 
+			startLine = endLine = 0
+
 			// Validate and handle line range if provided
-			if (startLine) {
+			if (startLine && endLine) {
 				// Convert to 0-based index
 				const exactStartIndex = startLine - 1
 				const searchLen = searchLines.length
@@ -483,7 +485,7 @@ Only use a single line of '=======' between search and replacement content, beca
 				} else {
 					// No match found with either method
 					const originalContentSection =
-						startLine !== undefined && endLine !== undefined
+						startLine && endLine
 							? `\n\nOriginal Content:\n${addLineNumbers(
 									resultLines
 										.slice(
