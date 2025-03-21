@@ -102,6 +102,7 @@ export class McpHub {
 	private providerRef: WeakRef<ClineProvider>
 	private disposables: vscode.Disposable[] = []
 	private settingsWatcher?: vscode.FileSystemWatcher
+	private projectMcpWatcher?: vscode.FileSystemWatcher
 	private fileWatchers: Map<string, FSWatcher> = new Map()
 	private isDisposed: boolean = false
 	connections: McpConnection[] = []
@@ -110,7 +111,10 @@ export class McpHub {
 	constructor(provider: ClineProvider) {
 		this.providerRef = new WeakRef(provider)
 		this.watchMcpSettingsFile()
-		this.initializeMcpServers()
+		this.watchProjectMcpFile()
+		this.setupWorkspaceFoldersWatcher()
+		this.initializeGlobalMcpServers()
+		this.initializeProjectMcpServers()
 	}
 
 	/**
@@ -183,6 +187,84 @@ export class McpHub {
 		// }
 	}
 
+	public setupWorkspaceFoldersWatcher(): void {
+		// Skip if test environment is detected
+		if (process.env.NODE_ENV === "test" || process.env.JEST_WORKER_ID !== undefined) {
+			return
+		}
+		this.disposables.push(
+			vscode.workspace.onDidChangeWorkspaceFolders(async () => {
+				await this.updateProjectMcpServers()
+				this.watchProjectMcpFile()
+			}),
+		)
+	}
+
+	private watchProjectMcpFile(): void {
+		this.projectMcpWatcher?.dispose()
+
+		this.projectMcpWatcher = vscode.workspace.createFileSystemWatcher("**/.roo/mcp.json", false, false, false)
+
+		this.disposables.push(
+			this.projectMcpWatcher.onDidChange(async () => {
+				await this.updateProjectMcpServers()
+			}),
+			this.projectMcpWatcher.onDidCreate(async () => {
+				await this.updateProjectMcpServers()
+			}),
+			this.projectMcpWatcher.onDidDelete(async () => {
+				await this.cleanupProjectMcpServers()
+			}),
+		)
+
+		this.disposables.push(this.projectMcpWatcher)
+	}
+
+	private async updateProjectMcpServers(): Promise<void> {
+		try {
+			const projectMcpPath = await this.getProjectMcpPath()
+			if (!projectMcpPath) return
+
+			const content = await fs.readFile(projectMcpPath, "utf-8")
+			let config: any
+
+			try {
+				config = JSON.parse(content)
+			} catch (parseError) {
+				const errorMessage = t("common:errors.invalid_mcp_settings_syntax")
+				console.error(errorMessage, parseError)
+				vscode.window.showErrorMessage(errorMessage)
+				return
+			}
+
+			// 验证配置结构
+			const result = McpSettingsSchema.safeParse(config)
+			if (result.success) {
+				// 使用与全局MCP相同的增量更新策略
+				await this.updateServerConnections(result.data.mcpServers || {}, "project")
+			} else {
+				// 格式化验证错误以提供更好的用户反馈
+				const errorMessages = result.error.errors
+					.map((err) => `${err.path.join(".")}: ${err.message}`)
+					.join("\n")
+				console.error("Invalid project MCP settings format:", errorMessages)
+				vscode.window.showErrorMessage(t("common:errors.invalid_mcp_settings_validation", { errorMessages }))
+			}
+		} catch (error) {
+			this.showErrorMessage("Failed to update project MCP servers", error)
+		}
+	}
+
+	private async cleanupProjectMcpServers(): Promise<void> {
+		const projectServers = this.connections.filter((conn) => conn.server.source === "project")
+
+		for (const conn of projectServers) {
+			await this.deleteConnection(conn.server.name)
+		}
+
+		await this.notifyWebviewOfServerChanges()
+	}
+
 	getServers(): McpServer[] {
 		// Only return enabled servers
 		return this.connections.filter((conn) => !conn.server.disabled).map((conn) => conn.server)
@@ -250,7 +332,8 @@ export class McpHub {
 						return
 					}
 					try {
-						await this.updateServerConnections(result.data.mcpServers || {})
+						// Only update global servers when global settings change
+						await this.updateServerConnections(result.data.mcpServers || {}, "global")
 					} catch (error) {
 						this.showErrorMessage("Failed to process MCP settings change", error)
 					}
@@ -259,8 +342,9 @@ export class McpHub {
 		)
 	}
 
-	private async initializeMcpServers(): Promise<void> {
+	private async initializeGlobalMcpServers(): Promise<void> {
 		try {
+			// Initialize global MCP servers
 			const settingsPath = await this.getMcpSettingsFilePath()
 			const content = await fs.readFile(settingsPath, "utf-8")
 			let config: any
@@ -288,17 +372,65 @@ export class McpHub {
 
 				// Still try to connect with the raw config, but show warnings
 				try {
-					await this.updateServerConnections(config.mcpServers || {})
+					await this.updateServerConnections(config.mcpServers || {}, "global")
 				} catch (error) {
-					this.showErrorMessage("Failed to initialize MCP servers with raw config", error)
+					this.showErrorMessage("Failed to initialize global MCP servers with raw config", error)
 				}
 			}
 		} catch (error) {
-			this.showErrorMessage("Failed to initialize MCP servers", error)
+			this.showErrorMessage("Failed to initialize global MCP servers", error)
 		}
 	}
 
-	private async connectToServer(name: string, config: z.infer<typeof ServerConfigSchema>): Promise<void> {
+	// Get project-level MCP configuration path
+	private async getProjectMcpPath(): Promise<string | null> {
+		if (!vscode.workspace.workspaceFolders?.length) {
+			return null
+		}
+
+		const workspaceFolder = vscode.workspace.workspaceFolders[0]
+		const projectMcpDir = path.join(workspaceFolder.uri.fsPath, ".roo")
+		const projectMcpPath = path.join(projectMcpDir, "mcp.json")
+
+		try {
+			await fs.access(projectMcpPath)
+			return projectMcpPath
+		} catch {
+			return null
+		}
+	}
+
+	// Initialize project-level MCP servers
+	private async initializeProjectMcpServers(): Promise<void> {
+		const projectMcpPath = await this.getProjectMcpPath()
+		if (!projectMcpPath) {
+			return
+		}
+
+		try {
+			const content = await fs.readFile(projectMcpPath, "utf-8")
+			const config = JSON.parse(content)
+
+			// Validate configuration structure
+			const result = McpSettingsSchema.safeParse(config)
+			if (!result.success) {
+				vscode.window.showErrorMessage("Invalid project MCP configuration format")
+				return
+			}
+
+			// Update server connections
+			await this.updateServerConnections(result.data.mcpServers || {}, "project")
+		} catch (error) {
+			console.error("Failed to initialize project MCP servers:", error)
+			vscode.window.showErrorMessage(`Failed to initialize project MCP server: ${error}`)
+		}
+	}
+
+	private async connectToServer(
+		name: string,
+		config: z.infer<typeof ServerConfigSchema>,
+		source: "global" | "project" = "global",
+	): Promise<void> {
 		// Remove existing connection if it exists
 		await this.deleteConnection(name)
 
@@ -410,6 +542,8 @@ export class McpHub {
 					config: JSON.stringify(config),
 					status: "connecting",
 					disabled: config.disabled,
+					source,
+					projectPath: source === "project" ? vscode.workspace.workspaceFolders?.[0]?.uri.fsPath : undefined,
 				},
 				client,
 				transport,
@@ -448,15 +582,40 @@ export class McpHub {
 
 	private async fetchToolsList(serverName: string): Promise<McpTool[]> {
 		try {
-			const response = await this.connections
-				.find((conn) => conn.server.name === serverName)
-				?.client.request({ method: "tools/list" }, ListToolsResultSchema)
+			const connection = this.connections.find((conn) => conn.server.name === serverName)
+			if (!connection) {
+				throw new Error(`Server ${serverName} not found`)
+			}
 
-			// Get always allow settings
-			const settingsPath = await this.getMcpSettingsFilePath()
-			const content = await fs.readFile(settingsPath, "utf-8")
-			const config = JSON.parse(content)
-			const alwaysAllowConfig = config.mcpServers[serverName]?.alwaysAllow || []
+			const response = await connection.client.request({ method: "tools/list" }, ListToolsResultSchema)
+
+			// Determine which config file to read based on server source
+			const isProjectServer = connection.server.source === "project"
+			let configPath: string
+			let alwaysAllowConfig: string[] = []
+
+			// Read from the appropriate config file
+			try {
+				if (isProjectServer) {
+					// Get project MCP config path
+					const projectMcpPath = await this.getProjectMcpPath()
+					if (projectMcpPath) {
+						configPath = projectMcpPath
+						const content = await fs.readFile(configPath, "utf-8")
+						const config = JSON.parse(content)
+						alwaysAllowConfig = config.mcpServers?.[serverName]?.alwaysAllow || []
+					}
+				} else {
+					// Get global MCP settings path
+					configPath = await this.getMcpSettingsFilePath()
+					const content = await fs.readFile(configPath, "utf-8")
+					const config = JSON.parse(content)
+					alwaysAllowConfig = config.mcpServers?.[serverName]?.alwaysAllow || []
+				}
+			} catch (error) {
+				console.error(`Failed to read alwaysAllow config for ${serverName}:`, error)
+				// Continue with empty alwaysAllowConfig
+			}
 
 			// Mark tools as always allowed based on settings
 			const tools = (response?.tools || []).map((tool) => ({
@@ -467,7 +626,7 @@ export class McpHub {
 			console.log(`[MCP] Fetched tools for ${serverName}:`, tools)
 			return tools
 		} catch (error) {
-			// console.error(`Failed to fetch tools for ${serverName}:`, error)
+			console.error(`Failed to fetch tools for ${serverName}:`, error)
 			return []
 		}
 	}
@@ -509,10 +668,17 @@ export class McpHub {
 		}
 	}
 
-	async updateServerConnections(newServers: Record<string, any>): Promise<void> {
+	async updateServerConnections(
+		newServers: Record<string, any>,
+		source: "global" | "project" = "global",
+	): Promise<void> {
 		this.isConnecting = true
 		this.removeAllFileWatchers()
-		const currentNames = new Set(this.connections.map((conn) => conn.server.name))
+		// Filter connections by source
+		const currentConnections = this.connections.filter(
+			(conn) => conn.server.source === source || (!conn.server.source && source === "global"),
+		)
+		const currentNames = new Set(currentConnections.map((conn) => conn.server.name))
 		const newNames = new Set(Object.keys(newServers))
 
 		// Delete removed servers
@@ -525,7 +691,12 @@ export class McpHub {
 
 		// Update or add servers
 		for (const [name, config] of Object.entries(newServers)) {
-			const currentConnection = this.connections.find((conn) => conn.server.name === name)
+			// Only consider connections that match the current source
+			const currentConnection = this.connections.find(
+				(conn) =>
+					conn.server.name === name &&
+					(conn.server.source === source || (!conn.server.source && source === "global")),
+			)
 
 			// Validate and transform the config
 			let validatedConfig: z.infer<typeof ServerConfigSchema>
@@ -540,7 +711,7 @@ export class McpHub {
 				// New server
 				try {
 					this.setupFileWatcher(name, validatedConfig)
-					await this.connectToServer(name, validatedConfig)
+					await this.connectToServer(name, validatedConfig, source)
 				} catch (error) {
 					this.showErrorMessage(`Failed to connect to new MCP server ${name}`, error)
 				}
@@ -549,8 +720,8 @@ export class McpHub {
 				try {
 					this.setupFileWatcher(name, validatedConfig)
 					await this.deleteConnection(name)
-					await this.connectToServer(name, validatedConfig)
-					console.log(`Reconnected MCP server with updated config: ${name}`)
+					await this.connectToServer(name, validatedConfig, source)
+					console.log(`Reconnected ${source} MCP server with updated config: ${name}`)
 				} catch (error) {
 					this.showErrorMessage(`Failed to reconnect MCP server ${name}`, error)
 				}
@@ -628,133 +799,167 @@ export class McpHub {
 	}
 
 	private async notifyWebviewOfServerChanges(): Promise<void> {
-		// servers should always be sorted in the order they are defined in the settings file
+		// Get global server order from settings file
 		const settingsPath = await this.getMcpSettingsFilePath()
 		const content = await fs.readFile(settingsPath, "utf-8")
 		const config = JSON.parse(content)
-		const serverOrder = Object.keys(config.mcpServers || {})
+		const globalServerOrder = Object.keys(config.mcpServers || {})
+
+		// Get project server order if available
+		const projectMcpPath = await this.getProjectMcpPath()
+		let projectServerOrder: string[] = []
+		if (projectMcpPath) {
+			try {
+				const projectContent = await fs.readFile(projectMcpPath, "utf-8")
+				const projectConfig = JSON.parse(projectContent)
+				projectServerOrder = Object.keys(projectConfig.mcpServers || {})
+			} catch (error) {
+				console.error("Failed to read project MCP config:", error)
+			}
+		}
+
+		// Sort connections: first global servers in their defined order, then project servers in their defined order
+		const sortedConnections = [...this.connections].sort((a, b) => {
+			const aIsGlobal = a.server.source === "global" || !a.server.source
+			const bIsGlobal = b.server.source === "global" || !b.server.source
+
+			// If both are global or both are project, sort by their respective order
+			if (aIsGlobal && bIsGlobal) {
+				const indexA = globalServerOrder.indexOf(a.server.name)
+				const indexB = globalServerOrder.indexOf(b.server.name)
+				return indexA - indexB
+			} else if (!aIsGlobal && !bIsGlobal) {
+				const indexA = projectServerOrder.indexOf(a.server.name)
+				const indexB = projectServerOrder.indexOf(b.server.name)
+				return indexA - indexB
+			}
+
+			// Global servers come before project servers
+			return aIsGlobal ? -1 : 1
+		})
+
+		// Send sorted servers to webview
 		await this.providerRef.deref()?.postMessageToWebview({
 			type: "mcpServers",
-			mcpServers: [...this.connections]
-				.sort((a, b) => {
-					const indexA = serverOrder.indexOf(a.server.name)
-					const indexB = serverOrder.indexOf(b.server.name)
-					return indexA - indexB
-				})
-				.map((connection) => connection.server),
+			mcpServers: sortedConnections.map((connection) => connection.server),
 		})
 	}
 
 	public async toggleServerDisabled(serverName: string, disabled: boolean): Promise<void> {
-		let settingsPath: string
 		try {
-			settingsPath = await this.getMcpSettingsFilePath()
-
-			// Ensure the settings file exists and is accessible
-			try {
-				await fs.access(settingsPath)
-			} catch (error) {
-				console.error("Settings file not accessible:", error)
-				throw new Error("Settings file not accessible")
-			}
-			const content = await fs.readFile(settingsPath, "utf-8")
-			const config = JSON.parse(content)
-
-			// Validate the config structure
-			if (!config || typeof config !== "object") {
-				throw new Error("Invalid config structure")
+			// Find the connection to determine if it's a global or project server
+			const connection = this.connections.find((conn) => conn.server.name === serverName)
+			if (!connection) {
+				throw new Error(`Server ${serverName} not found`)
 			}
 
-			if (!config.mcpServers || typeof config.mcpServers !== "object") {
-				config.mcpServers = {}
-			}
+			// Update the server config in the appropriate file
+			await this.updateServerConfig(serverName, { disabled }, connection.server.source || "global")
 
-			if (config.mcpServers[serverName]) {
-				// Create a new server config object to ensure clean structure
-				const serverConfig = {
-					...config.mcpServers[serverName],
-					disabled,
-				}
+			// Update the connection object
+			if (connection) {
+				try {
+					connection.server.disabled = disabled
 
-				// Ensure required fields exist
-				if (!serverConfig.alwaysAllow) {
-					serverConfig.alwaysAllow = []
-				}
-
-				config.mcpServers[serverName] = serverConfig
-
-				// Write the entire config back
-				const updatedConfig = {
-					mcpServers: config.mcpServers,
-				}
-
-				await fs.writeFile(settingsPath, JSON.stringify(updatedConfig, null, 2))
-
-				const connection = this.connections.find((conn) => conn.server.name === serverName)
-				if (connection) {
-					try {
-						connection.server.disabled = disabled
-
-						// Only refresh capabilities if connected
-						if (connection.server.status === "connected") {
-							connection.server.tools = await this.fetchToolsList(serverName)
-							connection.server.resources = await this.fetchResourcesList(serverName)
-							connection.server.resourceTemplates = await this.fetchResourceTemplatesList(serverName)
-						}
-					} catch (error) {
-						console.error(`Failed to refresh capabilities for ${serverName}:`, error)
+					// Only refresh capabilities if connected
+					if (connection.server.status === "connected") {
+						connection.server.tools = await this.fetchToolsList(serverName)
+						connection.server.resources = await this.fetchResourcesList(serverName)
+						connection.server.resourceTemplates = await this.fetchResourceTemplatesList(serverName)
 					}
+				} catch (error) {
+					console.error(`Failed to refresh capabilities for ${serverName}:`, error)
 				}
-
-				await this.notifyWebviewOfServerChanges()
 			}
+
+			await this.notifyWebviewOfServerChanges()
 		} catch (error) {
 			this.showErrorMessage(`Failed to update server ${serverName} state`, error)
 			throw error
 		}
 	}
 
-	public async updateServerTimeout(serverName: string, timeout: number): Promise<void> {
-		let settingsPath: string
+	/**
+	 * Helper method to update a server's configuration in the appropriate settings file
+	 * @param serverName The name of the server to update
+	 * @param configUpdate The configuration updates to apply
+	 * @param source Whether to update the global or project config
+	 */
+	private async updateServerConfig(
+		serverName: string,
+		configUpdate: Record<string, any>,
+		source: "global" | "project" = "global",
+	): Promise<void> {
+		// Determine which config file to update
+		let configPath: string
+		if (source === "project") {
+			const projectMcpPath = await this.getProjectMcpPath()
+			if (!projectMcpPath) {
+				throw new Error("Project MCP configuration file not found")
+			}
+			configPath = projectMcpPath
+		} else {
+			configPath = await this.getMcpSettingsFilePath()
+		}
+
+		// Ensure the settings file exists and is accessible
 		try {
-			settingsPath = await this.getMcpSettingsFilePath()
+			await fs.access(configPath)
+		} catch (error) {
+			console.error("Settings file not accessible:", error)
+			throw new Error("Settings file not accessible")
+		}
 
-			// Ensure the settings file exists and is accessible
-			try {
-				await fs.access(settingsPath)
-			} catch (error) {
-				console.error("Settings file not accessible:", error)
-				throw new Error("Settings file not accessible")
+		// Read and parse the config file
+		const content = await fs.readFile(configPath, "utf-8")
+		const config = JSON.parse(content)
+
+		// Validate the config structure
+		if (!config || typeof config !== "object") {
+			throw new Error("Invalid config structure")
+		}
+
+		if (!config.mcpServers || typeof config.mcpServers !== "object") {
+			config.mcpServers = {}
+		}
+
+		if (!config.mcpServers[serverName]) {
+			config.mcpServers[serverName] = {}
+		}
+
+		// Create a new server config object to ensure clean structure
+		const serverConfig = {
+			...config.mcpServers[serverName],
+			...configUpdate,
+		}
+
+		// Ensure required fields exist
+		if (!serverConfig.alwaysAllow) {
+			serverConfig.alwaysAllow = []
+		}
+
+		config.mcpServers[serverName] = serverConfig
+
+		// Write the entire config back
+		const updatedConfig = {
+			mcpServers: config.mcpServers,
+		}
+
+		await fs.writeFile(configPath, JSON.stringify(updatedConfig, null, 2))
+	}
+
+	public async updateServerTimeout(serverName: string, timeout: number): Promise<void> {
+		try {
+			// Find the connection to determine if it's a global or project server
+			const connection = this.connections.find((conn) => conn.server.name === serverName)
+			if (!connection) {
+				throw new Error(`Server ${serverName} not found`)
 			}
-			const content = await fs.readFile(settingsPath, "utf-8")
-			const config = JSON.parse(content)
 
-			// Validate the config structure
-			if (!config || typeof config !== "object") {
-				throw new Error("Invalid config structure")
-			}
+			// Update the server config in the appropriate file
+			await this.updateServerConfig(serverName, { timeout }, connection.server.source || "global")
 
-			if (!config.mcpServers || typeof config.mcpServers !== "object") {
-				config.mcpServers = {}
-			}
-
-			if (config.mcpServers[serverName]) {
-				// Create a new server config object to ensure clean structure
-				const serverConfig = {
-					...config.mcpServers[serverName],
-					timeout,
-				}
-
-				config.mcpServers[serverName] = serverConfig
-
-				// Write the entire config back
-				const updatedConfig = {
-					mcpServers: config.mcpServers,
-				}
-
-				await fs.writeFile(settingsPath, JSON.stringify(updatedConfig, null, 2))
-				await this.notifyWebviewOfServerChanges()
-			}
+			await this.notifyWebviewOfServerChanges()
 		} catch (error) {
 			this.showErrorMessage(`Failed to update server ${serverName} timeout settings`, error)
 			throw error
@@ -763,16 +968,36 @@ export class McpHub {
 
 	public async deleteServer(serverName: string): Promise<void> {
 		try {
-			const settingsPath = await this.getMcpSettingsFilePath()
+			// Find the connection to determine if it's a global or project server
+			const connection = this.connections.find((conn) => conn.server.name === serverName)
+			if (!connection) {
+				throw new Error(`Server ${serverName} not found`)
+			}
+
+			// Determine config file based on server source
+			const isProjectServer = connection.server.source === "project"
+			let configPath: string
+
+			if (isProjectServer) {
+				// Get project MCP config path
+				const projectMcpPath = await this.getProjectMcpPath()
+				if (!projectMcpPath) {
+					throw new Error("Project MCP configuration file not found")
+				}
+				configPath = projectMcpPath
+			} else {
+				// Get global MCP settings path
+				configPath = await this.getMcpSettingsFilePath()
+			}
 
 			// Ensure the settings file exists and is accessible
 			try {
-				await fs.access(settingsPath)
+				await fs.access(configPath)
 			} catch (error) {
 				throw new Error("Settings file not accessible")
 			}
 
-			const content = await fs.readFile(settingsPath, "utf-8")
+			const content = await fs.readFile(configPath, "utf-8")
 			const config = JSON.parse(content)
 
 			// Validate the config structure
@@ -793,10 +1018,10 @@ export class McpHub {
 					mcpServers: config.mcpServers,
 				}
 
-				await fs.writeFile(settingsPath, JSON.stringify(updatedConfig, null, 2))
+				await fs.writeFile(configPath, JSON.stringify(updatedConfig, null, 2))
 
-				// Update server connections
-				await this.updateServerConnections(config.mcpServers)
+				// Update server connections with the correct source
+				await this.updateServerConnections(config.mcpServers, connection.server.source || "global")
 
 				vscode.window.showInformationMessage(t("common:info.mcp_server_deleted", { serverName }))
 			} else {
@@ -869,9 +1094,40 @@ export class McpHub {
 
 	async toggleToolAlwaysAllow(serverName: string, toolName: string, shouldAllow: boolean): Promise<void> {
 		try {
-			const settingsPath = await this.getMcpSettingsFilePath()
-			const content = await fs.readFile(settingsPath, "utf-8")
+			// Find the connection to determine if it's a global or project server
+			const connection = this.connections.find((conn) => conn.server.name === serverName)
+			if (!connection) {
+				throw new Error(`Server ${serverName} not found`)
+			}
+
+			const isProjectServer = connection.server.source === "project"
+			let configPath: string
+
+			if (isProjectServer) {
+				// Get project MCP config path
+				const projectMcpPath = await this.getProjectMcpPath()
+				if (!projectMcpPath) {
+					throw new Error("Project MCP configuration file not found")
+				}
+				configPath = projectMcpPath
+			} else {
+				// Get global MCP settings path
+				configPath = await this.getMcpSettingsFilePath()
+			}
+
+			// Read the appropriate config file
+			const content = await fs.readFile(configPath, "utf-8")
 			const config = JSON.parse(content)
+
+			// Initialize mcpServers if it doesn't exist
+			if (!config.mcpServers) {
+				config.mcpServers = {}
+			}
+
+			// Initialize server config if it doesn't exist
+			if (!config.mcpServers[serverName]) {
+				config.mcpServers[serverName] = {}
+			}
 
 			// Initialize alwaysAllow if it doesn't exist
 			if (!config.mcpServers[serverName].alwaysAllow) {
@@ -890,10 +1146,9 @@ export class McpHub {
 			}
 
 			// Write updated config back to file
-			await fs.writeFile(settingsPath, JSON.stringify(config, null, 2))
+			await fs.writeFile(configPath, JSON.stringify(config, null, 2))
 
 			// Update the tools list to reflect the change
-			const connection = this.connections.find((conn) => conn.server.name === serverName)
 			if (connection) {
 				connection.server.tools = await this.fetchToolsList(serverName)
 				await this.notifyWebviewOfServerChanges()
