@@ -55,6 +55,26 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		return cline.taskId
 	}
 
+	public async resumeTask(taskId: string): Promise<void> {
+		await this.provider.removeClineFromStack()
+		await this.provider.postStateToWebview()
+		await this.provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
+		// TODO: what message should we send to the webview before resuming an old task?
+		await this.provider.postMessageToWebview({ type: "invoke", invoke: "newChat" })
+
+		const { historyItem } = await this.provider.getTaskWithId(taskId)
+		await this.provider.initClineWithHistoryItem(historyItem)
+	}
+
+	public async isTaskInHistory(taskId: string): Promise<boolean> {
+		try {
+			await this.provider.getTaskWithId(taskId)
+			return true
+		} catch {
+			return false
+		}
+	}
+
 	public getCurrentTaskStack() {
 		return this.provider.getCurrentTaskStack()
 	}
