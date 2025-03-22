@@ -281,6 +281,9 @@
 			"description": "Maximum time to wait for shell integration to initialize before executing commands. For users with long shell startup times, this value may need to be increased if you see \"Shell Integration Unavailable\" errors in the terminal."
 		}
 	},
+	"rateLimit": {
+		"useCustom": "Use custom rate limit"
+	},
 	"advanced": {
 		"rateLimit": {
 			"label": "Rate limit",

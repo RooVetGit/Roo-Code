@@ -281,6 +281,9 @@
 			"description": "Maximale Wartezeit für die Shell-Integration, bevor Befehle ausgeführt werden. Für Benutzer mit langen Shell-Startzeiten muss dieser Wert möglicherweise erhöht werden, wenn Sie Fehler vom Typ \"Shell Integration Unavailable\" im Terminal sehen."
 		}
 	},
+	"rateLimit": {
+		"useCustom": "Benutzerdefinierte Ratenbegrenzung verwenden"
+	},
 	"advanced": {
 		"rateLimit": {
 			"label": "Ratenbegrenzung",

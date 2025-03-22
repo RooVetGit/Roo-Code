@@ -9,6 +9,9 @@ export interface ApiConfigData {
 		[key: string]: ApiConfiguration
 	}
 	modeApiConfigs?: Partial<Record<Mode, string>>
+	migrations?: {
+		rateLimitMigrated?: boolean // Flag to track if rate limit migration has been applied
+	}
 }
 
 export class ConfigManager {
@@ -17,7 +20,11 @@ export class ConfigManager {
 		apiConfigs: {
 			default: {
 				id: this.generateId(),
+				rateLimitSeconds: 0, // Set default rate limit for new installations
 			},
+		},
+		migrations: {
+			rateLimitMigrated: true, // Mark as migrated for fresh installs
 		},
 	}
 
@@ -52,13 +59,26 @@ export class ConfigManager {
 					return
 				}
 
-				// Migrate: ensure all configs have IDs
+				// Initialize migrations tracking object if it doesn't exist
+				if (!config.migrations) {
+					config.migrations = {}
+				}
+
 				let needsMigration = false
+
+				// Migrate: ensure all configs have IDs
 				for (const [name, apiConfig] of Object.entries(config.apiConfigs)) {
 					if (!apiConfig.id) {
 						apiConfig.id = this.generateId()
 						needsMigration = true
 					}
+				}
+
+				// Apply rate limit migration if needed
+				if (!config.migrations.rateLimitMigrated) {
+					await this.migrateRateLimit(config)
+					config.migrations.rateLimitMigrated = true
+					needsMigration = true
 				}
 
 				if (needsMigration) {
@@ -67,6 +87,43 @@ export class ConfigManager {
 			})
 		} catch (error) {
 			throw new Error(`Failed to initialize config: ${error}`)
+		}
+	}
+
+	/**
+	 * Migrate rate limit settings from global state to per-profile configuration
+	 */
+	private async migrateRateLimit(config: ApiConfigData): Promise<void> {
+		try {
+			// Get the global rate limit value from extension state
+			let rateLimitSeconds: number | undefined
+
+			try {
+				// Try to get global state rate limit
+				rateLimitSeconds = await this.context.globalState.get<number>("rateLimitSeconds")
+				console.log(`[RateLimitMigration] Found global rate limit value: ${rateLimitSeconds}`)
+			} catch (error) {
+				console.error("[RateLimitMigration] Error getting global rate limit:", error)
+			}
+
+			// If no global rate limit, use default value of 5 seconds
+			if (rateLimitSeconds === undefined) {
+				rateLimitSeconds = 5 // Default value
+				console.log(`[RateLimitMigration] Using default rate limit value: ${rateLimitSeconds}`)
+			}
+
+			// Apply the rate limit to all API configurations
+			for (const [name, apiConfig] of Object.entries(config.apiConfigs)) {
+				// Only set if not already configured
+				if (apiConfig.rateLimitSeconds === undefined) {
+					console.log(`[RateLimitMigration] Applying rate limit ${rateLimitSeconds}s to profile: ${name}`)
+					apiConfig.rateLimitSeconds = rateLimitSeconds
+				}
+			}
+
+			console.log(`[RateLimitMigration] Migration complete`)
+		} catch (error) {
+			console.error(`[RateLimitMigration] Failed to migrate rate limit settings:`, error)
 		}
 	}
 
@@ -96,6 +153,48 @@ export class ConfigManager {
 			return await this.lock(async () => {
 				const currentConfig = await this.readConfig()
 				const existingConfig = currentConfig.apiConfigs[name]
+
+				// If this is a new config or doesn't have rate limit, try to apply the global rate limit
+				if (!existingConfig || config.rateLimitSeconds === undefined) {
+					// Apply rate limit if not specified explicitly in the config being saved
+					if (config.rateLimitSeconds === undefined) {
+						let globalRateLimit: number | undefined
+
+						// First check if we have an existing migrated config to copy from
+						const anyExistingConfig = Object.values(currentConfig.apiConfigs)[0]
+						if (anyExistingConfig?.rateLimitSeconds !== undefined) {
+							globalRateLimit = anyExistingConfig.rateLimitSeconds
+							console.log(
+								`[RateLimitMigration] Using existing profile's rate limit value: ${globalRateLimit}s`,
+							)
+						} else {
+							// Otherwise check global state
+							try {
+								globalRateLimit = await this.context.globalState.get<number>("rateLimitSeconds")
+								console.log(
+									`[RateLimitMigration] Using global rate limit for new profile: ${globalRateLimit}s`,
+								)
+							} catch (error) {
+								console.error(
+									"[RateLimitMigration] Error getting global rate limit for new profile:",
+									error,
+								)
+							}
+
+							// Use default if not found
+							if (globalRateLimit === undefined) {
+								globalRateLimit = 5 // Default value
+								console.log(
+									`[RateLimitMigration] Using default rate limit value for new profile: ${globalRateLimit}s`,
+								)
+							}
+						}
+
+						// Apply the rate limit to the new config
+						config.rateLimitSeconds = globalRateLimit
+					}
+				}
+
 				currentConfig.apiConfigs[name] = {
 					...config,
 					id: existingConfig?.id || this.generateId(),

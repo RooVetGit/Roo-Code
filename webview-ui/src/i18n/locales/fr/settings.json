@@ -281,6 +281,9 @@
 			"description": "Temps maximum d'attente pour l'initialisation de l'intégration du shell avant d'exécuter des commandes. Pour les utilisateurs avec des temps de démarrage de shell longs, cette valeur peut nécessiter d'être augmentée si vous voyez des erreurs \"Shell Integration Unavailable\" dans le terminal."
 		}
 	},
+	"rateLimit": {
+		"useCustom": "Utiliser une limite de débit personnalisée"
+	},
 	"advanced": {
 		"rateLimit": {
 			"label": "Limite de débit",

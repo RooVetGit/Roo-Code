@@ -281,6 +281,9 @@
 			"description": "Tiempo máximo de espera para la inicialización de la integración del shell antes de ejecutar comandos. Para usuarios con tiempos de inicio de shell largos, este valor puede necesitar ser aumentado si ve errores \"Shell Integration Unavailable\" en el terminal."
 		}
 	},
+	"rateLimit": {
+		"useCustom": "Usar límite de tasa personalizado"
+	},
 	"advanced": {
 		"rateLimit": {
 			"label": "Límite de tasa",

@@ -9,8 +9,14 @@ const mockSecrets = {
 	delete: jest.fn(),
 }
 
+const mockGlobalState = {
+	get: jest.fn(),
+	update: jest.fn(),
+}
+
 const mockContext = {
 	secrets: mockSecrets,
+	globalState: mockGlobalState,
 } as unknown as ExtensionContext
 
 describe("ConfigManager", () => {
@@ -40,7 +46,11 @@ describe("ConfigManager", () => {
 						default: {
 							config: {},
 							id: "default",
+							rateLimitSeconds: 5,
 						},
+					},
+					migrations: {
+						rateLimitMigrated: true,
 					},
 				}),
 			)
@@ -65,6 +75,9 @@ describe("ConfigManager", () => {
 					},
 				}),
 			)
+
+			// Mock global state to prevent rate limit errors
+			mockGlobalState.get.mockResolvedValue(5)
 
 			await configManager.initConfig()
 
@@ -141,6 +154,9 @@ describe("ConfigManager", () => {
 
 	describe("SaveConfig", () => {
 		it("should save new config", async () => {
+			// Mock globalState to prevent rate limit errors
+			mockGlobalState.get.mockResolvedValue(5)
+
 			mockSecrets.get.mockResolvedValue(
 				JSON.stringify({
 					currentApiConfigName: "default",
@@ -162,9 +178,10 @@ describe("ConfigManager", () => {
 
 			await configManager.saveConfig("test", newConfig)
 
-			// Get the actual stored config to check the generated ID
+			// Get the actual stored config to check the generated ID and rate limit
 			const storedConfig = JSON.parse(mockSecrets.store.mock.calls[0][1])
 			const testConfigId = storedConfig.apiConfigs.test.id
+			const rateLimitSeconds = storedConfig.apiConfigs.test.rateLimitSeconds
 
 			const expectedConfig = {
 				currentApiConfigName: "default",
@@ -173,6 +190,7 @@ describe("ConfigManager", () => {
 					test: {
 						...newConfig,
 						id: testConfigId,
+						rateLimitSeconds,
 					},
 				},
 				modeApiConfigs: {
@@ -196,6 +214,7 @@ describe("ConfigManager", () => {
 						apiProvider: "anthropic",
 						apiKey: "old-key",
 						id: "test-id",
+						rateLimitSeconds: 5,
 					},
 				},
 			}
@@ -209,21 +228,14 @@ describe("ConfigManager", () => {
 
 			await configManager.saveConfig("test", updatedConfig)
 
-			const expectedConfig = {
-				currentApiConfigName: "default",
-				apiConfigs: {
-					test: {
-						apiProvider: "anthropic",
-						apiKey: "new-key",
-						id: "test-id",
-					},
-				},
-			}
-
-			expect(mockSecrets.store).toHaveBeenCalledWith(
-				"roo_cline_config_api_config",
-				JSON.stringify(expectedConfig, null, 2),
-			)
+			// Check that the last call to store has the correct values
+			const storedConfig = JSON.parse(mockSecrets.store.mock.calls[mockSecrets.store.mock.calls.length - 1][1])
+			expect(storedConfig.apiConfigs.test).toEqual({
+				apiProvider: "anthropic",
+				apiKey: "new-key",
+				id: "test-id",
+				rateLimitSeconds: 5,
+			})
 		})
 
 		it("should throw error if secrets storage fails", async () => {
@@ -319,8 +331,9 @@ describe("ConfigManager", () => {
 				id: "test-id",
 			})
 
-			// Get the stored config to check the structure
-			const storedConfig = JSON.parse(mockSecrets.store.mock.calls[0][1])
+			// Get the last stored config to check the structure
+			const lastCallIndex = mockSecrets.store.mock.calls.length - 1
+			const storedConfig = JSON.parse(mockSecrets.store.mock.calls[lastCallIndex][1])
 			expect(storedConfig.currentApiConfigName).toBe("test")
 			expect(storedConfig.apiConfigs.test).toEqual({
 				apiProvider: "anthropic",
@@ -386,8 +399,9 @@ describe("ConfigManager", () => {
 
 			await configManager.setCurrentConfig("test")
 
-			// Get the stored config to check the structure
-			const storedConfig = JSON.parse(mockSecrets.store.mock.calls[0][1])
+			// Get the last stored config to check the structure
+			const lastCallIndex = mockSecrets.store.mock.calls.length - 1
+			const storedConfig = JSON.parse(mockSecrets.store.mock.calls[lastCallIndex][1])
 			expect(storedConfig.currentApiConfigName).toBe("test")
 			expect(storedConfig.apiConfigs.default.id).toBe("default")
 			expect(storedConfig.apiConfigs.test).toEqual({

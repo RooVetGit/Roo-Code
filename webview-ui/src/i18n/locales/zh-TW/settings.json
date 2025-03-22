@@ -281,6 +281,9 @@
 			"description": "執行命令前等待 Shell 整合初始化的最長時間。對於 Shell 啟動時間較長的使用者，如果在終端機中看到\"Shell Integration Unavailable\"錯誤，可能需要增加此值。"
 		}
 	},
+	"rateLimit": {
+		"useCustom": "使用自訂速率限制"
+	},
 	"advanced": {
 		"rateLimit": {
 			"label": "速率限制",

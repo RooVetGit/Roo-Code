@@ -281,6 +281,9 @@
 			"description": "Komutları yürütmeden önce kabuk entegrasyonunun başlatılması için beklenecek maksimum süre. Kabuk başlatma süresi uzun olan kullanıcılar için, terminalde \"Shell Integration Unavailable\" hatalarını görürseniz bu değerin artırılması gerekebilir."
 		}
 	},
+	"rateLimit": {
+		"useCustom": "Özel hız sınırı kullan"
+	},
 	"advanced": {
 		"rateLimit": {
 			"label": "Hız sınırı",
