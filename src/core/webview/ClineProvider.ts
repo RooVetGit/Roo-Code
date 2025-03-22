@@ -91,9 +91,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	private contextProxy: ContextProxy
 	configManager: ConfigManager
 	customModesManager: CustomModesManager
-	get cwd() {
-		return getWorkspacePath()
-	}
+
 	constructor(
 		readonly context: vscode.ExtensionContext,
 		private readonly outputChannel: vscode.OutputChannel,
@@ -2743,6 +2741,12 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	public async setValues(values: Partial<ConfigurationValues>) {
 		await this.contextProxy.setValues(values)
+	}
+
+	// cwd
+
+	get cwd() {
+		return getWorkspacePath()
 	}
 
 	// dev

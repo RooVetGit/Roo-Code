@@ -1,0 +1,24 @@
+{
+	"name": "@benchmark/types",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/index.cjs"
+		}
+	},
+	"scripts": {
+		"lint": "eslint src --ext ts --max-warnings=0",
+		"check-types": "tsc --noEmit",
+		"format": "prettier --write src",
+		"build": "tsup --format esm,cjs"
+	},
+	"dependencies": {
+		"zod": "^3.24.2"
+	},
+	"devDependencies": {
+		"@benchmark/eslint-config": "workspace:^",
+		"@benchmark/typescript-config": "workspace:^"
+	}
+}

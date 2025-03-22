@@ -1,16 +1,17 @@
 {
-	"name": "benchmark",
-	"version": "0.1.0",
+	"name": "@benchmark/monorepo",
 	"private": true,
-	"main": "out/run.js",
+	"packageManager": "pnpm@10.6.5",
 	"scripts": {
-		"build": "npm run compile && cd .. && npm run compile && npm run build:webview",
-		"lint": "eslint src --ext ts",
-		"check-types": "tsc --noEmit",
-		"compile": "rm -rf out && tsc -p tsconfig.json",
-		"cli": "npm run compile && npx dotenvx run -f .env.local -- tsx src/cli.ts",
-		"clean": "rimraf out",
-		"clean:exercises": "cd exercises && git checkout -f && git clean -fd",
+		"lint": "turbo lint",
+		"check-types": "turbo check-types",
+		"format": "turbo format",
+		"build": "turbo build",
+		"build:extension": "cd .. && npm run vscode-test",
+		"build:runner": "turbo build --filter @benchmark/runner",
+		"cli": "pnpm --filter @benchmark/cli dev",
+		"web": "pnpm --filter @benchmark/web dev",
+		"studio": "pnpm --filter @benchmark/db db:studio",
 		"docker:build": "docker build -f Dockerfile -t roo-code-benchmark ..",
 		"docker:run": "touch /tmp/benchmarks.db && docker run -d -it -p 3000:3000 -v /tmp/benchmarks.db:/tmp/benchmarks.db roo-code-benchmark",
 		"docker:start": "npm run docker:build && npm run docker:run",
@@ -21,10 +22,16 @@
 		"docker:clean": "npm run docker:stop && npm run docker:rm"
 	},
 	"devDependencies": {
-		"@vscode/test-electron": "^2.4.0",
-		"gluegun": "^5.1.2",
+		"@dotenvx/dotenvx": "^1.39.0",
+		"@eslint/js": "^9.22.0",
+		"eslint": "^9.22.0",
+		"globals": "^16.0.0",
+		"prettier": "^3.5.3",
+		"rimraf": "^6.0.1",
+		"tsup": "^8.4.0",
 		"tsx": "^4.19.3",
-		"typescript": "^5.4.5",
-		"yargs": "^17.7.2"
+		"turbo": "^2.4.4",
+		"typescript": "^5",
+		"typescript-eslint": "^8.26.0"
 	}
 }

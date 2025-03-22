@@ -1,0 +1,8 @@
+{
+	"extends": "@benchmark/typescript-config/cjs.json",
+	"compilerOptions": {
+		"outDir": "dist"
+	},
+	"include": ["src"],
+	"exclude": ["node_modules"]
+}
