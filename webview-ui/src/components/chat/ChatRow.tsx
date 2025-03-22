@@ -359,6 +359,21 @@ export const ChatRowContent = ({
 						</div>
 					</>
 				)
+			case "fetchInstructions":
+				return (
+					<>
+						<div style={headerStyle}>
+							{toolIcon("file-code")}
+							<span style={{ fontWeight: "bold" }}>{t("chat:instructions.wantsToFetch")}</span>
+						</div>
+						<CodeAccordian
+							isLoading={message.partial}
+							code={tool.content!}
+							isExpanded={isExpanded}
+							onToggleExpand={onToggleExpand}
+						/>
+					</>
+				)
 			case "listFilesTopLevel":
 				return (
 					<>
