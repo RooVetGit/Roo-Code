@@ -5,14 +5,16 @@ import { ClineProvider } from "../core/webview/ClineProvider"
 
 import { RooCodeAPI, RooCodeEvents, ConfigurationValues, TokenUsage } from "./roo-code"
 import { MessageHistory } from "./message-history"
+import { IpcClientMessageType, IpcServerMessageType, IpcServer } from "./ipc"
 
 export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 	private readonly outputChannel: vscode.OutputChannel
 	private readonly provider: ClineProvider
 	private readonly history: MessageHistory
 	private readonly tokenUsage: Record<string, TokenUsage>
+	private readonly ipc?: IpcServer
 
-	constructor(outputChannel: vscode.OutputChannel, provider: ClineProvider) {
+	constructor(outputChannel: vscode.OutputChannel, provider: ClineProvider, socketPath?: string) {
 		super()
 
 		this.outputChannel = outputChannel
@@ -27,14 +29,12 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 			cline.on("taskUnpaused", () => this.emit("taskUnpaused", cline.taskId))
 			cline.on("taskAskResponded", () => this.emit("taskAskResponded", cline.taskId))
 			cline.on("taskAborted", () => this.emit("taskAborted", cline.taskId))
-			cline.on("taskSpawned", (taskId) => this.emit("taskSpawned", cline.taskId, taskId))
+			cline.on("taskSpawned", (childTaskId) => this.emit("taskSpawned", cline.taskId, childTaskId))
+			cline.on("taskCompleted", (_, usage) => this.emit("taskCompleted", cline.taskId, usage))
+			cline.on("taskTokenUsageUpdated", (_, usage) => this.emit("taskTokenUsageUpdated", cline.taskId, usage))
 		})
 
 		this.on("message", ({ taskId, action, message }) => {
-			// if (message.type === "say") {
-			// 	console.log("message", { taskId, action, message })
-			// }
-
 			if (action === "created") {
 				this.history.add(taskId, message)
 			} else if (action === "updated") {
@@ -43,6 +43,30 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		})
 
 		this.on("taskTokenUsageUpdated", (taskId, usage) => (this.tokenUsage[taskId] = usage))
+
+		if (socketPath) {
+			this.ipc = new IpcServer(socketPath)
+			this.ipc.listen()
+
+			this.ipc.on("message", (message) => {
+				switch (message.type) {
+					case IpcClientMessageType.StartNewTask:
+						this.startNewTask(message.data.text, message.data.images)
+						break
+				}
+			})
+		}
+	}
+
+	public override emit<K extends keyof RooCodeEvents>(
+		eventName: K,
+		...args: K extends keyof RooCodeEvents ? RooCodeEvents[K] : never
+	) {
+		if (this.ipc) {
+			this.ipc.broadcast({ type: IpcServerMessageType.TaskEvent, data: { eventName, data: { ...args } } })
+		}
+
+		return super.emit(eventName, ...args)
 	}
 
 	public async startNewTask(text?: string, images?: string[]) {

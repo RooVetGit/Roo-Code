@@ -111,7 +111,7 @@ export function activate(context: vscode.ExtensionContext) {
 	registerTerminalActions(context)
 
 	// Implements the `RooCodeAPI` interface.
-	return new API(outputChannel, provider)
+	return new API(outputChannel, provider, "/tmp/roo-code-ipc.sock")
 }
 
 // This method is called when your extension is deactivated
