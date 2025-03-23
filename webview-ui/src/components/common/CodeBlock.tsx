@@ -181,6 +181,7 @@ const CodeBlock = memo(
 		const [highlightedCode, setHighlightedCode] = useState<string>("")
 		const [showCollapseButton, setShowCollapseButton] = useState(true)
 		const codeBlockRef = useRef<HTMLDivElement>(null)
+		const preRef = useRef<HTMLDivElement>(null)
 		const copyButtonWrapperRef = useRef<HTMLDivElement>(null)
 		const { showCopyFeedback, copyWithFeedback } = useCopyToClipboard()
 		language = normalizeLanguage(language)
@@ -233,6 +234,22 @@ const CodeBlock = memo(
 				}
 			})
 		}, [source, language, collapsedHeight])
+
+		// Scroll to bottom immediately when source changes
+		useEffect(() => {
+			if (preRef.current && source) {
+				// Use requestAnimationFrame to ensure DOM is updated
+				requestAnimationFrame(() => {
+					// Small delay to ensure content is rendered
+					setTimeout(() => {
+						if (preRef.current) {
+							// Use scrollTop for JSDOM compatibility
+							preRef.current.scrollTop = preRef.current.scrollHeight
+						}
+					}, 0)
+				})
+			}
+		}, [source])
 
 		const updateCopyButtonPosition = useCallback((forceShow = false) => {
 			const codeBlock = codeBlockRef.current
@@ -345,6 +362,7 @@ const CodeBlock = memo(
 		return (
 			<CodeBlockContainer ref={codeBlockRef}>
 				<StyledPre
+					ref={preRef}
 					preStyle={preStyle}
 					wordwrap={wordWrap ? "true" : "false"}
 					windowshade={windowShade ? "true" : "false"}
