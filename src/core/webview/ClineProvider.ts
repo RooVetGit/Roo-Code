@@ -39,6 +39,7 @@ import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { ShadowCheckpointService } from "../../services/checkpoints/ShadowCheckpointService"
 import { BrowserSession } from "../../services/browser/BrowserSession"
 import { discoverChromeInstances } from "../../services/browser/browserDiscovery"
+import { searchWorkspaceFiles } from "../../services/search/file-search"
 import { fileExistsAtPath } from "../../utils/fs"
 import { playSound, setSoundEnabled, setSoundVolume } from "../../utils/sound"
 import { playTts, setTtsEnabled, setTtsSpeed, stopTts } from "../../utils/tts"
@@ -86,7 +87,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	private clineStack: Cline[] = []
 	private workspaceTracker?: WorkspaceTracker
 	protected mcpHub?: McpHub // Change from private to protected
-	private latestAnnouncementId = "mar-18-2025-3-9" // update to some unique identifier when we add a new announcement
+	private latestAnnouncementId = "mar-20-2025-3-10" // update to some unique identifier when we add a new announcement
 	private contextProxy: ContextProxy
 	configManager: ConfigManager
 	customModesManager: CustomModesManager
@@ -1645,6 +1646,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						await this.updateGlobalState("showRooIgnoredFiles", message.bool ?? true)
 						await this.postStateToWebview()
 						break
+					case "maxReadFileLine":
+						await this.updateGlobalState("maxReadFileLine", message.value)
+						await this.postStateToWebview()
+						break
 					case "enhancementApiConfigId":
 						await this.updateGlobalState("enhancementApiConfigId", message.text)
 						await this.postStateToWebview()
@@ -1751,6 +1756,46 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								)
 								vscode.window.showErrorMessage(t("common:errors.search_commits"))
 							}
+						}
+						break
+					}
+					case "searchFiles": {
+						const workspacePath = getWorkspacePath()
+
+						if (!workspacePath) {
+							// Handle case where workspace path is not available
+							await this.postMessageToWebview({
+								type: "fileSearchResults",
+								results: [],
+								requestId: message.requestId,
+								error: "No workspace path available",
+							})
+							break
+						}
+						try {
+							// Call file search service with query from message
+							const results = await searchWorkspaceFiles(
+								message.query || "",
+								workspacePath,
+								20, // Use default limit, as filtering is now done in the backend
+							)
+
+							// Send results back to webview
+							await this.postMessageToWebview({
+								type: "fileSearchResults",
+								results,
+								requestId: message.requestId,
+							})
+						} catch (error) {
+							const errorMessage = error instanceof Error ? error.message : String(error)
+
+							// Send error response to webview
+							await this.postMessageToWebview({
+								type: "fileSearchResults",
+								results: [],
+								error: errorMessage,
+								requestId: message.requestId,
+							})
 						}
 						break
 					}
@@ -2285,51 +2330,33 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	}> {
 		const history = ((await this.getGlobalState("taskHistory")) as HistoryItem[] | undefined) || []
 		const historyItem = history.find((item) => item.id === id)
-		if (!historyItem) {
-			throw new Error("Task not found in history")
+		if (historyItem) {
+			const taskDirPath = path.join(this.contextProxy.globalStorageUri.fsPath, "tasks", id)
+			const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
+			const uiMessagesFilePath = path.join(taskDirPath, GlobalFileNames.uiMessages)
+			const fileExists = await fileExistsAtPath(apiConversationHistoryFilePath)
+			if (fileExists) {
+				const apiConversationHistory = JSON.parse(await fs.readFile(apiConversationHistoryFilePath, "utf8"))
+				return {
+					historyItem,
+					taskDirPath,
+					apiConversationHistoryFilePath,
+					uiMessagesFilePath,
+					apiConversationHistory,
+				}
+			}
 		}
-
-		const taskDirPath = path.join(this.contextProxy.globalStorageUri.fsPath, "tasks", id)
-		const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
-		const uiMessagesFilePath = path.join(taskDirPath, GlobalFileNames.uiMessages)
-
-		const fileExists = await fileExistsAtPath(apiConversationHistoryFilePath)
-		if (!fileExists) {
-			// Instead of silently deleting, throw a specific error
-			throw new Error("TASK_FILES_MISSING")
-		}
-
-		const apiConversationHistory = JSON.parse(await fs.readFile(apiConversationHistoryFilePath, "utf8"))
-		return {
-			historyItem,
-			taskDirPath,
-			apiConversationHistoryFilePath,
-			uiMessagesFilePath,
-			apiConversationHistory,
-		}
+		// if we tried to get a task that doesn't exist, remove it from state
+		// FIXME: this seems to happen sometimes when the json file doesnt save to disk for some reason
+		await this.deleteTaskFromState(id)
+		throw new Error("Task not found")
 	}
 
 	async showTaskWithId(id: string) {
 		if (id !== this.getCurrentCline()?.taskId) {
-			try {
-				const { historyItem } = await this.getTaskWithId(id)
-				await this.initClineWithHistoryItem(historyItem)
-			} catch (error) {
-				if (error.message === "TASK_FILES_MISSING") {
-					const response = await vscode.window.showWarningMessage(
-						t("common:warnings.missing_task_files"),
-						t("common:answers.remove"),
-						t("common:answers.keep"),
-					)
-
-					if (response === t("common:answers.remove")) {
-						await this.deleteTaskFromState(id)
-						await this.postStateToWebview()
-					}
-					return
-				}
-				throw error
-			}
+			// Non-current task.
+			const { historyItem } = await this.getTaskWithId(id)
+			await this.initClineWithHistoryItem(historyItem) // Clears existing task.
 		}
 
 		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
@@ -2450,6 +2477,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			telemetrySetting,
 			showRooIgnoredFiles,
 			language,
+			maxReadFileLine,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
@@ -2519,6 +2547,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			showRooIgnoredFiles: showRooIgnoredFiles ?? true,
 			language,
 			renderContext: this.renderContext,
+			maxReadFileLine: maxReadFileLine ?? 500,
 		}
 	}
 
@@ -2677,6 +2706,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			browserToolEnabled: stateValues.browserToolEnabled ?? true,
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
+			maxReadFileLine: stateValues.maxReadFileLine ?? 500,
 		}
 	}
 
@@ -2812,29 +2842,5 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		}
 
 		return properties
-	}
-
-	async validateTaskHistory() {
-		const history = ((await this.getGlobalState("taskHistory")) as HistoryItem[] | undefined) || []
-		const validTasks: HistoryItem[] = []
-
-		for (const item of history) {
-			const taskDirPath = path.join(this.contextProxy.globalStorageUri.fsPath, "tasks", item.id)
-			const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
-
-			if (await fileExistsAtPath(apiConversationHistoryFilePath)) {
-				validTasks.push(item)
-			}
-		}
-
-		if (validTasks.length !== history.length) {
-			await this.updateGlobalState("taskHistory", validTasks)
-			await this.postStateToWebview()
-
-			const removedCount = history.length - validTasks.length
-			if (removedCount > 0) {
-				await vscode.window.showInformationMessage(t("common:info.history_cleanup", { count: removedCount }))
-			}
-		}
 	}
 }

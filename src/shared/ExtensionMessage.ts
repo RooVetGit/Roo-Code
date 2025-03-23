@@ -56,6 +56,8 @@ export interface ExtensionMessage {
 		| "remoteBrowserEnabled"
 		| "ttsStart"
 		| "ttsStop"
+		| "maxReadFileLine"
+		| "fileSearchResults"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -92,6 +94,12 @@ export interface ExtensionMessage {
 	values?: Record<string, any>
 	requestId?: string
 	promptText?: string
+	results?: Array<{
+		path: string
+		type: "file" | "folder"
+		label?: string
+	}>
+	error?: string
 }
 
 export interface ApiConfigMeta {
@@ -159,6 +167,7 @@ export interface ExtensionState {
 	machineId?: string
 	showRooIgnoredFiles: boolean // Whether to show .rooignore'd files in listings
 	renderContext: "sidebar" | "editor"
+	maxReadFileLine: number // Maximum number of lines to read from a file before truncating
 }
 
 export type { ClineMessage, ClineAsk, ClineSay }

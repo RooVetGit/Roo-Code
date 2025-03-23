@@ -1,6 +1,6 @@
 {
-	"dialogTitle": "Menschliche Weiterleitung - Bitte helfen Sie beim Kopieren und Einfügen von Informationen",
-	"dialogDescription": "Bitte kopieren Sie den folgenden Prompt in die Web-KI und fügen Sie dann die Antwort der KI in das untenstehende Textfeld ein.",
+	"dialogTitle": "Menschliche Weiterleitung - Bitte hilf beim Kopieren/Einfügen von Informationen",
+	"dialogDescription": "Bitte kopiere den folgenden Prompt in die Web-KI und füge dann die Antwort der KI in das Eingabefeld unten ein.",
 	"copiedToClipboard": "In die Zwischenablage kopiert",
 	"warning": {
 		"lastInteraction": "Es sieht so aus, als hätten Sie die KI-Antwort aus der letzten Interaktion kopiert, nicht die Antwort für die aktuelle Aufgabe. Bitte überprüfen Sie Ihre Interaktion mit der Web-KI.",
@@ -15,8 +15,8 @@
 	},
 	"shortcutDescription": "Sie können den Tastaturkurzbefehl Strg/Cmd+Alt+V (Standard) verwenden, um den Inhalt der Zwischenablage schnell zu senden. Sie können den Kurzbefehl auch ändern, indem Sie in den Tastaturkurzbefehl-Einstellungen nach 'Zwischenablage senden' suchen.",
 	"aiResponse": {
-		"label": "KI-Antwort eingeben:",
-		"placeholder": "Fügen Sie hier die Antwort der KI ein..."
+		"label": "Bitte gib die KI-Antwort ein:",
+		"placeholder": "KI-Antwort hier einfügen..."
 	},
 	"actions": {
 		"cancel": "Abbrechen",

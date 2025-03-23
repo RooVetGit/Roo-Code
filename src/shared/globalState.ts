@@ -124,6 +124,7 @@ export const GLOBAL_STATE_KEYS = [
 	"humanRelayMonitorInterval",
 	"language",
 	"maxWorkspaceFiles",
+	"maxReadFileLine",
 	"fakeAi",
 ] as const
 
