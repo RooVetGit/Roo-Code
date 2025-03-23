@@ -1,9 +1,9 @@
 {
-	"name": "seawolf-cline",
-	"displayName": "Seawolf Code (prev. Roo Cline)",
+	"name": "roo-cline",
+	"displayName": "Roo Code (prev. Roo Cline)",
 	"description": "A whole dev team of AI agents in your editor.",
 	"publisher": "RooVeterinaryInc",
-	"version": "3.8.8",
+	"version": "3.10.2",
 	"icon": "assets/icons/rocket.png",
 	"galleryBanner": {
 		"color": "#617A91",
@@ -42,8 +42,8 @@
 		"sonnet",
 		"ai",
 		"llama",
-		"seawolf code",
-		"seawolfcode"
+		"roo code",
+		"roocode"
 	],
 	"activationEvents": [
 		"onLanguage",
@@ -53,115 +53,115 @@
 	"contributes": {
 		"submenus": [
 			{
-				"id": "seawolf-code.contextMenu",
-				"label": "Seawolf Code"
+				"id": "roo-code.contextMenu",
+				"label": "Roo Code"
 			},
 			{
-				"id": "seawolf-code.terminalMenu",
-				"label": "Seawolf Code"
+				"id": "roo-code.terminalMenu",
+				"label": "Roo Code"
 			}
 		],
 		"viewsContainers": {
 			"activitybar": [
 				{
-					"id": "seawolf-cline-ActivityBar",
-					"title": "Seawolf Code",
+					"id": "roo-cline-ActivityBar",
+					"title": "Roo Code",
 					"icon": "$(rocket)"
 				}
 			]
 		},
 		"views": {
-			"seawolf-cline-ActivityBar": [
+			"roo-cline-ActivityBar": [
 				{
 					"type": "webview",
-					"id": "seawolf-cline.SidebarProvider",
+					"id": "roo-cline.SidebarProvider",
 					"name": ""
 				}
 			]
 		},
 		"commands": [
 			{
-				"command": "seawolf-cline.plusButtonClicked",
+				"command": "roo-cline.plusButtonClicked",
 				"title": "New Task",
 				"icon": "$(add)"
 			},
 			{
-				"command": "seawolf-cline.mcpButtonClicked",
+				"command": "roo-cline.mcpButtonClicked",
 				"title": "MCP Servers",
 				"icon": "$(server)"
 			},
 			{
-				"command": "seawolf-cline.promptsButtonClicked",
+				"command": "roo-cline.promptsButtonClicked",
 				"title": "Prompts",
 				"icon": "$(notebook)"
 			},
 			{
-				"command": "seawolf-cline.historyButtonClicked",
+				"command": "roo-cline.historyButtonClicked",
 				"title": "History",
 				"icon": "$(history)"
 			},
 			{
-				"command": "seawolf-cline.popoutButtonClicked",
+				"command": "roo-cline.popoutButtonClicked",
 				"title": "Open in Editor",
 				"icon": "$(link-external)"
 			},
 			{
-				"command": "seawolf-cline.settingsButtonClicked",
+				"command": "roo-cline.settingsButtonClicked",
 				"title": "Settings",
 				"icon": "$(settings-gear)"
 			},
 			{
-				"command": "seawolf-cline.helpButtonClicked",
+				"command": "roo-cline.helpButtonClicked",
 				"title": "Documentation",
 				"icon": "$(question)"
 			},
 			{
-				"command": "seawolf-cline.openInNewTab",
+				"command": "roo-cline.openInNewTab",
 				"title": "Open In New Tab",
-				"category": "Seawolf Code"
+				"category": "Roo Code"
 			},
 			{
-				"command": "seawolf-cline.explainCode",
+				"command": "roo-cline.explainCode",
 				"title": "Explain Code",
-				"category": "Seawolf Code"
+				"category": "Roo Code"
 			},
 			{
-				"command": "seawolf-cline.fixCode",
+				"command": "roo-cline.fixCode",
 				"title": "Fix Code",
-				"category": "Seawolf Code"
+				"category": "Roo Code"
 			},
 			{
-				"command": "seawolf-cline.improveCode",
+				"command": "roo-cline.improveCode",
 				"title": "Improve Code",
-				"category": "Seawolf Code"
+				"category": "Roo Code"
 			},
 			{
-				"command": "seawolf-cline.addToContext",
+				"command": "roo-cline.addToContext",
 				"title": "Add To Context",
-				"category": "Seawolf Code"
+				"category": "Roo Code"
 			},
 			{
-				"command": "seawolf-cline.terminalAddToContext",
+				"command": "roo-cline.terminalAddToContext",
 				"title": "Add Terminal Content to Context",
 				"category": "Terminal"
 			},
 			{
-				"command": "seawolf-cline.terminalFixCommand",
+				"command": "roo-cline.terminalFixCommand",
 				"title": "Fix This Command",
 				"category": "Terminal"
 			},
 			{
-				"command": "seawolf-cline.terminalExplainCommand",
+				"command": "roo-cline.terminalExplainCommand",
 				"title": "Explain This Command",
 				"category": "Terminal"
 			},
 			{
-				"command": "seawolf-cline.terminalFixCommandInCurrentTask",
+				"command": "roo-cline.terminalFixCommandInCurrentTask",
 				"title": "Fix This Command (Current Task)",
 				"category": "Terminal"
 			},
 			{
-				"command": "seawolf-cline.terminalExplainCommandInCurrentTask",
+				"command": "roo-cline.terminalExplainCommandInCurrentTask",
 				"title": "Explain This Command (Current Task)",
 				"category": "Terminal"
 			}
@@ -169,90 +169,98 @@
 		"menus": {
 			"editor/context": [
 				{
-					"command": "seawolf-cline.explainCode",
-					"when": "editorHasSelection",
-					"group": "Seawolf@1"
+					"submenu": "roo-code.contextMenu",
+					"group": "navigation"
+				}
+			],
+			"roo-code.contextMenu": [
+				{
+					"command": "roo-cline.explainCode",
+					"group": "1_actions@1"
 				},
 				{
-					"command": "seawolf-cline.fixCode",
-					"when": "editorHasSelection",
-					"group": "Seawolf@2"
+					"command": "roo-cline.fixCode",
+					"group": "1_actions@2"
 				},
 				{
-					"command": "seawolf-cline.improveCode",
-					"when": "editorHasSelection",
-					"group": "Seawolf@3"
+					"command": "roo-cline.improveCode",
+					"group": "1_actions@3"
 				},
 				{
-					"command": "seawolf-cline.addToContext",
-					"when": "editorHasSelection",
-					"group": "Seawolf@4"
+					"command": "roo-cline.addToContext",
+					"group": "1_actions@4"
 				}
 			],
 			"terminal/context": [
 				{
-					"command": "seawolf-cline.terminalAddToContext",
-					"group": "Seawolf@1"
+					"submenu": "roo-code.terminalMenu",
+					"group": "navigation"
+				}
+			],
+			"roo-code.terminalMenu": [
+				{
+					"command": "roo-cline.terminalAddToContext",
+					"group": "1_actions@1"
 				},
 				{
-					"command": "seawolf-cline.terminalFixCommand",
-					"group": "Seawolf@2"
+					"command": "roo-cline.terminalFixCommand",
+					"group": "1_actions@2"
 				},
 				{
-					"command": "seawolf-cline.terminalExplainCommand",
-					"group": "Seawolf@3"
+					"command": "roo-cline.terminalExplainCommand",
+					"group": "1_actions@3"
 				},
 				{
-					"command": "seawolf-cline.terminalFixCommandInCurrentTask",
-					"group": "Seawolf@5"
+					"command": "roo-cline.terminalFixCommandInCurrentTask",
+					"group": "1_actions@5"
 				},
 				{
-					"command": "seawolf-cline.terminalExplainCommandInCurrentTask",
-					"group": "Seawolf@6"
+					"command": "roo-cline.terminalExplainCommandInCurrentTask",
+					"group": "1_actions@6"
 				}
 			],
 			"view/title": [
 				{
-					"command": "seawolf-cline.plusButtonClicked",
+					"command": "roo-cline.plusButtonClicked",
 					"group": "navigation@1",
-					"when": "view == seawolf-cline.SidebarProvider"
+					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
-					"command": "seawolf-cline.promptsButtonClicked",
+					"command": "roo-cline.promptsButtonClicked",
 					"group": "navigation@2",
-					"when": "view == seawolf-cline.SidebarProvider"
+					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
-					"command": "seawolf-cline.mcpButtonClicked",
+					"command": "roo-cline.mcpButtonClicked",
 					"group": "navigation@3",
-					"when": "view == seawolf-cline.SidebarProvider"
+					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
-					"command": "seawolf-cline.historyButtonClicked",
+					"command": "roo-cline.historyButtonClicked",
 					"group": "navigation@4",
-					"when": "view == seawolf-cline.SidebarProvider"
+					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
-					"command": "seawolf-cline.popoutButtonClicked",
+					"command": "roo-cline.popoutButtonClicked",
 					"group": "navigation@5",
-					"when": "view == seawolf-cline.SidebarProvider"
+					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
-					"command": "seawolf-cline.settingsButtonClicked",
+					"command": "roo-cline.settingsButtonClicked",
 					"group": "navigation@6",
-					"when": "view == seawolf-cline.SidebarProvider"
+					"when": "view == roo-cline.SidebarProvider"
 				},
 				{
-					"command": "seawolf-cline.helpButtonClicked",
+					"command": "roo-cline.helpButtonClicked",
 					"group": "navigation@7",
-					"when": "view == seawolf-cline.SidebarProvider"
+					"when": "view == roo-cline.SidebarProvider"
 				}
 			]
 		},
 		"configuration": {
-			"title": "Seawolf",
+			"title": "Roo Code",
 			"properties": {
-				"seawolf-cline.allowedCommands": {
+				"roo-cline.allowedCommands": {
 					"type": "array",
 					"items": {
 						"type": "string"
@@ -267,7 +275,7 @@
 					],
 					"description": "Commands that can be auto-executed when 'Always approve execute operations' is enabled"
 				},
-				"seawolf-cline.vsCodeLmModelSelector": {
+				"roo-cline.vsCodeLmModelSelector": {
 					"type": "object",
 					"properties": {
 						"vendor": {
@@ -285,23 +293,27 @@
 		}
 	},
 	"scripts": {
-		"build": "npm run build:webview && npm run vsix",
+		"build": "npm run vsix",
 		"build:webview": "cd webview-ui && npm run build",
+		"build:esbuild": "node esbuild.js --production",
 		"compile": "tsc -p . --outDir out && node esbuild.js",
 		"install:all": "npm install npm-run-all && npm run install:_all",
 		"install:_all": "npm-run-all -p install-*",
 		"install-extension": "npm install",
-		"install-webview-ui": "cd webview-ui && npm install",
+		"install-webview": "cd webview-ui && npm install",
 		"install-e2e": "cd e2e && npm install",
+		"install-benchmark": "cd benchmark && npm install",
 		"lint": "npm-run-all -p lint:*",
 		"lint:extension": "eslint src --ext ts",
-		"lint:webview-ui": "cd webview-ui && npm run lint",
+		"lint:webview": "cd webview-ui && npm run lint",
 		"lint:e2e": "cd e2e && npm run lint",
+		"lint:benchmark": "cd benchmark && npm run lint",
 		"check-types": "npm-run-all -p check-types:*",
 		"check-types:extension": "tsc --noEmit",
-		"check-types:webview-ui": "cd webview-ui && npm run check-types",
+		"check-types:webview": "cd webview-ui && npm run check-types",
 		"check-types:e2e": "cd e2e && npm run check-types",
-		"package": "npm run build:webview && npm run check-types && npm run lint && node esbuild.js --production",
+		"check-types:benchmark": "cd benchmark && npm run check-types",
+		"package": "npm-run-all -p build:webview build:esbuild check-types lint",
 		"pretest": "npm run compile",
 		"dev": "cd webview-ui && npm run dev",
 		"test": "npm-run-all -p test:*",
@@ -319,6 +331,11 @@
 		"watch-tests": "tsc -p . -w --outDir out",
 		"changeset": "changeset",
 		"knip": "knip --include files",
+		"clean": "npm-run-all -p clean:*",
+		"clean:extension": "rimraf bin dist out",
+		"clean:webview": "cd webview-ui && npm run clean",
+		"clean:e2e": "cd e2e && npm run clean",
+		"clean:benchmark": "cd benchmark && npm run clean",
 		"update-contributors": "node scripts/update-contributors.js"
 	},
 	"dependencies": {
@@ -329,7 +346,7 @@
 		"@google-cloud/vertexai": "^1.9.3",
 		"@google/generative-ai": "^0.18.0",
 		"@mistralai/mistralai": "^1.3.6",
-		"@modelcontextprotocol/sdk": "^1.0.1",
+		"@modelcontextprotocol/sdk": "^1.7.0",
 		"@types/clone-deep": "^4.0.4",
 		"@types/pdf-parse": "^1.1.4",
 		"@types/tmp": "^0.2.6",
@@ -355,7 +372,6 @@
 		"js-tiktoken": "^1.0.19",
 		"mammoth": "^1.8.0",
 		"monaco-vscode-textmate-theme-converter": "^0.1.7",
-		"nvm": "^0.0.4",
 		"openai": "^4.78.1",
 		"os-name": "^6.0.0",
 		"p-wait-for": "^5.0.2",
@@ -411,10 +427,10 @@
 		"*.{js,jsx,ts,tsx,json,css,md}": [
 			"prettier --write"
 		],
-		"src/**/!(*.d).{ts,tsx}": [
+		"src/**/*.{ts,tsx}": [
 			"npx eslint -c .eslintrc.json --max-warnings=0 --fix"
 		],
-		"webview-ui/**/!(*.d).{ts,tsx}": [
+		"webview-ui/**/*.{ts,tsx}": [
 			"npx eslint -c webview-ui/.eslintrc.json --max-warnings=0 --fix"
 		]
 	}
