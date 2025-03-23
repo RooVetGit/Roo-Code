@@ -179,6 +179,7 @@ const CodeBlock = memo(
 		const [lastScrollPosition, setLastScrollPosition] = useState<number | undefined>(undefined)
 
 		const [highlightedCode, setHighlightedCode] = useState<string>("")
+		const [showCollapseButton, setShowCollapseButton] = useState(true)
 		const codeBlockRef = useRef<HTMLDivElement>(null)
 		const copyButtonWrapperRef = useRef<HTMLDivElement>(null)
 		const { showCopyFeedback, copyWithFeedback } = useCopyToClipboard()
@@ -223,7 +224,15 @@ const CodeBlock = memo(
 				console.error("[CodeBlock] Syntax highlighting error:", e, "\nStack trace:", e.stack)
 				setHighlightedCode(fallback)
 			})
-		}, [source, language])
+			// Check if content height exceeds collapsed height after highlighting
+			highlight().then(() => {
+				const codeBlock = codeBlockRef.current
+				if (codeBlock) {
+					const actualHeight = codeBlock.scrollHeight
+					setShowCollapseButton(actualHeight >= WINDOW_SHADE_SETTINGS.collapsedHeight)
+				}
+			})
+		}, [source, language, collapsedHeight])
 
 		const updateCopyButtonPosition = useCallback((forceShow = false) => {
 			const codeBlock = codeBlockRef.current
@@ -347,37 +356,39 @@ const CodeBlock = memo(
 					onMouseEnter={() => updateCopyButtonPosition(true)}
 					onMouseLeave={() => updateCopyButtonPosition()}>
 					{language && <LanguageDisplay>{language}</LanguageDisplay>}
-					<CopyButton
-						onClick={() => {
-							// Get the current code block element and scrollable container
-							const codeBlock = codeBlockRef.current
-							const scrollContainer = document.querySelector('[data-virtuoso-scroller="true"]')
-							if (!codeBlock || !scrollContainer) return
+					{showCollapseButton && (
+						<CopyButton
+							onClick={() => {
+								// Get the current code block element and scrollable container
+								const codeBlock = codeBlockRef.current
+								const scrollContainer = document.querySelector('[data-virtuoso-scroller="true"]')
+								if (!codeBlock || !scrollContainer) return
 
-							// Get scrollable container and save current scroll position
-							const scrollPosition = scrollContainer.scrollTop
-							// console.debug("Current scroll position ", scrollPosition)
+								// Get scrollable container and save current scroll position
+								const scrollPosition = scrollContainer.scrollTop
+								// console.debug("Current scroll position ", scrollPosition)
 
-							// Toggle window shade state
-							setWindowShade(!windowShade)
+								// Toggle window shade state
+								setWindowShade(!windowShade)
 
-							// Save the position but do it after the UI updates
-							setTimeout(
-								() => {
-									if (lastScrollPosition !== undefined) {
-										// console.debug("Restoring scroll position to", lastScrollPosition)
-										scrollContainer.scrollTop = lastScrollPosition
-									}
+								// Save the position but do it after the UI updates
+								setTimeout(
+									() => {
+										if (lastScrollPosition !== undefined) {
+											// console.debug("Restoring scroll position to", lastScrollPosition)
+											scrollContainer.scrollTop = lastScrollPosition
+										}
 
-									// console.debug("Saving scroll position to", scrollPosition)
-									setLastScrollPosition(scrollPosition)
-								},
-								WINDOW_SHADE_SETTINGS.transitionDelayS * 1000 + 100,
-							)
-						}}
-						title={`${windowShade ? "Expand" : "Collapse"} code block`}>
-						<ButtonIcon style={{ fontSize: "16px" }}>{windowShade ? "⌄" : "⌃"}</ButtonIcon>
-					</CopyButton>
+										// console.debug("Saving scroll position to", scrollPosition)
+										setLastScrollPosition(scrollPosition)
+									},
+									WINDOW_SHADE_SETTINGS.transitionDelayS * 1000 + 100,
+								)
+							}}
+							title={`${windowShade ? "Expand" : "Collapse"} code block`}>
+							<ButtonIcon style={{ fontSize: "16px" }}>{windowShade ? "⌄" : "⌃"}</ButtonIcon>
+						</CopyButton>
+					)}
 					<CopyButton
 						onClick={() => setWordWrap(!wordWrap)}
 						title={`${wordWrap ? "Disable" : "Enable"} word wrap`}>
