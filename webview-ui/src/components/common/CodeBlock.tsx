@@ -225,15 +225,16 @@ const CodeBlock = memo(
 				console.error("[CodeBlock] Syntax highlighting error:", e, "\nStack trace:", e.stack)
 				setHighlightedCode(fallback)
 			})
-			// Check if content height exceeds collapsed height after highlighting
-			highlight().then(() => {
-				const codeBlock = codeBlockRef.current
-				if (codeBlock) {
-					const actualHeight = codeBlock.scrollHeight
-					setShowCollapseButton(actualHeight >= WINDOW_SHADE_SETTINGS.collapsedHeight)
-				}
-			})
 		}, [source, language, collapsedHeight])
+
+		// Check if content height exceeds collapsed height whenever content changes
+		useEffect(() => {
+			const codeBlock = codeBlockRef.current
+			if (codeBlock) {
+				const actualHeight = codeBlock.scrollHeight
+				setShowCollapseButton(actualHeight >= WINDOW_SHADE_SETTINGS.collapsedHeight)
+			}
+		}, [highlightedCode])
 
 		// Scroll to bottom immediately when source changes
 		useEffect(() => {
