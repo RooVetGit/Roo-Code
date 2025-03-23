@@ -1,5 +1,4 @@
 import { memo, useEffect, useRef, useCallback, useState } from "react"
-import debounce from "debounce"
 import styled from "styled-components"
 import { useCopyToClipboard } from "@src/utils/clipboard"
 import { getHighlighter, isLanguageLoaded, normalizeLanguage } from "@src/utils/highlighter"
@@ -232,9 +231,8 @@ const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProp
 	}, [])
 
 	useEffect(() => {
-		const debouncedUpdate = debounce(updateCopyButtonPosition, 10)
-		const handleScroll = () => debouncedUpdate()
-		const handleResize = () => debouncedUpdate()
+		const handleScroll = () => updateCopyButtonPosition()
+		const handleResize = () => updateCopyButtonPosition()
 
 		const scrollContainer = document.querySelector('[data-virtuoso-scroller="true"]')
 		if (scrollContainer) {
@@ -248,7 +246,6 @@ const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProp
 				scrollContainer.removeEventListener("scroll", handleScroll)
 				window.removeEventListener("resize", handleResize)
 			}
-			debouncedUpdate.clear()
 		}
 	}, [updateCopyButtonPosition])
 
