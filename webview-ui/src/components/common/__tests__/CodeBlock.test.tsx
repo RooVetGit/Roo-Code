@@ -2,15 +2,21 @@ import { render, screen, fireEvent, act } from "@testing-library/react"
 import "@testing-library/jest-dom"
 import CodeBlock from "../CodeBlock"
 
-// Mock shiki
-jest.mock("shiki", () => ({
-	createHighlighter: jest.fn().mockImplementation(async () => ({
+// Mock the highlighter utility
+jest.mock("../../../utils/highlighter", () => {
+	const mockHighlighter = {
 		codeToHtml: jest.fn().mockImplementation((code, options) => {
 			const theme = options.theme === "github-light" ? "light" : "dark"
 			return `<pre><code class="hljs language-${options.lang}">${code} [${theme}-theme]</code></pre>`
 		}),
-	})),
-}))
+	}
+
+	return {
+		normalizeLanguage: jest.fn((lang) => lang || "txt"),
+		isLanguageLoaded: jest.fn().mockReturnValue(true),
+		getHighlighter: jest.fn().mockResolvedValue(mockHighlighter),
+	}
+})
 
 // Mock clipboard utility
 jest.mock("../../../utils/clipboard", () => ({
@@ -92,8 +98,8 @@ describe("CodeBlock", () => {
 
 	it("handles WASM loading errors", async () => {
 		const mockError = new Error("WASM load failed")
-		const createHighlighter = require("shiki").createHighlighter
-		createHighlighter.mockRejectedValueOnce(mockError)
+		const highlighterUtil = require("../../../utils/highlighter")
+		highlighterUtil.getHighlighter.mockRejectedValueOnce(mockError)
 
 		const code = "const x = 1;"
 		const consoleSpy = jest.spyOn(console, "error").mockImplementation()
@@ -103,7 +109,7 @@ describe("CodeBlock", () => {
 		})
 
 		expect(consoleSpy).toHaveBeenCalledWith(
-			"CodeBlock highlighting error:",
+			"[CodeBlock] Syntax highlighting error:",
 			mockError,
 			"\nStack trace:",
 			mockError.stack,
@@ -113,19 +119,17 @@ describe("CodeBlock", () => {
 		consoleSpy.mockRestore()
 	})
 
-	it("verifies CSP compliance with precompiled WASM", async () => {
+	it("verifies highlighter utility is used correctly", async () => {
 		const code = "const x = 1;"
-		const createHighlighter = require("shiki").createHighlighter
+		const highlighterUtil = require("../../../utils/highlighter")
 
 		await act(async () => {
 			render(<CodeBlock source={code} language="typescript" />)
 		})
 
-		// Verify createHighlighter was called with themes/langs only (no dynamic WASM)
-		expect(createHighlighter).toHaveBeenCalledWith({
-			themes: ["github-dark", "github-light"],
-			langs: ["typescript"],
-		})
+		// Verify getHighlighter was called with the right language
+		expect(highlighterUtil.getHighlighter).toHaveBeenCalledWith("typescript")
+		expect(highlighterUtil.normalizeLanguage).toHaveBeenCalledWith("typescript")
 	})
 
 	it("handles copy functionality", async () => {
