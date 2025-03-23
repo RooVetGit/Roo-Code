@@ -4,6 +4,7 @@ import { useCopyToClipboard } from "@src/utils/clipboard"
 import { getHighlighter, isLanguageLoaded, normalizeLanguage } from "@src/utils/highlighter"
 import type { ShikiTransformer } from "shiki"
 export const CODE_BLOCK_BG_COLOR = "var(--vscode-editor-background, --vscode-sideBar-background, rgb(30 30 30))"
+export const WRAPPER_ALPHA = "cc" // 80% opacity
 // Configuration constants
 export const WINDOW_SHADE_SETTINGS = {
 	transitionDelayS: 0.2,
@@ -60,7 +61,7 @@ const CopyButtonWrapper = styled.div`
 	right: var(--copy-button-right, 8px);
 	height: auto;
 	z-index: 100;
-	background: ${CODE_BLOCK_BG_COLOR};
+	background: ${CODE_BLOCK_BG_COLOR}${WRAPPER_ALPHA};
 	overflow: visible;
 	pointer-events: none;
 	opacity: var(--copy-button-opacity, 0);
@@ -72,6 +73,7 @@ const CopyButtonWrapper = styled.div`
 
 	&:hover {
 		background: var(--vscode-editor-background);
+		opacity: 1 !important;
 	}
 
 	${CopyButton} {
@@ -151,6 +153,15 @@ export const StyledPre = styled.div<{
 		color: var(--vscode-editor-foreground, #fff);
 		background-color: ${CODE_BLOCK_BG_COLOR};
 	}
+`
+
+const LanguageDisplay = styled.div`
+	font-size: 12px;
+	color: var(--vscode-foreground);
+	opacity: 0.6;
+	margin-top: 4px;
+	text-align: center;
+	font-family: var(--vscode-font-family);
 `
 
 const CodeBlock = memo(
@@ -335,6 +346,7 @@ const CodeBlock = memo(
 					ref={copyButtonWrapperRef}
 					onMouseEnter={() => updateCopyButtonPosition(true)}
 					onMouseLeave={() => updateCopyButtonPosition()}>
+					{language && <LanguageDisplay>{language}</LanguageDisplay>}
 					<CopyButton
 						onClick={() => {
 							// Get the current code block element and scrollable container
@@ -344,7 +356,7 @@ const CodeBlock = memo(
 
 							// Get scrollable container and save current scroll position
 							const scrollPosition = scrollContainer.scrollTop
-							console.log("Current scroll position ", scrollPosition)
+							// console.debug("Current scroll position ", scrollPosition)
 
 							// Toggle window shade state
 							setWindowShade(!windowShade)
@@ -353,11 +365,11 @@ const CodeBlock = memo(
 							setTimeout(
 								() => {
 									if (lastScrollPosition !== undefined) {
-										console.log("Restoring scroll position to", lastScrollPosition)
+										// console.debug("Restoring scroll position to", lastScrollPosition)
 										scrollContainer.scrollTop = lastScrollPosition
 									}
 
-									console.log("Saving scroll position to", scrollPosition)
+									// console.debug("Saving scroll position to", scrollPosition)
 									setLastScrollPosition(scrollPosition)
 								},
 								WINDOW_SHADE_SETTINGS.transitionDelayS * 1000 + 100,
