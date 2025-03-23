@@ -2341,7 +2341,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 									isFileTruncated = true
 
 									const res = await Promise.all([
-										maxReadFileLine > 0 ? readLines(absolutePath, maxReadFileLine - 1, 0) : "",
+										maxReadFileLine > 0 ? readLines(absolutePath, maxReadFileLine - 1, 0) : [],
 										parseSourceCodeDefinitionsForFile(absolutePath, this.rooIgnoreController),
 									])
 
