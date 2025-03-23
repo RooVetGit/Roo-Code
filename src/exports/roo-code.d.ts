@@ -256,6 +256,8 @@ export type GlobalStateKey =
 	| "language"
 	| "maxReadFileLine"
 	| "fakeAi"
+	| "humanRelayMonitorClipboard"
+	| "humanRelayMonitorInterval"
 
 export type ConfigurationKey = GlobalStateKey | SecretKey
 
