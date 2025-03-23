@@ -1,25 +1,26 @@
 {
-	"name": "Seawolf",
-	"displayName": "Seawolf",
+	"name": "seawolf-cline",
+	"displayName": "Seawolf Code (prev. Roo Cline)",
 	"description": "A whole dev team of AI agents in your editor.",
-	"publisher": "Opensourceful",
+	"publisher": "RooVeterinaryInc",
 	"version": "3.8.8",
-	"icon": "assets/icons/logo.jpg",
+	"icon": "assets/icons/rocket.png",
 	"galleryBanner": {
 		"color": "#617A91",
-		"theme": "light"
+		"theme": "dark"
 	},
 	"engines": {
-		"vscode": "^1.84.0"
+		"vscode": "^1.84.0",
+		"node": ">=20.18.1"
 	},
 	"author": {
-		"name": "Seawolf Vet"
+		"name": "Roo Vet"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Opensourceful/Seawolf"
+		"url": "https://github.com/RooVetGit/Roo-Code"
 	},
-	"homepage": "https://github.com/Opensourceful/Seawolf",
+	"homepage": "https://github.com/RooVetGit/Roo-Code",
 	"categories": [
 		"AI",
 		"Chat",
@@ -41,8 +42,8 @@
 		"sonnet",
 		"ai",
 		"llama",
-		"Seawolf",
-		"seawolf"
+		"seawolf code",
+		"seawolfcode"
 	],
 	"activationEvents": [
 		"onLanguage",
@@ -50,198 +51,208 @@
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
+		"submenus": [
+			{
+				"id": "seawolf-code.contextMenu",
+				"label": "Seawolf Code"
+			},
+			{
+				"id": "seawolf-code.terminalMenu",
+				"label": "Seawolf Code"
+			}
+		],
 		"viewsContainers": {
 			"activitybar": [
 				{
-					"id": "Seawolf-ActivityBar",
-					"title": "Seawolf",
-					"icon": "assets/icons/logo.svg"
+					"id": "seawolf-cline-ActivityBar",
+					"title": "Seawolf Code",
+					"icon": "$(rocket)"
 				}
 			]
 		},
 		"views": {
-			"Seawolf-ActivityBar": [
+			"seawolf-cline-ActivityBar": [
 				{
 					"type": "webview",
-					"id": "Seawolf-SidebarProvider",
+					"id": "seawolf-cline.SidebarProvider",
 					"name": ""
 				}
 			]
 		},
 		"commands": [
 			{
-				"command": "Seawolf.plusButtonClicked",
+				"command": "seawolf-cline.plusButtonClicked",
 				"title": "New Task",
 				"icon": "$(add)"
 			},
 			{
-				"command": "Seawolf.mcpButtonClicked",
+				"command": "seawolf-cline.mcpButtonClicked",
 				"title": "MCP Servers",
 				"icon": "$(server)"
 			},
 			{
-				"command": "Seawolf.promptsButtonClicked",
+				"command": "seawolf-cline.promptsButtonClicked",
 				"title": "Prompts",
 				"icon": "$(notebook)"
 			},
 			{
-				"command": "Seawolf.historyButtonClicked",
+				"command": "seawolf-cline.historyButtonClicked",
 				"title": "History",
 				"icon": "$(history)"
 			},
 			{
-				"command": "Seawolf.popoutButtonClicked",
+				"command": "seawolf-cline.popoutButtonClicked",
 				"title": "Open in Editor",
 				"icon": "$(link-external)"
 			},
 			{
-				"command": "Seawolf.settingsButtonClicked",
+				"command": "seawolf-cline.settingsButtonClicked",
 				"title": "Settings",
 				"icon": "$(settings-gear)"
 			},
 			{
-				"command": "Seawolf.helpButtonClicked",
+				"command": "seawolf-cline.helpButtonClicked",
 				"title": "Documentation",
 				"icon": "$(question)"
 			},
 			{
-				"command": "Seawolf.openInNewTab",
+				"command": "seawolf-cline.openInNewTab",
 				"title": "Open In New Tab",
-				"category": "Seawolf"
+				"category": "Seawolf Code"
 			},
 			{
-				"command": "Seawolf.explainCode",
-				"title": "Seawolf: Explain Code",
-				"category": "Seawolf"
+				"command": "seawolf-cline.explainCode",
+				"title": "Explain Code",
+				"category": "Seawolf Code"
 			},
 			{
-				"command": "Seawolf.fixCode",
-				"title": "Seawolf: Fix Code",
-				"category": "Seawolf"
+				"command": "seawolf-cline.fixCode",
+				"title": "Fix Code",
+				"category": "Seawolf Code"
 			},
 			{
-				"command": "Seawolf.improveCode",
-				"title": "Seawolf: Improve Code",
-				"category": "Seawolf"
+				"command": "seawolf-cline.improveCode",
+				"title": "Improve Code",
+				"category": "Seawolf Code"
 			},
 			{
-				"command": "Seawolf.addToContext",
-				"title": "Seawolf: Add To Context",
-				"category": "Seawolf"
+				"command": "seawolf-cline.addToContext",
+				"title": "Add To Context",
+				"category": "Seawolf Code"
 			},
 			{
-				"command": "Seawolf.terminalAddToContext",
-				"title": "Seawolf: Add Terminal Content to Context",
+				"command": "seawolf-cline.terminalAddToContext",
+				"title": "Add Terminal Content to Context",
 				"category": "Terminal"
 			},
 			{
-				"command": "Seawolf.terminalFixCommand",
-				"title": "Seawolf: Fix This Command",
+				"command": "seawolf-cline.terminalFixCommand",
+				"title": "Fix This Command",
 				"category": "Terminal"
 			},
 			{
-				"command": "Seawolf.terminalExplainCommand",
-				"title": "Seawolf: Explain This Command",
+				"command": "seawolf-cline.terminalExplainCommand",
+				"title": "Explain This Command",
 				"category": "Terminal"
 			},
 			{
-				"command": "Seawolf.terminalFixCommandInCurrentTask",
-				"title": "Seawolf: Fix This Command (Current Task)",
+				"command": "seawolf-cline.terminalFixCommandInCurrentTask",
+				"title": "Fix This Command (Current Task)",
 				"category": "Terminal"
 			},
 			{
-				"command": "Seawolf.terminalExplainCommandInCurrentTask",
-				"title": "Seawolf: Explain This Command (Current Task)",
+				"command": "seawolf-cline.terminalExplainCommandInCurrentTask",
+				"title": "Explain This Command (Current Task)",
 				"category": "Terminal"
 			}
 		],
 		"menus": {
 			"editor/context": [
 				{
-					"command": "Seawolf.explainCode",
+					"command": "seawolf-cline.explainCode",
 					"when": "editorHasSelection",
 					"group": "Seawolf@1"
 				},
 				{
-					"command": "Seawolf.fixCode",
+					"command": "seawolf-cline.fixCode",
 					"when": "editorHasSelection",
 					"group": "Seawolf@2"
 				},
 				{
-					"command": "Seawolf.improveCode",
+					"command": "seawolf-cline.improveCode",
 					"when": "editorHasSelection",
 					"group": "Seawolf@3"
 				},
 				{
-					"command": "Seawolf.addToContext",
+					"command": "seawolf-cline.addToContext",
 					"when": "editorHasSelection",
 					"group": "Seawolf@4"
 				}
 			],
 			"terminal/context": [
 				{
-					"command": "Seawolf.terminalAddToContext",
+					"command": "seawolf-cline.terminalAddToContext",
 					"group": "Seawolf@1"
 				},
 				{
-					"command": "Seawolf.terminalFixCommand",
+					"command": "seawolf-cline.terminalFixCommand",
 					"group": "Seawolf@2"
 				},
 				{
-					"command": "Seawolf.terminalExplainCommand",
+					"command": "seawolf-cline.terminalExplainCommand",
 					"group": "Seawolf@3"
 				},
 				{
-					"command": "Seawolf.terminalFixCommandInCurrentTask",
+					"command": "seawolf-cline.terminalFixCommandInCurrentTask",
 					"group": "Seawolf@5"
 				},
 				{
-					"command": "Seawolf.terminalExplainCommandInCurrentTask",
+					"command": "seawolf-cline.terminalExplainCommandInCurrentTask",
 					"group": "Seawolf@6"
 				}
 			],
 			"view/title": [
 				{
-					"command": "Seawolf.plusButtonClicked",
+					"command": "seawolf-cline.plusButtonClicked",
 					"group": "navigation@1",
-					"when": "view == Seawolf-SidebarProvider"
+					"when": "view == seawolf-cline.SidebarProvider"
 				},
 				{
-					"command": "Seawolf.promptsButtonClicked",
+					"command": "seawolf-cline.promptsButtonClicked",
 					"group": "navigation@2",
-					"when": "view == Seawolf-SidebarProvider"
+					"when": "view == seawolf-cline.SidebarProvider"
 				},
 				{
-					"command": "Seawolf.mcpButtonClicked",
+					"command": "seawolf-cline.mcpButtonClicked",
 					"group": "navigation@3",
-					"when": "view == Seawolf-SidebarProvider"
+					"when": "view == seawolf-cline.SidebarProvider"
 				},
 				{
-					"command": "Seawolf.historyButtonClicked",
+					"command": "seawolf-cline.historyButtonClicked",
 					"group": "navigation@4",
-					"when": "view == Seawolf-SidebarProvider"
+					"when": "view == seawolf-cline.SidebarProvider"
 				},
 				{
-					"command": "Seawolf.popoutButtonClicked",
+					"command": "seawolf-cline.popoutButtonClicked",
 					"group": "navigation@5",
-					"when": "view == Seawolf-SidebarProvider"
+					"when": "view == seawolf-cline.SidebarProvider"
 				},
 				{
-					"command": "Seawolf.settingsButtonClicked",
+					"command": "seawolf-cline.settingsButtonClicked",
 					"group": "navigation@6",
-					"when": "view == Seawolf-SidebarProvider"
+					"when": "view == seawolf-cline.SidebarProvider"
 				},
 				{
-					"command": "Seawolf.helpButtonClicked",
+					"command": "seawolf-cline.helpButtonClicked",
 					"group": "navigation@7",
-					"when": "view == Seawolf-SidebarProvider"
+					"when": "view == seawolf-cline.SidebarProvider"
 				}
 			]
 		},
 		"configuration": {
 			"title": "Seawolf",
 			"properties": {
-				"Seawolf.allowedCommands": {
+				"seawolf-cline.allowedCommands": {
 					"type": "array",
 					"items": {
 						"type": "string"
@@ -256,7 +267,7 @@
 					],
 					"description": "Commands that can be auto-executed when 'Always approve execute operations' is enabled"
 				},
-				"Seawolf.vsCodeLmModelSelector": {
+				"seawolf-cline.vsCodeLmModelSelector": {
 					"type": "object",
 					"properties": {
 						"vendor": {
@@ -334,9 +345,12 @@
 		"diff": "^5.2.0",
 		"diff-match-patch": "^1.0.5",
 		"fast-deep-equal": "^3.1.3",
+		"fast-xml-parser": "^4.5.1",
 		"fastest-levenshtein": "^1.0.16",
+		"fzf": "^0.5.2",
 		"get-folder-size": "^5.0.0",
 		"globby": "^14.0.2",
+		"i18next": "^24.2.2",
 		"isbinaryfile": "^5.0.2",
 		"js-tiktoken": "^1.0.19",
 		"mammoth": "^1.8.0",
@@ -346,10 +360,12 @@
 		"os-name": "^6.0.0",
 		"p-wait-for": "^5.0.2",
 		"pdf-parse": "^1.1.1",
+		"pkce-challenge": "^4.1.0",
 		"posthog-node": "^4.7.0",
 		"pretty-bytes": "^6.1.1",
 		"puppeteer-chromium-resolver": "^23.0.0",
 		"puppeteer-core": "^23.4.0",
+		"reconnecting-eventsource": "^1.6.4",
 		"serialize-error": "^11.0.3",
 		"simple-git": "^3.27.0",
 		"sound-play": "^1.1.0",
