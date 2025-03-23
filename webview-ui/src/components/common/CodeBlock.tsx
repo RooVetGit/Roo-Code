@@ -18,19 +18,28 @@ interface CodeBlockProps {
 	rawSource?: string // Add rawSource prop for copying raw text
 	language?: string
 	preStyle?: React.CSSProperties
+	initialWordWrap?: boolean
 }
+
+const ButtonIcon = styled.span`
+	display: inline-block;
+	width: 1.5em;
+	text-align: center;
+`
 
 const CopyButton = styled.button`
 	background: transparent;
 	border: none;
 	color: var(--vscode-foreground);
 	cursor: var(--copy-button-cursor, default);
-	padding: 4px;
+	padding: 0px;
+	margin: 0 0px;
 	display: flex;
 	align-items: center;
 	opacity: 0.4;
 	border-radius: 3px;
 	pointer-events: var(--copy-button-events, none);
+	margin-left: 4px;
 
 	&:hover {
 		background: var(--vscode-toolbar-hoverBackground);
@@ -42,14 +51,17 @@ const CopyButtonWrapper = styled.div`
 	position: fixed;
 	top: var(--copy-button-top);
 	right: var(--copy-button-right, 8px);
-	height: 0;
+	height: auto;
 	z-index: 100;
 	background: ${CODE_BLOCK_BG_COLOR};
 	overflow: visible;
 	pointer-events: none;
 	opacity: var(--copy-button-opacity, 0);
-	padding: 4px;
+	padding: 4px 6px;
 	border-radius: 3px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 
 	&:hover {
 		background: var(--vscode-editor-background);
@@ -65,10 +77,19 @@ const CopyButtonWrapper = styled.div`
 const CodeBlockContainer = styled.div`
 	position: relative;
 	overflow: hidden;
+	border-bottom: 4px solid var(--vscode-sideBar-background);
 	background-color: ${CODE_BLOCK_BG_COLOR};
 
+	${CopyButtonWrapper} {
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.2s;
+	}
+
 	&[data-partially-visible="true"]:hover ${CopyButtonWrapper} {
-		opacity: 1 !important;
+		opacity: 1;
+		pointer-events: all;
+		cursor: pointer;
 	}
 `
 
@@ -116,7 +137,8 @@ export const StyledPre = styled.div<{ preStyle?: React.CSSProperties; wordwrap?:
 	}
 `
 
-const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProps) => {
+const CodeBlock = memo(({ source, rawSource, language, preStyle, initialWordWrap = true }: CodeBlockProps) => {
+	const [wordWrap, setWordWrap] = useState(initialWordWrap)
 	const [highlightedCode, setHighlightedCode] = useState<string>("")
 	const codeBlockRef = useRef<HTMLDivElement>(null)
 	const copyButtonWrapperRef = useRef<HTMLDivElement>(null)
@@ -275,15 +297,20 @@ const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProp
 
 	return (
 		<CodeBlockContainer ref={codeBlockRef}>
-			<StyledPre preStyle={preStyle} wordwrap="true">
+			<StyledPre preStyle={preStyle} wordwrap={wordWrap ? "true" : "false"}>
 				<div dangerouslySetInnerHTML={{ __html: highlightedCode }} />
 			</StyledPre>
 			<CopyButtonWrapper
 				ref={copyButtonWrapperRef}
 				onMouseEnter={() => updateCopyButtonPosition(true)}
 				onMouseLeave={() => updateCopyButtonPosition()}>
+				<CopyButton
+					onClick={() => setWordWrap(!wordWrap)}
+					title={`${wordWrap ? "Disable" : "Enable"} word wrap`}>
+					<ButtonIcon style={{ fontSize: "16px", fontWeight: 900 }}>{wordWrap ? "⟼" : "⤸"}</ButtonIcon>
+				</CopyButton>
 				<CopyButton onClick={handleCopy} title="Copy code">
-					<span className={`codicon codicon-${showCopyFeedback ? "check" : "copy"}`} />
+					<ButtonIcon className={`codicon codicon-${showCopyFeedback ? "check" : "copy"}`} />
 				</CopyButton>
 			</CopyButtonWrapper>
 		</CodeBlockContainer>
