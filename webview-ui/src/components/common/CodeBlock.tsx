@@ -73,7 +73,7 @@ const CodeBlockContainer = styled.div`
 	}
 `
 
-export const StyledPre = styled.div<{ preStyle?: React.CSSProperties; wordwrap?: boolean }>`
+export const StyledPre = styled.div<{ preStyle?: React.CSSProperties; wordwrap?: "true" | "false" | undefined }>`
 	background-color: ${CODE_BLOCK_BG_COLOR};
 	padding: 10px;
 	border-radius: 5px;
@@ -90,9 +90,10 @@ export const StyledPre = styled.div<{ preStyle?: React.CSSProperties; wordwrap?:
 
 	pre,
 	code {
-		white-space: ${({ wordwrap }) => (wordwrap === false ? "pre" : "pre-wrap")};
-		word-break: ${({ wordwrap }) => (wordwrap === false ? "normal" : "normal")};
-		overflow-wrap: ${({ wordwrap }) => (wordwrap === false ? "normal" : "break-word")};
+		/* Undefined wordwrap defaults to true (pre-wrap) behavior */
+		white-space: ${({ wordwrap }) => (wordwrap === "false" ? "pre" : "pre-wrap")};
+		word-break: ${({ wordwrap }) => (wordwrap === "false" ? "normal" : "normal")};
+		overflow-wrap: ${({ wordwrap }) => (wordwrap === "false" ? "normal" : "break-word")};
 		font-size: var(--vscode-editor-font-size, var(--vscode-font-size, 12px));
 		font-family: var(--vscode-editor-font-family);
 	}
@@ -277,7 +278,7 @@ const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProp
 
 	return (
 		<CodeBlockContainer ref={codeBlockRef}>
-			<StyledPre preStyle={preStyle} wordwrap={true}>
+			<StyledPre preStyle={preStyle} wordwrap="true">
 				<div dangerouslySetInnerHTML={{ __html: highlightedCode }} />
 			</StyledPre>
 			<CopyButtonWrapper
