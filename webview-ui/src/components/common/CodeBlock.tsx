@@ -1,8 +1,9 @@
 import { memo, useEffect, useRef, useCallback, useState } from "react"
 import debounce from "debounce"
-import { createHighlighter } from "shiki"
 import styled from "styled-components"
 import { useCopyToClipboard } from "@src/utils/clipboard"
+import { getHighlighter, isLanguageLoaded, normalizeLanguage } from "@src/utils/highlighter"
+import type { ShikiTransformer } from "shiki"
 export const CODE_BLOCK_BG_COLOR = "var(--vscode-editor-background, --vscode-sideBar-background, rgb(30 30 30))"
 
 /*
@@ -121,43 +122,47 @@ const CodeBlock = memo(({ source, rawSource, language, preStyle }: CodeBlockProp
 	const copyButtonWrapperRef = useRef<HTMLDivElement>(null)
 	const { showCopyFeedback, copyWithFeedback } = useCopyToClipboard()
 
-	// Direct syntax highlighting with Shiki
+	language = normalizeLanguage(language)
+
+	// Syntax highlighting with cached Shiki instance
 	useEffect(() => {
+		const fallback = `<pre style="padding: 0; margin: 0;"><code class="hljs language-${language || "txt"}">${source || ""}</code></pre>`
 		const highlight = async () => {
-			try {
-				const highlighter = await createHighlighter({
-					themes: ["github-dark", "github-light"],
-					langs: [language || "txt"],
-				})
-				const html = await highlighter.codeToHtml(source || "", {
-					lang: language || "txt",
-					theme: document.body.className.toLowerCase().includes("light") ? "github-light" : "github-dark",
-					transformers: [
-						{
-							pre(node: any) {
-								node.properties.style = "padding: 0; margin: 0;"
-								return node
-							},
-							code(node: any) {
-								// Add hljs classes for consistent styling
-								node.properties.class = `hljs language-${language || "txt"}`
-								return node
-							},
-							line(node: any) {
-								// Preserve existing line handling
-								node.properties.class = node.properties.class || ""
-								return node
-							},
-						},
-					],
-				})
-				setHighlightedCode(html)
-			} catch (e: any) {
-				console.error("CodeBlock highlighting error:", e, "\nStack trace:", e.stack)
-				setHighlightedCode(source || "")
+			// Show plain text if language needs to be loaded
+			if (language && !isLanguageLoaded(language)) {
+				setHighlightedCode(fallback)
 			}
+
+			const highlighter = await getHighlighter(language)
+			const html = await highlighter.codeToHtml(source || "", {
+				lang: language,
+				theme: document.body.className.toLowerCase().includes("light") ? "github-light" : "github-dark",
+				transformers: [
+					{
+						pre(node) {
+							node.properties.style = "padding: 0; margin: 0;"
+							return node
+						},
+						code(node) {
+							// Add hljs classes for consistent styling
+							node.properties.class = `hljs language-${language}`
+							return node
+						},
+						line(node) {
+							// Preserve existing line handling
+							node.properties.class = node.properties.class || ""
+							return node
+						},
+					},
+				] as ShikiTransformer[],
+			})
+			setHighlightedCode(html)
 		}
-		highlight()
+
+		highlight().catch((e) => {
+			console.error("[CodeBlock] Syntax highlighting error:", e, "\nStack trace:", e.stack)
+			setHighlightedCode(fallback)
+		})
 	}, [source, language])
 
 	const updateCopyButtonPosition = useCallback((forceShow = false) => {
