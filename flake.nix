@@ -16,14 +16,9 @@
       name = "roo-code";
       
       packages = with pkgs; [
-        zsh
-        nodejs_18
-        corepack_18
+        nodejs_20
+        corepack_20
       ];
-
-      shellHook = ''
-        exec zsh
-      '';
     };
   in {
     devShells = forAllSystems (system: {

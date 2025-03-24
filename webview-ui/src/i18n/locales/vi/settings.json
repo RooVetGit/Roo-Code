@@ -3,7 +3,8 @@
 		"save": "Lưu",
 		"done": "Hoàn thành",
 		"cancel": "Hủy",
-		"reset": "Đặt lại"
+		"reset": "Đặt lại",
+		"select": "Chọn"
 	},
 	"header": {
 		"title": "Cài đặt",
@@ -24,8 +25,11 @@
 		"checkpoints": "Điểm kiểm tra",
 		"notifications": "Thông báo",
 		"contextManagement": "Quản lý ngữ cảnh",
+		"terminal": "Terminal",
 		"advanced": "Nâng cao",
-		"experimental": "Tính năng thử nghiệm"
+		"experimental": "Tính năng thử nghiệm",
+		"language": "Ngôn ngữ",
+		"about": "Về Roo Code"
 	},
 	"autoApprove": {
 		"description": "Cho phép Roo tự động thực hiện các hoạt động mà không cần phê duyệt. Chỉ bật những cài đặt này nếu bạn hoàn toàn tin tưởng AI và hiểu rõ các rủi ro bảo mật liên quan.",
@@ -71,7 +75,7 @@
 	},
 	"providers": {
 		"configProfile": "Hồ sơ cấu hình",
-		"description": "Mô tả",
+		"description": "Lưu các cấu hình API khác nhau để nhanh chóng chuyển đổi giữa các nhà cung cấp và cài đặt.",
 		"apiProvider": "Nhà cung cấp API",
 		"model": "Mẫu",
 		"nameEmpty": "Tên không được để trống",
@@ -151,6 +155,13 @@
 		"humanRelay": {
 			"description": "Không cần khóa API, nhưng người dùng cần giúp sao chép và dán thông tin vào AI trò chuyện web.",
 			"instructions": "Trong quá trình sử dụng, một hộp thoại sẽ xuất hiện và tin nhắn hiện tại sẽ được tự động sao chép vào clipboard. Bạn cần dán chúng vào các phiên bản web của AI (như ChatGPT hoặc Claude), sau đó sao chép phản hồi của AI trở lại hộp thoại và nhấp vào nút xác nhận."
+		},
+		"openRouter": {
+			"providerRouting": {
+				"title": "Định tuyến nhà cung cấp OpenRouter",
+				"description": "OpenRouter chuyển hướng yêu cầu đến các nhà cung cấp tốt nhất hiện có cho mô hình của bạn. Theo mặc định, các yêu cầu được cân bằng giữa các nhà cung cấp hàng đầu để tối đa hóa thời gian hoạt động. Tuy nhiên, bạn có thể chọn một nhà cung cấp cụ thể để sử dụng cho mô hình này.",
+				"learnMore": "Tìm hiểu thêm về định tuyến nhà cung cấp"
+			}
 		},
 		"customModel": {
 			"capabilities": "Cấu hình các khả năng và giá cả cho mô hình tương thích OpenAI tùy chỉnh của bạn. Hãy cẩn thận khi chỉ định khả năng của mô hình, vì chúng có thể ảnh hưởng đến cách Roo Code hoạt động.",
@@ -234,14 +245,15 @@
 			"label": "Bật hiệu ứng âm thanh",
 			"description": "Khi được bật, Roo sẽ phát hiệu ứng âm thanh cho thông báo và sự kiện.",
 			"volumeLabel": "Âm lượng"
+		},
+		"tts": {
+			"label": "Bật chuyển văn bản thành giọng nói",
+			"description": "Khi được bật, Roo sẽ đọc to các phản hồi của nó bằng chức năng chuyển văn bản thành giọng nói.",
+			"speedLabel": "Tốc độ"
 		}
 	},
 	"contextManagement": {
 		"description": "Kiểm soát thông tin nào được đưa vào cửa sổ ngữ cảnh của AI, ảnh hưởng đến việc sử dụng token và chất lượng phản hồi",
-		"terminal": {
-			"label": "Giới hạn đầu ra terminal",
-			"description": "Số dòng tối đa để đưa vào đầu ra terminal khi thực hiện lệnh. Khi vượt quá, các dòng sẽ bị xóa khỏi phần giữa, tiết kiệm token."
-		},
 		"openTabs": {
 			"label": "Giới hạn ngữ cảnh tab đang mở",
 			"description": "Số lượng tab VSCode đang mở tối đa để đưa vào ngữ cảnh. Giá trị cao hơn cung cấp nhiều ngữ cảnh hơn nhưng tăng sử dụng token."
@@ -253,6 +265,21 @@
 		"rooignore": {
 			"label": "Hiển thị tệp .rooignore trong danh sách và tìm kiếm",
 			"description": "Khi được bật, các tệp khớp với mẫu trong .rooignore sẽ được hiển thị trong danh sách với biểu tượng khóa. Khi bị tắt, các tệp này sẽ hoàn toàn bị ẩn khỏi danh sách tệp và tìm kiếm."
+		},
+		"maxReadFile": {
+			"label": "Ngưỡng tự động cắt ngắn khi đọc tệp",
+			"description": "Số dòng mặc định để đọc từ một tệp trong một lô. Giá trị thấp hơn giảm sử dụng ngữ cảnh/tài nguyên nhưng có thể yêu cầu đọc nhiều lần hơn cho các tệp lớn.",
+			"lines": "dòng"
+		}
+	},
+	"terminal": {
+		"outputLineLimit": {
+			"label": "Giới hạn đầu ra terminal",
+			"description": "Số dòng tối đa để đưa vào đầu ra terminal khi thực hiện lệnh. Khi vượt quá, các dòng sẽ bị xóa khỏi phần giữa, tiết kiệm token."
+		},
+		"shellIntegrationTimeout": {
+			"label": "Thời gian chờ tích hợp shell terminal",
+			"description": "Thời gian tối đa để chờ tích hợp shell khởi tạo trước khi thực hiện lệnh. Đối với người dùng có thời gian khởi động shell dài, giá trị này có thể cần được tăng lên nếu bạn thấy lỗi \"Shell Integration Unavailable\" trong terminal."
 		}
 	},
 	"advanced": {
@@ -323,6 +350,8 @@
 		"cacheReadsPrice": "Giá đọc bộ nhớ đệm",
 		"cacheWritesPrice": "Giá ghi bộ nhớ đệm",
 		"enableStreaming": "Bật streaming",
+		"enableR1Format": "Kích hoạt tham số mô hình R1",
+		"enableR1FormatTips": "Cần kích hoạt khi sử dụng các mô hình R1 như QWQ, để tránh lỗi 400",
 		"useAzure": "Sử dụng Azure",
 		"azureApiVersion": "Đặt phiên bản API Azure",
 		"gemini": {
@@ -331,7 +360,11 @@
 		}
 	},
 	"modelPicker": {
-		"automaticFetch": "Tiện ích mở rộng tự động lấy danh sách mới nhất các mô hình có sẵn trên <serviceLink>{{serviceName}}</serviceLink>. Nếu bạn không chắc chắn nên chọn mô hình nào, Roo Code hoạt động tốt nhất với <defaultModelLink>{{defaultModelId}}</defaultModelLink>. Bạn cũng có thể thử tìm kiếm \"free\" cho các tùy chọn miễn phí hiện có."
+		"automaticFetch": "Tiện ích mở rộng tự động lấy danh sách mới nhất các mô hình có sẵn trên <serviceLink>{{serviceName}}</serviceLink>. Nếu bạn không chắc chắn nên chọn mô hình nào, Roo Code hoạt động tốt nhất với <defaultModelLink>{{defaultModelId}}</defaultModelLink>. Bạn cũng có thể thử tìm kiếm \"free\" cho các tùy chọn miễn phí hiện có.",
+		"label": "Mô hình",
+		"searchPlaceholder": "Tìm kiếm",
+		"noMatchFound": "Không tìm thấy kết quả",
+		"useCustomModel": "Sử dụng tùy chỉnh: {{modelId}}"
 	},
 	"footer": {
 		"feedback": "Nếu bạn có bất kỳ câu hỏi hoặc phản hồi nào, vui lòng mở một vấn đề tại <githubLink>github.com/RooVetGit/Roo-Code</githubLink> hoặc tham gia <redditLink>reddit.com/r/RooCode</redditLink> hoặc <discordLink>discord.gg/roocode</discordLink>",
@@ -344,5 +377,55 @@
 			"description": "Đặt lại tất cả trạng thái toàn cầu và lưu trữ bí mật trong tiện ích mở rộng.",
 			"button": "Đặt lại"
 		}
+	},
+	"thinkingBudget": {
+		"maxTokens": "Tokens tối đa",
+		"maxThinkingTokens": "Tokens suy nghĩ tối đa"
+	},
+	"validation": {
+		"apiKey": "Bạn phải cung cấp khóa API hợp lệ.",
+		"awsRegion": "Bạn phải chọn một vùng để sử dụng AWS Bedrock.",
+		"googleCloud": "Bạn phải cung cấp ID dự án và vùng Google Cloud hợp lệ.",
+		"modelId": "Bạn phải cung cấp ID mô hình hợp lệ.",
+		"modelSelector": "Bạn phải cung cấp bộ chọn mô hình hợp lệ.",
+		"openAi": "Bạn phải cung cấp URL cơ sở, khóa API và ID mô hình hợp lệ.",
+		"arn": {
+			"invalidFormat": "Định dạng ARN không hợp lệ. Vui lòng kiểm tra yêu cầu về định dạng.",
+			"regionMismatch": "Cảnh báo: Vùng trong ARN của bạn ({{arnRegion}}) không khớp với vùng bạn đã chọn ({{region}}). Điều này có thể gây ra vấn đề truy cập. Nhà cung cấp sẽ sử dụng vùng từ ARN."
+		},
+		"modelAvailability": "ID mô hình ({{modelId}}) bạn đã cung cấp không khả dụng. Vui lòng chọn một mô hình khác."
+	},
+	"placeholders": {
+		"apiKey": "Nhập khóa API...",
+		"profileName": "Nhập tên hồ sơ",
+		"accessKey": "Nhập khóa truy cập...",
+		"secretKey": "Nhập khóa bí mật...",
+		"sessionToken": "Nhập token phiên...",
+		"credentialsJson": "Nhập JSON thông tin xác thực...",
+		"keyFilePath": "Nhập đường dẫn tệp khóa...",
+		"projectId": "Nhập ID dự án...",
+		"customArn": "Nhập ARN (vd: arn:aws:bedrock:us-east-1:123456789012:foundation-model/my-model)",
+		"baseUrl": "Nhập URL cơ sở...",
+		"modelId": {
+			"lmStudio": "vd: meta-llama-3.1-8b-instruct",
+			"lmStudioDraft": "vd: lmstudio-community/llama-3.2-1b-instruct",
+			"ollama": "vd: llama3.1"
+		},
+		"numbers": {
+			"maxTokens": "vd: 4096",
+			"contextWindow": "vd: 128000",
+			"inputPrice": "vd: 0.0001",
+			"outputPrice": "vd: 0.0002",
+			"cacheWritePrice": "vd: 0.00005"
+		}
+	},
+	"defaults": {
+		"ollamaUrl": "Mặc định: http://localhost:11434",
+		"lmStudioUrl": "Mặc định: http://localhost:1234",
+		"geminiUrl": "Mặc định: https://generativelanguage.googleapis.com"
+	},
+	"labels": {
+		"customArn": "ARN tùy chỉnh",
+		"useCustomArn": "Sử dụng ARN tùy chỉnh..."
 	}
 }

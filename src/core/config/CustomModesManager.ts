@@ -4,8 +4,9 @@ import * as fs from "fs/promises"
 import { CustomModesSettingsSchema } from "./CustomModesSchema"
 import { ModeConfig } from "../../shared/modes"
 import { fileExistsAtPath } from "../../utils/fs"
-import { arePathsEqual } from "../../utils/path"
+import { arePathsEqual, getWorkspacePath } from "../../utils/path"
 import { logger } from "../../utils/logging"
+import { GlobalFileNames } from "../../shared/globalFileNames"
 
 const ROOMODES_FILENAME = ".roomodes"
 
@@ -51,7 +52,7 @@ export class CustomModesManager {
 		if (!workspaceFolders || workspaceFolders.length === 0) {
 			return undefined
 		}
-		const workspaceRoot = workspaceFolders[0].uri.fsPath
+		const workspaceRoot = getWorkspacePath()
 		const roomodesPath = path.join(workspaceRoot, ROOMODES_FILENAME)
 		const exists = await fileExistsAtPath(roomodesPath)
 		return exists ? roomodesPath : undefined
@@ -113,7 +114,7 @@ export class CustomModesManager {
 
 	async getCustomModesFilePath(): Promise<string> {
 		const settingsDir = await this.ensureSettingsDirectoryExists()
-		const filePath = path.join(settingsDir, "cline_custom_modes.json")
+		const filePath = path.join(settingsDir, GlobalFileNames.customModes)
 		const fileExists = await fileExistsAtPath(filePath)
 		if (!fileExists) {
 			await this.queueWrite(async () => {
@@ -226,7 +227,7 @@ export class CustomModesManager {
 					logger.error("Failed to update project mode: No workspace folder found", { slug })
 					throw new Error("No workspace folder found for project-specific mode")
 				}
-				const workspaceRoot = workspaceFolders[0].uri.fsPath
+				const workspaceRoot = getWorkspacePath()
 				targetPath = path.join(workspaceRoot, ROOMODES_FILENAME)
 				const exists = await fileExistsAtPath(targetPath)
 				logger.info(`${exists ? "Updating" : "Creating"} project mode in ${ROOMODES_FILENAME}`, {

@@ -49,6 +49,10 @@ describe("Tree-sitter Service", () => {
 						node: {
 							startPosition: { row: 0 },
 							endPosition: { row: 0 },
+							parent: {
+								startPosition: { row: 0 },
+								endPosition: { row: 0 },
+							},
 						},
 						name: "name.definition",
 					},
@@ -85,6 +89,10 @@ describe("Tree-sitter Service", () => {
 						node: {
 							startPosition: { row: 0 },
 							endPosition: { row: 0 },
+							parent: {
+								startPosition: { row: 0 },
+								endPosition: { row: 0 },
+							},
 						},
 						name: "name.definition.class",
 					},
@@ -92,6 +100,10 @@ describe("Tree-sitter Service", () => {
 						node: {
 							startPosition: { row: 2 },
 							endPosition: { row: 2 },
+							parent: {
+								startPosition: { row: 0 },
+								endPosition: { row: 0 },
+							},
 						},
 						name: "name.definition.function",
 					},
@@ -110,7 +122,6 @@ describe("Tree-sitter Service", () => {
 
 			expect(result).toContain("class TestClass")
 			expect(result).toContain("testMethod()")
-			expect(result).toContain("|----")
 		})
 
 		it("should handle parsing errors gracefully", async () => {
@@ -187,6 +198,10 @@ describe("Tree-sitter Service", () => {
 						node: {
 							startPosition: { row: 0 },
 							endPosition: { row: 0 },
+							parent: {
+								startPosition: { row: 0 },
+								endPosition: { row: 0 },
+							},
 						},
 						name: "name",
 					},
@@ -231,6 +246,10 @@ describe("Tree-sitter Service", () => {
 						node: {
 							startPosition: { row: 0 },
 							endPosition: { row: 0 },
+							parent: {
+								startPosition: { row: 0 },
+								endPosition: { row: 0 },
+							},
 						},
 						name: "name",
 					},

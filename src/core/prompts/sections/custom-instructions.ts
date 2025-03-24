@@ -1,6 +1,7 @@
 import fs from "fs/promises"
 import path from "path"
 import * as vscode from "vscode"
+import { LANGUAGES } from "../../../shared/language"
 
 async function safeReadFile(filePath: string): Promise<string> {
 	try {
@@ -15,18 +16,47 @@ async function safeReadFile(filePath: string): Promise<string> {
 	}
 }
 
+async function findRuleInDirectory(dir: string, ruleFile: string): Promise<string> {
+	const filePath = path.join(dir, ruleFile)
+	const content = await safeReadFile(filePath)
+
+	if (content) {
+		return content
+	}
+
+	// Check if we've reached the root directory
+	const parentDir = path.dirname(dir)
+	if (parentDir === dir) {
+		return ""
+	}
+
+	// Recursively check parent directory
+	return findRuleInDirectory(parentDir, ruleFile)
+}
+
 export async function loadRuleFiles(cwd: string): Promise<string> {
 	const ruleFiles = [".clinerules", ".cursorrules", ".windsurfrules"]
 	let combinedRules = ""
 
 	for (const file of ruleFiles) {
-		const content = await safeReadFile(path.join(cwd, file))
+		const content = await findRuleInDirectory(cwd, file)
 		if (content) {
 			combinedRules += `\n# Rules from ${file}:\n${content}\n`
 		}
 	}
 
 	return combinedRules
+}
+
+async function findCustomInstructionsFile(dir: string, filePattern: string): Promise<string> {
+	// First try to find as a direct file
+	const content = await findRuleInDirectory(dir, filePattern)
+	if (content) {
+		return content
+	}
+
+	// If not found as a file, check if it's raw content
+	return filePattern.trim()
 }
 
 export async function addCustomInstructions(
@@ -47,19 +77,22 @@ export async function addCustomInstructions(
 
 	// Add language preference if provided
 	if (options.language) {
+		const languageName = LANGUAGES[options.language] || options.language
 		sections.push(
-			`Language Preference:\nYou should always speak and think in the "${options.language}" language unless the user gives you instructions below to do otherwise.`,
+			`Language Preference:\nYou should always speak and think in the "${languageName}" (${options.language}) language unless the user gives you instructions below to do otherwise.`,
 		)
 	}
 
-	// Add global instructions first
-	if (typeof globalCustomInstructions === "string" && globalCustomInstructions.trim()) {
-		sections.push(`Global Instructions:\n${globalCustomInstructions.trim()}`)
+	// Add global instructions first - try to find as file or use raw content
+	const globalContent = await findCustomInstructionsFile(cwd, globalCustomInstructions)
+	if (globalContent) {
+		sections.push(`Global Instructions:\n${globalContent}`)
 	}
 
-	// Add mode-specific instructions after
-	if (typeof modeCustomInstructions === "string" && modeCustomInstructions.trim()) {
-		sections.push(`Mode-specific Instructions:\n${modeCustomInstructions.trim()}`)
+	// Add mode-specific instructions - try to find as file or use raw content
+	const modeContent = await findCustomInstructionsFile(cwd, modeCustomInstructions)
+	if (modeContent) {
+		sections.push(`Mode-specific Instructions:\n${modeContent}`)
 	}
 
 	// Add rules - include both mode-specific and generic rules if they exist

@@ -1,4 +1,5 @@
 import * as React from "react"
+import { CaretUpIcon } from "@radix-ui/react-icons"
 
 import { cn } from "@/lib/utils"
 
@@ -9,7 +10,9 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 	DropdownMenuSeparator,
+	DropdownMenuShortcut,
 } from "./dropdown-menu"
+import { Check } from "lucide-react"
 
 export enum DropdownOptionType {
 	ITEM = "item",
@@ -30,12 +33,10 @@ export interface SelectDropdownProps {
 	onChange: (value: string) => void
 	disabled?: boolean
 	title?: string
-	className?: string
 	triggerClassName?: string
 	contentClassName?: string
 	sideOffset?: number
 	align?: "start" | "center" | "end"
-	shouldShowCaret?: boolean
 	placeholder?: string
 	shortcutText?: string
 }
@@ -48,12 +49,10 @@ export const SelectDropdown = React.forwardRef<React.ElementRef<typeof DropdownM
 			onChange,
 			disabled = false,
 			title = "",
-			className = "",
 			triggerClassName = "",
 			contentClassName = "",
 			sideOffset = 4,
 			align = "start",
-			shouldShowCaret = true,
 			placeholder = "",
 			shortcutText = "",
 		},
@@ -83,44 +82,21 @@ export const SelectDropdown = React.forwardRef<React.ElementRef<typeof DropdownM
 					disabled={disabled}
 					title={title}
 					className={cn(
-						"inline-flex items-center gap-1 relative whitespace-nowrap rounded pr-1.5 py-1.5 text-xs outline-none focus-visible:ring-2 focus-visible:ring-vscode-focusBorder",
+						"w-full min-w-0 max-w-full inline-flex items-center gap-1 relative whitespace-nowrap pr-1.5 py-1.5 text-xs outline-none",
 						"bg-transparent border-none text-vscode-foreground w-auto",
-						disabled ? "opacity-50 cursor-not-allowed" : "opacity-80 cursor-pointer hover:opacity-100",
+						disabled ? "opacity-50 cursor-not-allowed" : "opacity-80 hover:opacity-100 cursor-pointer",
 						triggerClassName,
-					)}
-					style={{
-						width: "100%", // Take full width of parent.
-						minWidth: "0",
-						maxWidth: "100%",
-					}}>
-					{shouldShowCaret && (
-						<div className="pointer-events-none opacity-80 flex-shrink-0">
-							<svg
-								fill="none"
-								height="10"
-								stroke="currentColor"
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								strokeWidth="2"
-								viewBox="0 0 24 24"
-								width="10">
-								<polyline points="18 15 12 9 6 15" />
-							</svg>
-						</div>
-					)}
+					)}>
+					<CaretUpIcon className="pointer-events-none opacity-80 flex-shrink-0 size-3" />
 					<span className="truncate">{displayText}</span>
 				</DropdownMenuTrigger>
-
 				<DropdownMenuContent
 					align={align}
 					sideOffset={sideOffset}
 					onEscapeKeyDown={() => setOpen(false)}
 					onInteractOutside={() => setOpen(false)}
 					container={portalContainer}
-					className={cn(
-						"bg-vscode-dropdown-background text-vscode-dropdown-foreground border border-vscode-dropdown-border z-50",
-						contentClassName,
-					)}>
+					className={contentClassName}>
 					{options.map((option, index) => {
 						if (option.type === DropdownOptionType.SEPARATOR) {
 							return <DropdownMenuSeparator key={`sep-${index}`} />
@@ -131,9 +107,9 @@ export const SelectDropdown = React.forwardRef<React.ElementRef<typeof DropdownM
 							(option.disabled && shortcutText && option.label.includes(shortcutText))
 						) {
 							return (
-								<div key={`label-${index}`} className="px-2 py-1.5 text-xs opacity-50">
+								<DropdownMenuItem key={`label-${index}`} disabled>
 									{option.label}
-								</div>
+								</DropdownMenuItem>
 							)
 						}
 
@@ -141,12 +117,13 @@ export const SelectDropdown = React.forwardRef<React.ElementRef<typeof DropdownM
 							<DropdownMenuItem
 								key={`item-${option.value}`}
 								disabled={option.disabled}
-								className={cn(
-									"cursor-pointer text-xs focus:bg-vscode-list-hoverBackground focus:text-vscode-list-hoverForeground",
-									option.value === value && "bg-vscode-list-focusBackground",
-								)}
 								onClick={() => handleSelect(option)}>
 								{option.label}
+								{option.value === value && (
+									<DropdownMenuShortcut>
+										<Check className="size-4 p-0.5" />
+									</DropdownMenuShortcut>
+								)}
 							</DropdownMenuItem>
 						)
 					})}

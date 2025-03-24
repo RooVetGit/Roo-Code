@@ -3,7 +3,8 @@
 		"save": "Save",
 		"done": "Done",
 		"cancel": "Cancel",
-		"reset": "Reset"
+		"reset": "Reset",
+		"select": "Select"
 	},
 	"header": {
 		"title": "Settings",
@@ -24,8 +25,11 @@
 		"checkpoints": "Checkpoints",
 		"notifications": "Notifications",
 		"contextManagement": "Context Management",
+		"terminal": "Terminal",
 		"advanced": "Advanced",
-		"experimental": "Experimental Features"
+		"experimental": "Experimental Features",
+		"language": "Language",
+		"about": "About Roo Code"
 	},
 	"autoApprove": {
 		"description": "Allow Roo to automatically perform operations without requiring approval. Enable these settings only if you fully trust the AI and understand the associated security risks.",
@@ -71,7 +75,7 @@
 	},
 	"providers": {
 		"configProfile": "Configuration Profile",
-		"description": "Description",
+		"description": "Save different API configurations to quickly switch between providers and settings.",
 		"apiProvider": "API Provider",
 		"model": "Model",
 		"nameEmpty": "Name cannot be empty",
@@ -151,6 +155,13 @@
 		"humanRelay": {
 			"description": "No API key is required, but the user needs to help copy and paste the information to the web chat AI.",
 			"instructions": "During use, a dialog box will pop up and the current message will be copied to the clipboard automatically. You need to paste these to web versions of AI (such as ChatGPT or Claude), then copy the AI's reply back to the dialog box and click the confirm button."
+		},
+		"openRouter": {
+			"providerRouting": {
+				"title": "OpenRouter Provider Routing",
+				"description": "OpenRouter routes requests to the best available providers for your model. By default, requests are load balanced across the top providers to maximize uptime. However, you can choose a specific provider to use for this model.",
+				"learnMore": "Learn more about provider routing"
+			}
 		},
 		"customModel": {
 			"capabilities": "Configure the capabilities and pricing for your custom OpenAI-compatible model. Be careful when specifying the model capabilities, as they can affect how Roo Code performs.",
@@ -234,14 +245,15 @@
 			"label": "Enable sound effects",
 			"description": "When enabled, Roo will play sound effects for notifications and events.",
 			"volumeLabel": "Volume"
+		},
+		"tts": {
+			"label": "Enable text-to-speech",
+			"description": "When enabled, Roo will read aloud its responses using text-to-speech.",
+			"speedLabel": "Speed"
 		}
 	},
 	"contextManagement": {
 		"description": "Control what information is included in the AI's context window, affecting token usage and response quality",
-		"terminal": {
-			"label": "Terminal output limit",
-			"description": "Maximum number of lines to include in terminal output when executing commands. When exceeded lines will be removed from the middle, saving tokens."
-		},
 		"openTabs": {
 			"label": "Open tabs context limit",
 			"description": "Maximum number of VSCode open tabs to include in context. Higher values provide more context but increase token usage."
@@ -253,6 +265,21 @@
 		"rooignore": {
 			"label": "Show .rooignore'd files in lists and searches",
 			"description": "When enabled, files matching patterns in .rooignore will be shown in lists with a lock symbol. When disabled, these files will be completely hidden from file lists and searches."
+		},
+		"maxReadFile": {
+			"label": "File read auto-truncate threshold",
+			"description": "The default number of lines to read from a file in one batch. Lower values reduce context/resource usage but may require more reads for large files.",
+			"lines": "lines"
+		}
+	},
+	"terminal": {
+		"outputLineLimit": {
+			"label": "Terminal output limit",
+			"description": "Maximum number of lines to include in terminal output when executing commands. When exceeded lines will be removed from the middle, saving tokens."
+		},
+		"shellIntegrationTimeout": {
+			"label": "Terminal shell integration timeout",
+			"description": "Maximum time to wait for shell integration to initialize before executing commands. For users with long shell startup times, this value may need to be increased if you see \"Shell Integration Unavailable\" errors in the terminal."
 		}
 	},
 	"advanced": {
@@ -323,6 +350,8 @@
 		"cacheReadsPrice": "Cache reads price",
 		"cacheWritesPrice": "Cache writes price",
 		"enableStreaming": "Enable streaming",
+		"enableR1Format": "Enable R1 model parameters",
+		"enableR1FormatTips": "Must be enabled when using R1 models such as QWQ to prevent 400 errors",
 		"useAzure": "Use Azure",
 		"azureApiVersion": "Set Azure API version",
 		"gemini": {
@@ -331,11 +360,14 @@
 		}
 	},
 	"modelPicker": {
-		"automaticFetch": "The extension automatically fetches the latest list of models available on <serviceLink>{{serviceName}}</serviceLink>. If you're unsure which model to choose, Roo Code works best with <defaultModelLink>{{defaultModelId}}</defaultModelLink>. You can also try searching \"free\" for no-cost options currently available."
+		"automaticFetch": "The extension automatically fetches the latest list of models available on <serviceLink>{{serviceName}}</serviceLink>. If you're unsure which model to choose, Roo Code works best with <defaultModelLink>{{defaultModelId}}</defaultModelLink>. You can also try searching \"free\" for no-cost options currently available.",
+		"label": "Model",
+		"searchPlaceholder": "Search",
+		"noMatchFound": "No match found",
+		"useCustomModel": "Use custom: {{modelId}}"
 	},
 	"footer": {
 		"feedback": "If you have any questions or feedback, feel free to open an issue at <githubLink>github.com/RooVetGit/Roo-Code</githubLink> or join <redditLink>reddit.com/r/RooCode</redditLink> or <discordLink>discord.gg/roocode</discordLink>",
-		"version": "Roo Code v{{version}}",
 		"telemetry": {
 			"label": "Allow anonymous error and usage reporting",
 			"description": "Help improve Roo Code by sending anonymous usage data and error reports. No code, prompts, or personal information is ever sent. See our privacy policy for more details."
@@ -344,5 +376,55 @@
 			"description": "Reset all global state and secret storage in the extension.",
 			"button": "Reset"
 		}
+	},
+	"thinkingBudget": {
+		"maxTokens": "Max Tokens",
+		"maxThinkingTokens": "Max Thinking Tokens"
+	},
+	"validation": {
+		"apiKey": "You must provide a valid API key.",
+		"awsRegion": "You must choose a region to use with AWS Bedrock.",
+		"googleCloud": "You must provide a valid Google Cloud Project ID and Region.",
+		"modelId": "You must provide a valid model ID.",
+		"modelSelector": "You must provide a valid model selector.",
+		"openAi": "You must provide a valid base URL, API key, and model ID.",
+		"arn": {
+			"invalidFormat": "Invalid ARN format. Please check the format requirements.",
+			"regionMismatch": "Warning: The region in your ARN ({{arnRegion}}) does not match your selected region ({{region}}). This may cause access issues. The provider will use the region from the ARN."
+		},
+		"modelAvailability": "The model ID ({{modelId}}) you provided is not available. Please choose a different model."
+	},
+	"placeholders": {
+		"apiKey": "Enter API Key...",
+		"profileName": "Enter profile name",
+		"accessKey": "Enter Access Key...",
+		"secretKey": "Enter Secret Key...",
+		"sessionToken": "Enter Session Token...",
+		"credentialsJson": "Enter Credentials JSON...",
+		"keyFilePath": "Enter Key File Path...",
+		"projectId": "Enter Project ID...",
+		"customArn": "Enter ARN (e.g. arn:aws:bedrock:us-east-1:123456789012:foundation-model/my-model)",
+		"baseUrl": "Enter base URL...",
+		"modelId": {
+			"lmStudio": "e.g. meta-llama-3.1-8b-instruct",
+			"lmStudioDraft": "e.g. lmstudio-community/llama-3.2-1b-instruct",
+			"ollama": "e.g. llama3.1"
+		},
+		"numbers": {
+			"maxTokens": "e.g. 4096",
+			"contextWindow": "e.g. 128000",
+			"inputPrice": "e.g. 0.0001",
+			"outputPrice": "e.g. 0.0002",
+			"cacheWritePrice": "e.g. 0.00005"
+		}
+	},
+	"defaults": {
+		"ollamaUrl": "Default: http://localhost:11434",
+		"lmStudioUrl": "Default: http://localhost:1234",
+		"geminiUrl": "Default: https://generativelanguage.googleapis.com"
+	},
+	"labels": {
+		"customArn": "Custom ARN",
+		"useCustomArn": "Use custom ARN..."
 	}
 }

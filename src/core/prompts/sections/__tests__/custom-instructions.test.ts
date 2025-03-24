@@ -106,7 +106,15 @@ describe("addCustomInstructions", () => {
 	})
 
 	it("should combine all instruction types when provided", async () => {
-		mockedFs.readFile.mockResolvedValue("mode specific rules")
+		// Mock implementation to return different values based on the file path
+		mockedFs.readFile.mockImplementation(((filePath: any) => {
+			// For .clinerules-test-mode, return mode-specific rules
+			if (filePath.toString().includes(".clinerules-test-mode")) {
+				return Promise.resolve("mode specific rules")
+			}
+			// For any other read operation, return empty
+			return Promise.reject({ code: "ENOENT" })
+		}) as any)
 
 		const result = await addCustomInstructions(
 			"mode instructions",
@@ -117,7 +125,8 @@ describe("addCustomInstructions", () => {
 		)
 
 		expect(result).toContain("Language Preference:")
-		expect(result).toContain("es")
+		expect(result).toContain("Español") // Check for language name
+		expect(result).toContain("(es)") // Check for language code in parentheses
 		expect(result).toContain("Global Instructions:\nglobal instructions")
 		expect(result).toContain("Mode-specific Instructions:\nmode instructions")
 		expect(result).toContain("Rules from .clinerules-test-mode:\nmode specific rules")
@@ -143,6 +152,22 @@ describe("addCustomInstructions", () => {
 		expect(result).toContain("Global Instructions:")
 		expect(result).toContain("Mode-specific Instructions:")
 		expect(result).not.toContain("Rules from .clinerules-test-mode")
+	})
+
+	it("should handle unknown language codes properly", async () => {
+		mockedFs.readFile.mockRejectedValue({ code: "ENOENT" })
+
+		const result = await addCustomInstructions(
+			"mode instructions",
+			"global instructions",
+			"/fake/path",
+			"test-mode",
+			{ language: "xyz" }, // Unknown language code
+		)
+
+		expect(result).toContain("Language Preference:")
+		expect(result).toContain('"xyz" (xyz) language') // For unknown codes, the code is used as the name too
+		expect(result).toContain("Global Instructions:\nglobal instructions")
 	})
 
 	it("should throw on unexpected errors", async () => {

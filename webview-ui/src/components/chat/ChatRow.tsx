@@ -3,6 +3,7 @@ import deepEqual from "fast-deep-equal"
 import React, { memo, useEffect, useMemo, useRef, useState } from "react"
 import { useSize } from "react-use"
 import { useCopyToClipboard } from "../../utils/clipboard"
+import { useTranslation, Trans } from "react-i18next"
 import {
 	ClineApiReqInfo,
 	ClineAskUseMcpServer,
@@ -22,6 +23,7 @@ import McpResourceRow from "../mcp/McpResourceRow"
 import McpToolRow from "../mcp/McpToolRow"
 import { highlightMentions } from "./TaskHeader"
 import { CheckpointSaved } from "./checkpoints/CheckpointSaved"
+import FollowUpSuggest from "./FollowUpSuggest"
 
 interface ChatRowProps {
 	message: ClineMessage
@@ -31,6 +33,7 @@ interface ChatRowProps {
 	isStreaming: boolean
 	onToggleExpand: () => void
 	onHeightChange: (isTaller: boolean) => void
+	onSuggestionClick?: (answer: string) => void
 }
 
 interface ChatRowContentProps extends Omit<ChatRowProps, "onHeightChange"> {}
@@ -77,7 +80,9 @@ export const ChatRowContent = ({
 	isLast,
 	isStreaming,
 	onToggleExpand,
+	onSuggestionClick,
 }: ChatRowContentProps) => {
+	const { t } = useTranslation()
 	const { mcpServers, alwaysAllowMcp, currentCheckpoint } = useExtensionState()
 	const [reasoningCollapsed, setReasoningCollapsed] = useState(true)
 
@@ -117,14 +122,14 @@ export const ChatRowContent = ({
 					<span
 						className="codicon codicon-error"
 						style={{ color: errorColor, marginBottom: "-1.5px" }}></span>,
-					<span style={{ color: errorColor, fontWeight: "bold" }}>Error</span>,
+					<span style={{ color: errorColor, fontWeight: "bold" }}>{t("chat:error")}</span>,
 				]
 			case "mistake_limit_reached":
 				return [
 					<span
 						className="codicon codicon-error"
 						style={{ color: errorColor, marginBottom: "-1.5px" }}></span>,
-					<span style={{ color: errorColor, fontWeight: "bold" }}>Roo is having trouble...</span>,
+					<span style={{ color: errorColor, fontWeight: "bold" }}>{t("chat:troubleMessage")}</span>,
 				]
 			case "command":
 				return [
@@ -135,7 +140,7 @@ export const ChatRowContent = ({
 							className="codicon codicon-terminal"
 							style={{ color: normalColor, marginBottom: "-1.5px" }}></span>
 					),
-					<span style={{ color: normalColor, fontWeight: "bold" }}>Roo wants to execute this command:</span>,
+					<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:runCommand.title")}:</span>,
 				]
 			case "use_mcp_server":
 				const mcpServerUse = JSON.parse(message.text || "{}") as ClineAskUseMcpServer
@@ -148,8 +153,9 @@ export const ChatRowContent = ({
 							style={{ color: normalColor, marginBottom: "-1.5px" }}></span>
 					),
 					<span style={{ color: normalColor, fontWeight: "bold" }}>
-						Roo wants to {mcpServerUse.type === "use_mcp_tool" ? "use a tool" : "access a resource"} on the{" "}
-						<code>{mcpServerUse.serverName}</code> MCP server:
+						{mcpServerUse.type === "use_mcp_tool"
+							? t("chat:mcp.wantsToUseTool", { serverName: mcpServerUse.serverName })
+							: t("chat:mcp.wantsToAccessResource", { serverName: mcpServerUse.serverName })}
 					</span>,
 				]
 			case "completion_result":
@@ -157,7 +163,7 @@ export const ChatRowContent = ({
 					<span
 						className="codicon codicon-check"
 						style={{ color: successColor, marginBottom: "-1.5px" }}></span>,
-					<span style={{ color: successColor, fontWeight: "bold" }}>Task Completed</span>,
+					<span style={{ color: successColor, fontWeight: "bold" }}>{t("chat:taskCompleted")}</span>,
 				]
 			case "api_req_retry_delayed":
 				return []
@@ -196,16 +202,20 @@ export const ChatRowContent = ({
 					),
 					apiReqCancelReason !== null && apiReqCancelReason !== undefined ? (
 						apiReqCancelReason === "user_cancelled" ? (
-							<span style={{ color: normalColor, fontWeight: "bold" }}>API Request Cancelled</span>
+							<span style={{ color: normalColor, fontWeight: "bold" }}>
+								{t("chat:apiRequest.cancelled")}
+							</span>
 						) : (
-							<span style={{ color: errorColor, fontWeight: "bold" }}>API Streaming Failed</span>
+							<span style={{ color: errorColor, fontWeight: "bold" }}>
+								{t("chat:apiRequest.streamingFailed")}
+							</span>
 						)
 					) : cost !== null && cost !== undefined ? (
-						<span style={{ color: normalColor, fontWeight: "bold" }}>API Request</span>
+						<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:apiRequest.title")}</span>
 					) : apiRequestFailedMessage ? (
-						<span style={{ color: errorColor, fontWeight: "bold" }}>API Request Failed</span>
+						<span style={{ color: errorColor, fontWeight: "bold" }}>{t("chat:apiRequest.failed")}</span>
 					) : (
-						<span style={{ color: normalColor, fontWeight: "bold" }}>API Request...</span>
+						<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:apiRequest.streaming")}</span>
 					),
 				]
 			case "followup":
@@ -213,12 +223,12 @@ export const ChatRowContent = ({
 					<span
 						className="codicon codicon-question"
 						style={{ color: normalColor, marginBottom: "-1.5px" }}></span>,
-					<span style={{ color: normalColor, fontWeight: "bold" }}>Roo has a question:</span>,
+					<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:questions.hasQuestion")}</span>,
 				]
 			default:
 				return [null, null]
 		}
-	}, [type, isCommandExecuting, message, isMcpServerResponding, apiReqCancelReason, cost, apiRequestFailedMessage])
+	}, [type, isCommandExecuting, message, isMcpServerResponding, apiReqCancelReason, cost, apiRequestFailedMessage, t])
 
 	const headerStyle: React.CSSProperties = {
 		display: "flex",
@@ -241,6 +251,13 @@ export const ChatRowContent = ({
 		return null
 	}, [message.ask, message.say, message.text])
 
+	const followUpData = useMemo(() => {
+		if (message.type === "ask" && message.ask === "followup" && !message.partial) {
+			return JSON.parse(message.text || "{}")
+		}
+		return null
+	}, [message.type, message.ask, message.partial, message.text])
+
 	if (tool) {
 		const toolIcon = (name: string) => (
 			<span
@@ -255,7 +272,7 @@ export const ChatRowContent = ({
 					<>
 						<div style={headerStyle}>
 							{toolIcon(tool.tool === "appliedDiff" ? "diff" : "edit")}
-							<span style={{ fontWeight: "bold" }}>Roo wants to edit this file:</span>
+							<span style={{ fontWeight: "bold" }}>{t("chat:fileOperations.wantsToEdit")}</span>
 						</div>
 						<CodeAccordian
 							progressStatus={message.progressStatus}
@@ -272,7 +289,7 @@ export const ChatRowContent = ({
 					<>
 						<div style={headerStyle}>
 							{toolIcon("new-file")}
-							<span style={{ fontWeight: "bold" }}>Roo wants to create a new file:</span>
+							<span style={{ fontWeight: "bold" }}>{t("chat:fileOperations.wantsToCreate")}</span>
 						</div>
 						<CodeAccordian
 							isLoading={message.partial}
@@ -289,7 +306,9 @@ export const ChatRowContent = ({
 						<div style={headerStyle}>
 							{toolIcon("file-code")}
 							<span style={{ fontWeight: "bold" }}>
-								{message.type === "ask" ? "Roo wants to read this file:" : "Roo read this file:"}
+								{message.type === "ask"
+									? t("chat:fileOperations.wantsToRead")
+									: t("chat:fileOperations.didRead")}
 							</span>
 						</div>
 						{/* <CodeAccordian
@@ -347,8 +366,8 @@ export const ChatRowContent = ({
 							{toolIcon("folder-opened")}
 							<span style={{ fontWeight: "bold" }}>
 								{message.type === "ask"
-									? "Roo wants to view the top level files in this directory:"
-									: "Roo viewed the top level files in this directory:"}
+									? t("chat:directoryOperations.wantsToViewTopLevel")
+									: t("chat:directoryOperations.didViewTopLevel")}
 							</span>
 						</div>
 						<CodeAccordian
@@ -367,8 +386,8 @@ export const ChatRowContent = ({
 							{toolIcon("folder-opened")}
 							<span style={{ fontWeight: "bold" }}>
 								{message.type === "ask"
-									? "Roo wants to recursively view all files in this directory:"
-									: "Roo recursively viewed all files in this directory:"}
+									? t("chat:directoryOperations.wantsToViewRecursive")
+									: t("chat:directoryOperations.didViewRecursive")}
 							</span>
 						</div>
 						<CodeAccordian
@@ -387,8 +406,8 @@ export const ChatRowContent = ({
 							{toolIcon("file-code")}
 							<span style={{ fontWeight: "bold" }}>
 								{message.type === "ask"
-									? "Roo wants to view source code definition names used in this directory:"
-									: "Roo viewed source code definition names used in this directory:"}
+									? t("chat:directoryOperations.wantsToViewDefinitions")
+									: t("chat:directoryOperations.didViewDefinitions")}
 							</span>
 						</div>
 						<CodeAccordian
@@ -406,13 +425,17 @@ export const ChatRowContent = ({
 							{toolIcon("search")}
 							<span style={{ fontWeight: "bold" }}>
 								{message.type === "ask" ? (
-									<>
-										Roo wants to search this directory for <code>{tool.regex}</code>:
-									</>
+									<Trans
+										i18nKey="chat:directoryOperations.wantsToSearch"
+										components={{ code: <code>{tool.regex}</code> }}
+										values={{ regex: tool.regex }}
+									/>
 								) : (
-									<>
-										Roo searched this directory for <code>{tool.regex}</code>:
-									</>
+									<Trans
+										i18nKey="chat:directoryOperations.didSearch"
+										components={{ code: <code>{tool.regex}</code> }}
+										values={{ regex: tool.regex }}
+									/>
 								)}
 							</span>
 						</div>
@@ -433,13 +456,35 @@ export const ChatRowContent = ({
 							<span style={{ fontWeight: "bold" }}>
 								{message.type === "ask" ? (
 									<>
-										Roo wants to switch to <code>{tool.mode}</code> mode
-										{tool.reason ? ` because: ${tool.reason}` : ""}
+										{tool.reason ? (
+											<Trans
+												i18nKey="chat:modes.wantsToSwitchWithReason"
+												components={{ code: <code>{tool.mode}</code> }}
+												values={{ mode: tool.mode, reason: tool.reason }}
+											/>
+										) : (
+											<Trans
+												i18nKey="chat:modes.wantsToSwitch"
+												components={{ code: <code>{tool.mode}</code> }}
+												values={{ mode: tool.mode }}
+											/>
+										)}
 									</>
 								) : (
 									<>
-										Roo switched to <code>{tool.mode}</code> mode
-										{tool.reason ? ` because: ${tool.reason}` : ""}
+										{tool.reason ? (
+											<Trans
+												i18nKey="chat:modes.didSwitchWithReason"
+												components={{ code: <code>{tool.mode}</code> }}
+												values={{ mode: tool.mode, reason: tool.reason }}
+											/>
+										) : (
+											<Trans
+												i18nKey="chat:modes.didSwitch"
+												components={{ code: <code>{tool.mode}</code> }}
+												values={{ mode: tool.mode }}
+											/>
+										)}
 									</>
 								)}
 							</span>
@@ -452,7 +497,11 @@ export const ChatRowContent = ({
 						<div style={headerStyle}>
 							{toolIcon("new-file")}
 							<span style={{ fontWeight: "bold" }}>
-								Roo wants to create a new subtask in <code>{tool.mode}</code> mode:
+								<Trans
+									i18nKey="chat:subtasks.wantsToCreate"
+									components={{ code: <code>{tool.mode}</code> }}
+									values={{ mode: tool.mode }}
+								/>
 							</span>
 						</div>
 						<div style={{ paddingLeft: "26px", marginTop: "4px" }}>
@@ -465,7 +514,7 @@ export const ChatRowContent = ({
 					<>
 						<div style={headerStyle}>
 							{toolIcon("checklist")}
-							<span style={{ fontWeight: "bold" }}>Roo wants to finish this subtask</span>
+							<span style={{ fontWeight: "bold" }}>{t("chat:subtasks.wantsToFinish")}</span>
 						</div>
 						<div style={{ paddingLeft: "26px", marginTop: "4px" }}>
 							<code>{tool.content}</code>
@@ -527,7 +576,7 @@ export const ChatRowContent = ({
 											<>
 												<br />
 												<br />
-												It seems like you're having Windows PowerShell issues, please see this{" "}
+												{t("chat:powershell.issues")}{" "}
 												<a
 													href="https://github.com/cline/cline/wiki/TroubleShooting-%E2%80%90-%22PowerShell-is-not-recognized-as-an-internal-or-external-command%22"
 													style={{ color: "inherit", textDecoration: "underline" }}>
@@ -703,7 +752,7 @@ export const ChatRowContent = ({
 											color: "#FFA500",
 										}}></i>
 									<span style={{ fontWeight: 500, color: "#FFA500" }}>
-										Shell Integration Unavailable
+										{t("chat:shellIntegration.unavailable")}
 									</span>
 								</div>
 								<div>
@@ -716,7 +765,7 @@ export const ChatRowContent = ({
 									<a
 										href="http://docs.roocode.com/troubleshooting/shell-integration/"
 										style={{ color: "inherit", textDecoration: "underline" }}>
-										Still having trouble?
+										{t("chat:shellIntegration.troubleshooting")}
 									</a>
 								</div>
 							</div>
@@ -733,7 +782,7 @@ export const ChatRowContent = ({
 										fontSize: "12px",
 										textTransform: "uppercase",
 									}}>
-									Response
+									{t("chat:response")}
 								</div>
 								<CodeAccordian
 									code={message.text}
@@ -844,7 +893,7 @@ export const ChatRowContent = ({
 											}}>
 											<span
 												className={`codicon codicon-chevron-${isExpanded ? "down" : "right"}`}></span>
-											<span style={{ fontSize: "0.8em" }}>Command Output</span>
+											<span style={{ fontSize: "0.8em" }}>{t("chat:commandOutput")}</span>
 										</div>
 										{isExpanded && <CodeBlock source={`${"```"}shell\n${output}\n${"```"}`} />}
 									</div>
@@ -916,7 +965,7 @@ export const ChatRowContent = ({
 														fontSize: "12px",
 														textTransform: "uppercase",
 													}}>
-													Arguments
+													{t("chat:arguments")}
 												</div>
 												<CodeAccordian
 													code={useMcpServer.arguments}
@@ -956,9 +1005,16 @@ export const ChatRowContent = ({
 									{title}
 								</div>
 							)}
-							<div style={{ paddingTop: 10 }}>
-								<Markdown markdown={message.text} />
+							<div style={{ paddingTop: 10, paddingBottom: 15 }}>
+								<Markdown
+									markdown={message.partial === true ? message?.text : followUpData?.question}
+								/>
 							</div>
+							<FollowUpSuggest
+								suggestions={followUpData?.suggest}
+								onSuggestionClick={onSuggestionClick}
+								ts={message?.ts}
+							/>
 						</>
 					)
 				default:

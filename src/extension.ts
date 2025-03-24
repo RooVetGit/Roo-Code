@@ -1,10 +1,11 @@
 import * as vscode from "vscode"
 import * as dotenvx from "@dotenvx/dotenvx"
+import * as path from "path"
 
 // Load environment variables from .env file
 try {
 	// Specify path to .env file in the project root directory
-	const envPath = __dirname + "/../.env"
+	const envPath = path.join(__dirname, "..", ".env")
 	dotenvx.config({ path: envPath })
 } catch (e) {
 	// Silently handle environment loading errors
@@ -13,6 +14,7 @@ try {
 
 import "./utils/path" // Necessary to have access to String.prototype.toPosix.
 
+import { initializeI18n } from "./i18n"
 import { ClineProvider } from "./core/webview/ClineProvider"
 import { CodeActionProvider } from "./core/CodeActionProvider"
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
@@ -20,8 +22,10 @@ import { McpServerManager } from "./services/mcp/McpServerManager"
 import { telemetryService } from "./services/telemetry/TelemetryService"
 import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"
 import { API } from "./exports/api"
+import { migrateSettings } from "./utils/migrateSettings"
 
 import { handleUri, registerCommands, registerCodeActions, registerTerminalActions } from "./activate"
+import { formatLanguage } from "./shared/language"
 
 /**
  * Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -36,14 +40,20 @@ let extensionContext: vscode.ExtensionContext
 
 // This method is called when your extension is activated.
 // Your extension is activated the very first time the command is executed.
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
 	extensionContext = context
 	outputChannel = vscode.window.createOutputChannel("Roo-Code")
 	context.subscriptions.push(outputChannel)
 	outputChannel.appendLine("Roo-Code extension activated")
 
+	// Migrate old settings to new
+	await migrateSettings(context, outputChannel)
+
 	// Initialize telemetry service after environment variables are loaded.
 	telemetryService.initialize()
+
+	// Initialize i18n for internationalization support
+	initializeI18n(context.globalState.get("language") ?? formatLanguage(vscode.env.language))
 
 	// Initialize terminal shell execution handlers.
 	TerminalRegistry.initialize()
@@ -56,7 +66,7 @@ export function activate(context: vscode.ExtensionContext) {
 		context.globalState.update("allowedCommands", defaultCommands)
 	}
 
-	const provider = new ClineProvider(context, outputChannel)
+	const provider = new ClineProvider(context, outputChannel, "sidebar")
 	telemetryService.setProvider(provider)
 
 	context.subscriptions.push(

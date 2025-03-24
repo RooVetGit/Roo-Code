@@ -11,6 +11,7 @@ export interface TokenUsage {
 
 export interface RooCodeEvents {
 	message: [{ taskId: string; action: "created" | "updated"; message: ClineMessage }]
+	taskCreated: [taskId: string]
 	taskStarted: [taskId: string]
 	taskPaused: [taskId: string]
 	taskUnpaused: [taskId: string]
@@ -200,12 +201,16 @@ export type GlobalStateKey =
 	| "modelMaxThinkingTokens"
 	| "azureApiVersion"
 	| "openAiStreamingEnabled"
+	| "openAiR1FormatEnabled"
 	| "openRouterModelId"
 	| "openRouterModelInfo"
 	| "openRouterBaseUrl"
+	| "openRouterSpecificProvider"
 	| "openRouterUseMiddleOutTransform"
 	| "googleGeminiBaseUrl"
 	| "allowedCommands"
+	| "ttsEnabled"
+	| "ttsSpeed"
 	| "soundEnabled"
 	| "soundVolume"
 	| "diffEnabled"
@@ -217,6 +222,7 @@ export type GlobalStateKey =
 	| "fuzzyMatchThreshold"
 	| "writeDelayMs"
 	| "terminalOutputLineLimit"
+	| "terminalShellIntegrationTimeout"
 	| "mcpEnabled"
 	| "enableMcpServerCreation"
 	| "alwaysApproveResubmit"
@@ -250,6 +256,8 @@ export type GlobalStateKey =
 	| "showRooIgnoredFiles"
 	| "remoteBrowserEnabled"
 	| "language"
+	| "maxReadFileLine"
+	| "fakeAi"
 
 export type ConfigurationKey = GlobalStateKey | SecretKey
 

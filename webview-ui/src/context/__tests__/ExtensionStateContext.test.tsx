@@ -202,6 +202,8 @@ describe("mergeExtensionState", () => {
 			apiConfiguration: { providerId: "openrouter" } as ApiConfiguration,
 			telemetrySetting: "unset",
 			showRooIgnoredFiles: true,
+			renderContext: "sidebar",
+			maxReadFileLine: 500,
 		}
 
 		const prevState: ExtensionState = {

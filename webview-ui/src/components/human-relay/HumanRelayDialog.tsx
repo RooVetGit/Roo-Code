@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "../ui/textarea"
 import { useClipboard } from "../ui/hooks"
 import { Check, Copy, X } from "lucide-react"
+import { useAppTranslation } from "@/i18n/TranslationContext"
 
 interface HumanRelayDialogProps {
 	isOpen: boolean
@@ -26,11 +27,12 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 	onSubmit,
 	onCancel,
 }) => {
+	const { t } = useAppTranslation()
 	const [response, setResponse] = React.useState("")
 	const { copy } = useClipboard()
 	const [isCopyClicked, setIsCopyClicked] = React.useState(false)
 
-	// Listen to isOpen changes, clear the input box when the dialog box is opened
+	// Clear input when dialog opens
 	React.useEffect(() => {
 		if (isOpen) {
 			setResponse("")
@@ -38,7 +40,7 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 		}
 	}, [isOpen])
 
-	// Copy to clipboard and show a success message
+	// Copy to clipboard and show success message
 	const handleCopy = () => {
 		copy(promptText)
 		setIsCopyClicked(true)
@@ -47,7 +49,7 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 		}, 2000)
 	}
 
-	// Submit the response
+	// Submit response
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault()
 		if (response.trim()) {
@@ -56,7 +58,7 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 		}
 	}
 
-	// Cancel the operation
+	// Cancel operation
 	const handleCancel = () => {
 		onCancel(requestId)
 		onClose()
@@ -64,15 +66,13 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 
 	return (
 		<Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
-			<DialogContent className="sm:max-w-[600px]">
+			<DialogContent className="sm:max-w-[600px] overflow-y-auto max-h-[80vh]">
 				<DialogHeader>
-					<DialogTitle>Human Relay - Please Help Copy and Paste Information</DialogTitle>
-					<DialogDescription>
-						Please copy the text below to the web AI, then paste the AI's response into the input box below.
-					</DialogDescription>
+					<DialogTitle>{t("humanRelay:dialogTitle")}</DialogTitle>
+					<DialogDescription>{t("humanRelay:dialogDescription")}</DialogDescription>
 				</DialogHeader>
 
-				<div className="grid gap-4 py-4">
+				<div className="grid gap-6 py-6">
 					<div className="relative">
 						<Textarea
 							className="min-h-[200px] font-mono text-sm p-4 pr-12 whitespace-pre-wrap"
@@ -84,12 +84,14 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 						</Button>
 					</div>
 
-					{isCopyClicked && <div className="text-sm text-emerald-500 font-medium">Copied to clipboard</div>}
+					{isCopyClicked && (
+						<div className="text-sm text-emerald-500 font-medium">{t("humanRelay:copiedToClipboard")}</div>
+					)}
 
 					<div>
-						<div className="mb-2 font-medium">Please enter the AI's response:</div>
+						<div className="mb-2 font-medium">{t("humanRelay:aiResponse.label")}</div>
 						<Textarea
-							placeholder="Paste the AI's response here..."
+							placeholder={t("humanRelay:aiResponse.placeholder")}
 							value={response}
 							onChange={(e) => setResponse(e.target.value)}
 							className="min-h-[150px]"
@@ -100,11 +102,11 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 				<DialogFooter>
 					<Button variant="outline" onClick={handleCancel} className="gap-1">
 						<X className="h-4 w-4" />
-						Cancel
+						{t("humanRelay:actions.cancel")}
 					</Button>
 					<Button onClick={handleSubmit} disabled={!response.trim()} className="gap-1">
 						<Check className="h-4 w-4" />
-						Submit
+						{t("humanRelay:actions.submit")}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

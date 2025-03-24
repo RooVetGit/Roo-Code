@@ -7,34 +7,14 @@ import { ServerConfigSchema } from "../McpHub"
 const fs = require("fs/promises")
 const { McpHub } = require("../McpHub")
 
-jest.mock("vscode", () => ({
-	workspace: {
-		createFileSystemWatcher: jest.fn().mockReturnValue({
-			onDidChange: jest.fn(),
-			onDidCreate: jest.fn(),
-			onDidDelete: jest.fn(),
-			dispose: jest.fn(),
-		}),
-		onDidSaveTextDocument: jest.fn(),
-		onDidChangeWorkspaceFolders: jest.fn(),
-		workspaceFolders: [],
-	},
-	window: {
-		showErrorMessage: jest.fn(),
-		showInformationMessage: jest.fn(),
-		showWarningMessage: jest.fn(),
-	},
-	Disposable: {
-		from: jest.fn(),
-	},
-}))
+jest.mock("vscode")
 jest.mock("fs/promises")
 jest.mock("../../../core/webview/ClineProvider")
 
 describe("McpHub", () => {
 	let mcpHub: McpHubType
 	let mockProvider: Partial<ClineProvider>
-	const mockSettingsPath = "/mock/settings/path/cline_mcp_settings.json"
+	const mockSettingsPath = "/mock/settings/path/mcp_settings.json"
 
 	beforeEach(() => {
 		jest.clearAllMocks()

@@ -3,7 +3,8 @@
 		"save": "Guardar",
 		"done": "Hecho",
 		"cancel": "Cancelar",
-		"reset": "Restablecer"
+		"reset": "Restablecer",
+		"select": "Seleccionar"
 	},
 	"header": {
 		"title": "Configuración",
@@ -24,8 +25,11 @@
 		"checkpoints": "Puntos de control",
 		"notifications": "Notificaciones",
 		"contextManagement": "Gestión de contexto",
+		"terminal": "Terminal",
 		"advanced": "Avanzado",
-		"experimental": "Funciones experimentales"
+		"experimental": "Funciones experimentales",
+		"language": "Idioma",
+		"about": "Acerca de Roo Code"
 	},
 	"autoApprove": {
 		"description": "Permitir que Roo realice operaciones automáticamente sin requerir aprobación. Habilite esta configuración solo si confía plenamente en la IA y comprende los riesgos de seguridad asociados.",
@@ -71,7 +75,7 @@
 	},
 	"providers": {
 		"configProfile": "Perfil de configuración",
-		"description": "Descripción",
+		"description": "Guarde diferentes configuraciones de API para cambiar rápidamente entre proveedores y ajustes.",
 		"apiProvider": "Proveedor de API",
 		"model": "Modelo",
 		"nameEmpty": "El nombre no puede estar vacío",
@@ -151,6 +155,13 @@
 		"humanRelay": {
 			"description": "No se requiere clave API, pero el usuario necesita ayudar a copiar y pegar la información en el chat web de IA.",
 			"instructions": "Durante el uso, aparecerá un cuadro de diálogo y el mensaje actual se copiará automáticamente al portapapeles. Debe pegarlo en las versiones web de IA (como ChatGPT o Claude), luego copiar la respuesta de la IA de vuelta al cuadro de diálogo y hacer clic en el botón de confirmar."
+		},
+		"openRouter": {
+			"providerRouting": {
+				"title": "Enrutamiento de Proveedores de OpenRouter",
+				"description": "OpenRouter dirige las solicitudes a los mejores proveedores disponibles para su modelo. Por defecto, las solicitudes se equilibran entre los principales proveedores para maximizar el tiempo de actividad. Sin embargo, puede elegir un proveedor específico para este modelo.",
+				"learnMore": "Más información sobre el enrutamiento de proveedores"
+			}
 		},
 		"customModel": {
 			"capabilities": "Configure las capacidades y precios para su modelo personalizado compatible con OpenAI. Tenga cuidado al especificar las capacidades del modelo, ya que pueden afectar cómo funciona Roo Code.",
@@ -234,14 +245,15 @@
 			"label": "Habilitar efectos de sonido",
 			"description": "Cuando está habilitado, Roo reproducirá efectos de sonido para notificaciones y eventos.",
 			"volumeLabel": "Volumen"
+		},
+		"tts": {
+			"label": "Habilitar texto a voz",
+			"description": "Cuando está habilitado, Roo leerá en voz alta sus respuestas usando texto a voz.",
+			"speedLabel": "Velocidad"
 		}
 	},
 	"contextManagement": {
 		"description": "Controle qué información se incluye en la ventana de contexto de la IA, afectando el uso de token y la calidad de respuesta",
-		"terminal": {
-			"label": "Límite de salida de terminal",
-			"description": "Número máximo de líneas a incluir en la salida del terminal al ejecutar comandos. Cuando se excede, se eliminarán líneas del medio, ahorrando token."
-		},
 		"openTabs": {
 			"label": "Límite de contexto de pestañas abiertas",
 			"description": "Número máximo de pestañas abiertas de VSCode a incluir en el contexto. Valores más altos proporcionan más contexto pero aumentan el uso de token."
@@ -253,6 +265,21 @@
 		"rooignore": {
 			"label": "Mostrar archivos .rooignore en listas y búsquedas",
 			"description": "Cuando está habilitado, los archivos que coinciden con los patrones en .rooignore se mostrarán en listas con un símbolo de candado. Cuando está deshabilitado, estos archivos se ocultarán completamente de las listas de archivos y búsquedas."
+		},
+		"maxReadFile": {
+			"label": "Umbral de auto-truncado de lectura de archivos",
+			"description": "El número predeterminado de líneas para leer de un archivo en un lote. Valores más bajos reducen el uso de contexto/recursos pero pueden requerir más lecturas para archivos grandes.",
+			"lines": "líneas"
+		}
+	},
+	"terminal": {
+		"outputLineLimit": {
+			"label": "Límite de salida de terminal",
+			"description": "Número máximo de líneas a incluir en la salida del terminal al ejecutar comandos. Cuando se excede, se eliminarán líneas del medio, ahorrando token."
+		},
+		"shellIntegrationTimeout": {
+			"label": "Tiempo de espera de integración del shell del terminal",
+			"description": "Tiempo máximo de espera para la inicialización de la integración del shell antes de ejecutar comandos. Para usuarios con tiempos de inicio de shell largos, este valor puede necesitar ser aumentado si ve errores \"Shell Integration Unavailable\" en el terminal."
 		}
 	},
 	"advanced": {
@@ -323,6 +350,8 @@
 		"cacheReadsPrice": "Precio de lecturas de caché",
 		"cacheWritesPrice": "Precio de escrituras de caché",
 		"enableStreaming": "Habilitar streaming",
+		"enableR1Format": "Habilitar parámetros del modelo R1",
+		"enableR1FormatTips": "Debe habilitarse al utilizar modelos R1 como QWQ, para evitar el error 400",
 		"useAzure": "Usar Azure",
 		"azureApiVersion": "Establecer versión de API de Azure",
 		"gemini": {
@@ -331,7 +360,11 @@
 		}
 	},
 	"modelPicker": {
-		"automaticFetch": "La extensión obtiene automáticamente la lista más reciente de modelos disponibles en <serviceLink>{{serviceName}}</serviceLink>. Si no está seguro de qué modelo elegir, Roo Code funciona mejor con <defaultModelLink>{{defaultModelId}}</defaultModelLink>. También puede buscar \"free\" para opciones sin costo actualmente disponibles."
+		"automaticFetch": "La extensión obtiene automáticamente la lista más reciente de modelos disponibles en <serviceLink>{{serviceName}}</serviceLink>. Si no está seguro de qué modelo elegir, Roo Code funciona mejor con <defaultModelLink>{{defaultModelId}}</defaultModelLink>. También puede buscar \"free\" para opciones sin costo actualmente disponibles.",
+		"label": "Modelo",
+		"searchPlaceholder": "Buscar",
+		"noMatchFound": "No se encontraron coincidencias",
+		"useCustomModel": "Usar personalizado: {{modelId}}"
 	},
 	"footer": {
 		"feedback": "Si tiene alguna pregunta o comentario, no dude en abrir un issue en <githubLink>github.com/RooVetGit/Roo-Code</githubLink> o unirse a <redditLink>reddit.com/r/RooCode</redditLink> o <discordLink>discord.gg/roocode</discordLink>",
@@ -344,5 +377,55 @@
 			"description": "Restablecer todo el estado global y almacenamiento secreto en la extensión.",
 			"button": "Restablecer"
 		}
+	},
+	"thinkingBudget": {
+		"maxTokens": "Tokens máximos",
+		"maxThinkingTokens": "Tokens máximos de pensamiento"
+	},
+	"validation": {
+		"apiKey": "Debe proporcionar una clave API válida.",
+		"awsRegion": "Debe elegir una región para usar con AWS Bedrock.",
+		"googleCloud": "Debe proporcionar un ID de proyecto y región de Google Cloud válidos.",
+		"modelId": "Debe proporcionar un ID de modelo válido.",
+		"modelSelector": "Debe proporcionar un selector de modelo válido.",
+		"openAi": "Debe proporcionar una URL base, clave API y ID de modelo válidos.",
+		"arn": {
+			"invalidFormat": "Formato de ARN no válido. Por favor, verifique los requisitos de formato.",
+			"regionMismatch": "Advertencia: La región en su ARN ({{arnRegion}}) no coincide con su región seleccionada ({{region}}). Esto puede causar problemas de acceso. El proveedor usará la región del ARN."
+		},
+		"modelAvailability": "El ID de modelo ({{modelId}}) que proporcionó no está disponible. Por favor, elija un modelo diferente."
+	},
+	"placeholders": {
+		"apiKey": "Ingrese clave API...",
+		"profileName": "Ingrese nombre del perfil",
+		"accessKey": "Ingrese clave de acceso...",
+		"secretKey": "Ingrese clave secreta...",
+		"sessionToken": "Ingrese token de sesión...",
+		"credentialsJson": "Ingrese JSON de credenciales...",
+		"keyFilePath": "Ingrese ruta del archivo de clave...",
+		"projectId": "Ingrese ID del proyecto...",
+		"customArn": "Ingrese ARN (ej. arn:aws:bedrock:us-east-1:123456789012:foundation-model/my-model)",
+		"baseUrl": "Ingrese URL base...",
+		"modelId": {
+			"lmStudio": "ej. meta-llama-3.1-8b-instruct",
+			"lmStudioDraft": "ej. lmstudio-community/llama-3.2-1b-instruct",
+			"ollama": "ej. llama3.1"
+		},
+		"numbers": {
+			"maxTokens": "ej. 4096",
+			"contextWindow": "ej. 128000",
+			"inputPrice": "ej. 0.0001",
+			"outputPrice": "ej. 0.0002",
+			"cacheWritePrice": "ej. 0.00005"
+		}
+	},
+	"defaults": {
+		"ollamaUrl": "Predeterminado: http://localhost:11434",
+		"lmStudioUrl": "Predeterminado: http://localhost:1234",
+		"geminiUrl": "Predeterminado: https://generativelanguage.googleapis.com"
+	},
+	"labels": {
+		"customArn": "ARN personalizado",
+		"useCustomArn": "Usar ARN personalizado..."
 	}
 }

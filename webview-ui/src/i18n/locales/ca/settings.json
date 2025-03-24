@@ -3,7 +3,8 @@
 		"save": "Desar",
 		"done": "Fet",
 		"cancel": "Cancel·lar",
-		"reset": "Restablir"
+		"reset": "Restablir",
+		"select": "Seleccionar"
 	},
 	"header": {
 		"title": "Configuració",
@@ -24,8 +25,11 @@
 		"checkpoints": "Punts de control",
 		"notifications": "Notificacions",
 		"contextManagement": "Gestió de context",
+		"terminal": "Terminal",
 		"advanced": "Avançat",
-		"experimental": "Funcions experimentals"
+		"experimental": "Funcions experimentals",
+		"language": "Idioma",
+		"about": "Sobre Roo Code"
 	},
 	"autoApprove": {
 		"description": "Permet que Roo realitzi operacions automàticament sense requerir aprovació. Activeu aquesta configuració només si confieu plenament en la IA i enteneu els riscos de seguretat associats.",
@@ -71,7 +75,7 @@
 	},
 	"providers": {
 		"configProfile": "Perfil de configuració",
-		"description": "Descripció",
+		"description": "Deseu diferents configuracions d'API per canviar ràpidament entre proveïdors i configuracions.",
 		"apiProvider": "Proveïdor d'API",
 		"openRouterApiKey": "Clau API d'OpenRouter",
 		"nameEmpty": "El nom no pot estar buit",
@@ -151,6 +155,13 @@
 		"humanRelay": {
 			"description": "No es requereix clau API, però l'usuari necessita ajuda per copiar i enganxar informació al xat d'IA web.",
 			"instructions": "Durant l'ús, apareixerà un diàleg i el missatge actual es copiarà automàticament al porta-retalls. Necessiteu enganxar-lo a les versions web d'IA (com ChatGPT o Claude), després copiar la resposta de l'IA de nou al diàleg i fer clic al botó de confirmació."
+		},
+		"openRouter": {
+			"providerRouting": {
+				"title": "Encaminament de Proveïdors d'OpenRouter",
+				"description": "OpenRouter dirigeix les sol·licituds als millors proveïdors disponibles per al vostre model. Per defecte, les sol·licituds s'equilibren entre els principals proveïdors per maximitzar el temps de funcionament. No obstant això, podeu triar un proveïdor específic per utilitzar amb aquest model.",
+				"learnMore": "Més informació sobre l'encaminament de proveïdors"
+			}
 		},
 		"customModel": {
 			"capabilities": "Configureu les capacitats i preus per al vostre model personalitzat compatible amb OpenAI. Tingueu cura en especificar les capacitats del model, ja que poden afectar com funciona Roo Code.",
@@ -234,14 +245,15 @@
 			"label": "Habilitar efectes de so",
 			"description": "Quan està habilitat, Roo reproduirà efectes de so per a notificacions i esdeveniments.",
 			"volumeLabel": "Volum"
+		},
+		"tts": {
+			"label": "Habilitar text a veu",
+			"description": "Quan està habilitat, Roo llegirà en veu alta les seves respostes utilitzant text a veu.",
+			"speedLabel": "Velocitat"
 		}
 	},
 	"contextManagement": {
 		"description": "Controleu quina informació s'inclou a la finestra de context de la IA, afectant l'ús de token i la qualitat de resposta",
-		"terminal": {
-			"label": "Límit de sortida de terminal",
-			"description": "Nombre màxim de línies a incloure a la sortida del terminal en executar comandes. Quan s'excedeix, s'eliminaran línies del mig, estalviant token."
-		},
 		"openTabs": {
 			"label": "Límit de context de pestanyes obertes",
 			"description": "Nombre màxim de pestanyes obertes de VSCode a incloure al context. Valors més alts proporcionen més context però augmenten l'ús de token."
@@ -253,6 +265,21 @@
 		"rooignore": {
 			"label": "Mostrar fitxers .rooignore en llistes i cerques",
 			"description": "Quan està habilitat, els fitxers que coincideixen amb els patrons a .rooignore es mostraran en llistes amb un símbol de cadenat. Quan està deshabilitat, aquests fitxers s'ocultaran completament de les llistes de fitxers i cerques."
+		},
+		"maxReadFile": {
+			"label": "Llindar d'auto-truncament de lectura de fitxers",
+			"description": "El nombre predeterminat de línies per llegir d'un fitxer en un lot. Valors més baixos redueixen l'ús de context/recursos però poden requerir més lectures per a fitxers grans.",
+			"lines": "línies"
+		}
+	},
+	"terminal": {
+		"outputLineLimit": {
+			"label": "Límit de sortida de terminal",
+			"description": "Nombre màxim de línies a incloure a la sortida del terminal en executar comandes. Quan s'excedeix, s'eliminaran línies del mig, estalviant token."
+		},
+		"shellIntegrationTimeout": {
+			"label": "Temps d'espera d'integració de shell del terminal",
+			"description": "Temps màxim d'espera per a la inicialització de la integració de shell abans d'executar comandes. Per a usuaris amb temps d'inici de shell llargs, aquest valor pot necessitar ser augmentat si veieu errors \"Shell Integration Unavailable\" al terminal."
 		}
 	},
 	"advanced": {
@@ -322,16 +349,22 @@
 		"outputPrice": "Preu de sortida",
 		"cacheReadsPrice": "Preu de lectures de caché",
 		"cacheWritesPrice": "Preu d'escriptures de caché",
+		"enableStreaming": "Habilitar streaming",
+		"enableR1Format": "Activar els paràmetres del model R1",
+		"enableR1FormatTips": "S'ha d'activat quan s'utilitzen models R1 com el QWQ per evitar errors 400",
+		"useAzure": "Utilitzar Azure",
+		"azureApiVersion": "Establir versió de l'API d'Azure",
 		"gemini": {
 			"freeRequests": "* Gratuït fins a {{count}} sol·licituds per minut. Després d'això, la facturació depèn de la mida del prompt.",
 			"pricingDetails": "Per a més informació, consulteu els detalls de preus."
-		},
-		"enableStreaming": "Habilitar streaming",
-		"useAzure": "Utilitzar Azure",
-		"azureApiVersion": "Establir versió de l'API d'Azure"
+		}
 	},
 	"modelPicker": {
-		"automaticFetch": "L'extensió obté automàticament la llista més recent de models disponibles a <serviceLink>{{serviceName}}</serviceLink>. Si no esteu segur de quin model triar, Roo Code funciona millor amb <defaultModelLink>{{defaultModelId}}</defaultModelLink>. També podeu cercar \"free\" per a opcions gratuïtes actualment disponibles."
+		"automaticFetch": "L'extensió obté automàticament la llista més recent de models disponibles a <serviceLink>{{serviceName}}</serviceLink>. Si no esteu segur de quin model triar, Roo Code funciona millor amb <defaultModelLink>{{defaultModelId}}</defaultModelLink>. També podeu cercar \"free\" per a opcions gratuïtes actualment disponibles.",
+		"label": "Model",
+		"searchPlaceholder": "Cerca",
+		"noMatchFound": "No s'ha trobat cap coincidència",
+		"useCustomModel": "Utilitzar personalitzat: {{modelId}}"
 	},
 	"footer": {
 		"feedback": "Si teniu qualsevol pregunta o comentari, no dubteu a obrir un issue a <githubLink>github.com/RooVetGit/Roo-Code</githubLink> o unir-vos a <redditLink>reddit.com/r/RooCode</redditLink> o <discordLink>discord.gg/roocode</discordLink>",
@@ -344,5 +377,55 @@
 			"description": "Restablir tot l'estat global i emmagatzematge secret a l'extensió.",
 			"button": "Restablir"
 		}
+	},
+	"thinkingBudget": {
+		"maxTokens": "Tokens màxims",
+		"maxThinkingTokens": "Tokens de pensament màxims"
+	},
+	"validation": {
+		"apiKey": "Heu de proporcionar una clau API vàlida.",
+		"awsRegion": "Heu de triar una regió per utilitzar AWS Bedrock.",
+		"googleCloud": "Heu de proporcionar un ID de projecte i regió de Google Cloud vàlids.",
+		"modelId": "Heu de proporcionar un ID de model vàlid.",
+		"modelSelector": "Heu de proporcionar un selector de model vàlid.",
+		"openAi": "Heu de proporcionar una URL base, clau API i ID de model vàlids.",
+		"arn": {
+			"invalidFormat": "Format ARN no vàlid. Si us plau, comproveu els requisits del format.",
+			"regionMismatch": "Avís: La regió del vostre ARN ({{arnRegion}}) no coincideix amb la regió seleccionada ({{region}}). Això pot causar problemes d'accés. El proveïdor utilitzarà la regió de l'ARN."
+		},
+		"modelAvailability": "L'ID de model ({{modelId}}) que heu proporcionat no està disponible. Si us plau, trieu un altre model."
+	},
+	"placeholders": {
+		"apiKey": "Introduïu la clau API...",
+		"profileName": "Introduïu el nom del perfil",
+		"accessKey": "Introduïu la clau d'accés...",
+		"secretKey": "Introduïu la clau secreta...",
+		"sessionToken": "Introduïu el token de sessió...",
+		"credentialsJson": "Introduïu el JSON de credencials...",
+		"keyFilePath": "Introduïu la ruta del fitxer de clau...",
+		"projectId": "Introduïu l'ID del projecte...",
+		"customArn": "Introduïu l'ARN (p. ex. arn:aws:bedrock:us-east-1:123456789012:foundation-model/my-model)",
+		"baseUrl": "Introduïu l'URL base...",
+		"modelId": {
+			"lmStudio": "p. ex. meta-llama-3.1-8b-instruct",
+			"lmStudioDraft": "p. ex. lmstudio-community/llama-3.2-1b-instruct",
+			"ollama": "p. ex. llama3.1"
+		},
+		"numbers": {
+			"maxTokens": "p. ex. 4096",
+			"contextWindow": "p. ex. 128000",
+			"inputPrice": "p. ex. 0.0001",
+			"outputPrice": "p. ex. 0.0002",
+			"cacheWritePrice": "p. ex. 0.00005"
+		}
+	},
+	"defaults": {
+		"ollamaUrl": "Per defecte: http://localhost:11434",
+		"lmStudioUrl": "Per defecte: http://localhost:1234",
+		"geminiUrl": "Per defecte: https://generativelanguage.googleapis.com"
+	},
+	"labels": {
+		"customArn": "ARN personalitzat",
+		"useCustomArn": "Utilitza ARN personalitzat..."
 	}
 }
