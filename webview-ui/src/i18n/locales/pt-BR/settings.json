@@ -268,7 +268,8 @@
 		},
 		"maxReadFile": {
 			"label": "Limite de auto-truncamento de leitura de arquivo",
-			"description": "O número padrão de linhas para ler de um arquivo em um lote. Valores mais baixos reduzem o uso de contexto/recursos, mas podem exigir mais leituras para arquivos grandes."
+			"description": "O número padrão de linhas para ler de um arquivo em um lote. Valores mais baixos reduzem o uso de contexto/recursos, mas podem exigir mais leituras para arquivos grandes.",
+			"lines": "linhas"
 		}
 	},
 	"terminal": {

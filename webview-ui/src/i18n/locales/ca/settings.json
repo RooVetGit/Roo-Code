@@ -268,7 +268,8 @@
 		},
 		"maxReadFile": {
 			"label": "Llindar d'auto-truncament de lectura de fitxers",
-			"description": "El nombre predeterminat de línies per llegir d'un fitxer en un lot. Valors més baixos redueixen l'ús de context/recursos però poden requerir més lectures per a fitxers grans."
+			"description": "El nombre predeterminat de línies per llegir d'un fitxer en un lot. Valors més baixos redueixen l'ús de context/recursos però poden requerir més lectures per a fitxers grans.",
+			"lines": "línies"
 		}
 	},
 	"terminal": {

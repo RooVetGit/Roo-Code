@@ -268,7 +268,8 @@
 		},
 		"maxReadFile": {
 			"label": "Soglia di auto-troncamento lettura file",
-			"description": "Il numero predefinito di righe da leggere da un file in un singolo batch. Valori più bassi riducono l'utilizzo di contesto/risorse ma potrebbero richiedere più letture per file di grandi dimensioni."
+			"description": "Il numero predefinito di righe da leggere da un file in un singolo batch. Valori più bassi riducono l'utilizzo di contesto/risorse ma potrebbero richiedere più letture per file di grandi dimensioni.",
+			"lines": "righe"
 		}
 	},
 	"terminal": {

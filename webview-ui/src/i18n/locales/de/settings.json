@@ -268,7 +268,8 @@
 		},
 		"maxReadFile": {
 			"label": "Schwellenwert für automatische Dateilesekürzung",
-			"description": "Die Standardanzahl an Zeilen, die in einem Durchgang aus einer Datei gelesen werden. Niedrigere Werte reduzieren den Kontext-/Ressourcenverbrauch, können aber mehr Lesevorgänge für große Dateien erfordern."
+			"description": "Die Standardanzahl an Zeilen, die in einem Durchgang aus einer Datei gelesen werden. Niedrigere Werte reduzieren den Kontext-/Ressourcenverbrauch, können aber mehr Lesevorgänge für große Dateien erfordern.",
+			"lines": "Zeilen"
 		}
 	},
 	"terminal": {

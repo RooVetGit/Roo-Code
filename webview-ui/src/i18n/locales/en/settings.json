@@ -268,7 +268,8 @@
 		},
 		"maxReadFile": {
 			"label": "File read auto-truncate threshold",
-			"description": "The default number of lines to read from a file in one batch. Lower values reduce context/resource usage but may require more reads for large files."
+			"description": "The default number of lines to read from a file in one batch. Lower values reduce context/resource usage but may require more reads for large files.",
+			"lines": "lines"
 		}
 	},
 	"terminal": {

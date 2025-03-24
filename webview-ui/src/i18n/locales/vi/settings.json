@@ -268,7 +268,8 @@
 		},
 		"maxReadFile": {
 			"label": "Ngưỡng tự động cắt ngắn khi đọc tệp",
-			"description": "Số dòng mặc định để đọc từ một tệp trong một lô. Giá trị thấp hơn giảm sử dụng ngữ cảnh/tài nguyên nhưng có thể yêu cầu đọc nhiều lần hơn cho các tệp lớn."
+			"description": "Số dòng mặc định để đọc từ một tệp trong một lô. Giá trị thấp hơn giảm sử dụng ngữ cảnh/tài nguyên nhưng có thể yêu cầu đọc nhiều lần hơn cho các tệp lớn.",
+			"lines": "dòng"
 		}
 	},
 	"terminal": {

@@ -268,7 +268,8 @@
 		},
 		"maxReadFile": {
 			"label": "Umbral de auto-truncado de lectura de archivos",
-			"description": "El número predeterminado de líneas para leer de un archivo en un lote. Valores más bajos reducen el uso de contexto/recursos pero pueden requerir más lecturas para archivos grandes."
+			"description": "El número predeterminado de líneas para leer de un archivo en un lote. Valores más bajos reducen el uso de contexto/recursos pero pueden requerir más lecturas para archivos grandes.",
+			"lines": "líneas"
 		}
 	},
 	"terminal": {

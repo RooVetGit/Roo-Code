@@ -268,7 +268,8 @@
 		},
 		"maxReadFile": {
 			"label": "Seuil d'auto-troncature de lecture de fichier",
-			"description": "Le nombre par défaut de lignes à lire depuis un fichier en un lot. Des valeurs plus basses réduisent l'utilisation de contexte/ressources mais peuvent nécessiter plus de lectures pour les fichiers volumineux."
+			"description": "Le nombre par défaut de lignes à lire depuis un fichier en un lot. Des valeurs plus basses réduisent l'utilisation de contexte/ressources mais peuvent nécessiter plus de lectures pour les fichiers volumineux.",
+			"lines": "lignes"
 		}
 	},
 	"terminal": {

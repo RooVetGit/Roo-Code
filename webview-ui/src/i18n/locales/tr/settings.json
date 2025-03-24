@@ -268,7 +268,8 @@
 		},
 		"maxReadFile": {
 			"label": "Dosya okuma otomatik kısaltma eşiği",
-			"description": "Bir dosyadan bir partide okunacak varsayılan satır sayısı. Daha düşük değerler bağlam/kaynak kullanımını azaltır ancak büyük dosyalar için daha fazla okuma gerektirebilir."
+			"description": "Bir dosyadan bir partide okunacak varsayılan satır sayısı. Daha düşük değerler bağlam/kaynak kullanımını azaltır ancak büyük dosyalar için daha fazla okuma gerektirebilir.",
+			"lines": "satır"
 		}
 	},
 	"terminal": {
