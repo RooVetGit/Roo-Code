@@ -12,7 +12,6 @@ export type MistralMessage =
 
 export function convertToMistralMessages(anthropicMessages: Anthropic.Messages.MessageParam[]): MistralMessage[] {
 	const mistralMessages: MistralMessage[] = []
-
 	for (const anthropicMessage of anthropicMessages) {
 		if (typeof anthropicMessage.content === "string") {
 			mistralMessages.push({
@@ -21,25 +20,15 @@ export function convertToMistralMessages(anthropicMessages: Anthropic.Messages.M
 			})
 		} else {
 			if (anthropicMessage.role === "user") {
-				const { nonToolMessages, toolMessages } = anthropicMessage.content.reduce<{
-					nonToolMessages: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[]
-					toolMessages: Anthropic.ToolResultBlockParam[]
-				}>(
-					(acc, part) => {
-						if (part.type === "tool_result") {
-							acc.toolMessages.push(part)
-						} else if (part.type === "text" || part.type === "image") {
-							acc.nonToolMessages.push(part)
-						} // user cannot send tool_use messages
-						return acc
-					},
-					{ nonToolMessages: [], toolMessages: [] },
+				// Filter to only include text and image blocks
+				const textAndImageBlocks = anthropicMessage.content.filter(
+					(part) => part.type === "text" || part.type === "image",
 				)
 
-				if (nonToolMessages.length > 0) {
+				if (textAndImageBlocks.length > 0) {
 					mistralMessages.push({
 						role: "user",
-						content: nonToolMessages.map((part) => {
+						content: textAndImageBlocks.map((part) => {
 							if (part.type === "image") {
 								return {
 									type: "image_url",
@@ -53,37 +42,17 @@ export function convertToMistralMessages(anthropicMessages: Anthropic.Messages.M
 					})
 				}
 			} else if (anthropicMessage.role === "assistant") {
-				const { nonToolMessages, toolMessages } = anthropicMessage.content.reduce<{
-					nonToolMessages: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[]
-					toolMessages: Anthropic.ToolUseBlockParam[]
-				}>(
-					(acc, part) => {
-						if (part.type === "tool_use") {
-							acc.toolMessages.push(part)
-						} else if (part.type === "text" || part.type === "image") {
-							acc.nonToolMessages.push(part)
-						} // assistant cannot send tool_result messages
-						return acc
-					},
-					{ nonToolMessages: [], toolMessages: [] },
-				)
+				// Only process text blocks - assistant cannot send images or other content types in Mistral's API format
+				const textBlocks = anthropicMessage.content.filter((part) => part.type === "text")
 
-				let content: string | undefined
-				if (nonToolMessages.length > 0) {
-					content = nonToolMessages
-						.map((part) => {
-							if (part.type === "image") {
-								return "" // impossible as the assistant cannot send images
-							}
-							return part.text
-						})
-						.join("\n")
+				if (textBlocks.length > 0) {
+					const content = textBlocks.map((part) => part.text).join("\n")
+
+					mistralMessages.push({
+						role: "assistant",
+						content,
+					})
 				}
-
-				mistralMessages.push({
-					role: "assistant",
-					content,
-				})
 			}
 		}
 	}

@@ -1092,8 +1092,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 		let rateLimitDelay = 0
 
-		// Only apply rate limiting if this isn't the first request
-		if (this.lastApiRequestTime) {
+		// Only apply rate limiting if this isn't the first request AND the API handler doesn't have built-in rate limiting
+		const hasBuiltInRateLimiting = "hasBuiltInRateLimiting" in this.api && this.api.hasBuiltInRateLimiting === true
+
+		if (this.lastApiRequestTime && !hasBuiltInRateLimiting) {
 			const now = Date.now()
 			const timeSinceLastRequest = now - this.lastApiRequestTime
 			const rateLimit = rateLimitSeconds || 0
