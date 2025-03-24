@@ -267,8 +267,9 @@
 			"description": "Quando ativado, os arquivos que correspondem aos padrões em .rooignore serão mostrados em listas com um símbolo de cadeado. Quando desativado, esses arquivos serão completamente ocultos das listas de arquivos e pesquisas."
 		},
 		"maxReadFile": {
-			"label": "Número máximo de linhas para ler de um arquivo",
-			"description": "Número máximo de linhas para ler de um arquivo de uma vez. Valores mais baixos reduzem o uso de contexto/recursos, mas podem exigir mais leituras para arquivos grandes."
+			"label": "Limite de auto-truncamento de leitura de arquivo",
+			"description": "O número padrão de linhas para ler de um arquivo em um lote. Valores mais baixos reduzem o uso de contexto/recursos, mas podem exigir mais leituras para arquivos grandes.",
+			"lines": "linhas"
 		}
 	},
 	"terminal": {
@@ -349,6 +350,8 @@
 		"cacheReadsPrice": "Preço de leituras de cache",
 		"cacheWritesPrice": "Preço de escritas de cache",
 		"enableStreaming": "Ativar streaming",
+		"enableR1Format": "Ativar parâmetros do modelo R1",
+		"enableR1FormatTips": "Deve ser ativado ao usar modelos R1 como QWQ, para evitar erro 400",
 		"useAzure": "Usar Azure",
 		"azureApiVersion": "Definir versão da API Azure",
 		"gemini": {

@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { Trans } from "react-i18next"
+import { getRequestyAuthUrl, getOpenRouterAuthUrl, getGlamaAuthUrl } from "../../oauth/urls"
 import { useDebounce, useEvent } from "react-use"
 import { LanguageModelChatSelector } from "vscode"
 import { Checkbox } from "vscrui"
@@ -54,6 +55,7 @@ import { TemperatureControl } from "./TemperatureControl"
 import { validateApiConfiguration, validateModelId, validateBedrockArn } from "@/utils/validate"
 import { ApiErrorMessage } from "./ApiErrorMessage"
 import { ThinkingBudget } from "./ThinkingBudget"
+import { R1FormatSetting } from "./R1FormatSetting"
 
 interface ApiOptionsProps {
 	uriScheme: string | undefined
@@ -103,7 +105,6 @@ const ApiOptions = ({
 		!!apiConfiguration?.googleGeminiBaseUrl,
 	)
 	const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
-
 	const noTransform = <T,>(value: T) => value
 
 	const inputEventTransform = <E,>(event: E) => (event as { target: HTMLInputElement })?.target?.value as any
@@ -279,7 +280,10 @@ const ApiOptions = ({
 						{t("settings:providers.apiKeyStorageNotice")}
 					</div>
 					{!apiConfiguration?.openRouterApiKey && (
-						<VSCodeButtonLink href={getOpenRouterAuthUrl(uriScheme)} appearance="secondary">
+						<VSCodeButtonLink
+							href={getOpenRouterAuthUrl(uriScheme)}
+							style={{ width: "100%" }}
+							appearance="primary">
 							{t("settings:providers.getOpenRouterApiKey")}
 						</VSCodeButtonLink>
 					)}
@@ -380,7 +384,10 @@ const ApiOptions = ({
 						{t("settings:providers.apiKeyStorageNotice")}
 					</div>
 					{!apiConfiguration?.glamaApiKey && (
-						<VSCodeButtonLink href={getGlamaAuthUrl(uriScheme)} appearance="secondary">
+						<VSCodeButtonLink
+							href={getGlamaAuthUrl(uriScheme)}
+							style={{ width: "100%" }}
+							appearance="primary">
 							{t("settings:providers.getGlamaApiKey")}
 						</VSCodeButtonLink>
 					)}
@@ -400,6 +407,14 @@ const ApiOptions = ({
 					<div className="text-sm text-vscode-descriptionForeground -mt-2">
 						{t("settings:providers.apiKeyStorageNotice")}
 					</div>
+					{!apiConfiguration?.requestyApiKey && (
+						<VSCodeButtonLink
+							href={getRequestyAuthUrl(uriScheme)}
+							style={{ width: "100%" }}
+							appearance="primary">
+							{t("settings:providers.getRequestyApiKey")}
+						</VSCodeButtonLink>
+					)}
 				</>
 			)}
 
@@ -680,6 +695,10 @@ const ApiOptions = ({
 						modelInfoKey="openAiCustomModelInfo"
 						serviceName="OpenAI"
 						serviceUrl="https://platform.openai.com"
+					/>
+					<R1FormatSetting
+						onChange={handleInputChange("openAiR1FormatEnabled", noTransform)}
+						openAiR1FormatEnabled={apiConfiguration?.openAiR1FormatEnabled ?? false}
 					/>
 					<Checkbox
 						checked={apiConfiguration?.openAiStreamingEnabled ?? true}
@@ -1534,15 +1553,6 @@ const ApiOptions = ({
 			)}
 		</div>
 	)
-}
-
-export function getGlamaAuthUrl(uriScheme?: string) {
-	const callbackUrl = `${uriScheme || "vscode"}://rooveterinaryinc.roo-cline/glama`
-	return `https://glama.ai/oauth/authorize?callback_url=${encodeURIComponent(callbackUrl)}`
-}
-
-export function getOpenRouterAuthUrl(uriScheme?: string) {
-	return `https://openrouter.ai/auth?callback_url=${uriScheme || "vscode"}://rooveterinaryinc.roo-cline/openrouter`
 }
 
 export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {

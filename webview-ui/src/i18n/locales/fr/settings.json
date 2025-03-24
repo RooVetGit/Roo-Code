@@ -267,8 +267,9 @@
 			"description": "Lorsque cette option est activée, les fichiers correspondant aux modèles dans .rooignore seront affichés dans les listes avec un symbole de cadenas. Lorsqu'elle est désactivée, ces fichiers seront complètement masqués des listes de fichiers et des recherches."
 		},
 		"maxReadFile": {
-			"label": "Nombre maximum de lignes à lire depuis un fichier",
-			"description": "Nombre maximum de lignes à lire depuis un fichier à la fois. Des valeurs plus basses réduisent l'utilisation de contexte/ressources mais peuvent nécessiter plus de lectures pour les fichiers volumineux."
+			"label": "Seuil d'auto-troncature de lecture de fichier",
+			"description": "Le nombre par défaut de lignes à lire depuis un fichier en un lot. Des valeurs plus basses réduisent l'utilisation de contexte/ressources mais peuvent nécessiter plus de lectures pour les fichiers volumineux.",
+			"lines": "lignes"
 		}
 	},
 	"terminal": {
@@ -349,6 +350,8 @@
 		"cacheReadsPrice": "Prix des lectures de cache",
 		"cacheWritesPrice": "Prix des écritures de cache",
 		"enableStreaming": "Activer le streaming",
+		"enableR1Format": "Activer les paramètres du modèle R1",
+		"enableR1FormatTips": "Doit être activé lors de l'utilisation de modèles R1 tels que QWQ, pour éviter l'erreur 400",
 		"useAzure": "Utiliser Azure",
 		"azureApiVersion": "Définir la version de l'API Azure",
 		"gemini": {

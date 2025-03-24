@@ -82,6 +82,7 @@ import { validateToolUse, isToolAllowedForMode, ToolName } from "./mode-validato
 import { parseXml } from "../utils/xml"
 import { readLines } from "../integrations/misc/read-lines"
 import { getWorkspacePath } from "../utils/path"
+import { isBinaryFile } from "isbinaryfile"
 
 type ToolResponse = string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam>
 type UserContent = Array<Anthropic.Messages.ContentBlockParam>
@@ -1231,7 +1232,16 @@ export class Cline extends EventEmitter<ClineEvents> {
 		} catch (error) {
 			// note that this api_req_failed ask is unique in that we only present this option if the api hasn't streamed any content yet (ie it fails on the first chunk due), as it would allow them to hit a retry button. However if the api failed mid-stream, it could be in any arbitrary state where some tools may have executed, so that error is handled differently and requires cancelling the task entirely.
 			if (alwaysApproveResubmit) {
-				const errorMsg = error.error?.metadata?.raw ?? error.message ?? "Unknown error"
+				let errorMsg
+
+				if (error.error?.metadata?.raw) {
+					errorMsg = JSON.stringify(error.error.metadata.raw, null, 2)
+				} else if (error.message) {
+					errorMsg = error.message
+				} else {
+					errorMsg = "Unknown error"
+				}
+
 				const baseDelay = requestDelaySeconds || 5
 				const exponentialDelay = Math.ceil(baseDelay * Math.pow(2, retryAttempt))
 				// Wait for the greater of the exponential delay or the rate limit delay
@@ -2329,25 +2339,28 @@ export class Cline extends EventEmitter<ClineEvents> {
 								let isFileTruncated = false
 								let sourceCodeDef = ""
 
+								const isBinary = await isBinaryFile(absolutePath).catch(() => false)
+								const autoTruncate = block.params.auto_truncate === "true"
+
 								if (isRangeRead) {
 									if (startLine === undefined) {
 										content = addLineNumbers(await readLines(absolutePath, endLine, startLine))
 									} else {
 										content = addLineNumbers(
 											await readLines(absolutePath, endLine, startLine),
-											startLine,
+											startLine + 1,
 										)
 									}
-								} else if (totalLines > maxReadFileLine) {
+								} else if (autoTruncate && !isBinary && totalLines > maxReadFileLine) {
 									// If file is too large, only read the first maxReadFileLine lines
 									isFileTruncated = true
 
 									const res = await Promise.all([
-										readLines(absolutePath, maxReadFileLine - 1, 0),
+										maxReadFileLine > 0 ? readLines(absolutePath, maxReadFileLine - 1, 0) : "",
 										parseSourceCodeDefinitionsForFile(absolutePath, this.rooIgnoreController),
 									])
 
-									content = addLineNumbers(res[0])
+									content = res[0].length > 0 ? addLineNumbers(res[0]) : ""
 									const result = res[1]
 									if (result) {
 										sourceCodeDef = `\n\n${result}`
@@ -2359,7 +2372,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 								// Add truncation notice if applicable
 								if (isFileTruncated) {
-									content += `\n\n[File truncated: showing ${maxReadFileLine} of ${totalLines} total lines. Use start_line and end_line if you need to read more.].${sourceCodeDef}`
+									content += `\n\n[File truncated: showing ${maxReadFileLine} of ${totalLines} total lines. Use start_line and end_line or set auto_truncate to false if you need to read more.].${sourceCodeDef}`
 								}
 
 								pushToolResult(content)
@@ -2888,45 +2901,39 @@ export class Cline extends EventEmitter<ClineEvents> {
 									break
 								}
 
-								if (!follow_up) {
-									this.consecutiveMistakeCount++
-									pushToolResult(
-										await this.sayAndCreateMissingParamError("ask_followup_question", "follow_up"),
-									)
-									break
-								}
-
-								let normalizedSuggest = null
-
 								type Suggest = {
 									answer: string
 								}
 
-								let parsedSuggest: {
-									suggest: Suggest[] | Suggest
+								let follow_up_json = {
+									question,
+									suggest: [] as Suggest[],
 								}
 
-								try {
-									parsedSuggest = parseXml(follow_up, ["suggest"]) as {
+								if (follow_up) {
+									let parsedSuggest: {
 										suggest: Suggest[] | Suggest
 									}
-								} catch (error) {
-									this.consecutiveMistakeCount++
-									await this.say("error", `Failed to parse operations: ${error.message}`)
-									pushToolResult(formatResponse.toolError("Invalid operations xml format"))
-									break
+
+									try {
+										parsedSuggest = parseXml(follow_up, ["suggest"]) as {
+											suggest: Suggest[] | Suggest
+										}
+									} catch (error) {
+										this.consecutiveMistakeCount++
+										await this.say("error", `Failed to parse operations: ${error.message}`)
+										pushToolResult(formatResponse.toolError("Invalid operations xml format"))
+										break
+									}
+
+									const normalizedSuggest = Array.isArray(parsedSuggest?.suggest)
+										? parsedSuggest.suggest
+										: [parsedSuggest?.suggest].filter((sug): sug is Suggest => sug !== undefined)
+
+									follow_up_json.suggest = normalizedSuggest
 								}
 
 								this.consecutiveMistakeCount = 0
-
-								normalizedSuggest = Array.isArray(parsedSuggest?.suggest)
-									? parsedSuggest.suggest
-									: [parsedSuggest?.suggest].filter((sug): sug is Suggest => sug !== undefined)
-
-								const follow_up_json = {
-									question,
-									suggest: normalizedSuggest,
-								}
 
 								const { text, images } = await this.ask(
 									"followup",
