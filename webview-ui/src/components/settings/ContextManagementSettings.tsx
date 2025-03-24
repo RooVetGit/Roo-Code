@@ -98,13 +98,13 @@ export const ContextManagementSettings = ({
 						<div className="flex items-center gap-2">
 							<Slider
 								min={0}
-								max={2000}
+								max={5000}
 								step={10}
-								value={[maxReadFileLine ?? 450]}
+								value={[maxReadFileLine ?? 500]}
 								onValueChange={([value]) => setCachedStateField("maxReadFileLine", value)}
 								data-testid="max-read-file-line-slider"
 							/>
-							<span className="w-10">{maxReadFileLine ?? 450}</span>
+							<span className="w-10">{maxReadFileLine ?? 500}</span>
 						</div>
 					</div>
 					<div className="text-vscode-descriptionForeground text-sm mt-0">
