@@ -1,13 +1,14 @@
 import * as vscode from "vscode"
 import { COMMAND_IDS } from "../core/CodeActionProvider"
 import { ClineProvider } from "../core/webview/ClineProvider"
+import { t } from "../i18n"
 
 export const handleNewTask = async (params: { prompt?: string } | null | undefined) => {
 	let prompt = params?.prompt
 	if (!prompt) {
 		prompt = await vscode.window.showInputBox({
-			prompt: "What should Roo do?",
-			placeHolder: "Type your task here",
+			prompt: t("input.task_prompt"),
+			placeHolder: t("input.task_placeholder"),
 		})
 	}
 	if (!prompt) {
