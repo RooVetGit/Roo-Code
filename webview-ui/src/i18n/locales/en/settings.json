@@ -267,8 +267,9 @@
 			"description": "When enabled, files matching patterns in .rooignore will be shown in lists with a lock symbol. When disabled, these files will be completely hidden from file lists and searches."
 		},
 		"maxReadFile": {
-			"label": "Maximum lines to read from a file",
-			"description": "Maximum number of lines to read from a file at once. Lower values reduce context/resource usage but may require more reads for large files."
+			"label": "File read auto-truncate threshold",
+			"description": "The default number of lines to read from a file in one batch. Lower values reduce context/resource usage but may require more reads for large files.",
+			"lines": "lines"
 		}
 	},
 	"terminal": {
@@ -349,6 +350,8 @@
 		"cacheReadsPrice": "Cache reads price",
 		"cacheWritesPrice": "Cache writes price",
 		"enableStreaming": "Enable streaming",
+		"enableR1Format": "Enable R1 model parameters",
+		"enableR1FormatTips": "Must be enabled when using R1 models such as QWQ to prevent 400 errors",
 		"useAzure": "Use Azure",
 		"azureApiVersion": "Set Azure API version",
 		"gemini": {

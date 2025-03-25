@@ -267,8 +267,9 @@
 			"description": "Khi được bật, các tệp khớp với mẫu trong .rooignore sẽ được hiển thị trong danh sách với biểu tượng khóa. Khi bị tắt, các tệp này sẽ hoàn toàn bị ẩn khỏi danh sách tệp và tìm kiếm."
 		},
 		"maxReadFile": {
-			"label": "Số dòng tối đa để đọc từ một tệp",
-			"description": "Số dòng tối đa để đọc từ một tệp cùng một lúc. Giá trị thấp hơn giảm sử dụng ngữ cảnh/tài nguyên nhưng có thể yêu cầu đọc nhiều lần hơn cho các tệp lớn."
+			"label": "Ngưỡng tự động cắt ngắn khi đọc tệp",
+			"description": "Số dòng mặc định để đọc từ một tệp trong một lô. Giá trị thấp hơn giảm sử dụng ngữ cảnh/tài nguyên nhưng có thể yêu cầu đọc nhiều lần hơn cho các tệp lớn.",
+			"lines": "dòng"
 		}
 	},
 	"terminal": {
@@ -349,6 +350,8 @@
 		"cacheReadsPrice": "Giá đọc bộ nhớ đệm",
 		"cacheWritesPrice": "Giá ghi bộ nhớ đệm",
 		"enableStreaming": "Bật streaming",
+		"enableR1Format": "Kích hoạt tham số mô hình R1",
+		"enableR1FormatTips": "Cần kích hoạt khi sử dụng các mô hình R1 như QWQ, để tránh lỗi 400",
 		"useAzure": "Sử dụng Azure",
 		"azureApiVersion": "Đặt phiên bản API Azure",
 		"gemini": {

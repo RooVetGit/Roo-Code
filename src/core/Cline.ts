@@ -115,6 +115,7 @@ export type ClineOptions = {
 	rootTask?: Cline
 	parentTask?: Cline
 	taskNumber?: number
+	onCreated?: (cline: Cline) => void
 }
 
 export class Cline extends EventEmitter<ClineEvents> {
@@ -192,6 +193,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		rootTask,
 		parentTask,
 		taskNumber,
+		onCreated,
 	}: ClineOptions) {
 		super()
 
@@ -234,6 +236,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 			Experiments.isEnabled(experiments ?? {}, EXPERIMENT_IDS.DIFF_STRATEGY),
 			Experiments.isEnabled(experiments ?? {}, EXPERIMENT_IDS.MULTI_SEARCH_AND_REPLACE),
 		)
+
+		onCreated?.(this)
 
 		if (startTask) {
 			if (task || images) {
@@ -290,9 +294,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 		if (!globalStoragePath) {
 			throw new Error("Global storage uri is invalid")
 		}
-		const taskDir = path.join(globalStoragePath, "tasks", this.taskId)
-		await fs.mkdir(taskDir, { recursive: true })
-		return taskDir
+
+		// Use storagePathManager to retrieve the task storage directory
+		const { getTaskDirectoryPath } = await import("../shared/storagePathManager")
+		return getTaskDirectoryPath(globalStoragePath, this.taskId)
 	}
 
 	private async getSavedApiConversationHistory(): Promise<Anthropic.MessageParam[]> {
@@ -1227,7 +1232,16 @@ export class Cline extends EventEmitter<ClineEvents> {
 		} catch (error) {
 			// note that this api_req_failed ask is unique in that we only present this option if the api hasn't streamed any content yet (ie it fails on the first chunk due), as it would allow them to hit a retry button. However if the api failed mid-stream, it could be in any arbitrary state where some tools may have executed, so that error is handled differently and requires cancelling the task entirely.
 			if (alwaysApproveResubmit) {
-				const errorMsg = error.error?.metadata?.raw ?? error.message ?? "Unknown error"
+				let errorMsg
+
+				if (error.error?.metadata?.raw) {
+					errorMsg = JSON.stringify(error.error.metadata.raw, null, 2)
+				} else if (error.message) {
+					errorMsg = error.message
+				} else {
+					errorMsg = "Unknown error"
+				}
+
 				const baseDelay = requestDelaySeconds || 5
 				const exponentialDelay = Math.ceil(baseDelay * Math.pow(2, retryAttempt))
 				// Wait for the greater of the exponential delay or the rate limit delay
@@ -2326,6 +2340,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 								let sourceCodeDef = ""
 
 								const isBinary = await isBinaryFile(absolutePath).catch(() => false)
+								const autoTruncate = block.params.auto_truncate === "true"
 
 								if (isRangeRead) {
 									if (startLine === undefined) {
@@ -2336,7 +2351,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 											startLine + 1,
 										)
 									}
-								} else if (!isBinary && totalLines > maxReadFileLine) {
+								} else if (autoTruncate && !isBinary && totalLines > maxReadFileLine) {
 									// If file is too large, only read the first maxReadFileLine lines
 									isFileTruncated = true
 
@@ -2357,7 +2372,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 								// Add truncation notice if applicable
 								if (isFileTruncated) {
-									content += `\n\n[File truncated: showing ${maxReadFileLine} of ${totalLines} total lines. Use start_line and end_line if you need to read more.].${sourceCodeDef}`
+									content += `\n\n[File truncated: showing ${maxReadFileLine} of ${totalLines} total lines. Use start_line and end_line or set auto_truncate to false if you need to read more.].${sourceCodeDef}`
 								}
 
 								pushToolResult(content)
