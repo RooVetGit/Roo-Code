@@ -10,14 +10,27 @@ import { SingleCompletionHandler, getModelParams } from "../index"
 export class KiloCodeHandler extends BaseProvider implements SingleCompletionHandler {
 	private options: ApiHandlerOptions
 	private client: Anthropic
+	private baseURL: string = "https://kilocode.ai"
 
 	constructor(options: ApiHandlerOptions) {
 		super()
 		this.options = options
+		this.getBaseURL()
 		this.client = new Anthropic({
 			authToken: this.options.kilocodeToken,
-			baseURL: "https://kilocode.ai/api/claude/",
+			baseURL: `${this.baseURL}/api/claude/`,
 		})
+	}
+
+	private getBaseURL() {
+		try {
+			const token = this.options.kilocodeToken as string
+			const payload_string = token.split(".")[1]
+			const payload = JSON.parse(Buffer.from(payload_string, "base64").toString())
+			if (payload.env === "development") this.baseURL = "http://localhost:3000"
+		} catch (_error) {
+			console.warn("Failed to get base URL from Kilo Code token")
+		}
 	}
 
 	async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
