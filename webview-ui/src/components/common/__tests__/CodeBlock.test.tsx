@@ -2,6 +2,15 @@ import { render, screen, fireEvent, act } from "@testing-library/react"
 import "@testing-library/jest-dom"
 import CodeBlock from "../CodeBlock"
 
+// Mock shiki module
+jest.mock("shiki", () => ({
+	bundledLanguages: {
+		typescript: {},
+		javascript: {},
+		txt: {},
+	},
+}))
+
 // Mock the highlighter utility
 jest.mock("../../../utils/highlighter", () => {
 	const mockHighlighter = {
