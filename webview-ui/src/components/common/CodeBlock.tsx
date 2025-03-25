@@ -2,6 +2,7 @@ import { memo, useEffect, useRef, useCallback, useState } from "react"
 import styled from "styled-components"
 import { useCopyToClipboard } from "@src/utils/clipboard"
 import { getHighlighter, isLanguageLoaded, normalizeLanguage } from "@src/utils/highlighter"
+import { bundledLanguages } from "shiki"
 import type { ShikiTransformer } from "shiki"
 export const CODE_BLOCK_BG_COLOR = "var(--vscode-editor-background, --vscode-sideBar-background, rgb(30 30 30))"
 export const WRAPPER_ALPHA = "cc" // 80% opacity
@@ -27,12 +28,14 @@ interface CodeBlockProps {
 	initialWordWrap?: boolean
 	collapsedHeight?: number
 	initialWindowShade?: boolean
+	onLanguageChange?: (language: string) => void
 }
 
 const ButtonIcon = styled.span`
 	display: inline-block;
-	width: 1.5em;
+	width: 1.2em;
 	text-align: center;
+	vertical-align: middle;
 `
 
 const CodeBlockButton = styled.button`
@@ -40,7 +43,7 @@ const CodeBlockButton = styled.button`
 	border: none;
 	color: var(--vscode-foreground);
 	cursor: var(--copy-button-cursor, default);
-	padding: 0px;
+	padding: 4px;
 	margin: 0 0px;
 	display: flex;
 	align-items: center;
@@ -48,6 +51,7 @@ const CodeBlockButton = styled.button`
 	border-radius: 3px;
 	pointer-events: var(--copy-button-events, none);
 	margin-left: 4px;
+	height: 24px;
 
 	&:hover {
 		background: var(--vscode-toolbar-hoverBackground);
@@ -155,13 +159,50 @@ export const StyledPre = styled.div<{
 	}
 `
 
-const LanguageDisplay = styled.div`
+const LanguageSelect = styled.select`
 	font-size: 12px;
 	color: var(--vscode-foreground);
-	opacity: 0.6;
-	margin-top: 4px;
-	text-align: center;
-	font-family: var(--vscode-font-family);
+	opacity: 0.4;
+	font-family: monospace;
+	appearance: none;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	padding: 4px;
+	margin: 0;
+	vertical-align: middle;
+	height: 24px;
+
+	& option {
+		background: var(--vscode-editor-background);
+		color: var(--vscode-foreground);
+		padding: 0;
+		margin: 0;
+	}
+
+	&::-webkit-scrollbar {
+		width: 6px;
+	}
+
+	&::-webkit-scrollbar-thumb {
+		background: var(--vscode-scrollbarSlider-background);
+	}
+
+	&::-webkit-scrollbar-track {
+		background: var(--vscode-editor-background);
+	}
+
+	&:hover {
+		opacity: 1;
+		background: var(--vscode-toolbar-hoverBackground);
+		border-radius: 3px;
+	}
+
+	&:focus {
+		opacity: 1;
+		outline: none;
+		border-radius: 3px;
+	}
 `
 
 const CodeBlock = memo(
@@ -173,9 +214,11 @@ const CodeBlock = memo(
 		initialWordWrap = true,
 		initialWindowShade = true,
 		collapsedHeight,
+		onLanguageChange,
 	}: CodeBlockProps) => {
 		const [wordWrap, setWordWrap] = useState(initialWordWrap)
 		const [windowShade, setWindowShade] = useState(initialWindowShade)
+		const [currentLanguage, setCurrentLanguage] = useState(language)
 
 		const [highlightedCode, setHighlightedCode] = useState<string>("")
 		const [showCollapseButton, setShowCollapseButton] = useState(true)
@@ -187,16 +230,16 @@ const CodeBlock = memo(
 
 		// Syntax highlighting with cached Shiki instance
 		useEffect(() => {
-			const fallback = `<pre style="padding: 0; margin: 0;"><code class="hljs language-${language || "txt"}">${source || ""}</code></pre>`
+			const fallback = `<pre style="padding: 0; margin: 0;"><code class="hljs language-${currentLanguage || "txt"}">${source || ""}</code></pre>`
 			const highlight = async () => {
 				// Show plain text if language needs to be loaded
-				if (language && !isLanguageLoaded(language)) {
+				if (currentLanguage && !isLanguageLoaded(currentLanguage)) {
 					setHighlightedCode(fallback)
 				}
 
-				const highlighter = await getHighlighter(language)
+				const highlighter = await getHighlighter(currentLanguage)
 				const html = await highlighter.codeToHtml(source || "", {
-					lang: language,
+					lang: currentLanguage || "txt",
 					theme: document.body.className.toLowerCase().includes("light") ? "github-light" : "github-dark",
 					transformers: [
 						{
@@ -206,7 +249,7 @@ const CodeBlock = memo(
 							},
 							code(node) {
 								// Add hljs classes for consistent styling
-								node.properties.class = `hljs language-${language}`
+								node.properties.class = `hljs language-${currentLanguage}`
 								return node
 							},
 							line(node) {
@@ -224,7 +267,7 @@ const CodeBlock = memo(
 				console.error("[CodeBlock] Syntax highlighting error:", e, "\nStack trace:", e.stack)
 				setHighlightedCode(fallback)
 			})
-		}, [source, language, collapsedHeight])
+		}, [source, currentLanguage, collapsedHeight])
 
 		// Check if content height exceeds collapsed height whenever content changes
 		useEffect(() => {
@@ -372,8 +415,56 @@ const CodeBlock = memo(
 				<CodeBlockButtonWrapper
 					ref={copyButtonWrapperRef}
 					onMouseEnter={() => updateCodeBlockButtonPosition(true)}
-					onMouseLeave={() => updateCodeBlockButtonPosition()}>
-					{language && <LanguageDisplay>{language}</LanguageDisplay>}
+					onMouseLeave={() => updateCodeBlockButtonPosition()}
+					style={{ gap: 0 }}>
+					{language && (
+						<LanguageSelect
+							value={currentLanguage}
+							style={{
+								alignContent: "middle",
+								width: `${Math.max(3, (currentLanguage?.length || 5) + 1)}ch`,
+								textAlign: "right",
+								marginRight: 0,
+							}}
+							onClick={(e) => {
+								e.currentTarget.focus()
+							}}
+							onChange={(e) => {
+								const newLang = normalizeLanguage(e.target.value)
+								setCurrentLanguage(newLang)
+								if (onLanguageChange) {
+									onLanguageChange(newLang)
+								}
+							}}>
+							{
+								// Display original language at top of list for quick selection
+								language && (
+									<option
+										value={language}
+										style={{ fontWeight: "bold", textAlign: "left", fontSize: "1.2em" }}>
+										{language}
+									</option>
+								)
+							}
+							{
+								// Display all available languages in alphabetical order
+								Object.keys(bundledLanguages)
+									.sort()
+									.map((lang) => (
+										<option
+											key={lang}
+											value={lang}
+											style={{
+												fontWeight: lang === language ? "bold" : "normal",
+												textAlign: "left",
+												fontSize: lang === language ? "1.2em" : "inherit",
+											}}>
+											{lang}
+										</option>
+									))
+							}
+						</LanguageSelect>
+					)}
 					{showCollapseButton && (
 						<CodeBlockButton
 							onClick={() => {
