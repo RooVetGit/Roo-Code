@@ -2399,12 +2399,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 						}
 					}
 
-
 					case "fetch_instructions": {
 						const task: string | undefined = block.params.task
 						const sharedMessageProps: ClineSayTool = {
 							tool: "fetchInstructions",
-							task: task,
+							content: task,
 						}
 						try {
 							if (block.partial) {
