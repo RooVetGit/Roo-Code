@@ -7,8 +7,8 @@ export const handleNewTask = async (params: { prompt?: string } | null | undefin
 	let prompt = params?.prompt
 	if (!prompt) {
 		prompt = await vscode.window.showInputBox({
-			prompt: t("input.task_prompt"),
-			placeHolder: t("input.task_placeholder"),
+			prompt: t("common:input.task_prompt"),
+			placeHolder: t("common:input.task_placeholder"),
 		})
 	}
 	if (!prompt) {
