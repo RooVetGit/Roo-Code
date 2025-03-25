@@ -68,7 +68,7 @@ export interface RooCodeAPI extends EventEmitter<RooCodeEvents> {
 	 * Sets the configuration for the current task.
 	 * @param values An object containing key-value pairs to set.
 	 */
-	setConfiguration(values: Partial<ConfigurationValues>): Promise<void>
+	setConfiguration(values: Partial<Record<GlobalStateKey | SecretKey, any>>): Promise<void>
 
 	/**
 	 * Returns true if the API is ready to use.
@@ -150,7 +150,129 @@ export interface ClineMessage {
 	progressStatus?: ToolProgressStatus
 }
 
-export type SecretKey =
+export type ProviderName =
+	| "anthropic"
+	| "glama"
+	| "openrouter"
+	| "bedrock"
+	| "vertex"
+	| "openai"
+	| "ollama"
+	| "lmstudio"
+	| "gemini"
+	| "openai-native"
+	| "deepseek"
+	| "vscode-lm"
+	| "mistral"
+	| "unbound"
+	| "requesty"
+	| "human-relay"
+	| "fake-ai"
+
+export interface ModelInfo {
+	maxTokens?: number
+	contextWindow: number
+	supportsImages?: boolean
+	supportsComputerUse?: boolean
+	supportsPromptCache: boolean // This value is hardcoded for now.
+	inputPrice?: number
+	outputPrice?: number
+	cacheWritesPrice?: number
+	cacheReadsPrice?: number
+	description?: string
+	reasoningEffort?: "low" | "medium" | "high"
+	thinking?: boolean
+}
+
+export interface ProviderOptions {
+	apiModelId?: string
+	// Anthropic
+	apiKey?: string // secret
+	anthropicBaseUrl?: string
+	// Glama
+	glamaApiKey?: string // secret
+	glamaModelId?: string
+	glamaModelInfo?: ModelInfo
+	// OpenRouter
+	openRouterApiKey?: string // secret
+	openRouterModelId?: string
+	openRouterModelInfo?: ModelInfo
+	openRouterBaseUrl?: string
+	openRouterSpecificProvider?: string
+	openRouterUseMiddleOutTransform?: boolean
+	// AWS Bedrock
+	awsAccessKey?: string // secret
+	awsSecretKey?: string // secret
+	awsSessionToken?: string // secret
+	awsRegion?: string
+	awsUseCrossRegionInference?: boolean
+	awsUsePromptCache?: boolean
+	awspromptCacheId?: string
+	awsProfile?: string
+	awsUseProfile?: boolean
+	awsCustomArn?: string
+	// Google Vertex
+	vertexKeyFile?: string
+	vertexJsonCredentials?: string
+	vertexProjectId?: string
+	vertexRegion?: string
+	// OpenAI
+	openAiApiKey?: string // secret
+	openAiBaseUrl?: string
+	openAiR1FormatEnabled?: boolean
+	openAiModelId?: string
+	openAiCustomModelInfo?: ModelInfo
+	openAiUseAzure?: boolean
+	openAiStreamingEnabled?: boolean
+	// Ollama
+	ollamaModelId?: string
+	ollamaBaseUrl?: string
+	// VS Code LM
+	vsCodeLmModelSelector?: vscode.LanguageModelChatSelector
+	// LM Studio
+	lmStudioModelId?: string
+	lmStudioBaseUrl?: string
+	lmStudioDraftModelId?: string
+	lmStudioSpeculativeDecodingEnabled?: boolean
+	// Gemini
+	geminiApiKey?: string // secret
+	googleGeminiBaseUrl?: string
+	// OpenAI Native
+	openAiNativeApiKey?: string // secret
+	// Mistral
+	mistralApiKey?: string // secret
+	mistralCodestralUrl?: string // New option for Codestral URL.
+	// Azure
+	azureApiVersion?: string
+	// DeepSeek
+	deepSeekApiKey?: string // secret
+	deepSeekBaseUrl?: string
+	includeMaxTokens?: boolean
+	// Unbound
+	unboundApiKey?: string // secret
+	unboundModelId?: string
+	unboundModelInfo?: ModelInfo
+	// Requesty
+	requestyApiKey?: string
+	requestyModelId?: string
+	requestyModelInfo?: ModelInfo
+	// Claude 3.7 Sonnet Thinking
+	modelTemperature?: number | null
+	modelMaxTokens?: number
+	modelMaxThinkingTokens?: number
+	// Fake AI
+	fakeAi?: unknown
+}
+
+export interface ProviderConfiguration extends ProviderOptions {
+	apiProvider?: ApiProvider
+	id?: string // Stable unique identifier.
+}
+
+export type ProviderConfigurationKey = keyof ProviderConfiguration
+
+export type SecretKey = keyof Pick<
+	ProviderConfiguration,
 	| "apiKey"
 	| "glamaApiKey"
 	| "openRouterApiKey"
@@ -164,101 +286,149 @@ export type SecretKey =
 	| "mistralApiKey"
 	| "unboundApiKey"
 	| "requestyApiKey"
+>
 
-export type GlobalStateKey =
-	| "apiProvider"
-	| "apiModelId"
-	| "glamaModelId"
-	| "glamaModelInfo"
-	| "awsRegion"
-	| "awsUseCrossRegionInference"
-	| "awsProfile"
-	| "awsUseProfile"
-	| "awsCustomArn"
-	| "vertexKeyFile"
-	| "vertexJsonCredentials"
-	| "vertexProjectId"
-	| "vertexRegion"
-	| "lastShownAnnouncementId"
-	| "customInstructions"
-	| "alwaysAllowReadOnly"
-	| "alwaysAllowWrite"
-	| "alwaysAllowExecute"
-	| "alwaysAllowBrowser"
-	| "alwaysAllowMcp"
-	| "alwaysAllowModeSwitch"
-	| "alwaysAllowSubtasks"
-	| "taskHistory"
-	| "openAiBaseUrl"
-	| "openAiModelId"
-	| "openAiCustomModelInfo"
-	| "openAiUseAzure"
-	| "ollamaModelId"
-	| "ollamaBaseUrl"
-	| "lmStudioModelId"
-	| "lmStudioBaseUrl"
-	| "anthropicBaseUrl"
-	| "modelMaxThinkingTokens"
-	| "azureApiVersion"
-	| "openAiStreamingEnabled"
-	| "openAiR1FormatEnabled"
-	| "openRouterModelId"
-	| "openRouterModelInfo"
-	| "openRouterBaseUrl"
-	| "openRouterSpecificProvider"
-	| "openRouterUseMiddleOutTransform"
-	| "googleGeminiBaseUrl"
-	| "allowedCommands"
-	| "ttsEnabled"
-	| "ttsSpeed"
-	| "soundEnabled"
-	| "soundVolume"
-	| "diffEnabled"
-	| "enableCheckpoints"
-	| "checkpointStorage"
-	| "browserViewportSize"
-	| "screenshotQuality"
-	| "remoteBrowserHost"
-	| "fuzzyMatchThreshold"
-	| "writeDelayMs"
-	| "terminalOutputLineLimit"
-	| "terminalShellIntegrationTimeout"
-	| "mcpEnabled"
-	| "enableMcpServerCreation"
-	| "alwaysApproveResubmit"
-	| "requestDelaySeconds"
-	| "rateLimitSeconds"
-	| "currentApiConfigName"
-	| "listApiConfigMeta"
-	| "vsCodeLmModelSelector"
-	| "mode"
-	| "modeApiConfigs"
-	| "customModePrompts"
-	| "customSupportPrompts"
-	| "enhancementApiConfigId"
-	| "experiments" // Map of experiment IDs to their enabled state
-	| "autoApprovalEnabled"
-	| "enableCustomModeCreation" // Enable the ability for Roo to create custom modes
-	| "customModes" // Array of custom modes
-	| "unboundModelId"
-	| "requestyModelId"
-	| "requestyModelInfo"
-	| "unboundModelInfo"
-	| "modelTemperature"
-	| "modelMaxTokens"
-	| "mistralCodestralUrl"
-	| "maxOpenTabsContext"
-	| "maxWorkspaceFiles"
-	| "browserToolEnabled"
-	| "lmStudioSpeculativeDecodingEnabled"
-	| "lmStudioDraftModelId"
-	| "telemetrySetting"
-	| "showRooIgnoredFiles"
-	| "remoteBrowserEnabled"
-	| "language"
-	| "maxReadFileLine"
-	| "fakeAi"
+export interface ApiConfigMeta {
+	id: string
+	name: string
+	apiProvider?: ProviderName
+}
 
-export type ConfigurationKey = GlobalStateKey | SecretKey
+export type HistoryItem = {
+	id: string
+	number: number
+	ts: number
+	task: string
+	tokensIn: number
+	tokensOut: number
+	cacheWrites?: number
+	cacheReads?: number
+	totalCost: number
+	size?: number
+}
 
-export type ConfigurationValues = Record<ConfigurationKey, any>
+export type ExperimentId =
+	| "experimentalDiffStrategy"
+	| "search_and_replace"
+	| "insert_content"
+	| "powerSteering"
+	| "multi_search_and_replace"
+
+export type CheckpointStorage = "task" | "workspace"
+
+export type GroupOptions = {
+	fileRegex?: string // Regular expression pattern.
+	description?: string // Human-readable description of the pattern.
+}
+
+export type ToolGroup = "read" | "edit" | "browser" | "command" | "mcp" | "modes"
+
+export type GroupEntry = ToolGroup | readonly [ToolGroup, GroupOptions]
+
+export type ModeConfig = {
+	slug: string
+	name: string
+	roleDefinition: string
+	customInstructions?: string
+	groups: readonly GroupEntry[] // Now supports both simple strings and tuples with options
+	source?: "global" | "project" // Where this mode was loaded from
+}
+
+export type PromptComponent = {
+	roleDefinition?: string
+	customInstructions?: string
+}
+
+export type CustomModePrompts = {
+	[key: string]: PromptComponent | undefined
+}
+
+export type CustomSupportPrompts = {
+	[key: string]: string | undefined
+}
+
+export type TelemetrySetting = "unset" | "enabled" | "disabled"
+
+export type Language =
+	| "ca"
+	| "de"
+	| "en"
+	| "es"
+	| "fr"
+	| "hi"
+	| "it"
+	| "ja"
+	| "ko"
+	| "pl"
+	| "pt-BR"
+	| "tr"
+	| "vi"
+	| "zh-CN"
+	| "zh-TW"
+
+export interface GlobalConfiguration {
+	currentApiConfigName?: string
+	listApiConfigMeta?: ApiConfigMeta[]
+	lastShownAnnouncementId?: string
+	customInstructions?: string
+	taskHistory?: HistoryItem[]
+
+	autoApprovalEnabled?: boolean
+	alwaysAllowReadOnly?: boolean
+	alwaysAllowWrite?: boolean
+	writeDelayMs?: number
+	alwaysAllowBrowser?: boolean
+	alwaysApproveResubmit?: boolean
+	requestDelaySeconds?: number
+	alwaysAllowMcp?: boolean
+	alwaysAllowModeSwitch?: boolean
+	alwaysAllowSubtasks?: boolean
+	alwaysAllowExecute?: boolean
+	allowedCommands?: string[]
+
+	browserToolEnabled?: boolean
+	browserViewportSize?: string
+	screenshotQuality?: number
+	remoteBrowserEnabled?: boolean
+	remoteBrowserHost?: string
+
+	enableCheckpoints?: boolean
+	checkpointStorage?: CheckpointStorage
+
+	ttsEnabled?: boolean
+	ttsSpeed?: number
+	soundEnabled?: boolean
+	soundVolume?: number
+
+	maxOpenTabsContext?: number
+	maxWorkspaceFiles?: number
+	showRooIgnoredFiles?: boolean
+	maxReadFileLine?: number
+
+	terminalOutputLineLimit?: number
+	terminalShellIntegrationTimeout?: number
+
+	rateLimitSeconds?: number
+	diffEnabled?: boolean
+	fuzzyMatchThreshold?: number
+	experiments?: Record<ExperimentId, boolean> // Map of experiment IDs to their enabled state.
+
+	language?: Language
+
+	telemetrySetting?: TelemetrySetting
+
+	mcpEnabled?: boolean
+	enableMcpServerCreation?: boolean
+
+	mode?: string
+	modeApiConfigs?: Record<string, string>
+	customModes: ModeConfig[]
+	enableCustomModeCreation?: boolean
+	customModePrompts?: CustomModePrompts
+	customSupportPrompts?: CustomSupportPrompts
+	enhancementApiConfigId?: string
+}
+
+export type GlobalConfigurationKey = keyof GlobalConfiguration
+
+export type GlobalStateKey = Exclude<ProviderConfigurationKey, SecretKey | "id"> | GlobalConfigurationKey

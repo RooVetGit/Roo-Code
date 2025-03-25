@@ -8,14 +8,14 @@ import {
 	SECRET_KEYS,
 	GlobalStateKey,
 	SecretKey,
-	ConfigurationKey,
-	ConfigurationValues,
 	isSecretKey,
 	isGlobalStateKey,
 	isPassThroughStateKey,
-	globalStateSchema,
+	globalConfigurationSchema,
 } from "../shared/globalState"
-import { API_CONFIG_KEYS, ApiConfiguration, apiHandlerOptionsSchema, ApiHandlerOptionsKey } from "../shared/api"
+import { API_CONFIG_KEYS, ApiConfiguration, ApiHandlerOptionsKey, apiHandlerOptionsSchema } from "../shared/api"
+
+const globalStateSchema = globalConfigurationSchema.merge(apiHandlerOptionsSchema)
 
 const NON_EXPORTABLE_GLOBAL_CONFIGURATION: GlobalStateKey[] = [
 	"taskHistory",
@@ -135,7 +135,7 @@ export class ContextProxy {
 	 * @param value The value to set
 	 * @returns A promise that resolves when the operation completes
 	 */
-	setValue(key: ConfigurationKey, value: any) {
+	setValue(key: GlobalStateKey | SecretKey, value: any) {
 		if (isSecretKey(key)) {
 			return this.storeSecret(key, value)
 		}
@@ -154,11 +154,11 @@ export class ContextProxy {
 	 * @param values An object containing key-value pairs to set
 	 * @returns A promise that resolves when all operations complete
 	 */
-	async setValues(values: Partial<ConfigurationValues>) {
+	async setValues(values: Partial<Record<GlobalStateKey | SecretKey, any>>) {
 		const promises: Thenable<void>[] = []
 
 		for (const [key, value] of Object.entries(values)) {
-			promises.push(this.setValue(key as ConfigurationKey, value))
+			promises.push(this.setValue(key as GlobalStateKey | SecretKey, value))
 		}
 
 		await Promise.all(promises)
@@ -173,7 +173,10 @@ export class ContextProxy {
 		await this.setValues({
 			...API_CONFIG_KEYS.filter((key) => isGlobalStateKey(key))
 				.filter((key) => !!this.stateCache.get(key))
-				.reduce((acc, key) => ({ ...acc, [key]: undefined }), {} as Partial<ConfigurationValues>),
+				.reduce(
+					(acc, key) => ({ ...acc, [key]: undefined }),
+					{} as Partial<Record<GlobalStateKey | SecretKey, any>>,
+				),
 			...apiConfiguration,
 		})
 	}

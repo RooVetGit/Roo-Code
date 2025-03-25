@@ -1,4 +1,8 @@
-export const EXPERIMENT_IDS = {
+import { ExperimentId } from "../exports/roo-code"
+
+export type { ExperimentId }
+
+export const EXPERIMENT_IDS: Record<string, ExperimentId> = {
 	DIFF_STRATEGY: "experimentalDiffStrategy",
 	SEARCH_AND_REPLACE: "search_and_replace",
 	INSERT_BLOCK: "insert_content",
@@ -7,7 +11,6 @@ export const EXPERIMENT_IDS = {
 } as const
 
 export type ExperimentKey = keyof typeof EXPERIMENT_IDS
-export type ExperimentId = valueof<typeof EXPERIMENT_IDS>
 
 export interface ExperimentConfig {
 	enabled: boolean

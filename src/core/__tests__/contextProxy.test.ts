@@ -6,7 +6,7 @@ import * as vscode from "vscode"
 import { ContextProxy } from "../contextProxy"
 
 import { logger } from "../../utils/logging"
-import { GLOBAL_STATE_KEYS, SECRET_KEYS, ConfigurationKey, GlobalStateKey } from "../../shared/globalState"
+import { GLOBAL_STATE_KEYS, SECRET_KEYS, GlobalStateKey } from "../../shared/globalState"
 
 jest.mock("vscode", () => ({
 	Uri: {
@@ -231,7 +231,7 @@ describe("ContextProxy", () => {
 			const updateGlobalStateSpy = jest.spyOn(proxy, "updateGlobalState")
 
 			// Test with an unknown key
-			await proxy.setValue("unknownKey" as ConfigurationKey, "some-value")
+			await proxy.setValue("unknownKey" as GlobalStateKey, "some-value")
 
 			// Should have logged a warning
 			expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Unknown key: unknownKey"))

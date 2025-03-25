@@ -3,7 +3,7 @@ import * as vscode from "vscode"
 
 import { ClineProvider } from "../core/webview/ClineProvider"
 
-import { RooCodeAPI, RooCodeEvents, ConfigurationValues, TokenUsage } from "./roo-code"
+import { RooCodeAPI, RooCodeEvents, TokenUsage, SecretKey, GlobalStateKey } from "./roo-code"
 import { MessageHistory } from "./message-history"
 import { IpcClientMessageType, IpcServerMessageType, IpcServer } from "./ipc"
 
@@ -105,7 +105,7 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 	}
 
 	// TODO: Change this to `setApiConfiguration`.
-	public async setConfiguration(values: Partial<ConfigurationValues>) {
+	public async setConfiguration(values: Partial<Record<GlobalStateKey | SecretKey, any>>) {
 		await this.provider.setValues(values)
 	}
 

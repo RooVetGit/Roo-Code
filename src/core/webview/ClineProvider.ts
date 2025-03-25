@@ -25,14 +25,7 @@ import {
 import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
-import {
-	SecretKey,
-	GlobalStateKey,
-	SECRET_KEYS,
-	GLOBAL_STATE_KEYS,
-	ConfigurationValues,
-	isGlobalStateKey,
-} from "../../shared/globalState"
+import { SecretKey, GlobalStateKey, SECRET_KEYS, GLOBAL_STATE_KEYS, isGlobalStateKey } from "../../shared/globalState"
 import { HistoryItem } from "../../shared/HistoryItem"
 import { ApiConfigMeta, ExtensionMessage } from "../../shared/ExtensionMessage"
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
@@ -2812,7 +2805,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	// global + secret
 
-	public async setValues(values: Partial<ConfigurationValues>) {
+	public async setValues(values: Partial<Record<GlobalStateKey | SecretKey, any>>) {
 		await this.contextProxy.setValues(values)
 	}
 

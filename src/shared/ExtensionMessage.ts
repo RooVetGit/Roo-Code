@@ -1,13 +1,14 @@
-import { ApiConfiguration, ApiProvider, ModelInfo } from "./api"
+import { ApiConfiguration, ModelInfo } from "./api"
 import { HistoryItem } from "./HistoryItem"
 import { McpServer } from "./mcp"
 import { GitCommit } from "../utils/git"
-import { Mode, CustomModePrompts, ModeConfig } from "./modes"
-import { CustomSupportPrompts } from "./support-prompt"
+import { Mode, ModeConfig } from "./modes"
 import { ExperimentId } from "./experiments"
 import { CheckpointStorage } from "./checkpoints"
 import { TelemetrySetting } from "./TelemetrySetting"
-import type { ClineMessage, ClineAsk, ClineSay } from "../exports/roo-code"
+import type { GlobalConfiguration, ApiConfigMeta, ClineMessage, ClineAsk, ClineSay } from "../exports/roo-code"
+
+export type { ApiConfigMeta }
 
 export interface LanguageModelChatSelector {
 	vendor?: string
@@ -102,72 +103,77 @@ export interface ExtensionMessage {
 	error?: string
 }
 
-export interface ApiConfigMeta {
-	id: string
-	name: string
-	apiProvider?: ApiProvider
-}
-
-export interface ExtensionState {
+export type ExtensionState = Pick<
+	GlobalConfiguration,
+	| "currentApiConfigName"
+	| "listApiConfigMeta"
+	| "customInstructions"
+	| "autoApprovalEnabled"
+	| "alwaysAllowReadOnly"
+	| "alwaysAllowWrite"
+	| "alwaysAllowBrowser"
+	| "alwaysApproveResubmit"
+	| "alwaysAllowMcp"
+	| "alwaysAllowModeSwitch"
+	| "alwaysAllowSubtasks"
+	| "alwaysAllowExecute"
+	| "allowedCommands"
+	| "browserToolEnabled"
+	| "browserViewportSize"
+	| "screenshotQuality"
+	| "remoteBrowserEnabled"
+	| "remoteBrowserHost"
+	| "ttsEnabled"
+	| "ttsSpeed"
+	| "soundEnabled"
+	| "soundVolume"
+	| "terminalOutputLineLimit"
+	| "terminalShellIntegrationTimeout"
+	| "diffEnabled"
+	| "fuzzyMatchThreshold"
+	| "language"
+	| "enableCustomModeCreation"
+	| "customModePrompts"
+	| "customSupportPrompts"
+	| "modeApiConfigs"
+	| "enhancementApiConfigId"
+> & {
 	version: string
 	clineMessages: ClineMessage[]
-	taskHistory: HistoryItem[]
-	shouldShowAnnouncement: boolean
-	apiConfiguration?: ApiConfiguration
-	currentApiConfigName?: string
-	listApiConfigMeta?: ApiConfigMeta[]
-	customInstructions?: string
-	customModePrompts?: CustomModePrompts
-	customSupportPrompts?: CustomSupportPrompts
-	alwaysAllowReadOnly?: boolean
-	alwaysAllowWrite?: boolean
-	alwaysAllowExecute?: boolean
-	alwaysAllowBrowser?: boolean
-	alwaysAllowMcp?: boolean
-	alwaysApproveResubmit?: boolean
-	alwaysAllowModeSwitch?: boolean
-	alwaysAllowSubtasks?: boolean
-	browserToolEnabled?: boolean
-	requestDelaySeconds: number
-	rateLimitSeconds: number // Minimum time between successive requests (0 = disabled)
-	uriScheme?: string
 	currentTaskItem?: HistoryItem
-	allowedCommands?: string[]
-	soundEnabled?: boolean
-	ttsEnabled?: boolean
-	ttsSpeed?: number
-	soundVolume?: number
-	diffEnabled?: boolean
+	apiConfiguration?: ApiConfiguration
+	uriScheme?: string
+	shouldShowAnnouncement: boolean
+
+	taskHistory: HistoryItem[]
+
+	writeDelayMs: number
+	requestDelaySeconds: number
+
 	enableCheckpoints: boolean
 	checkpointStorage: CheckpointStorage
-	browserViewportSize?: string
-	screenshotQuality?: number
-	remoteBrowserHost?: string
-	remoteBrowserEnabled?: boolean
-	fuzzyMatchThreshold?: number
-	language?: string
-	writeDelayMs: number
-	terminalOutputLineLimit?: number
-	terminalShellIntegrationTimeout?: number
-	mcpEnabled: boolean
-	enableMcpServerCreation: boolean
-	enableCustomModeCreation?: boolean
-	mode: Mode
-	modeApiConfigs?: Record<Mode, string>
-	enhancementApiConfigId?: string
-	experiments: Record<ExperimentId, boolean> // Map of experiment IDs to their enabled state
-	autoApprovalEnabled?: boolean
-	customModes: ModeConfig[]
-	toolRequirements?: Record<string, boolean> // Map of tool names to their requirements (e.g. {"apply_diff": true} if diffEnabled)
+
 	maxOpenTabsContext: number // Maximum number of VSCode open tabs to include in context (0-500)
 	maxWorkspaceFiles: number // Maximum number of files to include in current working directory details (0-500)
+	showRooIgnoredFiles: boolean // Whether to show .rooignore'd files in listings
+	maxReadFileLine: number // Maximum number of lines to read from a file before truncating
+
+	rateLimitSeconds: number // Minimum time between successive requests (0 = disabled).
+	experiments: Record<ExperimentId, boolean> // Map of experiment IDs to their enabled state
+
+	mcpEnabled: boolean
+	enableMcpServerCreation: boolean
+
+	mode: Mode
+	customModes: ModeConfig[]
+	toolRequirements?: Record<string, boolean> // Map of tool names to their requirements (e.g. {"apply_diff": true} if diffEnabled)
+
 	cwd?: string // Current working directory
 	telemetrySetting: TelemetrySetting
 	telemetryKey?: string
 	machineId?: string
-	showRooIgnoredFiles: boolean // Whether to show .rooignore'd files in listings
+
 	renderContext: "sidebar" | "editor"
-	maxReadFileLine: number // Maximum number of lines to read from a file before truncating
 	settingsImportedAt?: number
 }
 

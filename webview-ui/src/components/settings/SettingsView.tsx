@@ -453,8 +453,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 						maxOpenTabsContext={maxOpenTabsContext}
 						maxWorkspaceFiles={maxWorkspaceFiles ?? 200}
 						showRooIgnoredFiles={showRooIgnoredFiles}
-						setCachedStateField={setCachedStateField}
 						maxReadFileLine={maxReadFileLine}
+						setCachedStateField={setCachedStateField}
 					/>
 				</div>
 

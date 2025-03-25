@@ -1,9 +1,13 @@
 import * as vscode from "vscode"
 import { z } from "zod"
 
+import { ModelInfo, ProviderName as ApiProvider } from "../exports/roo-code"
+
 import { AssertEqual, Equals } from "../utils/type-fu"
 
 // Models
+
+export type { ModelInfo }
 
 export const modelInfoSchema = z.object({
 	maxTokens: z.number().optional(),
@@ -20,45 +24,13 @@ export const modelInfoSchema = z.object({
 	thinking: z.boolean().optional(),
 })
 
-export interface ModelInfo {
-	maxTokens?: number
-	contextWindow: number
-	supportsImages?: boolean
-	supportsComputerUse?: boolean
-	supportsPromptCache: boolean // This value is hardcoded for now.
-	inputPrice?: number
-	outputPrice?: number
-	cacheWritesPrice?: number
-	cacheReadsPrice?: number
-	description?: string
-	reasoningEffort?: "low" | "medium" | "high"
-	thinking?: boolean
-}
-
 // Throws a type error if the inferred type of the schema is not equal to the
 // type of the ModelInfo.
 type _AssertModelInfoMatchesSchema = AssertEqual<Equals<ModelInfo, z.infer<typeof modelInfoSchema>>>
 
 // Providers
 
-export type ApiProvider =
-	| "anthropic"
-	| "glama"
-	| "openrouter"
-	| "bedrock"
-	| "vertex"
-	| "openai"
-	| "ollama"
-	| "lmstudio"
-	| "gemini"
-	| "openai-native"
-	| "deepseek"
-	| "vscode-lm"
-	| "mistral"
-	| "unbound"
-	| "requesty"
-	| "human-relay"
-	| "fake-ai"
+export type { ApiProvider }
 
 export interface ApiHandlerOptions {
 	apiModelId?: string

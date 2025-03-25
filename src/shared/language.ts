@@ -1,7 +1,12 @@
+import { type Language } from "../exports/roo-code"
+
+export type { Language }
+
 /**
  * Language name mapping from ISO codes to full language names
  */
-export const LANGUAGES: Record<string, string> = {
+
+export const LANGUAGES: Record<Language, string> = {
 	ca: "Català",
 	de: "Deutsch",
 	en: "English",
