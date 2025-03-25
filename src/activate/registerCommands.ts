@@ -96,5 +96,9 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		"roo-cline.registerHumanRelayCallback": registerHumanRelayCallback,
 		"roo-cline.unregisterHumanRelayCallback": unregisterHumanRelayCallback,
 		"roo-cline.handleHumanRelayResponse": handleHumanRelayResponse,
+		"roo-cline.setCustomStoragePath": async () => {
+			const { promptForCustomStoragePath } = await import("../shared/storagePathManager")
+			await promptForCustomStoragePath()
+		},
 	}
 }

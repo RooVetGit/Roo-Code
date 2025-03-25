@@ -11,6 +11,7 @@ export interface TokenUsage {
 
 export interface RooCodeEvents {
 	message: [{ taskId: string; action: "created" | "updated"; message: ClineMessage }]
+	taskCreated: [taskId: string]
 	taskStarted: [taskId: string]
 	taskPaused: [taskId: string]
 	taskUnpaused: [taskId: string]
@@ -181,7 +182,9 @@ export type GlobalStateKey =
 	| "lastShownAnnouncementId"
 	| "customInstructions"
 	| "alwaysAllowReadOnly"
+	| "alwaysAllowReadOnlyOutsideWorkspace"
 	| "alwaysAllowWrite"
+	| "alwaysAllowWriteOutsideWorkspace"
 	| "alwaysAllowExecute"
 	| "alwaysAllowBrowser"
 	| "alwaysAllowMcp"
