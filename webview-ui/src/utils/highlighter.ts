@@ -89,19 +89,19 @@ const warnedLanguages = new Set<string>()
 
 // Normalize language to a valid Shiki language
 export function normalizeLanguage(language: string | undefined): ExtendedLanguage {
-	if (language === undefined || language.length < 2) return "txt"
+	if (language === undefined) return "txt"
 
 	// Convert to lowercase for consistent matching
 	const normalizedInput = language.toLowerCase()
 
-	// Check if it's an alias
-	if (normalizedInput in languageAliases) {
-		return languageAliases[normalizedInput]
-	}
-
 	// If it's already a valid bundled language, return it
 	if (normalizedInput in bundledLanguages) {
 		return normalizedInput as BundledLanguage
+	}
+
+	// Check if it's an alias
+	if (normalizedInput in languageAliases) {
+		return languageAliases[normalizedInput]
 	}
 
 	// Warn about unrecognized language and default to txt (only once per language)
