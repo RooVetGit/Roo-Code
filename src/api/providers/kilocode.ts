@@ -172,7 +172,7 @@ export class KiloCodeHandler extends BaseProvider implements SingleCompletionHan
 					type: "text",
 					text:
 						`ERROR: ${error.message || "Failed to communicate with Kilo Code API"}\n\n` +
-						"If you need any help please check http://kilocode.ai to reach out to us",
+						"If you need any help please check https://kilocode.ai to reach out to us",
 				}
 			}
 
