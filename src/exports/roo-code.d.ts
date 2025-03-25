@@ -198,6 +198,7 @@ export type GlobalStateKey =
 	| "telemetrySetting"
 	| "showRooIgnoredFiles"
 	| "remoteBrowserEnabled"
+	| "cachedChromeHostUrl"
 
 export type ConfigurationKey = GlobalStateKey | SecretKey
 

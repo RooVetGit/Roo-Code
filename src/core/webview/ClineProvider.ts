@@ -2349,7 +2349,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			remoteBrowserHost,
 			remoteBrowserEnabled: remoteBrowserEnabled ?? false,
 			cachedChromeHostUrl: (await this.getGlobalState("cachedChromeHostUrl")) as string | undefined,
-			preferredLanguage: preferredLanguage ?? "English",
+			preferredLanguage: language ?? "English",
 			writeDelayMs: writeDelayMs ?? 1000,
 			terminalOutputLineLimit: terminalOutputLineLimit ?? 500,
 			fuzzyMatchThreshold: fuzzyMatchThreshold ?? 1.0,
