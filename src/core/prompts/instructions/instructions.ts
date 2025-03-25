@@ -2,10 +2,12 @@ import { createMCPServerInstructions } from "./create-mcp-server"
 import { createModeInstructions } from "./create-mode"
 import { McpHub } from "../../../services/mcp/McpHub"
 import { DiffStrategy } from "../../diff/DiffStrategy"
+import * as vscode from "vscode"
 
 interface InstructionsDetail {
 	mcpHub?: McpHub
 	diffStrategy?: DiffStrategy
+	context?: vscode.ExtensionContext
 }
 
 export async function fetchInstructions(text: string, detail: InstructionsDetail): Promise<string> {
@@ -14,7 +16,7 @@ export async function fetchInstructions(text: string, detail: InstructionsDetail
 			return await createMCPServerInstructions(detail.mcpHub, detail.diffStrategy)
 		}
 		case "create_mode": {
-			return await createModeInstructions()
+			return await createModeInstructions(detail.context)
 		}
 		default: {
 			return ""

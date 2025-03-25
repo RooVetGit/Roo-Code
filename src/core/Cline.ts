@@ -2434,12 +2434,14 @@ export class Cline extends EventEmitter<ClineEvents> {
 								}
 
 								// now fetch the content and provide it to the agent.
-								const mcpHub = this.providerRef.deref()?.getMcpHub()
+								const provider = this.providerRef.deref()
+								const mcpHub = provider?.getMcpHub()
 								if (!mcpHub) {
 									throw new Error("MCP hub not available")
 								}
 								const diffStrategy = this.diffStrategy
-								const content = await fetchInstructions(task, { mcpHub, diffStrategy })
+								const context = provider?.context
+								const content = await fetchInstructions(task, { mcpHub, diffStrategy, context })
 								if (!content) {
 									pushToolResult(formatResponse.toolError(`Invalid instructions request: ${task}`))
 									break
@@ -2950,7 +2952,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 									if (item.mimeType?.startsWith("image") && item.blob) {
 										images.push(item.blob)
 									}
-								});
+								})
 								await this.say("mcp_server_response", resourceResultPretty, images)
 								pushToolResult(formatResponse.toolResult(resourceResultPretty, images))
 								break

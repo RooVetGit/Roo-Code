@@ -7,7 +7,6 @@ import { GlobalFileNames } from "../../../shared/globalFileNames"
 export async function getModesSection(context: vscode.ExtensionContext): Promise<string> {
 	const settingsDir = path.join(context.globalStorageUri.fsPath, "settings")
 	await fs.mkdir(settingsDir, { recursive: true })
-	const customModesPath = path.join(settingsDir, GlobalFileNames.customModes)
 
 	// Get all modes with their overrides from extension state
 	const allModes = await getAllModesWithPrompts(context)
@@ -25,13 +24,6 @@ ${allModes.map((mode: ModeConfig) => `  * "${mode.name}" mode (${mode.slug}) - $
 	// Only include custom modes documentation if the feature is enabled
 	if (shouldEnableCustomModeCreation) {
 		modesContent += `
-
-- Custom modes can be configured in two ways:
-  1. Globally via '${customModesPath}' (created automatically on startup)
-  2. Per-workspace via '.roomodes' in the workspace root directory
-
-  When modes with the same slug exist in both files, the workspace-specific .roomodes version takes precedence. This allows projects to override global modes or define project-specific modes.
-
 If the user asks you to create or edit a new mode for this project, you can get instructions using the fetch_instructions tool, like this:
 <fetch_instructions>
 <task>create_mode</task>

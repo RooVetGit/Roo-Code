@@ -1,5 +1,22 @@
-export async function createModeInstructions(): Promise<string> {
+import * as path from "path"
+import * as vscode from "vscode"
+import { promises as fs } from "fs"
+import { GlobalFileNames } from "../../../shared/globalFileNames"
+
+export async function createModeInstructions(context: vscode.ExtensionContext | undefined): Promise<string> {
+	if (!context) throw new Error("Missing VSCode Extension Context")
+
+	const settingsDir = path.join(context.globalStorageUri.fsPath, "settings")
+	const customModesPath = path.join(settingsDir, GlobalFileNames.customModes)
+
 	return `
+Custom modes can be configured in two ways:
+  1. Globally via '${customModesPath}' (created automatically on startup)
+  2. Per-workspace via '.roomodes' in the workspace root directory
+
+When modes with the same slug exist in both files, the workspace-specific .roomodes version takes precedence. This allows projects to override global modes or define project-specific modes.
+
+
 If asked to create a project mode, create it in .roomodes in the workspace root. If asked to create a global mode, use the global custom modes file.
 
 - The following fields are required and must not be empty:
