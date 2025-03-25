@@ -12,7 +12,7 @@ function wasmPlugin(): Plugin {
 			if (id.endsWith(".wasm")) {
 				const wasmBinary = await import(id)
 				return `
-          const wasmModule = new WebAssembly.Module(${wasmBinary});
+          const wasmModule = new WebAssembly.Module(${wasmBinary.default});
           export default wasmModule;
         `
 			}
