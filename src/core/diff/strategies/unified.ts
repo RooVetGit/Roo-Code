@@ -24,13 +24,13 @@ Format Requirements:
     - Use actual file paths
     - NO timestamps after paths
 
-2. Hunks:
+2. Chunks:
     \`\`\`
     @@ -lineStart,lineCount +lineStart,lineCount @@
     -removed line
     +added line
     \`\`\`
-    - Each hunk starts with @@ showing line numbers for changes
+    - Each chunk starts with @@ showing line numbers for changes
     - Format: @@ -originalStart,originalCount +newStart,newCount @@
     - Use - for removed/changed lines
     - Use + for new/modified lines
@@ -96,10 +96,10 @@ Best Practices:
     - Remove complete old version with - lines
     - Add complete new version with + lines
     - Include correct line numbers
-2. Moving code requires two hunks:
-    - First hunk: Remove from old location
-    - Second hunk: Add to new location
-3. One hunk per logical change
+2. Moving code requires two chunks:
+    - First chunk: Remove from old location
+    - Second chunk: Add to new location
+3. One chunk per logical change
 4. Verify line numbers match the line numbers you have in the file
 
 Usage:
