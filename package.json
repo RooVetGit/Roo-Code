@@ -142,7 +142,7 @@
 			},
 			{
 				"command": "roo-cline.newTask",
-				"title": "Roo Code: New Task",
+				"title": "New Task",
 				"category": "Roo Code"
 			},
 			{
