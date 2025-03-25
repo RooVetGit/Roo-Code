@@ -74,7 +74,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			webviewOptions: { retainContextWhenHidden: true },
 		}),
 	)
-
+	// register the commands for the extension
 	registerCommands({ context, outputChannel, provider })
 
 	/**
@@ -94,6 +94,12 @@ export async function activate(context: vscode.ExtensionContext) {
 	 * https://code.visualstudio.com/api/extension-guides/virtual-documents
 	 */
 	const diffContentProvider = new (class implements vscode.TextDocumentContentProvider {
+		/**
+		 * Given a virtual uri, returns the contents of the text document for that uri.
+		 * The uri query is expected to contain the text document contents encoded in base64.
+		 * @param uri The virtual uri for which to return the contents.
+		 * @returns The text document contents.
+		 */
 		provideTextDocumentContent(uri: vscode.Uri): string {
 			return Buffer.from(uri.query, "base64").toString("utf-8")
 		}

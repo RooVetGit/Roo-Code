@@ -3,7 +3,7 @@ import * as vscode from "vscode"
 
 import { ClineProvider } from "../core/webview/ClineProvider"
 
-import { RooCodeAPI, RooCodeEvents, ConfigurationValues, TokenUsage } from "./roo-code"
+import { ConfigurationValues, RooCodeAPI, RooCodeEvents, TokenUsage } from "./roo-code"
 import { MessageHistory } from "./message-history"
 
 export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
@@ -12,6 +12,12 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 	private readonly history: MessageHistory
 	private readonly tokenUsage: Record<string, TokenUsage>
 
+	/**
+	 * Construct a new API object.
+	 *
+	 * @param outputChannel The output channel to print any internal logs to.
+	 * @param provider The ClineProvider to listen to events from.
+	 */
 	constructor(outputChannel: vscode.OutputChannel, provider: ClineProvider) {
 		super()
 
@@ -55,6 +61,10 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		return cline.taskId
 	}
 
+	/**
+	 * Returns the current task stack.
+	 * @returns An array of task IDs.
+	 */
 	public getCurrentTaskStack() {
 		return this.provider.getCurrentTaskStack()
 	}
