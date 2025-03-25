@@ -295,10 +295,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 		if (!globalStoragePath) {
 			throw new Error("Global storage uri is invalid")
 		}
-
-		// Use storagePathManager to retrieve the task storage directory
-		const { getTaskDirectoryPath } = await import("../shared/storagePathManager")
-		return getTaskDirectoryPath(globalStoragePath, this.taskId)
+		const taskDir = path.join(globalStoragePath, "tasks", this.taskId)
+		await fs.mkdir(taskDir, { recursive: true })
+		return taskDir
 	}
 
 	private async getSavedApiConversationHistory(): Promise<Anthropic.MessageParam[]> {
@@ -911,11 +910,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 	}
 
 	async abortTask(isAbandoned = false) {
-		// if (this.abort) {
-		// 	console.log(`[subtasks] already aborted task ${this.taskId}.${this.instanceId}`)
-		// 	return
-		// }
-
 		console.log(`[subtasks] aborting task ${this.taskId}.${this.instanceId}`)
 
 		// Will stop any autonomously running promises.
@@ -944,6 +938,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 		if (this.isStreaming && this.diffViewProvider.isEditing) {
 			await this.diffViewProvider.revertChanges()
 		}
+
+		await this.showTaskDiffs()
 	}
 
 	// Tools
@@ -3203,6 +3199,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 								telemetryService.captureTaskCompleted(this.taskId)
 								this.emit("taskCompleted", this.taskId, this.getTokenUsage())
 
+								await this.showTaskDiffs()
+
 								if (this.parentTask) {
 									const didApprove = await askFinishSubTaskApproval()
 
@@ -4205,6 +4203,24 @@ export class Cline extends EventEmitter<ClineEvents> {
 		} catch (err) {
 			this.providerRef.deref()?.log("[checkpointRestore] disabling checkpoints for this task")
 			this.enableCheckpoints = false
+		}
+	}
+
+	private async showTaskDiffs() {
+		if (this.enableCheckpoints && this.checkpointService?.isInitialized) {
+			const checkpoints = this.clineMessages.filter(({ say }) => say === "checkpoint_saved")
+			if (checkpoints.length > 0) {
+				const initialCheckpoint = checkpoints[0]
+				const finalCheckpoint = checkpoints[checkpoints.length - 1]
+				if (initialCheckpoint.text && finalCheckpoint.text) {
+					await this.checkpointDiff({
+						ts: Date.now(),
+						previousCommitHash: initialCheckpoint.text,
+						commitHash: finalCheckpoint.text,
+						mode: "full"
+					})
+				}
+			}
 		}
 	}
 }
