@@ -131,7 +131,7 @@ Generate a unified diff that can be cleanly applied to modify code files.
 
 3. Group related changes:
    - Keep related modifications in the same chunk
-   - Start new hunks for logically separate changes
+   - Start new chunks for logically separate changes
    - When modifying functions/methods, include the entire block
 
 ## Requirements:
