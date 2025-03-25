@@ -113,7 +113,7 @@ export const StyledPre = styled.div<{
 		windowshade === "true" ? `${collapsedHeight || WINDOW_SHADE_SETTINGS.collapsedHeight}px` : "none"};
 	overflow-y: auto;
 	padding: 10px;
-	transition: max-height ${WINDOW_SHADE_SETTINGS.transitionDelayS} ease-out;
+	// transition: max-height ${WINDOW_SHADE_SETTINGS.transitionDelayS} ease-out;
 	border-radius: 5px;
 	${({ preStyle }) => preStyle && { ...preStyle }}
 
@@ -176,7 +176,6 @@ const CodeBlock = memo(
 	}: CodeBlockProps) => {
 		const [wordWrap, setWordWrap] = useState(initialWordWrap)
 		const [windowShade, setWindowShade] = useState(initialWindowShade)
-		const [lastScrollPosition, setLastScrollPosition] = useState<number | undefined>(undefined)
 
 		const [highlightedCode, setHighlightedCode] = useState<string>("")
 		const [showCollapseButton, setShowCollapseButton] = useState(true)
@@ -383,25 +382,23 @@ const CodeBlock = memo(
 								const scrollContainer = document.querySelector('[data-virtuoso-scroller="true"]')
 								if (!codeBlock || !scrollContainer) return
 
-								// Get scrollable container and save current scroll position
-								const scrollPosition = scrollContainer.scrollTop
-								// console.debug("Current scroll position ", scrollPosition)
-
 								// Toggle window shade state
 								setWindowShade(!windowShade)
 
-								// Save the position but do it after the UI updates
+								// After UI updates, ensure code block is visible and update button position
 								setTimeout(
 									() => {
-										if (lastScrollPosition !== undefined) {
-											// console.debug("Restoring scroll position to", lastScrollPosition)
-											scrollContainer.scrollTop = lastScrollPosition
-										}
+										codeBlock.scrollIntoView({
+											behavior: "smooth",
+											block: "nearest",
+										})
 
-										// console.debug("Saving scroll position to", scrollPosition)
-										setLastScrollPosition(scrollPosition)
+										// Wait for scroll to complete before updating button position
+										setTimeout(() => {
+											updateCopyButtonPosition(true)
+										}, 50)
 									},
-									WINDOW_SHADE_SETTINGS.transitionDelayS * 1000 + 100,
+									WINDOW_SHADE_SETTINGS.transitionDelayS * 1000 + 50,
 								)
 							}}
 							title={`${windowShade ? "Expand" : "Collapse"} code block`}>
