@@ -35,7 +35,7 @@ const ButtonIcon = styled.span`
 	text-align: center;
 `
 
-const CopyButton = styled.button`
+const CodeBlockButton = styled.button`
 	background: transparent;
 	border: none;
 	color: var(--vscode-foreground);
@@ -55,7 +55,7 @@ const CopyButton = styled.button`
 	}
 `
 
-const CopyButtonWrapper = styled.div`
+const CodeBlockButtonWrapper = styled.div`
 	position: fixed;
 	top: var(--copy-button-top);
 	right: var(--copy-button-right, 8px);
@@ -76,7 +76,7 @@ const CopyButtonWrapper = styled.div`
 		opacity: 1 !important;
 	}
 
-	${CopyButton} {
+	${CodeBlockButton} {
 		position: relative;
 		top: 0;
 		right: 0;
@@ -89,13 +89,13 @@ const CodeBlockContainer = styled.div`
 	border-bottom: 4px solid var(--vscode-sideBar-background);
 	background-color: ${CODE_BLOCK_BG_COLOR};
 
-	${CopyButtonWrapper} {
+	${CodeBlockButtonWrapper} {
 		opacity: 0;
 		pointer-events: none;
 		transition: opacity 0.2s; /* Keep opacity transition for buttons */
 	}
 
-	&[data-partially-visible="true"]:hover ${CopyButtonWrapper} {
+	&[data-partially-visible="true"]:hover ${CodeBlockButtonWrapper} {
 		opacity: 1;
 		pointer-events: all;
 		cursor: pointer;
@@ -251,7 +251,7 @@ const CodeBlock = memo(
 			}
 		}, [source])
 
-		const updateCopyButtonPosition = useCallback((forceShow = false) => {
+		const updateCodeBlockButtonPosition = useCallback((forceShow = false) => {
 			const codeBlock = codeBlockRef.current
 			const copyWrapper = copyButtonWrapperRef.current
 			if (!codeBlock) return
@@ -317,14 +317,14 @@ const CodeBlock = memo(
 		}, [])
 
 		useEffect(() => {
-			const handleScroll = () => updateCopyButtonPosition()
-			const handleResize = () => updateCopyButtonPosition()
+			const handleScroll = () => updateCodeBlockButtonPosition()
+			const handleResize = () => updateCodeBlockButtonPosition()
 
 			const scrollContainer = document.querySelector('[data-virtuoso-scroller="true"]')
 			if (scrollContainer) {
 				scrollContainer.addEventListener("scroll", handleScroll)
 				window.addEventListener("resize", handleResize)
-				updateCopyButtonPosition()
+				updateCodeBlockButtonPosition()
 			}
 
 			return () => {
@@ -333,14 +333,14 @@ const CodeBlock = memo(
 					window.removeEventListener("resize", handleResize)
 				}
 			}
-		}, [updateCopyButtonPosition])
+		}, [updateCodeBlockButtonPosition])
 
 		// Update button position when highlightedCode changes
 		useEffect(() => {
 			if (highlightedCode) {
-				setTimeout(updateCopyButtonPosition, 0)
+				setTimeout(updateCodeBlockButtonPosition, 0)
 			}
-		}, [highlightedCode, updateCopyButtonPosition])
+		}, [highlightedCode, updateCodeBlockButtonPosition])
 
 		const handleCopy = useCallback(
 			(e: React.MouseEvent) => {
@@ -369,13 +369,13 @@ const CodeBlock = memo(
 					collapsedHeight={collapsedHeight}>
 					<div dangerouslySetInnerHTML={{ __html: highlightedCode }} />
 				</StyledPre>
-				<CopyButtonWrapper
+				<CodeBlockButtonWrapper
 					ref={copyButtonWrapperRef}
-					onMouseEnter={() => updateCopyButtonPosition(true)}
-					onMouseLeave={() => updateCopyButtonPosition()}>
+					onMouseEnter={() => updateCodeBlockButtonPosition(true)}
+					onMouseLeave={() => updateCodeBlockButtonPosition()}>
 					{language && <LanguageDisplay>{language}</LanguageDisplay>}
 					{showCollapseButton && (
-						<CopyButton
+						<CodeBlockButton
 							onClick={() => {
 								// Get the current code block element and scrollable container
 								const codeBlock = codeBlockRef.current
@@ -395,7 +395,7 @@ const CodeBlock = memo(
 
 										// Wait for scroll to complete before updating button position
 										setTimeout(() => {
-											updateCopyButtonPosition(true)
+											updateCodeBlockButtonPosition(true)
 										}, 50)
 									},
 									WINDOW_SHADE_SETTINGS.transitionDelayS * 1000 + 50,
@@ -403,17 +403,17 @@ const CodeBlock = memo(
 							}}
 							title={`${windowShade ? "Expand" : "Collapse"} code block`}>
 							<ButtonIcon style={{ fontSize: "16px" }}>{windowShade ? "⌄" : "⌃"}</ButtonIcon>
-						</CopyButton>
+						</CodeBlockButton>
 					)}
-					<CopyButton
+					<CodeBlockButton
 						onClick={() => setWordWrap(!wordWrap)}
 						title={`${wordWrap ? "Disable" : "Enable"} word wrap`}>
 						<ButtonIcon style={{ fontSize: "16px", fontWeight: 900 }}>{wordWrap ? "⟼" : "⤸"}</ButtonIcon>
-					</CopyButton>
-					<CopyButton onClick={handleCopy} title="Copy code">
+					</CodeBlockButton>
+					<CodeBlockButton onClick={handleCopy} title="Copy code">
 						<ButtonIcon className={`codicon codicon-${showCopyFeedback ? "check" : "copy"}`} />
-					</CopyButton>
-				</CopyButtonWrapper>
+					</CodeBlockButton>
+				</CodeBlockButtonWrapper>
 			</CodeBlockContainer>
 		)
 	},
