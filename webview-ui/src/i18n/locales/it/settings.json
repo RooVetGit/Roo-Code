@@ -35,12 +35,20 @@
 		"description": "Permetti a Roo di eseguire automaticamente operazioni senza richiedere approvazione. Abilita queste impostazioni solo se ti fidi completamente dell'IA e comprendi i rischi di sicurezza associati.",
 		"readOnly": {
 			"label": "Approva sempre operazioni di sola lettura",
-			"description": "Quando abilitato, Roo visualizzerà automaticamente i contenuti della directory e leggerà i file senza richiedere di cliccare sul pulsante Approva."
+			"description": "Quando abilitato, Roo visualizzerà automaticamente i contenuti della directory e leggerà i file senza richiedere di cliccare sul pulsante Approva.",
+			"outsideWorkspace": {
+				"label": "Includi file al di fuori dell'area di lavoro",
+				"description": "Permetti a Roo di leggere file al di fuori dell'area di lavoro attuale senza richiedere approvazione."
+			}
 		},
 		"write": {
 			"label": "Approva sempre operazioni di scrittura",
 			"description": "Crea e modifica automaticamente i file senza richiedere approvazione",
-			"delayLabel": "Ritardo dopo le scritture per consentire alla diagnostica di rilevare potenziali problemi"
+			"delayLabel": "Ritardo dopo le scritture per consentire alla diagnostica di rilevare potenziali problemi",
+			"outsideWorkspace": {
+				"label": "Includi file al di fuori dell'area di lavoro",
+				"description": "Permetti a Roo di creare e modificare file al di fuori dell'area di lavoro attuale senza richiedere approvazione."
+			}
 		},
 		"browser": {
 			"label": "Approva sempre azioni del browser",
@@ -267,8 +275,9 @@
 			"description": "Quando abilitato, i file che corrispondono ai pattern in .rooignore verranno mostrati negli elenchi con un simbolo di blocco. Quando disabilitato, questi file saranno completamente nascosti dagli elenchi di file e dalle ricerche."
 		},
 		"maxReadFile": {
-			"label": "Numero massimo di righe da leggere da un file",
-			"description": "Numero massimo di righe da leggere da un file alla volta. Valori più bassi riducono l'utilizzo di contesto/risorse ma potrebbero richiedere più letture per file di grandi dimensioni."
+			"label": "Soglia di auto-troncamento lettura file",
+			"description": "Il numero predefinito di righe da leggere da un file in un singolo batch. Valori più bassi riducono l'utilizzo di contesto/risorse ma potrebbero richiedere più letture per file di grandi dimensioni.",
+			"lines": "righe"
 		}
 	},
 	"terminal": {
@@ -349,6 +358,8 @@
 		"cacheReadsPrice": "Prezzo letture cache",
 		"cacheWritesPrice": "Prezzo scritture cache",
 		"enableStreaming": "Abilita streaming",
+		"enableR1Format": "Abilita i parametri del modello R1",
+		"enableR1FormatTips": "Deve essere abilitato quando si utilizzano modelli R1 come QWQ, per evitare l'errore 400",
 		"useAzure": "Usa Azure",
 		"azureApiVersion": "Imposta versione API Azure",
 		"gemini": {

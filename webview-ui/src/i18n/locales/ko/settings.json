@@ -35,12 +35,20 @@
 		"description": "Roo가 승인 없이 자동으로 작업을 수행할 수 있도록 허용합니다. AI를 완전히 신뢰하고 관련 보안 위험을 이해하는 경우에만 이러한 설정을 활성화하세요.",
 		"readOnly": {
 			"label": "읽기 전용 작업 항상 승인",
-			"description": "활성화되면 Roo는 승인 버튼을 클릭하지 않고도 자동으로 디렉토리 내용을 보고 파일을 읽습니다."
+			"description": "활성화되면 Roo는 승인 버튼을 클릭하지 않고도 자동으로 디렉토리 내용을 보고 파일을 읽습니다.",
+			"outsideWorkspace": {
+				"label": "워크스페이스 외부 파일 포함",
+				"description": "Roo가 승인 없이 현재 워크스페이스 외부의 파일을 읽을 수 있도록 허용합니다."
+			}
 		},
 		"write": {
 			"label": "쓰기 작업 항상 승인",
 			"description": "승인 없이 자동으로 파일 생성 및 편집",
-			"delayLabel": "진단이 잠재적 문제를 감지할 수 있도록 쓰기 후 지연"
+			"delayLabel": "진단이 잠재적 문제를 감지할 수 있도록 쓰기 후 지연",
+			"outsideWorkspace": {
+				"label": "워크스페이스 외부 파일 포함",
+				"description": "Roo가 승인 없이 현재 워크스페이스 외부의 파일을 생성하고 편집할 수 있도록 허용합니다."
+			}
 		},
 		"browser": {
 			"label": "브라우저 작업 항상 승인",
@@ -267,8 +275,9 @@
 			"description": "활성화되면 .rooignore의 패턴과 일치하는 파일이 잠금 기호와 함께 목록에 표시됩니다. 비활성화되면 이러한 파일은 파일 목록 및 검색에서 완전히 숨겨집니다."
 		},
 		"maxReadFile": {
-			"label": "파일에서 읽을 최대 라인 수",
-			"description": "한 번에 파일에서 읽을 최대 라인 수. 낮은 값은 컨텍스트/리소스 사용량을 줄이지만 대용량 파일의 경우 더 많은 읽기가 필요할 수 있습니다."
+			"label": "파일 읽기 자동 축소 임계값",
+			"description": "한 번에 파일에서 읽을 기본 라인 수. 낮은 값은 컨텍스트/리소스 사용량을 줄이지만 대용량 파일의 경우 더 많은 읽기가 필요할 수 있습니다.",
+			"lines": "줄"
 		}
 	},
 	"terminal": {
@@ -349,6 +358,8 @@
 		"cacheReadsPrice": "캐시 읽기 가격",
 		"cacheWritesPrice": "캐시 쓰기 가격",
 		"enableStreaming": "스트리밍 활성화",
+		"enableR1Format": "R1 모델 매개변수 활성화",
+		"enableR1FormatTips": "QWQ와 같은 R1 모델을 사용할 때 활성화해야 하며, 400 오류를 방지합니다",
 		"useAzure": "Azure 사용",
 		"azureApiVersion": "Azure API 버전 설정",
 		"gemini": {

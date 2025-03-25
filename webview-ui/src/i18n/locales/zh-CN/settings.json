@@ -35,12 +35,20 @@
 		"description": "允许 Roo 自动执行操作而无需批准。只有在您完全信任 AI 并了解相关安全风险的情况下才启用这些设置。",
 		"readOnly": {
 			"label": "始终批准只读操作",
-			"description": "启用后，Roo 将自动查看目录内容并读取文件，无需点击批准按钮。"
+			"description": "启用后，Roo 将自动查看目录内容并读取文件，无需点击批准按钮。",
+			"outsideWorkspace": {
+				"label": "包含工作区外的文件",
+				"description": "允许 Roo 读取当前工作区外的文件，无需批准。"
+			}
 		},
 		"write": {
 			"label": "始终批准写入操作",
 			"description": "自动创建和编辑文件而无需批准",
-			"delayLabel": "写入后延迟以允许诊断检测潜在问题"
+			"delayLabel": "写入后延迟以允许诊断检测潜在问题",
+			"outsideWorkspace": {
+				"label": "包含工作区外的文件",
+				"description": "允许 Roo 创建和编辑当前工作区外的文件，无需批准。"
+			}
 		},
 		"browser": {
 			"label": "始终批准浏览器操作",
@@ -267,8 +275,9 @@
 			"description": "启用后，与 .rooignore 中模式匹配的文件将在列表中显示锁定符号。禁用时，这些文件将从文件列表和搜索中完全隐藏。"
 		},
 		"maxReadFile": {
-			"label": "文件读取的最大行数",
-			"description": "一次从文件读取的最大行数。较低的值会减少上下文/资源使用，但可能需要对大文件进行更多次读取。"
+			"label": "文件读取自动截断阈值",
+			"description": "一次批处理中从文件读取的默认行数。较低的值会减少上下文/资源使用，但可能需要对大文件进行更多次读取。",
+			"lines": "行"
 		}
 	},
 	"terminal": {
@@ -349,6 +358,8 @@
 		"cacheReadsPrice": "缓存读取价格",
 		"cacheWritesPrice": "缓存写入价格",
 		"enableStreaming": "启用流式传输",
+		"enableR1Format": "启用R1模型传参",
+		"enableR1FormatTips": "当使用QWQ等类R1模型时需启用，防止报400错误",
 		"useAzure": "使用 Azure 服务",
 		"azureApiVersion": "设置 Azure API 版本",
 		"gemini": {
