@@ -1,5 +1,77 @@
 # Roo Code Changelog
 
+## [3.10.3] - 2025-03-23
+
+- Update the welcome page to provide 1-click OAuth flows with LLM routers (thanks @dtrugman!)
+- Switch to a more direct method of tracking OpenRouter tokens/spend
+- Make partial file reads backwards-compatible with custom system prompts and give users more control over the chunk size
+- Fix issues where questions and suggestions weren’t showing up for non-streaming models and were hard to read in some themes
+- A variety of fixes and improvements to experimental multi-block diff (thanks @KJ7LNW!)
+- Fix opacity of drop-down menus in settings (thanks @KJ7LNW!)
+- Fix bugs with reading and mentioning binary files like PDFs
+- Fix the pricing information for OpenRouter free models (thanks @Jdo300!)
+- Fix an issue with our unit tests on Windows (thanks @diarmidmackenzie!)
+- Fix a maxTokens issue for the Outbound provider (thanks @pugazhendhi-m!)
+- Fix a line number issue with partial file reads (thanks @samhvw8!)
+
+## [3.10.2] - 2025-03-21
+
+- Fixes to context mentions on Windows
+- Fixes to German translations (thanks @cannuri!)
+- Fixes to telemetry banner internationalization
+- Sonnet 3.7 non-thinking now correctly uses 8192 max output tokens
+
+## [3.10.1] - 2025-03-20
+
+- Make the suggested responses optional to not break overriden system prompts
+
+## [3.10.0] - 2025-03-20
+
+- Suggested responses to questions (thanks samhvw8!)
+- Support for reading large files in chunks (thanks samhvw8!)
+- More consistent @-mention lookups of files and folders
+- Consolidate code actions into a submenu (thanks samhvw8!)
+- Fix MCP error logging (thanks aheizi!)
+- Improvements to search_files tool formatting and logic (thanks KJ7LNW!)
+- Fix changelog formatting in GitHub Releases (thanks pdecat!)
+- Add fake provider for integration tests (thanks franekp!)
+- Reflect Cross-region inference option in ap-xx region (thanks Yoshino-Yukitaro!)
+- Fix bug that was causing task history to be lost when using WSL
+
+## [3.9.2] - 2025-03-19
+
+- Update GitHub Actions workflow to automatically create GitHub Releases (thanks @pdecat!)
+- Correctly persist the text-to-speech speed state (thanks @heyseth!)
+- Fixes to French translations (thanks @arthurauffray!)
+- Optimize build time for local development (thanks @KJ7LNW!)
+- VSCode theme fixes for select, dropdown and command components
+- Bring back the ability to manually enter a model name in the model picker
+- Fix internationalization of the announcement title and the browser
+
+## [3.9.1] - 2025-03-18
+
+- Pass current language to system prompt correctly so Roo thinks and speaks in the selected language
+
+## [3.9.0] - 2025-03-18
+
+- Internationalize Roo Code into Catalan, German, Spanish, French, Hindi, Italian, Japanese, Korean, Polish, Portuguese, Turkish, Vietnamese, Simplified Chinese, and Traditional Chinese (thanks @feifei325!)
+- Bring back support for MCP over SSE (thanks @aheizi!)
+- Add a text-to-speech option to have Roo talk to you as it works (thanks @heyseth!)
+- Choose a specific provider when using OpenRouter (thanks PhunkyBob!)
+- Support batch deletion of task history (thanks @aheizi!)
+- Internationalize Human Relay, adjust the layout, and make it work on the welcome screen (thanks @NyxJae!)
+- Fix shell integration race condition (thanks @KJ7LNW!)
+- Fix display updating for Bedrock custom ARNs that are prompt routers (thanks @Smartsheet-JB-Brown!)
+- Fix to exclude search highlighting when copying items from task history (thanks @im47cn!)
+- Fix context mentions to work with multiple-workspace projects (thanks @teddyOOXX!)
+- Fix to task history saving when running multiple Roos (thanks @samhvw8!)
+- Improve task deletion when underlying files are missing (thanks @GitlyHallows!)
+- Improve support for NixOS & direnv (thanks @wkordalski!)
+- Fix wheel scrolling when Roo is opened in editor tabs (thanks @GitlyHallows!)
+- Don’t automatically mention the file when using the "Add to context" code action (thanks @qdaxb!)
+- Expose task stack in `RooCodeAPI` (thanks @franekp!)
+- Give the models visibility into the current task's API cost
+
 ## [3.8.6] - 2025-03-13
 
 - Revert SSE MCP support while we debug some config validation issues

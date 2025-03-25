@@ -6,10 +6,13 @@ import * as fs from "fs/promises"
 import { CustomModesManager } from "../CustomModesManager"
 import { ModeConfig } from "../../../shared/modes"
 import { fileExistsAtPath } from "../../../utils/fs"
+import { getWorkspacePath, arePathsEqual } from "../../../utils/path"
+import { GlobalFileNames } from "../../../shared/globalFileNames"
 
 jest.mock("vscode")
 jest.mock("fs/promises")
 jest.mock("../../../utils/fs")
+jest.mock("../../../utils/path")
 
 describe("CustomModesManager", () => {
 	let manager: CustomModesManager
@@ -19,7 +22,7 @@ describe("CustomModesManager", () => {
 
 	// Use path.sep to ensure correct path separators for the current platform
 	const mockStoragePath = `${path.sep}mock${path.sep}settings`
-	const mockSettingsPath = path.join(mockStoragePath, "settings", "cline_custom_modes.json")
+	const mockSettingsPath = path.join(mockStoragePath, "settings", GlobalFileNames.customModes)
 	const mockRoomodes = `${path.sep}mock${path.sep}workspace${path.sep}.roomodes`
 
 	beforeEach(() => {
@@ -37,6 +40,7 @@ describe("CustomModesManager", () => {
 		mockWorkspaceFolders = [{ uri: { fsPath: "/mock/workspace" } }]
 		;(vscode.workspace as any).workspaceFolders = mockWorkspaceFolders
 		;(vscode.workspace.onDidSaveTextDocument as jest.Mock).mockReturnValue({ dispose: jest.fn() })
+		;(getWorkspacePath as jest.Mock).mockReturnValue("/mock/workspace")
 		;(fileExistsAtPath as jest.Mock).mockImplementation(async (path: string) => {
 			return path === mockSettingsPath || path === mockRoomodes
 		})
@@ -330,17 +334,16 @@ describe("CustomModesManager", () => {
 			expect(mockOnUpdate).toHaveBeenCalled()
 		})
 	})
-
 	describe("File Operations", () => {
 		it("creates settings directory if it doesn't exist", async () => {
-			const configPath = path.join(mockStoragePath, "settings", "cline_custom_modes.json")
+			const settingsPath = path.join(mockStoragePath, "settings", GlobalFileNames.customModes)
 			await manager.getCustomModesFilePath()
 
-			expect(fs.mkdir).toHaveBeenCalledWith(path.dirname(configPath), { recursive: true })
+			expect(fs.mkdir).toHaveBeenCalledWith(path.dirname(settingsPath), { recursive: true })
 		})
 
 		it("creates default config if file doesn't exist", async () => {
-			const configPath = path.join(mockStoragePath, "settings", "cline_custom_modes.json")
+			const settingsPath = path.join(mockStoragePath, "settings", GlobalFileNames.customModes)
 
 			// Mock fileExists to return false first time, then true
 			let firstCall = true
@@ -355,15 +358,18 @@ describe("CustomModesManager", () => {
 			await manager.getCustomModesFilePath()
 
 			expect(fs.writeFile).toHaveBeenCalledWith(
-				configPath,
+				settingsPath,
 				expect.stringMatching(/^\{\s+"customModes":\s+\[\s*\]\s*\}$/),
 			)
 		})
 
 		it("watches file for changes", async () => {
-			const configPath = path.join(mockStoragePath, "settings", "cline_custom_modes.json")
-			;(fs.readFile as jest.Mock).mockResolvedValue(JSON.stringify({ customModes: [] }))
+			const configPath = path.join(mockStoragePath, "settings", GlobalFileNames.customModes)
 
+			;(fs.readFile as jest.Mock).mockResolvedValue(JSON.stringify({ customModes: [] }))
+			;(arePathsEqual as jest.Mock).mockImplementation((path1: string, path2: string) => {
+				return path.normalize(path1) === path.normalize(path2)
+			})
 			// Get the registered callback
 			const registerCall = (vscode.workspace.onDidSaveTextDocument as jest.Mock).mock.calls[0]
 			expect(registerCall).toBeDefined()

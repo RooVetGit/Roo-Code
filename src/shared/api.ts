@@ -17,6 +17,7 @@ export type ApiProvider =
 	| "unbound"
 	| "requesty"
 	| "human-relay"
+	| "fake-ai"
 
 export interface ApiHandlerOptions {
 	apiModelId?: string
@@ -30,6 +31,7 @@ export interface ApiHandlerOptions {
 	openRouterModelId?: string
 	openRouterModelInfo?: ModelInfo
 	openRouterBaseUrl?: string
+	openRouterSpecificProvider?: string
 	awsAccessKey?: string
 	awsSecretKey?: string
 	awsSessionToken?: string
@@ -46,6 +48,7 @@ export interface ApiHandlerOptions {
 	vertexRegion?: string
 	openAiBaseUrl?: string
 	openAiApiKey?: string
+	openAiR1FormatEnabled?: boolean
 	openAiModelId?: string
 	openAiCustomModelInfo?: ModelInfo
 	openAiUseAzure?: boolean
@@ -75,6 +78,7 @@ export interface ApiHandlerOptions {
 	modelTemperature?: number | null
 	modelMaxTokens?: number
 	modelMaxThinkingTokens?: number
+	fakeAi?: unknown
 }
 
 export type ApiConfiguration = ApiHandlerOptions & {
@@ -85,7 +89,9 @@ export type ApiConfiguration = ApiHandlerOptions & {
 // Import GlobalStateKey type from globalState.ts
 import { GlobalStateKey } from "./globalState"
 
-// Define API configuration keys for dynamic object building
+// Define API configuration keys for dynamic object building.
+// TODO: This needs actual type safety; a type error should be thrown if
+// this is not an exhaustive list of all `GlobalStateKey` values.
 export const API_CONFIG_KEYS: GlobalStateKey[] = [
 	"apiModelId",
 	"anthropicBaseUrl",
@@ -95,6 +101,7 @@ export const API_CONFIG_KEYS: GlobalStateKey[] = [
 	"openRouterModelId",
 	"openRouterModelInfo",
 	"openRouterBaseUrl",
+	"openRouterSpecificProvider",
 	"awsRegion",
 	"awsUseCrossRegionInference",
 	// "awsUsePromptCache", // NOT exist on GlobalStateKey
@@ -121,6 +128,7 @@ export const API_CONFIG_KEYS: GlobalStateKey[] = [
 	"azureApiVersion",
 	"openRouterUseMiddleOutTransform",
 	"openAiStreamingEnabled",
+	"openAiR1FormatEnabled",
 	// "deepSeekBaseUrl", //  not exist on GlobalStateKey
 	// "includeMaxTokens", // not exist on GlobalStateKey
 	"unboundModelId",
@@ -130,6 +138,7 @@ export const API_CONFIG_KEYS: GlobalStateKey[] = [
 	"modelTemperature",
 	"modelMaxTokens",
 	"modelMaxThinkingTokens",
+	"fakeAi",
 ]
 
 // Models
@@ -167,7 +176,7 @@ export const anthropicModels = {
 		thinking: true,
 	},
 	"claude-3-7-sonnet-20250219": {
-		maxTokens: 16_384,
+		maxTokens: 8192,
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsComputerUse: true,
@@ -660,7 +669,7 @@ export const vertexModels = {
 		thinking: true,
 	},
 	"claude-3-7-sonnet@20250219": {
-		maxTokens: 16_384,
+		maxTokens: 8192,
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsComputerUse: true,
@@ -725,15 +734,6 @@ export const vertexModels = {
 } as const satisfies Record<string, ModelInfo>
 
 export const openAiModelInfoSaneDefaults: ModelInfo = {
-	maxTokens: -1,
-	contextWindow: 128_000,
-	supportsImages: true,
-	supportsPromptCache: false,
-	inputPrice: 0,
-	outputPrice: 0,
-}
-
-export const requestyModelInfoSaneDefaults: ModelInfo = {
 	maxTokens: -1,
 	contextWindow: 128_000,
 	supportsImages: true,

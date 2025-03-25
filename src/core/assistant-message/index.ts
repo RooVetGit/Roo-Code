@@ -51,12 +51,14 @@ export const toolParamNames = [
 	"diff",
 	"start_line",
 	"end_line",
+	"auto_truncate",
 	"mode_slug",
 	"reason",
 	"operations",
 	"mode",
 	"message",
 	"cwd",
+	"follow_up",
 ] as const
 
 export type ToolParamName = (typeof toolParamNames)[number]
@@ -77,7 +79,7 @@ export interface ExecuteCommandToolUse extends ToolUse {
 
 export interface ReadFileToolUse extends ToolUse {
 	name: "read_file"
-	params: Partial<Pick<Record<ToolParamName, string>, "path">>
+	params: Partial<Pick<Record<ToolParamName, string>, "path" | "start_line" | "end_line">>
 }
 
 export interface WriteToFileToolUse extends ToolUse {
@@ -122,7 +124,7 @@ export interface AccessMcpResourceToolUse extends ToolUse {
 
 export interface AskFollowupQuestionToolUse extends ToolUse {
 	name: "ask_followup_question"
-	params: Partial<Pick<Record<ToolParamName, string>, "question">>
+	params: Partial<Pick<Record<ToolParamName, string>, "question" | "follow_up">>
 }
 
 export interface AttemptCompletionToolUse extends ToolUse {

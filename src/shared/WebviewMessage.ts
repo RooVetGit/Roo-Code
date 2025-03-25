@@ -11,6 +11,7 @@ export type AudioType = "notification" | "celebration" | "progress_loop"
 export interface WebviewMessage {
 	type:
 		| "apiConfiguration"
+		| "deleteMultipleTasksWithIds"
 		| "currentApiConfigName"
 		| "saveApiConfiguration"
 		| "upsertApiConfiguration"
@@ -21,7 +22,9 @@ export interface WebviewMessage {
 		| "customInstructions"
 		| "allowedCommands"
 		| "alwaysAllowReadOnly"
+		| "alwaysAllowReadOnlyOutsideWorkspace"
 		| "alwaysAllowWrite"
+		| "alwaysAllowWriteOutsideWorkspace"
 		| "alwaysAllowExecute"
 		| "webviewDidLaunch"
 		| "newTask"
@@ -50,7 +53,11 @@ export interface WebviewMessage {
 		| "alwaysAllowModeSwitch"
 		| "alwaysAllowSubtasks"
 		| "playSound"
+		| "playTts"
+		| "stopTts"
 		| "soundEnabled"
+		| "ttsEnabled"
+		| "ttsSpeed"
 		| "soundVolume"
 		| "diffEnabled"
 		| "enableCheckpoints"
@@ -70,6 +77,7 @@ export interface WebviewMessage {
 		| "draggedImages"
 		| "deleteMessage"
 		| "terminalOutputLineLimit"
+		| "terminalShellIntegrationTimeout"
 		| "mcpEnabled"
 		| "enableMcpServerCreation"
 		| "enableCustomModeCreation"
@@ -97,6 +105,7 @@ export interface WebviewMessage {
 		| "checkpointRestore"
 		| "deleteMcpServer"
 		| "maxOpenTabsContext"
+		| "maxWorkspaceFiles"
 		| "humanRelayResponse"
 		| "humanRelayCancel"
 		| "browserToolEnabled"
@@ -106,6 +115,9 @@ export interface WebviewMessage {
 		| "discoverBrowser"
 		| "browserConnectionResult"
 		| "remoteBrowserEnabled"
+		| "language"
+		| "maxReadFileLine"
+		| "searchFiles"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
@@ -130,6 +142,7 @@ export interface WebviewMessage {
 	payload?: WebViewMessagePayload
 	source?: "global" | "project"
 	requestId?: string
+	ids?: string[]
 }
 
 export const checkoutDiffPayloadSchema = z.object({

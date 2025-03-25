@@ -31,6 +31,7 @@ import { validateCommand } from "../../utils/command-validation"
 import { getAllModes } from "../../../../src/shared/modes"
 import TelemetryBanner from "../common/TelemetryBanner"
 import { useAppTranslation } from "@/i18n/TranslationContext"
+import removeMd from "remove-markdown"
 
 interface ChatViewProps {
 	isHidden: boolean
@@ -42,9 +43,10 @@ interface ChatViewProps {
 export const MAX_IMAGES_PER_MESSAGE = 20 // Anthropic limits to 20 images
 
 const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0
-const modeShortcutText = `${isMac ? "⌘" : "Ctrl"} + . for next mode`
 
 const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryView }: ChatViewProps) => {
+	const { t } = useAppTranslation()
+	const modeShortcutText = `${isMac ? "⌘" : "Ctrl"} + . ${t("chat:forNextMode")}`
 	const {
 		version,
 		clineMessages: messages,
@@ -53,7 +55,9 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		mcpServers,
 		alwaysAllowBrowser,
 		alwaysAllowReadOnly,
+		alwaysAllowReadOnlyOutsideWorkspace,
 		alwaysAllowWrite,
+		alwaysAllowWriteOutsideWorkspace,
 		alwaysAllowExecute,
 		alwaysAllowMcp,
 		allowedCommands,
@@ -66,8 +70,6 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		customModes,
 		telemetrySetting,
 	} = useExtensionState()
-
-	const { t } = useAppTranslation()
 
 	//const task = messages.length > 0 ? (messages[0].say === "task" ? messages[0] : undefined) : undefined) : undefined
 	const task = useMemo(() => messages.at(0), [messages]) // leaving this less safe version here since if the first message is not a task, then the extension is in a bad state and needs to be debugged (see Cline.abort)
@@ -92,6 +94,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	const disableAutoScrollRef = useRef(false)
 	const [showScrollToBottom, setShowScrollToBottom] = useState(false)
 	const [isAtBottom, setIsAtBottom] = useState(false)
+	const lastTtsRef = useRef<string>("")
 
 	const [wasStreaming, setWasStreaming] = useState<boolean>(false)
 	const [showCheckpointWarning, setShowCheckpointWarning] = useState<boolean>(false)
@@ -103,6 +106,10 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 
 	function playSound(audioType: AudioType) {
 		vscode.postMessage({ type: "playSound", audioType })
+	}
+
+	function playTts(text: string) {
+		vscode.postMessage({ type: "playTts", text })
 	}
 
 	useDeepCompareEffect(() => {
@@ -119,16 +126,16 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							setTextAreaDisabled(true)
 							setClineAsk("api_req_failed")
 							setEnableButtons(true)
-							setPrimaryButtonText("Retry")
-							setSecondaryButtonText("Start New Task")
+							setPrimaryButtonText(t("chat:retry.title"))
+							setSecondaryButtonText(t("chat:startNewTask.title"))
 							break
 						case "mistake_limit_reached":
 							playSound("progress_loop")
 							setTextAreaDisabled(false)
 							setClineAsk("mistake_limit_reached")
 							setEnableButtons(true)
-							setPrimaryButtonText("Proceed Anyways")
-							setSecondaryButtonText("Start New Task")
+							setPrimaryButtonText(t("chat:proceedAnyways.title"))
+							setSecondaryButtonText(t("chat:startNewTask.title"))
 							break
 						case "followup":
 							setTextAreaDisabled(isPartial)
@@ -149,16 +156,16 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 								case "editedExistingFile":
 								case "appliedDiff":
 								case "newFileCreated":
-									setPrimaryButtonText("Save")
-									setSecondaryButtonText("Reject")
+									setPrimaryButtonText(t("chat:save.title"))
+									setSecondaryButtonText(t("chat:reject.title"))
 									break
 								case "finishTask":
-									setPrimaryButtonText("Complete Subtask and Return")
+									setPrimaryButtonText(t("chat:completeSubtaskAndReturn"))
 									setSecondaryButtonText(undefined)
 									break
 								default:
-									setPrimaryButtonText("Approve")
-									setSecondaryButtonText("Reject")
+									setPrimaryButtonText(t("chat:approve.title"))
+									setSecondaryButtonText(t("chat:reject.title"))
 									break
 							}
 							break
@@ -169,8 +176,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							setTextAreaDisabled(isPartial)
 							setClineAsk("browser_action_launch")
 							setEnableButtons(!isPartial)
-							setPrimaryButtonText("Approve")
-							setSecondaryButtonText("Reject")
+							setPrimaryButtonText(t("chat:approve.title"))
+							setSecondaryButtonText(t("chat:reject.title"))
 							break
 						case "command":
 							if (!isAutoApproved(lastMessage)) {
@@ -179,22 +186,22 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							setTextAreaDisabled(isPartial)
 							setClineAsk("command")
 							setEnableButtons(!isPartial)
-							setPrimaryButtonText("Run Command")
-							setSecondaryButtonText("Reject")
+							setPrimaryButtonText(t("chat:runCommand.title"))
+							setSecondaryButtonText(t("chat:reject.title"))
 							break
 						case "command_output":
 							setTextAreaDisabled(false)
 							setClineAsk("command_output")
 							setEnableButtons(true)
-							setPrimaryButtonText("Proceed While Running")
+							setPrimaryButtonText(t("chat:proceedWhileRunning.title"))
 							setSecondaryButtonText(undefined)
 							break
 						case "use_mcp_server":
 							setTextAreaDisabled(isPartial)
 							setClineAsk("use_mcp_server")
 							setEnableButtons(!isPartial)
-							setPrimaryButtonText("Approve")
-							setSecondaryButtonText("Reject")
+							setPrimaryButtonText(t("chat:approve.title"))
+							setSecondaryButtonText(t("chat:reject.title"))
 							break
 						case "completion_result":
 							// extension waiting for feedback. but we can just present a new task button
@@ -202,22 +209,22 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							setTextAreaDisabled(isPartial)
 							setClineAsk("completion_result")
 							setEnableButtons(!isPartial)
-							setPrimaryButtonText("Start New Task")
+							setPrimaryButtonText(t("chat:startNewTask.title"))
 							setSecondaryButtonText(undefined)
 							break
 						case "resume_task":
 							setTextAreaDisabled(false)
 							setClineAsk("resume_task")
 							setEnableButtons(true)
-							setPrimaryButtonText("Resume Task")
-							setSecondaryButtonText("Terminate")
+							setPrimaryButtonText(t("chat:resumeTask.title"))
+							setSecondaryButtonText(t("chat:terminate.title"))
 							setDidClickCancel(false) // special case where we reset the cancel button state
 							break
 						case "resume_completed_task":
 							setTextAreaDisabled(false)
 							setClineAsk("resume_completed_task")
 							setEnableButtons(true)
-							setPrimaryButtonText("Start New Task")
+							setPrimaryButtonText(t("chat:startNewTask.title"))
 							setSecondaryButtonText(undefined)
 							setDidClickCancel(false)
 							break
@@ -644,26 +651,60 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		(message: ClineMessage | undefined) => {
 			if (!autoApprovalEnabled || !message || message.type !== "ask") return false
 
-			return (
-				(alwaysAllowBrowser && message.ask === "browser_action_launch") ||
-				(alwaysAllowReadOnly && message.ask === "tool" && isReadOnlyToolAction(message)) ||
-				(alwaysAllowWrite && message.ask === "tool" && isWriteToolAction(message)) ||
-				(alwaysAllowExecute && message.ask === "command" && isAllowedCommand(message)) ||
-				(alwaysAllowMcp && message.ask === "use_mcp_server" && isMcpToolAlwaysAllowed(message)) ||
-				(alwaysAllowModeSwitch &&
-					message.ask === "tool" &&
-					JSON.parse(message.text || "{}")?.tool === "switchMode") ||
-				(alwaysAllowSubtasks &&
-					message.ask === "tool" &&
-					["newTask", "finishTask"].includes(JSON.parse(message.text || "{}")?.tool))
-			)
+			if (message.ask === "browser_action_launch") {
+				return alwaysAllowBrowser
+			}
+
+			if (message.ask === "use_mcp_server") {
+				return alwaysAllowMcp && isMcpToolAlwaysAllowed(message)
+			}
+
+			if (message.ask === "command") {
+				return alwaysAllowExecute && isAllowedCommand(message)
+			}
+
+			// For read/write operations, check if it's outside workspace and if we have permission for that
+			if (message.ask === "tool") {
+				let tool: any = {}
+				try {
+					tool = JSON.parse(message.text || "{}")
+				} catch (error) {
+					console.error("Failed to parse tool:", error)
+				}
+
+				if (!tool) {
+					return false
+				}
+
+				if (tool?.tool === "switchMode") {
+					return alwaysAllowModeSwitch
+				}
+
+				if (["newTask", "finishTask"].includes(tool?.tool)) {
+					return alwaysAllowSubtasks
+				}
+
+				const isOutsideWorkspace = !!tool.isOutsideWorkspace
+
+				if (isReadOnlyToolAction(message)) {
+					return alwaysAllowReadOnly && (!isOutsideWorkspace || alwaysAllowReadOnlyOutsideWorkspace)
+				}
+
+				if (isWriteToolAction(message)) {
+					return alwaysAllowWrite && (!isOutsideWorkspace || alwaysAllowWriteOutsideWorkspace)
+				}
+			}
+
+			return false
 		},
 		[
 			autoApprovalEnabled,
 			alwaysAllowBrowser,
 			alwaysAllowReadOnly,
+			alwaysAllowReadOnlyOutsideWorkspace,
 			isReadOnlyToolAction,
 			alwaysAllowWrite,
+			alwaysAllowWriteOutsideWorkspace,
 			isWriteToolAction,
 			alwaysAllowExecute,
 			isAllowedCommand,
@@ -675,6 +716,34 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	)
 
 	useEffect(() => {
+		// this ensures the first message is not read, future user messages are labelled as user_feedback
+		if (lastMessage && messages.length > 1) {
+			//console.log(JSON.stringify(lastMessage))
+			if (
+				lastMessage.text && // has text
+				(lastMessage.say === "text" || lastMessage.say === "completion_result") && // is a text message
+				!lastMessage.partial && // not a partial message
+				!lastMessage.text.startsWith("{") // not a json object
+			) {
+				let text = lastMessage?.text || ""
+				const mermaidRegex = /```mermaid[\s\S]*?```/g
+				// remove mermaid diagrams from text
+				text = text.replace(mermaidRegex, "")
+				// remove markdown from text
+				text = removeMd(text)
+
+				// ensure message is not a duplicate of last read message
+				if (text !== lastTtsRef.current) {
+					try {
+						playTts(text)
+						lastTtsRef.current = text
+					} catch (error) {
+						console.error("Failed to execute text-to-speech:", error)
+					}
+				}
+			}
+		}
+
 		// Only execute when isStreaming changes from true to false
 		if (wasStreaming && !isStreaming && lastMessage) {
 			// Play appropriate sound based on lastMessage content
@@ -707,7 +776,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		}
 		// Update previous value
 		setWasStreaming(isStreaming)
-	}, [isStreaming, lastMessage, wasStreaming, isAutoApproved])
+	}, [isStreaming, lastMessage, wasStreaming, isAutoApproved, messages.length])
 
 	const isBrowserSessionMessage = (message: ClineMessage): boolean => {
 		// which of visible messages are browser session messages, see above
@@ -941,12 +1010,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		[],
 	)
 
-	const placeholderText = useMemo(() => {
-		const baseText = task ? "Type a message..." : "Type your task here..."
-		const contextText = "(@ to add context, / to switch modes"
-		const imageText = shouldDisableImages ? ", hold shift to drag in files" : ", hold shift to drag in files/images"
-		return baseText + `\n${contextText}${imageText})`
-	}, [task, shouldDisableImages])
+	const placeholderText = task ? t("chat:typeMessage") : t("chat:typeTask")
 
 	const itemContent = useCallback(
 		(index: number, messageOrGroup: ClineMessage | ClineMessage[]) => {
@@ -982,6 +1046,9 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 					isLast={index === groupedMessages.length - 1}
 					onHeightChange={handleRowHeightChange}
 					isStreaming={isStreaming}
+					onSuggestionClick={(answer: string) => {
+						handleSendMessage(answer, [])
+					}}
 				/>
 			)
 		},
@@ -992,6 +1059,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			handleRowHeightChange,
 			isStreaming,
 			toggleRowExpansion,
+			handleSendMessage,
 		],
 	)
 
@@ -1015,7 +1083,9 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		handlePrimaryButtonClick,
 		alwaysAllowBrowser,
 		alwaysAllowReadOnly,
+		alwaysAllowReadOnlyOutsideWorkspace,
 		alwaysAllowWrite,
+		alwaysAllowWriteOutsideWorkspace,
 		alwaysAllowExecute,
 		alwaysAllowMcp,
 		messages,
@@ -1107,13 +1177,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 					{showAnnouncement && <Announcement version={version} hideAnnouncement={hideAnnouncement} />}
 					<div style={{ padding: "0 20px", flexShrink: 0 }}>
 						<h2>{t("chat:greeting")}</h2>
-						<p>
-							Thanks to the latest breakthroughs in agentic coding capabilities, I can handle complex
-							software development tasks step-by-step. With tools that let me create & edit files, explore
-							complex projects, use the browser, and execute terminal commands (after you grant
-							permission), I can assist you in ways that go beyond code completion or tech support. I can
-							even use MCP to create new tools and extend my own capabilities.
-						</p>
+						<p>{t("chat:aboutMe")}</p>
 					</div>
 					{taskHistory.length > 0 && <HistoryPreview showHistoryView={showHistoryView} />}
 				</div>
@@ -1185,7 +1249,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 									scrollToBottomSmooth()
 									disableAutoScrollRef.current = false
 								}}
-								title="Scroll to bottom of chat">
+								title={t("chat:scrollToBottom")}>
 								<span className="codicon codicon-chevron-down" style={{ fontSize: "18px" }}></span>
 							</ScrollToBottomButton>
 						</div>
@@ -1210,22 +1274,23 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 										marginRight: secondaryButtonText ? "6px" : "0",
 									}}
 									title={
-										primaryButtonText === "Retry"
-											? "Try the operation again"
-											: primaryButtonText === "Save"
-												? "Save the file changes"
-												: primaryButtonText === "Approve"
-													? "Approve this action"
-													: primaryButtonText === "Run Command"
-														? "Execute this command"
-														: primaryButtonText === "Start New Task"
-															? "Begin a new task"
-															: primaryButtonText === "Resume Task"
-																? "Continue the current task"
-																: primaryButtonText === "Proceed Anyways"
-																	? "Continue despite warnings"
-																	: primaryButtonText === "Proceed While Running"
-																		? "Continue while command executes"
+										primaryButtonText === t("chat:retry.title")
+											? t("chat:retry.tooltip")
+											: primaryButtonText === t("chat:save.title")
+												? t("chat:save.tooltip")
+												: primaryButtonText === t("chat:approve.title")
+													? t("chat:approve.tooltip")
+													: primaryButtonText === t("chat:runCommand.title")
+														? t("chat:runCommand.tooltip")
+														: primaryButtonText === t("chat:startNewTask.title")
+															? t("chat:startNewTask.tooltip")
+															: primaryButtonText === t("chat:resumeTask.title")
+																? t("chat:resumeTask.tooltip")
+																: primaryButtonText === t("chat:proceedAnyways.title")
+																	? t("chat:proceedAnyways.tooltip")
+																	: primaryButtonText ===
+																		  t("chat:proceedWhileRunning.title")
+																		? t("chat:proceedWhileRunning.tooltip")
 																		: undefined
 									}
 									onClick={(e) => handlePrimaryButtonClick(inputValue, selectedImages)}>
@@ -1242,17 +1307,17 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 									}}
 									title={
 										isStreaming
-											? "Cancel the current operation"
-											: secondaryButtonText === "Start New Task"
-												? "Begin a new task"
-												: secondaryButtonText === "Reject"
-													? "Reject this action"
-													: secondaryButtonText === "Terminate"
-														? "End the current task"
+											? t("chat:cancel.tooltip")
+											: secondaryButtonText === t("chat:startNewTask.title")
+												? t("chat:startNewTask.tooltip")
+												: secondaryButtonText === t("chat:reject.title")
+													? t("chat:reject.tooltip")
+													: secondaryButtonText === t("chat:terminate.title")
+														? t("chat:terminate.tooltip")
 														: undefined
 									}
 									onClick={(e) => handleSecondaryButtonClick(inputValue, selectedImages)}>
-									{isStreaming ? "Cancel" : secondaryButtonText}
+									{isStreaming ? t("chat:cancel.title") : secondaryButtonText}
 								</VSCodeButton>
 							)}
 						</div>

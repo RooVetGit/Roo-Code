@@ -3,14 +3,15 @@
 	"displayName": "Roo Code (prev. Roo Cline)",
 	"description": "A whole dev team of AI agents in your editor.",
 	"publisher": "RooVeterinaryInc",
-	"version": "3.8.6",
+	"version": "3.10.3",
 	"icon": "assets/icons/rocket.png",
 	"galleryBanner": {
 		"color": "#617A91",
 		"theme": "dark"
 	},
 	"engines": {
-		"vscode": "^1.84.0"
+		"vscode": "^1.84.0",
+		"node": ">=20.18.1"
 	},
 	"author": {
 		"name": "Roo Vet"
@@ -50,6 +51,16 @@
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
+		"submenus": [
+			{
+				"id": "roo-code.contextMenu",
+				"label": "Roo Code"
+			},
+			{
+				"id": "roo-code.terminalMenu",
+				"label": "Roo Code"
+			}
+		],
 		"viewsContainers": {
 			"activitybar": [
 				{
@@ -111,22 +122,22 @@
 			},
 			{
 				"command": "roo-cline.explainCode",
-				"title": "Roo Code: Explain Code",
+				"title": "Explain Code",
 				"category": "Roo Code"
 			},
 			{
 				"command": "roo-cline.fixCode",
-				"title": "Roo Code: Fix Code",
+				"title": "Fix Code",
 				"category": "Roo Code"
 			},
 			{
 				"command": "roo-cline.improveCode",
-				"title": "Roo Code: Improve Code",
+				"title": "Improve Code",
 				"category": "Roo Code"
 			},
 			{
 				"command": "roo-cline.addToContext",
-				"title": "Roo Code: Add To Context",
+				"title": "Add To Context",
 				"category": "Roo Code"
 			},
 			{
@@ -136,73 +147,86 @@
 			},
 			{
 				"command": "roo-cline.terminalAddToContext",
-				"title": "Roo Code: Add Terminal Content to Context",
+				"title": "Add Terminal Content to Context",
 				"category": "Terminal"
 			},
 			{
 				"command": "roo-cline.terminalFixCommand",
-				"title": "Roo Code: Fix This Command",
+				"title": "Fix This Command",
 				"category": "Terminal"
 			},
 			{
 				"command": "roo-cline.terminalExplainCommand",
-				"title": "Roo Code: Explain This Command",
+				"title": "Explain This Command",
 				"category": "Terminal"
 			},
 			{
 				"command": "roo-cline.terminalFixCommandInCurrentTask",
-				"title": "Roo Code: Fix This Command (Current Task)",
+				"title": "Fix This Command (Current Task)",
 				"category": "Terminal"
 			},
 			{
 				"command": "roo-cline.terminalExplainCommandInCurrentTask",
-				"title": "Roo Code: Explain This Command (Current Task)",
+				"title": "Explain This Command (Current Task)",
 				"category": "Terminal"
+			},
+			{
+				"command": "roo-cline.setCustomStoragePath",
+				"title": "Set Custom Storage Path",
+				"category": "Roo Code"
 			}
 		],
 		"menus": {
 			"editor/context": [
 				{
+					"submenu": "roo-code.contextMenu",
+					"group": "navigation"
+				}
+			],
+			"roo-code.contextMenu": [
+				{
 					"command": "roo-cline.explainCode",
-					"when": "editorHasSelection",
-					"group": "Roo Code@1"
+					"group": "1_actions@1"
 				},
 				{
 					"command": "roo-cline.fixCode",
-					"when": "editorHasSelection",
-					"group": "Roo Code@2"
+					"group": "1_actions@2"
 				},
 				{
 					"command": "roo-cline.improveCode",
-					"when": "editorHasSelection",
-					"group": "Roo Code@3"
+					"group": "1_actions@3"
 				},
 				{
 					"command": "roo-cline.addToContext",
-					"when": "editorHasSelection",
-					"group": "Roo Code@4"
+					"group": "1_actions@4"
 				}
 			],
 			"terminal/context": [
 				{
+					"submenu": "roo-code.terminalMenu",
+					"group": "navigation"
+				}
+			],
+			"roo-code.terminalMenu": [
+				{
 					"command": "roo-cline.terminalAddToContext",
-					"group": "Roo Code@1"
+					"group": "1_actions@1"
 				},
 				{
 					"command": "roo-cline.terminalFixCommand",
-					"group": "Roo Code@2"
+					"group": "1_actions@2"
 				},
 				{
 					"command": "roo-cline.terminalExplainCommand",
-					"group": "Roo Code@3"
+					"group": "1_actions@3"
 				},
 				{
 					"command": "roo-cline.terminalFixCommandInCurrentTask",
-					"group": "Roo Code@5"
+					"group": "1_actions@5"
 				},
 				{
 					"command": "roo-cline.terminalExplainCommandInCurrentTask",
-					"group": "Roo Code@6"
+					"group": "1_actions@6"
 				}
 			],
 			"view/title": [
@@ -274,28 +298,37 @@
 						}
 					},
 					"description": "Settings for VSCode Language Model API"
+				},
+				"roo-cline.customStoragePath": {
+					"type": "string",
+					"default": "",
+					"description": "Custom storage path. Leave empty to use the default location. Supports absolute paths (e.g. 'D:\\RooCodeStorage')"
 				}
 			}
 		}
 	},
 	"scripts": {
-		"build": "npm run build:webview && npm run vsix",
+		"build": "npm run vsix",
 		"build:webview": "cd webview-ui && npm run build",
+		"build:esbuild": "node esbuild.js --production",
 		"compile": "tsc -p . --outDir out && node esbuild.js",
 		"install:all": "npm install npm-run-all && npm run install:_all",
 		"install:_all": "npm-run-all -p install-*",
 		"install-extension": "npm install",
-		"install-webview-ui": "cd webview-ui && npm install",
+		"install-webview": "cd webview-ui && npm install",
 		"install-e2e": "cd e2e && npm install",
+		"install-benchmark": "cd benchmark && npm install",
 		"lint": "npm-run-all -p lint:*",
 		"lint:extension": "eslint src --ext ts",
-		"lint:webview-ui": "cd webview-ui && npm run lint",
+		"lint:webview": "cd webview-ui && npm run lint",
 		"lint:e2e": "cd e2e && npm run lint",
+		"lint:benchmark": "cd benchmark && npm run lint",
 		"check-types": "npm-run-all -p check-types:*",
 		"check-types:extension": "tsc --noEmit",
-		"check-types:webview-ui": "cd webview-ui && npm run check-types",
+		"check-types:webview": "cd webview-ui && npm run check-types",
 		"check-types:e2e": "cd e2e && npm run check-types",
-		"package": "npm run build:webview && npm run check-types && npm run lint && node esbuild.js --production",
+		"check-types:benchmark": "cd benchmark && npm run check-types",
+		"package": "npm-run-all -p build:webview build:esbuild check-types lint",
 		"pretest": "npm run compile",
 		"dev": "cd webview-ui && npm run dev",
 		"test": "npm-run-all -p test:*",
@@ -313,6 +346,11 @@
 		"watch-tests": "tsc -p . -w --outDir out",
 		"changeset": "changeset",
 		"knip": "knip --include files",
+		"clean": "npm-run-all -p clean:*",
+		"clean:extension": "rimraf bin dist out",
+		"clean:webview": "cd webview-ui && npm run clean",
+		"clean:e2e": "cd e2e && npm run clean",
+		"clean:benchmark": "cd benchmark && npm run clean",
 		"update-contributors": "node scripts/update-contributors.js"
 	},
 	"dependencies": {
@@ -323,7 +361,7 @@
 		"@google-cloud/vertexai": "^1.9.3",
 		"@google/generative-ai": "^0.18.0",
 		"@mistralai/mistralai": "^1.3.6",
-		"@modelcontextprotocol/sdk": "^1.0.1",
+		"@modelcontextprotocol/sdk": "^1.7.0",
 		"@types/clone-deep": "^4.0.4",
 		"@types/pdf-parse": "^1.1.4",
 		"@types/tmp": "^0.2.6",
@@ -339,9 +377,12 @@
 		"diff": "^5.2.0",
 		"diff-match-patch": "^1.0.5",
 		"fast-deep-equal": "^3.1.3",
+		"fast-xml-parser": "^4.5.1",
 		"fastest-levenshtein": "^1.0.16",
+		"fzf": "^0.5.2",
 		"get-folder-size": "^5.0.0",
 		"globby": "^14.0.2",
+		"i18next": "^24.2.2",
 		"isbinaryfile": "^5.0.2",
 		"js-tiktoken": "^1.0.19",
 		"mammoth": "^1.8.0",
@@ -350,10 +391,13 @@
 		"os-name": "^6.0.0",
 		"p-wait-for": "^5.0.2",
 		"pdf-parse": "^1.1.1",
+		"pkce-challenge": "^4.1.0",
 		"posthog-node": "^4.7.0",
 		"pretty-bytes": "^6.1.1",
 		"puppeteer-chromium-resolver": "^23.0.0",
 		"puppeteer-core": "^23.4.0",
+		"reconnecting-eventsource": "^1.6.4",
+		"say": "^0.16.0",
 		"serialize-error": "^11.0.3",
 		"simple-git": "^3.27.0",
 		"sound-play": "^1.1.0",
