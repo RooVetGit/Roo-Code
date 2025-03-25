@@ -246,7 +246,7 @@ Your diff here
 		if (!parsedDiff.hunks.length) {
 			return {
 				success: false,
-				error: "No hunks found in diff. Please ensure your diff includes actual changes and follows the unified diff format.",
+				error: "No chunks found in diff. Please ensure your diff includes actual changes and follows the unified diff format.",
 			}
 		}
 
@@ -259,7 +259,7 @@ Your diff here
 			} = findBestMatch(contextStr, result, 0, this.confidenceThreshold)
 
 			if (confidence < this.confidenceThreshold) {
-				console.log("Full hunk application failed, trying sub-hunks strategy")
+				console.log("Full chunk application failed, trying sub-chunks strategy")
 				// Try splitting the hunk into smaller hunks
 				const subHunks = this.splitHunk(hunk)
 				let subHunkSuccess = true
@@ -304,7 +304,7 @@ Your diff here
 				errorMsg += `- Context Lines: ${contextLines} out of ${totalLines} total lines (${Math.floor(
 					contextRatio * 100,
 				)}%)\n`
-				errorMsg += `- Attempted to split into ${subHunks.length} sub-hunks but still failed\n`
+				errorMsg += `- Attempted to split into ${subHunks.length} sub-chunks but still failed\n`
 
 				if (contextRatio < 0.2) {
 					errorMsg += "\nPossible Issues:\n"
@@ -318,7 +318,7 @@ Your diff here
 					errorMsg += "\nPossible Issues:\n"
 					errorMsg += "- The diff may be targeting a different version of the file\n"
 					errorMsg +=
-						"- There may be too many changes in a single hunk, try splitting the changes into multiple hunks\n"
+						"- There may be too many changes in a single chunk, try splitting the changes into multiple chunks\n"
 				}
 
 				if (startLine && endLine) {
