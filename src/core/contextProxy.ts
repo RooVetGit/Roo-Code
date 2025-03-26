@@ -250,7 +250,7 @@ export class ContextProxy {
 			return providerSettings
 		} catch (error) {
 			logger.error(
-				`Error importing API configuration from ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
+				`Error importing provider settings from ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
 			)
 			return undefined
 		}
