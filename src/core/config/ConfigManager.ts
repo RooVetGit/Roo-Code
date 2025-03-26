@@ -6,7 +6,7 @@ import { ApiConfigMeta } from "../../shared/ExtensionMessage"
 export interface ApiConfigData {
 	currentApiConfigName: string
 	apiConfigs: {
-		[key: string]: ApiConfiguration
+		[key: string]: ApiConfiguration & { id?: string }
 	}
 	modeApiConfigs?: Partial<Record<Mode, string>>
 }

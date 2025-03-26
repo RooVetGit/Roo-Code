@@ -5,12 +5,10 @@ import axios from "axios"
 
 import { ClineProvider } from "../ClineProvider"
 import { ExtensionMessage, ExtensionState } from "../../../shared/ExtensionMessage"
-import { GlobalStateKey, SecretKey } from "../../../shared/globalState"
 import { setSoundEnabled } from "../../../utils/sound"
 import { setTtsEnabled } from "../../../utils/tts"
 import { defaultModeSlug } from "../../../shared/modes"
 import { experimentDefault } from "../../../shared/experiments"
-import { Cline } from "../../Cline"
 
 // Mock setup must come before imports
 jest.mock("../../prompts/sections/custom-instructions")
@@ -2073,19 +2071,19 @@ describe("ContextProxy integration", () => {
 	})
 
 	test("updateGlobalState uses contextProxy", async () => {
-		await provider.updateGlobalState("currentApiConfigName" as GlobalStateKey, "testValue")
+		await provider.updateGlobalState("currentApiConfigName", "testValue")
 		expect(mockContextProxy.updateGlobalState).toHaveBeenCalledWith("currentApiConfigName", "testValue")
 	})
 
 	test("getGlobalState uses contextProxy", async () => {
 		mockContextProxy.getGlobalState.mockResolvedValueOnce("testValue")
-		const result = await provider.getGlobalState("currentApiConfigName" as GlobalStateKey)
+		const result = await provider.getGlobalState("currentApiConfigName")
 		expect(mockContextProxy.getGlobalState).toHaveBeenCalledWith("currentApiConfigName")
 		expect(result).toBe("testValue")
 	})
 
 	test("storeSecret uses contextProxy", async () => {
-		await provider.storeSecret("apiKey" as SecretKey, "test-secret")
+		await provider.storeSecret("apiKey", "test-secret")
 		expect(mockContextProxy.storeSecret).toHaveBeenCalledWith("apiKey", "test-secret")
 	})
 

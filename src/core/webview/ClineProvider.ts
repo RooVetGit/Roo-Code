@@ -8,13 +8,21 @@ import pWaitFor from "p-wait-for"
 import * as path from "path"
 import * as vscode from "vscode"
 
+import {
+	CheckpointStorage,
+	GlobalState,
+	Language,
+	ProviderSettings,
+	RooCodeSettings,
+	GlobalStateKey,
+	SecretStateKey,
+} from "../../exports/roo-code"
 import { changeLanguage, t } from "../../i18n"
 import { setPanel } from "../../activate/registerCommands"
 import {
 	ApiConfiguration,
 	ApiProvider,
 	ModelInfo,
-	API_CONFIG_KEYS,
 	requestyDefaultModelId,
 	requestyDefaultModelInfo,
 	openRouterDefaultModelId,
@@ -25,13 +33,6 @@ import {
 import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
-import {
-	SecretKey,
-	GlobalStateKey,
-	SECRET_KEYS,
-	GLOBAL_STATE_KEYS,
-	ConfigurationValues,
-} from "../../shared/globalState"
 import { HistoryItem } from "../../shared/HistoryItem"
 import { ApiConfigMeta, ExtensionMessage } from "../../shared/ExtensionMessage"
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
@@ -99,12 +100,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	private workspaceTracker?: WorkspaceTracker
 	protected mcpHub?: McpHub // Change from private to protected
 	private latestAnnouncementId = "mar-20-2025-3-10" // update to some unique identifier when we add a new announcement
+	private settingsImportedAt?: number
 	private contextProxy: ContextProxy
 	configManager: ConfigManager
 	customModesManager: CustomModesManager
-	get cwd() {
-		return getWorkspacePath()
-	}
+
 	constructor(
 		readonly context: vscode.ExtensionContext,
 		private readonly outputChannel: vscode.OutputChannel,
@@ -1081,6 +1081,41 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					case "exportTaskWithId":
 						this.exportTaskWithId(message.text!)
 						break
+					case "importSettings":
+						const uris = await vscode.window.showOpenDialog({
+							filters: { JSON: ["json"] },
+							canSelectMany: false,
+						})
+
+						if (uris) {
+							if (message.text === "global") {
+								await this.contextProxy.importGlobalSettings(uris[0].fsPath)
+							} else {
+								await this.contextProxy.importGlobalSettings(uris[0].fsPath)
+							}
+
+							this.settingsImportedAt = Date.now()
+							await this.postStateToWebview()
+							await vscode.window.showInformationMessage(t("common:info.settings_imported"))
+						}
+						break
+					case "exportSettings":
+						const uri = await vscode.window.showSaveDialog({
+							filters: { JSON: ["json"] },
+							defaultUri: vscode.Uri.file(
+								path.join(os.homedir(), "Documents", `roo-code-${message.text}.json`),
+							),
+						})
+
+						if (uri) {
+							if (message.text === "global") {
+								await this.contextProxy.exportGlobalSettings(uri.fsPath)
+							} else {
+								await this.contextProxy.exportProviderSettings(uri.fsPath)
+							}
+						}
+
+						break
 					case "resetState":
 						await this.resetState()
 						break
@@ -1338,7 +1373,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					case "checkpointStorage":
 						console.log(`[ClineProvider] checkpointStorage: ${message.text}`)
 						const checkpointStorage = message.text ?? "task"
-						await this.updateGlobalState("checkpointStorage", checkpointStorage)
+						await this.updateGlobalState("checkpointStorage", checkpointStorage as CheckpointStorage)
 						await this.postStateToWebview()
 						break
 					case "browserViewportSize":
@@ -1664,7 +1699,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						break
 					case "language":
 						changeLanguage(message.text ?? "en")
-						await this.updateGlobalState("language", message.text)
+						await this.updateGlobalState("language", message.text as Language)
 						await this.postStateToWebview()
 						break
 					case "showRooIgnoredFiles":
@@ -2149,7 +2184,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		await this.postStateToWebview()
 	}
 
-	private async updateApiConfiguration(apiConfiguration: ApiConfiguration) {
+	private async updateApiConfiguration(providerSettings: ProviderSettings) {
 		// Update mode's default config.
 		const { mode } = await this.getState()
 
@@ -2162,10 +2197,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				await this.configManager.setModeConfig(mode, config.id)
 			}
 		}
-		await this.contextProxy.setApiConfiguration(apiConfiguration)
+
+		await this.contextProxy.setProviderSettings(providerSettings)
 
 		if (this.getCurrentCline()) {
-			this.getCurrentCline()!.api = buildApiHandler(apiConfiguration)
+			this.getCurrentCline()!.api = buildApiHandler(providerSettings)
 		}
 	}
 
@@ -2610,6 +2646,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			language,
 			renderContext: this.renderContext,
 			maxReadFileLine: maxReadFileLine ?? 500,
+			settingsImportedAt: this.settingsImportedAt,
 		}
 	}
 
@@ -2660,58 +2697,24 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	*/
 
 	async getState() {
-		// Create an object to store all fetched values
-		const stateValues: Record<GlobalStateKey | SecretKey, any> = {} as Record<GlobalStateKey | SecretKey, any>
-		const secretValues: Record<SecretKey, any> = {} as Record<SecretKey, any>
+		const stateValues = this.contextProxy.getValues()
 
-		// Create promise arrays for global state and secrets
-		const statePromises = GLOBAL_STATE_KEYS.map((key) => this.getGlobalState(key))
-		const secretPromises = SECRET_KEYS.map((key) => this.getSecret(key))
+		const customModes = await this.customModesManager.getCustomModes()
 
-		// Add promise for custom modes which is handled separately
-		const customModesPromise = this.customModesManager.getCustomModes()
+		// Determine apiProvider with the same logic as before.
+		const apiProvider: ApiProvider = stateValues.apiProvider ? stateValues.apiProvider : "anthropic"
 
-		let idx = 0
-		const valuePromises = await Promise.all([...statePromises, ...secretPromises, customModesPromise])
-
-		// Populate stateValues and secretValues
-		GLOBAL_STATE_KEYS.forEach((key, _) => {
-			stateValues[key] = valuePromises[idx]
-			idx = idx + 1
-		})
-
-		SECRET_KEYS.forEach((key, index) => {
-			secretValues[key] = valuePromises[idx]
-			idx = idx + 1
-		})
-
-		let customModes = valuePromises[idx] as ModeConfig[] | undefined
-
-		// Determine apiProvider with the same logic as before
-		let apiProvider: ApiProvider
-		if (stateValues.apiProvider) {
-			apiProvider = stateValues.apiProvider
-		} else {
-			apiProvider = "anthropic"
-		}
-
-		// Build the apiConfiguration object combining state values and secrets
-		// Using the dynamic approach with API_CONFIG_KEYS
-		const apiConfiguration: ApiConfiguration = {
-			// Dynamically add all API-related keys from stateValues
-			...Object.fromEntries(API_CONFIG_KEYS.map((key) => [key, stateValues[key]])),
-			// Add all secrets
-			...secretValues,
-		}
+		// Build the apiConfiguration object combining state values and secrets.
+		const providerSettings = this.contextProxy.getProviderSettings()
 
 		// Ensure apiProvider is set properly if not already in state
-		if (!apiConfiguration.apiProvider) {
-			apiConfiguration.apiProvider = apiProvider
+		if (!providerSettings.apiProvider) {
+			providerSettings.apiProvider = apiProvider
 		}
 
 		// Return the same structure as before
 		return {
-			apiConfiguration,
+			apiConfiguration: providerSettings,
 			lastShownAnnouncementId: stateValues.lastShownAnnouncementId,
 			customInstructions: stateValues.customInstructions,
 			alwaysAllowReadOnly: stateValues.alwaysAllowReadOnly ?? false,
@@ -2776,34 +2779,41 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		} else {
 			history.push(item)
 		}
+
 		await this.updateGlobalState("taskHistory", history)
 		return history
 	}
 
 	// global
 
-	public async updateGlobalState(key: GlobalStateKey, value: any) {
-		await this.contextProxy.updateGlobalState(key, value)
+	public async updateGlobalState<K extends GlobalStateKey>(key: K, value: GlobalState[K]) {
+		await this.contextProxy.setValue(key, value)
 	}
 
-	public async getGlobalState(key: GlobalStateKey) {
-		return await this.contextProxy.getGlobalState(key)
+	public getGlobalState(key: GlobalStateKey) {
+		return this.contextProxy.getValue(key)
 	}
 
 	// secrets
 
-	public async storeSecret(key: SecretKey, value?: string) {
-		await this.contextProxy.storeSecret(key, value)
+	public async storeSecret(key: SecretStateKey, value?: string) {
+		await this.contextProxy.setValue(key, value)
 	}
 
-	private async getSecret(key: SecretKey) {
-		return await this.contextProxy.getSecret(key)
+	private getSecret(key: SecretStateKey) {
+		return this.contextProxy.getValue(key)
 	}
 
 	// global + secret
 
-	public async setValues(values: Partial<ConfigurationValues>) {
+	public async setValues(values: RooCodeSettings) {
 		await this.contextProxy.setValues(values)
+	}
+
+	// cwd
+
+	get cwd() {
+		return getWorkspacePath()
 	}
 
 	// dev

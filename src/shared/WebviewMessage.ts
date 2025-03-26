@@ -36,6 +36,8 @@ export interface WebviewMessage {
 		| "showTaskWithId"
 		| "deleteTaskWithId"
 		| "exportTaskWithId"
+		| "importSettings"
+		| "exportSettings"
 		| "resetState"
 		| "requestOllamaModels"
 		| "requestLmStudioModels"

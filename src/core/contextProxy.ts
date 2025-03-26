@@ -1,30 +1,52 @@
 import * as vscode from "vscode"
+import * as fs from "fs/promises"
+import * as path from "path"
 
 import { logger } from "../utils/logging"
-import {
-	GLOBAL_STATE_KEYS,
-	SECRET_KEYS,
+import type {
+	ProviderSettings,
+	RooCodeSettings,
+	RooCodeSettingsKey,
 	GlobalStateKey,
-	SecretKey,
-	ConfigurationKey,
-	ConfigurationValues,
-	isSecretKey,
-	isGlobalStateKey,
+	GlobalState,
+	SecretStateKey,
+	SecretState,
+	GlobalSettings,
+} from "../exports/roo-code"
+import {
+	PROVIDER_SETTINGS_KEYS,
+	GLOBAL_STATE_KEYS,
+	SECRET_STATE_KEYS,
+	isSecretStateKey,
 	isPassThroughStateKey,
+	globalSettingsSchema,
+	providerSettingsSchema,
 } from "../shared/globalState"
-import { API_CONFIG_KEYS, ApiConfiguration } from "../shared/api"
+
+const globalSettingsExportSchema = globalSettingsSchema.omit({
+	taskHistory: true,
+	listApiConfigMeta: true,
+	currentApiConfigName: true,
+})
+
+const providerSettingsExportSchema = providerSettingsSchema.omit({
+	glamaModelInfo: true,
+	openRouterModelInfo: true,
+	unboundModelInfo: true,
+	requestyModelInfo: true,
+})
 
 export class ContextProxy {
 	private readonly originalContext: vscode.ExtensionContext
 
-	private stateCache: Map<GlobalStateKey, any>
-	private secretCache: Map<SecretKey, string | undefined>
+	private stateCache: GlobalState
+	private secretCache: SecretState
 	private _isInitialized = false
 
 	constructor(context: vscode.ExtensionContext) {
 		this.originalContext = context
-		this.stateCache = new Map()
-		this.secretCache = new Map()
+		this.stateCache = {}
+		this.secretCache = {}
 		this._isInitialized = false
 	}
 
@@ -35,15 +57,15 @@ export class ContextProxy {
 	public async initialize() {
 		for (const key of GLOBAL_STATE_KEYS) {
 			try {
-				this.stateCache.set(key, this.originalContext.globalState.get(key))
+				this.stateCache[key] = this.originalContext.globalState.get(key)
 			} catch (error) {
 				logger.error(`Error loading global ${key}: ${error instanceof Error ? error.message : String(error)}`)
 			}
 		}
 
-		const promises = SECRET_KEYS.map(async (key) => {
+		const promises = SECRET_STATE_KEYS.map(async (key) => {
 			try {
-				this.secretCache.set(key, await this.originalContext.secrets.get(key))
+				this.secretCache[key] = await this.originalContext.secrets.get(key)
 			} catch (error) {
 				logger.error(`Error loading secret ${key}: ${error instanceof Error ? error.message : String(error)}`)
 			}
@@ -54,56 +76,72 @@ export class ContextProxy {
 		this._isInitialized = true
 	}
 
-	get extensionUri() {
+	public get extensionUri() {
 		return this.originalContext.extensionUri
 	}
 
-	get extensionPath() {
+	public get extensionPath() {
 		return this.originalContext.extensionPath
 	}
 
-	get globalStorageUri() {
+	public get globalStorageUri() {
 		return this.originalContext.globalStorageUri
 	}
 
-	get logUri() {
+	public get logUri() {
 		return this.originalContext.logUri
 	}
 
-	get extension() {
+	public get extension() {
 		return this.originalContext.extension
 	}
 
-	get extensionMode() {
+	public get extensionMode() {
 		return this.originalContext.extensionMode
 	}
 
-	getGlobalState<T>(key: GlobalStateKey): T | undefined
-	getGlobalState<T>(key: GlobalStateKey, defaultValue: T): T
-	getGlobalState<T>(key: GlobalStateKey, defaultValue?: T): T | undefined {
+	/**
+	 * ExtensionContext.globalState
+	 * https://code.visualstudio.com/api/references/vscode-api#ExtensionContext.globalState
+	 */
+
+	getGlobalState<K extends GlobalStateKey>(key: K): GlobalState[K]
+	getGlobalState<K extends GlobalStateKey>(key: K, defaultValue: GlobalState[K]): GlobalState[K]
+	getGlobalState<K extends GlobalStateKey>(key: K, defaultValue?: GlobalState[K]): GlobalState[K] {
 		if (isPassThroughStateKey(key)) {
-			const value = this.originalContext.globalState.get(key)
-			return value === undefined || value === null ? defaultValue : (value as T)
+			const value = this.originalContext.globalState.get<GlobalState[K]>(key)
+			return value === undefined || value === null ? defaultValue : value
 		}
-		const value = this.stateCache.get(key) as T | undefined
-		return value !== undefined ? value : (defaultValue as T | undefined)
+
+		const value = this.stateCache[key]
+		return value !== undefined ? value : defaultValue
 	}
 
-	updateGlobalState<T>(key: GlobalStateKey, value: T) {
+	updateGlobalState<K extends GlobalStateKey>(key: K, value: GlobalState[K]) {
 		if (isPassThroughStateKey(key)) {
 			return this.originalContext.globalState.update(key, value)
 		}
-		this.stateCache.set(key, value)
+
+		this.stateCache[key] = value
 		return this.originalContext.globalState.update(key, value)
 	}
 
-	getSecret(key: SecretKey) {
-		return this.secretCache.get(key)
+	private getAllGlobalState(): GlobalState {
+		return Object.fromEntries(GLOBAL_STATE_KEYS.map((key) => [key, this.getGlobalState(key)]))
 	}
 
-	storeSecret(key: SecretKey, value?: string) {
+	/**
+	 * ExtensionContext.secrets
+	 * https://code.visualstudio.com/api/references/vscode-api#ExtensionContext.secrets
+	 */
+
+	getSecret(key: SecretStateKey) {
+		return this.secretCache[key]
+	}
+
+	storeSecret(key: SecretStateKey, value?: string) {
 		// Update cache.
-		this.secretCache.set(key, value)
+		this.secretCache[key] = value
 
 		// Write directly to context.
 		return value === undefined
@@ -111,56 +149,134 @@ export class ContextProxy {
 			: this.originalContext.secrets.store(key, value)
 	}
 
-	/**
-	 * Set a value in either secrets or global state based on key type.
-	 * If the key is in SECRET_KEYS, it will be stored as a secret.
-	 * If the key is in GLOBAL_STATE_KEYS or unknown, it will be stored in global state.
-	 * @param key The key to set
-	 * @param value The value to set
-	 * @returns A promise that resolves when the operation completes
-	 */
-	setValue(key: ConfigurationKey, value: any) {
-		if (isSecretKey(key)) {
-			return this.storeSecret(key, value)
-		}
-
-		if (isGlobalStateKey(key)) {
-			return this.updateGlobalState(key, value)
-		}
-
-		logger.warn(`Unknown key: ${key}. Storing as global state.`)
-		return this.updateGlobalState(key, value)
+	private getAllSecrets(): SecretState {
+		return Object.fromEntries(SECRET_STATE_KEYS.map((key) => [key, this.getSecret(key)]))
 	}
 
 	/**
-	 * Set multiple values at once. Each key will be routed to either
-	 * secrets or global state based on its type.
-	 * @param values An object containing key-value pairs to set
-	 * @returns A promise that resolves when all operations complete
+	 * GlobalSettings
 	 */
-	async setValues(values: Partial<ConfigurationValues>) {
-		const promises: Thenable<void>[] = []
 
-		for (const [key, value] of Object.entries(values)) {
-			promises.push(this.setValue(key as ConfigurationKey, value))
-		}
-
-		await Promise.all(promises)
+	public getGlobalSettings(): GlobalSettings {
+		return globalSettingsSchema.parse({ ...this.stateCache })
 	}
 
-	async setApiConfiguration(apiConfiguration: ApiConfiguration) {
+	public async exportGlobalSettings(filePath: string): Promise<GlobalSettings | undefined> {
+		try {
+			const globalSettings = globalSettingsExportSchema.parse(this.getValues())
+
+			const sanitized = Object.fromEntries(
+				Object.entries(globalSettings).filter(([_, value]) => value !== undefined),
+			)
+
+			const dirname = path.dirname(filePath)
+			await fs.mkdir(dirname, { recursive: true })
+			await fs.writeFile(filePath, JSON.stringify(sanitized, null, 2), "utf-8")
+			return sanitized
+		} catch (error) {
+			console.log(error.message)
+			logger.error(
+				`Error exporting global configuration to ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
+			)
+			return undefined
+		}
+	}
+
+	public async importGlobalSettings(filePath: string) {
+		try {
+			const globalConfiguration = globalSettingsExportSchema.parse(
+				JSON.parse(await fs.readFile(filePath, "utf-8")),
+			)
+
+			await this.setValues(globalConfiguration)
+			return globalConfiguration
+		} catch (error) {
+			logger.error(
+				`Error importing global configuration from ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
+			)
+			return undefined
+		}
+	}
+
+	/**
+	 * ProviderSettings
+	 */
+
+	public getProviderSettings(): ProviderSettings {
+		return providerSettingsSchema.parse(this.getValues())
+	}
+
+	public async setProviderSettings(values: ProviderSettings) {
 		// Explicitly clear out any old API configuration values before that
 		// might not be present in the new configuration.
 		// If a value is not present in the new configuration, then it is assumed
 		// that the setting's value should be `undefined` and therefore we
 		// need to remove it from the state cache if it exists.
 		await this.setValues({
-			...API_CONFIG_KEYS.filter((key) => !!this.stateCache.get(key)).reduce(
-				(acc, key) => ({ ...acc, [key]: undefined }),
-				{} as Partial<ConfigurationValues>,
-			),
-			...apiConfiguration,
+			...PROVIDER_SETTINGS_KEYS.filter((key) => !isSecretStateKey(key))
+				.filter((key) => !!this.stateCache[key])
+				.reduce((acc, key) => ({ ...acc, [key]: undefined }), {} as ProviderSettings),
+			...values,
 		})
+	}
+
+	public async exportProviderSettings(filePath: string): Promise<ProviderSettings | undefined> {
+		try {
+			const providerSettings = providerSettingsExportSchema.parse(this.getValues())
+
+			const sanitized = Object.fromEntries(
+				Object.entries(providerSettings).filter(([_, value]) => value !== undefined),
+			)
+
+			const dirname = path.dirname(filePath)
+			await fs.mkdir(dirname, { recursive: true })
+			await fs.writeFile(filePath, JSON.stringify(sanitized, null, 2), "utf-8")
+			return sanitized
+		} catch (error) {
+			logger.error(
+				`Error exporting API configuration to ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
+			)
+			return undefined
+		}
+	}
+
+	public async importProviderSettings(filePath: string): Promise<ProviderSettings | undefined> {
+		try {
+			const providerSettings = providerSettingsExportSchema.parse(
+				JSON.parse(await fs.readFile(filePath, "utf-8")),
+			)
+
+			await this.setProviderSettings(providerSettings)
+			return providerSettings
+		} catch (error) {
+			logger.error(
+				`Error importing API configuration from ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
+			)
+			return undefined
+		}
+	}
+
+	/**
+	 * RooCodeSettings
+	 */
+
+	public setValue<K extends RooCodeSettingsKey>(key: K, value: RooCodeSettings[K]) {
+		return isSecretStateKey(key) ? this.storeSecret(key, value as string) : this.updateGlobalState(key, value)
+	}
+
+	public getValue<K extends RooCodeSettingsKey>(key: K): RooCodeSettings[K] {
+		return isSecretStateKey(key)
+			? (this.getSecret(key) as RooCodeSettings[K])
+			: (this.getGlobalState(key) as RooCodeSettings[K])
+	}
+
+	public getValues(): RooCodeSettings {
+		return { ...this.getAllGlobalState(), ...this.getAllSecrets() }
+	}
+
+	public async setValues(values: RooCodeSettings) {
+		const entries = Object.entries(values) as [RooCodeSettingsKey, unknown][]
+		await Promise.all(entries.map(([key, value]) => this.setValue(key, value)))
 	}
 
 	/**
@@ -168,22 +284,16 @@ export class ContextProxy {
 	 * This clears all data from both the in-memory caches and the VSCode storage.
 	 * @returns A promise that resolves when all reset operations are complete
 	 */
-	async resetAllState() {
+	public async resetAllState() {
 		// Clear in-memory caches
-		this.stateCache.clear()
-		this.secretCache.clear()
+		this.stateCache = {}
+		this.secretCache = {}
 
-		// Reset all global state values to undefined.
-		const stateResetPromises = GLOBAL_STATE_KEYS.map((key) =>
-			this.originalContext.globalState.update(key, undefined),
-		)
+		await Promise.all([
+			...GLOBAL_STATE_KEYS.map((key) => this.originalContext.globalState.update(key, undefined)),
+			...SECRET_STATE_KEYS.map((key) => this.originalContext.secrets.delete(key)),
+		])
 
-		// Delete all secrets.
-		const secretResetPromises = SECRET_KEYS.map((key) => this.originalContext.secrets.delete(key))
-
-		// Wait for all reset operations to complete.
-		await Promise.all([...stateResetPromises, ...secretResetPromises])
-
-		this.initialize()
+		await this.initialize()
 	}
 }
