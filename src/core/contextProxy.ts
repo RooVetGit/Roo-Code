@@ -234,7 +234,7 @@ export class ContextProxy {
 			return sanitized
 		} catch (error) {
 			logger.error(
-				`Error exporting API configuration to ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
+				`Error exporting provider settings to ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
 			)
 			return undefined
 		}
