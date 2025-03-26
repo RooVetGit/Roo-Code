@@ -402,8 +402,8 @@ const experimentsSchema = z.object({
 	multi_search_and_replace: z.boolean(),
 })
 
-// Throws a type error if the inferred type of the schema is not equal to the
-// type of the GlobalSettings.
+// Throws a type error if the inferred type of the experimentsSchema is not
+// equal to  ExperimentId.
 type _AssertExperiments = AssertEqual<Equals<ExperimentId, Keys<z.infer<typeof experimentsSchema>>>>
 
 export const globalSettingsSchema = z.object({
@@ -482,8 +482,8 @@ export const globalSettingsSchema = z.object({
 
 type Key = "vsCodeLmModelSelector"
 
-// Throws a type error if the inferred type of the schema is not equal to the
-// type of the GlobalSettings.
+// Throws a type error if the inferred type of the globalSettingsSchema is not
+// equal to GlobalSettings.
 type _AssertGlobalSettings = AssertEqual<Equals<GlobalSettings, z.infer<typeof globalSettingsSchema>>>
 
 export const modelInfoSchema = z.object({
@@ -501,8 +501,8 @@ export const modelInfoSchema = z.object({
 	thinking: z.boolean().optional(),
 })
 
-// Throws a type error if the inferred type of the schema is not equal to the
-// type of the ModelInfo.
+// Throws a type error if the inferred type of the modelInfoSchema is not equal
+// to ModelInfo.
 type _AssertModelInfo = AssertEqual<Equals<ModelInfo, z.infer<typeof modelInfoSchema>>>
 
 export const providerSettingsSchema = z.object({
@@ -595,8 +595,8 @@ export const providerSettingsSchema = z.object({
 	fakeAi: z.unknown().optional(),
 })
 
-// Throws a type error if the inferred type of the schema is not equal to the
-// type of the ProviderSettings.
+// Throws a type error if the inferred type of the providerSettingsSchema is not
+// equal to ProviderSettings.
 type _AssertProviderSettings = AssertEqual<Equals<ProviderSettings, z.infer<typeof providerSettingsSchema>>>
 
 export const rooCodeSettingsSchema = globalSettingsSchema.merge(providerSettingsSchema)
