@@ -74,6 +74,16 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			pinnedApiConfigs,
 			togglePinnedApiConfig,
 		} = useExtensionState()
+
+		// Find the ID and display text for the currently selected API configuration
+		const { currentConfigId, displayName } = useMemo(() => {
+			const currentConfig = listApiConfigMeta?.find((config) => config.name === currentApiConfigName)
+			return {
+				currentConfigId: currentConfig?.id || "",
+				displayName: currentApiConfigName || "", // Use the name directly for display
+			}
+		}, [listApiConfigMeta, currentApiConfigName])
+
 		const [gitCommits, setGitCommits] = useState<any[]>([])
 		const [showDropdown, setShowDropdown] = useState(false)
 		const [fileSearchResults, setFileSearchResults] = useState<SearchResult[]>([])
@@ -964,23 +974,26 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						{/* API configuration selector - flexible width */}
 						<div className={cn("flex-1", "min-w-0", "overflow-hidden")}>
 							<SelectDropdown
-								value={currentApiConfigName || ""}
+								value={currentConfigId}
 								disabled={textAreaDisabled}
 								title={t("chat:selectApiConfig")}
+								placeholder={displayName} // Always show the current name
 								options={[
 									// Pinned items first
 									...(listApiConfigMeta || [])
-										.filter((config) => pinnedApiConfigs && pinnedApiConfigs[config.name])
+										.filter((config) => pinnedApiConfigs && pinnedApiConfigs[config.id])
 										.map((config) => ({
-											value: config.name,
+											value: config.id,
 											label: config.name,
+											name: config.name, // Keep name for comparison with currentApiConfigName
 											type: DropdownOptionType.ITEM,
 											pinned: true,
-										})),
+										}))
+										.sort((a, b) => a.label.localeCompare(b.label)),
 									// If we have pinned items and unpinned items, add a separator
 									...(pinnedApiConfigs &&
 									Object.keys(pinnedApiConfigs).length > 0 &&
-									(listApiConfigMeta || []).some((config) => !pinnedApiConfigs[config.name])
+									(listApiConfigMeta || []).some((config) => !pinnedApiConfigs[config.id])
 										? [
 												{
 													value: "sep-pinned",
@@ -991,10 +1004,11 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 										: []),
 									// Unpinned items sorted alphabetically
 									...(listApiConfigMeta || [])
-										.filter((config) => !pinnedApiConfigs || !pinnedApiConfigs[config.name])
+										.filter((config) => !pinnedApiConfigs || !pinnedApiConfigs[config.id])
 										.map((config) => ({
-											value: config.name,
+											value: config.id,
 											label: config.name,
+											name: config.name, // Keep name for comparison with currentApiConfigName
 											type: DropdownOptionType.ITEM,
 											pinned: false,
 										}))
@@ -1010,13 +1024,31 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 										type: DropdownOptionType.ACTION,
 									},
 								]}
-								onChange={(value) => vscode.postMessage({ type: "loadApiConfiguration", text: value })}
+								onChange={(value) => {
+									if (value === "settingsButtonClicked") {
+										// Handle special actions
+										vscode.postMessage({
+											type: "loadApiConfiguration",
+											text: value,
+										})
+									} else {
+										// Use the ID directly with our new message type
+										vscode.postMessage({
+											type: "loadApiConfigurationById",
+											text: value,
+										})
+									}
+								}}
 								contentClassName="max-h-[300px] overflow-y-auto"
 								triggerClassName="w-full text-ellipsis overflow-hidden"
 								renderItem={(option) => {
 									if (option.type !== DropdownOptionType.ITEM) {
 										return option.label
 									}
+
+									// Get the config from listApiConfigMeta by ID
+									const config = listApiConfigMeta?.find((c) => c.id === option.value)
+									const isCurrentConfig = config?.name === currentApiConfigName
 
 									return (
 										<div className="flex items-center justify-between w-full">
@@ -1033,15 +1065,13 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 													togglePinnedApiConfig(option.value)
 													vscode.postMessage({
 														type: "toggleApiConfigPin",
-														text: option.value,
+														text: option.value, // Send ID as text
 													})
 												}}
 												title={option.pinned ? t("chat:unpin") : t("chat:pin")}>
 												<Pin className="size-3" />
 											</div>
-											{option.value === currentApiConfigName && (
-												<Check className="size-4 p-0.5 ml-1" />
-											)}
+											{isCurrentConfig && <Check className="size-4 p-0.5 ml-1" />}
 										</div>
 									)
 								}}

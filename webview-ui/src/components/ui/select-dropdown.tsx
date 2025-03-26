@@ -64,8 +64,10 @@ export const SelectDropdown = React.forwardRef<React.ElementRef<typeof DropdownM
 		const [open, setOpen] = React.useState(false)
 		const portalContainer = useRooPortal("roo-portal")
 
+		// If the selected option isn't in the list yet, but we have a placeholder, prioritize showing the placeholder
 		const selectedOption = options.find((option) => option.value === value)
-		const displayText = selectedOption?.label || placeholder || ""
+		const displayText =
+			value && !selectedOption && placeholder ? placeholder : selectedOption?.label || placeholder || ""
 
 		const handleSelect = (option: DropdownOption) => {
 			if (option.type === DropdownOptionType.ACTION) {

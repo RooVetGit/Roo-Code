@@ -1867,16 +1867,24 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 									break
 								}
 
-								await this.configManager.saveConfig(newName, message.apiConfiguration)
+								// Load the old configuration to get its ID
+								const oldConfig = await this.configManager.loadConfig(oldName)
+
+								// Create a new configuration with the same ID
+								const newConfig = {
+									...message.apiConfiguration,
+									id: oldConfig.id, // Preserve the ID
+								}
+
+								// Save with the new name but same ID
+								await this.configManager.saveConfig(newName, newConfig)
 								await this.configManager.deleteConfig(oldName)
 
 								const listApiConfig = await this.configManager.listConfig()
-								const config = listApiConfig?.find((c) => c.name === newName)
 
 								// Update listApiConfigMeta first to ensure UI has latest data
 								await this.updateGlobalState("listApiConfigMeta", listApiConfig)
-
-								await Promise.all([this.updateGlobalState("currentApiConfigName", newName)])
+								await this.updateGlobalState("currentApiConfigName", newName)
 
 								await this.postStateToWebview()
 							} catch (error) {
@@ -1903,6 +1911,29 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 							} catch (error) {
 								this.outputChannel.appendLine(
 									`Error load api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+								)
+								vscode.window.showErrorMessage(t("common:errors.load_api_config"))
+							}
+						}
+						break
+					case "loadApiConfigurationById":
+						if (message.text) {
+							try {
+								const { config: apiConfig, name } = await this.configManager.loadConfigById(
+									message.text,
+								)
+								const listApiConfig = await this.configManager.listConfig()
+
+								await Promise.all([
+									this.updateGlobalState("listApiConfigMeta", listApiConfig),
+									this.updateGlobalState("currentApiConfigName", name),
+									this.updateApiConfiguration(apiConfig),
+								])
+
+								await this.postStateToWebview()
+							} catch (error) {
+								this.outputChannel.appendLine(
+									`Error load api configuration by ID: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 								)
 								vscode.window.showErrorMessage(t("common:errors.load_api_config"))
 							}

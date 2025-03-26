@@ -225,27 +225,6 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 					setListApiConfigMeta(message.listApiConfig ?? [])
 					break
 				}
-				case "toggleApiConfigPin": {
-					if (message.text) {
-						setState((prevState) => {
-							const currentPinned = prevState.pinnedApiConfigs || {}
-							const newPinned = { ...currentPinned }
-
-							// Toggle the pinned state
-							if (currentPinned[message.text!]) {
-								delete newPinned[message.text!]
-							} else {
-								newPinned[message.text!] = true
-							}
-
-							return {
-								...prevState,
-								pinnedApiConfigs: newPinned,
-							}
-						})
-					}
-					break
-				}
 			}
 		},
 		[setListApiConfigMeta],
@@ -333,17 +312,17 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setRemoteBrowserEnabled: (value) => setState((prevState) => ({ ...prevState, remoteBrowserEnabled: value })),
 		setMaxReadFileLine: (value) => setState((prevState) => ({ ...prevState, maxReadFileLine: value })),
 		setPinnedApiConfigs: (value) => setState((prevState) => ({ ...prevState, pinnedApiConfigs: value })),
-		togglePinnedApiConfig: (configName) =>
+		togglePinnedApiConfig: (configId) =>
 			setState((prevState) => {
 				const currentPinned = prevState.pinnedApiConfigs || {}
 				const newPinned = {
 					...currentPinned,
-					[configName]: !currentPinned[configName],
+					[configId]: !currentPinned[configId],
 				}
 
 				// If the config is now unpinned, remove it from the object
-				if (!newPinned[configName]) {
-					delete newPinned[configName]
+				if (!newPinned[configId]) {
+					delete newPinned[configId]
 				}
 
 				return { ...prevState, pinnedApiConfigs: newPinned }

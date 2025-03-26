@@ -17,6 +17,7 @@ export interface WebviewMessage {
 		| "upsertApiConfiguration"
 		| "deleteApiConfiguration"
 		| "loadApiConfiguration"
+		| "loadApiConfigurationById"
 		| "renameApiConfiguration"
 		| "getListApiConfiguration"
 		| "customInstructions"
