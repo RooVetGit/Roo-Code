@@ -24,7 +24,7 @@ import { SelectDropdown, DropdownOptionType, Button } from "@/components/ui"
 import Thumbnails from "../common/Thumbnails"
 import { MAX_IMAGES_PER_MESSAGE } from "./ChatView"
 import ContextMenu from "./ContextMenu"
-import { VolumeX } from "lucide-react"
+import { VolumeX, Pin, Check } from "lucide-react"
 import { IconButton } from "./IconButton"
 import { cn } from "@/lib/utils"
 
@@ -64,7 +64,16 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		ref,
 	) => {
 		const { t } = useAppTranslation()
-		const { filePaths, openedTabs, currentApiConfigName, listApiConfigMeta, customModes, cwd } = useExtensionState()
+		const {
+			filePaths,
+			openedTabs,
+			currentApiConfigName,
+			listApiConfigMeta,
+			customModes,
+			cwd,
+			pinnedApiConfigs,
+			togglePinnedApiConfig,
+		} = useExtensionState()
 		const [gitCommits, setGitCommits] = useState<any[]>([])
 		const [showDropdown, setShowDropdown] = useState(false)
 		const [fileSearchResults, setFileSearchResults] = useState<SearchResult[]>([])
@@ -959,11 +968,37 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								disabled={textAreaDisabled}
 								title={t("chat:selectApiConfig")}
 								options={[
-									...(listApiConfigMeta || []).map((config) => ({
-										value: config.name,
-										label: config.name,
-										type: DropdownOptionType.ITEM,
-									})),
+									// Pinned items first
+									...(listApiConfigMeta || [])
+										.filter((config) => pinnedApiConfigs && pinnedApiConfigs[config.name])
+										.map((config) => ({
+											value: config.name,
+											label: config.name,
+											type: DropdownOptionType.ITEM,
+											pinned: true,
+										})),
+									// If we have pinned items and unpinned items, add a separator
+									...(pinnedApiConfigs &&
+									Object.keys(pinnedApiConfigs).length > 0 &&
+									(listApiConfigMeta || []).some((config) => !pinnedApiConfigs[config.name])
+										? [
+												{
+													value: "sep-pinned",
+													label: t("chat:separator"),
+													type: DropdownOptionType.SEPARATOR,
+												},
+											]
+										: []),
+									// Unpinned items sorted alphabetically
+									...(listApiConfigMeta || [])
+										.filter((config) => !pinnedApiConfigs || !pinnedApiConfigs[config.name])
+										.map((config) => ({
+											value: config.name,
+											label: config.name,
+											type: DropdownOptionType.ITEM,
+											pinned: false,
+										}))
+										.sort((a, b) => a.label.localeCompare(b.label)),
 									{
 										value: "sep-2",
 										label: t("chat:separator"),
@@ -978,6 +1013,38 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								onChange={(value) => vscode.postMessage({ type: "loadApiConfiguration", text: value })}
 								contentClassName="max-h-[300px] overflow-y-auto"
 								triggerClassName="w-full text-ellipsis overflow-hidden"
+								renderItem={(option) => {
+									if (option.type !== DropdownOptionType.ITEM) {
+										return option.label
+									}
+
+									return (
+										<div className="flex items-center justify-between w-full">
+											<span>{option.label}</span>
+											<div
+												className={cn(
+													"ml-2 p-1 rounded-sm cursor-pointer hover:bg-[rgba(255,255,255,0.1)]",
+													option.pinned
+														? "text-vscode-focusBorder"
+														: "text-vscode-descriptionForeground opacity-50 hover:opacity-100",
+												)}
+												onClick={(e) => {
+													e.stopPropagation()
+													togglePinnedApiConfig(option.value)
+													vscode.postMessage({
+														type: "toggleApiConfigPin",
+														text: option.value,
+													})
+												}}
+												title={option.pinned ? t("chat:unpin") : t("chat:pin")}>
+												<Pin className="size-3" />
+											</div>
+											{option.value === currentApiConfigName && (
+												<Check className="size-4 p-0.5 ml-1" />
+											)}
+										</div>
+									)
+								}}
 							/>
 						</div>
 					</div>

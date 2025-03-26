@@ -1675,6 +1675,25 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						await this.updateGlobalState("maxReadFileLine", message.value)
 						await this.postStateToWebview()
 						break
+					case "toggleApiConfigPin":
+						if (message.text) {
+							const currentPinned = ((await this.getGlobalState("pinnedApiConfigs")) || {}) as Record<
+								string,
+								boolean
+							>
+							const updatedPinned: Record<string, boolean> = { ...currentPinned }
+
+							// Toggle the pinned state
+							if (currentPinned[message.text]) {
+								delete updatedPinned[message.text]
+							} else {
+								updatedPinned[message.text] = true
+							}
+
+							await this.updateGlobalState("pinnedApiConfigs", updatedPinned)
+							await this.postStateToWebview()
+						}
+						break
 					case "enhancementApiConfigId":
 						await this.updateGlobalState("enhancementApiConfigId", message.text)
 						await this.postStateToWebview()
@@ -2610,6 +2629,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			language,
 			renderContext: this.renderContext,
 			maxReadFileLine: maxReadFileLine ?? 500,
+			pinnedApiConfigs:
+				((await this.getGlobalState("pinnedApiConfigs")) as Record<string, boolean>) ??
+				({} as Record<string, boolean>),
 		}
 	}
 

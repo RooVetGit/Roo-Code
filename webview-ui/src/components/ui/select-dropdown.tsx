@@ -25,6 +25,7 @@ export interface DropdownOption {
 	label: string
 	disabled?: boolean
 	type?: DropdownOptionType
+	pinned?: boolean
 }
 
 export interface SelectDropdownProps {
@@ -39,6 +40,7 @@ export interface SelectDropdownProps {
 	align?: "start" | "center" | "end"
 	placeholder?: string
 	shortcutText?: string
+	renderItem?: (option: DropdownOption) => React.ReactNode
 }
 
 export const SelectDropdown = React.forwardRef<React.ElementRef<typeof DropdownMenuTrigger>, SelectDropdownProps>(
@@ -55,6 +57,7 @@ export const SelectDropdown = React.forwardRef<React.ElementRef<typeof DropdownM
 			align = "start",
 			placeholder = "",
 			shortcutText = "",
+			renderItem,
 		},
 		ref,
 	) => {
@@ -121,11 +124,17 @@ export const SelectDropdown = React.forwardRef<React.ElementRef<typeof DropdownM
 								key={`item-${option.value}`}
 								disabled={option.disabled}
 								onClick={() => handleSelect(option)}>
-								{option.label}
-								{option.value === value && (
-									<DropdownMenuShortcut>
-										<Check className="size-4 p-0.5" />
-									</DropdownMenuShortcut>
+								{renderItem ? (
+									renderItem(option)
+								) : (
+									<>
+										{option.label}
+										{option.value === value && (
+											<DropdownMenuShortcut>
+												<Check className="size-4 p-0.5" />
+											</DropdownMenuShortcut>
+										)}
+									</>
 								)}
 							</DropdownMenuItem>
 						)
