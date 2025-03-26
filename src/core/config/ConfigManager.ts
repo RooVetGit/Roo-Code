@@ -1,24 +1,20 @@
 import { ExtensionContext } from "vscode"
-import { ApiConfiguration } from "../../shared/api"
 import { Mode } from "../../shared/modes"
 import { ApiConfigMeta } from "../../shared/ExtensionMessage"
+import { ProviderSettings } from "../../exports/roo-code"
+
+type ProviderSettingsWithId = ProviderSettings & { id?: string }
 
 export interface ApiConfigData {
 	currentApiConfigName: string
-	apiConfigs: {
-		[key: string]: ApiConfiguration & { id?: string }
-	}
+	apiConfigs: { [key: string]: ProviderSettingsWithId }
 	modeApiConfigs?: Partial<Record<Mode, string>>
 }
 
 export class ConfigManager {
 	private readonly defaultConfig: ApiConfigData = {
 		currentApiConfigName: "default",
-		apiConfigs: {
-			default: {
-				id: this.generateId(),
-			},
-		},
+		apiConfigs: { default: { id: this.generateId() } },
 	}
 
 	private readonly SCOPE_PREFIX = "roo_cline_config_"
@@ -29,7 +25,7 @@ export class ConfigManager {
 		this.initConfig().catch(console.error)
 	}
 
-	private generateId(): string {
+	private generateId() {
 		return Math.random().toString(36).substring(2, 15)
 	}
 
@@ -40,20 +36,23 @@ export class ConfigManager {
 		this._lock = next.catch(() => {}) as Promise<void>
 		return next
 	}
+
 	/**
-	 * Initialize config if it doesn't exist
+	 * Initialize config if it doesn't exist.
 	 */
-	async initConfig(): Promise<void> {
+	async initConfig() {
 		try {
 			return await this.lock(async () => {
 				const config = await this.readConfig()
+
 				if (!config) {
 					await this.writeConfig(this.defaultConfig)
 					return
 				}
 
-				// Migrate: ensure all configs have IDs
+				// Migrate: ensure all configs have IDs.
 				let needsMigration = false
+
 				for (const [name, apiConfig] of Object.entries(config.apiConfigs)) {
 					if (!apiConfig.id) {
 						apiConfig.id = this.generateId()
@@ -71,12 +70,13 @@ export class ConfigManager {
 	}
 
 	/**
-	 * List all available configs with metadata
+	 * List all available configs with metadata.
 	 */
 	async listConfig(): Promise<ApiConfigMeta[]> {
 		try {
 			return await this.lock(async () => {
 				const config = await this.readConfig()
+
 				return Object.entries(config.apiConfigs).map(([name, apiConfig]) => ({
 					name,
 					id: apiConfig.id || "",
@@ -89,17 +89,17 @@ export class ConfigManager {
 	}
 
 	/**
-	 * Save a config with the given name
+	 * Save a config with the given name.
+	 * Preserves the ID from the input 'config' object if it exists,
+	 * otherwise generates a new one (for creation scenarios).
 	 */
-	async saveConfig(name: string, config: ApiConfiguration): Promise<void> {
+	async saveConfig(name: string, config: ProviderSettingsWithId) {
 		try {
 			return await this.lock(async () => {
 				const currentConfig = await this.readConfig()
-				const existingConfig = currentConfig.apiConfigs[name]
-				currentConfig.apiConfigs[name] = {
-					...config,
-					id: existingConfig?.id || this.generateId(),
-				}
+				// Preserve the existing ID if this is an update to an existing config.
+				const existingId = currentConfig.apiConfigs[name]?.id
+				currentConfig.apiConfigs[name] = { ...config, id: config.id || existingId || this.generateId() }
 				await this.writeConfig(currentConfig)
 			})
 		} catch (error) {
@@ -108,9 +108,9 @@ export class ConfigManager {
 	}
 
 	/**
-	 * Load a config by name
+	 * Load a config by name.
 	 */
-	async loadConfig(name: string): Promise<ApiConfiguration> {
+	async loadConfig(name: string) {
 		try {
 			return await this.lock(async () => {
 				const config = await this.readConfig()
@@ -131,12 +131,41 @@ export class ConfigManager {
 	}
 
 	/**
-	 * Delete a config by name
+	 * Load a config by ID.
 	 */
-	async deleteConfig(name: string): Promise<void> {
+	async loadConfigById(id: string) {
+		try {
+			return await this.lock(async () => {
+				const config = await this.readConfig()
+
+				// Find the config with the matching ID
+				const entry = Object.entries(config.apiConfigs).find(([_, apiConfig]) => apiConfig.id === id)
+
+				if (!entry) {
+					throw new Error(`Config with ID '${id}' not found`)
+				}
+
+				const [name, apiConfig] = entry
+
+				// Update current config name
+				config.currentApiConfigName = name
+				await this.writeConfig(config)
+
+				return { config: apiConfig, name }
+			})
+		} catch (error) {
+			throw new Error(`Failed to load config by ID: ${error}`)
+		}
+	}
+
+	/**
+	 * Delete a config by name.
+	 */
+	async deleteConfig(name: string) {
 		try {
 			return await this.lock(async () => {
 				const currentConfig = await this.readConfig()
+
 				if (!currentConfig.apiConfigs[name]) {
 					throw new Error(`Config '${name}' not found`)
 				}
@@ -155,12 +184,13 @@ export class ConfigManager {
 	}
 
 	/**
-	 * Set the current active API configuration
+	 * Set the current active API configuration.
 	 */
-	async setCurrentConfig(name: string): Promise<void> {
+	async setCurrentConfig(name: string) {
 		try {
 			return await this.lock(async () => {
 				const currentConfig = await this.readConfig()
+
 				if (!currentConfig.apiConfigs[name]) {
 					throw new Error(`Config '${name}' not found`)
 				}
@@ -174,9 +204,9 @@ export class ConfigManager {
 	}
 
 	/**
-	 * Check if a config exists by name
+	 * Check if a config exists by name.
 	 */
-	async hasConfig(name: string): Promise<boolean> {
+	async hasConfig(name: string) {
 		try {
 			return await this.lock(async () => {
 				const config = await this.readConfig()
@@ -188,15 +218,17 @@ export class ConfigManager {
 	}
 
 	/**
-	 * Set the API config for a specific mode
+	 * Set the API config for a specific mode.
 	 */
-	async setModeConfig(mode: Mode, configId: string): Promise<void> {
+	async setModeConfig(mode: Mode, configId: string) {
 		try {
 			return await this.lock(async () => {
 				const currentConfig = await this.readConfig()
+
 				if (!currentConfig.modeApiConfigs) {
 					currentConfig.modeApiConfigs = {}
 				}
+
 				currentConfig.modeApiConfigs[mode] = configId
 				await this.writeConfig(currentConfig)
 			})
@@ -206,9 +238,9 @@ export class ConfigManager {
 	}
 
 	/**
-	 * Get the API config ID for a specific mode
+	 * Get the API config ID for a specific mode.
 	 */
-	async getModeConfigId(mode: Mode): Promise<string | undefined> {
+	async getModeConfigId(mode: Mode) {
 		try {
 			return await this.lock(async () => {
 				const config = await this.readConfig()
@@ -220,16 +252,16 @@ export class ConfigManager {
 	}
 
 	/**
-	 * Get the key used for storing config in secrets
+	 * Get the key used for storing config in secrets.
 	 */
-	private getConfigKey(): string {
+	private getConfigKey() {
 		return `${this.SCOPE_PREFIX}api_config`
 	}
 
 	/**
-	 * Reset all configuration by deleting the stored config from secrets
+	 * Reset all configuration by deleting the stored config from secrets.
 	 */
-	public async resetAllConfigs(): Promise<void> {
+	public async resetAllConfigs() {
 		return await this.lock(async () => {
 			await this.context.secrets.delete(this.getConfigKey())
 		})
@@ -243,13 +275,14 @@ export class ConfigManager {
 				return this.defaultConfig
 			}
 
+			// TODO: Use a zod schema to validate the config.
 			return JSON.parse(content)
 		} catch (error) {
 			throw new Error(`Failed to read config from secrets: ${error}`)
 		}
 	}
 
-	private async writeConfig(config: ApiConfigData): Promise<void> {
+	private async writeConfig(config: ApiConfigData) {
 		try {
 			const content = JSON.stringify(config, null, 2)
 			await this.context.secrets.store(this.getConfigKey(), content)

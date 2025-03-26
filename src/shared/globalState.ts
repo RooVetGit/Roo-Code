@@ -174,6 +174,7 @@ const providerSettingsKeys: Record<ProviderSettingsKey, true> = {
 	openAiModelId: true,
 	openAiCustomModelInfo: true,
 	openAiUseAzure: true,
+	azureApiVersion: true,
 	openAiStreamingEnabled: true,
 	// Ollama
 	ollamaModelId: true,
@@ -193,8 +194,6 @@ const providerSettingsKeys: Record<ProviderSettingsKey, true> = {
 	// Mistral
 	mistralApiKey: true,
 	mistralCodestralUrl: true,
-	// Azure
-	azureApiVersion: true,
 	// DeepSeek
 	deepSeekApiKey: true,
 	deepSeekBaseUrl: true,
@@ -249,101 +248,145 @@ export const isSecretStateKey = (key: string): key is SecretStateKey =>
 const globalStateKeys: Record<GlobalStateKey, true> = {
 	apiProvider: true,
 	apiModelId: true,
+	// Anthropic
+	// apiKey: true,
+	anthropicBaseUrl: true,
+	// Glama
+	// glamaApiKey: true,
 	glamaModelId: true,
 	glamaModelInfo: true,
-	awsRegion: true,
-	awsUseCrossRegionInference: true,
-	awsProfile: true,
-	awsUseProfile: true,
-	awsCustomArn: true,
-	awsUsePromptCache: true,
-	awspromptCacheId: true,
-	vertexKeyFile: true,
-	vertexJsonCredentials: true,
-	vertexProjectId: true,
-	vertexRegion: true,
-	lastShownAnnouncementId: true,
-	customInstructions: true,
-	alwaysAllowReadOnly: true,
-	alwaysAllowReadOnlyOutsideWorkspace: true,
-	alwaysAllowWrite: true,
-	alwaysAllowWriteOutsideWorkspace: true,
-	alwaysAllowExecute: true,
-	alwaysAllowBrowser: true,
-	alwaysAllowMcp: true,
-	alwaysAllowModeSwitch: true,
-	alwaysAllowSubtasks: true,
-	taskHistory: true,
-	openAiBaseUrl: true,
-	openAiModelId: true,
-	openAiCustomModelInfo: true,
-	openAiUseAzure: true,
-	ollamaModelId: true,
-	ollamaBaseUrl: true,
-	lmStudioModelId: true,
-	lmStudioBaseUrl: true,
-	anthropicBaseUrl: true,
-	includeMaxTokens: true,
-	modelMaxThinkingTokens: true,
-	azureApiVersion: true,
-	openAiStreamingEnabled: true,
-	openAiR1FormatEnabled: true,
+	// OpenRouter
+	// openRouterApiKey: true,
 	openRouterModelId: true,
 	openRouterModelInfo: true,
 	openRouterBaseUrl: true,
 	openRouterSpecificProvider: true,
 	openRouterUseMiddleOutTransform: true,
+	// AWS Bedrock
+	// awsAccessKey: true,
+	// awsSecretKey: true,
+	// awsSessionToken: true,
+	awsRegion: true,
+	awsUseCrossRegionInference: true,
+	awsUsePromptCache: true,
+	awspromptCacheId: true,
+	awsProfile: true,
+	awsUseProfile: true,
+	awsCustomArn: true,
+	// Google Vertex
+	vertexKeyFile: true,
+	vertexJsonCredentials: true,
+	vertexProjectId: true,
+	vertexRegion: true,
+	// OpenAI
+	// openAiApiKey: true,
+	openAiBaseUrl: true,
+	openAiR1FormatEnabled: true,
+	openAiModelId: true,
+	openAiCustomModelInfo: true,
+	openAiUseAzure: true,
+	azureApiVersion: true,
+	openAiStreamingEnabled: true,
+	// Ollama
+	ollamaModelId: true,
+	ollamaBaseUrl: true,
+	// VS Code LM
+	vsCodeLmModelSelector: true,
+	// LM Studio
+	lmStudioModelId: true,
+	lmStudioBaseUrl: true,
+	lmStudioDraftModelId: true,
+	lmStudioSpeculativeDecodingEnabled: true,
+	// Gemini
+	// geminiApiKey: true,
 	googleGeminiBaseUrl: true,
+	// OpenAI Native
+	// openAiNativeApiKey: true,
+	// Mistral
+	// mistralApiKey: true,
+	mistralCodestralUrl: true,
+	// DeepSeek
+	// deepSeekApiKey: true,
 	deepSeekBaseUrl: true,
-	allowedCommands: true,
-	soundEnabled: true,
-	ttsEnabled: true,
-	ttsSpeed: true,
-	soundVolume: true,
-	diffEnabled: true,
-	enableCheckpoints: true,
-	checkpointStorage: true,
-	browserViewportSize: true,
-	screenshotQuality: true,
-	remoteBrowserHost: true,
-	fuzzyMatchThreshold: true,
-	writeDelayMs: true,
-	terminalOutputLineLimit: true,
-	terminalShellIntegrationTimeout: true,
-	mcpEnabled: true,
-	enableMcpServerCreation: true,
-	alwaysApproveResubmit: true,
-	requestDelaySeconds: true,
-	rateLimitSeconds: true,
+	includeMaxTokens: true,
+	// Unbound
+	// unboundApiKey: true,
+	unboundModelId: true,
+	unboundModelInfo: true,
+	// Requesty
+	// requestyApiKey: true,
+	requestyModelId: true,
+	requestyModelInfo: true,
+	// Claude 3.7 Sonnet Thinking
+	modelTemperature: true,
+	modelMaxTokens: true,
+	modelMaxThinkingTokens: true,
+	// Fake AI
+	fakeAi: true,
+
 	currentApiConfigName: true,
 	listApiConfigMeta: true,
-	vsCodeLmModelSelector: true,
+	pinnedApiConfigs: true,
+
+	lastShownAnnouncementId: true,
+	customInstructions: true,
+	taskHistory: true,
+
+	autoApprovalEnabled: true,
+	alwaysAllowReadOnly: true,
+	alwaysAllowReadOnlyOutsideWorkspace: true,
+	alwaysAllowWrite: true,
+	alwaysAllowWriteOutsideWorkspace: true,
+	writeDelayMs: true,
+	alwaysAllowBrowser: true,
+	alwaysApproveResubmit: true,
+	requestDelaySeconds: true,
+	alwaysAllowMcp: true,
+	alwaysAllowModeSwitch: true,
+	alwaysAllowSubtasks: true,
+	alwaysAllowExecute: true,
+	allowedCommands: true,
+
+	browserToolEnabled: true,
+	browserViewportSize: true,
+	screenshotQuality: true,
+	remoteBrowserEnabled: true,
+	remoteBrowserHost: true,
+
+	enableCheckpoints: true,
+	checkpointStorage: true,
+
+	ttsEnabled: true,
+	ttsSpeed: true,
+	soundEnabled: true,
+	soundVolume: true,
+
+	maxOpenTabsContext: true,
+	maxWorkspaceFiles: true,
+	showRooIgnoredFiles: true,
+	maxReadFileLine: true,
+
+	terminalOutputLineLimit: true,
+	terminalShellIntegrationTimeout: true,
+
+	rateLimitSeconds: true,
+	diffEnabled: true,
+	fuzzyMatchThreshold: true,
+	experiments: true,
+
+	language: true,
+
+	telemetrySetting: true,
+
+	mcpEnabled: true,
+	enableMcpServerCreation: true,
+
 	mode: true,
 	modeApiConfigs: true,
+	customModes: true,
 	customModePrompts: true,
 	customSupportPrompts: true,
 	enhancementApiConfigId: true,
-	experiments: true, // Map of experiment IDs to their enabled state.
-	autoApprovalEnabled: true,
-	customModes: true, // Array of custom modes.
-	unboundModelId: true,
-	requestyModelId: true,
-	requestyModelInfo: true,
-	unboundModelInfo: true,
-	modelTemperature: true,
-	modelMaxTokens: true,
-	mistralCodestralUrl: true,
-	maxOpenTabsContext: true,
-	browserToolEnabled: true,
-	lmStudioSpeculativeDecodingEnabled: true,
-	lmStudioDraftModelId: true,
-	telemetrySetting: true,
-	showRooIgnoredFiles: true,
-	remoteBrowserEnabled: true,
-	language: true,
-	maxWorkspaceFiles: true,
-	maxReadFileLine: true,
-	fakeAi: true,
 }
 
 export const GLOBAL_STATE_KEYS = Object.keys(globalStateKeys) as GlobalStateKey[]
@@ -465,17 +508,19 @@ const experimentsSchema = z.object({
 	multi_search_and_replace: z.boolean(),
 })
 
-/**
- * GlobalSettings
- */
-
 // Throws a type error if the inferred type of the experimentsSchema is not
 // equal to  ExperimentId.
 type _AssertExperiments = AssertEqual<Equals<ExperimentId, Keys<z.infer<typeof experimentsSchema>>>>
 
+/**
+ * GlobalSettings
+ */
+
 export const globalSettingsSchema = z.object({
 	currentApiConfigName: z.string().optional(),
 	listApiConfigMeta: z.array(apiConfigMetaSchema).optional(),
+	pinnedApiConfigs: z.record(z.string(), z.boolean()).optional(),
+
 	lastShownAnnouncementId: z.string().optional(),
 	customInstructions: z.string().optional(),
 	taskHistory: z.array(historyItemSchema).optional(),

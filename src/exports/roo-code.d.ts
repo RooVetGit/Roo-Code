@@ -255,6 +255,8 @@ export type Language =
 export interface GlobalSettings {
 	currentApiConfigName?: string
 	listApiConfigMeta?: ApiConfigMeta[]
+	pinnedApiConfigs?: Record<string, boolean>
+
 	lastShownAnnouncementId?: string
 	customInstructions?: string
 	taskHistory?: HistoryItem[]

@@ -59,6 +59,7 @@ export interface ExtensionMessage {
 		| "ttsStop"
 		| "maxReadFileLine"
 		| "fileSearchResults"
+		| "toggleApiConfigPin"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -107,6 +108,7 @@ export type ExtensionState = Pick<
 	GlobalSettings,
 	| "currentApiConfigName"
 	| "listApiConfigMeta"
+	| "pinnedApiConfigs"
 	// | "lastShownAnnouncementId"
 	| "customInstructions"
 	// | "taskHistory" // Optional in GlobalSettings, required here.
