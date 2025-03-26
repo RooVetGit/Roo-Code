@@ -1,11 +1,12 @@
+import os from "os"
+import * as path from "path"
+import fs from "fs/promises"
+import EventEmitter from "events"
+
 import { Anthropic } from "@anthropic-ai/sdk"
 import delay from "delay"
 import axios from "axios"
-import EventEmitter from "events"
-import fs from "fs/promises"
-import os from "os"
 import pWaitFor from "p-wait-for"
-import * as path from "path"
 import * as vscode from "vscode"
 
 import {
@@ -36,7 +37,7 @@ import { GlobalFileNames } from "../../shared/globalFileNames"
 import { HistoryItem } from "../../shared/HistoryItem"
 import { ApiConfigMeta, ExtensionMessage } from "../../shared/ExtensionMessage"
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
-import { Mode, PromptComponent, defaultModeSlug, ModeConfig, getModeBySlug, getGroupName } from "../../shared/modes"
+import { Mode, PromptComponent, defaultModeSlug, getModeBySlug, getGroupName } from "../../shared/modes"
 import { checkExistKey } from "../../shared/checkExistApiConfig"
 import { EXPERIMENT_IDS, experiments as Experiments, experimentDefault, ExperimentId } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
@@ -59,9 +60,10 @@ import { singleCompletionHandler } from "../../utils/single-completion-handler"
 import { searchCommits } from "../../utils/git"
 import { getDiffStrategy } from "../diff/DiffStrategy"
 import { SYSTEM_PROMPT } from "../prompts/system"
-import { ConfigManager } from "../config/ConfigManager"
+import { ContextProxy } from "../config/ContextProxy"
+import { ProviderSettingsManager } from "../config/ProviderSettingsManager"
+import { exportSettings, importSettings } from "../config/importExport"
 import { CustomModesManager } from "../config/CustomModesManager"
-import { ContextProxy } from "../contextProxy"
 import { buildApiHandler } from "../../api"
 import { getOpenRouterModels } from "../../api/providers/openrouter"
 import { getGlamaModels } from "../../api/providers/glama"
@@ -102,8 +104,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	private latestAnnouncementId = "mar-20-2025-3-10" // update to some unique identifier when we add a new announcement
 	private settingsImportedAt?: number
 	private contextProxy: ContextProxy
-	configManager: ConfigManager
-	customModesManager: CustomModesManager
+	public readonly providerSettingsManager: ProviderSettingsManager
+	public readonly customModesManager: CustomModesManager
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
@@ -116,11 +118,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		this.contextProxy = new ContextProxy(context)
 		ClineProvider.activeInstances.add(this)
 
-		// Register this provider with the telemetry service to enable it to add properties like mode and provider
+		// Register this provider with the telemetry service to enable it to add
+		// properties like mode and provider.
 		telemetryService.setProvider(this)
 
 		this.workspaceTracker = new WorkspaceTracker(this)
-		this.configManager = new ConfigManager(this.context)
+
+		this.providerSettingsManager = new ProviderSettingsManager(this.context)
+
 		this.customModesManager = new CustomModesManager(this.context, async () => {
 			await this.postStateToWebview()
 		})
@@ -886,7 +891,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 							}
 						})
 
-						this.configManager
+						this.providerSettingsManager
 							.listConfig()
 							.then(async (listApiConfig) => {
 								if (!listApiConfig) {
@@ -898,7 +903,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 									if (!checkExistKey(listApiConfig[0])) {
 										const { apiConfiguration } = await this.getState()
 
-										await this.configManager.saveConfig(
+										await this.providerSettingsManager.saveConfig(
 											listApiConfig[0].name ?? "default",
 											apiConfiguration,
 										)
@@ -910,11 +915,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								const currentConfigName = this.getGlobalState("currentApiConfigName")
 
 								if (currentConfigName) {
-									if (!(await this.configManager.hasConfig(currentConfigName))) {
+									if (!(await this.providerSettingsManager.hasConfig(currentConfigName))) {
 										// current config name not valid, get first config in list
 										await this.updateGlobalState("currentApiConfigName", listApiConfig?.[0]?.name)
 										if (listApiConfig?.[0]?.name) {
-											const apiConfig = await this.configManager.loadConfig(
+											const apiConfig = await this.providerSettingsManager.loadConfig(
 												listApiConfig?.[0]?.name,
 											)
 
@@ -1039,6 +1044,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						break
 					case "deleteMultipleTasksWithIds": {
 						const ids = message.ids
+
 						if (Array.isArray(ids)) {
 							// Process in batches of 20 (or another reasonable number)
 							const batchSize = 20
@@ -1084,38 +1090,23 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						this.exportTaskWithId(message.text!)
 						break
 					case "importSettings":
-						const uris = await vscode.window.showOpenDialog({
-							filters: { JSON: ["json"] },
-							canSelectMany: false,
+						const { success } = await importSettings({
+							providerSettingsManager: this.providerSettingsManager,
+							contextProxy: this.contextProxy,
 						})
 
-						if (uris) {
-							if (message.text === "global") {
-								await this.contextProxy.importGlobalSettings(uris[0].fsPath)
-							} else {
-								await this.contextProxy.importGlobalSettings(uris[0].fsPath)
-							}
-
+						if (success) {
 							this.settingsImportedAt = Date.now()
 							await this.postStateToWebview()
 							await vscode.window.showInformationMessage(t("common:info.settings_imported"))
 						}
+
 						break
 					case "exportSettings":
-						const uri = await vscode.window.showSaveDialog({
-							filters: { JSON: ["json"] },
-							defaultUri: vscode.Uri.file(
-								path.join(os.homedir(), "Documents", `roo-code-${message.text}.json`),
-							),
+						await exportSettings({
+							providerSettingsManager: this.providerSettingsManager,
+							contextProxy: this.contextProxy,
 						})
-
-						if (uri) {
-							if (message.text === "global") {
-								await this.contextProxy.exportGlobalSettings(uri.fsPath)
-							} else {
-								await this.contextProxy.exportProviderSettings(uri.fsPath)
-							}
-						}
 
 						break
 					case "resetState":
@@ -1725,7 +1716,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 										(c: ApiConfigMeta) => c.id === enhancementApiConfigId,
 									)
 									if (config?.name) {
-										const loadedConfig = await this.configManager.loadConfig(config.name)
+										const loadedConfig = await this.providerSettingsManager.loadConfig(config.name)
 										if (loadedConfig.apiProvider) {
 											configToUse = loadedConfig
 										}
@@ -1848,8 +1839,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					case "saveApiConfiguration":
 						if (message.text && message.apiConfiguration) {
 							try {
-								await this.configManager.saveConfig(message.text, message.apiConfiguration)
-								const listApiConfig = await this.configManager.listConfig()
+								await this.providerSettingsManager.saveConfig(message.text, message.apiConfiguration)
+								const listApiConfig = await this.providerSettingsManager.listConfig()
 								await this.updateGlobalState("listApiConfigMeta", listApiConfig)
 							} catch (error) {
 								this.outputChannel.appendLine(
@@ -1874,7 +1865,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								}
 
 								// Load the old configuration to get its ID
-								const oldConfig = await this.configManager.loadConfig(oldName)
+								const oldConfig = await this.providerSettingsManager.loadConfig(oldName)
 
 								// Create a new configuration with the same ID
 								const newConfig = {
@@ -1883,10 +1874,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								}
 
 								// Save with the new name but same ID
-								await this.configManager.saveConfig(newName, newConfig)
-								await this.configManager.deleteConfig(oldName)
+								await this.providerSettingsManager.saveConfig(newName, newConfig)
+								await this.providerSettingsManager.deleteConfig(oldName)
 
-								const listApiConfig = await this.configManager.listConfig()
+								const listApiConfig = await this.providerSettingsManager.listConfig()
 
 								// Update listApiConfigMeta first to ensure UI has latest data
 								await this.updateGlobalState("listApiConfigMeta", listApiConfig)
@@ -1904,8 +1895,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					case "loadApiConfiguration":
 						if (message.text) {
 							try {
-								const apiConfig = await this.configManager.loadConfig(message.text)
-								const listApiConfig = await this.configManager.listConfig()
+								const apiConfig = await this.providerSettingsManager.loadConfig(message.text)
+								const listApiConfig = await this.providerSettingsManager.listConfig()
 
 								await Promise.all([
 									this.updateGlobalState("listApiConfigMeta", listApiConfig),
@@ -1925,10 +1916,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					case "loadApiConfigurationById":
 						if (message.text) {
 							try {
-								const { config: apiConfig, name } = await this.configManager.loadConfigById(
+								const { config: apiConfig, name } = await this.providerSettingsManager.loadConfigById(
 									message.text,
 								)
-								const listApiConfig = await this.configManager.listConfig()
+								const listApiConfig = await this.providerSettingsManager.listConfig()
 
 								await Promise.all([
 									this.updateGlobalState("listApiConfigMeta", listApiConfig),
@@ -1958,8 +1949,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 							}
 
 							try {
-								await this.configManager.deleteConfig(message.text)
-								const listApiConfig = await this.configManager.listConfig()
+								await this.providerSettingsManager.deleteConfig(message.text)
+								const listApiConfig = await this.providerSettingsManager.listConfig()
 
 								// Update listApiConfigMeta first to ensure UI has latest data
 								await this.updateGlobalState("listApiConfigMeta", listApiConfig)
@@ -1968,7 +1959,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								const currentApiConfigName = this.getGlobalState("currentApiConfigName")
 
 								if (message.text === currentApiConfigName && listApiConfig?.[0]?.name) {
-									const apiConfig = await this.configManager.loadConfig(listApiConfig[0].name)
+									const apiConfig = await this.providerSettingsManager.loadConfig(
+										listApiConfig[0].name,
+									)
 									await Promise.all([
 										this.updateGlobalState("currentApiConfigName", listApiConfig[0].name),
 										this.updateApiConfiguration(apiConfig),
@@ -1986,7 +1979,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						break
 					case "getListApiConfiguration":
 						try {
-							const listApiConfig = await this.configManager.listConfig()
+							const listApiConfig = await this.providerSettingsManager.listConfig()
 							await this.updateGlobalState("listApiConfigMeta", listApiConfig)
 							this.postMessageToWebview({ type: "listApiConfig", listApiConfig })
 						} catch (error) {
@@ -2176,8 +2169,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		await this.updateGlobalState("mode", newMode)
 
 		// Load the saved API config for the new mode if it exists
-		const savedConfigId = await this.configManager.getModeConfigId(newMode)
-		const listApiConfig = await this.configManager.listConfig()
+		const savedConfigId = await this.providerSettingsManager.getModeConfigId(newMode)
+		const listApiConfig = await this.providerSettingsManager.listConfig()
 
 		// Update listApiConfigMeta first to ensure UI has latest data
 		await this.updateGlobalState("listApiConfigMeta", listApiConfig)
@@ -2186,7 +2179,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		if (savedConfigId) {
 			const config = listApiConfig?.find((c) => c.id === savedConfigId)
 			if (config?.name) {
-				const apiConfig = await this.configManager.loadConfig(config.name)
+				const apiConfig = await this.providerSettingsManager.loadConfig(config.name)
 				await Promise.all([
 					this.updateGlobalState("currentApiConfigName", config.name),
 					this.updateApiConfiguration(apiConfig),
@@ -2199,7 +2192,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			if (currentApiConfigName) {
 				const config = listApiConfig?.find((c) => c.name === currentApiConfigName)
 				if (config?.id) {
-					await this.configManager.setModeConfig(newMode, config.id)
+					await this.providerSettingsManager.setModeConfig(newMode, config.id)
 				}
 			}
 		}
@@ -2213,11 +2206,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		if (mode) {
 			const currentApiConfigName = this.getGlobalState("currentApiConfigName")
-			const listApiConfig = await this.configManager.listConfig()
+			const listApiConfig = await this.providerSettingsManager.listConfig()
 			const config = listApiConfig?.find((c) => c.name === currentApiConfigName)
 
 			if (config?.id) {
-				await this.configManager.setModeConfig(mode, config.id)
+				await this.providerSettingsManager.setModeConfig(mode, config.id)
 			}
 		}
 
@@ -2416,8 +2409,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	async upsertApiConfiguration(configName: string, apiConfiguration: ApiConfiguration) {
 		try {
-			await this.configManager.saveConfig(configName, apiConfiguration)
-			const listApiConfig = await this.configManager.listConfig()
+			await this.providerSettingsManager.saveConfig(configName, apiConfiguration)
+			const listApiConfig = await this.providerSettingsManager.listConfig()
 
 			await Promise.all([
 				this.updateGlobalState("listApiConfigMeta", listApiConfig),
@@ -2817,7 +2810,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		}
 
 		await this.contextProxy.resetAllState()
-		await this.configManager.resetAllConfigs()
+		await this.providerSettingsManager.resetAllConfigs()
 		await this.customModesManager.resetCustomModes()
 		await this.removeClineFromStack()
 		await this.postStateToWebview()

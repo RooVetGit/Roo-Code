@@ -9,7 +9,7 @@ import { TelemetrySetting } from "../../../../src/shared/TelemetrySetting"
 
 import { vscode } from "@/utils/vscode"
 import { cn } from "@/lib/utils"
-import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui"
+import { Button } from "@/components/ui"
 
 import { SectionHeader } from "./SectionHeader"
 import { Section } from "./Section"
@@ -59,45 +59,17 @@ export const About = ({ version, telemetrySetting, setTelemetrySetting, classNam
 				</div>
 
 				<div className="flex items-center gap-2 mt-2">
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button>
-								<Download className="p-0.5" />
-								Import
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent>
-							<DropdownMenuItem
-								onClick={() => vscode.postMessage({ type: "importSettings", text: "provider" })}>
-								Current Provider Settings
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								onClick={() => vscode.postMessage({ type: "importSettings", text: "global" })}>
-								Global Settings
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button>
-								<Upload className="p-0.5" />
-								Export
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent>
-							<DropdownMenuItem
-								onClick={() => vscode.postMessage({ type: "exportSettings", text: "provider" })}>
-								Current Provider Settings
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								onClick={() => vscode.postMessage({ type: "exportSettings", text: "global" })}>
-								Global Settings
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
+					<Button onClick={() => vscode.postMessage({ type: "exportSettings" })}>
+						<Upload className="p-0.5" />
+						{t("settings:footer.settings.export")}
+					</Button>
+					<Button onClick={() => vscode.postMessage({ type: "importSettings" })}>
+						<Download className="p-0.5" />
+						{t("settings:footer.settings.import")}
+					</Button>
 					<Button variant="destructive" onClick={() => vscode.postMessage({ type: "resetState" })}>
 						<TriangleAlert className="p-0.5" />
-						{t("settings:footer.reset.button")}
+						{t("settings:footer.settings.reset")}
 					</Button>
 				</div>
 			</Section>

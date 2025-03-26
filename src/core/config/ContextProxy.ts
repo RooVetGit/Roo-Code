@@ -1,8 +1,6 @@
 import * as vscode from "vscode"
-import * as fs from "fs/promises"
-import * as path from "path"
 
-import { logger } from "../utils/logging"
+import { logger } from "../../utils/logging"
 import type {
 	ProviderSettings,
 	RooCodeSettings,
@@ -12,7 +10,7 @@ import type {
 	SecretStateKey,
 	SecretState,
 	GlobalSettings,
-} from "../exports/roo-code"
+} from "../../exports/roo-code"
 import {
 	PROVIDER_SETTINGS_KEYS,
 	GLOBAL_STATE_KEYS,
@@ -21,19 +19,12 @@ import {
 	isPassThroughStateKey,
 	globalSettingsSchema,
 	providerSettingsSchema,
-} from "../shared/globalState"
+} from "../../shared/globalState"
 
 const globalSettingsExportSchema = globalSettingsSchema.omit({
 	taskHistory: true,
 	listApiConfigMeta: true,
 	currentApiConfigName: true,
-})
-
-const providerSettingsExportSchema = providerSettingsSchema.omit({
-	glamaModelInfo: true,
-	openRouterModelInfo: true,
-	unboundModelInfo: true,
-	requestyModelInfo: true,
 })
 
 export class ContextProxy {
@@ -161,43 +152,6 @@ export class ContextProxy {
 		return globalSettingsSchema.parse({ ...this.stateCache })
 	}
 
-	public async exportGlobalSettings(filePath: string): Promise<GlobalSettings | undefined> {
-		try {
-			const globalSettings = globalSettingsExportSchema.parse(this.getValues())
-
-			const sanitized = Object.fromEntries(
-				Object.entries(globalSettings).filter(([_, value]) => value !== undefined),
-			)
-
-			const dirname = path.dirname(filePath)
-			await fs.mkdir(dirname, { recursive: true })
-			await fs.writeFile(filePath, JSON.stringify(sanitized, null, 2), "utf-8")
-			return sanitized
-		} catch (error) {
-			console.log(error.message)
-			logger.error(
-				`Error exporting global configuration to ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
-			)
-			return undefined
-		}
-	}
-
-	public async importGlobalSettings(filePath: string) {
-		try {
-			const globalConfiguration = globalSettingsExportSchema.parse(
-				JSON.parse(await fs.readFile(filePath, "utf-8")),
-			)
-
-			await this.setValues(globalConfiguration)
-			return globalConfiguration
-		} catch (error) {
-			logger.error(
-				`Error importing global configuration from ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
-			)
-			return undefined
-		}
-	}
-
 	/**
 	 * ProviderSettings
 	 */
@@ -218,42 +172,6 @@ export class ContextProxy {
 				.reduce((acc, key) => ({ ...acc, [key]: undefined }), {} as ProviderSettings),
 			...values,
 		})
-	}
-
-	public async exportProviderSettings(filePath: string): Promise<ProviderSettings | undefined> {
-		try {
-			const providerSettings = providerSettingsExportSchema.parse(this.getValues())
-
-			const sanitized = Object.fromEntries(
-				Object.entries(providerSettings).filter(([_, value]) => value !== undefined),
-			)
-
-			const dirname = path.dirname(filePath)
-			await fs.mkdir(dirname, { recursive: true })
-			await fs.writeFile(filePath, JSON.stringify(sanitized, null, 2), "utf-8")
-			return sanitized
-		} catch (error) {
-			logger.error(
-				`Error exporting provider settings to ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
-			)
-			return undefined
-		}
-	}
-
-	public async importProviderSettings(filePath: string): Promise<ProviderSettings | undefined> {
-		try {
-			const providerSettings = providerSettingsExportSchema.parse(
-				JSON.parse(await fs.readFile(filePath, "utf-8")),
-			)
-
-			await this.setProviderSettings(providerSettings)
-			return providerSettings
-		} catch (error) {
-			logger.error(
-				`Error importing provider settings from ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
-			)
-			return undefined
-		}
 	}
 
 	/**
@@ -277,6 +195,21 @@ export class ContextProxy {
 	public async setValues(values: RooCodeSettings) {
 		const entries = Object.entries(values) as [RooCodeSettingsKey, unknown][]
 		await Promise.all(entries.map(([key, value]) => this.setValue(key, value)))
+	}
+
+	/**
+	 * Import / Export
+	 */
+
+	public async export(): Promise<GlobalSettings | undefined> {
+		try {
+			const globalSettings = globalSettingsExportSchema.parse(this.getValues())
+
+			return Object.fromEntries(Object.entries(globalSettings).filter(([_, value]) => value !== undefined))
+		} catch (error) {
+			console.log(error.message)
+			return undefined
+		}
 	}
 
 	/**
