@@ -98,9 +98,12 @@ export class ConfigManager {
 			return await this.lock(async () => {
 				const currentConfig = await this.readConfig()
 
+				// Preserve the existing ID if this is an update to an existing config
+				const existingId = currentConfig.apiConfigs[name]?.id
+
 				currentConfig.apiConfigs[name] = {
 					...config,
-					id: config.id || this.generateId(),
+					id: config.id || existingId || this.generateId(),
 				}
 
 				await this.writeConfig(currentConfig)
