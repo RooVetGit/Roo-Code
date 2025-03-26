@@ -17,12 +17,32 @@
 		"noDescription": "No description"
 	},
 	"tabs": {
+		"installed": "Installed & Settings",
+		"marketplace": "Marketplace",
 		"tools": "Tools",
 		"resources": "Resources"
 	},
 	"emptyState": {
 		"noTools": "No tools found",
-		"noResources": "No resources found"
+		"noResources": "No resources found",
+		"noServers": "No servers installed",
+		"browseMarketplace": "Browse Marketplace"
+	},
+	"marketplace": {
+		"loading": "Loading marketplace...",
+		"noServers": "No servers available",
+		"noResults": "No matching servers found",
+		"retry": "Retry",
+		"install": "Install",
+		"by": "by {{author}}",
+		"searchPlaceholder": "Search servers...",
+		"filter": "Filter:",
+		"allCategories": "All Categories",
+		"sort": "Sort:",
+		"sortByStars": "Most Stars",
+		"sortByDownloadCount": "Most Installs",
+		"sortByNewest": "Newest",
+		"sortByName": "Name"
 	},
 	"networkTimeout": {
 		"label": "Network Timeout",

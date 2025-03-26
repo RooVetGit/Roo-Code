@@ -17,12 +17,32 @@
 		"noDescription": "Sem descrição"
 	},
 	"tabs": {
+		"installed": "Instalados e Configurações",
+		"marketplace": "Marketplace",
 		"tools": "Ferramentas",
 		"resources": "Recursos"
 	},
 	"emptyState": {
 		"noTools": "Nenhuma ferramenta encontrada",
-		"noResources": "Nenhum recurso encontrado"
+		"noResources": "Nenhum recurso encontrado",
+		"noServers": "Nenhum servidor instalado",
+		"browseMarketplace": "Explorar Marketplace"
+	},
+	"marketplace": {
+		"loading": "Carregando marketplace...",
+		"noServers": "Nenhum servidor disponível",
+		"noResults": "Nenhum servidor correspondente encontrado",
+		"retry": "Tentar novamente",
+		"install": "Instalar",
+		"by": "por {{author}}",
+		"searchPlaceholder": "Pesquisar servidores...",
+		"filter": "Filtrar:",
+		"allCategories": "Todas as Categorias",
+		"sort": "Ordenar:",
+		"sortByStars": "Mais Estrelas",
+		"sortByDownloadCount": "Mais Instalações",
+		"sortByNewest": "Mais Recentes",
+		"sortByName": "Nome"
 	},
 	"networkTimeout": {
 		"label": "Tempo limite de rede",

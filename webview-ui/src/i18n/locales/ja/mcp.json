@@ -18,11 +18,31 @@
 	},
 	"tabs": {
 		"tools": "ツール",
-		"resources": "リソース"
+		"resources": "リソース",
+		"installed": "インストール済み & 設定",
+		"marketplace": "マーケットプレイス"
 	},
 	"emptyState": {
 		"noTools": "ツールが見つかりません",
-		"noResources": "リソースが見つかりません"
+		"noResources": "リソースが見つかりません",
+		"noServers": "サーバーがインストールされていません",
+		"browseMarketplace": "マーケットプレイスを閲覧"
+	},
+	"marketplace": {
+		"loading": "マーケットプレイスを読み込み中...",
+		"noServers": "利用可能なサーバーがありません",
+		"noResults": "一致するサーバーが見つかりません",
+		"retry": "再試行",
+		"install": "インストール",
+		"by": "作成者：{{author}}",
+		"searchPlaceholder": "サーバーを検索...",
+		"filter": "フィルター：",
+		"allCategories": "すべてのカテゴリー",
+		"sort": "並び替え：",
+		"sortByStars": "スター数順",
+		"sortByDownloadCount": "インストール数順",
+		"sortByNewest": "新着順",
+		"sortByName": "名前順"
 	},
 	"networkTimeout": {
 		"label": "ネットワークタイムアウト",
