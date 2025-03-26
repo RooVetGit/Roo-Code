@@ -204,6 +204,8 @@ describe("mergeExtensionState", () => {
 			showRooIgnoredFiles: true,
 			renderContext: "sidebar",
 			maxReadFileLine: 500,
+			notebookOutputSizeLimit: 1000,
+			notebookExecutionTimeoutSeconds: 30,
 		}
 
 		const prevState: ExtensionState = {

@@ -2029,6 +2029,26 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						await this.postStateToWebview()
 						break
 					}
+					case "notebookOutputSizeLimit":
+						await this.updateGlobalState("notebookOutputSizeLimit", message.value)
+						await this.postStateToWebview()
+						break
+					case "notebookExecutionTimeoutSeconds":
+						await this.updateGlobalState("notebookExecutionTimeoutSeconds", message.value)
+						await this.postStateToWebview()
+						break
+					case "alwaysAllowReadNotebook":
+						await this.updateGlobalState("alwaysAllowReadNotebook", message.bool ?? undefined)
+						await this.postStateToWebview()
+						break
+					case "alwaysAllowEditNotebook":
+						await this.updateGlobalState("alwaysAllowEditNotebook", message.bool ?? undefined)
+						await this.postStateToWebview()
+						break
+					case "alwaysAllowExecuteNotebook":
+						await this.updateGlobalState("alwaysAllowExecuteNotebook", message.bool ?? undefined)
+						await this.postStateToWebview()
+						break
 				}
 			},
 			null,
@@ -2538,6 +2558,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			showRooIgnoredFiles,
 			language,
 			maxReadFileLine,
+			notebookOutputSizeLimit,
+			notebookExecutionTimeoutSeconds,
+			alwaysAllowReadNotebook,
+			alwaysAllowEditNotebook,
+			alwaysAllowExecuteNotebook,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
@@ -2610,6 +2635,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			language,
 			renderContext: this.renderContext,
 			maxReadFileLine: maxReadFileLine ?? 500,
+			notebookOutputSizeLimit: notebookOutputSizeLimit ?? 2000,
+			notebookExecutionTimeoutSeconds: notebookExecutionTimeoutSeconds ?? 30,
+			alwaysAllowReadNotebook: alwaysAllowReadNotebook ?? false,
+			alwaysAllowEditNotebook: alwaysAllowEditNotebook ?? false,
+			alwaysAllowExecuteNotebook: alwaysAllowExecuteNotebook ?? false,
 		}
 	}
 
@@ -2764,6 +2794,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 			maxReadFileLine: stateValues.maxReadFileLine ?? 500,
+			notebookOutputSizeLimit: stateValues.notebookOutputSizeLimit ?? 2000,
+			notebookExecutionTimeoutSeconds: stateValues.notebookExecutionTimeoutSeconds ?? 30,
+			alwaysAllowReadNotebook: stateValues.alwaysAllowReadNotebook ?? false,
+			alwaysAllowEditNotebook: stateValues.alwaysAllowEditNotebook ?? false,
+			alwaysAllowExecuteNotebook: stateValues.alwaysAllowExecuteNotebook ?? false,
 		}
 	}
 

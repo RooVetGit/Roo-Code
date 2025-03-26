@@ -29,7 +29,8 @@
 		"advanced": "進階",
 		"experimental": "實驗性功能",
 		"language": "語言",
-		"about": "關於 Roo Code"
+		"about": "關於 Roo Code",
+		"notebook": "筆記本"
 	},
 	"autoApprove": {
 		"description": "允許 Roo 無需批准即執行操作。僅在您完全信任 AI 並了解相關安全風險時啟用這些設定。",
@@ -435,5 +436,16 @@
 	"labels": {
 		"customArn": "自定義 ARN",
 		"useCustomArn": "使用自定義 ARN..."
+	},
+	"notebook": {
+		"outputSizeLimit": {
+			"label": "輸出大小限制",
+			"description": "使用筆記本工具時筆記本單元輸出的最大字元限制。"
+		},
+		"executionTimeout": {
+			"label": "執行逾時",
+			"description": "等待筆記本單元完成執行的最長時間。"
+		},
+		"chars": "字元"
 	}
 }

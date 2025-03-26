@@ -29,7 +29,8 @@
 		"advanced": "Advanced",
 		"experimental": "Experimental Features",
 		"language": "Language",
-		"about": "About Roo Code"
+		"about": "About Roo Code",
+		"notebook": "Notebook"
 	},
 	"autoApprove": {
 		"description": "Allow Roo to automatically perform operations without requiring approval. Enable these settings only if you fully trust the AI and understand the associated security risks.",
@@ -434,5 +435,16 @@
 	"labels": {
 		"customArn": "Custom ARN",
 		"useCustomArn": "Use custom ARN..."
+	},
+	"notebook": {
+		"outputSizeLimit": {
+			"label": "Output Size Limit",
+			"description": "Maximum character limit for notebook cell outputs when using notebook tools."
+		},
+		"executionTimeout": {
+			"label": "Execution Timeout",
+			"description": "Maximum time to wait for a notebook cell to complete execution."
+		},
+		"chars": "chars"
 	}
 }
