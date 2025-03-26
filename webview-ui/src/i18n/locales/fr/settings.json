@@ -345,6 +345,26 @@
 		"description": "Contrôle l'aléatoire dans les réponses du modèle.",
 		"rangeDescription": "Des valeurs plus élevées rendent la sortie plus aléatoire, des valeurs plus basses la rendent plus déterministe."
 	},
+	"minP": {
+		"useCustom": "Utiliser un min_p personnalisé",
+		"description": "Seuil de probabilité minimum pour la sélection des tokens.",
+		"rangeDescription": "Des valeurs plus élevées rendent la sortie plus ciblée, des valeurs plus basses permettent plus de diversité."
+	},
+	"maxP": {
+		"useCustom": "Utiliser un max_p (top_p) personnalisé",
+		"description": "Paramètre d'échantillonnage du noyau.",
+		"rangeDescription": "Des valeurs plus élevées incluent plus de tokens, des valeurs plus basses rendent la sortie plus ciblée."
+	},
+	"topK": {
+		"useCustom": "Utiliser un top_k personnalisé",
+		"description": "Limite la sélection des tokens aux K tokens les plus probables.",
+		"rangeDescription": "Des valeurs plus élevées permettent plus de diversité, des valeurs plus basses rendent la sortie plus ciblée."
+	},
+	"repetitionPenalty": {
+		"useCustom": "Utiliser une pénalité de répétition personnalisée",
+		"description": "Pénalise les tokens répétés pour réduire le texte répétitif.",
+		"rangeDescription": "Des valeurs plus élevées réduisent la répétition plus fortement."
+	},
 	"modelInfo": {
 		"supportsImages": "Prend en charge les images",
 		"noImages": "Ne prend pas en charge les images",

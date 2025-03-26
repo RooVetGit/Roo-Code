@@ -345,6 +345,26 @@
 		"description": "モデルの応答のランダム性を制御します。",
 		"rangeDescription": "高い値は出力をよりランダムに、低い値はより決定論的にします。"
 	},
+	"minP": {
+		"useCustom": "カスタムmin_pを使用",
+		"description": "トークン選択の最小確率しきい値。",
+		"rangeDescription": "高い値は出力をより集中的に、低い値はより多様性を許容します。"
+	},
+	"maxP": {
+		"useCustom": "カスタムmax_p (top_p)を使用",
+		"description": "核サンプリングパラメータ。",
+		"rangeDescription": "高い値はより多くのトークンを含み、低い値は出力をより集中的にします。"
+	},
+	"topK": {
+		"useCustom": "カスタムtop_kを使用",
+		"description": "トークン選択を最も可能性の高いK個のトークンに制限します。",
+		"rangeDescription": "高い値はより多様性を許容し、低い値は出力をより集中的にします。"
+	},
+	"repetitionPenalty": {
+		"useCustom": "カスタム繰り返しペナルティを使用",
+		"description": "繰り返しテキストを減らすために繰り返されるトークンにペナルティを与えます。",
+		"rangeDescription": "高い値は繰り返しをより強く減少させます。"
+	},
 	"modelInfo": {
 		"supportsImages": "画像をサポート",
 		"noImages": "画像をサポートしていません",

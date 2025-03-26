@@ -345,6 +345,26 @@
 		"description": "控制模型响应中的随机性。",
 		"rangeDescription": "较高的值使输出更随机，较低的值使其更确定性。"
 	},
+	"minP": {
+		"useCustom": "使用自定义 min_p",
+		"description": "令牌选择的最小概率阈值。",
+		"rangeDescription": "较高的值使输出更集中，较低的值允许更多多样性。"
+	},
+	"maxP": {
+		"useCustom": "使用自定义 max_p (top_p)",
+		"description": "核采样参数。",
+		"rangeDescription": "较高的值包含更多令牌，较低的值使输出更集中。"
+	},
+	"topK": {
+		"useCustom": "使用自定义 top_k",
+		"description": "将令牌选择限制为最可能的 K 个令牌。",
+		"rangeDescription": "较高的值允许更多多样性，较低的值使输出更集中。"
+	},
+	"repetitionPenalty": {
+		"useCustom": "使用自定义重复惩罚",
+		"description": "对重复的令牌进行惩罚以减少重复文本。",
+		"rangeDescription": "较高的值更强烈地减少重复。"
+	},
 	"modelInfo": {
 		"supportsImages": "支持图像",
 		"noImages": "不支持图像",

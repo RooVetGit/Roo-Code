@@ -345,6 +345,26 @@
 		"description": "Kiểm soát tính ngẫu nhiên trong phản hồi của mô hình.",
 		"rangeDescription": "Giá trị cao hơn làm cho đầu ra ngẫu nhiên hơn, giá trị thấp hơn làm cho nó xác định hơn."
 	},
+	"minP": {
+		"useCustom": "Sử dụng min_p tùy chỉnh",
+		"description": "Ngưỡng xác suất tối thiểu cho việc lựa chọn token.",
+		"rangeDescription": "Giá trị cao hơn làm cho đầu ra tập trung hơn, giá trị thấp hơn cho phép đa dạng hơn."
+	},
+	"maxP": {
+		"useCustom": "Sử dụng max_p (top_p) tùy chỉnh",
+		"description": "Tham số lấy mẫu hạt nhân.",
+		"rangeDescription": "Giá trị cao hơn bao gồm nhiều token hơn, giá trị thấp hơn làm cho đầu ra tập trung hơn."
+	},
+	"topK": {
+		"useCustom": "Sử dụng top_k tùy chỉnh",
+		"description": "Giới hạn lựa chọn token cho K token có khả năng cao nhất.",
+		"rangeDescription": "Giá trị cao hơn cho phép đa dạng hơn, giá trị thấp hơn làm cho đầu ra tập trung hơn."
+	},
+	"repetitionPenalty": {
+		"useCustom": "Sử dụng hình phạt lặp lại tùy chỉnh",
+		"description": "Phạt các token lặp lại để giảm văn bản lặp lại.",
+		"rangeDescription": "Giá trị cao hơn giảm lặp lại mạnh mẽ hơn."
+	},
 	"modelInfo": {
 		"supportsImages": "Hỗ trợ hình ảnh",
 		"noImages": "Không hỗ trợ hình ảnh",

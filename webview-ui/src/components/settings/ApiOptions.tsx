@@ -53,6 +53,10 @@ import { VSCodeButtonLink } from "../common/VSCodeButtonLink"
 import { ModelInfoView } from "./ModelInfoView"
 import { ModelPicker } from "./ModelPicker"
 import { TemperatureControl } from "./TemperatureControl"
+import { MinPControl } from "./MinPControl"
+import { MaxPControl } from "./MaxPControl"
+import { TopKControl } from "./TopKControl"
+import { RepetitionPenaltyControl } from "./RepetitionPenaltyControl"
 import { validateApiConfiguration, validateModelId, validateBedrockArn } from "@/utils/validate"
 import { ApiErrorMessage } from "./ApiErrorMessage"
 import { ThinkingBudget } from "./ThinkingBudget"
@@ -1594,11 +1598,29 @@ const ApiOptions = ({
 			)}
 
 			{!fromWelcomeView && (
-				<TemperatureControl
-					value={apiConfiguration?.modelTemperature}
-					onChange={handleInputChange("modelTemperature", noTransform)}
-					maxValue={2}
-				/>
+				<>
+					<TemperatureControl
+						value={apiConfiguration?.modelTemperature}
+						onChange={handleInputChange("modelTemperature", noTransform)}
+						maxValue={2}
+					/>
+					<MinPControl
+						value={apiConfiguration?.modelMinP}
+						onChange={handleInputChange("modelMinP", noTransform)}
+					/>
+					<MaxPControl
+						value={apiConfiguration?.modelMaxP}
+						onChange={handleInputChange("modelMaxP", noTransform)}
+					/>
+					<TopKControl
+						value={apiConfiguration?.modelTopK}
+						onChange={handleInputChange("modelTopK", noTransform)}
+					/>
+					<RepetitionPenaltyControl
+						value={apiConfiguration?.modelRepetitionPenalty}
+						onChange={handleInputChange("modelRepetitionPenalty", noTransform)}
+					/>
+				</>
 			)}
 		</div>
 	)

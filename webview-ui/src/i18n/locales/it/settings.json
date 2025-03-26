@@ -345,6 +345,26 @@
 		"description": "Controlla la casualità nelle risposte del modello.",
 		"rangeDescription": "Valori più alti rendono l'output più casuale, valori più bassi lo rendono più deterministico."
 	},
+	"minP": {
+		"useCustom": "Usa min_p personalizzato",
+		"description": "Soglia minima di probabilità per la selezione dei token.",
+		"rangeDescription": "Valori più alti rendono l'output più focalizzato, valori più bassi consentono maggiore diversità."
+	},
+	"maxP": {
+		"useCustom": "Usa max_p (top_p) personalizzato",
+		"description": "Parametro di campionamento del nucleo.",
+		"rangeDescription": "Valori più alti includono più token, valori più bassi rendono l'output più focalizzato."
+	},
+	"topK": {
+		"useCustom": "Usa top_k personalizzato",
+		"description": "Limita la selezione dei token ai K token più probabili.",
+		"rangeDescription": "Valori più alti consentono maggiore diversità, valori più bassi rendono l'output più focalizzato."
+	},
+	"repetitionPenalty": {
+		"useCustom": "Usa penalità di ripetizione personalizzata",
+		"description": "Penalizza i token ripetuti per ridurre il testo ripetitivo.",
+		"rangeDescription": "Valori più alti riducono la ripetizione più fortemente."
+	},
 	"modelInfo": {
 		"supportsImages": "Supporta immagini",
 		"noImages": "Non supporta immagini",

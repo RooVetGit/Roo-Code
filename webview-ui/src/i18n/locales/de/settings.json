@@ -345,6 +345,26 @@
 		"description": "Steuert die Zufälligkeit in den Antworten des Modells.",
 		"rangeDescription": "Höhere Werte machen die Ausgabe zufälliger, niedrigere Werte machen sie deterministischer."
 	},
+	"minP": {
+		"useCustom": "Benutzerdefiniertes min_p verwenden",
+		"description": "Minimaler Wahrscheinlichkeitsschwellenwert für die Token-Auswahl.",
+		"rangeDescription": "Höhere Werte machen die Ausgabe fokussierter, niedrigere Werte erlauben mehr Vielfalt."
+	},
+	"maxP": {
+		"useCustom": "Benutzerdefiniertes max_p (top_p) verwenden",
+		"description": "Nucleus-Sampling-Parameter.",
+		"rangeDescription": "Höhere Werte schließen mehr Tokens ein, niedrigere Werte machen die Ausgabe fokussierter."
+	},
+	"topK": {
+		"useCustom": "Benutzerdefiniertes top_k verwenden",
+		"description": "Begrenzt die Token-Auswahl auf die K wahrscheinlichsten Tokens.",
+		"rangeDescription": "Höhere Werte erlauben mehr Vielfalt, niedrigere Werte machen die Ausgabe fokussierter."
+	},
+	"repetitionPenalty": {
+		"useCustom": "Benutzerdefinierte Wiederholungsstrafe verwenden",
+		"description": "Bestraft wiederholte Tokens, um repetitiven Text zu reduzieren.",
+		"rangeDescription": "Höhere Werte reduzieren Wiederholungen stärker."
+	},
 	"modelInfo": {
 		"supportsImages": "Unterstützt Bilder",
 		"noImages": "Unterstützt keine Bilder",
