@@ -2,17 +2,21 @@ import { z } from "zod"
 
 import type {
 	ProviderName,
-	ModelInfo,
-	ExperimentId,
 	CheckpointStorage,
 	ToolGroup,
 	Language,
 	TelemetrySetting,
+	ProviderSettingsKey,
 	SecretStateKey,
 	GlobalStateKey,
-	GlobalSettings,
+	ModelInfo,
+	ApiConfigMeta,
+	HistoryItem,
+	GroupEntry,
+	ModeConfig,
+	ExperimentId,
 	ProviderSettings,
-	ProviderSettingsKey,
+	GlobalSettings,
 } from "../exports/roo-code"
 
 import { Keys, AssertEqual, Equals } from "../utils/type-fu"
@@ -103,7 +107,7 @@ const languages: Record<Language, true> = {
 	"zh-TW": true,
 }
 
-export const LANGUAGES = Object.keys(languages) as Language[]
+const LANGUAGES = Object.keys(languages) as Language[]
 
 const languagesEnum: [Language, ...Language[]] = [LANGUAGES[0], ...LANGUAGES.slice(1).map((p) => p)]
 
@@ -119,7 +123,7 @@ const telemetrySettings: Record<TelemetrySetting, true> = {
 	disabled: true,
 }
 
-export const TELEMETRY_SETTINGS = Object.keys(telemetrySettings) as TelemetrySetting[]
+const TELEMETRY_SETTINGS = Object.keys(telemetrySettings) as TelemetrySetting[]
 
 const telemetrySettingsEnum: [TelemetrySetting, ...TelemetrySetting[]] = [
 	TELEMETRY_SETTINGS[0],
@@ -242,7 +246,7 @@ export const isSecretStateKey = (key: string): key is SecretStateKey =>
  * GlobalStateKey
  */
 
-export const globalStateKeys: Record<GlobalStateKey, true> = {
+const globalStateKeys: Record<GlobalStateKey, true> = {
 	apiProvider: true,
 	apiModelId: true,
 	glamaModelId: true,
@@ -344,11 +348,48 @@ export const globalStateKeys: Record<GlobalStateKey, true> = {
 
 export const GLOBAL_STATE_KEYS = Object.keys(globalStateKeys) as GlobalStateKey[]
 
-export const isGlobalStateKey = (key: string): key is GlobalStateKey =>
-	GLOBAL_STATE_KEYS.includes(key as GlobalStateKey)
+/**
+ * PassThroughStateKey
+ *
+ * TODO: Why is this necessary?
+ */
+
+const PASS_THROUGH_STATE_KEYS = ["taskHistory"] as const
+
+type PassThroughStateKey = (typeof PASS_THROUGH_STATE_KEYS)[number]
+
+export const isPassThroughStateKey = (key: string): key is PassThroughStateKey =>
+	PASS_THROUGH_STATE_KEYS.includes(key as PassThroughStateKey)
 
 /**
  * Schemas
+ */
+
+/**
+ * ModelInfo
+ */
+
+const modelInfoSchema = z.object({
+	maxTokens: z.number().optional(),
+	contextWindow: z.number(),
+	supportsImages: z.boolean().optional(),
+	supportsComputerUse: z.boolean().optional(),
+	supportsPromptCache: z.boolean(),
+	inputPrice: z.number().optional(),
+	outputPrice: z.number().optional(),
+	cacheWritesPrice: z.number().optional(),
+	cacheReadsPrice: z.number().optional(),
+	description: z.string().optional(),
+	reasoningEffort: z.enum(["low", "medium", "high"]).optional(),
+	thinking: z.boolean().optional(),
+})
+
+// Throws a type error if the inferred type of the modelInfoSchema is not equal
+// to ModelInfo.
+type _AssertModelInfo = AssertEqual<Equals<ModelInfo, z.infer<typeof modelInfoSchema>>>
+
+/**
+ * ApiConfigMeta
  */
 
 const apiConfigMetaSchema = z.object({
@@ -357,7 +398,13 @@ const apiConfigMetaSchema = z.object({
 	apiProvider: z.enum(providerNamesEnum).optional(),
 })
 
-const taskHistorySchema = z.object({
+type _AssertApiConfigMeta = AssertEqual<Equals<ApiConfigMeta, z.infer<typeof apiConfigMetaSchema>>>
+
+/**
+ * HistoryItem
+ */
+
+const historyItemSchema = z.object({
 	id: z.string(),
 	number: z.number(),
 	ts: z.number(),
@@ -370,13 +417,17 @@ const taskHistorySchema = z.object({
 	size: z.number().optional(),
 })
 
-const toolGroupSchema = z.enum(toolGroupsEnum)
+type _AssertHistoryItem = AssertEqual<Equals<HistoryItem, z.infer<typeof historyItemSchema>>>
+
+/**
+ * GroupEntry
+ */
 
 const groupEntrySchema = z.union([
-	toolGroupSchema,
+	z.enum(toolGroupsEnum),
 	z
 		.tuple([
-			toolGroupSchema,
+			z.enum(toolGroupsEnum),
 			z.object({
 				fileRegex: z.string().optional(),
 				description: z.string().optional(),
@@ -384,6 +435,12 @@ const groupEntrySchema = z.union([
 		])
 		.readonly(),
 ])
+
+type _AssertGroupEntry = AssertEqual<Equals<GroupEntry, z.infer<typeof groupEntrySchema>>>
+
+/**
+ * ModeConfig
+ */
 
 const modeConfigSchema = z.object({
 	slug: z.string(),
@@ -394,6 +451,12 @@ const modeConfigSchema = z.object({
 	source: z.enum(["global", "project"]).optional(),
 })
 
+type _AssertModeConfig = AssertEqual<Equals<ModeConfig, z.infer<typeof modeConfigSchema>>>
+
+/**
+ * ExperimentId
+ */
+
 const experimentsSchema = z.object({
 	experimentalDiffStrategy: z.boolean(),
 	search_and_replace: z.boolean(),
@@ -401,6 +464,10 @@ const experimentsSchema = z.object({
 	powerSteering: z.boolean(),
 	multi_search_and_replace: z.boolean(),
 })
+
+/**
+ * GlobalSettings
+ */
 
 // Throws a type error if the inferred type of the experimentsSchema is not
 // equal to  ExperimentId.
@@ -411,7 +478,7 @@ export const globalSettingsSchema = z.object({
 	listApiConfigMeta: z.array(apiConfigMetaSchema).optional(),
 	lastShownAnnouncementId: z.string().optional(),
 	customInstructions: z.string().optional(),
-	taskHistory: z.array(taskHistorySchema).optional(),
+	taskHistory: z.array(historyItemSchema).optional(),
 
 	autoApprovalEnabled: z.boolean().optional(),
 	alwaysAllowReadOnly: z.boolean().optional(),
@@ -484,24 +551,9 @@ export const globalSettingsSchema = z.object({
 // equal to GlobalSettings.
 type _AssertGlobalSettings = AssertEqual<Equals<GlobalSettings, z.infer<typeof globalSettingsSchema>>>
 
-export const modelInfoSchema = z.object({
-	maxTokens: z.number().optional(),
-	contextWindow: z.number(),
-	supportsImages: z.boolean().optional(),
-	supportsComputerUse: z.boolean().optional(),
-	supportsPromptCache: z.boolean(),
-	inputPrice: z.number().optional(),
-	outputPrice: z.number().optional(),
-	cacheWritesPrice: z.number().optional(),
-	cacheReadsPrice: z.number().optional(),
-	description: z.string().optional(),
-	reasoningEffort: z.enum(["low", "medium", "high"]).optional(),
-	thinking: z.boolean().optional(),
-})
-
-// Throws a type error if the inferred type of the modelInfoSchema is not equal
-// to ModelInfo.
-type _AssertModelInfo = AssertEqual<Equals<ModelInfo, z.infer<typeof modelInfoSchema>>>
+/**
+ * ProviderSettings
+ */
 
 export const providerSettingsSchema = z.object({
 	apiProvider: z.enum(providerNamesEnum).optional(),
@@ -596,15 +648,3 @@ export const providerSettingsSchema = z.object({
 // Throws a type error if the inferred type of the providerSettingsSchema is not
 // equal to ProviderSettings.
 type _AssertProviderSettings = AssertEqual<Equals<ProviderSettings, z.infer<typeof providerSettingsSchema>>>
-
-export const rooCodeSettingsSchema = globalSettingsSchema.merge(providerSettingsSchema)
-
-/**
- * Pass-through state keys.
- * TODO: What are these?
- */
-
-export const PASS_THROUGH_STATE_KEYS = ["taskHistory"] as const
-
-export const isPassThroughStateKey = (key: string): key is (typeof PASS_THROUGH_STATE_KEYS)[number] =>
-	PASS_THROUGH_STATE_KEYS.includes(key as (typeof PASS_THROUGH_STATE_KEYS)[number])
