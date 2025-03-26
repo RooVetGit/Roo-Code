@@ -290,6 +290,9 @@
 			"description": "Maksymalny czas oczekiwania na inicjalizację integracji powłoki przed wykonaniem poleceń. Dla użytkowników z długim czasem uruchamiania powłoki, ta wartość może wymagać zwiększenia, jeśli widzisz błędy \"Shell Integration Unavailable\" w terminalu."
 		}
 	},
+	"rateLimit": {
+		"useCustom": "Użyj niestandardowego limitu szybkości"
+	},
 	"advanced": {
 		"rateLimit": {
 			"label": "Limit szybkości",

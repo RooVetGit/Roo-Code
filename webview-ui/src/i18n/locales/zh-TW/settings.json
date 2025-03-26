@@ -290,6 +290,9 @@
 			"description": "shell 綜合初始化的最長等待時間"
 		}
 	},
+	"rateLimit": {
+		"useCustom": "使用自訂速率限制"
+	},
 	"advanced": {
 		"rateLimit": {
 			"label": "速率限制",

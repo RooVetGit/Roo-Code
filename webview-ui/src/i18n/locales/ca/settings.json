@@ -290,6 +290,9 @@
 			"description": "Temps màxim d'espera per a la inicialització de la integració de shell abans d'executar comandes. Per a usuaris amb temps d'inici de shell llargs, aquest valor pot necessitar ser augmentat si veieu errors \"Shell Integration Unavailable\" al terminal."
 		}
 	},
+	"rateLimit": {
+		"useCustom": "Utilitzar límit de freqüència personalitzat"
+	},
 	"advanced": {
 		"rateLimit": {
 			"label": "Límit de freqüència",

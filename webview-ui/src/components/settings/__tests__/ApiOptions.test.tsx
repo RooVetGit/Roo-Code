@@ -57,6 +57,7 @@ jest.mock("@/components/ui", () => ({
 }))
 
 jest.mock("../TemperatureControl", () => ({
+	__esModule: true,
 	TemperatureControl: ({ value, onChange }: any) => (
 		<div data-testid="temperature-control">
 			<input
@@ -71,8 +72,25 @@ jest.mock("../TemperatureControl", () => ({
 	),
 }))
 
+jest.mock("../RateLimitControl", () => ({
+	__esModule: true,
+	RateLimitControl: ({ value, onChange, maxValue }: any) => (
+		<div data-testid="rate-limit-control">
+			<input
+				type="range"
+				value={value || 0}
+				onChange={(e) => onChange(parseInt(e.target.value))}
+				min={0}
+				max={maxValue || 60}
+				step={1}
+			/>
+		</div>
+	),
+}))
+
 // Mock ThinkingBudget component
 jest.mock("../ThinkingBudget", () => ({
+	__esModule: true,
 	ThinkingBudget: ({ apiConfiguration, setApiConfigurationField, modelInfo, provider }: any) =>
 		modelInfo?.thinking ? (
 			<div data-testid="thinking-budget" data-provider={provider}>

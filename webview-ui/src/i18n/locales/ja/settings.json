@@ -290,6 +290,9 @@
 			"description": "コマンドを実行する前にシェル統合の初期化を待つ最大時間。シェルの起動時間が長いユーザーの場合、ターミナルで「Shell Integration Unavailable」エラーが表示される場合は、この値を増やす必要があるかもしれません。"
 		}
 	},
+	"rateLimit": {
+		"useCustom": "カスタムレート制限を使用"
+	},
 	"advanced": {
 		"rateLimit": {
 			"label": "レート制限",
