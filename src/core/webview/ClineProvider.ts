@@ -73,6 +73,7 @@ import { getLmStudioModels } from "../../api/providers/lmstudio"
 import { ACTION_NAMES } from "../CodeActionProvider"
 import { Cline, ClineOptions } from "../Cline"
 import { openMention } from "../mentions"
+import { cspGenerate } from "../../shared/csp"
 import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
@@ -588,6 +589,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		}
 
 		const nonce = getNonce()
+		const csp = cspGenerate(webview, nonce, true)
 
 		const stylesUri = getUri(webview, this.contextProxy.extensionUri, [
 			"webview-ui",
@@ -619,26 +621,17 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			</script>
 		`
 
-		const csp = [
-			"default-src 'none'",
-			`font-src ${webview.cspSource}`,
-			`style-src ${webview.cspSource} 'unsafe-inline' https://* http://${localServerUrl} http://0.0.0.0:${localPort}`,
-			`img-src ${webview.cspSource} data:`,
-			`script-src 'unsafe-eval' ${webview.cspSource} https://* https://*.posthog.com http://${localServerUrl} http://0.0.0.0:${localPort} 'nonce-${nonce}'`,
-			`connect-src https://* https://*.posthog.com ws://${localServerUrl} ws://0.0.0.0:${localPort} http://${localServerUrl} http://0.0.0.0:${localPort}`,
-		]
-
 		return /*html*/ `
 			<!DOCTYPE html>
 			<html lang="en">
 				<head>
 					<meta charset="utf-8">
 					<meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
-					<meta http-equiv="Content-Security-Policy" content="${csp.join("; ")}">
+					<meta http-equiv="Content-Security-Policy" content="${csp}">
 					<link rel="stylesheet" type="text/css" href="${stylesUri}">
 					<link href="${codiconsUri}" rel="stylesheet" />
 					<script nonce="${nonce}">
-						window.IMAGES_BASE_URI = "${imagesUri}"
+					window.IMAGES_BASE_URI = "${imagesUri}"
 					</script>
 					<title>Roo Code</title>
 				</head>
@@ -710,21 +703,22 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		in meta tag we add nonce attribute: A cryptographic nonce (only used once) to allow scripts. The server must generate a unique nonce value each time it transmits a policy. It is critical to provide a nonce that cannot be guessed as bypassing a resource's policy is otherwise trivial.
 		*/
 		const nonce = getNonce()
+		const csp = cspGenerate(webview, nonce, false)
 
 		// Tip: Install the es6-string-html VS Code extension to enable code highlighting below
 		return /*html*/ `
-        <!DOCTYPE html>
-        <html lang="en">
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
-            <meta name="theme-color" content="#000000">
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:; script-src 'nonce-${nonce}' https://us-assets.i.posthog.com; connect-src https://openrouter.ai https://us.i.posthog.com https://us-assets.i.posthog.com;">
+		        <!DOCTYPE html>
+		        <html lang="en">
+		          <head>
+		            <meta charset="utf-8">
+		            <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
+		            <meta name="theme-color" content="#000000">
+		            <meta http-equiv="Content-Security-Policy" content="${csp}">
             <link rel="stylesheet" type="text/css" href="${stylesUri}">
-			<link href="${codiconsUri}" rel="stylesheet" />
-			<script nonce="${nonce}">
-				window.IMAGES_BASE_URI = "${imagesUri}"
-			</script>
+<link href="${codiconsUri}" rel="stylesheet" />
+<script nonce="${nonce}">
+window.IMAGES_BASE_URI = "${imagesUri}"
+</script>
             <title>Roo Code</title>
           </head>
           <body>
