@@ -480,8 +480,6 @@ export const globalSettingsSchema = z.object({
 	enhancementApiConfigId: z.string().optional(),
 })
 
-type Key = "vsCodeLmModelSelector"
-
 // Throws a type error if the inferred type of the globalSettingsSchema is not
 // equal to GlobalSettings.
 type _AssertGlobalSettings = AssertEqual<Equals<GlobalSettings, z.infer<typeof globalSettingsSchema>>>
