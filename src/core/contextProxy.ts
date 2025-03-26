@@ -149,7 +149,7 @@ export class ContextProxy {
 			: this.originalContext.secrets.store(key, value)
 	}
 
-	private getAllSecrets(): SecretState {
+	private getAllSecretState(): SecretState {
 		return Object.fromEntries(SECRET_STATE_KEYS.map((key) => [key, this.getSecret(key)]))
 	}
 
@@ -271,7 +271,7 @@ export class ContextProxy {
 	}
 
 	public getValues(): RooCodeSettings {
-		return { ...this.getAllGlobalState(), ...this.getAllSecrets() }
+		return { ...this.getAllGlobalState(), ...this.getAllSecretState() }
 	}
 
 	public async setValues(values: RooCodeSettings) {

@@ -328,6 +328,10 @@ export type GlobalSettingsKey = keyof GlobalSettings
 
 /**
  * DiscriminatedProviderSettings
+ *
+ * NOTE: This is actually how our provider settings should be typed, but it
+ * will take a little elbow grease to move to this shape. For now we're just
+ * using it to generate the `ProviderName`.
  */
 
 export type DiscriminatedProviderSettings =
