@@ -77,9 +77,9 @@ const toolGroups: Record<ToolGroup, true> = {
 	modes: true,
 }
 
-const toolGroupKeys = Object.keys(toolGroups) as ToolGroup[]
+const TOOL_GROUPS = Object.keys(toolGroups) as ToolGroup[]
 
-const TOOL_GROUPS: [ToolGroup, ...ToolGroup[]] = [toolGroupKeys[0], ...toolGroupKeys.slice(1).map((p) => p)]
+const toolGroupsEnum: [ToolGroup, ...ToolGroup[]] = [TOOL_GROUPS[0], ...TOOL_GROUPS.slice(1).map((p) => p)]
 
 /**
  * Language
@@ -370,7 +370,7 @@ const taskHistorySchema = z.object({
 	size: z.number().optional(),
 })
 
-const toolGroupSchema = z.enum(TOOL_GROUPS)
+const toolGroupSchema = z.enum(toolGroupsEnum)
 
 const groupEntrySchema = z.union([
 	toolGroupSchema,

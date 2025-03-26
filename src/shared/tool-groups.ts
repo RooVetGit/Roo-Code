@@ -1,3 +1,5 @@
+import type { ToolGroup } from "../exports/roo-code"
+
 // Define tool group configuration
 export type ToolGroupConfig = {
 	tools: readonly string[]
@@ -23,7 +25,7 @@ export const TOOL_DISPLAY_NAMES = {
 	new_task: "create new task",
 } as const
 
-export type ToolGroup = "read" | "edit" | "browser" | "command" | "mcp" | "modes"
+export type { ToolGroup }
 
 // Define available tool groups
 export const TOOL_GROUPS: Record<ToolGroup, ToolGroupConfig> = {
