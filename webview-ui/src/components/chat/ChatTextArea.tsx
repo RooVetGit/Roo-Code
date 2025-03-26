@@ -1026,52 +1026,39 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								]}
 								onChange={(value) => {
 									if (value === "settingsButtonClicked") {
-										// Handle special actions
-										vscode.postMessage({
-											type: "loadApiConfiguration",
-											text: value,
-										})
+										vscode.postMessage({ type: "loadApiConfiguration", text: value })
 									} else {
-										// Use the ID directly with our new message type
-										vscode.postMessage({
-											type: "loadApiConfigurationById",
-											text: value,
-										})
+										vscode.postMessage({ type: "loadApiConfigurationById", text: value })
 									}
 								}}
 								contentClassName="max-h-[300px] overflow-y-auto"
 								triggerClassName="w-full text-ellipsis overflow-hidden"
-								renderItem={(option) => {
-									if (option.type !== DropdownOptionType.ITEM) {
-										return option.label
+								renderItem={({ type, value, label, pinned }) => {
+									if (type !== DropdownOptionType.ITEM) {
+										return label
 									}
 
-									// Get the config from listApiConfigMeta by ID
-									const config = listApiConfigMeta?.find((c) => c.id === option.value)
+									const config = listApiConfigMeta?.find((c) => c.id === value)
 									const isCurrentConfig = config?.name === currentApiConfigName
 
 									return (
-										<div className="flex items-center justify-between w-full">
-											<span>{option.label}</span>
-											<div
-												className={cn(
-													"ml-2 p-1 rounded-sm cursor-pointer hover:bg-[rgba(255,255,255,0.1)]",
-													option.pinned
-														? "text-vscode-focusBorder"
-														: "text-vscode-descriptionForeground opacity-50 hover:opacity-100",
-												)}
-												onClick={(e) => {
-													e.stopPropagation()
-													togglePinnedApiConfig(option.value)
-													vscode.postMessage({
-														type: "toggleApiConfigPin",
-														text: option.value, // Send ID as text
-													})
-												}}
-												title={option.pinned ? t("chat:unpin") : t("chat:pin")}>
-												<Pin className="size-3" />
+										<div className="flex items-center justify-between gap-2 w-full">
+											<div className={cn({ "font-medium": isCurrentConfig })}>{label}</div>
+											<div className="flex items-center gap-1">
+												<Button
+													variant="ghost"
+													size="icon"
+													title={pinned ? t("chat:unpin") : t("chat:pin")}
+													onClick={(e) => {
+														e.stopPropagation()
+														togglePinnedApiConfig(value)
+														vscode.postMessage({ type: "toggleApiConfigPin", text: value })
+													}}
+													className={cn("w-5 h-5", { "bg-accent": pinned })}>
+													<Pin className="size-3 p-0.5 opacity-50" />
+												</Button>
+												{isCurrentConfig && <Check className="size-3" />}
 											</div>
-											{isCurrentConfig && <Check className="size-4 p-0.5 ml-1" />}
 										</div>
 									)
 								}}
