@@ -4,6 +4,7 @@
 - abstract method signatures
 - class declarations (including abstract classes)
 - module declarations
+- arrow functions (lambda functions)
 */
 export default `
 (function_signature
@@ -44,4 +45,6 @@ export default `
   right: [(arrow_function) (function_expression)]) @definition.test
   (#eq? @obj "exports")
   (#eq? @prop "test")
+(arrow_function) @definition.lambda
+
 `

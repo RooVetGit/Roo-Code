@@ -215,32 +215,47 @@ async function parseFile(
 			const startLine = definitionNode.startPosition.row
 			const endLine = definitionNode.endPosition.row
 			const nodeLine = node.startPosition.row
+			const lineCount = endLine - startLine + 1
+
+			// Skip single line items that start with whitespace followed by '<'
+			if (startLine === endLine && /^\s*</.test(lines[startLine])) {
+				return
+			}
 
 			// Create unique keys for definition lines
 			const lineKey = `${startLine}-${lines[startLine]}`
 			const nodeLineKey = `${nodeLine}-${lines[nodeLine]}`
 
-			// Always show the class definition line
-			if (name.includes("class") || (name.includes("name") && name.includes("class"))) {
+			// Handle React components (both class and function components)
+			if (name.includes("react_component")) {
 				if (!processedLines.has(lineKey)) {
 					formattedOutput += `${startLine}--${endLine} | ${lines[startLine]}\n`
 					processedLines.add(lineKey)
 				}
 			}
-
+			// Always show the class definition line
+			else if (name.includes("class") || (name.includes("name") && name.includes("class"))) {
+				if (!processedLines.has(lineKey)) {
+					formattedOutput += `${startLine}--${endLine} | ${lines[startLine]}\n`
+					processedLines.add(lineKey)
+				}
+			}
+			// Handle lambda functions (arrow functions) with at least 4 lines
+			else if (name.includes("lambda")) {
+				if (lineCount >= 4 && !processedLines.has(lineKey)) {
+					formattedOutput += `${startLine}--${endLine} | ${lines[startLine]}\n`
+					processedLines.add(lineKey)
+				}
+			}
 			// Always show method/function definitions
-			// This is crucial for the test case that checks for "testMethod()"
-			if (name.includes("function") || name.includes("method")) {
-				// For function definitions, we need to show the actual line with the function/method name
-				// This handles the test case mocks where nodeLine is 2 (for "testMethod()")
+			else if (name.includes("function") || name.includes("method")) {
 				if (!processedLines.has(nodeLineKey) && lines[nodeLine]) {
 					formattedOutput += `${nodeLine}--${node.endPosition.row} | ${lines[nodeLine]}\n`
 					processedLines.add(nodeLineKey)
 				}
 			}
-
 			// Handle variable and other named definitions
-			if (
+			else if (
 				name.includes("name") &&
 				!name.includes("class") &&
 				!name.includes("function") &&
