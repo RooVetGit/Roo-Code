@@ -3,16 +3,19 @@ import * as path from "path"
 import * as fs from "fs/promises"
 import { fileExistsAtPath } from "./fs"
 import { GlobalFileNames } from "../shared/globalFileNames"
+import { ContextHolder } from "../core/contextHolder"
 
 /**
  * Migrates old settings files to new file names
  *
  * TODO: Remove this migration code in September 2025 (6 months after implementation)
+ * TODO: use inject on the vscode outputchannel
  */
-export async function migrateSettings(
-	context: vscode.ExtensionContext,
-	outputChannel: vscode.OutputChannel,
-): Promise<void> {
+export async function migrateSettings(outputChannel: vscode.OutputChannel): Promise<void> {
+	// ContextHolder is initialized in activate
+	// todo: use inject in the future
+	const context: vscode.ExtensionContext = ContextHolder.getInstanceWithoutArgs().getContext()
+
 	// Legacy file names that need to be migrated to the new names in GlobalFileNames
 	const fileMigrations = [
 		{ oldName: "cline_custom_modes.json", newName: GlobalFileNames.customModes },
@@ -38,6 +41,7 @@ export async function migrateSettings(
 			const oldFileExists = await fileExistsAtPath(oldPath)
 			const newFileExists = await fileExistsAtPath(newPath)
 
+			// Log the migration
 			if (oldFileExists && !newFileExists) {
 				await fs.rename(oldPath, newPath)
 				outputChannel.appendLine(`Renamed ${migration.oldName} to ${migration.newName}`)

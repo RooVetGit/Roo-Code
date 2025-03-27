@@ -4,7 +4,7 @@ import { SecretKey } from "../../../shared/globalState"
 
 // Define our custom secret key type
 type CustomSecretKey = "customInstructionsApiKey"
-
+//todo: remove this subscriber
 export class CustomInstructionsSubscriber {
 	private contextProxy: ContextProxy
 

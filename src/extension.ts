@@ -1,7 +1,7 @@
 import * as vscode from "vscode"
 import * as dotenvx from "@dotenvx/dotenvx"
 import * as path from "path"
-
+import "reflect-metadata"
 // Load environment variables from .env file
 try {
 	// Specify path to .env file in the project root directory
@@ -23,9 +23,11 @@ import { telemetryService } from "./services/telemetry/TelemetryService"
 import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"
 import { API } from "./exports/api"
 import { migrateSettings } from "./utils/migrateSettings"
+import { OutputChannelManager } from "./core/outputChannelManager"
 
 import { handleUri, registerCommands, registerCodeActions, registerTerminalActions } from "./activate"
 import { formatLanguage } from "./shared/language"
+import { ContextHolder } from "./core/contextHolder"
 
 /**
  * Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -35,25 +37,28 @@ import { formatLanguage } from "./shared/language"
  *  - https://github.com/microsoft/vscode-webview-ui-toolkit-samples/tree/main/frameworks/hello-world-react-cra
  */
 
-let outputChannel: vscode.OutputChannel
-let extensionContext: vscode.ExtensionContext
+let extensionContext: ContextHolder
 
 // This method is called when your extension is activated.
 // Your extension is activated the very first time the command is executed.
 export async function activate(context: vscode.ExtensionContext) {
-	extensionContext = context
-	outputChannel = vscode.window.createOutputChannel("Roo-Code")
+	// register a singleton, please use this to get context going forward!
+	extensionContext = ContextHolder.getInstance(context)
+	//register output channel for debugging
+	const outputChannelManager = OutputChannelManager.getInstance() //setup
+	const outputChannel = outputChannelManager.getOutputChannel()
+	// register the output channel with the context
 	context.subscriptions.push(outputChannel)
 	outputChannel.appendLine("Roo-Code extension activated")
 
 	// Migrate old settings to new
-	await migrateSettings(context, outputChannel)
+	await migrateSettings(outputChannel)
 
 	// Initialize telemetry service after environment variables are loaded.
 	telemetryService.initialize()
 
 	// Initialize i18n for internationalization support
-	initializeI18n(context.globalState.get("language") ?? formatLanguage(vscode.env.language))
+	initializeI18n(extensionContext.getContext().globalState.get("language") ?? formatLanguage(vscode.env.language))
 
 	// Initialize terminal shell execution handlers.
 	TerminalRegistry.initialize()
@@ -62,11 +67,11 @@ export async function activate(context: vscode.ExtensionContext) {
 	const defaultCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
 
 	// Initialize global state if not already set.
-	if (!context.globalState.get("allowedCommands")) {
-		context.globalState.update("allowedCommands", defaultCommands)
+	if (!extensionContext.getContext().globalState.get("allowedCommands")) {
+		extensionContext.getContext().globalState.update("allowedCommands", defaultCommands)
 	}
 
-	const provider = new ClineProvider(context, outputChannel, "sidebar")
+	const provider = new ClineProvider(outputChannel, "sidebar")
 	telemetryService.setProvider(provider)
 
 	context.subscriptions.push(
@@ -75,7 +80,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		}),
 	)
 	// register the commands for the extension
-	registerCommands({ context, outputChannel, provider })
+	registerCommands({ context: extensionContext.getContext(), outputChannel, provider })
 
 	/**
 	 * We use the text document content provider API to show the left side for diff
@@ -118,8 +123,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		}),
 	)
 
-	registerCodeActions(context)
-	registerTerminalActions(context)
+	registerCodeActions(extensionContext.getContext()) // TODO: use inject for the context
+	registerTerminalActions(extensionContext.getContext()) // TODO: use inject for the context
 
 	// Implements the `RooCodeAPI` interface.
 	return new API(outputChannel, provider)
@@ -127,9 +132,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
 // This method is called when your extension is deactivated
 export async function deactivate() {
+	const outputChannelManager = OutputChannelManager.getInstance()
+	const outputChannel = outputChannelManager.getOutputChannel()
 	outputChannel.appendLine("Roo-Code extension deactivated")
 	// Clean up MCP server manager
-	await McpServerManager.cleanup(extensionContext)
+	await McpServerManager.cleanup(extensionContext.getContext()) // todo: refactor to call the singleton
 	telemetryService.shutdown()
 
 	// Clean up terminal handlers

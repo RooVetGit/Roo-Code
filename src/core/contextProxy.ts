@@ -13,26 +13,63 @@ import {
 	isPassThroughStateKey,
 } from "../shared/globalState"
 import { API_CONFIG_KEYS, ApiConfiguration } from "../shared/api"
+import { ContextHolder } from "./contextHolder"
 
-export class ContextProxy {
+/*
+ * This class provides a proxy for the vscode.ExtensionContext.
+ * It caches global state and secrets in memory for faster access.
+ * It also provides a method to reset all state and secrets.
+ */
+
+export interface ContextProxyInstance {
+	get isInitialized(): boolean
+	get extensionUri(): vscode.Uri
+	get extensionPath(): string
+	get globalStorageUri(): vscode.Uri
+	get logUri(): vscode.Uri
+	get extension(): vscode.Extension<any>
+	get extensionMode(): vscode.ExtensionMode
+	getGlobalState<T>(key: GlobalStateKey): T | undefined
+	getGlobalState<T>(key: GlobalStateKey, defaultValue: T): T
+	getGlobalState<T>(key: GlobalStateKey, defaultValue?: T): T | undefined
+	updateGlobalState<T>(key: GlobalStateKey, value: T): any
+	getSecret(key: SecretKey): string | undefined
+	storeSecret(key: SecretKey, value?: string): Thenable<void>
+	setValue(key: ConfigurationKey, value: any): Thenable<void>
+	setValues(values: Partial<ConfigurationValues>): Thenable<void>
+	setApiConfiguration(apiConfiguration: ApiConfiguration): Thenable<void>
+	resetAllState(): Thenable<void>
+}
+
+export class ContextProxy implements ContextProxyInstance {
+	private static instance: ContextProxy
+
 	private readonly originalContext: vscode.ExtensionContext
 
 	private stateCache: Map<GlobalStateKey, any>
 	private secretCache: Map<SecretKey, string | undefined>
 	private _isInitialized = false
 
-	constructor(context: vscode.ExtensionContext) {
-		this.originalContext = context
+	private constructor() {
+		this.originalContext = ContextHolder.getInstanceWithoutArgs().getContext()
 		this.stateCache = new Map()
 		this.secretCache = new Map()
-		this._isInitialized = false
+		this.initialize() // Initialize immediately
 	}
 
-	public get isInitialized() {
-		return this._isInitialized
+	public static getInstance(): ContextProxy {
+		if (!ContextProxy.instance) {
+			ContextProxy.instance = new ContextProxy()
+		}
+		return ContextProxy.instance
 	}
 
-	public async initialize() {
+	/**
+	 * Initialize the context proxy by loading global state and secrets.
+	 * This method is called automatically when the instance is created.
+	 */
+	private async initialize() {
+		if (this._isInitialized) return
 		for (const key of GLOBAL_STATE_KEYS) {
 			try {
 				this.stateCache.set(key, this.originalContext.globalState.get(key))
@@ -52,6 +89,10 @@ export class ContextProxy {
 		await Promise.all(promises)
 
 		this._isInitialized = true
+	}
+
+	public get isInitialized() {
+		return this._isInitialized
 	}
 
 	get extensionUri() {
@@ -97,11 +138,23 @@ export class ContextProxy {
 		return this.originalContext.globalState.update(key, value)
 	}
 
+	/**
+	 * Retrieve a secret from the cache.
+	 * @param key The secret key to retrieve
+	 * @returns The cached secret value or undefined if not found
+	 */
 	getSecret(key: SecretKey) {
 		return this.secretCache.get(key)
 	}
 
-	storeSecret(key: SecretKey, value?: string) {
+	/**
+	 * Store a secret in the cache and write it to the context.
+	 * If the value is undefined, the secret will be deleted from the context.
+	 * @param key The secret key to store
+	 * @param value The secret value to store
+	 * @returns A promise that resolves when the operation completes
+	 */
+	storeSecret(key: SecretKey, value?: string): Thenable<void> {
 		// Update cache.
 		this.secretCache.set(key, value)
 
@@ -119,7 +172,7 @@ export class ContextProxy {
 	 * @param value The value to set
 	 * @returns A promise that resolves when the operation completes
 	 */
-	setValue(key: ConfigurationKey, value: any) {
+	setValue(key: ConfigurationKey, value: any): Thenable<void> {
 		if (isSecretKey(key)) {
 			return this.storeSecret(key, value)
 		}

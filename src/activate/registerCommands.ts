@@ -61,7 +61,7 @@ export const registerCommands = (options: RegisterCommandOptions): void => {
 const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOptions) => {
 	return {
 		"roo-cline.plusButtonClicked": async () => {
-			await provider.removeClineFromStack()
+			await provider.clineStackManager.removeClineFromStack()
 			await provider.postStateToWebview()
 			await provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		},

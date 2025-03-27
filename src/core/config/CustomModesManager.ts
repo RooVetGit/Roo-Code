@@ -9,7 +9,7 @@ import { logger } from "../../utils/logging"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 
 const ROOMODES_FILENAME = ".roomodes"
-
+// TODO: Decouple this code
 export class CustomModesManager {
 	private disposables: vscode.Disposable[] = []
 	private isWriting = false

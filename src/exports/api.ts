@@ -53,7 +53,7 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 	}
 
 	public async startNewTask(text?: string, images?: string[]) {
-		await this.provider.removeClineFromStack()
+		await this.provider.clineStackManager.removeClineFromStack()
 		await this.provider.postStateToWebview()
 		await this.provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		await this.provider.postMessageToWebview({ type: "invoke", invoke: "newChat", text, images })
@@ -64,12 +64,18 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 
 	/**
 	 * Returns the current task stack.
+	 * todo: currently unused, to remove...
 	 * @returns An array of task IDs.
 	 */
-	public getCurrentTaskStack() {
-		return this.provider.getCurrentTaskStack()
+	public async getCurrentTaskStack() {
+		return this.provider.clineStackManager.getCurrentTaskStack()
 	}
 
+	/**
+	 * Clears the current task.
+	 * todo: currently unused, to remove...
+	 * @param lastMessage Optional last message to send before clearing.
+	 */
 	public async clearCurrentTask(lastMessage?: string) {
 		await this.provider.finishSubTask(lastMessage)
 	}
