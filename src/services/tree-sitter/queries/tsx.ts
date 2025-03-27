@@ -1,5 +1,8 @@
+import typescriptQuery from "./typescript"
+
 /**
- * Tree-sitter Query for TSX Files
+ * Tree-sitter Query for TSX Files:
+ *    Combines TypeScript queries with TSX-specific React component queries
  *
  * This query captures various TypeScript and React component definitions in TSX files.
  *
@@ -65,7 +68,10 @@
  * - Use direct node matching instead of field names when possible
  * - Simpler patterns are more robust and less prone to errors
  */
-export default `
+
+export default `${typescriptQuery}
+
+; React Component Queries
 ; React Function Components
 (function_declaration
   name: (identifier) @name.definition.function
@@ -77,7 +83,7 @@ export default `
     name: (identifier) @name.definition.function
     value: (arrow_function))) @definition.react_component
 
-; React Class Components - matching tree structure from debug output
+; React Class Components
 (class_declaration
   name: (type_identifier) @name.definition.class
   (class_heritage
@@ -85,50 +91,7 @@ export default `
       (member_expression) @react_base))) @definition.react_component
   (#match? @react_base "^React\\.Component$")
 
-; Functions and Methods
-(arrow_function) @definition.lambda
-
-(function_signature
-  name: (identifier) @name.definition.function) @definition.function
-
-(method_signature
-  name: (property_identifier) @name.definition.method) @definition.method
-
-(abstract_method_signature
-  name: (property_identifier) @name.definition.method) @definition.method
-
-(abstract_class_declaration
-  name: (type_identifier) @name.definition.class) @definition.class
-
-(module
-  name: (identifier) @name.definition.module) @definition.module
-
-(function_declaration
-  name: (identifier) @name.definition.function) @definition.function
-
-(method_definition
-  name: (property_identifier) @name.definition.method) @definition.method
-
-(class_declaration
-  name: (type_identifier) @name.definition.class) @definition.class
-
-; Tests
-(call_expression
-  function: (identifier) @func_name
-  arguments: (arguments
-    (string) @name
-    [(arrow_function) (function_expression)]) @definition.test)
-  (#match? @func_name "^(describe|test|it)$")
-
-(assignment_expression
-  left: (member_expression
-    object: (identifier) @obj
-    property: (property_identifier) @prop)
-  right: [(arrow_function) (function_expression)]) @definition.test
-  (#eq? @obj "exports")
-  (#eq? @prop "test")
-
-; JSX Widget Definitions - captures complete widget components
+; JSX Widget Definitions
 (jsx_element
   (jsx_opening_element
     name: (identifier) @_widget_name)
