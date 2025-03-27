@@ -1,6 +1,7 @@
 import fs from "fs/promises"
 
 import { zodToTs, createTypeAlias, printNode } from "zod-to-ts"
+import { $ } from "execa"
 
 import { typeDefinitions } from "../src/schemas"
 
@@ -11,9 +12,11 @@ async function main() {
 
 	for (const { schema, identifier } of typeDefinitions) {
 		types.push(printNode(createTypeAlias(zodToTs(schema, identifier).node, identifier)))
+		types.push(`export type { ${identifier} }`)
 	}
 
-	await fs.writeFile("src/exports/types.d.ts", types.join("\n\n"))
+	await fs.writeFile("src/exports/types.ts", types.join("\n\n"))
+	await $`npx prettier --write src/exports/types.ts`
 }
 
 main()

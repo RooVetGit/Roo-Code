@@ -1,8 +1,10 @@
-// Update to this file will automatically propgate to src/exports/types.d.ts
+// Updates to this file will automatically propgate to src/exports/types.ts
 // via a pre-commit hook. If you want to update the types before committing you
-// can run `npx tsx scripts/generate-types.ts`.
+// can run `npm run generate-types`.
 
 import { z } from "zod"
+
+import { Equals, Keys, AssertEqual } from "../utils/type-fu"
 
 /**
  * ProviderName
@@ -52,6 +54,9 @@ export const checkpointStoragesSchema = z.enum(checkpointStorages)
 
 export type CheckpointStorage = z.infer<typeof checkpointStoragesSchema>
 
+export const isCheckpointStorage = (value: string): value is CheckpointStorage =>
+	checkpointStorages.includes(value as CheckpointStorage)
+
 /**
  * Language
  */
@@ -77,6 +82,8 @@ export const languages = [
 export const languagesSchema = z.enum(languages)
 
 export type Language = z.infer<typeof languagesSchema>
+
+export const isLanguage = (value: string): value is Language => languages.includes(value as Language)
 
 /**
  * TelemetrySetting
@@ -141,21 +148,21 @@ export const historyItemSchema = z.object({
 export type HistoryItem = z.infer<typeof historyItemSchema>
 
 /**
+ * GroupOptions
+ */
+
+export const groupOptionsSchema = z.object({
+	fileRegex: z.string().optional(),
+	description: z.string().optional(),
+})
+
+export type GroupOptions = z.infer<typeof groupOptionsSchema>
+
+/**
  * GroupEntry
  */
 
-export const groupEntrySchema = z.union([
-	toolGroupsSchema,
-	z
-		.tuple([
-			toolGroupsSchema,
-			z.object({
-				fileRegex: z.string().optional(),
-				description: z.string().optional(),
-			}),
-		])
-		.readonly(),
-])
+export const groupEntrySchema = z.union([toolGroupsSchema, z.tuple([toolGroupsSchema, groupOptionsSchema])])
 
 export type GroupEntry = z.infer<typeof groupEntrySchema>
 
@@ -168,17 +175,60 @@ export const modeConfigSchema = z.object({
 	name: z.string(),
 	roleDefinition: z.string(),
 	customInstructions: z.string().optional(),
-	groups: z.array(groupEntrySchema).readonly(),
+	groups: z.array(groupEntrySchema),
 	source: z.enum(["global", "project"]).optional(),
 })
 
 export type ModeConfig = z.infer<typeof modeConfigSchema>
 
 /**
+ * PromptComponent
+ */
+
+export const promptComponentSchema = z.object({
+	roleDefinition: z.string().optional(),
+	customInstructions: z.string().optional(),
+})
+
+export type PromptComponent = z.infer<typeof promptComponentSchema>
+
+/**
+ * CustomModePrompts
+ */
+
+export const customModePromptsSchema = z.record(z.string(), promptComponentSchema.optional())
+
+export type CustomModePrompts = z.infer<typeof customModePromptsSchema>
+
+/**
+ * CustomSupportPrompts
+ */
+
+export const customSupportPromptsSchema = z.record(z.string(), z.string().optional())
+
+export type CustomSupportPrompts = z.infer<typeof customSupportPromptsSchema>
+
+/**
  * ExperimentId
  */
 
-export const experimentIdSchema = z.object({
+export const experimentIds = [
+	"experimentalDiffStrategy",
+	"search_and_replace",
+	"insert_content",
+	"powerSteering",
+	"multi_search_and_replace",
+] as const
+
+export const experimentIdsSchema = z.enum(experimentIds)
+
+export type ExperimentId = z.infer<typeof experimentIdsSchema>
+
+/**
+ * Experiments
+ */
+
+const experimentsSchema = z.object({
 	experimentalDiffStrategy: z.boolean(),
 	search_and_replace: z.boolean(),
 	insert_content: z.boolean(),
@@ -186,7 +236,187 @@ export const experimentIdSchema = z.object({
 	multi_search_and_replace: z.boolean(),
 })
 
-export type ExperimentId = z.infer<typeof experimentIdSchema>
+export type Experiments = z.infer<typeof experimentsSchema>
+
+type _AssertExperiments = AssertEqual<Equals<ExperimentId, Keys<Experiments>>>
+
+/**
+ * ProviderSettings
+ */
+
+export const providerSettingsSchema = z.object({
+	apiProvider: providerNamesSchema.optional(),
+	// Anthropic
+	apiModelId: z.string().optional(),
+	apiKey: z.string().optional(),
+	anthropicBaseUrl: z.string().optional(),
+	// Glama
+	glamaModelId: z.string().optional(),
+	glamaModelInfo: modelInfoSchema.optional(),
+	glamaApiKey: z.string().optional(),
+	// OpenRouter
+	openRouterApiKey: z.string().optional(),
+	openRouterModelId: z.string().optional(),
+	openRouterModelInfo: modelInfoSchema.optional(),
+	openRouterBaseUrl: z.string().optional(),
+	openRouterSpecificProvider: z.string().optional(),
+	openRouterUseMiddleOutTransform: z.boolean().optional(),
+	// AWS Bedrock
+	awsAccessKey: z.string().optional(),
+	awsSecretKey: z.string().optional(),
+	awsSessionToken: z.string().optional(),
+	awsRegion: z.string().optional(),
+	awsUseCrossRegionInference: z.boolean().optional(),
+	awsUsePromptCache: z.boolean().optional(),
+	awspromptCacheId: z.string().optional(),
+	awsProfile: z.string().optional(),
+	awsUseProfile: z.boolean().optional(),
+	awsCustomArn: z.string().optional(),
+	// Google Vertex
+	vertexKeyFile: z.string().optional(),
+	vertexJsonCredentials: z.string().optional(),
+	vertexProjectId: z.string().optional(),
+	vertexRegion: z.string().optional(),
+	// OpenAI
+	openAiBaseUrl: z.string().optional(),
+	openAiApiKey: z.string().optional(),
+	openAiR1FormatEnabled: z.boolean().optional(),
+	openAiModelId: z.string().optional(),
+	openAiCustomModelInfo: modelInfoSchema.optional(),
+	openAiUseAzure: z.boolean().optional(),
+	azureApiVersion: z.string().optional(),
+	openAiStreamingEnabled: z.boolean().optional(),
+	// Ollama
+	ollamaModelId: z.string().optional(),
+	ollamaBaseUrl: z.string().optional(),
+	// VS Code LM
+	vsCodeLmModelSelector: z
+		.object({
+			vendor: z.string().optional(),
+			family: z.string().optional(),
+			version: z.string().optional(),
+			id: z.string().optional(),
+		})
+		.optional(),
+	// LM Studio
+	lmStudioModelId: z.string().optional(),
+	lmStudioBaseUrl: z.string().optional(),
+	lmStudioDraftModelId: z.string().optional(),
+	lmStudioSpeculativeDecodingEnabled: z.boolean().optional(),
+	// Gemini
+	geminiApiKey: z.string().optional(),
+	googleGeminiBaseUrl: z.string().optional(),
+	// OpenAI Native
+	openAiNativeApiKey: z.string().optional(),
+	// Mistral
+	mistralApiKey: z.string().optional(),
+	mistralCodestralUrl: z.string().optional(),
+	// DeepSeek
+	deepSeekBaseUrl: z.string().optional(),
+	deepSeekApiKey: z.string().optional(),
+	// Unbound
+	unboundApiKey: z.string().optional(),
+	unboundModelId: z.string().optional(),
+	unboundModelInfo: modelInfoSchema.optional(),
+	// Requesty
+	requestyApiKey: z.string().optional(),
+	requestyModelId: z.string().optional(),
+	requestyModelInfo: modelInfoSchema.optional(),
+	// Claude 3.7 Sonnet Thinking
+	modelTemperature: z.number().nullish(),
+	modelMaxTokens: z.number().optional(),
+	modelMaxThinkingTokens: z.number().optional(),
+	// Generic
+	includeMaxTokens: z.boolean().optional(),
+	// Fake AI
+	fakeAi: z.unknown().optional(),
+})
+
+export type ProviderSettings = z.infer<typeof providerSettingsSchema>
+
+type ProviderSettingsRecord = Record<Keys<ProviderSettings>, undefined>
+
+const providerSettingsRecord: ProviderSettingsRecord = {
+	apiProvider: undefined,
+	// Anthropic
+	apiModelId: undefined,
+	apiKey: undefined,
+	anthropicBaseUrl: undefined,
+	// Glama
+	glamaModelId: undefined,
+	glamaModelInfo: undefined,
+	glamaApiKey: undefined,
+	// OpenRouter
+	openRouterApiKey: undefined,
+	openRouterModelId: undefined,
+	openRouterModelInfo: undefined,
+	openRouterBaseUrl: undefined,
+	openRouterSpecificProvider: undefined,
+	openRouterUseMiddleOutTransform: undefined,
+	// AWS Bedrock
+	awsAccessKey: undefined,
+	awsSecretKey: undefined,
+	awsSessionToken: undefined,
+	awsRegion: undefined,
+	awsUseCrossRegionInference: undefined,
+	awsUsePromptCache: undefined,
+	awspromptCacheId: undefined,
+	awsProfile: undefined,
+	awsUseProfile: undefined,
+	awsCustomArn: undefined,
+	// Google Vertex
+	vertexKeyFile: undefined,
+	vertexJsonCredentials: undefined,
+	vertexProjectId: undefined,
+	vertexRegion: undefined,
+	// OpenAI
+	openAiBaseUrl: undefined,
+	openAiApiKey: undefined,
+	openAiR1FormatEnabled: undefined,
+	openAiModelId: undefined,
+	openAiCustomModelInfo: undefined,
+	openAiUseAzure: undefined,
+	azureApiVersion: undefined,
+	openAiStreamingEnabled: undefined,
+	// Ollama
+	ollamaModelId: undefined,
+	ollamaBaseUrl: undefined,
+	// VS Code LM
+	vsCodeLmModelSelector: undefined,
+	lmStudioModelId: undefined,
+	lmStudioBaseUrl: undefined,
+	lmStudioDraftModelId: undefined,
+	lmStudioSpeculativeDecodingEnabled: undefined,
+	// Gemini
+	geminiApiKey: undefined,
+	googleGeminiBaseUrl: undefined,
+	// OpenAI Native
+	openAiNativeApiKey: undefined,
+	// Mistral
+	mistralApiKey: undefined,
+	mistralCodestralUrl: undefined,
+	// DeepSeek
+	deepSeekBaseUrl: undefined,
+	deepSeekApiKey: undefined,
+	// Unbound
+	unboundApiKey: undefined,
+	unboundModelId: undefined,
+	unboundModelInfo: undefined,
+	// Requesty
+	requestyApiKey: undefined,
+	requestyModelId: undefined,
+	requestyModelInfo: undefined,
+	// Claude 3.7 Sonnet Thinking
+	modelTemperature: undefined,
+	modelMaxTokens: undefined,
+	modelMaxThinkingTokens: undefined,
+	// Generic
+	includeMaxTokens: undefined,
+	// Fake AI
+	fakeAi: undefined,
+}
+
+export const PROVIDER_SETTINGS_KEYS = Object.keys(providerSettingsRecord) as Keys<ProviderSettings>[]
 
 /**
  * GlobalSettings
@@ -241,7 +471,7 @@ export const globalSettingsSchema = z.object({
 	rateLimitSeconds: z.number().optional(),
 	diffEnabled: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
-	experiments: experimentIdSchema.optional(),
+	experiments: experimentsSchema.optional(),
 
 	language: languagesSchema.optional(),
 
@@ -253,22 +483,149 @@ export const globalSettingsSchema = z.object({
 	mode: z.string().optional(),
 	modeApiConfigs: z.record(z.string(), z.string()).optional(),
 	customModes: z.array(modeConfigSchema).optional(),
-	customModePrompts: z
-		.record(
-			z.string(),
-			z
-				.object({
-					roleDefinition: z.string().optional(),
-					customInstructions: z.string().optional(),
-				})
-				.optional(),
-		)
-		.optional(),
-	customSupportPrompts: z.record(z.string(), z.string().optional()).optional(),
+	customModePrompts: customModePromptsSchema.optional(),
+	customSupportPrompts: customSupportPromptsSchema.optional(),
 	enhancementApiConfigId: z.string().optional(),
 })
 
 export type GlobalSettings = z.infer<typeof globalSettingsSchema>
+
+type GlobalSettingsRecord = Record<Keys<GlobalSettings>, undefined>
+
+const globalSettingsRecord: GlobalSettingsRecord = {
+	currentApiConfigName: undefined,
+	listApiConfigMeta: undefined,
+	pinnedApiConfigs: undefined,
+
+	lastShownAnnouncementId: undefined,
+	customInstructions: undefined,
+	taskHistory: undefined,
+
+	autoApprovalEnabled: undefined,
+	alwaysAllowReadOnly: undefined,
+	alwaysAllowReadOnlyOutsideWorkspace: undefined,
+	alwaysAllowWrite: undefined,
+	alwaysAllowWriteOutsideWorkspace: undefined,
+	writeDelayMs: undefined,
+	alwaysAllowBrowser: undefined,
+	alwaysApproveResubmit: undefined,
+	requestDelaySeconds: undefined,
+	alwaysAllowMcp: undefined,
+	alwaysAllowModeSwitch: undefined,
+	alwaysAllowSubtasks: undefined,
+	alwaysAllowExecute: undefined,
+	allowedCommands: undefined,
+
+	browserToolEnabled: undefined,
+	browserViewportSize: undefined,
+	screenshotQuality: undefined,
+	remoteBrowserEnabled: undefined,
+	remoteBrowserHost: undefined,
+
+	enableCheckpoints: undefined,
+	checkpointStorage: undefined,
+
+	ttsEnabled: undefined,
+	ttsSpeed: undefined,
+	soundEnabled: undefined,
+	soundVolume: undefined,
+
+	maxOpenTabsContext: undefined,
+	maxWorkspaceFiles: undefined,
+	showRooIgnoredFiles: undefined,
+	maxReadFileLine: undefined,
+
+	terminalOutputLineLimit: undefined,
+	terminalShellIntegrationTimeout: undefined,
+
+	rateLimitSeconds: undefined,
+	diffEnabled: undefined,
+	fuzzyMatchThreshold: undefined,
+	experiments: undefined,
+
+	language: undefined,
+
+	telemetrySetting: undefined,
+
+	mcpEnabled: undefined,
+	enableMcpServerCreation: undefined,
+
+	mode: undefined,
+	modeApiConfigs: undefined,
+	customModes: undefined,
+	customModePrompts: undefined,
+	customSupportPrompts: undefined,
+	enhancementApiConfigId: undefined,
+}
+
+export const GLOBAL_SETTINGS_KEYS = Object.keys(globalSettingsRecord) as Keys<GlobalSettings>[]
+
+/**
+ * RooCodeSettings
+ */
+
+export type RooCodeSettings = GlobalSettings & ProviderSettings
+
+/**
+ * SecretState
+ */
+
+export type SecretState = Pick<
+	ProviderSettings,
+	| "apiKey"
+	| "glamaApiKey"
+	| "openRouterApiKey"
+	| "awsAccessKey"
+	| "awsSecretKey"
+	| "awsSessionToken"
+	| "openAiApiKey"
+	| "geminiApiKey"
+	| "openAiNativeApiKey"
+	| "deepSeekApiKey"
+	| "mistralApiKey"
+	| "unboundApiKey"
+	| "requestyApiKey"
+>
+
+type SecretStateRecord = Record<Keys<SecretState>, undefined>
+
+const secretStateRecord: SecretStateRecord = {
+	apiKey: undefined,
+	glamaApiKey: undefined,
+	openRouterApiKey: undefined,
+	awsAccessKey: undefined,
+	awsSecretKey: undefined,
+	awsSessionToken: undefined,
+	openAiApiKey: undefined,
+	geminiApiKey: undefined,
+	openAiNativeApiKey: undefined,
+	deepSeekApiKey: undefined,
+	mistralApiKey: undefined,
+	unboundApiKey: undefined,
+	requestyApiKey: undefined,
+}
+
+export const SECRET_STATE_KEYS = Object.keys(secretStateRecord) as Keys<SecretState>[]
+
+export const isSecretStateKey = (key: string): key is Keys<SecretState> =>
+	SECRET_STATE_KEYS.includes(key as Keys<SecretState>)
+
+/**
+ * GlobalState
+ */
+
+export type GlobalState = Omit<RooCodeSettings, Keys<SecretState>>
+
+export const GLOBAL_STATE_KEYS = [...GLOBAL_SETTINGS_KEYS, ...PROVIDER_SETTINGS_KEYS].filter(
+	(key: Keys<RooCodeSettings>) => !SECRET_STATE_KEYS.includes(key as Keys<SecretState>),
+) as Keys<GlobalState>[]
+
+export const isGlobalStateKey = (key: string): key is Keys<GlobalState> =>
+	GLOBAL_STATE_KEYS.includes(key as Keys<GlobalState>)
+
+/**
+ * TypeDefinition
+ */
 
 type TypeDefinition = {
 	schema: z.ZodTypeAny
@@ -284,8 +641,14 @@ export const typeDefinitions: TypeDefinition[] = [
 	{ schema: modelInfoSchema, identifier: "ModelInfo" },
 	{ schema: apiConfigMetaSchema, identifier: "ApiConfigMeta" },
 	{ schema: historyItemSchema, identifier: "HistoryItem" },
+	{ schema: groupOptionsSchema, identifier: "GroupOptions" },
 	{ schema: groupEntrySchema, identifier: "GroupEntry" },
 	{ schema: modeConfigSchema, identifier: "ModeConfig" },
-	{ schema: experimentIdSchema, identifier: "ExperimentId" },
+	{ schema: promptComponentSchema, identifier: "PromptComponent" },
+	{ schema: customModePromptsSchema, identifier: "CustomModePrompts" },
+	{ schema: customSupportPromptsSchema, identifier: "CustomSupportPrompts" },
+	{ schema: experimentIdsSchema, identifier: "ExperimentId" },
+	{ schema: experimentsSchema, identifier: "Experiments" },
 	{ schema: globalSettingsSchema, identifier: "GlobalSettings" },
+	{ schema: providerSettingsSchema, identifier: "ProviderSettings" },
 ]

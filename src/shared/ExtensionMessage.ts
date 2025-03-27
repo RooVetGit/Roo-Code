@@ -1,12 +1,18 @@
-import { ApiConfiguration, ModelInfo } from "./api"
-import { HistoryItem } from "./HistoryItem"
+import {
+	ModelInfo,
+	GlobalSettings,
+	ApiConfigMeta,
+	ProviderSettings as ApiConfiguration,
+	HistoryItem,
+	ModeConfig,
+	CheckpointStorage,
+	TelemetrySetting,
+	ExperimentId,
+} from "../schemas"
 import { McpServer } from "./mcp"
 import { GitCommit } from "../utils/git"
-import { Mode, ModeConfig } from "./modes"
-import { ExperimentId } from "./experiments"
-import { CheckpointStorage } from "./checkpoints"
-import { TelemetrySetting } from "./TelemetrySetting"
-import type { GlobalSettings, ApiConfigMeta, ClineMessage, ClineAsk, ClineSay } from "../exports/roo-code"
+import { Mode } from "./modes"
+import type { ClineMessage, ClineAsk, ClineSay } from "../exports/roo-code"
 
 export type { ApiConfigMeta }
 
@@ -262,7 +268,4 @@ export interface ClineApiReqInfo {
 
 export type ClineApiReqCancelReason = "streaming_failed" | "user_cancelled"
 
-export type ToolProgressStatus = {
-	icon?: string
-	text?: string
-}
+export type { ToolProgressStatus } from "../exports/roo-code"
