@@ -8,13 +8,16 @@ import {
 	CheckpointStorage,
 	TelemetrySetting,
 	ExperimentId,
+	ClineAsk,
+	ClineSay,
+	ToolProgressStatus,
+	ClineMessage,
 } from "../schemas"
 import { McpServer } from "./mcp"
 import { GitCommit } from "../utils/git"
 import { Mode } from "./modes"
-import type { ClineMessage, ClineAsk, ClineSay } from "../exports/roo-code"
 
-export type { ApiConfigMeta }
+export type { ApiConfigMeta, ToolProgressStatus }
 
 export interface LanguageModelChatSelector {
 	vendor?: string
@@ -267,5 +270,3 @@ export interface ClineApiReqInfo {
 }
 
 export type ClineApiReqCancelReason = "streaming_failed" | "user_cancelled"
-
-export type { ToolProgressStatus } from "../exports/roo-code"

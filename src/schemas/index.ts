@@ -624,6 +624,108 @@ export const isGlobalStateKey = (key: string): key is Keys<GlobalState> =>
 	GLOBAL_STATE_KEYS.includes(key as Keys<GlobalState>)
 
 /**
+ * ClineAsk
+ */
+
+export const clineAsks = [
+	"followup",
+	"command",
+	"command_output",
+	"completion_result",
+	"tool",
+	"api_req_failed",
+	"resume_task",
+	"resume_completed_task",
+	"mistake_limit_reached",
+	"browser_action_launch",
+	"use_mcp_server",
+	"finishTask",
+] as const
+
+export const clineAskSchema = z.enum(clineAsks)
+
+export type ClineAsk = z.infer<typeof clineAskSchema>
+
+// ClineSay
+
+export const clineSays = [
+	"task",
+	"error",
+	"api_req_started",
+	"api_req_finished",
+	"api_req_retried",
+	"api_req_retry_delayed",
+	"api_req_deleted",
+	"text",
+	"reasoning",
+	"completion_result",
+	"user_feedback",
+	"user_feedback_diff",
+	"command_output",
+	"tool",
+	"shell_integration_warning",
+	"browser_action",
+	"browser_action_result",
+	"command",
+	"mcp_server_request_started",
+	"mcp_server_response",
+	"new_task_started",
+	"new_task",
+	"checkpoint_saved",
+	"rooignore_error",
+] as const
+
+export const clineSaySchema = z.enum(clineSays)
+
+export type ClineSay = z.infer<typeof clineSaySchema>
+
+/**
+ * ToolProgressStatus
+ */
+
+export const toolProgressStatusSchema = z.object({
+	icon: z.string().optional(),
+	text: z.string().optional(),
+})
+
+export type ToolProgressStatus = z.infer<typeof toolProgressStatusSchema>
+
+/**
+ * ClineMessage
+ */
+
+export const clineMessageSchema = z.object({
+	ts: z.number(),
+	type: z.union([z.literal("ask"), z.literal("say")]),
+	ask: clineAskSchema.optional(),
+	say: clineSaySchema.optional(),
+	text: z.string().optional(),
+	images: z.array(z.string()).optional(),
+	partial: z.boolean().optional(),
+	reasoning: z.string().optional(),
+	conversationHistoryIndex: z.number().optional(),
+	checkpoint: z.record(z.string(), z.unknown()).optional(),
+	progressStatus: toolProgressStatusSchema.optional(),
+})
+
+export type ClineMessage = z.infer<typeof clineMessageSchema>
+
+/**
+ * TokenUsage
+ */
+
+export const tokenUsageSchema = z.object({
+	totalTokensIn: z.number(),
+	totalTokensOut: z.number(),
+	totalCacheWrites: z.number().optional(),
+	totalCacheReads: z.number().optional(),
+	totalCost: z.number(),
+	contextTokens: z.number(),
+})
+
+export type TokenUsage = z.infer<typeof tokenUsageSchema>
+
+/**
  * TypeDefinition
  */
 
@@ -633,22 +735,8 @@ type TypeDefinition = {
 }
 
 export const typeDefinitions: TypeDefinition[] = [
-	{ schema: providerNamesSchema, identifier: "ProviderName" },
-	{ schema: toolGroupsSchema, identifier: "ToolGroup" },
-	{ schema: checkpointStoragesSchema, identifier: "CheckpointStorage" },
-	{ schema: languagesSchema, identifier: "Language" },
-	{ schema: telemetrySettingsSchema, identifier: "TelemetrySetting" },
-	{ schema: modelInfoSchema, identifier: "ModelInfo" },
-	{ schema: apiConfigMetaSchema, identifier: "ApiConfigMeta" },
-	{ schema: historyItemSchema, identifier: "HistoryItem" },
-	{ schema: groupOptionsSchema, identifier: "GroupOptions" },
-	{ schema: groupEntrySchema, identifier: "GroupEntry" },
-	{ schema: modeConfigSchema, identifier: "ModeConfig" },
-	{ schema: promptComponentSchema, identifier: "PromptComponent" },
-	{ schema: customModePromptsSchema, identifier: "CustomModePrompts" },
-	{ schema: customSupportPromptsSchema, identifier: "CustomSupportPrompts" },
-	{ schema: experimentIdsSchema, identifier: "ExperimentId" },
-	{ schema: experimentsSchema, identifier: "Experiments" },
-	{ schema: globalSettingsSchema, identifier: "GlobalSettings" },
 	{ schema: providerSettingsSchema, identifier: "ProviderSettings" },
+	{ schema: globalSettingsSchema, identifier: "GlobalSettings" },
+	{ schema: clineMessageSchema, identifier: "ClineMessage" },
+	{ schema: tokenUsageSchema, identifier: "TokenUsage" },
 ]
