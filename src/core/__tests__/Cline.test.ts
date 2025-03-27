@@ -139,6 +139,10 @@ jest.mock("vscode", () => {
 	}
 
 	return {
+		CodeActionKind: {
+			QuickFix: { value: "quickfix" },
+			RefactorRewrite: { value: "refactor.rewrite" },
+		},
 		window: {
 			createTextEditorDecorationType: jest.fn().mockReturnValue({
 				dispose: jest.fn(),
@@ -1019,6 +1023,7 @@ describe("Cline", () => {
 						"<task>Text with @/some/path in task tags</task>",
 						expect.any(String),
 						expect.any(Object),
+						expect.any(String),
 					)
 
 					// Feedback tag content should be processed
@@ -1029,6 +1034,7 @@ describe("Cline", () => {
 						"<feedback>Check @/some/path</feedback>",
 						expect.any(String),
 						expect.any(Object),
+						expect.any(String),
 					)
 
 					// Regular tool result should not be processed

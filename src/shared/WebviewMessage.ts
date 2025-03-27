@@ -17,6 +17,7 @@ export interface WebviewMessage {
 		| "upsertApiConfiguration"
 		| "deleteApiConfiguration"
 		| "loadApiConfiguration"
+		| "loadApiConfigurationById"
 		| "renameApiConfiguration"
 		| "getListApiConfiguration"
 		| "customInstructions"
@@ -36,6 +37,8 @@ export interface WebviewMessage {
 		| "showTaskWithId"
 		| "deleteTaskWithId"
 		| "exportTaskWithId"
+		| "importSettings"
+		| "exportSettings"
 		| "resetState"
 		| "requestOllamaModels"
 		| "requestLmStudioModels"
@@ -66,6 +69,7 @@ export interface WebviewMessage {
 		| "screenshotQuality"
 		| "remoteBrowserHost"
 		| "openMcpSettings"
+		| "openProjectMcpSettings"
 		| "restartMcpServer"
 		| "toggleToolAlwaysAllow"
 		| "toggleMcpServer"
@@ -80,7 +84,6 @@ export interface WebviewMessage {
 		| "terminalShellIntegrationTimeout"
 		| "mcpEnabled"
 		| "enableMcpServerCreation"
-		| "enableCustomModeCreation"
 		| "searchCommits"
 		| "alwaysApproveResubmit"
 		| "requestDelaySeconds"
@@ -118,6 +121,7 @@ export interface WebviewMessage {
 		| "language"
 		| "maxReadFileLine"
 		| "searchFiles"
+		| "toggleApiConfigPin"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse

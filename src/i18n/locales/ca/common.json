@@ -1,4 +1,8 @@
 {
+	"input": {
+		"task_prompt": "Què vols que faci Roo?",
+		"task_placeholder": "Escriu la teva tasca aquí"
+	},
 	"extension": {
 		"name": "Roo Code",
 		"description": "Tot un equip de desenvolupadors d'IA al teu editor."
@@ -44,6 +48,7 @@
 		"delete_api_config": "Ha fallat l'eliminació de la configuració de l'API",
 		"list_api_config": "Ha fallat l'obtenció de la llista de configuracions de l'API",
 		"update_server_timeout": "Ha fallat l'actualització del temps d'espera del servidor",
+		"failed_update_project_mcp": "Ha fallat l'actualització dels servidors MCP del projecte",
 		"create_mcp_json": "Ha fallat la creació o obertura de .roo/mcp.json: {{error}}",
 		"hmr_not_running": "El servidor de desenvolupament local no està executant-se, l'HMR no funcionarà. Si us plau, executa 'npm run dev' abans de llançar l'extensió per habilitar l'HMR.",
 		"retrieve_current_mode": "Error en recuperar el mode actual de l'estat.",
@@ -65,7 +70,8 @@
 		"mcp_server_deleted": "Servidor MCP eliminat: {{serverName}}",
 		"mcp_server_not_found": "Servidor \"{{serverName}}\" no trobat a la configuració",
 		"custom_storage_path_set": "Ruta d'emmagatzematge personalitzada establerta: {{path}}",
-		"default_storage_path": "S'ha reprès l'ús de la ruta d'emmagatzematge predeterminada"
+		"default_storage_path": "S'ha reprès l'ús de la ruta d'emmagatzematge predeterminada",
+		"settings_imported": "Configuració importada correctament."
 	},
 	"answers": {
 		"yes": "Sí",

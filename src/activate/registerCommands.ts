@@ -4,6 +4,7 @@ import { openClineInNewTab } from "../integrations/tab/OpenTab"
 import { ClineProvider } from "../core/webview/ClineProvider"
 
 import { handleHumanRelayResponse, registerHumanRelayCallback, unregisterHumanRelayCallback } from "./humanRelay"
+import { handleNewTask } from "./handleTask"
 
 // Store panel references in both modes
 let sidebarPanel: vscode.WebviewView | undefined = undefined
@@ -96,6 +97,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		"roo-cline.registerHumanRelayCallback": registerHumanRelayCallback,
 		"roo-cline.unregisterHumanRelayCallback": unregisterHumanRelayCallback,
 		"roo-cline.handleHumanRelayResponse": handleHumanRelayResponse,
+		"roo-cline.newTask": handleNewTask,
 		"roo-cline.setCustomStoragePath": async () => {
 			const { promptForCustomStoragePath } = await import("../shared/storagePathManager")
 			await promptForCustomStoragePath()

@@ -91,12 +91,12 @@
 			"TERMINAL_EXPLAIN": {
 				"label": "Terminal-Befehl erklären",
 				"description": "Erhalten Sie detaillierte Erklärungen zu Terminal-Befehlen und deren Ausgaben. Verfügbar im Kontextmenü des Terminals (Rechtsklick auf ausgewählten Terminal-Inhalt)."
+			},
+			"NEW_TASK": {
+				"label": "Neue Aufgabe starten",
+				"description": "Starte eine neue Aufgabe mit deiner Eingabe. Verfügbar in der Befehlspalette."
 			}
 		}
-	},
-	"customModeCreation": {
-		"enableTitle": "Erstellung benutzerdefinierter Modi über Prompts aktivieren",
-		"description": "Wenn aktiviert, ermöglicht Roo dir, benutzerdefinierte Modi mit Prompts wie 'Erstelle mir einen benutzerdefinierten Modus, der...' zu erstellen. Die Deaktivierung reduziert deinen System-Prompt um etwa 700 Tokens, wenn diese Funktion nicht benötigt wird. Bei Deaktivierung kannst du immer noch manuell benutzerdefinierte Modi mit der +-Schaltfläche oben erstellen oder durch Bearbeiten der zugehörigen Konfigurations-JSON."
 	},
 	"advancedSystemPrompt": {
 		"title": "Erweitert: System-Prompt überschreiben",
