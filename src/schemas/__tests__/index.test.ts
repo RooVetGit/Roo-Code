@@ -2,7 +2,7 @@
 
 import { GLOBAL_STATE_KEYS } from "../index"
 
-describe("GLOBAL_SETTINGS_KEYS", () => {
+describe("GLOBAL_STATE_KEYS", () => {
 	it("should contain provider settings keys", () => {
 		expect(GLOBAL_STATE_KEYS).toContain("autoApprovalEnabled")
 	})
