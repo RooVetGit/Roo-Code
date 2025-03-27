@@ -1,6 +1,6 @@
 import * as assert from "assert"
 
-import { getCompletion, getMessage, sleep, waitForCompletion, waitUntilAborted } from "./utils"
+import { getCompletion, waitUntilCompleted } from "./utils"
 
 suite("Roo Code Modes", () => {
 	test("Should handle switching modes correctly", async function () {
@@ -16,7 +16,7 @@ suite("Roo Code Modes", () => {
 
 		await api.setConfiguration({ mode: "Code", alwaysAllowModeSwitch: true, autoApprovalEnabled: true })
 		const switchModesTaskId = await api.startNewTask(switchModesPrompt)
-		await waitForCompletion({ api, taskId: switchModesTaskId, timeout: 60_000 })
+		await waitUntilCompleted({ api, taskId: switchModesTaskId, timeout: 60_000 })
 
 		/**
 		 * Grade the response.
@@ -32,7 +32,7 @@ suite("Roo Code Modes", () => {
 
 		await api.setConfiguration({ mode: "Ask" })
 		const gradeTaskId = await api.startNewTask(gradePrompt)
-		await waitForCompletion({ api, taskId: gradeTaskId, timeout: 60_000 })
+		await waitUntilCompleted({ api, taskId: gradeTaskId, timeout: 60_000 })
 
 		const completion = getCompletion({ api, taskId: gradeTaskId })
 		const match = completion?.text?.match(/Grade: (\d+)/)

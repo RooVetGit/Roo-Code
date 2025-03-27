@@ -1,6 +1,6 @@
 import * as assert from "assert"
 
-import { sleep, waitFor, getMessage, waitForCompletion } from "./utils"
+import { sleep, waitFor, getMessage, waitUntilCompleted } from "./utils"
 
 suite("Roo Code Subtasks", () => {
 	test("Should handle subtask cancellation and resumption correctly", async function () {
@@ -48,7 +48,7 @@ suite("Roo Code Subtasks", () => {
 
 		// Start a new task with the same message as the subtask.
 		const anotherTaskId = await api.startNewTask(childPrompt)
-		await waitForCompletion({ api, taskId: anotherTaskId })
+		await waitUntilCompleted({ api, taskId: anotherTaskId })
 
 		// Wait a bit to ensure any task resumption would have happened.
 		await sleep(2_000)
@@ -66,6 +66,6 @@ suite("Roo Code Subtasks", () => {
 
 		// Clean up - cancel all tasks.
 		await api.clearCurrentTask()
-		await waitForCompletion({ api, taskId: parentTaskId })
+		await waitUntilCompleted({ api, taskId: parentTaskId })
 	})
 })
