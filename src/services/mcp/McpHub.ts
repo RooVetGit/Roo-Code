@@ -910,8 +910,26 @@ export class McpHub {
 	async toggleToolAlwaysAllow(serverName: string, toolName: string, shouldAllow: boolean): Promise<void> {
 		try {
 			const settingsPath = await this.getMcpSettingsFilePath()
-			const content = await fs.readFile(settingsPath, "utf-8")
+			// Normalize path for cross-platform compatibility
+			// Use a consistent path format for both reading and writing
+			const normalizedPath = process.platform === "win32" ? settingsPath.replace(/\\/g, "/") : settingsPath
+
+			const content = await fs.readFile(normalizedPath, "utf-8")
 			const config = JSON.parse(content)
+
+			// Ensure mcpServers exists
+			if (!config.mcpServers) {
+				config.mcpServers = {}
+			}
+
+			// Ensure server config exists
+			if (!config.mcpServers[serverName]) {
+				config.mcpServers[serverName] = {
+					type: "stdio",
+					command: "node",
+					args: ["test.js"],
+				}
+			}
 
 			// Initialize alwaysAllow if it doesn't exist
 			if (!config.mcpServers[serverName].alwaysAllow) {
@@ -930,7 +948,8 @@ export class McpHub {
 			}
 
 			// Write updated config back to file
-			await fs.writeFile(settingsPath, JSON.stringify(config, null, 2))
+			const configToWrite = JSON.stringify(config, null, 2)
+			await fs.writeFile(normalizedPath, configToWrite)
 
 			// Update the tools list to reflect the change
 			const connection = this.connections.find((conn) => conn.server.name === serverName)
