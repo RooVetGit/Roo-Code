@@ -15,8 +15,8 @@ fi
 npm run generate-types
 
 # Check if src/exports/types.ts has unstaged changes after running the script.
-if [ -n "$(git diff --name-only src/exports/types.ts)" ]; then
-  echo "Error: There are unstaged changes to src/exports/types.ts after running 'npm run generate-types'."
+if [ -n "$(git diff --name-only src/exports/roo-code.d.ts)" ]; then
+  echo "Error: There are unstaged changes to roo-code.d.ts after running 'npm run generate-types'."
   echo "Please review and stage the changes before committing."
   exit 1
 fi
