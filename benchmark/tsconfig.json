@@ -1,6 +1,8 @@
 {
 	"compilerOptions": {
 		"module": "CommonJS",
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true,
 		"moduleResolution": "Node",
 		"esModuleInterop": true,
 		"target": "ES2022",

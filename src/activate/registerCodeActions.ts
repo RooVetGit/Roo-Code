@@ -4,6 +4,11 @@ import { ACTION_NAMES, COMMAND_IDS } from "../core/CodeActionProvider"
 import { EditorUtils } from "../core/EditorUtils"
 import { ClineProvider } from "../core/webview/ClineProvider"
 
+/**
+ * Registers code actions for the CodeActionProvider.
+ *
+ * @param context - The extension context.
+ */
 export const registerCodeActions = (context: vscode.ExtensionContext) => {
 	registerCodeActionPair(
 		context,
@@ -32,6 +37,15 @@ export const registerCodeActions = (context: vscode.ExtensionContext) => {
 	registerCodeAction(context, COMMAND_IDS.ADD_TO_CONTEXT, "ADD_TO_CONTEXT")
 }
 
+/**
+ * Registers a code action command.
+ *
+ * @param context - The extension context.
+ * @param command - The command ID to register.
+ * @param promptType - The type of prompt to show, if any.
+ * @param inputPrompt - The prompt to show when asking for user input.
+ * @param inputPlaceholder - The placeholder to show in the input box.
+ */
 const registerCodeAction = (
 	context: vscode.ExtensionContext,
 	command: string,
@@ -75,6 +89,20 @@ const registerCodeAction = (
 		}),
 	)
 }
+
+/**
+ * Registers two code action commands.
+ *
+ * The first command is registered with the given {@link baseCommand} and
+ * {@link promptType}. The second command is registered with
+ * `baseCommand + "InCurrentTask"` and the same {@link promptType}.
+ *
+ * @param context - The extension context.
+ * @param baseCommand - The base command to register.
+ * @param promptType - The type of prompt to show, if any.
+ * @param inputPrompt - The prompt to show when asking for user input.
+ * @param inputPlaceholder - The placeholder to show in the input box.
+ */
 
 const registerCodeActionPair = (
 	context: vscode.ExtensionContext,

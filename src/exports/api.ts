@@ -12,6 +12,12 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 	private readonly history: MessageHistory
 	private readonly tokenUsage: Record<string, TokenUsage>
 
+	/**
+	 * Construct a new API object.
+	 *
+	 * @param outputChannel The output channel to print any internal logs to.
+	 * @param provider The ClineProvider to listen to events from.
+	 */
 	constructor(outputChannel: vscode.OutputChannel, provider: ClineProvider) {
 		super()
 
@@ -45,7 +51,7 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 	}
 
 	public async startNewTask(text?: string, images?: string[]) {
-		await this.provider.removeClineFromStack()
+		await this.provider.clineStackManager.removeClineFromStack()
 		await this.provider.postStateToWebview()
 		await this.provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		await this.provider.postMessageToWebview({ type: "invoke", invoke: "newChat", text, images })
@@ -54,10 +60,20 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		return cline.taskId
 	}
 
-	public getCurrentTaskStack() {
-		return this.provider.getCurrentTaskStack()
+	/**
+	 * Returns the current task stack.
+	 * todo: currently unused, to remove...
+	 * @returns An array of task IDs.
+	 */
+	public async getCurrentTaskStack() {
+		return this.provider.clineStackManager.getCurrentTaskStack()
 	}
 
+	/**
+	 * Clears the current task.
+	 * todo: currently unused, to remove...
+	 * @param lastMessage Optional last message to send before clearing.
+	 */
 	public async clearCurrentTask(lastMessage?: string) {
 		await this.provider.finishSubTask(lastMessage)
 	}

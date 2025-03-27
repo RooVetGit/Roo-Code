@@ -9,6 +9,8 @@
 		"strict": true,
 		"skipLibCheck": true,
 		"useUnknownInCatchVariables": false,
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true,
 		"outDir": "out"
 	},
 	"include": ["src", "../src/exports/roo-code.d.ts"],
