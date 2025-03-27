@@ -436,7 +436,9 @@
 		"prettier": "^3.4.2",
 		"rimraf": "^6.0.1",
 		"ts-jest": "^29.2.5",
-		"typescript": "^5.4.5"
+		"tsx": "^4.19.3",
+		"typescript": "^5.4.5",
+		"zod-to-ts": "^1.2.0"
 	},
 	"lint-staged": {
 		"*.{js,jsx,ts,tsx,json,css,md}": [
