@@ -48,7 +48,7 @@ export const importSettings = async ({ providerSettingsManager, contextProxy }: 
 			},
 		}
 
-		await providerSettingsManager.import(newProviderProfiles)
+		await providerSettingsManager.import(providerProfiles)
 
 		await contextProxy.setValues(globalSettings)
 		contextProxy.setValue("currentApiConfigName", providerProfiles.currentApiConfigName)
