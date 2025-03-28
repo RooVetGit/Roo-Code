@@ -55,6 +55,8 @@ async function extractTextFromIPYNB(filePath: string): Promise<string> {
 }
 
 export function addLineNumbers(content: string, startLine: number = 1): string {
+	return content
+
 	const lines = content.split("\n")
 	const maxLineNumberWidth = String(startLine + lines.length - 1).length
 	return lines
