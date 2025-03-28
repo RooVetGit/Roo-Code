@@ -333,7 +333,7 @@ describe("Cline", () => {
 			})
 		})
 
-		it("should require either task or historyItem", async () => {
+		it("should require either task or historyItem", () => {
 			expect(() => {
 				new Cline({ provider: mockProvider, apiConfiguration: mockApiConfig })
 			}).toThrow("Either historyItem or task/images must be provided")
