@@ -26,6 +26,22 @@ jest.mock("../languageParser", () => ({
 
 // Sample component content
 const sampleTsxContent = `
+interface VSCodeCheckboxProps {
+  checked: boolean
+  onChange: (checked: boolean) => void
+  label?: string
+  disabled?: boolean
+}
+
+export const VSCodeCheckbox: React.FC<VSCodeCheckboxProps> = ({
+  checked,
+  onChange,
+  label,
+  disabled
+}) => {
+  return <div>Checkbox</div>
+}
+
 interface TemperatureControlProps {
   isCustomTemperature: boolean
   setIsCustomTemperature: (value: boolean) => void
@@ -217,15 +233,12 @@ describe("treeParserDebug", () => {
 		expect(tree).toBeDefined()
 	})
 
-	it("should successfully call parseSourceCodeDefinitionsForFile", async function () {
+	async function testParseSourceCodeDefinitions(testFilePath: string, content: string): Promise<string | undefined> {
 		// Clear any previous mocks
 		jest.clearAllMocks()
 
-		// Set up path for our test file - use the .tsx extension
-		const testFilePath = "/test/TemperatureControl.tsx"
-
 		// Mock fs.readFile to return our sample content
-		mockedFs.readFile.mockResolvedValue(sampleTsxContent)
+		mockedFs.readFile.mockResolvedValue(content)
 
 		// Get the mock function
 		const mockedLoadRequiredLanguageParsers = require("../languageParser").loadRequiredLanguageParsers
@@ -250,15 +263,24 @@ describe("treeParserDebug", () => {
 		// Configure the mock to return our parser
 		mockedLoadRequiredLanguageParsers.mockResolvedValue(mockLanguageParser)
 
-		// Call the function under test - the real parseSourceCodeDefinitionsForFile
+		// Call the function under test
 		const result = await parseSourceCodeDefinitionsForFile(testFilePath)
-		console.log("Result:", result)
+
 		// Verify loadRequiredLanguageParsers was called with the expected file path
 		expect(mockedLoadRequiredLanguageParsers).toHaveBeenCalledWith([testFilePath])
-
-		// The test passes if we get to this point without errors
-		// and loadRequiredLanguageParsers was called correctly
 		expect(mockedLoadRequiredLanguageParsers).toHaveBeenCalled()
+
+		return result
+	}
+
+	it("should successfully parse components", async function () {
+		const testFile = "/test/components.tsx"
+		const result = await testParseSourceCodeDefinitions(testFile, sampleTsxContent)
+		expect(result).toBeDefined()
+		expect(result).toContain("# components.tsx")
+		// Check component declarations
+		expect(result).toContain("export const VSCodeCheckbox: React.FC<VSCodeCheckboxProps>")
+		expect(result).toContain("const TemperatureControl")
 	})
 })
 
@@ -278,16 +300,16 @@ describe("parseSourceCodeDefinitions", () => {
 
 	it("should parse interface definitions", async function () {
 		const result = await logParseResult("Interface Definitions", testFilePath)
-		expect(result).toContain("interface TemperatureControlProps")
-		expect(result).toContain("isCustomTemperature: boolean")
-		expect(result).toContain("setIsCustomTemperature: (value: boolean) => void")
+		expect(result).toContain("interface VSCodeCheckboxProps")
+		expect(result).toContain("checked: boolean")
+		expect(result).toContain("onChange: (checked: boolean) => void")
 	})
 
 	// Tests for parsing functionality with tree-sitter
 	it("should parse React component definitions", async function () {
 		const result = await logParseResult("React Component", testFilePath)
 		expect(result).toBeDefined()
-		expect(result).toContain("TemperatureControl")
-		expect(result).toContain("TemperatureControlProps")
+		expect(result).toContain("VSCodeCheckbox")
+		expect(result).toContain("VSCodeCheckboxProps")
 	})
 })
