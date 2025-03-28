@@ -41,7 +41,11 @@ export async function readFileTool(
 						...sharedMessageProps,
 						content: undefined,
 					} satisfies ClineSayTool)
-					await cline.ask("tool", partialMessage, block.partial).catch(() => {})
+					try {
+						await cline.ask("tool", partialMessage, block.partial)
+					} catch (innerError) {
+						pushToolResult(formatResponse.toolError("Failed to send partial message"))
+					}
 					break
 				} else {
 					if (!relPath) {
