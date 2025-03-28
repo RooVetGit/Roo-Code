@@ -71,32 +71,84 @@ import typescriptQuery from "./typescript"
 
 export default `${typescriptQuery}
 
-; React Component Queries
-; React Function Components
+; React Component Definitions
+; Function Components
 (function_declaration
-  name: (identifier) @name.definition.function
-  return_type: (type_annotation)
-  body: (statement_block)) @definition.react_component
+  name: (identifier) @name.definition.component) @definition.component
 
+; Arrow Function Components
 (variable_declaration
   (variable_declarator
-    name: (identifier) @name.definition.function
-    value: (arrow_function))) @definition.react_component
+    name: (identifier) @name.definition.component
+    value: [(arrow_function) (function_expression)])) @definition.component
 
-; React Class Components
+; Class Components
 (class_declaration
-  name: (type_identifier) @name.definition.class
+  name: (type_identifier) @name.definition.component
   (class_heritage
     (extends_clause
-      (member_expression) @react_base))) @definition.react_component
-  (#match? @react_base "^React\\.Component$")
+      (member_expression) @base))) @definition.component
 
-; JSX Widget Definitions
+; Higher Order Components
+(variable_declaration
+  (variable_declarator
+    name: (identifier) @name.definition.component
+    value: (call_expression
+      function: (identifier) @hoc))) @definition.component
+  (#match? @hoc "^with[A-Z]")
+
+; React Helper Components (memo, forwardRef)
+(variable_declaration
+  (variable_declarator
+    name: (identifier) @name.definition.component
+    value: (call_expression
+      function: [(member_expression) (identifier)] @helper))) @definition.component
+  (#match? @helper "^(React\\.memo|React\\.forwardRef|memo|forwardRef)$")
+
+; Enhanced Components
+(variable_declaration
+  (variable_declarator
+    name: (identifier) @name.definition.component
+    value: (call_expression))) @definition.component
+
+; Types and Interfaces
+(interface_declaration
+  name: (type_identifier) @name.definition.interface) @definition.interface
+
+(type_alias_declaration
+  name: (type_identifier) @name.definition.type) @definition.type
+
+; JSX Component Usage - Capture all components in JSX
 (jsx_element
-  (jsx_opening_element
-    name: (identifier) @_widget_name)
-  (_)*  ; Match any content between tags
-  (jsx_closing_element)) @definition.widget
-  ; Only capture widget components (start with capital letter)
-  (#match? @_widget_name "^[A-Z]")
+  open_tag: (jsx_opening_element
+    name: [(identifier) @component (member_expression) @component])) @definition.component
+  (#match? @component "^[A-Z]")
+
+(jsx_self_closing_element
+  name: [(identifier) @component (member_expression) @component]) @definition.component
+  (#match? @component "^[A-Z]")
+
+; Capture all identifiers in JSX expressions that start with capital letters
+(jsx_expression
+  (identifier) @jsx_component) @definition.jsx_component
+  (#match? @jsx_component "^[A-Z]")
+
+; Capture all member expressions in JSX
+(member_expression
+  object: (identifier) @object
+  property: (property_identifier) @property) @definition.member_component
+  (#match? @object "^[A-Z]")
+
+; Capture components in conditional expressions
+(ternary_expression
+  consequence: (parenthesized_expression
+    (jsx_element
+      open_tag: (jsx_opening_element
+        name: (identifier) @component)))) @definition.conditional_component
+  (#match? @component "^[A-Z]")
+
+(ternary_expression
+  alternative: (jsx_self_closing_element
+    name: (identifier) @component)) @definition.conditional_component
+  (#match? @component "^[A-Z]")
 `
