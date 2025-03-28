@@ -1,0 +1,93 @@
+{
+	"extension": {
+		"name": "Roo Code",
+		"description": "Ein komplettes Entwicklerteam mit KI in deinem Editor."
+	},
+	"number_format": {
+		"thousand_suffix": "k",
+		"million_suffix": "m",
+		"billion_suffix": "b"
+	},
+	"welcome": "Willkommen, {{name}}! Du hast {{count}} Benachrichtigungen.",
+	"items": {
+		"zero": "Keine Elemente",
+		"one": "Ein Element",
+		"other": "{{count}} Elemente"
+	},
+	"confirmation": {
+		"reset_state": "Möchtest du wirklich alle Zustände und geheimen Speicher in der Erweiterung zurücksetzen? Dies kann nicht rückgängig gemacht werden.",
+		"delete_config_profile": "Möchtest du dieses Konfigurationsprofil wirklich löschen?",
+		"delete_custom_mode": "Möchtest du diesen benutzerdefinierten Modus wirklich löschen?",
+		"delete_message": "Was möchtest du löschen?",
+		"just_this_message": "Nur diese Nachricht",
+		"this_and_subsequent": "Diese und alle nachfolgenden Nachrichten"
+	},
+	"errors": {
+		"invalid_mcp_config": "Ungültiges MCP-Projekt-Konfigurationsformat",
+		"invalid_mcp_settings_format": "Ungültiges MCP-Einstellungen-JSON-Format. Bitte stelle sicher, dass deine Einstellungen dem korrekten JSON-Format entsprechen.",
+		"invalid_mcp_settings_syntax": "Ungültiges MCP-Einstellungen-JSON-Format. Bitte überprüfe deine Einstellungsdatei auf Syntaxfehler.",
+		"invalid_mcp_settings_validation": "Ungültiges MCP-Einstellungen-Format: {{errorMessages}}",
+		"failed_initialize_project_mcp": "Fehler beim Initialisieren des Projekt-MCP-Servers: {{error}}",
+		"invalid_data_uri": "Ungültiges Daten-URI-Format",
+		"checkpoint_timeout": "Zeitüberschreitung beim Versuch, den Checkpoint wiederherzustellen.",
+		"checkpoint_failed": "Fehler beim Wiederherstellen des Checkpoints.",
+		"no_workspace": "Bitte öffne zuerst einen Projektordner",
+		"update_support_prompt": "Fehler beim Aktualisieren der Support-Nachricht",
+		"reset_support_prompt": "Fehler beim Zurücksetzen der Support-Nachricht",
+		"enhance_prompt": "Fehler beim Verbessern der Nachricht",
+		"get_system_prompt": "Fehler beim Abrufen der Systemnachricht",
+		"search_commits": "Fehler beim Suchen von Commits",
+		"save_api_config": "Fehler beim Speichern der API-Konfiguration",
+		"create_api_config": "Fehler beim Erstellen der API-Konfiguration",
+		"rename_api_config": "Fehler beim Umbenennen der API-Konfiguration",
+		"load_api_config": "Fehler beim Laden der API-Konfiguration",
+		"delete_api_config": "Fehler beim Löschen der API-Konfiguration",
+		"list_api_config": "Fehler beim Abrufen der API-Konfigurationsliste",
+		"update_server_timeout": "Fehler beim Aktualisieren des Server-Timeouts",
+		"failed_update_project_mcp": "Fehler beim Aktualisieren der Projekt-MCP-Server",
+		"create_mcp_json": "Fehler beim Erstellen oder Öffnen von .roo/mcp.json: {{error}}",
+		"hmr_not_running": "Der lokale Entwicklungsserver läuft nicht, HMR wird nicht funktionieren. Bitte führen Sie 'npm run dev' vor dem Start der Erweiterung aus, um HMR zu aktivieren.",
+		"retrieve_current_mode": "Fehler beim Abrufen des aktuellen Modus aus dem Zustand.",
+		"failed_delete_repo": "Fehler beim Löschen des zugehörigen Shadow-Repositorys oder -Zweigs: {{error}}",
+		"failed_remove_directory": "Fehler beim Entfernen des Aufgabenverzeichnisses: {{error}}",
+		"custom_storage_path_unusable": "Benutzerdefinierter Speicherpfad \"{{path}}\" ist nicht verwendbar, Standardpfad wird verwendet",
+		"cannot_access_path": "Zugriff auf Pfad {{path}} nicht möglich: {{error}}"
+	},
+	"warnings": {
+		"no_terminal_content": "Kein Terminal-Inhalt ausgewählt",
+		"missing_task_files": "Die Dateien dieser Aufgabe fehlen. Möchtest du sie aus der Aufgabenliste entfernen?"
+	},
+	"info": {
+		"no_changes": "Keine Änderungen gefunden.",
+		"clipboard_copy": "Systemnachricht erfolgreich in die Zwischenablage kopiert",
+		"history_cleanup": "{{count}} Aufgabe(n) mit fehlenden Dateien aus dem Verlauf bereinigt.",
+		"mcp_server_restarting": "MCP-Server {{serverName}} wird neu gestartet...",
+		"mcp_server_connected": "MCP-Server {{serverName}} verbunden",
+		"mcp_server_deleted": "MCP-Server gelöscht: {{serverName}}",
+		"mcp_server_not_found": "Server \"{{serverName}}\" nicht in der Konfiguration gefunden",
+		"custom_storage_path_set": "Benutzerdefinierter Speicherpfad festgelegt: {{path}}",
+		"default_storage_path": "Auf Standardspeicherpfad zurückgesetzt",
+		"settings_imported": "Einstellungen erfolgreich importiert."
+	},
+	"answers": {
+		"yes": "Ja",
+		"no": "Nein",
+		"cancel": "Abbrechen",
+		"remove": "Entfernen",
+		"keep": "Behalten"
+	},
+	"tasks": {
+		"canceled": "Aufgabenfehler: Die Aufgabe wurde vom Benutzer gestoppt und abgebrochen.",
+		"deleted": "Aufgabenfehler: Die Aufgabe wurde vom Benutzer gestoppt und gelöscht."
+	},
+	"storage": {
+		"prompt_custom_path": "Gib den benutzerdefinierten Speicherpfad für den Gesprächsverlauf ein, leer lassen für Standardspeicherort",
+		"path_placeholder": "D:\\RooCodeStorage",
+		"enter_absolute_path": "Bitte gib einen absoluten Pfad ein (z.B. D:\\RooCodeStorage oder /home/user/storage)",
+		"enter_valid_path": "Bitte gib einen gültigen Pfad ein"
+	},
+	"input": {
+		"task_prompt": "Was soll Roo tun?",
+		"task_placeholder": "Gib deine Aufgabe hier ein"
+	}
+}

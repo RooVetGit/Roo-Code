@@ -1,7 +1,14 @@
 import { mentionRegex } from "../../../src/shared/context-mentions"
 import { Fzf } from "fzf"
 import { ModeConfig } from "../../../src/shared/modes"
+import * as path from "path"
+import { formatPath } from "../../../src/shared/formatPath"
 
+export interface SearchResult {
+	path: string
+	type: "file" | "folder"
+	label?: string
+}
 export function insertMention(
 	text: string,
 	position: number,
@@ -76,11 +83,24 @@ export interface ContextMenuQueryItem {
 	icon?: string
 }
 
+function mapSearchResult(result: SearchResult, os?: string): ContextMenuQueryItem {
+	const formattedPath = formatPath(result.path, os)
+
+	return {
+		type: result.type === "folder" ? ContextMenuOptionType.Folder : ContextMenuOptionType.File,
+		value: formattedPath,
+		label: result.label || path.basename(result.path),
+		description: formattedPath,
+	}
+}
+
 export function getContextMenuOptions(
 	query: string,
 	selectedType: ContextMenuOptionType | null = null,
 	queryItems: ContextMenuQueryItem[],
+	dynamicSearchResults: SearchResult[] = [],
 	modes?: ModeConfig[],
+	os?: string,
 ): ContextMenuQueryItem[] {
 	// Handle slash commands for modes
 	if (query.startsWith("/")) {
@@ -203,7 +223,6 @@ export function getContextMenuOptions(
 		}
 	}
 
-	// Create searchable strings array for fzf
 	const searchableItems = queryItems.map((item) => ({
 		original: item,
 		searchStr: [item.value, item.label, item.description].filter(Boolean).join(" "),
@@ -218,38 +237,35 @@ export function getContextMenuOptions(
 	const matchingItems = query ? fzf.find(query).map((result) => result.item.original) : []
 
 	// Separate matches by type
-	const fileMatches = matchingItems.filter(
-		(item) =>
-			item.type === ContextMenuOptionType.File ||
-			item.type === ContextMenuOptionType.OpenedFile ||
-			item.type === ContextMenuOptionType.Folder,
-	)
+	const openedFileMatches = matchingItems.filter((item) => item.type === ContextMenuOptionType.OpenedFile)
+
 	const gitMatches = matchingItems.filter((item) => item.type === ContextMenuOptionType.Git)
-	const otherMatches = matchingItems.filter(
-		(item) =>
-			item.type !== ContextMenuOptionType.File &&
-			item.type !== ContextMenuOptionType.OpenedFile &&
-			item.type !== ContextMenuOptionType.Folder &&
-			item.type !== ContextMenuOptionType.Git,
-	)
 
-	// Combine suggestions with matching items in the desired order
-	if (suggestions.length > 0 || matchingItems.length > 0) {
-		const allItems = [...suggestions, ...fileMatches, ...gitMatches, ...otherMatches]
+	// Convert search results to queryItems format
+	const searchResultItems = dynamicSearchResults.map((result) => mapSearchResult(result, os))
 
-		// Remove duplicates based on type and value
-		const seen = new Set()
-		const deduped = allItems.filter((item) => {
-			const key = `${item.type}-${item.value}`
-			if (seen.has(key)) return false
-			seen.add(key)
-			return true
-		})
+	const allItems = [...suggestions, ...openedFileMatches, ...searchResultItems, ...gitMatches]
 
-		return deduped
-	}
+	// Remove duplicates - normalize paths by ensuring all have leading slashes
+	const seen = new Set()
+	const deduped = allItems.filter((item) => {
+		const normalizedValue = item.value
+		let key = ""
+		if (
+			item.type === ContextMenuOptionType.File ||
+			item.type === ContextMenuOptionType.Folder ||
+			item.type === ContextMenuOptionType.OpenedFile
+		) {
+			key = normalizedValue!
+		} else {
+			key = `${item.type}-${normalizedValue}`
+		}
+		if (seen.has(key)) return false
+		seen.add(key)
+		return true
+	})
 
-	return [{ type: ContextMenuOptionType.NoResults }]
+	return deduped.length > 0 ? deduped : [{ type: ContextMenuOptionType.NoResults }]
 }
 
 export function shouldShowContextMenu(text: string, position: number): boolean {
@@ -257,26 +273,23 @@ export function shouldShowContextMenu(text: string, position: number): boolean {
 	if (text.startsWith("/")) {
 		return position <= text.length && !text.includes(" ")
 	}
-
 	const beforeCursor = text.slice(0, position)
 	const atIndex = beforeCursor.lastIndexOf("@")
 
-	if (atIndex === -1) return false
+	if (atIndex === -1) {
+		return false
+	}
 
 	const textAfterAt = beforeCursor.slice(atIndex + 1)
 
 	// Check if there's any whitespace after the '@'
 	if (/\s/.test(textAfterAt)) return false
 
-	// Don't show the menu if it's a URL
-	if (textAfterAt.toLowerCase().startsWith("http")) return false
-
-	// Don't show the menu if it's a problems or terminal
-	if (textAfterAt.toLowerCase().startsWith("problems") || textAfterAt.toLowerCase().startsWith("terminal"))
+	// Don't show the menu if it's clearly a URL
+	if (textAfterAt.toLowerCase().startsWith("http")) {
 		return false
+	}
 
-	// NOTE: it's okay that menu shows when there's trailing punctuation since user could be inputting a path with marks
-
-	// Show the menu if there's just '@' or '@' followed by some text (but not a URL)
+	// Show menu in all other cases
 	return true
 }

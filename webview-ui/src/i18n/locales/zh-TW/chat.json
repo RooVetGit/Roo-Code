@@ -1,0 +1,242 @@
+{
+	"greeting": "Roo能為您做什麼？",
+	"task": {
+		"title": "任務",
+		"seeMore": "查看更多",
+		"seeLess": "查看更少",
+		"tokens": "Tokens:",
+		"cache": "快取:",
+		"apiCost": "API成本:",
+		"contextWindow": "上下文視窗:",
+		"closeAndStart": "關閉任務並開始新任務",
+		"export": "匯出任務歷史",
+		"delete": "刪除任務（Shift + 點擊跳過確認）"
+	},
+	"tokenProgress": {
+		"availableSpace": "可用空間: {{amount}} tokens",
+		"tokensUsed": "已使用tokens: {{used}} / {{total}}",
+		"reservedForResponse": "為模型回應保留: {{amount}} tokens"
+	},
+	"retry": {
+		"title": "重試",
+		"tooltip": "再次嘗試操作"
+	},
+	"startNewTask": {
+		"title": "開始新任務",
+		"tooltip": "開始一個新任務"
+	},
+	"proceedAnyways": {
+		"title": "仍繼續",
+		"tooltip": "在命令執行時繼續"
+	},
+	"save": {
+		"title": "儲存",
+		"tooltip": "儲存檔案變更"
+	},
+	"reject": {
+		"title": "拒絕",
+		"tooltip": "拒絕此操作"
+	},
+	"completeSubtaskAndReturn": "完成子任務並返回",
+	"approve": {
+		"title": "批准",
+		"tooltip": "批准此操作"
+	},
+	"runCommand": {
+		"title": "執行命令",
+		"tooltip": "執行此命令"
+	},
+	"proceedWhileRunning": {
+		"title": "執行時繼續",
+		"tooltip": "儘管有警告仍繼續"
+	},
+	"resumeTask": {
+		"title": "恢復任務",
+		"tooltip": "繼續當前任務"
+	},
+	"terminate": {
+		"title": "終止",
+		"tooltip": "結束當前任務"
+	},
+	"cancel": {
+		"title": "取消",
+		"tooltip": "取消當前操作"
+	},
+	"scrollToBottom": "捲動到聊天底部",
+	"aboutMe": "由於代理編碼能力的最新突破，我可以逐步處理複雜的軟體開發任務。透過允許我創建和編輯檔案、探索複雜專案、使用瀏覽器和執行終端命令（在您授權後）的工具，我可以以超越程式碼補全或技術支援的方式幫助您。我甚至可以使用MCP創建新工具並擴展自己的能力。",
+	"selectMode": "選擇互動模式",
+	"selectApiConfig": "選擇API配置",
+	"enhancePrompt": "使用附加上下文增強提示",
+	"addImages": "添加圖片到訊息",
+	"sendMessage": "發送訊息",
+	"typeMessage": "輸入訊息...",
+	"typeTask": "在此處輸入您的任務...",
+	"addContext": "@添加上下文，/切換模式",
+	"dragFiles": "按住shift拖動檔案",
+	"dragFilesImages": "按住shift拖動檔案/圖片",
+	"enhancePromptDescription": "'增強提示'按鈕透過提供額外上下文、澄清或重新表述來幫助改進您的請求。嘗試在此處輸入請求，然後再次點擊按鈕查看其工作原理。",
+	"errorReadingFile": "讀取檔案時出錯:",
+	"noValidImages": "沒有處理有效圖片",
+	"separator": "分隔符",
+	"edit": "編輯...",
+	"forNextMode": "用於下一個模式",
+	"error": "錯誤",
+	"troubleMessage": "Roo遇到問題...",
+	"apiRequest": {
+		"title": "API請求",
+		"failed": "API請求失敗",
+		"streaming": "API請求...",
+		"cancelled": "API請求已取消",
+		"streamingFailed": "API串流傳輸失敗"
+	},
+	"checkpoint": {
+		"initial": "初始檢查點",
+		"regular": "檢查點",
+		"menu": {
+			"viewDiff": "查看差異",
+			"restore": "還原檢查點",
+			"restoreFiles": "還原檔案",
+			"restoreFilesDescription": "將您的專案檔案還原到此時點拍攝的快照。",
+			"restoreFilesAndTask": "還原檔案和任務",
+			"confirm": "確認",
+			"cancel": "取消",
+			"cannotUndo": "此操作無法撤銷。",
+			"restoreFilesAndTaskDescription": "將您的專案檔案還原到此時點拍攝的快照，並刪除此點之後的所有訊息。"
+		},
+		"current": "當前"
+	},
+	"instructions": {
+		"wantsToFetch": "Roo想要獲取詳細指示以協助目前任務"
+	},
+	"fileOperations": {
+		"wantsToRead": "Roo想讀取此檔案:",
+		"wantsToReadOutsideWorkspace": "Roo想讀取此工作區外的檔案:",
+		"didRead": "Roo已讀取此檔案:",
+		"wantsToEdit": "Roo想編輯此檔案:",
+		"wantsToEditOutsideWorkspace": "Roo想編輯此工作區外的檔案:",
+		"wantsToCreate": "Roo想創建新檔案:"
+	},
+	"directoryOperations": {
+		"wantsToViewTopLevel": "Roo想查看此目錄中的頂層檔案:",
+		"didViewTopLevel": "Roo已查看此目錄中的頂層檔案:",
+		"wantsToViewRecursive": "Roo想遞迴查看此目錄中的所有檔案:",
+		"didViewRecursive": "Roo已遞迴查看此目錄中的所有檔案:",
+		"wantsToViewDefinitions": "Roo想查看此目錄中使用的原始碼定義名稱:",
+		"didViewDefinitions": "Roo已查看此目錄中使用的原始碼定義名稱:",
+		"wantsToSearch": "Roo想在此目錄中搜尋 <code>{{regex}}</code>:",
+		"didSearch": "Roo已在此目錄中搜尋 <code>{{regex}}</code>:"
+	},
+	"commandOutput": "命令輸出",
+	"response": "回應",
+	"arguments": "參數",
+	"mcp": {
+		"wantsToUseTool": "Roo想在{{serverName}} MCP伺服器上使用工具:",
+		"wantsToAccessResource": "Roo想存取{{serverName}} MCP伺服器上的資源:"
+	},
+	"modes": {
+		"wantsToSwitch": "Roo想切換到<code>{{mode}}</code>模式",
+		"wantsToSwitchWithReason": "Roo想切換到<code>{{mode}}</code>模式，原因: {{reason}}",
+		"didSwitch": "Roo已切換到<code>{{mode}}</code>模式",
+		"didSwitchWithReason": "Roo已切換到<code>{{mode}}</code>模式，原因: {{reason}}"
+	},
+	"subtasks": {
+		"wantsToCreate": "Roo想在<code>{{mode}}</code>模式下創建新子任務:",
+		"wantsToFinish": "Roo想完成此子任務"
+	},
+	"questions": {
+		"hasQuestion": "Roo有一個問題:"
+	},
+	"taskCompleted": "任務完成",
+	"shellIntegration": {
+		"unavailable": "Shell整合不可用",
+		"troubleshooting": "仍有問題嗎？"
+	},
+	"powershell": {
+		"issues": "看起來您遇到了Windows PowerShell問題，請參閱此"
+	},
+	"autoApprove": {
+		"title": "自動批准:",
+		"none": "無",
+		"description": "自動批准允許Roo Code無需請求許可即可執行操作。僅為您完全信任的操作啟用。",
+		"actions": {
+			"readFiles": {
+				"label": "讀取檔案和目錄",
+				"shortName": "讀取",
+				"description": "允許存取讀取電腦上的任何檔案。"
+			},
+			"editFiles": {
+				"label": "編輯檔案",
+				"shortName": "編輯",
+				"description": "允許修改電腦上的任何檔案。"
+			},
+			"executeCommands": {
+				"label": "執行已批准的命令",
+				"shortName": "命令",
+				"description": "允許執行已批准的終端命令。您可以在設置面板中配置此項。"
+			},
+			"useBrowser": {
+				"label": "使用瀏覽器",
+				"shortName": "瀏覽器",
+				"description": "允許在無頭瀏覽器中啟動並與任何網站互動的能力。"
+			},
+			"useMcp": {
+				"label": "使用MCP伺服器",
+				"shortName": "MCP",
+				"description": "允許使用可能修改檔案系統或與API互動的已配置MCP伺服器。"
+			},
+			"switchModes": {
+				"label": "切換模式",
+				"shortName": "模式",
+				"description": "允許在不需要批准的情況下自動切換不同模式。"
+			},
+			"subtasks": {
+				"label": "創建和完成子任務",
+				"shortName": "子任務",
+				"description": "允許在不需要批准的情況下創建和完成子任務。"
+			},
+			"retryRequests": {
+				"label": "重試失敗的請求",
+				"shortName": "重試",
+				"description": "當提供者返回錯誤回應時自動重試失敗的API請求。"
+			}
+		}
+	},
+	"reasoning": {
+		"thinking": "思考中",
+		"seconds": "{{count}}秒"
+	},
+	"announcement": {
+		"title": "🎉 Roo Code 3.10 已發布",
+		"description": "Roo Code 3.10帶來強大的生產力提升！",
+		"whatsNew": "新功能",
+		"feature1": "問題的建議回答",
+		"feature2": "改進的大檔案處理",
+		"feature3": "重建的@-提及檔案查詢",
+		"feature4": "",
+		"feature5": "",
+		"hideButton": "隱藏公告",
+		"detailsDiscussLinks": "在<discordLink>Discord</discordLink>和<redditLink>Reddit</redditLink>取得更多詳情並參與討論 🚀"
+	},
+	"browser": {
+		"rooWantsToUse": "Roo想使用瀏覽器:",
+		"consoleLogs": "主控台記錄",
+		"noNewLogs": "(沒有新記錄)",
+		"screenshot": "瀏覽器截圖",
+		"cursor": "游標",
+		"navigation": {
+			"step": "步驟 {{current}} / {{total}}",
+			"previous": "上一步",
+			"next": "下一步"
+		},
+		"sessionStarted": "瀏覽器工作階段已啟動",
+		"actions": {
+			"title": "瀏覽器動作: ",
+			"launch": "在 {{url}} 啟動瀏覽器",
+			"click": "點擊 ({{coordinate}})",
+			"type": "輸入 \"{{text}}\"",
+			"scrollDown": "向下捲動",
+			"scrollUp": "向上捲動",
+			"close": "關閉瀏覽器"
+		}
+	}
+}

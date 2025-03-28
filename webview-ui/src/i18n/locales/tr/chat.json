@@ -1,0 +1,242 @@
+{
+	"greeting": "Roo sizin için ne yapabilir?",
+	"task": {
+		"title": "Görev",
+		"seeMore": "Daha fazla gör",
+		"seeLess": "Daha az gör",
+		"tokens": "Tokenlar:",
+		"cache": "Önbellek:",
+		"apiCost": "API Maliyeti:",
+		"contextWindow": "Bağlam Penceresi:",
+		"closeAndStart": "Görevi kapat ve yeni bir görev başlat",
+		"export": "Görev geçmişini dışa aktar",
+		"delete": "Görevi sil (Onayı atlamak için Shift + Tıkla)"
+	},
+	"tokenProgress": {
+		"availableSpace": "Kullanılabilir alan: {{amount}} token",
+		"tokensUsed": "Kullanılan tokenlar: {{used}} / {{total}}",
+		"reservedForResponse": "Model yanıtı için ayrılan: {{amount}} token"
+	},
+	"retry": {
+		"title": "Yeniden Dene",
+		"tooltip": "İşlemi tekrar dene"
+	},
+	"startNewTask": {
+		"title": "Yeni Görev Başlat",
+		"tooltip": "Yeni bir görev başlat"
+	},
+	"proceedAnyways": {
+		"title": "Yine de Devam Et",
+		"tooltip": "Komut çalışırken devam et"
+	},
+	"save": {
+		"title": "Kaydet",
+		"tooltip": "Dosya değişikliklerini kaydet"
+	},
+	"reject": {
+		"title": "Reddet",
+		"tooltip": "Bu eylemi reddet"
+	},
+	"completeSubtaskAndReturn": "Alt görevi tamamla ve geri dön",
+	"approve": {
+		"title": "Onayla",
+		"tooltip": "Bu eylemi onayla"
+	},
+	"runCommand": {
+		"title": "Komutu Çalıştır",
+		"tooltip": "Bu komutu çalıştır"
+	},
+	"proceedWhileRunning": {
+		"title": "Çalışırken Devam Et",
+		"tooltip": "Uyarılara rağmen devam et"
+	},
+	"resumeTask": {
+		"title": "Göreve Devam Et",
+		"tooltip": "Mevcut göreve devam et"
+	},
+	"terminate": {
+		"title": "Sonlandır",
+		"tooltip": "Mevcut görevi sonlandır"
+	},
+	"cancel": {
+		"title": "İptal",
+		"tooltip": "Mevcut işlemi iptal et"
+	},
+	"scrollToBottom": "Sohbetin altına kaydır",
+	"aboutMe": "Ajansal kodlama yeteneklerindeki son atılımlar sayesinde, karmaşık yazılım geliştirme görevlerini adım adım ele alabilirim. Dosya oluşturma ve düzenleme, karmaşık projeleri keşfetme, tarayıcıyı kullanma ve terminal komutlarını çalıştırma (izin verdikten sonra) olanağı sağlayan araçlarla, kod tamamlama veya teknik desteğin ötesinde size yardımcı olabilirim. Hatta yeni araçlar oluşturmak ve kendi yeteneklerimi genişletmek için MCP'yi bile kullanabilirim.",
+	"selectMode": "Etkileşim modunu seçin",
+	"selectApiConfig": "API yapılandırmasını seçin",
+	"enhancePrompt": "Ek bağlamla istemi geliştir",
+	"addImages": "Mesaja resim ekle",
+	"sendMessage": "Mesaj gönder",
+	"typeMessage": "Bir mesaj yazın...",
+	"typeTask": "Görevinizi buraya yazın...",
+	"addContext": "Bağlam eklemek için @, mod değiştirmek için /",
+	"dragFiles": "dosyaları sürüklemek için shift tuşuna basılı tutun",
+	"dragFilesImages": "dosyaları/resimleri sürüklemek için shift tuşuna basılı tutun",
+	"enhancePromptDescription": "'İstemi geliştir' düğmesi, ek bağlam, açıklama veya yeniden ifade sağlayarak isteğinizi iyileştirmeye yardımcı olur. Buraya bir istek yazıp düğmeye tekrar tıklayarak nasıl çalıştığını görebilirsiniz.",
+	"errorReadingFile": "Dosya okuma hatası:",
+	"noValidImages": "Hiçbir geçerli resim işlenmedi",
+	"separator": "Ayırıcı",
+	"edit": "Düzenle...",
+	"forNextMode": "sonraki mod için",
+	"error": "Hata",
+	"troubleMessage": "Roo sorun yaşıyor...",
+	"apiRequest": {
+		"title": "API İsteği",
+		"failed": "API İsteği Başarısız",
+		"streaming": "API İsteği...",
+		"cancelled": "API İsteği İptal Edildi",
+		"streamingFailed": "API Akışı Başarısız"
+	},
+	"checkpoint": {
+		"initial": "İlk Kontrol Noktası",
+		"regular": "Kontrol Noktası",
+		"menu": {
+			"viewDiff": "Farkları Görüntüle",
+			"restore": "Kontrol Noktasını Geri Yükle",
+			"restoreFiles": "Dosyaları Geri Yükle",
+			"restoreFilesDescription": "Projenizin dosyalarını bu noktada alınan bir anlık görüntüye geri yükler.",
+			"restoreFilesAndTask": "Dosyaları ve Görevi Geri Yükle",
+			"confirm": "Onayla",
+			"cancel": "İptal",
+			"cannotUndo": "Bu işlem geri alınamaz.",
+			"restoreFilesAndTaskDescription": "Projenizin dosyalarını bu noktada alınan bir anlık görüntüye geri yükler ve bu noktadan sonraki tüm mesajları siler."
+		},
+		"current": "Mevcut"
+	},
+	"instructions": {
+		"wantsToFetch": "Roo mevcut göreve yardımcı olmak için ayrıntılı talimatlar almak istiyor"
+	},
+	"fileOperations": {
+		"wantsToRead": "Roo bu dosyayı okumak istiyor:",
+		"wantsToReadOutsideWorkspace": "Roo çalışma alanı dışındaki bu dosyayı okumak istiyor:",
+		"didRead": "Roo bu dosyayı okudu:",
+		"wantsToEdit": "Roo bu dosyayı düzenlemek istiyor:",
+		"wantsToEditOutsideWorkspace": "Roo çalışma alanı dışındaki bu dosyayı düzenlemek istiyor:",
+		"wantsToCreate": "Roo yeni bir dosya oluşturmak istiyor:"
+	},
+	"directoryOperations": {
+		"wantsToViewTopLevel": "Roo bu dizindeki üst düzey dosyaları görüntülemek istiyor:",
+		"didViewTopLevel": "Roo bu dizindeki üst düzey dosyaları görüntüledi:",
+		"wantsToViewRecursive": "Roo bu dizindeki tüm dosyaları özyinelemeli olarak görüntülemek istiyor:",
+		"didViewRecursive": "Roo bu dizindeki tüm dosyaları özyinelemeli olarak görüntüledi:",
+		"wantsToViewDefinitions": "Roo bu dizinde kullanılan kaynak kod tanımlama isimlerini görüntülemek istiyor:",
+		"didViewDefinitions": "Roo bu dizinde kullanılan kaynak kod tanımlama isimlerini görüntüledi:",
+		"wantsToSearch": "Roo bu dizinde <code>{{regex}}</code> için arama yapmak istiyor:",
+		"didSearch": "Roo bu dizinde <code>{{regex}}</code> için arama yaptı:"
+	},
+	"commandOutput": "Komut Çıktısı",
+	"response": "Yanıt",
+	"arguments": "Argümanlar",
+	"mcp": {
+		"wantsToUseTool": "Roo {{serverName}} MCP sunucusunda bir araç kullanmak istiyor:",
+		"wantsToAccessResource": "Roo {{serverName}} MCP sunucusundaki bir kaynağa erişmek istiyor:"
+	},
+	"modes": {
+		"wantsToSwitch": "Roo <code>{{mode}}</code> moduna geçmek istiyor",
+		"wantsToSwitchWithReason": "Roo <code>{{mode}}</code> moduna geçmek istiyor çünkü: {{reason}}",
+		"didSwitch": "Roo <code>{{mode}}</code> moduna geçti",
+		"didSwitchWithReason": "Roo <code>{{mode}}</code> moduna geçti çünkü: {{reason}}"
+	},
+	"subtasks": {
+		"wantsToCreate": "Roo <code>{{mode}}</code> modunda yeni bir alt görev oluşturmak istiyor:",
+		"wantsToFinish": "Roo bu alt görevi bitirmek istiyor"
+	},
+	"questions": {
+		"hasQuestion": "Roo'nun bir sorusu var:"
+	},
+	"taskCompleted": "Görev Tamamlandı",
+	"shellIntegration": {
+		"unavailable": "Kabuk Entegrasyonu Kullanılamıyor",
+		"troubleshooting": "Hala sorun mu yaşıyorsunuz?"
+	},
+	"powershell": {
+		"issues": "Windows PowerShell ile ilgili sorunlar yaşıyor gibi görünüyorsunuz, lütfen şu konuya bakın"
+	},
+	"autoApprove": {
+		"title": "Otomatik-onay:",
+		"none": "Hiçbiri",
+		"description": "Otomatik onay, Roo Code'un izin istemeden işlemler gerçekleştirmesine olanak tanır. Yalnızca tamamen güvendiğiniz eylemler için etkinleştirin.",
+		"actions": {
+			"readFiles": {
+				"label": "Dosyaları ve dizinleri oku",
+				"shortName": "Okuma",
+				"description": "Bilgisayarınızdaki herhangi bir dosyayı okuma erişimine izin verir."
+			},
+			"editFiles": {
+				"label": "Dosyaları düzenle",
+				"shortName": "Düzenleme",
+				"description": "Bilgisayarınızdaki herhangi bir dosyanın değiştirilmesine izin verir."
+			},
+			"executeCommands": {
+				"label": "Onaylanmış komutları çalıştır",
+				"shortName": "Komutlar",
+				"description": "Onaylanmış terminal komutlarının çalıştırılmasına izin verir. Bunu ayarlar panelinde yapılandırabilirsiniz."
+			},
+			"useBrowser": {
+				"label": "Tarayıcıyı kullan",
+				"shortName": "Tarayıcı",
+				"description": "Grafiksel arayüz olmayan bir tarayıcıda herhangi bir web sitesini başlatma ve etkileşim kurma yeteneğine izin verir."
+			},
+			"useMcp": {
+				"label": "MCP sunucularını kullan",
+				"shortName": "MCP",
+				"description": "Dosya sistemini değiştirebilen veya API'lerle etkileşime girebilen yapılandırılmış MCP sunucularının kullanımına izin verir."
+			},
+			"switchModes": {
+				"label": "Modları değiştir",
+				"shortName": "Modlar",
+				"description": "Onay gerektirmeden farklı modlar arasında otomatik geçişe izin verir."
+			},
+			"subtasks": {
+				"label": "Alt görevler oluştur ve tamamla",
+				"shortName": "Alt görevler",
+				"description": "Onay gerektirmeden alt görevlerin oluşturulmasına ve tamamlanmasına izin verir."
+			},
+			"retryRequests": {
+				"label": "Başarısız istekleri yeniden dene",
+				"shortName": "Yeniden Denemeler",
+				"description": "Sağlayıcı bir hata yanıtı döndürdüğünde başarısız API isteklerini otomatik olarak yeniden dener."
+			}
+		}
+	},
+	"reasoning": {
+		"thinking": "Düşünüyor",
+		"seconds": "{{count}}sn"
+	},
+	"announcement": {
+		"title": "🎉 Roo Code 3.10 Yayınlandı",
+		"description": "Roo Code 3.10 güçlü üretkenlik iyileştirmeleri getiriyor!",
+		"whatsNew": "Yenilikler",
+		"feature1": "Sorulara önerilen yanıtlar",
+		"feature2": "Geliştirilmiş büyük dosya işleme",
+		"feature3": "Yeniden yapılandırılmış @-mention dosya aramaları",
+		"feature4": "",
+		"feature5": "",
+		"hideButton": "Duyuruyu gizle",
+		"detailsDiscussLinks": "<discordLink>Discord</discordLink> ve <redditLink>Reddit</redditLink> üzerinde daha fazla ayrıntı edinin ve tartışmalara katılın 🚀"
+	},
+	"browser": {
+		"rooWantsToUse": "Roo tarayıcıyı kullanmak istiyor:",
+		"consoleLogs": "Konsol Kayıtları",
+		"noNewLogs": "(Yeni kayıt yok)",
+		"screenshot": "Tarayıcı ekran görüntüsü",
+		"cursor": "imleç",
+		"navigation": {
+			"step": "Adım {{current}} / {{total}}",
+			"previous": "Önceki",
+			"next": "Sonraki"
+		},
+		"sessionStarted": "Tarayıcı Oturumu Başlatıldı",
+		"actions": {
+			"title": "Tarayıcı İşlemi: ",
+			"launch": "{{url}} adresinde tarayıcı başlat",
+			"click": "Tıkla ({{coordinate}})",
+			"type": "Yaz \"{{text}}\"",
+			"scrollDown": "Aşağı kaydır",
+			"scrollUp": "Yukarı kaydır",
+			"close": "Tarayıcıyı kapat"
+		}
+	}
+}

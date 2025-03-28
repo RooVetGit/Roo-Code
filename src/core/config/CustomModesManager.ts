@@ -1,11 +1,12 @@
 import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs/promises"
-import { CustomModesSettingsSchema } from "./CustomModesSchema"
+import { customModesSettingsSchema } from "../../schemas"
 import { ModeConfig } from "../../shared/modes"
 import { fileExistsAtPath } from "../../utils/fs"
-import { arePathsEqual } from "../../utils/path"
+import { arePathsEqual, getWorkspacePath } from "../../utils/path"
 import { logger } from "../../utils/logging"
+import { GlobalFileNames } from "../../shared/globalFileNames"
 
 const ROOMODES_FILENAME = ".roomodes"
 
@@ -51,7 +52,7 @@ export class CustomModesManager {
 		if (!workspaceFolders || workspaceFolders.length === 0) {
 			return undefined
 		}
-		const workspaceRoot = workspaceFolders[0].uri.fsPath
+		const workspaceRoot = getWorkspacePath()
 		const roomodesPath = path.join(workspaceRoot, ROOMODES_FILENAME)
 		const exists = await fileExistsAtPath(roomodesPath)
 		return exists ? roomodesPath : undefined
@@ -61,7 +62,7 @@ export class CustomModesManager {
 		try {
 			const content = await fs.readFile(filePath, "utf-8")
 			const settings = JSON.parse(content)
-			const result = CustomModesSettingsSchema.safeParse(settings)
+			const result = customModesSettingsSchema.safeParse(settings)
 			if (!result.success) {
 				return []
 			}
@@ -113,7 +114,7 @@ export class CustomModesManager {
 
 	async getCustomModesFilePath(): Promise<string> {
 		const settingsDir = await this.ensureSettingsDirectoryExists()
-		const filePath = path.join(settingsDir, "cline_custom_modes.json")
+		const filePath = path.join(settingsDir, GlobalFileNames.customModes)
 		const fileExists = await fileExistsAtPath(filePath)
 		if (!fileExists) {
 			await this.queueWrite(async () => {
@@ -143,7 +144,8 @@ export class CustomModesManager {
 						return
 					}
 
-					const result = CustomModesSettingsSchema.safeParse(config)
+					const result = customModesSettingsSchema.safeParse(config)
+
 					if (!result.success) {
 						vscode.window.showErrorMessage(errorMessage)
 						return
@@ -226,7 +228,7 @@ export class CustomModesManager {
 					logger.error("Failed to update project mode: No workspace folder found", { slug })
 					throw new Error("No workspace folder found for project-specific mode")
 				}
-				const workspaceRoot = workspaceFolders[0].uri.fsPath
+				const workspaceRoot = getWorkspacePath()
 				targetPath = path.join(workspaceRoot, ROOMODES_FILENAME)
 				const exists = await fileExistsAtPath(targetPath)
 				logger.info(`${exists ? "Updating" : "Creating"} project mode in ${ROOMODES_FILENAME}`, {

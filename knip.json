@@ -14,9 +14,11 @@
 		"out/**",
 		"bin/**",
 		"e2e/**",
+		"benchmark/**",
 		"src/activate/**",
 		"src/exports/**",
-		"src/extension.ts"
+		"src/extension.ts",
+		"scripts/**"
 	],
 	"workspaces": {
 		"webview-ui": {

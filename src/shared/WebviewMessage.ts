@@ -11,17 +11,21 @@ export type AudioType = "notification" | "celebration" | "progress_loop"
 export interface WebviewMessage {
 	type:
 		| "apiConfiguration"
+		| "deleteMultipleTasksWithIds"
 		| "currentApiConfigName"
 		| "saveApiConfiguration"
 		| "upsertApiConfiguration"
 		| "deleteApiConfiguration"
 		| "loadApiConfiguration"
+		| "loadApiConfigurationById"
 		| "renameApiConfiguration"
 		| "getListApiConfiguration"
 		| "customInstructions"
 		| "allowedCommands"
 		| "alwaysAllowReadOnly"
+		| "alwaysAllowReadOnlyOutsideWorkspace"
 		| "alwaysAllowWrite"
+		| "alwaysAllowWriteOutsideWorkspace"
 		| "alwaysAllowExecute"
 		| "webviewDidLaunch"
 		| "newTask"
@@ -33,6 +37,8 @@ export interface WebviewMessage {
 		| "showTaskWithId"
 		| "deleteTaskWithId"
 		| "exportTaskWithId"
+		| "importSettings"
+		| "exportSettings"
 		| "resetState"
 		| "requestOllamaModels"
 		| "requestLmStudioModels"
@@ -50,7 +56,11 @@ export interface WebviewMessage {
 		| "alwaysAllowModeSwitch"
 		| "alwaysAllowSubtasks"
 		| "playSound"
+		| "playTts"
+		| "stopTts"
 		| "soundEnabled"
+		| "ttsEnabled"
+		| "ttsSpeed"
 		| "soundVolume"
 		| "diffEnabled"
 		| "enableCheckpoints"
@@ -59,6 +69,7 @@ export interface WebviewMessage {
 		| "screenshotQuality"
 		| "remoteBrowserHost"
 		| "openMcpSettings"
+		| "openProjectMcpSettings"
 		| "restartMcpServer"
 		| "toggleToolAlwaysAllow"
 		| "toggleMcpServer"
@@ -70,9 +81,9 @@ export interface WebviewMessage {
 		| "draggedImages"
 		| "deleteMessage"
 		| "terminalOutputLineLimit"
+		| "terminalShellIntegrationTimeout"
 		| "mcpEnabled"
 		| "enableMcpServerCreation"
-		| "enableCustomModeCreation"
 		| "searchCommits"
 		| "alwaysApproveResubmit"
 		| "requestDelaySeconds"
@@ -97,6 +108,7 @@ export interface WebviewMessage {
 		| "checkpointRestore"
 		| "deleteMcpServer"
 		| "maxOpenTabsContext"
+		| "maxWorkspaceFiles"
 		| "humanRelayResponse"
 		| "humanRelayCancel"
 		| "browserToolEnabled"
@@ -105,6 +117,10 @@ export interface WebviewMessage {
 		| "testBrowserConnection"
 		| "browserConnectionResult"
 		| "remoteBrowserEnabled"
+		| "language"
+		| "maxReadFileLine"
+		| "searchFiles"
+		| "toggleApiConfigPin"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
@@ -129,18 +145,7 @@ export interface WebviewMessage {
 	payload?: WebViewMessagePayload
 	source?: "global" | "project"
 	requestId?: string
-}
-
-// Human relay related message types
-export interface HumanRelayResponseMessage extends WebviewMessage {
-	type: "humanRelayResponse"
-	requestId: string
-	text: string
-}
-
-export interface HumanRelayCancelMessage extends WebviewMessage {
-	type: "humanRelayCancel"
-	requestId: string
+	ids?: string[]
 }
 
 export const checkoutDiffPayloadSchema = z.object({

@@ -1,0 +1,93 @@
+{
+	"extension": {
+		"name": "Roo Code",
+		"description": "Une équipe complète de développeurs IA dans votre éditeur."
+	},
+	"number_format": {
+		"thousand_suffix": "k",
+		"million_suffix": "m",
+		"billion_suffix": "b"
+	},
+	"welcome": "Bienvenue, {{name}} ! Vous avez {{count}} notification(s).",
+	"items": {
+		"zero": "Aucun élément",
+		"one": "Un élément",
+		"other": "{{count}} éléments"
+	},
+	"confirmation": {
+		"reset_state": "Êtes-vous sûr de vouloir réinitialiser le global state et le stockage de secrets de l'extension ? Cette action est irréversible.",
+		"delete_config_profile": "Êtes-vous sûr de vouloir supprimer ce profil de configuration ?",
+		"delete_custom_mode": "Êtes-vous sûr de vouloir supprimer ce mode personnalisé ?",
+		"delete_message": "Que souhaitez-vous supprimer ?",
+		"just_this_message": "Uniquement ce message",
+		"this_and_subsequent": "Ce message et tous les messages suivants"
+	},
+	"errors": {
+		"invalid_mcp_config": "Format de configuration MCP du projet invalide",
+		"invalid_mcp_settings_format": "Format JSON des paramètres MCP invalide. Veuillez vous assurer que vos paramètres suivent le format JSON correct.",
+		"invalid_mcp_settings_syntax": "Format JSON des paramètres MCP invalide. Veuillez vérifier le syntaxe de votre fichier de paramètres.",
+		"invalid_mcp_settings_validation": "Format de paramètres MCP invalide : {{errorMessages}}",
+		"failed_initialize_project_mcp": "Échec de l'initialisation du serveur MCP du projet : {{error}}",
+		"invalid_data_uri": "Format d'URI de données invalide",
+		"checkpoint_timeout": "Expiration du délai lors de la tentative de rétablissement du checkpoint.",
+		"checkpoint_failed": "Échec du rétablissement du checkpoint.",
+		"no_workspace": "Veuillez d'abord ouvrir un espace de travail",
+		"update_support_prompt": "Erreur lors de la mise à jour du prompt de support",
+		"reset_support_prompt": "Erreur lors de la réinitialisation du prompt de support",
+		"enhance_prompt": "Erreur lors de l'amélioration du prompt",
+		"get_system_prompt": "Erreur lors de l'obtention du prompt système",
+		"search_commits": "Erreur lors de la recherche des commits",
+		"save_api_config": "Erreur lors de l'enregistrement de la configuration API",
+		"create_api_config": "Erreur lors de la création de la configuration API",
+		"rename_api_config": "Erreur lors du renommage de la configuration API",
+		"load_api_config": "Erreur lors du chargement de la configuration API",
+		"delete_api_config": "Erreur lors de la suppression de la configuration API",
+		"list_api_config": "Erreur lors de l'obtention de la liste des configurations API",
+		"update_server_timeout": "Erreur lors de la mise à jour du délai d'attente du serveur",
+		"failed_update_project_mcp": "Échec de la mise à jour des serveurs MCP du projet",
+		"create_mcp_json": "Échec de la création ou de l'ouverture de .roo/mcp.json : {{error}}",
+		"hmr_not_running": "Le serveur de développement local n'est pas en cours d'exécution, HMR ne fonctionnera pas. Veuillez exécuter 'npm run dev' avant de lancer l'extension pour activer l'HMR.",
+		"retrieve_current_mode": "Erreur lors de la récupération du mode actuel à partir du state.",
+		"failed_delete_repo": "Échec de la suppression du repo fantôme ou de la branche associée : {{error}}",
+		"failed_remove_directory": "Échec de la suppression du répertoire de tâches : {{error}}",
+		"custom_storage_path_unusable": "Le chemin de stockage personnalisé \"{{path}}\" est inutilisable, le chemin par défaut sera utilisé",
+		"cannot_access_path": "Impossible d'accéder au chemin {{path}} : {{error}}"
+	},
+	"warnings": {
+		"no_terminal_content": "Aucun contenu de terminal sélectionné",
+		"missing_task_files": "Les fichiers de cette tâche sont introuvables. Souhaitez-vous la supprimer de la liste des tâches ?"
+	},
+	"info": {
+		"no_changes": "Aucun changement trouvé.",
+		"clipboard_copy": "Prompt système copié dans le presse-papiers",
+		"history_cleanup": "{{count}} tâche(s) avec des fichiers introuvables ont été supprimés de l'historique.",
+		"mcp_server_restarting": "Redémarrage du serveur MCP {{serverName}}...",
+		"mcp_server_connected": "Serveur MCP {{serverName}} connecté",
+		"mcp_server_deleted": "Serveur MCP supprimé : {{serverName}}",
+		"mcp_server_not_found": "Serveur \"{{serverName}}\" introuvable dans la configuration",
+		"custom_storage_path_set": "Chemin de stockage personnalisé défini : {{path}}",
+		"default_storage_path": "Retour au chemin de stockage par défaut",
+		"settings_imported": "Paramètres importés avec succès."
+	},
+	"answers": {
+		"yes": "Oui",
+		"no": "Non",
+		"cancel": "Annuler",
+		"remove": "Supprimer",
+		"keep": "Conserver"
+	},
+	"tasks": {
+		"canceled": "Erreur de tâche : Elle a été arrêtée et annulée par l'utilisateur.",
+		"deleted": "Échec de la tâche : Elle a été arrêtée et supprimée par l'utilisateur."
+	},
+	"storage": {
+		"prompt_custom_path": "Entrez le chemin de stockage personnalisé pour l'historique des conversations, laissez vide pour utiliser l'emplacement par défaut",
+		"path_placeholder": "D:\\RooCodeStorage",
+		"enter_absolute_path": "Veuillez entrer un chemin absolu (ex. D:\\RooCodeStorage ou /home/user/storage)",
+		"enter_valid_path": "Veuillez entrer un chemin valide"
+	},
+	"input": {
+		"task_prompt": "Que doit faire Roo ?",
+		"task_placeholder": "Écris ta tâche ici"
+	}
+}

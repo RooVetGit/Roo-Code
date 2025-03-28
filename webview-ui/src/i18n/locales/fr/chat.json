@@ -1,0 +1,242 @@
+{
+	"greeting": "Que peut faire Roo pour vous ?",
+	"task": {
+		"title": "Tâche",
+		"seeMore": "Voir plus",
+		"seeLess": "Voir moins",
+		"tokens": "Tokens :",
+		"cache": "Cache :",
+		"apiCost": "Coût API :",
+		"contextWindow": "Fenêtre de contexte :",
+		"closeAndStart": "Fermer la tâche et en commencer une nouvelle",
+		"export": "Exporter l'historique des tâches",
+		"delete": "Supprimer la tâche (Shift + Clic pour ignorer la confirmation)"
+	},
+	"tokenProgress": {
+		"availableSpace": "Espace disponible : {{amount}} tokens",
+		"tokensUsed": "Tokens utilisés : {{used}} sur {{total}}",
+		"reservedForResponse": "Réservé pour la réponse du modèle : {{amount}} tokens"
+	},
+	"retry": {
+		"title": "Réessayer",
+		"tooltip": "Tenter à nouveau l'opération"
+	},
+	"startNewTask": {
+		"title": "Commencer une nouvelle tâche",
+		"tooltip": "Démarrer une nouvelle tâche"
+	},
+	"proceedAnyways": {
+		"title": "Continuer quand même",
+		"tooltip": "Continuer pendant l'exécution de la commande"
+	},
+	"save": {
+		"title": "Enregistrer",
+		"tooltip": "Sauvegarder les modifications du fichier"
+	},
+	"reject": {
+		"title": "Rejeter",
+		"tooltip": "Rejeter cette action"
+	},
+	"completeSubtaskAndReturn": "Terminer la sous-tâche et revenir",
+	"approve": {
+		"title": "Approuver",
+		"tooltip": "Approuver cette action"
+	},
+	"runCommand": {
+		"title": "Exécuter la commande",
+		"tooltip": "Exécuter cette commande"
+	},
+	"proceedWhileRunning": {
+		"title": "Continuer pendant l'exécution",
+		"tooltip": "Continuer malgré les avertissements"
+	},
+	"resumeTask": {
+		"title": "Reprendre la tâche",
+		"tooltip": "Continuer la tâche actuelle"
+	},
+	"terminate": {
+		"title": "Terminer",
+		"tooltip": "Terminer la tâche actuelle"
+	},
+	"cancel": {
+		"title": "Annuler",
+		"tooltip": "Annuler l'opération actuelle"
+	},
+	"scrollToBottom": "Défiler jusqu'au bas du chat",
+	"aboutMe": "Grâce aux dernières avancées en matière de capacités de codage agent, je peux gérer des tâches complexes de développement logiciel étape par étape. Avec des outils qui me permettent de créer et d'éditer des fichiers, d'explorer des projets complexes, d'utiliser le navigateur et d'exécuter des commandes de terminal (après votre autorisation), je peux vous aider de manières qui vont au-delà de la complétion de code ou du support technique. Je peux même utiliser MCP pour créer de nouveaux outils et étendre mes propres capacités.",
+	"selectMode": "Sélectionner le mode d'interaction",
+	"selectApiConfig": "Sélectionner la configuration API",
+	"enhancePrompt": "Améliorer la requête avec un contexte supplémentaire",
+	"addImages": "Ajouter des images au message",
+	"sendMessage": "Envoyer le message",
+	"typeMessage": "Écrivez un message...",
+	"typeTask": "Écrivez votre tâche ici...",
+	"addContext": "@ pour ajouter du contexte, / pour changer de mode",
+	"dragFiles": "maintenir Maj pour glisser des fichiers",
+	"dragFilesImages": "maintenir Maj pour glisser des fichiers/images",
+	"enhancePromptDescription": "Le bouton 'Améliorer la requête' aide à améliorer votre demande en fournissant un contexte supplémentaire, des clarifications ou des reformulations. Essayez de taper une demande ici et cliquez à nouveau sur le bouton pour voir comment cela fonctionne.",
+	"errorReadingFile": "Erreur lors de la lecture du fichier :",
+	"noValidImages": "Aucune image valide n'a été traitée",
+	"separator": "Séparateur",
+	"edit": "Éditer...",
+	"forNextMode": "pour le prochain mode",
+	"error": "Erreur",
+	"troubleMessage": "Roo rencontre des difficultés...",
+	"apiRequest": {
+		"title": "Requête API",
+		"failed": "Échec de la requête API",
+		"streaming": "Requête API...",
+		"cancelled": "Requête API annulée",
+		"streamingFailed": "Échec du streaming API"
+	},
+	"checkpoint": {
+		"initial": "Point de contrôle initial",
+		"regular": "Point de contrôle",
+		"menu": {
+			"viewDiff": "Voir les différences",
+			"restore": "Restaurer le point de contrôle",
+			"restoreFiles": "Restaurer les fichiers",
+			"restoreFilesDescription": "Restaure les fichiers de votre projet à un instantané pris à ce moment.",
+			"restoreFilesAndTask": "Restaurer fichiers et tâche",
+			"confirm": "Confirmer",
+			"cancel": "Annuler",
+			"cannotUndo": "Cette action ne peut pas être annulée.",
+			"restoreFilesAndTaskDescription": "Restaure les fichiers de votre projet à un instantané pris à ce moment et supprime tous les messages après ce point."
+		},
+		"current": "Actuel"
+	},
+	"fileOperations": {
+		"wantsToRead": "Roo veut lire ce fichier :",
+		"wantsToReadOutsideWorkspace": "Roo veut lire ce fichier en dehors de l'espace de travail :",
+		"didRead": "Roo a lu ce fichier :",
+		"wantsToEdit": "Roo veut éditer ce fichier :",
+		"wantsToEditOutsideWorkspace": "Roo veut éditer ce fichier en dehors de l'espace de travail :",
+		"wantsToCreate": "Roo veut créer un nouveau fichier :"
+	},
+	"instructions": {
+		"wantsToFetch": "Roo veut récupérer des instructions détaillées pour aider à la tâche actuelle"
+	},
+	"directoryOperations": {
+		"wantsToViewTopLevel": "Roo veut voir les fichiers de premier niveau dans ce répertoire :",
+		"didViewTopLevel": "Roo a vu les fichiers de premier niveau dans ce répertoire :",
+		"wantsToViewRecursive": "Roo veut voir récursivement tous les fichiers dans ce répertoire :",
+		"didViewRecursive": "Roo a vu récursivement tous les fichiers dans ce répertoire :",
+		"wantsToViewDefinitions": "Roo veut voir les noms de définitions de code source utilisés dans ce répertoire :",
+		"didViewDefinitions": "Roo a vu les noms de définitions de code source utilisés dans ce répertoire :",
+		"wantsToSearch": "Roo veut rechercher dans ce répertoire <code>{{regex}}</code> :",
+		"didSearch": "Roo a recherché dans ce répertoire <code>{{regex}}</code> :"
+	},
+	"commandOutput": "Sortie de commande",
+	"response": "Réponse",
+	"arguments": "Arguments",
+	"mcp": {
+		"wantsToUseTool": "Roo veut utiliser un outil sur le serveur MCP {{serverName}} :",
+		"wantsToAccessResource": "Roo veut accéder à une ressource sur le serveur MCP {{serverName}} :"
+	},
+	"modes": {
+		"wantsToSwitch": "Roo veut passer au mode <code>{{mode}}</code>",
+		"wantsToSwitchWithReason": "Roo veut passer au mode <code>{{mode}}</code> car : {{reason}}",
+		"didSwitch": "Roo est passé au mode <code>{{mode}}</code>",
+		"didSwitchWithReason": "Roo est passé au mode <code>{{mode}}</code> car : {{reason}}"
+	},
+	"subtasks": {
+		"wantsToCreate": "Roo veut créer une nouvelle sous-tâche en mode <code>{{mode}}</code> :",
+		"wantsToFinish": "Roo veut terminer cette sous-tâche"
+	},
+	"questions": {
+		"hasQuestion": "Roo a une question :"
+	},
+	"taskCompleted": "Tâche terminée",
+	"shellIntegration": {
+		"unavailable": "Intégration du shell indisponible",
+		"troubleshooting": "Toujours des problèmes ?"
+	},
+	"powershell": {
+		"issues": "Il semble que vous rencontriez des problèmes avec Windows PowerShell, veuillez consulter ce"
+	},
+	"autoApprove": {
+		"title": "Auto-approbation :",
+		"none": "Aucune",
+		"description": "L'auto-approbation permet à Roo Code d'effectuer des actions sans demander d'autorisation. Activez-la uniquement pour les actions auxquelles vous faites entièrement confiance.",
+		"actions": {
+			"readFiles": {
+				"label": "Lire fichiers et répertoires",
+				"shortName": "Lecture",
+				"description": "Permet l'accès en lecture à n'importe quel fichier sur votre ordinateur."
+			},
+			"editFiles": {
+				"label": "Éditer des fichiers",
+				"shortName": "Édition",
+				"description": "Permet la modification de n'importe quel fichier sur votre ordinateur."
+			},
+			"executeCommands": {
+				"label": "Exécuter des commandes approuvées",
+				"shortName": "Commandes",
+				"description": "Permet l'exécution de commandes de terminal approuvées. Vous pouvez configurer cela dans le panneau des paramètres."
+			},
+			"useBrowser": {
+				"label": "Utiliser le navigateur",
+				"shortName": "Navigateur",
+				"description": "Permet de lancer et d'interagir avec n'importe quel site web dans un navigateur sans interface."
+			},
+			"useMcp": {
+				"label": "Utiliser les serveurs MCP",
+				"shortName": "MCP",
+				"description": "Permet l'utilisation de serveurs MCP configurés qui peuvent modifier le système de fichiers ou interagir avec des APIs."
+			},
+			"switchModes": {
+				"label": "Changer de modes",
+				"shortName": "Modes",
+				"description": "Permet le changement automatique entre différents modes sans nécessiter d'approbation."
+			},
+			"subtasks": {
+				"label": "Créer et terminer des sous-tâches",
+				"shortName": "Sous-tâches",
+				"description": "Permet la création et l'achèvement de sous-tâches sans nécessiter d'approbation."
+			},
+			"retryRequests": {
+				"label": "Réessayer les requêtes échouées",
+				"shortName": "Réessais",
+				"description": "Réessaie automatiquement les requêtes API échouées lorsque le fournisseur renvoie une réponse d'erreur."
+			}
+		}
+	},
+	"reasoning": {
+		"thinking": "Réflexion",
+		"seconds": "{{count}}s"
+	},
+	"announcement": {
+		"title": "🎉 Roo Code 3.10 est sortie",
+		"description": "Roo Code 3.10 apporte de puissantes améliorations de productivité !",
+		"whatsNew": "Quoi de neuf",
+		"feature1": "Réponses suggérées aux questions",
+		"feature2": "Gestion améliorée des fichiers volumineux",
+		"feature3": "Recherche de fichiers par @-mention reconstruite",
+		"feature4": "",
+		"feature5": "",
+		"hideButton": "Masquer l'annonce",
+		"detailsDiscussLinks": "Obtenez plus de détails et participez aux discussions sur <discordLink>Discord</discordLink> et <redditLink>Reddit</redditLink> 🚀"
+	},
+	"browser": {
+		"rooWantsToUse": "Roo veut utiliser le navigateur :",
+		"consoleLogs": "Journaux de console",
+		"noNewLogs": "(Pas de nouveaux journaux)",
+		"screenshot": "Capture d'écran du navigateur",
+		"cursor": "curseur",
+		"navigation": {
+			"step": "Étape {{current}} sur {{total}}",
+			"previous": "Précédent",
+			"next": "Suivant"
+		},
+		"sessionStarted": "Session de navigateur démarrée",
+		"actions": {
+			"title": "Action de navigation : ",
+			"launch": "Lancer le navigateur sur {{url}}",
+			"click": "Cliquer ({{coordinate}})",
+			"type": "Saisir \"{{text}}\"",
+			"scrollDown": "Défiler vers le bas",
+			"scrollUp": "Défiler vers le haut",
+			"close": "Fermer le navigateur"
+		}
+	}
+}

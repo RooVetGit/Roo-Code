@@ -1,0 +1,242 @@
+{
+	"greeting": "Què pot fer Roo per tu?",
+	"task": {
+		"title": "Tasca",
+		"seeMore": "Veure més",
+		"seeLess": "Veure menys",
+		"tokens": "Tokens:",
+		"cache": "Caché:",
+		"apiCost": "Cost d'API:",
+		"contextWindow": "Finestra de context:",
+		"closeAndStart": "Tancar tasca i iniciar-ne una de nova",
+		"export": "Exportar historial de tasques",
+		"delete": "Eliminar tasca (Shift + Clic per ometre confirmació)"
+	},
+	"tokenProgress": {
+		"availableSpace": "Espai disponible: {{amount}} tokens",
+		"tokensUsed": "Tokens utilitzats: {{used}} de {{total}}",
+		"reservedForResponse": "Reservat per a resposta del model: {{amount}} tokens"
+	},
+	"retry": {
+		"title": "Tornar a intentar",
+		"tooltip": "Torna a provar l'operació"
+	},
+	"startNewTask": {
+		"title": "Començar una nova tasca",
+		"tooltip": "Comença una nova tasca"
+	},
+	"proceedAnyways": {
+		"title": "Continuar de totes maneres",
+		"tooltip": "Continua mentre s'executa l'ordre"
+	},
+	"save": {
+		"title": "Desar",
+		"tooltip": "Desa els canvis del fitxer"
+	},
+	"reject": {
+		"title": "Rebutjar",
+		"tooltip": "Rebutja aquesta acció"
+	},
+	"completeSubtaskAndReturn": "Completar la subtasca i tornar",
+	"approve": {
+		"title": "Aprovar",
+		"tooltip": "Aprova aquesta acció"
+	},
+	"runCommand": {
+		"title": "Executar ordre",
+		"tooltip": "Executa aquesta ordre"
+	},
+	"proceedWhileRunning": {
+		"title": "Continuar mentre s'executa",
+		"tooltip": "Continua malgrat els advertiments"
+	},
+	"resumeTask": {
+		"title": "Reprendre la tasca",
+		"tooltip": "Repren la tasca actual"
+	},
+	"terminate": {
+		"title": "Finalitzar",
+		"tooltip": "Finalitza la tasca actual"
+	},
+	"cancel": {
+		"title": "Cancel·lar",
+		"tooltip": "Cancel·la l'operació actual"
+	},
+	"scrollToBottom": "Desplaça't al final del xat",
+	"aboutMe": "Gràcies als últims avenços en capacitats de codificació intel·ligent, puc gestionar tasques complexes de desenvolupament de programari pas a pas. Amb eines que em permeten crear i editar fitxers, explorar projectes complexos, utilitzar el navegador i executar ordres de terminal (després que em donis permís), puc ajudar-te de maneres que van més enllà de la finalització de codi o el suport tècnic. Fins i tot puc utilitzar MCP per crear noves eines i ampliar les meves capacitats.",
+	"selectMode": "Selecciona el mode d'interacció",
+	"selectApiConfig": "Selecciona la configuració de l'API",
+	"enhancePrompt": "Millora la sol·licitud amb context addicional",
+	"addImages": "Afegeix imatges al missatge",
+	"sendMessage": "Envia el missatge",
+	"typeMessage": "Escriu un missatge...",
+	"typeTask": "Escriu la teva tasca aquí...",
+	"addContext": "@ per afegir context, / per canviar de mode",
+	"dragFiles": "manté premut shift per arrossegar fitxers",
+	"dragFilesImages": "manté premut shift per arrossegar fitxers/imatges",
+	"enhancePromptDescription": "El botó 'Millora la sol·licitud' ajuda a millorar la teva sol·licitud proporcionant context addicional, aclariments o reformulacions. Prova d'escriure una sol·licitud aquí i fes clic al botó de nou per veure com funciona.",
+	"errorReadingFile": "Error en llegir el fitxer:",
+	"noValidImages": "No s'ha processat cap imatge vàlida",
+	"separator": "Separador",
+	"edit": "Edita...",
+	"forNextMode": "per al següent mode",
+	"error": "Error",
+	"troubleMessage": "Roo està tenint problemes...",
+	"apiRequest": {
+		"title": "Sol·licitud API",
+		"failed": "Sol·licitud API ha fallat",
+		"streaming": "Sol·licitud API...",
+		"cancelled": "Sol·licitud API cancel·lada",
+		"streamingFailed": "Transmissió API ha fallat"
+	},
+	"checkpoint": {
+		"initial": "Punt de control inicial",
+		"regular": "Punt de control",
+		"menu": {
+			"viewDiff": "Veure diferències",
+			"restore": "Restaurar punt de control",
+			"restoreFiles": "Restaurar arxius",
+			"restoreFilesDescription": "Restaura els arxius del teu projecte a una instantània presa en aquest punt.",
+			"restoreFilesAndTask": "Restaurar arxius i tasca",
+			"confirm": "Confirmar",
+			"cancel": "Cancel·lar",
+			"cannotUndo": "Aquesta acció no es pot desfer.",
+			"restoreFilesAndTaskDescription": "Restaura els arxius del teu projecte a una instantània presa en aquest punt i elimina tots els missatges posteriors a aquest punt."
+		},
+		"current": "Actual"
+	},
+	"instructions": {
+		"wantsToFetch": "Roo vol obtenir instruccions detallades per ajudar amb la tasca actual."
+	},
+	"fileOperations": {
+		"wantsToRead": "Roo vol llegir aquest fitxer:",
+		"wantsToReadOutsideWorkspace": "Roo vol llegir aquest fitxer fora de l'espai de treball:",
+		"didRead": "Roo ha llegit aquest fitxer:",
+		"wantsToEdit": "Roo vol editar aquest fitxer:",
+		"wantsToEditOutsideWorkspace": "Roo vol editar aquest fitxer fora de l'espai de treball:",
+		"wantsToCreate": "Roo vol crear un nou fitxer:"
+	},
+	"directoryOperations": {
+		"wantsToViewTopLevel": "Roo vol veure els fitxers de nivell superior en aquest directori:",
+		"didViewTopLevel": "Roo ha vist els fitxers de nivell superior en aquest directori:",
+		"wantsToViewRecursive": "Roo vol veure recursivament tots els fitxers en aquest directori:",
+		"didViewRecursive": "Roo ha vist recursivament tots els fitxers en aquest directori:",
+		"wantsToViewDefinitions": "Roo vol veure noms de definicions de codi font utilitzats en aquest directori:",
+		"didViewDefinitions": "Roo ha vist noms de definicions de codi font utilitzats en aquest directori:",
+		"wantsToSearch": "Roo vol cercar en aquest directori <code>{{regex}}</code>:",
+		"didSearch": "Roo ha cercat en aquest directori <code>{{regex}}</code>:"
+	},
+	"commandOutput": "Sortida de l'ordre",
+	"response": "Resposta",
+	"arguments": "Arguments",
+	"mcp": {
+		"wantsToUseTool": "Roo vol utilitzar una eina al servidor MCP {{serverName}}:",
+		"wantsToAccessResource": "Roo vol accedir a un recurs al servidor MCP {{serverName}}:"
+	},
+	"modes": {
+		"wantsToSwitch": "Roo vol canviar a mode <code>{{mode}}</code>",
+		"wantsToSwitchWithReason": "Roo vol canviar a mode <code>{{mode}}</code> perquè: {{reason}}",
+		"didSwitch": "Roo ha canviat a mode <code>{{mode}}</code>",
+		"didSwitchWithReason": "Roo ha canviat a mode <code>{{mode}}</code> perquè: {{reason}}"
+	},
+	"subtasks": {
+		"wantsToCreate": "Roo vol crear una nova subtasca en mode <code>{{mode}}</code>:",
+		"wantsToFinish": "Roo vol finalitzar aquesta subtasca"
+	},
+	"questions": {
+		"hasQuestion": "Roo té una pregunta:"
+	},
+	"taskCompleted": "Tasca completada",
+	"shellIntegration": {
+		"unavailable": "Integració de shell no disponible",
+		"troubleshooting": "Encara tens problemes?"
+	},
+	"powershell": {
+		"issues": "Sembla que estàs tenint problemes amb Windows PowerShell, si us plau consulta aquesta documentació per a més informació."
+	},
+	"autoApprove": {
+		"title": "Aprovació automàtica:",
+		"none": "Cap",
+		"description": "L'aprovació automàtica permet a Roo Code realitzar accions sense demanar permís. Activa-la només per a accions en les que confies plenament.",
+		"actions": {
+			"readFiles": {
+				"label": "Llegir fitxers i directoris",
+				"shortName": "Lectura",
+				"description": "Permet l'accés per llegir qualsevol fitxer al teu ordinador."
+			},
+			"editFiles": {
+				"label": "Editar fitxers",
+				"shortName": "Edició",
+				"description": "Permet la modificació de qualsevol fitxer al teu ordinador."
+			},
+			"executeCommands": {
+				"label": "Executar ordres aprovades",
+				"shortName": "Ordres",
+				"description": "Permet l'execució d'ordres de terminal aprovades. Pots configurar-ho al panell de configuració."
+			},
+			"useBrowser": {
+				"label": "Utilitzar el navegador",
+				"shortName": "Navegador",
+				"description": "Permet la capacitat d'iniciar i interactuar amb qualsevol lloc web en un navegador headless."
+			},
+			"useMcp": {
+				"label": "Utilitzar servidors MCP",
+				"shortName": "MCP",
+				"description": "Permet l'ús de servidors MCP configurats que poden modificar el sistema de fitxers o interactuar amb APIs."
+			},
+			"switchModes": {
+				"label": "Canviar modes",
+				"shortName": "Modes",
+				"description": "Permet el canvi automàtic entre diferents modes sense requerir aprovació."
+			},
+			"subtasks": {
+				"label": "Crear i completar subtasques",
+				"shortName": "Subtasques",
+				"description": "Permet la creació i finalització de subtasques sense requerir aprovació."
+			},
+			"retryRequests": {
+				"label": "Reintentar sol·licituds fallides",
+				"shortName": "Reintents",
+				"description": "Reintenta automàticament les sol·licituds API fallides quan el proveïdor retorna una resposta d'error."
+			}
+		}
+	},
+	"reasoning": {
+		"thinking": "Pensant",
+		"seconds": "{{count}}s"
+	},
+	"announcement": {
+		"title": "🎉 Roo Code 3.10 publicat",
+		"description": "Roo Code 3.10 aporta potents millores de productivitat!",
+		"whatsNew": "Novetats",
+		"feature1": "Respostes suggerides a les preguntes",
+		"feature2": "Millora en la gestió de fitxers grans",
+		"feature3": "Reconstrucció de les cerques de fitxers amb @-menció",
+		"feature4": "",
+		"feature5": "",
+		"hideButton": "Amagar anunci",
+		"detailsDiscussLinks": "Obté més detalls i participa a <discordLink>Discord</discordLink> i <redditLink>Reddit</redditLink> 🚀"
+	},
+	"browser": {
+		"rooWantsToUse": "Roo vol utilitzar el navegador:",
+		"consoleLogs": "Registres de consola",
+		"noNewLogs": "(Cap registre nou)",
+		"screenshot": "Captura de pantalla del navegador",
+		"cursor": "cursor",
+		"navigation": {
+			"step": "Pas {{current}} de {{total}}",
+			"previous": "Anterior",
+			"next": "Següent"
+		},
+		"sessionStarted": "Sessió de navegador iniciada",
+		"actions": {
+			"title": "Acció de navegació: ",
+			"launch": "Iniciar navegador a {{url}}",
+			"click": "Clic ({{coordinate}})",
+			"type": "Escriure \"{{text}}\"",
+			"scrollDown": "Desplaçar avall",
+			"scrollUp": "Desplaçar amunt",
+			"close": "Tancar navegador"
+		}
+	}
+}

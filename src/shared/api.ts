@@ -1,153 +1,10 @@
-import * as vscode from "vscode"
+import { ModelInfo, ProviderName, ProviderSettings } from "../schemas"
 
-export type ApiProvider =
-	| "anthropic"
-	| "glama"
-	| "openrouter"
-	| "bedrock"
-	| "vertex"
-	| "openai"
-	| "ollama"
-	| "lmstudio"
-	| "gemini"
-	| "openai-native"
-	| "deepseek"
-	| "vscode-lm"
-	| "mistral"
-	| "unbound"
-	| "requesty"
-	| "human-relay"
+export type { ModelInfo, ProviderName as ApiProvider }
 
-export interface ApiHandlerOptions {
-	apiModelId?: string
-	apiKey?: string // anthropic
-	anthropicBaseUrl?: string
-	vsCodeLmModelSelector?: vscode.LanguageModelChatSelector
-	glamaModelId?: string
-	glamaModelInfo?: ModelInfo
-	glamaApiKey?: string
-	openRouterApiKey?: string
-	openRouterModelId?: string
-	openRouterModelInfo?: ModelInfo
-	openRouterBaseUrl?: string
-	awsAccessKey?: string
-	awsSecretKey?: string
-	awsSessionToken?: string
-	awsRegion?: string
-	awsUseCrossRegionInference?: boolean
-	awsUsePromptCache?: boolean
-	awspromptCacheId?: string
-	awsProfile?: string
-	awsUseProfile?: boolean
-	awsCustomArn?: string
-	vertexKeyFile?: string
-	vertexJsonCredentials?: string
-	vertexProjectId?: string
-	vertexRegion?: string
-	openAiBaseUrl?: string
-	openAiApiKey?: string
-	openAiModelId?: string
-	openAiCustomModelInfo?: ModelInfo
-	openAiUseAzure?: boolean
-	ollamaModelId?: string
-	ollamaBaseUrl?: string
-	lmStudioModelId?: string
-	lmStudioBaseUrl?: string
-	lmStudioDraftModelId?: string
-	lmStudioSpeculativeDecodingEnabled?: boolean
-	geminiApiKey?: string
-	googleGeminiBaseUrl?: string
-	openAiNativeApiKey?: string
-	mistralApiKey?: string
-	mistralCodestralUrl?: string // New option for Codestral URL
-	azureApiVersion?: string
-	openRouterUseMiddleOutTransform?: boolean
-	openAiStreamingEnabled?: boolean
-	deepSeekBaseUrl?: string
-	deepSeekApiKey?: string
-	includeMaxTokens?: boolean
-	unboundApiKey?: string
-	unboundModelId?: string
-	unboundModelInfo?: ModelInfo
-	requestyApiKey?: string
-	requestyModelId?: string
-	requestyModelInfo?: ModelInfo
-	modelTemperature?: number | null
-	modelMaxTokens?: number
-	modelMaxThinkingTokens?: number
-}
+export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider" | "id">
 
-export type ApiConfiguration = ApiHandlerOptions & {
-	apiProvider?: ApiProvider
-	id?: string // stable unique identifier
-}
-
-// Import GlobalStateKey type from globalState.ts
-import { GlobalStateKey } from "./globalState"
-
-// Define API configuration keys for dynamic object building
-export const API_CONFIG_KEYS: GlobalStateKey[] = [
-	"apiModelId",
-	"anthropicBaseUrl",
-	"vsCodeLmModelSelector",
-	"glamaModelId",
-	"glamaModelInfo",
-	"openRouterModelId",
-	"openRouterModelInfo",
-	"openRouterBaseUrl",
-	"awsRegion",
-	"awsUseCrossRegionInference",
-	// "awsUsePromptCache", // NOT exist on GlobalStateKey
-	// "awspromptCacheId", // NOT exist on GlobalStateKey
-	"awsProfile",
-	"awsUseProfile",
-	"awsCustomArn",
-	"vertexKeyFile",
-	"vertexJsonCredentials",
-	"vertexProjectId",
-	"vertexRegion",
-	"openAiBaseUrl",
-	"openAiModelId",
-	"openAiCustomModelInfo",
-	"openAiUseAzure",
-	"ollamaModelId",
-	"ollamaBaseUrl",
-	"lmStudioModelId",
-	"lmStudioBaseUrl",
-	"lmStudioDraftModelId",
-	"lmStudioSpeculativeDecodingEnabled",
-	"googleGeminiBaseUrl",
-	"mistralCodestralUrl",
-	"azureApiVersion",
-	"openRouterUseMiddleOutTransform",
-	"openAiStreamingEnabled",
-	// "deepSeekBaseUrl", //  not exist on GlobalStateKey
-	// "includeMaxTokens", // not exist on GlobalStateKey
-	"unboundModelId",
-	"unboundModelInfo",
-	"requestyModelId",
-	"requestyModelInfo",
-	"modelTemperature",
-	"modelMaxTokens",
-	"modelMaxThinkingTokens",
-]
-
-// Models
-
-export interface ModelInfo {
-	maxTokens?: number
-	contextWindow: number
-	supportsImages?: boolean
-	supportsComputerUse?: boolean
-	supportsPromptCache: boolean // this value is hardcoded for now
-	inputPrice?: number
-	outputPrice?: number
-	cacheWritesPrice?: number
-	cacheReadsPrice?: number
-	description?: string
-	reasoningEffort?: "low" | "medium" | "high"
-	thinking?: boolean
-}
+export type ApiConfiguration = ProviderSettings
 
 // Anthropic
 // https://docs.anthropic.com/en/docs/about-claude/models
@@ -167,7 +24,7 @@ export const anthropicModels = {
 		thinking: true,
 	},
 	"claude-3-7-sonnet-20250219": {
-		maxTokens: 16_384,
+		maxTokens: 8192,
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsComputerUse: true,
@@ -246,6 +103,10 @@ export interface MessageContent {
 
 export type BedrockModelId = keyof typeof bedrockModels
 export const bedrockDefaultModelId: BedrockModelId = "anthropic.claude-3-7-sonnet-20250219-v1:0"
+export const bedrockDefaultPromptRouterModelId: BedrockModelId = "anthropic.claude-3-sonnet-20240229-v1:0"
+
+// March, 12 2025 - updated prices to match US-West-2 list price shown at https://aws.amazon.com/bedrock/pricing/
+// including older models that are part of the default prompt routers AWS enabled for GA of the promot router feature
 export const bedrockModels = {
 	"amazon.nova-pro-v1:0": {
 		maxTokens: 5000,
@@ -258,6 +119,18 @@ export const bedrockModels = {
 		cacheWritesPrice: 0.8, // per million tokens
 		cacheReadsPrice: 0.2, // per million tokens
 	},
+	"amazon.nova-pro-latency-optimized-v1:0": {
+		maxTokens: 5000,
+		contextWindow: 300_000,
+		supportsImages: true,
+		supportsComputerUse: false,
+		supportsPromptCache: false,
+		inputPrice: 1.0,
+		outputPrice: 4.0,
+		cacheWritesPrice: 1.0, // per million tokens
+		cacheReadsPrice: 0.25, // per million tokens
+		description: "Amazon Nova Pro with latency optimized inference",
+	},
 	"amazon.nova-lite-v1:0": {
 		maxTokens: 5000,
 		contextWindow: 300_000,
@@ -265,7 +138,7 @@ export const bedrockModels = {
 		supportsComputerUse: false,
 		supportsPromptCache: false,
 		inputPrice: 0.06,
-		outputPrice: 0.024,
+		outputPrice: 0.24,
 		cacheWritesPrice: 0.06, // per million tokens
 		cacheReadsPrice: 0.015, // per million tokens
 	},
@@ -307,8 +180,8 @@ export const bedrockModels = {
 		contextWindow: 200_000,
 		supportsImages: false,
 		supportsPromptCache: false,
-		inputPrice: 1.0,
-		outputPrice: 5.0,
+		inputPrice: 0.8,
+		outputPrice: 4.0,
 		cacheWritesPrice: 1.0,
 		cacheReadsPrice: 0.08,
 	},
@@ -344,6 +217,33 @@ export const bedrockModels = {
 		inputPrice: 0.25,
 		outputPrice: 1.25,
 	},
+	"anthropic.claude-2-1-v1:0": {
+		maxTokens: 4096,
+		contextWindow: 100_000,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 8.0,
+		outputPrice: 24.0,
+		description: "Claude 2.1",
+	},
+	"anthropic.claude-2-0-v1:0": {
+		maxTokens: 4096,
+		contextWindow: 100_000,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 8.0,
+		outputPrice: 24.0,
+		description: "Claude 2.0",
+	},
+	"anthropic.claude-instant-v1:0": {
+		maxTokens: 4096,
+		contextWindow: 100_000,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0.8,
+		outputPrice: 2.4,
+		description: "Claude Instant",
+	},
 	"deepseek.r1-v1:0": {
 		maxTokens: 32_768,
 		contextWindow: 128_000,
@@ -360,6 +260,7 @@ export const bedrockModels = {
 		supportsPromptCache: false,
 		inputPrice: 0.72,
 		outputPrice: 0.72,
+		description: "Llama 3.3 Instruct (70B)",
 	},
 	"meta.llama3-2-90b-instruct-v1:0": {
 		maxTokens: 8192,
@@ -369,6 +270,7 @@ export const bedrockModels = {
 		supportsPromptCache: false,
 		inputPrice: 0.72,
 		outputPrice: 0.72,
+		description: "Llama 3.2 Instruct (90B)",
 	},
 	"meta.llama3-2-11b-instruct-v1:0": {
 		maxTokens: 8192,
@@ -378,6 +280,7 @@ export const bedrockModels = {
 		supportsPromptCache: false,
 		inputPrice: 0.16,
 		outputPrice: 0.16,
+		description: "Llama 3.2 Instruct (11B)",
 	},
 	"meta.llama3-2-3b-instruct-v1:0": {
 		maxTokens: 8192,
@@ -387,6 +290,7 @@ export const bedrockModels = {
 		supportsPromptCache: false,
 		inputPrice: 0.15,
 		outputPrice: 0.15,
+		description: "Llama 3.2 Instruct (3B)",
 	},
 	"meta.llama3-2-1b-instruct-v1:0": {
 		maxTokens: 8192,
@@ -396,6 +300,7 @@ export const bedrockModels = {
 		supportsPromptCache: false,
 		inputPrice: 0.1,
 		outputPrice: 0.1,
+		description: "Llama 3.2 Instruct (1B)",
 	},
 	"meta.llama3-1-405b-instruct-v1:0": {
 		maxTokens: 8192,
@@ -405,6 +310,7 @@ export const bedrockModels = {
 		supportsPromptCache: false,
 		inputPrice: 2.4,
 		outputPrice: 2.4,
+		description: "Llama 3.1 Instruct (405B)",
 	},
 	"meta.llama3-1-70b-instruct-v1:0": {
 		maxTokens: 8192,
@@ -414,6 +320,17 @@ export const bedrockModels = {
 		supportsPromptCache: false,
 		inputPrice: 0.72,
 		outputPrice: 0.72,
+		description: "Llama 3.1 Instruct (70B)",
+	},
+	"meta.llama3-1-70b-instruct-latency-optimized-v1:0": {
+		maxTokens: 8192,
+		contextWindow: 128_000,
+		supportsImages: false,
+		supportsComputerUse: false,
+		supportsPromptCache: false,
+		inputPrice: 0.9,
+		outputPrice: 0.9,
+		description: "Llama 3.1 Instruct (70B) (w/ latency optimized inference)",
 	},
 	"meta.llama3-1-8b-instruct-v1:0": {
 		maxTokens: 8192,
@@ -423,6 +340,7 @@ export const bedrockModels = {
 		supportsPromptCache: false,
 		inputPrice: 0.22,
 		outputPrice: 0.22,
+		description: "Llama 3.1 Instruct (8B)",
 	},
 	"meta.llama3-70b-instruct-v1:0": {
 		maxTokens: 2048,
@@ -441,6 +359,44 @@ export const bedrockModels = {
 		supportsPromptCache: false,
 		inputPrice: 0.3,
 		outputPrice: 0.6,
+	},
+	"amazon.titan-text-lite-v1:0": {
+		maxTokens: 4096,
+		contextWindow: 8_000,
+		supportsImages: false,
+		supportsComputerUse: false,
+		supportsPromptCache: false,
+		inputPrice: 0.15,
+		outputPrice: 0.2,
+		description: "Amazon Titan Text Lite",
+	},
+	"amazon.titan-text-express-v1:0": {
+		maxTokens: 4096,
+		contextWindow: 8_000,
+		supportsImages: false,
+		supportsComputerUse: false,
+		supportsPromptCache: false,
+		inputPrice: 0.2,
+		outputPrice: 0.6,
+		description: "Amazon Titan Text Express",
+	},
+	"amazon.titan-text-embeddings-v1:0": {
+		maxTokens: 8192,
+		contextWindow: 8_000,
+		supportsImages: false,
+		supportsComputerUse: false,
+		supportsPromptCache: false,
+		inputPrice: 0.1,
+		description: "Amazon Titan Text Embeddings",
+	},
+	"amazon.titan-text-embeddings-v2:0": {
+		maxTokens: 8192,
+		contextWindow: 8_000,
+		supportsImages: false,
+		supportsComputerUse: false,
+		supportsPromptCache: false,
+		inputPrice: 0.02,
+		description: "Amazon Titan Text Embeddings V2",
 	},
 } as const satisfies Record<string, ModelInfo>
 
@@ -561,7 +517,7 @@ export const vertexModels = {
 		thinking: true,
 	},
 	"claude-3-7-sonnet@20250219": {
-		maxTokens: 16_384,
+		maxTokens: 8192,
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsComputerUse: true,
@@ -634,20 +590,19 @@ export const openAiModelInfoSaneDefaults: ModelInfo = {
 	outputPrice: 0,
 }
 
-export const requestyModelInfoSaneDefaults: ModelInfo = {
-	maxTokens: -1,
-	contextWindow: 128_000,
-	supportsImages: true,
-	supportsPromptCache: false,
-	inputPrice: 0,
-	outputPrice: 0,
-}
-
 // Gemini
 // https://ai.google.dev/gemini-api/docs/models/gemini
 export type GeminiModelId = keyof typeof geminiModels
 export const geminiDefaultModelId: GeminiModelId = "gemini-2.0-flash-001"
 export const geminiModels = {
+	"gemini-2.5-pro-exp-03-25": {
+		maxTokens: 65_536,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+	},
 	"gemini-2.0-flash-001": {
 		maxTokens: 8192,
 		contextWindow: 1_048_576,
@@ -756,7 +711,7 @@ export const openAiNativeModels = {
 		maxTokens: 100_000,
 		contextWindow: 200_000,
 		supportsImages: false,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		reasoningEffort: "medium",
@@ -765,7 +720,7 @@ export const openAiNativeModels = {
 		maxTokens: 100_000,
 		contextWindow: 200_000,
 		supportsImages: false,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		reasoningEffort: "high",
@@ -774,7 +729,7 @@ export const openAiNativeModels = {
 		maxTokens: 100_000,
 		contextWindow: 200_000,
 		supportsImages: false,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		reasoningEffort: "low",
@@ -783,7 +738,7 @@ export const openAiNativeModels = {
 		maxTokens: 100_000,
 		contextWindow: 200_000,
 		supportsImages: true,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 15,
 		outputPrice: 60,
 	},
@@ -791,7 +746,7 @@ export const openAiNativeModels = {
 		maxTokens: 32_768,
 		contextWindow: 128_000,
 		supportsImages: true,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 15,
 		outputPrice: 60,
 	},
@@ -799,7 +754,7 @@ export const openAiNativeModels = {
 		maxTokens: 65_536,
 		contextWindow: 128_000,
 		supportsImages: true,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 	},
@@ -807,7 +762,7 @@ export const openAiNativeModels = {
 		maxTokens: 16_384,
 		contextWindow: 128_000,
 		supportsImages: true,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 75,
 		outputPrice: 150,
 	},
@@ -815,7 +770,7 @@ export const openAiNativeModels = {
 		maxTokens: 16_384,
 		contextWindow: 128_000,
 		supportsImages: true,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 2.5,
 		outputPrice: 10,
 	},
@@ -823,7 +778,7 @@ export const openAiNativeModels = {
 		maxTokens: 16_384,
 		contextWindow: 128_000,
 		supportsImages: true,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 0.15,
 		outputPrice: 0.6,
 	},

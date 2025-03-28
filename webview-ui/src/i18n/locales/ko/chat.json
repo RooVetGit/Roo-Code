@@ -1,0 +1,242 @@
+{
+	"greeting": "Roo가 어떻게 도와드릴까요?",
+	"task": {
+		"title": "작업",
+		"seeMore": "더 보기",
+		"seeLess": "줄여보기",
+		"tokens": "토큰:",
+		"cache": "캐시:",
+		"apiCost": "API 비용:",
+		"contextWindow": "컨텍스트 창:",
+		"closeAndStart": "작업 닫고 새 작업 시작",
+		"export": "작업 기록 내보내기",
+		"delete": "작업 삭제 (Shift + 클릭으로 확인 생략)"
+	},
+	"tokenProgress": {
+		"availableSpace": "사용 가능한 공간: {{amount}} 토큰",
+		"tokensUsed": "사용된 토큰: {{used}} / {{total}}",
+		"reservedForResponse": "모델 응답용 예약: {{amount}} 토큰"
+	},
+	"retry": {
+		"title": "다시 시도",
+		"tooltip": "작업 다시 시도"
+	},
+	"startNewTask": {
+		"title": "새 작업 시작",
+		"tooltip": "새 작업 시작하기"
+	},
+	"proceedAnyways": {
+		"title": "그래도 계속",
+		"tooltip": "명령 실행 중에도 계속 진행"
+	},
+	"save": {
+		"title": "저장",
+		"tooltip": "파일 변경사항 저장"
+	},
+	"reject": {
+		"title": "거부",
+		"tooltip": "이 작업 거부"
+	},
+	"completeSubtaskAndReturn": "하위 작업 완료 후 돌아가기",
+	"approve": {
+		"title": "승인",
+		"tooltip": "이 작업 승인"
+	},
+	"runCommand": {
+		"title": "명령 실행",
+		"tooltip": "이 명령 실행"
+	},
+	"proceedWhileRunning": {
+		"title": "실행 중에도 계속",
+		"tooltip": "경고에도 불구하고 계속 진행"
+	},
+	"resumeTask": {
+		"title": "작업 재개",
+		"tooltip": "현재 작업 계속하기"
+	},
+	"terminate": {
+		"title": "종료",
+		"tooltip": "현재 작업 종료"
+	},
+	"cancel": {
+		"title": "취소",
+		"tooltip": "현재 작업 취소"
+	},
+	"scrollToBottom": "채팅 하단으로 스크롤",
+	"aboutMe": "최신 에이전트 코딩 기능의 발전 덕분에 복잡한 소프트웨어 개발 작업을 단계별로 처리할 수 있습니다. 파일 생성 및 편집, 복잡한 프로젝트 탐색, 브라우저 사용, 터미널 명령 실행(승인 후)을 가능하게 하는 도구를 통해 코드 완성이나 기술 지원을 넘어서는 방식으로 도움을 드릴 수 있습니다. MCP를 사용하여 새로운 도구를 만들고 자체 기능을 확장할 수도 있습니다.",
+	"selectMode": "상호작용 모드 선택",
+	"selectApiConfig": "API 구성 선택",
+	"enhancePrompt": "추가 컨텍스트로 프롬프트 향상",
+	"addImages": "메시지에 이미지 추가",
+	"sendMessage": "메시지 보내기",
+	"typeMessage": "메시지 입력...",
+	"typeTask": "여기에 작업 입력...",
+	"addContext": "컨텍스트 추가는 @, 모드 전환은 /",
+	"dragFiles": "파일을 드래그하려면 shift 키 누르기",
+	"dragFilesImages": "파일/이미지를 드래그하려면 shift 키 누르기",
+	"enhancePromptDescription": "'프롬프트 향상' 버튼은 추가 컨텍스트, 명확화 또는 재구성을 제공하여 요청을 개선합니다. 여기에 요청을 입력한 다음 버튼을 다시 클릭하여 작동 방식을 확인해보세요.",
+	"errorReadingFile": "파일 읽기 오류:",
+	"noValidImages": "처리된 유효한 이미지가 없습니다",
+	"separator": "구분자",
+	"edit": "편집...",
+	"forNextMode": "다음 모드용",
+	"error": "오류",
+	"troubleMessage": "Roo에 문제가 발생했습니다...",
+	"apiRequest": {
+		"title": "API 요청",
+		"failed": "API 요청 실패",
+		"streaming": "API 요청...",
+		"cancelled": "API 요청 취소됨",
+		"streamingFailed": "API 스트리밍 실패"
+	},
+	"checkpoint": {
+		"initial": "초기 체크포인트",
+		"regular": "체크포인트",
+		"menu": {
+			"viewDiff": "차이점 보기",
+			"restore": "체크포인트 복원",
+			"restoreFiles": "파일 복원",
+			"restoreFilesDescription": "프로젝트 파일을 이 시점에 찍힌 스냅샷으로 복원합니다.",
+			"restoreFilesAndTask": "파일 및 작업 복원",
+			"confirm": "확인",
+			"cancel": "취소",
+			"cannotUndo": "이 작업은 취소할 수 없습니다.",
+			"restoreFilesAndTaskDescription": "프로젝트 파일을 이 시점에 찍힌 스냅샷으로 복원하고 이 지점 이후의 모든 메시지를 삭제합니다."
+		},
+		"current": "현재"
+	},
+	"instructions": {
+		"wantsToFetch": "Roo는 현재 작업을 지원하기 위해 자세한 지침을 가져오려고 합니다"
+	},
+	"fileOperations": {
+		"wantsToRead": "Roo가 이 파일을 읽고 싶어합니다:",
+		"wantsToReadOutsideWorkspace": "Roo가 워크스페이스 외부의 이 파일을 읽고 싶어합니다:",
+		"didRead": "Roo가 이 파일을 읽었습니다:",
+		"wantsToEdit": "Roo가 이 파일을 편집하고 싶어합니다:",
+		"wantsToEditOutsideWorkspace": "Roo가 워크스페이스 외부의 이 파일을 편집하고 싶어합니다:",
+		"wantsToCreate": "Roo가 새 파일을 만들고 싶어합니다:"
+	},
+	"directoryOperations": {
+		"wantsToViewTopLevel": "Roo가 이 디렉토리의 최상위 파일을 보고 싶어합니다:",
+		"didViewTopLevel": "Roo가 이 디렉토리의 최상위 파일을 보았습니다:",
+		"wantsToViewRecursive": "Roo가 이 디렉토리의 모든 파일을 재귀적으로 보고 싶어합니다:",
+		"didViewRecursive": "Roo가 이 디렉토리의 모든 파일을 재귀적으로 보았습니다:",
+		"wantsToViewDefinitions": "Roo가 이 디렉토리에서 사용된 소스 코드 정의 이름을 보고 싶어합니다:",
+		"didViewDefinitions": "Roo가 이 디렉토리에서 사용된 소스 코드 정의 이름을 보았습니다:",
+		"wantsToSearch": "Roo가 이 디렉토리에서 <code>{{regex}}</code>을(를) 검색하고 싶어합니다:",
+		"didSearch": "Roo가 이 디렉토리에서 <code>{{regex}}</code>을(를) 검색했습니다:"
+	},
+	"commandOutput": "명령 출력",
+	"response": "응답",
+	"arguments": "인수",
+	"mcp": {
+		"wantsToUseTool": "Roo가 {{serverName}} MCP 서버에서 도구를 사용하고 싶어합니다:",
+		"wantsToAccessResource": "Roo가 {{serverName}} MCP 서버에서 리소스에 접근하고 싶어합니다:"
+	},
+	"modes": {
+		"wantsToSwitch": "Roo가 <code>{{mode}}</code> 모드로 전환하고 싶어합니다",
+		"wantsToSwitchWithReason": "Roo가 다음 이유로 <code>{{mode}}</code> 모드로 전환하고 싶어합니다: {{reason}}",
+		"didSwitch": "Roo가 <code>{{mode}}</code> 모드로 전환했습니다",
+		"didSwitchWithReason": "Roo가 다음 이유로 <code>{{mode}}</code> 모드로 전환했습니다: {{reason}}"
+	},
+	"subtasks": {
+		"wantsToCreate": "Roo가 <code>{{mode}}</code> 모드에서 새 하위 작업을 만들고 싶어합니다:",
+		"wantsToFinish": "Roo가 이 하위 작업을 완료하고 싶어합니다"
+	},
+	"questions": {
+		"hasQuestion": "Roo에게 질문이 있습니다:"
+	},
+	"taskCompleted": "작업 완료",
+	"shellIntegration": {
+		"unavailable": "쉘 통합 사용 불가",
+		"troubleshooting": "여전히 문제가 있나요?"
+	},
+	"powershell": {
+		"issues": "Windows PowerShell에 문제가 있는 것 같습니다. 다음을 참조하세요"
+	},
+	"autoApprove": {
+		"title": "자동 승인:",
+		"none": "없음",
+		"description": "자동 승인을 사용하면 Roo Code가 권한을 요청하지 않고 작업을 수행할 수 있습니다. 완전히 신뢰할 수 있는 작업에만 활성화하세요.",
+		"actions": {
+			"readFiles": {
+				"label": "파일 및 디렉토리 읽기",
+				"shortName": "읽기",
+				"description": "컴퓨터의 모든 파일을 읽을 수 있는 액세스 권한을 허용합니다."
+			},
+			"editFiles": {
+				"label": "파일 편집",
+				"shortName": "편집",
+				"description": "컴퓨터의 모든 파일을 수정할 수 있는 권한을 허용합니다."
+			},
+			"executeCommands": {
+				"label": "승인된 명령 실행",
+				"shortName": "명령",
+				"description": "승인된 터미널 명령 실행을 허용합니다. 설정 패널에서 구성할 수 있습니다."
+			},
+			"useBrowser": {
+				"label": "브라우저 사용",
+				"shortName": "브라우저",
+				"description": "헤드리스 브라우저에서 모든 웹사이트를 실행하고 상호작용할 수 있는 기능을 허용합니다."
+			},
+			"useMcp": {
+				"label": "MCP 서버 사용",
+				"shortName": "MCP",
+				"description": "파일 시스템을 수정하거나 API와 상호작용할 수 있는 구성된 MCP 서버 사용을 허용합니다."
+			},
+			"switchModes": {
+				"label": "모드 전환",
+				"shortName": "모드",
+				"description": "승인 없이 다른 모드 간 자동 전환을 허용합니다."
+			},
+			"subtasks": {
+				"label": "하위 작업 생성 및 완료",
+				"shortName": "하위 작업",
+				"description": "승인 없이 하위 작업 생성 및 완료를 허용합니다."
+			},
+			"retryRequests": {
+				"label": "실패한 요청 재시도",
+				"shortName": "재시도",
+				"description": "제공자가 오류 응답을 반환할 때 실패한 API 요청을 자동으로 재시도합니다."
+			}
+		}
+	},
+	"reasoning": {
+		"thinking": "생각 중",
+		"seconds": "{{count}}초"
+	},
+	"announcement": {
+		"title": "🎉 Roo Code 3.10 출시",
+		"description": "Roo Code 3.10이 강력한 생산성 향상 기능을 제공합니다!",
+		"whatsNew": "새로운 기능",
+		"feature1": "질문에 대한 제안 응답",
+		"feature2": "대용량 파일 처리 개선",
+		"feature3": "@-언급 파일 검색 기능 재구축",
+		"feature4": "",
+		"feature5": "",
+		"hideButton": "공지 숨기기",
+		"detailsDiscussLinks": "<discordLink>Discord</discordLink>와 <redditLink>Reddit</redditLink>에서 더 자세한 정보를 확인하고 논의하세요 🚀"
+	},
+	"browser": {
+		"rooWantsToUse": "Roo가 브라우저를 사용하고 싶어합니다:",
+		"consoleLogs": "콘솔 로그",
+		"noNewLogs": "(새 로그 없음)",
+		"screenshot": "브라우저 스크린샷",
+		"cursor": "커서",
+		"navigation": {
+			"step": "단계 {{current}} / {{total}}",
+			"previous": "이전",
+			"next": "다음"
+		},
+		"sessionStarted": "브라우저 세션 시작됨",
+		"actions": {
+			"title": "브라우저 작업: ",
+			"launch": "{{url}}에서 브라우저 실행",
+			"click": "클릭 ({{coordinate}})",
+			"type": "입력 \"{{text}}\"",
+			"scrollDown": "아래로 스크롤",
+			"scrollUp": "위로 스크롤",
+			"close": "브라우저 닫기"
+		}
+	}
+}

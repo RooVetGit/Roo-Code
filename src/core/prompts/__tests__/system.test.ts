@@ -1,16 +1,12 @@
+import * as vscode from "vscode"
+
 import { SYSTEM_PROMPT } from "../system"
 import { McpHub } from "../../../services/mcp/McpHub"
-import { McpServer } from "../../../shared/mcp"
 import { ClineProvider } from "../../../core/webview/ClineProvider"
 import { SearchReplaceDiffStrategy } from "../../../core/diff/strategies/search-replace"
-import * as vscode from "vscode"
-import fs from "fs/promises"
-import os from "os"
-import { defaultModeSlug, modes, Mode, isToolAllowedForMode } from "../../../shared/modes"
-// Import path utils to get access to toPosix string extension
-import "../../../utils/path"
+import { defaultModeSlug, modes, Mode, ModeConfig } from "../../../shared/modes"
+import "../../../utils/path" // Import path utils to get access to toPosix string extension.
 import { addCustomInstructions } from "../sections/custom-instructions"
-import * as modesSection from "../sections/modes"
 import { EXPERIMENT_IDS } from "../../../shared/experiments"
 
 // Mock the sections
@@ -250,51 +246,6 @@ describe("SYSTEM_PROMPT", () => {
 			true, // enableMcpServerCreation
 		)
 
-		// Verify basic MCP server info is included
-		expect(prompt).toContain("MCP SERVERS")
-		expect(prompt).toContain("The Model Context Protocol (MCP) enables communication")
-
-		// Verify server types are described
-		expect(prompt).toContain("Local (Stdio-based) servers")
-		expect(prompt).toContain("Remote (SSE-based) servers")
-
-		// Verify connected servers section exists
-		expect(prompt).toContain("Connected MCP Servers")
-		expect(prompt).toContain("When a server is connected")
-
-		// Verify server creation info is included
-		expect(prompt).toContain("Creating an MCP Server")
-		expect(prompt).toContain("MCP Server Types and Configuration")
-
-		// Verify configuration examples are included
-		expect(prompt).toContain("Local (Stdio) Server Configuration")
-		expect(prompt).toContain("Remote (SSE) Server Configuration")
-		expect(prompt).toContain("Common configuration options for both types")
-
-		// Verify example server info is included
-		expect(prompt).toContain("Example Local MCP Server")
-		expect(prompt).toContain("create-typescript-server")
-	})
-
-	it("should include MCP server creation info when enabled", async () => {
-		const mockMcpHub = createMockMcpHub()
-
-		const prompt = await SYSTEM_PROMPT(
-			mockContext,
-			"/test/path",
-			false,
-			mockMcpHub,
-			undefined,
-			undefined,
-			defaultModeSlug,
-			undefined,
-			undefined,
-			undefined,
-			undefined,
-			experiments,
-			true,
-		)
-
 		expect(prompt).toMatchSnapshot()
 	})
 
@@ -315,10 +266,7 @@ describe("SYSTEM_PROMPT", () => {
 			true, // enableMcpServerCreation
 		)
 
-		// Should not contain any MCP server related content since mcpHub is undefined
-		expect(prompt).not.toContain("MCP SERVERS")
-		expect(prompt).not.toContain("Connected MCP Servers")
-		expect(prompt).not.toContain("Creating an MCP Server")
+		expect(prompt).toMatchSnapshot()
 	})
 
 	it("should handle different browser viewport sizes", async () => {
@@ -434,7 +382,8 @@ describe("SYSTEM_PROMPT", () => {
 
 	it("should include custom mode role definition at top and instructions at bottom", async () => {
 		const modeCustomInstructions = "Custom mode instructions"
-		const customModes = [
+
+		const customModes: ModeConfig[] = [
 			{
 				slug: "custom-mode",
 				name: "Custom Mode",
@@ -781,18 +730,8 @@ describe("addCustomInstructions", () => {
 			true, // enableMcpServerCreation
 		)
 
-		// Verify server creation info is included
 		expect(prompt).toContain("Creating an MCP Server")
-		expect(prompt).toContain("MCP Server Types and Configuration")
-
-		// Verify configuration examples are included
-		expect(prompt).toContain("Local (Stdio) Server Configuration")
-		expect(prompt).toContain("Remote (SSE) Server Configuration")
-		expect(prompt).toContain("Common configuration options for both types")
-
-		// Verify example server info is included
-		expect(prompt).toContain("Example Local MCP Server")
-		expect(prompt).toContain("create-typescript-server")
+		expect(prompt).toMatchSnapshot()
 	})
 
 	it("should exclude MCP server creation info when disabled", async () => {
@@ -815,23 +754,12 @@ describe("addCustomInstructions", () => {
 		)
 
 		expect(prompt).not.toContain("Creating an MCP Server")
-		expect(prompt).not.toContain("MCP Server Types and Configuration")
-		expect(prompt).toContain("MCP SERVERS")
-		expect(prompt).toContain("Connected MCP Servers")
+		expect(prompt).toMatchSnapshot()
 	})
 
 	it("should prioritize mode-specific rules for code mode", async () => {
 		const instructions = await addCustomInstructions("", "", "/test/path", defaultModeSlug)
-		const rulesSection = instructions.split("\n\n").find((section) => section.startsWith("Rules:"))
-		expect(rulesSection).toBeDefined()
-
-		// Get the rules as separate lines and filter for header lines only
-		const ruleLines = rulesSection?.split("\n").filter((line) => line.startsWith("#")) ?? []
-
-		// Verify we have both rule headers
-		expect(ruleLines).toHaveLength(2)
-		expect(ruleLines[0]).toContain(`Rules from .clinerules-${defaultModeSlug}`)
-		expect(ruleLines[1]).toContain("Rules from .clinerules")
+		expect(instructions).toMatchSnapshot()
 	})
 
 	it("should prioritize mode-specific rules for ask mode", async () => {
