@@ -8,7 +8,7 @@ import {
 } from "shiki"
 
 // Extend BundledLanguage to include 'txt' because Shiki supports this but it is not listed in the bundled languages
-type ExtendedLanguage = BundledLanguage | "txt"
+export type ExtendedLanguage = BundledLanguage | "txt"
 
 // Map common language aliases to their Shiki BundledLanguage equivalent
 const languageAliases: Record<string, ExtendedLanguage> = {
