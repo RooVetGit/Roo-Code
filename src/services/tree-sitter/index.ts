@@ -267,20 +267,12 @@ async function parseFile(
 
 					// Only include context if it spans multiple lines
 					if (contextSpan >= MIN_COMPONENT_LINES) {
-						const validLines = []
-						for (let i = node.parent.startPosition.row; i <= contextEnd; i++) {
-							const line = lines[i].trim()
-							const contextLineKey = `${i}-${line}`
-							if (line && !processedLines.has(contextLineKey) && isNotHtmlElement(line)) {
-								validLines.push({ i, line: lines[i] })
-								processedLines.add(contextLineKey)
-							}
+						// Add the full range first
+						const rangeKey = `${node.parent.startPosition.row}-${contextEnd}`
+						if (!processedLines.has(rangeKey)) {
+							formattedOutput += `${node.parent.startPosition.row}--${contextEnd} | ${lines[node.parent.startPosition.row]}\n`
+							processedLines.add(rangeKey)
 						}
-
-						// Add valid lines to output
-						validLines.forEach(({ i, line }) => {
-							formattedOutput += `${i}--${i} | ${line}\n`
-						})
 					}
 				}
 			}

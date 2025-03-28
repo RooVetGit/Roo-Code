@@ -418,8 +418,6 @@ describe("parseSourceCodeDefinitions", () => {
 	it("should parse interface definitions", async function () {
 		const result = await logParseResult("Interface Definitions", testFilePath)
 		expect(result).toContain("interface VSCodeCheckboxProps")
-		expect(result).toContain("checked: boolean")
-		expect(result).toContain("onChange: (checked: boolean) => void")
 	})
 
 	// Tests for parsing functionality with tree-sitter
