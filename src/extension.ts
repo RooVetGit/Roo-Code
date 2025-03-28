@@ -115,8 +115,12 @@ export async function activate(context: vscode.ExtensionContext) {
 	registerCodeActions(context)
 	registerTerminalActions(context)
 
+	if (process.env.ROO_CODE_IPC_SOCKET_PATH) {
+		outputChannel.appendLine(`ROO_CODE_IPC_SOCKET_PATH: ${process.env.ROO_CODE_IPC_SOCKET_PATH}`)
+	}
+
 	// Implements the `RooCodeAPI` interface.
-	return new API(outputChannel, provider)
+	return new API(outputChannel, provider, process.env.ROO_CODE_IPC_SOCKET_PATH)
 }
 
 // This method is called when your extension is deactivated

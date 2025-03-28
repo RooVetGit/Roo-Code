@@ -1,0 +1,5 @@
+{
+	"extends": "@benchmark/typescript-config/cjs.json",
+	"include": ["src"],
+	"exclude": ["node_modules"]
+}
