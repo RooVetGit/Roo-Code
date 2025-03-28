@@ -347,8 +347,15 @@ describe("treeParserDebug", () => {
 		// expect(result).toMatch(/React\.Component|Component/)
 	})
 
-	it("should detect React.memo and forwardRef components", async function () {
-		const memoContent = `
+	it("should detect wrapped components with any wrapper function", async function () {
+		const wrappedContent = `
+	    // Custom component wrapper
+	    const withLogger = (Component) => (props) => {
+	      console.log('Rendering:', props)
+	      return <Component {...props} />
+	    }
+	
+	    // Component with multiple wrappers including React utilities
 	    export const MemoInput = React.memo(
 	      React.forwardRef<HTMLInputElement, InputProps>(
 	        (props, ref) => (
@@ -357,25 +364,42 @@ describe("treeParserDebug", () => {
 	      )
 	    );
 	
-	    export const CustomButton = React.forwardRef<
-	      HTMLButtonElement,
-	      ButtonProps
-	    >(({ children, ...props }, ref) => (
-	      <button ref={ref} {...props}>
-	        {children}
-	      </button>
-	    ));
+	    // Custom HOC
+	    export const EnhancedButton = withLogger(
+	      ({ children, ...props }) => (
+	        <button {...props}>
+	          {children}
+	        </button>
+	      )
+	    );
+	
+	    // Another custom wrapper
+	    const withTheme = (Component) => (props) => {
+	      const theme = useTheme()
+	      return <Component {...props} theme={theme} />
+	    }
+	
+	    // Multiple custom wrappers
+	    export const ThemedButton = withTheme(
+	      withLogger(
+	        ({ theme, children, ...props }) => (
+	          <button style={{ color: theme.primary }} {...props}>
+	            {children}
+	          </button>
+	        )
+	      )
+	    );
 	  `
-		const result = await testParseSourceCodeDefinitions("/test/memo.tsx", memoContent)
+		const result = await testParseSourceCodeDefinitions("/test/wrapped.tsx", wrappedContent)
 
-		// The current implementation doesn't reliably detect React.memo components
-		// These tests are commented out until the implementation is improved
-		// expect(result).toMatch(/MemoInput|Input/)
-		// expect(result).toContain("CustomButton")
-		// expect(result).toMatch(/React\.memo|memo/)
-		// expect(result).toMatch(/React\.forwardRef|forwardRef/)
+		// Should detect all component definitions regardless of wrapper
+		expect(result).toContain("MemoInput")
+		expect(result).toContain("EnhancedButton")
+		expect(result).toContain("ThemedButton")
+		expect(result).toContain("withLogger")
+		expect(result).toContain("withTheme")
 
-		// Just check that we get some output
+		// Also check that we get some output
 		expect(result).toBeDefined()
 	})
 

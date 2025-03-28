@@ -97,13 +97,44 @@ export default `${typescriptQuery}
       function: (identifier) @hoc))) @definition.component
   (#match? @hoc "^with[A-Z]")
 
-; React Helper Components (memo, forwardRef)
+; Capture all named definitions (component or not)
 (variable_declaration
   (variable_declarator
-    name: (identifier) @name.definition.component
-    value: (call_expression
-      function: [(member_expression) (identifier)] @helper))) @definition.component
-  (#match? @helper "^(React\\.memo|React\\.forwardRef|memo|forwardRef)$")
+    name: (identifier) @name.definition
+    value: [
+      (call_expression) @value
+      (arrow_function) @value
+    ])) @definition.component
+
+; Capture all exported component declarations, including React component wrappers
+(export_statement
+  (variable_declaration
+    (variable_declarator
+      name: (identifier) @name.definition.component
+      value: [
+        (call_expression) @value
+        (arrow_function) @value
+      ]))) @definition.component
+
+; Capture React component name inside wrapped components
+(call_expression
+  function: (_)
+  arguments: (arguments
+    (arrow_function))) @definition.wrapped_component
+
+; HOC definitions - capture both the HOC name and definition
+(variable_declaration
+  (variable_declarator
+    name: (identifier) @name.definition.hoc
+    value: (arrow_function
+      parameters: (formal_parameters)))) @definition.hoc
+
+; Type definitions (to include interfaces and types)
+(type_alias_declaration
+  name: (type_identifier) @name.definition.type) @definition.type
+
+(interface_declaration
+  name: (type_identifier) @name.definition.interface) @definition.interface
 
 ; Enhanced Components
 (variable_declaration

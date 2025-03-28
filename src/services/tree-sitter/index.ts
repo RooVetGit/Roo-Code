@@ -143,11 +143,23 @@ This approach allows us to focus on the most relevant parts of the code (defined
  * @param rooIgnoreController - Optional controller to check file access permissions
  * @returns A formatted string with code definitions or null if no definitions found
  */
+
 async function parseFile(
 	filePath: string,
 	languageParsers: LanguageParser,
 	rooIgnoreController?: RooIgnoreController,
 ): Promise<string | null> {
+	// Minimum number of lines for a component to be included
+	const MIN_COMPONENT_LINES = 4
+
+	// Filter function to exclude HTML elements
+	const isNotHtmlElement = (line: string): boolean => {
+		// Common HTML elements pattern
+		const HTML_ELEMENTS = /^[^A-Z]*<\/?(?:div|span|button|input|h[1-6]|p|a|img|ul|li|form)\b/
+		const trimmedLine = line.trim()
+		return !HTML_ELEMENTS.test(trimmedLine)
+	}
+
 	// Check if we have permission to access this file
 	if (rooIgnoreController && !rooIgnoreController.validateAccess(filePath)) {
 		return null
@@ -211,59 +223,65 @@ async function parseFile(
 			const definitionNode = name.includes("name") ? node.parent : node
 			if (!definitionNode) return
 
-			// Get the start and end lines of the full definition and also the node's own line
+			// Get the start and end lines of the full definition
 			const startLine = definitionNode.startPosition.row
 			const endLine = definitionNode.endPosition.row
-			const nodeLine = node.startPosition.row
 			const lineCount = endLine - startLine + 1
 
-			// Skip single line items that start with whitespace followed by '<'
-			if (startLine === endLine && /^\s*</.test(lines[startLine])) {
+			// Skip components that don't span enough lines
+			if (lineCount < MIN_COMPONENT_LINES) {
 				return
 			}
 
-			// Create unique keys for definition lines
+			// Create unique key for this definition
 			const lineKey = `${startLine}-${lines[startLine]}`
-			const nodeLineKey = `${nodeLine}-${lines[nodeLine]}`
 
-			// Handle React components (both class and function components)
-			if (name.includes("react_component")) {
-				if (!processedLines.has(lineKey)) {
+			// Skip already processed lines
+			if (processedLines.has(lineKey)) {
+				return
+			}
+
+			// Check if this is a valid component definition (not an HTML element)
+			const startLineContent = lines[startLine].trim()
+
+			// Special handling for component name definitions
+			if (name.includes("name.definition")) {
+				// Extract component name
+				const componentName = node.text
+
+				// Add component name to output regardless of HTML filtering
+				if (!processedLines.has(lineKey) && componentName) {
 					formattedOutput += `${startLine}--${endLine} | ${lines[startLine]}\n`
 					processedLines.add(lineKey)
 				}
 			}
-			// Always show the class definition line
-			else if (name.includes("class") || (name.includes("name") && name.includes("class"))) {
-				if (!processedLines.has(lineKey)) {
-					formattedOutput += `${startLine}--${endLine} | ${lines[startLine]}\n`
-					processedLines.add(lineKey)
-				}
-			}
-			// Handle lambda functions (arrow functions) with at least 4 lines
-			else if (name.includes("lambda")) {
-				if (lineCount >= 4 && !processedLines.has(lineKey)) {
-					formattedOutput += `${startLine}--${endLine} | ${lines[startLine]}\n`
-					processedLines.add(lineKey)
-				}
-			}
-			// Always show method/function definitions
-			else if (name.includes("function") || name.includes("method")) {
-				if (!processedLines.has(nodeLineKey) && lines[nodeLine]) {
-					formattedOutput += `${nodeLine}--${node.endPosition.row} | ${lines[nodeLine]}\n`
-					processedLines.add(nodeLineKey)
-				}
-			}
-			// Handle variable and other named definitions
-			else if (
-				name.includes("name") &&
-				!name.includes("class") &&
-				!name.includes("function") &&
-				!name.includes("method")
-			) {
-				if (!processedLines.has(lineKey)) {
-					formattedOutput += `${startLine}--${endLine} | ${lines[startLine]}\n`
-					processedLines.add(lineKey)
+			// For other component definitions
+			else if (isNotHtmlElement(startLineContent)) {
+				formattedOutput += `${startLine}--${endLine} | ${lines[startLine]}\n`
+				processedLines.add(lineKey)
+
+				// If this is part of a larger definition, include its non-HTML context
+				if (node.parent && node.parent.lastChild) {
+					const contextEnd = node.parent.lastChild.endPosition.row
+					const contextSpan = contextEnd - node.parent.startPosition.row + 1
+
+					// Only include context if it spans multiple lines
+					if (contextSpan >= MIN_COMPONENT_LINES) {
+						const validLines = []
+						for (let i = node.parent.startPosition.row; i <= contextEnd; i++) {
+							const line = lines[i].trim()
+							const contextLineKey = `${i}-${line}`
+							if (line && !processedLines.has(contextLineKey) && isNotHtmlElement(line)) {
+								validLines.push({ i, line: lines[i] })
+								processedLines.add(contextLineKey)
+							}
+						}
+
+						// Add valid lines to output
+						validLines.forEach(({ i, line }) => {
+							formattedOutput += `${i}--${i} | ${line}\n`
+						})
+					}
 				}
 			}
 

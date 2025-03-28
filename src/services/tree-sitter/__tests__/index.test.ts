@@ -46,13 +46,15 @@ describe("Tree-sitter Service", () => {
 			const mockQuery = {
 				captures: jest.fn().mockReturnValue([
 					{
+						// Must span 4 lines to meet MIN_COMPONENT_LINES
 						node: {
 							startPosition: { row: 0 },
-							endPosition: { row: 0 },
+							endPosition: { row: 3 },
 							parent: {
 								startPosition: { row: 0 },
-								endPosition: { row: 0 },
+								endPosition: { row: 3 },
 							},
+							text: () => "export class TestClass",
 						},
 						name: "name.definition",
 					},
@@ -88,22 +90,24 @@ describe("Tree-sitter Service", () => {
 					{
 						node: {
 							startPosition: { row: 0 },
-							endPosition: { row: 0 },
+							endPosition: { row: 3 },
 							parent: {
 								startPosition: { row: 0 },
-								endPosition: { row: 0 },
+								endPosition: { row: 3 },
 							},
+							text: () => "class TestClass",
 						},
 						name: "name.definition.class",
 					},
 					{
 						node: {
 							startPosition: { row: 2 },
-							endPosition: { row: 2 },
+							endPosition: { row: 5 },
 							parent: {
-								startPosition: { row: 0 },
-								endPosition: { row: 0 },
+								startPosition: { row: 2 },
+								endPosition: { row: 5 },
 							},
+							text: () => "testMethod()",
 						},
 						name: "name.definition.function",
 					},
@@ -362,11 +366,12 @@ export const CheckboxExample = () => (
 					{
 						node: {
 							startPosition: { row: 0 },
-							endPosition: { row: 0 },
+							endPosition: { row: 3 },
 							parent: {
 								startPosition: { row: 0 },
-								endPosition: { row: 0 },
+								endPosition: { row: 3 },
 							},
+							text: () => "function test() {}",
 						},
 						name: "name",
 					},
@@ -410,11 +415,12 @@ export const CheckboxExample = () => (
 					{
 						node: {
 							startPosition: { row: 0 },
-							endPosition: { row: 0 },
+							endPosition: { row: 3 },
 							parent: {
 								startPosition: { row: 0 },
-								endPosition: { row: 0 },
+								endPosition: { row: 3 },
 							},
+							text: () => "class Test {}",
 						},
 						name: "name",
 					},
