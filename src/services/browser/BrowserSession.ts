@@ -308,7 +308,8 @@ export class BrowserSession {
 	private getRootDomain(url: string): string {
 		try {
 			const urlObj = new URL(url)
-			return urlObj.host // Returns hostname with port if present
+			// Remove www. prefix if present
+			return urlObj.host.replace(/^www\./, "")
 		} catch (error) {
 			// If URL parsing fails, return the original URL
 			return url
