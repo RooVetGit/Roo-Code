@@ -12,6 +12,7 @@ export interface MentionContext {
 	urlContentFetcher: UrlContentFetcher
 	launchBrowserError?: Error
 	osInfo: string
+	maxReadFileLine?: number,
 }
 
 export interface HandlerConfig {

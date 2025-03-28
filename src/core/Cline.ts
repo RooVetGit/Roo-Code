@@ -23,12 +23,11 @@ import {
 } from "../services/checkpoints"
 import { findToolName, formatContentBlockToMarkdown } from "../integrations/misc/export-markdown"
 import {
-	extractTextFromFile,
 	addLineNumbers,
 	stripLineNumbers,
 	everyLineHasLineNumbers,
+	readFileContent,
 } from "../integrations/misc/extract-text"
-import { countFileLines } from "../integrations/misc/line-counter"
 import { fetchInstructions } from "./prompts/instructions/instructions"
 import { ExitCodeDetails } from "../integrations/terminal/TerminalProcess"
 import { Terminal } from "../integrations/terminal/Terminal"
@@ -36,7 +35,7 @@ import { TerminalRegistry } from "../integrations/terminal/TerminalRegistry"
 import { UrlContentFetcher } from "../services/browser/UrlContentFetcher"
 import { listFiles } from "../services/glob/list-files"
 import { regexSearchFiles } from "../services/ripgrep"
-import { parseSourceCodeDefinitionsForFile, parseSourceCodeForDefinitionsTopLevel } from "../services/tree-sitter"
+import { parseSourceCodeForDefinitionsTopLevel } from "../services/tree-sitter"
 import { CheckpointStorage } from "../shared/checkpoints"
 import { ApiConfiguration } from "../shared/api"
 import { findLastIndex } from "../shared/array"
@@ -82,9 +81,7 @@ import { insertGroups } from "./diff/insert-groups"
 import { telemetryService } from "../services/telemetry/TelemetryService"
 import { validateToolUse, isToolAllowedForMode, ToolName } from "./mode-validator"
 import { parseXml } from "../utils/xml"
-import { readLines } from "../integrations/misc/read-lines"
 import { getWorkspacePath } from "../utils/path"
-import { isBinaryFile } from "isbinaryfile"
 
 type ToolResponse = string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam>
 type UserContent = Array<Anthropic.Messages.ContentBlockParam>
@@ -2340,57 +2337,16 @@ export class Cline extends EventEmitter<ClineEvents> {
 								if (!didApprove) {
 									break
 								}
-
 								// Get the maxReadFileLine setting
 								const { maxReadFileLine = 500 } = (await this.providerRef.deref()?.getState()) ?? {}
 
-								// Count total lines in the file
-								let totalLines = 0
-								try {
-									totalLines = await countFileLines(absolutePath)
-								} catch (error) {
-									console.error(`Error counting lines in file ${absolutePath}:`, error)
-								}
-
 								// now execute the tool like normal
-								let content: string
-								let isFileTruncated = false
-								let sourceCodeDef = ""
-
-								const isBinary = await isBinaryFile(absolutePath).catch(() => false)
-
-								if (isRangeRead) {
-									if (startLine === undefined) {
-										content = addLineNumbers(await readLines(absolutePath, endLine, startLine))
-									} else {
-										content = addLineNumbers(
-											await readLines(absolutePath, endLine, startLine),
-											startLine + 1,
-										)
-									}
-								} else if (!isBinary && maxReadFileLine >= 0 && totalLines > maxReadFileLine) {
-									// If file is too large, only read the first maxReadFileLine lines
-									isFileTruncated = true
-
-									const res = await Promise.all([
-										maxReadFileLine > 0 ? readLines(absolutePath, maxReadFileLine - 1, 0) : "",
-										parseSourceCodeDefinitionsForFile(absolutePath, this.rooIgnoreController),
-									])
-
-									content = res[0].length > 0 ? addLineNumbers(res[0]) : ""
-									const result = res[1]
-									if (result) {
-										sourceCodeDef = `\n\n${result}`
-									}
-								} else {
-									// Read entire file
-									content = await extractTextFromFile(absolutePath)
-								}
-
-								// Add truncation notice if applicable
-								if (isFileTruncated) {
-									content += `\n\n[Showing only ${maxReadFileLine} of ${totalLines} total lines. Use start_line and end_line if you need to read more]${sourceCodeDef}`
-								}
+								let content = await readFileContent(absolutePath, {
+									maxReadFileLine: maxReadFileLine,
+									startLine: isRangeRead ? startLine : undefined,
+									endLine: isRangeRead ? endLine : undefined,
+									rooIgnoreController: this.rooIgnoreController,
+								})
 
 								pushToolResult(content)
 								break
@@ -3449,7 +3405,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 			}),
 		)
 
-		const [parsedUserContent, environmentDetails] = await this.loadContext(userContent, includeFileDetails)
+		const [parsedUserContent, environmentDetails] = await this.loadContext(
+			userContent,
+			includeFileDetails,
+		)
 		userContent = parsedUserContent
 		// add environment details as its own text block, separate from tool results
 		userContent.push({ type: "text", text: environmentDetails })
@@ -3720,7 +3679,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			// 2. ToolResultBlockParam's content/context text arrays if it contains "<feedback>" (see formatToolDeniedFeedback, attemptCompletion, executeCommand, and consecutiveMistakeCount >= 3) or "<answer>" (see askFollowupQuestion), we place all user generated content in these tags so they can effectively be used as markers for when we should parse mentions)
 			Promise.all(
 				userContent.map(async (block) => {
-					const { osInfo } = (await this.providerRef.deref()?.getState()) || { osInfo: "unix" }
+					const { osInfo, maxReadFileLine } = (await this.providerRef.deref()?.getState()) || { osInfo: "unix" }
 
 					const shouldProcessMentions = (text: string) =>
 						text.includes("<task>") || text.includes("<feedback>")
@@ -3729,7 +3688,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 						if (shouldProcessMentions(block.text)) {
 							return {
 								...block,
-								text: await parseMentions(block.text, this.cwd, this.urlContentFetcher, osInfo),
+								text: await parseMentions(
+									block.text,
+									this.cwd,
+									this.urlContentFetcher, 
+									osInfo,
+									maxReadFileLine,
+								),
 							}
 						}
 						return block
@@ -3743,6 +3708,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 										this.cwd,
 										this.urlContentFetcher,
 										osInfo,
+										maxReadFileLine,
 									),
 								}
 							}
@@ -3758,7 +3724,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 												this.cwd,
 												this.urlContentFetcher,
 												osInfo,
-											),
+												maxReadFileLine,
+											)
 										}
 									}
 									return contentBlock

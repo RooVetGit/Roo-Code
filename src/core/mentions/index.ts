@@ -22,10 +22,7 @@ export async function openMention(mention?: string, osInfo?: string): Promise<vo
 		return
 	}
 
-	if (
-		(osInfo !== "win32" && mention.startsWith("/")) ||
-		(osInfo === "win32" && mention.startsWith("\\"))
-	) {
+	if ((osInfo !== "win32" && mention.startsWith("/")) || (osInfo === "win32" && mention.startsWith("\\"))) {
 		const relPath = mention.slice(1)
 		let absPath = path.resolve(cwd, relPath)
 		if (absPath.includes(" ")) {
@@ -70,7 +67,7 @@ export const handleError = (error: Error, message: string): string => {
 }
 
 // File utilities
-export async function getFileOrFolderContent(mentionPath: string, cwd: string, osInfo: string): Promise<string> {
+export async function getFileOrFolderContent(mentionPath: string, cwd: string, osInfo: string, maxReadFileLine?: number): Promise<string> {
 	const absPath = path.resolve(cwd, mentionPath)
 
 	try {
@@ -78,7 +75,7 @@ export async function getFileOrFolderContent(mentionPath: string, cwd: string, o
 
 		if (stats.isFile()) {
 			try {
-				const content = await extractTextFromFile(absPath)
+				const content = await extractTextFromFile(absPath, maxReadFileLine)
 				return content
 			} catch (error) {
 				return `(Failed to read contents of ${mentionPath}): ${error.message}`
@@ -101,7 +98,7 @@ export async function getFileOrFolderContent(mentionPath: string, cwd: string, o
 								if (isBinary) {
 									return undefined
 								}
-								const content = await extractTextFromFile(absoluteFilePath)
+								const content = await extractTextFromFile(absoluteFilePath, maxReadFileLine)
 								return `<file_content path="${filePath}">\n${content}\n</file_content>`
 							} catch (error) {
 								return undefined
@@ -162,7 +159,7 @@ const urlHandler: HandlerConfig = {
 const fileHandler: HandlerConfig = {
 	name: "file",
 	test: (mention: string, { osInfo }) => (osInfo !== "win32" ? mention.startsWith("/") : mention.startsWith("\\")),
-	handler: async (mention, { cwd, osInfo }) => {
+	handler: async (mention, { cwd, osInfo, maxReadFileLine }) => {
 		let mentionPath = mention.slice(1)
 		const isFolder = osInfo === "win32" ? mention.endsWith("\\") : mention.endsWith("/")
 		const tag = createXmlTag(isFolder ? "folder_content" : "file_content", { path: mentionPath })
@@ -173,7 +170,7 @@ const fileHandler: HandlerConfig = {
 		}
 
 		try {
-			const content = await getFileOrFolderContent(mentionPath, cwd, osInfo)
+			const content = await getFileOrFolderContent(mentionPath, cwd, osInfo, maxReadFileLine)
 			return wrapContent(content, tag)
 		} catch (error) {
 			return wrapContent(handleError(error, "fetching content"), tag)
@@ -252,6 +249,7 @@ export async function parseMentions(
 	cwd: string,
 	urlContentFetcher: UrlContentFetcher,
 	osInfo: string = "unix",
+	maxReadFileLine?: number,
 ): Promise<string> {
 	const mentions: Set<string> = new Set()
 	let parsedText = text.replace(mentionRegexGlobal, (match, mention) => {
@@ -302,6 +300,7 @@ export async function parseMentions(
 		urlContentFetcher,
 		launchBrowserError,
 		osInfo,
+		maxReadFileLine
 	}
 
 	const mentionResults = await Promise.all(

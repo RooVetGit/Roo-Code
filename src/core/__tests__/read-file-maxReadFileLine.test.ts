@@ -3,7 +3,7 @@ const DEBUG = false
 import * as path from "path"
 import { countFileLines } from "../../integrations/misc/line-counter"
 import { readLines } from "../../integrations/misc/read-lines"
-import { extractTextFromFile, addLineNumbers } from "../../integrations/misc/extract-text"
+import { extractTextFromFile, addLineNumbers, readFileContent } from "../../integrations/misc/extract-text"
 import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
 import { isBinaryFile } from "isbinaryfile"
 import { ReadFileToolUse } from "../assistant-message"
@@ -50,6 +50,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 	const originalReadLines = jest.requireActual("../../integrations/misc/read-lines").readLines
 	const originalExtractTextFromFile = jest.requireActual("../../integrations/misc/extract-text").extractTextFromFile
 	const originalAddLineNumbers = jest.requireActual("../../integrations/misc/extract-text").addLineNumbers
+	const originalReadFileContent = jest.requireActual("../../integrations/misc/extract-text").readFileContent
 	const originalParseSourceCodeDefinitionsForFile =
 		jest.requireActual("../../services/tree-sitter").parseSourceCodeDefinitionsForFile
 	const originalIsBinaryFile = jest.requireActual("isbinaryfile").isBinaryFile
@@ -69,6 +70,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		;(countFileLines as jest.Mock).mockImplementation(originalCountFileLines)
 		;(readLines as jest.Mock).mockImplementation(originalReadLines)
 		;(extractTextFromFile as jest.Mock).mockImplementation(originalExtractTextFromFile)
+		;(readFileContent as jest.Mock).mockImplementation(originalReadFileContent)
 		;(parseSourceCodeDefinitionsForFile as jest.Mock).mockImplementation(originalParseSourceCodeDefinitionsForFile)
 		;(isBinaryFile as jest.Mock).mockImplementation(originalIsBinaryFile)
 
@@ -76,6 +78,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		;(countFileLines as jest.Mock).mockResolvedValue(5)
 		;(readLines as jest.Mock).mockResolvedValue(fileContent)
 		;(extractTextFromFile as jest.Mock).mockResolvedValue(numberedFileContent)
+		;(readFileContent as jest.Mock).mockResolvedValue(numberedFileContent)
 		// Use the real addLineNumbers function
 		;(addLineNumbers as jest.Mock).mockImplementation(originalAddLineNumbers)
 		;(parseSourceCodeDefinitionsForFile as jest.Mock).mockResolvedValue(sourceCodeDef)
@@ -162,9 +165,11 @@ describe("read_file tool with maxReadFileLine setting", () => {
 
 	interface TestExpectations {
 		extractTextCalled: boolean
+		readFileContentCalled: boolean
 		readLinesCalled: boolean
 		sourceCodeDefCalled: boolean
 		readLinesParams?: [string, number, number]
+		readFileContentParams?: [string, object]
 		responseValidation: {
 			expectedLineCount: number
 			shouldContainLines?: number[]
@@ -188,9 +193,11 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			name: "read entire file when maxReadFileLine is -1",
 			maxReadFileLine: -1,
 			expectations: {
-				extractTextCalled: true,
+				extractTextCalled: false,
+				readFileContentCalled: true,
 				readLinesCalled: false,
 				sourceCodeDefCalled: false,
+				readFileContentParams: [absoluteFilePath, { maxReadFileLine: -1, startLine: undefined, endLine: undefined, rooIgnoreController: expect.any(Object) }],
 				responseValidation: {
 					expectedLineCount: 5,
 					shouldContainLines: [1, 2, 3, 4, 5],
@@ -202,9 +209,11 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			name: "read entire file when maxReadFileLine >= file length",
 			maxReadFileLine: 10,
 			expectations: {
-				extractTextCalled: true,
+				extractTextCalled: false,
+				readFileContentCalled: true,
 				readLinesCalled: false,
 				sourceCodeDefCalled: false,
+				readFileContentParams: [absoluteFilePath, { maxReadFileLine: 10, startLine: undefined, endLine: undefined, rooIgnoreController: expect.any(Object) }],
 				responseValidation: {
 					expectedLineCount: 5,
 					shouldContainLines: [1, 2, 3, 4, 5],
@@ -215,10 +224,22 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		{
 			name: "read zero lines and only provide line declaration definitions when maxReadFileLine is 0",
 			maxReadFileLine: 0,
+			setup: () => {
+				jest.clearAllMocks()
+				;(countFileLines as jest.Mock).mockResolvedValue(5)
+				;(readFileContent as jest.Mock).mockImplementation((path, options) => {
+					if (options?.maxReadFileLine === 0) {
+						return Promise.resolve(`\n\n[Showing only 0 of 5 total lines. Use start_line and end_line if you need to read more]${sourceCodeDef}`)
+					}
+					return Promise.resolve(numberedFileContent)
+				})
+			},
 			expectations: {
 				extractTextCalled: false,
+				readFileContentCalled: true,
 				readLinesCalled: false,
-				sourceCodeDefCalled: true,
+				sourceCodeDefCalled: false,
+				readFileContentParams: [absoluteFilePath, { maxReadFileLine: 0, startLine: undefined, endLine: undefined, rooIgnoreController: expect.any(Object) }],
 				responseValidation: {
 					expectedLineCount: 0,
 				},
@@ -232,19 +253,23 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			setup: () => {
 				jest.clearAllMocks()
 				;(countFileLines as jest.Mock).mockResolvedValue(5)
-				;(readLines as jest.Mock).mockImplementation((path, endLine, startLine = 0) => {
+				;(readFileContent as jest.Mock).mockImplementation((path, options) => {
 					const lines = fileContent.split("\n")
-					const actualEndLine = endLine !== undefined ? Math.min(endLine, lines.length - 1) : lines.length - 1
-					const actualStartLine = startLine !== undefined ? Math.min(startLine, lines.length - 1) : 0
-					const requestedLines = lines.slice(actualStartLine, actualEndLine + 1)
-					return Promise.resolve(requestedLines.join("\n"))
+					const maxLines = options?.maxReadFileLine || lines.length
+					const requestedLines = lines.slice(0, Math.min(maxLines, lines.length))
+					const content = addLineNumbers(requestedLines.join("\n"))
+					if (maxLines < lines.length) {
+						return Promise.resolve(content + `\n\n[Showing only ${maxLines} of 5 total lines. Use start_line and end_line if you need to read more]` + sourceCodeDef)
+					}
+					return Promise.resolve(content)
 				})
 			},
 			expectations: {
 				extractTextCalled: false,
-				readLinesCalled: true,
-				sourceCodeDefCalled: true,
-				readLinesParams: [absoluteFilePath, 2, 0],
+				readFileContentCalled: true,
+				readLinesCalled: false,
+				sourceCodeDefCalled: false,
+				readFileContentParams: [absoluteFilePath, { maxReadFileLine: 3, startLine: undefined, endLine: undefined, rooIgnoreController: expect.any(Object) }],
 				responseValidation: {
 					expectedLineCount: 3,
 					shouldContainLines: [1, 2, 3],
@@ -268,9 +293,19 @@ describe("read_file tool with maxReadFileLine setting", () => {
 
 		// Verify mock calls
 		if (testCase.expectations.extractTextCalled) {
-			expect(extractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
+			expect(extractTextFromFile).toHaveBeenCalledWith(absoluteFilePath, testCase.maxReadFileLine)
 		} else {
 			expect(extractTextFromFile).not.toHaveBeenCalled()
+		}
+
+		if (testCase.expectations.readFileContentCalled) {
+			const params = testCase.expectations.readFileContentParams
+			if (!params) {
+				throw new Error("readFileContentParams must be defined when readFileContentCalled is true")
+			}
+			expect(readFileContent).toHaveBeenCalledWith(...params)
+		} else {
+			expect(readFileContent).not.toHaveBeenCalled()
 		}
 
 		if (testCase.expectations.readLinesCalled) {

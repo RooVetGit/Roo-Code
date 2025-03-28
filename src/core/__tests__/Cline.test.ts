@@ -933,6 +933,7 @@ describe("Cline", () => {
 						expect.any(String),
 						expect.any(Object),
 						expect.any(String),
+						expect.any(Number),
 					)
 
 					// Feedback tag content should be processed
@@ -944,6 +945,7 @@ describe("Cline", () => {
 						expect.any(String),
 						expect.any(Object),
 						expect.any(String),
+						expect.any(Number),
 					)
 
 					// Regular tool result should not be processed
