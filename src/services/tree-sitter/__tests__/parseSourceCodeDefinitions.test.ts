@@ -121,6 +121,48 @@ async function initializeWorkingParser() {
 }
 // ^^^ DO NOT CHANGE THAT FUNCTION ^^^
 
+// Test helper for parsing source code definitions
+async function testParseSourceCodeDefinitions(testFilePath: string, content: string): Promise<string | undefined> {
+	// Clear any previous mocks
+	jest.clearAllMocks()
+
+	// Mock fs.readFile to return our sample content
+	mockedFs.readFile.mockResolvedValue(content)
+
+	// Get the mock function
+	const mockedLoadRequiredLanguageParsers = require("../languageParser").loadRequiredLanguageParsers
+
+	// Initialize TreeSitter and create a real parser
+	const TreeSitter = await initializeTreeSitter()
+	const parser = new TreeSitter()
+
+	// Load TSX language and configure parser
+	const wasmPath = path.join(process.cwd(), "dist/tree-sitter-tsx.wasm")
+	const tsxLang = await TreeSitter.Language.load(wasmPath)
+	parser.setLanguage(tsxLang)
+
+	// Create a real query
+	const query = tsxLang.query(tsxQuery)
+
+	// Set up our language parser with real parser and query
+	const mockLanguageParser = {
+		tsx: { parser, query },
+	}
+
+	// Configure the mock to return our parser
+	mockedLoadRequiredLanguageParsers.mockResolvedValue(mockLanguageParser)
+
+	// Call the function under test
+	const result = await parseSourceCodeDefinitionsForFile(testFilePath)
+
+	// Verify loadRequiredLanguageParsers was called with the expected file path
+	expect(mockedLoadRequiredLanguageParsers).toHaveBeenCalledWith([testFilePath])
+	expect(mockedLoadRequiredLanguageParsers).toHaveBeenCalled()
+
+	console.log(`content:\n${content}\n\nResult:\n${result}`)
+	return result
+}
+
 // Parse with the correct WASM path
 // Use the same approach as the working treeParserDebug test
 // Store the initialized TreeSitter from treeParserDebug for reuse
@@ -132,60 +174,14 @@ const logParseResult = async (description: string, filePath: string) => {
 	// Unmock fs/promises - this matches what treeParserDebug does
 	jest.unmock("fs/promises")
 
-	// Initialize TreeSitter
-	const TreeSitter = await initializeTreeSitter()
-
-	// Load the tsx language using the same pattern from treeParserDebug
-	const wasmPath = path.join(process.cwd(), "dist/tree-sitter-tsx.wasm")
-	// console.log("Loading WASM from:", wasmPath)
-	const tsxLang = await TreeSitter.Language.load(wasmPath)
-
-	// Create parser and set language - exactly as in treeParserDebug
-	const parser = new TreeSitter()
-	parser.setLanguage(tsxLang)
-
-	// Parse the content directly
+	// Use the sample content for testing
 	const fileContent = sampleTsxContent
-	const tree = parser.parse(fileContent)
 
-	// Extract definitions using TSX query - similar to parseSourceCodeDefinitionsForFile
-	const query = tsxLang.query(tsxQuery)
-
-	// Format result to match parseSourceCodeDefinitionsForFile output
-	let formattedOutput = ""
-
-	// Split content into lines
-	const lines = fileContent.split("\n")
-
-	// Directly find interface declaration node which is what the test expects
-	const interfaceNodes = tree.rootNode.descendantsOfType("interface_declaration")
-	// console.log(`Found ${interfaceNodes.length} interface declarations`)
-
-	if (interfaceNodes.length > 0) {
-		// Add the interface declaration line
-		const interfaceNode = interfaceNodes[0]
-		const startLine = interfaceNode.startPosition.row
-		const endLine = interfaceNode.endPosition.row
-		formattedOutput += `${startLine}--${endLine} | ${lines[startLine]}\n`
-
-		// Find all property signatures within the interface
-		const propertyNodes = interfaceNode.descendantsOfType("property_signature")
-		// console.log(`Found ${propertyNodes.length} property signatures in interface`)
-
-		propertyNodes.forEach((node: any) => {
-			const propStartLine = node.startPosition.row
-			const propEndLine = node.endPosition.row
-			formattedOutput += `${propStartLine}--${propEndLine} | ${lines[propStartLine]}\n`
-		})
-
-		// Add the header to match parseSourceCodeDefinitionsForFile format
-		formattedOutput = `# ${path.basename(filePath)}\n${formattedOutput}`
-	}
+	let formattedOutput = (await testParseSourceCodeDefinitions(filePath, fileContent)) || ""
 
 	// Log results
 	console.log("File:", path.basename(filePath))
 	console.log("Result Type:", typeof formattedOutput)
-	console.log("Result:", formattedOutput)
 
 	if (formattedOutput) {
 		const lines = formattedOutput.split("\n")
@@ -222,47 +218,6 @@ describe("treeParserDebug", () => {
 
 		expect(tree).toBeDefined()
 	})
-
-	async function testParseSourceCodeDefinitions(testFilePath: string, content: string): Promise<string | undefined> {
-		// Clear any previous mocks
-		jest.clearAllMocks()
-
-		// Mock fs.readFile to return our sample content
-		mockedFs.readFile.mockResolvedValue(content)
-
-		// Get the mock function
-		const mockedLoadRequiredLanguageParsers = require("../languageParser").loadRequiredLanguageParsers
-
-		// Initialize TreeSitter and create a real parser
-		const TreeSitter = await initializeTreeSitter()
-		const parser = new TreeSitter()
-
-		// Load TSX language and configure parser
-		const wasmPath = path.join(process.cwd(), "dist/tree-sitter-tsx.wasm")
-		const tsxLang = await TreeSitter.Language.load(wasmPath)
-		parser.setLanguage(tsxLang)
-
-		// Create a real query
-		const query = tsxLang.query(tsxQuery)
-
-		// Set up our language parser with real parser and query
-		const mockLanguageParser = {
-			tsx: { parser, query },
-		}
-
-		// Configure the mock to return our parser
-		mockedLoadRequiredLanguageParsers.mockResolvedValue(mockLanguageParser)
-
-		// Call the function under test
-		const result = await parseSourceCodeDefinitionsForFile(testFilePath)
-
-		// Verify loadRequiredLanguageParsers was called with the expected file path
-		expect(mockedLoadRequiredLanguageParsers).toHaveBeenCalledWith([testFilePath])
-		expect(mockedLoadRequiredLanguageParsers).toHaveBeenCalled()
-
-		console.log(`content: ${content} Result: ${result}`)
-		return result
-	}
 
 	it("should successfully parse basic components", async function () {
 		const testFile = "/test/components.tsx"
