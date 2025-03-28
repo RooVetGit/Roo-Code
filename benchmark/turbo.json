@@ -15,11 +15,11 @@
 		"format": {},
 		"lint": {},
 		"check-types": {
-			"dependsOn": ["build"]
+			"dependsOn": []
 		},
 		"test": {},
 		"dev": {
-			"dependsOn": ["build"],
+			"dependsOn": [],
 			"cache": false,
 			"persistent": true
 		},

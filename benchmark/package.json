@@ -1,7 +1,7 @@
 {
 	"name": "@benchmark/monorepo",
 	"private": true,
-	"packageManager": "pnpm@10.7.0",
+	"packageManager": "pnpm@10.7.0+sha512.6b865ad4b62a1d9842b61d674a393903b871d9244954f652b8842c2b553c72176b278f64c463e52d40fff8aba385c235c8c9ecf5cc7de4fd78b8bb6d49633ab6",
 	"scripts": {
 		"lint": "turbo lint --log-order grouped --output-logs new-only",
 		"check-types": "turbo check-types --log-order grouped --output-logs new-only",
@@ -25,7 +25,6 @@
 		"eslint": "^9.22.0",
 		"globals": "^16.0.0",
 		"prettier": "^3.5.3",
-		"tsup": "^8.4.0",
 		"tsx": "^4.19.3",
 		"turbo": "^2.4.4",
 		"typescript": "^5",

@@ -5,7 +5,7 @@ import * as crypto from "node:crypto"
 import ipc from "node-ipc"
 import { z } from "zod"
 
-import { tokenUsageSchema } from "../schemas"
+import { tokenUsageSchema, clineMessageSchema } from "../schemas"
 
 /**
  * TaskEvent
@@ -46,23 +46,7 @@ export const taskEventSchema = z.discriminatedUnion("eventName", [
 	// }),
 	z.object({
 		eventName: z.literal(TaskEventName.Message),
-		data: z.object({
-			task: z.object({ id: z.number() }),
-			message: z.object({
-				taskId: z.string(),
-				action: z.enum(["created", "updated"]),
-				message: z.object({
-					// See ClineMessage.
-					ts: z.number(),
-					type: z.enum(["ask", "say"]),
-					ask: z.string().optional(),
-					say: z.string().optional(),
-					partial: z.boolean().optional(),
-					text: z.string().optional(),
-					reasoning: z.string().optional(),
-				}),
-			}),
-		}),
+		data: z.object({ taskId: z.string(), message: clineMessageSchema }),
 	}),
 	z.object({
 		eventName: z.literal(TaskEventName.TaskCreated),

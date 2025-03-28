@@ -10,7 +10,7 @@ import { type ExerciseLanguage, exerciseLanguages, IpcOrigin, IpcMessageType, Ta
 import { type Run, findRun, createRun, finishRun, createTask, Task, getTasks, updateTask } from "@benchmark/db"
 import { IpcServer } from "@benchmark/ipc"
 
-import { __dirname, extensionDevelopmentPath, extensionTestsPath, exercisesPath } from "./paths.js"
+import { __dirname, extensionDevelopmentPath, exercisesPath } from "./paths.js"
 import { getExercises } from "./exercises.js"
 
 const testCommands: Record<ExerciseLanguage, { commands: string[]; timeout?: number; cwd?: string }> = {
@@ -230,11 +230,6 @@ const main = async () => {
 
 if (!fs.existsSync(extensionDevelopmentPath)) {
 	console.error(`"extensionDevelopmentPath" does not exist.`)
-	process.exit(1)
-}
-
-if (!fs.existsSync(extensionTestsPath)) {
-	console.error(`"extensionTestsPath" does not exist. Please run "pnpm --filter @benchmark/runner build".`)
 	process.exit(1)
 }
 

@@ -3,9 +3,9 @@ import * as vscode from "vscode"
 
 import { ClineProvider } from "../core/webview/ClineProvider"
 
-import { RooCodeAPI, RooCodeEvents, TokenUsage, RooCodeSettings } from "./roo-code"
+import { RooCodeAPI, RooCodeEvents, TokenUsage, RooCodeSettings, ClineMessage } from "./roo-code"
 import { MessageHistory } from "./message-history"
-import { IpcServer, TaskCommandName, IpcMessageType, TaskEventName, IpcOrigin } from "./ipc"
+import { IpcOrigin, IpcMessageType, IpcServer, TaskCommandName, TaskEventName } from "./ipc"
 
 export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 	private readonly outputChannel: vscode.OutputChannel
@@ -65,84 +65,116 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 	) {
 		if (this.ipc) {
 			switch (eventName) {
-				case "taskCreated":
+				case TaskEventName.Message:
 					this.ipc.broadcast({
 						type: IpcMessageType.TaskEvent,
-						data: { eventName: TaskEventName.TaskCreated, data: { taskId: args[0] as string } },
+						data: {
+							eventName: TaskEventName.Message,
+							data: args[0] as RooCodeEvents[TaskEventName.Message][0],
+						},
 						origin: IpcOrigin.Server,
 					})
 					break
-				case "taskStarted":
+				case TaskEventName.TaskCreated:
 					this.ipc.broadcast({
 						type: IpcMessageType.TaskEvent,
-						data: { eventName: TaskEventName.TaskStarted, data: { taskId: args[0] as string } },
+						data: {
+							eventName: TaskEventName.TaskCreated,
+							data: { taskId: args[0] as RooCodeEvents[TaskEventName.TaskCreated][0] },
+						},
 						origin: IpcOrigin.Server,
 					})
 					break
-				case "taskPaused":
+				case TaskEventName.TaskStarted:
 					this.ipc.broadcast({
 						type: IpcMessageType.TaskEvent,
-						data: { eventName: TaskEventName.TaskPaused, data: { taskId: args[0] as string } },
+						data: {
+							eventName: TaskEventName.TaskStarted,
+							data: { taskId: args[0] as RooCodeEvents[TaskEventName.TaskStarted][0] },
+						},
 						origin: IpcOrigin.Server,
 					})
 					break
-				case "taskUnpaused":
+				case TaskEventName.TaskPaused:
 					this.ipc.broadcast({
 						type: IpcMessageType.TaskEvent,
-						data: { eventName: TaskEventName.TaskUnpaused, data: { taskId: args[0] as string } },
+						data: {
+							eventName: TaskEventName.TaskPaused,
+							data: { taskId: args[0] as RooCodeEvents[TaskEventName.TaskPaused][0] },
+						},
 						origin: IpcOrigin.Server,
 					})
 					break
-				case "taskAskResponded":
+				case TaskEventName.TaskUnpaused:
 					this.ipc.broadcast({
 						type: IpcMessageType.TaskEvent,
-						data: { eventName: TaskEventName.TaskAskResponded, data: { taskId: args[0] as string } },
+						data: {
+							eventName: TaskEventName.TaskUnpaused,
+							data: { taskId: args[0] as RooCodeEvents[TaskEventName.TaskUnpaused][0] },
+						},
 						origin: IpcOrigin.Server,
 					})
 					break
-				case "taskAborted":
+				case TaskEventName.TaskAskResponded:
 					this.ipc.broadcast({
 						type: IpcMessageType.TaskEvent,
-						data: { eventName: TaskEventName.TaskAborted, data: { taskId: args[0] as string } },
+						data: {
+							eventName: TaskEventName.TaskAskResponded,
+							data: { taskId: args[0] as RooCodeEvents[TaskEventName.TaskAskResponded][0] },
+						},
 						origin: IpcOrigin.Server,
 					})
 					break
-				case "taskSpawned":
+				case TaskEventName.TaskAborted:
+					this.ipc.broadcast({
+						type: IpcMessageType.TaskEvent,
+						data: {
+							eventName: TaskEventName.TaskAborted,
+							data: { taskId: args[0] as RooCodeEvents[TaskEventName.TaskAborted][0] },
+						},
+						origin: IpcOrigin.Server,
+					})
+					break
+				case TaskEventName.TaskSpawned:
 					this.ipc.broadcast({
 						type: IpcMessageType.TaskEvent,
 						data: {
 							eventName: TaskEventName.TaskSpawned,
-							data: { taskId: args[0] as string, childTaskId: args[1] as string },
+							data: {
+								taskId: args[0] as RooCodeEvents[TaskEventName.TaskSpawned][0],
+								childTaskId: args[1] as RooCodeEvents[TaskEventName.TaskSpawned][1],
+							},
 						},
 						origin: IpcOrigin.Server,
 					})
 					break
-				case "taskCompleted":
+				case TaskEventName.TaskCompleted:
 					this.ipc.broadcast({
 						type: IpcMessageType.TaskEvent,
 						data: {
 							eventName: TaskEventName.TaskCompleted,
-							data: { taskId: args[0] as string, usage: args[1] as TokenUsage },
+							data: {
+								taskId: args[0] as RooCodeEvents[TaskEventName.TaskCompleted][0],
+								usage: args[1] as RooCodeEvents[TaskEventName.TaskCompleted][1],
+							},
 						},
 						origin: IpcOrigin.Server,
 					})
 					break
-				case "taskTokenUsageUpdated":
+				case TaskEventName.TaskTokenUsageUpdated:
 					this.ipc.broadcast({
 						type: IpcMessageType.TaskEvent,
 						data: {
 							eventName: TaskEventName.TaskTokenUsageUpdated,
-							data: { taskId: args[0] as string, usage: args[1] as TokenUsage },
+							data: {
+								taskId: args[0] as RooCodeEvents[TaskEventName.TaskTokenUsageUpdated][0],
+								usage: args[1] as RooCodeEvents[TaskEventName.TaskTokenUsageUpdated][1],
+							},
 						},
 						origin: IpcOrigin.Server,
 					})
 					break
-				default:
-					console.log(eventName, args)
-					break
 			}
-
-			// this.ipc.broadcast({ type: IpcMessageType.TaskEvent, data: { eventName, data: { ...args } } })
 		}
 
 		return super.emit(eventName, ...args)

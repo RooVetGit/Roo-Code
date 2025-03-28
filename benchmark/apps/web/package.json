@@ -6,7 +6,7 @@
 		"check-types": "tsc -b",
 		"dev": "dotenvx run -f ../../.env -- next dev --turbopack",
 		"format": "prettier --write src",
-		"build": "echo 'NOP' || next build",
+		"build": "next build",
 		"start": "next start"
 	},
 	"dependencies": {
