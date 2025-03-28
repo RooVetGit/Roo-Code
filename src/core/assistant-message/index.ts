@@ -58,6 +58,8 @@ export const toolParamNames = [
 	"mode",
 	"message",
 	"cwd",
+	"selector",
+	"filepath",
 	"follow_up",
 	"task",
 ] as const
@@ -115,7 +117,9 @@ export interface ListCodeDefinitionNamesToolUse extends ToolUse {
 
 export interface BrowserActionToolUse extends ToolUse {
 	name: "browser_action"
-	params: Partial<Pick<Record<ToolParamName, string>, "action" | "url" | "coordinate" | "text">>
+	params: Partial<
+		Pick<Record<ToolParamName, string>, "action" | "url" | "coordinate" | "text" | "selector" | "filepath">
+	>
 }
 
 export interface UseMcpToolToolUse extends ToolUse {

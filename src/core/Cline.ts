@@ -2466,7 +2466,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 								}
 								break
 							} else {
-								let browserActionResult: BrowserActionResult
+								let browserActionResult: BrowserActionResult | undefined
 								if (action === "launch") {
 									if (!url) {
 										this.consecutiveMistakeCount++
@@ -2536,11 +2536,95 @@ export class Cline extends EventEmitter<ClineEvents> {
 										case "scroll_up":
 											browserActionResult = await this.browserSession.scrollUp()
 											break
+										case "upload":
+											const selector = block.params.selector
+											const filepath = block.params.filepath
+
+											if (!selector) {
+												this.consecutiveMistakeCount++
+												pushToolResult(
+													await this.sayAndCreateMissingParamError(
+														"browser_action",
+														"selector",
+													),
+												)
+												await this.browserSession.closeBrowser()
+												break
+											}
+											if (!filepath) {
+												this.consecutiveMistakeCount++
+												pushToolResult(
+													await this.sayAndCreateMissingParamError(
+														"browser_action",
+														"filepath",
+													),
+												)
+												await this.browserSession.closeBrowser()
+												break
+											}
+
+											// Validate filepath exists
+											try {
+												await fs.access(filepath)
+											} catch (error) {
+												this.consecutiveMistakeCount++
+												await this.say(
+													"error",
+													`File not found: ${filepath}. Please provide a valid file path.`,
+												)
+												pushToolResult(
+													formatResponse.toolError(
+														`File not found: ${filepath}. Please check the file path and ensure it exists.`,
+													),
+												)
+												await this.browserSession.closeBrowser()
+												break
+											}
+
+											this.consecutiveMistakeCount = 0
+
+											// Show explicit message about upload being processed
+											// First, log to console for debugging
+											console.log(
+												`Uploading file: ${filepath} to selector: ${selector} without opening system dialog`,
+											)
+
+											// Use the browser_action say without the unsupported message property
+											await this.say(
+												"browser_action",
+												JSON.stringify({
+													action: "upload" as BrowserAction,
+													selector,
+													filepath,
+												} satisfies ClineSayBrowserAction),
+												undefined,
+												true,
+											)
+
+											try {
+												browserActionResult = await this.browserSession.upload(
+													selector,
+													filepath,
+												)
+											} catch (error) {
+												await this.say("error", `Failed to upload file: ${error.message}`)
+												pushToolResult(
+													formatResponse.toolError(
+														`Upload failed: ${error.message}\n\nNOTE: If you're seeing system dialogs, this indicates an issue with the implementation. Please report this bug.`,
+													),
+												)
+												await this.browserSession.closeBrowser()
+												break
+											}
+											break
 										case "close":
 											browserActionResult = await this.browserSession.closeBrowser()
 											break
 									}
 								}
+
+								// Initialize browserActionResult to an empty object if it's not already set
+								browserActionResult = browserActionResult || {}
 
 								switch (action) {
 									case "launch":
@@ -2548,6 +2632,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 									case "type":
 									case "scroll_down":
 									case "scroll_up":
+									case "upload":
 										await this.say("browser_action_result", JSON.stringify(browserActionResult))
 										pushToolResult(
 											formatResponse.toolResult(

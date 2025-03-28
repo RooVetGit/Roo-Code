@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .upload-container {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .file-input {
+            margin-bottom: 10px;
+        }
+        .hidden-file-input {
+            display: none;
+        }
+        .custom-file-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .file-list {
+            margin-top: 20px;
+            border: 1px solid #eee;
+            padding: 10px;
+        }
+        .file-item {
+            padding: 5px;
+            margin: 5px 0;
+            background-color: #f9f9f9;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>File Upload Test Page</h1>
+    <p>This page is used to test the file upload functionality in the browser tool.</p>
+
+    <div class="upload-container">
+        <h2>Standard File Input</h2>
+        <input type="file" id="fileInput" class="file-input">
+        <div id="standardSuccess" class="success">File uploaded successfully!</div>
+        <div id="standardFileList" class="file-list"></div>
+    </div>
+
+    <div class="upload-container">
+        <h2>Hidden File Input with Custom Button</h2>
+        <input type="file" id="hiddenFileInput" class="hidden-file-input">
+        <button id="customButton" class="custom-file-button">Choose File</button>
+        <div id="hiddenSuccess" class="success">File uploaded successfully!</div>
+        <div id="hiddenFileList" class="file-list"></div>
+    </div>
+
+    <script>
+        // Standard file input
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const fileList = document.getElementById('standardFileList');
+            fileList.innerHTML = '';
+            
+            for (const file of this.files) {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.textContent = `File: ${file.name}, Size: ${file.size} bytes, Type: ${file.type}`;
+                fileList.appendChild(fileItem);
+            }
+            
+            document.getElementById('standardSuccess').style.display = 'block';
+        });
+
+        // Custom button for hidden file input
+        document.getElementById('customButton').addEventListener('click', function() {
+            document.getElementById('hiddenFileInput').click();
+        });
+
+        // Hidden file input
+        document.getElementById('hiddenFileInput').addEventListener('change', function(e) {
+            const fileList = document.getElementById('hiddenFileList');
+            fileList.innerHTML = '';
+            
+            for (const file of this.files) {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.textContent = `File: ${file.name}, Size: ${file.size} bytes, Type: ${file.type}`;
+                fileList.appendChild(fileItem);
+            }
+            
+            document.getElementById('hiddenSuccess').style.display = 'block';
+        });
+    </script>
+</body>
+</html>

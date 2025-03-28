@@ -1,7 +1,7 @@
 import * as vscode from "vscode"
 import * as fs from "fs/promises"
 import * as path from "path"
-import { Browser, Page, ScreenshotOptions, TimeoutError, launch, connect } from "puppeteer-core"
+import { Browser, Page, ScreenshotOptions, TimeoutError, launch, connect, ElementHandle } from "puppeteer-core"
 // @ts-ignore
 import PCR from "puppeteer-chromium-resolver"
 import pWaitFor from "p-wait-for"
@@ -243,9 +243,14 @@ export class BrowserSession {
 		try {
 			await action(this.page)
 		} catch (err) {
-			if (!(err instanceof TimeoutError)) {
+			// Re-throw the file chooser error to ensure it propagates to the caller
+			if (err instanceof Error && err.message.includes("Clicking this element opened a file selection dialog")) {
+				throw err // Re-throw to ensure the click action fails properly
+			} else if (!(err instanceof TimeoutError)) {
 				logs.push(`[Error] ${err.toString()}`)
 			}
+			// Re-throw the error to be caught by the caller (e.g., the test)
+			throw err
 		}
 
 		// Wait for console inactivity, with a timeout
@@ -342,22 +347,37 @@ export class BrowserSession {
 	async click(coordinate: string): Promise<BrowserActionResult> {
 		const [x, y] = coordinate.split(",").map(Number)
 		return this.doAction(async (page) => {
-			// Set up network request monitoring
+			// Set up file chooser interception
+			console.log("[TEST_DEBUG] Attaching filechooser listener")
+			page.once("filechooser", async (fileChooser) => {
+				console.log("[TEST_DEBUG] Filechooser listener triggered!")
+				// Intercept file chooser triggered by click and throw an error
+				throw new Error(
+					"Clicking this element opened a file selection dialog. You MUST use the 'upload' action with a valid CSS selector for the file input element and the file path instead of clicking.",
+				)
+			})
+			console.log("[TEST_DEBUG] Filechooser listener attached")
+
+			// Set up network activity monitoring
 			let hasNetworkActivity = false
 			const requestListener = () => {
 				hasNetworkActivity = true
 			}
+
+			// Add the request listener to detect network activity
 			page.on("request", requestListener)
 
 			// Perform the click
+			console.log(`[TEST_DEBUG] Performing click at ${x},${y}`)
 			await page.mouse.click(x, y)
+			console.log(`[TEST_DEBUG] Click performed at ${x},${y}`)
 			this.currentMousePosition = coordinate
 
-			// Small delay to check if click triggered any network activity
+			// Small delay before checking for navigation
 			await delay(100)
 
+			// Wait for navigation/loading only if there was network activity
 			if (hasNetworkActivity) {
-				// If we detected network activity, wait for navigation/loading
 				await page
 					.waitForNavigation({
 						waitUntil: ["domcontentloaded", "networkidle2"],
@@ -367,7 +387,7 @@ export class BrowserSession {
 				await this.waitTillHTMLStable(page)
 			}
 
-			// Clean up listener
+			// Clean up the request listener
 			page.off("request", requestListener)
 		})
 	}
@@ -404,5 +424,538 @@ export class BrowserSession {
 			}, height)
 			await delay(300)
 		})
+	}
+
+	/**
+	 * Uploads a file to a file input element identified by the selector
+	 *
+	 * This method implements a robust file upload strategy with multiple fallback mechanisms:
+	 * 1. First tries to directly set the file on the input element (works with hidden inputs)
+	 * 2. Falls back to using the FileChooser API if direct method fails
+	 *
+	 * @param selector CSS selector for the file input element
+	 * @param filepath Path to the file to upload
+	 * @returns Browser action result with screenshot and logs
+	 */
+	async upload(selector: string, filepath: string): Promise<BrowserActionResult> {
+		return this.doAction(async (page) => {
+			// Verify file exists before attempting upload
+			await this.verifyFileExists(filepath)
+
+			console.log(`[UPLOAD] Starting upload of file: ${filepath} using selector: ${selector}`)
+
+			// Set up network monitoring to track upload activity
+			const { requestListener, responseListener } = this.setupNetworkMonitoring(page)
+			page.on("request", requestListener)
+			page.on("response", responseListener)
+
+			// Track initial page state to detect changes after upload
+			const initialUrl = page.url()
+			const initialContent = await page.content()
+
+			try {
+				// Try multiple upload methods with fallbacks
+				await this.attemptUploadWithMultipleMethods(page, selector, filepath, initialUrl, initialContent)
+			} catch (error) {
+				console.error(`[UPLOAD] All upload methods failed: ${error.message}`)
+				throw new Error(
+					`Failed to upload file: ${error.message}. Please check that your selector points to a valid file input element.`,
+				)
+			} finally {
+				// Clean up listeners
+				page.off("request", requestListener)
+				page.off("response", responseListener)
+			}
+		})
+	}
+
+	/**
+	 * Verifies that the file exists before attempting to upload it
+	 *
+	 * @param filepath Path to the file to upload
+	 * @throws Error if the file does not exist
+	 */
+	private async verifyFileExists(filepath: string): Promise<void> {
+		try {
+			await fs.access(filepath)
+		} catch (error) {
+			throw new Error(`File not found: ${filepath}. Please check the path and ensure the file exists.`)
+		}
+	}
+
+	/**
+	 * Sets up network monitoring to track upload activity
+	 *
+	 * @param page The Puppeteer page
+	 * @returns Object containing request and response listeners
+	 */
+	private setupNetworkMonitoring(page: Page): {
+		requestListener: (request: any) => void
+		responseListener: (response: any) => void
+	} {
+		const requestListener = (request: any) => {
+			const url = request.url()
+			if (request.method() === "POST" || request.method() === "PUT") {
+				console.log(`[UPLOAD] Network request: ${request.method()} ${url}`)
+			}
+		}
+
+		const responseListener = (response: any) => {
+			const url = response.url()
+			const status = response.status()
+			if (status >= 200 && status < 300) {
+				console.log(`[UPLOAD] Network response: ${status} ${url}`)
+			} else if (status >= 400) {
+				console.log(`[UPLOAD] Network error: ${status} ${url}`)
+			}
+		}
+
+		return { requestListener, responseListener }
+	}
+
+	/**
+	 * Attempts to upload a file using multiple methods with fallbacks
+	 *
+	 * @param page The Puppeteer page
+	 * @param selector CSS selector for the file input element
+	 * @param filepath Path to the file to upload
+	 * @param initialUrl The URL before the upload started
+	 * @param initialContent The page content before the upload started
+	 */
+	private async attemptUploadWithMultipleMethods(
+		page: Page,
+		selector: string,
+		filepath: string,
+		initialUrl: string,
+		initialContent: string,
+	): Promise<void> {
+		// Try direct input method first (most reliable)
+		try {
+			await this.uploadWithDirectInputMethod(page, selector, filepath, initialUrl, initialContent)
+			return
+		} catch (directMethodError) {
+			console.log(`[UPLOAD] Direct input method failed: ${directMethodError.message}`)
+			console.log("[UPLOAD] Trying FileChooser API method as fallback")
+		}
+
+		// Try FileChooser API method as fallback
+		try {
+			await this.uploadWithFileChooserAPI(page, selector, filepath, initialUrl, initialContent)
+			return
+		} catch (fileChooserError) {
+			console.error(`[UPLOAD] FileChooser API method failed: ${fileChooserError.message}`)
+			throw new Error("All upload methods failed. Please check the selector and file path.")
+		}
+	}
+
+	/**
+	 * Uploads a file using the direct input method
+	 * This method works by directly setting the file on the input element
+	 *
+	 * @param page The Puppeteer page
+	 * @param selector CSS selector for the file input element
+	 * @param filepath Path to the file to upload
+	 * @param initialUrl The URL before the upload started
+	 * @param initialContent The page content before the upload started
+	 */
+	private async uploadWithDirectInputMethod(
+		page: Page,
+		selector: string,
+		filepath: string,
+		initialUrl: string,
+		initialContent: string,
+	): Promise<void> {
+		const fileInputs = await page.$$('input[type="file"]')
+
+		if (fileInputs.length === 0) {
+			console.log("[UPLOAD] No file input elements found on the page")
+			throw new Error("No file input elements found on the page")
+		}
+
+		// Find the target input element
+		const targetInput = await this.findTargetFileInput(page, selector, fileInputs)
+
+		// Now that we have a file input element, set its file
+		if (targetInput) {
+			// Make the file input visible and enabled if it's hidden
+			const originalStyles = await this.makeFileInputAccessible(page, targetInput)
+
+			// Upload the file
+			const inputElement = targetInput as unknown as ElementHandle<HTMLInputElement>
+			await inputElement.uploadFile(filepath)
+			console.log(`[UPLOAD] File uploaded successfully using direct input method: ${filepath}`)
+
+			// Restore the original styles
+			await this.restoreFileInputStyles(page, targetInput, originalStyles)
+
+			// Wait for upload to complete
+			await this.waitForUploadToComplete(page, initialUrl, initialContent)
+		} else {
+			throw new Error("Could not find a suitable file input element")
+		}
+	}
+
+	/**
+	 * Finds the target file input element based on the selector
+	 * Falls back to the first available file input if the selector doesn't match
+	 *
+	 * @param page The Puppeteer page
+	 * @param selector CSS selector for the file input element
+	 * @param fileInputs Array of file input elements found on the page
+	 * @returns The target file input element or null if not found
+	 */
+	private async findTargetFileInput(
+		page: Page,
+		selector: string,
+		fileInputs: ElementHandle<Element>[],
+	): Promise<ElementHandle<Element> | null> {
+		let targetInput = null
+
+		// First try direct match
+		try {
+			targetInput = await page.$(selector)
+
+			if (targetInput) {
+				// Check if this is actually a file input
+				const isFileInput = await page.evaluate((el) => (el as HTMLInputElement).type === "file", targetInput)
+				if (!isFileInput) {
+					console.log(`[UPLOAD] Selected element with selector "${selector}" is not a file input`)
+					targetInput = null
+				}
+			}
+		} catch (err) {
+			console.log(`[UPLOAD] Error finding element with selector "${selector}": ${err.message}`)
+		}
+
+		// If we couldn't find the exact selector or it wasn't a file input,
+		// try to find the closest file input
+		if (!targetInput) {
+			console.log(`[UPLOAD] Could not find file input with selector "${selector}", trying to find any file input`)
+
+			// Just use the first file input as a fallback
+			targetInput = fileInputs[0]
+			console.log(`[UPLOAD] Using first available file input as fallback`)
+		}
+
+		return targetInput
+	}
+
+	/**
+	 * Makes a file input element accessible by modifying its styles
+	 * This is necessary for hidden file inputs that are not directly interactive
+	 *
+	 * @param page The Puppeteer page
+	 * @param inputElement The file input element
+	 * @returns The original styles to restore later
+	 */
+	private async makeFileInputAccessible(page: Page, inputElement: ElementHandle<Element>): Promise<any> {
+		return page.evaluate((el) => {
+			// Cast to HTMLInputElement to access style and other properties
+			const input = el as HTMLInputElement
+
+			// Save original values to restore later
+			const originalDisplay = input.style.display
+			const originalVisibility = input.style.visibility
+			const originalPosition = input.style.position
+
+			// Make it visible and interactive
+			input.style.display = "block"
+			input.style.visibility = "visible"
+			input.style.position = "fixed"
+			input.style.top = "0"
+			input.style.left = "0"
+			input.style.opacity = "1"
+			input.style.zIndex = "9999"
+			input.disabled = false
+
+			return { originalDisplay, originalVisibility, originalPosition }
+		}, inputElement)
+	}
+
+	/**
+	 * Restores the original styles of a file input element
+	 *
+	 * @param page The Puppeteer page
+	 * @param inputElement The file input element
+	 * @param originalStyles The original styles to restore
+	 */
+	private async restoreFileInputStyles(
+		page: Page,
+		inputElement: ElementHandle<Element>,
+		originalStyles: any,
+	): Promise<void> {
+		await page.evaluate(
+			(el, originals) => {
+				// Cast to HTMLInputElement to access style properties
+				const input = el as HTMLInputElement
+				input.style.display = originals.originalDisplay
+				input.style.visibility = originals.originalVisibility
+				input.style.position = originals.originalPosition
+			},
+			inputElement,
+			originalStyles,
+		)
+	}
+
+	/**
+	 * Attempts to upload a file using the FileChooser API
+	 * This is a fallback method that works by clicking on the file input
+	 *
+	 * @param page The Puppeteer page
+	 * @param selector CSS selector for the file input element
+	 * @param filepath Path to the file to upload
+	 * @param initialUrl The URL before the upload started
+	 * @param initialContent The page content before the upload started
+	 */
+	private async uploadWithFileChooserAPI(
+		page: Page,
+		selector: string,
+		filepath: string,
+		initialUrl: string,
+		initialContent: string,
+	): Promise<void> {
+		console.log("[UPLOAD] Trying FileChooser API method as fallback")
+		try {
+			const [fileChooser] = await Promise.all([
+				page.waitForFileChooser({ timeout: 5000 }),
+				page.click(selector).catch((err) => {
+					throw new Error(`Failed to click on selector "${selector}": ${err.message}`)
+				}),
+			])
+
+			await fileChooser.accept([filepath])
+			console.log(`[UPLOAD] File uploaded successfully using FileChooser API: ${filepath}`)
+
+			// Wait for upload to complete
+			await this.waitForUploadToComplete(page, initialUrl, initialContent)
+		} catch (fileChooserError) {
+			console.error(`[UPLOAD] FileChooser API method failed: ${fileChooserError.message}`)
+			throw new Error(
+				`Upload failed: ${fileChooserError.message}. Try using a more specific selector for the file input element.`,
+			)
+		}
+	}
+
+	/**
+	 * Waits for an upload to complete by monitoring network activity, URL changes, and UI changes
+	 *
+	 * This method uses multiple strategies to detect when an upload has completed:
+	 * 1. Monitors network activity and waits for it to settle
+	 * 2. Checks for URL changes that might indicate navigation after upload
+	 * 3. Checks for content changes that might indicate successful upload
+	 * 4. Looks for common success indicators in the page content
+	 *
+	 * @param page The Puppeteer page
+	 * @param initialUrl The URL before the upload started
+	 * @param initialContent The page content before the upload started
+	 */
+	private async waitForUploadToComplete(page: Page, initialUrl: string, initialContent: string): Promise<void> {
+		console.log("[UPLOAD] Waiting for upload to complete...")
+
+		// Wait for network activity to settle
+		try {
+			// First, wait a short time for any network activity to start
+			await delay(500)
+
+			await this.waitForNetworkActivityToSettle(page)
+
+			// Wait for HTML to stabilize
+			await this.waitTillHTMLStable(page, 10000)
+
+			// Check for changes that might indicate successful upload
+			await this.detectUploadCompletionChanges(page, initialUrl, initialContent)
+
+			console.log("[UPLOAD] Upload process completed successfully")
+		} catch (error) {
+			console.error(`[UPLOAD] Error while waiting for upload to complete: ${error.message}`)
+		}
+	}
+
+	/**
+	 * Waits for network activity to settle (no new activity for 2 seconds)
+	 *
+	 * @param page The Puppeteer page
+	 */
+	private async waitForNetworkActivityToSettle(page: Page): Promise<void> {
+		// Track network activity
+		let lastNetworkActivityTime = Date.now()
+		let hasActiveRequests = false
+
+		const requestStartListener = () => {
+			hasActiveRequests = true
+			lastNetworkActivityTime = Date.now()
+		}
+
+		const requestEndListener = () => {
+			lastNetworkActivityTime = Date.now()
+		}
+
+		page.on("request", requestStartListener)
+		page.on("requestfinished", requestEndListener)
+		page.on("requestfailed", requestEndListener)
+
+		try {
+			await pWaitFor(
+				() => {
+					const timeSinceLastActivity = Date.now() - lastNetworkActivityTime
+					const networkIsQuiet = timeSinceLastActivity > 2000
+
+					if (networkIsQuiet && hasActiveRequests) {
+						console.log("[UPLOAD] Network activity has settled")
+						return true
+					}
+
+					return false
+				},
+				{
+					timeout: 15000, // 15 seconds max wait time
+					interval: 500,
+				},
+			)
+		} catch (error) {
+			console.log("[UPLOAD] Timed out waiting for network activity to settle")
+		} finally {
+			// Clean up listeners
+			page.off("request", requestStartListener)
+			page.off("requestfinished", requestEndListener)
+			page.off("requestfailed", requestEndListener)
+		}
+	}
+
+	/**
+	 * Detects changes that might indicate a successful upload
+	 *
+	 * @param page The Puppeteer page
+	 * @param initialUrl The URL before the upload started
+	 * @param initialContent The page content before the upload started
+	 */
+	private async detectUploadCompletionChanges(page: Page, initialUrl: string, initialContent: string): Promise<void> {
+		// Check for URL changes that might indicate successful upload
+		const currentUrl = page.url()
+		if (currentUrl !== initialUrl) {
+			console.log(`[UPLOAD] URL changed after upload: ${initialUrl} -> ${currentUrl}`)
+		}
+
+		// Check for content changes that might indicate successful upload
+		const currentContent = await page.content()
+		if (currentContent.length !== initialContent.length) {
+			console.log(
+				`[UPLOAD] Page content changed after upload: ${initialContent.length} bytes -> ${currentContent.length} bytes`,
+			)
+		}
+
+		// Look for common success indicators in the page
+		const successIndicators = await this.checkForUploadSuccessIndicators(page)
+		if (successIndicators.length > 0) {
+			console.log(`[UPLOAD] Found success indicators: ${successIndicators.join(", ")}`)
+		}
+	}
+	/**
+	 * Checks for common indicators that an upload was successful
+	 *
+	 * This method looks for:
+	 * 1. Success text messages in the page content
+	 * 2. Success elements/icons that might indicate completion
+	 * 3. New file elements that might have appeared after upload
+	 *
+	 * @param page The Puppeteer page
+	 * @returns Array of success indicators found
+	 */
+	private async checkForUploadSuccessIndicators(page: Page): Promise<string[]> {
+		const indicators: string[] = []
+
+		try {
+			// Check for success messages
+			const successTexts = [
+				"success",
+				"uploaded",
+				"complete",
+				"finished",
+				"done",
+				"file uploaded",
+				"upload successful",
+				"upload complete",
+			]
+
+			// Look for success text in the page
+			const successTextFound = await page.evaluate((texts) => {
+				const pageText = document.body.innerText.toLowerCase()
+				return texts.find((text) => pageText.includes(text.toLowerCase()))
+			}, successTexts)
+
+			if (successTextFound) {
+				indicators.push(`Success text: "${successTextFound}"`)
+			}
+
+			// Check for success icons or elements
+			const successSelectors = [
+				".success",
+				".upload-success",
+				".complete",
+				".done",
+				'[data-status="success"]',
+				'[data-upload-status="complete"]',
+				".fa-check",
+				".fa-check-circle",
+				'.material-icons:contains("check")',
+			]
+
+			for (const selector of successSelectors) {
+				try {
+					const element = await page.$(selector)
+					if (element) {
+						indicators.push(`Success element: "${selector}"`)
+						break
+					}
+				} catch (error) {
+					// Ignore errors from invalid selectors
+				}
+			}
+
+			// Check for new file elements that might have appeared
+			const fileSelectors = [
+				".file",
+				".file-item",
+				".uploaded-file",
+				".document",
+				'[data-type="file"]',
+				"[data-file-type]",
+			]
+
+			for (const selector of fileSelectors) {
+				try {
+					const elements = await page.$$(selector)
+					if (elements.length > 0) {
+						indicators.push(`File elements: ${elements.length} "${selector}" elements found`)
+						break
+					}
+				} catch (error) {
+					// Ignore errors from invalid selectors
+				}
+			}
+		} catch (error) {
+			console.error(`[UPLOAD] Error checking for success indicators: ${error.message}`)
+		}
+
+		return indicators
+	}
+
+	// Helper method for testing to get element coordinates
+	async getElementCoordinatesForTest(selector: string): Promise<{ x: number; y: number } | null> {
+		if (!this.page) {
+			throw new Error("Browser page not available")
+		}
+		const element = await this.page.$(selector)
+		if (!element) {
+			return null
+		}
+		const boundingBox = await element.boundingBox()
+		if (!boundingBox) {
+			return null
+		}
+		return {
+			x: Math.round(boundingBox.x + boundingBox.width / 2),
+			y: Math.round(boundingBox.y + boundingBox.height / 2),
+		}
 	}
 }

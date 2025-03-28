@@ -1,0 +1,12 @@
+This is a test file for upload functionality.
+It contains multiple lines of text to verify that
+file uploads work correctly in the browser tool.
+
+The file upload feature should be able to:
+1. Upload files to standard file inputs
+2. Upload files to hidden file inputs
+3. Handle different file types
+4. Provide appropriate feedback
+
+This test file is used in the e2e tests to verify
+that the file upload functionality works as expected.
