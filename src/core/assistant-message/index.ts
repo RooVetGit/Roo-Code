@@ -103,8 +103,21 @@ export interface SearchFilesToolUse extends ToolUse {
 	params: Partial<Pick<Record<ToolParamName, string>, "path" | "regex" | "file_pattern">>
 }
 
+/**
+ * Tool use for listing files in a directory.
+ *
+ */
 export interface ListFilesToolUse extends ToolUse {
 	name: "list_files"
+	/**
+	 * Relative path to the directory to list files from.
+	 * Defaults to the current file's directory.
+	 *
+	 * @param path - Relative path to the directory to list files from.
+	 *              Defaults to the current file's directory.
+	 * @param recursive - Whether to list files recursively in the directory.
+	 *                    Defaults to false.
+	 */
 	params: Partial<Pick<Record<ToolParamName, string>, "path" | "recursive">>
 }
 

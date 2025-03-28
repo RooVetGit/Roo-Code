@@ -1,7 +1,9 @@
 import { globby, Options } from "globby"
 import os from "os"
 import * as path from "path"
-import { arePathsEqual } from "../../utils/path"
+import { arePathsEqual, getReadablePath } from "../../utils/path"
+import { formatResponse } from "../../core/prompts/responses"
+import { ClineSayTool } from "../../shared/ExtensionMessage"
 
 export async function listFiles(dirPath: string, recursive: boolean, limit: number): Promise<[string[], boolean]> {
 	const absolutePath = path.resolve(dirPath)
@@ -93,5 +95,126 @@ async function globbyLevelByLevel(limit: number, options?: Options) {
 	} catch (error) {
 		console.warn("Globbing timed out, returning partial results")
 		return Array.from(results)
+	}
+}
+
+export class ListFilesTool {
+	private readonly cwd: string
+	private readonly relDirPath: string
+	private readonly recursive: boolean
+	private readonly providerRef: WeakRef<any>
+	private readonly rooIgnoreController: any
+
+	constructor(
+		cwd: string,
+		relDirPath: string,
+		recursive: boolean,
+		providerRef: WeakRef<any>,
+		rooIgnoreController: any,
+	) {
+		this.cwd = cwd
+		this.relDirPath = relDirPath
+		this.recursive = recursive
+		this.providerRef = providerRef
+		this.rooIgnoreController = rooIgnoreController
+	}
+
+	public getSharedMessageProps(): ClineSayTool {
+		return {
+			tool: !this.recursive ? "listFilesTopLevel" : "listFilesRecursive",
+			path: getReadablePath(this.cwd, removeClosingTag("path", this.relDirPath)),
+		}
+	}
+
+	public async getPartialMessage(): Promise<string> {
+		return JSON.stringify({
+			...this.getSharedMessageProps(),
+			content: "",
+		} satisfies ClineSayTool)
+	}
+
+	public async execute(): Promise<string> {
+		if (!this.relDirPath) {
+			throw new Error("Missing required parameter: path")
+		}
+
+		const absolutePath = path.resolve(this.cwd, this.relDirPath)
+		const [files, didHitLimit] = await listFiles(absolutePath, this.recursive, 200)
+		const { showRooIgnoredFiles = true } = (await this.providerRef.deref()?.getState()) ?? {}
+
+		return formatResponse.formatFilesList(
+			absolutePath,
+			files,
+			didHitLimit,
+			this.rooIgnoreController,
+			showRooIgnoredFiles,
+		)
+	}
+}
+function removeClosingTag(arg0: string, relDirPath: string): string | undefined {
+	throw new Error("Function not implemented.")
+}
+
+export class ListFilesToolHandler {
+	constructor(
+		private readonly cline: any, // Type this properly based on your Cline class
+		private readonly block: {
+			params: { path?: string; recursive?: string }
+			partial?: boolean
+		},
+		private readonly pushToolResult: (result: string) => void,
+	) {}
+
+	async handle(): Promise<void> {
+		const relDirPath = this.block.params.path
+		const recursiveRaw = this.block.params.recursive
+		const recursive = recursiveRaw?.toLowerCase() === "true"
+
+		const listFilesTool = new ListFilesTool(
+			this.cline.cwd,
+			relDirPath,
+			recursive,
+			this.cline.providerRef,
+			this.cline.rooIgnoreController,
+		)
+
+		try {
+			if (this.block.partial) {
+				await this.handlePartial(listFilesTool)
+				return
+			}
+
+			if (!relDirPath) {
+				this.cline.consecutiveMistakeCount++
+				this.pushToolResult(await this.cline.sayAndCreateMissingParamError("list_files", "path"))
+				return
+			}
+
+			await this.handleComplete(listFilesTool)
+		} catch (error) {
+			await this.cline.handleError("listing files", error)
+		}
+	}
+
+	private async handlePartial(listFilesTool: ListFilesTool): Promise<void> {
+		const partialMessage = await listFilesTool.getPartialMessage()
+		await this.cline.ask("tool", partialMessage, this.block.partial).catch(() => {})
+	}
+
+	private async handleComplete(listFilesTool: ListFilesTool): Promise<void> {
+		this.cline.consecutiveMistakeCount = 0
+		const result = await listFilesTool.execute()
+
+		const completeMessage = JSON.stringify({
+			...listFilesTool.getSharedMessageProps(),
+			content: result,
+		} satisfies ClineSayTool)
+
+		const didApprove = await this.cline.askApproval("tool", completeMessage)
+		if (!didApprove) {
+			return
+		}
+
+		this.pushToolResult(result)
 	}
 }

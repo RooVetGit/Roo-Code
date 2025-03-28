@@ -1,5 +1,10 @@
 import { ToolArgs } from "./types"
 
+/**
+ * Get the tool description for the list_files tool
+ * @param args The tool arguments including cwd and toolOptions
+ * @returns The complete tool description including format requirements and examples
+ */
 export function getListFilesDescription(args: ToolArgs): string {
 	return `## list_files
 Description: Request to list files and directories within the specified directory. If recursive is true, it will list all files and directories recursively. If recursive is false or not provided, it will only list the top-level contents. Do not use this tool to confirm the existence of files you may have created, as the user will let you know if the files were created successfully or not.

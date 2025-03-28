@@ -35,7 +35,7 @@ import { ExitCodeDetails } from "../integrations/terminal/TerminalProcess"
 import { Terminal } from "../integrations/terminal/Terminal"
 import { TerminalRegistry } from "../integrations/terminal/TerminalRegistry"
 import { UrlContentFetcher } from "../services/browser/UrlContentFetcher"
-import { listFiles } from "../services/glob/list-files"
+import { listFiles, ListFilesToolHandler } from "../services/glob/list-files"
 import { regexSearchFiles } from "../services/ripgrep"
 import { parseSourceCodeDefinitionsForFile, parseSourceCodeForDefinitionsTopLevel } from "../services/tree-sitter"
 import { CheckpointStorage } from "../shared/checkpoints"
@@ -414,9 +414,29 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 	}
 
-	// Communicate with webview
-
-	// partial has three valid states true (partial message), false (completion of partial message), undefined (individual complete message)
+	/**
+	 * Sends a message to the webview and waits for a response.
+	 *
+	 * The webview will render the message as a prompt to the user, and
+	 * will respond with a `ClineAskResponse` depending on the action
+	 * taken by the user.
+	 *
+	 * The `partial` argument is a boolean value that indicates whether
+	 * the message is a partial message or a completion of a partial
+	 * message. If `partial` is `true`, the message will be rendered as
+	 * a partial message to the user. If `partial` is `false`, the
+	 * message will be rendered as a completion of the partial message.
+	 * If `partial` is `undefined`, the message will be rendered as a
+	 * complete message.
+	 *
+	 * The `progressStatus` argument is an object that indicates the
+	 * progress of a long-running tool. It is optional.
+	 *
+	 * @param type - The type of the message to send.
+	 * @param text - The text of the message to send.
+	 * @param partial - The partial state of the message.
+	 * @param progressStatus - The progress status of a long-running tool.
+	 */
 	async ask(
 		type: ClineAsk,
 		text?: string,
@@ -1315,7 +1335,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 			//throw new Error("No more content blocks to stream! This shouldn't happen...") // remove and just return after testing
 		}
 
-		const block = cloneDeep(this.assistantMessageContent[this.currentStreamingContentIndex]) // need to create copy bc while stream is updating the array, it could be updating the reference block properties too
+		const block: AssistantMessageContent = cloneDeep(
+			this.assistantMessageContent[this.currentStreamingContentIndex],
+		) // need to create copy bc while stream is updating the array, it could be updating the reference block properties too
 
 		let isCheckpointPossible = false
 
@@ -2455,54 +2477,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 					}
 
 					case "list_files": {
-						const relDirPath: string | undefined = block.params.path
-						const recursiveRaw: string | undefined = block.params.recursive
-						const recursive = recursiveRaw?.toLowerCase() === "true"
-						const sharedMessageProps: ClineSayTool = {
-							tool: !recursive ? "listFilesTopLevel" : "listFilesRecursive",
-							path: getReadablePath(this.cwd, removeClosingTag("path", relDirPath)),
-						}
-						try {
-							if (block.partial) {
-								const partialMessage = JSON.stringify({
-									...sharedMessageProps,
-									content: "",
-								} satisfies ClineSayTool)
-								await this.ask("tool", partialMessage, block.partial).catch(() => {})
-								break
-							} else {
-								if (!relDirPath) {
-									this.consecutiveMistakeCount++
-									pushToolResult(await this.sayAndCreateMissingParamError("list_files", "path"))
-									break
-								}
-								this.consecutiveMistakeCount = 0
-								const absolutePath = path.resolve(this.cwd, relDirPath)
-								const [files, didHitLimit] = await listFiles(absolutePath, recursive, 200)
-								const { showRooIgnoredFiles = true } =
-									(await this.providerRef.deref()?.getState()) ?? {}
-								const result = formatResponse.formatFilesList(
-									absolutePath,
-									files,
-									didHitLimit,
-									this.rooIgnoreController,
-									showRooIgnoredFiles,
-								)
-								const completeMessage = JSON.stringify({
-									...sharedMessageProps,
-									content: result,
-								} satisfies ClineSayTool)
-								const didApprove = await askApproval("tool", completeMessage)
-								if (!didApprove) {
-									break
-								}
-								pushToolResult(result)
-								break
-							}
-						} catch (error) {
-							await handleError("listing files", error)
-							break
-						}
+						const handler = new ListFilesToolHandler(this, block, pushToolResult)
+						await handler.handle()
+						break
 					}
 					case "list_code_definition_names": {
 						const relDirPath: string | undefined = block.params.path
