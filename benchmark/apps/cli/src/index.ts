@@ -4,7 +4,6 @@ import * as os from "os"
 
 import pMap from "p-map"
 import { build, filesystem, GluegunPrompt, GluegunToolbox } from "gluegun"
-import { runTests } from "@vscode/test-electron"
 import { execa, parseCommandString } from "execa"
 
 import { type ExerciseLanguage, exerciseLanguages, IpcOrigin, IpcMessageType, TaskEventName } from "@benchmark/types"
@@ -150,17 +149,15 @@ const runExercise = async ({ run, task }: { run: Run; task: Task }) => {
 
 	console.log(`Running ${language} / ${exercise}`)
 
-	await runTests({
-		extensionDevelopmentPath,
-		extensionTestsPath,
-		launchArgs: [workspacePath, "--disable-extensions"],
-		extensionTestsEnv: {
-			TASK_ID: task.id.toString(),
-			PROMPT_PATH: promptPath,
-			WORKSPACE_PATH: workspacePath,
-			OPENROUTER_MODEL_ID: run.model,
+	await execa({
+		env: {
+			ROO_CODE_IPC_SOCKET_PATH: run.socketPath,
+			// TASK_ID: task.id.toString(),
+			// PROMPT_PATH: promptPath,
+			// WORKSPACE_PATH: workspacePath,
+			// OPENROUTER_MODEL_ID: run.model,
 		},
-	})
+	})`code --disable-extensions ${workspacePath}`
 
 	return true
 }
