@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef, useCallback, useState } from "react"
 import styled from "styled-components"
 import { useCopyToClipboard } from "@src/utils/clipboard"
-import { getHighlighter, isLanguageLoaded, normalizeLanguage } from "@src/utils/highlighter"
+import { getHighlighter, isLanguageLoaded, normalizeLanguage, ExtendedLanguage } from "@src/utils/highlighter"
 import { bundledLanguages } from "shiki"
 import type { ShikiTransformer } from "shiki"
 export const CODE_BLOCK_BG_COLOR = "var(--vscode-editor-background, --vscode-sideBar-background, rgb(30 30 30))"
@@ -218,15 +218,21 @@ const CodeBlock = memo(
 	}: CodeBlockProps) => {
 		const [wordWrap, setWordWrap] = useState(initialWordWrap)
 		const [windowShade, setWindowShade] = useState(initialWindowShade)
-		const [currentLanguage, setCurrentLanguage] = useState(language)
-
+		const [currentLanguage, setCurrentLanguage] = useState<ExtendedLanguage>(() => normalizeLanguage(language))
 		const [highlightedCode, setHighlightedCode] = useState<string>("")
 		const [showCollapseButton, setShowCollapseButton] = useState(true)
 		const codeBlockRef = useRef<HTMLDivElement>(null)
 		const preRef = useRef<HTMLDivElement>(null)
 		const copyButtonWrapperRef = useRef<HTMLDivElement>(null)
 		const { showCopyFeedback, copyWithFeedback } = useCopyToClipboard()
-		language = normalizeLanguage(language)
+
+		// Update current language when prop changes
+		useEffect(() => {
+			const normalizedLang = normalizeLanguage(language)
+			if (normalizedLang !== currentLanguage) {
+				setCurrentLanguage(normalizedLang)
+			}
+		}, [language, currentLanguage])
 
 		// Syntax highlighting with cached Shiki instance
 		useEffect(() => {
