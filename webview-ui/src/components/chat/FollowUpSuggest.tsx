@@ -4,14 +4,14 @@ import { Button } from "../ui/button"
 
 interface FollowUpSuggestProps {
 	suggestions?: string[]
-	onSuggestionClick?: (answer: string) => void
+	onSuggestionClick?: (answer: string, event?: React.MouseEvent) => void
 	ts: number
 }
 
 const FollowUpSuggest = ({ suggestions = [], onSuggestionClick, ts = 1 }: FollowUpSuggestProps) => {
 	const handleSuggestionClick = useCallback(
-		(suggestion: string) => {
-			onSuggestionClick?.(suggestion)
+		(suggestion: string, event: React.MouseEvent) => {
+			onSuggestionClick?.(suggestion, event)
 		},
 		[onSuggestionClick],
 	)
@@ -30,7 +30,7 @@ const FollowUpSuggest = ({ suggestions = [], onSuggestionClick, ts = 1 }: Follow
 							<Button
 								variant="secondary"
 								className="w-full text-left whitespace-normal break-words h-auto min-h-[28px] py-2 justify-start"
-								onClick={() => handleSuggestionClick(suggestion)}
+								onClick={(event) => handleSuggestionClick(suggestion, event)}
 								aria-label={suggestion}>
 								<span className="text-left">{suggestion}</span>
 							</Button>
