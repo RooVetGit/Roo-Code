@@ -1,5 +1,16 @@
 # Roo Code Changelog
 
+## 3.10.6
+
+### Patch Changes
+
+- Show openrouter key balance on the settings screen
+- Remove redundant zod schemas
+- Show requesty key balance on the settings screen
+- Wrangle our settings-related types and add support for settings import / export
+- Automatically generate .d.ts from zod schemas
+- Add config getters to RooCodeAPI
+
 ## [3.10.5] - 2025-03-25
 
 - Updated value of max tokens for gemini-2.5-pro-03-25 to 65,536 (thanks @linegel!)
