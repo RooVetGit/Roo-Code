@@ -67,10 +67,10 @@ describe("truncateConversation", () => {
 		// 2 is already even, so no rounding needed
 		const result = truncateConversation(messages, 0.5)
 
-		expect(result.length).toBe(3)
+		expect(result.length).toBe(5)
 		expect(result[0]).toEqual(messages[0])
-		expect(result[1]).toEqual(messages[3])
-		expect(result[2]).toEqual(messages[4])
+		expect(result[1]).toEqual(messages[1])
+		expect(result[2]).toEqual(messages[2])
 	})
 
 	it("should round to an even number of messages to remove", () => {
@@ -88,8 +88,50 @@ describe("truncateConversation", () => {
 		// 1.8 rounds down to 1, then to 0 to make it even
 		const result = truncateConversation(messages, 0.3)
 
-		expect(result.length).toBe(7) // No messages removed
-		expect(result).toEqual(messages)
+		expect(result.length).toBe(6) // No messages removed
+		expect(result[0]).toEqual(messages[0])
+		expect(result[1]).toEqual(messages[2])
+		expect(result[2]).toEqual(messages[3])
+		expect(result[3]).toEqual(messages[4])
+		expect(result[4]).toEqual(messages[5])
+		expect(result[5]).toEqual(messages[6])
+	})
+
+	it("should round to an 1 number of messages to remove", () => {
+		const messages: Anthropic.Messages.MessageParam[] = [
+			{ role: "user", content: "First message" },
+			{ role: "assistant", content: "Second message" },
+			{ role: "user", content: "Third message" },
+			{ role: "assistant", content: "Fourth message" },
+			{ role: "user", content: "Fifth message" },
+			{ role: "assistant", content: "Sixth message" },
+			{ role: "user", content: "Seventh message" },
+			{ role: "user", content: "Eighth message" },
+			{ role: "user", content: "Ninth message" },
+			{ role: "user", content: "Tenth message" },
+			{ role: "user", content: "Eleventh message" },
+			{ role: "user", content: "Twelfth message" },
+			{ role: "user", content: "Thirteenth message" },
+			{ role: "user", content: "Fourteenth message" },
+			{ role: "user", content: "Fifteenth message" },
+			{ role: "user", content: "Sixteenth message" },
+			{ role: "user", content: "Seventeenth message" },
+			{ role: "user", content: "Eighteenth message" },
+			{ role: "user", content: "Nineteenth message" },
+			{ role: "user", content: "Twentieth message" },
+		]
+
+		// 6 messages excluding first, 0.3 fraction = 1.8 messages to remove
+		// 1.8 rounds down to 1, then to 0 to make it even
+		const result = truncateConversation(messages, 0.3)
+
+		expect(result.length).toBe(17) // No messages removed
+		expect(result[0]).toEqual(messages[0])
+		expect(result[1]).toEqual(messages[1])
+		expect(result[2]).toEqual(messages[2])
+		expect(result[4]).toEqual(messages[7])
+		expect(result[5]).toEqual(messages[8])
+		expect(result[result.length - 1]).toEqual(messages[19])
 	})
 
 	it("should handle edge case with fracToRemove = 0", () => {
@@ -116,9 +158,11 @@ describe("truncateConversation", () => {
 		// But 3 is odd, so it rounds down to 2 to make it even
 		const result = truncateConversation(messages, 1)
 
-		expect(result.length).toBe(2)
+		expect(result.length).toBe(4)
 		expect(result[0]).toEqual(messages[0])
-		expect(result[1]).toEqual(messages[3])
+		expect(result[1]).toEqual(messages[1])
+		expect(result[2]).toEqual(messages[2])
+		expect(result[3]).toEqual(messages[3])
 	})
 })
 
@@ -215,6 +259,34 @@ describe("estimateTokenCount", () => {
  * Tests for the truncateConversationIfNeeded function
  */
 describe("truncateConversationIfNeeded", () => {
+	it("should truncate when message count exceeds MAX_HISTORY_MESSAGES", async () => {
+		const MAX_HISTORY_MESSAGES = 100
+
+		const messages: Anthropic.Messages.MessageParam[] = []
+		messages.push({ role: "user", content: "System message" }) // 系统消息
+
+		for (let i = 1; i <= MAX_HISTORY_MESSAGES; i++) {
+			messages.push({ role: i % 2 === 1 ? "user" : "assistant", content: `Message ${i}` })
+		}
+
+		expect(messages.length).toBeGreaterThan(MAX_HISTORY_MESSAGES)
+
+		const result = await truncateConversationIfNeeded({
+			messages,
+			totalTokens: 1000,
+			contextWindow: 100000,
+			maxTokens: 30000,
+			apiHandler: mockApiHandler,
+		})
+
+		expect(result.length).toBeLessThan(messages.length)
+		expect(result[0]).toEqual(messages[0])
+		expect(result.length).toBeLessThan(MAX_HISTORY_MESSAGES)
+
+		const expectedMaxLength = Math.ceil(messages.length * 0.3) + 1 // +1 因为第一条消息总是保留
+		expect(result.length).toBeLessThanOrEqual(expectedMaxLength)
+	})
+
 	const createModelInfo = (contextWindow: number, maxTokens?: number): ModelInfo => ({
 		contextWindow,
 		supportsPromptCache: true,
@@ -391,7 +463,7 @@ describe("truncateConversationIfNeeded", () => {
 	it("should truncate if tokens are within TOKEN_BUFFER_PERCENTAGE of the threshold", async () => {
 		const modelInfo = createModelInfo(100000, 30000)
 		const maxTokens = 100000 - 30000 // 70000
-		const dynamicBuffer = modelInfo.contextWindow * TOKEN_BUFFER_PERCENTAGE // 10% of 100000 = 10000
+		const dynamicBuffer = modelInfo.contextWindow * TOKEN_BUFFER_PERCENTAGE // 10% of context window = 10000
 		const totalTokens = 70000 - dynamicBuffer + 1 // Just within the dynamic buffer of threshold (70000)
 
 		// Create messages with very small content in the last one to avoid token overflow
