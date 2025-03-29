@@ -39,7 +39,7 @@ export interface ExtensionMessage {
 		| "theme"
 		| "workspaceUpdated"
 		| "invoke"
-		| "partialMessage"
+		| "updatePartialMessage"
 		| "openRouterModels"
 		| "glamaModels"
 		| "unboundModels"
@@ -89,7 +89,7 @@ export interface ExtensionMessage {
 		isActive: boolean
 		path?: string
 	}>
-	partialMessage?: ClineMessage
+	clineMessage?: ClineMessage
 	openRouterModels?: Record<string, ModelInfo>
 	glamaModels?: Record<string, ModelInfo>
 	unboundModels?: Record<string, ModelInfo>
