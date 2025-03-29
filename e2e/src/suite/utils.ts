@@ -61,13 +61,16 @@ export const waitUntilAborted = async ({ api, taskId, ...options }: WaitUntilAbo
 	await waitFor(() => set.has(taskId), options)
 }
 
-export const waitForCompletion = async ({
-	api,
-	taskId,
-	...options
-}: WaitUntilReadyOptions & {
+type WaitUntilCompletedOptions = WaitForOptions & {
+	api: RooCodeAPI
 	taskId: string
-}) => waitFor(() => !!getCompletion({ api, taskId }), options)
+}
+
+export const waitUntilCompleted = async ({ api, taskId, ...options }: WaitUntilCompletedOptions) => {
+	const set = new Set<string>()
+	api.on("taskCompleted", (taskId) => set.add(taskId))
+	await waitFor(() => set.has(taskId), options)
+}
 
 export const getCompletion = ({ api, taskId }: { api: RooCodeAPI; taskId: string }) =>
 	api.getMessages(taskId).find(({ say, partial }) => say === "completion_result" && partial === false)

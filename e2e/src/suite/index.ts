@@ -26,7 +26,7 @@ export async function run() {
 	await api.setConfiguration({
 		apiProvider: "openrouter",
 		openRouterApiKey: process.env.OPENROUTER_API_KEY!,
-		openRouterModelId: "anthropic/claude-3.5-sonnet",
+		openRouterModelId: "google/gemini-2.0-flash-001", // "anthropic/claude-3.5-sonnet",
 	})
 
 	await waitUntilReady({ api })
