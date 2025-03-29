@@ -1,6 +1,6 @@
 import { VSCodeButton, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 import debounce from "debounce"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { useDeepCompareEffect, useEvent, useMount } from "react-use"
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
 import styled from "styled-components"
@@ -94,7 +94,11 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	const disableAutoScrollRef = useRef(false)
 	const [showScrollToBottom, setShowScrollToBottom] = useState(false)
 	const [isAtBottom, setIsAtBottom] = useState(false)
+	const [firstVisibleIndex, setFirstVisibleIndex] = useState(0);
 	const lastTtsRef = useRef<string>("")
+	const userScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const expandingRowTsRef = useRef<number | null>(null);
+	const topItemIndexBeforeExpandRef = useRef<number | null>(null);
 
 	const [wasStreaming, setWasStreaming] = useState<boolean>(false)
 	const [showCheckpointWarning, setShowCheckpointWarning] = useState<boolean>(false)
@@ -890,57 +894,60 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	// scroll when user toggles certain rows
 	const toggleRowExpansion = useCallback(
 		(ts: number) => {
-			const isCollapsing = expandedRows[ts] ?? false
-			const lastGroup = groupedMessages.at(-1)
-			const isLast = Array.isArray(lastGroup) ? lastGroup[0].ts === ts : lastGroup?.ts === ts
-			const secondToLastGroup = groupedMessages.at(-2)
+			const isCollapsing = expandedRows[ts] ?? false;
+			const lastGroup = groupedMessages.at(-1);
+			const isLast = Array.isArray(lastGroup) ? lastGroup[0].ts === ts : lastGroup?.ts === ts;
+			const secondToLastGroup = groupedMessages.at(-2);
 			const isSecondToLast = Array.isArray(secondToLastGroup)
 				? secondToLastGroup[0].ts === ts
-				: secondToLastGroup?.ts === ts
+				: secondToLastGroup?.ts === ts;
 
 			const isLastCollapsedApiReq =
 				isLast &&
 				!Array.isArray(lastGroup) && // Make sure it's not a browser session group
 				lastGroup?.say === "api_req_started" &&
-				!expandedRows[lastGroup.ts]
+				!expandedRows[lastGroup.ts];
+
+			// --- START: Record state before expansion ---
+			if (!isCollapsing) {
+				expandingRowTsRef.current = ts;
+				// Read from state variable updated by rangeChanged prop
+				topItemIndexBeforeExpandRef.current = firstVisibleIndex;
+				// disable auto scroll when user expands row
+				disableAutoScrollRef.current = true;
+			} else {
+				// Reset refs if collapsing
+				expandingRowTsRef.current = null;
+				topItemIndexBeforeExpandRef.current = null;
+			}
+			// --- END: Record state before expansion ---
 
 			setExpandedRows((prev) => ({
 				...prev,
 				[ts]: !prev[ts],
-			}))
+			}));
 
-			// disable auto scroll when user expands row
-			if (!isCollapsing) {
-				disableAutoScrollRef.current = true
-			}
-
+			// Keep existing collapse logic
 			if (isCollapsing && isAtBottom) {
 				const timer = setTimeout(() => {
-					scrollToBottomAuto()
-				}, 0)
-				return () => clearTimeout(timer)
+					scrollToBottomAuto();
+				}, 0);
+				return () => clearTimeout(timer);
 			} else if (isLast || isSecondToLast) {
 				if (isCollapsing) {
 					if (isSecondToLast && !isLastCollapsedApiReq) {
-						return
+						return;
 					}
 					const timer = setTimeout(() => {
-						scrollToBottomAuto()
-					}, 0)
-					return () => clearTimeout(timer)
-				} else {
-					const timer = setTimeout(() => {
-						virtuosoRef.current?.scrollToIndex({
-							index: groupedMessages.length - (isLast ? 1 : 2),
-							align: "start",
-						})
-					}, 0)
-					return () => clearTimeout(timer)
+						scrollToBottomAuto();
+					}, 0);
+					return () => clearTimeout(timer);
 				}
+				// NOTE: The 'else' block for scrolling *to* the expanded item was removed previously
 			}
 		},
-		[groupedMessages, expandedRows, scrollToBottomAuto, isAtBottom],
-	)
+		[groupedMessages, expandedRows, scrollToBottomAuto, isAtBottom, firstVisibleIndex], // Add firstVisibleIndex dependency
+	);
 
 	const handleRowHeightChange = useCallback(
 		(isTaller: boolean) => {
@@ -967,15 +974,39 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	}, [groupedMessages.length, scrollToBottomSmooth])
 
 	const handleWheel = useCallback((event: Event) => {
-		const wheelEvent = event as WheelEvent
+		const wheelEvent = event as WheelEvent;
 		if (wheelEvent.deltaY && wheelEvent.deltaY < 0) {
 			if (scrollContainerRef.current?.contains(wheelEvent.target as Node)) {
 				// user scrolled up
-				disableAutoScrollRef.current = true
+				disableAutoScrollRef.current = true;
+				// Clear any existing timeout
+				if (userScrollTimeoutRef.current) {
+					clearTimeout(userScrollTimeoutRef.current);
+				}
+				// Start a new timeout to re-enable auto-scroll check after a delay
+				userScrollTimeoutRef.current = setTimeout(() => {
+					userScrollTimeoutRef.current = null;
+					// Check if we are at the bottom *after* the timeout expires
+					// and re-enable auto-scroll if necessary.
+					// We need to access the state value via the ref/state variable
+					// directly if possible, or pass isAtBottom state to this callback.
+					// Simpler approach: Let atBottomStateChange handle re-enabling.
+				}, 500); // 500ms delay
 			}
 		}
-	}, [])
-	useEvent("wheel", handleWheel, window, { passive: true }) // passive improves scrolling performance
+	}, []); // Removed isAtBottom dependency as the timeout handles it indirectly
+	
+	// Effect to attach/detach wheel listener and clean up timeout
+	useEffect(() => {
+		window.addEventListener("wheel", handleWheel, { passive: true }); // passive improves scrolling performance
+		return () => {
+			window.removeEventListener("wheel", handleWheel);
+			// Clear timeout on unmount
+			if (userScrollTimeoutRef.current) {
+				clearTimeout(userScrollTimeoutRef.current);
+			}
+		};
+	}, [handleWheel]); // Add handleWheel dependency
 
 	// Effect to handle showing the checkpoint warning after a delay
 	useEffect(() => {
@@ -995,6 +1026,21 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			setShowCheckpointWarning(false)
 		}
 	}, [modifiedMessages.length, isStreaming])
+
+	// Check if near an expanded API dialog (heuristic)
+	const isNearExpandedApiDialog = useCallback(() => {
+		const lastGroup = groupedMessages.at(-1);
+		const secondLastGroup = groupedMessages.at(-2);
+
+		const isLastApiReq = !Array.isArray(lastGroup) && lastGroup?.say === "api_req_started";
+		const isLastExpanded = isLastApiReq && !!expandedRows[lastGroup.ts];
+
+		const isSecondLastApiReq = !Array.isArray(secondLastGroup) && secondLastGroup?.say === "api_req_started";
+		const isSecondLastExpanded = isSecondLastApiReq && !!expandedRows[secondLastGroup.ts];
+
+		// Return true if the last or second-to-last message is an expanded API request
+		return isLastExpanded || isSecondLastExpanded;
+	}, [groupedMessages, expandedRows]);
 
 	// Checkpoint warning component
 	const CheckpointWarningMessage = useCallback(
@@ -1071,6 +1117,28 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			handleSendMessage,
 		],
 	)
+
+	useLayoutEffect(() => {
+		// Check if an expansion just happened and user was scrolled up
+		if (
+			expandingRowTsRef.current !== null &&
+			disableAutoScrollRef.current &&
+			topItemIndexBeforeExpandRef.current !== null
+		) {
+			try {
+				virtuosoRef.current?.scrollToIndex({
+					index: topItemIndexBeforeExpandRef.current,
+					align: "start",
+					behavior: "auto", // Use 'auto' for immediate adjustment after layout
+				});
+			} catch (error) {
+				console.error("Error scrolling to index:", error);
+			}
+		}
+		// Reset refs after the effect runs
+		expandingRowTsRef.current = null;
+		topItemIndexBeforeExpandRef.current = null;
+	}, [expandedRows]); // Dependency: run when expansion state changes
 
 	useEffect(() => {
 		// Only proceed if we have an ask and buttons are enabled
@@ -1227,22 +1295,32 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							style={{
 								flexGrow: 1,
 								overflowY: "scroll", // always show scrollbar
+								overflowAnchor: "auto", // Explicitly set CSS anchor scrolling
 							}}
 							components={{
 								Footer: () => <div style={{ height: 5 }} />, // Add empty padding at the bottom
 							}}
-							// increasing top by 3_000 to prevent jumping around when user collapses a row
-							increaseViewportBy={{ top: 3_000, bottom: Number.MAX_SAFE_INTEGER }} // hack to make sure the last message is always rendered to get truly perfect scroll to bottom animation when new messages are added (Number.MAX_SAFE_INTEGER is safe for arithmetic operations, which is all virtuoso uses this value for in src/sizeRangeSystem.ts)
+							// Adjust viewport increase
+							increaseViewportBy={{ top: 1000, bottom: 3000 }}
 							data={groupedMessages} // messages is the raw format returned by extension, modifiedMessages is the manipulated structure that combines certain messages of related type, and visibleMessages is the filtered structure that removes messages that should not be rendered
 							itemContent={itemContent}
-							atBottomStateChange={(isAtBottom) => {
-								setIsAtBottom(isAtBottom)
-								if (isAtBottom) {
-									disableAutoScrollRef.current = false
-								}
-								setShowScrollToBottom(disableAutoScrollRef.current && !isAtBottom)
+							rangeChanged={({ startIndex }) => {
+								setFirstVisibleIndex(startIndex);
 							}}
-							atBottomThreshold={10} // anything lower causes issues with followOutput
+							atBottomStateChange={(isAtBottom) => {
+								setIsAtBottom(isAtBottom);
+								if (isAtBottom) {
+									// Only re-enable auto-scroll if the user scroll timeout is not active
+									// AND we are not near an expanded API dialog at the bottom
+									if (userScrollTimeoutRef.current === null && !isNearExpandedApiDialog()) {
+										disableAutoScrollRef.current = false;
+									}
+								}
+								// Update scroll-to-bottom button visibility regardless of timeout/expanded state
+								setShowScrollToBottom(disableAutoScrollRef.current && !isAtBottom);
+							}}
+							// Increase threshold
+							atBottomThreshold={50}
 							initialTopMostItemIndex={groupedMessages.length - 1}
 						/>
 					</div>
@@ -1257,6 +1335,11 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 								onClick={() => {
 									scrollToBottomSmooth()
 									disableAutoScrollRef.current = false
+									// Clear any pending timeout if user clicks the button
+									if (userScrollTimeoutRef.current) {
+										clearTimeout(userScrollTimeoutRef.current);
+										userScrollTimeoutRef.current = null;
+									}
 								}}
 								title={t("chat:scrollToBottom")}>
 								<span className="codicon codicon-chevron-down" style={{ fontSize: "18px" }}></span>
