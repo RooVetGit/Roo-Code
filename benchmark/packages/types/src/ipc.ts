@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { RooCodeEventName, rooCodeEventsSchema } from "./roo-code.js"
+import { RooCodeEventName, rooCodeEventsSchema, rooCodeSettingsSchema } from "./roo-code.js"
 
 /**
  * TaskCommand
@@ -14,8 +14,10 @@ export const taskCommandSchema = z.discriminatedUnion("commandName", [
 	z.object({
 		commandName: z.literal(TaskCommandName.StartNewTask),
 		data: z.object({
+			configuration: rooCodeSettingsSchema,
 			text: z.string(),
 			images: z.array(z.string()).optional(),
+			newTab: z.boolean().optional(),
 		}),
 	}),
 ])
@@ -28,44 +30,59 @@ export type TaskCommand = z.infer<typeof taskCommandSchema>
 
 export const taskEventSchema = z.discriminatedUnion("eventName", [
 	z.object({
+		eventName: z.literal(RooCodeEventName.Connect),
+		payload: z.unknown(),
+		taskId: z.number(),
+	}),
+	z.object({
 		eventName: z.literal(RooCodeEventName.Message),
 		payload: rooCodeEventsSchema.shape[RooCodeEventName.Message],
+		taskId: z.number().optional(),
 	}),
 	z.object({
 		eventName: z.literal(RooCodeEventName.TaskCreated),
 		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskCreated],
+		taskId: z.number().optional(),
 	}),
 	z.object({
 		eventName: z.literal(RooCodeEventName.TaskStarted),
 		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskStarted],
+		taskId: z.number().optional(),
 	}),
 	z.object({
 		eventName: z.literal(RooCodeEventName.TaskPaused),
 		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskPaused],
+		taskId: z.number().optional(),
 	}),
 	z.object({
 		eventName: z.literal(RooCodeEventName.TaskUnpaused),
 		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskUnpaused],
+		taskId: z.number().optional(),
 	}),
 	z.object({
 		eventName: z.literal(RooCodeEventName.TaskAskResponded),
 		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskAskResponded],
+		taskId: z.number().optional(),
 	}),
 	z.object({
 		eventName: z.literal(RooCodeEventName.TaskAborted),
 		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskAborted],
+		taskId: z.number().optional(),
 	}),
 	z.object({
 		eventName: z.literal(RooCodeEventName.TaskSpawned),
 		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskSpawned],
+		taskId: z.number().optional(),
 	}),
 	z.object({
 		eventName: z.literal(RooCodeEventName.TaskCompleted),
 		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskCompleted],
+		taskId: z.number().optional(),
 	}),
 	z.object({
 		eventName: z.literal(RooCodeEventName.TaskTokenUsageUpdated),
 		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskTokenUsageUpdated],
+		taskId: z.number().optional(),
 	}),
 ])
 

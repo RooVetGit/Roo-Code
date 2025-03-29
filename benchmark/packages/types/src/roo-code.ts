@@ -623,6 +623,8 @@ export const GLOBAL_SETTINGS_KEYS = Object.keys(globalSettingsRecord) as Keys<Gl
  * RooCodeSettings
  */
 
+export const rooCodeSettingsSchema = providerSettingsSchema.merge(globalSettingsSchema)
+
 export type RooCodeSettings = GlobalSettings & ProviderSettings
 
 /**
@@ -789,6 +791,7 @@ export type TokenUsage = z.infer<typeof tokenUsageSchema>
  */
 
 export enum RooCodeEventName {
+	Connect = "connect",
 	Message = "message",
 	TaskCreated = "taskCreated",
 	TaskStarted = "taskStarted",

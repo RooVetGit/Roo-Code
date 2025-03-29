@@ -38,33 +38,43 @@ export const useRunStatus = (run: Run) => {
 			return
 		}
 
-		const { eventName, payload } = result.data
+		const { eventName, payload, taskId } = result.data
 
-		// switch (eventName) {
-		// 	case RooCodeEventName.Connect:
-		// 	case RooCodeEventName.TaskStarted:
-		// 		setRunningTaskId(taskId)
-		// 		break
-		// 	case RooCodeEventName.TaskFinished:
-		// 		setRunningTaskId(undefined)
-		// 		break
-		// 	case RooCodeEventName.Message: {
-		// 		const text = payload.data.message.message.text
+		if (!taskId) {
+			console.log(`no taskId: ${messageEvent.data}`)
+			return
+		}
 
-		// 		if (text) {
-		// 			outputRef.current.set(taskId, [...(outputRef.current.get(taskId) || []), text])
-		// 			const outputCounts: Record<number, number> = {}
+		switch (eventName) {
+			case RooCodeEventName.Connect:
+			case RooCodeEventName.TaskCreated:
+			case RooCodeEventName.TaskStarted:
+				setRunningTaskId(taskId)
+				break
+			case RooCodeEventName.TaskCompleted:
+				setRunningTaskId(undefined)
+				break
+			case RooCodeEventName.Message: {
+				const [
+					{
+						message: { text },
+					},
+				] = payload
 
-		// 			for (const [taskId, messages] of outputRef.current.entries()) {
-		// 				outputCounts[taskId] = messages.length
-		// 			}
+				if (text) {
+					outputRef.current.set(taskId, [...(outputRef.current.get(taskId) || []), text])
+					const outputCounts: Record<number, number> = {}
 
-		// 			setOutputCounts(outputCounts)
-		// 		}
+					for (const [taskId, messages] of outputRef.current.entries()) {
+						outputCounts[taskId] = messages.length
+					}
 
-		// 		break
-		// 	}
-		// }
+					setOutputCounts(outputCounts)
+				}
+
+				break
+			}
+		}
 	}, [])
 
 	const status = useEventSource({ url, onMessage })

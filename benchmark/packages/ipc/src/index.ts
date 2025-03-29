@@ -34,28 +34,28 @@ export class IpcClient extends EventEmitter<IpcClientEvents> {
 		ipc.config.silent = true
 
 		ipc.connectTo("benchmarkServer", this.socketPath, () => {
-			ipc.of.benchmarkServer?.on("connect", (args) => this.onConnect(args))
-			ipc.of.benchmarkServer?.on("disconnect", (args) => this.onDisconnect(args))
+			ipc.of.benchmarkServer?.on("connect", () => this.onConnect())
+			ipc.of.benchmarkServer?.on("disconnect", () => this.onDisconnect())
 			ipc.of.benchmarkServer?.on("message", (data) => this.onMessage(data))
 		})
 	}
 
-	private onConnect(args: unknown) {
+	private onConnect() {
 		if (this._isConnected) {
 			return
 		}
 
-		this.log("[client#onConnect]", args)
+		this.log("[client#onConnect]")
 		this._isConnected = true
 		this.emit("connect")
 	}
 
-	private onDisconnect(args: unknown) {
+	private onDisconnect() {
 		if (!this._isConnected) {
 			return
 		}
 
-		this.log("[client#onDisconnect]", args)
+		this.log("[client#onDisconnect]")
 		this._isConnected = false
 		this.emit("disconnect")
 	}

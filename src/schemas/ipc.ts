@@ -7,24 +7,17 @@ import { RooCodeEventName, rooCodeEventsSchema, rooCodeSettingsSchema } from "./
  */
 
 export enum TaskCommandName {
-	GetSettings = "GetSettings",
-	PutSettings = "PutSettings",
 	StartNewTask = "StartNewTask",
 }
 
 export const taskCommandSchema = z.discriminatedUnion("commandName", [
 	z.object({
-		commandName: z.literal(TaskCommandName.GetSettings),
-	}),
-	z.object({
-		commandName: z.literal(TaskCommandName.PutSettings),
-		data: rooCodeSettingsSchema,
-	}),
-	z.object({
 		commandName: z.literal(TaskCommandName.StartNewTask),
 		data: z.object({
+			configuration: rooCodeSettingsSchema,
 			text: z.string(),
 			images: z.array(z.string()).optional(),
+			newTab: z.boolean().optional(),
 		}),
 	}),
 ])
