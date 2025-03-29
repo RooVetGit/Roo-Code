@@ -2621,7 +2621,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			remoteBrowserHost,
 			remoteBrowserEnabled: remoteBrowserEnabled ?? false,
 			cachedChromeHostUrl: cachedChromeHostUrl,
-			preferredLanguage: language ?? "English",
 			writeDelayMs: writeDelayMs ?? 1000,
 			terminalOutputLineLimit: terminalOutputLineLimit ?? 500,
 			terminalShellIntegrationTimeout: terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT,
