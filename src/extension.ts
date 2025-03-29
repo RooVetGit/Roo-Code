@@ -115,9 +115,8 @@ export async function activate(context: vscode.ExtensionContext) {
 	registerCodeActions(context)
 	registerTerminalActions(context)
 
-	if (process.env.ROO_CODE_IPC_SOCKET_PATH) {
-		outputChannel.appendLine(`ROO_CODE_IPC_SOCKET_PATH: ${process.env.ROO_CODE_IPC_SOCKET_PATH}`)
-	}
+	// Allows other extensions to activate once Roo is ready.
+	vscode.commands.executeCommand("roo-cline.activationCompleted")
 
 	// Implements the `RooCodeAPI` interface.
 	return new API(outputChannel, provider, process.env.ROO_CODE_IPC_SOCKET_PATH)
