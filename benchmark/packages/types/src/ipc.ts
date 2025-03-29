@@ -1,60 +1,6 @@
 import { z } from "zod"
 
-/**
- * TaskEvent
- */
-
-export enum TaskEventName {
-	Connect = "Connect",
-	TaskStarted = "TaskStarted",
-	Message = "Message",
-	TaskTokenUsageUpdated = "TaskTokenUsageUpdated",
-	TaskFinished = "TaskFinished",
-}
-
-export const taskEventSchema = z.discriminatedUnion("eventName", [
-	z.object({
-		eventName: z.literal(TaskEventName.Connect),
-		data: z.object({ task: z.object({ id: z.number() }) }),
-	}),
-	z.object({
-		eventName: z.literal(TaskEventName.TaskStarted),
-		data: z.object({ task: z.object({ id: z.number() }) }),
-	}),
-	z.object({
-		eventName: z.literal(TaskEventName.Message),
-		data: z.object({
-			task: z.object({ id: z.number() }),
-			message: z.object({
-				taskId: z.string(),
-				action: z.enum(["created", "updated"]),
-				message: z.object({
-					// See ClineMessage.
-					ts: z.number(),
-					type: z.enum(["ask", "say"]),
-					ask: z.string().optional(),
-					say: z.string().optional(),
-					partial: z.boolean().optional(),
-					text: z.string().optional(),
-					reasoning: z.string().optional(),
-				}),
-			}),
-		}),
-	}),
-	z.object({
-		eventName: z.literal(TaskEventName.TaskTokenUsageUpdated),
-		data: z.object({
-			task: z.object({ id: z.number() }),
-			usage: z.object({}),
-		}),
-	}),
-	z.object({
-		eventName: z.literal(TaskEventName.TaskFinished),
-		data: z.object({ task: z.object({ id: z.number() }), taskMetrics: z.unknown() }),
-	}),
-])
-
-export type TaskEvent = z.infer<typeof taskEventSchema>
+import { RooCodeEventName, rooCodeEventsSchema } from "./roo-code.js"
 
 /**
  * TaskCommand
@@ -75,6 +21,55 @@ export const taskCommandSchema = z.discriminatedUnion("commandName", [
 ])
 
 export type TaskCommand = z.infer<typeof taskCommandSchema>
+
+/**
+ * TaskEvent
+ */
+
+export const taskEventSchema = z.discriminatedUnion("eventName", [
+	z.object({
+		eventName: z.literal(RooCodeEventName.Message),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.Message],
+	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.TaskCreated),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskCreated],
+	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.TaskStarted),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskStarted],
+	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.TaskPaused),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskPaused],
+	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.TaskUnpaused),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskUnpaused],
+	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.TaskAskResponded),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskAskResponded],
+	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.TaskAborted),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskAborted],
+	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.TaskSpawned),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskSpawned],
+	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.TaskCompleted),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskCompleted],
+	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.TaskTokenUsageUpdated),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskTokenUsageUpdated],
+	}),
+])
+
+export type TaskEvent = z.infer<typeof taskEventSchema>
 
 /**
  * IpcMessage

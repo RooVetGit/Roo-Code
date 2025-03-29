@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from "react"
 import { useQuery, keepPreviousData } from "@tanstack/react-query"
 
-import { TaskEventName, taskEventSchema } from "@benchmark/types"
+import { RooCodeEventName, taskEventSchema } from "@benchmark/types"
 import { Run } from "@benchmark/db"
 
 import { getTasks } from "@/lib/server/tasks"
@@ -38,34 +38,33 @@ export const useRunStatus = (run: Run) => {
 			return
 		}
 
-		const payload = result.data
-		const taskId = payload.data.task.id
+		const { eventName, payload } = result.data
 
-		switch (payload.eventName) {
-			case TaskEventName.Connect:
-			case TaskEventName.TaskStarted:
-				setRunningTaskId(taskId)
-				break
-			case TaskEventName.TaskFinished:
-				setRunningTaskId(undefined)
-				break
-			case TaskEventName.Message: {
-				const text = payload.data.message.message.text
+		// switch (eventName) {
+		// 	case RooCodeEventName.Connect:
+		// 	case RooCodeEventName.TaskStarted:
+		// 		setRunningTaskId(taskId)
+		// 		break
+		// 	case RooCodeEventName.TaskFinished:
+		// 		setRunningTaskId(undefined)
+		// 		break
+		// 	case RooCodeEventName.Message: {
+		// 		const text = payload.data.message.message.text
 
-				if (text) {
-					outputRef.current.set(taskId, [...(outputRef.current.get(taskId) || []), text])
-					const outputCounts: Record<number, number> = {}
+		// 		if (text) {
+		// 			outputRef.current.set(taskId, [...(outputRef.current.get(taskId) || []), text])
+		// 			const outputCounts: Record<number, number> = {}
 
-					for (const [taskId, messages] of outputRef.current.entries()) {
-						outputCounts[taskId] = messages.length
-					}
+		// 			for (const [taskId, messages] of outputRef.current.entries()) {
+		// 				outputCounts[taskId] = messages.length
+		// 			}
 
-					setOutputCounts(outputCounts)
-				}
+		// 			setOutputCounts(outputCounts)
+		// 		}
 
-				break
-			}
-		}
+		// 		break
+		// 	}
+		// }
 	}, [])
 
 	const status = useEventSource({ url, onMessage })

@@ -3,12 +3,20 @@ import * as path from "path"
 import * as os from "os"
 
 import pMap from "p-map"
-import { build, filesystem, GluegunPrompt, GluegunToolbox } from "gluegun"
+import pWaitFor from "p-wait-for"
 import { execa, parseCommandString } from "execa"
+import { build, filesystem, GluegunPrompt, GluegunToolbox } from "gluegun"
 
-import { type ExerciseLanguage, exerciseLanguages, IpcOrigin, IpcMessageType, TaskEventName } from "@benchmark/types"
+import {
+	type ExerciseLanguage,
+	exerciseLanguages,
+	RooCodeEventName,
+	IpcOrigin,
+	IpcMessageType,
+	TaskCommandName,
+} from "@benchmark/types"
 import { type Run, findRun, createRun, finishRun, createTask, Task, getTasks, updateTask } from "@benchmark/db"
-import { IpcServer } from "@benchmark/ipc"
+import { IpcServer, IpcClient } from "@benchmark/ipc"
 
 import { __dirname, extensionDevelopmentPath, exercisesPath } from "./paths.js"
 import { getExercises } from "./exercises.js"
@@ -72,25 +80,25 @@ const run = async (toolbox: GluegunToolbox) => {
 		throw new Error("No tasks found.")
 	}
 
-	const server = new IpcServer(run.socketPath, () => {})
-	server.listen()
+	// const server = new IpcServer(run.socketPath, () => {})
+	// server.listen()
 
-	server.on("connect", (clientId) => {
-		server.send(clientId, {
-			type: IpcMessageType.TaskEvent,
-			origin: IpcOrigin.Server,
-			data: { eventName: TaskEventName.Connect, data: { task: currentTask! } },
-		})
-	})
+	// server.on("connect", (clientId) => {
+	// 	server.send(clientId, {
+	// 		type: IpcMessageType.TaskEvent,
+	// 		origin: IpcOrigin.Server,
+	// 		data: { eventName: TaskEventName.Connect, data: { task: currentTask! } },
+	// 	})
+	// })
 
-	server.on("taskEvent", (relayClientId, data) => {
-		server.broadcast({
-			type: IpcMessageType.TaskEvent,
-			origin: IpcOrigin.Server,
-			relayClientId,
-			data,
-		})
-	})
+	// server.on("taskEvent", (relayClientId, data) => {
+	// 	server.broadcast({
+	// 		type: IpcMessageType.TaskEvent,
+	// 		origin: IpcOrigin.Server,
+	// 		relayClientId,
+	// 		data,
+	// 	})
+	// })
 
 	for (const task of tasks) {
 		currentTask = task
@@ -136,30 +144,82 @@ const run = async (toolbox: GluegunToolbox) => {
 const runExercise = async ({ run, task }: { run: Run; task: Task }) => {
 	const { language, exercise } = task
 	const workspacePath = path.resolve(exercisesPath, language, exercise)
-	const promptPath = path.resolve(exercisesPath, `prompts/${language}.md`)
-
-	if (!fs.existsSync(promptPath)) {
-		throw new Error(`Prompt file does not exist: ${promptPath}`)
-	}
 
 	if (task.finishedAt) {
 		console.log(`Test result exists for ${language} / ${exercise}, skipping`)
 		return false
 	}
 
+	const promptPath = path.resolve(exercisesPath, `prompts/${language}.md`)
+
+	if (!fs.existsSync(promptPath)) {
+		throw new Error(`Prompt file does not exist: ${promptPath}`)
+	}
+
+	const prompt = fs.readFileSync(promptPath, "utf-8")
+
+	console.log(`code -n ${workspacePath}`)
+	const dirname = path.dirname(run.socketPath)
+	const basename = path.basename(run.socketPath, ".sock")
+	const taskSocketPath = path.resolve(dirname, `${dirname}/${basename}-${task.id}.sock`)
+	await execa({ env: { ROO_CODE_IPC_SOCKET_PATH: taskSocketPath } })`code -n ${workspacePath}`
+
+	console.log(`Connecting to ${taskSocketPath}`)
+	let tries = 0
+	let client = new IpcClient(taskSocketPath)
+
+	while (true) {
+		try {
+			await pWaitFor(() => client.isConnected, { interval: 250, timeout: 1_000 })
+			break
+		} catch (error) {
+			console.error(error)
+
+			if (++tries > 10) {
+				return false
+			}
+
+			client = new IpcClient(taskSocketPath)
+		}
+	}
+
 	console.log(`Running ${language} / ${exercise}`)
 
-	await execa({
-		env: {
-			ROO_CODE_IPC_SOCKET_PATH: run.socketPath,
-			// TASK_ID: task.id.toString(),
-			// PROMPT_PATH: promptPath,
-			// WORKSPACE_PATH: workspacePath,
-			// OPENROUTER_MODEL_ID: run.model,
+	client.sendMessage({
+		type: IpcMessageType.TaskCommand,
+		origin: IpcOrigin.Client,
+		clientId: client.clientId!,
+		data: {
+			commandName: TaskCommandName.StartNewTask,
+			data: { text: prompt },
 		},
-	})`code --disable-extensions ${workspacePath}`
+	})
 
-	return true
+	let isTaskFinished = false
+
+	client.on("taskEvent", ({ eventName, payload }) => {
+		console.log(`${eventName}`)
+
+		if (eventName === RooCodeEventName.Message) {
+			const { message } = payload[0]
+			console.log(`${message.ts}: ${message.text}`)
+		}
+
+		if (eventName === RooCodeEventName.TaskCompleted || eventName === RooCodeEventName.TaskAborted) {
+			console.log("task finished")
+			isTaskFinished = true
+		}
+	})
+
+	try {
+		await pWaitFor(() => isTaskFinished, { interval: 1_000, timeout: 300 * 1_000 })
+		client.disconnect()
+		return true
+	} catch (error) {
+		console.error(error)
+		client.disconnect()
+		return false
+	}
 }
 
 const askLanguage = async (prompt: GluegunPrompt) => {
