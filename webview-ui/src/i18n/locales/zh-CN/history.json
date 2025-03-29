@@ -34,5 +34,7 @@
 	"deleteTasks": "删除任务",
 	"confirmDeleteTasks": "确定要删除 {{count}} 个任务吗？",
 	"deleteTasksWarning": "已删除的任务无法恢复。请确认是否继续。",
-	"deleteItems": "删除 {{count}} 项"
+	"deleteItems": "删除 {{count}} 项",
+	"showAll": "显示全部",
+	"showCurrentWorkspace": "显示当前工作区"
 }

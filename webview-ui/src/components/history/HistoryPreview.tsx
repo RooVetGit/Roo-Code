@@ -7,12 +7,14 @@ import { Button } from "@/components/ui"
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import { useAppTranslation } from "../../i18n/TranslationContext"
 import { CopyButton } from "./CopyButton"
+import { useTaskSearch } from "./useTaskSearch"
 
 type HistoryPreviewProps = {
 	showHistoryView: () => void
 }
 const HistoryPreview = ({ showHistoryView }: HistoryPreviewProps) => {
-	const { taskHistory } = useExtensionState()
+	const { osInfo } = useExtensionState()
+	const { tasks: taskHistory, setShowCurrentWorkspaceOnly, showCurrentWorkspaceOnly } = useTaskSearch()
 	const { t } = useAppTranslation()
 
 	return (
@@ -25,6 +27,14 @@ const HistoryPreview = ({ showHistoryView }: HistoryPreviewProps) => {
 				<Button variant="ghost" size="sm" onClick={() => showHistoryView()} className="uppercase">
 					{t("history:viewAll")}
 				</Button>
+
+				<Button
+					variant="ghost"
+					size="sm"
+					onClick={() => setShowCurrentWorkspaceOnly(!showCurrentWorkspaceOnly)}
+					className="uppercase">
+					{showCurrentWorkspaceOnly ? t("history:showAll") : t("history:showCurrentWorkspace")}
+				</Button>
 			</div>
 			{taskHistory.slice(0, 3).map((item) => (
 				<div
@@ -33,9 +43,17 @@ const HistoryPreview = ({ showHistoryView }: HistoryPreviewProps) => {
 					onClick={() => vscode.postMessage({ type: "showTaskWithId", text: item.id })}>
 					<div className="flex flex-col gap-2 p-3 pt-1">
 						<div className="flex justify-between items-center">
-							<span className="text-xs font-medium text-vscode-descriptionForeground uppercase">
-								{formatDate(item.ts)}
-							</span>
+							<div className="flex items-center gap-2">
+								<span className="text-xs font-medium text-vscode-descriptionForeground uppercase">
+									{formatDate(item.ts)}
+								</span>
+								{item.workspace && (
+									<span className="text-vscode-descriptionForeground text-xs flex items-center gap-1">
+										<span className="codicon codicon-folder" />
+										{item.workspace.split(osInfo === "win32" ? "\\" : "/").pop() ?? item.workspace}
+									</span>
+								)}
+							</div>
 							<CopyButton itemTask={item.task} />
 						</div>
 						<div

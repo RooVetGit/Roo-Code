@@ -166,6 +166,13 @@
 	code {
 		background-color: var(--vscode-textCodeBlock-background);
 	}
+
+	/* Search result highlighting */
+	.history-item-highlight {
+		background-color: color-mix(in srgb, var(--vscode-badge-background) 50%, transparent);
+		border-radius: 2px;
+		font-weight: bold;
+	}
 }
 
 /* Form Element Focus States */

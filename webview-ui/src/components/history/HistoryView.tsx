@@ -69,6 +69,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 			setShowBatchDeleteDialog(true)
 		}
 	}
+	console.log('HistoryView', tasks)
 
 	return (
 		<Tab>
@@ -219,9 +220,17 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 
 								<div className="flex-1">
 									<div className="flex justify-between items-center">
-										<span className="text-vscode-descriptionForeground font-medium text-sm uppercase">
-											{formatDate(item.ts)}
-										</span>
+										<div className="flex items-center gap-2">
+											<span className="text-vscode-descriptionForeground font-medium text-sm uppercase">
+												{formatDate(item.ts)}
+											</span>
+											{item.workspace && (
+												<span className="text-vscode-descriptionForeground text-xs flex items-center gap-1">
+													<span className="codicon codicon-folder" />
+													<span dangerouslySetInnerHTML={{ __html: item.workspace }} />
+												</span>
+											)}
+										</div>
 										<div className="flex flex-row">
 											{!isSelectionMode && (
 												<Button

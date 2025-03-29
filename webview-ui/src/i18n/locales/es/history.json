@@ -34,5 +34,7 @@
 	"deleteTasks": "Eliminar tareas",
 	"confirmDeleteTasks": "¿Estás seguro de que quieres eliminar {{count}} tareas?",
 	"deleteTasksWarning": "Las tareas eliminadas no se pueden recuperar. Por favor, asegúrate de que quieres continuar.",
-	"deleteItems": "Eliminar {{count}} elementos"
+	"deleteItems": "Eliminar {{count}} elementos",
+	"showAll": "Mostrar todo",
+	"showCurrentWorkspace": "Mostrar espacio de trabajo actual"
 }

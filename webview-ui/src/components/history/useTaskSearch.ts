@@ -7,9 +7,10 @@ import { useExtensionState } from "@/context/ExtensionStateContext"
 type SortOption = "newest" | "oldest" | "mostExpensive" | "mostTokens" | "mostRelevant"
 
 export const useTaskSearch = () => {
-	const { taskHistory } = useExtensionState()
+	const { taskHistory, cwd } = useExtensionState()
 	const [searchQuery, setSearchQuery] = useState("")
 	const [sortOption, setSortOption] = useState<SortOption>("newest")
+	const [showCurrentWorkspaceOnly, setShowCurrentWorkspaceOnly] = useState(false)
 	const [lastNonRelevantSort, setLastNonRelevantSort] = useState<SortOption | null>("newest")
 
 	useEffect(() => {
@@ -28,22 +29,52 @@ export const useTaskSearch = () => {
 
 	const fzf = useMemo(() => {
 		return new Fzf(presentableTasks, {
-			selector: (item) => item.task,
+			selector: (item) => {
+				// Search across both task content and workspace
+				const workspaceDisplay = item.workspace ?? ""
+				return `${item.task} ${workspaceDisplay}`
+			},
 		})
 	}, [presentableTasks])
 
 	const tasks = useMemo(() => {
-		let results = presentableTasks
-		if (searchQuery) {
-			const searchResults = fzf.find(searchQuery)
-			results = searchResults.map((result) => ({
-				...result.item,
-				task: highlightFzfMatch(result.item.task, Array.from(result.positions)),
-			}))
+		// First filter by workspace if selected
+		let filteredTasks = presentableTasks
+
+		if (showCurrentWorkspaceOnly) {
+			filteredTasks = filteredTasks.filter((item) => item.workspace === cwd)
 		}
 
-		// First apply search if needed
-		const searchResults = searchQuery ? results : presentableTasks
+		// Then apply search if needed
+		let results = filteredTasks
+		if (searchQuery) {
+			const searchResults = fzf.find(searchQuery)
+			// Filter search results to match workspace filter
+			const filteredSearchResults = searchResults.filter((result) =>
+				filteredTasks.some((task) => task.id === result.item.id),
+			)
+			results = filteredSearchResults.map((result) => {
+				const workspaceDisplay = result.item.workspace ?? "";
+				const taskLength = result.item.task.length;
+				
+				// Filter positions to only include those within the task's range
+				const taskPositions = Array.from(result.positions).filter(pos => pos < taskLength);
+				
+				// Filter positions for workspace and adjust them to be relative to workspace string
+				const workspacePositions = Array.from(result.positions)
+					.filter(pos => pos > taskLength) // +1 for the space
+					.map(pos => pos - taskLength - 1); // -1 for the space
+				
+				return {
+					...result.item,
+					workspace: workspaceDisplay ? highlightFzfMatch(workspaceDisplay, workspacePositions) : "",
+					task: highlightFzfMatch(result.item.task, taskPositions),
+				};
+			})
+		}
+
+		// Get final results
+		const searchResults = searchQuery ? results : filteredTasks
 
 		// Then sort the results
 		return [...searchResults].sort((a, b) => {
@@ -64,7 +95,7 @@ export const useTaskSearch = () => {
 					return (b.ts || 0) - (a.ts || 0)
 			}
 		})
-	}, [presentableTasks, searchQuery, fzf, sortOption])
+	}, [presentableTasks, showCurrentWorkspaceOnly, searchQuery, cwd, fzf, sortOption])
 
 	return {
 		tasks,
@@ -74,5 +105,7 @@ export const useTaskSearch = () => {
 		setSortOption,
 		lastNonRelevantSort,
 		setLastNonRelevantSort,
+		showCurrentWorkspaceOnly,
+		setShowCurrentWorkspaceOnly,
 	}
 }

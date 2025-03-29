@@ -34,5 +34,7 @@
 	"deleteTasks": "Elimina attività",
 	"confirmDeleteTasks": "Sei sicuro di voler eliminare {{count}} attività?",
 	"deleteTasksWarning": "Le attività eliminate non possono essere recuperate. Assicurati di voler continuare.",
-	"deleteItems": "Elimina {{count}} elementi"
+	"deleteItems": "Elimina {{count}} elementi",
+	"showAll": "Mostra tutto",
+	"showCurrentWorkspace": "Mostra workspace corrente"
 }
