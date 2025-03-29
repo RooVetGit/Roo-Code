@@ -376,11 +376,13 @@ describe("ClineProvider", () => {
 			"connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com;",
 		)
 
-		// Extract the script-src directive section and verify it contains the nonce
+		// Extract the script-src directive section and verify required security elements
 		const html = mockWebviewView.webview.html
 		const scriptSrcMatch = html.match(/script-src[^;]*;/)
 		expect(scriptSrcMatch).not.toBeNull()
 		expect(scriptSrcMatch![0]).toContain("'nonce-")
+		// Verify wasm-unsafe-eval is present for Shiki syntax highlighting
+		expect(scriptSrcMatch![0]).toContain("'wasm-unsafe-eval'")
 	})
 
 	test("postMessageToWebview sends message to webview", async () => {
