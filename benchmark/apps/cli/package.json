@@ -14,7 +14,8 @@
 		"@benchmark/types": "workspace:^",
 		"execa": "^9.5.2",
 		"gluegun": "^5.1.2",
-		"p-map": "^7.0.3"
+		"p-map": "^7.0.3",
+		"p-wait-for": "^5.0.2"
 	},
 	"devDependencies": {
 		"@benchmark/eslint-config": "workspace:^",

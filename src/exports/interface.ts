@@ -1,23 +1,12 @@
 import { EventEmitter } from "events"
 
-import type { ProviderSettings, GlobalSettings, ClineMessage, TokenUsage } from "./types"
+import type { ProviderSettings, GlobalSettings, ClineMessage, TokenUsage, RooCodeEvents } from "./types"
+export type { RooCodeSettings, ProviderSettings, GlobalSettings, ClineMessage, TokenUsage, RooCodeEvents }
+
+import { RooCodeEventName } from "../schemas"
+export type { RooCodeEventName }
 
 type RooCodeSettings = GlobalSettings & ProviderSettings
-
-export type { RooCodeSettings, ProviderSettings, GlobalSettings, ClineMessage, TokenUsage }
-
-export interface RooCodeEvents {
-	message: [{ taskId: string; action: "created" | "updated"; message: ClineMessage }]
-	taskCreated: [taskId: string]
-	taskStarted: [taskId: string]
-	taskPaused: [taskId: string]
-	taskUnpaused: [taskId: string]
-	taskAskResponded: [taskId: string]
-	taskAborted: [taskId: string]
-	taskSpawned: [taskId: string, childTaskId: string]
-	taskCompleted: [taskId: string, usage: TokenUsage]
-	taskTokenUsageUpdated: [taskId: string, usage: TokenUsage]
-}
 
 export interface RooCodeAPI extends EventEmitter<RooCodeEvents> {
 	/**
