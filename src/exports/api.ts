@@ -82,8 +82,8 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		return this.provider.getValues()
 	}
 
-	public getConfigurationValue<K extends keyof RooCodeSettings>(key: K) {
-		return this.provider.getValue(key)
+	public getConfigurationValue<K extends keyof RooCodeSettings>(key: K): RooCodeSettings[K] {
+		return this.provider.getValue(key as any) as RooCodeSettings[K]
 	}
 
 	public async setConfiguration(values: RooCodeSettings) {
@@ -91,7 +91,7 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 	}
 
 	public async setConfigurationValue<K extends keyof RooCodeSettings>(key: K, value: RooCodeSettings[K]) {
-		await this.provider.setValue(key, value)
+		await this.provider.setValue(key as any, value)
 	}
 
 	public isReady() {
