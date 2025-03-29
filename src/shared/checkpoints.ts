@@ -1,5 +1,3 @@
-export type CheckpointStorage = "task" | "workspace"
+import { CheckpointStorage, isCheckpointStorage } from "../schemas"
 
-export const isCheckpointStorage = (value: string): value is CheckpointStorage => {
-	return value === "task" || value === "workspace"
-}
+export { type CheckpointStorage, isCheckpointStorage }

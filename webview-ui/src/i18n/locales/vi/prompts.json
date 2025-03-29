@@ -91,12 +91,12 @@
 			"TERMINAL_EXPLAIN": {
 				"label": "Giải thích lệnh terminal",
 				"description": "Nhận giải thích chi tiết về lệnh terminal và đầu ra của chúng. Có sẵn trong menu ngữ cảnh terminal (nhấp chuột phải vào nội dung terminal đã chọn)."
+			},
+			"NEW_TASK": {
+				"label": "Bắt đầu tác vụ mới",
+				"description": "Bắt đầu tác vụ mới với nội dung đã nhập. Có sẵn trong bảng lệnh."
 			}
 		}
-	},
-	"customModeCreation": {
-		"enableTitle": "Bật tạo chế độ tùy chỉnh thông qua lời nhắc",
-		"description": "Khi được bật, Roo cho phép bạn tạo chế độ tùy chỉnh bằng cách sử dụng lời nhắc như 'Tạo cho tôi một chế độ tùy chỉnh mà…'. Việc tắt tính năng này giảm lời nhắc hệ thống của bạn khoảng 700 token khi tính năng này không cần thiết. Khi tắt, bạn vẫn có thể tạo chế độ tùy chỉnh bằng cách sử dụng nút + ở trên hoặc bằng cách chỉnh sửa tệp JSON cấu hình liên quan."
 	},
 	"advancedSystemPrompt": {
 		"title": "Nâng cao: Ghi đè lời nhắc hệ thống",

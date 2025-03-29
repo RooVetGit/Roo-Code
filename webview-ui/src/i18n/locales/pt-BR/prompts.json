@@ -91,12 +91,12 @@
 			"TERMINAL_EXPLAIN": {
 				"label": "Explicar Comando do Terminal",
 				"description": "Obtenha explicações detalhadas de comandos de terminal e suas saídas. Available in the terminal context menu (right-click on selected terminal content)."
+			},
+			"NEW_TASK": {
+				"label": "Iniciar Nova Tarefa",
+				"description": "Inicie uma nova tarefa com a entrada fornecida. Disponível na paleta de comandos."
 			}
 		}
-	},
-	"customModeCreation": {
-		"enableTitle": "Ativar criação de modo personalizado através de prompts",
-		"description": "Quando ativado, o Roo permite que você crie modos personalizados usando prompts como 'Crie para mim um modo personalizado que...'. Desativar isto reduz seu prompt de sistema em cerca de 700 tokens quando esta funcionalidade não é necessária. Quando desativado, você ainda pode criar modos personalizados manualmente usando o botão + acima ou editando o JSON de configuração relacionado."
 	},
 	"advancedSystemPrompt": {
 		"title": "Avançado: Substituir prompt do sistema",

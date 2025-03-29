@@ -91,12 +91,12 @@
 			"TERMINAL_EXPLAIN": {
 				"label": "解释终端命令",
 				"description": "获取对终端命令及其输出的详细解释。可在终端上下文菜单（右键点击选中的终端内容）中使用。"
+			},
+			"NEW_TASK": {
+				"label": "开始新任务",
+				"description": "使用输入内容开始新任务。可在命令面板中使用。"
 			}
 		}
-	},
-	"customModeCreation": {
-		"enableTitle": "通过提示词启用自定义模式创建",
-		"description": "启用后，Roo允许您使用类似\"为我创建一个自定义模式，它可以...\"的提示词来创建自定义模式。禁用此功能可以在不需要时减少系统提示词约700个token。禁用后您仍然可以通过上方的+按钮或编辑相关配置JSON手动创建自定义模式。"
 	},
 	"advancedSystemPrompt": {
 		"title": "高级：覆盖系统提示词",

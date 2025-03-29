@@ -44,6 +44,7 @@
 		"delete_api_config": "API कॉन्फ़िगरेशन हटाने में विफल",
 		"list_api_config": "API कॉन्फ़िगरेशन की सूची प्राप्त करने में विफल",
 		"update_server_timeout": "सर्वर टाइमआउट अपडेट करने में विफल",
+		"failed_update_project_mcp": "प्रोजेक्ट MCP सर्वर अपडेट करने में विफल",
 		"create_mcp_json": ".roo/mcp.json बनाने या खोलने में विफल: {{error}}",
 		"hmr_not_running": "स्थानीय विकास सर्वर चल नहीं रहा है, HMR काम नहीं करेगा। कृपया HMR सक्षम करने के लिए एक्सटेंशन लॉन्च करने से पहले 'npm run dev' चलाएँ।",
 		"retrieve_current_mode": "स्टेट से वर्तमान मोड प्राप्त करने में त्रुटि।",
@@ -65,7 +66,8 @@
 		"mcp_server_deleted": "MCP सर्वर हटाया गया: {{serverName}}",
 		"mcp_server_not_found": "सर्वर \"{{serverName}}\" कॉन्फ़िगरेशन में नहीं मिला",
 		"custom_storage_path_set": "कस्टम स्टोरेज पाथ सेट किया गया: {{path}}",
-		"default_storage_path": "डिफ़ॉल्ट स्टोरेज पाथ का उपयोग पुनः शुरू किया गया"
+		"default_storage_path": "डिफ़ॉल्ट स्टोरेज पाथ का उपयोग पुनः शुरू किया गया",
+		"settings_imported": "सेटिंग्स सफलतापूर्वक इम्पोर्ट की गईं।"
 	},
 	"answers": {
 		"yes": "हां",
@@ -83,5 +85,9 @@
 		"path_placeholder": "D:\\RooCodeStorage",
 		"enter_absolute_path": "कृपया एक पूर्ण पाथ दर्ज करें (उदाहरण: D:\\RooCodeStorage या /home/user/storage)",
 		"enter_valid_path": "कृपया एक वैध पाथ दर्ज करें"
+	},
+	"input": {
+		"task_prompt": "Roo को क्या करना है?",
+		"task_placeholder": "अपना कार्य यहाँ लिखें"
 	}
 }

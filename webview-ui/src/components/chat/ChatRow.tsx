@@ -356,6 +356,7 @@ export const ChatRowContent = ({
 										textAlign: "left",
 									}}>
 									{removeLeadingNonAlphanumeric(tool.path ?? "") + "\u200E"}
+									{tool.reason}
 								</span>
 								<div style={{ flexGrow: 1 }}></div>
 								<span
@@ -363,6 +364,21 @@ export const ChatRowContent = ({
 									style={{ fontSize: 13.5, margin: "1px 0" }}></span>
 							</div>
 						</div>
+					</>
+				)
+			case "fetchInstructions":
+				return (
+					<>
+						<div style={headerStyle}>
+							{toolIcon("file-code")}
+							<span style={{ fontWeight: "bold" }}>{t("chat:instructions.wantsToFetch")}</span>
+						</div>
+						<CodeAccordian
+							isLoading={message.partial}
+							code={tool.content!}
+							isExpanded={isExpanded}
+							onToggleExpand={onToggleExpand}
+						/>
 					</>
 				)
 			case "listFilesTopLevel":

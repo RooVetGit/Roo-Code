@@ -44,6 +44,7 @@
 		"delete_api_config": "Fehler beim Löschen der API-Konfiguration",
 		"list_api_config": "Fehler beim Abrufen der API-Konfigurationsliste",
 		"update_server_timeout": "Fehler beim Aktualisieren des Server-Timeouts",
+		"failed_update_project_mcp": "Fehler beim Aktualisieren der Projekt-MCP-Server",
 		"create_mcp_json": "Fehler beim Erstellen oder Öffnen von .roo/mcp.json: {{error}}",
 		"hmr_not_running": "Der lokale Entwicklungsserver läuft nicht, HMR wird nicht funktionieren. Bitte führen Sie 'npm run dev' vor dem Start der Erweiterung aus, um HMR zu aktivieren.",
 		"retrieve_current_mode": "Fehler beim Abrufen des aktuellen Modus aus dem Zustand.",
@@ -65,7 +66,8 @@
 		"mcp_server_deleted": "MCP-Server gelöscht: {{serverName}}",
 		"mcp_server_not_found": "Server \"{{serverName}}\" nicht in der Konfiguration gefunden",
 		"custom_storage_path_set": "Benutzerdefinierter Speicherpfad festgelegt: {{path}}",
-		"default_storage_path": "Auf Standardspeicherpfad zurückgesetzt"
+		"default_storage_path": "Auf Standardspeicherpfad zurückgesetzt",
+		"settings_imported": "Einstellungen erfolgreich importiert."
 	},
 	"answers": {
 		"yes": "Ja",
@@ -83,5 +85,9 @@
 		"path_placeholder": "D:\\RooCodeStorage",
 		"enter_absolute_path": "Bitte gib einen absoluten Pfad ein (z.B. D:\\RooCodeStorage oder /home/user/storage)",
 		"enter_valid_path": "Bitte gib einen gültigen Pfad ein"
+	},
+	"input": {
+		"task_prompt": "Was soll Roo tun?",
+		"task_placeholder": "Gib deine Aufgabe hier ein"
 	}
 }

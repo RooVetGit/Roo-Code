@@ -1,3 +1,5 @@
+import type { ToolGroup } from "../schemas"
+
 // Define tool group configuration
 export type ToolGroupConfig = {
 	tools: readonly string[]
@@ -8,6 +10,7 @@ export type ToolGroupConfig = {
 export const TOOL_DISPLAY_NAMES = {
 	execute_command: "run commands",
 	read_file: "read files",
+	fetch_instructions: "fetch instructions",
 	write_to_file: "write files",
 	apply_diff: "apply changes",
 	search_files: "search files",
@@ -22,10 +25,12 @@ export const TOOL_DISPLAY_NAMES = {
 	new_task: "create new task",
 } as const
 
+export type { ToolGroup }
+
 // Define available tool groups
-export const TOOL_GROUPS: Record<string, ToolGroupConfig> = {
+export const TOOL_GROUPS: Record<ToolGroup, ToolGroupConfig> = {
 	read: {
-		tools: ["read_file", "search_files", "list_files", "list_code_definition_names"],
+		tools: ["read_file", "fetch_instructions", "search_files", "list_files", "list_code_definition_names"],
 	},
 	edit: {
 		tools: ["apply_diff", "write_to_file", "insert_content", "search_and_replace"],
@@ -44,8 +49,6 @@ export const TOOL_GROUPS: Record<string, ToolGroupConfig> = {
 		alwaysAvailable: true,
 	},
 }
-
-export type ToolGroup = keyof typeof TOOL_GROUPS
 
 // Tools that are always available to all modes
 export const ALWAYS_AVAILABLE_TOOLS = [

@@ -11,9 +11,8 @@ import pWaitFor from "p-wait-for"
 import getFolderSize from "get-folder-size"
 import { serializeError } from "serialize-error"
 import * as vscode from "vscode"
-import { isPathOutsideWorkspace } from "../utils/pathUtils"
 
-import { TokenUsage } from "../exports/roo-code"
+import { TokenUsage } from "../schemas"
 import { ApiHandler, buildApiHandler } from "../api"
 import { ApiStream } from "../api/transform/stream"
 import { DIFF_VIEW_URI_SCHEME, DiffViewProvider } from "../integrations/editor/DiffViewProvider"
@@ -30,6 +29,8 @@ import {
 	everyLineHasLineNumbers,
 } from "../integrations/misc/extract-text"
 import { countFileLines } from "../integrations/misc/line-counter"
+import { fetchInstructionsTool } from "./tools/fetchInstructionsTool"
+import { readFileTool } from "./tools/readFileTool"
 import { ExitCodeDetails } from "../integrations/terminal/TerminalProcess"
 import { Terminal } from "../integrations/terminal/Terminal"
 import { TerminalRegistry } from "../integrations/terminal/TerminalRegistry"
@@ -64,6 +65,7 @@ import { defaultModeSlug, getModeBySlug, getFullModeDetails } from "../shared/mo
 import { EXPERIMENT_IDS, experiments as Experiments, ExperimentId } from "../shared/experiments"
 import { calculateApiCostAnthropic } from "../utils/cost"
 import { fileExistsAtPath } from "../utils/fs"
+import { isPathOutsideWorkspace } from "../utils/pathUtils"
 import { arePathsEqual, getReadablePath } from "../utils/path"
 import { parseMentions } from "./mentions"
 import { RooIgnoreController } from "./ignore/RooIgnoreController"
@@ -81,11 +83,9 @@ import { insertGroups } from "./diff/insert-groups"
 import { telemetryService } from "../services/telemetry/TelemetryService"
 import { validateToolUse, isToolAllowedForMode, ToolName } from "./mode-validator"
 import { parseXml } from "../utils/xml"
-import { readLines } from "../integrations/misc/read-lines"
 import { getWorkspacePath } from "../utils/path"
-import { isBinaryFile } from "isbinaryfile"
 
-type ToolResponse = string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam>
+export type ToolResponse = string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam>
 type UserContent = Array<Anthropic.Messages.ContentBlockParam>
 
 export type ClineEvents = {
@@ -122,10 +122,7 @@ export type ClineOptions = {
 export class Cline extends EventEmitter<ClineEvents> {
 	readonly taskId: string
 	readonly instanceId: string
-	get cwd() {
-		return getWorkspacePath(path.join(os.homedir(), "Desktop"))
-	}
-	// Subtasks
+
 	readonly rootTask: Cline | undefined = undefined
 	readonly parentTask: Cline | undefined = undefined
 	readonly taskNumber: number
@@ -150,9 +147,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 	private askResponseText?: string
 	private askResponseImages?: string[]
 	private lastMessageTs?: number
-	private consecutiveMistakeCount: number = 0
+	// Not private since it needs to be accessible by tools
+	consecutiveMistakeCount: number = 0
 	private consecutiveMistakeCountForApplyDiff: Map<string, number> = new Map()
-	private providerRef: WeakRef<ClineProvider>
+	// Not private since it needs to be accessible by tools
+	providerRef: WeakRef<ClineProvider>
 	private abort: boolean = false
 	didFinishAbortingStream = false
 	abandoned = false
@@ -267,6 +266,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 		return [instance, promise]
 	}
 
+	get cwd() {
+		return getWorkspacePath(path.join(os.homedir(), "Desktop"))
+	}
+
 	// Add method to update diffStrategy
 	async updateDiffStrategy(experimentalDiffStrategy?: boolean, multiSearchReplaceDiffStrategy?: boolean) {
 		// If not provided, get from current state
@@ -333,6 +336,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 	private async getSavedClineMessages(): Promise<ClineMessage[]> {
 		const filePath = path.join(await this.ensureTaskDirectoryExists(), GlobalFileNames.uiMessages)
+
 		if (await fileExistsAtPath(filePath)) {
 			return JSON.parse(await fs.readFile(filePath, "utf8"))
 		} else {
@@ -993,7 +997,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			}
 		}
 
-		const { terminalOutputLineLimit } = (await this.providerRef.deref()?.getState()) ?? {}
+		const { terminalOutputLineLimit = 500 } = (await this.providerRef.deref()?.getState()) ?? {}
 
 		process.on("line", (line) => {
 			if (!didContinue) {
@@ -1221,11 +1225,12 @@ export class Cline extends EventEmitter<ClineEvents> {
 			}
 			return { role, content }
 		})
+
 		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory)
 		const iterator = stream[Symbol.asyncIterator]()
 
 		try {
-			// awaiting first chunk to see if it will throw an error
+			// Awaiting first chunk to see if it will throw an error.
 			this.isWaitingForFirstChunk = true
 			const firstChunk = await iterator.next()
 			yield firstChunk.value
@@ -1371,6 +1376,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 							return `[${block.name} for '${block.params.command}']`
 						case "read_file":
 							return `[${block.name} for '${block.params.path}']`
+						case "fetch_instructions":
+							return `[${block.name} for '${block.params.task}']`
 						case "write_to_file":
 							return `[${block.name} for '${block.params.path}']`
 						case "apply_diff":
@@ -2248,152 +2255,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 					}
 
 					case "read_file": {
-						const relPath: string | undefined = block.params.path
-						const startLineStr: string | undefined = block.params.start_line
-						const endLineStr: string | undefined = block.params.end_line
+						await readFileTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
+						break
+					}
 
-						// Get the full path and determine if it's outside the workspace
-						const fullPath = relPath ? path.resolve(this.cwd, removeClosingTag("path", relPath)) : ""
-						const isOutsideWorkspace = isPathOutsideWorkspace(fullPath)
-
-						const sharedMessageProps: ClineSayTool = {
-							tool: "readFile",
-							path: getReadablePath(this.cwd, removeClosingTag("path", relPath)),
-							isOutsideWorkspace,
-						}
-						try {
-							if (block.partial) {
-								const partialMessage = JSON.stringify({
-									...sharedMessageProps,
-									content: undefined,
-								} satisfies ClineSayTool)
-								await this.ask("tool", partialMessage, block.partial).catch(() => {})
-								break
-							} else {
-								if (!relPath) {
-									this.consecutiveMistakeCount++
-									pushToolResult(await this.sayAndCreateMissingParamError("read_file", "path"))
-									break
-								}
-
-								// Check if we're doing a line range read
-								let isRangeRead = false
-								let startLine: number | undefined = undefined
-								let endLine: number | undefined = undefined
-
-								// Check if we have either range parameter
-								if (startLineStr || endLineStr) {
-									isRangeRead = true
-								}
-
-								// Parse start_line if provided
-								if (startLineStr) {
-									startLine = parseInt(startLineStr)
-									if (isNaN(startLine)) {
-										// Invalid start_line
-										this.consecutiveMistakeCount++
-										await this.say("error", `Failed to parse start_line: ${startLineStr}`)
-										pushToolResult(formatResponse.toolError("Invalid start_line value"))
-										break
-									}
-									startLine -= 1 // Convert to 0-based index
-								}
-
-								// Parse end_line if provided
-								if (endLineStr) {
-									endLine = parseInt(endLineStr)
-
-									if (isNaN(endLine)) {
-										// Invalid end_line
-										this.consecutiveMistakeCount++
-										await this.say("error", `Failed to parse end_line: ${endLineStr}`)
-										pushToolResult(formatResponse.toolError("Invalid end_line value"))
-										break
-									}
-
-									// Convert to 0-based index
-									endLine -= 1
-								}
-
-								const accessAllowed = this.rooIgnoreController?.validateAccess(relPath)
-								if (!accessAllowed) {
-									await this.say("rooignore_error", relPath)
-									pushToolResult(formatResponse.toolError(formatResponse.rooIgnoreError(relPath)))
-
-									break
-								}
-
-								this.consecutiveMistakeCount = 0
-								const absolutePath = path.resolve(this.cwd, relPath)
-								const completeMessage = JSON.stringify({
-									...sharedMessageProps,
-									content: absolutePath,
-								} satisfies ClineSayTool)
-
-								const didApprove = await askApproval("tool", completeMessage)
-								if (!didApprove) {
-									break
-								}
-
-								// Get the maxReadFileLine setting
-								const { maxReadFileLine } = (await this.providerRef.deref()?.getState()) ?? {}
-
-								// Count total lines in the file
-								let totalLines = 0
-								try {
-									totalLines = await countFileLines(absolutePath)
-								} catch (error) {
-									console.error(`Error counting lines in file ${absolutePath}:`, error)
-								}
-
-								// now execute the tool like normal
-								let content: string
-								let isFileTruncated = false
-								let sourceCodeDef = ""
-
-								const isBinary = await isBinaryFile(absolutePath).catch(() => false)
-								const autoTruncate = block.params.auto_truncate === "true"
-
-								if (isRangeRead) {
-									if (startLine === undefined) {
-										content = addLineNumbers(await readLines(absolutePath, endLine, startLine))
-									} else {
-										content = addLineNumbers(
-											await readLines(absolutePath, endLine, startLine),
-											startLine + 1,
-										)
-									}
-								} else if (autoTruncate && !isBinary && totalLines > maxReadFileLine) {
-									// If file is too large, only read the first maxReadFileLine lines
-									isFileTruncated = true
-
-									const res = await Promise.all([
-										maxReadFileLine > 0 ? readLines(absolutePath, maxReadFileLine - 1, 0) : "",
-										parseSourceCodeDefinitionsForFile(absolutePath, this.rooIgnoreController),
-									])
-
-									content = res[0].length > 0 ? addLineNumbers(res[0]) : ""
-									const result = res[1]
-									if (result) {
-										sourceCodeDef = `\n\n${result}`
-									}
-								} else {
-									// Read entire file
-									content = await extractTextFromFile(absolutePath)
-								}
-
-								// Add truncation notice if applicable
-								if (isFileTruncated) {
-									content += `\n\n[File truncated: showing ${maxReadFileLine} of ${totalLines} total lines. Use start_line and end_line or set auto_truncate to false if you need to read more.].${sourceCodeDef}`
-								}
-
-								pushToolResult(content)
-								break
-							}
-						} catch (error) {
-							await handleError("reading file", error)
-							break
-						}
+					case "fetch_instructions": {
+						await fetchInstructionsTool(this, block, askApproval, handleError, pushToolResult)
+						break
 					}
 
 					case "list_files": {
@@ -2421,13 +2289,14 @@ export class Cline extends EventEmitter<ClineEvents> {
 								this.consecutiveMistakeCount = 0
 								const absolutePath = path.resolve(this.cwd, relDirPath)
 								const [files, didHitLimit] = await listFiles(absolutePath, recursive, 200)
-								const { showRooIgnoredFiles } = (await this.providerRef.deref()?.getState()) ?? {}
+								const { showRooIgnoredFiles = true } =
+									(await this.providerRef.deref()?.getState()) ?? {}
 								const result = formatResponse.formatFilesList(
 									absolutePath,
 									files,
 									didHitLimit,
 									this.rooIgnoreController,
-									showRooIgnoredFiles ?? true,
+									showRooIgnoredFiles,
 								)
 								const completeMessage = JSON.stringify({
 									...sharedMessageProps,
@@ -2446,10 +2315,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 						}
 					}
 					case "list_code_definition_names": {
-						const relDirPath: string | undefined = block.params.path
+						const relPath: string | undefined = block.params.path
 						const sharedMessageProps: ClineSayTool = {
 							tool: "listCodeDefinitionNames",
-							path: getReadablePath(this.cwd, removeClosingTag("path", relDirPath)),
+							path: getReadablePath(this.cwd, removeClosingTag("path", relPath)),
 						}
 						try {
 							if (block.partial) {
@@ -2460,7 +2329,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 								await this.ask("tool", partialMessage, block.partial).catch(() => {})
 								break
 							} else {
-								if (!relDirPath) {
+								if (!relPath) {
 									this.consecutiveMistakeCount++
 									pushToolResult(
 										await this.sayAndCreateMissingParamError("list_code_definition_names", "path"),
@@ -2468,11 +2337,27 @@ export class Cline extends EventEmitter<ClineEvents> {
 									break
 								}
 								this.consecutiveMistakeCount = 0
-								const absolutePath = path.resolve(this.cwd, relDirPath)
-								const result = await parseSourceCodeForDefinitionsTopLevel(
-									absolutePath,
-									this.rooIgnoreController,
-								)
+								const absolutePath = path.resolve(this.cwd, relPath)
+								let result: string
+								try {
+									const stats = await fs.stat(absolutePath)
+									if (stats.isFile()) {
+										const fileResult = await parseSourceCodeDefinitionsForFile(
+											absolutePath,
+											this.rooIgnoreController,
+										)
+										result = fileResult ?? "No source code definitions found in this file."
+									} else if (stats.isDirectory()) {
+										result = await parseSourceCodeForDefinitionsTopLevel(
+											absolutePath,
+											this.rooIgnoreController,
+										)
+									} else {
+										result = "The specified path is neither a file nor a directory."
+									}
+								} catch {
+									result = `${absolutePath}: does not exist or cannot be accessed.`
+								}
 								const completeMessage = JSON.stringify({
 									...sharedMessageProps,
 									content: result,
@@ -2581,7 +2466,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 								}
 								break
 							} else {
-								let browserActionResult: BrowserActionResult
+								// Initialize with empty object to avoid "used before assigned" errors
+								let browserActionResult: BrowserActionResult = {}
 								if (action === "launch") {
 									if (!url) {
 										this.consecutiveMistakeCount++
@@ -2667,9 +2553,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 										pushToolResult(
 											formatResponse.toolResult(
 												`The browser action has been executed. The console logs and screenshot have been captured for your analysis.\n\nConsole logs:\n${
-													browserActionResult.logs || "(No new logs)"
+													browserActionResult?.logs || "(No new logs)"
 												}\n\n(REMEMBER: if you need to proceed to using non-\`browser_action\` tools or launch a new browser, you MUST first close this browser. For example, if after analyzing the logs and screenshot you need to edit a file, you must first close the browser before you can use the write_to_file tool.)`,
-												browserActionResult.screenshot ? [browserActionResult.screenshot] : [],
+												browserActionResult?.screenshot ? [browserActionResult.screenshot] : [],
 											),
 										)
 										break
@@ -2893,7 +2779,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 									if (item.mimeType?.startsWith("image") && item.blob) {
 										images.push(item.blob)
 									}
-								});
+								})
 								await this.say("mcp_server_response", resourceResultPretty, images)
 								pushToolResult(formatResponse.toolResult(resourceResultPretty, images))
 								break
@@ -3143,6 +3029,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 											false,
 										)
 
+										telemetryService.captureTaskCompleted(this.taskId)
+										this.emit("taskCompleted", this.taskId, this.getTokenUsage())
+
 										await this.ask(
 											"command",
 											removeClosingTag("command", command),
@@ -3174,9 +3063,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 								if (command) {
 									if (lastMessage && lastMessage.ask !== "command") {
-										// Haven't sent a command message yet so
-										// first send completion_result then command.
+										// Haven't sent a command message yet so first send completion_result then command.
 										await this.say("completion_result", result, undefined, false)
+										telemetryService.captureTaskCompleted(this.taskId)
+										this.emit("taskCompleted", this.taskId, this.getTokenUsage())
 									}
 
 									// Complete command message.
@@ -3198,10 +3088,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 									commandResult = execCommandResult
 								} else {
 									await this.say("completion_result", result, undefined, false)
+									telemetryService.captureTaskCompleted(this.taskId)
+									this.emit("taskCompleted", this.taskId, this.getTokenUsage())
 								}
-
-								telemetryService.captureTaskCompleted(this.taskId)
-								this.emit("taskCompleted", this.taskId, this.getTokenUsage())
 
 								if (this.parentTask) {
 									const didApprove = await askFinishSubTaskApproval()
@@ -3330,6 +3219,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 					? `This may indicate a failure in his thought process or inability to use a tool properly, which can be mitigated with some user guidance (e.g. "Try breaking down the task into smaller steps").`
 					: "Roo Code uses complex prompts and iterative task execution that may be challenging for less capable models. For best results, it's recommended to use Claude 3.7 Sonnet for its advanced agentic coding capabilities.",
 			)
+
 			if (response === "messageResponse") {
 				userContent.push(
 					...[
@@ -3393,9 +3283,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 		// since we sent off a placeholder api_req_started message to update the webview while waiting to actually start the API request (to load potential details for example), we need to update the text of that message
 		const lastApiReqIndex = findLastIndex(this.clineMessages, (m) => m.say === "api_req_started")
+
 		this.clineMessages[lastApiReqIndex].text = JSON.stringify({
 			request: userContent.map((block) => formatContentBlockToMarkdown(block)).join("\n\n"),
 		} satisfies ClineApiReqInfo)
+
 		await this.saveClineMessages()
 		await this.providerRef.deref()?.postStateToWebview()
 
@@ -3437,6 +3329,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 				// if last message is a partial we need to update and save it
 				const lastMessage = this.clineMessages.at(-1)
+
 				if (lastMessage && lastMessage.partial) {
 					// lastMessage.ts = Date.now() DO NOT update ts since it is used as a key for virtuoso list
 					lastMessage.partial = false
@@ -3482,7 +3375,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 			this.presentAssistantMessageHasPendingUpdates = false
 			await this.diffViewProvider.reset()
 
-			const stream = this.attemptApiRequest(previousApiReqIndex) // yields only if the first chunk is successful, otherwise will allow the user to retry the request (most likely due to rate limit error, which gets thrown on the first chunk)
+			// Yields only if the first chunk is successful, otherwise will
+			// allow the user to retry the request (most likely due to rate
+			// limit error, which gets thrown on the first chunk).
+			const stream = this.attemptApiRequest(previousApiReqIndex)
 			let assistantMessage = ""
 			let reasoningMessage = ""
 			this.isStreaming = true
@@ -3490,9 +3386,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 			try {
 				for await (const chunk of stream) {
 					if (!chunk) {
-						// Sometimes chunk is undefined, no idea that can cause it, but this workaround seems to fix it
+						// Sometimes chunk is undefined, no idea that can cause it, but this workaround seems to fix it.
 						continue
 					}
+
 					switch (chunk.type) {
 						case "reasoning":
 							reasoningMessage += chunk.text
@@ -3548,11 +3445,14 @@ export class Cline extends EventEmitter<ClineEvents> {
 				// abandoned happens when extension is no longer waiting for the cline instance to finish aborting (error is thrown here when any function in the for loop throws due to this.abort)
 				if (!this.abandoned) {
 					this.abortTask() // if the stream failed, there's various states the task could be in (i.e. could have streamed some tools the user may have executed), so we just resort to replicating a cancel task
+
 					await abortStream(
 						"streaming_failed",
 						error.message ?? JSON.stringify(serializeError(error), null, 2),
 					)
+
 					const history = await this.providerRef.deref()?.getTaskWithId(this.taskId)
+
 					if (history) {
 						await this.providerRef.deref()?.initClineWithHistoryItem(history.historyItem)
 						// await this.providerRef.deref()?.postStateToWebview()
@@ -3644,6 +3544,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 			// 2. ToolResultBlockParam's content/context text arrays if it contains "<feedback>" (see formatToolDeniedFeedback, attemptCompletion, executeCommand, and consecutiveMistakeCount >= 3) or "<answer>" (see askFollowupQuestion), we place all user generated content in these tags so they can effectively be used as markers for when we should parse mentions)
 			Promise.all(
 				userContent.map(async (block) => {
+					const { osInfo } = (await this.providerRef.deref()?.getState()) || { osInfo: "unix" }
+
 					const shouldProcessMentions = (text: string) =>
 						text.includes("<task>") || text.includes("<feedback>")
 
@@ -3651,7 +3553,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 						if (shouldProcessMentions(block.text)) {
 							return {
 								...block,
-								text: await parseMentions(block.text, this.cwd, this.urlContentFetcher),
+								text: await parseMentions(block.text, this.cwd, this.urlContentFetcher, osInfo),
 							}
 						}
 						return block
@@ -3660,7 +3562,12 @@ export class Cline extends EventEmitter<ClineEvents> {
 							if (shouldProcessMentions(block.content)) {
 								return {
 									...block,
-									content: await parseMentions(block.content, this.cwd, this.urlContentFetcher),
+									content: await parseMentions(
+										block.content,
+										this.cwd,
+										this.urlContentFetcher,
+										osInfo,
+									),
 								}
 							}
 							return block
@@ -3674,6 +3581,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 												contentBlock.text,
 												this.cwd,
 												this.urlContentFetcher,
+												osInfo,
 											),
 										}
 									}
@@ -3697,7 +3605,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 	async getEnvironmentDetails(includeFileDetails: boolean = false) {
 		let details = ""
 
-		const { terminalOutputLineLimit, maxWorkspaceFiles } = (await this.providerRef.deref()?.getState()) ?? {}
+		const { terminalOutputLineLimit = 500, maxWorkspaceFiles = 200 } =
+			(await this.providerRef.deref()?.getState()) ?? {}
 
 		// It could be useful for cline to know if the user went from one or no file to another between messages, so we always include this context
 		details += "\n\n# VSCode Visible Files"
@@ -3705,7 +3614,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			?.map((editor) => editor.document?.uri?.fsPath)
 			.filter(Boolean)
 			.map((absolutePath) => path.relative(this.cwd, absolutePath))
-			.slice(0, maxWorkspaceFiles ?? 200)
+			.slice(0, maxWorkspaceFiles)
 
 		// Filter paths through rooIgnoreController
 		const allowedVisibleFiles = this.rooIgnoreController
@@ -3917,7 +3826,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			} else {
 				const maxFiles = maxWorkspaceFiles ?? 200
 				const [files, didHitLimit] = await listFiles(this.cwd, true, maxFiles)
-				const { showRooIgnoredFiles } = (await this.providerRef.deref()?.getState()) ?? {}
+				const { showRooIgnoredFiles = true } = (await this.providerRef.deref()?.getState()) ?? {}
 				const result = formatResponse.formatFilesList(
 					this.cwd,
 					files,
@@ -4021,7 +3930,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 			})
 
 			service.initShadowGit().catch((err) => {
-				log("[Cline#initializeCheckpoints] caught unexpected error in initShadowGit, disabling checkpoints")
+				log(
+					`[Cline#initializeCheckpoints] caught unexpected error in initShadowGit, disabling checkpoints (${err.message})`,
+				)
 				console.error(err)
 				this.enableCheckpoints = false
 			})

@@ -50,7 +50,8 @@
 		"failed_delete_repo": "Failed to delete associated shadow repository or branch: {{error}}",
 		"failed_remove_directory": "Failed to remove task directory: {{error}}",
 		"custom_storage_path_unusable": "Custom storage path \"{{path}}\" is unusable, will use default path",
-		"cannot_access_path": "Cannot access path {{path}}: {{error}}"
+		"cannot_access_path": "Cannot access path {{path}}: {{error}}",
+		"failed_update_project_mcp": "Failed to update project MCP servers"
 	},
 	"warnings": {
 		"no_terminal_content": "No terminal content selected",
@@ -65,7 +66,8 @@
 		"mcp_server_deleted": "Deleted MCP server: {{serverName}}",
 		"mcp_server_not_found": "Server \"{{serverName}}\" not found in configuration",
 		"custom_storage_path_set": "Custom storage path set: {{path}}",
-		"default_storage_path": "Reverted to using default storage path"
+		"default_storage_path": "Reverted to using default storage path",
+		"settings_imported": "Settings imported successfully."
 	},
 	"answers": {
 		"yes": "Yes",
@@ -83,5 +85,9 @@
 		"path_placeholder": "D:\\RooCodeStorage",
 		"enter_absolute_path": "Please enter an absolute path (e.g. D:\\RooCodeStorage or /home/user/storage)",
 		"enter_valid_path": "Please enter a valid path"
+	},
+	"input": {
+		"task_prompt": "What should Roo do?",
+		"task_placeholder": "Type your task here"
 	}
 }

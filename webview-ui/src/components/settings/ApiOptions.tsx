@@ -8,8 +8,6 @@ import { Checkbox } from "vscrui"
 import { VSCodeLink, VSCodeRadio, VSCodeRadioGroup, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 import { ExternalLinkIcon } from "@radix-ui/react-icons"
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator, Button } from "@/components/ui"
-
 import {
 	ApiConfiguration,
 	ModelInfo,
@@ -42,20 +40,23 @@ import {
 import { ExtensionMessage } from "../../../../src/shared/ExtensionMessage"
 
 import { vscode } from "@/utils/vscode"
+import { validateApiConfiguration, validateModelId, validateBedrockArn } from "@/utils/validate"
 import {
 	useOpenRouterModelProviders,
 	OPENROUTER_DEFAULT_PROVIDER_NAME,
 } from "@/components/ui/hooks/useOpenRouterModelProviders"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator, Button } from "@/components/ui"
 
 import { MODELS_BY_PROVIDER, PROVIDERS, AWS_REGIONS, VERTEX_REGIONS } from "./constants"
 import { VSCodeButtonLink } from "../common/VSCodeButtonLink"
 import { ModelInfoView } from "./ModelInfoView"
 import { ModelPicker } from "./ModelPicker"
 import { TemperatureControl } from "./TemperatureControl"
-import { validateApiConfiguration, validateModelId, validateBedrockArn } from "@/utils/validate"
 import { ApiErrorMessage } from "./ApiErrorMessage"
 import { ThinkingBudget } from "./ThinkingBudget"
 import { R1FormatSetting } from "./R1FormatSetting"
+import { OpenRouterBalanceDisplay } from "./OpenRouterBalanceDisplay"
+import { RequestyBalanceDisplay } from "./RequestyBalanceDisplay"
 
 interface ApiOptionsProps {
 	uriScheme: string | undefined
@@ -274,7 +275,15 @@ const ApiOptions = ({
 						onInput={handleInputChange("openRouterApiKey")}
 						placeholder={t("settings:placeholders.apiKey")}
 						className="w-full">
-						<label className="block font-medium mb-1">{t("settings:providers.openRouterApiKey")}</label>
+						<div className="flex justify-between items-center mb-1">
+							<label className="block font-medium">{t("settings:providers.openRouterApiKey")}</label>
+							{apiConfiguration?.openRouterApiKey && (
+								<OpenRouterBalanceDisplay
+									apiKey={apiConfiguration.openRouterApiKey}
+									baseUrl={apiConfiguration.openRouterBaseUrl}
+								/>
+							)}
+						</div>
 					</VSCodeTextField>
 					<div className="text-sm text-vscode-descriptionForeground -mt-2">
 						{t("settings:providers.apiKeyStorageNotice")}
@@ -402,7 +411,12 @@ const ApiOptions = ({
 						onInput={handleInputChange("requestyApiKey")}
 						placeholder={t("settings:providers.getRequestyApiKey")}
 						className="w-full">
-						<label className="block font-medium mb-1">{t("settings:providers.requestyApiKey")}</label>
+						<div className="flex justify-between items-center mb-1">
+							<label className="block font-medium">{t("settings:providers.requestyApiKey")}</label>
+							{apiConfiguration?.requestyApiKey && (
+								<RequestyBalanceDisplay apiKey={apiConfiguration.requestyApiKey} />
+							)}
+						</div>
 					</VSCodeTextField>
 					<div className="text-sm text-vscode-descriptionForeground -mt-2">
 						{t("settings:providers.apiKeyStorageNotice")}

@@ -1,20 +1,28 @@
+import os from "os"
+import * as path from "path"
+import fs from "fs/promises"
+import EventEmitter from "events"
+
 import { Anthropic } from "@anthropic-ai/sdk"
 import delay from "delay"
 import axios from "axios"
-import EventEmitter from "events"
-import fs from "fs/promises"
-import os from "os"
 import pWaitFor from "p-wait-for"
-import * as path from "path"
 import * as vscode from "vscode"
 
+import {
+	CheckpointStorage,
+	GlobalState,
+	Language,
+	ProviderSettings,
+	RooCodeSettings,
+	ApiConfigMeta,
+} from "../../schemas"
 import { changeLanguage, t } from "../../i18n"
 import { setPanel } from "../../activate/registerCommands"
 import {
 	ApiConfiguration,
 	ApiProvider,
 	ModelInfo,
-	API_CONFIG_KEYS,
 	requestyDefaultModelId,
 	requestyDefaultModelInfo,
 	openRouterDefaultModelId,
@@ -25,17 +33,10 @@ import {
 import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
-import {
-	SecretKey,
-	GlobalStateKey,
-	SECRET_KEYS,
-	GLOBAL_STATE_KEYS,
-	ConfigurationValues,
-} from "../../shared/globalState"
 import { HistoryItem } from "../../shared/HistoryItem"
-import { ApiConfigMeta, ExtensionMessage } from "../../shared/ExtensionMessage"
+import { ExtensionMessage } from "../../shared/ExtensionMessage"
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
-import { Mode, PromptComponent, defaultModeSlug, ModeConfig, getModeBySlug, getGroupName } from "../../shared/modes"
+import { Mode, PromptComponent, defaultModeSlug, getModeBySlug, getGroupName } from "../../shared/modes"
 import { checkExistKey } from "../../shared/checkExistApiConfig"
 import { EXPERIMENT_IDS, experiments as Experiments, experimentDefault, ExperimentId } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
@@ -49,7 +50,7 @@ import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { ShadowCheckpointService } from "../../services/checkpoints/ShadowCheckpointService"
 import { BrowserSession } from "../../services/browser/BrowserSession"
-import { discoverChromeInstances } from "../../services/browser/browserDiscovery"
+import { discoverChromeHostUrl, tryChromeHostUrl } from "../../services/browser/browserDiscovery"
 import { searchWorkspaceFiles } from "../../services/search/file-search"
 import { fileExistsAtPath } from "../../utils/fs"
 import { playSound, setSoundEnabled, setSoundVolume } from "../../utils/sound"
@@ -58,9 +59,10 @@ import { singleCompletionHandler } from "../../utils/single-completion-handler"
 import { searchCommits } from "../../utils/git"
 import { getDiffStrategy } from "../diff/DiffStrategy"
 import { SYSTEM_PROMPT } from "../prompts/system"
-import { ConfigManager } from "../config/ConfigManager"
+import { ContextProxy } from "../config/ContextProxy"
+import { ProviderSettingsManager } from "../config/ProviderSettingsManager"
+import { exportSettings, importSettings } from "../config/importExport"
 import { CustomModesManager } from "../config/CustomModesManager"
-import { ContextProxy } from "../contextProxy"
 import { buildApiHandler } from "../../api"
 import { getOpenRouterModels } from "../../api/providers/openrouter"
 import { getGlamaModels } from "../../api/providers/glama"
@@ -99,12 +101,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	private workspaceTracker?: WorkspaceTracker
 	protected mcpHub?: McpHub // Change from private to protected
 	private latestAnnouncementId = "mar-20-2025-3-10" // update to some unique identifier when we add a new announcement
+	private settingsImportedAt?: number
 	private contextProxy: ContextProxy
-	configManager: ConfigManager
-	customModesManager: CustomModesManager
-	get cwd() {
-		return getWorkspacePath()
-	}
+	public readonly providerSettingsManager: ProviderSettingsManager
+	public readonly customModesManager: CustomModesManager
+
 	constructor(
 		readonly context: vscode.ExtensionContext,
 		private readonly outputChannel: vscode.OutputChannel,
@@ -116,11 +117,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		this.contextProxy = new ContextProxy(context)
 		ClineProvider.activeInstances.add(this)
 
-		// Register this provider with the telemetry service to enable it to add properties like mode and provider
+		// Register this provider with the telemetry service to enable it to add
+		// properties like mode and provider.
 		telemetryService.setProvider(this)
 
 		this.workspaceTracker = new WorkspaceTracker(this)
-		this.configManager = new ConfigManager(this.context)
+
+		this.providerSettingsManager = new ProviderSettingsManager(this.context)
+
 		this.customModesManager = new CustomModesManager(this.context, async () => {
 			await this.postStateToWebview()
 		})
@@ -886,7 +890,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 							}
 						})
 
-						this.configManager
+						this.providerSettingsManager
 							.listConfig()
 							.then(async (listApiConfig) => {
 								if (!listApiConfig) {
@@ -894,25 +898,27 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								}
 
 								if (listApiConfig.length === 1) {
-									// check if first time init then sync with exist config
+									// Check if first time init then sync with exist config.
 									if (!checkExistKey(listApiConfig[0])) {
 										const { apiConfiguration } = await this.getState()
-										await this.configManager.saveConfig(
+
+										await this.providerSettingsManager.saveConfig(
 											listApiConfig[0].name ?? "default",
 											apiConfiguration,
 										)
+
 										listApiConfig[0].apiProvider = apiConfiguration.apiProvider
 									}
 								}
 
-								const currentConfigName = (await this.getGlobalState("currentApiConfigName")) as string
+								const currentConfigName = this.getGlobalState("currentApiConfigName")
 
 								if (currentConfigName) {
-									if (!(await this.configManager.hasConfig(currentConfigName))) {
+									if (!(await this.providerSettingsManager.hasConfig(currentConfigName))) {
 										// current config name not valid, get first config in list
 										await this.updateGlobalState("currentApiConfigName", listApiConfig?.[0]?.name)
 										if (listApiConfig?.[0]?.name) {
-											const apiConfig = await this.configManager.loadConfig(
+											const apiConfig = await this.providerSettingsManager.loadConfig(
 												listApiConfig?.[0]?.name,
 											)
 
@@ -1037,6 +1043,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						break
 					case "deleteMultipleTasksWithIds": {
 						const ids = message.ids
+
 						if (Array.isArray(ids)) {
 							// Process in batches of 20 (or another reasonable number)
 							const batchSize = 20
@@ -1080,6 +1087,26 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					}
 					case "exportTaskWithId":
 						this.exportTaskWithId(message.text!)
+						break
+					case "importSettings":
+						const { success } = await importSettings({
+							providerSettingsManager: this.providerSettingsManager,
+							contextProxy: this.contextProxy,
+						})
+
+						if (success) {
+							this.settingsImportedAt = Date.now()
+							await this.postStateToWebview()
+							await vscode.window.showInformationMessage(t("common:info.settings_imported"))
+						}
+
+						break
+					case "exportSettings":
+						await exportSettings({
+							providerSettingsManager: this.providerSettingsManager,
+							contextProxy: this.contextProxy,
+						})
+
 						break
 					case "resetState":
 						await this.resetState()
@@ -1170,7 +1197,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						openFile(message.text!, message.values as { create?: boolean; content?: string })
 						break
 					case "openMention":
-						openMention(message.text)
+						{
+							const { osInfo } = (await this.getState()) || {}
+							openMention(message.text, osInfo)
+						}
 						break
 					case "checkpointDiff":
 						const result = checkoutDiffPayloadSchema.safeParse(message.payload)
@@ -1218,6 +1248,28 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						}
 						break
 					}
+					case "openProjectMcpSettings": {
+						if (!vscode.workspace.workspaceFolders?.length) {
+							vscode.window.showErrorMessage(t("common:no_workspace"))
+							return
+						}
+
+						const workspaceFolder = vscode.workspace.workspaceFolders[0]
+						const rooDir = path.join(workspaceFolder.uri.fsPath, ".roo")
+						const mcpPath = path.join(rooDir, "mcp.json")
+
+						try {
+							await fs.mkdir(rooDir, { recursive: true })
+							const exists = await fileExistsAtPath(mcpPath)
+							if (!exists) {
+								await fs.writeFile(mcpPath, JSON.stringify({ mcpServers: {} }, null, 2))
+							}
+							await openFile(mcpPath)
+						} catch (error) {
+							vscode.window.showErrorMessage(t("common:errors.create_mcp_json", { error: `${error}` }))
+						}
+						break
+					}
 					case "openCustomModesSettings": {
 						const customModesFilePath = await this.customModesManager.getCustomModesFilePath()
 						if (customModesFilePath) {
@@ -1232,7 +1284,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 						try {
 							this.outputChannel.appendLine(`Attempting to delete MCP server: ${message.serverName}`)
-							await this.mcpHub?.deleteServer(message.serverName)
+							await this.mcpHub?.deleteServer(message.serverName, message.source as "global" | "project")
 							this.outputChannel.appendLine(`Successfully deleted MCP server: ${message.serverName}`)
 						} catch (error) {
 							const errorMessage = error instanceof Error ? error.message : String(error)
@@ -1243,7 +1295,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					}
 					case "restartMcpServer": {
 						try {
-							await this.mcpHub?.restartConnection(message.text!)
+							await this.mcpHub?.restartConnection(message.text!, message.source as "global" | "project")
 						} catch (error) {
 							this.outputChannel.appendLine(
 								`Failed to retry connection for ${message.text}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
@@ -1253,11 +1305,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					}
 					case "toggleToolAlwaysAllow": {
 						try {
-							await this.mcpHub?.toggleToolAlwaysAllow(
-								message.serverName!,
-								message.toolName!,
-								message.alwaysAllow!,
-							)
+							if (this.mcpHub) {
+								await this.mcpHub.toggleToolAlwaysAllow(
+									message.serverName!,
+									message.source as "global" | "project",
+									message.toolName!,
+									Boolean(message.alwaysAllow),
+								)
+							}
 						} catch (error) {
 							this.outputChannel.appendLine(
 								`Failed to toggle auto-approve for tool ${message.toolName}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
@@ -1267,7 +1322,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					}
 					case "toggleMcpServer": {
 						try {
-							await this.mcpHub?.toggleServerDisabled(message.serverName!, message.disabled!)
+							await this.mcpHub?.toggleServerDisabled(
+								message.serverName!,
+								message.disabled!,
+								message.source as "global" | "project",
+							)
 						} catch (error) {
 							this.outputChannel.appendLine(
 								`Failed to toggle MCP server ${message.serverName}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
@@ -1338,7 +1397,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					case "checkpointStorage":
 						console.log(`[ClineProvider] checkpointStorage: ${message.text}`)
 						const checkpointStorage = message.text ?? "task"
-						await this.updateGlobalState("checkpointStorage", checkpointStorage)
+						await this.updateGlobalState("checkpointStorage", checkpointStorage as CheckpointStorage)
 						await this.postStateToWebview()
 						break
 					case "browserViewportSize":
@@ -1361,74 +1420,17 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						await this.postStateToWebview()
 						break
 					case "testBrowserConnection":
-						try {
-							const browserSession = new BrowserSession(this.context)
-							// If no text is provided, try auto-discovery
-							if (!message.text) {
-								try {
-									const discoveredHost = await discoverChromeInstances()
-									if (discoveredHost) {
-										// Test the connection to the discovered host
-										const result = await browserSession.testConnection(discoveredHost)
-										// Send the result back to the webview
-										await this.postMessageToWebview({
-											type: "browserConnectionResult",
-											success: result.success,
-											text: `Auto-discovered and tested connection to Chrome at ${discoveredHost}: ${result.message}`,
-											values: { endpoint: result.endpoint },
-										})
-									} else {
-										await this.postMessageToWebview({
-											type: "browserConnectionResult",
-											success: false,
-											text: "No Chrome instances found on the network. Make sure Chrome is running with remote debugging enabled (--remote-debugging-port=9222).",
-										})
-									}
-								} catch (error) {
-									await this.postMessageToWebview({
-										type: "browserConnectionResult",
-										success: false,
-										text: `Error during auto-discovery: ${error instanceof Error ? error.message : String(error)}`,
-									})
-								}
-							} else {
-								// Test the provided URL
-								const result = await browserSession.testConnection(message.text)
-
+						// If no text is provided, try auto-discovery
+						if (!message.text) {
+							// Use testBrowserConnection for auto-discovery
+							const chromeHostUrl = await discoverChromeHostUrl()
+							if (chromeHostUrl) {
 								// Send the result back to the webview
 								await this.postMessageToWebview({
 									type: "browserConnectionResult",
-									success: result.success,
-									text: result.message,
-									values: { endpoint: result.endpoint },
-								})
-							}
-						} catch (error) {
-							await this.postMessageToWebview({
-								type: "browserConnectionResult",
-								success: false,
-								text: `Error testing connection: ${error instanceof Error ? error.message : String(error)}`,
-							})
-						}
-						break
-					case "discoverBrowser":
-						try {
-							const discoveredHost = await discoverChromeInstances()
-
-							if (discoveredHost) {
-								// Don't update the remoteBrowserHost state when auto-discovering
-								// This way we don't override the user's preference
-
-								// Test the connection to get the endpoint
-								const browserSession = new BrowserSession(this.context)
-								const result = await browserSession.testConnection(discoveredHost)
-
-								// Send the result back to the webview
-								await this.postMessageToWebview({
-									type: "browserConnectionResult",
-									success: true,
-									text: `Successfully discovered and connected to Chrome at ${discoveredHost}`,
-									values: { endpoint: result.endpoint },
+									success: !!chromeHostUrl,
+									text: `Auto-discovered and tested connection to Chrome: ${chromeHostUrl}`,
+									values: { endpoint: chromeHostUrl },
 								})
 							} else {
 								await this.postMessageToWebview({
@@ -1437,11 +1439,17 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 									text: "No Chrome instances found on the network. Make sure Chrome is running with remote debugging enabled (--remote-debugging-port=9222).",
 								})
 							}
-						} catch (error) {
+						} else {
+							// Test the provided URL
+							const customHostUrl = message.text
+							const hostIsValid = await tryChromeHostUrl(message.text)
+							// Send the result back to the webview
 							await this.postMessageToWebview({
 								type: "browserConnectionResult",
-								success: false,
-								text: `Error discovering browser: ${error instanceof Error ? error.message : String(error)}`,
+								success: hostIsValid,
+								text: hostIsValid
+									? `Successfully connected to Chrome: ${customHostUrl}`
+									: "Failed to connect to Chrome",
 							})
 						}
 						break
@@ -1485,13 +1493,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								return
 							}
 
-							const existingPrompts = (await this.getGlobalState("customSupportPrompts")) || {}
-
-							const updatedPrompts = {
-								...existingPrompts,
-								...message.values,
-							}
-
+							const existingPrompts = this.getGlobalState("customSupportPrompts") ?? {}
+							const updatedPrompts = { ...existingPrompts, ...message.values }
 							await this.updateGlobalState("customSupportPrompts", updatedPrompts)
 							await this.postStateToWebview()
 						} catch (error) {
@@ -1507,15 +1510,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 								return
 							}
 
-							const existingPrompts = ((await this.getGlobalState("customSupportPrompts")) ||
-								{}) as Record<string, any>
-
-							const updatedPrompts = {
-								...existingPrompts,
-							}
-
+							const existingPrompts = this.getGlobalState("customSupportPrompts") ?? {}
+							const updatedPrompts = { ...existingPrompts }
 							updatedPrompts[message.text] = undefined
-
 							await this.updateGlobalState("customSupportPrompts", updatedPrompts)
 							await this.postStateToWebview()
 						} catch (error) {
@@ -1527,28 +1524,12 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						break
 					case "updatePrompt":
 						if (message.promptMode && message.customPrompt !== undefined) {
-							const existingPrompts = (await this.getGlobalState("customModePrompts")) || {}
-
-							const updatedPrompts = {
-								...existingPrompts,
-								[message.promptMode]: message.customPrompt,
-							}
-
+							const existingPrompts = this.getGlobalState("customModePrompts") ?? {}
+							const updatedPrompts = { ...existingPrompts, [message.promptMode]: message.customPrompt }
 							await this.updateGlobalState("customModePrompts", updatedPrompts)
-
-							// Get current state and explicitly include customModePrompts
 							const currentState = await this.getState()
-
-							const stateWithPrompts = {
-								...currentState,
-								customModePrompts: updatedPrompts,
-							}
-
-							// Post state with prompts
-							this.view?.webview.postMessage({
-								type: "state",
-								state: stateWithPrompts,
-							})
+							const stateWithPrompts = { ...currentState, customModePrompts: updatedPrompts }
+							this.view?.webview.postMessage({ type: "state", state: stateWithPrompts })
 						}
 						break
 					case "deleteMessage": {
@@ -1664,7 +1645,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						break
 					case "language":
 						changeLanguage(message.text ?? "en")
-						await this.updateGlobalState("language", message.text)
+						await this.updateGlobalState("language", message.text as Language)
 						await this.postStateToWebview()
 						break
 					case "showRooIgnoredFiles":
@@ -1675,12 +1656,23 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						await this.updateGlobalState("maxReadFileLine", message.value)
 						await this.postStateToWebview()
 						break
+					case "toggleApiConfigPin":
+						if (message.text) {
+							const currentPinned = this.getGlobalState("pinnedApiConfigs") ?? {}
+							const updatedPinned: Record<string, boolean> = { ...currentPinned }
+
+							if (currentPinned[message.text]) {
+								delete updatedPinned[message.text]
+							} else {
+								updatedPinned[message.text] = true
+							}
+
+							await this.updateGlobalState("pinnedApiConfigs", updatedPinned)
+							await this.postStateToWebview()
+						}
+						break
 					case "enhancementApiConfigId":
 						await this.updateGlobalState("enhancementApiConfigId", message.text)
-						await this.postStateToWebview()
-						break
-					case "enableCustomModeCreation":
-						await this.updateGlobalState("enableCustomModeCreation", message.bool ?? true)
 						await this.postStateToWebview()
 						break
 					case "autoApprovalEnabled":
@@ -1704,7 +1696,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 										(c: ApiConfigMeta) => c.id === enhancementApiConfigId,
 									)
 									if (config?.name) {
-										const loadedConfig = await this.configManager.loadConfig(config.name)
+										const loadedConfig = await this.providerSettingsManager.loadConfig(config.name)
 										if (loadedConfig.apiProvider) {
 											configToUse = loadedConfig
 										}
@@ -1827,8 +1819,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					case "saveApiConfiguration":
 						if (message.text && message.apiConfiguration) {
 							try {
-								await this.configManager.saveConfig(message.text, message.apiConfiguration)
-								const listApiConfig = await this.configManager.listConfig()
+								await this.providerSettingsManager.saveConfig(message.text, message.apiConfiguration)
+								const listApiConfig = await this.providerSettingsManager.listConfig()
 								await this.updateGlobalState("listApiConfigMeta", listApiConfig)
 							} catch (error) {
 								this.outputChannel.appendLine(
@@ -1852,16 +1844,24 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 									break
 								}
 
-								await this.configManager.saveConfig(newName, message.apiConfiguration)
-								await this.configManager.deleteConfig(oldName)
+								// Load the old configuration to get its ID
+								const oldConfig = await this.providerSettingsManager.loadConfig(oldName)
 
-								const listApiConfig = await this.configManager.listConfig()
-								const config = listApiConfig?.find((c) => c.name === newName)
+								// Create a new configuration with the same ID
+								const newConfig = {
+									...message.apiConfiguration,
+									id: oldConfig.id, // Preserve the ID
+								}
+
+								// Save with the new name but same ID
+								await this.providerSettingsManager.saveConfig(newName, newConfig)
+								await this.providerSettingsManager.deleteConfig(oldName)
+
+								const listApiConfig = await this.providerSettingsManager.listConfig()
 
 								// Update listApiConfigMeta first to ensure UI has latest data
 								await this.updateGlobalState("listApiConfigMeta", listApiConfig)
-
-								await Promise.all([this.updateGlobalState("currentApiConfigName", newName)])
+								await this.updateGlobalState("currentApiConfigName", newName)
 
 								await this.postStateToWebview()
 							} catch (error) {
@@ -1875,8 +1875,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					case "loadApiConfiguration":
 						if (message.text) {
 							try {
-								const apiConfig = await this.configManager.loadConfig(message.text)
-								const listApiConfig = await this.configManager.listConfig()
+								const apiConfig = await this.providerSettingsManager.loadConfig(message.text)
+								const listApiConfig = await this.providerSettingsManager.listConfig()
 
 								await Promise.all([
 									this.updateGlobalState("listApiConfigMeta", listApiConfig),
@@ -1888,6 +1888,29 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 							} catch (error) {
 								this.outputChannel.appendLine(
 									`Error load api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+								)
+								vscode.window.showErrorMessage(t("common:errors.load_api_config"))
+							}
+						}
+						break
+					case "loadApiConfigurationById":
+						if (message.text) {
+							try {
+								const { config: apiConfig, name } = await this.providerSettingsManager.loadConfigById(
+									message.text,
+								)
+								const listApiConfig = await this.providerSettingsManager.listConfig()
+
+								await Promise.all([
+									this.updateGlobalState("listApiConfigMeta", listApiConfig),
+									this.updateGlobalState("currentApiConfigName", name),
+									this.updateApiConfiguration(apiConfig),
+								])
+
+								await this.postStateToWebview()
+							} catch (error) {
+								this.outputChannel.appendLine(
+									`Error load api configuration by ID: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 								)
 								vscode.window.showErrorMessage(t("common:errors.load_api_config"))
 							}
@@ -1906,16 +1929,19 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 							}
 
 							try {
-								await this.configManager.deleteConfig(message.text)
-								const listApiConfig = await this.configManager.listConfig()
+								await this.providerSettingsManager.deleteConfig(message.text)
+								const listApiConfig = await this.providerSettingsManager.listConfig()
 
 								// Update listApiConfigMeta first to ensure UI has latest data
 								await this.updateGlobalState("listApiConfigMeta", listApiConfig)
 
 								// If this was the current config, switch to first available
-								const currentApiConfigName = await this.getGlobalState("currentApiConfigName")
+								const currentApiConfigName = this.getGlobalState("currentApiConfigName")
+
 								if (message.text === currentApiConfigName && listApiConfig?.[0]?.name) {
-									const apiConfig = await this.configManager.loadConfig(listApiConfig[0].name)
+									const apiConfig = await this.providerSettingsManager.loadConfig(
+										listApiConfig[0].name,
+									)
 									await Promise.all([
 										this.updateGlobalState("currentApiConfigName", listApiConfig[0].name),
 										this.updateApiConfiguration(apiConfig),
@@ -1933,7 +1959,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						break
 					case "getListApiConfiguration":
 						try {
-							const listApiConfig = await this.configManager.listConfig()
+							const listApiConfig = await this.providerSettingsManager.listConfig()
 							await this.updateGlobalState("listApiConfigMeta", listApiConfig)
 							this.postMessageToWebview({ type: "listApiConfig", listApiConfig })
 						} catch (error) {
@@ -1949,9 +1975,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						}
 
 						const updatedExperiments = {
-							...((await this.getGlobalState("experiments")) ?? experimentDefault),
+							...(this.getGlobalState("experiments") ?? experimentDefault),
 							...message.values,
-						} as Record<ExperimentId, boolean>
+						}
 
 						await this.updateGlobalState("experiments", updatedExperiments)
 
@@ -1969,7 +1995,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					case "updateMcpTimeout":
 						if (message.serverName && typeof message.timeout === "number") {
 							try {
-								await this.mcpHub?.updateServerTimeout(message.serverName, message.timeout)
+								await this.mcpHub?.updateServerTimeout(
+									message.serverName,
+									message.timeout,
+									message.source as "global" | "project",
+								)
 							} catch (error) {
 								this.outputChannel.appendLine(
 									`Failed to update timeout for ${message.serverName}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
@@ -2123,8 +2153,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		await this.updateGlobalState("mode", newMode)
 
 		// Load the saved API config for the new mode if it exists
-		const savedConfigId = await this.configManager.getModeConfigId(newMode)
-		const listApiConfig = await this.configManager.listConfig()
+		const savedConfigId = await this.providerSettingsManager.getModeConfigId(newMode)
+		const listApiConfig = await this.providerSettingsManager.listConfig()
 
 		// Update listApiConfigMeta first to ensure UI has latest data
 		await this.updateGlobalState("listApiConfigMeta", listApiConfig)
@@ -2133,7 +2163,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		if (savedConfigId) {
 			const config = listApiConfig?.find((c) => c.id === savedConfigId)
 			if (config?.name) {
-				const apiConfig = await this.configManager.loadConfig(config.name)
+				const apiConfig = await this.providerSettingsManager.loadConfig(config.name)
 				await Promise.all([
 					this.updateGlobalState("currentApiConfigName", config.name),
 					this.updateApiConfiguration(apiConfig),
@@ -2141,11 +2171,12 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			}
 		} else {
 			// If no saved config for this mode, save current config as default
-			const currentApiConfigName = await this.getGlobalState("currentApiConfigName")
+			const currentApiConfigName = this.getGlobalState("currentApiConfigName")
+
 			if (currentApiConfigName) {
 				const config = listApiConfig?.find((c) => c.name === currentApiConfigName)
 				if (config?.id) {
-					await this.configManager.setModeConfig(newMode, config.id)
+					await this.providerSettingsManager.setModeConfig(newMode, config.id)
 				}
 			}
 		}
@@ -2153,23 +2184,24 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		await this.postStateToWebview()
 	}
 
-	private async updateApiConfiguration(apiConfiguration: ApiConfiguration) {
+	private async updateApiConfiguration(providerSettings: ProviderSettings) {
 		// Update mode's default config.
 		const { mode } = await this.getState()
 
 		if (mode) {
-			const currentApiConfigName = await this.getGlobalState("currentApiConfigName")
-			const listApiConfig = await this.configManager.listConfig()
+			const currentApiConfigName = this.getGlobalState("currentApiConfigName")
+			const listApiConfig = await this.providerSettingsManager.listConfig()
 			const config = listApiConfig?.find((c) => c.name === currentApiConfigName)
 
 			if (config?.id) {
-				await this.configManager.setModeConfig(mode, config.id)
+				await this.providerSettingsManager.setModeConfig(mode, config.id)
 			}
 		}
-		await this.contextProxy.setApiConfiguration(apiConfiguration)
+
+		await this.contextProxy.setProviderSettings(providerSettings)
 
 		if (this.getCurrentCline()) {
-			this.getCurrentCline()!.api = buildApiHandler(apiConfiguration)
+			this.getCurrentCline()!.api = buildApiHandler(providerSettings)
 		}
 	}
 
@@ -2361,8 +2393,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	async upsertApiConfiguration(configName: string, apiConfiguration: ApiConfiguration) {
 		try {
-			await this.configManager.saveConfig(configName, apiConfiguration)
-			const listApiConfig = await this.configManager.listConfig()
+			await this.providerSettingsManager.saveConfig(configName, apiConfiguration)
+			const listApiConfig = await this.providerSettingsManager.listConfig()
 
 			await Promise.all([
 				this.updateGlobalState("listApiConfigMeta", listApiConfig),
@@ -2388,8 +2420,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		uiMessagesFilePath: string
 		apiConversationHistory: Anthropic.MessageParam[]
 	}> {
-		const history = ((await this.getGlobalState("taskHistory")) as HistoryItem[] | undefined) || []
+		const history = this.getGlobalState("taskHistory") ?? []
 		const historyItem = history.find((item) => item.id === id)
+
 		if (historyItem) {
 			const { getTaskDirectoryPath } = await import("../../shared/storagePathManager")
 			const globalStoragePath = this.contextProxy.globalStorageUri.fsPath
@@ -2397,8 +2430,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
 			const uiMessagesFilePath = path.join(taskDirPath, GlobalFileNames.uiMessages)
 			const fileExists = await fileExistsAtPath(apiConversationHistoryFilePath)
+
 			if (fileExists) {
 				const apiConversationHistory = JSON.parse(await fs.readFile(apiConversationHistoryFilePath, "utf8"))
+
 				return {
 					historyItem,
 					taskDirPath,
@@ -2408,6 +2443,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				}
 			}
 		}
+
 		// if we tried to get a task that doesn't exist, remove it from state
 		// FIXME: this seems to happen sometimes when the json file doesnt save to disk for some reason
 		await this.deleteTaskFromState(id)
@@ -2478,12 +2514,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	}
 
 	async deleteTaskFromState(id: string) {
-		// Remove the task from history
-		const taskHistory = ((await this.getGlobalState("taskHistory")) as HistoryItem[]) || []
+		const taskHistory = this.getGlobalState("taskHistory") ?? []
 		const updatedTaskHistory = taskHistory.filter((task) => task.id !== id)
 		await this.updateGlobalState("taskHistory", updatedTaskHistory)
-
-		// Notify the webview that the task has been deleted
 		await this.postStateToWebview()
 	}
 
@@ -2518,6 +2551,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			screenshotQuality,
 			remoteBrowserHost,
 			remoteBrowserEnabled,
+			cachedChromeHostUrl,
 			writeDelayMs,
 			terminalOutputLineLimit,
 			terminalShellIntegrationTimeout,
@@ -2529,6 +2563,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			rateLimitSeconds,
 			currentApiConfigName,
 			listApiConfigMeta,
+			pinnedApiConfigs,
 			mode,
 			customModePrompts,
 			customSupportPrompts,
@@ -2551,6 +2586,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		return {
 			version: this.context.extension?.packageJSON?.version ?? "",
+			osInfo: os.platform() === "win32" ? "win32" : "unix",
 			apiConfiguration,
 			customInstructions,
 			alwaysAllowReadOnly: alwaysAllowReadOnly ?? false,
@@ -2584,6 +2620,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			screenshotQuality: screenshotQuality ?? 75,
 			remoteBrowserHost,
 			remoteBrowserEnabled: remoteBrowserEnabled ?? false,
+			cachedChromeHostUrl: cachedChromeHostUrl,
 			writeDelayMs: writeDelayMs ?? 1000,
 			terminalOutputLineLimit: terminalOutputLineLimit ?? 500,
 			terminalShellIntegrationTimeout: terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT,
@@ -2595,6 +2632,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			rateLimitSeconds: rateLimitSeconds ?? 0,
 			currentApiConfigName: currentApiConfigName ?? "default",
 			listApiConfigMeta: listApiConfigMeta ?? [],
+			pinnedApiConfigs: pinnedApiConfigs ?? {},
 			mode: mode ?? defaultModeSlug,
 			customModePrompts: customModePrompts ?? {},
 			customSupportPrompts: customSupportPrompts ?? {},
@@ -2614,108 +2652,36 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			language,
 			renderContext: this.renderContext,
 			maxReadFileLine: maxReadFileLine ?? 500,
+			settingsImportedAt: this.settingsImportedAt,
 		}
 	}
 
-	// Caching mechanism to keep track of webview messages + API conversation history per provider instance
-
-	/*
-	Now that we use retainContextWhenHidden, we don't have to store a cache of cline messages in the user's state, but we could to reduce memory footprint in long conversations.
-
-	- We have to be careful of what state is shared between ClineProvider instances since there could be multiple instances of the extension running at once. For example when we cached cline messages using the same key, two instances of the extension could end up using the same key and overwriting each other's messages.
-	- Some state does need to be shared between the instances, i.e. the API key--however there doesn't seem to be a good way to notfy the other instances that the API key has changed.
-
-	We need to use a unique identifier for each ClineProvider instance's message cache since we could be running several instances of the extension outside of just the sidebar i.e. in editor panels.
-
-	// conversation history to send in API requests
-
-	/*
-	It seems that some API messages do not comply with vscode state requirements. Either the Anthropic library is manipulating these values somehow in the backend in a way thats creating cyclic references, or the API returns a function or a Symbol as part of the message content.
-	VSCode docs about state: "The value must be JSON-stringifyable ... value — A value. MUST not contain cyclic references."
-	For now we'll store the conversation history in memory, and if we need to store in state directly we'd need to do a manual conversion to ensure proper json stringification.
-	*/
-
-	// getApiConversationHistory(): Anthropic.MessageParam[] {
-	// 	// const history = (await this.getGlobalState(
-	// 	// 	this.getApiConversationHistoryStateKey()
-	// 	// )) as Anthropic.MessageParam[]
-	// 	// return history || []
-	// 	return this.apiConversationHistory
-	// }
-
-	// setApiConversationHistory(history: Anthropic.MessageParam[] | undefined) {
-	// 	// await this.updateGlobalState(this.getApiConversationHistoryStateKey(), history)
-	// 	this.apiConversationHistory = history || []
-	// }
-
-	// addMessageToApiConversationHistory(message: Anthropic.MessageParam): Anthropic.MessageParam[] {
-	// 	// const history = await this.getApiConversationHistory()
-	// 	// history.push(message)
-	// 	// await this.setApiConversationHistory(history)
-	// 	// return history
-	// 	this.apiConversationHistory.push(message)
-	// 	return this.apiConversationHistory
-	// }
-
-	/*
-	Storage
-	https://dev.to/kompotkot/how-to-use-secretstorage-in-your-vscode-extensions-2hco
-	https://www.eliostruyf.com/devhack-code-extension-storage-options/
-	*/
+	/**
+	 * Storage
+	 * https://dev.to/kompotkot/how-to-use-secretstorage-in-your-vscode-extensions-2hco
+	 * https://www.eliostruyf.com/devhack-code-extension-storage-options/
+	 */
 
 	async getState() {
-		// Create an object to store all fetched values
-		const stateValues: Record<GlobalStateKey | SecretKey, any> = {} as Record<GlobalStateKey | SecretKey, any>
-		const secretValues: Record<SecretKey, any> = {} as Record<SecretKey, any>
+		const stateValues = this.contextProxy.getValues()
 
-		// Create promise arrays for global state and secrets
-		const statePromises = GLOBAL_STATE_KEYS.map((key) => this.getGlobalState(key))
-		const secretPromises = SECRET_KEYS.map((key) => this.getSecret(key))
+		const customModes = await this.customModesManager.getCustomModes()
 
-		// Add promise for custom modes which is handled separately
-		const customModesPromise = this.customModesManager.getCustomModes()
+		// Determine apiProvider with the same logic as before.
+		const apiProvider: ApiProvider = stateValues.apiProvider ? stateValues.apiProvider : "anthropic"
 
-		let idx = 0
-		const valuePromises = await Promise.all([...statePromises, ...secretPromises, customModesPromise])
-
-		// Populate stateValues and secretValues
-		GLOBAL_STATE_KEYS.forEach((key, _) => {
-			stateValues[key] = valuePromises[idx]
-			idx = idx + 1
-		})
-
-		SECRET_KEYS.forEach((key, index) => {
-			secretValues[key] = valuePromises[idx]
-			idx = idx + 1
-		})
-
-		let customModes = valuePromises[idx] as ModeConfig[] | undefined
-
-		// Determine apiProvider with the same logic as before
-		let apiProvider: ApiProvider
-		if (stateValues.apiProvider) {
-			apiProvider = stateValues.apiProvider
-		} else {
-			apiProvider = "anthropic"
-		}
-
-		// Build the apiConfiguration object combining state values and secrets
-		// Using the dynamic approach with API_CONFIG_KEYS
-		const apiConfiguration: ApiConfiguration = {
-			// Dynamically add all API-related keys from stateValues
-			...Object.fromEntries(API_CONFIG_KEYS.map((key) => [key, stateValues[key]])),
-			// Add all secrets
-			...secretValues,
-		}
+		// Build the apiConfiguration object combining state values and secrets.
+		const providerSettings = this.contextProxy.getProviderSettings()
 
 		// Ensure apiProvider is set properly if not already in state
-		if (!apiConfiguration.apiProvider) {
-			apiConfiguration.apiProvider = apiProvider
+		if (!providerSettings.apiProvider) {
+			providerSettings.apiProvider = apiProvider
 		}
 
 		// Return the same structure as before
 		return {
-			apiConfiguration,
+			apiConfiguration: providerSettings,
+			osInfo: os.platform() === "win32" ? "win32" : "unix",
 			lastShownAnnouncementId: stateValues.lastShownAnnouncementId,
 			customInstructions: stateValues.customInstructions,
 			alwaysAllowReadOnly: stateValues.alwaysAllowReadOnly ?? false,
@@ -2740,6 +2706,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			screenshotQuality: stateValues.screenshotQuality ?? 75,
 			remoteBrowserHost: stateValues.remoteBrowserHost,
 			remoteBrowserEnabled: stateValues.remoteBrowserEnabled ?? false,
+			cachedChromeHostUrl: stateValues.cachedChromeHostUrl as string | undefined,
 			fuzzyMatchThreshold: stateValues.fuzzyMatchThreshold ?? 1.0,
 			writeDelayMs: stateValues.writeDelayMs ?? 1000,
 			terminalOutputLineLimit: stateValues.terminalOutputLineLimit ?? 500,
@@ -2754,6 +2721,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			rateLimitSeconds: stateValues.rateLimitSeconds ?? 0,
 			currentApiConfigName: stateValues.currentApiConfigName ?? "default",
 			listApiConfigMeta: stateValues.listApiConfigMeta ?? [],
+			pinnedApiConfigs: stateValues.pinnedApiConfigs ?? {},
 			modeApiConfigs: stateValues.modeApiConfigs ?? ({} as Record<Mode, string>),
 			customModePrompts: stateValues.customModePrompts ?? {},
 			customSupportPrompts: stateValues.customSupportPrompts ?? {},
@@ -2772,7 +2740,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	}
 
 	async updateTaskHistory(item: HistoryItem): Promise<HistoryItem[]> {
-		const history = ((await this.getGlobalState("taskHistory")) as HistoryItem[] | undefined) || []
+		const history = (this.getGlobalState("taskHistory") as HistoryItem[] | undefined) || []
 		const existingItemIndex = history.findIndex((h) => h.id === item.id)
 
 		if (existingItemIndex !== -1) {
@@ -2780,34 +2748,43 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		} else {
 			history.push(item)
 		}
+
 		await this.updateGlobalState("taskHistory", history)
 		return history
 	}
 
-	// global
+	// ContextProxy
 
-	public async updateGlobalState(key: GlobalStateKey, value: any) {
-		await this.contextProxy.updateGlobalState(key, value)
+	// @deprecated - Use `ContextProxy#setValue` instead.
+	private async updateGlobalState<K extends keyof GlobalState>(key: K, value: GlobalState[K]) {
+		await this.contextProxy.setValue(key, value)
 	}
 
-	public async getGlobalState(key: GlobalStateKey) {
-		return await this.contextProxy.getGlobalState(key)
+	// @deprecated - Use `ContextProxy#getValue` instead.
+	private getGlobalState<K extends keyof GlobalState>(key: K) {
+		return this.contextProxy.getValue(key)
 	}
 
-	// secrets
-
-	public async storeSecret(key: SecretKey, value?: string) {
-		await this.contextProxy.storeSecret(key, value)
+	public async setValue<K extends keyof RooCodeSettings>(key: K, value: RooCodeSettings[K]) {
+		await this.contextProxy.setValue(key, value)
 	}
 
-	private async getSecret(key: SecretKey) {
-		return await this.contextProxy.getSecret(key)
+	public getValue<K extends keyof RooCodeSettings>(key: K) {
+		return this.contextProxy.getValue(key)
 	}
 
-	// global + secret
+	public getValues() {
+		return this.contextProxy.getValues()
+	}
 
-	public async setValues(values: Partial<ConfigurationValues>) {
+	public async setValues(values: RooCodeSettings) {
 		await this.contextProxy.setValues(values)
+	}
+
+	// cwd
+
+	get cwd() {
+		return getWorkspacePath()
 	}
 
 	// dev
@@ -2824,7 +2801,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		}
 
 		await this.contextProxy.resetAllState()
-		await this.configManager.resetAllConfigs()
+		await this.providerSettingsManager.resetAllConfigs()
 		await this.customModesManager.resetCustomModes()
 		await this.removeClineFromStack()
 		await this.postStateToWebview()
