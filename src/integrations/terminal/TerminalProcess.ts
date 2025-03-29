@@ -241,7 +241,7 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 	private hotTimer: NodeJS.Timeout | null = null
 
 	async run(command: string) {
-		this.command = command
+		this.command = this.sanitizeHtmlEscapes(command)
 		const terminal = this.terminalInfo.terminal
 
 		if (terminal.shellIntegration && terminal.shellIntegration.executeCommand) {
@@ -665,6 +665,23 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 		}
 
 		return match133 !== undefined ? match133 : match633
+	}
+
+	/**
+	 * Sanitizes HTML escape sequences in a string.
+	 * @param input The input string to sanitize
+	 * @returns The sanitized string
+	 */
+	private sanitizeHtmlEscapes(input: string): string {
+		const htmlEscapes: Record<string, string> = {
+			"&amp;": "&",
+			"&lt;": "<",
+			"&gt;": ">",
+			"&quot;": '"',
+			"&#39;": "'",
+		}
+
+		return input.replace(/&(?:amp|lt|gt|quot|#39);/g, (match) => htmlEscapes[match] || match)
 	}
 }
 

@@ -163,33 +163,33 @@ export class Terminal {
 		const process = new TerminalProcess(this)
 
 		// Store the command on the process for reference
-		process.command = command
+		process.command = this.sanitizeHtmlEscapes(command)
 
 		// Set process on terminal
 		this.process = process
 
 		// Create a promise for command completion
 		const promise = new Promise<void>((resolve, reject) => {
-			// Set up event handlers
-			process.once("continue", () => resolve())
-			process.once("error", (error) => {
-				console.error(`[Terminal ${this.id}] error:`, error)
-				reject(error)
-			})
+				// Set up event handlers
+				process.once("continue", () => resolve())
+				process.once("error", (error) => {
+					console.error(`[Terminal ${this.id}] error:`, error)
+					reject(error)
+				})
 
-			// Wait for shell integration before executing the command
-			pWaitFor(() => this.terminal.shellIntegration !== undefined, { timeout: Terminal.shellIntegrationTimeout })
-				.then(() => {
-					process.run(command)
-				})
-				.catch(() => {
-					console.log(`[Terminal ${this.id}] Shell integration not available. Command execution aborted.`)
-					process.emit(
-						"no_shell_integration",
-						"Shell integration initialization sequence '\\x1b]633;A' was not received within 4 seconds. Shell integration has been disabled for this terminal instance. Increase the timeout in the settings if necessary.",
-					)
-				})
-		})
+				// Wait for shell integration before executing the command
+				pWaitFor(() => this.terminal.shellIntegration !== undefined, { timeout: Terminal.shellIntegrationTimeout })
+					.then(() => {
+						process.run(command)
+					})
+					.catch(() => {
+						console.log(`[Terminal ${this.id}] Shell integration not available. Command execution aborted.`)
+						process.emit(
+							"no_shell_integration",
+							"Shell integration initialization sequence '\\x1b]633;A' was not received within 4 seconds. Shell integration has been disabled for this terminal instance. Increase the timeout in the settings if necessary.",
+						)
+					})
+			})
 
 		return mergePromise(process, promise)
 	}
@@ -258,5 +258,22 @@ export class Terminal {
 
 	public static compressTerminalOutput(input: string, lineLimit: number): string {
 		return truncateOutput(applyRunLengthEncoding(input), lineLimit)
+	}
+
+	/**
+	 * Sanitizes HTML escape sequences in a string.
+	 * @param input The input string to sanitize
+	 * @returns The sanitized string
+	 */
+	private sanitizeHtmlEscapes(input: string): string {
+		const htmlEscapes: Record<string, string> = {
+			"&amp;": "&",
+			"&lt;": "<",
+			"&gt;": ">",
+			"&quot;": '"',
+			"&#39;": "'",
+		}
+
+		return input.replace(/&(?:amp|lt|gt|quot|#39);/g, (match) => htmlEscapes[match] || match)
 	}
 }

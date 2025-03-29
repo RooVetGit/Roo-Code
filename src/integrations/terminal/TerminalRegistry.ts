@@ -128,7 +128,8 @@ export class TerminalRegistry {
 		})
 
 		const cwdString = cwd.toString()
-		const newTerminal = new Terminal(this.nextTerminalId++, terminal, cwdString)
+		const sanitizedCwd = TerminalProcess.sanitizeHtmlEscapes(cwdString)
+		const newTerminal = new Terminal(this.nextTerminalId++, terminal, sanitizedCwd)
 
 		this.terminals.push(newTerminal)
 		return newTerminal
