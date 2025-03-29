@@ -245,11 +245,11 @@ export const ChatRowContent = ({
 	}
 
 	const tool = useMemo(() => {
-		if (message.ask === "tool" || message.say === "tool") {
+		if (message.ask === "tool") {
 			return JSON.parse(message.text || "{}") as ClineSayTool
 		}
 		return null
-	}, [message.ask, message.say, message.text])
+	}, [message.ask, message.text])
 
 	const followUpData = useMemo(() => {
 		if (message.type === "ask" && message.ask === "followup" && !message.partial) {
