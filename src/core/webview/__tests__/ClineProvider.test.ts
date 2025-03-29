@@ -375,7 +375,12 @@ describe("ClineProvider", () => {
 		expect(mockWebviewView.webview.html).toContain(
 			"connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com;",
 		)
-		expect(mockWebviewView.webview.html).toContain("script-src 'nonce-")
+
+		// Extract the script-src directive section and verify it contains the nonce
+		const html = mockWebviewView.webview.html
+		const scriptSrcMatch = html.match(/script-src[^;]*;/)
+		expect(scriptSrcMatch).not.toBeNull()
+		expect(scriptSrcMatch![0]).toContain("'nonce-")
 	})
 
 	test("postMessageToWebview sends message to webview", async () => {
