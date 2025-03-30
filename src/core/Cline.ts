@@ -2266,7 +2266,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 					}
 
 					case "list_files": {
-						listFilesTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
+						await listFilesTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
 						break
 					}
 					case "list_code_definition_names": {
