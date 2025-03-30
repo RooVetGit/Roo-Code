@@ -291,6 +291,10 @@ describe("ClineProvider", () => {
 		// Reset mocks
 		jest.clearAllMocks()
 
+		// Reset ClineStackManager mock stack
+		const { __resetMockStack } = require("../ClineStackManager")
+		__resetMockStack()
+
 		// Mock context
 		const globalState: Record<string, string | undefined> = {
 			mode: "architect",
