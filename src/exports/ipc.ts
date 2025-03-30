@@ -50,7 +50,13 @@ export class IpcServer extends EventEmitter<IpcServerEvents> {
 		const clientId = crypto.randomBytes(6).toString("hex")
 		this._clients.set(clientId, socket)
 		this.log(`[server#onConnect] clientId = ${clientId}, # clients = ${this._clients.size}`)
-		this.send(socket, { type: IpcMessageType.Ack, origin: IpcOrigin.Server, data: { clientId } })
+
+		this.send(socket, {
+			type: IpcMessageType.Ack,
+			origin: IpcOrigin.Server,
+			data: { clientId, pid: process.pid, ppid: process.ppid },
+		})
+
 		this.emit(IpcMessageType.Connect, clientId)
 	}
 

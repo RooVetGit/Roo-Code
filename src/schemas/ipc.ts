@@ -94,7 +94,7 @@ export const ipcMessageSchema = z.discriminatedUnion("type", [
 	z.object({
 		type: z.literal(IpcMessageType.Ack),
 		origin: z.literal(IpcOrigin.Server),
-		data: z.object({ clientId: z.string() }),
+		data: z.object({ clientId: z.string(), pid: z.number(), ppid: z.number() }),
 	}),
 	z.object({
 		type: z.literal(IpcMessageType.TaskCommand),
