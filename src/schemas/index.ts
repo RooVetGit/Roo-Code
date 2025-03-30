@@ -314,12 +314,12 @@ export const providerSettingsSchema = z.object({
 	anthropicBaseUrl: z.string().optional(),
 	// Glama
 	glamaModelId: z.string().optional(),
-	glamaModelInfo: modelInfoSchema.optional(),
+	glamaModelInfo: modelInfoSchema.nullish(),
 	glamaApiKey: z.string().optional(),
 	// OpenRouter
 	openRouterApiKey: z.string().optional(),
 	openRouterModelId: z.string().optional(),
-	openRouterModelInfo: modelInfoSchema.optional(),
+	openRouterModelInfo: modelInfoSchema.nullish(),
 	openRouterBaseUrl: z.string().optional(),
 	openRouterSpecificProvider: z.string().optional(),
 	openRouterUseMiddleOutTransform: z.boolean().optional(),
@@ -344,7 +344,7 @@ export const providerSettingsSchema = z.object({
 	openAiApiKey: z.string().optional(),
 	openAiR1FormatEnabled: z.boolean().optional(),
 	openAiModelId: z.string().optional(),
-	openAiCustomModelInfo: modelInfoSchema.optional(),
+	openAiCustomModelInfo: modelInfoSchema.nullish(),
 	openAiUseAzure: z.boolean().optional(),
 	azureApiVersion: z.string().optional(),
 	openAiStreamingEnabled: z.boolean().optional(),
@@ -379,11 +379,11 @@ export const providerSettingsSchema = z.object({
 	// Unbound
 	unboundApiKey: z.string().optional(),
 	unboundModelId: z.string().optional(),
-	unboundModelInfo: modelInfoSchema.optional(),
+	unboundModelInfo: modelInfoSchema.nullish(),
 	// Requesty
 	requestyApiKey: z.string().optional(),
 	requestyModelId: z.string().optional(),
-	requestyModelInfo: modelInfoSchema.optional(),
+	requestyModelInfo: modelInfoSchema.nullish(),
 	// Claude 3.7 Sonnet Thinking
 	modelTemperature: z.number().nullish(),
 	modelMaxTokens: z.number().optional(),
@@ -513,6 +513,7 @@ export const globalSettingsSchema = z.object({
 	screenshotQuality: z.number().optional(),
 	remoteBrowserEnabled: z.boolean().optional(),
 	remoteBrowserHost: z.string().optional(),
+	cachedChromeHostUrl: z.string().optional(),
 
 	enableCheckpoints: z.boolean().optional(),
 	checkpointStorage: checkpointStoragesSchema.optional(),
@@ -618,6 +619,7 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	customModePrompts: undefined,
 	customSupportPrompts: undefined,
 	enhancementApiConfigId: undefined,
+	cachedChromeHostUrl: undefined,
 }
 
 export const GLOBAL_SETTINGS_KEYS = Object.keys(globalSettingsRecord) as Keys<GlobalSettings>[]
@@ -791,7 +793,7 @@ export type TokenUsage = z.infer<typeof tokenUsageSchema>
  * TypeDefinition
  */
 
-type TypeDefinition = {
+export type TypeDefinition = {
 	schema: z.ZodTypeAny
 	identifier: string
 }
@@ -802,3 +804,6 @@ export const typeDefinitions: TypeDefinition[] = [
 	{ schema: clineMessageSchema, identifier: "ClineMessage" },
 	{ schema: tokenUsageSchema, identifier: "TokenUsage" },
 ]
+
+// Also export as default for ESM compatibility
+export default { typeDefinitions }
