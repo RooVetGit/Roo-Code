@@ -391,6 +391,89 @@ const CodeBlock = memo(
 			}
 		}, [highlightedCode, updateCodeBlockButtonPosition])
 
+		// Advanced inertial scroll chaining
+		// This effect handles the transition between scrolling the code block and the outer container.
+		// When a user scrolls to the boundary of a code block (top or bottom), this implementation:
+		// 1. Detects the boundary condition
+		// 2. Applies inertial scrolling to the outer container for a smooth transition
+		// 3. Adds physics-based momentum for natural deceleration
+		// This creates a seamless experience where scrolling flows naturally between nested scrollable areas
+		useEffect(() => {
+			if (!preRef.current) return
+
+			// Find the outer scrollable container
+			const getScrollContainer = () => {
+				return document.querySelector('[data-virtuoso-scroller="true"]') as HTMLElement
+			}
+
+			// Inertial scrolling implementation
+			let velocity = 0
+			let animationFrameId: number | null = null
+			const FRICTION = 0.85 // Friction coefficient (lower = more friction)
+			const MIN_VELOCITY = 0.5 // Minimum velocity before stopping
+
+			// Animation function for inertial scrolling
+			const animate = () => {
+				const scrollContainer = getScrollContainer()
+				if (!scrollContainer) return
+
+				// Apply current velocity
+				if (Math.abs(velocity) > MIN_VELOCITY) {
+					scrollContainer.scrollBy(0, velocity)
+					velocity *= FRICTION // Apply friction
+					animationFrameId = requestAnimationFrame(animate)
+				} else {
+					velocity = 0
+					animationFrameId = null
+				}
+			}
+
+			// Wheel event handler with inertial scrolling
+			const handleWheel = (e: WheelEvent) => {
+				if (!preRef.current) return
+
+				const scrollContainer = getScrollContainer()
+				if (!scrollContainer) return
+
+				// Check if we're at the top or bottom of the inner container
+				const isAtVeryTop = preRef.current.scrollTop === 0
+				const isAtVeryBottom =
+					Math.abs(preRef.current.scrollHeight - preRef.current.scrollTop - preRef.current.clientHeight) < 1
+
+				// Handle scrolling at container boundaries
+				if ((e.deltaY < 0 && isAtVeryTop) || (e.deltaY > 0 && isAtVeryBottom)) {
+					// Prevent default to stop inner container from handling
+					e.preventDefault()
+
+					const boost = 0.15
+					velocity += e.deltaY * boost
+
+					// Start animation if not already running
+					if (!animationFrameId) {
+						animationFrameId = requestAnimationFrame(animate)
+					}
+				}
+			}
+
+			// Add wheel event listener to inner container
+			const preElement = preRef.current
+			if (preElement) {
+				preElement.addEventListener("wheel", handleWheel, { passive: false })
+			}
+
+			// Clean up
+			return () => {
+				if (preElement) {
+					preElement.removeEventListener("wheel", handleWheel)
+				}
+
+				// Cancel any ongoing animation
+				if (animationFrameId) {
+					cancelAnimationFrame(animationFrameId)
+				}
+			}
+		}, [])
+
 		const handleCopy = useCallback(
 			(e: React.MouseEvent) => {
 				e.stopPropagation()
@@ -420,7 +503,7 @@ const CodeBlock = memo(
 				</StyledPre>
 				<CodeBlockButtonWrapper
 					ref={copyButtonWrapperRef}
-					onMouseEnter={() => updateCodeBlockButtonPosition(true)}
+					onMouseOver={() => updateCodeBlockButtonPosition(true)}
 					onMouseLeave={() => updateCodeBlockButtonPosition()}
 					style={{ gap: 0 }}>
 					{language && (
