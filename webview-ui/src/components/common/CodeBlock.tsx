@@ -219,6 +219,7 @@ const CodeBlock = memo(
 		const [wordWrap, setWordWrap] = useState(initialWordWrap)
 		const [windowShade, setWindowShade] = useState(initialWindowShade)
 		const [currentLanguage, setCurrentLanguage] = useState<ExtendedLanguage>(() => normalizeLanguage(language))
+		const userChangedLanguageRef = useRef(false)
 		const [highlightedCode, setHighlightedCode] = useState<string>("")
 		const [showCollapseButton, setShowCollapseButton] = useState(true)
 		const codeBlockRef = useRef<HTMLDivElement>(null)
@@ -226,10 +227,10 @@ const CodeBlock = memo(
 		const copyButtonWrapperRef = useRef<HTMLDivElement>(null)
 		const { showCopyFeedback, copyWithFeedback } = useCopyToClipboard()
 
-		// Update current language when prop changes
+		// Update current language when prop changes, but only if user hasn't made a selection
 		useEffect(() => {
 			const normalizedLang = normalizeLanguage(language)
-			if (normalizedLang !== currentLanguage) {
+			if (normalizedLang !== currentLanguage && !userChangedLanguageRef.current) {
 				setCurrentLanguage(normalizedLang)
 			}
 		}, [language, currentLanguage])
@@ -549,6 +550,7 @@ const CodeBlock = memo(
 								}}
 								onChange={(e) => {
 									const newLang = normalizeLanguage(e.target.value)
+									userChangedLanguageRef.current = true
 									setCurrentLanguage(newLang)
 									if (onLanguageChange) {
 										onLanguageChange(newLang)
