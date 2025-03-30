@@ -95,7 +95,7 @@ const run = async (toolbox: GluegunToolbox) => {
 	const server = new IpcServer(run.socketPath, () => {})
 	server.listen()
 
-	server.on("connect", (clientId) => {
+	server.on(IpcMessageType.Connect, (clientId) => {
 		server.send(clientId, {
 			type: IpcMessageType.TaskEvent,
 			origin: IpcOrigin.Server,
@@ -178,7 +178,7 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 
 	let isTaskFinished = false
 
-	client.on("disconnect", () => {
+	client.on(IpcMessageType.Disconnect, () => {
 		console.log("disconnect")
 		isTaskFinished = true
 	})
@@ -191,12 +191,12 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 
 	let taskStartedAt = Date.now()
 
-	client.on("taskEvent", async (taskEvent) => {
+	client.on(IpcMessageType.TaskEvent, async (taskEvent) => {
 		const { eventName, payload } = taskEvent
 
 		server.broadcast({
 			type: IpcMessageType.TaskEvent,
-			origin: IpcOrigin.Relay,
+			origin: IpcOrigin.Server,
 			relayClientId: client.clientId!,
 			data: { ...taskEvent, taskId: task.id },
 		})

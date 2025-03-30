@@ -30,7 +30,7 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 			this.ipc.listen()
 			this.outputChannel.appendLine(`IPC server started: ${socketPath}`)
 
-			this.ipc.on("taskCommand", async (_clientId, { commandName, data }) => {
+			this.ipc.on(IpcMessageType.TaskCommand, async (_clientId, { commandName, data }) => {
 				switch (commandName) {
 					case TaskCommandName.StartNewTask:
 						this.startNewTask(data)

@@ -93,6 +93,8 @@ export type TaskEvent = z.infer<typeof taskEventSchema>
  */
 
 export enum IpcMessageType {
+	Connect = "Connect",
+	Disconnect = "Disconnect",
 	Ack = "Ack",
 	TaskCommand = "TaskCommand",
 	TaskEvent = "TaskEvent",
@@ -101,7 +103,6 @@ export enum IpcMessageType {
 export enum IpcOrigin {
 	Client = "client",
 	Server = "server",
-	Relay = "relay",
 }
 
 export const ipcMessageSchema = z.discriminatedUnion("type", [
@@ -118,7 +119,7 @@ export const ipcMessageSchema = z.discriminatedUnion("type", [
 	}),
 	z.object({
 		type: z.literal(IpcMessageType.TaskEvent),
-		origin: z.union([z.literal(IpcOrigin.Server), z.literal(IpcOrigin.Relay)]),
+		origin: z.literal(IpcOrigin.Server),
 		relayClientId: z.string().optional(),
 		data: taskEventSchema,
 	}),

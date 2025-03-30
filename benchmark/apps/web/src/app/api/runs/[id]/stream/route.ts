@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server"
 
 import { findRun } from "@benchmark/db"
+import { IpcMessageType } from "@benchmark/types"
 import { IpcClient } from "@benchmark/ipc"
 
 import { SSEStream } from "@/lib/server/sse-stream"
@@ -15,6 +16,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 	const client = new IpcClient(run.socketPath, () => {})
 
 	const write = async (data: string | object) => {
+		console.log(`[stream#${requestId}] write`, data)
 		const success = await stream.write(data)
 
 		if (!success) {
@@ -23,9 +25,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 	}
 
 	console.log(`[stream#${requestId}] connect`)
-	client.on("connect", () => write("connect"))
-	client.on("disconnect", () => write("disconnect"))
-	client.on("taskEvent", write)
+	client.on(IpcMessageType.Connect, () => write("connect"))
+	client.on(IpcMessageType.Disconnect, () => write("disconnect"))
+	client.on(IpcMessageType.TaskEvent, write)
 
 	request.signal.addEventListener("abort", () => {
 		console.log(`[stream#${requestId}] abort`)
