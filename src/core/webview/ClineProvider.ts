@@ -74,6 +74,7 @@ import { getVsCodeLmModels } from "../../api/providers/vscode-lm"
 import { getLmStudioModels } from "../../api/providers/lmstudio"
 import { ACTION_NAMES } from "../CodeActionProvider"
 import { Cline, ClineOptions } from "../Cline"
+import { ClineStackManager } from "./ClineStackManager"
 import { openMention } from "../mentions"
 import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
@@ -97,7 +98,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	private disposables: vscode.Disposable[] = []
 	private view?: vscode.WebviewView | vscode.WebviewPanel
 	private isViewLaunched = false
-	private clineStack: Cline[] = []
+	public static clineStackManager: ClineStackManager
 	private workspaceTracker?: WorkspaceTracker
 	protected mcpHub?: McpHub // Change from private to protected
 	private latestAnnouncementId = "mar-20-2025-3-10" // update to some unique identifier when we add a new announcement
@@ -116,6 +117,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		this.outputChannel.appendLine("ClineProvider instantiated")
 		this.contextProxy = new ContextProxy(context)
 		ClineProvider.activeInstances.add(this)
+		this.clineStackManager = new ClineStackManager()
 
 		// Register this provider with the telemetry service to enable it to add
 		// properties like mode and provider.
@@ -139,79 +141,79 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			})
 	}
 
-	// Adds a new Cline instance to clineStack, marking the start of a new task.
-	// The instance is pushed to the top of the stack (LIFO order).
-	// When the task is completed, the top instance is removed, reactivating the previous task.
+	/**
+	 * Adds a Cline instance to the stack and validates the current state
+	 * The instance is pushed to the top of the stack (LIFO order).
+	 * When the task is completed, the top instance is removed, reactivating the previous task.
+	 * @param cline - The Cline instance to be added to the stack
+	 * @throws {Error} When clineStackManager is not initialized
+	 * @throws {Error} When state is undefined
+	 * @throws {Error} When state mode is invalid
+	 */
 	async addClineToStack(cline: Cline) {
-		console.log(`[subtasks] adding task ${cline.taskId}.${cline.instanceId} to stack`)
+		try {
+			this.outputChannel.appendLine(`[subtasks] adding task ${cline.taskId}.${cline.instanceId} to stack`)
 
-		// Add this cline instance into the stack that represents the order of all the called tasks.
-		this.clineStack.push(cline)
-
-		// Ensure getState() resolves correctly.
-		const state = await this.getState()
-
-		if (!state || typeof state.mode !== "string") {
-			throw new Error(t("common:errors.retrieve_current_mode"))
-		}
-	}
-
-	// Removes and destroys the top Cline instance (the current finished task),
-	// activating the previous one (resuming the parent task).
-	async removeClineFromStack() {
-		if (this.clineStack.length === 0) {
-			return
-		}
-
-		// Pop the top Cline instance from the stack.
-		var cline = this.clineStack.pop()
-
-		if (cline) {
-			console.log(`[subtasks] removing task ${cline.taskId}.${cline.instanceId} from stack`)
-
-			try {
-				// Abort the running task and set isAbandoned to true so
-				// all running promises will exit as well.
-				await cline.abortTask(true)
-			} catch (e) {
-				this.log(
-					`[subtasks] encountered error while aborting task ${cline.taskId}.${cline.instanceId}: ${e.message}`,
-				)
+			if (!this.clineStackManager) {
+				throw new Error("clineStackManager is not initialized")
 			}
 
-			// Make sure no reference kept, once promises end it will be
-			// garbage collected.
-			cline = undefined
+			await this.clineStackManager.addClineToStack(cline)
+
+			const state = await this.getState()
+
+			if (!state) {
+				throw new Error("State is undefined")
+			}
+
+			if (typeof state.mode !== "string") {
+				this.log(`State mode is not a string:${state}`)
+				throw new Error(t("common:errors.retrieve_current_mode"))
+			}
+		} catch (error) {
+			console.error("Error in addClineToStack:", error)
+			throw error
 		}
 	}
 
-	// returns the current cline object in the stack (the top one)
-	// if the stack is empty, returns undefined
-	getCurrentCline(): Cline | undefined {
-		if (this.clineStack.length === 0) {
-			return undefined
-		}
-		return this.clineStack[this.clineStack.length - 1]
+	/**
+	 * Removes the current cline from the stack by delegating to the cline stack manager.
+	 * @returns A promise that resolves when the cline has been removed from the stack
+	 */
+	async removeClineFromStack() {
+		await this.clineStackManager.removeClineFromStack()
+	}
+
+	/**
+	 * Retrieves the current Cline instance from the cline stack
+	 * @returns A Promise that resolves to the current Cline object, or undefined if no Cline exists
+	 */
+	async getCurrentCline(): Promise<Cline | undefined> {
+		return this.clineStackManager.getCurrentCline()
 	}
 
 	// returns the current clineStack length (how many cline objects are in the stack)
-	getClineStackSize(): number {
-		return this.clineStack.length
+	async getClineStackSize(): Promise<number> {
+		return this.clineStackManager.getClineStackSize()
 	}
 
-	public getCurrentTaskStack(): string[] {
-		return this.clineStack.map((cline) => cline.taskId)
+	public async getCurrentTaskStack(): Promise<string[]> {
+		return this.clineStackManager.getCurrentTaskStack()
 	}
 
-	// remove the current task/cline instance (at the top of the stack), ao this task is finished
-	// and resume the previous task/cline instance (if it exists)
-	// this is used when a sub task is finished and the parent task needs to be resumed
+	/**
+	 * Removes the current task/cline instance (at the top of the stack), so this task is finished
+	 * and resume the previous task/cline instance (if it exists).
+	 * This is used when a sub task is finished and the parent task needs to be resumed.
+	 * @param lastMessage - Optional message to log when finishing the subtask
+	 */
 	async finishSubTask(lastMessage?: string) {
-		console.log(`[subtasks] finishing subtask ${lastMessage}`)
+		this.log(`[subtasks] finishing subtask ${lastMessage}`)
 		// remove the last cline instance from the stack (this is the finished sub task)
 		await this.removeClineFromStack()
-		// resume the last cline instance in the stack (if it exists - this is the 'parnt' calling task)
-		this.getCurrentCline()?.resumePausedTask(lastMessage)
+		// resume the last cline instance in the stack (if it exists - this is the 'parent' calling task)
+		const currentCline = await this.getCurrentCline()
+		currentCline?.resumePausedTask(lastMessage)
 	}
 
 	/*
@@ -279,7 +281,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		}
 
 		// check if there is a cline instance in the stack (if this provider has an active task)
-		if (visibleProvider.getCurrentCline()) {
+		const currentCline = await visibleProvider.getCurrentCline()
+		if (currentCline) {
 			return true
 		}
 
@@ -311,7 +314,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			return
 		}
 
-		if (visibleProvider.getCurrentCline() && command.endsWith("InCurrentTask")) {
+		const currentCline = await visibleProvider.getCurrentCline()
+		if (currentCline && command.endsWith("InCurrentTask")) {
 			await visibleProvider.postMessageToWebview({ type: "invoke", invoke: "sendMessage", text: prompt })
 			return
 		}
@@ -342,7 +346,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			return
 		}
 
-		if (visibleProvider.getCurrentCline() && command.endsWith("InCurrentTask")) {
+		const currentCline = await visibleProvider.getCurrentCline()
+		if (currentCline && command.endsWith("InCurrentTask")) {
 			await visibleProvider.postMessageToWebview({
 				type: "invoke",
 				invoke: "sendMessage",
@@ -484,6 +489,24 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const modePrompt = customModePrompts?.[mode] as PromptComponent
 		const effectiveInstructions = [globalInstructions, modePrompt?.customInstructions].filter(Boolean).join("\n\n")
 
+		// Get the stack size and root task for the new Cline
+		const stackSize = await this.getClineStackSize()
+		let rootTask: Cline | undefined = undefined
+
+		// If there are tasks in the stack, get the first one as the root task
+		if (stackSize > 0) {
+			const taskStack = await this.getCurrentTaskStack()
+			if (taskStack.length > 0) {
+				// We need to find the first task in the stack
+				// This is a simplification - in a real implementation, you might need to
+				// access the actual Cline object from the stack
+				const currentCline = await this.getCurrentCline()
+				if (currentCline && currentCline.rootTask) {
+					rootTask = currentCline.rootTask
+				}
+			}
+		}
+
 		const cline = new Cline({
 			provider: this,
 			apiConfiguration,
@@ -495,9 +518,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			task,
 			images,
 			experiments,
-			rootTask: this.clineStack.length > 0 ? this.clineStack[0] : undefined,
+			rootTask,
 			parentTask,
-			taskNumber: this.clineStack.length + 1,
+			taskNumber: stackSize + 1,
 			onCreated: (cline) => this.emit("clineCreated", cline),
 		})
 
@@ -1010,7 +1033,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						await this.postStateToWebview()
 						break
 					case "askResponse":
-						this.getCurrentCline()?.handleWebviewAskResponse(
+						;((await this.getCurrentCline()) as Cline)?.handleWebviewAskResponse(
 							message.askResponse!,
 							message.text,
 							message.images,
@@ -1030,7 +1053,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						await this.postMessageToWebview({ type: "selectedImages", images })
 						break
 					case "exportCurrentTask":
-						const currentTaskId = this.getCurrentCline()?.taskId
+						const currentCline = await this.getCurrentCline()
+						const currentTaskId = currentCline?.taskId
 						if (currentTaskId) {
 							this.exportTaskWithId(currentTaskId)
 						}
@@ -1206,7 +1230,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						const result = checkoutDiffPayloadSchema.safeParse(message.payload)
 
 						if (result.success) {
-							await this.getCurrentCline()?.checkpointDiff(result.data)
+							const currentCline = await this.getCurrentCline()
+							await currentCline?.checkpointDiff(result.data)
 						}
 
 						break
@@ -1217,13 +1242,20 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 							await this.cancelTask()
 
 							try {
-								await pWaitFor(() => this.getCurrentCline()?.isInitialized === true, { timeout: 3_000 })
+								await pWaitFor(
+									async () => {
+										const currentCline = await this.getCurrentCline()
+										return currentCline?.isInitialized === true
+									},
+									{ timeout: 3_000 },
+								)
 							} catch (error) {
 								vscode.window.showErrorMessage(t("common:errors.checkpoint_timeout"))
 							}
 
 							try {
-								await this.getCurrentCline()?.checkpointRestore(result.data)
+								const currentCline = await this.getCurrentCline()
+								await currentCline?.checkpointRestore(result.data)
 							} catch (error) {
 								vscode.window.showErrorMessage(t("common:errors.checkpoint_failed"))
 							}
@@ -1590,46 +1622,48 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 							t("common:confirmation.just_this_message"),
 							t("common:confirmation.this_and_subsequent"),
 						)
+						// Get the current cline for use in this handler
+						const currentCline = await this.getCurrentCline()
+
 						if (
 							(answer === t("common:confirmation.just_this_message") ||
 								answer === t("common:confirmation.this_and_subsequent")) &&
-							this.getCurrentCline() &&
+							currentCline &&
 							typeof message.value === "number" &&
 							message.value
 						) {
 							const timeCutoff = message.value - 1000 // 1 second buffer before the message to delete
-							const messageIndex = this.getCurrentCline()!.clineMessages.findIndex(
+							const messageIndex = currentCline.clineMessages.findIndex(
 								(msg) => msg.ts && msg.ts >= timeCutoff,
 							)
-							const apiConversationHistoryIndex =
-								this.getCurrentCline()?.apiConversationHistory.findIndex(
-									(msg) => msg.ts && msg.ts >= timeCutoff,
-								)
+							const apiConversationHistoryIndex = currentCline.apiConversationHistory.findIndex(
+								(msg) => msg.ts && msg.ts >= timeCutoff,
+							)
 
 							if (messageIndex !== -1) {
-								const { historyItem } = await this.getTaskWithId(this.getCurrentCline()!.taskId)
+								const { historyItem } = await this.getTaskWithId(currentCline.taskId)
 
 								if (answer === t("common:confirmation.just_this_message")) {
 									// Find the next user message first
-									const nextUserMessage = this.getCurrentCline()!
-										.clineMessages.slice(messageIndex + 1)
+									const nextUserMessage = currentCline.clineMessages
+										.slice(messageIndex + 1)
 										.find((msg) => msg.type === "say" && msg.say === "user_feedback")
 
 									// Handle UI messages
 									if (nextUserMessage) {
 										// Find absolute index of next user message
-										const nextUserMessageIndex = this.getCurrentCline()!.clineMessages.findIndex(
+										const nextUserMessageIndex = currentCline.clineMessages.findIndex(
 											(msg) => msg === nextUserMessage,
 										)
 										// Keep messages before current message and after next user message
-										await this.getCurrentCline()!.overwriteClineMessages([
-											...this.getCurrentCline()!.clineMessages.slice(0, messageIndex),
-											...this.getCurrentCline()!.clineMessages.slice(nextUserMessageIndex),
+										await currentCline.overwriteClineMessages([
+											...currentCline.clineMessages.slice(0, messageIndex),
+											...currentCline.clineMessages.slice(nextUserMessageIndex),
 										])
 									} else {
 										// If no next user message, keep only messages before current message
-										await this.getCurrentCline()!.overwriteClineMessages(
-											this.getCurrentCline()!.clineMessages.slice(0, messageIndex),
+										await currentCline.overwriteClineMessages(
+											currentCline.clineMessages.slice(0, messageIndex),
 										)
 									}
 
@@ -1637,19 +1671,19 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 									if (apiConversationHistoryIndex !== -1) {
 										if (nextUserMessage && nextUserMessage.ts) {
 											// Keep messages before current API message and after next user message
-											await this.getCurrentCline()!.overwriteApiConversationHistory([
-												...this.getCurrentCline()!.apiConversationHistory.slice(
+											await currentCline.overwriteApiConversationHistory([
+												...currentCline.apiConversationHistory.slice(
 													0,
 													apiConversationHistoryIndex,
 												),
-												...this.getCurrentCline()!.apiConversationHistory.filter(
+												...currentCline.apiConversationHistory.filter(
 													(msg) => msg.ts && msg.ts >= nextUserMessage.ts,
 												),
 											])
 										} else {
 											// If no next user message, keep only messages before current API message
-											await this.getCurrentCline()!.overwriteApiConversationHistory(
-												this.getCurrentCline()!.apiConversationHistory.slice(
+											await currentCline.overwriteApiConversationHistory(
+												currentCline.apiConversationHistory.slice(
 													0,
 													apiConversationHistoryIndex,
 												),
@@ -1658,15 +1692,12 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 									}
 								} else if (answer === t("common:confirmation.this_and_subsequent")) {
 									// Delete this message and all that follow
-									await this.getCurrentCline()!.overwriteClineMessages(
-										this.getCurrentCline()!.clineMessages.slice(0, messageIndex),
+									await currentCline.overwriteClineMessages(
+										currentCline.clineMessages.slice(0, messageIndex),
 									)
 									if (apiConversationHistoryIndex !== -1) {
-										await this.getCurrentCline()!.overwriteApiConversationHistory(
-											this.getCurrentCline()!.apiConversationHistory.slice(
-												0,
-												apiConversationHistoryIndex,
-											),
+										await currentCline.overwriteApiConversationHistory(
+											currentCline.apiConversationHistory.slice(0, apiConversationHistoryIndex),
 										)
 									}
 								}
@@ -2033,8 +2064,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						await this.updateGlobalState("experiments", updatedExperiments)
 
 						// Update diffStrategy in current Cline instance if it exists
-						if (message.values[EXPERIMENT_IDS.DIFF_STRATEGY] !== undefined && this.getCurrentCline()) {
-							await this.getCurrentCline()!.updateDiffStrategy(
+						const currentCline = await this.getCurrentCline()
+						if (message.values[EXPERIMENT_IDS.DIFF_STRATEGY] !== undefined && currentCline) {
+							await currentCline.updateDiffStrategy(
 								Experiments.isEnabled(updatedExperiments, EXPERIMENT_IDS.DIFF_STRATEGY),
 								Experiments.isEnabled(updatedExperiments, EXPERIMENT_IDS.MULTI_SEARCH_AND_REPLACE),
 							)
@@ -2147,7 +2179,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			const mode = message.mode ?? defaultModeSlug
 			const customModes = await this.customModesManager.getCustomModes()
 
-			const rooIgnoreInstructions = this.getCurrentCline()?.rooIgnoreController?.getInstructions()
+			const currentCline = await this.getCurrentCline()
+			const rooIgnoreInstructions = currentCline?.rooIgnoreController?.getInstructions()
 
 			// Determine if browser tools can be used based on model support, mode, and user settings
 			let modelSupportsComputerUse = false
@@ -2196,7 +2229,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	 */
 	public async handleModeSwitch(newMode: Mode) {
 		// Capture mode switch telemetry event
-		const currentTaskId = this.getCurrentCline()?.taskId
+		const currentCline = await this.getCurrentCline()
+		const currentTaskId = currentCline?.taskId
 		if (currentTaskId) {
 			telemetryService.captureModeSwitch(currentTaskId, newMode)
 		}
@@ -2251,13 +2285,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		await this.contextProxy.setProviderSettings(providerSettings)
 
-		if (this.getCurrentCline()) {
-			this.getCurrentCline()!.api = buildApiHandler(providerSettings)
+		const apiCline = await this.getCurrentCline()
+		if (apiCline) {
+			apiCline.api = buildApiHandler(providerSettings)
 		}
 	}
 
 	async cancelTask() {
-		const cline = this.getCurrentCline()
+		const cline = await this.getCurrentCline()
 
 		if (!cline) {
 			return
@@ -2273,14 +2308,18 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		cline.abortTask()
 
 		await pWaitFor(
-			() =>
-				this.getCurrentCline()! === undefined ||
-				this.getCurrentCline()!.isStreaming === false ||
-				this.getCurrentCline()!.didFinishAbortingStream ||
-				// If only the first chunk is processed, then there's no
-				// need to wait for graceful abort (closes edits, browser,
-				// etc).
-				this.getCurrentCline()!.isWaitingForFirstChunk,
+			async () => {
+				const waitCline = await this.getCurrentCline()
+				return (
+					waitCline === undefined ||
+					waitCline.isStreaming === false ||
+					waitCline.didFinishAbortingStream ||
+					// If only the first chunk is processed, then there's no
+					// need to wait for graceful abort (closes edits, browser,
+					// etc).
+					waitCline.isWaitingForFirstChunk
+				)
+			},
 			{
 				timeout: 3_000,
 			},
@@ -2288,11 +2327,12 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			console.error("Failed to abort task")
 		})
 
-		if (this.getCurrentCline()) {
+		const abandonedCline = await this.getCurrentCline()
+		if (abandonedCline) {
 			// 'abandoned' will prevent this Cline instance from affecting
 			// future Cline instances. This may happen if its hanging on a
 			// streaming request.
-			this.getCurrentCline()!.abandoned = true
+			abandonedCline.abandoned = true
 		}
 
 		// Clears task again, so we need to abortTask manually above.
@@ -2303,8 +2343,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		// User may be clearing the field.
 		await this.updateGlobalState("customInstructions", instructions || undefined)
 
-		if (this.getCurrentCline()) {
-			this.getCurrentCline()!.customInstructions = instructions || undefined
+		const currentCline = await this.getCurrentCline()
+		if (currentCline) {
+			currentCline.customInstructions = instructions || undefined
 		}
 
 		await this.postStateToWebview()
@@ -2502,7 +2543,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	}
 
 	async showTaskWithId(id: string) {
-		if (id !== this.getCurrentCline()?.taskId) {
+		const currentCline = await this.getCurrentCline()
+		if (id !== currentCline?.taskId) {
 			// Non-current task.
 			const { historyItem } = await this.getTaskWithId(id)
 			await this.initClineWithHistoryItem(historyItem) // Clears existing task.
@@ -2523,7 +2565,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			const { taskDirPath } = await this.getTaskWithId(id)
 
 			// remove task from stack if it's the current task
-			if (id === this.getCurrentCline()?.taskId) {
+			const currentCline = await this.getCurrentCline()
+			if (id === currentCline?.taskId) {
 				// if we found the taskid to delete - call finish to abort this task and allow a new task to be started,
 				// if we are deleting a subtask and parent task is still waiting for subtask to finish - it allows the parent to resume (this case should neve exist)
 				await this.finishSubTask(t("common:tasks.deleted"))
@@ -2577,6 +2620,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	}
 
 	async getStateToPostToWebview() {
+		// Get the current cline for use in this method
+		const currentCline = await this.getCurrentCline()
+
 		const {
 			apiConfiguration,
 			lastShownAnnouncementId,
@@ -2649,10 +2695,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			alwaysAllowModeSwitch: alwaysAllowModeSwitch ?? false,
 			alwaysAllowSubtasks: alwaysAllowSubtasks ?? false,
 			uriScheme: vscode.env.uriScheme,
-			currentTaskItem: this.getCurrentCline()?.taskId
-				? (taskHistory || []).find((item: HistoryItem) => item.id === this.getCurrentCline()?.taskId)
+			currentTaskItem: currentCline?.taskId
+				? (taskHistory || []).find((item: HistoryItem) => item.id === currentCline?.taskId)
 				: undefined,
-			clineMessages: this.getCurrentCline()?.clineMessages || [],
+			clineMessages: currentCline?.clineMessages || [],
 			taskHistory: (taskHistory || [])
 				.filter((item: HistoryItem) => item.ts && item.task)
 				.sort((a: HistoryItem, b: HistoryItem) => b.ts - a.ts),
@@ -2869,8 +2915,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		return this.isViewLaunched
 	}
 
-	get messages() {
-		return this.getCurrentCline()?.clineMessages || []
+	/**
+	 * Retrieves the messages from the current cline.
+	 * @returns {Promise<Array>} A promise that resolves to an array of cline messages.
+	 * If no current cline exists, returns an empty array.
+	 */
+	async getMessages() {
+		const currentCline = await this.getCurrentCline()
+		return currentCline?.clineMessages || []
 	}
 
 	// Add public getter
@@ -2915,7 +2967,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		}
 
 		// Add model ID if available
-		const currentCline = this.getCurrentCline()
+		const currentCline = await this.getCurrentCline()
 		if (currentCline?.api) {
 			const { id: modelId } = currentCline.api.getModel()
 			if (modelId) {

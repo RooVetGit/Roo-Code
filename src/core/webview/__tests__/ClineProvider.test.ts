@@ -228,9 +228,37 @@ jest.mock("../../Cline", () => ({
 				setParentTask: jest.fn(),
 				setRootTask: jest.fn(),
 				taskId: taskId || "test-task-id",
+				rootTask: undefined,
+				parentTask: undefined,
 			}),
 		),
 }))
+
+// Mock ClineStackManager
+jest.mock("../ClineStackManager", () => {
+	let mockClineStack: any[] = []
+	return {
+		ClineStackManager: jest.fn().mockImplementation(() => ({
+			addClineToStack: jest.fn().mockImplementation(async (cline) => {
+				mockClineStack.push(cline)
+			}),
+			removeClineFromStack: jest.fn().mockImplementation(async () => {
+				const cline = mockClineStack.pop()
+				if (cline && cline.abortTask) {
+					await cline.abortTask(true)
+				}
+			}),
+			getCurrentCline: jest.fn().mockImplementation(async () => {
+				return mockClineStack.length > 0 ? mockClineStack[mockClineStack.length - 1] : undefined
+			}),
+			getClineStackSize: jest.fn().mockImplementation(async () => mockClineStack.length),
+			getCurrentTaskStack: jest.fn().mockImplementation(async () => mockClineStack.map((c) => c.taskId)),
+		})),
+		__resetMockStack: () => {
+			mockClineStack = []
+		},
+	}
+})
 
 // Mock extract-text
 jest.mock("../../../integrations/misc/extract-text", () => ({
@@ -456,13 +484,13 @@ describe("ClineProvider", () => {
 		await provider.addClineToStack(mockCline)
 
 		// get the stack size before the abort call
-		const stackSizeBeforeAbort = provider.getClineStackSize()
+		const stackSizeBeforeAbort = await provider.getClineStackSize()
 
 		// call the removeClineFromStack method so it will call the current cline abort and remove it from the stack
 		await provider.removeClineFromStack()
 
 		// get the stack size after the abort call
-		const stackSizeAfterAbort = provider.getClineStackSize()
+		const stackSizeAfterAbort = await provider.getClineStackSize()
 
 		// check if the abort method was called
 		expect(mockCline.abortTask).toHaveBeenCalled()
@@ -484,10 +512,10 @@ describe("ClineProvider", () => {
 		await provider.addClineToStack(mockCline2)
 
 		// verify cline instances were added to the stack
-		expect(provider.getClineStackSize()).toBe(2)
+		expect(await provider.getClineStackSize()).toBe(2)
 
 		// verify current cline instance is the last one added
-		expect(provider.getCurrentCline()).toBe(mockCline2)
+		expect(await provider.getCurrentCline()).toBe(mockCline2)
 	})
 
 	test("getState returns correct initial state", async () => {
@@ -970,6 +998,9 @@ describe("ClineProvider", () => {
 			mockCline.apiConversationHistory = mockApiHistory // Set API history
 			await provider.addClineToStack(mockCline) // Add the mocked instance to the stack
 
+			// Mock getCurrentCline to return the mockCline
+			;(provider.clineStackManager.getCurrentCline as jest.Mock).mockResolvedValue(mockCline)
+
 			// Mock getTaskWithId
 			;(provider as any).getTaskWithId = jest.fn().mockResolvedValue({
 				historyItem: { id: "test-task-id" },
@@ -1017,6 +1048,9 @@ describe("ClineProvider", () => {
 			mockCline.apiConversationHistory = mockApiHistory
 			await provider.addClineToStack(mockCline)
 
+			// Mock getCurrentCline to return the mockCline
+			;(provider.clineStackManager.getCurrentCline as jest.Mock).mockResolvedValue(mockCline)
+
 			// Mock getTaskWithId
 			;(provider as any).getTaskWithId = jest.fn().mockResolvedValue({
 				historyItem: { id: "test-task-id" },
@@ -1043,6 +1077,9 @@ describe("ClineProvider", () => {
 			mockCline.clineMessages = [{ ts: 1000 }, { ts: 2000 }]
 			mockCline.apiConversationHistory = [{ ts: 1000 }, { ts: 2000 }]
 			await provider.addClineToStack(mockCline)
+
+			// Mock getCurrentCline to return the mockCline
+			;(provider.clineStackManager.getCurrentCline as jest.Mock).mockResolvedValue(mockCline)
 
 			// Trigger message deletion
 			const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
@@ -1245,6 +1282,9 @@ describe("ClineProvider", () => {
 				}),
 			}
 			await provider.addClineToStack(mockCline)
+
+			// Mock getCurrentCline to return the mockCline
+			;(provider.clineStackManager.getCurrentCline as jest.Mock).mockResolvedValue(mockCline)
 
 			// Mock getState to return diffEnabled: false
 			jest.spyOn(provider, "getState").mockResolvedValue({
@@ -2235,11 +2275,27 @@ describe("getTelemetryProperties", () => {
 	})
 
 	test("includes model ID from current Cline instance if available", async () => {
+		// Create a mock Cline instance with api property
+		const mockCline = {
+			taskId: "test-task-id",
+			instanceId: "test-instance-id",
+			api: {
+				getModel: jest.fn().mockReturnValue({
+					id: "claude-3-7-sonnet-20250219",
+					info: { contextWindow: 200000 },
+				}),
+			},
+		}
+
 		// Add mock Cline to stack
 		await provider.addClineToStack(mockCline)
 
-		const properties = await provider.getTelemetryProperties()
+		// Verify the mock Cline was added correctly
+		const currentCline = await provider.getCurrentCline()
+		expect(currentCline).toBe(mockCline)
+		expect(currentCline?.api?.getModel).toBeDefined()
 
+		const properties = await provider.getTelemetryProperties()
 		expect(properties).toHaveProperty("modelId", "claude-3-7-sonnet-20250219")
 	})
 })
