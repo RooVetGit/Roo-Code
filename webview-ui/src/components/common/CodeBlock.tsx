@@ -300,7 +300,7 @@ const CodeBlock = memo(
 			}
 		}, [source])
 
-		const updateCodeBlockButtonPosition = useCallback((forceShow = false) => {
+		const updateCodeBlockButtonPosition = useCallback((forceHide = false) => {
 			const codeBlock = codeBlockRef.current
 			const copyWrapper = copyButtonWrapperRef.current
 			if (!codeBlock) return
@@ -346,7 +346,7 @@ const CodeBlock = memo(
 				paddingValue > 0 ? paddingValue : parseInt(computedStyle.getPropertyValue("padding-top") || "0", 10)
 
 			// Update visibility state and button interactivity
-			const isVisible = isPartiallyVisible && (forceShow || isPartiallyVisible)
+			const isVisible = !forceHide && isPartiallyVisible
 			codeBlock.setAttribute("data-partially-visible", isPartiallyVisible ? "true" : "false")
 			codeBlock.style.setProperty("--copy-button-cursor", isVisible ? "pointer" : "default")
 			codeBlock.style.setProperty("--copy-button-events", isVisible ? "all" : "none")
@@ -474,6 +474,33 @@ const CodeBlock = memo(
 			}
 		}, [])
 
+		// Track text selection state
+		const [isSelecting, setIsSelecting] = useState(false)
+
+		useEffect(() => {
+			if (!preRef.current) return
+
+			const handleMouseDown = (e: MouseEvent) => {
+				// Only trigger if clicking the pre element directly
+				if (e.currentTarget === preRef.current) {
+					setIsSelecting(true)
+				}
+			}
+
+			const handleMouseUp = () => {
+				setIsSelecting(false)
+			}
+
+			const preElement = preRef.current
+			preElement.addEventListener("mousedown", handleMouseDown)
+			document.addEventListener("mouseup", handleMouseUp)
+
+			return () => {
+				preElement.removeEventListener("mousedown", handleMouseDown)
+				document.removeEventListener("mouseup", handleMouseUp)
+			}
+		}, [])
+
 		const handleCopy = useCallback(
 			(e: React.MouseEvent) => {
 				e.stopPropagation()
@@ -498,102 +525,107 @@ const CodeBlock = memo(
 					preStyle={preStyle}
 					wordwrap={wordWrap ? "true" : "false"}
 					windowshade={windowShade ? "true" : "false"}
-					collapsedHeight={collapsedHeight}>
+					collapsedHeight={collapsedHeight}
+					onMouseDown={() => updateCodeBlockButtonPosition(true)}
+					onMouseUp={() => updateCodeBlockButtonPosition(false)}>
 					<div dangerouslySetInnerHTML={{ __html: highlightedCode }} />
 				</StyledPre>
-				<CodeBlockButtonWrapper
-					ref={copyButtonWrapperRef}
-					onMouseOver={() => updateCodeBlockButtonPosition(true)}
-					onMouseLeave={() => updateCodeBlockButtonPosition()}
-					style={{ gap: 0 }}>
-					{language && (
-						<LanguageSelect
-							value={currentLanguage}
-							style={{
-								alignContent: "middle",
-								width: `${Math.max(3, (currentLanguage?.length || 5) + 1)}ch`,
-								textAlign: "right",
-								marginRight: 0,
-							}}
-							onClick={(e) => {
-								e.currentTarget.focus()
-							}}
-							onChange={(e) => {
-								const newLang = normalizeLanguage(e.target.value)
-								setCurrentLanguage(newLang)
-								if (onLanguageChange) {
-									onLanguageChange(newLang)
-								}
-							}}>
-							{
-								// Display original language at top of list for quick selection
-								language && (
-									<option
-										value={language}
-										style={{ fontWeight: "bold", textAlign: "left", fontSize: "1.2em" }}>
-										{language}
-									</option>
-								)
-							}
-							{
-								// Display all available languages in alphabetical order
-								Object.keys(bundledLanguages)
-									.sort()
-									.map((lang) => (
+				{!isSelecting && (
+					<CodeBlockButtonWrapper
+						ref={copyButtonWrapperRef}
+						onMouseOver={() => updateCodeBlockButtonPosition()}
+						style={{ gap: 0 }}>
+						{language && (
+							<LanguageSelect
+								value={currentLanguage}
+								style={{
+									alignContent: "middle",
+									width: `${Math.max(3, (currentLanguage?.length || 5) + 1)}ch`,
+									textAlign: "right",
+									marginRight: 0,
+								}}
+								onClick={(e) => {
+									e.currentTarget.focus()
+								}}
+								onChange={(e) => {
+									const newLang = normalizeLanguage(e.target.value)
+									setCurrentLanguage(newLang)
+									if (onLanguageChange) {
+										onLanguageChange(newLang)
+									}
+								}}>
+								{
+									// Display original language at top of list for quick selection
+									language && (
 										<option
-											key={lang}
-											value={lang}
-											style={{
-												fontWeight: lang === language ? "bold" : "normal",
-												textAlign: "left",
-												fontSize: lang === language ? "1.2em" : "inherit",
-											}}>
-											{lang}
+											value={language}
+											style={{ fontWeight: "bold", textAlign: "left", fontSize: "1.2em" }}>
+											{language}
 										</option>
-									))
-							}
-						</LanguageSelect>
-					)}
-					{showCollapseButton && (
+									)
+								}
+								{
+									// Display all available languages in alphabetical order
+									Object.keys(bundledLanguages)
+										.sort()
+										.map((lang) => (
+											<option
+												key={lang}
+												value={lang}
+												style={{
+													fontWeight: lang === language ? "bold" : "normal",
+													textAlign: "left",
+													fontSize: lang === language ? "1.2em" : "inherit",
+												}}>
+												{lang}
+											</option>
+										))
+								}
+							</LanguageSelect>
+						)}
+						{showCollapseButton && (
+							<CodeBlockButton
+								onClick={() => {
+									// Get the current code block element and scrollable container
+									const codeBlock = codeBlockRef.current
+									const scrollContainer = document.querySelector('[data-virtuoso-scroller="true"]')
+									if (!codeBlock || !scrollContainer) return
+
+									// Toggle window shade state
+									setWindowShade(!windowShade)
+
+									// After UI updates, ensure code block is visible and update button position
+									setTimeout(
+										() => {
+											codeBlock.scrollIntoView({
+												behavior: "smooth",
+												block: "nearest",
+											})
+
+											// Wait for scroll to complete before updating button position
+											setTimeout(() => {
+												updateCodeBlockButtonPosition()
+											}, 50)
+										},
+										WINDOW_SHADE_SETTINGS.transitionDelayS * 1000 + 50,
+									)
+								}}
+								title={`${windowShade ? "Expand" : "Collapse"} code block`}>
+								<ButtonIcon style={{ fontSize: "16px" }}>{windowShade ? "⌄" : "⌃"}</ButtonIcon>
+							</CodeBlockButton>
+						)}
 						<CodeBlockButton
-							onClick={() => {
-								// Get the current code block element and scrollable container
-								const codeBlock = codeBlockRef.current
-								const scrollContainer = document.querySelector('[data-virtuoso-scroller="true"]')
-								if (!codeBlock || !scrollContainer) return
-
-								// Toggle window shade state
-								setWindowShade(!windowShade)
-
-								// After UI updates, ensure code block is visible and update button position
-								setTimeout(
-									() => {
-										codeBlock.scrollIntoView({
-											behavior: "smooth",
-											block: "nearest",
-										})
-
-										// Wait for scroll to complete before updating button position
-										setTimeout(() => {
-											updateCodeBlockButtonPosition(true)
-										}, 50)
-									},
-									WINDOW_SHADE_SETTINGS.transitionDelayS * 1000 + 50,
-								)
-							}}
-							title={`${windowShade ? "Expand" : "Collapse"} code block`}>
-							<ButtonIcon style={{ fontSize: "16px" }}>{windowShade ? "⌄" : "⌃"}</ButtonIcon>
+							onClick={() => setWordWrap(!wordWrap)}
+							title={`${wordWrap ? "Disable" : "Enable"} word wrap`}>
+							<ButtonIcon style={{ fontSize: "16px", fontWeight: 900 }}>
+								{wordWrap ? "⟼" : "⤸"}
+							</ButtonIcon>
 						</CodeBlockButton>
-					)}
-					<CodeBlockButton
-						onClick={() => setWordWrap(!wordWrap)}
-						title={`${wordWrap ? "Disable" : "Enable"} word wrap`}>
-						<ButtonIcon style={{ fontSize: "16px", fontWeight: 900 }}>{wordWrap ? "⟼" : "⤸"}</ButtonIcon>
-					</CodeBlockButton>
-					<CodeBlockButton onClick={handleCopy} title="Copy code">
-						<ButtonIcon className={`codicon codicon-${showCopyFeedback ? "check" : "copy"}`} />
-					</CodeBlockButton>
-				</CodeBlockButtonWrapper>
+						<CodeBlockButton onClick={handleCopy} title="Copy code">
+							<ButtonIcon className={`codicon codicon-${showCopyFeedback ? "check" : "copy"}`} />
+						</CodeBlockButton>
+					</CodeBlockButtonWrapper>
+				)}
 			</CodeBlockContainer>
 		)
 	},
