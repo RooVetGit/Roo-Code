@@ -33,6 +33,7 @@ import { IpcServer, IpcClient } from "@benchmark/ipc"
 import { __dirname, extensionDevelopmentPath, exercisesPath } from "./paths.js"
 import { getExercises } from "./exercises.js"
 
+const maxConcurrency = 2
 const taskTimeLimit = 2 * 60 * 1_000
 
 const testCommands: Record<ExerciseLanguage, { commands: string[]; timeout?: number; cwd?: string }> = {
@@ -43,8 +44,6 @@ const testCommands: Record<ExerciseLanguage, { commands: string[]; timeout?: num
 	python: { commands: ["uv run python3 -m pytest -o markers=task *_test.py"] }, // timeout 15s bash -c "cd '$dir' && uv run python3 -m pytest -o markers=task *_test.py"
 	rust: { commands: ["cargo test"] }, // timeout 15s bash -c "cd '$dir' && cargo test > /dev/null 2>&1"
 }
-
-let parentPid: number | undefined = undefined
 
 const run = async (toolbox: GluegunToolbox) => {
 	const { config, prompt } = toolbox
@@ -117,7 +116,6 @@ const run = async (toolbox: GluegunToolbox) => {
 	// 	})
 	// })
 
-	const maxConcurrency = 3
 	const runningPromises: Promise<void>[] = []
 
 	const processTask = async (task: Task) => {
@@ -158,15 +156,6 @@ const run = async (toolbox: GluegunToolbox) => {
 		// console.error(error)
 	}
 
-	if (parentPid) {
-		try {
-			console.log(await execa`kill -INT ${parentPid}`)
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		} catch (error) {
-			// console.error(error)
-		}
-	}
-
 	console.log(await execa({ cwd: exercisesPath })`git add .`)
 	console.log(await execa({ cwd: exercisesPath })`git commit -m ${`Run #${run.id}`} --no-verify`)
 }
@@ -177,15 +166,15 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 	const dirname = path.dirname(run.socketPath)
 	const taskSocketPath = path.resolve(dirname, `${dirname}/task-${task.id}.sock`)
 
+	const controller = new AbortController()
+	const cancelSignal = controller.signal
+
 	// If debugging:
-	// --log trace
-	// --verbose
+	// Use --log trace or --verbose.
 	let codeCommand = `code --wait --log trace --disable-workspace-trust`
 
-	const isDocker = fs.existsSync("/.dockerenv")
-
-	if (isDocker) {
-		codeCommand = `xvfb-run --auto-servernum --server-num=1 ${codeCommand} --password-store="basic"`
+	if (fs.existsSync("/.dockerenv")) {
+		codeCommand = `xvfb-run --auto-servernum --server-num=1 ${codeCommand} --disable-gpu --password-store="basic"`
 	}
 
 	const subprocess = execa({
@@ -193,13 +182,14 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 			ROO_CODE_IPC_SOCKET_PATH: taskSocketPath,
 		},
 		shell: "/bin/bash",
+		cancelSignal,
 	})`${codeCommand} -n ${path.resolve(exercisesPath, language, exercise)}`
 
 	// If debugging:
-	subprocess.stdout.pipe(process.stdout)
+	// subprocess.stdout.pipe(process.stdout)
 
 	// Give VSCode some time to spawn before connectint to its unix socket.
-	await new Promise((resolve) => setTimeout(resolve, 1_000))
+	await new Promise((resolve) => setTimeout(resolve, 2_000))
 	console.log(`Connecting to ${taskSocketPath} (pid: ${subprocess.pid})`)
 
 	const createClient = (taskSocketPath: string) => {
@@ -207,7 +197,6 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 
 		ipcClient.on(IpcMessageType.Ack, (ack) => {
 			console.log(`[cli#runExercise | ${language} / ${exercise}] ack`, ack)
-			parentPid = ack.ppid
 		})
 
 		return ipcClient
@@ -227,24 +216,19 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 		}
 	}
 
-	if (!client.isReady) {
-		client.disconnect()
-		console.log(`[cli#runExercise | ${language} / ${exercise}] unable to connect`)
-		return
-	}
-
 	let isTaskFinished = false
+	let isClientDisconnected = false
 
 	client.on(IpcMessageType.Disconnect, async () => {
 		console.log(`[cli#runExercise | ${language} / ${exercise}] disconnect`)
-		// await updateTask(task.id, { finishedAt: new Date() })
 		isTaskFinished = true
+		isClientDisconnected = true
 	})
 
 	const ignoreEvents: RooCodeEventName[] = [
-		// RooCodeEventName.Message,
-		// RooCodeEventName.TaskTokenUsageUpdated,
-		// RooCodeEventName.TaskAskResponded,
+		RooCodeEventName.Message,
+		RooCodeEventName.TaskTokenUsageUpdated,
+		RooCodeEventName.TaskAskResponded,
 	]
 
 	let taskStartedAt = Date.now()
@@ -263,7 +247,7 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 
 		if (!ignoreEvents.includes(eventName)) {
 			console.log(`[cli#runExercise | ${language} / ${exercise}] taskEvent -> ${eventName}`)
-			console.log(payload)
+			// console.log(payload)
 		}
 
 		if (eventName === RooCodeEventName.TaskStarted) {
@@ -312,25 +296,32 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 		}
 	})
 
-	client.sendMessage({
-		type: IpcMessageType.TaskCommand,
-		origin: IpcOrigin.Client,
-		clientId: client.clientId!,
-		data: {
-			commandName: TaskCommandName.StartNewTask,
+	if (client.isReady) {
+		client.sendMessage({
+			type: IpcMessageType.TaskCommand,
+			origin: IpcOrigin.Client,
+			clientId: client.clientId!,
 			data: {
-				configuration: {
-					...rooCodeDefaults,
-					openRouterApiKey: process.env.OPENROUTER_API_KEY!,
-					...run.settings,
+				commandName: TaskCommandName.StartNewTask,
+				data: {
+					configuration: {
+						...rooCodeDefaults,
+						openRouterApiKey: process.env.OPENROUTER_API_KEY!,
+						...run.settings,
+					},
+					text: prompt,
+					newTab: true,
 				},
-				text: prompt,
-				newTab: true,
 			},
-		},
-	})
+		})
 
-	console.log(`[cli#runExercise | ${language} / ${exercise}] starting task`)
+		console.log(`[cli#runExercise | ${language} / ${exercise}] starting task`)
+	} else {
+		console.log(`[cli#runExercise | ${language} / ${exercise}] unable to connect`)
+		client.disconnect()
+		isTaskFinished = true
+		isClientDisconnected = true
+	}
 
 	try {
 		await pWaitFor(() => isTaskFinished, { interval: 1_000, timeout: taskTimeLimit })
@@ -338,7 +329,7 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 	} catch (error) {
 		console.log(`[cli#runExercise | ${language} / ${exercise}] time limit reached`)
 
-		if (rooTaskId) {
+		if (rooTaskId && !isClientDisconnected) {
 			client.sendMessage({
 				type: IpcMessageType.TaskCommand,
 				origin: IpcOrigin.Client,
@@ -352,24 +343,35 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 		await updateTask(task.id, { finishedAt: new Date() })
 	}
 
+	if (!isClientDisconnected) {
+		try {
+			client.sendMessage({
+				type: IpcMessageType.VSCodeCommand,
+				origin: IpcOrigin.Client,
+				clientId: client.clientId!,
+				data: "workbench.action.files.saveFiles",
+			})
+
+			client.sendMessage({
+				type: IpcMessageType.VSCodeCommand,
+				origin: IpcOrigin.Client,
+				clientId: client.clientId!,
+				data: "workbench.action.closeWindow",
+			})
+
+			client.disconnect()
+		} catch (error) {
+			console.error(error)
+		}
+	}
+
 	try {
-		client.sendMessage({
-			type: IpcMessageType.VSCodeCommand,
-			origin: IpcOrigin.Client,
-			clientId: client.clientId!,
-			data: "workbench.action.files.saveFiles",
-		})
-
-		client.sendMessage({
-			type: IpcMessageType.VSCodeCommand,
-			origin: IpcOrigin.Client,
-			clientId: client.clientId!,
-			data: "workbench.action.closeWindow",
-		})
-
-		client.disconnect()
+		console.log(`[cli#runExercise | ${language} / ${exercise}] aborting subprocess`)
+		controller.abort()
+		await subprocess
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (error) {
-		console.error(error)
+		// console.error(error)
 	}
 }
 
