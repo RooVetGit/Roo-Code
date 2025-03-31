@@ -354,6 +354,7 @@ export class BrowserSession {
 		const normalizedNewUrl = url.replace(/\/$/, "")
 
 		// Check if browser assistant mode is enabled
+		const remoteBrowserEnabled = this.context.globalState.get("remoteBrowserEnabled") as string | undefined
 		const browserAssistantModeEnabled = this.context.globalState.get("browserAssistantModeEnabled") as
 			| boolean
 			| undefined
@@ -364,7 +365,7 @@ export class BrowserSession {
 		// Try to find a page with the same root domain or use the latest tab in assistant mode
 		let existingPage: Page | undefined
 
-		if (browserAssistantModeEnabled) {
+		if (browserAssistantModeEnabled && remoteBrowserEnabled) {
 			// In assistant mode, always use the latest tab (last in the array)
 			// Skip the first page which is usually the blank page
 			existingPage = pages.length >= 1 ? pages[pages.length - 1] : undefined
@@ -401,7 +402,7 @@ export class BrowserSession {
 			const currentUrl = existingPage.url().replace(/\/$/, "") // Remove trailing / if present
 
 			if (
-				browserAssistantModeEnabled ||
+				(browserAssistantModeEnabled && remoteBrowserEnabled) ||
 				(this.getRootDomain(currentUrl) === this.getRootDomain(normalizedNewUrl) &&
 					currentUrl !== normalizedNewUrl)
 			) {

@@ -212,28 +212,27 @@ export const BrowserSettings = ({
 								<div className="text-vscode-descriptionForeground text-sm mt-1">
 									{t("settings:browser.remote.instructions")}
 								</div>
+								<div>
+									<VSCodeCheckbox
+										checked={browserAssistantModeEnabled}
+										onChange={(e: any) => {
+											setCachedStateField("browserAssistantModeEnabled", e.target.checked)
+										}}>
+										<label className="block font-medium mb-1">
+											{t("settings:browser.assistantMode.label")}
+										</label>
+									</VSCodeCheckbox>
+									<div className="text-vscode-descriptionForeground text-sm mt-1">
+										{t("settings:browser.assistantMode.description")}
+									</div>
+									{browserAssistantModeEnabled && (
+										<div className="text-vscode-descriptionForeground text-sm mt-1">
+											{t("settings:browser.assistantMode.instructions")}
+										</div>
+									)}
+								</div>
 							</>
 						)}
-
-						<div>
-							<VSCodeCheckbox
-								checked={browserAssistantModeEnabled}
-								onChange={(e: any) => {
-									setCachedStateField("browserAssistantModeEnabled", e.target.checked)
-								}}>
-								<label className="block font-medium mb-1">
-									{t("settings:browser.assistantMode.label")}
-								</label>
-							</VSCodeCheckbox>
-							<div className="text-vscode-descriptionForeground text-sm mt-1">
-								{t("settings:browser.assistantMode.description")}
-							</div>
-							{browserAssistantModeEnabled && (
-								<div className="text-vscode-descriptionForeground text-sm mt-1">
-									{t("settings:browser.assistantMode.instructions")}
-								</div>
-							)}
-						</div>
 					</div>
 				)}
 			</Section>
