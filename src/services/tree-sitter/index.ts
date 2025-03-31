@@ -233,8 +233,9 @@ async function parseFile(
 				return
 			}
 
-			// Create unique key for this definition
-			const lineKey = `${startLine}-${lines[startLine]}`
+			// Create unique key for this definition based on line range
+			// This ensures we don't output the same line range multiple times
+			const lineKey = `${startLine}-${endLine}`
 
 			// Skip already processed lines
 			if (processedLines.has(lineKey)) {

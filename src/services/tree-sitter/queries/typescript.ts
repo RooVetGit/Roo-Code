@@ -5,6 +5,7 @@
 - class declarations (including abstract classes)
 - module declarations
 - arrow functions (lambda functions)
+- switch/case statements with complex case blocks
 */
 export default `
 (function_signature
@@ -47,4 +48,12 @@ export default `
   (#eq? @prop "test")
 (arrow_function) @definition.lambda
 
+; Switch statements and case clauses
+(switch_statement) @definition.switch
+
+; Individual case clauses with their blocks
+(switch_case) @definition.case
+
+; Default clause
+(switch_default) @definition.default
 `

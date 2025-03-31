@@ -168,6 +168,21 @@ async function testParseSourceCodeDefinitions(testFilePath: string, content: str
 // Store the initialized TreeSitter from treeParserDebug for reuse
 let initializedTreeSitter: any = null
 
+// Helper function to inspect tree structure
+async function inspectTreeStructure(content: string, language: string = "typescript"): Promise<void> {
+	const TreeSitter = await initializeTreeSitter()
+	const parser = new TreeSitter()
+	const wasmPath = path.join(process.cwd(), `dist/tree-sitter-${language}.wasm`)
+	const lang = await TreeSitter.Language.load(wasmPath)
+	parser.setLanguage(lang)
+
+	// Parse the content
+	const tree = parser.parse(content)
+
+	// Print the tree structure
+	console.log(`TREE STRUCTURE (${language}):\n${tree.rootNode.toString()}`)
+}
+
 const logParseResult = async (description: string, filePath: string) => {
 	console.log("\n=== Parse Test:", description, "===")
 
@@ -398,6 +413,50 @@ describe("treeParserDebug", () => {
 		// Check standard HTML elements (should not be captured)
 		expect(result).not.toContain("div")
 		expect(result).not.toContain("h1")
+	})
+
+	it("should parse switch/case statements", async function () {
+		const switchCaseContent = `
+	    function handleTemperature(value: number) {
+	      switch (value) {
+	        case 0:
+	          // Handle freezing temperature
+	          logTemperature("Freezing");
+	          updateDisplay("Ice warning");
+	          notifyUser("Cold weather alert");
+	          setHeating(true);
+	          return "Freezing";
+	
+	        case 25:
+	          // Handle room temperature
+	          logTemperature("Normal");
+	          updateComfortMetrics();
+	          setHeating(false);
+	          setCooling(false);
+	          return "Room temperature";
+	
+	        default:
+	          // Handle unknown temperature
+	          logTemperature("Unknown");
+	          runDiagnostics();
+	          checkSensors();
+	          updateSystemStatus();
+	          return "Unknown temperature";
+	      }
+	    }
+	  `
+		mockedFs.readFile.mockResolvedValue(Buffer.from(switchCaseContent))
+
+		// Inspect the tree structure to see the actual node names
+		//   await inspectTreeStructure(switchCaseContent)
+
+		const result = await testParseSourceCodeDefinitions("/test/switch-case.tsx", switchCaseContent)
+		console.log("Switch Case Test Result:", result)
+		expect(result).toBeDefined()
+		expect(result).toContain("handleTemperature")
+		// Check for case statements in the output
+		expect(result).toContain("case 0:")
+		expect(result).toContain("case 25:")
 	})
 })
 
