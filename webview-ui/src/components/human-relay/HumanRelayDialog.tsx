@@ -129,7 +129,7 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 				<div className="grid gap-6 py-6">
 					<div className="relative">
 						<Textarea
-							className="min-h-[200px] font-mono text-sm p-4 pr-12 whitespace-pre-wrap"
+							className="min-h-[100px] font-mono text-sm p-4 pr-12 whitespace-pre-wrap"
 							value={promptText}
 							readOnly
 						/>
@@ -180,7 +180,7 @@ export const HumanRelayDialog: React.FC<HumanRelayDialogProps> = ({
 							placeholder={t("humanRelay:aiResponse.placeholder")}
 							value={response}
 							onChange={(e) => setResponse(e.target.value)}
-							className="min-h-[150px]"
+							className="min-h-[100px]"
 						/>
 					</div>
 				</div>
