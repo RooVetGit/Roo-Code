@@ -458,6 +458,44 @@ describe("treeParserDebug", () => {
 		expect(result).toContain("case 0:")
 		expect(result).toContain("case 25:")
 	})
+
+	it("should parse namespace declarations", async function () {
+		const namespaceContent = `
+	   /**
+	    * Validation namespace containing various validation functions
+	    * @namespace
+	    * @description Contains reusable validation logic
+	    */
+	   namespace Validation {
+	     /**
+	      * Validates email addresses according to RFC 5322
+	      * @param email - The email address to validate
+	      * @returns boolean indicating if the email is valid
+	      */
+	     export function isValidEmail(email: string): boolean {
+	       // Email validation logic
+	       return true;
+	     }
+
+	     /**
+	      * Validates phone numbers in international format
+	      * @param phone - The phone number to validate
+	      * @returns boolean indicating if the phone number is valid
+	      */
+	     export function isValidPhone(phone: string): boolean {
+	       // Phone validation logic
+	       return true;
+	     }
+	   }
+	 `
+		mockedFs.readFile.mockResolvedValue(Buffer.from(namespaceContent))
+
+		const result = await testParseSourceCodeDefinitions("/test/namespace.tsx", namespaceContent)
+		expect(result).toBeDefined()
+		expect(result).toContain("namespace Validation")
+		expect(result).toContain("isValidEmail")
+		expect(result).toContain("isValidPhone")
+	})
 })
 
 describe("parseSourceCodeDefinitions", () => {

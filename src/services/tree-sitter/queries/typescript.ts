@@ -7,6 +7,7 @@
 - arrow functions (lambda functions)
 - switch/case statements with complex case blocks
 - enum declarations with members
+- namespace declarations
 */
 export default `
 (function_signature
@@ -61,4 +62,8 @@ export default `
 ; Enum declarations
 (enum_declaration
   name: (identifier) @name.definition.enum) @definition.enum
+
+; Namespace declarations
+(internal_module
+  name: (identifier) @name.definition.namespace) @definition.namespace
 `
