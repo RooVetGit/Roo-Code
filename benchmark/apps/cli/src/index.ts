@@ -147,10 +147,20 @@ const run = async (toolbox: GluegunToolbox) => {
 	await Promise.all(runningPromises)
 
 	const result = await finishRun(run.id)
-	console.log("[cli#run]", result)
+	try {
+		console.log("[cli#run]", result)
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	} catch (error) {
+		// console.error(error)
+	}
 
 	if (parentPid) {
-		console.log(await execa`kill -INT ${parentPid}`)
+		try {
+			console.log(await execa`kill -INT ${parentPid}`)
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		} catch (error) {
+			// console.error(error)
+		}
 	}
 
 	console.log(await execa({ cwd: exercisesPath })`git add .`)
@@ -163,11 +173,24 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 	const dirname = path.dirname(run.socketPath)
 	const taskSocketPath = path.resolve(dirname, `${dirname}/task-${task.id}.sock`)
 
-	await execa({
-		env: { ROO_CODE_IPC_SOCKET_PATH: taskSocketPath },
-	})`code -n ${path.resolve(exercisesPath, language, exercise)}`
+	let codeCommand = `code --wait --verbose --disable-workspace-trust`
 
-	console.log(`Connecting to ${taskSocketPath}`)
+	const isDocker = fs.existsSync("/.dockerenv")
+
+	if (isDocker) {
+		codeCommand = `xvfb-run --auto-servernum --server-num=1 ${codeCommand} --disable-gpu --password-store="basic"`
+	}
+
+	const subprocess = execa({
+		env: {
+			ROO_CODE_IPC_SOCKET_PATH: taskSocketPath,
+		},
+		shell: "/bin/bash",
+	})`${codeCommand} -n ${path.resolve(exercisesPath, language, exercise)}`
+
+	subprocess.stdout.pipe(process.stdout)
+
+	console.log(`Connecting to ${taskSocketPath} (pid: ${subprocess.pid})`)
 
 	const createClient = (taskSocketPath: string) => {
 		const ipcClient = new IpcClient(taskSocketPath)
@@ -208,10 +231,10 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 		isTaskFinished = true
 	})
 
-	const ignoreEvents = [
-		RooCodeEventName.Message,
-		RooCodeEventName.TaskTokenUsageUpdated,
-		RooCodeEventName.TaskAskResponded,
+	const ignoreEvents: RooCodeEventName[] = [
+		// RooCodeEventName.Message,
+		// RooCodeEventName.TaskTokenUsageUpdated,
+		// RooCodeEventName.TaskAskResponded,
 	]
 
 	let taskStartedAt = Date.now()
@@ -230,6 +253,7 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 
 		if (!ignoreEvents.includes(eventName)) {
 			console.log(`[cli#runExercise | ${language} / ${exercise}] taskEvent -> ${eventName}`)
+			console.log(payload)
 		}
 
 		if (eventName === RooCodeEventName.TaskStarted) {

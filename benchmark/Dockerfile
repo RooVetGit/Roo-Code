@@ -1,8 +1,3 @@
-# docker build -f Dockerfile.base -t roo-code-benchmark-base ..
-# docker build -f Dockerfile -t roo-code-benchmark ..
-# docker run -d -it -p 3000:3000 -v /tmp/benchmarks.db:/tmp/benchmarks.db roo-code-benchmark
-# docker exec -it $(docker ps --filter "ancestor=roo-code-benchmark" -q) /bin/bash
-
 FROM node:20-slim AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -49,10 +44,7 @@ RUN echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
 WORKDIR /home/vscode
 USER vscode
 
-COPY benchmark/entrypoint.sh /usr/local/bin/entrypoint.sh
-
 # Copy exercises
-WORKDIR /home/vscode
 RUN git clone https://github.com/cte/Roo-Code-Benchmark.git exercises
 
 # Prepare exercises
@@ -60,23 +52,35 @@ WORKDIR /home/vscode/exercises/python
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 RUN /home/vscode/.local/bin/uv sync
 
-# Copy and build extension dependencies
-WORKDIR /home/vscode/repo
-COPY --chown=vscode:vscode package*.json /home/vscode/repo/
-COPY --chown=vscode:vscode webview-ui/package*.json /home/vscode/repo/webview-ui/
-RUN npm-run-all -l -p install-extension install-webview
-
-# Copy extension and benchmark code
-COPY --chown=vscode:vscode . /home/vscode/repo
-
-# Build extension dependencies
 WORKDIR /home/vscode/repo/benchmark
+
+# Copy & install extension
+COPY --chown=vscode:vscode ./bin/roo-cline-3.11.1.vsix ./
+RUN code --debug --install-extension ./roo-cline-3.11.1.vsix
+
+# Install dependencies
+COPY --chown=vscode:vscode ./benchmark/package.json ./benchmark/pnpm-lock.yaml ./benchmark/pnpm-workspace.yaml ./benchmark/.npmrc ./
+RUN mkdir -p apps/cli apps/web \
+  config/eslint config/typescript \
+  packages/db packages/ipc packages/lib packages/types
+COPY --chown=vscode:vscode ./benchmark/apps/cli/package.json          ./apps/cli/
+COPY --chown=vscode:vscode ./benchmark/apps/web/package.json          ./apps/web/
+COPY --chown=vscode:vscode ./benchmark/config/eslint/package.json     ./config/eslint/
+COPY --chown=vscode:vscode ./benchmark/config/typescript/package.json ./config/typescript/
+COPY --chown=vscode:vscode ./benchmark/packages/db/package.json       ./packages/db/
+COPY --chown=vscode:vscode ./benchmark/packages/ipc/package.json      ./packages/ipc/
+COPY --chown=vscode:vscode ./benchmark/packages/lib/package.json      ./packages/lib/
+COPY --chown=vscode:vscode ./benchmark/packages/types/package.json    ./packages/types/
 RUN pnpm install
 
-# Initialize database
-RUN echo "BENCHMARKS_DB_PATH=file:/tmp/benchmarks.db" > .env
+# Copy application code
+COPY --chown=vscode:vscode ./benchmark ./
+
+# Copy environment variables
+COPY --chown=vscode:vscode ./benchmark/.env ./
+
+# Push database schema
 RUN pnpm --filter @benchmark/db db:push
 
 EXPOSE 3000
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["/usr/bin/pnpm", "dev"]
+CMD ["pnpm", "web"]

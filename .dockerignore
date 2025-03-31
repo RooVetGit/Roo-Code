@@ -7,6 +7,7 @@
 
 # Build artifacts
 bin/
+!bin/roo-cline-3.11.1.vsix
 dist/
 **/dist/
 out/

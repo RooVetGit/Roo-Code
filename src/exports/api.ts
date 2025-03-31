@@ -4,7 +4,7 @@ import * as vscode from "vscode"
 import { ClineProvider } from "../core/webview/ClineProvider"
 import { openClineInNewTab } from "../activate/registerCommands"
 
-import { RooCodeSettings, RooCodeEvents, RooCodeEventName } from "../schemas"
+import { RooCodeSettings, RooCodeEvents, RooCodeEventName, ClineMessage } from "../schemas"
 import { IpcOrigin, IpcMessageType, TaskCommandName, TaskEvent } from "../schemas/ipc"
 import { RooCodeAPI } from "./interface"
 import { IpcServer } from "./ipc"
@@ -28,28 +28,75 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		this.registerListeners(this.sidebarProvider)
 
 		if (socketPath) {
-			this.ipc = new IpcServer(socketPath, (...args: unknown[]) => outputChannelLog(this.outputChannel, ...args))
-			this.ipc.listen()
+			const ipc = (this.ipc = new IpcServer(socketPath, (...args: unknown[]) =>
+				outputChannelLog(this.outputChannel, ...args),
+			))
 
-			this.outputChannel.appendLine(
-				`[API] ipc server started: socketPath=${socketPath}, pid=${process.pid}, ppid=${process.ppid}`,
-			)
+			ipc.listen()
+			this.log(`[API] ipc server started: socketPath=${socketPath}, pid=${process.pid}, ppid=${process.ppid}`)
 
-			this.ipc.on(IpcMessageType.TaskCommand, async (_clientId, { commandName, data }) => {
-				this.outputChannel.appendLine(`[API] TaskCommand -> ${commandName}`)
-
+			ipc.on(IpcMessageType.TaskCommand, async (_clientId, { commandName, data }) => {
 				switch (commandName) {
 					case TaskCommandName.StartNewTask:
-						await this.startNewTask(data)
+						this.log(`[API] StartNewTask -> ${data.text}`)
+						this.log(`[API] StartNewTask -> ${JSON.stringify(data.configuration)}`)
+
+						try {
+							await this.startNewTask(data)
+
+							ipc.broadcast({
+								type: IpcMessageType.TaskEvent,
+								origin: IpcOrigin.Server,
+								data: {
+									eventName: RooCodeEventName.Message,
+									payload: [
+										{
+											taskId: "[system]",
+											action: "created",
+											message: {
+												ts: Date.now(),
+												type: "say",
+												text: `ACK: TaskCommand -> ${commandName}`,
+											},
+										},
+									],
+								},
+							})
+						} catch (error) {
+							this.log(`[API] error starting new task: ${error}`)
+						}
+
 						break
 					case TaskCommandName.CancelTask:
+						this.log(`[API] CancelTask -> ${data}`)
+
 						await this.cancelTask(data)
+
+						ipc.broadcast({
+							type: IpcMessageType.TaskEvent,
+							origin: IpcOrigin.Server,
+							data: {
+								eventName: RooCodeEventName.Message,
+								payload: [
+									{
+										taskId: "[system]",
+										action: "created",
+										message: {
+											ts: Date.now(),
+											type: "say",
+											text: `ACK: CancelTask -> ${data}`,
+										},
+									},
+								],
+							},
+						})
+
 						break
 				}
 			})
 
-			this.ipc.on(IpcMessageType.VSCodeCommand, async (_clientId, command) => {
-				this.outputChannel.appendLine(`[API] VSCodeCommand -> ${command}`)
+			ipc.on(IpcMessageType.VSCodeCommand, async (_clientId, command) => {
+				this.log(`[API] VSCodeCommand -> ${command}`)
 				await vscode.commands.executeCommand(command)
 			})
 		}
@@ -78,11 +125,13 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		let provider: ClineProvider
 
 		if (newTab) {
-			await vscode.commands.executeCommand("workbench.action.closeAllEditors")
+			// await vscode.commands.executeCommand("workbench.action.closeAllEditors")
 
 			if (!this.tabProvider) {
+				this.log(`[API#startNewTask] -> openClineInNewTab`)
 				this.tabProvider = await openClineInNewTab({ context: this.context, outputChannel: this.outputChannel })
 				this.registerListeners(this.tabProvider)
+				this.log(`[API#startNewTask] <- openClineInNewTab`)
 			}
 
 			provider = this.tabProvider
@@ -91,21 +140,32 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		}
 
 		if (configuration) {
+			this.log(`[API#startNewTask] -> setValues ${JSON.stringify(configuration)}`)
 			await provider.setValues(configuration)
+			this.log(`[API#startNewTask] <- setValues ${JSON.stringify(configuration)}`)
 
 			if (configuration.allowedCommands) {
+				this.log(`[API#startNewTask] -> setAllowedCommands ${JSON.stringify(configuration.allowedCommands)}`)
+
 				await vscode.workspace
 					.getConfiguration("roo-cline")
 					.update("allowedCommands", configuration.allowedCommands, vscode.ConfigurationTarget.Global)
+
+				this.log(`[API#startNewTask] setAllowedCommands ${JSON.stringify(configuration.allowedCommands)}`)
 			}
 		}
 
+		this.log(`[API#startNewTask] -> removeClineFromStack`)
 		await provider.removeClineFromStack()
 		await provider.postStateToWebview()
 		await provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		await provider.postMessageToWebview({ type: "invoke", invoke: "newChat", text, images })
+		this.log(`[API#startNewTask] <- removeClineFromStack`)
 
+		this.log(`[API#startNewTask] -> initClineWithTask`)
 		const { taskId } = await provider.initClineWithTask(text, images)
+		this.log(`[API#startNewTask] <- initClineWithTask`)
+
 		return taskId
 	}
 
@@ -164,6 +224,7 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 
 	public log(message: string) {
 		this.outputChannel.appendLine(message)
+		console.log(`${message}\n`)
 	}
 
 	private registerListeners(provider: ClineProvider) {

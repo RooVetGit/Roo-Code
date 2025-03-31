@@ -11,14 +11,13 @@
 		"web": "turbo dev --filter @benchmark/web --output-logs new-only --ui tui",
 		"cli": "turbo dev --filter @benchmark/cli --output-logs new-only --ui tui -- run",
 		"drizzle:studio": "pnpm --filter @benchmark/db db:studio",
-		"docker:build": "docker build -f Dockerfile -t roo-code-benchmark ..",
+		"docker:build": "docker build -f Dockerfile -t roo-code-benchmark --progress=plain ..",
 		"docker:run": "touch /tmp/benchmarks.db && docker run -d -it -p 3000:3000 -v /tmp/benchmarks.db:/tmp/benchmarks.db roo-code-benchmark",
-		"docker:start": "npm run docker:build && npm run docker:run",
+		"docker:start": "pnpm docker:build && pnpm docker:run",
 		"docker:shell": "docker exec -it $(docker ps --filter \"ancestor=roo-code-benchmark\" -q) /bin/bash",
-		"docker:cli": "docker exec -it -w /home/vscode/repo/benchmark $(docker ps --filter \"ancestor=roo-code-benchmark\" -q) xvfb-run npm run cli --",
 		"docker:stop": "docker stop $(docker ps --filter \"ancestor=roo-code-benchmark\" -q)",
 		"docker:rm": "docker rm $(docker ps -a --filter \"ancestor=roo-code-benchmark\" -q)",
-		"docker:clean": "npm run docker:stop && npm run docker:rm"
+		"docker:clean": "pnpm docker:stop && pnpm docker:rm"
 	},
 	"devDependencies": {
 		"@dotenvx/dotenvx": "^1.39.0",
