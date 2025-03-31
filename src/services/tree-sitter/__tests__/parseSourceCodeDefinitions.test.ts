@@ -544,6 +544,49 @@ it("should parse namespace declarations", async function () {
 	expect(result).toContain("isValidPhone")
 })
 
+it("should parse generic type declarations with constraints", async function () {
+	const genericTypeContent = `
+	   /**
+	    * Dictionary interface with constrained key types
+	    */
+	   interface Dictionary<K extends string | number, V> {
+	     /**
+	      * Gets a value by its key
+	      * @param key - The key to look up
+	      * @returns The value associated with the key, or undefined
+	      */
+	     get(key: K): V | undefined;
+	     
+	     /**
+	      * Sets a value for a key
+	      * @param key - The key to set
+	      * @param value - The value to associate with the key
+	      */
+	     set(key: K, value: V): void;
+	     
+	     /**
+	      * Checks if the dictionary contains a key
+	      * @param key - The key to check
+	      */
+	     has(key: K): boolean;
+	   }
+	   
+	   /**
+	    * Type alias with constrained generic parameters
+	    */
+	   type KeyValuePair<K extends string | number, V> = {
+	     key: K;
+	     value: V;
+	   }
+	 `
+	mockedFs.readFile.mockResolvedValue(Buffer.from(genericTypeContent))
+
+	const result = await testParseSourceCodeDefinitions("/test/generic-type.tsx", genericTypeContent)
+	expect(result).toBeDefined()
+	expect(result).toContain("interface Dictionary<K extends string | number, V>")
+	expect(result).toContain("type KeyValuePair<K extends string | number, V>")
+})
+
 describe("parseSourceCodeDefinitions", () => {
 	const testFilePath = "/test/TemperatureControl.tsx"
 
