@@ -90,13 +90,6 @@ export async function addCustomInstructions(
 	const joinedSections = sections.join("\n\n")
 
 	return joinedSections
-		? `
-====
-
-USER'S CUSTOM INSTRUCTIONS
-
-The following additional instructions are provided by the user, and should be followed to the best of your ability without interfering with the TOOL USE guidelines.
-
-${joinedSections}`
+		? `\n## USER'S CUSTOM INSTRUCTIONS\n\nFollow these additional instructions while respecting TOOL USE guidelines:\n\n${joinedSections}`
 		: ""
 }
