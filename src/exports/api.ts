@@ -84,7 +84,7 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 
 	public async setConfiguration(values: RooCodeSettings) {
 		await this.provider.setValues(values)
-		this.provider.postStateToWebview()
+		await this.provider.postStateToWebview()
 	}
 
 	public isReady() {
