@@ -12,6 +12,8 @@
 		"export": "Aufgabenverlauf exportieren",
 		"delete": "Aufgabe löschen (Shift + Klick zum Überspringen der Bestätigung)"
 	},
+	"unpin": "Lösen von oben",
+	"pin": "Anheften",
 	"tokenProgress": {
 		"availableSpace": "Verfügbarer Speicher: {{amount}} Tokens",
 		"tokensUsed": "Verwendete Tokens: {{used}} von {{total}}",
@@ -105,10 +107,15 @@
 		},
 		"current": "Aktuell"
 	},
+	"instructions": {
+		"wantsToFetch": "Roo möchte detaillierte Anweisungen abrufen, um bei der aktuellen Aufgabe zu helfen"
+	},
 	"fileOperations": {
 		"wantsToRead": "Roo möchte diese Datei lesen:",
+		"wantsToReadOutsideWorkspace": "Roo möchte diese Datei außerhalb des Arbeitsbereichs lesen:",
 		"didRead": "Roo hat diese Datei gelesen:",
 		"wantsToEdit": "Roo möchte diese Datei bearbeiten:",
+		"wantsToEditOutsideWorkspace": "Roo möchte diese Datei außerhalb des Arbeitsbereichs bearbeiten:",
 		"wantsToCreate": "Roo möchte eine neue Datei erstellen:"
 	},
 	"directoryOperations": {
@@ -152,7 +159,7 @@
 	"autoApprove": {
 		"title": "Automatische Genehmigung:",
 		"none": "Keine",
-		"description": "Automatische Genehmigung erlaubt Roo Code, Aktionen ohne Nachfrage auszuführen. Aktiviere dies nur für Aktionen, denen du vollständig vertraust.",
+		"description": "Automatische Genehmigung erlaubt Roo Code, Aktionen ohne Nachfrage auszuführen. Aktiviere dies nur für Aktionen, denen du vollständig vertraust. Detailliertere Konfiguration verfügbar in den <settingsLink>Einstellungen</settingsLink>.",
 		"actions": {
 			"readFiles": {
 				"label": "Dateien und Verzeichnisse lesen",
@@ -200,15 +207,18 @@
 		"thinking": "Denke nach",
 		"seconds": "{{count}}s"
 	},
+	"followUpSuggest": {
+		"copyToInput": "In Eingabefeld kopieren (oder Shift + Klick)"
+	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.10 veröffentlicht",
-		"description": "Roo Code 3.10 bringt leistungsstarke Produktivitätsverbesserungen!",
+		"title": "🎉 Roo Code 3.11 veröffentlicht",
+		"description": "Roo Code 3.11 bringt signifikante Leistungsverbesserungen und neue Funktionen!",
 		"whatsNew": "Was ist neu",
-		"feature1": "Vorgeschlagene Antworten auf Fragen",
-		"feature2": "Verbesserte Handhabung großer Dateien",
-		"feature3": "Überarbeitete @-Erwähnungs-Dateisuche",
-		"feature4": "",
-		"feature5": "",
+		"feature1": "Schnelle Bearbeitungen: Änderungen werden jetzt viel schneller angewendet. Weniger Wartezeit, mehr Coding.",
+		"feature2": "API-Schlüssel-Guthaben: Sieh dir deine OpenRouter- und Requesty-Guthaben in den Einstellungen an.",
+		"feature3": "Projekt-Level MCP-Konfiguration: Jetzt kannst du sie pro Projekt/Workspace konfigurieren.",
+		"feature4": "Verbesserte Gemini-Unterstützung: Intelligentere Wiederholungen, korrigiertes Escaping, zum Vertex-Provider hinzugefügt.",
+		"feature5": "Import/Export von Einstellungen: Sichere oder teile deine Konfiguration einfach über verschiedene Setups hinweg.",
 		"hideButton": "Ankündigung ausblenden",
 		"detailsDiscussLinks": "Erhalte mehr Details und diskutiere auf <discordLink>Discord</discordLink> und <redditLink>Reddit</redditLink> 🚀"
 	},

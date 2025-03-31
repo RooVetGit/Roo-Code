@@ -1,17 +1,13 @@
+import * as vscode from "vscode"
+
 import { SYSTEM_PROMPT } from "../system"
 import { McpHub } from "../../../services/mcp/McpHub"
-import { McpServer } from "../../../shared/mcp"
 import { ClineProvider } from "../../../core/webview/ClineProvider"
-import { SearchReplaceDiffStrategy } from "../../../core/diff/strategies/search-replace"
-import * as vscode from "vscode"
-import fs from "fs/promises"
-import os from "os"
-import { defaultModeSlug, modes, Mode, isToolAllowedForMode } from "../../../shared/modes"
-// Import path utils to get access to toPosix string extension
-import "../../../utils/path"
+import { defaultModeSlug, modes, Mode, ModeConfig } from "../../../shared/modes"
+import "../../../utils/path" // Import path utils to get access to toPosix string extension.
 import { addCustomInstructions } from "../sections/custom-instructions"
-import * as modesSection from "../sections/modes"
 import { EXPERIMENT_IDS } from "../../../shared/experiments"
+import { MultiSearchReplaceDiffStrategy } from "../../diff/strategies/multi-search-replace"
 
 // Mock the sections
 jest.mock("../sections/modes", () => ({
@@ -299,7 +295,7 @@ describe("SYSTEM_PROMPT", () => {
 			"/test/path",
 			false, // supportsComputerUse
 			undefined, // mcpHub
-			new SearchReplaceDiffStrategy(), // Use actual diff strategy from the codebase
+			new MultiSearchReplaceDiffStrategy(), // Use actual diff strategy from the codebase
 			undefined, // browserViewportSize
 			defaultModeSlug, // mode
 			undefined, // customModePrompts
@@ -320,7 +316,7 @@ describe("SYSTEM_PROMPT", () => {
 			"/test/path",
 			false, // supportsComputerUse
 			undefined, // mcpHub
-			new SearchReplaceDiffStrategy(), // Use actual diff strategy from the codebase
+			new MultiSearchReplaceDiffStrategy(), // Use actual diff strategy from the codebase
 			undefined, // browserViewportSize
 			defaultModeSlug, // mode
 			undefined, // customModePrompts
@@ -341,7 +337,7 @@ describe("SYSTEM_PROMPT", () => {
 			"/test/path",
 			false, // supportsComputerUse
 			undefined, // mcpHub
-			new SearchReplaceDiffStrategy(), // Use actual diff strategy from the codebase
+			new MultiSearchReplaceDiffStrategy(), // Use actual diff strategy from the codebase
 			undefined, // browserViewportSize
 			defaultModeSlug, // mode
 			undefined, // customModePrompts
@@ -386,7 +382,8 @@ describe("SYSTEM_PROMPT", () => {
 
 	it("should include custom mode role definition at top and instructions at bottom", async () => {
 		const modeCustomInstructions = "Custom mode instructions"
-		const customModes = [
+
+		const customModes: ModeConfig[] = [
 			{
 				slug: "custom-mode",
 				name: "Custom Mode",
@@ -599,7 +596,7 @@ describe("SYSTEM_PROMPT", () => {
 				"/test/path",
 				false,
 				undefined,
-				new SearchReplaceDiffStrategy(),
+				new MultiSearchReplaceDiffStrategy(),
 				undefined,
 				defaultModeSlug,
 				undefined,
@@ -627,7 +624,7 @@ describe("SYSTEM_PROMPT", () => {
 				"/test/path",
 				false,
 				undefined,
-				new SearchReplaceDiffStrategy(),
+				new MultiSearchReplaceDiffStrategy(),
 				undefined,
 				defaultModeSlug,
 				undefined,

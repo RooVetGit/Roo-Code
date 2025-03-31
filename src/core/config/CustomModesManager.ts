@@ -1,11 +1,12 @@
 import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs/promises"
-import { CustomModesSettingsSchema } from "./CustomModesSchema"
+import { customModesSettingsSchema } from "../../schemas"
 import { ModeConfig } from "../../shared/modes"
 import { fileExistsAtPath } from "../../utils/fs"
 import { arePathsEqual, getWorkspacePath } from "../../utils/path"
 import { logger } from "../../utils/logging"
+import { GlobalFileNames } from "../../shared/globalFileNames"
 
 const ROOMODES_FILENAME = ".roomodes"
 
@@ -18,6 +19,7 @@ export class CustomModesManager {
 		private readonly context: vscode.ExtensionContext,
 		private readonly onUpdate: () => Promise<void>,
 	) {
+		// TODO: We really shouldn't have async methods in the constructor.
 		this.watchCustomModesFiles()
 	}
 
@@ -61,7 +63,7 @@ export class CustomModesManager {
 		try {
 			const content = await fs.readFile(filePath, "utf-8")
 			const settings = JSON.parse(content)
-			const result = CustomModesSettingsSchema.safeParse(settings)
+			const result = customModesSettingsSchema.safeParse(settings)
 			if (!result.success) {
 				return []
 			}
@@ -113,7 +115,7 @@ export class CustomModesManager {
 
 	async getCustomModesFilePath(): Promise<string> {
 		const settingsDir = await this.ensureSettingsDirectoryExists()
-		const filePath = path.join(settingsDir, "cline_custom_modes.json")
+		const filePath = path.join(settingsDir, GlobalFileNames.customModes)
 		const fileExists = await fileExistsAtPath(filePath)
 		if (!fileExists) {
 			await this.queueWrite(async () => {
@@ -143,7 +145,8 @@ export class CustomModesManager {
 						return
 					}
 
-					const result = CustomModesSettingsSchema.safeParse(config)
+					const result = customModesSettingsSchema.safeParse(config)
+
 					if (!result.success) {
 						vscode.window.showErrorMessage(errorMessage)
 						return

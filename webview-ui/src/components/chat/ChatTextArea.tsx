@@ -24,7 +24,9 @@ import { SelectDropdown, DropdownOptionType, Button } from "@/components/ui"
 import Thumbnails from "../common/Thumbnails"
 import { MAX_IMAGES_PER_MESSAGE } from "./ChatView"
 import ContextMenu from "./ContextMenu"
-import { VolumeX } from "lucide-react"
+import { VolumeX, Pin, Check } from "lucide-react"
+import { IconButton } from "./IconButton"
+import { cn } from "@/lib/utils"
 
 interface ChatTextAreaProps {
 	inputValue: string
@@ -62,7 +64,27 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		ref,
 	) => {
 		const { t } = useAppTranslation()
-		const { filePaths, openedTabs, currentApiConfigName, listApiConfigMeta, customModes, cwd } = useExtensionState()
+		const {
+			filePaths,
+			openedTabs,
+			currentApiConfigName,
+			listApiConfigMeta,
+			customModes,
+			cwd,
+			osInfo,
+			pinnedApiConfigs,
+			togglePinnedApiConfig,
+		} = useExtensionState()
+
+		// Find the ID and display text for the currently selected API configuration
+		const { currentConfigId, displayName } = useMemo(() => {
+			const currentConfig = listApiConfigMeta?.find((config) => config.name === currentApiConfigName)
+			return {
+				currentConfigId: currentConfig?.id || "",
+				displayName: currentApiConfigName || "", // Use the name directly for display
+			}
+		}, [listApiConfigMeta, currentApiConfigName])
+
 		const [gitCommits, setGitCommits] = useState<any[]>([])
 		const [showDropdown, setShowDropdown] = useState(false)
 		const [fileSearchResults, setFileSearchResults] = useState<SearchResult[]>([])
@@ -113,7 +135,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			return () => window.removeEventListener("message", messageHandler)
 		}, [setInputValue, searchRequestId])
 
-		const [thumbnailsHeight, setThumbnailsHeight] = useState(0)
+		const [isDraggingOver, setIsDraggingOver] = useState(false)
 		const [textAreaBaseHeight, setTextAreaBaseHeight] = useState<number | undefined>(undefined)
 		const [showContextMenu, setShowContextMenu] = useState(false)
 		const [cursorPosition, setCursorPosition] = useState(0)
@@ -166,7 +188,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					.filter((tab) => tab.path)
 					.map((tab) => ({
 						type: ContextMenuOptionType.OpenedFile,
-						value: "/" + tab.path,
+						value: tab.path,
 					})),
 				...filePaths
 					.map((file) => "/" + file)
@@ -286,6 +308,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								queryItems,
 								fileSearchResults,
 								getAllModes(customModes),
+								osInfo,
 							)
 							const optionsLength = options.length
 
@@ -322,6 +345,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							queryItems,
 							fileSearchResults,
 							getAllModes(customModes),
+							osInfo,
 						)[selectedMenuIndex]
 						if (
 							selectedOption &&
@@ -377,19 +401,20 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				}
 			},
 			[
-				onSend,
 				showContextMenu,
-				searchQuery,
 				selectedMenuIndex,
-				handleMentionSelect,
+				searchQuery,
 				selectedType,
+				queryItems,
+				fileSearchResults,
+				customModes,
+				osInfo,
+				handleMentionSelect,
+				onSend,
 				inputValue,
 				cursorPosition,
-				setInputValue,
 				justDeletedSpaceAfterMention,
-				queryItems,
-				customModes,
-				fileSearchResults,
+				setInputValue,
 			],
 		)
 
@@ -547,14 +572,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			[shouldDisableImages, setSelectedImages, cursorPosition, setInputValue, inputValue, t],
 		)
 
-		const handleThumbnailsHeightChange = useCallback((height: number) => setThumbnailsHeight(height), [])
-
-		useEffect(() => {
-			if (selectedImages.length === 0) {
-				setThumbnailsHeight(0)
-			}
-		}, [selectedImages])
-
 		const handleMenuMouseDown = useCallback(() => {
 			setIsMouseDownOnMenu(true)
 		}, [])
@@ -592,75 +609,51 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			[updateCursorPosition],
 		)
 
-		const [isTtsPlaying, setIsTtsPlaying] = useState(false)
+		const handleDrop = useCallback(
+			async (e: React.DragEvent<HTMLDivElement>) => {
+				e.preventDefault()
+				setIsDraggingOver(false)
 
-		useEvent("message", (event: MessageEvent) => {
-			const message: ExtensionMessage = event.data
+				const text = e.dataTransfer.getData("text")
+				if (text) {
+					// Split text on newlines to handle multiple files
+					const lines = text.split(/\r?\n/).filter((line) => line.trim() !== "")
 
-			if (message.type === "ttsStart") {
-				setIsTtsPlaying(true)
-			} else if (message.type === "ttsStop") {
-				setIsTtsPlaying(false)
-			}
-		})
+					if (lines.length > 0) {
+						// Process each line as a separate file path
+						let newValue = inputValue.slice(0, cursorPosition)
+						let totalLength = 0
 
-		return (
-			<div
-				className="chat-text-area"
-				style={{
-					opacity: textAreaDisabled ? 0.5 : 1,
-					position: "relative",
-					display: "flex",
-					flexDirection: "column",
-					gap: "8px",
-					backgroundColor: "var(--vscode-input-background)",
-					margin: "10px 15px",
-					padding: "8px",
-					outline: "none",
-					border: "1px solid",
-					borderColor: isFocused ? "var(--vscode-focusBorder)" : "transparent",
-					borderRadius: "2px",
-				}}
-				onDrop={async (e) => {
-					e.preventDefault()
-					const files = Array.from(e.dataTransfer.files)
-					const text = e.dataTransfer.getData("text")
+						// Using a standard for loop instead of forEach for potential performance gains.
+						for (let i = 0; i < lines.length; i++) {
+							const line = lines[i]
+							// Convert each path to a mention-friendly format
+							const mentionText = convertToMentionPath(line, cwd, osInfo)
+							newValue += mentionText
+							totalLength += mentionText.length
 
-					if (text) {
-						// Split text on newlines to handle multiple files
-						const lines = text.split(/\r?\n/).filter((line) => line.trim() !== "")
-
-						if (lines.length > 0) {
-							// Process each line as a separate file path
-							let newValue = inputValue.slice(0, cursorPosition)
-							let totalLength = 0
-
-							lines.forEach((line, index) => {
-								// Convert each path to a mention-friendly format
-								const mentionText = convertToMentionPath(line, cwd)
-								newValue += mentionText
-								totalLength += mentionText.length
-
-								// Add space after each mention except the last one
-								if (index < lines.length - 1) {
-									newValue += " "
-									totalLength += 1
-								}
-							})
-
-							// Add space after the last mention and append the rest of the input
-							newValue += " " + inputValue.slice(cursorPosition)
-							totalLength += 1
-
-							setInputValue(newValue)
-							const newCursorPosition = cursorPosition + totalLength
-							setCursorPosition(newCursorPosition)
-							setIntendedCursorPosition(newCursorPosition)
+							// Add space after each mention except the last one
+							if (i < lines.length - 1) {
+								newValue += " "
+								totalLength += 1
+							}
 						}
 
-						return
+						// Add space after the last mention and append the rest of the input
+						newValue += " " + inputValue.slice(cursorPosition)
+						totalLength += 1
+
+						setInputValue(newValue)
+						const newCursorPosition = cursorPosition + totalLength
+						setCursorPosition(newCursorPosition)
+						setIntendedCursorPosition(newCursorPosition)
 					}
 
+					return
+				}
+
+				const files = Array.from(e.dataTransfer.files)
+				if (!textAreaDisabled && files.length > 0) {
 					const acceptedTypes = ["png", "jpeg", "webp"]
 					const imageFiles = files.filter((file) => {
 						const [type, subtype] = file.type.split("/")
@@ -699,159 +692,256 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							console.warn(t("chat:noValidImages"))
 						}
 					}
-				}}
-				onDragOver={(e) => {
-					e.preventDefault()
-				}}>
-				{showContextMenu && (
-					<div ref={contextMenuContainerRef}>
-						<ContextMenu
-							onSelect={handleMentionSelect}
-							searchQuery={searchQuery}
-							onMouseDown={handleMenuMouseDown}
-							selectedIndex={selectedMenuIndex}
-							setSelectedIndex={setSelectedMenuIndex}
-							selectedType={selectedType}
-							queryItems={queryItems}
-							modes={getAllModes(customModes)}
-							loading={searchLoading}
-							dynamicSearchResults={fileSearchResults}
-						/>
-					</div>
-				)}
+				}
+			},
+			[
+				textAreaDisabled,
+				inputValue,
+				cursorPosition,
+				setInputValue,
+				cwd,
+				osInfo,
+				shouldDisableImages,
+				t,
+				setSelectedImages,
+			],
+		)
 
-				<div
-					style={{
-						position: "relative",
-						flex: "1 1 auto",
-						display: "flex",
-						flexDirection: "column-reverse",
-						minHeight: 0,
-						overflow: "hidden",
-					}}>
+		const [isTtsPlaying, setIsTtsPlaying] = useState(false)
+
+		useEvent("message", (event: MessageEvent) => {
+			const message: ExtensionMessage = event.data
+
+			if (message.type === "ttsStart") {
+				setIsTtsPlaying(true)
+			} else if (message.type === "ttsStop") {
+				setIsTtsPlaying(false)
+			}
+		})
+
+		const placeholderBottomText = `\n(${t("chat:addContext")}${shouldDisableImages ? `, ${t("chat:dragFiles")}` : `, ${t("chat:dragFilesImages")}`})`
+
+		return (
+			<div
+				className={cn(
+					"relative",
+					"flex",
+					"flex-col",
+					"gap-2",
+					"bg-editor-background",
+					"m-2 mt-1",
+					"p-1.5",
+					"outline-none",
+					"border",
+					"border-none",
+					"w-[calc(100%-16px)]",
+					"ml-auto",
+					"mr-auto",
+					"box-border",
+				)}>
+				<div className="relative">
 					<div
-						ref={highlightLayerRef}
-						style={{
-							position: "absolute",
-							inset: 0,
-							pointerEvents: "none",
-							whiteSpace: "pre-wrap",
-							wordWrap: "break-word",
-							color: "transparent",
-							overflow: "hidden",
-							fontFamily: "var(--vscode-font-family)",
-							fontSize: "var(--vscode-editor-font-size)",
-							lineHeight: "var(--vscode-editor-line-height)",
-							padding: "2px",
-							paddingRight: "8px",
-							marginBottom: thumbnailsHeight > 0 ? `${thumbnailsHeight + 16}px` : 0,
-							zIndex: 1,
-						}}
-					/>
-					<DynamicTextArea
-						ref={(el) => {
-							if (typeof ref === "function") {
-								ref(el)
-							} else if (ref) {
-								ref.current = el
+						className={cn("chat-text-area", "relative", "flex", "flex-col", "outline-none")}
+						onDrop={handleDrop}
+						onDragOver={(e) => {
+							//Only allowed to drop images/files on shift key pressed
+							if (!e.shiftKey) {
+								setIsDraggingOver(false)
+								return
 							}
-							textAreaRef.current = el
+							e.preventDefault()
+							setIsDraggingOver(true)
+							e.dataTransfer.dropEffect = "copy"
 						}}
-						value={inputValue}
-						disabled={textAreaDisabled}
-						onChange={(e) => {
-							handleInputChange(e)
-							updateHighlights()
-						}}
-						onFocus={() => setIsFocused(true)}
-						onKeyDown={handleKeyDown}
-						onKeyUp={handleKeyUp}
-						onBlur={handleBlur}
-						onPaste={handlePaste}
-						onSelect={updateCursorPosition}
-						onMouseUp={updateCursorPosition}
-						onHeightChange={(height) => {
-							if (textAreaBaseHeight === undefined || height < textAreaBaseHeight) {
-								setTextAreaBaseHeight(height)
+						onDragLeave={(e) => {
+							e.preventDefault()
+							const rect = e.currentTarget.getBoundingClientRect()
+							if (
+								e.clientX <= rect.left ||
+								e.clientX >= rect.right ||
+								e.clientY <= rect.top ||
+								e.clientY >= rect.bottom
+							) {
+								setIsDraggingOver(false)
 							}
-							onHeightChange?.(height)
-						}}
-						placeholder={placeholderText}
-						minRows={3}
-						maxRows={15}
-						autoFocus={true}
-						style={{
-							width: "100%",
-							outline: "none",
-							boxSizing: "border-box",
-							backgroundColor: "transparent",
-							color: "var(--vscode-input-foreground)",
-							borderRadius: 2,
-							fontFamily: "var(--vscode-font-family)",
-							fontSize: "var(--vscode-editor-font-size)",
-							lineHeight: "var(--vscode-editor-line-height)",
-							resize: "none",
-							overflowX: "hidden",
-							overflowY: "auto",
-							border: "none",
-							padding: "2px",
-							paddingRight: "8px",
-							marginBottom: thumbnailsHeight > 0 ? `${thumbnailsHeight + 16}px` : 0,
-							cursor: textAreaDisabled ? "not-allowed" : undefined,
-							flex: "0 1 auto",
-							zIndex: 2,
-							scrollbarWidth: "none",
-						}}
-						onScroll={() => updateHighlights()}
-					/>
-					{isTtsPlaying && (
-						<Button
-							variant="ghost"
-							size="icon"
-							className="absolute top-0 right-0 opacity-25 hover:opacity-100 z-10"
-							onClick={() => vscode.postMessage({ type: "stopTts" })}>
-							<VolumeX className="size-4" />
-						</Button>
-					)}
+						}}>
+						{showContextMenu && (
+							<div
+								ref={contextMenuContainerRef}
+								className={cn(
+									"absolute",
+									"bottom-full",
+									"left-0",
+									"right-0",
+									"z-[1000]",
+									"mb-2",
+									"filter",
+									"drop-shadow-md",
+								)}>
+								<ContextMenu
+									onSelect={handleMentionSelect}
+									searchQuery={searchQuery}
+									onMouseDown={handleMenuMouseDown}
+									selectedIndex={selectedMenuIndex}
+									setSelectedIndex={setSelectedMenuIndex}
+									selectedType={selectedType}
+									queryItems={queryItems}
+									modes={getAllModes(customModes)}
+									loading={searchLoading}
+									dynamicSearchResults={fileSearchResults}
+									os={osInfo}
+								/>
+							</div>
+						)}
+						<div
+							className={cn(
+								"relative",
+								"flex-1",
+								"flex",
+								"flex-col-reverse",
+								"min-h-0",
+								"overflow-hidden",
+								"rounded",
+							)}>
+							<div
+								ref={highlightLayerRef}
+								className={cn(
+									"absolute",
+									"inset-0",
+									"pointer-events-none",
+									"whitespace-pre-wrap",
+									"break-words",
+									"text-transparent",
+									"overflow-hidden",
+									"font-vscode-font-family",
+									"text-vscode-editor-font-size",
+									"leading-vscode-editor-line-height",
+									"py-2",
+									"px-[9px]",
+									"z-[1000]",
+								)}
+								style={{
+									color: "transparent",
+								}}
+							/>
+							<DynamicTextArea
+								ref={(el) => {
+									if (typeof ref === "function") {
+										ref(el)
+									} else if (ref) {
+										ref.current = el
+									}
+									textAreaRef.current = el
+								}}
+								value={inputValue}
+								disabled={textAreaDisabled}
+								onChange={(e) => {
+									handleInputChange(e)
+									updateHighlights()
+								}}
+								onFocus={() => setIsFocused(true)}
+								onKeyDown={handleKeyDown}
+								onKeyUp={handleKeyUp}
+								onBlur={handleBlur}
+								onPaste={handlePaste}
+								onSelect={updateCursorPosition}
+								onMouseUp={updateCursorPosition}
+								onHeightChange={(height) => {
+									if (textAreaBaseHeight === undefined || height < textAreaBaseHeight) {
+										setTextAreaBaseHeight(height)
+									}
+									onHeightChange?.(height)
+								}}
+								placeholder={placeholderText}
+								minRows={3}
+								maxRows={15}
+								autoFocus={true}
+								className={cn(
+									"w-full",
+									"text-vscode-input-foreground",
+									"font-vscode-font-family",
+									"text-vscode-editor-font-size",
+									"leading-vscode-editor-line-height",
+									textAreaDisabled ? "cursor-not-allowed" : "cursor-text",
+									"py-1.5 px-2",
+									isFocused
+										? "border border-vscode-focusBorder outline outline-vscode-focusBorder"
+										: isDraggingOver
+											? "border-2 border-dashed border-vscode-focusBorder"
+											: "border border-transparent",
+									textAreaDisabled ? "opacity-50" : "opacity-100",
+									isDraggingOver
+										? "bg-[color-mix(in_srgb,var(--vscode-input-background)_95%,var(--vscode-focusBorder))]"
+										: "bg-vscode-input-background",
+									"transition-background-color duration-150 ease-in-out",
+									"will-change-background-color",
+									"h-[100px]",
+									"[@media(min-width:150px)]:min-h-[80px]",
+									"[@media(min-width:425px)]:min-h-[60px]",
+									"box-border",
+									"rounded",
+									"resize-none",
+									"overflow-x-hidden",
+									"overflow-y-auto",
+									"pr-2",
+									"flex-none flex-grow",
+									"z-[2]",
+									"scrollbar-none",
+								)}
+								onScroll={() => updateHighlights()}
+							/>
+							{isTtsPlaying && (
+								<Button
+									variant="ghost"
+									size="icon"
+									className="absolute top-0 right-0 opacity-25 hover:opacity-100 z-10"
+									onClick={() => vscode.postMessage({ type: "stopTts" })}>
+									<VolumeX className="size-4" />
+								</Button>
+							)}
+							{!inputValue && (
+								<div
+									className={cn(
+										"absolute",
+										"left-2",
+										"flex",
+										"gap-2",
+										"text-xs",
+										"text-descriptionForeground",
+										"pointer-events-none",
+										"z-25",
+										"bottom-1.5",
+										"pr-2",
+										"transition-opacity",
+										"duration-200",
+										"ease-in-out",
+										textAreaDisabled ? "opacity-35" : "opacity-70",
+									)}>
+									{placeholderBottomText}
+								</div>
+							)}
+						</div>
+					</div>
 				</div>
 
 				{selectedImages.length > 0 && (
 					<Thumbnails
 						images={selectedImages}
 						setImages={setSelectedImages}
-						onHeightChange={handleThumbnailsHeightChange}
 						style={{
-							position: "absolute",
-							bottom: "36px",
 							left: "16px",
 							zIndex: 2,
-							marginBottom: "4px",
+							marginBottom: 0,
 						}}
 					/>
 				)}
 
-				<div
-					style={{
-						display: "flex",
-						justifyContent: "space-between",
-						alignItems: "center",
-						marginTop: "auto",
-						paddingTop: "2px",
-					}}>
-					{/* Left side - dropdowns container */}
-					<div
-						style={{
-							display: "flex",
-							alignItems: "center",
-							gap: "4px",
-							overflow: "hidden",
-							minWidth: 0,
-						}}>
+				<div className={cn("flex", "justify-between", "items-center", "mt-auto", "pt-0.5")}>
+					<div className={cn("flex", "items-center", "gap-1", "min-w-0")}>
 						{/* Mode selector - fixed width */}
-						<div style={{ flexShrink: 0 }}>
+						<div className="shrink-0">
 							<SelectDropdown
 								value={mode}
-								disabled={textAreaDisabled}
 								title={t("chat:selectMode")}
 								options={[
 									{
@@ -886,22 +976,47 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						</div>
 
 						{/* API configuration selector - flexible width */}
-						<div
-							style={{
-								flex: "1 1 auto",
-								minWidth: 0,
-								overflow: "hidden",
-							}}>
+						<div className={cn("flex-1", "min-w-0", "overflow-hidden")}>
 							<SelectDropdown
-								value={currentApiConfigName || ""}
+								value={currentConfigId}
 								disabled={textAreaDisabled}
 								title={t("chat:selectApiConfig")}
+								placeholder={displayName} // Always show the current name
 								options={[
-									...(listApiConfigMeta || []).map((config) => ({
-										value: config.name,
-										label: config.name,
-										type: DropdownOptionType.ITEM,
-									})),
+									// Pinned items first
+									...(listApiConfigMeta || [])
+										.filter((config) => pinnedApiConfigs && pinnedApiConfigs[config.id])
+										.map((config) => ({
+											value: config.id,
+											label: config.name,
+											name: config.name, // Keep name for comparison with currentApiConfigName
+											type: DropdownOptionType.ITEM,
+											pinned: true,
+										}))
+										.sort((a, b) => a.label.localeCompare(b.label)),
+									// If we have pinned items and unpinned items, add a separator
+									...(pinnedApiConfigs &&
+									Object.keys(pinnedApiConfigs).length > 0 &&
+									(listApiConfigMeta || []).some((config) => !pinnedApiConfigs[config.id])
+										? [
+												{
+													value: "sep-pinned",
+													label: t("chat:separator"),
+													type: DropdownOptionType.SEPARATOR,
+												},
+											]
+										: []),
+									// Unpinned items sorted alphabetically
+									...(listApiConfigMeta || [])
+										.filter((config) => !pinnedApiConfigs || !pinnedApiConfigs[config.id])
+										.map((config) => ({
+											value: config.id,
+											label: config.name,
+											name: config.name, // Keep name for comparison with currentApiConfigName
+											type: DropdownOptionType.ITEM,
+											pinned: false,
+										}))
+										.sort((a, b) => a.label.localeCompare(b.label)),
 									{
 										value: "sep-2",
 										label: t("chat:separator"),
@@ -913,59 +1028,78 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 										type: DropdownOptionType.ACTION,
 									},
 								]}
-								onChange={(value) => vscode.postMessage({ type: "loadApiConfiguration", text: value })}
+								onChange={(value) => {
+									if (value === "settingsButtonClicked") {
+										vscode.postMessage({ type: "loadApiConfiguration", text: value })
+									} else {
+										vscode.postMessage({ type: "loadApiConfigurationById", text: value })
+									}
+								}}
 								contentClassName="max-h-[300px] overflow-y-auto"
 								triggerClassName="w-full text-ellipsis overflow-hidden"
+								itemClassName="group"
+								renderItem={({ type, value, label, pinned }) => {
+									if (type !== DropdownOptionType.ITEM) {
+										return label
+									}
+
+									const config = listApiConfigMeta?.find((c) => c.id === value)
+									const isCurrentConfig = config?.name === currentApiConfigName
+
+									return (
+										<div className="flex justify-between gap-2 w-full h-5">
+											<div className={cn({ "font-medium": isCurrentConfig })}>{label}</div>
+											<div className="flex justify-end w-10">
+												<div
+													className={cn("size-5 p-1", {
+														"block group-hover:hidden": !pinned,
+														hidden: !isCurrentConfig,
+													})}>
+													<Check className="size-3" />
+												</div>
+												<Button
+													variant="ghost"
+													size="icon"
+													title={pinned ? t("chat:unpin") : t("chat:pin")}
+													onClick={(e) => {
+														e.stopPropagation()
+														togglePinnedApiConfig(value)
+														vscode.postMessage({ type: "toggleApiConfigPin", text: value })
+													}}
+													className={cn("size-5", {
+														"hidden group-hover:flex": !pinned,
+														"bg-accent": pinned,
+													})}>
+													<Pin className="size-3 p-0.5 opacity-50" />
+												</Button>
+											</div>
+										</div>
+									)
+								}}
 							/>
 						</div>
 					</div>
 
 					{/* Right side - action buttons */}
-					<div
-						style={{
-							display: "flex",
-							alignItems: "center",
-							gap: "8px",
-							flexShrink: 0,
-						}}>
-						<div style={{ display: "flex", alignItems: "center" }}>
-							{isEnhancingPrompt ? (
-								<span
-									className="codicon codicon-loading codicon-modifier-spin"
-									style={{
-										color: "var(--vscode-input-foreground)",
-										opacity: 0.5,
-										fontSize: 16.5,
-										marginRight: 6,
-									}}
-								/>
-							) : (
-								<span
-									role="button"
-									aria-label="enhance prompt"
-									data-testid="enhance-prompt-button"
-									title={t("chat:enhancePrompt")}
-									className={`input-icon-button ${
-										textAreaDisabled ? "disabled" : ""
-									} codicon codicon-sparkle`}
-									onClick={() => !textAreaDisabled && handleEnhancePrompt()}
-									style={{ fontSize: 16.5 }}
-								/>
-							)}
-						</div>
-						<span
-							className={`input-icon-button ${
-								shouldDisableImages ? "disabled" : ""
-							} codicon codicon-device-camera`}
-							title={t("chat:addImages")}
-							onClick={() => !shouldDisableImages && onSelectImages()}
-							style={{ fontSize: 16.5 }}
+					<div className={cn("flex", "items-center", "gap-0.5", "shrink-0")}>
+						<IconButton
+							iconClass={isEnhancingPrompt ? "codicon-loading" : "codicon-sparkle"}
+							title={t("chat:enhancePrompt")}
+							disabled={textAreaDisabled}
+							isLoading={isEnhancingPrompt}
+							onClick={handleEnhancePrompt}
 						/>
-						<span
-							className={`input-icon-button ${textAreaDisabled ? "disabled" : ""} codicon codicon-send`}
+						<IconButton
+							iconClass="codicon-device-camera"
+							title={t("chat:addImages")}
+							disabled={shouldDisableImages}
+							onClick={onSelectImages}
+						/>
+						<IconButton
+							iconClass="codicon-send"
 							title={t("chat:sendMessage")}
-							onClick={() => !textAreaDisabled && onSend()}
-							style={{ fontSize: 15 }}
+							disabled={textAreaDisabled}
+							onClick={onSend}
 						/>
 					</div>
 				</div>

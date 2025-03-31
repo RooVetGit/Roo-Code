@@ -25,6 +25,7 @@ export interface DropdownOption {
 	label: string
 	disabled?: boolean
 	type?: DropdownOptionType
+	pinned?: boolean
 }
 
 export interface SelectDropdownProps {
@@ -35,10 +36,12 @@ export interface SelectDropdownProps {
 	title?: string
 	triggerClassName?: string
 	contentClassName?: string
+	itemClassName?: string
 	sideOffset?: number
 	align?: "start" | "center" | "end"
 	placeholder?: string
 	shortcutText?: string
+	renderItem?: (option: DropdownOption) => React.ReactNode
 }
 
 export const SelectDropdown = React.forwardRef<React.ElementRef<typeof DropdownMenuTrigger>, SelectDropdownProps>(
@@ -51,18 +54,22 @@ export const SelectDropdown = React.forwardRef<React.ElementRef<typeof DropdownM
 			title = "",
 			triggerClassName = "",
 			contentClassName = "",
+			itemClassName = "",
 			sideOffset = 4,
 			align = "start",
 			placeholder = "",
 			shortcutText = "",
+			renderItem,
 		},
 		ref,
 	) => {
 		const [open, setOpen] = React.useState(false)
 		const portalContainer = useRooPortal("roo-portal")
 
+		// If the selected option isn't in the list yet, but we have a placeholder, prioritize showing the placeholder
 		const selectedOption = options.find((option) => option.value === value)
-		const displayText = selectedOption?.label || placeholder || ""
+		const displayText =
+			value && !selectedOption && placeholder ? placeholder : selectedOption?.label || placeholder || ""
 
 		const handleSelect = (option: DropdownOption) => {
 			if (option.type === DropdownOptionType.ACTION) {
@@ -82,9 +89,12 @@ export const SelectDropdown = React.forwardRef<React.ElementRef<typeof DropdownM
 					disabled={disabled}
 					title={title}
 					className={cn(
-						"w-full min-w-0 max-w-full inline-flex items-center gap-1 relative whitespace-nowrap pr-1.5 py-1.5 text-xs outline-none",
-						"bg-transparent border-none text-vscode-foreground w-auto",
-						disabled ? "opacity-50 cursor-not-allowed" : "opacity-80 hover:opacity-100 cursor-pointer",
+						"w-full min-w-0 max-w-full inline-flex items-center gap-1.5 relative whitespace-nowrap px-1.5 py-1 text-xs",
+						"bg-transparent border border-[rgba(255,255,255,0.08)] rounded-md text-vscode-foreground w-auto",
+						"transition-all duration-150 focus:outline-none focus-visible:ring-1 focus-visible:ring-vscode-focusBorder",
+						disabled
+							? "opacity-50 cursor-not-allowed"
+							: "opacity-90 hover:opacity-100 hover:bg-[rgba(255,255,255,0.03)] hover:border-[rgba(255,255,255,0.15)] cursor-pointer",
 						triggerClassName,
 					)}>
 					<CaretUpIcon className="pointer-events-none opacity-80 flex-shrink-0 size-3" />
@@ -117,12 +127,19 @@ export const SelectDropdown = React.forwardRef<React.ElementRef<typeof DropdownM
 							<DropdownMenuItem
 								key={`item-${option.value}`}
 								disabled={option.disabled}
-								onClick={() => handleSelect(option)}>
-								{option.label}
-								{option.value === value && (
-									<DropdownMenuShortcut>
-										<Check className="size-4 p-0.5" />
-									</DropdownMenuShortcut>
+								onClick={() => handleSelect(option)}
+								className={itemClassName}>
+								{renderItem ? (
+									renderItem(option)
+								) : (
+									<>
+										{option.label}
+										{option.value === value && (
+											<DropdownMenuShortcut>
+												<Check className="size-4 p-0.5" />
+											</DropdownMenuShortcut>
+										)}
+									</>
 								)}
 							</DropdownMenuItem>
 						)

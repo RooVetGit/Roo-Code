@@ -35,12 +35,20 @@
 		"description": "Allow Roo to automatically perform operations without requiring approval. Enable these settings only if you fully trust the AI and understand the associated security risks.",
 		"readOnly": {
 			"label": "Always approve read-only operations",
-			"description": "When enabled, Roo will automatically view directory contents and read files without requiring you to click the Approve button."
+			"description": "When enabled, Roo will automatically view directory contents and read files without requiring you to click the Approve button.",
+			"outsideWorkspace": {
+				"label": "Include files outside workspace",
+				"description": "Allow Roo to read files outside the current workspace without requiring approval."
+			}
 		},
 		"write": {
 			"label": "Always approve write operations",
 			"description": "Automatically create and edit files without requiring approval",
-			"delayLabel": "Delay after writes to allow diagnostics to detect potential problems"
+			"delayLabel": "Delay after writes to allow diagnostics to detect potential problems",
+			"outsideWorkspace": {
+				"label": "Include files outside workspace",
+				"description": "Allow Roo to create and edit files outside the current workspace without requiring approval."
+			}
 		},
 		"browser": {
 			"label": "Always approve browser actions",
@@ -74,6 +82,7 @@
 		}
 	},
 	"providers": {
+		"providerDocumentation": "{{provider}} documentation",
 		"configProfile": "Configuration Profile",
 		"description": "Save different API configurations to quickly switch between providers and settings.",
 		"apiProvider": "API Provider",
@@ -267,8 +276,10 @@
 			"description": "When enabled, files matching patterns in .rooignore will be shown in lists with a lock symbol. When disabled, these files will be completely hidden from file lists and searches."
 		},
 		"maxReadFile": {
-			"label": "Maximum lines to read from a file",
-			"description": "Maximum number of lines to read from a file at once. Lower values reduce context/resource usage but may require more reads for large files."
+			"label": "File read auto-truncate threshold",
+			"description": "Roo reads this number of lines when the model omits start/end values. If this number is less than the file's total, Roo generates a line number index of code definitions. Special cases: -1 instructs Roo to read the entire file (without indexing), and 0 instructs it to read no lines and provides line indexes only for minimal context. Lower values minimize initial context usage, enabling precise subsequent line-range reads. Explicit start/end requests are not limited by this setting.",
+			"lines": "lines",
+			"always_full_read": "Always read entire file"
 		}
 	},
 	"terminal": {
@@ -310,7 +321,7 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
-		"DIFF_STRATEGY": {
+		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Use experimental unified diff strategy",
 			"description": "Enable the experimental unified diff strategy. This strategy might reduce the number of retries caused by model errors but may cause unexpected behavior or incorrect edits. Only enable if you understand the risks and are willing to carefully review all changes."
 		},
@@ -349,6 +360,8 @@
 		"cacheReadsPrice": "Cache reads price",
 		"cacheWritesPrice": "Cache writes price",
 		"enableStreaming": "Enable streaming",
+		"enableR1Format": "Enable R1 model parameters",
+		"enableR1FormatTips": "Must be enabled when using R1 models such as QWQ to prevent 400 errors",
 		"useAzure": "Use Azure",
 		"azureApiVersion": "Set Azure API version",
 		"gemini": {
@@ -369,9 +382,10 @@
 			"label": "Allow anonymous error and usage reporting",
 			"description": "Help improve Roo Code by sending anonymous usage data and error reports. No code, prompts, or personal information is ever sent. See our privacy policy for more details."
 		},
-		"reset": {
-			"description": "Reset all global state and secret storage in the extension.",
-			"button": "Reset"
+		"settings": {
+			"import": "Import",
+			"export": "Export",
+			"reset": "Reset"
 		}
 	},
 	"thinkingBudget": {

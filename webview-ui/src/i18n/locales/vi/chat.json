@@ -12,6 +12,8 @@
 		"export": "Xuất lịch sử nhiệm vụ",
 		"delete": "Xóa nhiệm vụ (Shift + Click để bỏ qua xác nhận)"
 	},
+	"unpin": "Bỏ ghim khỏi đầu",
+	"pin": "Ghim lên đầu",
 	"tokenProgress": {
 		"availableSpace": "Không gian khả dụng: {{amount}} tokens",
 		"tokensUsed": "Tokens đã sử dụng: {{used}} trong {{total}}",
@@ -105,10 +107,15 @@
 		},
 		"current": "Hiện tại"
 	},
+	"instructions": {
+		"wantsToFetch": "Roo muốn lấy hướng dẫn chi tiết để hỗ trợ nhiệm vụ hiện tại"
+	},
 	"fileOperations": {
 		"wantsToRead": "Roo muốn đọc tệp này:",
+		"wantsToReadOutsideWorkspace": "Roo muốn đọc tệp này bên ngoài không gian làm việc:",
 		"didRead": "Roo đã đọc tệp này:",
 		"wantsToEdit": "Roo muốn chỉnh sửa tệp này:",
+		"wantsToEditOutsideWorkspace": "Roo muốn chỉnh sửa tệp này bên ngoài không gian làm việc:",
 		"wantsToCreate": "Roo muốn tạo một tệp mới:"
 	},
 	"directoryOperations": {
@@ -152,7 +159,7 @@
 	"autoApprove": {
 		"title": "Tự động phê duyệt:",
 		"none": "Không",
-		"description": "Tự động phê duyệt cho phép Roo Code thực hiện hành động mà không cần xin phép. Chỉ bật cho các hành động bạn hoàn toàn tin tưởng.",
+		"description": "Tự động phê duyệt cho phép Roo Code thực hiện hành động mà không cần xin phép. Chỉ bật cho các hành động bạn hoàn toàn tin tưởng. Cấu hình chi tiết hơn có sẵn trong <settingsLink>Cài đặt</settingsLink>.",
 		"actions": {
 			"readFiles": {
 				"label": "Đọc tệp và thư mục",
@@ -200,15 +207,18 @@
 		"thinking": "Đang suy nghĩ",
 		"seconds": "{{count}} giây"
 	},
+	"followUpSuggest": {
+		"copyToInput": "Sao chép vào ô nhập liệu (hoặc Shift + nhấp chuột)"
+	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.10 Đã phát hành",
-		"description": "Roo Code 3.10 mang đến những cải tiến năng suất mạnh mẽ!",
+		"title": "🎉 Roo Code 3.11 Đã phát hành",
+		"description": "Roo Code 3.11 mang đến những cải tiến hiệu suất đáng kể và các tính năng mới!",
 		"whatsNew": "Có gì mới",
-		"feature1": "Gợi ý phản hồi cho câu hỏi",
-		"feature2": "Cải thiện xử lý tệp tin lớn",
-		"feature3": "Xây dựng lại tìm kiếm tệp tin bằng @-mention",
-		"feature4": "",
-		"feature5": "",
+		"feature1": "Chỉnh sửa nhanh - Các chỉnh sửa giờ đây được áp dụng nhanh hơn nhiều. Ít thời gian chờ đợi, nhiều thời gian lập trình.",
+		"feature2": "Số dư khóa API - Xem số dư OpenRouter và Requesty của bạn trong cài đặt.",
+		"feature3": "Cấu hình MCP cấp dự án - Giờ đây bạn có thể cấu hình theo từng dự án/không gian làm việc.",
+		"feature4": "Hỗ trợ Gemini được cải thiện - Thử lại thông minh hơn, sửa lỗi escape, thêm vào nhà cung cấp Vertex.",
+		"feature5": "Nhập/Xuất cài đặt - Dễ dàng sao lưu hoặc chia sẻ cấu hình của bạn giữa các môi trường khác nhau.",
 		"hideButton": "Ẩn thông báo",
 		"detailsDiscussLinks": "Nhận thêm chi tiết và thảo luận tại <discordLink>Discord</discordLink> và <redditLink>Reddit</redditLink> 🚀"
 	},

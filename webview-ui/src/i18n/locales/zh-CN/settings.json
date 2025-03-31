@@ -35,12 +35,20 @@
 		"description": "允许 Roo 自动执行操作而无需批准。只有在您完全信任 AI 并了解相关安全风险的情况下才启用这些设置。",
 		"readOnly": {
 			"label": "始终批准只读操作",
-			"description": "启用后，Roo 将自动查看目录内容并读取文件，无需点击批准按钮。"
+			"description": "启用后，Roo 将自动查看目录内容并读取文件，无需点击批准按钮。",
+			"outsideWorkspace": {
+				"label": "包含工作区外的文件",
+				"description": "允许 Roo 读取当前工作区外的文件，无需批准。"
+			}
 		},
 		"write": {
 			"label": "始终批准写入操作",
 			"description": "自动创建和编辑文件而无需批准",
-			"delayLabel": "写入后延迟以允许诊断检测潜在问题"
+			"delayLabel": "写入后延迟以允许诊断检测潜在问题",
+			"outsideWorkspace": {
+				"label": "包含工作区外的文件",
+				"description": "允许 Roo 创建和编辑当前工作区外的文件，无需批准。"
+			}
 		},
 		"browser": {
 			"label": "始终批准浏览器操作",
@@ -75,6 +83,7 @@
 	},
 	"providers": {
 		"configProfile": "配置文件",
+		"providerDocumentation": "{{provider}} 文档",
 		"description": "保存不同的 API 配置以快速切换提供商和设置。",
 		"apiProvider": "API 提供商",
 		"model": "模型",
@@ -267,8 +276,10 @@
 			"description": "启用后，与 .rooignore 中模式匹配的文件将在列表中显示锁定符号。禁用时，这些文件将从文件列表和搜索中完全隐藏。"
 		},
 		"maxReadFile": {
-			"label": "文件读取的最大行数",
-			"description": "一次从文件读取的最大行数。较低的值会减少上下文/资源使用，但可能需要对大文件进行更多次读取。"
+			"label": "文件读取自动截断阈值",
+			"description": "当模型未指定起始/结束值时，Roo 读取的行数。如果此数值小于文件总行数，Roo 将生成代码定义的行号索引。特殊情况：-1 指示 Roo 读取整个文件（不创建索引），0 指示不读取任何行并仅提供行索引以获得最小上下文。较低的值可最小化初始上下文使用，允许后续精确的行范围读取。显式指定起始/结束的请求不受此设置限制。",
+			"lines": "行",
+			"always_full_read": "始终读取整个文件"
 		}
 	},
 	"terminal": {
@@ -310,7 +321,7 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
-		"DIFF_STRATEGY": {
+		"DIFF_STRATEGY_UNIFIED": {
 			"name": "使用实验性统一差异策略",
 			"description": "启用实验性统一差异策略。此策略可能减少由模型错误引起的重试次数，但可能导致意外行为或不正确的编辑。仅在您了解风险并愿意仔细审查所有更改时才启用。"
 		},
@@ -349,6 +360,8 @@
 		"cacheReadsPrice": "缓存读取价格",
 		"cacheWritesPrice": "缓存写入价格",
 		"enableStreaming": "启用流式传输",
+		"enableR1Format": "启用R1模型传参",
+		"enableR1FormatTips": "当使用QWQ等类R1模型时需启用，防止报400错误",
 		"useAzure": "使用 Azure 服务",
 		"azureApiVersion": "设置 Azure API 版本",
 		"gemini": {
@@ -370,9 +383,10 @@
 			"label": "允许匿名错误和使用情况报告",
 			"description": "通过发送匿名使用数据和错误报告来帮助改进 Roo Code。绝不会发送代码、提示或个人信息。有关更多详细信息，请参阅我们的隐私政策。"
 		},
-		"reset": {
-			"description": "重置扩展中的所有全局状态和密钥存储。",
-			"button": "重置"
+		"settings": {
+			"import": "导入",
+			"export": "导出",
+			"reset": "重置"
 		}
 	},
 	"thinkingBudget": {

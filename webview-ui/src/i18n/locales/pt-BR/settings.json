@@ -35,12 +35,20 @@
 		"description": "Permitir que o Roo realize operações automaticamente sem exigir aprovação. Ative essas configurações apenas se confiar totalmente na IA e compreender os riscos de segurança associados.",
 		"readOnly": {
 			"label": "Aprovar sempre operações somente de leitura",
-			"description": "Quando ativado, o Roo visualizará automaticamente o conteúdo do diretório e lerá arquivos sem que você precise clicar no botão Aprovar."
+			"description": "Quando ativado, o Roo visualizará automaticamente o conteúdo do diretório e lerá arquivos sem que você precise clicar no botão Aprovar.",
+			"outsideWorkspace": {
+				"label": "Incluir arquivos fora do espaço de trabalho",
+				"description": "Permitir que o Roo leia arquivos fora do espaço de trabalho atual sem exigir aprovação."
+			}
 		},
 		"write": {
 			"label": "Aprovar sempre operações de escrita",
 			"description": "Criar e editar arquivos automaticamente sem exigir aprovação",
-			"delayLabel": "Atraso após escritas para permitir que diagnósticos detectem problemas potenciais"
+			"delayLabel": "Atraso após escritas para permitir que diagnósticos detectem problemas potenciais",
+			"outsideWorkspace": {
+				"label": "Incluir arquivos fora do espaço de trabalho",
+				"description": "Permitir que o Roo crie e edite arquivos fora do espaço de trabalho atual sem exigir aprovação."
+			}
 		},
 		"browser": {
 			"label": "Aprovar sempre ações do navegador",
@@ -75,6 +83,7 @@
 	},
 	"providers": {
 		"configProfile": "Perfil de configuração",
+		"providerDocumentation": "Documentação do {{provider}}",
 		"description": "Salve diferentes configurações de API para alternar rapidamente entre provedores e configurações.",
 		"apiProvider": "Provedor de API",
 		"model": "Modelo",
@@ -267,8 +276,10 @@
 			"description": "Quando ativado, os arquivos que correspondem aos padrões em .rooignore serão mostrados em listas com um símbolo de cadeado. Quando desativado, esses arquivos serão completamente ocultos das listas de arquivos e pesquisas."
 		},
 		"maxReadFile": {
-			"label": "Número máximo de linhas para ler de um arquivo",
-			"description": "Número máximo de linhas para ler de um arquivo de uma vez. Valores mais baixos reduzem o uso de contexto/recursos, mas podem exigir mais leituras para arquivos grandes."
+			"label": "Limite de auto-truncamento de leitura de arquivo",
+			"description": "O Roo lê este número de linhas quando o modelo omite valores de início/fim. Se este número for menor que o total do arquivo, o Roo gera um índice de números de linha das definições de código. Casos especiais: -1 instrui o Roo a ler o arquivo inteiro (sem indexação), e 0 instrui a não ler linhas e fornecer apenas índices de linha para contexto mínimo. Valores mais baixos minimizam o uso inicial de contexto, permitindo leituras posteriores precisas de intervalos de linhas. Requisições com início/fim explícitos não são limitadas por esta configuração.",
+			"lines": "linhas",
+			"always_full_read": "Sempre ler o arquivo inteiro"
 		}
 	},
 	"terminal": {
@@ -310,7 +321,7 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
-		"DIFF_STRATEGY": {
+		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Usar estratégia diff unificada experimental",
 			"description": "Ativar a estratégia diff unificada experimental. Esta estratégia pode reduzir o número de novas tentativas causadas por erros do modelo, mas pode causar comportamento inesperado ou edições incorretas. Ative apenas se compreender os riscos e estiver disposto a revisar cuidadosamente todas as alterações."
 		},
@@ -349,6 +360,8 @@
 		"cacheReadsPrice": "Preço de leituras de cache",
 		"cacheWritesPrice": "Preço de escritas de cache",
 		"enableStreaming": "Ativar streaming",
+		"enableR1Format": "Ativar parâmetros do modelo R1",
+		"enableR1FormatTips": "Deve ser ativado ao usar modelos R1 como QWQ, para evitar erro 400",
 		"useAzure": "Usar Azure",
 		"azureApiVersion": "Definir versão da API Azure",
 		"gemini": {
@@ -370,9 +383,10 @@
 			"label": "Permitir relatórios anônimos de erros e uso",
 			"description": "Ajude a melhorar o Roo Code enviando dados de uso anônimos e relatórios de erros. Nunca são enviados código, prompts ou informações pessoais. Consulte nossa política de privacidade para mais detalhes."
 		},
-		"reset": {
-			"description": "Redefinir todo o estado global e armazenamento secreto na extensão.",
-			"button": "Redefinir"
+		"settings": {
+			"import": "Importar",
+			"export": "Exportar",
+			"reset": "Redefinir"
 		}
 	},
 	"thinkingBudget": {

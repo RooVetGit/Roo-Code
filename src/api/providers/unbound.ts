@@ -79,7 +79,7 @@ export class UnboundHandler extends BaseProvider implements SingleCompletionHand
 		let maxTokens: number | undefined
 
 		if (this.getModel().id.startsWith("anthropic/")) {
-			maxTokens = this.getModel().info.maxTokens
+			maxTokens = this.getModel().info.maxTokens ?? undefined
 		}
 
 		const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
@@ -212,7 +212,10 @@ export async function getUnboundModels() {
 
 				switch (true) {
 					case modelId.startsWith("anthropic/"):
-						modelInfo.maxTokens = 8192
+						// Set max tokens to 8192 for supported Anthropic models
+						if (modelInfo.maxTokens !== 4096) {
+							modelInfo.maxTokens = 8192
+						}
 						break
 					default:
 						break

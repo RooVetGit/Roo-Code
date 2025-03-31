@@ -12,6 +12,8 @@
 		"export": "Exportar histórico de tarefas",
 		"delete": "Excluir tarefa (Shift + Clique para pular confirmação)"
 	},
+	"unpin": "Desfixar",
+	"pin": "Fixar",
 	"tokenProgress": {
 		"availableSpace": "Espaço disponível: {{amount}} tokens",
 		"tokensUsed": "Tokens usados: {{used}} de {{total}}",
@@ -105,10 +107,15 @@
 		},
 		"current": "Atual"
 	},
+	"instructions": {
+		"wantsToFetch": "Roo quer buscar instruções detalhadas para ajudar com a tarefa atual"
+	},
 	"fileOperations": {
 		"wantsToRead": "Roo quer ler este arquivo:",
+		"wantsToReadOutsideWorkspace": "Roo quer ler este arquivo fora do espaço de trabalho:",
 		"didRead": "Roo leu este arquivo:",
 		"wantsToEdit": "Roo quer editar este arquivo:",
+		"wantsToEditOutsideWorkspace": "Roo quer editar este arquivo fora do espaço de trabalho:",
 		"wantsToCreate": "Roo quer criar um novo arquivo:"
 	},
 	"directoryOperations": {
@@ -152,7 +159,7 @@
 	"autoApprove": {
 		"title": "Aprovação automática:",
 		"none": "Nenhuma",
-		"description": "A aprovação automática permite que o Roo Code execute ações sem pedir permissão. Ative apenas para ações nas quais você confia totalmente.",
+		"description": "A aprovação automática permite que o Roo Code execute ações sem pedir permissão. Ative apenas para ações nas quais você confia totalmente. Configuração mais detalhada disponível nas <settingsLink>Configurações</settingsLink>.",
 		"actions": {
 			"readFiles": {
 				"label": "Ler arquivos e diretórios",
@@ -200,15 +207,18 @@
 		"thinking": "Pensando",
 		"seconds": "{{count}}s"
 	},
+	"followUpSuggest": {
+		"copyToInput": "Copiar para entrada (ou Shift + clique)"
+	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.10 Lançado",
-		"description": "Roo Code 3.10 traz poderosas melhorias de produtividade!",
+		"title": "🎉 Roo Code 3.11 Lançado",
+		"description": "Roo Code 3.11 traz melhorias significativas de desempenho e novas funcionalidades!",
 		"whatsNew": "O que há de novo",
-		"feature1": "Respostas sugeridas para perguntas",
-		"feature2": "Manuseio aprimorado de arquivos grandes",
-		"feature3": "Busca de arquivos por @-menção reconstruída",
-		"feature4": "",
-		"feature5": "",
+		"feature1": "Edições rápidas - As edições agora são aplicadas muito mais rápido. Menos espera, mais codificação.",
+		"feature2": "Saldos de chaves API - Visualize seus saldos OpenRouter e Requesty nas configurações.",
+		"feature3": "Configuração MCP em nível de projeto - Agora você pode configurá-la por projeto/espaço de trabalho.",
+		"feature4": "Suporte Gemini aprimorado - Repetições mais inteligentes, escape corrigido, adicionado ao provedor Vertex.",
+		"feature5": "Importação/Exportação de configurações - Faça backup ou compartilhe facilmente sua configuração entre diferentes ambientes.",
 		"hideButton": "Ocultar anúncio",
 		"detailsDiscussLinks": "Obtenha mais detalhes e participe da discussão no <discordLink>Discord</discordLink> e <redditLink>Reddit</redditLink> 🚀"
 	},

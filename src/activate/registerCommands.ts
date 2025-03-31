@@ -9,6 +9,7 @@ import {
 	handleHumanRelayResponse,
 	sendClipboardToHumanRelay,
 } from "./humanRelay"
+import { handleNewTask } from "./handleTask"
 
 // Store panel references in both modes
 let sidebarPanel: vscode.WebviewView | undefined = undefined
@@ -54,6 +55,7 @@ export const registerCommands = (options: RegisterCommandOptions) => {
 
 const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOptions) => {
 	return {
+		"roo-cline.activationCompleted": () => {},
 		"roo-cline.plusButtonClicked": async () => {
 			await provider.removeClineFromStack()
 			await provider.postStateToWebview()
@@ -90,7 +92,13 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		"roo-cline.registerHumanRelayCallback": registerHumanRelayCallback,
 		"roo-cline.unregisterHumanRelayCallback": unregisterHumanRelayCallback,
 		"roo-cline.handleHumanRelayResponse": handleHumanRelayResponse,
-		"roo-cline.sendClipboardToHumanRelay": sendClipboardToHumanRelay,
+		"roo-cline.sendClipboardToHumanRelay": sendClipboardToHumanRelay, // Keep local change
+		"roo-cline.newTask": handleNewTask, // Keep remote change
+		"roo-cline.setCustomStoragePath": async () => {
+			// Keep remote change
+			const { promptForCustomStoragePath } = await import("../shared/storagePathManager")
+			await promptForCustomStoragePath()
+		},
 	}
 }
 
@@ -124,8 +132,8 @@ const openClineInNewTab = async ({ context, outputChannel }: Omit<RegisterComman
 	// TODO: Use better svg icon with light and dark variants (see
 	// https://stackoverflow.com/questions/58365687/vscode-extension-iconpath).
 	newPanel.iconPath = {
-		light: vscode.Uri.joinPath(context.extensionUri, "assets", "icons", "rocket.png"),
-		dark: vscode.Uri.joinPath(context.extensionUri, "assets", "icons", "rocket.png"),
+		light: vscode.Uri.joinPath(context.extensionUri, "assets", "icons", "panel_light.png"),
+		dark: vscode.Uri.joinPath(context.extensionUri, "assets", "icons", "panel_dark.png"),
 	}
 
 	await tabProvider.resolveWebviewView(newPanel)

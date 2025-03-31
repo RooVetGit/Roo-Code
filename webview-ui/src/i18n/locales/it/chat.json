@@ -12,6 +12,8 @@
 		"export": "Esporta cronologia attività",
 		"delete": "Elimina attività (Shift + Clic per saltare la conferma)"
 	},
+	"unpin": "Rilascia",
+	"pin": "Fissa",
 	"tokenProgress": {
 		"availableSpace": "Spazio disponibile: {{amount}} tokens",
 		"tokensUsed": "Tokens utilizzati: {{used}} di {{total}}",
@@ -80,6 +82,9 @@
 	"separator": "Separatore",
 	"edit": "Modifica...",
 	"forNextMode": "per la prossima modalità",
+	"instructions": {
+		"wantsToFetch": "Roo vuole recuperare istruzioni dettagliate per aiutare con l'attività corrente"
+	},
 	"error": "Errore",
 	"troubleMessage": "Roo sta avendo problemi...",
 	"apiRequest": {
@@ -107,8 +112,10 @@
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo vuole leggere questo file:",
+		"wantsToReadOutsideWorkspace": "Roo vuole leggere questo file al di fuori dell'area di lavoro:",
 		"didRead": "Roo ha letto questo file:",
 		"wantsToEdit": "Roo vuole modificare questo file:",
+		"wantsToEditOutsideWorkspace": "Roo vuole modificare questo file al di fuori dell'area di lavoro:",
 		"wantsToCreate": "Roo vuole creare un nuovo file:"
 	},
 	"directoryOperations": {
@@ -152,7 +159,7 @@
 	"autoApprove": {
 		"title": "Auto-approvazione:",
 		"none": "Nessuna",
-		"description": "L'auto-approvazione permette a Roo Code di eseguire azioni senza chiedere permesso. Abilita solo per azioni di cui ti fidi completamente.",
+		"description": "L'auto-approvazione permette a Roo Code di eseguire azioni senza chiedere permesso. Abilita solo per azioni di cui ti fidi completamente. Configurazione più dettagliata disponibile nelle <settingsLink>Impostazioni</settingsLink>.",
 		"actions": {
 			"readFiles": {
 				"label": "Leggi file e directory",
@@ -200,15 +207,18 @@
 		"thinking": "Sto pensando",
 		"seconds": "{{count}}s"
 	},
+	"followUpSuggest": {
+		"copyToInput": "Copia nell'input (o Shift + clic)"
+	},
 	"announcement": {
-		"title": "🎉 Rilasciato Roo Code 3.10",
-		"description": "Roo Code 3.10 porta potenti miglioramenti di produttività!",
+		"title": "🎉 Rilasciato Roo Code 3.11",
+		"description": "Roo Code 3.11 porta significativi miglioramenti di prestazioni e nuove funzionalità!",
 		"whatsNew": "Novità",
-		"feature1": "Risposte suggerite alle domande",
-		"feature2": "Gestione migliorata dei file di grandi dimensioni",
-		"feature3": "Ricerca file tramite @-menzione ricostruita",
-		"feature4": "",
-		"feature5": "",
+		"feature1": "Modifiche veloci - Le modifiche ora vengono applicate molto più velocemente. Meno attesa, più codifica.",
+		"feature2": "Saldi delle chiavi API - Visualizza i tuoi saldi OpenRouter e Requesty nelle impostazioni.",
+		"feature3": "Configurazione MCP a livello di progetto - Ora puoi configurarla per progetto/area di lavoro.",
+		"feature4": "Supporto Gemini migliorato - Tentativi più intelligenti, escaping corretto, aggiunto al provider Vertex.",
+		"feature5": "Importazione/Esportazione impostazioni - Backup o condivisione facile della tua configurazione tra diverse installazioni.",
 		"hideButton": "Nascondi annuncio",
 		"detailsDiscussLinks": "Ottieni maggiori dettagli e partecipa alle discussioni su <discordLink>Discord</discordLink> e <redditLink>Reddit</redditLink> 🚀"
 	},

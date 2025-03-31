@@ -35,12 +35,20 @@
 		"description": "Roo가 승인 없이 자동으로 작업을 수행할 수 있도록 허용합니다. AI를 완전히 신뢰하고 관련 보안 위험을 이해하는 경우에만 이러한 설정을 활성화하세요.",
 		"readOnly": {
 			"label": "읽기 전용 작업 항상 승인",
-			"description": "활성화되면 Roo는 승인 버튼을 클릭하지 않고도 자동으로 디렉토리 내용을 보고 파일을 읽습니다."
+			"description": "활성화되면 Roo는 승인 버튼을 클릭하지 않고도 자동으로 디렉토리 내용을 보고 파일을 읽습니다.",
+			"outsideWorkspace": {
+				"label": "워크스페이스 외부 파일 포함",
+				"description": "Roo가 승인 없이 현재 워크스페이스 외부의 파일을 읽을 수 있도록 허용합니다."
+			}
 		},
 		"write": {
 			"label": "쓰기 작업 항상 승인",
 			"description": "승인 없이 자동으로 파일 생성 및 편집",
-			"delayLabel": "진단이 잠재적 문제를 감지할 수 있도록 쓰기 후 지연"
+			"delayLabel": "진단이 잠재적 문제를 감지할 수 있도록 쓰기 후 지연",
+			"outsideWorkspace": {
+				"label": "워크스페이스 외부 파일 포함",
+				"description": "Roo가 승인 없이 현재 워크스페이스 외부의 파일을 생성하고 편집할 수 있도록 허용합니다."
+			}
 		},
 		"browser": {
 			"label": "브라우저 작업 항상 승인",
@@ -75,6 +83,7 @@
 	},
 	"providers": {
 		"configProfile": "구성 프로필",
+		"providerDocumentation": "{{provider}} 문서",
 		"description": "다양한 API 구성을 저장하여 제공자와 설정 간에 빠르게 전환할 수 있습니다.",
 		"apiProvider": "API 제공자",
 		"model": "모델",
@@ -267,8 +276,10 @@
 			"description": "활성화되면 .rooignore의 패턴과 일치하는 파일이 잠금 기호와 함께 목록에 표시됩니다. 비활성화되면 이러한 파일은 파일 목록 및 검색에서 완전히 숨겨집니다."
 		},
 		"maxReadFile": {
-			"label": "파일에서 읽을 최대 라인 수",
-			"description": "한 번에 파일에서 읽을 최대 라인 수. 낮은 값은 컨텍스트/리소스 사용량을 줄이지만 대용량 파일의 경우 더 많은 읽기가 필요할 수 있습니다."
+			"label": "파일 읽기 자동 축소 임계값",
+			"description": "모델이 시작/끝 값을 지정하지 않을 때 Roo가 읽는 줄 수입니다. 이 수가 파일의 총 줄 수보다 적으면 Roo는 코드 정의의 줄 번호 인덱스를 생성합니다. 특수한 경우: -1은 Roo에게 전체 파일을 읽도록 지시하고(인덱싱 없이), 0은 줄을 읽지 않고 최소한의 컨텍스트를 위해 줄 인덱스만 제공하도록 지시합니다. 낮은 값은 초기 컨텍스트 사용을 최소화하고, 이후 정확한 줄 범위 읽기를 가능하게 합니다. 명시적 시작/끝 요청은 이 설정의 제한을 받지 않습니다.",
+			"lines": "줄",
+			"always_full_read": "항상 전체 파일 읽기"
 		}
 	},
 	"terminal": {
@@ -310,7 +321,7 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
-		"DIFF_STRATEGY": {
+		"DIFF_STRATEGY_UNIFIED": {
 			"name": "실험적 통합 diff 전략 사용",
 			"description": "실험적 통합 diff 전략을 활성화합니다. 이 전략은 모델 오류로 인한 재시도 횟수를 줄일 수 있지만 예기치 않은 동작이나 잘못된 편집을 일으킬 수 있습니다. 위험을 이해하고 모든 변경 사항을 신중하게 검토할 의향이 있는 경우에만 활성화하십시오."
 		},
@@ -349,6 +360,8 @@
 		"cacheReadsPrice": "캐시 읽기 가격",
 		"cacheWritesPrice": "캐시 쓰기 가격",
 		"enableStreaming": "스트리밍 활성화",
+		"enableR1Format": "R1 모델 매개변수 활성화",
+		"enableR1FormatTips": "QWQ와 같은 R1 모델을 사용할 때 활성화해야 하며, 400 오류를 방지합니다",
 		"useAzure": "Azure 사용",
 		"azureApiVersion": "Azure API 버전 설정",
 		"gemini": {
@@ -370,9 +383,10 @@
 			"label": "익명 오류 및 사용 보고 허용",
 			"description": "익명 사용 데이터 및 오류 보고서를 보내 Roo Code 개선에 도움을 주세요. 코드, 프롬프트 또는 개인 정보는 절대 전송되지 않습니다. 자세한 내용은 개인정보 보호정책을 참조하세요."
 		},
-		"reset": {
-			"description": "확장 프로그램의 모든 전역 상태 및 보안 저장소를 재설정합니다.",
-			"button": "초기화"
+		"settings": {
+			"import": "가져오기",
+			"export": "내보내기",
+			"reset": "초기화"
 		}
 	},
 	"thinkingBudget": {

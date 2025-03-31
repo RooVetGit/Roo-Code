@@ -3,18 +3,18 @@
 	"displayName": "Roo Code (prev. Roo Cline)",
 	"description": "A whole dev team of AI agents in your editor.",
 	"publisher": "RooVeterinaryInc",
-	"version": "3.10.2",
-	"icon": "assets/icons/rocket.png",
+	"version": "3.11.1",
+	"icon": "assets/icons/icon.png",
 	"galleryBanner": {
 		"color": "#617A91",
 		"theme": "dark"
 	},
 	"engines": {
 		"vscode": "^1.84.0",
-		"node": ">=20.18.1"
+		"node": "20.18.1"
 	},
 	"author": {
-		"name": "Roo Vet"
+		"name": "Roo Code"
 	},
 	"repository": {
 		"type": "git",
@@ -66,7 +66,7 @@
 				{
 					"id": "roo-cline-ActivityBar",
 					"title": "Roo Code",
-					"icon": "$(rocket)"
+					"icon": "assets/icons/icon.svg"
 				}
 			]
 		},
@@ -141,6 +141,11 @@
 				"category": "Roo Code"
 			},
 			{
+				"command": "roo-cline.newTask",
+				"title": "New Task",
+				"category": "Roo Code"
+			},
+			{
 				"command": "roo-cline.terminalAddToContext",
 				"title": "Add Terminal Content to Context",
 				"category": "Terminal"
@@ -166,6 +171,11 @@
 				"category": "Terminal"
 			},
 			{
+				"command": "roo-cline.setCustomStoragePath",
+				"title": "Set Custom Storage Path",
+				"category": "Roo Code"
+			},
+			{
 				"command": "roo-cline.sendClipboardToHumanRelay",
 				"title": "Roo Code: Send Clipboard Content to Human Relay",
 				"category": "Roo Code"
@@ -187,19 +197,19 @@
 			],
 			"roo-code.contextMenu": [
 				{
-					"command": "roo-cline.explainCode",
+					"command": "roo-cline.addToContext",
 					"group": "1_actions@1"
 				},
 				{
-					"command": "roo-cline.fixCode",
+					"command": "roo-cline.explainCode",
 					"group": "1_actions@2"
 				},
 				{
-					"command": "roo-cline.improveCode",
+					"command": "roo-cline.fixCode",
 					"group": "1_actions@3"
 				},
 				{
-					"command": "roo-cline.addToContext",
+					"command": "roo-cline.improveCode",
 					"group": "1_actions@4"
 				}
 			],
@@ -300,6 +310,11 @@
 						}
 					},
 					"description": "Settings for VSCode Language Model API"
+				},
+				"roo-cline.customStoragePath": {
+					"type": "string",
+					"default": "",
+					"description": "Custom storage path. Leave empty to use the default location. Supports absolute paths (e.g. 'D:\\RooCodeStorage')"
 				}
 			}
 		}
@@ -348,7 +363,8 @@
 		"clean:webview": "cd webview-ui && npm run clean",
 		"clean:e2e": "cd e2e && npm run clean",
 		"clean:benchmark": "cd benchmark && npm run clean",
-		"update-contributors": "node scripts/update-contributors.js"
+		"update-contributors": "node scripts/update-contributors.js",
+		"generate-types": "tsx scripts/generate-types.mts"
 	},
 	"dependencies": {
 		"@anthropic-ai/bedrock-sdk": "^0.10.2",
@@ -422,6 +438,7 @@
 		"@typescript-eslint/parser": "^7.11.0",
 		"esbuild": "^0.24.0",
 		"eslint": "^8.57.0",
+		"execa": "^9.5.2",
 		"glob": "^11.0.1",
 		"husky": "^9.1.7",
 		"jest": "^29.7.0",
@@ -433,7 +450,10 @@
 		"prettier": "^3.4.2",
 		"rimraf": "^6.0.1",
 		"ts-jest": "^29.2.5",
-		"typescript": "^5.4.5"
+		"tsup": "^8.4.0",
+		"tsx": "^4.19.3",
+		"typescript": "^5.4.5",
+		"zod-to-ts": "^1.2.0"
 	},
 	"lint-staged": {
 		"*.{js,jsx,ts,tsx,json,css,md}": [

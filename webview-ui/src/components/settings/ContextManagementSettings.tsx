@@ -95,19 +95,35 @@ export const ContextManagementSettings = ({
 				<div>
 					<div className="flex flex-col gap-2">
 						<span className="font-medium">{t("settings:contextManagement.maxReadFile.label")}</span>
-						<div className="flex items-center gap-2">
-							<Slider
-								min={0}
-								max={2000}
-								step={10}
-								value={[maxReadFileLine ?? 450]}
-								onValueChange={([value]) => setCachedStateField("maxReadFileLine", value)}
-								data-testid="max-read-file-line-slider"
+						<div className="flex items-center gap-4">
+							<input
+								type="number"
+								pattern="-?[0-9]*"
+								className="w-24 bg-vscode-input-background text-vscode-input-foreground border border-vscode-input-border px-2 py-1 rounded text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50"
+								value={maxReadFileLine ?? 500}
+								min={-1}
+								onChange={(e) => {
+									const newValue = parseInt(e.target.value, 10)
+									if (!isNaN(newValue) && newValue >= -1) {
+										setCachedStateField("maxReadFileLine", newValue)
+									}
+								}}
+								onClick={(e) => e.currentTarget.select()}
+								data-testid="max-read-file-line-input"
+								disabled={maxReadFileLine === -1}
 							/>
-							<span className="w-10">{maxReadFileLine ?? 450}</span>
+							<span>{t("settings:contextManagement.maxReadFile.lines")}</span>
+							<VSCodeCheckbox
+								checked={maxReadFileLine === -1}
+								onChange={(e: any) =>
+									setCachedStateField("maxReadFileLine", e.target.checked ? -1 : 500)
+								}
+								data-testid="max-read-file-always-full-checkbox">
+								{t("settings:contextManagement.maxReadFile.always_full_read")}
+							</VSCodeCheckbox>
 						</div>
 					</div>
-					<div className="text-vscode-descriptionForeground text-sm mt-0">
+					<div className="text-vscode-descriptionForeground text-sm mt-2">
 						{t("settings:contextManagement.maxReadFile.description")}
 					</div>
 				</div>

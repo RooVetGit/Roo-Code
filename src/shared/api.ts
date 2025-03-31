@@ -1,165 +1,11 @@
-import * as vscode from "vscode"
+import { ModelInfo, ProviderName, ProviderSettings } from "../schemas"
 
-export type ApiProvider =
-	| "anthropic"
-	| "glama"
-	| "openrouter"
-	| "bedrock"
-	| "vertex"
-	| "openai"
-	| "ollama"
-	| "lmstudio"
-	| "gemini"
-	| "openai-native"
-	| "deepseek"
-	| "vscode-lm"
-	| "mistral"
-	| "unbound"
-	| "requesty"
-	| "human-relay"
-	| "fake-ai"
+export type { ModelInfo, ProviderName as ApiProvider }
 
-export interface ApiHandlerOptions {
-	apiModelId?: string
-	apiKey?: string // anthropic
-	anthropicBaseUrl?: string
-	vsCodeLmModelSelector?: vscode.LanguageModelChatSelector
-	glamaModelId?: string
-	glamaModelInfo?: ModelInfo
-	glamaApiKey?: string
-	openRouterApiKey?: string
-	openRouterModelId?: string
-	openRouterModelInfo?: ModelInfo
-	openRouterBaseUrl?: string
-	openRouterSpecificProvider?: string
-	awsAccessKey?: string
-	awsSecretKey?: string
-	awsSessionToken?: string
-	awsRegion?: string
-	awsUseCrossRegionInference?: boolean
-	awsUsePromptCache?: boolean
-	awspromptCacheId?: string
-	awsProfile?: string
-	awsUseProfile?: boolean
-	awsCustomArn?: string
-	vertexKeyFile?: string
-	vertexJsonCredentials?: string
-	vertexProjectId?: string
-	vertexRegion?: string
-	openAiBaseUrl?: string
-	openAiApiKey?: string
-	openAiModelId?: string
-	openAiCustomModelInfo?: ModelInfo
-	openAiUseAzure?: boolean
-	ollamaModelId?: string
-	ollamaBaseUrl?: string
-	lmStudioModelId?: string
-	lmStudioBaseUrl?: string
-	lmStudioDraftModelId?: string
-	lmStudioSpeculativeDecodingEnabled?: boolean
-	geminiApiKey?: string
-	googleGeminiBaseUrl?: string
-	openAiNativeApiKey?: string
-	mistralApiKey?: string
-	mistralCodestralUrl?: string // New option for Codestral URL
-	azureApiVersion?: string
-	openRouterUseMiddleOutTransform?: boolean
-	openAiStreamingEnabled?: boolean
-	deepSeekBaseUrl?: string
-	deepSeekApiKey?: string
-	includeMaxTokens?: boolean
-	unboundApiKey?: string
-	unboundModelId?: string
-	unboundModelInfo?: ModelInfo
-	requestyApiKey?: string
-	requestyModelId?: string
-	requestyModelInfo?: ModelInfo
-	modelTemperature?: number | null
-	modelMaxTokens?: number
-	modelMaxThinkingTokens?: number
-	fakeAi?: unknown
-	// Human relay specific options
-	humanRelayMonitorClipboard?: boolean // Whether to monitor clipboard for automatic content sending
-	humanRelayMonitorInterval?: number // Monitoring interval time (milliseconds)
-}
+// Keep the remote version which uses generated types
+export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider" | "id">
 
-export type ApiConfiguration = ApiHandlerOptions & {
-	apiProvider?: ApiProvider
-	id?: string // stable unique identifier
-}
-
-// Import GlobalStateKey type from globalState.ts
-import { GlobalStateKey } from "./globalState"
-
-// Define API configuration keys for dynamic object building.
-// TODO: This needs actual type safety; a type error should be thrown if
-// this is not an exhaustive list of all `GlobalStateKey` values.
-export const API_CONFIG_KEYS: GlobalStateKey[] = [
-	"apiModelId",
-	"anthropicBaseUrl",
-	"vsCodeLmModelSelector",
-	"glamaModelId",
-	"glamaModelInfo",
-	"openRouterModelId",
-	"openRouterModelInfo",
-	"openRouterBaseUrl",
-	"openRouterSpecificProvider",
-	"awsRegion",
-	"awsUseCrossRegionInference",
-	// "awsUsePromptCache", // NOT exist on GlobalStateKey
-	// "awspromptCacheId", // NOT exist on GlobalStateKey
-	"awsProfile",
-	"awsUseProfile",
-	"awsCustomArn",
-	"vertexKeyFile",
-	"vertexJsonCredentials",
-	"vertexProjectId",
-	"vertexRegion",
-	"openAiBaseUrl",
-	"openAiModelId",
-	"openAiCustomModelInfo",
-	"openAiUseAzure",
-	"ollamaModelId",
-	"ollamaBaseUrl",
-	"lmStudioModelId",
-	"lmStudioBaseUrl",
-	"lmStudioDraftModelId",
-	"lmStudioSpeculativeDecodingEnabled",
-	"googleGeminiBaseUrl",
-	"mistralCodestralUrl",
-	"azureApiVersion",
-	"openRouterUseMiddleOutTransform",
-	"openAiStreamingEnabled",
-	// "deepSeekBaseUrl", //  not exist on GlobalStateKey
-	// "includeMaxTokens", // not exist on GlobalStateKey
-	"unboundModelId",
-	"unboundModelInfo",
-	"requestyModelId",
-	"requestyModelInfo",
-	"modelTemperature",
-	"modelMaxTokens",
-	"modelMaxThinkingTokens",
-	"fakeAi",
-	"humanRelayMonitorClipboard",
-	"humanRelayMonitorInterval",
-]
-
-// Models
-
-export interface ModelInfo {
-	maxTokens?: number
-	contextWindow: number
-	supportsImages?: boolean
-	supportsComputerUse?: boolean
-	supportsPromptCache: boolean // this value is hardcoded for now
-	inputPrice?: number
-	outputPrice?: number
-	cacheWritesPrice?: number
-	cacheReadsPrice?: number
-	description?: string
-	reasoningEffort?: "low" | "medium" | "high"
-	thinking?: boolean
-}
+export type ApiConfiguration = ProviderSettings
 
 // Anthropic
 // https://docs.anthropic.com/en/docs/about-claude/models
@@ -619,6 +465,14 @@ export const vertexModels = {
 		inputPrice: 0.15,
 		outputPrice: 0.6,
 	},
+	"gemini-2.5-pro-exp-03-25": {
+		maxTokens: 65_535,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+	},
 	"gemini-2.0-pro-exp-02-05": {
 		maxTokens: 8192,
 		contextWindow: 2_097_152,
@@ -745,20 +599,19 @@ export const openAiModelInfoSaneDefaults: ModelInfo = {
 	outputPrice: 0,
 }
 
-export const requestyModelInfoSaneDefaults: ModelInfo = {
-	maxTokens: -1,
-	contextWindow: 128_000,
-	supportsImages: true,
-	supportsPromptCache: false,
-	inputPrice: 0,
-	outputPrice: 0,
-}
-
 // Gemini
 // https://ai.google.dev/gemini-api/docs/models/gemini
 export type GeminiModelId = keyof typeof geminiModels
 export const geminiDefaultModelId: GeminiModelId = "gemini-2.0-flash-001"
 export const geminiModels = {
+	"gemini-2.5-pro-exp-03-25": {
+		maxTokens: 65_536,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+	},
 	"gemini-2.0-flash-001": {
 		maxTokens: 8192,
 		contextWindow: 1_048_576,
@@ -867,7 +720,7 @@ export const openAiNativeModels = {
 		maxTokens: 100_000,
 		contextWindow: 200_000,
 		supportsImages: false,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		reasoningEffort: "medium",
@@ -876,7 +729,7 @@ export const openAiNativeModels = {
 		maxTokens: 100_000,
 		contextWindow: 200_000,
 		supportsImages: false,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		reasoningEffort: "high",
@@ -885,7 +738,7 @@ export const openAiNativeModels = {
 		maxTokens: 100_000,
 		contextWindow: 200_000,
 		supportsImages: false,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 		reasoningEffort: "low",
@@ -894,7 +747,7 @@ export const openAiNativeModels = {
 		maxTokens: 100_000,
 		contextWindow: 200_000,
 		supportsImages: true,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 15,
 		outputPrice: 60,
 	},
@@ -902,7 +755,7 @@ export const openAiNativeModels = {
 		maxTokens: 32_768,
 		contextWindow: 128_000,
 		supportsImages: true,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 15,
 		outputPrice: 60,
 	},
@@ -910,7 +763,7 @@ export const openAiNativeModels = {
 		maxTokens: 65_536,
 		contextWindow: 128_000,
 		supportsImages: true,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 1.1,
 		outputPrice: 4.4,
 	},
@@ -918,7 +771,7 @@ export const openAiNativeModels = {
 		maxTokens: 16_384,
 		contextWindow: 128_000,
 		supportsImages: true,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 75,
 		outputPrice: 150,
 	},
@@ -926,7 +779,7 @@ export const openAiNativeModels = {
 		maxTokens: 16_384,
 		contextWindow: 128_000,
 		supportsImages: true,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 2.5,
 		outputPrice: 10,
 	},
@@ -934,7 +787,7 @@ export const openAiNativeModels = {
 		maxTokens: 16_384,
 		contextWindow: 128_000,
 		supportsImages: true,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 0.15,
 		outputPrice: 0.6,
 	},

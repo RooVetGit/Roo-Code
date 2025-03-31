@@ -1,5 +1,76 @@
 # Roo Code Changelog
 
+## [3.11.1] - 2025-03-30
+
+- Relax provider profiles schema and add telemetry
+
+## [3.11.0] - 2025-03-30
+
+- Replace single-block-diff with multi-block-diff fast editing strategy
+- Support project-level MCP config in .roo/mcp.json (thanks @aheizi!)
+- Show OpenRouter and Requesty key balance on the settings screen
+- Support import/export of settings
+- Add pinning and sorting for API configuration dropdown (thanks @jwcraig!)
+- Add Gemini 2.5 Pro to GCP Vertex AI provider (thanks @nbihan-mediware!)
+- Smarter retry logic for Gemini
+- Fix Gemini command escaping
+- Support @-mentions of files with spaces in the name (thanks @samhvw8!)
+- Improvements to partial file reads (thanks @KJ7LNW!)
+- Fix list_code_definition_names to support files (thanks @KJ7LNW!)
+- Refactor tool-calling logic to make the code a lot easier to work with (thanks @diarmidmackenzie, @bramburn, @KJ7LNW, and everyone else who helped!)
+- Prioritize “Add to Context” in the code actions and include line numbers (thanks @samhvw8!)
+- Add an activation command that other extensions can use to interface with Roo Code (thanks @gtaylor!)
+- Preserve language characters in file @-mentions (thanks @aheizi!)
+- Browser tool improvements (thanks @afshawnlotfi!)
+- Display info about partial reads in the chat row
+- Link to the settings page from the auto-approve toolbar
+- Link to provider docs from the API options
+- Fix switching profiles to ensure only the selected profile is switched (thanks @feifei325!)
+- Allow custom o3-mini-<reasoning> model from OpenAI-compatible providers (thanks @snoyiatk!)
+- Edit suggested answers before accepting them (thanks @samhvw8!)
+
+## [3.10.5] - 2025-03-25
+
+- Updated value of max tokens for gemini-2.5-pro-03-25 to 65,536 (thanks @linegel!)
+- Fix logic around when we fire task completion events
+
+## [3.10.4] - 2025-03-25
+
+- Dynamically fetch instructions for creating/editing custom modes and MCP servers (thanks @diarmidmackenzie!)
+- Added Gemini 2.5 Pro model to Google Gemini provider (thanks @samsilveira!)
+- Add settings to control whether to auto-approve reads and writes outside of the workspace
+- Update UX for chat text area (thanks @chadgauth!)
+- Support a custom storage path for tasks (thanks @Chenjiayuan195!)
+- Add a New Task command in the Command Palette (thanks @qdaxb!)
+- Add R1 support checkbox to Open AI compatible provider to support QWQ (thanks @teddyOOXX!)
+- Support test declarations in TypeScript tree-sitter queries (thanks @KJ7LNW!)
+- Add Bedrock support for application-inference-profile (thanks @maekawataiki!)
+- Rename and migrate global MCP and modes files (thanks @StevenTCramer!)
+- Add watchPaths option to McpHub for file change detection (thanks @01Rian!)
+- Read image responses from MCP calls (thanks @nevermorec!)
+- Add taskCreated event to API and subscribe to Cline events earlier (thanks @wkordalski!)
+- Fixes to numeric formatting suffix internationalization (thanks @feifei325!)
+- Fix open tab support in the context mention suggestions (thanks @aheizi!)
+- Better display of OpenRouter “overloaded” error messages
+- Fix browser tool visibility in system prompt preview (thanks @cannuri!)
+- Fix the supportsPromptCache value for OpenAI models (thanks @PeterDaveHello!)
+- Fix readme links to docs (thanks @kvokka!)
+- Run ‘npm audit fix’ on all of our libraries
+
+## [3.10.3] - 2025-03-23
+
+- Update the welcome page to provide 1-click OAuth flows with LLM routers (thanks @dtrugman!)
+- Switch to a more direct method of tracking OpenRouter tokens/spend
+- Make partial file reads backwards-compatible with custom system prompts and give users more control over the chunk size
+- Fix issues where questions and suggestions weren’t showing up for non-streaming models and were hard to read in some themes
+- A variety of fixes and improvements to experimental multi-block diff (thanks @KJ7LNW!)
+- Fix opacity of drop-down menus in settings (thanks @KJ7LNW!)
+- Fix bugs with reading and mentioning binary files like PDFs
+- Fix the pricing information for OpenRouter free models (thanks @Jdo300!)
+- Fix an issue with our unit tests on Windows (thanks @diarmidmackenzie!)
+- Fix a maxTokens issue for the Outbound provider (thanks @pugazhendhi-m!)
+- Fix a line number issue with partial file reads (thanks @samhvw8!)
+
 ## [3.10.2] - 2025-03-21
 
 - Fixes to context mentions on Windows

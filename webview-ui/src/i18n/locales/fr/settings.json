@@ -35,12 +35,20 @@
 		"description": "Permettre à Roo d'effectuer automatiquement des opérations sans requérir d'approbation. Activez ces paramètres uniquement si vous faites entièrement confiance à l'IA et que vous comprenez les risques de sécurité associés.",
 		"readOnly": {
 			"label": "Toujours approuver les opérations en lecture seule",
-			"description": "Lorsque cette option est activée, Roo affichera automatiquement le contenu des répertoires et lira les fichiers sans que vous ayez à cliquer sur le bouton Approuver."
+			"description": "Lorsque cette option est activée, Roo affichera automatiquement le contenu des répertoires et lira les fichiers sans que vous ayez à cliquer sur le bouton Approuver.",
+			"outsideWorkspace": {
+				"label": "Inclure les fichiers en dehors de l'espace de travail",
+				"description": "Permettre à Roo de lire des fichiers en dehors de l'espace de travail actuel sans nécessiter d'approbation."
+			}
 		},
 		"write": {
 			"label": "Toujours approuver les opérations d'écriture",
 			"description": "Créer et modifier automatiquement des fichiers sans nécessiter d'approbation",
-			"delayLabel": "Délai après les écritures pour permettre aux diagnostics de détecter les problèmes potentiels"
+			"delayLabel": "Délai après les écritures pour permettre aux diagnostics de détecter les problèmes potentiels",
+			"outsideWorkspace": {
+				"label": "Inclure les fichiers en dehors de l'espace de travail",
+				"description": "Permettre à Roo de créer et modifier des fichiers en dehors de l'espace de travail actuel sans nécessiter d'approbation."
+			}
 		},
 		"browser": {
 			"label": "Toujours approuver les actions du navigateur",
@@ -75,6 +83,7 @@
 	},
 	"providers": {
 		"configProfile": "Profil de configuration",
+		"providerDocumentation": "Documentation {{provider}}",
 		"description": "Enregistrez différentes configurations d'API pour basculer rapidement entre les fournisseurs et les paramètres.",
 		"apiProvider": "Fournisseur d'API",
 		"model": "Modèle",
@@ -267,8 +276,10 @@
 			"description": "Lorsque cette option est activée, les fichiers correspondant aux modèles dans .rooignore seront affichés dans les listes avec un symbole de cadenas. Lorsqu'elle est désactivée, ces fichiers seront complètement masqués des listes de fichiers et des recherches."
 		},
 		"maxReadFile": {
-			"label": "Nombre maximum de lignes à lire depuis un fichier",
-			"description": "Nombre maximum de lignes à lire depuis un fichier à la fois. Des valeurs plus basses réduisent l'utilisation de contexte/ressources mais peuvent nécessiter plus de lectures pour les fichiers volumineux."
+			"label": "Seuil d'auto-troncature de lecture de fichier",
+			"description": "Roo lit ce nombre de lignes lorsque le modèle omet les valeurs de début/fin. Si ce nombre est inférieur au total du fichier, Roo génère un index des numéros de ligne des définitions de code. Cas spéciaux : -1 indique à Roo de lire le fichier entier (sans indexation), et 0 indique de ne lire aucune ligne et de fournir uniquement les index de ligne pour un contexte minimal. Des valeurs plus basses minimisent l'utilisation initiale du contexte, permettant des lectures ultérieures de plages de lignes précises. Les requêtes avec début/fin explicites ne sont pas limitées par ce paramètre.",
+			"lines": "lignes",
+			"always_full_read": "Toujours lire le fichier entier"
 		}
 	},
 	"terminal": {
@@ -310,7 +321,7 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
-		"DIFF_STRATEGY": {
+		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Utiliser la stratégie diff unifiée expérimentale",
 			"description": "Activer la stratégie diff unifiée expérimentale. Cette stratégie pourrait réduire le nombre de tentatives causées par des erreurs de modèle, mais peut provoquer des comportements inattendus ou des modifications incorrectes. Activez-la uniquement si vous comprenez les risques et êtes prêt à examiner attentivement tous les changements."
 		},
@@ -349,6 +360,8 @@
 		"cacheReadsPrice": "Prix des lectures de cache",
 		"cacheWritesPrice": "Prix des écritures de cache",
 		"enableStreaming": "Activer le streaming",
+		"enableR1Format": "Activer les paramètres du modèle R1",
+		"enableR1FormatTips": "Doit être activé lors de l'utilisation de modèles R1 tels que QWQ, pour éviter l'erreur 400",
 		"useAzure": "Utiliser Azure",
 		"azureApiVersion": "Définir la version de l'API Azure",
 		"gemini": {
@@ -370,9 +383,10 @@
 			"label": "Autoriser les rapports anonymes d'erreurs et d'utilisation",
 			"description": "Aidez à améliorer Roo Code en envoyant des données d'utilisation anonymes et des rapports d'erreurs. Aucun code, prompt ou information personnelle n'est jamais envoyé. Consultez notre politique de confidentialité pour plus de détails."
 		},
-		"reset": {
-			"description": "Réinitialiser tous les états globaux et le stockage secret dans l'extension.",
-			"button": "Réinitialiser"
+		"settings": {
+			"import": "Importer",
+			"export": "Exporter",
+			"reset": "Réinitialiser"
 		}
 	},
 	"thinkingBudget": {
