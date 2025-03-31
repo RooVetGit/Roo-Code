@@ -88,6 +88,10 @@ const vscode = {
 		Directory: 2,
 		SymbolicLink: 64,
 	},
+	CodeActionKind: {
+		QuickFix: { value: "quickfix" }, // Match the structure in ClineProvider.test.ts
+		RefactorRewrite: { value: "refactor.rewrite" }, // Match the structure in ClineProvider.test.ts
+	},
 	TabInputText: class {
 		constructor(uri) {
 			this.uri = uri
