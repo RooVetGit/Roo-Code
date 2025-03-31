@@ -13,7 +13,7 @@
 		"disable": "停用",
 		"enable": "啟用"
 	},
-	"shortcutDescription": "您可以使用快捷鍵Ctrl/Cmd+Alt+V（預設）快速發送剪貼簿內容。您也可以在快捷鍵設定中搜尋「發送剪貼簿」來修改快捷鍵。",
+	"shortcutDescription": "您可以使用快捷鍵Ctrl/Cmd+Alt+V（預設）快速發送剪貼簿內容。您也可以在快捷鍵設定中搜尋「send clipboard」來修改快捷鍵。",
 	"aiResponse": {
 		"label": "請輸入AI的回覆：",
 		"placeholder": "在此貼上AI的回覆..."

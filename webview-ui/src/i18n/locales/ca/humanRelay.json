@@ -13,7 +13,7 @@
 		"disable": "Desactivar",
 		"enable": "Activar"
 	},
-	"shortcutDescription": "Podeu utilitzar la drecera Ctrl/Cmd+Alt+V (per defecte) per enviar ràpidament el contingut del porta-retalls. També podeu canviar la drecera cercant 'enviar porta-retalls' a la configuració de dreceres de teclat.",
+	"shortcutDescription": "Podeu utilitzar la drecera Ctrl/Cmd+Alt+V (per defecte) per enviar ràpidament el contingut del porta-retalls. També podeu canviar la drecera cercant 'send clipboard' a la configuració de dreceres de teclat.",
 	"aiResponse": {
 		"label": "Introduïu la resposta de la IA:",
 		"placeholder": "Enganxeu aquí la resposta de la IA..."

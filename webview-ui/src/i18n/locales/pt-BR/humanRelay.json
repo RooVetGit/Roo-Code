@@ -13,7 +13,7 @@
 		"disable": "Desativar",
 		"enable": "Ativar"
 	},
-	"shortcutDescription": "Você pode usar o atalho Ctrl/Cmd+Alt+V (padrão) para enviar rapidamente o conteúdo da área de transferência. Você também pode alterar o atalho pesquisando por 'enviar área de transferência' nas configurações de atalhos de teclado.",
+	"shortcutDescription": "Você pode usar o atalho Ctrl/Cmd+Alt+V (padrão) para enviar rapidamente o conteúdo da área de transferência. Você também pode alterar o atalho pesquisando por 'send clipboard' nas configurações de atalhos de teclado.",
 	"aiResponse": {
 		"label": "Insira a resposta da IA:",
 		"placeholder": "Cole a resposta da IA aqui..."

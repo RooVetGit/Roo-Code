@@ -13,7 +13,7 @@
 		"disable": "Desactivar",
 		"enable": "Activar"
 	},
-	"shortcutDescription": "Puede usar el atajo Ctrl/Cmd+Alt+V (predeterminado) para enviar rápidamente el contenido del portapapeles. También puede cambiar el atajo buscando 'enviar portapapeles' en la configuración de atajos de teclado.",
+	"shortcutDescription": "Puede usar el atajo Ctrl/Cmd+Alt+V (predeterminado) para enviar rápidamente el contenido del portapapeles. También puede cambiar el atajo buscando 'send clipboard' en la configuración de atajos de teclado.",
 	"aiResponse": {
 		"label": "Ingrese la respuesta de la IA:",
 		"placeholder": "Pegue aquí la respuesta de la IA..."

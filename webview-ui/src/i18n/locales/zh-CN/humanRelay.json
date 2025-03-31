@@ -13,7 +13,7 @@
 		"disable": "禁用",
 		"enable": "启用"
 	},
-	"shortcutDescription": "您可以使用快捷键Ctrl/Cmd+Alt+V（默认）快捷发送剪贴板内容。您也可以在快捷键设置中搜索`发送剪贴板`来修改快捷键。",
+	"shortcutDescription": "您可以使用快捷键Ctrl/Cmd+Alt+V（默认）快捷发送剪贴板内容。您也可以在快捷键设置中搜索`send clipboard`来修改快捷键。",
 	"aiResponse": {
 		"label": "请输入AI的回复：",
 		"placeholder": "在此粘贴AI的回复..."

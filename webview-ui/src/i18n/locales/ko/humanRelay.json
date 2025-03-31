@@ -13,7 +13,7 @@
 		"disable": "비활성화",
 		"enable": "활성화"
 	},
-	"shortcutDescription": "단축키 Ctrl/Cmd+Alt+V(기본값)를 사용하여 클립보드 내용을 빠르게 보낼 수 있습니다. 키보드 단축키 설정에서 '클립보드 보내기'를 검색하여 변경할 수도 있습니다.",
+	"shortcutDescription": "단축키 Ctrl/Cmd+Alt+V(기본값)를 사용하여 클립보드 내용을 빠르게 보낼 수 있습니다. 키보드 단축키 설정에서 'send clipboard'를 검색하여 변경할 수도 있습니다.",
 	"aiResponse": {
 		"label": "AI의 응답을 입력해 주세요:",
 		"placeholder": "여기에 AI의 응답을 붙여넣으세요..."

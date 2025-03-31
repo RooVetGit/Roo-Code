@@ -13,7 +13,7 @@
 		"disable": "Désactiver",
 		"enable": "Activer"
 	},
-	"shortcutDescription": "Vous pouvez utiliser le raccourci Ctrl/Cmd+Alt+V (par défaut) pour envoyer rapidement le contenu du presse-papiers. Vous pouvez également modifier le raccourci en recherchant 'envoyer presse-papiers' dans les paramètres des raccourcis clavier.",
+	"shortcutDescription": "Vous pouvez utiliser le raccourci Ctrl/Cmd+Alt+V (par défaut) pour envoyer rapidement le contenu du presse-papiers. Vous pouvez également modifier le raccourci en recherchant 'send clipboard' dans les paramètres des raccourcis clavier.",
 	"aiResponse": {
 		"label": "Entrez la réponse de l'IA :",
 		"placeholder": "Collez ici la réponse de l'IA..."

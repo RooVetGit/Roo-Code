@@ -13,7 +13,7 @@
 		"disable": "Devre dışı bırak",
 		"enable": "Etkinleştir"
 	},
-	"shortcutDescription": "Pano içeriğini hızlıca göndermek için Ctrl/Cmd+Alt+V (varsayılan) kısayolunu kullanabilirsiniz. Ayrıca klavye kısayolları ayarlarında 'panoyu gönder' araması yaparak kısayolu değiştirebilirsiniz.",
+	"shortcutDescription": "Pano içeriğini hızlıca göndermek için Ctrl/Cmd+Alt+V (varsayılan) kısayolunu kullanabilirsiniz. Ayrıca klavye kısayolları ayarlarında 'send clipboard' araması yaparak kısayolu değiştirebilirsiniz.",
 	"aiResponse": {
 		"label": "Yapay zeka yanıtını girin:",
 		"placeholder": "Yapay zeka yanıtını buraya yapıştırın..."

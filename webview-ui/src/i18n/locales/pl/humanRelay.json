@@ -13,7 +13,7 @@
 		"disable": "Wyłącz",
 		"enable": "Włącz"
 	},
-	"shortcutDescription": "Możesz użyć skrótu klawiszowego Ctrl/Cmd+Alt+V (domyślnie), aby szybko wysłać zawartość schowka. Możesz również zmienić skrót, wyszukując 'wyślij schowek' w ustawieniach skrótów klawiszowych.",
+	"shortcutDescription": "Możesz użyć skrótu klawiszowego Ctrl/Cmd+Alt+V (domyślnie), aby szybko wysłać zawartość schowka. Możesz również zmienić skrót, wyszukując 'send clipboard' w ustawieniach skrótów klawiszowych.",
 	"aiResponse": {
 		"label": "Wprowadź odpowiedź AI:",
 		"placeholder": "Wklej tutaj odpowiedź AI..."

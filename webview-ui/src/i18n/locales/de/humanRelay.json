@@ -13,7 +13,7 @@
 		"disable": "Deaktivieren",
 		"enable": "Aktivieren"
 	},
-	"shortcutDescription": "Sie können den Tastaturkurzbefehl Strg/Cmd+Alt+V (Standard) verwenden, um den Inhalt der Zwischenablage schnell zu senden. Sie können den Kurzbefehl auch ändern, indem Sie in den Tastaturkurzbefehl-Einstellungen nach 'Zwischenablage senden' suchen.",
+	"shortcutDescription": "Sie können den Tastaturkurzbefehl Strg/Cmd+Alt+V (Standard) verwenden, um den Inhalt der Zwischenablage schnell zu senden. Sie können den Kurzbefehl auch ändern, indem Sie in den Tastaturkurzbefehl-Einstellungen nach 'send clipboard' suchen.",
 	"aiResponse": {
 		"label": "Bitte gib die KI-Antwort ein:",
 		"placeholder": "KI-Antwort hier einfügen..."

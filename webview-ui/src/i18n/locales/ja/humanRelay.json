@@ -13,7 +13,7 @@
 		"disable": "無効にする",
 		"enable": "有効にする"
 	},
-	"shortcutDescription": "ショートカットキーCtrl/Cmd+Alt+V（デフォルト）を使用してクリップボードの内容をすばやく送信できます。キーボードショートカット設定で「クリップボードを送信」を検索して変更することもできます。",
+	"shortcutDescription": "ショートカットキーCtrl/Cmd+Alt+V（デフォルト）を使用してクリップボードの内容をすばやく送信できます。キーボードショートカット設定で「send clipboard」を検索して変更することもできます。",
 	"aiResponse": {
 		"label": "AIの応答を入力してください：",
 		"placeholder": "ここにAIの応答を貼り付けてください..."

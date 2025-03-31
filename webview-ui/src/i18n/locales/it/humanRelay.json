@@ -13,7 +13,7 @@
 		"disable": "Disabilita",
 		"enable": "Abilita"
 	},
-	"shortcutDescription": "Puoi utilizzare la scorciatoia Ctrl/Cmd+Alt+V (predefinita) per inviare rapidamente il contenuto degli appunti. Puoi anche modificare la scorciatoia cercando 'invia appunti' nelle impostazioni delle scorciatoie da tastiera.",
+	"shortcutDescription": "Puoi utilizzare la scorciatoia Ctrl/Cmd+Alt+V (predefinita) per inviare rapidamente il contenuto degli appunti. Puoi anche modificare la scorciatoia cercando 'send clipboard' nelle impostazioni delle scorciatoie da tastiera.",
 	"aiResponse": {
 		"label": "Inserisci la risposta dell'AI:",
 		"placeholder": "Incolla qui la risposta dell'AI..."
