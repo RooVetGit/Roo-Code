@@ -3,6 +3,7 @@
 import { spawn } from "child_process"
 import path from "path"
 import os from "os"
+import fs from "fs"
 
 import { revalidatePath } from "next/cache"
 import pMap from "p-map"
@@ -42,12 +43,14 @@ export async function createRun({ suite, exercises = [], ...values }: CreateRun)
 	revalidatePath("/runs")
 
 	try {
+		const logFile = fs.openSync(`/tmp/roo-code-evals-${run.id}.log`, "a")
+
 		const process = spawn(
 			"pnpm",
 			["--filter", "@benchmark/cli", "dev", "run", "all", "--runId", run.id.toString()],
 			{
 				detached: true,
-				stdio: "ignore",
+				stdio: ["ignore", logFile, logFile],
 			},
 		)
 
