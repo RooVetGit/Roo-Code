@@ -32,7 +32,7 @@ export interface RooCodeAPI extends EventEmitter<RooCodeEvents> {
 	 * Returns the current task stack.
 	 * @returns An array of task IDs.
 	 */
-	getCurrentTaskStack(): string[]
+	getCurrentTaskStack(): Promise<string[]>
 
 	/**
 	 * Clears the current task.
