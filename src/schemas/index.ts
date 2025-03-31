@@ -100,7 +100,7 @@ export type TelemetrySetting = z.infer<typeof telemetrySettingsSchema>
  */
 
 export const modelInfoSchema = z.object({
-	maxTokens: z.number().optional(),
+	maxTokens: z.number().nullish(),
 	contextWindow: z.number(),
 	supportsImages: z.boolean().optional(),
 	supportsComputerUse: z.boolean().optional(),
@@ -275,11 +275,10 @@ export type CustomSupportPrompts = z.infer<typeof customSupportPromptsSchema>
  */
 
 export const experimentIds = [
-	"experimentalDiffStrategy",
 	"search_and_replace",
+	"experimentalDiffStrategy",
 	"insert_content",
 	"powerSteering",
-	"multi_search_and_replace",
 ] as const
 
 export const experimentIdsSchema = z.enum(experimentIds)
@@ -291,11 +290,10 @@ export type ExperimentId = z.infer<typeof experimentIdsSchema>
  */
 
 const experimentsSchema = z.object({
-	experimentalDiffStrategy: z.boolean(),
 	search_and_replace: z.boolean(),
+	experimentalDiffStrategy: z.boolean(),
 	insert_content: z.boolean(),
 	powerSteering: z.boolean(),
-	multi_search_and_replace: z.boolean(),
 })
 
 export type Experiments = z.infer<typeof experimentsSchema>
