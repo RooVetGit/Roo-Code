@@ -34,7 +34,7 @@ import { __dirname, extensionDevelopmentPath, exercisesPath } from "./paths.js"
 import { getExercises } from "./exercises.js"
 
 const maxConcurrency = 2
-const taskTimeLimit = 2 * 60 * 1_000
+const taskTimeLimit = 5 * 60 * 1_000
 
 const testCommands: Record<ExerciseLanguage, { commands: string[]; timeout?: number; cwd?: string }> = {
 	cpp: { commands: ["cmake -G 'Unix\\ Makefiles' -DEXERCISM_RUN_ALL_TESTS=1 ..", "make"], cwd: "build" }, // timeout 15s bash -c "cd '$dir' && mkdir -p build && cd build && cmake -G 'Unix Makefiles' -DEXERCISM_RUN_ALL_TESTS=1 .. >/dev/null 2>&1 && make >/dev/null 2>&1"
@@ -94,8 +94,8 @@ const run = async (toolbox: GluegunToolbox) => {
 		throw new Error("No tasks found.")
 	}
 
-	console.log(await execa({ cwd: exercisesPath })`git config --global user.name "Roo Code"`)
-	console.log(await execa({ cwd: exercisesPath })`git config --global user.email "support@roocode.com"`)
+	console.log(await execa({ cwd: exercisesPath })`git config user.name "Roo Code"`)
+	console.log(await execa({ cwd: exercisesPath })`git config user.email "support@roocode.com"`)
 	console.log(await execa({ cwd: exercisesPath })`git checkout -f`)
 	console.log(await execa({ cwd: exercisesPath })`git clean -fd`)
 	console.log(await execa({ cwd: exercisesPath })`git checkout -b runs/${run.id} main`)
@@ -170,11 +170,12 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 	const cancelSignal = controller.signal
 
 	// If debugging:
-	// Use --log trace or --verbose.
-	let codeCommand = `code --wait --log trace --disable-workspace-trust`
+	// Use --wait --log trace or --verbose.
+	let codeCommand = `code --disable-workspace-trust`
+	const isDocker = fs.existsSync("/.dockerenv")
 
-	if (fs.existsSync("/.dockerenv")) {
-		codeCommand = `xvfb-run --auto-servernum --server-num=1 ${codeCommand} --disable-gpu --password-store="basic"`
+	if (isDocker) {
+		codeCommand = `xvfb-run --auto-servernum --server-num=1 ${codeCommand} --wait --log trace --disable-gpu --password-store="basic"`
 	}
 
 	const subprocess = execa({
@@ -189,7 +190,7 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 	// subprocess.stdout.pipe(process.stdout)
 
 	// Give VSCode some time to spawn before connectint to its unix socket.
-	await new Promise((resolve) => setTimeout(resolve, 2_000))
+	await new Promise((resolve) => setTimeout(resolve, isDocker ? 5_000 : 1_000))
 	console.log(`Connecting to ${taskSocketPath} (pid: ${subprocess.pid})`)
 
 	const createClient = (taskSocketPath: string) => {
@@ -207,7 +208,7 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 
 	while (++tries < 5) {
 		try {
-			await pWaitFor(() => client.isReady, { interval: 100, timeout: 2_000 })
+			await pWaitFor(() => client.isReady, { interval: 100, timeout: 5_000 })
 			break
 		} catch (error) {
 			console.error(error)
@@ -227,8 +228,8 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 
 	const ignoreEvents: RooCodeEventName[] = [
 		RooCodeEventName.Message,
-		RooCodeEventName.TaskTokenUsageUpdated,
-		RooCodeEventName.TaskAskResponded,
+		// RooCodeEventName.TaskTokenUsageUpdated,
+		// RooCodeEventName.TaskAskResponded,
 	]
 
 	let taskStartedAt = Date.now()

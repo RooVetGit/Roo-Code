@@ -29,6 +29,7 @@ Build the Roo Code extension:
 ```sh
 npm run install:all
 npx vsce package --out bin/roo-code-latest.vsix
+code --install-extension bin/roo-code-latest.vsix
 ```
 
 [Install](https://docs.docker.com/desktop/) and run Docker Desktop.

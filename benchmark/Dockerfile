@@ -54,10 +54,6 @@ RUN /home/vscode/.local/bin/uv sync
 
 WORKDIR /home/vscode/repo/benchmark
 
-# Copy & install extension
-COPY --chown=vscode:vscode ./bin/roo-code-latest.vsix ./
-RUN code --debug --install-extension ./roo-code-latest.vsix
-
 # Install dependencies
 COPY --chown=vscode:vscode ./benchmark/package.json ./benchmark/pnpm-lock.yaml ./benchmark/pnpm-workspace.yaml ./benchmark/.npmrc ./
 RUN mkdir -p apps/cli apps/web \
@@ -72,6 +68,10 @@ COPY --chown=vscode:vscode ./benchmark/packages/ipc/package.json      ./packages
 COPY --chown=vscode:vscode ./benchmark/packages/lib/package.json      ./packages/lib/
 COPY --chown=vscode:vscode ./benchmark/packages/types/package.json    ./packages/types/
 RUN pnpm install
+
+# Copy & install extension
+COPY --chown=vscode:vscode ./bin/roo-code-latest.vsix ./
+RUN code --debug --install-extension ./roo-code-latest.vsix
 
 # Copy application code
 COPY --chown=vscode:vscode ./benchmark ./

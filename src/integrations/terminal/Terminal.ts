@@ -3,7 +3,7 @@ import pWaitFor from "p-wait-for"
 import { ExitCodeDetails, mergePromise, TerminalProcess, TerminalProcessResultPromise } from "./TerminalProcess"
 import { truncateOutput, applyRunLengthEncoding } from "../misc/extract-text"
 
-export const TERMINAL_SHELL_INTEGRATION_TIMEOUT = 5000
+export const TERMINAL_SHELL_INTEGRATION_TIMEOUT = 15_000
 
 export class Terminal {
 	private static shellIntegrationTimeout: number = TERMINAL_SHELL_INTEGRATION_TIMEOUT
@@ -186,7 +186,7 @@ export class Terminal {
 					console.log(`[Terminal ${this.id}] Shell integration not available. Command execution aborted.`)
 					process.emit(
 						"no_shell_integration",
-						"Shell integration initialization sequence '\\x1b]633;A' was not received within 4 seconds. Shell integration has been disabled for this terminal instance. Increase the timeout in the settings if necessary.",
+						`Shell integration initialization sequence '\\x1b]633;A' was not received within ${Terminal.shellIntegrationTimeout / 1000}s. Shell integration has been disabled for this terminal instance. Increase the timeout in the settings if necessary.`,
 					)
 				})
 		})

@@ -41,7 +41,7 @@ export const rooCodeDefaults: RooCodeSettings = {
 	maxReadFileLine: 500,
 
 	terminalOutputLineLimit: 500,
-	terminalShellIntegrationTimeout: 5000,
+	terminalShellIntegrationTimeout: 15000,
 
 	rateLimitSeconds: 0,
 	diffEnabled: true,
