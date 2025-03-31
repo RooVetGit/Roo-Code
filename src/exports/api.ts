@@ -54,7 +54,7 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		return cline.taskId
 	}
 
-	public getCurrentTaskStack() {
+	public async getCurrentTaskStack(): Promise<string[]> {
 		return this.provider.getCurrentTaskStack()
 	}
 
