@@ -33,6 +33,8 @@ import { IpcServer, IpcClient } from "@benchmark/ipc"
 import { __dirname, extensionDevelopmentPath, exercisesPath } from "./paths.js"
 import { getExercises } from "./exercises.js"
 
+const taskTimeLimit = 2 * 60 * 1_000
+
 const testCommands: Record<ExerciseLanguage, { commands: string[]; timeout?: number; cwd?: string }> = {
 	cpp: { commands: ["cmake -G 'Unix\\ Makefiles' -DEXERCISM_RUN_ALL_TESTS=1 ..", "make"], cwd: "build" }, // timeout 15s bash -c "cd '$dir' && mkdir -p build && cd build && cmake -G 'Unix Makefiles' -DEXERCISM_RUN_ALL_TESTS=1 .. >/dev/null 2>&1 && make >/dev/null 2>&1"
 	go: { commands: ["go test"] }, // timeout 15s bash -c "cd '$dir' && go test > /dev/null 2>&1"
@@ -196,6 +198,8 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 	// If debugging:
 	subprocess.stdout.pipe(process.stdout)
 
+	// Give VSCode some time to spawn before connectint to its unix socket.
+	await new Promise((resolve) => setTimeout(resolve, 1_000))
 	console.log(`Connecting to ${taskSocketPath} (pid: ${subprocess.pid})`)
 
 	const createClient = (taskSocketPath: string) => {
@@ -329,7 +333,7 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 	console.log(`[cli#runExercise | ${language} / ${exercise}] starting task`)
 
 	try {
-		await pWaitFor(() => isTaskFinished, { interval: 1_000, timeout: 1 * 60 * 1_000 })
+		await pWaitFor(() => isTaskFinished, { interval: 1_000, timeout: taskTimeLimit })
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	} catch (error) {
 		console.log(`[cli#runExercise | ${language} / ${exercise}] time limit reached`)
