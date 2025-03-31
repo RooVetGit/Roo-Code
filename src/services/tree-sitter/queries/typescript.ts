@@ -6,6 +6,7 @@
 - module declarations
 - arrow functions (lambda functions)
 - switch/case statements with complex case blocks
+- enum declarations with members
 */
 export default `
 (function_signature
@@ -56,4 +57,8 @@ export default `
 
 ; Default clause
 (switch_default) @definition.default
+
+; Enum declarations
+(enum_declaration
+  name: (identifier) @name.definition.enum) @definition.enum
 `

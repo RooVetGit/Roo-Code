@@ -486,4 +486,30 @@ describe("parseSourceCodeDefinitions", () => {
 		expect(result).toContain("VSCodeCheckbox")
 		expect(result).toContain("VSCodeCheckboxProps")
 	})
+
+	it("should parse enum declarations", async function () {
+		const enumContent = `
+	   /**
+	    * Log levels for application logging
+	    * Used throughout the application to control log output
+	    * @enum {number}
+	    */
+	   enum LogLevel {
+	     /** Critical errors that need immediate attention */
+	     Error = 1,
+	     /** Warning messages for potential issues */
+	     Warning = 2,
+	     /** Informational messages about normal operation */
+	     Info = 3,
+	     /** Detailed debug information */
+	     Debug = 4
+	   }
+	 `
+
+		const result = await testParseSourceCodeDefinitions("/test/enums.tsx", enumContent)
+		expect(result).toBeDefined()
+		expect(result).toContain("LogLevel")
+		// Test that the enum name is captured
+		expect(result).toContain("enum LogLevel")
+	})
 })
