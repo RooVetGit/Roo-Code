@@ -93,6 +93,8 @@ const run = async (toolbox: GluegunToolbox) => {
 		throw new Error("No tasks found.")
 	}
 
+	console.log(await execa({ cwd: exercisesPath })`git config --global user.name "Roo Code"`)
+	console.log(await execa({ cwd: exercisesPath })`git config --global user.email "support@roocode.com"`)
 	console.log(await execa({ cwd: exercisesPath })`git checkout -f`)
 	console.log(await execa({ cwd: exercisesPath })`git clean -fd`)
 	console.log(await execa({ cwd: exercisesPath })`git checkout -b runs/${run.id} main`)
@@ -173,12 +175,15 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 	const dirname = path.dirname(run.socketPath)
 	const taskSocketPath = path.resolve(dirname, `${dirname}/task-${task.id}.sock`)
 
-	let codeCommand = `code --wait --verbose --disable-workspace-trust`
+	// If debugging:
+	// --log trace
+	// --verbose
+	let codeCommand = `code --wait --log trace --disable-workspace-trust`
 
 	const isDocker = fs.existsSync("/.dockerenv")
 
 	if (isDocker) {
-		codeCommand = `xvfb-run --auto-servernum --server-num=1 ${codeCommand} --disable-gpu --password-store="basic"`
+		codeCommand = `xvfb-run --auto-servernum --server-num=1 ${codeCommand} --password-store="basic"`
 	}
 
 	const subprocess = execa({
@@ -188,6 +193,7 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 		shell: "/bin/bash",
 	})`${codeCommand} -n ${path.resolve(exercisesPath, language, exercise)}`
 
+	// If debugging:
 	subprocess.stdout.pipe(process.stdout)
 
 	console.log(`Connecting to ${taskSocketPath} (pid: ${subprocess.pid})`)
