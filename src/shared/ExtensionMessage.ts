@@ -64,6 +64,7 @@ export interface ExtensionMessage {
 		| "browserToolEnabled"
 		| "browserConnectionResult"
 		| "remoteBrowserEnabled"
+		| "browserAssistantModeEnabled"
 		| "ttsStart"
 		| "ttsStop"
 		| "maxReadFileLine"
@@ -140,6 +141,7 @@ export type ExtensionState = Pick<
 	| "screenshotQuality"
 	| "remoteBrowserEnabled"
 	| "remoteBrowserHost"
+	| "browserAssistantModeEnabled"
 	// | "enableCheckpoints" // Optional in GlobalSettings, required here.
 	// | "checkpointStorage" // Optional in GlobalSettings, required here.
 	| "ttsEnabled"

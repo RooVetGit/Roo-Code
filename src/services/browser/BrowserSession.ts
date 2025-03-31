@@ -353,55 +353,69 @@ export class BrowserSession {
 		// Remove trailing slash for comparison
 		const normalizedNewUrl = url.replace(/\/$/, "")
 
-		// Extract the root domain from the URL
-		const rootDomain = this.getRootDomain(normalizedNewUrl)
-
+		// Check if browser assistant mode is enabled
+		const browserAssistantModeEnabled = this.context.globalState.get("browserAssistantModeEnabled") as
+			| boolean
+			| undefined
+		console.log(`browserAssistantModeEnabled: ${browserAssistantModeEnabled}`)
 		// Get all current pages
 		const pages = await this.browser.pages()
 
-		// Try to find a page with the same root domain
+		// Try to find a page with the same root domain or use the latest tab in assistant mode
 		let existingPage: Page | undefined
 
-		for (const page of pages) {
-			try {
-				const pageUrl = page.url()
-				if (pageUrl && this.getRootDomain(pageUrl) === rootDomain) {
-					existingPage = page
-					break
+		if (browserAssistantModeEnabled) {
+			// In assistant mode, always use the latest tab (last in the array)
+			// Skip the first page which is usually the blank page
+			existingPage = pages.length >= 1 ? pages[pages.length - 1] : undefined
+			console.log(`Browser assistant mode enabled, using latest tab`)
+		} else {
+			// Extract the root domain from the URL
+			const rootDomain = this.getRootDomain(normalizedNewUrl)
+
+			// Try to find a page with the same root domain
+			for (const page of pages) {
+				try {
+					const pageUrl = page.url()
+					if (pageUrl && this.getRootDomain(pageUrl) === rootDomain) {
+						existingPage = page
+						break
+					}
+				} catch (error) {
+					// Skip pages that might have been closed or have errors
+					console.log(`Error checking page URL: ${error}`)
+					continue
 				}
-			} catch (error) {
-				// Skip pages that might have been closed or have errors
-				console.log(`Error checking page URL: ${error}`)
-				continue
 			}
 		}
 
 		if (existingPage) {
 			// Tab with the same root domain exists, switch to it
-			console.log(`Tab with domain ${rootDomain} already exists, switching to it`)
+			console.log(`Tab exists, switching to it`)
 
 			// Update the active page
 			this.page = existingPage
 			existingPage.bringToFront()
 
-			// Navigate to the new URL if it's different]
+			// Navigate to the new URL if it's different
 			const currentUrl = existingPage.url().replace(/\/$/, "") // Remove trailing / if present
-			if (this.getRootDomain(currentUrl) === rootDomain && currentUrl !== normalizedNewUrl) {
+
+			if (
+				browserAssistantModeEnabled ||
+				(this.getRootDomain(currentUrl) === this.getRootDomain(normalizedNewUrl) &&
+					currentUrl !== normalizedNewUrl)
+			) {
 				console.log(`Navigating to new URL: ${normalizedNewUrl}`)
 				console.log(`Current URL: ${currentUrl}`)
-				console.log(`Root domain: ${this.getRootDomain(currentUrl)}`)
-				console.log(`New URL: ${normalizedNewUrl}`)
 				// Navigate to the new URL
 				return this.doAction(async (page) => {
 					await this.navigatePageToUrl(page, normalizedNewUrl)
 				})
 			} else {
-				console.log(`Tab with domain ${rootDomain} already exists, and URL is the same: ${normalizedNewUrl}`)
+				console.log(`URL is the same: ${normalizedNewUrl}`)
 				// URL is the same, just reload the page to ensure it's up to date
 				console.log(`Reloading page: ${normalizedNewUrl}`)
 				console.log(`Current URL: ${currentUrl}`)
-				console.log(`Root domain: ${this.getRootDomain(currentUrl)}`)
-				console.log(`New URL: ${normalizedNewUrl}`)
 				return this.doAction(async (page) => {
 					await page.reload({ timeout: 7_000, waitUntil: ["domcontentloaded", "networkidle2"] })
 					await this.waitTillHTMLStable(page)
@@ -409,7 +423,7 @@ export class BrowserSession {
 			}
 		} else {
 			// No tab with this root domain exists, create a new one
-			console.log(`No tab with domain ${rootDomain} exists, creating a new one`)
+			console.log(`No suitable tab exists, creating a new one`)
 			return this.createNewTab(normalizedNewUrl)
 		}
 	}

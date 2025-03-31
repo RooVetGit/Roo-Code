@@ -241,6 +241,11 @@
 			"testButton": "Testa connessione",
 			"testingButton": "Test in corso...",
 			"instructions": "Inserisci l'indirizzo host del protocollo DevTools o lascia vuoto per scoprire automaticamente le istanze Chrome locali. Il pulsante Test Connessione proverà l'URL personalizzato se fornito, o scoprirà automaticamente se il campo è vuoto."
+		},
+		"assistantMode": {
+			"label": "Usa modalità assistente browser",
+			"description": "Utilizza sempre la scheda più recente invece di cercare il dominio principale quando ci si connette al browser.",
+			"instructions": "Quando abilitato, Roo utilizzerà sempre la scheda più recente nel browser invece di cercare una scheda con lo stesso dominio principale."
 		}
 	},
 	"checkpoints": {

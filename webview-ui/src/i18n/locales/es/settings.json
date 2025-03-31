@@ -241,6 +241,11 @@
 			"testButton": "Probar conexión",
 			"testingButton": "Probando...",
 			"instructions": "Ingrese la dirección del host del protocolo DevTools o déjelo vacío para descubrir automáticamente instancias locales de Chrome. El botón Probar Conexión intentará usar la URL personalizada si se proporciona, o descubrirá automáticamente si el campo está vacío."
+		},
+		"assistantMode": {
+			"label": "Usar modo asistente de navegador",
+			"description": "Utilizar siempre la pestaña más reciente en lugar de buscar el dominio raíz al conectarse al navegador.",
+			"instructions": "Cuando está habilitado, Roo siempre usará la pestaña más reciente del navegador en lugar de intentar encontrar una pestaña con el mismo dominio raíz."
 		}
 	},
 	"checkpoints": {

@@ -513,6 +513,7 @@ export const globalSettingsSchema = z.object({
 	screenshotQuality: z.number().optional(),
 	remoteBrowserEnabled: z.boolean().optional(),
 	remoteBrowserHost: z.string().optional(),
+	browserAssistantModeEnabled: z.boolean().optional(),
 	cachedChromeHostUrl: z.string().optional(),
 
 	enableCheckpoints: z.boolean().optional(),
@@ -578,12 +579,12 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	alwaysAllowSubtasks: undefined,
 	alwaysAllowExecute: undefined,
 	allowedCommands: undefined,
-
 	browserToolEnabled: undefined,
 	browserViewportSize: undefined,
 	screenshotQuality: undefined,
 	remoteBrowserEnabled: undefined,
 	remoteBrowserHost: undefined,
+	browserAssistantModeEnabled: undefined,
 
 	enableCheckpoints: undefined,
 	checkpointStorage: undefined,

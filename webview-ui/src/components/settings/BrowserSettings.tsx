@@ -16,12 +16,14 @@ type BrowserSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	screenshotQuality?: number
 	remoteBrowserHost?: string
 	remoteBrowserEnabled?: boolean
+	browserAssistantModeEnabled?: boolean
 	setCachedStateField: SetCachedStateField<
 		| "browserToolEnabled"
 		| "browserViewportSize"
 		| "screenshotQuality"
 		| "remoteBrowserHost"
 		| "remoteBrowserEnabled"
+		| "browserAssistantModeEnabled"
 	>
 }
 
@@ -31,6 +33,7 @@ export const BrowserSettings = ({
 	screenshotQuality,
 	remoteBrowserHost,
 	remoteBrowserEnabled,
+	browserAssistantModeEnabled,
 	setCachedStateField,
 	...props
 }: BrowserSettingsProps) => {
@@ -211,6 +214,26 @@ export const BrowserSettings = ({
 								</div>
 							</>
 						)}
+
+						<div>
+							<VSCodeCheckbox
+								checked={browserAssistantModeEnabled}
+								onChange={(e: any) => {
+									setCachedStateField("browserAssistantModeEnabled", e.target.checked)
+								}}>
+								<label className="block font-medium mb-1">
+									{t("settings:browser.assistantMode.label")}
+								</label>
+							</VSCodeCheckbox>
+							<div className="text-vscode-descriptionForeground text-sm mt-1">
+								{t("settings:browser.assistantMode.description")}
+							</div>
+							{browserAssistantModeEnabled && (
+								<div className="text-vscode-descriptionForeground text-sm mt-1">
+									{t("settings:browser.assistantMode.instructions")}
+								</div>
+							)}
+						</div>
 					</div>
 				)}
 			</Section>

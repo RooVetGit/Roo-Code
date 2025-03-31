@@ -1,6 +1,6 @@
 import { z } from "zod"
-import { ApiConfiguration, ApiProvider } from "./api"
-import { Mode, PromptComponent, ModeConfig } from "./modes"
+import { ApiConfiguration } from "./api"
+import { Mode, ModeConfig, PromptComponent } from "./modes"
 
 export type ClineAskResponse = "yesButtonClicked" | "noButtonClicked" | "messageResponse"
 
@@ -117,6 +117,7 @@ export interface WebviewMessage {
 		| "testBrowserConnection"
 		| "browserConnectionResult"
 		| "remoteBrowserEnabled"
+		| "browserAssistantModeEnabled"
 		| "language"
 		| "maxReadFileLine"
 		| "searchFiles"

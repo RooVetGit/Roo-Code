@@ -241,6 +241,11 @@
 			"testButton": "Kiểm tra kết nối",
 			"testingButton": "Đang kiểm tra...",
 			"instructions": "Nhập địa chỉ DevTools Protocol hoặc để trống để tự động phát hiện các instance Chrome cục bộ. Nút Kiểm tra kết nối sẽ thử URL tùy chỉnh nếu được cung cấp, hoặc tự động phát hiện nếu trường này trống."
+		},
+		"assistantMode": {
+			"label": "Sử dụng chế độ trợ lý trình duyệt",
+			"description": "Luôn sử dụng tab mới nhất thay vì tìm kiếm tên miền gốc khi kết nối với trình duyệt.",
+			"instructions": "Khi được bật, Roo sẽ luôn sử dụng tab mới nhất trong trình duyệt thay vì cố gắng tìm tab có cùng tên miền gốc."
 		}
 	},
 	"checkpoints": {
