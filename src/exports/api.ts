@@ -125,13 +125,11 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		let provider: ClineProvider
 
 		if (newTab) {
-			// await vscode.commands.executeCommand("workbench.action.closeAllEditors")
+			await vscode.commands.executeCommand("workbench.action.closeAllEditors")
 
 			if (!this.tabProvider) {
-				this.log(`[API#startNewTask] -> openClineInNewTab`)
 				this.tabProvider = await openClineInNewTab({ context: this.context, outputChannel: this.outputChannel })
 				this.registerListeners(this.tabProvider)
-				this.log(`[API#startNewTask] <- openClineInNewTab`)
 			}
 
 			provider = this.tabProvider
@@ -140,32 +138,21 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		}
 
 		if (configuration) {
-			this.log(`[API#startNewTask] -> setValues ${JSON.stringify(configuration)}`)
 			await provider.setValues(configuration)
-			this.log(`[API#startNewTask] <- setValues ${JSON.stringify(configuration)}`)
 
 			if (configuration.allowedCommands) {
-				this.log(`[API#startNewTask] -> setAllowedCommands ${JSON.stringify(configuration.allowedCommands)}`)
-
 				await vscode.workspace
 					.getConfiguration("roo-cline")
 					.update("allowedCommands", configuration.allowedCommands, vscode.ConfigurationTarget.Global)
-
-				this.log(`[API#startNewTask] setAllowedCommands ${JSON.stringify(configuration.allowedCommands)}`)
 			}
 		}
 
-		this.log(`[API#startNewTask] -> removeClineFromStack`)
 		await provider.removeClineFromStack()
 		await provider.postStateToWebview()
 		await provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		await provider.postMessageToWebview({ type: "invoke", invoke: "newChat", text, images })
-		this.log(`[API#startNewTask] <- removeClineFromStack`)
 
-		this.log(`[API#startNewTask] -> initClineWithTask`)
 		const { taskId } = await provider.initClineWithTask(text, images)
-		this.log(`[API#startNewTask] <- initClineWithTask`)
-
 		return taskId
 	}
 
