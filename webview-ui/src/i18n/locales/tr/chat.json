@@ -12,6 +12,8 @@
 		"export": "Görev geçmişini dışa aktar",
 		"delete": "Görevi sil (Onayı atlamak için Shift + Tıkla)"
 	},
+	"unpin": "Sabitlemeyi iptal et",
+	"pin": "Sabitle",
 	"tokenProgress": {
 		"availableSpace": "Kullanılabilir alan: {{amount}} token",
 		"tokensUsed": "Kullanılan tokenlar: {{used}} / {{total}}",
@@ -157,7 +159,7 @@
 	"autoApprove": {
 		"title": "Otomatik-onay:",
 		"none": "Hiçbiri",
-		"description": "Otomatik onay, Roo Code'un izin istemeden işlemler gerçekleştirmesine olanak tanır. Yalnızca tamamen güvendiğiniz eylemler için etkinleştirin.",
+		"description": "Otomatik onay, Roo Code'un izin istemeden işlemler gerçekleştirmesine olanak tanır. Yalnızca tamamen güvendiğiniz eylemler için etkinleştirin. Daha detaylı yapılandırma <settingsLink>Ayarlar</settingsLink>'da mevcuttur.",
 		"actions": {
 			"readFiles": {
 				"label": "Dosyaları ve dizinleri oku",
@@ -205,15 +207,18 @@
 		"thinking": "Düşünüyor",
 		"seconds": "{{count}}sn"
 	},
+	"followUpSuggest": {
+		"copyToInput": "Giriş alanına kopyala (veya Shift + tıklama)"
+	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.10 Yayınlandı",
-		"description": "Roo Code 3.10 güçlü üretkenlik iyileştirmeleri getiriyor!",
+		"title": "🎉 Roo Code 3.11 Yayınlandı",
+		"description": "Roo Code 3.11 önemli performans iyileştirmeleri ve yeni özellikler getiriyor!",
 		"whatsNew": "Yenilikler",
-		"feature1": "Sorulara önerilen yanıtlar",
-		"feature2": "Geliştirilmiş büyük dosya işleme",
-		"feature3": "Yeniden yapılandırılmış @-mention dosya aramaları",
-		"feature4": "",
-		"feature5": "",
+		"feature1": "Hızlı Düzenlemeler - Düzenlemeler artık çok daha hızlı uygulanıyor. Daha az bekleme, daha çok kodlama.",
+		"feature2": "API Anahtar Bakiyeleri - OpenRouter ve Requesty bakiyelerinizi ayarlarda görüntüleyin.",
+		"feature3": "Proje Seviyesinde MCP Yapılandırması - Artık her proje/çalışma alanı için yapılandırabilirsiniz.",
+		"feature4": "Geliştirilmiş Gemini Desteği - Daha akıllı yeniden denemeler, düzeltilmiş kaçış karakterleri, Vertex sağlayıcısına eklendi.",
+		"feature5": "Ayarları İçe/Dışa Aktarma - Yapılandırmanızı farklı ortamlar arasında kolayca yedekleyin veya paylaşın.",
 		"hideButton": "Duyuruyu gizle",
 		"detailsDiscussLinks": "<discordLink>Discord</discordLink> ve <redditLink>Reddit</redditLink> üzerinde daha fazla ayrıntı edinin ve tartışmalara katılın 🚀"
 	},

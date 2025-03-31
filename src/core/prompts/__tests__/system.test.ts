@@ -3,11 +3,11 @@ import * as vscode from "vscode"
 import { SYSTEM_PROMPT } from "../system"
 import { McpHub } from "../../../services/mcp/McpHub"
 import { ClineProvider } from "../../../core/webview/ClineProvider"
-import { SearchReplaceDiffStrategy } from "../../../core/diff/strategies/search-replace"
 import { defaultModeSlug, modes, Mode, ModeConfig } from "../../../shared/modes"
 import "../../../utils/path" // Import path utils to get access to toPosix string extension.
 import { addCustomInstructions } from "../sections/custom-instructions"
 import { EXPERIMENT_IDS } from "../../../shared/experiments"
+import { MultiSearchReplaceDiffStrategy } from "../../diff/strategies/multi-search-replace"
 
 // Mock the sections
 jest.mock("../sections/modes", () => ({
@@ -295,7 +295,7 @@ describe("SYSTEM_PROMPT", () => {
 			"/test/path",
 			false, // supportsComputerUse
 			undefined, // mcpHub
-			new SearchReplaceDiffStrategy(), // Use actual diff strategy from the codebase
+			new MultiSearchReplaceDiffStrategy(), // Use actual diff strategy from the codebase
 			undefined, // browserViewportSize
 			defaultModeSlug, // mode
 			undefined, // customModePrompts
@@ -316,7 +316,7 @@ describe("SYSTEM_PROMPT", () => {
 			"/test/path",
 			false, // supportsComputerUse
 			undefined, // mcpHub
-			new SearchReplaceDiffStrategy(), // Use actual diff strategy from the codebase
+			new MultiSearchReplaceDiffStrategy(), // Use actual diff strategy from the codebase
 			undefined, // browserViewportSize
 			defaultModeSlug, // mode
 			undefined, // customModePrompts
@@ -337,7 +337,7 @@ describe("SYSTEM_PROMPT", () => {
 			"/test/path",
 			false, // supportsComputerUse
 			undefined, // mcpHub
-			new SearchReplaceDiffStrategy(), // Use actual diff strategy from the codebase
+			new MultiSearchReplaceDiffStrategy(), // Use actual diff strategy from the codebase
 			undefined, // browserViewportSize
 			defaultModeSlug, // mode
 			undefined, // customModePrompts
@@ -596,7 +596,7 @@ describe("SYSTEM_PROMPT", () => {
 				"/test/path",
 				false,
 				undefined,
-				new SearchReplaceDiffStrategy(),
+				new MultiSearchReplaceDiffStrategy(),
 				undefined,
 				defaultModeSlug,
 				undefined,
@@ -624,7 +624,7 @@ describe("SYSTEM_PROMPT", () => {
 				"/test/path",
 				false,
 				undefined,
-				new SearchReplaceDiffStrategy(),
+				new MultiSearchReplaceDiffStrategy(),
 				undefined,
 				defaultModeSlug,
 				undefined,

@@ -27,8 +27,8 @@ type ProviderSettings = {
 	anthropicBaseUrl?: string | undefined
 	glamaModelId?: string | undefined
 	glamaModelInfo?:
-		| {
-				maxTokens?: number | undefined
+		| ({
+				maxTokens?: (number | null) | undefined
 				contextWindow: number
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
@@ -40,14 +40,14 @@ type ProviderSettings = {
 				description?: string | undefined
 				reasoningEffort?: ("low" | "medium" | "high") | undefined
 				thinking?: boolean | undefined
-		  }
+		  } | null)
 		| undefined
 	glamaApiKey?: string | undefined
 	openRouterApiKey?: string | undefined
 	openRouterModelId?: string | undefined
 	openRouterModelInfo?:
-		| {
-				maxTokens?: number | undefined
+		| ({
+				maxTokens?: (number | null) | undefined
 				contextWindow: number
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
@@ -59,7 +59,7 @@ type ProviderSettings = {
 				description?: string | undefined
 				reasoningEffort?: ("low" | "medium" | "high") | undefined
 				thinking?: boolean | undefined
-		  }
+		  } | null)
 		| undefined
 	openRouterBaseUrl?: string | undefined
 	openRouterSpecificProvider?: string | undefined
@@ -83,8 +83,8 @@ type ProviderSettings = {
 	openAiR1FormatEnabled?: boolean | undefined
 	openAiModelId?: string | undefined
 	openAiCustomModelInfo?:
-		| {
-				maxTokens?: number | undefined
+		| ({
+				maxTokens?: (number | null) | undefined
 				contextWindow: number
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
@@ -96,7 +96,7 @@ type ProviderSettings = {
 				description?: string | undefined
 				reasoningEffort?: ("low" | "medium" | "high") | undefined
 				thinking?: boolean | undefined
-		  }
+		  } | null)
 		| undefined
 	openAiUseAzure?: boolean | undefined
 	azureApiVersion?: string | undefined
@@ -125,8 +125,8 @@ type ProviderSettings = {
 	unboundApiKey?: string | undefined
 	unboundModelId?: string | undefined
 	unboundModelInfo?:
-		| {
-				maxTokens?: number | undefined
+		| ({
+				maxTokens?: (number | null) | undefined
 				contextWindow: number
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
@@ -138,13 +138,13 @@ type ProviderSettings = {
 				description?: string | undefined
 				reasoningEffort?: ("low" | "medium" | "high") | undefined
 				thinking?: boolean | undefined
-		  }
+		  } | null)
 		| undefined
 	requestyApiKey?: string | undefined
 	requestyModelId?: string | undefined
 	requestyModelInfo?:
-		| {
-				maxTokens?: number | undefined
+		| ({
+				maxTokens?: (number | null) | undefined
 				contextWindow: number
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
@@ -156,7 +156,7 @@ type ProviderSettings = {
 				description?: string | undefined
 				reasoningEffort?: ("low" | "medium" | "high") | undefined
 				thinking?: boolean | undefined
-		  }
+		  } | null)
 		| undefined
 	modelTemperature?: (number | null) | undefined
 	modelMaxTokens?: number | undefined
@@ -234,6 +234,7 @@ type GlobalSettings = {
 	screenshotQuality?: number | undefined
 	remoteBrowserEnabled?: boolean | undefined
 	remoteBrowserHost?: string | undefined
+	cachedChromeHostUrl?: string | undefined
 	enableCheckpoints?: boolean | undefined
 	checkpointStorage?: ("task" | "workspace") | undefined
 	ttsEnabled?: boolean | undefined
@@ -251,11 +252,10 @@ type GlobalSettings = {
 	fuzzyMatchThreshold?: number | undefined
 	experiments?:
 		| {
-				experimentalDiffStrategy: boolean
 				search_and_replace: boolean
+				experimentalDiffStrategy: boolean
 				insert_content: boolean
 				powerSteering: boolean
-				multi_search_and_replace: boolean
 		  }
 		| undefined
 	language?:

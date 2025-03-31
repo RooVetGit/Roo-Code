@@ -33,7 +33,7 @@ interface ChatRowProps {
 	isStreaming: boolean
 	onToggleExpand: () => void
 	onHeightChange: (isTaller: boolean) => void
-	onSuggestionClick?: (answer: string) => void
+	onSuggestionClick?: (answer: string, event?: React.MouseEvent) => void
 }
 
 interface ChatRowContentProps extends Omit<ChatRowProps, "onHeightChange"> {}
@@ -356,6 +356,7 @@ export const ChatRowContent = ({
 										textAlign: "left",
 									}}>
 									{removeLeadingNonAlphanumeric(tool.path ?? "") + "\u200E"}
+									{tool.reason}
 								</span>
 								<div style={{ flexGrow: 1 }}></div>
 								<span
