@@ -98,7 +98,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	private disposables: vscode.Disposable[] = []
 	private view?: vscode.WebviewView | vscode.WebviewPanel
 	private isViewLaunched = false
-	public static clineStackManager: ClineStackManager
+	public clineStackManager: ClineStackManager
 	private workspaceTracker?: WorkspaceTracker
 	protected mcpHub?: McpHub // Change from private to protected
 	private latestAnnouncementId = "mar-20-2025-3-10" // update to some unique identifier when we add a new announcement

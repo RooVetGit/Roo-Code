@@ -9,6 +9,7 @@ import { setSoundEnabled } from "../../../utils/sound"
 import { setTtsEnabled } from "../../../utils/tts"
 import { defaultModeSlug } from "../../../shared/modes"
 import { experimentDefault } from "../../../shared/experiments"
+import { Cline } from "../../Cline"
 
 // Mock setup must come before imports
 jest.mock("../../prompts/sections/custom-instructions")
@@ -2279,7 +2280,7 @@ describe("getTelemetryProperties", () => {
 	})
 
 	test("includes model ID from current Cline instance if available", async () => {
-		// Create a mock Cline instance with api property
+		// Create a mock Cline instance with api property and all required properties
 		const mockCline = {
 			taskId: "test-task-id",
 			instanceId: "test-instance-id",
@@ -2289,7 +2290,21 @@ describe("getTelemetryProperties", () => {
 					info: { contextWindow: 200000 },
 				}),
 			},
-		}
+			rootTask: undefined,
+			parentTask: undefined,
+			taskNumber: 1,
+			isPaused: false,
+			pausedModeSlug: "default",
+			pauseInterval: undefined,
+			apiConfiguration: {},
+			diffEnabled: false,
+			fuzzyMatchThreshold: 1.0,
+			// Add EventEmitter methods
+			on: jest.fn(),
+			once: jest.fn(),
+			off: jest.fn(),
+			emit: jest.fn(),
+		} as unknown as Cline
 
 		// Add mock Cline to stack
 		await provider.addClineToStack(mockCline)

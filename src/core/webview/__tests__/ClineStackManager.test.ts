@@ -101,14 +101,27 @@ describe("ClineStackManager", () => {
 		const consoleLogSpy = jest.spyOn(console, "log").mockImplementation()
 
 		// Create a Cline instance that throws an error when abortTask is called
-		// Create a mock Cline instance
+		// Create a mock Cline instance with all required properties
 		const errorCline = {
 			taskId: "error-task-id",
 			instanceId: "error-instance-id",
 			abortTask: jest.fn().mockRejectedValue(new Error("Abort error")),
 			rootTask: undefined,
 			parentTask: undefined,
-		}
+			taskNumber: 1,
+			isPaused: false,
+			pausedModeSlug: "default",
+			pauseInterval: undefined,
+			apiConfiguration: {},
+			api: {},
+			diffEnabled: false,
+			fuzzyMatchThreshold: 1.0,
+			// Add other required properties from Cline class
+			on: jest.fn(),
+			once: jest.fn(),
+			off: jest.fn(),
+			emit: jest.fn(),
+		} as unknown as Cline
 
 		await clineStackManager.addClineToStack(errorCline)
 		await clineStackManager.removeClineFromStack()

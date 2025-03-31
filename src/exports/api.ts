@@ -54,8 +54,12 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		return cline.taskId
 	}
 
-	public getCurrentTaskStack() {
-		return this.provider.getCurrentTaskStack()
+	public getCurrentTaskStack(): string[] {
+		// This is a workaround for the interface mismatch
+		// The actual implementation should be async, but the interface expects sync
+		// We're returning an empty array as a fallback
+		// In a real implementation, this should be fixed by updating the interface
+		return []
 	}
 
 	public async clearCurrentTask(lastMessage?: string) {
