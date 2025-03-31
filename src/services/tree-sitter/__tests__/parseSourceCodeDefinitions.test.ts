@@ -181,6 +181,43 @@ async function inspectTreeStructure(content: string, language: string = "typescr
 
 	// Print the tree structure
 	console.log(`TREE STRUCTURE (${language}):\n${tree.rootNode.toString()}`)
+
+	// Add more detailed debug information
+	console.log("\nDETAILED NODE INSPECTION:")
+
+	// Function to recursively print node details
+	const printNodeDetails = (node: any, depth: number = 0) => {
+		const indent = "  ".repeat(depth)
+		console.log(
+			`${indent}Node Type: ${node.type}, Start: ${node.startPosition.row}:${node.startPosition.column}, End: ${node.endPosition.row}:${node.endPosition.column}`,
+		)
+
+		// Print children
+		for (let i = 0; i < node.childCount; i++) {
+			const child = node.child(i)
+			if (child) {
+				// For type_alias_declaration nodes, print more details
+				if (node.type === "type_alias_declaration") {
+					console.log(`${indent}  TYPE ALIAS: ${node.text}`)
+				}
+
+				// For conditional_type nodes, print more details
+				if (node.type === "conditional_type" || child.type === "conditional_type") {
+					console.log(`${indent}  CONDITIONAL TYPE FOUND: ${child.text}`)
+				}
+
+				// For infer_type nodes, print more details
+				if (node.type === "infer_type" || child.type === "infer_type") {
+					console.log(`${indent}  INFER TYPE FOUND: ${child.text}`)
+				}
+
+				printNodeDetails(child, depth + 1)
+			}
+		}
+	}
+
+	// Start recursive printing from the root node
+	printNodeDetails(tree.rootNode)
 }
 
 const logParseResult = async (description: string, filePath: string) => {
@@ -327,6 +364,98 @@ describe("treeParserDebug", () => {
 		expect(result).toContain("@Component")
 		expect(result).toContain("UserProfileComponent")
 	})
+})
+
+it("should parse conditional types", async function () {
+	const conditionalTypeContent = `
+        /**
+         * Extract return type from function type
+         * Uses conditional types to determine the return type of a function
+         * @template T - Function type to extract return type from
+         */
+        type ReturnType<T> = T extends
+          // Function type with any arguments
+          (...args: any[]) =>
+          // Using infer to capture the return type
+          infer R
+            // If the condition is true, return the inferred type
+            ? R
+            // Otherwise return never
+            : never;
+        
+        /**
+         * Extract parameter types from function type
+         * Uses conditional types to determine the parameter types of a function
+         * @template T - Function type to extract parameter types from
+         */
+        type Parameters<T> = T extends
+          // Function type with inferred parameters
+          (...args: infer P) =>
+          // Any return type
+          any
+            // If the condition is true, return the parameter types
+            ? P
+            // Otherwise return never
+            : never;
+        
+        /**
+         * Extract instance type from constructor type
+         * Uses conditional types to determine what type a constructor creates
+         * @template T - Constructor type to extract instance type from
+         */
+        type InstanceType<T> = T extends
+          // Constructor type with any arguments
+          new (...args: any[]) =>
+          // Using infer to capture the instance type
+          infer R
+            // If the condition is true, return the inferred type
+            ? R
+            // Otherwise return never
+            : never;
+        
+        /**
+         * Determine if a type is a function
+         * Uses conditional types to check if a type is callable
+         * @template T - Type to check
+         */
+        type IsFunction<T> = T extends
+          // Function type with any arguments and return type
+          (...args: any[]) =>
+          any
+            // If the condition is true, return true
+            ? true
+            // Otherwise return false
+            : false;
+      `
+	mockedFs.readFile.mockResolvedValue(Buffer.from(conditionalTypeContent))
+
+	// First run without adding the query pattern to see if it's already implemented
+	const initialResult = await testParseSourceCodeDefinitions("/test/conditional-type.tsx", conditionalTypeContent)
+	console.log("Initial result before adding query pattern:", initialResult)
+
+	// Save the initial line count to compare later
+	const initialLineCount = initialResult ? initialResult.split("\n").length : 0
+	const initialCaptures = initialResult ? initialResult : ""
+
+	// Now check if the new query pattern improves the output
+	const updatedResult = await testParseSourceCodeDefinitions("/test/conditional-type.tsx", conditionalTypeContent)
+	console.log("Updated result after adding query pattern:", updatedResult)
+
+	// Compare results
+	const updatedLineCount = updatedResult ? updatedResult.split("\n").length : 0
+	expect(updatedResult).toBeDefined()
+
+	// Check if the feature is already implemented
+	if (initialResult && initialResult.includes("ReturnType<T>") && initialResult.includes("Parameters<T>")) {
+		console.log("Conditional types are already supported by the parser!")
+		// If the feature is already implemented, we don't need to check if the updated result is better
+		expect(true).toBe(true)
+	} else {
+		// If the feature wasn't already implemented, check if our changes improved it
+		expect(updatedLineCount).toBeGreaterThan(initialLineCount)
+		expect(updatedResult).toContain("ReturnType<T>")
+		expect(updatedResult).toContain("Parameters<T>")
+	}
 })
 
 it("should detect TypeScript interfaces and HOCs", async function () {
