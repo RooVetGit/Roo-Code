@@ -237,6 +237,7 @@ type GlobalSettings = {
 	screenshotQuality?: number | undefined
 	remoteBrowserEnabled?: boolean | undefined
 	remoteBrowserHost?: string | undefined
+	browserAssistantModeEnabled?: boolean | undefined
 	cachedChromeHostUrl?: string | undefined
 	enableCheckpoints?: boolean | undefined
 	checkpointStorage?: ("task" | "workspace") | undefined

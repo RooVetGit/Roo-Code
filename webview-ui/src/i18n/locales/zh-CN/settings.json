@@ -241,6 +241,11 @@
 			"testButton": "测试连接",
 			"testingButton": "测试中...",
 			"instructions": "输入 DevTools 协议主机地址或留空以自动发现本地 Chrome 实例。测试连接按钮将尝试使用自定义 URL（如果提供），或者如果字段为空则自动发现。"
+		},
+		"assistantMode": {
+			"label": "使用浏览器助手模式",
+			"description": "连接到浏览器时始终使用最新的标签页，而不是查找根域名。",
+			"instructions": "启用后，Roo 将始终使用浏览器中最新的标签页，而不是尝试查找具有相同根域名的标签页。"
 		}
 	},
 	"checkpoints": {

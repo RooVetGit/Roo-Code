@@ -241,6 +241,11 @@
 			"testButton": "測試連線",
 			"testingButton": "測試中...",
 			"instructions": "輸入 DevTools 協定主機位址或留空以自動發現本機 Chrome 執行個體。"
+		},
+		"assistantMode": {
+			"label": "使用瀏覽器助手模式",
+			"description": "連接瀏覽器時始終使用最新分頁而非尋找根網域。",
+			"instructions": "啟用後，Roo 將始終使用瀏覽器中的最新分頁，而不是嘗試尋找具有相同根網域的分頁。"
 		}
 	},
 	"checkpoints": {

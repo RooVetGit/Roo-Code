@@ -241,6 +241,11 @@
 			"testButton": "Tester la connexion",
 			"testingButton": "Test en cours...",
 			"instructions": "Entrez l'adresse hôte du protocole DevTools ou laissez vide pour découvrir automatiquement les instances Chrome locales. Le bouton Tester la connexion essaiera l'URL personnalisée si fournie, ou découvrira automatiquement si le champ est vide."
+		},
+		"assistantMode": {
+			"label": "Utiliser le mode assistant de navigateur",
+			"description": "Toujours utiliser l'onglet le plus récent au lieu de rechercher le domaine racine lors de la connexion au navigateur.",
+			"instructions": "Lorsque cette option est activée, Roo utilisera toujours l'onglet le plus récent dans le navigateur au lieu d'essayer de trouver un onglet avec le même domaine racine."
 		}
 	},
 	"checkpoints": {

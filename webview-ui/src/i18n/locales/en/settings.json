@@ -241,6 +241,11 @@
 			"testButton": "Test Connection",
 			"testingButton": "Testing...",
 			"instructions": "Enter the DevTools Protocol host address or leave empty to auto-discover Chrome local instances. The Test Connection button will try the custom URL if provided, or auto-discover if the field is empty."
+		},
+		"assistantMode": {
+			"label": "Use browser assistant mode",
+			"description": "Always use the latest tab instead of looking for root domain when connecting to the browser.",
+			"instructions": "When enabled, Roo will always use the latest tab in the browser instead of trying to find a tab with the same root domain."
 		}
 	},
 	"checkpoints": {

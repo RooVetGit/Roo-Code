@@ -1419,6 +1419,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						}
 						await this.postStateToWebview()
 						break
+					case "browserAssistantModeEnabled":
+						await this.updateGlobalState("browserAssistantModeEnabled", message.bool ?? false)
+						await this.postStateToWebview()
+						break
 					case "testBrowserConnection":
 						// If no text is provided, try auto-discovery
 						if (!message.text) {
@@ -2559,6 +2563,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			remoteBrowserHost,
 			remoteBrowserEnabled,
 			cachedChromeHostUrl,
+			browserAssistantModeEnabled,
 			writeDelayMs,
 			terminalOutputLineLimit,
 			terminalShellIntegrationTimeout,
@@ -2628,6 +2633,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			remoteBrowserHost,
 			remoteBrowserEnabled: remoteBrowserEnabled ?? false,
 			cachedChromeHostUrl: cachedChromeHostUrl,
+			browserAssistantModeEnabled: browserAssistantModeEnabled ?? false,
 			writeDelayMs: writeDelayMs ?? 1000,
 			terminalOutputLineLimit: terminalOutputLineLimit ?? 500,
 			terminalShellIntegrationTimeout: terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT,
@@ -2714,6 +2720,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			remoteBrowserHost: stateValues.remoteBrowserHost,
 			remoteBrowserEnabled: stateValues.remoteBrowserEnabled ?? false,
 			cachedChromeHostUrl: stateValues.cachedChromeHostUrl as string | undefined,
+			browserAssistantModeEnabled: stateValues.browserAssistantModeEnabled ?? false,
 			fuzzyMatchThreshold: stateValues.fuzzyMatchThreshold ?? 1.0,
 			writeDelayMs: stateValues.writeDelayMs ?? 1000,
 			terminalOutputLineLimit: stateValues.terminalOutputLineLimit ?? 500,

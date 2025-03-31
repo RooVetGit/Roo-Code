@@ -241,6 +241,11 @@
 			"testButton": "Verbindung testen",
 			"testingButton": "Teste...",
 			"instructions": "Geben Sie die DevTools-Protokoll-Host-Adresse ein oder lassen Sie das Feld leer, um Chrome lokale Instanzen automatisch zu erkennen. Die Schaltfläche 'Verbindung testen' versucht die benutzerdefinierte URL, wenn angegeben, oder erkennt automatisch, wenn das Feld leer ist."
+		},
+		"assistantMode": {
+			"label": "Browser-Assistentenmodus verwenden",
+			"description": "Immer den neuesten Tab anstelle der Suche nach der Root-Domain verwenden, wenn eine Verbindung zum Browser hergestellt wird.",
+			"instructions": "Wenn aktiviert, wird Roo immer den neuesten Tab im Browser verwenden, anstatt zu versuchen, einen Tab mit derselben Root-Domain zu finden."
 		}
 	},
 	"checkpoints": {

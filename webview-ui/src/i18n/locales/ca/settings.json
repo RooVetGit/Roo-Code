@@ -241,6 +241,11 @@
 			"testButton": "Provar connexió",
 			"testingButton": "Provant...",
 			"instructions": "Introduïu l'adreça d'amfitrió del protocol DevTools o deixeu-la buida per descobrir automàticament instàncies locals de Chrome. El botó Provar Connexió provarà la URL personalitzada si es proporciona, o descobrirà automàticament si el camp està buit."
+		},
+		"assistantMode": {
+			"label": "Utilitzar mode assistent del navegador",
+			"description": "Utilitzar sempre la pestanya més recent en lloc de buscar el domini arrel quan es connecta al navegador.",
+			"instructions": "Quan està activat, Roo utilitzarà sempre la pestanya més recent del navegador en lloc d'intentar trobar una pestanya amb el mateix domini arrel."
 		}
 	},
 	"checkpoints": {

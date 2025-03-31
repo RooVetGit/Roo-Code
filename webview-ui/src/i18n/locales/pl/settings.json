@@ -241,6 +241,11 @@
 			"testButton": "Testuj połączenie",
 			"testingButton": "Testowanie...",
 			"instructions": "Wprowadź adres hosta protokołu DevTools lub pozostaw puste, aby automatycznie wykryć lokalne instancje Chrome. Przycisk Test Połączenia spróbuje użyć niestandardowego URL, jeśli podany, lub automatycznie wykryje, jeśli pole jest puste."
+		},
+		"assistantMode": {
+			"label": "Użyj trybu asystenta przeglądarki",
+			"description": "Zawsze używaj najnowszej karty zamiast szukać domeny głównej podczas łączenia z przeglądarką.",
+			"instructions": "Gdy włączone, Roo zawsze będzie używać najnowszej karty w przeglądarce zamiast próbować znaleźć kartę z tą samą domeną główną."
 		}
 	},
 	"checkpoints": {

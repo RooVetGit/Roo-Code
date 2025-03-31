@@ -241,6 +241,11 @@
 			"testButton": "Bağlantıyı Test Et",
 			"testingButton": "Test Ediliyor...",
 			"instructions": "DevTools protokolü ana bilgisayar adresini girin veya yerel Chrome örneklerini otomatik olarak keşfetmek için boş bırakın. Bağlantıyı Test Et düğmesi, sağlanmışsa özel URL'yi deneyecek veya alan boşsa otomatik olarak keşfedecektir."
+		},
+		"assistantMode": {
+			"label": "Tarayıcı asistan modunu kullan",
+			"description": "Tarayıcıya bağlanırken kök alan adını aramak yerine her zaman en son sekmeyi kullan.",
+			"instructions": "Etkinleştirildiğinde, Roo aynı kök alan adına sahip bir sekme bulmaya çalışmak yerine her zaman tarayıcıdaki en son sekmeyi kullanacaktır."
 		}
 	},
 	"checkpoints": {
