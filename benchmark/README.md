@@ -2,15 +2,11 @@
 
 ## Get Started
 
-[Install](https://docs.docker.com/desktop/) and run Docker Desktop.
-
-Build a container to run the Roo Code benchmarks:
+Clone the Roo Code repo:
 
 ```sh
-docker build -f Dockerfile -t roo-code-benchmark ..
+git clone https://github.com/RooVetGit/Roo-Code.git
 ```
-
-## Local Debugging
 
 Install nvm:
 
@@ -28,28 +24,21 @@ corepack enable pnpm
 corepack use pnpm@latest-10
 ```
 
-Install dependencies:
+Build the Roo Code extension:
 
 ```sh
+npm run install:all
+npx vsce package --out bin/roo-code-latest.vsix
+```
+
+[Install](https://docs.docker.com/desktop/) and run Docker Desktop.
+
+Build a container to run the Roo Code evals:
+
+```sh
+cd benchmark
 pnpm install
+pnpm docker:start
 ```
 
-Configure database:
-
-```sh
-cp packages/server/.env.sample packages/server/.env
-# Update BENCHMARKS_DB_PATH as needed in `packages/server/.env`.
-pnpm --filter @benchmark/db db:push
-```
-
-Run the web app:
-
-```sh
-pnpm web
-```
-
-Run an exercise via the cli:
-
-```sh
-pnpm cli run [cpp|go|java|javascript|python|rust|all] [<exercise>|all]
-```
+Navigation to [localhost:3000](http://localhost:3000/) in your browser.

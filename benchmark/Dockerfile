@@ -55,8 +55,8 @@ RUN /home/vscode/.local/bin/uv sync
 WORKDIR /home/vscode/repo/benchmark
 
 # Copy & install extension
-COPY --chown=vscode:vscode ./bin/roo-cline-3.11.1.vsix ./
-RUN code --debug --install-extension ./roo-cline-3.11.1.vsix
+COPY --chown=vscode:vscode ./bin/roo-code-latest.vsix ./
+RUN code --debug --install-extension ./roo-code-latest.vsix
 
 # Install dependencies
 COPY --chown=vscode:vscode ./benchmark/package.json ./benchmark/pnpm-lock.yaml ./benchmark/pnpm-workspace.yaml ./benchmark/.npmrc ./
