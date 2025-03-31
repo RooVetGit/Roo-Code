@@ -226,7 +226,7 @@ describe("treeParserDebug", () => {
 		const tsxLang = await TreeSitter.Language.load(wasmPath)
 		parser.setLanguage(tsxLang)
 		const tree = parser.parse(sampleCode)
-		console.log("Parsed tree:", tree.rootNode.toString())
+		// console.log("Parsed tree:", tree.rootNode.toString())
 
 		// Extract definitions using TSX query
 		const query = tsxLang.query(tsxQuery)
@@ -282,8 +282,55 @@ describe("treeParserDebug", () => {
 		// expect(result).toMatch(/Text\.Body|Body/)
 	})
 
-	it("should detect TypeScript interfaces and HOCs", async function () {
-		const tsContent = `
+	it("should parse decorators with arguments", async function () {
+		const decoratorContent = `
+	      /**
+	       * Component decorator with configuration
+	       * Defines a web component with template and styling
+	       * @decorator
+	       */
+	      @Component({
+	        selector: 'app-user-profile',
+	        templateUrl: './user-profile.component.html',
+	        styleUrls: [
+	          './user-profile.component.css',
+	          './user-profile.theme.css'
+	        ],
+	        providers: [
+	          UserService,
+	          { provide: ErrorHandler, useClass: CustomErrorHandler }
+	        ]
+	      })
+	      export class UserProfileComponent {
+	        // Add more lines to ensure it meets MIN_COMPONENT_LINES requirement
+	        private name: string;
+	        private age: number;
+	        
+	        constructor() {
+	          this.name = 'Default User';
+	          this.age = 30;
+	        }
+	        
+	        /**
+	         * Get user information
+	         * @returns User info as string
+	         */
+	        getUserInfo(): string {
+	          return "Name: " + this.name + ", Age: " + this.age;
+	        }
+	      }
+	    `
+		mockedFs.readFile.mockResolvedValue(Buffer.from(decoratorContent))
+
+		const result = await testParseSourceCodeDefinitions("/test/decorator.tsx", decoratorContent)
+		expect(result).toBeDefined()
+		expect(result).toContain("@Component")
+		expect(result).toContain("UserProfileComponent")
+	})
+})
+
+it("should detect TypeScript interfaces and HOCs", async function () {
+	const tsContent = `
 	    interface Props {
 	      title: string;
 	      items: Array<{
@@ -304,21 +351,21 @@ describe("treeParserDebug", () => {
 	
 	    export const EnhancedComponent = withLogger(BaseComponent);
 	  `
-		const result = await testParseSourceCodeDefinitions("/test/hoc.tsx", tsContent)
+	const result = await testParseSourceCodeDefinitions("/test/hoc.tsx", tsContent)
 
-		// Check interface and type definitions - these are reliably detected
-		expect(result).toContain("Props")
-		expect(result).toContain("withLogger")
+	// Check interface and type definitions - these are reliably detected
+	expect(result).toContain("Props")
+	expect(result).toContain("withLogger")
 
-		// The current implementation doesn't reliably detect class components in HOCs
-		// These tests are commented out until the implementation is improved
-		// expect(result).toMatch(/WithLogger|WrappedComponent/)
-		// expect(result).toContain("EnhancedComponent")
-		// expect(result).toMatch(/React\.Component|Component/)
-	})
+	// The current implementation doesn't reliably detect class components in HOCs
+	// These tests are commented out until the implementation is improved
+	// expect(result).toMatch(/WithLogger|WrappedComponent/)
+	// expect(result).toContain("EnhancedComponent")
+	// expect(result).toMatch(/React\.Component|Component/)
+})
 
-	it("should detect wrapped components with any wrapper function", async function () {
-		const wrappedContent = `
+it("should detect wrapped components with any wrapper function", async function () {
+	const wrappedContent = `
 	    // Custom component wrapper
 	    const withLogger = (Component) => (props) => {
 	      console.log('Rendering:', props)
@@ -360,21 +407,21 @@ describe("treeParserDebug", () => {
 	      )
 	    );
 	  `
-		const result = await testParseSourceCodeDefinitions("/test/wrapped.tsx", wrappedContent)
+	const result = await testParseSourceCodeDefinitions("/test/wrapped.tsx", wrappedContent)
 
-		// Should detect all component definitions regardless of wrapper
-		expect(result).toContain("MemoInput")
-		expect(result).toContain("EnhancedButton")
-		expect(result).toContain("ThemedButton")
-		expect(result).toContain("withLogger")
-		expect(result).toContain("withTheme")
+	// Should detect all component definitions regardless of wrapper
+	expect(result).toContain("MemoInput")
+	expect(result).toContain("EnhancedButton")
+	expect(result).toContain("ThemedButton")
+	expect(result).toContain("withLogger")
+	expect(result).toContain("withTheme")
 
-		// Also check that we get some output
-		expect(result).toBeDefined()
-	})
+	// Also check that we get some output
+	expect(result).toBeDefined()
+})
 
-	it("should handle conditional and generic components", async function () {
-		const genericContent = `
+it("should handle conditional and generic components", async function () {
+	const genericContent = `
 	    type ComplexProps<T> = {
 	      data: T[];
 	      render: (item: T) => React.ReactNode;
@@ -398,25 +445,25 @@ describe("treeParserDebug", () => {
 	        <FallbackContent />
 	      );
 	  `
-		const result = await testParseSourceCodeDefinitions("/test/generic.tsx", genericContent)
+	const result = await testParseSourceCodeDefinitions("/test/generic.tsx", genericContent)
 
-		// Check type and component declarations - these are reliably detected
-		expect(result).toContain("ComplexProps")
-		expect(result).toContain("GenericList")
-		expect(result).toContain("ConditionalComponent")
+	// Check type and component declarations - these are reliably detected
+	expect(result).toContain("ComplexProps")
+	expect(result).toContain("GenericList")
+	expect(result).toContain("ConditionalComponent")
 
-		// The current implementation doesn't reliably detect components in conditional expressions
-		// These tests are commented out until the implementation is improved
-		// expect(result).toMatch(/PrimaryContent|Primary/)
-		// expect(result).toMatch(/FallbackContent|Fallback/)
+	// The current implementation doesn't reliably detect components in conditional expressions
+	// These tests are commented out until the implementation is improved
+	// expect(result).toMatch(/PrimaryContent|Primary/)
+	// expect(result).toMatch(/FallbackContent|Fallback/)
 
-		// Check standard HTML elements (should not be captured)
-		expect(result).not.toContain("div")
-		expect(result).not.toContain("h1")
-	})
+	// Check standard HTML elements (should not be captured)
+	expect(result).not.toContain("div")
+	expect(result).not.toContain("h1")
+})
 
-	it("should parse switch/case statements", async function () {
-		const switchCaseContent = `
+it("should parse switch/case statements", async function () {
+	const switchCaseContent = `
 	    function handleTemperature(value: number) {
 	      switch (value) {
 	        case 0:
@@ -445,22 +492,22 @@ describe("treeParserDebug", () => {
 	      }
 	    }
 	  `
-		mockedFs.readFile.mockResolvedValue(Buffer.from(switchCaseContent))
+	mockedFs.readFile.mockResolvedValue(Buffer.from(switchCaseContent))
 
-		// Inspect the tree structure to see the actual node names
-		//   await inspectTreeStructure(switchCaseContent)
+	// Inspect the tree structure to see the actual node names
+	//   await inspectTreeStructure(switchCaseContent)
 
-		const result = await testParseSourceCodeDefinitions("/test/switch-case.tsx", switchCaseContent)
-		console.log("Switch Case Test Result:", result)
-		expect(result).toBeDefined()
-		expect(result).toContain("handleTemperature")
-		// Check for case statements in the output
-		expect(result).toContain("case 0:")
-		expect(result).toContain("case 25:")
-	})
+	const result = await testParseSourceCodeDefinitions("/test/switch-case.tsx", switchCaseContent)
+	console.log("Switch Case Test Result:", result)
+	expect(result).toBeDefined()
+	expect(result).toContain("handleTemperature")
+	// Check for case statements in the output
+	expect(result).toContain("case 0:")
+	expect(result).toContain("case 25:")
+})
 
-	it("should parse namespace declarations", async function () {
-		const namespaceContent = `
+it("should parse namespace declarations", async function () {
+	const namespaceContent = `
 	   /**
 	    * Validation namespace containing various validation functions
 	    * @namespace
@@ -488,14 +535,13 @@ describe("treeParserDebug", () => {
 	     }
 	   }
 	 `
-		mockedFs.readFile.mockResolvedValue(Buffer.from(namespaceContent))
+	mockedFs.readFile.mockResolvedValue(Buffer.from(namespaceContent))
 
-		const result = await testParseSourceCodeDefinitions("/test/namespace.tsx", namespaceContent)
-		expect(result).toBeDefined()
-		expect(result).toContain("namespace Validation")
-		expect(result).toContain("isValidEmail")
-		expect(result).toContain("isValidPhone")
-	})
+	const result = await testParseSourceCodeDefinitions("/test/namespace.tsx", namespaceContent)
+	expect(result).toBeDefined()
+	expect(result).toContain("namespace Validation")
+	expect(result).toContain("isValidEmail")
+	expect(result).toContain("isValidPhone")
 })
 
 describe("parseSourceCodeDefinitions", () => {

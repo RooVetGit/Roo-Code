@@ -63,6 +63,18 @@ export default `
 (enum_declaration
   name: (identifier) @name.definition.enum) @definition.enum
 
+; Decorator definitions with decorated class
+(export_statement
+  decorator: (decorator
+    (call_expression
+      function: (identifier) @name.definition.decorator))
+  declaration: (class_declaration
+    name: (type_identifier) @name.definition.decorated_class)) @definition.decorated_class
+
+; Explicitly capture class name in decorated class
+(class_declaration
+  name: (type_identifier) @name.definition.class) @definition.class
+
 ; Namespace declarations
 (internal_module
   name: (identifier) @name.definition.namespace) @definition.namespace
