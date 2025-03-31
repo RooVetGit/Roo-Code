@@ -163,6 +163,8 @@ type ProviderSettings = {
 	modelMaxThinkingTokens?: number | undefined
 	includeMaxTokens?: boolean | undefined
 	fakeAi?: unknown | undefined
+	humanRelayMonitorClipboard?: boolean | undefined
+	humanRelayMonitorInterval?: number | undefined
 }
 
 type GlobalSettings = {
