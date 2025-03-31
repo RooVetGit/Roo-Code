@@ -11,10 +11,7 @@ export async function getModesSection(context: vscode.ExtensionContext): Promise
 	// Get all modes with their overrides from extension state
 	const allModes = await getAllModesWithPrompts(context)
 
-	let modesContent = `====
-
-MODES
-
+	let modesContent = `## MODES
 - These are the currently available modes:
 ${allModes.map((mode: ModeConfig) => `  * "${mode.name}" mode (${mode.slug}) - ${mode.roleDefinition.split(".")[0]}`).join("\n")}`
 
