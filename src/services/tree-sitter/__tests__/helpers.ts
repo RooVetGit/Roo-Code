@@ -50,7 +50,19 @@ export async function initializeWorkingParser() {
 export async function testParseSourceCodeDefinitions(
 	testFilePath: string,
 	content: string,
+	options: {
+		language?: string
+		wasmFile?: string
+		queryString?: string
+		extKey?: string
+	} = {},
 ): Promise<string | undefined> {
+	// Set default options
+	const language = options.language || "tsx"
+	const wasmFile = options.wasmFile || "tree-sitter-tsx.wasm"
+	const queryString = options.queryString || tsxQuery
+	const extKey = options.extKey || "tsx"
+
 	// Clear any previous mocks
 	jest.clearAllMocks()
 
@@ -64,18 +76,17 @@ export async function testParseSourceCodeDefinitions(
 	const TreeSitter = await initializeTreeSitter()
 	const parser = new TreeSitter()
 
-	// Load TSX language and configure parser
-	const wasmPath = path.join(process.cwd(), "dist/tree-sitter-tsx.wasm")
-	const tsxLang = await TreeSitter.Language.load(wasmPath)
-	parser.setLanguage(tsxLang)
+	// Load language and configure parser
+	const wasmPath = path.join(process.cwd(), `dist/${wasmFile}`)
+	const lang = await TreeSitter.Language.load(wasmPath)
+	parser.setLanguage(lang)
 
 	// Create a real query
-	const query = tsxLang.query(tsxQuery)
+	const query = lang.query(queryString)
 
 	// Set up our language parser with real parser and query
-	const mockLanguageParser = {
-		tsx: { parser, query },
-	}
+	const mockLanguageParser: any = {}
+	mockLanguageParser[extKey] = { parser, query }
 
 	// Configure the mock to return our parser
 	mockedLoadRequiredLanguageParsers.mockResolvedValue(mockLanguageParser)

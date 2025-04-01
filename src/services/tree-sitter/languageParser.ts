@@ -69,6 +69,7 @@ export async function loadRequiredLanguageParsers(filesToParse: string[]): Promi
 		switch (ext) {
 			case "js":
 			case "jsx":
+			case "json":
 				language = await loadLanguage("javascript")
 				query = language.query(javascriptQuery)
 				break

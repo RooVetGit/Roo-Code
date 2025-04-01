@@ -34,6 +34,8 @@ const extensions = [
 	// Markdown
 	"md",
 	"markdown",
+	// JSON
+	"json",
 ].map((e) => `.${e}`)
 
 export async function parseSourceCodeDefinitionsForFile(
