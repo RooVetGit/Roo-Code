@@ -780,7 +780,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		await this.postStateToWebview()
 	}
 
-	// not private, so it can be accessed from webviewMessageHandler
 	async updateApiConfiguration(providerSettings: ProviderSettings) {
 		// Update mode's default config.
 		const { mode } = await this.getState()
@@ -887,11 +886,15 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		return getSettingsDirectoryPath(globalStoragePath)
 	}
 
-	// not private, so it can be accessed from webviewMessageHandler
-	async ensureCacheDirectoryExists() {
+	private async ensureCacheDirectoryExists() {
 		const { getCacheDirectoryPath } = await import("../../shared/storagePathManager")
 		const globalStoragePath = this.contextProxy.globalStorageUri.fsPath
 		return getCacheDirectoryPath(globalStoragePath)
+	}
+
+	async writeDataToCache<T>(filename: string, data: T) {
+		const cacheDir = await this.ensureCacheDirectoryExists()
+		await fs.writeFile(path.join(cacheDir, filename), JSON.stringify(data))
 	}
 
 	// not private, so it can be accessed from webviewMessageHandler

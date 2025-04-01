@@ -63,8 +63,6 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				})
 			}
 
-			const cacheDir = await provider.ensureCacheDirectoryExists()
-
 			// Post last cached models in case the call to endpoint fails.
 			provider.readModelsFromCache(GlobalFileNames.openRouterModels).then((openRouterModels) => {
 				if (openRouterModels) {
@@ -83,10 +81,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			const { apiConfiguration: currentApiConfig } = await provider.getState()
 			getOpenRouterModels(currentApiConfig).then(async (openRouterModels) => {
 				if (Object.keys(openRouterModels).length > 0) {
-					await fs.writeFile(
-						path.join(cacheDir, GlobalFileNames.openRouterModels),
-						JSON.stringify(openRouterModels),
-					)
+					await provider.writeDataToCache(GlobalFileNames.openRouterModels, openRouterModels)
 					await provider.postMessageToWebview({ type: "openRouterModels", openRouterModels })
 
 					// Update model info in state (this needs to be
@@ -113,7 +108,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 
 			getGlamaModels().then(async (glamaModels) => {
 				if (Object.keys(glamaModels).length > 0) {
-					await fs.writeFile(path.join(cacheDir, GlobalFileNames.glamaModels), JSON.stringify(glamaModels))
+					await provider.writeDataToCache(GlobalFileNames.glamaModels, glamaModels)
 					await provider.postMessageToWebview({ type: "glamaModels", glamaModels })
 
 					const { apiConfiguration } = await provider.getState()
@@ -133,10 +128,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 
 			getUnboundModels().then(async (unboundModels) => {
 				if (Object.keys(unboundModels).length > 0) {
-					await fs.writeFile(
-						path.join(cacheDir, GlobalFileNames.unboundModels),
-						JSON.stringify(unboundModels),
-					)
+					await provider.writeDataToCache(GlobalFileNames.unboundModels, unboundModels)
 					await provider.postMessageToWebview({ type: "unboundModels", unboundModels })
 
 					const { apiConfiguration } = await provider.getState()
@@ -159,10 +151,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 
 			getRequestyModels().then(async (requestyModels) => {
 				if (Object.keys(requestyModels).length > 0) {
-					await fs.writeFile(
-						path.join(cacheDir, GlobalFileNames.requestyModels),
-						JSON.stringify(requestyModels),
-					)
+					await provider.writeDataToCache(GlobalFileNames.requestyModels, requestyModels)
 					await provider.postMessageToWebview({ type: "requestyModels", requestyModels })
 
 					const { apiConfiguration } = await provider.getState()
@@ -399,11 +388,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			const openRouterModels = await getOpenRouterModels(configForRefresh)
 
 			if (Object.keys(openRouterModels).length > 0) {
-				const cacheDir = await provider.ensureCacheDirectoryExists()
-				await fs.writeFile(
-					path.join(cacheDir, GlobalFileNames.openRouterModels),
-					JSON.stringify(openRouterModels),
-				)
+				await provider.writeDataToCache(GlobalFileNames.openRouterModels, openRouterModels)
 				await provider.postMessageToWebview({ type: "openRouterModels", openRouterModels })
 			}
 
@@ -413,8 +398,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			const glamaModels = await getGlamaModels()
 
 			if (Object.keys(glamaModels).length > 0) {
-				const cacheDir = await provider.ensureCacheDirectoryExists()
-				await fs.writeFile(path.join(cacheDir, GlobalFileNames.glamaModels), JSON.stringify(glamaModels))
+				await provider.writeDataToCache(GlobalFileNames.glamaModels, glamaModels)
 				await provider.postMessageToWebview({ type: "glamaModels", glamaModels })
 			}
 
@@ -423,8 +407,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			const unboundModels = await getUnboundModels()
 
 			if (Object.keys(unboundModels).length > 0) {
-				const cacheDir = await provider.ensureCacheDirectoryExists()
-				await fs.writeFile(path.join(cacheDir, GlobalFileNames.unboundModels), JSON.stringify(unboundModels))
+				await provider.writeDataToCache(GlobalFileNames.unboundModels, unboundModels)
 				await provider.postMessageToWebview({ type: "unboundModels", unboundModels })
 			}
 
@@ -433,8 +416,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			const requestyModels = await getRequestyModels()
 
 			if (Object.keys(requestyModels).length > 0) {
-				const cacheDir = await provider.ensureCacheDirectoryExists()
-				await fs.writeFile(path.join(cacheDir, GlobalFileNames.requestyModels), JSON.stringify(requestyModels))
+				await provider.writeDataToCache(GlobalFileNames.requestyModels, requestyModels)
 				await provider.postMessageToWebview({ type: "requestyModels", requestyModels })
 			}
 
