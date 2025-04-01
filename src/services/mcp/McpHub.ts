@@ -80,7 +80,7 @@ const createServerTypeSchema = () => {
 			url: z.string().url("URL must be a valid URL format"),
 			headers: z.record(z.string()).optional(),
 			// Ensure no stdio fields are present
-			command: z.undefined(),
+			command: z.undefined().optional(),
 			args: z.undefined().optional(),
 			env: z.undefined().optional(),
 		})
