@@ -285,20 +285,47 @@ const CodeBlock = memo(
 			}
 		}, [highlightedCode])
 
-		// Scroll to bottom immediately when source changes
+		// Ref to track if user was scrolled up *before* the source update potentially changes scrollHeight
+		const wasScrolledUpRef = useRef(false)
+
+		// Effect to listen to scroll events and update the ref
 		useEffect(() => {
-			if (preRef.current && source) {
-				// Use requestAnimationFrame to ensure DOM is updated
+			const preElement = preRef.current
+			if (!preElement) return
+
+			const handleScroll = () => {
+				const tolerance = 5 // Pixels tolerance for being "at the bottom"
+				const isAtBottom =
+					Math.abs(preElement.scrollHeight - preElement.scrollTop - preElement.clientHeight) < tolerance
+				wasScrolledUpRef.current = !isAtBottom
+			}
+
+			preElement.addEventListener("scroll", handleScroll, { passive: true })
+			// Initial check in case it starts scrolled up
+			handleScroll()
+
+			return () => {
+				preElement.removeEventListener("scroll", handleScroll)
+			}
+		}, []) // Empty dependency array: runs once on mount
+
+		// Scroll to bottom immediately when source changes, but only if user wasn't scrolled up *before* the update
+		useEffect(() => {
+			// Check the ref *before* potentially scrolling
+			if (preRef.current && source && !wasScrolledUpRef.current) {
+				// Use rAF to wait for DOM updates (like scrollHeight change)
 				requestAnimationFrame(() => {
-					// Small delay to ensure content is rendered
+					// Use a small timeout to ensure rendering is complete, especially for complex highlights
 					setTimeout(() => {
 						if (preRef.current) {
-							// Use scrollTop for JSDOM compatibility
 							preRef.current.scrollTop = preRef.current.scrollHeight
+							// After auto-scrolling, update the ref state as we are now at the bottom
+							wasScrolledUpRef.current = false
 						}
-					}, 0)
+					}, 50) // Slightly increased delay
 				})
 			}
+			// We only need to react to source changes here. The ref check handles the scroll state.
 		}, [source])
 
 		const updateCodeBlockButtonPosition = useCallback((forceHide = false) => {
@@ -441,6 +468,11 @@ const CodeBlock = memo(
 				const isAtVeryBottom =
 					Math.abs(preRef.current.scrollHeight - preRef.current.scrollTop - preRef.current.clientHeight) < 1
 
+				// No need to set userHasScrolled here anymore, the scroll listener handles it
+				// if (e.deltaY < 0 && !isAtVeryTop) {
+				// 	setUserHasScrolled(true)
+				// }
+
 				// Handle scrolling at container boundaries
 				if ((e.deltaY < 0 && isAtVeryTop) || (e.deltaY > 0 && isAtVeryBottom)) {
 					// Prevent default to stop inner container from handling
@@ -528,7 +560,9 @@ const CodeBlock = memo(
 					windowshade={windowShade ? "true" : "false"}
 					collapsedHeight={collapsedHeight}
 					onMouseDown={() => updateCodeBlockButtonPosition(true)}
-					onMouseUp={() => updateCodeBlockButtonPosition(false)}>
+					onMouseUp={() => updateCodeBlockButtonPosition(false)}
+					// onScroll prop is removed - handled by the useEffect scroll listener now
+				>
 					<div dangerouslySetInnerHTML={{ __html: highlightedCode }} />
 				</StyledPre>
 				{!isSelecting && (
