@@ -1,5 +1,16 @@
 # Roo Code Changelog
 
+## [3.11.3] - 2025-03-31
+
+- Revert mention changes in case they're causing performance issues/crashes
+
+## [3.11.2] - 2025-03-31
+
+- Fix bug in loading Requesty key balance
+- Fix bug with Bedrock inference profiles
+- Update the webview when changing settings via the API
+- Refactor webview messages code (thanks @diarmidmackenzie!)
+
 ## [3.11.1] - 2025-03-30
 
 - Relax provider profiles schema and add telemetry
