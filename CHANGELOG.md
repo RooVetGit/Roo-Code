@@ -1,5 +1,9 @@
 # Roo Code Changelog
 
+## [3.11.4] - 2025-03-31
+
+- Update deepseek-chat model config to reflect increased context window size of DeepSeek-V3 model
+
 ## [3.11.3] - 2025-03-31
 
 - Revert mention changes in case they're causing performance issues/crashes
