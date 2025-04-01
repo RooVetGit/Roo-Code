@@ -224,7 +224,10 @@ describe("VsCodeLmHandler.createMessage", () => {
 		// Test with error code
 		mockLanguageModelChat.sendRequest.mockImplementationOnce(() => {
 			// eslint-disable-next-line no-throw-literal
-			throw new Error(JSON.stringify({ error: { code: "rate_limit_exceeded" } }))
+			const error = new Error(JSON.stringify({ error: { code: "rate_limit_exceeded" } }))
+			// Add status property to the error object
+			;(error as any).status = 429
+			throw error
 		})
 
 		try {

@@ -65,8 +65,15 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			const modelUrl = this.options.openAiBaseUrl ?? ""
 			const modelId = this.options.openAiModelId ?? ""
 			const enabledR1Format = this.options.openAiR1FormatEnabled ?? false
-			const deepseekReasoner = modelId.includes("deepseek-reasoner") || enabledR1Format
-			const ark = modelUrl.includes(".volces.com")
+			const deepseekReasoner = /^deepseek-reasoner/.test(modelId) || enabledR1Format
+			const ark = (() => {
+				try {
+					const url = new URL(modelUrl)
+					return url.hostname.endsWith(".volces.com")
+				} catch {
+					return false
+				}
+			})()
 			if (modelId.startsWith("o3-mini")) {
 				yield* this.handleO3FamilyMessage(modelId, systemPrompt, messages)
 				return

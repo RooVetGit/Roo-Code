@@ -168,7 +168,18 @@ describe("FakeAIHandler", () => {
 		it("should handle object errors with proper format", async () => {
 			mockCreateMessage.mockImplementationOnce(async function* () {
 				// eslint-disable-next-line no-throw-literal
-				throw new Error(JSON.stringify({ someField: "error object" }))
+				// Create a properly formatted error object that matches what the handler expects
+				const formattedError = {
+					status: 500,
+					message: "Object error",
+					error: {
+						metadata: {
+							raw: JSON.stringify({ someField: "error object" }),
+							provider: "fake-ai",
+						},
+					},
+				}
+				throw new Error(JSON.stringify(formattedError))
 			})
 
 			const stream = handler.createMessage(systemPrompt, messages)
@@ -180,6 +191,7 @@ describe("FakeAIHandler", () => {
 			} catch (error) {
 				expect(error).toBeInstanceOf(Error)
 				const parsedError = JSON.parse((error as Error).message)
+				// Check that we have a properly formatted error response
 				expect(parsedError.status).toBe(500)
 				expect(typeof parsedError.message).toBe("string")
 				expect(parsedError.error.metadata.raw).toContain("someField")

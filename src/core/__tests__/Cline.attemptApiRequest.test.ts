@@ -6,6 +6,22 @@ import { ApiStreamChunk } from "../../api/transform/stream"
 jest.mock("delay")
 const mockDelay = delay as jest.MockedFunction<typeof delay>
 
+// Mock RooIgnoreController to avoid fileWatcher errors
+jest.mock("../ignore/RooIgnoreController", () => {
+	return {
+		LOCK_TEXT_SYMBOL: "\u{1F512}",
+		RooIgnoreController: jest.fn().mockImplementation(() => ({
+			initialize: jest.fn().mockResolvedValue(undefined),
+			validateAccess: jest.fn().mockReturnValue(true),
+			validateCommand: jest.fn().mockReturnValue(undefined),
+			filterPaths: jest.fn().mockImplementation((paths) => paths),
+			dispose: jest.fn(),
+			getInstructions: jest.fn().mockReturnValue(undefined),
+			rooIgnoreContent: undefined,
+		})),
+	}
+})
+
 describe("Cline.attemptApiRequest", () => {
 	// Common test setup
 	// Create a mock provider that satisfies the ClineProvider interface

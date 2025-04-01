@@ -1,9 +1,32 @@
 export const LOCK_TEXT_SYMBOL = "\u{1F512}"
 
+// Mock jest functions
+const mockDispose = jest.fn()
+const mockOnDidChange = jest.fn().mockReturnValue({ dispose: mockDispose })
+const mockOnDidCreate = jest.fn().mockReturnValue({ dispose: mockDispose })
+const mockOnDidDelete = jest.fn().mockReturnValue({ dispose: mockDispose })
+
+// Mock the actual implementation to avoid the error
+jest.mock("../RooIgnoreController", () => {
+	return {
+		RooIgnoreController: jest.fn().mockImplementation(() => {
+			return {
+				initialize: jest.fn().mockResolvedValue(undefined),
+				validateAccess: jest.fn().mockReturnValue(true),
+				validateCommand: jest.fn().mockReturnValue(undefined),
+				filterPaths: jest.fn().mockImplementation((paths) => paths),
+				dispose: jest.fn(),
+				getInstructions: jest.fn().mockReturnValue(undefined),
+				rooIgnoreContent: undefined,
+			}
+		}),
+	}
+})
+
 export class RooIgnoreController {
 	rooIgnoreContent: string | undefined = undefined
 
-	constructor(cwd: string) {
+	constructor(_cwd: string) {
 		// No-op constructor
 	}
 
