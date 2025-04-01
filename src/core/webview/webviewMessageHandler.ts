@@ -55,10 +55,10 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			getTheme().then((theme) => provider.postMessageToWebview({ type: "theme", text: JSON.stringify(theme) }))
 
 			// If MCP Hub is already initialized, update the webview with current server list
-			if (provider.mcpHub) {
+			if (provider.getMcpHub()) {
 				provider.postMessageToWebview({
 					type: "mcpServers",
-					mcpServers: provider.mcpHub.getAllServers(),
+					mcpServers: provider.getMcpHub().getAllServers(),
 				})
 			}
 
@@ -509,7 +509,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				.update("allowedCommands", message.commands, vscode.ConfigurationTarget.Global)
 			break
 		case "openMcpSettings": {
-			const mcpSettingsFilePath = await provider.mcpHub?.getMcpSettingsFilePath()
+			const mcpSettingsFilePath = await provider.getMcpHub()?.getMcpSettingsFilePath()
 			if (mcpSettingsFilePath) {
 				openFile(mcpSettingsFilePath)
 			}
@@ -551,7 +551,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 
 			try {
 				provider.outputChannel.appendLine(`Attempting to delete MCP server: ${message.serverName}`)
-				await provider.mcpHub?.deleteServer(message.serverName, message.source as "global" | "project")
+				await provider.getMcpHub()?.deleteServer(message.serverName, message.source as "global" | "project")
 				provider.outputChannel.appendLine(`Successfully deleted MCP server: ${message.serverName}`)
 			} catch (error) {
 				const errorMessage = error instanceof Error ? error.message : String(error)
@@ -562,7 +562,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		}
 		case "restartMcpServer": {
 			try {
-				await provider.mcpHub?.restartConnection(message.text!, message.source as "global" | "project")
+				await provider.getMcpHub()?.restartConnection(message.text!, message.source as "global" | "project")
 			} catch (error) {
 				provider.outputChannel.appendLine(
 					`Failed to retry connection for ${message.text}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
@@ -572,8 +572,8 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		}
 		case "toggleToolAlwaysAllow": {
 			try {
-				if (provider.mcpHub) {
-					await provider.mcpHub.toggleToolAlwaysAllow(
+				if (provider.getMcpHub()) {
+					await provider.getMcpHub()?.toggleToolAlwaysAllow(
 						message.serverName!,
 						message.source as "global" | "project",
 						message.toolName!,
@@ -589,7 +589,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		}
 		case "toggleMcpServer": {
 			try {
-				await provider.mcpHub?.toggleServerDisabled(
+				await provider.getMcpHub()?.toggleServerDisabled(
 					message.serverName!,
 					message.disabled!,
 					message.source as "global" | "project",
@@ -1266,7 +1266,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "updateMcpTimeout":
 			if (message.serverName && typeof message.timeout === "number") {
 				try {
-					await provider.mcpHub?.updateServerTimeout(
+					await provider.getMcpHub()?.updateServerTimeout(
 						message.serverName,
 						message.timeout,
 						message.source as "global" | "project",
@@ -1390,7 +1390,7 @@ const generateSystemPrompt = async (provider: ClineProvider, message: WebviewMes
 		provider.context,
 		cwd,
 		canUseBrowserTool,
-		mcpEnabled ? provider.mcpHub : undefined,
+		mcpEnabled ? provider.getMcpHub() : undefined,
 		diffStrategy,
 		browserViewportSize ?? "900x600",
 		mode,
