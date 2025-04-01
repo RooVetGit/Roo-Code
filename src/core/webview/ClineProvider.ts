@@ -68,8 +68,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	public static readonly tabPanelId = "roo-cline.TabPanelProvider"
 	private static activeInstances: Set<ClineProvider> = new Set()
 	private disposables: vscode.Disposable[] = []
-	// not private, so it can be accessed from webviewMessageHandler
-	view?: vscode.WebviewView | vscode.WebviewPanel
+	private view?: vscode.WebviewView | vscode.WebviewPanel
 	// not private, so it can be accessed from webviewMessageHandler
 	// callers could update to get viewLaunched() getter function
 	isViewLaunched = false

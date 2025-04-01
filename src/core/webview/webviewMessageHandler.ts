@@ -799,7 +799,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				await provider.updateGlobalState("customModePrompts", updatedPrompts)
 				const currentState = await provider.getState()
 				const stateWithPrompts = { ...currentState, customModePrompts: updatedPrompts }
-				provider.view?.webview.postMessage({ type: "state", state: stateWithPrompts })
+				provider.postMessageToWebview({ type: "state", state: stateWithPrompts })
 			}
 			break
 		case "deleteMessage": {
