@@ -26,19 +26,122 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 	}
 
 	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
-		const modelId = this.getModel().id
+		try {
+			const modelId = this.getModel().id
 
-		if (modelId.startsWith("o1")) {
-			yield* this.handleO1FamilyMessage(modelId, systemPrompt, messages)
-			return
+			if (modelId.startsWith("o1")) {
+				yield* this.handleO1FamilyMessage(modelId, systemPrompt, messages)
+				return
+			}
+
+			if (modelId.startsWith("o3-mini")) {
+				yield* this.handleO3FamilyMessage(modelId, systemPrompt, messages)
+				return
+			}
+
+			yield* this.handleDefaultModelMessage(modelId, systemPrompt, messages)
+		} catch (error) {
+			// Format errors in a consistent way
+			console.error("OpenAI Native API error:", error)
+
+			// Handle rate limit errors specifically
+			const errorObj = error as any
+			if (
+				errorObj.status === 429 ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("rate limit")) ||
+				errorObj.error?.code === "rate_limit_exceeded"
+			) {
+				throw new Error(
+					JSON.stringify({
+						status: 429,
+						message: "Rate limit exceeded",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Too many requests, please try again later",
+							},
+						},
+						errorDetails: [
+							{
+								"@type": "type.googleapis.com/google.rpc.RetryInfo",
+								retryDelay: "30s", // Default retry delay if not provided
+							},
+						],
+					}),
+				)
+			}
+
+			// Handle authentication errors
+			if (errorObj.status === 401 || (errorObj.message && errorObj.message.toLowerCase().includes("api key"))) {
+				throw new Error(
+					JSON.stringify({
+						status: 401,
+						message: "Authentication error",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Invalid API key or unauthorized access",
+							},
+						},
+					}),
+				)
+			}
+
+			// Handle bad request errors
+			if (errorObj.status === 400 || (errorObj.error && errorObj.error.type === "invalid_request_error")) {
+				throw new Error(
+					JSON.stringify({
+						status: 400,
+						message: "Bad request",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Invalid request parameters",
+								param: errorObj.error?.param,
+							},
+						},
+					}),
+				)
+			}
+
+			// Handle other errors
+			if (error instanceof Error) {
+				throw new Error(
+					JSON.stringify({
+						status: errorObj.status || 500,
+						message: error.message,
+						error: {
+							metadata: {
+								raw: error.message,
+							},
+						},
+					}),
+				)
+			} else if (typeof error === "object" && error !== null) {
+				const errorDetails = JSON.stringify(error, null, 2)
+				throw new Error(
+					JSON.stringify({
+						status: errorObj.status || 500,
+						message: errorObj.message || errorDetails,
+						error: {
+							metadata: {
+								raw: errorDetails,
+							},
+						},
+					}),
+				)
+			} else {
+				// Handle primitive errors or other unexpected types
+				throw new Error(
+					JSON.stringify({
+						status: 500,
+						message: String(error),
+						error: {
+							metadata: {
+								raw: String(error),
+							},
+						},
+					}),
+				)
+			}
 		}
-
-		if (modelId.startsWith("o3-mini")) {
-			yield* this.handleO3FamilyMessage(modelId, systemPrompt, messages)
-			return
-		}
-
-		yield* this.handleDefaultModelMessage(modelId, systemPrompt, messages)
 	}
 
 	private async *handleO1FamilyMessage(

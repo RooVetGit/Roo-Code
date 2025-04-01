@@ -471,6 +471,32 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 				throw new Error("Roo Code <Language Model API>: Request cancelled by user")
 			}
 
+			// Handle rate limit errors specifically
+			const errorObj = error as any
+			if (
+				errorObj.status === 429 ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("rate limit")) ||
+				errorObj.error?.code === "rate_limit_exceeded"
+			) {
+				throw new Error(
+					JSON.stringify({
+						status: 429,
+						message: "Rate limit exceeded",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Too many requests, please try again later",
+							},
+						},
+						errorDetails: [
+							{
+								"@type": "type.googleapis.com/google.rpc.RetryInfo",
+								retryDelay: "30s", // Default retry delay if not provided
+							},
+						],
+					}),
+				)
+			}
+
 			if (error instanceof Error) {
 				console.error("Roo Code <Language Model API>: Stream error details:", {
 					message: error.message,
@@ -478,18 +504,46 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 					name: error.name,
 				})
 
-				// Return original error if it's already an Error instance
-				throw error
+				// Throw error in a format that Cline.ts can process
+				throw new Error(
+					JSON.stringify({
+						status: 500,
+						message: error.message,
+						error: {
+							metadata: {
+								raw: error.message,
+							},
+						},
+					}),
+				)
 			} else if (typeof error === "object" && error !== null) {
-				// Handle error-like objects
 				const errorDetails = JSON.stringify(error, null, 2)
 				console.error("Roo Code <Language Model API>: Stream error object:", errorDetails)
-				throw new Error(`Roo Code <Language Model API>: Response stream error: ${errorDetails}`)
+				throw new Error(
+					JSON.stringify({
+						status: 500,
+						message: errorDetails,
+						error: {
+							metadata: {
+								raw: errorDetails,
+							},
+						},
+					}),
+				)
 			} else {
-				// Fallback for unknown error types
 				const errorMessage = String(error)
 				console.error("Roo Code <Language Model API>: Unknown stream error:", errorMessage)
-				throw new Error(`Roo Code <Language Model API>: Response stream error: ${errorMessage}`)
+				throw new Error(
+					JSON.stringify({
+						status: 500,
+						message: errorMessage,
+						error: {
+							metadata: {
+								raw: errorMessage,
+							},
+						},
+					}),
+				)
 			}
 		}
 	}

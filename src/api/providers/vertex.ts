@@ -376,17 +376,129 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 	}
 
 	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
-		switch (this.modelType) {
-			case this.MODEL_CLAUDE: {
-				yield* this.createClaudeMessage(systemPrompt, messages)
-				break
+		try {
+			switch (this.modelType) {
+				case this.MODEL_CLAUDE: {
+					yield* this.createClaudeMessage(systemPrompt, messages)
+					break
+				}
+				case this.MODEL_GEMINI: {
+					yield* this.createGeminiMessage(systemPrompt, messages)
+					break
+				}
+				default: {
+					throw new Error(`Invalid model type: ${this.modelType}`)
+				}
 			}
-			case this.MODEL_GEMINI: {
-				yield* this.createGeminiMessage(systemPrompt, messages)
-				break
+		} catch (error) {
+			// Format errors in a consistent way
+			console.error("Vertex API error:", error)
+
+			// Handle rate limit errors specifically
+			const errorObj = error as any
+			if (
+				errorObj.status === 429 ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("rate limit")) ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("quota")) ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("resource exhausted"))
+			) {
+				throw new Error(
+					JSON.stringify({
+						status: 429,
+						message: "Rate limit exceeded",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Too many requests, please try again later",
+							},
+						},
+						errorDetails: [
+							{
+								"@type": "type.googleapis.com/google.rpc.RetryInfo",
+								retryDelay: "30s", // Default retry delay if not provided
+							},
+						],
+					}),
+				)
 			}
-			default: {
-				throw new Error(`Invalid model type: ${this.modelType}`)
+
+			// Handle authentication errors
+			if (
+				errorObj.status === 401 ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("api key")) ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("auth")) ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("permission"))
+			) {
+				throw new Error(
+					JSON.stringify({
+						status: 401,
+						message: "Authentication error",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Invalid API key or unauthorized access",
+							},
+						},
+					}),
+				)
+			}
+
+			// Handle bad request errors
+			if (
+				errorObj.status === 400 ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("invalid")) ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("bad request"))
+			) {
+				throw new Error(
+					JSON.stringify({
+						status: 400,
+						message: "Bad request",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Invalid request parameters",
+							},
+						},
+					}),
+				)
+			}
+
+			// Handle other errors
+			if (error instanceof Error) {
+				throw new Error(
+					JSON.stringify({
+						status: errorObj.status || 500,
+						message: error.message,
+						error: {
+							metadata: {
+								raw: error.message,
+							},
+						},
+					}),
+				)
+			} else if (typeof error === "object" && error !== null) {
+				const errorDetails = JSON.stringify(error, null, 2)
+				throw new Error(
+					JSON.stringify({
+						status: errorObj.status || 500,
+						message: errorObj.message || errorDetails,
+						error: {
+							metadata: {
+								raw: errorDetails,
+							},
+						},
+					}),
+				)
+			} else {
+				// Handle primitive errors or other unexpected types
+				throw new Error(
+					JSON.stringify({
+						status: 500,
+						message: String(error),
+						error: {
+							metadata: {
+								raw: String(error),
+							},
+						},
+					}),
+				)
 			}
 		}
 	}

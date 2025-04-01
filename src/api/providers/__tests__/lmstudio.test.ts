@@ -164,4 +164,80 @@ describe("LmStudioHandler", () => {
 			expect(modelInfo.info.contextWindow).toBe(128_000)
 		})
 	})
+
+	describe("error handling", () => {
+		it("should handle connection errors", async () => {
+			mockCreate.mockRejectedValueOnce({
+				code: "ECONNREFUSED",
+				message: "connect ECONNREFUSED 127.0.0.1:1234",
+			})
+
+			const stream = handler.createMessage("system prompt", [])
+			await expect(async () => {
+				for await (const _ of stream) {
+					/* consume stream */
+				}
+			}).rejects.toMatchObject({
+				message: expect.stringContaining("503"),
+			})
+		})
+
+		it("should handle rate limit errors", async () => {
+			mockCreate.mockRejectedValueOnce({
+				status: 429,
+				message: "Too many requests",
+			})
+
+			const stream = handler.createMessage("system prompt", [])
+			await expect(async () => {
+				for await (const _ of stream) {
+					/* consume stream */
+				}
+			}).rejects.toMatchObject({
+				message: expect.stringContaining("429"),
+			})
+		})
+
+		it("should handle model loading errors", async () => {
+			mockCreate.mockRejectedValueOnce({
+				message: "Model not loaded or insufficient context length",
+			})
+
+			const stream = handler.createMessage("system prompt", [])
+			await expect(async () => {
+				for await (const _ of stream) {
+					/* consume stream */
+				}
+			}).rejects.toMatchObject({
+				message: expect.stringContaining("503"),
+			})
+		})
+
+		it("should handle bad request errors", async () => {
+			mockCreate.mockRejectedValueOnce({
+				status: 400,
+				message: "Invalid request parameters",
+			})
+
+			const stream = handler.createMessage("system prompt", [])
+			await expect(async () => {
+				for await (const _ of stream) {
+					/* consume stream */
+				}
+			}).rejects.toMatchObject({
+				message: expect.stringContaining("400"),
+			})
+		})
+
+		it("should handle unknown errors", async () => {
+			mockCreate.mockRejectedValueOnce("Unknown error")
+
+			const stream = handler.createMessage("system prompt", [])
+			await expect(async () => {
+				for await (const _ of stream) {
+					/* consume stream */
+				}
+			}).rejects.toThrow("Please check the LM Studio developer logs to debug what went wrong")
+		})
+	})
 })

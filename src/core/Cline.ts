@@ -1071,6 +1071,12 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 	}
 
+	/**
+	 * Attempts to make an API request, handling rate limiting and retries.
+	 * @param previousApiReqIndex The index of the previous API request in the clineMessages array
+	 * @param retryAttempt The current retry attempt number, used for exponential backoff
+	 * @returns An AsyncGenerator that yields chunks of the API response
+	 */
 	async *attemptApiRequest(previousApiReqIndex: number, retryAttempt: number = 0): ApiStream {
 		let mcpHub: McpHub | undefined
 
@@ -1207,88 +1213,135 @@ export class Cline extends EventEmitter<ClineEvents> {
 			return { role, content }
 		})
 
-		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory)
-		const iterator = stream[Symbol.asyncIterator]()
-
 		try {
-			// Awaiting first chunk to see if it will throw an error.
-			this.isWaitingForFirstChunk = true
-			const firstChunk = await iterator.next()
-			yield firstChunk.value
-			this.isWaitingForFirstChunk = false
-		} catch (error) {
-			// note that this api_req_failed ask is unique in that we only present this option if the api hasn't streamed any content yet (ie it fails on the first chunk due), as it would allow them to hit a retry button. However if the api failed mid-stream, it could be in any arbitrary state where some tools may have executed, so that error is handled differently and requires cancelling the task entirely.
-			if (alwaysApproveResubmit) {
-				let errorMsg
+			// Initialize the message stream with our system prompt and conversation history
+			// This is where the initial API call is made
+			const stream = this.api.createMessage(systemPrompt, cleanConversationHistory)
+			const iterator = stream[Symbol.asyncIterator]()
 
-				if (error.error?.metadata?.raw) {
-					errorMsg = JSON.stringify(error.error.metadata.raw, null, 2)
-				} else if (error.message) {
-					errorMsg = error.message
-				} else {
-					errorMsg = "Unknown error"
-				}
+			try {
+				// First chunk handling is critical as it validates the API connection
+				// and catches immediate errors like rate limits or authentication issues
+				this.isWaitingForFirstChunk = true
+				const firstChunk = await iterator.next()
+				yield firstChunk.value
+				this.isWaitingForFirstChunk = false
 
-				const baseDelay = requestDelaySeconds || 5
-				let exponentialDelay = Math.ceil(baseDelay * Math.pow(2, retryAttempt))
+				// Once we've successfully received the first chunk, we need to continue
+				// processing the rest of the stream. Each chunk could potentially fail
+				// due to rate limits or other API issues
+				while (true) {
+					try {
+						const chunk = await iterator.next()
+						// Exit condition: stream is complete
+						if (chunk.done) break
+						yield chunk.value
+					} catch (error) {
+						// Handle streaming errors, particularly rate limits
+						// Rate limits can occur at any point during streaming, not just at the start
+						if (
+							error.status === 429 ||
+							(error.message && error.message.toLowerCase().includes("rate limit"))
+						) {
+							if (alwaysApproveResubmit) {
+								// Automatic retry workflow:
+								// 1. Show rate limit message to user
+								// 2. Attempt retry with incremented retry count
+								// 3. Return from generator to start fresh stream
+								const errorMsg = error.message ?? JSON.stringify(serializeError(error), null, 2)
+								await this.say(
+									"api_req_retry_delayed",
+									`Rate limit exceeded: ${errorMsg}`,
+									undefined,
+									true,
+								)
 
-				// If the error is a 429, and the error details contain a retry delay, use that delay instead of exponential backoff
-				if (error.status === 429) {
-					const geminiRetryDetails = error.errorDetails?.find(
-						(detail: any) => detail["@type"] === "type.googleapis.com/google.rpc.RetryInfo",
-					)
-					if (geminiRetryDetails) {
-						const match = geminiRetryDetails?.retryDelay?.match(/^(\d+)s$/)
-						if (match) {
-							exponentialDelay = Number(match[1]) + 1
+								// Show countdown for retry delay
+								const retryDelay = requestDelaySeconds || 5
+								for (let i = retryDelay; i > 0; i--) {
+									const delayMessage = `Retrying in ${i} seconds...`
+									await this.say(
+										"api_req_retry_delayed",
+										`${errorMsg}\n\nRetry attempt ${retryAttempt + 1}\n${delayMessage}`,
+										undefined,
+										true,
+									)
+									await delay(1000)
+								}
+								await this.say("api_req_retry_delayed", "Retrying now", undefined, false)
+
+								yield* this.attemptApiRequest(previousApiReqIndex, retryAttempt + 1)
+								return
+							} else {
+								// Manual retry workflow:
+								// 1. Show error to user with retry button
+								// 2. If user clicks retry, start fresh stream
+								// 3. If user doesn't retry, propagate error
+								const { response } = await this.ask(
+									"api_req_failed",
+									error.message ?? JSON.stringify(serializeError(error), null, 2),
+								)
+								if (response === "yesButtonClicked") {
+									await this.say("api_req_retried")
+									yield* this.attemptApiRequest(previousApiReqIndex)
+									return
+								}
+								throw error // User chose not to retry, propagate error
+							}
 						}
+						// For non-rate-limit errors, propagate them up
+						throw error
 					}
 				}
+			} catch (error) {
+				// This catch block handles errors from the first chunk
+				// It's separate because first chunk errors often indicate
+				// immediate issues that need to be handled differently
+				if (error.status === 429 || (error.message && error.message.toLowerCase().includes("rate limit"))) {
+					if (alwaysApproveResubmit) {
+						const errorMsg = error.message ?? JSON.stringify(serializeError(error), null, 2)
+						await this.say("api_req_retry_delayed", `Rate limit exceeded: ${errorMsg}`, undefined, true)
 
-				// Wait for the greater of the exponential delay or the rate limit delay
-				const finalDelay = Math.max(exponentialDelay, rateLimitDelay)
+						// Show countdown for retry delay
+						const retryDelay = requestDelaySeconds || 5
+						for (let i = retryDelay; i > 0; i--) {
+							const delayMessage = `Retrying in ${i} seconds...`
+							await this.say(
+								"api_req_retry_delayed",
+								`${errorMsg}\n\nRetry attempt ${retryAttempt + 1}\n${delayMessage}`,
+								undefined,
+								true,
+							)
+							await delay(1000)
+						}
+						await this.say("api_req_retry_delayed", "Retrying now", undefined, false)
 
-				// Show countdown timer with exponential backoff
-				for (let i = finalDelay; i > 0; i--) {
-					await this.say(
-						"api_req_retry_delayed",
-						`${errorMsg}\n\nRetry attempt ${retryAttempt + 1}\nRetrying in ${i} seconds...`,
-						undefined,
-						true,
-					)
-					await delay(1000)
+						yield* this.attemptApiRequest(previousApiReqIndex, retryAttempt + 1)
+						return
+					} else {
+						const { response } = await this.ask(
+							"api_req_failed",
+							error.message ?? JSON.stringify(serializeError(error), null, 2),
+						)
+						if (response === "yesButtonClicked") {
+							await this.say("api_req_retried")
+							yield* this.attemptApiRequest(previousApiReqIndex)
+							return
+						}
+						throw error // User chose not to retry, propagate error
+					}
 				}
-
-				await this.say(
-					"api_req_retry_delayed",
-					`${errorMsg}\n\nRetry attempt ${retryAttempt + 1}\nRetrying now...`,
-					undefined,
-					false,
-				)
-
-				// delegate generator output from the recursive call with incremented retry count
-				yield* this.attemptApiRequest(previousApiReqIndex, retryAttempt + 1)
-				return
-			} else {
-				const { response } = await this.ask(
-					"api_req_failed",
-					error.message ?? JSON.stringify(serializeError(error), null, 2),
-				)
-				if (response !== "yesButtonClicked") {
-					// this will never happen since if noButtonClicked, we will clear current task, aborting this instance
-					throw new Error("API request failed")
-				}
-				await this.say("api_req_retried")
-				// delegate generator output from the recursive call
-				yield* this.attemptApiRequest(previousApiReqIndex)
-				return
+				throw error // Propagate non-rate-limit errors
 			}
+		} catch (error) {
+			// Outermost error handling for catastrophic failures
+			// This includes API initialization errors or other fatal issues
+			console.error("Fatal error in attemptApiRequest:", error)
+			throw error
 		}
 
-		// no error, so we can continue to yield all remaining chunks
-		// (needs to be placed outside of try/catch since it we want caller to handle errors not with api_req_failed as that is reserved for first chunk failures only)
-		// this delegates to another generator or iterable object. In this case, it's saying "yield all remaining values from this iterator". This effectively passes along all subsequent chunks from the original stream.
-		yield* iterator
+		// Update last API request time after successful completion
+		this.lastApiRequestTime = Date.now()
 	}
 
 	async presentAssistantMessage() {

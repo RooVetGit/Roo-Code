@@ -172,6 +172,143 @@ describe("GlamaHandler", () => {
 		})
 	})
 
+	describe("createMessage error handling", () => {
+		const systemPrompt = "You are a helpful assistant"
+		const messages: Anthropic.Messages.MessageParam[] = [{ role: "user" as const, content: "Hello" }]
+
+		beforeEach(() => {
+			mockCreate.mockClear()
+			jest.spyOn(console, "error").mockImplementation(() => {})
+		})
+
+		it("should handle rate limit errors", async () => {
+			mockCreate.mockRejectedValueOnce({
+				status: 429,
+				message: "Too many requests",
+			})
+
+			const generator = handler.createMessage(systemPrompt, messages)
+			await expect(generator.next()).rejects.toMatchObject({
+				message: expect.stringContaining("429"),
+			})
+
+			const error = await generator.next().catch((e) => JSON.parse(e.message))
+			expect(error.status).toBe(429)
+			expect(error.errorDetails[0]["@type"]).toBe("type.googleapis.com/google.rpc.RetryInfo")
+		})
+
+		it("should handle authentication errors", async () => {
+			mockCreate.mockRejectedValueOnce({
+				status: 401,
+				message: "Invalid API key provided",
+			})
+
+			const generator = handler.createMessage(systemPrompt, messages)
+			await expect(generator.next()).rejects.toMatchObject({
+				message: expect.stringContaining("401"),
+			})
+
+			const error = await generator.next().catch((e) => JSON.parse(e.message))
+			expect(error.status).toBe(401)
+			expect(error.error.metadata.raw).toBe("Invalid API key provided")
+		})
+
+		it("should handle bad request errors", async () => {
+			mockCreate.mockRejectedValueOnce({
+				status: 400,
+				error: {
+					type: "invalid_request_error",
+					param: "messages",
+				},
+				message: "Invalid messages format",
+			})
+
+			const generator = handler.createMessage(systemPrompt, messages)
+			await expect(generator.next()).rejects.toMatchObject({
+				message: expect.stringContaining("400"),
+			})
+
+			const error = await generator.next().catch((e) => JSON.parse(e.message))
+			expect(error.status).toBe(400)
+			expect(error.error.metadata.param).toBe("messages")
+		})
+
+		it("should handle model availability errors", async () => {
+			mockCreate.mockRejectedValueOnce({
+				status: 503,
+				message: "Model claude-3 is not available",
+			})
+
+			const generator = handler.createMessage(systemPrompt, messages)
+			await expect(generator.next()).rejects.toMatchObject({
+				message: expect.stringContaining("503"),
+			})
+
+			const error = await generator.next().catch((e) => JSON.parse(e.message))
+			expect(error.status).toBe(503)
+			expect(error.message).toBe("Model error")
+		})
+
+		it("should handle cache-related errors", async () => {
+			mockCreate.mockRejectedValueOnce({
+				status: 500,
+				message: "Cache system error occurred",
+			})
+
+			const generator = handler.createMessage(systemPrompt, messages)
+			await expect(generator.next()).rejects.toMatchObject({
+				message: expect.stringContaining("500"),
+			})
+
+			const error = await generator.next().catch((e) => JSON.parse(e.message))
+			expect(error.status).toBe(500)
+			expect(error.message).toBe("Cache error")
+		})
+
+		it("should handle unknown errors", async () => {
+			mockCreate.mockRejectedValueOnce({
+				status: 500,
+				message: "Unknown internal error",
+			})
+
+			const generator = handler.createMessage(systemPrompt, messages)
+			await expect(generator.next()).rejects.toMatchObject({
+				message: expect.stringContaining("500"),
+			})
+
+			const error = await generator.next().catch((e) => JSON.parse(e.message))
+			expect(error.status).toBe(500)
+			expect(error.error.metadata.raw).toBe("Unknown internal error")
+		})
+
+		it("should handle completion details fetch errors", async () => {
+			// Mock successful stream but failed completion details
+			mockCreate.mockResolvedValueOnce({
+				data: {
+					choices: [{ delta: { content: "Hello" } }],
+				},
+				response: {
+					headers: new Map([["x-completion-request-id", "test-id"]]),
+				},
+			})
+
+			// Mock axios.get to throw an error
+			jest.spyOn(axios, "get").mockRejectedValueOnce(new Error("Failed to fetch completion details"))
+
+			const generator = handler.createMessage(systemPrompt, messages)
+			const results = []
+
+			for await (const chunk of generator) {
+				results.push(chunk)
+			}
+
+			// Should still get the text chunk but no usage info
+			expect(results).toHaveLength(1)
+			expect(results[0]).toEqual({ type: "text", text: "Hello" })
+			expect(console.error).toHaveBeenCalledWith("Error fetching Glama completion details", expect.any(Error))
+		})
+	})
+
 	describe("completePrompt", () => {
 		it("should complete prompt successfully", async () => {
 			const result = await handler.completePrompt("Test prompt")

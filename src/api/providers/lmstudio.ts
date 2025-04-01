@@ -57,7 +57,101 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 				}
 			}
 		} catch (error) {
-			// LM Studio doesn't return an error code/body for now
+			// Format errors in a consistent way
+			console.error("LM Studio API error:", error)
+
+			const errorObj = error as any
+
+			// Handle connection errors (common with LM Studio)
+			if (
+				errorObj.code === "ECONNREFUSED" ||
+				errorObj.code === "ECONNRESET" ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("connection"))
+			) {
+				throw new Error(
+					JSON.stringify({
+						status: 503,
+						message: "LM Studio connection error",
+						error: {
+							metadata: {
+								raw: "Failed to connect to LM Studio. Please ensure LM Studio is running and accessible.",
+							},
+						},
+					}),
+				)
+			}
+
+			// Handle rate limit errors
+			if (
+				errorObj.status === 429 ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("rate limit")) ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("too many requests"))
+			) {
+				throw new Error(
+					JSON.stringify({
+						status: 429,
+						message: "Rate limit exceeded",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Too many requests, please try again later",
+							},
+						},
+						errorDetails: [
+							{
+								"@type": "type.googleapis.com/google.rpc.RetryInfo",
+								retryDelay: "30s",
+							},
+						],
+					}),
+				)
+			}
+
+			// Handle authentication errors
+			if (errorObj.status === 401 || (errorObj.message && errorObj.message.toLowerCase().includes("auth"))) {
+				throw new Error(
+					JSON.stringify({
+						status: 401,
+						message: "Authentication error",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Invalid authentication credentials",
+							},
+						},
+					}),
+				)
+			}
+
+			// Handle bad request errors
+			if (errorObj.status === 400 || (errorObj.message && errorObj.message.toLowerCase().includes("invalid"))) {
+				throw new Error(
+					JSON.stringify({
+						status: 400,
+						message: "Bad request",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Invalid request parameters",
+							},
+						},
+					}),
+				)
+			}
+
+			// Handle model loading/availability errors (specific to LM Studio)
+			if (errorObj.message && errorObj.message.toLowerCase().includes("model")) {
+				throw new Error(
+					JSON.stringify({
+						status: 503,
+						message: "Model error",
+						error: {
+							metadata: {
+								raw: "Please check that a model is loaded in LM Studio and has sufficient context length for Roo Code's prompts.",
+							},
+						},
+					}),
+				)
+			}
+
+			// Handle other errors - use the same error message as completePrompt for consistency
 			throw new Error(
 				"Please check the LM Studio developer logs to debug what went wrong. You may need to load the model with a larger context length to work with Roo Code's prompts.",
 			)

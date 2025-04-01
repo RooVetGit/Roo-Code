@@ -60,138 +60,242 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	}
 
 	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
-		const modelInfo = this.getModel().info
-		const modelUrl = this.options.openAiBaseUrl ?? ""
-		const modelId = this.options.openAiModelId ?? ""
-		const enabledR1Format = this.options.openAiR1FormatEnabled ?? false
-		const deepseekReasoner = modelId.includes("deepseek-reasoner") || enabledR1Format
-		const ark = modelUrl.includes(".volces.com")
-		if (modelId.startsWith("o3-mini")) {
-			yield* this.handleO3FamilyMessage(modelId, systemPrompt, messages)
-			return
-		}
-
-		if (this.options.openAiStreamingEnabled ?? true) {
-			let systemMessage: OpenAI.Chat.ChatCompletionSystemMessageParam = {
-				role: "system",
-				content: systemPrompt,
+		try {
+			const modelInfo = this.getModel().info
+			const modelUrl = this.options.openAiBaseUrl ?? ""
+			const modelId = this.options.openAiModelId ?? ""
+			const enabledR1Format = this.options.openAiR1FormatEnabled ?? false
+			const deepseekReasoner = modelId.includes("deepseek-reasoner") || enabledR1Format
+			const ark = modelUrl.includes(".volces.com")
+			if (modelId.startsWith("o3-mini")) {
+				yield* this.handleO3FamilyMessage(modelId, systemPrompt, messages)
+				return
 			}
 
-			let convertedMessages
-			if (deepseekReasoner) {
-				convertedMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
-			} else if (ark) {
-				convertedMessages = [systemMessage, ...convertToSimpleMessages(messages)]
-			} else {
-				if (modelInfo.supportsPromptCache) {
-					systemMessage = {
-						role: "system",
-						content: [
-							{
-								type: "text",
-								text: systemPrompt,
+			if (this.options.openAiStreamingEnabled ?? true) {
+				let systemMessage: OpenAI.Chat.ChatCompletionSystemMessageParam = {
+					role: "system",
+					content: systemPrompt,
+				}
+
+				let convertedMessages
+				if (deepseekReasoner) {
+					convertedMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
+				} else if (ark) {
+					convertedMessages = [systemMessage, ...convertToSimpleMessages(messages)]
+				} else {
+					if (modelInfo.supportsPromptCache) {
+						systemMessage = {
+							role: "system",
+							content: [
+								{
+									type: "text",
+									text: systemPrompt,
+									// @ts-ignore-next-line
+									cache_control: { type: "ephemeral" },
+								},
+							],
+						}
+					}
+					convertedMessages = [systemMessage, ...convertToOpenAiMessages(messages)]
+					if (modelInfo.supportsPromptCache) {
+						// Note: the following logic is copied from openrouter:
+						// Add cache_control to the last two user messages
+						// (note: this works because we only ever add one user message at a time, but if we added multiple we'd need to mark the user message before the last assistant message)
+						const lastTwoUserMessages = convertedMessages.filter((msg) => msg.role === "user").slice(-2)
+						lastTwoUserMessages.forEach((msg) => {
+							if (typeof msg.content === "string") {
+								msg.content = [{ type: "text", text: msg.content }]
+							}
+							if (Array.isArray(msg.content)) {
+								// NOTE: this is fine since env details will always be added at the end. but if it weren't there, and the user added a image_url type message, it would pop a text part before it and then move it after to the end.
+								let lastTextPart = msg.content.filter((part) => part.type === "text").pop()
+
+								if (!lastTextPart) {
+									lastTextPart = { type: "text", text: "..." }
+									msg.content.push(lastTextPart)
+								}
 								// @ts-ignore-next-line
-								cache_control: { type: "ephemeral" },
+								lastTextPart["cache_control"] = { type: "ephemeral" }
+							}
+						})
+					}
+				}
+
+				const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
+					model: modelId,
+					temperature:
+						this.options.modelTemperature ?? (deepseekReasoner ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0),
+					messages: convertedMessages,
+					stream: true as const,
+					stream_options: { include_usage: true },
+				}
+				if (this.options.includeMaxTokens) {
+					requestOptions.max_tokens = modelInfo.maxTokens
+				}
+
+				const stream = await this.client.chat.completions.create(requestOptions)
+
+				const matcher = new XmlMatcher(
+					"think",
+					(chunk) =>
+						({
+							type: chunk.matched ? "reasoning" : "text",
+							text: chunk.data,
+						}) as const,
+				)
+
+				let lastUsage
+
+				for await (const chunk of stream) {
+					const delta = chunk.choices[0]?.delta ?? {}
+
+					if (delta.content) {
+						for (const chunk of matcher.update(delta.content)) {
+							yield chunk
+						}
+					}
+
+					if ("reasoning_content" in delta && delta.reasoning_content) {
+						yield {
+							type: "reasoning",
+							text: (delta.reasoning_content as string | undefined) || "",
+						}
+					}
+					if (chunk.usage) {
+						lastUsage = chunk.usage
+					}
+				}
+				for (const chunk of matcher.final()) {
+					yield chunk
+				}
+
+				if (lastUsage) {
+					yield this.processUsageMetrics(lastUsage, modelInfo)
+				}
+			} else {
+				// o1 for instance doesnt support streaming, non-1 temp, or system prompt
+				const systemMessage: OpenAI.Chat.ChatCompletionUserMessageParam = {
+					role: "user",
+					content: systemPrompt,
+				}
+
+				const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
+					model: modelId,
+					messages: deepseekReasoner
+						? convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
+						: [systemMessage, ...convertToOpenAiMessages(messages)],
+				}
+
+				const response = await this.client.chat.completions.create(requestOptions)
+
+				yield {
+					type: "text",
+					text: response.choices[0]?.message.content || "",
+				}
+				yield this.processUsageMetrics(response.usage, modelInfo)
+			}
+		} catch (error) {
+			// Format errors in a consistent way
+			console.error("OpenAI API error:", error)
+
+			// Handle rate limit errors specifically
+			const errorObj = error as any
+			if (
+				errorObj.status === 429 ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("rate limit")) ||
+				errorObj.error?.code === "rate_limit_exceeded"
+			) {
+				throw new Error(
+					JSON.stringify({
+						status: 429,
+						message: "Rate limit exceeded",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Too many requests, please try again later",
+							},
+						},
+						errorDetails: [
+							{
+								"@type": "type.googleapis.com/google.rpc.RetryInfo",
+								retryDelay: "30s", // Default retry delay if not provided
 							},
 						],
-					}
-				}
-				convertedMessages = [systemMessage, ...convertToOpenAiMessages(messages)]
-				if (modelInfo.supportsPromptCache) {
-					// Note: the following logic is copied from openrouter:
-					// Add cache_control to the last two user messages
-					// (note: this works because we only ever add one user message at a time, but if we added multiple we'd need to mark the user message before the last assistant message)
-					const lastTwoUserMessages = convertedMessages.filter((msg) => msg.role === "user").slice(-2)
-					lastTwoUserMessages.forEach((msg) => {
-						if (typeof msg.content === "string") {
-							msg.content = [{ type: "text", text: msg.content }]
-						}
-						if (Array.isArray(msg.content)) {
-							// NOTE: this is fine since env details will always be added at the end. but if it weren't there, and the user added a image_url type message, it would pop a text part before it and then move it after to the end.
-							let lastTextPart = msg.content.filter((part) => part.type === "text").pop()
-
-							if (!lastTextPart) {
-								lastTextPart = { type: "text", text: "..." }
-								msg.content.push(lastTextPart)
-							}
-							// @ts-ignore-next-line
-							lastTextPart["cache_control"] = { type: "ephemeral" }
-						}
-					})
-				}
+					}),
+				)
 			}
 
-			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
-				model: modelId,
-				temperature: this.options.modelTemperature ?? (deepseekReasoner ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0),
-				messages: convertedMessages,
-				stream: true as const,
-				stream_options: { include_usage: true },
-			}
-			if (this.options.includeMaxTokens) {
-				requestOptions.max_tokens = modelInfo.maxTokens
-			}
-
-			const stream = await this.client.chat.completions.create(requestOptions)
-
-			const matcher = new XmlMatcher(
-				"think",
-				(chunk) =>
-					({
-						type: chunk.matched ? "reasoning" : "text",
-						text: chunk.data,
-					}) as const,
-			)
-
-			let lastUsage
-
-			for await (const chunk of stream) {
-				const delta = chunk.choices[0]?.delta ?? {}
-
-				if (delta.content) {
-					for (const chunk of matcher.update(delta.content)) {
-						yield chunk
-					}
-				}
-
-				if ("reasoning_content" in delta && delta.reasoning_content) {
-					yield {
-						type: "reasoning",
-						text: (delta.reasoning_content as string | undefined) || "",
-					}
-				}
-				if (chunk.usage) {
-					lastUsage = chunk.usage
-				}
-			}
-			for (const chunk of matcher.final()) {
-				yield chunk
+			// Handle authentication errors
+			if (errorObj.status === 401 || (errorObj.message && errorObj.message.toLowerCase().includes("api key"))) {
+				throw new Error(
+					JSON.stringify({
+						status: 401,
+						message: "Authentication error",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Invalid API key or unauthorized access",
+							},
+						},
+					}),
+				)
 			}
 
-			if (lastUsage) {
-				yield this.processUsageMetrics(lastUsage, modelInfo)
-			}
-		} else {
-			// o1 for instance doesnt support streaming, non-1 temp, or system prompt
-			const systemMessage: OpenAI.Chat.ChatCompletionUserMessageParam = {
-				role: "user",
-				content: systemPrompt,
+			// Handle bad request errors
+			if (errorObj.status === 400 || (errorObj.error && errorObj.error.type === "invalid_request_error")) {
+				throw new Error(
+					JSON.stringify({
+						status: 400,
+						message: "Bad request",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Invalid request parameters",
+								param: errorObj.error?.param,
+							},
+						},
+					}),
+				)
 			}
 
-			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
-				model: modelId,
-				messages: deepseekReasoner
-					? convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
-					: [systemMessage, ...convertToOpenAiMessages(messages)],
+			// Handle other errors
+			if (error instanceof Error) {
+				throw new Error(
+					JSON.stringify({
+						status: errorObj.status || 500,
+						message: error.message,
+						error: {
+							metadata: {
+								raw: error.message,
+							},
+						},
+					}),
+				)
+			} else if (typeof error === "object" && error !== null) {
+				const errorDetails = JSON.stringify(error, null, 2)
+				throw new Error(
+					JSON.stringify({
+						status: errorObj.status || 500,
+						message: errorObj.message || errorDetails,
+						error: {
+							metadata: {
+								raw: errorDetails,
+							},
+						},
+					}),
+				)
+			} else {
+				// Handle primitive errors or other unexpected types
+				throw new Error(
+					JSON.stringify({
+						status: 500,
+						message: String(error),
+						error: {
+							metadata: {
+								raw: String(error),
+							},
+						},
+					}),
+				)
 			}
-
-			const response = await this.client.chat.completions.create(requestOptions)
-
-			yield {
-				type: "text",
-				text: response.choices[0]?.message.content || "",
-			}
-			yield this.processUsageMetrics(response.usage, modelInfo)
 		}
 	}
 

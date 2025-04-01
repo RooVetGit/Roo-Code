@@ -39,133 +39,248 @@ export class GlamaHandler extends BaseProvider implements SingleCompletionHandle
 	}
 
 	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
-		// Convert Anthropic messages to OpenAI format
-		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-			{ role: "system", content: systemPrompt },
-			...convertToOpenAiMessages(messages),
-		]
+		try {
+			// Convert Anthropic messages to OpenAI format
+			const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+				{ role: "system", content: systemPrompt },
+				...convertToOpenAiMessages(messages),
+			]
 
-		// this is specifically for claude models (some models may 'support prompt caching' automatically without this)
-		if (this.getModel().id.startsWith("anthropic/claude-3")) {
-			openAiMessages[0] = {
-				role: "system",
-				content: [
-					{
-						type: "text",
-						text: systemPrompt,
+			// Handle Claude-3 specific cache control
+			if (this.getModel().id.startsWith("anthropic/claude-3")) {
+				openAiMessages[0] = {
+					role: "system",
+					content: [
+						{
+							type: "text",
+							text: systemPrompt,
+							// @ts-ignore-next-line
+							cache_control: { type: "ephemeral" },
+						},
+					],
+				}
+
+				const lastTwoUserMessages = openAiMessages.filter((msg) => msg.role === "user").slice(-2)
+				lastTwoUserMessages.forEach((msg) => {
+					if (typeof msg.content === "string") {
+						msg.content = [{ type: "text", text: msg.content }]
+					}
+					if (Array.isArray(msg.content)) {
+						let lastTextPart = msg.content.filter((part) => part.type === "text").pop()
+
+						if (!lastTextPart) {
+							lastTextPart = { type: "text", text: "..." }
+							msg.content.push(lastTextPart)
+						}
 						// @ts-ignore-next-line
-						cache_control: { type: "ephemeral" },
-					},
-				],
+						lastTextPart["cache_control"] = { type: "ephemeral" }
+					}
+				})
 			}
 
-			// Add cache_control to the last two user messages
-			// (note: this works because we only ever add one user message at a time,
-			// but if we added multiple we'd need to mark the user message before the last assistant message)
-			const lastTwoUserMessages = openAiMessages.filter((msg) => msg.role === "user").slice(-2)
-			lastTwoUserMessages.forEach((msg) => {
-				if (typeof msg.content === "string") {
-					msg.content = [{ type: "text", text: msg.content }]
-				}
-				if (Array.isArray(msg.content)) {
-					// NOTE: this is fine since env details will always be added at the end.
-					// but if it weren't there, and the user added a image_url type message,
-					// it would pop a text part before it and then move it after to the end.
-					let lastTextPart = msg.content.filter((part) => part.type === "text").pop()
+			let maxTokens: number | undefined
+			if (this.getModel().id.startsWith("anthropic/")) {
+				maxTokens = this.getModel().info.maxTokens ?? undefined
+			}
 
-					if (!lastTextPart) {
-						lastTextPart = { type: "text", text: "..." }
-						msg.content.push(lastTextPart)
+			const requestOptions: OpenAI.Chat.ChatCompletionCreateParams = {
+				model: this.getModel().id,
+				max_tokens: maxTokens,
+				messages: openAiMessages,
+				stream: true,
+			}
+
+			if (this.supportsTemperature()) {
+				requestOptions.temperature = this.options.modelTemperature ?? GLAMA_DEFAULT_TEMPERATURE
+			}
+
+			const { data: completion, response } = await this.client.chat.completions
+				.create(requestOptions, {
+					headers: {
+						"X-Glama-Metadata": JSON.stringify({
+							labels: [
+								{
+									key: "app",
+									value: "vscode.rooveterinaryinc.roo-cline",
+								},
+							],
+						}),
+					},
+				})
+				.withResponse()
+
+			const completionRequestId = response.headers.get("x-completion-request-id")
+
+			for await (const chunk of completion) {
+				const delta = chunk.choices[0]?.delta
+
+				if (delta?.content) {
+					yield {
+						type: "text",
+						text: delta.content,
 					}
-					// @ts-ignore-next-line
-					lastTextPart["cache_control"] = { type: "ephemeral" }
 				}
-			})
-		}
+			}
 
-		// Required by Anthropic
-		// Other providers default to max tokens allowed.
-		let maxTokens: number | undefined
+			try {
+				let attempt = 0
+				const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-		if (this.getModel().id.startsWith("anthropic/")) {
-			maxTokens = this.getModel().info.maxTokens ?? undefined
-		}
+				while (attempt++ < 10) {
+					const response = await axios.get(
+						`https://glama.ai/api/gateway/v1/completion-requests/${completionRequestId}`,
+						{
+							headers: {
+								Authorization: `Bearer ${this.options.glamaApiKey}`,
+							},
+						},
+					)
 
-		const requestOptions: OpenAI.Chat.ChatCompletionCreateParams = {
-			model: this.getModel().id,
-			max_tokens: maxTokens,
-			messages: openAiMessages,
-			stream: true,
-		}
+					const completionRequest = response.data
 
-		if (this.supportsTemperature()) {
-			requestOptions.temperature = this.options.modelTemperature ?? GLAMA_DEFAULT_TEMPERATURE
-		}
+					if (completionRequest.tokenUsage && completionRequest.totalCostUsd) {
+						yield {
+							type: "usage",
+							cacheWriteTokens: completionRequest.tokenUsage.cacheCreationInputTokens,
+							cacheReadTokens: completionRequest.tokenUsage.cacheReadInputTokens,
+							inputTokens: completionRequest.tokenUsage.promptTokens,
+							outputTokens: completionRequest.tokenUsage.completionTokens,
+							totalCost: parseFloat(completionRequest.totalCostUsd),
+						}
+						break
+					}
 
-		const { data: completion, response } = await this.client.chat.completions
-			.create(requestOptions, {
-				headers: {
-					"X-Glama-Metadata": JSON.stringify({
-						labels: [
+					await delay(200)
+				}
+			} catch (error) {
+				console.error("Error fetching Glama completion details", error)
+			}
+		} catch (error) {
+			console.error("Glama API error:", error)
+			const errorObj = error as any
+
+			// Handle rate limit errors
+			if (
+				errorObj.status === 429 ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("rate limit")) ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("too many requests"))
+			) {
+				throw new Error(
+					JSON.stringify({
+						status: 429,
+						message: "Rate limit exceeded",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Too many requests, please try again later",
+							},
+						},
+						errorDetails: [
 							{
-								key: "app",
-								value: "vscode.rooveterinaryinc.roo-cline",
+								"@type": "type.googleapis.com/google.rpc.RetryInfo",
+								retryDelay: "30s",
 							},
 						],
 					}),
-				},
-			})
-			.withResponse()
-
-		const completionRequestId = response.headers.get("x-completion-request-id")
-
-		for await (const chunk of completion) {
-			const delta = chunk.choices[0]?.delta
-
-			if (delta?.content) {
-				yield {
-					type: "text",
-					text: delta.content,
-				}
-			}
-		}
-
-		try {
-			let attempt = 0
-
-			const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-			while (attempt++ < 10) {
-				// In case of an interrupted request, we need to wait for the upstream API to finish processing the request
-				// before we can fetch information about the token usage and cost.
-				const response = await axios.get(
-					`https://glama.ai/api/gateway/v1/completion-requests/${completionRequestId}`,
-					{
-						headers: {
-							Authorization: `Bearer ${this.options.glamaApiKey}`,
-						},
-					},
 				)
-
-				const completionRequest = response.data
-
-				if (completionRequest.tokenUsage && completionRequest.totalCostUsd) {
-					yield {
-						type: "usage",
-						cacheWriteTokens: completionRequest.tokenUsage.cacheCreationInputTokens,
-						cacheReadTokens: completionRequest.tokenUsage.cacheReadInputTokens,
-						inputTokens: completionRequest.tokenUsage.promptTokens,
-						outputTokens: completionRequest.tokenUsage.completionTokens,
-						totalCost: parseFloat(completionRequest.totalCostUsd),
-					}
-
-					break
-				}
-
-				await delay(200)
 			}
-		} catch (error) {
-			console.error("Error fetching Glama completion details", error)
+
+			// Handle authentication errors
+			if (
+				errorObj.status === 401 ||
+				(errorObj.message &&
+					(errorObj.message.toLowerCase().includes("api key") ||
+						errorObj.message.toLowerCase().includes("unauthorized") ||
+						errorObj.message.toLowerCase().includes("authentication")))
+			) {
+				throw new Error(
+					JSON.stringify({
+						status: 401,
+						message: "Authentication error",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Invalid API key or unauthorized access",
+							},
+						},
+					}),
+				)
+			}
+
+			// Handle bad request errors
+			if (errorObj.status === 400 || (errorObj.error && errorObj.error.type === "invalid_request_error")) {
+				throw new Error(
+					JSON.stringify({
+						status: 400,
+						message: "Bad request",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Invalid request parameters",
+								param: errorObj.error?.param,
+							},
+						},
+					}),
+				)
+			}
+
+			// Handle model-specific errors
+			if (
+				errorObj.message &&
+				(errorObj.message.toLowerCase().includes("model") ||
+					errorObj.message.toLowerCase().includes("not available"))
+			) {
+				throw new Error(
+					JSON.stringify({
+						status: 503,
+						message: "Model error",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Selected model is currently unavailable",
+							},
+						},
+					}),
+				)
+			}
+
+			// Handle cache-related errors
+			if (errorObj.message && errorObj.message.toLowerCase().includes("cache")) {
+				throw new Error(
+					JSON.stringify({
+						status: 500,
+						message: "Cache error",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Error with prompt caching system",
+							},
+						},
+					}),
+				)
+			}
+
+			// Handle other errors
+			if (error instanceof Error) {
+				throw new Error(
+					JSON.stringify({
+						status: errorObj.status || 500,
+						message: error.message,
+						error: {
+							metadata: {
+								raw: error.message,
+							},
+						},
+					}),
+				)
+			} else {
+				throw new Error(
+					JSON.stringify({
+						status: 500,
+						message: String(error),
+						error: {
+							metadata: {
+								raw: String(error),
+							},
+						},
+					}),
+				)
+			}
 		}
 	}
 

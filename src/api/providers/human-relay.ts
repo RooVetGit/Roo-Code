@@ -1,11 +1,9 @@
-// filepath: e:\Project\Roo-Code\src\api\providers\human-relay.ts
 import { Anthropic } from "@anthropic-ai/sdk"
 import { ApiHandlerOptions, ModelInfo } from "../../shared/api"
 import { ApiHandler, SingleCompletionHandler } from "../index"
 import { ApiStream } from "../transform/stream"
 import * as vscode from "vscode"
 import { ExtensionMessage } from "../../shared/ExtensionMessage"
-import { getPanel } from "../../activate/registerCommands" // Import the getPanel function
 
 /**
  * Human Relay API processor
@@ -27,41 +25,144 @@ export class HumanRelayHandler implements ApiHandler, SingleCompletionHandler {
 	 * @param messages Message list
 	 */
 	async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
-		// Get the most recent user message
-		const latestMessage = messages[messages.length - 1]
+		try {
+			// Get the most recent user message
+			const latestMessage = messages[messages.length - 1]
 
-		if (!latestMessage) {
-			throw new Error("No message to relay")
+			if (!latestMessage) {
+				throw new Error(
+					JSON.stringify({
+						status: 400,
+						message: "No message to relay",
+						error: {
+							metadata: {
+								raw: "Message list is empty",
+								provider: "human-relay",
+							},
+						},
+					}),
+				)
+			}
+
+			// If it is the first message, splice the system prompt word with the user message
+			let promptText = ""
+			try {
+				if (messages.length === 1) {
+					promptText = `${systemPrompt}\n\n${getMessageContent(latestMessage)}`
+				} else {
+					promptText = getMessageContent(latestMessage)
+				}
+			} catch (error) {
+				throw new Error(
+					JSON.stringify({
+						status: 400,
+						message: "Invalid message format",
+						error: {
+							metadata: {
+								raw: error instanceof Error ? error.message : String(error),
+								provider: "human-relay",
+							},
+						},
+					}),
+				)
+			}
+
+			// Copy to clipboard
+			try {
+				await vscode.env.clipboard.writeText(promptText)
+			} catch (error) {
+				throw new Error(
+					JSON.stringify({
+						status: 500,
+						message: "Clipboard access error",
+						error: {
+							metadata: {
+								raw: error instanceof Error ? error.message : "Failed to access clipboard",
+								provider: "human-relay",
+							},
+						},
+					}),
+				)
+			}
+
+			// Show dialog and wait for response
+			let response: string | undefined
+			try {
+				response = await showHumanRelayDialog(promptText)
+			} catch (error) {
+				throw new Error(
+					JSON.stringify({
+						status: 500,
+						message: "Dialog interaction error",
+						error: {
+							metadata: {
+								raw: error instanceof Error ? error.message : "Failed to show dialog",
+								provider: "human-relay",
+							},
+						},
+					}),
+				)
+			}
+
+			if (!response) {
+				throw new Error(
+					JSON.stringify({
+						status: 499, // Client Closed Request
+						message: "Operation cancelled",
+						error: {
+							metadata: {
+								raw: "Human relay operation cancelled by user",
+								provider: "human-relay",
+							},
+						},
+					}),
+				)
+			}
+
+			if (!response.trim()) {
+				throw new Error(
+					JSON.stringify({
+						status: 400,
+						message: "Empty response",
+						error: {
+							metadata: {
+								raw: "Response contains only whitespace",
+								provider: "human-relay",
+							},
+						},
+					}),
+				)
+			}
+
+			// Return the user input reply
+			yield { type: "text", text: response }
+		} catch (error) {
+			// If error is already formatted, re-throw it
+			if (error instanceof Error && error.message.startsWith("{")) {
+				throw error
+			}
+
+			// Handle any other unexpected errors
+			console.error("Human relay error:", error)
+			throw new Error(
+				JSON.stringify({
+					status: 500,
+					message: "Internal error",
+					error: {
+						metadata: {
+							raw: error instanceof Error ? error.message : String(error),
+							provider: "human-relay",
+						},
+					},
+				}),
+			)
 		}
-
-		// If it is the first message, splice the system prompt word with the user message
-		let promptText = ""
-		if (messages.length === 1) {
-			promptText = `${systemPrompt}\n\n${getMessageContent(latestMessage)}`
-		} else {
-			promptText = getMessageContent(latestMessage)
-		}
-
-		// Copy to clipboard
-		await vscode.env.clipboard.writeText(promptText)
-
-		// A dialog box pops up to request user action
-		const response = await showHumanRelayDialog(promptText)
-
-		if (!response) {
-			// The user canceled the operation
-			throw new Error("Human relay operation cancelled")
-		}
-
-		// Return to the user input reply
-		yield { type: "text", text: response }
 	}
 
 	/**
 	 * Get model information
 	 */
 	getModel(): { id: string; info: ModelInfo } {
-		// Human relay does not depend on a specific model, here is a default configuration
 		return {
 			id: "human-relay",
 			info: {
@@ -82,17 +183,80 @@ export class HumanRelayHandler implements ApiHandler, SingleCompletionHandler {
 	 * @param prompt Prompt content
 	 */
 	async completePrompt(prompt: string): Promise<string> {
-		// Copy to clipboard
-		await vscode.env.clipboard.writeText(prompt)
+		try {
+			// Copy to clipboard
+			try {
+				await vscode.env.clipboard.writeText(prompt)
+			} catch (error) {
+				throw new Error(
+					JSON.stringify({
+						status: 500,
+						message: "Clipboard access error",
+						error: {
+							metadata: {
+								raw: error instanceof Error ? error.message : "Failed to access clipboard",
+								provider: "human-relay",
+							},
+						},
+					}),
+				)
+			}
 
-		// A dialog box pops up to request user action
-		const response = await showHumanRelayDialog(prompt)
+			// Show dialog and wait for response
+			const response = await showHumanRelayDialog(prompt)
 
-		if (!response) {
-			throw new Error("Human relay operation cancelled")
+			if (!response) {
+				throw new Error(
+					JSON.stringify({
+						status: 499,
+						message: "Operation cancelled",
+						error: {
+							metadata: {
+								raw: "Human relay operation cancelled by user",
+								provider: "human-relay",
+							},
+						},
+					}),
+				)
+			}
+
+			if (!response.trim()) {
+				throw new Error(
+					JSON.stringify({
+						status: 400,
+						message: "Empty response",
+						error: {
+							metadata: {
+								raw: "Response contains only whitespace",
+								provider: "human-relay",
+							},
+						},
+					}),
+				)
+			}
+
+			return response
+		} catch (error) {
+			// If error is already formatted, re-throw it
+			if (error instanceof Error && error.message.startsWith("{")) {
+				throw error
+			}
+
+			// Handle any other unexpected errors
+			console.error("Human relay error:", error)
+			throw new Error(
+				JSON.stringify({
+					status: 500,
+					message: "Internal error",
+					error: {
+						metadata: {
+							raw: error instanceof Error ? error.message : String(error),
+							provider: "human-relay",
+						},
+					},
+				}),
+			)
 		}
-
-		return response
 	}
 }
 

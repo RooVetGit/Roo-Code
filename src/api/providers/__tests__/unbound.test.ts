@@ -181,6 +181,152 @@ describe("UnboundHandler", () => {
 		})
 	})
 
+	describe("createMessage error handling", () => {
+		const systemPrompt = "You are a helpful assistant"
+		const messages: Anthropic.Messages.MessageParam[] = [{ role: "user" as const, content: "Hello" }]
+
+		beforeEach(() => {
+			mockCreate.mockClear()
+			mockWithResponse.mockClear()
+			jest.spyOn(console, "error").mockImplementation(() => {})
+		})
+
+		it("should handle rate limit errors", async () => {
+			const error = new Error("Rate limit exceeded")
+			Object.assign(error, { status: 429 })
+			mockCreate.mockRejectedValueOnce(error)
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			try {
+				for await (const _ of stream) {
+					// consume stream
+				}
+				fail("Expected error to be thrown")
+			} catch (error) {
+				const parsedError = JSON.parse((error as Error).message)
+				expect(parsedError.status).toBe(429)
+				expect(parsedError.error.metadata.provider).toBe("unbound")
+				expect(parsedError.errorDetails[0]["@type"]).toBe("type.googleapis.com/google.rpc.RetryInfo")
+			}
+		})
+
+		it("should handle authentication errors", async () => {
+			const error = new Error("Invalid API key provided")
+			Object.assign(error, { status: 401 })
+			mockCreate.mockRejectedValueOnce(error)
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			try {
+				for await (const _ of stream) {
+					// consume stream
+				}
+				fail("Expected error to be thrown")
+			} catch (error) {
+				const parsedError = JSON.parse((error as Error).message)
+				expect(parsedError.status).toBe(401)
+				expect(parsedError.error.metadata.provider).toBe("unbound")
+				expect(parsedError.error.metadata.raw).toBe("Invalid API key provided")
+			}
+		})
+
+		it("should handle bad request errors", async () => {
+			const error = new Error("Invalid request parameters")
+			Object.assign(error, {
+				status: 400,
+				error: {
+					type: "invalid_request_error",
+					param: "messages",
+				},
+			})
+			mockCreate.mockRejectedValueOnce(error)
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			try {
+				for await (const _ of stream) {
+					// consume stream
+				}
+				fail("Expected error to be thrown")
+			} catch (error) {
+				const parsedError = JSON.parse((error as Error).message)
+				expect(parsedError.status).toBe(400)
+				expect(parsedError.error.metadata.param).toBe("messages")
+				expect(parsedError.error.metadata.provider).toBe("unbound")
+			}
+		})
+
+		it("should handle model not found errors", async () => {
+			const error = new Error("Model not found")
+			Object.assign(error, { status: 404 })
+			mockCreate.mockRejectedValueOnce(error)
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			try {
+				for await (const _ of stream) {
+					// consume stream
+				}
+				fail("Expected error to be thrown")
+			} catch (error) {
+				const parsedError = JSON.parse((error as Error).message)
+				expect(parsedError.status).toBe(404)
+				expect(parsedError.error.metadata.modelId).toBe(mockOptions.unboundModelId)
+				expect(parsedError.error.metadata.provider).toBe("unbound")
+			}
+		})
+
+		it("should handle cache-related errors", async () => {
+			const error = new Error("Cache system error")
+			mockCreate.mockRejectedValueOnce(error)
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			try {
+				for await (const _ of stream) {
+					// consume stream
+				}
+				fail("Expected error to be thrown")
+			} catch (error) {
+				const parsedError = JSON.parse((error as Error).message)
+				expect(parsedError.status).toBe(500)
+				expect(parsedError.message).toBe("Cache error")
+				expect(parsedError.error.metadata.provider).toBe("unbound")
+			}
+		})
+
+		it("should handle unknown errors", async () => {
+			const error = new Error("Unknown error")
+			mockCreate.mockRejectedValueOnce(error)
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			try {
+				for await (const _ of stream) {
+					// consume stream
+				}
+				fail("Expected error to be thrown")
+			} catch (error) {
+				const parsedError = JSON.parse((error as Error).message)
+				expect(parsedError.status).toBe(500)
+				expect(parsedError.error.metadata.raw).toBe("Unknown error")
+				expect(parsedError.error.metadata.provider).toBe("unbound")
+			}
+		})
+
+		it("should handle non-Error objects", async () => {
+			mockCreate.mockRejectedValueOnce({ custom: "error" })
+
+			const stream = handler.createMessage(systemPrompt, messages)
+			try {
+				for await (const _ of stream) {
+					// consume stream
+				}
+				fail("Expected error to be thrown")
+			} catch (error) {
+				const parsedError = JSON.parse((error as Error).message)
+				expect(parsedError.status).toBe(500)
+				expect(parsedError.error.metadata.provider).toBe("unbound")
+				expect(JSON.parse(parsedError.error.metadata.raw)).toEqual({ custom: "error" })
+			}
+		})
+	})
+
 	describe("completePrompt", () => {
 		it("should complete prompt successfully", async () => {
 			const result = await handler.completePrompt("Test prompt")

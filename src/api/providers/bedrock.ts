@@ -475,11 +475,111 @@ Please check:
 				outputTokens: 0,
 			}
 
-			// Re-throw the error
+			// Format errors in a consistent way for Cline.ts
+			const errorObj = error as any
+
+			// Handle rate limit errors specifically
+			if (
+				errorObj.status === 429 ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("rate limit")) ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("throttl"))
+			) {
+				throw new Error(
+					JSON.stringify({
+						status: 429,
+						message: "Rate limit exceeded",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Too many requests, please try again later",
+							},
+						},
+						errorDetails: [
+							{
+								"@type": "type.googleapis.com/google.rpc.RetryInfo",
+								retryDelay: "30s", // Default retry delay if not provided
+							},
+						],
+					}),
+				)
+			}
+
+			// Handle authentication errors
+			if (
+				errorObj.status === 401 ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("access denied")) ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("credentials"))
+			) {
+				throw new Error(
+					JSON.stringify({
+						status: 401,
+						message: "Authentication error",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Invalid AWS credentials or unauthorized access",
+							},
+						},
+					}),
+				)
+			}
+
+			// Handle bad request errors
+			if (
+				errorObj.status === 400 ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("invalid")) ||
+				(errorObj.message && errorObj.message.toLowerCase().includes("not found"))
+			) {
+				throw new Error(
+					JSON.stringify({
+						status: 400,
+						message: "Bad request",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Invalid request parameters",
+							},
+						},
+					}),
+				)
+			}
+
+			// Handle other errors
 			if (error instanceof Error) {
-				throw error
+				throw new Error(
+					JSON.stringify({
+						status: errorObj.status || 500,
+						message: error.message,
+						error: {
+							metadata: {
+								raw: error.message,
+							},
+						},
+					}),
+				)
+			} else if (typeof error === "object" && error !== null) {
+				const errorDetails = JSON.stringify(error, null, 2)
+				throw new Error(
+					JSON.stringify({
+						status: errorObj.status || 500,
+						message: errorObj.message || errorDetails,
+						error: {
+							metadata: {
+								raw: errorDetails,
+							},
+						},
+					}),
+				)
 			} else {
-				throw new Error("An unknown error occurred")
+				// Handle primitive errors or other unexpected types
+				throw new Error(
+					JSON.stringify({
+						status: 500,
+						message: String(error),
+						error: {
+							metadata: {
+								raw: String(error),
+							},
+						},
+					}),
+				)
 			}
 		}
 	}

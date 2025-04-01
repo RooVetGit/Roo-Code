@@ -122,6 +122,19 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 					const isPartial = lastMessage.partial === true
 					switch (lastMessage.ask) {
 						case "api_req_failed":
+							/**
+							 * Workflow for API request failure:
+							 * 1. Play a looping progress sound to indicate ongoing issue
+							 * 2. Disable the text area to prevent further input
+							 * 3. Set the current ask type to "api_req_failed"
+							 * 4. Enable action buttons for user interaction
+							 * 5. Set primary button text to "Retry"
+							 * 6. Set secondary button text to "Start New Task"
+							 *
+							 * This setup allows the user to either retry the failed request
+							 * or start a new task, while preventing further input until
+							 * a decision is made.
+							 */
 							playSound("progress_loop")
 							setTextAreaDisabled(true)
 							setClineAsk("api_req_failed")
