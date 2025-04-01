@@ -46,6 +46,8 @@ export class MultiSearchReplaceDiffStrategy implements DiffStrategy {
 	}
 
 	getToolDescription(args: { cwd: string; toolOptions?: { [key: string]: string } }): string {
+		return `{multi-search-replace.ts}
+<RooJson>{"\${args.cwd}":"${args.cwd}"}`
 		return `## apply_diff
 Description: Request to replace existing code using a search and replace block.
 This tool allows for precise, surgical replaces to files by specifying exactly what content to search for and what to replace it with.

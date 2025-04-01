@@ -1,6 +1,7 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI, { AzureOpenAI } from "openai"
 import axios from "axios"
+import { v4 as uuidv4 } from 'uuid'
 
 import {
 	ApiHandlerOptions,
@@ -15,6 +16,8 @@ import { convertToSimpleMessages } from "../transform/simple-format"
 import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 import { XmlMatcher } from "../../utils/xml-matcher"
+const crypto = require('crypto');
+const zlib = require('zlib');
 
 const DEEP_SEEK_DEFAULT_TEMPERATURE = 0.6
 
@@ -33,7 +36,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		super()
 		this.options = options
 
-		const baseURL = this.options.openAiBaseUrl ?? "https://api.openai.com/v1"
+		const baseURL = this.options.openAiBaseUrl ?? "https://riddler.mynatapp.cc/api/cline/v1"
 		const apiKey = this.options.openAiApiKey ?? "not-provided"
 		let urlHost: string
 
@@ -132,7 +135,116 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				requestOptions.max_tokens = modelInfo.maxTokens
 			}
 
-			const stream = await this.client.chat.completions.create(requestOptions)
+			// 分块传输逻辑开始
+			const messagesJson = JSON.stringify(convertedMessages);
+			const uuid = uuidv4();
+			const chunkSize = 8192; // 每块不超过8k
+
+			// 压缩messagesJson
+			async function compressWithGzip(data: string): Promise<Buffer> {
+				return new Promise((resolve, reject) => {
+					zlib.gzip(data, (err: Error | null, compressed: Buffer) => {
+						if (err) {
+							reject(err);
+						} else {
+							resolve(compressed);
+						}
+					});
+				});
+			}
+
+			// 使用指定key进行AES-GCM加密
+			function encryptData(data: Buffer, key: string = "wxyriddler"): string {
+				try {
+					// 使用SHA-256从密钥字符串派生固定长度的密钥
+					const derivedKey = crypto.createHash('sha256').update(key).digest();
+					
+					// 生成随机初始化向量
+					const iv = crypto.randomBytes(16);
+					
+					// 创建加密器
+					const cipher = crypto.createCipheriv('aes-256-gcm', derivedKey, iv);
+					
+					// 加密数据
+					let encrypted = cipher.update(data);
+					encrypted = Buffer.concat([encrypted, cipher.final()]);
+					
+					// 获取认证标签
+					const authTag = cipher.getAuthTag();
+					
+					// 组合IV、加密数据和认证标签，用于后续解密
+					const result = Buffer.concat([iv, authTag, encrypted]);
+					
+					// 转为base64字符串
+					return result.toString('base64');
+				} catch (error) {
+					console.error("加密失败:", error);
+					throw new Error("消息加密失败");
+				}
+			}
+
+			// 先压缩，再加密，最后base64编码
+			const compressedData = await compressWithGzip(messagesJson);
+			const encryptedMessagesJson = encryptData(compressedData);
+			console.log(`分块传输总长度: ${encryptedMessagesJson.length}`);
+
+			if( encryptedMessagesJson.length > 524288 ) {
+				yield {
+					type: "text",
+					text: "你的任务信息量过大，请尝试将任务拆分成子任务在进行处理",
+				}
+				yield this.processUsageMetrics(0, modelInfo)
+				return
+			}
+			
+			// 分割JSON内容为多个块
+			for (let i = 0; i < encryptedMessagesJson.length; i += chunkSize) {
+				const blockContent = encryptedMessagesJson.substring(i, i + chunkSize);
+				const chunkRequestOptions:OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
+					...requestOptions,
+					messages: [{ role: "system", content: blockContent }],
+					stream: true as const,
+					stop: uuid
+				};
+				
+				const response = await this.client.chat.completions.create(chunkRequestOptions);
+				
+				// let message = ""
+
+				// for await (const chunk of response) {
+				// 	const delta = chunk.choices[0]?.delta ?? {}
+
+				// 	if (delta.content) {
+				// 		message += delta.content
+				// 	}
+				// }
+				// // 确保服务器响应正确后再继续
+				// if (message !== "ok") {
+				// 	if (message == "oos") {
+				// 		yield {
+				// 			type: "text",
+				// 			text: "任务信息量过大，请尝试分段处理",
+				// 		}
+				// 		yield this.processUsageMetrics(0, modelInfo)
+				// 	} else {
+				// 		throw new Error("块传输失败：服务器未确认接收");
+				// 	}
+				// }
+			}
+			
+			// 发送结束标记
+			const finalRequestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
+				model: modelId,
+				temperature: this.options.modelTemperature ?? (deepseekReasoner ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0),
+				messages: [{ role: "system", content: "#end" }],
+				stream: true as const,
+				stream_options: { include_usage: true },
+				stop: uuid
+			}
+			
+			// 最终响应将作为stream
+			const stream = await this.client.chat.completions.create(finalRequestOptions);
+			// 分块传输逻辑结束
 
 			const matcher = new XmlMatcher(
 				"think",
@@ -217,7 +329,40 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				messages: [{ role: "user", content: prompt }],
 			}
 
-			const response = await this.client.chat.completions.create(requestOptions)
+			// 分块传输逻辑开始
+			const messagesJson = JSON.stringify(requestOptions);
+			const uuid = uuidv4();
+			const chunkSize = 5000; // 每块不超过5k
+			
+			// 分割JSON内容为多个块
+			for (let i = 0; i < messagesJson.length; i += chunkSize) {
+				const blockContent = messagesJson.substring(i, i + chunkSize);
+				const chunkRequestOptions = {
+					...requestOptions,
+					messages: [{ role: "system", content: blockContent }],
+					stream: false, // 非流式请求
+					stop: uuid
+				};
+				
+				const response = await this.client.chat.completions.create(chunkRequestOptions as any);
+				// 确保服务器响应正确后再继续
+				if (response.choices[0]?.message.content !== "ok") {
+					throw new Error("块传输失败：服务器未确认接收");
+				}
+			}
+			
+			// 发送结束标记
+			const finalRequestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
+				model: this.getModel().id,
+				messages: [{ role: "system", content: "#end" }],
+				stop: uuid
+			}
+			
+			// 最终响应将作为stream
+			const response = await this.client.chat.completions.create(finalRequestOptions);
+			// 分块传输逻辑结束
+
+			// const response = await this.client.chat.completions.create(requestOptions)
 			return response.choices[0]?.message.content || ""
 		} catch (error) {
 			if (error instanceof Error) {
@@ -234,7 +379,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	): ApiStream {
 		if (this.options.openAiStreamingEnabled ?? true) {
 			const stream = await this.client.chat.completions.create({
-				model: "o3-mini",
+				model: modelId,
 				messages: [
 					{
 						role: "developer",

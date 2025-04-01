@@ -1,6 +1,8 @@
 import { ToolArgs } from "./types"
 
 export function getInsertContentDescription(args: ToolArgs): string {
+  return `{insert-content.ts}
+<RooJson>{"\${args.cwd.toPosix()}":"${args.cwd.toPosix()}"}`
 	return `## insert_content
 Description: Inserts content at specific line positions in a file. This is the primary tool for adding new content and code (functions/methods/classes, imports, attributes etc.) as it allows for precise insertions without overwriting existing content. The tool uses an efficient line-based insertion system that maintains file integrity and proper ordering of multiple insertions. Beware to use the proper indentation. This tool is the preferred way to add new content and code to files.
 Parameters:

@@ -8,8 +8,6 @@ import { Checkbox } from "vscrui"
 import { VSCodeLink, VSCodeRadio, VSCodeRadioGroup, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 import { ExternalLinkIcon } from "@radix-ui/react-icons"
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator, Button } from "@/components/ui"
-
 import {
 	ApiConfiguration,
 	ModelInfo,
@@ -42,56 +40,23 @@ import {
 import { ExtensionMessage } from "../../../../src/shared/ExtensionMessage"
 
 import { vscode } from "@/utils/vscode"
+import { validateApiConfiguration, validateModelId, validateBedrockArn } from "@/utils/validate"
 import {
 	useOpenRouterModelProviders,
 	OPENROUTER_DEFAULT_PROVIDER_NAME,
 } from "@/components/ui/hooks/useOpenRouterModelProviders"
-import { useOpenRouterKeyInfo } from "@/components/ui/hooks/useOpenRouterKeyInfo"
-import { useRequestyKeyInfo } from "@/components/ui/hooks/useRequestyKeyInfo"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator, Button } from "@/components/ui"
+
 import { MODELS_BY_PROVIDER, PROVIDERS, AWS_REGIONS, VERTEX_REGIONS } from "./constants"
 import { VSCodeButtonLink } from "../common/VSCodeButtonLink"
 import { ModelInfoView } from "./ModelInfoView"
 import { ModelPicker } from "./ModelPicker"
 import { TemperatureControl } from "./TemperatureControl"
-import { validateApiConfiguration, validateModelId, validateBedrockArn } from "@/utils/validate"
 import { ApiErrorMessage } from "./ApiErrorMessage"
 import { ThinkingBudget } from "./ThinkingBudget"
 import { R1FormatSetting } from "./R1FormatSetting"
-
-// Component to display OpenRouter API key balance
-const OpenRouterBalanceDisplay = ({ apiKey, baseUrl }: { apiKey: string; baseUrl?: string }) => {
-	const { data: keyInfo } = useOpenRouterKeyInfo(apiKey, baseUrl)
-
-	if (!keyInfo || !keyInfo.limit) {
-		return null
-	}
-
-	const formattedBalance = (keyInfo.limit - keyInfo.usage).toFixed(2)
-
-	return (
-		<VSCodeLink href="https://openrouter.ai/settings/keys" className="text-vscode-foreground hover:underline">
-			${formattedBalance}
-		</VSCodeLink>
-	)
-}
-
-const RequestyBalanceDisplay = ({ apiKey }: { apiKey: string }) => {
-	const { data: keyInfo } = useRequestyKeyInfo(apiKey)
-
-	if (!keyInfo) {
-		return null
-	}
-
-	// Parse the balance to a number and format it to 2 decimal places
-	const balance = parseFloat(keyInfo.org_balance)
-	const formattedBalance = balance.toFixed(2)
-
-	return (
-		<VSCodeLink href="https://app.requesty.ai/settings" className="text-vscode-foreground hover:underline">
-			${formattedBalance}
-		</VSCodeLink>
-	)
-}
+import { OpenRouterBalanceDisplay } from "./OpenRouterBalanceDisplay"
+import { RequestyBalanceDisplay } from "./RequestyBalanceDisplay"
 
 interface ApiOptionsProps {
 	uriScheme: string | undefined
@@ -278,10 +243,55 @@ const ApiOptions = ({
 		[selectedProvider],
 	)
 
+	// Base URL for provider documentation
+	const DOC_BASE_URL = "https://docs.roocode.com/providers"
+
+	// Custom URL path mappings for providers with different slugs
+	const providerUrlSlugs: Record<string, string> = {
+		"openai-native": "openai",
+		openai: "openai-compatible",
+	}
+
+	// Helper function to get provider display name from PROVIDERS constant
+	const getProviderDisplayName = (providerKey: string): string | undefined => {
+		const provider = PROVIDERS.find((p) => p.value === providerKey)
+		return provider?.label
+	}
+
+	// Helper function to get the documentation URL and name for the currently selected provider
+	const getSelectedProviderDocUrl = (): { url: string; name: string } | undefined => {
+		const displayName = getProviderDisplayName(selectedProvider)
+		if (!displayName) {
+			return undefined
+		}
+
+		// Get the URL slug - use custom mapping if available, otherwise use the provider key
+		const urlSlug = providerUrlSlugs[selectedProvider] || selectedProvider
+
+		return {
+			url: `${DOC_BASE_URL}/${urlSlug}`,
+			name: displayName,
+		}
+	}
+
 	return (
 		<div className="flex flex-col gap-3">
-			<div>
-				<label className="block font-medium mb-1">{t("settings:providers.apiProvider")}</label>
+			<div className="flex flex-col gap-1 relative">
+				<div className="flex justify-between items-center">
+					<label className="block font-medium mb-1">{t("settings:providers.apiProvider")}</label>
+					{getSelectedProviderDocUrl() && (
+						<div className="text-xs text-vscode-descriptionForeground">
+							{/* <VSCodeLink
+								href={getSelectedProviderDocUrl()!.url}
+								className="hover:text-vscode-foreground"
+								target="_blank">
+								{t("settings:providers.providerDocumentation", {
+									provider: getSelectedProviderDocUrl()!.name,
+								})}
+							</VSCodeLink> */}
+						</div>
+					)}
+				</div>
 				<Select
 					value={selectedProvider}
 					onValueChange={(value) => setApiConfigurationField("apiProvider", value as ApiProvider)}>
@@ -289,9 +299,9 @@ const ApiOptions = ({
 						<SelectValue placeholder={t("settings:common.select")} />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="openrouter">OpenRouter</SelectItem>
-						<SelectSeparator />
-						{PROVIDERS.map(({ value, label }) => (
+						{/* <SelectItem value="openrouter">OpenRouter</SelectItem>
+						<SelectSeparator /> */}
+						{PROVIDERS.filter((p) => p.value !== "openrouter").map(({ value, label }) => (
 							<SelectItem key={value} value={value}>
 								{label}
 							</SelectItem>
@@ -737,13 +747,13 @@ const ApiOptions = ({
 					<ModelPicker
 						apiConfiguration={apiConfiguration}
 						setApiConfigurationField={setApiConfigurationField}
-						defaultModelId="gpt-4o"
+						defaultModelId="gemini-2.0"
 						defaultModelInfo={openAiModelInfoSaneDefaults}
 						models={openAiModels}
 						modelIdKey="openAiModelId"
 						modelInfoKey="openAiCustomModelInfo"
-						serviceName="OpenAI"
-						serviceUrl="https://platform.openai.com"
+						serviceName="Models"
+						serviceUrl="https://riddler.mynatapp.cc/api/cline/v1/models"
 					/>
 					<R1FormatSetting
 						onChange={handleInputChange("openAiR1FormatEnabled", noTransform)}

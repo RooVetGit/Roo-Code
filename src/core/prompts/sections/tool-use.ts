@@ -1,4 +1,5 @@
 export function getSharedToolUseSection(): string {
+	return `{tool-use.ts}`
 	return `====
 
 TOOL USE

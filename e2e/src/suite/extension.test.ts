@@ -18,6 +18,7 @@ suite("Roo Code Extension", () => {
 			"roo-cline.openInNewTab",
 			"roo-cline.explainCode",
 			"roo-cline.fixCode",
+			"roo-cline.askForHelp",
 			"roo-cline.improveCode",
 		]
 

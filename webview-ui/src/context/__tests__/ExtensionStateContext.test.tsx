@@ -184,7 +184,6 @@ describe("mergeExtensionState", () => {
 	it("should correctly merge extension states", () => {
 		const baseState: ExtensionState = {
 			version: "",
-			osInfo: "unix",
 			mcpEnabled: false,
 			enableMcpServerCreation: false,
 			clineMessages: [],
@@ -222,7 +221,6 @@ describe("mergeExtensionState", () => {
 			apiConfiguration: { modelMaxThinkingTokens: 456, modelTemperature: 0.3 },
 			experiments: {
 				powerSteering: true,
-				multi_search_and_replace: true,
 			} as Record<ExperimentId, boolean>,
 		}
 
@@ -238,7 +236,6 @@ describe("mergeExtensionState", () => {
 			search_and_replace: true,
 			insert_content: true,
 			powerSteering: true,
-			multi_search_and_replace: true,
 		})
 	})
 })

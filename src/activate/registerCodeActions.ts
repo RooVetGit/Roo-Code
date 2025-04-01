@@ -23,6 +23,14 @@ export const registerCodeActions = (context: vscode.ExtensionContext) => {
 
 	registerCodeActionPair(
 		context,
+		COMMAND_IDS.ASK_FOR_HELP,
+		"ASK_FOR_HELP",
+		"What is your command?",
+		"E.g. How does the error handling work?",
+	)
+
+	registerCodeActionPair(
+		context,
 		COMMAND_IDS.IMPROVE,
 		"IMPROVE",
 		"What would you like Roo to improve?",
@@ -45,28 +53,34 @@ const registerCodeAction = (
 		vscode.commands.registerCommand(command, async (...args: any[]) => {
 			if (inputPrompt) {
 				userInput = await vscode.window.showInputBox({
+					title: `Roo: ${promptType.replace("_", " ")}`,
 					prompt: inputPrompt,
 					placeHolder: inputPlaceholder,
 				})
+				if (!userInput) return;
 			}
 
 			// Handle both code action and direct command cases.
 			let filePath: string
 			let selectedText: string
+			let startLine: number | undefined
+			let endLine: number | undefined
 			let diagnostics: any[] | undefined
 
 			if (args.length > 1) {
 				// Called from code action.
-				;[filePath, selectedText, diagnostics] = args
+				;[filePath, selectedText, startLine, endLine, diagnostics] = args
 			} else {
 				// Called directly from command palette.
 				const context = EditorUtils.getEditorContext()
 				if (!context) return
-				;({ filePath, selectedText, diagnostics } = context)
+				;({ filePath, selectedText, startLine, endLine, diagnostics } = context)
 			}
 
 			const params = {
 				...{ filePath, selectedText },
+				...(startLine !== undefined ? { startLine: startLine.toString() } : {}),
+				...(endLine !== undefined ? { endLine: endLine.toString() } : {}),
 				...(diagnostics ? { diagnostics } : {}),
 				...(userInput ? { userInput } : {}),
 			}

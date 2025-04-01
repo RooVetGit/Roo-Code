@@ -22,70 +22,71 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		super()
 		this.options = options
 		const apiKey = this.options.openAiNativeApiKey ?? "not-provided"
-		this.client = new OpenAI({ apiKey })
+		const baseURL = "http://10.12.154.110:7000/v1"
+		this.client = new OpenAI({ apiKey , baseURL})
 	}
 
 	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
 		const modelId = this.getModel().id
 
-		if (modelId.startsWith("o1")) {
-			yield* this.handleO1FamilyMessage(modelId, systemPrompt, messages)
-			return
-		}
+		// if (modelId.startsWith("o1")) {
+		// 	yield* this.handleO1FamilyMessage(modelId, systemPrompt, messages)
+		// 	return
+		// }
 
-		if (modelId.startsWith("o3-mini")) {
-			yield* this.handleO3FamilyMessage(modelId, systemPrompt, messages)
-			return
-		}
+		// if (modelId.startsWith("o3-mini")) {
+		// 	yield* this.handleO3FamilyMessage(modelId, systemPrompt, messages)
+		// 	return
+		// }
 
 		yield* this.handleDefaultModelMessage(modelId, systemPrompt, messages)
 	}
 
-	private async *handleO1FamilyMessage(
-		modelId: string,
-		systemPrompt: string,
-		messages: Anthropic.Messages.MessageParam[],
-	): ApiStream {
-		// o1 supports developer prompt with formatting
-		// o1-preview and o1-mini only support user messages
-		const isOriginalO1 = modelId === "o1"
-		const response = await this.client.chat.completions.create({
-			model: modelId,
-			messages: [
-				{
-					role: isOriginalO1 ? "developer" : "user",
-					content: isOriginalO1 ? `Formatting re-enabled\n${systemPrompt}` : systemPrompt,
-				},
-				...convertToOpenAiMessages(messages),
-			],
-			stream: true,
-			stream_options: { include_usage: true },
-		})
+	// private async *handleO1FamilyMessage(
+	// 	modelId: string,
+	// 	systemPrompt: string,
+	// 	messages: Anthropic.Messages.MessageParam[],
+	// ): ApiStream {
+	// 	// o1 supports developer prompt with formatting
+	// 	// o1-preview and o1-mini only support user messages
+	// 	const isOriginalO1 = modelId === "o1"
+	// 	const response = await this.client.chat.completions.create({
+	// 		model: modelId,
+	// 		messages: [
+	// 			{
+	// 				role: isOriginalO1 ? "developer" : "user",
+	// 				content: isOriginalO1 ? `Formatting re-enabled\n${systemPrompt}` : systemPrompt,
+	// 			},
+	// 			...convertToOpenAiMessages(messages),
+	// 		],
+	// 		stream: true,
+	// 		stream_options: { include_usage: true },
+	// 	})
 
-		yield* this.handleStreamResponse(response)
-	}
+	// 	yield* this.handleStreamResponse(response)
+	// }
 
-	private async *handleO3FamilyMessage(
-		modelId: string,
-		systemPrompt: string,
-		messages: Anthropic.Messages.MessageParam[],
-	): ApiStream {
-		const stream = await this.client.chat.completions.create({
-			model: "o3-mini",
-			messages: [
-				{
-					role: "developer",
-					content: `Formatting re-enabled\n${systemPrompt}`,
-				},
-				...convertToOpenAiMessages(messages),
-			],
-			stream: true,
-			stream_options: { include_usage: true },
-			reasoning_effort: this.getModel().info.reasoningEffort,
-		})
+	// private async *handleO3FamilyMessage(
+	// 	modelId: string,
+	// 	systemPrompt: string,
+	// 	messages: Anthropic.Messages.MessageParam[],
+	// ): ApiStream {
+	// 	const stream = await this.client.chat.completions.create({
+	// 		model: "o3-mini",
+	// 		messages: [
+	// 			{
+	// 				role: "developer",
+	// 				content: `Formatting re-enabled\n${systemPrompt}`,
+	// 			},
+	// 			...convertToOpenAiMessages(messages),
+	// 		],
+	// 		stream: true,
+	// 		stream_options: { include_usage: true },
+	// 		reasoning_effort: this.getModel().info.reasoningEffort,
+	// 	})
 
-		yield* this.handleStreamResponse(stream)
-	}
+	// 	yield* this.handleStreamResponse(stream)
+	// }
 
 	private async *handleDefaultModelMessage(
 		modelId: string,
@@ -103,17 +104,17 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		yield* this.handleStreamResponse(stream)
 	}
 
-	private async *yieldResponseData(response: OpenAI.Chat.Completions.ChatCompletion): ApiStream {
-		yield {
-			type: "text",
-			text: response.choices[0]?.message.content || "",
-		}
-		yield {
-			type: "usage",
-			inputTokens: response.usage?.prompt_tokens || 0,
-			outputTokens: response.usage?.completion_tokens || 0,
-		}
-	}
+	// private async *yieldResponseData(response: OpenAI.Chat.Completions.ChatCompletion): ApiStream {
+	// 	yield {
+	// 		type: "text",
+	// 		text: response.choices[0]?.message.content || "",
+	// 	}
+	// 	yield {
+	// 		type: "usage",
+	// 		inputTokens: response.usage?.prompt_tokens || 0,
+	// 		outputTokens: response.usage?.completion_tokens || 0,
+	// 	}
+	// }
 
 	private async *handleStreamResponse(stream: AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>): ApiStream {
 		for await (const chunk of stream) {
@@ -149,13 +150,13 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			const modelId = this.getModel().id
 			let requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming
 
-			if (modelId.startsWith("o1")) {
-				requestOptions = this.getO1CompletionOptions(modelId, prompt)
-			} else if (modelId.startsWith("o3-mini")) {
-				requestOptions = this.getO3CompletionOptions(modelId, prompt)
-			} else {
+			// if (modelId.startsWith("o1")) {
+			// 	requestOptions = this.getO1CompletionOptions(modelId, prompt)
+			// } else if (modelId.startsWith("o3-mini")) {
+			// 	requestOptions = this.getO3CompletionOptions(modelId, prompt)
+			// } else {
 				requestOptions = this.getDefaultCompletionOptions(modelId, prompt)
-			}
+			// }
 
 			const response = await this.client.chat.completions.create(requestOptions)
 			return response.choices[0]?.message.content || ""
@@ -167,26 +168,26 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		}
 	}
 
-	private getO1CompletionOptions(
-		modelId: string,
-		prompt: string,
-	): OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming {
-		return {
-			model: modelId,
-			messages: [{ role: "user", content: prompt }],
-		}
-	}
+	// private getO1CompletionOptions(
+	// 	modelId: string,
+	// 	prompt: string,
+	// ): OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming {
+	// 	return {
+	// 		model: modelId,
+	// 		messages: [{ role: "user", content: prompt }],
+	// 	}
+	// }
 
-	private getO3CompletionOptions(
-		modelId: string,
-		prompt: string,
-	): OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming {
-		return {
-			model: "o3-mini",
-			messages: [{ role: "user", content: prompt }],
-			reasoning_effort: this.getModel().info.reasoningEffort,
-		}
-	}
+	// private getO3CompletionOptions(
+	// 	modelId: string,
+	// 	prompt: string,
+	// ): OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming {
+	// 	return {
+	// 		model: "o3-mini",
+	// 		messages: [{ role: "user", content: prompt }],
+	// 		reasoning_effort: this.getModel().info.reasoningEffort,
+	// 	}
+	// }
 
 	private getDefaultCompletionOptions(
 		modelId: string,

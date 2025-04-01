@@ -1,19 +1,22 @@
 import * as vscode from "vscode"
+import { ZodError } from "zod"
 
 import {
 	PROVIDER_SETTINGS_KEYS,
-	ProviderSettings,
-	providerSettingsSchema,
-	GlobalSettings,
-	globalSettingsSchema,
-	RooCodeSettings,
+	GLOBAL_SETTINGS_KEYS,
 	SECRET_STATE_KEYS,
-	SecretState,
-	isSecretStateKey,
 	GLOBAL_STATE_KEYS,
+	ProviderSettings,
+	GlobalSettings,
+	SecretState,
 	GlobalState,
+	RooCodeSettings,
+	providerSettingsSchema,
+	globalSettingsSchema,
+	isSecretStateKey,
 } from "../../schemas"
 import { logger } from "../../utils/logging"
+import { telemetryService } from "../../services/telemetry/TelemetryService"
 
 type GlobalStateKey = keyof GlobalState
 type SecretStateKey = keyof SecretState
@@ -151,7 +154,17 @@ export class ContextProxy {
 	 */
 
 	public getGlobalSettings(): GlobalSettings {
-		return globalSettingsSchema.parse({ ...this.stateCache })
+		const values = this.getValues()
+
+		try {
+			return globalSettingsSchema.parse(values)
+		} catch (error) {
+			if (error instanceof ZodError) {
+				telemetryService.captureSchemaValidationError({ schemaName: "GlobalSettings", error })
+			}
+
+			return GLOBAL_SETTINGS_KEYS.reduce((acc, key) => ({ ...acc, [key]: values[key] }), {} as GlobalSettings)
+		}
 	}
 
 	/**
@@ -159,7 +172,17 @@ export class ContextProxy {
 	 */
 
 	public getProviderSettings(): ProviderSettings {
-		return providerSettingsSchema.parse(this.getValues())
+		const values = this.getValues()
+
+		try {
+			return providerSettingsSchema.parse(values)
+		} catch (error) {
+			if (error instanceof ZodError) {
+				telemetryService.captureSchemaValidationError({ schemaName: "ProviderSettings", error })
+			}
+
+			return PROVIDER_SETTINGS_KEYS.reduce((acc, key) => ({ ...acc, [key]: values[key] }), {} as ProviderSettings)
+		}
 	}
 
 	public async setProviderSettings(values: ProviderSettings) {
@@ -206,10 +229,12 @@ export class ContextProxy {
 	public async export(): Promise<GlobalSettings | undefined> {
 		try {
 			const globalSettings = globalSettingsExportSchema.parse(this.getValues())
-
 			return Object.fromEntries(Object.entries(globalSettings).filter(([_, value]) => value !== undefined))
 		} catch (error) {
-			console.log(error.message)
+			if (error instanceof ZodError) {
+				telemetryService.captureSchemaValidationError({ schemaName: "GlobalSettings", error })
+			}
+
 			return undefined
 		}
 	}

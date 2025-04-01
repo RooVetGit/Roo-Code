@@ -1,10 +1,10 @@
 {
-	"name": "roo-cline",
-	"displayName": "Roo Code (prev. Roo Cline)",
+	"name": "rid-cline",
+	"displayName": "Rid Code (fork from Roo Code)",
 	"description": "A whole dev team of AI agents in your editor.",
 	"publisher": "RooVeterinaryInc",
-	"version": "3.10.5",
-	"icon": "assets/icons/icon.png",
+	"version": "3.11.3",
+	"icon": "assets/icons/rocket.png",
 	"galleryBanner": {
 		"color": "#617A91",
 		"theme": "dark"
@@ -51,6 +51,20 @@
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
+		"keybindings": [
+			{
+				"command": "roo-cline.askForHelp",
+				"key": "ctrl+i",
+				"mac": "cmd+i",
+				"when": "editorTextFocus&&editorHasSelection"
+			},
+			{
+				"command": "roo-cline.newTask",
+				"key": "ctrl+alt+i",
+				"mac": "cmd+alt+i",
+				"when": "-"
+			}
+		],
 		"submenus": [
 			{
 				"id": "roo-code.contextMenu",
@@ -66,7 +80,7 @@
 				{
 					"id": "roo-cline-ActivityBar",
 					"title": "Roo Code",
-					"icon": "assets/icons/icon.svg"
+					"icon": "assets/icons/rocket.png"
 				}
 			]
 		},
@@ -131,6 +145,11 @@
 				"category": "Roo Code"
 			},
 			{
+				"command": "roo-cline.askForHelp",
+				"title": "Ask For Help",
+				"category": "Roo Code"
+			},
+			{
 				"command": "roo-cline.improveCode",
 				"title": "Improve Code",
 				"category": "Roo Code"
@@ -185,20 +204,24 @@
 			],
 			"roo-code.contextMenu": [
 				{
-					"command": "roo-cline.explainCode",
+					"command": "roo-cline.addToContext",
 					"group": "1_actions@1"
 				},
 				{
-					"command": "roo-cline.fixCode",
+					"command": "roo-cline.explainCode",
 					"group": "1_actions@2"
 				},
 				{
-					"command": "roo-cline.improveCode",
+					"command": "roo-cline.fixCode",
 					"group": "1_actions@3"
 				},
 				{
-					"command": "roo-cline.addToContext",
+					"command": "roo-cline.improveCode",
 					"group": "1_actions@4"
+				},
+				{
+					"command": "roo-cline.askForHelp",
+					"group": "1_actions@5"
 				}
 			],
 			"terminal/context": [

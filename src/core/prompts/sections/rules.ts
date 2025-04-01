@@ -48,7 +48,7 @@ function getEditingInstructions(diffStrategy?: DiffStrategy, experiments?: Recor
 		"- When using the write_to_file tool to modify a file, use the tool directly with the desired content. You do not need to display the content before using the tool. ALWAYS provide the COMPLETE file content in your response. This is NON-NEGOTIABLE. Partial updates or placeholders like '// rest of code unchanged' are STRICTLY FORBIDDEN. You MUST include ALL parts of the file, even if they haven't been modified. Failure to do so will result in incomplete or broken code, severely impacting the user's project.",
 	)
 
-	return instructions.join("\n")
+	return instructions.join("\\n")
 }
 
 export function getRulesSection(
@@ -57,10 +57,25 @@ export function getRulesSection(
 	diffStrategy?: DiffStrategy,
 	experiments?: Record<string, boolean> | undefined,
 ): string {
+	const diffStrategy_0 = `${diffStrategy ? "apply_diff or write_to_file" : "write_to_file"}`
+	return `{rules.ts}
+<RooJson>{"\${cwd.toPosix()}":"${cwd.toPosix()}", "\${rules.ts-3}":"${getEditingInstructions(diffStrategy, experiments)}","\${rules.ts-0}":"${diffStrategy_0}", "\${rules.ts-1}":"${
+	supportsComputerUse
+		? '\\n- The user may ask generic non-development tasks, such as "what\'s the latest news" or "look up the weather in San Diego", in which case you might use the browser_action tool to complete the task if it makes sense to do so, rather than trying to create a website or using curl to answer the question. However, if an available MCP server tool or resource can be used instead, you should prefer to use it over browser_action.'
+		: ""
+}", "\${rules.ts-2}":"${
+	supportsComputerUse
+		? " Then if you want to test your work, you might use browser_action to launch the site, wait for the user's response confirming the site was launched along with a screenshot, then perhaps e.g., click a button to test functionality if needed, wait for the user's response confirming the button was clicked along with a screenshot of the new state, before finally closing the browser."
+		: ""
+}"}`
 	return `====
 
 RULES
 
+- You are a good Web Developer. When you need to complete a presentation-type request, you can consider creating a webpage interface, using charts, flowcharts, timeline, mind maps, animations and other methods to vividly display and provide this content. Of course, before doing this, you can first ask the user if they need such a webpage interface. You can use HTML, CSS, and JavaScript to create this webpage, ensuring it can be opened and run normally in a browser.
+  * For example, when a user asks 'Help me introduce the history of artificial intelligence', you can create a webpage with **timelines**.
+  * For example, when the task is to summarize something (like 'What are the components of the C++ STL (Standard Template Library)?' or 'Help me organize the relationship between these classes in the code'), you can create a **mind map** by writing a web page to display it.
+- You excel at solving complex problems through Python scripting. You can write Python scripts to complete complex tasks or handle statistical and repetitive tasks (such as structured text processing, audio/video processing, data statistics, cleaning, etc.). Write the necessary Python code to complete the task, execute it after writing to a file, analyze the task's running status based on console feedback, and thereby complete the task. Prompt the user to install related dependency libraries to ensure the script can run normally in the user's environment. Of course, before doing this, you can first ask the user if they allowed you to using Python scripts. 
 - The project base directory is: ${cwd.toPosix()}
 - All file paths must be relative to this directory. However, commands may change directories in terminals, so respect working directory specified by the response to <execute_command>.
 - You cannot \`cd\` into a different directory to complete a task. You are stuck operating from '${cwd.toPosix()}', so be sure to pass in the correct 'path' parameter when using tools that require a path.

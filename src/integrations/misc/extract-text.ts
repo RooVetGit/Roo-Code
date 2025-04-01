@@ -4,6 +4,7 @@ import pdf from "pdf-parse/lib/pdf-parse"
 import mammoth from "mammoth"
 import fs from "fs/promises"
 import { isBinaryFile } from "isbinaryfile"
+const iconv = require('iconv-lite');
 
 export async function extractTextFromFile(filePath: string): Promise<string> {
 	try {
@@ -20,6 +21,17 @@ export async function extractTextFromFile(filePath: string): Promise<string> {
 		case ".ipynb":
 			return extractTextFromIPYNB(filePath)
 		default:
+			// Try to read file with gb2312 encoding first
+			if ((await fs.stat(filePath)).size < 1024 * 1024) {
+				try {
+					const buffer = await fs.readFile(filePath, "binary");
+					const textContent = iconv.decode(buffer, 'gb2312');
+					return addLineNumbers(textContent);
+				} catch (error) {
+					// If gb2312 reading fails, continue with default handling
+				}
+			}
+
 			const isBinary = await isBinaryFile(filePath).catch(() => false)
 			if (!isBinary) {
 				return addLineNumbers(await fs.readFile(filePath, "utf8"))

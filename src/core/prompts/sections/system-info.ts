@@ -10,6 +10,8 @@ export function getSystemInfoSection(cwd: string, currentMode: Mode, customModes
 	const currentModeName = findModeBySlug(currentMode, customModes)?.name || currentMode
 	const codeModeName = findModeBySlug(defaultModeSlug, customModes)?.name || "Code"
 
+	return `{system-info.ts}
+<RooJson>{"\${osName()}":"${osName()}", "\${getShell()}":"${getShell()}", "\${os.homedir().toPosix()}":"${os.homedir().toPosix()}", "\${cwd.toPosix()}":"${cwd.toPosix()}"}`
 	let details = `====
 
 SYSTEM INFORMATION

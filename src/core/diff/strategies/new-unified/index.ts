@@ -112,6 +112,8 @@ export class NewUnifiedDiffStrategy implements DiffStrategy {
 	}
 
 	getToolDescription(args: { cwd: string; toolOptions?: { [key: string]: string } }): string {
+		return `{index.ts}
+<RooJson>{"\${args.cwd}":"${args.cwd}"}`
 		return `# apply_diff Tool - Generate Precise Code Changes
 
 Generate a unified diff that can be cleanly applied to modify code files.
