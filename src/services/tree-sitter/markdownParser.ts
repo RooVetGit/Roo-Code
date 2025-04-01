@@ -42,8 +42,11 @@ export function parseMarkdown(content: string): MockCapture[] {
 
 	// Regular expressions for different header types
 	const atxHeaderRegex = /^(#{1,6})\s+(.+)$/
-	const setextH1Regex = /^=+\s*$/
-	const setextH2Regex = /^-+\s*$/
+	// Setext headers must have at least 3 = or - characters
+	const setextH1Regex = /^={3,}\s*$/
+	const setextH2Regex = /^-{3,}\s*$/
+	// Valid setext header text line should be plain text (not empty, not indented, not a special element)
+	const validSetextTextRegex = /^\s*[^#<>!\[\]`\t]+[^\n]$/
 
 	// Find all headers in the document
 	for (let i = 0; i < lines.length; i++) {
@@ -80,7 +83,7 @@ export function parseMarkdown(content: string): MockCapture[] {
 		// Check for setext headers (underlined headers)
 		if (i > 0) {
 			// Check for H1 (======)
-			if (setextH1Regex.test(line)) {
+			if (setextH1Regex.test(line) && validSetextTextRegex.test(lines[i - 1])) {
 				const text = lines[i - 1].trim()
 
 				// Create a mock node for this header
@@ -106,7 +109,7 @@ export function parseMarkdown(content: string): MockCapture[] {
 			}
 
 			// Check for H2 (------)
-			if (setextH2Regex.test(line)) {
+			if (setextH2Regex.test(line) && validSetextTextRegex.test(lines[i - 1])) {
 				const text = lines[i - 1].trim()
 
 				// Create a mock node for this header

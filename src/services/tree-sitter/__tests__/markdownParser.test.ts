@@ -462,6 +462,42 @@ Line 5`
 			}
 		}
 	})
+
+	it("should correctly handle horizontal rules and not confuse them with setext headers", () => {
+		const content = `## Section Header
+
+Some content here.
+
+## License
+
+[Apache 2.0 © 2025 Roo Veterinary, Inc.](./LICENSE)
+
+---
+
+**Enjoy Roo Code!** Whether you keep it on a short leash or let it roam autonomously, we can't wait to see what you build.`
+
+		const captures = parseMarkdown(content)
+		expect(captures).toBeDefined()
+
+		// Format with default minSectionLines = 4
+		const formatted = formatMarkdownCaptures(captures)
+		expect(formatted).toBeDefined()
+		expect(formatted).toContain("## Section Header")
+		expect(formatted).toContain("## License")
+
+		// Verify that the horizontal rule is not treated as a setext header
+		const licenseCapture = captures.find((c) => c.node.text === "License")
+		expect(licenseCapture).toBeDefined()
+
+		// Check that the License section extends past the horizontal rule
+		const licenseCaptureIndex = captures.findIndex((c) => c.node.text === "License")
+		if (licenseCaptureIndex !== -1 && licenseCaptureIndex + 1 < captures.length) {
+			const licenseDefinitionCapture = captures[licenseCaptureIndex + 1]
+			expect(licenseDefinitionCapture.node.endPosition.row).toBeGreaterThan(
+				content.split("\n").findIndex((line) => line === "---"),
+			)
+		}
+	})
 })
 
 // Helper function to mimic the processCaptures function from index.ts
