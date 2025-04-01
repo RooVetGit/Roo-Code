@@ -69,25 +69,23 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	private static activeInstances: Set<ClineProvider> = new Set()
 	private disposables: vscode.Disposable[] = []
 	private view?: vscode.WebviewView | vscode.WebviewPanel
-	// not private, so it can be accessed from webviewMessageHandler
-	// callers could update to get viewLaunched() getter function
-	isViewLaunched = false
 	private clineStack: Cline[] = []
-	// not private, so it can be accessed from webviewMessageHandler
-	workspaceTracker?: WorkspaceTracker
+	private _workspaceTracker?: WorkspaceTracker // workSpaceTracker read-only for access outside this class
+	public get workspaceTracker(): WorkspaceTracker | undefined {
+		return this._workspaceTracker
+	}
 	protected mcpHub?: McpHub // Change from private to protected
-	// not private, so it can be accessed from webviewMessageHandler
-	latestAnnouncementId = "mar-30-2025-3-11" // update for v3.11.0 announcement
-	// not private, so it can be accessed from webviewMessageHandler
-	settingsImportedAt?: number
+
+	public isViewLaunched = false
+	public settingsImportedAt?: number
+	public readonly latestAnnouncementId = "mar-30-2025-3-11" // update for v3.11.0 announcement
 	public readonly contextProxy: ContextProxy
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
-		// not private, so it can be accessed from webviewMessageHandler
-		readonly outputChannel: vscode.OutputChannel,
+		private readonly outputChannel: vscode.OutputChannel,
 		private readonly renderContext: "sidebar" | "editor" = "sidebar",
 	) {
 		super()
@@ -100,7 +98,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		// properties like mode and provider.
 		telemetryService.setProvider(this)
 
-		this.workspaceTracker = new WorkspaceTracker(this)
+		this._workspaceTracker = new WorkspaceTracker(this)
 
 		this.providerSettingsManager = new ProviderSettingsManager(this.context)
 
@@ -216,8 +214,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			}
 		}
 
-		this.workspaceTracker?.dispose()
-		this.workspaceTracker = undefined
+		this._workspaceTracker?.dispose()
+		this._workspaceTracker = undefined
 		this.mcpHub?.dispose()
 		this.mcpHub = undefined
 		this.customModesManager?.dispose()
