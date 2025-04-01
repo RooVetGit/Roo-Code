@@ -92,7 +92,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	) {
 		super()
 
-		this.outputChannel.appendLine("ClineProvider instantiated")
+		this.log("ClineProvider instantiated")
 		this.contextProxy = new ContextProxy(context)
 		ClineProvider.activeInstances.add(this)
 
@@ -114,7 +114,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				this.mcpHub = hub
 			})
 			.catch((error) => {
-				this.outputChannel.appendLine(`Failed to initialize MCP Hub: ${error}`)
+				this.log(`Failed to initialize MCP Hub: ${error}`)
 			})
 	}
 
@@ -199,13 +199,13 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	- https://github.com/microsoft/vscode-extension-samples/blob/main/webview-sample/src/extension.ts
 	*/
 	async dispose() {
-		this.outputChannel.appendLine("Disposing ClineProvider...")
+		this.log("Disposing ClineProvider...")
 		await this.removeClineFromStack()
-		this.outputChannel.appendLine("Cleared task")
+		this.log("Cleared task")
 
 		if (this.view && "dispose" in this.view) {
 			this.view.dispose()
-			this.outputChannel.appendLine("Disposed webview")
+			this.log("Disposed webview")
 		}
 
 		while (this.disposables.length) {
@@ -221,7 +221,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		this.mcpHub?.dispose()
 		this.mcpHub = undefined
 		this.customModesManager?.dispose()
-		this.outputChannel.appendLine("Disposed all disposables")
+		this.log("Disposed all disposables")
 		ClineProvider.activeInstances.delete(this)
 
 		// Unregister from McpServerManager
@@ -334,7 +334,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	}
 
 	async resolveWebviewView(webviewView: vscode.WebviewView | vscode.WebviewPanel) {
-		this.outputChannel.appendLine("Resolving webview view")
+		this.log("Resolving webview view")
 
 		if (!this.contextProxy.isInitialized) {
 			await this.contextProxy.initialize()
@@ -437,7 +437,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		// If the extension is starting a new session, clear previous task state.
 		await this.removeClineFromStack()
 
-		this.outputChannel.appendLine("Webview view resolved")
+		this.log("Webview view resolved")
 	}
 
 	public async initClineWithSubTask(parent: Cline, task?: string, images?: string[]) {
@@ -926,7 +926,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				throw new Error("Invalid response from OpenRouter API")
 			}
 		} catch (error) {
-			this.outputChannel.appendLine(
+			this.log(
 				`Error exchanging code for API key: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 			)
 			throw error
@@ -955,7 +955,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				throw new Error("Invalid response from Glama API")
 			}
 		} catch (error) {
-			this.outputChannel.appendLine(
+			this.log(
 				`Error exchanging code for API key: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 			)
 			throw error
@@ -1005,7 +1005,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 			await this.postStateToWebview()
 		} catch (error) {
-			this.outputChannel.appendLine(
+			this.log(
 				`Error create new api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 			)
 			vscode.window.showErrorMessage(t("common:errors.create_api_config"))
