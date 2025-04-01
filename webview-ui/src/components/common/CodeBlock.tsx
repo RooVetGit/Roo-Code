@@ -458,6 +458,10 @@ const CodeBlock = memo(
 
 			// Wheel event handler with inertial scrolling
 			const handleWheel = (e: WheelEvent) => {
+				// If shift is pressed, let the browser handle default horizontal scrolling
+				if (e.shiftKey) {
+					return
+				}
 				if (!preRef.current) return
 
 				const scrollContainer = getScrollContainer()
