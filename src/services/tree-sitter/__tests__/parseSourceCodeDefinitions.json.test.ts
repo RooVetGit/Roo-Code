@@ -5,7 +5,7 @@ import * as path from "path"
 import { fileExistsAtPath } from "../../../utils/fs"
 import { loadRequiredLanguageParsers } from "../languageParser"
 import { javascriptQuery } from "../queries"
-import { initializeTreeSitter, testParseSourceCodeDefinitions, inspectTreeStructure } from "./helpers"
+import { initializeTreeSitter, testParseSourceCodeDefinitions, inspectTreeStructure, debugLog } from "./helpers"
 
 // Sample JSON content for tests
 const sampleJsonContent = `{
@@ -132,7 +132,7 @@ describe("parseSourceCodeDefinitions for JSON", () => {
 	})
 
 	it("should parse top-level object properties", async function () {
-		console.log("\n=== Parse Test: Top-level Properties ===")
+		debugLog("\n=== Parse Test: Top-level Properties ===")
 		const result = await testParseSourceCodeDefinitions(testFilePath, sampleJsonContent, jsonOptions)
 		expect(result).toBeDefined()
 		expect(result).toContain('"server"')
@@ -140,7 +140,7 @@ describe("parseSourceCodeDefinitions for JSON", () => {
 	})
 
 	it("should parse nested object properties", async function () {
-		console.log("\n=== Parse Test: Nested Properties ===")
+		debugLog("\n=== Parse Test: Nested Properties ===")
 		const result = await testParseSourceCodeDefinitions(testFilePath, sampleJsonContent, jsonOptions)
 		expect(result).toBeDefined()
 		expect(result).toContain('"ssl"')

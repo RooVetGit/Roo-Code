@@ -5,7 +5,7 @@ import * as path from "path"
 import { fileExistsAtPath } from "../../../utils/fs"
 import { loadRequiredLanguageParsers } from "../languageParser"
 import tsxQuery from "../queries/tsx"
-import { initializeTreeSitter, testParseSourceCodeDefinitions, inspectTreeStructure } from "./helpers"
+import { initializeTreeSitter, testParseSourceCodeDefinitions, inspectTreeStructure, debugLog } from "./helpers"
 
 // Sample component content
 const sampleTsxContent = `
@@ -255,7 +255,7 @@ it("should parse template literal types", async function () {
 
 	// Run the test to see if template literal types are already supported
 	const result = await testParseSourceCodeDefinitions("/test/template-literal-type.tsx", templateLiteralTypeContent)
-	console.log("Template literal type parsing result:", result)
+	debugLog("Template literal type parsing result:", result)
 
 	// Check if the result contains the type declarations
 	expect(result).toBeDefined()
@@ -265,7 +265,7 @@ it("should parse template literal types", async function () {
 	expect(result).toContain("RouteParams<T")
 	expect(result).toContain("StringOps<T")
 
-	console.log("Template literal types are already partially supported by the parser!")
+	debugLog("Template literal types are already partially supported by the parser!")
 
 	// Note: EventName and CSSProperty types aren't fully captured in the output,
 	// but this is likely due to the minimum line requirement (MIN_COMPONENT_LINES = 4)
@@ -337,7 +337,7 @@ it("should parse conditional types", async function () {
 
 	// First run without adding the query pattern to see if it's already implemented
 	const initialResult = await testParseSourceCodeDefinitions("/test/conditional-type.tsx", conditionalTypeContent)
-	console.log("Initial result before adding query pattern:", initialResult)
+	debugLog("Initial result before adding query pattern:", initialResult)
 
 	// Save the initial line count to compare later
 	const initialLineCount = initialResult ? initialResult.split("\n").length : 0
@@ -345,7 +345,7 @@ it("should parse conditional types", async function () {
 
 	// Now check if the new query pattern improves the output
 	const updatedResult = await testParseSourceCodeDefinitions("/test/conditional-type.tsx", conditionalTypeContent)
-	console.log("Updated result after adding query pattern:", updatedResult)
+	debugLog("Updated result after adding query pattern:", updatedResult)
 
 	// Compare results
 	const updatedLineCount = updatedResult ? updatedResult.split("\n").length : 0
@@ -353,7 +353,7 @@ it("should parse conditional types", async function () {
 
 	// Check if the feature is already implemented
 	if (initialResult && initialResult.includes("ReturnType<T>") && initialResult.includes("Parameters<T>")) {
-		console.log("Conditional types are already supported by the parser!")
+		debugLog("Conditional types are already supported by the parser!")
 		// If the feature is already implemented, we don't need to check if the updated result is better
 		expect(true).toBe(true)
 	} else {
@@ -533,7 +533,7 @@ it("should parse switch/case statements", async function () {
 	//   await inspectTreeStructure(switchCaseContent)
 
 	const result = await testParseSourceCodeDefinitions("/test/switch-case.tsx", switchCaseContent)
-	console.log("Switch Case Test Result:", result)
+	debugLog("Switch Case Test Result:", result)
 	expect(result).toBeDefined()
 	expect(result).toContain("handleTemperature")
 	// Check for case statements in the output

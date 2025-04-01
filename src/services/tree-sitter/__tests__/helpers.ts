@@ -5,11 +5,21 @@ import * as path from "path"
 import Parser from "web-tree-sitter"
 import tsxQuery from "../queries/tsx"
 
+// Global debug flag - set to 0 to disable debug logging
+export const DEBUG = 0
+
+// Debug function to conditionally log messages
+export const debugLog = (message: string, ...args: any[]) => {
+	if (DEBUG) {
+		console.debug(message, ...args)
+	}
+}
+
 // Mock fs module
 const mockedFs = jest.mocked(fs)
 
 // Store the initialized TreeSitter for reuse
-let initializedTreeSitter: any = null
+let initializedTreeSitter: Parser | null = null
 
 // Function to initialize tree-sitter
 export async function initializeTreeSitter() {
@@ -98,7 +108,7 @@ export async function testParseSourceCodeDefinitions(
 	expect(mockedLoadRequiredLanguageParsers).toHaveBeenCalledWith([testFilePath])
 	expect(mockedLoadRequiredLanguageParsers).toHaveBeenCalled()
 
-	console.log(`content:\n${content}\n\nResult:\n${result}`)
+	debugLog(`content:\n${content}\n\nResult:\n${result}`)
 	return result
 }
 
@@ -114,15 +124,15 @@ export async function inspectTreeStructure(content: string, language: string = "
 	const tree = parser.parse(content)
 
 	// Print the tree structure
-	console.log(`TREE STRUCTURE (${language}):\n${tree.rootNode.toString()}`)
+	debugLog(`TREE STRUCTURE (${language}):\n${tree.rootNode.toString()}`)
 
 	// Add more detailed debug information
-	console.log("\nDETAILED NODE INSPECTION:")
+	debugLog("\nDETAILED NODE INSPECTION:")
 
 	// Function to recursively print node details
-	const printNodeDetails = (node: any, depth: number = 0) => {
+	const printNodeDetails = (node: Parser.SyntaxNode, depth: number = 0) => {
 		const indent = "  ".repeat(depth)
-		console.log(
+		debugLog(
 			`${indent}Node Type: ${node.type}, Start: ${node.startPosition.row}:${node.startPosition.column}, End: ${node.endPosition.row}:${node.endPosition.column}`,
 		)
 
@@ -132,17 +142,17 @@ export async function inspectTreeStructure(content: string, language: string = "
 			if (child) {
 				// For type_alias_declaration nodes, print more details
 				if (node.type === "type_alias_declaration") {
-					console.log(`${indent}  TYPE ALIAS: ${node.text}`)
+					debugLog(`${indent}  TYPE ALIAS: ${node.text}`)
 				}
 
 				// For conditional_type nodes, print more details
 				if (node.type === "conditional_type" || child.type === "conditional_type") {
-					console.log(`${indent}  CONDITIONAL TYPE FOUND: ${child.text}`)
+					debugLog(`${indent}  CONDITIONAL TYPE FOUND: ${child.text}`)
 				}
 
 				// For infer_type nodes, print more details
 				if (node.type === "infer_type" || child.type === "infer_type") {
-					console.log(`${indent}  INFER TYPE FOUND: ${child.text}`)
+					debugLog(`${indent}  INFER TYPE FOUND: ${child.text}`)
 				}
 
 				printNodeDetails(child, depth + 1)
