@@ -5,6 +5,7 @@ import { DeepSeekHandler } from "./deepseek"
 import Anthropic from "@anthropic-ai/sdk"
 import { BaseProvider } from "./base-provider"
 import { SingleCompletionHandler } from "../"
+import { OpenRouterHandler } from "./openrouter"
 
 interface PearAiModelsResponse {
 	models: {
@@ -17,7 +18,7 @@ interface PearAiModelsResponse {
 }
 
 export class PearAiHandler extends BaseProvider implements SingleCompletionHandler {
-	private handler!: AnthropicHandler | DeepSeekHandler
+	private handler!: AnthropicHandler | DeepSeekHandler | OpenRouterHandler
 
 	constructor(options: ApiHandlerOptions) {
 		super()
@@ -36,12 +37,19 @@ export class PearAiHandler extends BaseProvider implements SingleCompletionHandl
 			throw new Error("PearAI API key not found. Please login to PearAI.")
 		}
 
-		// Initialize with a default handler synchronously
-		this.handler = new AnthropicHandler({
+		// // Initialize with a default handler synchronously
+		// this.handler = new AnthropicHandler({
+		// 	...options,
+		// 	apiKey: options.pearaiApiKey,
+		// 	anthropicBaseUrl: PEARAI_URL,
+		// 	apiModelId: "claude-3-5-sonnet-20241022",
+		// })
+
+		this.handler = new OpenRouterHandler({
 			...options,
-			apiKey: options.pearaiApiKey,
-			anthropicBaseUrl: PEARAI_URL,
-			apiModelId: "claude-3-5-sonnet-20241022",
+			openRouterBaseUrl: PEARAI_URL,
+			openRouterApiKey: options.pearaiApiKey,
+			openRouterModelId: "deepseek/deepseek-chat-v3-0324",
 		})
 
 		// Then try to initialize the correct handler asynchronously
@@ -95,10 +103,16 @@ export class PearAiHandler extends BaseProvider implements SingleCompletionHandl
 				anthropicBaseUrl: PEARAI_URL,
 			})
 		} else if (modelId.startsWith("deepseek")) {
-			this.handler = new DeepSeekHandler({
+			// this.handler = new DeepSeekHandler({
+			// 	...options,
+			// 	deepSeekApiKey: options.pearaiApiKey,
+			// 	deepSeekBaseUrl: PEARAI_URL,
+			// })
+			this.handler = new OpenRouterHandler({
 				...options,
-				deepSeekApiKey: options.pearaiApiKey,
-				deepSeekBaseUrl: PEARAI_URL,
+				openRouterBaseUrl: PEARAI_URL,
+				openRouterApiKey: options.pearaiApiKey,
+				openRouterModelId: modelId,
 			})
 		} else {
 			throw new Error(`Unsupported model: ${modelId}`)
