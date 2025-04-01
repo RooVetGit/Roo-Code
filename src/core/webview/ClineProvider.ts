@@ -1355,14 +1355,12 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	// ContextProxy
 
 	// @deprecated - Use `ContextProxy#setValue` instead.
-	// not private, so it can be accessed from webviewMessageHandler
-	async updateGlobalState<K extends keyof GlobalState>(key: K, value: GlobalState[K]) {
+	private async updateGlobalState<K extends keyof GlobalState>(key: K, value: GlobalState[K]) {
 		await this.contextProxy.setValue(key, value)
 	}
 
 	// @deprecated - Use `ContextProxy#getValue` instead.
-	// not private, so it can be accessed from webviewMessageHandler
-	getGlobalState<K extends keyof GlobalState>(key: K) {
+	private getGlobalState<K extends keyof GlobalState>(key: K) {
 		return this.contextProxy.getValue(key)
 	}
 

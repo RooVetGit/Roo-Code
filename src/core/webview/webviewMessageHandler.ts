@@ -41,13 +41,18 @@ import { Mode, defaultModeSlug, getModeBySlug, getGroupName } from "../../shared
 import { getDiffStrategy } from "../diff/DiffStrategy"
 import { SYSTEM_PROMPT } from "../prompts/system"
 import { buildApiHandler } from "../../api"
+import { GlobalState } from "../../schemas"
 
 export const webviewMessageHandler = async (provider: ClineProvider, message: WebviewMessage) => {
+	const getGlobalState = <K extends keyof GlobalState>(key: K) => provider.contextProxy.getValue(key)
+	const updateGlobalState = async <K extends keyof GlobalState>(key: K, value: GlobalState[K]) =>
+		await provider.contextProxy.setValue(key, value)
+
 	switch (message.type) {
 		case "webviewDidLaunch":
 			// Load custom modes first
 			const customModes = await provider.customModesManager.getCustomModes()
-			await provider.updateGlobalState("customModes", customModes)
+			await updateGlobalState("customModes", customModes)
 
 			provider.postStateToWebview()
 			provider.workspaceTracker?.initializeFilePaths() // don't await
@@ -91,7 +96,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					const { apiConfiguration } = await provider.getState()
 
 					if (apiConfiguration.openRouterModelId) {
-						await provider.updateGlobalState(
+						await updateGlobalState(
 							"openRouterModelInfo",
 							openRouterModels[apiConfiguration.openRouterModelId],
 						)
@@ -114,7 +119,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					const { apiConfiguration } = await provider.getState()
 
 					if (apiConfiguration.glamaModelId) {
-						await provider.updateGlobalState("glamaModelInfo", glamaModels[apiConfiguration.glamaModelId])
+						await updateGlobalState("glamaModelInfo", glamaModels[apiConfiguration.glamaModelId])
 						await provider.postStateToWebview()
 					}
 				}
@@ -134,10 +139,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					const { apiConfiguration } = await provider.getState()
 
 					if (apiConfiguration?.unboundModelId) {
-						await provider.updateGlobalState(
-							"unboundModelInfo",
-							unboundModels[apiConfiguration.unboundModelId],
-						)
+						await updateGlobalState("unboundModelInfo", unboundModels[apiConfiguration.unboundModelId])
 						await provider.postStateToWebview()
 					}
 				}
@@ -157,10 +159,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					const { apiConfiguration } = await provider.getState()
 
 					if (apiConfiguration.requestyModelId) {
-						await provider.updateGlobalState(
-							"requestyModelInfo",
-							requestyModels[apiConfiguration.requestyModelId],
-						)
+						await updateGlobalState("requestyModelInfo", requestyModels[apiConfiguration.requestyModelId])
 						await provider.postStateToWebview()
 					}
 				}
@@ -187,19 +186,19 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 						}
 					}
 
-					const currentConfigName = provider.getGlobalState("currentApiConfigName")
+					const currentConfigName = getGlobalState("currentApiConfigName")
 
 					if (currentConfigName) {
 						if (!(await provider.providerSettingsManager.hasConfig(currentConfigName))) {
 							// current config name not valid, get first config in list
-							await provider.updateGlobalState("currentApiConfigName", listApiConfig?.[0]?.name)
+							await updateGlobalState("currentApiConfigName", listApiConfig?.[0]?.name)
 							if (listApiConfig?.[0]?.name) {
 								const apiConfig = await provider.providerSettingsManager.loadConfig(
 									listApiConfig?.[0]?.name,
 								)
 
 								await Promise.all([
-									provider.updateGlobalState("listApiConfigMeta", listApiConfig),
+									updateGlobalState("listApiConfigMeta", listApiConfig),
 									provider.postMessageToWebview({ type: "listApiConfig", listApiConfig }),
 									provider.updateApiConfiguration(apiConfig),
 								])
@@ -210,7 +209,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					}
 
 					await Promise.all([
-						await provider.updateGlobalState("listApiConfigMeta", listApiConfig),
+						await updateGlobalState("listApiConfigMeta", listApiConfig),
 						await provider.postMessageToWebview({ type: "listApiConfig", listApiConfig }),
 					])
 				})
@@ -250,39 +249,39 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await provider.updateCustomInstructions(message.text)
 			break
 		case "alwaysAllowReadOnly":
-			await provider.updateGlobalState("alwaysAllowReadOnly", message.bool ?? undefined)
+			await updateGlobalState("alwaysAllowReadOnly", message.bool ?? undefined)
 			await provider.postStateToWebview()
 			break
 		case "alwaysAllowReadOnlyOutsideWorkspace":
-			await provider.updateGlobalState("alwaysAllowReadOnlyOutsideWorkspace", message.bool ?? undefined)
+			await updateGlobalState("alwaysAllowReadOnlyOutsideWorkspace", message.bool ?? undefined)
 			await provider.postStateToWebview()
 			break
 		case "alwaysAllowWrite":
-			await provider.updateGlobalState("alwaysAllowWrite", message.bool ?? undefined)
+			await updateGlobalState("alwaysAllowWrite", message.bool ?? undefined)
 			await provider.postStateToWebview()
 			break
 		case "alwaysAllowWriteOutsideWorkspace":
-			await provider.updateGlobalState("alwaysAllowWriteOutsideWorkspace", message.bool ?? undefined)
+			await updateGlobalState("alwaysAllowWriteOutsideWorkspace", message.bool ?? undefined)
 			await provider.postStateToWebview()
 			break
 		case "alwaysAllowExecute":
-			await provider.updateGlobalState("alwaysAllowExecute", message.bool ?? undefined)
+			await updateGlobalState("alwaysAllowExecute", message.bool ?? undefined)
 			await provider.postStateToWebview()
 			break
 		case "alwaysAllowBrowser":
-			await provider.updateGlobalState("alwaysAllowBrowser", message.bool ?? undefined)
+			await updateGlobalState("alwaysAllowBrowser", message.bool ?? undefined)
 			await provider.postStateToWebview()
 			break
 		case "alwaysAllowMcp":
-			await provider.updateGlobalState("alwaysAllowMcp", message.bool)
+			await updateGlobalState("alwaysAllowMcp", message.bool)
 			await provider.postStateToWebview()
 			break
 		case "alwaysAllowModeSwitch":
-			await provider.updateGlobalState("alwaysAllowModeSwitch", message.bool)
+			await updateGlobalState("alwaysAllowModeSwitch", message.bool)
 			await provider.postStateToWebview()
 			break
 		case "alwaysAllowSubtasks":
-			await provider.updateGlobalState("alwaysAllowSubtasks", message.bool)
+			await updateGlobalState("alwaysAllowSubtasks", message.bool)
 			await provider.postStateToWebview()
 			break
 		case "askResponse":
@@ -294,7 +293,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await provider.postStateToWebview()
 			break
 		case "didShowAnnouncement":
-			await provider.updateGlobalState("lastShownAnnouncementId", provider.latestAnnouncementId)
+			await updateGlobalState("lastShownAnnouncementId", provider.latestAnnouncementId)
 			await provider.postStateToWebview()
 			break
 		case "selectImages":
@@ -588,11 +587,11 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		}
 		case "mcpEnabled":
 			const mcpEnabled = message.bool ?? true
-			await provider.updateGlobalState("mcpEnabled", mcpEnabled)
+			await updateGlobalState("mcpEnabled", mcpEnabled)
 			await provider.postStateToWebview()
 			break
 		case "enableMcpServerCreation":
-			await provider.updateGlobalState("enableMcpServerCreation", message.bool ?? true)
+			await updateGlobalState("enableMcpServerCreation", message.bool ?? true)
 			await provider.postStateToWebview()
 			break
 		case "playSound":
@@ -603,25 +602,25 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		case "soundEnabled":
 			const soundEnabled = message.bool ?? true
-			await provider.updateGlobalState("soundEnabled", soundEnabled)
+			await updateGlobalState("soundEnabled", soundEnabled)
 			setSoundEnabled(soundEnabled) // Add this line to update the sound utility
 			await provider.postStateToWebview()
 			break
 		case "soundVolume":
 			const soundVolume = message.value ?? 0.5
-			await provider.updateGlobalState("soundVolume", soundVolume)
+			await updateGlobalState("soundVolume", soundVolume)
 			setSoundVolume(soundVolume)
 			await provider.postStateToWebview()
 			break
 		case "ttsEnabled":
 			const ttsEnabled = message.bool ?? true
-			await provider.updateGlobalState("ttsEnabled", ttsEnabled)
+			await updateGlobalState("ttsEnabled", ttsEnabled)
 			setTtsEnabled(ttsEnabled) // Add this line to update the tts utility
 			await provider.postStateToWebview()
 			break
 		case "ttsSpeed":
 			const ttsSpeed = message.value ?? 1.0
-			await provider.updateGlobalState("ttsSpeed", ttsSpeed)
+			await updateGlobalState("ttsSpeed", ttsSpeed)
 			setTtsSpeed(ttsSpeed)
 			await provider.postStateToWebview()
 			break
@@ -638,36 +637,36 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		case "diffEnabled":
 			const diffEnabled = message.bool ?? true
-			await provider.updateGlobalState("diffEnabled", diffEnabled)
+			await updateGlobalState("diffEnabled", diffEnabled)
 			await provider.postStateToWebview()
 			break
 		case "enableCheckpoints":
 			const enableCheckpoints = message.bool ?? true
-			await provider.updateGlobalState("enableCheckpoints", enableCheckpoints)
+			await updateGlobalState("enableCheckpoints", enableCheckpoints)
 			await provider.postStateToWebview()
 			break
 		case "checkpointStorage":
 			console.log(`[ClineProvider] checkpointStorage: ${message.text}`)
 			const checkpointStorage = message.text ?? "task"
-			await provider.updateGlobalState("checkpointStorage", checkpointStorage as CheckpointStorage)
+			await updateGlobalState("checkpointStorage", checkpointStorage as CheckpointStorage)
 			await provider.postStateToWebview()
 			break
 		case "browserViewportSize":
 			const browserViewportSize = message.text ?? "900x600"
-			await provider.updateGlobalState("browserViewportSize", browserViewportSize)
+			await updateGlobalState("browserViewportSize", browserViewportSize)
 			await provider.postStateToWebview()
 			break
 		case "remoteBrowserHost":
-			await provider.updateGlobalState("remoteBrowserHost", message.text)
+			await updateGlobalState("remoteBrowserHost", message.text)
 			await provider.postStateToWebview()
 			break
 		case "remoteBrowserEnabled":
 			// Store the preference in global state
 			// remoteBrowserEnabled now means "enable remote browser connection"
-			await provider.updateGlobalState("remoteBrowserEnabled", message.bool ?? false)
+			await updateGlobalState("remoteBrowserEnabled", message.bool ?? false)
 			// If disabling remote browser connection, clear the remoteBrowserHost
 			if (!message.bool) {
-				await provider.updateGlobalState("remoteBrowserHost", undefined)
+				await updateGlobalState("remoteBrowserHost", undefined)
 			}
 			await provider.postStateToWebview()
 			break
@@ -706,31 +705,31 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			}
 			break
 		case "fuzzyMatchThreshold":
-			await provider.updateGlobalState("fuzzyMatchThreshold", message.value)
+			await updateGlobalState("fuzzyMatchThreshold", message.value)
 			await provider.postStateToWebview()
 			break
 		case "alwaysApproveResubmit":
-			await provider.updateGlobalState("alwaysApproveResubmit", message.bool ?? false)
+			await updateGlobalState("alwaysApproveResubmit", message.bool ?? false)
 			await provider.postStateToWebview()
 			break
 		case "requestDelaySeconds":
-			await provider.updateGlobalState("requestDelaySeconds", message.value ?? 5)
+			await updateGlobalState("requestDelaySeconds", message.value ?? 5)
 			await provider.postStateToWebview()
 			break
 		case "rateLimitSeconds":
-			await provider.updateGlobalState("rateLimitSeconds", message.value ?? 0)
+			await updateGlobalState("rateLimitSeconds", message.value ?? 0)
 			await provider.postStateToWebview()
 			break
 		case "writeDelayMs":
-			await provider.updateGlobalState("writeDelayMs", message.value)
+			await updateGlobalState("writeDelayMs", message.value)
 			await provider.postStateToWebview()
 			break
 		case "terminalOutputLineLimit":
-			await provider.updateGlobalState("terminalOutputLineLimit", message.value)
+			await updateGlobalState("terminalOutputLineLimit", message.value)
 			await provider.postStateToWebview()
 			break
 		case "terminalShellIntegrationTimeout":
-			await provider.updateGlobalState("terminalShellIntegrationTimeout", message.value)
+			await updateGlobalState("terminalShellIntegrationTimeout", message.value)
 			await provider.postStateToWebview()
 			if (message.value !== undefined) {
 				Terminal.setShellIntegrationTimeout(message.value)
@@ -745,9 +744,9 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					return
 				}
 
-				const existingPrompts = provider.getGlobalState("customSupportPrompts") ?? {}
+				const existingPrompts = getGlobalState("customSupportPrompts") ?? {}
 				const updatedPrompts = { ...existingPrompts, ...message.values }
-				await provider.updateGlobalState("customSupportPrompts", updatedPrompts)
+				await updateGlobalState("customSupportPrompts", updatedPrompts)
 				await provider.postStateToWebview()
 			} catch (error) {
 				provider.outputChannel.appendLine(
@@ -762,10 +761,10 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					return
 				}
 
-				const existingPrompts = provider.getGlobalState("customSupportPrompts") ?? {}
+				const existingPrompts = getGlobalState("customSupportPrompts") ?? {}
 				const updatedPrompts = { ...existingPrompts }
 				updatedPrompts[message.text] = undefined
-				await provider.updateGlobalState("customSupportPrompts", updatedPrompts)
+				await updateGlobalState("customSupportPrompts", updatedPrompts)
 				await provider.postStateToWebview()
 			} catch (error) {
 				provider.outputChannel.appendLine(
@@ -776,9 +775,9 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		case "updatePrompt":
 			if (message.promptMode && message.customPrompt !== undefined) {
-				const existingPrompts = provider.getGlobalState("customModePrompts") ?? {}
+				const existingPrompts = getGlobalState("customModePrompts") ?? {}
 				const updatedPrompts = { ...existingPrompts, [message.promptMode]: message.customPrompt }
-				await provider.updateGlobalState("customModePrompts", updatedPrompts)
+				await updateGlobalState("customModePrompts", updatedPrompts)
 				const currentState = await provider.getState()
 				const stateWithPrompts = { ...currentState, customModePrompts: updatedPrompts }
 				provider.postMessageToWebview({ type: "state", state: stateWithPrompts })
@@ -891,39 +890,39 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		}
 		case "screenshotQuality":
-			await provider.updateGlobalState("screenshotQuality", message.value)
+			await updateGlobalState("screenshotQuality", message.value)
 			await provider.postStateToWebview()
 			break
 		case "maxOpenTabsContext":
 			const tabCount = Math.min(Math.max(0, message.value ?? 20), 500)
-			await provider.updateGlobalState("maxOpenTabsContext", tabCount)
+			await updateGlobalState("maxOpenTabsContext", tabCount)
 			await provider.postStateToWebview()
 			break
 		case "maxWorkspaceFiles":
 			const fileCount = Math.min(Math.max(0, message.value ?? 200), 500)
-			await provider.updateGlobalState("maxWorkspaceFiles", fileCount)
+			await updateGlobalState("maxWorkspaceFiles", fileCount)
 			await provider.postStateToWebview()
 			break
 		case "browserToolEnabled":
-			await provider.updateGlobalState("browserToolEnabled", message.bool ?? true)
+			await updateGlobalState("browserToolEnabled", message.bool ?? true)
 			await provider.postStateToWebview()
 			break
 		case "language":
 			changeLanguage(message.text ?? "en")
-			await provider.updateGlobalState("language", message.text as Language)
+			await updateGlobalState("language", message.text as Language)
 			await provider.postStateToWebview()
 			break
 		case "showRooIgnoredFiles":
-			await provider.updateGlobalState("showRooIgnoredFiles", message.bool ?? true)
+			await updateGlobalState("showRooIgnoredFiles", message.bool ?? true)
 			await provider.postStateToWebview()
 			break
 		case "maxReadFileLine":
-			await provider.updateGlobalState("maxReadFileLine", message.value)
+			await updateGlobalState("maxReadFileLine", message.value)
 			await provider.postStateToWebview()
 			break
 		case "toggleApiConfigPin":
 			if (message.text) {
-				const currentPinned = provider.getGlobalState("pinnedApiConfigs") ?? {}
+				const currentPinned = getGlobalState("pinnedApiConfigs") ?? {}
 				const updatedPinned: Record<string, boolean> = { ...currentPinned }
 
 				if (currentPinned[message.text]) {
@@ -932,16 +931,16 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					updatedPinned[message.text] = true
 				}
 
-				await provider.updateGlobalState("pinnedApiConfigs", updatedPinned)
+				await updateGlobalState("pinnedApiConfigs", updatedPinned)
 				await provider.postStateToWebview()
 			}
 			break
 		case "enhancementApiConfigId":
-			await provider.updateGlobalState("enhancementApiConfigId", message.text)
+			await updateGlobalState("enhancementApiConfigId", message.text)
 			await provider.postStateToWebview()
 			break
 		case "autoApprovalEnabled":
-			await provider.updateGlobalState("autoApprovalEnabled", message.bool ?? false)
+			await updateGlobalState("autoApprovalEnabled", message.bool ?? false)
 			await provider.postStateToWebview()
 			break
 		case "enhancePrompt":
@@ -1080,7 +1079,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				try {
 					await provider.providerSettingsManager.saveConfig(message.text, message.apiConfiguration)
 					const listApiConfig = await provider.providerSettingsManager.listConfig()
-					await provider.updateGlobalState("listApiConfigMeta", listApiConfig)
+					await updateGlobalState("listApiConfigMeta", listApiConfig)
 				} catch (error) {
 					provider.outputChannel.appendLine(
 						`Error save api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
@@ -1119,8 +1118,8 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					const listApiConfig = await provider.providerSettingsManager.listConfig()
 
 					// Update listApiConfigMeta first to ensure UI has latest data
-					await provider.updateGlobalState("listApiConfigMeta", listApiConfig)
-					await provider.updateGlobalState("currentApiConfigName", newName)
+					await updateGlobalState("listApiConfigMeta", listApiConfig)
+					await updateGlobalState("currentApiConfigName", newName)
 
 					await provider.postStateToWebview()
 				} catch (error) {
@@ -1138,8 +1137,8 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					const listApiConfig = await provider.providerSettingsManager.listConfig()
 
 					await Promise.all([
-						provider.updateGlobalState("listApiConfigMeta", listApiConfig),
-						provider.updateGlobalState("currentApiConfigName", message.text),
+						updateGlobalState("listApiConfigMeta", listApiConfig),
+						updateGlobalState("currentApiConfigName", message.text),
 						provider.updateApiConfiguration(apiConfig),
 					])
 
@@ -1161,8 +1160,8 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					const listApiConfig = await provider.providerSettingsManager.listConfig()
 
 					await Promise.all([
-						provider.updateGlobalState("listApiConfigMeta", listApiConfig),
-						provider.updateGlobalState("currentApiConfigName", name),
+						updateGlobalState("listApiConfigMeta", listApiConfig),
+						updateGlobalState("currentApiConfigName", name),
 						provider.updateApiConfiguration(apiConfig),
 					])
 
@@ -1192,15 +1191,15 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					const listApiConfig = await provider.providerSettingsManager.listConfig()
 
 					// Update listApiConfigMeta first to ensure UI has latest data
-					await provider.updateGlobalState("listApiConfigMeta", listApiConfig)
+					await updateGlobalState("listApiConfigMeta", listApiConfig)
 
 					// If this was the current config, switch to first available
-					const currentApiConfigName = provider.getGlobalState("currentApiConfigName")
+					const currentApiConfigName = getGlobalState("currentApiConfigName")
 
 					if (message.text === currentApiConfigName && listApiConfig?.[0]?.name) {
 						const apiConfig = await provider.providerSettingsManager.loadConfig(listApiConfig[0].name)
 						await Promise.all([
-							provider.updateGlobalState("currentApiConfigName", listApiConfig[0].name),
+							updateGlobalState("currentApiConfigName", listApiConfig[0].name),
 							provider.updateApiConfiguration(apiConfig),
 						])
 					}
@@ -1217,7 +1216,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "getListApiConfiguration":
 			try {
 				const listApiConfig = await provider.providerSettingsManager.listConfig()
-				await provider.updateGlobalState("listApiConfigMeta", listApiConfig)
+				await updateGlobalState("listApiConfigMeta", listApiConfig)
 				provider.postMessageToWebview({ type: "listApiConfig", listApiConfig })
 			} catch (error) {
 				provider.outputChannel.appendLine(
@@ -1232,11 +1231,11 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			}
 
 			const updatedExperiments = {
-				...(provider.getGlobalState("experiments") ?? experimentDefault),
+				...(getGlobalState("experiments") ?? experimentDefault),
 				...message.values,
 			}
 
-			await provider.updateGlobalState("experiments", updatedExperiments)
+			await updateGlobalState("experiments", updatedExperiments)
 
 			const currentCline = provider.getCurrentCline()
 
@@ -1271,8 +1270,8 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				await provider.customModesManager.updateCustomMode(message.modeConfig.slug, message.modeConfig)
 				// Update state after saving the mode
 				const customModes = await provider.customModesManager.getCustomModes()
-				await provider.updateGlobalState("customModes", customModes)
-				await provider.updateGlobalState("mode", message.modeConfig.slug)
+				await updateGlobalState("customModes", customModes)
+				await updateGlobalState("mode", message.modeConfig.slug)
 				await provider.postStateToWebview()
 			}
 			break
@@ -1290,7 +1289,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 
 				await provider.customModesManager.deleteCustomMode(message.slug)
 				// Switch back to default mode after deletion
-				await provider.updateGlobalState("mode", defaultModeSlug)
+				await updateGlobalState("mode", defaultModeSlug)
 				await provider.postStateToWebview()
 			}
 			break
@@ -1315,7 +1314,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 
 		case "telemetrySetting": {
 			const telemetrySetting = message.text as TelemetrySetting
-			await provider.updateGlobalState("telemetrySetting", telemetrySetting)
+			await updateGlobalState("telemetrySetting", telemetrySetting)
 			const isOptedIn = telemetrySetting === "enabled"
 			telemetryService.updateTelemetryState(isOptedIn)
 			await provider.postStateToWebview()
