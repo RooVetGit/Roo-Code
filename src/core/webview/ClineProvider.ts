@@ -892,7 +892,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		return getCacheDirectoryPath(globalStoragePath)
 	}
 
-	async writeDataToCache<T>(filename: string, data: T) {
+	async writeModelsToCache<T>(filename: string, data: T) {
 		const cacheDir = await this.ensureCacheDirectoryExists()
 		await fs.writeFile(path.join(cacheDir, filename), JSON.stringify(data))
 	}
