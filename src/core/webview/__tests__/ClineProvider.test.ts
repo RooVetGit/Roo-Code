@@ -378,7 +378,7 @@ describe("ClineProvider", () => {
 
 		// Verify Content Security Policy contains the necessary PostHog domains
 		expect(mockWebviewView.webview.html).toContain(
-			"connect-src https://openrouter.ai https://us.i.posthog.com https://us-assets.i.posthog.com;",
+			"connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com;",
 		)
 		expect(mockWebviewView.webview.html).toContain("script-src 'nonce-")
 	})
@@ -388,7 +388,6 @@ describe("ClineProvider", () => {
 
 		const mockState: ExtensionState = {
 			version: "1.0.0",
-			osInfo: "unix",
 			clineMessages: [],
 			taskHistory: [],
 			shouldShowAnnouncement: false,
