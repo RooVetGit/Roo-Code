@@ -2,27 +2,10 @@ import { describe, expect, it, jest, beforeEach, beforeAll } from "@jest/globals
 import { parseSourceCodeDefinitionsForFile } from ".."
 import * as fs from "fs/promises"
 import * as path from "path"
-import Parser from "web-tree-sitter"
 import { fileExistsAtPath } from "../../../utils/fs"
+import { loadRequiredLanguageParsers } from "../languageParser"
 import tsxQuery from "../queries/tsx"
-import { loadRequiredLanguageParsers, LanguageParser } from "../languageParser"
-
-// We'll use the debug test to test the parser directly
-
-// Mock file system operations
-jest.mock("fs/promises")
-const mockedFs = jest.mocked(fs)
-
-// Mock fileExistsAtPath to return true for our test paths
-jest.mock("../../../utils/fs", () => ({
-	fileExistsAtPath: jest.fn().mockImplementation(() => Promise.resolve(true)),
-}))
-
-// Mock loadRequiredLanguageParsers
-// Mock the loadRequiredLanguageParsers function
-jest.mock("../languageParser", () => ({
-	loadRequiredLanguageParsers: jest.fn(),
-}))
+import { initializeTreeSitter, testParseSourceCodeDefinitions, inspectTreeStructure } from "./helpers"
 
 // Sample component content
 const sampleTsxContent = `
@@ -75,7 +58,7 @@ const TemperatureControl = ({
       </VSCodeCheckbox>
 
       <Slider
-        min={0} 
+        min={0}
         max={maxValue}
         value={[inputValue ?? 0]}
         onValueChange={([value]) => setInputValue(value)}
@@ -85,167 +68,27 @@ const TemperatureControl = ({
 }
 }`
 
-// Function to initialize tree-sitter
-async function initializeTreeSitter() {
-	if (initializedTreeSitter) {
-		return initializedTreeSitter
-	}
+// We'll use the debug test to test the parser directly
 
-	const TreeSitter = await initializeWorkingParser()
-	const wasmPath = path.join(process.cwd(), "dist/tree-sitter-tsx.wasm")
-	const tsxLang = await TreeSitter.Language.load(wasmPath)
+// Mock file system operations
+jest.mock("fs/promises")
+const mockedFs = jest.mocked(fs)
 
-	initializedTreeSitter = TreeSitter
-	return TreeSitter
-}
+// Mock fileExistsAtPath to return true for our test paths
+jest.mock("../../../utils/fs", () => ({
+	fileExistsAtPath: jest.fn().mockImplementation(() => Promise.resolve(true)),
+}))
 
-// Function to initialize a working parser with correct WASM path
-// DO NOT CHANGE THIS FUNCTION
-async function initializeWorkingParser() {
-	const TreeSitter = jest.requireActual("web-tree-sitter") as any
+// Mock loadRequiredLanguageParsers
+// Mock the loadRequiredLanguageParsers function
+jest.mock("../languageParser", () => ({
+	loadRequiredLanguageParsers: jest.fn(),
+}))
 
-	// Initialize directly using the default export or the module itself
-	const ParserConstructor = TreeSitter.default || TreeSitter
-	await ParserConstructor.init()
+// Sample component content is imported from helpers.ts
 
-	// Override the Parser.Language.load to use dist directory
-	const originalLoad = TreeSitter.Language.load
-	TreeSitter.Language.load = async (wasmPath: string) => {
-		const filename = path.basename(wasmPath)
-		const correctPath = path.join(process.cwd(), "dist", filename)
-		// console.log(`Redirecting WASM load from ${wasmPath} to ${correctPath}`)
-		return originalLoad(correctPath)
-	}
-
-	return TreeSitter
-}
-// ^^^ DO NOT CHANGE THAT FUNCTION ^^^
-
-// Test helper for parsing source code definitions
-async function testParseSourceCodeDefinitions(testFilePath: string, content: string): Promise<string | undefined> {
-	// Clear any previous mocks
-	jest.clearAllMocks()
-
-	// Mock fs.readFile to return our sample content
-	mockedFs.readFile.mockResolvedValue(content)
-
-	// Get the mock function
-	const mockedLoadRequiredLanguageParsers = require("../languageParser").loadRequiredLanguageParsers
-
-	// Initialize TreeSitter and create a real parser
-	const TreeSitter = await initializeTreeSitter()
-	const parser = new TreeSitter()
-
-	// Load TSX language and configure parser
-	const wasmPath = path.join(process.cwd(), "dist/tree-sitter-tsx.wasm")
-	const tsxLang = await TreeSitter.Language.load(wasmPath)
-	parser.setLanguage(tsxLang)
-
-	// Create a real query
-	const query = tsxLang.query(tsxQuery)
-
-	// Set up our language parser with real parser and query
-	const mockLanguageParser = {
-		tsx: { parser, query },
-	}
-
-	// Configure the mock to return our parser
-	mockedLoadRequiredLanguageParsers.mockResolvedValue(mockLanguageParser)
-
-	// Call the function under test
-	const result = await parseSourceCodeDefinitionsForFile(testFilePath)
-
-	// Verify loadRequiredLanguageParsers was called with the expected file path
-	expect(mockedLoadRequiredLanguageParsers).toHaveBeenCalledWith([testFilePath])
-	expect(mockedLoadRequiredLanguageParsers).toHaveBeenCalled()
-
-	console.log(`content:\n${content}\n\nResult:\n${result}`)
-	return result
-}
-
-// Parse with the correct WASM path
-// Use the same approach as the working treeParserDebug test
-// Store the initialized TreeSitter from treeParserDebug for reuse
-let initializedTreeSitter: any = null
-
-// Helper function to inspect tree structure
-async function inspectTreeStructure(content: string, language: string = "typescript"): Promise<void> {
-	const TreeSitter = await initializeTreeSitter()
-	const parser = new TreeSitter()
-	const wasmPath = path.join(process.cwd(), `dist/tree-sitter-${language}.wasm`)
-	const lang = await TreeSitter.Language.load(wasmPath)
-	parser.setLanguage(lang)
-
-	// Parse the content
-	const tree = parser.parse(content)
-
-	// Print the tree structure
-	console.log(`TREE STRUCTURE (${language}):\n${tree.rootNode.toString()}`)
-
-	// Add more detailed debug information
-	console.log("\nDETAILED NODE INSPECTION:")
-
-	// Function to recursively print node details
-	const printNodeDetails = (node: any, depth: number = 0) => {
-		const indent = "  ".repeat(depth)
-		console.log(
-			`${indent}Node Type: ${node.type}, Start: ${node.startPosition.row}:${node.startPosition.column}, End: ${node.endPosition.row}:${node.endPosition.column}`,
-		)
-
-		// Print children
-		for (let i = 0; i < node.childCount; i++) {
-			const child = node.child(i)
-			if (child) {
-				// For type_alias_declaration nodes, print more details
-				if (node.type === "type_alias_declaration") {
-					console.log(`${indent}  TYPE ALIAS: ${node.text}`)
-				}
-
-				// For conditional_type nodes, print more details
-				if (node.type === "conditional_type" || child.type === "conditional_type") {
-					console.log(`${indent}  CONDITIONAL TYPE FOUND: ${child.text}`)
-				}
-
-				// For infer_type nodes, print more details
-				if (node.type === "infer_type" || child.type === "infer_type") {
-					console.log(`${indent}  INFER TYPE FOUND: ${child.text}`)
-				}
-
-				printNodeDetails(child, depth + 1)
-			}
-		}
-	}
-
-	// Start recursive printing from the root node
-	printNodeDetails(tree.rootNode)
-}
-
-const logParseResult = async (description: string, filePath: string) => {
-	console.log("\n=== Parse Test:", description, "===")
-
-	// Unmock fs/promises - this matches what treeParserDebug does
-	jest.unmock("fs/promises")
-
-	// Use the sample content for testing
-	const fileContent = sampleTsxContent
-
-	let formattedOutput = (await testParseSourceCodeDefinitions(filePath, fileContent)) || ""
-
-	// Log results
-	console.log("File:", path.basename(filePath))
-	console.log("Result Type:", typeof formattedOutput)
-
-	if (formattedOutput) {
-		const lines = formattedOutput.split("\n")
-		console.log("Line Count:", lines.length)
-		console.log("First 3 Lines:\n", lines.slice(0, 3).join("\n"))
-	}
-
-	console.log("================\n")
-	return formattedOutput
-}
 // Add a test that uses the real parser with a debug approach
-// This test MUST run before tests that use logParseResult
+// This test MUST run before tests to trigger initializeTreeSitter
 describe("treeParserDebug", () => {
 	// Run this test to debug tree-sitter parsing
 	it("should debug tree-sitter parsing directly using example from debug-tsx-tree.js", async () => {
@@ -367,7 +210,7 @@ describe("treeParserDebug", () => {
 })
 
 it("should parse template literal types", async function () {
-	 const templateLiteralTypeContent = `
+	const templateLiteralTypeContent = `
 	   /**
 	    * EventName type for DOM events
 	    * Creates a union type of all possible event names with 'on' prefix
@@ -408,25 +251,25 @@ it("should parse template literal types", async function () {
 	     Uncapitalize: Uncapitalize<T>;
 	   };
 	 `
-	 mockedFs.readFile.mockResolvedValue(Buffer.from(templateLiteralTypeContent))
-	 
-	 // Run the test to see if template literal types are already supported
-	 const result = await testParseSourceCodeDefinitions("/test/template-literal-type.tsx", templateLiteralTypeContent)
-	 console.log("Template literal type parsing result:", result)
-	 
-	 // Check if the result contains the type declarations
-	 expect(result).toBeDefined()
-	 
-	 // The test shows that template literal types are already partially supported
-	 // We can see that RouteParams and StringOps are being captured
-	 expect(result).toContain("RouteParams<T")
-	 expect(result).toContain("StringOps<T")
-	 
-	 console.log("Template literal types are already partially supported by the parser!")
-	 
-	 // Note: EventName and CSSProperty types aren't fully captured in the output,
-	 // but this is likely due to the minimum line requirement (MIN_COMPONENT_LINES = 4)
-	 // as mentioned in the task description (index.ts requires blocks to have at least 5 lines)
+	mockedFs.readFile.mockResolvedValue(Buffer.from(templateLiteralTypeContent))
+
+	// Run the test to see if template literal types are already supported
+	const result = await testParseSourceCodeDefinitions("/test/template-literal-type.tsx", templateLiteralTypeContent)
+	console.log("Template literal type parsing result:", result)
+
+	// Check if the result contains the type declarations
+	expect(result).toBeDefined()
+
+	// The test shows that template literal types are already partially supported
+	// We can see that RouteParams and StringOps are being captured
+	expect(result).toContain("RouteParams<T")
+	expect(result).toContain("StringOps<T")
+
+	console.log("Template literal types are already partially supported by the parser!")
+
+	// Note: EventName and CSSProperty types aren't fully captured in the output,
+	// but this is likely due to the minimum line requirement (MIN_COMPONENT_LINES = 4)
+	// as mentioned in the task description (index.ts requires blocks to have at least 5 lines)
 })
 
 it("should parse conditional types", async function () {
@@ -794,13 +637,13 @@ describe("parseSourceCodeDefinitions", () => {
 	})
 
 	it("should parse interface definitions", async function () {
-		const result = await logParseResult("Interface Definitions", testFilePath)
+		const result = await testParseSourceCodeDefinitions(testFilePath, sampleTsxContent)
 		expect(result).toContain("interface VSCodeCheckboxProps")
 	})
 
 	// Tests for parsing functionality with tree-sitter
 	it("should parse React component definitions", async function () {
-		const result = await logParseResult("React Component", testFilePath)
+		const result = await testParseSourceCodeDefinitions(testFilePath, sampleTsxContent)
 		expect(result).toBeDefined()
 		expect(result).toContain("VSCodeCheckbox")
 		expect(result).toContain("VSCodeCheckboxProps")
