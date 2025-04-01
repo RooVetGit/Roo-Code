@@ -37,7 +37,7 @@ import { openMention } from "../mentions"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { TelemetrySetting } from "../../shared/TelemetrySetting"
 import { getWorkspacePath } from "../../utils/path"
-import { Mode, PromptComponent, defaultModeSlug, getModeBySlug, getGroupName } from "../../shared/modes"
+import { Mode, defaultModeSlug, getModeBySlug, getGroupName } from "../../shared/modes"
 import { getDiffStrategy } from "../diff/DiffStrategy"
 import { SYSTEM_PROMPT } from "../prompts/system"
 import { buildApiHandler } from "../../api"
@@ -55,10 +55,11 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			getTheme().then((theme) => provider.postMessageToWebview({ type: "theme", text: JSON.stringify(theme) }))
 
 			// If MCP Hub is already initialized, update the webview with current server list
-			if (provider.getMcpHub()) {
+			const mcpHub = provider.getMcpHub()
+			if (mcpHub) {
 				provider.postMessageToWebview({
 					type: "mcpServers",
-					mcpServers: provider.getMcpHub().getAllServers(),
+					mcpServers: mcpHub.getAllServers(),
 				})
 			}
 
@@ -572,14 +573,14 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		}
 		case "toggleToolAlwaysAllow": {
 			try {
-				if (provider.getMcpHub()) {
-					await provider.getMcpHub()?.toggleToolAlwaysAllow(
+				await provider
+					.getMcpHub()
+					?.toggleToolAlwaysAllow(
 						message.serverName!,
 						message.source as "global" | "project",
 						message.toolName!,
 						Boolean(message.alwaysAllow),
 					)
-				}
 			} catch (error) {
 				provider.outputChannel.appendLine(
 					`Failed to toggle auto-approve for tool ${message.toolName}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
@@ -589,11 +590,13 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		}
 		case "toggleMcpServer": {
 			try {
-				await provider.getMcpHub()?.toggleServerDisabled(
-					message.serverName!,
-					message.disabled!,
-					message.source as "global" | "project",
-				)
+				await provider
+					.getMcpHub()
+					?.toggleServerDisabled(
+						message.serverName!,
+						message.disabled!,
+						message.source as "global" | "project",
+					)
 			} catch (error) {
 				provider.outputChannel.appendLine(
 					`Failed to toggle MCP server ${message.serverName}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
@@ -1266,11 +1269,13 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "updateMcpTimeout":
 			if (message.serverName && typeof message.timeout === "number") {
 				try {
-					await provider.getMcpHub()?.updateServerTimeout(
-						message.serverName,
-						message.timeout,
-						message.source as "global" | "project",
-					)
+					await provider
+						.getMcpHub()
+						?.updateServerTimeout(
+							message.serverName,
+							message.timeout,
+							message.source as "global" | "project",
+						)
 				} catch (error) {
 					provider.outputChannel.appendLine(
 						`Failed to update timeout for ${message.serverName}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
