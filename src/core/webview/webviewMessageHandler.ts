@@ -44,6 +44,7 @@ import { buildApiHandler } from "../../api"
 import { GlobalState } from "../../schemas"
 
 export const webviewMessageHandler = async (provider: ClineProvider, message: WebviewMessage) => {
+	// Utility functions provided for concise get/update of global state via contextProxy API.
 	const getGlobalState = <K extends keyof GlobalState>(key: K) => provider.contextProxy.getValue(key)
 	const updateGlobalState = async <K extends keyof GlobalState>(key: K, value: GlobalState[K]) =>
 		await provider.contextProxy.setValue(key, value)
