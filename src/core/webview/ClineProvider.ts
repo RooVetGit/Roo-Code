@@ -897,7 +897,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		await fs.writeFile(path.join(cacheDir, filename), JSON.stringify(data))
 	}
 
-	// not private, so it can be accessed from webviewMessageHandler
 	async readModelsFromCache(filename: string): Promise<Record<string, ModelInfo> | undefined> {
 		const filePath = path.join(await this.ensureCacheDirectoryExists(), filename)
 		const fileExists = await fileExistsAtPath(filePath)
