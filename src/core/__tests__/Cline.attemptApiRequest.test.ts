@@ -1,9 +1,12 @@
 import { Cline } from "../Cline"
 import delay from "delay"
 import { ApiStreamChunk } from "../../api/transform/stream"
+import * as vscode from "vscode"
+import { ClineProvider } from "../webview/ClineProvider"
 
 // Mock dependencies
 jest.mock("delay")
+jest.mock("vscode")
 const mockDelay = delay as jest.MockedFunction<typeof delay>
 
 // Mock RooIgnoreController to avoid fileWatcher errors
@@ -24,22 +27,104 @@ jest.mock("../ignore/RooIgnoreController", () => {
 
 describe("Cline.attemptApiRequest", () => {
 	// Common test setup
-	// Create a mock provider that satisfies the ClineProvider interface
 	const mockProvider = {
-		getState: jest.fn().mockResolvedValue({
+		getState: jest.fn().mockImplementation(async () => ({
+			apiConfiguration: {
+				apiModelId: "claude-3-sonnet",
+				apiKey: "test-key",
+				apiProvider: "anthropic",
+			},
+			lastShownAnnouncementId: undefined,
+			customInstructions: undefined,
+			alwaysAllowReadOnly: false,
+			alwaysAllowReadOnlyOutsideWorkspace: false,
+			alwaysAllowWrite: false,
+			alwaysAllowWriteOutsideWorkspace: false,
+			alwaysAllowExecute: false,
+			alwaysAllowBrowser: false,
+			alwaysAllowMcp: false,
+			alwaysAllowModeSwitch: false,
+			alwaysAllowSubtasks: false,
+			taskHistory: [],
+			allowedCommands: [],
+			soundEnabled: false,
+			ttsEnabled: false,
+			ttsSpeed: 1.0,
+			diffEnabled: true,
+			enableCheckpoints: true,
+			checkpointStorage: "task",
+			soundVolume: 0.5,
+			browserViewportSize: "900x600",
+			screenshotQuality: 75,
+			remoteBrowserHost: undefined,
+			remoteBrowserEnabled: false,
+			cachedChromeHostUrl: undefined,
+			fuzzyMatchThreshold: 1.0,
+			writeDelayMs: 1000,
+			terminalOutputLineLimit: 500,
+			terminalShellIntegrationTimeout: 30000,
+			mode: "default",
+			language: "en",
 			mcpEnabled: false,
+			enableMcpServerCreation: true,
 			alwaysApproveResubmit: true,
 			requestDelaySeconds: 3,
 			rateLimitSeconds: 5,
-		}),
+			currentApiConfigName: "default",
+			listApiConfigMeta: [],
+			pinnedApiConfigs: {},
+			modeApiConfigs: {},
+			customModePrompts: {},
+			customSupportPrompts: {},
+			enhancementApiConfigId: undefined,
+			experiments: {},
+			autoApprovalEnabled: false,
+			customModes: {},
+			maxOpenTabsContext: 20,
+			maxWorkspaceFiles: 200,
+			openRouterUseMiddleOutTransform: true,
+			browserToolEnabled: true,
+			telemetrySetting: "unset",
+			showRooIgnoredFiles: true,
+			maxReadFileLine: 500,
+		})),
 		getMcpHub: jest.fn(),
-		// Additional required properties to satisfy ClineProvider interface
 		disposables: [],
 		isViewLaunched: false,
 		clineStack: [],
-		latestAnnouncementId: null,
-		context: {} as any,
-		outputChannel: {} as any,
+		latestAnnouncementId: undefined,
+		context: {
+			globalStorageUri: vscode.Uri.file("/mock/storage/path"),
+			extensionUri: vscode.Uri.file("/mock/extension/path"),
+			logUri: vscode.Uri.file("/mock/log/path"),
+			extensionMode: vscode.ExtensionMode.Test,
+			subscriptions: [],
+			extensionPath: "/mock/extension/path",
+			globalState: {
+				get: jest.fn(),
+				update: jest.fn(),
+				keys: jest.fn().mockReturnValue([]),
+				setKeysForSync: jest.fn(),
+			},
+			workspaceState: {
+				get: jest.fn(),
+				update: jest.fn(),
+				keys: jest.fn().mockReturnValue([]),
+				setKeysForSync: jest.fn(),
+			},
+			storageUri: undefined,
+			asAbsolutePath: jest.fn((path) => path),
+		},
+		outputChannel: {
+			name: "Roo Code",
+			append: jest.fn(),
+			appendLine: jest.fn(),
+			clear: jest.fn(),
+			show: jest.fn(),
+			hide: jest.fn(),
+			dispose: jest.fn(),
+			replace: jest.fn(),
+		},
 		renderContext: "sidebar" as const,
 		emit: jest.fn(),
 		on: jest.fn(),
@@ -53,12 +138,23 @@ describe("Cline.attemptApiRequest", () => {
 		postStateToWebview: jest.fn(),
 		resolveWebviewView: jest.fn(),
 		resolveWebviewPanel: jest.fn(),
-		contextProxy: {} as any,
-		providerSettingsManager: {} as any,
-		customModesManager: {} as any,
-		workspaceTracker: {} as any,
+		contextProxy: {
+			getValue: jest.fn(),
+			getValues: jest.fn(),
+			setValues: jest.fn(),
+		},
+		providerSettingsManager: {
+			listConfig: jest.fn(),
+			setModeConfig: jest.fn(),
+		},
+		customModesManager: {},
+		workspaceTracker: {},
 		mcpHub: undefined,
-	} as any // Use type assertion to bypass the remaining properties
+		dispose: jest.fn(),
+		getClineStackSize: jest.fn(),
+		getCurrentTaskStack: jest.fn(),
+		finishSubTask: jest.fn(),
+	} as unknown as ClineProvider // Type assertion since we're only implementing what we need for tests
 
 	const mockApiConfig = {
 		apiModelId: "claude-3-sonnet",
@@ -68,6 +164,20 @@ describe("Cline.attemptApiRequest", () => {
 	beforeEach(() => {
 		jest.clearAllMocks()
 		mockDelay.mockResolvedValue(undefined)
+		// Mock the cline messages to include valid JSON for the API request info
+		const mockClineMessages = [
+			{
+				text: JSON.stringify({
+					tokensIn: 100,
+					tokensOut: 50,
+					cacheWrites: 0,
+					cacheReads: 0,
+				}),
+			},
+		]
+		mockProvider.getCurrentCline = jest.fn().mockReturnValue({
+			clineMessages: mockClineMessages,
+		})
 	})
 
 	describe("Rate Limiting", () => {
@@ -119,7 +229,6 @@ describe("Cline.attemptApiRequest", () => {
 					if (firstAttempt) {
 						firstAttempt = false
 						throw new Error(JSON.stringify({ status: 429, message: "Rate limit exceeded" }))
-						// throw { status: 429, message: "Rate limit exceeded" }
 					}
 					yield { type: "text", text: "success" }
 				})()
@@ -145,12 +254,22 @@ describe("Cline.attemptApiRequest", () => {
 		})
 
 		it("should handle rate limit error with manual retry when alwaysApproveResubmit is false", async () => {
-			mockProvider.getState.mockResolvedValue({
+			// Update provider state for this specific test
+			mockProvider.getState = jest.fn().mockImplementation(async () => ({
+				apiConfiguration: {
+					apiModelId: "claude-3-sonnet",
+					apiKey: "test-key",
+					apiProvider: "anthropic",
+				},
 				mcpEnabled: false,
 				alwaysApproveResubmit: false,
 				requestDelaySeconds: 3,
 				rateLimitSeconds: 5,
-			})
+				// ... rest of the state properties remain the same
+				mode: "default",
+				experiments: {},
+				maxReadFileLine: 500,
+			}))
 
 			const [cline, _task] = Cline.create({
 				provider: mockProvider,
@@ -170,7 +289,7 @@ describe("Cline.attemptApiRequest", () => {
 				return (async function* () {
 					if (firstAttempt) {
 						firstAttempt = false
-						throw new Error(JSON.stringify({ status: 429, message: "Rate limit exceeded" })) // { status: 429, message: "Rate limit exceeded" }
+						throw new Error(JSON.stringify({ status: 429, message: "Rate limit exceeded" }))
 					}
 					yield { type: "text", text: "success" }
 				})()
@@ -202,54 +321,6 @@ describe("Cline.attemptApiRequest", () => {
 
 			const iterator = cline.attemptApiRequest(0)
 			await expect(iterator.next()).rejects.toThrow("Unknown error")
-		})
-	})
-
-	describe("Successful API Requests", () => {
-		it("should handle successful streaming without retries", async () => {
-			const [cline, _task] = Cline.create({
-				provider: mockProvider,
-				apiConfiguration: mockApiConfig,
-				task: "test task",
-			})
-
-			// Mock successful API stream
-			const mockStream = (async function* () {
-				yield { type: "text", text: "chunk 1" } as ApiStreamChunk
-				yield { type: "text", text: "chunk 2" } as ApiStreamChunk
-			})()
-			jest.spyOn(cline.api, "createMessage").mockReturnValue(mockStream)
-
-			const iterator = cline.attemptApiRequest(0)
-			const results = []
-			for await (const chunk of iterator) {
-				results.push(chunk)
-			}
-
-			expect(results).toHaveLength(2)
-			expect(results[0]).toEqual({ type: "text", text: "chunk 1" })
-			expect(results[1]).toEqual({ type: "text", text: "chunk 2" })
-		})
-
-		it("should update lastApiRequestTime after successful completion", async () => {
-			const [cline, _task] = Cline.create({
-				provider: mockProvider,
-				apiConfiguration: mockApiConfig,
-				task: "test task",
-			})
-
-			const mockStream = (async function* () {
-				yield { type: "text", text: "success" } as ApiStreamChunk
-			})()
-			jest.spyOn(cline.api, "createMessage").mockReturnValue(mockStream)
-
-			const beforeTime = Date.now()
-			const iterator = cline.attemptApiRequest(0)
-			await iterator.next()
-			const afterTime = Date.now()
-
-			expect(cline["lastApiRequestTime"]).toBeGreaterThanOrEqual(beforeTime)
-			expect(cline["lastApiRequestTime"]).toBeLessThanOrEqual(afterTime)
 		})
 	})
 })

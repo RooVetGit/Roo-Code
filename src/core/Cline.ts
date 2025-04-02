@@ -622,7 +622,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 		let imageBlocks: Anthropic.ImageBlockParam[] = formatResponse.imageBlocks(images)
 
-		console.log(`[subtasks] task ${this.taskId}.${this.instanceId} starting`)
+		this.providerRef.deref()?.log(`[subtasks] task ${this.taskId}.${this.instanceId} starting`)
 
 		await this.initiateTaskLoop([
 			{
@@ -882,7 +882,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 		await this.overwriteApiConversationHistory(modifiedApiConversationHistory)
 
-		console.log(`[subtasks] task ${this.taskId}.${this.instanceId} resuming from history item`)
+		this.providerRef.deref()?.log(`[subtasks] task ${this.taskId}.${this.instanceId} resuming from history item`)
 
 		await this.initiateTaskLoop(newUserContent)
 	}
@@ -928,7 +928,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		// 	return
 		// }
 
-		console.log(`[subtasks] aborting task ${this.taskId}.${this.instanceId}`)
+		this.providerRef.deref()?.log(`[subtasks] aborting task ${this.taskId}.${this.instanceId}`)
 
 		// Will stop any autonomously running promises.
 		if (isAbandoned) {
@@ -1926,7 +1926,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 					// lastMessage.ts = Date.now() DO NOT update ts since it is used as a key for virtuoso list
 					lastMessage.partial = false
 					// instead of streaming partialMessage events, we do a save and post like normal to persist to disk
-					console.log("updating partial message", lastMessage)
+					this.providerRef.deref()?.log(`updating partial message ${lastMessage.text}`)
 					// await this.saveClineMessages()
 				}
 
@@ -2008,7 +2008,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 					}
 
 					if (this.abort) {
-						console.log(`aborting stream, this.abandoned = ${this.abandoned}`)
+						this.providerRef.deref()?.log(`aborting stream, this.abandoned = ${this.abandoned}`)
 
 						if (!this.abandoned) {
 							// only need to gracefully abort if this instance isn't abandoned (sometimes openrouter stream hangs, in which case this would affect future instances of cline)
@@ -2440,7 +2440,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 
 		const log = (message: string) => {
-			console.log(message)
+			this.providerRef.deref()?.log(message)
 
 			try {
 				this.providerRef.deref()?.log(message)
@@ -2548,7 +2548,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		try {
 			await pWaitFor(
 				() => {
-					console.log("[Cline#getCheckpointService] waiting for service to initialize")
+					this.providerRef.deref()?.log("[Cline#getCheckpointService] waiting for service to initialize")
 					return service.isInitialized
 				},
 				{ interval, timeout },
