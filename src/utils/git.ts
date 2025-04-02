@@ -158,3 +158,52 @@ export async function getWorkingState(cwd: string): Promise<string> {
 		return `Failed to get working state: ${error instanceof Error ? error.message : String(error)}`
 	}
 }
+
+// Get staged changes diff using git command line
+export async function getStagedDiff(cwd: string): Promise<string> {
+	try {
+		const isInstalled = await checkGitInstalled()
+		if (!isInstalled) {
+			console.error("Git is not installed")
+			return ""
+		}
+
+		const isRepo = await checkGitRepo(cwd)
+		if (!isRepo) {
+			console.error("Not a git repository")
+			return ""
+		}
+
+		// Get diff of staged changes
+		const { stdout } = await execAsync("git diff HEAD", { cwd })
+		return stdout
+	} catch (error) {
+		console.error("Error getting staged diff:", error)
+		return ""
+	}
+}
+
+// Get staged files status using git command line
+export async function getStagedStatus(cwd: string): Promise<string> {
+	try {
+		const isInstalled = await checkGitInstalled()
+		if (!isInstalled) {
+			console.error("Git is not installed")
+			return ""
+		}
+
+		const isRepo = await checkGitRepo(cwd)
+		if (!isRepo) {
+			console.error("Not a git repository")
+			return ""
+		}
+
+		// Get status of staged files only
+		const { stdout } = await execAsync("git status --short", { cwd })
+
+		return stdout
+	} catch (error) {
+		console.error("Error getting staged status:", error)
+		return ""
+	}
+}

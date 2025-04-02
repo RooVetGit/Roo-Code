@@ -81,6 +81,11 @@
 		},
 		"commands": [
 			{
+				"command": "roo-cline.commitSuggestion",
+				"title": "generate Commit Suggestion",
+				"icon": "$(rocket)"
+			},
+			{
 				"command": "roo-cline.plusButtonClicked",
 				"title": "New Task",
 				"icon": "$(add)"
@@ -264,6 +269,13 @@
 					"command": "roo-cline.helpButtonClicked",
 					"group": "navigation@7",
 					"when": "view == roo-cline.SidebarProvider"
+				}
+			],
+			"scm/title": [
+				{
+					"command": "roo-cline.commitSuggestion",
+					"when": "scmProvider == git && git.state == initialized",
+					"group": "navigation"
 				}
 			]
 		},

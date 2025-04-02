@@ -95,6 +95,10 @@
 			"NEW_TASK": {
 				"label": "Iniciar nova tasca",
 				"description": "Inicieu una nova tasca amb l'entrada proporcionada. Disponible a la paleta de comandes."
+			},
+			"COMMIT": {
+				"label": "Generar missatge de commit",
+				"description": "Genera un missatge de commit semàntic basat en els canvis preparats utilitzant git status i diffs. Disponible quan es preparen canvis al control de codi font."
 			}
 		}
 	},

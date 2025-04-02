@@ -95,6 +95,10 @@
 			"NEW_TASK": {
 				"label": "Bắt đầu tác vụ mới",
 				"description": "Bắt đầu tác vụ mới với nội dung đã nhập. Có sẵn trong bảng lệnh."
+			},
+			"COMMIT": {
+				"label": "Tạo thông điệp commit",
+				"description": "Tạo thông điệp commit ngữ nghĩa dựa trên các thay đổi đã staged sử dụng git status và diffs. Có sẵn khi staging các thay đổi trong kiểm soát mã nguồn."
 			}
 		}
 	},

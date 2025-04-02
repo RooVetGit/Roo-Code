@@ -1,5 +1,5 @@
 import { jest } from "@jest/globals"
-import { searchCommits, getCommitInfo, getWorkingState, GitCommit } from "../git"
+import { searchCommits, getCommitInfo, getWorkingState, getStagedDiff, getStagedStatus, GitCommit } from "../git"
 import { ExecException } from "child_process"
 
 type ExecFunction = (
@@ -339,6 +339,122 @@ describe("git utils", () => {
 
 			const result = await getWorkingState(cwd)
 			expect(result).toBe("Not a git repository")
+		})
+	})
+	describe("getStagedDiff", () => {
+		it("should return staged diff when there are staged changes", async () => {
+			const mockDiff = "@@ -1,1 +1,2 @@\n-old line\n+new line"
+			const responses = new Map([
+				["git --version", { stdout: "git version 2.39.2", stderr: "" }],
+				["git rev-parse --git-dir", { stdout: ".git", stderr: "" }],
+				["git diff --staged", { stdout: mockDiff, stderr: "" }],
+			])
+
+			exec.mockImplementation((command: string, options: { cwd?: string }, callback: Function) => {
+				for (const [cmd, response] of responses) {
+					if (command === cmd) {
+						callback(null, response)
+						return
+					}
+				}
+				callback(new Error("Unexpected command"))
+			})
+
+			const result = await getStagedDiff(cwd)
+			expect(result).toBe(mockDiff)
+		})
+
+		it("should return empty string when git is not installed", async () => {
+			exec.mockImplementation((command: string, options: { cwd?: string }, callback: Function) => {
+				if (command === "git --version") {
+					callback(new Error("git not found"))
+					return
+				}
+				callback(new Error("Unexpected command"))
+			})
+
+			const result = await getStagedDiff(cwd)
+			expect(result).toBe("")
+		})
+
+		it("should return empty string when not in a git repository", async () => {
+			const responses = new Map([
+				["git --version", { stdout: "git version 2.39.2", stderr: "" }],
+				["git rev-parse --git-dir", null], // null indicates error should be called
+			])
+
+			exec.mockImplementation((command: string, options: { cwd?: string }, callback: Function) => {
+				const response = responses.get(command)
+				if (response === null) {
+					callback(new Error("not a git repository"))
+				} else if (response) {
+					callback(null, response)
+				} else {
+					callback(new Error("Unexpected command"))
+				}
+			})
+
+			const result = await getStagedDiff(cwd)
+			expect(result).toBe("")
+		})
+	})
+
+	describe("getStagedStatus", () => {
+		it("should return formatted staged status", async () => {
+			const mockStatus = "M  file1.txt\nA  file2.txt\nD  file3.txt\n?? file4.txt"
+			const responses = new Map([
+				["git --version", { stdout: "git version 2.39.2", stderr: "" }],
+				["git rev-parse --git-dir", { stdout: ".git", stderr: "" }],
+				["git status --short", { stdout: mockStatus, stderr: "" }],
+			])
+
+			exec.mockImplementation((command: string, options: { cwd?: string }, callback: Function) => {
+				for (const [cmd, response] of responses) {
+					if (command === cmd) {
+						callback(null, response)
+						return
+					}
+				}
+				callback(new Error("Unexpected command"))
+			})
+
+			const result = await getStagedStatus(cwd)
+			expect(result).toBe("M - file1.txt\nA - file2.txt\nD - file3.txt")
+			// Note: file4.txt is not staged (has ?? status) so it's not included
+		})
+
+		it("should return empty string when git is not installed", async () => {
+			exec.mockImplementation((command: string, options: { cwd?: string }, callback: Function) => {
+				if (command === "git --version") {
+					callback(new Error("git not found"))
+					return
+				}
+				callback(new Error("Unexpected command"))
+			})
+
+			const result = await getStagedStatus(cwd)
+			expect(result).toBe("")
+		})
+
+		it("should return empty string when not in a git repository", async () => {
+			const responses = new Map([
+				["git --version", { stdout: "git version 2.39.2", stderr: "" }],
+				["git rev-parse --git-dir", null], // null indicates error should be called
+			])
+
+			exec.mockImplementation((command: string, options: { cwd?: string }, callback: Function) => {
+				const response = responses.get(command)
+				if (response === null) {
+					callback(new Error("not a git repository"))
+				} else if (response) {
+					callback(null, response)
+				} else {
+					callback(new Error("Unexpected command"))
+				}
+			})
+
+			const result = await getStagedStatus(cwd)
+			expect(result).toBe("")
 		})
 	})
 })

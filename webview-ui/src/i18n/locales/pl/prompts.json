@@ -95,6 +95,10 @@
 			"NEW_TASK": {
 				"label": "Rozpocznij nowe zadanie",
 				"description": "Rozpocznij nowe zadanie z wprowadzonymi danymi. Dostępne w palecie poleceń."
+			},
+			"COMMIT": {
+				"label": "Generuj komunikat commita",
+				"description": "Wygeneruj semantyczny komunikat commita na podstawie przygotowanych zmian przy użyciu git status i diffs. Dostępne podczas przygotowywania zmian w kontroli źródła."
 			}
 		}
 	},

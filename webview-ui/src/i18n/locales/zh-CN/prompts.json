@@ -95,6 +95,10 @@
 			"NEW_TASK": {
 				"label": "开始新任务",
 				"description": "使用输入内容开始新任务。可在命令面板中使用。"
+			},
+			"COMMIT": {
+				"label": "生成提交信息",
+				"description": "基于使用git status和diffs的已暂存更改生成语义化提交信息。在源代码管理中暂存更改时可用。"
 			}
 		}
 	},

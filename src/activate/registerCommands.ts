@@ -2,6 +2,7 @@ import * as vscode from "vscode"
 import delay from "delay"
 
 import { ClineProvider } from "../core/webview/ClineProvider"
+import { generateCommitSuggestion } from "../utils/commitSuggestion"
 
 import { registerHumanRelayCallback, unregisterHumanRelayCallback, handleHumanRelayResponse } from "./humanRelay"
 import { handleNewTask } from "./handleTask"
@@ -92,6 +93,36 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 			const { promptForCustomStoragePath } = await import("../shared/storagePathManager")
 			await promptForCustomStoragePath()
 		},
+		"roo-cline.commitSuggestion": (() => {
+			let isExecuting = false // Flag to prevent multiple executions
+
+			return async () => {
+				if (isExecuting) {
+					return // Prevent multiple executions
+				}
+
+				try {
+					isExecuting = true
+					await vscode.window.withProgress(
+						{
+							location: vscode.ProgressLocation.Notification,
+							title: "Generating commit suggestion...",
+							cancellable: false,
+						},
+						async () => {
+							// Get the current workspace folder path
+							const workspaceFolders = vscode.workspace.workspaceFolders
+							const cwd = workspaceFolders?.[0]?.uri.fsPath || process.cwd()
+							await generateCommitSuggestion(provider, cwd)
+						},
+					)
+				} catch (error) {
+					console.error("Error generating commit suggestion:", error)
+				} finally {
+					isExecuting = false // Reset the flag
+				}
+			}
+		})(),
 	}
 }
 
