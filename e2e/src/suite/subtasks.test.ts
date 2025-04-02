@@ -5,7 +5,7 @@ import type { ClineMessage } from "../../../src/exports/roo-code"
 import { sleep, waitFor, waitUntilCompleted } from "./utils"
 
 suite("Roo Code Subtasks", () => {
-	test.only("Should handle subtask cancellation and resumption correctly", async () => {
+	test("Should handle subtask cancellation and resumption correctly", async () => {
 		const api = globalThis.api
 
 		const messages: Record<string, ClineMessage[]> = {}
