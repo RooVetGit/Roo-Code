@@ -99,7 +99,7 @@ export class IpcServer extends EventEmitter<IpcServerEvents> {
 					this.emit(IpcMessageType.TaskCommand, payload.clientId, payload.data)
 					break
 				default:
-					throw new Error(`[server#onMessage] unhandled payload: ${JSON.stringify(payload)}`)
+					this.log(`[server#onMessage] unhandled payload: ${JSON.stringify(payload)}`)
 					break
 			}
 		}
