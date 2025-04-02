@@ -25,13 +25,17 @@ export const defaultHeaders = {
 
 export interface OpenAiHandlerOptions extends ApiHandlerOptions {}
 
+const AZURE_AI_INFERENCE_PATH = "/models/chat/completions"
+
 export class OpenAiHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: OpenAiHandlerOptions
 	private client: OpenAI
+	private isAzure: boolean
 
 	constructor(options: OpenAiHandlerOptions) {
 		super()
 		this.options = options
+		this.isAzure = options.openAiUseAzure ?? false
 
 		const baseURL = this.options.openAiBaseUrl ?? "https://api.openai.com/v1"
 		const apiKey = this.options.openAiApiKey ?? "not-provided"
@@ -83,7 +87,6 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			urlHost = ""
 		}
 		const isAzureAiInference = urlHost.endsWith(".services.ai.azure.com")
-		const azureAiInferencePath = "/models/chat/completions" // Path for Azure AI Inference
 		const deepseekReasoner = modelId.includes("deepseek-reasoner") || enabledR1Format
 		const ark = modelUrl.includes(".volces.com")
 		if (modelId.startsWith("o3-mini")) {
@@ -154,7 +157,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 			const stream = await this.client.chat.completions.create(
 				requestOptions,
-				isAzureAiInference ? { path: azureAiInferencePath } : {},
+				isAzureAiInference ? { path: AZURE_AI_INFERENCE_PATH } : {},
 			)
 
 			const matcher = new XmlMatcher(
@@ -210,7 +213,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 			const response = await this.client.chat.completions.create(
 				requestOptions,
-				isAzureAiInference ? { path: azureAiInferencePath } : {},
+				isAzureAiInference ? { path: AZURE_AI_INFERENCE_PATH } : {},
 			)
 
 			yield {
@@ -246,7 +249,6 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				urlHost = ""
 			}
 			const isAzureAiInference = urlHost.endsWith(".services.ai.azure.com")
-			const azureAiInferencePath = "/models/chat/completions" // Path for Azure AI Inference
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
 				model: this.getModel().id,
 				messages: [{ role: "user", content: prompt }],
@@ -254,7 +256,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 			const response = await this.client.chat.completions.create(
 				requestOptions,
-				isAzureAiInference ? { path: azureAiInferencePath } : {},
+				isAzureAiInference ? { path: AZURE_AI_INFERENCE_PATH } : {},
 			)
 			return response.choices[0]?.message.content || ""
 		} catch (error) {
@@ -279,7 +281,6 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				methodUrlHost = ""
 			}
 			const methodIsAzureAiInference = methodUrlHost.endsWith(".services.ai.azure.com")
-			const methodAzureAiInferencePath = "/models/chat/completions"
 
 			const stream = await this.client.chat.completions.create(
 				{
@@ -295,7 +296,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 					stream_options: { include_usage: true },
 					reasoning_effort: this.getModel().info.reasoningEffort,
 				},
-				methodIsAzureAiInference ? { path: methodAzureAiInferencePath } : {},
+				methodIsAzureAiInference ? { path: AZURE_AI_INFERENCE_PATH } : {},
 			)
 
 			yield* this.handleStreamResponse(stream)
@@ -319,11 +320,10 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				methodUrlHost = ""
 			}
 			const methodIsAzureAiInference = methodUrlHost.endsWith(".services.ai.azure.com")
-			const methodAzureAiInferencePath = "/models/chat/completions"
 
 			const response = await this.client.chat.completions.create(
 				requestOptions,
-				methodIsAzureAiInference ? { path: methodAzureAiInferencePath } : {},
+				methodIsAzureAiInference ? { path: AZURE_AI_INFERENCE_PATH } : {},
 			)
 
 			yield {
