@@ -468,6 +468,7 @@ export const vertexModels = {
 		maxTokens: 65_535,
 		contextWindow: 1_048_576,
 		supportsImages: true,
+		supportsComputerUse: true,
 		supportsPromptCache: false,
 		inputPrice: 0,
 		outputPrice: 0,
