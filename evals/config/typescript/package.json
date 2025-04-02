@@ -1,0 +1,7 @@
+{
+	"name": "@benchmark/typescript-config",
+	"private": true,
+	"publishConfig": {
+		"access": "public"
+	}
+}
