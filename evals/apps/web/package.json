@@ -32,6 +32,7 @@
 		"next": "15.2.2",
 		"next-themes": "^0.4.6",
 		"p-map": "^7.0.3",
+		"ps-tree": "^1.2.0",
 		"react": "^19.0.0",
 		"react-dom": "^19.0.0",
 		"react-hook-form": "^7.54.2",
@@ -46,6 +47,7 @@
 		"@evals/eslint-config": "workspace:^",
 		"@evals/typescript-config": "workspace:^",
 		"@tailwindcss/postcss": "^4",
+		"@types/ps-tree": "^1.1.6",
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
 		"tailwindcss": "^4"

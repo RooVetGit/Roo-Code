@@ -13,6 +13,7 @@ import {
 	DrawerHeader,
 	DrawerTitle,
 	ScrollArea,
+	Separator,
 	Table,
 	TableBody,
 	TableCell,
@@ -44,10 +45,13 @@ export function Run({ run }: { run: db.Run }) {
 
 	return (
 		<>
-			<div className="flex flex-col gap-2">
-				<div>
-					<div>{run.model}</div>
-					{run.description && <div className="text-sm text-muted-foreground">{run.description}</div>}
+			<div>
+				<div className="mb-2">
+					<div>
+						<div>{run.model}</div>
+						{run.description && <div className="text-sm text-muted-foreground">{run.description}</div>}
+					</div>
+					<ConnectionStatus status={status} pid={run.pid} />
 				</div>
 				{!tasks ? (
 					<LoaderCircle className="size-4 animate-spin" />
@@ -109,9 +113,6 @@ export function Run({ run }: { run: db.Run }) {
 						</TableBody>
 					</Table>
 				)}
-			</div>
-			<div className="absolute top-5 right-5">
-				<ConnectionStatus status={status} pid={run.pid} />
 			</div>
 			<Drawer open={!!selectedTask} onOpenChange={() => setSelectedTask(undefined)}>
 				<DrawerContent>

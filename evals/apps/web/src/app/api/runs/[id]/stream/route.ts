@@ -16,7 +16,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 	const client = new IpcClient(run.socketPath, () => {})
 
 	const write = async (data: string | object) => {
-		console.log(`[stream#${requestId}] write`, data)
+		// console.log(`[stream#${requestId}] write`, data)
 		const success = await stream.write(data)
 
 		if (!success) {
