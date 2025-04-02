@@ -84,7 +84,7 @@ export class UnboundHandler extends BaseProvider implements SingleCompletionHand
 				requestOptions.temperature = this.options.modelTemperature ?? 0
 			}
 
-			const { data: completion, response } = await this.client.chat.completions
+			const { data: completion } = await this.client.chat.completions
 				.create(requestOptions, {
 					headers: {
 						"X-Unbound-Metadata": JSON.stringify({
@@ -191,6 +191,23 @@ export class UnboundHandler extends BaseProvider implements SingleCompletionHand
 				)
 			}
 
+			// Also check for error objects with type property
+			if (errorObj.error?.type === "invalid_request_error") {
+				throw new Error(
+					JSON.stringify({
+						status: 400,
+						message: "Bad request",
+						error: {
+							metadata: {
+								raw: errorObj.message || "Invalid request parameters",
+								param: errorObj.error?.param,
+								provider: "unbound",
+							},
+						},
+					}),
+				)
+			}
+
 			// Handle model-specific errors
 			if (errorObj.status === 404 || (errorObj.message && errorObj.message.toLowerCase().includes("model"))) {
 				throw new Error(
@@ -225,33 +242,43 @@ export class UnboundHandler extends BaseProvider implements SingleCompletionHand
 			}
 
 			// Handle other errors
-			if (error instanceof Error) {
-				throw new Error(
-					JSON.stringify({
-						status: errorObj.status || 500,
-						message: error.message,
-						error: {
-							metadata: {
-								raw: error.message,
-								provider: "unbound",
-							},
-						},
-					}),
-				)
-			} else {
-				throw new Error(
-					JSON.stringify({
-						status: 500,
-						message: String(error),
-						error: {
-							metadata: {
-								raw: String(error),
-								provider: "unbound",
-							},
-						},
-					}),
-				)
+			let errorMessage = errorObj.message || (error instanceof Error ? error.message : String(error))
+			let rawError = errorMessage
+
+			// For non-Error objects, try to stringify them
+			if (typeof error === "object" && error !== null && !(error instanceof Error)) {
+				try {
+					rawError = JSON.stringify(error)
+				} catch (e) {
+					// If we can't stringify, use the string representation
+					rawError = String(error)
+				}
 			}
+
+			// Try to parse the error message if it's a JSON string
+			try {
+				const parsedError = JSON.parse(errorMessage)
+				if (parsedError.error?.message) {
+					errorMessage = parsedError.error.message
+				} else if (parsedError.message) {
+					errorMessage = parsedError.message
+				}
+			} catch (e) {
+				// Not a JSON string, use as is
+			}
+
+			throw new Error(
+				JSON.stringify({
+					status: errorObj.status || 500,
+					message: errorMessage,
+					error: {
+						metadata: {
+							raw: rawError,
+							provider: "unbound",
+						},
+					},
+				}),
+			)
 		}
 	}
 
@@ -296,10 +323,26 @@ export class UnboundHandler extends BaseProvider implements SingleCompletionHand
 			})
 			return response.choices[0]?.message.content || ""
 		} catch (error) {
-			if (error instanceof Error) {
-				throw new Error(`Unbound completion error: ${error.message}`)
+			let errorMessage =
+				error instanceof Error
+					? error.message
+					: typeof error === "object" && error !== null && "message" in error
+						? (error as { message: string }).message
+						: String(error)
+
+			// Try to parse the error message if it's a JSON string
+			try {
+				const parsedError = JSON.parse(errorMessage)
+				if (parsedError.error?.message) {
+					errorMessage = parsedError.error.message
+				} else if (parsedError.message) {
+					errorMessage = parsedError.message
+				}
+			} catch (e) {
+				// Not a JSON string, use as is
 			}
-			throw error
+
+			throw new Error(`Unbound completion error: ${errorMessage}`)
 		}
 	}
 }

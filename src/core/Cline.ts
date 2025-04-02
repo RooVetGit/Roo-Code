@@ -275,10 +275,16 @@ export class Cline extends EventEmitter<ClineEvents> {
 	// Storing task to disk for history
 
 	private async ensureTaskDirectoryExists(): Promise<string> {
-		const globalStoragePath = this.providerRef.deref()?.context.globalStorageUri.fsPath
-		if (!globalStoragePath) {
+		const provider = this.providerRef.deref()
+		if (
+			!provider ||
+			!provider.context ||
+			!provider.context.globalStorageUri ||
+			!provider.context.globalStorageUri.fsPath
+		) {
 			throw new Error("Global storage uri is invalid")
 		}
+		const globalStoragePath = provider.context.globalStorageUri.fsPath
 
 		// Use storagePathManager to retrieve the task storage directory
 		const { getTaskDirectoryPath } = await import("../shared/storagePathManager")
@@ -333,20 +339,38 @@ export class Cline extends EventEmitter<ClineEvents> {
 	}
 
 	private async addToClineMessages(message: ClineMessage) {
-		this.clineMessages.push(message)
-		await this.providerRef.deref()?.postStateToWebview()
-		this.emit("message", { action: "created", message })
-		await this.saveClineMessages()
+		try {
+			this.clineMessages.push(message)
+			const provider = this.providerRef.deref()
+			if (provider && typeof provider.postStateToWebview === "function") {
+				await provider.postStateToWebview()
+			}
+			this.emit("message", { action: "created", message })
+			await this.saveClineMessages()
+		} catch (error) {
+			console.error("Failed to add to Cline messages:", error)
+		}
 	}
 
 	public async overwriteClineMessages(newMessages: ClineMessage[]) {
-		this.clineMessages = newMessages
-		await this.saveClineMessages()
+		try {
+			this.clineMessages = newMessages
+			await this.saveClineMessages()
+		} catch (error) {
+			console.error("Failed to overwrite Cline messages:", error)
+		}
 	}
 
 	private async updateClineMessage(partialMessage: ClineMessage) {
-		await this.providerRef.deref()?.postMessageToWebview({ type: "partialMessage", partialMessage })
-		this.emit("message", { action: "updated", message: partialMessage })
+		try {
+			const provider = this.providerRef.deref()
+			if (provider && typeof provider.postMessageToWebview === "function") {
+				await provider.postMessageToWebview({ type: "partialMessage", partialMessage })
+			}
+			this.emit("message", { action: "updated", message: partialMessage })
+		} catch (error) {
+			console.error("Failed to update Cline message:", error)
+		}
 	}
 
 	getTokenUsage() {
@@ -381,18 +405,21 @@ export class Cline extends EventEmitter<ClineEvents> {
 				)
 			}
 
-			await this.providerRef.deref()?.updateTaskHistory({
-				id: this.taskId,
-				number: this.taskNumber,
-				ts: lastRelevantMessage.ts,
-				task: taskMessage.text ?? "",
-				tokensIn: apiMetrics.totalTokensIn,
-				tokensOut: apiMetrics.totalTokensOut,
-				cacheWrites: apiMetrics.totalCacheWrites,
-				cacheReads: apiMetrics.totalCacheReads,
-				totalCost: apiMetrics.totalCost,
-				size: taskDirSize,
-			})
+			const provider = this.providerRef.deref()
+			if (provider && typeof provider.updateTaskHistory === "function") {
+				await provider.updateTaskHistory({
+					id: this.taskId,
+					number: this.taskNumber,
+					ts: lastRelevantMessage.ts,
+					task: taskMessage.text ?? "",
+					tokensIn: apiMetrics.totalTokensIn,
+					tokensOut: apiMetrics.totalTokensOut,
+					cacheWrites: apiMetrics.totalCacheWrites,
+					cacheReads: apiMetrics.totalCacheReads,
+					totalCost: apiMetrics.totalCost,
+					size: taskDirSize,
+				})
+			}
 		} catch (error) {
 			console.error("Failed to save cline messages:", error)
 		}
@@ -1847,7 +1874,14 @@ export class Cline extends EventEmitter<ClineEvents> {
 		} satisfies ClineApiReqInfo)
 
 		await this.saveClineMessages()
-		await this.providerRef.deref()?.postStateToWebview()
+		try {
+			const provider = this.providerRef.deref()
+			if (provider && typeof provider.postStateToWebview === "function") {
+				await provider.postStateToWebview()
+			}
+		} catch (error) {
+			console.error("Failed to post state to webview:", error)
+		}
 
 		try {
 			let cacheWriteTokens = 0
@@ -2040,7 +2074,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 			updateApiReqMsg()
 			await this.saveClineMessages()
-			await this.providerRef.deref()?.postStateToWebview()
+			const provider = this.providerRef.deref()
+			if (provider && typeof provider.postStateToWebview === "function") {
+				await provider.postStateToWebview()
+			}
 
 			// now add to apiconversationhistory
 			// need to save assistant responses to file before proceeding to tool use since user can exit at any moment and we wouldn't be able to save the assistant's response
@@ -2286,7 +2323,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 				// Add this terminal's outputs to the details
 				if (terminalOutputs.length > 0) {
 					terminalDetails += `\n## Terminal ${inactiveTerminal.id}`
-					terminalOutputs.forEach((output, index) => {
+					terminalOutputs.forEach((output) => {
 						terminalDetails += `\n### New Output\n${output}`
 					})
 				}
@@ -2464,7 +2501,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 			service.on("checkpoint", ({ isFirst, fromHash: from, toHash: to }) => {
 				try {
-					this.providerRef.deref()?.postMessageToWebview({ type: "currentCheckpointUpdated", text: to })
+					const provider = this.providerRef.deref()
+					if (provider && typeof provider.postMessageToWebview === "function") {
+						provider.postMessageToWebview({ type: "currentCheckpointUpdated", text: to })
+					}
 
 					this.say("checkpoint_saved", to, undefined, undefined, { isFirst, from, to }).catch((err) => {
 						log("[Cline#initializeCheckpoints] caught unexpected error in say('checkpoint_saved')")
@@ -2569,7 +2609,14 @@ export class Cline extends EventEmitter<ClineEvents> {
 				]),
 			)
 		} catch (err) {
-			this.providerRef.deref()?.log("[checkpointDiff] disabling checkpoints for this task")
+			try {
+				const provider = this.providerRef.deref()
+				if (provider && typeof provider.log === "function") {
+					provider.log("[checkpointDiff] disabling checkpoints for this task")
+				}
+			} catch (error) {
+				console.error("Failed to log message:", error)
+			}
 			this.enableCheckpoints = false
 		}
 	}
@@ -2582,9 +2629,16 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 
 		if (!service.isInitialized) {
-			this.providerRef
-				.deref()
-				?.log("[checkpointSave] checkpoints didn't initialize in time, disabling checkpoints for this task")
+			try {
+				const provider = this.providerRef.deref()
+				if (provider && typeof provider.log === "function") {
+					provider.log(
+						"[checkpointSave] checkpoints didn't initialize in time, disabling checkpoints for this task",
+					)
+				}
+			} catch (error) {
+				console.error("Failed to log message:", error)
+			}
 			this.enableCheckpoints = false
 			return
 		}
@@ -2624,7 +2678,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 			telemetryService.captureCheckpointRestored(this.taskId)
 
-			await this.providerRef.deref()?.postMessageToWebview({ type: "currentCheckpointUpdated", text: commitHash })
+			const provider = this.providerRef.deref()
+			if (provider && typeof provider.postMessageToWebview === "function") {
+				await provider.postMessageToWebview({ type: "currentCheckpointUpdated", text: commitHash })
+			}
 
 			if (mode === "restore") {
 				await this.overwriteApiConversationHistory(
@@ -2662,9 +2719,23 @@ export class Cline extends EventEmitter<ClineEvents> {
 			// I'd like to revisit this in the future and try to improve the
 			// task flow and the communication between the webview and the
 			// Cline instance.
-			this.providerRef.deref()?.cancelTask()
+			try {
+				const provider = this.providerRef.deref()
+				if (provider && typeof provider.cancelTask === "function") {
+					provider.cancelTask()
+				}
+			} catch (error) {
+				console.error("Failed to cancel task:", error)
+			}
 		} catch (err) {
-			this.providerRef.deref()?.log("[checkpointRestore] disabling checkpoints for this task")
+			try {
+				const provider = this.providerRef.deref()
+				if (provider && typeof provider.log === "function") {
+					provider.log("[checkpointRestore] disabling checkpoints for this task")
+				}
+			} catch (error) {
+				console.error("Failed to log message:", error)
+			}
 			this.enableCheckpoints = false
 		}
 	}
