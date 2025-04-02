@@ -191,7 +191,7 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 			}
 		} catch (error) {
 			// Format errors in a consistent way with vscode-lm.ts
-			console.error("Anthropic API error:", error)
+			// console.error("Anthropic API error:", error)
 
 			// Handle rate limit errors specifically
 			const errorObj = error as any
@@ -355,7 +355,7 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 			return response.input_tokens
 		} catch (error) {
 			// Log error but fallback to tiktoken estimation
-			console.warn("Anthropic token counting failed, using fallback", error)
+			// console.warn("Anthropic token counting failed, using fallback", error)
 
 			// Use the base provider's implementation as fallback
 			return super.countTokens(content)

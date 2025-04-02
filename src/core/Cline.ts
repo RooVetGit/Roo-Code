@@ -199,7 +199,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 		this.rooIgnoreController = new RooIgnoreController(this.cwd)
 		this.rooIgnoreController.initialize().catch((error) => {
-			console.error("Failed to initialize RooIgnoreController:", error)
+			this.providerRef.deref()?.log(`Failed to initialize RooIgnoreController: ${error}`)
 		})
 
 		this.taskId = historyItem ? historyItem.id : crypto.randomUUID()
@@ -317,7 +317,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			await fs.writeFile(filePath, JSON.stringify(this.apiConversationHistory))
 		} catch (error) {
 			// in the off chance this fails, we don't want to stop the task
-			console.error("Failed to save API conversation history:", error)
+			this.providerRef.deref()?.log(`Failed to save API conversation history: ${error}`)
 		}
 	}
 
@@ -348,7 +348,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			this.emit("message", { action: "created", message })
 			await this.saveClineMessages()
 		} catch (error) {
-			console.error("Failed to add to Cline messages:", error)
+			this.providerRef.deref()?.log(`Failed to add to Cline messages: ${error}`)
 		}
 	}
 
@@ -357,7 +357,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			this.clineMessages = newMessages
 			await this.saveClineMessages()
 		} catch (error) {
-			console.error("Failed to overwrite Cline messages:", error)
+			this.providerRef.deref()?.log(`Failed to overwrite Cline messages: ${error}`)
 		}
 	}
 
@@ -369,7 +369,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			}
 			this.emit("message", { action: "updated", message: partialMessage })
 		} catch (error) {
-			console.error("Failed to update Cline message:", error)
+			this.providerRef.deref()?.log(`Failed to update Cline message: ${error}`)
 		}
 	}
 
@@ -400,9 +400,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 			try {
 				taskDirSize = await getFolderSize.loose(taskDir)
 			} catch (err) {
-				console.error(
-					`[saveClineMessages] failed to get task directory size (${taskDir}): ${err instanceof Error ? err.message : String(err)}`,
-				)
+				this.providerRef
+					.deref()
+					?.log(
+						`[saveClineMessages] failed to get task directory size (${taskDir}): ${err instanceof Error ? err.message : String(err)}`,
+					)
 			}
 
 			const provider = this.providerRef.deref()
@@ -421,7 +423,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 				})
 			}
 		} catch (error) {
-			console.error("Failed to save cline messages:", error)
+			this.providerRef.deref()?.log(`Failed to save cline messages: ${error}`)
 		}
 	}
 
@@ -1140,7 +1142,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			}
 			// Wait for MCP servers to be connected before generating system prompt
 			await pWaitFor(() => mcpHub!.isConnecting !== true, { timeout: 10_000 }).catch(() => {
-				console.error("MCP servers failed to connect in time")
+				this.providerRef.deref()?.log("MCP servers failed to connect in time")
 			})
 		}
 
@@ -1184,13 +1186,24 @@ export class Cline extends EventEmitter<ClineEvents> {
 		if (previousApiReqIndex >= 0) {
 			const previousRequest = this.clineMessages[previousApiReqIndex]?.text
 			if (!previousRequest) return
+			console.log("Previous request:", previousRequest)
+			console.log("previous type is of ", typeof previousRequest)
 
-			const {
-				tokensIn = 0,
-				tokensOut = 0,
-				cacheWrites = 0,
-				cacheReads = 0,
-			}: ClineApiReqInfo = JSON.parse(previousRequest)
+			let apiReqInfo: ClineApiReqInfo = {
+				tokensIn: 0,
+				tokensOut: 0,
+				cacheWrites: 0,
+				cacheReads: 0,
+			}
+
+			try {
+				apiReqInfo = JSON.parse(previousRequest)
+			} catch (error) {
+				// If parsing fails, we'll use the default values
+				console.log("Failed to parse previous request as JSON, using default values")
+			}
+
+			const { tokensIn = 0, tokensOut = 0, cacheWrites = 0, cacheReads = 0 } = apiReqInfo
 
 			const totalTokens = tokensIn + tokensOut + cacheWrites + cacheReads
 
@@ -1363,7 +1376,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		} catch (error) {
 			// Outermost error handling for catastrophic failures
 			// This includes API initialization errors or other fatal issues
-			console.error("Fatal error in attemptApiRequest:", error)
+			this.providerRef.deref()?.log(`Fatal error in attemptApiRequest: ${error}`)
 			throw error
 		}
 
@@ -1880,7 +1893,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 				await provider.postStateToWebview()
 			}
 		} catch (error) {
-			console.error("Failed to post state to webview:", error)
+			this.providerRef.deref()?.log(`Failed to post state to webview: ${error}`)
 		}
 
 		try {
@@ -2508,13 +2521,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 					this.say("checkpoint_saved", to, undefined, undefined, { isFirst, from, to }).catch((err) => {
 						log("[Cline#initializeCheckpoints] caught unexpected error in say('checkpoint_saved')")
-						console.error(err)
+						this.providerRef.deref()?.log(err)
 					})
 				} catch (err) {
 					log(
 						"[Cline#initializeCheckpoints] caught unexpected error in on('checkpoint'), disabling checkpoints",
 					)
-					console.error(err)
+					this.providerRef.deref()?.log(err)
 					this.enableCheckpoints = false
 				}
 			})
@@ -2523,7 +2536,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 				log(
 					`[Cline#initializeCheckpoints] caught unexpected error in initShadowGit, disabling checkpoints (${err.message})`,
 				)
-				console.error(err)
+				this.providerRef.deref()?.log(err)
 				this.enableCheckpoints = false
 			})
 
@@ -2615,7 +2628,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 					provider.log("[checkpointDiff] disabling checkpoints for this task")
 				}
 			} catch (error) {
-				console.error("Failed to log message:", error)
+				this.providerRef.deref()?.log(`Failed to log message: ${error}`)
 			}
 			this.enableCheckpoints = false
 		}
@@ -2637,7 +2650,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 					)
 				}
 			} catch (error) {
-				console.error("Failed to log message:", error)
+				this.providerRef.deref()?.log(`Failed to log message: ${error}`)
 			}
 			this.enableCheckpoints = false
 			return
@@ -2647,7 +2660,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 		// Start the checkpoint process in the background.
 		service.saveCheckpoint(`Task: ${this.taskId}, Time: ${Date.now()}`).catch((err) => {
-			console.error("[Cline#checkpointSave] caught unexpected error, disabling checkpoints", err)
+			this.providerRef
+				.deref()
+				?.log(`[Cline#checkpointSave] caught unexpected error, disabling checkpoints: ${err}`)
 			this.enableCheckpoints = false
 		})
 	}
@@ -2725,7 +2740,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 					provider.cancelTask()
 				}
 			} catch (error) {
-				console.error("Failed to cancel task:", error)
+				this.providerRef.deref()?.log(`Failed to cancel task: ${error}`)
 			}
 		} catch (err) {
 			try {
@@ -2734,7 +2749,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 					provider.log("[checkpointRestore] disabling checkpoints for this task")
 				}
 			} catch (error) {
-				console.error("Failed to log message:", error)
+				this.providerRef.deref()?.log(`Failed to log message: ${error}`)
 			}
 			this.enableCheckpoints = false
 		}

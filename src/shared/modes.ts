@@ -92,11 +92,16 @@ export const modes: readonly ModeConfig[] = [
 export const defaultModeSlug = modes[0].slug
 
 // Helper functions
-export function getModeBySlug(slug: string, customModes?: ModeConfig[]): ModeConfig | undefined {
-	// Check custom modes first
-	const customMode = customModes?.find((mode) => mode.slug === slug)
-	if (customMode) {
-		return customMode
+export function getModeBySlug(slug: string, customModes?: ModeConfig[] | any): ModeConfig | undefined {
+	// Check custom modes first if it's an array
+	if (customModes && Array.isArray(customModes)) {
+		const customMode = customModes.find((mode) => mode.slug === slug)
+		if (customMode) {
+			return customMode
+		}
+	} else if (customModes && typeof customModes === "object" && !Array.isArray(customModes)) {
+		// If customModes is an object but not an array, log a warning and continue
+		console.warn("getModeBySlug received an object instead of an array for customModes")
 	}
 	// Then check built-in modes
 	return modes.find((mode) => mode.slug === slug)
