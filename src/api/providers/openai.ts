@@ -16,7 +16,7 @@ import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 import { XmlMatcher } from "../../utils/xml-matcher"
 
-const DEEP_SEEK_DEFAULT_TEMPERATURE = 0.6
+export const DEEP_SEEK_DEFAULT_TEMPERATURE = 0.6
 
 export const defaultHeaders = {
 	"HTTP-Referer": "https://github.com/RooVetGit/Roo-Cline",
@@ -45,7 +45,18 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			urlHost = ""
 		}
 
-		if (urlHost === "azure.com" || urlHost.endsWith(".azure.com") || options.openAiUseAzure) {
+		const isAzureAiInference = urlHost.endsWith(".services.ai.azure.com")
+		const isAzureOpenAi = urlHost === "azure.com" || urlHost.endsWith(".azure.com") || options.openAiUseAzure
+
+		if (isAzureAiInference) {
+			// Azure AI Inference Service (e.g., for DeepSeek) uses a different path structure
+			this.client = new OpenAI({
+				baseURL,
+				apiKey,
+				defaultHeaders,
+				defaultQuery: { "api-version": this.options.azureApiVersion || "2024-05-01-preview" },
+			})
+		} else if (isAzureOpenAi) {
 			// Azure API shape slightly differs from the core API shape:
 			// https://github.com/openai/openai-node?tab=readme-ov-file#microsoft-azure-openai
 			this.client = new AzureOpenAI({
@@ -64,6 +75,15 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		const modelUrl = this.options.openAiBaseUrl ?? ""
 		const modelId = this.options.openAiModelId ?? ""
 		const enabledR1Format = this.options.openAiR1FormatEnabled ?? false
+		// Add Azure AI Inference check within this method
+		let urlHost: string
+		try {
+			urlHost = new URL(modelUrl).host
+		} catch (error) {
+			urlHost = ""
+		}
+		const isAzureAiInference = urlHost.endsWith(".services.ai.azure.com")
+		const azureAiInferencePath = "/models/chat/completions" // Path for Azure AI Inference
 		const deepseekReasoner = modelId.includes("deepseek-reasoner") || enabledR1Format
 		const ark = modelUrl.includes(".volces.com")
 		if (modelId.startsWith("o3-mini")) {
@@ -132,7 +152,10 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				requestOptions.max_tokens = modelInfo.maxTokens
 			}
 
-			const stream = await this.client.chat.completions.create(requestOptions)
+			const stream = await this.client.chat.completions.create(
+				requestOptions,
+				isAzureAiInference ? { path: azureAiInferencePath } : {},
+			)
 
 			const matcher = new XmlMatcher(
 				"think",
@@ -185,7 +208,10 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 					: [systemMessage, ...convertToOpenAiMessages(messages)],
 			}
 
-			const response = await this.client.chat.completions.create(requestOptions)
+			const response = await this.client.chat.completions.create(
+				requestOptions,
+				isAzureAiInference ? { path: azureAiInferencePath } : {},
+			)
 
 			yield {
 				type: "text",
@@ -212,12 +238,24 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 	async completePrompt(prompt: string): Promise<string> {
 		try {
+			// Add Azure AI Inference check within this method
+			let urlHost: string
+			try {
+				urlHost = new URL(this.options.openAiBaseUrl ?? "").host
+			} catch (error) {
+				urlHost = ""
+			}
+			const isAzureAiInference = urlHost.endsWith(".services.ai.azure.com")
+			const azureAiInferencePath = "/models/chat/completions" // Path for Azure AI Inference
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
 				model: this.getModel().id,
 				messages: [{ role: "user", content: prompt }],
 			}
 
-			const response = await this.client.chat.completions.create(requestOptions)
+			const response = await this.client.chat.completions.create(
+				requestOptions,
+				isAzureAiInference ? { path: azureAiInferencePath } : {},
+			)
 			return response.choices[0]?.message.content || ""
 		} catch (error) {
 			if (error instanceof Error) {
@@ -233,19 +271,32 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		messages: Anthropic.Messages.MessageParam[],
 	): ApiStream {
 		if (this.options.openAiStreamingEnabled ?? true) {
-			const stream = await this.client.chat.completions.create({
-				model: modelId,
-				messages: [
-					{
-						role: "developer",
-						content: `Formatting re-enabled\n${systemPrompt}`,
-					},
-					...convertToOpenAiMessages(messages),
-				],
-				stream: true,
-				stream_options: { include_usage: true },
-				reasoning_effort: this.getModel().info.reasoningEffort,
-			})
+			// Add Azure AI Inference check within this method scope
+			let methodUrlHost: string
+			try {
+				methodUrlHost = new URL(this.options.openAiBaseUrl ?? "").host
+			} catch (error) {
+				methodUrlHost = ""
+			}
+			const methodIsAzureAiInference = methodUrlHost.endsWith(".services.ai.azure.com")
+			const methodAzureAiInferencePath = "/models/chat/completions"
+
+			const stream = await this.client.chat.completions.create(
+				{
+					model: modelId,
+					messages: [
+						{
+							role: "developer",
+							content: `Formatting re-enabled\n${systemPrompt}`,
+						},
+						...convertToOpenAiMessages(messages),
+					],
+					stream: true,
+					stream_options: { include_usage: true },
+					reasoning_effort: this.getModel().info.reasoningEffort,
+				},
+				methodIsAzureAiInference ? { path: methodAzureAiInferencePath } : {},
+			)
 
 			yield* this.handleStreamResponse(stream)
 		} else {
@@ -260,7 +311,20 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				],
 			}
 
-			const response = await this.client.chat.completions.create(requestOptions)
+			// Add Azure AI Inference check within this method scope
+			let methodUrlHost: string
+			try {
+				methodUrlHost = new URL(this.options.openAiBaseUrl ?? "").host
+			} catch (error) {
+				methodUrlHost = ""
+			}
+			const methodIsAzureAiInference = methodUrlHost.endsWith(".services.ai.azure.com")
+			const methodAzureAiInferencePath = "/models/chat/completions"
+
+			const response = await this.client.chat.completions.create(
+				requestOptions,
+				methodIsAzureAiInference ? { path: methodAzureAiInferencePath } : {},
+			)
 
 			yield {
 				type: "text",
