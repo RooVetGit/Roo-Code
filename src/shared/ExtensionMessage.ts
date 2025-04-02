@@ -78,7 +78,7 @@ export interface ExtensionMessage {
 		| "promptsButtonClicked"
 		| "didBecomeVisible"
 	invoke?: "newChat" | "sendMessage" | "primaryButtonClick" | "secondaryButtonClick" | "setChatBoxMessage"
-	state?: Partial<ExtensionState>
+	state?: ExtensionState
 	images?: string[]
 	ollamaModels?: string[]
 	lmStudioModels?: string[]

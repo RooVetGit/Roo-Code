@@ -88,7 +88,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
 
-export const mergeExtensionState = (prevState: ExtensionState, newState: Partial<ExtensionState>) => {
+export const mergeExtensionState = (prevState: ExtensionState, newState: ExtensionState) => {
 	const {
 		customModePrompts: prevCustomModePrompts,
 		customSupportPrompts: prevCustomSupportPrompts,

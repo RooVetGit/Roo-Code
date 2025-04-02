@@ -779,7 +779,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				const existingPrompts = getGlobalState("customModePrompts") ?? {}
 				const updatedPrompts = { ...existingPrompts, [message.promptMode]: message.customPrompt }
 				await updateGlobalState("customModePrompts", updatedPrompts)
-				const currentState = await provider.getState()
+				const currentState = await provider.getStateToPostToWebview()
 				const stateWithPrompts = { ...currentState, customModePrompts: updatedPrompts }
 				provider.postMessageToWebview({ type: "state", state: stateWithPrompts })
 			}
