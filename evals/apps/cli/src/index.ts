@@ -172,7 +172,7 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 	// Use --wait --log trace or --verbose.
 	const codeCommand = `code --disable-workspace-trust`
 
-	const subprocess = execa({
+	await execa({
 		env: {
 			ROO_CODE_IPC_SOCKET_PATH: taskSocketPath,
 		},
@@ -181,11 +181,12 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 	})`${codeCommand} -n ${path.resolve(exercisesPath, language, exercise)}`
 
 	// If debugging:
+	// Don't await execa and store result as subprocess.
 	// subprocess.stdout.pipe(process.stdout)
 
 	// Give VSCode some time to spawn before connectint to its unix socket.
 	await new Promise((resolve) => setTimeout(resolve, 1_000))
-	console.log(`Connecting to ${taskSocketPath} (pid: ${subprocess.pid})`)
+	console.log(`Connecting to ${taskSocketPath}`)
 
 	const createClient = (taskSocketPath: string) => {
 		const ipcClient = new IpcClient(taskSocketPath)
@@ -355,14 +356,12 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 		}
 	}
 
-	try {
-		console.log(`[cli#runExercise | ${language} / ${exercise}] aborting subprocess`)
-		controller.abort()
-		await subprocess
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	} catch (error) {
-		// console.error(error)
-	}
+	// try {
+	// 	console.log(`[cli#runExercise | ${language} / ${exercise}] aborting subprocess`)
+	// 	controller.abort()
+	// 	await subprocess
+	// } catch (error) {
+	// }
 }
 
 const runUnitTest = async ({ task }: { task: Task }) => {
@@ -374,15 +373,15 @@ const runUnitTest = async ({ task }: { task: Task }) => {
 	let passed = true
 
 	for (const command of commands) {
-		const controller = new AbortController()
-		const cancelSignal = controller.signal
-		const timeout = setTimeout(() => controller.abort(), cmd.timeout ?? 15_000)
+		// const controller = new AbortController()
+		// const cancelSignal = controller.signal
+		// const timeout = setTimeout(() => controller.abort(), cmd.timeout ?? 15_000)
 
 		try {
-			const result = await execa({ cwd, shell: true, reject: false, cancelSignal })`${command}`
+			const result = await execa({ cwd, shell: true, reject: false /* , cancelSignal */ })`${command}`
 			// console.log('[cli#run] execa result =', { ...result, cwd, command })
 
-			clearTimeout(timeout)
+			// clearTimeout(timeout)
 
 			if (result.failed) {
 				passed = false
