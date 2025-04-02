@@ -15,8 +15,7 @@ import { convertToSimpleMessages } from "../transform/simple-format"
 import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 import { XmlMatcher } from "../../utils/xml-matcher"
-
-export const DEEP_SEEK_DEFAULT_TEMPERATURE = 0.6
+import { DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
 
 export const defaultHeaders = {
 	"HTTP-Referer": "https://github.com/RooVetGit/Roo-Cline",
