@@ -9,7 +9,7 @@ type WaitForOptions = {
 
 export const waitFor = (
 	condition: (() => Promise<boolean>) | (() => boolean),
-	{ timeout = 60_000, interval = 250 }: WaitForOptions = {},
+	{ timeout = 30_000, interval = 250 }: WaitForOptions = {},
 ) => {
 	let timeoutId: NodeJS.Timeout | undefined = undefined
 

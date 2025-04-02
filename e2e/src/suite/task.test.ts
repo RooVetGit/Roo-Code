@@ -9,7 +9,12 @@ suite("Roo Code Task", () => {
 		const api = globalThis.api
 
 		const messages: ClineMessage[] = []
-		api.on("message", ({ message }) => messages.push(message))
+
+		api.on("message", ({ message }) => {
+			if (message.type === "say" && message.partial === false) {
+				messages.push(message)
+			}
+		})
 
 		const taskId = await api.startNewTask({
 			configuration: { mode: "Ask", alwaysAllowModeSwitch: true, autoApprovalEnabled: true },
@@ -18,7 +23,7 @@ suite("Roo Code Task", () => {
 
 		await waitUntilCompleted({ api, taskId })
 
-		const completion = messages.find(({ type, say, partial }) => say === "completion_result" && partial === false)
+		const completion = messages.find(({ say, partial }) => say === "completion_result")
 
 		assert.ok(
 			completion?.text?.includes("My name is Roo"),

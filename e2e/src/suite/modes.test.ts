@@ -18,7 +18,11 @@ suite("Roo Code Modes", () => {
 
 		let messages: ClineMessage[] = []
 
-		api.on("message", ({ message }) => messages.push(message))
+		api.on("message", ({ message }) => {
+			if (message.type === "say" && message.partial === false) {
+				messages.push(message)
+			}
+		})
 
 		const switchModesTaskId = await api.startNewTask({
 			configuration: { mode: "Code", alwaysAllowModeSwitch: true, autoApprovalEnabled: true },
@@ -31,22 +35,25 @@ suite("Roo Code Modes", () => {
 		 * Grade the response.
 		 */
 
-		const gradePrompt =
-			`Given this prompt: ${switchModesPrompt} grade the response from 1 to 10 in the format of "Grade: (1-10)": ` +
-			messages
-				.filter(({ type }) => type === "say")
-				.map(({ text }) => text ?? "")
-				.join("\n")
+		const response = messages
+			.filter(({ type, say, partial }) => say === "text")
+			.map(({ text }) => text ?? "")
+			.join("\n")
+
+		const gradePrompt = `Given this prompt: ${switchModesPrompt} grade the response from 1 to 10 in the format of "Grade: (1-10)". For example: Grade 7\n\nResponse: ${response}`
 
 		messages = []
 
 		const gradeTaskId = await api.startNewTask({ configuration: { mode: "Ask" }, text: gradePrompt })
-		await waitUntilCompleted({ api, taskId: gradeTaskId, timeout: 60_000 })
+		await waitUntilCompleted({ api, taskId: gradeTaskId })
 
-		const completion = messages.find(({ type, say, partial }) => say === "completion_result" && partial === false)
+		const completion = messages.find(({ type, say, partial }) => say === "completion_result")
 		const match = completion?.text?.match(/Grade: (\d+)/)
 		const score = parseInt(match?.[1] ?? "0")
-		assert.ok(score >= 7 && score <= 10, `Grade must be between 7 and 10 - ${completion?.text}`)
+		assert.ok(
+			score >= 7 && score <= 10,
+			`Grade must be between 7 and 10. DEBUG: score = ${score}, completion = ${completion?.text}`,
+		)
 
 		await api.cancelCurrentTask()
 	})
