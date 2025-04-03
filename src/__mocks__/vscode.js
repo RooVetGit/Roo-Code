@@ -34,6 +34,25 @@ const vscode = {
 			stat: jest.fn(),
 		},
 	},
+	FileSystemError: class FileSystemError extends Error {
+		constructor(message, code) {
+			super(message)
+			this.name = "FileSystemError"
+			this.code = code
+		}
+		static FileNotFound(uri) {
+			return new FileSystemError(`File not found: ${uri}`, "FileNotFound")
+		}
+		static FileExists(uri) {
+			return new FileSystemError(`File already exists: ${uri}`, "FileExists")
+		}
+		static FileNotADirectory(uri) {
+			return new FileSystemError(`Not a directory: ${uri}`, "FileNotADirectory")
+		}
+		static NoPermissions(uri) {
+			return new FileSystemError(`No permissions: ${uri}`, "NoPermissions")
+		}
+	},
 	Disposable: class {
 		dispose() {}
 	},
