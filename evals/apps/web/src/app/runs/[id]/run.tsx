@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef } from "react"
 import { LoaderCircle, SquareTerminal } from "lucide-react"
 
 import * as db from "@evals/db"
@@ -13,7 +13,6 @@ import {
 	DrawerHeader,
 	DrawerTitle,
 	ScrollArea,
-	Separator,
 	Table,
 	TableBody,
 	TableCell,
@@ -29,19 +28,6 @@ export function Run({ run }: { run: db.Run }) {
 	const { tasks, status, output, outputCounts } = useRunStatus(run)
 	const scrollAreaRef = useRef<HTMLDivElement>(null)
 	const [selectedTask, setSelectedTask] = useState<db.Task>()
-
-	useEffect(() => {
-		if (selectedTask) {
-			const scrollArea = scrollAreaRef.current
-
-			if (scrollArea) {
-				scrollArea.scrollTo({
-					top: scrollArea.scrollHeight,
-					behavior: "smooth",
-				})
-			}
-		}
-	}, [selectedTask, outputCounts])
 
 	return (
 		<>
