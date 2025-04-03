@@ -70,4 +70,25 @@ export class CodeIndexQdrantClient {
 			throw error
 		}
 	}
+
+	async deletePointsByFilePath(filePath: string): Promise<void> {
+		try {
+			await this.client.delete(this.collectionName, {
+				filter: {
+					must: [
+						{
+							key: "filePath",
+							match: {
+								value: filePath,
+							},
+						},
+					],
+				},
+				wait: true,
+			})
+		} catch (error) {
+			console.error("Failed to delete points by file path:", error)
+			throw error
+		}
+	}
 }
