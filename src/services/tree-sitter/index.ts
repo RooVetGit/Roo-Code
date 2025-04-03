@@ -38,6 +38,8 @@ const extensions = [
 	"json",
 ].map((e) => `.${e}`)
 
+export { extensions }
+
 export async function parseSourceCodeDefinitionsForFile(
 	filePath: string,
 	rooIgnoreController?: RooIgnoreController,
