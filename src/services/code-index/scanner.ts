@@ -4,6 +4,9 @@ import { parseCodeFileBySize, CodeBlock } from "./parser"
 import { stat } from "fs/promises"
 import * as path from "path"
 import { extensions } from "../tree-sitter"
+import { CodeIndexOpenAiEmbedder } from "./openai-embedder"
+import { CodeIndexQdrantClient } from "./qdrant-client"
+import { ApiHandlerOptions } from "../../shared/api"
 
 const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB
 
@@ -16,6 +19,8 @@ const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB
 export async function scanDirectoryForCodeBlocks(
 	directoryPath: string = process.cwd(),
 	rooIgnoreController?: RooIgnoreController,
+	openAiOptions?: ApiHandlerOptions,
+	qdrantUrl?: string,
 ): Promise<CodeBlock[]> {
 	// Get all files recursively (handles .gitignore automatically)
 	const [allPaths, _] = await listFiles(directoryPath, true, Infinity)
@@ -59,5 +64,42 @@ export async function scanDirectoryForCodeBlocks(
 	const results = await Promise.all(processingPromises)
 
 	// Flatten the array of arrays into a single array
-	return results.flat()
+	const codeBlocks = results.flat()
+
+	// If we have both clients configured, process embeddings
+	if (openAiOptions && qdrantUrl) {
+		try {
+			const embedder = new CodeIndexOpenAiEmbedder(openAiOptions)
+			const qdrantClient = new CodeIndexQdrantClient(qdrantUrl)
+
+			// Initialize Qdrant collection
+			await qdrantClient.initialize()
+
+			// Get text content from code blocks
+			const texts = codeBlocks.map((block) => block.content)
+
+			// Generate embeddings
+			const { embeddings } = await embedder.createEmbeddings(texts)
+
+			// Prepare points for Qdrant
+			const points = codeBlocks.map((block, index) => ({
+				id: `${block.file_path}:${block.start_line}-${block.end_line}`,
+				vector: embeddings[index],
+				payload: {
+					filePath: block.file_path,
+					codeChunk: block.content,
+					startLine: block.start_line,
+					endLine: block.end_line,
+				},
+			}))
+
+			// Upsert to Qdrant
+			await qdrantClient.upsertPoints(points)
+		} catch (error) {
+			console.error("Failed to process embeddings:", error)
+			// Continue with the original code blocks even if embedding fails
+		}
+	}
+
+	return codeBlocks
 }
