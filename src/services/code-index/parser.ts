@@ -18,13 +18,17 @@ interface CodeBlock {
 const MIN_BLOCK_LINES = 2
 const MAX_BLOCK_LINES = 100
 
-export async function parseCodeFileBySize(
-	filePath: string,
-	options?: { minBlockLines?: number; maxBlockLines?: number },
-): Promise<CodeBlock[]> {
+interface ParseOptions {
+	minBlockLines?: number
+	maxBlockLines?: number
+	content?: string
+	fileHash?: string
+}
+
+export async function parseCodeFileBySize(filePath: string, options?: ParseOptions): Promise<CodeBlock[]> {
 	try {
-		const content = await readFile(filePath, "utf-8")
-		const fileHash = createHash("sha256").update(content).digest("hex")
+		const content = options?.content ?? (await readFile(filePath, "utf-8"))
+		const fileHash = options?.fileHash ?? createHash("sha256").update(content).digest("hex")
 		const languageParsers = await loadRequiredLanguageParsers([filePath])
 		const ext = path.extname(filePath).slice(1)
 		const parserInfo = languageParsers[ext]
