@@ -1,5 +1,7 @@
 import { QdrantClient } from "@qdrant/js-client-rest"
 import { createHash } from "crypto"
+import * as path from "path"
+import { getWorkspacePath } from "../../utils/path"
 
 export class CodeIndexQdrantClient {
 	private readonly QDRANT_URL = "http://localhost:6333"
@@ -73,13 +75,17 @@ export class CodeIndexQdrantClient {
 
 	async deletePointsByFilePath(filePath: string): Promise<void> {
 		try {
+			const workspaceRoot = getWorkspacePath()
+			const absolutePath = path.resolve(workspaceRoot, filePath)
+			const normalizedAbsolutePath = path.normalize(absolutePath)
+
 			await this.client.delete(this.collectionName, {
 				filter: {
 					must: [
 						{
 							key: "filePath",
 							match: {
-								value: filePath,
+								value: normalizedAbsolutePath,
 							},
 						},
 					],
