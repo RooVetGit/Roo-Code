@@ -1,0 +1,4 @@
+
+				function FRe() {
+					return {}
+				}

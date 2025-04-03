@@ -1,0 +1,42 @@
+
+	var { extractBody: sYe, mixinBody: oYe, cloneBody: aYe, bodyUnusable: xse } = s0(),
+		{
+			Headers: kse,
+			fill: lYe,
+			HeadersList: ED,
+			setHeadersGuard: TV,
+			getHeadersGuard: cYe,
+			setHeadersList: Mse,
+			getHeadersList: _se,
+		} = pp(),
+		{ FinalizationRegistry: uYe } = bse()(),
+		CD = Xt(),
+		wse = require("util"),
+		{ isValidHTTPToken: dYe, sameOrigin: Ise, environmentSettingsObject: yD } = ga(),
+		{
+			forbiddenMethodsSet: fYe,
+			corsSafeListedMethodsSet: hYe,
+			referrerPolicy: gYe,
+			requestRedirect: pYe,
+			requestMode: AYe,
+			requestCredentials: mYe,
+			requestCache: yYe,
+			requestDuplex: CYe,
+		} = SE(),
+		{ kEnumerableProperty: Ii, normalizedMethodRecordsBase: vYe, normalizedMethodRecords: EYe } = CD,
+		{ kHeaders: Ca, kSignal: vD, kState: xn, kDispatcher: DV } = Gf(),
+		{ webidl: gt } = ys(),
+		{ URLSerializer: bYe } = No(),
+		{ kConstruct: bD } = Qn(),
+		xYe = require("assert"),
+		{
+			getMaxListeners: Sse,
+			setMaxListeners: Bse,
+			getEventListeners: _Ye,
+			defaultMaxListeners: Dse,
+		} = require("events"),
+		wYe = Symbol("abortController"),
+		Fse = new uYe(({ signal: e, abort: t }) => {
+			e.removeEventListener("abort", t)
+		}),
+		xD = new WeakMap()

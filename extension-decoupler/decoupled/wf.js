@@ -1,0 +1,2 @@
+
+var WF = require("vscode")

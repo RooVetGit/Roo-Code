@@ -1,0 +1,4 @@
+
+function pd() {
+	return nP()
+}

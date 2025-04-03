@@ -1,0 +1,2 @@
+
+	var Yse = performance.markResourceTiming

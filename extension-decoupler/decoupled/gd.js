@@ -1,0 +1,2 @@
+
+	var Gd = An.createLogger()

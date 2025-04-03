@@ -1,0 +1,30 @@
+
+	function t3(e, t) {
+		var r = pt(),
+			n = pt(),
+			i = pt(),
+			s = pt(),
+			o = pt(),
+			a = pt(),
+			l = pt(),
+			c = pt(),
+			u = pt()
+		z0(r, e[1], e[0]),
+			z0(u, t[1], t[0]),
+			un(r, r, u),
+			J0(n, e[0], e[1]),
+			J0(u, t[0], t[1]),
+			un(n, n, u),
+			un(i, e[3], t[3]),
+			un(i, i, KXe),
+			un(s, e[2], t[2]),
+			J0(s, s, s),
+			z0(o, n, r),
+			z0(a, s, i),
+			J0(l, s, i),
+			J0(c, n, r),
+			un(e[0], o, a),
+			un(e[1], c, l),
+			un(e[2], l, a),
+			un(e[3], o, c)
+	}

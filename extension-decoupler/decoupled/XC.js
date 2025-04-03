@@ -1,0 +1,2 @@
+
+var xC = require("vscode")

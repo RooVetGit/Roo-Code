@@ -1,0 +1,181 @@
+
+	var V = gn.asn1,
+		or = gn.pki,
+		Mb = (Ace.exports = gn.pkcs12 = gn.pkcs12 || {}),
+		pce = {
+			name: "ContentInfo",
+			tagClass: V.Class.UNIVERSAL,
+			type: V.Type.SEQUENCE,
+			constructed: !0,
+			value: [
+				{
+					name: "ContentInfo.contentType",
+					tagClass: V.Class.UNIVERSAL,
+					type: V.Type.OID,
+					constructed: !1,
+					capture: "contentType",
+				},
+				{
+					name: "ContentInfo.content",
+					tagClass: V.Class.CONTEXT_SPECIFIC,
+					constructed: !0,
+					captureAsn1: "content",
+				},
+			],
+		},
+		uXe = {
+			name: "PFX",
+			tagClass: V.Class.UNIVERSAL,
+			type: V.Type.SEQUENCE,
+			constructed: !0,
+			value: [
+				{
+					name: "PFX.version",
+					tagClass: V.Class.UNIVERSAL,
+					type: V.Type.INTEGER,
+					constructed: !1,
+					capture: "version",
+				},
+				pce,
+				{
+					name: "PFX.macData",
+					tagClass: V.Class.UNIVERSAL,
+					type: V.Type.SEQUENCE,
+					constructed: !0,
+					optional: !0,
+					captureAsn1: "mac",
+					value: [
+						{
+							name: "PFX.macData.mac",
+							tagClass: V.Class.UNIVERSAL,
+							type: V.Type.SEQUENCE,
+							constructed: !0,
+							value: [
+								{
+									name: "PFX.macData.mac.digestAlgorithm",
+									tagClass: V.Class.UNIVERSAL,
+									type: V.Type.SEQUENCE,
+									constructed: !0,
+									value: [
+										{
+											name: "PFX.macData.mac.digestAlgorithm.algorithm",
+											tagClass: V.Class.UNIVERSAL,
+											type: V.Type.OID,
+											constructed: !1,
+											capture: "macAlgorithm",
+										},
+										{
+											name: "PFX.macData.mac.digestAlgorithm.parameters",
+											tagClass: V.Class.UNIVERSAL,
+											captureAsn1: "macAlgorithmParameters",
+										},
+									],
+								},
+								{
+									name: "PFX.macData.mac.digest",
+									tagClass: V.Class.UNIVERSAL,
+									type: V.Type.OCTETSTRING,
+									constructed: !1,
+									capture: "macDigest",
+								},
+							],
+						},
+						{
+							name: "PFX.macData.macSalt",
+							tagClass: V.Class.UNIVERSAL,
+							type: V.Type.OCTETSTRING,
+							constructed: !1,
+							capture: "macSalt",
+						},
+						{
+							name: "PFX.macData.iterations",
+							tagClass: V.Class.UNIVERSAL,
+							type: V.Type.INTEGER,
+							constructed: !1,
+							optional: !0,
+							capture: "macIterations",
+						},
+					],
+				},
+			],
+		},
+		dXe = {
+			name: "SafeBag",
+			tagClass: V.Class.UNIVERSAL,
+			type: V.Type.SEQUENCE,
+			constructed: !0,
+			value: [
+				{
+					name: "SafeBag.bagId",
+					tagClass: V.Class.UNIVERSAL,
+					type: V.Type.OID,
+					constructed: !1,
+					capture: "bagId",
+				},
+				{
+					name: "SafeBag.bagValue",
+					tagClass: V.Class.CONTEXT_SPECIFIC,
+					constructed: !0,
+					captureAsn1: "bagValue",
+				},
+				{
+					name: "SafeBag.bagAttributes",
+					tagClass: V.Class.UNIVERSAL,
+					type: V.Type.SET,
+					constructed: !0,
+					optional: !0,
+					capture: "bagAttributes",
+				},
+			],
+		},
+		fXe = {
+			name: "Attribute",
+			tagClass: V.Class.UNIVERSAL,
+			type: V.Type.SEQUENCE,
+			constructed: !0,
+			value: [
+				{
+					name: "Attribute.attrId",
+					tagClass: V.Class.UNIVERSAL,
+					type: V.Type.OID,
+					constructed: !1,
+					capture: "oid",
+				},
+				{
+					name: "Attribute.attrValues",
+					tagClass: V.Class.UNIVERSAL,
+					type: V.Type.SET,
+					constructed: !0,
+					capture: "values",
+				},
+			],
+		},
+		hXe = {
+			name: "CertBag",
+			tagClass: V.Class.UNIVERSAL,
+			type: V.Type.SEQUENCE,
+			constructed: !0,
+			value: [
+				{
+					name: "CertBag.certId",
+					tagClass: V.Class.UNIVERSAL,
+					type: V.Type.OID,
+					constructed: !1,
+					capture: "certId",
+				},
+				{
+					name: "CertBag.certValue",
+					tagClass: V.Class.CONTEXT_SPECIFIC,
+					constructed: !0,
+					value: [
+						{
+							name: "CertBag.certValue[0]",
+							tagClass: V.Class.UNIVERSAL,
+							type: V.Class.OCTETSTRING,
+							constructed: !1,
+							capture: "cert",
+						},
+					],
+				},
+			],
+		}

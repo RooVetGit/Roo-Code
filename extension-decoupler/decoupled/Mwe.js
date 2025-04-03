@@ -1,0 +1,2 @@
+
+var mwe = require("console")

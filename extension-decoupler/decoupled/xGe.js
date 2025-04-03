@@ -1,0 +1,4 @@
+
+	function Xge(e) {
+		e()
+	}

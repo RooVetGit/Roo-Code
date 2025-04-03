@@ -1,0 +1,2 @@
+
+var Hu = require("vscode")

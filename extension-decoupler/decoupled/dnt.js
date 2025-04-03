@@ -1,0 +1,2 @@
+
+	var Dnt = Go()
