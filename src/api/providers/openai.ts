@@ -29,12 +29,10 @@ const AZURE_AI_INFERENCE_PATH = "/models/chat/completions"
 export class OpenAiHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: OpenAiHandlerOptions
 	private client: OpenAI
-	private isAzure: boolean
 
 	constructor(options: OpenAiHandlerOptions) {
 		super()
 		this.options = options
-		this.isAzure = options.openAiUseAzure ?? false
 
 		const baseURL = this.options.openAiBaseUrl ?? "https://api.openai.com/v1"
 		const apiKey = this.options.openAiApiKey ?? "not-provided"
