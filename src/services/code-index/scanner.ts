@@ -156,8 +156,17 @@ export async function scanDirectoryForCodeBlocks(
 	if (cachePath) {
 		for (const cachedFilePath of Object.keys(oldHashes)) {
 			if (!processedFiles.has(cachedFilePath)) {
-				// File was deleted or is no longer supported
-				// Note: We're not handling Qdrant deletions here
+				// File was deleted or is no longer supported/indexed
+				if (qdrantClient) {
+					try {
+						console.log(`[CodeIndexScanner] Deleting points for deleted file: ${cachedFilePath}`)
+						await qdrantClient.deletePointsByFilePath(cachedFilePath)
+					} catch (error) {
+						console.error(`[CodeIndexScanner] Failed to delete points for ${cachedFilePath}:`, error)
+						// Decide if we should re-throw or just log
+					}
+				}
+				// The file is implicitly removed from the cache because it's not added to newHashes
 			}
 		}
 
