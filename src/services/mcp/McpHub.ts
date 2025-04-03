@@ -63,7 +63,7 @@ const createServerTypeSchema = () => {
 			type: z.enum(["stdio"]).optional(),
 			command: z.string().min(1, "Command cannot be empty"),
 			args: z.array(z.string()).optional(),
-			cwd: z.string().default(vscode.workspace.workspaceFolders?.at(0)?.uri.fsPath ?? process.cwd()),
+			cwd: z.string().default(() => vscode.workspace.workspaceFolders?.at(0)?.uri.fsPath ?? process.cwd()),
 			env: z.record(z.string()).optional(),
 			// Ensure no SSE fields are present
 			url: z.undefined().optional(),
