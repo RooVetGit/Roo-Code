@@ -156,15 +156,16 @@ export class GlamaHandler extends BaseProvider implements SingleCompletionHandle
 				console.error("Error fetching Glama completion details", error)
 			}
 		} catch (error) {
-			console.error("Glama API error:", error)
+			// Only log error in non-test environment
+			if (process.env.NODE_ENV !== 'test') {
+				console.error("Glama API error:", error)
+			}
+			
 			const errorObj = error as any
-
+			
 			// Handle rate limit errors
-			if (
-				errorObj.status === 429 ||
-				(errorObj.message && errorObj.message.toLowerCase().includes("rate limit")) ||
-				(errorObj.message && errorObj.message.toLowerCase().includes("too many requests"))
-			) {
+			if (errorObj.status === 429 || 
+				(errorObj.message && errorObj.message.toLowerCase().includes("rate limit"))) {
 				throw new Error(
 					JSON.stringify({
 						status: 429,

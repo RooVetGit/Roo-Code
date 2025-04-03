@@ -153,21 +153,27 @@ describe("GlamaHandler", () => {
 		})
 
 		it("should handle API errors", async () => {
+			// Mock the API error
 			mockCreate.mockImplementationOnce(() => {
 				throw new Error("API Error")
 			})
 
 			const stream = handler.createMessage(systemPrompt, messages)
-			const chunks = []
+			const chunks: any[] = []
 
+			// Properly handle the async iterator with try/catch
 			try {
 				for await (const chunk of stream) {
 					chunks.push(chunk)
 				}
 				fail("Expected error to be thrown")
 			} catch (error) {
+				// Remove or comment out console.error in the actual implementation
+				// since we expect this error in the test
 				expect(error).toBeInstanceOf(Error)
-				expect(error.message).toBe("API Error")
+				expect((error as Error).message).toBe("API Error")
+				// Verify no chunks were processed
+				expect(chunks).toHaveLength(0)
 			}
 		})
 	})
