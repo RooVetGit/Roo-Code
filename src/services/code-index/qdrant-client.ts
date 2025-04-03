@@ -1,28 +1,33 @@
 import { QdrantClient } from "@qdrant/js-client-rest"
+import { createHash } from "crypto"
 
 export class CodeIndexQdrantClient {
 	private readonly QDRANT_URL = "http://localhost:6333"
-	private readonly COLLECTION_NAME = "code_embeddings"
 	private readonly VECTOR_SIZE = 1536
 	private readonly DISTANCE_METRIC = "Cosine"
 
 	private client: QdrantClient
+	private readonly collectionName: string
 
-	constructor(url?: string) {
+	constructor(workspacePath: string, url?: string) {
 		this.client = new QdrantClient({
 			url: url || this.QDRANT_URL,
 		})
+
+		// Generate collection name from workspace path
+		const hash = createHash("sha256").update(workspacePath).digest("hex")
+		this.collectionName = `ws-${hash.substring(0, 16)}`
 	}
 
 	async initialize(): Promise<void> {
 		try {
 			const collections = await this.client.getCollections()
 			const collectionExists = collections.collections.some(
-				(collection) => collection.name === this.COLLECTION_NAME,
+				(collection) => collection.name === this.collectionName,
 			)
 
 			if (!collectionExists) {
-				await this.client.createCollection(this.COLLECTION_NAME, {
+				await this.client.createCollection(this.collectionName, {
 					vectors: {
 						size: this.VECTOR_SIZE,
 						distance: this.DISTANCE_METRIC,
@@ -43,7 +48,7 @@ export class CodeIndexQdrantClient {
 		}>,
 	): Promise<void> {
 		try {
-			await this.client.upsert(this.COLLECTION_NAME, {
+			await this.client.upsert(this.collectionName, {
 				points,
 				wait: true,
 			})
@@ -55,7 +60,7 @@ export class CodeIndexQdrantClient {
 
 	async search(queryVector: number[], limit: number = 10): Promise<Array<Record<string, any>>> {
 		try {
-			const result = await this.client.search(this.COLLECTION_NAME, {
+			const result = await this.client.search(this.collectionName, {
 				vector: queryVector,
 				limit,
 			})

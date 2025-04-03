@@ -9,6 +9,7 @@ import { CodeIndexQdrantClient } from "./qdrant-client"
 import { ApiHandlerOptions } from "../../shared/api"
 
 const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB
+const MAX_LIST_FILES_LIMIT = 1_000
 
 /**
  * Recursively scans a directory for code blocks in supported files.
@@ -23,7 +24,7 @@ export async function scanDirectoryForCodeBlocks(
 	qdrantUrl?: string,
 ): Promise<CodeBlock[]> {
 	// Get all files recursively (handles .gitignore automatically)
-	const [allPaths, _] = await listFiles(directoryPath, true, Infinity)
+	const [allPaths, _] = await listFiles(directoryPath, true, MAX_LIST_FILES_LIMIT)
 
 	// Filter out directories (marked with trailing '/')
 	const filePaths = allPaths.filter((p) => !p.endsWith("/"))
@@ -70,7 +71,7 @@ export async function scanDirectoryForCodeBlocks(
 	if (openAiOptions && qdrantUrl) {
 		try {
 			const embedder = new CodeIndexOpenAiEmbedder(openAiOptions)
-			const qdrantClient = new CodeIndexQdrantClient(qdrantUrl)
+			const qdrantClient = new CodeIndexQdrantClient(directoryPath, qdrantUrl)
 
 			// Initialize Qdrant collection
 			await qdrantClient.initialize()
