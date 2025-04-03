@@ -36,17 +36,8 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 		const baseURL = this.options.openAiBaseUrl ?? "https://api.openai.com/v1"
 		const apiKey = this.options.openAiApiKey ?? "not-provided"
-		let urlHost: string
-
-		try {
-			urlHost = new URL(this.options.openAiBaseUrl ?? "").host
-		} catch (error) {
-			// Likely an invalid `openAiBaseUrl`; we're still working on
-			// proper settings validation.
-			urlHost = ""
-		}
-
-		const isAzureAiInference = urlHost.endsWith(".services.ai.azure.com")
+		const isAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
+		const urlHost = this._getUrlHost(this.options.openAiBaseUrl)
 		const isAzureOpenAi = urlHost === "azure.com" || urlHost.endsWith(".azure.com") || options.openAiUseAzure
 
 		if (isAzureAiInference) {
@@ -76,14 +67,8 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		const modelUrl = this.options.openAiBaseUrl ?? ""
 		const modelId = this.options.openAiModelId ?? ""
 		const enabledR1Format = this.options.openAiR1FormatEnabled ?? false
-		// Add Azure AI Inference check within this method
-		let urlHost: string
-		try {
-			urlHost = new URL(modelUrl).host
-		} catch (error) {
-			urlHost = ""
-		}
-		const isAzureAiInference = urlHost.endsWith(".services.ai.azure.com")
+		const isAzureAiInference = this._isAzureAiInference(modelUrl)
+		const urlHost = this._getUrlHost(modelUrl)
 		const deepseekReasoner = modelId.includes("deepseek-reasoner") || enabledR1Format
 		const ark = modelUrl.includes(".volces.com")
 		if (modelId.startsWith("o3-mini")) {
@@ -210,7 +195,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 			const response = await this.client.chat.completions.create(
 				requestOptions,
-				isAzureAiInference ? { path: AZURE_AI_INFERENCE_PATH } : {},
+				this._isAzureAiInference(modelUrl) ? { path: AZURE_AI_INFERENCE_PATH } : {},
 			)
 
 			yield {
@@ -238,14 +223,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 	async completePrompt(prompt: string): Promise<string> {
 		try {
-			// Add Azure AI Inference check within this method
-			let urlHost: string
-			try {
-				urlHost = new URL(this.options.openAiBaseUrl ?? "").host
-			} catch (error) {
-				urlHost = ""
-			}
-			const isAzureAiInference = urlHost.endsWith(".services.ai.azure.com")
+			const isAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
 				model: this.getModel().id,
 				messages: [{ role: "user", content: prompt }],
@@ -270,14 +248,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		messages: Anthropic.Messages.MessageParam[],
 	): ApiStream {
 		if (this.options.openAiStreamingEnabled ?? true) {
-			// Add Azure AI Inference check within this method scope
-			let methodUrlHost: string
-			try {
-				methodUrlHost = new URL(this.options.openAiBaseUrl ?? "").host
-			} catch (error) {
-				methodUrlHost = ""
-			}
-			const methodIsAzureAiInference = methodUrlHost.endsWith(".services.ai.azure.com")
+			const methodIsAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
 
 			const stream = await this.client.chat.completions.create(
 				{
@@ -309,14 +280,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				],
 			}
 
-			// Add Azure AI Inference check within this method scope
-			let methodUrlHost: string
-			try {
-				methodUrlHost = new URL(this.options.openAiBaseUrl ?? "").host
-			} catch (error) {
-				methodUrlHost = ""
-			}
-			const methodIsAzureAiInference = methodUrlHost.endsWith(".services.ai.azure.com")
+			const methodIsAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
 
 			const response = await this.client.chat.completions.create(
 				requestOptions,
@@ -349,6 +313,18 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				}
 			}
 		}
+	}
+	private _getUrlHost(baseUrl?: string): string {
+		try {
+			return new URL(baseUrl ?? "").host
+		} catch (error) {
+			return ""
+		}
+	}
+
+	private _isAzureAiInference(baseUrl?: string): boolean {
+		const urlHost = this._getUrlHost(baseUrl)
+		return urlHost.endsWith(".services.ai.azure.com")
 	}
 }
 
