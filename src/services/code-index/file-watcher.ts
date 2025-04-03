@@ -2,6 +2,7 @@ import * as vscode from "vscode"
 import * as path from "path"
 import { createHash } from "crypto"
 import { RooIgnoreController } from "../../core/ignore/RooIgnoreController"
+import { getWorkspacePath } from "../../utils/path"
 import { extensions } from "../tree-sitter"
 import { parseCodeFileBySize, CodeBlock } from "./parser"
 import { CodeIndexOpenAiEmbedder } from "./openai-embedder"
@@ -132,16 +133,22 @@ export class CodeIndexFileWatcher {
 				const texts = blocks.map((block) => block.content)
 				const { embeddings } = await this.embedder.createEmbeddings(texts)
 
-				const points = blocks.map((block, index) => ({
-					id: `${block.file_path}:${block.start_line}-${block.end_line}`,
-					vector: embeddings[index],
-					payload: {
-						filePath: block.file_path,
-						codeChunk: block.content,
-						startLine: block.start_line,
-						endLine: block.end_line,
-					},
-				}))
+				const workspaceRoot = getWorkspacePath()
+				const points = blocks.map((block, index) => {
+					const absolutePath = path.resolve(workspaceRoot, block.file_path)
+					const normalizedAbsolutePath = path.normalize(absolutePath)
+
+					return {
+						id: `${block.file_path}:${block.start_line}-${block.end_line}`,
+						vector: embeddings[index],
+						payload: {
+							filePath: normalizedAbsolutePath,
+							codeChunk: block.content,
+							startLine: block.start_line,
+							endLine: block.end_line,
+						},
+					}
+				})
 
 				await this.qdrantClient.upsertPoints(points)
 			}
@@ -182,16 +189,22 @@ export class CodeIndexFileWatcher {
 				const texts = blocks.map((block) => block.content)
 				const { embeddings } = await this.embedder.createEmbeddings(texts)
 
-				const points = blocks.map((block, index) => ({
-					id: `${block.file_path}:${block.start_line}-${block.end_line}`,
-					vector: embeddings[index],
-					payload: {
-						filePath: block.file_path,
-						codeChunk: block.content,
-						startLine: block.start_line,
-						endLine: block.end_line,
-					},
-				}))
+				const workspaceRoot = getWorkspacePath()
+				const points = blocks.map((block, index) => {
+					const absolutePath = path.resolve(workspaceRoot, block.file_path)
+					const normalizedAbsolutePath = path.normalize(absolutePath)
+
+					return {
+						id: `${block.file_path}:${block.start_line}-${block.end_line}`,
+						vector: embeddings[index],
+						payload: {
+							filePath: normalizedAbsolutePath,
+							codeChunk: block.content,
+							startLine: block.start_line,
+							endLine: block.end_line,
+						},
+					}
+				})
 
 				await this.qdrantClient.upsertPoints(points)
 			}
@@ -207,7 +220,10 @@ export class CodeIndexFileWatcher {
 		// Check if file was likely indexed
 		if (this.hashCache[filePath] && this.qdrantClient) {
 			try {
-				await this.qdrantClient.deletePointsByFilePath(filePath)
+				const workspaceRoot = getWorkspacePath()
+				const absolutePath = path.resolve(workspaceRoot, filePath)
+				const normalizedAbsolutePath = path.normalize(absolutePath)
+				await this.qdrantClient.deletePointsByFilePath(normalizedAbsolutePath)
 				delete this.hashCache[filePath]
 				await this.saveHashCache()
 			} catch (error) {

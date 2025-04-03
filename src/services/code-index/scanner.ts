@@ -3,6 +3,7 @@ import { RooIgnoreController } from "../../core/ignore/RooIgnoreController"
 import { parseCodeFileBySize, CodeBlock } from "./parser"
 import { stat } from "fs/promises"
 import * as path from "path"
+import { getWorkspacePath } from "../../utils/path"
 import { extensions } from "../tree-sitter"
 import { CodeIndexOpenAiEmbedder } from "./openai-embedder"
 import { CodeIndexQdrantClient } from "./qdrant-client"
@@ -129,16 +130,22 @@ export async function scanDirectoryForCodeBlocks(
 					const texts = blocks.map((block) => block.content)
 					const { embeddings } = await embedder.createEmbeddings(texts)
 
-					const points = blocks.map((block, index) => ({
-						id: `${block.file_path}:${block.start_line}-${block.end_line}`,
-						vector: embeddings[index],
-						payload: {
-							filePath: block.file_path,
-							codeChunk: block.content,
-							startLine: block.start_line,
-							endLine: block.end_line,
-						},
-					}))
+					const points = blocks.map((block, index) => {
+						const workspaceRoot = getWorkspacePath()
+						const absolutePath = path.resolve(workspaceRoot, block.file_path)
+						const normalizedAbsolutePath = path.normalize(absolutePath)
+
+						return {
+							id: `${block.file_path}:${block.start_line}-${block.end_line}`,
+							vector: embeddings[index],
+							payload: {
+								filePath: normalizedAbsolutePath,
+								codeChunk: block.content,
+								startLine: block.start_line,
+								endLine: block.end_line,
+							},
+						}
+					})
 
 					await qdrantClient.upsertPoints(points)
 				} catch (error) {
