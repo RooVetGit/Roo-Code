@@ -816,7 +816,7 @@ function five() {
 					const diff =
 						"<<<<<<< SEARCH\n" +
 						"before\n" +
-						"\\<<<<<<< SEARCH\n" +
+						"\\<<<<<<<\n" +
 						"after\n" +
 						"=======\n" +
 						"new content\n" +
@@ -839,11 +839,11 @@ function five() {
 				})
 
 				it("processes escaped search marker in content", async () => {
-					const originalContent = "before\n<<<<<<< SEARCH\nafter\n"
+					const originalContent = "before\n<<<<<<<\nafter\n"
 					const diffContent =
 						"<<<<<<< SEARCH\n" +
 						"before\n" +
-						"\\<<<<<<< SEARCH\n" +
+						"\\<<<<<<<\n" +
 						"after\n" +
 						"=======\n" +
 						"unchanged\n" +
@@ -873,11 +873,11 @@ function five() {
 				})
 
 				it("processes escaped search marker in content", async () => {
-					const originalContent = "before\n<<<<<<< SEARCH\nafter\n"
+					const originalContent = "before\n<<<<<<<\nafter\n"
 					const diffContent =
 						"<<<<<<< SEARCH\n" +
 						"before\n" +
-						"\\<<<<<<< SEARCH\n" +
+						"\\<<<<<<<\n" +
 						"after\n" +
 						"=======\n" +
 						"unchanged\n" +
@@ -907,12 +907,12 @@ function five() {
 				})
 
 				it("processes escaped search marker in content", async () => {
-					const originalContent = "before\n<<<<<<< SEARCH\nafter\n"
+					const originalContent = "before\n<<<<<<<\nafter\n"
 					const diffContent =
 						"test.ts\n" +
 						"<<<<<<< SEARCH\n" +
 						"before\n" +
-						"\\<<<<<<< SEARCH\n" +
+						"\\<<<<<<<\n" +
 						"after\n" +
 						"=======\n" +
 						"unchanged\n" +
@@ -925,12 +925,12 @@ function five() {
 				})
 
 				it("processes escaped search marker in content", async () => {
-					const originalContent = "before\n<<<<<<< SEARCH\nafter\n"
+					const originalContent = "before\n<<<<<<<\nafter\n"
 					const diffContent =
 						"test.ts\n" +
 						"<<<<<<< SEARCH\n" +
 						"before\n" +
-						"\\<<<<<<< SEARCH\n" +
+						"\\<<<<<<<\n" +
 						"after\n" +
 						"=======\n" +
 						"unchanged\n" +
@@ -960,11 +960,11 @@ function five() {
 				})
 
 				it("processes escaped search marker in content", async () => {
-					const originalContent = "before\n<<<<<<< SEARCH\nafter\n"
+					const originalContent = "before\n<<<<<<<\nafter\n"
 					const diffContent =
 						"<<<<<<< SEARCH\n" +
 						"before\n" +
-						"\\<<<<<<< SEARCH\n" +
+						"\\<<<<<<<\n" +
 						"after\n" +
 						"=======\n" +
 						"unchanged\n" +
@@ -977,11 +977,11 @@ function five() {
 				})
 
 				it("processes escaped search marker in content", async () => {
-					const originalContent = "before\n<<<<<<< SEARCH\nafter\n"
+					const originalContent = "before\n<<<<<<<\nafter\n"
 					const diffContent =
 						"<<<<<<< SEARCH\n" +
 						"before\n" +
-						"\\<<<<<<< SEARCH\n" +
+						"\\<<<<<<<\n" +
 						"after\n" +
 						"=======\n" +
 						"unchanged\n" +
@@ -994,11 +994,11 @@ function five() {
 				})
 
 				it("processes escaped search marker in content", async () => {
-					const originalContent = "before\n<<<<<<< SEARCH\nafter\n"
+					const originalContent = "before\n<<<<<<<\nafter\n"
 					const diffContent =
 						"<<<<<<< SEARCH\n" +
 						"before\n" +
-						"\\<<<<<<< SEARCH\n" +
+						"\\<<<<<<<\n" +
 						"after\n" +
 						"=======\n" +
 						"unchanged\n" +
@@ -1031,7 +1031,7 @@ function five() {
 					const diff =
 						"<<<<<<< SEARCH\n" +
 						"before\n" +
-						"\\<<<<<<< SEARCH\n" +
+						"\\<<<<<<<\n" +
 						"after\n" +
 						"=======\n" +
 						"new content\n" +
@@ -1055,7 +1055,7 @@ function five() {
 					const diff =
 						"<<<<<<< SEARCH\n" +
 						"before\n" +
-						"\\<<<<<<< SEARCH\n" +
+						"\\<<<<<<<\n" +
 						"after\n" +
 						"=======\n" +
 						"new content\n" +
@@ -1067,7 +1067,7 @@ function five() {
 					const diff =
 						"<<<<<<< SEARCH\n" +
 						"before\n" +
-						"\\<<<<<<< SEARCH\n" +
+						"\\<<<<<<<\n" +
 						"after\n" +
 						"=======\n" +
 						"new content\n" +
@@ -1091,7 +1091,7 @@ function five() {
 					const diff =
 						"<<<<<<< SEARCH\n" +
 						"before\n" +
-						"\\>>>>>>> REPLACE\n" +
+						"\\>>>>>>>\n" +
 						"after\n" +
 						"=======\n" +
 						"new content\n" +
@@ -1115,7 +1115,7 @@ function five() {
 					const diff =
 						"<<<<<<< SEARCH\n" +
 						"before\n" +
-						"\\>>>>>>> REPLACE\n" +
+						"\\>>>>>>>\n" +
 						"after\n" +
 						"=======\n" +
 						"new content\n" +
@@ -1127,7 +1127,7 @@ function five() {
 					const diff =
 						"<<<<<<< SEARCH\n" +
 						"before\n" +
-						"\\>>>>>>> REPLACE\n" +
+						"\\>>>>>>>\n" +
 						"after\n" +
 						"=======\n" +
 						"new content\n" +
@@ -1136,11 +1136,11 @@ function five() {
 				})
 
 				it("processes escaped search marker in content", async () => {
-					const originalContent = "before\n<<<<<<< SEARCH\nafter\n"
+					const originalContent = "before\n<<<<<<<\nafter\n"
 					const diffContent =
 						"<<<<<<< SEARCH\n" +
 						"before\n" +
-						"\\<<<<<<< SEARCH\n" +
+						"\\<<<<<<<\n" +
 						"after\n" +
 						"=======\n" +
 						"replaced content\n" +
@@ -1153,11 +1153,11 @@ function five() {
 				})
 
 				it("processes escaped replace marker in content", async () => {
-					const originalContent = "before\n>>>>>>> REPLACE\nafter\n"
+					const originalContent = "before\n>>>>>>>\nafter\n"
 					const diffContent =
 						"<<<<<<< SEARCH\n" +
 						"before\n" +
-						"\\>>>>>>> REPLACE\n" +
+						"\\>>>>>>>\n" +
 						"after\n" +
 						"=======\n" +
 						"unchanged\n" +
@@ -1170,12 +1170,12 @@ function five() {
 				})
 
 				it("processes multiple escaped markers in content", async () => {
-					const originalContent = "<<<<<<< SEARCH\n=======\n>>>>>>> REPLACE\n"
+					const originalContent = "<<<<<<<\n=======\n>>>>>>>\n"
 					const diffContent =
 						"<<<<<<< SEARCH\n" +
-						"\\<<<<<<< SEARCH\n" +
+						"\\<<<<<<<\n" +
 						"\\=======\n" +
-						"\\>>>>>>> REPLACE\n" +
+						"\\>>>>>>>\n" +
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
@@ -1204,11 +1204,11 @@ function five() {
 				})
 
 				it("processes escaped search marker in content", async () => {
-					const originalContent = "before\n<<<<<<< SEARCH\nafter\n"
+					const originalContent = "before\n<<<<<<<\nafter\n"
 					const diffContent =
 						"<<<<<<< SEARCH\n" +
 						"before\n" +
-						"\\<<<<<<< SEARCH\n" +
+						"\\<<<<<<<\n" +
 						"after\n" +
 						"=======\n" +
 						"unchanged\n" +
@@ -1221,11 +1221,11 @@ function five() {
 				})
 
 				it("processes escaped replace marker in content", async () => {
-					const originalContent = "before\n>>>>>>> REPLACE\nafter\n"
+					const originalContent = "before\n>>>>>>>\nafter\n"
 					const diffContent =
 						"<<<<<<< SEARCH\n" +
 						"before\n" +
-						"\\>>>>>>> REPLACE\n" +
+						"\\>>>>>>>\n" +
 						"after\n" +
 						"=======\n" +
 						"unchanged\n" +
@@ -1256,11 +1256,11 @@ function five() {
 				})
 
 				it("processes escaped replace marker in content", async () => {
-					const originalContent = "before\n>>>>>>> REPLACE\nafter\n"
+					const originalContent = "before\n>>>>>>>\nafter\n"
 					const diffContent =
 						"<<<<<<< SEARCH\n" +
 						"before\n" +
-						"\\>>>>>>> REPLACE\n" +
+						"\\>>>>>>>\n" +
 						"after\n" +
 						"=======\n" +
 						"unchanged\n" +
@@ -1273,12 +1273,12 @@ function five() {
 				})
 
 				it("processes multiple escaped markers in content", async () => {
-					const originalContent = "<<<<<<< SEARCH\n=======\n>>>>>>> REPLACE\n"
+					const originalContent = "<<<<<<<\n=======\n>>>>>>>\n"
 					const diffContent =
 						"<<<<<<< SEARCH\n" +
-						"\\<<<<<<< SEARCH\n" +
+						"\\<<<<<<<\n" +
 						"\\=======\n" +
-						"\\>>>>>>> REPLACE\n" +
+						"\\>>>>>>>\n" +
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
@@ -1290,11 +1290,11 @@ function five() {
 				})
 
 				it("processes escaped replace marker in content", async () => {
-					const originalContent = "before\n>>>>>>> REPLACE\nafter\n"
+					const originalContent = "before\n>>>>>>>\nafter\n"
 					const diffContent =
 						"<<<<<<< SEARCH\n" +
 						"before\n" +
-						"\\>>>>>>> REPLACE\n" +
+						"\\>>>>>>>\n" +
 						"after\n" +
 						"=======\n" +
 						"unchanged\n" +
@@ -1307,12 +1307,12 @@ function five() {
 				})
 
 				it("processes multiple escaped markers in content", async () => {
-					const originalContent = "<<<<<<< SEARCH\n=======\n>>>>>>> REPLACE\n"
+					const originalContent = "<<<<<<<\n=======\n>>>>>>>\n"
 					const diffContent =
 						"<<<<<<< SEARCH\n" +
-						"\\<<<<<<< SEARCH\n" +
+						"\\<<<<<<<\n" +
 						"\\=======\n" +
-						"\\>>>>>>> REPLACE\n" +
+						"\\>>>>>>>\n" +
 						"=======\n" +
 						"unchanged\n" +
 						">>>>>>> REPLACE"
@@ -1327,7 +1327,7 @@ function five() {
 					const diff =
 						"<<<<<<< SEARCH\n" +
 						"before\n" +
-						"\\>>>>>>> REPLACE\n" +
+						"\\>>>>>>>\n" +
 						"after\n" +
 						"=======\n" +
 						"new content\n" +
@@ -1339,9 +1339,9 @@ function five() {
 				it("allows multiple escaped markers in content", () => {
 					const diff =
 						"<<<<<<< SEARCH\n" +
-						"\\<<<<<<< SEARCH\n" +
+						"\\<<<<<<<\n" +
 						"\\=======\n" +
-						"\\>>>>>>> REPLACE\n" +
+						"\\>>>>>>>\n" +
 						"=======\n" +
 						"new content\n" +
 						">>>>>>> REPLACE"
