@@ -3,6 +3,18 @@ import delay from "delay"
 
 import { ClineProvider } from "../core/webview/ClineProvider"
 
+/**
+ * Helper to get the visible ClineProvider instance or log if not found.
+ */
+export function getVisibleProviderOrLog(outputChannel: vscode.OutputChannel): ClineProvider | undefined {
+	const visibleProvider = ClineProvider.getVisibleInstance()
+	if (!visibleProvider) {
+		outputChannel.appendLine("Cannot find any visible Cline instances.")
+		return undefined
+	}
+	return visibleProvider
+}
+
 import { registerHumanRelayCallback, unregisterHumanRelayCallback, handleHumanRelayResponse } from "./humanRelay"
 import { handleNewTask } from "./handleTask"
 
@@ -52,47 +64,32 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 	return {
 		"roo-cline.activationCompleted": () => {},
 		"roo-cline.plusButtonClicked": async () => {
-			const visibleProvider = ClineProvider.getVisibleInstance()
-			if (!visibleProvider) {
-				outputChannel.appendLine("Cannot find any visible Cline instances.")
-				return
-			}
+			const visibleProvider = getVisibleProviderOrLog(outputChannel)
+			if (!visibleProvider) return
 			await visibleProvider.removeClineFromStack()
 			await visibleProvider.postStateToWebview()
 			await visibleProvider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		},
 		"roo-cline.mcpButtonClicked": () => {
-			const visibleProvider = ClineProvider.getVisibleInstance()
-			if (!visibleProvider) {
-				outputChannel.appendLine("Cannot find any visible Cline instances.")
-				return
-			}
+			const visibleProvider = getVisibleProviderOrLog(outputChannel)
+			if (!visibleProvider) return
 			visibleProvider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
 		},
 		"roo-cline.promptsButtonClicked": () => {
-			const visibleProvider = ClineProvider.getVisibleInstance()
-			if (!visibleProvider) {
-				outputChannel.appendLine("Cannot find any visible Cline instances.")
-				return
-			}
+			const visibleProvider = getVisibleProviderOrLog(outputChannel)
+			if (!visibleProvider) return
 			visibleProvider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" })
 		},
 		"roo-cline.popoutButtonClicked": () => openClineInNewTab({ context, outputChannel }),
 		"roo-cline.openInNewTab": () => openClineInNewTab({ context, outputChannel }),
 		"roo-cline.settingsButtonClicked": () => {
-			const visibleProvider = ClineProvider.getVisibleInstance()
-			if (!visibleProvider) {
-				outputChannel.appendLine("Cannot find any visible Cline instances.")
-				return
-			}
+			const visibleProvider = getVisibleProviderOrLog(outputChannel)
+			if (!visibleProvider) return
 			visibleProvider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
 		},
 		"roo-cline.historyButtonClicked": () => {
-			const visibleProvider = ClineProvider.getVisibleInstance()
-			if (!visibleProvider) {
-				outputChannel.appendLine("Cannot find any visible Cline instances.")
-				return
-			}
+			const visibleProvider = getVisibleProviderOrLog(outputChannel)
+			if (!visibleProvider) return
 			visibleProvider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
 		},
 		"roo-cline.helpButtonClicked": () => {
