@@ -37,7 +37,7 @@ type TaskResult = { success: boolean; retry: boolean }
 type TaskPromise = Promise<TaskResult>
 
 const MAX_CONCURRENCY = 20
-const TASK_TIMEOUT = 5 * 60 * 1_000
+const TASK_TIMEOUT = 10 * 60 * 1_000
 const UNIT_TEST_TIMEOUT = 60 * 1_000
 
 const testCommands: Record<ExerciseLanguage, { commands: string[]; timeout?: number; cwd?: string }> = {
@@ -343,20 +343,17 @@ const runUnitTest = async ({ task }: { task: Task }) => {
 	let passed = true
 
 	for (const command of commands) {
-		const controller = new AbortController()
-		const cancelSignal = controller.signal
-		const timeout = setTimeout(() => controller.abort(), cmd.timeout ?? UNIT_TEST_TIMEOUT)
+		const timeout = cmd.timeout ?? UNIT_TEST_TIMEOUT
 
 		try {
-			const result = await execa({ cwd, shell: true, reject: false, cancelSignal })`${command}`
-			clearTimeout(timeout)
+			const result = await execa({ cwd, shell: true, reject: false, timeout })`${command}`
 
 			if (result.failed) {
 				passed = false
 				break
 			}
 		} catch (error) {
-			console.log("[cli#runUnitTest] execa error =", error)
+			console.log("[cli#runUnitTest]", error)
 			passed = false
 			break
 		}
