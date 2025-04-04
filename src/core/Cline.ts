@@ -1438,38 +1438,18 @@ export class Cline extends EventEmitter<ClineEvents> {
 				}
 
 				const pushToolResult = (content: ToolResponse) => {
-					if (block.name === "read_file") {
-						// Special formatting for read_file results
-						const filePath = block.params.path || "unknown/path" // Use fallback if path is missing
-						const fileContent =
-							typeof content === "string"
-								? content || "(tool did not return anything)"
-								: "Error: Expected string content for read_file" // read_file should return string
-
-						const xmlResult = `<file>\n  <path>${filePath}</path>\n  <content>\n${fileContent}\n  </content>\n</file>`
-
+					this.userMessageContent.push({
+						type: "text",
+						text: `${toolDescription()} Result:`,
+					})
+					if (typeof content === "string") {
 						this.userMessageContent.push({
 							type: "text",
-							text: xmlResult,
+							text: content || "(tool did not return anything)",
 						})
 					} else {
-						// Original formatting for all other tools
-						this.userMessageContent.push({
-							type: "text",
-							text: `${toolDescription()} Result:`,
-						})
-						if (typeof content === "string") {
-							this.userMessageContent.push({
-								type: "text",
-								text: content || "(tool did not return anything)",
-							})
-						} else {
-							// Handle potential non-string content for other tools
-							this.userMessageContent.push(...content)
-						}
+						this.userMessageContent.push(...content)
 					}
-
-					// Common logic after pushing result
 					// once a tool result has been collected, ignore all other tool uses since we should only ever present one tool result per message
 					this.didAlreadyUseTool = true
 
