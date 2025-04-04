@@ -48,6 +48,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 	const fileContent = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
 	const numberedFileContent = "1 | Line 1\n2 | Line 2\n3 | Line 3\n4 | Line 4\n5 | Line 5"
 	const sourceCodeDef = "\n\n# file.txt\n1--5 | Content"
+	const expectedFullFileXml = `<file>\n  <path>${testFilePath}</path>\n  <content>\n${numberedFileContent}\n  </content>\n</file>`
 
 	// Mocked functions with correct types
 	const mockedCountFileLines = countFileLines as jest.MockedFunction<typeof countFileLines>
@@ -147,9 +148,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
 			expect(mockedReadLines).not.toHaveBeenCalled()
 			expect(mockedParseSourceCodeDefinitionsForFile).not.toHaveBeenCalled()
-			expect(result).toBe(
-				`<file>\n  <path>${testFilePath}</path>\n  <content>\n${numberedFileContent}\n  </content>\n</file>`,
-			)
+			expect(result).toBe(expectedFullFileXml)
 		})
 	})
 
@@ -209,9 +208,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 
 			// Verify
 			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
-			expect(result).toBe(
-				`<file>\n  <path>${testFilePath}</path>\n  <content>\n${numberedFileContent}\n  </content>\n</file>`,
-			)
+			expect(result).toBe(expectedFullFileXml)
 		})
 
 		it("should read with extractTextFromFile when file has few lines", async () => {
@@ -225,9 +222,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			// Verify
 			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
 			expect(mockedReadLines).not.toHaveBeenCalled()
-			expect(result).toBe(
-				`<file>\n  <path>${testFilePath}</path>\n  <content>\n${numberedFileContent}\n  </content>\n</file>`,
-			)
+			expect(result).toBe(expectedFullFileXml)
 		})
 	})
 
@@ -243,9 +238,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			// Verify
 			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
 			expect(mockedReadLines).not.toHaveBeenCalled()
-			expect(result).toBe(
-				`<file>\n  <path>${testFilePath}</path>\n  <content>\n${numberedFileContent}\n  </content>\n</file>`,
-			)
+			expect(result).toBe(expectedFullFileXml)
 		})
 	})
 
