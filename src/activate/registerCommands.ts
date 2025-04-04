@@ -3,6 +3,18 @@ import delay from "delay"
 
 import { ClineProvider } from "../core/webview/ClineProvider"
 
+/**
+ * Helper to get the visible ClineProvider instance or log if not found.
+ */
+export function getVisibleProviderOrLog(outputChannel: vscode.OutputChannel): ClineProvider | undefined {
+	const visibleProvider = ClineProvider.getVisibleInstance()
+	if (!visibleProvider) {
+		outputChannel.appendLine("Cannot find any visible Cline instances.")
+		return undefined
+	}
+	return visibleProvider
+}
+
 import { registerHumanRelayCallback, unregisterHumanRelayCallback, handleHumanRelayResponse } from "./humanRelay"
 import { handleNewTask } from "./handleTask"
 
@@ -52,23 +64,33 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 	return {
 		"roo-cline.activationCompleted": () => {},
 		"roo-cline.plusButtonClicked": async () => {
-			await provider.removeClineFromStack()
-			await provider.postStateToWebview()
-			await provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
+			const visibleProvider = getVisibleProviderOrLog(outputChannel)
+			if (!visibleProvider) return
+			await visibleProvider.removeClineFromStack()
+			await visibleProvider.postStateToWebview()
+			await visibleProvider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		},
 		"roo-cline.mcpButtonClicked": () => {
-			provider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
+			const visibleProvider = getVisibleProviderOrLog(outputChannel)
+			if (!visibleProvider) return
+			visibleProvider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
 		},
 		"roo-cline.promptsButtonClicked": () => {
-			provider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" })
+			const visibleProvider = getVisibleProviderOrLog(outputChannel)
+			if (!visibleProvider) return
+			visibleProvider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" })
 		},
 		"roo-cline.popoutButtonClicked": () => openClineInNewTab({ context, outputChannel }),
 		"roo-cline.openInNewTab": () => openClineInNewTab({ context, outputChannel }),
 		"roo-cline.settingsButtonClicked": () => {
-			provider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
+			const visibleProvider = getVisibleProviderOrLog(outputChannel)
+			if (!visibleProvider) return
+			visibleProvider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
 		},
 		"roo-cline.historyButtonClicked": () => {
-			provider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
+			const visibleProvider = getVisibleProviderOrLog(outputChannel)
+			if (!visibleProvider) return
+			visibleProvider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
 		},
 		"roo-cline.helpButtonClicked": () => {
 			vscode.env.openExternal(vscode.Uri.parse("https://docs.roocode.com"))
@@ -95,7 +117,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 	}
 }
 
-const openClineInNewTab = async ({ context, outputChannel }: Omit<RegisterCommandOptions, "provider">) => {
+export const openClineInNewTab = async ({ context, outputChannel }: Omit<RegisterCommandOptions, "provider">) => {
 	// (This example uses webviewProvider activation event which is necessary to
 	// deserialize cached webview, but since we use retainContextWhenHidden, we
 	// don't need to use that event).
@@ -139,4 +161,6 @@ const openClineInNewTab = async ({ context, outputChannel }: Omit<RegisterComman
 	// Lock the editor group so clicking on files doesn't open them over the panel.
 	await delay(100)
 	await vscode.commands.executeCommand("workbench.action.lockEditorGroup")
+
+	return tabProvider
 }
