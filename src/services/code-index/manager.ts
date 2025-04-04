@@ -197,6 +197,47 @@ export class CodeIndexManager {
 		console.log(`[CodeIndexManager] Disposed for workspace: ${this.workspacePath}`)
 	}
 
+	/**
+	 * Clears all index data by stopping the watcher, clearing the Qdrant collection,
+	 * and deleting the cache file.
+	 */
+	public async clearIndexData(): Promise<void> {
+		console.log("[CodeIndexManager] Clearing code index data...")
+		this._isProcessing = true
+
+		try {
+			// Stop the watcher if running
+			await this.stopWatcher()
+
+			// Clear Qdrant collection
+			try {
+				if (!this._fileWatcher) {
+					throw new Error("File watcher not initialized")
+				}
+				await this._fileWatcher.clearCollection()
+			} catch (error: any) {
+				console.error("[CodeIndexManager] Failed to clear vector collection:", error)
+				this.updateState("Error", `Failed to clear vector collection: ${error.message}`)
+				throw error
+			}
+
+			// Delete cache file
+			try {
+				await this._fileWatcher?.deleteCacheFile()
+			} catch (error: any) {
+				console.error("[CodeIndexManager] Failed to delete cache file:", error)
+				this.updateState("Error", `Failed to delete cache file: ${error.message}`)
+				throw error
+			}
+
+			// If we get here, both operations succeeded
+			this.updateState("Standby", "Index data cleared successfully.")
+			console.log("[CodeIndexManager] Code index data cleared successfully.")
+		} finally {
+			this._isProcessing = false
+		}
+	}
+
 	// --- Private Helpers ---
 
 	private updateState(newState: IndexingState, message?: string): void {

@@ -277,6 +277,29 @@ export class CodeIndexFileWatcher {
 		}
 	}
 
+	public async deleteCacheFile(): Promise<void> {
+		if (!this.cachePath) return
+		try {
+			await vscode.workspace.fs.delete(this.cachePath, { useTrash: false })
+			this.hashCache = {}
+			console.log(`Successfully deleted cache file at ${this.cachePath.fsPath}`)
+		} catch (error) {
+			if (error instanceof vscode.FileSystemError && error.code === "FileNotFound") {
+				console.log("Cache file not found, nothing to delete")
+			} else {
+				console.error("Error deleting cache file:", error)
+				throw error
+			}
+		}
+	}
+
+	public async clearCollection(): Promise<void> {
+		if (!this.qdrantClient) {
+			throw new Error("Qdrant client not initialized")
+		}
+		await this.qdrantClient.clearCollection()
+	}
+
 	dispose(): void {
 		this.watcher.dispose()
 		Object.values(this.debounceTimers).forEach(clearTimeout)

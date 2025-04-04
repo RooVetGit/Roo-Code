@@ -97,4 +97,18 @@ export class CodeIndexQdrantClient {
 			throw error
 		}
 	}
+
+	async clearCollection(): Promise<void> {
+		try {
+			await this.client.delete(this.collectionName, {
+				filter: {
+					must: [],
+				},
+				wait: true,
+			})
+		} catch (error) {
+			console.error("Failed to clear collection:", error)
+			throw error
+		}
+	}
 }
