@@ -35,7 +35,7 @@ const supportPromptConfigs: Record<string, SupportPromptConfig> = {
 \${userInput}`,
 	},
 	EXPLAIN: {
-		template: `Explain the following code from file path \${filePath}:\${startLine}-\${endLine}
+		template: `Explain the following code from file path \${filePath}: (line: \${startLine}-\${endLine})
 \${userInput}
 
 \`\`\`
@@ -48,7 +48,7 @@ Please provide a clear and concise explanation of what this code does, including
 3. Important patterns or techniques used`,
 	},
 	FIX: {
-		template: `Fix any issues in the following code from file path \${filePath}:\${startLine}-\${endLine}
+		template: `Fix any issues in the following code from file path \${filePath}: (line: \${startLine}-\${endLine})
 \${diagnosticText}
 \${userInput}
 
@@ -62,9 +62,28 @@ Please:
 3. Provide corrected code
 4. Explain what was fixed and why`,
 	},
+	COMPLETE: {
+		template: `Complete the selected code block \${filePath}: (line: \${startLine}-\${endLine})
+
+\`\`\`
+\${selectedText}
+\`\`\`
+
+Please pay attention to the following:
+1. the user's design approach
+2. the purpose and functionality of the code block to be completed
+3. the logical structure of the code
+4. The comments and pseudocode which the user may have written (if any):
+ - Pseudocode may use abbreviated or shorthand forms of types, variables, function names
+ - Pseudocode may contain unusual syntax order
+5. existing context variables, input parameters, and dependencies that must be correctly utilized
+6. output values, return types, and new variables that subsequent code will depend on
+
+You should only insert or modify code at the user-specified location. Other parts of the code should not be modified.(You can give your suggestions in the other parts of the code, but do not modify them directly)`,
+	},
 	ASK_FOR_HELP: {
 		template: `
-\${filePath}:\${startLine}-\${endLine}
+\${filePath}: (line: \${startLine}-\${endLine})
 \${diagnosticText}
 \`\`\`
 \${selectedText}
@@ -90,11 +109,19 @@ If user ask for improve some code, you should suggest improvements for:
 4. Error handling and edge cases
 * Provide the improved code along with explanations for each enhancement.
 
+If the user asks you to complete code or insert code, you need to consider the following:
+1. The user's design approach, the purpose and functionality of the code block to be completed, and the logical structure of the code
+2. Known context variables
+3. Variables to be defined for future use
+* The user's pseudocode may use abbreviated or shorthand forms of types, variables, function names.
+* The user's pseudocode may contain unusual syntax order.
+
+
 For other situations, please provide relevant responses based on the user's request.
 `,
 	},
 	IMPROVE: {
-		template: `Improve the following code from file path \${filePath}:\${startLine}-\${endLine}
+		template: `Improve the following code from file path \${filePath}: (line: \${startLine}-\${endLine})
 \${userInput}
 
 \`\`\`
@@ -110,7 +137,7 @@ Please suggest improvements for:
 Provide the improved code along with explanations for each enhancement.`,
 	},
 	ADD_TO_CONTEXT: {
-		template: `\${filePath}:\${startLine}-\${endLine}
+		template: `\${filePath}: (line: \${startLine}-\${endLine})
 \`\`\`
 \${selectedText}
 \`\`\`\n`,

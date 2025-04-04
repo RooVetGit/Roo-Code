@@ -399,7 +399,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 	}
 
 	// Communicate with webview
-
+	// 用于在中途询问用户，例如获取用户允许等
 	// partial has three valid states true (partial message), false (completion of partial message), undefined (individual complete message)
 	async ask(
 		type: ClineAsk,

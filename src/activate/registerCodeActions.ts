@@ -36,7 +36,8 @@ export const registerCodeActions = (context: vscode.ExtensionContext) => {
 		"What would you like Roo to improve?",
 		"E.g. Focus on performance optimization",
 	)
-
+	
+	registerCodeAction(context, COMMAND_IDS.COMPLETE, "COMPLETE")
 	registerCodeAction(context, COMMAND_IDS.ADD_TO_CONTEXT, "ADD_TO_CONTEXT")
 }
 
@@ -51,15 +52,6 @@ const registerCodeAction = (
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(command, async (...args: any[]) => {
-			if (inputPrompt) {
-				userInput = await vscode.window.showInputBox({
-					title: `Roo: ${promptType.replace("_", " ")}`,
-					prompt: inputPrompt,
-					placeHolder: inputPlaceholder,
-				})
-				if (!userInput) return;
-			}
-
 			// Handle both code action and direct command cases.
 			let filePath: string
 			let selectedText: string
@@ -75,6 +67,14 @@ const registerCodeAction = (
 				const context = EditorUtils.getEditorContext()
 				if (!context) return
 				;({ filePath, selectedText, startLine, endLine, diagnostics } = context)
+			}
+			if (inputPrompt) {
+				userInput = await vscode.window.showInputBox({
+					title: `Roo: ${promptType.replace("_", " ")}`,
+					prompt: inputPrompt,
+					placeHolder: inputPlaceholder,
+				})
+				if (!userInput) return;
 			}
 
 			const params = {

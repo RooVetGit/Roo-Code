@@ -9,12 +9,14 @@ export const ACTION_NAMES = {
 	ADD_TO_CONTEXT: "Roo Code: Add to Context",
 	NEW_TASK: "Roo Code: New Task",
 	ASK_FOR_HELP: "Roo Code: Ask for Help",
+	COMPLETE: "Roo Code: Complete Code",
 } as const
 
 export const COMMAND_IDS = {
 	EXPLAIN: "roo-cline.explainCode",
 	FIX: "roo-cline.fixCode",
 	ASK_FOR_HELP: "roo-cline.askForHelp",
+	COMPLETE: "roo-cline.completeCode",
 	IMPROVE: "roo-cline.improveCode",
 	ADD_TO_CONTEXT: "roo-cline.addToContext",
 	NEW_TASK: "roo-cline.newTask",

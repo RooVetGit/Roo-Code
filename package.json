@@ -59,9 +59,15 @@
 				"when": "editorTextFocus&&editorHasSelection"
 			},
 			{
-				"command": "roo-cline.newTask",
+				"command": "roo-cline.completeCode",
 				"key": "ctrl+alt+i",
 				"mac": "cmd+alt+i",
+				"when": "-"
+			},
+			{
+				"command": "roo-cline.addToContext",
+				"key": "ctrl+alt+u",
+				"mac": "cmd+alt+u",
 				"when": "-"
 			}
 		],
@@ -147,6 +153,11 @@
 			{
 				"command": "roo-cline.askForHelp",
 				"title": "Ask For Help",
+				"category": "Roo Code"
+			},
+			{
+				"command": "roo-cline.completeCode",
+				"title": "Complete Code",
 				"category": "Roo Code"
 			},
 			{

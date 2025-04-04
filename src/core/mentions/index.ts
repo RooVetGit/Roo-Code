@@ -38,6 +38,7 @@ export async function openMention(mention?: string): Promise<void> {
 	}
 }
 
+// 解析各种@产生的语法预设
 export async function parseMentions(text: string, cwd: string, urlContentFetcher: UrlContentFetcher): Promise<string> {
 	const mentions: Set<string> = new Set()
 	let parsedText = text.replace(mentionRegexGlobal, (match, mention) => {

@@ -80,6 +80,10 @@
 				"label": "咨询",
 				"description": "可以用于对选中的代码进行咨询，涵盖FIX、EXPLAIN、IMPROVE。"
 			},
+			"COMPLETE": {
+				"label": "补全",
+				"description": "将选中的代码块进行代码补全"
+			},
 			"ADD_TO_CONTEXT": {
 				"label": "添加到上下文",
 				"description": "为当前任务或对话添加上下文。用于提供额外信息或说明。可在代码操作（编辑器中的灯泡图标）和编辑器上下文菜单（右键点击选中的代码）中使用。"
