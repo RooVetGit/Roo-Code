@@ -240,6 +240,9 @@ type GlobalSettings = {
 	alwaysApproveResubmit?: boolean | undefined
 	requestDelaySeconds?: number | undefined
 	alwaysAllowMcp?: boolean | undefined
+	codeIndexEnabled?: boolean | undefined
+	codeIndexOpenAiKey?: string | undefined
+	codeIndexQdrantUrl?: string | undefined
 	alwaysAllowModeSwitch?: boolean | undefined
 	alwaysAllowSubtasks?: boolean | undefined
 	alwaysAllowExecute?: boolean | undefined

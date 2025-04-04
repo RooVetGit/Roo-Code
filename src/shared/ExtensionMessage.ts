@@ -69,6 +69,11 @@ export interface ExtensionMessage {
 		| "maxReadFileLine"
 		| "fileSearchResults"
 		| "toggleApiConfigPin"
+		| "indexingStatusUpdate"
+		| "indexCleared"
+		| "codeIndexEnabled"
+		| "codeIndexOpenAiKey"
+		| "codeIndexQdrantUrl"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -200,6 +205,9 @@ export type ExtensionState = Pick<
 	telemetrySetting: TelemetrySetting
 	telemetryKey?: string
 	machineId?: string
+	codeIndexEnabled: boolean
+	codeIndexOpenAiKey: string
+	codeIndexQdrantUrl: string
 
 	renderContext: "sidebar" | "editor"
 	settingsImportedAt?: number
