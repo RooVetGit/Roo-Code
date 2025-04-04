@@ -18,6 +18,7 @@ import { openFile, openImage } from "../../integrations/misc/open-file"
 import { selectImages } from "../../integrations/misc/process-images"
 import { getTheme } from "../../integrations/theme/getTheme"
 import { discoverChromeHostUrl, tryChromeHostUrl } from "../../services/browser/browserDiscovery"
+import { CodeIndexManager, IndexProgressUpdate } from "../../services/code-index/manager"
 import { searchWorkspaceFiles } from "../../services/search/file-search"
 import { fileExistsAtPath } from "../../utils/fs"
 import { playSound, setSoundEnabled, setSoundVolume } from "../../utils/sound"
@@ -1325,6 +1326,72 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			const isOptedIn = telemetrySetting === "enabled"
 			telemetryService.updateTelemetryState(isOptedIn)
 			await provider.postStateToWebview()
+			break
+		}
+		case "requestIndexingStatus": {
+			const manager = CodeIndexManager.getInstance(provider.context)
+			const state = manager.state
+			// Attempt to get the last message, but don't wait indefinitely
+			const lastMessage = (
+				await new Promise<{ message?: string }>((resolve) => {
+					let resolved = false
+					const sub = manager.onProgressUpdate((update: IndexProgressUpdate) => {
+						if (!resolved) {
+							resolved = true
+							sub.dispose()
+							resolve({ message: update.message })
+						}
+					})
+					// Fire immediately with current state if no updates come in quickly
+					setTimeout(() => {
+						if (!resolved) {
+							resolved = true
+							sub.dispose()
+							resolve({ message: "" }) // Default to empty message
+						}
+					}, 100) // Short timeout
+				})
+			).message // <<< This parenthesis closes the new Promise(...) call
+
+			provider.postMessageToWebview({
+				type: "indexingStatusUpdate",
+				values: {
+					state,
+					message: lastMessage || "",
+				},
+			})
+			break
+		}
+		case "startIndexing": {
+			try {
+				const manager = CodeIndexManager.getInstance(provider.context)
+				await manager.startIndexing()
+				// Optionally send a confirmation or rely on indexingStatusUpdate
+			} catch (error) {
+				provider.outputChannel.appendLine(
+					`Error starting indexing: ${error instanceof Error ? error.message : String(error)}`,
+				)
+				// Optionally send an error message back to the webview
+			}
+			break
+		}
+		case "clearIndexData": {
+			try {
+				const manager = CodeIndexManager.getInstance(provider.context)
+				await manager.clearIndexData()
+				provider.postMessageToWebview({ type: "indexCleared", values: { success: true } })
+			} catch (error) {
+				provider.outputChannel.appendLine(
+					`Error clearing index data: ${error instanceof Error ? error.message : String(error)}`,
+				)
+				provider.postMessageToWebview({
+					type: "indexCleared",
+					values: {
+						success: false,
+						error: error instanceof Error ? error.message : String(error),
+					},
+				})
+			}
 			break
 		}
 	}
