@@ -52,23 +52,48 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 	return {
 		"roo-cline.activationCompleted": () => {},
 		"roo-cline.plusButtonClicked": async () => {
-			await provider.removeClineFromStack()
-			await provider.postStateToWebview()
-			await provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
+			const visibleProvider = ClineProvider.getVisibleInstance()
+			if (!visibleProvider) {
+				outputChannel.appendLine("Cannot find any visible Cline instances.")
+				return
+			}
+			await visibleProvider.removeClineFromStack()
+			await visibleProvider.postStateToWebview()
+			await visibleProvider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		},
 		"roo-cline.mcpButtonClicked": () => {
-			provider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
+			const visibleProvider = ClineProvider.getVisibleInstance()
+			if (!visibleProvider) {
+				outputChannel.appendLine("Cannot find any visible Cline instances.")
+				return
+			}
+			visibleProvider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
 		},
 		"roo-cline.promptsButtonClicked": () => {
-			provider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" })
+			const visibleProvider = ClineProvider.getVisibleInstance()
+			if (!visibleProvider) {
+				outputChannel.appendLine("Cannot find any visible Cline instances.")
+				return
+			}
+			visibleProvider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" })
 		},
 		"roo-cline.popoutButtonClicked": () => openClineInNewTab({ context, outputChannel }),
 		"roo-cline.openInNewTab": () => openClineInNewTab({ context, outputChannel }),
 		"roo-cline.settingsButtonClicked": () => {
-			provider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
+			const visibleProvider = ClineProvider.getVisibleInstance()
+			if (!visibleProvider) {
+				outputChannel.appendLine("Cannot find any visible Cline instances.")
+				return
+			}
+			visibleProvider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
 		},
 		"roo-cline.historyButtonClicked": () => {
-			provider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
+			const visibleProvider = ClineProvider.getVisibleInstance()
+			if (!visibleProvider) {
+				outputChannel.appendLine("Cannot find any visible Cline instances.")
+				return
+			}
+			visibleProvider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
 		},
 		"roo-cline.helpButtonClicked": () => {
 			vscode.env.openExternal(vscode.Uri.parse("https://docs.roocode.com"))
