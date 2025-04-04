@@ -64,15 +64,6 @@ const MockCodeIndexOpenAiEmbedder = CodeIndexOpenAiEmbedder as jest.MockedClass<
 const MockCodeIndexQdrantClient = CodeIndexQdrantClient as jest.MockedClass<typeof CodeIndexQdrantClient>
 const mockGetWorkspacePath = getWorkspacePath as jest.MockedFunction<typeof getWorkspacePath>
 
-// Helper to get mock watcher handlers
-const getWatcherHandlers = () => {
-	const mockWatcher = mockVscode.workspace.createFileSystemWatcher.mock.results[0].value
-	const createHandler = mockWatcher.onDidCreate.mock.calls[0][0]
-	const changeHandler = mockWatcher.onDidChange.mock.calls[0][0]
-	const deleteHandler = mockWatcher.onDidDelete.mock.calls[0][0]
-	return { createHandler, changeHandler, deleteHandler }
-}
-
 // --- Test Suite ---
 describe("CodeIndexFileWatcher", () => {
 	let watcherInstance: CodeIndexFileWatcher
