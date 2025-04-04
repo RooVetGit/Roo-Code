@@ -109,6 +109,7 @@ export const modelInfoSchema = z.object({
 	outputPrice: z.number().optional(),
 	cacheWritesPrice: z.number().optional(),
 	cacheReadsPrice: z.number().optional(),
+	freeRequestsRpm: z.number().optional(),
 	description: z.string().optional(),
 	reasoningEffort: z.enum(["low", "medium", "high"]).optional(),
 	thinking: z.boolean().optional(),

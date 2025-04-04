@@ -628,6 +628,7 @@ export const geminiModels = {
 		supportsPromptCache: false,
 		inputPrice: 0,
 		outputPrice: 0,
+		freeRequestsRpm: 5,
 	},
 	"gemini-2.5-pro-preview-03-25": {
 		maxTokens: 65_535,
@@ -644,6 +645,7 @@ export const geminiModels = {
 		supportsPromptCache: false,
 		inputPrice: 0,
 		outputPrice: 0,
+		freeRequestsRpm: 15,
 	},
 	"gemini-2.0-flash-lite-preview-02-05": {
 		maxTokens: 8192,
@@ -652,6 +654,7 @@ export const geminiModels = {
 		supportsPromptCache: false,
 		inputPrice: 0,
 		outputPrice: 0,
+		freeRequestsRpm: 30,
 	},
 	"gemini-2.0-pro-exp-02-05": {
 		maxTokens: 8192,
@@ -660,6 +663,7 @@ export const geminiModels = {
 		supportsPromptCache: false,
 		inputPrice: 0,
 		outputPrice: 0,
+		freeRequestsRpm: 5,
 	},
 	"gemini-2.0-flash-thinking-exp-01-21": {
 		maxTokens: 65_536,
@@ -668,6 +672,7 @@ export const geminiModels = {
 		supportsPromptCache: false,
 		inputPrice: 0,
 		outputPrice: 0,
+		freeRequestsRpm: 10,
 	},
 	"gemini-2.0-flash-thinking-exp-1219": {
 		maxTokens: 8192,
@@ -676,6 +681,7 @@ export const geminiModels = {
 		supportsPromptCache: false,
 		inputPrice: 0,
 		outputPrice: 0,
+		freeRequestsRpm: 10,
 	},
 	"gemini-2.0-flash-exp": {
 		maxTokens: 8192,
@@ -684,6 +690,7 @@ export const geminiModels = {
 		supportsPromptCache: false,
 		inputPrice: 0,
 		outputPrice: 0,
+		freeRequestsRpm: 10,
 	},
 	"gemini-1.5-flash-002": {
 		maxTokens: 8192,
@@ -692,6 +699,7 @@ export const geminiModels = {
 		supportsPromptCache: false,
 		inputPrice: 0,
 		outputPrice: 0,
+		freeRequestsRpm: 15,
 	},
 	"gemini-1.5-flash-exp-0827": {
 		maxTokens: 8192,
@@ -700,6 +708,7 @@ export const geminiModels = {
 		supportsPromptCache: false,
 		inputPrice: 0,
 		outputPrice: 0,
+		freeRequestsRpm: 15,
 	},
 	"gemini-1.5-flash-8b-exp-0827": {
 		maxTokens: 8192,
@@ -708,6 +717,7 @@ export const geminiModels = {
 		supportsPromptCache: false,
 		inputPrice: 0,
 		outputPrice: 0,
+		freeRequestsRpm: 15,
 	},
 	"gemini-1.5-pro-002": {
 		maxTokens: 8192,
@@ -716,6 +726,7 @@ export const geminiModels = {
 		supportsPromptCache: false,
 		inputPrice: 0,
 		outputPrice: 0,
+		freeRequestsRpm: 2,
 	},
 	"gemini-1.5-pro-exp-0827": {
 		maxTokens: 8192,
@@ -724,6 +735,7 @@ export const geminiModels = {
 		supportsPromptCache: false,
 		inputPrice: 0,
 		outputPrice: 0,
+		freeRequestsRpm: 2,
 	},
 	"gemini-exp-1206": {
 		maxTokens: 8192,
@@ -732,6 +744,7 @@ export const geminiModels = {
 		supportsPromptCache: false,
 		inputPrice: 0,
 		outputPrice: 0,
+		freeRequestsRpm: 5,
 	},
 } as const satisfies Record<string, ModelInfo>
 
