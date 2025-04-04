@@ -80,6 +80,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	const [inputValue, setInputValue] = useState("")
 	const textAreaRef = useRef<HTMLTextAreaElement>(null)
 	const [textAreaDisabled, setTextAreaDisabled] = useState(false)
+	const [textAreaFocused, setTextAreaFocused] = useState(true)
 	const [selectedImages, setSelectedImages] = useState<string[]>([])
 
 	// we need to hold on to the ask because useEffect > lastMessage will always let us know when an ask comes in and handle it, but by the time handleMessage is called, the last message might not be the ask anymore (it could be a say that followed)
@@ -495,7 +496,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				case "action":
 					switch (message.action!) {
 						case "didBecomeVisible":
-							if (!isHidden && !textAreaDisabled && !enableButtons) {
+							if (!isHidden && textAreaFocused) {
 								textAreaRef.current?.focus()
 							}
 							break
@@ -532,8 +533,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		},
 		[
 			isHidden,
-			textAreaDisabled,
-			enableButtons,
+			textAreaFocused,
 			handleChatReset,
 			handleSendMessage,
 			handleSetChatBoxMessage,
@@ -544,21 +544,49 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 
 	useEvent("message", handleMessage)
 
+	const onTextAreaFocus = (event: FocusEvent) => {
+		console.log("Focus set")
+		setTextAreaFocused(true)
+	}
+
+	const isHiddenRef = useRef(isHidden)
+	useEffect(() => {
+		isHiddenRef.current = isHidden
+	}, [isHidden])
+
+	const onTextAreaBlur = (event: FocusEvent) => {
+		console.log("OnBlur: Hidden: ", isHiddenRef.current, " TextAreaFocused: ", textAreaFocused)
+		if (!isHiddenRef.current) {
+			console.log("Focus cleared")
+			setTextAreaFocused(false)
+		} else {
+			console.log("Focus state retained as blur is due to being hidden")
+		}
+	}
+
 	useMount(() => {
-		// NOTE: the vscode window needs to be focused for this to work
-		textAreaRef.current?.focus()
+		console.log("Event Listeners Added")
+		console.log("TextAreaRef: ", textAreaRef.current)
+		textAreaRef.current?.addEventListener("focus", onTextAreaFocus)
+		textAreaRef.current?.addEventListener("blur", onTextAreaBlur)
+		return () => {
+			textAreaRef.current?.removeEventListener("focus", onTextAreaFocus)
+			textAreaRef.current?.removeEventListener("blur", onTextAreaBlur)
+		}
 	})
 
 	useEffect(() => {
+		console.log("Hidden or TextAreaFocussed changes")
+		console.log("Hidden: ", isHidden, " TextAreaFocused: ", textAreaFocused)
 		const timer = setTimeout(() => {
-			if (!isHidden && !textAreaDisabled && !enableButtons) {
+			if (!isHidden && textAreaFocused) {
 				textAreaRef.current?.focus()
 			}
 		}, 50)
 		return () => {
 			clearTimeout(timer)
 		}
-	}, [isHidden, textAreaDisabled, enableButtons])
+	}, [isHidden, textAreaFocused])
 
 	const visibleMessages = useMemo(() => {
 		return modifiedMessages.filter((message) => {
