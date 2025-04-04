@@ -20,6 +20,14 @@ export class CodeIndexFileWatcher {
 	private cachePath?: vscode.Uri
 	private debounceTimers: Record<string, NodeJS.Timeout> = {}
 
+	private _onDidStartProcessing = new vscode.EventEmitter<string>()
+	private _onDidFinishProcessing = new vscode.EventEmitter<{ path: string; error?: Error }>()
+	private _onError = new vscode.EventEmitter<Error>()
+
+	public readonly onDidStartProcessing = this._onDidStartProcessing.event
+	public readonly onDidFinishProcessing = this._onDidFinishProcessing.event
+	public readonly onError = this._onError.event
+
 	constructor(
 		private workspacePath: string,
 		private context: vscode.ExtensionContext,
@@ -71,6 +79,9 @@ export class CodeIndexFileWatcher {
 
 		// Debounce the event handling
 		this.debounceTimers[filePath] = setTimeout(async () => {
+			let hadError = false
+			this._onDidStartProcessing.fire(filePath)
+
 			try {
 				switch (eventType) {
 					case "create":
@@ -84,8 +95,14 @@ export class CodeIndexFileWatcher {
 						break
 				}
 			} catch (error) {
+				hadError = true
 				console.error(`Error handling file ${eventType} event for ${filePath}:`, error)
+				this._onDidFinishProcessing.fire({ path: filePath, error: error as Error })
+				this._onError.fire(error as Error)
 			} finally {
+				if (!hadError) {
+					this._onDidFinishProcessing.fire({ path: filePath })
+				}
 				delete this.debounceTimers[filePath]
 			}
 		}, 500) // 500ms debounce
@@ -263,5 +280,8 @@ export class CodeIndexFileWatcher {
 	dispose(): void {
 		this.watcher.dispose()
 		Object.values(this.debounceTimers).forEach(clearTimeout)
+		this._onDidStartProcessing.dispose()
+		this._onDidFinishProcessing.dispose()
+		this._onError.dispose()
 	}
 }
