@@ -1,7 +1,7 @@
 import { VSCodeButton, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 import debounce from "debounce"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useDeepCompareEffect, useEvent, useMount } from "react-use"
+import { useDeepCompareEffect, useEvent } from "react-use"
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
 import styled from "styled-components"
 import {
@@ -32,6 +32,7 @@ import { getAllModes } from "../../../../src/shared/modes"
 import TelemetryBanner from "../common/TelemetryBanner"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import removeMd from "remove-markdown"
+import { useFocusPreservation } from "./hooks/useFocusPreservation"
 
 interface ChatViewProps {
 	isHidden: boolean
@@ -80,7 +81,6 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	const [inputValue, setInputValue] = useState("")
 	const textAreaRef = useRef<HTMLTextAreaElement>(null)
 	const [textAreaDisabled, setTextAreaDisabled] = useState(false)
-	const [textAreaFocused, setTextAreaFocused] = useState(true)
 	const [selectedImages, setSelectedImages] = useState<string[]>([])
 
 	// we need to hold on to the ask because useEffect > lastMessage will always let us know when an ask comes in and handle it, but by the time handleMessage is called, the last message might not be the ask anymore (it could be a say that followed)
@@ -96,6 +96,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	const [showScrollToBottom, setShowScrollToBottom] = useState(false)
 	const [isAtBottom, setIsAtBottom] = useState(false)
 	const lastTtsRef = useRef<string>("")
+	const [viewHidden, setViewHidden] = useState<boolean>(false)
 
 	const [wasStreaming, setWasStreaming] = useState<boolean>(false)
 	const [showCheckpointWarning, setShowCheckpointWarning] = useState<boolean>(false)
@@ -496,9 +497,12 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				case "action":
 					switch (message.action!) {
 						case "didBecomeVisible":
-							if (!isHidden && textAreaFocused) {
-								textAreaRef.current?.focus()
-							}
+							console.log("Set view hidden = false")
+							setViewHidden(false)
+							break
+						case "didBecomeInvisible":
+							console.log("Set view hidden = true")
+							setViewHidden(true)
 							break
 					}
 					break
@@ -532,8 +536,6 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			// textAreaRef.current is not explicitly required here since react gaurantees that ref will be stable across re-renders, and we're not using its value but its reference.
 		},
 		[
-			isHidden,
-			textAreaFocused,
 			handleChatReset,
 			handleSendMessage,
 			handleSetChatBoxMessage,
@@ -544,49 +546,10 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 
 	useEvent("message", handleMessage)
 
-	const onTextAreaFocus = (event: FocusEvent) => {
-		console.log("Focus set")
-		setTextAreaFocused(true)
-	}
-
-	const isHiddenRef = useRef(isHidden)
-	useEffect(() => {
-		isHiddenRef.current = isHidden
-	}, [isHidden])
-
-	const onTextAreaBlur = (event: FocusEvent) => {
-		console.log("OnBlur: Hidden: ", isHiddenRef.current, " TextAreaFocused: ", textAreaFocused)
-		if (!isHiddenRef.current) {
-			console.log("Focus cleared")
-			setTextAreaFocused(false)
-		} else {
-			console.log("Focus state retained as blur is due to being hidden")
-		}
-	}
-
-	useMount(() => {
-		console.log("Event Listeners Added")
-		console.log("TextAreaRef: ", textAreaRef.current)
-		textAreaRef.current?.addEventListener("focus", onTextAreaFocus)
-		textAreaRef.current?.addEventListener("blur", onTextAreaBlur)
-		return () => {
-			textAreaRef.current?.removeEventListener("focus", onTextAreaFocus)
-			textAreaRef.current?.removeEventListener("blur", onTextAreaBlur)
-		}
-	})
-
-	useEffect(() => {
-		console.log("Hidden or TextAreaFocussed changes")
-		console.log("Hidden: ", isHidden, " TextAreaFocused: ", textAreaFocused)
-		const timer = setTimeout(() => {
-			if (!isHidden && textAreaFocused) {
-				textAreaRef.current?.focus()
-			}
-		}, 50)
-		return () => {
-			clearTimeout(timer)
-		}
-	}, [isHidden, textAreaFocused])
+	// preserve focus on text area when...
+	// - isHidden: switching to another Roo tab
+	// - viewHidden: switchint to another VSCode extension, or hiding this one.
+	useFocusPreservation(textAreaRef.current, isHidden || viewHidden)
 
 	const visibleMessages = useMemo(() => {
 		return modifiedMessages.filter((message) => {

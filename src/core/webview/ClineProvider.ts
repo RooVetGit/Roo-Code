@@ -397,6 +397,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				() => {
 					if (this.view?.visible) {
 						this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
+					} else {
+						this.postMessageToWebview({ type: "action", action: "didBecomeInvisible" })
 					}
 				},
 				null,
@@ -408,6 +410,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				() => {
 					if (this.view?.visible) {
 						this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
+					} else {
+						this.postMessageToWebview({ type: "action", action: "didBecomeInvisible" })
 					}
 				},
 				null,

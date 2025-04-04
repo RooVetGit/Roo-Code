@@ -1,20 +1,32 @@
 import { useState, useEffect, useRef } from "react"
-import { useMount } from "react-use"
 
-export interface UseFocusPreservationProps {
-	element: HTMLElement | undefined
-	isHidden: Boolean
-}
-
-export function useFocusPreservation({ element, isHidden }: UseFocusPreservationProps) {
+/**
+ * Custom Hook to preserve focus on a specified HTML element.
+ *
+ * @param {HTMLElement | null} element - The HTML element to manage focus for.
+ * @param {Boolean} isHidden - A flag indicating if the element is hidden.
+ *
+ * @returns {isFocused} - A flag indicating whether the element is focused
+ *
+ * This hook preserves the focus state of an HTML element, even though it may be
+ * hidden (e.g. if the whole tab it is on is hidden).
+ * When the element is hidden, it will lose focus, triggering a "blur" event.
+ * However, if the "blur" event is due to the element having been hidden,
+ * this hook will track the "focussed" state, and reinstate it once the element
+ * is no longer hidden.
+ */
+export function useFocusPreservation(element: HTMLElement | null, isHidden: Boolean) {
 	const [isFocused, setIsFocused] = useState(false)
 	const isHiddenRef = useRef(isHidden)
+	const isHiddenLastChangedRef = useRef(0)
 
 	useEffect(() => {
 		isHiddenRef.current = isHidden
+		isHiddenLastChangedRef.current = Date.now()
 	}, [isHidden])
 
 	useEffect(() => {
+		// unclear why timer is here, and whether it's still necessary.
 		const timer = setTimeout(() => {
 			if (!isHidden && isFocused) {
 				element?.focus()
@@ -25,24 +37,40 @@ export function useFocusPreservation({ element, isHidden }: UseFocusPreservation
 		}
 	}, [isHidden, element, isFocused])
 
-	const onTextAreaFocus = (event: FocusEvent) => {
-		setIsFocused(true)
-	}
+	useEffect(() => {
+		if (!element) return
 
-	const onTextAreaBlur = (event: FocusEvent) => {
-		// We wil get blur events when the element is hidden
-		// don't count these as an intentional loss of focus.
-		if (!isHiddenRef.current) {
-			setIsFocused(false)
+		const onTextAreaFocus = () => {
+			setIsFocused(true)
 		}
-	}
 
-	useMount(() => {
-		element?.addEventListener("focus", onTextAreaFocus)
-		element?.addEventListener("blur", onTextAreaBlur)
+		const onTextAreaBlur = () => {
+			// Blur event should only be interpreted as an intentional defocus
+			// if they have not occured as a result of the element being hidden.
+			const BLUR_DELAY = 500
+			setTimeout(() => {
+				if (!isHiddenRef.current && Date.now() - isHiddenLastChangedRef.current > BLUR_DELAY) {
+					// We consider a blur event to be an intentional defocus
+					// if BLUR_DELAY msecs after the blur, the element is still hidden
+					// and the element's hidden state hasn't changed witin that time period.
+					setIsFocused(false)
+				}
+			}, BLUR_DELAY)
+		}
+
+		element.addEventListener("focus", onTextAreaFocus)
+		element.addEventListener("blur", onTextAreaBlur)
+
+		// Initialize focus state
+		if (document.activeElement === element) {
+			setIsFocused(true)
+		}
+
 		return () => {
-			element?.removeEventListener("focus", onTextAreaFocus)
-			element?.removeEventListener("blur", onTextAreaBlur)
+			element.removeEventListener("focus", onTextAreaFocus)
+			element.removeEventListener("blur", onTextAreaBlur)
 		}
-	})
+	}, [element])
+
+	return isFocused
 }
