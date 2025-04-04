@@ -265,6 +265,43 @@
 					"group": "navigation@7",
 					"when": "view == roo-cline.SidebarProvider"
 				}
+			],
+			"editor/title": [
+				{
+					"command": "roo-cline.plusButtonClicked",
+					"group": "navigation@1",
+					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				},
+				{
+					"command": "roo-cline.promptsButtonClicked",
+					"group": "navigation@2",
+					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				},
+				{
+					"command": "roo-cline.mcpButtonClicked",
+					"group": "navigation@3",
+					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				},
+				{
+					"command": "roo-cline.historyButtonClicked",
+					"group": "navigation@4",
+					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				},
+				{
+					"command": "roo-cline.popoutButtonClicked",
+					"group": "navigation@5",
+					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				},
+				{
+					"command": "roo-cline.settingsButtonClicked",
+					"group": "navigation@6",
+					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				},
+				{
+					"command": "roo-cline.helpButtonClicked",
+					"group": "navigation@7",
+					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				}
 			]
 		},
 		"configuration": {
@@ -356,7 +393,7 @@
 		"@anthropic-ai/bedrock-sdk": "^0.10.2",
 		"@anthropic-ai/sdk": "^0.37.0",
 		"@anthropic-ai/vertex-sdk": "^0.7.0",
-		"@aws-sdk/client-bedrock-runtime": "^3.706.0",
+		"@aws-sdk/client-bedrock-runtime": "^3.779.0",
 		"@google-cloud/vertexai": "^1.9.3",
 		"@google/generative-ai": "^0.18.0",
 		"@mistralai/mistralai": "^1.3.6",

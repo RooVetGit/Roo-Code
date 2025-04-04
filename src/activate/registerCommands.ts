@@ -3,6 +3,18 @@ import delay from "delay"
 
 import { ClineProvider } from "../core/webview/ClineProvider"
 
+/**
+ * Helper to get the visible ClineProvider instance or log if not found.
+ */
+export function getVisibleProviderOrLog(outputChannel: vscode.OutputChannel): ClineProvider | undefined {
+	const visibleProvider = ClineProvider.getVisibleInstance()
+	if (!visibleProvider) {
+		outputChannel.appendLine("Cannot find any visible Cline instances.")
+		return undefined
+	}
+	return visibleProvider
+}
+
 import { registerHumanRelayCallback, unregisterHumanRelayCallback, handleHumanRelayResponse } from "./humanRelay"
 import { handleNewTask } from "./handleTask"
 
@@ -52,23 +64,33 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 	return {
 		"roo-cline.activationCompleted": () => {},
 		"roo-cline.plusButtonClicked": async () => {
-			await provider.removeClineFromStack()
-			await provider.postStateToWebview()
-			await provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
+			const visibleProvider = getVisibleProviderOrLog(outputChannel)
+			if (!visibleProvider) return
+			await visibleProvider.removeClineFromStack()
+			await visibleProvider.postStateToWebview()
+			await visibleProvider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		},
 		"roo-cline.mcpButtonClicked": () => {
-			provider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
+			const visibleProvider = getVisibleProviderOrLog(outputChannel)
+			if (!visibleProvider) return
+			visibleProvider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
 		},
 		"roo-cline.promptsButtonClicked": () => {
-			provider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" })
+			const visibleProvider = getVisibleProviderOrLog(outputChannel)
+			if (!visibleProvider) return
+			visibleProvider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" })
 		},
 		"roo-cline.popoutButtonClicked": () => openClineInNewTab({ context, outputChannel }),
 		"roo-cline.openInNewTab": () => openClineInNewTab({ context, outputChannel }),
 		"roo-cline.settingsButtonClicked": () => {
-			provider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
+			const visibleProvider = getVisibleProviderOrLog(outputChannel)
+			if (!visibleProvider) return
+			visibleProvider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
 		},
 		"roo-cline.historyButtonClicked": () => {
-			provider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
+			const visibleProvider = getVisibleProviderOrLog(outputChannel)
+			if (!visibleProvider) return
+			visibleProvider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
 		},
 		"roo-cline.helpButtonClicked": () => {
 			vscode.env.openExternal(vscode.Uri.parse("https://docs.roocode.com"))
@@ -101,17 +123,25 @@ export const openClineInNewTab = async ({ context, outputChannel }: Omit<Registe
 	// don't need to use that event).
 	// https://github.com/microsoft/vscode-extension-samples/blob/main/webview-sample/src/extension.ts
 	const tabProvider = new ClineProvider(context, outputChannel, "editor")
-	const lastCol = Math.max(...vscode.window.visibleTextEditors.map((editor) => editor.viewColumn || 0))
 
-	// Check if there are any visible text editors, otherwise open a new group
-	// to the right.
+	const activeEditor = vscode.window.activeTextEditor
 	const hasVisibleEditors = vscode.window.visibleTextEditors.length > 0
 
-	if (!hasVisibleEditors) {
-		await vscode.commands.executeCommand("workbench.action.newGroupRight")
-	}
+	let targetCol: vscode.ViewColumn
 
-	const targetCol = hasVisibleEditors ? Math.max(lastCol + 1, 1) : vscode.ViewColumn.Two
+	if (!hasVisibleEditors) {
+		// No editors open, open in first column
+		targetCol = vscode.ViewColumn.One
+	} else if (activeEditor && activeEditor.document.isUntitled && vscode.window.visibleTextEditors.length === 1) {
+		// Only one editor and it's empty (untitled), reuse it
+		targetCol = activeEditor.viewColumn ?? vscode.ViewColumn.One
+	} else {
+		// Otherwise, create a new group to the right
+		await vscode.commands.executeCommand("workbench.action.newGroupRight")
+		// New group becomes the last + 1
+		const lastCol = Math.max(...vscode.window.visibleTextEditors.map((e) => e.viewColumn || 1))
+		targetCol = (lastCol + 1) as vscode.ViewColumn
+	}
 
 	const newPanel = vscode.window.createWebviewPanel(ClineProvider.tabPanelId, "Roo Code", targetCol, {
 		enableScripts: true,
