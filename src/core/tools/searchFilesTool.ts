@@ -17,11 +17,13 @@ export async function searchFilesTool(
 	const relDirPath: string | undefined = block.params.path
 	const regex: string | undefined = block.params.regex
 	const filePattern: string | undefined = block.params.file_pattern
+	const maxResults: string | undefined = block.params.max_results
 	const sharedMessageProps: ClineSayTool = {
 		tool: "searchFiles",
 		path: getReadablePath(cline.cwd, removeClosingTag("path", relDirPath)),
 		regex: removeClosingTag("regex", regex),
 		filePattern: removeClosingTag("file_pattern", filePattern),
+		maxResults: removeClosingTag("max_results", maxResults),
 	}
 	try {
 		if (block.partial) {
@@ -42,6 +44,12 @@ export async function searchFilesTool(
 				pushToolResult(await cline.sayAndCreateMissingParamError("search_files", "regex"))
 				return
 			}
+			const maxResultsNumber = parseInt(maxResults ?? "")
+			if (maxResults !== undefined && isNaN(maxResultsNumber)) {
+				cline.consecutiveMistakeCount++
+				pushToolResult(await cline.sayAndCreateInvalidNumberParamError("search_files", "max_results"))
+				return
+			}
 			cline.consecutiveMistakeCount = 0
 			const absolutePath = path.resolve(cline.cwd, relDirPath)
 			const results = await regexSearchFiles(
@@ -49,6 +57,7 @@ export async function searchFilesTool(
 				absolutePath,
 				regex,
 				filePattern,
+				maxResultsNumber,
 				cline.rooIgnoreController,
 			)
 			const completeMessage = JSON.stringify({

@@ -66,7 +66,7 @@ interface SearchLineResult {
 	column?: number
 }
 // Constants
-const MAX_RESULTS = 300
+const DEFAULT_MAX_RESULTS = 300
 const MAX_LINE_LENGTH = 500
 
 /**
@@ -95,7 +95,7 @@ export async function getBinPath(vscodeAppRoot: string): Promise<string | undefi
 	)
 }
 
-async function execRipgrep(bin: string, args: string[]): Promise<string> {
+async function execRipgrep(bin: string, args: string[], maxResults: number): Promise<string> {
 	return new Promise((resolve, reject) => {
 		const rgProcess = childProcess.spawn(bin, args)
 		// cross-platform alternative to head, which is ripgrep author's recommendation for limiting output.
@@ -106,7 +106,7 @@ async function execRipgrep(bin: string, args: string[]): Promise<string> {
 
 		let output = ""
 		let lineCount = 0
-		const maxLines = MAX_RESULTS * 5 // limiting ripgrep output with max lines since there's no other way to limit results. it's okay that we're outputting as json, since we're parsing it line by line and ignore anything that's not part of a match. This assumes each result is at most 5 lines.
+		const maxLines = maxResults * 5 // limiting ripgrep output with max lines since there's no other way to limit results. it's okay that we're outputting as json, since we're parsing it line by line and ignore anything that's not part of a match. This assumes each result is at most 5 lines.
 
 		rl.on("line", (line) => {
 			if (lineCount < maxLines) {
@@ -140,6 +140,7 @@ export async function regexSearchFiles(
 	directoryPath: string,
 	regex: string,
 	filePattern?: string,
+	maxResults?: number,
 	rooIgnoreController?: RooIgnoreController,
 ): Promise<string> {
 	const vscodeAppRoot = vscode.env.appRoot
@@ -151,9 +152,13 @@ export async function regexSearchFiles(
 
 	const args = ["--json", "-e", regex, "--glob", filePattern || "*", "--context", "1", directoryPath]
 
+	if (maxResults === undefined) {
+		maxResults = DEFAULT_MAX_RESULTS
+	}
+
 	let output: string
 	try {
-		output = await execRipgrep(rgPath, args)
+		output = await execRipgrep(rgPath, args, maxResults)
 	} catch (error) {
 		console.error("Error executing ripgrep:", error)
 		return "No results found"
@@ -217,22 +222,22 @@ export async function regexSearchFiles(
 		? results.filter((result) => rooIgnoreController.validateAccess(result.file))
 		: results
 
-	return formatResults(filteredResults, cwd)
+	return formatResults(filteredResults, cwd, maxResults)
 }
 
-function formatResults(fileResults: SearchFileResult[], cwd: string): string {
+function formatResults(fileResults: SearchFileResult[], cwd: string, maxResults: number): string {
 	const groupedResults: { [key: string]: SearchResult[] } = {}
 
 	let totalResults = fileResults.reduce((sum, file) => sum + file.searchResults.length, 0)
 	let output = ""
-	if (totalResults >= MAX_RESULTS) {
-		output += `Showing first ${MAX_RESULTS} of ${MAX_RESULTS}+ results. Use a more specific search if necessary.\n\n`
+	if (totalResults >= maxResults) {
+		output += `Showing first ${maxResults} of ${maxResults}+ results. Use a more specific search if necessary.\n\n`
 	} else {
 		output += `Found ${totalResults === 1 ? "1 result" : `${totalResults.toLocaleString()} results`}.\n\n`
 	}
 
 	// Group results by file name
-	fileResults.slice(0, MAX_RESULTS).forEach((file) => {
+	fileResults.slice(0, maxResults).forEach((file) => {
 		const relativeFilePath = path.relative(cwd, file.file)
 		if (!groupedResults[relativeFilePath]) {
 			groupedResults[relativeFilePath] = []

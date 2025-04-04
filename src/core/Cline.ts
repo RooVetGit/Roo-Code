@@ -582,6 +582,14 @@ export class Cline extends EventEmitter<ClineEvents> {
 		return formatResponse.toolError(formatResponse.missingToolParameterError(paramName))
 	}
 
+	async sayAndCreateInvalidNumberParamError(toolName: ToolUseName, paramName: string) {
+		await this.say(
+			"error",
+			`Roo tried to use ${toolName} with invalid number value for parameter '${paramName}'. Retrying...`,
+		)
+		return formatResponse.toolError(formatResponse.invalidNumberParameterError(paramName))
+	}
+
 	// Task lifecycle
 
 	private async startTask(task?: string, images?: string[]): Promise<void> {
