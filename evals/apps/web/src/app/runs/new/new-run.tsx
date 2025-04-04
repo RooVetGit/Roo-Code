@@ -7,7 +7,7 @@ import { useForm, FormProvider } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import fuzzysort from "fuzzysort"
 import { toast } from "sonner"
-import { X, Rocket, Check, ChevronsUpDown, HardDriveUpload, CircleCheck } from "lucide-react"
+import { X, Rocket, Check, ChevronsUpDown, HardDriveUpload, CircleCheck, Cpu } from "lucide-react"
 
 import { globalSettingsSchema, rooCodeDefaults } from "@evals/types"
 
@@ -39,6 +39,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 	ScrollArea,
+	Slider,
 } from "@/components/ui"
 
 import { SettingsDiff } from "./settings-diff"
@@ -68,6 +69,7 @@ export function NewRun() {
 			suite: "full",
 			exercises: [],
 			settings: undefined,
+			concurrency: 10,
 		},
 	})
 
@@ -79,7 +81,7 @@ export function NewRun() {
 		formState: { isSubmitting },
 	} = form
 
-	const [model, suite, settings] = watch(["model", "suite", "settings"])
+	const [model, suite, settings, concurrency] = watch(["model", "suite", "settings", "concurrency"])
 
 	const onSubmit = useCallback(
 		async (data: FormValues) => {
@@ -275,6 +277,40 @@ export function NewRun() {
 										maxCount={4}
 									/>
 								)}
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+
+					<FormField
+						control={form.control}
+						name="concurrency"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel className="flex items-center gap-2">
+									<Cpu className="size-4" />
+									Concurrency
+								</FormLabel>
+								<FormControl>
+									<div className="flex flex-col gap-2">
+										<Slider
+											defaultValue={[field.value]}
+											min={1}
+											max={50}
+											step={1}
+											onValueChange={(value) => field.onChange(value[0])}
+										/>
+										<div className="flex justify-between text-xs text-muted-foreground">
+											<span>1</span>
+											<span>{field.value}</span>
+											<span>50</span>
+										</div>
+									</div>
+								</FormControl>
+								<FormDescription>
+									Number of tasks to run in parallel. Higher values may improve speed but increase
+									resource usage.
+								</FormDescription>
 								<FormMessage />
 							</FormItem>
 						)}

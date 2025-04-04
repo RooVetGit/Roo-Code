@@ -33,7 +33,6 @@ import { IpcServer, IpcClient } from "@evals/ipc"
 import { __dirname, extensionDevelopmentPath, exercisesPath } from "./paths.js"
 import { getExercises } from "./exercises.js"
 
-const maxConcurrency = 2
 const taskTimeLimit = 5 * 60 * 1_000
 
 const testCommands: Record<ExerciseLanguage, { commands: string[]; timeout?: number; cwd?: string }> = {
@@ -74,12 +73,14 @@ const run = async (toolbox: GluegunToolbox) => {
 				const exercises = getExercises()[language as ExerciseLanguage]
 
 				await pMap(exercises, (exercise) => createTask({ runId: run.id, language, exercise }), {
-					concurrency: 10,
+					concurrency: run.concurrency,
 				})
 			}
 		} else if (exercise === "all") {
 			const exercises = getExercises()[language as ExerciseLanguage]
-			await pMap(exercises, (exercise) => createTask({ runId: run.id, language, exercise }), { concurrency: 10 })
+			await pMap(exercises, (exercise) => createTask({ runId: run.id, language, exercise }), {
+				concurrency: run.concurrency,
+			})
 		} else {
 			language = language || (await askLanguage(prompt))
 			exercise = exercise || (await askExercise(prompt, language))
@@ -140,7 +141,7 @@ const run = async (toolbox: GluegunToolbox) => {
 			}
 		})
 
-		if (runningPromises.length >= maxConcurrency) {
+		if (runningPromises.length >= run.concurrency) {
 			await Promise.race(runningPromises)
 		}
 	}

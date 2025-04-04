@@ -13,7 +13,6 @@ import {
 	DrawerHeader,
 	DrawerTitle,
 	ScrollArea,
-	Separator,
 	Table,
 	TableBody,
 	TableCell,
