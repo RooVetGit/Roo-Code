@@ -1,6 +1,6 @@
 {
-	"dialogTitle": "人工中繼 - 請協助複製貼上資訊",
-	"dialogDescription": "請將以下提示詞複製到網頁AI，然後將AI的回覆貼到下方的輸入框中。",
+	"dialogTitle": "人工中繼 - 請協助複製貼上訊息",
+	"dialogDescription": "請將以下提示詞複製到網頁 AI，然後將 AI 的回覆貼上到下方的輸入框中。",
 	"copiedToClipboard": "已複製到剪貼簿",
 	"warning": {
 		"lastInteraction": "看起來您複製了上一次互動的AI回覆，而不是當前任務的回覆。請檢查您與網路AI的互動。",
@@ -15,8 +15,8 @@
 	},
 	"shortcutDescription": "您可以使用快捷鍵Ctrl/Cmd+Alt+V（預設）快速發送剪貼簿內容。您也可以在快捷鍵設定中搜尋「send clipboard」來修改快捷鍵。",
 	"aiResponse": {
-		"label": "請輸入AI的回覆：",
-		"placeholder": "在此貼上AI的回覆..."
+		"label": "請輸入 AI 的回覆：",
+		"placeholder": "在此貼上 AI 的回覆..."
 	},
 	"actions": {
 		"cancel": "取消",
