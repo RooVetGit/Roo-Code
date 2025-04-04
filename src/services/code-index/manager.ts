@@ -122,14 +122,16 @@ export class CodeIndexManager {
 				this.openAiOptions,
 				this.qdrantUrl,
 				this.context,
-				// TODO: Add callback/emitter here to report progress *during* scan if needed later
+				(batchError) => {
+					this.updateState("Error", `Failed during initial scan batch: ${batchError.message}`)
+				},
 			)
 			console.log(
 				`[CodeIndexManager] Initial scan complete. Processed: ${stats.processed}, Skipped: ${stats.skipped}`,
 			)
 
 			// --- Start Watcher ---
-			if (!this._fileWatcher) {
+			if (!this._fileWatcher && this.state === "Indexing") {
 				this.updateState("Indexing", "Initializing file watcher...") // Still indexing phase
 				this._fileWatcher = new CodeIndexFileWatcher(
 					this.workspacePath,
