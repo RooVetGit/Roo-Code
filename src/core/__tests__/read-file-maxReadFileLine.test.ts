@@ -147,7 +147,9 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
 			expect(mockedReadLines).not.toHaveBeenCalled()
 			expect(mockedParseSourceCodeDefinitionsForFile).not.toHaveBeenCalled()
-			expect(result).toBe(numberedFileContent)
+			expect(result).toBe(
+				`<file>\n  <path>${testFilePath}</path>\n  <content>\n${numberedFileContent}\n  </content>\n</file>`,
+			)
 		})
 	})
 
@@ -207,7 +209,9 @@ describe("read_file tool with maxReadFileLine setting", () => {
 
 			// Verify
 			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
-			expect(result).toBe(numberedFileContent)
+			expect(result).toBe(
+				`<file>\n  <path>${testFilePath}</path>\n  <content>\n${numberedFileContent}\n  </content>\n</file>`,
+			)
 		})
 
 		it("should read with extractTextFromFile when file has few lines", async () => {
@@ -221,7 +225,9 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			// Verify
 			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
 			expect(mockedReadLines).not.toHaveBeenCalled()
-			expect(result).toBe(numberedFileContent)
+			expect(result).toBe(
+				`<file>\n  <path>${testFilePath}</path>\n  <content>\n${numberedFileContent}\n  </content>\n</file>`,
+			)
 		})
 	})
 
@@ -237,7 +243,9 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			// Verify
 			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
 			expect(mockedReadLines).not.toHaveBeenCalled()
-			expect(result).toBe(numberedFileContent)
+			expect(result).toBe(
+				`<file>\n  <path>${testFilePath}</path>\n  <content>\n${numberedFileContent}\n  </content>\n</file>`,
+			)
 		})
 	})
 
