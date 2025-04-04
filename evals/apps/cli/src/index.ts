@@ -356,7 +356,7 @@ const runUnitTest = async ({ task }: { task: Task }) => {
 				break
 			}
 		} catch (error) {
-			console.log("[cli#run] execa error =", error)
+			console.log("[cli#runUnitTest] execa error =", error)
 			passed = false
 			break
 		}
