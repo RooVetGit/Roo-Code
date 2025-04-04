@@ -132,7 +132,7 @@ export const openClineInNewTab = async ({ context, outputChannel }: Omit<Registe
 	if (!hasVisibleEditors) {
 		// No editors open, open in first column
 		targetCol = vscode.ViewColumn.One
-	} else if (activeEditor && activeEditor.document.fileName === "" && vscode.window.visibleTextEditors.length === 1) {
+	} else if (activeEditor && activeEditor.document.isUntitled && vscode.window.visibleTextEditors.length === 1) {
 		// Only one editor and it's empty (untitled), reuse it
 		targetCol = activeEditor.viewColumn ?? vscode.ViewColumn.One
 	} else {
