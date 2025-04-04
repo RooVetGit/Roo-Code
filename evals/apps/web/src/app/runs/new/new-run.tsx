@@ -9,7 +9,7 @@ import fuzzysort from "fuzzysort"
 import { toast } from "sonner"
 import { X, Rocket, Check, ChevronsUpDown, HardDriveUpload, CircleCheck } from "lucide-react"
 
-import { globalSettingsSchema, rooCodeDefaults } from "@evals/types"
+import { globalSettingsSchema, providerSettingsSchema, rooCodeDefaults } from "@evals/types"
 
 import { createRun } from "@/lib/server/runs"
 import { createRunSchema as formSchema, type CreateRun as FormValues } from "@/lib/schemas"
@@ -73,7 +73,6 @@ export function NewRun() {
 
 	const {
 		setValue,
-		setError,
 		clearErrors,
 		watch,
 		formState: { isSubmitting },
@@ -82,15 +81,29 @@ export function NewRun() {
 	const [model, suite, settings] = watch(["model", "suite", "settings"])
 
 	const onSubmit = useCallback(
-		async (data: FormValues) => {
+		async ({ settings, ...data }: FormValues) => {
 			try {
-				const { id } = await createRun(data)
+				const openRouterModel = models.data?.find(({ id }) => id === data.model)
+
+				if (!openRouterModel) {
+					throw new Error(`Model not found: ${data.model}`)
+				}
+
+				const { id } = await createRun({
+					...data,
+					settings: {
+						...settings,
+						openRouterModelId: openRouterModel.id,
+						openRouterModelInfo: openRouterModel.modelInfo,
+					},
+				})
+
 				router.push(`/runs/${id}`)
 			} catch (e) {
 				toast.error(e instanceof Error ? e.message : "An unknown error occurred.")
 			}
 		},
-		[router],
+		[router, models.data],
 	)
 
 	const onFilterModels = useCallback(
@@ -133,14 +146,51 @@ export function NewRun() {
 			clearErrors("settings")
 
 			try {
-				const result = z.object({ globalSettings: globalSettingsSchema }).parse(JSON.parse(await file.text()))
-				setValue("settings", result.globalSettings)
+				const { providerProfiles, globalSettings } = z
+					.object({
+						providerProfiles: z.object({
+							currentApiConfigName: z.string(),
+							apiConfigs: z.record(z.string(), providerSettingsSchema),
+						}),
+						globalSettings: globalSettingsSchema,
+					})
+					.parse(JSON.parse(await file.text()))
+
+				const providerSettings = providerProfiles.apiConfigs[providerProfiles.currentApiConfigName] ?? {}
+
+				if (providerSettings.apiProvider === "openrouter" && providerSettings.openRouterModelId) {
+					const {
+						openRouterModelId,
+						modelMaxTokens,
+						modelMaxThinkingTokens,
+						modelTemperature,
+						includeMaxTokens,
+					} = providerSettings
+
+					const model = openRouterModelId
+
+					const settings = {
+						...rooCodeDefaults,
+						openRouterModelId,
+						modelMaxTokens,
+						modelMaxThinkingTokens,
+						modelTemperature,
+						includeMaxTokens,
+						...globalSettings,
+					}
+
+					setValue("model", model)
+					setValue("settings", settings)
+				} else {
+					setValue("settings", globalSettings)
+				}
+
 				event.target.value = ""
-			} catch (_error) {
-				setError("settings", { message: "Error parsing JSON file. Please check the file format." })
+			} catch (e) {
+				toast.error(e instanceof Error ? e.message : "An unknown error occurred.")
 			}
 		},
-		[clearErrors, setError, setValue],
+		[clearErrors, setValue],
 	)
 
 	return (
