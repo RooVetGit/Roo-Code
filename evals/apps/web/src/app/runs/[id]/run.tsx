@@ -37,7 +37,7 @@ export function Run({ run }: { run: db.Run }) {
 						<div>{run.model}</div>
 						{run.description && <div className="text-sm text-muted-foreground">{run.description}</div>}
 					</div>
-					<ConnectionStatus status={status} pid={run.pid} />
+					{!run.taskMetricsId && <ConnectionStatus status={status} pid={run.pid} />}
 				</div>
 				{!tasks ? (
 					<LoaderCircle className="size-4 animate-spin" />
