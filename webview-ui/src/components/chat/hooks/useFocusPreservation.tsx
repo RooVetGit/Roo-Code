@@ -26,14 +26,8 @@ export function useFocusPreservation(element: HTMLElement | null, isHidden: Bool
 	}, [isHidden])
 
 	useEffect(() => {
-		// unclear why timer is here, and whether it's still necessary.
-		const timer = setTimeout(() => {
-			if (!isHidden && isFocused) {
-				element?.focus()
-			}
-		}, 50)
-		return () => {
-			clearTimeout(timer)
+		if (!isHidden && isFocused) {
+			element?.focus()
 		}
 	}, [isHidden, element, isFocused])
 
