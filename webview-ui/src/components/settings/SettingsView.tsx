@@ -508,20 +508,12 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 				</div>
 
 				<div ref={codeIndexRef}>
-					<SectionHeader>
-						<div className="flex items-center gap-2">
-							<Database className="w-4" />
-							<div>{t("settings:sections.codeIndex")}</div>
-						</div>
-					</SectionHeader>
-					<Section>
-						<CodeIndexSettings
-							codeIndexEnabled={codeIndexEnabled}
-							codeIndexOpenAiKey={codeIndexOpenAiKey}
-							codeIndexQdrantUrl={codeIndexQdrantUrl}
-							setCachedStateField={setCachedStateField}
-						/>
-					</Section>
+					<CodeIndexSettings
+						codeIndexEnabled={codeIndexEnabled}
+						codeIndexOpenAiKey={codeIndexOpenAiKey}
+						codeIndexQdrantUrl={codeIndexQdrantUrl}
+						setCachedStateField={setCachedStateField}
+					/>
 				</div>
 
 				<div ref={aboutRef}>
