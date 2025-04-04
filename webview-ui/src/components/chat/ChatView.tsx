@@ -142,13 +142,9 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 						case "followup":
 							setTextAreaDisabled(isPartial)
 							setClineAsk("followup")
-							// setting enable buttons to `false` would trigger a focus grab when
-							// the text area is enabled which is undesirable.
-							// We have no buttons for this tool, so no problem having them "enabled"
-							// to workaround this issue.  See #1358.
-							setEnableButtons(true)
-							setPrimaryButtonText(undefined)
-							setSecondaryButtonText(undefined)
+							setEnableButtons(isPartial)
+							// setPrimaryButtonText(undefined)
+							// setSecondaryButtonText(undefined)
 							break
 						case "tool":
 							if (!isAutoApproved(lastMessage)) {
