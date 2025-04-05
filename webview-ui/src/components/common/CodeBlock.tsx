@@ -12,6 +12,9 @@ export const WINDOW_SHADE_SETTINGS = {
 	collapsedHeight: 500, // Default collapsed height in pixels
 }
 
+// Tolerance in pixels for determining when a container is considered "at the bottom"
+export const SCROLL_SNAP_TOLERANCE = 20
+
 /*
 overflowX: auto + inner div with padding results in an issue where the top/left/bottom padding renders but the right padding inside does not count as overflow as the width of the element is not exceeded. Once the inner div is outside the boundaries of the parent it counts as overflow.
 https://stackoverflow.com/questions/60778406/why-is-padding-right-clipped-with-overflowscroll/77292459#77292459
@@ -288,15 +291,18 @@ const CodeBlock = memo(
 		// Ref to track if user was scrolled up *before* the source update potentially changes scrollHeight
 		const wasScrolledUpRef = useRef(false)
 
+		// Ref to track if outer container was near bottom
+		const outerContainerNearBottomRef = useRef(false)
+
 		// Effect to listen to scroll events and update the ref
 		useEffect(() => {
 			const preElement = preRef.current
 			if (!preElement) return
 
 			const handleScroll = () => {
-				const tolerance = 5 // Pixels tolerance for being "at the bottom"
 				const isAtBottom =
-					Math.abs(preElement.scrollHeight - preElement.scrollTop - preElement.clientHeight) < tolerance
+					Math.abs(preElement.scrollHeight - preElement.scrollTop - preElement.clientHeight) <
+					SCROLL_SNAP_TOLERANCE
 				wasScrolledUpRef.current = !isAtBottom
 			}
 
@@ -309,23 +315,38 @@ const CodeBlock = memo(
 			}
 		}, []) // Empty dependency array: runs once on mount
 
-		// Scroll to bottom immediately when source changes, but only if user wasn't scrolled up *before* the update
+		// Effect to track outer container scroll position
 		useEffect(() => {
-			// Check the ref *before* potentially scrolling
-			if (preRef.current && source && !wasScrolledUpRef.current) {
-				// Use rAF to wait for DOM updates (like scrollHeight change)
-				requestAnimationFrame(() => {
-					// Use a small timeout to ensure rendering is complete, especially for complex highlights
-					setTimeout(() => {
-						if (preRef.current) {
-							preRef.current.scrollTop = preRef.current.scrollHeight
-							// After auto-scrolling, update the ref state as we are now at the bottom
-							wasScrolledUpRef.current = false
-						}
-					}, 50) // Slightly increased delay
-				})
+			const scrollContainer = document.querySelector('[data-virtuoso-scroller="true"]')
+			if (!scrollContainer) return
+
+			const handleOuterScroll = () => {
+				const isAtBottom =
+					Math.abs(scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight) <
+					SCROLL_SNAP_TOLERANCE
+				outerContainerNearBottomRef.current = isAtBottom
 			}
-			// We only need to react to source changes here. The ref check handles the scroll state.
+
+			scrollContainer.addEventListener("scroll", handleOuterScroll, { passive: true })
+			// Initial check
+			handleOuterScroll()
+
+			return () => {
+				scrollContainer.removeEventListener("scroll", handleOuterScroll)
+			}
+		}, []) // Empty dependency array: runs once on mount
+
+		// Store whether we should scroll after highlighting completes
+		const shouldScrollAfterHighlightRef = useRef(false)
+
+		// Check if we should scroll when source changes
+		useEffect(() => {
+			// Only set the flag if we're at the bottom when source changes
+			if (preRef.current && source && !wasScrolledUpRef.current) {
+				shouldScrollAfterHighlightRef.current = true
+			} else {
+				shouldScrollAfterHighlightRef.current = false
+			}
 		}, [source])
 
 		const updateCodeBlockButtonPosition = useCallback((forceHide = false) => {
@@ -412,10 +433,32 @@ const CodeBlock = memo(
 			}
 		}, [updateCodeBlockButtonPosition])
 
-		// Update button position when highlightedCode changes
+		// Update button position and scroll when highlightedCode changes
 		useEffect(() => {
 			if (highlightedCode) {
+				// Update button position
 				setTimeout(updateCodeBlockButtonPosition, 0)
+
+				// Scroll to bottom if needed (immediately after Shiki updates)
+				if (shouldScrollAfterHighlightRef.current) {
+					// Scroll inner container
+					if (preRef.current) {
+						preRef.current.scrollTop = preRef.current.scrollHeight
+						wasScrolledUpRef.current = false
+					}
+
+					// Also scroll outer container if it was near bottom
+					if (outerContainerNearBottomRef.current) {
+						const scrollContainer = document.querySelector('[data-virtuoso-scroller="true"]')
+						if (scrollContainer) {
+							scrollContainer.scrollTop = scrollContainer.scrollHeight
+							outerContainerNearBottomRef.current = true
+						}
+					}
+
+					// Reset the flag
+					shouldScrollAfterHighlightRef.current = false
+				}
 			}
 		}, [highlightedCode, updateCodeBlockButtonPosition])
 
