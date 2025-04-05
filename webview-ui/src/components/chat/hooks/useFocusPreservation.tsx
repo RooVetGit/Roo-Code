@@ -18,13 +18,19 @@ import { useState, useEffect, useRef } from "react"
 export function useFocusPreservation(element: HTMLElement | null, isHidden: boolean) {
 	const [isFocused, setIsFocused] = useState(false)
 	const isHiddenRef = useRef(isHidden)
-	const isHiddenLastChangedRef = useRef(0)
+	const timerRef = useRef<NodeJS.Timeout | null>(null)
 
+	// keep isHiddenRef up-to-date
 	useEffect(() => {
 		isHiddenRef.current = isHidden
-		isHiddenLastChangedRef.current = Date.now()
+
+		if (isHidden && timerRef.current) {
+			// Now hidden, so any blur event should not be counted.
+			clearTimeout(timerRef.current)
+		}
 	}, [isHidden])
 
+	// Apply focus when required
 	useEffect(() => {
 		if (!isHidden && isFocused) {
 			element?.focus()
@@ -41,14 +47,15 @@ export function useFocusPreservation(element: HTMLElement | null, isHidden: bool
 		const onTextAreaBlur = () => {
 			// Blur event should only be interpreted as an intentional defocus
 			// if they have not occured as a result of the element being hidden.
+			// We consider a blur event to be an intentional defocus
+			// if BLUR_DELAY msecs after the blur, the element is not hidden
+			// (and has not been hidden at any point)
 			const BLUR_DELAY = 500
-			setTimeout(() => {
-				if (!isHiddenRef.current && Date.now() - isHiddenLastChangedRef.current > BLUR_DELAY) {
-					// We consider a blur event to be an intentional defocus
-					// if BLUR_DELAY msecs after the blur, the element is still hidden
-					// and the element's hidden state hasn't changed witin that time period.
+			timerRef.current = setTimeout(() => {
+				if (!isHiddenRef.current) {
 					setIsFocused(false)
 				}
+				timerRef.current = null
 			}, BLUR_DELAY)
 		}
 

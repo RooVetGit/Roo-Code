@@ -1236,6 +1236,10 @@ describe("ChatView - Focus Grabbing Tests", () => {
 				/>
 			</ExtensionStateContextProvider>,
 		)
+		// when chat view is hidden, this triggers a "blur" event
+		if (textAreaElement) {
+			fireEvent.blur(textAreaElement)
+		}
 
 		expect(mockFocus).toHaveBeenCalledTimes(1)
 
@@ -1256,7 +1260,7 @@ describe("ChatView - Focus Grabbing Tests", () => {
 	})
 
 	it("does not grab focus when unhidden and not previously focused", async () => {
-		const { rerender } = render(
+		const { getByTestId, rerender } = render(
 			<ExtensionStateContextProvider>
 				<ChatView
 					isHidden={false}
@@ -1267,6 +1271,7 @@ describe("ChatView - Focus Grabbing Tests", () => {
 			</ExtensionStateContextProvider>,
 		)
 
+		const textAreaElement = getByTestId("chat-textarea").querySelector("input")
 		rerender(
 			<ExtensionStateContextProvider>
 				<ChatView
@@ -1277,6 +1282,10 @@ describe("ChatView - Focus Grabbing Tests", () => {
 				/>
 			</ExtensionStateContextProvider>,
 		)
+		// when chat view is hidden, this triggers a "blur" event
+		if (textAreaElement) {
+			fireEvent.blur(textAreaElement)
+		}
 
 		rerender(
 			<ExtensionStateContextProvider>
@@ -1326,6 +1335,10 @@ describe("ChatView - Focus Grabbing Tests", () => {
 			expect(mockFocus).toHaveBeenCalledTimes(1)
 		})
 
+		// when extension becomes invisible, this will trigger a blur event before the message is sent.
+		if (textAreaElement) {
+			fireEvent.blur(textAreaElement)
+		}
 		await sendActionMessage("didBecomeInvisible")
 		expect(mockFocus).toHaveBeenCalledTimes(1)
 
@@ -1339,7 +1352,7 @@ describe("ChatView - Focus Grabbing Tests", () => {
 	})
 
 	it("does not grab focus when unhidden and not previously focused", async () => {
-		render(
+		const { findByTestId } = render(
 			<ExtensionStateContextProvider>
 				<ChatView
 					isHidden={false}
@@ -1350,6 +1363,12 @@ describe("ChatView - Focus Grabbing Tests", () => {
 			</ExtensionStateContextProvider>,
 		)
 
+		const textAreaElement = (await findByTestId("chat-textarea")).querySelector("input")
+
+		// when extension becomes invisible, this will trigger a blur event before the message is sent.
+		if (textAreaElement) {
+			fireEvent.blur(textAreaElement)
+		}
 		await sendActionMessage("didBecomeInvisible")
 		expect(mockFocus).toHaveBeenCalledTimes(0)
 
@@ -1389,8 +1408,11 @@ describe("ChatView - Focus Grabbing Tests", () => {
 		if (textAreaElement) {
 			fireEvent.blur(textAreaElement)
 		}
-
 		expect(mockFocus).toHaveBeenCalledTimes(1)
+
+		// must wait for > 500msecs after blur before making panel invisible
+		// so that the blur is interpreted as a deliberate user action.
+		await sleep(550)
 
 		await sendActionMessage("didBecomeInvisible")
 
