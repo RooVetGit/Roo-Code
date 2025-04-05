@@ -1,6 +1,5 @@
 import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
-import { Button as VSCodeButton } from "vscrui"
 import {
 	CheckCheck,
 	SquareMousePointer,
@@ -349,8 +348,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 					</DropdownMenu>
 				</div>
 				<div className="flex gap-2">
-					<VSCodeButton
-						appearance={isSettingValid ? "primary" : "secondary"}
+					<Button
+						variant={isSettingValid ? "default" : "secondary"}
 						className={!isSettingValid ? "!border-vscode-errorForeground" : ""}
 						title={
 							!isSettingValid
@@ -363,13 +362,13 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 						disabled={!isChangeDetected || !isSettingValid}
 						data-testid="save-button">
 						{t("settings:common.save")}
-					</VSCodeButton>
-					<VSCodeButton
-						appearance="secondary"
+					</Button>
+					<Button
+						variant="secondary"
 						title={t("settings:header.doneButtonTooltip")}
 						onClick={() => checkUnsaveChanges(onDone)}>
 						{t("settings:common.done")}
-					</VSCodeButton>
+					</Button>
 				</div>
 			</TabHeader>
 
