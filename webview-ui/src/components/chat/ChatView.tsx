@@ -493,11 +493,9 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				case "action":
 					switch (message.action!) {
 						case "didBecomeVisible":
-							console.log("Set view hidden = false")
 							setViewHidden(false)
 							break
 						case "didBecomeInvisible":
-							console.log("Set view hidden = true")
 							setViewHidden(true)
 							break
 					}

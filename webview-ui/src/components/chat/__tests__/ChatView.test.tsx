@@ -1,5 +1,5 @@
 import React from "react"
-import { render, waitFor, act } from "@testing-library/react"
+import { render, waitFor, act, fireEvent } from "@testing-library/react"
 import ChatView from "../ChatView"
 import { ExtensionStateContextProvider } from "../../../context/ExtensionStateContext"
 import { vscode } from "../../../utils/vscode"
@@ -60,25 +60,34 @@ interface ChatTextAreaProps {
 	shouldDisableImages?: boolean
 }
 
-const mockInputRef = React.createRef<HTMLInputElement>()
+interface ChatTextAreaHandle {
+	focus: () => void
+	current: HTMLInputElement | null
+}
+
 const mockFocus = jest.fn()
 
 jest.mock("../ChatTextArea", () => {
 	const mockReact = require("react")
+
 	return {
 		__esModule: true,
 		default: mockReact.forwardRef(function MockChatTextArea(
 			props: ChatTextAreaProps,
-			ref: React.ForwardedRef<{ focus: () => void }>,
+			ref: React.ForwardedRef<ChatTextAreaHandle>,
 		) {
-			// Use useImperativeHandle to expose the mock focus method
-			React.useImperativeHandle(ref, () => ({
-				focus: mockFocus,
-			}))
+			const inputRef = mockReact.useRef(null)
+
+			mockReact.useImperativeHandle(ref, () => {
+				if (inputRef.current) {
+					inputRef.current.focus = mockFocus
+				}
+				return inputRef.current
+			})
 
 			return (
 				<div data-testid="chat-textarea">
-					<input ref={mockInputRef} type="text" onChange={(e) => props.onSend(e.target.value)} />
+					<input ref={inputRef} type="text" onChange={(e) => props.onSend(e.target.value)} />
 				</div>
 			)
 		}),
@@ -149,6 +158,10 @@ const mockPostMessage = (state: Partial<ExtensionState>) => {
 		},
 		"*",
 	)
+}
+
+const sleep = (timeout: number) => {
+	return act(() => new Promise((resolve) => setTimeout(resolve, timeout)))
 }
 
 describe("ChatView - Auto Approval Tests", () => {
@@ -1102,12 +1115,6 @@ describe("ChatView - Focus Grabbing Tests", () => {
 	})
 
 	it("does not grab focus when follow-up question presented", async () => {
-		const sleep = async (timeout: number) => {
-			await act(async () => {
-				await new Promise((resolve) => setTimeout(resolve, timeout))
-			})
-		}
-
 		render(
 			<ExtensionStateContextProvider>
 				<ChatView
@@ -1145,7 +1152,7 @@ describe("ChatView - Focus Grabbing Tests", () => {
 		// wait for focus updates (can take 50msecs)
 		await sleep(100)
 
-		const FOCUS_CALLS_ON_INIT = 2
+		const FOCUS_CALLS_ON_INIT = 0
 		expect(mockFocus).toHaveBeenCalledTimes(FOCUS_CALLS_ON_INIT)
 
 		// Finish task, and send the followup ask message (streaming unfinished)
@@ -1194,5 +1201,204 @@ describe("ChatView - Focus Grabbing Tests", () => {
 
 		// focus() should not have been called again
 		expect(mockFocus).toHaveBeenCalledTimes(FOCUS_CALLS_ON_INIT)
+	})
+
+	it("grabs focus to restore focus when unhidden", async () => {
+		const { getByTestId, rerender } = render(
+			<ExtensionStateContextProvider>
+				<ChatView
+					isHidden={false}
+					showAnnouncement={false}
+					hideAnnouncement={() => {}}
+					showHistoryView={() => {}}
+				/>
+			</ExtensionStateContextProvider>,
+		)
+
+		const textAreaElement = getByTestId("chat-textarea").querySelector("input")
+
+		// simulate focus on textArea
+		if (textAreaElement) {
+			fireEvent.focus(textAreaElement)
+		}
+
+		await waitFor(() => {
+			expect(mockFocus).toHaveBeenCalledTimes(1)
+		})
+
+		rerender(
+			<ExtensionStateContextProvider>
+				<ChatView
+					isHidden={true}
+					showAnnouncement={false}
+					hideAnnouncement={() => {}}
+					showHistoryView={() => {}}
+				/>
+			</ExtensionStateContextProvider>,
+		)
+
+		expect(mockFocus).toHaveBeenCalledTimes(1)
+
+		rerender(
+			<ExtensionStateContextProvider>
+				<ChatView
+					isHidden={false}
+					showAnnouncement={false}
+					hideAnnouncement={() => {}}
+					showHistoryView={() => {}}
+				/>
+			</ExtensionStateContextProvider>,
+		)
+
+		await waitFor(() => {
+			expect(mockFocus).toHaveBeenCalledTimes(2)
+		})
+	})
+
+	it("does not grab focus when unhidden and not previously focused", async () => {
+		const { rerender } = render(
+			<ExtensionStateContextProvider>
+				<ChatView
+					isHidden={false}
+					showAnnouncement={false}
+					hideAnnouncement={() => {}}
+					showHistoryView={() => {}}
+				/>
+			</ExtensionStateContextProvider>,
+		)
+
+		rerender(
+			<ExtensionStateContextProvider>
+				<ChatView
+					isHidden={true}
+					showAnnouncement={false}
+					hideAnnouncement={() => {}}
+					showHistoryView={() => {}}
+				/>
+			</ExtensionStateContextProvider>,
+		)
+
+		rerender(
+			<ExtensionStateContextProvider>
+				<ChatView
+					isHidden={false}
+					showAnnouncement={false}
+					hideAnnouncement={() => {}}
+					showHistoryView={() => {}}
+				/>
+			</ExtensionStateContextProvider>,
+		)
+
+		await sleep(100)
+		expect(mockFocus).toHaveBeenCalledTimes(0)
+	})
+
+	const sendActionMessage = (action: string) => {
+		return act(() => {
+			const message = {
+				type: "action",
+				action,
+			}
+			window.postMessage(message, "*")
+		})
+	}
+
+	it("grabs focus to restore focus when extension goes invisible and becomes visible again", async () => {
+		const { findByTestId } = render(
+			<ExtensionStateContextProvider>
+				<ChatView
+					isHidden={false}
+					showAnnouncement={false}
+					hideAnnouncement={() => {}}
+					showHistoryView={() => {}}
+				/>
+			</ExtensionStateContextProvider>,
+		)
+
+		const textAreaElement = (await findByTestId("chat-textarea")).querySelector("input")
+
+		// simulate focus on textArea
+		if (textAreaElement) {
+			fireEvent.focus(textAreaElement)
+		}
+
+		await waitFor(() => {
+			expect(mockFocus).toHaveBeenCalledTimes(1)
+		})
+
+		await sendActionMessage("didBecomeInvisible")
+		expect(mockFocus).toHaveBeenCalledTimes(1)
+
+		// we need processing of message to complete before toggling visibility again.
+		await sleep(0)
+
+		await sendActionMessage("didBecomeVisible")
+		await waitFor(() => {
+			expect(mockFocus).toHaveBeenCalledTimes(2)
+		})
+	})
+
+	it("does not grab focus when unhidden and not previously focused", async () => {
+		render(
+			<ExtensionStateContextProvider>
+				<ChatView
+					isHidden={false}
+					showAnnouncement={false}
+					hideAnnouncement={() => {}}
+					showHistoryView={() => {}}
+				/>
+			</ExtensionStateContextProvider>,
+		)
+
+		await sendActionMessage("didBecomeInvisible")
+		expect(mockFocus).toHaveBeenCalledTimes(0)
+
+		// we need processing of message to complete before toggling visibility again.
+		await sleep(0)
+
+		await sendActionMessage("didBecomeVisible")
+
+		await sleep(100)
+		expect(mockFocus).toHaveBeenCalledTimes(0)
+	})
+
+	it("does not grab focus when extension becomes visible when previously focused then blurred", async () => {
+		const { findByTestId } = render(
+			<ExtensionStateContextProvider>
+				<ChatView
+					isHidden={false}
+					showAnnouncement={false}
+					hideAnnouncement={() => {}}
+					showHistoryView={() => {}}
+				/>
+			</ExtensionStateContextProvider>,
+		)
+
+		const textAreaElement = (await findByTestId("chat-textarea")).querySelector("input")
+
+		// simulate focus on textArea
+		if (textAreaElement) {
+			fireEvent.focus(textAreaElement)
+		}
+
+		await waitFor(() => {
+			expect(mockFocus).toHaveBeenCalledTimes(1)
+		})
+
+		// simulate blur on textArea
+		if (textAreaElement) {
+			fireEvent.blur(textAreaElement)
+		}
+
+		expect(mockFocus).toHaveBeenCalledTimes(1)
+
+		await sendActionMessage("didBecomeInvisible")
+
+		expect(mockFocus).toHaveBeenCalledTimes(1)
+
+		await sendActionMessage("didBecomeVisible")
+
+		await sleep(100)
+		expect(mockFocus).toHaveBeenCalledTimes(1)
 	})
 })
