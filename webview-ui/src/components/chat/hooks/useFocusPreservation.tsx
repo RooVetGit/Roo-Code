@@ -15,7 +15,7 @@ import { useState, useEffect, useRef } from "react"
  * this hook will track the "focussed" state, and reinstate it once the element
  * is no longer hidden.
  */
-export function useFocusPreservation(element: HTMLElement | null, isHidden: Boolean) {
+export function useFocusPreservation(element: HTMLElement | null, isHidden: boolean) {
 	const [isFocused, setIsFocused] = useState(false)
 	const isHiddenRef = useRef(isHidden)
 	const isHiddenLastChangedRef = useRef(0)
