@@ -1318,7 +1318,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "codeIndexEnabled": {
 			const enabled = message.bool ?? false
 			// Save the state first
-			await provider.updateGlobalState("codeIndexEnabled", enabled)
+			await updateGlobalState("codeIndexEnabled", enabled)
 			// Get manager instance
 			const manager = CodeIndexManager.getInstance(provider.context)
 			// Get related state AFTER saving the current value
@@ -1341,7 +1341,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "codeIndexOpenAiKey": {
 			const newKey = message.text // Key is sent in 'text' field
 			// Save the state first
-			await provider.updateGlobalState("codeIndexOpenAiKey", newKey)
+			await updateGlobalState("codeIndexOpenAiKey", newKey)
 			// Get manager instance
 			const manager = CodeIndexManager.getInstance(provider.context)
 			// Get related state AFTER saving the current value
@@ -1361,7 +1361,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "codeIndexQdrantUrl": {
 			const newUrl = message.text // URL is sent in 'text' field
 			// Save the state first
-			await provider.updateGlobalState("codeIndexQdrantUrl", newUrl)
+			await updateGlobalState("codeIndexQdrantUrl", newUrl)
 			// Get manager instance
 			const manager = CodeIndexManager.getInstance(provider.context)
 			// Get related state AFTER saving the current value
@@ -1418,9 +1418,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				await manager.startIndexing()
 				// Optionally send a confirmation or rely on indexingStatusUpdate
 			} catch (error) {
-				provider.outputChannel.appendLine(
-					`Error starting indexing: ${error instanceof Error ? error.message : String(error)}`,
-				)
+				provider.log(`Error starting indexing: ${error instanceof Error ? error.message : String(error)}`)
 				// Optionally send an error message back to the webview
 			}
 			break
@@ -1431,9 +1429,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				await manager.clearIndexData()
 				provider.postMessageToWebview({ type: "indexCleared", values: { success: true } })
 			} catch (error) {
-				provider.outputChannel.appendLine(
-					`Error clearing index data: ${error instanceof Error ? error.message : String(error)}`,
-				)
+				provider.log(`Error clearing index data: ${error instanceof Error ? error.message : String(error)}`)
 				provider.postMessageToWebview({
 					type: "indexCleared",
 					values: {
