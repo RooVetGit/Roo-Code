@@ -1238,13 +1238,6 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 
 			await updateGlobalState("experiments", updatedExperiments)
 
-			const currentCline = provider.getCurrentCline()
-
-			// Update diffStrategy in current Cline instance if it exists.
-			if (message.values[EXPERIMENT_IDS.DIFF_STRATEGY_UNIFIED] !== undefined && currentCline) {
-				await currentCline.updateDiffStrategy(updatedExperiments)
-			}
-
 			await provider.postStateToWebview()
 			break
 		}

@@ -63,6 +63,7 @@ const createServerTypeSchema = () => {
 			type: z.enum(["stdio"]).optional(),
 			command: z.string().min(1, "Command cannot be empty"),
 			args: z.array(z.string()).optional(),
+			cwd: z.string().default(() => vscode.workspace.workspaceFolders?.at(0)?.uri.fsPath ?? process.cwd()),
 			env: z.record(z.string()).optional(),
 			// Ensure no SSE fields are present
 			url: z.undefined().optional(),
@@ -108,6 +109,7 @@ export class McpHub {
 	private isDisposed: boolean = false
 	connections: McpConnection[] = []
 	isConnecting: boolean = false
+	private refCount: number = 0 // Reference counter for active clients
 
 	constructor(provider: ClineProvider) {
 		this.providerRef = new WeakRef(provider)
@@ -116,6 +118,27 @@ export class McpHub {
 		this.setupWorkspaceFoldersWatcher()
 		this.initializeGlobalMcpServers()
 		this.initializeProjectMcpServers()
+	}
+	/**
+	 * Registers a client (e.g., ClineProvider) using this hub.
+	 * Increments the reference count.
+	 */
+	public registerClient(): void {
+		this.refCount++
+		console.log(`McpHub: Client registered. Ref count: ${this.refCount}`)
+	}
+
+	/**
+	 * Unregisters a client. Decrements the reference count.
+	 * If the count reaches zero, disposes the hub.
+	 */
+	public async unregisterClient(): Promise<void> {
+		this.refCount--
+		console.log(`McpHub: Client unregistered. Ref count: ${this.refCount}`)
+		if (this.refCount <= 0) {
+			console.log("McpHub: Last client unregistered. Disposing hub.")
+			await this.dispose()
+		}
 	}
 
 	/**
@@ -314,7 +337,7 @@ export class McpHub {
 				mcpSettingsFilePath,
 				`{
   "mcpServers": {
-    
+
   }
 }`,
 			)
@@ -427,6 +450,7 @@ export class McpHub {
 				transport = new StdioClientTransport({
 					command: config.command,
 					args: config.args,
+					cwd: config.cwd,
 					env: {
 						...config.env,
 						...(process.env.PATH ? { PATH: process.env.PATH } : {}),
@@ -1245,6 +1269,12 @@ export class McpHub {
 	}
 
 	async dispose(): Promise<void> {
+		// Prevent multiple disposals
+		if (this.isDisposed) {
+			console.log("McpHub: Already disposed.")
+			return
+		}
+		console.log("McpHub: Disposing...")
 		this.isDisposed = true
 		this.removeAllFileWatchers()
 		for (const connection of this.connections) {

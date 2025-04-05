@@ -98,6 +98,8 @@
 		"enterProfileName": "Ingrese el nombre del perfil",
 		"createProfile": "Crear perfil",
 		"cannotDeleteOnlyProfile": "No se puede eliminar el único perfil",
+		"searchPlaceholder": "Buscar perfiles",
+		"noMatchFound": "No se encontraron perfiles coincidentes",
 		"vscodeLmDescription": "La API del Modelo de Lenguaje de VS Code le permite ejecutar modelos proporcionados por otras extensiones de VS Code (incluido, entre otros, GitHub Copilot). La forma más sencilla de empezar es instalar las extensiones Copilot y Copilot Chat desde el VS Code Marketplace.",
 		"awsCustomArnUse": "Ingrese un ARN de AWS Bedrock válido para el modelo que desea utilizar. Ejemplos de formato:",
 		"awsCustomArnDesc": "Asegúrese de que la región en el ARN coincida con la región de AWS seleccionada anteriormente.",
@@ -131,6 +133,9 @@
 		"awsSessionToken": "Token de sesión de AWS",
 		"awsRegion": "Región de AWS",
 		"awsCrossRegion": "Usar inferencia entre regiones",
+		"enablePromptCaching": "Habilitar caché de prompts",
+		"enablePromptCachingTitle": "Habilitar el caché de prompts para mejorar el rendimiento y reducir costos para modelos compatibles.",
+		"cacheUsageNote": "Nota: Si no ve el uso del caché, intente seleccionar un modelo diferente y luego seleccionar nuevamente su modelo deseado.",
 		"vscodeLmModel": "Modelo de lenguaje",
 		"vscodeLmWarning": "Nota: Esta es una integración muy experimental y el soporte del proveedor variará. Si recibe un error sobre un modelo no compatible, es un problema del proveedor.",
 		"googleCloudSetup": {
@@ -366,7 +371,8 @@
 		"azureApiVersion": "Establecer versión de API de Azure",
 		"gemini": {
 			"freeRequests": "* Gratis hasta {{count}} solicitudes por minuto. Después de eso, la facturación depende del tamaño del prompt.",
-			"pricingDetails": "Para más información, consulte los detalles de precios."
+			"pricingDetails": "Para más información, consulte los detalles de precios.",
+			"billingEstimate": "* La facturación es una estimación - el costo exacto depende del tamaño del prompt."
 		}
 	},
 	"modelPicker": {
