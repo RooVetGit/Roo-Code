@@ -730,7 +730,7 @@ describe("addCustomInstructions", () => {
 			true, // enableMcpServerCreation
 		)
 
-		expect(prompt).toContain("Creating an MCP Server")
+		expect(prompt).toContain("## Creating MCP Server")
 		expect(prompt).toMatchSnapshot()
 	})
 
