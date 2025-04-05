@@ -19,44 +19,55 @@ import { ClineMessage } from "./ExtensionMessage"
  * // Result: [{ type: "say", say: "api_req_started", text: '{"request":"GET /api/data","cost":0.005}', ts: 1000 }]
  */
 export function combineApiRequests(messages: ClineMessage[]): ClineMessage[] {
-	const combinedApiRequests: ClineMessage[] = []
+	// Early return for empty array
+	if (messages.length === 0) {
+		return []
+	}
 
+	// Map to track which api_req_started messages have been combined
+	const combinedStartIndices = new Set<number>()
+
+	// First pass: identify and combine api requests
+	const result: ClineMessage[] = []
+	const startedRequests: { index: number; message: ClineMessage }[] = []
+
+	// Process all messages in a single pass
 	for (let i = 0; i < messages.length; i++) {
-		if (messages[i].type === "say" && messages[i].say === "api_req_started") {
-			let startedRequest = JSON.parse(messages[i].text || "{}")
-			let j = i + 1
+		const message = messages[i]
 
-			while (j < messages.length) {
-				if (messages[j].type === "say" && messages[j].say === "api_req_finished") {
-					let finishedRequest = JSON.parse(messages[j].text || "{}")
-					let combinedRequest = { ...startedRequest, ...finishedRequest }
+		if (message.type === "say") {
+			if (message.say === "api_req_started") {
+				// Add to result and track for potential combination
+				result.push(message)
+				startedRequests.push({ index: result.length - 1, message })
+			} else if (message.say === "api_req_finished" && startedRequests.length > 0) {
+				// Find the most recent api_req_started that hasn't been combined
+				const startRequest = startedRequests.pop()
+				if (startRequest) {
+					// Parse and combine the requests
+					const startedData = JSON.parse(startRequest.message.text || "{}")
+					const finishedData = JSON.parse(message.text || "{}")
+					const combinedData = { ...startedData, ...finishedData }
 
-					combinedApiRequests.push({
-						...messages[i],
-						text: JSON.stringify(combinedRequest),
-					})
+					// Update the api_req_started message in the result array
+					result[startRequest.index] = {
+						...startRequest.message,
+						text: JSON.stringify(combinedData),
+					}
 
-					i = j // Skip to the api_req_finished message
-					break
+					// Mark this start message as combined
+					combinedStartIndices.add(startRequest.index)
 				}
-				j++
+				// Skip adding api_req_finished to result (filtered out)
+			} else if (message.say !== "api_req_finished") {
+				// Add any other message type to the result
+				result.push(message)
 			}
-
-			if (j === messages.length) {
-				// If no matching api_req_finished found, keep the original api_req_started
-				combinedApiRequests.push(messages[i])
-			}
+		} else {
+			// Add non-say message types to the result
+			result.push(message)
 		}
 	}
 
-	// Replace original api_req_started and remove api_req_finished
-	return messages
-		.filter((msg) => !(msg.type === "say" && msg.say === "api_req_finished"))
-		.map((msg) => {
-			if (msg.type === "say" && msg.say === "api_req_started") {
-				const combinedRequest = combinedApiRequests.find((req) => req.ts === msg.ts)
-				return combinedRequest || msg
-			}
-			return msg
-		})
+	return result
 }
