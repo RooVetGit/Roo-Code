@@ -7,17 +7,20 @@ Parameters:
 - path: (required) The path of the directory to search in (relative to the current working directory ${args.cwd}). This directory will be recursively searched.
 - regex: (required) The regular expression pattern to search for. Uses Rust regex syntax.
 - file_pattern: (optional) Glob pattern to filter files (e.g., '*.ts' for TypeScript files). If not provided, it will search all files (*).
+- max_results: (optional) The maximum number of results to return. If not provided, a reasonable default is used.
 Usage:
 <search_files>
 <path>Directory path here</path>
 <regex>Your regex pattern here</regex>
 <file_pattern>file pattern here (optional)</file_pattern>
+<max_results>Maximum number of results to return (optional)</max_results>
 </search_files>
 
-Example: Requesting to search for all .ts files in the current directory
+Example: Requesting to search for all .ts files in the current directory and limit the result count to 100.
 <search_files>
 <path>.</path>
 <regex>.*</regex>
 <file_pattern>*.ts</file_pattern>
+<max_results>100</max_results>
 </search_files>`
 }

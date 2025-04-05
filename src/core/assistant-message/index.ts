@@ -38,6 +38,7 @@ export const toolParamNames = [
 	"line_count",
 	"regex",
 	"file_pattern",
+	"max_results",
 	"recursive",
 	"action",
 	"url",
@@ -100,7 +101,7 @@ export interface InsertCodeBlockToolUse extends ToolUse {
 
 export interface SearchFilesToolUse extends ToolUse {
 	name: "search_files"
-	params: Partial<Pick<Record<ToolParamName, string>, "path" | "regex" | "file_pattern">>
+	params: Partial<Pick<Record<ToolParamName, string>, "path" | "regex" | "file_pattern" | "max_results">>
 }
 
 export interface ListFilesToolUse extends ToolUse {
