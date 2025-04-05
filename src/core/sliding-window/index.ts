@@ -95,6 +95,33 @@ export async function truncateConversationIfNeeded({
 	// Truncate if we're within TOKEN_BUFFER_PERCENTAGE of the context window
 	const allowedTokens = contextWindow * (1 - TOKEN_BUFFER_PERCENTAGE) - reservedTokens
 
+	// Apply compression to reduce token usage while preserving information
+	// Generate filenames with timestamp
+	const timestamp = Date.now()
+	const dateStr = new Date(timestamp)
+		.toLocaleString("en-US", {
+			month: "short",
+			day: "2-digit",
+			year: "numeric",
+			hour: "2-digit",
+			minute: "2-digit",
+			second: "2-digit",
+			hour12: false,
+		})
+		.toLowerCase()
+		.replace(/[,:]/g, "-")
+		.replace(/\s+/g, "-")
+
+	const debugDir = path.join(this.providerRef.deref()?.context.extensionUri.fsPath || "", "debug")
+	const beforeName = path.join(debugDir, `conversation_before_compression_${timestamp}_${dateStr}.json`)
+	const afterName = path.join(debugDir, `conversation_after_compression_${timestamp}_${dateStr}.json`)
+
+	await compressConversationHistory(messages, this.taskId, beforeName, afterName)
+
 	// Determine if truncation is needed and apply if necessary
-	return effectiveTokens > allowedTokens ? truncateConversation(messages, 0.5) : messages
+	if (effectiveTokens > allowedTokens) {
+		messages = truncateConversation(messages, 0.5)
+	}
+
+	return messages
 }
