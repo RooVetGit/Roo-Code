@@ -46,7 +46,7 @@ const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0
 
 const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryView }: ChatViewProps) => {
 	const { t } = useAppTranslation()
-	const modeShortcutText = `${isMac ? "⌘" : "Ctrl"} + . ${t("chat:forNextMode")}`
+	const modeShortcutText = `${isMac ? "⌘" : "Ctrl"} + . next or / prev mode` // Updated shortcut hint format
 	const {
 		version,
 		clineMessages: messages,
@@ -1130,16 +1130,39 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		})
 	}, [mode, setMode, customModes])
 
+	// Function to switch to the previous mode
+	const switchToPreviousMode = useCallback(() => {
+		const allModes = getAllModes(customModes)
+		const currentModeIndex = allModes.findIndex((m) => m.slug === mode)
+		if (currentModeIndex === -1) return // Should not happen
+
+		// Calculate previous index with wrap-around
+		const previousModeIndex = (currentModeIndex - 1 + allModes.length) % allModes.length
+		const previousMode = allModes[previousModeIndex]
+
+		// Update local state and notify extension to sync mode change
+		setMode(previousMode.slug)
+		vscode.postMessage({
+			type: "mode",
+			text: previousMode.slug,
+		})
+		// Consider adding playSound("progress_loop") here if desired for consistency
+	}, [mode, setMode, customModes])
+
 	// Add keyboard event handler
 	const handleKeyDown = useCallback(
 		(event: KeyboardEvent) => {
-			// Check for Command + . (period)
+			// Check for Command + . (period) for next mode
 			if ((event.metaKey || event.ctrlKey) && event.key === ".") {
 				event.preventDefault() // Prevent default browser behavior
 				switchToNextMode()
+				// Check for Command + / (slash) for previous mode
+			} else if ((event.metaKey || event.ctrlKey) && event.key === "/") {
+				event.preventDefault() // Prevent default browser behavior
+				switchToPreviousMode()
 			}
 		},
-		[switchToNextMode],
+		[switchToNextMode, switchToPreviousMode], // Added switchToPreviousMode dependency
 	)
 
 	// Add event listener
