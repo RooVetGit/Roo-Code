@@ -2,6 +2,7 @@ import { ModelInfo, ProviderName, ProviderSettings } from "../schemas"
 
 export type { ModelInfo, ProviderName as ApiProvider }
 
+// Keep the remote version which uses generated types
 export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider" | "id">
 
 export type ApiConfiguration = ProviderSettings

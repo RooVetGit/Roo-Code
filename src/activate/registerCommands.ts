@@ -15,7 +15,12 @@ export function getVisibleProviderOrLog(outputChannel: vscode.OutputChannel): Cl
 	return visibleProvider
 }
 
-import { registerHumanRelayCallback, unregisterHumanRelayCallback, handleHumanRelayResponse } from "./humanRelay"
+import {
+	registerHumanRelayCallback,
+	unregisterHumanRelayCallback,
+	handleHumanRelayResponse,
+	sendClipboardToHumanRelay,
+} from "./humanRelay"
 import { handleNewTask } from "./handleTask"
 
 // Store panel references in both modes
@@ -24,7 +29,7 @@ let tabPanel: vscode.WebviewPanel | undefined = undefined
 
 /**
  * Get the currently active panel
- * @returns WebviewPanel或WebviewView
+ * @returns WebviewPanel or WebviewView
  */
 export function getPanel(): vscode.WebviewPanel | vscode.WebviewView | undefined {
 	return tabPanel || sidebarPanel
@@ -109,8 +114,10 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		"roo-cline.registerHumanRelayCallback": registerHumanRelayCallback,
 		"roo-cline.unregisterHumanRelayCallback": unregisterHumanRelayCallback,
 		"roo-cline.handleHumanRelayResponse": handleHumanRelayResponse,
-		"roo-cline.newTask": handleNewTask,
+		"roo-cline.sendClipboardToHumanRelay": sendClipboardToHumanRelay, // Keep local change
+		"roo-cline.newTask": handleNewTask, // Keep remote change
 		"roo-cline.setCustomStoragePath": async () => {
+			// Keep remote change
 			const { promptForCustomStoragePath } = await import("../shared/storagePathManager")
 			await promptForCustomStoragePath()
 		},
