@@ -67,17 +67,23 @@ export class CodeIndexManager {
 	 */
 	public updateConfiguration(config: { openAiOptions?: ApiHandlerOptions; qdrantUrl?: string }): void {
 		let configChanged = false
-		// Check if openAiOptions exists before accessing its properties
-		if (
-			config.openAiOptions &&
-			(!this.openAiOptions || config.openAiOptions.openAiNativeApiKey !== this.openAiOptions.openAiNativeApiKey)
-		) {
-			this.openAiOptions = config.openAiOptions
-			configChanged = true
+
+		// Handle OpenAI options update if present
+		if (config.openAiOptions) {
+			const newKey = config.openAiOptions.openAiNativeApiKey
+			if (!this.openAiOptions || newKey !== this.openAiOptions.openAiNativeApiKey) {
+				this.openAiOptions = config.openAiOptions
+				configChanged = true
+			}
 		}
-		if (config.qdrantUrl && config.qdrantUrl !== this.qdrantUrl) {
-			this.qdrantUrl = config.qdrantUrl
-			configChanged = true
+
+		// Handle Qdrant URL update if present
+		if (config.qdrantUrl) {
+			const newUrl = config.qdrantUrl
+			if (newUrl !== this.qdrantUrl) {
+				this.qdrantUrl = newUrl
+				configChanged = true
+			}
 		}
 
 		if (configChanged) {
@@ -252,6 +258,7 @@ export class CodeIndexManager {
 		}
 	}
 
+	//TODO: this probably will always fail since I don't know if we are initializing the class with these properties
 	private isConfigured(): boolean {
 		// Ensure openAiOptions itself exists before checking the key
 		return !!(this.openAiOptions?.openAiNativeApiKey && this.qdrantUrl)
