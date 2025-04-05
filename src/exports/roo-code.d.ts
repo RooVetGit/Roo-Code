@@ -20,6 +20,7 @@ type ProviderSettings = {
 				| "requesty"
 				| "human-relay"
 				| "fake-ai"
+				| "tabby"
 		  )
 		| undefined
 	apiModelId?: string | undefined
@@ -178,6 +179,9 @@ type ProviderSettings = {
 	modelMaxThinkingTokens?: number | undefined
 	includeMaxTokens?: boolean | undefined
 	fakeAi?: unknown | undefined
+	tabbyBaseUrl?: string | undefined
+	tabbyApiKey?: string | undefined
+	tabbyModelId?: string | undefined
 }
 
 type GlobalSettings = {
@@ -205,6 +209,7 @@ type GlobalSettings = {
 							| "requesty"
 							| "human-relay"
 							| "fake-ai"
+							| "tabby"
 					  )
 					| undefined
 		  }[]

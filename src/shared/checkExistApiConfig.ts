@@ -20,6 +20,7 @@ export function checkExistKey(config: ProviderSettings | undefined) {
 		config.ollamaModelId,
 		config.lmStudioModelId,
 		config.vsCodeLmModelSelector,
+		config.tabbyModelId,
 	].some((value) => value !== undefined)
 
 	return hasSecretKey || hasOtherConfig

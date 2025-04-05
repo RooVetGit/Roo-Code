@@ -41,6 +41,7 @@ import { Mode, PromptComponent, defaultModeSlug, getModeBySlug, getGroupName } f
 import { getDiffStrategy } from "../diff/DiffStrategy"
 import { SYSTEM_PROMPT } from "../prompts/system"
 import { buildApiHandler } from "../../api"
+import { fetchLatestTabbyConfig, getTabbyModels, TabbyConfig } from "../../api/providers/tabbyml"
 
 export const webviewMessageHandler = async (provider: ClineProvider, message: WebviewMessage) => {
 	switch (message.type) {
@@ -459,6 +460,24 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			const vsCodeLmModels = await getVsCodeLmModels()
 			// TODO: Cache like we do for OpenRouter, etc?
 			provider.postMessageToWebview({ type: "vsCodeLmModels", vsCodeLmModels })
+			break
+		case "requestTabbyModels":
+			let tabbyConfig: TabbyConfig = {
+				endpoint: message.apiConfiguration?.tabbyBaseUrl || "",
+				apiKey: message.apiConfiguration?.tabbyApiKey,
+			}
+			if (tabbyConfig.apiKey === undefined) {
+				tabbyConfig = await fetchLatestTabbyConfig()
+			}
+			const tabbyModels = await getTabbyModels(tabbyConfig.endpoint, tabbyConfig.apiKey)
+			provider.postMessageToWebview({
+				type: "tabbyModels",
+				tabbyModels: tabbyModels,
+				tabbyConfig: {
+					endpoint: tabbyConfig.endpoint,
+					apiKey: tabbyConfig.apiKey,
+				},
+			})
 			break
 		case "openImage":
 			openImage(message.text!)
