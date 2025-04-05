@@ -1,5 +1,35 @@
 # Roo Code Changelog
 
+## [3.11.8] - 2025-04-05
+
+- Improve combineApiRequests performance to reduce gray screens of death (thanks @kyle-apex!)
+- Add searchable dropdown to API config profiles on the settings screen (thanks @samhvw8!)
+- Add workspace tracking to history items in preparation for future filtering (thanks @samhvw8!)
+- Fix search highlighting UI in history search (thanks @samhvw8!)
+- Add support for .roorules and give deprecation warning for .clinerules (thanks @upamune!)
+- Fix nodejs version format in .tool-versions file (thanks @upamune!)
+
+## [3.11.7] - 2025-04-04
+
+- Improve file tool context formatting and diff error guidance
+- Improve zh-TW localization (thanks @PeterDaveHello!)
+- Implement reference counting for McpHub disposal
+- Update buttons to be more consistent (thanks @kyle-apex!)
+- Improve zh-CN localization (thanks @System233!)
+
+## [3.11.6] - 2025-04-04
+
+- Add the gemini 2.5 pro preview model with upper bound pricing
+
+## [3.11.5] - 2025-04-03
+
+- Add prompt caching for Amazon Bedrock (thanks @Smartsheet-JB-Brown!)
+- Add support for configuring the current working directory of MCP servers (thanks @shoopapa!)
+- Add profile management functions to API (thanks @gtaylor!)
+- Improvements to diff editing functionality, tests, and error messages (thanks @p12tic!)
+- Fix for follow-up questions grabbing the focus (thanks @diarmidmackenzie!)
+- Show menu buttons when popping the extension out into a new tab (thanks @benny123tw!)
+
 ## [3.11.4] - 2025-04-02
 
 - Correctly post state to webview when the current task is cleared (thanks @wkordalski!)

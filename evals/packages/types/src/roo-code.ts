@@ -270,12 +270,7 @@ export type CustomSupportPrompts = z.infer<typeof customSupportPromptsSchema>
  * ExperimentId
  */
 
-export const experimentIds = [
-	"search_and_replace",
-	"insert_content",
-	"powerSteering",
-	"multi_search_and_replace",
-] as const
+export const experimentIds = ["search_and_replace", "insert_content", "powerSteering"] as const
 
 export const experimentIdsSchema = z.enum(experimentIds)
 
@@ -289,7 +284,6 @@ const experimentsSchema = z.object({
 	search_and_replace: z.boolean(),
 	insert_content: z.boolean(),
 	powerSteering: z.boolean(),
-	multi_search_and_replace: z.boolean(),
 })
 
 export type Experiments = z.infer<typeof experimentsSchema>
@@ -379,11 +373,10 @@ export const providerSettingsSchema = z.object({
 	requestyApiKey: z.string().optional(),
 	requestyModelId: z.string().optional(),
 	requestyModelInfo: modelInfoSchema.optional(),
-	// Claude 3.7 Sonnet Thinking
-	modelTemperature: z.number().nullish(),
-	modelMaxTokens: z.number().optional(),
-	modelMaxThinkingTokens: z.number().optional(),
 	// Generic
+	modelMaxTokens: z.number().optional(), // Currently only used by Anthropic hybrid thinking models.
+	modelMaxThinkingTokens: z.number().optional(), // Currently only used by Anthropic hybrid thinking models.
+	modelTemperature: z.number().nullish(),
 	includeMaxTokens: z.boolean().optional(),
 	// Fake AI
 	fakeAi: z.unknown().optional(),
@@ -624,6 +617,8 @@ export const GLOBAL_SETTINGS_KEYS = Object.keys(globalSettingsRecord) as Keys<Gl
 export const rooCodeSettingsSchema = providerSettingsSchema.merge(globalSettingsSchema)
 
 export type RooCodeSettings = GlobalSettings & ProviderSettings
+
+export const ROO_CODE_SETTINGS_KEYS = [...GLOBAL_SETTINGS_KEYS, ...PROVIDER_SETTINGS_KEYS] as Keys<RooCodeSettings>[]
 
 /**
  * SecretState

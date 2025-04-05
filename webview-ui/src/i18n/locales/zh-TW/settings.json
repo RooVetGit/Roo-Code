@@ -101,6 +101,8 @@
 		"vscodeLmDescription": "VS Code 語言模型 API 可以讓您使用其他擴充功能（如 GitHub Copilot）提供的模型。最簡單的方式是從 VS Code Marketplace 安裝 Copilot 和 Copilot Chat 擴充套件。",
 		"awsCustomArnUse": "輸入您要使用的模型的有效 AWS Bedrock ARN。格式範例：",
 		"awsCustomArnDesc": "確保 ARN 中的區域與您上面選擇的 AWS 區域相符。",
+		"searchPlaceholder": "搜尋設定檔",
+		"noMatchFound": "找不到符合的設定檔",
 		"openRouterApiKey": "OpenRouter API 金鑰",
 		"getOpenRouterApiKey": "取得 OpenRouter API 金鑰",
 		"apiKeyStorageNotice": "API 金鑰安全儲存於 VSCode 金鑰儲存中",
@@ -369,7 +371,8 @@
 		"azureApiVersion": "設定 Azure API 版本",
 		"gemini": {
 			"freeRequests": "* 每分鐘可免費使用 {{count}} 次請求，超過後將依提示大小計費。",
-			"pricingDetails": "詳細資訊請參閱定價說明。"
+			"pricingDetails": "詳細資訊請參閱定價說明。",
+			"billingEstimate": "* 費用為估算值 - 實際費用取決於提示大小。"
 		}
 	},
 	"modelPicker": {
