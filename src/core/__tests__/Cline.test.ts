@@ -941,6 +941,7 @@ describe("Cline", () => {
 						"<task>Text with @/some/path in task tags</task>",
 						expect.any(String),
 						expect.any(Object),
+						expect.any(Number),
 					)
 
 					// Feedback tag content should be processed
@@ -951,6 +952,7 @@ describe("Cline", () => {
 						"<feedback>Check @/some/path</feedback>",
 						expect.any(String),
 						expect.any(Object),
+						expect.any(Number),
 					)
 
 					// Regular tool result should not be processed

@@ -1,7 +1,7 @@
 import * as path from "path"
 import { countFileLines } from "../../integrations/misc/line-counter"
 import { readLines } from "../../integrations/misc/read-lines"
-import { extractTextFromFile, addLineNumbers } from "../../integrations/misc/extract-text"
+import { extractTextFromFile, addLineNumbers, readFileContent } from "../../integrations/misc/extract-text"
 
 // Mock the required functions
 jest.mock("../../integrations/misc/line-counter")
@@ -13,6 +13,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 	const originalCountFileLines = jest.requireActual("../../integrations/misc/line-counter").countFileLines
 	const originalReadLines = jest.requireActual("../../integrations/misc/read-lines").readLines
 	const originalExtractTextFromFile = jest.requireActual("../../integrations/misc/extract-text").extractTextFromFile
+	const originalReadFileContent = jest.requireActual("../../integrations/misc/extract-text").readFileContent
 	const originalAddLineNumbers = jest.requireActual("../../integrations/misc/extract-text").addLineNumbers
 
 	beforeEach(() => {
@@ -21,6 +22,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		;(countFileLines as jest.Mock).mockImplementation(originalCountFileLines)
 		;(readLines as jest.Mock).mockImplementation(originalReadLines)
 		;(extractTextFromFile as jest.Mock).mockImplementation(originalExtractTextFromFile)
+		;(readFileContent as jest.Mock).mockImplementation(originalReadFileContent)
 		;(addLineNumbers as jest.Mock).mockImplementation(originalAddLineNumbers)
 	})
 
@@ -28,7 +30,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 	it("should read entire file when line count is less than maxReadFileLine", async () => {
 		// Mock necessary functions
 		;(countFileLines as jest.Mock).mockResolvedValue(100)
-		;(extractTextFromFile as jest.Mock).mockResolvedValue("Small file content")
+		;(readFileContent as jest.Mock).mockResolvedValue("Small file content")
 
 		// Create mock implementation that would simulate the behavior
 		// Note: We're not testing the Cline class directly as it would be too complex
@@ -37,102 +39,67 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		const filePath = path.resolve("/test", "smallFile.txt")
 		const maxReadFileLine = 500
 
-		// Check line count
-		const lineCount = await countFileLines(filePath)
-		expect(lineCount).toBeLessThan(maxReadFileLine)
+		// Use readFileContent with appropriate options
+		await readFileContent(filePath, {
+			maxReadFileLine: maxReadFileLine,
+		})
 
-		// Should use extractTextFromFile for small files
-		if (lineCount < maxReadFileLine) {
-			await extractTextFromFile(filePath)
-		}
-
-		expect(extractTextFromFile).toHaveBeenCalledWith(filePath)
-		expect(readLines).not.toHaveBeenCalled()
+		expect(readFileContent).toHaveBeenCalledWith(filePath, {
+			maxReadFileLine: maxReadFileLine,
+		})
 	})
 
 	// Test for the case when file size is larger than maxReadFileLine
 	it("should truncate file when line count exceeds maxReadFileLine", async () => {
 		// Mock necessary functions
 		;(countFileLines as jest.Mock).mockResolvedValue(5000)
-		;(readLines as jest.Mock).mockResolvedValue("First 500 lines of large file")
-		;(addLineNumbers as jest.Mock).mockReturnValue("1 | First line\n2 | Second line\n...")
+		;(readFileContent as jest.Mock).mockImplementation((path, options) => {
+			const maxReadFileLine = options?.maxReadFileLine || 500
+			const lineCount = 5000
+			return Promise.resolve(
+				`1 | First line\n2 | Second line\n...\n\n[Showing only ${maxReadFileLine} of ${lineCount} total lines. Use start_line and end_line if you need to read more]`,
+			)
+		})
 
 		const filePath = path.resolve("/test", "largeFile.txt")
 		const maxReadFileLine = 500
 
-		// Check line count
-		const lineCount = await countFileLines(filePath)
-		expect(lineCount).toBeGreaterThan(maxReadFileLine)
+		// Use readFileContent with appropriate options
+		const result = await readFileContent(filePath, {
+			maxReadFileLine: maxReadFileLine,
+		})
 
-		// Should use readLines for large files
-		if (lineCount > maxReadFileLine) {
-			const content = await readLines(filePath, maxReadFileLine - 1, 0)
-			const numberedContent = addLineNumbers(content)
-
-			// Verify the truncation message is shown (simulated)
-			const truncationMsg = `\n\n[File truncated: showing ${maxReadFileLine} of ${lineCount} total lines]`
-			const fullResult = numberedContent + truncationMsg
-
-			expect(fullResult).toContain("File truncated")
-		}
-
-		expect(readLines).toHaveBeenCalledWith(filePath, maxReadFileLine - 1, 0)
-		expect(addLineNumbers).toHaveBeenCalled()
-		expect(extractTextFromFile).not.toHaveBeenCalled()
+		expect(readFileContent).toHaveBeenCalledWith(filePath, {
+			maxReadFileLine: maxReadFileLine,
+		})
+		expect(result).toContain(`[Showing only ${maxReadFileLine} of 5000 total lines`)
 	})
 
 	// Test for the case when the file is a source code file
 	it("should add source code file type info for large source code files", async () => {
 		// Mock necessary functions
 		;(countFileLines as jest.Mock).mockResolvedValue(5000)
-		;(readLines as jest.Mock).mockResolvedValue("First 500 lines of large JavaScript file")
-		;(addLineNumbers as jest.Mock).mockReturnValue('1 | const foo = "bar";\n2 | function test() {...')
+		;(readFileContent as jest.Mock).mockImplementation((path, options) => {
+			const maxReadFileLine = options?.maxReadFileLine || 500
+			const lineCount = 5000
+			const sourceCodeDef = "\n\nfunction main() { ... }\nfunction helper() { ... }"
+			return Promise.resolve(
+				`1 | const foo = "bar";\n2 | function test() {...\n\n[Showing only ${maxReadFileLine} of ${lineCount} total lines. Use start_line and end_line if you need to read more]${sourceCodeDef}`,
+			)
+		})
 
 		const filePath = path.resolve("/test", "largeFile.js")
 		const maxReadFileLine = 500
 
-		// Check line count
-		const lineCount = await countFileLines(filePath)
-		expect(lineCount).toBeGreaterThan(maxReadFileLine)
+		// Use readFileContent with appropriate options
+		const result = await readFileContent(filePath, {
+			maxReadFileLine: maxReadFileLine,
+		})
 
-		// Check if the file is a source code file
-		const fileExt = path.extname(filePath).toLowerCase()
-		const isSourceCode = [
-			".js",
-			".ts",
-			".jsx",
-			".tsx",
-			".py",
-			".java",
-			".c",
-			".cpp",
-			".cs",
-			".go",
-			".rb",
-			".php",
-			".swift",
-			".rs",
-		].includes(fileExt)
-		expect(isSourceCode).toBeTruthy()
-
-		// Should use readLines for large files
-		if (lineCount > maxReadFileLine) {
-			const content = await readLines(filePath, maxReadFileLine - 1, 0)
-			const numberedContent = addLineNumbers(content)
-
-			// Verify the truncation message and source code message are shown (simulated)
-			let truncationMsg = `\n\n[File truncated: showing ${maxReadFileLine} of ${lineCount} total lines]`
-			if (isSourceCode) {
-				truncationMsg +=
-					"\n\nThis appears to be a source code file. Consider using list_code_definition_names to understand its structure."
-			}
-			const fullResult = numberedContent + truncationMsg
-
-			expect(fullResult).toContain("source code file")
-			expect(fullResult).toContain("list_code_definition_names")
-		}
-
-		expect(readLines).toHaveBeenCalledWith(filePath, maxReadFileLine - 1, 0)
-		expect(addLineNumbers).toHaveBeenCalled()
+		expect(readFileContent).toHaveBeenCalledWith(filePath, {
+			maxReadFileLine: maxReadFileLine,
+		})
+		expect(result).toContain(`[Showing only ${maxReadFileLine} of 5000 total lines`)
+		expect(result).toContain("function main() { ... }")
 	})
 })

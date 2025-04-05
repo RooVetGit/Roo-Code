@@ -4,29 +4,200 @@ import pdf from "pdf-parse/lib/pdf-parse"
 import mammoth from "mammoth"
 import fs from "fs/promises"
 import { isBinaryFile } from "isbinaryfile"
+import { countFileLines } from "./line-counter"
+import { readLines } from "./read-lines"
+import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
+/**
+ * Map of file extensions to their MIME types and descriptions.
+ * Used for better error messages and future extensibility.
+ */
+const FILE_TYPE_MAP: Record<string, { mimeType: string; description: string; supported: boolean }> = {
+	".pdf": { mimeType: "application/pdf", description: "PDF Document", supported: true },
+	".docx": {
+		mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+		description: "Word Document",
+		supported: true,
+	},
+	".docm": {
+		mimeType: "application/vnd.ms-word.document.macroEnabled.12",
+		description: "Word Document (with Macros)",
+		supported: true,
+	},
+	".ipynb": { mimeType: "application/json", description: "Jupyter Notebook", supported: true },
+	".xlsx": {
+		mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+		description: "Excel Spreadsheet",
+		supported: false,
+	},
+	".xlsm": {
+		mimeType: "application/vnd.ms-excel.sheet.macroEnabled.12",
+		description: "Excel Spreadsheet (with Macros)",
+		supported: false,
+	},
+	".xls": { mimeType: "application/vnd.ms-excel", description: "Excel Spreadsheet (Legacy)", supported: false },
+	".pptx": {
+		mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+		description: "PowerPoint Presentation",
+		supported: false,
+	},
+	".md": { mimeType: "text/markdown", description: "Markdown Document", supported: true },
+	".csv": { mimeType: "text/csv", description: "CSV File", supported: true },
+}
 
-export async function extractTextFromFile(filePath: string): Promise<string> {
+/**
+ * Gets file type information based on file extension.
+ *
+ * @param filePath Path to the file
+ * @returns File type information or undefined if not in the map
+ */
+function getFileTypeInfo(filePath: string): { mimeType: string; description: string; supported: boolean } | undefined {
+	const fileExtension = path.extname(filePath).toLowerCase()
+	return FILE_TYPE_MAP[fileExtension]
+}
+
+/**
+ * Reads file content with support for range reading and auto-truncation.
+ * This is a unified function that handles all file reading operations.
+ *
+ * Features:
+ * - Supports reading specific line ranges
+ * - Auto-truncates large files with source code definitions
+ * - Extracts text from PDF, DOCX, and Jupyter Notebook files
+ * - Detects binary files and provides helpful error messages
+ * - Adds line numbers to output for easier reference
+ *
+ * @param filePath Path to the file to read
+ * @param options Optional parameters for reading
+ * @param options.maxReadFileLine Maximum number of lines to read when auto-truncating
+ * @param options.startLine Start line for range reading (0-based)
+ * @param options.endLine End line for range reading (0-based, inclusive)
+ * @param options.autoTruncate Whether to auto-truncate large files
+ * @param options.rooIgnoreController Optional RooIgnoreController for source code definitions
+ * @returns The file content with line numbers
+ * @throws Error if file not found, is binary, or extraction fails
+ */
+export async function readFileContent(
+	filePath: string,
+	options?: {
+		maxReadFileLine?: number
+		startLine?: number
+		endLine?: number
+		rooIgnoreController?: any // TODO: Add proper type when available
+	},
+): Promise<string> {
+	const { maxReadFileLine, startLine, endLine, rooIgnoreController } = options || {}
+
+	// Check if file exists
 	try {
 		await fs.access(filePath)
 	} catch (error) {
-		throw new Error(`File not found: ${filePath}`)
+		const errorMessage = error instanceof Error ? error.message : String(error)
+		throw new Error(`File not found: ${filePath} (${errorMessage})`)
 	}
+
+	// Check if it's a special file type that needs custom extraction
 	const fileExtension = path.extname(filePath).toLowerCase()
-	switch (fileExtension) {
-		case ".pdf":
-			return extractTextFromPDF(filePath)
-		case ".docx":
-			return extractTextFromDOCX(filePath)
-		case ".ipynb":
-			return extractTextFromIPYNB(filePath)
-		default:
-			const isBinary = await isBinaryFile(filePath).catch(() => false)
-			if (!isBinary) {
-				return addLineNumbers(await fs.readFile(filePath, "utf8"))
-			} else {
-				throw new Error(`Cannot read text for file type: ${fileExtension}`)
+	const fileTypeInfo = getFileTypeInfo(filePath)
+
+	try {
+		// Handle known file types
+		if (fileTypeInfo) {
+			if (!fileTypeInfo.supported) {
+				throw new Error(
+					`File type ${fileTypeInfo.description} (${fileExtension}) is not supported for text extraction`,
+				)
 			}
+
+			switch (fileExtension) {
+				case ".pdf":
+					return await extractTextFromPDF(filePath)
+				case ".docx":
+				case ".docm": // Also handle macro-enabled Word documents
+					return await extractTextFromDOCX(filePath)
+				case ".ipynb":
+					return await extractTextFromIPYNB(filePath)
+			}
+		}
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error)
+		throw new Error(`Failed to extract text from ${fileExtension} file: ${filePath} (${errorMessage})`)
 	}
+
+	// Check if it's a binary file
+	const isBinary = await isBinaryFile(filePath).catch((error) => {
+		console.error(`Error checking if file is binary: ${filePath}`, error)
+		return false
+	})
+
+	if (isBinary) {
+		const typeDesc = fileTypeInfo ? fileTypeInfo.description : fileExtension
+		throw new Error(`Cannot read text for binary file: ${typeDesc} at ${filePath}`)
+	}
+
+	// Count total lines for truncation check
+	let totalLines = 0
+	try {
+		totalLines = await countFileLines(filePath)
+	} catch (error) {
+		console.error(`Error counting lines in file ${filePath}:`, error)
+	}
+
+	// Handle range reading
+	const isRangeRead = startLine !== undefined || endLine !== undefined
+	if (isRangeRead) {
+		const effectiveStartLine = startLine ?? 0
+		const effectiveEndLine = endLine ?? totalLines - 1
+
+		// readLines expects (filePath, endLine, startLine)
+		const content = await readLines(filePath, effectiveEndLine, effectiveStartLine)
+		return addLineNumbers(content, effectiveStartLine + 1)
+	}
+
+	// Handle auto-truncation for large files
+	if (maxReadFileLine !== undefined && totalLines > maxReadFileLine) {
+		try {
+			// Read the first portion of the file
+			const fileContent = maxReadFileLine > 0 ? await readLines(filePath, maxReadFileLine - 1, 0) : ""
+
+			// Get source code definitions if available
+			const sourceCodeDefs = await parseSourceCodeDefinitionsForFile(filePath, rooIgnoreController).catch(
+				(error) => {
+					console.error(`Error parsing source code definitions: ${filePath}`, error)
+					return null
+				},
+			)
+
+			// Format the truncated content
+			const truncationMessage = `\n\n[Showing only ${maxReadFileLine} of ${totalLines} total lines. Use start_line and end_line if you need to read more]`
+			const formattedContent = fileContent.length > 0 ? addLineNumbers(fileContent) : ""
+
+			// Add source code definitions if available
+			return formattedContent + truncationMessage + (sourceCodeDefs ? `\n\n${sourceCodeDefs}` : "")
+		} catch (error) {
+			console.error(`Error during auto-truncation: ${filePath}`, error)
+			// Fall back to reading the entire file if truncation fails
+			return addLineNumbers(await fs.readFile(filePath, "utf8"))
+		}
+	}
+
+	// Read entire file
+	try {
+		const content = await fs.readFile(filePath, "utf8")
+		return addLineNumbers(content)
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error)
+		throw new Error(`Error reading file: ${filePath} (${errorMessage})`)
+	}
+}
+
+/**
+ * Legacy function that uses the new unified readFileContent function.
+ * Maintained for backward compatibility.
+ */
+export async function extractTextFromFile(filePath: string, maxReadFileLine?: number): Promise<string> {
+	return readFileContent(filePath, {
+		maxReadFileLine,
+	})
 }
 
 async function extractTextFromPDF(filePath: string): Promise<string> {

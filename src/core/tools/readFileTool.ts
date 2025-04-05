@@ -7,11 +7,7 @@ import { t } from "../../i18n"
 import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "./types"
 import { isPathOutsideWorkspace } from "../../utils/pathUtils"
 import { getReadablePath } from "../../utils/path"
-import { countFileLines } from "../../integrations/misc/line-counter"
-import { readLines } from "../../integrations/misc/read-lines"
-import { extractTextFromFile, addLineNumbers } from "../../integrations/misc/extract-text"
-import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
-import { isBinaryFile } from "isbinaryfile"
+import { readFileContent } from "../../integrations/misc/extract-text"
 
 export async function readFileTool(
 	cline: Cline,
@@ -126,50 +122,13 @@ export async function readFileTool(
 				return
 			}
 
-			// Count total lines in the file
-			let totalLines = 0
-			try {
-				totalLines = await countFileLines(absolutePath)
-			} catch (error) {
-				console.error(`Error counting lines in file ${absolutePath}:`, error)
-			}
-
 			// now execute the tool like normal
-			let content: string
-			let isFileTruncated = false
-			let sourceCodeDef = ""
-
-			const isBinary = await isBinaryFile(absolutePath).catch(() => false)
-
-			if (isRangeRead) {
-				if (startLine === undefined) {
-					content = addLineNumbers(await readLines(absolutePath, endLine, startLine))
-				} else {
-					content = addLineNumbers(await readLines(absolutePath, endLine, startLine), startLine + 1)
-				}
-			} else if (!isBinary && maxReadFileLine >= 0 && totalLines > maxReadFileLine) {
-				// If file is too large, only read the first maxReadFileLine lines
-				isFileTruncated = true
-
-				const res = await Promise.all([
-					maxReadFileLine > 0 ? readLines(absolutePath, maxReadFileLine - 1, 0) : "",
-					parseSourceCodeDefinitionsForFile(absolutePath, cline.rooIgnoreController),
-				])
-
-				content = res[0].length > 0 ? addLineNumbers(res[0]) : ""
-				const result = res[1]
-				if (result) {
-					sourceCodeDef = `\n\n${result}`
-				}
-			} else {
-				// Read entire file
-				content = await extractTextFromFile(absolutePath)
-			}
-
-			// Add truncation notice if applicable
-			if (isFileTruncated) {
-				content += `\n\n[Showing only ${maxReadFileLine} of ${totalLines} total lines. Use start_line and end_line if you need to read more]${sourceCodeDef}`
-			}
+			let content = await readFileContent(absolutePath, {
+				maxReadFileLine: maxReadFileLine,
+				startLine: isRangeRead ? startLine : undefined,
+				endLine: isRangeRead ? endLine : undefined,
+				rooIgnoreController: cline.rooIgnoreController,
+			})
 
 			// Format the result into the required XML structure
 			const xmlResult = `<file>\n  <path>${relPath}</path>\n  <content>\n${content}\n  </content>\n</file>`
