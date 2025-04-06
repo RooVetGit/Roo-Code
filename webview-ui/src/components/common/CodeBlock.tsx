@@ -641,9 +641,9 @@ const CodeBlock = memo(
 									// Display original language at top of list for quick selection
 									language && (
 										<option
-											value={language}
+											value={normalizeLanguage(language)}
 											style={{ fontWeight: "bold", textAlign: "left", fontSize: "1.2em" }}>
-											{language}
+											{normalizeLanguage(language)}
 										</option>
 									)
 								}
@@ -651,18 +651,23 @@ const CodeBlock = memo(
 									// Display all available languages in alphabetical order
 									Object.keys(bundledLanguages)
 										.sort()
-										.map((lang) => (
-											<option
-												key={lang}
-												value={lang}
-												style={{
-													fontWeight: lang === language ? "bold" : "normal",
-													textAlign: "left",
-													fontSize: lang === language ? "1.2em" : "inherit",
-												}}>
-												{lang}
-											</option>
-										))
+										.map((lang) => {
+											const normalizedLang = normalizeLanguage(lang)
+											return (
+												<option
+													key={normalizedLang}
+													value={normalizedLang}
+													style={{
+														fontWeight:
+															normalizedLang === currentLanguage ? "bold" : "normal",
+														textAlign: "left",
+														fontSize:
+															normalizedLang === currentLanguage ? "1.2em" : "inherit",
+													}}>
+													{normalizedLang}
+												</option>
+											)
+										})
 								}
 							</LanguageSelect>
 						)}
