@@ -12,6 +12,10 @@ import { initializeTreeSitter, testParseSourceCodeDefinitions, inspectTreeStruct
 // - struct definitions
 // - method definitions (functions within a declaration list)
 // - function definitions
+// - enum definitions
+// - trait definitions
+// - impl trait for struct
+// - generic structs with lifetime parameters
 const sampleRustContent = `
 // Basic struct definition
 struct Point {
@@ -117,6 +121,190 @@ impl<'a, T> Container<'a, T> {
         }
     }
 }
+
+// Macro definition
+macro_rules! say_hello {
+    // Match a single name
+    ($name:expr) => {
+        println!("Hello, {}!", $name);
+    };
+    // Match multiple names
+    ($($name:expr),*) => {
+        $(
+            println!("Hello, {}!", $name);
+        )*
+    };
+}
+
+// Module definition
+mod math {
+    // Constants
+    pub const PI: f64 = 3.14159;
+    
+    // Static variables
+    pub static VERSION: &str = "1.0.0";
+    
+    // Type alias
+    pub type Number = f64;
+    
+    // Functions within modules
+    pub fn add(a: Number, b: Number) -> Number {
+        a + b
+    }
+    
+    pub fn subtract(a: Number, b: Number) -> Number {
+        a - b
+    }
+}
+
+// Union type
+union IntOrFloat {
+    int_value: i32,
+    float_value: f32,
+}
+
+// Trait with associated types
+trait Iterator {
+    // Associated type
+    type Item;
+    
+    // Method using associated type
+    fn next(&mut self) -> Option<Self::Item>;
+    
+    // Default implementation
+    fn count(self) -> usize where Self: Sized {
+        let mut count = 0;
+        while let Some(_) = self.next() {
+            count += 1;
+        }
+        count
+    }
+}
+
+// Advanced Rust language features for testing
+
+// 1. Closures: Multi-line anonymous functions with captured environments
+fn use_closures() {
+    let captured_value = 42;
+    
+    // Simple closure
+    let simple_closure = || {
+        println!("Captured value: {}", captured_value);
+    };
+    
+    // Closure with parameters
+    let add_closure = |a: i32, b: i32| -> i32 {
+        let sum = a + b + captured_value;
+        println!("Sum with captured value: {}", sum);
+        sum
+    };
+    
+    // Using closures
+    simple_closure();
+    let result = add_closure(10, 20);
+}
+
+// 2. Match Expressions: Complex pattern matching constructs
+fn complex_matching(value: Option<Result<Vec<i32>, String>>) {
+    match value {
+        Some(Ok(vec)) if vec.len() > 5 => {
+            println!("Got a vector with more than 5 elements");
+            for item in vec {
+                println!("Item: {}", item);
+            }
+        },
+        Some(Ok(vec)) => {
+            println!("Got a vector with {} elements", vec.len());
+        },
+        Some(Err(e)) => {
+            println!("Got an error: {}", e);
+        },
+        None => {
+            println!("Got nothing");
+        }
+    }
+}
+
+// 3. Where Clauses: Type constraints on generic parameters
+fn print_sorted<T>(collection: &[T])
+where
+    T: std::fmt::Debug + Ord + Clone,
+{
+    let mut sorted = collection.to_vec();
+    sorted.sort();
+    println!("Sorted collection: {:?}", sorted);
+}
+
+// 4. Attribute Macros: Annotations that modify behavior
+#[derive(Debug, Clone, PartialEq)]
+struct AttributeExample {
+    field1: String,
+    field2: i32,
+}
+
+#[cfg(test)]
+mod test_module {
+    #[test]
+    fn test_example() {
+        assert_eq!(2 + 2, 4);
+    }
+}
+
+// 5. Procedural Macros (simulated, as they require separate crates)
+// This is a placeholder to represent a proc macro
+// In real code, this would be in a separate crate with #[proc_macro]
+fn custom_derive_macro() {
+    // Implementation would generate code at compile time
+}
+
+// 6. Async Functions and Blocks: Asynchronous code constructs
+async fn fetch_data(url: &str) -> Result<String, String> {
+    // Simulated async operation
+    println!("Fetching data from {}", url);
+    
+    // Async block
+    let result = async {
+        // Simulated async work
+        Ok("Response data".to_string())
+    }.await;
+    
+    result
+}
+
+// 7. Impl Blocks with Generic Parameters: Implementation with complex type parameters
+struct GenericContainer<T, U> {
+    first: T,
+    second: U,
+}
+
+impl<T, U> GenericContainer<T, U>
+where
+    T: std::fmt::Display,
+    U: std::fmt::Debug,
+{
+    fn new(first: T, second: U) -> Self {
+        GenericContainer { first, second }
+    }
+    
+    fn display(&self) {
+        println!("First: {}, Second: {:?}", self.first, self.second);
+    }
+}
+
+// 8. Complex Trait Bounds: Trait bounds using + operator or where clauses
+trait Processor<T> {
+    fn process(&self, item: T) -> T;
+}
+
+fn process_items<T, P>(processor: P, items: Vec<T>) -> Vec<T>
+where
+    P: Processor<T> + Clone,
+    T: Clone + std::fmt::Debug + 'static,
+{
+    items.into_iter()
+         .map(|item| processor.process(item))
+         .collect()
+}
 `
 
 // Rust test options
@@ -218,54 +406,70 @@ describe("parseSourceCodeDefinitionsForFile with Rust", () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.rs", sampleRustContent, rustOptions)
 		const resultLines = result?.split("\n") || []
 
-		// We're not testing specific captures here since the current query might not capture all these structures
-		// Instead, we're verifying that the parser doesn't crash with more complex Rust code
-
-		// The test passes if parsing completes without errors
+		// Now we test specific captures for all supported structures
 		expect(result).toBeTruthy()
 
-		// If the parser is enhanced in the future to capture these structures,
-		// we can add more specific assertions here:
-		// - enum definitions
-		// - trait definitions
-		// - impl trait for struct
-		// - generic structs with lifetime parameters
-	})
+		// Test enum definitions
+		expect(resultLines.some((line) => line.includes("enum Status"))).toBe(true)
 
-	// Debug test that can be enabled for diagnosing issues
-	it.skip("should debug Rust tree structure directly", async () => {
-		jest.unmock("fs/promises")
+		// Test trait definitions
+		expect(resultLines.some((line) => line.includes("trait Drawable"))).toBe(true)
 
-		// Initialize tree-sitter
-		const TreeSitter = await initializeTreeSitter()
+		// Test impl trait for struct
+		expect(resultLines.some((line) => line.includes("impl Drawable for Rectangle"))).toBe(true)
 
-		// Create parser and load Rust language
-		const parser = new TreeSitter()
-		const wasmPath = path.join(process.cwd(), "dist/tree-sitter-rust.wasm")
-		const rustLang = await TreeSitter.Language.load(wasmPath)
-		parser.setLanguage(rustLang)
+		// Test generic structs with lifetime parameters
+		expect(resultLines.some((line) => line.includes("struct Container<'a, T>"))).toBe(true)
 
-		// Parse the content
-		const tree = parser.parse(sampleRustContent)
+		// Test macro definitions
+		expect(resultLines.some((line) => line.includes("macro_rules! say_hello"))).toBe(true)
 
-		// Create the query
-		const query = rustLang.query(rustQuery)
+		// Test module definitions
+		expect(resultLines.some((line) => line.includes("mod math"))).toBe(true)
 
-		// Execute the query
-		const captures = query.captures(tree.rootNode)
+		// Test union types
+		expect(resultLines.some((line) => line.includes("union IntOrFloat"))).toBe(true)
 
-		// Log the results for debugging
-		console.log(
-			"Captures:",
-			captures.map((c: { node: Parser.SyntaxNode; name: string }) => ({
-				name: c.name,
-				text: c.node.text,
-				type: c.node.type,
-				startRow: c.node.startPosition.row,
-				startCol: c.node.startPosition.column,
-				endRow: c.node.endPosition.row,
-				endCol: c.node.endPosition.column,
-			})),
+		// Test trait with associated types
+		expect(resultLines.some((line) => line.includes("trait Iterator"))).toBe(true)
+
+		// Test advanced Rust language features
+		// 1. Closures
+		expect(
+			resultLines.some(
+				(line) =>
+					line.includes("let simple_closure") ||
+					line.includes("let add_closure") ||
+					line.includes("closure_expression"),
+			),
+		).toBe(true)
+
+		// 2. Match expressions
+		expect(resultLines.some((line) => line.includes("match value") || line.includes("match_expression"))).toBe(true)
+
+		// 3. Functions with where clauses
+		expect(resultLines.some((line) => line.includes("fn print_sorted") || line.includes("where_clause"))).toBe(true)
+
+		// 4. Attribute macros - Note: These might not be directly captured by the current query
+		// Instead, we check for the struct that has the attribute
+		expect(resultLines.some((line) => line.includes("struct AttributeExample"))).toBe(true)
+
+		// 5. Async functions
+		expect(resultLines.some((line) => line.includes("async fn fetch_data"))).toBe(true)
+
+		// 6. Impl blocks with generic parameters
+		expect(resultLines.some((line) => line.includes("impl<T, U> GenericContainer"))).toBe(true)
+
+		// 7. Functions with complex trait bounds
+		expect(resultLines.some((line) => line.includes("fn process_items") || line.includes("trait_bounds"))).toBe(
+			true,
 		)
+
+		// Note: The following structures are nested inside modules and might not be captured directly
+		// - Type aliases (type Number)
+		// - Constants (const PI)
+		// - Static variables (static VERSION)
+		// - Associated types (type Item)
+		// These would require more complex query patterns or post-processing to extract
 	})
 })
