@@ -160,7 +160,7 @@ export async function readFileTool(
 				content = res[0].length > 0 ? addLineNumbers(res[0]) : ""
 				const result = res[1]
 				if (result) {
-					sourceCodeDef = `\n\n${result}`
+					sourceCodeDef = `${result}`
 				}
 			} else {
 				// Read entire file
@@ -173,11 +173,11 @@ export async function readFileTool(
 
 			// Add truncation notice if applicable
 			if (isFileTruncated) {
-				xmlInfo += `<notice>Showing only ${maxReadFileLine} of ${totalLines} total lines. Use start_line and end_line if you need to read more</notice>`
+				xmlInfo += `<notice>Showing only ${maxReadFileLine} of ${totalLines} total lines. Use start_line and end_line if you need to read more</notice>\n`
 
 				// Add source code definitions if available
 				if (sourceCodeDef) {
-					xmlInfo += `<list_code_definition_names>${sourceCodeDef}</list_code_definition_names>`
+					xmlInfo += `<list_code_definition_names>${sourceCodeDef}</list_code_definition_names>\n`
 				}
 			}
 
@@ -185,7 +185,7 @@ export async function readFileTool(
 			if (content === "" && totalLines === 0) {
 				// Always add self-closing content tag and notice for empty files
 				contentTag = `<content/>`
-				xmlInfo += `<notice>File is empty</notice>`
+				xmlInfo += `<notice>File is empty</notice>\n`
 			}
 			// Range reads should always show content regardless of maxReadFileLine
 			else if (isRangeRead) {
@@ -196,7 +196,7 @@ export async function readFileTool(
 				lineRangeAttr = ` lines="${displayStartLine}-${displayEndLine}"`
 
 				// Maintain exact format expected by tests
-				contentTag = `<content${lineRangeAttr}>\n${content}</content>`
+				contentTag = `<content${lineRangeAttr}>\n${content}</content>\n`
 			}
 			// maxReadFileLine=0 for non-range reads
 			else if (maxReadFileLine === 0) {
@@ -205,19 +205,19 @@ export async function readFileTool(
 			}
 			// Normal case: non-empty files with content (non-range reads)
 			else {
-				let lineRangeAttr = ""
-
-				// For non-range reads with maxReadFileLine > 0, show line range 1-maxReadFileLine
-				if (maxReadFileLine > 0 && isFileTruncated) {
-					lineRangeAttr = ` lines="1-${maxReadFileLine}"`
+				// For non-range reads, always show line range
+				let lines = totalLines
+				if (maxReadFileLine >= 0 && totalLines > maxReadFileLine) {
+					lines = maxReadFileLine
 				}
+				const lineRangeAttr = ` lines="1-${lines}"`
 
 				// Maintain exact format expected by tests
-				contentTag = `<content${lineRangeAttr}>\n${content}</content>`
+				contentTag = `<content${lineRangeAttr}>\n${content}</content>\n`
 			}
 
 			// Format the result into the required XML structure
-			const xmlResult = `<file><path>${relPath}</path>${contentTag}${xmlInfo}</file>`
+			const xmlResult = `<file><path>${relPath}</path>\n${contentTag}${xmlInfo}</file>`
 			pushToolResult(xmlResult)
 		}
 	} catch (error) {
