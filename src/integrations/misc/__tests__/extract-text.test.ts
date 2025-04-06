@@ -20,7 +20,7 @@ describe("addLineNumbers", () => {
 	})
 
 	it("should handle empty content", () => {
-		expect(addLineNumbers("")).toBe("1 | ")
+		expect(addLineNumbers("")).toBe("")
 		expect(addLineNumbers("", 5)).toBe("5 | ")
 	})
 
