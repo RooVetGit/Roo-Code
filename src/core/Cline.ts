@@ -2257,21 +2257,18 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 		// Add current time information with timezone
 		const now = new Date()
-		const formatter = new Intl.DateTimeFormat(undefined, {
-			year: "numeric",
-			month: "numeric",
-			day: "numeric",
-			hour: "numeric",
-			minute: "numeric",
-			second: "numeric",
-			hour12: true,
-		})
-		const timeZone = formatter.resolvedOptions().timeZone
-		const timeZoneOffset = -now.getTimezoneOffset() / 60 // Convert to hours and invert sign to match conventional notation
-		const timeZoneOffsetHours = Math.floor(Math.abs(timeZoneOffset))
-		const timeZoneOffsetMinutes = Math.abs(Math.round((Math.abs(timeZoneOffset) - timeZoneOffsetHours) * 60))
-		const timeZoneOffsetStr = `${timeZoneOffset >= 0 ? "+" : "-"}${timeZoneOffsetHours}:${timeZoneOffsetMinutes.toString().padStart(2, "0")}`
-		details += `\n\n# Current Time\n${formatter.format(now)} (${timeZone}, UTC${timeZoneOffsetStr})`
+		// Calculate timezone offset
+		const tzOffset = -now.getTimezoneOffset() // in minutes
+		const sign = tzOffset >= 0 ? "+" : "-"
+		const pad = (num: number) => String(Math.floor(Math.abs(num))).padStart(2, "0")
+		const offsetHours = pad(tzOffset / 60)
+		const offsetMinutes = pad(tzOffset % 60)
+
+		// Remove the trailing 'Z' from ISO string and add the custom offset
+		const isoWithoutZ = now.toISOString().replace("Z", "")
+		const isoString = `${isoWithoutZ}${sign}${offsetHours}:${offsetMinutes}`
+
+		details += `\n\n# Current Time\n${isoString}`
 
 		// Add context tokens information
 		const { contextTokens, totalCost } = getApiMetrics(this.clineMessages)
