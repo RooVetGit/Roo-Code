@@ -3,6 +3,9 @@ import { scanDirectoryForCodeBlocks } from "./scanner"
 import { CodeIndexFileWatcher } from "./file-watcher"
 import { ApiHandlerOptions } from "../../shared/api"
 import { getWorkspacePath } from "../../utils/path"
+import { CodeIndexOpenAiEmbedder } from "./openai-embedder"
+import { CodeIndexQdrantClient } from "./qdrant-client"
+import { QdrantSearchResult } from "./types"
 
 export type IndexingState = "Standby" | "Indexing" | "Indexed" | "Error"
 
@@ -47,6 +50,9 @@ export class CodeIndexManager {
 	private qdrantUrl?: string // Configurable
 	private isEnabled: boolean = false // New: enabled flag
 
+	private _embedder?: CodeIndexOpenAiEmbedder
+	private _qdrantClient?: CodeIndexQdrantClient
+
 	// Webview provider reference for status updates
 	private webviewProvider?: { postMessage: (msg: any) => void }
 
@@ -77,6 +83,14 @@ export class CodeIndexManager {
 		this.isEnabled = enabled
 		this.openAiOptions = { openAiNativeApiKey: openAiKey }
 		this.qdrantUrl = qdrantUrl
+
+		if (this.isEnabled && this.isConfigured()) {
+			this._embedder = new CodeIndexOpenAiEmbedder(this.openAiOptions!)
+			this._qdrantClient = new CodeIndexQdrantClient(this.workspacePath, this.qdrantUrl)
+		} else {
+			this._embedder = undefined
+			this._qdrantClient = undefined
+		}
 
 		if (!this.isEnabled) {
 			console.log("[CodeIndexManager] Code Indexing Disabled.")
@@ -293,7 +307,6 @@ export class CodeIndexManager {
 		}
 	}
 
-	//TODO: this probably will always fail since I don't know if we are initializing the class with these properties
 	private isConfigured(): boolean {
 		// Ensure openAiOptions itself exists before checking the key
 		return !!(this.openAiOptions?.openAiNativeApiKey && this.qdrantUrl)
@@ -309,8 +322,8 @@ export class CodeIndexManager {
 		this._fileWatcher = new CodeIndexFileWatcher(
 			this.workspacePath,
 			this.context,
-			this.openAiOptions,
-			this.qdrantUrl,
+			this._embedder,
+			this._qdrantClient,
 		)
 		await this._fileWatcher.initialize()
 
@@ -335,19 +348,31 @@ export class CodeIndexManager {
 
 	private async _checkCollectionExists(): Promise<boolean> {
 		try {
-			if (this._fileWatcher) {
-				return await this._fileWatcher.checkCollectionExists()
+			if (!this._qdrantClient) {
+				throw new Error("[CodeIndexManager] Qdrant client is not initialized")
 			}
-			const tempWatcher = new CodeIndexFileWatcher(
-				this.workspacePath,
-				this.context,
-				this.openAiOptions,
-				this.qdrantUrl,
-			)
-			return await tempWatcher.checkCollectionExists()
+			return await this._qdrantClient.collectionExists()
 		} catch (error) {
 			console.warn("[CodeIndexManager] Error checking collection existence:", error)
 			return false
 		}
+	}
+	public async searchIndex(query: string, limit: number): Promise<QdrantSearchResult[]> {
+		if (!this._embedder || !this._qdrantClient) {
+			throw new Error("Code index is not properly configured or initialized.")
+		}
+
+		const embeddingResponse = await this._embedder.createEmbeddings([query])
+		const vector = embeddingResponse.embeddings[0]
+		if (!vector) {
+			throw new Error("Failed to generate embedding for query.")
+		}
+
+		if (typeof this._qdrantClient.search !== "function") {
+			throw new Error("Qdrant client does not support search operation.")
+		}
+
+		const results = await this._qdrantClient.search(vector, limit)
+		return results
 	}
 }
