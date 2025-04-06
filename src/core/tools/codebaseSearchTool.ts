@@ -91,20 +91,36 @@ export async function codebaseSearchTool(
 			return
 		}
 
-		let formattedResult = `Found ${searchResults.length} results for query "${query}":\n\n`
-		searchResults.forEach((result, index) => {
+		const jsonResult = {
+			query,
+			results: [],
+		} as {
+			query: string
+			results: Array<{
+				filePath: string
+				score: number
+				startLine: number
+				endLine: number
+				codeChunk: string
+			}>
+		}
+
+		searchResults.forEach((result) => {
 			if (!result.payload) return
 			if (!("filePath" in result.payload)) return
 
-			// Make file path relative
 			const relativePath = vscode.workspace.asRelativePath(result.payload.filePath, false)
-			formattedResult += `${index + 1}. File: ${relativePath}\n`
-			formattedResult += `   Score: ${result.score.toFixed(4)}\n`
-			formattedResult += `   Lines: ${result.payload.startLine}-${result.payload.endLine}\n` // Line numbers from payload
-			formattedResult += `   Snippet:\n\`\`\`\n${result.payload.codeChunk.trim()}\n\`\`\`\n\n`
+
+			jsonResult.results.push({
+				filePath: relativePath,
+				score: result.score,
+				startLine: result.payload.startLine,
+				endLine: result.payload.endLine,
+				codeChunk: result.payload.codeChunk.trim(),
+			})
 		})
 
-		pushToolResult(formattedResult.trim()) // Use simple string for results
+		pushToolResult(JSON.stringify(jsonResult))
 	} catch (error: any) {
 		await handleError(toolName, error) // Use the standard error handler
 	}
