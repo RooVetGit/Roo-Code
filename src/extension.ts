@@ -18,6 +18,7 @@ import { initializeI18n } from "./i18n"
 import { ClineProvider } from "./core/webview/ClineProvider"
 import { CodeActionProvider } from "./core/CodeActionProvider"
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
+import { CodeIndexManager } from "./services/code-index/manager"
 import { McpServerManager } from "./services/mcp/McpServerManager"
 import { telemetryService } from "./services/telemetry/TelemetryService"
 import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"
@@ -44,6 +45,10 @@ export async function activate(context: vscode.ExtensionContext) {
 	extensionContext = context
 	outputChannel = vscode.window.createOutputChannel("Roo-Code")
 	context.subscriptions.push(outputChannel)
+
+	const codeIndexManager = CodeIndexManager.getInstance(context)
+	context.subscriptions.push(codeIndexManager)
+	await codeIndexManager.loadConfiguration()
 	outputChannel.appendLine("Roo-Code extension activated")
 
 	// Migrate old settings to new
@@ -66,7 +71,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		context.globalState.update("allowedCommands", defaultCommands)
 	}
 
-	const provider = new ClineProvider(context, outputChannel, "sidebar")
+	const provider = new ClineProvider(context, outputChannel, "sidebar", codeIndexManager)
 	telemetryService.setProvider(provider)
 
 	context.subscriptions.push(
