@@ -31,28 +31,21 @@ export class CodeIndexFileWatcher {
 	constructor(
 		private workspacePath: string,
 		private context: vscode.ExtensionContext,
-		openAiOptions?: ApiHandlerOptions,
-		qdrantUrl?: string,
+		embedder?: CodeIndexOpenAiEmbedder,
+		qdrantClient?: CodeIndexQdrantClient,
 	) {
-		// Initialize ignore controller
 		this.ignoreController = new RooIgnoreController(workspacePath)
 
-		// Initialize clients if options provided
-		if (openAiOptions && qdrantUrl) {
-			this.embedder = new CodeIndexOpenAiEmbedder(openAiOptions)
-			this.qdrantClient = new CodeIndexQdrantClient(workspacePath, qdrantUrl)
-		}
+		this.embedder = embedder
+		this.qdrantClient = qdrantClient
 
-		// Initialize cache path
 		this.cachePath = vscode.Uri.joinPath(
 			context.globalStorageUri,
 			`roo-index-cache-${createHash("sha256").update(workspacePath).digest("hex")}.json`,
 		)
 
-		// Create file system watcher
 		this.watcher = vscode.workspace.createFileSystemWatcher("**/*")
 
-		// Setup event handlers with debouncing
 		this.watcher.onDidCreate((uri) => this.handleFileEvent(uri, "create"))
 		this.watcher.onDidChange((uri) => this.handleFileEvent(uri, "change"))
 		this.watcher.onDidDelete((uri) => this.handleFileEvent(uri, "delete"))
