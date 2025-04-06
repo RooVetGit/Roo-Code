@@ -30,7 +30,14 @@ export type { ToolGroup }
 // Define available tool groups
 export const TOOL_GROUPS: Record<ToolGroup, ToolGroupConfig> = {
 	read: {
-		tools: ["read_file", "fetch_instructions", "search_files", "list_files", "list_code_definition_names"],
+		tools: [
+			"read_file",
+			"fetch_instructions",
+			"search_files",
+			"list_files",
+			"list_code_definition_names",
+			"codebase_search",
+		],
 	},
 	edit: {
 		tools: ["apply_diff", "write_to_file", "insert_content", "search_and_replace"],
