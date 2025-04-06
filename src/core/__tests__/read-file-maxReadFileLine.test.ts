@@ -48,7 +48,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 	const fileContent = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
 	const numberedFileContent = "1 | Line 1\n2 | Line 2\n3 | Line 3\n4 | Line 4\n5 | Line 5"
 	const sourceCodeDef = "\n\n# file.txt\n1--5 | Content"
-	const expectedFullFileXml = `<file>\n  <path>${testFilePath}</path>\n  <content>\n${numberedFileContent}\n  </content>\n</file>`
+	const expectedFullFileXml = `<file><path>${testFilePath}</path><content>\n${numberedFileContent}</content></file>`
 
 	// Mocked functions with correct types
 	const mockedCountFileLines = countFileLines as jest.MockedFunction<typeof countFileLines>
@@ -167,8 +167,15 @@ describe("read_file tool with maxReadFileLine setting", () => {
 				absoluteFilePath,
 				mockCline.rooIgnoreController,
 			)
-			expect(result).toContain("[Showing only 0 of 5 total lines")
-			expect(result).toContain(sourceCodeDef)
+
+			// Verify XML structure
+			expect(result).toContain(`<file><path>${testFilePath}</path>`)
+			expect(result).toContain("<notice>Showing only 0 of 5 total lines")
+			expect(result).toContain("</notice>")
+			expect(result).toContain("<list_code_definition_names>")
+			expect(result).toContain(sourceCodeDef.trim())
+			expect(result).toContain("</list_code_definition_names>")
+			expect(result).not.toContain("<content") // No content when maxReadFileLine is 0
 		})
 	})
 
@@ -189,11 +196,21 @@ describe("read_file tool with maxReadFileLine setting", () => {
 				absoluteFilePath,
 				mockCline.rooIgnoreController,
 			)
+
+			// Verify XML structure
+			expect(result).toContain(`<file><path>${testFilePath}</path>`)
+			expect(result).toContain('<content lines="1-3">')
 			expect(result).toContain("1 | Line 1")
 			expect(result).toContain("2 | Line 2")
 			expect(result).toContain("3 | Line 3")
-			expect(result).toContain("[Showing only 3 of 5 total lines")
-			expect(result).toContain(sourceCodeDef)
+			expect(result).toContain("</content>")
+			expect(result).toContain("<notice>Showing only 3 of 5 total lines")
+			expect(result).toContain("</notice>")
+			expect(result).toContain("<list_code_definition_names>")
+			expect(result).toContain(sourceCodeDef.trim())
+			expect(result).toContain("</list_code_definition_names>")
+			expect(result).toContain("<list_code_definition_names>")
+			expect(result).toContain(sourceCodeDef.trim())
 		})
 	})
 
@@ -277,6 +294,14 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			// Verify
 			expect(mockedReadLines).toHaveBeenCalledWith(absoluteFilePath, 3, 1) // end_line - 1, start_line - 1
 			expect(mockedAddLineNumbers).toHaveBeenCalledWith(expect.any(String), 2) // start with proper line numbers
+
+			// Verify XML structure with lines attribute
+			expect(rangeResult).toContain(`<file><path>${testFilePath}</path>`)
+			expect(rangeResult).toContain(`<content lines="2-4">`)
+			expect(rangeResult).toContain("2 | Line 2")
+			expect(rangeResult).toContain("3 | Line 3")
+			expect(rangeResult).toContain("4 | Line 4")
+			expect(rangeResult).toContain("</content>")
 		})
 	})
 })
