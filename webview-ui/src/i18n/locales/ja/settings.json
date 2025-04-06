@@ -218,6 +218,10 @@
 				}
 			},
 			"resetDefaults": "デフォルトにリセット"
+		},
+		"rateLimit": {
+			"label": "レート制限",
+			"description": "APIリクエスト間の最小時間。"
 		}
 	},
 	"browser": {

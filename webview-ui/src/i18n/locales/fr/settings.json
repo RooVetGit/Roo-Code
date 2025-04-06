@@ -218,6 +218,10 @@
 				}
 			},
 			"resetDefaults": "Réinitialiser les valeurs par défaut"
+		},
+		"rateLimit": {
+			"label": "Limite de débit",
+			"description": "Temps minimum entre les requêtes API."
 		}
 	},
 	"browser": {

@@ -218,6 +218,10 @@
 				}
 			},
 			"resetDefaults": "Restaurar Padrões"
+		},
+		"rateLimit": {
+			"label": "Limite de taxa",
+			"description": "Tempo mínimo entre requisições de API."
 		}
 	},
 	"browser": {

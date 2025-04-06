@@ -218,6 +218,10 @@
 				}
 			},
 			"resetDefaults": "Przywróć domyślne"
+		},
+		"rateLimit": {
+			"label": "Limit szybkości",
+			"description": "Minimalny czas między żądaniami API."
 		}
 	},
 	"browser": {

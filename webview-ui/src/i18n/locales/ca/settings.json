@@ -218,6 +218,10 @@
 				}
 			},
 			"resetDefaults": "Restablir als valors per defecte"
+		},
+		"rateLimit": {
+			"label": "Limit de velocitat",
+			"description": "Temps mínim entre sol·licituds d'API."
 		}
 	},
 	"browser": {

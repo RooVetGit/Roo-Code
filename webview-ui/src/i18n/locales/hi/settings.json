@@ -218,6 +218,10 @@
 				}
 			},
 			"resetDefaults": "डिफ़ॉल्ट पर रीसेट करें"
+		},
+		"rateLimit": {
+			"label": "दर सीमा",
+			"description": "API अनुरोधों के बीच न्यूनतम समय।"
 		}
 	},
 	"browser": {

@@ -218,6 +218,10 @@
 				}
 			},
 			"resetDefaults": "Ripristina valori predefiniti"
+		},
+		"rateLimit": {
+			"label": "Limite di frequenza",
+			"description": "Tempo minimo tra le richieste API."
 		}
 	},
 	"browser": {

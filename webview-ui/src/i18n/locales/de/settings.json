@@ -218,6 +218,10 @@
 				}
 			},
 			"resetDefaults": "Auf Standardwerte zurücksetzen"
+		},
+		"rateLimit": {
+			"label": "Ratenbegrenzung",
+			"description": "Minimale Zeit zwischen API-Anfragen."
 		}
 	},
 	"browser": {

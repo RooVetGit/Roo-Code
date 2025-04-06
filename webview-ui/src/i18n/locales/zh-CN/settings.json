@@ -218,6 +218,10 @@
 				}
 			},
 			"resetDefaults": "重置为默认值"
+		},
+		"rateLimit": {
+			"label": "请求频率限制",
+			"description": "设置API请求的最小间隔时间"
 		}
 	},
 	"browser": {

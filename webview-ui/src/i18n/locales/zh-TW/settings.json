@@ -218,6 +218,10 @@
 				}
 			},
 			"resetDefaults": "重設為預設值"
+		},
+		"rateLimit": {
+			"label": "速率限制",
+			"description": "設定 API 請求間的最短時間"
 		}
 	},
 	"browser": {

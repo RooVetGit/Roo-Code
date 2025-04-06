@@ -218,6 +218,10 @@
 				}
 			},
 			"resetDefaults": "Đặt lại về mặc định"
+		},
+		"rateLimit": {
+			"label": "Giới hạn tốc độ",
+			"description": "Thời gian tối thiểu giữa các yêu cầu API."
 		}
 	},
 	"browser": {

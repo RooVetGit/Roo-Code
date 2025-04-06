@@ -218,6 +218,10 @@
 				}
 			},
 			"resetDefaults": "Varsayılanlara Sıfırla"
+		},
+		"rateLimit": {
+			"label": "Hız sınırı",
+			"description": "API istekleri arasındaki minimum süre."
 		}
 	},
 	"browser": {

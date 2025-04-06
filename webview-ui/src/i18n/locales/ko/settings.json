@@ -218,6 +218,10 @@
 				}
 			},
 			"resetDefaults": "기본값으로 재설정"
+		},
+		"rateLimit": {
+			"label": "속도 제한",
+			"description": "API 요청 간 최소 시간입니다."
 		}
 	},
 	"browser": {
