@@ -123,12 +123,15 @@ describe("CodeIndexFileWatcher", () => {
 				}) as any,
 		)
 
-		// Instantiate the watcher
+		// Create mock embedder instance explicitly
+		const mockEmbedderInstance = new MockCodeIndexOpenAiEmbedder({} as any)
+
+		// Instantiate the watcher with updated constructor signature
 		watcherInstance = new CodeIndexFileWatcher(
 			workspaceRoot,
 			mockContext,
-			{ apiKey: "test-key" }, // Dummy options to enable embedder/qdrant
-			"http://test-qdrant",
+			mockEmbedderInstance,
+			mockQdrantClientInstance,
 		)
 
 		// Capture the handlers from the watcher mock
