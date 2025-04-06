@@ -1379,42 +1379,34 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		}
 		case "requestIndexingStatus": {
-			const manager = CodeIndexManager.getInstance(provider.context)
-			const state = manager.state
-			// Attempt to get the last message, but don't wait indefinitely
-			const lastMessage = (
-				await new Promise<{ message?: string }>((resolve) => {
-					let resolved = false
-					const sub = manager.onProgressUpdate((update: IndexProgressUpdate) => {
-						if (!resolved) {
-							resolved = true
-							sub.dispose()
-							resolve({ message: update.message })
-						}
-					})
-					// Fire immediately with current state if no updates come in quickly
-					setTimeout(() => {
-						if (!resolved) {
-							resolved = true
-							sub.dispose()
-							resolve({ message: "" }) // Default to empty message
-						}
-					}, 100) // Short timeout
-				})
-			).message // <<< This parenthesis closes the new Promise(...) call
-
+			const status = provider.codeIndexManager!.getCurrentStatus()
 			provider.postMessageToWebview({
 				type: "indexingStatusUpdate",
-				values: {
-					state,
-					message: lastMessage || "",
-				},
+				values: status,
 			})
+			break
+		}
+		case "requestIndexingStatus": {
+			const manager = provider.codeIndexManager! // Access via provider
+			if (manager) {
+				// Send the current status immediately upon request
+				provider.postMessageToWebview({
+					type: "indexingStatusUpdate",
+					values: { state: manager.state, message: "Current status requested" }, // Provide a clearer message
+				})
+			} else {
+				provider.log("CodeIndexManager not available for requestIndexingStatus")
+				// Optionally send a standby/error status back to the webview
+				provider.postMessageToWebview({
+					type: "indexingStatusUpdate",
+					values: { state: "Error", message: "Code Index Manager not available" },
+				})
+			}
 			break
 		}
 		case "startIndexing": {
 			try {
-				const manager = CodeIndexManager.getInstance(provider.context)
+				const manager = provider.codeIndexManager!
 				await manager.startIndexing()
 				// Optionally send a confirmation or rely on indexingStatusUpdate
 			} catch (error) {
@@ -1425,7 +1417,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		}
 		case "clearIndexData": {
 			try {
-				const manager = CodeIndexManager.getInstance(provider.context)
+				const manager = provider.codeIndexManager!
 				await manager.clearIndexData()
 				provider.postMessageToWebview({ type: "indexCleared", values: { success: true } })
 			} catch (error) {
