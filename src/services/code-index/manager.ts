@@ -13,6 +13,7 @@ export interface IndexProgressUpdate {
 }
 
 export class CodeIndexManager {
+	private _statusMessage: string = ""
 	// --- Singleton Implementation ---
 	private static instances = new Map<string, CodeIndexManager>() // Map workspace path to instance
 
@@ -44,12 +45,16 @@ export class CodeIndexManager {
 	private readonly context: vscode.ExtensionContext
 	private openAiOptions?: ApiHandlerOptions // Configurable
 	private qdrantUrl?: string // Configurable
+	private isEnabled: boolean = false // New: enabled flag
+
+	// Webview provider reference for status updates
+	private webviewProvider?: { postMessage: (msg: any) => void }
 
 	// Private constructor for singleton pattern
 	private constructor(workspacePath: string, context: vscode.ExtensionContext) {
 		this.workspacePath = workspacePath
 		this.context = context
-		this.updateState("Standby", "Awaiting configuration and start signal.")
+		// this.updateState("Standby", "Awaiting configuration and start signal.")
 	}
 
 	// --- Public API ---
@@ -58,6 +63,31 @@ export class CodeIndexManager {
 
 	public get state(): IndexingState {
 		return this._state
+	}
+
+	/**
+	 * Loads persisted configuration from globalState.
+	 */
+	public async loadConfiguration(): Promise<void> {
+		console.log("[CodeIndexManager] Loading configuration...")
+		const enabled = this.context.globalState.get<boolean>("codeIndexEnabled", false)
+		const openAiKey = this.context.globalState.get<string>("codeIndexOpenAiKey", "")
+		const qdrantUrl = this.context.globalState.get<string>("codeIndexQdrantUrl", "")
+
+		this.isEnabled = enabled
+		this.openAiOptions = { openAiNativeApiKey: openAiKey }
+		this.qdrantUrl = qdrantUrl
+
+		if (!this.isEnabled) {
+			console.log("[CodeIndexManager] Code Indexing Disabled.")
+			this.updateState("Standby", "Code Indexing Disabled.")
+		} else if (!this.isConfigured()) {
+			console.log("[CodeIndexManager] Missing configuration.")
+			this.updateState("Standby", "Missing configuration.")
+		} else {
+			console.log("[CodeIndexManager] Configuration loaded. Starting indexing...")
+			await this.startIndexing()
+		}
 	}
 
 	/**
@@ -121,52 +151,32 @@ export class CodeIndexManager {
 		this.updateState("Indexing", "Starting initial scan...")
 
 		try {
-			// --- Initial Scan ---
-			const { stats } = await scanDirectoryForCodeBlocks(
-				this.workspacePath,
-				undefined, // Let scanner create its own ignore controller
-				this.openAiOptions,
-				this.qdrantUrl,
-				this.context,
-				(batchError) => {
-					this.updateState("Error", `Failed during initial scan batch: ${batchError.message}`)
-				},
-			)
-			console.log(
-				`[CodeIndexManager] Initial scan complete. Processed: ${stats.processed}, Skipped: ${stats.skipped}`,
-			)
+			this.updateState("Indexing", "Checking for existing collection...")
+			const collectionExists = await this._checkCollectionExists()
 
-			// --- Start Watcher ---
-			if (!this._fileWatcher && this.state === "Indexing") {
-				this.updateState("Indexing", "Initializing file watcher...") // Still indexing phase
-				this._fileWatcher = new CodeIndexFileWatcher(
+			if (collectionExists) {
+				this.updateState("Indexing", "Collection exists. Starting file watcher...")
+				await this._startWatcher()
+			} else {
+				this.updateState("Indexing", "Collection does not exist. Starting full scan...")
+				// Start watcher first to capture changes during scan
+				await this._startWatcher()
+				// Perform the initial scan using scanDirectoryForCodeBlocks
+				const { stats } = await scanDirectoryForCodeBlocks(
 					this.workspacePath,
-					this.context,
+					undefined, // Let scanner create its own ignore controller
 					this.openAiOptions,
 					this.qdrantUrl,
+					this.context,
+					(batchError) => {
+						this.updateState("Error", `Failed during initial scan batch: ${batchError.message}`)
+					},
 				)
-				await this._fileWatcher.initialize()
-
-				// Subscribe to file watcher events
-				this._fileWatcherSubscriptions = [
-					this._fileWatcher.onDidStartProcessing((filePath) => {
-						this.updateState("Indexing", `Processing file: ${filePath}`)
-					}),
-					this._fileWatcher.onDidFinishProcessing((event) => {
-						if (event.error) {
-							this.updateState("Error", `Error processing ${event.path}: ${event.error.message}`)
-						} else {
-							this.updateState("Indexed", `Finished processing ${event.path}. Index up-to-date.`)
-						}
-					}),
-					this._fileWatcher.onError((error) => {
-						this.updateState("Error", `File watcher error: ${error.message}`)
-					}),
-				]
-				console.log("[CodeIndexManager] File watcher started.")
+				console.log(
+					`[CodeIndexManager] Initial scan complete. Processed: ${stats.processed}, Skipped: ${stats.skipped}`,
+				)
 			}
-
-			this.updateState("Indexed", "Initial scan complete and watching for changes.") // Final state after successful start
+			this.updateState("Indexed", "Initial indexing process complete.") // Or appropriate state
 		} catch (error: any) {
 			console.error("[CodeIndexManager] Error during indexing startup:", error)
 			this.updateState("Error", `Failed during startup: ${error.message || "Unknown error"}`)
@@ -175,6 +185,10 @@ export class CodeIndexManager {
 			this._isProcessing = false
 		}
 	}
+
+	/**
+	 * Starts the indexing process. Checks for existing collection and starts file watcher.
+	 */
 
 	/**
 	 * Stops the file watcher and potentially cleans up resources.
@@ -247,9 +261,11 @@ export class CodeIndexManager {
 	// --- Private Helpers ---
 
 	private updateState(newState: IndexingState, message?: string): void {
+		this._statusMessage = message ?? ""
 		const oldState = this._state
 		if (oldState !== newState) {
 			this._state = newState
+			this.postStatusUpdate()
 			console.log(`[CodeIndexManager] State Change: ${oldState} -> ${newState} ${message ? `(${message})` : ""}`)
 			this._progressEmitter.fire({ state: newState, message })
 		} else if (message) {
@@ -258,9 +274,80 @@ export class CodeIndexManager {
 		}
 	}
 
+	public getCurrentStatus(): IndexProgressUpdate {
+		return {
+			state: this._state,
+			message: this._statusMessage,
+		}
+	}
+
+	/**
+	 * Posts the current status update to the webview if available.
+	 */
+	private postStatusUpdate() {
+		if (this.webviewProvider) {
+			this.webviewProvider.postMessage({
+				type: "indexingStatusUpdate",
+				values: this._state,
+			})
+		}
+	}
+
 	//TODO: this probably will always fail since I don't know if we are initializing the class with these properties
 	private isConfigured(): boolean {
 		// Ensure openAiOptions itself exists before checking the key
 		return !!(this.openAiOptions?.openAiNativeApiKey && this.qdrantUrl)
+	}
+	private async _startWatcher(): Promise<void> {
+		if (this._fileWatcher) {
+			console.log("[CodeIndexManager] File watcher already running.")
+			return
+		}
+
+		this.updateState("Indexing", "Initializing file watcher...")
+
+		this._fileWatcher = new CodeIndexFileWatcher(
+			this.workspacePath,
+			this.context,
+			this.openAiOptions,
+			this.qdrantUrl,
+		)
+		await this._fileWatcher.initialize()
+
+		this._fileWatcherSubscriptions = [
+			this._fileWatcher.onDidStartProcessing((filePath) => {
+				this.updateState("Indexing", `Processing file: ${filePath}`)
+			}),
+			this._fileWatcher.onDidFinishProcessing((event) => {
+				if (event.error) {
+					this.updateState("Error", `Error processing ${event.path}: ${event.error.message}`)
+				} else {
+					this.updateState("Indexed", `Finished processing ${event.path}. Index up-to-date.`)
+				}
+			}),
+			this._fileWatcher.onError((error) => {
+				this.updateState("Error", `File watcher error: ${error.message}`)
+			}),
+		]
+
+		console.log("[CodeIndexManager] File watcher started.")
+	}
+
+	private async _checkCollectionExists(): Promise<boolean> {
+		try {
+			if (this._fileWatcher) {
+				return await this._fileWatcher.checkCollectionExists()
+			}
+			const tempWatcher = new CodeIndexFileWatcher(
+				this.workspacePath,
+				this.context,
+				this.openAiOptions,
+				this.qdrantUrl,
+			)
+			return await tempWatcher.checkCollectionExists()
+		} catch (error) {
+			console.warn("[CodeIndexManager] Error checking collection existence:", error)
+			return false
+		}
 	}
 }
