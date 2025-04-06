@@ -111,4 +111,17 @@ export class CodeIndexQdrantClient {
 			throw error
 		}
 	}
+	async collectionExists(): Promise<boolean> {
+		try {
+			// Prefer direct API call if supported
+			await this.client.getCollection(this.collectionName)
+			return true
+		} catch (error: any) {
+			if (error?.response?.status === 404) {
+				return false
+			}
+			console.error("Error checking collection existence:", error)
+			return false
+		}
+	}
 }

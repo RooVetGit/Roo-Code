@@ -307,4 +307,11 @@ export class CodeIndexFileWatcher {
 		this._onDidFinishProcessing.dispose()
 		this._onError.dispose()
 	}
+	public async checkCollectionExists(): Promise<boolean> {
+		if (!this.qdrantClient) {
+			console.warn("[CodeIndexFileWatcher] Qdrant client not initialized; cannot check collection existence.")
+			return false
+		}
+		return this.qdrantClient.collectionExists()
+	}
 }
