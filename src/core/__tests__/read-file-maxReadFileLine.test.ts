@@ -48,7 +48,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 	const fileContent = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
 	const numberedFileContent = "1 | Line 1\n2 | Line 2\n3 | Line 3\n4 | Line 4\n5 | Line 5"
 	const sourceCodeDef = "\n\n# file.txt\n1--5 | Content"
-	const expectedFullFileXml = `<file><path>${testFilePath}</path><content>\n${numberedFileContent}</content></file>`
+	const expectedFullFileXml = `<file><path>${testFilePath}</path>\n<content lines="1-5">\n${numberedFileContent}</content>\n</file>`
 
 	// Mocked functions with correct types
 	const mockedCountFileLines = countFileLines as jest.MockedFunction<typeof countFileLines>
@@ -239,7 +239,9 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			// Verify
 			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
 			expect(mockedReadLines).not.toHaveBeenCalled()
-			expect(result).toBe(expectedFullFileXml)
+			// Create a custom expected XML with lines="1-3" since totalLines is 3
+			const expectedXml = `<file><path>${testFilePath}</path>\n<content lines="1-3">\n${numberedFileContent}</content>\n</file>`
+			expect(result).toBe(expectedXml)
 		})
 	})
 
@@ -248,6 +250,8 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			// Setup
 			mockedIsBinaryFile.mockResolvedValue(true)
 			mockedExtractTextFromFile.mockResolvedValue(numberedFileContent)
+			// For binary files, we're using a maxReadFileLine of 3 and totalLines is assumed to be 5
+			mockedCountFileLines.mockResolvedValue(3)
 
 			// Execute
 			const result = await executeReadFileTool(3)
@@ -255,7 +259,9 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			// Verify
 			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
 			expect(mockedReadLines).not.toHaveBeenCalled()
-			expect(result).toBe(expectedFullFileXml)
+			// Create a custom expected XML with lines="1-3" for binary files
+			const expectedXml = `<file><path>${testFilePath}</path>\n<content lines="1-3">\n${numberedFileContent}</content>\n</file>`
+			expect(result).toBe(expectedXml)
 		})
 	})
 

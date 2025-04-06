@@ -163,7 +163,9 @@ describe("read_file tool XML output structure", () => {
 			const result = await executeReadFileTool()
 
 			// Verify
-			expect(result).toBe(`<file><path>${testFilePath}</path><content>\n${numberedFileContent}</content></file>`)
+			expect(result).toBe(
+				`<file><path>${testFilePath}</path>\n<content lines="1-5">\n${numberedFileContent}</content>\n</file>`,
+			)
 		})
 
 		it("should follow the correct XML structure format", async () => {
@@ -175,7 +177,7 @@ describe("read_file tool XML output structure", () => {
 
 			// Verify using regex to check structure
 			const xmlStructureRegex = new RegExp(
-				`^<file><path>${testFilePath}</path><content>\\n.*</content></file>$`,
+				`^<file><path>${testFilePath}</path>\\n<content lines="1-5">\\n.*</content>\\n</file>$`,
 				"s",
 			)
 			expect(result).toMatch(xmlStructureRegex)
@@ -233,7 +235,7 @@ describe("read_file tool XML output structure", () => {
 			expect(result).toContain(`<content lines="${startLine}-${endLine}">`)
 		})
 
-		it("should not include lines attribute when no range is specified", async () => {
+		it("should include lines attribute even when no range is specified", async () => {
 			// Setup
 			mockedExtractTextFromFile.mockResolvedValue(numberedFileContent)
 
@@ -241,8 +243,7 @@ describe("read_file tool XML output structure", () => {
 			const result = await executeReadFileTool()
 
 			// Verify
-			expect(result).not.toContain(`<content lines=`)
-			expect(result).toContain(`<content>\n`)
+			expect(result).toContain(`<content lines="1-5">\n`)
 		})
 
 		it("should include content when maxReadFileLine=0 and range is specified", async () => {
@@ -451,7 +452,7 @@ describe("read_file tool XML output structure", () => {
 			// Verify
 			// Should include notice
 			expect(result).toContain(
-				`<file><path>${testFilePath}</path><notice>Showing only 0 of ${totalLines} total lines. Use start_line and end_line if you need to read more</notice></file>`,
+				`<file><path>${testFilePath}</path>\n<notice>Showing only 0 of ${totalLines} total lines. Use start_line and end_line if you need to read more</notice>\n</file>`,
 			)
 			// Should not include list_code_definition_names tag since there are no definitions
 			expect(result).not.toContain("<list_code_definition_names>")
@@ -531,7 +532,7 @@ describe("read_file tool XML output structure", () => {
 
 			// Verify
 			// Empty files should include a content tag and notice
-			expect(result).toBe(`<file><path>${testFilePath}</path><content/><notice>File is empty</notice></file>`)
+			expect(result).toBe(`<file><path>${testFilePath}</path>\n<content/><notice>File is empty</notice>\n</file>`)
 			// And make sure there's no error
 			expect(result).not.toContain(`<error>`)
 		})
@@ -548,7 +549,7 @@ describe("read_file tool XML output structure", () => {
 
 			// Verify
 			// Empty files should include a content tag and notice even with maxReadFileLine=0
-			expect(result).toBe(`<file><path>${testFilePath}</path><content/><notice>File is empty</notice></file>`)
+			expect(result).toBe(`<file><path>${testFilePath}</path>\n<content/><notice>File is empty</notice>\n</file>`)
 			// Ensure no line numbers are added
 			expect(mockedAddLineNumbers).not.toHaveBeenCalled()
 		})
@@ -561,7 +562,9 @@ describe("read_file tool XML output structure", () => {
 			const result = await executeReadFileTool({}, { isBinary: true })
 
 			// Verify
-			expect(result).toBe(`<file><path>${testFilePath}</path><content>\nBinary content</content></file>`)
+			expect(result).toBe(
+				`<file><path>${testFilePath}</path>\n<content lines="1-5">\nBinary content</content>\n</file>`,
+			)
 			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
 		})
 
