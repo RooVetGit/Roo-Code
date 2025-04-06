@@ -80,6 +80,7 @@ import { askFollowupQuestionTool } from "./tools/askFollowupQuestionTool"
 import { switchModeTool } from "./tools/switchModeTool"
 import { attemptCompletionTool } from "./tools/attemptCompletionTool"
 import { newTaskTool } from "./tools/newTaskTool"
+import { codebaseSearchTool } from "./tools/codebaseSearchTool"
 
 export type ToolResponse = string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam>
 type UserContent = Array<Anthropic.Messages.ContentBlockParam>
@@ -1407,6 +1408,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 							return `[${block.name}]`
 						case "switch_mode":
 							return `[${block.name} to '${block.params.mode_slug}'${block.params.reason ? ` because: ${block.params.reason}` : ""}]`
+						case "codebase_search": // Add case for the new tool
+							return `[${block.name} for '${block.params.query}']`
 						case "new_task": {
 							const mode = block.params.mode ?? defaultModeSlug
 							const message = block.params.message ?? "(no message)"
@@ -1591,6 +1594,16 @@ export class Cline extends EventEmitter<ClineEvents> {
 						break
 					case "list_files":
 						await listFilesTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
+						break
+					case "codebase_search":
+						await codebaseSearchTool(
+							this,
+							block,
+							askApproval,
+							handleError,
+							pushToolResult,
+							removeClosingTag,
+						)
 						break
 					case "list_code_definition_names":
 						await listCodeDefinitionNamesTool(
