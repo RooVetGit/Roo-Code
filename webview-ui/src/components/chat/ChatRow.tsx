@@ -24,6 +24,7 @@ import McpToolRow from "../mcp/McpToolRow"
 import { highlightMentions } from "./TaskHeader"
 import { CheckpointSaved } from "./checkpoints/CheckpointSaved"
 import FollowUpSuggest from "./FollowUpSuggest"
+import CodebaseSearchResult from "./CodebaseSearchResult"
 
 interface ChatRowProps {
 	message: ClineMessage
@@ -304,6 +305,45 @@ export const ChatRowContent = ({
 						/>
 					</>
 				)
+			case "codebase_search": {
+				let parsed: {
+					query: string
+					results: Array<{
+						filePath: string
+						score: number
+						startLine: number
+						endLine: number
+						codeChunk: string
+					}>
+				} | null = null
+				try {
+					parsed = JSON.parse(tool.content || "{}")
+				} catch (e) {
+					console.error("Failed to parse codebase_search JSON content", e)
+				}
+
+				const query = parsed?.query || ""
+				const results = parsed?.results || []
+
+				return (
+					<div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+						<div style={{ fontWeight: "bold" }}>
+							Found {results.length} result{results.length !== 1 ? "s" : ""} for query '{query}'
+						</div>
+						{results.map((result, idx) => (
+							<CodebaseSearchResult
+								key={idx}
+								filePath={result.filePath}
+								score={result.score}
+								startLine={result.startLine}
+								endLine={result.endLine}
+								language="plaintext"
+								snippet={result.codeChunk}
+							/>
+						))}
+					</div>
+				)
+			}
 			case "readFile":
 				return (
 					<>
