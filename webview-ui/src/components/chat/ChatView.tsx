@@ -1,7 +1,7 @@
 import { VSCodeButton, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 import debounce from "debounce"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useDeepCompareEffect, useEvent, useMount } from "react-use"
+import { useDeepCompareEffect, useEvent } from "react-use"
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
 import styled from "styled-components"
 import {
@@ -32,6 +32,7 @@ import { getAllModes } from "../../../../src/shared/modes"
 import TelemetryBanner from "../common/TelemetryBanner"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import removeMd from "remove-markdown"
+import { useFocusPreservation } from "./hooks/useFocusPreservation"
 
 interface ChatViewProps {
 	isHidden: boolean
@@ -95,6 +96,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	const [showScrollToBottom, setShowScrollToBottom] = useState(false)
 	const [isAtBottom, setIsAtBottom] = useState(false)
 	const lastTtsRef = useRef<string>("")
+	const [viewHidden, setViewHidden] = useState<boolean>(false)
 
 	const [wasStreaming, setWasStreaming] = useState<boolean>(false)
 	const [showCheckpointWarning, setShowCheckpointWarning] = useState<boolean>(false)
@@ -140,13 +142,9 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 						case "followup":
 							setTextAreaDisabled(isPartial)
 							setClineAsk("followup")
-							// setting enable buttons to `false` would trigger a focus grab when
-							// the text area is enabled which is undesirable.
-							// We have no buttons for this tool, so no problem having them "enabled"
-							// to workaround this issue.  See #1358.
-							setEnableButtons(true)
-							setPrimaryButtonText(undefined)
-							setSecondaryButtonText(undefined)
+							setEnableButtons(isPartial)
+							// setPrimaryButtonText(undefined)
+							// setSecondaryButtonText(undefined)
 							break
 						case "tool":
 							if (!isAutoApproved(lastMessage)) {
@@ -495,9 +493,10 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				case "action":
 					switch (message.action!) {
 						case "didBecomeVisible":
-							if (!isHidden && !textAreaDisabled && !enableButtons) {
-								textAreaRef.current?.focus()
-							}
+							setViewHidden(false)
+							break
+						case "didBecomeInvisible":
+							setViewHidden(true)
 							break
 					}
 					break
@@ -531,9 +530,6 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			// textAreaRef.current is not explicitly required here since react gaurantees that ref will be stable across re-renders, and we're not using its value but its reference.
 		},
 		[
-			isHidden,
-			textAreaDisabled,
-			enableButtons,
 			handleChatReset,
 			handleSendMessage,
 			handleSetChatBoxMessage,
@@ -544,21 +540,10 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 
 	useEvent("message", handleMessage)
 
-	useMount(() => {
-		// NOTE: the vscode window needs to be focused for this to work
-		textAreaRef.current?.focus()
-	})
-
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			if (!isHidden && !textAreaDisabled && !enableButtons) {
-				textAreaRef.current?.focus()
-			}
-		}, 50)
-		return () => {
-			clearTimeout(timer)
-		}
-	}, [isHidden, textAreaDisabled, enableButtons])
+	// preserve focus on text area when...
+	// - isHidden: switching to another Roo tab
+	// - viewHidden: switchint to another VSCode extension, or hiding this one.
+	useFocusPreservation(textAreaRef.current, isHidden || viewHidden)
 
 	const visibleMessages = useMemo(() => {
 		return modifiedMessages.filter((message) => {
