@@ -2,6 +2,7 @@ import { QdrantClient } from "@qdrant/js-client-rest"
 import { createHash } from "crypto"
 import * as path from "path"
 import { getWorkspacePath } from "../../utils/path"
+import { Payload, QdrantSearchResult } from "./types"
 
 export class CodeIndexQdrantClient {
 	private readonly QDRANT_URL = "http://localhost:6333"
@@ -60,13 +61,19 @@ export class CodeIndexQdrantClient {
 		}
 	}
 
-	async search(queryVector: number[], limit: number = 10): Promise<Array<Record<string, any>>> {
+	private isPayloadValid(payload: Record<string, unknown>): payload is Payload {
+		return "filePath" in payload && "codeChunk" in payload && "startLine" in payload && "endLine" in payload
+	}
+
+	async search(queryVector: number[], limit: number = 10): Promise<QdrantSearchResult[]> {
 		try {
 			const result = await this.client.search(this.collectionName, {
 				vector: queryVector,
 				limit,
 			})
-			return result
+			result.filter((r) => this.isPayloadValid(r.payload!))
+
+			return result as QdrantSearchResult[]
 		} catch (error) {
 			console.error("Failed to search points:", error)
 			throw error
