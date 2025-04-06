@@ -340,6 +340,11 @@
 					"type": "string",
 					"default": "",
 					"description": "Custom storage path. Leave empty to use the default location. Supports absolute paths (e.g. 'D:\\RooCodeStorage')"
+				},
+				"roo-cline.fontSmoothing": {
+					"type": "boolean",
+					"default": true,
+					"description": "Enable CSS font smoothing (-webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;) for the Roo Code webview UI for potentially crisper text rendering."
 				}
 			}
 		}

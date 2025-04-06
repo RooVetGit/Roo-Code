@@ -27,8 +27,15 @@ const tabsByMessageAction: Partial<Record<NonNullable<ExtensionMessage["action"]
 }
 
 const App = () => {
-	const { didHydrateState, showWelcome, shouldShowAnnouncement, telemetrySetting, telemetryKey, machineId } =
-		useExtensionState()
+	const {
+		didHydrateState,
+		showWelcome,
+		shouldShowAnnouncement,
+		telemetrySetting,
+		telemetryKey,
+		machineId,
+		fontSmoothing,
+	} = useExtensionState()
 
 	const [showAnnouncement, setShowAnnouncement] = useState(false)
 	const [tab, setTab] = useState<Tab>("chat")
@@ -90,6 +97,15 @@ const App = () => {
 
 	// Tell the extension that we are ready to receive messages.
 	useEffect(() => vscode.postMessage({ type: "webviewDidLaunch" }), [])
+
+	// Apply font smoothing class based on setting
+	useEffect(() => {
+		if (fontSmoothing) {
+			document.documentElement.classList.add("font-smoothing-enabled")
+		} else {
+			document.documentElement.classList.remove("font-smoothing-enabled")
+		}
+	}, [fontSmoothing])
 
 	if (!didHydrateState) {
 		return null

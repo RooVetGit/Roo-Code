@@ -203,6 +203,7 @@ export type ExtensionState = Pick<
 
 	renderContext: "sidebar" | "editor"
 	settingsImportedAt?: number
+	fontSmoothing?: boolean
 }
 
 export type { ClineMessage, ClineAsk, ClineSay }
