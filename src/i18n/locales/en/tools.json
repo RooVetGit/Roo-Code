@@ -5,5 +5,8 @@
 		"linesFromStartTo": " (lines 1-{{end}})",
 		"definitionsOnly": " (definitions only)",
 		"maxLines": " (max {{max}} lines)"
+	},
+	"codebaseSearch": {
+		"approval": "Searching for '{{query}}' in codebase (limit: {{limit}})..."
 	}
 }
