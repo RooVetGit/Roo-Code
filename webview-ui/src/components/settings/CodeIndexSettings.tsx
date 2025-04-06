@@ -40,13 +40,10 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 			return
 		}
 
-		// Immediately request initial status
+		// Request initial indexing status from extension host
 		vscode.postMessage({ type: "requestIndexingStatus" })
 
 		// Set up interval for periodic status updates
-		const intervalId = setInterval(() => {
-			vscode.postMessage({ type: "requestIndexingStatus" })
-		}, 3000)
 
 		// Set up message listener for status updates
 		const handleMessage = (event: MessageEvent) => {
@@ -60,7 +57,6 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 
 		// Cleanup function
 		return () => {
-			clearInterval(intervalId)
 			window.removeEventListener("message", handleMessage)
 		}
 	}, [codeIndexEnabled])
@@ -105,7 +101,22 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 						</div>
 
 						<div className="text-sm text-vscode-descriptionForeground mt-4">
-							Status: {indexingState}
+							<span
+								className={`
+									inline-block w-3 h-3 rounded-full mr-2
+									${
+										indexingState === "Standby"
+											? "bg-gray-400"
+											: indexingState === "Indexing"
+												? "bg-yellow-500 animate-pulse"
+												: indexingState === "Indexed"
+													? "bg-green-500"
+													: indexingState === "Error"
+														? "bg-red-500"
+														: "bg-gray-400"
+									}
+								`}></span>
+							{indexingState}
 							{indexingMessage ? ` - ${indexingMessage}` : ""}
 						</div>
 
