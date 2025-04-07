@@ -28,7 +28,7 @@ export async function codebaseSearchTool(
 	// --- Parameter Extraction and Validation ---
 	let query: string | undefined = block.params.query
 	let limitStr: string | undefined = block.params.limit
-	let limit: number = 10 // Default limit
+	let limit: number = 5 // Default limit
 
 	if (!query) {
 		cline.consecutiveMistakeCount++
@@ -47,13 +47,23 @@ export async function codebaseSearchTool(
 		}
 	}
 
+	// Extract optional sendResultsToUI parameter
+
 	// --- Approval ---
-	const translationKey = "tools:codebaseSearch.approval"
+	const translationKey = "chat:codebaseSearch.wantsToSearch"
 	let approvalMessage: string
 
 	approvalMessage = t(translationKey, { query, limit })
 
-	const didApprove = await askApproval("tool", approvalMessage)
+	const approvalPayload = {
+		tool: "codebase_search",
+		approvalPrompt: approvalMessage,
+		query: query,
+		limit: limit,
+		isOutsideWorkspace: false,
+	}
+
+	const didApprove = await askApproval("tool", JSON.stringify(approvalPayload))
 	if (!didApprove) {
 		pushToolResult(formatResponse.toolDenied())
 		return
@@ -120,6 +130,11 @@ export async function codebaseSearchTool(
 			})
 		})
 
+		// Send results to UI
+		const payload = { tool: toolName, content: jsonResult }
+		await cline.say("tool", JSON.stringify(payload))
+
+		// Push results to AI
 		pushToolResult(JSON.stringify(jsonResult))
 	} catch (error: any) {
 		await handleError(toolName, error) // Use the standard error handler
