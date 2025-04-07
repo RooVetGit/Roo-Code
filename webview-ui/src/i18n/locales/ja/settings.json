@@ -83,6 +83,7 @@
 	},
 	"providers": {
 		"configProfile": "設定プロファイル",
+		"providerDocumentation": "{{provider}}のドキュメント",
 		"description": "異なるAPI設定を保存して、プロバイダーと設定をすばやく切り替えることができます。",
 		"apiProvider": "APIプロバイダー",
 		"model": "モデル",
@@ -97,6 +98,8 @@
 		"enterProfileName": "プロファイル名を入力",
 		"createProfile": "プロファイルを作成",
 		"cannotDeleteOnlyProfile": "唯一のプロファイルは削除できません",
+		"searchPlaceholder": "プロファイルを検索",
+		"noMatchFound": "一致するプロファイルが見つかりません",
 		"vscodeLmDescription": "VS Code言語モデルAPIを使用すると、他のVS Code拡張機能（GitHub Copilotなど）が提供するモデルを実行できます。最も簡単な方法は、VS Code MarketplaceからCopilotおよびCopilot Chat拡張機能をインストールすることです。",
 		"awsCustomArnUse": "使用したいモデルの有効なAWS Bedrock ARNを入力してください。形式の例:",
 		"awsCustomArnDesc": "ARN内のリージョンが上で選択したAWSリージョンと一致していることを確認してください。",
@@ -130,6 +133,9 @@
 		"awsSessionToken": "AWSセッショントークン",
 		"awsRegion": "AWSリージョン",
 		"awsCrossRegion": "クロスリージョン推論を使用",
+		"enablePromptCaching": "プロンプトキャッシュを有効化",
+		"enablePromptCachingTitle": "サポートされているモデルのパフォーマンスを向上させ、コストを削減するためにプロンプトキャッシュを有効化します。",
+		"cacheUsageNote": "注意：キャッシュの使用が表示されない場合は、別のモデルを選択してから希望のモデルを再度選択してみてください。",
 		"vscodeLmModel": "言語モデル",
 		"vscodeLmWarning": "注意：これは非常に実験的な統合であり、プロバイダーのサポートは異なります。モデルがサポートされていないというエラーが表示された場合、それはプロバイダー側の問題です。",
 		"googleCloudSetup": {
@@ -320,7 +326,7 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
-		"DIFF_STRATEGY": {
+		"DIFF_STRATEGY_UNIFIED": {
 			"name": "実験的な統合diff戦略を使用する",
 			"description": "実験的な統合diff戦略を有効にします。この戦略はモデルエラーによる再試行の回数を減らす可能性がありますが、予期しない動作や不正確な編集を引き起こす可能性があります。リスクを理解し、すべての変更を注意深く確認する準備がある場合にのみ有効にしてください。"
 		},
@@ -365,7 +371,8 @@
 		"azureApiVersion": "Azure APIバージョンを設定",
 		"gemini": {
 			"freeRequests": "* 1分間あたり{{count}}リクエストまで無料。それ以降は、プロンプトサイズに応じて課金されます。",
-			"pricingDetails": "詳細は価格情報をご覧ください。"
+			"pricingDetails": "詳細は価格情報をご覧ください。",
+			"billingEstimate": "* 課金は見積もりです - 正確な費用はプロンプトのサイズによって異なります。"
 		}
 	},
 	"modelPicker": {

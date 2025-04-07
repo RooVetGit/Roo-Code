@@ -2714,19 +2714,26 @@ Parameters:
     * launch: Launch a new Puppeteer-controlled browser instance at the specified URL. This **must always be the first action**.
         - Use with the \`url\` parameter to provide the URL.
         - Ensure the URL is valid and includes the appropriate protocol (e.g. http://localhost:3000/page, file:///path/to/file.html, etc.)
+    * hover: Move the cursor to a specific x,y coordinate.
+        - Use with the \`coordinate\` parameter to specify the location.
+        - Always move to the center of an element (icon, button, link, etc.) based on coordinates derived from a screenshot.
     * click: Click at a specific x,y coordinate.
         - Use with the \`coordinate\` parameter to specify the location.
         - Always click in the center of an element (icon, button, link, etc.) based on coordinates derived from a screenshot.
     * type: Type a string of text on the keyboard. You might use this after clicking on a text field to input text.
         - Use with the \`text\` parameter to provide the string to type.
+    * resize: Resize the viewport to a specific w,h size.
+        - Use with the \`size\` parameter to specify the new size.
     * scroll_down: Scroll down the page by one page height.
     * scroll_up: Scroll up the page by one page height.
     * close: Close the Puppeteer-controlled browser instance. This **must always be the final browser action**.
         - Example: \`<action>close</action>\`
 - url: (optional) Use this for providing the URL for the \`launch\` action.
     * Example: <url>https://example.com</url>
-- coordinate: (optional) The X and Y coordinates for the \`click\` action. Coordinates should be within the **900x600** resolution.
+- coordinate: (optional) The X and Y coordinates for the \`click\` and \`hover\` actions. Coordinates should be within the **900x600** resolution.
     * Example: <coordinate>450,300</coordinate>
+- size: (optional) The width and height for the \`resize\` action.
+    * Example: <size>1280,720</size>
 - text: (optional) Use this for providing the text for the \`type\` action.
     * Example: <text>Hello, world!</text>
 Usage:
@@ -3625,19 +3632,26 @@ Parameters:
     * launch: Launch a new Puppeteer-controlled browser instance at the specified URL. This **must always be the first action**.
         - Use with the \`url\` parameter to provide the URL.
         - Ensure the URL is valid and includes the appropriate protocol (e.g. http://localhost:3000/page, file:///path/to/file.html, etc.)
+    * hover: Move the cursor to a specific x,y coordinate.
+        - Use with the \`coordinate\` parameter to specify the location.
+        - Always move to the center of an element (icon, button, link, etc.) based on coordinates derived from a screenshot.
     * click: Click at a specific x,y coordinate.
         - Use with the \`coordinate\` parameter to specify the location.
         - Always click in the center of an element (icon, button, link, etc.) based on coordinates derived from a screenshot.
     * type: Type a string of text on the keyboard. You might use this after clicking on a text field to input text.
         - Use with the \`text\` parameter to provide the string to type.
+    * resize: Resize the viewport to a specific w,h size.
+        - Use with the \`size\` parameter to specify the new size.
     * scroll_down: Scroll down the page by one page height.
     * scroll_up: Scroll up the page by one page height.
     * close: Close the Puppeteer-controlled browser instance. This **must always be the final browser action**.
         - Example: \`<action>close</action>\`
 - url: (optional) Use this for providing the URL for the \`launch\` action.
     * Example: <url>https://example.com</url>
-- coordinate: (optional) The X and Y coordinates for the \`click\` action. Coordinates should be within the **1280x800** resolution.
+- coordinate: (optional) The X and Y coordinates for the \`click\` and \`hover\` actions. Coordinates should be within the **1280x800** resolution.
     * Example: <coordinate>450,300</coordinate>
+- size: (optional) The width and height for the \`resize\` action.
+    * Example: <size>1280,720</size>
 - text: (optional) Use this for providing the text for the \`type\` action.
     * Example: <text>Hello, world!</text>
 Usage:
@@ -4031,21 +4045,25 @@ Only a single operation is allowed per tool use.
 The SEARCH section must exactly match existing content including whitespace and indentation.
 If you're not confident in the exact content to search for, use the read_file tool first to get the exact content.
 When applying the diffs, be extra careful to remember to change any closing brackets or other syntax that may be affected by the diff farther down in the file.
+ALWAYS make as many changes in a single 'apply_diff' request as possible using multiple SEARCH/REPLACE blocks
 
 Parameters:
 - path: (required) The path of the file to modify (relative to the current working directory /test/path)
 - diff: (required) The search/replace block defining the changes.
-- start_line: (required) The line number where the search block starts.
-- end_line: (required) The line number where the search block ends.
 
 Diff format:
 \`\`\`
 <<<<<<< SEARCH
+:start_line: (required) The line number of original content where the search block starts.
+:end_line: (required) The line number of original content  where the search block ends.
+-------
 [exact content to find including whitespace]
 =======
 [new content to replace with]
 >>>>>>> REPLACE
+
 \`\`\`
+
 
 Example:
 
@@ -4061,6 +4079,9 @@ Original file:
 Search/Replace content:
 \`\`\`
 <<<<<<< SEARCH
+:start_line:1
+:end_line:5
+-------
 def calculate_total(items):
     total = 0
     for item in items:
@@ -4071,16 +4092,43 @@ def calculate_total(items):
     """Calculate total with 10% markup"""
     return sum(item * 1.1 for item in items)
 >>>>>>> REPLACE
+
 \`\`\`
+
+Search/Replace content with multi edits:
+\`\`\`
+<<<<<<< SEARCH
+:start_line:1
+:end_line:2
+-------
+def calculate_sum(items):
+    sum = 0
+=======
+def calculate_sum(items):
+    sum = 0
+>>>>>>> REPLACE
+
+<<<<<<< SEARCH
+:start_line:4
+:end_line:5
+-------
+        total += item
+    return total
+=======
+        sum += item
+    return sum 
+>>>>>>> REPLACE
+\`\`\`
+
 
 Usage:
 <apply_diff>
 <path>File path here</path>
 <diff>
 Your search/replace content here
+You can use multi search/replace block in one diff block, but make sure to include the line numbers for each block.
+Only use a single line of '=======' between search and replacement content, because multiple '=======' will corrupt the file.
 </diff>
-<start_line>1</start_line>
-<end_line>5</end_line>
 </apply_diff>
 
 ## write_to_file

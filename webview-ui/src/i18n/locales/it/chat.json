@@ -12,6 +12,8 @@
 		"export": "Esporta cronologia attività",
 		"delete": "Elimina attività (Shift + Clic per saltare la conferma)"
 	},
+	"unpin": "Rilascia",
+	"pin": "Fissa",
 	"tokenProgress": {
 		"availableSpace": "Spazio disponibile: {{amount}} tokens",
 		"tokensUsed": "Tokens utilizzati: {{used}} di {{total}}",
@@ -95,6 +97,7 @@
 	"checkpoint": {
 		"initial": "Checkpoint iniziale",
 		"regular": "Checkpoint",
+		"initializingWarning": "Inizializzazione del checkpoint in corso... Se questa operazione richiede troppo tempo, puoi disattivare i checkpoint nelle <settingsLink>impostazioni</settingsLink> e riavviare l'attività.",
 		"menu": {
 			"viewDiff": "Visualizza differenze",
 			"restore": "Ripristina checkpoint",
@@ -157,7 +160,7 @@
 	"autoApprove": {
 		"title": "Auto-approvazione:",
 		"none": "Nessuna",
-		"description": "L'auto-approvazione permette a Roo Code di eseguire azioni senza chiedere permesso. Abilita solo per azioni di cui ti fidi completamente.",
+		"description": "L'auto-approvazione permette a Roo Code di eseguire azioni senza chiedere permesso. Abilita solo per azioni di cui ti fidi completamente. Configurazione più dettagliata disponibile nelle <settingsLink>Impostazioni</settingsLink>.",
 		"actions": {
 			"readFiles": {
 				"label": "Leggi file e directory",
@@ -205,17 +208,14 @@
 		"thinking": "Sto pensando",
 		"seconds": "{{count}}s"
 	},
+	"followUpSuggest": {
+		"copyToInput": "Copia nell'input (o Shift + clic)"
+	},
 	"announcement": {
-		"title": "🎉 Rilasciato Roo Code 3.10",
-		"description": "Roo Code 3.10 porta potenti miglioramenti di produttività!",
-		"whatsNew": "Novità",
-		"feature1": "Risposte suggerite alle domande",
-		"feature2": "Gestione migliorata dei file di grandi dimensioni",
-		"feature3": "Ricerca file tramite @-menzione ricostruita",
-		"feature4": "",
-		"feature5": "",
-		"hideButton": "Nascondi annuncio",
-		"detailsDiscussLinks": "Ottieni maggiori dettagli e partecipa alle discussioni su <discordLink>Discord</discordLink> e <redditLink>Reddit</redditLink> 🚀"
+		"title": "Fai di più con le Attività Boomerang 🪃",
+		"description": "Dividi il lavoro in sottoattività, ognuna eseguita in una modalità specializzata, come code, architect, debug o una modalità personalizzata.",
+		"learnMore": "Scopri di più →",
+		"hideButton": "Nascondi annuncio"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo vuole utilizzare il browser:",

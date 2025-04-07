@@ -12,6 +12,8 @@
 		"export": "Exportar historial de tasques",
 		"delete": "Eliminar tasca (Shift + Clic per ometre confirmació)"
 	},
+	"unpin": "Desfixar",
+	"pin": "Fixar",
 	"tokenProgress": {
 		"availableSpace": "Espai disponible: {{amount}} tokens",
 		"tokensUsed": "Tokens utilitzats: {{used}} de {{total}}",
@@ -92,6 +94,7 @@
 	"checkpoint": {
 		"initial": "Punt de control inicial",
 		"regular": "Punt de control",
+		"initializingWarning": "Encara s'està inicialitzant el punt de control... Si això triga massa, pots desactivar els punts de control a la <settingsLink>configuració</settingsLink> i reiniciar la teva tasca.",
 		"menu": {
 			"viewDiff": "Veure diferències",
 			"restore": "Restaurar punt de control",
@@ -157,7 +160,7 @@
 	"autoApprove": {
 		"title": "Aprovació automàtica:",
 		"none": "Cap",
-		"description": "L'aprovació automàtica permet a Roo Code realitzar accions sense demanar permís. Activa-la només per a accions en les que confies plenament.",
+		"description": "L'aprovació automàtica permet a Roo Code realitzar accions sense demanar permís. Activa-la només per a accions en les que confies plenament. Configuració més detallada disponible a la <settingsLink>Configuració</settingsLink>.",
 		"actions": {
 			"readFiles": {
 				"label": "Llegir fitxers i directoris",
@@ -205,17 +208,14 @@
 		"thinking": "Pensant",
 		"seconds": "{{count}}s"
 	},
+	"followUpSuggest": {
+		"copyToInput": "Copiar a l'entrada (o Shift + clic)"
+	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.10 publicat",
-		"description": "Roo Code 3.10 aporta potents millores de productivitat!",
-		"whatsNew": "Novetats",
-		"feature1": "Respostes suggerides a les preguntes",
-		"feature2": "Millora en la gestió de fitxers grans",
-		"feature3": "Reconstrucció de les cerques de fitxers amb @-menció",
-		"feature4": "",
-		"feature5": "",
-		"hideButton": "Amagar anunci",
-		"detailsDiscussLinks": "Obté més detalls i participa a <discordLink>Discord</discordLink> i <redditLink>Reddit</redditLink> 🚀"
+		"title": "Fes més amb Tasques Boomerang 🪃",
+		"description": "Divideix la feina en subtasques, cadascuna executant-se en un mode especialitzat, com code, architect, debug o un mode personalitzat.",
+		"learnMore": "Saber-ne més →",
+		"hideButton": "Amagar anunci"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo vol utilitzar el navegador:",

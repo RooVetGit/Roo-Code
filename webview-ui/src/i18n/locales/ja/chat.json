@@ -12,6 +12,8 @@
 		"export": "タスク履歴をエクスポート",
 		"delete": "タスクを削除（Shift + クリックで確認をスキップ）"
 	},
+	"unpin": "ピン留めを解除",
+	"pin": "ピン留め",
 	"tokenProgress": {
 		"availableSpace": "利用可能な空き容量: {{amount}} トークン",
 		"tokensUsed": "使用トークン: {{used}} / {{total}}",
@@ -92,6 +94,7 @@
 	"checkpoint": {
 		"initial": "初期チェックポイント",
 		"regular": "チェックポイント",
+		"initializingWarning": "チェックポイントの初期化中... 時間がかかりすぎる場合は、<settingsLink>設定</settingsLink>でチェックポイントを無効にしてタスクを再開できます。",
 		"menu": {
 			"viewDiff": "差分を表示",
 			"restore": "チェックポイントを復元",
@@ -157,7 +160,7 @@
 	"autoApprove": {
 		"title": "自動承認:",
 		"none": "なし",
-		"description": "自動承認はRoo Codeに許可を求めずに操作を実行する権限を与えます。完全に信頼できる操作のみ有効にしてください。",
+		"description": "自動承認はRoo Codeに許可を求めずに操作を実行する権限を与えます。完全に信頼できる操作のみ有効にしてください。より詳細な設定は<settingsLink>設定</settingsLink>で利用できます。",
 		"actions": {
 			"readFiles": {
 				"label": "ファイルとディレクトリの読み取り",
@@ -205,17 +208,14 @@
 		"thinking": "考え中",
 		"seconds": "{{count}}秒"
 	},
+	"followUpSuggest": {
+		"copyToInput": "入力欄にコピー（またはShift + クリック）"
+	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.10 リリース",
-		"description": "Roo Code 3.10は強力な生産性向上機能をもたらします！",
-		"whatsNew": "新機能",
-		"feature1": "質問への提案回答機能",
-		"feature2": "大きなファイルの取り扱い改善",
-		"feature3": "@メンションによるファイル検索の再構築",
-		"feature4": "",
-		"feature5": "",
-		"hideButton": "通知を非表示",
-		"detailsDiscussLinks": "詳細は<discordLink>Discord</discordLink>と<redditLink>Reddit</redditLink>でご確認・ディスカッションください 🚀"
+		"title": "ブーメランタスクでさらに便利に 🪃",
+		"description": "作業をサブタスクに分割し、それぞれをcode、architect、debugなどの専門モードや、カスタムモードで実行できます。",
+		"learnMore": "詳細を見る →",
+		"hideButton": "通知を非表示"
 	},
 	"browser": {
 		"rooWantsToUse": "Rooはブラウザを使用したい:",

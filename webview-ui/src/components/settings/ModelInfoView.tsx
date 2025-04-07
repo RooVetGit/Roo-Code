@@ -43,7 +43,7 @@ export const ModelInfoView = ({
 				doesNotSupportLabel={t("settings:modelInfo.noPromptCache")}
 			/>
 		),
-		modelInfo.maxTokens !== undefined && modelInfo.maxTokens > 0 && (
+		typeof modelInfo.maxTokens === "number" && modelInfo.maxTokens > 0 && (
 			<>
 				<span className="font-medium">{t("settings:modelInfo.maxOutput")}:</span>{" "}
 				{modelInfo.maxTokens?.toLocaleString()} tokens
@@ -75,9 +75,11 @@ export const ModelInfoView = ({
 		),
 		isGemini && (
 			<span className="italic">
-				{t("settings:modelInfo.gemini.freeRequests", {
-					count: selectedModelId && selectedModelId.includes("flash") ? 15 : 2,
-				})}{" "}
+				{selectedModelId === "gemini-2.5-pro-preview-03-25"
+					? t("settings:modelInfo.gemini.billingEstimate")
+					: t("settings:modelInfo.gemini.freeRequests", {
+							count: selectedModelId && selectedModelId.includes("flash") ? 15 : 2,
+						})}{" "}
 				<VSCodeLink href="https://ai.google.dev/pricing" className="text-sm">
 					{t("settings:modelInfo.gemini.pricingDetails")}
 				</VSCodeLink>

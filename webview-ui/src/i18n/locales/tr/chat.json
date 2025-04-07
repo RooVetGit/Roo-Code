@@ -12,6 +12,8 @@
 		"export": "Görev geçmişini dışa aktar",
 		"delete": "Görevi sil (Onayı atlamak için Shift + Tıkla)"
 	},
+	"unpin": "Sabitlemeyi iptal et",
+	"pin": "Sabitle",
 	"tokenProgress": {
 		"availableSpace": "Kullanılabilir alan: {{amount}} token",
 		"tokensUsed": "Kullanılan tokenlar: {{used}} / {{total}}",
@@ -92,6 +94,7 @@
 	"checkpoint": {
 		"initial": "İlk Kontrol Noktası",
 		"regular": "Kontrol Noktası",
+		"initializingWarning": "Kontrol noktası hala başlatılıyor... Bu çok uzun sürerse, <settingsLink>ayarlar</settingsLink> bölümünden kontrol noktalarını devre dışı bırakabilir ve görevinizi yeniden başlatabilirsiniz.",
 		"menu": {
 			"viewDiff": "Farkları Görüntüle",
 			"restore": "Kontrol Noktasını Geri Yükle",
@@ -157,7 +160,7 @@
 	"autoApprove": {
 		"title": "Otomatik-onay:",
 		"none": "Hiçbiri",
-		"description": "Otomatik onay, Roo Code'un izin istemeden işlemler gerçekleştirmesine olanak tanır. Yalnızca tamamen güvendiğiniz eylemler için etkinleştirin.",
+		"description": "Otomatik onay, Roo Code'un izin istemeden işlemler gerçekleştirmesine olanak tanır. Yalnızca tamamen güvendiğiniz eylemler için etkinleştirin. Daha detaylı yapılandırma <settingsLink>Ayarlar</settingsLink>'da mevcuttur.",
 		"actions": {
 			"readFiles": {
 				"label": "Dosyaları ve dizinleri oku",
@@ -205,17 +208,14 @@
 		"thinking": "Düşünüyor",
 		"seconds": "{{count}}sn"
 	},
+	"followUpSuggest": {
+		"copyToInput": "Giriş alanına kopyala (veya Shift + tıklama)"
+	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.10 Yayınlandı",
-		"description": "Roo Code 3.10 güçlü üretkenlik iyileştirmeleri getiriyor!",
-		"whatsNew": "Yenilikler",
-		"feature1": "Sorulara önerilen yanıtlar",
-		"feature2": "Geliştirilmiş büyük dosya işleme",
-		"feature3": "Yeniden yapılandırılmış @-mention dosya aramaları",
-		"feature4": "",
-		"feature5": "",
-		"hideButton": "Duyuruyu gizle",
-		"detailsDiscussLinks": "<discordLink>Discord</discordLink> ve <redditLink>Reddit</redditLink> üzerinde daha fazla ayrıntı edinin ve tartışmalara katılın 🚀"
+		"title": "Bumerang Görevleriyle Daha Fazlasını Yapın 🪃",
+		"description": "İşi alt görevlere bölerek, her birini code, architect, debug veya özel mod gibi özelleştirilmiş bir modda çalıştırın.",
+		"learnMore": "Daha fazla bilgi →",
+		"hideButton": "Duyuruyu gizle"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo tarayıcıyı kullanmak istiyor:",

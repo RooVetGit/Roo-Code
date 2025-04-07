@@ -1,8 +1,9 @@
 import { ExtensionContext } from "vscode"
-import { z } from "zod"
+import { z, ZodError } from "zod"
 
 import { providerSettingsSchema, ApiConfigMeta } from "../../schemas"
-import { Mode } from "../../shared/modes"
+import { Mode, modes } from "../../shared/modes"
+import { telemetryService } from "../../services/telemetry/TelemetryService"
 
 const providerSettingsWithIdSchema = providerSettingsSchema.extend({ id: z.string().optional() })
 
@@ -18,10 +19,16 @@ export type ProviderProfiles = z.infer<typeof providerProfilesSchema>
 
 export class ProviderSettingsManager {
 	private static readonly SCOPE_PREFIX = "roo_cline_config_"
+	private readonly defaultConfigId = this.generateId()
+
+	private readonly defaultModeApiConfigs: Record<string, string> = Object.fromEntries(
+		modes.map((mode) => [mode.slug, this.defaultConfigId]),
+	)
 
 	private readonly defaultProviderProfiles: ProviderProfiles = {
 		currentApiConfigName: "default",
-		apiConfigs: { default: { id: this.generateId() } },
+		apiConfigs: { default: { id: this.defaultConfigId } },
+		modeApiConfigs: this.defaultModeApiConfigs,
 	}
 
 	private readonly context: ExtensionContext
@@ -33,7 +40,7 @@ export class ProviderSettingsManager {
 		this.initialize().catch(console.error)
 	}
 
-	private generateId() {
+	public generateId() {
 		return Math.random().toString(36).substring(2, 15)
 	}
 
@@ -266,6 +273,10 @@ export class ProviderSettingsManager {
 			const content = await this.context.secrets.get(this.secretsKey)
 			return content ? providerProfilesSchema.parse(JSON.parse(content)) : this.defaultProviderProfiles
 		} catch (error) {
+			if (error instanceof ZodError) {
+				telemetryService.captureSchemaValidationError({ schemaName: "ProviderProfiles", error })
+			}
+
 			throw new Error(`Failed to read provider profiles from secrets: ${error}`)
 		}
 	}

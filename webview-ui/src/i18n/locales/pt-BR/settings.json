@@ -83,6 +83,7 @@
 	},
 	"providers": {
 		"configProfile": "Perfil de configuração",
+		"providerDocumentation": "Documentação do {{provider}}",
 		"description": "Salve diferentes configurações de API para alternar rapidamente entre provedores e configurações.",
 		"apiProvider": "Provedor de API",
 		"model": "Modelo",
@@ -97,6 +98,8 @@
 		"enterProfileName": "Digite o nome do perfil",
 		"createProfile": "Criar perfil",
 		"cannotDeleteOnlyProfile": "Não é possível excluir o único perfil",
+		"searchPlaceholder": "Pesquisar perfis",
+		"noMatchFound": "Nenhum perfil correspondente encontrado",
 		"vscodeLmDescription": "A API do Modelo de Linguagem do VS Code permite executar modelos fornecidos por outras extensões do VS Code (incluindo, mas não se limitando, ao GitHub Copilot). A maneira mais fácil de começar é instalar as extensões Copilot e Copilot Chat no VS Code Marketplace.",
 		"awsCustomArnUse": "Insira um ARN AWS Bedrock válido para o modelo que deseja usar. Exemplos de formato:",
 		"awsCustomArnDesc": "Certifique-se de que a região no ARN corresponde à região AWS selecionada acima.",
@@ -130,6 +133,9 @@
 		"awsSessionToken": "Token de Sessão AWS",
 		"awsRegion": "Região AWS",
 		"awsCrossRegion": "Usar inferência entre regiões",
+		"enablePromptCaching": "Ativar cache de prompts",
+		"enablePromptCachingTitle": "Ativar cache de prompts para melhorar o desempenho e reduzir custos para modelos suportados.",
+		"cacheUsageNote": "Nota: Se você não vir o uso do cache, tente selecionar um modelo diferente e depois selecionar novamente o modelo desejado.",
 		"vscodeLmModel": "Modelo de Linguagem",
 		"vscodeLmWarning": "Nota: Esta é uma integração muito experimental e o suporte do provedor pode variar. Se você receber um erro sobre um modelo não ser suportado, isso é um problema do lado do provedor.",
 		"googleCloudSetup": {
@@ -320,7 +326,7 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
-		"DIFF_STRATEGY": {
+		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Usar estratégia diff unificada experimental",
 			"description": "Ativar a estratégia diff unificada experimental. Esta estratégia pode reduzir o número de novas tentativas causadas por erros do modelo, mas pode causar comportamento inesperado ou edições incorretas. Ative apenas se compreender os riscos e estiver disposto a revisar cuidadosamente todas as alterações."
 		},
@@ -365,7 +371,8 @@
 		"azureApiVersion": "Definir versão da API Azure",
 		"gemini": {
 			"freeRequests": "* Gratuito até {{count}} requisições por minuto. Depois disso, a cobrança depende do tamanho do prompt.",
-			"pricingDetails": "Para mais informações, consulte os detalhes de preços."
+			"pricingDetails": "Para mais informações, consulte os detalhes de preços.",
+			"billingEstimate": "* A cobrança é uma estimativa - o custo exato depende do tamanho do prompt."
 		}
 	},
 	"modelPicker": {

@@ -12,6 +12,8 @@
 		"export": "Exportar histórico de tarefas",
 		"delete": "Excluir tarefa (Shift + Clique para pular confirmação)"
 	},
+	"unpin": "Desfixar",
+	"pin": "Fixar",
 	"tokenProgress": {
 		"availableSpace": "Espaço disponível: {{amount}} tokens",
 		"tokensUsed": "Tokens usados: {{used}} de {{total}}",
@@ -92,6 +94,7 @@
 	"checkpoint": {
 		"initial": "Ponto de verificação inicial",
 		"regular": "Ponto de verificação",
+		"initializingWarning": "Ainda inicializando ponto de verificação... Se isso demorar muito, você pode desativar os pontos de verificação nas <settingsLink>configurações</settingsLink> e reiniciar sua tarefa.",
 		"menu": {
 			"viewDiff": "Ver diferenças",
 			"restore": "Restaurar ponto de verificação",
@@ -157,7 +160,7 @@
 	"autoApprove": {
 		"title": "Aprovação automática:",
 		"none": "Nenhuma",
-		"description": "A aprovação automática permite que o Roo Code execute ações sem pedir permissão. Ative apenas para ações nas quais você confia totalmente.",
+		"description": "A aprovação automática permite que o Roo Code execute ações sem pedir permissão. Ative apenas para ações nas quais você confia totalmente. Configuração mais detalhada disponível nas <settingsLink>Configurações</settingsLink>.",
 		"actions": {
 			"readFiles": {
 				"label": "Ler arquivos e diretórios",
@@ -205,17 +208,14 @@
 		"thinking": "Pensando",
 		"seconds": "{{count}}s"
 	},
+	"followUpSuggest": {
+		"copyToInput": "Copiar para entrada (ou Shift + clique)"
+	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.10 Lançado",
-		"description": "Roo Code 3.10 traz poderosas melhorias de produtividade!",
-		"whatsNew": "O que há de novo",
-		"feature1": "Respostas sugeridas para perguntas",
-		"feature2": "Manuseio aprimorado de arquivos grandes",
-		"feature3": "Busca de arquivos por @-menção reconstruída",
-		"feature4": "",
-		"feature5": "",
-		"hideButton": "Ocultar anúncio",
-		"detailsDiscussLinks": "Obtenha mais detalhes e participe da discussão no <discordLink>Discord</discordLink> e <redditLink>Reddit</redditLink> 🚀"
+		"title": "Faça mais com Tarefas Boomerang 🪃",
+		"description": "Divida o trabalho em subtarefas, cada uma executando em um modo especializado, como code, architect, debug ou um modo personalizado.",
+		"learnMore": "Saiba mais →",
+		"hideButton": "Ocultar anúncio"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo quer usar o navegador:",

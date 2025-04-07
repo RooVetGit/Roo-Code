@@ -83,6 +83,7 @@
 	},
 	"providers": {
 		"configProfile": "Profilo di configurazione",
+		"providerDocumentation": "Documentazione {{provider}}",
 		"description": "Salva diverse configurazioni API per passare rapidamente tra fornitori e impostazioni.",
 		"apiProvider": "Fornitore API",
 		"model": "Modello",
@@ -97,6 +98,8 @@
 		"enterProfileName": "Inserisci il nome del profilo",
 		"createProfile": "Crea profilo",
 		"cannotDeleteOnlyProfile": "Impossibile eliminare l'unico profilo",
+		"searchPlaceholder": "Cerca profili",
+		"noMatchFound": "Nessun profilo corrispondente trovato",
 		"vscodeLmDescription": "L'API del Modello di Linguaggio di VS Code consente di eseguire modelli forniti da altre estensioni di VS Code (incluso, ma non limitato a, GitHub Copilot). Il modo più semplice per iniziare è installare le estensioni Copilot e Copilot Chat dal VS Code Marketplace.",
 		"awsCustomArnUse": "Inserisci un ARN AWS Bedrock valido per il modello che desideri utilizzare. Esempi di formato:",
 		"awsCustomArnDesc": "Assicurati che la regione nell'ARN corrisponda alla regione AWS selezionata sopra.",
@@ -130,6 +133,9 @@
 		"awsSessionToken": "Token di sessione AWS",
 		"awsRegion": "Regione AWS",
 		"awsCrossRegion": "Usa inferenza cross-regione",
+		"enablePromptCaching": "Abilita cache dei prompt",
+		"enablePromptCachingTitle": "Abilita la cache dei prompt per migliorare le prestazioni e ridurre i costi per i modelli supportati.",
+		"cacheUsageNote": "Nota: Se non vedi l'utilizzo della cache, prova a selezionare un modello diverso e poi seleziona nuovamente il modello desiderato.",
 		"vscodeLmModel": "Modello linguistico",
 		"vscodeLmWarning": "Nota: Questa è un'integrazione molto sperimentale e il supporto del fornitore varierà. Se ricevi un errore relativo a un modello non supportato, si tratta di un problema del fornitore.",
 		"googleCloudSetup": {
@@ -320,7 +326,7 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
-		"DIFF_STRATEGY": {
+		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Usa strategia diff unificata sperimentale",
 			"description": "Abilita la strategia diff unificata sperimentale. Questa strategia potrebbe ridurre il numero di tentativi causati da errori del modello, ma può causare comportamenti imprevisti o modifiche errate. Abilitala solo se comprendi i rischi e sei disposto a rivedere attentamente tutte le modifiche."
 		},
@@ -365,7 +371,8 @@
 		"azureApiVersion": "Imposta versione API Azure",
 		"gemini": {
 			"freeRequests": "* Gratuito fino a {{count}} richieste al minuto. Dopo, la fatturazione dipende dalla dimensione del prompt.",
-			"pricingDetails": "Per maggiori informazioni, vedi i dettagli sui prezzi."
+			"pricingDetails": "Per maggiori informazioni, vedi i dettagli sui prezzi.",
+			"billingEstimate": "* La fatturazione è una stima - il costo esatto dipende dalle dimensioni del prompt."
 		}
 	},
 	"modelPicker": {

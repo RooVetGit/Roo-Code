@@ -83,6 +83,7 @@
 	},
 	"providers": {
 		"configProfile": "Perfil de configuració",
+		"providerDocumentation": "Documentació de {{provider}}",
 		"description": "Deseu diferents configuracions d'API per canviar ràpidament entre proveïdors i configuracions.",
 		"apiProvider": "Proveïdor d'API",
 		"openRouterApiKey": "Clau API d'OpenRouter",
@@ -97,6 +98,8 @@
 		"enterProfileName": "Introduïu el nom del perfil",
 		"createProfile": "Crea perfil",
 		"cannotDeleteOnlyProfile": "No es pot eliminar l'únic perfil",
+		"searchPlaceholder": "Cerca perfils",
+		"noMatchFound": "No s'han trobat perfils coincidents",
 		"vscodeLmDescription": "L'API del model de llenguatge de VS Code us permet executar models proporcionats per altres extensions de VS Code (incloent-hi, però no limitat a, GitHub Copilot). La manera més senzilla de començar és instal·lar les extensions Copilot i Copilot Chat des del VS Code Marketplace.",
 		"awsCustomArnUse": "Introduïu un ARN vàlid d'AWS Bedrock per al model que voleu utilitzar. Exemples de format:",
 		"awsCustomArnDesc": "Assegureu-vos que la regió a l'ARN coincideix amb la regió d'AWS seleccionada anteriorment.",
@@ -130,6 +133,9 @@
 		"awsSessionToken": "Token de sessió d'AWS",
 		"awsRegion": "Regió d'AWS",
 		"awsCrossRegion": "Utilitzar inferència entre regions",
+		"enablePromptCaching": "Habilitar emmagatzematge en caché de prompts",
+		"enablePromptCachingTitle": "Habilitar l'emmagatzematge en caché de prompts per millorar el rendiment i reduir els costos per als models compatibles.",
+		"cacheUsageNote": "Nota: Si no veieu l'ús de la caché, proveu de seleccionar un model diferent i després tornar a seleccionar el model desitjat.",
 		"vscodeLmModel": "Model de llenguatge",
 		"vscodeLmWarning": "Nota: Aquesta és una integració molt experimental i el suport del proveïdor variarà. Si rebeu un error sobre un model no compatible, és un problema del proveïdor.",
 		"googleCloudSetup": {
@@ -320,7 +326,7 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
-		"DIFF_STRATEGY": {
+		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Utilitzar estratègia diff unificada experimental",
 			"description": "Activar l'estratègia diff unificada experimental. Aquesta estratègia podria reduir el nombre de reintents causats per errors del model, però pot causar comportaments inesperats o edicions incorrectes. Activeu-la només si enteneu els riscos i esteu disposats a revisar acuradament tots els canvis."
 		},
@@ -365,7 +371,8 @@
 		"azureApiVersion": "Establir versió de l'API d'Azure",
 		"gemini": {
 			"freeRequests": "* Gratuït fins a {{count}} sol·licituds per minut. Després d'això, la facturació depèn de la mida del prompt.",
-			"pricingDetails": "Per a més informació, consulteu els detalls de preus."
+			"pricingDetails": "Per a més informació, consulteu els detalls de preus.",
+			"billingEstimate": "* La facturació és una estimació - el cost exacte depèn de la mida del prompt."
 		}
 	},
 	"modelPicker": {

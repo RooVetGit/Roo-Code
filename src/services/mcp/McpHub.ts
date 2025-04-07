@@ -63,6 +63,7 @@ const createServerTypeSchema = () => {
 			type: z.enum(["stdio"]).optional(),
 			command: z.string().min(1, "Command cannot be empty"),
 			args: z.array(z.string()).optional(),
+			cwd: z.string().default(() => vscode.workspace.workspaceFolders?.at(0)?.uri.fsPath ?? process.cwd()),
 			env: z.record(z.string()).optional(),
 			// Ensure no SSE fields are present
 			url: z.undefined().optional(),
@@ -108,6 +109,7 @@ export class McpHub {
 	private isDisposed: boolean = false
 	connections: McpConnection[] = []
 	isConnecting: boolean = false
+	private refCount: number = 0 // Reference counter for active clients
 
 	constructor(provider: ClineProvider) {
 		this.providerRef = new WeakRef(provider)
@@ -116,6 +118,27 @@ export class McpHub {
 		this.setupWorkspaceFoldersWatcher()
 		this.initializeGlobalMcpServers()
 		this.initializeProjectMcpServers()
+	}
+	/**
+	 * Registers a client (e.g., ClineProvider) using this hub.
+	 * Increments the reference count.
+	 */
+	public registerClient(): void {
+		this.refCount++
+		console.log(`McpHub: Client registered. Ref count: ${this.refCount}`)
+	}
+
+	/**
+	 * Unregisters a client. Decrements the reference count.
+	 * If the count reaches zero, disposes the hub.
+	 */
+	public async unregisterClient(): Promise<void> {
+		this.refCount--
+		console.log(`McpHub: Client unregistered. Ref count: ${this.refCount}`)
+		if (this.refCount <= 0) {
+			console.log("McpHub: Last client unregistered. Disposing hub.")
+			await this.dispose()
+		}
 	}
 
 	/**
@@ -314,7 +337,7 @@ export class McpHub {
 				mcpSettingsFilePath,
 				`{
   "mcpServers": {
-    
+
   }
 }`,
 			)
@@ -427,6 +450,7 @@ export class McpHub {
 				transport = new StdioClientTransport({
 					command: config.command,
 					args: config.args,
+					cwd: config.cwd,
 					env: {
 						...config.env,
 						...(process.env.PATH ? { PATH: process.env.PATH } : {}),
@@ -1191,8 +1215,12 @@ export class McpHub {
 				configPath = await this.getMcpSettingsFilePath()
 			}
 
+			// Normalize path for cross-platform compatibility
+			// Use a consistent path format for both reading and writing
+			const normalizedPath = process.platform === "win32" ? configPath.replace(/\\/g, "/") : configPath
+
 			// Read the appropriate config file
-			const content = await fs.readFile(configPath, "utf-8")
+			const content = await fs.readFile(normalizedPath, "utf-8")
 			const config = JSON.parse(content)
 
 			// Initialize mcpServers if it doesn't exist
@@ -1202,7 +1230,11 @@ export class McpHub {
 
 			// Initialize server config if it doesn't exist
 			if (!config.mcpServers[serverName]) {
-				config.mcpServers[serverName] = {}
+				config.mcpServers[serverName] = {
+					type: "stdio",
+					command: "node",
+					args: [], // Default to an empty array; can be set later if needed
+				}
 			}
 
 			// Initialize alwaysAllow if it doesn't exist
@@ -1222,7 +1254,7 @@ export class McpHub {
 			}
 
 			// Write updated config back to file
-			await fs.writeFile(configPath, JSON.stringify(config, null, 2))
+			await fs.writeFile(normalizedPath, JSON.stringify(config, null, 2))
 
 			// Update the tools list to reflect the change
 			if (connection) {
@@ -1237,6 +1269,12 @@ export class McpHub {
 	}
 
 	async dispose(): Promise<void> {
+		// Prevent multiple disposals
+		if (this.isDisposed) {
+			console.log("McpHub: Already disposed.")
+			return
+		}
+		console.log("McpHub: Disposing...")
 		this.isDisposed = true
 		this.removeAllFileWatchers()
 		for (const connection of this.connections) {

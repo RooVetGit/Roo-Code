@@ -12,6 +12,8 @@
 		"export": "Exportar historial de tareas",
 		"delete": "Eliminar tarea (Shift + Clic para omitir confirmación)"
 	},
+	"unpin": "Desfijar",
+	"pin": "Fijar",
 	"retry": {
 		"title": "Reintentar",
 		"tooltip": "Intenta la operación de nuevo"
@@ -92,6 +94,7 @@
 	"checkpoint": {
 		"initial": "Punto de control inicial",
 		"regular": "Punto de control",
+		"initializingWarning": "Todavía inicializando el punto de control... Si esto tarda demasiado, puedes desactivar los puntos de control en la <settingsLink>configuración</settingsLink> y reiniciar tu tarea.",
 		"menu": {
 			"viewDiff": "Ver diferencias",
 			"restore": "Restaurar punto de control",
@@ -157,7 +160,7 @@
 	"autoApprove": {
 		"title": "Auto-aprobar:",
 		"none": "Ninguno",
-		"description": "Auto-aprobar permite a Roo Code realizar acciones sin pedir permiso. Habilita solo para acciones en las que confíes plenamente.",
+		"description": "Auto-aprobar permite a Roo Code realizar acciones sin pedir permiso. Habilita solo para acciones en las que confíes plenamente. Configuración más detallada disponible en <settingsLink>Configuración</settingsLink>.",
 		"actions": {
 			"readFiles": {
 				"label": "Leer archivos y directorios",
@@ -205,17 +208,14 @@
 		"thinking": "Pensando",
 		"seconds": "{{count}}s"
 	},
+	"followUpSuggest": {
+		"copyToInput": "Copiar a la entrada (o Shift + clic)"
+	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.10 publicado",
-		"description": "¡Roo Code 3.10 trae potentes mejoras de productividad!",
-		"whatsNew": "Novedades",
-		"feature1": "Respuestas sugeridas a preguntas",
-		"feature2": "Mejor manejo de archivos grandes",
-		"feature3": "Búsquedas de archivos con @-mención reconstruidas",
-		"feature4": "",
-		"feature5": "",
-		"hideButton": "Ocultar anuncio",
-		"detailsDiscussLinks": "Obtén más detalles y participa en <discordLink>Discord</discordLink> y <redditLink>Reddit</redditLink> 🚀"
+		"title": "Haz más con Tareas Boomerang 🪃",
+		"description": "Divide el trabajo en subtareas, cada una ejecutándose en un modo especializado, como code, architect, debug o un modo personalizado.",
+		"learnMore": "Saber más →",
+		"hideButton": "Ocultar anuncio"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo quiere usar el navegador:",

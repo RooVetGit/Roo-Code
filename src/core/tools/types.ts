@@ -8,8 +8,12 @@ export type AskApproval = (
 	progressStatus?: ToolProgressStatus,
 ) => Promise<boolean>
 
-export type HandleError = (action: string, error: Error) => void
+export type HandleError = (action: string, error: Error) => Promise<void>
 
 export type PushToolResult = (content: ToolResponse) => void
 
 export type RemoveClosingTag = (tag: ToolParamName, content?: string) => string
+
+export type AskFinishSubTaskApproval = () => Promise<boolean>
+
+export type ToolDescription = () => string

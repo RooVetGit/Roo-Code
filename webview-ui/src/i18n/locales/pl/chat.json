@@ -12,6 +12,8 @@
 		"export": "Eksportuj historię zadań",
 		"delete": "Usuń zadanie (Shift + Kliknięcie, aby pominąć potwierdzenie)"
 	},
+	"unpin": "Odepnij",
+	"pin": "Przypnij",
 	"tokenProgress": {
 		"availableSpace": "Dostępne miejsce: {{amount}} tokenów",
 		"tokensUsed": "Wykorzystane tokeny: {{used}} z {{total}}",
@@ -92,6 +94,7 @@
 	"checkpoint": {
 		"initial": "Początkowy punkt kontrolny",
 		"regular": "Punkt kontrolny",
+		"initializingWarning": "Trwa inicjalizacja punktu kontrolnego... Jeśli to trwa zbyt długo, możesz wyłączyć punkty kontrolne w <settingsLink>ustawieniach</settingsLink> i uruchomić zadanie ponownie.",
 		"menu": {
 			"viewDiff": "Zobacz różnice",
 			"restore": "Przywróć punkt kontrolny",
@@ -157,7 +160,7 @@
 	"autoApprove": {
 		"title": "Automatyczne zatwierdzanie:",
 		"none": "Brak",
-		"description": "Automatyczne zatwierdzanie pozwala Roo Code wykonywać działania bez pytania o pozwolenie. Włącz tylko dla działań, którym w pełni ufasz.",
+		"description": "Automatyczne zatwierdzanie pozwala Roo Code wykonywać działania bez pytania o pozwolenie. Włącz tylko dla działań, którym w pełni ufasz. Bardziej szczegółowa konfiguracja dostępna w <settingsLink>Ustawieniach</settingsLink>.",
 		"actions": {
 			"readFiles": {
 				"label": "Czytaj pliki i katalogi",
@@ -205,17 +208,14 @@
 		"thinking": "Myślenie",
 		"seconds": "{{count}} s"
 	},
+	"followUpSuggest": {
+		"copyToInput": "Kopiuj do pola wprowadzania (lub Shift + kliknięcie)"
+	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.10 wydany",
-		"description": "Roo Code 3.10 przynosi potężne usprawnienia produktywności!",
-		"whatsNew": "Co nowego",
-		"feature1": "Sugerowane odpowiedzi na pytania",
-		"feature2": "Ulepszenia obsługi dużych plików",
-		"feature3": "Przebudowane wyszukiwanie plików przez @-wzmianki",
-		"feature4": "",
-		"feature5": "",
-		"hideButton": "Ukryj ogłoszenie",
-		"detailsDiscussLinks": "Uzyskaj więcej szczegółów i dołącz do dyskusji na <discordLink>Discord</discordLink> i <redditLink>Reddit</redditLink> 🚀"
+		"title": "Zrób więcej z Zadaniami Bumerang 🪃",
+		"description": "Podziel pracę na podzadania, każde działające w wyspecjalizowanym trybie, takim jak code, architect, debug lub trybie niestandardowym.",
+		"learnMore": "Dowiedz się więcej →",
+		"hideButton": "Ukryj ogłoszenie"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo chce użyć przeglądarki:",

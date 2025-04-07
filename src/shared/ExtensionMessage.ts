@@ -77,6 +77,7 @@ export interface ExtensionMessage {
 		| "historyButtonClicked"
 		| "promptsButtonClicked"
 		| "didBecomeVisible"
+		| "focusInput"
 	invoke?: "newChat" | "sendMessage" | "primaryButtonClick" | "secondaryButtonClick" | "setChatBoxMessage"
 	state?: ExtensionState
 	images?: string[]
@@ -168,7 +169,6 @@ export type ExtensionState = Pick<
 	| "enhancementApiConfigId"
 > & {
 	version: string
-	osInfo: string
 	clineMessages: ClineMessage[]
 	currentTaskItem?: HistoryItem
 	apiConfiguration?: ApiConfiguration
@@ -233,13 +233,23 @@ export interface ClineSayTool {
 }
 
 // Must keep in sync with system prompt.
-export const browserActions = ["launch", "click", "hover", "type", "scroll_down", "scroll_up", "close"] as const
+export const browserActions = [
+	"launch",
+	"click",
+	"hover",
+	"type",
+	"scroll_down",
+	"scroll_up",
+	"resize",
+	"close",
+] as const
 
 export type BrowserAction = (typeof browserActions)[number]
 
 export interface ClineSayBrowserAction {
 	action: BrowserAction
 	coordinate?: string
+	size?: string
 	text?: string
 }
 

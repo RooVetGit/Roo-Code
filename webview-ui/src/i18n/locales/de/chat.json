@@ -12,6 +12,8 @@
 		"export": "Aufgabenverlauf exportieren",
 		"delete": "Aufgabe löschen (Shift + Klick zum Überspringen der Bestätigung)"
 	},
+	"unpin": "Lösen von oben",
+	"pin": "Anheften",
 	"tokenProgress": {
 		"availableSpace": "Verfügbarer Speicher: {{amount}} Tokens",
 		"tokensUsed": "Verwendete Tokens: {{used}} von {{total}}",
@@ -92,6 +94,7 @@
 	"checkpoint": {
 		"initial": "Initialer Checkpoint",
 		"regular": "Checkpoint",
+		"initializingWarning": "Checkpoint wird noch initialisiert... Falls dies zu lange dauert, kannst du Checkpoints in den <settingsLink>Einstellungen</settingsLink> deaktivieren und deine Aufgabe neu starten.",
 		"menu": {
 			"viewDiff": "Unterschiede anzeigen",
 			"restore": "Checkpoint wiederherstellen",
@@ -157,7 +160,7 @@
 	"autoApprove": {
 		"title": "Automatische Genehmigung:",
 		"none": "Keine",
-		"description": "Automatische Genehmigung erlaubt Roo Code, Aktionen ohne Nachfrage auszuführen. Aktiviere dies nur für Aktionen, denen du vollständig vertraust.",
+		"description": "Automatische Genehmigung erlaubt Roo Code, Aktionen ohne Nachfrage auszuführen. Aktiviere dies nur für Aktionen, denen du vollständig vertraust. Detailliertere Konfiguration verfügbar in den <settingsLink>Einstellungen</settingsLink>.",
 		"actions": {
 			"readFiles": {
 				"label": "Dateien und Verzeichnisse lesen",
@@ -205,17 +208,14 @@
 		"thinking": "Denke nach",
 		"seconds": "{{count}}s"
 	},
+	"followUpSuggest": {
+		"copyToInput": "In Eingabefeld kopieren (oder Shift + Klick)"
+	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.10 veröffentlicht",
-		"description": "Roo Code 3.10 bringt leistungsstarke Produktivitätsverbesserungen!",
-		"whatsNew": "Was ist neu",
-		"feature1": "Vorgeschlagene Antworten auf Fragen",
-		"feature2": "Verbesserte Handhabung großer Dateien",
-		"feature3": "Überarbeitete @-Erwähnungs-Dateisuche",
-		"feature4": "",
-		"feature5": "",
-		"hideButton": "Ankündigung ausblenden",
-		"detailsDiscussLinks": "Erhalte mehr Details und diskutiere auf <discordLink>Discord</discordLink> und <redditLink>Reddit</redditLink> 🚀"
+		"title": "Mach mehr mit Boomerang Tasks 🪃",
+		"description": "Teile deine Arbeit in Unteraufgaben auf, die jeweils in einem spezialisierten Modus laufen, wie code, architect, debug oder einem benutzerdefinierten Modus.",
+		"learnMore": "Mehr erfahren →",
+		"hideButton": "Ankündigung ausblenden"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo möchte den Browser verwenden:",

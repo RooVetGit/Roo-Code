@@ -12,6 +12,8 @@
 		"export": "Export task history",
 		"delete": "Delete Task (Shift + Click to skip confirmation)"
 	},
+	"unpin": "Unpin",
+	"pin": "Pin",
 	"retry": {
 		"title": "Retry",
 		"tooltip": "Try the operation again"
@@ -90,6 +92,7 @@
 	"checkpoint": {
 		"initial": "Initial Checkpoint",
 		"regular": "Checkpoint",
+		"initializingWarning": "Still initializing checkpoint... If this takes too long, you can disable checkpoints in <settingsLink>settings</settingsLink> and restart your task.",
 		"menu": {
 			"viewDiff": "View Diff",
 			"restore": "Restore Checkpoint",
@@ -157,7 +160,7 @@
 	"autoApprove": {
 		"title": "Auto-approve:",
 		"none": "None",
-		"description": "Auto-approve allows Roo Code to perform actions without asking for permission. Only enable for actions you fully trust.",
+		"description": "Auto-approve allows Roo Code to perform actions without asking for permission. Only enable for actions you fully trust. More detailed configuration available in <settingsLink>Settings</settingsLink>.",
 		"actions": {
 			"readFiles": {
 				"label": "Read files and directories",
@@ -202,20 +205,17 @@
 		}
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.10 Released",
-		"description": "Roo Code 3.10 brings powerful productivity enhancements!",
-		"whatsNew": "What's New",
-		"feature1": "Suggested responses to questions",
-		"feature2": "Improved large file handling",
-		"feature3": "Rebuilt @-mention file lookups",
-		"feature4": "",
-		"feature5": "",
-		"hideButton": "Hide announcement",
-		"detailsDiscussLinks": "Get more details and discuss in <discordLink>Discord</discordLink> and <redditLink>Reddit</redditLink> 🚀"
+		"title": "Do more with Boomerang Tasks 🪃",
+		"description": "Split work into subtasks with each running in a specialized mode such as code, architect, debug, or a custom mode.",
+		"learnMore": "Learn more →",
+		"hideButton": "Hide announcement"
 	},
 	"reasoning": {
 		"thinking": "Thinking",
 		"seconds": "{{count}}s"
+	},
+	"followUpSuggest": {
+		"copyToInput": "Copy to input (same as shift + click)"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo wants to use the browser:",

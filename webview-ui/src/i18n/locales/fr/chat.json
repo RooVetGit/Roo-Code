@@ -12,6 +12,8 @@
 		"export": "Exporter l'historique des tâches",
 		"delete": "Supprimer la tâche (Shift + Clic pour ignorer la confirmation)"
 	},
+	"unpin": "Désépingler",
+	"pin": "Épingler",
 	"tokenProgress": {
 		"availableSpace": "Espace disponible : {{amount}} tokens",
 		"tokensUsed": "Tokens utilisés : {{used}} sur {{total}}",
@@ -92,6 +94,7 @@
 	"checkpoint": {
 		"initial": "Point de contrôle initial",
 		"regular": "Point de contrôle",
+		"initializingWarning": "Initialisation du point de contrôle en cours... Si cela prend trop de temps, tu peux désactiver les points de contrôle dans les <settingsLink>paramètres</settingsLink> et redémarrer ta tâche.",
 		"menu": {
 			"viewDiff": "Voir les différences",
 			"restore": "Restaurer le point de contrôle",
@@ -157,7 +160,7 @@
 	"autoApprove": {
 		"title": "Auto-approbation :",
 		"none": "Aucune",
-		"description": "L'auto-approbation permet à Roo Code d'effectuer des actions sans demander d'autorisation. Activez-la uniquement pour les actions auxquelles vous faites entièrement confiance.",
+		"description": "L'auto-approbation permet à Roo Code d'effectuer des actions sans demander d'autorisation. Activez-la uniquement pour les actions auxquelles vous faites entièrement confiance. Configuration plus détaillée disponible dans les <settingsLink>Paramètres</settingsLink>.",
 		"actions": {
 			"readFiles": {
 				"label": "Lire fichiers et répertoires",
@@ -205,17 +208,14 @@
 		"thinking": "Réflexion",
 		"seconds": "{{count}}s"
 	},
+	"followUpSuggest": {
+		"copyToInput": "Copier vers l'entrée (ou Shift + clic)"
+	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.10 est sortie",
-		"description": "Roo Code 3.10 apporte de puissantes améliorations de productivité !",
-		"whatsNew": "Quoi de neuf",
-		"feature1": "Réponses suggérées aux questions",
-		"feature2": "Gestion améliorée des fichiers volumineux",
-		"feature3": "Recherche de fichiers par @-mention reconstruite",
-		"feature4": "",
-		"feature5": "",
-		"hideButton": "Masquer l'annonce",
-		"detailsDiscussLinks": "Obtenez plus de détails et participez aux discussions sur <discordLink>Discord</discordLink> et <redditLink>Reddit</redditLink> 🚀"
+		"title": "Faites-en plus avec les Tâches Boomerang 🪃",
+		"description": "Divisez le travail en sous-tâches, chacune s'exécutant dans un mode spécialisé, comme code, architect, debug ou un mode personnalisé.",
+		"learnMore": "En savoir plus →",
+		"hideButton": "Masquer l'annonce"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo veut utiliser le navigateur :",
