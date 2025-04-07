@@ -238,6 +238,8 @@ export interface ClineSayTool {
 	mode?: string
 	reason?: string
 	isOutsideWorkspace?: boolean
+	limit?: number
+	query?: string
 }
 
 // Must keep in sync with system prompt.
