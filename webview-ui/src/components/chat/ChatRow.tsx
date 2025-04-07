@@ -306,43 +306,69 @@ export const ChatRowContent = ({
 					</>
 				)
 			case "codebase_search": {
-				let parsed: {
-					query: string
-					results: Array<{
-						filePath: string
-						score: number
-						startLine: number
-						endLine: number
-						codeChunk: string
-					}>
-				} | null = null
-				try {
-					parsed = JSON.parse(tool.content || "{}")
-				} catch (e) {
-					console.error("Failed to parse codebase_search JSON content", e)
-				}
+				if (message.type === "say") {
+					let parsed: {
+						query: string
+						results: Array<{
+							filePath: string
+							score: number
+							startLine: number
+							endLine: number
+							codeChunk: string
+						}>
+					} | null = null
+					if (typeof tool.content === "object" && tool.content !== null) {
+						parsed = tool.content as {
+							query: string
+							results: Array<{
+								filePath: string
+								score: number
+								startLine: number
+								endLine: number
+								codeChunk: string
+							}>
+						}
+					} else {
+						console.error("codebase_search content is not a valid object:", tool.content)
+						parsed = null
+					}
 
-				const query = parsed?.query || ""
-				const results = parsed?.results || []
+					const query = parsed?.query || ""
+					const results = parsed?.results || []
 
-				return (
-					<div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-						<div style={{ fontWeight: "bold" }}>
-							Found {results.length} result{results.length !== 1 ? "s" : ""} for query '{query}'
+					return (
+						<div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+							<div style={{ fontWeight: "bold" }}>
+								{t("chat:codebaseSearch.didSearch", {
+									query,
+									limit: tool.limit,
+									count: results.length,
+								})}
+							</div>
+							{results.map((result, idx) => (
+								<CodebaseSearchResult
+									key={idx}
+									filePath={result.filePath}
+									score={result.score}
+									startLine={result.startLine}
+									endLine={result.endLine}
+									language="plaintext"
+									snippet={result.codeChunk}
+								/>
+							))}
 						</div>
-						{results.map((result, idx) => (
-							<CodebaseSearchResult
-								key={idx}
-								filePath={result.filePath}
-								score={result.score}
-								startLine={result.startLine}
-								endLine={result.endLine}
-								language="plaintext"
-								snippet={result.codeChunk}
-							/>
-						))}
-					</div>
-				)
+					)
+				} else if (message.type === "ask") {
+					return (
+						<div style={headerStyle}>
+							{toolIcon("search")}
+							<span style={{ fontWeight: "bold" }}>
+								{t("chat:codebaseSearch.wantsToSearch", { query: tool.query, limit: tool.limit })}
+							</span>
+						</div>
+					)
+				}
+				return null
 			}
 			case "readFile":
 				return (
