@@ -144,8 +144,7 @@ export async function codebaseSearchTool(
 		  <result>
 		    <filePath>${result.filePath}</filePath>
 		    <score>${result.score}</score>
-		    <startLine>${result.startLine}</startLine>
-		    <endLine>${result.endLine}</endLine>
+		    <lines>${result.startLine}-${result.endLine}</lines>
 		    <codeChunk>${result.codeChunk}</codeChunk>
 		  </result>
 		  `,
