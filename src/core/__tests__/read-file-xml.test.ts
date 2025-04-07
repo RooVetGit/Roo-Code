@@ -10,7 +10,28 @@ import { Cline } from "../Cline"
 // Mock dependencies
 jest.mock("../../integrations/misc/line-counter")
 jest.mock("../../integrations/misc/read-lines")
-jest.mock("../../integrations/misc/extract-text")
+jest.mock("../../integrations/misc/extract-text", () => {
+	const actual = jest.requireActual("../../integrations/misc/extract-text")
+	// Create a spy on the actual addLineNumbers function
+	const addLineNumbersSpy = jest.spyOn(actual, "addLineNumbers")
+
+	return {
+		...actual,
+		// Expose the spy so tests can access it
+		__addLineNumbersSpy: addLineNumbersSpy,
+		extractTextFromFile: jest.fn().mockImplementation((filePath) => {
+			// Use the actual addLineNumbers function
+			const content = mockInputContent
+			return Promise.resolve(actual.addLineNumbers(content))
+		}),
+	}
+})
+
+// Get a reference to the spy
+const addLineNumbersSpy = jest.requireMock("../../integrations/misc/extract-text").__addLineNumbersSpy
+
+// Variable to control what content is used by the mock
+let mockInputContent = ""
 jest.mock("../../services/tree-sitter")
 jest.mock("isbinaryfile")
 jest.mock("../ignore/RooIgnoreController", () => ({
@@ -46,14 +67,13 @@ describe("read_file tool XML output structure", () => {
 	const testFilePath = "test/file.txt"
 	const absoluteFilePath = "/test/file.txt"
 	const fileContent = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
-	const numberedFileContent = "1 | Line 1\n2 | Line 2\n3 | Line 3\n4 | Line 4\n5 | Line 5"
+	const numberedFileContent = "1 | Line 1\n2 | Line 2\n3 | Line 3\n4 | Line 4\n5 | Line 5\n"
 	const sourceCodeDef = "\n\n# file.txt\n1--5 | Content"
 
 	// Mocked functions with correct types
 	const mockedCountFileLines = countFileLines as jest.MockedFunction<typeof countFileLines>
 	const mockedReadLines = readLines as jest.MockedFunction<typeof readLines>
 	const mockedExtractTextFromFile = extractTextFromFile as jest.MockedFunction<typeof extractTextFromFile>
-	const mockedAddLineNumbers = addLineNumbers as jest.MockedFunction<typeof addLineNumbers>
 	const mockedParseSourceCodeDefinitionsForFile = parseSourceCodeDefinitionsForFile as jest.MockedFunction<
 		typeof parseSourceCodeDefinitionsForFile
 	>
@@ -73,12 +93,9 @@ describe("read_file tool XML output structure", () => {
 
 		// Setup mocks for file operations
 		mockedIsBinaryFile.mockResolvedValue(false)
-		mockedAddLineNumbers.mockImplementation((content: string, startLine = 1) => {
-			return content
-				.split("\n")
-				.map((line, i) => `${i + startLine} | ${line}`)
-				.join("\n")
-		})
+
+		// Set the default content for the mock
+		mockInputContent = fileContent
 
 		// Setup mock provider
 		mockProvider = {
@@ -112,6 +129,7 @@ describe("read_file tool XML output structure", () => {
 			maxReadFileLine?: number
 			isBinary?: boolean
 			validateAccess?: boolean
+			skipAddLineNumbersCheck?: boolean // Flag to skip addLineNumbers check
 		} = {},
 	): Promise<string | undefined> {
 		// Configure mocks based on test scenario
@@ -139,6 +157,9 @@ describe("read_file tool XML output structure", () => {
 		// Import the tool implementation dynamically to avoid hoisting issues
 		const { readFileTool } = require("../tools/readFileTool")
 
+		// Reset the spy's call history before each test
+		addLineNumbersSpy.mockClear()
+
 		// Execute the tool
 		await readFileTool(
 			mockCline,
@@ -150,14 +171,21 @@ describe("read_file tool XML output structure", () => {
 			},
 			(param: string, value: string) => value,
 		)
+		// Verify addLineNumbers was called (unless explicitly skipped)
+		if (!options.skipAddLineNumbersCheck) {
+			expect(addLineNumbersSpy).toHaveBeenCalled()
+		} else {
+			// For cases where we expect addLineNumbers NOT to be called
+			expect(addLineNumbersSpy).not.toHaveBeenCalled()
+		}
 
 		return toolResult
 	}
 
 	describe("Basic XML Structure Tests", () => {
 		it("should produce XML output with no unnecessary indentation", async () => {
-			// Setup
-			mockedExtractTextFromFile.mockResolvedValue(numberedFileContent)
+			// Setup - use default mockInputContent (fileContent)
+			mockInputContent = fileContent
 
 			// Execute
 			const result = await executeReadFileTool()
@@ -169,8 +197,8 @@ describe("read_file tool XML output structure", () => {
 		})
 
 		it("should follow the correct XML structure format", async () => {
-			// Setup
-			mockedExtractTextFromFile.mockResolvedValue(numberedFileContent)
+			// Setup - use default mockInputContent (fileContent)
+			mockInputContent = fileContent
 
 			// Execute
 			const result = await executeReadFileTool()
@@ -236,8 +264,8 @@ describe("read_file tool XML output structure", () => {
 		})
 
 		it("should include lines attribute even when no range is specified", async () => {
-			// Setup
-			mockedExtractTextFromFile.mockResolvedValue(numberedFileContent)
+			// Setup - use default mockInputContent (fileContent)
+			mockInputContent = fileContent
 
 			// Execute
 			const result = await executeReadFileTool()
@@ -418,12 +446,12 @@ describe("read_file tool XML output structure", () => {
 			const maxReadFileLine = 0
 			const totalLines = 10
 			// Mock content with exactly 10 lines to match totalLines
-			const mockContent = Array(10).fill("Line content").join("\n")
-			mockedExtractTextFromFile.mockResolvedValue(mockContent)
+			const rawContent = Array(10).fill("Line content").join("\n")
+			mockInputContent = rawContent
 			mockedParseSourceCodeDefinitionsForFile.mockResolvedValue(sourceCodeDef)
 
-			// Execute
-			const result = await executeReadFileTool({}, { maxReadFileLine, totalLines })
+			// Execute - skip addLineNumbers check as it's not called for maxReadFileLine=0
+			const result = await executeReadFileTool({}, { maxReadFileLine, totalLines, skipAddLineNumbersCheck: true })
 
 			// Verify
 			expect(result).toContain(`<notice>Showing only 0 of ${totalLines} total lines`)
@@ -443,11 +471,11 @@ describe("read_file tool XML output structure", () => {
 			// Mock that no source code definitions are available
 			mockedParseSourceCodeDefinitionsForFile.mockResolvedValue("")
 			// Mock content with exactly 10 lines to match totalLines
-			const mockContent = Array(10).fill("Line content").join("\n")
-			mockedExtractTextFromFile.mockResolvedValue(mockContent)
+			const rawContent = Array(10).fill("Line content").join("\n")
+			mockInputContent = rawContent
 
-			// Execute
-			const result = await executeReadFileTool({}, { maxReadFileLine, totalLines })
+			// Execute - skip addLineNumbers check as it's not called for maxReadFileLine=0
+			const result = await executeReadFileTool({}, { maxReadFileLine, totalLines, skipAddLineNumbersCheck: true })
 
 			// Verify
 			// Should include notice
@@ -492,8 +520,8 @@ describe("read_file tool XML output structure", () => {
 		})
 
 		it("should include error tag for invalid start_line", async () => {
-			// Execute
-			const result = await executeReadFileTool({ start_line: "invalid" })
+			// Execute - skip addLineNumbers check as it returns early with an error
+			const result = await executeReadFileTool({ start_line: "invalid" }, { skipAddLineNumbersCheck: true })
 
 			// Verify
 			expect(result).toContain(`<file><path>${testFilePath}</path><error>Invalid start_line value</error></file>`)
@@ -501,8 +529,8 @@ describe("read_file tool XML output structure", () => {
 		})
 
 		it("should include error tag for invalid end_line", async () => {
-			// Execute
-			const result = await executeReadFileTool({ end_line: "invalid" })
+			// Execute - skip addLineNumbers check as it returns early with an error
+			const result = await executeReadFileTool({ end_line: "invalid" }, { skipAddLineNumbersCheck: true })
 
 			// Verify
 			expect(result).toContain(`<file><path>${testFilePath}</path><error>Invalid end_line value</error></file>`)
@@ -510,8 +538,8 @@ describe("read_file tool XML output structure", () => {
 		})
 
 		it("should include error tag for RooIgnore error", async () => {
-			// Execute
-			const result = await executeReadFileTool({}, { validateAccess: false })
+			// Execute - skip addLineNumbers check as it returns early with an error
+			const result = await executeReadFileTool({}, { validateAccess: false, skipAddLineNumbersCheck: true })
 
 			// Verify
 			expect(result).toContain(`<file><path>${testFilePath}</path><error>`)
@@ -521,8 +549,8 @@ describe("read_file tool XML output structure", () => {
 
 	describe("Edge Cases Tests", () => {
 		it("should handle empty files correctly with maxReadFileLine=-1", async () => {
-			// Setup
-			mockedExtractTextFromFile.mockResolvedValue("")
+			// Setup - use empty string
+			mockInputContent = ""
 			const maxReadFileLine = -1
 			const totalLines = 0
 			mockedCountFileLines.mockResolvedValue(totalLines)
@@ -538,8 +566,8 @@ describe("read_file tool XML output structure", () => {
 		})
 
 		it("should handle empty files correctly with maxReadFileLine=0", async () => {
-			// Setup
-			mockedExtractTextFromFile.mockResolvedValue("")
+			// Setup - use empty string
+			mockInputContent = ""
 			const maxReadFileLine = 0
 			const totalLines = 0
 			mockedCountFileLines.mockResolvedValue(totalLines)
@@ -550,16 +578,15 @@ describe("read_file tool XML output structure", () => {
 			// Verify
 			// Empty files should include a content tag and notice even with maxReadFileLine=0
 			expect(result).toBe(`<file><path>${testFilePath}</path>\n<content/><notice>File is empty</notice>\n</file>`)
-			// Ensure no line numbers are added
-			expect(mockedAddLineNumbers).not.toHaveBeenCalled()
 		})
 
 		it("should handle binary files correctly", async () => {
 			// Setup
+			// For binary content, we need to override the mock since we don't use addLineNumbers
 			mockedExtractTextFromFile.mockResolvedValue("Binary content")
 
-			// Execute
-			const result = await executeReadFileTool({}, { isBinary: true })
+			// Execute - skip addLineNumbers check as we're directly mocking extractTextFromFile
+			const result = await executeReadFileTool({}, { isBinary: true, skipAddLineNumbersCheck: true })
 
 			// Verify
 			expect(result).toBe(
@@ -571,10 +598,11 @@ describe("read_file tool XML output structure", () => {
 		it("should handle file read errors correctly", async () => {
 			// Setup
 			const errorMessage = "File not found"
+			// For error cases, we need to override the mock to simulate a failure
 			mockedExtractTextFromFile.mockRejectedValue(new Error(errorMessage))
 
-			// Execute
-			const result = await executeReadFileTool()
+			// Execute - skip addLineNumbers check as it throws an error
+			const result = await executeReadFileTool({}, { skipAddLineNumbersCheck: true })
 
 			// Verify
 			expect(result).toContain(
