@@ -2103,7 +2103,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		])
 	}
 
-	async getEnvironmentDetails(includeFileDetails: boolean = false) {
+	async getEnvironmentDetails(includeFileDetails: boolean = false, currentTime?: Date) {
 		let details = ""
 
 		const { terminalOutputLineLimit = 500, maxWorkspaceFiles = 200 } =
@@ -2256,19 +2256,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 
 		// Add current time information with timezone
-		const now = new Date()
-		// Calculate timezone offset
-		const tzOffset = -now.getTimezoneOffset() // in minutes
-		const sign = tzOffset >= 0 ? "+" : "-"
-		const pad = (num: number) => String(Math.floor(Math.abs(num))).padStart(2, "0")
-		const offsetHours = pad(tzOffset / 60)
-		const offsetMinutes = pad(tzOffset % 60)
+		const now = currentTime ?? new Date()
+		// Get formatted time strings
+		const zuluTimeString = now.toISOString()
+		const localTimeString = now.toString()
 
-		// Remove the trailing 'Z' from ISO string and add the custom offset
-		const isoWithoutZ = now.toISOString().replace("Z", "")
-		const isoString = `${isoWithoutZ}${sign}${offsetHours}:${offsetMinutes}`
-
-		details += `\n\n# Current Time\n${isoString}`
+		details += `\n\n# Current Zulu Date/Time\n${zuluTimeString}`
+		details += `\n# Current Local Date/Time\n${localTimeString}`
 
 		// Add context tokens information
 		const { contextTokens, totalCost } = getApiMetrics(this.clineMessages)
