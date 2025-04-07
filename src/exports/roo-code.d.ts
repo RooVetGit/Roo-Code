@@ -178,6 +178,8 @@ type ProviderSettings = {
 	modelMaxThinkingTokens?: number | undefined
 	includeMaxTokens?: boolean | undefined
 	fakeAi?: unknown | undefined
+	humanRelayMonitorClipboard?: boolean | undefined
+	humanRelayMonitorInterval?: number | undefined
 }
 
 type GlobalSettings = {
@@ -336,6 +338,8 @@ type GlobalSettings = {
 		  }
 		| undefined
 	enhancementApiConfigId?: string | undefined
+	humanRelayMonitorClipboard?: boolean | undefined
+	humanRelayMonitorInterval?: number | undefined
 }
 
 type ClineMessage = {

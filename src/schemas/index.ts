@@ -388,6 +388,9 @@ export const providerSettingsSchema = z.object({
 	includeMaxTokens: z.boolean().optional(),
 	// Fake AI
 	fakeAi: z.unknown().optional(),
+	// Human Relay
+	humanRelayMonitorClipboard: z.boolean().optional(),
+	humanRelayMonitorInterval: z.number().optional(),
 })
 
 export type ProviderSettings = z.infer<typeof providerSettingsSchema>
@@ -472,6 +475,9 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	includeMaxTokens: undefined,
 	// Fake AI
 	fakeAi: undefined,
+	// Human Relay
+	humanRelayMonitorClipboard: undefined,
+	humanRelayMonitorInterval: undefined,
 }
 
 export const PROVIDER_SETTINGS_KEYS = Object.keys(providerSettingsRecord) as Keys<ProviderSettings>[]
@@ -545,6 +551,8 @@ export const globalSettingsSchema = z.object({
 	customModePrompts: customModePromptsSchema.optional(),
 	customSupportPrompts: customSupportPromptsSchema.optional(),
 	enhancementApiConfigId: z.string().optional(),
+	humanRelayMonitorClipboard: z.boolean().optional(),
+	humanRelayMonitorInterval: z.number().optional(),
 })
 
 export type GlobalSettings = z.infer<typeof globalSettingsSchema>
@@ -616,6 +624,8 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	customSupportPrompts: undefined,
 	enhancementApiConfigId: undefined,
 	cachedChromeHostUrl: undefined,
+	humanRelayMonitorClipboard: undefined,
+	humanRelayMonitorInterval: undefined,
 }
 
 export const GLOBAL_SETTINGS_KEYS = Object.keys(globalSettingsRecord) as Keys<GlobalSettings>[]

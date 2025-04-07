@@ -1,3 +1,6 @@
+import * as vscode from "vscode"
+import { getPanel } from "./registerCommands"
+
 // Callback mapping of human relay response.
 const humanRelayCallbacks = new Map<string, (response: string | undefined) => void>()
 
@@ -22,5 +25,38 @@ export const handleHumanRelayResponse = (response: { requestId: string; text?: s
 		}
 
 		humanRelayCallbacks.delete(response.requestId)
+	}
+}
+
+/**
+ * Validate if content contains any tags in <xxx> format
+ */
+export function containsValidTags(content: string): boolean {
+	const tagPattern = /<[^>]+>/
+	return tagPattern.test(content)
+}
+
+export const sendClipboardToHumanRelay = async () => {
+	const panel = getPanel()
+	if (!panel) {
+		return
+	}
+
+	try {
+		const clipboardText = await vscode.env.clipboard.readText()
+		if (!clipboardText) {
+			return
+		}
+
+		const requestId = "SendAIResponse"
+
+		panel?.webview.postMessage({ type: "closeHumanRelayDialog" })
+
+		vscode.commands.executeCommand("roo-cline.handleHumanRelayResponse", {
+			requestId,
+			text: clipboardText,
+		})
+	} catch (error) {
+		console.error("Failed to process clipboard content:", error)
 	}
 }
