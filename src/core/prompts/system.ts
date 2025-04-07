@@ -67,6 +67,7 @@ async function generatePrompt(
 ${getSharedToolUseSection()}
 
 ${getToolDescriptionsForMode(
+	context,
 	mode,
 	cwd,
 	supportsComputerUse,
