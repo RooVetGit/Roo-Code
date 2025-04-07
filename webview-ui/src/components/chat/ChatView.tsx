@@ -495,6 +495,9 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 								textAreaRef.current?.focus()
 							}
 							break
+						case "focusInput":
+							textAreaRef.current?.focus()
+							break
 					}
 					if (message.action === "focusInput") {
 						textAreaRef.current?.focus()
@@ -1301,7 +1304,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 																: primaryButtonText === t("chat:proceedAnyways.title")
 																	? t("chat:proceedAnyways.tooltip")
 																	: primaryButtonText ===
-																		t("chat:proceedWhileRunning.title")
+																		  t("chat:proceedWhileRunning.title")
 																		? t("chat:proceedWhileRunning.tooltip")
 																		: undefined
 									}
