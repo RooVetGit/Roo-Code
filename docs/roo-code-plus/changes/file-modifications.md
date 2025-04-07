@@ -31,7 +31,12 @@ This document lists all files modified during the integration of the LiteLLM pro
 
 *   **`webview-ui/src/components/settings/ApiOptions.tsx`**:
     *   Imported `liteLlmDefaultModelId`.
-    *   Added a conditional rendering block (`{selectedProvider === "litellm" && ...}`) to display settings fields (API Key, API URL, Model ID) for the LiteLLM provider.
+    *   Added a conditional rendering block (`{selectedProvider === "litellm" && ...}`) to display settings fields (API Key, API URL, Model Name) for the LiteLLM provider.
+    *   Updated translation key usage for LiteLLM labels.
+
+*   **`webview-ui/src/i18n/locales/en/settings.json`**:
+    *   Added translation keys `settings:providers.liteLLM.apiKey` and `settings:providers.liteLLM.apiUrl`.
+    *   Updated values for the new keys.
 
 ## Build/Dependencies
 

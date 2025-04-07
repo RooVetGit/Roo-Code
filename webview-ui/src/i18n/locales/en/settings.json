@@ -170,6 +170,10 @@
 			"description": "No API key is required, but the user needs to help copy and paste the information to the web chat AI.",
 			"instructions": "During use, a dialog box will pop up and the current message will be copied to the clipboard automatically. You need to paste these to web versions of AI (such as ChatGPT or Claude), then copy the AI's reply back to the dialog box and click the confirm button."
 		},
+		"liteLLM": {
+			"apiKey": "API Key",
+			"apiUrl": "LiteLLM API URL"
+		},
 		"openRouter": {
 			"providerRouting": {
 				"title": "OpenRouter Provider Routing",
@@ -218,7 +222,8 @@
 				}
 			},
 			"resetDefaults": "Reset to Defaults"
-		}
+		},
+		"modelId": "Model Name"
 	},
 	"browser": {
 		"enable": {
@@ -425,7 +430,8 @@
 		"modelId": {
 			"lmStudio": "e.g. meta-llama-3.1-8b-instruct",
 			"lmStudioDraft": "e.g. lmstudio-community/llama-3.2-1b-instruct",
-			"ollama": "e.g. llama3.1"
+			"ollama": "e.g. llama3.1",
+			"modelIdOptional": "Enter Model Name (optional, default: {{defaultValue}})"
 		},
 		"numbers": {
 			"maxTokens": "e.g. 4096",

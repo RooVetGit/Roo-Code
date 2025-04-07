@@ -1291,7 +1291,7 @@ const ApiOptions = ({
 						onInput={handleInputChange("litellmApiKey")}
 						placeholder={t("settings:placeholders.apiKey")}
 						className="w-full">
-						<label className="block font-medium mb-1">{t("settings:providers.liteLLMApiKey")}</label>
+						<label className="block font-medium mb-1">{t("settings:providers.liteLLM.apiKey")}</label>
 					</VSCodeTextField>
 					<div className="text-sm text-vscode-descriptionForeground -mt-2">
 						{t("settings:providers.apiKeyStorageNotice")}
@@ -1302,7 +1302,7 @@ const ApiOptions = ({
 						onInput={handleInputChange("litellmApiUrl")}
 						placeholder="http://localhost:4000"
 						className="w-full">
-						<label className="block font-medium mb-1">{t("settings:providers.liteLLMApiUrl")}</label>
+						<label className="block font-medium mb-1">{t("settings:providers.liteLLM.apiUrl")}</label>
 					</VSCodeTextField>
 					<VSCodeTextField
 						value={apiConfiguration?.litellmModelId || ""}

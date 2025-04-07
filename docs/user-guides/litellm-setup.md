@@ -19,8 +19,8 @@ This guide explains how to configure Roo-Code-Plus to use the LiteLLM provider, 
 
 3.  **Enter LiteLLM Settings:**
     *   **LiteLLM API URL:** Enter the base URL of your running LiteLLM proxy server. If it's running locally on the default port, you might leave this blank or enter `http://localhost:4000`.
-    *   **LiteLLM API Key:** If your LiteLLM proxy requires an API key for authentication, enter it here. Otherwise, leave it blank.
-    *   **LiteLLM Model ID:** Enter the exact model string that your LiteLLM proxy expects for the model you want to use. This typically includes the provider prefix. Examples:
+    *   **API Key:** If your LiteLLM proxy requires an API key for authentication, enter it here. Otherwise, leave it blank.
+    *   **Model Name:** Enter the exact model string that your LiteLLM proxy expects for the model you want to use. This typically includes the provider prefix. Examples:
         *   `gpt-3.5-turbo` (for OpenAI models via LiteLLM)
         *   `ollama/llama3` (for an Ollama model via LiteLLM)
         *   `bedrock/anthropic.claude-3-sonnet-20240229-v1:0` (for a Bedrock model via LiteLLM)
