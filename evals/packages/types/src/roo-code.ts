@@ -518,7 +518,7 @@ export const globalSettingsSchema = z.object({
 	terminalOutputLineLimit: z.number().optional(),
 	terminalShellIntegrationTimeout: z.number().optional(),
 
-	rateLimitSeconds: z.number().optional(),
+	rateLimitSeconds: z.number().optional(), // this can go away in a future major release
 	diffEnabled: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
 	experiments: experimentsSchema.optional(),
