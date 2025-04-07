@@ -28,6 +28,7 @@ export const providerNames = [
 	"requesty",
 	"human-relay",
 	"fake-ai",
+	"litellm",
 ] as const
 
 export const providerNamesSchema = z.enum(providerNames)
@@ -388,6 +389,11 @@ export const providerSettingsSchema = z.object({
 	includeMaxTokens: z.boolean().optional(),
 	// Fake AI
 	fakeAi: z.unknown().optional(),
+	// LiteLLM
+	litellmApiKey: z.string().optional(),
+	litellmApiUrl: z.string().optional(),
+	litellmModelId: z.string().optional(),
+	litellmModelInfo: modelInfoSchema.nullish(),
 })
 
 export type ProviderSettings = z.infer<typeof providerSettingsSchema>
@@ -472,6 +478,11 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	includeMaxTokens: undefined,
 	// Fake AI
 	fakeAi: undefined,
+	// LiteLLM
+	litellmApiKey: undefined,
+	litellmApiUrl: undefined,
+	litellmModelId: undefined,
+	litellmModelInfo: undefined,
 }
 
 export const PROVIDER_SETTINGS_KEYS = Object.keys(providerSettingsRecord) as Keys<ProviderSettings>[]

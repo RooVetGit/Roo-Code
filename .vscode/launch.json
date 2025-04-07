@@ -13,7 +13,7 @@
 			"args": ["--extensionDevelopmentPath=${workspaceFolder}"],
 			"sourceMaps": true,
 			"outFiles": ["${workspaceFolder}/dist/**/*.js"],
-			"preLaunchTask": "${defaultBuildTask}",
+			"preLaunchTask": "npm: package",
 			"env": {
 				"NODE_ENV": "development",
 				"VSCODE_DEBUG_MODE": "true"

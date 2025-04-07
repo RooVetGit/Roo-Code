@@ -20,6 +20,7 @@ type ProviderSettings = {
 				| "requesty"
 				| "human-relay"
 				| "fake-ai"
+				| "litellm"
 		  )
 		| undefined
 	apiModelId?: string | undefined
@@ -178,6 +179,28 @@ type ProviderSettings = {
 	modelMaxThinkingTokens?: number | undefined
 	includeMaxTokens?: boolean | undefined
 	fakeAi?: unknown | undefined
+	litellmApiKey?: string | undefined
+	litellmApiUrl?: string | undefined
+	litellmModelId?: string | undefined
+	litellmModelInfo?:
+		| ({
+				maxTokens?: (number | null) | undefined
+				contextWindow: number
+				supportsImages?: boolean | undefined
+				supportsComputerUse?: boolean | undefined
+				supportsPromptCache: boolean
+				inputPrice?: number | undefined
+				outputPrice?: number | undefined
+				cacheWritesPrice?: number | undefined
+				cacheReadsPrice?: number | undefined
+				description?: string | undefined
+				reasoningEffort?: ("low" | "medium" | "high") | undefined
+				thinking?: boolean | undefined
+				minTokensPerCachePoint?: number | undefined
+				maxCachePoints?: number | undefined
+				cachableFields?: string[] | undefined
+		  } | null)
+		| undefined
 }
 
 type GlobalSettings = {
@@ -205,6 +228,7 @@ type GlobalSettings = {
 							| "requesty"
 							| "human-relay"
 							| "fake-ai"
+							| "litellm"
 					  )
 					| undefined
 		  }[]

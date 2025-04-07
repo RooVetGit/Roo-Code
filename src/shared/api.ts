@@ -919,3 +919,17 @@ export const unboundDefaultModelInfo: ModelInfo = {
 	cacheWritesPrice: 3.75,
 	cacheReadsPrice: 0.3,
 }
+
+// LiteLLM
+// LiteLLM acts as a proxy, so defaults are generic placeholders.
+// Actual model capabilities depend on the underlying model configured in LiteLLM.
+export const liteLlmDefaultModelId = "gpt-3.5-turbo" // Common default, adjust as needed
+export const liteLlmModelInfoSaneDefaults: ModelInfo = {
+	maxTokens: 4096, // Placeholder
+	contextWindow: 16385, // Placeholder, common for gpt-3.5-turbo
+	supportsImages: false, // Assume false by default
+	supportsComputerUse: false, // Assume false by default
+	supportsPromptCache: false, // Assume false by default
+	// Pricing depends heavily on the underlying model, omit defaults
+	description: "Generic LiteLLM proxy model. Actual capabilities depend on the configured underlying model.",
+}

@@ -1,5 +1,10 @@
 # Roo Code Changelog
 
+## [Unreleased]
+
+### Added
+- Add LiteLLM provider support, allowing connection to any LLM via a LiteLLM proxy server. Includes configuration for API URL, API Key, and Model ID, plus cost calculation support via the `/spend/calculate` endpoint.
+
 ## [3.11.8] - 2025-04-05
 
 - Improve combineApiRequests performance to reduce gray screens of death (thanks @kyle-apex!)

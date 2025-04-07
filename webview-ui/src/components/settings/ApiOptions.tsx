@@ -36,6 +36,7 @@ import {
 	requestyDefaultModelId,
 	requestyDefaultModelInfo,
 	ApiProvider,
+	liteLlmDefaultModelId,
 } from "../../../../src/shared/api"
 import { ExtensionMessage } from "../../../../src/shared/ExtensionMessage"
 
@@ -1279,6 +1280,39 @@ const ApiOptions = ({
 							}}
 						/>
 					</div>
+				</>
+			)}
+
+			{selectedProvider === "litellm" && (
+				<>
+					<VSCodeTextField
+						value={apiConfiguration?.litellmApiKey || ""}
+						type="password"
+						onInput={handleInputChange("litellmApiKey")}
+						placeholder={t("settings:placeholders.apiKey")}
+						className="w-full">
+						<label className="block font-medium mb-1">{t("settings:providers.liteLLMApiKey")}</label>
+					</VSCodeTextField>
+					<div className="text-sm text-vscode-descriptionForeground -mt-2">
+						{t("settings:providers.apiKeyStorageNotice")}
+					</div>
+					<VSCodeTextField
+						value={apiConfiguration?.litellmApiUrl || ""}
+						type="url"
+						onInput={handleInputChange("litellmApiUrl")}
+						placeholder="http://localhost:4000"
+						className="w-full">
+						<label className="block font-medium mb-1">{t("settings:providers.liteLLMApiUrl")}</label>
+					</VSCodeTextField>
+					<VSCodeTextField
+						value={apiConfiguration?.litellmModelId || ""}
+						onInput={handleInputChange("litellmModelId")}
+						placeholder={t("settings:placeholders.modelIdOptional", {
+							defaultValue: liteLlmDefaultModelId,
+						})}
+						className="w-full">
+						<label className="block font-medium mb-1">{t("settings:providers.modelId")}</label>
+					</VSCodeTextField>
 				</>
 			)}
 
