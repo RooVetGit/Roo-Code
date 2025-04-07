@@ -15,5 +15,4 @@
 
 - Add spaces between Chinese and English/numbers: "AI 驅動" (not "AI驅動")
 - Use Traditional Chinese quotation marks: 「範例文字」(not "範例文字")
-- Add spaces between numbers and units: "1 個檔案" (not "1個檔案")
 - Use Taiwanese computing conventions rather than mainland terminology
