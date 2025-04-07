@@ -71,6 +71,14 @@ export class CodeIndexManager {
 		return this._state
 	}
 
+	public get isFeatureEnabled(): boolean {
+		return this.isEnabled
+	}
+
+	public get isFeatureConfigured(): boolean {
+		return this.isConfigured()
+	}
+
 	/**
 	 * Loads persisted configuration from globalState.
 	 */
