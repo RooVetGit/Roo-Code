@@ -2,7 +2,7 @@ import { ToolArgs } from "./types"
 
 export function getCodebaseSearchDescription(args: ToolArgs): string {
 	return `## codebase_search
-Description: Request to perform a semantic search across the indexed codebase to find relevant code snippets based on a natural language query. Requires code indexing to be enabled and configured.
+Description: Search the codebase for relevant files based on a query. Use this when the user asks a question about the codebase that requires finding specific files or code snippets.
 Parameters:
 - query: (required) The natural language query to search for.
 - limit: (optional) The maximum number of search results to return. Defaults to 10.
