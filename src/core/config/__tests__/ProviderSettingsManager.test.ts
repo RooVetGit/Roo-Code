@@ -111,7 +111,7 @@ describe("ProviderSettingsManager", () => {
 						},
 					},
 					migrations: {
-						rateLimitSecondsMigrate: false,
+						rateLimitSecondsMigrated: false,
 					},
 				}),
 			)
