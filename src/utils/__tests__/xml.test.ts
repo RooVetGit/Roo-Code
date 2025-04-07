@@ -117,21 +117,35 @@ describe("parseXml", () => {
 
 	describe("error handling", () => {
 		it("wraps parser errors with a descriptive message", () => {
-			// Mock XMLParser to simulate a parsing error
-			const originalParser = require("fast-xml-parser").XMLParser
-			require("fast-xml-parser").XMLParser = jest.fn().mockImplementation(() => {
-				return {
-					parse: () => {
-						throw new Error("Simulated parsing error")
-					},
-				}
+			// Use jest.spyOn to mock the XMLParser implementation
+			const mockParseFn = jest.fn().mockImplementation(() => {
+				throw new Error("Simulated parsing error")
 			})
+
+			const mockParserInstance = {
+				parse: mockParseFn,
+			}
+
+			// Spy on the XMLParser constructor to return our mock
+			const parserSpy = jest
+				.spyOn(require("fast-xml-parser"), "XMLParser")
+				.mockImplementation(() => mockParserInstance)
 
 			// Test that our function wraps the error appropriately
 			expect(() => parseXml("<root></root>")).toThrow("Failed to parse XML: Simulated parsing error")
 
-			// Restore the original parser
-			require("fast-xml-parser").XMLParser = originalParser
+			// Verify the parser was called with the expected options
+			expect(parserSpy).toHaveBeenCalledWith({
+				ignoreAttributes: false,
+				attributeNamePrefix: "@_",
+				parseAttributeValue: false,
+				parseTagValue: false,
+				trimValues: true,
+				stopNodes: [],
+			})
+
+			// Cleanup
+			parserSpy.mockRestore()
 		})
 	})
 })
