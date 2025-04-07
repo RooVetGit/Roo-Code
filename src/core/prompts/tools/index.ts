@@ -1,3 +1,4 @@
+import * as vscode from "vscode"
 import { getExecuteCommandDescription } from "./execute-command"
 import { getReadFileDescription } from "./read-file"
 import { getFetchInstructionsDescription } from "./fetch-instructions"
@@ -20,6 +21,7 @@ import { McpHub } from "../../../services/mcp/McpHub"
 import { Mode, ModeConfig, getModeConfig, isToolAllowedForMode, getGroupName } from "../../../shared/modes"
 import { ToolName, TOOL_GROUPS, ALWAYS_AVAILABLE_TOOLS } from "../../../shared/tool-groups"
 import { ToolArgs } from "./types"
+import { CodeIndexManager } from "../../../services/code-index/manager"
 
 // Map of tool names to their description functions
 const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined> = {
@@ -45,6 +47,7 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 }
 
 export function getToolDescriptionsForMode(
+	context: vscode.ExtensionContext,
 	mode: Mode,
 	cwd: string,
 	supportsComputerUse: boolean,
@@ -65,6 +68,8 @@ export function getToolDescriptionsForMode(
 
 	const tools = new Set<string>()
 
+	const manager = CodeIndexManager.getInstance(context)
+
 	// Add tools from mode's groups
 	config.groups.forEach((groupEntry) => {
 		const groupName = getGroupName(groupEntry)
@@ -80,6 +85,11 @@ export function getToolDescriptionsForMode(
 
 	// Add always available tools
 	ALWAYS_AVAILABLE_TOOLS.forEach((tool) => tools.add(tool))
+
+	// Conditionally exclude codebase_search if feature is disabled or not configured
+	if (!(manager.isFeatureEnabled && manager.isFeatureConfigured)) {
+		tools.delete("codebase_search")
+	}
 
 	// Map tool descriptions for allowed tools
 	const descriptions = Array.from(tools).map((toolName) => {
