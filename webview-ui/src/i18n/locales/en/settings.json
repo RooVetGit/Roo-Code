@@ -26,6 +26,7 @@
 		"notifications": "Notifications",
 		"contextManagement": "Context Management",
 		"terminal": "Terminal",
+		"notebook": "Notebook",
 		"advanced": "Advanced",
 		"experimental": "Experimental Features",
 		"language": "Language",
@@ -79,6 +80,18 @@
 			"allowedCommandsDescription": "Command prefixes that can be auto-executed when \"Always approve execute operations\" is enabled. Add * to allow all commands (use with caution).",
 			"commandPlaceholder": "Enter command prefix (e.g., 'git ')",
 			"addButton": "Add"
+		},
+		"notebookRead": {
+			"label": "NB Read",
+			"description": "Automatically read the active notebook without requiring approval"
+		},
+		"notebookEdit": {
+			"label": "NB Edit",
+			"description": "Automatically edit the active notebook without requiring approval"
+		},
+		"notebookExecute": {
+			"label": "NB Execute",
+			"description": "Automatically execute cells in the active notebook without requiring approval"
 		}
 	},
 	"providers": {
@@ -334,6 +347,16 @@
 		"zdotdir": {
 			"label": "Enable ZDOTDIR handling",
 			"description": "When enabled, creates a temporary directory for ZDOTDIR to handle zsh shell integration properly. This ensures VSCode shell integration works correctly with zsh while preserving your zsh configuration. (experimental)"
+		}
+	},
+	"notebook": {
+		"maxOutputSize": {
+			"label": "Notebook output size limit",
+			"description": "Maximum size (in characters) for notebook cell output"
+		},
+		"timeoutSeconds": {
+			"label": "Execution timeout",
+			"description": "Maximum time (in seconds) to wait for notebook cell execution"
 		}
 	},
 	"advanced": {

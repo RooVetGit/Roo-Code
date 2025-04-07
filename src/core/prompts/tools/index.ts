@@ -14,6 +14,10 @@ import { getUseMcpToolDescription } from "./use-mcp-tool"
 import { getAccessMcpResourceDescription } from "./access-mcp-resource"
 import { getSwitchModeDescription } from "./switch-mode"
 import { getNewTaskDescription } from "./new-task"
+import { getNotebookReadToolDescription } from "./notebook-read"
+import { getNotebookEditToolDescription } from "./notebook-edit"
+import { getNotebookExecuteToolDescription } from "./notebook-execute"
+import { getNotebookSaveToolDescription } from "./notebook-save"
 import { DiffStrategy } from "../../diff/DiffStrategy"
 import { McpHub } from "../../../services/mcp/McpHub"
 import { Mode, ModeConfig, getModeConfig, isToolAllowedForMode, getGroupName } from "../../../shared/modes"
@@ -38,6 +42,10 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 	new_task: (args) => getNewTaskDescription(args),
 	insert_content: (args) => getInsertContentDescription(args),
 	search_and_replace: (args) => getSearchAndReplaceDescription(args),
+	notebook_read: (args) => getNotebookReadToolDescription(args),
+	notebook_edit: (args) => getNotebookEditToolDescription(args),
+	notebook_execute: (args) => getNotebookExecuteToolDescription(args),
+	notebook_save: (args) => getNotebookSaveToolDescription(args),
 	apply_diff: (args) =>
 		args.diffStrategy ? args.diffStrategy.getToolDescription({ cwd: args.cwd, toolOptions: args.toolOptions }) : "",
 }
@@ -112,4 +120,8 @@ export {
 	getSwitchModeDescription,
 	getInsertContentDescription,
 	getSearchAndReplaceDescription,
+	getNotebookReadToolDescription,
+	getNotebookEditToolDescription,
+	getNotebookExecuteToolDescription,
+	getNotebookSaveToolDescription,
 }

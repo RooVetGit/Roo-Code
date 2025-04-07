@@ -14,6 +14,9 @@ type AutoApproveToggles = Pick<
 	| "alwaysAllowModeSwitch"
 	| "alwaysAllowSubtasks"
 	| "alwaysAllowExecute"
+	| "alwaysAllowNotebookRead"
+	| "alwaysAllowNotebookEdit"
+	| "alwaysAllowNotebookExecute"
 >
 
 export type AutoApproveSetting = keyof AutoApproveToggles
@@ -82,6 +85,27 @@ export const autoApproveSettingsConfig: Record<AutoApproveSetting, AutoApproveCo
 		descriptionKey: "settings:autoApprove.execute.description",
 		icon: "terminal",
 		testId: "always-allow-execute-toggle",
+	},
+	alwaysAllowNotebookRead: {
+		key: "alwaysAllowNotebookRead",
+		labelKey: "settings:autoApprove.notebookRead.label",
+		descriptionKey: "settings:autoApprove.notebookRead.description",
+		icon: "eye",
+		testId: "always-allow-notebook-read-toggle",
+	},
+	alwaysAllowNotebookEdit: {
+		key: "alwaysAllowNotebookEdit",
+		labelKey: "settings:autoApprove.notebookEdit.label",
+		descriptionKey: "settings:autoApprove.notebookEdit.description",
+		icon: "edit",
+		testId: "always-allow-notebook-edit-toggle",
+	},
+	alwaysAllowNotebookExecute: {
+		key: "alwaysAllowNotebookExecute",
+		labelKey: "settings:autoApprove.notebookExecute.label",
+		descriptionKey: "settings:autoApprove.notebookExecute.description",
+		icon: "run",
+		testId: "always-allow-notebook-execute-toggle",
 	},
 }
 

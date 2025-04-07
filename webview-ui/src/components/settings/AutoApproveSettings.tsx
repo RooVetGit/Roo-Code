@@ -25,6 +25,9 @@ type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	alwaysAllowSubtasks?: boolean
 	alwaysAllowExecute?: boolean
 	allowedCommands?: string[]
+	alwaysAllowNotebookRead?: boolean
+	alwaysAllowNotebookEdit?: boolean
+	alwaysAllowNotebookExecute?: boolean
 	setCachedStateField: SetCachedStateField<
 		| "alwaysAllowReadOnly"
 		| "alwaysAllowReadOnlyOutsideWorkspace"
@@ -39,6 +42,9 @@ type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 		| "alwaysAllowSubtasks"
 		| "alwaysAllowExecute"
 		| "allowedCommands"
+		| "alwaysAllowNotebookRead"
+		| "alwaysAllowNotebookEdit"
+		| "alwaysAllowNotebookExecute"
 	>
 }
 
@@ -56,6 +62,9 @@ export const AutoApproveSettings = ({
 	alwaysAllowSubtasks,
 	alwaysAllowExecute,
 	allowedCommands,
+	alwaysAllowNotebookRead,
+	alwaysAllowNotebookEdit,
+	alwaysAllowNotebookExecute,
 	setCachedStateField,
 	className,
 	...props
@@ -93,6 +102,9 @@ export const AutoApproveSettings = ({
 					alwaysAllowModeSwitch={alwaysAllowModeSwitch}
 					alwaysAllowSubtasks={alwaysAllowSubtasks}
 					alwaysAllowExecute={alwaysAllowExecute}
+					alwaysAllowNotebookRead={alwaysAllowNotebookRead}
+					alwaysAllowNotebookEdit={alwaysAllowNotebookEdit}
+					alwaysAllowNotebookExecute={alwaysAllowNotebookExecute}
 					onToggle={(key, value) => setCachedStateField(key, value)}
 				/>
 

@@ -12,6 +12,7 @@ import {
 	AlertTriangle,
 	Globe,
 	Info,
+	NotebookText,
 	LucideIcon,
 	Monitor,
 } from "lucide-react"
@@ -51,6 +52,7 @@ import { InterfaceSettings } from "./InterfaceSettings"
 import { NotificationSettings } from "./NotificationSettings"
 import { ContextManagementSettings } from "./ContextManagementSettings"
 import { TerminalSettings } from "./TerminalSettings"
+import { NotebookSettings } from "./NotebookSettings"
 import { ExperimentalSettings } from "./ExperimentalSettings"
 import { LanguageSettings } from "./LanguageSettings"
 import { About } from "./About"
@@ -69,6 +71,7 @@ const sectionNames = [
 	"notifications",
 	"contextManagement",
 	"terminal",
+	"notebook",
 	"experimental",
 	"language",
 	"about",
@@ -134,11 +137,16 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		terminalZshOhMy,
 		terminalZshP10k,
 		terminalZdotdir,
+		notebookMaxOutputSize,
+		notebookTimeoutSeconds,
 		writeDelayMs,
 		showRooIgnoredFiles,
 		remoteBrowserEnabled,
 		maxReadFileLine,
 		showGreeting,
+		alwaysAllowNotebookRead,
+		alwaysAllowNotebookEdit,
+		alwaysAllowNotebookExecute,
 	} = cachedState
 
 	// Make sure apiConfiguration is initialized and managed by SettingsView.
@@ -248,6 +256,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "terminalZshOhMy", bool: terminalZshOhMy })
 			vscode.postMessage({ type: "terminalZshP10k", bool: terminalZshP10k })
 			vscode.postMessage({ type: "terminalZdotdir", bool: terminalZdotdir })
+			vscode.postMessage({ type: "notebookMaxOutputSize", value: notebookMaxOutputSize ?? 2000 })
+			vscode.postMessage({ type: "notebookTimeoutSeconds", value: notebookTimeoutSeconds ?? 30 })
 			vscode.postMessage({ type: "mcpEnabled", bool: mcpEnabled })
 			vscode.postMessage({ type: "alwaysApproveResubmit", bool: alwaysApproveResubmit })
 			vscode.postMessage({ type: "requestDelaySeconds", value: requestDelaySeconds })
@@ -259,6 +269,9 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "updateExperimental", values: experiments })
 			vscode.postMessage({ type: "alwaysAllowModeSwitch", bool: alwaysAllowModeSwitch })
 			vscode.postMessage({ type: "alwaysAllowSubtasks", bool: alwaysAllowSubtasks })
+			vscode.postMessage({ type: "alwaysAllowNotebookRead", bool: alwaysAllowNotebookRead })
+			vscode.postMessage({ type: "alwaysAllowNotebookEdit", bool: alwaysAllowNotebookEdit })
+			vscode.postMessage({ type: "alwaysAllowNotebookExecute", bool: alwaysAllowNotebookExecute })
 			vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
 			vscode.postMessage({ type: "telemetrySetting", text: telemetrySetting })
 			vscode.postMessage({ type: "showGreeting", bool: showGreeting })
@@ -294,6 +307,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 	const notificationsRef = useRef<HTMLDivElement>(null)
 	const contextManagementRef = useRef<HTMLDivElement>(null)
 	const terminalRef = useRef<HTMLDivElement>(null)
+	const notebookRef = useRef<HTMLDivElement>(null)
 	const experimentalRef = useRef<HTMLDivElement>(null)
 	const languageRef = useRef<HTMLDivElement>(null)
 	const aboutRef = useRef<HTMLDivElement>(null)
@@ -308,6 +322,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			{ id: "notifications", icon: Bell, ref: notificationsRef },
 			{ id: "contextManagement", icon: Database, ref: contextManagementRef },
 			{ id: "terminal", icon: SquareTerminal, ref: terminalRef },
+			{ id: "notebook", icon: NotebookText, ref: notebookRef },
 			{ id: "experimental", icon: FlaskConical, ref: experimentalRef },
 			{ id: "language", icon: Globe, ref: languageRef },
 			{ id: "about", icon: Info, ref: aboutRef },
@@ -321,6 +336,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			notificationsRef,
 			contextManagementRef,
 			terminalRef,
+			notebookRef,
 			experimentalRef,
 		],
 	)
@@ -446,6 +462,9 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 						alwaysAllowSubtasks={alwaysAllowSubtasks}
 						alwaysAllowExecute={alwaysAllowExecute}
 						allowedCommands={allowedCommands}
+						alwaysAllowNotebookRead={alwaysAllowNotebookRead}
+						alwaysAllowNotebookEdit={alwaysAllowNotebookEdit}
+						alwaysAllowNotebookExecute={alwaysAllowNotebookExecute}
 						setCachedStateField={setCachedStateField}
 					/>
 				</div>
@@ -502,6 +521,14 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 						terminalZshOhMy={terminalZshOhMy}
 						terminalZshP10k={terminalZshP10k}
 						terminalZdotdir={terminalZdotdir}
+						setCachedStateField={setCachedStateField}
+					/>
+				</div>
+
+				<div ref={notebookRef}>
+					<NotebookSettings
+						notebookMaxOutputSize={notebookMaxOutputSize}
+						notebookTimeoutSeconds={notebookTimeoutSeconds}
 						setCachedStateField={setCachedStateField}
 					/>
 				</div>

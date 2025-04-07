@@ -190,6 +190,16 @@
 		"hideButton": "隱藏公告",
 		"detailsDiscussLinks": "在 <discordLink>Discord</discordLink> 和 <redditLink>Reddit</redditLink> 取得更多詳細資訊並參與討論 🚀"
 	},
+	"notebook": {
+		"wantsToRead": "Roo 想要讀取目前作用中的筆記本",
+		"didRead": "Roo 已讀取目前作用中的筆記本",
+		"wantsToEdit": "Roo 想要編輯目前作用中的筆記本",
+		"didEdit": "Roo 已編輯目前作用中的筆記本",
+		"wantsToExecute": "Roo 想要執行目前作用中筆記本的儲存格",
+		"didExecute": "Roo 已執行筆記本的儲存格",
+		"wantsToSave": "Roo 想要儲存目前作用中的筆記本",
+		"didSave": "Roo 已儲存目前作用中的筆記本"
+	},
 	"browser": {
 		"rooWantsToUse": "Roo 想要使用瀏覽器：",
 		"consoleLogs": "主控台記錄",

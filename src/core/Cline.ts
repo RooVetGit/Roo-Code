@@ -76,6 +76,10 @@ import { askFollowupQuestionTool } from "./tools/askFollowupQuestionTool"
 import { switchModeTool } from "./tools/switchModeTool"
 import { attemptCompletionTool } from "./tools/attemptCompletionTool"
 import { newTaskTool } from "./tools/newTaskTool"
+import { notebookReadTool } from "./tools/notebookReadTool"
+import { notebookEditTool } from "./tools/notebookEditTool"
+import { notebookExecuteTool } from "./tools/notebookExecuteTool"
+import { notebookSaveTool } from "./tools/notebookSaveTool"
 
 export type ToolResponse = string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam>
 type UserContent = Array<Anthropic.Messages.ContentBlockParam>
@@ -1422,6 +1426,14 @@ export class Cline extends EventEmitter<ClineEvents> {
 							const modeName = getModeBySlug(mode, customModes)?.name ?? mode
 							return `[${block.name} in ${modeName} mode: '${message}']`
 						}
+						case "notebook_read":
+							return `[${block.name} action '${block.params.action}']`
+						case "notebook_edit":
+							return `[${block.name} action '${block.params.action}']`
+						case "notebook_execute":
+							return `[${block.name} action '${block.params.action}']`
+						case "notebook_save":
+							return `[${block.name}]`
 					}
 				}
 
@@ -1665,6 +1677,25 @@ export class Cline extends EventEmitter<ClineEvents> {
 							toolDescription,
 							askFinishSubTaskApproval,
 						)
+						break
+					case "notebook_read":
+						await notebookReadTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
+						break
+					case "notebook_edit":
+						await notebookEditTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
+						break
+					case "notebook_execute":
+						await notebookExecuteTool(
+							this,
+							block,
+							askApproval,
+							handleError,
+							pushToolResult,
+							removeClosingTag,
+						)
+						break
+					case "notebook_save":
+						await notebookSaveTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
 						break
 				}
 
