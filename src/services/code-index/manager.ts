@@ -11,7 +11,7 @@ export type IndexingState = "Standby" | "Indexing" | "Indexed" | "Error"
 
 // Define the structure for progress updates
 export interface IndexProgressUpdate {
-	state: IndexingState
+	systemStatus: IndexingState
 	message?: string // For details like error messages or current activity
 }
 
