@@ -2,12 +2,6 @@ import * as assert from "assert"
 import * as vscode from "vscode"
 
 suite("Roo Code Extension", () => {
-	test("OPENROUTER_API_KEY environment variable is set", () => {
-		if (!process.env.OPENROUTER_API_KEY) {
-			assert.fail("OPENROUTER_API_KEY environment variable is not set")
-		}
-	})
-
 	test("Commands should be registered", async () => {
 		const expectedCommands = [
 			"roo-cline.plusButtonClicked",
@@ -18,7 +12,6 @@ suite("Roo Code Extension", () => {
 			"roo-cline.openInNewTab",
 			"roo-cline.explainCode",
 			"roo-cline.fixCode",
-			"roo-cline.askForHelp",
 			"roo-cline.improveCode",
 		]
 

@@ -80,7 +80,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	// Could modify code to use getMcpHub() instead.
 	mcpHub?: McpHub // Change from private to protected
 	// not private, so it can be accessed from webviewMessageHandler
-	latestAnnouncementId = "mar-30-2025-3-11" // update for v3.11.0 announcement
+	latestAnnouncementId = "apr-04-2025-boomerang" // update for Boomerang Tasks announcement
 	// not private, so it can be accessed from webviewMessageHandler
 	settingsImportedAt?: number
 	public readonly contextProxy: ContextProxy
@@ -115,6 +115,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		McpServerManager.getInstance(this.context, this)
 			.then((hub) => {
 				this.mcpHub = hub
+				this.mcpHub.registerClient()
 			})
 			.catch((error) => {
 				this.outputChannel.appendLine(`Failed to initialize MCP Hub: ${error}`)
@@ -221,7 +222,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		this.workspaceTracker?.dispose()
 		this.workspaceTracker = undefined
-		this.mcpHub?.dispose()
+		await this.mcpHub?.unregisterClient()
 		this.mcpHub = undefined
 		this.customModesManager?.dispose()
 		this.outputChannel.appendLine("Disposed all disposables")
@@ -447,10 +448,29 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		return this.initClineWithTask(task, images, parent)
 	}
 
-	// when initializing a new task, (not from history but from a tool command new_task) there is no need to remove the previouse task
-	// since the new task is a sub task of the previous one, and when it finishes it is removed from the stack and the caller is resumed
-	// in this way we can have a chain of tasks, each one being a sub task of the previous one until the main task is finished
-	public async initClineWithTask(task?: string, images?: string[], parentTask?: Cline) {
+	// When initializing a new task, (not from history but from a tool command
+	// new_task) there is no need to remove the previouse task since the new
+	// task is a subtask of the previous one, and when it finishes it is removed
+	// from the stack and the caller is resumed in this way we can have a chain
+	// of tasks, each one being a sub task of the previous one until the main
+	// task is finished.
+	public async initClineWithTask(
+		task?: string,
+		images?: string[],
+		parentTask?: Cline,
+		options: Partial<
+			Pick<
+				ClineOptions,
+				| "customInstructions"
+				| "enableDiff"
+				| "enableCheckpoints"
+				| "checkpointStorage"
+				| "fuzzyMatchThreshold"
+				| "consecutiveMistakeLimit"
+				| "experiments"
+			>
+		> = {},
+	) {
 		const {
 			apiConfiguration,
 			customModePrompts,
@@ -481,12 +501,15 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			parentTask,
 			taskNumber: this.clineStack.length + 1,
 			onCreated: (cline) => this.emit("clineCreated", cline),
+			...options,
 		})
 
 		await this.addClineToStack(cline)
+
 		this.log(
 			`[subtasks] ${cline.parentTask ? "child" : "parent"} task ${cline.taskId}.${cline.instanceId} instantiated`,
 		)
+
 		return cline
 	}
 
@@ -740,10 +763,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	 */
 	public async handleModeSwitch(newMode: Mode) {
 		// Capture mode switch telemetry event
-		const currentTaskId = this.getCurrentCline()?.taskId
+		const cline = this.getCurrentCline()
 
-		if (currentTaskId) {
-			telemetryService.captureModeSwitch(currentTaskId, newMode)
+		if (cline) {
+			telemetryService.captureModeSwitch(cline.taskId, newMode)
+			cline.emit("taskModeSwitched", cline.taskId, newMode)
 		}
 
 		await this.updateGlobalState("mode", newMode)
@@ -1269,7 +1293,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const customModes = await this.customModesManager.getCustomModes()
 
 		// Determine apiProvider with the same logic as before.
-		const apiProvider: ApiProvider = stateValues.apiProvider ? stateValues.apiProvider : "anthropic"
+		const apiProvider: ApiProvider = stateValues.apiProvider ? stateValues.apiProvider : "openai"
 
 		// Build the apiConfiguration object combining state values and secrets.
 		const providerSettings = this.contextProxy.getProviderSettings()

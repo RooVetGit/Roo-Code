@@ -98,6 +98,8 @@
 		"enterProfileName": "Profil adını girin",
 		"createProfile": "Profil oluştur",
 		"cannotDeleteOnlyProfile": "Yalnızca tek profili silemezsiniz",
+		"searchPlaceholder": "Profilleri ara",
+		"noMatchFound": "Eşleşen profil bulunamadı",
 		"vscodeLmDescription": "VS Code Dil Modeli API'si, diğer VS Code uzantıları tarafından sağlanan modelleri çalıştırmanıza olanak tanır (GitHub Copilot dahil ancak bunlarla sınırlı değildir). Başlamanın en kolay yolu, VS Code Marketplace'ten Copilot ve Copilot Chat uzantılarını yüklemektir.",
 		"awsCustomArnUse": "Kullanmak istediğiniz model için geçerli bir AWS Bedrock ARN'si girin. Format örnekleri:",
 		"awsCustomArnDesc": "ARN içindeki bölgenin yukarıda seçilen AWS Bölgesiyle eşleştiğinden emin olun.",
@@ -131,6 +133,9 @@
 		"awsSessionToken": "AWS Oturum Belirteci",
 		"awsRegion": "AWS Bölgesi",
 		"awsCrossRegion": "Bölgeler arası çıkarım kullan",
+		"enablePromptCaching": "İstem önbelleğini etkinleştir",
+		"enablePromptCachingTitle": "Desteklenen modeller için performansı artırmak ve maliyetleri azaltmak için istem önbelleğini etkinleştir.",
+		"cacheUsageNote": "Not: Önbellek kullanımını görmüyorsanız, farklı bir model seçip ardından istediğiniz modeli tekrar seçmeyi deneyin.",
 		"vscodeLmModel": "Dil Modeli",
 		"vscodeLmWarning": "Not: Bu çok deneysel bir entegrasyondur ve sağlayıcı desteği değişebilir. Bir modelin desteklenmediğine dair bir hata alırsanız, bu sağlayıcı tarafındaki bir sorundur.",
 		"googleCloudSetup": {
@@ -366,7 +371,8 @@
 		"azureApiVersion": "Azure API sürümünü ayarla",
 		"gemini": {
 			"freeRequests": "* Dakikada {{count}} isteğe kadar ücretsiz. Bundan sonra, ücretlendirme istem boyutuna bağlıdır.",
-			"pricingDetails": "Daha fazla bilgi için fiyatlandırma ayrıntılarına bakın."
+			"pricingDetails": "Daha fazla bilgi için fiyatlandırma ayrıntılarına bakın.",
+			"billingEstimate": "* Ücretlendirme bir tahmindir - kesin maliyet istem boyutuna bağlıdır."
 		}
 	},
 	"modelPicker": {

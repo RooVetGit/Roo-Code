@@ -98,6 +98,8 @@
 		"enterProfileName": "프로필 이름 입력",
 		"createProfile": "프로필 생성",
 		"cannotDeleteOnlyProfile": "유일한 프로필은 삭제할 수 없습니다",
+		"searchPlaceholder": "프로필 검색",
+		"noMatchFound": "일치하는 프로필이 없습니다",
 		"vscodeLmDescription": "VS Code 언어 모델 API를 사용하면 GitHub Copilot을 포함한 기타 VS Code 확장 프로그램이 제공하는 모델을 실행할 수 있습니다. 시작하려면 VS Code 마켓플레이스에서 Copilot 및 Copilot Chat 확장 프로그램을 설치하는 것이 가장 쉽습니다.",
 		"awsCustomArnUse": "사용하려는 모델의 유효한 AWS Bedrock ARN을 입력하세요. 형식 예시:",
 		"awsCustomArnDesc": "ARN의 리전이 위에서 선택한 AWS 리전과 일치하는지 확인하세요.",
@@ -131,6 +133,9 @@
 		"awsSessionToken": "AWS 세션 토큰",
 		"awsRegion": "AWS 리전",
 		"awsCrossRegion": "교차 리전 추론 사용",
+		"enablePromptCaching": "프롬프트 캐시 활성화",
+		"enablePromptCachingTitle": "지원되는 모델의 성능을 향상시키고 비용을 절감하기 위해 프롬프트 캐시를 활성화합니다.",
+		"cacheUsageNote": "참고: 캐시 사용이 표시되지 않는 경우, 다른 모델을 선택한 다음 원하는 모델을 다시 선택해 보세요.",
 		"vscodeLmModel": "언어 모델",
 		"vscodeLmWarning": "참고: 이는 매우 실험적인 통합이며, 공급자 지원은 다를 수 있습니다. 모델이 지원되지 않는다는 오류가 발생하면, 이는 공급자 측의 문제입니다.",
 		"googleCloudSetup": {
@@ -366,7 +371,8 @@
 		"azureApiVersion": "Azure API 버전 설정",
 		"gemini": {
 			"freeRequests": "* 분당 {{count}}개의 요청까지 무료. 이후에는 프롬프트 크기에 따라 요금이 부과됩니다.",
-			"pricingDetails": "자세한 내용은 가격 정보를 참조하세요."
+			"pricingDetails": "자세한 내용은 가격 정보를 참조하세요.",
+			"billingEstimate": "* 요금은 추정치입니다 - 정확한 비용은 프롬프트 크기에 따라 달라집니다."
 		}
 	},
 	"modelPicker": {
