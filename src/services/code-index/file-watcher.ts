@@ -8,6 +8,7 @@ import { parseCodeFileBySize, CodeBlock } from "./parser"
 import { CodeIndexOpenAiEmbedder } from "./openai-embedder"
 import { CodeIndexQdrantClient } from "./qdrant-client"
 import { ApiHandlerOptions } from "../../shared/api"
+import { v4 as uuidv4 } from "uuid"
 
 const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB
 
@@ -236,7 +237,7 @@ export class CodeIndexFileWatcher {
 					const normalizedAbsolutePath = path.normalize(absolutePath)
 
 					return {
-						id: `${block.file_path}:${block.start_line}-${block.end_line}`,
+						id: uuidv4(),
 						vector: embeddings[index],
 						payload: {
 							filePath: normalizedAbsolutePath,
