@@ -73,9 +73,16 @@ export class CodeIndexFileWatcher {
 		// Debounce the event handling
 		this.debounceTimers[filePath] = setTimeout(async () => {
 			let hadError = false
-			this._onDidStartProcessing.fire(filePath)
 
 			try {
+				const shouldProcess = await this.shouldProcessFile(filePath)
+				if (!shouldProcess) {
+					delete this.debounceTimers[filePath]
+					return
+				}
+
+				this._onDidStartProcessing.fire(filePath)
+
 				switch (eventType) {
 					case "create":
 						await this.handleFileCreate(filePath)
@@ -93,7 +100,7 @@ export class CodeIndexFileWatcher {
 				this._onDidFinishProcessing.fire({ path: filePath, error: error as Error })
 				this._onError.fire(error as Error)
 			} finally {
-				if (!hadError) {
+				if (!hadError && (await this.shouldProcessFile(filePath))) {
 					this._onDidFinishProcessing.fire({ path: filePath })
 				}
 				delete this.debounceTimers[filePath]
