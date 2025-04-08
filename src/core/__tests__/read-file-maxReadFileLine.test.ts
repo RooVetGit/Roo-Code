@@ -26,8 +26,6 @@ jest.mock("../../integrations/misc/extract-text", () => {
 // Get a reference to the spy
 const addLineNumbersSpy = jest.requireMock("../../integrations/misc/extract-text").__addLineNumbersSpy
 
-// Variable to control what content is used by the mock
-let mockInputContent = ""
 jest.mock("../../services/tree-sitter")
 jest.mock("isbinaryfile")
 jest.mock("../ignore/RooIgnoreController", () => ({
