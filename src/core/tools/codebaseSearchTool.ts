@@ -135,25 +135,20 @@ export async function codebaseSearchTool(
 		await cline.say("tool", JSON.stringify(payload))
 
 		// Push results to AI
-		const xmlResult = `<codebase_search_results>
-		<query>${jsonResult.query}</query>
-		<results>
-		  ${jsonResult.results
-				.map(
-					(result) => `
-		  <result>
-		    <filePath>${result.filePath}</filePath>
-		    <score>${result.score}</score>
-		    <lines>${result.startLine}-${result.endLine}</lines>
-		    <codeChunk>${result.codeChunk}</codeChunk>
-		  </result>
-		  `,
-				)
-				.join("")}
-		</results>
-</codebase_search_results>`
+		const output = `Query: ${query}
+Results:
 
-		pushToolResult(xmlResult)
+${jsonResult.results
+	.map(
+		(result) => `File path: ${result.filePath}
+Score: ${result.score}
+Lines: ${result.startLine}-${result.endLine}
+Code Chunk: ${result.codeChunk}
+`,
+	)
+	.join("\n")}`
+
+		pushToolResult(output)
 	} catch (error: any) {
 		await handleError(toolName, error) // Use the standard error handler
 	}
