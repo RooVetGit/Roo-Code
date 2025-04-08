@@ -199,7 +199,6 @@ export class CodeIndexManager {
 
 		this._isProcessing = true
 		this.updateState({ systemStatus: "Indexing", message: "Starting initial scan..." })
-
 		try {
 			this.updateState({ systemStatus: "Indexing", message: "Checking for existing collection..." })
 			const collectionExists = await this._checkCollectionExists()
@@ -212,8 +211,6 @@ export class CodeIndexManager {
 					systemStatus: "Indexing",
 					message: "Collection does not exist. Starting full scan...",
 				})
-				// Start watcher first to capture changes during scan
-				await this._startWatcher()
 				// Perform the initial scan using scanDirectoryForCodeBlocks
 				const { stats } = await scanDirectoryForCodeBlocks(
 					this.workspacePath,
@@ -231,13 +228,19 @@ export class CodeIndexManager {
 				console.log(
 					`[CodeIndexManager] Initial scan complete. Processed: ${stats.processed}, Skipped: ${stats.skipped}`,
 				)
+				await this._startWatcher()
 			}
 			this.updateState({ systemStatus: "Indexed", message: "Initial indexing process complete." }) // Or appropriate state
 		} catch (error: any) {
-			console.error("[CodeIndexManager] Error during indexing startup:", error)
+			console.error("[CodeIndexManager] Error during indexing:", error)
+			try {
+				await this._qdrantClient?.clearAll()
+			} catch (cleanupError) {
+				console.error("[CodeIndexManager] Failed to clean up after error:", cleanupError)
+			}
 			this.updateState({
 				systemStatus: "Error",
-				message: `Failed during startup: ${error.message || "Unknown error"}`,
+				message: `Failed during initial scan: ${error.message || "Unknown error"}`,
 			})
 			this.stopWatcher() // Clean up watcher if it started
 		} finally {
