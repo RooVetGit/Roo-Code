@@ -234,7 +234,7 @@ export class CodeIndexManager {
 		} catch (error: any) {
 			console.error("[CodeIndexManager] Error during indexing:", error)
 			try {
-				await this._qdrantClient?.clearAll()
+				await this._qdrantClient?.clearCollection()
 			} catch (cleanupError) {
 				console.error("[CodeIndexManager] Failed to clean up after error:", cleanupError)
 			}
