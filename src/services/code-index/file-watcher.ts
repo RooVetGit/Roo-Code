@@ -44,7 +44,9 @@ export class CodeIndexFileWatcher {
 			`roo-index-cache-${createHash("sha256").update(workspacePath).digest("hex")}.json`,
 		)
 
-		this.watcher = vscode.workspace.createFileSystemWatcher("**/*")
+		const extGlob = `{${extensions.map((e) => e.slice(1)).join(",")}}`
+		const pattern = `**/*.${extGlob}`
+		this.watcher = vscode.workspace.createFileSystemWatcher(pattern)
 
 		this.watcher.onDidCreate((uri) => this.handleFileEvent(uri, "create"))
 		this.watcher.onDidChange((uri) => this.handleFileEvent(uri, "change"))
@@ -109,12 +111,6 @@ export class CodeIndexFileWatcher {
 	}
 
 	private async shouldProcessFile(filePath: string): Promise<boolean> {
-		// Check file extension
-		const ext = path.extname(filePath).toLowerCase()
-		if (!extensions.includes(ext)) {
-			return false
-		}
-
 		// Check against .rooignore
 		if (!this.ignoreController.filterPaths([filePath]).includes(filePath)) {
 			return false
