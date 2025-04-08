@@ -11,6 +11,13 @@ import { ApiHandlerOptions } from "../../shared/api"
 
 const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB
 
+interface FileProcessingResult {
+	path: string
+	status: "success" | "skipped" | "error"
+	error?: Error
+	reason?: string
+}
+
 export class CodeIndexFileWatcher {
 	private watcher: vscode.FileSystemWatcher
 	private ignoreController: RooIgnoreController
@@ -21,7 +28,7 @@ export class CodeIndexFileWatcher {
 	private debounceTimers: Record<string, NodeJS.Timeout> = {}
 
 	private _onDidStartProcessing = new vscode.EventEmitter<string>()
-	private _onDidFinishProcessing = new vscode.EventEmitter<{ path: string; error?: Error }>()
+	private _onDidFinishProcessing = new vscode.EventEmitter<FileProcessingResult>()
 	private _onError = new vscode.EventEmitter<Error>()
 
 	public readonly onDidStartProcessing = this._onDidStartProcessing.event
@@ -66,6 +73,16 @@ export class CodeIndexFileWatcher {
 	private async handleFileEvent(uri: vscode.Uri, eventType: "create" | "change" | "delete"): Promise<void> {
 		const filePath = uri.fsPath
 
+		// Check dependencies before scheduling debounce
+		if (!this.embedder || !this.qdrantClient) {
+			this._onDidFinishProcessing.fire({
+				path: filePath,
+				status: "skipped",
+				reason: "Dependencies not initialized",
+			})
+			return
+		}
+
 		// Clear any pending debounce timer for this file
 		if (this.debounceTimers[filePath]) {
 			clearTimeout(this.debounceTimers[filePath])
@@ -74,12 +91,19 @@ export class CodeIndexFileWatcher {
 
 		// Debounce the event handling
 		this.debounceTimers[filePath] = setTimeout(async () => {
-			let hadError = false
+			let resultStatus: "success" | "skipped" | "error" = "skipped"
+			let errorObj: Error | undefined = undefined
 
 			try {
+				// Double-check dependencies inside debounce
+				if (!this.embedder || !this.qdrantClient) {
+					resultStatus = "skipped"
+					return
+				}
+
 				const shouldProcess = await this.shouldProcessFile(filePath)
 				if (!shouldProcess) {
-					delete this.debounceTimers[filePath]
+					resultStatus = "skipped"
 					return
 				}
 
@@ -96,15 +120,19 @@ export class CodeIndexFileWatcher {
 						await this.handleFileDelete(filePath)
 						break
 				}
+
+				resultStatus = "success"
 			} catch (error) {
-				hadError = true
-				console.error(`Error handling file ${eventType} event for ${filePath}:`, error)
-				this._onDidFinishProcessing.fire({ path: filePath, error: error as Error })
-				this._onError.fire(error as Error)
+				resultStatus = "error"
+				errorObj = error as Error
+				console.error(`Error handling file ${eventType} event for ${filePath}:`, errorObj)
+				this._onError.fire(errorObj)
 			} finally {
-				if (!hadError && (await this.shouldProcessFile(filePath))) {
-					this._onDidFinishProcessing.fire({ path: filePath })
-				}
+				this._onDidFinishProcessing.fire({
+					path: filePath,
+					status: resultStatus,
+					error: errorObj,
+				})
 				delete this.debounceTimers[filePath]
 			}
 		}, 500) // 500ms debounce

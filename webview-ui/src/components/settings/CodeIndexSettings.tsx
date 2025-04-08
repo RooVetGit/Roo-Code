@@ -24,18 +24,26 @@ interface CodeIndexSettingsProps {
 	setCachedStateField: SetCachedStateField<"codeIndexEnabled" | "codeIndexOpenAiKey" | "codeIndexQdrantUrl">
 }
 
+interface IndexingStatusUpdateMessage {
+	type: "indexingStatusUpdate"
+	values: {
+		systemStatus: string
+		message?: string
+	}
+}
+
 export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 	codeIndexEnabled,
 	codeIndexOpenAiKey,
 	codeIndexQdrantUrl,
 	setCachedStateField,
 }) => {
-	const [indexingState, setIndexingState] = useState("Standby")
+	const [systemStatus, setSystemStatus] = useState("Standby")
 	const [indexingMessage, setIndexingMessage] = useState("")
 
 	useEffect(() => {
 		if (!codeIndexEnabled) {
-			setIndexingState("Standby")
+			setSystemStatus("Standby")
 			setIndexingMessage("")
 			return
 		}
@@ -46,10 +54,10 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 		// Set up interval for periodic status updates
 
 		// Set up message listener for status updates
-		const handleMessage = (event: MessageEvent) => {
+		const handleMessage = (event: MessageEvent<IndexingStatusUpdateMessage>) => {
 			if (event.data.type === "indexingStatusUpdate") {
-				setIndexingState(event.data.values.state)
-				setIndexingMessage(event.data.values.message)
+				setSystemStatus(event.data.values.systemStatus)
+				setIndexingMessage(event.data.values.message || "")
 			}
 		}
 
@@ -105,25 +113,25 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 								className={`
 									inline-block w-3 h-3 rounded-full mr-2
 									${
-										indexingState === "Standby"
+										systemStatus === "Standby"
 											? "bg-gray-400"
-											: indexingState === "Indexing"
+											: systemStatus === "Indexing"
 												? "bg-yellow-500 animate-pulse"
-												: indexingState === "Indexed"
+												: systemStatus === "Indexed"
 													? "bg-green-500"
-													: indexingState === "Error"
+													: systemStatus === "Error"
 														? "bg-red-500"
 														: "bg-gray-400"
 									}
 								`}></span>
-							{indexingState}
+							{systemStatus}
 							{indexingMessage ? ` - ${indexingMessage}` : ""}
 						</div>
 
 						<div className="flex gap-2 mt-4">
 							<VSCodeButton
 								onClick={() => vscode.postMessage({ type: "startIndexing" })} // Added onClick
-								disabled={!codeIndexOpenAiKey || !codeIndexQdrantUrl || indexingState === "Indexing"} // Added disabled logic
+								disabled={!codeIndexOpenAiKey || !codeIndexQdrantUrl || systemStatus === "Indexing"} // Added disabled logic
 							>
 								Start Indexing {/* Reverted translation */}
 							</VSCodeButton>
