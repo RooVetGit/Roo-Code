@@ -40,7 +40,7 @@ describe("ContextWindowProgress", () => {
 		const defaultTask = {
 			ts: Date.now(),
 			type: "say" as const,
-			say: "task" as const,
+			say: "text" as const,
 			text: "Test task",
 		}
 
