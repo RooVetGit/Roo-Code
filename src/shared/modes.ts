@@ -272,7 +272,7 @@ export async function getFullModeDetails(
 			options.globalCustomInstructions || "",
 			options.cwd,
 			modeSlug,
-			{ language: options.language },
+			{ language: options.language, customInstructionsPaths: baseMode.customInstructionsPaths },
 		)
 	}
 

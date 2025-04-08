@@ -2,6 +2,7 @@ import fs from "fs/promises"
 import path from "path"
 
 import { LANGUAGES, isLanguage } from "../../../shared/language"
+import { CustomInstructionsPathsConfig } from "../../../schemas"
 
 /**
  * Safely read a file and return its trimmed content
@@ -34,7 +35,7 @@ async function directoryExists(dirPath: string): Promise<boolean> {
 /**
  * Read all text files from a directory in alphabetical order
  */
-async function readTextFilesFromDirectory(dirPath: string): Promise<Array<{ filename: string; content: string }>> {
+async function readTextFilesFromDirectory(dirPath: string): Promise<Array<{ fullPath: string; content: string }>> {
 	try {
 		const files = await fs
 			.readdir(dirPath, { withFileTypes: true, recursive: true })
@@ -44,13 +45,8 @@ async function readTextFilesFromDirectory(dirPath: string): Promise<Array<{ file
 		const fileContents = await Promise.all(
 			files.map(async (file) => {
 				try {
-					// Check if it's a file (not a directory)
-					const stats = await fs.stat(file)
-					if (stats.isFile()) {
-						const content = await safeReadFile(file)
-						return { filename: file, content }
-					}
-					return null
+					const content = await safeReadFile(file)
+					return { fullPath: file, content }
 				} catch (err) {
 					return null
 				}
@@ -58,7 +54,7 @@ async function readTextFilesFromDirectory(dirPath: string): Promise<Array<{ file
 		)
 
 		// Filter out null values (directories or failed reads)
-		return fileContents.filter((item): item is { filename: string; content: string } => item !== null)
+		return fileContents.filter((item) => item !== null)
 	} catch (err) {
 		return []
 	}
@@ -67,14 +63,14 @@ async function readTextFilesFromDirectory(dirPath: string): Promise<Array<{ file
 /**
  * Format content from multiple files with filenames as headers
  */
-function formatDirectoryContent(dirPath: string, files: Array<{ filename: string; content: string }>): string {
+function formatDirectoryContent(dirPath: string, files: Array<{ fullPath: string; content: string }>): string {
 	if (files.length === 0) return ""
 
 	return (
 		"\n\n" +
 		files
 			.map((file) => {
-				return `# Rules from ${file.filename}:\n${file.content}`
+				return `# Rules from ${file.fullPath}:\n${file.content}`
 			})
 			.join("\n\n")
 	)
@@ -106,12 +102,40 @@ export async function loadRuleFiles(cwd: string): Promise<string> {
 	return ""
 }
 
+/**
+ * Load rules from a directory or file.
+ * If the path is a directory, it will read all files in that directory recursively.
+ * If the path is a file, it will read that file.
+ * @param fullPath - The full path to the directory or file.
+ * @returns An array of rules, each representing the content of a rule file.
+ */
+export async function loadRulesInPath(fullPath: string): Promise<string[]> {
+	const rules: string[] = []
+	const stats = await fs.lstat(fullPath)
+	if (stats.isDirectory()) {
+		const ruleFiles = await readTextFilesFromDirectory(fullPath)
+		if (ruleFiles.length > 0) {
+			rules.push(...ruleFiles.map((ruleFile) => `# Rules from ${ruleFile.fullPath}:\n${ruleFile.content}`))
+		}
+	} else {
+		const content = await safeReadFile(fullPath)
+		if (content) {
+			rules.push(`# Rules from ${fullPath}:\n${content}`)
+		}
+	}
+	return rules
+}
+
 export async function addCustomInstructions(
 	modeCustomInstructions: string,
 	globalCustomInstructions: string,
 	cwd: string,
 	mode: string,
-	options: { language?: string; rooIgnoreInstructions?: string } = {},
+	options: {
+		language?: string
+		rooIgnoreInstructions?: string
+		customInstructionsPaths?: CustomInstructionsPathsConfig[]
+	} = {},
 ): Promise<string> {
 	const sections = []
 
@@ -176,14 +200,32 @@ export async function addCustomInstructions(
 		}
 	}
 
+	// Load custom instructions from paths if provided
+	if (options.customInstructionsPaths) {
+		const customInstructionsFullPaths = options.customInstructionsPaths.map((customPath) => {
+			return typeof customPath === "string"
+				? path.isAbsolute(customPath)
+					? customPath
+					: path.join(cwd, customPath)
+				: customPath.isAbsolute || path.isAbsolute(customPath.path)
+					? customPath.path
+					: path.join(cwd, customPath.path)
+		})
+		// TODO: Consider to use glob pattern
+		for (const customInstructionsFullPath of customInstructionsFullPaths) {
+			const loadedRules = await loadRulesInPath(customInstructionsFullPath)
+			rules.push(...loadedRules)
+		}
+	}
+
 	if (options.rooIgnoreInstructions) {
 		rules.push(options.rooIgnoreInstructions)
 	}
 
 	// Add generic rules
 	const genericRuleContent = await loadRuleFiles(cwd)
-	if (genericRuleContent && genericRuleContent.trim()) {
-		rules.push(genericRuleContent.trim())
+	if (genericRuleContent) {
+		rules.push(genericRuleContent)
 	}
 
 	if (rules.length > 0) {

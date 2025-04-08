@@ -2,6 +2,7 @@ import { loadRuleFiles, addCustomInstructions } from "../custom-instructions"
 import fs from "fs/promises"
 import path from "path"
 import { PathLike } from "fs"
+import { parentPort } from "worker_threads"
 
 // Mock fs/promises
 jest.mock("fs/promises")
@@ -154,8 +155,6 @@ describe("loadRuleFiles", () => {
 		expect(result).toContain("# Rules from /fake/path/.roo/rules/file2.txt:")
 		expect(result).toContain("content of file2")
 
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules/file1.txt")
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules/file2.txt")
 		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules/file1.txt", "utf-8")
 		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules/file2.txt", "utf-8")
 	})
@@ -264,11 +263,6 @@ describe("loadRuleFiles", () => {
 		expect(result).toContain("nested file 1 content")
 		expect(result).toContain("# Rules from /fake/path/.roo/rules/subdir/subdir2/nested2.txt:")
 		expect(result).toContain("nested file 2 content")
-
-		// Verify correct paths were checked
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules/root.txt")
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules/subdir/nested1.txt")
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules/subdir/subdir2/nested2.txt")
 
 		// Verify files were read with correct paths
 		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules/root.txt", "utf-8")
@@ -430,8 +424,6 @@ describe("addCustomInstructions", () => {
 		expect(result).toContain("# Rules from /fake/path/.roo/rules-test-mode/rule2.txt:")
 		expect(result).toContain("mode specific rule 2")
 
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules-test-mode/rule1.txt")
-		expect(statMock).toHaveBeenCalledWith("/fake/path/.roo/rules-test-mode/rule2.txt")
 		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules-test-mode/rule1.txt", "utf-8")
 		expect(readFileMock).toHaveBeenCalledWith("/fake/path/.roo/rules-test-mode/rule2.txt", "utf-8")
 	})

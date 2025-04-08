@@ -210,11 +210,21 @@ const groupEntryArraySchema = z.array(groupEntrySchema).refine(
 	{ message: "Duplicate groups are not allowed" },
 )
 
+export const customInstructionsPathsConfigSchema = z.union([
+	z.object({
+		path: z.string(),
+		isAbsolute: z.boolean().optional(),
+	}),
+	z.string(),
+])
+export type CustomInstructionsPathsConfig = z.infer<typeof customInstructionsPathsConfigSchema>
+
 export const modeConfigSchema = z.object({
 	slug: z.string().regex(/^[a-zA-Z0-9-]+$/, "Slug must contain only letters numbers and dashes"),
 	name: z.string().min(1, "Name is required"),
 	roleDefinition: z.string().min(1, "Role definition is required"),
 	customInstructions: z.string().optional(),
+	customInstructionsPaths: z.array(customInstructionsPathsConfigSchema).optional(),
 	groups: groupEntryArraySchema,
 	source: z.enum(["global", "project"]).optional(),
 })

@@ -91,7 +91,7 @@ ${getSystemInfoSection(cwd, mode, customModeConfigs)}
 
 ${getObjectiveSection()}
 
-${await addCustomInstructions(promptComponent?.customInstructions || modeConfig.customInstructions || "", globalCustomInstructions || "", cwd, mode, { language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions })}`
+${await addCustomInstructions(promptComponent?.customInstructions || modeConfig.customInstructions || "", globalCustomInstructions || "", cwd, mode, { language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions, customInstructionsPaths: modeConfig.customInstructionsPaths })}`
 
 	return basePrompt
 }
@@ -141,7 +141,11 @@ export const SYSTEM_PROMPT = async (
 			globalCustomInstructions || "",
 			cwd,
 			mode,
-			{ language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions },
+			{
+				language: language ?? formatLanguage(vscode.env.language),
+				rooIgnoreInstructions,
+				customInstructionsPaths: currentMode.customInstructionsPaths,
+			},
 		)
 		// For file-based prompts, don't include the tool sections
 		return `${roleDefinition}
