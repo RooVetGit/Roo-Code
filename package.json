@@ -446,6 +446,7 @@
 		"tree-sitter-wasms": "^0.1.11",
 		"turndown": "^7.2.0",
 		"uuid": "^11.1.0",
+		"uuid5": "^1.0.2",
 		"web-tree-sitter": "^0.22.6",
 		"zod": "^3.23.8"
 	},
