@@ -223,21 +223,43 @@ export class CodeIndexManager {
 			type: "system",
 			payload: { systemStatus: "Indexing", message: "Starting initial scan..." },
 		})
+
+		this.enqueueStateUpdate({
+			type: "system",
+			payload: { systemStatus: "Indexing", message: "Initializing Qdrant connection and collection..." },
+		})
+
 		try {
+			// Ensure client is initialized before calling initialize
+			if (!this._qdrantClient) {
+				if (this.isConfigured()) {
+					this._qdrantClient = new CodeIndexQdrantClient(this.workspacePath, this.qdrantUrl)
+				} else {
+					throw new Error(
+						"Cannot initialize collection: Qdrant client cannot be initialized - configuration missing.",
+					)
+				}
+			}
+			await this._qdrantClient.initialize() // Call the existing initialize method
+
 			this.enqueueStateUpdate({
 				type: "system",
-				payload: { systemStatus: "Indexing", message: "Checking for existing collection..." },
+				payload: { systemStatus: "Indexing", message: "Qdrant ready. Starting workspace scan..." },
 			})
-			const collectionExists = await this._checkCollectionExists()
-
+		} catch (initError: any) {
+			console.error("[CodeIndexManager] Failed to initialize Qdrant client or collection:", initError)
 			this.enqueueStateUpdate({
 				type: "system",
 				payload: {
-					systemStatus: "Indexing",
-					message: "Starting workspace scan...",
+					systemStatus: "Error",
+					message: `Failed to initialize Qdrant: ${initError.message || "Unknown error"}`,
 				},
 			})
+			this._isProcessing = false // Stop processing on critical error
+			return // Exit startIndexing if initialization fails
+		}
 
+		try {
 			const { stats } = await scanDirectoryForCodeBlocks(
 				this.workspacePath,
 				undefined, // Let scanner create its own ignore controller
@@ -654,27 +676,6 @@ export class CodeIndexManager {
 		console.log("[CodeIndexManager] File watcher started.")
 	}
 
-	private async _checkCollectionExists(): Promise<boolean> {
-		try {
-			if (!this._qdrantClient) {
-				// Attempt to initialize if configured but not yet initialized
-				if (this.isConfigured()) {
-					this._qdrantClient = new CodeIndexQdrantClient(this.workspacePath, this.qdrantUrl)
-				} else {
-					throw new Error("[CodeIndexManager] Qdrant client cannot be initialized - configuration missing.")
-				}
-			}
-			return await this._qdrantClient.collectionExists()
-		} catch (error) {
-			console.warn("[CodeIndexManager] Error checking collection existence:", error)
-			// Propagate error state if check fails critically
-			this.enqueueStateUpdate({
-				type: "system",
-				payload: { systemStatus: "Error", message: `Failed to check collection: ${(error as Error).message}` },
-			})
-			return false
-		}
-	}
 	public async searchIndex(query: string, limit: number): Promise<QdrantSearchResult[]> {
 		if (!this.isEnabled || !this.isConfigured()) {
 			throw new Error("Code index feature is disabled or not configured.")
