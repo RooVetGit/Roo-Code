@@ -10,7 +10,9 @@ import { CodeIndexQdrantClient } from "./qdrant-client"
 import { ApiHandlerOptions } from "../../shared/api"
 import * as vscode from "vscode"
 import { createHash } from "crypto"
-import { v4 as uuidv4 } from "uuid"
+import { v5 as uuidv5 } from "uuid"
+
+const QDRANT_CODE_BLOCK_NAMESPACE = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 
 const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB
 const MAX_LIST_FILES_LIMIT = 1_000
@@ -210,6 +212,25 @@ export async function scanDirectoryForCodeBlocks(
 		while (attempts < MAX_BATCH_RETRIES && !success) {
 			attempts++
 			try {
+				// --- Deletion Step ---
+				const uniqueFilePaths = [...new Set(batchFileInfos.map((info) => info.filePath))]
+				console.log(
+					`[CodeIndexScanner] Deleting existing points for ${uniqueFilePaths.length} file(s) in batch...`,
+				)
+				for (const filePath of uniqueFilePaths) {
+					try {
+						await qdrantClient.deletePointsByFilePath(filePath)
+						// Optional: Add more detailed logging if needed
+					} catch (deleteError) {
+						console.error(
+							`[CodeIndexScanner] Failed to delete points for ${filePath} before upsert:`,
+							deleteError,
+						)
+						// Re-throw the error to stop processing this batch attempt
+						throw deleteError
+					}
+				}
+				// --- End Deletion Step ---
 				// Create embeddings for batch
 				const { embeddings } = await embedder.createEmbeddings(batchTexts)
 
@@ -219,8 +240,11 @@ export async function scanDirectoryForCodeBlocks(
 					const absolutePath = path.resolve(workspaceRoot, block.file_path)
 					const normalizedAbsolutePath = path.normalize(absolutePath)
 
+					const stableName = `${normalizedAbsolutePath}:${block.start_line}`
+					const pointId = uuidv5(stableName, QDRANT_CODE_BLOCK_NAMESPACE)
+
 					return {
-						id: uuidv4(),
+						id: pointId,
 						vector: embeddings[index],
 						payload: {
 							filePath: normalizedAbsolutePath,

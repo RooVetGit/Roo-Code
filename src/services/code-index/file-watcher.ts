@@ -7,7 +7,9 @@ import { extensions } from "../tree-sitter"
 import { parseCodeFileBySize, CodeBlock } from "./parser"
 import { CodeIndexOpenAiEmbedder } from "./openai-embedder"
 import { CodeIndexQdrantClient } from "./qdrant-client"
-import { v4 as uuidv4 } from "uuid"
+import { v5 as uuidv5 } from "uuid"
+
+const QDRANT_CODE_BLOCK_NAMESPACE = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 
 const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB
 
@@ -179,8 +181,11 @@ export class CodeIndexFileWatcher {
 					const absolutePath = path.resolve(workspaceRoot, block.file_path)
 					const normalizedAbsolutePath = path.normalize(absolutePath)
 
+					const stableName = `${normalizedAbsolutePath}:${block.start_line}`
+					const pointId = uuidv5(stableName, QDRANT_CODE_BLOCK_NAMESPACE)
+
 					return {
-						id: `${block.file_path}:${block.start_line}-${block.end_line}`,
+						id: pointId,
 						vector: embeddings[index],
 						payload: {
 							filePath: normalizedAbsolutePath,
@@ -218,9 +223,20 @@ export class CodeIndexFileWatcher {
 				return // File content hasn't changed
 			}
 
-			// Delete old points if they exist
+			// Delete old points first
 			if (this.qdrantClient) {
-				await this.qdrantClient.deletePointsByFilePath(filePath)
+				try {
+					// Assuming deletePointsByFilePath handles normalization
+					await this.qdrantClient.deletePointsByFilePath(filePath)
+					console.log(`[CodeIndexFileWatcher] Deleted existing points for changed file: ${filePath}`)
+				} catch (deleteError) {
+					console.error(
+						`[CodeIndexFileWatcher] Failed to delete points for ${filePath} before upsert:`,
+						deleteError,
+					)
+					// Re-throw the error to stop processing this file event
+					throw deleteError
+				}
 			}
 
 			// Process new content
@@ -235,8 +251,11 @@ export class CodeIndexFileWatcher {
 					const absolutePath = path.resolve(workspaceRoot, block.file_path)
 					const normalizedAbsolutePath = path.normalize(absolutePath)
 
+					const stableName = `${normalizedAbsolutePath}:${block.start_line}`
+					const pointId = uuidv5(stableName, QDRANT_CODE_BLOCK_NAMESPACE)
+
 					return {
-						id: uuidv4(),
+						id: pointId,
 						vector: embeddings[index],
 						payload: {
 							filePath: normalizedAbsolutePath,
