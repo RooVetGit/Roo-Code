@@ -22,8 +22,9 @@ export class CodeIndexQdrantClient {
 		this.collectionName = `ws-${hash.substring(0, 16)}`
 	}
 
-	async initialize(): Promise<void> {
+	async initialize(): Promise<boolean> {
 		try {
+			let created = false
 			const collections = await this.client.getCollections()
 			const collectionExists = collections.collections.some(
 				(collection) => collection.name === this.collectionName,
@@ -36,7 +37,9 @@ export class CodeIndexQdrantClient {
 						distance: this.DISTANCE_METRIC,
 					},
 				})
+				created = true
 			}
+			return created
 		} catch (error) {
 			console.error("Failed to initialize Qdrant collection:", error)
 			throw error

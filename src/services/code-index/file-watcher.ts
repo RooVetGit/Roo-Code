@@ -4,7 +4,7 @@ import { createHash } from "crypto"
 import { RooIgnoreController } from "../../core/ignore/RooIgnoreController"
 import { getWorkspacePath } from "../../utils/path"
 import { extensions } from "../tree-sitter"
-import { parseCodeFileBySize, CodeBlock } from "./parser"
+import { parseCodeFileByQueries, CodeBlock } from "./parser"
 import { CodeIndexOpenAiEmbedder } from "./openai-embedder"
 import { CodeIndexQdrantClient } from "./qdrant-client"
 import { v5 as uuidv5 } from "uuid"
@@ -170,7 +170,7 @@ export class CodeIndexFileWatcher {
 				.then((buffer) => Buffer.from(buffer).toString("utf-8"))
 
 			const fileHash = createHash("sha256").update(content).digest("hex")
-			const blocks = await parseCodeFileBySize(filePath, { content, fileHash })
+			const blocks = await parseCodeFileByQueries(filePath, { content, fileHash })
 
 			if (this.embedder && this.qdrantClient && blocks.length > 0) {
 				const texts = blocks.map((block) => block.content)
@@ -240,7 +240,7 @@ export class CodeIndexFileWatcher {
 			}
 
 			// Process new content
-			const blocks = await parseCodeFileBySize(filePath, { content, fileHash: newHash })
+			const blocks = await parseCodeFileByQueries(filePath, { content, fileHash: newHash })
 
 			if (this.embedder && this.qdrantClient && blocks.length > 0) {
 				const texts = blocks.map((block) => block.content)

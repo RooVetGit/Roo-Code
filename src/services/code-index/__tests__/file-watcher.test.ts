@@ -2,7 +2,7 @@ import * as vscode from "vscode"
 import * as path from "path"
 import { CodeIndexFileWatcher } from "../file-watcher"
 import { RooIgnoreController } from "../../../core/ignore/RooIgnoreController"
-import { parseCodeFileBySize, CodeBlock } from "../parser"
+import { parseCodeFileByQueries, CodeBlock } from "../parser"
 import { CodeIndexOpenAiEmbedder } from "../openai-embedder"
 import { CodeIndexQdrantClient } from "../qdrant-client"
 import { getWorkspacePath } from "../../../utils/path"
@@ -59,7 +59,7 @@ jest.mock("../openai-embedder")
 jest.mock("../qdrant-client")
 jest.mock("../../../utils/path")
 // RooIgnoreController is now directly the mock constructor from the factory
-const mockParseCodeFileBySize = parseCodeFileBySize as jest.MockedFunction<typeof parseCodeFileBySize>
+const mockParseCodeFileByQueries = parseCodeFileByQueries as jest.MockedFunction<typeof parseCodeFileByQueries>
 const MockCodeIndexOpenAiEmbedder = CodeIndexOpenAiEmbedder as jest.MockedClass<typeof CodeIndexOpenAiEmbedder>
 const MockCodeIndexQdrantClient = CodeIndexQdrantClient as jest.MockedClass<typeof CodeIndexQdrantClient>
 const mockGetWorkspacePath = getWorkspacePath as jest.MockedFunction<typeof getWorkspacePath>
@@ -93,7 +93,7 @@ describe("CodeIndexFileWatcher", () => {
 			// Default content for other file reads (e.g., during change events)
 			return Buffer.from("file content")
 		})
-		mockParseCodeFileBySize.mockResolvedValue([]) // Default to no blocks
+		mockParseCodeFileByQueries.mockResolvedValue([]) // Default to no blocks
 
 		// Mock RooIgnoreController instance
 		mockIgnoreControllerInstance = {
@@ -180,7 +180,7 @@ describe("CodeIndexFileWatcher", () => {
 			fileHash: "h1",
 			segmentHash: "h2",
 		}
-		mockParseCodeFileBySize.mockResolvedValue([mockBlock])
+		mockParseCodeFileByQueries.mockResolvedValue([mockBlock])
 
 		// Simulate file creation event
 		createHandler(vscode.Uri.file(absoluteFilePath))
@@ -213,7 +213,7 @@ describe("CodeIndexFileWatcher", () => {
 			fileHash: "newHash",
 			segmentHash: "h3",
 		}
-		mockParseCodeFileBySize.mockResolvedValue([mockBlock])
+		mockParseCodeFileByQueries.mockResolvedValue([mockBlock])
 		// No longer need specific readFile mock here, beforeEach handles it
 
 		// Simulate file change event
@@ -263,7 +263,7 @@ describe("CodeIndexFileWatcher", () => {
 		createHandler(vscode.Uri.file(filePath))
 		await jest.advanceTimersByTimeAsync(600)
 
-		expect(mockParseCodeFileBySize).not.toHaveBeenCalled()
+		expect(mockParseCodeFileByQueries).not.toHaveBeenCalled()
 		expect(mockQdrantClientInstance.upsertPoints).not.toHaveBeenCalled()
 	})
 
@@ -276,7 +276,7 @@ describe("CodeIndexFileWatcher", () => {
 		createHandler(vscode.Uri.file(filePath))
 		await jest.advanceTimersByTimeAsync(600)
 
-		expect(mockParseCodeFileBySize).not.toHaveBeenCalled()
+		expect(mockParseCodeFileByQueries).not.toHaveBeenCalled()
 		expect(mockQdrantClientInstance.upsertPoints).not.toHaveBeenCalled()
 	})
 
@@ -293,7 +293,7 @@ describe("CodeIndexFileWatcher", () => {
 		createHandler(vscode.Uri.file(filePath))
 		await jest.advanceTimersByTimeAsync(600)
 
-		expect(mockParseCodeFileBySize).not.toHaveBeenCalled()
+		expect(mockParseCodeFileByQueries).not.toHaveBeenCalled()
 		expect(mockQdrantClientInstance.upsertPoints).not.toHaveBeenCalled()
 	})
 })

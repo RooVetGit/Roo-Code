@@ -1,6 +1,6 @@
 import { listFiles } from "../glob/list-files"
 import { RooIgnoreController } from "../../core/ignore/RooIgnoreController"
-import { parseCodeFileBySize, CodeBlock } from "./parser"
+import { parseCodeFileByQueries, CodeBlock } from "./parser"
 import { stat } from "fs/promises"
 import * as path from "path"
 import { getWorkspacePath } from "../../utils/path"
@@ -132,7 +132,7 @@ export async function scanDirectoryForCodeBlocks(
 			}
 
 			// File is new or changed - parse it
-			const blocks = await parseCodeFileBySize(filePath, { content, fileHash: currentFileHash })
+			const blocks = await parseCodeFileByQueries(filePath, { content, fileHash: currentFileHash })
 			codeBlocks.push(...blocks)
 			processedCount++
 

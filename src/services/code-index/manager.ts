@@ -194,6 +194,22 @@ export class CodeIndexManager {
 		}
 	}
 
+	private async _resetCacheFile(): Promise<void> {
+		try {
+			const cacheFileName = `roo-index-cache-${createHash("sha256").update(this.workspacePath).digest("hex")}.json`
+			const cachePath = vscode.Uri.joinPath(this.context.globalStorageUri, cacheFileName)
+
+			try {
+				await vscode.workspace.fs.writeFile(cachePath, Buffer.from("{}", "utf-8"))
+				console.log(`[CodeIndexManager] Cache file reset (emptied) at ${cachePath.fsPath}`)
+			} catch (error) {
+				console.error("[CodeIndexManager] Failed to reset (empty) cache file:", error)
+			}
+		} catch (error) {
+			console.error("[CodeIndexManager] Unexpected error during cache file reset:", error)
+		}
+	}
+
 	/**
 	 * Initiates the indexing process (initial scan and starts watcher).
 	 */
@@ -240,7 +256,12 @@ export class CodeIndexManager {
 					)
 				}
 			}
-			await this._qdrantClient.initialize() // Call the existing initialize method
+			const collectionCreated = await this._qdrantClient.initialize() // Call the existing initialize method
+
+			if (collectionCreated) {
+				await this._resetCacheFile()
+				console.log("[CodeIndexManager] Qdrant collection created; cache file emptied.")
+			}
 
 			this.enqueueStateUpdate({
 				type: "system",
@@ -296,16 +317,8 @@ export class CodeIndexManager {
 			}
 
 			// Attempt to clear cache file after scan error
-			try {
-				const cachePath = vscode.Uri.joinPath(
-					this.context.globalStorageUri,
-					`roo-index-cache-${createHash("sha256").update(this.workspacePath).digest("hex")}.json`,
-				)
-				await vscode.workspace.fs.writeFile(cachePath, Buffer.from("{}", "utf-8"))
-				console.log(`[CodeIndexManager] Cleared cache file at ${cachePath.fsPath} due to scan error`)
-			} catch (cacheClearError) {
-				console.error("Failed to clear cache file after scan error:", cacheClearError)
-			}
+			await this._resetCacheFile()
+			console.log("[CodeIndexManager] Cleared cache file due to scan error.")
 
 			this.enqueueStateUpdate({
 				type: "system",
@@ -391,26 +404,8 @@ export class CodeIndexManager {
 			}
 
 			// Delete cache file
-			try {
-				const cacheFileName = `roo-index-cache-${createHash("sha256").update(this.workspacePath).digest("hex")}.json`
-				const cachePath = vscode.Uri.joinPath(this.context.globalStorageUri, cacheFileName)
-				await vscode.workspace.fs.delete(cachePath, { useTrash: false })
-				console.log("[CodeIndexManager] Cache file deleted.")
-			} catch (error: any) {
-				// Ignore if file doesn't exist, log other errors
-				if (error instanceof vscode.FileSystemError && error.code === "FileNotFound") {
-					console.log("[CodeIndexManager] Cache file not found, skipping deletion.")
-				} else {
-					console.error("[CodeIndexManager] Failed to delete cache file:", error)
-					this.enqueueStateUpdate({
-						type: "system",
-						payload: {
-							systemStatus: "Error",
-							message: `Failed to delete cache file: ${error.message}`,
-						},
-					})
-				}
-			}
+			await this._resetCacheFile()
+			console.log("[CodeIndexManager] Cache file emptied.")
 
 			// If no errors occurred during clearing, confirm success
 			if (this._systemStatus !== "Error") {
