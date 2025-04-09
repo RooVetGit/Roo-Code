@@ -109,6 +109,8 @@
 		"glamaApiKey": "Glama API Key",
 		"getGlamaApiKey": "Get Glama API Key",
 		"useCustomBaseUrl": "Use custom base URL",
+		"useHostHeader": "Use custom Host header",
+		"useLegacyFormat": "Use legacy OpenAI API format",
 		"requestyApiKey": "Requesty API Key",
 		"getRequestyApiKey": "Get Requesty API Key",
 		"openRouterTransformsText": "Compress prompts and message chains to the context size (<a>OpenRouter Transforms</a>)",
@@ -223,7 +225,11 @@
 			},
 			"resetDefaults": "Reset to Defaults"
 		},
-		"modelId": "Model Name"
+		"modelId": "Model Name",
+		"rateLimitSeconds": {
+			"label": "Rate limit",
+			"description": "Minimum time between API requests."
+		}
 	},
 	"browser": {
 		"enable": {
@@ -303,10 +309,6 @@
 		}
 	},
 	"advanced": {
-		"rateLimit": {
-			"label": "Rate limit",
-			"description": "Minimum time between API requests."
-		},
 		"diff": {
 			"label": "Enable editing through diffs",
 			"description": "When enabled, Roo will be able to edit files more quickly and will automatically reject truncated full-file writes. Works best with the latest Claude 3.7 Sonnet model.",

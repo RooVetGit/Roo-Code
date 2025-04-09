@@ -5,6 +5,31 @@
 ### Added
 - Add LiteLLM provider support, allowing connection to any LLM via a LiteLLM proxy server. Includes configuration for API URL, API Key, and Model ID, plus cost calculation support via the `/spend/calculate` endpoint.
 
+## [3.11.10] - 2025-04-08
+
+- Fix bug where nested .roo/rules directories are not respected properly (thanks @taisukeoe!)
+- Handle long command output more efficiently in the chat row (thanks @samhvw8!)
+- Fix cache usage tracking for OpenAI-compatible providers
+- Add custom translation instructions for zh-CN (thanks @System233!)
+- Code cleanup after making rate-limits per-profile (thanks @ross!)
+
+## [3.11.9] - 2025-04-07
+
+- Rate-limit setting updated to be per-profile (thanks @ross and @olweraltuve!)
+- You can now place multiple rules files in the .roo/rules/ and .roo/rules-{mode}/ folders (thanks @upamune!)
+- Prevent unnecessary autoscroll when buttons appear (thanks @shtse8!)
+- Add Gemini 2.5 Pro Preview to Vertex AI (thanks @nbihan-mediware!)
+- Tidy up following ClineProvider refactor (thanks @diarmidmackenzie!)
+- Clamp negative line numbers when reading files (thanks @KJ7LNW!)
+- Enhance Rust tree-sitter parser with advanced language structures (thanks @KJ7LNW!)
+- Persist settings on api.setConfiguration (thanks @gtaylor!)
+- Add deep links to settings sections
+- Add command to focus Roo Code input field (thanks @axkirillov!)
+- Add resize and hover actions to the browser (thanks @SplittyDev!)
+- Add resumeTask and isTaskInHistory to the API (thanks @franekp!)
+- Fix bug displaying boolean/numeric suggested answers
+- Dynamic Vite port detection for webview development (thanks @KJ7LNW!)
+
 ## [3.11.8] - 2025-04-05
 
 - Improve combineApiRequests performance to reduce gray screens of death (thanks @kyle-apex!)

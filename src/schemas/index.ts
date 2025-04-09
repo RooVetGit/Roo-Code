@@ -339,6 +339,8 @@ export const providerSettingsSchema = z.object({
 	// OpenAI
 	openAiBaseUrl: z.string().optional(),
 	openAiApiKey: z.string().optional(),
+	openAiHostHeader: z.string().optional(),
+	openAiLegacyFormat: z.boolean().optional(),
 	openAiR1FormatEnabled: z.boolean().optional(),
 	openAiModelId: z.string().optional(),
 	openAiCustomModelInfo: modelInfoSchema.nullish(),
@@ -387,6 +389,7 @@ export const providerSettingsSchema = z.object({
 	modelMaxThinkingTokens: z.number().optional(),
 	// Generic
 	includeMaxTokens: z.boolean().optional(),
+	rateLimitSeconds: z.number().optional(),
 	// Fake AI
 	fakeAi: z.unknown().optional(),
 	// LiteLLM
@@ -436,6 +439,8 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	// OpenAI
 	openAiBaseUrl: undefined,
 	openAiApiKey: undefined,
+	openAiHostHeader: undefined,
+	openAiLegacyFormat: undefined,
 	openAiR1FormatEnabled: undefined,
 	openAiModelId: undefined,
 	openAiCustomModelInfo: undefined,
@@ -476,6 +481,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	modelMaxThinkingTokens: undefined,
 	// Generic
 	includeMaxTokens: undefined,
+	rateLimitSeconds: undefined,
 	// Fake AI
 	fakeAi: undefined,
 	// LiteLLM
@@ -744,6 +750,7 @@ export const clineSays = [
 	"mcp_server_response",
 	"new_task_started",
 	"new_task",
+	"subtask_result",
 	"checkpoint_saved",
 	"rooignore_error",
 ] as const

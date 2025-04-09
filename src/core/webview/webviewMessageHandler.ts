@@ -423,7 +423,11 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		case "refreshOpenAiModels":
 			if (message?.values?.baseUrl && message?.values?.apiKey) {
-				const openAiModels = await getOpenAiModels(message?.values?.baseUrl, message?.values?.apiKey)
+				const openAiModels = await getOpenAiModels(
+					message?.values?.baseUrl,
+					message?.values?.apiKey,
+					message?.values?.hostHeader,
+				)
 				provider.postMessageToWebview({ type: "openAiModels", openAiModels })
 			}
 
@@ -715,10 +719,6 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		case "requestDelaySeconds":
 			await updateGlobalState("requestDelaySeconds", message.value ?? 5)
-			await provider.postStateToWebview()
-			break
-		case "rateLimitSeconds":
-			await updateGlobalState("rateLimitSeconds", message.value ?? 0)
 			await provider.postStateToWebview()
 			break
 		case "writeDelayMs":

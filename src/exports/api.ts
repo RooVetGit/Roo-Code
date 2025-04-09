@@ -132,12 +132,27 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		return taskId
 	}
 
+	public async resumeTask(taskId: string): Promise<void> {
+		const { historyItem } = await this.sidebarProvider.getTaskWithId(taskId)
+		await this.sidebarProvider.initClineWithHistoryItem(historyItem)
+		await this.sidebarProvider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
+	}
+
+	public async isTaskInHistory(taskId: string): Promise<boolean> {
+		try {
+			await this.sidebarProvider.getTaskWithId(taskId)
+			return true
+		} catch {
+			return false
+		}
+	}
+
 	public getCurrentTaskStack() {
 		return this.sidebarProvider.getCurrentTaskStack()
 	}
 
 	public async clearCurrentTask(lastMessage?: string) {
-		await this.sidebarProvider.finishSubTask(lastMessage)
+		await this.sidebarProvider.finishSubTask(lastMessage ?? "")
 		await this.sidebarProvider.postStateToWebview()
 	}
 

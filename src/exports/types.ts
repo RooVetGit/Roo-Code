@@ -88,6 +88,8 @@ type ProviderSettings = {
 	vertexRegion?: string | undefined
 	openAiBaseUrl?: string | undefined
 	openAiApiKey?: string | undefined
+	openAiHostHeader?: string | undefined
+	openAiLegacyFormat?: boolean | undefined
 	openAiR1FormatEnabled?: boolean | undefined
 	openAiModelId?: string | undefined
 	openAiCustomModelInfo?:
@@ -179,6 +181,7 @@ type ProviderSettings = {
 	modelMaxTokens?: number | undefined
 	modelMaxThinkingTokens?: number | undefined
 	includeMaxTokens?: boolean | undefined
+	rateLimitSeconds?: number | undefined
 	fakeAi?: unknown | undefined
 	litellmApiKey?: string | undefined
 	litellmApiUrl?: string | undefined
@@ -410,6 +413,7 @@ type ClineMessage = {
 				| "mcp_server_response"
 				| "new_task_started"
 				| "new_task"
+				| "subtask_result"
 				| "checkpoint_saved"
 				| "rooignore_error"
 		  )
@@ -493,6 +497,7 @@ type RooCodeEvents = {
 							| "mcp_server_response"
 							| "new_task_started"
 							| "new_task"
+							| "subtask_result"
 							| "checkpoint_saved"
 							| "rooignore_error"
 					  )

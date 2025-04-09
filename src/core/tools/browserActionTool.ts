@@ -21,6 +21,7 @@ export async function browserActionTool(
 	const url: string | undefined = block.params.url
 	const coordinate: string | undefined = block.params.coordinate
 	const text: string | undefined = block.params.text
+	const size: string | undefined = block.params.size
 	if (!action || !browserActions.includes(action)) {
 		// checking for action to ensure it is complete and valid
 		if (!block.partial) {
@@ -72,7 +73,7 @@ export async function browserActionTool(
 				await cline.browserSession.launchBrowser()
 				browserActionResult = await cline.browserSession.navigateToUrl(url)
 			} else {
-				if (action === "click") {
+				if (action === "click" || action === "hover") {
 					if (!coordinate) {
 						cline.consecutiveMistakeCount++
 						pushToolResult(await cline.sayAndCreateMissingParamError("browser_action", "coordinate"))
@@ -84,6 +85,14 @@ export async function browserActionTool(
 					if (!text) {
 						cline.consecutiveMistakeCount++
 						pushToolResult(await cline.sayAndCreateMissingParamError("browser_action", "text"))
+						await cline.browserSession.closeBrowser()
+						return
+					}
+				}
+				if (action === "resize") {
+					if (!size) {
+						cline.consecutiveMistakeCount++
+						pushToolResult(await cline.sayAndCreateMissingParamError("browser_action", "size"))
 						await cline.browserSession.closeBrowser()
 						return
 					}
@@ -103,6 +112,9 @@ export async function browserActionTool(
 					case "click":
 						browserActionResult = await cline.browserSession.click(coordinate!)
 						break
+					case "hover":
+						browserActionResult = await cline.browserSession.hover(coordinate!)
+						break
 					case "type":
 						browserActionResult = await cline.browserSession.type(text!)
 						break
@@ -111,6 +123,9 @@ export async function browserActionTool(
 						break
 					case "scroll_up":
 						browserActionResult = await cline.browserSession.scrollUp()
+						break
+					case "resize":
+						browserActionResult = await cline.browserSession.resize(size!)
 						break
 					case "close":
 						browserActionResult = await cline.browserSession.closeBrowser()
@@ -121,9 +136,11 @@ export async function browserActionTool(
 			switch (action) {
 				case "launch":
 				case "click":
+				case "hover":
 				case "type":
 				case "scroll_down":
 				case "scroll_up":
+				case "resize":
 					await cline.say("browser_action_result", JSON.stringify(browserActionResult))
 					pushToolResult(
 						formatResponse.toolResult(

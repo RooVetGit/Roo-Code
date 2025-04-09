@@ -57,7 +57,7 @@ When applying the diffs, be extra careful to remember to change any closing brac
 ALWAYS make as many changes in a single 'apply_diff' request as possible using multiple SEARCH/REPLACE blocks
 
 Parameters:
-- path: (required) The path of the file to modify (relative to the current working directory ${args.cwd})
+- path: (required) The path of the file to modify (relative to the current workspace directory ${args.cwd})
 - diff: (required) The search/replace block defining the changes.
 
 Diff format:
@@ -110,7 +110,7 @@ Search/Replace content with multi edits:
 :start_line:1
 :end_line:2
 -------
-def calculate_sum(items):
+def calculate_total(items):
     sum = 0
 =======
 def calculate_sum(items):

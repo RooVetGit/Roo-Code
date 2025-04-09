@@ -109,6 +109,8 @@
 		"glamaApiKey": "Glama APIキー",
 		"getGlamaApiKey": "Glama APIキーを取得",
 		"useCustomBaseUrl": "カスタムベースURLを使用",
+		"useHostHeader": "カスタムHostヘッダーを使用",
+		"useLegacyFormat": "レガシーOpenAI API形式を使用",
 		"requestyApiKey": "Requesty APIキー",
 		"getRequestyApiKey": "Requesty APIキーを取得",
 		"openRouterTransformsText": "プロンプトとメッセージチェーンをコンテキストサイズに圧縮 (<a>OpenRouter Transforms</a>)",
@@ -218,6 +220,10 @@
 				}
 			},
 			"resetDefaults": "デフォルトにリセット"
+		},
+		"rateLimitSeconds": {
+			"label": "レート制限",
+			"description": "APIリクエスト間の最小時間。"
 		}
 	},
 	"browser": {
@@ -298,10 +304,6 @@
 		}
 	},
 	"advanced": {
-		"rateLimit": {
-			"label": "レート制限",
-			"description": "APIリクエスト間の最小時間。"
-		},
 		"diff": {
 			"label": "diff経由の編集を有効化",
 			"description": "有効にすると、Rooはファイルをより迅速に編集でき、切り詰められた全ファイル書き込みを自動的に拒否します。最新のClaude 3.7 Sonnetモデルで最良に機能します。",

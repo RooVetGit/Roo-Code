@@ -109,6 +109,8 @@
 		"glamaApiKey": "Glama API Anahtarı",
 		"getGlamaApiKey": "Glama API Anahtarı Al",
 		"useCustomBaseUrl": "Özel temel URL kullan",
+		"useHostHeader": "Özel Host başlığı kullan",
+		"useLegacyFormat": "Eski OpenAI API formatını kullan",
 		"requestyApiKey": "Requesty API Anahtarı",
 		"getRequestyApiKey": "Requesty API Anahtarı Al",
 		"openRouterTransformsText": "İstem ve mesaj zincirlerini bağlam boyutuna sıkıştır (<a>OpenRouter Dönüşümleri</a>)",
@@ -218,6 +220,10 @@
 				}
 			},
 			"resetDefaults": "Varsayılanlara Sıfırla"
+		},
+		"rateLimitSeconds": {
+			"label": "Hız sınırı",
+			"description": "API istekleri arasındaki minimum süre."
 		}
 	},
 	"browser": {
@@ -298,10 +304,6 @@
 		}
 	},
 	"advanced": {
-		"rateLimit": {
-			"label": "Hız sınırı",
-			"description": "API istekleri arasındaki minimum süre."
-		},
 		"diff": {
 			"label": "Diff'ler aracılığıyla düzenlemeyi etkinleştir",
 			"description": "Etkinleştirildiğinde, Roo dosyaları daha hızlı düzenleyebilecek ve kesik tam dosya yazımlarını otomatik olarak reddedecektir. En son Claude 3.7 Sonnet modeliyle en iyi şekilde çalışır.",

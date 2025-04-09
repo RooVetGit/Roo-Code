@@ -109,6 +109,8 @@
 		"glamaApiKey": "Chiave API Glama",
 		"getGlamaApiKey": "Ottieni chiave API Glama",
 		"useCustomBaseUrl": "Usa URL base personalizzato",
+		"useHostHeader": "Usa intestazione Host personalizzata",
+		"useLegacyFormat": "Usa formato API OpenAI legacy",
 		"requestyApiKey": "Chiave API Requesty",
 		"getRequestyApiKey": "Ottieni chiave API Requesty",
 		"openRouterTransformsText": "Comprimi prompt e catene di messaggi alla dimensione del contesto (<a>Trasformazioni OpenRouter</a>)",
@@ -218,6 +220,10 @@
 				}
 			},
 			"resetDefaults": "Ripristina valori predefiniti"
+		},
+		"rateLimitSeconds": {
+			"label": "Limite di frequenza",
+			"description": "Tempo minimo tra le richieste API."
 		}
 	},
 	"browser": {
@@ -298,10 +304,6 @@
 		}
 	},
 	"advanced": {
-		"rateLimit": {
-			"label": "Limite di frequenza",
-			"description": "Tempo minimo tra le richieste API."
-		},
 		"diff": {
 			"label": "Abilita modifica tramite diff",
 			"description": "Quando abilitato, Roo sarà in grado di modificare i file più velocemente e rifiuterà automaticamente scritture di file completi troncati. Funziona meglio con l'ultimo modello Claude 3.7 Sonnet.",
