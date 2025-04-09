@@ -289,36 +289,36 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 
 		return (
 			text
-				// Нормализуем переносы строк
+				// Normalize line breaks
 				.replace(/\r\n/g, "\n")
 				.replace(/\r/g, "\n")
 
-				// Удаляем ANSI escape sequences
-				.replace(/\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])/g, "") // Полный набор ANSI sequences
+				// Remove ANSI escape sequences
+				.replace(/\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])/g, "") // Complete set of ANSI sequences
 				.replace(/\x9B[0-?]*[ -/]*[@-~]/g, "") // CSI sequences
 
-				// Удаляем последовательности установки заголовка терминала и прочие OSC sequences
+				// Remove terminal title setting sequences and other OSC sequences
 				.replace(/\x1B\][0-9;]*(?:\x07|\x1B\\)/g, "")
 
-				// Удаляем управляющие символы
+				// Remove control characters
 				.replace(/[\x00-\x09\x0B-\x0C\x0E-\x1F\x7F]/g, "")
 
-				// Удаляем escape-последовательности VS Code
+				// Remove VS Code escape sequences
 				.replace(/\x1B[PD].*?\x1B\\/g, "") // DCS sequences
 				.replace(/\x1B_.*?\x1B\\/g, "") // APC sequences
 				.replace(/\x1B\^.*?\x1B\\/g, "") // PM sequences
 				.replace(/\x1B\[[\d;]*[HfABCDEFGJKST]/g, "") // Cursor movement and clear screen
 
-				// Удаляем пути Windows и служебную информацию
+				// Remove Windows paths and service information
 				.replace(/^(?:PS )?[A-Z]:\\[^\n]*$/gm, "")
 				.replace(/^;?Cwd=.*$/gm, "")
 
-				// Очищаем экранированные последовательности
+				// Clean escaped sequences
 				.replace(/\\x[0-9a-fA-F]{2}/g, "")
 				.replace(/\\u[0-9a-fA-F]{4}/g, "")
 
-				// Финальная очистка
-				.replace(/\n{3,}/g, "\n\n") // Убираем множественные пустые строки
+				// Final cleanup
+				.replace(/\n{3,}/g, "\n\n") // Remove multiple empty lines
 				.trim()
 		)
 	}
