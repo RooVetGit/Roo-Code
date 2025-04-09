@@ -1,4 +1,6 @@
 import * as vscode from "vscode"
+import * as path from "path"
+import { createHash } from "crypto"
 import { scanDirectoryForCodeBlocks } from "./scanner"
 import { CodeIndexFileWatcher } from "./file-watcher"
 import { ApiHandlerOptions } from "../../shared/api"
@@ -211,6 +213,32 @@ export class CodeIndexManager {
 					systemStatus: "Indexing",
 					message: "Collection does not exist. Starting full scan...",
 				})
+
+				// Calculate workspace-specific cache file path
+				const cacheFileName = `roo-index-cache-${createHash("sha256").update(this.workspacePath).digest("hex")}.json`
+				const cachePath = vscode.Uri.joinPath(this.context.globalStorageUri, cacheFileName)
+
+				this.updateState({
+					systemStatus: "Indexing",
+					message: "Clearing cache before full scan...",
+				})
+
+				try {
+					// Ensure directory exists
+					await vscode.workspace.fs.createDirectory(vscode.Uri.file(path.dirname(cachePath.fsPath)))
+
+					// Write empty JSON object to cache file
+					await vscode.workspace.fs.writeFile(cachePath, Buffer.from("{}", "utf-8"))
+
+					console.log(`[CodeIndexManager] Cleared cache file at ${cachePath.fsPath}`)
+				} catch (error) {
+					console.error(`[CodeIndexManager] Failed to clear cache file at ${cachePath.fsPath}:`, error)
+					this.updateState({
+						systemStatus: "Error",
+						message: `Failed to clear cache file before scan: ${(error as Error).message}. Indexing halted.`,
+					})
+					return
+				}
 				// Perform the initial scan using scanDirectoryForCodeBlocks
 				const { stats } = await scanDirectoryForCodeBlocks(
 					this.workspacePath,
@@ -238,6 +266,19 @@ export class CodeIndexManager {
 			} catch (cleanupError) {
 				console.error("[CodeIndexManager] Failed to clean up after error:", cleanupError)
 			}
+
+			// Attempt to clear cache file after scan error
+			try {
+				const cachePath = vscode.Uri.joinPath(
+					this.context.globalStorageUri,
+					`roo-index-cache-${createHash("sha256").update(this.workspacePath).digest("hex")}.json`,
+				)
+				await vscode.workspace.fs.writeFile(cachePath, Buffer.from("{}", "utf-8"))
+				console.log(`[CodeIndexManager] Cleared cache file at ${cachePath.fsPath} due to scan error`)
+			} catch (cacheClearError) {
+				console.error("Failed to clear cache file after scan error:", cacheClearError)
+			}
+
 			this.updateState({
 				systemStatus: "Error",
 				message: `Failed during initial scan: ${error.message || "Unknown error"}`,
