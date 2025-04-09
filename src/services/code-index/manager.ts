@@ -213,6 +213,7 @@ export class CodeIndexManager {
 	/**
 	 * Initiates the indexing process (initial scan and starts watcher).
 	 */
+
 	public async startIndexing(): Promise<void> {
 		if (!this.isConfigured()) {
 			this.enqueueStateUpdate({
@@ -277,7 +278,7 @@ export class CodeIndexManager {
 				},
 			})
 			this._isProcessing = false // Stop processing on critical error
-			return // Exit startIndexing if initialization fails
+			return // Exit if initialization fails
 		}
 
 		try {

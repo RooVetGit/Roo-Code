@@ -48,7 +48,31 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	const codeIndexManager = CodeIndexManager.getInstance(context)
 	context.subscriptions.push(codeIndexManager)
-	await codeIndexManager.loadConfiguration()
+	// Start configuration loading (which might trigger indexing) in the background.
+	// Don't await, allowing activation to continue immediately.
+	codeIndexManager
+		.loadConfiguration()
+		.then(() => {
+			// Optional: Log success after config/indexing finishes.
+			outputChannel.appendLine("CodeIndexManager configuration loaded successfully (async).")
+		})
+		.catch((error) => {
+			// Log errors from the configuration/indexing process.
+			// Use console.error for better visibility in developer tools if needed.
+			console.error(
+				"[Extension Activation] Error during background CodeIndexManager configuration/indexing:",
+				error,
+			)
+			outputChannel.appendLine(
+				`[Error] Background CodeIndexManager configuration/indexing failed: ${error.message || error}`,
+			)
+			// Optionally notify the user via a non-modal message
+			// vscode.window.showWarningMessage(`Roo-Code index initialization failed: ${error.message}`);
+		})
+
+	// Activation continues here immediately...
+	// Add a log to confirm activation proceeds without waiting
+	outputChannel.appendLine("Roo-Code extension activation proceeding without waiting for index load.")
 	outputChannel.appendLine("Roo-Code extension activated")
 
 	// Migrate old settings to new
