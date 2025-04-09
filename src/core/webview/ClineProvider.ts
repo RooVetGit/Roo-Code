@@ -389,7 +389,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			this.codeIndexStatusSubscription = this.codeIndexManager.onProgressUpdate((update: IndexProgressUpdate) => {
 				this.postMessageToWebview({
 					type: "indexingStatusUpdate",
-					values: { state: update.systemStatus, message: update.message },
+					values: { systemStatus: update.systemStatus, message: update.message },
 				})
 			})
 			// Add the subscription to the main disposables array
