@@ -111,7 +111,7 @@ export class FileContextTracker {
 
 	// Gets task metadata from storage
 	async getTaskMetadata(taskId: string): Promise<TaskMetadata> {
-		const globalStoragePath = this.getContextProxy()!.globalStorageUri.fsPath
+		const globalStoragePath = this.getContextProxy()?.globalStorageUri.fsPath ?? ''
 		const taskDir = await getTaskDirectoryPath(globalStoragePath, taskId)
 		const filePath = path.join(taskDir, GlobalFileNames.taskMetadata)
 		try {
@@ -180,7 +180,7 @@ export class FileContextTracker {
 				case "roo_edited":
 					newEntry.roo_read_date = now
 					newEntry.roo_edit_date = now
-					this.checkpointPossibleFile.add(filePath)
+					this.checkpointPossibleFiles.add(filePath)
 					break
 
 				// read_tool/file_mentioned: Roo has read the file via a tool or file mention
@@ -205,8 +205,8 @@ export class FileContextTracker {
 	}
 
 	getAndClearCheckpointPossibleFile(): string[] {
-		const files = Array.from(this.checkpointPossibleFile)
-		this.checkpointPossibleFile.clear()
+		const files = Array.from(this.checkpointPossibleFiles)
+		this.checkpointPossibleFiles.clear()
 		return files
 	}
 
