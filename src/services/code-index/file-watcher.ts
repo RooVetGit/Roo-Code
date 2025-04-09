@@ -7,12 +7,11 @@ import { extensions } from "../tree-sitter"
 import { parseCodeFileBySize, CodeBlock } from "./parser"
 import { CodeIndexOpenAiEmbedder } from "./openai-embedder"
 import { CodeIndexQdrantClient } from "./qdrant-client"
-import { ApiHandlerOptions } from "../../shared/api"
 import { v4 as uuidv4 } from "uuid"
 
 const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB
 
-interface FileProcessingResult {
+export interface FileProcessingResult {
 	path: string
 	status: "success" | "skipped" | "error"
 	error?: Error
