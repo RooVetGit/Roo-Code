@@ -230,80 +230,41 @@ export class CodeIndexManager {
 			})
 			const collectionExists = await this._checkCollectionExists()
 
-			if (collectionExists) {
-				this.enqueueStateUpdate({
-					type: "system",
-					payload: { systemStatus: "Indexing", message: "Collection exists. Starting file watcher..." },
-				})
-				await this._startWatcher()
-			} else {
-				this.enqueueStateUpdate({
-					type: "system",
-					payload: {
-						systemStatus: "Indexing",
-						message: "Collection does not exist. Starting full scan...",
-					},
-				})
+			this.enqueueStateUpdate({
+				type: "system",
+				payload: {
+					systemStatus: "Indexing",
+					message: "Starting workspace scan...",
+				},
+			})
 
-				// Calculate workspace-specific cache file path
-				const cacheFileName = `roo-index-cache-${createHash("sha256").update(this.workspacePath).digest("hex")}.json`
-				const cachePath = vscode.Uri.joinPath(this.context.globalStorageUri, cacheFileName)
-
-				this.enqueueStateUpdate({
-					type: "system",
-					payload: {
-						systemStatus: "Indexing",
-						message: "Clearing cache before full scan...",
-					},
-				})
-
-				try {
-					// Ensure directory exists
-					await vscode.workspace.fs.createDirectory(vscode.Uri.file(path.dirname(cachePath.fsPath)))
-
-					// Write empty JSON object to cache file
-					await vscode.workspace.fs.writeFile(cachePath, Buffer.from("{}", "utf-8"))
-
-					console.log(`[CodeIndexManager] Cleared cache file at ${cachePath.fsPath}`)
-				} catch (error) {
-					console.error(`[CodeIndexManager] Failed to clear cache file at ${cachePath.fsPath}:`, error)
+			const { stats } = await scanDirectoryForCodeBlocks(
+				this.workspacePath,
+				undefined, // Let scanner create its own ignore controller
+				this.openAiOptions,
+				this.qdrantUrl,
+				this.context,
+				(batchError: Error) => {
 					this.enqueueStateUpdate({
 						type: "system",
 						payload: {
 							systemStatus: "Error",
-							message: `Failed to clear cache file before scan: ${(error as Error).message}. Indexing halted.`,
+							message: `Failed during initial scan batch: ${batchError.message}`,
 						},
 					})
-					this._isProcessing = false // Reset processing flag on early exit
-					return
-				}
-				// Perform the initial scan using scanDirectoryForCodeBlocks
-				const { stats } = await scanDirectoryForCodeBlocks(
-					this.workspacePath,
-					undefined, // Let scanner create its own ignore controller
-					this.openAiOptions,
-					this.qdrantUrl,
-					this.context,
-					(batchError: Error) => {
-						// Added type
-						this.enqueueStateUpdate({
-							type: "system",
-							payload: {
-								systemStatus: "Error",
-								message: `Failed during initial scan batch: ${batchError.message}`,
-							},
-						})
-					},
-				)
-				console.log(
-					`[CodeIndexManager] Initial scan complete. Processed: ${stats.processed}, Skipped: ${stats.skipped}`,
-				)
-				await this._startWatcher()
-			}
+				},
+			)
+
+			console.log(
+				`[CodeIndexManager] Initial scan complete. Processed: ${stats.processed}, Skipped: ${stats.skipped}`,
+			)
+
+			await this._startWatcher()
+
 			this.enqueueStateUpdate({
 				type: "system",
-				payload: { systemStatus: "Indexed", message: "Initial indexing process complete." },
-			}) // Or appropriate state
+				payload: { systemStatus: "Indexed", message: "Workspace scan and watcher started." },
+			})
 		} catch (error: any) {
 			console.error("[CodeIndexManager] Error during indexing:", error)
 			try {
