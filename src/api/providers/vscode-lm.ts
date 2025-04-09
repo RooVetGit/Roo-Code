@@ -282,54 +282,13 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 		return this.client
 	}
 
-	private cleanTerminalOutput(text: string): string {
-		if (!text) {
-			return ""
-		}
-
-		return (
-			text
-				// Normalize line breaks
-				.replace(/\r\n/g, "\n")
-				.replace(/\r/g, "\n")
-
-				// Remove ANSI escape sequences
-				.replace(/\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])/g, "") // Complete set of ANSI sequences
-				.replace(/\x9B[0-?]*[ -/]*[@-~]/g, "") // CSI sequences
-
-				// Remove terminal title setting sequences and other OSC sequences
-				.replace(/\x1B\][0-9;]*(?:\x07|\x1B\\)/g, "")
-
-				// Remove control characters
-				.replace(/[\x00-\x09\x0B-\x0C\x0E-\x1F\x7F]/g, "")
-
-				// Remove VS Code escape sequences
-				.replace(/\x1B[PD].*?\x1B\\/g, "") // DCS sequences
-				.replace(/\x1B_.*?\x1B\\/g, "") // APC sequences
-				.replace(/\x1B\^.*?\x1B\\/g, "") // PM sequences
-				.replace(/\x1B\[[\d;]*[HfABCDEFGJKST]/g, "") // Cursor movement and clear screen
-
-				// Remove Windows paths and service information
-				.replace(/^(?:PS )?[A-Z]:\\[^\n]*$/gm, "")
-				.replace(/^;?Cwd=.*$/gm, "")
-
-				// Clean escaped sequences
-				.replace(/\\x[0-9a-fA-F]{2}/g, "")
-				.replace(/\\u[0-9a-fA-F]{4}/g, "")
-
-				// Final cleanup
-				.replace(/\n{3,}/g, "\n\n") // Remove multiple empty lines
-				.trim()
-		)
-	}
-
 	private cleanMessageContent(content: any): any {
 		if (!content) {
 			return content
 		}
 
 		if (typeof content === "string") {
-			return this.cleanTerminalOutput(content)
+			return content
 		}
 
 		if (Array.isArray(content)) {
@@ -352,8 +311,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 		this.ensureCleanState()
 		const client: vscode.LanguageModelChat = await this.getClient()
 
-		// Clean system prompt and messages
-		const cleanedSystemPrompt = this.cleanTerminalOutput(systemPrompt)
+		// Process messages
 		const cleanedMessages = messages.map((msg) => ({
 			...msg,
 			content: this.cleanMessageContent(msg.content),
@@ -361,7 +319,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 
 		// Convert Anthropic messages to VS Code LM messages
 		const vsCodeLmMessages: vscode.LanguageModelChatMessage[] = [
-			vscode.LanguageModelChatMessage.Assistant(cleanedSystemPrompt),
+			vscode.LanguageModelChatMessage.Assistant(systemPrompt),
 			...convertToVsCodeLmMessages(cleanedMessages),
 		]
 
