@@ -108,6 +108,15 @@ export class CodeIndexManager {
 		return this.isConfigured()
 	}
 
+	async _recreateClients(): Promise<void> {
+		console.log("[CodeIndexManager] Recreating clients...")
+
+		this._embedder = new CodeIndexOpenAiEmbedder(this.openAiOptions!)
+		this._qdrantClient = new CodeIndexQdrantClient(this.workspacePath, this.qdrantUrl)
+
+		await this.startIndexing()
+	}
+
 	/**
 	 * Loads persisted configuration from globalState.
 	 */
@@ -149,10 +158,7 @@ export class CodeIndexManager {
 		const shouldRestart = (!prevEnabled || !prevConfigured) && enabled && nowConfigured
 
 		if (shouldRestart) {
-			this._embedder = new CodeIndexOpenAiEmbedder(this.openAiOptions!)
-			this._qdrantClient = new CodeIndexQdrantClient(this.workspacePath, this.qdrantUrl)
-			console.log("[CodeIndexManager] Configuration loaded. Starting indexing...")
-			await this.startIndexing()
+			await this._recreateClients()
 		} else {
 			console.log("[CodeIndexManager] Configuration loaded. No restart needed.")
 			// If already configured and enabled, ensure state reflects readiness if standby
@@ -165,7 +171,7 @@ export class CodeIndexManager {
 	/**
 	 * Updates the configuration required for indexing.
 	 */
-	public updateConfiguration(config: { openAiOptions?: ApiHandlerOptions; qdrantUrl?: string }): void {
+	public async updateConfiguration(config: { openAiOptions?: ApiHandlerOptions; qdrantUrl?: string }): Promise<void> {
 		let configChanged = false
 
 		// Handle OpenAI options update if present
@@ -189,8 +195,8 @@ export class CodeIndexManager {
 		if (configChanged) {
 			console.log("[CodeIndexManager] Configuration updated.")
 			// If we were waiting for config, check if we can proceed
-			if (this._systemStatus === "Standby" && this.isConfigured()) {
-				this._setSystemState("Standby", "Configuration ready. Ready to index.")
+			if (this.isEnabled && this.isConfigured() && this._systemStatus === "Standby") {
+				await this._recreateClients()
 			} else if (this._systemStatus !== "Standby") {
 				// Configuration changed while running - might need restart logic later
 				console.warn("[CodeIndexManager] Configuration updated while active. A restart might be needed.")
