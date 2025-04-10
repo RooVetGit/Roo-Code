@@ -54,17 +54,11 @@
 										"type": "string",
 										"enum": ["read", "edit", "browser", "command", "mcp", "modes"]
 									},
-									"options": {
-										"type": "object",
-										"properties": {
-											"fileRegex": {
-												"type": "string"
-											},
-											"description": {
-												"type": "string"
-											}
-										},
-										"additionalProperties": false
+									"fileRegex": {
+										"type": "string"
+									},
+									"description": {
+										"type": "string"
 									}
 								},
 								"required": ["group"],

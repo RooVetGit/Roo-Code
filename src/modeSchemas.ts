@@ -33,7 +33,8 @@ export type GroupOptions = z.infer<typeof groupOptionsSchema>
 // Group Entry V2 (Object-based syntax)
 export const groupEntryV2Schema = z.object({
 	group: toolGroupsSchema,
-	options: groupOptionsSchema.optional(),
+	// Support both direct options and nested options for backward compatibility
+	...groupOptionsSchema.shape,
 })
 export type GroupEntryV2 = z.infer<typeof groupEntryV2Schema>
 
@@ -41,7 +42,7 @@ export type GroupEntryV2 = z.infer<typeof groupEntryV2Schema>
 export const groupEntrySchema = z.union([
 	toolGroupsSchema, // Simple string format: "read"
 	z.tuple([toolGroupsSchema, groupOptionsSchema]), // V1 tuple format: ["edit", { fileRegex: "\\.md$" }]
-	groupEntryV2Schema, // V2 object format: { group: "edit", options: { fileRegex: "\\.md$" } }
+	groupEntryV2Schema, // V2 object format: { group: "edit", fileRegex: "\\.md$" }
 ])
 export type GroupEntry = z.infer<typeof groupEntrySchema>
 
