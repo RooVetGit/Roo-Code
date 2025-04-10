@@ -1444,6 +1444,77 @@ const ApiOptions = ({
 					)}
 				</>
 			)}
+			{selectedProvider === "custom-openai" && (
+				<>
+					<VSCodeTextField
+						value={apiConfiguration?.customBaseUrl || ""}
+						type="url"
+						onInput={handleInputChange("customBaseUrl")}
+						placeholder="https://your-custom-api.example.com"
+						className="w-full">
+						<label className="block font-medium mb-1">Custom Base URL</label>
+					</VSCodeTextField>
+					<VSCodeTextField
+						value={apiConfiguration?.customApiKey || ""}
+						type="password"
+						onInput={handleInputChange("customApiKey")}
+						placeholder={t("settings:placeholders.apiKey")}
+						className="w-full">
+						<label className="block font-medium mb-1">Custom API Key</label>
+					</VSCodeTextField>
+					<div className="text-sm text-vscode-descriptionForeground -mt-2">
+						{t("settings:providers.apiKeyStorageNotice")}
+					</div>
+					<VSCodeTextField
+						value={apiConfiguration?.customAuthHeaderName || ""}
+						type="text"
+						onInput={handleInputChange("customAuthHeaderName")}
+						placeholder="Authorization" // Default placeholder
+						className="w-full">
+						<label className="block font-medium mb-1">Auth Header Name</label>
+					</VSCodeTextField>
+					<VSCodeTextField
+						value={apiConfiguration?.customAuthHeaderPrefix || ""}
+						type="text"
+						onInput={handleInputChange("customAuthHeaderPrefix")}
+						placeholder="Bearer " // Default placeholder
+						title="Prefix for the auth header value (e.g., 'Bearer '). Leave empty if not needed." // Tooltip added
+						className="w-full">
+						<label className="block font-medium mb-1">Auth Header Prefix</label>
+					</VSCodeTextField>
+
+					{/* Custom-specific options */}
+					<div className="mt-4 mb-2">
+						<div className="font-medium mb-2">Custom API Options</div>
+						<Checkbox
+							checked={apiConfiguration?.useModelInPath ?? false}
+							onChange={handleInputChange("useModelInPath", noTransform)}>
+							Use model name in URL path
+						</Checkbox>
+						<div className="text-sm text-vscode-descriptionForeground ml-6 -mt-1">
+							Enable this for APIs that include the model name in the URL path (e.g.,
+							/api/v1/chat/model-name)
+						</div>
+					</div>
+
+					{apiConfiguration?.useModelInPath && (
+						<VSCodeTextField
+							value={apiConfiguration?.customPathPrefix || "/api/v1/chat/"}
+							type="text"
+							onInput={handleInputChange("customPathPrefix")}
+							placeholder="/api/v1/chat/"
+							className="w-full">
+							<label className="block font-medium mb-1">Path Prefix</label>
+						</VSCodeTextField>
+					)}
+
+					<div className="text-sm text-vscode-descriptionForeground mt-2">
+						Configure a custom OpenAI-compatible API endpoint. For services that use a different
+						authentication header (like 'X-API-Key' instead of 'Authorization: Bearer'), specify the header
+						name and prefix accordingly.
+					</div>
+				</>
+			)}
 
 			{selectedProvider === "human-relay" && (
 				<>
@@ -1518,6 +1589,30 @@ const ApiOptions = ({
 						</div>
 					</div>
 				)}
+
+			{selectedProvider === "custom-openai" && (
+				<>
+					<ModelPicker
+						apiConfiguration={apiConfiguration}
+						setApiConfigurationField={setApiConfigurationField}
+						defaultModelId="claude-3-7-sonnet-20250219"
+						defaultModelInfo={openAiModelInfoSaneDefaults}
+						models={openAiNativeModels}
+						modelIdKey="openAiModelId"
+						modelInfoKey="openAiCustomModelInfo"
+						serviceName="Custom OpenAI"
+						serviceUrl="#"
+					/>
+					<TemperatureControl
+						value={apiConfiguration?.modelTemperature}
+						onChange={handleInputChange("modelTemperature", noTransform)}
+					/>
+					<RateLimitSecondsControl
+						value={apiConfiguration?.rateLimitSeconds || 0}
+						onChange={(value) => setApiConfigurationField("rateLimitSeconds", value)}
+					/>
+				</>
+			)}
 
 			{selectedProvider === "glama" && (
 				<ModelPicker
@@ -1753,6 +1848,12 @@ export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
 			return {
 				selectedProvider: provider,
 				selectedModelId: apiConfiguration?.openAiModelId || "",
+				selectedModelInfo: apiConfiguration?.openAiCustomModelInfo || openAiModelInfoSaneDefaults,
+			}
+		case "custom-openai":
+			return {
+				selectedProvider: provider,
+				selectedModelId: apiConfiguration?.openAiModelId || "claude-3-7-sonnet-20250219", // Changed default
 				selectedModelInfo: apiConfiguration?.openAiCustomModelInfo || openAiModelInfoSaneDefaults,
 			}
 		case "ollama":

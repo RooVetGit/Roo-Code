@@ -37,6 +37,7 @@ export const PROVIDERS = [
 	{ value: "unbound", label: "Unbound" },
 	{ value: "requesty", label: "Requesty" },
 	{ value: "human-relay", label: "Human Relay" },
+	{ value: "custom-openai", label: "Custom OpenAI Compatible" },
 ].sort((a, b) => a.label.localeCompare(b.label))
 
 export const VERTEX_REGIONS = [

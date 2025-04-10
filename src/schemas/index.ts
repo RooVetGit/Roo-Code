@@ -17,6 +17,7 @@ export const providerNames = [
 	"bedrock",
 	"vertex",
 	"openai",
+	"custom-openai", // Added custom provider
 	"ollama",
 	"vscode-lm",
 	"lmstudio",
@@ -105,6 +106,7 @@ export const modelInfoSchema = z.object({
 	supportsImages: z.boolean().optional(),
 	supportsComputerUse: z.boolean().optional(),
 	supportsPromptCache: z.boolean(),
+	supportsUsageStream: z.boolean().optional(),
 	inputPrice: z.number().optional(),
 	outputPrice: z.number().optional(),
 	cacheWritesPrice: z.number().optional(),
@@ -391,6 +393,13 @@ export const providerSettingsSchema = z.object({
 	rateLimitSeconds: z.number().optional(),
 	// Fake AI
 	fakeAi: z.unknown().optional(),
+	// Custom OpenAI Compatible
+	customBaseUrl: z.string().optional(),
+	customApiKey: z.string().optional(),
+	customAuthHeaderName: z.string().optional(),
+	customAuthHeaderPrefix: z.string().optional(),
+	useModelInPath: z.boolean().optional(),
+	customPathPrefix: z.string().optional(),
 })
 
 export type ProviderSettings = z.infer<typeof providerSettingsSchema>
@@ -471,6 +480,13 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	requestyModelInfo: undefined,
 	// Claude 3.7 Sonnet Thinking
 	modelTemperature: undefined,
+	// Custom OpenAI Compatible
+	customBaseUrl: undefined,
+	customApiKey: undefined,
+	customAuthHeaderName: undefined,
+	customAuthHeaderPrefix: undefined,
+	useModelInPath: undefined,
+	customPathPrefix: undefined,
 	modelMaxTokens: undefined,
 	modelMaxThinkingTokens: undefined,
 	// Generic

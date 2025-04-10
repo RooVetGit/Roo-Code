@@ -10,6 +10,7 @@ type ProviderSettings = {
 				| "bedrock"
 				| "vertex"
 				| "openai"
+				| "custom-openai"
 				| "ollama"
 				| "vscode-lm"
 				| "lmstudio"
@@ -34,6 +35,7 @@ type ProviderSettings = {
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
 				supportsPromptCache: boolean
+				supportsUsageStream?: boolean | undefined
 				inputPrice?: number | undefined
 				outputPrice?: number | undefined
 				cacheWritesPrice?: number | undefined
@@ -56,6 +58,7 @@ type ProviderSettings = {
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
 				supportsPromptCache: boolean
+				supportsUsageStream?: boolean | undefined
 				inputPrice?: number | undefined
 				outputPrice?: number | undefined
 				cacheWritesPrice?: number | undefined
@@ -98,6 +101,7 @@ type ProviderSettings = {
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
 				supportsPromptCache: boolean
+				supportsUsageStream?: boolean | undefined
 				inputPrice?: number | undefined
 				outputPrice?: number | undefined
 				cacheWritesPrice?: number | undefined
@@ -143,6 +147,7 @@ type ProviderSettings = {
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
 				supportsPromptCache: boolean
+				supportsUsageStream?: boolean | undefined
 				inputPrice?: number | undefined
 				outputPrice?: number | undefined
 				cacheWritesPrice?: number | undefined
@@ -164,6 +169,7 @@ type ProviderSettings = {
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
 				supportsPromptCache: boolean
+				supportsUsageStream?: boolean | undefined
 				inputPrice?: number | undefined
 				outputPrice?: number | undefined
 				cacheWritesPrice?: number | undefined
@@ -182,6 +188,12 @@ type ProviderSettings = {
 	includeMaxTokens?: boolean | undefined
 	rateLimitSeconds?: number | undefined
 	fakeAi?: unknown | undefined
+	customBaseUrl?: string | undefined
+	customApiKey?: string | undefined
+	customAuthHeaderName?: string | undefined
+	customAuthHeaderPrefix?: string | undefined
+	useModelInPath?: boolean | undefined
+	customPathPrefix?: string | undefined
 }
 
 export type { ProviderSettings }
@@ -200,6 +212,7 @@ type GlobalSettings = {
 							| "bedrock"
 							| "vertex"
 							| "openai"
+							| "custom-openai"
 							| "ollama"
 							| "vscode-lm"
 							| "lmstudio"

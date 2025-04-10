@@ -21,6 +21,7 @@ import { UnboundHandler } from "./providers/unbound"
 import { RequestyHandler } from "./providers/requesty"
 import { HumanRelayHandler } from "./providers/human-relay"
 import { FakeAIHandler } from "./providers/fake-ai"
+import { CustomOpenAiHandler } from "./providers/custom-openai" // Import the new handler
 
 export interface SingleCompletionHandler {
 	completePrompt(prompt: string): Promise<string>
@@ -56,6 +57,8 @@ export function buildApiHandler(configuration: ApiConfiguration): ApiHandler {
 			return new VertexHandler(options)
 		case "openai":
 			return new OpenAiHandler(options)
+		case "custom-openai": // Add case for the new handler
+			return new CustomOpenAiHandler(options)
 		case "ollama":
 			return new OllamaHandler(options)
 		case "lmstudio":
