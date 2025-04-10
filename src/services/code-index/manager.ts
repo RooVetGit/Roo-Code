@@ -108,13 +108,13 @@ export class CodeIndexManager {
 		return this.isConfigured()
 	}
 
-	async _recreateClients(): Promise<void> {
+	_recreateClients() {
 		console.log("[CodeIndexManager] Recreating clients...")
 
 		this._embedder = new CodeIndexOpenAiEmbedder(this.openAiOptions!)
 		this._qdrantClient = new CodeIndexQdrantClient(this.workspacePath, this.qdrantUrl)
 
-		await this.startIndexing()
+		this.startIndexing()
 	}
 
 	/**
@@ -127,7 +127,7 @@ export class CodeIndexManager {
 		const prevConfigured = this.isConfigured?.() ?? false
 
 		const enabled = this.context.globalState.get<boolean>("codeIndexEnabled", false)
-		const openAiKey = this.context.globalState.get<string>("codeIndexOpenAiKey", "")
+		const openAiKey = (await this.context.secrets.get("codeIndexOpenAiKey")) ?? ""
 		const qdrantUrl = this.context.globalState.get<string>("codeIndexQdrantUrl", "")
 
 		this.isEnabled = enabled
@@ -164,43 +164,6 @@ export class CodeIndexManager {
 			// If already configured and enabled, ensure state reflects readiness if standby
 			if (this._systemStatus === "Standby") {
 				this._setSystemState("Standby", "Configuration ready. Ready to index.")
-			}
-		}
-	}
-
-	/**
-	 * Updates the configuration required for indexing.
-	 */
-	public async updateConfiguration(config: { openAiOptions?: ApiHandlerOptions; qdrantUrl?: string }): Promise<void> {
-		let configChanged = false
-
-		// Handle OpenAI options update if present
-		if (config.openAiOptions) {
-			const newKey = config.openAiOptions.openAiNativeApiKey
-			if (!this.openAiOptions || newKey !== this.openAiOptions.openAiNativeApiKey) {
-				this.openAiOptions = config.openAiOptions
-				configChanged = true
-			}
-		}
-
-		// Handle Qdrant URL update if present
-		if (config.qdrantUrl) {
-			const newUrl = config.qdrantUrl
-			if (newUrl !== this.qdrantUrl) {
-				this.qdrantUrl = newUrl
-				configChanged = true
-			}
-		}
-
-		if (configChanged) {
-			console.log("[CodeIndexManager] Configuration updated.")
-			// If we were waiting for config, check if we can proceed
-			if (this.isEnabled && this.isConfigured() && this._systemStatus === "Standby") {
-				await this._recreateClients()
-			} else if (this._systemStatus !== "Standby") {
-				// Configuration changed while running - might need restart logic later
-				console.warn("[CodeIndexManager] Configuration updated while active. A restart might be needed.")
-				// Potentially stop and update internal components if feasible
 			}
 		}
 	}

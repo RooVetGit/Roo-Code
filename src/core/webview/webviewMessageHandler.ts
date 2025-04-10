@@ -1321,19 +1321,9 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await updateGlobalState("codeIndexEnabled", enabled)
 			// Get manager instance
 			const manager = CodeIndexManager.getInstance(provider.context)
-			// Get related state AFTER saving the current value
-			const { codeIndexOpenAiKey, codeIndexQdrantUrl } = await provider.getState()
 
-			if (enabled && codeIndexOpenAiKey && codeIndexQdrantUrl) {
-				// If enabling and full config is present, update manager
-				manager.updateConfiguration({
-					openAiOptions: { openAiNativeApiKey: codeIndexOpenAiKey },
-					qdrantUrl: codeIndexQdrantUrl,
-				})
-			} else if (!enabled) {
-				// If disabling, ensure the watcher is stopped
-				manager.stopWatcher()
-			}
+			await manager.loadConfiguration()
+
 			// Update webview state
 			await provider.postStateToWebview()
 			break
@@ -1341,19 +1331,12 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "codeIndexOpenAiKey": {
 			const newKey = message.text // Key is sent in 'text' field
 			// Save the state first
-			await updateGlobalState("codeIndexOpenAiKey", newKey)
+			provider.contextProxy.setValue("codeIndexOpenAiKey", newKey)
 			// Get manager instance
 			const manager = CodeIndexManager.getInstance(provider.context)
-			// Get related state AFTER saving the current value
-			const { codeIndexEnabled, codeIndexQdrantUrl } = await provider.getState()
 
-			// Update manager only if enabled and both key & URL are now present
-			if (codeIndexEnabled && newKey && codeIndexQdrantUrl) {
-				manager.updateConfiguration({
-					openAiOptions: { openAiNativeApiKey: newKey },
-					qdrantUrl: codeIndexQdrantUrl,
-				})
-			}
+			await manager.loadConfiguration()
+
 			// Update webview state
 			await provider.postStateToWebview()
 			break
@@ -1365,15 +1348,11 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			// Get manager instance
 			const manager = CodeIndexManager.getInstance(provider.context)
 			// Get related state AFTER saving the current value
-			const { codeIndexEnabled, codeIndexOpenAiKey } = await provider.getState()
 
 			// Update manager only if enabled and both key & URL are now present
-			if (codeIndexEnabled && codeIndexOpenAiKey && newUrl) {
-				manager.updateConfiguration({
-					openAiOptions: { openAiNativeApiKey: codeIndexOpenAiKey },
-					qdrantUrl: newUrl,
-				})
-			}
+
+			await manager.loadConfiguration()
+
 			// Update webview state
 			await provider.postStateToWebview()
 			break

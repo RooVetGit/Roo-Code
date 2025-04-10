@@ -174,6 +174,7 @@ type ProviderSettings = {
 				cachableFields?: string[] | undefined
 		  } | null)
 		| undefined
+	codeIndexOpenAiKey?: string | undefined
 	modelTemperature?: (number | null) | undefined
 	modelMaxTokens?: number | undefined
 	modelMaxThinkingTokens?: number | undefined
