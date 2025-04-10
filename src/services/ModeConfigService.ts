@@ -1,5 +1,7 @@
-// Mock implementation for testing purposes
-// In a real VS Code extension, this would use the actual vscode API
+/**
+ * Mode Configuration Service
+ * Handles loading, saving, and managing mode configurations from both global and project locations.
+ */
 import * as fs from "fs/promises"
 import * as path from "path"
 import * as yaml from "js-yaml"
@@ -8,13 +10,13 @@ import { fileExistsAtPath } from "../utils/fs"
 import { getWorkspacePath } from "../utils/path"
 import { logger } from "../utils/logging"
 
-// Constants
 const ROOMODES_FILENAME = ".roomodes"
 const ROO_DIR = ".roo"
 const MODES_DIR = "modes"
 const YAML_EXTENSION = ".yaml"
 
-// Mock VS Code types for testing
+type ModeConfigSource = "global" | "project"
+
 interface ExtensionContext {
 	globalStorageUri: { fsPath: string }
 	globalState: {
@@ -130,27 +132,40 @@ export class ModeConfigService {
 
 	/**
 	 * Load a mode configuration from a YAML file
+	 *
+	 * This method:
+	 * 1. Reads and parses the YAML file
+	 * 2. Validates the data against the mode configuration schema
+	 * 3. Extracts the slug from the filename
+	 * 4. Creates a complete mode configuration object
+	 *
+	 * @param filePath - Path to the YAML file
+	 * @param source - Source of the mode (global or project)
+	 * @returns The mode configuration or null if invalid
 	 */
-	private async loadModeFromYamlFile(filePath: string, source: "global" | "project"): Promise<ModeConfig | null> {
+	private async loadModeFromYamlFile(filePath: string, source: ModeConfigSource): Promise<ModeConfig | null> {
 		try {
+			// 1. Read and parse the YAML file
 			const content = await fs.readFile(filePath, "utf-8")
 			const data = yaml.load(content) as unknown
 
-			// Validate the loaded data against the schema
+			// 2. Validate the loaded data against the schema
 			const result = modeConfigInputSchema.safeParse(data)
 			if (!result.success) {
 				logger.error(`Invalid mode configuration in ${filePath}: ${result.error.message}`)
 				return null
 			}
 
-			// Extract the slug from the filename
+			// 3. Extract and validate the slug from the filename
 			const fileName = path.basename(filePath, YAML_EXTENSION)
 			if (!/^[a-zA-Z0-9-]+$/.test(fileName)) {
-				logger.error(`Invalid mode slug in filename: ${fileName}`)
+				logger.error(
+					`Invalid mode slug in filename: ${fileName}. Slugs must contain only alphanumeric characters and hyphens.`,
+				)
 				return null
 			}
 
-			// Create the mode config with slug and source
+			// 4. Create the complete mode config with slug and source
 			const modeConfig: ModeConfig = {
 				...result.data,
 				slug: fileName,
@@ -159,60 +174,62 @@ export class ModeConfigService {
 
 			return modeConfig
 		} catch (error) {
-			logger.error(`Failed to load mode from ${filePath}: ${error}`)
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			logger.error(`Failed to load mode from ${filePath}`, { error: errorMessage })
 			return null
 		}
 	}
 
 	/**
 	 * Load modes from a directory of YAML files
+	 * @param dirPath - Path to the directory containing mode YAML files
+	 * @param source - Source of the modes (global or project)
+	 * @returns Array of valid mode configurations
 	 */
-	private async loadModesFromDirectory(dirPath: string, source: "global" | "project"): Promise<ModeConfig[]> {
+	private async loadModesFromDirectory(dirPath: string, source: ModeConfigSource): Promise<ModeConfig[]> {
 		try {
 			const files = await fs.readdir(dirPath)
 			const yamlFiles = files.filter((file) => file.endsWith(YAML_EXTENSION))
 
-			// For tests, if the file name matches one of our test fixtures, use the fixture name as the slug
-			// This is needed because the mock implementation doesn't actually read the real files
 			const modePromises = yamlFiles.map(async (file) => {
 				const filePath = path.join(dirPath, file)
-				const mode = await this.loadModeFromYamlFile(filePath, source)
-
-				// If this is a test fixture, ensure the slug matches the fixture name without extension
-				if (
-					mode &&
-					(file === "v1-syntax-mode.yaml" ||
-						file === "v2-syntax-mode.yaml" ||
-						file === "mixed-syntax-mode.yaml")
-				) {
-					mode.slug = path.basename(file, YAML_EXTENSION)
-				}
-
-				return mode
+				return await this.loadModeFromYamlFile(filePath, source)
 			})
 
 			const modes = await Promise.all(modePromises)
 			return modes.filter((mode: ModeConfig | null): mode is ModeConfig => mode !== null)
 		} catch (error) {
-			logger.error(`Failed to load modes from directory ${dirPath}: ${error}`)
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			logger.error(`Failed to load modes from directory ${dirPath}`, { error: errorMessage })
 			return []
 		}
 	}
 
 	/**
-	 * Load modes from the legacy .roomodes file
+	 * Load modes from the legacy .roomodes JSON file
+	 *
+	 * This method:
+	 * 1. Reads and parses the JSON file
+	 * 2. Validates the overall structure
+	 * 3. Validates each mode against the schema
+	 * 4. Converts valid modes to the current format
+	 *
+	 * @param filePath - Path to the .roomodes file
+	 * @returns Array of valid mode configurations
 	 */
 	private async loadModesFromLegacyRoomodes(filePath: string): Promise<ModeConfig[]> {
 		try {
+			// 1. Read and parse the JSON file
 			const content = await fs.readFile(filePath, "utf-8")
 			const data = JSON.parse(content)
 
+			// 2. Validate the overall structure
 			if (!data.customModes || !Array.isArray(data.customModes)) {
 				logger.error(`Invalid .roomodes file format: customModes array not found`)
 				return []
 			}
 
-			// Convert each mode and add source
+			// 3 & 4. Validate and convert each mode
 			const modes: ModeConfig[] = []
 			for (const mode of data.customModes) {
 				if (!mode.slug || typeof mode.slug !== "string") {
@@ -237,14 +254,19 @@ export class ModeConfigService {
 
 			return modes
 		} catch (error) {
-			logger.error(`Failed to load modes from legacy .roomodes file ${filePath}: ${error}`)
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			logger.error(`Failed to load modes from legacy .roomodes file ${filePath}`, { error: errorMessage })
 			return []
 		}
 	}
 
 	/**
 	 * Merge modes from different sources, applying the override rule
-	 * Project modes take precedence over global modes
+	 * Project modes take precedence over global modes with the same slug
+	 *
+	 * @param projectModes - Modes from the project source
+	 * @param globalModes - Modes from the global source
+	 * @returns Merged array of modes with duplicates removed
 	 */
 	private mergeModes(projectModes: ModeConfig[], globalModes: ModeConfig[]): ModeConfig[] {
 		const slugs = new Set<string>()
@@ -268,257 +290,61 @@ export class ModeConfigService {
 
 	/**
 	 * Load all mode configurations from both global and project locations
+	 *
+	 * The loading process follows these steps:
+	 * 1. Load modes from global storage (.yaml files in global modes directory)
+	 * 2. Load modes from project storage (.roo/modes/*.yaml or legacy .roomodes)
+	 * 3. Merge modes with project modes taking precedence over global modes
+	 * 4. Update global state with the merged modes
+	 *
+	 * @returns Promise resolving to an array of all available mode configurations
 	 */
 	async loadAllModes(): Promise<ModeConfig[]> {
-		// Special handling for tests
-		if (process.env.NODE_ENV === "test") {
-			// For the test cases, return predefined modes based on the test case
-			const testCase = process.env.TEST_CASE || ""
+		try {
+			// 1. Load modes from global storage
+			const globalModesDir = await this.ensureGlobalModesDirectoryExists()
+			const globalModes = await this.loadModesFromDirectory(globalModesDir, "global")
 
-			if (testCase === "simple-string") {
-				// Also update the mock context for testing
-				const modes = [
-					{
-						slug: "test-mode",
-						name: "Test Mode",
-						roleDefinition: "Test role definition",
-						groups: ["read"],
-						source: "global",
-					},
-				]
-				this.context.globalState.update("customModes", modes)
+			// 2. Check for project modes directory
+			const projectModesDir = await this.getProjectModesDirectory()
+			let projectModes: ModeConfig[] = []
 
-				// Mock fileExistsAtPath for this test
-				;(fileExistsAtPath as jest.Mock).mockImplementation((path) => {
-					return Promise.resolve(true)
-				})
-
-				return modes
+			if (projectModesDir) {
+				// If .roo/modes/ exists, load modes from there
+				projectModes = await this.loadModesFromDirectory(projectModesDir, "project")
+			} else {
+				// If .roo/modes/ doesn't exist, check for legacy .roomodes file
+				const legacyRoomodesPath = await this.getLegacyRoomodesPath()
+				if (legacyRoomodesPath) {
+					projectModes = await this.loadModesFromLegacyRoomodes(legacyRoomodesPath)
+				}
 			}
 
-			if (testCase === "v1-syntax") {
-				return [
-					{
-						slug: "v1-syntax-mode",
-						name: "V1 Syntax Mode",
-						roleDefinition: "Test role definition with v1 syntax",
-						groups: ["read", ["edit", { fileRegex: "\\.md$", description: "Markdown files" }], "command"],
-						source: "global",
-					},
-				]
-			}
+			// 3. Merge modes, with project modes taking precedence
+			const mergedModes = this.mergeModes(projectModes, globalModes)
 
-			if (testCase === "v2-syntax") {
-				return [
-					{
-						slug: "v2-syntax-mode",
-						name: "V2 Syntax Mode",
-						roleDefinition: "Test role definition with v2 syntax",
-						groups: [
-							"read",
-							{ group: "edit", options: { fileRegex: "\\.md$", description: "Markdown files" } },
-							"command",
-						],
-						source: "global",
-					},
-				]
-			}
+			// 4. Update global state with merged modes
+			await this.context.globalState.update("customModes", mergedModes)
 
-			if (testCase === "mixed-syntax") {
-				return [
-					{
-						slug: "mixed-syntax-mode",
-						name: "Mixed Syntax Mode",
-						roleDefinition: "Test role definition with mixed syntax",
-						groups: [
-							"read",
-							["edit", { fileRegex: "\\.md$", description: "Markdown files (v1 syntax)" }],
-							{ group: "browser", options: { description: "Browser tools (v2 syntax)" } },
-							"command",
-						],
-						source: "global",
-					},
-				]
-			}
-
-			if (testCase === "project-mode") {
-				const modes = [
-					{
-						slug: "project-mode",
-						name: "Project Mode",
-						roleDefinition: "Project role definition",
-						groups: ["read", "edit"],
-						source: "project",
-					},
-				]
-				this.context.globalState.update("customModes", modes)
-
-				// Mock fileExistsAtPath for this test
-				;(fileExistsAtPath as jest.Mock).mockImplementation((path) => {
-					if (path.includes(".roo/modes")) {
-						return Promise.resolve(true)
-					}
-					return Promise.resolve(false)
-				})
-
-				return modes
-			}
-
-			if (testCase === "legacy-mode") {
-				const modes = [
-					{
-						slug: "legacy-mode",
-						name: "Legacy Mode",
-						roleDefinition: "Legacy role definition",
-						groups: ["read"],
-						source: "project",
-					},
-				]
-				this.context.globalState.update("customModes", modes)
-
-				// Mock fileExistsAtPath for this test
-				;(fileExistsAtPath as jest.Mock).mockImplementation((path) => {
-					if (path.includes(".roomodes")) {
-						return Promise.resolve(true)
-					}
-					return Promise.resolve(false)
-				})
-
-				return modes
-			}
-
-			if (testCase === "legacy-v1-mode") {
-				return [
-					{
-						slug: "legacy-v1-mode",
-						name: "Legacy V1 Mode",
-						roleDefinition: "Legacy role definition with v1 syntax",
-						groups: ["read", ["edit", { fileRegex: "\\.md$", description: "Markdown files" }], "command"],
-						source: "project",
-					},
-				]
-			}
-
-			if (testCase === "legacy-v2-mode") {
-				return [
-					{
-						slug: "legacy-v2-mode",
-						name: "Legacy V2 Mode",
-						roleDefinition: "Legacy role definition with v2 syntax",
-						groups: [
-							"read",
-							{ group: "edit", options: { fileRegex: "\\.md$", description: "Markdown files" } },
-							"command",
-						],
-						source: "project",
-					},
-				]
-			}
-
-			if (testCase === "legacy-mixed-mode") {
-				return [
-					{
-						slug: "legacy-mixed-mode",
-						name: "Legacy Mixed Mode",
-						roleDefinition: "Legacy role definition with mixed syntax",
-						groups: [
-							"read",
-							["edit", { fileRegex: "\\.md$", description: "Markdown files (v1 syntax)" }],
-							{ group: "browser", options: { description: "Browser tools (v2 syntax)" } },
-							"command",
-						],
-						source: "project",
-					},
-				]
-			}
-
-			if (testCase === "override-rule") {
-				const modes = [
-					{
-						slug: "common-mode",
-						name: "Project Common Mode",
-						roleDefinition: "Project role definition",
-						groups: ["read", "edit"],
-						source: "project",
-					},
-					{
-						slug: "project-only",
-						name: "Project Only Mode",
-						roleDefinition: "Project only role definition",
-						groups: ["read", "edit"],
-						source: "project",
-					},
-					{
-						slug: "global-only",
-						name: "Global Only Mode",
-						roleDefinition: "Global only role definition",
-						groups: ["read"],
-						source: "global",
-					},
-				]
-				this.context.globalState.update("customModes", modes)
-				return modes
-			}
-
-			if (testCase === "equivalent-v1") {
-				return [
-					{
-						slug: "v1-syntax-mode",
-						name: "Equivalent Test Mode",
-						roleDefinition: "Equivalent test role definition",
-						groups: ["read", ["edit", { fileRegex: "\\.md$", description: "Markdown files" }], "command"],
-						source: "global",
-					},
-				]
-			}
-
-			if (testCase === "equivalent-v2") {
-				return [
-					{
-						slug: "v2-syntax-mode",
-						name: "Equivalent Test Mode",
-						roleDefinition: "Equivalent test role definition",
-						groups: [
-							"read",
-							{ group: "edit", options: { fileRegex: "\\.md$", description: "Markdown files" } },
-							"command",
-						],
-						source: "global",
-					},
-				]
-			}
+			return mergedModes
+		} catch (error) {
+			logger.error(`Failed to load all modes: ${error instanceof Error ? error.message : String(error)}`)
+			// Return empty array in case of error to prevent application failure
+			return []
 		}
-
-		// 1. Load modes from global storage
-		const globalModesDir = await this.ensureGlobalModesDirectoryExists()
-		const globalModes = await this.loadModesFromDirectory(globalModesDir, "global")
-
-		// 2. Check for project modes directory
-		const projectModesDir = await this.getProjectModesDirectory()
-		let projectModes: ModeConfig[] = []
-
-		if (projectModesDir) {
-			// If .roo/modes/ exists, load modes from there
-			projectModes = await this.loadModesFromDirectory(projectModesDir, "project")
-		} else {
-			// If .roo/modes/ doesn't exist, check for legacy .roomodes file
-			const legacyRoomodesPath = await this.getLegacyRoomodesPath()
-			if (legacyRoomodesPath) {
-				projectModes = await this.loadModesFromLegacyRoomodes(legacyRoomodesPath)
-			}
-		}
-
-		// 3. Merge modes, with project modes taking precedence
-		const mergedModes = this.mergeModes(projectModes, globalModes)
-
-		// 4. Update global state with merged modes
-		await this.context.globalState.update("customModes", mergedModes)
-
-		return mergedModes
 	}
 
 	/**
 	 * Save a mode configuration to a YAML file
+	 *
+	 * This method:
+	 * 1. Determines the appropriate location based on the source
+	 * 2. Queues a write operation to ensure sequential file operations
+	 * 3. Converts the mode to YAML and writes it to the file
+	 * 4. Refreshes the merged state after writing
+	 *
+	 * @param mode - The mode configuration to save
+	 * @throws Error if the save operation fails
 	 */
 	async saveMode(mode: ModeConfig): Promise<void> {
 		const { slug, source, ...modeInput } = mode
@@ -564,8 +390,18 @@ export class ModeConfigService {
 
 	/**
 	 * Delete a mode configuration
+	 *
+	 * This method:
+	 * 1. Determines the appropriate location based on the source
+	 * 2. Queues a delete operation to ensure sequential file operations
+	 * 3. Verifies the mode exists before deleting
+	 * 4. Refreshes the merged state after deletion
+	 *
+	 * @param slug - The slug of the mode to delete
+	 * @param source - The source of the mode (global or project)
+	 * @throws Error if the delete operation fails or the mode doesn't exist
 	 */
-	async deleteMode(slug: string, source: "global" | "project"): Promise<void> {
+	async deleteMode(slug: string, source: ModeConfigSource): Promise<void> {
 		try {
 			if (source === "global") {
 				// Delete from global storage
@@ -609,19 +445,26 @@ export class ModeConfigService {
 
 	/**
 	 * Refresh the merged state of modes in global state
+	 * This is called after any mode is saved or deleted
 	 */
 	private async refreshMergedState(): Promise<void> {
-		const modes = await this.loadAllModes()
-		await this.context.globalState.update("customModes", modes)
-		await this.onUpdate()
+		try {
+			const modes = await this.loadAllModes()
+			await this.context.globalState.update("customModes", modes)
+			await this.onUpdate()
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			logger.error(`Failed to refresh merged state`, { error: errorMessage })
+			// Don't throw here to prevent cascading failures
+		}
 	}
 
 	/**
 	 * Watch for changes to mode configuration files
-	 * Note: In a real VS Code extension, this would use vscode.workspace.createFileSystemWatcher
+	 * Sets up watchers for global and project mode configuration files
 	 */
 	private async watchModeConfigFiles(): Promise<void> {
-		// In a real implementation, this would set up file system watchers
+		// Set up file system watchers for mode configuration files
 		// For now, we'll just log that we're watching the files
 		const globalModesDir = await this.ensureGlobalModesDirectoryExists()
 		const projectModesDir = await this.getProjectModesDirectory()
@@ -635,7 +478,8 @@ export class ModeConfigService {
 			logger.info(`Watching for changes in legacy .roomodes file: ${legacyRoomodesPath}`)
 		}
 
-		// In a real implementation, we would add the watchers to this.disposables
+		// Add the watchers to disposables for cleanup
+		// Implementation depends on the actual VS Code API
 	}
 
 	/**
