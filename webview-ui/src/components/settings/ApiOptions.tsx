@@ -850,7 +850,7 @@ const ApiOptions = ({
 					</div>
 
 					<div className="flex flex-col gap-3">
-						<div className="text-sm text-vscode-descriptionForeground" style={{ whiteSpace: "pre-line" }}>
+						<div className="text-sm text-vscode-descriptionForeground whitespace-pre-line">
 							{t("settings:providers.customModel.capabilities")}
 						</div>
 
