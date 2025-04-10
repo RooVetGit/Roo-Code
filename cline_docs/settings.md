@@ -1,12 +1,20 @@
 ## For All Settings
 
-1. Add the setting to ExtensionMessage.ts:
+1. Add the setting to schema definitions:
 
-    - Add the setting to the ExtensionState interface
-    - Make it required if it has a default value, optional if it can be undefined
-    - Example: `preferredLanguage: string`
+    - Add the item to `globalSettingsSchema` in `schemas/index.ts`
+    - Add the item to `globalSettingsRecord` in `schemas/index.ts`
+    - Example: `terminalCommandDelay: z.number().optional(),`
 
-2. Add test coverage:
+2. Add the setting to type definitions:
+
+    - Add the item to `exports/types.ts`
+    - Add the item to `exports/roo-code.d.ts`
+    - Add the setting to `shared/ExtensionMessage.ts`
+    - Add the setting to the WebviewMessage type in `shared/WebviewMessage.ts`
+    - Example: `terminalCommandDelay?: number | undefined`
+
+3. Add test coverage:
     - Add the setting to mockState in ClineProvider.test.ts
     - Add test cases for setting persistence and state updates
     - Ensure all tests pass before submitting changes
@@ -64,7 +72,8 @@
         ```
 
 5. Add the setting to handleSubmit in SettingsView.tsx:
-    - Add a vscode.postMessage call to send the setting's value when clicking Done
+    - Add a vscode.postMessage call to send the setting's value when clicking Save
+    - This step is critical for persistence - without it, the setting will not be saved when the user clicks Save
     - Example:
         ```typescript
         vscode.postMessage({ type: "multisearchDiffEnabled", bool: multisearchDiffEnabled })
@@ -98,6 +107,7 @@
     - Add the setting to the return value in getState with a default value
     - Add the setting to the destructured variables in getStateToPostToWebview
     - Add the setting to the return value in getStateToPostToWebview
+    - This step is critical for UI display - without it, the setting will not be displayed in the UI
     - Add a case in setWebviewMessageListener to handle the setting's message type
     - Example:
         ```typescript
