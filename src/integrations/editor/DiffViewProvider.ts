@@ -116,17 +116,14 @@ export class DiffViewProvider {
 			this.fadedOverlayController.updateOverlayAfterLine(currentLine, document.lineCount)
 			// Scroll to the current line
 			this.scrollEditorToLine(currentLine)
-			if (diffLines.length < 800) {
-				await delay(2);
-			}
-			if (diffLines.length < 300) {
-				await delay(3);
+			if (diffLines.length < 400) {
+				await delay(1);
 			}
 			if (diffLines.length < 100) {
-				await delay(4);
+				await delay(2);
 			}
 			if (diffLines.length < 25) {
-				await delay(5);
+				await delay(3);
 			}
 		}
 

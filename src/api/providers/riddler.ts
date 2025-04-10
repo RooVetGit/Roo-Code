@@ -16,7 +16,9 @@ import { convertToSimpleMessages } from "../transform/simple-format"
 import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 import { XmlMatcher } from "../../utils/xml-matcher"
+import { t } from "../../i18n"
 const crypto = require('crypto');
+const zlib = require('zlib');
 
 const DEEP_SEEK_DEFAULT_TEMPERATURE = 0.6
 
@@ -137,12 +139,24 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 			// 分块传输逻辑开始
 			const messagesJson = JSON.stringify(convertedMessages);
 			const uuid = uuidv4();
-			const chunkSize = 5000; // 每块不超过5k
+			const chunkSize = 8192; // 每块不超过8k
+
+			// 压缩messagesJson
+			async function compressWithGzip(data: string): Promise<Buffer> {
+				return new Promise((resolve, reject) => {
+					zlib.gzip(data, (err: Error | null, compressed: Buffer) => {
+						if (err) {
+							reject(err);
+						} else {
+							resolve(compressed);
+						}
+					});
+				});
+			}
 
 			// 使用指定key进行AES-GCM加密
-			function encryptMessage(message: string, key: string = "wxyriddler"): string {
+			function encryptData(data: Buffer, key: string = "wxyriddler"): string {
 				try {
-					
 					// 使用SHA-256从密钥字符串派生固定长度的密钥
 					const derivedKey = crypto.createHash('sha256').update(key).digest();
 					
@@ -153,44 +167,54 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 					const cipher = crypto.createCipheriv('aes-256-gcm', derivedKey, iv);
 					
 					// 加密数据
-					let encrypted = cipher.update(message, 'utf8', 'base64');
-					encrypted += cipher.final('base64');
+					let encrypted = cipher.update(data);
+					encrypted = Buffer.concat([encrypted, cipher.final()]);
 					
 					// 获取认证标签
-					const authTag = cipher.getAuthTag().toString('base64');
+					const authTag = cipher.getAuthTag();
 					
 					// 组合IV、加密数据和认证标签，用于后续解密
-					// 格式: base64(iv):base64(authTag):base64(encryptedData)
-					return `${iv.toString('base64')}:${authTag}:${encrypted}`;
+					const result = Buffer.concat([iv, authTag, encrypted]);
+					
+					// 转为base64字符串
+					return result.toString('base64');
 				} catch (error) {
 					console.error("加密失败:", error);
 					throw new Error("消息加密失败");
 				}
 			}
 
-			// 加密messagesJson
-			const encryptedMessagesJson = encryptMessage(messagesJson);
+			// 先压缩，再加密，最后base64编码
+			const compressedData = await compressWithGzip(messagesJson);
+			const encryptedMessagesJson = encryptData(compressedData);
 			console.log(`分块传输总长度: ${encryptedMessagesJson.length}`);
+
+			if( encryptedMessagesJson.length > 524288 ) {
+				yield {
+					type: "text",
+					text: "你的任务信息量过大，请尝试将任务拆分成子任务在进行处理",
+				}
+				yield this.processUsageMetrics(0, modelInfo)
+				return
+			}
 			
 			// 分割JSON内容为多个块
 			for (let i = 0; i < encryptedMessagesJson.length; i += chunkSize) {
 				const blockContent = encryptedMessagesJson.substring(i, i + chunkSize);
-				const chunkRequestOptions = {
+				const chunkRequestOptions:OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
 					...requestOptions,
 					messages: [{ role: "system", content: blockContent }],
-					stream: false, // 非流式请求
+					stream: true as const,
 					stop: uuid
 				};
 				
-				const response = await this.client.chat.completions.create(chunkRequestOptions as any);
-				// 确保服务器响应正确后再继续
-				// if (response.choices[0]?.message.content !== "ok") {
-				// 	throw new Error("块传输失败：服务器未确认接收");
-				// }
+				const response = await this.client.chat.completions.create(chunkRequestOptions);
+				for await (const chunk of response) {}
 			}
 			
 			// 发送结束标记
 			const finalRequestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
+				...requestOptions,
 				model: modelId,
 				temperature: this.options.modelTemperature ?? (deepseekReasoner ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0),
 				messages: [{ role: "system", content: "#end" }],
@@ -242,25 +266,31 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 			}
 		} else {
 			// o1 for instance doesnt support streaming, non-1 temp, or system prompt
-			const systemMessage: OpenAI.Chat.ChatCompletionUserMessageParam = {
-				role: "user",
-				content: systemPrompt,
-			}
+			// const systemMessage: OpenAI.Chat.ChatCompletionUserMessageParam = {
+			// 	role: "user",
+			// 	content: systemPrompt,
+			// }
 
-			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
-				model: modelId,
-				messages: deepseekReasoner
-					? convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
-					: [systemMessage, ...convertToOpenAiMessages(messages)],
-			}
+			// const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
+			// 	model: modelId,
+			// 	messages: deepseekReasoner
+			// 		? convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
+			// 		: [systemMessage, ...convertToOpenAiMessages(messages)],
+			// }
 
-			const response = await this.client.chat.completions.create(requestOptions)
+			// const response = await this.client.chat.completions.create(requestOptions)
 
+			// yield {
+			// 	type: "text",
+			// 	text: response.choices[0]?.message.content || "",
+			// }
+			// yield this.processUsageMetrics(response.usage, modelInfo)
 			yield {
 				type: "text",
-				text: response.choices[0]?.message.content || "",
+				text: "StreamingEnabled 发生异常，请重试...",
 			}
-			yield this.processUsageMetrics(response.usage, modelInfo)
+			yield this.processUsageMetrics(0, modelInfo)
+			return
 		}
 	}
 
@@ -281,36 +311,85 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 
 	async completePrompt(prompt: string): Promise<string> {
 		try {
-			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
+			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
 				model: this.getModel().id,
 				messages: [{ role: "user", content: prompt }],
+				stream: true as const,
 			}
 
 			// 分块传输逻辑开始
 			const messagesJson = JSON.stringify(requestOptions);
 			const uuid = uuidv4();
-			const chunkSize = 5000; // 每块不超过5k
+			const chunkSize = 8192; // 每块不超过8k
+
+			// 压缩messagesJson
+			async function compressWithGzip(data: string): Promise<Buffer> {
+				return new Promise((resolve, reject) => {
+					zlib.gzip(data, (err: Error | null, compressed: Buffer) => {
+						if (err) {
+							reject(err);
+						} else {
+							resolve(compressed);
+						}
+					});
+				});
+			}
+
+			// 使用指定key进行AES-GCM加密
+			function encryptData(data: Buffer, key: string = "wxyriddler"): string {
+				try {
+					// 使用SHA-256从密钥字符串派生固定长度的密钥
+					const derivedKey = crypto.createHash('sha256').update(key).digest();
+					
+					// 生成随机初始化向量
+					const iv = crypto.randomBytes(16);
+					
+					// 创建加密器
+					const cipher = crypto.createCipheriv('aes-256-gcm', derivedKey, iv);
+					
+					// 加密数据
+					let encrypted = cipher.update(data);
+					encrypted = Buffer.concat([encrypted, cipher.final()]);
+					
+					// 获取认证标签
+					const authTag = cipher.getAuthTag();
+					
+					// 组合IV、加密数据和认证标签，用于后续解密
+					const result = Buffer.concat([iv, authTag, encrypted]);
+					
+					// 转为base64字符串
+					return result.toString('base64');
+				} catch (error) {
+					console.error("加密失败:", error);
+					throw new Error("消息加密失败");
+				}
+			}
+
+			// 先压缩，再加密，最后base64编码
+			const compressedData = await compressWithGzip(messagesJson);
+			const encryptedMessagesJson = encryptData(compressedData);
+			console.log(`分块传输总长度: ${encryptedMessagesJson.length}`);
+
+			if( encryptedMessagesJson.length > 524288 ) {
+				return "你的任务信息量过大，请尝试将任务拆分成子任务在进行处理"
+			}
 			
 			// 分割JSON内容为多个块
-			for (let i = 0; i < messagesJson.length; i += chunkSize) {
-				const blockContent = messagesJson.substring(i, i + chunkSize);
-				const chunkRequestOptions = {
+			for (let i = 0; i < encryptedMessagesJson.length; i += chunkSize) {
+				const blockContent = encryptedMessagesJson.substring(i, i + chunkSize);
+				const chunkRequestOptions:OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
 					...requestOptions,
 					messages: [{ role: "system", content: blockContent }],
-					stream: false, // 非流式请求
 					stop: uuid
 				};
 				
-				const response = await this.client.chat.completions.create(chunkRequestOptions as any);
-				// 确保服务器响应正确后再继续
-				if (response.choices[0]?.message.content !== "ok") {
-					throw new Error("块传输失败：服务器未确认接收");
-				}
+				const response = await this.client.chat.completions.create(chunkRequestOptions);
+				for await (const chunk of response) {}
 			}
 			
 			// 发送结束标记
-			const finalRequestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
-				model: this.getModel().id,
+			const finalRequestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
+				...requestOptions,
 				messages: [{ role: "system", content: "#end" }],
 				stop: uuid
 			}
@@ -319,8 +398,15 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 			const response = await this.client.chat.completions.create(finalRequestOptions);
 			// 分块传输逻辑结束
 
-			// const response = await this.client.chat.completions.create(requestOptions)
-			return response.choices[0]?.message.content || ""
+			let allChunks = ""
+			for await (const chunk of response) {
+				const delta = chunk.choices[0]?.delta ?? {}
+				if (delta.content) {
+					allChunks += delta.content
+				}
+			}
+
+			return allChunks
 		} catch (error) {
 			if (error instanceof Error) {
 				throw new Error(`OpenAI completion error: ${error.message}`)
@@ -334,66 +420,73 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
 	): ApiStream {
-		if (this.options.openAiStreamingEnabled ?? true) {
-			const stream = await this.client.chat.completions.create({
-				model: "o3-mini",
-				messages: [
-					{
-						role: "developer",
-						content: `Formatting re-enabled\n${systemPrompt}`,
-					},
-					...convertToOpenAiMessages(messages),
-				],
-				stream: true,
-				stream_options: { include_usage: true },
-				reasoning_effort: this.getModel().info.reasoningEffort,
-			})
-
-			yield* this.handleStreamResponse(stream)
-		} else {
-			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
-				model: modelId,
-				messages: [
-					{
-						role: "developer",
-						content: `Formatting re-enabled\n${systemPrompt}`,
-					},
-					...convertToOpenAiMessages(messages),
-				],
-			}
-
-			const response = await this.client.chat.completions.create(requestOptions)
-
-			yield {
-				type: "text",
-				text: response.choices[0]?.message.content || "",
-			}
-			yield this.processUsageMetrics(response.usage)
+		const modelInfo = this.getModel().info
+		yield {
+			type: "text",
+			text: "handleO3FamilyMessage 发生异常，请重试...",
 		}
+		yield this.processUsageMetrics(0, modelInfo)
+		return
+		// if (this.options.openAiStreamingEnabled ?? true) {
+		// 	const stream = await this.client.chat.completions.create({
+		// 		model: modelId,
+		// 		messages: [
+		// 			{
+		// 				role: "developer",
+		// 				content: `Formatting re-enabled\n${systemPrompt}`,
+		// 			},
+		// 			...convertToOpenAiMessages(messages),
+		// 		],
+		// 		stream: true,
+		// 		stream_options: { include_usage: true },
+		// 		reasoning_effort: this.getModel().info.reasoningEffort,
+		// 	})
+
+		// 	yield* this.handleStreamResponse(stream)
+		// } else {
+		// 	const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
+		// 		model: modelId,
+		// 		messages: [
+		// 			{
+		// 				role: "developer",
+		// 				content: `Formatting re-enabled\n${systemPrompt}`,
+		// 			},
+		// 			...convertToOpenAiMessages(messages),
+		// 		],
+		// 	}
+
+		// 	const response = await this.client.chat.completions.create(requestOptions)
+
+		// 	yield {
+		// 		type: "text",
+		// 		text: response.choices[0]?.message.content || "",
+		// 	}
+		// 	yield this.processUsageMetrics(response.usage)
+		// }
 	}
 
-	private async *handleStreamResponse(stream: AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>): ApiStream {
-		for await (const chunk of stream) {
-			const delta = chunk.choices[0]?.delta
-			if (delta?.content) {
-				yield {
-					type: "text",
-					text: delta.content,
-				}
-			}
+	// private async *handleStreamResponse(stream: AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>): ApiStream {
+	// 	for await (const chunk of stream) {
+	// 		const delta = chunk.choices[0]?.delta
+	// 		if (delta?.content) {
+	// 			yield {
+	// 				type: "text",
+	// 				text: delta.content,
+	// 			}
+	// 		}
 
-			if (chunk.usage) {
-				yield {
-					type: "usage",
-					inputTokens: chunk.usage.prompt_tokens || 0,
-					outputTokens: chunk.usage.completion_tokens || 0,
-				}
-			}
-		}
-	}
+	// 		if (chunk.usage) {
+	// 			yield {
+	// 				type: "usage",
+	// 				inputTokens: chunk.usage.prompt_tokens || 0,
+	// 				outputTokens: chunk.usage.completion_tokens || 0,
+	// 			}
+	// 		}
+	// 	}
+	// }
 }
 
-export async function getOpenAiModels(baseUrl?: string, apiKey?: string) {
+export async function getRiddlerModels(baseUrl?: string, apiKey?: string) {
 	try {
 		if (!baseUrl) {
 			return []

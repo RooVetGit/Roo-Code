@@ -3,7 +3,7 @@
 	"displayName": "Rid Code (fork from Roo Code)",
 	"description": "A whole dev team of AI agents in your editor.",
 	"publisher": "RooVeterinaryInc",
-	"version": "3.11.7",
+	"version": "3.11.8",
 	"icon": "assets/icons/rocket.png",
 	"galleryBanner": {
 		"color": "#617A91",

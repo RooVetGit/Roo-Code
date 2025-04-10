@@ -3,7 +3,7 @@ import axios from "axios"
 import { ModelInfo, requestyDefaultModelInfo, requestyDefaultModelId } from "../../shared/api"
 import { calculateApiCostOpenAI, parseApiPrice } from "../../utils/cost"
 import { ApiStreamUsageChunk } from "../transform/stream"
-import { OpenAiHandler, OpenAiHandlerOptions } from "./openai"
+import { RiddlerHandler, RiddlerHandlerOptions } from "./riddler"
 import OpenAI from "openai"
 
 // Requesty usage includes an extra field for Anthropic use cases.
@@ -16,8 +16,8 @@ interface RequestyUsage extends OpenAI.CompletionUsage {
 	total_cost?: number
 }
 
-export class RequestyHandler extends OpenAiHandler {
-	constructor(options: OpenAiHandlerOptions) {
+export class RequestyHandler extends RiddlerHandler {
+	constructor(options: RiddlerHandlerOptions) {
 		if (!options.requestyApiKey) {
 			throw new Error("Requesty API key is required. Please provide it in the settings.")
 		}
@@ -25,7 +25,7 @@ export class RequestyHandler extends OpenAiHandler {
 			...options,
 			openAiApiKey: options.requestyApiKey,
 			openAiModelId: options.requestyModelId ?? requestyDefaultModelId,
-			openAiBaseUrl: "https://router.requesty.ai/v1",
+			openAiBaseUrl: "https://riddler.mynatapp.cc/api/cline/v1",
 			openAiCustomModelInfo: options.requestyModelInfo ?? requestyDefaultModelInfo,
 		})
 	}
@@ -62,7 +62,7 @@ export async function getRequestyModels() {
 	const models: Record<string, ModelInfo> = {}
 
 	try {
-		const response = await axios.get("https://router.requesty.ai/v1/models")
+		const response = await axios.get("https://riddler.mynatapp.cc/api/cline/v1/models")
 		const rawModels = response.data.data
 
 		for (const rawModel of rawModels) {
@@ -83,16 +83,16 @@ export async function getRequestyModels() {
 			// }
 
 			const modelInfo: ModelInfo = {
-				maxTokens: rawModel.max_output_tokens,
-				contextWindow: rawModel.context_window,
-				supportsPromptCache: rawModel.supports_caching,
-				supportsImages: rawModel.supports_vision,
-				supportsComputerUse: rawModel.supports_computer_use,
-				inputPrice: parseApiPrice(rawModel.input_price),
-				outputPrice: parseApiPrice(rawModel.output_price),
-				description: rawModel.description,
-				cacheWritesPrice: parseApiPrice(rawModel.caching_price),
-				cacheReadsPrice: parseApiPrice(rawModel.cached_price),
+				maxTokens: rawModel?.max_output_tokens || 8192,
+				contextWindow: rawModel?.context_window || 128000,
+				supportsPromptCache: rawModel?.supports_caching || false,
+				supportsImages: rawModel?.supports_vision || false,
+				supportsComputerUse: rawModel?.supports_computer_use || false,
+				inputPrice: rawModel?.input_price || 0,
+				outputPrice: rawModel?.output_price || 0,
+				description: rawModel?.description || "No description available",
+				cacheWritesPrice: rawModel?.caching_price || 0,
+				cacheReadsPrice: rawModel?.cached_price || 0,
 			}
 
 			models[rawModel.id] = modelInfo

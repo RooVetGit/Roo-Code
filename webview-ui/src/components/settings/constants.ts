@@ -21,12 +21,12 @@ export const MODELS_BY_PROVIDER: Partial<Record<ApiProvider, Record<string, Mode
 }
 
 export const PROVIDERS = [
-	// { value: "openrouter", label: "OpenRouter" },
+	{ value: "openrouter", label: "OpenRouter" },
 	// { value: "anthropic", label: "Anthropic" },
 	// { value: "gemini", label: "Google Gemini" },
-	// { value: "deepseek", label: "DeepSeek" },
+	{ value: "deepseek", label: "DeepSeek" },
 	// { value: "openai-native", label: "OpenAI" },
-	{ value: "openai", label: "RidCode" },
+	{ value: "openai", label: "OpenAI Compatible" },
 	// { value: "vertex", label: "GCP Vertex AI" },
 	// { value: "bedrock", label: "AWS Bedrock" },
 	// { value: "glama", label: "Glama" },

@@ -806,12 +806,49 @@ export const ChatRowContent = ({
 									}}>
 									{t("chat:response")}
 								</div>
-								<CodeAccordian
+								{/* <CodeAccordian
 									code={message.text}
 									language="json"
 									isExpanded={true}
 									onToggleExpand={onToggleExpand}
-								/>
+								/> */}
+								<div
+									style={{
+										borderRadius: 3,
+										backgroundColor: CODE_BLOCK_BG_COLOR,
+										overflow: "hidden",
+										border: "1px solid var(--vscode-editorGroup-border)",
+									}}>
+									<div
+										style={{
+											color: "var(--vscode-descriptionForeground)",
+											display: "flex",
+											alignItems: "center",
+											padding: "9px 10px",
+											cursor: "pointer",
+											userSelect: "none",
+											WebkitUserSelect: "none",
+											MozUserSelect: "none",
+											msUserSelect: "none",
+										}}
+										onClick={onToggleExpand}>
+										<span style={{
+											whiteSpace: "nowrap",
+											overflow: "hidden",
+											textOverflow: "ellipsis",
+											marginRight: "8px",
+										}}>
+											MCP Server Response
+										</span>
+										<div style={{ flexGrow: 1 }}></div>
+										<span
+											className={`codicon codicon-chevron-${isExpanded ? "up" : "down"}`}
+											style={{ fontSize: 13.5, margin: "1px 0" }}></span>
+									</div>
+									{isExpanded && (
+										<CodeBlock source={`${"```"}json\n${message.text}\n${"```"}`} />
+									)}
+								</div>
 							</div>
 						</>
 					)

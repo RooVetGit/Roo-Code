@@ -21,22 +21,26 @@ export async function extractTextFromFile(filePath: string): Promise<string> {
 		case ".ipynb":
 			return extractTextFromIPYNB(filePath)
 		default:
-			// Try to read file with gb2312 encoding first
-			if ((await fs.stat(filePath)).size < 1024 * 1024) {
-				try {
-					const buffer = await fs.readFile(filePath, "binary");
-					const textContent = iconv.decode(buffer, 'gb2312');
-					return addLineNumbers(textContent);
-				} catch (error) {
-					// If gb2312 reading fails, continue with default handling
-				}
-			}
-
 			const isBinary = await isBinaryFile(filePath).catch(() => false)
 			if (!isBinary) {
 				return addLineNumbers(await fs.readFile(filePath, "utf8"))
 			} else {
-				throw new Error(`Cannot read text for file type: ${fileExtension}`)
+				// Try to read file with gb2312 encoding first
+				try {
+					if ((await fs.stat(filePath)).size < 1024 * 1024) {
+						const buffer = await fs.readFile(filePath, "binary");
+						const textContent = iconv.decode(buffer, 'gb2312');
+						if (textContent.length < 16*1024) {
+							return addLineNumbers(textContent);
+						}
+						// If the content is too large, truncate it to 16k characters
+						return addLineNumbers(textContent.substring(0, 16*1024) + "...(file is too large, truncated to 16k characters)"); // Limit to 16k characters
+					} else {
+						throw new Error(`file is too large to read as text: ${fileExtension}`)
+					}
+				} catch (error) {
+					throw new Error(`Cannot read text for file type: ${fileExtension}`)
+				}
 			}
 	}
 }

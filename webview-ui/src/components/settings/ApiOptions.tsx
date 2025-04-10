@@ -299,7 +299,7 @@ const ApiOptions = ({
 						<SelectValue placeholder={t("settings:common.select")} />
 					</SelectTrigger>
 					<SelectContent>
-						{/* <SelectItem value="openrouter">OpenRouter</SelectItem> */}
+						<SelectItem value="openrouter">OpenRouter</SelectItem>
 						<SelectSeparator />
 						{PROVIDERS.filter((p) => p.value !== "openrouter").map(({ value, label }) => (
 							<SelectItem key={value} value={value}>
@@ -766,7 +766,7 @@ const ApiOptions = ({
 					<ModelPicker
 						apiConfiguration={apiConfiguration}
 						setApiConfigurationField={setApiConfigurationField}
-						defaultModelId="gemini-2.0"
+						defaultModelId="gpt-4o-mini"
 						defaultModelInfo={openAiModelInfoSaneDefaults}
 						models={openAiModels}
 						modelIdKey="openAiModelId"
@@ -1634,7 +1634,7 @@ const ApiOptions = ({
 }
 
 export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
-	const provider = apiConfiguration?.apiProvider || "openai"
+	const provider = apiConfiguration?.apiProvider || "deepseek"
 	const modelId = apiConfiguration?.apiModelId
 
 	const getProviderData = (models: Record<string, ModelInfo>, defaultId: string) => {
