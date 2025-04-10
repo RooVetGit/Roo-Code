@@ -1132,13 +1132,24 @@ Suggestions:
 			const refreshedCredentials = await fromIni({
 				profile: this.options.awsProfile,
 			})()
-			this.client.config.credentials = refreshedCredentials
+			// Create a new client with the refreshed credentials
+			const clientConfig: BedrockRuntimeClientConfig = {
+				region: this.options.awsRegion,
+				credentials: refreshedCredentials,
+			}
+			this.client = new BedrockRuntimeClient(clientConfig)
 		} else if (this.options.awsAccessKey && this.options.awsSecretKey) {
-			this.client.config.credentials = {
+			const newCredentials = {
 				accessKeyId: this.options.awsAccessKey,
 				secretAccessKey: this.options.awsSecretKey,
 				...(this.options.awsSessionToken ? { sessionToken: this.options.awsSessionToken } : {}),
 			}
+			// Create a new client with the new credentials
+			const clientConfig: BedrockRuntimeClientConfig = {
+				region: this.options.awsRegion,
+				credentials: newCredentials,
+			}
+			this.client = new BedrockRuntimeClient(clientConfig)
 		}
 	}
 }
