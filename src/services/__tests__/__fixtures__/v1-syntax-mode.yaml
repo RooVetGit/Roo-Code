@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/RooVetGit/Roo-Code/refs/heads/main/custom-mode-schema.json
+name: V1 Syntax Mode
+roleDefinition: |
+  You are a specialized assistant using the v1 tuple-based syntax for groups.
+  This tests the original syntax format.
+customInstructions: |
+  Follow the project's style guide.
+  Use clear and concise language.
+groups:
+  - read
+  - - edit
+    - fileRegex: \.md$
+      description: Markdown files (v1 syntax)
+  - command

@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/RooVetGit/Roo-Code/refs/heads/main/custom-mode-schema.json
+name: V2 Syntax Mode
+roleDefinition: |
+  You are a specialized assistant using the v2 object-based syntax for groups.
+  This tests the new syntax format.
+customInstructions: |
+  Follow the project's style guide.
+  Use clear and concise language.
+groups:
+  - read
+  - group: edit
+    options:
+      fileRegex: \.md$
+      description: Markdown files (v2 syntax)
+  - command

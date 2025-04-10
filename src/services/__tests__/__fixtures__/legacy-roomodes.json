@@ -1,0 +1,35 @@
+{
+	"customModes": [
+		{
+			"slug": "legacy-v1-mode",
+			"name": "Legacy V1 Mode",
+			"roleDefinition": "You are a specialized assistant using the v1 tuple-based syntax in a legacy .roomodes file.",
+			"groups": [
+				"read",
+				["edit", { "fileRegex": "\\.md$", "description": "Markdown files (v1 syntax)" }],
+				"command"
+			]
+		},
+		{
+			"slug": "legacy-v2-mode",
+			"name": "Legacy V2 Mode",
+			"roleDefinition": "You are a specialized assistant using the v2 object-based syntax in a legacy .roomodes file.",
+			"groups": [
+				"read",
+				{ "group": "edit", "options": { "fileRegex": "\\.md$", "description": "Markdown files (v2 syntax)" } },
+				"command"
+			]
+		},
+		{
+			"slug": "legacy-mixed-mode",
+			"name": "Legacy Mixed Mode",
+			"roleDefinition": "You are a specialized assistant using both v1 and v2 syntax in a legacy .roomodes file.",
+			"groups": [
+				"read",
+				["edit", { "fileRegex": "\\.md$", "description": "Markdown files (v1 syntax)" }],
+				{ "group": "browser", "options": { "description": "Browser tools (v2 syntax)" } },
+				"command"
+			]
+		}
+	]
+}
