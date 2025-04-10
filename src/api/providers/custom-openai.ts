@@ -184,15 +184,17 @@ export class CustomOpenAiHandler extends BaseProvider implements SingleCompletio
 				}
 			}
 		} catch (error: any) {
-			console.error("Custom OpenAI API request failed:", error)
-			let errorMessage = "Custom OpenAI API request failed."
-			if (axios.isAxiosError(error) && error.response) {
-				errorMessage += ` Status: ${error.response.status}. Data: ${JSON.stringify(error.response.data)}`
+			console.error("Custom OpenAI API request failed:", error?.message || error) // Log basic error message
+			let simpleErrorMessage = "Custom OpenAI API request failed."
+			if (axios.isAxiosError(error)) {
+				simpleErrorMessage += ` Status: ${error.response?.status || "unknown"}.`
+				// Avoid logging potentially large/circular response data
+				// console.error("Error Response Data:", error.response?.data); // Optional: Log only during debugging if needed
 			} else if (error instanceof Error) {
-				errorMessage += ` Error: ${error.message}`
+				simpleErrorMessage += ` Error: ${error.message}`
 			}
-			// Yield an error chunk or throw? For now, yield text.
-			yield { type: "text", text: `[ERROR: ${errorMessage}]` }
+			// Yield a simplified error message
+			yield { type: "text", text: `[ERROR: ${simpleErrorMessage}]` }
 			// Consider throwing an error instead if that's preferred for handling failures
 			// throw new Error(errorMessage);
 		}
