@@ -12,6 +12,7 @@ import getFolderSize from "get-folder-size"
 import { serializeError } from "serialize-error"
 import * as vscode from "vscode"
 
+import { TemperatureOverrideService } from "./services/TemperatureOverrideService"
 import { TokenUsage } from "../schemas"
 import { ApiHandler, buildApiHandler } from "../api"
 import { ApiStream } from "../api/transform/stream"
@@ -31,7 +32,7 @@ import { TerminalRegistry } from "../integrations/terminal/TerminalRegistry"
 import { UrlContentFetcher } from "../services/browser/UrlContentFetcher"
 import { listFiles } from "../services/glob/list-files"
 import { CheckpointStorage } from "../shared/checkpoints"
-import { ApiConfiguration } from "../shared/api"
+import { ApiConfiguration, ApiHandlerOptions } from "../shared/api"
 import { findLastIndex } from "../shared/array"
 import { combineApiRequests } from "../shared/combineApiRequests"
 import { combineCommandSequences } from "../shared/combineCommandSequences"
@@ -121,6 +122,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 	readonly taskId: string
 	readonly instanceId: string
 
+	private tempOverrideService: TemperatureOverrideService
+	private originalTemp?: number
+
 	readonly rootTask: Cline | undefined = undefined
 	readonly parentTask: Cline | undefined = undefined
 	readonly taskNumber: number
@@ -200,6 +204,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 		if (startTask && !task && !images && !historyItem) {
 			throw new Error("Either historyItem or task/images must be provided")
 		}
+
+		this.tempOverrideService = new TemperatureOverrideService()
 
 		this.rooIgnoreController = new RooIgnoreController(this.cwd)
 		this.rooIgnoreController.initialize().catch((error) => {
@@ -867,6 +873,42 @@ export class Cline extends EventEmitter<ClineEvents> {
 	}
 
 	private async initiateTaskLoop(userContent: UserContent): Promise<void> {
+		// Handle temperature override if present
+		try {
+			const firstBlock = userContent[0]
+			if (firstBlock.type === "text") {
+				const tempOverride = this.tempOverrideService.parseAndApplyOverride(
+					firstBlock.text || "",
+					this.apiConfiguration.modelTemperature || 0,
+				)
+
+				if (tempOverride) {
+					// Store original temp for restoration
+					this.originalTemp = tempOverride.originalTemp
+
+					// Apply override to apiConfiguration
+					this.apiConfiguration.modelTemperature = tempOverride.temperature
+
+					// For providers using direct options access (like MistralHandler)
+					// we need to update both the configuration and the provider's copy of options
+					if (this.api && "options" in this.api) {
+						// Use type assertion since we know these providers have options
+						const provider = this.api as { options: ApiHandlerOptions }
+						// Update the provider's copy of options
+						provider.options.modelTemperature = tempOverride.temperature
+					}
+
+					firstBlock.text = tempOverride.cleanedInput
+				}
+			}
+		} catch (error) {
+			await this.say(
+				"error",
+				`Temperature override error: ${error instanceof Error ? error.message : String(error)}`,
+			)
+			return
+		}
+
 		// Kicks off the checkpoints initialization process in the background.
 		this.getCheckpointService()
 
@@ -898,6 +940,20 @@ export class Cline extends EventEmitter<ClineEvents> {
 				nextUserContent = [{ type: "text", text: formatResponse.noToolsUsed() }]
 				this.consecutiveMistakeCount++
 			}
+		}
+
+		// Restore original temperature if override was applied
+		if (this.originalTemp !== undefined) {
+			// Restore both apiConfiguration and provider options
+			this.apiConfiguration.modelTemperature = this.originalTemp
+
+			// Also restore provider's copy if it exists
+			if (this.api && "options" in this.api) {
+				const provider = this.api as { options: ApiHandlerOptions }
+				provider.options.modelTemperature = this.originalTemp
+			}
+
+			this.originalTemp = undefined
 		}
 	}
 

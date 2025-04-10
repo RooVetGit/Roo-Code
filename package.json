@@ -312,7 +312,12 @@
 		"configuration": {
 			"title": "Roo Code",
 			"properties": {
-				"roo-cline.allowedCommands": {
+				"roo-code.enableTemperatureOverride": {
+					"type": "boolean",
+					"default": true,
+					"description": "Enable temperature override using @customTemperature syntax"
+				},
+				"roo-code.allowedCommands": {
 					"type": "array",
 					"items": {
 						"type": "string"
