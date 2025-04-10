@@ -18,7 +18,6 @@ export interface IndexProgressUpdate {
 }
 
 export class CodeIndexManager {
-	private returnToIndexedTimer: NodeJS.Timeout | null = null
 	private _statusMessage: string = ""
 	// --- Singleton Implementation ---
 	private static instances = new Map<string, CodeIndexManager>() // Map workspace path to instance
@@ -64,9 +63,27 @@ export class CodeIndexManager {
 	// Webview provider reference for status updates
 	private webviewProvider?: { postMessage: (msg: any) => void }
 
-	// --- New Queue Members ---
-	private updateQueue: Array<{ type: "system" | "file"; payload: any }> = []
-	private isProcessingQueue: boolean = false
+	// --- State Management ---
+	private _setSystemState(newState: IndexingState, message?: string): void {
+		const stateChanged =
+			newState !== this._systemStatus || (message !== undefined && message !== this._statusMessage)
+
+		if (stateChanged) {
+			this._systemStatus = newState
+			if (message !== undefined) {
+				this._statusMessage = message
+			}
+			this.postStatusUpdate()
+			this._progressEmitter.fire({
+				systemStatus: this._systemStatus,
+				fileStatuses: this._fileStatuses,
+				message: this._statusMessage,
+			})
+			console.log(
+				`[CodeIndexManager] System state changed to: ${this._systemStatus}${message ? ` (${message})` : ""}`,
+			)
+		}
+	}
 
 	// Private constructor for singleton pattern
 	private constructor(workspacePath: string, context: vscode.ExtensionContext) {
@@ -115,10 +132,7 @@ export class CodeIndexManager {
 			this._embedder = undefined
 			this._qdrantClient = undefined
 			console.log("[CodeIndexManager] Code Indexing Disabled.")
-			this.enqueueStateUpdate({
-				type: "system",
-				payload: { systemStatus: "Standby", message: "Code Indexing Disabled." },
-			})
+			this._setSystemState("Standby", "Code Indexing Disabled.")
 			return
 		}
 
@@ -127,10 +141,7 @@ export class CodeIndexManager {
 			this._embedder = undefined
 			this._qdrantClient = undefined
 			console.log("[CodeIndexManager] Missing configuration.")
-			this.enqueueStateUpdate({
-				type: "system",
-				payload: { systemStatus: "Standby", message: "Missing configuration." },
-			})
+			this._setSystemState("Standby", "Missing configuration.")
 			return
 		}
 
@@ -146,10 +157,7 @@ export class CodeIndexManager {
 			console.log("[CodeIndexManager] Configuration loaded. No restart needed.")
 			// If already configured and enabled, ensure state reflects readiness if standby
 			if (this._systemStatus === "Standby") {
-				this.enqueueStateUpdate({
-					type: "system",
-					payload: { systemStatus: "Standby", message: "Configuration ready. Ready to index." },
-				})
+				this._setSystemState("Standby", "Configuration ready. Ready to index.")
 			}
 		}
 	}
@@ -182,10 +190,7 @@ export class CodeIndexManager {
 			console.log("[CodeIndexManager] Configuration updated.")
 			// If we were waiting for config, check if we can proceed
 			if (this._systemStatus === "Standby" && this.isConfigured()) {
-				this.enqueueStateUpdate({
-					type: "system",
-					payload: { systemStatus: "Standby", message: "Configuration ready. Ready to index." },
-				})
+				this._setSystemState("Standby", "Configuration ready. Ready to index.")
 			} else if (this._systemStatus !== "Standby") {
 				// Configuration changed while running - might need restart logic later
 				console.warn("[CodeIndexManager] Configuration updated while active. A restart might be needed.")
@@ -216,13 +221,7 @@ export class CodeIndexManager {
 
 	public async startIndexing(): Promise<void> {
 		if (!this.isConfigured()) {
-			this.enqueueStateUpdate({
-				type: "system",
-				payload: {
-					systemStatus: "Standby",
-					message: "Cannot start: Missing OpenAI or Qdrant configuration.",
-				},
-			})
+			this._setSystemState("Standby", "Cannot start: Missing OpenAI or Qdrant configuration.")
 			console.warn("[CodeIndexManager] Start rejected: Missing configuration.")
 			return
 		}
@@ -236,15 +235,7 @@ export class CodeIndexManager {
 		}
 
 		this._isProcessing = true
-		this.enqueueStateUpdate({
-			type: "system",
-			payload: { systemStatus: "Indexing", message: "Starting initial scan..." },
-		})
-
-		this.enqueueStateUpdate({
-			type: "system",
-			payload: { systemStatus: "Indexing", message: "Initializing Qdrant connection and collection..." },
-		})
+		this._setSystemState("Indexing", "Initializing Qdrant connection and collection...")
 
 		try {
 			// Ensure client is initialized before calling initialize
@@ -264,19 +255,10 @@ export class CodeIndexManager {
 				console.log("[CodeIndexManager] Qdrant collection created; cache file emptied.")
 			}
 
-			this.enqueueStateUpdate({
-				type: "system",
-				payload: { systemStatus: "Indexing", message: "Qdrant ready. Starting workspace scan..." },
-			})
+			this._setSystemState("Indexing", "Qdrant ready. Starting workspace scan...")
 		} catch (initError: any) {
 			console.error("[CodeIndexManager] Failed to initialize Qdrant client or collection:", initError)
-			this.enqueueStateUpdate({
-				type: "system",
-				payload: {
-					systemStatus: "Error",
-					message: `Failed to initialize Qdrant: ${initError.message || "Unknown error"}`,
-				},
-			})
+			this._setSystemState("Error", `Failed to initialize Qdrant: ${initError.message || "Unknown error"}`)
 			this._isProcessing = false // Stop processing on critical error
 			return // Exit if initialization fails
 		}
@@ -289,13 +271,7 @@ export class CodeIndexManager {
 				this.qdrantUrl,
 				this.context,
 				(batchError: Error) => {
-					this.enqueueStateUpdate({
-						type: "system",
-						payload: {
-							systemStatus: "Error",
-							message: `Failed during initial scan batch: ${batchError.message}`,
-						},
-					})
+					this._setSystemState("Error", `Failed during initial scan batch: ${batchError.message}`)
 				},
 			)
 
@@ -305,10 +281,7 @@ export class CodeIndexManager {
 
 			await this._startWatcher()
 
-			this.enqueueStateUpdate({
-				type: "system",
-				payload: { systemStatus: "Indexed", message: "Workspace scan and watcher started." },
-			})
+			this._setSystemState("Indexed", "Workspace scan and watcher started.")
 		} catch (error: any) {
 			console.error("[CodeIndexManager] Error during indexing:", error)
 			try {
@@ -321,13 +294,7 @@ export class CodeIndexManager {
 			await this._resetCacheFile()
 			console.log("[CodeIndexManager] Cleared cache file due to scan error.")
 
-			this.enqueueStateUpdate({
-				type: "system",
-				payload: {
-					systemStatus: "Error",
-					message: `Failed during initial scan: ${error.message || "Unknown error"}`,
-				},
-			})
+			this._setSystemState("Error", `Failed during initial scan: ${error.message || "Unknown error"}`)
 			this.stopWatcher() // Clean up watcher if it started
 		} finally {
 			this._isProcessing = false
@@ -346,17 +313,10 @@ export class CodeIndexManager {
 			console.log("[CodeIndexManager] File watcher stopped.")
 			// Transition state appropriately only if not already in Error state
 			if (this.state !== "Error") {
-				this.enqueueStateUpdate({
-					type: "system",
-					payload: { systemStatus: "Standby", message: "File watcher stopped." },
-				}) // Return to standby if stopped manually
+				this._setSystemState("Standby", "File watcher stopped.") // Return to standby if stopped manually
 			}
 		}
 		this._isProcessing = false // Ensure processing flag is reset
-		if (this.returnToIndexedTimer) {
-			clearTimeout(this.returnToIndexedTimer)
-			this.returnToIndexedTimer = null
-		}
 	}
 
 	/**
@@ -394,13 +354,7 @@ export class CodeIndexManager {
 				}
 			} catch (error: any) {
 				console.error("[CodeIndexManager] Failed to clear vector collection:", error)
-				this.enqueueStateUpdate({
-					type: "system",
-					payload: {
-						systemStatus: "Error",
-						message: `Failed to clear vector collection: ${error.message}`,
-					},
-				})
+				this._setSystemState("Error", `Failed to clear vector collection: ${error.message}`)
 				// Don't re-throw, attempt cache deletion
 			}
 
@@ -410,13 +364,7 @@ export class CodeIndexManager {
 
 			// If no errors occurred during clearing, confirm success
 			if (this._systemStatus !== "Error") {
-				this.enqueueStateUpdate({
-					type: "system",
-					payload: {
-						systemStatus: "Standby",
-						message: "Index data cleared successfully.",
-					},
-				})
+				this._setSystemState("Standby", "Index data cleared successfully.")
 				console.log("[CodeIndexManager] Code index data cleared successfully.")
 			}
 		} finally {
@@ -426,103 +374,32 @@ export class CodeIndexManager {
 
 	// --- Private Helpers ---
 
-	// New method to enqueue updates and trigger processing
-	private enqueueStateUpdate(request: { type: "system" | "file"; payload: any }) {
-		this.updateQueue.push(request)
-		this.processUpdateQueue() // Don't await, let it run in background
-	}
-
-	// New method to process the queue asynchronously
-	private async processUpdateQueue(): Promise<void> {
-		if (this.isProcessingQueue) return // Prevent concurrent processing
-
-		this.isProcessingQueue = true
-		try {
-			while (this.updateQueue.length > 0) {
-				const request = this.updateQueue.shift()! // Non-null assertion ok due to length check
-				this.applyStateUpdate(request)
-				// Optional: Add a small delay if needed to yield execution
-				// await new Promise(resolve => setImmediate(resolve));
-			}
-		} catch (error) {
-			console.error("[CodeIndexManager] Error processing update queue:", error)
-			// Consider setting an error state here if appropriate
-			this._systemStatus = "Error"
-			this._statusMessage = `Internal error processing state updates: ${(error as Error).message}`
-			this.postStatusUpdate() // Notify about the internal error
-		} finally {
-			this.isProcessingQueue = false
+	// File status update helper
+	private _updateFileStatus(filePath: string, fileStatus: string, message?: string): void {
+		if (!this.isConfigured()) {
+			console.warn("[CodeIndexManager] Ignoring file status update because system is not properly configured.")
+			return
 		}
-	}
 
-	// New method containing the core state update logic
-	private applyStateUpdate(request: { type: "system" | "file"; payload: any }): void {
 		let stateChanged = false
 
-		if (request.type === "system") {
-			const { systemStatus, message } = request.payload as { systemStatus?: IndexingState; message?: string }
-
-			// Validate system status transition
-			if (systemStatus && systemStatus !== this._systemStatus) {
-				// Basic validation: e.g., don't allow invalid transitions like 'Indexed' -> 'Indexing' without explicit action
-				const isInvalidTransition = this._systemStatus === "Indexed" && systemStatus === "Indexing"
-				// Add more complex validation rules as needed
-
-				if (isInvalidTransition) {
-					console.warn(
-						`[CodeIndexManager] Invalid state transition blocked: ${this._systemStatus} -> ${systemStatus}`,
-					)
-				} else {
-					this._systemStatus = systemStatus
-					stateChanged = true
-					console.log(`[CodeIndexManager] System state changed to: ${this._systemStatus}`)
-				}
-			}
-
-			// Update message if provided and different
-			if (message && message !== this._statusMessage) {
-				this._statusMessage = message
-				stateChanged = true
-				console.log(`[CodeIndexManager] Status message updated: ${this._statusMessage}`)
-			}
-		} else if (request.type === "file") {
-			const { filePath, fileStatus, message } = request.payload as {
-				filePath: string
-				fileStatus: string
-				message?: string
-			}
-
-			if (!this.isConfigured()) {
-				console.warn(
-					"[CodeIndexManager] Ignoring file status update because system is not properly configured.",
-				)
-				return // Don't process file updates if not configured
-			}
-
-			// Update file status if different
-			if (this._fileStatuses[filePath] !== fileStatus) {
-				this._fileStatuses[filePath] = fileStatus
-				stateChanged = true
-				// console.log(`[CodeIndexManager] File status updated: ${filePath} -> ${fileStatus}`); // Can be noisy
-			}
-
-			// Update overall message ONLY if indexing and message is provided and different
-			// Rule 2.4 Option A: Only update message if system is 'Indexing'
-			if (message && this._systemStatus === "Indexing" && message !== this._statusMessage) {
-				this._statusMessage = message
-				stateChanged = true
-				console.log(`[CodeIndexManager] Status message updated during indexing: ${this._statusMessage}`)
-			}
-
-			// Do NOT change _systemStatus based on file errors alone. System errors handled by 'system' type requests.
+		if (this._fileStatuses[filePath] !== fileStatus) {
+			this._fileStatuses[filePath] = fileStatus
+			stateChanged = true
 		}
 
-		// If any state actually changed, notify listeners
+		// Update overall message ONLY if indexing and message is provided
+		if (message && this._systemStatus === "Indexing" && message !== this._statusMessage) {
+			this._statusMessage = message
+			stateChanged = true
+			console.log(`[CodeIndexManager] Status message updated during indexing: ${this._statusMessage}`)
+		}
+
 		if (stateChanged) {
 			this.postStatusUpdate()
 			this._progressEmitter.fire({
 				systemStatus: this._systemStatus,
-				fileStatuses: this._fileStatuses, // Send the whole map
+				fileStatuses: this._fileStatuses,
 				message: this._statusMessage,
 			})
 		}
@@ -569,18 +446,12 @@ export class CodeIndexManager {
 				this._embedder = new CodeIndexOpenAiEmbedder(this.openAiOptions!)
 				this._qdrantClient = new CodeIndexQdrantClient(this.workspacePath, this.qdrantUrl)
 			} else {
-				this.enqueueStateUpdate({
-					type: "system",
-					payload: { systemStatus: "Error", message: "Cannot start watcher: Configuration missing." },
-				})
+				this._setSystemState("Error", "Cannot start watcher: Configuration missing.")
 				return
 			}
 		}
 
-		this.enqueueStateUpdate({
-			type: "system",
-			payload: { systemStatus: "Indexing", message: "Initializing file watcher..." },
-		})
+		this._setSystemState("Indexing", "Initializing file watcher...")
 
 		this._fileWatcher = new CodeIndexFileWatcher(
 			this.workspacePath,
@@ -592,80 +463,27 @@ export class CodeIndexManager {
 
 		this._fileWatcherSubscriptions = [
 			this._fileWatcher.onDidStartProcessing((filePath: string) => {
-				if (this.returnToIndexedTimer) {
-					clearTimeout(this.returnToIndexedTimer)
-					this.returnToIndexedTimer = null
-				}
-
-				this.updateQueue.push({
-					type: "system",
-					payload: {
-						systemStatus: "Indexing",
-						message: `Processing file change: ${filePath}`,
-					},
-				})
-
-				this.updateQueue.push({
-					type: "file",
-					payload: {
-						filePath,
-						fileStatus: "Processing",
-						message: `Processing file: ${path.basename(filePath)}`,
-					},
-				})
-
-				this.processUpdateQueue()
+				this._updateFileStatus(filePath, "Processing", `Processing file: ${path.basename(filePath)}`)
 			}),
 			this._fileWatcher.onDidFinishProcessing((event: FileProcessingResult) => {
 				if (event.error) {
-					this.enqueueStateUpdate({
-						type: "file",
-						payload: {
-							filePath: event.path,
-							fileStatus: "Error",
-							// Don't update system message here based on file error
-							// message: `Error processing ${path.basename(event.path)}: ${event.error.message}`,
-						},
-					})
+					this._updateFileStatus(event.path, "Error")
 					console.error(`[CodeIndexManager] Error processing file ${event.path}:`, event.error)
 				} else {
-					this.enqueueStateUpdate({
-						type: "file",
-						payload: {
-							filePath: event.path,
-							fileStatus: "Indexed",
-							message: `Finished processing ${path.basename(event.path)}. Index up-to-date.`,
-						},
-					})
+					this._updateFileStatus(
+						event.path,
+						"Indexed",
+						`Finished processing ${path.basename(event.path)}. Index up-to-date.`,
+					)
 				}
 
-				if (this.returnToIndexedTimer) {
-					clearTimeout(this.returnToIndexedTimer)
+				if (this._systemStatus === "Indexing") {
+					this._setSystemState("Indexed", "Index up-to-date.")
 				}
-				this.returnToIndexedTimer = setTimeout(() => {
-					if (this._systemStatus === "Indexing") {
-						this.updateQueue.push({
-							type: "system",
-							payload: {
-								systemStatus: "Indexed",
-								message: "Index up-to-date.",
-							},
-						})
-						this.processUpdateQueue()
-					}
-					this.returnToIndexedTimer = null
-				}, 1500)
 			}),
 			this._fileWatcher.onError((error: Error) => {
-				// Added type
 				console.error("[CodeIndexManager] File watcher encountered an error:", error)
-				this.enqueueStateUpdate({
-					type: "system",
-					payload: {
-						systemStatus: "Error",
-						message: `File watcher error: ${error.message}`,
-					},
-				})
+				this._setSystemState("Error", `File watcher error: ${error.message}`)
 			}),
 		]
 
@@ -706,10 +524,7 @@ export class CodeIndexManager {
 			return results
 		} catch (error) {
 			console.error("[CodeIndexManager] Error during search:", error)
-			this.enqueueStateUpdate({
-				type: "system",
-				payload: { systemStatus: "Error", message: `Search failed: ${(error as Error).message}` },
-			})
+			this._setSystemState("Error", `Search failed: ${(error as Error).message}`)
 			throw error // Re-throw the error after setting state
 		}
 	}
