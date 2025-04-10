@@ -1,3 +1,10 @@
+import { AwsBedrockHandler } from "../bedrock"
+import { MessageContent } from "../../../shared/api"
+import { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime"
+import { Anthropic } from "@anthropic-ai/sdk"
+const { fromIni } = require("@aws-sdk/credential-providers")
+import { logger } from "../../../utils/logging"
+
 // Mock AWS SDK credential providers
 jest.mock("@aws-sdk/credential-providers", () => {
 	const mockFromIni = jest.fn().mockReturnValue({
@@ -7,12 +14,56 @@ jest.mock("@aws-sdk/credential-providers", () => {
 	return { fromIni: mockFromIni }
 })
 
-import { AwsBedrockHandler } from "../bedrock"
-import { MessageContent } from "../../../shared/api"
-import { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime"
-import { Anthropic } from "@anthropic-ai/sdk"
-const { fromIni } = require("@aws-sdk/credential-providers")
-import { logger } from "../../../utils/logging"
+// Mock AWS SDK modules
+jest.mock("@aws-sdk/client-bedrock-runtime", () => {
+	const mockSend = jest.fn().mockImplementation(async () => {
+		return {
+			$metadata: {
+				httpStatusCode: 200,
+				requestId: "mock-request-id",
+			},
+			stream: {
+				[Symbol.asyncIterator]: async function* () {
+					yield {
+						metadata: {
+							usage: {
+								inputTokens: 100,
+								outputTokens: 200,
+							},
+						},
+					}
+				},
+			},
+		}
+	})
+
+	return {
+		BedrockRuntimeClient: jest.fn().mockImplementation(() => ({
+			send: mockSend,
+			config: { region: "us-east-1" },
+			middlewareStack: {
+				clone: () => ({ resolve: () => {} }),
+				use: () => {},
+			},
+		})),
+		ConverseStreamCommand: jest.fn((params) => ({
+			...params,
+			input: params,
+			middlewareStack: {
+				clone: () => ({ resolve: () => {} }),
+				use: () => {},
+			},
+		})),
+		ConverseCommand: jest.fn((params) => ({
+			...params,
+			input: params,
+			middlewareStack: {
+				clone: () => ({ resolve: () => {} }),
+				use: () => {},
+			},
+		})),
+	}
+})
 
 describe("AwsBedrockHandler", () => {
 	let handler: AwsBedrockHandler
@@ -115,6 +166,55 @@ describe("AwsBedrockHandler", () => {
 			) // bedrockDefaultPromptRouterModelId
 			expect(modelInfo.info).toBeDefined()
 			expect(modelInfo.info.maxTokens).toBe(4096)
+		})
+	})
+
+	describe("AWS Credential Refresh", () => {
+		it("should refresh AWS credentials when they expire", async () => {
+			// Mock the send method to simulate expired credentials
+			const mockSend = jest.fn().mockImplementationOnce(async () => {
+				const error = new Error("The security token included in the request is expired")
+				error.name = "ExpiredTokenException"
+				throw error
+			})
+
+			// Mock the BedrockRuntimeClient to use the custom send method
+			BedrockRuntimeClient.prototype.send = mockSend
+
+			// Create a handler with profile-based credentials
+			const profileHandler = new AwsBedrockHandler({
+				apiModelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+				awsProfile: "test-profile",
+				awsUseProfile: true,
+				awsRegion: "us-east-1",
+			})
+
+			// Mock the fromIni method to simulate refreshed credentials
+			const mockFromIni = jest.fn().mockReturnValue({
+				accessKeyId: "refreshed-access-key",
+				secretAccessKey: "refreshed-secret-key",
+			})
+			fromIni.mockImplementation(mockFromIni)
+
+			// Attempt to create a message, which should trigger credential refresh
+			const messageGenerator = profileHandler.createMessage("system prompt", [
+				{ role: "user", content: "user message" },
+			])
+
+			// Consume the generator to trigger the send method
+			try {
+				for await (const _ of messageGenerator) {
+					// Just consume the messages
+				}
+			} catch (error) {
+				// Ignore errors for this test
+			}
+
+			// Verify that fromIni was called to refresh credentials
+			expect(mockFromIni).toHaveBeenCalledWith({ profile: "test-profile" })
+
+			// Verify that the send method was called twice (once for the initial attempt and once after refresh)
+			expect(mockSend).toHaveBeenCalledTimes(2)
 		})
 	})
 })

@@ -349,18 +349,134 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			// Clear timeout on error
 			clearTimeout(timeoutId)
 
-			// Use the extracted error handling method for all errors
-			const errorChunks = this.handleBedrockError(error, true) // true for streaming context
-			// Yield each chunk individually to ensure type compatibility
-			for (const chunk of errorChunks) {
-				yield chunk as any // Cast to any to bypass type checking since we know the structure is correct
-			}
+			// Check if the error is due to expired credentials
+			if (error instanceof Error && error.name === "ExpiredTokenException") {
+				logger.warn("AWS credentials expired, attempting to refresh", {
+					ctx: "bedrock",
+					error: error.message,
+				})
 
-			// Re-throw the error
-			if (error instanceof Error) {
-				throw error
+				// Refresh credentials
+				await this.refreshCredentials()
+
+				// Retry the request with refreshed credentials
+				const retryCommand = new ConverseStreamCommand(payload)
+				const retryResponse = await this.client.send(retryCommand, {
+					abortSignal: controller.signal,
+				})
+
+				if (!retryResponse.stream) {
+					throw new Error("No stream available in the retry response")
+				}
+
+				for await (const chunk of retryResponse.stream) {
+					let streamEvent: StreamEvent
+					try {
+						streamEvent = typeof chunk === "string" ? JSON.parse(chunk) : (chunk as unknown as StreamEvent)
+					} catch (e) {
+						logger.error("Failed to parse stream event during retry", {
+							ctx: "bedrock",
+							error: e instanceof Error ? e : String(e),
+							chunk: typeof chunk === "string" ? chunk : "binary data",
+						})
+						continue
+					}
+
+					// Handle metadata events first
+					if (streamEvent.metadata?.usage) {
+						const usage = (streamEvent.metadata?.usage || {}) as UsageType
+
+						// Check both field naming conventions for cache tokens
+						const cacheReadTokens = usage.cacheReadInputTokens || usage.cacheReadInputTokenCount || 0
+						const cacheWriteTokens = usage.cacheWriteInputTokens || usage.cacheWriteInputTokenCount || 0
+
+						// Always include all available token information
+						yield {
+							type: "usage",
+							inputTokens: usage.inputTokens || 0,
+							outputTokens: usage.outputTokens || 0,
+							cacheReadTokens: cacheReadTokens,
+							cacheWriteTokens: cacheWriteTokens,
+						}
+						continue
+					}
+
+					if (streamEvent?.trace?.promptRouter?.invokedModelId) {
+						try {
+							let invokedArnInfo = this.parseArn(streamEvent.trace.promptRouter.invokedModelId)
+							let invokedModel = this.getModelById(
+								invokedArnInfo.modelId as string,
+								invokedArnInfo.modelType,
+							)
+							if (invokedModel) {
+								invokedModel.id = modelConfig.id
+								this.costModelConfig = invokedModel
+							}
+
+							if (streamEvent?.trace?.promptRouter?.usage) {
+								const routerUsage = streamEvent.trace.promptRouter.usage
+
+								const cacheReadTokens =
+									routerUsage.cacheReadTokens || routerUsage.cacheReadInputTokenCount || 0
+								const cacheWriteTokens =
+									routerUsage.cacheWriteTokens || routerUsage.cacheWriteInputTokenCount || 0
+
+								yield {
+									type: "usage",
+									inputTokens: routerUsage.inputTokens || 0,
+									outputTokens: routerUsage.outputTokens || 0,
+									cacheReadTokens: cacheReadTokens,
+									cacheWriteTokens: cacheWriteTokens,
+								}
+							}
+						} catch (error) {
+							logger.error("Error handling Bedrock invokedModelId during retry", {
+								ctx: "bedrock",
+								error: error instanceof Error ? error : String(error),
+							})
+						} finally {
+							continue
+						}
+					}
+
+					if (streamEvent.messageStart) {
+						continue
+					}
+
+					if (streamEvent.contentBlockStart?.start?.text) {
+						yield {
+							type: "text",
+							text: streamEvent.contentBlockStart.start.text,
+						}
+						continue
+					}
+
+					if (streamEvent.contentBlockDelta?.delta?.text) {
+						yield {
+							type: "text",
+							text: streamEvent.contentBlockDelta.delta.text,
+						}
+						continue
+					}
+
+					if (streamEvent.messageStop) {
+						continue
+					}
+				}
 			} else {
-				throw new Error("An unknown error occurred")
+				// Use the extracted error handling method for all errors
+				const errorChunks = this.handleBedrockError(error, true) // true for streaming context
+				// Yield each chunk individually to ensure type compatibility
+				for (const chunk of errorChunks) {
+					yield chunk as any // Cast to any to bypass type checking since we know the structure is correct
+				}
+
+				// Re-throw the error
+				if (error instanceof Error) {
+					throw error
+				} else {
+					throw new Error("An unknown error occurred")
+				}
 			}
 		}
 	}
@@ -415,11 +531,69 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			}
 			return ""
 		} catch (error) {
-			// Use the extracted error handling method for all errors
-			const errorResult = this.handleBedrockError(error, false) // false for non-streaming context
-			// Since we're in a non-streaming context, we know the result is a string
-			const errorMessage = errorResult as string
-			throw new Error(errorMessage)
+			// Check if the error is due to expired credentials
+			if (error instanceof Error && error.name === "ExpiredTokenException") {
+				logger.warn("AWS credentials expired, attempting to refresh", {
+					ctx: "bedrock",
+					error: error.message,
+				})
+
+				// Refresh credentials
+				await this.refreshCredentials()
+
+				// Retry the request with refreshed credentials
+				const modelConfig = this.getModel()
+				const inferenceConfig: BedrockInferenceConfig = {
+					maxTokens: modelConfig.info.maxTokens as number,
+					temperature: this.options.modelTemperature as number,
+					topP: 0.1,
+				}
+
+				const conversationId = `prompt_${prompt.substring(0, 20)}`
+
+				const payload = {
+					modelId: modelConfig.id,
+					messages: this.convertToBedrockConverseMessages(
+						[
+							{
+								role: "user",
+								content: prompt,
+							},
+						],
+						undefined,
+						false,
+						modelConfig.info,
+						conversationId,
+					).messages,
+					inferenceConfig,
+				}
+
+				const retryCommand = new ConverseCommand(payload)
+				const retryResponse = await this.client.send(retryCommand)
+
+				if (
+					retryResponse?.output?.message?.content &&
+					retryResponse.output.message.content.length > 0 &&
+					retryResponse.output.message.content[0].text &&
+					retryResponse.output.message.content[0].text.trim().length > 0
+				) {
+					try {
+						return retryResponse.output.message.content[0].text
+					} catch (parseError) {
+						logger.error("Failed to parse Bedrock response during retry", {
+							ctx: "bedrock",
+							error: parseError instanceof Error ? parseError : String(parseError),
+						})
+					}
+				}
+				return ""
+			} else {
+				// Use the extracted error handling method for all errors
+				const errorResult = this.handleBedrockError(error, false) // false for non-streaming context
+				// Since we're in a non-streaming context, we know the result is a string
+				const errorMessage = errorResult as string
+				throw new Error(errorMessage)
+			}
 		}
 	}
 
@@ -947,6 +1121,24 @@ Suggestions:
 		} else {
 			// For non-streaming context, add the expected prefix
 			return `Bedrock completion error: ${errorMessage}`
+		}
+	}
+
+	/**
+	 * Refreshes AWS credentials using fromIni
+	 */
+	private async refreshCredentials() {
+		if (this.options.awsUseProfile && this.options.awsProfile) {
+			const refreshedCredentials = await fromIni({
+				profile: this.options.awsProfile,
+			})()
+			this.client.config.credentials = refreshedCredentials
+		} else if (this.options.awsAccessKey && this.options.awsSecretKey) {
+			this.client.config.credentials = {
+				accessKeyId: this.options.awsAccessKey,
+				secretAccessKey: this.options.awsSecretKey,
+				...(this.options.awsSessionToken ? { sessionToken: this.options.awsSessionToken } : {}),
+			}
 		}
 	}
 }
