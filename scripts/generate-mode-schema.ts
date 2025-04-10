@@ -30,24 +30,6 @@ async function generateModeSchema() {
 		...jsonSchema,
 		title: "Roo Code Mode Configuration",
 		description: "Schema for Roo Code mode configuration YAML files",
-		examples: [
-			{
-				name: "Example Mode",
-				roleDefinition: "You are a specialized assistant focused on a specific task.",
-				customInstructions: "Refer to project documentation when providing assistance.",
-				groups: [
-					{ group: "read" },
-					{
-						group: "edit",
-						options: {
-							fileRegex: "\\.(md|txt)$",
-							description: "Markdown and text files",
-						},
-					},
-					{ group: "command" },
-				],
-			},
-		],
 	}
 
 	// Add additional documentation about the syntax options

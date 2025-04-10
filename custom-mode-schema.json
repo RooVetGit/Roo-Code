@@ -74,27 +74,5 @@
 		}
 	},
 	"title": "Roo Code Mode Configuration",
-	"description": "Schema for Roo Code mode configuration YAML files. Supports object-based syntax for group entries.",
-	"examples": [
-		{
-			"name": "Example Mode",
-			"roleDefinition": "You are a specialized assistant focused on a specific task.",
-			"customInstructions": "Refer to project documentation when providing assistance.",
-			"groups": [
-				{
-					"group": "read"
-				},
-				{
-					"group": "edit",
-					"options": {
-						"fileRegex": "\\.(md|txt)$",
-						"description": "Markdown and text files"
-					}
-				},
-				{
-					"group": "command"
-				}
-			]
-		}
-	]
+	"description": "Schema for Roo Code mode configuration YAML files. Supports object-based syntax for group entries."
 }
