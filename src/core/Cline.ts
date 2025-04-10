@@ -22,9 +22,8 @@ import {
 	RepoPerWorkspaceCheckpointService,
 } from "../services/checkpoints"
 import { findToolName, formatContentBlockToMarkdown } from "../integrations/misc/export-markdown"
-import { fetchInstructionsTool } from "./tools/fetchInstructionsTool"
-import { listFilesTool } from "./tools/listFilesTool"
-import { readFileTool } from "./tools/readFileTool"
+// Import the ToolExecutor instead of individual tool implementations
+import { ToolExecutor } from "./tools/ToolExecutor"
 import { ExitCodeDetails } from "../integrations/terminal/TerminalProcess"
 import { Terminal } from "../integrations/terminal/Terminal"
 import { TerminalRegistry } from "../integrations/terminal/TerminalRegistry"
@@ -66,20 +65,7 @@ import { DiffStrategy, getDiffStrategy } from "./diff/DiffStrategy"
 import { telemetryService } from "../services/telemetry/TelemetryService"
 import { validateToolUse, isToolAllowedForMode, ToolName } from "./mode-validator"
 import { getWorkspacePath } from "../utils/path"
-import { writeToFileTool } from "./tools/writeToFileTool"
-import { applyDiffTool } from "./tools/applyDiffTool"
-import { insertContentTool } from "./tools/insertContentTool"
-import { searchAndReplaceTool } from "./tools/searchAndReplaceTool"
-import { listCodeDefinitionNamesTool } from "./tools/listCodeDefinitionNamesTool"
-import { searchFilesTool } from "./tools/searchFilesTool"
-import { browserActionTool } from "./tools/browserActionTool"
-import { executeCommandTool } from "./tools/executeCommandTool"
-import { useMcpToolTool } from "./tools/useMcpToolTool"
-import { accessMcpResourceTool } from "./tools/accessMcpResourceTool"
-import { askFollowupQuestionTool } from "./tools/askFollowupQuestionTool"
-import { switchModeTool } from "./tools/switchModeTool"
-import { attemptCompletionTool } from "./tools/attemptCompletionTool"
-import { newTaskTool } from "./tools/newTaskTool"
+import { ToolExecutor } from "./tools/ToolExecutor"
 
 export type ToolResponse = string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam>
 type UserContent = Array<Anthropic.Messages.ContentBlockParam>
@@ -1561,103 +1547,18 @@ export class Cline extends EventEmitter<ClineEvents> {
 					break
 				}
 
-				switch (block.name) {
-					case "write_to_file":
-						await writeToFileTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
-						break
-					case "apply_diff":
-						await applyDiffTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
-						break
-					case "insert_content":
-						await insertContentTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
-						break
-					case "search_and_replace":
-						await searchAndReplaceTool(
-							this,
-							block,
-							askApproval,
-							handleError,
-							pushToolResult,
-							removeClosingTag,
-						)
-						break
-					case "read_file":
-						await readFileTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
-						break
-					case "fetch_instructions":
-						await fetchInstructionsTool(this, block, askApproval, handleError, pushToolResult)
-						break
-					case "list_files":
-						await listFilesTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
-						break
-					case "list_code_definition_names":
-						await listCodeDefinitionNamesTool(
-							this,
-							block,
-							askApproval,
-							handleError,
-							pushToolResult,
-							removeClosingTag,
-						)
-						break
-					case "search_files":
-						await searchFilesTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
-						break
-					case "browser_action":
-						await browserActionTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
-						break
-					case "execute_command":
-						await executeCommandTool(
-							this,
-							block,
-							askApproval,
-							handleError,
-							pushToolResult,
-							removeClosingTag,
-						)
-						break
-					case "use_mcp_tool":
-						await useMcpToolTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
-						break
-					case "access_mcp_resource":
-						await accessMcpResourceTool(
-							this,
-							block,
-							askApproval,
-							handleError,
-							pushToolResult,
-							removeClosingTag,
-						)
-						break
-					case "ask_followup_question":
-						await askFollowupQuestionTool(
-							this,
-							block,
-							askApproval,
-							handleError,
-							pushToolResult,
-							removeClosingTag,
-						)
-						break
-					case "switch_mode":
-						await switchModeTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
-						break
-					case "new_task":
-						await newTaskTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
-						break
-					case "attempt_completion":
-						await attemptCompletionTool(
-							this,
-							block,
-							askApproval,
-							handleError,
-							pushToolResult,
-							removeClosingTag,
-							toolDescription,
-							askFinishSubTaskApproval,
-						)
-						break
-				}
+				// Use the ToolExecutor to execute the tool
+				const toolExecutor = new ToolExecutor()
+				await toolExecutor.executeToolUse(
+					this,
+					block,
+					askApproval,
+					handleError,
+					pushToolResult,
+					removeClosingTag,
+					toolDescription,
+					askFinishSubTaskApproval,
+				)
 
 				break
 		}
