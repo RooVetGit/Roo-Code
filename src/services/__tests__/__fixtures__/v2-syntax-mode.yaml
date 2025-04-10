@@ -8,8 +8,7 @@ customInstructions: |
   Use clear and concise language.
 groups:
   - read
-  - group: edit
-    options:
-      fileRegex: \.md$
+  - edit:
+      fileRegex: "\\.md$"
       description: Markdown files (v2 syntax)
   - command
