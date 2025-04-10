@@ -1,0 +1,106 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$ref": "#/definitions/ModeConfig",
+	"definitions": {
+		"ModeConfig": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string",
+					"minLength": 1
+				},
+				"roleDefinition": {
+					"type": "string",
+					"minLength": 1
+				},
+				"customInstructions": {
+					"type": "string"
+				},
+				"groups": {
+					"type": "array",
+					"items": {
+						"anyOf": [
+							{
+								"type": "string",
+								"enum": ["read", "edit", "browser", "command", "mcp", "modes"]
+							},
+							{
+								"type": "array",
+								"minItems": 2,
+								"maxItems": 2,
+								"items": [
+									{
+										"type": "string",
+										"enum": ["read", "edit", "browser", "command", "mcp", "modes"]
+									},
+									{
+										"type": "object",
+										"properties": {
+											"fileRegex": {
+												"type": "string"
+											},
+											"description": {
+												"type": "string"
+											}
+										},
+										"additionalProperties": false
+									}
+								]
+							},
+							{
+								"type": "object",
+								"properties": {
+									"group": {
+										"type": "string",
+										"enum": ["read", "edit", "browser", "command", "mcp", "modes"]
+									},
+									"options": {
+										"type": "object",
+										"properties": {
+											"fileRegex": {
+												"type": "string"
+											},
+											"description": {
+												"type": "string"
+											}
+										},
+										"additionalProperties": false
+									}
+								},
+								"required": ["group"],
+								"additionalProperties": false
+							}
+						]
+					},
+					"description": "Tool groups that are allowed in this mode. Recommended syntax: { group: \"read\" } or { group: \"edit\", options: { fileRegex: \"\\\\.md$\", description: \"Markdown files\" } }."
+				}
+			},
+			"required": ["name", "roleDefinition", "groups"],
+			"additionalProperties": false
+		}
+	},
+	"title": "Roo Code Mode Configuration",
+	"description": "Schema for Roo Code mode configuration YAML files. Supports object-based syntax for group entries.",
+	"examples": [
+		{
+			"name": "Example Mode",
+			"roleDefinition": "You are a specialized assistant focused on a specific task.",
+			"customInstructions": "Refer to project documentation when providing assistance.",
+			"groups": [
+				{
+					"group": "read"
+				},
+				{
+					"group": "edit",
+					"options": {
+						"fileRegex": "\\.(md|txt)$",
+						"description": "Markdown and text files"
+					}
+				},
+				{
+					"group": "command"
+				}
+			]
+		}
+	]
+}
