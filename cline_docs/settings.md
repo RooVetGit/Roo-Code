@@ -72,11 +72,33 @@
         ```
 
 5. Add the setting to handleSubmit in SettingsView.tsx:
+
     - Add a vscode.postMessage call to send the setting's value when clicking Save
     - This step is critical for persistence - without it, the setting will not be saved when the user clicks Save
     - Example:
         ```typescript
         vscode.postMessage({ type: "multisearchDiffEnabled", bool: multisearchDiffEnabled })
+        ```
+
+6. Style Considerations:
+    - Use the VSCodeCheckbox component from @vscode/webview-ui-toolkit/react instead of HTML input elements
+    - Wrap each checkbox in a div element for proper spacing
+    - Use a span with className="font-medium" for the checkbox label inside the VSCodeCheckbox component
+    - Place the description in a separate div with className="text-vscode-descriptionForeground text-sm mt-1"
+    - Maintain consistent spacing between configuration options
+    - Example:
+        ```typescript
+        <div>
+          <VSCodeCheckbox
+            checked={terminalPowershellCounter ?? true}
+            onChange={(e: any) => setCachedStateField("terminalPowershellCounter", e.target.checked)}
+            data-testid="terminal-powershell-counter-checkbox">
+            <span className="font-medium">{t("settings:terminal.powershellCounter.label")}</span>
+          </VSCodeCheckbox>
+          <div className="text-vscode-descriptionForeground text-sm mt-1">
+            {t("settings:terminal.powershellCounter.description")}
+          </div>
+        </div>
         ```
 
 ## For Select/Dropdown Settings
