@@ -129,6 +129,14 @@ export const apiConfigMetaSchema = z.object({
 	apiProvider: providerNamesSchema.optional(),
 })
 
+export const codeIndexConfigurationSchema = z.object({
+	codeIndexEnabled: z.boolean().optional(),
+	codeIndexOpenAiKey: z.string().optional(),
+	codeIndexQdrantUrl: z.string().optional(),
+})
+
+export type CodeIndexConfiguration = z.infer<typeof codeIndexConfigurationSchema>
+
 export type ApiConfigMeta = z.infer<typeof apiConfigMetaSchema>
 
 /**
@@ -503,9 +511,7 @@ export const globalSettingsSchema = z.object({
 	alwaysApproveResubmit: z.boolean().optional(),
 	requestDelaySeconds: z.number().optional(),
 	alwaysAllowMcp: z.boolean().optional(),
-	codeIndexEnabled: z.boolean().optional(),
-	codeIndexOpenAiKey: z.string().optional(),
-	codeIndexQdrantUrl: z.string().optional(),
+	codeIndexConfiguration: codeIndexConfigurationSchema.optional(),
 	alwaysAllowModeSwitch: z.boolean().optional(),
 	alwaysAllowSubtasks: z.boolean().optional(),
 	alwaysAllowExecute: z.boolean().optional(),
@@ -559,9 +565,7 @@ export type GlobalSettings = z.infer<typeof globalSettingsSchema>
 type GlobalSettingsRecord = Record<Keys<GlobalSettings>, undefined>
 
 const globalSettingsRecord: GlobalSettingsRecord = {
-	codeIndexEnabled: undefined,
-	codeIndexOpenAiKey: undefined,
-	codeIndexQdrantUrl: undefined,
+	codeIndexConfiguration: undefined,
 	currentApiConfigName: undefined,
 	listApiConfigMeta: undefined,
 	pinnedApiConfigs: undefined,

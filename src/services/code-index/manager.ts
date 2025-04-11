@@ -8,6 +8,7 @@ import { getWorkspacePath } from "../../utils/path"
 import { CodeIndexOpenAiEmbedder } from "./openai-embedder"
 import { CodeIndexQdrantClient } from "./qdrant-client"
 import { QdrantSearchResult } from "./types"
+import { CodeIndexConfiguration } from "../../schemas"
 
 export type IndexingState = "Standby" | "Indexing" | "Indexed" | "Error"
 
@@ -126,13 +127,13 @@ export class CodeIndexManager {
 		const prevEnabled = this.isEnabled
 		const prevConfigured = this.isConfigured?.() ?? false
 
-		const enabled = this.context.globalState.get<boolean>("codeIndexEnabled", false)
-		const openAiKey = (await this.context.secrets.get("codeIndexOpenAiKey")) ?? ""
-		const qdrantUrl = this.context.globalState.get<string>("codeIndexQdrantUrl", "")
+		const config = this.context.globalState.get<CodeIndexConfiguration>("codeIndexConfiguration", {})
 
-		this.isEnabled = enabled
+		const openAiKey = (await this.context.secrets.get("codeIndexOpenAiKey")) ?? ""
+
+		this.isEnabled = config.codeIndexEnabled ?? false
+		this.qdrantUrl = config.codeIndexQdrantUrl ?? ""
 		this.openAiOptions = { openAiNativeApiKey: openAiKey }
-		this.qdrantUrl = qdrantUrl
 
 		const nowConfigured = this.isConfigured()
 
@@ -155,7 +156,7 @@ export class CodeIndexManager {
 		}
 
 		// Only recreate embedder/client and restart indexing if transitioning from disabled/unconfigured to enabled+configured
-		const shouldRestart = (!prevEnabled || !prevConfigured) && enabled && nowConfigured
+		const shouldRestart = (!prevEnabled || !prevConfigured) && config.codeIndexEnabled && nowConfigured
 
 		if (shouldRestart) {
 			await this._recreateClients()

@@ -43,6 +43,7 @@ import { getDiffStrategy } from "../diff/DiffStrategy"
 import { SYSTEM_PROMPT } from "../prompts/system"
 import { buildApiHandler } from "../../api"
 import { GlobalState } from "../../schemas"
+import c from "../../services/tree-sitter/queries/c"
 
 export const webviewMessageHandler = async (provider: ClineProvider, message: WebviewMessage) => {
 	// Utility functions provided for concise get/update of global state via contextProxy API.
@@ -1315,41 +1316,18 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await provider.postStateToWebview()
 			break
 		}
-		case "codeIndexEnabled": {
-			const enabled = message.bool ?? false
+		case "codeIndexConfiguration": {
+			const codeIndexConfiguration = message.values ?? {}
 			// Save the state first
-			await updateGlobalState("codeIndexEnabled", enabled)
+			await updateGlobalState("codeIndexConfiguration", {
+				...codeIndexConfiguration,
+				codeIndexOpenAiKey: "protected",
+			})
+
+			await provider.contextProxy.setValue("codeIndexOpenAiKey", codeIndexConfiguration.codeIndexOpenAiKey)
+
 			// Get manager instance
 			const manager = CodeIndexManager.getInstance(provider.context)
-
-			await manager.loadConfiguration()
-
-			// Update webview state
-			await provider.postStateToWebview()
-			break
-		}
-		case "codeIndexOpenAiKey": {
-			const newKey = message.text // Key is sent in 'text' field
-			// Save the state first
-			provider.contextProxy.setValue("codeIndexOpenAiKey", newKey)
-			// Get manager instance
-			const manager = CodeIndexManager.getInstance(provider.context)
-
-			await manager.loadConfiguration()
-
-			// Update webview state
-			await provider.postStateToWebview()
-			break
-		}
-		case "codeIndexQdrantUrl": {
-			const newUrl = message.text // URL is sent in 'text' field
-			// Save the state first
-			await updateGlobalState("codeIndexQdrantUrl", newUrl)
-			// Get manager instance
-			const manager = CodeIndexManager.getInstance(provider.context)
-			// Get related state AFTER saving the current value
-
-			// Update manager only if enabled and both key & URL are now present
 
 			await manager.loadConfiguration()
 

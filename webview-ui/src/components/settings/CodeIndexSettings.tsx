@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react"
 import { Database } from "lucide-react"
 import { vscode } from "../../utils/vscode"
 import { VSCodeCheckbox, VSCodeTextField, VSCodeButton } from "@vscode/webview-ui-toolkit/react"
-import { SetCachedStateField } from "./types"
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -16,12 +15,14 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Section } from "./Section"
 import { SectionHeader } from "./SectionHeader"
+import { CodeIndexConfiguration } from "../../../../src/schemas"
 
 interface CodeIndexSettingsProps {
-	codeIndexEnabled: boolean
-	codeIndexOpenAiKey: string
-	codeIndexQdrantUrl: string
-	setCachedStateField: SetCachedStateField<"codeIndexEnabled" | "codeIndexOpenAiKey" | "codeIndexQdrantUrl">
+	codeIndexConfiguration: CodeIndexConfiguration
+	setCodeIndexConfigurationField: <K extends keyof CodeIndexConfiguration>(
+		field: K,
+		value: CodeIndexConfiguration[K],
+	) => void
 }
 
 interface IndexingStatusUpdateMessage {
@@ -33,21 +34,13 @@ interface IndexingStatusUpdateMessage {
 }
 
 export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
-	codeIndexEnabled,
-	codeIndexOpenAiKey,
-	codeIndexQdrantUrl,
-	setCachedStateField,
+	codeIndexConfiguration,
+	setCodeIndexConfigurationField,
 }) => {
 	const [systemStatus, setSystemStatus] = useState("Standby")
 	const [indexingMessage, setIndexingMessage] = useState("")
 
 	useEffect(() => {
-		if (!codeIndexEnabled) {
-			setSystemStatus("Standby")
-			setIndexingMessage("")
-			return
-		}
-
 		// Request initial indexing status from extension host
 		vscode.postMessage({ type: "requestIndexingStatus" })
 
@@ -67,7 +60,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 		return () => {
 			window.removeEventListener("message", handleMessage)
 		}
-	}, [codeIndexEnabled])
+	}, [codeIndexConfiguration.codeIndexEnabled])
 	return (
 		<>
 			<SectionHeader>
@@ -78,18 +71,20 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 			</SectionHeader>
 			<Section>
 				<VSCodeCheckbox
-					checked={codeIndexEnabled}
-					onChange={(e: any) => setCachedStateField("codeIndexEnabled", e.target.checked)}>
+					checked={codeIndexConfiguration.codeIndexEnabled}
+					onChange={(e: any) => setCodeIndexConfigurationField("codeIndexEnabled", e.target.checked)}>
 					Enable Codebase Indexing
 				</VSCodeCheckbox>
 
-				{codeIndexEnabled && (
+				{codeIndexConfiguration.codeIndexEnabled && (
 					<div className="mt-4 space-y-4">
 						<div className="space-y-2">
 							<VSCodeTextField
 								type="password"
-								value={codeIndexOpenAiKey}
-								onInput={(e: any) => setCachedStateField("codeIndexOpenAiKey", e.target.value)}>
+								value={codeIndexConfiguration.codeIndexOpenAiKey}
+								onInput={(e: any) =>
+									setCodeIndexConfigurationField("codeIndexOpenAiKey", e.target.value)
+								}>
 								OpenAI API Key (for Embeddings)
 							</VSCodeTextField>
 							<p className="text-sm text-vscode-descriptionForeground">
@@ -99,8 +94,10 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 
 						<div className="space-y-2">
 							<VSCodeTextField
-								value={codeIndexQdrantUrl}
-								onInput={(e: any) => setCachedStateField("codeIndexQdrantUrl", e.target.value)}>
+								value={codeIndexConfiguration.codeIndexQdrantUrl}
+								onInput={(e: any) =>
+									setCodeIndexConfigurationField("codeIndexQdrantUrl", e.target.value)
+								}>
 								Qdrant URL
 							</VSCodeTextField>
 							<p className="text-sm text-vscode-descriptionForeground">
@@ -131,7 +128,11 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 						<div className="flex gap-2 mt-4">
 							<VSCodeButton
 								onClick={() => vscode.postMessage({ type: "startIndexing" })} // Added onClick
-								disabled={!codeIndexOpenAiKey || !codeIndexQdrantUrl || systemStatus === "Indexing"} // Added disabled logic
+								disabled={
+									!codeIndexConfiguration.codeIndexOpenAiKey ||
+									!codeIndexConfiguration.codeIndexQdrantUrl ||
+									systemStatus === "Indexing"
+								} // Added disabled logic
 							>
 								Start Indexing {/* Reverted translation */}
 							</VSCodeButton>

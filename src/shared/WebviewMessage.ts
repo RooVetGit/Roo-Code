@@ -126,9 +126,7 @@ export interface WebviewMessage {
 		| "clearIndexData"
 		| "indexingStatusUpdate"
 		| "indexCleared"
-		| "codeIndexEnabled"
-		| "codeIndexOpenAiKey"
-		| "codeIndexQdrantUrl"
+		| "codeIndexConfiguration"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
