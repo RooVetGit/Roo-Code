@@ -1,24 +1,30 @@
 import { OpenAI } from "openai"
-import { OpenAiNativeHandler } from "../../api/providers/openai-native"
-import { ApiHandlerOptions } from "../../shared/api"
+import { OpenAiNativeHandler } from "../../../api/providers/openai-native"
+import { ApiHandlerOptions } from "../../../shared/api"
+import { IEmbedder, EmbeddingResponse } from "../interfaces"
 
-interface EmbeddingResponse {
-	embeddings: number[][]
-	usage: {
-		prompt_tokens: number
-		total_tokens: number
-	}
-}
-
-export class CodeIndexOpenAiEmbedder extends OpenAiNativeHandler {
+/**
+ * OpenAI implementation of the embedder interface
+ */
+export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 	private embeddingsClient: OpenAI
 
+	/**
+	 * Creates a new OpenAI embedder
+	 * @param options API handler options
+	 */
 	constructor(options: ApiHandlerOptions) {
 		super(options)
 		const apiKey = this.options.openAiNativeApiKey ?? "not-provided"
 		this.embeddingsClient = new OpenAI({ apiKey })
 	}
 
+	/**
+	 * Creates embeddings for the given texts
+	 * @param texts Array of text strings to embed
+	 * @param model Optional model identifier
+	 * @returns Promise resolving to embedding response
+	 */
 	async createEmbeddings(texts: string[], model: string = "text-embedding-3-small"): Promise<EmbeddingResponse> {
 		try {
 			const response = await this.embeddingsClient.embeddings.create({

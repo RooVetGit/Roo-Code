@@ -1,14 +1,15 @@
 import * as vscode from "vscode"
 import * as path from "path"
 import { createHash } from "crypto"
-import { scanDirectoryForCodeBlocks } from "./scanner"
-import { CodeIndexFileWatcher, FileProcessingResult } from "./file-watcher"
+import { DirectoryScanner, CodeParser } from "./processors"
 import { ApiHandlerOptions } from "../../shared/api"
 import { getWorkspacePath } from "../../utils/path"
-import { CodeIndexOpenAiEmbedder } from "./openai-embedder"
-import { CodeIndexQdrantClient } from "./qdrant-client"
+import { OpenAiEmbedder } from "./embedders/openai"
+import { QdrantVectorStore } from "./vector-store/qdrant-client"
 import { QdrantSearchResult } from "./types"
 import { ContextProxy } from "../../core/config/ContextProxy"
+import { FileProcessingResult, ICodeParser, IEmbedder, IFileWatcher, IVectorStore } from "./interfaces"
+import { FileWatcher } from "./processors"
 
 export type IndexingState = "Standby" | "Indexing" | "Indexed" | "Error"
 
@@ -47,9 +48,9 @@ export class CodeIndexManager {
 		fileStatuses: Record<string, string>
 		message?: string
 	}>()
-	private _fileWatcher: CodeIndexFileWatcher | null = null
-	private _isProcessing: boolean = false // Flag to track active work (scan or watch event)
+	private _fileWatcher?: IFileWatcher
 	private _fileWatcherSubscriptions: vscode.Disposable[] = []
+	private _isProcessing: boolean = false
 
 	// Dependencies
 	private readonly workspacePath: string
@@ -60,8 +61,10 @@ export class CodeIndexManager {
 	private qdrantApiKey?: string // Configurable
 	private isEnabled: boolean = false // New: enabled flag
 
-	private _embedder?: CodeIndexOpenAiEmbedder
-	private _qdrantClient?: CodeIndexQdrantClient
+	private _embedder?: IEmbedder
+	private _scanner?: DirectoryScanner
+	private _vectorStore?: IVectorStore
+	private _parser?: ICodeParser
 
 	// Webview provider reference for status updates
 	private webviewProvider?: { postMessage: (msg: any) => void }
@@ -96,6 +99,18 @@ export class CodeIndexManager {
 		// Initial state is set implicitly or via loadConfiguration
 	}
 
+	private _initDependencies() {
+		console.log("[CodeIndexManager] Recreating clients...")
+
+		if (this.isConfigured() && this.isEnabled && this.openAiOptions) {
+			this._parser = new CodeParser()
+			this._vectorStore = new QdrantVectorStore(this.workspacePath, this.qdrantUrl, this.qdrantApiKey)
+			this._embedder = new OpenAiEmbedder(this.openAiOptions)
+			this._scanner = new DirectoryScanner(this._embedder, this._vectorStore, this._parser)
+			this.startIndexing()
+		}
+	}
+
 	// --- Public API ---
 
 	public readonly onProgressUpdate = this._progressEmitter.event
@@ -110,16 +125,6 @@ export class CodeIndexManager {
 
 	public get isFeatureConfigured(): boolean {
 		return this.isConfigured()
-	}
-
-	_instanceClients() {
-		console.log("[CodeIndexManager] Recreating clients...")
-
-		if (this.isConfigured() && this.isEnabled && this.openAiOptions) {
-			this._embedder = new CodeIndexOpenAiEmbedder(this.openAiOptions)
-			this._qdrantClient = new CodeIndexQdrantClient(this.workspacePath, this.qdrantUrl, this.qdrantApiKey)
-			this.startIndexing()
-		}
 	}
 
 	/**
@@ -142,8 +147,6 @@ export class CodeIndexManager {
 		const openAiKey = this.contextProxy?.getSecret("codeIndexOpenAiKey") ?? ""
 		const qdrantApiKey = this.contextProxy?.getSecret("codeIndexQdrantApiKey") ?? ""
 
-		console.log("KEYS", openAiKey, qdrantApiKey)
-
 		this.isEnabled = codeIndexEnabled
 		this.qdrantUrl = codeIndexQdrantUrl
 		this.qdrantApiKey = qdrantApiKey ?? ""
@@ -154,7 +157,7 @@ export class CodeIndexManager {
 		if (!this.isEnabled) {
 			this.stopWatcher()
 			this._embedder = undefined
-			this._qdrantClient = undefined
+			this._vectorStore = undefined
 			console.log("[CodeIndexManager] Code Indexing Disabled.")
 			this._setSystemState("Standby", "Code Indexing Disabled.")
 			return
@@ -163,7 +166,7 @@ export class CodeIndexManager {
 		if (!nowConfigured) {
 			this.stopWatcher()
 			this._embedder = undefined
-			this._qdrantClient = undefined
+			this._vectorStore = undefined
 			console.log("[CodeIndexManager] Missing configuration.")
 			this._setSystemState("Standby", "Missing configuration.")
 			return
@@ -176,7 +179,7 @@ export class CodeIndexManager {
 			(prevQdrantApiKey !== this.qdrantApiKey && prevQdrantUrl !== this.qdrantUrl)
 
 		if (shouldRestart && nowConfigured) {
-			await this._instanceClients()
+			await this._initDependencies()
 		} else {
 			console.log("[CodeIndexManager] Configuration loaded. No restart needed.")
 			// If already configured and enabled, ensure state reflects readiness if standby
@@ -226,12 +229,12 @@ export class CodeIndexManager {
 
 		try {
 			// Ensure client is initialized before calling initialize
-			if (!this._qdrantClient) {
+			if (!this._vectorStore) {
 				throw new Error(
 					"Cannot initialize collection: Qdrant client cannot be initialized - configuration missing.",
 				)
 			}
-			const collectionCreated = await this._qdrantClient.initialize() // Call the existing initialize method
+			const collectionCreated = await this._vectorStore.initialize() // Call the existing initialize method
 
 			if (collectionCreated) {
 				await this._resetCacheFile()
@@ -247,16 +250,15 @@ export class CodeIndexManager {
 		}
 
 		try {
-			const { stats } = await scanDirectoryForCodeBlocks(
-				this.workspacePath,
-				this._embedder!,
-				this._qdrantClient!,
-				undefined, // Let scanner create its own ignore controller
-				this.context,
-				(batchError: Error) => {
-					this._setSystemState("Error", `Failed during initial scan batch: ${batchError.message}`)
-				},
-			)
+			const result = await this._scanner?.scanDirectory(this.workspacePath, this.context, (batchError: Error) => {
+				this._setSystemState("Error", `Failed during initial scan batch: ${batchError.message}`)
+			})
+
+			if (!result) {
+				throw new Error("Scan failed, is scanner initialized?")
+			}
+
+			const { stats } = result
 
 			console.log(
 				`[CodeIndexManager] Initial scan complete. Processed: ${stats.processed}, Skipped: ${stats.skipped}`,
@@ -268,7 +270,7 @@ export class CodeIndexManager {
 		} catch (error: any) {
 			console.error("[CodeIndexManager] Error during indexing:", error)
 			try {
-				await this._qdrantClient?.clearCollection()
+				await this._vectorStore?.clearCollection()
 			} catch (cleanupError) {
 				console.error("[CodeIndexManager] Failed to clean up after error:", cleanupError)
 			}
@@ -290,7 +292,7 @@ export class CodeIndexManager {
 	public stopWatcher(): void {
 		if (this._fileWatcher) {
 			this._fileWatcher.dispose()
-			this._fileWatcher = null
+			this._fileWatcher = undefined
 			this._fileWatcherSubscriptions.forEach((sub) => sub.dispose())
 			this._fileWatcherSubscriptions = []
 			console.log("[CodeIndexManager] File watcher stopped.")
@@ -326,15 +328,17 @@ export class CodeIndexManager {
 			// Clear Qdrant collection
 			try {
 				// Re-initialize client if needed (might have been cleared by stopWatcher)
-				if (!this._qdrantClient && this.isConfigured()) {
-					this._qdrantClient = new CodeIndexQdrantClient(this.workspacePath, this.qdrantUrl)
-				}
-				if (this._qdrantClient) {
-					await this._qdrantClient.clearCollection()
+				if (this.isConfigured()) {
+					if (!this._vectorStore) {
+						throw new Error("Vector store not initialized, is configuration correct?")
+					}
+
+					await this._vectorStore?.clearCollection()
 					console.log("[CodeIndexManager] Vector collection cleared.")
-				} else {
-					console.warn("[CodeIndexManager] Qdrant client not available, skipping vector collection clear.")
+					return
 				}
+
+				console.warn("[CodeIndexManager] Service not configured, skipping vector collection clear.")
 			} catch (error: any) {
 				console.error("[CodeIndexManager] Failed to clear vector collection:", error)
 				this._setSystemState("Error", `Failed to clear vector collection: ${error.message}`)
@@ -417,6 +421,7 @@ export class CodeIndexManager {
 		// Ensure openAiOptions itself exists before checking the key
 		return !!(this.openAiOptions?.openAiNativeApiKey && this.qdrantUrl)
 	}
+
 	private async _startWatcher(): Promise<void> {
 		if (this._fileWatcher) {
 			console.log("[CodeIndexManager] File watcher already running.")
@@ -424,17 +429,17 @@ export class CodeIndexManager {
 		}
 
 		// Ensure embedder and client are initialized before starting watcher
-		if (!this._embedder || !this._qdrantClient) {
+		if (!this._embedder || !this._vectorStore) {
 			throw new Error("Cannot start watcher: Clients not initialized.")
 		}
 
 		this._setSystemState("Indexing", "Initializing file watcher...")
 
-		this._fileWatcher = new CodeIndexFileWatcher(
+		this._fileWatcher = new FileWatcher(
 			this.workspacePath,
 			this.context,
 			this._embedder, // Pass initialized embedder
-			this._qdrantClient, // Pass initialized client
+			this._vectorStore, // Pass initialized client
 		)
 		await this._fileWatcher.initialize()
 
@@ -458,10 +463,6 @@ export class CodeIndexManager {
 					this._setSystemState("Indexed", "Index up-to-date.")
 				}
 			}),
-			this._fileWatcher.onError((error: Error) => {
-				console.error("[CodeIndexManager] File watcher encountered an error:", error)
-				this._setSystemState("Error", `File watcher error: ${error.message}`)
-			}),
 		]
 
 		console.log("[CodeIndexManager] File watcher started.")
@@ -475,10 +476,10 @@ export class CodeIndexManager {
 			// Allow search during Indexing too
 			throw new Error(`Code index is not ready for search. Current state: ${this._systemStatus}`)
 		}
-		if (!this._embedder || !this._qdrantClient) {
+		if (!this._embedder || !this._vectorStore) {
 			// Attempt to initialize if needed
 			if (this.isConfigured()) {
-				this._instanceClients()
+				this._initDependencies()
 			} else {
 				throw new Error("Code index components could not be initialized - configuration missing.")
 			}
@@ -491,12 +492,12 @@ export class CodeIndexManager {
 				throw new Error("Failed to generate embedding for query.")
 			}
 
-			if (typeof this._qdrantClient?.search !== "function") {
+			if (typeof this._vectorStore?.search !== "function") {
 				// This check might be redundant if the client is always correctly initialized
 				throw new Error("Qdrant client does not support search operation.")
 			}
 
-			const results = await this._qdrantClient.search(vector, limit)
+			const results = await this._vectorStore.search(vector, limit)
 			return results
 		} catch (error) {
 			console.error("[CodeIndexManager] Error during search:", error)
