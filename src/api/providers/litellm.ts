@@ -1,3 +1,9 @@
+/**
+ * LiteLLM provider implementation for Roo Code
+ * Ported and adapted from Cline's LiteLLM provider implementation
+ * Original PR: https://github.com/cline-app/cline/pull/1618
+ * Original author: @him0
+ */
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 import axios from "axios" // Using axios for the cost calculation request

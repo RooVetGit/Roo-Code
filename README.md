@@ -207,6 +207,10 @@ Thanks to all our contributors who have helped make Roo Code better!
 
 <!-- END CONTRIBUTORS SECTION -->
 
+## Attributions
+
+The LiteLLM provider implementation was ported and adapted from [Cline](https://github.com/cline-app/cline)'s LiteLLM provider, originally created by [@him0](https://github.com/him0) in [PR #1618](https://github.com/cline-app/cline/pull/1618).
+
 ## License
 
 [Apache 2.0 © 2025 Roo Code, Inc.](./LICENSE)
