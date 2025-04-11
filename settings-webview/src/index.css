@@ -1,0 +1,33 @@
+:root {
+	font-family: var(--vscode-font-family, Inter, system-ui, Avenir, Helvetica, Arial, sans-serif);
+	line-height: 1.5;
+	font-weight: 400;
+
+	color-scheme: light dark;
+	color: var(--vscode-foreground, rgba(255, 255, 255, 0.87));
+	background-color: var(--vscode-editor-background, #242424);
+
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+}
+
+body {
+	display: flex;
+}
+
+#root {
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}

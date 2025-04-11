@@ -2,6 +2,7 @@ import * as vscode from "vscode"
 import delay from "delay"
 
 import { ClineProvider } from "../core/webview/ClineProvider"
+import { SettingsWebviewProvider } from "../core/webview/SettingsWebviewProvider"
 
 /**
  * Helper to get the visible ClineProvider instance or log if not found.
@@ -21,6 +22,7 @@ import { handleNewTask } from "./handleTask"
 // Store panel references in both modes
 let sidebarPanel: vscode.WebviewView | undefined = undefined
 let tabPanel: vscode.WebviewPanel | undefined = undefined
+let settingsWebviewProvider: SettingsWebviewProvider | undefined = undefined
 
 /**
  * Get the currently active panel
@@ -86,6 +88,16 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
 			if (!visibleProvider) return
 			visibleProvider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
+			// Open the new settings webview panel TODO: implement later!
+			// vscode.commands.executeCommand("roo-cline.openSettingsWebview")
+		},
+		"roo-cline.openSettingsWebview": async () => {
+			// Initialize the settings webview provider if it doesn't exist
+			if (!settingsWebviewProvider) {
+				settingsWebviewProvider = new SettingsWebviewProvider(context, outputChannel)
+			}
+			// Open the settings panel
+			await settingsWebviewProvider.openPanel()
 		},
 		"roo-cline.historyButtonClicked": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)

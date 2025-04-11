@@ -111,6 +111,11 @@
 				"icon": "$(settings-gear)"
 			},
 			{
+				"command": "roo-cline.openSettingsWebview",
+				"title": "Open Settings Webview",
+				"category": "Roo Code"
+			},
+			{
 				"command": "roo-cline.helpButtonClicked",
 				"title": "Documentation",
 				"icon": "$(question)"
@@ -352,6 +357,7 @@
 	"scripts": {
 		"build": "npm run vsix",
 		"build:webview": "cd webview-ui && npm run build",
+		"build:settings-webview": "cd settings-webview && npm run build",
 		"build:esbuild": "node esbuild.js --production",
 		"compile": "tsc -p . --outDir out && node esbuild.js",
 		"install:all": "npm install npm-run-all && npm-run-all -l -p install-*",
@@ -366,9 +372,10 @@
 		"check-types:extension": "tsc --noEmit",
 		"check-types:webview": "cd webview-ui && npm run check-types",
 		"check-types:e2e": "cd e2e && npm run check-types",
-		"package": "npm-run-all -l -p build:webview build:esbuild check-types lint",
+		"package": "npm-run-all -l -p build:webview build:settings-webview build:esbuild check-types lint",
 		"pretest": "npm run compile",
 		"dev": "cd webview-ui && npm run dev",
+		"dev:settings": "cd settings-webview && npm run dev",
 		"test": "node scripts/run-tests.js",
 		"test:extension": "jest",
 		"test:webview": "cd webview-ui && npm run test",
