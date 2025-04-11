@@ -9,6 +9,7 @@ import { CodeIndexOpenAiEmbedder } from "./openai-embedder"
 import { CodeIndexQdrantClient } from "./qdrant-client"
 import { QdrantSearchResult } from "./types"
 import { CodeIndexConfiguration } from "../../schemas"
+import { ContextProxy } from "../../core/config/ContextProxy"
 
 export type IndexingState = "Standby" | "Indexing" | "Indexed" | "Error"
 
@@ -23,14 +24,14 @@ export class CodeIndexManager {
 	// --- Singleton Implementation ---
 	private static instances = new Map<string, CodeIndexManager>() // Map workspace path to instance
 
-	public static getInstance(context: vscode.ExtensionContext): CodeIndexManager {
+	public static getInstance(context: vscode.ExtensionContext, contextProxy?: ContextProxy): CodeIndexManager {
 		const workspacePath = getWorkspacePath() // Assumes single workspace for now
 		if (!workspacePath) {
 			throw new Error("Cannot get CodeIndexManager instance without an active workspace.")
 		}
 
-		if (!CodeIndexManager.instances.has(workspacePath)) {
-			CodeIndexManager.instances.set(workspacePath, new CodeIndexManager(workspacePath, context))
+		if (!CodeIndexManager.instances.has(workspacePath) && contextProxy) {
+			CodeIndexManager.instances.set(workspacePath, new CodeIndexManager(workspacePath, context, contextProxy))
 		}
 		return CodeIndexManager.instances.get(workspacePath)!
 	}
@@ -54,8 +55,10 @@ export class CodeIndexManager {
 	// Dependencies
 	private readonly workspacePath: string
 	private readonly context: vscode.ExtensionContext
+	private readonly contextProxy: ContextProxy | undefined
 	private openAiOptions?: ApiHandlerOptions // Configurable
 	private qdrantUrl?: string // Configurable
+	private qdrantApiKey?: string // Configurable
 	private isEnabled: boolean = false // New: enabled flag
 
 	private _embedder?: CodeIndexOpenAiEmbedder
@@ -87,9 +90,10 @@ export class CodeIndexManager {
 	}
 
 	// Private constructor for singleton pattern
-	private constructor(workspacePath: string, context: vscode.ExtensionContext) {
+	private constructor(workspacePath: string, context: vscode.ExtensionContext, contextProxy: ContextProxy) {
 		this.workspacePath = workspacePath
 		this.context = context
+		this.contextProxy = contextProxy
 		// Initial state is set implicitly or via loadConfiguration
 	}
 
@@ -109,13 +113,14 @@ export class CodeIndexManager {
 		return this.isConfigured()
 	}
 
-	_recreateClients() {
+	_instanceClients() {
 		console.log("[CodeIndexManager] Recreating clients...")
 
-		this._embedder = new CodeIndexOpenAiEmbedder(this.openAiOptions!)
-		this._qdrantClient = new CodeIndexQdrantClient(this.workspacePath, this.qdrantUrl)
-
-		this.startIndexing()
+		if (this.isConfigured() && this.isEnabled && this.openAiOptions) {
+			this._embedder = new CodeIndexOpenAiEmbedder(this.openAiOptions)
+			this._qdrantClient = new CodeIndexQdrantClient(this.workspacePath, this.qdrantUrl, this.qdrantApiKey)
+			this.startIndexing()
+		}
 	}
 
 	/**
@@ -127,12 +132,20 @@ export class CodeIndexManager {
 		const prevEnabled = this.isEnabled
 		const prevConfigured = this.isConfigured?.() ?? false
 
+		const prevOpenAiKey = this.openAiOptions?.openAiNativeApiKey
+		const prevQdrantUrl = this.qdrantUrl
+		const prevQdrantApiKey = this.qdrantApiKey
+
 		const config = this.context.globalState.get<CodeIndexConfiguration>("codeIndexConfiguration", {})
 
-		const openAiKey = (await this.context.secrets.get("codeIndexOpenAiKey")) ?? ""
+		const openAiKey = (await this.contextProxy?.getSecret("codeIndexOpenAiKey")) ?? ""
+		const qdrantApiKey = (await this.contextProxy?.getSecret("codeIndexQdrantApiKey")) ?? ""
+
+		console.log("KEYS", openAiKey, qdrantApiKey)
 
 		this.isEnabled = config.codeIndexEnabled ?? false
 		this.qdrantUrl = config.codeIndexQdrantUrl ?? ""
+		this.qdrantApiKey = qdrantApiKey ?? ""
 		this.openAiOptions = { openAiNativeApiKey: openAiKey }
 
 		const nowConfigured = this.isConfigured()
@@ -155,11 +168,14 @@ export class CodeIndexManager {
 			return
 		}
 
-		// Only recreate embedder/client and restart indexing if transitioning from disabled/unconfigured to enabled+configured
-		const shouldRestart = (!prevEnabled || !prevConfigured) && config.codeIndexEnabled && nowConfigured
+		// Only recreate embedder/client and restart indexing if transitioning from disabled/unconfigured to enabled+configured or if api keys change
+		const shouldRestart =
+			((!prevEnabled || !prevConfigured) && config.codeIndexEnabled && nowConfigured) ||
+			prevOpenAiKey !== this.openAiOptions?.openAiNativeApiKey ||
+			(prevQdrantApiKey !== this.qdrantApiKey && prevQdrantUrl !== this.qdrantUrl)
 
-		if (shouldRestart) {
-			await this._recreateClients()
+		if (shouldRestart && nowConfigured) {
+			await this._instanceClients()
 		} else {
 			console.log("[CodeIndexManager] Configuration loaded. No restart needed.")
 			// If already configured and enabled, ensure state reflects readiness if standby
@@ -210,13 +226,9 @@ export class CodeIndexManager {
 		try {
 			// Ensure client is initialized before calling initialize
 			if (!this._qdrantClient) {
-				if (this.isConfigured()) {
-					this._qdrantClient = new CodeIndexQdrantClient(this.workspacePath, this.qdrantUrl)
-				} else {
-					throw new Error(
-						"Cannot initialize collection: Qdrant client cannot be initialized - configuration missing.",
-					)
-				}
+				throw new Error(
+					"Cannot initialize collection: Qdrant client cannot be initialized - configuration missing.",
+				)
 			}
 			const collectionCreated = await this._qdrantClient.initialize() // Call the existing initialize method
 
@@ -236,9 +248,9 @@ export class CodeIndexManager {
 		try {
 			const { stats } = await scanDirectoryForCodeBlocks(
 				this.workspacePath,
+				this._embedder!,
+				this._qdrantClient!,
 				undefined, // Let scanner create its own ignore controller
-				this.openAiOptions,
-				this.qdrantUrl,
 				this.context,
 				(batchError: Error) => {
 					this._setSystemState("Error", `Failed during initial scan batch: ${batchError.message}`)
@@ -412,13 +424,7 @@ export class CodeIndexManager {
 
 		// Ensure embedder and client are initialized before starting watcher
 		if (!this._embedder || !this._qdrantClient) {
-			if (this.isConfigured()) {
-				this._embedder = new CodeIndexOpenAiEmbedder(this.openAiOptions!)
-				this._qdrantClient = new CodeIndexQdrantClient(this.workspacePath, this.qdrantUrl)
-			} else {
-				this._setSystemState("Error", "Cannot start watcher: Configuration missing.")
-				return
-			}
+			throw new Error("Cannot start watcher: Clients not initialized.")
 		}
 
 		this._setSystemState("Indexing", "Initializing file watcher...")
@@ -471,21 +477,20 @@ export class CodeIndexManager {
 		if (!this._embedder || !this._qdrantClient) {
 			// Attempt to initialize if needed
 			if (this.isConfigured()) {
-				this._embedder = new CodeIndexOpenAiEmbedder(this.openAiOptions!)
-				this._qdrantClient = new CodeIndexQdrantClient(this.workspacePath, this.qdrantUrl)
+				this._instanceClients()
 			} else {
 				throw new Error("Code index components could not be initialized - configuration missing.")
 			}
 		}
 
 		try {
-			const embeddingResponse = await this._embedder.createEmbeddings([query])
-			const vector = embeddingResponse.embeddings[0]
+			const embeddingResponse = await this._embedder?.createEmbeddings([query])
+			const vector = embeddingResponse?.embeddings[0]
 			if (!vector) {
 				throw new Error("Failed to generate embedding for query.")
 			}
 
-			if (typeof this._qdrantClient.search !== "function") {
+			if (typeof this._qdrantClient?.search !== "function") {
 				// This check might be redundant if the client is always correctly initialized
 				throw new Error("Qdrant client does not support search operation.")
 			}

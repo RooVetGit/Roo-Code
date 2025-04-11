@@ -133,6 +133,7 @@ export const codeIndexConfigurationSchema = z.object({
 	codeIndexEnabled: z.boolean().optional(),
 	codeIndexOpenAiKey: z.string().optional(),
 	codeIndexQdrantUrl: z.string().optional(),
+	codeIndexQdrantApiKey: z.string().optional(),
 })
 
 export type CodeIndexConfiguration = z.infer<typeof codeIndexConfigurationSchema>
@@ -390,6 +391,7 @@ export const providerSettingsSchema = z.object({
 	requestyModelInfo: modelInfoSchema.nullish(),
 	// Code Index
 	codeIndexOpenAiKey: z.string().optional(),
+	codeIndexQdrantApiKey: z.string().optional(),
 	// Claude 3.7 Sonnet Thinking
 	modelTemperature: z.number().nullish(),
 	modelMaxTokens: z.number().optional(),
@@ -476,6 +478,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	requestyModelInfo: undefined,
 	// Code Index
 	codeIndexOpenAiKey: undefined,
+	codeIndexQdrantApiKey: undefined,
 	// Claude 3.7 Sonnet Thinking
 	modelTemperature: undefined,
 	modelMaxTokens: undefined,
@@ -662,6 +665,7 @@ export type SecretState = Pick<
 	| "unboundApiKey"
 	| "requestyApiKey"
 	| "codeIndexOpenAiKey"
+	| "codeIndexQdrantApiKey"
 >
 
 type SecretStateRecord = Record<Keys<SecretState>, undefined>
@@ -681,6 +685,7 @@ const secretStateRecord: SecretStateRecord = {
 	unboundApiKey: undefined,
 	requestyApiKey: undefined,
 	codeIndexOpenAiKey: undefined,
+	codeIndexQdrantApiKey: undefined,
 }
 
 export const SECRET_STATE_KEYS = Object.keys(secretStateRecord) as Keys<SecretState>[]

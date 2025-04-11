@@ -105,6 +105,20 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							</p>
 						</div>
 
+						<div className="space-y-2">
+							<VSCodeTextField
+								type="password"
+								value={codeIndexConfiguration.codeIndexQdrantApiKey}
+								onInput={(e: any) =>
+									setCodeIndexConfigurationField("codeIndexQdrantApiKey", e.target.value)
+								}>
+								Qdrant API Key
+							</VSCodeTextField>
+							<p className="text-sm text-vscode-descriptionForeground">
+								API key for authenticating with your Qdrant instance.
+							</p>
+						</div>
+
 						<div className="text-sm text-vscode-descriptionForeground mt-4">
 							<span
 								className={`

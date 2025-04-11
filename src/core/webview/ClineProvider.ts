@@ -38,7 +38,7 @@ import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { ShadowCheckpointService } from "../../services/checkpoints/ShadowCheckpointService"
-import type { IndexProgressUpdate } from "../../services/code-index/manager"
+import { CodeIndexManager, type IndexProgressUpdate } from "../../services/code-index/manager"
 import { fileExistsAtPath } from "../../utils/fs"
 import { setSoundEnabled } from "../../utils/sound"
 import { setTtsEnabled, setTtsSpeed } from "../../utils/tts"
@@ -84,18 +84,42 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	public readonly contextProxy: ContextProxy
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
+	public readonly codeIndexManager: CodeIndexManager
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
 		private readonly outputChannel: vscode.OutputChannel,
 		private readonly renderContext: "sidebar" | "editor" = "sidebar",
-		public readonly codeIndexManager?: import("../../services/code-index/manager").CodeIndexManager,
 	) {
 		super()
 
 		this.log("ClineProvider instantiated")
 		this.contextProxy = new ContextProxy(context)
 		ClineProvider.activeInstances.add(this)
+
+		this.codeIndexManager = CodeIndexManager.getInstance(context, this.contextProxy)
+		context.subscriptions.push(this.codeIndexManager)
+		// Start configuration loading (which might trigger indexing) in the background.
+		// Don't await, allowing activation to continue immediately.
+		this.codeIndexManager
+			.loadConfiguration()
+			.then(() => {
+				// Optional: Log success after config/indexing finishes.
+				outputChannel.appendLine("CodeIndexManager configuration loaded successfully (async).")
+			})
+			.catch((error) => {
+				// Log errors from the configuration/indexing process.
+				// Use console.error for better visibility in developer tools if needed.
+				console.error(
+					"[Extension Activation] Error during background CodeIndexManager configuration/indexing:",
+					error,
+				)
+				outputChannel.appendLine(
+					`[Error] Background CodeIndexManager configuration/indexing failed: ${error.message || error}`,
+				)
+				// Optionally notify the user via a non-modal message
+				// vscode.window.showWarningMessage(`Roo-Code index initialization failed: ${error.message}`);
+			})
 
 		// Register this provider with the telemetry service to enable it to add
 		// properties like mode and provider.

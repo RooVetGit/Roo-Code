@@ -52,9 +52,9 @@ async function saveHashCache(cachePath: vscode.Uri, hashes: Record<string, strin
  */
 export async function scanDirectoryForCodeBlocks(
 	directoryPath: string = process.cwd(),
+	embedder: CodeIndexOpenAiEmbedder,
+	qdrantClient: CodeIndexQdrantClient,
 	rooIgnoreController?: RooIgnoreController,
-	openAiOptions?: ApiHandlerOptions,
-	qdrantUrl?: string,
 	context?: vscode.ExtensionContext,
 	onError?: (error: Error) => void,
 ): Promise<{ codeBlocks: CodeBlock[]; stats: { processed: number; skipped: number } }> {
@@ -97,13 +97,6 @@ export async function scanDirectoryForCodeBlocks(
 	let batchBlocks: CodeBlock[] = []
 	let batchTexts: string[] = []
 	let batchFileInfos: { filePath: string; fileHash: string }[] = []
-
-	// Initialize clients if needed
-	const embedder = openAiOptions && qdrantUrl ? new CodeIndexOpenAiEmbedder(openAiOptions) : undefined
-	const qdrantClient = openAiOptions && qdrantUrl ? new CodeIndexQdrantClient(directoryPath, qdrantUrl) : undefined
-	if (qdrantClient) {
-		await qdrantClient.initialize()
-	}
 
 	for (const filePath of supportedPaths) {
 		try {

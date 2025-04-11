@@ -1319,15 +1319,27 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "codeIndexConfiguration": {
 			const codeIndexConfiguration = message.values ?? {}
 			// Save the state first
+
 			await updateGlobalState("codeIndexConfiguration", {
 				...codeIndexConfiguration,
 				codeIndexOpenAiKey: "protected",
+				codeIndexQdrantApiKey: "protected",
 			})
 
-			await provider.contextProxy.setValue("codeIndexOpenAiKey", codeIndexConfiguration.codeIndexOpenAiKey)
+			if (
+				codeIndexConfiguration.codeIndexOpenAiKey !== "protected" &&
+				codeIndexConfiguration.codeIndexQdrantApiKey !== "protected"
+			) {
+				await provider.contextProxy.setValue("codeIndexOpenAiKey", codeIndexConfiguration.codeIndexOpenAiKey)
+
+				await provider.contextProxy.setValue(
+					"codeIndexQdrantApiKey",
+					codeIndexConfiguration.codeIndexQdrantApiKey,
+				)
+			}
 
 			// Get manager instance
-			const manager = CodeIndexManager.getInstance(provider.context)
+			const manager = CodeIndexManager.getInstance(provider.context, provider.contextProxy)
 
 			await manager.loadConfiguration()
 

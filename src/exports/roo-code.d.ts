@@ -174,6 +174,7 @@ type ProviderSettings = {
 		  } | null)
 		| undefined
 	codeIndexOpenAiKey?: string | undefined
+	codeIndexQdrantApiKey?: string | undefined
 	modelTemperature?: (number | null) | undefined
 	modelMaxTokens?: number | undefined
 	modelMaxThinkingTokens?: number | undefined
@@ -247,6 +248,7 @@ type GlobalSettings = {
 				codeIndexEnabled?: boolean | undefined
 				codeIndexOpenAiKey?: string | undefined
 				codeIndexQdrantUrl?: string | undefined
+				codeIndexQdrantApiKey?: string | undefined
 		  }
 		| undefined
 	alwaysAllowModeSwitch?: boolean | undefined
