@@ -55,7 +55,6 @@ import {
 	SelectSeparator,
 	Button,
 	Slider,
-	Label,
 } from "@/components/ui"
 import { MODELS_BY_PROVIDER, PROVIDERS, VERTEX_REGIONS } from "./constants"
 import { AWS_REGIONS } from "../../../../src/shared/aws_regions"
@@ -294,7 +293,11 @@ const ApiOptions = ({
 
 	// --- START: Helper functions and data for Context Window Slider ---
 	const contextWindowSteps = [
-		{ sliderValue: 0, overrideValue: undefined, label: t("settings:providers.contextWindow.default", { value: "128k" }) },
+		{
+			sliderValue: 0,
+			overrideValue: undefined,
+			label: t("settings:providers.contextWindow.default", { value: "128k" }),
+		},
 		{ sliderValue: 1, overrideValue: 8192, label: "8k" },
 		{ sliderValue: 2, overrideValue: 32768, label: "32k" },
 		{ sliderValue: 3, overrideValue: 131072, label: "128k" },
@@ -321,7 +324,6 @@ const ApiOptions = ({
 	const currentSliderValue = mapOverrideToSliderValue(apiConfiguration?.openAiContextWindowOverride)
 	const currentSliderLabel = mapSliderValueToLabel(currentSliderValue)
 	// --- END: Helper functions and data for Context Window Slider ---
-
 
 	return (
 		<div className="flex flex-col gap-3">
@@ -825,9 +827,9 @@ const ApiOptions = ({
 					/>
 					{/* START: OpenAI Context Window Override Slider */}
 					<div className="space-y-2">
-						<Label htmlFor="context-window-slider">
+						<label htmlFor="context-window-slider" className="block font-medium">
 							{t("settings:providers.contextWindow.overrideLabel")}
-						</Label>
+						</label>
 						<div className="flex items-center gap-3">
 							<Slider
 								id="context-window-slider"

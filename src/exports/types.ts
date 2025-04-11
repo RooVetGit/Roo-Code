@@ -114,6 +114,7 @@ type ProviderSettings = {
 	openAiUseAzure?: boolean | undefined
 	azureApiVersion?: string | undefined
 	openAiStreamingEnabled?: boolean | undefined
+	openAiContextWindowOverride?: number | undefined
 	ollamaModelId?: string | undefined
 	ollamaBaseUrl?: string | undefined
 	vsCodeLmModelSelector?:

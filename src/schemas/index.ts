@@ -448,6 +448,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	openAiUseAzure: undefined,
 	azureApiVersion: undefined,
 	openAiStreamingEnabled: undefined,
+	openAiContextWindowOverride: undefined,
 	// Ollama
 	ollamaModelId: undefined,
 	ollamaBaseUrl: undefined,
