@@ -9,3 +9,11 @@ export const GlobalFileNames = {
 	customModes: "custom_modes.json",
 	taskMetadata: "task_metadata.json",
 }
+
+/**
+ * File locations for mode configuration
+ */
+export enum ModeFileLocations {
+	LEGACY_ROOMODES = ".roomodes",
+	MODES_DIRECTORY = ".roo/modes",
+}
