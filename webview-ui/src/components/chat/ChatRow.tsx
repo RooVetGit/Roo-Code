@@ -16,7 +16,6 @@ import { findMatchingResourceOrTemplate } from "../../utils/mcp"
 import { vscode } from "../../utils/vscode"
 import CodeAccordian, { removeLeadingNonAlphanumeric } from "../common/CodeAccordian"
 import CodeBlock, { CODE_BLOCK_BG_COLOR } from "../common/CodeBlock"
-import CommandOutputViewer from "../common/CommandOutputViewer"
 import MarkdownBlock from "../common/MarkdownBlock"
 import { ReasoningBlock } from "./ReasoningBlock"
 import Thumbnails from "../common/Thumbnails"
@@ -468,7 +467,7 @@ export const ChatRowContent = ({
 						<CodeAccordian
 							code={tool.content!}
 							path={tool.path! + (tool.filePattern ? `/(${tool.filePattern})` : "")}
-							language="plaintext"
+							language="log"
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
 						/>
@@ -1038,33 +1037,39 @@ export const ChatRowContent = ({
 					const splitMessage = (text: string) => {
 						const outputIndex = text.indexOf(COMMAND_OUTPUT_STRING)
 						if (outputIndex === -1) {
-							return { command: text, output: "" }
+							return { command: text, output: "", rawOutput: "" }
 						}
+
+						// Store the raw output before formatting
+						const rawOutput = text.slice(outputIndex + COMMAND_OUTPUT_STRING.length).trim()
+
+						// Format output for display
+						const formattedOutput = rawOutput
+							.split("")
+							.map((char) => {
+								switch (char) {
+									case "\t":
+										return "→   "
+									case "\b":
+										return "⌫"
+									case "\f":
+										return "⏏"
+									case "\v":
+										return "⇳"
+									default:
+										return char
+								}
+							})
+							.join("")
+
 						return {
 							command: text.slice(0, outputIndex).trim(),
-							output: text
-								.slice(outputIndex + COMMAND_OUTPUT_STRING.length)
-								.trim()
-								.split("")
-								.map((char) => {
-									switch (char) {
-										case "\t":
-											return "→   "
-										case "\b":
-											return "⌫"
-										case "\f":
-											return "⏏"
-										case "\v":
-											return "⇳"
-										default:
-											return char
-									}
-								})
-								.join(""),
+							output: formattedOutput,
+							rawOutput: rawOutput,
 						}
 					}
 
-					const { command, output } = splitMessage(message.text || "")
+					const { command, output, rawOutput } = splitMessage(message.text || "")
 					return (
 						<>
 							<div style={headerStyle}>
@@ -1082,7 +1087,7 @@ export const ChatRowContent = ({
 									overflow: "hidden",
 									backgroundColor: CODE_BLOCK_BG_COLOR,
 								}}>
-								<CodeBlock source={`${"```"}shell\n${command}\n${"```"}`} forceWrap={true} />
+								<CodeBlock source={command} language="shell" />
 								{output.length > 0 && (
 									<div style={{ width: "100%" }}>
 										<div
@@ -1100,7 +1105,9 @@ export const ChatRowContent = ({
 												className={`codicon codicon-chevron-${isExpanded ? "down" : "right"}`}></span>
 											<span style={{ fontSize: "0.8em" }}>{t("chat:commandOutput")}</span>
 										</div>
-										{isExpanded && <CommandOutputViewer output={output} />}
+										{isExpanded && (
+											<CodeBlock source={output} language="log" rawSource={rawOutput} />
+										)}
 									</div>
 								)}
 							</div>
