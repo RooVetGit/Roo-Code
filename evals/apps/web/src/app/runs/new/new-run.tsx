@@ -64,7 +64,7 @@ export function NewRun() {
 			suite: "full",
 			exercises: [],
 			settings: undefined,
-			concurrency: 10,
+			concurrency: 2,
 		},
 	})
 
