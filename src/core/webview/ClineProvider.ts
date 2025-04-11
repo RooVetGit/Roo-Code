@@ -424,9 +424,15 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		// Listen for when color changes
 		vscode.workspace.onDidChangeConfiguration(
 			async (e) => {
-				if (e && e.affectsConfiguration("workbench.colorTheme")) {
-					// Sends latest theme name to webview
-					await this.postMessageToWebview({ type: "theme", text: JSON.stringify(await getTheme()) })
+				if (e) {
+					if (e.affectsConfiguration("workbench.colorTheme")) {
+						// Sends latest theme name to webview
+						await this.postMessageToWebview({ type: "theme", text: JSON.stringify(await getTheme()) })
+					}
+					if (e.affectsConfiguration("roo-cline.fontSmoothing")) {
+						// Resend the entire state to update the font smoothing setting in the webview
+						await this.postStateToWebview()
+					}
 				}
 			},
 			null,
@@ -1218,6 +1224,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			showRooIgnoredFiles,
 			language,
 			maxReadFileLine,
+			fontSmoothing,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
@@ -1292,6 +1299,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			renderContext: this.renderContext,
 			maxReadFileLine: maxReadFileLine ?? 500,
 			settingsImportedAt: this.settingsImportedAt,
+			fontSmoothing: fontSmoothing ?? false,
 		}
 	}
 
@@ -1303,6 +1311,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	async getState() {
 		const stateValues = this.contextProxy.getValues()
+		const config = vscode.workspace.getConfiguration("roo-cline")
 
 		const customModes = await this.customModesManager.getCustomModes()
 
@@ -1373,6 +1382,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 			maxReadFileLine: stateValues.maxReadFileLine ?? 500,
+			fontSmoothing: config.get<boolean>("fontSmoothing") ?? false,
 		}
 	}
 

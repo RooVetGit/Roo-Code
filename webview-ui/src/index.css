@@ -194,6 +194,9 @@ vscode-button::part(control):focus {
 
 html {
 	height: 100%;
+}
+
+html.font-smoothing-enabled {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }

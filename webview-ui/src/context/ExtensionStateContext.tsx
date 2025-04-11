@@ -84,6 +84,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	pinnedApiConfigs?: Record<string, boolean>
 	setPinnedApiConfigs: (value: Record<string, boolean>) => void
 	togglePinnedApiConfig: (configName: string) => void
+	fontSmoothing?: boolean
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -158,6 +159,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		renderContext: "sidebar",
 		maxReadFileLine: 500, // Default max read file line limit
 		pinnedApiConfigs: {}, // Empty object for pinned API configs
+		fontSmoothing: false,
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
@@ -326,6 +328,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 
 				return { ...prevState, pinnedApiConfigs: newPinned }
 			}),
+		fontSmoothing: state.fontSmoothing,
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>
