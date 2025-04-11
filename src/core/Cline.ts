@@ -2265,13 +2265,15 @@ export class Cline extends EventEmitter<ClineEvents> {
 		details += `\n# Current Local Date/Time\n${localTimeString}`
 
 		// Add context tokens information
-		const { contextTokens, totalCost } = getApiMetrics(this.clineMessages)
+		const { contextTokens, totalCost, totalTokensIn, totalTokensOut } = getApiMetrics(this.clineMessages)
 		const modelInfo = this.api.getModel().info
 		const contextWindow = modelInfo.contextWindow
 		const contextPercentage =
 			contextTokens && contextWindow ? Math.round((contextTokens / contextWindow) * 100) : undefined
 		details += `\n\n# Current Context Size (Tokens)\n${contextTokens ? `${contextTokens.toLocaleString()} (${contextPercentage}%)` : "(Not available)"}`
 		details += `\n\n# Current Cost\n${totalCost !== null ? `$${totalCost.toFixed(2)}` : "(Not available)"}`
+		details += `\n\n# Input Tokens Total\n${totalTokensIn ? totalTokensIn.toLocaleString() : "(Not available)"}`
+		details += `\n# Output Tokens Total\n${totalTokensOut ? totalTokensOut.toLocaleString() : "(Not available)"}`
 		// Add current mode and any mode-specific warnings
 		const {
 			mode,
