@@ -68,9 +68,13 @@
 			"label": "Approva sempre cambi di modalità",
 			"description": "Passa automaticamente tra diverse modalità senza richiedere approvazione"
 		},
-		"subtasks": {
-			"label": "Approva sempre creazione e completamento di attività secondarie",
-			"description": "Consenti la creazione e il completamento di attività secondarie senza richiedere approvazione"
+		"subtaskCreation": {
+			"label": "Approva sempre creazione di attività secondarie",
+			"description": "Consenti la creazione di attività secondarie senza richiedere approvazione"
+		},
+		"subtaskCompletion": {
+			"label": "Approva sempre completamento di attività secondarie",
+			"description": "Consenti il completamento di attività secondarie senza richiedere approvazione"
 		},
 		"execute": {
 			"label": "Approva sempre operazioni di esecuzione consentite",

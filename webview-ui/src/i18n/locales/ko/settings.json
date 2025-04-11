@@ -68,9 +68,13 @@
 			"label": "모드 전환 항상 승인",
 			"description": "승인 없이 자동으로 다양한 모드 간 전환"
 		},
-		"subtasks": {
-			"label": "하위 작업 생성 및 완료 항상 승인",
-			"description": "승인 없이 하위 작업 생성 및 완료 허용"
+		"subtaskCreation": {
+			"label": "하위 작업 생성 항상 승인",
+			"description": "승인 없이 하위 작업 생성 허용"
+		},
+		"subtaskCompletion": {
+			"label": "하위 작업 완료 항상 승인",
+			"description": "승인 없이 하위 작업 완료 허용"
 		},
 		"execute": {
 			"label": "허용된 실행 작업 항상 승인",

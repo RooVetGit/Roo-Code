@@ -34,7 +34,8 @@ export const rooCodeDefaults: RooCodeSettings = {
 	requestDelaySeconds: 5,
 	alwaysAllowMcp: true,
 	alwaysAllowModeSwitch: true,
-	alwaysAllowSubtasks: true,
+	alwaysAllowSubtaskCreation: true,
+	alwaysAllowSubtaskCompletion: true,
 	alwaysAllowExecute: true,
 	allowedCommands: ["*"],
 

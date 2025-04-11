@@ -200,10 +200,15 @@
 				"shortName": "Modos",
 				"description": "Permite el cambio automático entre diferentes modos sin requerir aprobación."
 			},
-			"subtasks": {
-				"label": "Crear y completar subtareas",
+			"subtaskCreation": {
+				"label": "Crear subtareas",
 				"shortName": "Subtareas",
-				"description": "Permite la creación y finalización de subtareas sin requerir aprobación."
+				"description": "Permite la creación de subtareas sin requerir aprobación."
+			},
+			"subtaskCompletion": {
+				"label": "Completar subtareas",
+				"shortName": "Finalización",
+				"description": "Permite la finalización de subtareas sin requerir aprobación."
 			},
 			"retryRequests": {
 				"label": "Reintentar solicitudes fallidas",

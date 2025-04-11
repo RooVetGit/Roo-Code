@@ -200,10 +200,15 @@
 				"shortName": "모드",
 				"description": "승인 없이 다른 모드 간 자동 전환을 허용합니다."
 			},
-			"subtasks": {
-				"label": "하위 작업 생성 및 완료",
+			"subtaskCreation": {
+				"label": "하위 작업 생성",
 				"shortName": "하위 작업",
-				"description": "승인 없이 하위 작업 생성 및 완료를 허용합니다."
+				"description": "승인 없이 하위 작업 생성을 허용합니다."
+			},
+			"subtaskCompletion": {
+				"label": "하위 작업 완료",
+				"shortName": "완료",
+				"description": "승인 없이 하위 작업 완료를 허용합니다."
 			},
 			"retryRequests": {
 				"label": "실패한 요청 재시도",

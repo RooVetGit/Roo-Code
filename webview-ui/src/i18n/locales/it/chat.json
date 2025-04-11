@@ -200,10 +200,15 @@
 				"shortName": "Modalità",
 				"description": "Consente il passaggio automatico tra diverse modalità senza richiedere approvazione."
 			},
-			"subtasks": {
-				"label": "Crea e completa sottoattività",
+			"subtaskCreation": {
+				"label": "Crea sottoattività",
 				"shortName": "Sottoattività",
-				"description": "Consente la creazione e il completamento di sottoattività senza richiedere approvazione."
+				"description": "Consente la creazione di sottoattività senza richiedere approvazione."
+			},
+			"subtaskCompletion": {
+				"label": "Completa sottoattività",
+				"shortName": "Completamento",
+				"description": "Consente il completamento di sottoattività senza richiedere approvazione."
 			},
 			"retryRequests": {
 				"label": "Riprova richieste fallite",

@@ -506,7 +506,8 @@ export const globalSettingsSchema = z.object({
 	requestDelaySeconds: z.number().optional(),
 	alwaysAllowMcp: z.boolean().optional(),
 	alwaysAllowModeSwitch: z.boolean().optional(),
-	alwaysAllowSubtasks: z.boolean().optional(),
+	alwaysAllowSubtaskCreation: z.boolean().optional(),
+	alwaysAllowSubtaskCompletion: z.boolean().optional(),
 	alwaysAllowExecute: z.boolean().optional(),
 	allowedCommands: z.array(z.string()).optional(),
 
@@ -577,7 +578,8 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	requestDelaySeconds: undefined,
 	alwaysAllowMcp: undefined,
 	alwaysAllowModeSwitch: undefined,
-	alwaysAllowSubtasks: undefined,
+	alwaysAllowSubtaskCreation: undefined,
+	alwaysAllowSubtaskCompletion: undefined,
 	alwaysAllowExecute: undefined,
 	allowedCommands: undefined,
 

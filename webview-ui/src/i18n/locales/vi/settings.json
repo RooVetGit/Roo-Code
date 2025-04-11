@@ -68,9 +68,13 @@
 			"label": "Luôn phê duyệt chuyển đổi chế độ",
 			"description": "Tự động chuyển đổi giữa các chế độ khác nhau mà không cần phê duyệt"
 		},
-		"subtasks": {
-			"label": "Luôn phê duyệt việc tạo và hoàn thành các công việc phụ",
-			"description": "Cho phép tạo và hoàn thành các công việc phụ mà không cần phê duyệt"
+		"subtaskCreation": {
+			"label": "Luôn phê duyệt việc tạo các công việc phụ",
+			"description": "Cho phép tạo các công việc phụ mà không cần phê duyệt"
+		},
+		"subtaskCompletion": {
+			"label": "Luôn phê duyệt việc hoàn thành các công việc phụ",
+			"description": "Cho phép hoàn thành các công việc phụ mà không cần phê duyệt"
 		},
 		"execute": {
 			"label": "Luôn phê duyệt các hoạt động thực thi được phép",

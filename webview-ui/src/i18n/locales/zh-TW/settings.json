@@ -68,9 +68,13 @@
 			"label": "始終核准模式切換",
 			"description": "自動在不同模式之間切換而無需核准"
 		},
-		"subtasks": {
-			"label": "始終核准子工作的建立和完成",
-			"description": "允許建立和完成子工作而無需核准"
+		"subtaskCreation": {
+			"label": "始終核准子工作的建立",
+			"description": "允許建立子工作而無需核准"
+		},
+		"subtaskCompletion": {
+			"label": "始終核准子工作的完成",
+			"description": "允許完成子工作而無需核准"
 		},
 		"execute": {
 			"label": "始終核准允許的執行操作",

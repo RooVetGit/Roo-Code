@@ -68,9 +68,13 @@
 			"label": "Aprovar sempre troca de modos",
 			"description": "Alternar automaticamente entre diferentes modos sem exigir aprovação"
 		},
-		"subtasks": {
-			"label": "Aprovar sempre criação e conclusão de subtarefas",
-			"description": "Permitir a criação e conclusão de subtarefas sem exigir aprovação"
+		"subtaskCreation": {
+			"label": "Aprovar sempre criação de subtarefas",
+			"description": "Permitir a criação de subtarefas sem exigir aprovação"
+		},
+		"subtaskCompletion": {
+			"label": "Aprovar sempre conclusão de subtarefas",
+			"description": "Permitir a conclusão de subtarefas sem exigir aprovação"
 		},
 		"execute": {
 			"label": "Aprovar sempre operações de execução permitidas",

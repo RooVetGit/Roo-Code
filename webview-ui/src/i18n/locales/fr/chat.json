@@ -200,10 +200,15 @@
 				"shortName": "Modes",
 				"description": "Permet le changement automatique entre différents modes sans nécessiter d'approbation."
 			},
-			"subtasks": {
-				"label": "Créer et terminer des sous-tâches",
+			"subtaskCreation": {
+				"label": "Créer des sous-tâches",
 				"shortName": "Sous-tâches",
-				"description": "Permet la création et l'achèvement de sous-tâches sans nécessiter d'approbation."
+				"description": "Permet la création de sous-tâches sans nécessiter d'approbation."
+			},
+			"subtaskCompletion": {
+				"label": "Terminer des sous-tâches",
+				"shortName": "Achèvement",
+				"description": "Permet l'achèvement de sous-tâches sans nécessiter d'approbation."
 			},
 			"retryRequests": {
 				"label": "Réessayer les requêtes échouées",

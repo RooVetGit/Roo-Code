@@ -66,7 +66,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		setMode,
 		autoApprovalEnabled,
 		alwaysAllowModeSwitch,
-		alwaysAllowSubtasks,
+		alwaysAllowSubtaskCreation,
+		alwaysAllowSubtaskCompletion,
 		customModes,
 		telemetrySetting,
 	} = useExtensionState()
@@ -694,8 +695,12 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 					return alwaysAllowModeSwitch
 				}
 
-				if (["newTask", "finishTask"].includes(tool?.tool)) {
-					return alwaysAllowSubtasks
+				if (["newTask"].includes(tool?.tool)) {
+					return alwaysAllowSubtaskCreation
+				}
+
+				if (["finishTask"].includes(tool?.tool)) {
+					return alwaysAllowSubtaskCompletion
 				}
 
 				const isOutsideWorkspace = !!tool.isOutsideWorkspace
@@ -725,7 +730,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			alwaysAllowMcp,
 			isMcpToolAlwaysAllowed,
 			alwaysAllowModeSwitch,
-			alwaysAllowSubtasks,
+			alwaysAllowSubtaskCreation,
+			alwaysAllowSubtaskCompletion,
 		],
 	)
 

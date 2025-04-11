@@ -200,10 +200,15 @@
 				"shortName": "Modos",
 				"description": "Permite a alternância automática entre diferentes modos sem exigir aprovação."
 			},
-			"subtasks": {
-				"label": "Criar e completar subtarefas",
+			"subtaskCreation": {
+				"label": "Criar subtarefas",
 				"shortName": "Subtarefas",
-				"description": "Permite a criação e conclusão de subtarefas sem exigir aprovação."
+				"description": "Permite a criação de subtarefas sem exigir aprovação."
+			},
+			"subtaskCompletion": {
+				"label": "Completar subtarefas",
+				"shortName": "Conclusão",
+				"description": "Permite a conclusão de subtarefas sem exigir aprovação."
 			},
 			"retryRequests": {
 				"label": "Retentar requisições falhas",

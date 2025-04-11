@@ -200,10 +200,15 @@
 				"shortName": "Tryby",
 				"description": "Pozwala na automatyczne przełączanie między różnymi trybami bez wymagania zatwierdzenia."
 			},
-			"subtasks": {
-				"label": "Twórz i kończ podzadania",
+			"subtaskCreation": {
+				"label": "Twórz podzadania",
 				"shortName": "Podzadania",
-				"description": "Pozwala na tworzenie i kończenie podzadań bez wymagania zatwierdzenia."
+				"description": "Pozwala na tworzenie podzadań bez wymagania zatwierdzenia."
+			},
+			"subtaskCompletion": {
+				"label": "Kończ podzadania",
+				"shortName": "Kończenie",
+				"description": "Pozwala na kończenie podzadań bez wymagania zatwierdzenia."
 			},
 			"retryRequests": {
 				"label": "Ponów nieudane zapytania",

@@ -200,10 +200,15 @@
 				"shortName": "Modlar",
 				"description": "Onay gerektirmeden farklı modlar arasında otomatik geçişe izin verir."
 			},
-			"subtasks": {
-				"label": "Alt görevler oluştur ve tamamla",
+			"subtaskCreation": {
+				"label": "Alt görevler oluştur",
 				"shortName": "Alt görevler",
-				"description": "Onay gerektirmeden alt görevlerin oluşturulmasına ve tamamlanmasına izin verir."
+				"description": "Onay gerektirmeden alt görevlerin oluşturulmasına izin verir."
+			},
+			"subtaskCompletion": {
+				"label": "Alt görevleri tamamla",
+				"shortName": "Tamamlama",
+				"description": "Onay gerektirmeden alt görevlerin tamamlanmasına izin verir."
 			},
 			"retryRequests": {
 				"label": "Başarısız istekleri yeniden dene",

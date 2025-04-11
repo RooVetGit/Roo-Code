@@ -68,9 +68,13 @@
 			"label": "Moduswechsel immer genehmigen",
 			"description": "Automatisch zwischen verschiedenen Modi wechseln ohne Genehmigung"
 		},
-		"subtasks": {
-			"label": "Erstellung & Abschluss von Unteraufgaben immer genehmigen",
-			"description": "Erstellung und Abschluss von Unteraufgaben ohne Genehmigung erlauben"
+		"subtaskCreation": {
+			"label": "Erstellung von Unteraufgaben immer genehmigen",
+			"description": "Erstellung von Unteraufgaben ohne Genehmigung erlauben"
+		},
+		"subtaskCompletion": {
+			"label": "Abschluss von Unteraufgaben immer genehmigen",
+			"description": "Abschluss von Unteraufgaben ohne Genehmigung erlauben"
 		},
 		"execute": {
 			"label": "Erlaubte Ausführungsoperationen immer genehmigen",

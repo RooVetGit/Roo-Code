@@ -68,9 +68,13 @@
 			"label": "Aprovar sempre canvis de mode",
 			"description": "Canviar automàticament entre diferents modes sense requerir aprovació"
 		},
-		"subtasks": {
-			"label": "Aprovar sempre creació i finalització de subtasques",
-			"description": "Permetre la creació i finalització de subtasques sense requerir aprovació"
+		"subtaskCreation": {
+			"label": "Aprovar sempre creació de subtasques",
+			"description": "Permetre la creació de subtasques sense requerir aprovació"
+		},
+		"subtaskCompletion": {
+			"label": "Aprovar sempre finalització de subtasques",
+			"description": "Permetre la finalització de subtasques sense requerir aprovació"
 		},
 		"execute": {
 			"label": "Aprovar sempre operacions d'execució permeses",

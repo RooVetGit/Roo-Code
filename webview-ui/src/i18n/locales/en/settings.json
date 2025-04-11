@@ -68,9 +68,13 @@
 			"label": "Always approve mode switching",
 			"description": "Automatically switch between different modes without requiring approval"
 		},
-		"subtasks": {
-			"label": "Always approve creation & completion of subtasks",
-			"description": "Allow creation and completion of subtasks without requiring approval"
+		"subtaskCreation": {
+			"label": "Always approve creation of subtasks",
+			"description": "Allow creation of subtasks without requiring approval"
+		},
+		"subtaskCompletion": {
+			"label": "Always approve completion of subtasks",
+			"description": "Allow completion of subtasks without requiring approval."
 		},
 		"execute": {
 			"label": "Always approve allowed execute operations",

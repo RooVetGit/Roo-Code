@@ -245,7 +245,8 @@ type GlobalSettings = {
 	requestDelaySeconds?: number | undefined
 	alwaysAllowMcp?: boolean | undefined
 	alwaysAllowModeSwitch?: boolean | undefined
-	alwaysAllowSubtasks?: boolean | undefined
+	alwaysAllowSubtaskCreation?: boolean | undefined
+	alwaysAllowSubtaskCompletion?: boolean | undefined
 	alwaysAllowExecute?: boolean | undefined
 	allowedCommands?: string[] | undefined
 	browserToolEnabled?: boolean | undefined
