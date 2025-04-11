@@ -1,5 +1,6 @@
 const esbuild = require("esbuild")
 const fs = require("fs")
+const fsExtra = require("fs-extra")
 const path = require("path")
 
 const production = process.argv.includes("--production")
@@ -160,6 +161,39 @@ const copyLocalesFiles = {
 	},
 }
 
+const copyWebviewFiles = {
+	name: "copy-webview-files",
+	setup(build) {
+		build.onEnd(() => {
+			// Copy webview-ui build output to dist folder
+			const webviewBuildFolder = path.join(__dirname, "webview-ui", "build")
+			const webviewTargetFolder = path.join(__dirname, "dist", "webview-ui")
+			if (fs.existsSync(webviewBuildFolder)) {
+				fs.mkdirSync(webviewTargetFolder, { recursive: true })
+				fsExtra.copySync(webviewBuildFolder, webviewTargetFolder)
+				console.log("Copied webview-ui files to dist/webview-ui")
+			} else {
+				console.warn("webview-ui/build folder does not exist. Skipping copy.")
+			}
+
+			// Copy settings-webview build output to dist folder
+			const settingsWebviewDistFolder = path.join(__dirname, "settings-webview", "dist")
+			const settingsWebviewTargetFolder = path.join(__dirname, "dist", "settings-webview")
+			if (fs.existsSync(settingsWebviewDistFolder)) {
+				// Clean the target folder if it exists
+				if (fs.existsSync(settingsWebviewTargetFolder)) {
+					fsExtra.removeSync(settingsWebviewTargetFolder)
+				}
+				fs.mkdirSync(settingsWebviewTargetFolder, { recursive: true })
+				fsExtra.copySync(settingsWebviewDistFolder, settingsWebviewTargetFolder)
+				console.log("Copied settings-webview files to dist/settings-webview")
+			} else {
+				console.warn("settings-webview/dist folder does not exist. Skipping copy.")
+			}
+		})
+	},
+}
+
 const extensionConfig = {
 	bundle: true,
 	minify: production,
@@ -168,6 +202,7 @@ const extensionConfig = {
 	plugins: [
 		copyWasmFiles,
 		copyLocalesFiles,
+		copyWebviewFiles,
 		/* add to the end of plugins array */
 		esbuildProblemMatcherPlugin,
 		{

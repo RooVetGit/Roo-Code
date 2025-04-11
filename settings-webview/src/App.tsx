@@ -4,6 +4,12 @@ import { FluentProvider, webLightTheme, webDarkTheme } from "@fluentui/react-com
 import SettingsView from "./components/SettingsView"
 import "./App.css"
 
+// Define the message type for communication with the extension
+interface VSCodeMessage {
+	type: string
+	[key: string]: unknown
+}
+
 function App() {
 	const [initialized, setInitialized] = useState<boolean>(false)
 	const [isDarkTheme, setIsDarkTheme] = useState<boolean>(document.body.classList.contains("vscode-dark"))
@@ -14,14 +20,15 @@ function App() {
 	useEffect(() => {
 		// Setup message handler from extension to webview
 		window.addEventListener("message", (event) => {
-			const message = event.data
+			const message = event.data as VSCodeMessage
 			switch (message.type) {
 				case "init":
 					setInitialized(true)
 					break
 				case "theme":
 					try {
-						const themeData = JSON.parse(message.text)
+						const themeText = message.text as string
+						const themeData = JSON.parse(themeText)
 						setIsDarkTheme(themeData.kind === "dark" || themeData.kind === "highContrast")
 					} catch (error) {
 						console.error("Error parsing theme data:", error)

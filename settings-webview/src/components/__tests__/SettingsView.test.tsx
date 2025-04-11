@@ -17,7 +17,7 @@ describe("SettingsView", () => {
 		)
 
 		// Check that all categories are rendered in the sidebar
-		const sidebar = screen.getByRole("button", { name: /general/i }).closest("div").parentElement
+		const sidebar = screen.getByRole("button", { name: /general/i }).closest("div")?.parentElement
 		expect(sidebar).toBeInTheDocument()
 
 		// Verify all category buttons are present

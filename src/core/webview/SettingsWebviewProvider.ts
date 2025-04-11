@@ -2,8 +2,8 @@ import * as vscode from "vscode"
 import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
 import { ContextProxy } from "../config/ContextProxy"
-import { delay } from "../../utils/delay"
-import { getTheme } from "../../utils/theme"
+import delay from "delay"
+import { getTheme } from "../../integrations/theme/getTheme"
 
 export class SettingsWebviewProvider {
 	public static readonly viewType = "roo-cline.SettingsWebviewProvider"
@@ -16,20 +16,29 @@ export class SettingsWebviewProvider {
 		private readonly outputChannel: vscode.OutputChannel,
 	) {
 		this.contextProxy = new ContextProxy(context)
+		this.log("SettingsWebviewProvider instantiated")
+	}
+
+	private log(message: string) {
+		this.outputChannel.appendLine(`[SettingsWebviewProvider] ${message}`)
 	}
 
 	public async openPanel() {
+		this.log("Opening settings webview panel")
 		// If we already have a panel, show it
 		if (this.panel) {
+			this.log("Panel already exists, revealing it")
 			this.panel.reveal(vscode.ViewColumn.One)
 			return
 		}
 
 		if (!this.contextProxy.isInitialized) {
+			this.log("Initializing context proxy")
 			await this.contextProxy.initialize()
 		}
 
 		// Create a new panel
+		this.log("Creating new webview panel")
 		this.panel = vscode.window.createWebviewPanel(
 			SettingsWebviewProvider.viewType,
 			"Roo Code Settings",
@@ -40,8 +49,10 @@ export class SettingsWebviewProvider {
 				localResourceRoots: [this.context.extensionUri],
 			},
 		)
+		this.log("Webview panel created")
 
 		// Set the webview's initial html content
+		this.log("Setting webview HTML content")
 		this.panel.webview.html = await this.getHtmlForWebview(this.panel.webview)
 
 		// Set up event listeners
@@ -70,16 +81,20 @@ export class SettingsWebviewProvider {
 		)
 
 		// Wait briefly for the panel to be ready
+		this.log("Waiting for panel to be ready")
 		await delay(100)
+		this.log("Settings webview panel opened successfully")
 	}
 
 	private async getHtmlForWebview(webview: vscode.Webview): Promise<string> {
 		// In development mode, use the local dev server
 		if (this.contextProxy.extensionMode === vscode.ExtensionMode.Development) {
+			this.log("Using development HTML content")
 			return await this.getDevHtmlContent(webview)
 		}
 
 		// In production mode, use the bundled files
+		this.log("Using production HTML content")
 		return this.getProdHtmlContent(webview)
 	}
 
@@ -87,14 +102,18 @@ export class SettingsWebviewProvider {
 		// Local dev server port
 		const localPort = 3000
 		const localServerUrl = `localhost:${localPort}`
+		this.log(`Checking if dev server is running at ${localServerUrl}`)
 
 		// Check if local dev server is running
 		try {
+			this.log("Attempting to connect to dev server")
 			const response = await fetch(`http://${localServerUrl}`)
 			if (!response.ok) {
 				throw new Error(`Dev server returned ${response.status}`)
 			}
+			this.log("Dev server is running")
 		} catch (error) {
+			this.log(`Dev server not running: ${error.message}`)
 			vscode.window.showErrorMessage(`Settings webview dev server not running: ${error.message}`)
 			return this.getProdHtmlContent(webview)
 		}
@@ -183,15 +202,18 @@ export class SettingsWebviewProvider {
 	}
 
 	private setWebviewMessageListener(webview: vscode.Webview) {
+		this.log("Setting up webview message listener")
 		webview.onDidReceiveMessage(
 			async (message) => {
+				this.log(`Received message from webview: ${message.type}`)
 				switch (message.type) {
 					case "webviewDidLaunch":
 						// Initialize the webview
+						this.log("Webview launched, initializing")
 						await this.postMessageToWebview({ type: "init" })
 						break
 					default:
-						console.log(`Unhandled message: ${message.type}`)
+						this.log(`Unhandled message: ${message.type}`)
 				}
 			},
 			null,
@@ -200,12 +222,17 @@ export class SettingsWebviewProvider {
 	}
 
 	private async postMessageToWebview(message: any) {
+		this.log(`Posting message to webview: ${message.type}`)
 		if (this.panel) {
 			await this.panel.webview.postMessage(message)
+			this.log(`Message posted to webview: ${message.type}`)
+		} else {
+			this.log(`Failed to post message: panel is undefined`)
 		}
 	}
 
 	private disposePanel() {
+		this.log("Disposing panel resources")
 		// Clean up resources
 		while (this.disposables.length) {
 			const disposable = this.disposables.pop()
@@ -213,5 +240,6 @@ export class SettingsWebviewProvider {
 				disposable.dispose()
 			}
 		}
+		this.log("Panel resources disposed")
 	}
 }
