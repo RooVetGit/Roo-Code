@@ -392,4 +392,45 @@ describe("OpenAiHandler", () => {
 			expect(lastCall[0]).not.toHaveProperty("stream_options")
 		})
 	})
+
+	describe("Databricks AI Provider", () => {
+		const databricksOptions = {
+			...mockOptions,
+			openAiBaseUrl: "https://adb-xxxx.azuredatabricks.net/serving-endpoints",
+			openAiModelId: "databricks-dbrx-instruct",
+		}
+
+		it("should initialize with Databricks AI configuration", () => {
+			const databricksHandler = new OpenAiHandler(databricksOptions)
+			expect(databricksHandler).toBeInstanceOf(OpenAiHandler)
+			expect(databricksHandler.getModel().id).toBe(databricksOptions.openAiModelId)
+		})
+
+		it("should exclude stream_options when streaming with Databricks AI", async () => {
+			const databricksHandler = new OpenAiHandler(databricksOptions)
+			const systemPrompt = "You are a helpful assistant."
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: "Hello!",
+				},
+			]
+
+			const stream = databricksHandler.createMessage(systemPrompt, messages)
+			await stream.next() // Consume one item to trigger the mock call
+
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					model: databricksOptions.openAiModelId,
+					stream: true,
+				}),
+				{}, // Expecting empty options object as second argument
+			)
+
+			// Verify stream_options is not present in the last call's arguments
+			const mockCalls = mockCreate.mock.calls
+			const lastCallArgs = mockCalls[mockCalls.length - 1][0]
+			expect(lastCallArgs).not.toHaveProperty("stream_options")
+		})
+	})
 })
