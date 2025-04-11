@@ -44,6 +44,7 @@ export async function parseMentions(
 	cwd: string,
 	urlContentFetcher: UrlContentFetcher,
 	fileContextTracker?: FileContextTracker,
+	maxReadFileLine?: number,
 ): Promise<string> {
 	const mentions: Set<string> = new Set()
 	let parsedText = text.replace(mentionRegexGlobal, (match, mention) => {
@@ -96,7 +97,7 @@ export async function parseMentions(
 		} else if (mention.startsWith("/")) {
 			const mentionPath = mention.slice(1)
 			try {
-				const content = await getFileOrFolderContent(mentionPath, cwd)
+				const content = await getFileOrFolderContent(mentionPath, cwd, maxReadFileLine)
 				if (mention.endsWith("/")) {
 					parsedText += `\n\n<folder_content path="${mentionPath}">\n${content}\n</folder_content>`
 				} else {
@@ -155,7 +156,7 @@ export async function parseMentions(
 	return parsedText
 }
 
-async function getFileOrFolderContent(mentionPath: string, cwd: string): Promise<string> {
+async function getFileOrFolderContent(mentionPath: string, cwd: string, maxReadFileLine?: number): Promise<string> {
 	const absPath = path.resolve(cwd, mentionPath)
 
 	try {
@@ -163,7 +164,7 @@ async function getFileOrFolderContent(mentionPath: string, cwd: string): Promise
 
 		if (stats.isFile()) {
 			try {
-				const content = await extractTextFromFile(absPath)
+				const content = await extractTextFromFile(absPath, maxReadFileLine)
 				return content
 			} catch (error) {
 				return `(Failed to read contents of ${mentionPath}): ${error.message}`
@@ -186,8 +187,8 @@ async function getFileOrFolderContent(mentionPath: string, cwd: string): Promise
 								if (isBinary) {
 									return undefined
 								}
-								const content = await extractTextFromFile(absoluteFilePath)
-								return `<file_content path="${filePath.toPosix()}">\n${content}\n</file_content>`
+								const content = await extractTextFromFile(absoluteFilePath, maxReadFileLine)
+								return `<file_content path="${filePath}">\n${content}\n</file_content>`
 							} catch (error) {
 								return undefined
 							}
