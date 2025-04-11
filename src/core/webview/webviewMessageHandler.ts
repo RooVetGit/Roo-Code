@@ -10,7 +10,13 @@ import { ApiConfiguration } from "../../shared/api"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 
-import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
+import {
+	checkoutDiffPayloadSchema,
+	checkoutRestorePayloadSchema,
+	WebviewMessage,
+	GetMentionPathsFromUrisMessage,
+	MentionPathsResponseMessage,
+} from "../../shared/WebviewMessage"
 import { checkExistKey } from "../../shared/checkExistApiConfig"
 import { EXPERIMENT_IDS, experimentDefault, ExperimentId } from "../../shared/experiments"
 import { Terminal } from "../../integrations/terminal/Terminal"
@@ -42,6 +48,7 @@ import { getDiffStrategy } from "../diff/DiffStrategy"
 import { SYSTEM_PROMPT } from "../prompts/system"
 import { buildApiHandler } from "../../api"
 import { GlobalState } from "../../schemas"
+import { uriToMentionPath } from "../../utils/pathUtils"
 
 export const webviewMessageHandler = async (provider: ClineProvider, message: WebviewMessage) => {
 	// Utility functions provided for concise get/update of global state via contextProxy API.
@@ -1304,7 +1311,30 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					cancelled: true,
 				})
 			}
+			break // Add break to prevent fallthrough
+		case "getMentionPathsFromUris": {
+			const { uris } = message as GetMentionPathsFromUrisMessage
+			const workspaceFolders = vscode.workspace.workspaceFolders
+			const mentionPaths: string[] = []
+
+			for (const uriString of uris) {
+				try {
+					const uri = vscode.Uri.parse(uriString, true) // true for strict parsing
+					const mentionPath = uriToMentionPath(uri, workspaceFolders)
+					if (mentionPath) {
+						mentionPaths.push(mentionPath)
+					}
+				} catch (error) {
+					console.error(`Failed to process URI: ${uriString}`, error)
+				}
+			}
+
+			await provider.postMessageToWebview({
+				type: "mentionPathsResponse",
+				mentionPaths: mentionPaths,
+			} as MentionPathsResponseMessage)
 			break
+		}
 
 		case "telemetrySetting": {
 			const telemetrySetting = message.text as TelemetrySetting

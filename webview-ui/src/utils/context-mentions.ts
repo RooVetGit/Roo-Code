@@ -29,15 +29,16 @@ export function insertMention(
 
 	let newValue: string
 	let mentionIndex: number
+	const mentionValue = value.startsWith("@") ? value : "@" + value
 
 	if (lastAtIndex !== -1) {
 		// If there's an '@' symbol, replace everything after it with the new mention
 		const beforeMention = text.slice(0, lastAtIndex)
-		newValue = beforeMention + "@" + value + " " + afterCursor.replace(/^[^\s]*/, "")
+		newValue = beforeMention + mentionValue + " " + afterCursor.replace(/^[^\s]*/, "")
 		mentionIndex = lastAtIndex
 	} else {
 		// If there's no '@' symbol, insert the mention at the cursor position
-		newValue = beforeCursor + "@" + value + " " + afterCursor
+		newValue = beforeCursor + mentionValue + " " + afterCursor
 		mentionIndex = position
 	}
 

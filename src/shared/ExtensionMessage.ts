@@ -69,6 +69,7 @@ export interface ExtensionMessage {
 		| "maxReadFileLine"
 		| "fileSearchResults"
 		| "toggleApiConfigPin"
+		| "mentionPathsResponse" // Response containing mention paths
 	text?: string
 	action?:
 		| "chatButtonClicked"

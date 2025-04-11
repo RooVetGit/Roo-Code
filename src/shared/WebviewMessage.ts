@@ -120,6 +120,8 @@ export interface WebviewMessage {
 		| "maxReadFileLine"
 		| "searchFiles"
 		| "toggleApiConfigPin"
+		| "getMentionPathsFromUris"
+		| "mentionPathsResponse"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
@@ -145,6 +147,21 @@ export interface WebviewMessage {
 	source?: "global" | "project"
 	requestId?: string
 	ids?: string[]
+	uris?: string[] // Payload for getMentionPathsFromUris
+	mentionPaths?: string[] // Payload for mentionPathsResponse
+}
+
+// Added based on Task Plan Step 1
+// From Webview to Extension: Request conversion of URIs to Mention paths
+export interface GetMentionPathsFromUrisMessage {
+	type: "getMentionPathsFromUris"
+	uris: string[] // Original URI strings from drag event
+}
+
+// From Extension to Webview: Response containing converted Mention paths
+export interface MentionPathsResponseMessage {
+	type: "mentionPathsResponse"
+	mentionPaths: string[] // Formatted Mention paths, e.g., ["@/src/file1.ts", "@/path/to/file2.js"]
 }
 
 export const checkoutDiffPayloadSchema = z.object({

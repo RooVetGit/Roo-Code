@@ -18,9 +18,7 @@ import {
 	shouldShowContextMenu,
 	SearchResult,
 } from "@/utils/context-mentions"
-import { convertToMentionPath } from "@/utils/path-mentions"
 import { SelectDropdown, DropdownOptionType, Button } from "@/components/ui"
-
 import Thumbnails from "../common/Thumbnails"
 import { MAX_IMAGES_PER_MESSAGE } from "./ChatView"
 import ContextMenu from "./ContextMenu"
@@ -72,7 +70,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			currentApiConfigName,
 			listApiConfigMeta,
 			customModes,
-			cwd,
 			pinnedApiConfigs,
 			togglePinnedApiConfig,
 		} = useExtensionState()
@@ -104,38 +101,53 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		}, [showDropdown])
 
 		// Handle enhanced prompt response and search results.
+		// --- 必须严格修改消息监听 useEffect --- (根据规划修改)
 		useEffect(() => {
 			const messageHandler = (event: MessageEvent) => {
-				const message = event.data
+				const message = event.data // The JSON data our extension sent
 
-				if (message.type === "enhancedPrompt") {
-					if (message.text) {
-						setInputValue(message.text)
+				switch (message.type) {
+					case "enhancedPrompt":
+						if (message.text) {
+							setInputValue(message.text)
+						}
+						setIsEnhancingPrompt(false)
+						break
+					case "commitSearchResults": {
+						const commits = message.commits.map((commit: any) => ({
+							type: ContextMenuOptionType.Git,
+							value: commit.hash,
+							label: commit.subject,
+							description: `${commit.shortHash} by ${commit.author} on ${commit.date}`,
+							icon: "$(git-commit)",
+						}))
+						setGitCommits(commits)
+						break
 					}
+					case "fileSearchResults":
+						setSearchLoading(false)
+						if (message.requestId === searchRequestId) {
+							setFileSearchResults(message.results || [])
+						}
+						break
 
-					setIsEnhancingPrompt(false)
-				} else if (message.type === "commitSearchResults") {
-					const commits = message.commits.map((commit: any) => ({
-						type: ContextMenuOptionType.Git,
-						value: commit.hash,
-						label: commit.subject,
-						description: `${commit.shortHash} by ${commit.author} on ${commit.date}`,
-						icon: "$(git-commit)",
-					}))
-
-					setGitCommits(commits)
-				} else if (message.type === "fileSearchResults") {
-					setSearchLoading(false)
-					if (message.requestId === searchRequestId) {
-						setFileSearchResults(message.results || [])
+					// 必须添加此 case (根据规划添加)
+					case "mentionPathsResponse": {
+						const validPaths = message.mentionPaths?.filter((path: string): path is string => !!path) || [] // 添加显式类型 string (修复 TS 错误)
+						if (validPaths.length > 0) {
+							// 必须更新 pendingInsertions 状态
+							setPendingInsertions((prev) => [...prev, ...validPaths])
+						}
+						break
 					}
+					// ... 其他 case ...
 				}
 			}
 
 			window.addEventListener("message", messageHandler)
+			// Clean up
 			return () => window.removeEventListener("message", messageHandler)
-		}, [setInputValue, searchRequestId])
-
+		}, [setInputValue, searchRequestId /* , 确保其他依赖项完整 */]) // 确保依赖项完整
 		const [isDraggingOver, setIsDraggingOver] = useState(false)
 		const [textAreaBaseHeight, setTextAreaBaseHeight] = useState<number | undefined>(undefined)
 		const [showContextMenu, setShowContextMenu] = useState(false)
@@ -147,6 +159,9 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const [selectedMenuIndex, setSelectedMenuIndex] = useState(-1)
 		const [selectedType, setSelectedType] = useState<ContextMenuOptionType | null>(null)
 		const [justDeletedSpaceAfterMention, setJustDeletedSpaceAfterMention] = useState(false)
+		// 必须定义此状态 (根据规划添加)
+		const [pendingInsertions, setPendingInsertions] = useState<string[]>([])
+		// 必须定义此状态 (已存在)
 		const [intendedCursorPosition, setIntendedCursorPosition] = useState<number | null>(null)
 		const contextMenuContainerRef = useRef<HTMLDivElement>(null)
 		const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false)
@@ -416,12 +431,15 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			],
 		)
 
+		// --- 必须添加用于应用光标位置的 useLayoutEffect --- (已存在，符合规划)
 		useLayoutEffect(() => {
 			if (intendedCursorPosition !== null && textAreaRef.current) {
+				// 必须应用光标位置
 				textAreaRef.current.setSelectionRange(intendedCursorPosition, intendedCursorPosition)
-				setIntendedCursorPosition(null) // Reset the state.
+				// 必须重置，防止重复应用
+				setIntendedCursorPosition(null)
 			}
-		}, [inputValue, intendedCursorPosition])
+		}, [inputValue, intendedCursorPosition]) // 必须包含正确的依赖项
 		// Ref to store the search timeout
 		const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -607,49 +625,72 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			[updateCursorPosition],
 		)
 
+		// --- 必须严格修改 onDrop (或 handleDrop) 函数 --- (根据规划重写)
 		const handleDrop = useCallback(
 			async (e: React.DragEvent<HTMLDivElement>) => {
 				e.preventDefault()
-				setIsDraggingOver(false)
+				setIsDraggingOver(false) // 假设有此状态
 
-				const text = e.dataTransfer.getData("text")
-				if (text) {
-					// Split text on newlines to handle multiple files
-					const lines = text.split(/\r?\n/).filter((line) => line.trim() !== "")
+				// --- 1. 核心：处理 VSCode 拖拽 ---
+				let uris: string[] = []
+				const vscodeUriListData = e.dataTransfer.getData("application/vnd.code.uri-list") // 必须检查这个
+				const resourceUrlsData = e.dataTransfer.getData("resourceurls") // 也要检查这个
 
-					if (lines.length > 0) {
-						// Process each line as a separate file path
-						let newValue = inputValue.slice(0, cursorPosition)
-						let totalLength = 0
-
-						// Using a standard for loop instead of forEach for potential performance gains.
-						for (let i = 0; i < lines.length; i++) {
-							const line = lines[i]
-							// Convert each path to a mention-friendly format
-							const mentionText = convertToMentionPath(line, cwd)
-							newValue += mentionText
-							totalLength += mentionText.length
-
-							// Add space after each mention except the last one
-							if (i < lines.length - 1) {
-								newValue += " "
-								totalLength += 1
-							}
-						}
-
-						// Add space after the last mention and append the rest of the input
-						newValue += " " + inputValue.slice(cursorPosition)
-						totalLength += 1
-
-						setInputValue(newValue)
-						const newCursorPosition = cursorPosition + totalLength
-						setCursorPosition(newCursorPosition)
-						setIntendedCursorPosition(newCursorPosition)
+				// 优先使用 application/vnd.code.uri-list
+				if (vscodeUriListData) {
+					uris = vscodeUriListData
+						.split("\n")
+						.map((uri) => uri.trim())
+						.filter((uri) => uri)
+				} else if (resourceUrlsData) {
+					// 回退到 resourceurls
+					try {
+						// 注意：resourceUrlsData 是 JSON 字符串数组
+						const parsedUris = JSON.parse(resourceUrlsData) as string[]
+						uris = parsedUris.map((uri) => decodeURIComponent(uri)).filter((uri) => uri)
+					} catch (error) {
+						console.error("Failed to parse resourceurls JSON:", error)
+						uris = []
 					}
-
-					return
 				}
 
+				// 过滤有效的 URI (file: 或 vscode-file:)
+				const validUris = uris.filter(
+					(uri) => uri && (uri.startsWith("vscode-file:") || uri.startsWith("file:")),
+				)
+
+				if (validUris.length > 0) {
+					// 必须清空待插入项
+					setPendingInsertions([])
+					// 必须记录初始光标位置
+					let initialCursorPos = inputValue.length
+					if (textAreaRef.current) {
+						initialCursorPos =
+							textAreaRef.current.selectionStart >= 0
+								? textAreaRef.current.selectionStart
+								: inputValue.length
+					}
+					setIntendedCursorPosition(initialCursorPos)
+
+					// 必须发送此消息
+					vscode.postMessage({
+						type: "getMentionPathsFromUris",
+						uris: validUris,
+					})
+					return // 处理完毕，不再执行后续逻辑
+				}
+
+				// --- 2. 移除或注释掉无关逻辑 ---
+				// 🚨 下面的 text/plain 处理逻辑与本次任务无关，必须移除或注释掉！
+				/*
+				const text = e.dataTransfer.getData("text")
+				if (text) {
+					// handleTextDrop(text) // 移除或注释掉这部分
+					return
+				}
+				*/
+
+				// --- 3. 其他拖拽处理 (例如图片) ---
 				const files = Array.from(e.dataTransfer.files)
 				if (!textAreaDisabled && files.length > 0) {
 					const acceptedTypes = ["png", "jpeg", "webp"]
@@ -693,12 +734,9 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				}
 			},
 			[
-				cursorPosition,
-				cwd,
 				inputValue,
-				setInputValue,
-				setCursorPosition,
 				setIntendedCursorPosition,
+				setPendingInsertions, // 添加依赖
 				textAreaDisabled,
 				shouldDisableImages,
 				setSelectedImages,
@@ -717,6 +755,29 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				setIsTtsPlaying(false)
 			}
 		})
+
+		useEffect(() => {
+			if (pendingInsertions.length === 0 || !textAreaRef.current) {
+				return
+			}
+
+			const path = pendingInsertions[0]
+			const currentTextArea = textAreaRef.current
+			const currentValue = currentTextArea.value
+			const currentCursorPos =
+				intendedCursorPosition ??
+				(currentTextArea.selectionStart >= 0 ? currentTextArea.selectionStart : currentValue.length)
+
+			const mentionTextToInsert = path + " "
+			const { newValue, mentionIndex } = insertMention(currentValue, currentCursorPos, mentionTextToInsert)
+			const newCursorPosition = mentionIndex + mentionTextToInsert.length // 声明移到 useEffect 内部
+
+			setInputValue(newValue)
+
+			setIntendedCursorPosition(newCursorPosition)
+
+			setPendingInsertions((prev) => prev.slice(1))
+		}, [pendingInsertions, setInputValue, intendedCursorPosition])
 
 		const placeholderBottomText = `\n(${t("chat:addContext")}${shouldDisableImages ? `, ${t("chat:dragFiles")}` : `, ${t("chat:dragFilesImages")}`})`
 

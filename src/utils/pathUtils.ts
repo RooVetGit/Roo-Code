@@ -22,3 +22,38 @@ export function isPathOutsideWorkspace(filePath: string): boolean {
 		return absolutePath === folderPath || absolutePath.startsWith(folderPath + path.sep)
 	})
 }
+
+/**
+ * Converts a file URI to a mention-friendly path relative to the workspace.
+ * @param uri The vscode.Uri to convert.
+ * @param workspaceFolders The current workspace folders.
+ * @returns A mention path string (e.g., "@/src/file.ts") or null if conversion fails.
+ */
+export function uriToMentionPath(
+	uri: vscode.Uri,
+	workspaceFolders: readonly vscode.WorkspaceFolder[] | undefined,
+): string | null {
+	if (!workspaceFolders || workspaceFolders.length === 0) {
+		// No workspace, return absolute path prefixed with @
+		return "@" + uri.fsPath.replace(/\\/g, "/") // Normalize slashes
+	}
+
+	// Try to get the relative path using the first workspace folder as a base
+	// Note: For multi-root workspaces, this might need more sophisticated logic
+	// to determine the most appropriate relative path.
+	const workspaceRoot = workspaceFolders[0].uri
+	let relativePath = vscode.workspace.asRelativePath(uri, false) // false: return absolute path if outside workspace
+
+	// Normalize slashes returned by asRelativePath (might be backslashes on Windows)
+	relativePath = relativePath.replace(/\\/g, "/")
+
+	// Check if asRelativePath returned an absolute path (meaning it's outside the workspace)
+	// A simple check, might need refinement for edge cases.
+	if (path.isAbsolute(relativePath) && !relativePath.startsWith(workspaceRoot.fsPath.replace(/\\/g, "/"))) {
+		// If absolute and outside workspace, prefix with @
+		return "@" + relativePath
+	}
+
+	// It's already a relative path, prefix with @/
+	return "@/" + relativePath
+}
