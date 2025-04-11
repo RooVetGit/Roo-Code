@@ -13,7 +13,6 @@ export class CodeIndexQdrantClient {
 	private readonly collectionName: string
 
 	constructor(workspacePath: string, url?: string, apiKey?: string) {
-		console.log("KEY", apiKey)
 		this.client = new QdrantClient({
 			url: url || this.QDRANT_URL,
 			apiKey: apiKey,

@@ -141,8 +141,6 @@ export class CodeIndexManager {
 		const openAiKey = (await this.contextProxy?.getSecret("codeIndexOpenAiKey")) ?? ""
 		const qdrantApiKey = (await this.contextProxy?.getSecret("codeIndexQdrantApiKey")) ?? ""
 
-		console.log("KEYS", openAiKey, qdrantApiKey)
-
 		this.isEnabled = config.codeIndexEnabled ?? false
 		this.qdrantUrl = config.codeIndexQdrantUrl ?? ""
 		this.qdrantApiKey = qdrantApiKey ?? ""
