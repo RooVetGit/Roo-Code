@@ -10,7 +10,9 @@
 		"contextWindow": "Okno kontekstu:",
 		"closeAndStart": "Zamknij zadanie i rozpocznij nowe",
 		"export": "Eksportuj historię zadań",
-		"delete": "Usuń zadanie (Shift + Kliknięcie, aby pominąć potwierdzenie)"
+		"delete": "Usuń zadanie (Shift + Kliknięcie, aby pominąć potwierdzenie)",
+		"contextLimitTipTitle": "Uwaga:",
+		"contextLimitTipText": "Kontekst zbliża się do maksymalnego limitu. Zaleca się rozpoczęcie nowego okna zadania, aby uniknąć obcięcia."
 	},
 	"unpin": "Odepnij",
 	"pin": "Przypnij",

@@ -10,7 +10,9 @@
 		"contextWindow": "Fenêtre de contexte :",
 		"closeAndStart": "Fermer la tâche et en commencer une nouvelle",
 		"export": "Exporter l'historique des tâches",
-		"delete": "Supprimer la tâche (Shift + Clic pour ignorer la confirmation)"
+		"delete": "Supprimer la tâche (Shift + Clic pour ignorer la confirmation)",
+		"contextLimitTipTitle": "Remarque :",
+		"contextLimitTipText": "Le contexte approche de la limite maximale. Il est recommandé de démarrer une nouvelle fenêtre de tâche pour éviter toute coupure."
 	},
 	"unpin": "Désépingler",
 	"pin": "Épingler",

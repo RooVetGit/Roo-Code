@@ -10,7 +10,9 @@
 		"contextWindow": "上下文窗口:",
 		"closeAndStart": "关闭任务并开始新任务",
 		"export": "导出任务历史",
-		"delete": "删除任务（Shift + 点击跳过确认）"
+		"delete": "删除任务（Shift + 点击跳过确认）",
+		"contextLimitTipTitle": "提示:",
+		"contextLimitTipText": "上下文已接近最大限制，建议开启新任务窗口以避免截断。"
 	},
 	"unpin": "取消置顶",
 	"pin": "置顶",

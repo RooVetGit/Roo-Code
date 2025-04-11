@@ -10,7 +10,9 @@
 		"contextWindow": "Bağlam Penceresi:",
 		"closeAndStart": "Görevi kapat ve yeni bir görev başlat",
 		"export": "Görev geçmişini dışa aktar",
-		"delete": "Görevi sil (Onayı atlamak için Shift + Tıkla)"
+		"delete": "Görevi sil (Onayı atlamak için Shift + Tıkla)",
+		"contextLimitTipTitle": "Not:",
+		"contextLimitTipText": "Bağlam maksimum sınıra yaklaşıyor. Kesilmesini önlemek için yeni bir görev penceresi açmanız önerilir."
 	},
 	"unpin": "Sabitlemeyi iptal et",
 	"pin": "Sabitle",

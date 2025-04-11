@@ -10,7 +10,9 @@
 		"contextWindow": "Context Window:",
 		"closeAndStart": "Close task and start a new one",
 		"export": "Export task history",
-		"delete": "Delete Task (Shift + Click to skip confirmation)"
+		"delete": "Delete Task (Shift + Click to skip confirmation)",
+		"contextLimitTipTitle": "Note:",
+		"contextLimitTipText": "Context is nearing the maximum limit. It is recommended to start a new task window to avoid truncation."
 	},
 	"unpin": "Unpin",
 	"pin": "Pin",

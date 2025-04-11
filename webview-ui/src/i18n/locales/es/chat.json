@@ -10,7 +10,9 @@
 		"contextWindow": "Ventana de contexto:",
 		"closeAndStart": "Cerrar tarea e iniciar una nueva",
 		"export": "Exportar historial de tareas",
-		"delete": "Eliminar tarea (Shift + Clic para omitir confirmación)"
+		"delete": "Eliminar tarea (Shift + Clic para omitir confirmación)",
+		"contextLimitTipTitle": "Nota:",
+		"contextLimitTipText": "El contexto está alcanzando el límite máximo. Se recomienda iniciar una nueva ventana de tarea para evitar la truncación."
 	},
 	"unpin": "Desfijar",
 	"pin": "Fijar",

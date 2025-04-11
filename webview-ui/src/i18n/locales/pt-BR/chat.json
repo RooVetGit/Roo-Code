@@ -10,7 +10,9 @@
 		"contextWindow": "Janela de contexto:",
 		"closeAndStart": "Fechar tarefa e iniciar nova",
 		"export": "Exportar histórico de tarefas",
-		"delete": "Excluir tarefa (Shift + Clique para pular confirmação)"
+		"delete": "Excluir tarefa (Shift + Clique para pular confirmação)",
+		"contextLimitTipTitle": "Nota:",
+		"contextLimitTipText": "O contexto está se aproximando do limite máximo. Recomenda-se iniciar uma nova janela de tarefa para evitar truncamento."
 	},
 	"unpin": "Desfixar",
 	"pin": "Fixar",

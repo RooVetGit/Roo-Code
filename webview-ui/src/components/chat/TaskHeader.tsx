@@ -50,6 +50,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 	const textContainerRef = useRef<HTMLDivElement>(null)
 	const textRef = useRef<HTMLDivElement>(null)
 	const contextWindow = selectedModelInfo?.contextWindow || 1
+	const isContextNearLimit = contextWindow > 0 && contextTokens / contextWindow >= 0.9
 
 	/*
 	When dealing with event listeners in React components that depend on state
@@ -345,6 +346,18 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 										<span>${totalCost?.toFixed(4)}</span>
 									</div>
 									<TaskActions item={currentTaskItem} />
+								</div>
+							)}
+							{isContextNearLimit && (
+								<div className="flex items-start gap-1" style={{ flexWrap: "wrap" }}>
+									<span className="font-bold" style={{ flexShrink: 0 }}>
+										{t("chat:task.contextLimitTipTitle")}
+									</span>
+									<span
+										className="text-yellow-300"
+										style={{ whiteSpace: "normal", wordBreak: "break-word", flex: 1 }}>
+										{t("chat:task.contextLimitTipText")}
+									</span>
 								</div>
 							)}
 						</div>

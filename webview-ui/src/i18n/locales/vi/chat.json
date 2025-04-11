@@ -10,7 +10,9 @@
 		"contextWindow": "Cửa sổ ngữ cảnh:",
 		"closeAndStart": "Đóng nhiệm vụ và bắt đầu nhiệm vụ mới",
 		"export": "Xuất lịch sử nhiệm vụ",
-		"delete": "Xóa nhiệm vụ (Shift + Click để bỏ qua xác nhận)"
+		"delete": "Xóa nhiệm vụ (Shift + Click để bỏ qua xác nhận)",
+		"contextLimitTipTitle": "Lưu ý:",
+		"contextLimitTipText": "Ngữ cảnh sắp đạt đến giới hạn tối đa. Nên bắt đầu cửa sổ nhiệm vụ mới để tránh bị cắt bớt."
 	},
 	"unpin": "Bỏ ghim khỏi đầu",
 	"pin": "Ghim lên đầu",

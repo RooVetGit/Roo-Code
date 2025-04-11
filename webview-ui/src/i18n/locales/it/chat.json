@@ -10,7 +10,9 @@
 		"contextWindow": "Finestra di contesto:",
 		"closeAndStart": "Chiudi attività e iniziane una nuova",
 		"export": "Esporta cronologia attività",
-		"delete": "Elimina attività (Shift + Clic per saltare la conferma)"
+		"delete": "Elimina attività (Shift + Clic per saltare la conferma)",
+		"contextLimitTipTitle": "Nota:",
+		"contextLimitTipText": "Il contesto sta raggiungendo il limite massimo. Si consiglia di avviare una nuova finestra di attività per evitare il troncamento."
 	},
 	"unpin": "Rilascia",
 	"pin": "Fissa",
