@@ -84,6 +84,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	pinnedApiConfigs?: Record<string, boolean>
 	setPinnedApiConfigs: (value: Record<string, boolean>) => void
 	togglePinnedApiConfig: (configName: string) => void
+	hiddenBuiltInModes: string[] // Add state for hidden modes
+	setHiddenBuiltInModes: (value: string[]) => void // Add setter
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -158,6 +160,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		renderContext: "sidebar",
 		maxReadFileLine: 500, // Default max read file line limit
 		pinnedApiConfigs: {}, // Empty object for pinned API configs
+		hiddenBuiltInModes: [], // Initialize hidden modes state
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
@@ -179,7 +182,13 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			switch (message.type) {
 				case "state": {
 					const newState = message.state!
-					setState((prevState) => mergeExtensionState(prevState, newState))
+					// Explicitly handle hiddenBuiltInModes update within mergeExtensionState or here
+					setState((prevState) => {
+						const mergedState = mergeExtensionState(prevState, newState)
+						// Ensure hiddenBuiltInModes is updated correctly, potentially overriding merge logic if needed
+						mergedState.hiddenBuiltInModes = newState.hiddenBuiltInModes ?? []
+						return mergedState
+					})
 					setShowWelcome(!checkExistKey(newState.apiConfiguration))
 					setDidHydrateState(true)
 					break
@@ -326,6 +335,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 
 				return { ...prevState, pinnedApiConfigs: newPinned }
 			}),
+		setHiddenBuiltInModes: (value) => setState((prevState) => ({ ...prevState, hiddenBuiltInModes: value })), // Add setter function
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>
