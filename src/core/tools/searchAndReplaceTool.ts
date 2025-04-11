@@ -2,6 +2,7 @@ import { Cline } from "../Cline"
 import { ToolUse } from "../assistant-message"
 import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "./types"
 import { formatResponse } from "../prompts/responses"
+import { parseXml } from "../../utils/xml"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { getReadablePath } from "../../utils/path"
 import path from "path"
@@ -57,7 +58,7 @@ export async function searchAndReplaceTool(
 				return
 			}
 
-			let parsedOperations: Array<{
+			type Operation = {
 				search: string
 				replace: string
 				start_line?: number
@@ -65,19 +66,29 @@ export async function searchAndReplaceTool(
 				use_regex?: boolean
 				ignore_case?: boolean
 				regex_flags?: string
-			}>
+			}
+			let parsedOperations: {
+				operation: Operation[] | Operation
+			}
 
 			try {
-				parsedOperations = JSON.parse(operations)
-				if (!Array.isArray(parsedOperations)) {
-					throw new Error("Operations must be an array")
+				parsedOperations = parseXml(operations, [
+					"operation.search",
+					"operation.replace",
+					"operation.regex_flags",
+				]) as {
+					operation: Operation[] | Operation
 				}
 			} catch (error) {
 				cline.consecutiveMistakeCount++
-				await cline.say("error", `Failed to parse operations JSON: ${error.message}`)
-				pushToolResult(formatResponse.toolError("Invalid operations JSON format"))
+				await cline.say("error", `Failed to parse operations: ${error.message}`)
+				pushToolResult(formatResponse.toolError("Invalid operations XML format"))
 				return
 			}
+
+			const normalizedOperations = Array.isArray(parsedOperations?.operation)
+				? parsedOperations.operation
+				: [parsedOperations?.operation].filter((op): op is Operation => op !== undefined)
 
 			// Read the original file content
 			const fileContent = await fs.readFile(absolutePath, "utf-8")
@@ -85,7 +96,7 @@ export async function searchAndReplaceTool(
 			cline.diffViewProvider.originalContent = fileContent
 			let lines = fileContent.split("\n")
 
-			for (const op of parsedOperations) {
+			for (const op of normalizedOperations) {
 				const flags = op.regex_flags ?? (op.ignore_case ? "gi" : "g")
 				const multilineFlags = flags.includes("m") ? flags : flags + "m"
 

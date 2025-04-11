@@ -2,6 +2,7 @@ import { getReadablePath } from "../../utils/path"
 import { Cline } from "../Cline"
 import { ToolUse } from "../assistant-message"
 import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "./types"
+import { parseXml } from "../../utils/xml"
 import { formatResponse } from "../prompts/responses"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import path from "path"
@@ -58,22 +59,28 @@ export async function insertContentTool(
 			return
 		}
 
-		let parsedOperations: Array<{
+		type Operation = {
 			start_line: number
 			content: string
-		}>
+		}
+		let parsedOperations: {
+			operation: Operation[] | Operation
+		}
 
 		try {
-			parsedOperations = JSON.parse(operations)
-			if (!Array.isArray(parsedOperations)) {
-				throw new Error("Operations must be an array")
+			parsedOperations = parseXml(operations) as {
+				operation: Operation[] | Operation
 			}
 		} catch (error) {
 			cline.consecutiveMistakeCount++
-			await cline.say("error", `Failed to parse operations JSON: ${error.message}`)
-			pushToolResult(formatResponse.toolError("Invalid operations JSON format"))
+			await cline.say("error", `Failed to parse operations: ${error.message}`)
+			pushToolResult(formatResponse.toolError("Invalid operations XML format"))
 			return
 		}
+
+		const normalizedOperations = Array.isArray(parsedOperations?.operation)
+			? parsedOperations.operation
+			: [parsedOperations?.operation].filter((op): op is Operation => op !== undefined)
 
 		cline.consecutiveMistakeCount = 0
 
@@ -85,7 +92,7 @@ export async function insertContentTool(
 
 		const updatedContent = insertGroups(
 			lines,
-			parsedOperations.map((elem) => {
+			normalizedOperations.map((elem) => {
 				return {
 					index: elem.start_line - 1,
 					elements: elem.content.split("\n"),
