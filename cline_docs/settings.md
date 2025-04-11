@@ -240,6 +240,105 @@ To add a new configuration item to the system, the following changes are necessa
     - Add test cases for the new settings in appropriate test files
     - Verify settings persistence and state updates
 
-10. **Avoiding Duplicates**
-    - Be careful to avoid duplicate handlers or UI components when adding new settings
-    - Check for existing similar settings to maintain consistent patterns
+10. **Ensuring Settings Persistence Across Reload**
+
+    To ensure settings persist across application reload, several key components must be properly configured:
+
+    1. **Initial State in ExtensionStateContextProvider**:
+
+        - Add the setting to the initial state in the useState call
+        - Example:
+            ```typescript
+            const [state, setState] = useState<ExtensionState>({
+            	// existing settings...
+            	newSetting: false, // Default value for the new setting
+            })
+            ```
+
+    2. **State Loading in ClineProvider**:
+
+        - Add the setting to the getState method to load it from storage
+        - Example:
+            ```typescript
+            return {
+            	// existing settings...
+            	newSetting: stateValues.newSetting ?? false,
+            }
+            ```
+
+    3. **State Initialization in resolveWebviewView**:
+
+        - Add the setting to the initialization in resolveWebviewView
+        - Example:
+            ```typescript
+            this.getState().then(
+            	({
+            		// existing settings...
+            		newSetting,
+            	}) => {
+            		// Initialize the setting with its stored value or default
+            		FeatureClass.setNewSetting(newSetting ?? false)
+            	},
+            )
+            ```
+
+    4. **State Transmission to Webview**:
+
+        - Add the setting to the getStateToPostToWebview method
+        - Example:
+            ```typescript
+            return {
+            	// existing settings...
+            	newSetting: newSetting ?? false,
+            }
+            ```
+
+    5. **Setter Method in ExtensionStateContext**:
+        - Add the setter method to the contextValue object
+        - Example:
+            ```typescript
+            const contextValue: ExtensionStateContextType = {
+            	// existing properties and methods...
+            	setNewSetting: (value) => setState((prevState) => ({ ...prevState, newSetting: value })),
+            }
+            ```
+
+11. **Debugging Settings Persistence Issues**
+
+    If a setting is not persisting across reload, check the following:
+
+    1. **Complete Chain of Persistence**:
+
+        - Verify that the setting is added to all required locations:
+            - globalSettingsSchema and globalSettingsRecord in schemas/index.ts
+            - Initial state in ExtensionStateContextProvider
+            - getState method in ClineProvider.ts
+            - getStateToPostToWebview method in ClineProvider.ts
+            - resolveWebviewView method in ClineProvider.ts (if feature-specific)
+        - A break in any part of this chain can prevent persistence
+
+    2. **Default Values Consistency**:
+
+        - Ensure default values are consistent across all locations
+        - Inconsistent defaults can cause unexpected behavior
+
+    3. **Message Handling**:
+
+        - Confirm the webviewMessageHandler.ts has a case for the setting
+        - Verify the message type matches what's sent from the UI
+
+    4. **UI Integration**:
+
+        - Check that the setting is included in the handleSubmit function in SettingsView.tsx
+        - Ensure the UI component correctly updates the state
+
+    5. **Type Definitions**:
+
+        - Verify the setting is properly typed in all relevant interfaces
+        - Check for typos in property names across different files
+
+    6. **Storage Mechanism**:
+        - For complex settings, ensure proper serialization/deserialization
+        - Check that the setting is being correctly stored in VSCode's globalState
+
+    These checks help identify and resolve common issues with settings persistence.
