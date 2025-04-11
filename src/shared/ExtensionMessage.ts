@@ -199,6 +199,8 @@ export type ExtensionState = Pick<
 	telemetrySetting: TelemetrySetting
 	telemetryKey?: string
 	machineId?: string
+	reasoningEffort?: "low" | "medium" | "high" // The reasoning effort level for models that support reasoning
+	grokReasoningEffort?: "low" | "high" // The reasoning effort level for Grok 3 Mini models
 
 	renderContext: "sidebar" | "editor"
 	settingsImportedAt?: number

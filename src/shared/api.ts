@@ -621,6 +621,7 @@ export const openAiModelInfoSaneDefaults: ModelInfo = {
 	supportsPromptCache: false,
 	inputPrice: 0,
 	outputPrice: 0,
+	reasoningEffort: "low",
 }
 
 // Gemini

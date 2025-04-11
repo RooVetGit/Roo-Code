@@ -138,6 +138,8 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			}
 
 			const isGrokXAI = this._isGrokXAI(this.options.openAiBaseUrl)
+			const isGrokMiniModel = modelId.includes("grok-3-mini")
+			const useGrokReasoning = modelInfo.thinking || (isGrokXAI && isGrokMiniModel)
 
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
 				model: modelId,
@@ -145,6 +147,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				messages: convertedMessages,
 				stream: true as const,
 				...(isGrokXAI ? {} : { stream_options: { include_usage: true } }),
+				...(useGrokReasoning ? { reasoning_effort: modelInfo.reasoningEffort || "low" } : {}),
 			}
 			if (this.options.includeMaxTokens) {
 				requestOptions.max_tokens = modelInfo.maxTokens
@@ -267,7 +270,10 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		if (this.options.openAiStreamingEnabled ?? true) {
 			const methodIsAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
 
+			const modelInfo = this.getModel().info
 			const isGrokXAI = this._isGrokXAI(this.options.openAiBaseUrl)
+			const isGrokMiniModel = modelId.includes("grok-3-mini")
+			const useGrokReasoning = modelInfo.thinking || (isGrokXAI && isGrokMiniModel)
 
 			const stream = await this.client.chat.completions.create(
 				{
@@ -281,7 +287,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 					],
 					stream: true,
 					...(isGrokXAI ? {} : { stream_options: { include_usage: true } }),
-					reasoning_effort: this.getModel().info.reasoningEffort,
+					...(useGrokReasoning ? { reasoning_effort: this.getModel().info.reasoningEffort || "low" } : {}),
 				},
 				methodIsAzureAiInference ? { path: AZURE_AI_INFERENCE_PATH } : {},
 			)

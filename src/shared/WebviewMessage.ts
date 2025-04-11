@@ -120,6 +120,7 @@ export interface WebviewMessage {
 		| "maxReadFileLine"
 		| "searchFiles"
 		| "toggleApiConfigPin"
+		| "reasoningEffort"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse

@@ -7,6 +7,7 @@ import { LanguageModelChatSelector } from "vscode"
 import { Checkbox } from "vscrui"
 import { VSCodeLink, VSCodeRadio, VSCodeRadioGroup, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 import { ExternalLinkIcon } from "@radix-ui/react-icons"
+import { GrokReasoningSettings } from "./GrokReasoningSettings"
 
 import {
 	ApiConfiguration,
@@ -128,6 +129,16 @@ const ApiOptions = ({
 		() => normalizeApiConfiguration(apiConfiguration),
 		[apiConfiguration],
 	)
+
+	// Check if the current model is a Grok 3 Mini model
+	const isGrokMiniModel = useMemo(() => {
+		return selectedModelId?.includes("grok-3-mini-beta") || selectedModelId?.includes("grok-3-mini-fast-beta")
+	}, [selectedModelId])
+
+	// Check if the endpoint is x.ai
+	const isXaiEndpoint = useMemo(() => {
+		return apiConfiguration?.openAiBaseUrl?.includes("x.ai") || false
+	}, [apiConfiguration?.openAiBaseUrl])
 
 	// Debounced refresh model updates, only executed 250ms after the user
 	// stops typing.
@@ -800,6 +811,24 @@ const ApiOptions = ({
 						onChange={handleInputChange("openAiStreamingEnabled", noTransform)}>
 						{t("settings:modelInfo.enableStreaming")}
 					</Checkbox>
+
+					{/* Grok3 Reasoning Settings - Only show for Grok Mini models */}
+					{isGrokMiniModel && isXaiEndpoint && (
+						<GrokReasoningSettings
+							reasoningEffort={
+								(apiConfiguration?.openAiCustomModelInfo?.reasoningEffort === "medium"
+									? "low"
+									: apiConfiguration?.openAiCustomModelInfo?.reasoningEffort) ?? "low"
+							}
+							setReasoningEffort={(value) => {
+								setApiConfigurationField("openAiCustomModelInfo", {
+									...(apiConfiguration?.openAiCustomModelInfo || openAiModelInfoSaneDefaults),
+									reasoningEffort: value,
+								})
+							}}
+						/>
+					)}
+
 					<Checkbox
 						checked={apiConfiguration?.openAiUseAzure ?? false}
 						onChange={handleInputChange("openAiUseAzure", noTransform)}>

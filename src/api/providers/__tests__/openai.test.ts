@@ -392,4 +392,136 @@ describe("OpenAiHandler", () => {
 			expect(lastCall[0]).not.toHaveProperty("stream_options")
 		})
 	})
+
+	describe("Grok 3 Mini models with reasoning", () => {
+		const grokMiniOptions = {
+			...mockOptions,
+			openAiBaseUrl: "https://api.x.ai/v1",
+			openAiModelId: "grok-3-mini-beta",
+			openAiCustomModelInfo: {
+				reasoningEffort: "low" as const,
+				thinking: true,
+				contextWindow: 128_000,
+				supportsPromptCache: false,
+				maxTokens: -1,
+				supportsImages: true,
+				inputPrice: 0,
+				outputPrice: 0,
+			},
+		}
+		it("should include reasoning_effort parameter for Grok mini models", async () => {
+			const grokHandler = new OpenAiHandler(grokMiniOptions)
+			const systemPrompt = "You are a helpful assistant."
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: "Hello!",
+				},
+			]
+
+			const stream = grokHandler.createMessage(systemPrompt, messages)
+			await stream.next()
+
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					model: grokMiniOptions.openAiModelId,
+					stream: true,
+					reasoning_effort: "low",
+				}),
+				{},
+			)
+		})
+
+		it("should use the specified reasoningEffort value", async () => {
+			const grokHandler = new OpenAiHandler({
+				...grokMiniOptions,
+				openAiCustomModelInfo: {
+					...grokMiniOptions.openAiCustomModelInfo,
+					reasoningEffort: "high",
+				},
+			})
+			const systemPrompt = "You are a helpful assistant."
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: "Hello!",
+				},
+			]
+
+			const stream = grokHandler.createMessage(systemPrompt, messages)
+			await stream.next()
+
+			expect(mockCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					model: grokMiniOptions.openAiModelId,
+					stream: true,
+					reasoning_effort: "high",
+				}),
+				{},
+			)
+		})
+
+		it("should process reasoning_content from response", async () => {
+			// Update the mock to include reasoning_content in the response
+			mockCreate.mockImplementationOnce(() => ({
+				[Symbol.asyncIterator]: async function* () {
+					yield {
+						choices: [
+							{
+								delta: { content: "Test response" },
+								index: 0,
+							},
+						],
+						usage: null,
+					}
+					yield {
+						choices: [
+							{
+								delta: { reasoning_content: "This is reasoning content" },
+								index: 0,
+							},
+						],
+						usage: null,
+					}
+					yield {
+						choices: [
+							{
+								delta: {},
+								index: 0,
+							},
+						],
+						usage: {
+							prompt_tokens: 10,
+							completion_tokens: 5,
+							total_tokens: 15,
+						},
+					}
+				},
+			}))
+
+			const grokHandler = new OpenAiHandler(grokMiniOptions)
+			const systemPrompt = "You are a helpful assistant."
+			const messages: Anthropic.Messages.MessageParam[] = [
+				{
+					role: "user",
+					content: "Hello!",
+				},
+			]
+
+			const stream = grokHandler.createMessage(systemPrompt, messages)
+			const chunks: any[] = []
+			for await (const chunk of stream) {
+				chunks.push(chunk)
+			}
+
+			const textChunks = chunks.filter((chunk) => chunk.type === "text")
+			const reasoningChunks = chunks.filter((chunk) => chunk.type === "reasoning")
+
+			expect(textChunks).toHaveLength(1)
+			expect(textChunks[0].text).toBe("Test response")
+
+			expect(reasoningChunks).toHaveLength(1)
+			expect(reasoningChunks[0].text).toBe("This is reasoning content")
+		})
+	})
 })
