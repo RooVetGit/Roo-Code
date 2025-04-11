@@ -339,6 +339,7 @@ type GlobalSettings = {
 		  }
 		| undefined
 	enhancementApiConfigId?: string | undefined
+	hiddenBuiltInModes?: string[] | undefined
 }
 
 type ClineMessage = {

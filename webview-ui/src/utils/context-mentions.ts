@@ -87,15 +87,23 @@ export function getContextMenuOptions(
 	selectedType: ContextMenuOptionType | null = null,
 	queryItems: ContextMenuQueryItem[],
 	dynamicSearchResults: SearchResult[] = [],
-	modes?: ModeConfig[],
+	modes?: ModeConfig[], // Keep original modes list
+	hiddenBuiltInModes: string[] = [],
+	customModes?: ModeConfig[], // Add customModes parameter
 ): ContextMenuQueryItem[] {
 	// Handle slash commands for modes
 	if (query.startsWith("/")) {
 		const modeQuery = query.slice(1)
-		if (!modes?.length) return [{ type: ContextMenuOptionType.NoResults }]
+		// Filter modes using the consistent logic
+		const visibleModes =
+			modes?.filter(
+				(m) => !hiddenBuiltInModes.includes(m.slug) || customModes?.some((cm) => cm.slug === m.slug),
+			) ?? []
 
-		// Create searchable strings array for fzf
-		const searchableItems = modes.map((mode) => ({
+		if (!visibleModes.length) return [{ type: ContextMenuOptionType.NoResults }]
+
+		// Create searchable strings array for fzf using visible modes
+		const searchableItems = visibleModes.map((mode) => ({
 			original: mode,
 			searchStr: mode.name,
 		}))
@@ -113,7 +121,8 @@ export function getContextMenuOptions(
 					label: result.item.original.name,
 					description: result.item.original.roleDefinition.split("\n")[0],
 				}))
-			: modes.map((mode) => ({
+			: // Use visible modes for non-query case as well
+				visibleModes.map((mode) => ({
 					type: ContextMenuOptionType.Mode,
 					value: mode.slug,
 					label: mode.name,

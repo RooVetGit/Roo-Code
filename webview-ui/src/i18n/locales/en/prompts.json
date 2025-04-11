@@ -7,6 +7,8 @@
 		"editModesConfig": "Edit modes configuration",
 		"editGlobalModes": "Edit Global Modes",
 		"editProjectModes": "Edit Project Modes (.roomodes)",
+		"hideBuiltInModes": "Hide Built-in Modes",
+		"showBuiltInModes": "Show Built-in Modes",
 		"createModeHelpText": "Hit the + to create a new custom mode, or just ask Roo in chat to create one for you!"
 	},
 	"apiConfiguration": {

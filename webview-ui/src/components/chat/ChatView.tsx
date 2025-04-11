@@ -69,6 +69,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		alwaysAllowSubtasks,
 		customModes,
 		telemetrySetting,
+		hiddenBuiltInModes, // Get hidden modes state
 	} = useExtensionState()
 
 	//const task = messages.length > 0 ? (messages[0].say === "task" ? messages[0] : undefined) : undefined) : undefined
@@ -1131,16 +1132,23 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 
 	// Function to handle mode switching
 	const switchToNextMode = useCallback(() => {
-		const allModes = getAllModes(customModes)
-		const currentModeIndex = allModes.findIndex((m) => m.slug === mode)
-		const nextModeIndex = (currentModeIndex + 1) % allModes.length
-		// Update local state and notify extension to sync mode change
-		setMode(allModes[nextModeIndex].slug)
+		// Filter modes first
+		const visibleModes = getAllModes(customModes).filter(
+			(m) => !hiddenBuiltInModes.includes(m.slug) || customModes?.some((cm) => cm.slug === m.slug),
+		)
+		if (visibleModes.length === 0) return // No visible modes to switch to
+
+		const currentIndex = visibleModes.findIndex((m) => m.slug === mode)
+		// If current mode not found in visible modes (e.g., it was just hidden), default to first visible mode
+		const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % visibleModes.length
+		const nextModeSlug = visibleModes[nextIndex].slug
+
+		setMode(nextModeSlug)
 		vscode.postMessage({
 			type: "mode",
-			text: allModes[nextModeIndex].slug,
+			text: nextModeSlug,
 		})
-	}, [mode, setMode, customModes])
+	}, [customModes, mode, setMode, hiddenBuiltInModes]) // Add hiddenBuiltInModes dependency
 
 	// Add keyboard event handler
 	const handleKeyDown = useCallback(
