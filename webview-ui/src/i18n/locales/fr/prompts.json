@@ -95,6 +95,10 @@
 			"NEW_TASK": {
 				"label": "Démarrer une nouvelle tâche",
 				"description": "Démarre une nouvelle tâche avec ton entrée. Disponible dans la palette de commandes."
+			},
+			"COMMIT": {
+				"label": "Générer un message de commit",
+				"description": "Génère un message de commit sémantique basé sur les changements préparés en utilisant git status et diffs. Disponible lors de la préparation des changements dans le contrôle de source."
 			}
 		}
 	},

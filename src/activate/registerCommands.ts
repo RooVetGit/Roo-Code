@@ -2,6 +2,7 @@ import * as vscode from "vscode"
 import delay from "delay"
 
 import { ClineProvider } from "../core/webview/ClineProvider"
+import { generateCommitSuggestion } from "../utils/commitSuggestion"
 
 /**
  * Helper to get the visible ClineProvider instance or log if not found.
@@ -117,6 +118,36 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		"roo-cline.focusInput": () => {
 			provider.postMessageToWebview({ type: "action", action: "focusInput" })
 		},
+		"roo-cline.commitSuggestion": (() => {
+			let isExecuting = false // Flag to prevent multiple executions
+
+			return async () => {
+				if (isExecuting) {
+					return // Prevent multiple executions
+				}
+
+				try {
+					isExecuting = true
+					await vscode.window.withProgress(
+						{
+							location: vscode.ProgressLocation.Notification,
+							title: "Generating commit suggestion...",
+							cancellable: false,
+						},
+						async () => {
+							// Get the current workspace folder path
+							const workspaceFolders = vscode.workspace.workspaceFolders
+							const cwd = workspaceFolders?.[0]?.uri.fsPath || process.cwd()
+							await generateCommitSuggestion(provider, cwd)
+						},
+					)
+				} catch (error) {
+					console.error("Error generating commit suggestion:", error)
+				} finally {
+					isExecuting = false // Reset the flag
+				}
+			}
+		})(),
 	}
 }
 

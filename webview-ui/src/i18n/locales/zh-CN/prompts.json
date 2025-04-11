@@ -95,6 +95,10 @@
 			"NEW_TASK": {
 				"label": "新任务",
 				"description": "控制开始新任务时的用户提示词。可在首页对话框中使用。"
+			},
+			"COMMIT": {
+				"label": "生成提交信息",
+				"description": "基于使用git status和diffs的已暂存更改生成语义化提交信息。在源代码管理中暂存更改时可用。"
 			}
 		}
 	},

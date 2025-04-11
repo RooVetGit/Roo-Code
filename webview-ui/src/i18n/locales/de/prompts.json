@@ -95,6 +95,10 @@
 			"NEW_TASK": {
 				"label": "Neue Aufgabe starten",
 				"description": "Starte eine neue Aufgabe mit deiner Eingabe. Verfügbar in der Befehlspalette."
+			},
+			"COMMIT": {
+				"label": "Commit-Nachricht generieren",
+				"description": "Generiere eine semantische Commit-Nachricht basierend auf bereitgestellten Änderungen mit git status und diffs. Verfügbar beim Bereitstellen von Änderungen in der Quellcodeverwaltung."
 			}
 		}
 	},
