@@ -98,8 +98,10 @@
 		"enterProfileName": "Profil adını girin",
 		"createProfile": "Profil oluştur",
 		"cannotDeleteOnlyProfile": "Yalnızca tek profili silemezsiniz",
+		"searchPlaceholder": "Profilleri ara",
+		"noMatchFound": "Eşleşen profil bulunamadı",
 		"vscodeLmDescription": "VS Code Dil Modeli API'si, diğer VS Code uzantıları tarafından sağlanan modelleri çalıştırmanıza olanak tanır (GitHub Copilot dahil ancak bunlarla sınırlı değildir). Başlamanın en kolay yolu, VS Code Marketplace'ten Copilot ve Copilot Chat uzantılarını yüklemektir.",
-		"awsCustomArnUse": "Kullanmak istediğiniz model için geçerli bir AWS Bedrock ARN'si girin. Format örnekleri:",
+		"awsCustomArnUse": "Kullanmak istediğiniz model için geçerli bir Amazon Bedrock ARN'si girin. Format örnekleri:",
 		"awsCustomArnDesc": "ARN içindeki bölgenin yukarıda seçilen AWS Bölgesiyle eşleştiğinden emin olun.",
 		"openRouterApiKey": "OpenRouter API Anahtarı",
 		"getOpenRouterApiKey": "OpenRouter API Anahtarı Al",
@@ -107,6 +109,8 @@
 		"glamaApiKey": "Glama API Anahtarı",
 		"getGlamaApiKey": "Glama API Anahtarı Al",
 		"useCustomBaseUrl": "Özel temel URL kullan",
+		"useHostHeader": "Özel Host başlığı kullan",
+		"useLegacyFormat": "Eski OpenAI API formatını kullan",
 		"requestyApiKey": "Requesty API Anahtarı",
 		"getRequestyApiKey": "Requesty API Anahtarı Al",
 		"openRouterTransformsText": "İstem ve mesaj zincirlerini bağlam boyutuna sıkıştır (<a>OpenRouter Dönüşümleri</a>)",
@@ -131,6 +135,9 @@
 		"awsSessionToken": "AWS Oturum Belirteci",
 		"awsRegion": "AWS Bölgesi",
 		"awsCrossRegion": "Bölgeler arası çıkarım kullan",
+		"enablePromptCaching": "İstem önbelleğini etkinleştir",
+		"enablePromptCachingTitle": "Desteklenen modeller için performansı artırmak ve maliyetleri azaltmak için istem önbelleğini etkinleştir.",
+		"cacheUsageNote": "Not: Önbellek kullanımını görmüyorsanız, farklı bir model seçip ardından istediğiniz modeli tekrar seçmeyi deneyin.",
 		"vscodeLmModel": "Dil Modeli",
 		"vscodeLmWarning": "Not: Bu çok deneysel bir entegrasyondur ve sağlayıcı desteği değişebilir. Bir modelin desteklenmediğine dair bir hata alırsanız, bu sağlayıcı tarafındaki bir sorundur.",
 		"googleCloudSetup": {
@@ -213,6 +220,10 @@
 				}
 			},
 			"resetDefaults": "Varsayılanlara Sıfırla"
+		},
+		"rateLimitSeconds": {
+			"label": "Hız sınırı",
+			"description": "API istekleri arasındaki minimum süre."
 		}
 	},
 	"browser": {
@@ -290,13 +301,33 @@
 		"shellIntegrationTimeout": {
 			"label": "Terminal kabuk entegrasyonu zaman aşımı",
 			"description": "Komutları yürütmeden önce kabuk entegrasyonunun başlatılması için beklenecek maksimum süre. Kabuk başlatma süresi uzun olan kullanıcılar için, terminalde \"Shell Integration Unavailable\" hatalarını görürseniz bu değerin artırılması gerekebilir."
+		},
+		"zdotdir": {
+			"label": "ZDOTDIR işlemeyi etkinleştir",
+			"description": "Etkinleştirildiğinde, zsh kabuğu entegrasyonunu düzgün şekilde işlemek için ZDOTDIR için geçici bir dizin oluşturur. Bu, zsh yapılandırmanızı korurken VSCode kabuk entegrasyonunun zsh ile düzgün çalışmasını sağlar. (deneysel)"
+		},
+		"commandDelay": {
+			"label": "Terminal komut gecikmesi",
+			"description": "Komut yürütmesinden sonra eklenecek gecikme süresi (milisaniye). 0 varsayılan ayarı gecikmeyi tamamen devre dışı bırakır. Bu, zamanlama sorunları olan terminallerde komut çıktısının tam olarak yakalanmasını sağlamaya yardımcı olabilir. Çoğu terminalde bu, `PROMPT_COMMAND='sleep N'` ayarlanarak uygulanır ve PowerShell her komutun sonuna `start-sleep` ekler. Başlangıçta VSCode hata#237208 için bir geçici çözümdü ve gerekli olmayabilir."
+		},
+		"powershellCounter": {
+			"label": "PowerShell sayaç geçici çözümünü etkinleştir",
+			"description": "Etkinleştirildiğinde, komutların doğru şekilde yürütülmesini sağlamak için PowerShell komutlarına bir sayaç ekler. Bu, çıktı yakalama sorunları yaşayabilecek PowerShell terminallerinde yardımcı olur."
+		},
+		"zshClearEolMark": {
+			"label": "ZSH satır sonu işaretini temizle",
+			"description": "Etkinleştirildiğinde, PROMPT_EOL_MARK='' ayarlanarak ZSH satır sonu işaretini temizler. Bu, '%' gibi özel karakterlerle biten komut çıktılarının yorumlanmasında sorun yaşanmasını önler."
+		},
+		"zshOhMy": {
+			"label": "Oh My Zsh entegrasyonunu etkinleştir",
+			"description": "Etkinleştirildiğinde, Oh My Zsh kabuk entegrasyon özelliklerini etkinleştirmek için ITERM_SHELL_INTEGRATION_INSTALLED=Yes ayarlar. (deneysel)"
+		},
+		"zshP10k": {
+			"label": "Powerlevel10k entegrasyonunu etkinleştir",
+			"description": "Etkinleştirildiğinde, Powerlevel10k kabuk entegrasyon özelliklerini etkinleştirmek için POWERLEVEL9K_TERM_SHELL_INTEGRATION=true ayarlar. (deneysel)"
 		}
 	},
 	"advanced": {
-		"rateLimit": {
-			"label": "Hız sınırı",
-			"description": "API istekleri arasındaki minimum süre."
-		},
 		"diff": {
 			"label": "Diff'ler aracılığıyla düzenlemeyi etkinleştir",
 			"description": "Etkinleştirildiğinde, Roo dosyaları daha hızlı düzenleyebilecek ve kesik tam dosya yazımlarını otomatik olarak reddedecektir. En son Claude 3.7 Sonnet modeliyle en iyi şekilde çalışır.",
@@ -366,7 +397,8 @@
 		"azureApiVersion": "Azure API sürümünü ayarla",
 		"gemini": {
 			"freeRequests": "* Dakikada {{count}} isteğe kadar ücretsiz. Bundan sonra, ücretlendirme istem boyutuna bağlıdır.",
-			"pricingDetails": "Daha fazla bilgi için fiyatlandırma ayrıntılarına bakın."
+			"pricingDetails": "Daha fazla bilgi için fiyatlandırma ayrıntılarına bakın.",
+			"billingEstimate": "* Ücretlendirme bir tahmindir - kesin maliyet istem boyutuna bağlıdır."
 		}
 	},
 	"modelPicker": {
@@ -395,7 +427,7 @@
 	},
 	"validation": {
 		"apiKey": "Geçerli bir API anahtarı sağlamalısınız.",
-		"awsRegion": "AWS Bedrock kullanmak için bir bölge seçmelisiniz.",
+		"awsRegion": "Amazon Bedrock kullanmak için bir bölge seçmelisiniz.",
 		"googleCloud": "Geçerli bir Google Cloud proje kimliği ve bölge sağlamalısınız.",
 		"modelId": "Geçerli bir model kimliği sağlamalısınız.",
 		"modelSelector": "Geçerli bir model seçici sağlamalısınız.",

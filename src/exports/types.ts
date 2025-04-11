@@ -41,6 +41,9 @@ type ProviderSettings = {
 				description?: string | undefined
 				reasoningEffort?: ("low" | "medium" | "high") | undefined
 				thinking?: boolean | undefined
+				minTokensPerCachePoint?: number | undefined
+				maxCachePoints?: number | undefined
+				cachableFields?: string[] | undefined
 		  } | null)
 		| undefined
 	glamaApiKey?: string | undefined
@@ -60,6 +63,9 @@ type ProviderSettings = {
 				description?: string | undefined
 				reasoningEffort?: ("low" | "medium" | "high") | undefined
 				thinking?: boolean | undefined
+				minTokensPerCachePoint?: number | undefined
+				maxCachePoints?: number | undefined
+				cachableFields?: string[] | undefined
 		  } | null)
 		| undefined
 	openRouterBaseUrl?: string | undefined
@@ -81,6 +87,8 @@ type ProviderSettings = {
 	vertexRegion?: string | undefined
 	openAiBaseUrl?: string | undefined
 	openAiApiKey?: string | undefined
+	openAiHostHeader?: string | undefined
+	openAiLegacyFormat?: boolean | undefined
 	openAiR1FormatEnabled?: boolean | undefined
 	openAiModelId?: string | undefined
 	openAiCustomModelInfo?:
@@ -97,6 +105,9 @@ type ProviderSettings = {
 				description?: string | undefined
 				reasoningEffort?: ("low" | "medium" | "high") | undefined
 				thinking?: boolean | undefined
+				minTokensPerCachePoint?: number | undefined
+				maxCachePoints?: number | undefined
+				cachableFields?: string[] | undefined
 		  } | null)
 		| undefined
 	openAiUseAzure?: boolean | undefined
@@ -139,6 +150,9 @@ type ProviderSettings = {
 				description?: string | undefined
 				reasoningEffort?: ("low" | "medium" | "high") | undefined
 				thinking?: boolean | undefined
+				minTokensPerCachePoint?: number | undefined
+				maxCachePoints?: number | undefined
+				cachableFields?: string[] | undefined
 		  } | null)
 		| undefined
 	requestyApiKey?: string | undefined
@@ -157,12 +171,16 @@ type ProviderSettings = {
 				description?: string | undefined
 				reasoningEffort?: ("low" | "medium" | "high") | undefined
 				thinking?: boolean | undefined
+				minTokensPerCachePoint?: number | undefined
+				maxCachePoints?: number | undefined
+				cachableFields?: string[] | undefined
 		  } | null)
 		| undefined
 	modelTemperature?: (number | null) | undefined
 	modelMaxTokens?: number | undefined
 	modelMaxThinkingTokens?: number | undefined
 	includeMaxTokens?: boolean | undefined
+	rateLimitSeconds?: number | undefined
 	fakeAi?: unknown | undefined
 }
 
@@ -216,6 +234,7 @@ type GlobalSettings = {
 				cacheReads?: number | undefined
 				totalCost: number
 				size?: number | undefined
+				workspace?: string | undefined
 		  }[]
 		| undefined
 	autoApprovalEnabled?: boolean | undefined
@@ -250,6 +269,12 @@ type GlobalSettings = {
 	maxReadFileLine?: number | undefined
 	terminalOutputLineLimit?: number | undefined
 	terminalShellIntegrationTimeout?: number | undefined
+	terminalCommandDelay?: number | undefined
+	terminalPowershellCounter?: boolean | undefined
+	terminalZshClearEolMark?: boolean | undefined
+	terminalZshOhMy?: boolean | undefined
+	terminalZshP10k?: boolean | undefined
+	terminalZdotdir?: boolean | undefined
 	rateLimitSeconds?: number | undefined
 	diffEnabled?: boolean | undefined
 	fuzzyMatchThreshold?: number | undefined
@@ -370,8 +395,10 @@ type ClineMessage = {
 				| "mcp_server_response"
 				| "new_task_started"
 				| "new_task"
+				| "subtask_result"
 				| "checkpoint_saved"
 				| "rooignore_error"
+				| "diff_error"
 		  )
 		| undefined
 	text?: string | undefined
@@ -453,8 +480,10 @@ type RooCodeEvents = {
 							| "mcp_server_response"
 							| "new_task_started"
 							| "new_task"
+							| "subtask_result"
 							| "checkpoint_saved"
 							| "rooignore_error"
+							| "diff_error"
 					  )
 					| undefined
 				text?: string | undefined

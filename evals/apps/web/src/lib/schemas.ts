@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { globalSettingsSchema } from "@evals/types"
+import { rooCodeSettingsSchema } from "@evals/types"
 
 /**
  * CreateRun
@@ -12,7 +12,7 @@ export const createRunSchema = z
 		description: z.string().optional(),
 		suite: z.enum(["full", "partial"]),
 		exercises: z.array(z.string()).optional(),
-		settings: globalSettingsSchema.optional(),
+		settings: rooCodeSettingsSchema.optional(),
 		concurrency: z.number().int().min(1).max(10).default(2),
 	})
 	.refine((data) => data.suite === "full" || (data.exercises || []).length > 0, {

@@ -86,6 +86,9 @@
 		"wantsToFetch": "Roo vuole recuperare istruzioni dettagliate per aiutare con l'attività corrente"
 	},
 	"error": "Errore",
+	"diffError": {
+		"title": "Modifica non riuscita"
+	},
 	"troubleMessage": "Roo sta avendo problemi...",
 	"apiRequest": {
 		"title": "Richiesta API",
@@ -97,6 +100,7 @@
 	"checkpoint": {
 		"initial": "Checkpoint iniziale",
 		"regular": "Checkpoint",
+		"initializingWarning": "Inizializzazione del checkpoint in corso... Se questa operazione richiede troppo tempo, puoi disattivare i checkpoint nelle <settingsLink>impostazioni</settingsLink> e riavviare l'attività.",
 		"menu": {
 			"viewDiff": "Visualizza differenze",
 			"restore": "Ripristina checkpoint",
@@ -143,7 +147,12 @@
 	},
 	"subtasks": {
 		"wantsToCreate": "Roo vuole creare una nuova sottoattività in modalità <code>{{mode}}</code>:",
-		"wantsToFinish": "Roo vuole completare questa sottoattività"
+		"wantsToFinish": "Roo vuole completare questa sottoattività",
+		"newTaskContent": "Istruzioni sottoattività",
+		"completionContent": "Sottoattività completata",
+		"resultContent": "Risultati sottoattività",
+		"defaultResult": "Per favore continua con la prossima attività.",
+		"completionInstructions": "Sottoattività completata! Puoi rivedere i risultati e suggerire correzioni o prossimi passi. Se tutto sembra a posto, conferma per restituire il risultato all'attività principale."
 	},
 	"questions": {
 		"hasQuestion": "Roo ha una domanda:"
@@ -151,7 +160,10 @@
 	"taskCompleted": "Attività completata",
 	"shellIntegration": {
 		"unavailable": "Integrazione shell non disponibile",
-		"troubleshooting": "Ancora problemi?"
+		"troubleshooting": "Ancora problemi? Clicca qui per la documentazione sull'integrazione della shell.",
+		"checkSettings": "Controlla le soluzioni alternative del terminale nella pagina delle impostazioni",
+		"updateVSCode": "Aggiorna VSCode",
+		"supportedShell": "Assicurati di utilizzare una shell supportata: zsh, bash, fish o PowerShell"
 	},
 	"powershell": {
 		"issues": "Sembra che tu stia avendo problemi con Windows PowerShell, consulta questa"
@@ -211,16 +223,10 @@
 		"copyToInput": "Copia nell'input (o Shift + clic)"
 	},
 	"announcement": {
-		"title": "🎉 Rilasciato Roo Code 3.11",
-		"description": "Roo Code 3.11 porta significativi miglioramenti di prestazioni e nuove funzionalità!",
-		"whatsNew": "Novità",
-		"feature1": "Modifiche veloci - Le modifiche ora vengono applicate molto più velocemente. Meno attesa, più codifica.",
-		"feature2": "Saldi delle chiavi API - Visualizza i tuoi saldi OpenRouter e Requesty nelle impostazioni.",
-		"feature3": "Configurazione MCP a livello di progetto - Ora puoi configurarla per progetto/area di lavoro.",
-		"feature4": "Supporto Gemini migliorato - Tentativi più intelligenti, escaping corretto, aggiunto al provider Vertex.",
-		"feature5": "Importazione/Esportazione impostazioni - Backup o condivisione facile della tua configurazione tra diverse installazioni.",
-		"hideButton": "Nascondi annuncio",
-		"detailsDiscussLinks": "Ottieni maggiori dettagli e partecipa alle discussioni su <discordLink>Discord</discordLink> e <redditLink>Reddit</redditLink> 🚀"
+		"title": "Fai di più con le Attività Boomerang 🪃",
+		"description": "Dividi il lavoro in sottoattività, ognuna eseguita in una modalità specializzata, come code, architect, debug o una modalità personalizzata.",
+		"learnMore": "Scopri di più →",
+		"hideButton": "Nascondi annuncio"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo vuole utilizzare il browser:",

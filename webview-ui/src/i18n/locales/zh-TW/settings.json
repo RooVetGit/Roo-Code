@@ -99,14 +99,18 @@
 		"createProfile": "建立設定檔",
 		"cannotDeleteOnlyProfile": "無法刪除唯一的設定檔",
 		"vscodeLmDescription": "VS Code 語言模型 API 可以讓您使用其他擴充功能（如 GitHub Copilot）提供的模型。最簡單的方式是從 VS Code Marketplace 安裝 Copilot 和 Copilot Chat 擴充套件。",
-		"awsCustomArnUse": "輸入您要使用的模型的有效 AWS Bedrock ARN。格式範例：",
+		"awsCustomArnUse": "輸入您要使用的模型的有效 Amazon Bedrock ARN。格式範例：",
 		"awsCustomArnDesc": "確保 ARN 中的區域與您上面選擇的 AWS 區域相符。",
+		"searchPlaceholder": "搜尋設定檔",
+		"noMatchFound": "找不到符合的設定檔",
 		"openRouterApiKey": "OpenRouter API 金鑰",
 		"getOpenRouterApiKey": "取得 OpenRouter API 金鑰",
 		"apiKeyStorageNotice": "API 金鑰安全儲存於 VSCode 金鑰儲存中",
 		"glamaApiKey": "Glama API 金鑰",
 		"getGlamaApiKey": "取得 Glama API 金鑰",
 		"useCustomBaseUrl": "使用自訂基礎 URL",
+		"useHostHeader": "使用自訂 Host 標頭",
+		"useLegacyFormat": "使用舊版 OpenAI API 格式",
 		"requestyApiKey": "Requesty API 金鑰",
 		"getRequestyApiKey": "取得 Requesty API 金鑰",
 		"openRouterTransformsText": "將提示和訊息鏈壓縮到上下文大小 (<a>OpenRouter 轉換</a>)",
@@ -131,6 +135,9 @@
 		"awsSessionToken": "AWS 工作階段權杖",
 		"awsRegion": "AWS 區域",
 		"awsCrossRegion": "使用跨區域推論",
+		"enablePromptCaching": "啟用提示快取",
+		"enablePromptCachingTitle": "啟用提示快取以提升支援的模型效能並降低成本。",
+		"cacheUsageNote": "注意：如果您沒有看到快取使用情況，請嘗試選擇其他模型，然後重新選擇您想要的模型。",
 		"vscodeLmModel": "語言模型",
 		"vscodeLmWarning": "注意：此整合功能仍處於實驗階段，各供應商的支援程度可能不同。如果出現模型不支援的錯誤，通常是供應商方面的問題。",
 		"googleCloudSetup": {
@@ -213,6 +220,10 @@
 				}
 			},
 			"resetDefaults": "重設為預設值"
+		},
+		"rateLimitSeconds": {
+			"label": "速率限制",
+			"description": "API 請求間的最短時間"
 		}
 	},
 	"browser": {
@@ -290,13 +301,33 @@
 		"shellIntegrationTimeout": {
 			"label": "終端機 Shell 整合逾時",
 			"description": "執行命令前等待 Shell 整合初始化的最長時間。如果您的 Shell 啟動較慢，且終端機出現「Shell 整合無法使用」的錯誤訊息，可能需要提高此數值。"
+		},
+		"zdotdir": {
+			"label": "啟用 ZDOTDIR 處理",
+			"description": "啟用後將建立暫存目錄用於 ZDOTDIR，以正確處理 zsh shell 整合。這確保 VSCode shell 整合能與 zsh 正常運作，同時保留您的 zsh 設定。（實驗性）"
+		},
+		"commandDelay": {
+			"label": "終端機命令延遲",
+			"description": "命令執行後添加的延遲時間（毫秒）。預設值為 0 時完全停用延遲。這可以幫助確保在有計時問題的終端機中完整擷取命令輸出。在大多數終端機中，這是透過設定 `PROMPT_COMMAND='sleep N'` 實現的，而 PowerShell 會在每個命令結尾加入 `start-sleep`。最初是為了解決 VSCode 錯誤#237208，現在可能不再需要。"
+		},
+		"powershellCounter": {
+			"label": "啟用 PowerShell 計數器解決方案",
+			"description": "啟用後，會在 PowerShell 命令中加入計數器以確保命令正確執行。這有助於解決可能存在輸出擷取問題的 PowerShell 終端機。"
+		},
+		"zshClearEolMark": {
+			"label": "清除 ZSH 行尾標記",
+			"description": "啟用後，透過設定 PROMPT_EOL_MARK='' 清除 ZSH 行尾標記。這可以防止命令輸出以特殊字元（如 '%'）結尾時的解析問題。"
+		},
+		"zshOhMy": {
+			"label": "啟用 Oh My Zsh 整合",
+			"description": "啟用後，設定 ITERM_SHELL_INTEGRATION_INSTALLED=Yes 以啟用 Oh My Zsh shell 整合功能。（實驗性）"
+		},
+		"zshP10k": {
+			"label": "啟用 Powerlevel10k 整合",
+			"description": "啟用後，設定 POWERLEVEL9K_TERM_SHELL_INTEGRATION=true 以啟用 Powerlevel10k shell 整合功能。（實驗性）"
 		}
 	},
 	"advanced": {
-		"rateLimit": {
-			"label": "速率限制",
-			"description": "API 請求間的最短時間"
-		},
 		"diff": {
 			"label": "透過差異比對編輯",
 			"description": "啟用後，Roo 可更快速地編輯檔案，並自動拒絕不完整的整檔覆寫。搭配最新的 Claude 3.7 Sonnet 模型效果最佳。",
@@ -366,7 +397,8 @@
 		"azureApiVersion": "設定 Azure API 版本",
 		"gemini": {
 			"freeRequests": "* 每分鐘可免費使用 {{count}} 次請求，超過後將依提示大小計費。",
-			"pricingDetails": "詳細資訊請參閱定價說明。"
+			"pricingDetails": "詳細資訊請參閱定價說明。",
+			"billingEstimate": "* 費用為估算值 - 實際費用取決於提示大小。"
 		}
 	},
 	"modelPicker": {
@@ -394,7 +426,7 @@
 	},
 	"validation": {
 		"apiKey": "請提供有效的 API 金鑰。",
-		"awsRegion": "請選擇要用於 AWS Bedrock 的區域。",
+		"awsRegion": "請選擇要用於 Amazon Bedrock 的區域。",
 		"googleCloud": "請提供有效的 Google Cloud 專案 ID 和區域。",
 		"modelId": "請提供有效的模型 ID。",
 		"modelSelector": "請提供有效的模型選擇器。",

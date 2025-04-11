@@ -1,5 +1,87 @@
 # Roo Code Changelog
 
+## [3.11.13] - 2025-04-11
+
+- Loads of terminal improvements: command delay, PowerShell counter, and ZSH EOL mark (thanks @KJ7LNW!)
+- Add file context tracking system (thanks @samhvw8 and @canvrno!)
+- Improved display of diff errors + easy copying for investigation
+- Fixes to .vscodeignore (thanks @franekp!)
+- Fix a zh-CN translation for model capabilities (thanks @zhangtony239!)
+- Rename AWS Bedrock to Amazon Bedrock (thanks @ronyblum!)
+- Update extension title and description (thanks @StevenTCramer!)
+
+## [3.11.12] - 2025-04-09
+
+- Make Grok3 streaming work with OpenAI Compatible (thanks @amittell!)
+- Tweak diff editing logic to make it more tolerant of model errors
+
+## [3.11.11] - 2025-04-09
+
+- Fix highlighting interaction with mode/profile dropdowns (thanks @atlasgong!)
+- Add the ability to set Host header and legacy OpenAI API in the OpenAI-compatible provider for better proxy support
+- Improvements to TypeScript, C++, Go, Java, Python tree-sitter parsers (thanks @KJ7LNW!)
+- Fixes to terminal working directory logic (thanks @KJ7LNW!)
+- Improve readFileTool XML output format (thanks @KJ7LNW!)
+- Add o1-pro support (thanks @arthurauffray!)
+- Follow symlinked rules files/directories to allow for more flexible rule setups
+- Focus Roo Code in the sidebar when running tasks in the sidebar via the API
+- Improve subtasks UI
+
+## [3.11.10] - 2025-04-08
+
+- Fix bug where nested .roo/rules directories are not respected properly (thanks @taisukeoe!)
+- Handle long command output more efficiently in the chat row (thanks @samhvw8!)
+- Fix cache usage tracking for OpenAI-compatible providers
+- Add custom translation instructions for zh-CN (thanks @System233!)
+- Code cleanup after making rate-limits per-profile (thanks @ross!)
+
+## [3.11.9] - 2025-04-07
+
+- Rate-limit setting updated to be per-profile (thanks @ross and @olweraltuve!)
+- You can now place multiple rules files in the .roo/rules/ and .roo/rules-{mode}/ folders (thanks @upamune!)
+- Prevent unnecessary autoscroll when buttons appear (thanks @shtse8!)
+- Add Gemini 2.5 Pro Preview to Vertex AI (thanks @nbihan-mediware!)
+- Tidy up following ClineProvider refactor (thanks @diarmidmackenzie!)
+- Clamp negative line numbers when reading files (thanks @KJ7LNW!)
+- Enhance Rust tree-sitter parser with advanced language structures (thanks @KJ7LNW!)
+- Persist settings on api.setConfiguration (thanks @gtaylor!)
+- Add deep links to settings sections
+- Add command to focus Roo Code input field (thanks @axkirillov!)
+- Add resize and hover actions to the browser (thanks @SplittyDev!)
+- Add resumeTask and isTaskInHistory to the API (thanks @franekp!)
+- Fix bug displaying boolean/numeric suggested answers
+- Dynamic Vite port detection for webview development (thanks @KJ7LNW!)
+
+## [3.11.8] - 2025-04-05
+
+- Improve combineApiRequests performance to reduce gray screens of death (thanks @kyle-apex!)
+- Add searchable dropdown to API config profiles on the settings screen (thanks @samhvw8!)
+- Add workspace tracking to history items in preparation for future filtering (thanks @samhvw8!)
+- Fix search highlighting UI in history search (thanks @samhvw8!)
+- Add support for .roorules and give deprecation warning for .clinerules (thanks @upamune!)
+- Fix nodejs version format in .tool-versions file (thanks @upamune!)
+
+## [3.11.7] - 2025-04-04
+
+- Improve file tool context formatting and diff error guidance
+- Improve zh-TW localization (thanks @PeterDaveHello!)
+- Implement reference counting for McpHub disposal
+- Update buttons to be more consistent (thanks @kyle-apex!)
+- Improve zh-CN localization (thanks @System233!)
+
+## [3.11.6] - 2025-04-04
+
+- Add the gemini 2.5 pro preview model with upper bound pricing
+
+## [3.11.5] - 2025-04-03
+
+- Add prompt caching for Amazon Bedrock (thanks @Smartsheet-JB-Brown!)
+- Add support for configuring the current working directory of MCP servers (thanks @shoopapa!)
+- Add profile management functions to API (thanks @gtaylor!)
+- Improvements to diff editing functionality, tests, and error messages (thanks @p12tic!)
+- Fix for follow-up questions grabbing the focus (thanks @diarmidmackenzie!)
+- Show menu buttons when popping the extension out into a new tab (thanks @benny123tw!)
+
 ## [3.11.4] - 2025-04-02
 
 - Correctly post state to webview when the current task is cleared (thanks @wkordalski!)

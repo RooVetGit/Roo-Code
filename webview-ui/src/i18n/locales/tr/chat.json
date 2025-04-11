@@ -83,6 +83,9 @@
 	"edit": "Düzenle...",
 	"forNextMode": "sonraki mod için",
 	"error": "Hata",
+	"diffError": {
+		"title": "Düzenleme Başarısız"
+	},
 	"troubleMessage": "Roo sorun yaşıyor...",
 	"apiRequest": {
 		"title": "API İsteği",
@@ -94,6 +97,7 @@
 	"checkpoint": {
 		"initial": "İlk Kontrol Noktası",
 		"regular": "Kontrol Noktası",
+		"initializingWarning": "Kontrol noktası hala başlatılıyor... Bu çok uzun sürerse, <settingsLink>ayarlar</settingsLink> bölümünden kontrol noktalarını devre dışı bırakabilir ve görevinizi yeniden başlatabilirsiniz.",
 		"menu": {
 			"viewDiff": "Farkları Görüntüle",
 			"restore": "Kontrol Noktasını Geri Yükle",
@@ -143,7 +147,12 @@
 	},
 	"subtasks": {
 		"wantsToCreate": "Roo <code>{{mode}}</code> modunda yeni bir alt görev oluşturmak istiyor:",
-		"wantsToFinish": "Roo bu alt görevi bitirmek istiyor"
+		"wantsToFinish": "Roo bu alt görevi bitirmek istiyor",
+		"newTaskContent": "Alt Görev Talimatları",
+		"completionContent": "Alt Görev Tamamlandı",
+		"resultContent": "Alt Görev Sonuçları",
+		"defaultResult": "Lütfen sonraki göreve devam edin.",
+		"completionInstructions": "Alt görev tamamlandı! Sonuçları inceleyebilir ve düzeltmeler veya sonraki adımlar önerebilirsiniz. Her şey iyi görünüyorsa, sonucu üst göreve döndürmek için onaylayın."
 	},
 	"questions": {
 		"hasQuestion": "Roo'nun bir sorusu var:"
@@ -151,7 +160,10 @@
 	"taskCompleted": "Görev Tamamlandı",
 	"shellIntegration": {
 		"unavailable": "Kabuk Entegrasyonu Kullanılamıyor",
-		"troubleshooting": "Hala sorun mu yaşıyorsunuz?"
+		"troubleshooting": "Hala sorun mu yaşıyorsunuz? Kabuk entegrasyonu belgelerine göz atmak için buraya tıklayın.",
+		"checkSettings": "Ayarlar sayfasındaki terminal geçici çözümlerini kontrol et",
+		"updateVSCode": "VSCode'u güncelle",
+		"supportedShell": "Desteklenen bir kabuk kullandığından emin ol: zsh, bash, fish veya PowerShell"
 	},
 	"powershell": {
 		"issues": "Windows PowerShell ile ilgili sorunlar yaşıyor gibi görünüyorsunuz, lütfen şu konuya bakın"
@@ -211,16 +223,10 @@
 		"copyToInput": "Giriş alanına kopyala (veya Shift + tıklama)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.11 Yayınlandı",
-		"description": "Roo Code 3.11 önemli performans iyileştirmeleri ve yeni özellikler getiriyor!",
-		"whatsNew": "Yenilikler",
-		"feature1": "Hızlı Düzenlemeler - Düzenlemeler artık çok daha hızlı uygulanıyor. Daha az bekleme, daha çok kodlama.",
-		"feature2": "API Anahtar Bakiyeleri - OpenRouter ve Requesty bakiyelerinizi ayarlarda görüntüleyin.",
-		"feature3": "Proje Seviyesinde MCP Yapılandırması - Artık her proje/çalışma alanı için yapılandırabilirsiniz.",
-		"feature4": "Geliştirilmiş Gemini Desteği - Daha akıllı yeniden denemeler, düzeltilmiş kaçış karakterleri, Vertex sağlayıcısına eklendi.",
-		"feature5": "Ayarları İçe/Dışa Aktarma - Yapılandırmanızı farklı ortamlar arasında kolayca yedekleyin veya paylaşın.",
-		"hideButton": "Duyuruyu gizle",
-		"detailsDiscussLinks": "<discordLink>Discord</discordLink> ve <redditLink>Reddit</redditLink> üzerinde daha fazla ayrıntı edinin ve tartışmalara katılın 🚀"
+		"title": "Bumerang Görevleriyle Daha Fazlasını Yapın 🪃",
+		"description": "İşi alt görevlere bölerek, her birini code, architect, debug veya özel mod gibi özelleştirilmiş bir modda çalıştırın.",
+		"learnMore": "Daha fazla bilgi →",
+		"hideButton": "Duyuruyu gizle"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo tarayıcıyı kullanmak istiyor:",

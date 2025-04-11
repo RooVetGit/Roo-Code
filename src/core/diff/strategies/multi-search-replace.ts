@@ -29,6 +29,48 @@ function getSimilarity(original: string, search: string): number {
 	return 1 - dist / maxLength
 }
 
+/**
+ * Performs a "middle-out" search of `lines` (between [startIndex, endIndex]) to find
+ * the slice that is most similar to `searchChunk`. Returns the best score, index, and matched text.
+ */
+function fuzzySearch(lines: string[], searchChunk: string, startIndex: number, endIndex: number) {
+	let bestScore = 0
+	let bestMatchIndex = -1
+	let bestMatchContent = ""
+	const searchLen = searchChunk.split(/\r?\n/).length
+
+	// Middle-out from the midpoint
+	const midPoint = Math.floor((startIndex + endIndex) / 2)
+	let leftIndex = midPoint
+	let rightIndex = midPoint + 1
+
+	while (leftIndex >= startIndex || rightIndex <= endIndex - searchLen) {
+		if (leftIndex >= startIndex) {
+			const originalChunk = lines.slice(leftIndex, leftIndex + searchLen).join("\n")
+			const similarity = getSimilarity(originalChunk, searchChunk)
+			if (similarity > bestScore) {
+				bestScore = similarity
+				bestMatchIndex = leftIndex
+				bestMatchContent = originalChunk
+			}
+			leftIndex--
+		}
+
+		if (rightIndex <= endIndex - searchLen) {
+			const originalChunk = lines.slice(rightIndex, rightIndex + searchLen).join("\n")
+			const similarity = getSimilarity(originalChunk, searchChunk)
+			if (similarity > bestScore) {
+				bestScore = similarity
+				bestMatchIndex = rightIndex
+				bestMatchContent = originalChunk
+			}
+			rightIndex++
+		}
+	}
+
+	return { bestScore, bestMatchIndex, bestMatchContent }
+}
+
 export class MultiSearchReplaceDiffStrategy implements DiffStrategy {
 	private fuzzyThreshold: number
 	private bufferLines: number
@@ -57,7 +99,7 @@ When applying the diffs, be extra careful to remember to change any closing brac
 ALWAYS make as many changes in a single 'apply_diff' request as possible using multiple SEARCH/REPLACE blocks
 
 Parameters:
-- path: (required) The path of the file to modify (relative to the current working directory ${args.cwd})
+- path: (required) The path of the file to modify (relative to the current workspace directory ${args.cwd})
 - diff: (required) The search/replace block defining the changes.
 
 Diff format:
@@ -110,7 +152,7 @@ Search/Replace content with multi edits:
 :start_line:1
 :end_line:2
 -------
-def calculate_sum(items):
+def calculate_total(items):
     sum = 0
 =======
 def calculate_sum(items):
@@ -143,9 +185,9 @@ Only use a single line of '=======' between search and replacement content, beca
 
 	private unescapeMarkers(content: string): string {
 		return content
-			.replace(/^\\<<<<<<< SEARCH/gm, "<<<<<<< SEARCH")
+			.replace(/^\\<<<<<<</gm, "<<<<<<<")
 			.replace(/^\\=======/gm, "=======")
-			.replace(/^\\>>>>>>> REPLACE/gm, ">>>>>>> REPLACE")
+			.replace(/^\\>>>>>>>/gm, ">>>>>>>")
 			.replace(/^\\-------/gm, "-------")
 			.replace(/^\\:end_line:/gm, ":end_line:")
 			.replace(/^\\:start_line:/gm, ":start_line:")
@@ -162,8 +204,10 @@ Only use a single line of '=======' between search and replacement content, beca
 		const SEARCH = "<<<<<<< SEARCH"
 		const SEP = "======="
 		const REPLACE = ">>>>>>> REPLACE"
+		const SEARCH_PREFIX = "<<<<<<<"
+		const REPLACE_PREFIX = ">>>>>>>"
 
-		const reportError = (found: string, expected: string) => ({
+		const reportMergeConflictError = (found: string, expected: string) => ({
 			success: false,
 			error:
 				`ERROR: Special marker '${found}' found in your diff content at line ${state.line}:\n` +
@@ -187,27 +231,62 @@ Only use a single line of '=======' between search and replacement content, beca
 				`\\${REPLACE}\n`,
 		})
 
+		const reportInvalidDiffError = (found: string, expected: string) => ({
+			success: false,
+			error:
+				`ERROR: Diff block is malformed: marker '${found}' found in your diff content at line ${state.line}. Expected: ${expected}\n` +
+				"\n" +
+				"CORRECT FORMAT:\n\n" +
+				"<<<<<<< SEARCH\n" +
+				":start_line: (required) The line number of original content where the search block starts.\n" +
+				":end_line: (required) The line number of original content  where the search block ends.\n" +
+				"-------\n" +
+				"[exact content to find including whitespace]\n" +
+				"=======\n" +
+				"[new content to replace with]\n" +
+				">>>>>>> REPLACE\n",
+		})
+
+		const lines = diffContent.split("\n")
+		const searchCount = lines.filter((l) => l.trim() === SEARCH).length
+		const sepCount = lines.filter((l) => l.trim() === SEP).length
+		const replaceCount = lines.filter((l) => l.trim() === REPLACE).length
+
+		const likelyBadStructure = searchCount !== replaceCount || sepCount < searchCount
+
 		for (const line of diffContent.split("\n")) {
 			state.line++
 			const marker = line.trim()
 
 			switch (state.current) {
 				case State.START:
-					if (marker === SEP) return reportError(SEP, SEARCH)
-					if (marker === REPLACE) return reportError(REPLACE, SEARCH)
+					if (marker === SEP)
+						return likelyBadStructure
+							? reportInvalidDiffError(SEP, SEARCH)
+							: reportMergeConflictError(SEP, SEARCH)
+					if (marker === REPLACE) return reportInvalidDiffError(REPLACE, SEARCH)
+					if (marker.startsWith(REPLACE_PREFIX)) return reportMergeConflictError(marker, SEARCH)
 					if (marker === SEARCH) state.current = State.AFTER_SEARCH
+					else if (marker.startsWith(SEARCH_PREFIX)) return reportMergeConflictError(marker, SEARCH)
 					break
 
 				case State.AFTER_SEARCH:
-					if (marker === SEARCH) return reportError(SEARCH, SEP)
-					if (marker === REPLACE) return reportError(REPLACE, SEP)
+					if (marker === SEARCH) return reportInvalidDiffError(SEARCH, SEP)
+					if (marker.startsWith(SEARCH_PREFIX)) return reportMergeConflictError(marker, SEARCH)
+					if (marker === REPLACE) return reportInvalidDiffError(REPLACE, SEP)
+					if (marker.startsWith(REPLACE_PREFIX)) return reportMergeConflictError(marker, SEARCH)
 					if (marker === SEP) state.current = State.AFTER_SEPARATOR
 					break
 
 				case State.AFTER_SEPARATOR:
-					if (marker === SEARCH) return reportError(SEARCH, REPLACE)
-					if (marker === SEP) return reportError(SEP, REPLACE)
+					if (marker === SEARCH) return reportInvalidDiffError(SEARCH, REPLACE)
+					if (marker.startsWith(SEARCH_PREFIX)) return reportMergeConflictError(marker, REPLACE)
+					if (marker === SEP)
+						return likelyBadStructure
+							? reportInvalidDiffError(SEP, REPLACE)
+							: reportMergeConflictError(SEP, REPLACE)
 					if (marker === REPLACE) state.current = State.START
+					else if (marker.startsWith(REPLACE_PREFIX)) return reportMergeConflictError(marker, REPLACE)
 					break
 			}
 		}
@@ -216,7 +295,9 @@ Only use a single line of '=======' between search and replacement content, beca
 			? { success: true }
 			: {
 					success: false,
-					error: `ERROR: Unexpected end of sequence: Expected '${state.current === State.AFTER_SEARCH ? SEP : REPLACE}' was not found.`,
+					error: `ERROR: Unexpected end of sequence: Expected '${
+						state.current === State.AFTER_SEARCH ? "=======" : ">>>>>>> REPLACE"
+					}' was not found.`,
 				}
 	}
 
@@ -292,19 +373,21 @@ Only use a single line of '=======' between search and replacement content, beca
 			}))
 			.sort((a, b) => a.startLine - b.startLine)
 
-		for (let { searchContent, replaceContent, startLine, endLine } of replacements) {
-			startLine += startLine === 0 ? 0 : delta
-			endLine += delta
+		for (const replacement of replacements) {
+			let { searchContent, replaceContent } = replacement
+			let startLine = replacement.startLine + (replacement.startLine === 0 ? 0 : delta)
+			let endLine = replacement.endLine + delta
 
 			// First unescape any escaped markers in the content
 			searchContent = this.unescapeMarkers(searchContent)
 			replaceContent = this.unescapeMarkers(replaceContent)
 
 			// Strip line numbers from search and replace content if every line starts with a line number
-			if (
+			const hasAllLineNumbers =
 				(everyLineHasLineNumbers(searchContent) && everyLineHasLineNumbers(replaceContent)) ||
 				(everyLineHasLineNumbers(searchContent) && replaceContent.trim() === "")
-			) {
+
+			if (hasAllLineNumbers) {
 				searchContent = stripLineNumbers(searchContent)
 				replaceContent = stripLineNumbers(replaceContent)
 			}
@@ -323,8 +406,8 @@ Only use a single line of '=======' between search and replacement content, beca
 			}
 
 			// Split content into lines, handling both \n and \r\n
-			const searchLines = searchContent === "" ? [] : searchContent.split(/\r?\n/)
-			const replaceLines = replaceContent === "" ? [] : replaceContent.split(/\r?\n/)
+			let searchLines = searchContent === "" ? [] : searchContent.split(/\r?\n/)
+			let replaceLines = replaceContent === "" ? [] : replaceContent.split(/\r?\n/)
 
 			// Validate that empty search requires start line
 			if (searchLines.length === 0 && !startLine) {
@@ -348,7 +431,7 @@ Only use a single line of '=======' between search and replacement content, beca
 			let matchIndex = -1
 			let bestMatchScore = 0
 			let bestMatchContent = ""
-			const searchChunk = searchLines.join("\n")
+			let searchChunk = searchLines.join("\n")
 
 			// Determine search bounds
 			let searchStartIndex = 0
@@ -384,68 +467,70 @@ Only use a single line of '=======' between search and replacement content, beca
 
 			// If no match found yet, try middle-out search within bounds
 			if (matchIndex === -1) {
-				const midPoint = Math.floor((searchStartIndex + searchEndIndex) / 2)
-				let leftIndex = midPoint
-				let rightIndex = midPoint + 1
-
-				// Search outward from the middle within bounds
-				while (leftIndex >= searchStartIndex || rightIndex <= searchEndIndex - searchLines.length) {
-					// Check left side if still in range
-					if (leftIndex >= searchStartIndex) {
-						const originalChunk = resultLines.slice(leftIndex, leftIndex + searchLines.length).join("\n")
-						const similarity = getSimilarity(originalChunk, searchChunk)
-						if (similarity > bestMatchScore) {
-							bestMatchScore = similarity
-							matchIndex = leftIndex
-							bestMatchContent = originalChunk
-						}
-						leftIndex--
-					}
-
-					// Check right side if still in range
-					if (rightIndex <= searchEndIndex - searchLines.length) {
-						const originalChunk = resultLines.slice(rightIndex, rightIndex + searchLines.length).join("\n")
-						const similarity = getSimilarity(originalChunk, searchChunk)
-						if (similarity > bestMatchScore) {
-							bestMatchScore = similarity
-							matchIndex = rightIndex
-							bestMatchContent = originalChunk
-						}
-						rightIndex++
-					}
-				}
+				const {
+					bestScore,
+					bestMatchIndex,
+					bestMatchContent: midContent,
+				} = fuzzySearch(resultLines, searchChunk, searchStartIndex, searchEndIndex)
+				matchIndex = bestMatchIndex
+				bestMatchScore = bestScore
+				bestMatchContent = midContent
 			}
 
-			// Require similarity to meet threshold
+			// Try aggressive line number stripping as a fallback if regular matching fails
 			if (matchIndex === -1 || bestMatchScore < this.fuzzyThreshold) {
-				const searchChunk = searchLines.join("\n")
-				const originalContentSection =
-					startLine !== undefined && endLine !== undefined
-						? `\n\nOriginal Content:\n${addLineNumbers(
-								resultLines
-									.slice(
-										Math.max(0, startLine - 1 - this.bufferLines),
-										Math.min(resultLines.length, endLine + this.bufferLines),
-									)
-									.join("\n"),
-								Math.max(1, startLine - this.bufferLines),
-							)}`
-						: `\n\nOriginal Content:\n${addLineNumbers(resultLines.join("\n"))}`
+				// Strip both search and replace content once (simultaneously)
+				const aggressiveSearchContent = stripLineNumbers(searchContent, true)
+				const aggressiveReplaceContent = stripLineNumbers(replaceContent, true)
 
-				const bestMatchSection = bestMatchContent
-					? `\n\nBest Match Found:\n${addLineNumbers(bestMatchContent, matchIndex + 1)}`
-					: `\n\nBest Match Found:\n(no match)`
+				const aggressiveSearchLines = aggressiveSearchContent ? aggressiveSearchContent.split(/\r?\n/) : []
+				const aggressiveSearchChunk = aggressiveSearchLines.join("\n")
 
-				const lineRange =
-					startLine || endLine
-						? ` at ${startLine ? `start: ${startLine}` : "start"} to ${endLine ? `end: ${endLine}` : "end"}`
-						: ""
+				// Try middle-out search again with aggressive stripped content (respecting the same search bounds)
+				const {
+					bestScore,
+					bestMatchIndex,
+					bestMatchContent: aggContent,
+				} = fuzzySearch(resultLines, aggressiveSearchChunk, searchStartIndex, searchEndIndex)
+				if (bestMatchIndex !== -1 && bestScore >= this.fuzzyThreshold) {
+					matchIndex = bestMatchIndex
+					bestMatchScore = bestScore
+					bestMatchContent = aggContent
+					// Replace the original search/replace with their stripped versions
+					searchContent = aggressiveSearchContent
+					replaceContent = aggressiveReplaceContent
+					searchLines = aggressiveSearchLines
+					replaceLines = replaceContent ? replaceContent.split(/\r?\n/) : []
+				} else {
+					// No match found with either method
+					const originalContentSection =
+						startLine !== undefined && endLine !== undefined
+							? `\n\nOriginal Content:\n${addLineNumbers(
+									resultLines
+										.slice(
+											Math.max(0, startLine - 1 - this.bufferLines),
+											Math.min(resultLines.length, endLine + this.bufferLines),
+										)
+										.join("\n"),
+									Math.max(1, startLine - this.bufferLines),
+								)}`
+							: `\n\nOriginal Content:\n${addLineNumbers(resultLines.join("\n"))}`
 
-				diffResults.push({
-					success: false,
-					error: `No sufficiently similar match found${lineRange} (${Math.floor(bestMatchScore * 100)}% similar, needs ${Math.floor(this.fuzzyThreshold * 100)}%)\n\nDebug Info:\n- Similarity Score: ${Math.floor(bestMatchScore * 100)}%\n- Required Threshold: ${Math.floor(this.fuzzyThreshold * 100)}%\n- Search Range: ${startLine && endLine ? `lines ${startLine}-${endLine}` : "start to end"}\n- Tip: Use read_file to get the latest content of the file before attempting the diff again, as the file content may have changed\n\nSearch Content:\n${searchChunk}${bestMatchSection}${originalContentSection}`,
-				})
-				continue
+					const bestMatchSection = bestMatchContent
+						? `\n\nBest Match Found:\n${addLineNumbers(bestMatchContent, matchIndex + 1)}`
+						: `\n\nBest Match Found:\n(no match)`
+
+					const lineRange =
+						startLine || endLine
+							? ` at ${startLine ? `start: ${startLine}` : "start"} to ${endLine ? `end: ${endLine}` : "end"}`
+							: ""
+
+					diffResults.push({
+						success: false,
+						error: `No sufficiently similar match found${lineRange} (${Math.floor(bestMatchScore * 100)}% similar, needs ${Math.floor(this.fuzzyThreshold * 100)}%)\n\nDebug Info:\n- Similarity Score: ${Math.floor(bestMatchScore * 100)}%\n- Required Threshold: ${Math.floor(this.fuzzyThreshold * 100)}%\n- Search Range: ${startLine && endLine ? `lines ${startLine}-${endLine}` : "start to end"}\n- Tried both standard and aggressive line number stripping\n- Tip: Use the read_file tool to get the latest content of the file before attempting to use the apply_diff tool again, as the file content may have changed\n\nSearch Content:\n${searchChunk}${bestMatchSection}${originalContentSection}`,
+					})
+					continue
+				}
 			}
 
 			// Get the matched lines from the original content

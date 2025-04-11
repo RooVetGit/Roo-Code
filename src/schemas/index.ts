@@ -112,6 +112,9 @@ export const modelInfoSchema = z.object({
 	description: z.string().optional(),
 	reasoningEffort: z.enum(["low", "medium", "high"]).optional(),
 	thinking: z.boolean().optional(),
+	minTokensPerCachePoint: z.number().optional(),
+	maxCachePoints: z.number().optional(),
+	cachableFields: z.array(z.string()).optional(),
 })
 
 export type ModelInfo = z.infer<typeof modelInfoSchema>
@@ -143,6 +146,7 @@ export const historyItemSchema = z.object({
 	cacheReads: z.number().optional(),
 	totalCost: z.number(),
 	size: z.number().optional(),
+	workspace: z.string().optional(),
 })
 
 export type HistoryItem = z.infer<typeof historyItemSchema>
@@ -315,7 +319,7 @@ export const providerSettingsSchema = z.object({
 	openRouterBaseUrl: z.string().optional(),
 	openRouterSpecificProvider: z.string().optional(),
 	openRouterUseMiddleOutTransform: z.boolean().optional(),
-	// AWS Bedrock
+	// Amazon Bedrock
 	awsAccessKey: z.string().optional(),
 	awsSecretKey: z.string().optional(),
 	awsSessionToken: z.string().optional(),
@@ -334,6 +338,8 @@ export const providerSettingsSchema = z.object({
 	// OpenAI
 	openAiBaseUrl: z.string().optional(),
 	openAiApiKey: z.string().optional(),
+	openAiHostHeader: z.string().optional(),
+	openAiLegacyFormat: z.boolean().optional(),
 	openAiR1FormatEnabled: z.boolean().optional(),
 	openAiModelId: z.string().optional(),
 	openAiCustomModelInfo: modelInfoSchema.nullish(),
@@ -382,6 +388,7 @@ export const providerSettingsSchema = z.object({
 	modelMaxThinkingTokens: z.number().optional(),
 	// Generic
 	includeMaxTokens: z.boolean().optional(),
+	rateLimitSeconds: z.number().optional(),
 	// Fake AI
 	fakeAi: z.unknown().optional(),
 })
@@ -407,7 +414,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	openRouterBaseUrl: undefined,
 	openRouterSpecificProvider: undefined,
 	openRouterUseMiddleOutTransform: undefined,
-	// AWS Bedrock
+	// Amazon Bedrock
 	awsAccessKey: undefined,
 	awsSecretKey: undefined,
 	awsSessionToken: undefined,
@@ -426,6 +433,8 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	// OpenAI
 	openAiBaseUrl: undefined,
 	openAiApiKey: undefined,
+	openAiHostHeader: undefined,
+	openAiLegacyFormat: undefined,
 	openAiR1FormatEnabled: undefined,
 	openAiModelId: undefined,
 	openAiCustomModelInfo: undefined,
@@ -466,6 +475,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	modelMaxThinkingTokens: undefined,
 	// Generic
 	includeMaxTokens: undefined,
+	rateLimitSeconds: undefined,
 	// Fake AI
 	fakeAi: undefined,
 }
@@ -522,6 +532,12 @@ export const globalSettingsSchema = z.object({
 
 	terminalOutputLineLimit: z.number().optional(),
 	terminalShellIntegrationTimeout: z.number().optional(),
+	terminalCommandDelay: z.number().optional(),
+	terminalPowershellCounter: z.boolean().optional(),
+	terminalZshClearEolMark: z.boolean().optional(),
+	terminalZshOhMy: z.boolean().optional(),
+	terminalZshP10k: z.boolean().optional(),
+	terminalZdotdir: z.boolean().optional(),
 
 	rateLimitSeconds: z.number().optional(),
 	diffEnabled: z.boolean().optional(),
@@ -592,6 +608,12 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 
 	terminalOutputLineLimit: undefined,
 	terminalShellIntegrationTimeout: undefined,
+	terminalCommandDelay: undefined,
+	terminalPowershellCounter: undefined,
+	terminalZshClearEolMark: undefined,
+	terminalZshOhMy: undefined,
+	terminalZshP10k: undefined,
+	terminalZdotdir: undefined,
 
 	rateLimitSeconds: undefined,
 	diffEnabled: undefined,
@@ -729,8 +751,10 @@ export const clineSays = [
 	"mcp_server_response",
 	"new_task_started",
 	"new_task",
+	"subtask_result",
 	"checkpoint_saved",
 	"rooignore_error",
+	"diff_error",
 ] as const
 
 export const clineSaySchema = z.enum(clineSays)

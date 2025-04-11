@@ -28,18 +28,57 @@ describe("MultiSearchReplaceDiffStrategy", () => {
 			expect(strategy["validateMarkerSequencing"](diff).success).toBe(true)
 		})
 
+		it("validates multiple correct marker sequences with line numbers", () => {
+			const diff =
+				"<<<<<<< SEARCH\n" +
+				":start_line:10\n" +
+				":end_line:11\n" +
+				"-------\n" +
+				"content1\n" +
+				"=======\n" +
+				"new1\n" +
+				">>>>>>> REPLACE\n\n" +
+				"<<<<<<< SEARCH\n" +
+				":start_line:10\n" +
+				":end_line:11\n" +
+				"-------\n" +
+				"content2\n" +
+				"=======\n" +
+				"new2\n" +
+				">>>>>>> REPLACE"
+			expect(strategy["validateMarkerSequencing"](diff).success).toBe(true)
+		})
+
 		it("detects separator before search", () => {
 			const diff = "=======\n" + "content\n" + ">>>>>>> REPLACE"
 			const result = strategy["validateMarkerSequencing"](diff)
 			expect(result.success).toBe(false)
 			expect(result.error).toContain("'=======' found in your diff content")
+			expect(result.error).toContain("Diff block is malformed")
 		})
 
-		it("detects replace before separator", () => {
+		it("detects missing separator", () => {
 			const diff = "<<<<<<< SEARCH\n" + "content\n" + ">>>>>>> REPLACE"
 			const result = strategy["validateMarkerSequencing"](diff)
 			expect(result.success).toBe(false)
 			expect(result.error).toContain("'>>>>>>> REPLACE' found in your diff content")
+			expect(result.error).toContain("Diff block is malformed")
+		})
+
+		it("detects two separators", () => {
+			const diff = "<<<<<<< SEARCH\n" + "content\n" + "=======\n" + "=======\n" + ">>>>>>> REPLACE"
+			const result = strategy["validateMarkerSequencing"](diff)
+			expect(result.success).toBe(false)
+			expect(result.error).toContain("'=======' found in your diff content")
+			expect(result.error).toContain("When removing merge conflict markers")
+		})
+
+		it("detects replace before separator (merge conflict message)", () => {
+			const diff = "<<<<<<< SEARCH\n" + "content\n" + ">>>>>>>"
+			const result = strategy["validateMarkerSequencing"](diff)
+			expect(result.success).toBe(false)
+			expect(result.error).toContain("'>>>>>>>' found in your diff content")
+			expect(result.error).toContain("When removing merge conflict markers")
 		})
 
 		it("detects incomplete sequence", () => {
@@ -776,23 +815,6 @@ function five() {
 					}
 				})
 
-				it("should not strip when not all lines have numbers in either section", async () => {
-					const originalContent = "function test() {\n    return true;\n}\n"
-					const diffContent = `test.ts
-<<<<<<< SEARCH
-1 | function test() {
-2 |     return true;
-3 | }
-=======
-1 | function test() {
-    return false;
-3 | }
->>>>>>> REPLACE`
-
-					const result = await strategy.applyDiff(originalContent, diffContent)
-					expect(result.success).toBe(false)
-				})
-
 				it("should preserve content that naturally starts with pipe", async () => {
 					const originalContent = "|header|another|\n|---|---|\n|data|more|\n"
 					const diffContent = `test.ts
@@ -811,6 +833,59 @@ function five() {
 					if (result.success) {
 						expect(result.content).toBe("|header|another|\n|---|---|\n|data|updated|\n")
 					}
+				})
+
+				describe("aggressive line number stripping fallback", () => {
+					// Tests for aggressive line number stripping fallback
+					it("should use aggressive line number stripping when line numbers are inconsistent", async () => {
+						const originalContent = "function test() {\n    return true;\n}\n"
+
+						const diffContent = [
+							"<<<<<<< SEARCH",
+							":start_line:1",
+							":end_line:3",
+							"-------",
+							"1 | function test() {",
+							"    return true;", // missing line number
+							"3 | }",
+							"=======",
+							"function test() {",
+							"    return fallback;",
+							"}",
+							">>>>>>> REPLACE",
+						].join("\n")
+
+						const result = await strategy.applyDiff(originalContent, diffContent)
+						expect(result.success).toBe(true)
+						if (result.success) {
+							expect(result.content).toBe("function test() {\n    return fallback;\n}\n")
+						}
+					})
+
+					it("should handle pipe characters without numbers using aggressive fallback", async () => {
+						const originalContent = "function test() {\n    return true;\n}\n"
+
+						const diffContent = [
+							"<<<<<<< SEARCH",
+							":start_line:1",
+							":end_line:3",
+							"-------",
+							"| function test() {",
+							"|     return true;",
+							"| }",
+							"=======",
+							"function test() {",
+							"    return piped;",
+							"}",
+							">>>>>>> REPLACE",
+						].join("\n")
+
+						const result = await strategy.applyDiff(originalContent, diffContent)
+						expect(result.success).toBe(true)
+						if (result.success) {
+							expect(result.content).toBe("function test() {\n    return piped;\n}\n")
+						}
+					})
 				})
 
 				it("should preserve indentation when stripping line numbers", async () => {
@@ -1395,6 +1470,25 @@ function five() {
 						">>>>>>> REPLACE"
 					const result = strategy["validateMarkerSequencing"](diff)
 					expect(result.success).toBe(true)
+				})
+
+				it("handles escaping of markers with custom suffixes", async () => {
+					const originalContent = "before\n<<<<<<< HEAD\nmiddle\n>>>>>>> feature-branch\nafter\n"
+					const diffContent =
+						"<<<<<<< SEARCH\n" +
+						"before\n" +
+						"\\<<<<<<< HEAD\n" +
+						"middle\n" +
+						"\\>>>>>>> feature-branch\n" +
+						"after\n" +
+						"=======\n" +
+						"replaced content\n" +
+						">>>>>>> REPLACE"
+					const result = await strategy.applyDiff(originalContent, diffContent)
+					expect(result.success).toBe(true)
+					if (result.success) {
+						expect(result.content).toBe("replaced content\n")
+					}
 				})
 
 				it("detects separator when expecting replace", () => {
@@ -2211,10 +2305,10 @@ function two() {
 			strategy = new MultiSearchReplaceDiffStrategy()
 		})
 
-		it("should include the current working directory", async () => {
+		it("should include the current workspace directory", async () => {
 			const cwd = "/test/dir"
 			const description = await strategy.getToolDescription({ cwd })
-			expect(description).toContain(`relative to the current working directory ${cwd}`)
+			expect(description).toContain(`relative to the current workspace directory ${cwd}`)
 		})
 
 		it("should include required format elements", async () => {

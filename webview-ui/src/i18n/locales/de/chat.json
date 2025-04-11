@@ -83,6 +83,9 @@
 	"edit": "Bearbeiten...",
 	"forNextMode": "für nächsten Modus",
 	"error": "Fehler",
+	"diffError": {
+		"title": "Bearbeitung fehlgeschlagen"
+	},
 	"troubleMessage": "Roo hat Probleme...",
 	"apiRequest": {
 		"title": "API-Anfrage",
@@ -94,6 +97,7 @@
 	"checkpoint": {
 		"initial": "Initialer Checkpoint",
 		"regular": "Checkpoint",
+		"initializingWarning": "Checkpoint wird noch initialisiert... Falls dies zu lange dauert, kannst du Checkpoints in den <settingsLink>Einstellungen</settingsLink> deaktivieren und deine Aufgabe neu starten.",
 		"menu": {
 			"viewDiff": "Unterschiede anzeigen",
 			"restore": "Checkpoint wiederherstellen",
@@ -143,7 +147,12 @@
 	},
 	"subtasks": {
 		"wantsToCreate": "Roo möchte eine neue Teilaufgabe im <code>{{mode}}</code>-Modus erstellen:",
-		"wantsToFinish": "Roo möchte diese Teilaufgabe abschließen"
+		"wantsToFinish": "Roo möchte diese Teilaufgabe abschließen",
+		"newTaskContent": "Teilaufgabenanweisungen",
+		"completionContent": "Teilaufgabe abgeschlossen",
+		"resultContent": "Teilaufgabenergebnisse",
+		"defaultResult": "Bitte fahre mit der nächsten Aufgabe fort.",
+		"completionInstructions": "Teilaufgabe abgeschlossen! Du kannst die Ergebnisse überprüfen und Korrekturen oder nächste Schritte vorschlagen. Wenn alles gut aussieht, bestätige, um das Ergebnis an die übergeordnete Aufgabe zurückzugeben."
 	},
 	"questions": {
 		"hasQuestion": "Roo hat eine Frage:"
@@ -151,7 +160,10 @@
 	"taskCompleted": "Aufgabe abgeschlossen",
 	"shellIntegration": {
 		"unavailable": "Shell-Integration nicht verfügbar",
-		"troubleshooting": "Immer noch Probleme?"
+		"troubleshooting": "Immer noch Probleme? Klicke hier für die Shell-Integrationsdokumentation.",
+		"checkSettings": "Überprüfe die Terminal-Workarounds in den Einstellungen",
+		"updateVSCode": "VSCode aktualisieren",
+		"supportedShell": "Stelle sicher, dass du eine unterstützte Shell verwendest: zsh, bash, fish oder PowerShell"
 	},
 	"powershell": {
 		"issues": "Es scheint, dass du Probleme mit Windows PowerShell hast, bitte sieh dir dies an"
@@ -211,16 +223,10 @@
 		"copyToInput": "In Eingabefeld kopieren (oder Shift + Klick)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.11 veröffentlicht",
-		"description": "Roo Code 3.11 bringt signifikante Leistungsverbesserungen und neue Funktionen!",
-		"whatsNew": "Was ist neu",
-		"feature1": "Schnelle Bearbeitungen: Änderungen werden jetzt viel schneller angewendet. Weniger Wartezeit, mehr Coding.",
-		"feature2": "API-Schlüssel-Guthaben: Sieh dir deine OpenRouter- und Requesty-Guthaben in den Einstellungen an.",
-		"feature3": "Projekt-Level MCP-Konfiguration: Jetzt kannst du sie pro Projekt/Workspace konfigurieren.",
-		"feature4": "Verbesserte Gemini-Unterstützung: Intelligentere Wiederholungen, korrigiertes Escaping, zum Vertex-Provider hinzugefügt.",
-		"feature5": "Import/Export von Einstellungen: Sichere oder teile deine Konfiguration einfach über verschiedene Setups hinweg.",
-		"hideButton": "Ankündigung ausblenden",
-		"detailsDiscussLinks": "Erhalte mehr Details und diskutiere auf <discordLink>Discord</discordLink> und <redditLink>Reddit</redditLink> 🚀"
+		"title": "Mach mehr mit Boomerang Tasks 🪃",
+		"description": "Teile deine Arbeit in Unteraufgaben auf, die jeweils in einem spezialisierten Modus laufen, wie code, architect, debug oder einem benutzerdefinierten Modus.",
+		"learnMore": "Mehr erfahren →",
+		"hideButton": "Ankündigung ausblenden"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo möchte den Browser verwenden:",

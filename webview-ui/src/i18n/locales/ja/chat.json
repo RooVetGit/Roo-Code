@@ -83,6 +83,9 @@
 	"edit": "編集...",
 	"forNextMode": "次のモード用",
 	"error": "エラー",
+	"diffError": {
+		"title": "編集に失敗しました"
+	},
 	"troubleMessage": "Rooに問題が発生しています...",
 	"apiRequest": {
 		"title": "APIリクエスト",
@@ -94,6 +97,7 @@
 	"checkpoint": {
 		"initial": "初期チェックポイント",
 		"regular": "チェックポイント",
+		"initializingWarning": "チェックポイントの初期化中... 時間がかかりすぎる場合は、<settingsLink>設定</settingsLink>でチェックポイントを無効にしてタスクを再開できます。",
 		"menu": {
 			"viewDiff": "差分を表示",
 			"restore": "チェックポイントを復元",
@@ -143,7 +147,12 @@
 	},
 	"subtasks": {
 		"wantsToCreate": "Rooは<code>{{mode}}</code>モードで新しいサブタスクを作成したい:",
-		"wantsToFinish": "Rooはこのサブタスクを終了したい"
+		"wantsToFinish": "Rooはこのサブタスクを終了したい",
+		"newTaskContent": "サブタスク指示",
+		"completionContent": "サブタスク完了",
+		"resultContent": "サブタスク結果",
+		"defaultResult": "次のタスクに進んでください。",
+		"completionInstructions": "サブタスク完了！結果を確認し、修正や次のステップを提案できます。問題なければ、親タスクに結果を返すために確認してください。"
 	},
 	"questions": {
 		"hasQuestion": "Rooは質問があります:"
@@ -151,7 +160,10 @@
 	"taskCompleted": "タスク完了",
 	"shellIntegration": {
 		"unavailable": "シェル統合が利用できません",
-		"troubleshooting": "まだ問題がありますか？"
+		"troubleshooting": "まだ問題がありますか？シェル統合のドキュメントはこちらをクリックしてください。",
+		"checkSettings": "設定ページでターミナルの回避策を確認してください",
+		"updateVSCode": "VSCodeを更新してください",
+		"supportedShell": "サポートされているシェルを使用していることを確認してください：zsh、bash、fish、またはPowerShell"
 	},
 	"powershell": {
 		"issues": "Windows PowerShellに問題があるようです。こちらを参照してください"
@@ -211,16 +223,10 @@
 		"copyToInput": "入力欄にコピー（またはShift + クリック）"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.11 リリース",
-		"description": "Roo Code 3.11は大幅なパフォーマンス向上と新機能をもたらします！",
-		"whatsNew": "新機能",
-		"feature1": "高速編集 - 編集がより速く適用されるようになりました。待ち時間が少なく、コーディングがより効率的に。",
-		"feature2": "APIキー残高 - OpenRouterとRequestyの残高を設定で確認できます。",
-		"feature3": "プロジェクトレベルのMCP設定 - プロジェクト/ワークスペースごとに設定可能になりました。",
-		"feature4": "Geminiサポートの改善 - より賢い再試行、エスケープの修正、Vertexプロバイダーへの追加。",
-		"feature5": "設定のインポート/エクスポート - 設定を簡単にバックアップしたり、異なる環境間で共有できます。",
-		"hideButton": "通知を非表示",
-		"detailsDiscussLinks": "詳細は<discordLink>Discord</discordLink>と<redditLink>Reddit</redditLink>でご確認・ディスカッションください 🚀"
+		"title": "ブーメランタスクでさらに便利に 🪃",
+		"description": "作業をサブタスクに分割し、それぞれをcode、architect、debugなどの専門モードや、カスタムモードで実行できます。",
+		"learnMore": "詳細を見る →",
+		"hideButton": "通知を非表示"
 	},
 	"browser": {
 		"rooWantsToUse": "Rooはブラウザを使用したい:",

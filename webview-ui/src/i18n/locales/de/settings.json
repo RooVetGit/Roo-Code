@@ -98,8 +98,10 @@
 		"enterProfileName": "Profilnamen eingeben",
 		"createProfile": "Profil erstellen",
 		"cannotDeleteOnlyProfile": "Das einzige Profil kann nicht gelöscht werden",
+		"searchPlaceholder": "Profile durchsuchen",
+		"noMatchFound": "Keine passenden Profile gefunden",
 		"vscodeLmDescription": "Die VS Code Language Model API ermöglicht das Ausführen von Modellen, die von anderen VS Code-Erweiterungen bereitgestellt werden (einschließlich, aber nicht beschränkt auf GitHub Copilot). Der einfachste Weg, um zu starten, besteht darin, die Erweiterungen Copilot und Copilot Chat aus dem VS Code Marketplace zu installieren.",
-		"awsCustomArnUse": "Geben Sie eine gültige AWS Bedrock ARN für das Modell ein, das Sie verwenden möchten. Formatbeispiele:",
+		"awsCustomArnUse": "Geben Sie eine gültige Amazon Bedrock ARN für das Modell ein, das Sie verwenden möchten. Formatbeispiele:",
 		"awsCustomArnDesc": "Stellen Sie sicher, dass die Region in der ARN mit Ihrer oben ausgewählten AWS-Region übereinstimmt.",
 		"openRouterApiKey": "OpenRouter API-Schlüssel",
 		"getOpenRouterApiKey": "OpenRouter API-Schlüssel erhalten",
@@ -107,6 +109,8 @@
 		"glamaApiKey": "Glama API-Schlüssel",
 		"getGlamaApiKey": "Glama API-Schlüssel erhalten",
 		"useCustomBaseUrl": "Benutzerdefinierte Basis-URL verwenden",
+		"useHostHeader": "Benutzerdefinierten Host-Header verwenden",
+		"useLegacyFormat": "Altes OpenAI API-Format verwenden",
 		"requestyApiKey": "Requesty API-Schlüssel",
 		"getRequestyApiKey": "Requesty API-Schlüssel erhalten",
 		"openRouterTransformsText": "Prompts und Nachrichtenketten auf Kontextgröße komprimieren (<a>OpenRouter Transformationen</a>)",
@@ -131,6 +135,9 @@
 		"awsSessionToken": "AWS Sitzungstoken",
 		"awsRegion": "AWS Region",
 		"awsCrossRegion": "Regionsübergreifende Inferenz verwenden",
+		"enablePromptCaching": "Prompt-Caching aktivieren",
+		"enablePromptCachingTitle": "Prompt-Caching aktivieren, um die Leistung zu verbessern und Kosten für unterstützte Modelle zu reduzieren.",
+		"cacheUsageNote": "Hinweis: Wenn Sie keine Cache-Nutzung sehen, versuchen Sie ein anderes Modell auszuwählen und dann Ihr gewünschtes Modell erneut auszuwählen.",
 		"vscodeLmModel": "Sprachmodell",
 		"vscodeLmWarning": "Hinweis: Dies ist eine sehr experimentelle Integration und die Anbieterunterstützung variiert. Wenn Sie einen Fehler über ein nicht unterstütztes Modell erhalten, liegt das Problem auf Anbieterseite.",
 		"googleCloudSetup": {
@@ -213,6 +220,10 @@
 				}
 			},
 			"resetDefaults": "Auf Standardwerte zurücksetzen"
+		},
+		"rateLimitSeconds": {
+			"label": "Ratenbegrenzung",
+			"description": "Minimale Zeit zwischen API-Anfragen."
 		}
 	},
 	"browser": {
@@ -289,14 +300,34 @@
 		},
 		"shellIntegrationTimeout": {
 			"label": "Terminal-Shell-Integrationszeit-Limit",
-			"description": "Maximale Wartezeit für die Shell-Integration, bevor Befehle ausgeführt werden. Für Benutzer mit langen Shell-Startzeiten muss dieser Wert möglicherweise erhöht werden, wenn Sie Fehler vom Typ \"Shell Integration Unavailable\" im Terminal sehen."
+			"description": "Maximale Wartezeit für die Shell-Integration, bevor Befehle ausgeführt werden. Für Benutzer mit langen Shell-Startzeiten musst du diesen Wert möglicherweise erhöhen, wenn du Fehler vom Typ \"Shell Integration Unavailable\" im Terminal siehst."
+		},
+		"zdotdir": {
+			"label": "ZDOTDIR-Behandlung aktivieren",
+			"description": "Erstellt bei Aktivierung ein temporäres Verzeichnis für ZDOTDIR, um die zsh-Shell-Integration korrekt zu handhaben. Dies stellt sicher, dass die VSCode-Shell-Integration mit zsh funktioniert und dabei deine zsh-Konfiguration erhalten bleibt. (experimentell)"
+		},
+		"commandDelay": {
+			"label": "Terminal-Befehlsverzögerung",
+			"description": "Verzögerung in Millisekunden, die nach der Befehlsausführung hinzugefügt wird. Die Standardeinstellung von 0 deaktiviert die Verzögerung vollständig. Dies kann dazu beitragen, dass die Befehlsausgabe in Terminals mit Timing-Problemen vollständig erfasst wird. In den meisten Terminals wird dies durch Setzen von `PROMPT_COMMAND='sleep N'` implementiert, und Powershell fügt `start-sleep` am Ende jedes Befehls hinzu. Ursprünglich war dies eine Lösung für VSCode-Bug#237208 und ist möglicherweise nicht mehr erforderlich."
+		},
+		"powershellCounter": {
+			"label": "PowerShell-Zähler-Workaround aktivieren",
+			"description": "Wenn aktiviert, fügt einen Zähler zu PowerShell-Befehlen hinzu, um die korrekte Befehlsausführung sicherzustellen. Dies hilft bei PowerShell-Terminals, die Probleme mit der Ausgabeerfassung haben könnten."
+		},
+		"zshClearEolMark": {
+			"label": "ZSH-Zeilenende-Markierung löschen",
+			"description": "Wenn aktiviert, wird die ZSH-Zeilenende-Markierung durch Setzen von PROMPT_EOL_MARK='' gelöscht. Dies verhindert Probleme bei der Interpretation der Befehlsausgabe, wenn diese mit Sonderzeichen wie '%' endet."
+		},
+		"zshOhMy": {
+			"label": "Oh My Zsh-Integration aktivieren",
+			"description": "Wenn aktiviert, wird ITERM_SHELL_INTEGRATION_INSTALLED=Yes gesetzt, um die Shell-Integrationsfunktionen von Oh My Zsh zu aktivieren. (experimentell)"
+		},
+		"zshP10k": {
+			"label": "Powerlevel10k-Integration aktivieren",
+			"description": "Wenn aktiviert, wird POWERLEVEL9K_TERM_SHELL_INTEGRATION=true gesetzt, um die Shell-Integrationsfunktionen von Powerlevel10k zu aktivieren. (experimentell)"
 		}
 	},
 	"advanced": {
-		"rateLimit": {
-			"label": "Ratenbegrenzung",
-			"description": "Minimale Zeit zwischen API-Anfragen."
-		},
 		"diff": {
 			"label": "Bearbeitung durch Diffs aktivieren",
 			"description": "Wenn aktiviert, kann Roo Dateien schneller bearbeiten und lehnt automatisch gekürzte vollständige Dateischreibvorgänge ab. Funktioniert am besten mit dem neuesten Claude 3.7 Sonnet-Modell.",
@@ -366,7 +397,8 @@
 		"azureApiVersion": "Azure API-Version festlegen",
 		"gemini": {
 			"freeRequests": "* Kostenlos bis zu {{count}} Anfragen pro Minute. Danach hängt die Abrechnung von der Prompt-Größe ab.",
-			"pricingDetails": "Weitere Informationen finden Sie in den Preisdetails."
+			"pricingDetails": "Weitere Informationen finden Sie in den Preisdetails.",
+			"billingEstimate": "* Die Abrechnung ist eine Schätzung - die genauen Kosten hängen von der Prompt-Größe ab."
 		}
 	},
 	"modelPicker": {
@@ -395,7 +427,7 @@
 	},
 	"validation": {
 		"apiKey": "Du musst einen gültigen API-Schlüssel angeben.",
-		"awsRegion": "Du musst eine Region für AWS Bedrock auswählen.",
+		"awsRegion": "Du musst eine Region für Amazon Bedrock auswählen.",
 		"googleCloud": "Du musst eine gültige Google Cloud Projekt-ID und Region angeben.",
 		"modelId": "Du musst eine gültige Modell-ID angeben.",
 		"modelSelector": "Du musst einen gültigen Modell-Selektor angeben.",

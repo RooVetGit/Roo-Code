@@ -280,7 +280,7 @@ if [[ ! -d "../../evals" ]]; then
     read -p "🔗 Would you like to be able to share eval results? (Y/n): " fork_evals
 
     if [[ "$fork_evals" =~ ^[Yy]|^$ ]]; then
-      gh repo fork cte/evals ../../evals || exit 1
+      gh repo fork cte/evals --clone ../../evals || exit 1
     else
       gh repo clone cte/evals ../../evals || exit 1
     fi
@@ -296,6 +296,7 @@ fi
 if [[ ! -s /tmp/evals.db ]]; then
   echo "🗄️ Creating database..."
   pnpm --filter @evals/db db:push || exit 1
+  pnpm --filter @evals/db db:enable-wal || exit 1
 fi
 
 if ! grep -q "OPENROUTER_API_KEY" .env; then

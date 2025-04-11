@@ -83,6 +83,9 @@
 	"edit": "Editar...",
 	"forNextMode": "para el siguiente modo",
 	"error": "Error",
+	"diffError": {
+		"title": "Edición fallida"
+	},
 	"troubleMessage": "Roo está teniendo problemas...",
 	"apiRequest": {
 		"title": "Solicitud API",
@@ -94,6 +97,7 @@
 	"checkpoint": {
 		"initial": "Punto de control inicial",
 		"regular": "Punto de control",
+		"initializingWarning": "Todavía inicializando el punto de control... Si esto tarda demasiado, puedes desactivar los puntos de control en la <settingsLink>configuración</settingsLink> y reiniciar tu tarea.",
 		"menu": {
 			"viewDiff": "Ver diferencias",
 			"restore": "Restaurar punto de control",
@@ -143,7 +147,12 @@
 	},
 	"subtasks": {
 		"wantsToCreate": "Roo quiere crear una nueva subtarea en modo <code>{{mode}}</code>:",
-		"wantsToFinish": "Roo quiere finalizar esta subtarea"
+		"wantsToFinish": "Roo quiere finalizar esta subtarea",
+		"newTaskContent": "Instrucciones de la subtarea",
+		"completionContent": "Subtarea completada",
+		"resultContent": "Resultados de la subtarea",
+		"defaultResult": "Por favor, continúa con la siguiente tarea.",
+		"completionInstructions": "¡Subtarea completada! Puedes revisar los resultados y sugerir correcciones o próximos pasos. Si todo se ve bien, confirma para devolver el resultado a la tarea principal."
 	},
 	"questions": {
 		"hasQuestion": "Roo tiene una pregunta:"
@@ -151,7 +160,10 @@
 	"taskCompleted": "Tarea completada",
 	"shellIntegration": {
 		"unavailable": "Integración de shell no disponible",
-		"troubleshooting": "¿Sigues teniendo problemas?"
+		"troubleshooting": "¿Sigues teniendo problemas? Haz clic aquí para ver la documentación de integración de shell.",
+		"checkSettings": "Revisa los ajustes alternativos de terminal en la página de configuración",
+		"updateVSCode": "Actualiza VSCode",
+		"supportedShell": "Asegúrate de usar un shell compatible: zsh, bash, fish o PowerShell"
 	},
 	"powershell": {
 		"issues": "Parece que estás teniendo problemas con Windows PowerShell, por favor consulta esta"
@@ -211,16 +223,10 @@
 		"copyToInput": "Copiar a la entrada (o Shift + clic)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.11 publicado",
-		"description": "¡Roo Code 3.11 trae mejoras significativas de rendimiento y nuevas funcionalidades!",
-		"whatsNew": "Novedades",
-		"feature1": "Ediciones rápidas: Las ediciones ahora se aplican mucho más rápido. Menos espera, más codificación.",
-		"feature2": "Saldos de claves API: Visualiza tus saldos de OpenRouter y Requesty en la configuración.",
-		"feature3": "Configuración MCP a nivel de proyecto: Ahora puedes configurarlo por proyecto/espacio de trabajo.",
-		"feature4": "Soporte mejorado para Gemini: Reintentos más inteligentes, escape corregido, añadido al proveedor Vertex.",
-		"feature5": "Importación/Exportación de configuración: Respalda o comparte fácilmente tu configuración entre diferentes entornos.",
-		"hideButton": "Ocultar anuncio",
-		"detailsDiscussLinks": "Obtén más detalles y participa en <discordLink>Discord</discordLink> y <redditLink>Reddit</redditLink> 🚀"
+		"title": "Haz más con Tareas Boomerang 🪃",
+		"description": "Divide el trabajo en subtareas, cada una ejecutándose en un modo especializado, como code, architect, debug o un modo personalizado.",
+		"learnMore": "Saber más →",
+		"hideButton": "Ocultar anuncio"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo quiere usar el navegador:",
