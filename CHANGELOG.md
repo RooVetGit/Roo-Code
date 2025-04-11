@@ -1,9 +1,12 @@
 # Roo Code Changelog
 
+
 ## [Unreleased]
 
 ### Added
 - Add LiteLLM provider support - adapted from Cline's implementation (PR #1618) -  allowing connection to any LLM via a LiteLLM proxy server. Includes configuration for API URL, API Key, and Model ID, plus cost calculation support via the `/spend/calculate` endpoint.
+
+=======
 
 ## [3.11.12] - 2025-04-09
 
@@ -21,7 +24,6 @@
 - Follow symlinked rules files/directories to allow for more flexible rule setups
 - Focus Roo Code in the sidebar when running tasks in the sidebar via the API
 - Improve subtasks UI
->>>>>>> upstream/main
 
 ## [3.11.10] - 2025-04-08
 

@@ -417,6 +417,7 @@ type ClineMessage = {
 				| "subtask_result"
 				| "checkpoint_saved"
 				| "rooignore_error"
+				| "diff_error"
 		  )
 		| undefined
 	text?: string | undefined
@@ -501,6 +502,7 @@ type RooCodeEvents = {
 							| "subtask_result"
 							| "checkpoint_saved"
 							| "rooignore_error"
+							| "diff_error"
 					  )
 					| undefined
 				text?: string | undefined
