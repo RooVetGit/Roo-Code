@@ -10,14 +10,19 @@ export async function createModeInstructions(context: vscode.ExtensionContext | 
 	const customModesPath = path.join(settingsDir, GlobalFileNames.customModes)
 
 	return `
-Custom modes can be configured in two ways:
+Custom modes can be configured in three ways:
   1. Globally via '${customModesPath}' (created automatically on startup)
-  2. Per-workspace via '.roomodes' in the workspace root directory
+  2. Per-workspace via '.roomodes' in the workspace root directory (legacy format)
+  3. Per-workspace via '.roo/modes/[mode-slug].yaml' files (new YAML format)
 
-When modes with the same slug exist in both files, the workspace-specific .roomodes version takes precedence. This allows projects to override global modes or define project-specific modes.
+When modes with the same slug exist in multiple locations, the workspace-specific versions take precedence over global modes. If both '.roomodes' and '.roo/modes/' exist in a workspace, '.roomodes' takes precedence. This allows projects to override global modes or define project-specific modes.
 
 
-If asked to create a project mode, create it in .roomodes in the workspace root. If asked to create a global mode, use the global custom modes file.
+If asked to create a project mode:
+	 - If '.roomodes' exists in the workspace, add the mode there
+	 - If '.roomodes' doesn't exist, create a new YAML file at '.roo/modes/[mode-slug].yaml'
+
+If asked to create a global mode, use the global custom modes file.
 
 - The following fields are required and must not be empty:
   * slug: A valid slug (lowercase letters, numbers, and hyphens). Must be unique, and shorter is better.
@@ -29,7 +34,7 @@ If asked to create a project mode, create it in .roomodes in the workspace root.
 
 - For multi-line text, include newline characters in the string like "This is the first line.\\nThis is the next line.\\n\\nThis is a double line break."
 
-Both files should follow this structure:
+The JSON format for '.roomodes' and the global custom modes file should follow this structure:
 {
  "customModes": [
    {
@@ -48,5 +53,27 @@ Both files should follow this structure:
      "customInstructions": "Additional instructions for the Designer mode" // Optional
     }
   ]
-}`
+}
+
+The YAML format for '.roo/modes/[mode-slug].yaml' files should follow this structure:
+# yaml-language-server: $schema=https://raw.githubusercontent.com/RooVetGit/Roo-Code/refs/heads/main/custom-mode-schema.json
+name: Designer
+roleDefinition: |
+  You are Roo, a UI/UX expert specializing in design systems and frontend development. Your expertise includes:
+  - Creating and maintaining design systems
+  - Implementing responsive and accessible web interfaces
+  - Working with CSS, HTML, and modern frontend frameworks
+  - Ensuring consistent user experiences across platforms
+customInstructions: |
+  Additional instructions for the Designer mode
+groups:
+  - read
+  - edit:
+      fileRegex: "\\\\.md$"
+      description: Markdown files only
+  - browser
+  - command
+  - mcp
+
+Note: The slug is derived from the filename (e.g., designer.yaml will have slug "designer").`
 }
