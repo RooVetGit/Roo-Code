@@ -34,3 +34,46 @@ The following settings have been added to support the LiteLLM provider. They are
 *   The `apiProvider` setting should be set to `"litellm"` to activate this provider.
 *   LiteLLM settings follow the same pattern as other providers, ensuring consistency.
 *   Existing configurations without LiteLLM settings remain valid and functional.
+
+## OpenAI Compatible Provider Settings
+
+The following settings are relevant when `apiProvider` is set to `"openai"`.
+
+*   **`rooCode.apiConfiguration.openAiBaseUrl`** (`string`, optional):
+	*   The base URL of the OpenAI-compatible API endpoint.
+	*   Required. Example: `"https://api.mistral.ai/v1"`
+
+*   **`rooCode.apiConfiguration.openAiApiKey`** (`string`, optional):
+	*   The API key for the endpoint.
+	*   Stored securely in VS Code's SecretStorage.
+
+*   **`rooCode.apiConfiguration.openAiModelId`** (`string`, optional):
+	*   The specific model ID to use with the endpoint.
+	*   Example: `"mistral-large-latest"`, `"gpt-4o"`
+
+*   **`rooCode.apiConfiguration.openAiContextWindowOverride`** (`number`, optional):
+	*   Allows overriding the default context window size (128k tokens) assumed for compatible endpoints.
+	*   Set via a slider in the UI (Default, 8k, 32k, 128k, 512k, 1M, 2M tokens).
+	*   If set, this value is used for determining when to truncate conversation history. If unset (`undefined`), the default 128k is used.
+
+*   **`rooCode.apiConfiguration.openAiCustomModelInfo`** (`object`, optional):
+	*   Allows overriding other `ModelInfo` properties like `maxTokens`, `supportsImages`, pricing, etc., for the specified `openAiModelId`.
+	*   The `openAiContextWindowOverride` takes precedence over the `contextWindow` value within `openAiCustomModelInfo` if both are set.
+
+*   **`rooCode.apiConfiguration.openAiUseAzure`** (`boolean`, optional):
+	*   Set to `true` if connecting to an Azure OpenAI endpoint.
+
+*   **`rooCode.apiConfiguration.azureApiVersion`** (`string`, optional):
+	*   Specifies the API version for Azure OpenAI endpoints.
+
+*   **`rooCode.apiConfiguration.openAiHostHeader`** (`string`, optional):
+	*   Allows setting a custom `Host` HTTP header, sometimes required by proxy services.
+
+*   **`rooCode.apiConfiguration.openAiLegacyFormat`** (`boolean`, optional):
+	*   Set to `true` if the endpoint requires the older OpenAI message format (less common).
+
+*   **`rooCode.apiConfiguration.openAiR1FormatEnabled`** (`boolean`, optional):
+	*   Set to `true` for models requiring specific R1 formatting (e.g., DeepSeek Reasoner).
+
+*   **`rooCode.apiConfiguration.openAiStreamingEnabled`** (`boolean`, optional):
+	*   Defaults to `true`. Set to `false` if the endpoint does not support streaming responses.

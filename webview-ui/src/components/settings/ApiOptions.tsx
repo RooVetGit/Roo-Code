@@ -46,7 +46,17 @@ import {
 	useOpenRouterModelProviders,
 	OPENROUTER_DEFAULT_PROVIDER_NAME,
 } from "@/components/ui/hooks/useOpenRouterModelProviders"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator, Button } from "@/components/ui"
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+	SelectSeparator,
+	Button,
+	Slider,
+	Label,
+} from "@/components/ui"
 import { MODELS_BY_PROVIDER, PROVIDERS, VERTEX_REGIONS } from "./constants"
 import { AWS_REGIONS } from "../../../../src/shared/aws_regions"
 import { VSCodeButtonLink } from "../common/VSCodeButtonLink"
@@ -281,6 +291,37 @@ const ApiOptions = ({
 			name: displayName,
 		}
 	}
+
+	// --- START: Helper functions and data for Context Window Slider ---
+	const contextWindowSteps = [
+		{ sliderValue: 0, overrideValue: undefined, label: t("settings:providers.contextWindow.default", { value: "128k" }) },
+		{ sliderValue: 1, overrideValue: 8192, label: "8k" },
+		{ sliderValue: 2, overrideValue: 32768, label: "32k" },
+		{ sliderValue: 3, overrideValue: 131072, label: "128k" },
+		{ sliderValue: 4, overrideValue: 524288, label: "512k" },
+		{ sliderValue: 5, overrideValue: 1048576, label: "1M" },
+		{ sliderValue: 6, overrideValue: 2097152, label: "2M" },
+	]
+
+	const mapOverrideToSliderValue = (override?: number): number => {
+		const step = contextWindowSteps.find((s) => s.overrideValue === override)
+		return step ? step.sliderValue : 0 // Default to step 0 if override is undefined or not found
+	}
+
+	const mapSliderValueToOverride = (sliderValue: number): number | undefined => {
+		const step = contextWindowSteps.find((s) => s.sliderValue === sliderValue)
+		return step ? step.overrideValue : undefined
+	}
+
+	const mapSliderValueToLabel = (sliderValue: number): string => {
+		const step = contextWindowSteps.find((s) => s.sliderValue === sliderValue)
+		return step ? step.label : "Unknown"
+	}
+
+	const currentSliderValue = mapOverrideToSliderValue(apiConfiguration?.openAiContextWindowOverride)
+	const currentSliderLabel = mapSliderValueToLabel(currentSliderValue)
+	// --- END: Helper functions and data for Context Window Slider ---
+
 
 	return (
 		<div className="flex flex-col gap-3">
@@ -782,6 +823,33 @@ const ApiOptions = ({
 						serviceName="OpenAI"
 						serviceUrl="https://platform.openai.com"
 					/>
+					{/* START: OpenAI Context Window Override Slider */}
+					<div className="space-y-2">
+						<Label htmlFor="context-window-slider">
+							{t("settings:providers.contextWindow.overrideLabel")}
+						</Label>
+						<div className="flex items-center gap-3">
+							<Slider
+								id="context-window-slider"
+								min={0}
+								max={6}
+								step={1}
+								value={[currentSliderValue]}
+								onValueChange={(value) => {
+									const newOverride = mapSliderValueToOverride(value[0])
+									setApiConfigurationField("openAiContextWindowOverride", newOverride)
+								}}
+								className="flex-grow"
+							/>
+							<span className="text-sm text-vscode-descriptionForeground min-w-[100px] text-right">
+								{t("settings:providers.contextWindow.selectedValue", { value: currentSliderLabel })}
+							</span>
+						</div>
+						<div className="text-sm text-vscode-descriptionForeground">
+							{t("settings:providers.contextWindow.description")}
+						</div>
+					</div>
+					{/* END: OpenAI Context Window Override Slider */}
 					<R1FormatSetting
 						onChange={handleInputChange("openAiR1FormatEnabled", noTransform)}
 						openAiR1FormatEnabled={apiConfiguration?.openAiR1FormatEnabled ?? false}
