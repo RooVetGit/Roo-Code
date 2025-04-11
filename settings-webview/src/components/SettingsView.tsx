@@ -1,5 +1,9 @@
 import { useState } from "react"
 import { makeStyles, shorthands, Button, Title2, Subtitle1, tokens, Divider } from "@fluentui/react-components"
+import GeneralSettings from "./settings/GeneralSettings"
+import PermissionsSettings from "./settings/PermissionsSettings"
+import AboutSettings from "./settings/AboutSettings"
+import PlaceholderSettings from "./settings/PlaceholderSettings"
 
 type SettingsCategory = {
 	id: string
@@ -107,8 +111,16 @@ const SettingsView = () => {
 				<Divider />
 
 				<div className={styles.contentBody}>
-					{/* Content for the selected category will go here */}
-					<p>Settings content for {selectedCategory} will be implemented here</p>
+					{/* Render the appropriate settings component based on the selected category */}
+					{selectedCategory === "general" && <GeneralSettings />}
+					{selectedCategory === "permissions" && <PermissionsSettings />}
+					{selectedCategory === "about" && <AboutSettings />}
+					{selectedCategory !== "general" && selectedCategory !== "permissions" && selectedCategory !== "about" && (
+						<PlaceholderSettings
+							categoryId={selectedCategory}
+							categoryName={SETTINGS_CATEGORIES.find((c) => c.id === selectedCategory)?.name || ""}
+						/>
+					)}
 				</div>
 			</div>
 		</div>
