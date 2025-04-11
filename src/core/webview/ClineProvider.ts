@@ -101,25 +101,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		context.subscriptions.push(this.codeIndexManager)
 		// Start configuration loading (which might trigger indexing) in the background.
 		// Don't await, allowing activation to continue immediately.
-		this.codeIndexManager
-			.loadConfiguration()
-			.then(() => {
-				// Optional: Log success after config/indexing finishes.
-				outputChannel.appendLine("CodeIndexManager configuration loaded successfully (async).")
-			})
-			.catch((error) => {
-				// Log errors from the configuration/indexing process.
-				// Use console.error for better visibility in developer tools if needed.
-				console.error(
-					"[Extension Activation] Error during background CodeIndexManager configuration/indexing:",
-					error,
-				)
-				outputChannel.appendLine(
-					`[Error] Background CodeIndexManager configuration/indexing failed: ${error.message || error}`,
-				)
-				// Optionally notify the user via a non-modal message
-				// vscode.window.showWarningMessage(`Roo-Code index initialization failed: ${error.message}`);
-			})
 
 		// Register this provider with the telemetry service to enable it to add
 		// properties like mode and provider.
@@ -364,6 +345,27 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		if (!this.contextProxy.isInitialized) {
 			await this.contextProxy.initialize()
+
+			// Load CodeIndexManager configuration after contextProxy (and secrets) are initialized.
+			this.codeIndexManager
+				.loadConfiguration()
+				.then(() => {
+					// Optional: Log success after config/indexing finishes.
+					this.outputChannel.appendLine("CodeIndexManager configuration loaded successfully (async).")
+				})
+				.catch((error) => {
+					// Log errors from the configuration/indexing process.
+					// Use console.error for better visibility in developer tools if needed.
+					console.error(
+						"[resolveWebviewView] Error during background CodeIndexManager configuration/indexing:",
+						error,
+					)
+					this.outputChannel.appendLine(
+						`[Error] Background CodeIndexManager configuration/indexing failed: ${error.message || error}`,
+					)
+					// Optionally notify the user via a non-modal message
+					// vscode.window.showWarningMessage(`Roo-Code index initialization failed: ${error.message}`);
+				})
 		}
 
 		this.view = webviewView
@@ -860,6 +862,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		if (this.getCurrentCline()) {
 			this.getCurrentCline()!.api = buildApiHandler(providerSettings)
 		}
+
+		// Load CodeIndexManager configuration after provider settings are updated
+		await this.codeIndexManager.loadConfiguration()
 	}
 
 	async cancelTask() {
@@ -1239,7 +1244,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			showRooIgnoredFiles,
 			language,
 			maxReadFileLine,
-			codeIndexConfiguration,
+			codeIndexEnabled,
+			codeIndexQdrantUrl,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
@@ -1315,7 +1321,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			renderContext: this.renderContext,
 			maxReadFileLine: maxReadFileLine ?? 500,
 			settingsImportedAt: this.settingsImportedAt,
-			codeIndexConfiguration: codeIndexConfiguration ?? { codeIndexEnabled: false, codeIndexQdrantUrl: "" },
+			codeIndexEnabled: codeIndexEnabled ?? false,
+			codeIndexQdrantUrl: codeIndexQdrantUrl ?? "",
 		}
 	}
 
@@ -1398,10 +1405,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 			maxReadFileLine: stateValues.maxReadFileLine ?? 500,
-			codeIndexConfiguration: stateValues.codeIndexConfiguration ?? {
-				codeIndexEnabled: false,
-				codeIndexQdrantUrl: "",
-			},
+			codeIndexEnabled: stateValues.codeIndexEnabled ?? false,
+			codeIndexQdrantUrl: stateValues.codeIndexQdrantUrl ?? "",
 		}
 	}
 

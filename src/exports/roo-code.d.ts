@@ -243,14 +243,8 @@ type GlobalSettings = {
 	alwaysApproveResubmit?: boolean | undefined
 	requestDelaySeconds?: number | undefined
 	alwaysAllowMcp?: boolean | undefined
-	codeIndexConfiguration?:
-		| {
-				codeIndexEnabled?: boolean | undefined
-				codeIndexOpenAiKey?: string | undefined
-				codeIndexQdrantUrl?: string | undefined
-				codeIndexQdrantApiKey?: string | undefined
-		  }
-		| undefined
+	codeIndexEnabled?: boolean | undefined
+	codeIndexQdrantUrl?: string | undefined
 	alwaysAllowModeSwitch?: boolean | undefined
 	alwaysAllowSubtasks?: boolean | undefined
 	alwaysAllowExecute?: boolean | undefined
