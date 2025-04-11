@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import { MemoryRouter as Router, Routes, Route } from "react-router-dom"
 import { FluentProvider, webLightTheme, webDarkTheme } from "@fluentui/react-components"
 import SettingsView from "./components/SettingsView"
 import "./App.css"
@@ -7,27 +7,20 @@ import "./App.css"
 // Define the VS Code API
 declare global {
 	interface Window {
-		acquireVsCodeApi?: () => {
-			postMessage: (message: any) => void
-			getState: () => any
-			setState: (state: any) => void
+		vscode?: {
+			postMessage: (message: unknown) => void
+			getState: () => unknown
+			setState: (state: unknown) => void
 		}
 	}
 }
 
-// Initialize VS Code API
-const vscode = (() => {
-	if (window.acquireVsCodeApi) {
-		return window.acquireVsCodeApi()
-	}
-
-	// Fallback for when running outside of VS Code (e.g., in a browser for development)
-	return {
-		postMessage: (message: any) => console.log("VS Code message:", message),
-		getState: () => ({}),
-		setState: () => {},
-	}
-})()
+// Use the global vscode object that was set in the HTML
+const vscode = window.vscode || {
+	postMessage: (message: unknown) => console.log("VS Code message:", message),
+	getState: () => ({}),
+	setState: () => {},
+}
 
 // Define the message type for communication with the extension
 interface VSCodeMessage {
@@ -73,7 +66,7 @@ function App() {
 
 	return (
 		<FluentProvider theme={theme}>
-			<Router>
+			<Router initialEntries={["/"]} initialIndex={0}>
 				<div className="app-container">
 					{!initialized ? (
 						<div style={{ padding: "20px" }}>Loading settings...</div>

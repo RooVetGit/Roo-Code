@@ -162,6 +162,7 @@ export class SettingsWebviewProvider {
 
 		// Get URIs for resources
 		const scriptUri = getUri(webview, this.context.extensionUri, ["settings-webview", "dist", "assets", "index.js"])
+		this.log(`scriptUri: ${scriptUri}`)
 
 		const stylesUri = getUri(webview, this.context.extensionUri, [
 			"settings-webview",
@@ -169,6 +170,7 @@ export class SettingsWebviewProvider {
 			"assets",
 			"index.css",
 		])
+		this.log(`stylesUri: ${stylesUri}`)
 
 		// Get codicons URI
 		const codiconsUri = getUri(webview, this.context.extensionUri, [
@@ -178,9 +180,11 @@ export class SettingsWebviewProvider {
 			"dist",
 			"codicon.css",
 		])
+		this.log(`codiconsUri: ${codiconsUri}`)
 
 		// Get images URI
 		const imagesUri = getUri(webview, this.context.extensionUri, ["assets", "images"])
+		this.log(`imagesUri: ${imagesUri}`)
 
 		return /*html*/ `
         <!DOCTYPE html>
@@ -193,7 +197,9 @@ export class SettingsWebviewProvider {
             <link rel="stylesheet" type="text/css" href="${stylesUri}">
 			<link href="${codiconsUri}" rel="stylesheet" />
 			<script nonce="${nonce}">
-				window.IMAGES_BASE_URI = "${imagesUri}"
+				window.IMAGES_BASE_URI = "${imagesUri}";
+				// Make sure vscode is defined for the webview
+				window.vscode = acquireVsCodeApi();
 			</script>
             <title>Roo Code Settings</title>
           </head>
