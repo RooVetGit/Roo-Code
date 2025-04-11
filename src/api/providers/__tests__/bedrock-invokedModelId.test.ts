@@ -1,10 +1,18 @@
+import { AwsBedrockHandler } from "../bedrock"
+import { ApiHandlerOptions } from "../../../shared/api"
+import { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime"
 // Mock AWS SDK credential providers and Bedrock client
-jest.mock("@aws-sdk/credential-providers", () => ({
-	fromIni: jest.fn().mockReturnValue({
-		accessKeyId: "profile-access-key",
-		secretAccessKey: "profile-secret-key",
-	}),
-}))
+jest.mock("@aws-sdk/credential-providers", () => {
+	const mockFromIni = jest.fn().mockImplementation(() => {
+		return async () => ({
+			accessKeyId: "profile-access-key",
+			secretAccessKey: "profile-secret-key",
+		})
+	})
+	return { fromIni: mockFromIni }
+})
+
+const { fromIni } = require("@aws-sdk/credential-providers")
 
 // Mock Smithy client
 jest.mock("@smithy/smithy-client", () => ({
@@ -62,11 +70,6 @@ jest.mock("@aws-sdk/client-bedrock-runtime", () => {
 	}
 })
 
-import { AwsBedrockHandler, StreamEvent } from "../bedrock"
-import { ApiHandlerOptions } from "../../../shared/api"
-import { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime"
-const { fromIni } = require("@aws-sdk/credential-providers")
-
 describe("AwsBedrockHandler with invokedModelId", () => {
 	let mockSend: jest.Mock
 
@@ -78,7 +81,7 @@ describe("AwsBedrockHandler with invokedModelId", () => {
 	})
 
 	// Helper function to create a mock async iterable stream
-	function createMockStream(events: StreamEvent[]) {
+	function createMockStream(events: any[]) {
 		return {
 			[Symbol.asyncIterator]: async function* () {
 				for (const event of events) {
@@ -360,5 +363,75 @@ describe("AwsBedrockHandler with invokedModelId", () => {
 		// Verify that getModel returns the original model info
 		const costModel = handler.getModel()
 		expect(costModel.id).toBe("anthropic.claude-3-5-sonnet-20241022-v2:0")
+	})
+
+	it("should refresh AWS credentials when they expire", async () => {
+		// Get the mock send function from our mocked module
+		const { BedrockRuntimeClient } = require("@aws-sdk/client-bedrock-runtime")
+		const mockSend = BedrockRuntimeClient().send
+
+		// Configure mockSend to throw an error on first call and succeed on second call
+		mockSend
+			.mockImplementationOnce(async () => {
+				const error = new Error("The security token included in the request is expired")
+				error.name = "ExpiredTokenException"
+				throw error
+			})
+			.mockImplementationOnce(async () => {
+				return {
+					$metadata: {
+						httpStatusCode: 200,
+						requestId: "mock-request-id",
+					},
+					stream: {
+						[Symbol.asyncIterator]: async function* () {
+							yield {
+								metadata: {
+									usage: {
+										inputTokens: 100,
+										outputTokens: 200,
+									},
+								},
+							}
+						},
+					},
+				}
+			})
+
+		// Create a handler with profile-based credentials
+		const profileHandler = new AwsBedrockHandler({
+			apiModelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+			awsProfile: "test-profile",
+			awsUseProfile: true,
+			awsRegion: "us-east-1",
+		})
+
+		// Mock the fromIni method to simulate refreshed credentials
+		fromIni.mockImplementation(() => {
+			return async () => ({
+				accessKeyId: "refreshed-access-key",
+				secretAccessKey: "refreshed-secret-key",
+			})
+		})
+
+		// Attempt to create a message, which should trigger credential refresh
+		const messageGenerator = profileHandler.createMessage("system prompt", [
+			{ role: "user", content: "user message" },
+		])
+
+		// Consume the generator to trigger the send method
+		try {
+			for await (const _ of messageGenerator) {
+				// Just consume the messages
+			}
+		} catch (error) {
+			// Ignore errors for this test
+		}
+
+		// Verify that fromIni was called to refresh credentials
+		expect(fromIni).toHaveBeenCalledWith({ profile: "test-profile" })
+
+		// Verify that the send method was called twice (once for the initial attempt and once after refresh)
+		expect(mockSend).toHaveBeenCalledTimes(2)
 	})
 })

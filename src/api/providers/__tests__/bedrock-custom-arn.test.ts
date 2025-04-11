@@ -2,6 +2,17 @@ import { AwsBedrockHandler } from "../bedrock"
 import { ApiHandlerOptions } from "../../../shared/api"
 import { logger } from "../../../utils/logging"
 
+// Mock AWS SDK credential providers
+jest.mock("@aws-sdk/credential-providers", () => {
+	const mockFromIni = jest.fn().mockImplementation(() => {
+		return async () => ({
+			accessKeyId: "profile-access-key",
+			secretAccessKey: "profile-secret-key",
+		})
+	})
+	return { fromIni: mockFromIni }
+})
+
 // Mock the logger
 jest.mock("../../../utils/logging", () => ({
 	logger: {
@@ -249,6 +260,64 @@ describe("Bedrock ARN Handling", () => {
 					arnRegion: "eu-west-1",
 				}),
 			)
+			infoSpy.mockRestore()
+		})
+
+		it("should refresh AWS credentials when they expire", async () => {
+			// Get the mock send function
+			const mockSend = bedrockMock.mockSend
+
+			// Configure mockSend to throw an error on first call and succeed on second call
+			mockSend
+				.mockImplementationOnce(async () => {
+					const error = new Error("The security token included in the request is expired")
+					error.name = "ExpiredTokenException"
+					throw error
+				})
+				.mockImplementationOnce(async () => {
+					return {
+						output: new TextEncoder().encode(JSON.stringify({ content: "Test response" })),
+					}
+				})
+
+			// Create a handler with profile-based credentials
+			const profileHandler = new AwsBedrockHandler({
+				apiModelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+				awsProfile: "test-profile",
+				awsUseProfile: true,
+				awsRegion: "us-east-1",
+			})
+
+			// Import fromIni after mocking
+			const { fromIni } = require("@aws-sdk/credential-providers")
+
+			// Mock the fromIni method to simulate refreshed credentials
+			fromIni.mockImplementation(() => {
+				return async () => ({
+					accessKeyId: "refreshed-access-key",
+					secretAccessKey: "refreshed-secret-key",
+				})
+			})
+
+			// Attempt to create a message, which should trigger credential refresh
+			const messageGenerator = profileHandler.createMessage("system prompt", [
+				{ role: "user", content: "user message" },
+			])
+
+			// Consume the generator to trigger the send method
+			try {
+				for await (const _ of messageGenerator) {
+					// Just consume the messages
+				}
+			} catch (error) {
+				// Ignore errors for this test
+			}
+
+			// Verify that fromIni was called to refresh credentials
+			expect(fromIni).toHaveBeenCalledWith({ profile: "test-profile" })
+
+			// Verify that the send method was called twice (once for the initial attempt and once after refresh)
+			expect(mockSend).toHaveBeenCalledTimes(2)
 		})
 	})
 })
