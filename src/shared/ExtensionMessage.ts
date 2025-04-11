@@ -12,7 +12,6 @@ import {
 	ClineSay,
 	ToolProgressStatus,
 	ClineMessage,
-	CodeIndexConfiguration,
 } from "../schemas"
 import { McpServer } from "./mcp"
 import { GitCommit } from "../utils/git"
@@ -72,7 +71,8 @@ export interface ExtensionMessage {
 		| "toggleApiConfigPin"
 		| "indexingStatusUpdate"
 		| "indexCleared"
-		| "codeIndexConfiguration"
+		| "codeIndexEnabled"
+		| "codeIndexQdrantUrl"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -170,6 +170,8 @@ export type ExtensionState = Pick<
 	| "customModePrompts"
 	| "customSupportPrompts"
 	| "enhancementApiConfigId"
+	| "codeIndexEnabled"
+	| "codeIndexQdrantUrl"
 > & {
 	version: string
 	clineMessages: ClineMessage[]
@@ -204,8 +206,6 @@ export type ExtensionState = Pick<
 	telemetrySetting: TelemetrySetting
 	telemetryKey?: string
 	machineId?: string
-
-	codeIndexConfiguration: CodeIndexConfiguration
 
 	renderContext: "sidebar" | "editor"
 	settingsImportedAt?: number

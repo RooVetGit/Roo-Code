@@ -129,15 +129,6 @@ export const apiConfigMetaSchema = z.object({
 	apiProvider: providerNamesSchema.optional(),
 })
 
-export const codeIndexConfigurationSchema = z.object({
-	codeIndexEnabled: z.boolean().optional(),
-	codeIndexOpenAiKey: z.string().optional(),
-	codeIndexQdrantUrl: z.string().optional(),
-	codeIndexQdrantApiKey: z.string().optional(),
-})
-
-export type CodeIndexConfiguration = z.infer<typeof codeIndexConfigurationSchema>
-
 export type ApiConfigMeta = z.infer<typeof apiConfigMetaSchema>
 
 /**
@@ -514,7 +505,8 @@ export const globalSettingsSchema = z.object({
 	alwaysApproveResubmit: z.boolean().optional(),
 	requestDelaySeconds: z.number().optional(),
 	alwaysAllowMcp: z.boolean().optional(),
-	codeIndexConfiguration: codeIndexConfigurationSchema.optional(),
+	codeIndexEnabled: z.boolean().optional(),
+	codeIndexQdrantUrl: z.string().optional(),
 	alwaysAllowModeSwitch: z.boolean().optional(),
 	alwaysAllowSubtasks: z.boolean().optional(),
 	alwaysAllowExecute: z.boolean().optional(),
@@ -568,7 +560,8 @@ export type GlobalSettings = z.infer<typeof globalSettingsSchema>
 type GlobalSettingsRecord = Record<Keys<GlobalSettings>, undefined>
 
 const globalSettingsRecord: GlobalSettingsRecord = {
-	codeIndexConfiguration: undefined,
+	codeIndexEnabled: undefined,
+	codeIndexQdrantUrl: undefined,
 	currentApiConfigName: undefined,
 	listApiConfigMeta: undefined,
 	pinnedApiConfigs: undefined,
@@ -667,6 +660,8 @@ export type SecretState = Pick<
 	| "codeIndexOpenAiKey"
 	| "codeIndexQdrantApiKey"
 >
+
+export type CodeIndexSecrets = "codeIndexOpenAiKey" | "codeIndexQdrantApiKey"
 
 type SecretStateRecord = Record<Keys<SecretState>, undefined>
 

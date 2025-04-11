@@ -8,7 +8,6 @@ import { getWorkspacePath } from "../../utils/path"
 import { CodeIndexOpenAiEmbedder } from "./openai-embedder"
 import { CodeIndexQdrantClient } from "./qdrant-client"
 import { QdrantSearchResult } from "./types"
-import { CodeIndexConfiguration } from "../../schemas"
 import { ContextProxy } from "../../core/config/ContextProxy"
 
 export type IndexingState = "Standby" | "Indexing" | "Indexed" | "Error"
@@ -136,13 +135,17 @@ export class CodeIndexManager {
 		const prevQdrantUrl = this.qdrantUrl
 		const prevQdrantApiKey = this.qdrantApiKey
 
-		const config = this.context.globalState.get<CodeIndexConfiguration>("codeIndexConfiguration", {})
+		// Fetch settings directly using getGlobalState
+		const codeIndexEnabled = this.contextProxy?.getGlobalState("codeIndexEnabled") ?? false
+		const codeIndexQdrantUrl = this.contextProxy?.getGlobalState("codeIndexQdrantUrl") ?? ""
 
-		const openAiKey = (await this.contextProxy?.getSecret("codeIndexOpenAiKey")) ?? ""
-		const qdrantApiKey = (await this.contextProxy?.getSecret("codeIndexQdrantApiKey")) ?? ""
+		const openAiKey = this.contextProxy?.getSecret("codeIndexOpenAiKey") ?? ""
+		const qdrantApiKey = this.contextProxy?.getSecret("codeIndexQdrantApiKey") ?? ""
 
-		this.isEnabled = config.codeIndexEnabled ?? false
-		this.qdrantUrl = config.codeIndexQdrantUrl ?? ""
+		console.log("KEYS", openAiKey, qdrantApiKey)
+
+		this.isEnabled = codeIndexEnabled
+		this.qdrantUrl = codeIndexQdrantUrl
 		this.qdrantApiKey = qdrantApiKey ?? ""
 		this.openAiOptions = { openAiNativeApiKey: openAiKey }
 
@@ -168,7 +171,7 @@ export class CodeIndexManager {
 
 		// Only recreate embedder/client and restart indexing if transitioning from disabled/unconfigured to enabled+configured or if api keys change
 		const shouldRestart =
-			((!prevEnabled || !prevConfigured) && config.codeIndexEnabled && nowConfigured) ||
+			((!prevEnabled || !prevConfigured) && codeIndexEnabled && nowConfigured) ||
 			prevOpenAiKey !== this.openAiOptions?.openAiNativeApiKey ||
 			(prevQdrantApiKey !== this.qdrantApiKey && prevQdrantUrl !== this.qdrantUrl)
 

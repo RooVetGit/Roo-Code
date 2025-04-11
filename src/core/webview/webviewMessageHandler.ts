@@ -1316,34 +1316,17 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await provider.postStateToWebview()
 			break
 		}
-		case "codeIndexConfiguration": {
-			const codeIndexConfiguration = message.values ?? {}
-			// Save the state first
-
-			await updateGlobalState("codeIndexConfiguration", {
-				...codeIndexConfiguration,
-				codeIndexOpenAiKey: "protected",
-				codeIndexQdrantApiKey: "protected",
-			})
-
-			if (
-				codeIndexConfiguration.codeIndexOpenAiKey !== "protected" &&
-				codeIndexConfiguration.codeIndexQdrantApiKey !== "protected"
-			) {
-				await provider.contextProxy.setValue("codeIndexOpenAiKey", codeIndexConfiguration.codeIndexOpenAiKey)
-
-				await provider.contextProxy.setValue(
-					"codeIndexQdrantApiKey",
-					codeIndexConfiguration.codeIndexQdrantApiKey,
-				)
-			}
-
-			// Get manager instance
-			const manager = CodeIndexManager.getInstance(provider.context, provider.contextProxy)
-
-			await manager.loadConfiguration()
-
-			// Update webview state
+		case "codeIndexEnabled": {
+			const codeIndexEnabled = message.bool ?? false
+			await updateGlobalState("codeIndexEnabled", codeIndexEnabled)
+			await provider.codeIndexManager.loadConfiguration()
+			await provider.postStateToWebview()
+			break
+		}
+		case "codeIndexQdrantUrl": {
+			const codeIndexQdrantUrl = message.text ?? ""
+			await updateGlobalState("codeIndexQdrantUrl", codeIndexQdrantUrl)
+			await provider.codeIndexManager.loadConfiguration()
 			await provider.postStateToWebview()
 			break
 		}
@@ -1353,24 +1336,6 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				type: "indexingStatusUpdate",
 				values: status,
 			})
-			break
-		}
-		case "requestIndexingStatus": {
-			const manager = provider.codeIndexManager! // Access via provider
-			if (manager) {
-				// Send the current status immediately upon request
-				provider.postMessageToWebview({
-					type: "indexingStatusUpdate",
-					values: { state: manager.state, message: "Current status requested" }, // Provide a clearer message
-				})
-			} else {
-				provider.log("CodeIndexManager not available for requestIndexingStatus")
-				// Optionally send a standby/error status back to the webview
-				provider.postMessageToWebview({
-					type: "indexingStatusUpdate",
-					values: { state: "Error", message: "Code Index Manager not available" },
-				})
-			}
 			break
 		}
 		case "startIndexing": {
