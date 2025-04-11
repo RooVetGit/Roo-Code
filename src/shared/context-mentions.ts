@@ -49,8 +49,22 @@ Mention regex:
   - `mentionRegexGlobal`: Creates a global version of the `mentionRegex` to find all matches within a given string.
 
 */
-export const mentionRegex =
-	/@((?:\/|\w+:\/\/)[^\s]+?|[a-f0-9]{7,40}\b|problems\b|git-changes\b|terminal\b)(?=[.,;:!?]?(?=[\s\r\n]|$))/
+// Path or URL pattern: matches file/folder paths starting with '/' or URLs with protocols
+const pathOrUrlPattern = "(?:\\/|\\w+:\\/\\/)[^\\s]+?"
+
+// Git commit hash pattern: matches hexadecimal characters (7-40 chars long)
+const gitHashPattern = "[a-f0-9]{7,40}\\b"
+
+// Special keywords that can be mentioned
+const keywordPatterns = ["problems\\b", "git-changes\\b", "terminal\\b"]
+
+// Combine all patterns with OR operator
+const mentionContentPattern = [pathOrUrlPattern, gitHashPattern, ...keywordPatterns].join("|")
+
+// Lookahead to ensure punctuation (if present) is followed by whitespace or end of string
+const punctuationLookahead = "(?=[.,;:!?]?(?=[\\s\\r\\n]|$))"
+
+export const mentionRegex = new RegExp(`@(${mentionContentPattern})${punctuationLookahead}`)
 export const mentionRegexGlobal = new RegExp(mentionRegex.source, "g")
 
 export interface MentionSuggestion {
