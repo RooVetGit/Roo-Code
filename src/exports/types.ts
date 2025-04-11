@@ -38,6 +38,7 @@ type ProviderSettings = {
 				outputPrice?: number | undefined
 				cacheWritesPrice?: number | undefined
 				cacheReadsPrice?: number | undefined
+				freeRequestsRpm?: number | undefined
 				description?: string | undefined
 				reasoningEffort?: ("low" | "medium" | "high") | undefined
 				thinking?: boolean | undefined
@@ -60,6 +61,7 @@ type ProviderSettings = {
 				outputPrice?: number | undefined
 				cacheWritesPrice?: number | undefined
 				cacheReadsPrice?: number | undefined
+				freeRequestsRpm?: number | undefined
 				description?: string | undefined
 				reasoningEffort?: ("low" | "medium" | "high") | undefined
 				thinking?: boolean | undefined
@@ -102,6 +104,7 @@ type ProviderSettings = {
 				outputPrice?: number | undefined
 				cacheWritesPrice?: number | undefined
 				cacheReadsPrice?: number | undefined
+				freeRequestsRpm?: number | undefined
 				description?: string | undefined
 				reasoningEffort?: ("low" | "medium" | "high") | undefined
 				thinking?: boolean | undefined
@@ -147,6 +150,7 @@ type ProviderSettings = {
 				outputPrice?: number | undefined
 				cacheWritesPrice?: number | undefined
 				cacheReadsPrice?: number | undefined
+				freeRequestsRpm?: number | undefined
 				description?: string | undefined
 				reasoningEffort?: ("low" | "medium" | "high") | undefined
 				thinking?: boolean | undefined
@@ -168,6 +172,7 @@ type ProviderSettings = {
 				outputPrice?: number | undefined
 				cacheWritesPrice?: number | undefined
 				cacheReadsPrice?: number | undefined
+				freeRequestsRpm?: number | undefined
 				description?: string | undefined
 				reasoningEffort?: ("low" | "medium" | "high") | undefined
 				thinking?: boolean | undefined

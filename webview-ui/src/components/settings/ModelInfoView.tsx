@@ -77,12 +77,16 @@ export const ModelInfoView = ({
 			<span className="italic">
 				{selectedModelId === "gemini-2.5-pro-preview-03-25"
 					? t("settings:modelInfo.gemini.billingEstimate")
-					: t("settings:modelInfo.gemini.freeRequests", {
-							count: selectedModelId && selectedModelId.includes("flash") ? 15 : 2,
-						})}{" "}
-				<VSCodeLink href="https://ai.google.dev/pricing" className="text-sm">
-					{t("settings:modelInfo.gemini.pricingDetails")}
-				</VSCodeLink>
+					: modelInfo.freeRequestsRpm && modelInfo.freeRequestsRpm > 0
+					? t("settings:modelInfo.gemini.freeRequests", {
+							count: modelInfo.freeRequestsRpm,
+					  })
+					: null}{" "}
+				{(selectedModelId === "gemini-2.5-pro-preview-03-25" || (modelInfo.freeRequestsRpm && modelInfo.freeRequestsRpm > 0)) && (
+					<VSCodeLink href="https://ai.google.dev/pricing" className="text-sm">
+						{t("settings:modelInfo.gemini.pricingDetails")}
+					</VSCodeLink>
+				)}
 			</span>
 		),
 	].filter(Boolean)
