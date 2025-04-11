@@ -350,7 +350,11 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 	private _isDatabricksAI(baseUrl?: string): boolean {
 		const urlHost = this._getUrlHost(baseUrl)
-		return urlHost.includes(".azuredatabricks.net")
+		return (
+			urlHost.endsWith(".azuredatabricks.net") ||
+			urlHost.endsWith(".cloud.databricks.com") ||
+			urlHost.endsWith(".gcp.databricks.com")
+		)
 	}
 
 	private _isAzureAiInference(baseUrl?: string): boolean {
