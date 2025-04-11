@@ -138,13 +138,14 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			}
 
 			const isGrokXAI = this._isGrokXAI(this.options.openAiBaseUrl)
+			const isDatabricksAI = this._isDatabricksAI(this.options.openAiBaseUrl)
 
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
 				model: modelId,
 				temperature: this.options.modelTemperature ?? (deepseekReasoner ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0),
 				messages: convertedMessages,
 				stream: true as const,
-				...(isGrokXAI ? {} : { stream_options: { include_usage: true } }),
+				...(isGrokXAI || isDatabricksAI ? {} : { stream_options: { include_usage: true } }),
 			}
 			if (this.options.includeMaxTokens) {
 				requestOptions.max_tokens = modelInfo.maxTokens
@@ -268,6 +269,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			const methodIsAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
 
 			const isGrokXAI = this._isGrokXAI(this.options.openAiBaseUrl)
+			const isDatabricksAI = this._isDatabricksAI(this.options.openAiBaseUrl)
 
 			const stream = await this.client.chat.completions.create(
 				{
@@ -280,7 +282,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 						...convertToOpenAiMessages(messages),
 					],
 					stream: true,
-					...(isGrokXAI ? {} : { stream_options: { include_usage: true } }),
+					...(isGrokXAI || isDatabricksAI ? {} : { stream_options: { include_usage: true } }),
 					reasoning_effort: this.getModel().info.reasoningEffort,
 				},
 				methodIsAzureAiInference ? { path: AZURE_AI_INFERENCE_PATH } : {},
@@ -344,6 +346,11 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	private _isGrokXAI(baseUrl?: string): boolean {
 		const urlHost = this._getUrlHost(baseUrl)
 		return urlHost.includes("x.ai")
+	}
+
+	private _isDatabricksAI(baseUrl?: string): boolean {
+		const urlHost = this._getUrlHost(baseUrl)
+		return urlHost.includes(".azuredatabricks.net")
 	}
 
 	private _isAzureAiInference(baseUrl?: string): boolean {
