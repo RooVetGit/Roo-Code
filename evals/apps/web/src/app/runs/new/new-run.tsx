@@ -22,7 +22,6 @@ import {
 	FormField,
 	FormItem,
 	FormLabel,
-	FormDescription,
 	FormMessage,
 	Textarea,
 	Tabs,
