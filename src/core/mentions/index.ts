@@ -23,7 +23,8 @@ export async function openMention(mention?: string): Promise<void> {
 	}
 
 	if (mention.startsWith("/")) {
-		const relPath = mention.slice(1)
+		// Slice off the leading slash and unescape any spaces in the path
+		const relPath = unescapeSpaces(mention.slice(1))
 		const absPath = path.resolve(cwd, relPath)
 		if (mention.endsWith("/")) {
 			vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(absPath))
@@ -155,8 +156,15 @@ export async function parseMentions(
 	return parsedText
 }
 
+// Helper function to unescape paths with backslash-escaped spaces
+function unescapeSpaces(path: string): string {
+	return path.replace(/\\ /g, " ")
+}
+
 async function getFileOrFolderContent(mentionPath: string, cwd: string): Promise<string> {
-	const absPath = path.resolve(cwd, mentionPath)
+	// Unescape spaces in the path before resolving it
+	const unescapedPath = unescapeSpaces(mentionPath)
+	const absPath = path.resolve(cwd, unescapedPath)
 
 	try {
 		const stats = await fs.stat(absPath)
