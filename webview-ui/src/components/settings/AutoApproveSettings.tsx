@@ -21,7 +21,8 @@ type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	requestDelaySeconds: number
 	alwaysAllowMcp?: boolean
 	alwaysAllowModeSwitch?: boolean
-	alwaysAllowSubtasks?: boolean
+	alwaysAllowSubtaskCreation?: boolean
+	alwaysAllowSubtaskCompletion?: boolean
 	alwaysAllowExecute?: boolean
 	allowedCommands?: string[]
 	setCachedStateField: SetCachedStateField<
@@ -35,7 +36,8 @@ type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 		| "requestDelaySeconds"
 		| "alwaysAllowMcp"
 		| "alwaysAllowModeSwitch"
-		| "alwaysAllowSubtasks"
+		| "alwaysAllowSubtaskCreation"
+		| "alwaysAllowSubtaskCompletion"
 		| "alwaysAllowExecute"
 		| "allowedCommands"
 	>
@@ -52,7 +54,8 @@ export const AutoApproveSettings = ({
 	requestDelaySeconds,
 	alwaysAllowMcp,
 	alwaysAllowModeSwitch,
-	alwaysAllowSubtasks,
+	alwaysAllowSubtaskCreation,
+	alwaysAllowSubtaskCompletion,
 	alwaysAllowExecute,
 	allowedCommands,
 	setCachedStateField,
@@ -234,13 +237,25 @@ export const AutoApproveSettings = ({
 
 				<div>
 					<VSCodeCheckbox
-						checked={alwaysAllowSubtasks}
-						onChange={(e: any) => setCachedStateField("alwaysAllowSubtasks", e.target.checked)}
-						data-testid="always-allow-subtasks-checkbox">
-						<span className="font-medium">{t("settings:autoApprove.subtasks.label")}</span>
+						checked={alwaysAllowSubtaskCreation}
+						onChange={(e: any) => setCachedStateField("alwaysAllowSubtaskCreation", e.target.checked)}
+						data-testid="always-allow-subtask-creation-checkbox">
+						<span className="font-medium">{t("settings:autoApprove.subtaskCreation.label")}</span>
 					</VSCodeCheckbox>
 					<div className="text-vscode-descriptionForeground text-sm mt-1">
-						{t("settings:autoApprove.subtasks.description")}
+						{t("settings:autoApprove.subtaskCreation.description")}
+					</div>
+				</div>
+
+				<div>
+					<VSCodeCheckbox
+						checked={alwaysAllowSubtaskCompletion}
+						onChange={(e: any) => setCachedStateField("alwaysAllowSubtaskCompletion", e.target.checked)}
+						data-testid="always-allow-subtask-completion-checkbox">
+						<span className="font-medium">{t("settings:autoApprove.subtaskCompletion.label")}</span>
+					</VSCodeCheckbox>
+					<div className="text-vscode-descriptionForeground text-sm mt-1">
+						{t("settings:autoApprove.subtaskCompletion.description")}
 					</div>
 				</div>
 

@@ -133,7 +133,8 @@ export type ExtensionState = Pick<
 	// | "requestDelaySeconds" // Optional in GlobalSettings, required here.
 	| "alwaysAllowMcp"
 	| "alwaysAllowModeSwitch"
-	| "alwaysAllowSubtasks"
+	| "alwaysAllowSubtaskCreation"
+	| "alwaysAllowSubtaskCompletion"
 	| "alwaysAllowExecute"
 	| "allowedCommands"
 	| "browserToolEnabled"

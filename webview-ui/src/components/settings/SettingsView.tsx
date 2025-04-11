@@ -105,7 +105,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		alwaysAllowExecute,
 		alwaysAllowMcp,
 		alwaysAllowModeSwitch,
-		alwaysAllowSubtasks,
+		alwaysAllowSubtaskCreation,
+		alwaysAllowSubtaskCompletion,
 		alwaysAllowWrite,
 		alwaysAllowWriteOutsideWorkspace,
 		alwaysApproveResubmit,
@@ -247,7 +248,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "currentApiConfigName", text: currentApiConfigName })
 			vscode.postMessage({ type: "updateExperimental", values: experiments })
 			vscode.postMessage({ type: "alwaysAllowModeSwitch", bool: alwaysAllowModeSwitch })
-			vscode.postMessage({ type: "alwaysAllowSubtasks", bool: alwaysAllowSubtasks })
+			vscode.postMessage({ type: "alwaysAllowSubtaskCreation", bool: alwaysAllowSubtaskCreation })
+			vscode.postMessage({ type: "alwaysAllowSubtaskCompletion", bool: alwaysAllowSubtaskCompletion })
 			vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
 			vscode.postMessage({ type: "telemetrySetting", text: telemetrySetting })
 			setChangeDetected(false)
@@ -431,7 +433,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 						requestDelaySeconds={requestDelaySeconds}
 						alwaysAllowMcp={alwaysAllowMcp}
 						alwaysAllowModeSwitch={alwaysAllowModeSwitch}
-						alwaysAllowSubtasks={alwaysAllowSubtasks}
+						alwaysAllowSubtaskCreation={alwaysAllowSubtaskCreation}
+						alwaysAllowSubtaskCompletion={alwaysAllowSubtaskCompletion}
 						alwaysAllowExecute={alwaysAllowExecute}
 						allowedCommands={allowedCommands}
 						setCachedStateField={setCachedStateField}

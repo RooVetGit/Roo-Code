@@ -200,10 +200,15 @@
 				"shortName": "Modes",
 				"description": "Allows automatic switching between different modes without requiring approval."
 			},
-			"subtasks": {
-				"label": "Create & complete subtasks",
+			"subtaskCreation": {
+				"label": "Create subtasks",
 				"shortName": "Subtasks",
-				"description": "Allow creation and completion of subtasks without requiring approval."
+				"description": "Allow creation of subtasks without requiring approval."
+			},
+			"subtaskCompletion": {
+				"label": "Complete subtasks",
+				"shortName": "Completion",
+				"description": "Allow completion of subtasks without requiring approval."
 			},
 			"retryRequests": {
 				"label": "Retry failed requests",

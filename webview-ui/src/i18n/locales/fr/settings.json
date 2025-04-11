@@ -68,9 +68,13 @@
 			"label": "Toujours approuver les changements de mode",
 			"description": "Basculer automatiquement entre différents modes sans nécessiter d'approbation"
 		},
-		"subtasks": {
-			"label": "Toujours approuver la création et l'achèvement des sous-tâches",
-			"description": "Permettre la création et l'achèvement des sous-tâches sans nécessiter d'approbation"
+		"subtaskCreation": {
+			"label": "Toujours approuver la création des sous-tâches",
+			"description": "Permettre la création des sous-tâches sans nécessiter d'approbation"
+		},
+		"subtaskCompletion": {
+			"label": "Toujours approuver l'achèvement des sous-tâches",
+			"description": "Permettre l'achèvement des sous-tâches sans nécessiter d'approbation"
 		},
 		"execute": {
 			"label": "Toujours approuver les opérations d'exécution autorisées",

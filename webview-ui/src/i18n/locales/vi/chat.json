@@ -200,10 +200,15 @@
 				"shortName": "Chế độ",
 				"description": "Cho phép tự động chuyển đổi giữa các chế độ khác nhau mà không cần phê duyệt."
 			},
-			"subtasks": {
-				"label": "Tạo & hoàn thành nhiệm vụ phụ",
+			"subtaskCreation": {
+				"label": "Tạo nhiệm vụ phụ",
 				"shortName": "Nhiệm vụ phụ",
-				"description": "Cho phép tạo và hoàn thành các nhiệm vụ phụ mà không cần phê duyệt."
+				"description": "Cho phép tạo các nhiệm vụ phụ mà không cần phê duyệt."
+			},
+			"subtaskCompletion": {
+				"label": "Hoàn thành nhiệm vụ phụ",
+				"shortName": "Hoàn thành",
+				"description": "Cho phép hoàn thành các nhiệm vụ phụ mà không cần phê duyệt."
 			},
 			"retryRequests": {
 				"label": "Thử lại yêu cầu thất bại",

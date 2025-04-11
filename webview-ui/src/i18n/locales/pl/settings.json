@@ -68,9 +68,13 @@
 			"label": "Zawsze zatwierdzaj przełączanie trybów",
 			"description": "Automatycznie przełączaj między różnymi trybami bez konieczności zatwierdzania"
 		},
-		"subtasks": {
-			"label": "Zawsze zatwierdzaj tworzenie i ukończenie podzadań",
-			"description": "Zezwalaj na tworzenie i ukończenie podzadań bez konieczności zatwierdzania"
+		"subtaskCreation": {
+			"label": "Zawsze zatwierdzaj tworzenie podzadań",
+			"description": "Zezwalaj na tworzenie podzadań bez konieczności zatwierdzania"
+		},
+		"subtaskCompletion": {
+			"label": "Zawsze zatwierdzaj ukończenie podzadań",
+			"description": "Zezwalaj na ukończenie podzadań bez konieczności zatwierdzania"
 		},
 		"execute": {
 			"label": "Zawsze zatwierdzaj dozwolone operacje wykonania",

@@ -68,9 +68,13 @@
 			"label": "モード切り替えを常に承認",
 			"description": "承認なしで自動的に異なるモード間を切り替え"
 		},
-		"subtasks": {
-			"label": "サブタスクの作成と完了を常に承認",
-			"description": "承認なしでサブタスクの作成と完了を許可"
+		"subtaskCreation": {
+			"label": "サブタスクの作成を常に承認",
+			"description": "承認なしでサブタスクの作成を許可"
+		},
+		"subtaskCompletion": {
+			"label": "サブタスクの完了を常に承認",
+			"description": "承認なしでサブタスクの完了を許可"
 		},
 		"execute": {
 			"label": "許可された実行操作を常に承認",

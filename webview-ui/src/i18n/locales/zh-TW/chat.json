@@ -200,10 +200,15 @@
 				"shortName": "模式",
 				"description": "允許在不需要核准的情況下自動切換不同模式。"
 			},
-			"subtasks": {
-				"label": "建立和完成子工作",
+			"subtaskCreation": {
+				"label": "建立子工作",
 				"shortName": "子工作",
-				"description": "允許在不需要核准的情況下建立和完成子工作。"
+				"description": "允許在不需要核准的情況下建立子工作。"
+			},
+			"subtaskCompletion": {
+				"label": "完成子工作",
+				"shortName": "完成",
+				"description": "允許在不需要核准的情況下完成子工作。"
 			},
 			"retryRequests": {
 				"label": "重試失敗的請求",

@@ -33,8 +33,10 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		setAlwaysAllowMcp,
 		alwaysAllowModeSwitch,
 		setAlwaysAllowModeSwitch,
-		alwaysAllowSubtasks,
-		setAlwaysAllowSubtasks,
+		alwaysAllowSubtaskCreation,
+		setAlwaysAllowSubtaskCreation,
+		alwaysAllowSubtaskCompletion,
+		setAlwaysAllowSubtaskCompletion,
 		alwaysApproveResubmit,
 		setAlwaysApproveResubmit,
 		autoApprovalEnabled,
@@ -87,11 +89,18 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 			description: t("chat:autoApprove.actions.switchModes.description"),
 		},
 		{
-			id: "subtasks",
-			label: t("chat:autoApprove.actions.subtasks.label"),
-			shortName: t("chat:autoApprove.actions.subtasks.shortName"),
-			enabled: alwaysAllowSubtasks ?? false,
-			description: t("chat:autoApprove.actions.subtasks.description"),
+			id: "subtaskCreation",
+			label: t("chat:autoApprove.actions.subtaskCreation.label"),
+			shortName: t("chat:autoApprove.actions.subtaskCreation.shortName"),
+			enabled: alwaysAllowSubtaskCreation ?? false,
+			description: t("chat:autoApprove.actions.subtaskCreation.description"),
+		},
+		{
+			id: "subtaskCompletion",
+			label: t("chat:autoApprove.actions.subtaskCompletion.label"),
+			shortName: t("chat:autoApprove.actions.subtaskCompletion.shortName"),
+			enabled: alwaysAllowSubtaskCompletion ?? false,
+			description: t("chat:autoApprove.actions.subtaskCompletion.description"),
 		},
 		{
 			id: "retryRequests",
@@ -148,11 +157,17 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		vscode.postMessage({ type: "alwaysAllowModeSwitch", bool: newValue })
 	}, [alwaysAllowModeSwitch, setAlwaysAllowModeSwitch])
 
-	const handleSubtasksChange = useCallback(() => {
-		const newValue = !(alwaysAllowSubtasks ?? false)
-		setAlwaysAllowSubtasks(newValue)
-		vscode.postMessage({ type: "alwaysAllowSubtasks", bool: newValue })
-	}, [alwaysAllowSubtasks, setAlwaysAllowSubtasks])
+	const handleSubtaskCreationChange = useCallback(() => {
+		const newValue = !(alwaysAllowSubtaskCreation ?? false)
+		setAlwaysAllowSubtaskCreation(newValue)
+		vscode.postMessage({ type: "alwaysAllowSubtaskCreation", bool: newValue })
+	}, [alwaysAllowSubtaskCreation, setAlwaysAllowSubtaskCreation])
+
+	const handleSubtaskCompletionChange = useCallback(() => {
+		const newValue = !(alwaysAllowSubtaskCompletion ?? false)
+		setAlwaysAllowSubtaskCompletion(newValue)
+		vscode.postMessage({ type: "alwaysAllowSubtaskCompletion", bool: newValue })
+	}, [alwaysAllowSubtaskCompletion, setAlwaysAllowSubtaskCompletion])
 
 	const handleRetryChange = useCallback(() => {
 		const newValue = !(alwaysApproveResubmit ?? false)
@@ -176,7 +191,8 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		useBrowser: handleBrowserChange,
 		useMcp: handleMcpChange,
 		switchModes: handleModeSwitchChange,
-		subtasks: handleSubtasksChange,
+		subtaskCreation: handleSubtaskCreationChange,
+		subtaskCompletion: handleSubtaskCompletionChange,
 		retryRequests: handleRetryChange,
 	}
 

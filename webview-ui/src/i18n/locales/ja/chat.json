@@ -200,10 +200,15 @@
 				"shortName": "モード",
 				"description": "承認を必要とせず、異なるモード間の自動切り替えを許可します。"
 			},
-			"subtasks": {
-				"label": "サブタスクの作成と完了",
+			"subtaskCreation": {
+				"label": "サブタスクの作成",
 				"shortName": "サブタスク",
-				"description": "承認を必要とせずにサブタスクの作成と完了を許可します。"
+				"description": "承認を必要とせずにサブタスクの作成を許可します。"
+			},
+			"subtaskCompletion": {
+				"label": "サブタスクの完了",
+				"shortName": "完了",
+				"description": "承認を必要とせずにサブタスクの完了を許可します。"
 			},
 			"retryRequests": {
 				"label": "失敗したリクエストの再試行",

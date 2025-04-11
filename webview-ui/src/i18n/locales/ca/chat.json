@@ -200,10 +200,15 @@
 				"shortName": "Modes",
 				"description": "Permet el canvi automàtic entre diferents modes sense requerir aprovació."
 			},
-			"subtasks": {
-				"label": "Crear i completar subtasques",
+			"subtaskCreation": {
+				"label": "Crear subtasques",
 				"shortName": "Subtasques",
-				"description": "Permet la creació i finalització de subtasques sense requerir aprovació."
+				"description": "Permet la creació de subtasques sense requerir aprovació."
+			},
+			"subtaskCompletion": {
+				"label": "Completar subtasques",
+				"shortName": "Finalització",
+				"description": "Permet la finalització de subtasques sense requerir aprovació."
 			},
 			"retryRequests": {
 				"label": "Reintentar sol·licituds fallides",

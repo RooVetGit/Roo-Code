@@ -68,9 +68,13 @@
 			"label": "Mod değiştirmeyi her zaman onayla",
 			"description": "Onay gerektirmeden otomatik olarak farklı modlar arasında geçiş yap"
 		},
-		"subtasks": {
-			"label": "Alt görevlerin oluşturulmasını ve tamamlanmasını her zaman onayla",
-			"description": "Onay gerektirmeden alt görevlerin oluşturulmasına ve tamamlanmasına izin ver"
+		"subtaskCreation": {
+			"label": "Alt görevlerin oluşturulmasını her zaman onayla",
+			"description": "Onay gerektirmeden alt görevlerin oluşturulmasına izin ver"
+		},
+		"subtaskCompletion": {
+			"label": "Alt görevlerin tamamlanmasını her zaman onayla",
+			"description": "Onay gerektirmeden alt görevlerin tamamlanmasına izin ver"
 		},
 		"execute": {
 			"label": "İzin verilen yürütme işlemlerini her zaman onayla",

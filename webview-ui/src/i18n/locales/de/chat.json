@@ -200,10 +200,15 @@
 				"shortName": "Modi",
 				"description": "Erlaubt automatischen Wechsel zwischen verschiedenen Modi ohne erforderliche Genehmigung."
 			},
-			"subtasks": {
-				"label": "Teilaufgaben erstellen & abschließen",
+			"subtaskCreation": {
+				"label": "Teilaufgaben erstellen",
 				"shortName": "Teilaufgaben",
-				"description": "Erlaubt die Erstellung und den Abschluss von Teilaufgaben ohne erforderliche Genehmigung."
+				"description": "Erlaubt die Erstellung von Teilaufgaben ohne erforderliche Genehmigung."
+			},
+			"subtaskCompletion": {
+				"label": "Teilaufgaben abschließen",
+				"shortName": "Abschluss",
+				"description": "Erlaubt den Abschluss von Teilaufgaben ohne erforderliche Genehmigung."
 			},
 			"retryRequests": {
 				"label": "Fehlgeschlagene Anfragen wiederholen",

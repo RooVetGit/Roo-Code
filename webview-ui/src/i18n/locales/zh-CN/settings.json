@@ -68,9 +68,13 @@
 			"label": "自动批准模式切换",
 			"description": "自动在不同模式之间切换而无需批准"
 		},
-		"subtasks": {
-			"label": "自动批准子任务的创建和完成",
-			"description": "允许创建和完成子任务而无需批准"
+		"subtaskCreation": {
+			"label": "自动批准子任务的创建",
+			"description": "允许创建子任务而无需批准"
+		},
+		"subtaskCompletion": {
+			"label": "自动批准子任务的完成",
+			"description": "允许完成子任务而无需批准"
 		},
 		"execute": {
 			"label": "自动批准命令行操作",
