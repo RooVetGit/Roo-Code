@@ -170,35 +170,40 @@ export class SettingsWebviewProvider {
 			"index.css",
 		])
 
-		// CSP directives
-		const csp = [
-			`default-src 'none'`,
-			`img-src ${webview.cspSource} data:`,
-			`style-src ${webview.cspSource} 'unsafe-inline'`,
-			`script-src 'nonce-${nonce}'`,
-			`connect-src ${webview.cspSource}`,
-			`font-src ${webview.cspSource}`,
-		]
+		// Get codicons URI
+		const codiconsUri = getUri(webview, this.context.extensionUri, [
+			"node_modules",
+			"@vscode",
+			"codicons",
+			"dist",
+			"codicon.css",
+		])
+
+		// Get images URI
+		const imagesUri = getUri(webview, this.context.extensionUri, ["assets", "images"])
 
 		return /*html*/ `
-      <!DOCTYPE html>
-      <html lang="en">
-        <head>
-          <meta charset="UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <meta http-equiv="Content-Security-Policy" content="${csp.join("; ")}" />
-          <link rel="stylesheet" type="text/css" href="${stylesUri}" />
-          <title>Roo Code Settings</title>
-          <script nonce="${nonce}">
-            const vscode = acquireVsCodeApi();
-          </script>
-        </head>
-        <body>
-          <div id="root"></div>
-          <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
-        </body>
-      </html>
-    `
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
+            <meta name="theme-color" content="#000000">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:; script-src 'nonce-${nonce}'; connect-src ${webview.cspSource};">
+            <link rel="stylesheet" type="text/css" href="${stylesUri}">
+			<link href="${codiconsUri}" rel="stylesheet" />
+			<script nonce="${nonce}">
+				window.IMAGES_BASE_URI = "${imagesUri}"
+			</script>
+            <title>Roo Code Settings</title>
+          </head>
+          <body>
+            <noscript>You need to enable JavaScript to run this app.</noscript>
+            <div id="root"></div>
+            <script nonce="${nonce}" type="module" src="${scriptUri}"></script>
+          </body>
+        </html>
+      `
 	}
 
 	private setWebviewMessageListener(webview: vscode.Webview) {

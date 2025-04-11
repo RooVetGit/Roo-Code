@@ -4,6 +4,31 @@ import { FluentProvider, webLightTheme, webDarkTheme } from "@fluentui/react-com
 import SettingsView from "./components/SettingsView"
 import "./App.css"
 
+// Define the VS Code API
+declare global {
+	interface Window {
+		acquireVsCodeApi?: () => {
+			postMessage: (message: any) => void
+			getState: () => any
+			setState: (state: any) => void
+		}
+	}
+}
+
+// Initialize VS Code API
+const vscode = (() => {
+	if (window.acquireVsCodeApi) {
+		return window.acquireVsCodeApi()
+	}
+
+	// Fallback for when running outside of VS Code (e.g., in a browser for development)
+	return {
+		postMessage: (message: any) => console.log("VS Code message:", message),
+		getState: () => ({}),
+		setState: () => {},
+	}
+})()
+
 // Define the message type for communication with the extension
 interface VSCodeMessage {
 	type: string
@@ -21,8 +46,10 @@ function App() {
 		// Setup message handler from extension to webview
 		window.addEventListener("message", (event) => {
 			const message = event.data as VSCodeMessage
+			console.log("Received message:", message)
 			switch (message.type) {
 				case "init":
+					console.log("Initializing settings webview")
 					setInitialized(true)
 					break
 				case "theme":
@@ -40,6 +67,7 @@ function App() {
 		})
 
 		// Notify the extension that the webview is ready
+		console.log("Sending webviewDidLaunch message")
 		vscode.postMessage({ type: "webviewDidLaunch" })
 	}, [])
 
