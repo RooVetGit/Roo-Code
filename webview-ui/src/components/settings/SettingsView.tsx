@@ -56,7 +56,6 @@ import { ExperimentalSettings } from "./ExperimentalSettings"
 import { LanguageSettings } from "./LanguageSettings"
 import { About } from "./About"
 import { Section } from "./Section"
-import { CodeIndexConfiguration } from "../../../../src/schemas"
 
 export interface SettingsViewRef {
 	checkUnsaveChanges: (then: () => void) => void
@@ -137,7 +136,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		showRooIgnoredFiles,
 		remoteBrowserEnabled,
 		maxReadFileLine,
-		codeIndexConfiguration,
+		codeIndexEnabled,
+		codeIndexQdrantUrl,
 	} = cachedState
 
 	// Make sure apiConfiguration is initialized and managed by SettingsView.
@@ -183,20 +183,6 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 
 				setChangeDetected(true)
 				return { ...prevState, apiConfiguration: { ...prevState.apiConfiguration, [field]: value } }
-			})
-		},
-		[],
-	)
-
-	const setCodeIndexConfigurationField = useCallback(
-		<K extends keyof CodeIndexConfiguration>(field: K, value: CodeIndexConfiguration[K]) => {
-			setCachedState((prevState) => {
-				if (prevState.codeIndexConfiguration?.[field] === value) {
-					return prevState
-				}
-
-				setChangeDetected(true)
-				return { ...prevState, codeIndexConfiguration: { ...prevState.codeIndexConfiguration, [field]: value } }
 			})
 		},
 		[],
@@ -270,7 +256,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "alwaysAllowSubtasks", bool: alwaysAllowSubtasks })
 			vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
 			vscode.postMessage({ type: "telemetrySetting", text: telemetrySetting })
-			vscode.postMessage({ type: "codeIndexConfiguration", values: codeIndexConfiguration })
+			vscode.postMessage({ type: "codeIndexEnabled", bool: codeIndexEnabled })
+			vscode.postMessage({ type: "codeIndexQdrantUrl", text: codeIndexQdrantUrl })
 			setChangeDetected(false)
 		}
 	}
@@ -531,8 +518,11 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 
 				<div ref={codeIndexRef}>
 					<CodeIndexSettings
-						codeIndexConfiguration={codeIndexConfiguration}
-						setCodeIndexConfigurationField={setCodeIndexConfigurationField}
+						codeIndexEnabled={codeIndexEnabled ?? false}
+						codeIndexQdrantUrl={codeIndexQdrantUrl ?? ""}
+						apiConfiguration={apiConfiguration}
+						setApiConfigurationField={setApiConfigurationField}
+						setCachedStateField={setCachedStateField}
 					/>
 				</div>
 
