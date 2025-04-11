@@ -1,4 +1,4 @@
-import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeCheckbox, VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 import { useCallback, useState } from "react"
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import { useAppTranslation } from "../../i18n/TranslationContext"
@@ -260,23 +260,47 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 							}}
 						/>
 					</div>
-					{actions.map((action) => (
-						<div key={action.id} style={{ margin: "6px 0" }}>
-							<div onClick={(e) => e.stopPropagation()}>
-								<VSCodeCheckbox checked={action.enabled} onChange={actionHandlers[action.id]}>
-									{action.label}
-								</VSCodeCheckbox>
-							</div>
-							<div
-								style={{
-									marginLeft: "28px",
-									color: "var(--vscode-descriptionForeground)",
-									fontSize: "12px",
-								}}>
-								{action.description}
-							</div>
-						</div>
-					))}
+					<div
+						className="grid grid-cols-2 [@media(min-width:240px)]:grid-cols-3 [@media(min-width:320px)]:grid-cols-4 gap-4"
+						style={{ paddingTop: "2rem", paddingBottom: "2rem" }}>
+						{actions.map((action) => {
+							const iconMap: Record<string, string> = {
+								readFiles: "eye",
+								editFiles: "edit",
+								executeCommands: "terminal",
+								useBrowser: "globe",
+								useMcp: "plug",
+								switchModes: "sync",
+								subtasks: "list-unordered",
+								retryRequests: "refresh",
+							}
+							const codicon = iconMap[action.id] || "question"
+							return (
+								<VSCodeButton
+									key={action.id}
+									appearance={action.enabled ? "primary" : "secondary"}
+									onClick={(e) => {
+										e.stopPropagation()
+										actionHandlers[action.id]()
+									}}
+									title={action.description}
+									className="aspect-square w-full min-h-[48px] min-w-[48px]">
+									<span className="flex flex-col items-center gap-1 h-full">
+										<span
+											className={`codicon codicon-${codicon} text-base md:text-lg`}
+											style={{
+												fontSize: "1.5rem",
+												paddingTop: "0.5rem",
+											}}
+										/>
+										<span className="text-xs sm:text-sm md:text-base text-center">
+											{action.shortName}
+										</span>
+									</span>
+								</VSCodeButton>
+							)
+						})}
+					</div>
 				</div>
 			)}
 		</div>
