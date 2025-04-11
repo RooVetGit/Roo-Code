@@ -150,12 +150,6 @@
 		"googleCloudKeyFile": "Google Cloud Key File Path",
 		"googleCloudProjectId": "Google Cloud Project ID",
 		"googleCloudRegion": "Google Cloud Region",
-		"contextWindow": {
-			"overrideLabel": "Context Window Override",
-			"selectedValue": "Selected: {{value}}",
-			"default": "Default ({{value}})",
-			"description": "Override the default context window size for this OpenAI compatible endpoint. 'Default' uses 128k tokens."
-		},
 		"lmStudio": {
 			"baseUrl": "Base URL (optional)",
 			"modelId": "Model ID",

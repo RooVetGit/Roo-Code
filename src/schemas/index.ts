@@ -347,7 +347,6 @@ export const providerSettingsSchema = z.object({
 	openAiUseAzure: z.boolean().optional(),
 	azureApiVersion: z.string().optional(),
 	openAiStreamingEnabled: z.boolean().optional(),
-	openAiContextWindowOverride: z.number().optional(),
 	// Ollama
 	ollamaModelId: z.string().optional(),
 	ollamaBaseUrl: z.string().optional(),
@@ -448,7 +447,6 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	openAiUseAzure: undefined,
 	azureApiVersion: undefined,
 	openAiStreamingEnabled: undefined,
-	openAiContextWindowOverride: undefined,
 	// Ollama
 	ollamaModelId: undefined,
 	ollamaBaseUrl: undefined,

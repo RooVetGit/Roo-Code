@@ -232,24 +232,9 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	}
 
 	override getModel(): { id: string; info: ModelInfo } {
-		// Get the base model info (custom or default)
-		const baseInfo = this.options.openAiCustomModelInfo ?? openAiModelInfoSaneDefaults
-
-		// Check for a valid override value
-		const overrideValue = this.options.openAiContextWindowOverride
-		let effectiveInfo = baseInfo
-
-		if (typeof overrideValue === "number" && overrideValue > 0) {
-			// Apply the override by creating a new object
-			effectiveInfo = {
-				...baseInfo,
-				contextWindow: overrideValue,
-			}
-		}
-
 		return {
 			id: this.options.openAiModelId ?? "",
-			info: effectiveInfo, // Return the potentially overridden info
+			info: this.options.openAiCustomModelInfo ?? openAiModelInfoSaneDefaults,
 		}
 	}
 
