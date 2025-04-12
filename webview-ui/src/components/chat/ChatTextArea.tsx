@@ -756,28 +756,50 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			}
 		})
 
+		// --- 必须严格修改此 useEffect 以处理多个插入 --- (根据规划重写)
 		useEffect(() => {
-			if (pendingInsertions.length === 0 || !textAreaRef.current) {
-				return
+			// 确保 textAreaRef.current 存在且 pendingInsertions 有内容
+			if (pendingInsertions.length > 0 && textAreaRef.current) {
+				const currentTextArea = textAreaRef.current // 引用当前文本区域
+				// 将所有待插入路径用空格连接成一个字符串
+				const textToInsert = pendingInsertions.join(" ")
+				// 获取当前光标位置，若无则取输入值末尾
+				const currentCursorPos = currentTextArea.selectionStart ?? inputValue.length
+				// 确定插入起始位置：优先使用记录的拖放初始位置，否则使用当前光标位置
+				const startPos = intendedCursorPosition ?? currentCursorPos
+
+				// 构建插入后的新输入值
+				const newValue =
+					inputValue.substring(0, startPos) + // 插入点之前的部分
+					textToInsert + // 要插入的所有路径字符串
+					" " + // 在所有路径后追加一个空格，以便继续输入
+					inputValue.substring(startPos) // 插入点之后的部分
+
+				// 调用回调函数更新父组件或全局状态中的输入值
+				// 注意：这里直接调用 setInputValue，因为它是 props 传入的 state setter
+				setInputValue(newValue)
+				// 一次性清空待插入项数组
+				setPendingInsertions([])
+
+				// 计算插入后的新光标位置（位于插入内容和末尾空格之后）
+				const newCursorPos = startPos + textToInsert.length + 1 // +1 是因为加了空格
+
+				// 使用 requestAnimationFrame 确保在 DOM 更新后设置光标和焦点
+				requestAnimationFrame(() => {
+					if (textAreaRef.current) {
+						textAreaRef.current.selectionStart = newCursorPos
+						textAreaRef.current.selectionEnd = newCursorPos
+						// 确保文本区域获得焦点，以便用户可以立即输入
+						textAreaRef.current.focus()
+					}
+				})
+
+				// 重置记录的初始光标位置
+				setIntendedCursorPosition(null)
 			}
-
-			const path = pendingInsertions[0]
-			const currentTextArea = textAreaRef.current
-			const currentValue = currentTextArea.value
-			const currentCursorPos =
-				intendedCursorPosition ??
-				(currentTextArea.selectionStart >= 0 ? currentTextArea.selectionStart : currentValue.length)
-
-			const mentionTextToInsert = path + " "
-			const { newValue, mentionIndex } = insertMention(currentValue, currentCursorPos, mentionTextToInsert)
-			const newCursorPosition = mentionIndex + mentionTextToInsert.length // 声明移到 useEffect 内部
-
-			setInputValue(newValue)
-
-			setIntendedCursorPosition(newCursorPosition)
-
-			setPendingInsertions((prev) => prev.slice(1))
-		}, [pendingInsertions, setInputValue, intendedCursorPosition])
+			// 依赖项数组：当这些值变化时，此 effect 会重新运行
+			// 需要包含所有在 effect 内部使用的、可能变化的外部变量/状态/回调
+		}, [pendingInsertions, inputValue, setInputValue, intendedCursorPosition, setIntendedCursorPosition]) // 确保依赖项完整
 
 		const placeholderBottomText = `\n(${t("chat:addContext")}${shouldDisableImages ? `, ${t("chat:dragFiles")}` : `, ${t("chat:dragFilesImages")}`})`
 
