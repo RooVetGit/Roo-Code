@@ -318,7 +318,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setAwsUsePromptCache: (value) => setState((prevState) => ({ ...prevState, awsUsePromptCache: value })),
 		setMaxReadFileLine: (value) => setState((prevState) => ({ ...prevState, maxReadFileLine: value })),
 		setPinnedApiConfigs: (value) => setState((prevState) => ({ ...prevState, pinnedApiConfigs: value })),
-		setShowGreeting: (value) => setState((prevState) => ({ ...prevState, shouldShowGreeting: value })),
+		setShowGreeting: (value) => setState((prevState) => ({ ...prevState, showGreeting: value })),
 		togglePinnedApiConfig: (configId) =>
 			setState((prevState) => {
 				const currentPinned = prevState.pinnedApiConfigs || {}

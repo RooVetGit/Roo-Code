@@ -310,8 +310,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			{ id: "autoApprove", icon: CheckCheck, ref: autoApproveRef },
 			{ id: "browser", icon: SquareMousePointer, ref: browserRef },
 			{ id: "checkpoints", icon: GitBranch, ref: checkpointsRef },
+			{ id: "interface", icon: Monitor, ref: interfaceRef },
 			{ id: "notifications", icon: Bell, ref: notificationsRef },
-			{ id: "interface", icon: Monitor, ref: interfaceRef},
 			{ id: "contextManagement", icon: Database, ref: contextManagementRef },
 			{ id: "terminal", icon: SquareTerminal, ref: terminalRef },
 			{ id: "advanced", icon: Cog, ref: advancedRef },
@@ -324,6 +324,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			autoApproveRef,
 			browserRef,
 			checkpointsRef,
+			interfaceRef,
 			notificationsRef,
 			contextManagementRef,
 			terminalRef,
@@ -476,19 +477,16 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 					/>
 				</div>
 
+				<div ref={interfaceRef}>
+					<InterfaceSettings showGreeting={showGreeting} setCachedStateField={setCachedStateField} />
+				</div>
+
 				<div ref={notificationsRef}>
 					<NotificationSettings
 						ttsEnabled={ttsEnabled}
 						ttsSpeed={ttsSpeed}
 						soundEnabled={soundEnabled}
 						soundVolume={soundVolume}
-						setCachedStateField={setCachedStateField}
-					/>
-				</div>
-
-				<div ref={interfaceRef}>
-					<InterfaceSettings
-						showGreeting={showGreeting}
 						setCachedStateField={setCachedStateField}
 					/>
 				</div>
