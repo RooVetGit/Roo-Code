@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Ellipsis, Rocket } from "lucide-react"
@@ -35,8 +35,7 @@ export function Home({ runs }: { runs: (Run & { taskMetrics: TaskMetrics | null 
 	const router = useRouter()
 
 	const [deleteRunId, setDeleteRunId] = useState<number>()
-
-	const visibleRuns = useMemo(() => runs.filter((run) => run.taskMetrics !== null), [runs])
+	const continueRef = useRef<HTMLButtonElement>(null)
 
 	const onConfirmDelete = useCallback(async () => {
 		if (!deleteRunId) {
@@ -67,21 +66,27 @@ export function Home({ runs }: { runs: (Run & { taskMetrics: TaskMetrics | null 
 					</TableRow>
 				</TableHeader>
 				<TableBody>
-					{visibleRuns.length ? (
-						visibleRuns.map(({ taskMetrics, ...run }) => (
+					{runs.length ? (
+						runs.map(({ taskMetrics, ...run }) => (
 							<TableRow key={run.id}>
 								<TableCell>{run.model}</TableCell>
 								<TableCell>{run.passed}</TableCell>
 								<TableCell>{run.failed}</TableCell>
-								<TableCell>{((run.passed / (run.passed + run.failed)) * 100).toFixed(1)}%</TableCell>
 								<TableCell>
-									<div className="flex items-center justify-evenly">
-										<div>{formatTokens(taskMetrics!.tokensIn)}</div>/
-										<div>{formatTokens(taskMetrics!.tokensOut)}</div>
-									</div>
+									{run.passed + run.failed > 0 && (
+										<span>{((run.passed / (run.passed + run.failed)) * 100).toFixed(1)}%</span>
+									)}
 								</TableCell>
-								<TableCell>{formatCurrency(taskMetrics!.cost)}</TableCell>
-								<TableCell>{formatDuration(taskMetrics!.duration)}</TableCell>
+								<TableCell>
+									{taskMetrics && (
+										<div className="flex items-center justify-evenly">
+											<div>{formatTokens(taskMetrics.tokensIn)}</div>/
+											<div>{formatTokens(taskMetrics.tokensOut)}</div>
+										</div>
+									)}
+								</TableCell>
+								<TableCell>{taskMetrics && formatCurrency(taskMetrics.cost)}</TableCell>
+								<TableCell>{taskMetrics && formatDuration(taskMetrics.duration)}</TableCell>
 								<TableCell>
 									<DropdownMenu>
 										<Button variant="ghost" size="icon" asChild>
@@ -89,11 +94,15 @@ export function Home({ runs }: { runs: (Run & { taskMetrics: TaskMetrics | null 
 												<Ellipsis />
 											</DropdownMenuTrigger>
 										</Button>
-										<DropdownMenuContent>
+										<DropdownMenuContent align="end">
 											<DropdownMenuItem asChild>
 												<Link href={`/runs/${run.id}`}>View Tasks</Link>
 											</DropdownMenuItem>
-											<DropdownMenuItem onClick={() => setDeleteRunId(run.id)}>
+											<DropdownMenuItem
+												onClick={() => {
+													setDeleteRunId(run.id)
+													setTimeout(() => continueRef.current?.focus(), 0)
+												}}>
 												Delete
 											</DropdownMenuItem>
 										</DropdownMenuContent>
@@ -128,7 +137,9 @@ export function Home({ runs }: { runs: (Run & { taskMetrics: TaskMetrics | null 
 					</AlertDialogHeader>
 					<AlertDialogFooter>
 						<AlertDialogCancel>Cancel</AlertDialogCancel>
-						<AlertDialogAction onClick={onConfirmDelete}>Continue</AlertDialogAction>
+						<AlertDialogAction ref={continueRef} onClick={onConfirmDelete}>
+							Continue
+						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
