@@ -34,7 +34,9 @@ async function directoryExists(dirPath: string): Promise<boolean> {
 
 const MAX_DEPTH = 5
 
-//
+/**
+ * Recursively resolve directory entries and collect file paths
+ */
 async function resolveDirectoryEntry(
 	entry: Dirent,
 	dirPath: string,
@@ -56,6 +58,9 @@ async function resolveDirectoryEntry(
 	}
 }
 
+/**
+ * Recursively resolve a symbolic link and collect file paths
+ */
 async function resolveSymLink(fullPath: string, filePaths: string[], depth: number): Promise<void> {
 	// Avoid cyclic symlinks
 	if (depth > MAX_DEPTH) {
