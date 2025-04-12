@@ -114,7 +114,7 @@ export async function testParseSourceCodeDefinitions(
 	expect(mockedLoadRequiredLanguageParsers).toHaveBeenCalledWith([testFilePath])
 	expect(mockedLoadRequiredLanguageParsers).toHaveBeenCalled()
 
-	debugLog(`content:\n${content}\n\nResult:\n${result}`)
+	debugLog(`Result:\n${result}`)
 	return result
 }
 
@@ -131,41 +131,4 @@ export async function inspectTreeStructure(content: string, language: string = "
 
 	// Print the tree structure
 	debugLog(`TREE STRUCTURE (${language}):\n${tree.rootNode.toString()}`)
-
-	// Add more detailed debug information
-	debugLog("\nDETAILED NODE INSPECTION:")
-
-	// Function to recursively print node details
-	const printNodeDetails = (node: Parser.SyntaxNode, depth: number = 0) => {
-		const indent = "  ".repeat(depth)
-		debugLog(
-			`${indent}Node Type: ${node.type}, Start: ${node.startPosition.row}:${node.startPosition.column}, End: ${node.endPosition.row}:${node.endPosition.column}`,
-		)
-
-		// Print children
-		for (let i = 0; i < node.childCount; i++) {
-			const child = node.child(i)
-			if (child) {
-				// For type_alias_declaration nodes, print more details
-				if (node.type === "type_alias_declaration") {
-					debugLog(`${indent}  TYPE ALIAS: ${node.text}`)
-				}
-
-				// For conditional_type nodes, print more details
-				if (node.type === "conditional_type" || child.type === "conditional_type") {
-					debugLog(`${indent}  CONDITIONAL TYPE FOUND: ${child.text}`)
-				}
-
-				// For infer_type nodes, print more details
-				if (node.type === "infer_type" || child.type === "infer_type") {
-					debugLog(`${indent}  INFER TYPE FOUND: ${child.text}`)
-				}
-
-				printNodeDetails(child, depth + 1)
-			}
-		}
-	}
-
-	// Start recursive printing from the root node
-	printNodeDetails(tree.rootNode)
 }
