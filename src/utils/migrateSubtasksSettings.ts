@@ -17,7 +17,6 @@ export async function migrateSubtasksSettings(
 	try {
 		// Get old value
 		const oldValue = await context.globalState.get(subtasksKey)
-		console.log(`old subtasks value: ${oldValue}`)
 
 		if (oldValue !== undefined && typeof oldValue === "boolean") {
 			// Update new settings
@@ -25,11 +24,6 @@ export async function migrateSubtasksSettings(
 				context.globalState.update(subtaskCreationKey, oldValue),
 				context.globalState.update(subtaskCompletionKey, oldValue),
 			])
-
-			const creationValue = await context.globalState.get(subtaskCreationKey)
-			const completionValue = await context.globalState.get(subtaskCompletionKey)
-			console.log(`new subtask creation value value: ${creationValue}`)
-			console.log(`new subtask completion value value: ${completionValue}`)
 
 			// Schedule cleanup
 			setTimeout(async () => {
