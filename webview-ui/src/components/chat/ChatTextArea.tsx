@@ -101,7 +101,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		}, [showDropdown])
 
 		// Handle enhanced prompt response and search results.
-		// --- 必须严格修改消息监听 useEffect --- (根据规划修改)
+
 		useEffect(() => {
 			const messageHandler = (event: MessageEvent) => {
 				const message = event.data // The JSON data our extension sent
@@ -131,23 +131,20 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						}
 						break
 
-					// 必须添加此 case (根据规划添加)
 					case "mentionPathsResponse": {
-						const validPaths = message.mentionPaths?.filter((path: string): path is string => !!path) || [] // 添加显式类型 string (修复 TS 错误)
+						const validPaths = message.mentionPaths?.filter((path: string): path is string => !!path) || []
 						if (validPaths.length > 0) {
-							// 必须更新 pendingInsertions 状态
 							setPendingInsertions((prev) => [...prev, ...validPaths])
 						}
 						break
 					}
-					// ... 其他 case ...
 				}
 			}
 
 			window.addEventListener("message", messageHandler)
 			// Clean up
 			return () => window.removeEventListener("message", messageHandler)
-		}, [setInputValue, searchRequestId /* , 确保其他依赖项完整 */]) // 确保依赖项完整
+		}, [setInputValue, searchRequestId])
 		const [isDraggingOver, setIsDraggingOver] = useState(false)
 		const [textAreaBaseHeight, setTextAreaBaseHeight] = useState<number | undefined>(undefined)
 		const [showContextMenu, setShowContextMenu] = useState(false)
@@ -159,9 +156,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const [selectedMenuIndex, setSelectedMenuIndex] = useState(-1)
 		const [selectedType, setSelectedType] = useState<ContextMenuOptionType | null>(null)
 		const [justDeletedSpaceAfterMention, setJustDeletedSpaceAfterMention] = useState(false)
-		// 必须定义此状态 (根据规划添加)
 		const [pendingInsertions, setPendingInsertions] = useState<string[]>([])
-		// 必须定义此状态 (已存在)
 		const [intendedCursorPosition, setIntendedCursorPosition] = useState<number | null>(null)
 		const contextMenuContainerRef = useRef<HTMLDivElement>(null)
 		const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false)
@@ -431,15 +426,12 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			],
 		)
 
-		// --- 必须添加用于应用光标位置的 useLayoutEffect --- (已存在，符合规划)
 		useLayoutEffect(() => {
 			if (intendedCursorPosition !== null && textAreaRef.current) {
-				// 必须应用光标位置
 				textAreaRef.current.setSelectionRange(intendedCursorPosition, intendedCursorPosition)
-				// 必须重置，防止重复应用
 				setIntendedCursorPosition(null)
 			}
-		}, [inputValue, intendedCursorPosition]) // 必须包含正确的依赖项
+		}, [inputValue, intendedCursorPosition])
 		// Ref to store the search timeout
 		const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -625,27 +617,22 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			[updateCursorPosition],
 		)
 
-		// --- 必须严格修改 onDrop (或 handleDrop) 函数 --- (根据规划重写)
 		const handleDrop = useCallback(
 			async (e: React.DragEvent<HTMLDivElement>) => {
 				e.preventDefault()
-				setIsDraggingOver(false) // 假设有此状态
+				setIsDraggingOver(false)
 
-				// --- 1. 核心：处理 VSCode 拖拽 ---
 				let uris: string[] = []
-				const vscodeUriListData = e.dataTransfer.getData("application/vnd.code.uri-list") // 必须检查这个
-				const resourceUrlsData = e.dataTransfer.getData("resourceurls") // 也要检查这个
+				const vscodeUriListData = e.dataTransfer.getData("application/vnd.code.uri-list")
+				const resourceUrlsData = e.dataTransfer.getData("resourceurls")
 
-				// 优先使用 application/vnd.code.uri-list
 				if (vscodeUriListData) {
 					uris = vscodeUriListData
 						.split("\n")
 						.map((uri) => uri.trim())
 						.filter((uri) => uri)
 				} else if (resourceUrlsData) {
-					// 回退到 resourceurls
 					try {
-						// 注意：resourceUrlsData 是 JSON 字符串数组
 						const parsedUris = JSON.parse(resourceUrlsData) as string[]
 						uris = parsedUris.map((uri) => decodeURIComponent(uri)).filter((uri) => uri)
 					} catch (error) {
@@ -654,15 +641,12 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					}
 				}
 
-				// 过滤有效的 URI (file: 或 vscode-file:)
 				const validUris = uris.filter(
 					(uri) => uri && (uri.startsWith("vscode-file:") || uri.startsWith("file:")),
 				)
 
 				if (validUris.length > 0) {
-					// 必须清空待插入项
 					setPendingInsertions([])
-					// 必须记录初始光标位置
 					let initialCursorPos = inputValue.length
 					if (textAreaRef.current) {
 						initialCursorPos =
@@ -672,25 +656,13 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					}
 					setIntendedCursorPosition(initialCursorPos)
 
-					// 必须发送此消息
 					vscode.postMessage({
 						type: "getMentionPathsFromUris",
 						uris: validUris,
 					})
-					return // 处理完毕，不再执行后续逻辑
-				}
-
-				// --- 2. 移除或注释掉无关逻辑 ---
-				// 🚨 下面的 text/plain 处理逻辑与本次任务无关，必须移除或注释掉！
-				/*
-				const text = e.dataTransfer.getData("text")
-				if (text) {
-					// handleTextDrop(text) // 移除或注释掉这部分
 					return
 				}
-				*/
 
-				// --- 3. 其他拖拽处理 (例如图片) ---
 				const files = Array.from(e.dataTransfer.files)
 				if (!textAreaDisabled && files.length > 0) {
 					const acceptedTypes = ["png", "jpeg", "webp"]
@@ -736,7 +708,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			[
 				inputValue,
 				setIntendedCursorPosition,
-				setPendingInsertions, // 添加依赖
+				setPendingInsertions,
 				textAreaDisabled,
 				shouldDisableImages,
 				setSelectedImages,
@@ -756,50 +728,31 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			}
 		})
 
-		// --- 必须严格修改此 useEffect 以处理多个插入 --- (根据规划重写)
 		useEffect(() => {
-			// 确保 textAreaRef.current 存在且 pendingInsertions 有内容
 			if (pendingInsertions.length > 0 && textAreaRef.current) {
-				const currentTextArea = textAreaRef.current // 引用当前文本区域
-				// 将所有待插入路径用空格连接成一个字符串
+				const currentTextArea = textAreaRef.current
 				const textToInsert = pendingInsertions.join(" ")
-				// 获取当前光标位置，若无则取输入值末尾
 				const currentCursorPos = currentTextArea.selectionStart ?? inputValue.length
-				// 确定插入起始位置：优先使用记录的拖放初始位置，否则使用当前光标位置
 				const startPos = intendedCursorPosition ?? currentCursorPos
 
-				// 构建插入后的新输入值
-				const newValue =
-					inputValue.substring(0, startPos) + // 插入点之前的部分
-					textToInsert + // 要插入的所有路径字符串
-					" " + // 在所有路径后追加一个空格，以便继续输入
-					inputValue.substring(startPos) // 插入点之后的部分
+				const newValue = inputValue.substring(0, startPos) + textToInsert + " " + inputValue.substring(startPos)
 
-				// 调用回调函数更新父组件或全局状态中的输入值
-				// 注意：这里直接调用 setInputValue，因为它是 props 传入的 state setter
 				setInputValue(newValue)
-				// 一次性清空待插入项数组
 				setPendingInsertions([])
 
-				// 计算插入后的新光标位置（位于插入内容和末尾空格之后）
-				const newCursorPos = startPos + textToInsert.length + 1 // +1 是因为加了空格
+				const newCursorPos = startPos + textToInsert.length + 1
 
-				// 使用 requestAnimationFrame 确保在 DOM 更新后设置光标和焦点
 				requestAnimationFrame(() => {
 					if (textAreaRef.current) {
 						textAreaRef.current.selectionStart = newCursorPos
 						textAreaRef.current.selectionEnd = newCursorPos
-						// 确保文本区域获得焦点，以便用户可以立即输入
 						textAreaRef.current.focus()
 					}
 				})
 
-				// 重置记录的初始光标位置
 				setIntendedCursorPosition(null)
 			}
-			// 依赖项数组：当这些值变化时，此 effect 会重新运行
-			// 需要包含所有在 effect 内部使用的、可能变化的外部变量/状态/回调
-		}, [pendingInsertions, inputValue, setInputValue, intendedCursorPosition, setIntendedCursorPosition]) // 确保依赖项完整
+		}, [pendingInsertions, inputValue, setInputValue, intendedCursorPosition, setIntendedCursorPosition])
 
 		const placeholderBottomText = `\n(${t("chat:addContext")}${shouldDisableImages ? `, ${t("chat:dragFiles")}` : `, ${t("chat:dragFilesImages")}`})`
 
