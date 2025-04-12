@@ -32,7 +32,7 @@ async function directoryExists(dirPath: string): Promise<boolean> {
 	}
 }
 
-const MAX_DEPTH = 10
+const MAX_DEPTH = 5
 
 //
 async function resolveDirectoryEntry(
