@@ -34,7 +34,7 @@ Voorbeelden van onacceptabel gedrag van deelnemers zijn onder andere:
 ## Onze Verantwoordelijkheden
 
 Projectbeheerders zijn verantwoordelijk voor het verduidelijken van de normen voor acceptabel
-gedrag en wordt verwacht dat zij passende en eerlijke corrigerende maatregelen nemen als
+gedrag en worden verwacht dat zij passende en eerlijke corrigerende maatregelen nemen als
 reactie op elk geval van onacceptabel gedrag.
 
 Projectbeheerders hebben het recht en de verantwoordelijkheid om opmerkingen, commits, code, wiki-bewerkingen,
