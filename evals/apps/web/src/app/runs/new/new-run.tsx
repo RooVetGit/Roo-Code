@@ -75,7 +75,7 @@ export function NewRun() {
 		formState: { isSubmitting },
 	} = form
 
-	const [model, suite, settings, concurrency] = watch(["model", "suite", "settings", "concurrency"])
+	const [model, suite, settings] = watch(["model", "suite", "settings", "concurrency"])
 
 	const onSubmit = useCallback(
 		async (values: FormValues) => {
@@ -295,30 +295,19 @@ export function NewRun() {
 						name="concurrency"
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel className="flex items-center gap-2">
-									<Cpu className="size-4" />
-									Concurrency
-								</FormLabel>
+								<FormLabel>Concurrency</FormLabel>
 								<FormControl>
-									<div className="flex flex-col gap-2">
+									<div className="flex flex-row items-center gap-2">
 										<Slider
 											defaultValue={[field.value]}
 											min={1}
-											max={50}
+											max={25}
 											step={1}
 											onValueChange={(value) => field.onChange(value[0])}
 										/>
-										<div className="flex justify-between text-xs text-muted-foreground">
-											<span>1</span>
-											<span>{field.value}</span>
-											<span>50</span>
-										</div>
+										<div>{field.value}</div>
 									</div>
 								</FormControl>
-								<FormDescription>
-									Number of tasks to run in parallel. Higher values may improve speed but increase
-									resource usage.
-								</FormDescription>
 								<FormMessage />
 							</FormItem>
 						)}
