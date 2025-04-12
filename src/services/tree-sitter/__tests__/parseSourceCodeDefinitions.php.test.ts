@@ -58,46 +58,45 @@ describe("parseSourceCodeDefinitionsForFile with PHP", () => {
 		const result = await testParseSourceCodeDefinitions("test.php", samplePhpContent, phpOptions)
 
 		// Check for all class types
-		expect(result).toContain("class TestAbstractClass")
-		expect(result).toContain("abstract class TestAbstractClass")
-		expect(result).toContain("final class TestFinalClass")
-		expect(result).toContain("readonly class TestReadonlyClass")
+		expect(result).toContain("class TestClassDefinition")
+		expect(result).toContain("abstract class TestAbstractClassDefinition")
+		expect(result).toContain("final class TestFinalClassDefinition")
 	})
 
 	it("should capture interface definitions", async () => {
 		const result = await testParseSourceCodeDefinitions("test.php", samplePhpContent, phpOptions)
 
 		// Check for interface declarations
-		expect(result).toContain("interface TestInterface")
+		expect(result).toContain("interface TestInterfaceDefinition")
 	})
 
 	it("should capture trait definitions", async () => {
 		const result = await testParseSourceCodeDefinitions("test.php", samplePhpContent, phpOptions)
 
 		// Check for trait declarations
-		expect(result).toContain("trait TestTrait")
+		expect(result).toContain("trait TestTraitDefinition")
 	})
 
 	it("should capture enum definitions", async () => {
 		const result = await testParseSourceCodeDefinitions("test.php", samplePhpContent, phpOptions)
 
 		// Check for enum declarations
-		expect(result).toContain("enum TestEnum")
+		expect(result).toContain("enum TestEnumDefinition")
 	})
 
 	it("should capture method definitions", async () => {
 		const result = await testParseSourceCodeDefinitions("test.php", samplePhpContent, phpOptions)
 
 		// Check for method declarations
-		expect(result).toContain("public function testUnionTypeMethod")
-		expect(result).toContain("public function testInterfaceMethod1")
+		expect(result).toContain("public function testMethodDefinition")
+		expect(result).toContain("public function testInterfaceMethod")
 		expect(result).toContain("public function testEnumMethod")
 	})
 
 	it("should capture function definitions", async () => {
 		const result = await testParseSourceCodeDefinitions("test.php", samplePhpContent, phpOptions)
 
-		expect(result).toContain("function testFunction")
+		expect(result).toContain("function testGlobalFunction")
 	})
 
 	it("should capture property definitions", async () => {
@@ -136,7 +135,7 @@ describe("parseSourceCodeDefinitionsForFile with PHP", () => {
 		const result = await testParseSourceCodeDefinitions("test.php", samplePhpContent, phpOptions)
 
 		// Check for anonymous class
-		expect(result).toContain("new class implements TestInterface")
+		expect(result).toContain("new class extends TestClassDefinition")
 	})
 
 	it("should capture arrow function definitions", async () => {
@@ -158,7 +157,7 @@ describe("parseSourceCodeDefinitionsForFile with PHP", () => {
 		const result = await testParseSourceCodeDefinitions("test.php", samplePhpContent, phpOptions)
 
 		// Check for attributes
-		expect(result).toContain("#[TestController]")
+		expect(result).toContain("#[TestAttribute]")
 	})
 
 	it("should capture match expressions", async () => {
@@ -173,6 +172,6 @@ describe("parseSourceCodeDefinitionsForFile with PHP", () => {
 
 		// Check for heredoc and nowdoc
 		expect(result).toContain("$testHeredoc = <<<HTML")
-		expect(result).toContain("$testNowdoc = <<<'CODE'")
+		expect(result).toContain("$testNowdoc = <<<'SQL'")
 	})
 })

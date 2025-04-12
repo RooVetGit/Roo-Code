@@ -68,120 +68,81 @@ int add(int a, int b) {
 	})
 
 	// Function definitions
-	it("should capture function definitions", async () => {
+	it("should capture basic function definition", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
 		const resultLines = result?.split("\n") || []
 
-		// Check for specific function definition
-		expect(resultLines.some((line) => line.includes("test_function_definition"))).toBe(true)
+		expect(resultLines.some((line) => line.includes("test_basic_function"))).toBe(true)
 	})
 
-	it("should capture functions with parameters", async () => {
+	it("should capture function with array parameters", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
 		const resultLines = result?.split("\n") || []
 
-		// Check for function with parameters
-		expect(resultLines.some((line) => line.includes("test_function_with_params"))).toBe(true)
+		expect(resultLines.some((line) => line.includes("test_array_function"))).toBe(true)
 	})
 
-	it("should capture functions with pointer parameters", async () => {
+	it("should capture function with pointer parameters", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
 		const resultLines = result?.split("\n") || []
 
-		// Check for function with pointer parameters
-		expect(resultLines.some((line) => line.includes("test_function_with_pointers"))).toBe(true)
+		expect(resultLines.some((line) => line.includes("test_pointer_function"))).toBe(true)
 	})
 
-	it("should capture functions with array parameters", async () => {
+	it("should capture variadic function", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
 		const resultLines = result?.split("\n") || []
 
-		// Check for function with array parameters
-		expect(resultLines.some((line) => line.includes("test_function_with_array"))).toBe(true)
-	})
-
-	it("should capture variadic functions", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
-		const resultLines = result?.split("\n") || []
-
-		// Check for variadic function
 		expect(resultLines.some((line) => line.includes("test_variadic_function"))).toBe(true)
 	})
 
-	// Note: Inline functions are not currently supported by the parser
-
 	// Struct definitions
-	it("should capture struct definitions", async () => {
+	it("should capture basic struct definition", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
-
-		// Check for specific struct definition
-		expect(result).toContain("struct test_struct_definition")
+		expect(result).toContain("struct TestBasicStruct")
 	})
 
-	it("should capture nested struct definitions", async () => {
+	it("should capture nested struct definition", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
-
-		// Check for nested struct
-		expect(result).toContain("struct test_nested_struct")
+		expect(result).toContain("struct TestNestedStruct")
 	})
 
-	it("should capture structs with bit fields", async () => {
+	it("should capture struct with bit fields", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
-
-		// Check for struct with bit fields
-		expect(result).toContain("struct test_struct_with_bitfields")
+		expect(result).toContain("struct TestBitFieldStruct")
 	})
 
-	it("should capture structs with function pointer members", async () => {
+	it("should capture struct with function pointer", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
-
-		// Check for struct with function pointer member
-		expect(result).toContain("struct test_struct_with_function_ptr")
+		expect(result).toContain("struct TestCallbackStruct")
 	})
-
-	// Note: Union definitions are not fully supported by the parser
 
 	// Enum definitions
-	it("should capture enum definitions", async () => {
+	it("should capture basic enum definition", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
+		expect(result).toContain("enum TestBasicEnum")
+	})
 
-		// Check for enum definition
-		expect(result).toContain("enum test_enum_definition")
+	it("should capture enum with explicit values", async () => {
+		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
+		expect(result).toContain("enum TestValuedEnum")
 	})
 
 	// Typedef declarations
-	it("should capture typedef struct declarations", async () => {
+	it("should capture typedef struct", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
-
-		// Check for typedef struct
 		expect(result).toContain("typedef struct")
 	})
 
-	// Note: The parser only supports typedef struct declarations, not primitive or function pointer typedefs
-
-	// Note: Simple macro definitions are not supported by the parser, only complex ones
-
-	// Note: The following constructs are not currently supported by the parser:
-	// - Global variables
-	// - Static variables and functions
-	// - Extern declarations
-	// - Function pointers
-	// - Array declarations
-	// - Pointer declarations
-
 	// C11 features
-	it("should capture C11 anonymous union structs", async () => {
+	it("should capture anonymous union struct", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
-
-		// Check for C11 anonymous union struct
-		expect(result).toContain("struct test_anonymous_union")
+		expect(result).toContain("struct TestAnonymousUnion")
 	})
 
-	it("should capture C11 alignas structs", async () => {
+	it("should capture aligned struct", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
-
-		// Check for C11 alignas struct
-		expect(result).toContain("struct test_alignas_struct")
+		expect(result).toContain("struct TestAlignedStruct")
 	})
 
 	// Note: C11 atomic types are not currently supported by the parser

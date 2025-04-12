@@ -1,191 +1,121 @@
 export default String.raw`
-// Package declaration
-package com.example.kotlin
-
-// Import statements
-import kotlin.collections.List
-import kotlin.math.PI
+// Package and imports
+package com.example.test
 import kotlin.math.sqrt
 
-// Regular class declaration
-class TestClassDefinition {
-    // Properties
-    var testProperty: String = ""
-    var age: Int = 0
+// Testing regular class with properties and methods
+class TestBasicClass {
+    private var name: String = ""
+    protected var count: Int = 0
     
-    // Constructor
-    constructor(name: String, age: Int) {
-        this.testProperty = name
-        this.age = age
+    constructor(name: String, count: Int) {
+        this.name = name
+        this.count = count
     }
     
-    // Method
-    fun greet(): String {
-        return "Hello, my name is $testProperty and I am $age years old."
+    fun testMethod(): String {
+        return "Test $name with count $count"
     }
 }
 
-// Another regular class with primary constructor
-class TestClassWithConstructor(
-    val name: String,
-    val position: String,
-    var salary: Double
-) {
-    // Secondary constructor
-    constructor(name: String, position: String) : this(name, position, 0.0)
-    
-    // Method with default parameter
-    fun giveRaise(amount: Double = 100.0) {
-        salary += amount
-    }
-}
-
-// Data class declaration
+// Testing data class with properties
 data class TestDataClass(
-    val id: String,
-    val name: String,
-    val price: Double,
-    val category: String
-) {
-    // Method in data class
-    fun applyDiscount(percentage: Double): Double {
-        return price * (1 - percentage / 100)
-    }
-}
-
-// Enum class declaration
-enum class TestEnumClass(val shortName: String) {
-    MONDAY("Mon"),
-    TUESDAY("Tue"),
-    WEDNESDAY("Wed"),
-    THURSDAY("Thu"),
-    FRIDAY("Fri"),
-    SATURDAY("Sat"),
-    SUNDAY("Sun");
-    
-    // Method in enum class
-    fun isWeekend(): Boolean {
-        return this == SATURDAY || this == SUNDAY
-    }
-}
-
-// Interface declaration
-interface TestInterface {
-    // Abstract property
-    val area: Double
-    
-    // Abstract method
-    fun draw()
-    
-    // Method with default implementation
-    fun erase() {
-        println("Erasing the drawing")
-    }
-}
-
-// Abstract class declaration
-abstract class TestAbstractClass : TestInterface {
-    // Abstract property
-    abstract val name: String
-    
-    // Concrete property
-    val color: String = "White"
-    
-    // Abstract method
-    abstract fun calculateArea(): Double
-    
-    // Concrete method
-    override fun draw() {
-        println("Drawing a $color $name")
-    }
-}
-
-// Sealed class declaration
-sealed class TestSealedClass {
-    // Nested data class
-    data class TestNestedDataClass(val data: Any) : TestSealedClass()
-    
-    // Nested class
-    class TestNestedClass(val exception: Exception) : TestSealedClass()
-    
-    // Nested object
-    object TestNestedObject : TestSealedClass()
-}
-
-// Object declaration (singleton)
-object TestObject {
-    private var connection: String? = null
-    
-    fun connect(url: String) {
-        connection = url
-        println("Connected to $url")
-    }
-    
-    fun disconnect() {
-        connection = null
-        println("Disconnected")
-    }
-}
-
-// Class with companion object
-class TestCompanionObjectClass {
-    companion object {
-        // Constant
-        const val PI_VALUE = 3.14159
-        
-        // Static method
-        fun square(x: Double): Double {
-            return x * x
-        }
-    }
-}
-
-// Regular function declaration
-fun testFunction(x1: Double, y1: Double, x2: Double, y2: Double): Double {
-    val dx = x2 - x1
-    val dy = y2 - y1
-    return sqrt(dx * dx + dy * dy)
-}
-
-// Extension function declaration
-fun String.testExtensionFunction(): Int {
-    return count { it in "aeiouAEIOU" }
-}
-
-// Extension property declaration
-val String.testExtensionProperty: Int
-    get() = count { it in "aeiouAEIOU" }
-
-// Property declaration
-val testProperty = "1.0.0"
-
-// Type alias declaration
-typealias TestTypeAlias = Map<String, TestUser>
-
-// Class with generics
-class TestGenericClass<T>(var content: T) {
-    fun getContent(): T {
-        return content
-    }
-}
-
-// Value class declaration
-@JvmInline
-value class TestValueClass(private val value: String)
-
-// Annotation class declaration
-annotation class TestAnnotationClass(
-    val message: String,
-    val replaceWith: String = ""
+    val testProperty1: String,
+    var testProperty2: Int,
+    private val testProperty3: Boolean = false,
+    internal var testProperty4: Float? = null
 )
 
-// Higher-order function declaration
-fun testHigherOrderFunction(x: Int, y: Int, operation: (Int, Int) -> Int): Int {
-    return operation(x, y)
+// Testing function with type parameters
+fun <T : Any> testGenericFunction(
+    param1: T,
+    param2: List<T>,
+    param3: (T) -> Boolean = { true }
+): Map<String, T> {
+    return mapOf()
 }
 
-// Suspend function declaration
-suspend fun testSuspendFunction(url: String): String {
-    // Simulating network call
-    return "Data from $url"
+// Testing class with companion object
+class TestCompanionClass {
+    companion object TestCompanion {
+        const val TEST_CONSTANT = "test"
+        fun testCompanionMethod() = TEST_CONSTANT
+        val testCompanionProperty = "property"
+        var testMutableProperty = 0
+    }
+}
+
+// Testing interface with properties and methods
+interface TestInterface {
+    val testProperty: String
+    fun testAbstractMethod()
+    fun testDefaultMethod() {
+        println("Default implementation")
+    }
+}
+
+// Testing abstract class implementation
+abstract class TestAbstractClass : TestInterface {
+    abstract val testAbstractProperty: Int
+    protected val testProtectedProperty: String = ""
+    
+    abstract fun testAbstractClassMethod(): Double
+    override fun testAbstractMethod() {
+        println("Abstract class implementation")
+    }
+}
+
+// Testing enum class with properties
+enum class TestEnumClass(val testValue: String) {
+    TEST_ONE("one"),
+    TEST_TWO("two"),
+    TEST_THREE("three");
+    
+    fun testEnumMethod(): Boolean {
+        return testValue.length > 3
+    }
+}
+
+// Testing sealed class hierarchy
+sealed class TestSealedClass {
+    data class TestSealedData(val testData: String) : TestSealedClass()
+    class TestSealedSubclass(val testValue: Int) : TestSealedClass()
+    object TestSealedObject : TestSealedClass()
+}
+
+// Testing object declaration (singleton)
+object TestSingleton {
+    private var testState: String? = null
+    
+    fun testSingletonMethod(value: String) {
+        testState = value
+    }
+    
+    fun testStateCheck(): Boolean {
+        return !testState.isNullOrEmpty()
+    }
+}
+
+// Testing annotation class
+annotation class TestAnnotation(
+    val testMessage: String,
+    val testPriority: Int = 0
+)
+
+// Testing generic class
+class TestGenericClass<T>(
+    private val testContent: T,
+    private val testHandler: (T) -> String
+) {
+    fun testGenericMethod(): String {
+        return testHandler(testContent)
+    }
+}
+
+// Testing suspend function
+suspend fun testSuspendFunction(
+    testParam1: String,
+    testParam2: Int = 0
+): Result<String> {
+    return Result.success("Test $testParam1 with $testParam2")
 }`

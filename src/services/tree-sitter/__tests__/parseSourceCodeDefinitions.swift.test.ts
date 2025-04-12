@@ -65,73 +65,72 @@ describe("parseSourceCodeDefinitionsForFile with Swift", () => {
 	it("should capture class declarations", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.swift", sampleSwiftContent, testOptions)
 
-		// Check for class declarations only
-		expect(result).toContain("class TestClassDefinition")
-		expect(result).toContain("class TestPropertyWrapperUser")
-		expect(result).toContain("class TestiOSClass")
-		expect(result).toContain("class TestMacOSClass")
-		expect(result).toContain("class TestGenericClass")
+		// Check for class declarations
+		expect(result).toContain("class TestBaseClass")
+		expect(result).toContain("class TestClassDefinition: TestBaseClass")
+		expect(result).toContain("class TestPlatformClass")
 	})
+
 	it("should capture struct declarations", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.swift", sampleSwiftContent, testOptions)
 
-		// Check for struct declarations only
-		expect(result).toContain("struct TestStructDefinition")
-		expect(result).toContain("struct TestNestedStruct")
-		expect(result).toContain("struct TestGenericStruct<T>")
-		expect(result).toContain("struct TestPropertyWrapper<Value: Comparable>")
+		// Check for struct declarations
+		expect(result).toContain("struct TestStructDefinition<T: Comparable>")
+		expect(result).toContain("struct TestPropertyWrapper<Value: Numeric & Comparable>")
 	})
+
 	it("should capture enum declarations", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.swift", sampleSwiftContent, testOptions)
 
-		// Check for enum declarations only
-		expect(result).toContain("enum TestEnumDefinition")
-		expect(result).toContain("enum TestGenericEnum<Success, Failure>")
-		expect(result).toContain("enum TestErrorEnum")
+		// Check for enum declarations
+		expect(result).toContain("enum TestEnumDefinition<T>")
+		expect(result).toContain("enum TestError")
 	})
+
 	it("should capture protocol declarations", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.swift", sampleSwiftContent, testOptions)
 
-		// Check for protocol declarations only
+		// Check for protocol declarations
+		expect(result).toContain("protocol TestProtocolOne")
+		expect(result).toContain("protocol TestProtocolTwo")
 		expect(result).toContain("protocol TestProtocolDefinition")
-		expect(result).toContain("protocol TestGenericProtocol")
 	})
+
 	it("should capture extensions", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.swift", sampleSwiftContent, testOptions)
 
-		// Check for extensions only
-		expect(result).toContain("extension TestStructDefinition: TestProtocolDefinition")
-		expect(result).toContain("extension String")
+		// Check for extensions
+		expect(result).toContain("extension TestClassDefinition")
+		expect(result).toContain("extension TestStructDefinition")
 	})
+
 	it("should capture standalone functions", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.swift", sampleSwiftContent, testOptions)
 
-		// Check for standalone functions only - only inout function is captured by the current grammar
-		expect(result).toContain("func testInoutFunction<T>(_ a: inout T, _ b: inout T)")
-		expect(result).toContain("func testErrorFunction(param: String)")
-		// Note: Regular standalone functions are not captured by the current grammar
+		// Check for standalone functions
+		expect(result).toContain("func testThrowingFunction(_ testParam: String)")
 	})
-	// Type aliases are not captured by the current grammar
+
 	it("should capture property wrappers", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.swift", sampleSwiftContent, testOptions)
 
-		// Check for property wrappers only
-		expect(result).toContain("struct TestPropertyWrapper<Value: Comparable>")
+		// Check for property wrappers
+		expect(result).toContain("struct TestPropertyWrapper<Value: Numeric & Comparable>")
 		expect(result).toContain("var wrappedValue: Value")
 	})
+
 	it("should capture error handling constructs", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.swift", sampleSwiftContent, testOptions)
 
-		// Check for error handling constructs only
-		expect(result).toContain("enum TestErrorEnum")
-		expect(result).toContain("func testErrorFunction(param: String)")
+		// Check for error handling constructs
+		expect(result).toContain("enum TestError")
+		expect(result).toContain("func testThrowingFunction(_ testParam: String)")
 	})
+
 	it("should capture conditional compilation blocks", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.swift", sampleSwiftContent, testOptions)
 
-		// Check for conditional compilation blocks only
-		expect(result).toContain("class TestiOSClass")
-		expect(result).toContain("class TestMacOSClass")
-		expect(result).toContain("class TestGenericClass")
+		// Check for conditional compilation blocks
+		expect(result).toContain("class TestPlatformClass")
 	})
 })

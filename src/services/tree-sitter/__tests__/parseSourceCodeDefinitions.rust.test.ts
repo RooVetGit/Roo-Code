@@ -35,25 +35,24 @@ describe("parseSourceCodeDefinitionsForFile with Rust", () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.rs", sampleRustContent, rustOptions)
 
 		// Check for struct definitions
-		expect(result).toContain("struct Point")
-		expect(result).toContain("struct Rectangle")
-		expect(result).toContain("struct Vehicle")
+		expect(result).toContain("struct TestBasicStruct")
+		expect(result).toContain("struct TestMethodStruct")
+		expect(result).toContain("struct TestComplexStruct")
 	})
 
 	it("should parse Rust method definitions within impl blocks", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.rs", sampleRustContent, rustOptions)
 
 		// Check for function definitions within implementations
-		expect(result).toContain("fn square")
-		expect(result).toContain("fn new")
+		expect(result).toContain("fn test_factory_method")
+		expect(result).toContain("fn test_new_method")
 	})
 
 	it("should parse Rust standalone function definitions", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.rs", sampleRustContent, rustOptions)
 
 		// Check for standalone function definitions
-		// Based on the actual output we've seen
-		expect(result).toContain("fn calculate_distance")
+		expect(result).toContain("fn test_calculation_function")
 	})
 
 	it("should correctly identify structs and functions", async () => {
@@ -62,17 +61,17 @@ describe("parseSourceCodeDefinitionsForFile with Rust", () => {
 		// Verify that structs and functions are being identified
 		const resultLines = result?.split("\n") || []
 
-		// Check that struct Point is found
-		const pointStructLine = resultLines.find((line) => line.includes("struct Point"))
-		expect(pointStructLine).toBeTruthy()
+		// Check that test struct is found
+		const basicStructLine = resultLines.find((line) => line.includes("struct TestBasicStruct"))
+		expect(basicStructLine).toBeTruthy()
 
-		// Check that fn calculate_distance is found
-		const distanceFuncLine = resultLines.find((line) => line.includes("fn calculate_distance"))
-		expect(distanceFuncLine).toBeTruthy()
+		// Check that test calculation function is found
+		const calcFuncLine = resultLines.find((line) => line.includes("fn test_calculation_function"))
+		expect(calcFuncLine).toBeTruthy()
 
-		// Check that fn square is found (method in impl block)
-		const squareFuncLine = resultLines.find((line) => line.includes("fn square"))
-		expect(squareFuncLine).toBeTruthy()
+		// Check that test factory method is found (method in impl block)
+		const factoryMethodLine = resultLines.find((line) => line.includes("fn test_factory_method"))
+		expect(factoryMethodLine).toBeTruthy()
 	})
 
 	it("should parse all supported Rust structures comprehensively", async () => {
@@ -80,16 +79,16 @@ describe("parseSourceCodeDefinitionsForFile with Rust", () => {
 		const resultLines = result?.split("\n") || []
 
 		// Verify all struct definitions are captured
-		expect(resultLines.some((line) => line.includes("struct Point"))).toBe(true)
-		expect(resultLines.some((line) => line.includes("struct Rectangle"))).toBe(true)
-		expect(resultLines.some((line) => line.includes("struct Vehicle"))).toBe(true)
+		expect(resultLines.some((line) => line.includes("struct TestBasicStruct"))).toBe(true)
+		expect(resultLines.some((line) => line.includes("struct TestMethodStruct"))).toBe(true)
+		expect(resultLines.some((line) => line.includes("struct TestComplexStruct"))).toBe(true)
 
 		// Verify impl block functions are captured
-		expect(resultLines.some((line) => line.includes("fn square"))).toBe(true)
-		expect(resultLines.some((line) => line.includes("fn new"))).toBe(true)
+		expect(resultLines.some((line) => line.includes("fn test_factory_method"))).toBe(true)
+		expect(resultLines.some((line) => line.includes("fn test_new_method"))).toBe(true)
 
 		// Verify standalone functions are captured
-		expect(resultLines.some((line) => line.includes("fn calculate_distance"))).toBe(true)
+		expect(resultLines.some((line) => line.includes("fn test_calculation_function"))).toBe(true)
 
 		// Verify the output format includes line numbers
 		expect(resultLines.some((line) => /\d+--\d+ \|/.test(line))).toBe(true)
@@ -106,66 +105,58 @@ describe("parseSourceCodeDefinitionsForFile with Rust", () => {
 		expect(result).toBeTruthy()
 
 		// Test enum definitions
-		expect(resultLines.some((line) => line.includes("enum Status"))).toBe(true)
+		expect(resultLines.some((line) => line.includes("enum TestEnum"))).toBe(true)
 
 		// Test trait definitions
-		expect(resultLines.some((line) => line.includes("trait Drawable"))).toBe(true)
+		expect(resultLines.some((line) => line.includes("trait TestTrait"))).toBe(true)
 
 		// Test impl trait for struct
-		expect(resultLines.some((line) => line.includes("impl Drawable for Rectangle"))).toBe(true)
+		expect(resultLines.some((line) => line.includes("impl TestTrait for TestMethodStruct"))).toBe(true)
 
 		// Test generic structs with lifetime parameters
-		expect(resultLines.some((line) => line.includes("struct Container<'a, T>"))).toBe(true)
+		expect(resultLines.some((line) => line.includes("struct TestGenericStruct<'a, T>"))).toBe(true)
 
 		// Test macro definitions
-		expect(resultLines.some((line) => line.includes("macro_rules! say_hello"))).toBe(true)
+		expect(resultLines.some((line) => line.includes("macro_rules! test_macro"))).toBe(true)
 
 		// Test module definitions
-		expect(resultLines.some((line) => line.includes("mod math"))).toBe(true)
+		expect(resultLines.some((line) => line.includes("mod test_module"))).toBe(true)
 
 		// Test union types
-		expect(resultLines.some((line) => line.includes("union IntOrFloat"))).toBe(true)
+		expect(resultLines.some((line) => line.includes("union TestUnion"))).toBe(true)
 
 		// Test trait with associated types
-		expect(resultLines.some((line) => line.includes("trait Iterator"))).toBe(true)
+		expect(resultLines.some((line) => line.includes("trait TestIterator"))).toBe(true)
 
 		// Test advanced Rust language features
 		// 1. Closures
 		expect(
-			resultLines.some(
-				(line) =>
-					line.includes("let simple_closure") ||
-					line.includes("let add_closure") ||
-					line.includes("closure_expression"),
-			),
+			resultLines.some((line) => line.includes("test_basic_closure") || line.includes("test_param_closure")),
 		).toBe(true)
 
 		// 2. Match expressions
-		expect(resultLines.some((line) => line.includes("match value") || line.includes("match_expression"))).toBe(true)
+		expect(resultLines.some((line) => line.includes("test_pattern_matching"))).toBe(true)
 
 		// 3. Functions with where clauses
-		expect(resultLines.some((line) => line.includes("fn print_sorted") || line.includes("where_clause"))).toBe(true)
+		expect(resultLines.some((line) => line.includes("test_where_clause"))).toBe(true)
 
-		// 4. Attribute macros - Note: These might not be directly captured by the current query
-		// Instead, we check for the struct that has the attribute
-		expect(resultLines.some((line) => line.includes("struct AttributeExample"))).toBe(true)
+		// 4. Attribute macros
+		expect(resultLines.some((line) => line.includes("struct TestAttributeStruct"))).toBe(true)
 
 		// 5. Async functions
-		expect(resultLines.some((line) => line.includes("async fn fetch_data"))).toBe(true)
+		expect(resultLines.some((line) => line.includes("async fn test_async_function"))).toBe(true)
 
 		// 6. Impl blocks with generic parameters
-		expect(resultLines.some((line) => line.includes("impl<T, U> GenericContainer"))).toBe(true)
+		expect(resultLines.some((line) => line.includes("impl<T, U> TestGenericImpl"))).toBe(true)
 
 		// 7. Functions with complex trait bounds
-		expect(resultLines.some((line) => line.includes("fn process_items") || line.includes("trait_bounds"))).toBe(
-			true,
-		)
+		expect(resultLines.some((line) => line.includes("fn test_process_items"))).toBe(true)
 
 		// Note: The following structures are nested inside modules and might not be captured directly
-		// - Type aliases (type Number)
-		// - Constants (const PI)
-		// - Static variables (static VERSION)
-		// - Associated types (type Item)
+		// - Type aliases (type TestType)
+		// - Constants (const TEST_CONSTANT)
+		// - Static variables (static TEST_STATIC)
+		// - Associated types (type TestItem)
 		// These would require more complex query patterns or post-processing to extract
 	})
 })

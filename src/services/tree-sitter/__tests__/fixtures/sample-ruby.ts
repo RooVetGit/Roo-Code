@@ -1,103 +1,693 @@
 export default String.raw`
-# CLASS DEFINITION - testing class definitions
-# This section tests the parser's ability to capture class definitions
-# with inheritance, class variables, constants, and methods
+# Testing class definition with inheritance
 class TestClassDefinition < ApplicationRecord
-  # Class variable - testing class variables
+  # Testing class variables
   @@test_class_variable = 0
   
-  # Constants - testing constant definitions
-  TEST_CONSTANT_ONE = 'constant1'
-  TEST_CONSTANT_TWO = 'constant2'
-  
-  # Class method - testing class methods
-  def self.test_class_method
-    @@test_class_variable
-    puts "Class method called"
-    return @@test_class_variable
+  # Testing constant definitions
+  TEST_CONSTANT_ONE = 'test_constant_1'
+  TEST_CONSTANT_TWO = 'test_constant_2'
+
+  # Testing method definitions
+  def test_method
+    puts "test method"
   end
-  
-  # Instance variables and attribute accessors - testing attribute accessors
-  attr_accessor :test_attr_accessor_prop
-  attr_reader :test_attr_reader_prop
-  attr_writer :test_attr_writer_prop
-  
-  # Constructor - testing instance methods and instance variables
-  def initialize(name, email)
-    @test_instance_var_name = name
-    @test_instance_var_email = email
-    @test_instance_var_created = Time.now
+
+  # Testing method definitions with parameters
+  # Testing instance method with parameters
+  def test_instance_method(test_param1, test_param2 = nil)
+    @test_instance_variable = test_param1
+    test_param2 ||= "default"
+    test_rest_params.each { |param| puts param }
+  end
+
+  # Testing class method definition
+  def self.test_class_method
     @@test_class_variable += 1
   end
-  
-  # Instance method with string interpolation - testing string interpolation
-  def test_string_interpolation
-    puts "Name: #{@test_instance_var_name}, Email: #{@test_instance_var_email}"
-    puts "Created at: #{@test_instance_var_created}"
-    return "User info: #{@test_instance_var_name}"
-  end
-  
-  # Method with keyword arguments - testing keyword arguments
-  def test_keyword_args(name: nil, email: nil)
-    @test_instance_var_name = name if name
-    @test_instance_var_email = email if email
-    puts "Updated user info"
-    return true
-  end
-  
-  # Private methods
+
   private
-  
-  def test_private_method
-    SecureRandom.hex(10)
-    puts "Generated token"
-    return "token"
+
+  def test_private_helper
+    puts "Private helper called"
+    generate_random_token
+    handle_data_processing
   end
 end
 
-# MODULE DEFINITION - testing module definitions
-# This section tests the parser's ability to capture module definitions
-# with constants, methods, and nested modules
-module TestModule
-  # Module constants
-  TEST_MODULE_CONSTANT = '1.0.0'
-  
-  # Module method
-  def self.test_module_method
-    puts "Module method called"
-    return true
+# Testing module with included/extended hooks
+module TestModuleDefinition
+  def self.included(test_base)
+    test_base.extend(TestClassMethods)
   end
-  
-  # Nested module
-  module TestNestedModule
-    def self.test_nested_method(str, length = 10)
-      str[0...length]
-      puts "String truncated"
-      return str[0...length]
+
+  def self.extended(test_base)
+    test_base.include(TestInstanceMethods)
+  end
+
+  module TestClassMethods
+    def test_extended_method
+      'extended'
+    end
+  end
+
+  module TestInstanceMethods
+    def test_included_method
+      'included'
     end
   end
 end
 
-# SINGLETON CLASS - testing singleton class
-# This section tests the parser's ability to capture singleton classes
+# Testing singleton class pattern
 class TestSingletonClass
-  # Singleton instance - testing class variables
   @@test_singleton_instance = nil
-  
-  # Private constructor
   private_class_method :new
-  
-  # Singleton accessor
+
   def self.instance
     @@test_singleton_instance ||= new
-    return @@test_singleton_instance
   end
-  
-  # Instance method
-  def test_singleton_method(message)
-    puts "[LOG] #{message}"
-    return true
+
+  def test_singleton_operation
+    'singleton operation'
   end
+
+  private
+
+  def handle_singleton_task
+    'handle task'
+  end
+end
+
+# Testing mixin module
+module TestMixinModule
+  def test_mixin_method(message)
+    "Mixin method: #{message}"
+  end
+end
+
+# Testing include
+class TestIncludeClass
+  include TestMixinModule
+
+  def initialize(name)
+    @name = name
+  end
+end
+
+# Testing extend
+class TestExtendClass
+  extend TestMixinModule
+
+  def self.test_extend_method
+    'Extended method'
+  end
+end
+
+# Testing prepend
+class TestPrependClass
+  prepend TestMixinModule
+
+  def test_mixin_method(message)
+    "Overridden method: #{message}"
+  end
+end
+
+# Testing blocks and procs
+def test_block_method(data)
+  yield(data) if block_given?
+end
+
+test_lambda = ->(x, y) {
+  x + y
+}
+
+test_proc = Proc.new do |x|
+  x * 2
+end
+
+# Testing splat operator
+def test_splat_method(*numbers)
+  numbers.sum
+end
+
+# Testing hash syntax
+test_hash = {
+  key1: 'value1',
+  key2: 'value2',
+  'key3' => 'value3',
+  :key4 => 'value4'
+}
+
+# Testing string interpolation
+test_string = "Value is #{test_hash[:key1]}"
+
+# Testing regular expressions
+test_pattern = /^test_\w+$/
+test_match = "test_pattern" =~ test_pattern
+
+# Testing exception handling
+begin
+  raise "Test error"
+rescue StandardError => e
+  puts e.message
+ensure
+  puts "Cleanup"
+end
+
+# Testing attribute accessors class
+class TestAttributeAccessorsClass
+  attr_reader :test_attr_reader
+  attr_writer :test_attr_writer
+  attr_accessor :test_attr_accessor
+
+  def initialize(title, content)
+    @test_attr_reader = title
+    @test_attr_writer = content
+  end
+end
+
+# Testing keyword arguments
+def test_keyword_args_method(host:, port: 80, protocol: 'http')
+  "#{protocol}://#{host}:#{port}"
+end
+
+# Testing class macros (Rails-like)
+class TestClassMacroClass < ApplicationRecord
+  has_many :test_associations
+  belongs_to :test_parent
+end
+
+# Testing metaprogramming
+class TestMetaprogrammingClass
+  [:test_meta_save, :test_meta_update, :test_meta_delete].each do |method_name|
+    define_method(method_name) do |*args|
+      "#{method_name} called with #{args}"
+    end
+  end
+
+  def method_missing(method_name, *args, &block)
+    "Method #{method_name} not found"
+  end
+end
+
+# Testing Ruby 3.0+ pattern matching
+case test_pattern_data
+in [Integer => x, String => y]
+  "Found #{x} and #{y}"
+in { id: Integer => id }
+  "Found id #{id}"
+in String => str
+  "Found string #{str}"
+else
+  "No match"
+end
+
+# Testing Ruby 3.1+ pin operator
+case test_pin_input
+in ^test_pattern
+  "Matched pattern"
+in String => str
+  "Found string #{str}"
+end
+# Testing module with included/extended hooks
+module TestModuleDefinition
+  def self.included(test_base)
+    test_base.extend(TestClassMethods)
+  end
+
+  def self.extended(test_base)
+    test_base.include(TestInstanceMethods)
+  end
+
+  module TestClassMethods
+    def test_extended_method
+      'extended'
+    end
+  end
+
+  module TestInstanceMethods
+    def test_included_method
+      'included'
+    end
+  end
+end
+
+# Testing singleton class pattern
+class TestSingletonClass
+  @@test_singleton_instance = nil
+  private_class_method :new
+
+  def self.instance
+    @@test_singleton_instance ||= new
+  end
+
+  def test_singleton_operation
+    'singleton operation'
+  end
+
+  private
+
+  def handle_singleton_task
+    'handle task'
+  end
+end
+
+# Testing mixin module
+module TestMixinModule
+  def test_mixin_method(message)
+    "Mixin method: #{message}"
+  end
+end
+
+# Testing include
+class TestIncludeClass
+  include TestMixinModule
+
+  def initialize(name)
+    @name = name
+  end
+end
+
+# Testing extend
+class TestExtendClass
+  extend TestMixinModule
+
+  def self.test_extend_method
+    'Extended method'
+  end
+end
+
+# Testing prepend
+class TestPrependClass
+  prepend TestMixinModule
+
+  def test_mixin_method(message)
+    "Overridden method: #{message}"
+  end
+end
+
+# Testing blocks and procs
+def test_block_method(data)
+  yield(data) if block_given?
+end
+
+test_lambda = ->(x, y) {
+  x + y
+}
+
+test_proc = Proc.new do |x|
+  x * 2
+end
+
+# Testing splat operator
+def test_splat_method(*numbers)
+  numbers.sum
+end
+
+# Testing hash syntax
+test_hash = {
+  key1: 'value1',
+  key2: 'value2',
+  'key3' => 'value3',
+  :key4 => 'value4'
+}
+
+# Testing string interpolation
+test_string = "Value is #{test_hash[:key1]}"
+
+# Testing regular expressions
+test_pattern = /^test_\w+$/
+test_match = "test_pattern" =~ test_pattern
+
+# Testing exception handling
+begin
+  raise "Test error"
+rescue StandardError => e
+  puts e.message
+ensure
+  puts "Cleanup"
+end
+
+# Testing attribute accessors class
+# Testing attribute accessors
+class TestAttributeAccessorsClass
+  # Define attribute accessors in order: reader, writer, accessor
+  attr_reader :test_attr_reader
+  attr_writer :test_attr_writer
+  attr_accessor :test_attr_accessor
+
+  def initialize(title, content)
+    @test_attr_reader = title
+    @test_attr_writer = content
+    @test_attr_accessor = nil
+  end
+
+  # Additional methods to demonstrate usage
+  def test_method
+    @test_attr_writer = "new value"
+    @test_attr_accessor = "accessed"
+  end
+
+  # Ensure all accessors are defined
+  def test_accessors
+    puts test_attr_reader
+    self.test_attr_writer = "write"
+    self.test_attr_accessor = "access"
+  end
+end
+
+# Testing attribute accessors with single line definitions
+class TestAttributeAccessorsClass2
+  # Define all three types of accessors
+  attr_reader :test_attr_reader
+  attr_writer :test_attr_writer
+  attr_accessor :test_attr_accessor
+
+  def initialize
+    @test_attr_reader = "read"
+    @test_attr_writer = "write"
+    @test_attr_accessor = "access"
+  end
+end
+
+# Testing attribute accessors with minimal definitions
+class TestAttributeAccessorsClass3
+  attr_reader :test_attr_reader
+  attr_writer :test_attr_writer
+  attr_accessor :test_attr_accessor
+end
+
+# Testing attribute accessors with single line definitions
+class TestAttributeAccessorsClass4
+  attr_reader :test_attr_reader
+  attr_writer :test_attr_writer
+  attr_accessor :test_attr_accessor
+end
+
+# Testing attribute accessors with single line definitions
+class TestAttributeAccessorsClass5
+  attr_reader :test_attr_reader
+  attr_writer :test_attr_writer
+  attr_accessor :test_attr_accessor
+end
+
+# Testing keyword arguments
+def test_keyword_args_method(host:, port: 80, protocol: 'http')
+  "#{protocol}://#{host}:#{port}"
+end
+
+# Testing class macros (Rails-like)
+class TestClassMacroClass < ApplicationRecord
+  has_many :test_associations
+  belongs_to :test_parent
+end
+
+# Testing metaprogramming
+class TestMetaprogrammingClass
+  [:test_meta_save, :test_meta_update, :test_meta_delete].each do |method_name|
+    define_method(method_name) do |*args|
+      "#{method_name} called with #{args}"
+    end
+  end
+
+  def method_missing(method_name, *args, &block)
+    "Method #{method_name} not found"
+  end
+end
+
+# Testing Ruby 3.0+ pattern matching
+case test_pattern_data
+in [Integer => x, String => y]
+  "Found #{x} and #{y}"
+in { id: Integer => id }
+  "Found id #{id}"
+in String => str
+  "Found string #{str}"
+else
+  "No match"
+end
+
+# Testing Ruby 3.1+ pin operator
+case test_pin_input
+in ^test_pattern
+  "Matched pattern"
+in String => str
+  "Found string #{str}"
+end
+# Testing module definition with methods
+module TestModuleDefinition
+  def test_module_method
+    TEST_CONSTANT_ONE
+  end
+
+  def test_module_method_with_block(&test_block)
+    test_block.call if test_block
+  end
+end
+
+# Testing singleton class definition
+class TestSingletonClass
+  private_class_method :new
+  @@test_instance = nil
+
+  def self.test_instance
+    @@test_instance ||= new
+  end
+
+  def test_singleton_method
+    'singleton operation'
+  end
+
+  private
+
+  private
+
+  def test_private_method
+    'private method'
+  end
+end
+
+# Testing mixin module definition
+module TestMixinModule
+  def test_mixin_method
+    'mixin method'
+  end
+end
+
+# Testing class with mixin
+class TestMixinClass
+  include TestMixinModule
+    @name = name
+  end
+end
+
+# Testing extend
+class TestExtendClass
+  extend TestMixinModule
+
+  def self.test_extend_method
+    'Extended method'
+  end
+end
+
+# Testing prepend
+class TestPrependClass
+  prepend TestMixinModule
+
+  def test_mixin_method(message)
+    "Overridden method: #{message}"
+  end
+end
+
+# Testing blocks and procs
+def test_block_method(data)
+  yield(data) if block_given?
+end
+
+test_lambda = ->(x, y) {
+  x + y
+}
+
+test_proc = Proc.new do |x|
+  x * 2
+end
+
+# Testing splat operator
+def test_splat_method(*numbers)
+  numbers.sum
+end
+
+# Testing hash syntax
+test_hash = {
+  key1: 'value1',
+  key2: 'value2',
+  'key3' => 'value3',
+  :key4 => 'value4'
+}
+
+# Testing string interpolation
+test_string = "Value is #{test_hash[:key1]}"
+
+# Testing regular expressions
+test_pattern = /^test_\w+$/
+test_match = "test_pattern" =~ test_pattern
+
+# Testing exception handling
+begin
+  raise "Test error"
+rescue StandardError => e
+  puts e.message
+ensure
+  puts "Cleanup"
+end
+
+# Testing attribute accessors class
+class TestAttributeAccessorsClass
+  attr_reader :test_attr_reader
+  attr_writer :test_attr_writer
+  attr_accessor :test_attr_accessor
+
+  def initialize(title, content)
+    @test_attr_reader = title
+    @test_attr_writer = content
+  end
+end
+
+# Testing keyword arguments
+def test_keyword_args_method(host:, port: 80, protocol: 'http')
+  "#{protocol}://#{host}:#{port}"
+end
+
+# Testing class macros (Rails-like)
+class TestClassMacroClass < ApplicationRecord
+  has_many :test_associations
+  belongs_to :test_parent
+end
+
+# Testing metaprogramming
+class TestMetaprogrammingClass
+  [:test_meta_save, :test_meta_update, :test_meta_delete].each do |method_name|
+    define_method(method_name) do |*args|
+      "#{method_name} called with #{args}"
+    end
+  end
+
+  def method_missing(method_name, *args, &block)
+    "Method #{method_name} not found"
+  end
+end
+
+# Testing Ruby 3.0+ pattern matching
+case test_pattern_data
+in [Integer => x, String => y]
+  "Found #{x} and #{y}"
+in { id: Integer => id }
+  "Found id #{id}"
+in String => str
+  "Found string #{str}"
+else
+  "No match"
+end
+
+# Testing Ruby 3.1+ pin operator
+case test_pin_input
+in ^test_pattern
+  "Matched pattern"
+in String => str
+  "Found string #{str}"
+end
+# Testing singleton class pattern
+class TestSingletonClass
+  @@test_singleton_instance = nil
+  private_class_method :new
+
+  def self.instance
+    @@test_singleton_instance ||= new
+  end
+end
+
+# Testing module with included/extended hooks
+module TestModuleDefinition
+  def self.included(test_base)
+    test_base.extend(TestClassMethods)
+  end
+
+  def self.extended(test_base)
+    test_base.include(TestInstanceMethods)
+  end
+
+  module TestClassMethods
+    def test_extended_method
+      'extended'
+    end
+  end
+
+  module TestInstanceMethods
+    def test_included_method
+      'included'
+    end
+  end
+end
+
+# Testing module with included/extended hooks
+module TestModule
+  def self.included(test_base)
+    test_base.extend(TestClassMethods)
+  end
+
+  def self.extended(test_base)
+    test_base.include(TestInstanceMethods)
+  end
+
+  # Testing module constants and methods
+  TEST_MODULE_CONSTANT = '1.0.0'
+  TEST_MODULE_VERSION = '2.0.0'
+
+  def self.test_module_method
+    puts "Module method called"
+    TEST_MODULE_VERSION
+  end
+
+  # Testing nested modules
+  module TestClassMethods
+    def test_extended_method
+      puts "Extended method called"
+      'extended'
+    end
+  end
+
+  module TestInstanceMethods
+    def test_included_method
+      puts "Included method called"
+      'included'
+    end
+  end
+end
+
+# Testing singleton class pattern
+class TestSingletonClass
+  @@test_singleton_instance = nil
+  private_class_method :new
+
+  # Testing class methods and instance management
+  def self.instance
+    @@test_singleton_instance ||= new
+    @@test_singleton_instance
+  end
+
+  def test_singleton_operation
+    puts "Singleton operation called"
+    handle_singleton_task
+    true
+  end
+
+  private
+
+  def handle_singleton_task
+    puts "Processing singleton task"
+    generate_task_result
+  end
+end
 end
 
 # MIXIN MODULE - testing mixins

@@ -52,41 +52,19 @@ describe("jsonParserDebug", () => {
 		const result = await testParseSourceCodeDefinitions(testFile, sampleJsonContent, jsonOptions)
 		expect(result).toBeDefined()
 		expect(result).toContain("# config.json")
-		expect(result).toContain('"server"')
-		expect(result).toContain('"database"')
+		expect(result).toContain('"test_object_with_primitives"')
+		expect(result).toContain('"test_nested_objects"')
+		expect(result).toContain('"test_arrays"')
 	})
 
 	it("should detect nested JSON objects and arrays", async function () {
 		const testFile = "/test/nested.json"
-		const nestedJson = `{
-      "users": [
-        {
-          "id": 1,
-          "name": "John Doe",
-          "roles": ["admin", "user"]
-        },
-        {
-          "id": 2,
-          "name": "Jane Smith",
-          "roles": ["user"]
-        }
-      ],
-      "settings": {
-        "theme": {
-          "dark": true,
-          "colors": {
-            "primary": "#007bff",
-            "secondary": "#6c757d"
-          }
-        }
-      }
-    }`
-
-		const result = await testParseSourceCodeDefinitions(testFile, nestedJson, jsonOptions)
+		const result = await testParseSourceCodeDefinitions(testFile, sampleJsonContent, jsonOptions)
 		expect(result).toBeDefined()
-		expect(result).toContain('"users"')
-		expect(result).toContain('"settings"')
-		expect(result).toContain('"theme"')
+		expect(result).toContain('"test_object"')
+		expect(result).toContain('"test_deep_object"')
+		expect(result).toContain('"test_object_array"')
+		expect(result).toContain('"test_mixed_array"')
 	})
 })
 
@@ -108,57 +86,34 @@ describe("parseSourceCodeDefinitions for JSON", () => {
 		debugLog("\n=== Parse Test: Top-level Properties ===")
 		const result = await testParseSourceCodeDefinitions(testFilePath, sampleJsonContent, jsonOptions)
 		expect(result).toBeDefined()
-		expect(result).toContain('"server"')
-		expect(result).toContain('"database"')
+		expect(result).toContain('"test_object_with_primitives"')
+		expect(result).toContain('"test_nested_objects"')
+		expect(result).toContain('"test_arrays"')
 	})
 
 	it("should parse nested object properties", async function () {
 		debugLog("\n=== Parse Test: Nested Properties ===")
 		const result = await testParseSourceCodeDefinitions(testFilePath, sampleJsonContent, jsonOptions)
 		expect(result).toBeDefined()
-		expect(result).toContain('"ssl"')
-		expect(result).toContain('"primary"')
+		expect(result).toContain('"test_object"')
+		expect(result).toContain('"test_nested_objects"')
+		expect(result).toContain('"test_deep_object"')
 	})
 
 	it("should parse arrays in JSON", async function () {
-		const arrayJson = `{
-      "items": [1, 2, 3, 4, 5],
-      "users": [
-        {"name": "John", "age": 30, "active": true},
-        {"name": "Jane", "age": 25, "active": false}
-      ]
-    }`
-
-		const result = await testParseSourceCodeDefinitions("/test/arrays.json", arrayJson, jsonOptions)
+		debugLog("\n=== Parse Test: Arrays ===")
+		const result = await testParseSourceCodeDefinitions(testFilePath, sampleJsonContent, jsonOptions)
 		expect(result).toBeDefined()
-		// Only check for users since that's what's being captured
-		expect(result).toContain('"users"')
+		expect(result).toContain('"test_arrays"')
+		expect(result).toContain('"test_object_array"')
+		expect(result).toContain('"test_mixed_array"')
 	})
 
 	it("should handle complex nested structures", async function () {
-		const complexJson = `{
-      "metadata": {
-        "version": "1.0",
-        "generated": "2024-03-31",
-        "stats": {
-          "count": 42,
-          "distribution": {
-            "regions": {
-              "north": 10,
-              "south": 15,
-              "east": 8,
-              "west": 9
-            }
-          }
-        }
-      }
-    }`
-
-		const result = await testParseSourceCodeDefinitions("/test/complex.json", complexJson, jsonOptions)
+		debugLog("\n=== Parse Test: Complex Nested Structures ===")
+		const result = await testParseSourceCodeDefinitions(testFilePath, sampleJsonContent, jsonOptions)
 		expect(result).toBeDefined()
-		expect(result).toContain('"metadata"')
-		expect(result).toContain('"stats"')
-		expect(result).toContain('"distribution"')
-		expect(result).toContain('"regions"')
+		expect(result).toContain('"test_deep_object"')
+		expect(result).toContain('"level1"')
 	})
 })

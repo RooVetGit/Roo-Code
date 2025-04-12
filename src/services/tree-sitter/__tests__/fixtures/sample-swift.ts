@@ -1,281 +1,172 @@
 export default String.raw`
 // MARK: - Class Definitions
 
-// Class declaration for testing class capture
-class TestClassDefinition {
-    // Properties for testing property capture
-    var testProperty: String
-    var testAnotherProperty: Int
+// Testing class definition with inheritance and protocols
+class TestBaseClass {
+    func testBaseMethod() -> String {
+        return "Base method"
+    }
+}
+
+class TestClassDefinition: TestBaseClass, TestProtocolOne, TestProtocolTwo {
+    // Testing property declarations with attributes
+    @TestPropertyWrapper
     private var testPrivateProperty: String
     
-    // Static property
-    static let testStaticProperty = "Static Value"
-    
-    // Method for testing method capture
-    func testMethod() -> String {
-        return "This is a test method"
+    public let testConstantProperty: Int
+    internal var testComputedProperty: Double {
+        get { return Double(testPrivateProperty.count) }
+        set { testPrivateProperty = String(newValue) }
     }
     
-    // Method with parameters
-    func testMethodWithParams(param1: String, param2: Int) -> String {
-        return "Method with params: \\(param1), \\(param2)"
-    }
-    
-    // Initializer for testing initializer capture
-    init(property1: String, property2: Int, property3: String) {
-        self.testProperty = property1
-        self.testAnotherProperty = property2
-        self.testPrivateProperty = property3
-    }
-    
-    // Deinitializer for testing deinitializer capture
-    deinit {
-        print("TestClassDefinition is being deinitialized")
-    }
-    
-    // Nested type
-    struct TestNestedStruct {
-        var nestedProperty1: Double
-        var nestedProperty2: String
-    }
-}
-
-// MARK: - Struct Definitions
-
-// Struct declaration for testing struct capture
-struct TestStructDefinition {
-    // Properties
-    var testStructProperty1: Double
-    var testStructProperty2: Double
-    
-    // Initializer
-    init(prop1: Double, prop2: Double) {
-        self.testStructProperty1 = prop1
-        self.testStructProperty2 = prop2
-    }
-    
-    // Mutating method
-    mutating func testMutatingMethod(value1: Double, value2: Double) {
-        testStructProperty1 += value1
-        testStructProperty2 += value2
-    }
-}
-
-// MARK: - Enum Definitions
-
-// Enum declaration for testing enum capture
-enum TestEnumDefinition {
-    case testCase1
-    case testCase2
-    case testCase3
-    case testCase4
-    
-    // Method in enum
-    func testEnumMethod() -> String {
-        switch self {
-        case .testCase1:
-            return "Test Case 1"
-        case .testCase2:
-            return "Test Case 2"
-        case .testCase3:
-            return "Test Case 3"
-        case .testCase4:
-            return "Test Case 4"
-        }
-    }
-}
-
-// Enum with associated values for testing generic enum capture
-enum TestGenericEnum<Success, Failure> where Failure: Error {
-    case testSuccess(Success)
-    case testFailure(Failure)
-    
-    // Method with switch
-    func testHandleMethod(onSuccess: (Success) -> Void, onFailure: (Failure) -> Void) {
-        switch self {
-        case .testSuccess(let value):
-            onSuccess(value)
-        case .testFailure(let error):
-            onFailure(error)
-        }
+    // Testing initializer with parameters
+    init(testParam1: String, testParam2: Int = 0) {
+        self.testPrivateProperty = testParam1
+        self.testConstantProperty = testParam2
+        super.init()
     }
 }
 
 // MARK: - Protocol Definitions
 
-// Protocol declaration for testing protocol capture
+// MARK: - Protocol Definitions
+
+// Testing protocol with required property
+protocol TestProtocolOne {
+    var testRequiredProperty: String { get }
+    func testProtocolOneMethod() -> String
+}
+
+// Testing protocol with required method
+protocol TestProtocolTwo {
+    func testRequiredMethod() -> Bool
+    var testProtocolTwoProperty: Int { get }
+}
+
+// Testing protocol with associated type
 protocol TestProtocolDefinition {
-    // Protocol property requirement
-    var testProtocolProperty: String { get }
+    associatedtype TestAssociatedType
     
-    // Protocol method requirement
-    func testProtocolMethod() -> String
+    var testProtocolProperty: TestAssociatedType { get }
     
-    // Protocol initializer requirement
-    init(identifier: String)
+    func testProtocolMethod(
+        _ testParam: TestAssociatedType
+    ) -> Bool
+    
+    static func testStaticMethod()
 }
 
-// Protocol with associated type
-protocol TestGenericProtocol {
-    associatedtype TestItem
+// MARK: - Struct Definitions
+
+// Testing struct with generic constraints
+struct TestStructDefinition<T: Comparable> {
+    // Testing property declarations
+    private var testItems: [T]
+    public let testIdentifier: String
     
-    // Protocol methods with associated type
-    mutating func testAddMethod(item: TestItem)
-    var testCountProperty: Int { get }
-}
-
-// MARK: - Extension Definitions
-
-// Extension for testing extension capture
-extension TestStructDefinition: TestProtocolDefinition {
-    // Protocol conformance
-    var testProtocolProperty: String {
-        return "Test Protocol Property Implementation"
+    // Testing initializer with default values
+    init(testItems: [T] = [], identifier: String = "default") {
+        self.testItems = testItems
+        self.testIdentifier = identifier
     }
     
-    func testProtocolMethod() -> String {
-        return "Test Protocol Method Implementation"
-    }
-    
-    init(identifier: String) {
-        let components = identifier.split(separator: ",")
-        self.init(
-            prop1: Double(components[0]) ?? 0,
-            prop2: Double(components[1]) ?? 0
-        )
+    // Testing mutating method
+    mutating func testAddItem(_ item: T) {
+        testItems.append(item)
     }
 }
 
-// Extension adding functionality to standard type
-extension String {
-    // Extension method
-    func testExtensionMethod() -> String {
-        return self + " - Extended"
-    }
+// MARK: - Enum Definitions
+
+// Testing enum with associated values
+enum TestEnumDefinition<T> {
+    case testSuccess(value: T)
+    case testFailure(error: Error)
     
-    // Extension computed property
-    var testExtensionProperty: Bool {
-        let pattern = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\\\.[A-Za-z]{2,}"
-        return range(of: pattern, options: .regularExpression) != nil
-    }
-}
-
-// MARK: - Generic Definitions
-
-// Generic struct for testing generic type capture
-struct TestGenericStruct<T> {
-    // Generic property
-    var testGenericItems: [T] = []
-    
-    // Generic method
-    mutating func testGenericMethod(item: T) {
-        testGenericItems.append(item)
-    }
-    
-    // Subscript
-    subscript(index: Int) -> T {
-        return testGenericItems[index]
-    }
-}
-
-// MARK: - Type Aliases
-
-// Type alias for testing type alias capture
-typealias TestTypeAlias = [String: String]
-typealias TestGenericTypeAlias<T> = (T) -> T
-
-// MARK: - Function Definitions
-
-// Function with parameters for testing function capture
-func testStandaloneFunction(param1: Int, param2: String) -> String {
-    return "Function with params: \\(param1), \\(param2)"
-}
-
-// Function with inout parameter
-func testInoutFunction<T>(_ a: inout T, _ b: inout T) {
-    let temp = a
-    a = b
-    b = temp
-}
-
-// MARK: - Property Wrapper
-
-// Property wrapper for testing property wrapper capture
-@propertyWrapper
-struct TestPropertyWrapper<Value: Comparable> {
-    private var value: Value
-    private let range: ClosedRange<Value>
-    
-    init(wrappedValue: Value, range: ClosedRange<Value>) {
-        self.range = range
-        self.value = min(max(wrappedValue, range.lowerBound), range.upperBound)
-    }
-    
-    var wrappedValue: Value {
-        get { value }
-        set { value = min(max(newValue, range.lowerBound), range.upperBound) }
-    }
-}
-
-// Class using property wrapper
-class TestPropertyWrapperUser {
-    @TestPropertyWrapper(wrappedValue: 25, range: 0...100)
-    var testWrappedProperty: Double
-}
-
-// MARK: - Error Handling
-
-// Error enum for testing error enum capture
-enum TestErrorEnum: Error {
-    case testErrorCase1
-    case testErrorCase2(code: Int)
-    case testErrorCase3
-    
-    // Computed property on enum
-    var testErrorDescription: String {
+    // Testing computed property
+    var testDescription: String {
         switch self {
-        case .testErrorCase1:
-            return "Test Error Case 1"
-        case .testErrorCase2(let code):
-            return "Test Error Case 2 with code: \\(code)"
-        case .testErrorCase3:
-            return "Test Error Case 3"
+        case .testSuccess(let value):
+            return "Success: \\(value)"
+        case .testFailure(let error):
+            return "Failure: \\(error.localizedDescription)"
         }
     }
 }
 
-// Function with error handling
-func testErrorFunction(param: String) throws -> String {
-    guard !param.isEmpty else {
-        throw TestErrorEnum.testErrorCase1
+// MARK: - Extension Definitions
+
+// Testing extension with generic constraints
+extension TestClassDefinition where TestAssociatedType: Equatable {
+    func testExtensionMethod<T: Comparable>(
+        testParam: T
+    ) -> [T] {
+        return [testParam]
+    }
+}
+
+// Testing extension adding functionality
+extension TestStructDefinition {
+    // Testing static method
+    static func testFactoryMethod() -> Self {
+        return Self()
+    }
+}
+
+// MARK: - Property Wrapper
+
+// Testing property wrapper with generic constraints
+@propertyWrapper
+struct TestPropertyWrapper<Value: Numeric & Comparable> {
+    private var testStorage: Value
+    private let testRange: ClosedRange<Value>
+    
+    var wrappedValue: Value {
+        get { testStorage }
+        set { testStorage = min(max(newValue, testRange.lowerBound), testRange.upperBound) }
     }
     
-    if param == "error" {
-        throw TestErrorEnum.testErrorCase2(code: 500)
+    init(wrappedValue: Value, range: ClosedRange<Value>) {
+        self.testRange = range
+        self.testStorage = min(max(wrappedValue, range.lowerBound), range.upperBound)
     }
-    
-    return "Success: \\(param)"
+}
+
+// MARK: - Error Handling
+
+// Testing error enum with associated values
+enum TestError: Error {
+    case testValidationError(message: String)
+    case testNetworkError(code: Int)
+}
+
+// Testing throwing function
+func testThrowingFunction(_ testParam: String) throws -> String {
+    guard !testParam.isEmpty else {
+        throw TestError.testValidationError(message: "Empty input")
+    }
+    return "Valid: \\(testParam)"
 }
 
 // MARK: - Conditional Compilation
 
-// Conditional compilation for testing conditional classes
+// Testing conditional compilation blocks
 #if os(iOS)
-class TestiOSClass {
-    func testMethod() {
-        print("iOS specific implementation")
+class TestPlatformClass {
+    func testPlatformMethod() {
+        print("iOS implementation")
     }
 }
 #elseif os(macOS)
-class TestMacOSClass {
-    func testMethod() {
-        print("macOS specific implementation")
+class TestPlatformClass {
+    func testPlatformMethod() {
+        print("macOS implementation")
     }
 }
 #else
-class TestGenericClass {
-    func testMethod() {
-        print("Generic implementation")
+class TestPlatformClass {
+    func testPlatformMethod() {
+        print("Default implementation")
     }
 }
 #endif

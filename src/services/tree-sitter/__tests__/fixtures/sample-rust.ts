@@ -1,290 +1,271 @@
 export default String.raw`
-// Basic struct definition
-struct Point {
-    x: f64,
-    y: f64,
+// Testing basic struct with fields
+struct TestBasicStruct {
+    test_field_x: f64,
+    test_field_y: f64,
 }
 
-// Struct with implementation (methods)
-struct Rectangle {
-    width: u32,
-    height: u32,
+// Testing struct with implementation methods
+struct TestMethodStruct {
+    test_width: u32,
+    test_height: u32,
 }
 
-impl Rectangle {
-    // Method definition
-    fn area(&self) -> u32 {
-        self.width * self.height
+impl TestMethodStruct {
+    // Testing method definition
+    fn test_area_method(&self) -> u32 {
+        self.test_width * self.test_height
     }
 
-    // Another method
-    fn can_hold(&self, other: &Rectangle) -> bool {
-        self.width > other.width && self.height > other.height
+    // Testing method with parameters
+    fn test_comparison_method(&self, other: &TestMethodStruct) -> bool {
+        self.test_width > other.test_width && self.test_height > other.test_height
     }
 
-    // Associated function (not a method, but still part of impl)
-    fn square(size: u32) -> Rectangle {
-        Rectangle {
-            width: size,
-            height: size,
+    // Testing associated function
+    fn test_factory_method(size: u32) -> TestMethodStruct {
+        TestMethodStruct {
+            test_width: size,
+            test_height: size,
         }
     }
 }
 
-// A standalone function
-fn calculate_distance(p1: &Point, p2: &Point) -> f64 {
-    let dx = p2.x - p1.x;
-    let dy = p2.y - p1.y;
+// Testing standalone function
+fn test_calculation_function(p1: &TestBasicStruct, p2: &TestBasicStruct) -> f64 {
+    let dx = p2.test_field_x - p1.test_field_x;
+    let dy = p2.test_field_y - p1.test_field_y;
     (dx * dx + dy * dy).sqrt()
 }
 
-// A more complex struct
-struct Vehicle {
-    make: String,
-    model: String,
-    year: u32,
+// Testing complex struct with multiple fields
+struct TestComplexStruct {
+    test_string_field1: String,
+    test_string_field2: String,
+    test_number_field: u32,
 }
 
-impl Vehicle {
-    // Constructor-like method
-    fn new(make: String, model: String, year: u32) -> Vehicle {
-        Vehicle {
-            make,
-            model,
-            year,
+impl TestComplexStruct {
+    // Testing constructor method
+    fn test_new_method(field1: String, field2: String, number: u32) -> TestComplexStruct {
+        TestComplexStruct {
+            test_string_field1: field1,
+            test_string_field2: field2,
+            test_number_field: number,
         }
     }
 
-    // Regular method
-    fn description(&self) -> String {
-        format!("{} {} ({})", self.make, self.model, self.year)
+    // Testing string formatting method
+    fn test_format_method(&self) -> String {
+        format!("{} {} ({})", self.test_string_field1, self.test_string_field2, self.test_number_field)
     }
 }
 
-// Another standalone function
-fn process_data(input: &str) -> String {
-    format!("Processed: {}", input)
+// Testing string processing function
+fn test_string_processing(input: &str) -> String {
+    format!("Test processed: {}", input)
 }
 
-// More complex Rust structures for advanced testing
-enum Status {
-    Active,
-    Inactive,
-    Pending(String),
-    Error { code: i32, message: String },
+// Testing enum with variants
+enum TestEnum {
+    TestVariant1,
+    TestVariant2,
+    TestVariant3(String),
+    TestVariant4 { test_code: i32, test_message: String },
 }
 
-trait Drawable {
-    fn draw(&self);
-    fn get_dimensions(&self) -> (u32, u32);
+// Testing trait definition
+trait TestTrait {
+    fn test_trait_method(&self);
+    fn test_trait_dimensions(&self) -> (u32, u32);
 }
 
-impl Drawable for Rectangle {
-    fn draw(&self) {
-        println!("Drawing rectangle: {}x{}", self.width, self.height);
+// Testing trait implementation
+impl TestTrait for TestMethodStruct {
+    fn test_trait_method(&self) {
+        println!("Testing trait method: {}x{}", self.test_width, self.test_height);
     }
     
-    fn get_dimensions(&self) -> (u32, u32) {
-        (self.width, self.height)
+    fn test_trait_dimensions(&self) -> (u32, u32) {
+        (self.test_width, self.test_height)
     }
 }
 
-// Generic struct with lifetime parameters
-struct Container<'a, T> {
-    data: &'a T,
-    count: usize,
+// Testing generic struct with lifetime
+struct TestGenericStruct<'a, T> {
+    test_data: &'a T,
+    test_count: usize,
 }
 
-impl<'a, T> Container<'a, T> {
-    fn new(data: &'a T) -> Container<'a, T> {
-        Container {
-            data,
-            count: 1,
+impl<'a, T> TestGenericStruct<'a, T> {
+    fn test_generic_method(data: &'a T) -> TestGenericStruct<'a, T> {
+        TestGenericStruct {
+            test_data: data,
+            test_count: 1,
         }
     }
 }
 
-// Macro definition
-macro_rules! say_hello {
-    // Match a single name
-    ($name:expr) => {
-        println!("Hello, {}!", $name);
+// Testing macro definition
+macro_rules! test_macro {
+    ($test_param:expr) => {
+        println!("Test macro output: {}", $test_param);
     };
-    // Match multiple names
-    ($($name:expr),*) => {
-        $(
-            println!("Hello, {}!", $name);
-        )*
+    ($test_param:expr, $($test_args:tt)*) => {
+        println!("Test macro with args: {}", $test_param);
+        test_macro!($($test_args)*);
     };
 }
 
-// Module definition
-mod math {
-    // Constants
-    pub const PI: f64 = 3.14159;
+// Testing module definition
+mod test_module {
+    // Testing constants
+    pub const TEST_CONSTANT: f64 = 3.14159;
     
-    // Static variables
-    pub static VERSION: &str = "1.0.0";
+    // Testing static variables
+    pub static TEST_STATIC: &str = "1.0.0";
     
-    // Type alias
-    pub type Number = f64;
+    // Testing type alias
+    pub type TestType = f64;
     
-    // Functions within modules
-    pub fn add(a: Number, b: Number) -> Number {
+    // Testing module functions
+    pub fn test_add(a: TestType, b: TestType) -> TestType {
         a + b
     }
     
-    pub fn subtract(a: Number, b: Number) -> Number {
+    pub fn test_subtract(a: TestType, b: TestType) -> TestType {
         a - b
     }
 }
 
-// Union type
-union IntOrFloat {
-    int_value: i32,
-    float_value: f32,
+// Testing union type
+union TestUnion {
+    test_int: i32,
+    test_float: f32,
 }
 
-// Trait with associated types
-trait Iterator {
-    // Associated type
-    type Item;
+// Testing trait with associated type
+trait TestIterator {
+    type TestItem;
     
-    // Method using associated type
-    fn next(&mut self) -> Option<Self::Item>;
+    fn test_next(&mut self) -> Option<Self::TestItem>;
     
-    // Default implementation
-    fn count(self) -> usize where Self: Sized {
+    fn test_count(self) -> usize where Self: Sized {
         let mut count = 0;
-        while let Some(_) = self.next() {
+        while let Some(_) = self.test_next() {
             count += 1;
         }
         count
     }
 }
 
-// Advanced Rust language features for testing
-
-// 1. Closures: Multi-line anonymous functions with captured environments
-fn use_closures() {
-    let captured_value = 42;
+// Testing closure definitions
+fn test_closures() {
+    let test_capture = 42;
     
-    // Simple closure
-    let simple_closure = || {
-        println!("Captured value: {}", captured_value);
+    let test_basic_closure = || {
+        println!("Test captured value: {}", test_capture);
     };
     
-    // Closure with parameters
-    let add_closure = |a: i32, b: i32| -> i32 {
-        let sum = a + b + captured_value;
-        println!("Sum with captured value: {}", sum);
+    let test_param_closure = |a: i32, b: i32| -> i32 {
+        let sum = a + b + test_capture;
+        println!("Test closure sum: {}", sum);
         sum
     };
     
-    // Using closures
-    simple_closure();
-    let result = add_closure(10, 20);
+    test_basic_closure();
+    let result = test_param_closure(10, 20);
 }
 
-// 2. Match Expressions: Complex pattern matching constructs
-fn complex_matching(value: Option<Result<Vec<i32>, String>>) {
+// Testing pattern matching
+fn test_pattern_matching(value: Option<Result<Vec<i32>, String>>) {
     match value {
         Some(Ok(vec)) if vec.len() > 5 => {
-            println!("Got a vector with more than 5 elements");
+            println!("Test vector > 5 elements");
             for item in vec {
-                println!("Item: {}", item);
+                println!("Test item: {}", item);
             }
         },
         Some(Ok(vec)) => {
-            println!("Got a vector with {} elements", vec.len());
+            println!("Test vector length: {}", vec.len());
         },
         Some(Err(e)) => {
-            println!("Got an error: {}", e);
+            println!("Test error: {}", e);
         },
         None => {
-            println!("Got nothing");
+            println!("Test none case");
         }
     }
 }
 
-// 3. Where Clauses: Type constraints on generic parameters
-fn print_sorted<T>(collection: &[T])
+// Testing where clause constraints
+fn test_where_clause<T>(collection: &[T])
 where
     T: std::fmt::Debug + Ord + Clone,
 {
     let mut sorted = collection.to_vec();
     sorted.sort();
-    println!("Sorted collection: {:?}", sorted);
+    println!("Test sorted: {:?}", sorted);
 }
 
-// 4. Attribute Macros: Annotations that modify behavior
+// Testing attribute macros
 #[derive(Debug, Clone, PartialEq)]
-struct AttributeExample {
-    field1: String,
-    field2: i32,
+struct TestAttributeStruct {
+    test_field1: String,
+    test_field2: i32,
 }
 
 #[cfg(test)]
-mod test_module {
+mod test_attribute_module {
     #[test]
-    fn test_example() {
+    fn test_attribute_function() {
         assert_eq!(2 + 2, 4);
     }
 }
 
-// 5. Procedural Macros (simulated, as they require separate crates)
-// This is a placeholder to represent a proc macro
-// In real code, this would be in a separate crate with #[proc_macro]
-fn custom_derive_macro() {
-    // Implementation would generate code at compile time
-}
-
-// 6. Async Functions and Blocks: Asynchronous code constructs
-async fn fetch_data(url: &str) -> Result<String, String> {
-    // Simulated async operation
-    println!("Fetching data from {}", url);
+// Testing async function
+async fn test_async_function(url: &str) -> Result<String, String> {
+    println!("Test async request: {}", url);
     
-    // Async block
     let result = async {
-        // Simulated async work
-        Ok("Response data".to_string())
+        Ok("Test response".to_string())
     }.await;
     
     result
 }
 
-// 7. Impl Blocks with Generic Parameters: Implementation with complex type parameters
-struct GenericContainer<T, U> {
-    first: T,
-    second: U,
+// Testing generic implementation
+struct TestGenericImpl<T, U> {
+    test_first: T,
+    test_second: U,
 }
 
-impl<T, U> GenericContainer<T, U>
+impl<T, U> TestGenericImpl<T, U>
 where
     T: std::fmt::Display,
     U: std::fmt::Debug,
 {
-    fn new(first: T, second: U) -> Self {
-        GenericContainer { first, second }
+    fn test_generic_new(first: T, second: U) -> Self {
+        TestGenericImpl { test_first: first, test_second: second }
     }
     
-    fn display(&self) {
-        println!("First: {}, Second: {:?}", self.first, self.second);
+    fn test_generic_display(&self) {
+        println!("Test first: {}, Test second: {:?}", self.test_first, self.test_second);
     }
 }
 
-// 8. Complex Trait Bounds: Trait bounds using + operator or where clauses
-trait Processor<T> {
-    fn process(&self, item: T) -> T;
+// Testing trait bounds
+trait TestProcessor<T> {
+    fn test_process(&self, item: T) -> T;
 }
 
-fn process_items<T, P>(processor: P, items: Vec<T>) -> Vec<T>
+fn test_process_items<T, P>(processor: P, items: Vec<T>) -> Vec<T>
 where
-    P: Processor<T> + Clone,
+    P: TestProcessor<T> + Clone,
     T: Clone + std::fmt::Debug + 'static,
 {
     items.into_iter()
-         .map(|item| processor.process(item))
+         .map(|item| processor.test_process(item))
          .collect()
 }
 `

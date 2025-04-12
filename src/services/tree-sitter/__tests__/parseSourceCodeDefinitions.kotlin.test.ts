@@ -48,91 +48,63 @@ describe("parseSourceCodeDefinitionsForFile with Kotlin", () => {
 		expect(true).toBe(true) // Dummy assertion
 	})
 
-	it("should parse Kotlin class declarations", async () => {
+	it("should parse Kotlin basic class declarations", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.kt", sampleKotlinContent, kotlinOptions)
-
-		// Check for class declarations
-		expect(result).toContain("class TestClassDefinition")
-		expect(result).toContain("class TestClassWithConstructor")
-		// TestUser is not captured by the parser
+		expect(result).toContain("class TestBasicClass")
 	})
 
 	it("should parse Kotlin data class declarations", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.kt", sampleKotlinContent, kotlinOptions)
-
-		// Check for data class declarations
 		expect(result).toContain("data class TestDataClass")
-		// Nested data classes are not captured by the parser
 	})
 
-	it("should parse Kotlin interface declarations", async () => {
+	it("should parse Kotlin generic function declarations", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.kt", sampleKotlinContent, kotlinOptions)
-
-		// Check for interface declarations
-		expect(result).toContain("interface TestInterface")
-	})
-
-	it("should parse Kotlin enum class declarations", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.kt", sampleKotlinContent, kotlinOptions)
-
-		// Check for enum class declarations
-		expect(result).toContain("enum class TestEnumClass")
-	})
-
-	it("should parse Kotlin abstract class declarations", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.kt", sampleKotlinContent, kotlinOptions)
-
-		// Check for abstract class declarations
-		expect(result).toContain("abstract class TestAbstractClass")
-	})
-
-	it("should parse Kotlin sealed class declarations", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.kt", sampleKotlinContent, kotlinOptions)
-
-		// Check for sealed class declarations
-		expect(result).toContain("sealed class TestSealedClass")
-	})
-
-	it("should parse Kotlin object declarations", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.kt", sampleKotlinContent, kotlinOptions)
-
-		// Check for object declarations
-		expect(result).toContain("object TestObject")
-		// Nested objects are not captured by the parser
+		expect(result).toContain("fun <T : Any> testGenericFunction")
 	})
 
 	it("should parse Kotlin companion object declarations", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.kt", sampleKotlinContent, kotlinOptions)
-
-		// Check for companion object declarations in TestCompanionObjectClass
-		expect(result).toContain("companion object")
+		expect(result).toContain("companion object TestCompanion")
 	})
 
-	it("should parse Kotlin function declarations", async () => {
+	it("should parse Kotlin interface declarations", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.kt", sampleKotlinContent, kotlinOptions)
-
-		// Check for function declarations
-		expect(result).toContain("fun testFunction")
+		expect(result).toContain("interface TestInterface")
 	})
 
-	it("should parse Kotlin generic class declarations", async () => {
+	it("should parse Kotlin abstract class declarations", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.kt", sampleKotlinContent, kotlinOptions)
+		expect(result).toContain("abstract class TestAbstractClass")
+	})
 
-		// Check for generic class declarations
-		expect(result).toContain("class TestGenericClass")
+	it("should parse Kotlin enum class declarations", async () => {
+		const result = await testParseSourceCodeDefinitions("/test/file.kt", sampleKotlinContent, kotlinOptions)
+		expect(result).toContain("enum class TestEnumClass")
+	})
+
+	it("should parse Kotlin sealed class declarations", async () => {
+		const result = await testParseSourceCodeDefinitions("/test/file.kt", sampleKotlinContent, kotlinOptions)
+		expect(result).toContain("sealed class TestSealedClass")
+	})
+
+	it("should parse Kotlin object (singleton) declarations", async () => {
+		const result = await testParseSourceCodeDefinitions("/test/file.kt", sampleKotlinContent, kotlinOptions)
+		expect(result).toContain("object TestSingleton")
 	})
 
 	it("should parse Kotlin annotation class declarations", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.kt", sampleKotlinContent, kotlinOptions)
+		expect(result).toContain("annotation class TestAnnotation")
+	})
 
-		// Check for annotation class declarations
-		expect(result).toContain("annotation class TestAnnotationClass")
+	it("should parse Kotlin generic class declarations", async () => {
+		const result = await testParseSourceCodeDefinitions("/test/file.kt", sampleKotlinContent, kotlinOptions)
+		expect(result).toContain("class TestGenericClass")
 	})
 
 	it("should parse Kotlin suspend functions", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.kt", sampleKotlinContent, kotlinOptions)
-
-		// Check for suspend functions
 		expect(result).toContain("suspend fun testSuspendFunction")
 	})
 })

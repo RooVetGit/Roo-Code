@@ -16,6 +16,9 @@ describe("inspectC", () => {
 	})
 
 	it("should parse C definitions", async () => {
-		await testParseSourceCodeDefinitions("test.c", sampleCContent, testOptions)
+		const result = await testParseSourceCodeDefinitions("test.c", sampleCContent, testOptions)
+		expect(result).toBeDefined()
+		expect(result).toContain("struct TestBasicStruct")
+		expect(result).toContain("test_basic_function")
 	})
 })
