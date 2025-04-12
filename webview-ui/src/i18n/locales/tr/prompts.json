@@ -7,7 +7,9 @@
 		"editModesConfig": "Mod yapılandırmasını düzenle",
 		"editGlobalModes": "Global modları düzenle",
 		"editProjectModes": "Proje modlarını düzenle (.roomodes)",
-		"createModeHelpText": "Yeni bir özel mod oluşturmak için + düğmesine tıklayın veya sohbette Roo'dan sizin için bir tane oluşturmasını isteyin!"
+		"createModeHelpText": "Yeni bir özel mod oluşturmak için + düğmesine tıklayın veya sohbette Roo'dan sizin için bir tane oluşturmasını isteyin!",
+		"hideBuiltInModes": "Yerleşik Modları Gizle",
+		"showBuiltInModes": "Yerleşik Modları Göster"
 	},
 	"apiConfiguration": {
 		"title": "API Yapılandırması",

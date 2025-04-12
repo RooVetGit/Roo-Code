@@ -7,7 +7,9 @@
 		"editModesConfig": "मोड कॉन्फ़िगरेशन संपादित करें",
 		"editGlobalModes": "ग्लोबल मोड्स संपादित करें",
 		"editProjectModes": "प्रोजेक्ट मोड्स संपादित करें (.roomodes)",
-		"createModeHelpText": "नया कस्टम मोड बनाने के लिए + पर क्लिक करें, या बस चैट में Roo से आपके लिए एक बनाने को कहें!"
+		"createModeHelpText": "नया कस्टम मोड बनाने के लिए + पर क्लिक करें, या बस चैट में Roo से आपके लिए एक बनाने को कहें!",
+		"hideBuiltInModes": "बिल्ट-इन मोड छिपाएँ",
+		"showBuiltInModes": "बिल्ट-इन मोड दिखाएँ"
 	},
 	"apiConfiguration": {
 		"title": "API कॉन्फ़िगरेशन",

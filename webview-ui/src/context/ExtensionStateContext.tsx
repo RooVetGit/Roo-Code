@@ -162,13 +162,10 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		renderContext: "sidebar",
 		maxReadFileLine: 500, // Default max read file line limit
 		pinnedApiConfigs: {}, // Empty object for pinned API configs
-<<<<<<< HEAD
 		terminalZshOhMy: false, // Default Oh My Zsh integration setting
 		terminalZshP10k: false, // Default Powerlevel10k integration setting
 		terminalZdotdir: false, // Default ZDOTDIR handling setting
-=======
 		hiddenBuiltInModes: [], // Initialize hidden modes state
->>>>>>> aa28b888 (feature: Allow Hiding Built-in Modes (#2492))
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
