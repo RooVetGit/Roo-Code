@@ -5,6 +5,18 @@ import * as path from "path"
 import Parser from "web-tree-sitter"
 import tsxQuery from "../queries/tsx"
 
+// Mock setup
+jest.mock("fs/promises")
+export const mockedFs = jest.mocked(fs)
+
+jest.mock("../../../utils/fs", () => ({
+	fileExistsAtPath: jest.fn().mockImplementation(() => Promise.resolve(true)),
+}))
+
+jest.mock("../languageParser", () => ({
+	loadRequiredLanguageParsers: jest.fn(),
+}))
+
 // Global debug flag - read from environment variable or default to 0
 export const DEBUG = process.env.DEBUG ? parseInt(process.env.DEBUG, 10) : 0
 
@@ -14,9 +26,6 @@ export const debugLog = (message: string, ...args: any[]) => {
 		console.debug(message, ...args)
 	}
 }
-
-// Mock fs module
-const mockedFs = jest.mocked(fs)
 
 // Store the initialized TreeSitter for reuse
 let initializedTreeSitter: Parser | null = null
@@ -70,10 +79,10 @@ export async function testParseSourceCodeDefinitions(
 	const queryString = options.queryString || tsxQuery
 	const extKey = options.extKey || "tsx"
 
-	// Clear any previous mocks
+	// Clear any previous mocks and set up fs mock
 	jest.clearAllMocks()
-
-	// Mock fs.readFile to return our sample content
+	jest.mock("fs/promises")
+	const mockedFs = require("fs/promises") as jest.Mocked<typeof import("fs/promises")>
 	mockedFs.readFile.mockResolvedValue(content)
 
 	// Get the mock function
