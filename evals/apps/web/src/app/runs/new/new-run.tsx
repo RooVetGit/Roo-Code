@@ -7,12 +7,18 @@ import { useForm, FormProvider } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import fuzzysort from "fuzzysort"
 import { toast } from "sonner"
-import { X, Rocket, Check, ChevronsUpDown, HardDriveUpload, CircleCheck, Cpu } from "lucide-react"
+import { X, Rocket, Check, ChevronsUpDown, HardDriveUpload, CircleCheck } from "lucide-react"
 
 import { globalSettingsSchema, providerSettingsSchema, rooCodeDefaults } from "@evals/types"
 
 import { createRun } from "@/lib/server/runs"
-import { createRunSchema as formSchema, type CreateRun as FormValues } from "@/lib/schemas"
+import {
+	createRunSchema as formSchema,
+	type CreateRun as FormValues,
+	CONCURRENCY_MIN,
+	CONCURRENCY_MAX,
+	CONCURRENCY_DEFAULT,
+} from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { useOpenRouterModels } from "@/hooks/use-open-router-models"
 import { useExercises } from "@/hooks/use-exercises"
@@ -64,7 +70,7 @@ export function NewRun() {
 			suite: "full",
 			exercises: [],
 			settings: undefined,
-			concurrency: 2,
+			concurrency: CONCURRENCY_DEFAULT,
 		},
 	})
 
@@ -300,8 +306,8 @@ export function NewRun() {
 									<div className="flex flex-row items-center gap-2">
 										<Slider
 											defaultValue={[field.value]}
-											min={1}
-											max={25}
+											min={CONCURRENCY_MIN}
+											max={CONCURRENCY_MAX}
 											step={1}
 											onValueChange={(value) => field.onChange(value[0])}
 										/>
