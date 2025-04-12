@@ -532,6 +532,8 @@ export const globalSettingsSchema = z.object({
 	enableCheckpoints: z.boolean().optional(),
 	checkpointStorage: checkpointStoragesSchema.optional(),
 
+	showGreeting: z.boolean().optional(),
+
 	ttsEnabled: z.boolean().optional(),
 	ttsSpeed: z.number().optional(),
 	soundEnabled: z.boolean().optional(),
@@ -607,6 +609,8 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 
 	enableCheckpoints: undefined,
 	checkpointStorage: undefined,
+
+	showGreeting: undefined,
 
 	ttsEnabled: undefined,
 	ttsSpeed: undefined,
