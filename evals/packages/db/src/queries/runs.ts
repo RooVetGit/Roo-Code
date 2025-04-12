@@ -83,3 +83,35 @@ export const finishRun = async (runId: number) => {
 
 	return run
 }
+
+export const deleteRun = async (runId: number) => {
+	const tasks = await db.query.tasks.findMany({
+		where: eq(schema.tasks.runId, runId),
+		columns: { id: true, taskMetricsId: true },
+	})
+
+	const taskMetricsIds = tasks
+		.map(({ taskMetricsId }) => taskMetricsId)
+		.filter((id): id is number => id !== null && id !== undefined)
+
+	await db.delete(schema.tasks).where(eq(schema.tasks.runId, runId))
+
+	if (taskMetricsIds.length > 0) {
+		await db.delete(schema.taskMetrics).where(sql`${schema.taskMetrics.id} in (${sql.join(taskMetricsIds)})`)
+	}
+
+	const run = await db.query.runs.findFirst({
+		where: eq(schema.runs.id, runId),
+		columns: { taskMetricsId: true },
+	})
+
+	if (!run) {
+		throw new RecordNotFoundError()
+	}
+
+	await db.delete(schema.runs).where(eq(schema.runs.id, runId))
+
+	if (run.taskMetricsId) {
+		await db.delete(schema.taskMetrics).where(eq(schema.taskMetrics.id, run.taskMetricsId))
+	}
+}
