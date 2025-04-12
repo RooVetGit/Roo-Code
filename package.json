@@ -1,9 +1,9 @@
 {
 	"name": "roo-cline",
-	"displayName": "Roo Code (prev. Roo Cline)",
-	"description": "A whole dev team of AI agents in your editor.",
+	"displayName": "Roo Code",
+	"description": "A whole dev team of AI agents in your editor. Previously Roo Cline.",
 	"publisher": "RooVeterinaryInc",
-	"version": "3.11.8",
+	"version": "3.11.14",
 	"icon": "assets/icons/icon.png",
 	"galleryBanner": {
 		"color": "#617A91",
@@ -173,6 +173,11 @@
 			{
 				"command": "roo-cline.setCustomStoragePath",
 				"title": "Set Custom Storage Path",
+				"category": "Roo Code"
+			},
+			{
+				"command": "roo-cline.focusInput",
+				"title": "Focus Input Field",
 				"category": "Roo Code"
 			}
 		],

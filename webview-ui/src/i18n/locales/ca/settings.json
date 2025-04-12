@@ -101,10 +101,12 @@
 		"searchPlaceholder": "Cerca perfils",
 		"noMatchFound": "No s'han trobat perfils coincidents",
 		"vscodeLmDescription": "L'API del model de llenguatge de VS Code us permet executar models proporcionats per altres extensions de VS Code (incloent-hi, però no limitat a, GitHub Copilot). La manera més senzilla de començar és instal·lar les extensions Copilot i Copilot Chat des del VS Code Marketplace.",
-		"awsCustomArnUse": "Introduïu un ARN vàlid d'AWS Bedrock per al model que voleu utilitzar. Exemples de format:",
+		"awsCustomArnUse": "Introduïu un ARN vàlid d'Amazon Bedrock per al model que voleu utilitzar. Exemples de format:",
 		"awsCustomArnDesc": "Assegureu-vos que la regió a l'ARN coincideix amb la regió d'AWS seleccionada anteriorment.",
 		"apiKeyStorageNotice": "Les claus API s'emmagatzemen de forma segura a l'Emmagatzematge Secret de VSCode",
 		"useCustomBaseUrl": "Utilitzar URL base personalitzada",
+		"useHostHeader": "Utilitzar capçalera Host personalitzada",
+		"useLegacyFormat": "Utilitzar el format d'API OpenAI antic",
 		"openRouterTransformsText": "Comprimir prompts i cadenes de missatges a la mida del context (<a>Transformacions d'OpenRouter</a>)",
 		"model": "Model",
 		"getOpenRouterApiKey": "Obtenir clau API d'OpenRouter",
@@ -218,6 +220,10 @@
 				}
 			},
 			"resetDefaults": "Restablir als valors per defecte"
+		},
+		"rateLimitSeconds": {
+			"label": "Límit de freqüència",
+			"description": "Temps mínim entre sol·licituds d'API."
 		}
 	},
 	"browser": {
@@ -295,13 +301,33 @@
 		"shellIntegrationTimeout": {
 			"label": "Temps d'espera d'integració de shell del terminal",
 			"description": "Temps màxim d'espera per a la inicialització de la integració de shell abans d'executar comandes. Per a usuaris amb temps d'inici de shell llargs, aquest valor pot necessitar ser augmentat si veieu errors \"Shell Integration Unavailable\" al terminal."
+		},
+		"zdotdir": {
+			"label": "Habilitar gestió de ZDOTDIR",
+			"description": "Quan està habilitat, crea un directori temporal per a ZDOTDIR per gestionar correctament la integració del shell zsh. Això assegura que la integració del shell de VSCode funcioni correctament amb zsh mentre es preserva la teva configuració de zsh. (experimental)"
+		},
+		"commandDelay": {
+			"label": "Retard de comanda del terminal",
+			"description": "Retard en mil·lisegons a afegir després de l'execució de la comanda. La configuració predeterminada de 0 desactiva completament el retard. Això pot ajudar a assegurar que la sortida de la comanda es capturi completament en terminals amb problemes de temporització. En la majoria de terminals s'implementa establint `PROMPT_COMMAND='sleep N'` i Powershell afegeix `start-sleep` al final de cada comanda. Originalment era una solució per al error VSCode#237208 i pot no ser necessari."
+		},
+		"powershellCounter": {
+			"label": "Habilita la solució temporal del comptador PowerShell",
+			"description": "Quan està habilitat, afegeix un comptador a les comandes PowerShell per assegurar l'execució correcta de les comandes. Això ajuda amb els terminals PowerShell que poden tenir problemes amb la captura de sortida."
+		},
+		"zshClearEolMark": {
+			"label": "Neteja la marca EOL de ZSH",
+			"description": "Quan està habilitat, neteja la marca de final de línia de ZSH establint PROMPT_EOL_MARK=''. Això evita problemes amb la interpretació de la sortida de comandes quan acaba amb caràcters especials com '%'."
+		},
+		"zshOhMy": {
+			"label": "Habilita la integració Oh My Zsh",
+			"description": "Quan està habilitat, estableix ITERM_SHELL_INTEGRATION_INSTALLED=Yes per habilitar les característiques d'integració del shell Oh My Zsh. (experimental)"
+		},
+		"zshP10k": {
+			"label": "Habilita la integració Powerlevel10k",
+			"description": "Quan està habilitat, estableix POWERLEVEL9K_TERM_SHELL_INTEGRATION=true per habilitar les característiques d'integració del shell Powerlevel10k. (experimental)"
 		}
 	},
 	"advanced": {
-		"rateLimit": {
-			"label": "Límit de freqüència",
-			"description": "Temps mínim entre sol·licituds d'API."
-		},
 		"diff": {
 			"label": "Habilitar edició mitjançant diffs",
 			"description": "Quan està habilitat, Roo podrà editar fitxers més ràpidament i rebutjarà automàticament escriptures completes de fitxers truncats. Funciona millor amb l'últim model Claude 3.7 Sonnet.",
@@ -401,7 +427,7 @@
 	},
 	"validation": {
 		"apiKey": "Heu de proporcionar una clau API vàlida.",
-		"awsRegion": "Heu de triar una regió per utilitzar AWS Bedrock.",
+		"awsRegion": "Heu de triar una regió per utilitzar Amazon Bedrock.",
 		"googleCloud": "Heu de proporcionar un ID de projecte i regió de Google Cloud vàlids.",
 		"modelId": "Heu de proporcionar un ID de model vàlid.",
 		"modelSelector": "Heu de proporcionar un selector de model vàlid.",

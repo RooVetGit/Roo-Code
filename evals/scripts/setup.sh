@@ -179,8 +179,8 @@ for i in "${!options[@]}"; do
   case "${plugin}" in
   "nodejs")
     if ! command -v node &>/dev/null; then
-      asdf install nodejs v20.18.1 || exit 1
-      asdf set nodejs v20.18.1 || exit 1
+      asdf install nodejs 20.18.1 || exit 1
+      asdf set nodejs 20.18.1 || exit 1
       NODE_VERSION=$(node --version)
       echo "✅ Node.js is installed ($NODE_VERSION)"
     else
@@ -280,7 +280,7 @@ if [[ ! -d "../../evals" ]]; then
     read -p "🔗 Would you like to be able to share eval results? (Y/n): " fork_evals
 
     if [[ "$fork_evals" =~ ^[Yy]|^$ ]]; then
-      gh repo fork cte/evals ../../evals || exit 1
+      gh repo fork cte/evals --clone ../../evals || exit 1
     else
       gh repo clone cte/evals ../../evals || exit 1
     fi
@@ -293,11 +293,9 @@ if [[ ! -s .env ]]; then
   cp .env.sample .env || exit 1
 fi
 
-if [[ ! -s /tmp/evals.db ]]; then
-  echo "🗄️ Creating database..."
-  pnpm --filter @evals/db db:push || exit 1
-  pnpm --filter @evals/db db:enable-wal || exit 1
-fi
+echo "🗄️ Syncing database..."
+pnpm --filter @evals/db db:push || exit 1
+pnpm --filter @evals/db db:enable-wal || exit 1
 
 if ! grep -q "OPENROUTER_API_KEY" .env; then
   read -p "🔐 Enter your OpenRouter API key (sk-or-v1-...): " openrouter_api_key

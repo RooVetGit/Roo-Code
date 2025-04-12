@@ -83,6 +83,9 @@
 	"edit": "편집...",
 	"forNextMode": "다음 모드용",
 	"error": "오류",
+	"diffError": {
+		"title": "편집 실패"
+	},
 	"troubleMessage": "Roo에 문제가 발생했습니다...",
 	"apiRequest": {
 		"title": "API 요청",
@@ -94,6 +97,7 @@
 	"checkpoint": {
 		"initial": "초기 체크포인트",
 		"regular": "체크포인트",
+		"initializingWarning": "체크포인트 초기화 중... 시간이 너무 오래 걸리면 <settingsLink>설정</settingsLink>에서 체크포인트를 비활성화하고 작업을 다시 시작할 수 있습니다.",
 		"menu": {
 			"viewDiff": "차이점 보기",
 			"restore": "체크포인트 복원",
@@ -143,7 +147,12 @@
 	},
 	"subtasks": {
 		"wantsToCreate": "Roo가 <code>{{mode}}</code> 모드에서 새 하위 작업을 만들고 싶어합니다:",
-		"wantsToFinish": "Roo가 이 하위 작업을 완료하고 싶어합니다"
+		"wantsToFinish": "Roo가 이 하위 작업을 완료하고 싶어합니다",
+		"newTaskContent": "하위 작업 지침",
+		"completionContent": "하위 작업 완료",
+		"resultContent": "하위 작업 결과",
+		"defaultResult": "다음 작업을 계속 진행해주세요.",
+		"completionInstructions": "하위 작업 완료! 결과를 검토하고 수정 사항이나 다음 단계를 제안할 수 있습니다. 모든 것이 괜찮아 보이면, 부모 작업에 결과를 반환하기 위해 확인해주세요."
 	},
 	"questions": {
 		"hasQuestion": "Roo에게 질문이 있습니다:"
@@ -151,7 +160,10 @@
 	"taskCompleted": "작업 완료",
 	"shellIntegration": {
 		"unavailable": "쉘 통합 사용 불가",
-		"troubleshooting": "여전히 문제가 있나요?"
+		"troubleshooting": "여전히 문제가 있나요? 쉘 통합 문서를 보려면 여기를 클릭하세요.",
+		"checkSettings": "설정 페이지에서 터미널 해결 방법을 확인하세요",
+		"updateVSCode": "VSCode를 업데이트하세요",
+		"supportedShell": "지원되는 쉘을 사용하고 있는지 확인하세요: zsh, bash, fish 또는 PowerShell"
 	},
 	"powershell": {
 		"issues": "Windows PowerShell에 문제가 있는 것 같습니다. 다음을 참조하세요"

@@ -101,12 +101,14 @@
 		"searchPlaceholder": "搜索配置文件",
 		"noMatchFound": "未找到匹配的配置文件",
 		"vscodeLmDescription": "VS Code 语言模型 API 允许您运行由其他 VS Code 扩展（包括但不限于 GitHub Copilot）提供的模型。最简单的方法是从 VS Code 市场安装 Copilot 和 Copilot Chat 扩展。",
-		"awsCustomArnUse": "请输入有效的 AWS Bedrock ARN（Amazon资源名称），格式示例：",
+		"awsCustomArnUse": "请输入有效的 Amazon Bedrock ARN（Amazon资源名称），格式示例：",
 		"awsCustomArnDesc": "请确保ARN中的区域与上方选择的AWS区域一致。",
 		"openRouterApiKey": "OpenRouter API 密钥",
 		"getOpenRouterApiKey": "获取 OpenRouter API 密钥",
 		"apiKeyStorageNotice": "API 密钥安全存储在 VSCode 的密钥存储中",
 		"useCustomBaseUrl": "使用自定义基础 URL",
+		"useHostHeader": "使用自定义 Host 标头",
+		"useLegacyFormat": "使用传统 OpenAI API 格式",
 		"glamaApiKey": "Glama API 密钥",
 		"getGlamaApiKey": "获取 Glama API 密钥",
 		"requestyApiKey": "Requesty API 密钥",
@@ -178,7 +180,7 @@
 			}
 		},
 		"customModel": {
-			"capabilities": "自定义模型配置注意事项：<br>• 确保兼容OpenAI接口规范<br>• 错误配置可能导致功能异常<br>• 价格参数影响费用统计",
+			"capabilities": "自定义模型配置注意事项：\n• 确保兼容OpenAI接口规范\n• 错误配置可能导致功能异常\n• 价格参数影响费用统计",
 			"maxTokens": {
 				"label": "最大输出Token数",
 				"description": "模型在响应中可以生成的最大Token数。（指定 -1 允许服务器设置最大Token数。）"
@@ -218,6 +220,10 @@
 				}
 			},
 			"resetDefaults": "重置为默认值"
+		},
+		"rateLimitSeconds": {
+			"label": "请求频率限制",
+			"description": "设置API请求的最小间隔时间"
 		}
 	},
 	"browser": {
@@ -295,13 +301,33 @@
 		"shellIntegrationTimeout": {
 			"label": "终端初始化等待时间",
 			"description": "执行命令前等待 Shell 集成初始化的最长时间。对于 Shell 启动时间较长的用户，如果在终端中看到\"Shell Integration Unavailable\"错误，可能需要增加此值。"
+		},
+		"zdotdir": {
+			"label": "启用 ZDOTDIR 处理",
+			"description": "启用后将创建临时目录用于 ZDOTDIR，以正确处理 zsh shell 集成。这确保 VSCode shell 集成能与 zsh 正常工作，同时保留您的 zsh 配置。（实验性）"
+		},
+		"commandDelay": {
+			"label": "终端命令延迟",
+			"description": "命令执行后添加的延迟时间（毫秒）。默认设置为 0 时完全禁用延迟。这可以帮助确保在有计时问题的终端中完全捕获命令输出。在大多数终端中，这是通过设置 `PROMPT_COMMAND='sleep N'` 实现的，而 PowerShell 会在每个命令末尾添加 `start-sleep`。最初是为了解决 VSCode 错误#237208，现在可能不再需要。"
+		},
+		"powershellCounter": {
+			"label": "启用 PowerShell 计数器解决方案",
+			"description": "启用后，会在 PowerShell 命令中添加计数器以确保命令正确执行。这有助于解决可能存在输出捕获问题的 PowerShell 终端。"
+		},
+		"zshClearEolMark": {
+			"label": "清除 ZSH 行尾标记",
+			"description": "启用后，通过设置 PROMPT_EOL_MARK='' 清除 ZSH 行尾标记。这可以防止命令输出以特殊字符（如 '%'）结尾时的解析问题。"
+		},
+		"zshOhMy": {
+			"label": "启用 Oh My Zsh 集成",
+			"description": "启用后，设置 ITERM_SHELL_INTEGRATION_INSTALLED=Yes 以启用 Oh My Zsh shell 集成功能。（实验性）"
+		},
+		"zshP10k": {
+			"label": "启用 Powerlevel10k 集成",
+			"description": "启用后，设置 POWERLEVEL9K_TERM_SHELL_INTEGRATION=true 以启用 Powerlevel10k shell 集成功能。（实验性）"
 		}
 	},
 	"advanced": {
-		"rateLimit": {
-			"label": "请求频率限制",
-			"description": "设置API请求的最小间隔时间"
-		},
 		"diff": {
 			"label": "启用diff更新",
 			"description": "启用后，Roo 将能够通过差异算法写入，避免模型输出完整文件，以降低Token消耗。与最新的 Claude 3.7 Sonnet 模型配合最佳。",
@@ -401,7 +427,7 @@
 	},
 	"validation": {
 		"apiKey": "您必须提供有效的 API 密钥。",
-		"awsRegion": "您必须选择一个区域来使用 AWS Bedrock。",
+		"awsRegion": "您必须选择一个区域来使用 Amazon Bedrock。",
 		"googleCloud": "您必须提供有效的 Google Cloud 项目 ID 和区域。",
 		"modelId": "您必须提供有效的模型 ID。",
 		"modelSelector": "您必须提供有效的模型选择器。",
