@@ -4,31 +4,8 @@ import * as path from "path"
 import { describe, expect, it, jest, beforeEach } from "@jest/globals"
 
 import { javascriptQuery } from "../queries"
-import { initializeTreeSitter, testParseSourceCodeDefinitions, debugLog } from "./helpers"
-
-// Sample JSON content for tests
-const sampleJsonContent = `{
-  "server": {
-    "port": 3000,
-    "host": "localhost",
-    "ssl": {
-      "enabled": true,
-      "cert": "/path/to/cert.pem",
-      "key": "/path/to/key.pem"
-    }
-  },
-  "database": {
-    "primary": {
-      "host": "db.example.com",
-      "port": 5432,
-      "credentials": {
-        "user": "admin",
-        "password": "secret123",
-        "roles": ["read", "write", "admin"]
-      }
-    }
-  }
-}`
+import { initializeTreeSitter, testParseSourceCodeDefinitions, inspectTreeStructure, debugLog } from "./helpers"
+import sampleJsonContent from "./fixtures/sample-json"
 
 // JSON test options
 const jsonOptions = {
