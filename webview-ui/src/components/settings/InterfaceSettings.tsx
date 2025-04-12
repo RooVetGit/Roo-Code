@@ -28,7 +28,7 @@ export const InterfaceSettings = ({ showGreeting, setCachedStateField, ...props 
 					<VSCodeCheckbox
 						checked={showGreeting}
 						onChange={(e: any) => setCachedStateField("showGreeting", e.target.checked)}>
-						<span className="font-medium">{t("settings:interface.showgreeting")}</span>
+						<span className="font-medium">{t("settings:interface.showgreeting.label")}</span>
 					</VSCodeCheckbox>
 					<div className="text-vscode-descriptionForeground text-sm mt-1">
 						{t("settings:interface.showgreeting.description")}
