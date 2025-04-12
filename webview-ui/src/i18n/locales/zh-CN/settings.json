@@ -258,7 +258,7 @@
 	"checkpoints": {
 		"enable": {
 			"label": "启用自动检查点",
-			"description": "开启后自动创建任务检查点，方便回溯修改"
+			"description": "开启后自动创建任务检查点，方便回溯修改。"
 		}
 	},
 	"notifications": {
