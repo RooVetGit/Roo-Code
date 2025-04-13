@@ -23,12 +23,16 @@ export const CodeBlock: FC<CodeBlockProps> = memo(({ language, value, className,
 
 	useEffect(() => {
 		const highlight = async () => {
-			const theme = "github-dark" // Use VSCode's current theme.
+			// Read body attribute to get VS Code theme kind
+			const vscodeThemeKind = document.body.dataset.vscodeThemeKind || "vscode-dark" // Default to dark if undefined
+
+			// Select shiki theme based on VS Code theme kind
+			const shikiTheme = vscodeThemeKind === "vscode-light" ? "github-light" : "github-dark"
 
 			try {
 				const html = await codeToHtml(value, {
 					lang: language,
-					theme,
+					theme: shikiTheme, // Use the dynamically determined theme
 					transformers: [
 						{
 							pre(node) {
