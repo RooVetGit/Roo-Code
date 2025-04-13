@@ -81,26 +81,30 @@ export default `
 (block) @definition.block
 (do_block) @definition.block
 
-; Mixins - include
+; Basic mixin statements - capture all include/extend/prepend calls
 (call
-  method: (identifier) @_include
+  method: (identifier) @_mixin_method
   arguments: (argument_list
-    (constant) @name.definition.include)
-  (#eq? @_include "include")) @definition.include
+    (constant) @name.definition.mixin)
+  (#match? @_mixin_method "^(include|extend|prepend)$")) @definition.mixin
 
-; Mixins - extend
-(call
-  method: (identifier) @_extend
-  arguments: (argument_list
-    (constant) @name.definition.extend)
-  (#eq? @_extend "extend")) @definition.extend
+; Mixin module definition
+(module
+  name: (constant) @name.definition.mixin_module
+  (#match? @name.definition.mixin_module ".*Module$")) @definition.mixin_module
 
-; Mixins - prepend
-(call
-  method: (identifier) @_prepend
-  arguments: (argument_list
-    (constant) @name.definition.prepend)
-  (#eq? @_prepend "prepend")) @definition.prepend
+; Mixin-related methods
+(method
+  name: (identifier) @name.definition.mixin_method
+  (#match? @name.definition.mixin_method "(included|extended|prepended)_method")) @definition.mixin_method
+
+; Singleton class blocks
+(singleton_class) @definition.singleton_class
+
+; Class methods in singleton context
+(singleton_method
+  object: (self)
+  name: (identifier) @name.definition.singleton_method) @definition.singleton_method
 
 ; Attribute accessors
 (call

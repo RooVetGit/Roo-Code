@@ -1,5 +1,5 @@
-import { describe, it } from "@jest/globals"
-import { inspectTreeStructure, testParseSourceCodeDefinitions } from "./helpers"
+import { describe, it, expect } from "@jest/globals"
+import { inspectTreeStructure, testParseSourceCodeDefinitions, debugLog } from "./helpers"
 import { swiftQuery } from "../queries"
 import sampleSwiftContent from "./fixtures/sample-swift"
 
@@ -12,10 +12,20 @@ describe("inspectSwift", () => {
 	}
 
 	it("should inspect Swift tree structure", async () => {
-		await inspectTreeStructure(sampleSwiftContent, "swift")
+		// This test only validates that the function completes successfully
+		const result = await inspectTreeStructure(sampleSwiftContent, "swift")
+		expect(result).toBeUndefined()
 	})
 
 	it("should parse Swift definitions", async () => {
-		await testParseSourceCodeDefinitions("test.swift", sampleSwiftContent, testOptions)
+		// This test validates that testParseSourceCodeDefinitions produces output
+		const result = await testParseSourceCodeDefinitions("test.swift", sampleSwiftContent, testOptions)
+		expect(result).toBeDefined()
+
+		// Check that the output format includes line numbers and content
+		if (result) {
+			expect(result).toMatch(/\d+--\d+ \| .+/)
+			debugLog("Swift parsing test completed successfully")
+		}
 	})
 })

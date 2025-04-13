@@ -2,47 +2,84 @@
 C Language Constructs Supported by Tree-Sitter Parser:
 
 1. Class-like Constructs:
-- struct definitions
-- union definitions (not fully functional)
-- enum definitions
+- struct definitions (with fields)
+- union definitions (with variants)
+- enum definitions (with values)
+- anonymous unions/structs
+- aligned structs
 
 2. Function-related Constructs:
-- function definitions
-- function declarations
+- function definitions (with parameters)
+- function declarations (prototypes)
+- static functions
+- function pointers
 
 3. Type Definitions:
-- typedef declarations (struct only)
+- typedef declarations (all types)
+- function pointer typedefs
+- struct/union typedefs
 
-4. Preprocessor Constructs:
-- complex macro definitions (not simple macros)
+4. Variable Declarations:
+- global variables
+- static variables
+- array declarations
+- pointer declarations
 
-5. C11 Features:
-- anonymous union structs
-- alignas structs
+5. Preprocessor Constructs:
+- function-like macros
+- object-like macros
+- conditional compilation
 */
+
 export default `
+; Function definitions and declarations
+(function_definition
+  declarator: (function_declarator
+    declarator: (identifier) @name.definition.function))
+
+(declaration
+  type: (_)?
+  declarator: (function_declarator
+    declarator: (identifier) @name.definition.function
+    parameters: (parameter_list)?)?) @definition.function
+
+(function_declarator
+  declarator: (identifier) @name.definition.function
+  parameters: (parameter_list)?) @definition.function
+
 ; Struct definitions
-(struct_specifier name: (type_identifier) @name.definition.class body:(_)) @definition.class
+(struct_specifier
+  name: (type_identifier) @name.definition.struct) @definition.struct
 
 ; Union definitions
-(declaration type: (union_specifier name: (type_identifier) @name.definition.class)) @definition.class
-
-; Function definitions
-(function_definition
-  type: (_)
-  declarator: (function_declarator declarator: (identifier) @name.definition.function)) @definition.function
-
-; Function declarations
-(function_declarator declarator: (identifier) @name.definition.function) @definition.function
-
-; Typedef declarations
-(type_definition declarator: (type_identifier) @name.definition.type) @definition.type
+(union_specifier
+  name: (type_identifier) @name.definition.union) @definition.union
 
 ; Enum definitions
-(enum_specifier name: (type_identifier) @name.definition.enum) @definition.enum
+(enum_specifier
+  name: (type_identifier) @name.definition.enum) @definition.enum
 
-; Field declarations in structs
-(field_declaration
+; Typedef declarations
+(type_definition
+  declarator: (type_identifier) @name.definition.type) @definition.type
+
+; Global variables
+(declaration
+  (storage_class_specifier)?
   type: (_)
-  declarator: (field_identifier) @name.definition.field) @definition.field
+  declarator: (identifier) @name.definition.variable) @definition.variable
+
+(declaration
+  (storage_class_specifier)?
+  type: (_)
+  declarator: (init_declarator
+    declarator: (identifier) @name.definition.variable)) @definition.variable
+
+; Object-like macros
+(preproc_def
+  name: (identifier) @name.definition.macro) @definition.macro
+
+; Function-like macros
+(preproc_function_def
+  name: (identifier) @name.definition.macro) @definition.macro
 `

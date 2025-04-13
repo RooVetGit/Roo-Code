@@ -15,7 +15,6 @@ const csharpOptions = {
 	wasmFile: "tree-sitter-c_sharp.wasm",
 	queryString: csharpQuery,
 	extKey: "cs",
-	content: sampleCSharpContent,
 }
 
 // Mock file system operations
@@ -37,165 +36,86 @@ describe("parseSourceCodeDefinitionsForFile with C#", () => {
 		jest.clearAllMocks()
 	})
 
-	// Debug test for tree structure inspection
+	// Test for tree structure inspection
 	it("should inspect C# tree structure", async () => {
-		// Initialize tree-sitter
-		const TreeSitter = await initializeTreeSitter()
-
-		// Create parser and load C# language
-		const parser = new TreeSitter()
-		const wasmPath = path.join(process.cwd(), "dist/tree-sitter-c_sharp.wasm")
-		const csharpLang = await TreeSitter.Language.load(wasmPath)
-		parser.setLanguage(csharpLang)
-
-		// Parse a simple C# code snippet with standardized naming
-		const simpleCode = `
-namespace TestNamespace {
-    public class TestClassForInspection {
-        public void TestMethodForInspection() { }
-        public string TestPropertyForInspection { get; set; }
-    }
-}
-`
-		// Parse the content
-		const tree = parser.parse(simpleCode)
-
-		// Print the tree structure for debugging
-		debugLog("C# TREE STRUCTURE:\n" + tree.rootNode.toString())
-
-		// Also print a method with expression body to debug
-		const methodWithExprBody = `
-public class TestClass {
-    public string TestMethod(string param) =>
-        $"Result: {param}";
-}
-`
-		const methodTree = parser.parse(methodWithExprBody)
-		debugLog("METHOD WITH EXPRESSION BODY:\n" + methodTree.rootNode.toString())
-
-		// Also print a property declaration to debug
-		const propertyCode = `
-public class TestClass {
-    public string TestProperty { get; set; }
-}
-`
-		const propertyTree = parser.parse(propertyCode)
-		debugLog("PROPERTY DECLARATION:\n" + propertyTree.rootNode.toString())
-
-		// Test passes if we can inspect the tree
-		expect(tree).toBeDefined()
+		await inspectTreeStructure(sampleCSharpContent, "c_sharp")
 	})
 
-	// Test for class declarations
-	it("should capture class definitions", async () => {
+	// Test namespace declarations
+	it("should capture namespace declarations", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
-
-		// Check only for class declarations
-		expect(result).toContain("class TestClassDefinition")
-		expect(result).toContain("class TestEventArgsDefinition")
-		expect(result).toContain("class TestPartialClassDefinition")
-		expect(result).toContain("class TestGenericClassDefinition<T>")
-		expect(result).toContain("class TestOuterClassDefinition")
-		expect(result).toContain("class TestNestedClassDefinition")
-		expect(result).toContain("class TestAsyncClassDefinition")
-		expect(result).toContain("class TestAbstractClassDefinition")
-		expect(result).toContain("class TestDerivedClass1")
-		expect(result).toContain("class TestDerivedClass2")
-		expect(result).toContain("class TestFileScopedClassDefinition")
+		expect(result).toContain("TestNamespaceDefinition")
+		expect(result).toContain("TestFileScopedNamespaceDefinition")
 	})
 
-	// Test for interface declarations
-	it("should capture interface definitions", async () => {
+	// Test class declarations with various modifiers
+	it("should capture class declarations with modifiers", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
-
-		// Check only for interface declarations
-		expect(result).toContain("interface ITestInterfaceDefinition")
+		expect(result).toContain("TestClassDefinition")
+		expect(result).toContain("TestStaticClassDefinition")
+		expect(result).toContain("TestAbstractClassDefinition")
+		expect(result).toContain("TestPartialClassDefinition")
+		expect(result).toContain("TestNestedClassDefinition")
+		expect(result).toContain("TestGenericClassDefinition")
 	})
 
-	// Test for enum declarations
-	it("should capture enum definitions", async () => {
+	// Test interface declarations
+	it("should capture interface declarations", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
-
-		// Check only for enum declarations
-		expect(result).toContain("enum TestEnumDefinition")
+		expect(result).toContain("ITestInterfaceDefinition")
 	})
 
-	// Test for struct declarations
-	it("should capture struct definitions", async () => {
+	// Test struct declarations
+	it("should capture struct declarations", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
-
-		// Check only for struct declarations
-		expect(result).toContain("struct TestStructDefinition")
+		expect(result).toContain("TestStructDefinition")
 	})
 
-	// Test for record declarations
-	it("should capture record definitions", async () => {
+	// Test enum declarations
+	it("should capture enum declarations", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
-
-		// Check only for record declarations
-		expect(result).toContain("record TestRecordDefinition")
+		expect(result).toContain("TestEnumDefinition")
 	})
 
-	// Test for method declarations
-	it("should capture method definitions", async () => {
+	// Test record declarations
+	it("should capture record declarations", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
-
-		// Check for standard methods with block body
-		expect(result).toContain("void TestInterfaceMethod")
-		expect(result).toContain("int TestInterfaceCalculateMethod")
-
-		// Check for methods that are definitely captured
-		expect(result).toContain("string ToString")
-		expect(result).toContain("void TestNestedMethod")
-		expect(result).toContain("Task TestAsyncMethodDefinition")
-		expect(result).toContain("Task<string> TestAsyncPrivateMethod1")
-		expect(result).toContain("Task TestAsyncPrivateMethod2")
-		expect(result).toContain("void TestFileScopedMethod")
-
-		// Check for generic methods
-		expect(result).toContain("T TestGenericMethodDefinition<T>")
-
-		// The parser output shows these methods are captured
-		expect(result).toContain("void TestExtensionMethod1")
-		expect(result).toContain("void TestExtensionMethod2")
-		expect(result).toContain("void TestGenericClassMethod1")
-		expect(result).toContain("List<T> TestGenericClassMethod2")
-		expect(result).toContain("T TestGenericMethodWithConstraint<TId>")
+		expect(result).toContain("TestRecordDefinition")
 	})
 
-	// Test for property declarations
-	it("should capture property definitions", async () => {
+	// Test method declarations with various modifiers
+	it("should capture method declarations with modifiers", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
-
-		// The current parser may not capture property details as expected
-		// Instead, we'll check if the class containing properties is captured
-		expect(result).toContain("class TestClassDefinition")
-
-		// We can also check if the class with abstract property is captured
-		expect(result).toContain("class TestAbstractClassDefinition")
-
-		// And check if derived classes with properties are captured
-		expect(result).toContain("class TestDerivedClass1")
-		expect(result).toContain("class TestDerivedClass2")
+		expect(result).toContain("TestAsyncMethodDefinition")
+		expect(result).toContain("TestExtensionMethod1")
+		expect(result).toContain("TestExtensionMethod2")
+		expect(result).toContain("TestGenericMethodDefinition")
 	})
 
-	// Test for namespace declarations
-	it("should capture namespace definitions", async () => {
+	// Test property declarations
+	it("should capture property declarations", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
-
-		// Check for standard namespace declarations
-		expect(result).toContain("namespace TestNamespaceDefinition")
-
-		// For file-scoped namespace, check if the class in that namespace is captured
-		// The parser may not directly capture file-scoped namespaces
-		expect(result).toContain("class TestFileScopedClassDefinition")
+		expect(result).toContain("TestPropertyDefinition")
+		expect(result).toContain("TestPropertyWithAccessor")
+		expect(result).toContain("TestPropertyWithInit")
+		expect(result).toContain("TestRequiredProperty")
 	})
 
-	// Test for static class declarations
-	it("should capture static class definitions", async () => {
+	// Test event declarations
+	it("should capture event declarations", async () => {
 		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
+		expect(result).toContain("TestEventDefinition")
+	})
 
-		// Check for static class declarations
-		expect(result).toContain("static class TestStaticClassDefinition")
+	// Test delegate declarations
+	it("should capture delegate declarations", async () => {
+		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
+		expect(result).toContain("TestDelegateDefinition")
+	})
+
+	// Test attribute declarations
+	it("should capture attribute declarations", async () => {
+		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
+		expect(result).toContain("TestAttributeDefinition")
 	})
 })

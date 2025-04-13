@@ -2,38 +2,46 @@
 Swift Tree-Sitter Query Patterns
 
 This file contains query patterns for Swift language constructs:
-- class declarations - Captures class definitions
-- protocol declarations - Captures protocol definitions
-- method declarations - Captures methods in classes/structs/enums/extensions
-- initializers - Captures init methods
-- deinitializers - Captures deinit methods
+- class declarations - Captures standard, final, and open class definitions
+- struct declarations - Captures standard and generic struct definitions
+- protocol declarations - Captures protocol definitions with requirements
+- extension declarations - Captures extensions for classes, structs, and protocols
+- method declarations - Captures instance and type methods
+- property declarations - Captures stored and computed properties
+- initializer declarations - Captures designated and convenience initializers
+- deinitializer declarations - Captures deinit methods
 - subscript declarations - Captures subscript methods
-- property declarations - Captures properties in classes/structs/enums/extensions
-- standalone function declarations - Captures top-level functions
-- enum entries - Captures enum cases
+- type alias declarations - Captures type alias definitions
 
 Each query pattern is mapped to a specific test in parseSourceCodeDefinitions.swift.test.ts
 */
 export default `
-; Class declarations
+; Class declarations - captures standard, final, and open classes
 (class_declaration
   name: (type_identifier) @name) @definition.class
 
-; Protocol declarations
+; Protocol declarations - captures protocols with requirements
 (protocol_declaration
   name: (type_identifier) @name) @definition.interface
 
 ; Method declarations in classes/structs/enums/extensions
-(class_declaration
-  (class_body
-    (function_declaration
-      name: (simple_identifier) @name)
-  )
-) @definition.method
+(function_declaration
+  name: (simple_identifier) @name) @definition.method
 
-; Initializers
+; Static/class method declarations
+(function_declaration
+  (modifiers
+    (property_modifier))
+  name: (simple_identifier) @name) @definition.static_method
+
+; Initializers - captures designated initializers
 (init_declaration
   "init" @name) @definition.initializer
+
+; Convenience initializers
+(init_declaration
+  (modifiers (member_modifier))
+  "init" @name) @definition.convenience_initializer
 
 ; Deinitializers
 (deinit_declaration
@@ -41,28 +49,26 @@ export default `
 
 ; Subscript declarations
 (subscript_declaration
-  (parameter (simple_identifier) @name)) @definition.subscript
+  (parameter) @name) @definition.subscript
 
-; Property declarations in classes/structs/enums/extensions
-(class_declaration
-  (class_body
-    (property_declaration
-      (pattern (simple_identifier) @name))
-  )
-) @definition.property
-
-; Standalone property declarations
+; Property declarations - captures stored properties
 (property_declaration
-  (pattern (simple_identifier) @name)) @definition.property
+  (pattern) @name) @definition.property
 
-; Standalone function declarations
-(function_declaration
-  name: (simple_identifier) @name) @definition.function
+; Computed property declarations with accessors
+(property_declaration
+  (pattern)
+  (computed_property)) @definition.computed_property
 
-; Type aliases are not supported by the current grammar
+; Type aliases
+(typealias_declaration
+  name: (type_identifier) @name) @definition.type_alias
 
-; Enum entries
-(enum_class_body
-  (enum_entry
-    name: (simple_identifier) @name)) @definition.enum_entry
+; Protocol property requirements
+(protocol_property_declaration
+  name: (pattern) @name) @definition.protocol_property
+
+; Protocol method requirements
+(protocol_function_declaration
+  name: (simple_identifier) @name) @definition.protocol_method
 `

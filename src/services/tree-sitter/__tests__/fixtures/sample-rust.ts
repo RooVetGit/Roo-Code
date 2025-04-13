@@ -1,271 +1,207 @@
 export default String.raw`
-// Testing basic struct with fields
-struct TestBasicStruct {
-    test_field_x: f64,
-    test_field_y: f64,
+// Function definitions - capturing standard, async, and const functions
+fn standard_function_definition(
+    param1: i32,
+    param2: &str,
+    param3: Option<String>
+) -> Result<i32, String> {
+    println!("Standard function with parameters");
+    let result = param1 + param3.map_or(0, |s| s.len() as i32);
+    Ok(result)
 }
 
-// Testing struct with implementation methods
-struct TestMethodStruct {
-    test_width: u32,
-    test_height: u32,
+async fn async_function_definition(
+    url: &str,
+    timeout: std::time::Duration,
+    retry_count: u32
+) -> Result<String, Box<dyn std::error::Error>> {
+    println!("Async function with parameters");
+    println!("URL: {}, timeout: {:?}, retries: {}", url, timeout, retry_count);
+    Ok(String::from("Async response"))
 }
 
-impl TestMethodStruct {
-    // Testing method definition
-    fn test_area_method(&self) -> u32 {
-        self.test_width * self.test_height
-    }
+const fn const_function_definition<T: Copy>(
+    value: T,
+    multiplier: usize
+) -> [T; 4] {
+    println!("Const function for compile-time evaluation");
+    [value; 4]
+}
 
-    // Testing method with parameters
-    fn test_comparison_method(&self, other: &TestMethodStruct) -> bool {
-        self.test_width > other.test_width && self.test_height > other.test_height
-    }
+// Struct definitions - capturing standard, tuple, and unit structs
+struct standard_struct_definition {
+    field1: String,
+    field2: i32,
+    field3: Option<Vec<f64>>,
+    field4: std::collections::HashMap<String, i32>,
+}
 
-    // Testing associated function
-    fn test_factory_method(size: u32) -> TestMethodStruct {
-        TestMethodStruct {
-            test_width: size,
-            test_height: size,
+struct tuple_struct_definition(
+    String,
+    i32,
+    Option<Vec<f64>>,
+    std::collections::HashMap<String, i32>
+);
+
+struct unit_struct_definition;
+
+// Enum definitions - capturing variants with and without data
+enum enum_definition {
+    UnitVariant,
+    TupleVariant(String, i32, f64),
+    StructVariant {
+        name: String,
+        value: i32,
+        data: Option<Vec<f64>>,
+    },
+    MultipleVariants(
+        String,
+        i32,
+        f64,
+        Option<Box<enum_definition>>
+    ),
+}
+
+// Trait definitions - capturing default and required methods
+trait trait_definition {
+    // Required methods without implementation
+    fn required_trait_method(&self, param: i32) -> bool;
+    fn required_trait_method_with_generics<T: Clone>(&self, param: T) -> Option<T>;
+    
+    // Default methods with implementation
+    fn default_trait_method(&self) -> String {
+        String::from("Default implementation in trait")
+    }
+    
+    fn another_default_trait_method(&self, prefix: &str) -> String {
+        format!("{}: {}", prefix, self.default_trait_method())
+    }
+}
+
+// Impl blocks - capturing trait and inherent implementations
+impl standard_struct_definition {
+    // Inherent implementation
+    fn inherent_implementation_method(
+        &self,
+        multiplier: i32
+    ) -> i32 {
+        self.field2 * multiplier
+    }
+    
+    fn inherent_static_method(
+        name: String,
+        value: i32
+    ) -> Self {
+        Self {
+            field1: name,
+            field2: value,
+            field3: None,
+            field4: std::collections::HashMap::new(),
         }
     }
 }
 
-// Testing standalone function
-fn test_calculation_function(p1: &TestBasicStruct, p2: &TestBasicStruct) -> f64 {
-    let dx = p2.test_field_x - p1.test_field_x;
-    let dy = p2.test_field_y - p1.test_field_y;
-    (dx * dx + dy * dy).sqrt()
-}
-
-// Testing complex struct with multiple fields
-struct TestComplexStruct {
-    test_string_field1: String,
-    test_string_field2: String,
-    test_number_field: u32,
-}
-
-impl TestComplexStruct {
-    // Testing constructor method
-    fn test_new_method(field1: String, field2: String, number: u32) -> TestComplexStruct {
-        TestComplexStruct {
-            test_string_field1: field1,
-            test_string_field2: field2,
-            test_number_field: number,
-        }
-    }
-
-    // Testing string formatting method
-    fn test_format_method(&self) -> String {
-        format!("{} {} ({})", self.test_string_field1, self.test_string_field2, self.test_number_field)
-    }
-}
-
-// Testing string processing function
-fn test_string_processing(input: &str) -> String {
-    format!("Test processed: {}", input)
-}
-
-// Testing enum with variants
-enum TestEnum {
-    TestVariant1,
-    TestVariant2,
-    TestVariant3(String),
-    TestVariant4 { test_code: i32, test_message: String },
-}
-
-// Testing trait definition
-trait TestTrait {
-    fn test_trait_method(&self);
-    fn test_trait_dimensions(&self) -> (u32, u32);
-}
-
-// Testing trait implementation
-impl TestTrait for TestMethodStruct {
-    fn test_trait_method(&self) {
-        println!("Testing trait method: {}x{}", self.test_width, self.test_height);
+impl trait_definition for standard_struct_definition {
+    // Trait implementation
+    fn required_trait_method(
+        &self,
+        param: i32
+    ) -> bool {
+        self.field2 > param
     }
     
-    fn test_trait_dimensions(&self) -> (u32, u32) {
-        (self.test_width, self.test_height)
-    }
-}
-
-// Testing generic struct with lifetime
-struct TestGenericStruct<'a, T> {
-    test_data: &'a T,
-    test_count: usize,
-}
-
-impl<'a, T> TestGenericStruct<'a, T> {
-    fn test_generic_method(data: &'a T) -> TestGenericStruct<'a, T> {
-        TestGenericStruct {
-            test_data: data,
-            test_count: 1,
+    fn required_trait_method_with_generics<T: Clone>(
+        &self,
+        param: T
+    ) -> Option<T> {
+        if self.field2 > 0 {
+            Some(param)
+        } else {
+            None
         }
     }
 }
 
-// Testing macro definition
-macro_rules! test_macro {
-    ($test_param:expr) => {
-        println!("Test macro output: {}", $test_param);
-    };
-    ($test_param:expr, $($test_args:tt)*) => {
-        println!("Test macro with args: {}", $test_param);
-        test_macro!($($test_args)*);
-    };
-}
-
-// Testing module definition
-mod test_module {
-    // Testing constants
-    pub const TEST_CONSTANT: f64 = 3.14159;
-    
-    // Testing static variables
-    pub static TEST_STATIC: &str = "1.0.0";
-    
-    // Testing type alias
-    pub type TestType = f64;
-    
-    // Testing module functions
-    pub fn test_add(a: TestType, b: TestType) -> TestType {
-        a + b
-    }
-    
-    pub fn test_subtract(a: TestType, b: TestType) -> TestType {
-        a - b
-    }
-}
-
-// Testing union type
-union TestUnion {
-    test_int: i32,
-    test_float: f32,
-}
-
-// Testing trait with associated type
-trait TestIterator {
-    type TestItem;
-    
-    fn test_next(&mut self) -> Option<Self::TestItem>;
-    
-    fn test_count(self) -> usize where Self: Sized {
-        let mut count = 0;
-        while let Some(_) = self.test_next() {
-            count += 1;
-        }
-        count
-    }
-}
-
-// Testing closure definitions
-fn test_closures() {
-    let test_capture = 42;
-    
-    let test_basic_closure = || {
-        println!("Test captured value: {}", test_capture);
+// Module definitions - capturing mod and use declarations
+mod module_definition {
+    use std::collections::HashMap;
+    use std::io::{self, Read, Write};
+    use super::{
+        standard_struct_definition,
+        trait_definition,
+        enum_definition
     };
     
-    let test_param_closure = |a: i32, b: i32| -> i32 {
-        let sum = a + b + test_capture;
-        println!("Test closure sum: {}", sum);
-        sum
+    pub fn module_function(
+        param: &standard_struct_definition
+    ) -> io::Result<String> {
+        Ok(format!("Module function: {}", param.field1))
+    }
+}
+
+// Macro definitions - capturing declarative and procedural macros
+macro_rules! declarative_macro_definition {
+    // Simple pattern
+    ($expr:expr) => {
+        println!("Macro expanded: {}", $expr);
     };
     
-    test_basic_closure();
-    let result = test_param_closure(10, 20);
-}
-
-// Testing pattern matching
-fn test_pattern_matching(value: Option<Result<Vec<i32>, String>>) {
-    match value {
-        Some(Ok(vec)) if vec.len() > 5 => {
-            println!("Test vector > 5 elements");
-            for item in vec {
-                println!("Test item: {}", item);
-            }
-        },
-        Some(Ok(vec)) => {
-            println!("Test vector length: {}", vec.len());
-        },
-        Some(Err(e)) => {
-            println!("Test error: {}", e);
-        },
-        None => {
-            println!("Test none case");
+    // Multiple patterns with different formats
+    ($expr:expr, $($arg:expr),*) => {
+        {
+            print!("Macro expanded: {}", $expr);
+            $(
+                print!(", {}", $arg);
+            )*
+            println!("");
         }
+    };
+}
+
+// Procedural macros would typically be defined in a separate crate with #[proc_macro]
+// This is a stand-in example showing what would be the usage in code
+#[derive(
+    procedural_macro_definition,
+    Debug,
+    Clone,
+    PartialEq
+)]
+struct struct_with_procedural_macros {
+    field1: String,
+    field2: i32,
+}
+
+// Type aliases - capturing basic and generic types
+type type_alias_definition = fn(i32, &str) -> Result<String, std::io::Error>;
+
+type generic_type_alias_definition<T, E> = Result<
+    std::collections::HashMap<String, T>,
+    Box<dyn std::error::Error + Send + Sync + 'static>
+>;
+
+// Const/Static items - capturing both forms
+const constant_item_definition: f64 = 3.14159265358979323846;
+
+static static_item_definition: &str =
+    "This is a static string that lives for the entire program duration";
+
+// Lifetime parameters - capturing annotations and bounds
+struct lifetime_parameters_definition<'a, 'b: 'a> {
+    reference1: &'a str,
+    reference2: &'b str,
+    reference3: &'a [&'b str],
+    reference4: std::collections::HashMap<&'a str, &'b str>,
+}
+
+impl<'shorter, 'longer: 'shorter> lifetime_parameters_definition<'shorter, 'longer> {
+    fn lifetime_method_definition<'a, 'b>(
+        &'a self,
+        param: &'b str
+    ) -> &'shorter str
+    where
+        'b: 'a,
+    {
+        self.reference1
     }
-}
-
-// Testing where clause constraints
-fn test_where_clause<T>(collection: &[T])
-where
-    T: std::fmt::Debug + Ord + Clone,
-{
-    let mut sorted = collection.to_vec();
-    sorted.sort();
-    println!("Test sorted: {:?}", sorted);
-}
-
-// Testing attribute macros
-#[derive(Debug, Clone, PartialEq)]
-struct TestAttributeStruct {
-    test_field1: String,
-    test_field2: i32,
-}
-
-#[cfg(test)]
-mod test_attribute_module {
-    #[test]
-    fn test_attribute_function() {
-        assert_eq!(2 + 2, 4);
-    }
-}
-
-// Testing async function
-async fn test_async_function(url: &str) -> Result<String, String> {
-    println!("Test async request: {}", url);
-    
-    let result = async {
-        Ok("Test response".to_string())
-    }.await;
-    
-    result
-}
-
-// Testing generic implementation
-struct TestGenericImpl<T, U> {
-    test_first: T,
-    test_second: U,
-}
-
-impl<T, U> TestGenericImpl<T, U>
-where
-    T: std::fmt::Display,
-    U: std::fmt::Debug,
-{
-    fn test_generic_new(first: T, second: U) -> Self {
-        TestGenericImpl { test_first: first, test_second: second }
-    }
-    
-    fn test_generic_display(&self) {
-        println!("Test first: {}, Test second: {:?}", self.test_first, self.test_second);
-    }
-}
-
-// Testing trait bounds
-trait TestProcessor<T> {
-    fn test_process(&self, item: T) -> T;
-}
-
-fn test_process_items<T, P>(processor: P, items: Vec<T>) -> Vec<T>
-where
-    P: TestProcessor<T> + Clone,
-    T: Clone + std::fmt::Debug + 'static,
-{
-    items.into_iter()
-         .map(|item| processor.test_process(item))
-         .collect()
 }
 `

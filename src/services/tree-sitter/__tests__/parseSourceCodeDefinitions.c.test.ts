@@ -1,149 +1,168 @@
-import { describe, expect, it, jest, beforeEach } from "@jest/globals"
-import { parseSourceCodeDefinitionsForFile } from ".."
-import * as fs from "fs/promises"
-import * as path from "path"
-import Parser from "web-tree-sitter"
-import { fileExistsAtPath } from "../../../utils/fs"
-import { loadRequiredLanguageParsers } from "../languageParser"
+import { describe, it } from "@jest/globals"
+import { testParseSourceCodeDefinitions, debugLog } from "./helpers"
 import { cQuery } from "../queries"
-import { initializeTreeSitter, testParseSourceCodeDefinitions, inspectTreeStructure, debugLog } from "./helpers"
 import sampleCContent from "./fixtures/sample-c"
-const cOptions = {
-	language: "c",
-	wasmFile: "tree-sitter-c.wasm",
-	queryString: cQuery,
-	extKey: "c",
-	content: sampleCContent,
-}
-
-// Mock file system operations
-jest.mock("fs/promises")
-const mockedFs = jest.mocked(fs)
-
-// Mock loadRequiredLanguageParsers
-jest.mock("../languageParser", () => ({
-	loadRequiredLanguageParsers: jest.fn(),
-}))
-
-// Mock fileExistsAtPath to return true for our test paths
-jest.mock("../../../utils/fs", () => ({
-	fileExistsAtPath: jest.fn().mockImplementation(() => Promise.resolve(true)),
-}))
 
 describe("parseSourceCodeDefinitionsForFile with C", () => {
-	beforeEach(() => {
-		jest.clearAllMocks()
+	const testOptions = {
+		language: "c",
+		wasmFile: "tree-sitter-c.wasm",
+		queryString: cQuery,
+		extKey: "c",
+	}
+
+	// Single test to inspect tree structure
+	it("should inspect C tree structure", async () => {
+		const result = await testParseSourceCodeDefinitions("test.c", sampleCContent, testOptions)
+		if (!result || !result.match(/\d+--\d+ \|/)) {
+			throw new Error("Failed to parse C tree structure")
+		}
+		debugLog("C Tree Structure Result:", result)
 	})
 
-	// Debug test to inspect the tree structure
-	it("should debug C tree structure", async () => {
-		// Initialize tree-sitter
-		const TreeSitter = await initializeTreeSitter()
+	// Test all function-related constructs
+	it("should capture function constructs", async () => {
+		const result = await testParseSourceCodeDefinitions("test.c", sampleCContent, testOptions)
+		const lines = result?.split("\n") || []
+		const functionPatterns = [
+			/\d+--\d+ \| void multiline_prototype\(/,
+			/\d+--\d+ \| void function_pointer_prototype\(/,
+			/\d+--\d+ \| int variadic_prototype\(/,
+			/\d+--\d+ \| int basic_multitype_function\(/,
+			/\d+--\d+ \| void array_param_function\(/,
+			/\d+--\d+ \| void pointer_param_function\(/,
+			/\d+--\d+ \| int variadic_impl_function\(/,
+		]
 
-		// Create parser and load C language
-		const parser = new TreeSitter()
-		const wasmPath = path.join(process.cwd(), "dist/tree-sitter-c.wasm")
-		const cLang = await TreeSitter.Language.load(wasmPath)
-		parser.setLanguage(cLang)
-
-		// Parse a simple C code snippet
-		const simpleCode = `
-struct Point {
-    int x;
-    int y;
-};
-
-int add(int a, int b) {
-    return a + b;
-}
-`
-		// Parse the content
-		const tree = parser.parse(simpleCode)
-
-		// Print the tree structure for debugging
-		debugLog("C TREE STRUCTURE:\n" + tree.rootNode.toString())
-
-		// Test passes if we can inspect the tree
-		expect(tree).toBeDefined()
+		for (const pattern of functionPatterns) {
+			if (!lines.some((line) => pattern.test(line))) {
+				throw new Error(`Missing function pattern: ${pattern}`)
+			}
+		}
+		debugLog(
+			"Function Constructs:",
+			lines.filter((l) => l.includes("function")),
+		)
 	})
 
-	// Function definitions
-	it("should capture basic function definition", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
-		const resultLines = result?.split("\n") || []
+	// Test all struct-related constructs
+	it("should capture struct constructs", async () => {
+		const result = await testParseSourceCodeDefinitions("test.c", sampleCContent, testOptions)
+		const lines = result?.split("\n") || []
+		const structPatterns = [
+			/\d+--\d+ \| union basic_types_struct/,
+			/\d+--\d+ \| struct nested_struct/,
+			/\d+--\d+ \| struct bitfield_struct/,
+			/\d+--\d+ \| struct callback_struct/,
+			/\d+--\d+ \| struct aligned_struct/,
+			/\d+--\d+ \| struct anonymous_union_struct/,
+		]
 
-		expect(resultLines.some((line) => line.includes("test_basic_function"))).toBe(true)
+		for (const pattern of structPatterns) {
+			if (!lines.some((line) => pattern.test(line))) {
+				throw new Error(`Missing struct pattern: ${pattern}`)
+			}
+		}
+		debugLog(
+			"Struct Constructs:",
+			lines.filter((l) => l.includes("struct")),
+		)
 	})
 
-	it("should capture function with array parameters", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
-		const resultLines = result?.split("\n") || []
+	// Test all union constructs
+	it("should capture union constructs", async () => {
+		const result = await testParseSourceCodeDefinitions("test.c", sampleCContent, testOptions)
+		const lines = result?.split("\n") || []
+		const unionPatterns = [/\d+--\d+ \| union multitype_data_union/, /\d+--\d+ \| union bitfield_union/]
 
-		expect(resultLines.some((line) => line.includes("test_array_function"))).toBe(true)
+		for (const pattern of unionPatterns) {
+			if (!lines.some((line) => pattern.test(line))) {
+				throw new Error(`Missing union pattern: ${pattern}`)
+			}
+		}
+		debugLog(
+			"Union Constructs:",
+			lines.filter((l) => l.includes("union")),
+		)
 	})
 
-	it("should capture function with pointer parameters", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
-		const resultLines = result?.split("\n") || []
+	// Test all enum constructs
+	it("should capture enum constructs", async () => {
+		const result = await testParseSourceCodeDefinitions("test.c", sampleCContent, testOptions)
+		const lines = result?.split("\n") || []
+		const enumPatterns = [
+			/\d+--\d+ \| enum sequential_value_enum/,
+			/\d+--\d+ \| enum explicit_value_enum/,
+			/\d+--\d+ \| enum mixed_value_enum/,
+		]
 
-		expect(resultLines.some((line) => line.includes("test_pointer_function"))).toBe(true)
+		for (const pattern of enumPatterns) {
+			if (!lines.some((line) => pattern.test(line))) {
+				throw new Error(`Missing enum pattern: ${pattern}`)
+			}
+		}
+		debugLog(
+			"Enum Constructs:",
+			lines.filter((l) => l.includes("enum")),
+		)
 	})
 
-	it("should capture variadic function", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
-		const resultLines = result?.split("\n") || []
+	// Test all typedef constructs
+	it("should capture typedef constructs", async () => {
+		const result = await testParseSourceCodeDefinitions("test.c", sampleCContent, testOptions)
+		const lines = result?.split("\n") || []
+		const typedefPatterns = [/\d+--\d+ \| typedef struct \{/]
 
-		expect(resultLines.some((line) => line.includes("test_variadic_function"))).toBe(true)
+		for (const pattern of typedefPatterns) {
+			if (!lines.some((line) => pattern.test(line))) {
+				throw new Error(`Missing typedef pattern: ${pattern}`)
+			}
+		}
+		debugLog(
+			"Typedef Constructs:",
+			lines.filter((l) => l.includes("typedef")),
+		)
 	})
 
-	// Struct definitions
-	it("should capture basic struct definition", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
-		expect(result).toContain("struct TestBasicStruct")
+	// Test all preprocessor constructs
+	it("should capture preprocessor constructs", async () => {
+		const result = await testParseSourceCodeDefinitions("test.c", sampleCContent, testOptions)
+		const lines = result?.split("\n") || []
+		const macroPatterns = [
+			/\d+--\d+ \| #define TEST_MIN\(a,b\) \(/,
+			/\d+--\d+ \| #define TEST_MAX\(a,b\) \(/,
+			/\d+--\d+ \| \s+#define TEST_DEBUG_LOG\(level, msg, \.\.\.\) do \{/,
+		]
+
+		for (const pattern of macroPatterns) {
+			if (!lines.some((line) => pattern.test(line))) {
+				throw new Error(`Missing macro pattern: ${pattern}`)
+			}
+		}
+		debugLog(
+			"Preprocessor Constructs:",
+			lines.filter((l) => l.includes("#define")),
+		)
 	})
 
-	it("should capture nested struct definition", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
-		expect(result).toContain("struct TestNestedStruct")
-	})
+	// Test all global variable constructs
+	it("should capture global variable constructs", async () => {
+		const result = await testParseSourceCodeDefinitions("test.c", sampleCContent, testOptions)
+		const lines = result?.split("\n") || []
+		const varPatterns = [
+			/\d+--\d+ \| static const int MAGIC_NUMBER =/,
+			/\d+--\d+ \| static const char\* const BUILD_INFO\[\]/,
+			/\d+--\d+ \| static struct config_struct/,
+		]
 
-	it("should capture struct with bit fields", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
-		expect(result).toContain("struct TestBitFieldStruct")
+		for (const pattern of varPatterns) {
+			if (!lines.some((line) => pattern.test(line))) {
+				throw new Error(`Missing variable pattern: ${pattern}`)
+			}
+		}
+		debugLog(
+			"Global Variable Constructs:",
+			lines.filter((l) => l.includes("static")),
+		)
 	})
-
-	it("should capture struct with function pointer", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
-		expect(result).toContain("struct TestCallbackStruct")
-	})
-
-	// Enum definitions
-	it("should capture basic enum definition", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
-		expect(result).toContain("enum TestBasicEnum")
-	})
-
-	it("should capture enum with explicit values", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
-		expect(result).toContain("enum TestValuedEnum")
-	})
-
-	// Typedef declarations
-	it("should capture typedef struct", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
-		expect(result).toContain("typedef struct")
-	})
-
-	// C11 features
-	it("should capture anonymous union struct", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
-		expect(result).toContain("struct TestAnonymousUnion")
-	})
-
-	it("should capture aligned struct", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.c", sampleCContent, cOptions)
-		expect(result).toContain("struct TestAlignedStruct")
-	})
-
-	// Note: C11 atomic types are not currently supported by the parser
 })

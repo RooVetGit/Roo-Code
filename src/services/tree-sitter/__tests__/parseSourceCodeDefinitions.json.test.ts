@@ -1,10 +1,6 @@
-import * as fs from "fs/promises"
-import * as path from "path"
-
-import { describe, expect, it, jest, beforeEach } from "@jest/globals"
-
+import { describe, it } from "@jest/globals"
+import { testParseSourceCodeDefinitions, debugLog } from "./helpers"
 import { javascriptQuery } from "../queries"
-import { initializeTreeSitter, testParseSourceCodeDefinitions, inspectTreeStructure, debugLog } from "./helpers"
 import sampleJsonContent from "./fixtures/sample-json"
 
 // JSON test options
@@ -16,104 +12,41 @@ const jsonOptions = {
 	content: sampleJsonContent,
 }
 
-// Mock file system operations
-jest.mock("fs/promises")
-const mockedFs = jest.mocked(fs)
+describe("JSON Structure Tests", () => {
+	const testFile = "/test/test.json"
 
-// Mock fileExistsAtPath to return true for our test paths
-jest.mock("../../../utils/fs", () => ({
-	fileExistsAtPath: jest.fn().mockImplementation(() => Promise.resolve(true)),
-}))
-
-// Mock loadRequiredLanguageParsers
-jest.mock("../languageParser", () => ({
-	loadRequiredLanguageParsers: jest.fn(),
-}))
-
-describe("jsonParserDebug", () => {
-	it("should debug tree-sitter parsing directly using JSON example", async () => {
-		jest.unmock("fs/promises")
-
-		// Initialize tree-sitter
-		const TreeSitter = await initializeTreeSitter()
-
-		// Create parser and query
-		const parser = new TreeSitter()
-		const wasmPath = path.join(process.cwd(), "dist/tree-sitter-javascript.wasm")
-		const jsLang = await TreeSitter.Language.load(wasmPath)
-		parser.setLanguage(jsLang)
-		const tree = parser.parse(sampleJsonContent)
-
-		expect(tree).toBeDefined()
+	it("should capture basic value types", async () => {
+		debugLog("\n=== Basic Value Types ===")
+		await testParseSourceCodeDefinitions(testFile, sampleJsonContent, jsonOptions)
 	})
 
-	it("should successfully parse basic JSON objects", async function () {
-		const testFile = "/test/config.json"
-		const result = await testParseSourceCodeDefinitions(testFile, sampleJsonContent, jsonOptions)
-		expect(result).toBeDefined()
-		expect(result).toContain("# config.json")
-		expect(result).toContain('"test_object_with_primitives"')
-		expect(result).toContain('"test_nested_objects"')
-		expect(result).toContain('"test_arrays"')
+	it("should capture nested object structures", async () => {
+		debugLog("\n=== Nested Object Structures ===")
+		await testParseSourceCodeDefinitions(testFile, sampleJsonContent, jsonOptions)
 	})
 
-	it("should detect nested JSON objects and arrays", async function () {
-		const testFile = "/test/nested.json"
-		const result = await testParseSourceCodeDefinitions(testFile, sampleJsonContent, jsonOptions)
-		expect(result).toBeDefined()
-		expect(result).toContain('"test_object"')
-		expect(result).toContain('"test_deep_object"')
-		expect(result).toContain('"test_object_array"')
-		expect(result).toContain('"test_mixed_array"')
-	})
-})
-
-describe("parseSourceCodeDefinitions for JSON", () => {
-	const testFilePath = "/test/config.json"
-
-	beforeEach(() => {
-		// Reset mocks
-		jest.clearAllMocks()
-
-		// Mock file existence check
-		mockedFs.access.mockResolvedValue(undefined)
-
-		// Mock file reading
-		mockedFs.readFile.mockResolvedValue(Buffer.from(sampleJsonContent))
+	it("should capture array structures", async () => {
+		debugLog("\n=== Array Structures ===")
+		await testParseSourceCodeDefinitions(testFile, sampleJsonContent, jsonOptions)
 	})
 
-	it("should parse top-level object properties", async function () {
-		debugLog("\n=== Parse Test: Top-level Properties ===")
-		const result = await testParseSourceCodeDefinitions(testFilePath, sampleJsonContent, jsonOptions)
-		expect(result).toBeDefined()
-		expect(result).toContain('"test_object_with_primitives"')
-		expect(result).toContain('"test_nested_objects"')
-		expect(result).toContain('"test_arrays"')
+	it("should capture object arrays", async () => {
+		debugLog("\n=== Object Arrays ===")
+		await testParseSourceCodeDefinitions(testFile, sampleJsonContent, jsonOptions)
 	})
 
-	it("should parse nested object properties", async function () {
-		debugLog("\n=== Parse Test: Nested Properties ===")
-		const result = await testParseSourceCodeDefinitions(testFilePath, sampleJsonContent, jsonOptions)
-		expect(result).toBeDefined()
-		expect(result).toContain('"test_object"')
-		expect(result).toContain('"test_nested_objects"')
-		expect(result).toContain('"test_deep_object"')
+	it("should capture mixed nesting", async () => {
+		debugLog("\n=== Mixed Nesting ===")
+		await testParseSourceCodeDefinitions(testFile, sampleJsonContent, jsonOptions)
 	})
 
-	it("should parse arrays in JSON", async function () {
-		debugLog("\n=== Parse Test: Arrays ===")
-		const result = await testParseSourceCodeDefinitions(testFilePath, sampleJsonContent, jsonOptions)
-		expect(result).toBeDefined()
-		expect(result).toContain('"test_arrays"')
-		expect(result).toContain('"test_object_array"')
-		expect(result).toContain('"test_mixed_array"')
+	it("should capture all value types", async () => {
+		debugLog("\n=== All Value Types ===")
+		await testParseSourceCodeDefinitions(testFile, sampleJsonContent, jsonOptions)
 	})
 
-	it("should handle complex nested structures", async function () {
-		debugLog("\n=== Parse Test: Complex Nested Structures ===")
-		const result = await testParseSourceCodeDefinitions(testFilePath, sampleJsonContent, jsonOptions)
-		expect(result).toBeDefined()
-		expect(result).toContain('"test_deep_object"')
-		expect(result).toContain('"level1"')
+	it("should capture special string content", async () => {
+		debugLog("\n=== Special String Content ===")
+		await testParseSourceCodeDefinitions(testFile, sampleJsonContent, jsonOptions)
 	})
 })

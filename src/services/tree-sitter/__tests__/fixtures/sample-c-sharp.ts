@@ -1,4 +1,20 @@
 export default String.raw`
+// Attribute declaration test - at least 4 lines long
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
+public class TestAttributeDefinition : Attribute
+{
+    // Attribute properties
+    public string Category { get; }
+    public int Priority { get; }
+
+    // Constructor
+    public TestAttributeDefinition(string category, int priority = 0)
+    {
+        Category = category;
+        Priority = priority;
+    }
+}
+
 // Namespace declaration test
 namespace TestNamespaceDefinition
 {
@@ -28,21 +44,55 @@ namespace TestNamespaceDefinition
         private readonly string _prefix;
         private static int _instanceCount = 0;
 
-        // Property declaration tests - each property has clear naming
-        public string TestPropertyDefinition { get; set; }
-        public TestEnumDefinition TestPropertyWithAccessor { get; private set; }
-        
+        // Property declaration tests - each property has clear naming and spans 4+ lines
+        public string TestPropertyDefinition
+        {
+            get;
+            set;
+        }
+
+        public TestEnumDefinition TestPropertyWithAccessor
+        {
+            get;
+            private set;
+        }
+
         // Auto-implemented property with init accessor (C# 9.0+)
-        public string TestPropertyWithInit { get; init; }
+        public string TestPropertyWithInit
+        {
+            get;
+            init;
+        }
         
         // Required member (C# 11.0+)
-        public required string TestRequiredProperty { get; set; }
+        public required string TestRequiredProperty
+        {
+            get;
+            set;
+        }
 
-        // Event declaration test
-        public event EventHandler<TestEventArgsDefinition> TestEventDefinition;
+        // Event declaration test with custom accessors - at least 4 lines long
+        private EventHandler<TestEventArgsDefinition> _testEvent;
+        public event EventHandler<TestEventArgsDefinition> TestEventDefinition
+        {
+            add
+            {
+                _testEvent += value;
+                Console.WriteLine("Event handler added");
+            }
+            remove
+            {
+                _testEvent -= value;
+                Console.WriteLine("Event handler removed");
+            }
+        }
 
-        // Delegate declaration test
-        public delegate void TestDelegateDefinition(string message);
+        // Delegate declaration test - at least 4 lines long
+        public delegate void TestDelegateDefinition(
+            string message,
+            TestEnumDefinition level,
+            DateTime timestamp
+        );
 
         // Constructor - at least 4 lines long
         public TestClassDefinition(string prefix)
@@ -54,13 +104,14 @@ namespace TestNamespaceDefinition
         }
 
         // Method declaration test - standard method with block body
+        [TestAttributeDefinition("Interface", 2)]
         public void TestInterfaceMethod(string message)
         {
             var formattedMessage = TestInterfaceFormatMethod(message, TestPropertyWithAccessor);
             Console.WriteLine(formattedMessage);
             
             // Raise event
-            TestEventDefinition?.Invoke(this, new TestEventArgsDefinition(formattedMessage));
+            _testEvent?.Invoke(this, new TestEventArgsDefinition(formattedMessage));
         }
 
         // Method with expression body - expanded to 4 lines with comments
@@ -299,17 +350,18 @@ namespace TestNamespaceDefinition
     }
 }
 
-// File-scoped namespace test (C# 10.0+)
-namespace TestFileScopedNamespaceDefinition;
-
-// Class in file-scoped namespace - expanded to 4+ lines
-public class TestFileScopedClassDefinition
+// File-scoped namespace test (C# 10.0+) - expanded to 4+ lines
+namespace TestFileScopedNamespaceDefinition
 {
-    private string _scopedField = "Scoped";
-    
-    public void TestFileScopedMethod()
+    // Class in file-scoped namespace
+    public class TestFileScopedClassDefinition
     {
-        Console.WriteLine("File-scoped namespace class");
+        private string _scopedField = "Scoped";
+        
+        public void TestFileScopedMethod()
+        {
+            Console.WriteLine("File-scoped namespace class");
+        }
     }
 }
 `

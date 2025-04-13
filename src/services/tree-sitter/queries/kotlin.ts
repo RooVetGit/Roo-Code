@@ -1,10 +1,17 @@
 /*
 - class declarations (regular, data, abstract, sealed, enum, annotation)
 - interface declarations
-- function declarations (regular, suspend)
+- function declarations (regular, suspend, extension)
 - object declarations (including companion objects)
+- property declarations and accessors
+- type aliases and constructors
 */
 export default `
+; Type alias declarations
+(type_alias
+  (type_identifier) @name.definition.type_alias
+) @definition.type_alias
+
 ; Regular class declarations
 (class_declaration
   (type_identifier) @name.definition.class
@@ -71,4 +78,33 @@ export default `
     (class_modifier) @_modifier (#eq? @_modifier "annotation"))
   (type_identifier) @name.definition.annotation_class
 ) @definition.annotation_class
+; Extension function declarations
+(function_declaration
+  (modifiers
+    (function_modifier) @_modifier (#eq? @_modifier "extension"))
+  (simple_identifier) @name.definition.extension_function
+) @definition.extension_function
+
+; Primary constructor declarations
+(class_declaration
+  (primary_constructor) @definition.primary_constructor
+)
+
+; Secondary constructor declarations
+(secondary_constructor) @definition.secondary_constructor
+
+; Property declarations
+(property_declaration
+  (variable_declaration
+    (simple_identifier) @name.definition.property)
+) @definition.property
+
+; Property declarations with accessors
+(property_declaration
+  (variable_declaration
+    (simple_identifier) @name.definition.property)
+  (getter)? @definition.getter
+  (setter)? @definition.setter
+) @definition.property_with_accessors
+
 `

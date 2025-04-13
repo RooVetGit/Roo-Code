@@ -1,12 +1,10 @@
 import { describe, expect, it, jest, beforeEach } from "@jest/globals"
 import { parseSourceCodeDefinitionsForFile } from ".."
 import * as fs from "fs/promises"
-import * as path from "path"
-import Parser from "web-tree-sitter"
 import { fileExistsAtPath } from "../../../utils/fs"
 import { loadRequiredLanguageParsers } from "../languageParser"
 import { rubyQuery } from "../queries"
-import { initializeTreeSitter, testParseSourceCodeDefinitions, inspectTreeStructure, debugLog } from "./helpers"
+import { testParseSourceCodeDefinitions, debugLog } from "./helpers"
 import sampleRubyContent from "./fixtures/sample-ruby"
 
 const rubyOptions = {
@@ -16,207 +14,97 @@ const rubyOptions = {
 	extKey: "rb",
 }
 
-// Mock file system operations
+// Setup shared mocks
 jest.mock("fs/promises")
-const mockedFs = jest.mocked(fs)
-
-// Mock loadRequiredLanguageParsers
 jest.mock("../languageParser", () => ({
 	loadRequiredLanguageParsers: jest.fn(),
 }))
-
-// Mock fileExistsAtPath to return true for our test paths
 jest.mock("../../../utils/fs", () => ({
 	fileExistsAtPath: jest.fn().mockImplementation(() => Promise.resolve(true)),
 }))
 
-describe("parseSourceCodeDefinitionsForFile with Ruby", () => {
+describe("Ruby Source Code Definition Parsing", () => {
 	beforeEach(() => {
 		jest.clearAllMocks()
 	})
 
-	it("should capture class definitions with inheritance and mixins", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		// The parser captures class definitions and inheritance
-		expect(result).toContain("class TestClassDefinition < ApplicationRecord")
-		expect(result).toContain("class TestMixinClass")
-		expect(result).toContain("include TestMixinModule")
+	it("should capture standard and nested class definitions", async () => {
+		const result = await testParseSourceCodeDefinitions("test.rb", sampleRubyContent, rubyOptions)
+		debugLog("Class definitions:", result)
+		expect(result).toContain("StandardClassDefinition")
+		expect(result).toContain("NestedClassDefinition")
 	})
 
-	it("should capture method definitions", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		expect(result).toContain("def test_instance_method")
-		expect(result).toContain("def test_private_helper")
-		expect(result).toContain("def test_method")
+	it("should capture standard and nested module definitions", async () => {
+		const result = await testParseSourceCodeDefinitions("test.rb", sampleRubyContent, rubyOptions)
+		debugLog("Module definitions:", result)
+		expect(result).toContain("StandardModuleDefinition")
+		expect(result).toContain("NestedModuleDefinition")
 	})
 
-	it("should capture class methods and singleton patterns", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		expect(result).toContain("def self.included")
-		expect(result).toContain("def test_extended_method")
-		expect(result).toContain("def test_included_method")
+	it("should capture all method definition types", async () => {
+		const result = await testParseSourceCodeDefinitions("test.rb", sampleRubyContent, rubyOptions)
+		debugLog("Method definitions:", result)
+		expect(result).toContain("standard_instance_method")
+		expect(result).toContain("class_method_example")
+		expect(result).toContain("singleton_method_example")
 	})
 
-	it("should capture module definitions and nested modules", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		expect(result).toContain("module TestModule")
-		expect(result).toContain("module TestClassMethods")
-		expect(result).toContain("module TestInstanceMethods")
+	it("should capture block definitions with both syntaxes", async () => {
+		const result = await testParseSourceCodeDefinitions("test.rb", sampleRubyContent, rubyOptions)
+		debugLog("Block definitions:", result)
+		expect(result).toContain("method_with_do_end_block")
+		expect(result).toContain("method_with_brace_block")
 	})
 
-	it("should capture constants and class variables", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		// The parser captures class definitions and constants
-		expect(result).toContain("class TestClassDefinition")
-		expect(result).toContain("module TestModuleDefinition")
-		expect(result).toContain("def test_instance_method")
-	})
-
-	it("should capture mixins (include, extend, prepend)", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		// Check for mixins
-		expect(result).toContain("include TestMixinModule")
-		expect(result).toContain("module TestModuleDefinition")
-		expect(result).toContain("module TestClassMethods")
-	})
-
-	it("should capture class macros (Rails-like)", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		// Check for class macros only - the parser captures the class containing the macros
-		expect(result).toContain("class TestClassMacroClass")
-	})
-
-	it("should capture metaprogramming constructs", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		// Check for metaprogramming constructs only - the parser captures the class containing the metaprogramming
-		expect(result).toContain("class TestMetaprogrammingClass")
-		expect(result).toContain("[:test_meta_save, :test_meta_update, :test_meta_delete].each")
-		expect(result).toContain("def method_missing")
-	})
-
-	it("should capture global variables", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		// Global variables aren't directly captured in the output
-		expect(result).toBeTruthy()
-	})
-
-	it("should capture instance variables", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		// Instance variables aren't directly captured in the output
-		expect(result).toBeTruthy()
-	})
-
-	it("should capture class variables", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		// Check for class variables - parser captures just the variable names
-		expect(result).toContain("@@test_class_variable = 0")
-		expect(result).toContain("@@test_singleton_instance = nil")
-	})
-
-	it("should capture symbols", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		// Symbols aren't directly captured in the output
-		expect(result).toBeTruthy()
-	})
-
-	it("should capture blocks, procs, and lambdas", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		// Check for blocks, procs, and lambdas only
-		expect(result).toContain("test_lambda = ->(x, y) {")
-		expect(result).toContain("test_proc = Proc.new do |x|")
-	})
-
-	it("should capture exception handling", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		// Check for exception handling only
+	it("should capture begin/rescue/ensure blocks", async () => {
+		const result = await testParseSourceCodeDefinitions("test.rb", sampleRubyContent, rubyOptions)
+		debugLog("Exception handling:", result)
+		expect(result).toContain("exception_handling_method")
 		expect(result).toContain("begin")
+		expect(result).toContain("rescue")
+		expect(result).toContain("ensure")
 	})
 
-	it("should capture keyword arguments", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		// Check for keyword arguments only
-		expect(result).toContain("def test_keyword_args")
+	it("should capture all attribute accessor types", async () => {
+		const result = await testParseSourceCodeDefinitions("test.rb", sampleRubyContent, rubyOptions)
+		debugLog("Attribute accessors:", result)
+		expect(result).toContain("attr_reader")
+		expect(result).toContain("attr_writer")
+		expect(result).toContain("attr_accessor")
 	})
 
-	it("should capture splat operators", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
+	it("should capture include and extend mixins", async () => {
+		const result = await testParseSourceCodeDefinitions("test.rb", sampleRubyContent, rubyOptions)
+		debugLog("Mixins:", result)
 
-		// Check for splat operators only
-		expect(result).toContain("def test_splat_method(*numbers)")
+		// Test for basic mixin presence
+		expect(result).toMatch(/module\s+MixinTestModule/)
+		expect(result).toMatch(/shared_mixin_method/)
+
+		// Test for mixin usage
+		expect(result).toMatch(/include/)
+		expect(result).toMatch(/extend/)
+		expect(result).toMatch(/prepend/)
+
+		// Test for mixin-related methods
+		expect(result).toMatch(/included_method/)
+		expect(result).toMatch(/class << self/)
+		expect(result).toMatch(/prepended_method/)
 	})
 
-	it("should capture hash syntax variants", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		// Check for hash syntax variants only
-		expect(result).toContain("test_hash = {")
+	it("should capture Rails-style class macros", async () => {
+		const result = await testParseSourceCodeDefinitions("test.rb", sampleRubyContent, rubyOptions)
+		debugLog("Class macros:", result)
+		expect(result).toContain("has_many")
+		expect(result).toContain("belongs_to")
+		expect(result).toContain("validates")
 	})
 
-	it("should capture string interpolation", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		// String interpolation isn't directly captured in the output
-		expect(result).toBeTruthy()
-	})
-
-	it("should capture regular expressions", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		// Regular expressions aren't directly captured in the output
-		expect(result).toBeTruthy()
-	})
-
-	it("should capture pattern matching", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		// Check for pattern matching only
-		expect(result).toContain("case test_pattern_data")
-	})
-
-	it("should capture endless methods", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		// Endless methods aren't directly captured in the output
-		expect(result).toBeTruthy()
-	})
-
-	it("should capture pin operator", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		// Check for pin operator only
-		expect(result).toContain("case test_pin_input")
-	})
-
-	it("should capture shorthand hash syntax", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-
-		// Shorthand hash syntax isn't directly captured in the output
-		expect(result).toBeTruthy()
-	})
-
-	it("should correctly identify all Ruby structures", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.rb", sampleRubyContent, rubyOptions)
-		const resultLines = result?.split("\n") || []
-
-		// Verify the output format includes line numbers
-		expect(resultLines.some((line) => /\d+--\d+ \|/.test(line))).toBe(true)
-
-		// Verify the output includes the file name
-		expect(result).toContain("# file.rb")
+	it("should capture symbol and hash definitions", async () => {
+		const result = await testParseSourceCodeDefinitions("test.rb", sampleRubyContent, rubyOptions)
+		debugLog("Symbols and hashes:", result)
+		expect(result).toContain("HASH_EXAMPLES")
+		expect(result).toContain("SYMBOL_EXAMPLES")
 	})
 })

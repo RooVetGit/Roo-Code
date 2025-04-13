@@ -1,881 +1,577 @@
 export default String.raw`
-# Testing class definition with inheritance
-class TestClassDefinition < ApplicationRecord
-  # Testing class variables
-  @@test_class_variable = 0
-  
-  # Testing constant definitions
-  TEST_CONSTANT_ONE = 'test_constant_1'
-  TEST_CONSTANT_TWO = 'test_constant_2'
+# Standard class definition test - at least 4 lines
+class StandardClassDefinition
+  # Class-level constant with descriptive initialization
+  STANDARD_CONFIG = {
+    name: "StandardClass",
+    version: "1.0.0",
+    description: "Test standard class definition",
+    features: ["basic", "advanced", "expert"]
+  }.freeze
 
-  # Testing method definitions
-  def test_method
-    puts "test method"
+  # Instance method to demonstrate class functionality
+  def standard_instance_method
+    initialize_configuration
+    validate_settings
+    process_features
+    generate_output
   end
 
-  # Testing method definitions with parameters
-  # Testing instance method with parameters
-  def test_instance_method(test_param1, test_param2 = nil)
-    @test_instance_variable = test_param1
-    test_param2 ||= "default"
-    test_rest_params.each { |param| puts param }
+  # Class method to demonstrate singleton method definition
+  def self.standard_class_method
+    validate_environment
+    initialize_resources
+    configure_system
+    cleanup_resources
   end
 
-  # Testing class method definition
-  def self.test_class_method
-    @@test_class_variable += 1
-  end
-
-  private
-
-  def test_private_helper
-    puts "Private helper called"
-    generate_random_token
-    handle_data_processing
-  end
-end
-
-# Testing module with included/extended hooks
-module TestModuleDefinition
-  def self.included(test_base)
-    test_base.extend(TestClassMethods)
-  end
-
-  def self.extended(test_base)
-    test_base.include(TestInstanceMethods)
-  end
-
-  module TestClassMethods
-    def test_extended_method
-      'extended'
-    end
-  end
-
-  module TestInstanceMethods
-    def test_included_method
-      'included'
+  # Nested class definition test
+  class NestedClassDefinition
+    def nested_instance_method
+      setup_nested_environment
+      process_nested_data
+      validate_nested_results
+      cleanup_nested_resources
     end
   end
 end
 
-# Testing singleton class pattern
-class TestSingletonClass
-  @@test_singleton_instance = nil
-  private_class_method :new
-
-  def self.instance
-    @@test_singleton_instance ||= new
+# Method definition variations test
+class MethodDefinitionTypes
+  # Standard instance method test
+  def standard_instance_method(data, format: :json)
+    validate_input(data)
+    process_data(data)
+    format_output(format)
+    generate_response
   end
 
-  def test_singleton_operation
-    'singleton operation'
+  # Class method test
+  def self.class_method_example(config)
+    validate_config(config)
+    initialize_system(config)
+    process_configuration(config)
+    finalize_setup(config)
   end
 
-  private
-
-  def handle_singleton_task
-    'handle task'
-  end
-end
-
-# Testing mixin module
-module TestMixinModule
-  def test_mixin_method(message)
-    "Mixin method: #{message}"
-  end
-end
-
-# Testing include
-class TestIncludeClass
-  include TestMixinModule
-
-  def initialize(name)
-    @name = name
-  end
-end
-
-# Testing extend
-class TestExtendClass
-  extend TestMixinModule
-
-  def self.test_extend_method
-    'Extended method'
-  end
-end
-
-# Testing prepend
-class TestPrependClass
-  prepend TestMixinModule
-
-  def test_mixin_method(message)
-    "Overridden method: #{message}"
-  end
-end
-
-# Testing blocks and procs
-def test_block_method(data)
-  yield(data) if block_given?
-end
-
-test_lambda = ->(x, y) {
-  x + y
-}
-
-test_proc = Proc.new do |x|
-  x * 2
-end
-
-# Testing splat operator
-def test_splat_method(*numbers)
-  numbers.sum
-end
-
-# Testing hash syntax
-test_hash = {
-  key1: 'value1',
-  key2: 'value2',
-  'key3' => 'value3',
-  :key4 => 'value4'
-}
-
-# Testing string interpolation
-test_string = "Value is #{test_hash[:key1]}"
-
-# Testing regular expressions
-test_pattern = /^test_\w+$/
-test_match = "test_pattern" =~ test_pattern
-
-# Testing exception handling
-begin
-  raise "Test error"
-rescue StandardError => e
-  puts e.message
-ensure
-  puts "Cleanup"
-end
-
-# Testing attribute accessors class
-class TestAttributeAccessorsClass
-  attr_reader :test_attr_reader
-  attr_writer :test_attr_writer
-  attr_accessor :test_attr_accessor
-
-  def initialize(title, content)
-    @test_attr_reader = title
-    @test_attr_writer = content
-  end
-end
-
-# Testing keyword arguments
-def test_keyword_args_method(host:, port: 80, protocol: 'http')
-  "#{protocol}://#{host}:#{port}"
-end
-
-# Testing class macros (Rails-like)
-class TestClassMacroClass < ApplicationRecord
-  has_many :test_associations
-  belongs_to :test_parent
-end
-
-# Testing metaprogramming
-class TestMetaprogrammingClass
-  [:test_meta_save, :test_meta_update, :test_meta_delete].each do |method_name|
-    define_method(method_name) do |*args|
-      "#{method_name} called with #{args}"
+  # Singleton method test
+  class << self
+    def singleton_method_example
+      setup_singleton_context
+      process_singleton_data
+      validate_singleton_result
+      cleanup_singleton_resources
     end
   end
 
-  def method_missing(method_name, *args, &block)
-    "Method #{method_name} not found"
+  # Method with rescue and ensure test
+  def exception_handling_method
+    setup_resources
+    process_operation
+    validate_results
+  rescue StandardError => e
+    log_error(e)
+    notify_admin(e)
+    handle_failure(e)
+  ensure
+    cleanup_resources
+    reset_state
+    update_metrics
+    log_completion
   end
+
+  # Method alias test
+  def original_method_name
+    initialize_process
+    perform_operation
+    validate_results
+    generate_output
+  end
+  alias_method :aliased_method_name, :original_method_name
 end
 
-# Testing Ruby 3.0+ pattern matching
-case test_pattern_data
-in [Integer => x, String => y]
-  "Found #{x} and #{y}"
-in { id: Integer => id }
-  "Found id #{id}"
-in String => str
-  "Found string #{str}"
-else
-  "No match"
-end
-
-# Testing Ruby 3.1+ pin operator
-case test_pin_input
-in ^test_pattern
-  "Matched pattern"
-in String => str
-  "Found string #{str}"
-end
-# Testing module with included/extended hooks
-module TestModuleDefinition
-  def self.included(test_base)
-    test_base.extend(TestClassMethods)
+# Module definition test - demonstrating standard and nested modules
+module StandardModuleDefinition
+  def self.module_class_method
+    initialize_module_context
+    setup_module_resources
+    process_module_data
+    cleanup_module_resources
   end
 
-  def self.extended(test_base)
-    test_base.include(TestInstanceMethods)
+  def standard_module_method
+    validate_module_input
+    process_module_operation
+    generate_module_output
+    finalize_module_task
   end
 
-  module TestClassMethods
-    def test_extended_method
-      'extended'
-    end
-  end
-
-  module TestInstanceMethods
-    def test_included_method
-      'included'
+  # Nested module test
+  module NestedModuleDefinition
+    def self.nested_module_method
+      setup_nested_context
+      initialize_nested_resources
+      process_nested_data
+      cleanup_nested_state
     end
   end
 end
 
-# Testing singleton class pattern
-class TestSingletonClass
-  @@test_singleton_instance = nil
-  private_class_method :new
-
-  def self.instance
-    @@test_singleton_instance ||= new
+# Module with nested components test
+module ModuleWithComponents
+  # Class methods module test
+  module ClassMethods
+    def class_level_operation
+      validate_class_context
+      initialize_class_resources
+      process_class_data
+      cleanup_class_state
+    end
   end
 
-  def test_singleton_operation
-    'singleton operation'
+  # Instance methods module test
+  module InstanceMethods
+    def instance_level_operation
+      setup_instance_context
+      process_instance_data
+      validate_instance_result
+      cleanup_instance_state
+    end
   end
 
-  private
-
-  def handle_singleton_task
-    'handle task'
-  end
-end
-
-# Testing mixin module
-module TestMixinModule
-  def test_mixin_method(message)
-    "Mixin method: #{message}"
-  end
-end
-
-# Testing include
-class TestIncludeClass
-  include TestMixinModule
-
-  def initialize(name)
-    @name = name
-  end
-end
-
-# Testing extend
-class TestExtendClass
-  extend TestMixinModule
-
-  def self.test_extend_method
-    'Extended method'
+  # Module inclusion hook test
+  def self.included(base)
+    base.extend(ClassMethods)
+    base.include(InstanceMethods)
+    base.class_eval do
+      setup_inclusion_hooks
+      initialize_module_state
+      register_callbacks
+      finalize_setup
+    end
   end
 end
 
-# Testing prepend
-class TestPrependClass
-  prepend TestMixinModule
-
-  def test_mixin_method(message)
-    "Overridden method: #{message}"
+# Mixin patterns test - demonstrating include, extend, and prepend
+module MixinTestModule
+  def mixin_operation
+    setup_mixin_context
+    process_mixin_data
+    validate_mixin_result
+    cleanup_mixin_state
   end
 end
 
-# Testing blocks and procs
-def test_block_method(data)
-  yield(data) if block_given?
-end
-
-test_lambda = ->(x, y) {
-  x + y
-}
-
-test_proc = Proc.new do |x|
-  x * 2
-end
-
-# Testing splat operator
-def test_splat_method(*numbers)
-  numbers.sum
-end
-
-# Testing hash syntax
-test_hash = {
-  key1: 'value1',
-  key2: 'value2',
-  'key3' => 'value3',
-  :key4 => 'value4'
-}
-
-# Testing string interpolation
-test_string = "Value is #{test_hash[:key1]}"
-
-# Testing regular expressions
-test_pattern = /^test_\w+$/
-test_match = "test_pattern" =~ test_pattern
-
-# Testing exception handling
-begin
-  raise "Test error"
-rescue StandardError => e
-  puts e.message
-ensure
-  puts "Cleanup"
-end
-
-# Testing attribute accessors class
-# Testing attribute accessors
-class TestAttributeAccessorsClass
-  # Define attribute accessors in order: reader, writer, accessor
-  attr_reader :test_attr_reader
-  attr_writer :test_attr_writer
-  attr_accessor :test_attr_accessor
-
-  def initialize(title, content)
-    @test_attr_reader = title
-    @test_attr_writer = content
-    @test_attr_accessor = nil
-  end
-
-  # Additional methods to demonstrate usage
-  def test_method
-    @test_attr_writer = "new value"
-    @test_attr_accessor = "accessed"
-  end
-
-  # Ensure all accessors are defined
-  def test_accessors
-    puts test_attr_reader
-    self.test_attr_writer = "write"
-    self.test_attr_accessor = "access"
+# Class demonstrating mixin usage
+# Mixin test module with comprehensive functionality
+module MixinTestModule
+  def shared_mixin_method
+    setup_mixin_context
+    process_mixin_data
+    validate_mixin_result
+    finalize_mixin_operation
   end
 end
 
-# Testing attribute accessors with single line definitions
-class TestAttributeAccessorsClass2
-  # Define all three types of accessors
-  attr_reader :test_attr_reader
-  attr_writer :test_attr_writer
-  attr_accessor :test_attr_accessor
+# Class demonstrating mixin usage - at least 4 lines per mixin type
+class MixinImplementation
+  # Include test with method implementation
+  include MixinTestModule
+  def included_method
+    setup_included_context
+    process_included_data
+    validate_included_result
+    finalize_included_operation
+  end
+
+  # Extend test with class method implementation
+  extend MixinTestModule
+  class << self
+    def extended_method
+      setup_extended_context
+      process_extended_data
+      validate_extended_result
+      finalize_extended_operation
+    end
+  end
+
+  # Prepend test with method implementation
+  prepend MixinTestModule
+  def prepended_method
+    setup_prepended_context
+    process_prepended_data
+    validate_prepended_result
+    finalize_prepended_operation
+  end
+end
+
+# Block syntax test - demonstrating do/end and brace blocks
+class BlockSyntaxExamples
+  # Block with do/end syntax test
+  def method_with_do_end_block
+    result = [1, 2, 3, 4].map do |number|
+      validate_number(number)
+      process_number(number)
+      transform_number(number)
+      format_number(number)
+    end
+  end
+
+  # Block with brace syntax test
+  def method_with_brace_block
+    result = [1, 2, 3, 4].select { |number|
+      validate_number(number)
+      check_conditions(number)
+      verify_constraints(number)
+      meets_criteria?(number)
+    }
+  end
+
+  # Lambda definition test
+  STANDARD_LAMBDA = lambda { |input|
+    validate_lambda_input(input)
+    process_lambda_data(input)
+    transform_lambda_result(input)
+    format_lambda_output(input)
+  }
+
+  # Proc definition test
+  STANDARD_PROC = Proc.new do |data|
+    setup_proc_context(data)
+    validate_proc_input(data)
+    process_proc_data(data)
+    finalize_proc_result(data)
+  end
+end
+
+# Attribute accessor test
+class AttributeAccessorExamples
+  # Reader attributes test
+  attr_reader :standard_reader,
+             :computed_reader,
+             :cached_reader,
+             :formatted_reader
+
+  # Writer attributes test
+  attr_writer :standard_writer,
+             :validated_writer,
+             :normalized_writer,
+             :formatted_writer
+
+  # Full accessor attributes test
+  attr_accessor :standard_accessor,
+                :validated_accessor,
+                :normalized_accessor,
+                :formatted_accessor
 
   def initialize
-    @test_attr_reader = "read"
-    @test_attr_writer = "write"
-    @test_attr_accessor = "access"
-  end
-end
-
-# Testing attribute accessors with minimal definitions
-class TestAttributeAccessorsClass3
-  attr_reader :test_attr_reader
-  attr_writer :test_attr_writer
-  attr_accessor :test_attr_accessor
-end
-
-# Testing attribute accessors with single line definitions
-class TestAttributeAccessorsClass4
-  attr_reader :test_attr_reader
-  attr_writer :test_attr_writer
-  attr_accessor :test_attr_accessor
-end
-
-# Testing attribute accessors with single line definitions
-class TestAttributeAccessorsClass5
-  attr_reader :test_attr_reader
-  attr_writer :test_attr_writer
-  attr_accessor :test_attr_accessor
-end
-
-# Testing keyword arguments
-def test_keyword_args_method(host:, port: 80, protocol: 'http')
-  "#{protocol}://#{host}:#{port}"
-end
-
-# Testing class macros (Rails-like)
-class TestClassMacroClass < ApplicationRecord
-  has_many :test_associations
-  belongs_to :test_parent
-end
-
-# Testing metaprogramming
-class TestMetaprogrammingClass
-  [:test_meta_save, :test_meta_update, :test_meta_delete].each do |method_name|
-    define_method(method_name) do |*args|
-      "#{method_name} called with #{args}"
-    end
-  end
-
-  def method_missing(method_name, *args, &block)
-    "Method #{method_name} not found"
-  end
-end
-
-# Testing Ruby 3.0+ pattern matching
-case test_pattern_data
-in [Integer => x, String => y]
-  "Found #{x} and #{y}"
-in { id: Integer => id }
-  "Found id #{id}"
-in String => str
-  "Found string #{str}"
-else
-  "No match"
-end
-
-# Testing Ruby 3.1+ pin operator
-case test_pin_input
-in ^test_pattern
-  "Matched pattern"
-in String => str
-  "Found string #{str}"
-end
-# Testing module definition with methods
-module TestModuleDefinition
-  def test_module_method
-    TEST_CONSTANT_ONE
-  end
-
-  def test_module_method_with_block(&test_block)
-    test_block.call if test_block
-  end
-end
-
-# Testing singleton class definition
-class TestSingletonClass
-  private_class_method :new
-  @@test_instance = nil
-
-  def self.test_instance
-    @@test_instance ||= new
-  end
-
-  def test_singleton_method
-    'singleton operation'
+    initialize_readers
+    initialize_writers
+    initialize_accessors
+    validate_attributes
   end
 
   private
 
-  private
-
-  def test_private_method
-    'private method'
+  def initialize_readers
+    @standard_reader = "Standard Read Value"
+    @computed_reader = calculate_reader_value
+    @cached_reader = fetch_cached_value
+    @formatted_reader = format_reader_value
   end
 end
 
-# Testing mixin module definition
-module TestMixinModule
-  def test_mixin_method
-    'mixin method'
-  end
-end
-
-# Testing class with mixin
-class TestMixinClass
-  include TestMixinModule
-    @name = name
-  end
-end
-
-# Testing extend
-class TestExtendClass
-  extend TestMixinModule
-
-  def self.test_extend_method
-    'Extended method'
-  end
-end
-
-# Testing prepend
-class TestPrependClass
-  prepend TestMixinModule
-
-  def test_mixin_method(message)
-    "Overridden method: #{message}"
-  end
-end
-
-# Testing blocks and procs
-def test_block_method(data)
-  yield(data) if block_given?
-end
-
-test_lambda = ->(x, y) {
-  x + y
-}
-
-test_proc = Proc.new do |x|
-  x * 2
-end
-
-# Testing splat operator
-def test_splat_method(*numbers)
-  numbers.sum
-end
-
-# Testing hash syntax
-test_hash = {
-  key1: 'value1',
-  key2: 'value2',
-  'key3' => 'value3',
-  :key4 => 'value4'
-}
-
-# Testing string interpolation
-test_string = "Value is #{test_hash[:key1]}"
-
-# Testing regular expressions
-test_pattern = /^test_\w+$/
-test_match = "test_pattern" =~ test_pattern
-
-# Testing exception handling
-begin
-  raise "Test error"
-rescue StandardError => e
-  puts e.message
-ensure
-  puts "Cleanup"
-end
-
-# Testing attribute accessors class
-class TestAttributeAccessorsClass
-  attr_reader :test_attr_reader
-  attr_writer :test_attr_writer
-  attr_accessor :test_attr_accessor
-
-  def initialize(title, content)
-    @test_attr_reader = title
-    @test_attr_writer = content
-  end
-end
-
-# Testing keyword arguments
-def test_keyword_args_method(host:, port: 80, protocol: 'http')
-  "#{protocol}://#{host}:#{port}"
-end
-
-# Testing class macros (Rails-like)
-class TestClassMacroClass < ApplicationRecord
-  has_many :test_associations
-  belongs_to :test_parent
-end
-
-# Testing metaprogramming
-class TestMetaprogrammingClass
-  [:test_meta_save, :test_meta_update, :test_meta_delete].each do |method_name|
-    define_method(method_name) do |*args|
-      "#{method_name} called with #{args}"
+# Pattern matching test
+class PatternMatchingExamples
+  # Case/in pattern matching test
+  def process_data_pattern(input)
+    case input
+    in { type: "record", id: Integer => record_id, data: { name: String => name } }
+      process_record_match(record_id)
+      validate_record_data(name)
+      transform_record_result
+      finalize_record_processing
+    in { type: "collection", items: Array => items } if items.size > 0
+      process_collection_match(items)
+      validate_collection_items
+      transform_collection_data
+      finalize_collection_result
+    else
+      handle_unknown_pattern
+      log_pattern_error
+      generate_error_result
+      track_pattern_failure
     end
   end
 
-  def method_missing(method_name, *args, &block)
-    "Method #{method_name} not found"
-  end
+# Rails-style class macro test
+class RailsStyleMacroExample < ApplicationRecord
+  # Association macros test
+  has_many :test_children,
+           class_name: 'TestChild',
+           foreign_key: 'parent_id',
+           dependent: :destroy
+
+  belongs_to :test_parent,
+             class_name: 'TestParent',
+             foreign_key: 'parent_id',
+             optional: true
+
+  # Validation macros test
+  validates :test_field,
+            presence: true,
+            uniqueness: { case_sensitive: false },
+            format: { with: /\A[A-Z0-9_]+\z/ }
+
+  # Callback macros test
+  before_validation :normalize_test_data,
+                   :validate_test_rules,
+                   :check_test_state,
+                   :ensure_test_valid
 end
 
-# Testing Ruby 3.0+ pattern matching
-case test_pattern_data
-in [Integer => x, String => y]
-  "Found #{x} and #{y}"
-in { id: Integer => id }
-  "Found id #{id}"
-in String => str
-  "Found string #{str}"
-else
-  "No match"
-end
-
-# Testing Ruby 3.1+ pin operator
-case test_pin_input
-in ^test_pattern
-  "Matched pattern"
-in String => str
-  "Found string #{str}"
-end
-# Testing singleton class pattern
-class TestSingletonClass
-  @@test_singleton_instance = nil
-  private_class_method :new
-
-  def self.instance
-    @@test_singleton_instance ||= new
-  end
-end
-
-# Testing module with included/extended hooks
-module TestModuleDefinition
-  def self.included(test_base)
-    test_base.extend(TestClassMethods)
-  end
-
-  def self.extended(test_base)
-    test_base.include(TestInstanceMethods)
-  end
-
-  module TestClassMethods
-    def test_extended_method
-      'extended'
-    end
-  end
-
-  module TestInstanceMethods
-    def test_included_method
-      'included'
+# Exception handling test
+class ExceptionHandlingExample
+  # Begin/rescue/ensure block test
+  def exception_handling_method
+    begin
+      setup_test_resources
+      perform_test_operation
+      validate_test_result
+      generate_test_output
+    rescue TestError => e
+      handle_test_error(e)
+      log_test_failure(e)
+      notify_test_admin(e)
+      track_test_error(e)
+    rescue StandardError => e
+      handle_standard_error(e)
+      log_standard_failure(e)
+      notify_system_admin(e)
+      track_system_error(e)
+    ensure
+      cleanup_test_resources
+      reset_test_state
+      update_test_metrics
+      log_test_completion
     end
   end
 end
 
-# Testing module with included/extended hooks
-module TestModule
-  def self.included(test_base)
-    test_base.extend(TestClassMethods)
+# Hash and symbol definition test
+class HashAndSymbolExamples
+  # Hash syntax variations test
+  HASH_EXAMPLES = {
+    symbol_key: 'symbol_value',
+    'string_key' => 'string_value',
+    :old_symbol_key => 'old_style_value',
+    nested_hash: {
+      key1: 'value1',
+      key2: 'value2'
+    }
+  }
+
+  # Symbol definition variations test
+  SYMBOL_EXAMPLES = [
+    :standard_symbol,
+    :'quoted_symbol',
+    :"interpolated_#{type}_symbol",
+    '%s{non_alphanumeric:symbol}'.to_sym
+  ]
+
+  # String interpolation test
+  def string_interpolation_example(status)
+    timestamp = Time.now.strftime('%Y-%m-%d %H:%M:%S')
+    <<~MESSAGE
+      Test Status [#{timestamp}]
+      Current State: #{status.upcase}
+      Details: #{fetch_details}
+      Metrics: #{calculate_metrics}
+    MESSAGE
   end
+end
 
-  def self.extended(test_base)
-    test_base.include(TestInstanceMethods)
-  end
+# REGULAR EXPRESSIONS - testing pattern matching
+class RegexImplementation
+  # Email validation pattern
+  EMAIL_PATTERN = %r{
+    \A
+    [a-zA-Z0-9._%+-]+ # username
+    @
+    [a-zA-Z0-9.-]+    # domain name
+    \.[a-zA-Z]{2,}    # domain extension
+    \z
+  }x
 
-  # Testing module constants and methods
-  TEST_MODULE_CONSTANT = '1.0.0'
-  TEST_MODULE_VERSION = '2.0.0'
+  # URL validation pattern
+  URL_PATTERN = %r{
+    \A
+    https?://          # protocol
+    (?:[\w-]+\.)+     # subdomains
+    [\w-]+            # domain
+    (?:/[\w- ./?%&=]*)? # path and query
+    \z
+  }x
 
-  def self.test_module_method
-    puts "Module method called"
-    TEST_MODULE_VERSION
-  end
-
-  # Testing nested modules
-  module TestClassMethods
-    def test_extended_method
-      puts "Extended method called"
-      'extended'
-    end
-  end
-
-  module TestInstanceMethods
-    def test_included_method
-      puts "Included method called"
-      'included'
+  def validate_patterns(input)
+    case input
+    when EMAIL_PATTERN
+      process_email_match(input)
+      validate_email_parts(input)
+      check_email_availability
+      register_email_validation
+    when URL_PATTERN
+      process_url_match(input)
+      validate_url_components(input)
+      check_url_accessibility
+      register_url_validation
     end
   end
 end
 
-# Testing singleton class pattern
-class TestSingletonClass
-  @@test_singleton_instance = nil
-  private_class_method :new
+# ATTRIBUTE ACCESSORS - testing comprehensive accessor patterns
+class ModelAttributeImplementation
+  # Reader attributes with validation
+  attr_reader :validated_reader_attribute,
+             :computed_reader_attribute,
+             :cached_reader_attribute,
+             :formatted_reader_attribute
 
-  # Testing class methods and instance management
-  def self.instance
-    @@test_singleton_instance ||= new
-    @@test_singleton_instance
-  end
+  # Writer attributes with preprocessing
+  attr_writer :validated_writer_attribute,
+             :normalized_writer_attribute,
+             :encrypted_writer_attribute,
+             :formatted_writer_attribute
 
-  def test_singleton_operation
-    puts "Singleton operation called"
-    handle_singleton_task
-    true
+  # Full accessors with complex logic
+  attr_accessor :managed_accessor_attribute,
+               :versioned_accessor_attribute,
+               :tracked_accessor_attribute,
+               :cached_accessor_attribute
+
+  def initialize(config)
+    initialize_reader_attributes(config)
+    initialize_writer_attributes(config)
+    initialize_accessor_attributes(config)
+    validate_all_attributes
   end
 
   private
 
-  def handle_singleton_task
-    puts "Processing singleton task"
-    generate_task_result
-  end
-end
-end
-
-# MIXIN MODULE - testing mixins
-# This section tests the parser's ability to capture mixins
-module TestMixinModule
-  def test_mixin_method(message)
-    puts "[#{self.class}] #{message}"
-    return true
+  def initialize_reader_attributes(config)
+    @validated_reader_attribute = validate_reader_input(config[:reader])
+    @computed_reader_attribute = compute_reader_value(config[:compute])
+    @cached_reader_attribute = cache_reader_value(config[:cache])
+    @formatted_reader_attribute = format_reader_value(config[:format])
   end
 end
 
-# INCLUDE MIXIN - testing include
-# This section tests the parser's ability to capture include statements
-class TestIncludeClass
-  include TestMixinModule
+# CLASS MACROS - testing Rails-style macro implementations
+class RailsModelImplementation < ApplicationRecord
+  # Association macros with complex options
+  has_many :managed_children,
+           class_name: 'ManagedChild',
+           foreign_key: 'parent_identifier',
+           dependent: :destroy,
+           counter_cache: true
+
+  belongs_to :managed_parent,
+             class_name: 'ManagedParent',
+             foreign_key: 'parent_identifier',
+             touch: true,
+             optional: true
+
+  # Validation macros with custom rules
+  validates :identifier_field,
+            presence: true,
+            uniqueness: { case_sensitive: false },
+            format: { with: /\A[A-Z0-9_]+\z/ },
+            length: { minimum: 8, maximum: 32 }
+
+  # Callback macros with complex logic
+  before_validation :normalize_identifier,
+                   :validate_business_rules,
+                   :check_dependencies,
+                   :ensure_valid_state
+
+  # Scope macros with complex queries
+  scope :active_records, -> {
+    where(active: true)
+      .where.not(deleted_at: nil)
+      .order(created_at: :desc)
+      .includes(:managed_children)
+  }
+end
+
+# EXCEPTION HANDLING - testing comprehensive error management
+class ErrorHandlingImplementation
+  class BusinessLogicError < StandardError; end
+  class ValidationError < StandardError; end
+  class ProcessingError < StandardError; end
   
-  def initialize(name)
-    @test_include_var = name
-    test_mixin_method("Include test #{name}")
-  end
-end
-
-# EXTEND MIXIN - testing extend
-# This section tests the parser's ability to capture extend statements
-class TestExtendClass
-  extend TestMixinModule
-  
-  def self.test_extend_method
-    test_mixin_method("Extend test")
-    return true
-  end
-end
-
-# PREPEND MIXIN - testing prepend
-# This section tests the parser's ability to capture prepend statements
-class TestPrependClass
-  prepend TestMixinModule
-  
-  def test_mixin_method(message)
-    puts "Original method: #{message}"
-    return false
-  end
-end
-
-# BLOCKS - testing blocks
-# This section tests the parser's ability to capture blocks
-def test_block_method(data)
-  yield(data) if block_given?
-  puts "Block executed"
-  return data
-end
-
-# Lambda expression - testing lambda
-test_lambda = ->(x, y) {
-  result = x * y
-  puts "Lambda result: #{result}"
-  return result
-}
-
-# Proc object - testing proc
-test_proc = Proc.new do |x|
-  puts x
-  puts "Proc executed"
-  return x
-end
-
-# SPLAT OPERATOR - testing splat
-# This section tests the parser's ability to capture splat operators
-def test_splat_method(*numbers)
-  sum = numbers.sum
-  puts "Sum: #{sum}"
-  return sum
-end
-
-# HASH SYNTAX - testing hash syntax
-# This section tests the parser's ability to capture different hash syntaxes
-test_hash = {
-  test_symbol_key: '12345',
-  'test_string_key' => 'api.example.com',
-  :test_old_symbol_key => 443
-}
-
-# STRING INTERPOLATION - testing string interpolation
-# This section tests the parser's ability to capture string interpolation
-test_string_var = "world"
-test_string_interpolation = "Hello, #{test_string_var}!"
-puts test_string_interpolation
-puts "Another #{test_string_var} example"
-
-# REGULAR EXPRESSION - testing regex
-# This section tests the parser's ability to capture regular expressions
-test_regex = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$/
-test_email = "test@example.com"
-if test_email =~ test_regex
-  puts "Valid email"
-end
-
-# EXCEPTION HANDLING - testing begin/rescue/ensure
-# This section tests the parser's ability to capture exception handling
-begin
-  # Some code that might raise an exception
-  test_exception_result = 10 / 0
-rescue ZeroDivisionError => e
-  puts "Error: #{e.message}"
-ensure
-  puts "This always runs"
-end
-
-# ATTRIBUTE ACCESSORS - testing attribute accessors
-# This section tests the parser's ability to capture attribute accessors
-class TestAttributeAccessorsClass
-  attr_reader :test_attr_reader
-  attr_writer :test_attr_writer
-  attr_accessor :test_attr_accessor
-  
-  def initialize(title, content)
-    @test_attr_reader = title
-    @test_attr_writer = content
-    @test_attr_accessor = false
-  end
-end
-
-# KEYWORD ARGUMENTS - testing keyword arguments
-# This section tests the parser's ability to capture keyword arguments
-def test_keyword_args_method(host:, port: 80, protocol: 'http')
-  url = "#{protocol}://#{host}:#{port}"
-  puts "URL: #{url}"
-  return url
-end
-
-# CLASS MACROS - testing class macros
-# This section tests the parser's ability to capture Rails-like class macros
-class TestClassMacroClass < ApplicationRecord
-  belongs_to :test_belongs_to
-  has_many :test_has_many
-  validates :test_validates, presence: true
-  scope :test_scope, -> { where(active: true) }
-end
-
-# METAPROGRAMMING - testing metaprogramming
-# This section tests the parser's ability to capture metaprogramming constructs
-class TestMetaprogrammingClass
-  [:test_meta_save, :test_meta_update, :test_meta_delete].each do |method_name|
-    define_method(method_name) do |*args|
-      puts "Called #{method_name} with #{args.inspect}"
-      return true
+  def process_with_error_handling(data)
+    begin
+      validate_input_data(data)
+      process_validated_data(data)
+      handle_successful_processing
+      generate_success_response
+    rescue BusinessLogicError => e
+      handle_business_error(e)
+      notify_business_stakeholders(e)
+      log_business_failure(e)
+      raise
+    rescue ValidationError => e
+      handle_validation_error(e)
+      notify_system_admins(e)
+      log_validation_failure(e)
+      retry if should_retry?
+    rescue ProcessingError => e
+      handle_processing_error(e)
+      attempt_error_recovery(e)
+      notify_error_handlers(e)
+      raise if critical_error?(e)
+    ensure
+      cleanup_resources
+      reset_processing_state
+      update_processing_metrics
+      log_processing_completion
     end
   end
-  
+end
+
+# METAPROGRAMMING - testing dynamic method generation
+class MetaprogrammingImplementation
+  # Dynamic method definition with validation
+  [:create, :update, :delete, :archive].each do |operation|
+    define_method("validate_#{operation}") do |record|
+      validate_permissions(operation, record)
+      validate_business_rules(operation, record)
+      validate_constraints(operation, record)
+      log_validation_attempt(operation, record)
+    end
+
+    define_method("process_#{operation}") do |record|
+      validate_operation = send("validate_#{operation}", record)
+      process_operation(operation, record)
+      notify_observers(operation, record)
+      log_operation_completion(operation, record)
+    end
+  end
+
+  # Method missing implementation with logging
   def method_missing(method_name, *args, &block)
-    puts "Called undefined method #{method_name}"
-    return nil
+    if method_name.to_s.start_with?('find_by_')
+      attribute = method_name.to_s.sub('find_by_', '')
+      log_dynamic_finder(attribute, args)
+      find_record_by_attribute(attribute, args.first)
+    else
+      log_unknown_method(method_name, args)
+      super
+    end
+  end
+
+  def respond_to_missing?(method_name, include_private = false)
+    method_name.to_s.start_with?('find_by_') || super
   end
 end
-
-# PATTERN MATCHING - testing pattern matching
-# This section tests the parser's ability to capture Ruby 2.7+ pattern matching
-test_pattern_data = {name: "TestPatternName", age: 25}
-case test_pattern_data
-in {name: "TestPatternName", age: age} if age > 18
-  puts "Adult TestPatternName"
-  result = "adult"
-in {name: "TestPatternName2", age: age}
-  puts "TestPatternName2 is #{age}"
-  result = "other"
-else
-  puts "Unknown pattern"
-  result = "unknown"
-end
-
-# ENDLESS METHOD - testing endless methods
-# This section tests the parser's ability to capture Ruby 3.0+ endless methods
-def test_endless_method(x) = x * x
-
-# PIN OPERATOR - testing pin operator
-# This section tests the parser's ability to capture Ruby 3.1+ pin operator
-test_pin_pattern = 42
-case test_pin_input
-in ^test_pin_pattern
-  puts "Matches 42"
-  result = "match"
-else
-  puts "No match"
-  result = "no_match"
-end
-
-# SHORTHAND HASH - testing shorthand hash
-# This section tests the parser's ability to capture Ruby 3.1+ shorthand hash syntax
-def test_shorthand_hash(user:)
-  {user:}
-end`
+`

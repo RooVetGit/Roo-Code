@@ -11,11 +11,12 @@ describe("inspectRuby", () => {
 		extKey: "rb",
 	}
 
-	it("should inspect Ruby tree structure", async () => {
+	it("should inspect Ruby tree structure and parse definitions", async () => {
+		// First inspect the tree structure
 		await inspectTreeStructure(sampleRubyContent, "ruby")
-	})
 
-	it("should parse Ruby definitions", async () => {
-		await testParseSourceCodeDefinitions("test.rb", sampleRubyContent, testOptions)
+		// Then validate definition parsing
+		const result = await testParseSourceCodeDefinitions("test.rb", sampleRubyContent, testOptions)
+		expect(result).toMatch(/\d+--\d+ \|/) // Verify line number format
 	})
 })

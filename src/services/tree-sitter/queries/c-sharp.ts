@@ -1,71 +1,57 @@
 /*
 C# Tree-Sitter Query Patterns
-This file contains query patterns for parsing C# source code definitions.
-Each pattern captures a specific language construct and is mapped to corresponding tests.
-
-The patterns are organized by language construct type:
-1. Namespace-level declarations (namespaces)
-2. Type declarations (classes, interfaces, structs, enums, records)
-3. Member declarations (methods, properties)
-
-Each pattern has been tested and verified with the corresponding test file.
 */
 export default `
-;-------------------------------------------------
-; NAMESPACE DECLARATIONS
-;-------------------------------------------------
-; Captures namespace names including standard and file-scoped namespaces
+; Namespace declarations (including file-scoped)
 (namespace_declaration
-  name: (identifier) @name.definition.namespace) @definition.namespace
+  name: (identifier) @name.definition.namespace)
+(file_scoped_namespace_declaration
+  name: (identifier) @name.definition.namespace)
 
-;-------------------------------------------------
-; TYPE DECLARATIONS
-;-------------------------------------------------
-; Class declarations
-; Captures class names for standard, static, generic, and nested classes
+; Class declarations (including generic, static, abstract, partial, nested)
 (class_declaration
-  name: (identifier) @name.definition.class) @definition.class
+  name: (identifier) @name.definition.class)
 
 ; Interface declarations
-; Captures interface names
 (interface_declaration
-  name: (identifier) @name.definition.interface) @definition.interface
+  name: (identifier) @name.definition.interface)
 
 ; Struct declarations
-; Captures struct names
 (struct_declaration
-  name: (identifier) @name.definition.struct) @definition.struct
+  name: (identifier) @name.definition.struct)
 
 ; Enum declarations
-; Captures enum names
 (enum_declaration
-  name: (identifier) @name.definition.enum) @definition.enum
+  name: (identifier) @name.definition.enum)
 
 ; Record declarations
-; Captures record names (C# 9.0+)
 (record_declaration
-  name: (identifier) @name.definition.record) @definition.record
+  name: (identifier) @name.definition.record)
 
-;-------------------------------------------------
-; MEMBER DECLARATIONS
-;-------------------------------------------------
-; Method declarations
-; Captures method names including:
-; - Standard methods with block bodies
-; - Methods with expression bodies (=>)
-; - Static, async, and generic methods
-; - Extension methods
-; - Abstract and override methods
+; Method declarations (including async, static, generic)
 (method_declaration
-  name: (identifier) @name.definition.method) @definition.method
+  name: (identifier) @name.definition.method)
 
 ; Property declarations
-; Captures property names with various accessor patterns:
-; - Standard properties with get/set
-; - Auto-implemented properties
-; - Properties with custom accessors
-; - Properties with init accessor (C# 9.0+)
-; - Required properties (C# 11.0+)
 (property_declaration
-  name: (identifier) @name.definition.property) @definition.property
+  name: (identifier) @name.definition.property)
+
+; Event declarations
+(event_declaration
+  name: (identifier) @name.definition.event)
+
+; Delegate declarations
+(delegate_declaration
+  name: (identifier) @name.definition.delegate)
+
+; Attribute declarations
+(class_declaration
+  (attribute_list
+    (attribute
+      name: (identifier) @name.definition.attribute)))
+
+; Generic type parameters
+(type_parameter_list
+  (type_parameter
+    name: (identifier) @name.definition.type_parameter))
 `

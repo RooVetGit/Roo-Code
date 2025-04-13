@@ -1,173 +1,298 @@
 export default String.raw`
 // MARK: - Class Definitions
 
-// Testing class definition with inheritance and protocols
-class TestBaseClass {
-    func testBaseMethod() -> String {
-        return "Base method"
+// Standard class definition test - at least 4 lines long
+class StandardClassDefinition {
+    private var standardProperty: String
+    
+    func standardMethod() -> String {
+        return "Standard class method"
     }
 }
 
-class TestClassDefinition: TestBaseClass, TestProtocolOne, TestProtocolTwo {
-    // Testing property declarations with attributes
-    @TestPropertyWrapper
-    private var testPrivateProperty: String
+// Final class definition test - at least 4 lines long
+final class FinalClassDefinition {
+    private let finalProperty: Int
     
-    public let testConstantProperty: Int
-    internal var testComputedProperty: Double {
-        get { return Double(testPrivateProperty.count) }
-        set { testPrivateProperty = String(newValue) }
-    }
-    
-    // Testing initializer with parameters
-    init(testParam1: String, testParam2: Int = 0) {
-        self.testPrivateProperty = testParam1
-        self.testConstantProperty = testParam2
-        super.init()
+    func finalClassMethod(
+        parameter: String
+    ) -> Int {
+        return finalProperty
     }
 }
 
-// MARK: - Protocol Definitions
-
-// MARK: - Protocol Definitions
-
-// Testing protocol with required property
-protocol TestProtocolOne {
-    var testRequiredProperty: String { get }
-    func testProtocolOneMethod() -> String
+// Open class definition test - at least 4 lines long
+open class OpenClassDefinition {
+    public var openProperty: Double
+    
+    open func openOverridableMethod(
+        parameter1: String,
+        parameter2: Int
+    ) -> Double {
+        return openProperty
+    }
 }
 
-// Testing protocol with required method
-protocol TestProtocolTwo {
-    func testRequiredMethod() -> Bool
-    var testProtocolTwoProperty: Int { get }
-}
-
-// Testing protocol with associated type
-protocol TestProtocolDefinition {
-    associatedtype TestAssociatedType
+// Class with inheritance and protocol conformance test - at least 4 lines long
+class InheritingClassDefinition: StandardClassDefinition, ProtocolDefinition {
+    var protocolRequiredProperty: String = "Required property"
     
-    var testProtocolProperty: TestAssociatedType { get }
+    override func standardMethod() -> String {
+        return "Overridden method"
+    }
     
-    func testProtocolMethod(
-        _ testParam: TestAssociatedType
-    ) -> Bool
-    
-    static func testStaticMethod()
+    func protocolRequiredMethod(
+        with parameter: String
+    ) -> Bool {
+        return !parameter.isEmpty
+    }
 }
 
 // MARK: - Struct Definitions
 
-// Testing struct with generic constraints
-struct TestStructDefinition<T: Comparable> {
-    // Testing property declarations
-    private var testItems: [T]
-    public let testIdentifier: String
+// Standard struct definition test - at least 4 lines long
+struct StandardStructDefinition {
+    private var standardStructProperty: String
+    let readOnlyProperty: Int
     
-    // Testing initializer with default values
-    init(testItems: [T] = [], identifier: String = "default") {
-        self.testItems = testItems
-        self.testIdentifier = identifier
-    }
-    
-    // Testing mutating method
-    mutating func testAddItem(_ item: T) {
-        testItems.append(item)
+    mutating func modifyingMethod(
+        newValue: String
+    ) {
+        standardStructProperty = newValue
     }
 }
 
-// MARK: - Enum Definitions
-
-// Testing enum with associated values
-enum TestEnumDefinition<T> {
-    case testSuccess(value: T)
-    case testFailure(error: Error)
+// Generic struct definition test - at least 4 lines long
+struct GenericStructDefinition<T: Comparable, U> {
+    private var items: [T]
+    private var mappings: [T: U]
     
-    // Testing computed property
-    var testDescription: String {
-        switch self {
-        case .testSuccess(let value):
-            return "Success: \\(value)"
-        case .testFailure(let error):
-            return "Failure: \\(error.localizedDescription)"
-        }
+    init(
+        items: [T] = [],
+        mappings: [T: U] = [:]
+    ) {
+        self.items = items
+        self.mappings = mappings
     }
+    
+    func findMapping(for key: T) -> U? {
+        return mappings[key]
+    }
+}
+
+// MARK: - Protocol Definitions
+
+// Protocol with requirements test - at least 4 lines long
+protocol ProtocolDefinition {
+    var protocolRequiredProperty: String { get set }
+    
+    func protocolRequiredMethod(
+        with parameter: String
+    ) -> Bool
+}
+
+// Protocol with associated type test - at least 4 lines long
+protocol AssociatedTypeProtocolDefinition {
+    associatedtype AssociatedItem
+    
+    var items: [AssociatedItem] { get set }
+    
+    func add(
+        item: AssociatedItem
+    )
+    
+    func remove(at index: Int)
 }
 
 // MARK: - Extension Definitions
 
-// Testing extension with generic constraints
-extension TestClassDefinition where TestAssociatedType: Equatable {
-    func testExtensionMethod<T: Comparable>(
-        testParam: T
-    ) -> [T] {
-        return [testParam]
+// Class extension test - at least 4 lines long
+extension StandardClassDefinition {
+    func classExtensionMethod(
+        parameter1: String,
+        parameter2: Int
+    ) -> String {
+        return "Extended class method: \\(parameter1), \\(parameter2)"
     }
 }
 
-// Testing extension adding functionality
-extension TestStructDefinition {
-    // Testing static method
-    static func testFactoryMethod() -> Self {
-        return Self()
+// Struct extension test - at least 4 lines long
+extension StandardStructDefinition {
+    func structExtensionMethod(
+        parameter: Double
+    ) -> String {
+        return "Extended struct method: \\(parameter)"
     }
 }
 
-// MARK: - Property Wrapper
+// Protocol extension test - at least 4 lines long
+extension ProtocolDefinition {
+    func protocolExtensionMethod(
+        parameter1: Int,
+        parameter2: Bool
+    ) -> String {
+        return "Protocol extension method"
+    }
+}
 
-// Testing property wrapper with generic constraints
-@propertyWrapper
-struct TestPropertyWrapper<Value: Numeric & Comparable> {
-    private var testStorage: Value
-    private let testRange: ClosedRange<Value>
+// MARK: - Function Definitions
+
+// Instance method definition test - at least 4 lines long
+class MethodContainer {
+    func instanceMethodDefinition(
+        parameter1: String,
+        parameter2: Int,
+        parameter3: Double
+    ) -> String {
+        return "Instance method"
+    }
+}
+
+// Type method definition test - at least 4 lines long
+struct TypeMethodContainer {
+    static func typeMethodDefinition(
+        parameter1: String,
+        parameter2: Int,
+        parameter3: Double
+    ) -> String {
+        return "Type method"
+    }
+}
+
+// MARK: - Property Definitions
+
+// Stored property definition test - at least 4 lines long
+class StoredPropertyContainer {
+    // Simple stored property
+    private var privateStoredProperty: String = "Private"
     
-    var wrappedValue: Value {
-        get { testStorage }
-        set { testStorage = min(max(newValue, testRange.lowerBound), testRange.upperBound) }
+    // Stored property with property observer
+    var storedPropertyWithObserver: Int = 0 {
+        willSet {
+            print("Will change from \\(storedPropertyWithObserver) to \\(newValue)")
+        }
+        didSet {
+            print("Did change from \\(oldValue) to \\(storedPropertyWithObserver)")
+        }
+    }
+}
+
+// Computed property definition test - at least 4 lines long
+class ComputedPropertyContainer {
+    private var backingStorage: String = ""
+    
+    // Full computed property
+    var computedProperty: String {
+        get {
+            return backingStorage.uppercased()
+        }
+        set {
+            backingStorage = newValue.lowercased()
+        }
     }
     
-    init(wrappedValue: Value, range: ClosedRange<Value>) {
-        self.testRange = range
-        self.testStorage = min(max(wrappedValue, range.lowerBound), range.upperBound)
+    // Read-only computed property
+    var readOnlyComputedProperty: Int {
+        return backingStorage.count * 2
     }
 }
 
-// MARK: - Error Handling
+// MARK: - Initializer Definitions
 
-// Testing error enum with associated values
-enum TestError: Error {
-    case testValidationError(message: String)
-    case testNetworkError(code: Int)
-}
-
-// Testing throwing function
-func testThrowingFunction(_ testParam: String) throws -> String {
-    guard !testParam.isEmpty else {
-        throw TestError.testValidationError(message: "Empty input")
-    }
-    return "Valid: \\(testParam)"
-}
-
-// MARK: - Conditional Compilation
-
-// Testing conditional compilation blocks
-#if os(iOS)
-class TestPlatformClass {
-    func testPlatformMethod() {
-        print("iOS implementation")
+// Designated initializer definition test - at least 4 lines long
+class DesignatedInitializerContainer {
+    let property1: String
+    let property2: Int
+    
+    // Designated initializer
+    init(
+        property1: String,
+        property2: Int
+    ) {
+        self.property1 = property1
+        self.property2 = property2
     }
 }
-#elseif os(macOS)
-class TestPlatformClass {
-    func testPlatformMethod() {
-        print("macOS implementation")
+
+// Convenience initializer definition test - at least 4 lines long
+class ConvenienceInitializerContainer {
+    let property1: String
+    let property2: Int
+    
+    // Designated initializer
+    init(property1: String, property2: Int) {
+        self.property1 = property1
+        self.property2 = property2
+    }
+    
+    // Convenience initializer
+    convenience init(
+        defaultsWithOverride: String = "Default"
+    ) {
+        self.init(
+            property1: defaultsWithOverride,
+            property2: 42
+        )
     }
 }
-#else
-class TestPlatformClass {
-    func testPlatformMethod() {
-        print("Default implementation")
+
+// MARK: - Deinitializer Definition
+
+// Deinitializer definition test - at least 4 lines long
+class DeinitializerDefinition {
+    private var resource: String
+    
+    init(resource: String) {
+        self.resource = resource
+        print("Initialized with: \\(resource)")
+    }
+    
+    deinit {
+        print("Releasing resource: \\(resource)")
+        resource = ""
+        // Perform cleanup
     }
 }
-#endif
+
+// MARK: - Subscript Definition
+
+// Subscript definition test - at least 4 lines long
+class SubscriptDefinition {
+    private var items: [String] = []
+    
+    subscript(
+        index: Int,
+        default defaultValue: String = ""
+    ) -> String {
+        get {
+            guard index >= 0 && index < items.count else {
+                return defaultValue
+            }
+            return items[index]
+        }
+        set {
+            while items.count <= index {
+                items.append(defaultValue)
+            }
+            items[index] = newValue
+        }
+    }
+}
+
+// MARK: - Type Alias Definition
+
+// Type alias definition test - at least 4 lines long
+class TypeAliasContainer {
+    // Simple type alias
+    typealias SimpleTypeAlias = String
+    
+    // Complex type alias with generic constraints
+    typealias DictionaryOfArrays<
+        Key: Hashable,
+        Value: Equatable
+    > = [Key: [Value]]
+    
+    // Using the type alias
+    var dictionaryOfArrays: DictionaryOfArrays<String, Int> = [:]
+}
 `

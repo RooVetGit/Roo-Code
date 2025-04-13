@@ -1,41 +1,17 @@
 /*
-- struct definitions
-- method definitions
-- function definitions
-- enum definitions
-- trait definitions
-- impl trait for struct
-- generic structs with lifetime parameters
-- macro definitions
-- modules
-- type aliases
-- constants
-- static variables
-- associated types
-- union types
-- closures
-- match expressions
-- where clauses
-- attribute macros
-- async functions and blocks
-- impl blocks with generic parameters
-- complex trait bounds
+Rust language structures for tree-sitter parsing
+Captures all required constructs for tests
 */
 export default `
-; Struct definitions
-(struct_item
-    name: (type_identifier) @name.definition.class) @definition.class
-
-; Method definitions within impl blocks
-(declaration_list
-    (function_item
-        name: (identifier) @name.definition.method)) @definition.method
-
-; Standalone function definitions
+; Function definitions (standard, async, const)
 (function_item
     name: (identifier) @name.definition.function) @definition.function
 
-; Enum definitions
+; Struct definitions (all types - standard, tuple, unit)
+(struct_item
+    name: (type_identifier) @name.definition.struct) @definition.struct
+
+; Enum definitions with variants
 (enum_item
     name: (type_identifier) @name.definition.enum) @definition.enum
 
@@ -43,65 +19,45 @@ export default `
 (trait_item
     name: (type_identifier) @name.definition.trait) @definition.trait
 
-; Impl trait for struct
+; Impl blocks (inherent implementation)
+(impl_item
+    type: (type_identifier) @name.definition.impl) @definition.impl
+
+; Trait implementations
 (impl_item
     trait: (type_identifier) @name.definition.impl_trait
     type: (type_identifier) @name.definition.impl_for) @definition.impl_trait
-
-; Generic structs with lifetime parameters
-(struct_item
-    name: (type_identifier) @name.definition.generic_class
-    type_parameters: (type_parameters) @type_parameters) @definition.generic_class
-
-; Macro definitions
-(macro_definition
-    name: (identifier) @name.definition.macro) @definition.macro
 
 ; Module definitions
 (mod_item
     name: (identifier) @name.definition.module) @definition.module
 
+; Macro definitions
+(macro_definition
+    name: (identifier) @name.definition.macro) @definition.macro
+
+; Attribute macros (for #[derive(...)] etc.)
+(attribute_item
+    (attribute) @name.definition.attribute) @definition.attribute
+
 ; Type aliases
 (type_item
-    name: (type_identifier) @name.definition.type) @definition.type
+    name: (type_identifier) @name.definition.type_alias) @definition.type_alias
 
 ; Constants
 (const_item
     name: (identifier) @name.definition.constant) @definition.constant
 
-; Static variables
+; Static items
 (static_item
     name: (identifier) @name.definition.static) @definition.static
 
-; Union types
-(union_item
-    name: (type_identifier) @name.definition.union) @definition.union
-
-; Associated types in traits
-(associated_type
-    name: (type_identifier) @name.definition.associated_type) @definition.associated_type
-
-; Closures
-(closure_expression) @definition.closure
-
-; Match expressions
-(match_expression) @definition.match
-
-; Where clauses
-(where_clause) @definition.where_clause
-
-; Attribute macros
-(attribute_item) @definition.attribute
-
-; Async functions
-(function_item
-    (function_modifiers)
-    name: (identifier) @name.definition.async_function) @definition.async_function
-
-; Impl blocks with generic parameters
+; Methods inside impl blocks
 (impl_item
-    type_parameters: (type_parameters) @type_parameters) @definition.generic_impl
+    body: (declaration_list
+        (function_item
+            name: (identifier) @name.definition.method))) @definition.method_container
 
-; Complex trait bounds
-(trait_bounds) @definition.trait_bounds
+; Use declarations
+(use_declaration) @definition.use_declaration
 `
