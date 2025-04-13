@@ -11,6 +11,7 @@ import {
 	ClineSay,
 	ToolProgressStatus,
 	ClineMessage,
+	CommandRiskLevel,
 } from "../schemas"
 import { McpServer } from "./mcp"
 import { GitCommit } from "../utils/git"
@@ -67,6 +68,7 @@ export interface ExtensionMessage {
 		| "ttsStop"
 		| "maxReadFileLine"
 		| "fileSearchResults"
+		| "commandRiskLevel"
 		| "toggleApiConfigPin"
 	text?: string
 	action?:
@@ -130,6 +132,7 @@ export type ExtensionState = Pick<
 	| "alwaysAllowBrowser"
 	| "alwaysApproveResubmit"
 	// | "requestDelaySeconds" // Optional in GlobalSettings, required here.
+	| "commandRiskLevel"
 	| "alwaysAllowMcp"
 	| "alwaysAllowModeSwitch"
 	| "alwaysAllowSubtasks"

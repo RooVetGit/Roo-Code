@@ -83,6 +83,23 @@ export const telemetrySettingsSchema = z.enum(telemetrySettings)
 export type TelemetrySetting = z.infer<typeof telemetrySettingsSchema>
 
 /**
+ * CommandRiskLevel
+ */
+
+export const commandRiskLevels = [
+	"none",
+	"readOnly",
+	"reversibleChanges",
+	"complexChanges",
+	"serviceInterruptingChanges",
+	"destructiveChanges",
+] as const
+
+export const commandRiskLevelsSchema = z.enum(commandRiskLevels)
+
+export type CommandRiskLevel = z.infer<typeof commandRiskLevelsSchema>
+
+/**
  * ReasoningEffort
  */
 
@@ -514,6 +531,7 @@ export const globalSettingsSchema = z.object({
 	alwaysAllowSubtasks: z.boolean().optional(),
 	alwaysAllowExecute: z.boolean().optional(),
 	allowedCommands: z.array(z.string()).optional(),
+	commandRiskLevel: commandRiskLevelsSchema.optional(),
 
 	browserToolEnabled: z.boolean().optional(),
 	browserViewportSize: z.string().optional(),
@@ -592,6 +610,7 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	alwaysAllowSubtasks: undefined,
 	alwaysAllowExecute: undefined,
 	allowedCommands: undefined,
+	commandRiskLevel: undefined,
 
 	browserToolEnabled: undefined,
 	browserViewportSize: undefined,

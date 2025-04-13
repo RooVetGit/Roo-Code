@@ -1,5 +1,7 @@
 import { HTMLAttributes, useState } from "react"
 import { X } from "lucide-react"
+import { CommandRiskLevel } from "../../../../src/schemas"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui"
 
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { VSCodeTextField, VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
@@ -25,6 +27,7 @@ type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	alwaysAllowSubtasks?: boolean
 	alwaysAllowExecute?: boolean
 	allowedCommands?: string[]
+	commandRiskLevel?: CommandRiskLevel
 	setCachedStateField: SetCachedStateField<
 		| "alwaysAllowReadOnly"
 		| "alwaysAllowReadOnlyOutsideWorkspace"
@@ -39,6 +42,7 @@ type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 		| "alwaysAllowSubtasks"
 		| "alwaysAllowExecute"
 		| "allowedCommands"
+		| "commandRiskLevel"
 	>
 }
 
@@ -56,6 +60,7 @@ export const AutoApproveSettings = ({
 	alwaysAllowSubtasks,
 	alwaysAllowExecute,
 	allowedCommands,
+	commandRiskLevel,
 	setCachedStateField,
 	className,
 	...props
@@ -192,6 +197,46 @@ export const AutoApproveSettings = ({
 						<div className="flex items-center gap-4 font-bold">
 							<span className="codicon codicon-terminal" />
 							<div>{t("settings:autoApprove.execute.label")}</div>
+						</div>
+
+						<div>
+							<label className="block font-medium mb-1" data-testid="command-risk-level-heading">
+								{t("settings:autoApprove.commandRiskLevel.label")}
+							</label>
+							<Select
+								value={commandRiskLevel}
+								onValueChange={(value) =>
+									setCachedStateField("commandRiskLevel", value as CommandRiskLevel)
+								}>
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder={t("settings:common.select")} />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectGroup>
+										<SelectItem value="none">
+											{t("settings:autoApprove.commandRiskLevel.none")}
+										</SelectItem>
+										<SelectItem value="readOnly">
+											{t("settings:autoApprove.commandRiskLevel.readOnly")}
+										</SelectItem>
+										<SelectItem value="reversibleChanges">
+											{t("settings:autoApprove.commandRiskLevel.reversibleChanges")}
+										</SelectItem>
+										<SelectItem value="complexChanges">
+											{t("settings:autoApprove.commandRiskLevel.complexChanges")}
+										</SelectItem>
+										<SelectItem value="serviceInterruptingChanges">
+											{t("settings:autoApprove.commandRiskLevel.serviceInterruptingChanges")}
+										</SelectItem>
+										<SelectItem value="destructiveChanges">
+											{t("settings:autoApprove.commandRiskLevel.destructiveChanges")}
+										</SelectItem>
+									</SelectGroup>
+								</SelectContent>
+							</Select>
+							<div className="text-vscode-descriptionForeground text-sm mt-1">
+								{t("settings:autoApprove.commandRiskLevel.description")}
+							</div>
 						</div>
 
 						<div>

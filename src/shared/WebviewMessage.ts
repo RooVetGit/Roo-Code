@@ -11,6 +11,7 @@ export type AudioType = "notification" | "celebration" | "progress_loop"
 export interface WebviewMessage {
 	type:
 		| "apiConfiguration"
+		| "commandRiskLevel"
 		| "deleteMultipleTasksWithIds"
 		| "currentApiConfigName"
 		| "saveApiConfiguration"
