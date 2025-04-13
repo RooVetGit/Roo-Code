@@ -1765,6 +1765,98 @@ console.log("test");
 				const result = await strategy.applyDiff(originalContent, diffContent)
 				expect(result.success).toBe(false)
 			})
+
+			it("should work correctly with line numbers", async () => {
+				const originalContent = `.game-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.chess-board-container {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999; /* Ensure it's above the board but below the promotion dialog */
+}
+
+.game-container.promotion-active .chess-board,
+.game-container.promotion-active .game-toolbar,
+.game-container.promotion-active .game-info-container {
+    filter: blur(2px);
+    pointer-events: none; /* Disable clicks on these elements */
+}
+
+.game-container.promotion-active .promotion-dialog {
+    z-index: 1000; /* Ensure it's above the overlay */
+    pointer-events: auto; /* Enable clicks on the promotion dialog */
+}`
+				const diffContent = `test.ts
+<<<<<<< SEARCH
+:start_line:12
+:end_line:13
+-------
+.overlay {
+=======
+.piece {
+	will-change: transform;
+}
+
+.overlay {
+>>>>>>> REPLACE
+`
+
+				const result = await strategy.applyDiff(originalContent, diffContent)
+				expect(result.success).toBe(true)
+				if (result.success) {
+					expect(result.content).toBe(`.game-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.chess-board-container {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.piece {
+	will-change: transform;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999; /* Ensure it's above the board but below the promotion dialog */
+}
+
+.game-container.promotion-active .chess-board,
+.game-container.promotion-active .game-toolbar,
+.game-container.promotion-active .game-info-container {
+    filter: blur(2px);
+    pointer-events: none; /* Disable clicks on these elements */
+}
+
+.game-container.promotion-active .promotion-dialog {
+    z-index: 1000; /* Ensure it's above the overlay */
+    pointer-events: auto; /* Enable clicks on the promotion dialog */
+}`)
+				}
+			})
 		})
 	})
 
