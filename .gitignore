@@ -35,3 +35,11 @@ logs
 
 # Vite development
 .vite-port
+
+# Compiled files
+.cursor/
+Roo-Code/
+extension.js
+extension.js.map
+*.wasm
+i18n/
