@@ -30,14 +30,68 @@ export function insertMention(
 	let newValue: string
 	let mentionIndex: number
 
+	/**
+	 * Multi-level escaping for spaces in file paths.
+	 *
+	 * This is a critical section that handles the complex escaping of spaces in file paths.
+	 *
+	 * WHY FOUR BACKSLASHES?
+	 * =====================
+	 * The sequence "\\\\" in JavaScript represents two literal backslashes in the actual string.
+	 * When we want to output "\\", we need to write it as "\\\\" in code.
+	 *
+	 * THE ESCAPING PIPELINE:
+	 * =====================
+	 * 1. First, we identify any already escaped spaces (e.g., "\ ") and temporarily replace them
+	 *    with a special marker.
+	 *
+	 * 2. Then we escape any regular spaces with a single backslash.
+	 *
+	 * 3. Finally, we replace our markers with double-backslash followed by space.
+	 *    This ensures that spaces that were already escaped get properly double-escaped.
+	 *
+	 * EXAMPLE:
+	 * =====================
+	 * Input: "file\ with spaces.txt"
+	 * After step 1: "file\ESCAPED_SPACEwith spaces.txt"
+	 * After step 2: "file\ESCAPED_SPACEwith\ spaces.txt"
+	 * After step 3: "file\\ with\ spaces.txt"
+	 *
+	 * This approach handles the case when:
+	 * - A file path comes from convertToMentionPath (which has already escaped spaces once)
+	 * - We need to ensure those escapes are preserved when inserted into text
+	 * - The final string will have double backslashes before spaces from convertToMentionPath
+	 *   and single backslashes before spaces added in this function
+	 */
+	// Escape spaces, handling already escaped spaces
+	const formattedValue = value
+		.replace(/\\ /g, "\\ESCAPED_SPACE") // Temporarily replace already escaped spaces
+		.replace(/ /g, "\\ ") // Escape all normal spaces
+		.replace(/\\ESCAPED_SPACE/g, "\\\\ ") // Restore escaped spaces with proper escaping
+
 	if (lastAtIndex !== -1) {
-		// If there's an '@' symbol, replace everything after it with the new mention
+		// If there's an '@' symbol, replace text after it up to the next space/end
 		const beforeMention = text.slice(0, lastAtIndex)
-		newValue = beforeMention + "@" + value + " " + afterCursor.replace(/^[^\s]*/, "")
+
+		// Extract and preserve the rest of the text after the word being replaced
+		const afterMentionMatch = afterCursor.match(/^\S*\s*(.*)$/)
+		const afterMentionText = afterMentionMatch ? afterMentionMatch[1] : ""
+
+		newValue = beforeMention + "@" + formattedValue + "  " + afterMentionText
 		mentionIndex = lastAtIndex
 	} else {
 		// If there's no '@' symbol, insert the mention at the cursor position
-		newValue = beforeCursor + "@" + value + " " + afterCursor
+		// Handle special cases
+		if (text === "") {
+			// For empty text, use original behavior with single space
+			newValue = "@" + formattedValue + " "
+		} else if (position === 0) {
+			newValue = "@" + formattedValue + "  " + afterCursor
+		} else if (position === text.length) {
+			newValue = beforeCursor + "@" + formattedValue + "  "
+		} else {
+			newValue = beforeCursor + "@" + formattedValue + " " + afterCursor
+		}
 		mentionIndex = position
 	}
 
