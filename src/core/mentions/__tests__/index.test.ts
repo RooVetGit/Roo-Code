@@ -1,6 +1,7 @@
 import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs/promises"
+import { Dirent } from "fs"
 /// <reference types="@jest/globals" />
 import { describe, it, expect, jest } from "@jest/globals"
 
@@ -44,7 +45,10 @@ const normalizeTestPath = (inputPath: string): string => {
 const mockExecuteCommand = jest.fn()
 const mockOpenExternal = jest.fn()
 const mockShowErrorMessage = jest.fn()
-const mockExtractTextFromFile = jest.fn()
+const mockExtractTextFromFile = jest.fn().mockImplementation(async (path) => {
+	console.log(`Mock extracting text from: ${path}`)
+	return "Mock file content"
+})
 const mockOpenFile = jest.fn()
 
 /**
@@ -61,7 +65,7 @@ const createMockWorkspace = () => ({
 		stat: jest.fn(),
 		writeFile: jest.fn(),
 	},
-	openTextDocument: jest.fn().mockResolvedValue({}),
+	openTextDocument: jest.fn().mockImplementation(() => Promise.resolve({})),
 })
 
 /**
@@ -74,7 +78,7 @@ const createMockWindow = () => ({
 	createTextEditorDecorationType: jest.fn(),
 	createOutputChannel: jest.fn(),
 	createWebviewPanel: jest.fn(),
-	showTextDocument: jest.fn().mockResolvedValue({}),
+	showTextDocument: jest.fn().mockImplementation(() => Promise.resolve({})),
 	activeTextEditor: undefined as undefined | { document: { uri: { fsPath: string } } },
 })
 
@@ -116,7 +120,13 @@ const mockVscode = {
  */
 const mockFs = {
 	stat: jest.fn(),
-	readdir: jest.fn(),
+	readdir: jest.fn().mockImplementation(() =>
+		Promise.resolve([
+			{ name: "file1.txt", isFile: () => true, isDirectory: () => false },
+			{ name: "file with spaces.txt", isFile: () => true, isDirectory: () => false },
+			{ name: "sub dir", isDirectory: () => true, isFile: () => false },
+		] as unknown as Dirent[]),
+	),
 }
 
 // --- Mock Setup ---
@@ -142,7 +152,7 @@ const setupMocks = () => {
 	}))
 	jest.mock("fs/promises", () => mockFs)
 	jest.mock("../../../integrations/misc/extract-text", () => ({
-		extractTextFromFile: jest.fn().mockImplementation((path: any) => mockExtractTextFromFile(path)),
+		extractTextFromFile: jest.fn().mockImplementation(async (path) => mockExtractTextFromFile(path)),
 	}))
 }
 
@@ -191,9 +201,11 @@ function resetMocks() {
 
 	// Reset URL content fetcher mock
 	const mockUrlContentFetcher = {
-		launchBrowser: jest.fn().mockResolvedValue(undefined),
-		closeBrowser: jest.fn().mockResolvedValue(undefined),
-		urlToMarkdown: jest.fn().mockResolvedValue(""),
+		launchBrowser: jest.fn().mockImplementation(() => Promise.resolve(undefined)),
+		closeBrowser: jest.fn().mockImplementation(() => Promise.resolve(undefined)),
+		urlToMarkdown: jest.fn().mockImplementation(() => Promise.resolve("")) as unknown as (
+			url: string,
+		) => Promise<string>,
 	} as unknown as UrlContentFetcher
 
 	return mockUrlContentFetcher
@@ -261,11 +273,13 @@ Detailed commit message with multiple lines
 		it("should correctly handle file mentions with escaped spaces", async () => {
 			// Setup mocks
 			const fileContent = "This is the content of the file with spaces"
-			mockExtractTextFromFile.mockResolvedValue(fileContent)
-			mockFs.stat.mockResolvedValue({
-				isFile: () => true,
-				isDirectory: () => false,
-			} as any)
+			mockExtractTextFromFile.mockReturnValue(fileContent)
+			mockFs.stat.mockImplementation(() =>
+				Promise.resolve({
+					isFile: () => true,
+					isDirectory: () => false,
+				}),
+			)
 
 			const testText = "Check this file: @/path/with\\ spaces/test\\ file.txt"
 			await parseMentions(testText, TEST_WORKSPACE_ROOT, mockUrlContentFetcher)
@@ -284,7 +298,7 @@ Detailed commit message with multiple lines
 			console.log("Expected path in test:", expectedUnescapedPath)
 
 			// Verify the path passed was the correctly unescaped path
-			expect(normalizeTestPath(extractFilePath)).toEqual(normalizeTestPath(expectedUnescapedPath))
+			expect(normalizeTestPath(extractFilePath as string)).toEqual(normalizeTestPath(expectedUnescapedPath))
 
 			// Verify result includes file content
 			expect(result).toContain(fileContent)
@@ -295,26 +309,28 @@ Detailed commit message with multiple lines
 
 		it("should correctly handle directory mentions with escaped spaces", async () => {
 			// Setup directory structure mock
-			mockFs.stat.mockImplementation((path: any) => {
+			mockFs.stat.mockImplementation((path: unknown) => {
 				// Check if path contains 'with spaces' to handle the test case specially
-				if (path.includes("with spaces")) {
+				if (typeof path === "string" && path.includes("with spaces")) {
 					return Promise.resolve({
 						isFile: () => false,
 						isDirectory: () => true,
-					})
+					} as any)
 				}
 				return Promise.resolve({
 					isFile: () => false,
 					isDirectory: () => true,
-				})
+				} as any)
 			})
 
 			// Mock directory entries
-			mockFs.readdir.mockResolvedValue([
-				{ name: "file1.txt", isFile: () => true, isDirectory: () => false },
-				{ name: "file with spaces.txt", isFile: () => true, isDirectory: () => false },
-				{ name: "sub dir", isDirectory: () => true, isFile: () => false },
-			] as any)
+			mockFs.readdir = jest.fn().mockImplementation(() =>
+				Promise.resolve([
+					{ name: "file1.txt", isFile: () => true, isDirectory: () => false },
+					{ name: "file with spaces.txt", isFile: () => true, isDirectory: () => false },
+					{ name: "sub dir", isDirectory: () => true, isFile: () => false },
+				] as unknown as Dirent[]),
+			)
 
 			// Test text with a directory mention containing escaped spaces
 			const testText = "Check this directory: @/path/with\\ spaces/"
@@ -329,7 +345,7 @@ Detailed commit message with multiple lines
 			const expectedUnescapedPath = path.resolve(TEST_WORKSPACE_ROOT, "path", "with spaces")
 
 			// Verify the path passed was the correctly unescaped path
-			expect(normalizeTestPath(readdirPath)).toEqual(normalizeTestPath(expectedUnescapedPath))
+			expect(normalizeTestPath(readdirPath as string)).toEqual(normalizeTestPath(expectedUnescapedPath))
 
 			// Verify result includes folder content structure
 			expect(result).toContain("file1.txt")
@@ -343,11 +359,13 @@ Detailed commit message with multiple lines
 		// Test the internal unescapePathSpaces function indirectly through parseMentions
 		it("should properly handle various escape patterns", async () => {
 			// Setup mocks
-			mockExtractTextFromFile.mockResolvedValue("test content")
-			mockFs.stat.mockResolvedValue({
-				isFile: () => true,
-				isDirectory: () => false,
-			} as any)
+			mockExtractTextFromFile.mockReturnValue("test content")
+			mockFs.stat.mockImplementation(() =>
+				Promise.resolve({
+					isFile: () => true,
+					isDirectory: () => false,
+				}),
+			)
 
 			// Test specific escape patterns one at a time
 			const testEscapedPath = "/path/with\\ one\\ space.txt"
@@ -367,17 +385,19 @@ Detailed commit message with multiple lines
 			console.log("Expected path with spaces in test:", expectedUnescapedPath)
 
 			// Verify the path was correctly unescaped
-			expect(normalizeTestPath(extractFilePath)).toEqual(normalizeTestPath(expectedUnescapedPath))
+			expect(normalizeTestPath(extractFilePath as string)).toEqual(normalizeTestPath(expectedUnescapedPath))
 		})
 
 		// Additional test to cover more edge cases and complex paths
 		it("should handle complex paths and multiple mentions in the same text", async () => {
 			// Setup mocks
-			mockExtractTextFromFile.mockResolvedValue("File content")
-			mockFs.stat.mockResolvedValue({
-				isFile: () => true,
-				isDirectory: () => false,
-			} as any)
+			mockExtractTextFromFile.mockReturnValue("File content")
+			mockFs.stat.mockImplementation(() =>
+				Promise.resolve({
+					isFile: () => true,
+					isDirectory: () => false,
+				}),
+			)
 
 			// Test with a single complex path with multiple spaces
 			const complexPath = "/complex/path\\ with\\ multiple\\ spaces/file.txt"
@@ -393,7 +413,7 @@ Detailed commit message with multiple lines
 			const expectedPath = path.resolve(TEST_WORKSPACE_ROOT, "complex", "path with multiple spaces", "file.txt")
 
 			// Verify the path was correctly resolved
-			expect(normalizeTestPath(extractFilePath)).toEqual(normalizeTestPath(expectedPath))
+			expect(normalizeTestPath(extractFilePath as string)).toEqual(normalizeTestPath(expectedPath))
 
 			// Verify XML tag format is correct (no leading slash, backslashes preserved)
 			expect(result).toContain('<file_content path="complex/path\\\\ with\\\\ multiple\\\\ spaces/file.txt">')
@@ -402,11 +422,13 @@ Detailed commit message with multiple lines
 		// Test platform-specific path handling without modifying Node's path module
 		it("should correctly handle paths with both forward and backslashes", async () => {
 			// Setup mocks
-			mockExtractTextFromFile.mockResolvedValue("File content")
-			mockFs.stat.mockResolvedValue({
-				isFile: () => true,
-				isDirectory: () => false,
-			} as any)
+			mockExtractTextFromFile.mockReturnValue("File content")
+			mockFs.stat.mockImplementation(() =>
+				Promise.resolve({
+					isFile: () => true,
+					isDirectory: () => false,
+				}),
+			)
 
 			// Test Unix-style path with backslash-escaped spaces
 			const unixPath = "@/unix/style/path\\ with/spaces/file.txt"
@@ -434,9 +456,9 @@ Detailed commit message with multiple lines
 			const winExtractPath = mockExtractTextFromFile.mock.calls[0][0]
 
 			// Both paths should be normalized by normalizeTestPath
-			expect(normalizeTestPath(unixExtractPath)).toContain("unix/style/path with/spaces/file.txt")
+			expect(normalizeTestPath(unixExtractPath as string)).toContain("unix/style/path with/spaces/file.txt")
 			// Adjust the expected Windows path to match actual implementation
-			expect(normalizeTestPath(winExtractPath)).toContain("windows/style/path with/spaces/file.txt")
+			expect(normalizeTestPath(winExtractPath as string)).toContain("windows/style/path with/spaces/file.txt")
 
 			// XML tags should preserve the original slash style - adjust to match our implementation
 			expect(unixResult).toContain('<file_content path="unix/style/path\\\\ with/spaces/file.txt">')
@@ -449,11 +471,13 @@ Detailed commit message with multiple lines
 			const expectedUnescapedPath = path.join("path", "with spaces", "file.txt") // Relative unescaped path
 
 			// Mock fs.stat to recognize it as a file
-			mockFs.stat.mockResolvedValue({
-				isFile: () => true,
-				isDirectory: () => false,
-			} as any)
-			mockExtractTextFromFile.mockResolvedValue("File content")
+			mockFs.stat.mockImplementation(() =>
+				Promise.resolve({
+					isFile: () => true,
+					isDirectory: () => false,
+				}),
+			)
+			mockExtractTextFromFile.mockReturnValue("File content")
 
 			const result = await parseMentions(testText, TEST_WORKSPACE_ROOT, mockUrlContentFetcher)
 
@@ -473,8 +497,8 @@ Detailed commit message with multiple lines
 			// Update expectations to match current implementation
 			const expectedFilePath = path.join("path", "another space.txt")
 
-			mockFs.stat.mockResolvedValue({ isFile: () => true, isDirectory: () => false } as any)
-			mockExtractTextFromFile.mockResolvedValue("Another file content")
+			mockFs.stat.mockImplementation(() => Promise.resolve({ isFile: () => true, isDirectory: () => false }))
+			mockExtractTextFromFile.mockReturnValue("Another file content")
 
 			const result = await parseMentions(testText, TEST_WORKSPACE_ROOT, mockUrlContentFetcher)
 
@@ -492,8 +516,8 @@ Detailed commit message with multiple lines
 			// Update expectations to match current implementation
 			const expectedFilePath = path.join("yet", "another path.md")
 
-			mockFs.stat.mockResolvedValue({ isFile: () => true, isDirectory: () => false } as any)
-			mockExtractTextFromFile.mockResolvedValue("Markdown content")
+			mockFs.stat.mockImplementation(() => Promise.resolve({ isFile: () => true, isDirectory: () => false }))
+			mockExtractTextFromFile.mockReturnValue("Markdown content")
 
 			const result = await parseMentions(testText, TEST_WORKSPACE_ROOT, mockUrlContentFetcher)
 
@@ -509,8 +533,8 @@ Detailed commit message with multiple lines
 
 		it("should still parse normal file mention without spaces", async () => {
 			// Setup mock
-			mockFs.stat.mockResolvedValue({ isFile: () => true, isDirectory: () => false } as any)
-			mockExtractTextFromFile.mockResolvedValue("JavaScript code")
+			mockFs.stat.mockImplementation(() => Promise.resolve({ isFile: () => true, isDirectory: () => false }))
+			mockExtractTextFromFile.mockReturnValue("JavaScript code")
 
 			const expectedDisplayPath = "simple/file.js"
 			const testText = `See @/${expectedDisplayPath} for the code.`
@@ -527,7 +551,11 @@ Detailed commit message with multiple lines
 		it("should parse http mentions and fetch content", async () => {
 			const url = "http://example.com"
 			const markdownContent = "Example site content"
-			mockUrlContentFetcher.urlToMarkdown = jest.fn().mockResolvedValue(markdownContent)
+			mockUrlContentFetcher.urlToMarkdown = jest
+				.fn()
+				.mockImplementation(() => Promise.resolve(markdownContent)) as unknown as (
+				url: string,
+			) => Promise<string>
 
 			const result = await parseMentions(`Check this link @${url}`, TEST_WORKSPACE_ROOT, mockUrlContentFetcher)
 
@@ -542,11 +570,13 @@ Detailed commit message with multiple lines
 		// Add multilingual support tests
 		it("should correctly handle file paths with international characters", async () => {
 			// Setup mocks
-			mockExtractTextFromFile.mockResolvedValue("Content with international characters")
-			mockFs.stat.mockResolvedValue({
-				isFile: () => true,
-				isDirectory: () => false,
-			} as any)
+			mockExtractTextFromFile.mockReturnValue("Content with international characters")
+			mockFs.stat.mockImplementation(() =>
+				Promise.resolve({
+					isFile: () => true,
+					isDirectory: () => false,
+				}),
+			)
 
 			// Test paths with different languages
 			const paths = [
@@ -582,11 +612,13 @@ Detailed commit message with multiple lines
 		// Test handling of URL safe characters
 		it("should handle URL encoded characters in file paths", async () => {
 			// Setup mocks
-			mockExtractTextFromFile.mockResolvedValue("URL encoded content")
-			mockFs.stat.mockResolvedValue({
-				isFile: () => true,
-				isDirectory: () => false,
-			} as any)
+			mockExtractTextFromFile.mockReturnValue("URL encoded content")
+			mockFs.stat.mockImplementation(() =>
+				Promise.resolve({
+					isFile: () => true,
+					isDirectory: () => false,
+				}),
+			)
 
 			// Note: The mention format itself doesn't typically use URL encoding.
 			// This test verifies that if a path *contains* such characters,
@@ -603,13 +635,13 @@ Detailed commit message with multiple lines
 			// Verify the path used for fs operations contains the *unescaped* characters
 			// path.resolve will handle the native path format
 			const expectedFsPath = path.resolve(TEST_WORKSPACE_ROOT, "path", "with percent#hash&ampersand.txt")
-			expect(normalizeTestPath(extractFilePath)).toEqual(normalizeTestPath(expectedFsPath))
+			expect(normalizeTestPath(extractFilePath as string)).toEqual(normalizeTestPath(expectedFsPath))
 		})
 
 		// Test error handling for invalid paths
 		it("should handle errors with invalid file paths gracefully", async () => {
 			// Setup mocks
-			mockFs.stat.mockRejectedValue(new Error("File not found"))
+			mockFs.stat.mockImplementation(() => Promise.reject(new Error("File not found")))
 
 			const testText = "Check this invalid file: @/non/existent/file.txt"
 			const result = await parseMentions(testText, TEST_WORKSPACE_ROOT, mockUrlContentFetcher)
@@ -622,11 +654,13 @@ Detailed commit message with multiple lines
 		// Test handling of extremely long paths
 		it("should handle extremely long file paths", async () => {
 			// Setup mocks
-			mockExtractTextFromFile.mockResolvedValue("Long path content")
-			mockFs.stat.mockResolvedValue({
-				isFile: () => true,
-				isDirectory: () => false,
-			} as any)
+			mockExtractTextFromFile.mockReturnValue("Long path content")
+			mockFs.stat.mockImplementation(() =>
+				Promise.resolve({
+					isFile: () => true,
+					isDirectory: () => false,
+				}),
+			)
 
 			// Create a very long path with repeated directories
 			const longPathPart = "verylongdirectoryname".repeat(20)
@@ -643,11 +677,13 @@ Detailed commit message with multiple lines
 		// Test special Windows path formats
 		it("should handle Windows-specific path patterns", async () => {
 			// Setup mocks
-			mockExtractTextFromFile.mockResolvedValue("Windows path content")
-			mockFs.stat.mockResolvedValue({
-				isFile: () => true,
-				isDirectory: () => false,
-			} as any)
+			mockExtractTextFromFile.mockReturnValue("Windows path content")
+			mockFs.stat.mockImplementation(() =>
+				Promise.resolve({
+					isFile: () => true,
+					isDirectory: () => false,
+				}),
+			)
 
 			// Test various Windows path patterns
 			const paths = [
@@ -672,11 +708,13 @@ Detailed commit message with multiple lines
 		// Test filenames with various special characters
 		it("should handle file paths with special characters", async () => {
 			// Setup mocks
-			mockExtractTextFromFile.mockResolvedValue("Special characters content")
-			mockFs.stat.mockResolvedValue({
-				isFile: () => true,
-				isDirectory: () => false,
-			} as any)
+			mockExtractTextFromFile.mockReturnValue("Special characters content")
+			mockFs.stat.mockImplementation(() =>
+				Promise.resolve({
+					isFile: () => true,
+					isDirectory: () => false,
+				}),
+			)
 
 			// Test paths with special characters
 			const paths = [
@@ -706,11 +744,13 @@ Detailed commit message with multiple lines
 		// Test file paths with escaped spaces in the extension
 		it("should handle file paths with escaped spaces in the extension", async () => {
 			// Setup mocks
-			mockExtractTextFromFile.mockResolvedValue("Extension space content")
-			mockFs.stat.mockResolvedValue({
-				isFile: () => true,
-				isDirectory: () => false,
-			} as any)
+			mockExtractTextFromFile.mockReturnValue("Extension space content")
+			mockFs.stat.mockImplementation(() =>
+				Promise.resolve({
+					isFile: () => true,
+					isDirectory: () => false,
+				}),
+			)
 
 			const pathWithEscapedExt = "@/path/file.with\\ space\\ ext"
 			const testText = `Check this file: ${pathWithEscapedExt}`
@@ -722,7 +762,7 @@ Detailed commit message with multiple lines
 			const operationPath = mockExtractTextFromFile.mock.calls[0][0]
 			const expectedUnescaped = path.resolve(TEST_WORKSPACE_ROOT, "path", "file.with space ext")
 
-			expect(normalizeTestPath(operationPath)).toEqual(normalizeTestPath(expectedUnescaped))
+			expect(normalizeTestPath(operationPath as string)).toEqual(normalizeTestPath(expectedUnescaped))
 			expect(result).toContain("Extension space content")
 			// Verify display path preserves escapes (and doubles backslashes for XML)
 			expect(result).toContain('<file_content path="path/file.with\\\\ space\\\\ ext">')
@@ -731,11 +771,13 @@ Detailed commit message with multiple lines
 		// Test paths with consecutive escaped spaces
 		it("should handle paths with consecutive escaped spaces", async () => {
 			// Setup mocks
-			mockExtractTextFromFile.mockResolvedValue("Consecutive space content")
-			mockFs.stat.mockResolvedValue({
-				isFile: () => true,
-				isDirectory: () => false,
-			} as any)
+			mockExtractTextFromFile.mockReturnValue("Consecutive space content")
+			mockFs.stat.mockImplementation(() =>
+				Promise.resolve({
+					isFile: () => true,
+					isDirectory: () => false,
+				}),
+			)
 
 			const pathWithConsecutive = "@/path/with\\ \\spaces/file.txt" // Two escaped spaces
 			const testText = `Check consecutive: ${pathWithConsecutive}`
@@ -747,7 +789,7 @@ Detailed commit message with multiple lines
 			// Adjust expected path - parser currently treats this as a single space
 			const expectedUnescaped = path.resolve(TEST_WORKSPACE_ROOT, "path", "with spaces", "file.txt")
 
-			expect(normalizeTestPath(operationPath)).toEqual(normalizeTestPath(expectedUnescaped))
+			expect(normalizeTestPath(operationPath as string)).toEqual(normalizeTestPath(expectedUnescaped))
 			expect(result).toContain("Consecutive space content")
 			// Adjust expected XML attribute to match actual implementation
 			expect(result).toContain('<file_content path="path/with\\\\ \\\\spaces/file.txt">')
@@ -756,8 +798,8 @@ Detailed commit message with multiple lines
 		// Test adjacent mentions
 		it("should handle adjacent mentions correctly", async () => {
 			// Setup mocks for two files
-			mockFs.stat.mockResolvedValue({ isFile: () => true, isDirectory: () => false } as any)
-			mockExtractTextFromFile.mockResolvedValueOnce("Content File 1").mockResolvedValueOnce("Content File 2")
+			mockFs.stat.mockImplementation(() => Promise.resolve({ isFile: () => true, isDirectory: () => false }))
+			mockExtractTextFromFile.mockReturnValueOnce("Content File 1").mockReturnValueOnce("Content File 2")
 
 			const adjacentText = "Check these: @/file1.txt@/file2.txt"
 			const result = await parseMentions(adjacentText, TEST_WORKSPACE_ROOT, mockUrlContentFetcher)
@@ -775,8 +817,8 @@ Detailed commit message with multiple lines
 		// Test accessing a file mention with a trailing slash (should be treated as file)
 		it("should treat file mention with trailing slash as a file, not directory", async () => {
 			// Setup mocks
-			mockFs.stat.mockResolvedValue({ isFile: () => true, isDirectory: () => false } as any)
-			mockExtractTextFromFile.mockResolvedValue("File content with slash")
+			mockFs.stat.mockImplementation(() => Promise.resolve({ isFile: () => true, isDirectory: () => false }))
+			mockExtractTextFromFile.mockReturnValue("File content with slash")
 
 			const filePathWithSlash = "@/path/to/file.txt/"
 			const testText = `Testing file with trailing slash: ${filePathWithSlash}`
@@ -794,10 +836,14 @@ Detailed commit message with multiple lines
 		// Test accessing a directory mention without a trailing slash (should be treated as directory)
 		it("should treat directory mention without trailing slash as a directory", async () => {
 			// Setup mocks
-			mockFs.stat.mockResolvedValue({ isFile: () => false, isDirectory: () => true } as any)
-			mockFs.readdir.mockResolvedValue([
-				{ name: "entry.txt", isFile: () => true, isDirectory: () => false },
-			] as any)
+			mockFs.stat.mockImplementation(() => Promise.resolve({ isFile: () => false, isDirectory: () => true }))
+			mockFs.readdir = jest
+				.fn()
+				.mockImplementation(() =>
+					Promise.resolve([
+						{ name: "entry.txt", isFile: () => true, isDirectory: () => false },
+					] as unknown as Dirent[]),
+				)
 
 			const dirPathNoSlash = "@/path/to/directory"
 			const testText = `Testing directory without trailing slash: ${dirPathNoSlash}`
@@ -880,7 +926,7 @@ Detailed commit message with multiple lines
 
 			expect(mockOpenFile).toHaveBeenCalled()
 			const openFilePath = mockOpenFile.mock.calls[0][0]
-			expect(normalizeTestPath(openFilePath)).toEqual(normalizeTestPath(expectedUnescapedPath))
+			expect(normalizeTestPath(openFilePath as string)).toEqual(normalizeTestPath(expectedUnescapedPath))
 		})
 
 		it("should correctly open files with international characters", async () => {
@@ -898,7 +944,7 @@ Detailed commit message with multiple lines
 
 				expect(mockOpenFile).toHaveBeenCalled()
 				const openFilePath = mockOpenFile.mock.calls[0][0]
-				expect(normalizeTestPath(openFilePath)).toContain(normalizeTestPath(filePath.substring(1)))
+				expect(normalizeTestPath(openFilePath as string)).toContain(normalizeTestPath(filePath.substring(1)))
 			}
 		})
 
