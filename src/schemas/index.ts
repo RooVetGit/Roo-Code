@@ -318,6 +318,7 @@ export const providerSettingsSchema = z.object({
 	apiModelId: z.string().optional(),
 	apiKey: z.string().optional(),
 	anthropicBaseUrl: z.string().optional(),
+	anthropicUseAuthToken: z.boolean().optional(),
 	// Glama
 	glamaModelId: z.string().optional(),
 	glamaModelInfo: modelInfoSchema.nullish(),
@@ -414,6 +415,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	apiModelId: undefined,
 	apiKey: undefined,
 	anthropicBaseUrl: undefined,
+	anthropicUseAuthToken: undefined,
 	// Glama
 	glamaModelId: undefined,
 	glamaModelInfo: undefined,
@@ -532,6 +534,8 @@ export const globalSettingsSchema = z.object({
 	enableCheckpoints: z.boolean().optional(),
 	checkpointStorage: checkpointStoragesSchema.optional(),
 
+	showGreeting: z.boolean().optional(),
+
 	ttsEnabled: z.boolean().optional(),
 	ttsSpeed: z.number().optional(),
 	soundEnabled: z.boolean().optional(),
@@ -607,6 +611,8 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 
 	enableCheckpoints: undefined,
 	checkpointStorage: undefined,
+
+	showGreeting: undefined,
 
 	ttsEnabled: undefined,
 	ttsSpeed: undefined,

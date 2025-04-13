@@ -26,6 +26,7 @@ type ProviderSettings = {
 	apiModelId?: string | undefined
 	apiKey?: string | undefined
 	anthropicBaseUrl?: string | undefined
+	anthropicUseAuthToken?: boolean | undefined
 	glamaModelId?: string | undefined
 	glamaModelInfo?:
 		| ({
@@ -260,6 +261,7 @@ type GlobalSettings = {
 	cachedChromeHostUrl?: string | undefined
 	enableCheckpoints?: boolean | undefined
 	checkpointStorage?: ("task" | "workspace") | undefined
+	showGreeting?: boolean | undefined
 	ttsEnabled?: boolean | undefined
 	ttsSpeed?: number | undefined
 	soundEnabled?: boolean | undefined

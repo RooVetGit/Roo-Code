@@ -29,7 +29,8 @@
 		"advanced": "Avanzate",
 		"experimental": "Funzionalità sperimentali",
 		"language": "Lingua",
-		"about": "Informazioni su Roo Code"
+		"about": "Informazioni su Roo Code",
+		"interface": "Interfaccia"
 	},
 	"autoApprove": {
 		"description": "Permetti a Roo di eseguire automaticamente operazioni senza richiedere approvazione. Abilita queste impostazioni solo se ti fidi completamente dell'IA e comprendi i rischi di sicurezza associati.",
@@ -116,6 +117,7 @@
 		"openRouterTransformsText": "Comprimi prompt e catene di messaggi alla dimensione del contesto (<a>Trasformazioni OpenRouter</a>)",
 		"anthropicApiKey": "Chiave API Anthropic",
 		"getAnthropicApiKey": "Ottieni chiave API Anthropic",
+		"anthropicUseAuthToken": "Passa la chiave API Anthropic come header di autorizzazione invece di X-Api-Key",
 		"deepSeekApiKey": "Chiave API DeepSeek",
 		"getDeepSeekApiKey": "Ottieni chiave API DeepSeek",
 		"geminiApiKey": "Chiave API Gemini",
@@ -470,5 +472,11 @@
 	"labels": {
 		"customArn": "ARN personalizzato",
 		"useCustomArn": "Usa ARN personalizzato..."
+	},
+	"interface": {
+		"showgreeting": {
+			"label": "Mostra messaggio di benvenuto",
+			"description": "Quando abilitato, Roo mostrerà un messaggio di benvenuto e un'introduzione."
+		}
 	}
 }

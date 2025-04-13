@@ -87,6 +87,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setPinnedApiConfigs: (value: Record<string, boolean>) => void
 	togglePinnedApiConfig: (configName: string) => void
 	fontSmoothing?: boolean
+	setShowGreeting: (value: boolean) => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -124,6 +125,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		clineMessages: [],
 		taskHistory: [],
 		shouldShowAnnouncement: false,
+		showGreeting: true,
 		allowedCommands: [],
 		soundEnabled: false,
 		soundVolume: 0.5,
@@ -318,6 +320,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setAwsUsePromptCache: (value) => setState((prevState) => ({ ...prevState, awsUsePromptCache: value })),
 		setMaxReadFileLine: (value) => setState((prevState) => ({ ...prevState, maxReadFileLine: value })),
 		setPinnedApiConfigs: (value) => setState((prevState) => ({ ...prevState, pinnedApiConfigs: value })),
+		setShowGreeting: (value) => setState((prevState) => ({ ...prevState, showGreeting: value })),
 		togglePinnedApiConfig: (configId) =>
 			setState((prevState) => {
 				const currentPinned = prevState.pinnedApiConfigs || {}

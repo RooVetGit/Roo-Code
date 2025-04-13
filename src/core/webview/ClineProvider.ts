@@ -1248,6 +1248,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			telemetrySetting,
 			showRooIgnoredFiles,
 			language,
+			showGreeting,
 			maxReadFileLine,
 			fontSmoothing,
 		} = await this.getState()
@@ -1331,6 +1332,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			maxReadFileLine: maxReadFileLine ?? 500,
 			settingsImportedAt: this.settingsImportedAt,
 			fontSmoothing: fontSmoothing ?? false,
+			showGreeting: showGreeting ?? true, // Ensure showGreeting is included in the returned state
+
 		}
 	}
 
@@ -1420,6 +1423,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 			maxReadFileLine: stateValues.maxReadFileLine ?? 500,
 			fontSmoothing: config.get<boolean>("fontSmoothing") ?? false,
+			showGreeting: stateValues.showGreeting ?? true, // Ensure showGreeting is returned by getState
 		}
 	}
 
