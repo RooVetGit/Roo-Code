@@ -72,6 +72,22 @@
 	},
 	"autoApprove": {
 		"description": "Allow Roo to automatically perform operations without requiring approval. Enable these settings only if you fully trust the AI and understand the associated security risks.",
+		"commandRiskLevel": {
+			"label": "Allowed Auto-Execute Risk Level",
+			"description": "In addition to the statically allowed commands below, this setting controls the level of risk allowed for automatic command execution. The AI model evaluates the risk for each command being run, so you trust the AI to follow the formally-defined predicate logic rules that categorize risk levels in the system instructions. Each higher level includes all prior levels.",
+			"none": "None",
+			"noneDesc": "No risk-evaluated execution is allowed",
+			"readOnly": "Read Only",
+			"readOnlyDesc": "Safe read-only operations",
+			"reversibleChanges": "Reversible Change",
+			"reversibleChangesDesc": "A single-command inverse operation is possible",
+			"complexChanges": "Complex Change",
+			"complexChangesDesc": "Reversal is non-trivial or impossible, but not overtly destructive",
+			"serviceInterruptingChanges": "Service Interrupting",
+			"serviceInterruptingChangesDesc": "May affect availability or access to this host",
+			"destructiveChanges": "Destructive Changes",
+			"destructiveChangesDesc": "Permanent alteration with expectation of data loss"
+		},
 		"readOnly": {
 			"label": "Read",
 			"description": "When enabled, Roo will automatically view directory contents and read files without requiring you to click the Approve button.",

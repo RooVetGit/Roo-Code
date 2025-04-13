@@ -1,6 +1,23 @@
 import { z } from "zod"
 
 /**
+ * CommandRiskLevel
+ */
+
+export const commandRiskLevels = [
+	"none",
+	"readOnly",
+	"reversibleChanges",
+	"complexChanges",
+	"serviceInterruptingChanges",
+	"destructiveChanges",
+] as const
+
+export const commandRiskLevelsSchema = z.enum(commandRiskLevels)
+
+export type CommandRiskLevel = z.infer<typeof commandRiskLevelsSchema>
+
+/**
  * CommandExecutionStatus
  */
 

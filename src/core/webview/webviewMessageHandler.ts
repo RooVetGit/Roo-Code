@@ -10,6 +10,7 @@ import { TelemetryService } from "@roo-code/telemetry"
 
 import { ClineProvider } from "./ClineProvider"
 import { changeLanguage, t } from "../../i18n"
+import { CommandRiskLevel } from "@roo-code/types"
 import { Package } from "../../shared/package"
 import { RouterName, toRouterName, ModelRecord } from "../../shared/api"
 import { supportPrompt } from "../../shared/support-prompt"
@@ -283,7 +284,7 @@ export const webviewMessageHandler = async (
 			if (Array.isArray(ids)) {
 				// Process in batches of 20 (or another reasonable number)
 				const batchSize = 20
-				const results = []
+				const results: Array<{ id: string; success: boolean }> = []
 
 				// Only log start and end of the operation
 				console.log(`Batch deletion started: ${ids.length} tasks total`)
@@ -1137,6 +1138,11 @@ export const webviewMessageHandler = async (
 		case "setHistoryPreviewCollapsed": // Add the new case handler
 			await updateGlobalState("historyPreviewCollapsed", message.bool ?? false)
 			// No need to call postStateToWebview here as the UI already updated optimistically
+			break
+		case "commandRiskLevel":
+			const riskLevel = (message.text ?? "none") as CommandRiskLevel
+			await provider.contextProxy.updateGlobalState("commandRiskLevel", riskLevel)
+			await provider.postStateToWebview()
 			break
 		case "toggleApiConfigPin":
 			if (message.text) {
