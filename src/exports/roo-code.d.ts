@@ -191,6 +191,16 @@ type GlobalSettings = {
 	alwaysAllowSubtasks?: boolean | undefined
 	alwaysAllowExecute?: boolean | undefined
 	allowedCommands?: string[] | undefined
+	commandRiskLevel?:
+		| (
+				| "none"
+				| "readOnly"
+				| "reversibleChanges"
+				| "complexChanges"
+				| "serviceInterruptingChanges"
+				| "destructiveChanges"
+		  )
+		| undefined
 	browserToolEnabled?: boolean | undefined
 	browserViewportSize?: string | undefined
 	screenshotQuality?: number | undefined

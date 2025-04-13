@@ -5,6 +5,7 @@ import * as vscode from "vscode"
 
 import { ClineProvider } from "./ClineProvider"
 import { Language, ApiConfigMeta } from "../../schemas"
+import { CommandRiskLevel } from "../../schemas"
 import { changeLanguage, t } from "../../i18n"
 import { ApiConfiguration } from "../../shared/api"
 import { supportPrompt } from "../../shared/support-prompt"
@@ -846,6 +847,11 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "setHistoryPreviewCollapsed": // Add the new case handler
 			await updateGlobalState("historyPreviewCollapsed", message.bool ?? false)
 			// No need to call postStateToWebview here as the UI already updated optimistically
+			break
+		case "commandRiskLevel":
+			const riskLevel = (message.text ?? "none") as CommandRiskLevel
+			await provider.contextProxy.updateGlobalState("commandRiskLevel", riskLevel)
+			await provider.postStateToWebview()
 			break
 		case "toggleApiConfigPin":
 			if (message.text) {
