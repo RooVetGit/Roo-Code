@@ -1,7 +1,10 @@
 import { mentionRegex } from "../../../src/shared/context-mentions"
 import { Fzf } from "fzf"
 import { ModeConfig } from "../../../src/shared/modes"
-import * as path from "path"
+
+function getBasename(filepath: string): string {
+	return filepath.split("/").pop() || filepath
+}
 
 export interface SearchResult {
 	path: string
@@ -235,7 +238,7 @@ export function getContextMenuOptions(
 		return {
 			type: result.type === "folder" ? ContextMenuOptionType.Folder : ContextMenuOptionType.File,
 			value: formattedPath,
-			label: result.label || path.basename(result.path),
+			label: result.label || getBasename(result.path),
 			description: formattedPath,
 		}
 	})
