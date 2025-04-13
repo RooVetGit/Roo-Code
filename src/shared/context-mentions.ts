@@ -9,7 +9,7 @@ Mention regex:
   - `/@`: 
 	- **@**: The mention must start with the '@' symbol.
   
-  - `((?:\/|\w+:\/\/)[^\s]+?|problems\b|git-changes\b)`:
+  - `((?:\/|\w+:\/\/)(?:\\\\ |[^\s])+?|[a-f0-9]{7,40}\b|problems\b|git-changes\b|terminal\b)`:
 	- **Capturing Group (`(...)`)**: Captures the part of the string that matches one of the specified patterns.
 	- `(?:\/|\w+:\/\/)`: 
 	  - **Non-Capturing Group (`(?:...)`)**: Groups the alternatives without capturing them for back-referencing.
@@ -18,14 +18,17 @@ Mention regex:
 	  - `|`: Logical OR.
 	  - `\w+:\/\/`: 
 		- **Protocol (`\w+://`)**: Matches URLs that start with a word character sequence followed by '://', such as 'http://', 'https://', 'ftp://', etc.
-	- `[^\s]+?`: 
+	- `(?:\\\\ |[^\s])+?`: 
 	  - **Non-Whitespace Characters (`[^\s]+`)**: Matches one or more characters that are not whitespace.
 	  - **Non-Greedy (`+?`)**: Ensures the smallest possible match, preventing the inclusion of trailing punctuation.
 	- `|`: Logical OR.
-	- `problems\b`: 
-	  - **Exact Word ('problems')**: Matches the exact word 'problems'.
-	  - **Word Boundary (`\b`)**: Ensures that 'problems' is matched as a whole word and not as part of another word (e.g., 'problematic').
+	- `[a-f0-9]{7,40}\b`: 
+	  - **Hexadecimal Characters (`[a-f0-9]{7,40}`)**: Matches a hexadecimal string of 7 to 40 characters.
+	  - **Word Boundary (`\b`)**: Ensures that the hexadecimal string is matched as a whole word and not as part of another word (e.g., 'problems').
 		- `|`: Logical OR.
+    - `git-changes\b`:
+      - **Exact Word ('git-changes')**: Matches the exact word 'git-changes'.
+      - **Word Boundary (`\b`)**: Ensures that 'git-changes' is matched as a whole word and not as part of another word (e.g., 'gitchanges').
     - `terminal\b`:
       - **Exact Word ('terminal')**: Matches the exact word 'terminal'.
       - **Word Boundary (`\b`)**: Ensures that 'terminal' is matched as a whole word and not as part of another word (e.g., 'terminals').
@@ -49,8 +52,27 @@ Mention regex:
   - `mentionRegexGlobal`: Creates a global version of the `mentionRegex` to find all matches within a given string.
 
 */
+
+/**
+ * Regular expression to match @mentions in text.
+ *
+ * Key components:
+ * - `/@(...)(?=[.,;:!?]?(?:\s|$))`: Matches @-prefixed entities followed by optional punctuation and whitespace/end
+ *
+ * Inside the first capture group:
+ * - `(?:[\/]|\w+:\/\/)`: Matches either a slash (file path) or protocol prefix (URLs)
+ * - `(?:\\\\ |.)+`: IMPORTANT - This is a GREEDY match for either:
+ *    - Escaped spaces `\\ ` (backslash followed by space)
+ *    - ANY character (`.`)
+ *   The greedy behavior ensures complete path capture, including multiple spaces
+ *   This fixes Windows path handling where paths were previously truncated at spaces
+ * - `(?:[a-f0-9]{7,40}|problems|git-changes|terminal)\b`: Matches various non-path entities
+ *   (Git commit hashes, special keywords)
+ *
+ * End lookahead ensures mentions terminate properly and don't include trailing punctuation
+ */
 export const mentionRegex =
-	/@((?:\/|\w+:\/\/)[^\s]+?|[a-f0-9]{7,40}\b|problems\b|git-changes\b|terminal\b)(?=[.,;:!?]?(?=[\s\r\n]|$))/
+	/@((?:[\/]|\w+:\/\/)(?:\\\\ |.)+|(?:[a-f0-9]{7,40}|problems|git-changes|terminal)\b)(?=[.,;:!?]?(?:\s|$))/
 export const mentionRegexGlobal = new RegExp(mentionRegex.source, "g")
 
 export interface MentionSuggestion {

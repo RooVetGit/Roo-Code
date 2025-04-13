@@ -12,6 +12,25 @@ import { getLatestTerminalOutput } from "../../integrations/terminal/get-latest-
 import { getWorkspacePath } from "../../utils/path"
 import { FileContextTracker } from "../context-tracking/FileContextTracker"
 
+/**
+ * Helper function to unescape spaces in file paths that were escaped with a backslash.
+ * e.g., "file\ with\ spaces.txt" becomes "file with spaces.txt"
+ *
+ * This is critical for converting displayed/stored paths (with escaped spaces) to
+ * actual file system paths that can be used with Node.js fs functions.
+ */
+function unescapePathSpaces(escapedPath: string): string {
+	try {
+		// Use the original regex logic which should be correct for \ followed by space
+		const result = escapedPath.replace(/\\ /g, " ")
+		return result
+	} catch (error) {
+		// If any error occurs, log it and return the original path
+		console.error("Error in unescapePathSpaces:", error)
+		return escapedPath
+	}
+}
+
 export async function openMention(mention?: string): Promise<void> {
 	if (!mention) {
 		return
@@ -23,7 +42,8 @@ export async function openMention(mention?: string): Promise<void> {
 	}
 
 	if (mention.startsWith("/")) {
-		const relPath = mention.slice(1)
+		const relPathWithEscapes = mention.slice(1)
+		const relPath = unescapePathSpaces(relPathWithEscapes) // Unescape spaces
 		const absPath = path.resolve(cwd, relPath)
 		if (mention.endsWith("/")) {
 			vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(absPath))
@@ -45,106 +65,156 @@ export async function parseMentions(
 	urlContentFetcher: UrlContentFetcher,
 	fileContextTracker?: FileContextTracker,
 ): Promise<string> {
-	const mentions: Set<string> = new Set()
-	let parsedText = text.replace(mentionRegexGlobal, (match, mention) => {
-		mentions.add(mention)
-		if (mention.startsWith("http")) {
-			return `'${mention}' (see below for site content)`
-		} else if (mention.startsWith("/")) {
-			const mentionPath = mention.slice(1)
-			return mentionPath.endsWith("/")
+	// Store full mentions and their corresponding values (capture group 1)
+	const mentionDetails: { fullMatch: string; value: string }[] = []
+	const matches = Array.from(text.matchAll(mentionRegexGlobal))
+
+	for (const match of matches) {
+		const fullMention = match[0] // e.g., @/path\ with\ spaces.txt
+		const mentionValue = match[1] // e.g., /path\ with\ spaces.txt
+		mentionDetails.push({ fullMatch: fullMention, value: mentionValue })
+	}
+
+	// Store the replacements separately
+	const replacements: { original: string; replacement: string }[] = []
+
+	// Build replacement strings based on the *value* (capture group)
+	for (const detail of mentionDetails) {
+		const { fullMatch, value } = detail
+		let replacementText = fullMatch // Default to original
+
+		if (value.startsWith("http")) {
+			replacementText = `'${value}' (see below for site content)`
+		} else if (value.startsWith("/")) {
+			const mentionPath = value.slice(1)
+			replacementText = mentionPath.endsWith("/")
 				? `'${mentionPath}' (see below for folder content)`
 				: `'${mentionPath}' (see below for file content)`
-		} else if (mention === "problems") {
-			return `Workspace Problems (see below for diagnostics)`
-		} else if (mention === "git-changes") {
-			return `Working directory changes (see below for details)`
-		} else if (/^[a-f0-9]{7,40}$/.test(mention)) {
-			return `Git commit '${mention}' (see below for commit info)`
-		} else if (mention === "terminal") {
-			return `Terminal Output (see below for output)`
+		} else if (value === "problems") {
+			replacementText = `Workspace Problems (see below for diagnostics)`
+		} else if (value === "git-changes") {
+			replacementText = `Working directory changes (see below for details)`
+		} else if (/^[a-f0-9]{7,40}$/.test(value)) {
+			replacementText = `Git commit '${value}' (see below for commit info)`
+		} else if (value === "terminal") {
+			replacementText = `Terminal Output (see below for output)`
 		}
-		return match
-	})
 
-	const urlMention = Array.from(mentions).find((mention) => mention.startsWith("http"))
+		replacements.push({ original: fullMatch, replacement: replacementText })
+	}
+
+	// Apply replacements to the original text
+	let parsedText = text
+	for (const rep of replacements) {
+		// Ensure we only replace the exact original match
+		// This avoids issues if the same mention value appears multiple times
+		parsedText = parsedText.replace(rep.original, rep.replacement)
+	}
+
+	const urlMentionDetails = mentionDetails.find((detail) => detail.value.startsWith("http"))
 	let launchBrowserError: Error | undefined
-	if (urlMention) {
+	if (urlMentionDetails) {
 		try {
 			await urlContentFetcher.launchBrowser()
 		} catch (error) {
-			launchBrowserError = error
-			vscode.window.showErrorMessage(`Error fetching content for ${urlMention}: ${error.message}`)
+			launchBrowserError = error as Error
+			vscode.window.showErrorMessage(
+				`Error fetching content for ${urlMentionDetails.value}: ${(error as Error).message}`,
+			)
 		}
 	}
 
-	for (const mention of mentions) {
-		if (mention.startsWith("http")) {
+	// Process content fetching based on the extracted details
+	for (const detail of mentionDetails) {
+		const { fullMatch, value } = detail // Use both fullMatch and value
+
+		if (value.startsWith("http")) {
 			let result: string
 			if (launchBrowserError) {
 				result = `Error fetching content: ${launchBrowserError.message}`
 			} else {
 				try {
-					const markdown = await urlContentFetcher.urlToMarkdown(mention)
+					const markdown = await urlContentFetcher.urlToMarkdown(value) // Use value for URL
 					result = markdown
 				} catch (error) {
-					vscode.window.showErrorMessage(`Error fetching content for ${mention}: ${error.message}`)
-					result = `Error fetching content: ${error.message}`
+					vscode.window.showErrorMessage(`Error fetching content for ${value}: ${(error as Error).message}`)
+					result = `Error fetching content: ${(error as Error).message}`
 				}
 			}
-			parsedText += `\n\n<url_content url="${mention}">\n${result}\n</url_content>`
-		} else if (mention.startsWith("/")) {
-			const mentionPath = mention.slice(1)
+			parsedText += `\n\n<url_content url="${value}">\n${result}\n</url_content>`
+		} else if (value.startsWith("/")) {
+			// FIX: Extract path part, potentially removing leading '@'
+			let mentionPathWithEscapes = fullMatch.startsWith("@") ? fullMatch.slice(1) : value
+
+			// FIX: Create a relative path by removing the leading '/' for resolution
+			let relativePathForResolve = mentionPathWithEscapes.startsWith("/")
+				? mentionPathWithEscapes.slice(1)
+				: mentionPathWithEscapes
+
 			try {
-				const content = await getFileOrFolderContent(mentionPath, cwd)
-				if (mention.endsWith("/")) {
-					parsedText += `\n\n<folder_content path="${mentionPath}">\n${content}\n</folder_content>`
+				const content = await getFileOrFolderContent(relativePathForResolve, cwd)
+
+				// Check original value for the logical type (file/folder)
+				if (value.endsWith("/")) {
+					// FIX: Remove leading slash from display path if present
+					const displayPath = mentionPathWithEscapes.startsWith("/")
+						? mentionPathWithEscapes.slice(1)
+						: mentionPathWithEscapes
+					parsedText += `\n\n<folder_content path="${displayPath}">\n${content}\n</folder_content>`
 				} else {
-					parsedText += `\n\n<file_content path="${mentionPath}">\n${content}\n</file_content>`
-					// Track that this file was mentioned and its content was included
+					// FIX: Remove leading slash from display path if present
+					const displayPath = mentionPathWithEscapes.startsWith("/")
+						? mentionPathWithEscapes.slice(1)
+						: mentionPathWithEscapes
+					parsedText += `\n\n<file_content path="${displayPath}">\n${content}\n</file_content>`
 					if (fileContextTracker) {
-						await fileContextTracker.trackFileContext(mentionPath, "file_mentioned")
+						await fileContextTracker.trackFileContext(relativePathForResolve, "file_mentioned")
 					}
 				}
 			} catch (error) {
-				if (mention.endsWith("/")) {
-					parsedText += `\n\n<folder_content path="${mentionPath}">\nError fetching content: ${error.message}\n</folder_content>`
+				const errorMessage = (error as Error).message
+				// FIX: Remove leading slash from display path in error case too
+				const displayPath = mentionPathWithEscapes.startsWith("/")
+					? mentionPathWithEscapes.slice(1)
+					: mentionPathWithEscapes
+				if (value.endsWith("/")) {
+					parsedText += `\n\n<folder_content path="${displayPath}">\nError fetching content: ${errorMessage}\n</folder_content>`
 				} else {
-					parsedText += `\n\n<file_content path="${mentionPath}">\nError fetching content: ${error.message}\n</file_content>`
+					parsedText += `\n\n<file_content path="${displayPath}">\nError fetching content: ${errorMessage}\n</file_content>`
 				}
 			}
-		} else if (mention === "problems") {
+		} else if (value === "problems") {
 			try {
 				const problems = await getWorkspaceProblems(cwd)
 				parsedText += `\n\n<workspace_diagnostics>\n${problems}\n</workspace_diagnostics>`
 			} catch (error) {
-				parsedText += `\n\n<workspace_diagnostics>\nError fetching diagnostics: ${error.message}\n</workspace_diagnostics>`
+				parsedText += `\n\n<workspace_diagnostics>\nError fetching diagnostics: ${(error as Error).message}\n</workspace_diagnostics>`
 			}
-		} else if (mention === "git-changes") {
+		} else if (value === "git-changes") {
 			try {
 				const workingState = await getWorkingState(cwd)
 				parsedText += `\n\n<git_working_state>\n${workingState}\n</git_working_state>`
 			} catch (error) {
-				parsedText += `\n\n<git_working_state>\nError fetching working state: ${error.message}\n</git_working_state>`
+				parsedText += `\n\n<git_working_state>\nError fetching working state: ${(error as Error).message}\n</git_working_state>`
 			}
-		} else if (/^[a-f0-9]{7,40}$/.test(mention)) {
+		} else if (/^[a-f0-9]{7,40}$/.test(value)) {
 			try {
-				const commitInfo = await getCommitInfo(mention, cwd)
-				parsedText += `\n\n<git_commit hash="${mention}">\n${commitInfo}\n</git_commit>`
+				const commitInfo = await getCommitInfo(value, cwd)
+				parsedText += `\n\n<git_commit hash="${value}">\n${commitInfo}\n</git_commit>`
 			} catch (error) {
-				parsedText += `\n\n<git_commit hash="${mention}">\nError fetching commit info: ${error.message}\n</git_commit>`
+				parsedText += `\n\n<git_commit hash="${value}">\nError fetching commit info: ${(error as Error).message}\n</git_commit>`
 			}
-		} else if (mention === "terminal") {
+		} else if (value === "terminal") {
 			try {
 				const terminalOutput = await getLatestTerminalOutput()
 				parsedText += `\n\n<terminal_output>\n${terminalOutput}\n</terminal_output>`
 			} catch (error) {
-				parsedText += `\n\n<terminal_output>\nError fetching terminal output: ${error.message}\n</terminal_output>`
+				parsedText += `\n\n<terminal_output>\nError fetching terminal output: ${(error as Error).message}\n</terminal_output>`
 			}
 		}
 	}
 
-	if (urlMention) {
+	if (urlMentionDetails) {
 		try {
 			await urlContentFetcher.closeBrowser()
 		} catch (error) {
@@ -155,7 +225,8 @@ export async function parseMentions(
 	return parsedText
 }
 
-async function getFileOrFolderContent(mentionPath: string, cwd: string): Promise<string> {
+async function getFileOrFolderContent(mentionPathWithEscapes: string, cwd: string): Promise<string> {
+	const mentionPath = unescapePathSpaces(mentionPathWithEscapes) // Unescape before resolving
 	const absPath = path.resolve(cwd, mentionPath)
 
 	try {
@@ -166,6 +237,7 @@ async function getFileOrFolderContent(mentionPath: string, cwd: string): Promise
 				const content = await extractTextFromFile(absPath)
 				return content
 			} catch (error) {
+				// Use the unescaped path for error messages that reference the resolved path
 				return `(Failed to read contents of ${mentionPath}): ${error.message}`
 			}
 		} else if (stats.isDirectory()) {
@@ -177,7 +249,12 @@ async function getFileOrFolderContent(mentionPath: string, cwd: string): Promise
 				const linePrefix = isLast ? "└── " : "├── "
 				if (entry.isFile()) {
 					folderContent += `${linePrefix}${entry.name}\n`
-					const filePath = path.join(mentionPath, entry.name)
+					// Use the original escaped path for constructing nested mention paths
+					const escapedFilePath = path
+						.join(mentionPathWithEscapes, entry.name)
+						.replace(/\\/g, "/")
+						.replace(/ /g, "\\ ")
+					// Use the unescaped path for resolving absolute path
 					const absoluteFilePath = path.resolve(absPath, entry.name)
 					fileContentPromises.push(
 						(async () => {
@@ -187,7 +264,8 @@ async function getFileOrFolderContent(mentionPath: string, cwd: string): Promise
 									return undefined
 								}
 								const content = await extractTextFromFile(absoluteFilePath)
-								return `<file_content path="${filePath.toPosix()}">\n${content}\n</file_content>`
+								// Use the properly escaped path for the XML tag
+								return `<file_content path="${escapedFilePath}">\n${content}\n</file_content>`
 							} catch (error) {
 								return undefined
 							}
@@ -202,9 +280,11 @@ async function getFileOrFolderContent(mentionPath: string, cwd: string): Promise
 			const fileContents = (await Promise.all(fileContentPromises)).filter((content) => content)
 			return `${folderContent}\n${fileContents.join("\n\n")}`.trim()
 		} else {
+			// Use the unescaped path for error messages
 			return `(Failed to read contents of ${mentionPath})`
 		}
 	} catch (error) {
+		// Use the unescaped path for error messages
 		throw new Error(`Failed to access path "${mentionPath}": ${error.message}`)
 	}
 }
