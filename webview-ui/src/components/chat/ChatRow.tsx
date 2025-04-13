@@ -86,7 +86,7 @@ const MarkdownWithCopy = memo(({ content, partial }: { content: string; partial?
 			onMouseLeave={() => setIsHovering(false)}
 			style={{ position: "relative" }}>
 			{/* Apply negative margins and text wrap styles */}
-			<div style={{ wordBreak: "break-word", overflowWrap: "anywhere", marginBottom: -15, marginTop: -15 }}>
+			<div style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
 				{/* Use the imported shared Markdown component */}
 				<Markdown content={content} />
 			</div>
