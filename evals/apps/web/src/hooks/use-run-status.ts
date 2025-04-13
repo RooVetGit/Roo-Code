@@ -56,7 +56,6 @@ export const useRunStatus = (run: Run) => {
 				setTasksUpdatedAt(Date.now())
 				break
 			case RooCodeEventName.TaskTokenUsageUpdated: {
-				console.log("taskTokenUsageUpdated", payload)
 				const startTime = startTimes.current.get(taskId)
 				const duration = startTime ? Date.now() - startTime : undefined
 				tokenUsage.current.set(taskId, { ...payload[1], duration })
