@@ -117,6 +117,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 
 	const {
 		alwaysAllowReadOnly,
+		commandRiskLevel,
 		alwaysAllowReadOnlyOutsideWorkspace,
 		allowedCommands,
 		language,
@@ -246,6 +247,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "alwaysAllowBrowser", bool: alwaysAllowBrowser })
 			vscode.postMessage({ type: "alwaysAllowMcp", bool: alwaysAllowMcp })
 			vscode.postMessage({ type: "allowedCommands", commands: allowedCommands ?? [] })
+			vscode.postMessage({ type: "commandRiskLevel", text: commandRiskLevel ?? "none" })
 			vscode.postMessage({ type: "browserToolEnabled", bool: browserToolEnabled })
 			vscode.postMessage({ type: "soundEnabled", bool: soundEnabled })
 			vscode.postMessage({ type: "ttsEnabled", bool: ttsEnabled })
