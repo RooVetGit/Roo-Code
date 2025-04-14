@@ -65,9 +65,11 @@ export function insertMention(
 	 */
 	// Escape spaces, handling already escaped spaces
 	const formattedValue = value
+		.replace(/\\\\/g, "\\DOUBLE_BACKSLASH") // First preserve actual double backslashes
 		.replace(/\\ /g, "\\ESCAPED_SPACE") // Temporarily replace already escaped spaces
 		.replace(/ /g, "\\ ") // Escape all normal spaces
 		.replace(/\\ESCAPED_SPACE/g, "\\\\ ") // Restore escaped spaces with proper escaping
+		.replace(/\\DOUBLE_BACKSLASH/g, "\\\\") // Restore actual double backslashes
 
 	if (lastAtIndex !== -1) {
 		// If there's an '@' symbol, replace text after it up to the next space/end

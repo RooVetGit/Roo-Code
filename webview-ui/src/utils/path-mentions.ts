@@ -12,32 +12,28 @@
  * @returns A mention-friendly path
  */
 export function convertToMentionPath(path: string, cwd?: string): string {
-	// First, detect and temporarily replace already escaped spaces
-	// We need to be careful with Windows paths that use backslashes
-	const detectedPath = path.replace(/\\/g, "/")
-	// Temporarily replace escaped spaces
-	let processedPath = detectedPath.replace(/\\ /g, "\\ESCAPED_SPACE")
-
-	let normalizedCwd = cwd ? cwd.replace(/\\/g, "/") : ""
+	// First, handle Windows path separators and convert to forward slashes
+	let processedPath = path.replace(/\\\\/g, "//").replace(/\\/g, "/");
+	let normalizedCwd = cwd ? cwd.replace(/\\\\/g, "//").replace(/\\/g, "/") : "";
 
 	if (!normalizedCwd) {
-		// If no CWD, just escape spaces in the original path and restore escaped spaces
-		return processedPath.replace(/ /g, "\\ ").replace(/\\ESCAPED_SPACE/g, "\\\\ ")
+		// If no CWD, just escape spaces in the original path
+		return processedPath.replace(/ /g, "\\ ");
 	}
 
 	// Remove trailing slash from cwd if it exists
 	if (normalizedCwd.endsWith("/")) {
-		normalizedCwd = normalizedCwd.slice(0, -1)
+		normalizedCwd = normalizedCwd.slice(0, -1);
 	}
 
 	// Always use case-insensitive comparison for path matching
-	const lowerPath = processedPath.toLowerCase()
-	const lowerCwd = normalizedCwd.toLowerCase()
+	const lowerPath = processedPath.toLowerCase();
+	const lowerCwd = normalizedCwd.toLowerCase();
 
 	if (lowerPath.startsWith(lowerCwd)) {
-		const relativePath = processedPath.substring(normalizedCwd.length)
+		const relativePath = processedPath.substring(normalizedCwd.length);
 		// Ensure there's a slash after the @ symbol when we create the mention path
-		let mentionPath = "@" + (relativePath.startsWith("/") ? relativePath : "/" + relativePath)
+		let mentionPath = "@" + (relativePath.startsWith("/") ? relativePath : "/" + relativePath);
 
 		/**
 		 * Space escaping logic for file paths
@@ -57,10 +53,10 @@ export function convertToMentionPath(path: string, cwd?: string): string {
 		 * will undergo a second round of escaping, resulting in double backslashes.
 		 * This is necessary to preserve the escapes through the entire text processing pipeline.
 		 */
-		// Escape regular spaces and restore already escaped spaces
-		return mentionPath.replace(/ /g, "\\ ").replace(/\\ESCAPED_SPACE/g, "\\\\ ")
+		// Escape spaces
+		return mentionPath.replace(/ /g, "\\ ");
 	}
 
 	// If path doesn't start with CWD, escape spaces in the processed path
-	return processedPath.replace(/ /g, "\\ ").replace(/\\ESCAPED_SPACE/g, "\\\\ ")
+	return processedPath.replace(/ /g, "\\ ");
 }
