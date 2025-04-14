@@ -329,9 +329,6 @@ export function getContextMenuOptions(
 }
 
 export function shouldShowContextMenu(text: string, position: number): boolean {
-	// Add comprehensive debug information
-	console.log(`[DEBUG] Input - text: "${text}", position: ${position}`)
-
 	// Handle slash command
 	if (text.startsWith("/")) {
 		return position <= text.length && !text.includes(" ")
@@ -341,49 +338,39 @@ export function shouldShowContextMenu(text: string, position: number): boolean {
 	const atIndex = beforeCursor.lastIndexOf("@")
 
 	if (atIndex === -1) {
-		console.log(`[DEBUG] No @ symbol found in: "${beforeCursor}"`)
 		return false
 	}
 
-	console.log(`[DEBUG] @ found at position: ${atIndex}`)
-
-	// Check if @ is at cursor position and followed by space
-	if (atIndex === position && position + 1 < text.length) {
-		const charAfterAt = text.charAt(position + 1)
-		console.log(`[DEBUG] Character after @ (cursor): "${charAfterAt}"`)
-		if (/\s/.test(charAfterAt)) {
-			console.log(`[DEBUG] Rejecting due to space after @ (cursor at @)`)
-			return false
-		}
+	// Special case: if cursor is AT the @ symbol position, always show menu regardless of what follows
+	if (atIndex === position) {
+		return true
 	}
 
 	// Get text after @ symbol
 	const textAfterAt = beforeCursor.slice(atIndex)
-	console.log(`[DEBUG] Text after @ symbol: "${textAfterAt}"`)
 
-	// Special case: just @ symbol at the cursor
+	// Special case: just @ symbol at the cursor or before the cursor
 	if (textAfterAt === "@") {
-		console.log(`[DEBUG] Just @ symbol at cursor`)
 		return true
 	}
 
-	// Detailed check for space after @
+	// Check for space after @ when cursor is NOT at @ position
 	if (textAfterAt.length > 1) {
 		const charAfterAt = textAfterAt.charAt(1)
-		console.log(`[DEBUG] Character after @: "${charAfterAt}", is whitespace: ${/\s/.test(charAfterAt)}`)
+
+		// If cursor is right after @ symbol, show menu regardless of what follows
+		if (position === atIndex + 1) {
+			return true
+		}
 
 		if (/\s/.test(charAfterAt)) {
-			console.log(`[DEBUG] Rejecting due to space after @`)
 			return false
 		}
 	}
 
-	// Use the same parsing logic that we use for highlighting
-	const possibleMentions = parseMentionsFromText(textAfterAt) || []
-
-	// Log for debugging
-	console.log("[DEBUG] Possible mentions:", possibleMentions)
-
-	// If we found any valid mentions
-	return possibleMentions.length > 0
+	// We found an @ symbol (`atIndex !== -1`)
+	// We already checked for the case where the @ is immediately followed by a space.
+	// If we reach this point, it means the user is potentially typing a mention query.
+	// Therefore, we should show the context menu.
+	return true
 }

@@ -413,17 +413,13 @@ describe("shouldShowContextMenu", () => {
 		expect(shouldShowContextMenu("text without mention", 10)).toBe(false)
 	})
 
-	it("should return false when there is a space after @", () => {
+	it("should return true when there is a space after @ but at the same position as @", () => {
 		// Position 10 is the @ symbol, position 11 is space after @
 		const testText = "text with @ space"
 		const testPos = 10 // Position of @ symbol
 
-		console.log(`[TEST] Testing text: "${testText}"`)
-		console.log(`[TEST] @ is at position: ${testText.indexOf("@")}`)
-		console.log(`[TEST] Character at position ${testPos + 1} is: "${testText.charAt(testPos + 1)}"`)
-
 		mockParseMentionsFromText.mockReturnValue([])
-		expect(shouldShowContextMenu(testText, testPos)).toBe(false)
+		expect(shouldShowContextMenu(testText, testPos)).toBe(true)
 	})
 
 	it("should return true for valid file path mentions", () => {

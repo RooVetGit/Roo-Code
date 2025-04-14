@@ -52,9 +52,7 @@ export function parseMentionsFromText(text: string): Array<{ fullMatch: string; 
 		if (nextChar === "/") {
 			// File or folder path
 			const subText = text.substring(atPos)
-			console.log("[DEBUG][parseMentionsFromText] atPos:", atPos, "subText:", subText)
 			const pathInfo = extractFilePath(subText)
-			console.log("[DEBUG][parseMentionsFromText] extractFilePath result:", pathInfo)
 			if (pathInfo) {
 				results.push({
 					fullMatch: pathInfo.fullMatch,
@@ -118,19 +116,10 @@ export function parseMentionsFromText(text: string): Array<{ fullMatch: string; 
 		}
 
 		// If we get here, this @ wasn't part of a valid mention, or extract failed
-		console.log(
-			"[DEBUG][parseMentionsFromText] invalid or failed mention atPos:",
-			atPos,
-			"char after @:",
-			nextChar,
-			"text:",
-			text,
-		)
 		// Advance position by one to avoid infinite loop on invalid char after @
 		currentPos = atPos + 1
 	}
 
-	console.log("[DEBUG][parseMentionsFromText] final results:", results)
 	return results
 }
 
@@ -232,7 +221,6 @@ export function extractFilePath(text: string): { fullMatch: string; value: strin
 		result.value = result.value.slice(0, -1)
 	}
 
-	console.log("[DEBUG] extractFilePath result:", result)
 	return result
 }
 

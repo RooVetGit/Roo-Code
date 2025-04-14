@@ -445,8 +445,12 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						const query = newValue.slice(lastAtIndex + 1, newCursorPosition)
 						setSearchQuery(query)
 
-						// Send file search request if query is not empty
-						if (query.length > 0) {
+						// Improvement: Force search when cursor is at @ symbol or after @ symbol
+						const isAtAtSymbol = (lastAtIndex === newCursorPosition - 1);
+						const shouldForceSearch = isAtAtSymbol;
+						
+						// Send file search request if query is not empty OR at @ symbol
+						if (query.length > 0 || shouldForceSearch) {
 							setSelectedMenuIndex(0)
 							// Don't clear results until we have new ones
 							// This prevents flickering
