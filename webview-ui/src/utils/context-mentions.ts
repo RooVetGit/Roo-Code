@@ -1,7 +1,7 @@
-import { mentionRegex } from "../../../src/shared/context-mentions"
+import { mentionRegex, parseMentionsFromText } from "../../../src/shared/context-mentions"
 import { Fzf } from "fzf"
 import { ModeConfig } from "../../../src/shared/modes"
-import * as path from "path"
+import * as path from "path-browserify"
 
 export interface SearchResult {
 	path: string
@@ -320,27 +320,61 @@ export function getContextMenuOptions(
 }
 
 export function shouldShowContextMenu(text: string, position: number): boolean {
+	// Add comprehensive debug information
+	console.log(`[DEBUG] Input - text: "${text}", position: ${position}`)
+
 	// Handle slash command
 	if (text.startsWith("/")) {
 		return position <= text.length && !text.includes(" ")
 	}
-	const beforeCursor = text.slice(0, position)
+
+	const beforeCursor = text.slice(0, position + 1) // Include the character at cursor
 	const atIndex = beforeCursor.lastIndexOf("@")
 
 	if (atIndex === -1) {
+		console.log(`[DEBUG] No @ symbol found in: "${beforeCursor}"`)
 		return false
 	}
 
-	const textAfterAt = beforeCursor.slice(atIndex + 1)
+	console.log(`[DEBUG] @ found at position: ${atIndex}`)
 
-	// Check if there's any whitespace after the '@'
-	if (/\s/.test(textAfterAt)) return false
-
-	// Don't show the menu if it's clearly a URL
-	if (textAfterAt.toLowerCase().startsWith("http")) {
-		return false
+	// Check if @ is at cursor position and followed by space
+	if (atIndex === position && position + 1 < text.length) {
+		const charAfterAt = text.charAt(position + 1)
+		console.log(`[DEBUG] Character after @ (cursor): "${charAfterAt}"`)
+		if (/\s/.test(charAfterAt)) {
+			console.log(`[DEBUG] Rejecting due to space after @ (cursor at @)`)
+			return false
+		}
 	}
 
-	// Show menu in all other cases
-	return true
+	// Get text after @ symbol
+	const textAfterAt = beforeCursor.slice(atIndex)
+	console.log(`[DEBUG] Text after @ symbol: "${textAfterAt}"`)
+
+	// Special case: just @ symbol at the cursor
+	if (textAfterAt === "@") {
+		console.log(`[DEBUG] Just @ symbol at cursor`)
+		return true
+	}
+
+	// Detailed check for space after @
+	if (textAfterAt.length > 1) {
+		const charAfterAt = textAfterAt.charAt(1)
+		console.log(`[DEBUG] Character after @: "${charAfterAt}", is whitespace: ${/\s/.test(charAfterAt)}`)
+
+		if (/\s/.test(charAfterAt)) {
+			console.log(`[DEBUG] Rejecting due to space after @`)
+			return false
+		}
+	}
+
+	// Use the same parsing logic that we use for highlighting
+	const possibleMentions = parseMentionsFromText(textAfterAt) || []
+
+	// Log for debugging
+	console.log("[DEBUG] Possible mentions:", possibleMentions)
+
+	// If we found any valid mentions
+	return possibleMentions.length > 0
 }

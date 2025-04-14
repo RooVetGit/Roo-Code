@@ -1,8 +1,7 @@
 import React, { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { useEvent } from "react-use"
 import DynamicTextArea from "react-textarea-autosize"
-
-import { mentionRegex, mentionRegexGlobal } from "../../../../src/shared/context-mentions"
+import { mentionRegex, parseMentionsFromText } from "../../../../src/shared/context-mentions"
 import { WebviewMessage } from "../../../../src/shared/WebviewMessage"
 import { Mode, getAllModes } from "../../../../src/shared/modes"
 import { ExtensionMessage } from "../../../../src/shared/ExtensionMessage"
@@ -579,10 +578,29 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 			const text = textAreaRef.current.value
 
-			highlightLayerRef.current.innerHTML = text
-				.replace(/\n$/, "\n\n")
-				.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c] || c)
-				.replace(mentionRegexGlobal, '<mark class="mention-context-textarea-highlight">$&</mark>')
+			// First perform HTML escaping
+			const escapeHtml = (str: string) =>
+				str.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c] || c)
+
+			const mentions = parseMentionsFromText(text)
+			if (!mentions.length) {
+				highlightLayerRef.current.innerHTML = escapeHtml(text).replace(/\n$/, "\n\n")
+			} else {
+				let html = ""
+				let lastIndex = 0
+				mentions.forEach((mention) => {
+					const start = text.indexOf(mention.fullMatch, lastIndex)
+					if (start > lastIndex) {
+						html += escapeHtml(text.slice(lastIndex, start))
+					}
+					html += `<mark class="mention-context-textarea-highlight">${escapeHtml(mention.fullMatch)}</mark>`
+					lastIndex = start + mention.fullMatch.length
+				})
+				if (lastIndex < text.length) {
+					html += escapeHtml(text.slice(lastIndex))
+				}
+				highlightLayerRef.current.innerHTML = html.replace(/\n$/, "\n\n")
+			}
 
 			highlightLayerRef.current.scrollTop = textAreaRef.current.scrollTop
 			highlightLayerRef.current.scrollLeft = textAreaRef.current.scrollLeft

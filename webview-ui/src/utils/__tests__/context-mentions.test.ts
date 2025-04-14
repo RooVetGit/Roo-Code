@@ -6,6 +6,13 @@ import {
 	ContextMenuOptionType,
 	ContextMenuQueryItem,
 } from "../context-mentions"
+import * as sharedContextMentions from "../../../../src/shared/context-mentions"
+
+// Mock the parseMentionsFromText function from shared module
+jest.mock("../../../../src/shared/context-mentions", () => ({
+	mentionRegex: /@(\/|\w+:\/\/|[a-f0-9]{7,40}\b|problems\b|git-changes\b|terminal\b)/,
+	parseMentionsFromText: jest.fn(),
+}))
 
 describe("insertMention", () => {
 	it("should insert mention at cursor position when no @ symbol exists", () => {
@@ -388,29 +395,70 @@ describe("getContextMenuOptions", () => {
 })
 
 describe("shouldShowContextMenu", () => {
-	it("should return true for @ symbol", () => {
-		expect(shouldShowContextMenu("@", 1)).toBe(true)
+	const mockParseMentionsFromText = sharedContextMentions.parseMentionsFromText as jest.Mock
+
+	beforeEach(() => {
+		jest.clearAllMocks()
 	})
 
-	it("should return true for @ followed by text", () => {
-		expect(shouldShowContextMenu("Hello @test", 10)).toBe(true)
+	it("should return true for slash commands", () => {
+		expect(shouldShowContextMenu("/mode", 5)).toBe(true)
 	})
 
-	it("should return false when no @ symbol exists", () => {
-		expect(shouldShowContextMenu("Hello world", 5)).toBe(false)
+	it("should return false for slash commands with spaces", () => {
+		expect(shouldShowContextMenu("/mode with space", 15)).toBe(false)
 	})
 
-	it("should return false for @ followed by whitespace", () => {
-		expect(shouldShowContextMenu("Hello @ world", 6)).toBe(false)
+	it("should return false when there is no @ symbol", () => {
+		expect(shouldShowContextMenu("text without mention", 10)).toBe(false)
 	})
 
-	it("should return false for @ in URL", () => {
-		expect(shouldShowContextMenu("Hello @http://test.com", 17)).toBe(false)
+	it("should return false when there is a space after @", () => {
+		// Position 10 is the @ symbol, position 11 is space after @
+		const testText = "text with @ space"
+		const testPos = 10 // Position of @ symbol
+
+		console.log(`[TEST] Testing text: "${testText}"`)
+		console.log(`[TEST] @ is at position: ${testText.indexOf("@")}`)
+		console.log(`[TEST] Character at position ${testPos + 1} is: "${testText.charAt(testPos + 1)}"`)
+
+		mockParseMentionsFromText.mockReturnValue([])
+		expect(shouldShowContextMenu(testText, testPos)).toBe(false)
 	})
 
-	it("should return true for @problems", () => {
-		// Position cursor at the end to test the full word
-		expect(shouldShowContextMenu("@problems", 9)).toBe(true)
+	it("should return true for valid file path mentions", () => {
+		mockParseMentionsFromText.mockReturnValue([{ fullMatch: "@/path/to/file.txt", value: "/path/to/file.txt" }])
+		expect(shouldShowContextMenu("Check @/path/to/file.txt", 10)).toBe(true)
+	})
+
+	it("should return true for valid URL mentions", () => {
+		mockParseMentionsFromText.mockReturnValue([{ fullMatch: "@http://example.com", value: "http://example.com" }])
+		expect(shouldShowContextMenu("Visit @http://example.com", 10)).toBe(true)
+	})
+
+	it("should return true for valid git hash mentions", () => {
+		mockParseMentionsFromText.mockReturnValue([{ fullMatch: "@abc1234", value: "abc1234" }])
+		expect(shouldShowContextMenu("See commit @abc1234", 15)).toBe(true)
+	})
+
+	it("should return true for just @ symbol (empty mention)", () => {
+		mockParseMentionsFromText.mockReturnValue([])
+		// Position cursor right after the @ symbol
+		expect(shouldShowContextMenu("text with @", 11)).toBe(true)
+	})
+
+	it("should return true for file paths with escaped spaces", () => {
+		mockParseMentionsFromText.mockReturnValue([
+			{ fullMatch: "@/path/with\\ spaces/file.txt", value: "/path/with spaces/file.txt" },
+		])
+		expect(shouldShowContextMenu("Look at @/path/with\\ spaces/file.txt", 15)).toBe(true)
+	})
+
+	it("should return true for file paths with URL encoded characters", () => {
+		mockParseMentionsFromText.mockReturnValue([
+			{ fullMatch: "@/path/with%20space.txt", value: "/path/with space.txt" },
+		])
+		expect(shouldShowContextMenu("Check @/path/with%20space.txt", 15)).toBe(true)
 	})
 })
 

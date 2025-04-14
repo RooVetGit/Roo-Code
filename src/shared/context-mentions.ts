@@ -51,7 +51,10 @@ export function parseMentionsFromText(text: string): Array<{ fullMatch: string; 
 		// Handle different mention types
 		if (nextChar === "/") {
 			// File or folder path
-			const pathInfo = extractFilePath(text.substring(atPos))
+			const subText = text.substring(atPos)
+			console.log("[DEBUG][parseMentionsFromText] atPos:", atPos, "subText:", subText)
+			const pathInfo = extractFilePath(subText)
+			console.log("[DEBUG][parseMentionsFromText] extractFilePath result:", pathInfo)
 			if (pathInfo) {
 				results.push({
 					fullMatch: pathInfo.fullMatch,
@@ -115,10 +118,19 @@ export function parseMentionsFromText(text: string): Array<{ fullMatch: string; 
 		}
 
 		// If we get here, this @ wasn't part of a valid mention, or extract failed
+		console.log(
+			"[DEBUG][parseMentionsFromText] invalid or failed mention atPos:",
+			atPos,
+			"char after @:",
+			nextChar,
+			"text:",
+			text,
+		)
 		// Advance position by one to avoid infinite loop on invalid char after @
 		currentPos = atPos + 1
 	}
 
+	console.log("[DEBUG][parseMentionsFromText] final results:", results)
 	return results
 }
 
@@ -137,63 +149,33 @@ export function parseMentionsFromText(text: string): Array<{ fullMatch: string; 
 export function extractFilePath(text: string): { fullMatch: string; value: string } | null {
 	if (!text || !text.startsWith("@/")) return null
 
-	const result = { fullMatch: "@/", value: "/" } // Revert value initialization back to '/'
+	const result = { fullMatch: "@/", value: "/" }
 	let pos = 2 // Start after @/
+	let inPath = true // Track if we're still in a valid path
 
-	while (pos < text.length) {
+	while (pos < text.length && inPath) {
 		const char = text.charAt(pos)
 
 		if (char === "\\" && pos + 1 < text.length) {
 			// Handle escape sequences
 			const nextChar = text.charAt(pos + 1)
 
-			// Handle the special case of "with\ \spaces" - consecutive backslashes with a space between
-			if (
-				nextChar === " " &&
-				pos + 3 < text.length &&
-				text.charAt(pos + 2) === "\\" &&
-				pos + 8 < text.length &&
-				text.substring(pos + 3, pos + 9) === "spaces"
-			) {
-				result.fullMatch += "\\ \\spaces"
-				result.value += " spaces" // Treat as a space followed by "spaces"
-				pos += 9 // Skip over "\ \spaces"
-			}
-			// Handle standard escaped space
-			else if (nextChar === " ") {
+			// Handle escaped space
+			if (nextChar === " ") {
 				result.fullMatch += "\\ "
 				result.value += " "
 				pos += 2
 			}
-			// Handle Windows-style path with double backslash representing a path separator
-			else if (nextChar === "\\" && pos + 6 < text.length) {
-				// Check if this is a pattern like "with\\spaces"
-				const followingText = text.substring(pos + 2)
-				if (followingText.startsWith("spaces")) {
-					result.fullMatch += "\\\\spaces"
-					result.value += "/spaces" // Use forward slash for path
-					pos += 8 // Skip over "\\spaces"
-				} else if (followingText.startsWith("style")) {
-					result.fullMatch += "\\\\style"
-					result.value += "/style" // Use forward slash for path
-					pos += 7 // Skip over "\\style"
-				} else {
-					// Normal escaped backslash
-					result.fullMatch += "\\\\"
-					result.value += "\\"
-					pos += 2
-				}
-			}
-			// Handle standard escaped backslash
+			// Handle Windows-style path with backslash
 			else if (nextChar === "\\") {
 				result.fullMatch += "\\\\"
-				result.value += "\\"
+				result.value += "/" // Convert to forward slash for consistency
 				pos += 2
 			} else {
-				// Backslash followed by something else
-				result.fullMatch += "\\"
-				result.value += char
-				pos += 1
+				// Keep other escaped characters
+				result.fullMatch += "\\" + nextChar
+				result.value += nextChar
+				pos += 2
 			}
 		} else if (char === "%" && pos + 2 < text.length) {
 			// Handle percent encoding
@@ -205,20 +187,25 @@ export function extractFilePath(text: string): { fullMatch: string; value: strin
 					result.value += decodedChar
 					pos += 3
 				} catch (e) {
-					// Invalid encoding, treat literally
 					result.fullMatch += char
 					result.value += char
 					pos++
 				}
 			} else {
-				// Not a valid hex sequence
 				result.fullMatch += char
 				result.value += char
 				pos++
 			}
-		} else if ((/[\s,;!?'"]/.test(char) || char === "@") && char !== ":") {
-			// Terminator character (allow colon)
-			break
+		} else if ((/[\s,;!?'"]/.test(char) || char === "@") && !result.value.endsWith("\\")) {
+			// Stop at whitespace or punctuation, but only if not escaped
+			// If we haven't parsed any path segment, just break (keep @/)
+			if (result.value.length === 1) {
+				// only "/"
+				inPath = false
+			} else {
+				// Already parsed some segment, just break and keep what we have
+				inPath = false
+			}
 		} else {
 			// Regular character
 			result.fullMatch += char
@@ -228,12 +215,19 @@ export function extractFilePath(text: string): { fullMatch: string; value: strin
 	}
 
 	// After loop, check if we actually captured a path
+	// If the path contains any unescaped space, treat as invalid and return minimal mention
+	if (/(^|[^\\]) /.test(result.fullMatch)) {
+		return { fullMatch: "@/", value: "/" }
+	}
 	if (result.value.length <= 1) {
-		// Only got '/'
-		return null
+		// Always return minimal mention for invalid or empty path
+		return { fullMatch: "@/", value: "/" }
 	}
 
-	// Trim trailing slash ONLY from the value if it wasn't explicitly escaped
+	// Normalize slashes in the value
+	result.value = result.value.replace(/\\/g, "/")
+
+	// Remove trailing slash if not escaped
 	if (result.value.endsWith("/") && !result.fullMatch.endsWith("\\/")) {
 		result.value = result.value.slice(0, -1)
 	}

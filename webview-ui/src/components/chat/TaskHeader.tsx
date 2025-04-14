@@ -10,8 +10,8 @@ import { calculateTokenDistribution, getMaxTokensForModel } from "@/utils/model-
 import { Button } from "@/components/ui"
 
 import { ClineMessage } from "../../../../src/shared/ExtensionMessage"
-import { mentionRegexGlobal } from "../../../../src/shared/context-mentions"
 import { HistoryItem } from "../../../../src/shared/HistoryItem"
+import { parseMentionsFromText } from "../../../../src/shared/context-mentions"
 
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import Thumbnails from "../common/Thumbnails"
@@ -357,24 +357,41 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 
 export const highlightMentions = (text?: string, withShadow = true) => {
 	if (!text) return text
-	const parts = text.split(mentionRegexGlobal)
-	return parts.map((part, index) => {
-		if (index % 2 === 0) {
-			// This is regular text
-			return part
-		} else {
-			// This is a mention
-			return (
-				<span
-					key={index}
-					className={withShadow ? "mention-context-highlight-with-shadow" : "mention-context-highlight"}
-					style={{ cursor: "pointer" }}
-					onClick={() => vscode.postMessage({ type: "openMention", text: part })}>
-					@{part}
-				</span>
-			)
+
+	const mentions = parseMentionsFromText(text)
+	if (!mentions.length) return text
+
+	const elements: React.ReactNode[] = []
+	let lastIndex = 0
+
+	/**
+	 * Use parseMentionsFromText to find all valid mention ranges, and highlight only those.
+	 * This implementation ensures that only allowed mention types (path, URL, problems, git-changes, terminal, git-hash) are highlighted,
+	 * and that repeated mentions or overlapping mentions are handled correctly.
+	 */
+	mentions.forEach((mention, idx) => {
+		const start = text.indexOf(mention.fullMatch, lastIndex)
+		if (start === -1) {
+			// Should not happen, but skip if not found
+			return
 		}
+		if (start > lastIndex) {
+			elements.push(text.slice(lastIndex, start))
+		}
+		elements.push(
+			<span
+				key={start}
+				className={withShadow ? "mention-context-highlight-with-shadow" : "mention-context-highlight"}
+				style={{ cursor: "pointer" }}>
+				{mention.fullMatch}
+			</span>,
+		)
+		lastIndex = start + mention.fullMatch.length
 	})
+	if (lastIndex < text.length) {
+		elements.push(text.slice(lastIndex))
+	}
+	return elements
 }
 
 const TaskActions = ({ item }: { item: HistoryItem | undefined }) => {
