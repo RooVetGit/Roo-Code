@@ -23,6 +23,7 @@ import { telemetryService } from "./services/telemetry/TelemetryService"
 import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"
 import { API } from "./exports/api"
 import { migrateSettings } from "./utils/migrateSettings"
+import { migrateSubtasksSettings } from "./utils/migrateSubtasksSettings"
 
 import { handleUri, registerCommands, registerCodeActions, registerTerminalActions } from "./activate"
 import { formatLanguage } from "./shared/language"
@@ -48,6 +49,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// Migrate old settings to new
 	await migrateSettings(context, outputChannel)
+	await migrateSubtasksSettings(context, outputChannel)
 
 	// Initialize telemetry service after environment variables are loaded.
 	telemetryService.initialize()

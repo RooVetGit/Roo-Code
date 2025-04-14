@@ -20,7 +20,8 @@ suite("Roo Code Subtasks", () => {
 		await api.setConfiguration({
 			mode: "ask",
 			alwaysAllowModeSwitch: true,
-			alwaysAllowSubtasks: true,
+			alwaysAllowSubtaskCreation: true,
+			alwaysAllowSubtaskCompletion: true,
 			autoApprovalEnabled: true,
 			enableCheckpoints: false,
 		})
