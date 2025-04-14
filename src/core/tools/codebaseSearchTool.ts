@@ -6,7 +6,7 @@ import { CodeIndexManager } from "../../services/code-index/manager"
 import { getWorkspacePath } from "../../utils/path"
 import { formatResponse } from "../prompts/responses"
 import { t } from "../../i18n"
-import { QdrantSearchResult } from "../../services/code-index/types"
+import { VectorStoreSearchResult } from "../../services/code-index/interfaces"
 
 export async function codebaseSearchTool(
 	cline: Cline,
@@ -93,7 +93,7 @@ export async function codebaseSearchTool(
 			throw new Error("Code Indexing is not configured (Missing OpenAI Key or Qdrant URL).")
 		}
 
-		const searchResults: QdrantSearchResult[] = await manager.searchIndex(query, limit)
+		const searchResults: VectorStoreSearchResult[] = await manager.searchIndex(query, limit)
 
 		// 3. Format and push results
 		if (!searchResults || searchResults.length === 0) {

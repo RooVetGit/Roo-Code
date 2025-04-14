@@ -1,5 +1,3 @@
-import { QdrantSearchResult } from "./types"
-
 /**
  * Interface for vector database clients
  */
@@ -28,7 +26,7 @@ export interface IVectorStore {
 	 * @param limit Maximum number of results to return
 	 * @returns Promise resolving to search results
 	 */
-	search(queryVector: number[], limit?: number): Promise<QdrantSearchResult[]>
+	search(queryVector: number[], limit?: number): Promise<VectorStoreSearchResult[]>
 
 	/**
 	 * Deletes points by file path
@@ -46,4 +44,18 @@ export interface IVectorStore {
 	 * @returns Promise resolving to boolean indicating if the collection exists
 	 */
 	collectionExists(): Promise<boolean>
+}
+
+export interface VectorStoreSearchResult {
+	id: string | number
+	score: number
+	payload?: Payload | null
+}
+
+export interface Payload {
+	filePath: string
+	codeChunk: string
+	startLine: number
+	endLine: number
+	[key: string]: any
 }

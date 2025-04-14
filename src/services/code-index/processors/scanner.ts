@@ -5,11 +5,11 @@ import * as path from "path"
 import { getWorkspacePath } from "../../../utils/path"
 import { extensions } from "../../tree-sitter"
 import * as vscode from "vscode"
-import { CodeBlock, ICodeParser, IEmbedder, IVectorStore } from "../interfaces" // Import CodeBlock directly
+import { CodeBlock, ICodeParser, IEmbedder, IVectorStore, IDirectoryScanner } from "../interfaces"
 import { createHash } from "crypto"
 import { v5 as uuidv5 } from "uuid"
 
-export class DirectoryScanner {
+export class DirectoryScanner implements IDirectoryScanner {
 	// Constants moved inside the class
 	private static readonly QDRANT_CODE_BLOCK_NAMESPACE = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 	private static readonly MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB

@@ -3,7 +3,7 @@ import { createHash } from "crypto"
 import * as path from "path"
 import { getWorkspacePath } from "../../../utils/path"
 import { IVectorStore } from "../interfaces/vector-store"
-import { Payload, QdrantSearchResult } from "../interfaces/types"
+import { Payload, VectorStoreSearchResult } from "../interfaces"
 
 /**
  * Qdrant implementation of the vector store interface
@@ -100,7 +100,7 @@ export class QdrantVectorStore implements IVectorStore {
 	 * @param limit Maximum number of results to return
 	 * @returns Promise resolving to search results
 	 */
-	async search(queryVector: number[], limit: number = 10): Promise<QdrantSearchResult[]> {
+	async search(queryVector: number[], limit: number = 10): Promise<VectorStoreSearchResult[]> {
 		try {
 			const result = await this.client.search(this.collectionName, {
 				vector: queryVector,
@@ -108,7 +108,7 @@ export class QdrantVectorStore implements IVectorStore {
 			})
 			result.filter((r) => this.isPayloadValid(r.payload!))
 
-			return result as QdrantSearchResult[]
+			return result as VectorStoreSearchResult[]
 		} catch (error) {
 			console.error("Failed to search points:", error)
 			throw error

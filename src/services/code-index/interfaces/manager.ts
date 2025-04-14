@@ -1,4 +1,4 @@
-import { IndexingState, IndexProgressUpdate, QdrantSearchResult } from "./types"
+import { VectorStoreSearchResult } from "./vector-store"
 import { ApiHandlerOptions } from "../../../shared/api"
 import * as vscode from "vscode"
 
@@ -52,11 +52,19 @@ export interface ICodeIndexManager {
 	 * @param limit Maximum number of results to return
 	 * @returns Promise resolving to search results
 	 */
-	searchIndex(query: string, limit: number): Promise<QdrantSearchResult[]>
+	searchIndex(query: string, limit: number): Promise<VectorStoreSearchResult[]>
 
 	/**
 	 * Sets the webview provider for status updates
 	 * @param provider Webview provider
 	 */
 	setWebviewProvider(provider: { postMessage: (msg: any) => void }): void
+}
+
+export type IndexingState = "Standby" | "Indexing" | "Indexed" | "Error"
+export type EmbedderType = "openai" | "ollama"
+
+export interface IndexProgressUpdate {
+	systemStatus: IndexingState
+	message?: string
 }

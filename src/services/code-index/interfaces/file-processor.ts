@@ -1,4 +1,3 @@
-import { CodeBlock, FileProcessingResult } from "./types"
 import * as vscode from "vscode"
 
 /**
@@ -32,10 +31,11 @@ export interface IDirectoryScanner {
 	 * @param options Optional scanning options
 	 * @returns Promise resolving to scan results
 	 */
-	scanDirectory(options?: {
-		onProgress?: (processed: number, total: number) => void
-		onError?: (error: Error) => void
-	}): Promise<{
+	scanDirectory(
+		directory: string,
+		context?: vscode.ExtensionContext,
+		onError?: (error: Error) => void,
+	): Promise<{
 		codeBlocks: CodeBlock[]
 		stats: {
 			processed: number
@@ -74,4 +74,26 @@ export interface IFileWatcher {
 	 * @returns Promise resolving to processing result
 	 */
 	processFile(filePath: string): Promise<FileProcessingResult>
+}
+
+export interface FileProcessingResult {
+	path: string
+	status: "success" | "skipped" | "error"
+	error?: Error
+	reason?: string
+}
+
+/**
+ * Common types used across the code-index service
+ */
+
+export interface CodeBlock {
+	file_path: string
+	identifier: string | null
+	type: string
+	start_line: number
+	end_line: number
+	content: string
+	fileHash: string
+	segmentHash: string
 }

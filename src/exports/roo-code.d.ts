@@ -175,6 +175,8 @@ type ProviderSettings = {
 		| undefined
 	codeIndexOpenAiKey?: string | undefined
 	codeIndexQdrantApiKey?: string | undefined
+	codeIndexEmbedderBaseUrl?: string | undefined
+	codeIndexEmbedderModelId?: string | undefined
 	modelTemperature?: (number | null) | undefined
 	modelMaxTokens?: number | undefined
 	modelMaxThinkingTokens?: number | undefined
@@ -236,6 +238,15 @@ type GlobalSettings = {
 	autoApprovalEnabled?: boolean | undefined
 	alwaysAllowReadOnly?: boolean | undefined
 	alwaysAllowReadOnlyOutsideWorkspace?: boolean | undefined
+	codebaseIndexConfig?:
+		| {
+				codebaseIndexEnabled?: boolean | undefined
+				codebaseIndexQdrantUrl?: string | undefined
+				codebaseIndexEmbedderType?: ("openai" | "ollama") | undefined
+				codebaseIndexEmbedderBaseUrl?: string | undefined
+				codebaseIndexEmbedderModelId?: string | undefined
+		  }
+		| undefined
 	alwaysAllowWrite?: boolean | undefined
 	alwaysAllowWriteOutsideWorkspace?: boolean | undefined
 	writeDelayMs?: number | undefined
@@ -243,8 +254,6 @@ type GlobalSettings = {
 	alwaysApproveResubmit?: boolean | undefined
 	requestDelaySeconds?: number | undefined
 	alwaysAllowMcp?: boolean | undefined
-	codeIndexEnabled?: boolean | undefined
-	codeIndexQdrantUrl?: string | undefined
 	alwaysAllowModeSwitch?: boolean | undefined
 	alwaysAllowSubtasks?: boolean | undefined
 	alwaysAllowExecute?: boolean | undefined
