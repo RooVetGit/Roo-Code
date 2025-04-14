@@ -26,13 +26,16 @@ const HistoryPreview = ({ showHistoryView }: HistoryPreviewProps) => {
 					{t("history:viewAll")}
 				</Button>
 			</div>
-			<div className="flex items-center gap-2 mb-2" onClick={() => setShowAllWorkspaces(!showAllWorkspaces)}>
+			<div className="flex items-center gap-2 mb-2">
 				<Checkbox
+					id="show-all-workspaces"
 					checked={showAllWorkspaces}
 					onCheckedChange={(checked) => setShowAllWorkspaces(checked === true)}
 					variant="description"
 				/>
-				<span className="text-xs text-vscode-foreground">{t("history:showAllWorkspaces")}</span>
+				<label htmlFor="show-all-workspaces" className="text-xs text-vscode-foreground cursor-pointer">
+					{t("history:showAllWorkspaces")}
+				</label>
 			</div>
 			{tasks.slice(0, 3).map((item) => (
 				<div
