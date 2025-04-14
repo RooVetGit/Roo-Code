@@ -96,7 +96,7 @@ export type TelemetrySetting = z.infer<typeof telemetrySettingsSchema>
  */
 
 export const modelInfoSchema = z.object({
-	maxTokens: z.number().optional(),
+	maxTokens: z.number().nullish(),
 	contextWindow: z.number(),
 	supportsImages: z.boolean().optional(),
 	supportsComputerUse: z.boolean().optional(),
@@ -301,6 +301,7 @@ export const providerSettingsSchema = z.object({
 	apiModelId: z.string().optional(),
 	apiKey: z.string().optional(),
 	anthropicBaseUrl: z.string().optional(),
+	anthropicUseAuthToken: z.boolean().optional(),
 	// Glama
 	glamaModelId: z.string().optional(),
 	glamaModelInfo: modelInfoSchema.optional(),
@@ -312,7 +313,7 @@ export const providerSettingsSchema = z.object({
 	openRouterBaseUrl: z.string().optional(),
 	openRouterSpecificProvider: z.string().optional(),
 	openRouterUseMiddleOutTransform: z.boolean().optional(),
-	// AWS Bedrock
+	// Amazon Bedrock
 	awsAccessKey: z.string().optional(),
 	awsSecretKey: z.string().optional(),
 	awsSessionToken: z.string().optional(),
@@ -374,11 +375,13 @@ export const providerSettingsSchema = z.object({
 	requestyModelId: z.string().optional(),
 	requestyModelInfo: modelInfoSchema.optional(),
 	// Claude 3.7 Sonnet Thinking
-	modelTemperature: z.number().nullish(),
-	modelMaxTokens: z.number().optional(),
-	modelMaxThinkingTokens: z.number().optional(),
+	modelMaxTokens: z.number().optional(), // Currently only used by Anthropic hybrid thinking models.
+	modelMaxThinkingTokens: z.number().optional(), // Currently only used by Anthropic hybrid thinking models.
 	// Generic
 	includeMaxTokens: z.boolean().optional(),
+	modelTemperature: z.number().nullish(),
+	reasoningEffort: z.enum(["low", "medium", "high"]).optional(),
+	rateLimitSeconds: z.number().optional(),
 	// Fake AI
 	fakeAi: z.unknown().optional(),
 })
@@ -393,6 +396,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	apiModelId: undefined,
 	apiKey: undefined,
 	anthropicBaseUrl: undefined,
+	anthropicUseAuthToken: undefined,
 	// Glama
 	glamaModelId: undefined,
 	glamaModelInfo: undefined,
@@ -404,7 +408,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	openRouterBaseUrl: undefined,
 	openRouterSpecificProvider: undefined,
 	openRouterUseMiddleOutTransform: undefined,
-	// AWS Bedrock
+	// Amazon Bedrock
 	awsAccessKey: undefined,
 	awsSecretKey: undefined,
 	awsSessionToken: undefined,
@@ -458,11 +462,13 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	requestyModelId: undefined,
 	requestyModelInfo: undefined,
 	// Claude 3.7 Sonnet Thinking
-	modelTemperature: undefined,
 	modelMaxTokens: undefined,
 	modelMaxThinkingTokens: undefined,
 	// Generic
 	includeMaxTokens: undefined,
+	modelTemperature: undefined,
+	reasoningEffort: undefined,
+	rateLimitSeconds: undefined,
 	// Fake AI
 	fakeAi: undefined,
 }
@@ -518,8 +524,13 @@ export const globalSettingsSchema = z.object({
 
 	terminalOutputLineLimit: z.number().optional(),
 	terminalShellIntegrationTimeout: z.number().optional(),
+	terminalCommandDelay: z.number().optional(),
+	terminalPowershellCounter: z.boolean().optional(),
+	terminalZshClearEolMark: z.boolean().optional(),
+	terminalZshOhMy: z.boolean().optional(),
+	terminalZshP10k: z.boolean().optional(),
+	terminalZdotdir: z.boolean().optional(),
 
-	rateLimitSeconds: z.number().optional(),
 	diffEnabled: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
 	experiments: experimentsSchema.optional(),
@@ -588,8 +599,13 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 
 	terminalOutputLineLimit: undefined,
 	terminalShellIntegrationTimeout: undefined,
+	terminalCommandDelay: undefined,
+	terminalPowershellCounter: undefined,
+	terminalZshClearEolMark: undefined,
+	terminalZshOhMy: undefined,
+	terminalZshP10k: undefined,
+	terminalZdotdir: undefined,
 
-	rateLimitSeconds: undefined,
 	diffEnabled: undefined,
 	fuzzyMatchThreshold: undefined,
 	experiments: undefined,
@@ -618,6 +634,8 @@ export const GLOBAL_SETTINGS_KEYS = Object.keys(globalSettingsRecord) as Keys<Gl
 export const rooCodeSettingsSchema = providerSettingsSchema.merge(globalSettingsSchema)
 
 export type RooCodeSettings = GlobalSettings & ProviderSettings
+
+export const ROO_CODE_SETTINGS_KEYS = [...GLOBAL_SETTINGS_KEYS, ...PROVIDER_SETTINGS_KEYS] as Keys<RooCodeSettings>[]
 
 /**
  * SecretState
@@ -726,6 +744,7 @@ export const clineSays = [
 	"new_task",
 	"checkpoint_saved",
 	"rooignore_error",
+	"diff_error",
 ] as const
 
 export const clineSaySchema = z.enum(clineSays)

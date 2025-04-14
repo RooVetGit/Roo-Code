@@ -20,15 +20,17 @@ vsc-extension-quickstart.md
 **/.vscode-test.*
 
 # Custom
-demo.gif
 .nvmrc
 .gitattributes
 .prettierignore
 .clinerules*
 .roomodes
+.roo/**
 cline_docs/**
 coverage/**
 locales/**
+benchmark/**
+.direnv/**
 
 # Ignore all webview-ui files except the build directory (https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/frameworks/hello-world-react-cra/.vscodeignore)
 webview-ui/src/**
@@ -48,6 +50,8 @@ webview-ui/node_modules/**
 # Include default themes JSON files used in getTheme
 !src/integrations/theme/default-themes/**
 
+# Ignore doc assets
+assets/docs/**
 # Include icons and images
 !assets/icons/**
 !assets/images/**

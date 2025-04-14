@@ -29,7 +29,8 @@
 		"advanced": "고급",
 		"experimental": "실험적 기능",
 		"language": "언어",
-		"about": "Roo Code 정보"
+		"about": "Roo Code 정보",
+		"interface": "인터페이스"
 	},
 	"autoApprove": {
 		"description": "Roo가 승인 없이 자동으로 작업을 수행할 수 있도록 허용합니다. AI를 완전히 신뢰하고 관련 보안 위험을 이해하는 경우에만 이러한 설정을 활성화하세요.",
@@ -98,8 +99,10 @@
 		"enterProfileName": "프로필 이름 입력",
 		"createProfile": "프로필 생성",
 		"cannotDeleteOnlyProfile": "유일한 프로필은 삭제할 수 없습니다",
+		"searchPlaceholder": "프로필 검색",
+		"noMatchFound": "일치하는 프로필이 없습니다",
 		"vscodeLmDescription": "VS Code 언어 모델 API를 사용하면 GitHub Copilot을 포함한 기타 VS Code 확장 프로그램이 제공하는 모델을 실행할 수 있습니다. 시작하려면 VS Code 마켓플레이스에서 Copilot 및 Copilot Chat 확장 프로그램을 설치하는 것이 가장 쉽습니다.",
-		"awsCustomArnUse": "사용하려는 모델의 유효한 AWS Bedrock ARN을 입력하세요. 형식 예시:",
+		"awsCustomArnUse": "사용하려는 모델의 유효한 Amazon Bedrock ARN을 입력하세요. 형식 예시:",
 		"awsCustomArnDesc": "ARN의 리전이 위에서 선택한 AWS 리전과 일치하는지 확인하세요.",
 		"openRouterApiKey": "OpenRouter API 키",
 		"getOpenRouterApiKey": "OpenRouter API 키 받기",
@@ -107,11 +110,14 @@
 		"glamaApiKey": "Glama API 키",
 		"getGlamaApiKey": "Glama API 키 받기",
 		"useCustomBaseUrl": "사용자 정의 기본 URL 사용",
+		"useHostHeader": "사용자 정의 Host 헤더 사용",
+		"useLegacyFormat": "레거시 OpenAI API 형식 사용",
 		"requestyApiKey": "Requesty API 키",
 		"getRequestyApiKey": "Requesty API 키 받기",
 		"openRouterTransformsText": "프롬프트와 메시지 체인을 컨텍스트 크기로 압축 (<a>OpenRouter Transforms</a>)",
 		"anthropicApiKey": "Anthropic API 키",
 		"getAnthropicApiKey": "Anthropic API 키 받기",
+		"anthropicUseAuthToken": "X-Api-Key 대신 Authorization 헤더로 Anthropic API 키 전달",
 		"deepSeekApiKey": "DeepSeek API 키",
 		"getDeepSeekApiKey": "DeepSeek API 키 받기",
 		"geminiApiKey": "Gemini API 키",
@@ -216,6 +222,10 @@
 				}
 			},
 			"resetDefaults": "기본값으로 재설정"
+		},
+		"rateLimitSeconds": {
+			"label": "속도 제한",
+			"description": "API 요청 간 최소 시간."
 		}
 	},
 	"browser": {
@@ -293,13 +303,33 @@
 		"shellIntegrationTimeout": {
 			"label": "터미널 쉘 통합 타임아웃",
 			"description": "명령을 실행하기 전에 쉘 통합이 초기화될 때까지 기다리는 최대 시간. 쉘 시작 시간이 긴 사용자의 경우, 터미널에서 \"Shell Integration Unavailable\" 오류가 표시되면 이 값을 늘려야 할 수 있습니다."
+		},
+		"zdotdir": {
+			"label": "ZDOTDIR 처리 활성화",
+			"description": "활성화하면 zsh 셸 통합을 올바르게 처리하기 위한 ZDOTDIR용 임시 디렉터리를 생성합니다. 이를 통해 zsh 구성을 유지하면서 VSCode 셸 통합이 zsh와 올바르게 작동합니다. (실험적)"
+		},
+		"commandDelay": {
+			"label": "터미널 명령 지연",
+			"description": "명령 실행 후 추가할 지연 시간(밀리초). 기본값 0은 지연을 완전히 비활성화합니다. 이는 타이밍 문제가 있는 터미널에서 명령 출력을 완전히 캡처하는 데 도움이 될 수 있습니다. 대부분의 터미널에서는 `PROMPT_COMMAND='sleep N'`을 설정하여 구현되며, PowerShell은 각 명령 끝에 `start-sleep`을 추가합니다. 원래는 VSCode 버그#237208에 대한 해결책이었으며 필요하지 않을 수 있습니다."
+		},
+		"powershellCounter": {
+			"label": "PowerShell 카운터 해결 방법 활성화",
+			"description": "활성화하면 PowerShell 명령에 카운터를 추가하여 명령이 올바르게 실행되도록 합니다. 이는 명령 출력 캡처에 문제가 있을 수 있는 PowerShell 터미널에서 도움이 됩니다."
+		},
+		"zshClearEolMark": {
+			"label": "ZSH 줄 끝 표시 지우기",
+			"description": "활성화하면 PROMPT_EOL_MARK=''를 설정하여 ZSH 줄 끝 표시를 지웁니다. 이는 '%'와 같은 특수 문자로 끝나는 명령 출력 해석의 문제를 방지합니다."
+		},
+		"zshOhMy": {
+			"label": "Oh My Zsh 통합 활성화",
+			"description": "활성화하면 ITERM_SHELL_INTEGRATION_INSTALLED=Yes를 설정하여 Oh My Zsh 셸 통합 기능을 활성화합니다. (실험적)"
+		},
+		"zshP10k": {
+			"label": "Powerlevel10k 통합 활성화",
+			"description": "활성화하면 POWERLEVEL9K_TERM_SHELL_INTEGRATION=true를 설정하여 Powerlevel10k 셸 통합 기능을 활성화합니다. (실험적)"
 		}
 	},
 	"advanced": {
-		"rateLimit": {
-			"label": "속도 제한",
-			"description": "API 요청 간 최소 시간."
-		},
 		"diff": {
 			"label": "diff를 통한 편집 활성화",
 			"description": "활성화되면 Roo는 파일을 더 빠르게 편집할 수 있으며 잘린 전체 파일 쓰기를 자동으로 거부합니다. 최신 Claude 3.7 Sonnet 모델에서 가장 잘 작동합니다.",
@@ -369,7 +399,8 @@
 		"azureApiVersion": "Azure API 버전 설정",
 		"gemini": {
 			"freeRequests": "* 분당 {{count}}개의 요청까지 무료. 이후에는 프롬프트 크기에 따라 요금이 부과됩니다.",
-			"pricingDetails": "자세한 내용은 가격 정보를 참조하세요."
+			"pricingDetails": "자세한 내용은 가격 정보를 참조하세요.",
+			"billingEstimate": "* 요금은 추정치입니다 - 정확한 비용은 프롬프트 크기에 따라 달라집니다."
 		}
 	},
 	"modelPicker": {
@@ -398,7 +429,7 @@
 	},
 	"validation": {
 		"apiKey": "유효한 API 키를 입력해야 합니다.",
-		"awsRegion": "AWS Bedrock을 사용하려면 리전을 선택해야 합니다.",
+		"awsRegion": "Amazon Bedrock을 사용하려면 리전을 선택해야 합니다.",
 		"googleCloud": "유효한 Google Cloud 프로젝트 ID와 리전을 입력해야 합니다.",
 		"modelId": "유효한 모델 ID를 입력해야 합니다.",
 		"modelSelector": "유효한 모델 선택기를 입력해야 합니다.",
@@ -441,5 +472,11 @@
 	"labels": {
 		"customArn": "사용자 지정 ARN",
 		"useCustomArn": "사용자 지정 ARN 사용..."
+	},
+	"interface": {
+		"showgreeting": {
+			"label": "환영 메시지 표시",
+			"description": "활성화하면 Roo가 환영 메시지와 소개를 표시합니다."
+		}
 	}
 }

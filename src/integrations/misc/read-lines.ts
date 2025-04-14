@@ -24,17 +24,24 @@ const outOfRangeError = (filepath: string, n: number) => {
  */
 export function readLines(filepath: string, endLine?: number, startLine?: number): Promise<string> {
 	return new Promise((resolve, reject) => {
-		// Validate input parameters
-		// Check startLine validity if provided
-		if (startLine !== undefined && (startLine < 0 || startLine % 1 !== 0)) {
-			return reject(
-				new RangeError(`Invalid startLine: ${startLine}. Line numbers must be non-negative integers.`),
-			)
+		// Reject if startLine is defined but not a number
+		if (startLine !== undefined && typeof startLine !== "number") {
+			return reject(new RangeError(`Invalid startLine: ${startLine}. Line numbers must be numbers.`))
 		}
 
-		// Check endLine validity if provided
-		if (endLine !== undefined && (endLine < 0 || endLine % 1 !== 0)) {
-			return reject(new RangeError(`Invalid endLine: ${endLine}. Line numbers must be non-negative integers.`))
+		// Force startLine to be an integer and clamp to 0 if negative
+		if (startLine !== undefined) {
+			startLine = Math.max(0, Math.floor(startLine))
+		}
+
+		// Reject if endLine is defined but not a number
+		if (endLine !== undefined && typeof endLine !== "number") {
+			return reject(new RangeError(`Invalid endLine: ${endLine}. Line numbers must be numbers.`))
+		}
+
+		// Force endLine to be an integer
+		if (endLine !== undefined) {
+			endLine = Math.floor(endLine)
 		}
 
 		const effectiveStartLine = startLine === undefined ? 0 : startLine
@@ -46,35 +53,64 @@ export function readLines(filepath: string, endLine?: number, startLine?: number
 			)
 		}
 
-		let cursor = 0
-		const lines: string[] = []
+		// Set up stream
 		const input = createReadStream(filepath)
-		const rl = createInterface({ input })
+		let buffer = ""
+		let lineCount = 0
+		let result = ""
 
-		rl.on("line", (line) => {
-			// Only collect lines within the specified range
-			if (cursor >= effectiveStartLine && (endLine === undefined || cursor <= endLine)) {
-				lines.push(line)
+		// Handle errors
+		input.on("error", reject)
+
+		// Process data chunks directly
+		input.on("data", (chunk) => {
+			// Add chunk to buffer
+			buffer += chunk.toString()
+
+			let pos = 0
+			let nextNewline = buffer.indexOf("\n", pos)
+
+			// Process complete lines in the buffer
+			while (nextNewline !== -1) {
+				// If we're in the target range, add this line to the result
+				if (lineCount >= effectiveStartLine && (endLine === undefined || lineCount <= endLine)) {
+					result += buffer.substring(pos, nextNewline + 1) // Include the newline
+				}
+
+				// Move position and increment line counter
+				pos = nextNewline + 1
+				lineCount++
+
+				// If we've reached the end line, we can stop
+				if (endLine !== undefined && lineCount > endLine) {
+					input.destroy()
+					resolve(result)
+					return
+				}
+
+				// Find next newline
+				nextNewline = buffer.indexOf("\n", pos)
 			}
 
-			// Close stream after reaching to_line (if specified)
-			if (endLine !== undefined && cursor === endLine) {
-				rl.close()
-				input.close()
-				resolve(lines.join("\n"))
-			}
-
-			cursor++
+			// Trim buffer - keep only the incomplete line
+			buffer = buffer.substring(pos)
 		})
 
-		rl.on("error", reject)
-
+		// Handle end of file
 		input.on("end", () => {
-			// If we collected some lines but didn't reach to_line, return what we have
-			if (lines.length > 0) {
-				resolve(lines.join("\n"))
-			} else {
+			// Process any remaining data in buffer (last line without newline)
+			if (buffer.length > 0) {
+				if (lineCount >= effectiveStartLine && (endLine === undefined || lineCount <= endLine)) {
+					result += buffer
+				}
+				lineCount++
+			}
+
+			// Check if we found any lines in the requested range
+			if (lineCount <= effectiveStartLine) {
 				reject(outOfRangeError(filepath, effectiveStartLine))
+			} else {
+				resolve(result)
 			}
 		})
 	})

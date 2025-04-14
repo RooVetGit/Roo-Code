@@ -29,7 +29,8 @@
 		"advanced": "Advanced",
 		"experimental": "Experimental Features",
 		"language": "Language",
-		"about": "About Roo Code"
+		"about": "About Roo Code",
+		"interface": "Interface"
 	},
 	"autoApprove": {
 		"description": "Allow Roo to automatically perform operations without requiring approval. Enable these settings only if you fully trust the AI and understand the associated security risks.",
@@ -98,8 +99,10 @@
 		"enterProfileName": "Enter profile name",
 		"createProfile": "Create Profile",
 		"cannotDeleteOnlyProfile": "Cannot delete the only profile",
+		"searchPlaceholder": "Search profiles",
+		"noMatchFound": "No matching profiles found",
 		"vscodeLmDescription": " The VS Code Language Model API allows you to run models provided by other VS Code extensions (including but not limited to GitHub Copilot). The easiest way to get started is to install the Copilot and Copilot Chat extensions from the VS Code Marketplace.",
-		"awsCustomArnUse": "Enter a valid AWS Bedrock ARN for the model you want to use. Format examples:",
+		"awsCustomArnUse": "Enter a valid Amazon Bedrock ARN for the model you want to use. Format examples:",
 		"awsCustomArnDesc": "Make sure the region in the ARN matches your selected AWS Region above.",
 		"openRouterApiKey": "OpenRouter API Key",
 		"getOpenRouterApiKey": "Get OpenRouter API Key",
@@ -107,11 +110,14 @@
 		"glamaApiKey": "Glama API Key",
 		"getGlamaApiKey": "Get Glama API Key",
 		"useCustomBaseUrl": "Use custom base URL",
+		"useHostHeader": "Use custom Host header",
+		"useLegacyFormat": "Use legacy OpenAI API format",
 		"requestyApiKey": "Requesty API Key",
 		"getRequestyApiKey": "Get Requesty API Key",
 		"openRouterTransformsText": "Compress prompts and message chains to the context size (<a>OpenRouter Transforms</a>)",
 		"anthropicApiKey": "Anthropic API Key",
 		"getAnthropicApiKey": "Get Anthropic API Key",
+		"anthropicUseAuthToken": "Pass Anthropic API Key as Authorization header instead of X-Api-Key",
 		"deepSeekApiKey": "DeepSeek API Key",
 		"getDeepSeekApiKey": "Get DeepSeek API Key",
 		"geminiApiKey": "Gemini API Key",
@@ -216,6 +222,10 @@
 				}
 			},
 			"resetDefaults": "Reset to Defaults"
+		},
+		"rateLimitSeconds": {
+			"label": "Rate limit",
+			"description": "Minimum time between API requests."
 		}
 	},
 	"browser": {
@@ -293,13 +303,33 @@
 		"shellIntegrationTimeout": {
 			"label": "Terminal shell integration timeout",
 			"description": "Maximum time to wait for shell integration to initialize before executing commands. For users with long shell startup times, this value may need to be increased if you see \"Shell Integration Unavailable\" errors in the terminal."
+		},
+		"commandDelay": {
+			"label": "Terminal command delay",
+			"description": "Delay in milliseconds to add after command execution. The default setting of 0 disables the delay completely. This can help ensure command output is fully captured in terminals with timing issues. In most terminals it is implemented by setting `PROMPT_COMMAND='sleep N'` and Powershell appends `start-sleep` to the end of each command. Originally was workaround for VSCode bug#237208 and may not be needed."
+		},
+		"powershellCounter": {
+			"label": "Enable PowerShell counter workaround",
+			"description": "When enabled, adds a counter to PowerShell commands to ensure proper command execution. This helps with PowerShell terminals that might have issues with command output capture."
+		},
+		"zshClearEolMark": {
+			"label": "Clear ZSH EOL mark",
+			"description": "When enabled, clears the ZSH end-of-line mark by setting PROMPT_EOL_MARK=''. This prevents issues with command output interpretation when output ends with special characters like '%'."
+		},
+		"zshOhMy": {
+			"label": "Enable Oh My Zsh integration",
+			"description": "When enabled, sets ITERM_SHELL_INTEGRATION_INSTALLED=Yes to enable Oh My Zsh shell integration features. (experimental)"
+		},
+		"zshP10k": {
+			"label": "Enable Powerlevel10k integration",
+			"description": "When enabled, sets POWERLEVEL9K_TERM_SHELL_INTEGRATION=true to enable Powerlevel10k shell integration features. (experimental)"
+		},
+		"zdotdir": {
+			"label": "Enable ZDOTDIR handling",
+			"description": "When enabled, creates a temporary directory for ZDOTDIR to handle zsh shell integration properly. This ensures VSCode shell integration works correctly with zsh while preserving your zsh configuration. (experimental)"
 		}
 	},
 	"advanced": {
-		"rateLimit": {
-			"label": "Rate limit",
-			"description": "Minimum time between API requests."
-		},
 		"diff": {
 			"label": "Enable editing through diffs",
 			"description": "When enabled, Roo will be able to edit files more quickly and will automatically reject truncated full-file writes. Works best with the latest Claude 3.7 Sonnet model.",
@@ -369,7 +399,8 @@
 		"azureApiVersion": "Set Azure API version",
 		"gemini": {
 			"freeRequests": "* Free up to {{count}} requests per minute. After that, billing depends on prompt size.",
-			"pricingDetails": "For more info, see pricing details."
+			"pricingDetails": "For more info, see pricing details.",
+			"billingEstimate": "* Billing is an estimate - exact cost depends on prompt size."
 		}
 	},
 	"modelPicker": {
@@ -397,7 +428,7 @@
 	},
 	"validation": {
 		"apiKey": "You must provide a valid API key.",
-		"awsRegion": "You must choose a region to use with AWS Bedrock.",
+		"awsRegion": "You must choose a region to use with Amazon Bedrock.",
 		"googleCloud": "You must provide a valid Google Cloud Project ID and Region.",
 		"modelId": "You must provide a valid model ID.",
 		"modelSelector": "You must provide a valid model selector.",
@@ -440,5 +471,11 @@
 	"labels": {
 		"customArn": "Custom ARN",
 		"useCustomArn": "Use custom ARN..."
+	},
+	"interface": {
+		"showgreeting": {
+			"label": "Show greeting message",
+			"description": "When enabled, Roo will display a welcome message and introduction."
+		}
 	}
 }

@@ -83,6 +83,9 @@
 	"edit": "編集...",
 	"forNextMode": "次のモード用",
 	"error": "エラー",
+	"diffError": {
+		"title": "編集に失敗しました"
+	},
 	"troubleMessage": "Rooに問題が発生しています...",
 	"apiRequest": {
 		"title": "APIリクエスト",
@@ -94,6 +97,7 @@
 	"checkpoint": {
 		"initial": "初期チェックポイント",
 		"regular": "チェックポイント",
+		"initializingWarning": "チェックポイントの初期化中... 時間がかかりすぎる場合は、<settingsLink>設定</settingsLink>でチェックポイントを無効にしてタスクを再開できます。",
 		"menu": {
 			"viewDiff": "差分を表示",
 			"restore": "チェックポイントを復元",
@@ -143,7 +147,12 @@
 	},
 	"subtasks": {
 		"wantsToCreate": "Rooは<code>{{mode}}</code>モードで新しいサブタスクを作成したい:",
-		"wantsToFinish": "Rooはこのサブタスクを終了したい"
+		"wantsToFinish": "Rooはこのサブタスクを終了したい",
+		"newTaskContent": "サブタスク指示",
+		"completionContent": "サブタスク完了",
+		"resultContent": "サブタスク結果",
+		"defaultResult": "次のタスクに進んでください。",
+		"completionInstructions": "サブタスク完了！結果を確認し、修正や次のステップを提案できます。問題なければ、親タスクに結果を返すために確認してください。"
 	},
 	"questions": {
 		"hasQuestion": "Rooは質問があります:"
@@ -151,7 +160,10 @@
 	"taskCompleted": "タスク完了",
 	"shellIntegration": {
 		"unavailable": "シェル統合が利用できません",
-		"troubleshooting": "まだ問題がありますか？"
+		"troubleshooting": "まだ問題がありますか？シェル統合のドキュメントはこちらをクリックしてください。",
+		"checkSettings": "設定ページでターミナルの回避策を確認してください",
+		"updateVSCode": "VSCodeを更新してください",
+		"supportedShell": "サポートされているシェルを使用していることを確認してください：zsh、bash、fish、またはPowerShell"
 	},
 	"powershell": {
 		"issues": "Windows PowerShellに問題があるようです。こちらを参照してください"

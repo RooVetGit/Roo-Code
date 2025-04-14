@@ -166,6 +166,11 @@
 	code {
 		background-color: var(--vscode-textCodeBlock-background);
 	}
+
+	/* Search result highlighting */
+	.history-item-highlight {
+		@apply underline;
+	}
 }
 
 /* Form Element Focus States */
@@ -176,10 +181,6 @@ textarea:focus {
 
 .focus\:outline-0 {
 	outline: 0 !important; /* Allow tailwind to override the `textarea:focus` rule */
-}
-
-vscode-button::part(control):focus {
-	outline: none;
 }
 
 /**

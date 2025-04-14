@@ -83,6 +83,9 @@
 	"edit": "Editar...",
 	"forNextMode": "para o próximo modo",
 	"error": "Erro",
+	"diffError": {
+		"title": "Edição mal-sucedida"
+	},
 	"troubleMessage": "Roo está tendo problemas...",
 	"apiRequest": {
 		"title": "Requisição API",
@@ -94,6 +97,7 @@
 	"checkpoint": {
 		"initial": "Ponto de verificação inicial",
 		"regular": "Ponto de verificação",
+		"initializingWarning": "Ainda inicializando ponto de verificação... Se isso demorar muito, você pode desativar os pontos de verificação nas <settingsLink>configurações</settingsLink> e reiniciar sua tarefa.",
 		"menu": {
 			"viewDiff": "Ver diferenças",
 			"restore": "Restaurar ponto de verificação",
@@ -143,7 +147,12 @@
 	},
 	"subtasks": {
 		"wantsToCreate": "Roo quer criar uma nova subtarefa no modo <code>{{mode}}</code>:",
-		"wantsToFinish": "Roo quer finalizar esta subtarefa"
+		"wantsToFinish": "Roo quer finalizar esta subtarefa",
+		"newTaskContent": "Instruções da subtarefa",
+		"completionContent": "Subtarefa concluída",
+		"resultContent": "Resultados da subtarefa",
+		"defaultResult": "Por favor, continue com a próxima tarefa.",
+		"completionInstructions": "Subtarefa concluída! Você pode revisar os resultados e sugerir correções ou próximos passos. Se tudo parecer bom, confirme para retornar o resultado à tarefa principal."
 	},
 	"questions": {
 		"hasQuestion": "Roo tem uma pergunta:"
@@ -151,7 +160,10 @@
 	"taskCompleted": "Tarefa concluída",
 	"shellIntegration": {
 		"unavailable": "Integração de shell indisponível",
-		"troubleshooting": "Ainda com problemas?"
+		"troubleshooting": "Ainda com problemas? Clique aqui para ver a documentação de integração do shell.",
+		"checkSettings": "Verifique as soluções alternativas do terminal na página de configurações",
+		"updateVSCode": "Atualize o VSCode",
+		"supportedShell": "Certifique-se de estar usando um shell suportado: zsh, bash, fish ou PowerShell"
 	},
 	"powershell": {
 		"issues": "Parece que você está tendo problemas com o Windows PowerShell, por favor veja este"

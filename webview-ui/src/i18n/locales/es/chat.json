@@ -83,6 +83,9 @@
 	"edit": "Editar...",
 	"forNextMode": "para el siguiente modo",
 	"error": "Error",
+	"diffError": {
+		"title": "Edición fallida"
+	},
 	"troubleMessage": "Roo está teniendo problemas...",
 	"apiRequest": {
 		"title": "Solicitud API",
@@ -94,6 +97,7 @@
 	"checkpoint": {
 		"initial": "Punto de control inicial",
 		"regular": "Punto de control",
+		"initializingWarning": "Todavía inicializando el punto de control... Si esto tarda demasiado, puedes desactivar los puntos de control en la <settingsLink>configuración</settingsLink> y reiniciar tu tarea.",
 		"menu": {
 			"viewDiff": "Ver diferencias",
 			"restore": "Restaurar punto de control",
@@ -143,7 +147,12 @@
 	},
 	"subtasks": {
 		"wantsToCreate": "Roo quiere crear una nueva subtarea en modo <code>{{mode}}</code>:",
-		"wantsToFinish": "Roo quiere finalizar esta subtarea"
+		"wantsToFinish": "Roo quiere finalizar esta subtarea",
+		"newTaskContent": "Instrucciones de la subtarea",
+		"completionContent": "Subtarea completada",
+		"resultContent": "Resultados de la subtarea",
+		"defaultResult": "Por favor, continúa con la siguiente tarea.",
+		"completionInstructions": "¡Subtarea completada! Puedes revisar los resultados y sugerir correcciones o próximos pasos. Si todo se ve bien, confirma para devolver el resultado a la tarea principal."
 	},
 	"questions": {
 		"hasQuestion": "Roo tiene una pregunta:"
@@ -151,7 +160,10 @@
 	"taskCompleted": "Tarea completada",
 	"shellIntegration": {
 		"unavailable": "Integración de shell no disponible",
-		"troubleshooting": "¿Sigues teniendo problemas?"
+		"troubleshooting": "¿Sigues teniendo problemas? Haz clic aquí para ver la documentación de integración de shell.",
+		"checkSettings": "Revisa los ajustes alternativos de terminal en la página de configuración",
+		"updateVSCode": "Actualiza VSCode",
+		"supportedShell": "Asegúrate de usar un shell compatible: zsh, bash, fish o PowerShell"
 	},
 	"powershell": {
 		"issues": "Parece que estás teniendo problemas con Windows PowerShell, por favor consulta esta"
