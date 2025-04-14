@@ -2,7 +2,6 @@ import { VSCodeButton, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 import debounce from "debounce"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useDeepCompareEffect, useEvent, useMount } from "react-use"
-import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
 import styled from "styled-components"
 import {
 	ClineAsk,
@@ -89,13 +88,13 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	const [primaryButtonText, setPrimaryButtonText] = useState<string | undefined>(undefined)
 	const [secondaryButtonText, setSecondaryButtonText] = useState<string | undefined>(undefined)
 	const [didClickCancel, setDidClickCancel] = useState(false)
-	const virtuosoRef = useRef<VirtuosoHandle>(null)
 	const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({})
 	const scrollContainerRef = useRef<HTMLDivElement>(null)
 	const disableAutoScrollRef = useRef(false)
 	const [showScrollToBottom, setShowScrollToBottom] = useState(false)
 	const [isAtBottom, setIsAtBottom] = useState(false)
 	const lastTtsRef = useRef<string>("")
+
 	const [wasStreaming, setWasStreaming] = useState<boolean>(false)
 	const [showCheckpointWarning, setShowCheckpointWarning] = useState<boolean>(false)
 
@@ -874,77 +873,58 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		() =>
 			debounce(
 				() => {
-					virtuosoRef.current?.scrollTo({
-						top: Number.MAX_SAFE_INTEGER,
-						behavior: "smooth",
-					})
+					const container = scrollContainerRef.current
+					if (container) {
+						container.scrollTo({
+							top: container.scrollHeight,
+							behavior: "smooth",
+						})
+					}
 				},
-				10,
-				{ immediate: true },
+				10, // Keep debounce low for responsiveness
+				{ immediate: false }, // Let height changes settle before scrolling
 			),
-		[],
+		[scrollContainerRef],
 	)
 
 	const scrollToBottomAuto = useCallback(() => {
-		virtuosoRef.current?.scrollTo({
-			top: Number.MAX_SAFE_INTEGER,
-			behavior: "auto", // instant causes crash
-		})
-	}, [])
+		const container = scrollContainerRef.current
+		if (container) {
+			// Use requestAnimationFrame to make sure  scroll happens after DOM updates
+			requestAnimationFrame(() => {
+				container.scrollTop = container.scrollHeight
+			})
+		}
+	}, [scrollContainerRef])
 
 	// scroll when user toggles certain rows
 	const toggleRowExpansion = useCallback(
 		(ts: number) => {
 			const isCollapsing = expandedRows[ts] ?? false
-			const lastGroup = groupedMessages.at(-1)
-			const isLast = Array.isArray(lastGroup) ? lastGroup[0].ts === ts : lastGroup?.ts === ts
-			const secondToLastGroup = groupedMessages.at(-2)
-			const isSecondToLast = Array.isArray(secondToLastGroup)
-				? secondToLastGroup[0].ts === ts
-				: secondToLastGroup?.ts === ts
-
-			const isLastCollapsedApiReq =
-				isLast &&
-				!Array.isArray(lastGroup) && // Make sure it's not a browser session group
-				lastGroup?.say === "api_req_started" &&
-				!expandedRows[lastGroup.ts]
 
 			setExpandedRows((prev) => ({
 				...prev,
 				[ts]: !prev[ts],
 			}))
 
-			// disable auto scroll when user expands row
-			if (!isCollapsing) {
+			// disable auto scroll when user expands/collapses a row unless already at bottom
+			if (!isAtBottom) {
 				disableAutoScrollRef.current = true
+				setShowScrollToBottom(true) // Show button immediately if not at bottom
 			}
 
+			// If collapsing and we were at the bottom, scroll to maintain bottom position after height change
 			if (isCollapsing && isAtBottom) {
-				const timer = setTimeout(() => {
+				// Use timeout to allow DOM to update height before scrolling
+				setTimeout(() => {
 					scrollToBottomAuto()
 				}, 0)
-				return () => clearTimeout(timer)
-			} else if (isLast || isSecondToLast) {
-				if (isCollapsing) {
-					if (isSecondToLast && !isLastCollapsedApiReq) {
-						return
-					}
-					const timer = setTimeout(() => {
-						scrollToBottomAuto()
-					}, 0)
-					return () => clearTimeout(timer)
-				} else {
-					const timer = setTimeout(() => {
-						virtuosoRef.current?.scrollToIndex({
-							index: groupedMessages.length - (isLast ? 1 : 2),
-							align: "start",
-						})
-					}, 0)
-					return () => clearTimeout(timer)
-				}
 			}
+
+			// We rely on handleRowHeightChange and the general scroll logic for now.
+			// If an item expands and pushes content off-screen, the user might need to scroll manually.
 		},
-		[groupedMessages, expandedRows, scrollToBottomAuto, isAtBottom],
+		[expandedRows, scrollToBottomAuto, isAtBottom],
 	)
 
 	const handleRowHeightChange = useCallback(
@@ -971,15 +951,53 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		}
 	}, [groupedMessages.length, scrollToBottomSmooth])
 
-	const handleWheel = useCallback((event: Event) => {
-		const wheelEvent = event as WheelEvent
-		if (wheelEvent.deltaY && wheelEvent.deltaY < 0) {
-			if (scrollContainerRef.current?.contains(wheelEvent.target as Node)) {
-				// user scrolled up
-				disableAutoScrollRef.current = true
+	const handleScroll = useCallback(() => {
+		const container = scrollContainerRef.current
+		if (container) {
+			const { scrollTop, scrollHeight, clientHeight } = container
+			// Add a small threshold for being "at bottom"
+			const atBottom = scrollHeight - scrollTop - clientHeight < 10
+			setIsAtBottom(atBottom)
+
+			if (atBottom) {
+				disableAutoScrollRef.current = false
 			}
+			// Note: We don't automatically set disableAutoScrollRef to true on scroll up here.
+			// It's set when the user explicitly interacts (wheel, toggle expansion).
+
+			setShowScrollToBottom(disableAutoScrollRef.current && !atBottom)
 		}
-	}, [])
+	}, [scrollContainerRef])
+
+	const handleWheel = useCallback(
+		(event: Event) => {
+			const wheelEvent = event as WheelEvent
+			const container = scrollContainerRef.current
+			// Check if the scroll event is happening within scroll container
+			if (container?.contains(wheelEvent.target as Node)) {
+				// User scrolled up
+				if (wheelEvent.deltaY < 0 && container.scrollTop > 0) {
+					disableAutoScrollRef.current = true
+					setShowScrollToBottom(true) // Show button immediately on scroll up
+				}
+				// User scrolled down but not to the absolute bottom yet
+				else if (wheelEvent.deltaY > 0) {
+					const { scrollTop, scrollHeight, clientHeight } = container
+					const atBottom = scrollHeight - scrollTop - clientHeight < 10
+					if (!atBottom) {
+						// If user scrolls down manually, keep auto-scroll disabled until they reach the bottom
+						disableAutoScrollRef.current = true
+						setShowScrollToBottom(true)
+					} else {
+						// Reached bottom via manual scroll, re-enable auto-scroll
+						disableAutoScrollRef.current = false
+						setShowScrollToBottom(false)
+					}
+				}
+			}
+		},
+		[scrollContainerRef],
+	)
 	useEvent("wheel", handleWheel, window, { passive: true }) // passive improves scrolling performance
 
 	// Effect to handle showing the checkpoint warning after a delay
@@ -1036,64 +1054,6 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	)
 
 	const placeholderText = task ? t("chat:typeMessage") : t("chat:typeTask")
-
-	const itemContent = useCallback(
-		(index: number, messageOrGroup: ClineMessage | ClineMessage[]) => {
-			// browser session group
-			if (Array.isArray(messageOrGroup)) {
-				return (
-					<BrowserSessionRow
-						messages={messageOrGroup}
-						isLast={index === groupedMessages.length - 1}
-						lastModifiedMessage={modifiedMessages.at(-1)}
-						onHeightChange={handleRowHeightChange}
-						isStreaming={isStreaming}
-						// Pass handlers for each message in the group
-						isExpanded={(messageTs: number) => expandedRows[messageTs] ?? false}
-						onToggleExpand={(messageTs: number) => {
-							setExpandedRows((prev) => ({
-								...prev,
-								[messageTs]: !prev[messageTs],
-							}))
-						}}
-					/>
-				)
-			}
-
-			// regular message
-			return (
-				<ChatRow
-					key={messageOrGroup.ts}
-					message={messageOrGroup}
-					isExpanded={expandedRows[messageOrGroup.ts] || false}
-					onToggleExpand={() => toggleRowExpansion(messageOrGroup.ts)}
-					lastModifiedMessage={modifiedMessages.at(-1)}
-					isLast={index === groupedMessages.length - 1}
-					onHeightChange={handleRowHeightChange}
-					isStreaming={isStreaming}
-					onSuggestionClick={(answer: string, event?: React.MouseEvent) => {
-						if (event?.shiftKey) {
-							// Always append to existing text, don't overwrite
-							setInputValue((currentValue) => {
-								return currentValue !== "" ? `${currentValue} \n${answer}` : answer
-							})
-						} else {
-							handleSendMessage(answer, [])
-						}
-					}}
-				/>
-			)
-		},
-		[
-			expandedRows,
-			modifiedMessages,
-			groupedMessages.length,
-			handleRowHeightChange,
-			isStreaming,
-			toggleRowExpansion,
-			handleSendMessage,
-		],
-	)
 
 	useEffect(() => {
 		// Only proceed if we have an ask and buttons are enabled
@@ -1162,6 +1122,21 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		}
 	}, [handleKeyDown])
 
+	// Defining handleSuggestionClick outside the map loop and memo-ing it here
+	const handleSuggestionClick = useCallback(
+		(answer: string, event?: React.MouseEvent) => {
+			if (event?.shiftKey) {
+				// Always append to existing text, don't overwrite
+				setInputValue((currentValue) => {
+					return currentValue !== "" ? `${currentValue} \n${answer}` : answer
+				})
+			} else {
+				handleSendMessage(answer, [])
+			}
+		},
+		[handleSendMessage, setInputValue], // handleSendMessage is memoized, setInputValue is stable
+	)
+
 	return (
 		<div
 			style={{
@@ -1217,17 +1192,17 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				</div>
 			)}
 
-			{/* 
+			{/*
 			// Flex layout explanation:
 			// 1. Content div above uses flex: "1 1 0" to:
-			//    - Grow to fill available space (flex-grow: 1) 
+			//    - Grow to fill available space (flex-grow: 1)
 			//    - Shrink when AutoApproveMenu needs space (flex-shrink: 1)
 			//    - Start from zero size (flex-basis: 0) to ensure proper distribution
 			//    minHeight: 0 allows it to shrink below its content height
 			//
 			// 2. AutoApproveMenu uses flex: "0 1 auto" to:
 			//    - Not grow beyond its content (flex-grow: 0)
-			//    - Shrink when viewport is small (flex-shrink: 1) 
+			//    - Shrink when viewport is small (flex-shrink: 1)
 			//    - Use its content size as basis (flex-basis: auto)
 			//    This ensures it takes its natural height when there's space
 			//    but becomes scrollable when the viewport is too small
@@ -1244,32 +1219,57 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 
 			{task && (
 				<>
-					<div style={{ flexGrow: 1, display: "flex" }} ref={scrollContainerRef}>
-						<Virtuoso
-							ref={virtuosoRef}
-							key={task.ts} // trick to make sure virtuoso re-renders when task changes, and we use initialTopMostItemIndex to start at the bottom
-							className="scrollable"
-							style={{
-								flexGrow: 1,
-								overflowY: "scroll", // always show scrollbar
-							}}
-							components={{
-								Footer: () => <div style={{ height: 5 }} />, // Add empty padding at the bottom
-							}}
-							// increasing top by 3_000 to prevent jumping around when user collapses a row
-							increaseViewportBy={{ top: 3_000, bottom: Number.MAX_SAFE_INTEGER }} // hack to make sure the last message is always rendered to get truly perfect scroll to bottom animation when new messages are added (Number.MAX_SAFE_INTEGER is safe for arithmetic operations, which is all virtuoso uses this value for in src/sizeRangeSystem.ts)
-							data={groupedMessages} // messages is the raw format returned by extension, modifiedMessages is the manipulated structure that combines certain messages of related type, and visibleMessages is the filtered structure that removes messages that should not be rendered
-							itemContent={itemContent}
-							atBottomStateChange={(isAtBottom) => {
-								setIsAtBottom(isAtBottom)
-								if (isAtBottom) {
-									disableAutoScrollRef.current = false
-								}
-								setShowScrollToBottom(disableAutoScrollRef.current && !isAtBottom)
-							}}
-							atBottomThreshold={10} // anything lower causes issues with followOutput
-							initialTopMostItemIndex={groupedMessages.length - 1}
-						/>
+					<div
+						ref={scrollContainerRef}
+						className="scrollable" // Keeping class incase it's used for styling
+						style={{
+							flexGrow: 1,
+							overflowY: "scroll", // Standard scrollable div
+							position: "relative", // Possibly Needed for scroll-to-bottom button positioning
+						}}
+						onScroll={handleScroll} // Adding scroll handler
+					>
+						{groupedMessages.map((messageOrGroup, index) => {
+							// Reusing the old logic from itemContent callback directly here
+							// browser session group
+							if (Array.isArray(messageOrGroup)) {
+								return (
+									// Optimization, applies CSS containment
+									<div style={{ contain: "content" }}>
+										<BrowserSessionRow
+											// Using a stable key, timestamp of the first message
+											key={messageOrGroup[0]?.ts || `group-${index}`}
+											messages={messageOrGroup}
+											isLast={index === groupedMessages.length - 1}
+											lastModifiedMessage={modifiedMessages.at(-1)}
+											onHeightChange={handleRowHeightChange}
+											isStreaming={isStreaming}
+											isExpanded={(messageTs: number) => expandedRows[messageTs] ?? false}
+											onToggleExpand={(messageTs: number) => toggleRowExpansion(messageTs)}
+										/>
+									</div>
+								)
+							}
+
+							// Regular message
+							return (
+								// Optimization, applies CSS containment
+								<div style={{ contain: "content" }}>
+									<ChatRow
+										key={messageOrGroup.ts}
+										message={messageOrGroup}
+										isExpanded={expandedRows[messageOrGroup.ts] || false}
+										onToggleExpand={() => toggleRowExpansion(messageOrGroup.ts)}
+										lastModifiedMessage={modifiedMessages.at(-1)}
+										isLast={index === groupedMessages.length - 1}
+										onHeightChange={handleRowHeightChange}
+										isStreaming={isStreaming}
+										onSuggestionClick={handleSuggestionClick} // Use the memoized callback
+									/>
+								</div>
+							)
+						})}
+						<div style={{ height: 5 }} />
 					</div>
 					<AutoApproveMenu />
 					{showScrollToBottom ? (
@@ -1280,8 +1280,10 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							}}>
 							<ScrollToBottomButton
 								onClick={() => {
+									// Ensure smooth scroll is called and reset disable flag
 									scrollToBottomSmooth()
 									disableAutoScrollRef.current = false
+									setShowScrollToBottom(false) // Hide button instantly
 								}}
 								title={t("chat:scrollToBottom")}>
 								<span className="codicon codicon-chevron-down" style={{ fontSize: "18px" }}></span>
@@ -1372,6 +1374,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				onSelectImages={selectImages}
 				shouldDisableImages={shouldDisableImages}
 				onHeightChange={() => {
+					// Scrolling to bottom if currently at bottom when text area resizes
 					if (isAtBottom) {
 						scrollToBottomAuto()
 					}

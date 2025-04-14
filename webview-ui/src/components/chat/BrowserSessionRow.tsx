@@ -419,85 +419,87 @@ interface BrowserSessionRowContentProps extends Omit<BrowserSessionRowProps, "me
 	isStreaming: boolean
 }
 
-const BrowserSessionRowContent = ({
-	message,
-	isExpanded,
-	onToggleExpand,
-	lastModifiedMessage,
-	isLast,
-	setMaxActionHeight,
-	isStreaming,
-}: BrowserSessionRowContentProps) => {
-	const { t } = useTranslation()
-	const headerStyle: React.CSSProperties = {
-		display: "flex",
-		alignItems: "center",
-		gap: "10px",
-		marginBottom: "10px",
-	}
+const BrowserSessionRowContent = memo(
+	({
+		message,
+		isExpanded,
+		onToggleExpand,
+		lastModifiedMessage,
+		isLast,
+		setMaxActionHeight,
+		isStreaming,
+	}: BrowserSessionRowContentProps) => {
+		const { t } = useTranslation()
+		const headerStyle: React.CSSProperties = {
+			display: "flex",
+			alignItems: "center",
+			gap: "10px",
+			marginBottom: "10px",
+		}
 
-	switch (message.type) {
-		case "say":
-			switch (message.say) {
-				case "api_req_started":
-				case "text":
-					return (
-						<div style={{ padding: "10px 0 10px 0" }}>
-							<ChatRowContent
-								message={message}
-								isExpanded={isExpanded(message.ts)}
-								onToggleExpand={() => {
-									if (message.say === "api_req_started") {
-										setMaxActionHeight(0)
-									}
-									onToggleExpand(message.ts)
-								}}
-								lastModifiedMessage={lastModifiedMessage}
-								isLast={isLast}
-								isStreaming={isStreaming}
+		switch (message.type) {
+			case "say":
+				switch (message.say) {
+					case "api_req_started":
+					case "text":
+						return (
+							<div style={{ padding: "10px 0 10px 0" }}>
+								<ChatRowContent
+									message={message}
+									isExpanded={isExpanded(message.ts)}
+									onToggleExpand={() => {
+										if (message.say === "api_req_started") {
+											setMaxActionHeight(0)
+										}
+										onToggleExpand(message.ts)
+									}}
+									lastModifiedMessage={lastModifiedMessage}
+									isLast={isLast}
+									isStreaming={isStreaming}
+								/>
+							</div>
+						)
+
+					case "browser_action":
+						const browserAction = JSON.parse(message.text || "{}") as ClineSayBrowserAction
+						return (
+							<BrowserActionBox
+								action={browserAction.action}
+								coordinate={browserAction.coordinate}
+								text={browserAction.text}
 							/>
-						</div>
-					)
+						)
 
-				case "browser_action":
-					const browserAction = JSON.parse(message.text || "{}") as ClineSayBrowserAction
-					return (
-						<BrowserActionBox
-							action={browserAction.action}
-							coordinate={browserAction.coordinate}
-							text={browserAction.text}
-						/>
-					)
+					default:
+						return null
+				}
 
-				default:
-					return null
-			}
+			case "ask":
+				switch (message.ask) {
+					case "browser_action_launch":
+						return (
+							<>
+								<div style={headerStyle}>
+									<span style={{ fontWeight: "bold" }}>{t("chat:browser.sessionStarted")}</span>
+								</div>
+								<div
+									style={{
+										borderRadius: 3,
+										border: "1px solid var(--vscode-editorGroup-border)",
+										overflow: "hidden",
+										backgroundColor: CODE_BLOCK_BG_COLOR,
+									}}>
+									<CodeBlock source={`${"```"}shell\n${message.text}\n${"```"}`} forceWrap={true} />
+								</div>
+							</>
+						)
 
-		case "ask":
-			switch (message.ask) {
-				case "browser_action_launch":
-					return (
-						<>
-							<div style={headerStyle}>
-								<span style={{ fontWeight: "bold" }}>{t("chat:browser.sessionStarted")}</span>
-							</div>
-							<div
-								style={{
-									borderRadius: 3,
-									border: "1px solid var(--vscode-editorGroup-border)",
-									overflow: "hidden",
-									backgroundColor: CODE_BLOCK_BG_COLOR,
-								}}>
-								<CodeBlock source={`${"```"}shell\n${message.text}\n${"```"}`} forceWrap={true} />
-							</div>
-						</>
-					)
-
-				default:
-					return null
-			}
-	}
-}
+					default:
+						return null
+				}
+		}
+	},
+)
 
 const BrowserActionBox = ({
 	action,

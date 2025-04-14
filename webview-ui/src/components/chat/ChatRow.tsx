@@ -74,638 +74,525 @@ const ChatRow = memo(
 
 export default ChatRow
 
-export const ChatRowContent = ({
-	message,
-	lastModifiedMessage,
-	isExpanded,
-	isLast,
-	isStreaming,
-	onToggleExpand,
-	onSuggestionClick,
-}: ChatRowContentProps) => {
-	const { t } = useTranslation()
-	const { mcpServers, alwaysAllowMcp, currentCheckpoint } = useExtensionState()
-	const [reasoningCollapsed, setReasoningCollapsed] = useState(true)
-	const [isDiffErrorExpanded, setIsDiffErrorExpanded] = useState(false)
-	const [showCopySuccess, setShowCopySuccess] = useState(false)
-	const { copyWithFeedback } = useCopyToClipboard()
+export const ChatRowContent = memo(
+	({
+		message,
+		lastModifiedMessage,
+		isExpanded,
+		isLast,
+		isStreaming,
+		onToggleExpand,
+		onSuggestionClick,
+	}: ChatRowContentProps) => {
+		const { t } = useTranslation()
+		const { mcpServers, alwaysAllowMcp, currentCheckpoint } = useExtensionState()
+		const [reasoningCollapsed, setReasoningCollapsed] = useState(true)
+		const [isDiffErrorExpanded, setIsDiffErrorExpanded] = useState(false)
+		const [showCopySuccess, setShowCopySuccess] = useState(false)
+		const { copyWithFeedback } = useCopyToClipboard()
 
-	const [cost, apiReqCancelReason, apiReqStreamingFailedMessage] = useMemo(() => {
-		if (message.text !== null && message.text !== undefined && message.say === "api_req_started") {
-			const info: ClineApiReqInfo = JSON.parse(message.text)
-			return [info.cost, info.cancelReason, info.streamingFailedMessage]
-		}
+		const [cost, apiReqCancelReason, apiReqStreamingFailedMessage] = useMemo(() => {
+			if (message.text !== null && message.text !== undefined && message.say === "api_req_started") {
+				const info: ClineApiReqInfo = JSON.parse(message.text)
+				return [info.cost, info.cancelReason, info.streamingFailedMessage]
+			}
 
-		return [undefined, undefined, undefined]
-	}, [message.text, message.say])
+			return [undefined, undefined, undefined]
+		}, [message.text, message.say])
 
-	// When resuming task, last wont be api_req_failed but a resume_task
-	// message, so api_req_started will show loading spinner. That's why we just
-	// remove the last api_req_started that failed without streaming anything.
-	const apiRequestFailedMessage =
-		isLast && lastModifiedMessage?.ask === "api_req_failed" // if request is retried then the latest message is a api_req_retried
-			? lastModifiedMessage?.text
-			: undefined
+		// When resuming task, last wont be api_req_failed but a resume_task
+		// message, so api_req_started will show loading spinner. That's why we just
+		// remove the last api_req_started that failed without streaming anything.
+		const apiRequestFailedMessage =
+			isLast && lastModifiedMessage?.ask === "api_req_failed" // if request is retried then the latest message is a api_req_retried
+				? lastModifiedMessage?.text
+				: undefined
 
-	const isCommandExecuting =
-		isLast && lastModifiedMessage?.ask === "command" && lastModifiedMessage?.text?.includes(COMMAND_OUTPUT_STRING)
+		const isCommandExecuting =
+			isLast &&
+			lastModifiedMessage?.ask === "command" &&
+			lastModifiedMessage?.text?.includes(COMMAND_OUTPUT_STRING)
 
-	const isMcpServerResponding = isLast && lastModifiedMessage?.say === "mcp_server_request_started"
+		const isMcpServerResponding = isLast && lastModifiedMessage?.say === "mcp_server_request_started"
 
-	const type = message.type === "ask" ? message.ask : message.say
+		const type = message.type === "ask" ? message.ask : message.say
 
-	const normalColor = "var(--vscode-foreground)"
-	const errorColor = "var(--vscode-errorForeground)"
-	const successColor = "var(--vscode-charts-green)"
-	const cancelledColor = "var(--vscode-descriptionForeground)"
+		const normalColor = "var(--vscode-foreground)"
+		const errorColor = "var(--vscode-errorForeground)"
+		const successColor = "var(--vscode-charts-green)"
+		const cancelledColor = "var(--vscode-descriptionForeground)"
 
-	const [icon, title] = useMemo(() => {
-		switch (type) {
-			case "error":
-				return [
-					<span
-						className="codicon codicon-error"
-						style={{ color: errorColor, marginBottom: "-1.5px" }}></span>,
-					<span style={{ color: errorColor, fontWeight: "bold" }}>{t("chat:error")}</span>,
-				]
-			case "mistake_limit_reached":
-				return [
-					<span
-						className="codicon codicon-error"
-						style={{ color: errorColor, marginBottom: "-1.5px" }}></span>,
-					<span style={{ color: errorColor, fontWeight: "bold" }}>{t("chat:troubleMessage")}</span>,
-				]
-			case "command":
-				return [
-					isCommandExecuting ? (
-						<ProgressIndicator />
-					) : (
+		const [icon, title] = useMemo(() => {
+			switch (type) {
+				case "error":
+					return [
 						<span
-							className="codicon codicon-terminal"
-							style={{ color: normalColor, marginBottom: "-1.5px" }}></span>
-					),
-					<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:runCommand.title")}:</span>,
-				]
-			case "use_mcp_server":
-				const mcpServerUse = JSON.parse(message.text || "{}") as ClineAskUseMcpServer
-				return [
-					isMcpServerResponding ? (
-						<ProgressIndicator />
-					) : (
+							className="codicon codicon-error"
+							style={{ color: errorColor, marginBottom: "-1.5px" }}></span>,
+						<span style={{ color: errorColor, fontWeight: "bold" }}>{t("chat:error")}</span>,
+					]
+				case "mistake_limit_reached":
+					return [
 						<span
-							className="codicon codicon-server"
-							style={{ color: normalColor, marginBottom: "-1.5px" }}></span>
-					),
-					<span style={{ color: normalColor, fontWeight: "bold" }}>
-						{mcpServerUse.type === "use_mcp_tool"
-							? t("chat:mcp.wantsToUseTool", { serverName: mcpServerUse.serverName })
-							: t("chat:mcp.wantsToAccessResource", { serverName: mcpServerUse.serverName })}
-					</span>,
-				]
-			case "completion_result":
-				return [
-					<span
-						className="codicon codicon-check"
-						style={{ color: successColor, marginBottom: "-1.5px" }}></span>,
-					<span style={{ color: successColor, fontWeight: "bold" }}>{t("chat:taskCompleted")}</span>,
-				]
-			case "api_req_retry_delayed":
-				return []
-			case "api_req_started":
-				const getIconSpan = (iconName: string, color: string) => (
-					<div
-						style={{
-							width: 16,
-							height: 16,
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "center",
-						}}>
+							className="codicon codicon-error"
+							style={{ color: errorColor, marginBottom: "-1.5px" }}></span>,
+						<span style={{ color: errorColor, fontWeight: "bold" }}>{t("chat:troubleMessage")}</span>,
+					]
+				case "command":
+					return [
+						isCommandExecuting ? (
+							<ProgressIndicator />
+						) : (
+							<span
+								className="codicon codicon-terminal"
+								style={{ color: normalColor, marginBottom: "-1.5px" }}></span>
+						),
+						<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:runCommand.title")}:</span>,
+					]
+				case "use_mcp_server":
+					const mcpServerUse = JSON.parse(message.text || "{}") as ClineAskUseMcpServer
+					return [
+						isMcpServerResponding ? (
+							<ProgressIndicator />
+						) : (
+							<span
+								className="codicon codicon-server"
+								style={{ color: normalColor, marginBottom: "-1.5px" }}></span>
+						),
+						<span style={{ color: normalColor, fontWeight: "bold" }}>
+							{mcpServerUse.type === "use_mcp_tool"
+								? t("chat:mcp.wantsToUseTool", { serverName: mcpServerUse.serverName })
+								: t("chat:mcp.wantsToAccessResource", { serverName: mcpServerUse.serverName })}
+						</span>,
+					]
+				case "completion_result":
+					return [
 						<span
-							className={`codicon codicon-${iconName}`}
+							className="codicon codicon-check"
+							style={{ color: successColor, marginBottom: "-1.5px" }}></span>,
+						<span style={{ color: successColor, fontWeight: "bold" }}>{t("chat:taskCompleted")}</span>,
+					]
+				case "api_req_retry_delayed":
+					return []
+				case "api_req_started":
+					const getIconSpan = (iconName: string, color: string) => (
+						<div
 							style={{
-								color,
-								fontSize: 16,
-								marginBottom: "-1.5px",
-							}}></span>
-					</div>
-				)
-				return [
-					apiReqCancelReason !== null && apiReqCancelReason !== undefined ? (
-						apiReqCancelReason === "user_cancelled" ? (
-							getIconSpan("error", cancelledColor)
-						) : (
+								width: 16,
+								height: 16,
+								display: "flex",
+								alignItems: "center",
+								justifyContent: "center",
+							}}>
+							<span
+								className={`codicon codicon-${iconName}`}
+								style={{
+									color,
+									fontSize: 16,
+									marginBottom: "-1.5px",
+								}}></span>
+						</div>
+					)
+					return [
+						apiReqCancelReason !== null && apiReqCancelReason !== undefined ? (
+							apiReqCancelReason === "user_cancelled" ? (
+								getIconSpan("error", cancelledColor)
+							) : (
+								getIconSpan("error", errorColor)
+							)
+						) : cost !== null && cost !== undefined ? (
+							getIconSpan("check", successColor)
+						) : apiRequestFailedMessage ? (
 							getIconSpan("error", errorColor)
-						)
-					) : cost !== null && cost !== undefined ? (
-						getIconSpan("check", successColor)
-					) : apiRequestFailedMessage ? (
-						getIconSpan("error", errorColor)
-					) : (
-						<ProgressIndicator />
-					),
-					apiReqCancelReason !== null && apiReqCancelReason !== undefined ? (
-						apiReqCancelReason === "user_cancelled" ? (
-							<span style={{ color: normalColor, fontWeight: "bold" }}>
-								{t("chat:apiRequest.cancelled")}
-							</span>
 						) : (
-							<span style={{ color: errorColor, fontWeight: "bold" }}>
-								{t("chat:apiRequest.streamingFailed")}
+							<ProgressIndicator />
+						),
+						apiReqCancelReason !== null && apiReqCancelReason !== undefined ? (
+							apiReqCancelReason === "user_cancelled" ? (
+								<span style={{ color: normalColor, fontWeight: "bold" }}>
+									{t("chat:apiRequest.cancelled")}
+								</span>
+							) : (
+								<span style={{ color: errorColor, fontWeight: "bold" }}>
+									{t("chat:apiRequest.streamingFailed")}
+								</span>
+							)
+						) : cost !== null && cost !== undefined ? (
+							<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:apiRequest.title")}</span>
+						) : apiRequestFailedMessage ? (
+							<span style={{ color: errorColor, fontWeight: "bold" }}>{t("chat:apiRequest.failed")}</span>
+						) : (
+							<span style={{ color: normalColor, fontWeight: "bold" }}>
+								{t("chat:apiRequest.streaming")}
 							</span>
-						)
-					) : cost !== null && cost !== undefined ? (
-						<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:apiRequest.title")}</span>
-					) : apiRequestFailedMessage ? (
-						<span style={{ color: errorColor, fontWeight: "bold" }}>{t("chat:apiRequest.failed")}</span>
-					) : (
-						<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:apiRequest.streaming")}</span>
-					),
-				]
-			case "followup":
-				return [
-					<span
-						className="codicon codicon-question"
-						style={{ color: normalColor, marginBottom: "-1.5px" }}></span>,
-					<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:questions.hasQuestion")}</span>,
-				]
-			default:
-				return [null, null]
+						),
+					]
+				case "followup":
+					return [
+						<span
+							className="codicon codicon-question"
+							style={{ color: normalColor, marginBottom: "-1.5px" }}></span>,
+						<span style={{ color: normalColor, fontWeight: "bold" }}>
+							{t("chat:questions.hasQuestion")}
+						</span>,
+					]
+				default:
+					return [null, null]
+			}
+		}, [
+			type,
+			isCommandExecuting,
+			message,
+			isMcpServerResponding,
+			apiReqCancelReason,
+			cost,
+			apiRequestFailedMessage,
+			t,
+		])
+
+		const headerStyle: React.CSSProperties = {
+			display: "flex",
+			alignItems: "center",
+			gap: "10px",
+			marginBottom: "10px",
 		}
-	}, [type, isCommandExecuting, message, isMcpServerResponding, apiReqCancelReason, cost, apiRequestFailedMessage, t])
 
-	const headerStyle: React.CSSProperties = {
-		display: "flex",
-		alignItems: "center",
-		gap: "10px",
-		marginBottom: "10px",
-	}
-
-	const pStyle: React.CSSProperties = {
-		margin: 0,
-		whiteSpace: "pre-wrap",
-		wordBreak: "break-word",
-		overflowWrap: "anywhere",
-	}
-
-	const tool = useMemo(() => {
-		if (message.ask === "tool" || message.say === "tool") {
-			return JSON.parse(message.text || "{}") as ClineSayTool
+		const pStyle: React.CSSProperties = {
+			margin: 0,
+			whiteSpace: "pre-wrap",
+			wordBreak: "break-word",
+			overflowWrap: "anywhere",
 		}
-		return null
-	}, [message.ask, message.say, message.text])
 
-	const followUpData = useMemo(() => {
-		if (message.type === "ask" && message.ask === "followup" && !message.partial) {
-			return JSON.parse(message.text || "{}")
-		}
-		return null
-	}, [message.type, message.ask, message.partial, message.text])
+		const tool = useMemo(() => {
+			if (message.ask === "tool" || message.say === "tool") {
+				return JSON.parse(message.text || "{}") as ClineSayTool
+			}
+			return null
+		}, [message.ask, message.say, message.text])
 
-	if (tool) {
-		const toolIcon = (name: string) => (
-			<span
-				className={`codicon codicon-${name}`}
-				style={{ color: "var(--vscode-foreground)", marginBottom: "-1.5px" }}></span>
-		)
+		const followUpData = useMemo(() => {
+			if (message.type === "ask" && message.ask === "followup" && !message.partial) {
+				return JSON.parse(message.text || "{}")
+			}
+			return null
+		}, [message.type, message.ask, message.partial, message.text])
 
-		switch (tool.tool) {
-			case "editedExistingFile":
-			case "appliedDiff":
-				return (
-					<>
-						<div style={headerStyle}>
-							{toolIcon(tool.tool === "appliedDiff" ? "diff" : "edit")}
-							<span style={{ fontWeight: "bold" }}>
-								{tool.isOutsideWorkspace
-									? t("chat:fileOperations.wantsToEditOutsideWorkspace")
-									: t("chat:fileOperations.wantsToEdit")}
-							</span>
-						</div>
-						<CodeAccordian
-							progressStatus={message.progressStatus}
-							isLoading={message.partial}
-							diff={tool.diff!}
-							path={tool.path!}
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
-						/>
-					</>
-				)
-			case "newFileCreated":
-				return (
-					<>
-						<div style={headerStyle}>
-							{toolIcon("new-file")}
-							<span style={{ fontWeight: "bold" }}>{t("chat:fileOperations.wantsToCreate")}</span>
-						</div>
-						<CodeAccordian
-							isLoading={message.partial}
-							code={tool.content!}
-							path={tool.path!}
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
-						/>
-					</>
-				)
-			case "readFile":
-				return (
-					<>
-						<div style={headerStyle}>
-							{toolIcon("file-code")}
-							<span style={{ fontWeight: "bold" }}>
-								{message.type === "ask"
-									? tool.isOutsideWorkspace
-										? t("chat:fileOperations.wantsToReadOutsideWorkspace")
-										: t("chat:fileOperations.wantsToRead")
-									: t("chat:fileOperations.didRead")}
-							</span>
-						</div>
-						{/* <CodeAccordian
+		if (tool) {
+			const toolIcon = (name: string) => (
+				<span
+					className={`codicon codicon-${name}`}
+					style={{ color: "var(--vscode-foreground)", marginBottom: "-1.5px" }}></span>
+			)
+
+			switch (tool.tool) {
+				case "editedExistingFile":
+				case "appliedDiff":
+					return (
+						<>
+							<div style={headerStyle}>
+								{toolIcon(tool.tool === "appliedDiff" ? "diff" : "edit")}
+								<span style={{ fontWeight: "bold" }}>
+									{tool.isOutsideWorkspace
+										? t("chat:fileOperations.wantsToEditOutsideWorkspace")
+										: t("chat:fileOperations.wantsToEdit")}
+								</span>
+							</div>
+							<CodeAccordian
+								progressStatus={message.progressStatus}
+								isLoading={message.partial}
+								diff={tool.diff!}
+								path={tool.path!}
+								isExpanded={isExpanded}
+								onToggleExpand={onToggleExpand}
+							/>
+						</>
+					)
+				case "newFileCreated":
+					return (
+						<>
+							<div style={headerStyle}>
+								{toolIcon("new-file")}
+								<span style={{ fontWeight: "bold" }}>{t("chat:fileOperations.wantsToCreate")}</span>
+							</div>
+							<CodeAccordian
+								isLoading={message.partial}
+								code={tool.content!}
+								path={tool.path!}
+								isExpanded={isExpanded}
+								onToggleExpand={onToggleExpand}
+							/>
+						</>
+					)
+				case "readFile":
+					return (
+						<>
+							<div style={headerStyle}>
+								{toolIcon("file-code")}
+								<span style={{ fontWeight: "bold" }}>
+									{message.type === "ask"
+										? tool.isOutsideWorkspace
+											? t("chat:fileOperations.wantsToReadOutsideWorkspace")
+											: t("chat:fileOperations.wantsToRead")
+										: t("chat:fileOperations.didRead")}
+								</span>
+							</div>
+							{/* <CodeAccordian
 							code={tool.content!}
 							path={tool.path!}
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
 						/> */}
-						<div
-							style={{
-								borderRadius: 3,
-								backgroundColor: CODE_BLOCK_BG_COLOR,
-								overflow: "hidden",
-								border: "1px solid var(--vscode-editorGroup-border)",
-							}}>
 							<div
 								style={{
-									color: "var(--vscode-descriptionForeground)",
-									display: "flex",
-									alignItems: "center",
-									padding: "9px 10px",
-									cursor: "pointer",
-									userSelect: "none",
-									WebkitUserSelect: "none",
-									MozUserSelect: "none",
-									msUserSelect: "none",
-								}}
-								onClick={() => {
-									vscode.postMessage({ type: "openFile", text: tool.content })
-								}}>
-								{tool.path?.startsWith(".") && <span>.</span>}
-								<span
-									style={{
-										whiteSpace: "nowrap",
-										overflow: "hidden",
-										textOverflow: "ellipsis",
-										marginRight: "8px",
-										direction: "rtl",
-										textAlign: "left",
-									}}>
-									{removeLeadingNonAlphanumeric(tool.path ?? "") + "\u200E"}
-									{tool.reason}
-								</span>
-								<div style={{ flexGrow: 1 }}></div>
-								<span
-									className={`codicon codicon-link-external`}
-									style={{ fontSize: 13.5, margin: "1px 0" }}></span>
-							</div>
-						</div>
-					</>
-				)
-			case "fetchInstructions":
-				return (
-					<>
-						<div style={headerStyle}>
-							{toolIcon("file-code")}
-							<span style={{ fontWeight: "bold" }}>{t("chat:instructions.wantsToFetch")}</span>
-						</div>
-						<CodeAccordian
-							isLoading={message.partial}
-							code={tool.content!}
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
-						/>
-					</>
-				)
-			case "listFilesTopLevel":
-				return (
-					<>
-						<div style={headerStyle}>
-							{toolIcon("folder-opened")}
-							<span style={{ fontWeight: "bold" }}>
-								{message.type === "ask"
-									? t("chat:directoryOperations.wantsToViewTopLevel")
-									: t("chat:directoryOperations.didViewTopLevel")}
-							</span>
-						</div>
-						<CodeAccordian
-							code={tool.content!}
-							path={tool.path!}
-							language="shell-session"
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
-						/>
-					</>
-				)
-			case "listFilesRecursive":
-				return (
-					<>
-						<div style={headerStyle}>
-							{toolIcon("folder-opened")}
-							<span style={{ fontWeight: "bold" }}>
-								{message.type === "ask"
-									? t("chat:directoryOperations.wantsToViewRecursive")
-									: t("chat:directoryOperations.didViewRecursive")}
-							</span>
-						</div>
-						<CodeAccordian
-							code={tool.content!}
-							path={tool.path!}
-							language="shell-session"
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
-						/>
-					</>
-				)
-			case "listCodeDefinitionNames":
-				return (
-					<>
-						<div style={headerStyle}>
-							{toolIcon("file-code")}
-							<span style={{ fontWeight: "bold" }}>
-								{message.type === "ask"
-									? t("chat:directoryOperations.wantsToViewDefinitions")
-									: t("chat:directoryOperations.didViewDefinitions")}
-							</span>
-						</div>
-						<CodeAccordian
-							code={tool.content!}
-							path={tool.path!}
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
-						/>
-					</>
-				)
-			case "searchFiles":
-				return (
-					<>
-						<div style={headerStyle}>
-							{toolIcon("search")}
-							<span style={{ fontWeight: "bold" }}>
-								{message.type === "ask" ? (
-									<Trans
-										i18nKey="chat:directoryOperations.wantsToSearch"
-										components={{ code: <code>{tool.regex}</code> }}
-										values={{ regex: tool.regex }}
-									/>
-								) : (
-									<Trans
-										i18nKey="chat:directoryOperations.didSearch"
-										components={{ code: <code>{tool.regex}</code> }}
-										values={{ regex: tool.regex }}
-									/>
-								)}
-							</span>
-						</div>
-						<CodeAccordian
-							code={tool.content!}
-							path={tool.path! + (tool.filePattern ? `/(${tool.filePattern})` : "")}
-							language="plaintext"
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
-						/>
-					</>
-				)
-			case "switchMode":
-				return (
-					<>
-						<div style={headerStyle}>
-							{toolIcon("symbol-enum")}
-							<span style={{ fontWeight: "bold" }}>
-								{message.type === "ask" ? (
-									<>
-										{tool.reason ? (
-											<Trans
-												i18nKey="chat:modes.wantsToSwitchWithReason"
-												components={{ code: <code>{tool.mode}</code> }}
-												values={{ mode: tool.mode, reason: tool.reason }}
-											/>
-										) : (
-											<Trans
-												i18nKey="chat:modes.wantsToSwitch"
-												components={{ code: <code>{tool.mode}</code> }}
-												values={{ mode: tool.mode }}
-											/>
-										)}
-									</>
-								) : (
-									<>
-										{tool.reason ? (
-											<Trans
-												i18nKey="chat:modes.didSwitchWithReason"
-												components={{ code: <code>{tool.mode}</code> }}
-												values={{ mode: tool.mode, reason: tool.reason }}
-											/>
-										) : (
-											<Trans
-												i18nKey="chat:modes.didSwitch"
-												components={{ code: <code>{tool.mode}</code> }}
-												values={{ mode: tool.mode }}
-											/>
-										)}
-									</>
-								)}
-							</span>
-						</div>
-					</>
-				)
-			case "newTask":
-				return (
-					<>
-						<div style={headerStyle}>
-							{toolIcon("tasklist")}
-							<span style={{ fontWeight: "bold" }}>
-								<Trans
-									i18nKey="chat:subtasks.wantsToCreate"
-									components={{ code: <code>{tool.mode}</code> }}
-									values={{ mode: tool.mode }}
-								/>
-							</span>
-						</div>
-						<div
-							style={{
-								marginTop: "4px",
-								backgroundColor: "var(--vscode-badge-background)",
-								border: "1px solid var(--vscode-badge-background)",
-								borderRadius: "4px 4px 0 0",
-								overflow: "hidden",
-								marginBottom: "2px",
-							}}>
-							<div
-								style={{
-									padding: "9px 10px 9px 14px",
-									backgroundColor: "var(--vscode-badge-background)",
-									borderBottom: "1px solid var(--vscode-editorGroup-border)",
-									fontWeight: "bold",
-									fontSize: "var(--vscode-font-size)",
-									color: "var(--vscode-badge-foreground)",
-									display: "flex",
-									alignItems: "center",
-									gap: "6px",
-								}}>
-								<span className="codicon codicon-arrow-right"></span>
-								{t("chat:subtasks.newTaskContent")}
-							</div>
-							<div style={{ padding: "12px 16px", backgroundColor: "var(--vscode-editor-background)" }}>
-								<MarkdownBlock markdown={tool.content} />
-							</div>
-						</div>
-					</>
-				)
-			case "finishTask":
-				return (
-					<>
-						<div style={headerStyle}>
-							{toolIcon("check-all")}
-							<span style={{ fontWeight: "bold" }}>{t("chat:subtasks.wantsToFinish")}</span>
-						</div>
-						<div
-							style={{
-								marginTop: "4px",
-								backgroundColor: "var(--vscode-editor-background)",
-								border: "1px solid var(--vscode-badge-background)",
-								borderRadius: "4px",
-								overflow: "hidden",
-								marginBottom: "8px",
-							}}>
-							<div
-								style={{
-									padding: "9px 10px 9px 14px",
-									backgroundColor: "var(--vscode-badge-background)",
-									borderBottom: "1px solid var(--vscode-editorGroup-border)",
-									fontWeight: "bold",
-									fontSize: "var(--vscode-font-size)",
-									color: "var(--vscode-badge-foreground)",
-									display: "flex",
-									alignItems: "center",
-									gap: "6px",
-								}}>
-								<span className="codicon codicon-check"></span>
-								{t("chat:subtasks.completionContent")}
-							</div>
-							<div style={{ padding: "12px 16px", backgroundColor: "var(--vscode-editor-background)" }}>
-								<MarkdownBlock markdown={t("chat:subtasks.completionInstructions")} />
-							</div>
-						</div>
-					</>
-				)
-			default:
-				return null
-		}
-	}
-
-	switch (message.type) {
-		case "say":
-			switch (message.say) {
-				case "diff_error":
-					return (
-						<div>
-							<div
-								style={{
-									marginTop: "0px",
+									borderRadius: 3,
+									backgroundColor: CODE_BLOCK_BG_COLOR,
 									overflow: "hidden",
-									marginBottom: "8px",
+									border: "1px solid var(--vscode-editorGroup-border)",
 								}}>
 								<div
 									style={{
-										borderBottom: isDiffErrorExpanded
-											? "1px solid var(--vscode-editorGroup-border)"
-											: "none",
-										fontWeight: "normal",
-										fontSize: "var(--vscode-font-size)",
-										color: "var(--vscode-editor-foreground)",
+										color: "var(--vscode-descriptionForeground)",
 										display: "flex",
 										alignItems: "center",
-										justifyContent: "space-between",
+										padding: "9px 10px",
 										cursor: "pointer",
+										userSelect: "none",
+										WebkitUserSelect: "none",
+										MozUserSelect: "none",
+										msUserSelect: "none",
 									}}
-									onClick={() => setIsDiffErrorExpanded(!isDiffErrorExpanded)}>
-									<div
+									onClick={() => {
+										vscode.postMessage({ type: "openFile", text: tool.content })
+									}}>
+									{tool.path?.startsWith(".") && <span>.</span>}
+									<span
 										style={{
-											display: "flex",
-											alignItems: "center",
-											gap: "10px",
-											flexGrow: 1,
+											whiteSpace: "nowrap",
+											overflow: "hidden",
+											textOverflow: "ellipsis",
+											marginRight: "8px",
+											direction: "rtl",
+											textAlign: "left",
 										}}>
-										<span
-											className="codicon codicon-warning"
-											style={{
-												color: "var(--vscode-editorWarning-foreground)",
-												opacity: 0.8,
-												fontSize: 16,
-												marginBottom: "-1.5px",
-											}}></span>
-										<span style={{ fontWeight: "bold" }}>{t("chat:diffError.title")}</span>
-									</div>
-									<div style={{ display: "flex", alignItems: "center" }}>
-										<VSCodeButton
-											appearance="icon"
-											style={{
-												padding: "3px",
-												height: "24px",
-												marginRight: "4px",
-												color: "var(--vscode-editor-foreground)",
-												display: "flex",
-												alignItems: "center",
-												justifyContent: "center",
-												background: "transparent",
-											}}
-											onClick={(e) => {
-												e.stopPropagation()
-
-												// Call copyWithFeedback and handle the Promise
-												copyWithFeedback(message.text || "").then((success) => {
-													if (success) {
-														// Show checkmark
-														setShowCopySuccess(true)
-
-														// Reset after a brief delay
-														setTimeout(() => {
-															setShowCopySuccess(false)
-														}, 1000)
-													}
-												})
-											}}>
-											<span
-												className={`codicon codicon-${showCopySuccess ? "check" : "copy"}`}></span>
-										</VSCodeButton>
-										<span
-											className={`codicon codicon-chevron-${isDiffErrorExpanded ? "up" : "down"}`}></span>
-									</div>
+										{removeLeadingNonAlphanumeric(tool.path ?? "") + "\u200E"}
+										{tool.reason}
+									</span>
+									<div style={{ flexGrow: 1 }}></div>
+									<span
+										className={`codicon codicon-link-external`}
+										style={{ fontSize: 13.5, margin: "1px 0" }}></span>
 								</div>
-								{isDiffErrorExpanded && (
-									<div
-										style={{
-											padding: "8px",
-											backgroundColor: "var(--vscode-editor-background)",
-											borderTop: "none",
-										}}>
-										<CodeBlock
-											source={`${"```"}plaintext\n${message.text || ""}\n${"```"}`}
-											forceWrap={true}
-										/>
-									</div>
-								)}
 							</div>
-						</div>
+						</>
 					)
-				case "subtask_result":
+				case "fetchInstructions":
 					return (
-						<div>
+						<>
+							<div style={headerStyle}>
+								{toolIcon("file-code")}
+								<span style={{ fontWeight: "bold" }}>{t("chat:instructions.wantsToFetch")}</span>
+							</div>
+							<CodeAccordian
+								isLoading={message.partial}
+								code={tool.content!}
+								isExpanded={isExpanded}
+								onToggleExpand={onToggleExpand}
+							/>
+						</>
+					)
+				case "listFilesTopLevel":
+					return (
+						<>
+							<div style={headerStyle}>
+								{toolIcon("folder-opened")}
+								<span style={{ fontWeight: "bold" }}>
+									{message.type === "ask"
+										? t("chat:directoryOperations.wantsToViewTopLevel")
+										: t("chat:directoryOperations.didViewTopLevel")}
+								</span>
+							</div>
+							<CodeAccordian
+								code={tool.content!}
+								path={tool.path!}
+								language="shell-session"
+								isExpanded={isExpanded}
+								onToggleExpand={onToggleExpand}
+							/>
+						</>
+					)
+				case "listFilesRecursive":
+					return (
+						<>
+							<div style={headerStyle}>
+								{toolIcon("folder-opened")}
+								<span style={{ fontWeight: "bold" }}>
+									{message.type === "ask"
+										? t("chat:directoryOperations.wantsToViewRecursive")
+										: t("chat:directoryOperations.didViewRecursive")}
+								</span>
+							</div>
+							<CodeAccordian
+								code={tool.content!}
+								path={tool.path!}
+								language="shell-session"
+								isExpanded={isExpanded}
+								onToggleExpand={onToggleExpand}
+							/>
+						</>
+					)
+				case "listCodeDefinitionNames":
+					return (
+						<>
+							<div style={headerStyle}>
+								{toolIcon("file-code")}
+								<span style={{ fontWeight: "bold" }}>
+									{message.type === "ask"
+										? t("chat:directoryOperations.wantsToViewDefinitions")
+										: t("chat:directoryOperations.didViewDefinitions")}
+								</span>
+							</div>
+							<CodeAccordian
+								code={tool.content!}
+								path={tool.path!}
+								isExpanded={isExpanded}
+								onToggleExpand={onToggleExpand}
+							/>
+						</>
+					)
+				case "searchFiles":
+					return (
+						<>
+							<div style={headerStyle}>
+								{toolIcon("search")}
+								<span style={{ fontWeight: "bold" }}>
+									{message.type === "ask" ? (
+										<Trans
+											i18nKey="chat:directoryOperations.wantsToSearch"
+											components={{ code: <code>{tool.regex}</code> }}
+											values={{ regex: tool.regex }}
+										/>
+									) : (
+										<Trans
+											i18nKey="chat:directoryOperations.didSearch"
+											components={{ code: <code>{tool.regex}</code> }}
+											values={{ regex: tool.regex }}
+										/>
+									)}
+								</span>
+							</div>
+							<CodeAccordian
+								code={tool.content!}
+								path={tool.path! + (tool.filePattern ? `/(${tool.filePattern})` : "")}
+								language="plaintext"
+								isExpanded={isExpanded}
+								onToggleExpand={onToggleExpand}
+							/>
+						</>
+					)
+				case "switchMode":
+					return (
+						<>
+							<div style={headerStyle}>
+								{toolIcon("symbol-enum")}
+								<span style={{ fontWeight: "bold" }}>
+									{message.type === "ask" ? (
+										<>
+											{tool.reason ? (
+												<Trans
+													i18nKey="chat:modes.wantsToSwitchWithReason"
+													components={{ code: <code>{tool.mode}</code> }}
+													values={{ mode: tool.mode, reason: tool.reason }}
+												/>
+											) : (
+												<Trans
+													i18nKey="chat:modes.wantsToSwitch"
+													components={{ code: <code>{tool.mode}</code> }}
+													values={{ mode: tool.mode }}
+												/>
+											)}
+										</>
+									) : (
+										<>
+											{tool.reason ? (
+												<Trans
+													i18nKey="chat:modes.didSwitchWithReason"
+													components={{ code: <code>{tool.mode}</code> }}
+													values={{ mode: tool.mode, reason: tool.reason }}
+												/>
+											) : (
+												<Trans
+													i18nKey="chat:modes.didSwitch"
+													components={{ code: <code>{tool.mode}</code> }}
+													values={{ mode: tool.mode }}
+												/>
+											)}
+										</>
+									)}
+								</span>
+							</div>
+						</>
+					)
+				case "newTask":
+					return (
+						<>
+							<div style={headerStyle}>
+								{toolIcon("tasklist")}
+								<span style={{ fontWeight: "bold" }}>
+									<Trans
+										i18nKey="chat:subtasks.wantsToCreate"
+										components={{ code: <code>{tool.mode}</code> }}
+										values={{ mode: tool.mode }}
+									/>
+								</span>
+							</div>
 							<div
 								style={{
-									marginTop: "0px",
+									marginTop: "4px",
 									backgroundColor: "var(--vscode-badge-background)",
 									border: "1px solid var(--vscode-badge-background)",
-									borderRadius: "0 0 4px 4px",
+									borderRadius: "4px 4px 0 0",
+									overflow: "hidden",
+									marginBottom: "2px",
+								}}>
+								<div
+									style={{
+										padding: "9px 10px 9px 14px",
+										backgroundColor: "var(--vscode-badge-background)",
+										borderBottom: "1px solid var(--vscode-editorGroup-border)",
+										fontWeight: "bold",
+										fontSize: "var(--vscode-font-size)",
+										color: "var(--vscode-badge-foreground)",
+										display: "flex",
+										alignItems: "center",
+										gap: "6px",
+									}}>
+									<span className="codicon codicon-arrow-right"></span>
+									{t("chat:subtasks.newTaskContent")}
+								</div>
+								<div
+									style={{
+										padding: "12px 16px",
+										backgroundColor: "var(--vscode-editor-background)",
+									}}>
+									<MarkdownBlock markdown={tool.content} />
+								</div>
+							</div>
+						</>
+					)
+				case "finishTask":
+					return (
+						<>
+							<div style={headerStyle}>
+								{toolIcon("check-all")}
+								<span style={{ fontWeight: "bold" }}>{t("chat:subtasks.wantsToFinish")}</span>
+							</div>
+							<div
+								style={{
+									marginTop: "4px",
+									backgroundColor: "var(--vscode-editor-background)",
+									border: "1px solid var(--vscode-badge-background)",
+									borderRadius: "4px",
 									overflow: "hidden",
 									marginBottom: "8px",
 								}}>
@@ -721,78 +608,217 @@ export const ChatRowContent = ({
 										alignItems: "center",
 										gap: "6px",
 									}}>
-									<span className="codicon codicon-arrow-left"></span>
-									{t("chat:subtasks.resultContent")}
+									<span className="codicon codicon-check"></span>
+									{t("chat:subtasks.completionContent")}
 								</div>
 								<div
 									style={{
 										padding: "12px 16px",
 										backgroundColor: "var(--vscode-editor-background)",
 									}}>
-									<MarkdownBlock markdown={message.text} />
+									<MarkdownBlock markdown={t("chat:subtasks.completionInstructions")} />
 								</div>
 							</div>
-						</div>
+						</>
 					)
-				case "reasoning":
-					return (
-						<ReasoningBlock
-							content={message.text || ""}
-							elapsed={isLast && isStreaming ? Date.now() - message.ts : undefined}
-							isCollapsed={reasoningCollapsed}
-							onToggleCollapse={() => setReasoningCollapsed(!reasoningCollapsed)}
-						/>
-					)
-				case "api_req_started":
-					return (
-						<>
-							<div
-								style={{
-									...headerStyle,
-									marginBottom:
-										((cost === null || cost === undefined) && apiRequestFailedMessage) ||
-										apiReqStreamingFailedMessage
-											? 10
-											: 0,
-									justifyContent: "space-between",
-									cursor: "pointer",
-									userSelect: "none",
-									WebkitUserSelect: "none",
-									MozUserSelect: "none",
-									msUserSelect: "none",
-								}}
-								onClick={onToggleExpand}>
-								<div style={{ display: "flex", alignItems: "center", gap: "10px", flexGrow: 1 }}>
-									{icon}
-									{title}
-									<VSCodeBadge
-										style={{ opacity: cost !== null && cost !== undefined && cost > 0 ? 1 : 0 }}>
-										${Number(cost || 0)?.toFixed(4)}
-									</VSCodeBadge>
-								</div>
-								<span className={`codicon codicon-chevron-${isExpanded ? "up" : "down"}`}></span>
-							</div>
-							{(((cost === null || cost === undefined) && apiRequestFailedMessage) ||
-								apiReqStreamingFailedMessage) && (
-								<>
-									<p style={{ ...pStyle, color: "var(--vscode-errorForeground)" }}>
-										{apiRequestFailedMessage || apiReqStreamingFailedMessage}
-										{apiRequestFailedMessage?.toLowerCase().includes("powershell") && (
-											<>
-												<br />
-												<br />
-												{t("chat:powershell.issues")}{" "}
-												<a
-													href="https://github.com/cline/cline/wiki/TroubleShooting-%E2%80%90-%22PowerShell-is-not-recognized-as-an-internal-or-external-command%22"
-													style={{ color: "inherit", textDecoration: "underline" }}>
-													troubleshooting guide
-												</a>
-												.
-											</>
-										)}
-									</p>
+				default:
+					return null
+			}
+		}
 
-									{/* {apiProvider === "" && (
+		switch (message.type) {
+			case "say":
+				switch (message.say) {
+					case "diff_error":
+						return (
+							<div>
+								<div
+									style={{
+										marginTop: "0px",
+										overflow: "hidden",
+										marginBottom: "8px",
+									}}>
+									<div
+										style={{
+											borderBottom: isDiffErrorExpanded
+												? "1px solid var(--vscode-editorGroup-border)"
+												: "none",
+											fontWeight: "normal",
+											fontSize: "var(--vscode-font-size)",
+											color: "var(--vscode-editor-foreground)",
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "space-between",
+											cursor: "pointer",
+										}}
+										onClick={() => setIsDiffErrorExpanded(!isDiffErrorExpanded)}>
+										<div
+											style={{
+												display: "flex",
+												alignItems: "center",
+												gap: "10px",
+												flexGrow: 1,
+											}}>
+											<span
+												className="codicon codicon-warning"
+												style={{
+													color: "var(--vscode-editorWarning-foreground)",
+													opacity: 0.8,
+													fontSize: 16,
+													marginBottom: "-1.5px",
+												}}></span>
+											<span style={{ fontWeight: "bold" }}>{t("chat:diffError.title")}</span>
+										</div>
+										<div style={{ display: "flex", alignItems: "center" }}>
+											<VSCodeButton
+												appearance="icon"
+												style={{
+													padding: "3px",
+													height: "24px",
+													marginRight: "4px",
+													color: "var(--vscode-editor-foreground)",
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
+													background: "transparent",
+												}}
+												onClick={(e) => {
+													e.stopPropagation()
+
+													// Call copyWithFeedback and handle the Promise
+													copyWithFeedback(message.text || "").then((success) => {
+														if (success) {
+															// Show checkmark
+															setShowCopySuccess(true)
+
+															// Reset after a brief delay
+															setTimeout(() => {
+																setShowCopySuccess(false)
+															}, 1000)
+														}
+													})
+												}}>
+												<span
+													className={`codicon codicon-${showCopySuccess ? "check" : "copy"}`}></span>
+											</VSCodeButton>
+											<span
+												className={`codicon codicon-chevron-${isDiffErrorExpanded ? "up" : "down"}`}></span>
+										</div>
+									</div>
+									{isDiffErrorExpanded && (
+										<div
+											style={{
+												padding: "8px",
+												backgroundColor: "var(--vscode-editor-background)",
+												borderTop: "none",
+											}}>
+											<CodeBlock
+												source={`${"```"}plaintext\n${message.text || ""}\n${"```"}`}
+												forceWrap={true}
+											/>
+										</div>
+									)}
+								</div>
+							</div>
+						)
+					case "subtask_result":
+						return (
+							<div>
+								<div
+									style={{
+										marginTop: "0px",
+										backgroundColor: "var(--vscode-badge-background)",
+										border: "1px solid var(--vscode-badge-background)",
+										borderRadius: "0 0 4px 4px",
+										overflow: "hidden",
+										marginBottom: "8px",
+									}}>
+									<div
+										style={{
+											padding: "9px 10px 9px 14px",
+											backgroundColor: "var(--vscode-badge-background)",
+											borderBottom: "1px solid var(--vscode-editorGroup-border)",
+											fontWeight: "bold",
+											fontSize: "var(--vscode-font-size)",
+											color: "var(--vscode-badge-foreground)",
+											display: "flex",
+											alignItems: "center",
+											gap: "6px",
+										}}>
+										<span className="codicon codicon-arrow-left"></span>
+										{t("chat:subtasks.resultContent")}
+									</div>
+									<div
+										style={{
+											padding: "12px 16px",
+											backgroundColor: "var(--vscode-editor-background)",
+										}}>
+										<MarkdownBlock markdown={message.text} />
+									</div>
+								</div>
+							</div>
+						)
+					case "reasoning":
+						return (
+							<ReasoningBlock
+								content={message.text || ""}
+								elapsed={isLast && isStreaming ? Date.now() - message.ts : undefined}
+								isCollapsed={reasoningCollapsed}
+								onToggleCollapse={() => setReasoningCollapsed(!reasoningCollapsed)}
+							/>
+						)
+					case "api_req_started":
+						return (
+							<>
+								<div
+									style={{
+										...headerStyle,
+										marginBottom:
+											((cost === null || cost === undefined) && apiRequestFailedMessage) ||
+											apiReqStreamingFailedMessage
+												? 10
+												: 0,
+										justifyContent: "space-between",
+										cursor: "pointer",
+										userSelect: "none",
+										WebkitUserSelect: "none",
+										MozUserSelect: "none",
+										msUserSelect: "none",
+									}}
+									onClick={onToggleExpand}>
+									<div style={{ display: "flex", alignItems: "center", gap: "10px", flexGrow: 1 }}>
+										{icon}
+										{title}
+										<VSCodeBadge
+											style={{
+												opacity: cost !== null && cost !== undefined && cost > 0 ? 1 : 0,
+											}}>
+											${Number(cost || 0)?.toFixed(4)}
+										</VSCodeBadge>
+									</div>
+									<span className={`codicon codicon-chevron-${isExpanded ? "up" : "down"}`}></span>
+								</div>
+								{(((cost === null || cost === undefined) && apiRequestFailedMessage) ||
+									apiReqStreamingFailedMessage) && (
+									<>
+										<p style={{ ...pStyle, color: "var(--vscode-errorForeground)" }}>
+											{apiRequestFailedMessage || apiReqStreamingFailedMessage}
+											{apiRequestFailedMessage?.toLowerCase().includes("powershell") && (
+												<>
+													<br />
+													<br />
+													{t("chat:powershell.issues")}{" "}
+													<a
+														href="https://github.com/cline/cline/wiki/TroubleShooting-%E2%80%90-%22PowerShell-is-not-recognized-as-an-internal-or-external-command%22"
+														style={{ color: "inherit", textDecoration: "underline" }}>
+														troubleshooting guide
+													</a>
+													.
+												</>
+											)}
+										</p>
+
+										{/* {apiProvider === "" && (
 											<div
 												style={{
 													display: "flex",
@@ -824,415 +850,416 @@ export const ChatRowContent = ({
 												</span>
 											</div>
 										)} */}
-								</>
-							)}
+									</>
+								)}
 
-							{isExpanded && (
-								<div style={{ marginTop: "10px" }}>
-									<CodeAccordian
-										code={JSON.parse(message.text || "{}").request}
-										language="markdown"
-										isExpanded={true}
-										onToggleExpand={onToggleExpand}
-									/>
-								</div>
-							)}
-						</>
-					)
-				case "api_req_finished":
-					return null // we should never see this message type
-				case "text":
-					return (
-						<div>
-							<Markdown markdown={message.text} partial={message.partial} />
-						</div>
-					)
-				case "user_feedback":
-					return (
-						<div
-							style={{
-								backgroundColor: "var(--vscode-badge-background)",
-								color: "var(--vscode-badge-foreground)",
-								borderRadius: "3px",
-								padding: "9px",
-								overflow: "hidden",
-								whiteSpace: "pre-wrap",
-								wordBreak: "break-word",
-								overflowWrap: "anywhere",
-							}}>
-							<div
-								style={{
-									display: "flex",
-									justifyContent: "space-between",
-									alignItems: "flex-start",
-									gap: "10px",
-								}}>
-								<span style={{ display: "block", flexGrow: 1, padding: "4px" }}>
-									{highlightMentions(message.text)}
-								</span>
-								<VSCodeButton
-									appearance="icon"
-									style={{
-										padding: "3px",
-										flexShrink: 0,
-										height: "24px",
-										marginTop: "-3px",
-										marginBottom: "-3px",
-										marginRight: "-6px",
-									}}
-									disabled={isStreaming}
-									onClick={(e) => {
-										e.stopPropagation()
-										vscode.postMessage({
-											type: "deleteMessage",
-											value: message.ts,
-										})
-									}}>
-									<span className="codicon codicon-trash"></span>
-								</VSCodeButton>
-							</div>
-							{message.images && message.images.length > 0 && (
-								<Thumbnails images={message.images} style={{ marginTop: "8px" }} />
-							)}
-						</div>
-					)
-				case "user_feedback_diff":
-					const tool = JSON.parse(message.text || "{}") as ClineSayTool
-					return (
-						<div
-							style={{
-								marginTop: -10,
-								width: "100%",
-							}}>
-							<CodeAccordian
-								diff={tool.diff!}
-								isFeedback={true}
-								isExpanded={isExpanded}
-								onToggleExpand={onToggleExpand}
-							/>
-						</div>
-					)
-				case "error":
-					return (
-						<>
-							{title && (
-								<div style={headerStyle}>
-									{icon}
-									{title}
-								</div>
-							)}
-							<p style={{ ...pStyle, color: "var(--vscode-errorForeground)" }}>{message.text}</p>
-						</>
-					)
-				case "completion_result":
-					return (
-						<>
-							<div style={headerStyle}>
-								{icon}
-								{title}
-							</div>
-							<div style={{ color: "var(--vscode-charts-green)", paddingTop: 10 }}>
-								<Markdown markdown={message.text} />
-							</div>
-						</>
-					)
-				case "shell_integration_warning":
-					return (
-						<>
-							<div
-								style={{
-									display: "flex",
-									flexDirection: "column",
-									backgroundColor: "rgba(255, 191, 0, 0.1)",
-									padding: 8,
-									borderRadius: 3,
-									fontSize: 12,
-								}}>
-								<div style={{ display: "flex", alignItems: "center", marginBottom: 4 }}>
-									<i
-										className="codicon codicon-warning"
-										style={{
-											marginRight: 8,
-											fontSize: 18,
-											color: "#FFA500",
-										}}></i>
-									<span style={{ fontWeight: 500, color: "#FFA500" }}>
-										{t("chat:shellIntegration.unavailable")}
-									</span>
-								</div>
-								<div>
-									<strong>{message.text}</strong>
-									<br />
-									<div>
-										&bull; {t("chat:shellIntegration.checkSettings")}
-										<br />
-										&bull; {t("chat:shellIntegration.updateVSCode")} (
-										<code>CMD/CTRL + Shift + P</code> → "Update")
-										<br />
-										&bull; {t("chat:shellIntegration.supportedShell")} (
-										<code>CMD/CTRL + Shift + P</code> → "Terminal: Select Default Profile")
+								{isExpanded && (
+									<div style={{ marginTop: "10px" }}>
+										<CodeAccordian
+											code={JSON.parse(message.text || "{}").request}
+											language="markdown"
+											isExpanded={true}
+											onToggleExpand={onToggleExpand}
+										/>
 									</div>
-									<br />
-									<a
-										href="http://docs.roocode.com/troubleshooting/shell-integration/"
-										style={{ color: "inherit", textDecoration: "underline" }}>
-										{t("chat:shellIntegration.troubleshooting")}
-									</a>
-								</div>
+								)}
+							</>
+						)
+					case "api_req_finished":
+						return null // we should never see this message type
+					case "text":
+						return (
+							<div>
+								<Markdown markdown={message.text} partial={message.partial} />
 							</div>
-						</>
-					)
-				case "mcp_server_response":
-					return (
-						<>
-							<div style={{ paddingTop: 0 }}>
+						)
+					case "user_feedback":
+						return (
+							<div
+								style={{
+									backgroundColor: "var(--vscode-badge-background)",
+									color: "var(--vscode-badge-foreground)",
+									borderRadius: "3px",
+									padding: "9px",
+									overflow: "hidden",
+									whiteSpace: "pre-wrap",
+									wordBreak: "break-word",
+									overflowWrap: "anywhere",
+								}}>
 								<div
 									style={{
-										marginBottom: "4px",
-										opacity: 0.8,
-										fontSize: "12px",
-										textTransform: "uppercase",
+										display: "flex",
+										justifyContent: "space-between",
+										alignItems: "flex-start",
+										gap: "10px",
 									}}>
-									{t("chat:response")}
+									<span style={{ display: "block", flexGrow: 1, padding: "4px" }}>
+										{highlightMentions(message.text)}
+									</span>
+									<VSCodeButton
+										appearance="icon"
+										style={{
+											padding: "3px",
+											flexShrink: 0,
+											height: "24px",
+											marginTop: "-3px",
+											marginBottom: "-3px",
+											marginRight: "-6px",
+										}}
+										disabled={isStreaming}
+										onClick={(e) => {
+											e.stopPropagation()
+											vscode.postMessage({
+												type: "deleteMessage",
+												value: message.ts,
+											})
+										}}>
+										<span className="codicon codicon-trash"></span>
+									</VSCodeButton>
 								</div>
+								{message.images && message.images.length > 0 && (
+									<Thumbnails images={message.images} style={{ marginTop: "8px" }} />
+								)}
+							</div>
+						)
+					case "user_feedback_diff":
+						const tool = JSON.parse(message.text || "{}") as ClineSayTool
+						return (
+							<div
+								style={{
+									marginTop: -10,
+									width: "100%",
+								}}>
 								<CodeAccordian
-									code={message.text}
-									language="json"
-									isExpanded={true}
+									diff={tool.diff!}
+									isFeedback={true}
+									isExpanded={isExpanded}
 									onToggleExpand={onToggleExpand}
 								/>
 							</div>
-						</>
-					)
-				case "checkpoint_saved":
-					return (
-						<CheckpointSaved
-							ts={message.ts!}
-							commitHash={message.text!}
-							currentHash={currentCheckpoint}
-							checkpoint={message.checkpoint}
-						/>
-					)
-				default:
-					return (
-						<>
-							{title && (
-								<div style={headerStyle}>
-									{icon}
-									{title}
-								</div>
-							)}
-							<div style={{ paddingTop: 10 }}>
-								<Markdown markdown={message.text} partial={message.partial} />
-							</div>
-						</>
-					)
-			}
-		case "ask":
-			switch (message.ask) {
-				case "mistake_limit_reached":
-					return (
-						<>
-							<div style={headerStyle}>
-								{icon}
-								{title}
-							</div>
-							<p style={{ ...pStyle, color: "var(--vscode-errorForeground)" }}>{message.text}</p>
-						</>
-					)
-				case "command":
-					const splitMessage = (text: string) => {
-						const outputIndex = text.indexOf(COMMAND_OUTPUT_STRING)
-						if (outputIndex === -1) {
-							return { command: text, output: "" }
-						}
-						return {
-							command: text.slice(0, outputIndex).trim(),
-							output: text
-								.slice(outputIndex + COMMAND_OUTPUT_STRING.length)
-								.trim()
-								.split("")
-								.map((char) => {
-									switch (char) {
-										case "\t":
-											return "→   "
-										case "\b":
-											return "⌫"
-										case "\f":
-											return "⏏"
-										case "\v":
-											return "⇳"
-										default:
-											return char
-									}
-								})
-								.join(""),
-						}
-					}
-
-					const { command, output } = splitMessage(message.text || "")
-					return (
-						<>
-							<div style={headerStyle}>
-								{icon}
-								{title}
-							</div>
-							{/* <Terminal
-								rawOutput={command + (output ? "\n" + output : "")}
-								shouldAllowInput={!!isCommandExecuting && output.length > 0}
-							/> */}
-							<div
-								style={{
-									borderRadius: 3,
-									border: "1px solid var(--vscode-editorGroup-border)",
-									overflow: "hidden",
-									backgroundColor: CODE_BLOCK_BG_COLOR,
-								}}>
-								<CodeBlock source={`${"```"}shell\n${command}\n${"```"}`} forceWrap={true} />
-								{output.length > 0 && (
-									<div style={{ width: "100%" }}>
-										<div
-											onClick={onToggleExpand}
-											style={{
-												display: "flex",
-												alignItems: "center",
-												gap: "4px",
-												width: "100%",
-												justifyContent: "flex-start",
-												cursor: "pointer",
-												padding: `2px 8px ${isExpanded ? 0 : 8}px 8px`,
-											}}>
-											<span
-												className={`codicon codicon-chevron-${isExpanded ? "down" : "right"}`}></span>
-											<span style={{ fontSize: "0.8em" }}>{t("chat:commandOutput")}</span>
-										</div>
-										{isExpanded && <CommandOutputViewer output={output} />}
+						)
+					case "error":
+						return (
+							<>
+								{title && (
+									<div style={headerStyle}>
+										{icon}
+										{title}
 									</div>
 								)}
-							</div>
-						</>
-					)
-				case "use_mcp_server":
-					const useMcpServer = JSON.parse(message.text || "{}") as ClineAskUseMcpServer
-					const server = mcpServers.find((server) => server.name === useMcpServer.serverName)
-					return (
-						<>
-							<div style={headerStyle}>
-								{icon}
-								{title}
-							</div>
-
-							<div
-								style={{
-									background: "var(--vscode-textCodeBlock-background)",
-									borderRadius: "3px",
-									padding: "8px 10px",
-									marginTop: "8px",
-								}}>
-								{useMcpServer.type === "access_mcp_resource" && (
-									<McpResourceRow
-										item={{
-											// Use the matched resource/template details, with fallbacks
-											...(findMatchingResourceOrTemplate(
-												useMcpServer.uri || "",
-												server?.resources,
-												server?.resourceTemplates,
-											) || {
-												name: "",
-												mimeType: "",
-												description: "",
-											}),
-											// Always use the actual URI from the request
-											uri: useMcpServer.uri || "",
-										}}
-									/>
-								)}
-
-								{useMcpServer.type === "use_mcp_tool" && (
-									<>
-										<div onClick={(e) => e.stopPropagation()}>
-											<McpToolRow
-												tool={{
-													name: useMcpServer.toolName || "",
-													description:
-														server?.tools?.find(
-															(tool) => tool.name === useMcpServer.toolName,
-														)?.description || "",
-													alwaysAllow:
-														server?.tools?.find(
-															(tool) => tool.name === useMcpServer.toolName,
-														)?.alwaysAllow || false,
-												}}
-												serverName={useMcpServer.serverName}
-												alwaysAllowMcp={alwaysAllowMcp}
-											/>
-										</div>
-										{useMcpServer.arguments && useMcpServer.arguments !== "{}" && (
-											<div style={{ marginTop: "8px" }}>
-												<div
-													style={{
-														marginBottom: "4px",
-														opacity: 0.8,
-														fontSize: "12px",
-														textTransform: "uppercase",
-													}}>
-													{t("chat:arguments")}
-												</div>
-												<CodeAccordian
-													code={useMcpServer.arguments}
-													language="json"
-													isExpanded={true}
-													onToggleExpand={onToggleExpand}
-												/>
-											</div>
-										)}
-									</>
-								)}
-							</div>
-						</>
-					)
-				case "completion_result":
-					if (message.text) {
+								<p style={{ ...pStyle, color: "var(--vscode-errorForeground)" }}>{message.text}</p>
+							</>
+						)
+					case "completion_result":
 						return (
-							<div>
+							<>
 								<div style={headerStyle}>
 									{icon}
 									{title}
 								</div>
 								<div style={{ color: "var(--vscode-charts-green)", paddingTop: 10 }}>
+									<Markdown markdown={message.text} />
+								</div>
+							</>
+						)
+					case "shell_integration_warning":
+						return (
+							<>
+								<div
+									style={{
+										display: "flex",
+										flexDirection: "column",
+										backgroundColor: "rgba(255, 191, 0, 0.1)",
+										padding: 8,
+										borderRadius: 3,
+										fontSize: 12,
+									}}>
+									<div style={{ display: "flex", alignItems: "center", marginBottom: 4 }}>
+										<i
+											className="codicon codicon-warning"
+											style={{
+												marginRight: 8,
+												fontSize: 18,
+												color: "#FFA500",
+											}}></i>
+										<span style={{ fontWeight: 500, color: "#FFA500" }}>
+											{t("chat:shellIntegration.unavailable")}
+										</span>
+									</div>
+									<div>
+										<strong>{message.text}</strong>
+										<br />
+										<div>
+											&bull; {t("chat:shellIntegration.checkSettings")}
+											<br />
+											&bull; {t("chat:shellIntegration.updateVSCode")} (
+											<code>CMD/CTRL + Shift + P</code> → "Update")
+											<br />
+											&bull; {t("chat:shellIntegration.supportedShell")} (
+											<code>CMD/CTRL + Shift + P</code> → "Terminal: Select Default Profile")
+										</div>
+										<br />
+										<a
+											href="http://docs.roocode.com/troubleshooting/shell-integration/"
+											style={{ color: "inherit", textDecoration: "underline" }}>
+											{t("chat:shellIntegration.troubleshooting")}
+										</a>
+									</div>
+								</div>
+							</>
+						)
+					case "mcp_server_response":
+						return (
+							<>
+								<div style={{ paddingTop: 0 }}>
+									<div
+										style={{
+											marginBottom: "4px",
+											opacity: 0.8,
+											fontSize: "12px",
+											textTransform: "uppercase",
+										}}>
+										{t("chat:response")}
+									</div>
+									<CodeAccordian
+										code={message.text}
+										language="json"
+										isExpanded={true}
+										onToggleExpand={onToggleExpand}
+									/>
+								</div>
+							</>
+						)
+					case "checkpoint_saved":
+						return (
+							<CheckpointSaved
+								ts={message.ts!}
+								commitHash={message.text!}
+								currentHash={currentCheckpoint}
+								checkpoint={message.checkpoint}
+							/>
+						)
+					default:
+						return (
+							<>
+								{title && (
+									<div style={headerStyle}>
+										{icon}
+										{title}
+									</div>
+								)}
+								<div style={{ paddingTop: 10 }}>
 									<Markdown markdown={message.text} partial={message.partial} />
 								</div>
-							</div>
+							</>
 						)
-					} else {
-						return null // Don't render anything when we get a completion_result ask without text
-					}
-				case "followup":
-					return (
-						<>
-							{title && (
+				}
+			case "ask":
+				switch (message.ask) {
+					case "mistake_limit_reached":
+						return (
+							<>
 								<div style={headerStyle}>
 									{icon}
 									{title}
 								</div>
-							)}
-							<div style={{ paddingTop: 10, paddingBottom: 15 }}>
-								<Markdown
-									markdown={message.partial === true ? message?.text : followUpData?.question}
+								<p style={{ ...pStyle, color: "var(--vscode-errorForeground)" }}>{message.text}</p>
+							</>
+						)
+					case "command":
+						const splitMessage = (text: string) => {
+							const outputIndex = text.indexOf(COMMAND_OUTPUT_STRING)
+							if (outputIndex === -1) {
+								return { command: text, output: "" }
+							}
+							return {
+								command: text.slice(0, outputIndex).trim(),
+								output: text
+									.slice(outputIndex + COMMAND_OUTPUT_STRING.length)
+									.trim()
+									.split("")
+									.map((char) => {
+										switch (char) {
+											case "\t":
+												return "→   "
+											case "\b":
+												return "⌫"
+											case "\f":
+												return "⏏"
+											case "\v":
+												return "⇳"
+											default:
+												return char
+										}
+									})
+									.join(""),
+							}
+						}
+
+						const { command, output } = splitMessage(message.text || "")
+						return (
+							<>
+								<div style={headerStyle}>
+									{icon}
+									{title}
+								</div>
+								{/* <Terminal
+								rawOutput={command + (output ? "\n" + output : "")}
+								shouldAllowInput={!!isCommandExecuting && output.length > 0}
+							/> */}
+								<div
+									style={{
+										borderRadius: 3,
+										border: "1px solid var(--vscode-editorGroup-border)",
+										overflow: "hidden",
+										backgroundColor: CODE_BLOCK_BG_COLOR,
+									}}>
+									<CodeBlock source={`${"```"}shell\n${command}\n${"```"}`} forceWrap={true} />
+									{output.length > 0 && (
+										<div style={{ width: "100%" }}>
+											<div
+												onClick={onToggleExpand}
+												style={{
+													display: "flex",
+													alignItems: "center",
+													gap: "4px",
+													width: "100%",
+													justifyContent: "flex-start",
+													cursor: "pointer",
+													padding: `2px 8px ${isExpanded ? 0 : 8}px 8px`,
+												}}>
+												<span
+													className={`codicon codicon-chevron-${isExpanded ? "down" : "right"}`}></span>
+												<span style={{ fontSize: "0.8em" }}>{t("chat:commandOutput")}</span>
+											</div>
+											{isExpanded && <CommandOutputViewer output={output} />}
+										</div>
+									)}
+								</div>
+							</>
+						)
+					case "use_mcp_server":
+						const useMcpServer = JSON.parse(message.text || "{}") as ClineAskUseMcpServer
+						const server = mcpServers.find((server) => server.name === useMcpServer.serverName)
+						return (
+							<>
+								<div style={headerStyle}>
+									{icon}
+									{title}
+								</div>
+
+								<div
+									style={{
+										background: "var(--vscode-textCodeBlock-background)",
+										borderRadius: "3px",
+										padding: "8px 10px",
+										marginTop: "8px",
+									}}>
+									{useMcpServer.type === "access_mcp_resource" && (
+										<McpResourceRow
+											item={{
+												// Use the matched resource/template details, with fallbacks
+												...(findMatchingResourceOrTemplate(
+													useMcpServer.uri || "",
+													server?.resources,
+													server?.resourceTemplates,
+												) || {
+													name: "",
+													mimeType: "",
+													description: "",
+												}),
+												// Always use the actual URI from the request
+												uri: useMcpServer.uri || "",
+											}}
+										/>
+									)}
+
+									{useMcpServer.type === "use_mcp_tool" && (
+										<>
+											<div onClick={(e) => e.stopPropagation()}>
+												<McpToolRow
+													tool={{
+														name: useMcpServer.toolName || "",
+														description:
+															server?.tools?.find(
+																(tool) => tool.name === useMcpServer.toolName,
+															)?.description || "",
+														alwaysAllow:
+															server?.tools?.find(
+																(tool) => tool.name === useMcpServer.toolName,
+															)?.alwaysAllow || false,
+													}}
+													serverName={useMcpServer.serverName}
+													alwaysAllowMcp={alwaysAllowMcp}
+												/>
+											</div>
+											{useMcpServer.arguments && useMcpServer.arguments !== "{}" && (
+												<div style={{ marginTop: "8px" }}>
+													<div
+														style={{
+															marginBottom: "4px",
+															opacity: 0.8,
+															fontSize: "12px",
+															textTransform: "uppercase",
+														}}>
+														{t("chat:arguments")}
+													</div>
+													<CodeAccordian
+														code={useMcpServer.arguments}
+														language="json"
+														isExpanded={true}
+														onToggleExpand={onToggleExpand}
+													/>
+												</div>
+											)}
+										</>
+									)}
+								</div>
+							</>
+						)
+					case "completion_result":
+						if (message.text) {
+							return (
+								<div>
+									<div style={headerStyle}>
+										{icon}
+										{title}
+									</div>
+									<div style={{ color: "var(--vscode-charts-green)", paddingTop: 10 }}>
+										<Markdown markdown={message.text} partial={message.partial} />
+									</div>
+								</div>
+							)
+						} else {
+							return null // Don't render anything when we get a completion_result ask without text
+						}
+					case "followup":
+						return (
+							<>
+								{title && (
+									<div style={headerStyle}>
+										{icon}
+										{title}
+									</div>
+								)}
+								<div style={{ paddingTop: 10, paddingBottom: 15 }}>
+									<Markdown
+										markdown={message.partial === true ? message?.text : followUpData?.question}
+									/>
+								</div>
+								<FollowUpSuggest
+									suggestions={followUpData?.suggest}
+									onSuggestionClick={onSuggestionClick}
+									ts={message?.ts}
 								/>
-							</div>
-							<FollowUpSuggest
-								suggestions={followUpData?.suggest}
-								onSuggestionClick={onSuggestionClick}
-								ts={message?.ts}
-							/>
-						</>
-					)
-				default:
-					return null
-			}
-	}
-}
+							</>
+						)
+					default:
+						return null
+				}
+		}
+	},
+)
 
 export const ProgressIndicator = () => (
 	<div
