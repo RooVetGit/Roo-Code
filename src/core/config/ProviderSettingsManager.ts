@@ -334,8 +334,7 @@ export class ProviderSettingsManager {
 
 			const apiConfigs = Object.entries(providerProfiles.apiConfigs).reduce(
 				(acc, [key, apiConfig]) => {
-					// Use .strict() to ensure only defined fields are allowed
-					const result = providerSettingsWithIdSchema.strict().safeParse(apiConfig)
+					const result = providerSettingsWithIdSchema.safeParse(apiConfig)
 					return result.success ? { ...acc, [key]: result.data } : acc
 				},
 				{} as Record<string, ProviderSettingsWithId>,
