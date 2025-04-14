@@ -874,7 +874,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			debounce(
 				() => {
 					const container = scrollContainerRef.current
-					if (container) {
+					if (container && typeof container.scrollTo === "function") {
 						container.scrollTo({
 							top: container.scrollHeight,
 							behavior: "smooth",
