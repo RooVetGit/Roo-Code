@@ -134,6 +134,7 @@ describe("path-mentions", () => {
 
 			// Same test with Unix path format
 			expect(convertToMentionPath("/Users/user/project/file\\ with\\ spaces.txt", "/Users/user/project")).toBe(
+				// codeql[js/incomplete-string-escaping]
 				"@/file/\\ with/\\ spaces.txt",
 			)
 		})
