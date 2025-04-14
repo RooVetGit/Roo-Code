@@ -68,11 +68,17 @@ describe("ProviderSettingsManager", () => {
 				JSON.stringify({
 					currentApiConfigName: "default",
 					apiConfigs: {
+						// Provide a minimal valid structure (missing ID)
 						default: {
-							config: {},
+							apiProvider: "openai", // Example provider
+							openAiModelId: "gpt-4", // Corresponding model field
+							rateLimitSeconds: 0,
 						},
+						// Provide a minimal valid structure (missing ID)
 						test: {
 							apiProvider: "anthropic",
+							apiModelId: "claude-instant-1", // Corresponding model field
+							rateLimitSeconds: 0,
 						},
 					},
 				}),
@@ -94,19 +100,24 @@ describe("ProviderSettingsManager", () => {
 				JSON.stringify({
 					currentApiConfigName: "default",
 					apiConfigs: {
+						// Valid structure, missing rateLimitSeconds
 						default: {
-							config: {},
-							id: "default",
+							apiProvider: "openai",
+							openAiModelId: "gpt-4",
+							id: "default-id", // Needs an ID for migration test structure
 							rateLimitSeconds: undefined,
 						},
+						// Valid structure, missing rateLimitSeconds and ID (ID will be generated)
 						test: {
 							apiProvider: "anthropic",
+							apiModelId: "claude-instant-1",
 							rateLimitSeconds: undefined,
 						},
+						// Valid structure, existing rateLimitSeconds
 						existing: {
 							apiProvider: "anthropic",
-							// this should not really be possible, unless someone has loaded a hand edited config,
-							// but we don't overwrite so we'll check that
+							apiModelId: "claude-instant-1",
+							id: "existing-id", // Needs an ID
 							rateLimitSeconds: 43,
 						},
 					},
@@ -422,11 +433,13 @@ describe("ProviderSettingsManager", () => {
 				JSON.stringify({
 					currentApiConfigName: "default",
 					apiConfigs: {
+						// Provide a valid structure for 'test'
 						test: {
-							config: {
-								apiProvider: "anthropic",
-							},
-							id: "test-id",
+							apiProvider: "anthropic",
+							apiModelId: "claude-instant-1",
+							apiKey: "test-key",
+							rateLimitSeconds: 0,
+							id: "test-id", // Keep ID as loadConfig uses it
 						},
 					},
 				}),
@@ -436,6 +449,54 @@ describe("ProviderSettingsManager", () => {
 			await expect(providerSettingsManager.loadConfig("test")).rejects.toThrow(
 				"Failed to load config: Error: Failed to write provider profiles to secrets: Error: Storage failed",
 			)
+		})
+
+		it("should remove invalid profiles during load", async () => {
+			const invalidConfig = {
+				currentApiConfigName: "valid",
+				apiConfigs: {
+					valid: {
+						apiProvider: "anthropic",
+						apiKey: "valid-key",
+						// id: "valid-id", // ID is added by the manager, not part of the schema input
+						apiModelId: "claude-3-opus-20240229", // Correct field name for Anthropic model
+						rateLimitSeconds: 0, // Generic field, should be fine
+					},
+					invalid: {
+						// Missing required fields like apiProvider or apiKey
+						id: "invalid-id",
+						someOtherField: "value",
+					},
+					anotherInvalid: "not an object", // Incorrect type
+				},
+				migrations: {
+					rateLimitSecondsMigrated: true,
+				},
+			}
+
+			mockSecrets.get.mockResolvedValue(JSON.stringify(invalidConfig))
+
+			// Load a valid config - this should trigger the cleanup
+			// Note: loadConfig itself doesn't clean, initialization does.
+			// We need to call initialize to trigger the load and cleanup.
+			await providerSettingsManager.initialize()
+
+			// Check that the stored config was updated and invalid profiles removed
+			// Initialize calls store multiple times potentially (migration, id generation, cleanup)
+			// We need to find the call that reflects the final cleaned state.
+			// The last call to store should contain the cleaned config.
+			const storeCalls = mockSecrets.store.mock.calls
+			expect(storeCalls.length).toBeGreaterThan(0) // Ensure store was called at least once
+			const finalStoredConfigJson = storeCalls[storeCalls.length - 1][1]
+			const storedConfig = JSON.parse(finalStoredConfigJson)
+
+			expect(storedConfig.apiConfigs.valid).toBeDefined()
+			expect(storedConfig.apiConfigs.invalid).toBeUndefined()
+			expect(storedConfig.apiConfigs.anotherInvalid).toBeUndefined()
+			expect(Object.keys(storedConfig.apiConfigs)).toEqual(["valid"])
+			// Initialize might reset currentApiConfigName if the original was invalid,
+			// or keep it if it was valid. Let's check it's still 'valid'.
+			expect(storedConfig.currentApiConfigName).toBe("valid")
 		})
 	})
 
