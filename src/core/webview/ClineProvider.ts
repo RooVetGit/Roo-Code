@@ -443,14 +443,24 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		// Listen for when color changes
 		vscode.workspace.onDidChangeConfiguration(
 			async (e) => {
-				if (e && e.affectsConfiguration("workbench.colorTheme")) {
+				if (e.affectsConfiguration("workbench.colorTheme")) {
 					// Sends latest theme name to webview
 					await this.postMessageToWebview({ type: "theme", text: JSON.stringify(await getTheme()) })
+				}
+				if (e.affectsConfiguration("workbench.fontAliasing")) {
+					const fontAliasingSetting = vscode.workspace.getConfiguration("workbench").get("fontAliasing")
+					const fontAliasing = typeof fontAliasingSetting === "string" ? fontAliasingSetting : undefined
+					await this.postMessageToWebview({ type: "fontAliasing", value: fontAliasing })
 				}
 			},
 			null,
 			this.disposables,
 		)
+
+		const initialFontAliasingSetting = vscode.workspace.getConfiguration("workbench").get("fontAliasing")
+		const initialFontAliasing =
+			typeof initialFontAliasingSetting === "string" ? initialFontAliasingSetting : undefined
+		await this.postMessageToWebview({ type: "fontAliasing", value: initialFontAliasing })
 
 		// If the extension is starting a new session, clear previous task state.
 		await this.removeClineFromStack()

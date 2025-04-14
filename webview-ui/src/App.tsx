@@ -75,6 +75,17 @@ const App = () => {
 				const { requestId, promptText } = message
 				setHumanRelayDialogState({ isOpen: true, requestId, promptText })
 			}
+
+			if (message.type === "fontAliasing") {
+				const value = message.value as string | undefined
+				let smoothingValue = "unset" // Default to letting the browser decide
+
+				if (value === "antialiased" || value === "subpixel-antialiased" || value === "none") {
+					smoothingValue = value
+				}
+
+				;(document.documentElement.style as any)["webkitFontSmoothing"] = smoothingValue
+			}
 		},
 		[switchTab],
 	)
