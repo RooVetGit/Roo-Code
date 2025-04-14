@@ -1,4 +1,4 @@
-import React, { memo, useState } from "react"
+import React, { memo, useState, useEffect } from "react"
 import { DeleteTaskDialog } from "./DeleteTaskDialog"
 import { BatchDeleteTaskDialog } from "./BatchDeleteTaskDialog"
 import prettyBytes from "pretty-bytes"
@@ -11,6 +11,7 @@ import { formatLargeNumber, formatDate } from "@/utils/format"
 import { cn } from "@/lib/utils"
 import { Button, Checkbox } from "@/components/ui"
 import { useAppTranslation } from "@/i18n/TranslationContext"
+import { useExtensionState } from "@/context/ExtensionStateContext" // Import the context hook
 
 import { Tab, TabContent, TabHeader } from "../common/Tab"
 import { useTaskSearch } from "./useTaskSearch"
@@ -35,11 +36,18 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 		setShowAllWorkspaces,
 	} = useTaskSearch()
 	const { t } = useAppTranslation()
+	const { workspaceTrustEnabled } = useExtensionState()
 
 	const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null)
 	const [isSelectionMode, setIsSelectionMode] = useState(false)
 	const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
 	const [showBatchDeleteDialog, setShowBatchDeleteDialog] = useState<boolean>(false)
+
+	useEffect(() => {
+		if (!workspaceTrustEnabled) {
+			setShowAllWorkspaces(true)
+		}
+	}, [workspaceTrustEnabled, setShowAllWorkspaces])
 
 	// Toggle selection mode
 	const toggleSelectionMode = () => {
@@ -156,17 +164,19 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 						</VSCodeRadio>
 					</VSCodeRadioGroup>
 
-					<div className="flex items-center gap-2">
-						<Checkbox
-							id="show-all-workspaces-view"
-							checked={showAllWorkspaces}
-							onCheckedChange={(checked) => setShowAllWorkspaces(checked === true)}
-							variant="description"
-						/>
-						<label htmlFor="show-all-workspaces-view" className="text-vscode-foreground cursor-pointer">
-							{t("history:showAllWorkspaces")}
-						</label>
-					</div>
+					{workspaceTrustEnabled && (
+						<div className="flex items-center gap-2">
+							<Checkbox
+								id="show-all-workspaces-view"
+								checked={showAllWorkspaces}
+								onCheckedChange={(checked) => setShowAllWorkspaces(checked === true)}
+								variant="description"
+							/>
+							<label htmlFor="show-all-workspaces-view" className="text-vscode-foreground cursor-pointer">
+								{t("history:showAllWorkspaces")}
+							</label>
+						</div>
+					)}
 
 					{/* Select all control in selection mode */}
 					{isSelectionMode && tasks.length > 0 && (
@@ -436,7 +446,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 											</div>
 										)}
 
-										{showAllWorkspaces && item.workspace && (
+										{showAllWorkspaces && workspaceTrustEnabled && item.workspace && (
 											<div className="flex flex-row gap-1 text-vscode-descriptionForeground text-xs">
 												<span className="codicon codicon-folder scale-80" />
 												<span>{item.workspace}</span>

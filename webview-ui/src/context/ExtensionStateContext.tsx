@@ -87,6 +87,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setPinnedApiConfigs: (value: Record<string, boolean>) => void
 	togglePinnedApiConfig: (configName: string) => void
 	setShowGreeting: (value: boolean) => void
+	workspaceTrustEnabled: boolean
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -165,6 +166,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		terminalZshOhMy: false, // Default Oh My Zsh integration setting
 		terminalZshP10k: false, // Default Powerlevel10k integration setting
 		terminalZdotdir: false, // Default ZDOTDIR handling setting
+		workspaceTrustEnabled: false, // Add default value for the new property
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
@@ -243,6 +245,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 
 	const contextValue: ExtensionStateContextType = {
 		...state,
+		workspaceTrustEnabled: state.workspaceTrustEnabled ?? false,
 		didHydrateState,
 		showWelcome,
 		theme,

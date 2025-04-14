@@ -1250,6 +1250,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const machineId = vscode.env.machineId
 		const allowedCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
 		const cwd = this.cwd
+		const workspaceTrustEnabled =
+			vscode.workspace.getConfiguration("security").get<boolean>("workspace.trust.enabled") ?? false
 
 		return {
 			version: this.context.extension?.packageJSON?.version ?? "",
@@ -1325,6 +1327,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			maxReadFileLine: maxReadFileLine ?? 500,
 			settingsImportedAt: this.settingsImportedAt,
 			showGreeting: showGreeting ?? true, // Ensure showGreeting is included in the returned state
+			workspaceTrustEnabled, // Add the workspace trust setting here
 		}
 	}
 

@@ -1,8 +1,9 @@
-import { memo } from "react"
+import { memo, useEffect } from "react"
 
 import { vscode } from "@/utils/vscode"
 import { formatLargeNumber, formatDate } from "@/utils/format"
 import { Button, Checkbox } from "@/components/ui"
+import { useExtensionState } from "@/context/ExtensionStateContext" // Import the context hook
 
 import { useAppTranslation } from "../../i18n/TranslationContext"
 import { CopyButton } from "./CopyButton"
@@ -13,7 +14,14 @@ type HistoryPreviewProps = {
 }
 const HistoryPreview = ({ showHistoryView }: HistoryPreviewProps) => {
 	const { tasks, showAllWorkspaces, setShowAllWorkspaces } = useTaskSearch()
+	const { workspaceTrustEnabled } = useExtensionState()
 	const { t } = useAppTranslation()
+
+	useEffect(() => {
+		if (!workspaceTrustEnabled) {
+			setShowAllWorkspaces(true)
+		}
+	}, [workspaceTrustEnabled, setShowAllWorkspaces])
 
 	return (
 		<div className="flex flex-col gap-3 shrink-0 mx-5">
@@ -26,17 +34,19 @@ const HistoryPreview = ({ showHistoryView }: HistoryPreviewProps) => {
 					{t("history:viewAll")}
 				</Button>
 			</div>
-			<div className="flex items-center gap-2 mb-2">
-				<Checkbox
-					id="show-all-workspaces"
-					checked={showAllWorkspaces}
-					onCheckedChange={(checked) => setShowAllWorkspaces(checked === true)}
-					variant="description"
-				/>
-				<label htmlFor="show-all-workspaces" className="text-xs text-vscode-foreground cursor-pointer">
-					{t("history:showAllWorkspaces")}
-				</label>
-			</div>
+			{workspaceTrustEnabled && (
+				<div className="flex items-center gap-2 mb-2">
+					<Checkbox
+						id="show-all-workspaces"
+						checked={showAllWorkspaces}
+						onCheckedChange={(checked) => setShowAllWorkspaces(checked === true)}
+						variant="description"
+					/>
+					<label htmlFor="show-all-workspaces" className="text-xs text-vscode-foreground cursor-pointer">
+						{t("history:showAllWorkspaces")}
+					</label>
+				</div>
+			)}
 			{tasks.slice(0, 3).map((item) => (
 				<div
 					key={item.id}
@@ -85,7 +95,7 @@ const HistoryPreview = ({ showHistoryView }: HistoryPreviewProps) => {
 								</>
 							)}
 						</div>
-						{showAllWorkspaces && item.workspace && (
+						{showAllWorkspaces && workspaceTrustEnabled && item.workspace && (
 							<div className="flex flex-row gap-1 text-vscode-descriptionForeground text-xs mt-1">
 								<span className="codicon codicon-folder scale-80" />
 								<span>{item.workspace}</span>
