@@ -2,17 +2,17 @@ import { memo } from "react"
 
 import { vscode } from "@/utils/vscode"
 import { formatLargeNumber, formatDate } from "@/utils/format"
-import { Button } from "@/components/ui"
+import { Button, Checkbox } from "@/components/ui"
 
-import { useExtensionState } from "../../context/ExtensionStateContext"
 import { useAppTranslation } from "../../i18n/TranslationContext"
 import { CopyButton } from "./CopyButton"
+import { useTaskSearch } from "./useTaskSearch"
 
 type HistoryPreviewProps = {
 	showHistoryView: () => void
 }
 const HistoryPreview = ({ showHistoryView }: HistoryPreviewProps) => {
-	const { taskHistory } = useExtensionState()
+	const { tasks, showAllWorkspaces, setShowAllWorkspaces } = useTaskSearch()
 	const { t } = useAppTranslation()
 
 	return (
@@ -26,7 +26,18 @@ const HistoryPreview = ({ showHistoryView }: HistoryPreviewProps) => {
 					{t("history:viewAll")}
 				</Button>
 			</div>
-			{taskHistory.slice(0, 3).map((item) => (
+			<div className="flex items-center gap-2 mb-2">
+				<Checkbox
+					id="show-all-workspaces"
+					checked={showAllWorkspaces}
+					onCheckedChange={(checked) => setShowAllWorkspaces(checked === true)}
+					variant="description"
+				/>
+				<label htmlFor="show-all-workspaces" className="text-xs text-vscode-foreground cursor-pointer">
+					{t("history:showAllWorkspaces")}
+				</label>
+			</div>
+			{tasks.slice(0, 3).map((item) => (
 				<div
 					key={item.id}
 					className="bg-vscode-toolbar-hoverBackground/50 hover:bg-vscode-toolbar-hoverBackground/75 rounded-xs relative overflow-hidden opacity-90 hover:opacity-100 cursor-pointer"
@@ -74,6 +85,12 @@ const HistoryPreview = ({ showHistoryView }: HistoryPreviewProps) => {
 								</>
 							)}
 						</div>
+						{showAllWorkspaces && item.workspace && (
+							<div className="flex flex-row gap-1 text-vscode-descriptionForeground text-xs mt-1">
+								<span className="codicon codicon-folder scale-80" />
+								<span>{item.workspace}</span>
+							</div>
+						)}
 					</div>
 				</div>
 			))}
