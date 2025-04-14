@@ -129,6 +129,19 @@ export const apiConfigMetaSchema = z.object({
 	apiProvider: providerNamesSchema.optional(),
 })
 
+/**
+ * Codebase Index Config
+ */
+export const codebaseIndexConfigSchema = z.object({
+	codebaseIndexEnabled: z.boolean().optional(),
+	codebaseIndexQdrantUrl: z.string().optional(),
+	codebaseIndexEmbedderType: z.enum(["openai", "ollama"]).optional(),
+	codebaseIndexEmbedderBaseUrl: z.string().optional(),
+	codebaseIndexEmbedderModelId: z.string().optional(),
+})
+
+export type CodebaseIndexConfig = z.infer<typeof codebaseIndexConfigSchema>
+
 export type ApiConfigMeta = z.infer<typeof apiConfigMetaSchema>
 
 /**
@@ -383,6 +396,8 @@ export const providerSettingsSchema = z.object({
 	// Code Index
 	codeIndexOpenAiKey: z.string().optional(),
 	codeIndexQdrantApiKey: z.string().optional(),
+	codeIndexEmbedderBaseUrl: z.string().optional(),
+	codeIndexEmbedderModelId: z.string().optional(),
 	// Claude 3.7 Sonnet Thinking
 	modelTemperature: z.number().nullish(),
 	modelMaxTokens: z.number().optional(),
@@ -470,6 +485,8 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	// Code Index
 	codeIndexOpenAiKey: undefined,
 	codeIndexQdrantApiKey: undefined,
+	codeIndexEmbedderBaseUrl: undefined,
+	codeIndexEmbedderModelId: undefined,
 	// Claude 3.7 Sonnet Thinking
 	modelTemperature: undefined,
 	modelMaxTokens: undefined,
@@ -498,6 +515,7 @@ export const globalSettingsSchema = z.object({
 	autoApprovalEnabled: z.boolean().optional(),
 	alwaysAllowReadOnly: z.boolean().optional(),
 	alwaysAllowReadOnlyOutsideWorkspace: z.boolean().optional(),
+	codebaseIndexConfig: codebaseIndexConfigSchema.optional(),
 	alwaysAllowWrite: z.boolean().optional(),
 	alwaysAllowWriteOutsideWorkspace: z.boolean().optional(),
 	writeDelayMs: z.number().optional(),
@@ -505,8 +523,6 @@ export const globalSettingsSchema = z.object({
 	alwaysApproveResubmit: z.boolean().optional(),
 	requestDelaySeconds: z.number().optional(),
 	alwaysAllowMcp: z.boolean().optional(),
-	codeIndexEnabled: z.boolean().optional(),
-	codeIndexQdrantUrl: z.string().optional(),
 	alwaysAllowModeSwitch: z.boolean().optional(),
 	alwaysAllowSubtasks: z.boolean().optional(),
 	alwaysAllowExecute: z.boolean().optional(),
@@ -560,8 +576,7 @@ export type GlobalSettings = z.infer<typeof globalSettingsSchema>
 type GlobalSettingsRecord = Record<Keys<GlobalSettings>, undefined>
 
 const globalSettingsRecord: GlobalSettingsRecord = {
-	codeIndexEnabled: undefined,
-	codeIndexQdrantUrl: undefined,
+	codebaseIndexConfig: undefined,
 	currentApiConfigName: undefined,
 	listApiConfigMeta: undefined,
 	pinnedApiConfigs: undefined,

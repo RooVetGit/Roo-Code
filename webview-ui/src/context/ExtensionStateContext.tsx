@@ -161,8 +161,13 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		renderContext: "sidebar",
 		maxReadFileLine: 500, // Default max read file line limit
 		pinnedApiConfigs: {}, // Empty object for pinned API configs
-		codeIndexEnabled: false,
-		codeIndexQdrantUrl: "",
+		codebaseIndexConfig: {
+			codebaseIndexEnabled: false,
+			codebaseIndexQdrantUrl: "",
+			codebaseIndexEmbedderType: "openai",
+			codebaseIndexEmbedderBaseUrl: "",
+			codebaseIndexEmbedderModelId: "",
+		},
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)

@@ -18,10 +18,10 @@ import { SectionHeader } from "./SectionHeader"
 import { SetCachedStateField } from "./types"
 import { ExtensionStateContextType } from "@/context/ExtensionStateContext"
 import { ApiConfiguration } from "../../../../src/shared/api"
+import { CodebaseIndexConfig } from "../../../../src/schemas"
 
 interface CodeIndexSettingsProps {
-	codeIndexEnabled: boolean
-	codeIndexQdrantUrl: string
+	codebaseIndexConfig: CodebaseIndexConfig | undefined
 	apiConfiguration: ApiConfiguration
 	setCachedStateField: SetCachedStateField<keyof ExtensionStateContextType>
 	setApiConfigurationField: <K extends keyof ApiConfiguration>(field: K, value: ApiConfiguration[K]) => void
@@ -36,8 +36,7 @@ interface IndexingStatusUpdateMessage {
 }
 
 export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
-	codeIndexEnabled,
-	codeIndexQdrantUrl,
+	codebaseIndexConfig,
 	apiConfiguration,
 	setCachedStateField,
 	setApiConfigurationField,
@@ -65,7 +64,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 		return () => {
 			window.removeEventListener("message", handleMessage)
 		}
-	}, [codeIndexEnabled])
+	}, [codebaseIndexConfig])
 	return (
 		<>
 			<SectionHeader>
@@ -76,12 +75,17 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 			</SectionHeader>
 			<Section>
 				<VSCodeCheckbox
-					checked={codeIndexEnabled}
-					onChange={(e: any) => setCachedStateField("codeIndexEnabled", e.target.checked)}>
+					checked={codebaseIndexConfig?.codebaseIndexEnabled}
+					onChange={(e: any) =>
+						setCachedStateField("codebaseIndexConfig", {
+							...codebaseIndexConfig,
+							codebaseIndexEnabled: e.target.checked,
+						})
+					}>
 					Enable Codebase Indexing
 				</VSCodeCheckbox>
 
-				{codeIndexEnabled && (
+				{codebaseIndexConfig?.codebaseIndexEnabled && (
 					<div className="mt-4 space-y-4">
 						<div className="space-y-2">
 							<VSCodeTextField
@@ -97,8 +101,13 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 
 						<div className="space-y-2">
 							<VSCodeTextField
-								value={codeIndexQdrantUrl}
-								onInput={(e: any) => setCachedStateField("codeIndexQdrantUrl", e.target.value)}>
+								value={codebaseIndexConfig.codebaseIndexQdrantUrl}
+								onInput={(e: any) =>
+									setCachedStateField("codebaseIndexConfig", {
+										...codebaseIndexConfig,
+										codebaseIndexQdrantUrl: e.target.value,
+									})
+								}>
 								Qdrant URL
 							</VSCodeTextField>
 							<p className="text-sm text-vscode-descriptionForeground">
@@ -147,29 +156,27 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 									systemStatus === "Indexing"
 								} // Added disabled logic
 							>
-								Start Indexing {/* Reverted translation */}
+								Start Indexing
 							</VSCodeButton>
 							<AlertDialog>
 								<AlertDialogTrigger asChild>
-									<VSCodeButton appearance="secondary">
-										Clear Index Data {/* Reverted translation */}
-									</VSCodeButton>
+									<VSCodeButton appearance="secondary">Clear Index Data</VSCodeButton>
 								</AlertDialogTrigger>
 								<AlertDialogContent>
 									<AlertDialogHeader>
-										<AlertDialogTitle>Are you sure?</AlertDialogTitle> {/* Reverted translation */}
+										<AlertDialogTitle>Are you sure?</AlertDialogTitle>
 										<AlertDialogDescription>
 											This action cannot be undone. This will permanently delete your codebase
-											index data. {/* Reverted translation */}
+											index data.
 										</AlertDialogDescription>
 									</AlertDialogHeader>
 									<AlertDialogFooter>
-										<AlertDialogCancel>Cancel</AlertDialogCancel> {/* Reverted translation */}
+										<AlertDialogCancel>Cancel</AlertDialogCancel>
 										<AlertDialogAction
 											// Removed variant="destructive"
 											onClick={() => vscode.postMessage({ type: "clearIndexData" })} // Added onClick
 										>
-											Clear Data {/* Reverted translation */}
+											Clear Data
 										</AlertDialogAction>
 									</AlertDialogFooter>
 								</AlertDialogContent>

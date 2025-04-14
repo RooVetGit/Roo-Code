@@ -71,8 +71,7 @@ export interface ExtensionMessage {
 		| "toggleApiConfigPin"
 		| "indexingStatusUpdate"
 		| "indexCleared"
-		| "codeIndexEnabled"
-		| "codeIndexQdrantUrl"
+		| "codebaseIndexConfig"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -170,8 +169,7 @@ export type ExtensionState = Pick<
 	| "customModePrompts"
 	| "customSupportPrompts"
 	| "enhancementApiConfigId"
-	| "codeIndexEnabled"
-	| "codeIndexQdrantUrl"
+	| "codebaseIndexConfig"
 > & {
 	version: string
 	clineMessages: ClineMessage[]

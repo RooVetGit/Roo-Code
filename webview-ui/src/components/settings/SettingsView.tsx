@@ -136,8 +136,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		showRooIgnoredFiles,
 		remoteBrowserEnabled,
 		maxReadFileLine,
-		codeIndexEnabled,
-		codeIndexQdrantUrl,
+		codebaseIndexConfig,
 	} = cachedState
 
 	// Make sure apiConfiguration is initialized and managed by SettingsView.
@@ -256,8 +255,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "alwaysAllowSubtasks", bool: alwaysAllowSubtasks })
 			vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
 			vscode.postMessage({ type: "telemetrySetting", text: telemetrySetting })
-			vscode.postMessage({ type: "codeIndexEnabled", bool: codeIndexEnabled })
-			vscode.postMessage({ type: "codeIndexQdrantUrl", text: codeIndexQdrantUrl })
+			vscode.postMessage({ type: "codebaseIndexConfig", values: codebaseIndexConfig })
 			setChangeDetected(false)
 		}
 	}
@@ -518,8 +516,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 
 				<div ref={codeIndexRef}>
 					<CodeIndexSettings
-						codeIndexEnabled={codeIndexEnabled ?? false}
-						codeIndexQdrantUrl={codeIndexQdrantUrl ?? ""}
+						codebaseIndexConfig={codebaseIndexConfig}
 						apiConfiguration={apiConfiguration}
 						setApiConfigurationField={setApiConfigurationField}
 						setCachedStateField={setCachedStateField}

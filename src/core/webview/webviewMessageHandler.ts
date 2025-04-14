@@ -18,7 +18,6 @@ import { openFile, openImage } from "../../integrations/misc/open-file"
 import { selectImages } from "../../integrations/misc/process-images"
 import { getTheme } from "../../integrations/theme/getTheme"
 import { discoverChromeHostUrl, tryChromeHostUrl } from "../../services/browser/browserDiscovery"
-import { CodeIndexManager, IndexProgressUpdate } from "../../services/code-index/manager"
 import { searchWorkspaceFiles } from "../../services/search/file-search"
 import { fileExistsAtPath } from "../../utils/fs"
 import { playSound, setSoundEnabled, setSoundVolume } from "../../utils/sound"
@@ -43,7 +42,6 @@ import { getDiffStrategy } from "../diff/DiffStrategy"
 import { SYSTEM_PROMPT } from "../prompts/system"
 import { buildApiHandler } from "../../api"
 import { GlobalState } from "../../schemas"
-import c from "../../services/tree-sitter/queries/c"
 
 export const webviewMessageHandler = async (provider: ClineProvider, message: WebviewMessage) => {
 	// Utility functions provided for concise get/update of global state via contextProxy API.
@@ -1316,16 +1314,15 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await provider.postStateToWebview()
 			break
 		}
-		case "codeIndexEnabled": {
-			const codeIndexEnabled = message.bool ?? false
-			await updateGlobalState("codeIndexEnabled", codeIndexEnabled)
-			await provider.codeIndexManager.loadConfiguration()
-			await provider.postStateToWebview()
-			break
-		}
-		case "codeIndexQdrantUrl": {
-			const codeIndexQdrantUrl = message.text ?? ""
-			await updateGlobalState("codeIndexQdrantUrl", codeIndexQdrantUrl)
+		case "codebaseIndexConfig": {
+			const codebaseIndexConfig = message.values ?? {
+				codebaseIndexEnabled: false,
+				codebaseIndexQdrantUrl: "",
+				codebaseIndexEmbedderType: "openai",
+				codebaseIndexEmbedderBaseUrl: "",
+				codebaseIndexEmbedderModelId: "",
+			}
+			await updateGlobalState("codebaseIndexConfig", codebaseIndexConfig)
 			await provider.codeIndexManager.loadConfiguration()
 			await provider.postStateToWebview()
 			break

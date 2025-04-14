@@ -1244,8 +1244,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			showRooIgnoredFiles,
 			language,
 			maxReadFileLine,
-			codeIndexEnabled,
-			codeIndexQdrantUrl,
+			codebaseIndexConfig,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
@@ -1321,8 +1320,13 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			renderContext: this.renderContext,
 			maxReadFileLine: maxReadFileLine ?? 500,
 			settingsImportedAt: this.settingsImportedAt,
-			codeIndexEnabled: codeIndexEnabled ?? false,
-			codeIndexQdrantUrl: codeIndexQdrantUrl ?? "",
+			codebaseIndexConfig: codebaseIndexConfig ?? {
+				codebaseIndexEnabled: false,
+				codebaseIndexQdrantUrl: "",
+				codebaseIndexEmbedderType: "openai",
+				codebaseIndexEmbedderBaseUrl: "",
+				codebaseIndexEmbedderModelId: "",
+			},
 		}
 	}
 
@@ -1405,8 +1409,13 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 			maxReadFileLine: stateValues.maxReadFileLine ?? 500,
-			codeIndexEnabled: stateValues.codeIndexEnabled ?? false,
-			codeIndexQdrantUrl: stateValues.codeIndexQdrantUrl ?? "",
+			codebaseIndexConfig: stateValues.codebaseIndexConfig ?? {
+				codebaseIndexEnabled: false,
+				codebaseIndexQdrantUrl: "",
+				codebaseIndexEmbedderType: "openai",
+				codebaseIndexEmbedderBaseUrl: "",
+				codebaseIndexEmbedderModelId: "",
+			},
 		}
 	}
 
