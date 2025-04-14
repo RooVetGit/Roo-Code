@@ -115,20 +115,15 @@ export class ProviderSettingsManager {
 			}
 
 			if (rateLimitSeconds === undefined) {
-				// Failed to get the existing value, use the default
+				// Failed to get the existing value, use the default.
 				rateLimitSeconds = 0
 			}
 
 			for (const [name, apiConfig] of Object.entries(providerProfiles.apiConfigs)) {
 				if (apiConfig.rateLimitSeconds === undefined) {
-					console.log(
-						`[MigrateRateLimitSeconds] Applying rate limit ${rateLimitSeconds}s to profile: ${name}`,
-					)
 					apiConfig.rateLimitSeconds = rateLimitSeconds
 				}
 			}
-
-			console.log(`[MigrateRateLimitSeconds] migration complete`)
 		} catch (error) {
 			console.error(`[MigrateRateLimitSeconds] Failed to migrate rate limit settings:`, error)
 		}
