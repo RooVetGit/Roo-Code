@@ -78,7 +78,7 @@ const App = () => {
 
 			if (message.type === "fontAliasing") {
 				const value = message.value as string | undefined
-				let smoothingValue = "unset" // Default to letting the browser decide
+				let smoothingValue = "unset"
 
 				if (value === "antialiased" || value === "subpixel-antialiased" || value === "none") {
 					smoothingValue = value
