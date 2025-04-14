@@ -1,43 +1,47 @@
-import React, { useEffect, useMemo, useRef } from "react"
+import React, { useEffect, useRef } from "react" // Remove useMemo
 import {
 	ContextMenuOptionType,
 	ContextMenuQueryItem,
-	getContextMenuOptions,
-	SearchResult,
+	// getContextMenuOptions, // Remove unused import
+	// SearchResult, // Remove unused import
 } from "../../utils/context-mentions"
 import { removeLeadingNonAlphanumeric } from "../common/CodeAccordian"
-import { ModeConfig } from "../../../../src/shared/modes"
+// import { ModeConfig } from "../../../../src/shared/modes" // Remove unused import
 
 interface ContextMenuProps {
 	onSelect: (type: ContextMenuOptionType, value?: string) => void
-	searchQuery: string
+	// Remove props related to calculation, as options are now passed in
+	// searchQuery: string
 	onMouseDown: () => void
 	selectedIndex: number
 	setSelectedIndex: (index: number) => void
-	selectedType: ContextMenuOptionType | null
-	queryItems: ContextMenuQueryItem[]
-	modes?: ModeConfig[]
-	loading?: boolean // New loading prop
-	dynamicSearchResults?: SearchResult[] // New dynamic search results prop
+	// selectedType: ContextMenuOptionType | null
+	// queryItems: ContextMenuQueryItem[]
+	// modes?: ModeConfig[]
+	loading?: boolean // Keep loading prop
+	// dynamicSearchResults?: SearchResult[]
+	filteredOptions: ContextMenuQueryItem[] // Add prop for pre-filtered options
 }
 
 const ContextMenu: React.FC<ContextMenuProps> = ({
 	onSelect,
-	searchQuery,
+	// searchQuery, // Removed
 	onMouseDown,
 	selectedIndex,
 	setSelectedIndex,
-	selectedType,
-	queryItems,
-	modes,
+	// selectedType, // Removed
+	// queryItems, // Removed
+	// modes, // Removed
 	loading = false,
-	dynamicSearchResults = [],
+	// dynamicSearchResults = [], // Removed
+	filteredOptions, // Use passed-in prop
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null)
 
-	const filteredOptions = useMemo(() => {
-		return getContextMenuOptions(searchQuery, selectedType, queryItems, dynamicSearchResults, modes)
-	}, [searchQuery, selectedType, queryItems, dynamicSearchResults, modes])
+	// Remove internal calculation, use the prop directly
+	// const filteredOptions = useMemo(() => {
+	// 	return getContextMenuOptions(searchQuery, selectedType, queryItems, dynamicSearchResults, modes)
+	// }, [searchQuery, selectedType, queryItems, dynamicSearchResults, modes])
 
 	useEffect(() => {
 		if (menuRef.current) {
@@ -183,7 +187,8 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 					maxHeight: "200px",
 					overflowY: "auto",
 				}}>
-				{filteredOptions && filteredOptions.length > 0 ? (
+				{/* Render directly using the filteredOptions prop */}
+				{filteredOptions.length > 0 ? (
 					filteredOptions.map((option, index) => (
 						<div
 							key={`${option.type}-${option.value || index}`}

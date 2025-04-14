@@ -172,6 +172,7 @@ export type ExtensionState = Pick<
 	| "customModePrompts"
 	| "customSupportPrompts"
 	| "enhancementApiConfigId"
+	| "hiddenBuiltInModes" // Add hiddenBuiltInModes to Pick
 > & {
 	version: string
 	clineMessages: ClineMessage[]
@@ -208,6 +209,7 @@ export type ExtensionState = Pick<
 
 	renderContext: "sidebar" | "editor"
 	settingsImportedAt?: number
+	hiddenBuiltInModes: string[] // Add hiddenBuiltInModes field
 }
 
 export type { ClineMessage, ClineAsk, ClineSay }

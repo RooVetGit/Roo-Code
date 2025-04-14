@@ -68,6 +68,7 @@ describe("ChatTextArea", () => {
 			apiConfiguration: {
 				apiProvider: "anthropic",
 			},
+			hiddenBuiltInModes: [],
 		})
 	})
 
@@ -76,6 +77,7 @@ describe("ChatTextArea", () => {
 			;(useExtensionState as jest.Mock).mockReturnValue({
 				filePaths: [],
 				openedTabs: [],
+				hiddenBuiltInModes: [],
 			})
 			render(<ChatTextArea {...defaultProps} textAreaDisabled={true} />)
 			const enhanceButton = getEnhancePromptButton()
@@ -94,6 +96,7 @@ describe("ChatTextArea", () => {
 				filePaths: [],
 				openedTabs: [],
 				apiConfiguration,
+				hiddenBuiltInModes: [],
 			})
 
 			render(<ChatTextArea {...defaultProps} inputValue="Test prompt" />)
@@ -114,6 +117,7 @@ describe("ChatTextArea", () => {
 				apiConfiguration: {
 					apiProvider: "openrouter",
 				},
+				hiddenBuiltInModes: [],
 			})
 
 			render(<ChatTextArea {...defaultProps} inputValue="" />)
@@ -131,6 +135,7 @@ describe("ChatTextArea", () => {
 				apiConfiguration: {
 					apiProvider: "openrouter",
 				},
+				hiddenBuiltInModes: [],
 			})
 
 			render(<ChatTextArea {...defaultProps} inputValue="Test prompt" />)
@@ -155,6 +160,7 @@ describe("ChatTextArea", () => {
 					apiProvider: "openrouter",
 					newSetting: "test",
 				},
+				hiddenBuiltInModes: [],
 			})
 
 			rerender(<ChatTextArea {...defaultProps} />)
@@ -193,6 +199,7 @@ describe("ChatTextArea", () => {
 				filePaths: [],
 				openedTabs: [],
 				cwd: mockCwd,
+				hiddenBuiltInModes: [],
 			})
 			mockConvertToMentionPath.mockClear()
 		})

@@ -7,6 +7,8 @@
 		"editModesConfig": "模式设置",
 		"editGlobalModes": "修改全局模式",
 		"editProjectModes": "编辑项目模式 (.roomodes)",
+		"hideBuiltInModes": "隐藏内置模式",
+		"showBuiltInModes": "显示内置模式",
 		"createModeHelpText": "点击 + 创建模式，或在对话时让Roo创建一个新模式。"
 	},
 	"apiConfiguration": {

@@ -21,6 +21,7 @@ const mockExtensionState = {
 	mode: "code",
 	customInstructions: "Initial instructions",
 	setCustomInstructions: jest.fn(),
+	hiddenBuiltInModes: [],
 }
 
 const renderPromptsView = (props = {}) => {

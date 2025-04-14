@@ -75,6 +75,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			cwd,
 			pinnedApiConfigs,
 			togglePinnedApiConfig,
+			hiddenBuiltInModes, // Get hidden modes state
 		} = useExtensionState()
 
 		// Find the ID and display text for the currently selected API configuration
@@ -201,6 +202,21 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			]
 		}, [filePaths, gitCommits, openedTabs])
 
+		// Calculate filtered options here in the parent component
+		const filteredOptions = useMemo(
+			() =>
+				getContextMenuOptions(
+					searchQuery,
+					selectedType,
+					queryItems,
+					fileSearchResults,
+					getAllModes(customModes), // Pass original list
+					hiddenBuiltInModes,
+					customModes,
+				),
+			[searchQuery, selectedType, queryItems, fileSearchResults, customModes, hiddenBuiltInModes],
+		)
+
 		useEffect(() => {
 			const handleClickOutside = (event: MouseEvent) => {
 				if (
@@ -308,7 +324,10 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								selectedType,
 								queryItems,
 								fileSearchResults,
-								getAllModes(customModes),
+								// Pass all necessary arguments including customModes
+								getAllModes(customModes), // Pass original list
+								hiddenBuiltInModes,
+								customModes,
 							)
 							const optionsLength = options.length
 
@@ -344,7 +363,10 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							selectedType,
 							queryItems,
 							fileSearchResults,
-							getAllModes(customModes),
+							// Pass all necessary arguments including customModes
+							getAllModes(customModes), // Pass original list
+							hiddenBuiltInModes,
+							customModes,
 						)[selectedMenuIndex]
 						if (
 							selectedOption &&
@@ -411,7 +433,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				setInputValue,
 				justDeletedSpaceAfterMention,
 				queryItems,
-				customModes,
+				customModes, // Keep customModes for getAllModes
+				hiddenBuiltInModes, // Add hiddenBuiltInModes dependency
 				fileSearchResults,
 			],
 		)
@@ -778,16 +801,15 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 									"drop-shadow-md",
 								)}>
 								<ContextMenu
+									// Pass the pre-calculated filtered options
+									filteredOptions={filteredOptions}
 									onSelect={handleMentionSelect}
-									searchQuery={searchQuery}
 									onMouseDown={handleMenuMouseDown}
 									selectedIndex={selectedMenuIndex}
 									setSelectedIndex={setSelectedMenuIndex}
-									selectedType={selectedType}
-									queryItems={queryItems}
-									modes={getAllModes(customModes)}
 									loading={searchLoading}
-									dynamicSearchResults={fileSearchResults}
+									// Remove props that are no longer needed in ContextMenu
+									// searchQuery, selectedType, queryItems, modes, dynamicSearchResults
 								/>
 							</div>
 						)}
@@ -948,11 +970,18 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 										disabled: true,
 										type: DropdownOptionType.SHORTCUT,
 									},
-									...getAllModes(customModes).map((mode) => ({
-										value: mode.slug,
-										label: mode.name,
-										type: DropdownOptionType.ITEM,
-									})),
+									// Filter modes for dropdown display
+									...getAllModes(customModes)
+										.filter(
+											(m) =>
+												!hiddenBuiltInModes.includes(m.slug) ||
+												customModes?.some((cm) => cm.slug === m.slug),
+										)
+										.map((mode) => ({
+											value: mode.slug,
+											label: mode.name,
+											type: DropdownOptionType.ITEM,
+										})),
 									{
 										value: "sep-1",
 										label: t("chat:separator"),

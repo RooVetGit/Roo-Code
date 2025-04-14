@@ -417,6 +417,7 @@ describe("ClineProvider", () => {
 			mode: defaultModeSlug,
 			customModes: [],
 			experiments: experimentDefault,
+			hiddenBuiltInModes: [], // Add missing property
 			maxOpenTabsContext: 20,
 			maxWorkspaceFiles: 200,
 			browserToolEnabled: true,
