@@ -43,3 +43,7 @@ extension.js
 extension.js.map
 *.wasm
 i18n/
+
+# CodeQL local analysis artifacts
+/webview-ui/codeql-db/
+/codeql-results.sarif

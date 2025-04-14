@@ -18,7 +18,7 @@ export function convertToMentionPath(path: string, cwd?: string): string {
 
 	if (!normalizedCwd) {
 		// If no CWD, just escape spaces in the original path
-		return processedPath.replace(/ /g, "\\ ");
+		return processedPath.replace(/\\/g, '\\\\').replace(/ /g, '\\ ');
 	}
 
 	// Remove trailing slash from cwd if it exists
@@ -53,10 +53,11 @@ export function convertToMentionPath(path: string, cwd?: string): string {
 		 * will undergo a second round of escaping, resulting in double backslashes.
 		 * This is necessary to preserve the escapes through the entire text processing pipeline.
 		 */
-		// Escape spaces
-		return mentionPath.replace(/ /g, "\\ ");
+		// Escape backslashes first, then spaces (single backslash for space)
+		return mentionPath.replace(/\\/g, '\\\\').replace(/ /g, '\\ ');
 	}
 
 	// If path doesn't start with CWD, escape spaces in the processed path
-	return processedPath.replace(/ /g, "\\ ");
+	// Escape backslashes first, then spaces (single backslash for space)
+	return processedPath.replace(/\\/g, '\\\\').replace(/ /g, '\\ ');
 }
