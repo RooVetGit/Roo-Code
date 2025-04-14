@@ -28,7 +28,7 @@ export async function initializeTreeSitter() {
 	}
 
 	const TreeSitter = await initializeWorkingParser()
-	const wasmPath = path.join(process.cwd(), "dist/tree-sitter-tsx.wasm")
+	const wasmPath = path.join(process.cwd(), "node_modules", "tree-sitter-wasms", "out", "/tree-sitter-tsx.wasm")
 	const tsxLang = await TreeSitter.Language.load(wasmPath)
 
 	initializedTreeSitter = TreeSitter
@@ -48,7 +48,7 @@ export async function initializeWorkingParser() {
 	const originalLoad = TreeSitter.Language.load
 	TreeSitter.Language.load = async (wasmPath: string) => {
 		const filename = path.basename(wasmPath)
-		const correctPath = path.join(process.cwd(), "dist", filename)
+		const correctPath = path.join(process.cwd(), "node_modules", "tree-sitter-wasms", "out", filename)
 		// console.log(`Redirecting WASM load from ${wasmPath} to ${correctPath}`)
 		return originalLoad(correctPath)
 	}
@@ -87,7 +87,7 @@ export async function testParseSourceCodeDefinitions(
 	const parser = new TreeSitter()
 
 	// Load language and configure parser
-	const wasmPath = path.join(process.cwd(), `dist/${wasmFile}`)
+	const wasmPath = path.join(process.cwd(), "node_modules", "tree-sitter-wasms", "out", `${wasmFile}`)
 	const lang = await TreeSitter.Language.load(wasmPath)
 	parser.setLanguage(lang)
 
@@ -116,7 +116,13 @@ export async function testParseSourceCodeDefinitions(
 export async function inspectTreeStructure(content: string, language: string = "typescript"): Promise<void> {
 	const TreeSitter = await initializeTreeSitter()
 	const parser = new TreeSitter()
-	const wasmPath = path.join(process.cwd(), `dist/tree-sitter-${language}.wasm`)
+	const wasmPath = path.join(
+		process.cwd(),
+		"node_modules",
+		"tree-sitter-wasms",
+		"out",
+		`/tree-sitter-${language}.wasm`,
+	)
 	const lang = await TreeSitter.Language.load(wasmPath)
 	parser.setLanguage(lang)
 

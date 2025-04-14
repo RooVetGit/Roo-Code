@@ -1,9 +1,9 @@
 {
 	"name": "roo-cline",
-	"displayName": "%extension.displayName%",
-	"description": "%extension.description%",
+	"displayName": "Roo Code",
+	"description": "A whole dev team of AI agents in your editor. Previously Roo Cline.",
 	"publisher": "RooVeterinaryInc",
-	"version": "3.11.15",
+	"version": "3.11.14",
 	"icon": "assets/icons/icon.png",
 	"galleryBanner": {
 		"color": "#617A91",
@@ -54,18 +54,18 @@
 		"submenus": [
 			{
 				"id": "roo-code.contextMenu",
-				"label": "%views.contextMenu.label%"
+				"label": "Roo Code"
 			},
 			{
 				"id": "roo-code.terminalMenu",
-				"label": "%views.terminalMenu.label%"
+				"label": "Roo Code"
 			}
 		],
 		"viewsContainers": {
 			"activitybar": [
 				{
 					"id": "roo-cline-ActivityBar",
-					"title": "%views.activitybar.title%",
+					"title": "Roo Code",
 					"icon": "assets/icons/icon.svg"
 				}
 			]
@@ -82,103 +82,103 @@
 		"commands": [
 			{
 				"command": "roo-cline.plusButtonClicked",
-				"title": "%command.newTask.title%",
+				"title": "New Task",
 				"icon": "$(add)"
 			},
 			{
 				"command": "roo-cline.mcpButtonClicked",
-				"title": "%command.mcpServers.title%",
+				"title": "MCP Servers",
 				"icon": "$(server)"
 			},
 			{
 				"command": "roo-cline.promptsButtonClicked",
-				"title": "%command.prompts.title%",
+				"title": "Prompts",
 				"icon": "$(notebook)"
 			},
 			{
 				"command": "roo-cline.historyButtonClicked",
-				"title": "%command.history.title%",
+				"title": "History",
 				"icon": "$(history)"
 			},
 			{
 				"command": "roo-cline.popoutButtonClicked",
-				"title": "%command.openInEditor.title%",
+				"title": "Open in Editor",
 				"icon": "$(link-external)"
 			},
 			{
 				"command": "roo-cline.settingsButtonClicked",
-				"title": "%command.settings.title%",
+				"title": "Settings",
 				"icon": "$(settings-gear)"
 			},
 			{
 				"command": "roo-cline.helpButtonClicked",
-				"title": "%command.documentation.title%",
+				"title": "Documentation",
 				"icon": "$(question)"
 			},
 			{
 				"command": "roo-cline.openInNewTab",
-				"title": "%command.openInNewTab.title%",
-				"category": "%extension.displayName%"
+				"title": "Open In New Tab",
+				"category": "Roo Code"
 			},
 			{
 				"command": "roo-cline.explainCode",
-				"title": "%command.explainCode.title%",
-				"category": "%extension.displayName%"
+				"title": "Explain Code",
+				"category": "Roo Code"
 			},
 			{
 				"command": "roo-cline.fixCode",
-				"title": "%command.fixCode.title%",
-				"category": "%extension.displayName%"
+				"title": "Fix Code",
+				"category": "Roo Code"
 			},
 			{
 				"command": "roo-cline.improveCode",
-				"title": "%command.improveCode.title%",
-				"category": "%extension.displayName%"
+				"title": "Improve Code",
+				"category": "Roo Code"
 			},
 			{
 				"command": "roo-cline.addToContext",
-				"title": "%command.addToContext.title%",
-				"category": "%extension.displayName%"
+				"title": "Add To Context",
+				"category": "Roo Code"
 			},
 			{
 				"command": "roo-cline.newTask",
-				"title": "%command.newTask.title%",
-				"category": "%extension.displayName%"
+				"title": "New Task",
+				"category": "Roo Code"
 			},
 			{
 				"command": "roo-cline.terminalAddToContext",
-				"title": "%command.terminal.addToContext.title%",
+				"title": "Add Terminal Content to Context",
 				"category": "Terminal"
 			},
 			{
 				"command": "roo-cline.terminalFixCommand",
-				"title": "%command.terminal.fixCommand.title%",
+				"title": "Fix This Command",
 				"category": "Terminal"
 			},
 			{
 				"command": "roo-cline.terminalExplainCommand",
-				"title": "%command.terminal.explainCommand.title%",
+				"title": "Explain This Command",
 				"category": "Terminal"
 			},
 			{
 				"command": "roo-cline.terminalFixCommandInCurrentTask",
-				"title": "%command.terminal.fixCommandInCurrentTask.title%",
+				"title": "Fix This Command (Current Task)",
 				"category": "Terminal"
 			},
 			{
 				"command": "roo-cline.terminalExplainCommandInCurrentTask",
-				"title": "%command.terminal.explainCommandInCurrentTask.title%",
+				"title": "Explain This Command (Current Task)",
 				"category": "Terminal"
 			},
 			{
 				"command": "roo-cline.setCustomStoragePath",
-				"title": "%command.setCustomStoragePath.title%",
-				"category": "%extension.displayName%"
+				"title": "Set Custom Storage Path",
+				"category": "Roo Code"
 			},
 			{
 				"command": "roo-cline.focusInput",
-				"title": "%command.focusInput.title%",
-				"category": "%extension.displayName%"
+				"title": "Focus Input Field",
+				"category": "Roo Code"
 			}
 		],
 		"menus": {
@@ -310,7 +310,7 @@
 			]
 		},
 		"configuration": {
-			"title": "%configuration.title%",
+			"title": "Roo Code",
 			"properties": {
 				"roo-cline.allowedCommands": {
 					"type": "array",
@@ -325,76 +325,44 @@
 						"git diff",
 						"git show"
 					],
-					"description": "%commands.allowedCommands.description%"
+					"description": "Commands that can be auto-executed when 'Always approve execute operations' is enabled"
 				},
 				"roo-cline.vsCodeLmModelSelector": {
 					"type": "object",
 					"properties": {
 						"vendor": {
 							"type": "string",
-							"description": "%settings.vsCodeLmModelSelector.vendor.description%"
+							"description": "The vendor of the language model (e.g. copilot)"
 						},
 						"family": {
 							"type": "string",
-							"description": "%settings.vsCodeLmModelSelector.family.description%"
+							"description": "The family of the language model (e.g. gpt-4)"
 						}
 					},
-					"description": "%settings.vsCodeLmModelSelector.description%"
+					"description": "Settings for VSCode Language Model API"
 				},
 				"roo-cline.customStoragePath": {
 					"type": "string",
 					"default": "",
-					"description": "%settings.customStoragePath.description%"
+					"description": "Custom storage path. Leave empty to use the default location. Supports absolute paths (e.g. 'D:\\RooCodeStorage')"
 				}
 			}
 		}
 	},
 	"scripts": {
-		"build": "npm-run-all -l -p build:* && npm run vsix",
-		"build:vscode": "cd plugins/vscode && npm run build",
-		"build:webview": "cd webview-ui && npm run build",
-		"compile": "tsc -p . --outDir out && cd plugins/vscode && node build.js",
-		"install:all": "npm install npm-run-all && npm-run-all -l -p install-*",
-		"install-extension": "npm install",
-		"install-webview": "cd webview-ui && npm install",
-		"install-vscode": "cd plugins/vscode && npm install",
-		"install-e2e": "cd e2e && npm install",
-		"lint": "npm-run-all -l -p lint:*",
-		"lint:extension": "eslint src --ext ts",
-		"lint:webview": "cd webview-ui && npm run lint",
-		"lint:e2e": "cd e2e && npm run lint",
-		"check-types": "npm-run-all -l -p check-types:*",
-		"check-types:extension": "tsc --noEmit",
-		"check-types:webview": "cd webview-ui && npm run check-types",
-		"check-types:e2e": "cd e2e && npm run check-types",
-		"package": "npm-run-all -l -p build:webview build:vscode check-types lint",
-		"pretest": "npm run compile",
-		"dev": "cd webview-ui && npm run dev",
-		"test": "node scripts/run-tests.js",
-		"test:extension": "jest",
-		"test:webview": "cd webview-ui && npm run test",
+		"build": "node build.js --production --baseDir=.",
+		"check-types": "tsc --noEmit",
+		"lint": "eslint src --ext ts",
+		"prepack": "node ./scripts/prepack.js",
+		"postpack": "node ./scripts/postpack.js",
+		"vsix": " npx vsce package  --out bin && npm run postpack",
+		"package": "npm run build && npm run vsix",
+		"dev": "cd ../../webview-ui && npm run dev",
+		"test": "node ../../scripts/run-tests.js",
 		"prepare": "husky",
 		"publish:marketplace": "vsce publish && ovsx publish",
 		"publish": "npm run build && changeset publish && npm install --package-lock-only",
-		"version-packages": "changeset version && npm install --package-lock-only",
-		"vscode:prepublish": "npm run package",
-		"vsix": "cd plugins/vscode && npm run vsix",
-		"watch": "npm-run-all -l -p watch:*",
-		"watch:vscode": "cd plugins/vscode && node build.js --watch",
-		"watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
-		"watch-tests": "tsc -p . -w --outDir out",
-		"changeset": "changeset",
-		"knip": "knip --include files",
-		"clean": "npm-run-all -l -p clean:*",
-		"clean:vscode": "cd plugins/vscode && npm run clean",
-		"clean:extension": "rimraf bin dist out",
-		"clean:webview": "cd webview-ui && npm run clean",
-		"clean:e2e": "cd e2e && npm run clean",
-		"vscode-test": "npm-run-all -l -p vscode-test:*",
-		"vscode-test:extension": "tsc -p . --outDir out && node esbuild.js",
-		"vscode-test:webview": "cd webview-ui && npm run build",
-		"update-contributors": "node scripts/update-contributors.js",
-		"generate-types": "tsx scripts/generate-types.mts"
+		"clean": "rimraf bin dist out webview-ui"
 	},
 	"dependencies": {
 		"@anthropic-ai/bedrock-sdk": "^0.10.2",
@@ -490,16 +458,5 @@
 		"tsx": "^4.19.3",
 		"typescript": "^5.4.5",
 		"zod-to-ts": "^1.2.0"
-	},
-	"lint-staged": {
-		"*.{js,jsx,ts,tsx,json,css,md}": [
-			"prettier --write"
-		],
-		"src/**/*.{ts,tsx}": [
-			"npx eslint -c .eslintrc.json --max-warnings=0 --fix"
-		],
-		"webview-ui/**/*.{ts,tsx}": [
-			"npx eslint -c webview-ui/.eslintrc.json --max-warnings=0 --fix"
-		]
 	}
 }

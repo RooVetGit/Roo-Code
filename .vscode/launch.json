@@ -10,15 +10,15 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
-			"args": ["--extensionDevelopmentPath=${workspaceFolder}"],
+			"args": ["--extensionDevelopmentPath=${workspaceFolder}/plugins/vscode"],
 			"sourceMaps": true,
-			"outFiles": ["${workspaceFolder}/dist/**/*.js"],
+			"outFiles": ["${workspaceFolder}/plugins/vscode/dist/**/*.js"],
 			"preLaunchTask": "${defaultBuildTask}",
 			"env": {
 				"NODE_ENV": "development",
 				"VSCODE_DEBUG_MODE": "true"
 			},
-			"resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"],
+			"resolveSourceMapLocations": ["${workspaceFolder}/plugins/vscode/**", "!**/node_modules/**"],
 			"presentation": {
 				"hidden": false,
 				"group": "tasks",

@@ -5,27 +5,27 @@ import * as path from "path"
 // Load environment variables from .env file
 try {
 	// Specify path to .env file in the project root directory
-	const envPath = path.join(__dirname, "..", ".env")
+	const envPath = path.join(__dirname, "..", "..", "..", ".env")
 	dotenvx.config({ path: envPath })
 } catch (e) {
 	// Silently handle environment loading errors
 	console.warn("Failed to load environment variables:", e)
 }
 
-import "./utils/path" // Necessary to have access to String.prototype.toPosix.
+import "@src/utils/path" // Necessary to have access to String.prototype.toPosix.
 
-import { initializeI18n } from "./i18n"
-import { ClineProvider } from "./core/webview/ClineProvider"
-import { CodeActionProvider } from "./core/CodeActionProvider"
-import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
-import { McpServerManager } from "./services/mcp/McpServerManager"
-import { telemetryService } from "./services/telemetry/TelemetryService"
-import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"
-import { API } from "./exports/api"
-import { migrateSettings } from "./utils/migrateSettings"
+import { initializeI18n } from "@src/i18n/index"
+import { ClineProvider } from "@src/core/webview/ClineProvider"
+import { CodeActionProvider } from "@src/core/CodeActionProvider"
+import { DIFF_VIEW_URI_SCHEME } from "@src/integrations/editor/DiffViewProvider"
+import { McpServerManager } from "@src/services/mcp/McpServerManager"
+import { telemetryService } from "@src/services/telemetry/TelemetryService"
+import { TerminalRegistry } from "@src/integrations/terminal/TerminalRegistry"
+import { API } from "@src/exports/api"
+import { migrateSettings } from "@src/utils/migrateSettings"
 
-import { handleUri, registerCommands, registerCodeActions, registerTerminalActions } from "./activate"
-import { formatLanguage } from "./shared/language"
+import { handleUri, registerCommands, registerCodeActions, registerTerminalActions } from "@src/activate"
+import { formatLanguage } from "@src/shared/language"
 
 /**
  * Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -40,7 +40,7 @@ let extensionContext: vscode.ExtensionContext
 
 // This method is called when your extension is activated.
 // Your extension is activated the very first time the command is executed.
-export async function activate(context: vscode.ExtensionContext) {
+async function activate(context: vscode.ExtensionContext) {
 	extensionContext = context
 	outputChannel = vscode.window.createOutputChannel("Roo-Code")
 	context.subscriptions.push(outputChannel)
@@ -125,7 +125,7 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 // This method is called when your extension is deactivated
-export async function deactivate() {
+async function deactivate() {
 	outputChannel.appendLine("Roo-Code extension deactivated")
 	// Clean up MCP server manager
 	await McpServerManager.cleanup(extensionContext)
@@ -134,3 +134,5 @@ export async function deactivate() {
 	// Clean up terminal handlers
 	TerminalRegistry.cleanup()
 }
+
+module.exports = { activate, deactivate }
