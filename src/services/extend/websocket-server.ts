@@ -62,10 +62,12 @@ export class WebSocketServer extends EventEmitter {
 		{
 			authenticated: boolean
 			subscriptions: Set<RooCodeEventName>
+			lastActivity: number
 		}
 	> = new Map()
 	private api: API
 	private token: string
+	private heartbeatInterval: NodeJS.Timeout | null = null
 	private outputChannel: vscode.OutputChannel
 	private actualPort: number | null = null
 
@@ -80,6 +82,7 @@ export class WebSocketServer extends EventEmitter {
 		this.token = token
 		this.outputChannel = outputChannel
 		this.setupApiEventListeners()
+		this.setupHeartbeat()
 	}
 
 	/**
@@ -129,6 +132,12 @@ export class WebSocketServer extends EventEmitter {
 			this.log("WebSocket server stopped")
 		})
 
+		// Clear heartbeat interval
+		if (this.heartbeatInterval) {
+			clearInterval(this.heartbeatInterval)
+			this.heartbeatInterval = null
+		}
+
 		this.clients.clear()
 		this.server = null
 		this.actualPort = null
@@ -144,18 +153,40 @@ export class WebSocketServer extends EventEmitter {
 		this.clients.set(ws, {
 			authenticated: false,
 			subscriptions: new Set(),
+			lastActivity: Date.now(),
 		})
 
 		// Setup event handlers for this connection
-		ws.on("message", (data: Buffer | ArrayBuffer | Buffer[]) => this.handleMessage(ws, data))
+		ws.on("message", (data: Buffer | ArrayBuffer | Buffer[]) => {
+			try {
+				// Update last activity timestamp
+				const clientState = this.clients.get(ws)
+				if (clientState) {
+					clientState.lastActivity = Date.now()
+				}
 
-		ws.on("close", () => {
-			this.log("Client disconnected")
+				this.handleMessage(ws, data)
+			} catch (error) {
+				this.log(`Error handling message: ${error instanceof Error ? error.message : String(error)}`)
+			}
+		})
+
+		ws.on("close", (code: number, reason: string) => {
+			this.log(`Client disconnected: code=${code}, reason=${reason || "none provided"}`)
 			this.clients.delete(ws)
 		})
 
 		ws.on("error", (error: Error) => {
 			this.log(`Client error: ${error.message}`)
+		})
+
+		// Add ping handler
+		ws.on("ping", () => {
+			try {
+				ws.pong()
+			} catch (error) {
+				this.log(`Error sending pong: ${error instanceof Error ? error.message : String(error)}`)
+			}
 		})
 	}
 
@@ -290,8 +321,35 @@ export class WebSocketServer extends EventEmitter {
 
 			// Add event to client's subscriptions
 			clientState.subscriptions.add(payload.event)
-			this.sendResponse(ws, message.message_id, { subscribed: true, event: payload.event })
-			this.log(`Client subscribed to event: ${payload.event}`)
+
+			// Log more detailed information
+			this.log(
+				`Client subscribed to event: ${payload.event}, current subscriptions: ${Array.from(clientState.subscriptions).join(", ")}`,
+			)
+
+			// Send a more detailed response
+			this.sendResponse(ws, message.message_id, {
+				subscribed: true,
+				event: payload.event,
+				allSubscriptions: Array.from(clientState.subscriptions),
+			})
+
+			// For Message event subscriptions, send a test event to verify
+			if (payload.event === RooCodeEventName.Message) {
+				this.sendEvent(RooCodeEventName.Message, [
+					{
+						taskId: "test-subscription",
+						action: "created",
+						message: {
+							ts: Date.now(),
+							type: "say",
+							say: "system",
+							text: "Subscription to Message events confirmed",
+							partial: false,
+						},
+					},
+				])
+			}
 		} catch (error) {
 			this.sendError(
 				ws,
@@ -336,6 +394,18 @@ export class WebSocketServer extends EventEmitter {
 	 * Send an event to subscribed clients
 	 */
 	private sendEvent(eventName: RooCodeEventName, data: unknown): void {
+		// Special handling for Message events with partial updates
+		if (eventName === RooCodeEventName.Message) {
+			const messageData = data as unknown[]
+			if (messageData.length > 0 && typeof messageData[0] === "object") {
+				const msgObj = messageData[0] as { message?: { partial?: boolean } }
+				if (msgObj.message?.partial === true) {
+					// Log partial message for debugging
+					this.log(`Sending partial message update: ${JSON.stringify(msgObj).substring(0, 100)}...`)
+				}
+			}
+		}
+
 		const eventMessage: Message = {
 			message_id: `event-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
 			type: MessageType.EVENT,
@@ -350,7 +420,12 @@ export class WebSocketServer extends EventEmitter {
 		// Send to all authenticated clients that have subscribed to this event
 		for (const [ws, clientState] of this.clients.entries()) {
 			if (clientState.authenticated && clientState.subscriptions.has(eventName)) {
-				ws.send(messageStr)
+				try {
+					ws.send(messageStr)
+				} catch (error) {
+					this.log(`Error sending event to client: ${error instanceof Error ? error.message : String(error)}`)
+					// Consider removing the client if the connection is broken
+				}
 			}
 		}
 	}
@@ -363,6 +438,20 @@ export class WebSocketServer extends EventEmitter {
 		Object.values(RooCodeEventName).forEach((eventName) => {
 			// Type-safe event handling
 			this.api.on(eventName as keyof RooCodeEvents, (...args: unknown[]) => {
+				// Special handling for Message events
+				if (eventName === RooCodeEventName.Message) {
+					const messageData = args[0] as { message?: { partial?: boolean; text?: string }; taskId?: string }
+					if (messageData && messageData.message) {
+						const isPartial = messageData.message.partial === true
+						this.log(
+							`Received ${isPartial ? "partial" : "complete"} message event for task ${messageData.taskId || "unknown"}: ${messageData.message.text?.substring(0, 50) || "(no text)"}${messageData.message.text && messageData.message.text.length > 50 ? "..." : ""}`,
+						)
+					}
+				} else {
+					// this.log(`Received event: ${eventName}, args: ${JSON.stringify(args).substring(0, 100)}...`);
+				}
+
+				// Send the event to subscribed clients
 				this.sendEvent(eventName, args)
 			})
 		})
@@ -394,5 +483,72 @@ export class WebSocketServer extends EventEmitter {
 	 */
 	private log(message: string): void {
 		outputChannelLog(this.outputChannel, `[WebSocketServer] ${message}`)
+	}
+
+	/**
+	 * Setup heartbeat to keep connections alive
+	 */
+	private setupHeartbeat(): void {
+		// Send a ping every 30 seconds to keep connections alive
+		this.heartbeatInterval = setInterval(() => {
+			for (const [ws, clientState] of this.clients.entries()) {
+				if (clientState.authenticated) {
+					try {
+						// Use WebSocket ping/pong mechanism
+						if (ws.readyState === WebSocket.OPEN) {
+							ws.ping()
+							this.log(
+								`Sent ping to client, last activity: ${new Date(clientState.lastActivity).toISOString()}`,
+							)
+						}
+					} catch (error) {
+						this.log(`Error sending ping: ${error instanceof Error ? error.message : String(error)}`)
+					}
+				}
+			}
+			// Log connection stats periodically
+			this.logConnectionStats()
+		}, 30000)
+	}
+
+	/**
+	 * Get connection statistics for monitoring
+	 */
+	public getConnectionStats(): {
+		totalConnections: number
+		authenticatedConnections: number
+		subscriptionStats: Record<string, number>
+	} {
+		const stats = {
+			totalConnections: this.clients.size,
+			authenticatedConnections: 0,
+			subscriptionStats: {} as Record<string, number>,
+		}
+
+		// Initialize subscription stats
+		Object.values(RooCodeEventName).forEach((eventName) => {
+			stats.subscriptionStats[eventName] = 0
+		})
+
+		// Count authenticated connections and subscriptions
+		for (const [_, clientState] of this.clients.entries()) {
+			if (clientState.authenticated) {
+				stats.authenticatedConnections++
+
+				for (const eventName of clientState.subscriptions) {
+					stats.subscriptionStats[eventName] = (stats.subscriptionStats[eventName] || 0) + 1
+				}
+			}
+		}
+
+		return stats
+	}
+
+	/**
+	 * Log connection statistics
+	 */
+	public logConnectionStats(): void {
+		const stats = this.getConnectionStats()
+		this.log(`Connection stats: ${JSON.stringify(stats)}`)
 	}
 }
