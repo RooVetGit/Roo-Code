@@ -73,7 +73,7 @@ export const autoApproveSettingsConfig: Record<AutoApproveSetting, AutoApproveCo
 		key: "alwaysAllowSubtasks",
 		labelKey: "settings:autoApprove.subtasks.label",
 		descriptionKey: "settings:autoApprove.subtasks.description",
-		icon: "discard",
+		icon: "list-tree",
 		testId: "always-allow-subtasks-toggle",
 	},
 	alwaysAllowExecute: {
