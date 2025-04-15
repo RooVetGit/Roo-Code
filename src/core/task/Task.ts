@@ -361,12 +361,16 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	// Note that `partial` has three valid states true (partial message),
 	// false (completion of partial message), undefined (individual complete
-	// message).
+	// message). 
+	// 
+	// Metadata is used to pass additional arbitrary user data to the 
+	// webview as necessary.
 	async ask(
 		type: ClineAsk,
 		text?: string,
 		partial?: boolean,
 		progressStatus?: ToolProgressStatus,
+		metadata?: Record<string, unknown>,
 	): Promise<{ response: ClineAskResponse; text?: string; images?: string[] }> {
 		// If this Cline instance was aborted by the provider, then the only
 		// thing keeping us alive is a promise still running in the background,
@@ -394,6 +398,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					lastMessage.text = text
 					lastMessage.partial = partial
 					lastMessage.progressStatus = progressStatus
+					lastMessage.metadata = metadata
 					// TODO: Be more efficient about saving and posting only new
 					// data or one whole message at a time so ignore partial for
 					// saves, and only post parts of partial message instead of
@@ -405,7 +410,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					// state.
 					askTs = Date.now()
 					this.lastMessageTs = askTs
-					await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text, partial })
+					await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text, partial, metadata })
 					throw new Error("Current ask promise was ignored (#2)")
 				}
 			} else {
@@ -432,6 +437,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					lastMessage.text = text
 					lastMessage.partial = false
 					lastMessage.progressStatus = progressStatus
+					lastMessage.metadata = metadata
 					await this.saveClineMessages()
 					this.updateClineMessage(lastMessage)
 				} else {
@@ -441,7 +447,7 @@ export class Task extends EventEmitter<ClineEvents> {
 					this.askResponseImages = undefined
 					askTs = Date.now()
 					this.lastMessageTs = askTs
-					await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text })
+					await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text, metadata })
 				}
 			}
 		} else {
@@ -451,7 +457,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			this.askResponseImages = undefined
 			askTs = Date.now()
 			this.lastMessageTs = askTs
-			await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text })
+			await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text, metadata })
 		}
 
 		await pWaitFor(() => this.askResponse !== undefined || this.lastMessageTs !== askTs, { interval: 100 })

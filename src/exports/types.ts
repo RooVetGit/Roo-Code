@@ -383,6 +383,11 @@ type ClineMessage = {
 				text?: string | undefined
 		  }
 		| undefined
+	metadata?:
+		| {
+				[x: string]: unknown
+		  }
+		| undefined
 }
 
 export type { ClineMessage }
@@ -460,6 +465,11 @@ type RooCodeEvents = {
 					| {
 							icon?: string | undefined
 							text?: string | undefined
+					  }
+					| undefined
+				metadata?:
+					| {
+							[x: string]: unknown
 					  }
 					| undefined
 			}
