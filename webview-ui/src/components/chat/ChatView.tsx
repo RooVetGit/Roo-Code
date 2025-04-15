@@ -1,9 +1,15 @@
+import { useAppTranslation } from "@/i18n/TranslationContext"
 import { VSCodeButton, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 import debounce from "debounce"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { Trans } from "react-i18next"
 import { useDeepCompareEffect, useEvent, useMount } from "react-use"
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
+import removeMd from "remove-markdown"
 import styled from "styled-components"
+import { findLast } from "../../../../src/shared/array"
+import { combineApiRequests } from "../../../../src/shared/combineApiRequests"
+import { combineCommandSequences } from "../../../../src/shared/combineCommandSequences"
 import {
 	ClineAsk,
 	ClineMessage,
@@ -11,28 +17,22 @@ import {
 	ClineSayTool,
 	ExtensionMessage,
 } from "../../../../src/shared/ExtensionMessage"
-import { McpServer, McpTool } from "../../../../src/shared/mcp"
-import { findLast } from "../../../../src/shared/array"
-import { combineApiRequests } from "../../../../src/shared/combineApiRequests"
-import { combineCommandSequences } from "../../../../src/shared/combineCommandSequences"
 import { getApiMetrics } from "../../../../src/shared/getApiMetrics"
+import { McpServer, McpTool } from "../../../../src/shared/mcp"
+import { getAllModes } from "../../../../src/shared/modes"
+import { AudioType } from "../../../../src/shared/WebviewMessage"
 import { useExtensionState } from "../../context/ExtensionStateContext"
+import { validateCommand } from "../../utils/command-validation"
 import { vscode } from "../../utils/vscode"
+import TelemetryBanner from "../common/TelemetryBanner"
 import HistoryPreview from "../history/HistoryPreview"
 import { normalizeApiConfiguration } from "../settings/ApiOptions"
 import Announcement from "./Announcement"
+import AutoApproveMenu from "./AutoApproveMenu"
 import BrowserSessionRow from "./BrowserSessionRow"
 import ChatRow from "./ChatRow"
 import ChatTextArea from "./ChatTextArea"
 import TaskHeader from "./TaskHeader"
-import AutoApproveMenu from "./AutoApproveMenu"
-import { AudioType } from "../../../../src/shared/WebviewMessage"
-import { validateCommand } from "../../utils/command-validation"
-import { getAllModes } from "../../../../src/shared/modes"
-import TelemetryBanner from "../common/TelemetryBanner"
-import { useAppTranslation } from "@/i18n/TranslationContext"
-import removeMd from "remove-markdown"
-import { Trans } from "react-i18next"
 interface ChatViewProps {
 	isHidden: boolean
 	showAnnouncement: boolean
@@ -333,8 +333,15 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	}, [])
 
 	const handleSendMessage = useCallback(
-		(text: string, images: string[]) => {
-			text = text.trim()
+		(text: string | object, images: string[]) => {
+			// console.log("This is the text... ", text)
+			if (typeof text === "object" && "text" in text && typeof text.text === "string") {
+				text = text.text.trim()
+			} else if (typeof text === "string") {
+				text = text.trim()
+			} else {
+				text = ""
+			}
 			if (text || images.length > 0) {
 				if (messages.length === 0) {
 					vscode.postMessage({ type: "newTask", text, images })
