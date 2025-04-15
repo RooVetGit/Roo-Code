@@ -28,6 +28,14 @@
 		"prompts": "^2.4.2",
 		"ws": "^8.14.2"
 	},
+	"bundledDependencies": [
+		"boxen",
+		"chalk",
+		"commander",
+		"ora",
+		"prompts",
+		"ws"
+	],
 	"devDependencies": {
 		"@types/boxen": "^3.0.1",
 		"@types/jest": "^29.5.14",

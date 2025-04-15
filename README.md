@@ -98,6 +98,16 @@ Roo Code comes with powerful [tools](https://docs.roocode.com/basic-usage/how-to
 - Use external tools via [MCP (Model Context Protocol)](https://docs.roocode.com/advanced-usage/mcp)
   MCP extends Roo Code's capabilities by allowing you to add unlimited custom tools. Integrate with external APIs, connect to databases, or create specialized development tools - MCP provides the framework to expand Roo Code's functionality to meet your specific needs.
 
+### WebSocket Server and CLI Integration
+
+Roo Code includes a WebSocket server that allows CLI clients to communicate with the extension. This enables you to build custom CLI tools or integrate Roo Code with other applications. The WebSocket server provides the following features:
+
+- **API Method Calls**: Call any API method available in the extension
+- **Event Subscriptions**: Subscribe to events like message updates, task creation, etc.
+- **Streaming Updates**: Receive real-time streaming updates as the AI generates responses
+
+For detailed information about the WebSocket server and how to use it, see the [WebSocket CLI Integration](websocket-cli-integration.md) documentation.
+
 ### CLI Tool
 
 Roo Code includes a command-line interface (CLI) tool that allows you to interact with the extension from the terminal. The CLI tool communicates with the extension via a WebSocket server, enabling you to manage profiles, start tasks, and interact with Roo Code directly from your command line.
@@ -121,16 +131,16 @@ Roo Code includes a command-line interface (CLI) tool that allows you to interac
 
     ```sh
     # Start a new task
-    roo task new "Create a React component"
+    roo create task --mode "code" --message "Create a React component"
 
-    # Get configuration
-    roo get --config
+    # List configurations
+    roo list configs
 
     # List available profiles
-    roo get --profiles
+    roo list profiles
 
     # Create a new profile
-    roo create profile "My Profile"
+    roo profile create --name "My Profile" --config "default"
     ```
 
 #### Key Features
@@ -140,6 +150,20 @@ Roo Code includes a command-line interface (CLI) tool that allows you to interac
 - **Interaction**: Send messages and press buttons in the Roo Code interface
 - **Configuration**: View and manage Roo Code configuration
 - **Programmatic Usage**: Use the CLI in scripts and Node.js applications
+- **Streaming Updates**: Receive real-time streaming updates as the AI generates responses
+
+#### Building the CLI Tool
+
+If you're developing the extension and need to build the CLI tool:
+
+```sh
+# Build the CLI tool with dependencies bundled
+npm run build:cli
+
+# This will create a tarball in the project root directory
+# Install it globally with:
+npm install -g roocli-1.0.0.tgz
+```
 
 #### Documentation
 
