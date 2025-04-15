@@ -426,6 +426,11 @@ type ClineMessage = {
 				text?: string | undefined
 		  }
 		| undefined
+	metadata?:
+		| {
+				[x: string]: unknown
+		  }
+		| undefined
 }
 
 type TokenUsage = {
@@ -505,6 +510,11 @@ type RooCodeEvents = {
 					| {
 							icon?: string | undefined
 							text?: string | undefined
+					  }
+					| undefined
+				metadata?:
+					| {
+							[x: string]: unknown
 					  }
 					| undefined
 			}
