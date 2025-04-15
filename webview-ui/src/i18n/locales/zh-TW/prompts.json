@@ -95,6 +95,10 @@
 			"NEW_TASK": {
 				"label": "開始新工作",
 				"description": "開始一個新的工作。可在命令選擇區使用。"
+			},
+			"COMMIT": {
+				"label": "產生提交訊息",
+				"description": "基於使用git status和diffs的已暫存更改產生語義化提交訊息。在原始碼控制中暫存更改時可用。"
 			}
 		}
 	},

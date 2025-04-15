@@ -95,6 +95,10 @@
 			"NEW_TASK": {
 				"label": "Avvia nuova attività",
 				"description": "Avvia una nuova attività con il tuo input. Disponibile nella palette dei comandi."
+			},
+			"COMMIT": {
+				"label": "Genera messaggio di commit",
+				"description": "Genera un messaggio di commit semantico basato sulle modifiche preparate utilizzando git status e diffs. Disponibile durante la preparazione delle modifiche nel controllo del codice sorgente."
 			}
 		}
 	},

@@ -95,6 +95,10 @@
 			"NEW_TASK": {
 				"label": "Iniciar Nova Tarefa",
 				"description": "Inicie uma nova tarefa com a entrada fornecida. Disponível na paleta de comandos."
+			},
+			"COMMIT": {
+				"label": "Gerar Mensagem de Commit",
+				"description": "Gere uma mensagem de commit semântica baseada em alterações preparadas usando git status e diffs. Disponível ao preparar alterações no controle de código-fonte."
 			}
 		}
 	},

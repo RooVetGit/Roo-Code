@@ -95,6 +95,10 @@
 			"NEW_TASK": {
 				"label": "Start New Task",
 				"description": "Start a new task with user input. Available in the Command Palette."
+			},
+			"COMMIT": {
+				"label": "Generate Commit Message",
+				"description": "Generate a semantic commit message based on staged changes using git status and diffs. Available when staging changes in source control."
 			}
 		}
 	},

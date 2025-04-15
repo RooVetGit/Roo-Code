@@ -95,6 +95,10 @@
 			"NEW_TASK": {
 				"label": "Iniciar nueva tarea",
 				"description": "Inicia una nueva tarea con entrada del usuario. Disponible en la Paleta de comandos."
+			},
+			"COMMIT": {
+				"label": "Generar mensaje de commit",
+				"description": "Genera un mensaje de commit semántico basado en cambios preparados usando git status y diffs. Disponible al preparar cambios en el control de código fuente."
 			}
 		}
 	},
