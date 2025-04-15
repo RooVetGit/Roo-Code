@@ -29,12 +29,13 @@
 		"advanced": "Avanzado",
 		"experimental": "Funciones experimentales",
 		"language": "Idioma",
-		"about": "Acerca de Roo Code"
+		"about": "Acerca de Roo Code",
+		"interface": "Interfaz"
 	},
 	"autoApprove": {
 		"description": "Permitir que Roo realice operaciones automáticamente sin requerir aprobación. Habilite esta configuración solo si confía plenamente en la IA y comprende los riesgos de seguridad asociados.",
 		"readOnly": {
-			"label": "Aprobar siempre operaciones de solo lectura",
+			"label": "Lectura",
 			"description": "Cuando está habilitado, Roo verá automáticamente el contenido del directorio y leerá archivos sin que necesite hacer clic en el botón Aprobar.",
 			"outsideWorkspace": {
 				"label": "Incluir archivos fuera del espacio de trabajo",
@@ -42,7 +43,7 @@
 			}
 		},
 		"write": {
-			"label": "Aprobar siempre operaciones de escritura",
+			"label": "Escritura",
 			"description": "Crear y editar archivos automáticamente sin requerir aprobación",
 			"delayLabel": "Retraso después de escritura para permitir que los diagnósticos detecten posibles problemas",
 			"outsideWorkspace": {
@@ -51,29 +52,28 @@
 			}
 		},
 		"browser": {
-			"label": "Aprobar siempre acciones del navegador",
-			"description": "Realizar acciones del navegador automáticamente sin requerir aprobación",
-			"note": "Nota: Solo se aplica cuando el modelo admite el uso del ordenador"
+			"label": "Navegador",
+			"description": "Realizar acciones del navegador automáticamente sin requerir aprobación. Nota: Solo se aplica cuando el modelo admite el uso del ordenador"
 		},
 		"retry": {
-			"label": "Reintentar siempre solicitudes de API fallidas",
+			"label": "Reintentar",
 			"description": "Reintentar automáticamente solicitudes de API fallidas cuando el servidor devuelve una respuesta de error",
 			"delayLabel": "Retraso antes de reintentar la solicitud"
 		},
 		"mcp": {
-			"label": "Aprobar siempre herramientas MCP",
+			"label": "MCP",
 			"description": "Habilitar la aprobación automática de herramientas MCP individuales en la vista de Servidores MCP (requiere tanto esta configuración como la casilla \"Permitir siempre\" de la herramienta)"
 		},
 		"modeSwitch": {
-			"label": "Aprobar siempre cambios de modo",
+			"label": "Modo",
 			"description": "Cambiar automáticamente entre diferentes modos sin requerir aprobación"
 		},
 		"subtasks": {
-			"label": "Aprobar siempre creación y finalización de subtareas",
+			"label": "Subtareas",
 			"description": "Permitir la creación y finalización de subtareas sin requerir aprobación"
 		},
 		"execute": {
-			"label": "Aprobar siempre operaciones de ejecución permitidas",
+			"label": "Ejecutar",
 			"description": "Ejecutar automáticamente comandos de terminal permitidos sin requerir aprobación",
 			"allowedCommands": "Comandos de auto-ejecución permitidos",
 			"allowedCommandsDescription": "Prefijos de comandos que pueden ser ejecutados automáticamente cuando \"Aprobar siempre operaciones de ejecución\" está habilitado. Añade * para permitir todos los comandos (usar con precaución).",
@@ -116,6 +116,7 @@
 		"openRouterTransformsText": "Comprimir prompts y cadenas de mensajes al tamaño del contexto (<a>Transformaciones de OpenRouter</a>)",
 		"anthropicApiKey": "Clave API de Anthropic",
 		"getAnthropicApiKey": "Obtener clave API de Anthropic",
+		"anthropicUseAuthToken": "Pasar la clave API de Anthropic como encabezado de autorización en lugar de X-Api-Key",
 		"deepSeekApiKey": "Clave API de DeepSeek",
 		"getDeepSeekApiKey": "Obtener clave API de DeepSeek",
 		"geminiApiKey": "Clave API de Gemini",
@@ -301,6 +302,30 @@
 		"shellIntegrationTimeout": {
 			"label": "Tiempo de espera de integración del shell del terminal",
 			"description": "Tiempo máximo de espera para la inicialización de la integración del shell antes de ejecutar comandos. Para usuarios con tiempos de inicio de shell largos, este valor puede necesitar ser aumentado si ve errores \"Shell Integration Unavailable\" en el terminal."
+		},
+		"zdotdir": {
+			"label": "Habilitar gestión de ZDOTDIR",
+			"description": "Cuando está habilitado, crea un directorio temporal para ZDOTDIR para manejar correctamente la integración del shell zsh. Esto asegura que la integración del shell de VSCode funcione correctamente con zsh mientras preserva tu configuración de zsh. (experimental)"
+		},
+		"commandDelay": {
+			"label": "Retraso de comando del terminal",
+			"description": "Retraso en milisegundos para añadir después de la ejecución del comando. La configuración predeterminada de 0 desactiva completamente el retraso. Esto puede ayudar a asegurar que la salida del comando se capture completamente en terminales con problemas de temporización. En la mayoría de terminales se implementa estableciendo `PROMPT_COMMAND='sleep N'` y Powershell añade `start-sleep` al final de cada comando. Originalmente era una solución para el error VSCode#237208 y puede no ser necesario."
+		},
+		"powershellCounter": {
+			"label": "Habilitar solución temporal del contador de PowerShell",
+			"description": "Cuando está habilitado, agrega un contador a los comandos de PowerShell para garantizar la ejecución correcta de los comandos. Esto ayuda con las terminales PowerShell que pueden tener problemas con la captura de salida de comandos."
+		},
+		"zshClearEolMark": {
+			"label": "Limpiar marca de fin de línea de ZSH",
+			"description": "Cuando está habilitado, limpia la marca de fin de línea de ZSH estableciendo PROMPT_EOL_MARK=''. Esto evita problemas con la interpretación de la salida de comandos cuando termina con caracteres especiales como '%'."
+		},
+		"zshOhMy": {
+			"label": "Habilitar integración Oh My Zsh",
+			"description": "Cuando está habilitado, establece ITERM_SHELL_INTEGRATION_INSTALLED=Yes para habilitar las características de integración del shell Oh My Zsh. (experimental)"
+		},
+		"zshP10k": {
+			"label": "Habilitar integración Powerlevel10k",
+			"description": "Cuando está habilitado, establece POWERLEVEL9K_TERM_SHELL_INTEGRATION=true para habilitar las características de integración del shell Powerlevel10k. (experimental)"
 		}
 	},
 	"advanced": {
@@ -446,5 +471,11 @@
 	"labels": {
 		"customArn": "ARN personalizado",
 		"useCustomArn": "Usar ARN personalizado..."
+	},
+	"interface": {
+		"showgreeting": {
+			"label": "Mostrar mensaje de bienvenida",
+			"description": "Cuando está habilitado, Roo mostrará un mensaje de bienvenida e introducción."
+		}
 	}
 }

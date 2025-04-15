@@ -29,12 +29,13 @@
 		"advanced": "進階",
 		"experimental": "實驗性功能",
 		"language": "語言",
-		"about": "關於 Roo Code"
+		"about": "關於 Roo Code",
+		"interface": "介面"
 	},
 	"autoApprove": {
 		"description": "允許 Roo 無需核准即執行操作。僅在您完全信任 AI 並了解相關安全風險時啟用這些設定。",
 		"readOnly": {
-			"label": "始終核准唯讀操作",
+			"label": "讀取",
 			"description": "啟用後，Roo 將自動檢視目錄內容並讀取檔案，無需點選核准按鈕。",
 			"outsideWorkspace": {
 				"label": "包含工作區外的檔案",
@@ -42,7 +43,7 @@
 			}
 		},
 		"write": {
-			"label": "始終核准寫入操作",
+			"label": "寫入",
 			"description": "自動建立和編輯文件而無需核准",
 			"delayLabel": "寫入後延遲以允許診斷偵測潛在問題",
 			"outsideWorkspace": {
@@ -51,29 +52,28 @@
 			}
 		},
 		"browser": {
-			"label": "始終核准瀏覽器操作",
-			"description": "自動執行瀏覽器操作而無需核准",
-			"note": "注意：僅適用於模型支援電腦使用時"
+			"label": "瀏覽器",
+			"description": "自動執行瀏覽器操作而無需核准 — 注意：僅適用於模型支援電腦使用時"
 		},
 		"retry": {
-			"label": "始終重試失敗的 API 請求",
+			"label": "重試",
 			"description": "當伺服器回傳錯誤回應時自動重試失敗的 API 請求",
 			"delayLabel": "重試請求前的延遲"
 		},
 		"mcp": {
-			"label": "始終核准 MCP 工具",
+			"label": "MCP",
 			"description": "在 MCP 伺服器檢視中啟用個別 MCP 工具的自動核准（需要此設定和工具的「始終允許」核取方塊）"
 		},
 		"modeSwitch": {
-			"label": "始終核准模式切換",
+			"label": "模式",
 			"description": "自動在不同模式之間切換而無需核准"
 		},
 		"subtasks": {
-			"label": "始終核准子工作的建立和完成",
+			"label": "子工作",
 			"description": "允許建立和完成子工作而無需核准"
 		},
 		"execute": {
-			"label": "始終核准允許的執行操作",
+			"label": "執行",
 			"description": "自動執行允許的終端機命令而無需核准",
 			"allowedCommands": "允許自動執行的命令",
 			"allowedCommandsDescription": "當「始終核准執行操作」啟用時可以自動執行的命令前綴。新增 * 以允許所有命令（請謹慎使用）。",
@@ -116,6 +116,7 @@
 		"openRouterTransformsText": "將提示和訊息鏈壓縮到上下文大小 (<a>OpenRouter 轉換</a>)",
 		"anthropicApiKey": "Anthropic API 金鑰",
 		"getAnthropicApiKey": "取得 Anthropic API 金鑰",
+		"anthropicUseAuthToken": "將 Anthropic API 金鑰作為 Authorization 標頭傳遞，而非使用 X-Api-Key",
 		"deepSeekApiKey": "DeepSeek API 金鑰",
 		"getDeepSeekApiKey": "取得 DeepSeek API 金鑰",
 		"geminiApiKey": "Gemini API 金鑰",
@@ -301,6 +302,30 @@
 		"shellIntegrationTimeout": {
 			"label": "終端機 Shell 整合逾時",
 			"description": "執行命令前等待 Shell 整合初始化的最長時間。如果您的 Shell 啟動較慢，且終端機出現「Shell 整合無法使用」的錯誤訊息，可能需要提高此數值。"
+		},
+		"zdotdir": {
+			"label": "啟用 ZDOTDIR 處理",
+			"description": "啟用後將建立暫存目錄用於 ZDOTDIR，以正確處理 zsh shell 整合。這確保 VSCode shell 整合能與 zsh 正常運作，同時保留您的 zsh 設定。（實驗性）"
+		},
+		"commandDelay": {
+			"label": "終端機命令延遲",
+			"description": "命令執行後添加的延遲時間（毫秒）。預設值為 0 時完全停用延遲。這可以幫助確保在有計時問題的終端機中完整擷取命令輸出。在大多數終端機中，這是透過設定 `PROMPT_COMMAND='sleep N'` 實現的，而 PowerShell 會在每個命令結尾加入 `start-sleep`。最初是為了解決 VSCode 錯誤#237208，現在可能不再需要。"
+		},
+		"powershellCounter": {
+			"label": "啟用 PowerShell 計數器解決方案",
+			"description": "啟用後，會在 PowerShell 命令中加入計數器以確保命令正確執行。這有助於解決可能存在輸出擷取問題的 PowerShell 終端機。"
+		},
+		"zshClearEolMark": {
+			"label": "清除 ZSH 行尾標記",
+			"description": "啟用後，透過設定 PROMPT_EOL_MARK='' 清除 ZSH 行尾標記。這可以防止命令輸出以特殊字元（如 '%'）結尾時的解析問題。"
+		},
+		"zshOhMy": {
+			"label": "啟用 Oh My Zsh 整合",
+			"description": "啟用後，設定 ITERM_SHELL_INTEGRATION_INSTALLED=Yes 以啟用 Oh My Zsh shell 整合功能。（實驗性）"
+		},
+		"zshP10k": {
+			"label": "啟用 Powerlevel10k 整合",
+			"description": "啟用後，設定 POWERLEVEL9K_TERM_SHELL_INTEGRATION=true 以啟用 Powerlevel10k shell 整合功能。（實驗性）"
 		}
 	},
 	"advanced": {
@@ -445,5 +470,11 @@
 	"labels": {
 		"customArn": "自訂 ARN",
 		"useCustomArn": "使用自訂 ARN..."
+	},
+	"interface": {
+		"showgreeting": {
+			"label": "顯示歡迎訊息",
+			"description": "啟用後，Roo 將顯示歡迎訊息與介紹。"
+		}
 	}
 }

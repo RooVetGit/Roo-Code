@@ -10,7 +10,7 @@ import { SettingsWebviewProvider } from "../core/webview/SettingsWebviewProvider
 export function getVisibleProviderOrLog(outputChannel: vscode.OutputChannel): ClineProvider | undefined {
 	const visibleProvider = ClineProvider.getVisibleInstance()
 	if (!visibleProvider) {
-		outputChannel.appendLine("Cannot find any visible Cline instances.")
+		outputChannel.appendLine("Cannot find any visible Roo Code instances.")
 		return undefined
 	}
 	return visibleProvider

@@ -29,12 +29,13 @@
 		"advanced": "Avançado",
 		"experimental": "Recursos experimentais",
 		"language": "Idioma",
-		"about": "Sobre o Roo Code"
+		"about": "Sobre o Roo Code",
+		"interface": "Interface"
 	},
 	"autoApprove": {
 		"description": "Permitir que o Roo realize operações automaticamente sem exigir aprovação. Ative essas configurações apenas se confiar totalmente na IA e compreender os riscos de segurança associados.",
 		"readOnly": {
-			"label": "Aprovar sempre operações somente de leitura",
+			"label": "Leitura",
 			"description": "Quando ativado, o Roo visualizará automaticamente o conteúdo do diretório e lerá arquivos sem que você precise clicar no botão Aprovar.",
 			"outsideWorkspace": {
 				"label": "Incluir arquivos fora do espaço de trabalho",
@@ -42,7 +43,7 @@
 			}
 		},
 		"write": {
-			"label": "Aprovar sempre operações de escrita",
+			"label": "Escrita",
 			"description": "Criar e editar arquivos automaticamente sem exigir aprovação",
 			"delayLabel": "Atraso após escritas para permitir que diagnósticos detectem problemas potenciais",
 			"outsideWorkspace": {
@@ -51,29 +52,28 @@
 			}
 		},
 		"browser": {
-			"label": "Aprovar sempre ações do navegador",
-			"description": "Realizar ações do navegador automaticamente sem exigir aprovação",
-			"note": "Nota: Aplica-se apenas quando o modelo suporta uso do computador"
+			"label": "Navegador",
+			"description": "Realizar ações do navegador automaticamente sem exigir aprovação. Nota: Aplica-se apenas quando o modelo suporta uso do computador"
 		},
 		"retry": {
-			"label": "Sempre tentar novamente requisições de API com falha",
+			"label": "Tentar novamente",
 			"description": "Tentar novamente automaticamente requisições de API com falha quando o servidor retorna uma resposta de erro",
 			"delayLabel": "Atraso antes de tentar novamente a requisição"
 		},
 		"mcp": {
-			"label": "Aprovar sempre ferramentas MCP",
+			"label": "MCP",
 			"description": "Ativar aprovação automática de ferramentas MCP individuais na visualização de Servidores MCP (requer tanto esta configuração quanto a caixa de seleção \"Permitir sempre\" da ferramenta)"
 		},
 		"modeSwitch": {
-			"label": "Aprovar sempre troca de modos",
+			"label": "Modo",
 			"description": "Alternar automaticamente entre diferentes modos sem exigir aprovação"
 		},
 		"subtasks": {
-			"label": "Aprovar sempre criação e conclusão de subtarefas",
+			"label": "Subtarefas",
 			"description": "Permitir a criação e conclusão de subtarefas sem exigir aprovação"
 		},
 		"execute": {
-			"label": "Aprovar sempre operações de execução permitidas",
+			"label": "Executar",
 			"description": "Executar automaticamente comandos de terminal permitidos sem exigir aprovação",
 			"allowedCommands": "Comandos de auto-execução permitidos",
 			"allowedCommandsDescription": "Prefixos de comando que podem ser auto-executados quando \"Aprovar sempre operações de execução\" está ativado. Adicione * para permitir todos os comandos (use com cautela).",
@@ -116,6 +116,7 @@
 		"openRouterTransformsText": "Comprimir prompts e cadeias de mensagens para o tamanho do contexto (<a>Transformações OpenRouter</a>)",
 		"anthropicApiKey": "Chave de API Anthropic",
 		"getAnthropicApiKey": "Obter chave de API Anthropic",
+		"anthropicUseAuthToken": "Passar a chave de API Anthropic como cabeçalho Authorization em vez de X-Api-Key",
 		"deepSeekApiKey": "Chave de API DeepSeek",
 		"getDeepSeekApiKey": "Obter chave de API DeepSeek",
 		"geminiApiKey": "Chave de API Gemini",
@@ -301,6 +302,30 @@
 		"shellIntegrationTimeout": {
 			"label": "Tempo limite de integração do shell do terminal",
 			"description": "Tempo máximo de espera para a inicialização da integração do shell antes de executar comandos. Para usuários com tempos de inicialização de shell longos, este valor pode precisar ser aumentado se você vir erros \"Shell Integration Unavailable\" no terminal."
+		},
+		"zdotdir": {
+			"label": "Ativar gerenciamento do ZDOTDIR",
+			"description": "Quando ativado, cria um diretório temporário para o ZDOTDIR para lidar corretamente com a integração do shell zsh. Isso garante que a integração do shell do VSCode funcione corretamente com o zsh enquanto preserva sua configuração do zsh. (experimental)"
+		},
+		"commandDelay": {
+			"label": "Atraso de comando do terminal",
+			"description": "Atraso em milissegundos para adicionar após a execução do comando. A configuração padrão de 0 desativa completamente o atraso. Isso pode ajudar a garantir que a saída do comando seja totalmente capturada em terminais com problemas de temporização. Na maioria dos terminais, isso é implementado definindo `PROMPT_COMMAND='sleep N'` e o PowerShell adiciona `start-sleep` ao final de cada comando. Originalmente era uma solução para o bug VSCode#237208 e pode não ser necessário."
+		},
+		"powershellCounter": {
+			"label": "Ativar solução alternativa do contador PowerShell",
+			"description": "Quando ativado, adiciona um contador aos comandos PowerShell para garantir a execução correta dos comandos. Isso ajuda com terminais PowerShell que podem ter problemas com a captura de saída."
+		},
+		"zshClearEolMark": {
+			"label": "Limpar marca de fim de linha do ZSH",
+			"description": "Quando ativado, limpa a marca de fim de linha do ZSH definindo PROMPT_EOL_MARK=''. Isso evita problemas com a interpretação da saída de comandos quando termina com caracteres especiais como '%'."
+		},
+		"zshOhMy": {
+			"label": "Ativar integração Oh My Zsh",
+			"description": "Quando ativado, define ITERM_SHELL_INTEGRATION_INSTALLED=Yes para habilitar os recursos de integração do shell Oh My Zsh. (experimental)"
+		},
+		"zshP10k": {
+			"label": "Ativar integração Powerlevel10k",
+			"description": "Quando ativado, define POWERLEVEL9K_TERM_SHELL_INTEGRATION=true para habilitar os recursos de integração do shell Powerlevel10k. (experimental)"
 		}
 	},
 	"advanced": {
@@ -446,5 +471,11 @@
 	"labels": {
 		"customArn": "ARN personalizado",
 		"useCustomArn": "Usar ARN personalizado..."
+	},
+	"interface": {
+		"showgreeting": {
+			"label": "Mostrar mensagem de boas-vindas",
+			"description": "Quando ativado, o Roo exibirá uma mensagem de boas-vindas e introdução."
+		}
 	}
 }

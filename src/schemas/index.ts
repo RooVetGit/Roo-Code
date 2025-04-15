@@ -96,6 +96,16 @@ export const telemetrySettingsSchema = z.enum(telemetrySettings)
 export type TelemetrySetting = z.infer<typeof telemetrySettingsSchema>
 
 /**
+ * ReasoningEffort
+ */
+
+export const reasoningEfforts = ["low", "medium", "high"] as const
+
+export const reasoningEffortsSchema = z.enum(reasoningEfforts)
+
+export type ReasoningEffort = z.infer<typeof reasoningEffortsSchema>
+
+/**
  * ModelInfo
  */
 
@@ -110,7 +120,7 @@ export const modelInfoSchema = z.object({
 	cacheWritesPrice: z.number().optional(),
 	cacheReadsPrice: z.number().optional(),
 	description: z.string().optional(),
-	reasoningEffort: z.enum(["low", "medium", "high"]).optional(),
+	reasoningEffort: reasoningEffortsSchema.optional(),
 	thinking: z.boolean().optional(),
 	minTokensPerCachePoint: z.number().optional(),
 	maxCachePoints: z.number().optional(),
@@ -308,6 +318,7 @@ export const providerSettingsSchema = z.object({
 	apiModelId: z.string().optional(),
 	apiKey: z.string().optional(),
 	anthropicBaseUrl: z.string().optional(),
+	anthropicUseAuthToken: z.boolean().optional(),
 	// Glama
 	glamaModelId: z.string().optional(),
 	glamaModelInfo: modelInfoSchema.nullish(),
@@ -383,11 +394,12 @@ export const providerSettingsSchema = z.object({
 	requestyModelId: z.string().optional(),
 	requestyModelInfo: modelInfoSchema.nullish(),
 	// Claude 3.7 Sonnet Thinking
-	modelTemperature: z.number().nullish(),
 	modelMaxTokens: z.number().optional(),
 	modelMaxThinkingTokens: z.number().optional(),
 	// Generic
 	includeMaxTokens: z.boolean().optional(),
+	modelTemperature: z.number().nullish(),
+	reasoningEffort: reasoningEffortsSchema.optional(),
 	rateLimitSeconds: z.number().optional(),
 	// Fake AI
 	fakeAi: z.unknown().optional(),
@@ -403,6 +415,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	apiModelId: undefined,
 	apiKey: undefined,
 	anthropicBaseUrl: undefined,
+	anthropicUseAuthToken: undefined,
 	// Glama
 	glamaModelId: undefined,
 	glamaModelInfo: undefined,
@@ -470,11 +483,12 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	requestyModelId: undefined,
 	requestyModelInfo: undefined,
 	// Claude 3.7 Sonnet Thinking
-	modelTemperature: undefined,
 	modelMaxTokens: undefined,
 	modelMaxThinkingTokens: undefined,
 	// Generic
 	includeMaxTokens: undefined,
+	modelTemperature: undefined,
+	reasoningEffort: undefined,
 	rateLimitSeconds: undefined,
 	// Fake AI
 	fakeAi: undefined,
@@ -520,6 +534,8 @@ export const globalSettingsSchema = z.object({
 	enableCheckpoints: z.boolean().optional(),
 	checkpointStorage: checkpointStoragesSchema.optional(),
 
+	showGreeting: z.boolean().optional(),
+
 	ttsEnabled: z.boolean().optional(),
 	ttsSpeed: z.number().optional(),
 	soundEnabled: z.boolean().optional(),
@@ -532,6 +548,12 @@ export const globalSettingsSchema = z.object({
 
 	terminalOutputLineLimit: z.number().optional(),
 	terminalShellIntegrationTimeout: z.number().optional(),
+	terminalCommandDelay: z.number().optional(),
+	terminalPowershellCounter: z.boolean().optional(),
+	terminalZshClearEolMark: z.boolean().optional(),
+	terminalZshOhMy: z.boolean().optional(),
+	terminalZshP10k: z.boolean().optional(),
+	terminalZdotdir: z.boolean().optional(),
 
 	rateLimitSeconds: z.number().optional(),
 	diffEnabled: z.boolean().optional(),
@@ -590,6 +612,8 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	enableCheckpoints: undefined,
 	checkpointStorage: undefined,
 
+	showGreeting: undefined,
+
 	ttsEnabled: undefined,
 	ttsSpeed: undefined,
 	soundEnabled: undefined,
@@ -602,6 +626,12 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 
 	terminalOutputLineLimit: undefined,
 	terminalShellIntegrationTimeout: undefined,
+	terminalCommandDelay: undefined,
+	terminalPowershellCounter: undefined,
+	terminalZshClearEolMark: undefined,
+	terminalZshOhMy: undefined,
+	terminalZshP10k: undefined,
+	terminalZdotdir: undefined,
 
 	rateLimitSeconds: undefined,
 	diffEnabled: undefined,
