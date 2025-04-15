@@ -781,6 +781,7 @@ export const openAiNativeModels = {
 		supportsPromptCache: true,
 		inputPrice: 1.1,
 		outputPrice: 4.4,
+		cacheReadsPrice: 0.55,
 		reasoningEffort: "medium",
 	},
 	"o3-mini-high": {
@@ -790,6 +791,7 @@ export const openAiNativeModels = {
 		supportsPromptCache: true,
 		inputPrice: 1.1,
 		outputPrice: 4.4,
+		cacheReadsPrice: 0.55,
 		reasoningEffort: "high",
 	},
 	"o3-mini-low": {
@@ -799,6 +801,7 @@ export const openAiNativeModels = {
 		supportsPromptCache: true,
 		inputPrice: 1.1,
 		outputPrice: 4.4,
+		cacheReadsPrice: 0.55,
 		reasoningEffort: "low",
 	},
 	o1: {
@@ -808,6 +811,7 @@ export const openAiNativeModels = {
 		supportsPromptCache: true,
 		inputPrice: 15,
 		outputPrice: 60,
+		cacheReadsPrice: 7.5,
 	},
 	"o1-preview": {
 		maxTokens: 32_768,
@@ -816,6 +820,7 @@ export const openAiNativeModels = {
 		supportsPromptCache: true,
 		inputPrice: 15,
 		outputPrice: 60,
+		cacheReadsPrice: 7.5,
 	},
 	"o1-mini": {
 		maxTokens: 65_536,
@@ -824,6 +829,7 @@ export const openAiNativeModels = {
 		supportsPromptCache: true,
 		inputPrice: 1.1,
 		outputPrice: 4.4,
+		cacheReadsPrice: 0.55,
 	},
 	"gpt-4.5-preview": {
 		maxTokens: 16_384,
@@ -832,6 +838,7 @@ export const openAiNativeModels = {
 		supportsPromptCache: true,
 		inputPrice: 75,
 		outputPrice: 150,
+		cacheReadsPrice: 37.5,
 	},
 	"gpt-4o": {
 		maxTokens: 16_384,
@@ -840,6 +847,7 @@ export const openAiNativeModels = {
 		supportsPromptCache: true,
 		inputPrice: 2.5,
 		outputPrice: 10,
+		cacheReadsPrice: 1.25,
 	},
 	"gpt-4o-mini": {
 		maxTokens: 16_384,
@@ -848,6 +856,7 @@ export const openAiNativeModels = {
 		supportsPromptCache: true,
 		inputPrice: 0.15,
 		outputPrice: 0.6,
+		cacheReadsPrice: 0.075,
 	},
 } as const satisfies Record<string, ModelInfo>
 
