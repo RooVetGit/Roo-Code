@@ -73,10 +73,12 @@ export class CodeIndexConfigManager {
 			qdrantApiKey: this.qdrantApiKey,
 		}
 
-		const codebaseIndexConfig = this.contextProxy?.getGlobalState("codebaseIndexConfig")
-
-		if (!codebaseIndexConfig) {
-			throw new Error("Codebase Indexing configuration not found in global state")
+		let codebaseIndexConfig = this.contextProxy?.getGlobalState("codebaseIndexConfig") ?? {
+			codebaseIndexEnabled: false,
+			codebaseIndexQdrantUrl: "",
+			codebaseIndexEmbedderType: "openai",
+			codebaseIndexEmbedderBaseUrl: "",
+			codebaseIndexEmbedderModelId: "",
 		}
 
 		const {
