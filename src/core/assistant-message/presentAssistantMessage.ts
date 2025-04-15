@@ -257,11 +257,13 @@ export async function presentAssistantMessage(cline: Task) {
 				cline.didAlreadyUseTool = true
 			}
 
+			// metadata is used to pass additional arbitrary user data to the webview as necessary
 			const askApproval = async (
 				type: ClineAsk,
 				partialMessage?: string,
 				progressStatus?: ToolProgressStatus,
 				isProtected?: boolean,
+				metadata?: Record<string, unknown>,
 			) => {
 				const { response, text, images } = await cline.ask(
 					type,
@@ -269,6 +271,7 @@ export async function presentAssistantMessage(cline: Task) {
 					false,
 					progressStatus,
 					isProtected || false,
+					metadata,
 				)
 
 				if (response !== "yesButtonClicked") {
