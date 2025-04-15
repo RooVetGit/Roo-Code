@@ -11,6 +11,20 @@ import { ExitCodeDetails, TerminalProcess } from "../../integrations/terminal/Te
 import { Terminal } from "../../integrations/terminal/Terminal"
 import { TerminalRegistry } from "../../integrations/terminal/TerminalRegistry"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
+import { CommandRiskLevel, commandRiskLevels } from "../../schemas"
+
+// Function to validate risk level
+export const isValidRiskLevel = (risk: string): boolean => {
+	return risk !== undefined && risk !== "none" && commandRiskLevels.includes(risk as CommandRiskLevel)
+}
+
+// Function to check if risk is allowed
+export const isRiskAllowed = (userRiskLevel: CommandRiskLevel, cmdRiskLevel: CommandRiskLevel): boolean => {
+	if (userRiskLevel === "none") return false
+	const userRiskIndex = commandRiskLevels.indexOf(userRiskLevel)
+	const cmdRiskIndex = commandRiskLevels.indexOf(cmdRiskLevel)
+	return cmdRiskIndex <= userRiskIndex
+}
 
 export async function executeCommandTool(
 	cline: Cline,
@@ -22,16 +36,26 @@ export async function executeCommandTool(
 ) {
 	let command: string | undefined = block.params.command
 	const customCwd: string | undefined = block.params.cwd
+	const commandRisk: string | undefined = block.params.risk
+	const metadata = commandRisk ? { risk: commandRisk } : undefined
 
 	try {
 		if (block.partial) {
-			await cline.ask("command", removeClosingTag("command", command), block.partial).catch(() => {})
+			await cline
+				.ask("command", removeClosingTag("command", command), block.partial, undefined, metadata)
+				.catch(() => {})
 			return
 		} else {
 			if (!command) {
 				cline.consecutiveMistakeCount++
 				cline.recordToolError("execute_command")
 				pushToolResult(await cline.sayAndCreateMissingParamError("execute_command", "command"))
+				return
+			}
+
+			if (!commandRisk) {
+				cline.consecutiveMistakeCount++
+				pushToolResult(await cline.sayAndCreateMissingParamError("execute_command", "risk"))
 				return
 			}
 
@@ -43,11 +67,17 @@ export async function executeCommandTool(
 				return
 			}
 
+			// Check if the risk level is valid
+			if (commandRisk && (!isValidRiskLevel(commandRisk) || commandRisk === "none")) {
+				const errorMessage = `Invalid risk level: "${commandRisk}". Valid risk levels are: ${commandRiskLevels.filter((r) => r !== "none").join(", ")}`
+				pushToolResult(formatResponse.toolError(errorMessage))
+				return
+			}
+
 			cline.consecutiveMistakeCount = 0
 
 			command = unescapeHtmlEntities(command) // Unescape HTML entities.
-			const didApprove = await askApproval("command", command)
-
+			const didApprove = await askApproval("command", command, undefined, metadata)
 			if (!didApprove) {
 				return
 			}
