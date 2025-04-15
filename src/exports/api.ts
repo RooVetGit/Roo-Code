@@ -1,13 +1,13 @@
 import { EventEmitter } from "events"
-import * as vscode from "vscode"
 import fs from "fs/promises"
 import * as path from "path"
+import * as vscode from "vscode"
 
-import { getWorkspacePath } from "../utils/path"
-import { ClineProvider } from "../core/webview/ClineProvider"
 import { openClineInNewTab } from "../activate/registerCommands"
-import { RooCodeSettings, RooCodeEvents, RooCodeEventName, ClineMessage } from "../schemas"
-import { IpcOrigin, IpcMessageType, TaskCommandName, TaskEvent } from "../schemas/ipc"
+import { ClineProvider } from "../core/webview/ClineProvider"
+import { RooCodeEventName, RooCodeEvents, RooCodeSettings } from "../schemas"
+import { IpcMessageType, IpcOrigin, TaskCommandName, TaskEvent } from "../schemas/ipc"
+import { getWorkspacePath } from "../utils/path"
 
 import { RooCodeAPI } from "./interface"
 import { IpcServer } from "./ipc"
