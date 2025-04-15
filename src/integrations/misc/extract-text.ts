@@ -289,18 +289,21 @@ export function processCarriageReturns(input: string): string {
 						// Partial overwrite - need to check for multi-byte character boundary issues
 						const potentialPartialChar = curLine.charAt(segment.length)
 
+						// Cache character code points to avoid repeated charCodeAt calls
+						const hasPartialChar = potentialPartialChar !== ""
+						const segmentLastCharCode = segment.length > 0 ? segment.charCodeAt(segment.length - 1) : 0
+						const partialCharCode = hasPartialChar ? potentialPartialChar.charCodeAt(0) : 0
+
 						// Check if character is part of a multi-byte sequence (emoji or other Unicode characters)
 						// Detect surrogate pairs (high/low surrogates) to identify multi-byte characters
 						if (
-							potentialPartialChar &&
+							hasPartialChar &&
 							((segment.length > 0 &&
-								((segment.charCodeAt(segment.length - 1) >= 0xd800 &&
-									segment.charCodeAt(segment.length - 1) <= 0xdbff) ||
-									(potentialPartialChar.charCodeAt(0) >= 0xdc00 &&
-										potentialPartialChar.charCodeAt(0) <= 0xdfff))) ||
+								((segmentLastCharCode >= 0xd800 && segmentLastCharCode <= 0xdbff) ||
+									(partialCharCode >= 0xdc00 && partialCharCode <= 0xdfff))) ||
 								(curLine.length > segment.length + 1 &&
-									potentialPartialChar.charCodeAt(0) >= 0xd800 &&
-									potentialPartialChar.charCodeAt(0) <= 0xdbff))
+									partialCharCode >= 0xd800 &&
+									partialCharCode <= 0xdbff))
 						) {
 							// If a partially overwritten multi-byte character is detected, replace with space
 							const remainPart = curLine.substring(segment.length + 1)
