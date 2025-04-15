@@ -2572,7 +2572,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 	}
 
-	public checkpointSave() {
+	public async checkpointSave() {
 		const service = this.getCheckpointService()
 
 		if (!service) {
@@ -2591,7 +2591,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		telemetryService.captureCheckpointCreated(this.taskId)
 
 		// Start the checkpoint process in the background.
-		service.saveCheckpoint(`Task: ${this.taskId}, Time: ${Date.now()}`).catch((err) => {
+		return service.saveCheckpoint(`Task: ${this.taskId}, Time: ${Date.now()}`).catch((err) => {
 			console.error("[Cline#checkpointSave] caught unexpected error, disabling checkpoints", err)
 			this.enableCheckpoints = false
 		})
