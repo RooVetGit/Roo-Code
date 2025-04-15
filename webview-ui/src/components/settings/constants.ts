@@ -25,7 +25,7 @@ export const PROVIDERS = [
 	// { value: "anthropic", label: "Anthropic" },
 	// { value: "gemini", label: "Google Gemini" },
 	{ value: "deepseek", label: "DeepSeek" },
-	// { value: "openai-native", label: "OpenAI" },
+	{ value: "openai-native", label: "OpenAI" },
 	{ value: "openai", label: "OpenAI Compatible" },
 	// { value: "vertex", label: "GCP Vertex AI" },
 	// { value: "bedrock", label: "AWS Bedrock" },

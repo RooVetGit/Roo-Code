@@ -454,7 +454,7 @@ export const requestyDefaultModelInfo: ModelInfo = {
 
 // OpenRouter
 // https://openrouter.ai/models?order=newest&supported_parameters=tools
-export const openRouterDefaultModelId = "anthropic/claude-3.7-sonnet"
+export const openRouterDefaultModelId = ""
 export const openRouterDefaultModelInfo: ModelInfo = {
 	maxTokens: 8192,
 	contextWindow: 200_000,
@@ -738,83 +738,37 @@ export const geminiModels = {
 // OpenAI Native
 // https://openai.com/api/pricing/
 export type OpenAiNativeModelId = keyof typeof openAiNativeModels
-export const openAiNativeDefaultModelId: OpenAiNativeModelId = "gpt-4o"
+export const openAiNativeDefaultModelId: OpenAiNativeModelId = "gpt-4.1-mini"
 export const openAiNativeModels = {
-	// don't support tool use yet
-	"o3-mini": {
-		maxTokens: 100_000,
-		contextWindow: 200_000,
-		supportsImages: false,
-		supportsPromptCache: true,
-		inputPrice: 1.1,
-		outputPrice: 4.4,
-		reasoningEffort: "medium",
-	},
-	"o3-mini-high": {
-		maxTokens: 100_000,
-		contextWindow: 200_000,
-		supportsImages: false,
-		supportsPromptCache: true,
-		inputPrice: 1.1,
-		outputPrice: 4.4,
-		reasoningEffort: "high",
-	},
-	"o3-mini-low": {
-		maxTokens: 100_000,
-		contextWindow: 200_000,
-		supportsImages: false,
-		supportsPromptCache: true,
-		inputPrice: 1.1,
-		outputPrice: 4.4,
-		reasoningEffort: "low",
-	},
-	o1: {
-		maxTokens: 100_000,
-		contextWindow: 200_000,
-		supportsImages: true,
-		supportsPromptCache: true,
-		inputPrice: 15,
-		outputPrice: 60,
-	},
-	"o1-preview": {
+	"gpt-4.1": {
 		maxTokens: 32_768,
-		contextWindow: 128_000,
+		contextWindow: 1_048_576,
 		supportsImages: true,
 		supportsPromptCache: true,
-		inputPrice: 15,
-		outputPrice: 60,
+		cacheReadsPrice: 0.5,
+		cacheWritesPrice: 2,
+		inputPrice: 2,
+		outputPrice: 8,
 	},
-	"o1-mini": {
-		maxTokens: 65_536,
-		contextWindow: 128_000,
+	"gpt-4.1-mini": {
+		maxTokens: 32_768,
+		contextWindow: 1_048_576,
 		supportsImages: true,
 		supportsPromptCache: true,
-		inputPrice: 1.1,
-		outputPrice: 4.4,
+		cacheReadsPrice: 0.1,
+		cacheWritesPrice: 0.4,
+		inputPrice: 0.4,
+		outputPrice: 1.6,
 	},
-	"gpt-4.5-preview": {
-		maxTokens: 16_384,
-		contextWindow: 128_000,
+	"gpt-4.1-nano": {
+		maxTokens: 32_768,
+		contextWindow: 1_048_576,
 		supportsImages: true,
 		supportsPromptCache: true,
-		inputPrice: 75,
-		outputPrice: 150,
-	},
-	"gpt-4o": {
-		maxTokens: 16_384,
-		contextWindow: 128_000,
-		supportsImages: true,
-		supportsPromptCache: true,
-		inputPrice: 2.5,
-		outputPrice: 10,
-	},
-	"gpt-4o-mini": {
-		maxTokens: 16_384,
-		contextWindow: 128_000,
-		supportsImages: true,
-		supportsPromptCache: true,
-		inputPrice: 0.15,
-		outputPrice: 0.6,
+		cacheReadsPrice: 0.025,
+		cacheWritesPrice: 0.1,
+		inputPrice: 0.1,
+		outputPrice: 0.4,
 	},
 } as const satisfies Record<string, ModelInfo>
 

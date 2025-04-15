@@ -584,7 +584,7 @@ export const ChatRowContent = ({
 									{title}
 									<VSCodeBadge
 										style={{ opacity: cost !== null && cost !== undefined && cost > 0 ? 1 : 0 }}>
-										${Number(cost || 0)?.toFixed(4)}
+										${Number(cost || 0)?.toFixed(7)}
 									</VSCodeBadge>
 								</div>
 								<span className={`codicon codicon-chevron-${isExpanded ? "up" : "down"}`}></span>
@@ -846,7 +846,7 @@ export const ChatRowContent = ({
 											style={{ fontSize: 13.5, margin: "1px 0" }}></span>
 									</div>
 									{isExpanded && (
-										<CodeBlock source={`${"```"}json\n${message.text}\n${"```"}`} />
+										<CodeBlock source={`${"```"}\n${message.text}\n${"```"}`} />
 									)}
 								</div>
 							</div>

@@ -25,7 +25,7 @@ export class RequestyHandler extends RiddlerHandler {
 			...options,
 			openAiApiKey: options.requestyApiKey,
 			openAiModelId: options.requestyModelId ?? requestyDefaultModelId,
-			openAiBaseUrl: "https://riddler.mynatapp.cc/api/cline/v1",
+			openAiBaseUrl: "https://router.requesty.ai/v1",
 			openAiCustomModelInfo: options.requestyModelInfo ?? requestyDefaultModelInfo,
 		})
 	}

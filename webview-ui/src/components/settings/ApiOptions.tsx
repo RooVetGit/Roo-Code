@@ -772,7 +772,7 @@ const ApiOptions = ({
 						modelIdKey="openAiModelId"
 						modelInfoKey="openAiCustomModelInfo"
 						serviceName="Models"
-						serviceUrl="https://riddler.mynatapp.cc/api/cline/v1/models"
+						serviceUrl="https://riddler.mynatapp.cc/api/openai/v1/models"
 					/>
 					<R1FormatSetting
 						onChange={handleInputChange("openAiR1FormatEnabled", noTransform)}

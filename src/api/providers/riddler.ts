@@ -17,8 +17,8 @@ import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 import { XmlMatcher } from "../../utils/xml-matcher"
 import { t } from "../../i18n"
-const crypto = require('crypto');
-const zlib = require('zlib');
+
+import { compressWithGzip, encryptData } from './tools'
 
 const DEEP_SEEK_DEFAULT_TEMPERATURE = 0.6
 
@@ -37,7 +37,7 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 		super()
 		this.options = options
 
-		const baseURL = this.options.openAiBaseUrl ?? "https://riddler.mynatapp.cc/api/cline/v1"
+		const baseURL = this.options.openAiBaseUrl ?? "https://riddler.mynatapp.cc/api/openai/v1"
 		const apiKey = this.options.openAiApiKey ?? "not-provided"
 		let urlHost: string
 
@@ -66,7 +66,7 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
 		const modelInfo = this.getModel().info
 		const modelUrl = this.options.openAiBaseUrl ?? ""
-		const modelId = this.options.openAiModelId ?? ""
+		const modelId = this.getModel().id ?? ""
 		const enabledR1Format = this.options.openAiR1FormatEnabled ?? false
 		const deepseekReasoner = modelId.includes("deepseek-reasoner") || enabledR1Format
 		const ark = modelUrl.includes(".volces.com")
@@ -141,49 +141,6 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 			const uuid = uuidv4();
 			const chunkSize = 8192; // 每块不超过8k
 
-			// 压缩messagesJson
-			async function compressWithGzip(data: string): Promise<Buffer> {
-				return new Promise((resolve, reject) => {
-					zlib.gzip(data, (err: Error | null, compressed: Buffer) => {
-						if (err) {
-							reject(err);
-						} else {
-							resolve(compressed);
-						}
-					});
-				});
-			}
-
-			// 使用指定key进行AES-GCM加密
-			function encryptData(data: Buffer, key: string = "wxyriddler"): string {
-				try {
-					// 使用SHA-256从密钥字符串派生固定长度的密钥
-					const derivedKey = crypto.createHash('sha256').update(key).digest();
-					
-					// 生成随机初始化向量
-					const iv = crypto.randomBytes(16);
-					
-					// 创建加密器
-					const cipher = crypto.createCipheriv('aes-256-gcm', derivedKey, iv);
-					
-					// 加密数据
-					let encrypted = cipher.update(data);
-					encrypted = Buffer.concat([encrypted, cipher.final()]);
-					
-					// 获取认证标签
-					const authTag = cipher.getAuthTag();
-					
-					// 组合IV、加密数据和认证标签，用于后续解密
-					const result = Buffer.concat([iv, authTag, encrypted]);
-					
-					// 转为base64字符串
-					return result.toString('base64');
-				} catch (error) {
-					console.error("加密失败:", error);
-					throw new Error("消息加密失败");
-				}
-			}
-
 			// 先压缩，再加密，最后base64编码
 			const compressedData = await compressWithGzip(messagesJson);
 			const encryptedMessagesJson = encryptData(compressedData);
@@ -242,6 +199,9 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 				const delta = chunk.choices[0]?.delta ?? {}
 
 				if (delta.content) {
+					if (typeof delta.content === 'string' && (delta.content.includes("域帐号认证失败") || delta.content.includes("McAfee Web Gateway")) ) {
+						throw new Error(`Request error: Domain error`)
+					}
 					for (const chunk of matcher.update(delta.content)) {
 						yield chunk
 					}
@@ -321,49 +281,6 @@ export class RiddlerHandler extends BaseProvider implements SingleCompletionHand
 			const messagesJson = JSON.stringify(requestOptions);
 			const uuid = uuidv4();
 			const chunkSize = 8192; // 每块不超过8k
-
-			// 压缩messagesJson
-			async function compressWithGzip(data: string): Promise<Buffer> {
-				return new Promise((resolve, reject) => {
-					zlib.gzip(data, (err: Error | null, compressed: Buffer) => {
-						if (err) {
-							reject(err);
-						} else {
-							resolve(compressed);
-						}
-					});
-				});
-			}
-
-			// 使用指定key进行AES-GCM加密
-			function encryptData(data: Buffer, key: string = "wxyriddler"): string {
-				try {
-					// 使用SHA-256从密钥字符串派生固定长度的密钥
-					const derivedKey = crypto.createHash('sha256').update(key).digest();
-					
-					// 生成随机初始化向量
-					const iv = crypto.randomBytes(16);
-					
-					// 创建加密器
-					const cipher = crypto.createCipheriv('aes-256-gcm', derivedKey, iv);
-					
-					// 加密数据
-					let encrypted = cipher.update(data);
-					encrypted = Buffer.concat([encrypted, cipher.final()]);
-					
-					// 获取认证标签
-					const authTag = cipher.getAuthTag();
-					
-					// 组合IV、加密数据和认证标签，用于后续解密
-					const result = Buffer.concat([iv, authTag, encrypted]);
-					
-					// 转为base64字符串
-					return result.toString('base64');
-				} catch (error) {
-					console.error("加密失败:", error);
-					throw new Error("消息加密失败");
-				}
-			}
 
 			// 先压缩，再加密，最后base64编码
 			const compressedData = await compressWithGzip(messagesJson);
