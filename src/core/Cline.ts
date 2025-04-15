@@ -16,11 +16,7 @@ import { TokenUsage } from "../schemas"
 import { ApiHandler, buildApiHandler } from "../api"
 import { ApiStream } from "../api/transform/stream"
 import { DIFF_VIEW_URI_SCHEME, DiffViewProvider } from "../integrations/editor/DiffViewProvider"
-import {
-	CheckpointServiceOptions,
-	RepoPerTaskCheckpointService,
-	RepoPerWorkspaceCheckpointService,
-} from "../services/checkpoints"
+import { CheckpointServiceOptions, RepoPerTaskCheckpointService } from "../services/checkpoints"
 import { findToolName, formatContentBlockToMarkdown } from "../integrations/misc/export-markdown"
 import { fetchInstructionsTool } from "./tools/fetchInstructionsTool"
 import { listFilesTool } from "./tools/listFilesTool"
@@ -30,7 +26,6 @@ import { Terminal } from "../integrations/terminal/Terminal"
 import { TerminalRegistry } from "../integrations/terminal/TerminalRegistry"
 import { UrlContentFetcher } from "../services/browser/UrlContentFetcher"
 import { listFiles } from "../services/glob/list-files"
-import { CheckpointStorage } from "../shared/checkpoints"
 import { ApiConfiguration } from "../shared/api"
 import { findLastIndex } from "../shared/array"
 import { combineApiRequests } from "../shared/combineApiRequests"
@@ -104,7 +99,6 @@ export type ClineOptions = {
 	customInstructions?: string
 	enableDiff?: boolean
 	enableCheckpoints?: boolean
-	checkpointStorage?: CheckpointStorage
 	fuzzyMatchThreshold?: number
 	consecutiveMistakeLimit?: number
 	task?: string
@@ -162,8 +156,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 	// checkpoints
 	private enableCheckpoints: boolean
-	private checkpointStorage: CheckpointStorage
-	private checkpointService?: RepoPerTaskCheckpointService | RepoPerWorkspaceCheckpointService
+	private checkpointService?: RepoPerTaskCheckpointService
+	private checkpointServiceInitializing = false
 
 	// streaming
 	isWaitingForFirstChunk = false
@@ -184,7 +178,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 		customInstructions,
 		enableDiff = false,
 		enableCheckpoints = true,
-		checkpointStorage = "task",
 		fuzzyMatchThreshold = 1.0,
 		consecutiveMistakeLimit = 3,
 		task,
@@ -223,7 +216,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 		this.providerRef = new WeakRef(provider)
 		this.diffViewProvider = new DiffViewProvider(this.cwd)
 		this.enableCheckpoints = enableCheckpoints
-		this.checkpointStorage = checkpointStorage
 
 		this.rootTask = rootTask
 		this.parentTask = parentTask
@@ -2399,6 +2391,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 			return this.checkpointService
 		}
 
+		if (this.checkpointServiceInitializing) {
+			console.log("[Cline#getCheckpointService] checkpoint service is still initializing")
+			return undefined
+		}
+
 		const log = (message: string) => {
 			console.log(message)
 
@@ -2409,11 +2406,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 			}
 		}
 
+		console.log("[Cline#getCheckpointService] initializing checkpoints service")
+
 		try {
 			const workspaceDir = getWorkspacePath()
 
 			if (!workspaceDir) {
-				log("[Cline#initializeCheckpoints] workspace folder not found, disabling checkpoints")
+				log("[Cline#getCheckpointService] workspace folder not found, disabling checkpoints")
 				this.enableCheckpoints = false
 				return undefined
 			}
@@ -2421,7 +2420,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			const globalStorageDir = this.providerRef.deref()?.context.globalStorageUri.fsPath
 
 			if (!globalStorageDir) {
-				log("[Cline#initializeCheckpoints] globalStorageDir not found, disabling checkpoints")
+				log("[Cline#getCheckpointService] globalStorageDir not found, disabling checkpoints")
 				this.enableCheckpoints = false
 				return undefined
 			}
@@ -2433,28 +2432,26 @@ export class Cline extends EventEmitter<ClineEvents> {
 				log,
 			}
 
-			// Only `task` is supported at the moment until we figure out how
-			// to fully isolate the `workspace` variant.
-			// const service =
-			// 	this.checkpointStorage === "task"
-			// 		? RepoPerTaskCheckpointService.create(options)
-			// 		: RepoPerWorkspaceCheckpointService.create(options)
-
 			const service = RepoPerTaskCheckpointService.create(options)
 
+			this.checkpointServiceInitializing = true
+
 			service.on("initialize", () => {
+				log("[Cline#getCheckpointService] service initialized")
+
 				try {
 					const isCheckpointNeeded =
 						typeof this.clineMessages.find(({ say }) => say === "checkpoint_saved") === "undefined"
 
 					this.checkpointService = service
+					this.checkpointServiceInitializing = false
 
 					if (isCheckpointNeeded) {
-						log("[Cline#initializeCheckpoints] no checkpoints found, saving initial checkpoint")
+						log("[Cline#getCheckpointService] no checkpoints found, saving initial checkpoint")
 						this.checkpointSave()
 					}
 				} catch (err) {
-					log("[Cline#initializeCheckpoints] caught error in on('initialize'), disabling checkpoints")
+					log("[Cline#getCheckpointService] caught error in on('initialize'), disabling checkpoints")
 					this.enableCheckpoints = false
 				}
 			})
@@ -2464,21 +2461,23 @@ export class Cline extends EventEmitter<ClineEvents> {
 					this.providerRef.deref()?.postMessageToWebview({ type: "currentCheckpointUpdated", text: to })
 
 					this.say("checkpoint_saved", to, undefined, undefined, { isFirst, from, to }).catch((err) => {
-						log("[Cline#initializeCheckpoints] caught unexpected error in say('checkpoint_saved')")
+						log("[Cline#getCheckpointService] caught unexpected error in say('checkpoint_saved')")
 						console.error(err)
 					})
 				} catch (err) {
 					log(
-						"[Cline#initializeCheckpoints] caught unexpected error in on('checkpoint'), disabling checkpoints",
+						"[Cline#getCheckpointService] caught unexpected error in on('checkpoint'), disabling checkpoints",
 					)
 					console.error(err)
 					this.enableCheckpoints = false
 				}
 			})
 
+			log("[Cline#getCheckpointService] initializing shadow git")
+
 			service.initShadowGit().catch((err) => {
 				log(
-					`[Cline#initializeCheckpoints] caught unexpected error in initShadowGit, disabling checkpoints (${err.message})`,
+					`[Cline#getCheckpointService] caught unexpected error in initShadowGit, disabling checkpoints (${err.message})`,
 				)
 				console.error(err)
 				this.enableCheckpoints = false
@@ -2486,7 +2485,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 			return service
 		} catch (err) {
-			log("[Cline#initializeCheckpoints] caught unexpected error, disabling checkpoints")
+			log("[Cline#getCheckpointService] caught unexpected error, disabling checkpoints")
 			this.enableCheckpoints = false
 			return undefined
 		}
