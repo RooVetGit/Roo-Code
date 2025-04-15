@@ -235,73 +235,95 @@ export function applyRunLengthEncoding(content: string): string {
 
 /**
  * Processes carriage returns in terminal output to simulate how a real terminal would display content.
- * For each line containing \r characters, only the content after the last \r is kept.
- * This function is designed for maximum performance with large outputs.
+ * This function is optimized for performance by using in-place string operations and avoiding memory-intensive
+ * operations like split/join.
+ *
+ * Key features:
+ * 1. Processes output line-by-line to maximize chunk processing
+ * 2. Uses string indexes and substring operations instead of arrays
+ * 3. Single-pass traversal of the entire input
+ * 4. Special handling for multi-byte characters (like emoji) to prevent corruption
+ * 5. Replacement of partially overwritten multi-byte characters with spaces
  *
  * @param input The terminal output to process
  * @returns The processed terminal output with carriage returns handled
  */
 export function processCarriageReturns(input: string): string {
-	// Quick return if no carriage returns exist
-	if (!input.includes("\r")) {
-		return input
-	}
+	// Quick check: if no carriage returns, return the original input
+	if (input.indexOf("\r") === -1) return input
 
-	// Split into lines to process each line separately
-	const lines = input.split("\n")
-	const processedLines = []
+	let output = ""
+	let i = 0
+	const len = input.length
 
-	for (let i = 0; i < lines.length; i++) {
-		let line = lines[i]
+	// Single-pass traversal of the entire input
+	while (i < len) {
+		// Find current line's end position (newline or end of text)
+		let lineEnd = input.indexOf("\n", i)
+		if (lineEnd === -1) lineEnd = len
 
-		// Skip processing if no carriage returns in this line
-		if (!line.includes("\r")) {
-			processedLines.push(line)
-			continue
-		}
-
-		// Handle case where the line ends with a carriage return
-		// In a terminal, this positions the cursor at the start
-		// but doesn't clear anything since nothing follows to overwrite
-		if (line.endsWith("\r")) {
-			line = line.slice(0, -1)
-		}
-
-		// Process segments of text separated by carriage returns
-		const segments = line.split("\r")
-
-		if (segments.length === 1) {
-			// Just one segment (probably ended with \r which we removed)
-			processedLines.push(segments[0])
+		// Check if current line contains carriage returns
+		let crPos = input.indexOf("\r", i)
+		if (crPos === -1 || crPos >= lineEnd) {
+			// No carriage returns in this line, copy entire line
+			output += input.substring(i, lineEnd)
 		} else {
-			// For "Initial text\rnext\rthird" we want to process as:
-			// 1. Start with "Initial text"
-			// 2. Replace with "next" + remaining chars from "Initial text"
-			// 3. Replace with "third" + remaining chars from previous result
+			// Line has carriage returns, handle overwrite logic
+			let curLine = input.substring(i, crPos)
 
-			let result = segments[0]
+			while (crPos < lineEnd) {
+				// Find next carriage return or line end
+				let nextCrPos = input.indexOf("\r", crPos + 1)
+				if (nextCrPos === -1 || nextCrPos >= lineEnd) nextCrPos = lineEnd
 
-			for (let j = 1; j < segments.length; j++) {
-				const segment = segments[j]
-				// If segment is completely empty, continue with current result
-				if (segment === "") {
-					continue
+				// Extract segment after carriage return
+				let segment = input.substring(crPos + 1, nextCrPos)
+
+				// Skip empty segments
+				if (segment !== "") {
+					// Determine how to handle overwrite
+					if (segment.length >= curLine.length) {
+						// Complete overwrite
+						curLine = segment
+					} else {
+						// Partial overwrite - need to check for multi-byte character boundary issues
+						const potentialPartialChar = curLine.charAt(segment.length)
+
+						// Check if character is part of a multi-byte sequence (emoji or other Unicode characters)
+						// Detect surrogate pairs (high/low surrogates) to identify multi-byte characters
+						if (
+							potentialPartialChar &&
+							((segment.length > 0 &&
+								((segment.charCodeAt(segment.length - 1) >= 0xd800 &&
+									segment.charCodeAt(segment.length - 1) <= 0xdbff) ||
+									(potentialPartialChar.charCodeAt(0) >= 0xdc00 &&
+										potentialPartialChar.charCodeAt(0) <= 0xdfff))) ||
+								(curLine.length > segment.length + 1 &&
+									potentialPartialChar.charCodeAt(0) >= 0xd800 &&
+									potentialPartialChar.charCodeAt(0) <= 0xdbff))
+						) {
+							// If a partially overwritten multi-byte character is detected, replace with space
+							const remainPart = curLine.substring(segment.length + 1)
+							curLine = segment + " " + remainPart
+						} else {
+							// Normal partial overwrite
+							curLine = segment + curLine.substring(segment.length)
+						}
+					}
 				}
 
-				if (segment.length >= result.length) {
-					// New segment is at least as long as previous result
-					// It completely overwrites the previous result
-					result = segment
-				} else {
-					// New segment is shorter than previous result
-					// It only overwrites part of the previous result
-					result = segment + result.substring(segment.length)
-				}
+				crPos = nextCrPos
 			}
 
-			processedLines.push(result)
+			output += curLine
 		}
+
+		// Add newline if not at end of text
+		if (lineEnd < len) output += "\n"
+
+		// Move to next line
+		i = lineEnd + 1
 	}
 
-	return processedLines.join("\n")
+	return output
 }

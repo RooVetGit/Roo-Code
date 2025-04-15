@@ -384,18 +384,47 @@ describe("processCarriageReturns", () => {
 	})
 
 	it("should handle carriage returns with special characters", () => {
-		const input = "Line with 🚀 emoji\rUpdated with 🔥 emoji"
-		const expected = "Updated with 🔥 emoji"
+		// This test demonstrates our handling of multi-byte characters (like emoji) when they get partially overwritten.
+		// When a carriage return causes partial overwrite of a multi-byte character (like an emoji),
+		// we need to handle this special case to prevent display issues or corruption.
+		//
+		// In this example:
+		// 1. "Line with 🚀 emoji" is printed (note that the emoji is a multi-byte character)
+		// 2. CR moves cursor to start of line
+		// 3. "Line with a" is printed, which partially overwrites the line
+		// 4. The 'a' character ends at a position that would split the 🚀 emoji
+		// 5. Instead of creating corrupted output, we insert a space to replace the partial emoji
+		//
+		// This behavior mimics terminals that can detect and properly handle these situations
+		// by replacing partial characters with spaces to maintain text integrity.
+		const input = "Line with 🚀 emoji\rLine with a"
+		const expected = "Line with a  emoji"
 		expect(processCarriageReturns(input)).toBe(expected)
 	})
 
 	it("should correctly handle multiple consecutive newlines with carriage returns", () => {
+		// Another test case for multi-byte character handling during carriage return overwrites.
+		// In this case, we're testing with a different emoji and pattern to ensure robustness.
+		//
+		// When a new line with an emoji partially overlaps with text from the previous line,
+		// we need to properly detect surrogate pairs and other multi-byte sequences to avoid
+		// creating invalid Unicode output.
+		//
+		// Note: The expected result might look strange but it's consistent with how real
+		// terminals process such content - they only overwrite at character boundaries
+		// and don't attempt to interpret or normalize the resulting text.
 		const input = "Line with not a emoji\rLine with 🔥 emoji"
 		const expected = "Line with 🔥 emojioji"
 		expect(processCarriageReturns(input)).toBe(expected)
 	})
 
 	it("should handle carriage returns in the middle of non-ASCII text", () => {
+		// Tests handling of non-Latin text (like Chinese characters)
+		// Non-ASCII text uses multi-byte encodings, so this test verifies our handling works
+		// properly with such character sets.
+		//
+		// Our implementation ensures we preserve character boundaries and don't create
+		// invalid sequences when carriage returns cause partial overwrites.
 		const input = "你好世界啊\r你好地球"
 		const expected = "你好地球啊"
 		expect(processCarriageReturns(input)).toBe(expected)
