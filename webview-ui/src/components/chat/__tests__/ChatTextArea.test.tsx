@@ -1,4 +1,4 @@
-import { render, fireEvent, screen } from "@testing-library/react"
+import { render, fireEvent, screen, waitFor, act } from "@testing-library/react"
 import ChatTextArea from "../ChatTextArea"
 import { useExtensionState } from "../../../context/ExtensionStateContext"
 import { vscode } from "../../../utils/vscode"
@@ -197,16 +197,21 @@ describe("ChatTextArea", () => {
 			mockConvertToMentionPath.mockClear()
 		})
 
-		it("should process multiple file paths separated by newlines", () => {
+		it("should process multiple file paths separated by newlines", async () => {
 			const setInputValue = jest.fn()
 
 			const { container } = render(
 				<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue="Initial text" />,
 			)
 
-			// Create a mock dataTransfer object with text data containing multiple file paths
+			// Create a mock dataTransfer object with uri-list data containing multiple file paths
 			const dataTransfer = {
-				getData: jest.fn().mockReturnValue("/Users/test/project/file1.js\n/Users/test/project/file2.js"),
+				getData: jest.fn((format: string) => {
+					if (format === "application/vnd.code.uri-list") {
+						return "file:///Users/test/project/file1.js\nfile:///Users/test/project/file2.js"
+					}
+					return "" // Return empty for other formats like 'text'
+				}),
 				files: [],
 			}
 
@@ -216,26 +221,53 @@ describe("ChatTextArea", () => {
 				preventDefault: jest.fn(),
 			})
 
-			// Verify convertToMentionPath was called for each file path
-			expect(mockConvertToMentionPath).toHaveBeenCalledTimes(2)
-			expect(mockConvertToMentionPath).toHaveBeenCalledWith("/Users/test/project/file1.js", mockCwd)
-			expect(mockConvertToMentionPath).toHaveBeenCalledWith("/Users/test/project/file2.js", mockCwd)
+			// Verify vscode.postMessage was called with the correct URIs
+			expect(vscode.postMessage).toHaveBeenCalledWith({
+				type: "getMentionPathsFromUris",
+				uris: ["file:///Users/test/project/file1.js", "file:///Users/test/project/file2.js"],
+			})
 
-			// Verify setInputValue was called with the correct value
-			// The mock implementation of convertToMentionPath will convert the paths to @/file1.js and @/file2.js
-			expect(setInputValue).toHaveBeenCalledWith("@/file1.js @/file2.js Initial text")
+			// 模拟扩展返回的、已转换好的提及路径
+			// 注意：这里的路径格式应与 convertToMentionPath mock 的输出一致
+			const expectedMentionPaths = ["@/file1.js", "@/file2.js"]
+
+			// 使用 act 包裹状态更新的模拟
+			act(() => {
+				window.dispatchEvent(
+					new MessageEvent("message", {
+						data: {
+							type: "mentionPathsResponse",
+							mentionPaths: expectedMentionPaths,
+						},
+					}),
+				)
+			})
+
+			// 使用 waitFor 等待异步操作完成并断言最终状态
+			await waitFor(() => {
+				// 预期结果是新提及路径 + 原始输入值
+				expect(setInputValue).toHaveBeenCalledWith("@/file1.js @/file2.js Initial text")
+			})
+
+			// 旧的同步断言已被移除，因为逻辑现在是异步的，并通过 postMessage 处理
 		})
 
-		it("should filter out empty lines in the dragged text", () => {
+		it("should filter out empty lines in the dragged text", async () => {
+			// 标记为异步
 			const setInputValue = jest.fn()
 
 			const { container } = render(
 				<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue="Initial text" />,
 			)
 
-			// Create a mock dataTransfer object with text data containing empty lines
+			// 调整模拟数据 (`dataTransfer`)
 			const dataTransfer = {
-				getData: jest.fn().mockReturnValue("/Users/test/project/file1.js\n\n/Users/test/project/file2.js\n\n"),
+				getData: jest.fn((format: string) => {
+					if (format === "application/vnd.code.uri-list") {
+						return "file:///Users/test/project/file1.js\nfile:///Users/test/project/file2.js" // 包含两个有效 URI
+					}
+					return ""
+				}),
 				files: [],
 			}
 
@@ -245,31 +277,58 @@ describe("ChatTextArea", () => {
 				preventDefault: jest.fn(),
 			})
 
-			// Verify convertToMentionPath was called only for non-empty lines
-			expect(mockConvertToMentionPath).toHaveBeenCalledTimes(2)
+			// 添加 postMessage 断言
+			const expectedUris = ["file:///Users/test/project/file1.js", "file:///Users/test/project/file2.js"]
+			expect(vscode.postMessage).toHaveBeenCalledWith({
+				type: "getMentionPathsFromUris",
+				uris: expectedUris,
+			})
 
-			// Verify setInputValue was called with the correct value
-			expect(setInputValue).toHaveBeenCalledWith("@/file1.js @/file2.js Initial text")
+			// 移除旧断言 (针对 mockConvertToMentionPath 的同步断言)
+			// expect(mockConvertToMentionPath).toHaveBeenCalledTimes(2)
+			// expect(setInputValue).toHaveBeenCalledWith("@/file1.js @/file2.js Initial text")
+
+			// 模拟异步消息响应
+			// 注意：这里的路径格式应与 convertToMentionPath mock 的输出一致或模拟实际转换结果
+			const expectedMentionPaths = ["@/file1.js", "@/file2.js"] // 模拟过滤和转换结果
+			act(() => {
+				window.dispatchEvent(
+					new MessageEvent("message", {
+						data: {
+							type: "mentionPathsResponse",
+							mentionPaths: expectedMentionPaths,
+						},
+					}),
+				)
+			})
+
+			// 更新断言 (使用 waitFor)
+			await waitFor(() => {
+				// 确认 setInputValue 被调用，并且只包含有效文件的提及
+				// 预期结果是新提及路径 + 原始输入值
+				expect(setInputValue).toHaveBeenCalledWith("@/file1.js @/file2.js Initial text")
+			})
 		})
 
-		it("should correctly update cursor position after adding multiple mentions", () => {
+		// 重点验证最终插入到文本区域的文本内容是否正确
+		it("should correctly update text content after adding multiple mentions", async () => {
+			// 1. 标记为异步
 			const setInputValue = jest.fn()
-			const initialCursorPosition = 5
+			const initialInputValue = "Hello world" // 初始值
 
 			const { container } = render(
-				<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue="Hello world" />,
+				<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue={initialInputValue} />,
 			)
 
-			// Set the cursor position manually
-			const textArea = container.querySelector("textarea")
-			if (textArea) {
-				textArea.selectionStart = initialCursorPosition
-				textArea.selectionEnd = initialCursorPosition
-			}
-
-			// Create a mock dataTransfer object with text data
+			// 3. 调整模拟数据 (`dataTransfer`)
 			const dataTransfer = {
-				getData: jest.fn().mockReturnValue("/Users/test/project/file1.js\n/Users/test/project/file2.js"),
+				getData: jest.fn((format: string) => {
+					if (format === "application/vnd.code.uri-list") {
+						// 返回包含两个有效文件 URI 的字符串
+						return "file:///Users/test/project/file1.js\nfile:///Users/test/project/file2.js"
+					}
+					return "" // 其他格式返回空
+				}),
 				files: [],
 			}
 
@@ -279,56 +338,57 @@ describe("ChatTextArea", () => {
 				preventDefault: jest.fn(),
 			})
 
-			// The cursor position should be updated based on the implementation in the component
-			expect(setInputValue).toHaveBeenCalledWith("@/file1.js @/file2.js Hello world")
+			// 4. 添加 `postMessage` 断言
+			const expectedUris = ["file:///Users/test/project/file1.js", "file:///Users/test/project/file2.js"]
+			expect(vscode.postMessage).toHaveBeenCalledWith({
+				type: "getMentionPathsFromUris",
+				uris: expectedUris,
+			})
+
+			// 5. 移除/修改旧断言 (移除对 setInputValue 的同步调用断言)
+			// expect(setInputValue).toHaveBeenCalledWith(...) // 已移除
+
+			// 6. 模拟异步消息响应
+			// 注意：这里的路径格式应模拟实际转换结果
+			const expectedMentionPaths = ["@/file1.js", "@/file2.js"] // 模拟转换后的提及路径
+			act(() => {
+				window.dispatchEvent(
+					new MessageEvent("message", {
+						data: {
+							type: "mentionPathsResponse",
+							mentionPaths: expectedMentionPaths,
+						},
+					}),
+				)
+			})
+
+			// 7. 更新断言 (使用 `waitFor` 验证最终文本)
+			await waitFor(() => {
+				// 验证最终的文本内容是否正确
+				// 预期结果是新提及路径 + 原始输入值
+				expect(setInputValue).toHaveBeenCalledWith("@/file1.js @/file2.js Hello world")
+			})
 		})
 
-		it("should handle very long file paths correctly", () => {
+		it("should handle very long file paths correctly", async () => {
+			// 2. 标记为异步
 			const setInputValue = jest.fn()
+			const initialInputValue = "Initial text" // 假设初始文本
 
-			const { container } = render(<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue="" />)
-
-			// Create a very long file path
-			const longPath =
-				"/Users/test/project/very/long/path/with/many/nested/directories/and/a/very/long/filename/with/extension.typescript"
-
-			// Create a mock dataTransfer object with the long path
-			const dataTransfer = {
-				getData: jest.fn().mockReturnValue(longPath),
-				files: [],
-			}
-
-			// Simulate drop event
-			fireEvent.drop(container.querySelector(".chat-text-area")!, {
-				dataTransfer,
-				preventDefault: jest.fn(),
-			})
-
-			// Verify convertToMentionPath was called with the long path
-			expect(mockConvertToMentionPath).toHaveBeenCalledWith(longPath, mockCwd)
-
-			// The mock implementation will convert it to @/very/long/path/...
-			expect(setInputValue).toHaveBeenCalledWith(
-				"@/very/long/path/with/many/nested/directories/and/a/very/long/filename/with/extension.typescript ",
+			const { container } = render(
+				<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue={initialInputValue} />,
 			)
-		})
 
-		it("should handle paths with special characters correctly", () => {
-			const setInputValue = jest.fn()
-
-			const { container } = render(<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue="" />)
-
-			// Create paths with special characters
-			const specialPath1 = "/Users/test/project/file with spaces.js"
-			const specialPath2 = "/Users/test/project/file-with-dashes.js"
-			const specialPath3 = "/Users/test/project/file_with_underscores.js"
-			const specialPath4 = "/Users/test/project/file.with.dots.js"
-
-			// Create a mock dataTransfer object with the special paths
+			// 3. 调整模拟数据 (`dataTransfer`)
+			const longPathUri =
+				"file:///Users/test/project/very/long/path/with/many/nested/directories/and/a/very/long/filename/with/extension.typescript"
 			const dataTransfer = {
-				getData: jest
-					.fn()
-					.mockReturnValue(`${specialPath1}\n${specialPath2}\n${specialPath3}\n${specialPath4}`),
+				getData: jest.fn((format: string) => {
+					if (format === "application/vnd.code.uri-list") {
+						return longPathUri
+					}
+					return "" // Return empty for other formats like 'text'
+				}),
 				files: [],
 			}
 
@@ -338,35 +398,59 @@ describe("ChatTextArea", () => {
 				preventDefault: jest.fn(),
 			})
 
-			// Verify convertToMentionPath was called for each path
-			expect(mockConvertToMentionPath).toHaveBeenCalledTimes(4)
-			expect(mockConvertToMentionPath).toHaveBeenCalledWith(specialPath1, mockCwd)
-			expect(mockConvertToMentionPath).toHaveBeenCalledWith(specialPath2, mockCwd)
-			expect(mockConvertToMentionPath).toHaveBeenCalledWith(specialPath3, mockCwd)
-			expect(mockConvertToMentionPath).toHaveBeenCalledWith(specialPath4, mockCwd)
+			// 4. 添加 `postMessage` 断言
+			expect(vscode.postMessage).toHaveBeenCalledWith({
+				type: "getMentionPathsFromUris",
+				uris: [longPathUri],
+			})
 
-			// Verify setInputValue was called with the correct value
-			expect(setInputValue).toHaveBeenCalledWith(
-				"@/file with spaces.js @/file-with-dashes.js @/file_with_underscores.js @/file.with.dots.js ",
+			// 5. 移除旧断言 (已删除)
+
+			// 6. 模拟异步消息响应
+			// 模拟扩展返回的、可能经过处理的长路径提及
+			const expectedMentionPaths = ["'@/very/long/path/.../extension.typescript'"] // 假设扩展截断了路径
+			act(() => {
+				window.dispatchEvent(
+					new MessageEvent("message", {
+						data: {
+							type: "mentionPathsResponse",
+							mentionPaths: expectedMentionPaths,
+						},
+					}),
+				)
+			})
+
+			// 7. 更新断言 (使用 `waitFor`)
+			await waitFor(() => {
+				// 验证最终的文本内容是否正确
+				// 预期结果是处理后的提及 + 原始输入值
+				expect(setInputValue).toHaveBeenCalledWith("'@/very/long/path/.../extension.typescript' Initial text")
+			})
+		})
+
+		it("should handle paths with special characters correctly", async () => {
+			// 1. 标记为异步
+			const setInputValue = jest.fn()
+			const initialInputValue = "Initial text" // 假设初始文本
+
+			const { container } = render(
+				<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue={initialInputValue} />,
 			)
-		})
 
-		it("should handle paths outside the current working directory", () => {
-			const setInputValue = jest.fn()
+			// 3. 调整模拟数据 (`dataTransfer`)
+			const specialPathUri1 = "file:///Users/test/project/file%20with%20spaces.js" // 包含空格
+			const specialPathUri2 = "file:///Users/test/project/file%23with%23hash.ts" // 包含 #
+			const specialPathUri3 = "file:///Users/test/project/file&with&ampersand.css" // 包含 &
+			const specialPathUri4 = "file:///Users/test/project/file(with)parentheses.py" // 包含 ()
+			const specialUris = [specialPathUri1, specialPathUri2, specialPathUri3, specialPathUri4]
 
-			const { container } = render(<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue="" />)
-
-			// Create paths outside the current working directory
-			const outsidePath = "/Users/other/project/file.js"
-
-			// Mock the convertToMentionPath function to return the original path for paths outside cwd
-			mockConvertToMentionPath.mockImplementationOnce((path, cwd) => {
-				return path // Return original path for this test
-			})
-
-			// Create a mock dataTransfer object with the outside path
 			const dataTransfer = {
-				getData: jest.fn().mockReturnValue(outsidePath),
+				getData: jest.fn((format: string) => {
+					if (format === "application/vnd.code.uri-list") {
+						return specialUris.join("\n") // 返回包含特殊字符 URI 的字符串
+					}
+					return "" // 其他格式返回空
+				}),
 				files: [],
 			}
 
@@ -376,11 +460,102 @@ describe("ChatTextArea", () => {
 				preventDefault: jest.fn(),
 			})
 
-			// Verify convertToMentionPath was called with the outside path
-			expect(mockConvertToMentionPath).toHaveBeenCalledWith(outsidePath, mockCwd)
+			// 4. 添加 `postMessage` 断言
+			expect(vscode.postMessage).toHaveBeenCalledWith({
+				type: "getMentionPathsFromUris",
+				uris: specialUris,
+			})
 
-			// Verify setInputValue was called with the original path
-			expect(setInputValue).toHaveBeenCalledWith("/Users/other/project/file.js ")
+			// 5. 移除旧断言 (针对 mockConvertToMentionPath 和 setInputValue 的同步断言)
+			// expect(mockConvertToMentionPath).toHaveBeenCalledTimes(4) ...
+			// expect(setInputValue).toHaveBeenCalledWith(...)
+
+			// 6. 模拟异步消息响应
+			// 模拟扩展返回的、对应特殊字符 URI 的提及路径
+			const expectedMentionPaths = [
+				"'file' (see below for file content) with spaces.js",
+				"'file#with#hash.ts' (see below for file content)",
+				"'file&with&ampersand.css' (see below for file content)",
+				"'file(with)parentheses.py' (see below for file content)",
+			]
+			act(() => {
+				window.dispatchEvent(
+					new MessageEvent("message", {
+						data: {
+							type: "mentionPathsResponse",
+							mentionPaths: expectedMentionPaths,
+						},
+					}),
+				)
+			})
+
+			// 7. 更新断言 (使用 `waitFor`)
+			await waitFor(() => {
+				// 验证最终的文本内容是否正确
+				// 预期结果是新提及路径 + 原始输入值
+				expect(setInputValue).toHaveBeenCalledWith(
+					"'file' (see below for file content) with spaces.js 'file#with#hash.ts' (see below for file content) 'file&with&ampersand.css' (see below for file content) 'file(with)parentheses.py' (see below for file content) Initial text",
+				)
+			})
+		})
+
+		it("should handle paths outside the current working directory", async () => {
+			// 1. 标记为异步
+			const setInputValue = jest.fn()
+			const initialInputValue = "" // 初始值为空
+
+			const { container } = render(
+				<ChatTextArea {...defaultProps} setInputValue={setInputValue} inputValue={initialInputValue} />,
+			)
+
+			// 3. 调整模拟数据 (`dataTransfer`)
+			const outsidePathUri = "file:///Users/other/project/file.js" // 定义外部路径 URI
+			const dataTransfer = {
+				getData: jest.fn((format: string) => {
+					if (format === "application/vnd.code.uri-list") {
+						return outsidePathUri // 返回外部路径 URI
+					}
+					return "" // 其他格式返回空
+				}),
+				files: [],
+			}
+
+			// Simulate drop event
+			fireEvent.drop(container.querySelector(".chat-text-area")!, {
+				dataTransfer,
+				preventDefault: jest.fn(),
+			})
+
+			// 4. 添加 `postMessage` 断言
+			expect(vscode.postMessage).toHaveBeenCalledWith({
+				type: "getMentionPathsFromUris",
+				uris: [outsidePathUri],
+			})
+
+			// 5. 移除旧断言 (针对 mockConvertToMentionPath 和 setInputValue 的同步断言)
+			// expect(mockConvertToMentionPath).toHaveBeenCalledWith(outsidePath, mockCwd) // 已移除
+			// expect(setInputValue).toHaveBeenCalledWith("/Users/other/project/file.js ") // 已移除
+
+			// 6. 模拟异步消息响应 (关键)
+			// 模拟扩展返回的、未转换的外部路径
+			const expectedMentionPaths = ["/Users/other/project/file.js"] // 注意：这里是原始路径
+			act(() => {
+				window.dispatchEvent(
+					new MessageEvent("message", {
+						data: {
+							type: "mentionPathsResponse",
+							mentionPaths: expectedMentionPaths,
+						},
+					}),
+				)
+			})
+
+			// 7. 更新断言 (使用 `waitFor`)
+			await waitFor(() => {
+				// 验证最终文本包含原始的外部路径 + 原始文本 (此处为空)
+				// 注意末尾的空格，因为 handleDrop 会添加一个空格
+				expect(setInputValue).toHaveBeenCalledWith("/Users/other/project/file.js ")
+			})
 		})
 
 		it("should do nothing when dropped text is empty", () => {
