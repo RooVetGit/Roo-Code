@@ -1,10 +1,24 @@
-import { VSCodeCheckbox, VSCodeButton } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
 import { useCallback, useState } from "react"
-import { useExtensionState } from "../../context/ExtensionStateContext"
-import { useAppTranslation } from "../../i18n/TranslationContext"
 import { Trans } from "react-i18next"
 import { VSCodeLink } from "@vscode/webview-ui-toolkit/react"
+
+import { Button } from "@/components/ui"
+
 import { vscode } from "../../utils/vscode"
+import { useExtensionState } from "../../context/ExtensionStateContext"
+import { useAppTranslation } from "../../i18n/TranslationContext"
+
+const ICON_MAP: Record<string, string> = {
+	readFiles: "eye",
+	editFiles: "edit",
+	executeCommands: "terminal",
+	useBrowser: "globe",
+	useMcp: "plug",
+	switchModes: "sync",
+	subtasks: "discard",
+	retryRequests: "refresh",
+}
 
 interface AutoApproveAction {
 	id: string
@@ -102,7 +116,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		.map((action) => action.label)
 		.join(", ")
 
-	// Individual checkbox handlers - each one only updates its own state
+	// Individual checkbox handlers - each one only updates its own state.
 	const handleReadOnlyChange = useCallback(() => {
 		const newValue = !(alwaysAllowReadOnly ?? false)
 		setAlwaysAllowReadOnly(newValue)
@@ -159,7 +173,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		})
 	}, [])
 
-	// Map action IDs to their specific handlers
+	// Map action IDs to their specific handlers.
 	const actionHandlers: Record<AutoApproveAction["id"], () => void> = {
 		readFiles: handleReadOnlyChange,
 		editFiles: handleWriteChange,
@@ -237,10 +251,9 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 				</div>
 			</div>
 			{isExpanded && (
-				<div style={{ padding: "0" }}>
+				<div className="flex flex-col gap-2">
 					<div
 						style={{
-							marginBottom: "10px",
 							color: "var(--vscode-descriptionForeground)",
 							fontSize: "12px",
 						}}>
@@ -251,43 +264,24 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 							}}
 						/>
 					</div>
-					<div
-						className="flex flex-row gap-2 [@media(min-width:400px)]:gap-4 flex-wrap justify-center"
-						style={{ paddingBottom: "2rem" }}>
+					<div className="grid grid-cols-2 [@media(min-width:320px)]:grid-cols-4 gap-2">
 						{actions.map((action) => {
-							const iconMap: Record<string, string> = {
-								readFiles: "eye",
-								editFiles: "edit",
-								executeCommands: "terminal",
-								useBrowser: "globe",
-								useMcp: "plug",
-								switchModes: "sync",
-								subtasks: "discard",
-								retryRequests: "refresh",
-							}
-							const codicon = iconMap[action.id] || "question"
+							const codicon = ICON_MAP[action.id] || "question"
 							return (
-								<VSCodeButton
+								<Button
 									key={action.id}
-									appearance={action.enabled ? "primary" : "secondary"}
+									variant={action.enabled ? "default" : "ghost"}
 									onClick={(e) => {
 										e.stopPropagation()
 										actionHandlers[action.id]()
 									}}
 									title={action.description}
-									className="aspect-square min-h-[80px] min-w-[80px] max-h-[100px] max-w-[100px]"
-									style={{ flexBasis: "20%" }}>
-									<span className="flex flex-col items-center gap-1 h-full">
-										<span
-											className={`codicon codicon-${codicon} text-base `}
-											style={{
-												fontSize: "1.5rem",
-												paddingTop: "0.5rem",
-											}}
-										/>
+									className="h-12">
+									<span className="flex flex-col items-center gap-1">
+										<span className={`codicon codicon-${codicon}`} />
 										<span className="text-sm text-center">{action.label}</span>
 									</span>
-								</VSCodeButton>
+								</Button>
 							)
 						})}
 					</div>
