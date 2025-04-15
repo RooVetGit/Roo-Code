@@ -1,118 +1,195 @@
 import chalk from "chalk"
-import { Command } from "commander"
-import { displayBox, displayTextInput } from "../utils/display"
-import { WebSocketClient } from "../utils/websocket-client"
+import { EventName, WebSocketClient } from "../utils/websocket-client"
 
 /**
- * Create the task command
- * @param wsClient The WebSocket client
- * @returns The task command
+ * Utility functions for task operations
+ * These functions are used by the create and update commands
  */
-export function taskCommand(wsClient: WebSocketClient): Command {
-	const task = new Command("task").description("Manage tasks")
 
-	// New task command
-	task.command("new [message]")
-		.description("Start a new task with an optional message")
-		.option("-i, --interactive", "Enter message interactively")
-		.option("-t, --tab", "Open in a new tab")
-		.action(async (message, options) => {
-			try {
-				let taskMessage = message
+/**
+ * Wait for a specified amount of time
+ * @param ms Time to wait in milliseconds
+ */
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-				if (options.interactive || !taskMessage) {
-					taskMessage = await displayTextInput("Enter your task message:")
-				}
+/**
+ * Set up event listeners for a task
+ * @export
+ * @param wsClient The WebSocket client
+ * @param taskId The ID of the task to listen for
+ */
+export async function setupTaskEventListeners(wsClient: WebSocketClient, taskId: string): Promise<void> {
+	// First, clean up any existing event listeners to prevent duplicates
+	wsClient.removeTaskEventListeners()
 
-				if (!taskMessage) {
-					console.log(chalk.yellow("No message provided. Task creation cancelled."))
-					return
-				}
+	// Subscribe to all events for this task to keep the connection alive
+	await wsClient.subscribeToTaskEvents(taskId)
 
-				const taskId = await wsClient.sendCommand("startNewTask", {
-					text: taskMessage,
-					newTab: options.tab || false,
-				})
+	// Handle partial message updates
+	wsClient.on("partialMessage", (data) => {
+		if (data.taskId === taskId) {
+			// Write the delta (new part) to stdout without a newline
+			process.stdout.write(data.delta || "")
+		}
+	})
 
-				displayBox("Task Created", `New task created with ID: ${taskId}`, "success")
+	// Handle complete messages
+	wsClient.on("completeMessage", (data) => {
+		if (data.taskId === taskId) {
+			// Write the complete message with a newline
+			console.log("\n" + data.content)
+		}
+	})
 
-				// Set up event listeners for streaming responses
-				wsClient.on("message", (payload) => {
-					if (payload && payload[0] && payload[0].taskId === taskId) {
-						const message = payload[0].message
-						if (message && message.text) {
-							console.log(message.text)
-						}
-					}
-				})
-			} catch (error) {
-				console.error(chalk.red(`Error: ${error instanceof Error ? error.message : String(error)}`))
-			}
-		})
+	// We no longer need the original message handler as it causes duplicate output
+	// The partialMessage and completeMessage handlers above handle all message types
 
-	// Resume task command
-	task.command("resume <taskId>")
-		.description("Resume a paused task")
-		.action(async (taskId) => {
-			try {
-				// Check if task exists
-				const exists = await wsClient.sendCommand("isTaskInHistory", { taskId })
+	// Set up handlers for all events in the EventName enum
+	// This ensures the CLI handles the same events as the webview-UI
 
-				if (!exists) {
-					console.error(chalk.red(`Error: Task with ID ${taskId} does not exist`))
-					return
-				}
+	// Handle task completion events
+	wsClient.on(EventName.TaskCompleted, (payload) => {
+		if (payload && payload[0] && payload[0] === taskId) {
+			console.log(chalk.green("\nTask completed."))
+			// Clean up event listeners when the task is completed
+			wsClient.removeTaskEventListeners()
+			// Signal that the task is complete
+			wsClient.emit("taskFinished", taskId)
+		}
+	})
 
-				await wsClient.sendCommand("resumeTask", { taskId })
-				displayBox("Task Resumed", `Task ${taskId} has been resumed`, "success")
-			} catch (error) {
-				console.error(chalk.red(`Error: ${error instanceof Error ? error.message : String(error)}`))
-			}
-		})
+	// Handle task aborted events
+	wsClient.on(EventName.TaskAborted, (payload) => {
+		if (payload && payload[0] && payload[0] === taskId) {
+			console.log(chalk.yellow("\nTask aborted."))
+			// Clean up event listeners when the task is aborted
+			wsClient.removeTaskEventListeners()
+			// Signal that the task is complete
+			wsClient.emit("taskFinished", taskId)
+		}
+	})
 
-	// Clear task command
-	task.command("clear")
-		.description("Clear the current task")
-		.option("-m, --message <message>", "Final message for the task")
-		.action(async (options) => {
-			try {
-				await wsClient.sendCommand("clearCurrentTask", { lastMessage: options.message })
-				displayBox("Task Cleared", "Current task has been cleared", "success")
-			} catch (error) {
-				console.error(chalk.red(`Error: ${error instanceof Error ? error.message : String(error)}`))
-			}
-		})
+	// Handle ask response events (when user interaction is required)
+	wsClient.on(EventName.TaskAskResponded, (payload) => {
+		if (payload && payload[0] && payload[0] === taskId) {
+			console.log(chalk.blue("\nTask is waiting for your response."))
+			// Clean up event listeners when the task requires user interaction
+			// wsClient.removeTaskEventListeners()
+			// Signal that the task is complete
+			// wsClient.emit("taskFinished", taskId)
+		}
+	})
 
-	// Cancel task command
-	task.command("cancel")
-		.description("Cancel the current task")
-		.action(async () => {
-			try {
-				await wsClient.sendCommand("cancelCurrentTask")
-				displayBox("Task Cancelled", "Current task has been cancelled", "success")
-			} catch (error) {
-				console.error(chalk.red(`Error: ${error instanceof Error ? error.message : String(error)}`))
-			}
-		})
+	// Handle task started events
+	wsClient.on(EventName.TaskStarted, (payload) => {
+		if (payload && payload[0] && payload[0] === taskId) {
+			console.log(chalk.blue(`Task ${taskId} started.`))
+		}
+	})
 
-	// Send message to task command
-	task.command("message <message>")
-		.description("Send a message to the current task")
-		.option("-i, --interactive", "Enter message interactively")
-		.action(async (message, options) => {
-			try {
-				let taskMessage = message
+	// Handle task mode switched events
+	wsClient.on(EventName.TaskModeSwitched, (payload) => {
+		if (payload && payload.length >= 2 && payload[0] === taskId) {
+			console.log(chalk.blue(`Task switched to mode: ${payload[1]}`))
+		}
+	})
 
-				if (options.interactive) {
-					taskMessage = await displayTextInput("Enter your message:", message)
-				}
+	// Handle task paused events
+	wsClient.on(EventName.TaskPaused, (payload) => {
+		if (payload && payload[0] && payload[0] === taskId) {
+			console.log(chalk.yellow(`Task ${taskId} paused.`))
+		}
+	})
 
-				await wsClient.sendCommand("sendMessage", { text: taskMessage })
-				displayBox("Message Sent", "Message has been sent to the current task", "success")
-			} catch (error) {
-				console.error(chalk.red(`Error: ${error instanceof Error ? error.message : String(error)}`))
-			}
-		})
+	// Handle task unpaused events
+	wsClient.on(EventName.TaskUnpaused, (payload) => {
+		if (payload && payload[0] && payload[0] === taskId) {
+			console.log(chalk.green(`Task ${taskId} resumed.`))
+		}
+	})
 
-	return task
+	// Handle task spawned events
+	wsClient.on(EventName.TaskSpawned, (payload) => {
+		if (payload && payload.length >= 2 && payload[0] === taskId) {
+			console.log(chalk.blue(`Task spawned child task: ${payload[1]}`))
+		}
+	})
+
+	// Handle token usage updated events
+	// wsClient.on(EventName.TaskTokenUsageUpdated, (payload) => {
+	// 	if (payload && payload.length >= 2 && payload[0] === taskId) {
+	// 		console.log(chalk.blue(`Token usage updated: ${JSON.stringify(payload[1])}`))
+	// 	}
+	// })
 }
+
+/**
+ * Wait for a task to complete or timeout
+ * @export
+ * @param wsClient The WebSocket client
+ * @param taskId The ID of the task to wait for
+ * @param timeoutMs Timeout in milliseconds
+ * @returns A promise that resolves when the task is complete or times out
+ */
+export async function waitForTaskCompletion(
+	wsClient: WebSocketClient,
+	taskId: string,
+	timeoutMs: number = 20000,
+): Promise<void> {
+	return new Promise<void>((resolve) => {
+		// Reset the last activity time
+		wsClient.resetLastActivityTime()
+
+		let timeoutId: NodeJS.Timeout
+		let activityCheckId: NodeJS.Timeout
+
+		// Set up a listener for the taskFinished event
+		const finishListener = (id: string) => {
+			if (id === taskId) {
+				clearTimeout(timeoutId)
+				clearInterval(activityCheckId)
+				wsClient.removeListener("taskFinished", finishListener)
+				resolve()
+			}
+		}
+
+		// Listen for the taskFinished event
+		wsClient.on("taskFinished", finishListener)
+
+		// Set up an interval to check for activity
+		activityCheckId = setInterval(() => {
+			// If there's been activity in the last 5 seconds, reset the timeout
+			if (wsClient.getTimeSinceLastActivity() < 5000) {
+				// Activity detected, reset the timeout
+				clearTimeout(timeoutId)
+
+				// Set up a new timeout
+				timeoutId = setTimeout(() => {
+					clearInterval(activityCheckId)
+					wsClient.removeListener("taskFinished", finishListener)
+					console.log(chalk.yellow("\nTask is still running. Press Ctrl+C to exit."))
+					resolve()
+				}, timeoutMs)
+			}
+		}, 1000)
+
+		// Set up the initial timeout
+		timeoutId = setTimeout(() => {
+			clearInterval(activityCheckId)
+			wsClient.removeListener("taskFinished", finishListener)
+
+			// Check if there's been any activity
+			if (wsClient.getTimeSinceLastActivity() < timeoutMs) {
+				// If there's been activity, keep waiting
+				console.log(chalk.yellow("\nTask is still running. Press Ctrl+C to exit."))
+			} else {
+				// If we haven't received any events, assume the task is not going to respond
+				console.log(chalk.red("\nNo response received from task within timeout period."))
+				wsClient.removeTaskEventListeners()
+			}
+
+			resolve()
+		}, timeoutMs)
+	})
+}
+// No taskCommand function - this functionality has been moved to create.ts and update.ts
