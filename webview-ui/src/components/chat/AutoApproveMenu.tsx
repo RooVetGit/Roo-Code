@@ -1,16 +1,29 @@
 import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
 import { useCallback, useState } from "react"
-import { useExtensionState } from "../../context/ExtensionStateContext"
-import { useAppTranslation } from "../../i18n/TranslationContext"
 import { Trans } from "react-i18next"
 import { VSCodeLink } from "@vscode/webview-ui-toolkit/react"
+
+import { Button } from "@/components/ui"
+
 import { vscode } from "../../utils/vscode"
+import { useExtensionState } from "../../context/ExtensionStateContext"
+import { useAppTranslation } from "../../i18n/TranslationContext"
+
+const ICON_MAP: Record<string, string> = {
+	readFiles: "eye",
+	editFiles: "edit",
+	executeCommands: "terminal",
+	useBrowser: "globe",
+	useMcp: "plug",
+	switchModes: "sync",
+	subtasks: "discard",
+	retryRequests: "refresh",
+}
 
 interface AutoApproveAction {
 	id: string
 	label: string
 	enabled: boolean
-	shortName: string
 	description: string
 }
 
@@ -47,56 +60,48 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		{
 			id: "readFiles",
 			label: t("chat:autoApprove.actions.readFiles.label"),
-			shortName: t("chat:autoApprove.actions.readFiles.shortName"),
 			enabled: alwaysAllowReadOnly ?? false,
 			description: t("chat:autoApprove.actions.readFiles.description"),
 		},
 		{
 			id: "editFiles",
 			label: t("chat:autoApprove.actions.editFiles.label"),
-			shortName: t("chat:autoApprove.actions.editFiles.shortName"),
 			enabled: alwaysAllowWrite ?? false,
 			description: t("chat:autoApprove.actions.editFiles.description"),
 		},
 		{
 			id: "executeCommands",
 			label: t("chat:autoApprove.actions.executeCommands.label"),
-			shortName: t("chat:autoApprove.actions.executeCommands.shortName"),
 			enabled: alwaysAllowExecute ?? false,
 			description: t("chat:autoApprove.actions.executeCommands.description"),
 		},
 		{
 			id: "useBrowser",
 			label: t("chat:autoApprove.actions.useBrowser.label"),
-			shortName: t("chat:autoApprove.actions.useBrowser.shortName"),
 			enabled: alwaysAllowBrowser ?? false,
 			description: t("chat:autoApprove.actions.useBrowser.description"),
 		},
 		{
 			id: "useMcp",
 			label: t("chat:autoApprove.actions.useMcp.label"),
-			shortName: t("chat:autoApprove.actions.useMcp.shortName"),
 			enabled: alwaysAllowMcp ?? false,
 			description: t("chat:autoApprove.actions.useMcp.description"),
 		},
 		{
 			id: "switchModes",
 			label: t("chat:autoApprove.actions.switchModes.label"),
-			shortName: t("chat:autoApprove.actions.switchModes.shortName"),
 			enabled: alwaysAllowModeSwitch ?? false,
 			description: t("chat:autoApprove.actions.switchModes.description"),
 		},
 		{
 			id: "subtasks",
 			label: t("chat:autoApprove.actions.subtasks.label"),
-			shortName: t("chat:autoApprove.actions.subtasks.shortName"),
 			enabled: alwaysAllowSubtasks ?? false,
 			description: t("chat:autoApprove.actions.subtasks.description"),
 		},
 		{
 			id: "retryRequests",
 			label: t("chat:autoApprove.actions.retryRequests.label"),
-			shortName: t("chat:autoApprove.actions.retryRequests.shortName"),
 			enabled: alwaysApproveResubmit ?? false,
 			description: t("chat:autoApprove.actions.retryRequests.description"),
 		},
@@ -108,10 +113,10 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 
 	const enabledActionsList = actions
 		.filter((action) => action.enabled)
-		.map((action) => action.shortName)
+		.map((action) => action.label)
 		.join(", ")
 
-	// Individual checkbox handlers - each one only updates its own state
+	// Individual checkbox handlers - each one only updates its own state.
 	const handleReadOnlyChange = useCallback(() => {
 		const newValue = !(alwaysAllowReadOnly ?? false)
 		setAlwaysAllowReadOnly(newValue)
@@ -168,7 +173,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		})
 	}, [])
 
-	// Map action IDs to their specific handlers
+	// Map action IDs to their specific handlers.
 	const actionHandlers: Record<AutoApproveAction["id"], () => void> = {
 		readFiles: handleReadOnlyChange,
 		editFiles: handleWriteChange,
@@ -246,10 +251,9 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 				</div>
 			</div>
 			{isExpanded && (
-				<div style={{ padding: "0" }}>
+				<div className="flex flex-col gap-2">
 					<div
 						style={{
-							marginBottom: "10px",
 							color: "var(--vscode-descriptionForeground)",
 							fontSize: "12px",
 						}}>
@@ -260,23 +264,27 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 							}}
 						/>
 					</div>
-					{actions.map((action) => (
-						<div key={action.id} style={{ margin: "6px 0" }}>
-							<div onClick={(e) => e.stopPropagation()}>
-								<VSCodeCheckbox checked={action.enabled} onChange={actionHandlers[action.id]}>
-									{action.label}
-								</VSCodeCheckbox>
-							</div>
-							<div
-								style={{
-									marginLeft: "28px",
-									color: "var(--vscode-descriptionForeground)",
-									fontSize: "12px",
-								}}>
-								{action.description}
-							</div>
-						</div>
-					))}
+					<div className="grid grid-cols-2 [@media(min-width:320px)]:grid-cols-4 gap-2">
+						{actions.map((action) => {
+							const codicon = ICON_MAP[action.id] || "question"
+							return (
+								<Button
+									key={action.id}
+									variant={action.enabled ? "default" : "ghost"}
+									onClick={(e) => {
+										e.stopPropagation()
+										actionHandlers[action.id]()
+									}}
+									title={action.description}
+									className="h-12">
+									<span className="flex flex-col items-center gap-1">
+										<span className={`codicon codicon-${codicon}`} />
+										<span className="text-sm text-center">{action.label}</span>
+									</span>
+								</Button>
+							)
+						})}
+					</div>
 				</div>
 			)}
 		</div>

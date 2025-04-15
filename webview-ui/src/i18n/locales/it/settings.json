@@ -29,12 +29,13 @@
 		"advanced": "Avanzate",
 		"experimental": "Funzionalità sperimentali",
 		"language": "Lingua",
-		"about": "Informazioni su Roo Code"
+		"about": "Informazioni su Roo Code",
+		"interface": "Interfaccia"
 	},
 	"autoApprove": {
 		"description": "Permetti a Roo di eseguire automaticamente operazioni senza richiedere approvazione. Abilita queste impostazioni solo se ti fidi completamente dell'IA e comprendi i rischi di sicurezza associati.",
 		"readOnly": {
-			"label": "Approva sempre operazioni di sola lettura",
+			"label": "Leggi",
 			"description": "Quando abilitato, Roo visualizzerà automaticamente i contenuti della directory e leggerà i file senza richiedere di cliccare sul pulsante Approva.",
 			"outsideWorkspace": {
 				"label": "Includi file al di fuori dell'area di lavoro",
@@ -42,7 +43,7 @@
 			}
 		},
 		"write": {
-			"label": "Approva sempre operazioni di scrittura",
+			"label": "Scrivi",
 			"description": "Crea e modifica automaticamente i file senza richiedere approvazione",
 			"delayLabel": "Ritardo dopo le scritture per consentire alla diagnostica di rilevare potenziali problemi",
 			"outsideWorkspace": {
@@ -51,29 +52,28 @@
 			}
 		},
 		"browser": {
-			"label": "Approva sempre azioni del browser",
-			"description": "Esegui automaticamente azioni del browser senza richiedere approvazione",
-			"note": "Nota: Si applica solo quando il modello supporta l'uso del computer"
+			"label": "Browser",
+			"description": "Esegui automaticamente azioni del browser senza richiedere approvazione. Nota: Si applica solo quando il modello supporta l'uso del computer"
 		},
 		"retry": {
-			"label": "Riprova sempre le richieste API fallite",
+			"label": "Riprova",
 			"description": "Riprova automaticamente le richieste API fallite quando il server restituisce una risposta di errore",
 			"delayLabel": "Ritardo prima di riprovare la richiesta"
 		},
 		"mcp": {
-			"label": "Approva sempre strumenti MCP",
+			"label": "MCP",
 			"description": "Abilita l'approvazione automatica dei singoli strumenti MCP nella vista Server MCP (richiede sia questa impostazione che la casella \"Consenti sempre\" dello strumento)"
 		},
 		"modeSwitch": {
-			"label": "Approva sempre cambi di modalità",
+			"label": "Modalità",
 			"description": "Passa automaticamente tra diverse modalità senza richiedere approvazione"
 		},
 		"subtasks": {
-			"label": "Approva sempre creazione e completamento di attività secondarie",
+			"label": "Sottoattività",
 			"description": "Consenti la creazione e il completamento di attività secondarie senza richiedere approvazione"
 		},
 		"execute": {
-			"label": "Approva sempre operazioni di esecuzione consentite",
+			"label": "Esegui",
 			"description": "Esegui automaticamente i comandi del terminale consentiti senza richiedere approvazione",
 			"allowedCommands": "Comandi di auto-esecuzione consentiti",
 			"allowedCommandsDescription": "Prefissi di comando che possono essere auto-eseguiti quando \"Approva sempre operazioni di esecuzione\" è abilitato. Aggiungi * per consentire tutti i comandi (usare con cautela).",
@@ -116,6 +116,7 @@
 		"openRouterTransformsText": "Comprimi prompt e catene di messaggi alla dimensione del contesto (<a>Trasformazioni OpenRouter</a>)",
 		"anthropicApiKey": "Chiave API Anthropic",
 		"getAnthropicApiKey": "Ottieni chiave API Anthropic",
+		"anthropicUseAuthToken": "Passa la chiave API Anthropic come header di autorizzazione invece di X-Api-Key",
 		"deepSeekApiKey": "Chiave API DeepSeek",
 		"getDeepSeekApiKey": "Ottieni chiave API DeepSeek",
 		"geminiApiKey": "Chiave API Gemini",
@@ -470,5 +471,11 @@
 	"labels": {
 		"customArn": "ARN personalizzato",
 		"useCustomArn": "Usa ARN personalizzato..."
+	},
+	"interface": {
+		"showgreeting": {
+			"label": "Mostra messaggio di benvenuto",
+			"description": "Quando abilitato, Roo mostrerà un messaggio di benvenuto e un'introduzione."
+		}
 	}
 }

@@ -645,6 +645,11 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await updateGlobalState("diffEnabled", diffEnabled)
 			await provider.postStateToWebview()
 			break
+		case "showGreeting":
+			const showGreeting = message.bool ?? true
+			await updateGlobalState("showGreeting", showGreeting)
+			await provider.postStateToWebview()
+			break
 		case "enableCheckpoints":
 			const enableCheckpoints = message.bool ?? true
 			await updateGlobalState("enableCheckpoints", enableCheckpoints)
@@ -1014,6 +1019,10 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 							customSupportPrompts,
 						),
 					)
+
+					// Capture telemetry for prompt enhancement
+					const currentCline = provider.getCurrentCline()
+					telemetryService.capturePromptEnhanced(currentCline?.taskId)
 
 					await provider.postMessageToWebview({
 						type: "enhancedPrompt",

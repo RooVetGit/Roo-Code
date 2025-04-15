@@ -21,8 +21,9 @@
 	"sections": {
 		"providers": "提供商",
 		"autoApprove": "自动批准",
-		"browser": "浏览器交互设置",
+		"browser": "浏览器交互",
 		"checkpoints": "检查点",
+		"interface": "界面内容",
 		"notifications": "通知",
 		"contextManagement": "上下文管理",
 		"terminal": "终端",
@@ -34,7 +35,7 @@
 	"autoApprove": {
 		"description": "允许 Roo 自动执行操作而无需批准。只有在您完全信任 AI 并了解相关安全风险的情况下才启用这些设置。",
 		"readOnly": {
-			"label": "自动批准只读操作",
+			"label": "读取",
 			"description": "启用后，Roo 将自动浏览目录和读取文件内容，无需人工确认。",
 			"outsideWorkspace": {
 				"label": "包含工作区外的文件",
@@ -42,7 +43,7 @@
 			}
 		},
 		"write": {
-			"label": "自动批准写入操作",
+			"label": "写入",
 			"description": "自动创建和编辑文件，无需二次确认",
 			"delayLabel": "延迟一段时间再自动批准写入，可以在期间检查模型输出是否有问题",
 			"outsideWorkspace": {
@@ -51,29 +52,28 @@
 			}
 		},
 		"browser": {
-			"label": "自动批准浏览器操作",
-			"description": "自动执行浏览器操作而无需批准",
-			"note": "注意：仅当模型支持计算机功能调用时适用"
+			"label": "浏览器",
+			"description": "自动执行浏览器操作而无需批准 — 注意：仅当模型支持计算机功能调用时适用"
 		},
 		"retry": {
-			"label": "自动重试失败的 API 请求",
+			"label": "重试",
 			"description": "当服务器返回错误响应时自动重试失败的 API 请求",
 			"delayLabel": "重试请求前的延迟"
 		},
 		"mcp": {
-			"label": "自动批准 MCP 服务调用",
+			"label": "MCP",
 			"description": "允许自动调用MCP服务而无需批准"
 		},
 		"modeSwitch": {
-			"label": "自动批准模式切换",
+			"label": "模式",
 			"description": "自动在不同模式之间切换而无需批准"
 		},
 		"subtasks": {
-			"label": "自动批准子任务的创建和完成",
+			"label": "子任务",
 			"description": "允许创建和完成子任务而无需批准"
 		},
 		"execute": {
-			"label": "自动批准命令行操作",
+			"label": "执行",
 			"description": "自动执行白名单中的命令而无需批准",
 			"allowedCommands": "命令白名单",
 			"allowedCommandsDescription": "当\"自动批准命令行操作\"启用时可以自动执行的命令前缀。添加 * 以允许所有命令（谨慎使用）。",
@@ -116,6 +116,7 @@
 		"openRouterTransformsText": "自动压缩提示词和消息链到上下文长度限制内 (<a>OpenRouter转换</a>)",
 		"anthropicApiKey": "Anthropic API 密钥",
 		"getAnthropicApiKey": "获取 Anthropic API 密钥",
+		"anthropicUseAuthToken": "将 Anthropic API 密钥作为 Authorization 标头传递，而不是 X-Api-Key",
 		"deepSeekApiKey": "DeepSeek API 密钥",
 		"getDeepSeekApiKey": "获取 DeepSeek API 密钥",
 		"geminiApiKey": "Gemini API 密钥",
@@ -257,7 +258,7 @@
 	"checkpoints": {
 		"enable": {
 			"label": "启用自动检查点",
-			"description": "开启后自动创建任务检查点，方便回溯修改"
+			"description": "开启后自动创建任务检查点，方便回溯修改。"
 		}
 	},
 	"notifications": {
@@ -470,5 +471,11 @@
 	"labels": {
 		"customArn": "自定义 ARN",
 		"useCustomArn": "使用自定义 ARN..."
+	},
+	"interface": {
+		"showgreeting": {
+			"label": "显示欢迎消息",
+			"description": "启用后，Roo 将显示欢迎语和简介。"
+		}
 	}
 }
