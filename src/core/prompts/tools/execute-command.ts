@@ -6,20 +6,82 @@ Description: Request to execute a CLI command on the system. Use this when you n
 Parameters:
 - command: (required) The CLI command to execute. This should be valid for the current operating system. Ensure the command is properly formatted and does not contain any harmful instructions.
 - cwd: (optional) The working directory to execute the command in (default: ${args.cwd})
-Usage:
+- risk: (required) The risk level of the command. You must analyze each command to determine the appropriate risk level using the formal definitions below. Always select the most conservative applicable level:
+
+### Risk Level Definitions:
+
+Let:
+S = complete system state: all files, processes, and configurations
+c = command operation: the command being executed
+
+1. readOnly:
+Command only observes system state without modification
+∀s ∈ S: c(s) = s
+Examples: ls, ps, df, netstat, find, SELECT queries
+
+2. reversibleChanges:
+Command has a single inverse operation that perfectly restores state
+∃c⁻¹: c⁻¹(c(s)) = s
+Examples: mkdir, chmod, database INSERT, git branch, mv/cp (without overwriting)
+
+3. complexChanges:
+Command creates interconnected changes that cannot be simply undone
+∃s' = c(s): s' ≠ s ∧ (
+   changes multiple components ∨    // like npm install
+   requires history ∨               // like git rebase
+   creates dependencies v           // like package installs   
+)
+Examples: database UPDATE, package install, git merge, recursive chown
+
+4. serviceInterruptingChanges:
+Command makes a service temporarily unavailable
+∃t > 0: A(s,t) = 0
+   where A(s,t) is the availability function that returns 1 if the service is available in state s at time t, 0 otherwise
+Examples: service control, process signals, network interface changes, system reboots, firewall rules
+
+5. destructiveChanges:
+Command permanently removes information without possibility of recovery
+∃d ∈ D: d(s) ⊂ s ∧ ¬∃f: f(d(s)) = s
+   where D is the set of destructive operations and f represents any possible recovery function
+Examples: rm, disk operations, database DROP/DELETE FROM, file truncation, cache clearing
+
+### Usage:
 <execute_command>
 <command>Your command here</command>
+<risk>Risk level here</risk>
 <cwd>Working directory path (optional)</cwd>
 </execute_command>
 
-Example: Requesting to execute npm run dev
-<execute_command>
-<command>npm run dev</command>
-</execute_command>
+### Examples:
 
-Example: Requesting to execute ls in a specific directory if directed
+Example: Requesting to execute a read-only command
 <execute_command>
 <command>ls -la</command>
+<risk>readOnly</risk>
+</execute_command>
+
+Example: Requesting to execute a reversible change
+<execute_command>
+<command>mkdir test_directory</command>
+<risk>reversibleChanges</risk>
+</execute_command>
+
+Example: Requesting to execute a complex change
+<execute_command>
+<command>npm install express</command>
+<risk>complexChanges</risk>
+</execute_command>
+
+Example: Requesting to execute a destructive change
+<execute_command>
+<command>rm test_file.txt</command>
+<risk>destructiveChanges</risk>
+</execute_command>
+
+Example: Requesting to execute a command in a specific directory
+<execute_command>
+<command>ls -la</command>
+<risk>readOnly</risk>
 <cwd>/home/user/projects</cwd>
 </execute_command>`
 }
