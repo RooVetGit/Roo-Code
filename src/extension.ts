@@ -1,6 +1,7 @@
 import * as dotenvx from "@dotenvx/dotenvx"
 import { execSync } from "child_process"
 import * as fs from "fs"
+import * as os from "os"
 import * as path from "path"
 import * as vscode from "vscode"
 
@@ -16,7 +17,7 @@ try {
 
 import "./utils/path" // Necessary to have access to String.prototype.toPosix.
 
-import { installCLI } from "./cli-utils"
+import { installCLI, uninstallCLI } from "./cli-utils"
 import { CodeActionProvider } from "./core/CodeActionProvider"
 import { ClineProvider } from "./core/webview/ClineProvider"
 import { API } from "./exports/api"
@@ -51,16 +52,41 @@ export async function activate(context: vscode.ExtensionContext) {
 	outputChannel = vscode.window.createOutputChannel("Roo-Code")
 	context.subscriptions.push(outputChannel)
 	outputChannel.appendLine("Roo-Code extension activated")
+	// Force CLI reinstallation by resetting the flag
+	await context.globalState.update("cliInstalled", false)
+	outputChannel.appendLine("Forcing CLI reinstallation by resetting cliInstalled flag")
 
 	// Check if CLI is already installed
 	const cliInstalled = context.globalState.get("cliInstalled", false)
+	outputChannel.appendLine(
+		`CLI installation status from global state: ${cliInstalled ? "installed" : "not installed"}`,
+	)
 
-	// Package and install CLI if not already installed
-	if (!cliInstalled) {
+	// Check if CLI is actually installed in the expected location
+	const platform = process.platform
+	const HOME_DIR = os.homedir()
+	let cliScriptPath = ""
+
+	if (platform === "win32") {
+		cliScriptPath = path.join(HOME_DIR, "AppData", "Local", "RooCode", "bin", "roo.cmd")
+	} else if (platform === "darwin" || platform === "linux") {
+		cliScriptPath = path.join(HOME_DIR, ".roocode", "bin", "roo")
+	}
+
+	const cliActuallyInstalled = fs.existsSync(cliScriptPath)
+	outputChannel.appendLine(`Checking if CLI is actually installed at ${cliScriptPath}: ${cliActuallyInstalled}`)
+
+	// Package and install CLI if not already installed or if the CLI script doesn't exist
+	if (!cliInstalled || !cliActuallyInstalled) {
+		outputChannel.appendLine("CLI needs to be installed or reinstalled")
 		try {
 			// First, check if the CLI is already packaged (might be in a production build)
 			const cliDistDir = path.join(context.extensionPath, "dist", "cli")
-			let cliIsPackaged = fs.existsSync(cliDistDir) && fs.existsSync(path.join(cliDistDir, "index.js"))
+			const cliIndexPath = path.join(cliDistDir, "index.js")
+			outputChannel.appendLine(`Checking if CLI dist directory exists: ${fs.existsSync(cliDistDir)}`)
+			outputChannel.appendLine(`Checking if CLI index.js exists: ${fs.existsSync(cliIndexPath)}`)
+			let cliIsPackaged = fs.existsSync(cliDistDir) && fs.existsSync(cliIndexPath)
+			outputChannel.appendLine(`CLI is packaged: ${cliIsPackaged}`)
 
 			if (!cliIsPackaged) {
 				// Need to package the CLI
@@ -127,7 +153,18 @@ export async function activate(context: vscode.ExtensionContext) {
 
 			// Now install the CLI if it was packaged successfully
 			if (cliIsPackaged) {
-				await installCLI(context, outputChannel)
+				outputChannel.appendLine("Starting CLI installation process...")
+				try {
+					await installCLI(context, outputChannel)
+					outputChannel.appendLine("CLI installation process completed successfully")
+				} catch (installError) {
+					outputChannel.appendLine(
+						`Error during CLI installation: ${installError instanceof Error ? installError.message : String(installError)}`,
+					)
+					if (installError instanceof Error && installError.stack) {
+						outputChannel.appendLine(`Installation error stack trace: ${installError.stack}`)
+					}
+				}
 			} else {
 				outputChannel.appendLine("CLI installation skipped because packaging failed.")
 				vscode.window.showErrorMessage("Failed to package RooCode CLI. Some features may not work properly.")
@@ -274,6 +311,21 @@ export async function activate(context: vscode.ExtensionContext) {
 // This method is called when your extension is deactivated
 export async function deactivate() {
 	outputChannel.appendLine("Roo-Code extension deactivated")
+
+	// Uninstall CLI when extension is deactivated
+	try {
+		outputChannel.appendLine("Starting CLI uninstallation process...")
+		await uninstallCLI(extensionContext, outputChannel)
+		outputChannel.appendLine("CLI uninstallation process completed successfully")
+	} catch (uninstallError) {
+		outputChannel.appendLine(
+			`Error during CLI uninstallation: ${uninstallError instanceof Error ? uninstallError.message : String(uninstallError)}`,
+		)
+		if (uninstallError instanceof Error && uninstallError.stack) {
+			outputChannel.appendLine(`Uninstallation error stack trace: ${uninstallError.stack}`)
+		}
+	}
+
 	// Clean up MCP server manager
 	await McpServerManager.cleanup(extensionContext)
 	telemetryService.shutdown()

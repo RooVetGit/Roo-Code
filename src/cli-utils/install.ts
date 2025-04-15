@@ -12,6 +12,7 @@ import * as vscode from "vscode"
 export async function installCLI(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel): Promise<void> {
 	try {
 		outputChannel.appendLine("Installing roocli tool...")
+		outputChannel.appendLine(`Extension path: ${context.extensionPath}`)
 
 		// Determine the OS
 		const platform = process.platform
@@ -23,6 +24,13 @@ export async function installCLI(context: vscode.ExtensionContext, outputChannel
 		const EXTENSION_DIR = context.extensionPath
 		const CLI_DIR = path.join(EXTENSION_DIR, "dist", "cli")
 		const HOME_DIR = os.homedir()
+
+		outputChannel.appendLine(`CLI source directory: ${CLI_DIR}`)
+		outputChannel.appendLine(`CLI source directory exists: ${fs.existsSync(CLI_DIR)}`)
+		if (fs.existsSync(CLI_DIR)) {
+			const cliFiles = fs.readdirSync(CLI_DIR)
+			outputChannel.appendLine(`CLI source directory contents: ${cliFiles.join(", ")}`)
+		}
 
 		// Create installation directories based on OS
 		let binDir: string
@@ -85,9 +93,24 @@ export async function installCLI(context: vscode.ExtensionContext, outputChannel
 			if (!fs.existsSync(configDir)) {
 				fs.mkdirSync(configDir, { recursive: true })
 			}
-
 			// Copy CLI files to bin directory
-			fs.cpSync(CLI_DIR, binDir, { recursive: true })
+			outputChannel.appendLine(`Copying CLI files from ${CLI_DIR} to ${binDir}`)
+			try {
+				fs.cpSync(CLI_DIR, binDir, { recursive: true })
+				outputChannel.appendLine("CLI files copied successfully")
+
+				// Verify the copy operation
+				if (fs.existsSync(path.join(binDir, "index.js"))) {
+					outputChannel.appendLine("Verified CLI index.js exists in target directory")
+				} else {
+					outputChannel.appendLine("WARNING: CLI index.js not found in target directory after copy")
+				}
+			} catch (copyError) {
+				outputChannel.appendLine(
+					`Error copying CLI files: ${copyError instanceof Error ? copyError.message : String(copyError)}`,
+				)
+				throw copyError // Re-throw to be caught by the main try/catch
+			}
 
 			// Create symlink in /usr/local/bin if possible
 			const symlinkPath = "/usr/local/bin/roo"
