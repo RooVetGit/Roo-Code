@@ -2,11 +2,10 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 import { ApiHandlerOptions, XAIModelId, ModelInfo, xaiDefaultModelId, xaiModels } from "../../shared/api"
 import { ApiStream } from "../transform/stream"
-import { BaseProvider } from "./base-provider"
 import { convertToOpenAiMessages } from "../transform/openai-format"
+import { DEFAULT_HEADERS, REASONING_MODELS } from "./constants"
+import { BaseProvider } from "./base-provider"
 import { SingleCompletionHandler } from ".."
-import { ChatCompletionReasoningEffort } from "openai/resources/chat/completions.mjs"
-import { defaultHeaders } from "./openai"
 
 export class XAIHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
@@ -18,35 +17,29 @@ export class XAIHandler extends BaseProvider implements SingleCompletionHandler 
 		this.client = new OpenAI({
 			baseURL: "https://api.x.ai/v1",
 			apiKey: this.options.xaiApiKey ?? "not-provided",
-			defaultHeaders: defaultHeaders,
+			defaultHeaders: DEFAULT_HEADERS,
 		})
 	}
 
-	override getModel(): { id: string; info: ModelInfo } {
+	override getModel() {
 		const modelId = this.options.apiModelId
+
 		if (modelId && modelId in xaiModels) {
 			const id = modelId as XAIModelId
 			return { id, info: xaiModels[id] }
 		}
+
 		return {
 			id: xaiDefaultModelId,
 			info: xaiModels[xaiDefaultModelId],
+			reasoningEffort: REASONING_MODELS.has(xaiDefaultModelId) ? this.options.reasoningEffort : undefined,
 		}
 	}
 
 	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
-		const modelId = this.getModel().id
-		const modelInfo = this.getModel().info
+		const { id: modelId, info: modelInfo, reasoningEffort } = this.getModel()
 
-		// Special handling for Grok-3-mini models which support reasoning_effort
-		let reasoningEffort: ChatCompletionReasoningEffort | undefined
-		if (modelId.includes("3-mini") && this.options.reasoningEffort) {
-			if (["low", "high"].includes(this.options.reasoningEffort)) {
-				reasoningEffort = this.options.reasoningEffort as ChatCompletionReasoningEffort
-			}
-		}
-
-		// Use the OpenAI-compatible API
+		// Use the OpenAI-compatible API.
 		const stream = await this.client.chat.completions.create({
 			model: modelId,
 			max_tokens: modelInfo.maxTokens,
@@ -59,6 +52,7 @@ export class XAIHandler extends BaseProvider implements SingleCompletionHandler 
 
 		for await (const chunk of stream) {
 			const delta = chunk.choices[0]?.delta
+
 			if (delta?.content) {
 				yield {
 					type: "text",
@@ -78,7 +72,7 @@ export class XAIHandler extends BaseProvider implements SingleCompletionHandler 
 					type: "usage",
 					inputTokens: chunk.usage.prompt_tokens || 0,
 					outputTokens: chunk.usage.completion_tokens || 0,
-					// X.AI might include these fields in the future, handle them if present
+					// X.AI might include these fields in the future, handle them if present.
 					cacheReadTokens:
 						"cache_read_input_tokens" in chunk.usage ? (chunk.usage as any).cache_read_input_tokens : 0,
 					cacheWriteTokens:
@@ -91,16 +85,21 @@ export class XAIHandler extends BaseProvider implements SingleCompletionHandler 
 	}
 
 	async completePrompt(prompt: string): Promise<string> {
+		const { id: modelId, reasoningEffort } = this.getModel()
+
 		try {
 			const response = await this.client.chat.completions.create({
-				model: this.getModel().id,
+				model: modelId,
 				messages: [{ role: "user", content: prompt }],
+				...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
 			})
+
 			return response.choices[0]?.message.content || ""
 		} catch (error) {
 			if (error instanceof Error) {
 				throw new Error(`xAI completion error: ${error.message}`)
 			}
+
 			throw error
 		}
 	}

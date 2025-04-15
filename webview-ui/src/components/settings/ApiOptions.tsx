@@ -1562,13 +1562,6 @@ const ApiOptions = ({
 					</div>
 				)}
 
-			{selectedProvider === "openrouter" && REASONING_MODELS.has(selectedModelId) && (
-				<ReasoningEffort
-					apiConfiguration={apiConfiguration}
-					setApiConfigurationField={setApiConfigurationField}
-				/>
-			)}
-
 			{selectedProvider === "glama" && (
 				<ModelPicker
 					apiConfiguration={apiConfiguration}
@@ -1711,6 +1704,13 @@ const ApiOptions = ({
 						modelInfo={selectedModelInfo}
 					/>
 				</>
+			)}
+
+			{REASONING_MODELS.has(selectedModelId) && (
+				<ReasoningEffort
+					apiConfiguration={apiConfiguration}
+					setApiConfigurationField={setApiConfigurationField}
+				/>
 			)}
 
 			{!fromWelcomeView && (

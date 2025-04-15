@@ -50,4 +50,4 @@ export const VERTEX_REGIONS = [
 	{ value: "asia-southeast1", label: "asia-southeast1" },
 ]
 
-export const REASONING_MODELS = new Set(["x-ai/grok-3-mini-beta"])
+export const REASONING_MODELS = new Set(["x-ai/grok-3-mini-beta", "grok-3-mini-beta", "grok-3-mini-fast-beta"])
