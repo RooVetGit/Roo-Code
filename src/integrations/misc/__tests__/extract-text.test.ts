@@ -4,6 +4,7 @@ import {
 	stripLineNumbers,
 	truncateOutput,
 	applyRunLengthEncoding,
+	processCarriageReturns,
 } from "../extract-text"
 
 describe("addLineNumbers", () => {
@@ -259,5 +260,168 @@ describe("applyRunLengthEncoding", () => {
 	it("should not compress when not beneficial", () => {
 		const input = "y\ny\ny\ny\ny\n"
 		expect(applyRunLengthEncoding(input)).toBe(input)
+	})
+})
+
+describe("processCarriageReturns", () => {
+	it("should return original input if no carriage returns present", () => {
+		const input = "Line 1\nLine 2\nLine 3"
+		expect(processCarriageReturns(input)).toBe(input)
+	})
+
+	it("should process basic progress bar with carriage returns", () => {
+		const input = "Progress: [===>---------] 30%\rProgress: [======>------] 60%\rProgress: [==========>] 100%"
+		const expected = "Progress: [==========>] 100%%"
+		expect(processCarriageReturns(input)).toBe(expected)
+	})
+
+	it("should handle multi-line outputs with carriage returns", () => {
+		const input = "Line 1\rUpdated Line 1\nLine 2\rUpdated Line 2\rFinal Line 2"
+		const expected = "Updated Line 1\nFinal Line 2 2"
+		expect(processCarriageReturns(input)).toBe(expected)
+	})
+
+	it("should handle carriage returns at end of line", () => {
+		// A carriage return at the end of a line should be treated as if the cursor is at the start
+		// with no content following it, so we keep the existing content
+		const input = "Initial text\rReplacement text\r"
+		// Depending on terminal behavior:
+		// Option 1: If last CR is ignored because nothing follows it to replace text
+		const expected = "Replacement text"
+		expect(processCarriageReturns(input)).toBe(expected)
+	})
+
+	// Additional test to clarify behavior with a terminal-like example
+	it("should handle carriage returns in a way that matches terminal behavior", () => {
+		// In a real terminal:
+		// 1. "Hello" is printed
+		// 2. CR moves cursor to start of line
+		// 3. "World" overwrites, becoming "World"
+		// 4. CR moves cursor to start again
+		// 5. Nothing follows, so the line remains "World" (cursor just sitting at start)
+		const input = "Hello\rWorld\r"
+		const expected = "World"
+		expect(processCarriageReturns(input)).toBe(expected)
+
+		// Same principle applies to CR+NL
+		// 1. "Line1" is printed
+		// 2. CR moves cursor to start
+		// 3. NL moves to next line, so the line remains "Line1"
+		expect(processCarriageReturns("Line1\r\n")).toBe("Line1\n")
+	})
+
+	it("should preserve lines without carriage returns", () => {
+		const input = "Line 1\nLine 2\rUpdated Line 2\nLine 3"
+		const expected = "Line 1\nUpdated Line 2\nLine 3"
+		expect(processCarriageReturns(input)).toBe(expected)
+	})
+
+	it("should handle complex tqdm-like progress bars", () => {
+		const input =
+			"10%|██        | 10/100 [00:01<00:09, 10.00it/s]\r20%|████      | 20/100 [00:02<00:08, 10.00it/s]\r100%|██████████| 100/100 [00:10<00:00, 10.00it/s]"
+		const expected = "100%|██████████| 100/100 [00:10<00:00, 10.00it/s]"
+		expect(processCarriageReturns(input)).toBe(expected)
+	})
+
+	it("should handle ANSI escape sequences", () => {
+		const input = "\x1b]633;C\x07Loading\rLoading.\rLoading..\rLoading...\x1b]633;D\x07"
+		const expected = "Loading...\x1b]633;D\x07"
+		expect(processCarriageReturns(input)).toBe(expected)
+	})
+
+	it("should handle mixed content with carriage returns and newlines", () => {
+		const input =
+			"Step 1: Starting\rStep 1: In progress\rStep 1: Done\nStep 2: Starting\rStep 2: In progress\rStep 2: Done"
+		const expected = "Step 1: Donerogress\nStep 2: Donerogress"
+		expect(processCarriageReturns(input)).toBe(expected)
+	})
+
+	it("should handle empty input", () => {
+		expect(processCarriageReturns("")).toBe("")
+	})
+
+	it("should handle large number of carriage returns efficiently", () => {
+		// Create a string with many carriage returns
+		let input = ""
+		for (let i = 0; i < 10000; i++) {
+			input += `Progress: ${i / 100}%\r`
+		}
+		input += "Progress: 100%"
+
+		const expected = "Progress: 100%9%"
+		expect(processCarriageReturns(input)).toBe(expected)
+	})
+
+	// Additional edge cases to stress test processCarriageReturns
+	it("should handle consecutive carriage returns", () => {
+		const input = "Initial\r\r\r\rFinal"
+		const expected = "Finalal"
+		expect(processCarriageReturns(input)).toBe(expected)
+	})
+
+	it("should handle carriage returns at the start of a line", () => {
+		const input = "\rText after carriage return"
+		const expected = "Text after carriage return"
+		expect(processCarriageReturns(input)).toBe(expected)
+	})
+
+	it("should handle only carriage returns", () => {
+		const input = "\r\r\r\r"
+		const expected = ""
+		expect(processCarriageReturns(input)).toBe(expected)
+	})
+
+	it("should handle carriage returns with empty strings between them", () => {
+		const input = "Start\r\r\r\r\rEnd"
+		const expected = "Endrt"
+		expect(processCarriageReturns(input)).toBe(expected)
+	})
+
+	it("should handle multiline with carriage returns at different positions", () => {
+		const input = "Line1\rLine1Updated\nLine2\nLine3\rLine3Updated\rLine3Final\nLine4"
+		const expected = "Line1Updated\nLine2\nLine3Finaled\nLine4"
+		expect(processCarriageReturns(input)).toBe(expected)
+	})
+
+	it("should handle carriage returns with special characters", () => {
+		const input = "Line with 🚀 emoji\rUpdated with 🔥 emoji"
+		const expected = "Updated with 🔥 emoji"
+		expect(processCarriageReturns(input)).toBe(expected)
+	})
+
+	it("should correctly handle multiple consecutive newlines with carriage returns", () => {
+		const input = "Line with not a emoji\rLine with 🔥 emoji"
+		const expected = "Line with 🔥 emojioji"
+		expect(processCarriageReturns(input)).toBe(expected)
+	})
+
+	it("should handle carriage returns in the middle of non-ASCII text", () => {
+		const input = "你好世界啊\r你好地球"
+		const expected = "你好地球啊"
+		expect(processCarriageReturns(input)).toBe(expected)
+	})
+
+	it("should correctly handle complex patterns of alternating carriage returns and newlines", () => {
+		// Break down the example:
+		// 1. "Line1" + CR + NL: CR moves cursor to start of line, NL moves to next line, preserving "Line1"
+		// 2. "Line2" + CR: CR moves cursor to start of line
+		// 3. "Line2Updated" overwrites "Line2"
+		// 4. NL: moves to next line
+		// 5. "Line3" + CR + NL: CR moves cursor to start, NL moves to next line, preserving "Line3"
+		const input = "Line1\r\nLine2\rLine2Updated\nLine3\r\n"
+		const expected = "Line1\nLine2Updated\nLine3\n"
+		expect(processCarriageReturns(input)).toBe(expected)
+	})
+
+	it("should handle partial overwrites with carriage returns", () => {
+		// In this case:
+		// 1. "Initial text" is printed
+		// 2. CR moves cursor to start of line
+		// 3. "next" is printed, overwriting only the first 4 chars
+		// 4. CR moves cursor to start, but nothing follows
+		// Final result should be "nextial text" (first 4 chars overwritten)
+		const input = "Initial text\rnext\r"
+		const expected = "nextial text"
+		expect(processCarriageReturns(input)).toBe(expected)
 	})
 })

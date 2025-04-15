@@ -160,6 +160,7 @@ export type ExtensionState = Pick<
 	| "terminalZshOhMy"
 	| "terminalZshP10k"
 	| "terminalZdotdir"
+	| "terminalCompressProgressBar"
 	| "diffEnabled"
 	| "fuzzyMatchThreshold"
 	// | "experiments" // Optional in GlobalSettings, required here.

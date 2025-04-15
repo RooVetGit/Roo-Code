@@ -550,81 +550,8 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 		this.lastRetrievedIndex += endIndex
 		outputToProcess = outputToProcess.slice(0, endIndex)
 
-		// Process carriage returns (\r) in the output to handle progress bars
-		// This simulates how a real terminal would display the content
-		outputToProcess = this.processCarriageReturns(outputToProcess)
-
 		// Clean and return output
 		return this.removeEscapeSequences(outputToProcess)
-	}
-
-	/**
-	 * Process carriage returns in terminal output, simulating how a real terminal
-	 * would display content with \r characters (like progress bars).
-	 *
-	 * For each line that contains \r, only keep the content after the last \r,
-	 * as this represents the final state that would be visible in the terminal.
-	 *
-	 * This method preserves escape sequences and other special characters.
-	 *
-	 * @param output The raw terminal output string to process
-	 * @returns Processed output with carriage returns handled
-	 */
-	private processCarriageReturns(output: string): string {
-		if (!output.includes("\r")) {
-			return output // Quick return if no carriage returns
-		}
-
-		// We need to handle escape sequences carefully to avoid breaking them
-		// Split the output into lines by newline, but be careful with special sequences
-		const lines = output.split("\n")
-		const processedLines: string[] = []
-
-		for (let i = 0; i < lines.length; i++) {
-			const line = lines[i]
-
-			if (line.includes("\r")) {
-				// Split by \r but preserve special sequences
-				const parts: string[] = []
-				let currentPos = 0
-				let rPos: number
-
-				// Find each \r position and extract the part
-				while ((rPos = line.indexOf("\r", currentPos)) !== -1) {
-					parts.push(line.substring(currentPos, rPos))
-					currentPos = rPos + 1 // Move past the \r
-				}
-
-				// Add the final part after the last \r (or the whole line if no \r)
-				if (currentPos < line.length) {
-					parts.push(line.substring(currentPos))
-				} else if (parts.length > 0) {
-					// If the line ends with \r, ensure we don't lose the last part
-					parts.push("")
-				}
-
-				// The visible content in a terminal would be the last non-empty part
-				// or the concatenation of parts if they contain escape sequences
-				let lastNonEmptyPart = parts[parts.length - 1]
-				if (!lastNonEmptyPart.trim() && parts.length > 1) {
-					// Find the last non-empty part
-					for (let j = parts.length - 2; j >= 0; j--) {
-						if (parts[j].trim()) {
-							lastNonEmptyPart = parts[j]
-							break
-						}
-					}
-				}
-
-				processedLines.push(lastNonEmptyPart)
-			} else {
-				// No carriage returns, keep as is
-				processedLines.push(line)
-			}
-		}
-
-		// Join lines back together with newlines
-		return processedLines.join("\n")
 	}
 
 	private stringIndexMatch(

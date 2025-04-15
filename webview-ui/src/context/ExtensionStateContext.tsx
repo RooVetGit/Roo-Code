@@ -87,6 +87,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setPinnedApiConfigs: (value: Record<string, boolean>) => void
 	togglePinnedApiConfig: (configName: string) => void
 	setShowGreeting: (value: boolean) => void
+	terminalCompressProgressBar?: boolean
+	setTerminalCompressProgressBar: (value: boolean) => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -165,6 +167,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		terminalZshOhMy: false, // Default Oh My Zsh integration setting
 		terminalZshP10k: false, // Default Powerlevel10k integration setting
 		terminalZdotdir: false, // Default ZDOTDIR handling setting
+		terminalCompressProgressBar: true, // Default to compress progress bar output
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
@@ -319,6 +322,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setMaxReadFileLine: (value) => setState((prevState) => ({ ...prevState, maxReadFileLine: value })),
 		setPinnedApiConfigs: (value) => setState((prevState) => ({ ...prevState, pinnedApiConfigs: value })),
 		setShowGreeting: (value) => setState((prevState) => ({ ...prevState, showGreeting: value })),
+		setTerminalCompressProgressBar: (value) =>
+			setState((prevState) => ({ ...prevState, terminalCompressProgressBar: value })),
 		togglePinnedApiConfig: (configId) =>
 			setState((prevState) => {
 				const currentPinned = prevState.pinnedApiConfigs || {}

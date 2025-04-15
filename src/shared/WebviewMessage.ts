@@ -88,6 +88,7 @@ export interface WebviewMessage {
 		| "terminalZshOhMy"
 		| "terminalZshP10k"
 		| "terminalZdotdir"
+		| "terminalCompressProgressBar"
 		| "mcpEnabled"
 		| "enableMcpServerCreation"
 		| "searchCommits"

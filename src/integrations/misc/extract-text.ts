@@ -232,3 +232,76 @@ export function applyRunLengthEncoding(content: string): string {
 
 	return result
 }
+
+/**
+ * Processes carriage returns in terminal output to simulate how a real terminal would display content.
+ * For each line containing \r characters, only the content after the last \r is kept.
+ * This function is designed for maximum performance with large outputs.
+ *
+ * @param input The terminal output to process
+ * @returns The processed terminal output with carriage returns handled
+ */
+export function processCarriageReturns(input: string): string {
+	// Quick return if no carriage returns exist
+	if (!input.includes("\r")) {
+		return input
+	}
+
+	// Split into lines to process each line separately
+	const lines = input.split("\n")
+	const processedLines = []
+
+	for (let i = 0; i < lines.length; i++) {
+		let line = lines[i]
+
+		// Skip processing if no carriage returns in this line
+		if (!line.includes("\r")) {
+			processedLines.push(line)
+			continue
+		}
+
+		// Handle case where the line ends with a carriage return
+		// In a terminal, this positions the cursor at the start
+		// but doesn't clear anything since nothing follows to overwrite
+		if (line.endsWith("\r")) {
+			line = line.slice(0, -1)
+		}
+
+		// Process segments of text separated by carriage returns
+		const segments = line.split("\r")
+
+		if (segments.length === 1) {
+			// Just one segment (probably ended with \r which we removed)
+			processedLines.push(segments[0])
+		} else {
+			// For "Initial text\rnext\rthird" we want to process as:
+			// 1. Start with "Initial text"
+			// 2. Replace with "next" + remaining chars from "Initial text"
+			// 3. Replace with "third" + remaining chars from previous result
+
+			let result = segments[0]
+
+			for (let j = 1; j < segments.length; j++) {
+				const segment = segments[j]
+				// If segment is completely empty, continue with current result
+				if (segment === "") {
+					continue
+				}
+
+				if (segment.length >= result.length) {
+					// New segment is at least as long as previous result
+					// It completely overwrites the previous result
+					result = segment
+				} else {
+					// New segment is shorter than previous result
+					// It only overwrites part of the previous result
+					result = segment + result.substring(segment.length)
+				}
+			}
+
+			processedLines.push(result)
+		}
+	}
+
+	return processedLines.join("\n")
+}
