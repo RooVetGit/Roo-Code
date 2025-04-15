@@ -204,9 +204,13 @@ describe("mergeExtensionState", () => {
 			showRooIgnoredFiles: true,
 			renderContext: "sidebar",
 			maxReadFileLine: 500,
-			codeIndexEnabled: false,
-			codeIndexOpenAiKey: "",
-			codeIndexQdrantUrl: "",
+			codebaseIndexConfig: {
+				codebaseIndexEnabled: false,
+				codebaseIndexQdrantUrl: "",
+				codebaseIndexEmbedderType: "openai",
+				codebaseIndexEmbedderBaseUrl: "",
+				codebaseIndexEmbedderModelId: "",
+			},
 		}
 
 		const prevState: ExtensionState = {
