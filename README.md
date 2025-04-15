@@ -96,6 +96,60 @@ Roo Code comes with powerful [tools](https://docs.roocode.com/basic-usage/how-to
 - Execute commands in your VS Code terminal
 - Control a web browser
 - Use external tools via [MCP (Model Context Protocol)](https://docs.roocode.com/advanced-usage/mcp)
+  MCP extends Roo Code's capabilities by allowing you to add unlimited custom tools. Integrate with external APIs, connect to databases, or create specialized development tools - MCP provides the framework to expand Roo Code's functionality to meet your specific needs.
+
+### CLI Tool
+
+Roo Code includes a command-line interface (CLI) tool that allows you to interact with the extension from the terminal. The CLI tool communicates with the extension via a WebSocket server, enabling you to manage profiles, start tasks, and interact with Roo Code directly from your command line.
+
+#### Quick Start
+
+1. Enable the WebSocket server in the extension settings:
+
+    - Open VS Code settings
+    - Search for "roo-cline.websocket.enabled"
+    - Set it to true
+    - Optionally, configure the port with "roo-cline.websocket.port" (default: 8765)
+
+2. Install the CLI tool:
+
+    ```sh
+    npm install -g roocli
+    ```
+
+3. Use the CLI tool to interact with Roo Code:
+
+    ```sh
+    # Start a new task
+    roo task new "Create a React component"
+
+    # Get configuration
+    roo get --config
+
+    # List available profiles
+    roo get --profiles
+
+    # Create a new profile
+    roo create profile "My Profile"
+    ```
+
+#### Key Features
+
+- **Profile Management**: Create, set active, and delete profiles
+- **Task Management**: Start, resume, clear, and cancel tasks
+- **Interaction**: Send messages and press buttons in the Roo Code interface
+- **Configuration**: View and manage Roo Code configuration
+- **Programmatic Usage**: Use the CLI in scripts and Node.js applications
+
+#### Documentation
+
+For detailed information about the CLI tool, refer to these resources:
+
+- [Usage Guide](roocli/USAGE.md): Comprehensive documentation on all commands and features
+- [Testing Plan](testing-plan.md): Detailed testing procedures for the CLI tool
+- [Demo Script](roocli/demo.js): Example script demonstrating programmatic usage
+
+The CLI tool provides a convenient way to use Roo Code's capabilities from the terminal, making it easier to integrate with your existing workflows and scripts.
 
 MCP extends Roo Code's capabilities by allowing you to add unlimited custom tools. Integrate with external APIs, connect to databases, or create specialized development tools - MCP provides the framework to expand Roo Code's functionality to meet your specific needs.
 
