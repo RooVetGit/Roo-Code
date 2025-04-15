@@ -58,3 +58,8 @@ assets/docs/**
 
 # Include .env file for telemetry
 !.env
+
+# Include CLI installation scripts
+!scripts/post-install.js
+!scripts/post-uninstall.js
+!scripts/package-cli.js
