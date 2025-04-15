@@ -345,6 +345,11 @@
 					"type": "string",
 					"default": "",
 					"description": "%settings.customStoragePath.description%"
+				},
+				"roo-cline.websocket.enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "Enable the WebSocket server for CLI tool communication (required for CLI commands to work)"
 				}
 			}
 		}
@@ -353,8 +358,9 @@
 		"build": "npm run vsix",
 		"build:webview": "cd webview-ui && npm run build",
 		"build:esbuild": "node esbuild.js --production",
+		"build:cli": "node scripts/package-cli.js",
 		"compile": "tsc -p . --outDir out && node esbuild.js",
-		"install:all": "npm install npm-run-all && npm-run-all -l -p install-*",
+		"install:all": "npm install npm-run-all && npm-run-all -l -p install-* && cd roocli && npm install && cd ..",
 		"install-extension": "npm install",
 		"install-webview": "cd webview-ui && npm install",
 		"install-e2e": "cd e2e && npm install",
@@ -366,7 +372,7 @@
 		"check-types:extension": "tsc --noEmit",
 		"check-types:webview": "cd webview-ui && npm run check-types",
 		"check-types:e2e": "cd e2e && npm run check-types",
-		"package": "npm-run-all -l -p build:webview build:esbuild check-types lint",
+		"package": "npm-run-all -l -p build:webview build:esbuild build:cli check-types lint",
 		"pretest": "npm run compile",
 		"dev": "cd webview-ui && npm run dev",
 		"test": "node scripts/run-tests.js",
@@ -377,6 +383,8 @@
 		"publish": "npm run build && changeset publish && npm install --package-lock-only",
 		"version-packages": "changeset version && npm install --package-lock-only",
 		"vscode:prepublish": "npm run package",
+		"postinstall": "node scripts/post-install.js",
+		"postuninstall": "node scripts/post-uninstall.js",
 		"vsix": "rimraf bin && mkdirp bin && npx vsce package --out bin",
 		"watch": "npm-run-all -l -p watch:*",
 		"watch:esbuild": "node esbuild.js --watch",
@@ -408,6 +416,7 @@
 		"@types/tmp": "^0.2.6",
 		"@types/turndown": "^5.0.5",
 		"@types/vscode": "^1.95.0",
+		"@types/ws": "^8.18.1",
 		"@vscode/codicons": "^0.0.36",
 		"axios": "^1.7.4",
 		"cheerio": "^1.0.0",
@@ -450,6 +459,7 @@
 		"tree-sitter-wasms": "^0.1.11",
 		"turndown": "^7.2.0",
 		"web-tree-sitter": "^0.22.6",
+		"ws": "^8.18.1",
 		"zod": "^3.23.8"
 	},
 	"devDependencies": {
