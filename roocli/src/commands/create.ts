@@ -1,8 +1,9 @@
 import chalk from "chalk"
 import { Command } from "commander"
 import { createProfileCommand } from "../commands/profile"
-import { displayBox } from "../utils/display"
+import { displayBox, displayTextInput } from "../utils/display"
 import { WebSocketClient } from "../utils/websocket-client"
+import { setupTaskEventListeners, waitForTaskCompletion } from "./task"
 
 /**
  * Create the create command
@@ -64,14 +65,27 @@ function createTaskCommand(wsClient: WebSocketClient): Command {
 		.description("Create a new task")
 		.requiredOption("--mode <mode>", "Task mode")
 		.option("--message <message>", "Initial message for the task")
+		.option("--interactive", "Enter message interactively")
 		.action(async (options) => {
 			try {
 				// Get current configuration
 				const currentConfig = await wsClient.sendCommand("getConfiguration")
 
+				// Handle interactive message input
+				let taskMessage = options.message
+
+				if (options.interactive || !taskMessage) {
+					taskMessage = await displayTextInput("Enter your task message:")
+				}
+
+				if (!taskMessage) {
+					console.log(chalk.yellow("No message provided. Task creation cancelled."))
+					return
+				}
+
 				const params: any = {
 					configuration: currentConfig,
-					text: options.message,
+					text: taskMessage,
 					newTab: false,
 				}
 
@@ -85,6 +99,13 @@ function createTaskCommand(wsClient: WebSocketClient): Command {
 
 				const taskId = await wsClient.sendCommand("startNewTask", params)
 				displayBox("Task Created", `Task created with ID: ${taskId}`, "success")
+
+				// Set up event listeners for the task
+				await setupTaskEventListeners(wsClient, taskId)
+
+				// Wait for the task to complete or timeout
+				console.log(chalk.blue("Waiting for task to respond..."))
+				await waitForTaskCompletion(wsClient, taskId)
 			} catch (error) {
 				console.error(chalk.red(`Error: ${error instanceof Error ? error.message : String(error)}`))
 			}
