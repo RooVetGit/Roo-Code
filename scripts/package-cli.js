@@ -1,63 +1,143 @@
 #!/usr/bin/env node
 
 /**
- * package-cli.js
- *
- * This script packages the roocli tool with the VS Code extension.
- * It builds the CLI tool and copies the necessary files to be included in the extension package.
+ * This script packages the CLI tool with its dependencies for global installation.
+ * It builds the CLI tool, copies the necessary files to a distribution directory,
+ * installs the dependencies in the distribution directory, and creates a tarball
+ * that can be installed globally.
  */
 
 const fs = require("fs")
 const path = require("path")
 const { execSync } = require("child_process")
 
-// Paths
-const ROOT_DIR = path.resolve(__dirname, "..")
-const CLI_DIR = path.join(ROOT_DIR, "roocli")
-const CLI_DIST_DIR = path.join(CLI_DIR, "dist")
-const EXTENSION_CLI_DIR = path.join(ROOT_DIR, "dist", "cli")
+// Configuration
+const rootDir = path.resolve(__dirname, "..")
+const roocliDir = path.join(rootDir, "roocli")
+const distDir = path.join(rootDir, "dist", "cli")
 
-// Ensure the CLI tool is built
+// Ensure the dist directory exists
+if (!fs.existsSync(distDir)) {
+	fs.mkdirSync(distDir, { recursive: true })
+}
+
 console.log("Building CLI tool...")
+
+// Build the CLI tool
 try {
-	process.chdir(CLI_DIR)
+	process.chdir(roocliDir)
+	execSync("npm install", { stdio: "inherit" })
 	execSync("npm run build", { stdio: "inherit" })
-	process.chdir(ROOT_DIR)
+	process.chdir(rootDir)
 } catch (error) {
-	console.error("Failed to build CLI tool:", error)
+	console.error(`Error building CLI tool: ${error.message}`)
 	process.exit(1)
 }
 
-// Create the CLI directory in the extension dist folder
-console.log("Creating CLI directory in extension package...")
-fs.mkdirSync(EXTENSION_CLI_DIR, { recursive: true })
+console.log("Copying files to distribution directory...")
 
-// Copy the CLI dist files to the extension package
-console.log("Copying CLI files to extension package...")
+// Copy the necessary files to the distribution directory
 try {
-	// Copy the CLI dist files
-	fs.cpSync(CLI_DIST_DIR, EXTENSION_CLI_DIR, { recursive: true })
+	// Copy the built files
+	const srcDistDir = path.join(roocliDir, "dist")
+	if (fs.existsSync(srcDistDir)) {
+		// Copy all files from the dist directory
+		const files = fs.readdirSync(srcDistDir)
+		for (const file of files) {
+			const srcPath = path.join(srcDistDir, file)
+			const destPath = path.join(distDir, file)
 
-	// Copy package.json (needed for dependencies)
-	fs.copyFileSync(path.join(CLI_DIR, "package.json"), path.join(EXTENSION_CLI_DIR, "package.json"))
-
-	// Create a stripped-down package.json for the CLI in the extension
-	const cliPackageJson = JSON.parse(fs.readFileSync(path.join(CLI_DIR, "package.json"), "utf8"))
-
-	// Keep only necessary fields
-	const strippedPackageJson = {
-		name: cliPackageJson.name,
-		version: cliPackageJson.version,
-		description: cliPackageJson.description,
-		main: cliPackageJson.main,
-		bin: cliPackageJson.bin,
-		dependencies: cliPackageJson.dependencies,
+			if (fs.statSync(srcPath).isDirectory()) {
+				// If it's a directory, copy it recursively
+				fs.cpSync(srcPath, destPath, { recursive: true })
+			} else {
+				// If it's a file, copy it
+				fs.copyFileSync(srcPath, destPath)
+			}
+		}
 	}
 
-	fs.writeFileSync(path.join(EXTENSION_CLI_DIR, "package.json"), JSON.stringify(strippedPackageJson, null, 2))
+	// Copy and modify package.json from roocli directory
+	const packageJsonPath = path.join(roocliDir, "package.json")
+	const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"))
 
-	console.log("CLI tool successfully packaged with extension.")
+	// Update paths for the distribution
+	packageJson.main = "index.js"
+	packageJson.bin = {
+		roo: "index.js",
+	}
+
+	// Ensure bundledDependencies is included
+	if (!packageJson.bundledDependencies) {
+		packageJson.bundledDependencies = Object.keys(packageJson.dependencies || {})
+	}
+
+	fs.writeFileSync(path.join(distDir, "package.json"), JSON.stringify(packageJson, null, 2))
+
+	// Create a README.md file
+	const readmeContent = `# RooCode CLI
+
+A command line interface for RooCode that communicates with the RooCode extension via WebSocket.
+
+## Installation
+
+\`\`\`bash
+npm install -g roocli
+\`\`\`
+
+## Usage
+
+\`\`\`bash
+# Get help
+roo --help
+
+# Get command-specific help
+roo <command> --help
+\`\`\`
+
+For more information, see the [RooCode documentation](https://docs.roocode.com).
+`
+
+	fs.writeFileSync(path.join(distDir, "README.md"), readmeContent)
 } catch (error) {
-	console.error("Failed to copy CLI files:", error)
+	console.error(`Error copying files: ${error.message}`)
 	process.exit(1)
 }
+
+console.log("Installing dependencies in distribution directory...")
+
+// Install dependencies in the distribution directory
+try {
+	process.chdir(distDir)
+	execSync("npm install", { stdio: "inherit" })
+} catch (error) {
+	console.error(`Error installing dependencies: ${error.message}`)
+	process.exit(1)
+}
+
+console.log("Creating tarball...")
+
+// Create a tarball
+try {
+	execSync("npm pack", { stdio: "inherit" })
+
+	// Move the tarball to the root directory
+	const tarballs = fs.readdirSync(distDir).filter((file) => file.endsWith(".tgz"))
+	if (tarballs.length > 0) {
+		const tarball = tarballs[0]
+		const srcPath = path.join(distDir, tarball)
+		const destPath = path.join(rootDir, tarball)
+		fs.copyFileSync(srcPath, destPath)
+		console.log(`Tarball created: ${destPath}`)
+		console.log("You can install it globally with:")
+		console.log(`npm install -g ${destPath}`)
+	}
+} catch (error) {
+	console.error(`Error creating tarball: ${error.message}`)
+	process.exit(1)
+}
+
+console.log("CLI tool packaged successfully!")
+
+// Return to the root directory
+process.chdir(rootDir)
