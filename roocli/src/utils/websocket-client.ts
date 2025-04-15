@@ -5,7 +5,7 @@ import WebSocket from "ws"
 
 interface WebSocketMessage {
 	message_id: string
-	type: "method_call" | "event" | "authentication" | "error"
+	type: "method_call" | "event" | "authentication" | "error" | "event_subscription"
 	payload: any
 }
 
@@ -13,6 +13,26 @@ interface WebSocketResponse {
 	message_id: string
 	type: string
 	payload: any
+}
+
+interface PartialMessage {
+	taskId: string
+	currentContent: string
+}
+
+// Event names that can be subscribed to
+export enum EventName {
+	Message = "message",
+	TaskCreated = "taskCreated",
+	TaskStarted = "taskStarted",
+	TaskModeSwitched = "taskModeSwitched",
+	TaskPaused = "taskPaused",
+	TaskUnpaused = "taskUnpaused",
+	TaskAskResponded = "taskAskResponded",
+	TaskAborted = "taskAborted",
+	TaskSpawned = "taskSpawned",
+	TaskCompleted = "taskCompleted",
+	TaskTokenUsageUpdated = "taskTokenUsageUpdated",
 }
 
 export class WebSocketClient extends EventEmitter {
@@ -23,11 +43,17 @@ export class WebSocketClient extends EventEmitter {
 	private pendingRequests: Map<string, { resolve: Function; reject: Function }> = new Map()
 	private connected: boolean = false
 	private spinner: any = null
+	private partialMessages: Map<string, PartialMessage> = new Map()
+	private activeTaskId: string | null = null
+	private connectionTimeoutId: NodeJS.Timeout | null = null
+	private debugMode: boolean = false
+	private lastActivityTime: number = Date.now()
 
-	constructor(url: string, token: string | null = null) {
+	constructor(url: string, token: string | null = null, debug: boolean = false) {
 		super()
 		this.url = url
 		this.token = token
+		this.debugMode = debug
 	}
 
 	/**
@@ -79,8 +105,17 @@ export class WebSocketClient extends EventEmitter {
 					this.emit("disconnected")
 				})
 
-				// Set a timeout for the connection
-				setTimeout(() => {
+				// Set up ping/pong handling for heartbeat
+				this.ws.on("ping", () => {
+					try {
+						this.ws?.pong()
+					} catch (error) {
+						console.error(chalk.red("Error sending pong:"), error)
+					}
+				})
+
+				// Set a timeout for the initial connection only
+				this.connectionTimeoutId = setTimeout(() => {
 					if (!this.connected) {
 						this.spinner.fail("Connection timeout")
 						reject(new Error("Connection timeout"))
@@ -99,6 +134,12 @@ export class WebSocketClient extends EventEmitter {
 	 * Disconnect from the WebSocket server
 	 */
 	public disconnect(): void {
+		// Clear the connection timeout if it exists
+		if (this.connectionTimeoutId) {
+			clearTimeout(this.connectionTimeoutId)
+			this.connectionTimeoutId = null
+		}
+
 		if (this.ws) {
 			this.ws.close()
 			this.ws = null
@@ -122,7 +163,8 @@ export class WebSocketClient extends EventEmitter {
 			// The server expects args to be an array, not an object
 			const args = Array.isArray(params) ? params : [params]
 
-			console.log(`Sending command ${method} with args:`, JSON.stringify(args))
+			// Log the command being sent for debugging
+			console.log(chalk.blue(`Sending command: ${method}`), chalk.gray(JSON.stringify(args).substring(0, 100)))
 
 			const id = String(++this.messageCounter)
 			const message = {
@@ -134,7 +176,16 @@ export class WebSocketClient extends EventEmitter {
 				},
 			}
 
-			this.pendingRequests.set(id, { resolve, reject })
+			this.pendingRequests.set(id, {
+				resolve: (result: T) => {
+					console.log(chalk.green(`Command ${method} completed successfully`))
+					resolve(result)
+				},
+				reject: (error: Error) => {
+					console.error(chalk.red(`Command ${method} failed: ${error.message}`))
+					reject(error)
+				},
+			})
 			this.ws.send(JSON.stringify(message))
 		})
 	}
@@ -183,8 +234,10 @@ export class WebSocketClient extends EventEmitter {
 				this.pendingRequests.delete(message.message_id)
 
 				if (message.type === "error") {
+					console.error(chalk.red(`Received error response: ${message.payload.message}`))
 					reject(new Error(message.payload.message))
 				} else {
+					console.log(chalk.green(`Received successful response for message ID: ${message.message_id}`))
 					resolve(message.payload)
 				}
 				return
@@ -192,7 +245,49 @@ export class WebSocketClient extends EventEmitter {
 
 			// Handle events
 			if (message.type === "event" && message.payload && message.payload.event) {
-				this.emit(message.payload.event, message.payload.data)
+				const eventName = message.payload.event
+				const eventData = message.payload.data
+
+				// Update last activity time
+				this.lastActivityTime = Date.now()
+
+				// Log all events received (except for high-frequency events like partial messages)
+				// if (eventName !== "message" || !Array.isArray(eventData) || eventData.length === 0 || !eventData[0].message || eventData[0].message.partial !== true) {
+				// 	console.log(chalk.cyan(`Received event: ${eventName}`));
+				// }
+
+				// Handle message events specially to avoid duplicates
+				if (eventName === "message" && Array.isArray(eventData)) {
+					// Process partial message updates through our special handler
+					this.handlePartialMessageUpdates(eventData)
+
+					// For debugging
+					if (this.debugMode) {
+						for (const data of eventData) {
+							if (data && data.message && data.taskId) {
+								const { taskId, message, action } = data
+								const { partial, text } = message
+
+								if (partial === true) {
+									console.log(
+										chalk.gray(
+											`Received partial message for task ${taskId}: ${text?.substring(0, 20)}...`,
+										),
+									)
+								} else if (action === "created" || action === "updated") {
+									console.log(
+										chalk.green(
+											`Received complete message for task ${taskId}: ${text?.substring(0, 20)}...`,
+										),
+									)
+								}
+							}
+						}
+					}
+				} else {
+					// For all other events, emit them normally
+					this.emit(eventName, eventData)
+				}
 				return
 			}
 
@@ -204,9 +299,167 @@ export class WebSocketClient extends EventEmitter {
 	}
 
 	/**
+	 * Remove all event listeners for a specific task
+	 * This prevents memory leaks and ensures that event listeners from previous tasks
+	 * don't interfere with new tasks
+	 */
+	public removeTaskEventListeners(): void {
+		// Remove all event listeners for specific events
+		this.removeAllListeners("partialMessage")
+		this.removeAllListeners("completeMessage")
+
+		// Remove listeners for all events in the EventName enum
+		Object.values(EventName).forEach((eventName) => {
+			this.removeAllListeners(eventName)
+		})
+
+		// Reset active task ID
+		this.activeTaskId = null
+
+		console.log(chalk.blue("Removed all task event listeners"))
+	}
+
+	/**
+	 * Handle partial message updates from the WebSocket server
+	 * @param messageData The message data array
+	 */
+	private handlePartialMessageUpdates(messageData: any[]): void {
+		for (const data of messageData) {
+			if (!data || !data.message || !data.taskId) continue
+
+			const { taskId, message, action } = data
+			const { partial, text } = message
+
+			// Skip if there's no text content
+			if (text === undefined) continue
+
+			if (partial === true) {
+				// This is a partial message update
+				let partialMessage = this.partialMessages.get(taskId)
+				let delta = text || ""
+
+				if (!partialMessage) {
+					// Initialize a new partial message if this is the first partial update
+					partialMessage = {
+						taskId,
+						currentContent: "",
+					}
+					this.partialMessages.set(taskId, partialMessage)
+				} else {
+					// Calculate the actual delta (only the new part)
+					// If the new text starts with the current content, extract only the new part
+					if (text.startsWith(partialMessage.currentContent)) {
+						delta = text.substring(partialMessage.currentContent.length)
+						if (this.debugMode) {
+							console.log(chalk.gray(`Delta (substring): "${delta}"`))
+						}
+					} else {
+						// If we can't determine the delta, just use the text as is
+						// This is a fallback and shouldn't normally happen
+						delta = text
+						if (this.debugMode) {
+							console.log(chalk.yellow(`Delta (fallback): "${delta}"`))
+						}
+					}
+				}
+
+				// Append the new text to the current content
+				partialMessage.currentContent = text || ""
+
+				// Emit a special event for partial updates with only the new part (delta)
+				this.emit("partialMessage", {
+					taskId,
+					content: partialMessage.currentContent,
+					delta: delta,
+				})
+			} else if (action === "created" || action === "updated") {
+				// This is a complete message, clear any partial state
+				this.partialMessages.delete(taskId)
+
+				// Emit a special event for complete messages
+				this.emit("completeMessage", {
+					taskId,
+					content: text,
+				})
+			}
+		}
+	}
+
+	/**
 	 * Check if the WebSocket is connected
 	 */
 	public isConnected(): boolean {
 		return this.connected && this.ws !== null && this.ws.readyState === WebSocket.OPEN
+	}
+
+	/**
+	 * Subscribe to an event
+	 * @param event The event to subscribe to
+	 * @returns A promise that resolves when the subscription is successful
+	 */
+	public subscribeToEvent(event: string): Promise<void> {
+		return new Promise((resolve, reject) => {
+			if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+				reject(new Error("WebSocket is not connected"))
+				return
+			}
+
+			const id = String(++this.messageCounter)
+			const message = {
+				message_id: id,
+				type: "event_subscription",
+				payload: {
+					event,
+				},
+			}
+
+			this.pendingRequests.set(id, {
+				resolve: () => resolve(),
+				reject,
+			})
+
+			this.ws.send(JSON.stringify(message))
+		})
+	}
+
+	/**
+	 * Subscribe to all events for a specific task
+	 * @param taskId The ID of the task to subscribe to
+	 */
+	public subscribeToTaskEvents(taskId: string): Promise<void> {
+		this.activeTaskId = taskId
+		console.log(chalk.blue(`Subscribing to events for task: ${taskId}`))
+
+		// Clear the connection timeout as we're now in active task mode
+		if (this.connectionTimeoutId) {
+			clearTimeout(this.connectionTimeoutId)
+			this.connectionTimeoutId = null
+		}
+
+		// Subscribe to ALL events in the EventName enum to ensure synchronization with webview-UI
+		const subscriptionPromises = Object.values(EventName).map((eventName) => {
+			// console.log(chalk.blue(`Subscribing to event: ${eventName}`));
+			return this.subscribeToEvent(eventName)
+		})
+
+		return Promise.all(subscriptionPromises).then(() => {
+			// console.log(chalk.green("Successfully subscribed to all task events"));
+			return Promise.resolve()
+		})
+	}
+
+	/**
+	 * Get the time since the last activity
+	 * @returns Time in milliseconds since the last activity
+	 */
+	public getTimeSinceLastActivity(): number {
+		return Date.now() - this.lastActivityTime
+	}
+
+	/**
+	 * Reset the last activity time
+	 */
+	public resetLastActivityTime(): void {
+		this.lastActivityTime = Date.now()
 	}
 }
