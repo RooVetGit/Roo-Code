@@ -19,8 +19,12 @@ export async function executeRipgrep({
 }): Promise<FileResult[]> {
 	const rgPath = await getBinPath(vscode.env.appRoot)
 
+	if (!rgPath) {
+		throw new Error(`ripgrep not found: ${rgPath}`)
+	}
+
 	return new Promise((resolve, reject) => {
-		const rgProcess = childProcess.spawn(rgPath || "rg", args)
+		const rgProcess = childProcess.spawn(rgPath, args)
 		const rl = readline.createInterface({ input: rgProcess.stdout, crlfDelay: Infinity })
 		const fileResults: FileResult[] = []
 		const dirSet = new Set<string>() // Track unique directory paths.
