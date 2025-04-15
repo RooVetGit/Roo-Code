@@ -9,6 +9,9 @@ export type AskApproval = (
 	partialMessage?: string,
 	progressStatus?: ToolProgressStatus,
 	forceApproval?: boolean,
+	
+	// metadata is used to pass additional arbitrary user data to the webview as necessary
+	metadata?: Record<string, unknown>,
 ) => Promise<boolean>
 
 export type HandleError = (action: string, error: Error) => Promise<void>
