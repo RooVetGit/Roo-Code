@@ -8,6 +8,7 @@ import {
 	mistralModels,
 	openAiNativeModels,
 	vertexModels,
+	xaiModels,
 } from "../../../../src/shared/api"
 
 export const MODELS_BY_PROVIDER: Partial<Record<ApiProvider, Record<string, ModelInfo>>> = {
@@ -18,6 +19,7 @@ export const MODELS_BY_PROVIDER: Partial<Record<ApiProvider, Record<string, Mode
 	mistral: mistralModels,
 	"openai-native": openAiNativeModels,
 	vertex: vertexModels,
+	xai: xaiModels,
 }
 
 export const PROVIDERS = [
@@ -37,6 +39,7 @@ export const PROVIDERS = [
 	{ value: "unbound", label: "Unbound" },
 	{ value: "requesty", label: "Requesty" },
 	{ value: "human-relay", label: "Human Relay" },
+	{ value: "xai", label: "xAI" },
 ].sort((a, b) => a.label.localeCompare(b.label))
 
 export const VERTEX_REGIONS = [
