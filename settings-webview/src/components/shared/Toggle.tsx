@@ -1,29 +1,4 @@
-import { makeStyles, Switch, Label, Text, tokens } from "@fluentui/react-components"
-
-const useStyles = makeStyles({
-	container: {
-		display: "flex",
-		flexDirection: "column",
-		marginBottom: "16px",
-	},
-	toggleRow: {
-		display: "flex",
-		alignItems: "center",
-		justifyContent: "space-between",
-	},
-	labelContainer: {
-		display: "flex",
-		flexDirection: "column",
-	},
-	label: {
-		fontWeight: tokens.fontWeightSemibold,
-		color: tokens.colorNeutralForeground1,
-	},
-	description: {
-		color: tokens.colorNeutralForeground2,
-		fontSize: tokens.fontSizeBase200,
-	},
-})
+import { cn } from "../../utils/tailwind"
 
 interface ToggleProps {
 	id: string
@@ -35,18 +10,32 @@ interface ToggleProps {
 }
 
 export const Toggle = ({ id, label, description, checked, onChange, disabled = false }: ToggleProps) => {
-	const styles = useStyles()
-
 	return (
-		<div className={styles.container}>
-			<div className={styles.toggleRow}>
-				<div className={styles.labelContainer}>
-					<Label htmlFor={id} className={styles.label}>
+		<div className="flex flex-col mb-4">
+			<div className="flex items-center justify-between">
+				<div className="flex flex-col">
+					<label htmlFor={id} className="font-semibold">
 						{label}
-					</Label>
-					{description && <Text className={styles.description}>{description}</Text>}
+					</label>
+					{description && <p className="text-vscode-description-fg text-sm">{description}</p>}
 				</div>
-				<Switch id={id} checked={checked} onChange={(_e, data) => onChange(data.checked)} disabled={disabled} />
+				<div className="relative inline-flex items-center">
+					<input
+						type="checkbox"
+						id={id}
+						checked={checked}
+						onChange={(e) => onChange(e.target.checked)}
+						disabled={disabled}
+						className={cn("sr-only peer", disabled && "cursor-not-allowed opacity-50")}
+					/>
+					<div
+						className={cn(
+							"w-11 h-6 bg-vscode-panel-border rounded-full peer peer-checked:bg-vscode-button-bg peer-focus:ring-1 peer-focus:ring-vscode-focus-border",
+							"after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all",
+							"peer-checked:after:translate-x-full",
+							disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
+						)}></div>
+				</div>
 			</div>
 		</div>
 	)

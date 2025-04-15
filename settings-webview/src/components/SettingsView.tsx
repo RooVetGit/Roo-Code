@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { makeStyles, shorthands, Button, Title2, Subtitle1, tokens, Divider } from "@fluentui/react-components"
 import GeneralSettings from "./settings/GeneralSettings"
 import PermissionsSettings from "./settings/PermissionsSettings"
 import AboutSettings from "./settings/AboutSettings"
@@ -24,103 +23,54 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
 	{ id: "about", name: "About", description: "Version and telemetry information" },
 ]
 
-const useStyles = makeStyles({
-	root: {
-		display: "flex",
-		height: "100%",
-		width: "100%",
-		overflow: "hidden",
-	},
-	sidebar: {
-		display: "flex",
-		flexDirection: "column",
-		width: "250px",
-		minWidth: "250px",
-		height: "100%",
-		borderRight: `1px solid ${tokens.colorNeutralStroke2}`,
-		overflowY: "auto",
-		...shorthands.padding("16px", "0"),
-	},
-	content: {
-		display: "flex",
-		flexDirection: "column",
-		flexGrow: 1,
-		height: "100%",
-		overflowY: "auto",
-		...shorthands.padding("24px"),
-	},
-	categoryButton: {
-		justifyContent: "flex-start",
-		textAlign: "left",
-		height: "auto",
-		...shorthands.padding("12px", "16px"),
-		...shorthands.borderRadius("0"),
-	},
-	categoryButtonSelected: {
-		backgroundColor: tokens.colorNeutralBackground1Selected,
-		"&:hover": {
-			backgroundColor: tokens.colorNeutralBackground1Hover,
-		},
-	},
-	categoryName: {
-		fontWeight: tokens.fontWeightSemibold,
-	},
-	categoryDescription: {
-		color: tokens.colorNeutralForeground2,
-		fontSize: tokens.fontSizeBase200,
-	},
-	contentHeader: {
-		marginBottom: "16px",
-	},
-	contentBody: {
-		marginTop: "16px",
-	},
-})
-
 const SettingsView = () => {
-	const styles = useStyles()
 	const [selectedCategory, setSelectedCategory] = useState<string>("general")
 
 	return (
-		<div className={styles.root}>
+		<div className="flex h-full w-full overflow-hidden">
 			{/* Left sidebar - Categories */}
-			<div className={styles.sidebar}>
+			<div className="flex flex-col w-[250px] min-w-[250px] h-full border-r border-vscode-panel-border overflow-y-auto py-4">
 				{SETTINGS_CATEGORIES.map((category) => (
-					<Button
+					<button
 						key={category.id}
-						appearance="subtle"
-						className={`${styles.categoryButton} ${selectedCategory === category.id ? styles.categoryButtonSelected : ""}`}
+						className={`flex flex-col items-start text-left h-auto py-3 px-4 w-full hover:bg-vscode-button-hover-bg ${
+							selectedCategory === category.id ? "bg-vscode-button-bg text-vscode-button-fg" : ""
+						}`}
 						onClick={() => setSelectedCategory(category.id)}>
-						<div>
-							<div className={styles.categoryName}>{category.name}</div>
-							{category.description && (
-								<div className={styles.categoryDescription}>{category.description}</div>
-							)}
-						</div>
-					</Button>
+						<div className="font-semibold">{category.name}</div>
+						{category.description && (
+							<div className="text-vscode-description-fg text-xs">{category.description}</div>
+						)}
+					</button>
 				))}
 			</div>
 
 			{/* Right content area */}
-			<div className={styles.content}>
-				<div className={styles.contentHeader}>
-					<Title2>{SETTINGS_CATEGORIES.find((c) => c.id === selectedCategory)?.name}</Title2>
-					<Subtitle1>{SETTINGS_CATEGORIES.find((c) => c.id === selectedCategory)?.description}</Subtitle1>
+			<div className="flex flex-col flex-grow h-full overflow-y-auto p-6">
+				<div className="mb-4">
+					<h1 className="text-2xl font-semibold mb-1">
+						{SETTINGS_CATEGORIES.find((c) => c.id === selectedCategory)?.name}
+					</h1>
+					<h2 className="text-base text-vscode-description-fg">
+						{SETTINGS_CATEGORIES.find((c) => c.id === selectedCategory)?.description}
+					</h2>
 				</div>
 
-				<Divider />
+				<div className="h-px w-full bg-vscode-panel-border my-4"></div>
 
-				<div className={styles.contentBody}>
+				<div className="mt-4">
 					{/* Render the appropriate settings component based on the selected category */}
 					{selectedCategory === "general" && <GeneralSettings />}
 					{selectedCategory === "permissions" && <PermissionsSettings />}
 					{selectedCategory === "about" && <AboutSettings />}
-					{selectedCategory !== "general" && selectedCategory !== "permissions" && selectedCategory !== "about" && (
-						<PlaceholderSettings
-							categoryId={selectedCategory}
-							categoryName={SETTINGS_CATEGORIES.find((c) => c.id === selectedCategory)?.name || ""}
-						/>
-					)}
+					{selectedCategory !== "general" &&
+						selectedCategory !== "permissions" &&
+						selectedCategory !== "about" && (
+							<PlaceholderSettings
+								categoryId={selectedCategory}
+								categoryName={SETTINGS_CATEGORIES.find((c) => c.id === selectedCategory)?.name || ""}
+							/>
+						)}
 				</div>
 			</div>
 		</div>

@@ -1,22 +1,4 @@
-import { makeStyles, Input, Label, Text, tokens } from "@fluentui/react-components"
-
-const useStyles = makeStyles({
-	container: {
-		display: "flex",
-		flexDirection: "column",
-		marginBottom: "16px",
-	},
-	label: {
-		fontWeight: tokens.fontWeightSemibold,
-		color: tokens.colorNeutralForeground1,
-		marginBottom: "4px",
-	},
-	description: {
-		color: tokens.colorNeutralForeground2,
-		fontSize: tokens.fontSizeBase200,
-		marginBottom: "8px",
-	},
-})
+import { cn } from "../../utils/tailwind"
 
 interface TextInputProps {
 	id: string
@@ -39,21 +21,24 @@ export const TextInput = ({
 	disabled = false,
 	type = "text",
 }: TextInputProps) => {
-	const styles = useStyles()
-
 	return (
-		<div className={styles.container}>
-			<Label htmlFor={id} className={styles.label}>
+		<div className="flex flex-col mb-4">
+			<label htmlFor={id} className="font-semibold mb-1">
 				{label}
-			</Label>
-			{description && <Text className={styles.description}>{description}</Text>}
-			<Input
+			</label>
+			{description && <p className="text-vscode-description-fg text-sm mb-2">{description}</p>}
+			<input
 				id={id}
 				value={value}
-				onChange={(_e, data) => onChange(data.value)}
+				onChange={(e) => onChange(e.target.value)}
 				placeholder={placeholder}
 				disabled={disabled}
 				type={type}
+				className={cn(
+					"w-full px-3 py-2 bg-vscode-input-bg text-vscode-input-fg border border-vscode-input-border rounded",
+					"focus:outline-none focus:ring-1 focus:ring-vscode-focus-border",
+					disabled && "opacity-50 cursor-not-allowed",
+				)}
 			/>
 		</div>
 	)

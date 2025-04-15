@@ -1,18 +1,7 @@
 import { useState } from "react"
-import { makeStyles, shorthands } from "@fluentui/react-components"
 import { Section, SectionHeader, Card, Toggle } from "../shared"
 
-const useStyles = makeStyles({
-	root: {
-		display: "flex",
-		flexDirection: "column",
-		...shorthands.gap("16px"),
-	},
-})
-
 const PermissionsSettings = () => {
-	const styles = useStyles()
-
 	// State for form values
 	const [approveRead, setApproveRead] = useState(true)
 	const [approveWrite, setApproveWrite] = useState(false)
@@ -23,7 +12,7 @@ const PermissionsSettings = () => {
 	const [approveSubtask, setApproveSubtask] = useState(true)
 
 	return (
-		<div className={styles.root}>
+		<div className="flex flex-col gap-4">
 			<Section>
 				<SectionHeader description="Configure which operations are automatically approved">
 					Auto Approve Settings

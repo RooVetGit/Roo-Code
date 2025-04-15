@@ -1,22 +1,5 @@
-import { makeStyles, tokens, shorthands } from "@fluentui/react-components"
 import { ReactNode } from "react"
-
-const useStyles = makeStyles({
-	card: {
-		backgroundColor: tokens.colorNeutralBackground1,
-		...shorthands.border("1px", "solid", tokens.colorNeutralStroke2),
-		...shorthands.borderRadius("4px"),
-		...shorthands.padding("16px"),
-		marginBottom: "16px",
-	},
-	header: {
-		fontWeight: tokens.fontWeightSemibold,
-		fontSize: tokens.fontSizeBase500,
-		marginTop: 0,
-		marginBottom: "12px",
-		color: tokens.colorNeutralForeground1,
-	},
-})
+import { cn } from "../../utils/tailwind"
 
 interface CardProps {
 	title?: string
@@ -25,11 +8,9 @@ interface CardProps {
 }
 
 export const Card = ({ title, children, className }: CardProps) => {
-	const styles = useStyles()
-
 	return (
-		<div className={`${styles.card} ${className || ""}`}>
-			{title && <h3 className={styles.header}>{title}</h3>}
+		<div className={cn("bg-vscode-bg border border-vscode-panel-border rounded p-4 mb-4", className)}>
+			{title && <h3 className="font-semibold text-lg mt-0 mb-3">{title}</h3>}
 			{children}
 		</div>
 	)

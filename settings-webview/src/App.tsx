@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react"
 import { MemoryRouter as Router, Routes, Route } from "react-router-dom"
-import { FluentProvider, webLightTheme, webDarkTheme } from "@fluentui/react-components"
 import SettingsView from "./components/SettingsView"
-import "./App.css"
 
 // Define the VS Code API
 declare global {
@@ -32,8 +30,7 @@ function App() {
 	const [initialized, setInitialized] = useState<boolean>(false)
 	const [isDarkTheme, setIsDarkTheme] = useState<boolean>(document.body.classList.contains("vscode-dark"))
 
-	// Use the built-in themes based on VS Code's theme
-	const theme = isDarkTheme ? webDarkTheme : webLightTheme
+	// We'll use Tailwind CSS classes that adapt to VS Code's theme
 
 	useEffect(() => {
 		// Setup message handler from extension to webview
@@ -65,19 +62,17 @@ function App() {
 	}, [])
 
 	return (
-		<FluentProvider theme={theme}>
-			<Router initialEntries={["/"]} initialIndex={0}>
-				<div className="app-container">
-					{!initialized ? (
-						<div style={{ padding: "20px" }}>Loading settings...</div>
-					) : (
-						<Routes>
-							<Route path="/" element={<SettingsView />} />
-						</Routes>
-					)}
-				</div>
-			</Router>
-		</FluentProvider>
+		<Router initialEntries={["/"]} initialIndex={0}>
+			<div className="w-full h-screen box-border flex flex-col overflow-hidden bg-vscode-bg text-vscode-fg">
+				{!initialized ? (
+					<div className="p-5">Loading settings...</div>
+				) : (
+					<Routes>
+						<Route path="/" element={<SettingsView />} />
+					</Routes>
+				)}
+			</div>
+		</Router>
 	)
 }
 

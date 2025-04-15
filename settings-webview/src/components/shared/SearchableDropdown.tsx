@@ -1,74 +1,5 @@
-import { useState, useEffect } from "react"
-import {
-	makeStyles,
-	Label,
-	Text,
-	tokens,
-	Input,
-	MenuList,
-	MenuItem,
-	Popover,
-	PopoverTrigger,
-	PopoverSurface,
-} from "@fluentui/react-components"
-import { Search24Regular, ChevronDown24Regular } from "@fluentui/react-icons"
-
-const useStyles = makeStyles({
-	container: {
-		display: "flex",
-		flexDirection: "column",
-		marginBottom: "16px",
-		position: "relative",
-	},
-	label: {
-		fontWeight: tokens.fontWeightSemibold,
-		color: tokens.colorNeutralForeground1,
-		marginBottom: "4px",
-	},
-	description: {
-		color: tokens.colorNeutralForeground2,
-		fontSize: tokens.fontSizeBase200,
-		marginBottom: "8px",
-	},
-	inputContainer: {
-		display: "flex",
-		position: "relative",
-	},
-	searchIcon: {
-		position: "absolute",
-		left: "8px",
-		top: "50%",
-		transform: "translateY(-50%)",
-		color: tokens.colorNeutralForeground3,
-	},
-	input: {
-		paddingLeft: "32px",
-	},
-	dropdownButton: {
-		marginLeft: "8px",
-	},
-	menuItem: {
-		cursor: "pointer",
-	},
-	selectedValue: {
-		display: "flex",
-		alignItems: "center",
-		justifyContent: "space-between",
-		padding: "5px 12px",
-		border: `1px solid ${tokens.colorNeutralStroke1}`,
-		borderRadius: tokens.borderRadiusMedium,
-		backgroundColor: tokens.colorNeutralBackground1,
-		cursor: "pointer",
-		"&:hover": {
-			backgroundColor: tokens.colorNeutralBackground1Hover,
-		},
-	},
-	selectedText: {
-		overflow: "hidden",
-		textOverflow: "ellipsis",
-		whiteSpace: "nowrap",
-	},
-})
+import { useState, useEffect, useRef } from "react"
+import { cn } from "../../utils/tailwind"
 
 export interface SearchableDropdownOption {
 	key: string
@@ -96,10 +27,24 @@ export const SearchableDropdown = ({
 	placeholder = "Search...",
 	disabled = false,
 }: SearchableDropdownProps) => {
-	const styles = useStyles()
 	const [searchText, setSearchText] = useState("")
 	const [filteredOptions, setFilteredOptions] = useState(options)
 	const [isOpen, setIsOpen] = useState(false)
+	const dropdownRef = useRef<HTMLDivElement>(null)
+
+	// Close dropdown when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+				setIsOpen(false)
+			}
+		}
+
+		document.addEventListener("mousedown", handleClickOutside)
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside)
+		}
+	}, [])
 
 	// Filter options when search text changes
 	useEffect(() => {
@@ -116,54 +61,78 @@ export const SearchableDropdown = ({
 	const selectedText = selectedOption ? selectedOption.text : placeholder
 
 	return (
-		<div className={styles.container}>
-			<Label htmlFor={id} className={styles.label}>
+		<div className="flex flex-col mb-4 relative" ref={dropdownRef}>
+			<label htmlFor={id} className="font-semibold mb-1">
 				{label}
-			</Label>
-			{description && <Text className={styles.description}>{description}</Text>}
+			</label>
+			{description && <p className="text-vscode-description-fg text-sm mb-2">{description}</p>}
 
-			<Popover open={isOpen} onOpenChange={(_e, data) => setIsOpen(data.open)}>
-				<PopoverTrigger disableButtonEnhancement>
-					<div className={styles.selectedValue} onClick={() => !disabled && setIsOpen(true)}>
-						<Text className={styles.selectedText}>{selectedText}</Text>
-						<ChevronDown24Regular />
-					</div>
-				</PopoverTrigger>
+			<button
+				type="button"
+				className={cn(
+					"flex items-center justify-between w-full px-3 py-2 text-left bg-vscode-dropdown-bg text-vscode-dropdown-fg border border-vscode-dropdown-border rounded",
+					"focus:outline-none focus:ring-1 focus:ring-vscode-focus-border",
+					disabled && "opacity-50 cursor-not-allowed",
+				)}
+				onClick={() => !disabled && setIsOpen(!isOpen)}
+				disabled={disabled}>
+				<span className="truncate">{selectedText}</span>
+				<span className="ml-2">▼</span>
+			</button>
 
-				<PopoverSurface>
-					<div style={{ padding: "8px", minWidth: "250px" }}>
-						<div className={styles.inputContainer}>
-							<Search24Regular className={styles.searchIcon} />
-							<Input
-								className={styles.input}
+			{isOpen && (
+				<div className="absolute z-20 w-full mt-1 bg-vscode-dropdown-bg border border-vscode-dropdown-border rounded shadow-lg">
+					<div className="p-2">
+						<div className="relative mb-2">
+							<span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-vscode-description-fg">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									width="16"
+									height="16"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									strokeLinecap="round"
+									strokeLinejoin="round">
+									<circle cx="11" cy="11" r="8"></circle>
+									<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+								</svg>
+							</span>
+							<input
+								type="text"
+								className="w-full pl-10 pr-3 py-2 bg-vscode-input-bg text-vscode-input-fg border border-vscode-input-border rounded"
 								value={searchText}
-								onChange={(_e, data) => setSearchText(data.value)}
+								onChange={(e) => setSearchText(e.target.value)}
 								placeholder={placeholder}
 								disabled={disabled}
 							/>
 						</div>
 
-						<MenuList>
+						<ul className="max-h-60 overflow-auto">
 							{filteredOptions.length > 0 ? (
 								filteredOptions.map((option) => (
-									<MenuItem
+									<li
 										key={option.key}
+										className={cn(
+											"px-3 py-2 cursor-pointer hover:bg-vscode-button-hover-bg",
+											option.key === selectedKey && "bg-vscode-button-bg text-vscode-button-fg",
+										)}
 										onClick={() => {
 											onChange(option.key)
 											setIsOpen(false)
 											setSearchText("")
-										}}
-										className={styles.menuItem}>
+										}}>
 										{option.text}
-									</MenuItem>
+									</li>
 								))
 							) : (
-								<MenuItem disabled>No results found</MenuItem>
+								<li className="px-3 py-2 text-vscode-description-fg">No results found</li>
 							)}
-						</MenuList>
+						</ul>
 					</div>
-				</PopoverSurface>
-			</Popover>
+				</div>
+			)}
 		</div>
 	)
 }

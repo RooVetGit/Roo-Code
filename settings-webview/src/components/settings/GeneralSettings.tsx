@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { makeStyles, shorthands } from "@fluentui/react-components"
 import {
 	Section,
 	SectionHeader,
@@ -11,14 +10,6 @@ import {
 	DropdownOption,
 	SearchableDropdownOption,
 } from "../shared"
-
-const useStyles = makeStyles({
-	root: {
-		display: "flex",
-		flexDirection: "column",
-		...shorthands.gap("16px"),
-	},
-})
 
 const languageOptions: DropdownOption[] = [
 	{ key: "en", text: "English" },
@@ -45,8 +36,6 @@ const modelOptions: SearchableDropdownOption[] = [
 ]
 
 const GeneralSettings = () => {
-	const styles = useStyles()
-
 	// State for form values
 	const [openAIKey, setOpenAIKey] = useState("")
 	const [anthropicKey, setAnthropicKey] = useState("")
@@ -56,7 +45,7 @@ const GeneralSettings = () => {
 	const [autoSave, setAutoSave] = useState(true)
 
 	return (
-		<div className={styles.root}>
+		<div className="flex flex-col gap-4">
 			<Section>
 				<SectionHeader description="Configure your API settings for different providers">
 					API Configuration

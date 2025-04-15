@@ -1,22 +1,4 @@
-import { makeStyles, SpinButton, Label, Text, tokens } from "@fluentui/react-components"
-
-const useStyles = makeStyles({
-	container: {
-		display: "flex",
-		flexDirection: "column",
-		marginBottom: "16px",
-	},
-	label: {
-		fontWeight: tokens.fontWeightSemibold,
-		color: tokens.colorNeutralForeground1,
-		marginBottom: "4px",
-	},
-	description: {
-		color: tokens.colorNeutralForeground2,
-		fontSize: tokens.fontSizeBase200,
-		marginBottom: "8px",
-	},
-})
+import { cn } from "../../utils/tailwind"
 
 interface NumberInputProps {
 	id: string
@@ -41,28 +23,58 @@ export const NumberInput = ({
 	step = 1,
 	disabled = false,
 }: NumberInputProps) => {
-	const styles = useStyles()
-
 	return (
-		<div className={styles.container}>
-			<Label htmlFor={id} className={styles.label}>
+		<div className="flex flex-col mb-4">
+			<label htmlFor={id} className="font-semibold mb-1">
 				{label}
-			</Label>
-			{description && <Text className={styles.description}>{description}</Text>}
-			<SpinButton
-				id={id}
-				value={value}
-				onChange={(_e, data) => {
-					const newValue = Number(data.value)
-					if (!isNaN(newValue)) {
-						onChange(newValue)
-					}
-				}}
-				min={min}
-				max={max}
-				step={step}
-				disabled={disabled}
-			/>
+			</label>
+			{description && <p className="text-vscode-description-fg text-sm mb-2">{description}</p>}
+			<div className="flex">
+				<input
+					id={id}
+					type="number"
+					value={value}
+					onChange={(e) => {
+						const newValue = Number(e.target.value)
+						if (!isNaN(newValue)) {
+							onChange(newValue)
+						}
+					}}
+					min={min}
+					max={max}
+					step={step}
+					disabled={disabled}
+					className={cn(
+						"w-full px-3 py-2 bg-vscode-input-bg text-vscode-input-fg border border-vscode-input-border rounded",
+						"focus:outline-none focus:ring-1 focus:ring-vscode-focus-border",
+						disabled && "opacity-50 cursor-not-allowed",
+					)}
+				/>
+				<div className="flex flex-col ml-1">
+					<button
+						type="button"
+						onClick={() => onChange(value + step)}
+						disabled={disabled || (max !== undefined && value >= max)}
+						className={cn(
+							"flex items-center justify-center w-6 h-6 bg-vscode-button-bg text-vscode-button-fg rounded-t",
+							"hover:bg-vscode-button-hover-bg focus:outline-none focus:ring-1 focus:ring-vscode-focus-border",
+							disabled && "opacity-50 cursor-not-allowed",
+						)}>
+						<span className="text-xs">▲</span>
+					</button>
+					<button
+						type="button"
+						onClick={() => onChange(value - step)}
+						disabled={disabled || (min !== undefined && value <= min)}
+						className={cn(
+							"flex items-center justify-center w-6 h-6 bg-vscode-button-bg text-vscode-button-fg rounded-b",
+							"hover:bg-vscode-button-hover-bg focus:outline-none focus:ring-1 focus:ring-vscode-focus-border",
+							disabled && "opacity-50 cursor-not-allowed",
+						)}>
+						<span className="text-xs">▼</span>
+					</button>
+				</div>
+			</div>
 		</div>
 	)
 }
