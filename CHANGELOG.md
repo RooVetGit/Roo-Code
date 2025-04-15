@@ -1,5 +1,37 @@
 # Roo Code Changelog
 
+## [3.11.16] - 2025-04-14
+
+- Add gpt-4.1, gpt-4.1-mini, and gpt-4.1-nano to the OpenAI provider
+- Include model ID in environment details and when exporting tasks (thanks @feifei325!)
+
+## [3.11.15] - 2025-04-13
+
+- Add ability to filter task history by workspace (thanks @samhvw8!)
+- Fix Node.js version in the .tool-versions file (thanks @bogdan0083!)
+- Fix duplicate suggested mentions for open tabs (thanks @samhvw8!)
+- Fix Bedrock ARN validation and token expiry issue when using profiles (thanks @vagadiya!)
+- Add Anthropic option to pass API token as Authorization header instead of X-Api-Key (thanks @mecab!)
+- Better documentation for adding new settings (thanks @KJ7LNW!)
+- Localize package.json (thanks @samhvw8!)
+- Add option to hide the welcome message and fix the background color for the new profile dialog (thanks @zhangtony239!)
+- Restore the focus ring for the VSCodeButton component (thanks @pokutuna!)
+
+## [3.11.14] - 2025-04-11
+
+- Support symbolic links in rules folders to directories and other symbolic links (thanks @taisukeoe!)
+- Stronger enforcement of the setting to always read full files instead of doing partial reads
+
+## [3.11.13] - 2025-04-11
+
+- Loads of terminal improvements: command delay, PowerShell counter, and ZSH EOL mark (thanks @KJ7LNW!)
+- Add file context tracking system (thanks @samhvw8 and @canvrno!)
+- Improved display of diff errors + easy copying for investigation
+- Fixes to .vscodeignore (thanks @franekp!)
+- Fix a zh-CN translation for model capabilities (thanks @zhangtony239!)
+- Rename AWS Bedrock to Amazon Bedrock (thanks @ronyblum!)
+- Update extension title and description (thanks @StevenTCramer!)
+
 ## [3.11.12] - 2025-04-09
 
 - Make Grok3 streaming work with OpenAI Compatible (thanks @amittell!)

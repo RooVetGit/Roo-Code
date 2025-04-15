@@ -29,12 +29,13 @@
 		"advanced": "Erweitert",
 		"experimental": "Experimentelle Funktionen",
 		"language": "Sprache",
-		"about": "Über Roo Code"
+		"about": "Über Roo Code",
+		"interface": "Oberfläche"
 	},
 	"autoApprove": {
 		"description": "Erlaubt Roo, Operationen automatisch ohne Genehmigung durchzuführen. Aktiviere diese Einstellungen nur, wenn du der KI vollständig vertraust und die damit verbundenen Sicherheitsrisiken verstehst.",
 		"readOnly": {
-			"label": "Schreibgeschützte Operationen immer genehmigen",
+			"label": "Lesen",
 			"description": "Wenn aktiviert, wird Roo automatisch Verzeichnisinhalte anzeigen und Dateien lesen, ohne dass du auf die Genehmigen-Schaltfläche klicken musst.",
 			"outsideWorkspace": {
 				"label": "Dateien außerhalb des Arbeitsbereichs einbeziehen",
@@ -42,7 +43,7 @@
 			}
 		},
 		"write": {
-			"label": "Schreiboperationen immer genehmigen",
+			"label": "Schreiben",
 			"description": "Dateien automatisch erstellen und bearbeiten ohne Genehmigung",
 			"delayLabel": "Verzögerung nach Schreibvorgängen, damit Diagnosefunktionen potenzielle Probleme erkennen können",
 			"outsideWorkspace": {
@@ -51,29 +52,28 @@
 			}
 		},
 		"browser": {
-			"label": "Browser-Aktionen immer genehmigen",
-			"description": "Browser-Aktionen automatisch ohne Genehmigung durchführen",
-			"note": "Hinweis: Gilt nur, wenn das Modell Computer-Nutzung unterstützt"
+			"label": "Browser",
+			"description": "Browser-Aktionen automatisch ohne Genehmigung durchführen. Hinweis: Gilt nur, wenn das Modell Computer-Nutzung unterstützt"
 		},
 		"retry": {
-			"label": "Fehlgeschlagene API-Anfragen immer wiederholen",
+			"label": "Wiederholen",
 			"description": "Fehlgeschlagene API-Anfragen automatisch wiederholen, wenn der Server eine Fehlerantwort zurückgibt",
 			"delayLabel": "Verzögerung vor dem Wiederholen der Anfrage"
 		},
 		"mcp": {
-			"label": "MCP-Tools immer genehmigen",
+			"label": "MCP",
 			"description": "Automatische Genehmigung einzelner MCP-Tools in der MCP-Server-Ansicht aktivieren (erfordert sowohl diese Einstellung als auch das 'Immer erlauben'-Kontrollkästchen des Tools)"
 		},
 		"modeSwitch": {
-			"label": "Moduswechsel immer genehmigen",
+			"label": "Modus",
 			"description": "Automatisch zwischen verschiedenen Modi wechseln ohne Genehmigung"
 		},
 		"subtasks": {
-			"label": "Erstellung & Abschluss von Unteraufgaben immer genehmigen",
+			"label": "Unteraufgaben",
 			"description": "Erstellung und Abschluss von Unteraufgaben ohne Genehmigung erlauben"
 		},
 		"execute": {
-			"label": "Erlaubte Ausführungsoperationen immer genehmigen",
+			"label": "Ausführen",
 			"description": "Erlaubte Terminal-Befehle automatisch ohne Genehmigung ausführen",
 			"allowedCommands": "Erlaubte Auto-Ausführungsbefehle",
 			"allowedCommandsDescription": "Befehlspräfixe, die automatisch ausgeführt werden können, wenn 'Ausführungsoperationen immer genehmigen' aktiviert ist. Fügen Sie * hinzu, um alle Befehle zu erlauben (mit Vorsicht verwenden).",
@@ -116,6 +116,7 @@
 		"openRouterTransformsText": "Prompts und Nachrichtenketten auf Kontextgröße komprimieren (<a>OpenRouter Transformationen</a>)",
 		"anthropicApiKey": "Anthropic API-Schlüssel",
 		"getAnthropicApiKey": "Anthropic API-Schlüssel erhalten",
+		"anthropicUseAuthToken": "Anthropic API-Schlüssel als Authorization-Header anstelle von X-Api-Key übergeben",
 		"deepSeekApiKey": "DeepSeek API-Schlüssel",
 		"getDeepSeekApiKey": "DeepSeek API-Schlüssel erhalten",
 		"geminiApiKey": "Gemini API-Schlüssel",
@@ -300,7 +301,31 @@
 		},
 		"shellIntegrationTimeout": {
 			"label": "Terminal-Shell-Integrationszeit-Limit",
-			"description": "Maximale Wartezeit für die Shell-Integration, bevor Befehle ausgeführt werden. Für Benutzer mit langen Shell-Startzeiten muss dieser Wert möglicherweise erhöht werden, wenn Sie Fehler vom Typ \"Shell Integration Unavailable\" im Terminal sehen."
+			"description": "Maximale Wartezeit für die Shell-Integration, bevor Befehle ausgeführt werden. Für Benutzer mit langen Shell-Startzeiten musst du diesen Wert möglicherweise erhöhen, wenn du Fehler vom Typ \"Shell Integration Unavailable\" im Terminal siehst."
+		},
+		"zdotdir": {
+			"label": "ZDOTDIR-Behandlung aktivieren",
+			"description": "Erstellt bei Aktivierung ein temporäres Verzeichnis für ZDOTDIR, um die zsh-Shell-Integration korrekt zu handhaben. Dies stellt sicher, dass die VSCode-Shell-Integration mit zsh funktioniert und dabei deine zsh-Konfiguration erhalten bleibt. (experimentell)"
+		},
+		"commandDelay": {
+			"label": "Terminal-Befehlsverzögerung",
+			"description": "Verzögerung in Millisekunden, die nach der Befehlsausführung hinzugefügt wird. Die Standardeinstellung von 0 deaktiviert die Verzögerung vollständig. Dies kann dazu beitragen, dass die Befehlsausgabe in Terminals mit Timing-Problemen vollständig erfasst wird. In den meisten Terminals wird dies durch Setzen von `PROMPT_COMMAND='sleep N'` implementiert, und Powershell fügt `start-sleep` am Ende jedes Befehls hinzu. Ursprünglich war dies eine Lösung für VSCode-Bug#237208 und ist möglicherweise nicht mehr erforderlich."
+		},
+		"powershellCounter": {
+			"label": "PowerShell-Zähler-Workaround aktivieren",
+			"description": "Wenn aktiviert, fügt einen Zähler zu PowerShell-Befehlen hinzu, um die korrekte Befehlsausführung sicherzustellen. Dies hilft bei PowerShell-Terminals, die Probleme mit der Ausgabeerfassung haben könnten."
+		},
+		"zshClearEolMark": {
+			"label": "ZSH-Zeilenende-Markierung löschen",
+			"description": "Wenn aktiviert, wird die ZSH-Zeilenende-Markierung durch Setzen von PROMPT_EOL_MARK='' gelöscht. Dies verhindert Probleme bei der Interpretation der Befehlsausgabe, wenn diese mit Sonderzeichen wie '%' endet."
+		},
+		"zshOhMy": {
+			"label": "Oh My Zsh-Integration aktivieren",
+			"description": "Wenn aktiviert, wird ITERM_SHELL_INTEGRATION_INSTALLED=Yes gesetzt, um die Shell-Integrationsfunktionen von Oh My Zsh zu aktivieren. (experimentell)"
+		},
+		"zshP10k": {
+			"label": "Powerlevel10k-Integration aktivieren",
+			"description": "Wenn aktiviert, wird POWERLEVEL9K_TERM_SHELL_INTEGRATION=true gesetzt, um die Shell-Integrationsfunktionen von Powerlevel10k zu aktivieren. (experimentell)"
 		}
 	},
 	"advanced": {
@@ -446,5 +471,11 @@
 	"labels": {
 		"customArn": "Benutzerdefinierte ARN",
 		"useCustomArn": "Benutzerdefinierte ARN verwenden..."
+	},
+	"interface": {
+		"showgreeting": {
+			"label": "Begrüßungsnachricht anzeigen",
+			"description": "Wenn aktiviert, zeigt Roo eine Willkommensnachricht und Einführung an."
+		}
 	}
 }

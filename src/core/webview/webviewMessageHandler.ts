@@ -652,6 +652,11 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await updateGlobalState("diffEnabled", diffEnabled)
 			await provider.postStateToWebview()
 			break
+		case "showGreeting":
+			const showGreeting = message.bool ?? true
+			await updateGlobalState("showGreeting", showGreeting)
+			await provider.postStateToWebview()
+			break
 		case "enableCheckpoints":
 			const enableCheckpoints = message.bool ?? true
 			await updateGlobalState("enableCheckpoints", enableCheckpoints)
@@ -741,6 +746,48 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await provider.postStateToWebview()
 			if (message.value !== undefined) {
 				Terminal.setShellIntegrationTimeout(message.value)
+			}
+			break
+		case "terminalCommandDelay":
+			await updateGlobalState("terminalCommandDelay", message.value)
+			await provider.postStateToWebview()
+			if (message.value !== undefined) {
+				Terminal.setCommandDelay(message.value)
+			}
+			break
+		case "terminalPowershellCounter":
+			await updateGlobalState("terminalPowershellCounter", message.bool)
+			await provider.postStateToWebview()
+			if (message.bool !== undefined) {
+				Terminal.setPowershellCounter(message.bool)
+			}
+			break
+		case "terminalZshClearEolMark":
+			await updateGlobalState("terminalZshClearEolMark", message.bool)
+			await provider.postStateToWebview()
+			if (message.bool !== undefined) {
+				Terminal.setTerminalZshClearEolMark(message.bool)
+			}
+			break
+		case "terminalZshOhMy":
+			await updateGlobalState("terminalZshOhMy", message.bool)
+			await provider.postStateToWebview()
+			if (message.bool !== undefined) {
+				Terminal.setTerminalZshOhMy(message.bool)
+			}
+			break
+		case "terminalZshP10k":
+			await updateGlobalState("terminalZshP10k", message.bool)
+			await provider.postStateToWebview()
+			if (message.bool !== undefined) {
+				Terminal.setTerminalZshP10k(message.bool)
+			}
+			break
+		case "terminalZdotdir":
+			await updateGlobalState("terminalZdotdir", message.bool)
+			await provider.postStateToWebview()
+			if (message.bool !== undefined) {
+				Terminal.setTerminalZdotdir(message.bool)
 			}
 			break
 		case "mode":

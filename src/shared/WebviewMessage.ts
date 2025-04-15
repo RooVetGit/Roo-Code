@@ -82,6 +82,12 @@ export interface WebviewMessage {
 		| "deleteMessage"
 		| "terminalOutputLineLimit"
 		| "terminalShellIntegrationTimeout"
+		| "terminalCommandDelay"
+		| "terminalPowershellCounter"
+		| "terminalZshClearEolMark"
+		| "terminalZshOhMy"
+		| "terminalZshP10k"
+		| "terminalZdotdir"
 		| "mcpEnabled"
 		| "enableMcpServerCreation"
 		| "searchCommits"
@@ -122,6 +128,7 @@ export interface WebviewMessage {
 		| "toggleApiConfigPin"
 		| "getMentionPathsFromUris"
 		| "mentionPathsResponse"
+		| "showGreeting"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse

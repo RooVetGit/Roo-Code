@@ -29,7 +29,8 @@
 		"advanced": "고급",
 		"experimental": "실험적 기능",
 		"language": "언어",
-		"about": "Roo Code 정보"
+		"about": "Roo Code 정보",
+		"interface": "인터페이스"
 	},
 	"autoApprove": {
 		"description": "Roo가 승인 없이 자동으로 작업을 수행할 수 있도록 허용합니다. AI를 완전히 신뢰하고 관련 보안 위험을 이해하는 경우에만 이러한 설정을 활성화하세요.",
@@ -52,8 +53,7 @@
 		},
 		"browser": {
 			"label": "브라우저 작업 항상 승인",
-			"description": "승인 없이 자동으로 브라우저 작업 수행",
-			"note": "참고: 모델이 컴퓨터 사용을 지원할 때만 적용됩니다"
+			"description": "승인 없이 자동으로 브라우저 작업 수행 — 참고: 모델이 컴퓨터 사용을 지원할 때만 적용됩니다"
 		},
 		"retry": {
 			"label": "실패한 API 요청 항상 재시도",
@@ -69,7 +69,7 @@
 			"description": "승인 없이 자동으로 다양한 모드 간 전환"
 		},
 		"subtasks": {
-			"label": "하위 작업 생성 및 완료 항상 승인",
+			"label": "하위 작업",
 			"description": "승인 없이 하위 작업 생성 및 완료 허용"
 		},
 		"execute": {
@@ -116,6 +116,7 @@
 		"openRouterTransformsText": "프롬프트와 메시지 체인을 컨텍스트 크기로 압축 (<a>OpenRouter Transforms</a>)",
 		"anthropicApiKey": "Anthropic API 키",
 		"getAnthropicApiKey": "Anthropic API 키 받기",
+		"anthropicUseAuthToken": "X-Api-Key 대신 Authorization 헤더로 Anthropic API 키 전달",
 		"deepSeekApiKey": "DeepSeek API 키",
 		"getDeepSeekApiKey": "DeepSeek API 키 받기",
 		"geminiApiKey": "Gemini API 키",
@@ -301,6 +302,30 @@
 		"shellIntegrationTimeout": {
 			"label": "터미널 쉘 통합 타임아웃",
 			"description": "명령을 실행하기 전에 쉘 통합이 초기화될 때까지 기다리는 최대 시간. 쉘 시작 시간이 긴 사용자의 경우, 터미널에서 \"Shell Integration Unavailable\" 오류가 표시되면 이 값을 늘려야 할 수 있습니다."
+		},
+		"zdotdir": {
+			"label": "ZDOTDIR 처리 활성화",
+			"description": "활성화하면 zsh 셸 통합을 올바르게 처리하기 위한 ZDOTDIR용 임시 디렉터리를 생성합니다. 이를 통해 zsh 구성을 유지하면서 VSCode 셸 통합이 zsh와 올바르게 작동합니다. (실험적)"
+		},
+		"commandDelay": {
+			"label": "터미널 명령 지연",
+			"description": "명령 실행 후 추가할 지연 시간(밀리초). 기본값 0은 지연을 완전히 비활성화합니다. 이는 타이밍 문제가 있는 터미널에서 명령 출력을 완전히 캡처하는 데 도움이 될 수 있습니다. 대부분의 터미널에서는 `PROMPT_COMMAND='sleep N'`을 설정하여 구현되며, PowerShell은 각 명령 끝에 `start-sleep`을 추가합니다. 원래는 VSCode 버그#237208에 대한 해결책이었으며 필요하지 않을 수 있습니다."
+		},
+		"powershellCounter": {
+			"label": "PowerShell 카운터 해결 방법 활성화",
+			"description": "활성화하면 PowerShell 명령에 카운터를 추가하여 명령이 올바르게 실행되도록 합니다. 이는 명령 출력 캡처에 문제가 있을 수 있는 PowerShell 터미널에서 도움이 됩니다."
+		},
+		"zshClearEolMark": {
+			"label": "ZSH 줄 끝 표시 지우기",
+			"description": "활성화하면 PROMPT_EOL_MARK=''를 설정하여 ZSH 줄 끝 표시를 지웁니다. 이는 '%'와 같은 특수 문자로 끝나는 명령 출력 해석의 문제를 방지합니다."
+		},
+		"zshOhMy": {
+			"label": "Oh My Zsh 통합 활성화",
+			"description": "활성화하면 ITERM_SHELL_INTEGRATION_INSTALLED=Yes를 설정하여 Oh My Zsh 셸 통합 기능을 활성화합니다. (실험적)"
+		},
+		"zshP10k": {
+			"label": "Powerlevel10k 통합 활성화",
+			"description": "활성화하면 POWERLEVEL9K_TERM_SHELL_INTEGRATION=true를 설정하여 Powerlevel10k 셸 통합 기능을 활성화합니다. (실험적)"
 		}
 	},
 	"advanced": {
@@ -446,5 +471,11 @@
 	"labels": {
 		"customArn": "사용자 지정 ARN",
 		"useCustomArn": "사용자 지정 ARN 사용..."
+	},
+	"interface": {
+		"showgreeting": {
+			"label": "환영 메시지 표시",
+			"description": "활성화하면 Roo가 환영 메시지와 소개를 표시합니다."
+		}
 	}
 }
