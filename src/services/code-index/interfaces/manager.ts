@@ -21,15 +21,19 @@ export interface ICodeIndexManager {
 	readonly state: IndexingState
 
 	/**
+	 * Whether the code indexing feature is enabled
+	 */
+	readonly isFeatureEnabled: boolean
+
+	/**
+	 * Whether the code indexing feature is configured
+	 */
+	readonly isFeatureConfigured: boolean
+
+	/**
 	 * Loads configuration from storage
 	 */
 	loadConfiguration(): Promise<void>
-
-	/**
-	 * Updates configuration
-	 * @param config Configuration options
-	 */
-	updateConfiguration(config: { openAiOptions?: ApiHandlerOptions; qdrantUrl?: string }): void
 
 	/**
 	 * Starts the indexing process
@@ -42,9 +46,9 @@ export interface ICodeIndexManager {
 	stopWatcher(): void
 
 	/**
-	 * Clears the index
+	 * Clears the index data
 	 */
-	clearIndex(): Promise<void>
+	clearIndexData(): Promise<void>
 
 	/**
 	 * Searches the index
@@ -55,10 +59,15 @@ export interface ICodeIndexManager {
 	searchIndex(query: string, limit: number): Promise<VectorStoreSearchResult[]>
 
 	/**
-	 * Sets the webview provider for status updates
-	 * @param provider Webview provider
+	 * Gets the current status of the indexing system
+	 * @returns Current status information
 	 */
-	setWebviewProvider(provider: { postMessage: (msg: any) => void }): void
+	getCurrentStatus(): { systemStatus: IndexingState; fileStatuses: Record<string, string>; message?: string }
+
+	/**
+	 * Disposes of resources used by the manager
+	 */
+	dispose(): void
 }
 
 export type IndexingState = "Standby" | "Indexing" | "Indexed" | "Error"
