@@ -371,11 +371,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 	// Communicate with webview
 
 	// partial has three valid states true (partial message), false (completion of partial message), undefined (individual complete message)
+	// metadata is used to pass additional arbitrary user data to the webview as necessary
 	async ask(
 		type: ClineAsk,
 		text?: string,
 		partial?: boolean,
 		progressStatus?: ToolProgressStatus,
+		metadata?: Record<string, unknown>,
 	): Promise<{ response: ClineAskResponse; text?: string; images?: string[] }> {
 		// If this Cline instance was aborted by the provider, then the only
 		// thing keeping us alive is a promise still running in the background,
@@ -401,6 +403,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 					lastMessage.text = text
 					lastMessage.partial = partial
 					lastMessage.progressStatus = progressStatus
+					lastMessage.metadata = metadata
 					// TODO: Be more efficient about saving and posting only new
 					// data or one whole message at a time so ignore partial for
 					// saves, and only post parts of partial message instead of
@@ -412,7 +415,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 					// state.
 					askTs = Date.now()
 					this.lastMessageTs = askTs
-					await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text, partial })
+					await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text, partial, metadata })
 					throw new Error("Current ask promise was ignored (#2)")
 				}
 			} else {
@@ -435,6 +438,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 					lastMessage.text = text
 					lastMessage.partial = false
 					lastMessage.progressStatus = progressStatus
+					lastMessage.metadata = metadata
 					await this.saveClineMessages()
 					this.updateClineMessage(lastMessage)
 				} else {
@@ -444,7 +448,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 					this.askResponseImages = undefined
 					askTs = Date.now()
 					this.lastMessageTs = askTs
-					await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text })
+					await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text, metadata })
 				}
 			}
 		} else {
@@ -454,7 +458,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			this.askResponseImages = undefined
 			askTs = Date.now()
 			this.lastMessageTs = askTs
-			await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text })
+			await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text, metadata })
 		}
 
 		await pWaitFor(() => this.askResponse !== undefined || this.lastMessageTs !== askTs, { interval: 100 })
@@ -1303,12 +1307,20 @@ export class Cline extends EventEmitter<ClineEvents> {
 					// which may have changed the file system.
 				}
 
+				// metadata is used to pass additional arbitrary user data to the webview as necessary
 				const askApproval = async (
 					type: ClineAsk,
 					partialMessage?: string,
 					progressStatus?: ToolProgressStatus,
+					metadata?: Record<string, unknown>,
 				) => {
-					const { response, text, images } = await this.ask(type, partialMessage, false, progressStatus)
+					const { response, text, images } = await this.ask(
+						type,
+						partialMessage,
+						false,
+						progressStatus,
+						metadata,
+					)
 					if (response !== "yesButtonClicked") {
 						// Handle both messageResponse and noButtonClicked with text
 						if (text) {

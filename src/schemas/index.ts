@@ -827,6 +827,9 @@ export const clineMessageSchema = z.object({
 	conversationHistoryIndex: z.number().optional(),
 	checkpoint: z.record(z.string(), z.unknown()).optional(),
 	progressStatus: toolProgressStatusSchema.optional(),
+
+	// metadata is used to pass additional arbitrary user data to the webview as necessary
+	metadata: z.record(z.string(), z.unknown()).optional(),
 })
 
 export type ClineMessage = z.infer<typeof clineMessageSchema>
