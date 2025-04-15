@@ -1,0 +1,42 @@
+{
+	"name": "roocli",
+	"version": "1.0.0",
+	"description": "Command line interface for RooCode",
+	"main": "dist/index.js",
+	"bin": {
+		"roo": "dist/index.js"
+	},
+	"scripts": {
+		"build": "tsc",
+		"start": "node dist/index.js",
+		"dev": "ts-node src/index.ts",
+		"test": "jest"
+	},
+	"keywords": [
+		"roocode",
+		"cli",
+		"vscode",
+		"extension"
+	],
+	"author": "",
+	"license": "MIT",
+	"dependencies": {
+		"boxen": "^5.1.2",
+		"chalk": "^4.1.2",
+		"commander": "^11.1.0",
+		"ora": "^5.4.1",
+		"prompts": "^2.4.2",
+		"ws": "^8.14.2"
+	},
+	"devDependencies": {
+		"@types/boxen": "^3.0.1",
+		"@types/jest": "^29.5.14",
+		"@types/node": "^20.10.5",
+		"@types/prompts": "^2.4.9",
+		"@types/ws": "^8.5.10",
+		"jest": "^29.7.0",
+		"ts-jest": "^29.2.5",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.3.3"
+	}
+}
