@@ -27,6 +27,8 @@ describe("executeCommandTool", () => {
 
 		// Create mock implementations with eslint directives to handle the type issues
 		mockCline = {
+			consecutiveMistakeCount: 0,
+			didRejectTool: false,
 			// @ts-expect-error - Jest mock function type issues
 			ask: jest.fn().mockResolvedValue(undefined),
 			// @ts-expect-error - Jest mock function type issues
@@ -35,8 +37,6 @@ describe("executeCommandTool", () => {
 			sayAndCreateMissingParamError: jest.fn().mockResolvedValue("Missing parameter error"),
 			// @ts-expect-error - Jest mock function type issues
 			executeCommandTool: jest.fn().mockResolvedValue([false, "Command executed"]),
-			consecutiveMistakeCount: 0,
-			didRejectTool: false,
 			rooIgnoreController: {
 				// @ts-expect-error - Jest mock function type issues
 				validateCommand: jest.fn().mockReturnValue(null),
@@ -56,6 +56,7 @@ describe("executeCommandTool", () => {
 			name: "execute_command",
 			params: {
 				command: "echo test",
+				risk: "readOnly",
 			},
 			partial: false,
 		}
@@ -82,7 +83,7 @@ describe("executeCommandTool", () => {
 			)
 
 			// Verify
-			expect(mockAskApproval).toHaveBeenCalledWith("command", "echo <test>")
+			expect(mockAskApproval).toHaveBeenCalledWith("command", "echo <test>", undefined, { risk: "readOnly" })
 			expect(mockCline.executeCommandTool).toHaveBeenCalledWith("echo <test>", undefined)
 		})
 
@@ -101,7 +102,9 @@ describe("executeCommandTool", () => {
 			)
 
 			// Verify
-			expect(mockAskApproval).toHaveBeenCalledWith("command", "echo test > output.txt")
+			expect(mockAskApproval).toHaveBeenCalledWith("command", "echo test > output.txt", undefined, {
+				risk: "readOnly",
+			})
 			expect(mockCline.executeCommandTool).toHaveBeenCalledWith("echo test > output.txt", undefined)
 		})
 
@@ -120,7 +123,9 @@ describe("executeCommandTool", () => {
 			)
 
 			// Verify
-			expect(mockAskApproval).toHaveBeenCalledWith("command", "echo foo && echo bar")
+			expect(mockAskApproval).toHaveBeenCalledWith("command", "echo foo && echo bar", undefined, {
+				risk: "readOnly",
+			})
 			expect(mockCline.executeCommandTool).toHaveBeenCalledWith("echo foo && echo bar", undefined)
 		})
 
@@ -140,7 +145,7 @@ describe("executeCommandTool", () => {
 
 			// Verify
 			const expectedCommand = "grep -E 'pattern' <file.txt >output.txt 2>&1"
-			expect(mockAskApproval).toHaveBeenCalledWith("command", expectedCommand)
+			expect(mockAskApproval).toHaveBeenCalledWith("command", expectedCommand, undefined, { risk: "readOnly" })
 			expect(mockCline.executeCommandTool).toHaveBeenCalledWith(expectedCommand, undefined)
 		})
 	})
@@ -162,7 +167,7 @@ describe("executeCommandTool", () => {
 			)
 
 			// Verify
-			expect(mockAskApproval).toHaveBeenCalledWith("command", "echo test")
+			expect(mockAskApproval).toHaveBeenCalledWith("command", "echo test", undefined, { risk: "readOnly" })
 			expect(mockCline.executeCommandTool).toHaveBeenCalledWith("echo test", undefined)
 			expect(mockPushToolResult).toHaveBeenCalledWith("Command executed")
 		})
@@ -227,7 +232,7 @@ describe("executeCommandTool", () => {
 			)
 
 			// Verify
-			expect(mockAskApproval).toHaveBeenCalledWith("command", "echo test")
+			expect(mockAskApproval).toHaveBeenCalledWith("command", "echo test", undefined, { risk: "readOnly" })
 			expect(mockCline.executeCommandTool).not.toHaveBeenCalled()
 			expect(mockPushToolResult).not.toHaveBeenCalled()
 		})
@@ -262,6 +267,52 @@ describe("executeCommandTool", () => {
 			expect(formatResponse.rooIgnoreError).toHaveBeenCalledWith(".env")
 			expect(formatResponse.toolError).toHaveBeenCalledWith(mockRooIgnoreError)
 			expect(mockPushToolResult).toHaveBeenCalled()
+			expect(mockAskApproval).not.toHaveBeenCalled()
+			expect(mockCline.executeCommandTool).not.toHaveBeenCalled()
+		})
+
+		it("should handle invalid risk level", async () => {
+			// Setup
+			mockToolUse.params.risk = "invalid_risk"
+
+			// Execute
+			await executeCommandTool(
+				mockCline as unknown as Cline,
+				mockToolUse,
+				mockAskApproval as unknown as AskApproval,
+				mockHandleError as unknown as HandleError,
+				mockPushToolResult as unknown as PushToolResult,
+				mockRemoveClosingTag as unknown as RemoveClosingTag,
+			)
+
+			// Verify
+			expect(mockPushToolResult).toHaveBeenCalledWith(
+				formatResponse.toolError(
+					'Invalid risk level: "invalid_risk". Valid risk levels are: readOnly, reversibleChanges, complexChanges, serviceInterruptingChanges, destructiveChanges',
+				),
+			)
+			expect(mockAskApproval).not.toHaveBeenCalled()
+			expect(mockCline.executeCommandTool).not.toHaveBeenCalled()
+		})
+
+		it("should handle missing risk level", async () => {
+			// Setup
+			mockToolUse.params.risk = undefined
+
+			// Execute
+			await executeCommandTool(
+				mockCline as unknown as Cline,
+				mockToolUse,
+				mockAskApproval as unknown as AskApproval,
+				mockHandleError as unknown as HandleError,
+				mockPushToolResult as unknown as PushToolResult,
+				mockRemoveClosingTag as unknown as RemoveClosingTag,
+			)
+
+			// Verify
+			expect(mockCline.consecutiveMistakeCount).toBe(1)
+			expect(mockCline.sayAndCreateMissingParamError).toHaveBeenCalledWith("execute_command", "risk")
+			expect(mockPushToolResult).toHaveBeenCalledWith("Missing parameter error")
 			expect(mockAskApproval).not.toHaveBeenCalled()
 			expect(mockCline.executeCommandTool).not.toHaveBeenCalled()
 		})
