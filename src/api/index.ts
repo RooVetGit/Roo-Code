@@ -19,6 +19,7 @@ import { VsCodeLmHandler } from "./providers/vscode-lm"
 import { ApiStream } from "./transform/stream"
 import { UnboundHandler } from "./providers/unbound"
 import { RequestyHandler } from "./providers/requesty"
+import { TabbyHandler } from "./providers/tabbyml"
 import { HumanRelayHandler } from "./providers/human-relay"
 import { FakeAIHandler } from "./providers/fake-ai"
 
@@ -68,6 +69,8 @@ export function buildApiHandler(configuration: ApiConfiguration): ApiHandler {
 			return new DeepSeekHandler(options)
 		case "vscode-lm":
 			return new VsCodeLmHandler(options)
+		case "tabby":
+			return new TabbyHandler(options)
 		case "mistral":
 			return new MistralHandler(options)
 		case "unbound":

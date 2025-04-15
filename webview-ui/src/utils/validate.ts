@@ -77,6 +77,11 @@ export function validateApiConfiguration(apiConfiguration?: ApiConfiguration): s
 				return i18next.t("settings:validation.modelSelector")
 			}
 			break
+		case "tabby":
+			if (!apiConfiguration.tabbyModelId) {
+				return "You must select a tabby model."
+			}
+			break
 	}
 
 	return undefined
