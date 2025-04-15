@@ -1680,9 +1680,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 
 		const recentlyModifiedFiles = this.fileContextTracker.getAndClearCheckpointPossibleFile()
+
 		if (recentlyModifiedFiles.length > 0) {
-			// TODO: we can track what file changes were made and only checkpoint those files, this will be save storage
-			this.checkpointSave()
+			// TODO: We can track what file changes were made and only
+			// checkpoint those files, this will be save storage.
+			await this.checkpointSave()
 		}
 
 		/*
@@ -2508,6 +2510,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 				},
 				{ interval, timeout },
 			)
+
 			return service
 		} catch (err) {
 			return undefined
@@ -2580,6 +2583,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			this.providerRef
 				.deref()
 				?.log("[checkpointSave] checkpoints didn't initialize in time, disabling checkpoints for this task")
+
 			this.enableCheckpoints = false
 			return
 		}
