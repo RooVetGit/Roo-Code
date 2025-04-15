@@ -1,7 +1,7 @@
 import * as vscode from "vscode"
 import { ApiHandlerOptions } from "../../shared/api"
 import { ContextProxy } from "../../core/config/ContextProxy"
-import { EmbedderType } from "./interfaces/manager"
+import { EmbedderProvider } from "./interfaces/manager"
 
 /**
  * Configuration state for the code indexing feature
@@ -9,7 +9,7 @@ import { EmbedderType } from "./interfaces/manager"
 export interface CodeIndexConfig {
 	isEnabled: boolean
 	isConfigured: boolean
-	embedderType: EmbedderType
+	embedderProvider: EmbedderProvider
 	openAiOptions?: ApiHandlerOptions
 	ollamaOptions?: ApiHandlerOptions
 	qdrantUrl?: string
@@ -22,7 +22,7 @@ export interface CodeIndexConfig {
 type PreviousConfigSnapshot = {
 	enabled: boolean
 	configured: boolean
-	embedderType: EmbedderType
+	embedderProvider: EmbedderProvider
 	openAiKey?: string
 	ollamaBaseUrl?: string
 	ollamaModelId?: string
@@ -36,7 +36,7 @@ type PreviousConfigSnapshot = {
  */
 export class CodeIndexConfigManager {
 	private isEnabled: boolean = false
-	private embedderType: EmbedderType = "openai"
+	private embedderProvider: EmbedderProvider = "openai"
 	private openAiOptions?: ApiHandlerOptions
 	private ollamaOptions?: ApiHandlerOptions
 	private qdrantUrl?: string
@@ -52,7 +52,7 @@ export class CodeIndexConfigManager {
 		currentConfig: {
 			isEnabled: boolean
 			isConfigured: boolean
-			embedderType: EmbedderType
+			embedderProvider: EmbedderProvider
 			openAiOptions?: ApiHandlerOptions
 			ollamaOptions?: ApiHandlerOptions
 			qdrantUrl?: string
@@ -65,7 +65,7 @@ export class CodeIndexConfigManager {
 		const previousConfigSnapshot: PreviousConfigSnapshot = {
 			enabled: this.isEnabled,
 			configured: this.isConfigured(),
-			embedderType: this.embedderType,
+			embedderProvider: this.embedderProvider,
 			openAiKey: this.openAiOptions?.openAiNativeApiKey,
 			ollamaBaseUrl: this.ollamaOptions?.ollamaBaseUrl,
 			ollamaModelId: this.ollamaOptions?.ollamaModelId,
@@ -76,7 +76,7 @@ export class CodeIndexConfigManager {
 		let codebaseIndexConfig = this.contextProxy?.getGlobalState("codebaseIndexConfig") ?? {
 			codebaseIndexEnabled: false,
 			codebaseIndexQdrantUrl: "",
-			codebaseIndexEmbedderType: "openai",
+			codebaseIndexEmbedderProvider: "openai",
 			codebaseIndexEmbedderBaseUrl: "",
 			codebaseIndexEmbedderModelId: "",
 		}
@@ -84,7 +84,7 @@ export class CodeIndexConfigManager {
 		const {
 			codebaseIndexEnabled,
 			codebaseIndexQdrantUrl,
-			codebaseIndexEmbedderType,
+			codebaseIndexEmbedderProvider,
 			codebaseIndexEmbedderBaseUrl,
 			codebaseIndexEmbedderModelId,
 		} = codebaseIndexConfig
@@ -97,7 +97,7 @@ export class CodeIndexConfigManager {
 		this.qdrantApiKey = qdrantApiKey ?? ""
 		this.openAiOptions = { openAiNativeApiKey: openAiKey }
 
-		this.embedderType = codebaseIndexEmbedderType === "ollama" ? "ollama" : "openai"
+		this.embedderProvider = codebaseIndexEmbedderProvider === "ollama" ? "ollama" : "openai"
 
 		this.ollamaOptions = {
 			ollamaBaseUrl: codebaseIndexEmbedderBaseUrl,
@@ -109,7 +109,7 @@ export class CodeIndexConfigManager {
 			currentConfig: {
 				isEnabled: this.isEnabled,
 				isConfigured: this.isConfigured(),
-				embedderType: this.embedderType,
+				embedderProvider: this.embedderProvider,
 				openAiOptions: this.openAiOptions,
 				ollamaOptions: this.ollamaOptions,
 				qdrantUrl: this.qdrantUrl,
@@ -123,13 +123,13 @@ export class CodeIndexConfigManager {
 	 * Checks if the service is properly configured based on the embedder type.
 	 */
 	public isConfigured(): boolean {
-		if (this.embedderType === "openai") {
+		if (this.embedderProvider === "openai") {
 			return !!(this.openAiOptions?.openAiNativeApiKey && this.qdrantUrl)
-		} else if (this.embedderType === "ollama") {
+		} else if (this.embedderProvider === "ollama") {
 			// Ollama model ID has a default, so only base URL is strictly required for config
 			return !!(this.ollamaOptions?.ollamaBaseUrl && this.qdrantUrl)
 		}
-		return false // Should not happen if embedderType is always set correctly
+		return false // Should not happen if embedderProvider is always set correctly
 	}
 
 	/**
@@ -152,15 +152,15 @@ export class CodeIndexConfigManager {
 		// Check for changes in relevant settings if the feature is enabled (or was enabled)
 		if (this.isEnabled || prev.enabled) {
 			// Check for embedder type change
-			if (prev.embedderType !== this.embedderType) return true
+			if (prev.embedderProvider !== this.embedderProvider) return true
 
 			// Check OpenAI key change if using OpenAI
-			if (this.embedderType === "openai" && prev.openAiKey !== this.openAiOptions?.openAiNativeApiKey) {
+			if (this.embedderProvider === "openai" && prev.openAiKey !== this.openAiOptions?.openAiNativeApiKey) {
 				return true
 			}
 
 			// Check Ollama settings change if using Ollama
-			if (this.embedderType === "ollama") {
+			if (this.embedderProvider === "ollama") {
 				if (
 					prev.ollamaBaseUrl !== this.ollamaOptions?.ollamaBaseUrl ||
 					prev.ollamaModelId !== this.ollamaOptions?.ollamaModelId
@@ -185,7 +185,7 @@ export class CodeIndexConfigManager {
 		return {
 			isEnabled: this.isEnabled,
 			isConfigured: this.isConfigured(),
-			embedderType: this.embedderType,
+			embedderProvider: this.embedderProvider,
 			openAiOptions: this.openAiOptions,
 			ollamaOptions: this.ollamaOptions,
 			qdrantUrl: this.qdrantUrl,
@@ -210,8 +210,8 @@ export class CodeIndexConfigManager {
 	/**
 	 * Gets the current embedder type (openai or ollama)
 	 */
-	public get currentEmbedderType(): EmbedderType {
-		return this.embedderType
+	public get currentEmbedderProvider(): EmbedderProvider {
+		return this.embedderProvider
 	}
 
 	/**

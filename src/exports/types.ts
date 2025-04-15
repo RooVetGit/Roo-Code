@@ -245,7 +245,7 @@ type GlobalSettings = {
 		| {
 				codebaseIndexEnabled?: boolean | undefined
 				codebaseIndexQdrantUrl?: string | undefined
-				codebaseIndexEmbedderType?: ("openai" | "ollama") | undefined
+				codebaseIndexEmbedderProvider?: ("openai" | "ollama") | undefined
 				codebaseIndexEmbedderBaseUrl?: string | undefined
 				codebaseIndexEmbedderModelId?: string | undefined
 		  }

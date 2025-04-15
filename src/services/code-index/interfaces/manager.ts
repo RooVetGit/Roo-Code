@@ -1,5 +1,4 @@
 import { VectorStoreSearchResult } from "./vector-store"
-import { ApiHandlerOptions } from "../../../shared/api"
 import * as vscode from "vscode"
 
 /**
@@ -71,7 +70,7 @@ export interface ICodeIndexManager {
 }
 
 export type IndexingState = "Standby" | "Indexing" | "Indexed" | "Error"
-export type EmbedderType = "openai" | "ollama"
+export type EmbedderProvider = "openai" | "ollama"
 
 export interface IndexProgressUpdate {
 	systemStatus: IndexingState

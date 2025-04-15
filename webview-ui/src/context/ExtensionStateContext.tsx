@@ -164,7 +164,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		codebaseIndexConfig: {
 			codebaseIndexEnabled: false,
 			codebaseIndexQdrantUrl: "",
-			codebaseIndexEmbedderType: "openai",
+			codebaseIndexEmbedderProvider: "openai",
 			codebaseIndexEmbedderBaseUrl: "",
 			codebaseIndexEmbedderModelId: "",
 		},

@@ -135,7 +135,7 @@ export const apiConfigMetaSchema = z.object({
 export const codebaseIndexConfigSchema = z.object({
 	codebaseIndexEnabled: z.boolean().optional(),
 	codebaseIndexQdrantUrl: z.string().optional(),
-	codebaseIndexEmbedderType: z.enum(["openai", "ollama"]).optional(),
+	codebaseIndexEmbedderProvider: z.enum(["openai", "ollama"]).optional(),
 	codebaseIndexEmbedderBaseUrl: z.string().optional(),
 	codebaseIndexEmbedderModelId: z.string().optional(),
 })

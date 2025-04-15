@@ -401,7 +401,7 @@ describe("ClineProvider", () => {
 			codebaseIndexConfig: {
 				codebaseIndexEnabled: false,
 				codebaseIndexQdrantUrl: "",
-				codebaseIndexEmbedderType: "openai",
+				codebaseIndexEmbedderProvider: "openai",
 				codebaseIndexEmbedderBaseUrl: "",
 				codebaseIndexEmbedderModelId: "",
 			},

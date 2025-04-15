@@ -97,11 +97,11 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 						<div className="flex items-center gap-2">
 							<VSCodeDropdown
 								id="embedder-dropdown"
-								value={codebaseIndexConfig?.codebaseIndexEmbedderType || "openai"}
+								value={codebaseIndexConfig?.codebaseIndexEmbedderProvider || "openai"}
 								onChange={(e: any) =>
 									setCachedStateField("codebaseIndexConfig", {
 										...codebaseIndexConfig,
-										codebaseIndexEmbedderType: e.target.value,
+										codebaseIndexEmbedderProvider: e.target.value,
 									})
 								}>
 								<VSCodeOption value="openai">OpenAI</VSCodeOption>
@@ -109,7 +109,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							</VSCodeDropdown>
 						</div>
 
-						{codebaseIndexConfig?.codebaseIndexEmbedderType === "openai" && (
+						{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai" && (
 							<div className="space-y-2">
 								<VSCodeTextField
 									type="password"
@@ -122,7 +122,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							</div>
 						)}
 
-						{codebaseIndexConfig?.codebaseIndexEmbedderType === "ollama" && (
+						{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "ollama" && (
 							<>
 								<div className="space-y-2">
 									<VSCodeTextField
@@ -198,9 +198,9 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							<VSCodeButton
 								onClick={() => vscode.postMessage({ type: "startIndexing" })} // Added onClick
 								disabled={
-									(codebaseIndexConfig?.codebaseIndexEmbedderType === "openai" &&
+									(codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai" &&
 										!apiConfiguration.codeIndexOpenAiKey) ||
-									(codebaseIndexConfig?.codebaseIndexEmbedderType === "ollama" &&
+									(codebaseIndexConfig?.codebaseIndexEmbedderProvider === "ollama" &&
 										(!codebaseIndexConfig.codebaseIndexEmbedderBaseUrl ||
 											!codebaseIndexConfig.codebaseIndexEmbedderModelId)) ||
 									!apiConfiguration.codeIndexQdrantApiKey ||
