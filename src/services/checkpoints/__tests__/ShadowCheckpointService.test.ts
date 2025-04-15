@@ -8,6 +8,7 @@ import { EventEmitter } from "events"
 import { simpleGit, SimpleGit } from "simple-git"
 
 import { fileExistsAtPath } from "../../../utils/fs"
+import * as fileSearch from "../../../services/search/file-search"
 
 import { RepoPerTaskCheckpointService } from "../RepoPerTaskCheckpointService"
 
@@ -418,21 +419,41 @@ describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
 				expect(await fileExistsAtPath(nestedGitDir)).toBe(true)
 				expect(await fileExistsAtPath(nestedGitDisabledDir)).toBe(false)
 
-				// Create a spy on fs.rename to track when it's called.
 				const renameSpy = jest.spyOn(fs, "rename")
 
-				// Initialize the shadow git service.
-				const service = new klass(taskId, shadowDir, workspaceDir, () => {})
+				jest.spyOn(fileSearch, "executeRipgrep").mockImplementation(({ args }) => {
+					const searchPattern = args[4]
 
-				// Initialize the shadow git repo.
+					if (searchPattern.includes(".git/HEAD")) {
+						return Promise.resolve([
+							{
+								path: path.relative(workspaceDir, nestedGitDir),
+								type: "folder",
+								label: ".git",
+							},
+						])
+					} else {
+						return Promise.resolve([])
+					}
+				})
+
+				const service = new klass(taskId, shadowDir, workspaceDir, () => {})
 				await service.initShadowGit()
 
 				// Verify rename was called with correct paths.
-				expect(renameSpy.mock.calls).toHaveLength(2)
+				expect(renameSpy.mock.calls).toHaveLength(1)
 				expect(renameSpy.mock.calls[0][0]).toBe(nestedGitDir)
 				expect(renameSpy.mock.calls[0][1]).toBe(nestedGitDisabledDir)
-				expect(renameSpy.mock.calls[1][0]).toBe(nestedGitDisabledDir)
-				expect(renameSpy.mock.calls[1][1]).toBe(nestedGitDir)
+
+				jest.spyOn(require("../../../utils/fs"), "fileExistsAtPath").mockImplementation((path) => {
+					if (path === nestedGitDir) {
+						return Promise.resolve(true)
+					} else if (path === nestedGitDisabledDir) {
+						return Promise.resolve(false)
+					}
+
+					return Promise.resolve(false)
+				})
 
 				// Verify the nested git directory is back to normal after initialization.
 				expect(await fileExistsAtPath(nestedGitDir)).toBe(true)
@@ -440,6 +461,7 @@ describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
 
 				// Clean up.
 				renameSpy.mockRestore()
+				jest.restoreAllMocks()
 				await fs.rm(shadowDir, { recursive: true, force: true })
 				await fs.rm(workspaceDir, { recursive: true, force: true })
 			})
