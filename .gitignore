@@ -35,3 +35,5 @@ logs
 
 # Vite development
 .vite-port
+housekeeping-mild.sh
+housekeeping-strong.sh
