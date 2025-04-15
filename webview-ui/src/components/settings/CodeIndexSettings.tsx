@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react"
 import { Database } from "lucide-react"
 import { vscode } from "../../utils/vscode"
-import { VSCodeCheckbox, VSCodeTextField, VSCodeButton } from "@vscode/webview-ui-toolkit/react"
+import {
+	VSCodeCheckbox,
+	VSCodeTextField,
+	VSCodeButton,
+	VSCodeDropdown,
+	VSCodeOption,
+} from "@vscode/webview-ui-toolkit/react"
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -87,17 +93,64 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 
 				{codebaseIndexConfig?.codebaseIndexEnabled && (
 					<div className="mt-4 space-y-4">
-						<div className="space-y-2">
-							<VSCodeTextField
-								type="password"
-								value={apiConfiguration.codeIndexOpenAiKey || ""}
-								onInput={(e: any) => setApiConfigurationField("codeIndexOpenAiKey", e.target.value)}>
-								OpenAI API Key (for Embeddings)
-							</VSCodeTextField>
-							<p className="text-sm text-vscode-descriptionForeground">
-								Used to generate embeddings for code snippets.
-							</p>
+						<div style={{ fontWeight: "normal", marginBottom: "4px" }}>Embeddings Provider</div>
+						<div className="flex items-center gap-2">
+							<VSCodeDropdown
+								id="embedder-dropdown"
+								value={codebaseIndexConfig?.codebaseIndexEmbedderType || "openai"}
+								onChange={(e: any) =>
+									setCachedStateField("codebaseIndexConfig", {
+										...codebaseIndexConfig,
+										codebaseIndexEmbedderType: e.target.value,
+									})
+								}>
+								<VSCodeOption value="openai">OpenAI</VSCodeOption>
+								<VSCodeOption value="ollama">Ollama</VSCodeOption>
+							</VSCodeDropdown>
 						</div>
+
+						{codebaseIndexConfig?.codebaseIndexEmbedderType === "openai" && (
+							<div className="space-y-2">
+								<VSCodeTextField
+									type="password"
+									value={apiConfiguration.codeIndexOpenAiKey || ""}
+									onInput={(e: any) =>
+										setApiConfigurationField("codeIndexOpenAiKey", e.target.value)
+									}>
+									OpenAI Key:
+								</VSCodeTextField>
+							</div>
+						)}
+
+						{codebaseIndexConfig?.codebaseIndexEmbedderType === "ollama" && (
+							<>
+								<div className="space-y-2">
+									<VSCodeTextField
+										value={codebaseIndexConfig.codebaseIndexEmbedderBaseUrl || ""}
+										onInput={(e: any) =>
+											setCachedStateField("codebaseIndexConfig", {
+												...codebaseIndexConfig,
+												codebaseIndexEmbedderBaseUrl: e.target.value,
+											})
+										}>
+										Ollama URL:
+									</VSCodeTextField>
+								</div>
+
+								<div className="space-y-2">
+									<VSCodeTextField
+										value={codebaseIndexConfig.codebaseIndexEmbedderModelId || ""}
+										onInput={(e: any) =>
+											setCachedStateField("codebaseIndexConfig", {
+												...codebaseIndexConfig,
+												codebaseIndexEmbedderModelId: e.target.value,
+											})
+										}>
+										Ollama Model:
+									</VSCodeTextField>
+								</div>
+							</>
+						)}
 
 						<div className="space-y-2">
 							<VSCodeTextField
@@ -110,9 +163,6 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 								}>
 								Qdrant URL
 							</VSCodeTextField>
-							<p className="text-sm text-vscode-descriptionForeground">
-								URL of your running Qdrant vector database instance.
-							</p>
 						</div>
 
 						<div className="space-y-2">
@@ -120,11 +170,8 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 								type="password"
 								value={apiConfiguration.codeIndexQdrantApiKey}
 								onInput={(e: any) => setApiConfigurationField("codeIndexQdrantApiKey", e.target.value)}>
-								Qdrant API Key
+								Qdrant Key:
 							</VSCodeTextField>
-							<p className="text-sm text-vscode-descriptionForeground">
-								API key for authenticating with your Qdrant instance.
-							</p>
 						</div>
 
 						<div className="text-sm text-vscode-descriptionForeground mt-4">
@@ -151,11 +198,15 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							<VSCodeButton
 								onClick={() => vscode.postMessage({ type: "startIndexing" })} // Added onClick
 								disabled={
-									!apiConfiguration.codeIndexOpenAiKey ||
+									(codebaseIndexConfig?.codebaseIndexEmbedderType === "openai" &&
+										!apiConfiguration.codeIndexOpenAiKey) ||
+									(codebaseIndexConfig?.codebaseIndexEmbedderType === "ollama" &&
+										(!codebaseIndexConfig.codebaseIndexEmbedderBaseUrl ||
+											!codebaseIndexConfig.codebaseIndexEmbedderModelId)) ||
 									!apiConfiguration.codeIndexQdrantApiKey ||
+									!codebaseIndexConfig.codebaseIndexQdrantUrl ||
 									systemStatus === "Indexing"
-								} // Added disabled logic
-							>
+								}>
 								Start Indexing
 							</VSCodeButton>
 							<AlertDialog>

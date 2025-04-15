@@ -6,10 +6,12 @@ import { ApiHandlerOptions } from "../../shared/api"
 import { getWorkspacePath } from "../../utils/path"
 import { OpenAiEmbedder } from "./embedders/openai"
 import { QdrantVectorStore } from "./vector-store/qdrant-client"
-import { QdrantSearchResult } from "./types"
+import { VectorStoreSearchResult } from "./interfaces"
 import { ContextProxy } from "../../core/config/ContextProxy"
 import { FileProcessingResult, ICodeParser, IEmbedder, IFileWatcher, IVectorStore } from "./interfaces"
 import { FileWatcher } from "./processors"
+import { EmbedderType } from "./interfaces/manager" // Corrected import path
+import { CodeIndexOllamaEmbedder } from "./embedders/ollama" // Corrected import path
 
 export type IndexingState = "Standby" | "Indexing" | "Indexed" | "Error"
 
@@ -17,6 +19,19 @@ export type IndexingState = "Standby" | "Indexing" | "Indexed" | "Error"
 export interface IndexProgressUpdate {
 	systemStatus: IndexingState
 	message?: string // For details like error messages or current activity
+}
+/**
+ * Snapshot of previous configuration used to determine if a restart is required
+ */
+type PreviousConfigSnapshot = {
+	enabled: boolean
+	configured: boolean
+	embedderType: EmbedderType
+	openAiKey?: string
+	ollamaBaseUrl?: string
+	ollamaModelId?: string
+	qdrantUrl?: string
+	qdrantApiKey?: string
 }
 
 export class CodeIndexManager {
@@ -60,6 +75,8 @@ export class CodeIndexManager {
 	private qdrantUrl?: string // Configurable
 	private qdrantApiKey?: string // Configurable
 	private isEnabled: boolean = false // New: enabled flag
+	private embedderType: EmbedderType = "openai" // Added property
+	private ollamaOptions?: ApiHandlerOptions // Added property
 
 	private _embedder?: IEmbedder
 	private _scanner?: DirectoryScanner
@@ -105,7 +122,24 @@ export class CodeIndexManager {
 		if (this.isConfigured() && this.isEnabled && this.openAiOptions) {
 			this._parser = new CodeParser()
 			this._vectorStore = new QdrantVectorStore(this.workspacePath, this.qdrantUrl, this.qdrantApiKey)
-			this._embedder = new OpenAiEmbedder(this.openAiOptions)
+			// Initialize embedder based on configuration
+			if (this.embedderType === "openai") {
+				if (!this.openAiOptions) {
+					throw new Error("OpenAI configuration missing in _initDependencies despite being configured.")
+				}
+				this._embedder = new OpenAiEmbedder(this.openAiOptions)
+				console.log("[CodeIndexManager] Initialized OpenAI Embedder.")
+			} else if (this.embedderType === "ollama") {
+				if (!this.ollamaOptions) {
+					throw new Error("Ollama configuration missing in _initDependencies despite being configured.")
+				}
+				this._embedder = new CodeIndexOllamaEmbedder(this.ollamaOptions)
+				console.log("[CodeIndexManager] Initialized Ollama Embedder.")
+			} else {
+				// This case should ideally not be reached if loadConfiguration sets defaults correctly
+				console.error(`[CodeIndexManager] Invalid embedder type configured: ${this.embedderType}`)
+				throw new Error(`Invalid embedder type: ${this.embedderType}`)
+			}
 			this._scanner = new DirectoryScanner(this._embedder, this._vectorStore, this._parser)
 			this.startIndexing()
 		}
@@ -133,24 +167,45 @@ export class CodeIndexManager {
 	public async loadConfiguration(): Promise<void> {
 		console.log("[CodeIndexManager] Loading configuration...")
 
-		const prevEnabled = this.isEnabled
-		const prevConfigured = this.isConfigured?.() ?? false
+		const previousConfigSnapshot: PreviousConfigSnapshot = {
+			enabled: this.isEnabled,
+			configured: this.isConfigured?.() ?? false,
+			embedderType: this.embedderType,
+			openAiKey: this.openAiOptions?.openAiNativeApiKey,
+			ollamaBaseUrl: this.ollamaOptions?.ollamaBaseUrl,
+			ollamaModelId: this.ollamaOptions?.ollamaModelId,
+			qdrantUrl: this.qdrantUrl,
+			qdrantApiKey: this.qdrantApiKey,
+		}
 
-		const prevOpenAiKey = this.openAiOptions?.openAiNativeApiKey
-		const prevQdrantUrl = this.qdrantUrl
-		const prevQdrantApiKey = this.qdrantApiKey
+		const codebaseIndexConfig = this.contextProxy?.getGlobalState("codebaseIndexConfig")
 
-		// Fetch settings directly using getGlobalState
-		const codeIndexEnabled = this.contextProxy?.getGlobalState("codeIndexEnabled") ?? false
-		const codeIndexQdrantUrl = this.contextProxy?.getGlobalState("codeIndexQdrantUrl") ?? ""
+		if (!codebaseIndexConfig) {
+			throw new Error("Codebase Indexing configuration not found in global state")
+		}
+
+		const {
+			codebaseIndexEnabled,
+			codebaseIndexQdrantUrl,
+			codebaseIndexEmbedderType,
+			codebaseIndexEmbedderBaseUrl,
+			codebaseIndexEmbedderModelId,
+		} = codebaseIndexConfig
 
 		const openAiKey = this.contextProxy?.getSecret("codeIndexOpenAiKey") ?? ""
 		const qdrantApiKey = this.contextProxy?.getSecret("codeIndexQdrantApiKey") ?? ""
 
-		this.isEnabled = codeIndexEnabled
-		this.qdrantUrl = codeIndexQdrantUrl
+		this.isEnabled = codebaseIndexEnabled || false
+		this.qdrantUrl = codebaseIndexQdrantUrl
 		this.qdrantApiKey = qdrantApiKey ?? ""
 		this.openAiOptions = { openAiNativeApiKey: openAiKey }
+
+		this.embedderType = codebaseIndexEmbedderType === "ollama" ? "ollama" : "openai"
+
+		this.ollamaOptions = {
+			ollamaBaseUrl: codebaseIndexEmbedderBaseUrl,
+			ollamaModelId: codebaseIndexEmbedderModelId,
+		}
 
 		const nowConfigured = this.isConfigured()
 
@@ -172,11 +227,8 @@ export class CodeIndexManager {
 			return
 		}
 
-		// Only recreate embedder/client and restart indexing if transitioning from disabled/unconfigured to enabled+configured or if api keys change
-		const shouldRestart =
-			((!prevEnabled || !prevConfigured) && codeIndexEnabled && nowConfigured) ||
-			prevOpenAiKey !== this.openAiOptions?.openAiNativeApiKey ||
-			(prevQdrantApiKey !== this.qdrantApiKey && prevQdrantUrl !== this.qdrantUrl)
+		// Only recreate embedder/client and restart indexing if transitioning from disabled/unconfigured to enabled+configured or if settings change
+		const shouldRestart = this._didConfigChangeRequireRestart(previousConfigSnapshot)
 
 		if (shouldRestart && nowConfigured) {
 			await this._initDependencies()
@@ -418,8 +470,48 @@ export class CodeIndexManager {
 	}
 
 	private isConfigured(): boolean {
-		// Ensure openAiOptions itself exists before checking the key
-		return !!(this.openAiOptions?.openAiNativeApiKey && this.qdrantUrl)
+		if (this.embedderType === "openai") {
+			return !!(this.openAiOptions?.openAiNativeApiKey && this.qdrantUrl)
+		} else if (this.embedderType === "ollama") {
+			// Ollama model ID has a default, so only base URL is strictly required for config
+			return !!(this.ollamaOptions?.ollamaBaseUrl && this.qdrantUrl)
+		}
+		return false // Should not happen if embedderType is always set correctly
+	}
+
+	/**
+	 * Determines if a configuration change requires restarting the indexing process.
+	 * @param prev The previous configuration snapshot
+	 * @returns boolean indicating whether a restart is needed
+	 */
+	private _didConfigChangeRequireRestart(prev: PreviousConfigSnapshot): boolean {
+		const nowConfigured = this.isConfigured() // Recalculate based on current state
+
+		// Check for transition from disabled/unconfigured to enabled+configured
+		const transitionedToReady = (!prev.enabled || !prev.configured) && this.isEnabled && nowConfigured
+		if (transitionedToReady) return true
+
+		// If wasn't ready before and isn't ready now, no restart needed for config change itself
+		if (!prev.configured && !nowConfigured) return false
+		// If was disabled and still is, no restart needed
+		if (!prev.enabled && !this.isEnabled) return false
+
+		// Check for changes in relevant settings if the feature is enabled (or was enabled)
+		if (this.isEnabled || prev.enabled) {
+			if (prev.embedderType !== this.embedderType) return true
+			if (prev.openAiKey !== this.openAiOptions?.openAiNativeApiKey) return true
+			if (
+				this.embedderType === "ollama" &&
+				(prev.ollamaBaseUrl !== this.ollamaOptions?.ollamaBaseUrl ||
+					prev.ollamaModelId !== this.ollamaOptions?.ollamaModelId)
+			) {
+				return true
+			}
+			if (prev.qdrantApiKey !== this.qdrantApiKey) return true
+			if (prev.qdrantUrl !== this.qdrantUrl) return true
+		}
+
+		return false // No change detected that requires restart
 	}
 
 	private async _startWatcher(): Promise<void> {
@@ -468,7 +560,7 @@ export class CodeIndexManager {
 		console.log("[CodeIndexManager] File watcher started.")
 	}
 
-	public async searchIndex(query: string, limit: number): Promise<QdrantSearchResult[]> {
+	public async searchIndex(query: string, limit: number): Promise<VectorStoreSearchResult[]> {
 		if (!this.isEnabled || !this.isConfigured()) {
 			throw new Error("Code index feature is disabled or not configured.")
 		}

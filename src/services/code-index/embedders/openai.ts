@@ -8,15 +8,17 @@ import { IEmbedder, EmbeddingResponse } from "../interfaces"
  */
 export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 	private embeddingsClient: OpenAI
+	private readonly defaultModelId: string
 
 	/**
 	 * Creates a new OpenAI embedder
 	 * @param options API handler options
 	 */
-	constructor(options: ApiHandlerOptions) {
+	constructor(options: ApiHandlerOptions & { openAiEmbeddingModelId?: string }) {
 		super(options)
 		const apiKey = this.options.openAiNativeApiKey ?? "not-provided"
 		this.embeddingsClient = new OpenAI({ apiKey })
+		this.defaultModelId = options.openAiEmbeddingModelId || "text-embedding-3-small"
 	}
 
 	/**
@@ -25,18 +27,19 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 	 * @param model Optional model identifier
 	 * @returns Promise resolving to embedding response
 	 */
-	async createEmbeddings(texts: string[], model: string = "text-embedding-3-small"): Promise<EmbeddingResponse> {
+	async createEmbeddings(texts: string[], model?: string): Promise<EmbeddingResponse> {
 		try {
+			const modelToUse = model || this.defaultModelId
 			const response = await this.embeddingsClient.embeddings.create({
 				input: texts,
-				model,
+				model: modelToUse,
 			})
 
 			return {
 				embeddings: response.data.map((item) => item.embedding),
 				usage: {
-					prompt_tokens: response.usage?.prompt_tokens || 0,
-					total_tokens: response.usage?.total_tokens || 0,
+					promptTokens: response.usage?.prompt_tokens || 0,
+					totalTokens: response.usage?.total_tokens || 0,
 				},
 			}
 		} catch (error) {
