@@ -3,15 +3,35 @@ import chalk from "chalk"
 import prompts from "prompts"
 
 /**
+ * Interface for the followup question structure
+ */
+interface FollowupQuestion {
+	question: string
+	suggest: string[]
+}
+
+/**
  * Display a message in a collapsible box
  * @param title The title of the box
  * @param content The content to display
  * @param type The type of message (info, success, error, warning)
  */
+// ANSI escape codes for mouse handling
+const ENABLE_MOUSE_TRACKING = "\x1b[?1000h" // Enable mouse click tracking
+const DISABLE_MOUSE_TRACKING = "\x1b[?1000l" // Disable mouse click tracking
+
+/**
+ * Display a message in a collapsible box
+ * @param title The title of the box
+ * @param content The content to display
+ * @param type The type of message (info, success, error, warning)
+ * @param collapsible Whether the box should be collapsible
+ */
 export function displayBox(
 	title: string,
 	content: string,
 	type: "info" | "success" | "error" | "warning" = "info",
+	collapsible: boolean = true, // Make all boxes collapsible by default
 ): void {
 	let titleColor: chalk.Chalk
 	// Define borderColor as a string type since boxen accepts color names
@@ -37,18 +57,46 @@ export function displayBox(
 			break
 	}
 
-	const boxTitle = titleColor(title)
-
+	// Create box options
 	const boxOptions: Options = {
 		padding: 1,
 		margin: 1,
 		borderStyle: "round",
 		borderColor: borderColor,
-		title: boxTitle,
+		title: titleColor(title),
 		titleAlignment: "center",
 	}
 
-	console.log(boxen(content, boxOptions))
+	// Create the full box content
+	const boxContent = boxen(content, boxOptions)
+
+	// Start with collapsed state by default for all boxes
+	let isCollapsed = true
+
+	if (collapsible) {
+		// Show collapsed version with [+] indicator
+		console.log(titleColor(`${title} [+]`))
+
+		// Add a hint about expanding
+		console.log(chalk.gray("Click to expand"))
+	} else {
+		// If not collapsible, show the full box immediately
+		console.log(boxContent)
+	}
+}
+
+/**
+ * Display a message in a collapsible box with checkpoint information
+ * @param title The title of the box
+ * @param content The content to display
+ * @param type The type of message (info, success, error, warning)
+ */
+export function displayCollapsibleBox(
+	title: string,
+	content: string,
+	type: "info" | "success" | "error" | "warning" = "info",
+): void {
+	displayBox(title, content, type, true)
 }
 
 /**
@@ -160,4 +208,88 @@ export async function displayConfigExpandable(title: string, configs: any): Prom
 			displayBox(`Configuration: ${selectedConfig}`, JSON.stringify(configs[selectedConfig], null, 2), "info")
 		}
 	}
+}
+
+/**
+ * Display a followup question with suggested answers and allow the user to select one
+ * @param followupQuestion The followup question with suggested answers
+ * @param additionalMessage Optional additional message to append to the selected suggestion
+ * @returns The selected suggestion with optional additional message
+ */
+export async function displayFollowupQuestion(
+	followupQuestion: FollowupQuestion,
+	additionalMessage?: string,
+): Promise<string> {
+	// Display the question
+	console.log(chalk.blue("\nQuestion:"), followupQuestion.question)
+
+	// Display the suggested answers
+	console.log(chalk.blue("\nSuggested answers:"))
+	followupQuestion.suggest.forEach((suggestion: string, index: number) => {
+		console.log(`${chalk.green(index + 1 + ".")} ${suggestion}`)
+	})
+
+	// Prompt the user to select an answer
+	const response = await prompts({
+		type: "select",
+		name: "value",
+		message: "Select an answer:",
+		choices: followupQuestion.suggest.map((suggestion: string, index: number) => ({
+			title: `${index + 1}. ${suggestion}`,
+			value: index,
+		})),
+		initial: 0,
+	})
+
+	// Get the selected suggestion
+	const selectedSuggestion = followupQuestion.suggest[response.value]
+
+	// If there's an additional message, append it to the selected suggestion
+	if (additionalMessage) {
+		return `${selectedSuggestion}\n${additionalMessage}`
+	}
+
+	return selectedSuggestion
+}
+
+/**
+ * Display suggested answers and allow the user to select one
+ * @param askMessage The ask type message with question and suggestions
+ * @param additionalMessage Optional additional message to append to the selected suggestion
+ * @returns The selected suggestion with optional additional message
+ */
+export async function displaySuggestedAnswers(
+	askMessage: { question: string; suggest: string[] },
+	additionalMessage?: string,
+): Promise<string> {
+	// Display the question
+	console.log(chalk.blue("\nQuestion:"), askMessage.question)
+
+	// Display the suggested answers
+	console.log(chalk.blue("\nSuggested answers:"))
+	askMessage.suggest.forEach((suggestion, index) => {
+		console.log(`${chalk.green(index + 1 + ".")} ${suggestion}`)
+	})
+
+	// Prompt the user to select an answer
+	const response = await prompts({
+		type: "select",
+		name: "value",
+		message: "Select an answer:",
+		choices: askMessage.suggest.map((suggestion, index) => ({
+			title: `${index + 1}. ${suggestion}`,
+			value: index,
+		})),
+		initial: 0,
+	})
+
+	// Get the selected suggestion
+	const selectedSuggestion = askMessage.suggest[response.value]
+
+	// If there's an additional message, append it to the selected suggestion
+	if (additionalMessage) {
+		return `${selectedSuggestion}\n${additionalMessage}`
+	}
+
+	return selectedSuggestion
 }

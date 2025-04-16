@@ -49,7 +49,9 @@ function setConfigCommand(wsClient: WebSocketClient): Command {
 				}
 
 				// Add debugging to see what's being sent
-				console.log("Sending configuration:", JSON.stringify(config, null, 2))
+				if (wsClient.isDebugMode()) {
+					console.log("Sending configuration:", JSON.stringify(config, null, 2))
+				}
 
 				// Ensure config is a valid object before sending
 				if (!config || typeof config !== "object") {

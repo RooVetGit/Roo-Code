@@ -1,4 +1,7 @@
 import chalk from "chalk"
+import { displayCollapsibleBox } from "../utils/display"
+import { storeFollowupQuestion } from "../utils/followup-store"
+import { parseFollowupQuestion } from "../utils/message-helpers"
 import { EventName, WebSocketClient } from "../utils/websocket-client"
 
 /**
@@ -22,6 +25,15 @@ export async function setupTaskEventListeners(wsClient: WebSocketClient, taskId:
 	// First, clean up any existing event listeners to prevent duplicates
 	wsClient.removeTaskEventListeners()
 
+	// Create a set to track processed message contents to prevent duplicates
+	const processedContents = new Set<string>()
+
+	// Track the last displayed message to prevent immediate duplicates
+	let lastDisplayedMessage = ""
+
+	// Flag to track if we need to add a newline before the next message
+	let needsNewline = false
+
 	// Subscribe to all events for this task to keep the connection alive
 	await wsClient.subscribeToTaskEvents(taskId)
 
@@ -32,12 +44,122 @@ export async function setupTaskEventListeners(wsClient: WebSocketClient, taskId:
 			process.stdout.write(data.delta || "")
 		}
 	})
-
 	// Handle complete messages
 	wsClient.on("completeMessage", (data) => {
 		if (data.taskId === taskId) {
-			// Write the complete message with a newline
-			console.log("\n" + data.content)
+			// Skip if this is exactly the same as the last displayed message
+			if (data.content === lastDisplayedMessage) {
+				return
+			}
+
+			// Skip if we've already processed this content
+			if (processedContents.has(data.content)) {
+				return
+			}
+
+			// Mark this content as processed
+			processedContents.add(data.content)
+			lastDisplayedMessage = data.content
+
+			// Add a newline if needed
+			if (needsNewline) {
+				console.log("")
+				needsNewline = false
+			}
+
+			// Check if this is a followup question with suggestions
+			const followupQuestion = parseFollowupQuestion(data.content)
+
+			if (followupQuestion) {
+				// Store the followup question for later use with --interact-suggestions
+				storeFollowupQuestion({
+					...followupQuestion,
+					taskId: data.taskId,
+				})
+
+				// Set the flag to add a newline before the next message
+				needsNewline = true
+
+				// Format and display the followup question
+				console.log(chalk.blue("\nQuestion:"), followupQuestion.question)
+				console.log(chalk.blue("\nSuggested answers:"))
+
+				followupQuestion.suggest.forEach((suggestion: string, index: number) => {
+					console.log(`${chalk.green(index + 1 + ".")} ${suggestion}`)
+				})
+
+				console.log(chalk.yellow("\nUse 'roocli update task --interact-suggestions' to select an answer"))
+				console.log(
+					chalk.yellow(
+						"Or use 'roocli update task --message \"your response\"' to provide a custom response",
+					),
+				)
+			} else {
+				// Check if the content is JSON and filter out unwanted JSON output
+				try {
+					const jsonContent = JSON.parse(data.content)
+
+					// If it contains a "request" field, it's likely the unwanted JSON output
+					if (jsonContent.request) {
+						// Skip printing this JSON
+						return
+					}
+
+					// If it contains a "Result" field, it's likely the unwanted JSON output
+					if (typeof jsonContent === "object" && "Result" in jsonContent) {
+						// Skip printing this JSON
+						return
+					}
+
+					// Check if this might be a checkpoint hash
+					if (
+						typeof jsonContent === "string" &&
+						jsonContent.length === 40 &&
+						/^[0-9a-f]+$/.test(jsonContent)
+					) {
+						// This looks like a checkpoint hash
+						displayCollapsibleBox("Checkpoint Saved", `Checkpoint hash: ${jsonContent}`, "success")
+						return
+					}
+
+					// Check if the content contains a checkpoint hash
+					const content = data.content.trim()
+					const hashMatch = content.match(/([0-9a-f]{40})/)
+					if (hashMatch) {
+						displayCollapsibleBox("Checkpoint Saved", `Checkpoint hash: ${hashMatch[1]}`, "success")
+						return
+					}
+
+					// Otherwise, print the JSON content with proper spacing
+					console.log(data.content)
+					needsNewline = true
+				} catch (e) {
+					// Not JSON, check if it's a checkpoint hash in plain text
+					const content = data.content.trim()
+
+					// Check if the content contains a checkpoint hash
+					const hashMatch = content.match(/([0-9a-f]{40})/)
+					if (hashMatch) {
+						// Add a newline before checkpoint messages
+						console.log("")
+						displayCollapsibleBox("Checkpoint Saved", `Checkpoint hash: ${hashMatch[1]}`, "success")
+						needsNewline = true
+						return
+					}
+					if (content.length === 40 && /^[0-9a-f]+$/.test(content)) {
+						// This looks like a checkpoint hash
+						// Add a newline before checkpoint messages
+						console.log("")
+						displayCollapsibleBox("Checkpoint Saved", `Checkpoint hash: ${content}`, "success")
+						needsNewline = true
+						return
+					}
+
+					// Not a checkpoint hash, just print the content
+					console.log(data.content)
+					needsNewline = true
+				}
+			}
 		}
 	})
 
@@ -83,35 +205,45 @@ export async function setupTaskEventListeners(wsClient: WebSocketClient, taskId:
 	// Handle task started events
 	wsClient.on(EventName.TaskStarted, (payload) => {
 		if (payload && payload[0] && payload[0] === taskId) {
-			console.log(chalk.blue(`Task ${taskId} started.`))
+			if (wsClient.isDebugMode()) {
+				console.log(chalk.blue(`Task ${taskId} started.`))
+			}
 		}
 	})
 
 	// Handle task mode switched events
 	wsClient.on(EventName.TaskModeSwitched, (payload) => {
 		if (payload && payload.length >= 2 && payload[0] === taskId) {
-			console.log(chalk.blue(`Task switched to mode: ${payload[1]}`))
+			if (wsClient.isDebugMode()) {
+				console.log(chalk.blue(`Task switched to mode: ${payload[1]}`))
+			}
 		}
 	})
 
 	// Handle task paused events
 	wsClient.on(EventName.TaskPaused, (payload) => {
 		if (payload && payload[0] && payload[0] === taskId) {
-			console.log(chalk.yellow(`Task ${taskId} paused.`))
+			if (wsClient.isDebugMode()) {
+				console.log(chalk.yellow(`Task ${taskId} paused.`))
+			}
 		}
 	})
 
 	// Handle task unpaused events
 	wsClient.on(EventName.TaskUnpaused, (payload) => {
 		if (payload && payload[0] && payload[0] === taskId) {
-			console.log(chalk.green(`Task ${taskId} resumed.`))
+			if (wsClient.isDebugMode()) {
+				console.log(chalk.green(`Task ${taskId} resumed.`))
+			}
 		}
 	})
 
 	// Handle task spawned events
 	wsClient.on(EventName.TaskSpawned, (payload) => {
 		if (payload && payload.length >= 2 && payload[0] === taskId) {
-			console.log(chalk.blue(`Task spawned child task: ${payload[1]}`))
+			if (wsClient.isDebugMode()) {
+				console.log(chalk.blue(`Task spawned child task: ${payload[1]}`))
+			}
 		}
 	})
 
@@ -121,6 +253,51 @@ export async function setupTaskEventListeners(wsClient: WebSocketClient, taskId:
 	// 		console.log(chalk.blue(`Token usage updated: ${JSON.stringify(payload[1])}`))
 	// 	}
 	// })
+
+	// Handle message events for checkpoint_saved
+	wsClient.on("message", (eventData) => {
+		if (Array.isArray(eventData) && eventData.length > 0) {
+			for (const data of eventData) {
+				if (data && data.taskId === taskId && data.message) {
+					const { message } = data
+
+					// Skip if we've already processed this content
+					if (message.text && processedContents.has(message.text)) {
+						continue
+					}
+
+					// Mark this content as processed if it has text
+					if (message.text) {
+						processedContents.add(message.text)
+					}
+
+					// Add a newline before checkpoint messages
+					if (message.type === "say" && message.say === "checkpoint_saved") {
+						console.log("")
+						needsNewline = false
+					}
+
+					// Check if this is a checkpoint_saved message
+					if (message.type === "say" && message.say === "checkpoint_saved" && message.text) {
+						// Set the flag to add a newline before the next message
+						needsNewline = true
+						try {
+							// Try to parse the checkpoint hash from the message text
+							const checkpointData = JSON.parse(message.text)
+							if (checkpointData && typeof checkpointData === "object") {
+								// Display the checkpoint hash in a collapsible box
+								const hash = checkpointData.hash || "Unknown"
+								displayCollapsibleBox("Checkpoint Saved", `Checkpoint hash: ${hash}`, "success")
+							}
+						} catch (e) {
+							// If parsing fails, just display the raw text
+							displayCollapsibleBox("Checkpoint Saved", message.text, "success")
+						}
+					}
+				}
+			}
+		}
+	})
 }
 
 /**

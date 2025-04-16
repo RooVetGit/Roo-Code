@@ -164,7 +164,12 @@ export class WebSocketClient extends EventEmitter {
 			const args = Array.isArray(params) ? params : [params]
 
 			// Log the command being sent for debugging
-			console.log(chalk.blue(`Sending command: ${method}`), chalk.gray(JSON.stringify(args).substring(0, 100)))
+			if (this.debugMode) {
+				console.log(
+					chalk.blue(`Sending command: ${method}`),
+					chalk.gray(JSON.stringify(args).substring(0, 100)),
+				)
+			}
 
 			const id = String(++this.messageCounter)
 			const message = {
@@ -178,7 +183,9 @@ export class WebSocketClient extends EventEmitter {
 
 			this.pendingRequests.set(id, {
 				resolve: (result: T) => {
-					console.log(chalk.green(`Command ${method} completed successfully`))
+					if (this.debugMode) {
+						console.log(chalk.green(`Command ${method} completed successfully`))
+					}
 					resolve(result)
 				},
 				reject: (error: Error) => {
@@ -237,7 +244,9 @@ export class WebSocketClient extends EventEmitter {
 					console.error(chalk.red(`Received error response: ${message.payload.message}`))
 					reject(new Error(message.payload.message))
 				} else {
-					console.log(chalk.green(`Received successful response for message ID: ${message.message_id}`))
+					if (this.debugMode) {
+						console.log(chalk.green(`Received successful response for message ID: ${message.message_id}`))
+					}
 					resolve(message.payload)
 				}
 				return
@@ -292,7 +301,9 @@ export class WebSocketClient extends EventEmitter {
 			}
 
 			// Handle unknown messages
-			console.log(chalk.yellow("Received unknown message:"), message)
+			if (this.debugMode) {
+				console.log(chalk.yellow("Received unknown message:"), message)
+			}
 		} catch (error) {
 			console.error(chalk.red("Error parsing message:"), error)
 		}
@@ -316,7 +327,9 @@ export class WebSocketClient extends EventEmitter {
 		// Reset active task ID
 		this.activeTaskId = null
 
-		console.log(chalk.blue("Removed all task event listeners"))
+		if (this.debugMode) {
+			console.log(chalk.blue("Removed all task event listeners"))
+		}
 	}
 
 	/**
@@ -428,7 +441,9 @@ export class WebSocketClient extends EventEmitter {
 	 */
 	public subscribeToTaskEvents(taskId: string): Promise<void> {
 		this.activeTaskId = taskId
-		console.log(chalk.blue(`Subscribing to events for task: ${taskId}`))
+		if (this.debugMode) {
+			console.log(chalk.blue(`Subscribing to events for task: ${taskId}`))
+		}
 
 		// Clear the connection timeout as we're now in active task mode
 		if (this.connectionTimeoutId) {
@@ -461,5 +476,13 @@ export class WebSocketClient extends EventEmitter {
 	 */
 	public resetLastActivityTime(): void {
 		this.lastActivityTime = Date.now()
+	}
+
+	/**
+	 * Get the debug mode status
+	 * @returns Whether debug mode is enabled
+	 */
+	public isDebugMode(): boolean {
+		return this.debugMode
 	}
 }

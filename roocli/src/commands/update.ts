@@ -1,6 +1,7 @@
 import chalk from "chalk"
 import { Command } from "commander"
-import { displayBox, displayTextInput } from "../utils/display"
+import { displayBox, displayFollowupQuestion, displayTextInput } from "../utils/display"
+import { getLastFollowupQuestion } from "../utils/followup-store"
 import { WebSocketClient } from "../utils/websocket-client"
 import { updateProfileCommand } from "./profile"
 import { setupTaskEventListeners, waitForTaskCompletion } from "./task"
@@ -72,6 +73,10 @@ function updateTaskCommand(wsClient: WebSocketClient): Command {
 		.option("--message <message>", "Send a message to the task")
 		.option("--interactive", "Enter message interactively")
 		.option("--interact <type>", "Interact with the task (primary or secondary)")
+		.option(
+			"--interact-suggestions [number]",
+			"Interact with followup questions and select from suggested answers (optionally specify suggestion number)",
+		)
 		.option("--resume", "Resume a paused task")
 		.option("--taskId <taskId>", "Task ID to operate on (required for --resume)")
 		.option("--clear", "Clear the current task")
@@ -137,23 +142,16 @@ function updateTaskCommand(wsClient: WebSocketClient): Command {
 					return
 				}
 
-				// Handle sending message to task
-				if (options.message || options.interactive) {
-					let taskMessage = options.message
-
-					if (options.interactive) {
-						taskMessage = await displayTextInput("Enter your message:", options.message || "")
-					}
-
-					if (!taskMessage) {
-						console.log(chalk.yellow("No message provided. Operation cancelled."))
-						return
-					}
-
+				// Handle sending message to task or interacting with suggestions
+				if (options.message || options.interactive || options.interactSuggestions) {
 					// Get the current task ID
-					console.log(chalk.blue("Getting current task stack..."))
+					if (wsClient.isDebugMode()) {
+						console.log(chalk.blue("Getting current task stack..."))
+					}
 					const currentTaskStack = await wsClient.sendCommand("getCurrentTaskStack")
-					console.log(chalk.blue("Current task stack:"), currentTaskStack)
+					if (wsClient.isDebugMode()) {
+						console.log(chalk.blue("Current task stack:"), currentTaskStack)
+					}
 
 					if (!currentTaskStack || !Array.isArray(currentTaskStack) || currentTaskStack.length === 0) {
 						console.error(chalk.red("Error: No active task found"))
@@ -161,28 +159,133 @@ function updateTaskCommand(wsClient: WebSocketClient): Command {
 					}
 
 					const taskId = currentTaskStack[currentTaskStack.length - 1]
-					console.log(chalk.blue(`Using task ID: ${taskId}`))
+					if (wsClient.isDebugMode()) {
+						console.log(chalk.blue(`Using task ID: ${taskId}`))
+					}
 
-					// First set the message in the chat box
-					console.log(chalk.blue(`Setting message in chat box: "${taskMessage}"`))
-					await wsClient.sendCommand("sendMessage", { text: taskMessage })
+					// Check if we need to handle ask-type message with suggestions
+					if (options.interactSuggestions) {
+						// Get the last stored followup question
+						const followupQuestion = getLastFollowupQuestion()
 
-					// Then press the primary button to send it
-					console.log(chalk.blue(`Sending message by pressing primary button`))
-					await wsClient.sendCommand("pressPrimaryButton")
-					displayBox("Message Sent", "Message has been sent to the current task", "success")
+						if (!followupQuestion) {
+							console.error(
+								chalk.red(
+									"Error: No followup question found. Run a task first to get a question with suggestions.",
+								),
+							)
+							return
+						}
+
+						// Check if the stored question is for the current task
+						if (followupQuestion.taskId !== taskId) {
+							console.log(chalk.yellow("Warning: The stored followup question is from a different task."))
+							console.log(chalk.yellow(`Stored question task ID: ${followupQuestion.taskId}`))
+							console.log(chalk.yellow(`Current task ID: ${taskId}`))
+
+							// Ask for confirmation
+							const proceed = await displayTextInput(
+								"Do you want to proceed with this question from a different task? (y/n)",
+								"n",
+							)
+
+							if (proceed.toLowerCase() !== "y" && proceed.toLowerCase() !== "yes") {
+								console.log(chalk.yellow("Operation cancelled."))
+								return
+							}
+						}
+
+						// Get the selected suggestion
+						let selectedMessage: string
+
+						// Check if a suggestion number was provided directly
+						if (options.interactSuggestions !== true) {
+							// A suggestion number was provided
+							const suggestionIndex = parseInt(options.interactSuggestions, 10) - 1
+
+							// Validate the suggestion index
+							if (
+								isNaN(suggestionIndex) ||
+								suggestionIndex < 0 ||
+								suggestionIndex >= followupQuestion.suggest.length
+							) {
+								console.error(
+									chalk.red(
+										`Error: Invalid suggestion number. Please provide a number between 1 and ${followupQuestion.suggest.length}`,
+									),
+								)
+								return
+							}
+
+							// Get the selected suggestion
+							const selectedSuggestion = followupQuestion.suggest[suggestionIndex]
+
+							// If there's an additional message, append it to the selected suggestion
+							if (options.message) {
+								selectedMessage = `${selectedSuggestion}\n${options.message}`
+							} else {
+								selectedMessage = selectedSuggestion
+							}
+
+							// Display what was selected
+							console.log(chalk.blue(`Selected suggestion ${suggestionIndex + 1}: ${selectedSuggestion}`))
+						} else {
+							// Use the interactive selection
+							selectedMessage = await displayFollowupQuestion(followupQuestion, options.message)
+						}
+
+						// Set the selected message in the chat box
+						if (wsClient.isDebugMode()) {
+							console.log(chalk.blue(`Setting selected message in chat box: "${selectedMessage}"`))
+						}
+						await wsClient.sendCommand("sendMessage", { text: selectedMessage })
+
+						// Then press the primary button to send it
+						if (wsClient.isDebugMode()) {
+							console.log(chalk.blue(`Sending message by pressing primary button`))
+						}
+						await wsClient.sendCommand("pressPrimaryButton")
+						displayBox("Message Sent", "Selected suggestion has been sent to the task", "success")
+					} else {
+						// Handle regular message sending
+						let taskMessage = options.message
+
+						if (options.interactive) {
+							taskMessage = await displayTextInput("Enter your message:", options.message || "")
+						}
+
+						if (!taskMessage) {
+							console.log(chalk.yellow("No message provided. Operation cancelled."))
+							return
+						}
+
+						// First set the message in the chat box
+						if (wsClient.isDebugMode()) {
+							console.log(chalk.blue(`Setting message in chat box: "${taskMessage}"`))
+						}
+						await wsClient.sendCommand("sendMessage", { text: taskMessage })
+
+						// Then press the primary button to send it
+						if (wsClient.isDebugMode()) {
+							console.log(chalk.blue(`Sending message by pressing primary button`))
+						}
+						await wsClient.sendCommand("pressPrimaryButton")
+						displayBox("Message Sent", "Message has been sent to the current task", "success")
+					}
 
 					// Set up event listeners for the task to receive streaming responses
 					await setupTaskEventListeners(wsClient, taskId)
 
 					// Wait for the task to complete or timeout
-					console.log(chalk.blue("Waiting for task to respond..."))
+					if (wsClient.isDebugMode()) {
+						console.log(chalk.blue("Waiting for task to respond..."))
+					}
 					await waitForTaskCompletion(wsClient, taskId)
 					return
 				}
 
 				throw new Error(
-					"At least one of --resume, --clear, --cancel, --mode, --message, or --interact option is required",
+					"At least one of --resume, --clear, --cancel, --mode, --message, --interact, or --interact-suggestions option is required",
 				)
 			} catch (error) {
 				console.error(chalk.red(`Error: ${error instanceof Error ? error.message : String(error)}`))

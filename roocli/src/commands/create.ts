@@ -104,7 +104,9 @@ function createTaskCommand(wsClient: WebSocketClient): Command {
 				await setupTaskEventListeners(wsClient, taskId)
 
 				// Wait for the task to complete or timeout
-				console.log(chalk.blue("Waiting for task to respond..."))
+				if (wsClient.isDebugMode()) {
+					console.log(chalk.blue("Waiting for task to respond..."))
+				}
 				await waitForTaskCompletion(wsClient, taskId)
 			} catch (error) {
 				console.error(chalk.red(`Error: ${error instanceof Error ? error.message : String(error)}`))

@@ -39,14 +39,18 @@ async function main() {
 		try {
 			const config = await readWebSocketConfig()
 			wsClient = new WebSocketClient(`ws://localhost:${config.port}`, config.token, debug)
-			console.log(chalk.green(`Using WebSocket server at port ${config.port}`))
+			if (debug) {
+				console.log(chalk.green(`Using WebSocket server at port ${config.port}`))
+			}
 		} catch (error) {
 			console.error(
 				chalk.yellow(
 					`Warning: Could not read WebSocket configuration: ${error instanceof Error ? error.message : String(error)}`,
 				),
 			)
-			console.log(chalk.yellow("Falling back to default WebSocket server at port 8765"))
+			if (debug) {
+				console.log(chalk.yellow("Falling back to default WebSocket server at port 8765"))
+			}
 			wsClient = new WebSocketClient("ws://localhost:8765", null, debug)
 		}
 
