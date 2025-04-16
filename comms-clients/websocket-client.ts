@@ -43,12 +43,14 @@ class SimpleSpinner {
 	}
 }
 
+// Used internally for sending messages to the server
 interface WebSocketMessage {
 	message_id: string
 	type: "method_call" | "event" | "authentication" | "error" | "event_subscription"
 	payload: any
 }
 
+// Used internally for handling responses from the server
 interface WebSocketResponse {
 	message_id: string
 	type: string
@@ -80,7 +82,13 @@ export class WebSocketClient extends EventEmitter {
 	private url: string
 	private token: string | null = null
 	private messageCounter: number = 0
-	private pendingRequests: Map<string, { resolve: Function; reject: Function }> = new Map()
+	private pendingRequests: Map<
+		string,
+		{
+			resolve: (value: any) => void
+			reject: (reason: Error) => void
+		}
+	> = new Map()
 	private connected: boolean = false
 	private spinner: SimpleSpinner | null = null
 	private partialMessages: Map<string, PartialMessage> = new Map()
@@ -399,7 +407,7 @@ export class WebSocketClient extends EventEmitter {
 
 			const { taskId, message, action } = data
 			// Extract fields from the ClineMessage structure
-			const { partial, text, type, ask, say } = message
+			const { partial, text } = message
 
 			// Skip if there's no text content
 			if (text === undefined) continue
