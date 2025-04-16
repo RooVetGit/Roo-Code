@@ -22,17 +22,19 @@ export class XAIHandler extends BaseProvider implements SingleCompletionHandler 
 	}
 
 	override getModel() {
-		const modelId = this.options.apiModelId
+		// Determine which model ID to use (specified or default)
+		const id =
+			this.options.apiModelId && this.options.apiModelId in xaiModels
+				? (this.options.apiModelId as XAIModelId)
+				: xaiDefaultModelId
 
-		if (modelId && modelId in xaiModels) {
-			const id = modelId as XAIModelId
-			return { id, info: xaiModels[id] }
-		}
+		// Check if reasoning effort applies to this model
+		const supportsReasoning = REASONING_MODELS.has(id)
 
 		return {
-			id: xaiDefaultModelId,
-			info: xaiModels[xaiDefaultModelId],
-			reasoningEffort: REASONING_MODELS.has(xaiDefaultModelId) ? this.options.reasoningEffort : undefined,
+			id,
+			info: xaiModels[id],
+			reasoningEffort: supportsReasoning ? this.options.reasoningEffort : undefined,
 		}
 	}
 
