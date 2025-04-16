@@ -11,9 +11,11 @@ import {
 	ClineSayTool,
 	ExtensionMessage,
 } from "../../../../src/shared/ExtensionMessage"
+import { CommandRiskLevel } from "../../../../src/schemas"
 import { McpServer, McpTool } from "../../../../src/shared/mcp"
 import { findLast } from "../../../../src/shared/array"
 import { combineApiRequests } from "../../../../src/shared/combineApiRequests"
+import { isValidRiskLevel, isRiskAllowed } from "../../utils/commandRiskUtils"
 import { combineCommandSequences } from "../../../../src/shared/combineCommandSequences"
 import { getApiMetrics } from "../../../../src/shared/getApiMetrics"
 import { useExtensionState } from "../../context/ExtensionStateContext"
@@ -61,6 +63,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		alwaysAllowExecute,
 		alwaysAllowMcp,
 		allowedCommands,
+		commandRiskLevel,
 		writeDelayMs,
 		mode,
 		setMode,
@@ -647,9 +650,21 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	const isAllowedCommand = useCallback(
 		(message: ClineMessage | undefined): boolean => {
 			if (message?.type !== "ask") return false
-			return validateCommand(message.text || "", allowedCommands || [])
+
+			// First check if command is allowed
+			if (validateCommand(message.text || "", allowedCommands || [])) {
+				return true
+			} else if (message.metadata?.risk) {
+				const risk = message.metadata?.risk as CommandRiskLevel
+				if (isValidRiskLevel(risk) && isRiskAllowed(commandRiskLevel as CommandRiskLevel, risk)) {
+					return true
+				}
+			}
+
+			// Default: If the command is not allowed, return false
+			return false
 		},
-		[allowedCommands],
+		[allowedCommands, commandRiskLevel],
 	)
 
 	const isAutoApproved = useCallback(

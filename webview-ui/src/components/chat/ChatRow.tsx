@@ -1074,6 +1074,31 @@ export const ChatRowContent = ({
 						}
 					}
 
+					// Get risk level and determine color/icon based on it
+					const risk = message.metadata?.risk || ""
+					const riskStyles = {
+						readOnly: {
+							color: "var(--vscode-testing-iconPassed)",
+							icon: "pass",
+						},
+						reversibleChanges: {
+							color: "var(--vscode-notificationsInfoIcon-foreground)",
+							icon: "sync",
+						},
+						complexChanges: {
+							color: "var(--vscode-editorWarning-foreground)",
+							icon: "warning",
+						},
+						serviceInterruptingChanges: {
+							color: "var(--vscode-editorError-foreground)",
+							icon: "bell",
+						},
+						destructiveChanges: {
+							color: "var(--vscode-problemsErrorIcon-foreground)",
+							icon: "error",
+						},
+					}
+					const riskStyle = risk ? riskStyles[risk as keyof typeof riskStyles] : null
 					const { command, output } = splitMessage(message.text || "")
 					return (
 						<>
@@ -1093,6 +1118,26 @@ export const ChatRowContent = ({
 									backgroundColor: CODE_BLOCK_BG_COLOR,
 								}}>
 								<CodeBlock source={`${"```"}shell\n${command}\n${"```"}`} forceWrap={true} />
+								{risk && (
+									<div
+										style={{
+											padding: "4px 8px",
+											color: riskStyle?.color || "var(--vscode-editorWarning-foreground)",
+											fontSize: "0.85em",
+											display: "flex",
+											alignItems: "center",
+											gap: "4px",
+											backgroundColor: "var(--vscode-editor-background)",
+											borderTop: "1px solid var(--vscode-editorGroup-border)",
+										}}>
+										<span
+											className={`codicon codicon-${riskStyle?.icon || "warning"}`}
+											style={{ color: riskStyle?.color }}></span>
+										<span style={{ color: riskStyle?.color }}>
+											{t(`settings:autoApprove.commandRiskLevel.${risk}`)}
+										</span>
+									</div>
+								)}
 								{output.length > 0 && (
 									<div style={{ width: "100%" }}>
 										<div
