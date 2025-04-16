@@ -1,4 +1,7 @@
 import { ModelInfo, ProviderName, ProviderSettings } from "../schemas"
+import { REASONING_MODELS } from "../api/providers/constants"
+
+export { REASONING_MODELS }
 
 export type { ModelInfo, ProviderName as ApiProvider }
 
@@ -77,6 +80,7 @@ export const anthropicModels = {
 		cacheReadsPrice: 0.03,
 	},
 } as const satisfies Record<string, ModelInfo> // as const assertion makes the object deeply readonly
+
 // Amazon Bedrock
 // https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html
 export interface MessageContent {
@@ -950,6 +954,7 @@ export const mistralModels = {
 } as const satisfies Record<string, ModelInfo>
 
 // Unbound Security
+// https://www.unboundsecurity.ai/ai-gateway
 export const unboundDefaultModelId = "anthropic/claude-3-5-sonnet-20241022"
 export const unboundDefaultModelInfo: ModelInfo = {
 	maxTokens: 8192,

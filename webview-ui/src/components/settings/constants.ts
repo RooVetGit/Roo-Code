@@ -9,7 +9,10 @@ import {
 	openAiNativeModels,
 	vertexModels,
 	xaiModels,
+	REASONING_MODELS,
 } from "../../../../src/shared/api"
+
+export { REASONING_MODELS }
 
 export const MODELS_BY_PROVIDER: Partial<Record<ApiProvider, Record<string, ModelInfo>>> = {
 	anthropic: anthropicModels,
@@ -49,5 +52,3 @@ export const VERTEX_REGIONS = [
 	{ value: "europe-west4", label: "europe-west4" },
 	{ value: "asia-southeast1", label: "asia-southeast1" },
 ]
-
-export const REASONING_MODELS = new Set(["x-ai/grok-3-mini-beta", "grok-3-mini-beta", "grok-3-mini-fast-beta"])
