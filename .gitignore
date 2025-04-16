@@ -27,13 +27,14 @@ docs/_site/
 !.env.*.sample
 
 
-#Local lint config
+# Local lint config
 .eslintrc.local.json
 
-#Logging
+# Logging
 logs
 
 # Vite development
 .vite-port
-housekeeping-mild.sh
-housekeeping-strong.sh
+
+# Turborepo
+.turbo

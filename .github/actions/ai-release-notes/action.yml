@@ -80,4 +80,3 @@ runs:
         CUSTOM_PROMPT: ${{ steps.ai_prompt.outputs.OPENAI_PROMPT }}
         MODEL_NAME: ${{ inputs.model_name }}
       run: python .github/scripts/ai-release-notes.py
-

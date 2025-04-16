@@ -46,7 +46,7 @@
 		"update_server_timeout": "Fehler beim Aktualisieren des Server-Timeouts",
 		"failed_update_project_mcp": "Fehler beim Aktualisieren der Projekt-MCP-Server",
 		"create_mcp_json": "Fehler beim Erstellen oder Öffnen von .roo/mcp.json: {{error}}",
-		"hmr_not_running": "Der lokale Entwicklungsserver läuft nicht, HMR wird nicht funktionieren. Bitte führen Sie 'npm run dev' vor dem Start der Erweiterung aus, um HMR zu aktivieren.",
+		"hmr_not_running": "Der lokale Entwicklungsserver läuft nicht, HMR wird nicht funktionieren. Bitte führen Sie 'pnpm dev' vor dem Start der Erweiterung aus, um HMR zu aktivieren.",
 		"retrieve_current_mode": "Fehler beim Abrufen des aktuellen Modus aus dem Zustand.",
 		"failed_delete_repo": "Fehler beim Löschen des zugehörigen Shadow-Repositorys oder -Zweigs: {{error}}",
 		"failed_remove_directory": "Fehler beim Entfernen des Aufgabenverzeichnisses: {{error}}",

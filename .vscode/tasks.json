@@ -5,7 +5,7 @@
 	"tasks": [
 		{
 			"label": "watch",
-			"dependsOn": ["npm: dev", "npm: watch:tsc", "npm: watch:esbuild"],
+			"dependsOn": ["pnpm dev", "pnpm watch:tsc", "pnpm watch:esbuild"],
 			"presentation": {
 				"reveal": "never"
 			},
@@ -15,9 +15,9 @@
 			}
 		},
 		{
-			"label": "npm: dev",
-			"type": "npm",
-			"script": "dev",
+			"label": "pnpm dev",
+			"type": "shell",
+			"command": "pnpm dev",
 			"group": "build",
 			"problemMatcher": {
 				"owner": "vite",
@@ -37,9 +37,9 @@
 			}
 		},
 		{
-			"label": "npm: watch:esbuild",
-			"type": "npm",
-			"script": "watch:esbuild",
+			"label": "pnpm watch:esbuild",
+			"type": "shell",
+			"command": "pnpm watch:esbuild",
 			"group": "build",
 			"problemMatcher": "$esbuild-watch",
 			"isBackground": true,
@@ -49,9 +49,9 @@
 			}
 		},
 		{
-			"label": "npm: watch:tsc",
-			"type": "npm",
-			"script": "watch:tsc",
+			"label": "pnpm watch:tsc",
+			"type": "shell",
+			"command": "pnpm watch:tsc",
 			"group": "build",
 			"problemMatcher": "$tsc-watch",
 			"isBackground": true,

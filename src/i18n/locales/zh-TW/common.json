@@ -46,7 +46,7 @@
 		"update_server_timeout": "更新伺服器超時設定失敗",
 		"failed_update_project_mcp": "更新專案 MCP 伺服器失敗",
 		"create_mcp_json": "建立或開啟 .roo/mcp.json 失敗：{{error}}",
-		"hmr_not_running": "本機開發伺服器沒有執行，HMR 將不起作用。請在啟動擴充套件前執行'npm run dev'以啟用 HMR。",
+		"hmr_not_running": "本機開發伺服器沒有執行，HMR 將不起作用。請在啟動擴充套件前執行'pnpm dev'以啟用 HMR。",
 		"retrieve_current_mode": "從狀態中檢索目前模式失敗。",
 		"failed_delete_repo": "刪除關聯的影子倉庫或分支失敗：{{error}}",
 		"failed_remove_directory": "刪除工作目錄失敗：{{error}}",

@@ -20,6 +20,7 @@ type ProviderSettings = {
 				| "requesty"
 				| "human-relay"
 				| "fake-ai"
+				| "xai"
 		  )
 		| undefined
 	apiModelId?: string | undefined
@@ -176,12 +177,15 @@ type ProviderSettings = {
 				cachableFields?: string[] | undefined
 		  } | null)
 		| undefined
+	xaiApiKey?: string | undefined
 	modelMaxTokens?: number | undefined
 	modelMaxThinkingTokens?: number | undefined
 	includeMaxTokens?: boolean | undefined
 	modelTemperature?: (number | null) | undefined
 	reasoningEffort?: ("low" | "medium" | "high") | undefined
 	rateLimitSeconds?: number | undefined
+	diffEnabled?: boolean | undefined
+	fuzzyMatchThreshold?: number | undefined
 	fakeAi?: unknown | undefined
 }
 
@@ -210,6 +214,7 @@ type GlobalSettings = {
 							| "requesty"
 							| "human-relay"
 							| "fake-ai"
+							| "xai"
 					  )
 					| undefined
 		  }[]
@@ -257,7 +262,6 @@ type GlobalSettings = {
 	remoteBrowserHost?: string | undefined
 	cachedChromeHostUrl?: string | undefined
 	enableCheckpoints?: boolean | undefined
-	checkpointStorage?: ("task" | "workspace") | undefined
 	showGreeting?: boolean | undefined
 	ttsEnabled?: boolean | undefined
 	ttsSpeed?: number | undefined

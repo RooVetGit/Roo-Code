@@ -171,49 +171,7 @@
 	"autoApprove": {
 		"title": "Tự động phê duyệt:",
 		"none": "Không",
-		"description": "Tự động phê duyệt cho phép Roo Code thực hiện hành động mà không cần xin phép. Chỉ bật cho các hành động bạn hoàn toàn tin tưởng. Cấu hình chi tiết hơn có sẵn trong <settingsLink>Cài đặt</settingsLink>.",
-		"actions": {
-			"readFiles": {
-				"label": "Đọc tệp và thư mục",
-				"shortName": "Đọc",
-				"description": "Cho phép truy cập để đọc bất kỳ tệp nào trên máy tính của bạn."
-			},
-			"editFiles": {
-				"label": "Chỉnh sửa tệp",
-				"shortName": "Chỉnh sửa",
-				"description": "Cho phép chỉnh sửa bất kỳ tệp nào trên máy tính của bạn."
-			},
-			"executeCommands": {
-				"label": "Thực thi lệnh đã phê duyệt",
-				"shortName": "Lệnh",
-				"description": "Cho phép thực thi lệnh terminal đã được phê duyệt. Bạn có thể cấu hình điều này trong bảng cài đặt."
-			},
-			"useBrowser": {
-				"label": "Sử dụng trình duyệt",
-				"shortName": "Trình duyệt",
-				"description": "Cho phép khả năng khởi chạy và tương tác với bất kỳ trang web nào trong trình duyệt không giao diện."
-			},
-			"useMcp": {
-				"label": "Sử dụng máy chủ MCP",
-				"shortName": "MCP",
-				"description": "Cho phép sử dụng máy chủ MCP đã cấu hình có thể sửa đổi hệ thống tệp hoặc tương tác với API."
-			},
-			"switchModes": {
-				"label": "Chuyển đổi chế độ",
-				"shortName": "Chế độ",
-				"description": "Cho phép tự động chuyển đổi giữa các chế độ khác nhau mà không cần phê duyệt."
-			},
-			"subtasks": {
-				"label": "Tạo & hoàn thành nhiệm vụ phụ",
-				"shortName": "Nhiệm vụ phụ",
-				"description": "Cho phép tạo và hoàn thành các nhiệm vụ phụ mà không cần phê duyệt."
-			},
-			"retryRequests": {
-				"label": "Thử lại yêu cầu thất bại",
-				"shortName": "Thử lại",
-				"description": "Tự động thử lại các yêu cầu API thất bại khi nhà cung cấp trả về phản hồi lỗi."
-			}
-		}
+		"description": "Tự động phê duyệt cho phép Roo Code thực hiện hành động mà không cần xin phép. Chỉ bật cho các hành động bạn hoàn toàn tin tưởng. Cấu hình chi tiết hơn có sẵn trong <settingsLink>Cài đặt</settingsLink>."
 	},
 	"reasoning": {
 		"thinking": "Đang suy nghĩ",
@@ -223,10 +181,14 @@
 		"copyToInput": "Sao chép vào ô nhập liệu (hoặc Shift + nhấp chuột)"
 	},
 	"announcement": {
-		"title": "Làm được nhiều hơn với Nhiệm vụ Boomerang 🪃",
-		"description": "Chia công việc thành các nhiệm vụ con, mỗi nhiệm vụ chạy trong một chế độ chuyên biệt như code, architect, debug, hoặc chế độ tùy chỉnh.",
-		"learnMore": "Tìm hiểu thêm →",
-		"hideButton": "Ẩn thông báo"
+		"title": "🎉 Roo Code 3.12 Đã phát hành",
+		"description": "Roo Code 3.12 mang đến các tính năng và cải tiến mới dựa trên phản hồi của bạn.",
+		"whatsNew": "Có gì mới",
+		"feature1": "<bold>Hỗ trợ Grok</bold>: Đã thêm nhà cung cấp xAI và các tùy chọn nỗ lực suy luận Grok trên OpenRouter",
+		"feature2": "<bold>Cải tiến chỉnh sửa khác biệt</bold>: Cấu hình theo hồ sơ và chuẩn hóa chuỗi tốt hơn để giảm lỗi",
+		"feature3": "<bold>Nâng cao điểm kiểm tra</bold>: Điểm kiểm tra nhanh hơn và đáng tin cậy hơn",
+		"hideButton": "Ẩn thông báo",
+		"detailsDiscussLinks": "Nhận thêm chi tiết và thảo luận tại <discordLink>Discord</discordLink> và <redditLink>Reddit</redditLink> 🚀"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo muốn sử dụng trình duyệt:",

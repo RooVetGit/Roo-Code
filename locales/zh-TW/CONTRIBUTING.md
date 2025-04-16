@@ -100,13 +100,13 @@ git clone https://github.com/RooVetGit/Roo-Code.git
 2. **安裝相依套件**：
 
 ```sh
-npm run install:all
+pnpm install
 ```
 
 3. **啟動網頁檢視（Vite/React 應用程式，支援 HMR）**：
 
 ```sh
-npm run dev
+pnpm dev
 ```
 
 4. **除錯**：
@@ -117,7 +117,7 @@ npm run dev
 或者，您也可以建置 .vsix 檔案並直接在 VSCode 中安裝：
 
 ```sh
-npm run build
+pnpm build
 ```
 
 建置完成後，`.vsix` 檔案會出現在 `bin/` 目錄中，可使用以下指令安裝：

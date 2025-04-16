@@ -100,13 +100,13 @@ git clone https://github.com/RooVetGit/Roo-Code.git
 2. **安装依赖**：
 
 ```sh
-npm run install:all
+pnpm install
 ```
 
 3. **启动 webview（Vite/React 应用，具有热模块替换）**：
 
 ```sh
-npm run dev
+pnpm dev
 ```
 
 4. **调试**：
@@ -117,7 +117,7 @@ npm run dev
 或者，您可以构建一个 .vsix 文件并直接在 VSCode 中安装：
 
 ```sh
-npm run build
+pnpm build
 ```
 
 `bin/` 目录中将出现一个 `.vsix` 文件，可以用以下命令安装：

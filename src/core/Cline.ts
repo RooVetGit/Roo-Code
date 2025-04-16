@@ -16,21 +16,16 @@ import { TokenUsage } from "../schemas"
 import { ApiHandler, buildApiHandler } from "../api"
 import { ApiStream } from "../api/transform/stream"
 import { DIFF_VIEW_URI_SCHEME, DiffViewProvider } from "../integrations/editor/DiffViewProvider"
-import {
-	CheckpointServiceOptions,
-	RepoPerTaskCheckpointService,
-	RepoPerWorkspaceCheckpointService,
-} from "../services/checkpoints"
+import { CheckpointServiceOptions, RepoPerTaskCheckpointService } from "../services/checkpoints"
 import { findToolName, formatContentBlockToMarkdown } from "../integrations/misc/export-markdown"
 import { fetchInstructionsTool } from "./tools/fetchInstructionsTool"
 import { listFilesTool } from "./tools/listFilesTool"
 import { readFileTool } from "./tools/readFileTool"
-import { ExitCodeDetails } from "../integrations/terminal/TerminalProcess"
+import { ExitCodeDetails, TerminalProcess } from "../integrations/terminal/TerminalProcess"
 import { Terminal } from "../integrations/terminal/Terminal"
 import { TerminalRegistry } from "../integrations/terminal/TerminalRegistry"
 import { UrlContentFetcher } from "../services/browser/UrlContentFetcher"
 import { listFiles } from "../services/glob/list-files"
-import { CheckpointStorage } from "../shared/checkpoints"
 import { ApiConfiguration } from "../shared/api"
 import { findLastIndex } from "../shared/array"
 import { combineApiRequests } from "../shared/combineApiRequests"
@@ -104,7 +99,6 @@ export type ClineOptions = {
 	customInstructions?: string
 	enableDiff?: boolean
 	enableCheckpoints?: boolean
-	checkpointStorage?: CheckpointStorage
 	fuzzyMatchThreshold?: number
 	consecutiveMistakeLimit?: number
 	task?: string
@@ -162,8 +156,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 	// checkpoints
 	private enableCheckpoints: boolean
-	private checkpointStorage: CheckpointStorage
-	private checkpointService?: RepoPerTaskCheckpointService | RepoPerWorkspaceCheckpointService
+	private checkpointService?: RepoPerTaskCheckpointService
+	private checkpointServiceInitializing = false
 
 	// streaming
 	isWaitingForFirstChunk = false
@@ -184,7 +178,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 		customInstructions,
 		enableDiff = false,
 		enableCheckpoints = true,
-		checkpointStorage = "task",
 		fuzzyMatchThreshold = 1.0,
 		consecutiveMistakeLimit = 3,
 		task,
@@ -223,7 +216,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 		this.providerRef = new WeakRef(provider)
 		this.diffViewProvider = new DiffViewProvider(this.cwd)
 		this.enableCheckpoints = enableCheckpoints
-		this.checkpointStorage = checkpointStorage
 
 		this.rootTask = rootTask
 		this.parentTask = parentTask
@@ -969,11 +961,14 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 		const workingDirInfo = workingDir ? ` from '${workingDir.toPosix()}'` : ""
 		terminalInfo.terminal.show() // weird visual bug when creating new terminals (even manually) where there's an empty space at the top.
-		const process = terminalInfo.runCommand(command)
-
 		let userFeedback: { text?: string; images?: string[] } | undefined
 		let didContinue = false
-		const sendCommandOutput = async (line: string): Promise<void> => {
+		let completed = false
+		let result: string = ""
+		let exitDetails: ExitCodeDetails | undefined
+		const { terminalOutputLineLimit = 500 } = (await this.providerRef.deref()?.getState()) ?? {}
+
+		const sendCommandOutput = async (line: string, terminalProcess: TerminalProcess): Promise<void> => {
 			try {
 				const { response, text, images } = await this.ask("command_output", line)
 				if (response === "yesButtonClicked") {
@@ -982,37 +977,30 @@ export class Cline extends EventEmitter<ClineEvents> {
 					userFeedback = { text, images }
 				}
 				didContinue = true
-				process.continue() // continue past the await
+				terminalProcess.continue() // continue past the await
 			} catch {
 				// This can only happen if this ask promise was ignored, so ignore this error
 			}
 		}
 
-		const { terminalOutputLineLimit = 500 } = (await this.providerRef.deref()?.getState()) ?? {}
-
-		process.on("line", (line) => {
-			if (!didContinue) {
-				sendCommandOutput(Terminal.compressTerminalOutput(line, terminalOutputLineLimit))
-			} else {
-				this.say("command_output", Terminal.compressTerminalOutput(line, terminalOutputLineLimit))
-			}
-		})
-
-		let completed = false
-		let result: string = ""
-		let exitDetails: ExitCodeDetails | undefined
-		process.once("completed", (output?: string) => {
-			// Use provided output if available, otherwise keep existing result.
-			result = output ?? ""
-			completed = true
-		})
-
-		process.once("shell_execution_complete", (details: ExitCodeDetails) => {
-			exitDetails = details
-		})
-
-		process.once("no_shell_integration", async (message: string) => {
-			await this.say("shell_integration_warning", message)
+		const process = terminalInfo.runCommand(command, {
+			onLine: (line, process) => {
+				if (!didContinue) {
+					sendCommandOutput(Terminal.compressTerminalOutput(line, terminalOutputLineLimit), process)
+				} else {
+					this.say("command_output", Terminal.compressTerminalOutput(line, terminalOutputLineLimit))
+				}
+			},
+			onCompleted: (output) => {
+				result = output ?? ""
+				completed = true
+			},
+			onShellExecutionComplete: (details) => {
+				exitDetails = details
+			},
+			onNoShellIntegration: async (message) => {
+				await this.say("shell_integration_warning", message)
+			},
 		})
 
 		await process
@@ -1025,6 +1013,25 @@ export class Cline extends EventEmitter<ClineEvents> {
 		await delay(50)
 
 		result = Terminal.compressTerminalOutput(result, terminalOutputLineLimit)
+
+		// keep in case we need it to troubleshoot user issues, but this should be removed in the future
+		// if everything looks good:
+		console.debug(
+			"[execute_command status]",
+			JSON.stringify(
+				{
+					completed,
+					userFeedback,
+					hasResult: result.length > 0,
+					exitDetails,
+					terminalId: terminalInfo.id,
+					workingDir: workingDirInfo,
+					isTerminalBusy: terminalInfo.busy,
+				},
+				null,
+				2,
+			),
+		)
 
 		if (userFeedback) {
 			await this.say("user_feedback", userFeedback.text, userFeedback.images)
@@ -1665,9 +1672,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 
 		const recentlyModifiedFiles = this.fileContextTracker.getAndClearCheckpointPossibleFile()
+
 		if (recentlyModifiedFiles.length > 0) {
-			// TODO: we can track what file changes were made and only checkpoint those files, this will be save storage
-			this.checkpointSave()
+			// TODO: We can track what file changes were made and only
+			// checkpoint those files, this will be save storage.
+			await this.checkpointSave()
 		}
 
 		/*
@@ -1743,6 +1752,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 						...formatResponse.imageBlocks(images),
 					],
 				)
+
+				// Track consecutive mistake errors in telemetry
+				telemetryService.captureConsecutiveMistakeError(this.taskId)
 			}
 			this.consecutiveMistakeCount = 0
 		}
@@ -2309,6 +2321,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		const {
 			mode,
 			customModes,
+			apiModelId,
 			customModePrompts,
 			experiments = {} as Record<ExperimentId, boolean>,
 			customInstructions: globalCustomInstructions,
@@ -2323,6 +2336,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		details += `\n\n# Current Mode\n`
 		details += `<slug>${currentMode}</slug>\n`
 		details += `<name>${modeDetails.name}</name>\n`
+		details += `<model>${apiModelId}</model>\n`
 		if (Experiments.isEnabled(experiments ?? {}, EXPERIMENT_IDS.POWER_STEERING)) {
 			details += `<role>${modeDetails.roleDefinition}</role>\n`
 			if (modeDetails.customInstructions) {
@@ -2377,6 +2391,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 			return this.checkpointService
 		}
 
+		if (this.checkpointServiceInitializing) {
+			console.log("[Cline#getCheckpointService] checkpoint service is still initializing")
+			return undefined
+		}
+
 		const log = (message: string) => {
 			console.log(message)
 
@@ -2387,11 +2406,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 			}
 		}
 
+		console.log("[Cline#getCheckpointService] initializing checkpoints service")
+
 		try {
 			const workspaceDir = getWorkspacePath()
 
 			if (!workspaceDir) {
-				log("[Cline#initializeCheckpoints] workspace folder not found, disabling checkpoints")
+				log("[Cline#getCheckpointService] workspace folder not found, disabling checkpoints")
 				this.enableCheckpoints = false
 				return undefined
 			}
@@ -2399,7 +2420,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			const globalStorageDir = this.providerRef.deref()?.context.globalStorageUri.fsPath
 
 			if (!globalStorageDir) {
-				log("[Cline#initializeCheckpoints] globalStorageDir not found, disabling checkpoints")
+				log("[Cline#getCheckpointService] globalStorageDir not found, disabling checkpoints")
 				this.enableCheckpoints = false
 				return undefined
 			}
@@ -2411,28 +2432,26 @@ export class Cline extends EventEmitter<ClineEvents> {
 				log,
 			}
 
-			// Only `task` is supported at the moment until we figure out how
-			// to fully isolate the `workspace` variant.
-			// const service =
-			// 	this.checkpointStorage === "task"
-			// 		? RepoPerTaskCheckpointService.create(options)
-			// 		: RepoPerWorkspaceCheckpointService.create(options)
-
 			const service = RepoPerTaskCheckpointService.create(options)
 
+			this.checkpointServiceInitializing = true
+
 			service.on("initialize", () => {
+				log("[Cline#getCheckpointService] service initialized")
+
 				try {
 					const isCheckpointNeeded =
 						typeof this.clineMessages.find(({ say }) => say === "checkpoint_saved") === "undefined"
 
 					this.checkpointService = service
+					this.checkpointServiceInitializing = false
 
 					if (isCheckpointNeeded) {
-						log("[Cline#initializeCheckpoints] no checkpoints found, saving initial checkpoint")
+						log("[Cline#getCheckpointService] no checkpoints found, saving initial checkpoint")
 						this.checkpointSave()
 					}
 				} catch (err) {
-					log("[Cline#initializeCheckpoints] caught error in on('initialize'), disabling checkpoints")
+					log("[Cline#getCheckpointService] caught error in on('initialize'), disabling checkpoints")
 					this.enableCheckpoints = false
 				}
 			})
@@ -2442,21 +2461,23 @@ export class Cline extends EventEmitter<ClineEvents> {
 					this.providerRef.deref()?.postMessageToWebview({ type: "currentCheckpointUpdated", text: to })
 
 					this.say("checkpoint_saved", to, undefined, undefined, { isFirst, from, to }).catch((err) => {
-						log("[Cline#initializeCheckpoints] caught unexpected error in say('checkpoint_saved')")
+						log("[Cline#getCheckpointService] caught unexpected error in say('checkpoint_saved')")
 						console.error(err)
 					})
 				} catch (err) {
 					log(
-						"[Cline#initializeCheckpoints] caught unexpected error in on('checkpoint'), disabling checkpoints",
+						"[Cline#getCheckpointService] caught unexpected error in on('checkpoint'), disabling checkpoints",
 					)
 					console.error(err)
 					this.enableCheckpoints = false
 				}
 			})
 
+			log("[Cline#getCheckpointService] initializing shadow git")
+
 			service.initShadowGit().catch((err) => {
 				log(
-					`[Cline#initializeCheckpoints] caught unexpected error in initShadowGit, disabling checkpoints (${err.message})`,
+					`[Cline#getCheckpointService] caught unexpected error in initShadowGit, disabling checkpoints (${err.message})`,
 				)
 				console.error(err)
 				this.enableCheckpoints = false
@@ -2464,7 +2485,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 			return service
 		} catch (err) {
-			log("[Cline#initializeCheckpoints] caught unexpected error, disabling checkpoints")
+			log("[Cline#getCheckpointService] caught unexpected error, disabling checkpoints")
 			this.enableCheckpoints = false
 			return undefined
 		}
@@ -2488,6 +2509,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 				},
 				{ interval, timeout },
 			)
+
 			return service
 		} catch (err) {
 			return undefined
@@ -2549,7 +2571,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 	}
 
-	public checkpointSave() {
+	public async checkpointSave() {
 		const service = this.getCheckpointService()
 
 		if (!service) {
@@ -2560,6 +2582,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			this.providerRef
 				.deref()
 				?.log("[checkpointSave] checkpoints didn't initialize in time, disabling checkpoints for this task")
+
 			this.enableCheckpoints = false
 			return
 		}
@@ -2567,7 +2590,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		telemetryService.captureCheckpointCreated(this.taskId)
 
 		// Start the checkpoint process in the background.
-		service.saveCheckpoint(`Task: ${this.taskId}, Time: ${Date.now()}`).catch((err) => {
+		return service.saveCheckpoint(`Task: ${this.taskId}, Time: ${Date.now()}`).catch((err) => {
 			console.error("[Cline#checkpointSave] caught unexpected error, disabling checkpoints", err)
 			this.enableCheckpoints = false
 		})

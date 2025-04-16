@@ -171,49 +171,7 @@
 	"autoApprove": {
 		"title": "自动批准:",
 		"none": "无",
-		"description": "允许直接执行操作无需确认，请谨慎启用。前往<settingsLink>设置</settingsLink>调整",
-		"actions": {
-			"readFiles": {
-				"label": "读取文件和目录",
-				"shortName": "读取",
-				"description": "允许读取系统中的文件内容"
-			},
-			"editFiles": {
-				"label": "编辑文件",
-				"shortName": "编辑",
-				"description": "允许修改系统中的文件"
-			},
-			"executeCommands": {
-				"label": "执行命令",
-				"shortName": "命令",
-				"description": "允许执行终端命令。"
-			},
-			"useBrowser": {
-				"label": "浏览器",
-				"shortName": "浏览器",
-				"description": "允许通过无头浏览器访问网站"
-			},
-			"useMcp": {
-				"label": "MCP服务",
-				"shortName": "MCP",
-				"description": "允许访问配置好的 MCP 服务（可能涉及文件系统或API操作）"
-			},
-			"switchModes": {
-				"label": "切换模式",
-				"shortName": "模式",
-				"description": "允许自动切换工作模式"
-			},
-			"subtasks": {
-				"label": "创建和完成子任务",
-				"shortName": "子任务",
-				"description": "允许自主创建和管理子任务"
-			},
-			"retryRequests": {
-				"label": "重试失败的请求",
-				"shortName": "重试",
-				"description": "API请求失败时自动重试"
-			}
-		}
+		"description": "允许直接执行操作无需确认，请谨慎启用。前往<settingsLink>设置</settingsLink>调整"
 	},
 	"reasoning": {
 		"thinking": "思考中",
@@ -223,10 +181,14 @@
 		"copyToInput": "复制到输入框（或按住Shift点击）"
 	},
 	"announcement": {
-		"title": "允许任务拆分",
-		"description": "将复杂任务拆分到不同模式（编程/架构/调试）执行",
-		"learnMore": "了解更多 →",
-		"hideButton": "隐藏公告"
+		"title": "🎉 Roo Code 3.12 已发布",
+		"description": "Roo Code 3.12 带来基于您反馈的新功能和改进。",
+		"whatsNew": "新特性",
+		"feature1": "<bold>Grok 支持</bold>: 添加 xAI 提供商并在 OpenRouter 上提供 Grok 推理强度选项",
+		"feature2": "<bold>差异编辑改进</bold>: 支持按配置文件设置和改进字符串规范化以减少错误",
+		"feature3": "<bold>检查点增强</bold>: 更快速可靠的检查点功能",
+		"hideButton": "隐藏公告",
+		"detailsDiscussLinks": "在 <discordLink>Discord</discordLink> 和 <redditLink>Reddit</redditLink> 获取更多详情并参与讨论 🚀"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo想使用浏览器:",

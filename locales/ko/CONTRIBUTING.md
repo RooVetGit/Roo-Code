@@ -101,13 +101,13 @@ git clone https://github.com/RooVetGit/Roo-Code.git
 2. **의존성 설치**:
 
 ```sh
-npm run install:all
+pnpm install
 ```
 
 3. **웹뷰 시작(HMR이 있는 Vite/React 앱)**:
 
 ```sh
-npm run dev
+pnpm dev
 ```
 
 4. **디버깅**:
@@ -118,7 +118,7 @@ npm run dev
 또는 .vsix를 빌드하고 VSCode에 직접 설치할 수 있습니다:
 
 ```sh
-npm run build
+pnpm build
 ```
 
 `bin/` 디렉토리에 `.vsix` 파일이 나타나며 다음 명령으로 설치할 수 있습니다:

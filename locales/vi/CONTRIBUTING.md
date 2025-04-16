@@ -100,13 +100,13 @@ git clone https://github.com/RooVetGit/Roo-Code.git
 2. **Cài đặt các phụ thuộc**:
 
 ```sh
-npm run install:all
+pnpm install
 ```
 
 3. **Khởi động webview (ứng dụng Vite/React với HMR)**:
 
 ```sh
-npm run dev
+pnpm dev
 ```
 
 4. **Gỡ lỗi**:
@@ -117,7 +117,7 @@ Các thay đổi đối với webview sẽ xuất hiện ngay lập tức. Các 
 Hoặc bạn có thể xây dựng một tệp .vsix và cài đặt nó trực tiếp trong VSCode:
 
 ```sh
-npm run build
+pnpm build
 ```
 
 Một tệp `.vsix` sẽ xuất hiện trong thư mục `bin/` có thể được cài đặt bằng:

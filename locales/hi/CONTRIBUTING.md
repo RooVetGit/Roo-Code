@@ -100,13 +100,13 @@ git clone https://github.com/RooVetGit/Roo-Code.git
 2. **डिपेंडेंसीज इंस्टॉल** करें:
 
 ```sh
-npm run install:all
+pnpm install
 ```
 
 3. **वेबव्यू शुरू करें (Vite/React ऐप HMR के साथ)**:
 
 ```sh
-npm run dev
+pnpm dev
 ```
 
 4. **डिबग**:
@@ -117,7 +117,7 @@ npm run dev
 वैकल्पिक रूप से आप .vsix बना सकते हैं और इसे सीधे VSCode में इंस्टॉल कर सकते हैं:
 
 ```sh
-npm run build
+pnpm build
 ```
 
 `bin/` डायरेक्टरी में एक `.vsix` फ़ाइल दिखाई देगी जिसे इस कमांड से इंस्टॉल किया जा सकता है:
