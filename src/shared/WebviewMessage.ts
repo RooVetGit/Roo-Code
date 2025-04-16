@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { ApiConfiguration, ApiProvider } from "./api"
+import { ApiConfiguration, ApiProvider } from "api-providers/shared"
 import { Mode, PromptComponent, ModeConfig } from "./modes"
 
 export type ClineAskResponse = "yesButtonClicked" | "noButtonClicked" | "messageResponse"

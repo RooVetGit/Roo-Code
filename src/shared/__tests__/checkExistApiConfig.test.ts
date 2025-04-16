@@ -1,5 +1,5 @@
 import { checkExistKey } from "../checkExistApiConfig"
-import { ApiConfiguration } from "../api"
+import { ApiConfiguration } from "api-providers/shared"
 
 describe("checkExistKey", () => {
 	it("should return false for undefined config", () => {

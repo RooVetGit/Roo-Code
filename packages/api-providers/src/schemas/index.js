@@ -1,0 +1,678 @@
+// Updates to this file will automatically propgate to src/exports/types.ts
+// via a pre-commit hook. If you want to update the types before committing you
+// can run `npm run generate-types`.
+import { z } from "zod"
+/**
+ * ProviderName
+ */
+export const providerNames = [
+	"anthropic",
+	"glama",
+	"openrouter",
+	"bedrock",
+	"vertex",
+	"openai",
+	"ollama",
+	"vscode-lm",
+	"lmstudio",
+	"gemini",
+	"openai-native",
+	"mistral",
+	"deepseek",
+	"unbound",
+	"requesty",
+	"human-relay",
+	"fake-ai",
+]
+export const providerNamesSchema = z.enum(providerNames)
+/**
+ * ToolGroup
+ */
+export const toolGroups = ["read", "edit", "browser", "command", "mcp", "modes"]
+export const toolGroupsSchema = z.enum(toolGroups)
+/**
+ * CheckpointStorage
+ */
+export const checkpointStorages = ["task", "workspace"]
+export const checkpointStoragesSchema = z.enum(checkpointStorages)
+export const isCheckpointStorage = (value) => checkpointStorages.includes(value)
+/**
+ * Language
+ */
+export const languages = [
+	"ca",
+	"de",
+	"en",
+	"es",
+	"fr",
+	"hi",
+	"it",
+	"ja",
+	"ko",
+	"pl",
+	"pt-BR",
+	"tr",
+	"vi",
+	"zh-CN",
+	"zh-TW",
+]
+export const languagesSchema = z.enum(languages)
+export const isLanguage = (value) => languages.includes(value)
+/**
+ * TelemetrySetting
+ */
+export const telemetrySettings = ["unset", "enabled", "disabled"]
+export const telemetrySettingsSchema = z.enum(telemetrySettings)
+/**
+ * ReasoningEffort
+ */
+export const reasoningEfforts = ["low", "medium", "high"]
+export const reasoningEffortsSchema = z.enum(reasoningEfforts)
+/**
+ * ModelInfo
+ */
+export const modelInfoSchema = z.object({
+	maxTokens: z.number().nullish(),
+	contextWindow: z.number(),
+	supportsImages: z.boolean().optional(),
+	supportsComputerUse: z.boolean().optional(),
+	supportsPromptCache: z.boolean(),
+	inputPrice: z.number().optional(),
+	outputPrice: z.number().optional(),
+	cacheWritesPrice: z.number().optional(),
+	cacheReadsPrice: z.number().optional(),
+	description: z.string().optional(),
+	reasoningEffort: reasoningEffortsSchema.optional(),
+	thinking: z.boolean().optional(),
+	minTokensPerCachePoint: z.number().optional(),
+	maxCachePoints: z.number().optional(),
+	cachableFields: z.array(z.string()).optional(),
+})
+/**
+ * ApiConfigMeta
+ */
+export const apiConfigMetaSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	apiProvider: providerNamesSchema.optional(),
+})
+/**
+ * HistoryItem
+ */
+export const historyItemSchema = z.object({
+	id: z.string(),
+	number: z.number(),
+	ts: z.number(),
+	task: z.string(),
+	tokensIn: z.number(),
+	tokensOut: z.number(),
+	cacheWrites: z.number().optional(),
+	cacheReads: z.number().optional(),
+	totalCost: z.number(),
+	size: z.number().optional(),
+	workspace: z.string().optional(),
+})
+/**
+ * GroupOptions
+ */
+export const groupOptionsSchema = z.object({
+	fileRegex: z
+		.string()
+		.optional()
+		.refine(
+			(pattern) => {
+				if (!pattern) {
+					return true // Optional, so empty is valid.
+				}
+				try {
+					new RegExp(pattern)
+					return true
+				} catch {
+					return false
+				}
+			},
+			{ message: "Invalid regular expression pattern" },
+		),
+	description: z.string().optional(),
+})
+/**
+ * GroupEntry
+ */
+export const groupEntrySchema = z.union([toolGroupsSchema, z.tuple([toolGroupsSchema, groupOptionsSchema])])
+/**
+ * ModeConfig
+ */
+const groupEntryArraySchema = z.array(groupEntrySchema).refine(
+	(groups) => {
+		const seen = new Set()
+		return groups.every((group) => {
+			// For tuples, check the group name (first element).
+			const groupName = Array.isArray(group) ? group[0] : group
+			if (seen.has(groupName)) {
+				return false
+			}
+			seen.add(groupName)
+			return true
+		})
+	},
+	{ message: "Duplicate groups are not allowed" },
+)
+export const modeConfigSchema = z.object({
+	slug: z.string().regex(/^[a-zA-Z0-9-]+$/, "Slug must contain only letters numbers and dashes"),
+	name: z.string().min(1, "Name is required"),
+	roleDefinition: z.string().min(1, "Role definition is required"),
+	customInstructions: z.string().optional(),
+	groups: groupEntryArraySchema,
+	source: z.enum(["global", "project"]).optional(),
+})
+/**
+ * CustomModesSettings
+ */
+export const customModesSettingsSchema = z.object({
+	customModes: z.array(modeConfigSchema).refine(
+		(modes) => {
+			const slugs = new Set()
+			return modes.every((mode) => {
+				if (slugs.has(mode.slug)) {
+					return false
+				}
+				slugs.add(mode.slug)
+				return true
+			})
+		},
+		{
+			message: "Duplicate mode slugs are not allowed",
+		},
+	),
+})
+/**
+ * PromptComponent
+ */
+export const promptComponentSchema = z.object({
+	roleDefinition: z.string().optional(),
+	customInstructions: z.string().optional(),
+})
+/**
+ * CustomModePrompts
+ */
+export const customModePromptsSchema = z.record(z.string(), promptComponentSchema.optional())
+/**
+ * CustomSupportPrompts
+ */
+export const customSupportPromptsSchema = z.record(z.string(), z.string().optional())
+/**
+ * ExperimentId
+ */
+export const experimentIds = ["search_and_replace", "insert_content", "powerSteering"]
+export const experimentIdsSchema = z.enum(experimentIds)
+/**
+ * Experiments
+ */
+const experimentsSchema = z.object({
+	search_and_replace: z.boolean(),
+	insert_content: z.boolean(),
+	powerSteering: z.boolean(),
+})
+/**
+ * ProviderSettings
+ */
+export const providerSettingsSchema = z.object({
+	apiProvider: providerNamesSchema.optional(),
+	// Anthropic
+	apiModelId: z.string().optional(),
+	apiKey: z.string().optional(),
+	anthropicBaseUrl: z.string().optional(),
+	anthropicUseAuthToken: z.boolean().optional(),
+	// Glama
+	glamaModelId: z.string().optional(),
+	glamaModelInfo: modelInfoSchema.nullish(),
+	glamaApiKey: z.string().optional(),
+	// OpenRouter
+	openRouterApiKey: z.string().optional(),
+	openRouterModelId: z.string().optional(),
+	openRouterModelInfo: modelInfoSchema.nullish(),
+	openRouterBaseUrl: z.string().optional(),
+	openRouterSpecificProvider: z.string().optional(),
+	openRouterUseMiddleOutTransform: z.boolean().optional(),
+	// Amazon Bedrock
+	awsAccessKey: z.string().optional(),
+	awsSecretKey: z.string().optional(),
+	awsSessionToken: z.string().optional(),
+	awsRegion: z.string().optional(),
+	awsUseCrossRegionInference: z.boolean().optional(),
+	awsUsePromptCache: z.boolean().optional(),
+	awspromptCacheId: z.string().optional(),
+	awsProfile: z.string().optional(),
+	awsUseProfile: z.boolean().optional(),
+	awsCustomArn: z.string().optional(),
+	// Google Vertex
+	vertexKeyFile: z.string().optional(),
+	vertexJsonCredentials: z.string().optional(),
+	vertexProjectId: z.string().optional(),
+	vertexRegion: z.string().optional(),
+	// OpenAI
+	openAiBaseUrl: z.string().optional(),
+	openAiApiKey: z.string().optional(),
+	openAiHostHeader: z.string().optional(),
+	openAiLegacyFormat: z.boolean().optional(),
+	openAiR1FormatEnabled: z.boolean().optional(),
+	openAiModelId: z.string().optional(),
+	openAiCustomModelInfo: modelInfoSchema.nullish(),
+	openAiUseAzure: z.boolean().optional(),
+	azureApiVersion: z.string().optional(),
+	openAiStreamingEnabled: z.boolean().optional(),
+	// Ollama
+	ollamaModelId: z.string().optional(),
+	ollamaBaseUrl: z.string().optional(),
+	// VS Code LM
+	vsCodeLmModelSelector: z
+		.object({
+			vendor: z.string().optional(),
+			family: z.string().optional(),
+			version: z.string().optional(),
+			id: z.string().optional(),
+		})
+		.optional(),
+	// LM Studio
+	lmStudioModelId: z.string().optional(),
+	lmStudioBaseUrl: z.string().optional(),
+	lmStudioDraftModelId: z.string().optional(),
+	lmStudioSpeculativeDecodingEnabled: z.boolean().optional(),
+	// Gemini
+	geminiApiKey: z.string().optional(),
+	googleGeminiBaseUrl: z.string().optional(),
+	// OpenAI Native
+	openAiNativeApiKey: z.string().optional(),
+	// Mistral
+	mistralApiKey: z.string().optional(),
+	mistralCodestralUrl: z.string().optional(),
+	// DeepSeek
+	deepSeekBaseUrl: z.string().optional(),
+	deepSeekApiKey: z.string().optional(),
+	// Unbound
+	unboundApiKey: z.string().optional(),
+	unboundModelId: z.string().optional(),
+	unboundModelInfo: modelInfoSchema.nullish(),
+	// Requesty
+	requestyApiKey: z.string().optional(),
+	requestyModelId: z.string().optional(),
+	requestyModelInfo: modelInfoSchema.nullish(),
+	// Claude 3.7 Sonnet Thinking
+	modelMaxTokens: z.number().optional(),
+	modelMaxThinkingTokens: z.number().optional(),
+	// Generic
+	includeMaxTokens: z.boolean().optional(),
+	modelTemperature: z.number().nullish(),
+	reasoningEffort: reasoningEffortsSchema.optional(),
+	rateLimitSeconds: z.number().optional(),
+	diffEnabled: z.boolean().optional(),
+	fuzzyMatchThreshold: z.number().optional(),
+	// Fake AI
+	fakeAi: z.unknown().optional(),
+})
+const providerSettingsRecord = {
+	apiProvider: undefined,
+	// Anthropic
+	apiModelId: undefined,
+	apiKey: undefined,
+	anthropicBaseUrl: undefined,
+	anthropicUseAuthToken: undefined,
+	// Glama
+	glamaModelId: undefined,
+	glamaModelInfo: undefined,
+	glamaApiKey: undefined,
+	// OpenRouter
+	openRouterApiKey: undefined,
+	openRouterModelId: undefined,
+	openRouterModelInfo: undefined,
+	openRouterBaseUrl: undefined,
+	openRouterSpecificProvider: undefined,
+	openRouterUseMiddleOutTransform: undefined,
+	// Amazon Bedrock
+	awsAccessKey: undefined,
+	awsSecretKey: undefined,
+	awsSessionToken: undefined,
+	awsRegion: undefined,
+	awsUseCrossRegionInference: undefined,
+	awsUsePromptCache: undefined,
+	awspromptCacheId: undefined,
+	awsProfile: undefined,
+	awsUseProfile: undefined,
+	awsCustomArn: undefined,
+	// Google Vertex
+	vertexKeyFile: undefined,
+	vertexJsonCredentials: undefined,
+	vertexProjectId: undefined,
+	vertexRegion: undefined,
+	// OpenAI
+	openAiBaseUrl: undefined,
+	openAiApiKey: undefined,
+	openAiHostHeader: undefined,
+	openAiLegacyFormat: undefined,
+	openAiR1FormatEnabled: undefined,
+	openAiModelId: undefined,
+	openAiCustomModelInfo: undefined,
+	openAiUseAzure: undefined,
+	azureApiVersion: undefined,
+	openAiStreamingEnabled: undefined,
+	// Ollama
+	ollamaModelId: undefined,
+	ollamaBaseUrl: undefined,
+	// VS Code LM
+	vsCodeLmModelSelector: undefined,
+	lmStudioModelId: undefined,
+	lmStudioBaseUrl: undefined,
+	lmStudioDraftModelId: undefined,
+	lmStudioSpeculativeDecodingEnabled: undefined,
+	// Gemini
+	geminiApiKey: undefined,
+	googleGeminiBaseUrl: undefined,
+	// OpenAI Native
+	openAiNativeApiKey: undefined,
+	// Mistral
+	mistralApiKey: undefined,
+	mistralCodestralUrl: undefined,
+	// DeepSeek
+	deepSeekBaseUrl: undefined,
+	deepSeekApiKey: undefined,
+	// Unbound
+	unboundApiKey: undefined,
+	unboundModelId: undefined,
+	unboundModelInfo: undefined,
+	// Requesty
+	requestyApiKey: undefined,
+	requestyModelId: undefined,
+	requestyModelInfo: undefined,
+	// Claude 3.7 Sonnet Thinking
+	modelMaxTokens: undefined,
+	modelMaxThinkingTokens: undefined,
+	// Generic
+	includeMaxTokens: undefined,
+	modelTemperature: undefined,
+	reasoningEffort: undefined,
+	rateLimitSeconds: undefined,
+	diffEnabled: undefined,
+	fuzzyMatchThreshold: undefined,
+	// Fake AI
+	fakeAi: undefined,
+}
+export const PROVIDER_SETTINGS_KEYS = Object.keys(providerSettingsRecord)
+/**
+ * GlobalSettings
+ */
+export const globalSettingsSchema = z.object({
+	currentApiConfigName: z.string().optional(),
+	listApiConfigMeta: z.array(apiConfigMetaSchema).optional(),
+	pinnedApiConfigs: z.record(z.string(), z.boolean()).optional(),
+	lastShownAnnouncementId: z.string().optional(),
+	customInstructions: z.string().optional(),
+	taskHistory: z.array(historyItemSchema).optional(),
+	autoApprovalEnabled: z.boolean().optional(),
+	alwaysAllowReadOnly: z.boolean().optional(),
+	alwaysAllowReadOnlyOutsideWorkspace: z.boolean().optional(),
+	alwaysAllowWrite: z.boolean().optional(),
+	alwaysAllowWriteOutsideWorkspace: z.boolean().optional(),
+	writeDelayMs: z.number().optional(),
+	alwaysAllowBrowser: z.boolean().optional(),
+	alwaysApproveResubmit: z.boolean().optional(),
+	requestDelaySeconds: z.number().optional(),
+	alwaysAllowMcp: z.boolean().optional(),
+	alwaysAllowModeSwitch: z.boolean().optional(),
+	alwaysAllowSubtasks: z.boolean().optional(),
+	alwaysAllowExecute: z.boolean().optional(),
+	allowedCommands: z.array(z.string()).optional(),
+	browserToolEnabled: z.boolean().optional(),
+	browserViewportSize: z.string().optional(),
+	screenshotQuality: z.number().optional(),
+	remoteBrowserEnabled: z.boolean().optional(),
+	remoteBrowserHost: z.string().optional(),
+	cachedChromeHostUrl: z.string().optional(),
+	enableCheckpoints: z.boolean().optional(),
+	checkpointStorage: checkpointStoragesSchema.optional(),
+	showGreeting: z.boolean().optional(),
+	ttsEnabled: z.boolean().optional(),
+	ttsSpeed: z.number().optional(),
+	soundEnabled: z.boolean().optional(),
+	soundVolume: z.number().optional(),
+	maxOpenTabsContext: z.number().optional(),
+	maxWorkspaceFiles: z.number().optional(),
+	showRooIgnoredFiles: z.boolean().optional(),
+	maxReadFileLine: z.number().optional(),
+	terminalOutputLineLimit: z.number().optional(),
+	terminalShellIntegrationTimeout: z.number().optional(),
+	terminalCommandDelay: z.number().optional(),
+	terminalPowershellCounter: z.boolean().optional(),
+	terminalZshClearEolMark: z.boolean().optional(),
+	terminalZshOhMy: z.boolean().optional(),
+	terminalZshP10k: z.boolean().optional(),
+	terminalZdotdir: z.boolean().optional(),
+	rateLimitSeconds: z.number().optional(),
+	diffEnabled: z.boolean().optional(),
+	fuzzyMatchThreshold: z.number().optional(),
+	experiments: experimentsSchema.optional(),
+	language: languagesSchema.optional(),
+	telemetrySetting: telemetrySettingsSchema.optional(),
+	mcpEnabled: z.boolean().optional(),
+	enableMcpServerCreation: z.boolean().optional(),
+	mode: z.string().optional(),
+	modeApiConfigs: z.record(z.string(), z.string()).optional(),
+	customModes: z.array(modeConfigSchema).optional(),
+	customModePrompts: customModePromptsSchema.optional(),
+	customSupportPrompts: customSupportPromptsSchema.optional(),
+	enhancementApiConfigId: z.string().optional(),
+})
+const globalSettingsRecord = {
+	currentApiConfigName: undefined,
+	listApiConfigMeta: undefined,
+	pinnedApiConfigs: undefined,
+	lastShownAnnouncementId: undefined,
+	customInstructions: undefined,
+	taskHistory: undefined,
+	autoApprovalEnabled: undefined,
+	alwaysAllowReadOnly: undefined,
+	alwaysAllowReadOnlyOutsideWorkspace: undefined,
+	alwaysAllowWrite: undefined,
+	alwaysAllowWriteOutsideWorkspace: undefined,
+	writeDelayMs: undefined,
+	alwaysAllowBrowser: undefined,
+	alwaysApproveResubmit: undefined,
+	requestDelaySeconds: undefined,
+	alwaysAllowMcp: undefined,
+	alwaysAllowModeSwitch: undefined,
+	alwaysAllowSubtasks: undefined,
+	alwaysAllowExecute: undefined,
+	allowedCommands: undefined,
+	browserToolEnabled: undefined,
+	browserViewportSize: undefined,
+	screenshotQuality: undefined,
+	remoteBrowserEnabled: undefined,
+	remoteBrowserHost: undefined,
+	enableCheckpoints: undefined,
+	checkpointStorage: undefined,
+	showGreeting: undefined,
+	ttsEnabled: undefined,
+	ttsSpeed: undefined,
+	soundEnabled: undefined,
+	soundVolume: undefined,
+	maxOpenTabsContext: undefined,
+	maxWorkspaceFiles: undefined,
+	showRooIgnoredFiles: undefined,
+	maxReadFileLine: undefined,
+	terminalOutputLineLimit: undefined,
+	terminalShellIntegrationTimeout: undefined,
+	terminalCommandDelay: undefined,
+	terminalPowershellCounter: undefined,
+	terminalZshClearEolMark: undefined,
+	terminalZshOhMy: undefined,
+	terminalZshP10k: undefined,
+	terminalZdotdir: undefined,
+	rateLimitSeconds: undefined,
+	diffEnabled: undefined,
+	fuzzyMatchThreshold: undefined,
+	experiments: undefined,
+	language: undefined,
+	telemetrySetting: undefined,
+	mcpEnabled: undefined,
+	enableMcpServerCreation: undefined,
+	mode: undefined,
+	modeApiConfigs: undefined,
+	customModes: undefined,
+	customModePrompts: undefined,
+	customSupportPrompts: undefined,
+	enhancementApiConfigId: undefined,
+	cachedChromeHostUrl: undefined,
+}
+export const GLOBAL_SETTINGS_KEYS = Object.keys(globalSettingsRecord)
+/**
+ * RooCodeSettings
+ */
+export const rooCodeSettingsSchema = providerSettingsSchema.merge(globalSettingsSchema)
+const secretStateRecord = {
+	apiKey: undefined,
+	glamaApiKey: undefined,
+	openRouterApiKey: undefined,
+	awsAccessKey: undefined,
+	awsSecretKey: undefined,
+	awsSessionToken: undefined,
+	openAiApiKey: undefined,
+	geminiApiKey: undefined,
+	openAiNativeApiKey: undefined,
+	deepSeekApiKey: undefined,
+	mistralApiKey: undefined,
+	unboundApiKey: undefined,
+	requestyApiKey: undefined,
+}
+export const SECRET_STATE_KEYS = Object.keys(secretStateRecord)
+export const isSecretStateKey = (key) => SECRET_STATE_KEYS.includes(key)
+export const GLOBAL_STATE_KEYS = [...GLOBAL_SETTINGS_KEYS, ...PROVIDER_SETTINGS_KEYS].filter(
+	(key) => !SECRET_STATE_KEYS.includes(key),
+)
+export const isGlobalStateKey = (key) => GLOBAL_STATE_KEYS.includes(key)
+/**
+ * ClineAsk
+ */
+export const clineAsks = [
+	"followup",
+	"command",
+	"command_output",
+	"completion_result",
+	"tool",
+	"api_req_failed",
+	"resume_task",
+	"resume_completed_task",
+	"mistake_limit_reached",
+	"browser_action_launch",
+	"use_mcp_server",
+	"finishTask",
+]
+export const clineAskSchema = z.enum(clineAsks)
+// ClineSay
+export const clineSays = [
+	"task",
+	"error",
+	"api_req_started",
+	"api_req_finished",
+	"api_req_retried",
+	"api_req_retry_delayed",
+	"api_req_deleted",
+	"text",
+	"reasoning",
+	"completion_result",
+	"user_feedback",
+	"user_feedback_diff",
+	"command_output",
+	"tool",
+	"shell_integration_warning",
+	"browser_action",
+	"browser_action_result",
+	"command",
+	"mcp_server_request_started",
+	"mcp_server_response",
+	"new_task_started",
+	"new_task",
+	"subtask_result",
+	"checkpoint_saved",
+	"rooignore_error",
+	"diff_error",
+]
+export const clineSaySchema = z.enum(clineSays)
+/**
+ * ToolProgressStatus
+ */
+export const toolProgressStatusSchema = z.object({
+	icon: z.string().optional(),
+	text: z.string().optional(),
+})
+/**
+ * ClineMessage
+ */
+export const clineMessageSchema = z.object({
+	ts: z.number(),
+	type: z.union([z.literal("ask"), z.literal("say")]),
+	ask: clineAskSchema.optional(),
+	say: clineSaySchema.optional(),
+	text: z.string().optional(),
+	images: z.array(z.string()).optional(),
+	partial: z.boolean().optional(),
+	reasoning: z.string().optional(),
+	conversationHistoryIndex: z.number().optional(),
+	checkpoint: z.record(z.string(), z.unknown()).optional(),
+	progressStatus: toolProgressStatusSchema.optional(),
+})
+/**
+ * TokenUsage
+ */
+export const tokenUsageSchema = z.object({
+	totalTokensIn: z.number(),
+	totalTokensOut: z.number(),
+	totalCacheWrites: z.number().optional(),
+	totalCacheReads: z.number().optional(),
+	totalCost: z.number(),
+	contextTokens: z.number(),
+})
+/**
+ * RooCodeEvent
+ */
+export var RooCodeEventName
+;(function (RooCodeEventName) {
+	RooCodeEventName["Message"] = "message"
+	RooCodeEventName["TaskCreated"] = "taskCreated"
+	RooCodeEventName["TaskStarted"] = "taskStarted"
+	RooCodeEventName["TaskModeSwitched"] = "taskModeSwitched"
+	RooCodeEventName["TaskPaused"] = "taskPaused"
+	RooCodeEventName["TaskUnpaused"] = "taskUnpaused"
+	RooCodeEventName["TaskAskResponded"] = "taskAskResponded"
+	RooCodeEventName["TaskAborted"] = "taskAborted"
+	RooCodeEventName["TaskSpawned"] = "taskSpawned"
+	RooCodeEventName["TaskCompleted"] = "taskCompleted"
+	RooCodeEventName["TaskTokenUsageUpdated"] = "taskTokenUsageUpdated"
+})(RooCodeEventName || (RooCodeEventName = {}))
+export const rooCodeEventsSchema = z.object({
+	[RooCodeEventName.Message]: z.tuple([
+		z.object({
+			taskId: z.string(),
+			action: z.union([z.literal("created"), z.literal("updated")]),
+			message: clineMessageSchema,
+		}),
+	]),
+	[RooCodeEventName.TaskCreated]: z.tuple([z.string()]),
+	[RooCodeEventName.TaskStarted]: z.tuple([z.string()]),
+	[RooCodeEventName.TaskModeSwitched]: z.tuple([z.string(), z.string()]),
+	[RooCodeEventName.TaskPaused]: z.tuple([z.string()]),
+	[RooCodeEventName.TaskUnpaused]: z.tuple([z.string()]),
+	[RooCodeEventName.TaskAskResponded]: z.tuple([z.string()]),
+	[RooCodeEventName.TaskAborted]: z.tuple([z.string()]),
+	[RooCodeEventName.TaskSpawned]: z.tuple([z.string(), z.string()]),
+	[RooCodeEventName.TaskCompleted]: z.tuple([z.string(), tokenUsageSchema]),
+	[RooCodeEventName.TaskTokenUsageUpdated]: z.tuple([z.string(), tokenUsageSchema]),
+})
+export const typeDefinitions = [
+	{ schema: providerSettingsSchema, identifier: "ProviderSettings" },
+	{ schema: globalSettingsSchema, identifier: "GlobalSettings" },
+	{ schema: clineMessageSchema, identifier: "ClineMessage" },
+	{ schema: tokenUsageSchema, identifier: "TokenUsage" },
+	{ schema: rooCodeEventsSchema, identifier: "RooCodeEvents" },
+]
+// Also export as default for ESM compatibility
+export default { typeDefinitions }
+//# sourceMappingURL=index.js.map

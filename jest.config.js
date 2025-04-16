@@ -26,6 +26,7 @@ module.exports = {
 		// PowerShell tests are conditionally skipped in the test files themselves using the setupFilesAfterEnv
 	],
 	moduleNameMapper: {
+		"^api-providers/(.*)$": "<rootDir>/packages/api-providers/src/$1",
 		"^vscode$": "<rootDir>/src/__mocks__/vscode.js",
 		"@modelcontextprotocol/sdk$": "<rootDir>/src/__mocks__/@modelcontextprotocol/sdk/index.js",
 		"@modelcontextprotocol/sdk/(.*)": "<rootDir>/src/__mocks__/@modelcontextprotocol/sdk/$1",

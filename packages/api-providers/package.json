@@ -1,0 +1,26 @@
+{
+	"name": "api-providers",
+	"version": "1.0.0",
+	"main": "index.js",
+	"exports": {
+		".": "./dist/index.js",
+		"./shared": "./dist/shared/index.js"
+	},
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"description": "",
+	"dependencies": {
+		"@anthropic-ai/sdk": "^0.37.0",
+		"@anthropic-ai/vertex-sdk": "^0.7.0",
+		"@aws-sdk/client-bedrock-runtime": "^3.779.0",
+		"@aws-sdk/credential-providers": "^3.779.0",
+		"@google-cloud/vertexai": "^1.9.3",
+		"google-auth-library": "^9.0.0",
+		"axios": "^1.7.4",
+		"openai": "^4.78.1"
+	}
+}

@@ -1,5 +1,5 @@
 import { ApiConfiguration } from "../shared/api"
-import { buildApiHandler, SingleCompletionHandler } from "../api"
+import { buildApiHandler, SingleCompletionHandler } from "api-providers/api"
 
 /**
  * Enhances a prompt using the configured API without creating a full Cline instance or task history.

@@ -1,10 +1,10 @@
 import { singleCompletionHandler } from "../single-completion-handler"
 import { ApiConfiguration } from "../../shared/api"
-import { buildApiHandler, SingleCompletionHandler } from "../../api"
+import { buildApiHandler, SingleCompletionHandler } from "api-providers/api"
 import { supportPrompt } from "../../shared/support-prompt"
 
 // Mock the API handler
-jest.mock("../../api", () => ({
+jest.mock("api-providers/api", () => ({
 	buildApiHandler: jest.fn(),
 }))
 

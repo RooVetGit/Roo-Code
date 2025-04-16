@@ -176,6 +176,15 @@ const extensionConfig = {
 				build.onResolve({ filter: /^pkce-challenge$/ }, (args) => {
 					return { path: require.resolve("pkce-challenge/dist/index.browser.js") }
 				})
+				build.onResolve({ filter: /^api-providers(\/.*)?$/ }, (args) => {
+					const relPath = args.path.replace(/^api-providers/, "")
+					let absPath = path.join(__dirname, "packages", "api-providers", "src", relPath)
+					// If the path is a directory, resolve to index.ts
+					if (fs.existsSync(absPath) && fs.statSync(absPath).isDirectory()) {
+						absPath = path.join(absPath, "index.ts")
+					}
+					return { path: absPath }
+				})
 			},
 		},
 	],
