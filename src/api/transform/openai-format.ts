@@ -89,7 +89,7 @@ export function convertToOpenAiMessages(
 								}
 							}
 							return { type: "text", text: part.text }
-						}),
+						}).join("\n") ?? "",
 					})
 				}
 			} else if (anthropicMessage.role === "assistant") {
