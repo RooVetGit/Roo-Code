@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react"
 import { useEvent } from "react-use"
 import { ApiConfigMeta, ExtensionMessage, ExtensionState } from "../../../src/shared/ExtensionMessage"
+import { CommandRiskLevel } from "../../../src/schemas"
 import { ApiConfiguration } from "../../../src/shared/api"
 import { vscode } from "../utils/vscode"
 import { convertTextMateToHljs } from "../utils/textMateToHljs"
@@ -27,6 +28,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setAlwaysAllowWrite: (value: boolean) => void
 	setAlwaysAllowWriteOutsideWorkspace: (value: boolean) => void
 	setAlwaysAllowExecute: (value: boolean) => void
+	commandRiskLevel: CommandRiskLevel
+	setCommandRiskLevel: (value: CommandRiskLevel) => void
 	setAlwaysAllowBrowser: (value: boolean) => void
 	setAlwaysAllowMcp: (value: boolean) => void
 	setAlwaysAllowModeSwitch: (value: boolean) => void
@@ -135,6 +138,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		fuzzyMatchThreshold: 1.0,
 		language: "en", // Default language code
 		writeDelayMs: 1000,
+		commandRiskLevel: "none",
 		browserViewportSize: "900x600",
 		screenshotQuality: 75,
 		terminalOutputLineLimit: 500,
@@ -247,6 +251,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		theme,
 		mcpServers,
 		currentCheckpoint,
+		commandRiskLevel: state.commandRiskLevel ?? "none",
 		filePaths,
 		openedTabs,
 		soundVolume: state.soundVolume,
@@ -276,6 +281,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setAlwaysAllowMcp: (value) => setState((prevState) => ({ ...prevState, alwaysAllowMcp: value })),
 		setAlwaysAllowModeSwitch: (value) => setState((prevState) => ({ ...prevState, alwaysAllowModeSwitch: value })),
 		setAlwaysAllowSubtasks: (value) => setState((prevState) => ({ ...prevState, alwaysAllowSubtasks: value })),
+		setCommandRiskLevel: (value: CommandRiskLevel) =>
+			setState((prevState) => ({ ...prevState, commandRiskLevel: value })),
 		setShowAnnouncement: (value) => setState((prevState) => ({ ...prevState, shouldShowAnnouncement: value })),
 		setAllowedCommands: (value) => setState((prevState) => ({ ...prevState, allowedCommands: value })),
 		setSoundEnabled: (value) => setState((prevState) => ({ ...prevState, soundEnabled: value })),

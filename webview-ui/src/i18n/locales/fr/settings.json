@@ -34,6 +34,16 @@
 	},
 	"autoApprove": {
 		"description": "Permettre à Roo d'effectuer automatiquement des opérations sans requérir d'approbation. Activez ces paramètres uniquement si vous faites entièrement confiance à l'IA et que vous comprenez les risques de sécurité associés.",
+		"commandRiskLevel": {
+			"label": "Niveau de risque autorisé pour l'exécution automatique",
+			"description": "En plus des commandes autorisées statiquement ci-dessous, ce paramètre contrôle le niveau de risque autorisé pour l'exécution automatique des commandes. Le modèle d'IA évalue le risque pour chaque commande exécutée, vous devez donc faire confiance à l'IA pour suivre les règles formellement définies dans les instructions système. Chaque niveau supérieur inclut tous les niveaux précédents.",
+			"none": "Aucun : Aucune exécution évaluée par risque n'est autorisée",
+			"readOnly": "Lecture seule",
+			"reversibleChanges": "Changements réversibles : Une opération inverse est possible",
+			"complexChanges": "Changements complexes : L'annulation est difficile ou impossible, mais pas manifestement destructive",
+			"serviceInterruptingChanges": "Changements interrompant le service : Peut affecter la disponibilité ou l'accès à cet hôte",
+			"destructiveChanges": "Changements destructifs : Modification permanente avec perte de données attendue"
+		},
 		"readOnly": {
 			"label": "Lecture",
 			"description": "Lorsque cette option est activée, Roo affichera automatiquement le contenu des répertoires et lira les fichiers sans que vous ayez à cliquer sur le bouton Approuver.",

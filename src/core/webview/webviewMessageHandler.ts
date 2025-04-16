@@ -5,6 +5,7 @@ import * as vscode from "vscode"
 
 import { ClineProvider } from "./ClineProvider"
 import { Language, ApiConfigMeta } from "../../schemas"
+import { CommandRiskLevel } from "../../schemas"
 import { changeLanguage, t } from "../../i18n"
 import { ApiConfiguration } from "../../shared/api"
 import { supportPrompt } from "../../shared/support-prompt"
@@ -960,6 +961,11 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		case "maxReadFileLine":
 			await updateGlobalState("maxReadFileLine", message.value)
+			await provider.postStateToWebview()
+			break
+		case "commandRiskLevel":
+			const riskLevel = (message.text ?? "none") as CommandRiskLevel
+			await provider.contextProxy.updateGlobalState("commandRiskLevel", riskLevel)
 			await provider.postStateToWebview()
 			break
 		case "toggleApiConfigPin":

@@ -61,6 +61,7 @@ export const toolParamNames = [
 	"follow_up",
 	"task",
 	"size",
+	"risk",
 ] as const
 
 export type ToolParamName = (typeof toolParamNames)[number]
@@ -76,7 +77,7 @@ export interface ToolUse {
 export interface ExecuteCommandToolUse extends ToolUse {
 	name: "execute_command"
 	// Pick<Record<ToolParamName, string>, "command"> makes "command" required, but Partial<> makes it optional
-	params: Partial<Pick<Record<ToolParamName, string>, "command" | "cwd">>
+	params: Partial<Pick<Record<ToolParamName, string>, "command" | "cwd" | "risk">>
 }
 
 export interface ReadFileToolUse extends ToolUse {

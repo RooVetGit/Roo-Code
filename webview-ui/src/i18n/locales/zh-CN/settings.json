@@ -34,6 +34,16 @@
 	},
 	"autoApprove": {
 		"description": "允许 Roo 自动执行操作而无需批准。只有在您完全信任 AI 并了解相关安全风险的情况下才启用这些设置。",
+		"commandRiskLevel": {
+			"label": "允许自动执行的风险等级",
+			"description": "除了下方静态允许的命令外，此设置控制自动命令执行的允许风险等级。AI 模型会评估每个执行命令的风险，因此您必须信任 AI 会遵循系统指令中正式定义的规则。每个更高等级包含所有较低等级。",
+			"none": "无：不允许风险评估执行",
+			"readOnly": "只读",
+			"reversibleChanges": "可逆更改：可以执行反向操作",
+			"complexChanges": "复杂更改：撤销困难或不可能，但不会明显破坏系统",
+			"serviceInterruptingChanges": "服务中断：可能影响此主机的可用性或访问",
+			"destructiveChanges": "破坏性更改：预期会造成数据丢失的永久性更改"
+		},
 		"readOnly": {
 			"label": "读取",
 			"description": "启用后，Roo 将自动浏览目录和读取文件内容，无需人工确认。",

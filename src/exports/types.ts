@@ -258,6 +258,16 @@ type GlobalSettings = {
 	alwaysAllowSubtasks?: boolean | undefined
 	alwaysAllowExecute?: boolean | undefined
 	allowedCommands?: string[] | undefined
+	commandRiskLevel?:
+		| (
+				| "none"
+				| "readOnly"
+				| "reversibleChanges"
+				| "complexChanges"
+				| "serviceInterruptingChanges"
+				| "destructiveChanges"
+		  )
+		| undefined
 	browserToolEnabled?: boolean | undefined
 	browserViewportSize?: string | undefined
 	screenshotQuality?: number | undefined
@@ -424,6 +434,11 @@ type ClineMessage = {
 				text?: string | undefined
 		  }
 		| undefined
+	metadata?:
+		| {
+				[x: string]: unknown
+		  }
+		| undefined
 }
 
 export type { ClineMessage }
@@ -507,6 +522,11 @@ type RooCodeEvents = {
 					| {
 							icon?: string | undefined
 							text?: string | undefined
+					  }
+					| undefined
+				metadata?:
+					| {
+							[x: string]: unknown
 					  }
 					| undefined
 			}
