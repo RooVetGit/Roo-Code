@@ -60,7 +60,7 @@ export class XAIHandler extends BaseProvider implements SingleCompletionHandler 
 				}
 			}
 
-			if ("reasoning_content" in delta && delta.reasoning_content) {
+			if (delta && "reasoning_content" in delta && delta.reasoning_content) {
 				yield {
 					type: "reasoning",
 					text: (delta.reasoning_content as string | undefined) || "",
