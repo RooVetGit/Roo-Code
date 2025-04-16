@@ -34,6 +34,16 @@
 	},
 	"autoApprove": {
 		"description": "Roo'nun onay gerektirmeden otomatik olarak işlemler gerçekleştirmesine izin verin. Bu ayarları yalnızca yapay zekaya tamamen güveniyorsanız ve ilgili güvenlik risklerini anlıyorsanız etkinleştirin.",
+		"commandRiskLevel": {
+			"label": "İzin Verilen Otomatik Yürütme Risk Seviyesi",
+			"description": "Aşağıda statik olarak izin verilen komutlara ek olarak, bu ayar otomatik komut yürütme için izin verilen risk seviyesini kontrol eder. Yapay zeka modeli yürütülen her komutun riskini değerlendirir, bu nedenle yapay zekanın sistem talimatlarında resmi olarak tanımlanan kurallara uyacağına güvenmelisiniz. Her üst seviye, önceki tüm seviyeleri içerir.",
+			"none": "Yok: Risk değerlendirmeli yürütmeye izin verilmez",
+			"readOnly": "Salt Okunur",
+			"reversibleChanges": "Geri Alınabilir Değişiklikler: Ters işlem mümkündür",
+			"complexChanges": "Karmaşık Değişiklikler: Geri alma zor veya imkansız, ancak açıkça yıkıcı değil",
+			"serviceInterruptingChanges": "Hizmet Kesintisi: Bu sunucunun kullanılabilirliğini veya erişimini etkileyebilir",
+			"destructiveChanges": "Yıkıcı Değişiklikler: Veri kaybı beklenen kalıcı değişiklik"
+		},
 		"readOnly": {
 			"label": "Okuma",
 			"description": "Etkinleştirildiğinde, Roo otomatik olarak dizin içeriğini görüntüleyecek ve Onayla düğmesine tıklamanıza gerek kalmadan dosyaları okuyacaktır.",
