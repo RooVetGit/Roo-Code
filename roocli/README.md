@@ -2,17 +2,48 @@
 
 A command line interface for RooCode that communicates with the RooCode extension via WebSocket.
 
+## Prerequisites
+
+Before using the CLI, you need to enable the WebSocket server in the RooCode extension settings:
+
+1. Open VS Code settings (File > Preferences > Settings or Ctrl+,)
+2. Search for "roo-cline.websocket.enabled"
+3. Ensure this setting is checked/enabled (it should be enabled by default)
+
+Alternatively, you can add this to your settings.json file:
+
+```json
+"roo-cline.websocket.enabled": true
+```
+
 ## Installation
+
+### From the Monorepo
+
+```bash
+# Install dependencies (from the root of the monorepo)
+pnpm install
+
+# Build the CLI and its dependencies
+pnpm build:cli-deps
+
+# Install the CLI globally from the local package
+pnpm --global install ./roocli
+```
+
+### Standalone Installation
+
+If you've downloaded just the CLI package:
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Build the CLI
-npm run build
+pnpm build
 
 # Install globally
-npm install -g .
+pnpm --global install .
 ```
 
 ## Usage
@@ -148,17 +179,47 @@ roo create task --mode "code" --message "Create a React component that fetches d
 
 ## Development
 
+### In the Monorepo
+
 ```bash
-# Run in development mode
-npm run dev
+# Run in development mode (from the root of the monorepo)
+pnpm --filter @roo-code/cli dev
+
+# Run a specific command in development mode
+cd roocli && npx ts-node src/index.ts create task --mode ask --message "Your message"
+
+# Build the comms-clients package (dependency)
+pnpm build:comms
 
 # Build the CLI
-npm run build
+pnpm build:cli
+
+# Build both in the correct order
+pnpm build:cli-deps
+```
+
+### Standalone Development
+
+```bash
+# Run in development mode
+pnpm dev
+
+# Build the CLI
+pnpm build
 ```
 
 ## Requirements
 
-- Node.js 14 or higher
-- RooCode extension must be running with the WebSocket server enabled
+- Node.js 20.16.0 or higher (20.18.1 recommended)
+- pnpm 10.8.1 or higher (when using the monorepo)
+- RooCode extension must be running with the WebSocket server enabled (see Prerequisites section)
+
+## Monorepo Structure
+
+This CLI is part of the RooCode monorepo and depends on the following packages:
+
+- `@roo-code/comms-clients`: Communication clients for WebSocket connectivity
+
+When working in the monorepo, make sure to build dependencies in the correct order using the provided scripts.
 
 For more detailed usage instructions, see [USAGE.md](./USAGE.md).

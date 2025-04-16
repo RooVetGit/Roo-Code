@@ -1,6 +1,6 @@
+import { WebSocketClient } from "@roo-code/comms-clients"
 import chalk from "chalk"
 import { Command } from "commander"
-import { WebSocketClient } from "../../../comms-clients/websocket-client"
 import { displayBox, displayFollowupQuestion, displayTextInput } from "../utils/display"
 import { getLastFollowupQuestion } from "../utils/followup-store"
 import { updatePermissionsCommand } from "./permissions"

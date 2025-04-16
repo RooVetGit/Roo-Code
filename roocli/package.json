@@ -1,16 +1,19 @@
 {
-	"name": "roocli",
+	"name": "@roo-code/cli",
 	"version": "1.0.0",
 	"description": "Command line interface for RooCode",
-	"main": "dist/roocli/src/index.js",
+	"main": "dist/index.js",
 	"bin": {
-		"roo": "dist/roocli/src/index.js"
+		"roo": "dist/index.js"
 	},
 	"scripts": {
 		"build": "tsc",
-		"start": "node dist/roocli/src/index.js",
+		"start": "node dist/index.js",
 		"dev": "ts-node src/index.ts",
-		"test": "jest"
+		"test": "jest",
+		"lint": "eslint src --ext .ts",
+		"check-types": "tsc --noEmit",
+		"format": "prettier --write \"src/**/*.ts\""
 	},
 	"keywords": [
 		"roocode",
@@ -21,6 +24,7 @@
 	"author": "",
 	"license": "MIT",
 	"dependencies": {
+		"@roo-code/comms-clients": "workspace:*",
 		"boxen": "^5.1.2",
 		"chalk": "^4.1.2",
 		"commander": "^11.1.0",
@@ -42,7 +46,9 @@
 		"@types/node": "^20.10.5",
 		"@types/prompts": "^2.4.9",
 		"@types/ws": "^8.5.10",
+		"eslint": "^8.57.0",
 		"jest": "^29.7.0",
+		"prettier": "^3.4.2",
 		"ts-jest": "^29.2.5",
 		"ts-node": "^10.9.2",
 		"typescript": "^5.3.3"

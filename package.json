@@ -354,6 +354,10 @@
 		"format": "turbo format --log-order grouped --output-logs new-only",
 		"dev": "pnpm --filter @roo-code/vscode-webview dev",
 		"build": "pnpm --filter @roo-code/vscode build",
+		"build:comms": "pnpm --filter @roo-code/comms-clients build",
+		"build:cli": "pnpm --filter @roo-code/cli build",
+		"build:all": "turbo build",
+		"build:cli-deps": "pnpm build:comms && pnpm build:cli",
 		"changeset": "changeset",
 		"knip": "knip --include files",
 		"update-contributors": "node scripts/update-contributors.js"

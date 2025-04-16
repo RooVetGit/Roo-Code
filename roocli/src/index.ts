@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 
+import { WebSocketClient, readWebSocketConfig } from "@roo-code/comms-clients"
 import chalk from "chalk"
 import { Command } from "commander"
-import { WebSocketClient } from "../../comms-clients/websocket-client"
-import { readWebSocketConfig } from "../../comms-clients/websocket-config"
 import { getCommands } from "./commands"
 
 // WebSocket client will be initialized later

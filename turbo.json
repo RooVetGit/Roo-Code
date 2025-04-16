@@ -4,6 +4,10 @@
 		"lint": {},
 		"check-types": {},
 		"test": {},
-		"format": {}
+		"format": {},
+		"build": {
+			"dependsOn": ["^build"],
+			"outputs": ["dist/**"]
+		}
 	}
 }

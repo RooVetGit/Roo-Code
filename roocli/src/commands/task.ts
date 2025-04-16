@@ -1,5 +1,5 @@
+import { EventName, WebSocketClient } from "@roo-code/comms-clients"
 import chalk from "chalk"
-import { EventName, WebSocketClient } from "../../../comms-clients/websocket-client"
 import { displayCollapsibleBox } from "../utils/display"
 import { storeFollowupQuestion } from "../utils/followup-store"
 import { parseFollowupQuestion } from "../utils/message-helpers"

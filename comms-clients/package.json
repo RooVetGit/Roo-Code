@@ -1,0 +1,31 @@
+{
+	"name": "@roo-code/comms-clients",
+	"version": "1.0.0",
+	"description": "Communication clients for RooCode",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"scripts": {
+		"build": "tsc",
+		"lint": "eslint . --ext .ts",
+		"check-types": "tsc --noEmit",
+		"format": "prettier --write \"**/*.ts\""
+	},
+	"keywords": [
+		"roocode",
+		"communication",
+		"websocket"
+	],
+	"author": "",
+	"license": "MIT",
+	"dependencies": {
+		"chalk": "^4.1.2",
+		"ora": "^5.4.1",
+		"ws": "^8.18.1"
+	},
+	"devDependencies": {
+		"@types/ws": "^8.18.1",
+		"eslint": "^8.57.0",
+		"prettier": "^3.4.2",
+		"typescript": "^5.4.5"
+	}
+}
