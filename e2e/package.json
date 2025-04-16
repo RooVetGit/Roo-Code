@@ -1,12 +1,12 @@
 {
-	"name": "@roo-code/vscode-e2e",
+	"name": "@roo-code/roo-code-e2e",
 	"private": true,
 	"scripts": {
 		"lint": "eslint --max-warnings=0 src/**/*.ts",
 		"check-types": "tsc --noEmit",
 		"format": "prettier --write src",
 		"test:quick": "pnpm build && npx dotenvx run -f .env.local -- node ./out/runTest.js",
-		"test:ci": "pnpm --filter @roo-code/vscode compile && pnpm --filter @roo-code/vscode-webview build && pnpm test:quick",
+		"test:ci": "pnpm --filter @roo-code/roo-code compile && pnpm --filter @roo-code/roo-code-webview build && pnpm test:quick",
 		"build": "rimraf out && tsc -p tsconfig.json"
 	},
 	"devDependencies": {

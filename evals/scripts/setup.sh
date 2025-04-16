@@ -28,8 +28,8 @@ build_extension() {
   echo "🔨 Building the Roo Code extension..."
   cd ..
   mkdir -p bin
-  pnpm --filter @roo-code/vscode compile || exit 1
-  pnpm --filter @roo-code/vscode-webview build || exit 1
+  pnpm --filter @roo-code/roo-code compile || exit 1
+  pnpm --filter @roo-code/roo-code-webview build || exit 1
   npx vsce package --out bin/roo-code-latest.vsix || exit 1
   code --install-extension bin/roo-code-latest.vsix || exit 1
   cd evals

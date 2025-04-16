@@ -1,5 +1,5 @@
 {
-	"name": "@roo-code/vscode-webview",
+	"name": "@roo-code/roo-code-webview",
 	"private": true,
 	"type": "module",
 	"scripts": {
