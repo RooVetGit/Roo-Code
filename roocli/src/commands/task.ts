@@ -3,6 +3,8 @@ import { EventName, WebSocketClient } from "../../../comms-clients/websocket-cli
 import { displayCollapsibleBox } from "../utils/display"
 import { storeFollowupQuestion } from "../utils/followup-store"
 import { parseFollowupQuestion } from "../utils/message-helpers"
+import { getToolPermissionSettings } from "../utils/settings-storage"
+import { ToolCategory, getToolCategory } from "../utils/tool-categories"
 
 /**
  * Utility functions for task operations
@@ -57,6 +59,9 @@ export async function setupTaskEventListeners(wsClient: WebSocketClient, taskId:
 				return
 			}
 
+			// We'll use the original content for processing
+			const contentToProcess = data.content
+
 			// Mark this content as processed
 			processedContents.add(data.content)
 			lastDisplayedMessage = data.content
@@ -68,7 +73,7 @@ export async function setupTaskEventListeners(wsClient: WebSocketClient, taskId:
 			}
 
 			// Check if this is a followup question with suggestions
-			const followupQuestion = parseFollowupQuestion(data.content)
+			const followupQuestion = parseFollowupQuestion(contentToProcess)
 
 			if (followupQuestion) {
 				// Store the followup question for later use with --interact-suggestions
@@ -97,7 +102,7 @@ export async function setupTaskEventListeners(wsClient: WebSocketClient, taskId:
 			} else {
 				// Check if the content is JSON and filter out unwanted JSON output
 				try {
-					const jsonContent = JSON.parse(data.content)
+					const jsonContent = JSON.parse(contentToProcess)
 
 					// If it contains a "request" field, it's likely the unwanted JSON output
 					if (jsonContent.request) {
@@ -123,19 +128,25 @@ export async function setupTaskEventListeners(wsClient: WebSocketClient, taskId:
 					}
 
 					// Check if the content contains a checkpoint hash
-					const content = data.content.trim()
+					const content = contentToProcess.trim()
 					const hashMatch = content.match(/([0-9a-f]{40})/)
 					if (hashMatch) {
 						displayCollapsibleBox("Checkpoint Saved", `Checkpoint hash: ${hashMatch[1]}`, "success")
 						return
 					}
 
+					// Check if this is a tool-related JSON
+					if (typeof jsonContent === "object" && jsonContent.tool) {
+						// Skip printing this JSON - it will be handled by the message event handler
+						return
+					}
+
 					// Otherwise, print the JSON content with proper spacing
-					console.log(data.content)
+					console.log(contentToProcess)
 					needsNewline = true
 				} catch (e) {
 					// Not JSON, check if it's a checkpoint hash in plain text
-					const content = data.content.trim()
+					const content = contentToProcess.trim()
 
 					// Check if the content contains a checkpoint hash
 					const hashMatch = content.match(/([0-9a-f]{40})/)
@@ -155,9 +166,11 @@ export async function setupTaskEventListeners(wsClient: WebSocketClient, taskId:
 						return
 					}
 
-					// Not a checkpoint hash, just print the content
-					console.log(data.content)
-					needsNewline = true
+					// Not a checkpoint hash, just print the filtered content
+					if (contentToProcess.trim()) {
+						console.log(contentToProcess)
+						needsNewline = true
+					}
 				}
 			}
 		}
@@ -254,12 +267,41 @@ export async function setupTaskEventListeners(wsClient: WebSocketClient, taskId:
 	// 	}
 	// })
 
-	// Handle message events for checkpoint_saved
+	// Keep track of the last tool message of each type
+	const lastToolMessages = new Map<
+		string,
+		{ title: string; content: string; style: "info" | "success" | "warning" | "error" }
+	>()
+
+	// Handle message events for checkpoint_saved and tools
 	wsClient.on("message", (eventData) => {
+		if (wsClient.isDebugMode()) {
+			console.log("DEBUG: Received message event:", JSON.stringify(eventData).substring(0, 200) + "...")
+		}
 		if (Array.isArray(eventData) && eventData.length > 0) {
 			for (const data of eventData) {
 				if (data && data.taskId === taskId && data.message) {
 					const { message } = data
+					if (wsClient.isDebugMode()) {
+						console.log(
+							"DEBUG: Processing message:",
+							JSON.stringify({
+								type: message.type,
+								say: message.say,
+								ask: message.ask,
+								hasText: !!message.text,
+								textLength: message.text ? message.text.length : 0,
+							}),
+						)
+					}
+
+					// Skip user_feedback and user_feedback_diff messages
+					if (
+						message.type === "say" &&
+						(message.say === "user_feedback" || message.say === "user_feedback_diff")
+					) {
+						continue
+					}
 
 					// Skip if we've already processed this content
 					if (message.text && processedContents.has(message.text)) {
@@ -275,6 +317,194 @@ export async function setupTaskEventListeners(wsClient: WebSocketClient, taskId:
 					if (message.type === "say" && message.say === "checkpoint_saved") {
 						console.log("")
 						needsNewline = false
+					}
+
+					// Handle tool messages
+					if (wsClient.isDebugMode()) {
+						console.log("DEBUG: Checking if tool message:", message.type === "say", message.say === "tool")
+					}
+					if (message.type === "say" && message.say === "tool") {
+						if (wsClient.isDebugMode()) {
+							console.log("DEBUG: Found tool message")
+						}
+						if (message.text) {
+							if (wsClient.isDebugMode()) {
+								console.log("DEBUG: Tool message has text")
+							}
+							try {
+								// Parse the message text to get the tool details
+								const jsonContent = JSON.parse(message.text)
+								// Get the tool type from the ClineSayTool structure
+								const toolType = jsonContent.tool || "Unknown"
+
+								// Create a descriptive title with tool name and path if available
+								let title = `Tool Output: ${toolType}`
+								if (jsonContent.path) {
+									title += ` | ${jsonContent.path}`
+								}
+
+								// All tool types from ClineSayTool interface:
+								// "editedExistingFile" | "appliedDiff" | "newFileCreated" | "readFile" |
+								// "fetchInstructions" | "listFilesTopLevel" | "listFilesRecursive" |
+								// "listCodeDefinitionNames" | "searchFiles" | "switchMode" | "newTask" | "finishTask"
+								// Display in a collapsible box with appropriate styling based on tool type
+								let boxStyle: "info" | "success" | "warning" | "error" = "info"
+
+								// Use different styles for different tool types
+								if (["editedExistingFile", "appliedDiff", "newFileCreated"].includes(toolType)) {
+									boxStyle = "success" // Green for file modifications
+								} else if (
+									[
+										"readFile",
+										"listFilesTopLevel",
+										"listFilesRecursive",
+										"listCodeDefinitionNames",
+										"searchFiles",
+									].includes(toolType)
+								) {
+									boxStyle = "info" // Blue for read operations
+								} else if (["switchMode", "newTask", "finishTask"].includes(toolType)) {
+									boxStyle = "warning" // Yellow for mode/task operations
+								}
+
+								// Store this tool message as the last one of its type
+								lastToolMessages.set(toolType, {
+									title,
+									content: message.text,
+									style: boxStyle,
+								})
+
+								// Don't display the tool message yet - we'll display the last one of each type at the end
+								continue
+							} catch (e) {
+								if (wsClient.isDebugMode()) {
+									console.log("DEBUG: Error parsing tool message JSON:", e)
+								}
+								// Not valid JSON, continue with normal processing
+							}
+						} else {
+							if (wsClient.isDebugMode()) {
+								console.log("DEBUG: Tool message has no text")
+							}
+						}
+					}
+					// Handle tool ask messages (tool approval requests)
+					if (wsClient.isDebugMode()) {
+						console.log(
+							"DEBUG: Checking if tool ask message:",
+							message.type === "ask",
+							message.ask === "tool",
+						)
+					}
+					if (message.type === "ask" && message.ask === "tool") {
+						if (wsClient.isDebugMode()) {
+							console.log("DEBUG: Found tool ask message")
+						}
+						if (message.text) {
+							if (wsClient.isDebugMode()) {
+								console.log("DEBUG: Tool ask message has text")
+							}
+							try {
+								// Parse the message text to get the tool details
+								if (wsClient.isDebugMode()) {
+									console.log("DEBUG: Attempting to parse tool ask message JSON")
+								}
+								const jsonContent = JSON.parse(message.text)
+								if (wsClient.isDebugMode()) {
+									console.log("DEBUG: Parsed JSON content:", JSON.stringify(jsonContent))
+								}
+
+								// Check if the jsonContent is consistent with ClineSayTool interface
+								if (wsClient.isDebugMode()) {
+									console.log(
+										"DEBUG: Checking if JSON content has tool property:",
+										jsonContent && typeof jsonContent === "object",
+										jsonContent ? "tool" in jsonContent : false,
+									)
+								}
+								if (jsonContent && typeof jsonContent === "object" && "tool" in jsonContent) {
+									if (wsClient.isDebugMode()) {
+										console.log("DEBUG: JSON content has tool property")
+									}
+									// Get the tool type from the ClineSayTool structure
+									let toolName = jsonContent.tool || "Unknown"
+									let toolPath = jsonContent.path || ""
+
+									// Check if this tool should be auto-approved based on user settings
+									if (wsClient.isDebugMode()) {
+										console.log(
+											"DEBUG: Checking if tool should be auto-approved:",
+											toolName,
+											toolPath,
+										)
+									}
+									const shouldAutoApprove = shouldAutoApproveTool(toolName, toolPath)
+									if (wsClient.isDebugMode()) {
+										console.log("DEBUG: Should auto-approve:", shouldAutoApprove)
+									}
+									if (shouldAutoApprove) {
+										if (wsClient.isDebugMode()) {
+											console.log("DEBUG: Auto-approving tool")
+										}
+										// Auto-approve the tool by sending a "yesButtonClicked" response
+										wsClient.sendCommand("askResponse", {
+											askResponse: "yesButtonClicked",
+										})
+
+										// Display auto-approval message
+										displayCollapsibleBox(
+											`Tool Auto-Approved: ${toolName}`,
+											`The tool ${toolName}${toolPath ? ` | ${toolPath}` : ""} was automatically approved based on your permission settings.`,
+											"info",
+										)
+
+										needsNewline = true
+										continue
+									}
+
+									// Create a followup question format for tool approval
+									const question = `Do you want to approve the tool use: ${toolName}${toolPath ? ` | ${toolPath}` : ""}?`
+									if (wsClient.isDebugMode()) {
+										console.log("DEBUG: Created tool approval question:", question)
+									}
+
+									// Format and display tool approval request
+									if (wsClient.isDebugMode()) {
+										console.log("DEBUG: Displaying tool approval request")
+									}
+									console.log(chalk.blue("\nTool Approval Request:"), question)
+									console.log(chalk.blue("\nOptions:"))
+									console.log(`${chalk.green("1.")} Approve`)
+									console.log(`${chalk.red("2.")} Reject`)
+
+									console.log(
+										chalk.yellow("\nUse 'roocli update task --interact primary' to approve"),
+									)
+									console.log(chalk.yellow("Use 'roocli update task --interact secondary' to reject"))
+									console.log(
+										chalk.yellow(
+											"Or use 'roocli update task --message \"approve\"' or 'roocli update task --message \"reject\"' to respond",
+										),
+									)
+
+									needsNewline = true
+									continue
+								} else {
+									if (wsClient.isDebugMode()) {
+										console.log("DEBUG: JSON content does not have expected structure")
+									}
+								}
+							} catch (e) {
+								if (wsClient.isDebugMode()) {
+									console.log("DEBUG: Error parsing tool ask message JSON:", e)
+								}
+								// Not valid JSON, continue with normal processing
+							}
+						} else {
+							if (wsClient.isDebugMode()) {
+								console.log("DEBUG: Tool ask message has no text")
+							}
+						}
 					}
 
 					// Check if this is a checkpoint_saved message
@@ -295,6 +525,24 @@ export async function setupTaskEventListeners(wsClient: WebSocketClient, taskId:
 						}
 					}
 				}
+			}
+
+			// After processing all messages, display the last tool message of each type
+			if (lastToolMessages.size > 0) {
+				// Add a newline before tool messages if needed
+				if (needsNewline) {
+					console.log("")
+					needsNewline = false
+				}
+
+				// Display each tool message
+				for (const [toolType, { title, content, style }] of lastToolMessages.entries()) {
+					displayCollapsibleBox(title, content, style)
+					needsNewline = true
+				}
+
+				// Clear the tool messages map after displaying them
+				lastToolMessages.clear()
 			}
 		}
 	})
@@ -370,3 +618,47 @@ export async function waitForTaskCompletion(
 	})
 }
 // No taskCommand function - this functionality has been moved to create.ts and update.ts
+
+/**
+ * Check if a tool should be auto-approved based on user settings
+ * @param toolName The name of the tool
+ * @param toolPath The path associated with the tool (if any)
+ * @returns True if the tool should be auto-approved, false otherwise
+ */
+function shouldAutoApproveTool(toolName: string, toolPath: string): boolean {
+	// Get the current tool permission settings
+	const settings = getToolPermissionSettings()
+
+	// If auto-approval is disabled, never auto-approve
+	if (!settings.autoApprovalEnabled) {
+		return false
+	}
+
+	// Get the tool category
+	const category = getToolCategory(toolName)
+
+	// If the tool doesn't have a category, don't auto-approve
+	if (!category) {
+		return false
+	}
+
+	// Check if the tool should be auto-approved based on its category
+	switch (category) {
+		case ToolCategory.READ_ONLY:
+			return settings.alwaysAllowReadOnly
+		case ToolCategory.WRITE:
+			return settings.alwaysAllowWrite
+		case ToolCategory.EXECUTE:
+			return settings.alwaysAllowExecute
+		case ToolCategory.BROWSER:
+			return settings.alwaysAllowBrowser
+		case ToolCategory.MCP:
+			return settings.alwaysAllowMcp
+		case ToolCategory.MODE_SWITCH:
+			return settings.alwaysAllowModeSwitch
+		case ToolCategory.SUBTASK:
+			return settings.alwaysAllowSubtasks
+		default:
+			return false
+	}
+}

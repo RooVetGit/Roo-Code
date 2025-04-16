@@ -270,6 +270,13 @@ export class WebSocketClient extends EventEmitter {
 					// Process partial message updates through our special handler
 					this.handlePartialMessageUpdates(eventData)
 
+					// IMPORTANT: Also emit the original message event with the full data structure
+					// This is needed for task.ts to process tool messages and tool ask messages
+					if (this.debugMode) {
+						console.log("DEBUG: Emitting original message event with full data structure")
+					}
+					this.emit(eventName, eventData)
+
 					// For debugging
 					if (this.debugMode) {
 						for (const data of eventData) {
@@ -341,7 +348,8 @@ export class WebSocketClient extends EventEmitter {
 			if (!data || !data.message || !data.taskId) continue
 
 			const { taskId, message, action } = data
-			const { partial, text } = message
+			// Extract fields from the ClineMessage structure
+			const { partial, text, type, ask, say } = message
 
 			// Skip if there's no text content
 			if (text === undefined) continue
