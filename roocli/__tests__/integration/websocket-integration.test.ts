@@ -2,8 +2,8 @@ import * as fs from "fs/promises"
 import * as os from "os"
 import * as path from "path"
 import WebSocket from "ws"
-import { WebSocketClient } from "../../src/utils/websocket-client"
-import { readWebSocketConfig } from "../../src/utils/websocket-config"
+import { WebSocketClient } from "../../../comms-clients/websocket-client"
+import { readWebSocketConfig } from "../../../comms-clients/websocket-config"
 
 // Mock dependencies
 jest.mock("fs/promises")
@@ -21,15 +21,15 @@ jest.mock("ora", () => {
 	})
 })
 
-describe("WebSocket Integration Tests", () => {
-	// Add a type declaration to extend WebSocketClient for testing
-	declare module "../../src/utils/websocket-client" {
-		interface WebSocketClient {
-			// For testing purposes only
-			messageHandler?: (data: string) => void
-		}
+// Add a type declaration to extend WebSocketClient for testing
+declare module "../../../comms-clients/websocket-client" {
+	interface WebSocketClient {
+		// For testing purposes only
+		messageHandler?: (data: string) => void
 	}
+}
 
+describe("WebSocket Integration Tests", () => {
 	const mockTmpDir = "/mock/tmp/dir"
 	const mockConfigPath = "/mock/tmp/dir/roocode-websocket-config.json"
 	const mockConfig = {

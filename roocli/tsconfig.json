@@ -10,6 +10,6 @@
 		"forceConsistentCasingInFileNames": true,
 		"resolveJsonModule": true
 	},
-	"include": ["src/**/*"],
+	"include": ["src/**/*", "../comms-clients/**/*"],
 	"exclude": ["node_modules", "**/*.test.ts"]
 }

@@ -1,5 +1,5 @@
 import WebSocket from "ws"
-import { WebSocketClient } from "../../src/utils/websocket-client"
+import { WebSocketClient } from "../../../comms-clients/websocket-client"
 
 // Mock the WebSocket module
 jest.mock("ws")

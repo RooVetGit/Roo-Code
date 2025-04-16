@@ -1,5 +1,5 @@
 import { Command } from "commander"
-import { WebSocketClient } from "../utils/websocket-client"
+import { WebSocketClient } from "../../../comms-clients/websocket-client"
 import { createCommand } from "./create"
 import { deleteCommand } from "./delete"
 import { listCommand } from "./list"

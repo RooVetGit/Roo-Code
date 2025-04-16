@@ -1,8 +1,8 @@
 import chalk from "chalk"
 import { Command } from "commander"
+import { WebSocketClient } from "../../../comms-clients/websocket-client"
 import { createProfileCommand } from "../commands/profile"
 import { displayBox, displayTextInput } from "../utils/display"
-import { WebSocketClient } from "../utils/websocket-client"
 import { setupTaskEventListeners, waitForTaskCompletion } from "./task"
 
 /**

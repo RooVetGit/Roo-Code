@@ -1,7 +1,7 @@
 import * as fs from "fs/promises"
 import * as os from "os"
 import * as path from "path"
-import { WebSocketConfig, getWebSocketConfigPath, readWebSocketConfig } from "../../src/utils/websocket-config"
+import { WebSocketConfig, getWebSocketConfigPath, readWebSocketConfig } from "../../../comms-clients/websocket-config"
 
 // Mock the fs module
 jest.mock("fs/promises")

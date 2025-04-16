@@ -2,8 +2,8 @@ import chalk from "chalk"
 import { Command } from "commander"
 import * as fs from "fs"
 import * as path from "path"
+import { WebSocketClient } from "../../../comms-clients/websocket-client"
 import { displayBox } from "../utils/display"
-import { WebSocketClient } from "../utils/websocket-client"
 
 /**
  * Create the set command

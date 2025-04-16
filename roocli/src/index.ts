@@ -2,9 +2,9 @@
 
 import chalk from "chalk"
 import { Command } from "commander"
+import { WebSocketClient } from "../../comms-clients/websocket-client"
+import { readWebSocketConfig } from "../../comms-clients/websocket-config"
 import { getCommands } from "./commands"
-import { WebSocketClient } from "./utils/websocket-client"
-import { readWebSocketConfig } from "./utils/websocket-config"
 
 // WebSocket client will be initialized later
 let wsClient: WebSocketClient

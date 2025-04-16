@@ -1,7 +1,7 @@
 import chalk from "chalk"
 import { Command } from "commander"
+import { WebSocketClient } from "../../../comms-clients/websocket-client"
 import { displayBox } from "../utils/display"
-import { WebSocketClient } from "../utils/websocket-client"
 
 /**
  * Create the interact command
