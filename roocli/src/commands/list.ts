@@ -2,6 +2,7 @@ import chalk from "chalk"
 import { Command } from "commander"
 import { WebSocketClient } from "../../../comms-clients/websocket-client"
 import { displayBox, displayConfirmation, displayPrompt } from "../utils/display"
+import { listPermissionsCommand } from "./permissions"
 import { listProfilesCommand } from "./profile"
 
 /**
@@ -15,6 +16,7 @@ export function listCommand(wsClient: WebSocketClient): Command {
 		.addCommand(listConfigsCommand(wsClient))
 		.addCommand(listProfilesCommand(wsClient))
 		.addCommand(listTasksCommand(wsClient))
+		.addCommand(listPermissionsCommand())
 
 	return command
 }

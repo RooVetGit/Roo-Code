@@ -3,6 +3,7 @@ import { Command } from "commander"
 import { WebSocketClient } from "../../../comms-clients/websocket-client"
 import { displayBox, displayFollowupQuestion, displayTextInput } from "../utils/display"
 import { getLastFollowupQuestion } from "../utils/followup-store"
+import { updatePermissionsCommand } from "./permissions"
 import { updateProfileCommand } from "./profile"
 import { setupTaskEventListeners, waitForTaskCompletion } from "./task"
 
@@ -13,10 +14,11 @@ import { setupTaskEventListeners, waitForTaskCompletion } from "./task"
  */
 export function updateCommand(wsClient: WebSocketClient): Command {
 	const command = new Command("update")
-		.description("Update a configuration, profile, or task")
+		.description("Update a configuration, profile, task, or permissions")
 		.addCommand(updateConfigCommand(wsClient))
 		.addCommand(updateProfileCommand(wsClient))
 		.addCommand(updateTaskCommand(wsClient))
+		.addCommand(updatePermissionsCommand(wsClient))
 
 	return command
 }
@@ -129,9 +131,38 @@ function updateTaskCommand(wsClient: WebSocketClient): Command {
 						throw new Error('Interact type must be either "primary" or "secondary"')
 					}
 
+					// Get the current task ID
+					if (wsClient.isDebugMode()) {
+						console.log(chalk.blue("Getting current task stack..."))
+					}
+					const currentTaskStack = await wsClient.sendCommand("getCurrentTaskStack")
+					if (wsClient.isDebugMode()) {
+						console.log(chalk.blue("Current task stack:"), currentTaskStack)
+					}
+
+					if (!currentTaskStack || !Array.isArray(currentTaskStack) || currentTaskStack.length === 0) {
+						console.error(chalk.red("Error: No active task found"))
+						return
+					}
+
+					const taskId = currentTaskStack[currentTaskStack.length - 1]
+					if (wsClient.isDebugMode()) {
+						console.log(chalk.blue(`Using task ID: ${taskId}`))
+					}
+
+					// Send the appropriate command based on the interact type
 					const method = options.interact === "primary" ? "pressPrimaryButton" : "pressSecondaryButton"
 					await wsClient.sendCommand(method, {})
 					displayBox("Task Interaction", `Initiated ${options.interact} interaction with the task`, "success")
+
+					// Set up event listeners for the task to receive streaming responses
+					await setupTaskEventListeners(wsClient, taskId)
+
+					// Wait for the task to complete or timeout
+					if (wsClient.isDebugMode()) {
+						console.log(chalk.blue("Waiting for task to respond..."))
+					}
+					await waitForTaskCompletion(wsClient, taskId)
 					return
 				}
 

@@ -3,6 +3,7 @@ import { WebSocketClient } from "../../../comms-clients/websocket-client"
 import { createCommand } from "./create"
 import { deleteCommand } from "./delete"
 import { listCommand } from "./list"
+import { permissionsCommand } from "./permissions"
 import { setCommand } from "./set"
 import { updateCommand } from "./update"
 
@@ -18,5 +19,6 @@ export function getCommands(wsClient: WebSocketClient): Command[] {
 		updateCommand(wsClient),
 		deleteCommand(wsClient),
 		setCommand(wsClient),
+		permissionsCommand(wsClient),
 	]
 }
