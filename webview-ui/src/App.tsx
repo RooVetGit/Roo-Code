@@ -84,8 +84,8 @@ const App = () => {
 				if (value === "antialiased" || value === "subpixel-antialiased" || value === "none") {
 					smoothingValue = value
 				}
-
 				;(document.documentElement.style as any)["webkitFontSmoothing"] = smoothingValue
+			}
 			if (message.type === "acceptInput") {
 				chatViewRef.current?.acceptInput()
 			}
