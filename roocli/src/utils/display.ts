@@ -16,9 +16,9 @@ interface FollowupQuestion {
  * @param content The content to display
  * @param type The type of message (info, success, error, warning)
  */
-// ANSI escape codes for mouse handling
-const ENABLE_MOUSE_TRACKING = "\x1b[?1000h" // Enable mouse click tracking
-const DISABLE_MOUSE_TRACKING = "\x1b[?1000l" // Disable mouse click tracking
+// ANSI escape codes for mouse handling (not currently used)
+// const ENABLE_MOUSE_TRACKING = "\x1b[?1000h" // Enable mouse click tracking
+// const DISABLE_MOUSE_TRACKING = "\x1b[?1000l" // Disable mouse click tracking
 
 /**
  * Display a message in a collapsible box
@@ -70,8 +70,7 @@ export function displayBox(
 	// Create the full box content
 	const boxContent = boxen(content, boxOptions)
 
-	// Start with collapsed state by default for all boxes
-	let isCollapsed = true
+	// Box starts in collapsed state by default
 
 	if (collapsible) {
 		// Show collapsed version with [+] indicator

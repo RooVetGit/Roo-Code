@@ -60,7 +60,7 @@ function setConfigCommand(wsClient: WebSocketClient): Command {
 
 				// Make sure we're sending the right parameter format
 				// Fix: Send the config object directly without wrapping it in a 'config' property
-				const result = await wsClient.sendCommand("setConfiguration", config)
+				await wsClient.sendCommand("setConfiguration", config)
 				displayBox("Configuration Set", "Configuration has been successfully set", "success")
 			} catch (error) {
 				console.error(chalk.red(`Error: ${error instanceof Error ? error.message : String(error)}`))

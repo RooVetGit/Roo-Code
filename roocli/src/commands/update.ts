@@ -51,7 +51,7 @@ function updateConfigCommand(wsClient: WebSocketClient): Command {
 					throw new Error("Either --json or --file option is required")
 				}
 
-				const result = await wsClient.sendCommand("updateConfiguration", { name: options.name, config })
+				await wsClient.sendCommand("updateConfiguration", { name: options.name, config })
 				displayBox(
 					"Configuration Updated",
 					`Configuration "${options.name}" has been successfully updated`,

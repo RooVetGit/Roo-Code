@@ -14,7 +14,7 @@ import { ToolCategory, getToolsInCategory } from "../utils/tool-categories"
  * @param wsClient The WebSocket client
  * @returns The permissions command
  */
-export function permissionsCommand(wsClient: WebSocketClient): Command {
+export function permissionsCommand(_wsClient: WebSocketClient): Command {
 	const command = new Command("permissions")
 		.description("Manage tool permissions")
 		.addCommand(listPermissionsCommand())
@@ -94,7 +94,7 @@ export function listPermissionsCommand(): Command {
  * @param wsClient The WebSocket client
  * @returns The update permissions command
  */
-export function updatePermissionsCommand(wsClient: WebSocketClient): Command {
+export function updatePermissionsCommand(_wsClient: WebSocketClient): Command {
 	return new Command("permissions")
 		.description("Update permission settings")
 		.option("--auto-approval <boolean>", "Enable or disable auto-approval")
@@ -257,7 +257,6 @@ export function updatePermissionsCommand(wsClient: WebSocketClient): Command {
 					displayBox("Permissions Updated", "Tool permissions have been successfully updated.", "success")
 
 					// Show the updated settings
-					const settings = getToolPermissionSettings()
 					console.log(chalk.blue("\nUpdated Tool Permission Settings:"))
 
 					Object.entries(updates).forEach(([key, value]) => {

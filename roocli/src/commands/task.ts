@@ -15,7 +15,8 @@ import { ToolCategory, getToolCategory } from "../utils/tool-categories"
  * Wait for a specified amount of time
  * @param ms Time to wait in milliseconds
  */
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+// Unused function, keeping for future reference
+// const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 /**
  * Set up event listeners for a task
@@ -427,8 +428,8 @@ export async function setupTaskEventListeners(wsClient: WebSocketClient, taskId:
 										console.log("DEBUG: JSON content has tool property")
 									}
 									// Get the tool type from the ClineSayTool structure
-									let toolName = jsonContent.tool || "Unknown"
-									let toolPath = jsonContent.path || ""
+									const toolName = jsonContent.tool || "Unknown"
+									const toolPath = jsonContent.path || ""
 
 									// Check if this tool should be auto-approved based on user settings
 									if (wsClient.isDebugMode()) {
@@ -536,7 +537,7 @@ export async function setupTaskEventListeners(wsClient: WebSocketClient, taskId:
 				}
 
 				// Display each tool message
-				for (const [toolType, { title, content, style }] of lastToolMessages.entries()) {
+				for (const [, { title, content, style }] of lastToolMessages.entries()) {
 					displayCollapsibleBox(title, content, style)
 					needsNewline = true
 				}
@@ -625,7 +626,7 @@ export async function waitForTaskCompletion(
  * @param toolPath The path associated with the tool (if any)
  * @returns True if the tool should be auto-approved, false otherwise
  */
-function shouldAutoApproveTool(toolName: string, toolPath: string): boolean {
+function shouldAutoApproveTool(toolName: string, _toolPath: string): boolean {
 	// Get the current tool permission settings
 	const settings = getToolPermissionSettings()
 

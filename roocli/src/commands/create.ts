@@ -47,7 +47,7 @@ function createConfigCommand(wsClient: WebSocketClient): Command {
 					throw new Error("Either --json or --file option is required")
 				}
 
-				const result = await wsClient.sendCommand("setConfiguration", { config })
+				await wsClient.sendCommand("setConfiguration", { config })
 				displayBox("Configuration Created", "Configuration has been successfully created", "success")
 			} catch (error) {
 				console.error(chalk.red(`Error: ${error instanceof Error ? error.message : String(error)}`))
