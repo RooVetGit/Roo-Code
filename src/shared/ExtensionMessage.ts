@@ -5,7 +5,6 @@ import {
 	ProviderSettings as ApiConfiguration,
 	HistoryItem,
 	ModeConfig,
-	CheckpointStorage,
 	TelemetrySetting,
 	ExperimentId,
 	ClineAsk,
@@ -70,6 +69,7 @@ export interface ExtensionMessage {
 		| "fileSearchResults"
 		| "toggleApiConfigPin"
 		| "fontAliasing"
+		| "acceptInput"
 	text?: string
 	value?: string
 	action?:
@@ -144,7 +144,6 @@ export type ExtensionState = Pick<
 	| "remoteBrowserEnabled"
 	| "remoteBrowserHost"
 	// | "enableCheckpoints" // Optional in GlobalSettings, required here.
-	// | "checkpointStorage" // Optional in GlobalSettings, required here.
 	| "showGreeting"
 	| "ttsEnabled"
 	| "ttsSpeed"
@@ -189,7 +188,6 @@ export type ExtensionState = Pick<
 	requestDelaySeconds: number
 
 	enableCheckpoints: boolean
-	checkpointStorage: CheckpointStorage
 	maxOpenTabsContext: number // Maximum number of VSCode open tabs to include in context (0-500)
 	maxWorkspaceFiles: number // Maximum number of files to include in current working directory details (0-500)
 	showRooIgnoredFiles: boolean // Whether to show .rooignore'd files in listings

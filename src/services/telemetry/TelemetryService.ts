@@ -27,9 +27,13 @@ class PostHogClient {
 			CHECKPOINT_CREATED: "Checkpoint Created",
 			CHECKPOINT_RESTORED: "Checkpoint Restored",
 			CHECKPOINT_DIFFED: "Checkpoint Diffed",
+			CODE_ACTION_USED: "Code Action Used",
+			PROMPT_ENHANCED: "Prompt Enhanced",
 		},
 		ERRORS: {
 			SCHEMA_VALIDATION_ERROR: "Schema Validation Error",
+			DIFF_APPLICATION_ERROR: "Diff Application Error",
+			CONSECUTIVE_MISTAKE_ERROR: "Consecutive Mistake Error",
 		},
 	}
 
@@ -266,11 +270,35 @@ class TelemetryService {
 		this.captureEvent(PostHogClient.EVENTS.TASK.CHECKPOINT_RESTORED, { taskId })
 	}
 
+	public captureCodeActionUsed(actionType: string): void {
+		this.captureEvent(PostHogClient.EVENTS.TASK.CODE_ACTION_USED, {
+			actionType,
+		})
+	}
+
+	public capturePromptEnhanced(taskId?: string): void {
+		this.captureEvent(PostHogClient.EVENTS.TASK.PROMPT_ENHANCED, {
+			...(taskId && { taskId }),
+		})
+	}
+
 	public captureSchemaValidationError({ schemaName, error }: { schemaName: string; error: ZodError }): void {
 		this.captureEvent(PostHogClient.EVENTS.ERRORS.SCHEMA_VALIDATION_ERROR, {
 			schemaName,
 			// https://zod.dev/ERROR_HANDLING?id=formatting-errors
 			error: error.format(),
+		})
+	}
+
+	public captureDiffApplicationError(taskId: string): void {
+		this.captureEvent(PostHogClient.EVENTS.ERRORS.DIFF_APPLICATION_ERROR, {
+			taskId,
+		})
+	}
+
+	public captureConsecutiveMistakeError(taskId: string): void {
+		this.captureEvent(PostHogClient.EVENTS.ERRORS.CONSECUTIVE_MISTAKE_ERROR, {
+			taskId,
 		})
 	}
 

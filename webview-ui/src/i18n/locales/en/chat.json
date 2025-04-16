@@ -171,55 +171,17 @@
 	"autoApprove": {
 		"title": "Auto-approve:",
 		"none": "None",
-		"description": "Auto-approve allows Roo Code to perform actions without asking for permission. Only enable for actions you fully trust. More detailed configuration available in <settingsLink>Settings</settingsLink>.",
-		"actions": {
-			"readFiles": {
-				"label": "Read files and directories",
-				"shortName": "Read",
-				"description": "Allows access to read any file on your computer."
-			},
-			"editFiles": {
-				"label": "Edit files",
-				"shortName": "Edit",
-				"description": "Allows modification of any files on your computer."
-			},
-			"executeCommands": {
-				"label": "Execute approved commands",
-				"shortName": "Commands",
-				"description": "Allows execution of approved terminal commands. You can configure this in the settings panel."
-			},
-			"useBrowser": {
-				"label": "Use the browser",
-				"shortName": "Browser",
-				"description": "Allows ability to launch and interact with any website in a headless browser."
-			},
-			"useMcp": {
-				"label": "Use MCP servers",
-				"shortName": "MCP",
-				"description": "Allows use of configured MCP servers which may modify filesystem or interact with APIs."
-			},
-			"switchModes": {
-				"label": "Switch modes",
-				"shortName": "Modes",
-				"description": "Allows automatic switching between different modes without requiring approval."
-			},
-			"subtasks": {
-				"label": "Create & complete subtasks",
-				"shortName": "Subtasks",
-				"description": "Allow creation and completion of subtasks without requiring approval."
-			},
-			"retryRequests": {
-				"label": "Retry failed requests",
-				"shortName": "Retries",
-				"description": "Automatically retry failed API requests when the provider returns an error response."
-			}
-		}
+		"description": "Auto-approve allows Roo Code to perform actions without asking for permission. Only enable for actions you fully trust. More detailed configuration available in <settingsLink>Settings</settingsLink>."
 	},
 	"announcement": {
-		"title": "Do more with Boomerang Tasks 🪃",
-		"description": "Split work into subtasks with each running in a specialized mode such as code, architect, debug, or a custom mode.",
-		"learnMore": "Learn more →",
-		"hideButton": "Hide announcement"
+		"title": "🎉 Roo Code 3.12 Released",
+		"description": "Roo Code 3.12 brings new features and improvements based on your feedback.",
+		"whatsNew": "What's New",
+		"feature1": "<bold>Grok Support</bold>: Added the xAI provider and Grok reasoning effort options on OpenRouter",
+		"feature2": "<bold>Diff Editing Improvements</bold>: Per-profile configuration and better string normalization for fewer errors",
+		"feature3": "<bold>Checkpoint Enhancements</bold>: Faster and more reliable checkpoints",
+		"hideButton": "Hide announcement",
+		"detailsDiscussLinks": "Get more details and discuss in <discordLink>Discord</discordLink> and <redditLink>Reddit</redditLink> 🚀"
 	},
 	"reasoning": {
 		"thinking": "Thinking",
