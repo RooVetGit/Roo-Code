@@ -7,6 +7,8 @@ import { DEFAULT_HEADERS, REASONING_MODELS } from "./constants"
 import { BaseProvider } from "./base-provider"
 import { SingleCompletionHandler } from ".."
 
+const XAI_DEFAULT_TEMPERATURE = 0
+
 export class XAIHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
 	private client: OpenAI
@@ -45,7 +47,7 @@ export class XAIHandler extends BaseProvider implements SingleCompletionHandler 
 		const stream = await this.client.chat.completions.create({
 			model: modelId,
 			max_tokens: modelInfo.maxTokens,
-			temperature: 0,
+			temperature: this.options.modelTemperature ?? XAI_DEFAULT_TEMPERATURE,
 			messages: [{ role: "system", content: systemPrompt }, ...convertToOpenAiMessages(messages)],
 			stream: true,
 			stream_options: { include_usage: true },
