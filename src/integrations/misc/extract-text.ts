@@ -274,7 +274,11 @@ export function processCarriageReturns(input: string): string {
 			output += curLine
 		}
 
-		// Add line feed (\n) if not at end of text
+		// 'curLine' now holds the processed content of the line *without* its original terminating line feed (\n) character.
+		// 'lineEnd' points to the position of that line feed (\n) in the original input, or to the end of the input string if no line feed (\n) was found.
+		// This check explicitly adds the line feed (\n) character back *only if* one was originally present at this position (lineEnd < len).
+		// This ensures we preserve the original structure, correctly handling inputs both with and without a final line feed (\n),
+		// rather than incorrectly injecting a line feed (\n) if the original input didn't end with one.
 		if (lineEnd < len) output += "\n"
 
 		// Move to next line

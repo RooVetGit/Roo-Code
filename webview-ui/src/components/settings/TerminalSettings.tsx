@@ -78,6 +78,18 @@ export const TerminalSettings = ({
 				</div>
 
 				<div>
+					<VSCodeCheckbox
+						checked={terminalCompressProgressBar ?? true}
+						onChange={(e: any) => setCachedStateField("terminalCompressProgressBar", e.target.checked)}
+						data-testid="terminal-compress-progress-bar-checkbox">
+						<span className="font-medium">{t("settings:terminal.compressProgressBar.label")}</span>
+					</VSCodeCheckbox>
+					<div className="text-vscode-descriptionForeground text-sm mt-1">
+						{t("settings:terminal.compressProgressBar.description")}
+					</div>
+				</div>
+
+				<div>
 					<label className="block font-medium mb-1">
 						{t("settings:terminal.shellIntegrationTimeout.label")}
 					</label>
@@ -177,18 +189,6 @@ export const TerminalSettings = ({
 					</VSCodeCheckbox>
 					<div className="text-vscode-descriptionForeground text-sm mt-1">
 						{t("settings:terminal.zdotdir.description")}
-					</div>
-				</div>
-
-				<div>
-					<VSCodeCheckbox
-						checked={terminalCompressProgressBar ?? true}
-						onChange={(e: any) => setCachedStateField("terminalCompressProgressBar", e.target.checked)}
-						data-testid="terminal-compress-progress-bar-checkbox">
-						<span className="font-medium">{t("settings:terminal.compressProgressBar.label")}</span>
-					</VSCodeCheckbox>
-					<div className="text-vscode-descriptionForeground text-sm mt-1">
-						{t("settings:terminal.compressProgressBar.description")}
 					</div>
 				</div>
 			</Section>
