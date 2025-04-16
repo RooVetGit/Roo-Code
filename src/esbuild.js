@@ -65,9 +65,10 @@ const copyWasmFiles = {
 
 // Simple function to copy locale files
 function copyLocaleFiles() {
-	const srcDir = path.join(__dirname, "src", "i18n", "locales")
+	const srcDir = path.join(__dirname, "i18n", "locales")
 	const destDir = path.join(__dirname, "dist", "i18n", "locales")
 	const outDir = path.join(__dirname, "out", "i18n", "locales")
+	console.log("copyLocaleFiles", { srcDir, destDir, outDir })
 
 	// Ensure source directory exists before proceeding
 	if (!fs.existsSync(srcDir)) {
@@ -77,6 +78,7 @@ function copyLocaleFiles() {
 
 	// Create destination directories
 	fs.mkdirSync(destDir, { recursive: true })
+
 	try {
 		fs.mkdirSync(outDir, { recursive: true })
 	} catch (e) {}
@@ -179,7 +181,7 @@ const extensionConfig = {
 			},
 		},
 	],
-	entryPoints: ["src/extension.ts"],
+	entryPoints: ["extension.ts"],
 	format: "cjs",
 	sourcesContent: false,
 	platform: "node",

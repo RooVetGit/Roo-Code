@@ -100,13 +100,13 @@ git clone https://github.com/RooVetGit/Roo-Code.git
 2. **Bağımlılıkları yükleyin**:
 
 ```sh
-npm run install:all
+pnpm install
 ```
 
 3. **Webview'ı başlatın (HMR ile Vite/React uygulaması)**:
 
 ```sh
-npm run dev
+pnpm dev
 ```
 
 4. **Hata ayıklama**:
@@ -117,7 +117,7 @@ Webview'daki değişiklikler anında görünecektir. Ana uzantıdaki değişikli
 Alternatif olarak, bir .vsix dosyası oluşturabilir ve doğrudan VSCode'a kurabilirsiniz:
 
 ```sh
-npm run build
+pnpm build
 ```
 
 `bin/` dizininde bir `.vsix` dosyası görünecek ve şu komutla kurulabilir:

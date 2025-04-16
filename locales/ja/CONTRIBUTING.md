@@ -100,13 +100,13 @@ git clone https://github.com/RooVetGit/Roo-Code.git
 2. **依存関係をインストール**します：
 
 ```sh
-npm run install:all
+pnpm install
 ```
 
 3. **ウェブビュー（Vite/ReactアプリとHMR）を起動**します：
 
 ```sh
-npm run dev
+pnpm dev
 ```
 
 4. **デバッグ**：
@@ -117,7 +117,7 @@ npm run dev
 または、.vsixファイルをビルドしてVSCodeに直接インストールすることもできます：
 
 ```sh
-npm run build
+pnpm build
 ```
 
 `bin/`ディレクトリに`.vsix`ファイルが作成され、以下のコマンドでインストールできます：

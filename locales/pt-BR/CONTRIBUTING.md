@@ -100,13 +100,13 @@ git clone https://github.com/RooVetGit/Roo-Code.git
 2. **Instale as dependências**:
 
 ```sh
-npm run install:all
+pnpm install
 ```
 
 3. **Inicie o webview (aplicativo Vite/React com HMR)**:
 
 ```sh
-npm run dev
+pnpm dev
 ```
 
 4. **Depuração**:
@@ -117,7 +117,7 @@ Alterações no webview aparecerão imediatamente. Alterações na extensão pri
 Alternativamente, você pode construir um .vsix e instalá-lo diretamente no VSCode:
 
 ```sh
-npm run build
+pnpm build
 ```
 
 Um arquivo `.vsix` aparecerá no diretório `bin/` que pode ser instalado com:

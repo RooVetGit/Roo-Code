@@ -131,13 +131,13 @@ git clone https://github.com/RooVetGit/Roo-Code.git
 2. **Installez les dépendances** :
 
 ```sh
-npm run install:all
+pnpm install
 ```
 
 3. **Démarrez la vue web (application Vite/React avec HMR)** :
 
 ```sh
-npm run dev
+pnpm dev
 ```
 
 4. **Débogage** :
@@ -148,7 +148,7 @@ Les modifications apportées à la vue web apparaîtront immédiatement. Les mod
 Vous pouvez également créer un fichier .vsix et l'installer directement dans VSCode :
 
 ```sh
-npm run build
+pnpm build
 ```
 
 Un fichier `.vsix` apparaîtra dans le répertoire `bin/` qui peut être installé avec :
