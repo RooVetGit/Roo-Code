@@ -28,9 +28,16 @@ interface VSCodeMessage {
 
 function App() {
 	const [initialized, setInitialized] = useState<boolean>(false)
-	const [isDarkTheme, setIsDarkTheme] = useState<boolean>(document.body.classList.contains("vscode-dark"))
+	const [isDarkTheme, setIsDarkTheme] = useState<boolean>(() => {
+		// Initialize theme from localStorage if available
+		const savedTheme = localStorage.getItem("vscode-theme-preference")
+		return savedTheme ? JSON.parse(savedTheme) : false
+	})
 
-	// We'll use Tailwind CSS classes that adapt to VS Code's theme
+	// Save theme preference whenever it changes
+	useEffect(() => {
+		localStorage.setItem("vscode-theme-preference", JSON.stringify(isDarkTheme))
+	}, [isDarkTheme])
 
 	useEffect(() => {
 		// Setup message handler from extension to webview

@@ -14,11 +14,13 @@
 		"check-types": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@heroicons/react": "^2.2.0",
+		"@tailwindcss/vite": "^4.1.4",
+		"class-variance-authority": "^0.7.0",
+		"clsx": "^2.1.0",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
 		"react-router-dom": "^6.22.1",
-		"class-variance-authority": "^0.7.0",
-		"clsx": "^2.1.0",
 		"tailwind-merge": "^2.2.1"
 	},
 	"devDependencies": {

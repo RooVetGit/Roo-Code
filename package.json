@@ -359,7 +359,7 @@
 		"build:webview": "cd webview-ui && npm run build",
 		"build:settings-webview": "cd settings-webview && npm run build",
 		"build:esbuild": "node esbuild.js --production",
-		"compile": "tsc -p . --outDir out && node esbuild.js",
+		"compile": "npm run build:settings-webview && tsc -p . --outDir out && node esbuild.js",
 		"install:all": "npm install npm-run-all && npm-run-all -l -p install-*",
 		"install-extension": "npm install",
 		"install-webview": "cd webview-ui && npm install",

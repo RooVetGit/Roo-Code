@@ -1,6 +1,6 @@
 # Settings Webview Migration
 
-This folder contains a new implementation of the Roo Code settings panel using React, TypeScript, Vite, Vitest, React Router, and Fluent UI. The goal is to gradually migrate all settings from the current implementation in `@webview-ui/src/components/settings/SettingsView.tsx` to this new implementation.
+This folder contains a new implementation of the Roo Code settings panel using React, TypeScript, Vite, Vitest, React Router, and TailwindCSS. The goal is to gradually migrate all settings from the current implementation in `@webview-ui/src/components/settings/SettingsView.tsx` to this new implementation.
 
 ## Architecture
 
@@ -9,7 +9,7 @@ This folder contains a new implementation of the Roo Code settings panel using R
 - **Vite**: Fast development and building
 - **Vitest**: Testing framework
 - **React Router**: Navigation
-- **Fluent UI**: UI component library
+- **TailwindCSS**: Utility-first CSS framework
 
 ## Development Process
 
