@@ -111,8 +111,9 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 				if (option.value) {
 					// remove trailing slash
 					const path = removeLeadingNonAlphanumeric(option.value || "").replace(/\/$/, "")
-					const filename = path.split("/").at(-1)
-					const folderPath = path.split("/").slice(0, -1).join("/")
+					const pathList = path.split("/")
+					const filename = pathList.at(-1)
+					const folderPath = pathList.slice(0, -1).join("/")
 					return (
 						<div
 							style={{
