@@ -171,49 +171,7 @@
 	"autoApprove": {
 		"title": "Auto-approvazione:",
 		"none": "Nessuna",
-		"description": "L'auto-approvazione permette a Roo Code di eseguire azioni senza chiedere permesso. Abilita solo per azioni di cui ti fidi completamente. Configurazione più dettagliata disponibile nelle <settingsLink>Impostazioni</settingsLink>.",
-		"actions": {
-			"readFiles": {
-				"label": "Leggi file e directory",
-				"shortName": "Lettura",
-				"description": "Consente l'accesso per leggere qualsiasi file sul tuo computer."
-			},
-			"editFiles": {
-				"label": "Modifica file",
-				"shortName": "Modifica",
-				"description": "Consente la modifica di qualsiasi file sul tuo computer."
-			},
-			"executeCommands": {
-				"label": "Esegui comandi approvati",
-				"shortName": "Comandi",
-				"description": "Consente l'esecuzione di comandi da terminale approvati. Puoi configurare questo nel pannello delle impostazioni."
-			},
-			"useBrowser": {
-				"label": "Usa il browser",
-				"shortName": "Browser",
-				"description": "Consente la capacità di avviare e interagire con qualsiasi sito web in un browser headless."
-			},
-			"useMcp": {
-				"label": "Usa server MCP",
-				"shortName": "MCP",
-				"description": "Consente l'uso di server MCP configurati che possono modificare il filesystem o interagire con API."
-			},
-			"switchModes": {
-				"label": "Cambia modalità",
-				"shortName": "Modalità",
-				"description": "Consente il passaggio automatico tra diverse modalità senza richiedere approvazione."
-			},
-			"subtasks": {
-				"label": "Crea e completa sottoattività",
-				"shortName": "Sottoattività",
-				"description": "Consente la creazione e il completamento di sottoattività senza richiedere approvazione."
-			},
-			"retryRequests": {
-				"label": "Riprova richieste fallite",
-				"shortName": "Ripetizioni",
-				"description": "Riprova automaticamente le richieste API fallite quando il provider restituisce una risposta di errore."
-			}
-		}
+		"description": "L'auto-approvazione permette a Roo Code di eseguire azioni senza chiedere permesso. Abilita solo per azioni di cui ti fidi completamente. Configurazione più dettagliata disponibile nelle <settingsLink>Impostazioni</settingsLink>."
 	},
 	"reasoning": {
 		"thinking": "Sto pensando",
@@ -223,10 +181,14 @@
 		"copyToInput": "Copia nell'input (o Shift + clic)"
 	},
 	"announcement": {
-		"title": "Fai di più con le Attività Boomerang 🪃",
-		"description": "Dividi il lavoro in sottoattività, ognuna eseguita in una modalità specializzata, come code, architect, debug o una modalità personalizzata.",
-		"learnMore": "Scopri di più →",
-		"hideButton": "Nascondi annuncio"
+		"title": "🎉 Rilasciato Roo Code 3.12",
+		"description": "Roo Code 3.12 porta nuove funzionalità e miglioramenti basati sui tuoi feedback.",
+		"whatsNew": "Novità",
+		"feature1": "<bold>Supporto Grok</bold>: Aggiunto il provider xAI e opzioni di impegno ragionato per Grok su OpenRouter",
+		"feature2": "<bold>Miglioramenti nell'editing delle differenze</bold>: Configurazione per profilo e migliore normalizzazione delle stringhe per meno errori",
+		"feature3": "<bold>Miglioramenti dei checkpoint</bold>: Checkpoint più veloci e affidabili",
+		"hideButton": "Nascondi annuncio",
+		"detailsDiscussLinks": "Ottieni maggiori dettagli e partecipa alle discussioni su <discordLink>Discord</discordLink> e <redditLink>Reddit</redditLink> 🚀"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo vuole utilizzare il browser:",

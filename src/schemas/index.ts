@@ -28,6 +28,7 @@ export const providerNames = [
 	"requesty",
 	"human-relay",
 	"fake-ai",
+	"xai",
 ] as const
 
 export const providerNamesSchema = z.enum(providerNames)
@@ -43,19 +44,6 @@ export const toolGroups = ["read", "edit", "browser", "command", "mcp", "modes"]
 export const toolGroupsSchema = z.enum(toolGroups)
 
 export type ToolGroup = z.infer<typeof toolGroupsSchema>
-
-/**
- * CheckpointStorage
- */
-
-export const checkpointStorages = ["task", "workspace"] as const
-
-export const checkpointStoragesSchema = z.enum(checkpointStorages)
-
-export type CheckpointStorage = z.infer<typeof checkpointStoragesSchema>
-
-export const isCheckpointStorage = (value: string): value is CheckpointStorage =>
-	checkpointStorages.includes(value as CheckpointStorage)
 
 /**
  * Language
@@ -393,6 +381,8 @@ export const providerSettingsSchema = z.object({
 	requestyApiKey: z.string().optional(),
 	requestyModelId: z.string().optional(),
 	requestyModelInfo: modelInfoSchema.nullish(),
+	// X.AI (Grok)
+	xaiApiKey: z.string().optional(),
 	// Claude 3.7 Sonnet Thinking
 	modelMaxTokens: z.number().optional(),
 	modelMaxThinkingTokens: z.number().optional(),
@@ -401,6 +391,8 @@ export const providerSettingsSchema = z.object({
 	modelTemperature: z.number().nullish(),
 	reasoningEffort: reasoningEffortsSchema.optional(),
 	rateLimitSeconds: z.number().optional(),
+	diffEnabled: z.boolean().optional(),
+	fuzzyMatchThreshold: z.number().optional(),
 	// Fake AI
 	fakeAi: z.unknown().optional(),
 })
@@ -490,8 +482,12 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	modelTemperature: undefined,
 	reasoningEffort: undefined,
 	rateLimitSeconds: undefined,
+	diffEnabled: undefined,
+	fuzzyMatchThreshold: undefined,
 	// Fake AI
 	fakeAi: undefined,
+	// X.AI (Grok)
+	xaiApiKey: undefined,
 }
 
 export const PROVIDER_SETTINGS_KEYS = Object.keys(providerSettingsRecord) as Keys<ProviderSettings>[]
@@ -532,7 +528,6 @@ export const globalSettingsSchema = z.object({
 	cachedChromeHostUrl: z.string().optional(),
 
 	enableCheckpoints: z.boolean().optional(),
-	checkpointStorage: checkpointStoragesSchema.optional(),
 
 	showGreeting: z.boolean().optional(),
 
@@ -610,7 +605,6 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	remoteBrowserHost: undefined,
 
 	enableCheckpoints: undefined,
-	checkpointStorage: undefined,
 
 	showGreeting: undefined,
 
@@ -683,6 +677,7 @@ export type SecretState = Pick<
 	| "mistralApiKey"
 	| "unboundApiKey"
 	| "requestyApiKey"
+	| "xaiApiKey"
 >
 
 type SecretStateRecord = Record<Keys<SecretState>, undefined>
@@ -701,6 +696,7 @@ const secretStateRecord: SecretStateRecord = {
 	mistralApiKey: undefined,
 	unboundApiKey: undefined,
 	requestyApiKey: undefined,
+	xaiApiKey: undefined,
 }
 
 export const SECRET_STATE_KEYS = Object.keys(secretStateRecord) as Keys<SecretState>[]
