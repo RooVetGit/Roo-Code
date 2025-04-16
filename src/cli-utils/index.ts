@@ -1,3 +1,3 @@
 // Export all CLI utility functions
-export * from "./install"
-export * from "./uninstall"
+export * from "./install-cli"
+export * from "./uninstall-cli"
