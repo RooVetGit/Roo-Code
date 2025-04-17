@@ -167,12 +167,14 @@ export interface NewTaskToolUse extends ToolUse {
 	params: Partial<Pick<Record<ToolParamName, string>, "mode" | "message">>
 }
 
-export type ToolUsage = Record<
-	ToolName,
-	{
-		attempts: number
-		failures: number
-	}
+export type ToolUsage = Partial<
+	Record<
+		ToolName,
+		{
+			attempts: number
+			failures: number
+		}
+	>
 >
 
 // Define tool group configuration

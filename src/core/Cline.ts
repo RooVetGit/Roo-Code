@@ -39,7 +39,7 @@ import { GlobalFileNames } from "../shared/globalFileNames"
 import { defaultModeSlug, getModeBySlug, getFullModeDetails, isToolAllowedForMode } from "../shared/modes"
 import { EXPERIMENT_IDS, experiments as Experiments, ExperimentId } from "../shared/experiments"
 import { formatLanguage } from "../shared/language"
-import { ToolParamName, ToolName, ToolResponse } from "../shared/tools"
+import { ToolParamName, ToolName, ToolResponse, ToolUsage } from "../shared/tools"
 
 // services
 import { UrlContentFetcher } from "../services/browser/UrlContentFetcher"
@@ -188,6 +188,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 	didRejectTool = false
 	private didAlreadyUseTool = false
 	private didCompleteReadingStream = false
+
+	// metrics
+	private toolUsage: ToolUsage = {}
 
 	constructor({
 		provider,
@@ -2692,5 +2695,21 @@ export class Cline extends EventEmitter<ClineEvents> {
 	// Public accessor for fileContextTracker
 	public getFileContextTracker(): FileContextTracker {
 		return this.fileContextTracker
+	}
+
+	// Metrics
+
+	public recordToolUsage({ toolName, success = true }: { toolName: ToolName; success?: boolean }): ToolUsage {
+		if (!this.toolUsage[toolName]) {
+			this.toolUsage[toolName] = { attempts: 0, failures: 0 }
+		}
+
+		this.toolUsage[toolName].attempts++
+
+		if (!success) {
+			this.toolUsage[toolName].failures++
+		}
+
+		return this.toolUsage
 	}
 }

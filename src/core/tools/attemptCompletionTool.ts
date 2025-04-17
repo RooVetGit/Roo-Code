@@ -26,8 +26,10 @@ export async function attemptCompletionTool(
 ) {
 	const result: string | undefined = block.params.result
 	const command: string | undefined = block.params.command
+
 	try {
 		const lastMessage = cline.clineMessages.at(-1)
+
 		if (block.partial) {
 			if (command) {
 				// the attempt_completion text is done, now we're getting command
@@ -55,6 +57,7 @@ export async function attemptCompletionTool(
 		} else {
 			if (!result) {
 				cline.consecutiveMistakeCount++
+				cline.recordToolUsage({ toolName: "attempt_completion", success: false })
 				pushToolResult(await cline.sayAndCreateMissingParamError("attempt_completion", "result"))
 				return
 			}
@@ -136,13 +139,10 @@ export async function attemptCompletionTool(
 			})
 
 			toolResults.push(...formatResponse.imageBlocks(images))
-
-			cline.userMessageContent.push({
-				type: "text",
-				text: `${toolDescription()} Result:`,
-			})
-
+			cline.userMessageContent.push({ type: "text", text: `${toolDescription()} Result:` })
 			cline.userMessageContent.push(...toolResults)
+			cline.recordToolUsage({ toolName: "attempt_completion" })
+
 			return
 		}
 	} catch (error) {
