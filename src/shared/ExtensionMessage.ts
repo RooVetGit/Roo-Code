@@ -229,6 +229,7 @@ export interface ClineSayTool {
 	content?: string
 	regex?: string
 	filePattern?: string
+	maxResults?: string
 	mode?: string
 	reason?: string
 	isOutsideWorkspace?: boolean
