@@ -549,6 +549,7 @@ export const globalSettingsSchema = z.object({
 	terminalZshOhMy: z.boolean().optional(),
 	terminalZshP10k: z.boolean().optional(),
 	terminalZdotdir: z.boolean().optional(),
+	terminalCompressProgressBar: z.boolean().optional(),
 
 	rateLimitSeconds: z.number().optional(),
 	diffEnabled: z.boolean().optional(),
@@ -626,6 +627,7 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	terminalZshOhMy: undefined,
 	terminalZshP10k: undefined,
 	terminalZdotdir: undefined,
+	terminalCompressProgressBar: undefined,
 
 	rateLimitSeconds: undefined,
 	diffEnabled: undefined,

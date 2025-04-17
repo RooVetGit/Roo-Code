@@ -282,6 +282,7 @@ type GlobalSettings = {
 	terminalZshOhMy?: boolean | undefined
 	terminalZshP10k?: boolean | undefined
 	terminalZdotdir?: boolean | undefined
+	terminalCompressProgressBar?: boolean | undefined
 	rateLimitSeconds?: number | undefined
 	diffEnabled?: boolean | undefined
 	fuzzyMatchThreshold?: number | undefined

@@ -139,6 +139,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		remoteBrowserEnabled,
 		maxReadFileLine,
 		showGreeting,
+		terminalCompressProgressBar,
 	} = cachedState
 
 	// Make sure apiConfiguration is initialized and managed by SettingsView.
@@ -248,6 +249,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "terminalZshOhMy", bool: terminalZshOhMy })
 			vscode.postMessage({ type: "terminalZshP10k", bool: terminalZshP10k })
 			vscode.postMessage({ type: "terminalZdotdir", bool: terminalZdotdir })
+			vscode.postMessage({ type: "terminalCompressProgressBar", bool: terminalCompressProgressBar })
 			vscode.postMessage({ type: "mcpEnabled", bool: mcpEnabled })
 			vscode.postMessage({ type: "alwaysApproveResubmit", bool: alwaysApproveResubmit })
 			vscode.postMessage({ type: "requestDelaySeconds", value: requestDelaySeconds })
@@ -502,6 +504,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 						terminalZshOhMy={terminalZshOhMy}
 						terminalZshP10k={terminalZshP10k}
 						terminalZdotdir={terminalZdotdir}
+						terminalCompressProgressBar={terminalCompressProgressBar}
 						setCachedStateField={setCachedStateField}
 					/>
 				</div>
