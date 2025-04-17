@@ -344,9 +344,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 		await this.saveClineMessages()
 	}
 
-	private async updateClineMessage(partialMessage: ClineMessage) {
-		await this.providerRef.deref()?.postMessageToWebview({ type: "partialMessage", partialMessage })
-		this.emit("message", { action: "updated", message: partialMessage })
+	private async updateClineMessage(message: ClineMessage) {
+		await this.providerRef.deref()?.postMessageToWebview({ type: "updatePartialMessage", clineMessage: message })
+		this.emit("message", { action: "updated", message })
 	}
 
 	getTokenUsage() {
