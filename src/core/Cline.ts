@@ -12,7 +12,10 @@ import getFolderSize from "get-folder-size"
 import { serializeError } from "serialize-error"
 import * as vscode from "vscode"
 
+// schemas
 import { TokenUsage } from "../schemas"
+
+// api
 import { ApiHandler, buildApiHandler } from "../api"
 import { ApiStream } from "../api/transform/stream"
 
@@ -77,19 +80,18 @@ import { switchModeTool } from "./tools/switchModeTool"
 import { attemptCompletionTool } from "./tools/attemptCompletionTool"
 import { newTaskTool } from "./tools/newTaskTool"
 
-import { parseMentions } from "./mentions"
-import { FileContextTracker } from "./context-tracking/FileContextTracker"
-import { RooIgnoreController } from "./ignore/RooIgnoreController"
-
-import { type AssistantMessageContent, parseAssistantMessage } from "./assistant-message"
-
+// prompts
 import { formatResponse } from "./prompts/responses"
 import { SYSTEM_PROMPT } from "./prompts/system"
 
+// ... everything else
+import { parseMentions } from "./mentions"
+import { FileContextTracker } from "./context-tracking/FileContextTracker"
+import { RooIgnoreController } from "./ignore/RooIgnoreController"
+import { type AssistantMessageContent, parseAssistantMessage } from "./assistant-message"
 import { truncateConversationIfNeeded } from "./sliding-window"
 import { ClineProvider } from "./webview/ClineProvider"
 import { DiffStrategy, getDiffStrategy } from "./diff/DiffStrategy"
-
 import { validateToolUse } from "./mode-validator"
 
 type UserContent = Array<Anthropic.Messages.ContentBlockParam>
