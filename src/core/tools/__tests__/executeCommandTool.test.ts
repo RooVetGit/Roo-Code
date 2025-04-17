@@ -5,7 +5,8 @@ import { describe, expect, it, jest, beforeEach } from "@jest/globals"
 import { executeCommandTool } from "../executeCommandTool"
 import { Cline } from "../../Cline"
 import { formatResponse } from "../../prompts/responses"
-import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag, ToolUsage } from "../../../shared/tools"
+import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../../shared/tools"
+import { ToolUsage } from "../../../schemas"
 
 // Mock dependencies
 jest.mock("../../Cline")
@@ -40,7 +41,6 @@ describe("executeCommandTool", () => {
 				// @ts-expect-error - Jest mock function type issues
 				validateCommand: jest.fn().mockReturnValue(null),
 			},
-			// @ts-expect-error - Jest mock function type issues
 			recordToolUsage: jest.fn().mockReturnValue({} as ToolUsage),
 		}
 

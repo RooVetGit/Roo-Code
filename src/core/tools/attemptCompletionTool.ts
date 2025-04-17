@@ -45,7 +45,7 @@ export async function attemptCompletionTool(
 					await cline.say("completion_result", removeClosingTag("result", result), undefined, false)
 
 					telemetryService.captureTaskCompleted(cline.taskId)
-					cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage())
+					cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage(), cline.getToolUsage())
 
 					await cline.ask("command", removeClosingTag("command", command), block.partial).catch(() => {})
 				}
@@ -71,7 +71,7 @@ export async function attemptCompletionTool(
 					// Haven't sent a command message yet so first send completion_result then command.
 					await cline.say("completion_result", result, undefined, false)
 					telemetryService.captureTaskCompleted(cline.taskId)
-					cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage())
+					cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage(), cline.getToolUsage())
 				}
 
 				// Complete command message.
@@ -94,7 +94,7 @@ export async function attemptCompletionTool(
 			} else {
 				await cline.say("completion_result", result, undefined, false)
 				telemetryService.captureTaskCompleted(cline.taskId)
-				cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage())
+				cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage(), cline.getToolUsage())
 			}
 
 			if (cline.parentTask) {
