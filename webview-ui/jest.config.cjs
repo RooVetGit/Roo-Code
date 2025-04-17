@@ -17,7 +17,10 @@ module.exports = {
 		"^\\./setup$": "<rootDir>/src/__mocks__/i18n/setup.ts",
 		"^src/i18n/TranslationContext$": "<rootDir>/src/__mocks__/i18n/TranslationContext.tsx",
 		"^\\.\\./TranslationContext$": "<rootDir>/src/__mocks__/i18n/TranslationContext.tsx",
-		"^\\./TranslationContext$": "<rootDir>/src/__mocks__/i18n/TranslationContext.tsx"
+		"^\\./TranslationContext$": "<rootDir>/src/__mocks__/i18n/TranslationContext.tsx",
+		'^react-markdown$': 'identity-obj-proxy',
+		'^remark-gfm$': 'identity-obj-proxy',
+		'^shiki$': 'identity-obj-proxy'
 	},
 	reporters: [["jest-simple-dot-reporter", {}]],
 	transformIgnorePatterns: [

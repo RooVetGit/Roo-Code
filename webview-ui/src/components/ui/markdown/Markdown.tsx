@@ -1,6 +1,7 @@
 import { FC, memo } from "react"
 import ReactMarkdown, { Options } from "react-markdown"
 import remarkGfm from "remark-gfm"
+import { cn } from "@/lib/utils"
 
 import { Separator } from "@/components/ui"
 
@@ -12,11 +13,12 @@ const MemoizedReactMarkdown: FC<Options> = memo(
 	(prevProps, nextProps) => prevProps.children === nextProps.children && prevProps.className === nextProps.className,
 )
 
-export function Markdown({ content }: { content: string }) {
+export function Markdown({ content, isComplete }: { content: string; isComplete?: boolean }) {
+	// Added optional isComplete prop
 	return (
 		<MemoizedReactMarkdown
 			remarkPlugins={[remarkGfm]}
-			className="custom-markdown break-words"
+			className="custom-markdown break-words text-[var(--vscode-font-size)]"
 			components={{
 				p({ children }) {
 					return <div className="mb-2 last:mb-0">{children}</div>
@@ -26,14 +28,14 @@ export function Markdown({ content }: { content: string }) {
 				},
 				ol({ children }) {
 					return (
-						<ol className="list-decimal pl-4 [&>li]:mb-1 [&>li:last-child]:mb-0 [&>li>ul]:mt-1 [&>li>ol]:mt-1">
+						<ol className="list-decimal pl-[2.5em] [&>li]:mb-1 [&>li:last-child]:mb-0 [&>li>ul]:mt-1 [&>li>ol]:mt-1">
 							{children}
 						</ol>
 					)
 				},
 				ul({ children }) {
 					return (
-						<ul className="list-disc pl-4 [&>li]:mb-1 [&>li:last-child]:mb-0 [&>li>ul]:mt-1 [&>li>ol]:mt-1">
+						<ul className="list-disc pl-[2.5em] [&>li]:mb-1 [&>li:last-child]:mb-0 [&>li>ul]:mt-1 [&>li>ol]:mt-1">
 							{children}
 						</ul>
 					)
@@ -56,15 +58,63 @@ export function Markdown({ content }: { content: string }) {
 						props.node?.position && props.node.position.start.line === props.node.position.end.line
 
 					return isInline ? (
-						<code className={className} {...props}>
+						<code
+							className={cn(
+								"font-mono bg-[var(--vscode-textCodeBlock-background)] text-muted-foreground px-1 py-[0.1em] rounded-sm border border-border inline-block align-baseline",
+								className, // Allow original className (like language-) to be passed if needed, though less likely for inline
+							)}
+							{...props}>
 							{children}
 						</code>
 					) : (
 						<CodeBlock
 							language={(match && match[1]) || ""}
 							value={String(children).replace(/\n$/, "")}
-							className="rounded-xs p-3 mb-2"
+							className="rounded-xs p-3 mb-2" // Keep existing classes for now, margin replacement was reverted/failed
+							isComplete={isComplete ?? true} // Pass down isComplete, default to true if undefined
 						/>
+					)
+				},
+				table({ children }) {
+					// Use w-full for full width, border-collapse for clean borders,
+					// border and border-border for VS Code theme-aware borders, my-2 for margin
+					return <table className="w-full my-2 border-collapse border border-border">{children}</table>
+				},
+				thead({ children }) {
+					// Add bottom border and a subtle background consistent with muted elements
+					return <thead className="border-b border-border bg-muted/50">{children}</thead>
+				},
+				tbody({ children }) {
+					// No specific styling needed for tbody itself
+					return <tbody>{children}</tbody>
+				},
+				tr({ children }) {
+					// Add bottom border, hover effect, and remove border for the last row
+					return (
+						<tr className="border-b border-border transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted last:border-b-0">
+							{children}
+						</tr>
+					)
+				},
+				th({ children }) {
+					// Add right border, padding, left alignment, medium font weight, muted text color,
+					// and remove border for the last header cell
+					return (
+						<th className="border-r border-border p-2 text-left align-middle font-medium text-muted-foreground last:border-r-0">
+							{children}
+						</th>
+					)
+				},
+				strong({ children }) {
+					// Apply a slightly lighter font weight than default bold
+					return <strong className="font-semibold">{children}</strong>
+				},
+				td({ children }) {
+					// Add right border, padding, left alignment, and remove border for the last data cell
+					return (
+						<td className="border-r border-border p-2 text-left align-middle last:border-r-0">
+							{children}
+						</td>
 					)
 				},
 				a({ href, children }) {

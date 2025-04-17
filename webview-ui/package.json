@@ -63,7 +63,8 @@
 		"tailwindcss": "^4.0.0",
 		"tailwindcss-animate": "^1.0.7",
 		"vscrui": "^0.2.2",
-		"zod": "^3.24.2"
+		"zod": "^3.24.2",
+		"shiki": "^2.3.2"
 	},
 	"devDependencies": {
 		"@storybook/addon-essentials": "^8.5.6",
@@ -92,7 +93,6 @@
 		"jest": "^29.7.0",
 		"jest-environment-jsdom": "^29.7.0",
 		"jest-simple-dot-reporter": "^1.0.5",
-		"shiki": "^2.3.2",
 		"storybook": "^8.5.6",
 		"storybook-dark-mode": "^4.0.2",
 		"ts-jest": "^29.2.5",
