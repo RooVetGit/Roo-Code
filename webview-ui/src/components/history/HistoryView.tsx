@@ -1,4 +1,4 @@
-import React, { memo, useState } from "react"
+import React, { memo, useState, useMemo } from "react"
 import { DeleteTaskDialog } from "./DeleteTaskDialog"
 import { BatchDeleteTaskDialog } from "./BatchDeleteTaskDialog"
 import prettyBytes from "pretty-bytes"
@@ -74,6 +74,14 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 		}
 	}
 
+	// Calculate total API cost for current tasks
+	const totalApiCost = useMemo(() => {
+		return tasks.reduce((sum, task) => {
+			const cost = typeof task.totalCost === "string" ? parseFloat(task.totalCost) : task.totalCost
+			return sum + (isNaN(cost) ? 0 : cost)
+		}, 0)
+	}, [tasks])
+
 	return (
 		<Tab>
 			<TabHeader className="flex flex-col gap-2">
@@ -95,6 +103,9 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 						</Button>
 						<Button onClick={onDone}>{t("history:done")}</Button>
 					</div>
+				</div>
+				<div className="text-vscode-descriptionForeground text-sm font-semibold">
+					{`Total ${t("history:apiCostLabel")}`} ${totalApiCost.toFixed(4)}
 				</div>
 				<div className="flex flex-col gap-2">
 					<VSCodeTextField
