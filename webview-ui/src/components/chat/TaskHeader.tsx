@@ -1,6 +1,5 @@
 import React, { memo, useMemo, useRef, useState } from "react"
 import { useWindowSize } from "react-use"
-import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 import prettyBytes from "pretty-bytes"
 import { useTranslation } from "react-i18next"
 
@@ -59,19 +58,12 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 		<div className="py-2 px-3">
 			<div
 				className={cn(
-					"rounded p-[10px] flex flex-col gap-[6px] relative z-1 outline",
+					"rounded-xs p-2.5 flex flex-col gap-1.5 relative z-1 border",
 					!!isTaskExpanded
-						? "outline-vscode-panel-border text-vscode-foreground"
-						: "outline-vscode-panel-border/80 text-vscode-foreground/80",
+						? "border-vscode-panel-border text-vscode-foreground"
+						: "border-vscode-panel-border/80 text-vscode-foreground/80",
 				)}>
-				<VSCodeButton
-					appearance="icon"
-					onClick={onClose}
-					className="absolute top-1 right-1 text-vscode-foreground"
-					title={t("chat:task.closeAndStart")}>
-					<span className="codicon codicon-close"></span>
-				</VSCodeButton>
-				<div className="flex justify-between items-center mr-4">
+				<div className="flex justify-between items-center gap-2">
 					<div
 						className="flex items-center cursor-pointer -ml-0.5 select-none grow min-w-0"
 						onClick={() => setIsTaskExpanded(!isTaskExpanded)}>
@@ -86,6 +78,14 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 							{!isTaskExpanded && <span className="ml-1">{highlightMentions(task.text, false)}</span>}
 						</div>
 					</div>
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={onClose}
+						title={t("chat:task.closeAndStart")}
+						className="shrink-0 w-5 h-5">
+						<span className="codicon codicon-close" />
+					</Button>
 				</div>
 				{/* Collapsed state: Track context and cost if we have any */}
 				{!isTaskExpanded && contextWindow > 0 && (
@@ -95,7 +95,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 							contextTokens={contextTokens || 0}
 							maxTokens={getMaxTokensForModel(selectedModelInfo, apiConfiguration)}
 						/>
-						{!!totalCost && <Badge variant="secondary">${totalCost?.toFixed(2)}</Badge>}
+						{!!totalCost && <Badge>${totalCost.toFixed(2)}</Badge>}
 					</div>
 				)}
 				{/* Expanded state: Show task text and images */}
@@ -272,7 +272,7 @@ const ContextWindowProgress = ({ contextWindow, contextTokens, maxTokens }: Cont
 				<div className="flex-1 relative">
 					{/* Invisible overlay for hover area */}
 					<div
-						className="absolute w-full cursor-pointer h-4 -top-[7px] z-5"
+						className="absolute w-full h-4 -top-[7px] z-5"
 						title={t("chat:tokenProgress.availableSpace", { amount: formatLargeNumber(availableSize) })}
 						data-testid="context-available-space"
 					/>
@@ -283,7 +283,7 @@ const ContextWindowProgress = ({ contextWindow, contextTokens, maxTokens }: Cont
 						<div className="relative h-full" style={{ width: `${currentPercent}%` }}>
 							{/* Invisible overlay for current tokens section */}
 							<div
-								className="absolute cursor-pointer h-4 -top-[7px] w-full z-6"
+								className="absolute h-4 -top-[7px] w-full z-6"
 								title={t("chat:tokenProgress.tokensUsed", {
 									used: formatLargeNumber(safeContextTokens),
 									total: formatLargeNumber(safeContextWindow),
@@ -298,7 +298,7 @@ const ContextWindowProgress = ({ contextWindow, contextTokens, maxTokens }: Cont
 						<div className="relative h-full" style={{ width: `${reservedPercent}%` }}>
 							{/* Invisible overlay for reserved section */}
 							<div
-								className="absolute cursor-pointer h-4 -top-[7px] w-full z-6"
+								className="absolute h-4 -top-[7px] w-full z-6"
 								title={t("chat:tokenProgress.reservedForResponse", {
 									amount: formatLargeNumber(reservedForOutput),
 								})}
@@ -313,7 +313,7 @@ const ContextWindowProgress = ({ contextWindow, contextTokens, maxTokens }: Cont
 							<div className="relative h-full" style={{ width: `${availablePercent}%` }}>
 								{/* Invisible overlay for available space */}
 								<div
-									className="absolute cursor-pointer h-4 -top-[7px] w-full z-6"
+									className="absolute h-4 -top-[7px] w-full z-6"
 									title={t("chat:tokenProgress.availableSpace", {
 										amount: formatLargeNumber(availableSize),
 									})}
