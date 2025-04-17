@@ -3,6 +3,16 @@
  */
 
 /**
+ * Helper function to escape backslashes and spaces in a path.
+ * This encapsulates the multi-level escaping strategy for file paths.
+ * @param inputPath The path to escape
+ * @returns The escaped path
+ */
+function escapePath(inputPath: string): string {
+	return inputPath.replace(/\\/g, '\\\\').replace(/ /g, '\\ ');
+}
+
+/**
  * Converts an absolute path to a mention-friendly path
  * If the provided path starts with the current working directory,
  * it's converted to a relative path prefixed with @
@@ -12,27 +22,52 @@
  * @returns A mention-friendly path
  */
 export function convertToMentionPath(path: string, cwd?: string): string {
-	const normalizedPath = path.replace(/\\/g, "/")
-	let normalizedCwd = cwd ? cwd.replace(/\\/g, "/") : ""
+	// First, handle Windows path separators and convert to forward slashes
+	let processedPath = path.replace(/\\\\\\/g, "//").replace(/\\/g, "/");
+	let normalizedCwd = cwd ? cwd.replace(/\\\\\\/g, "//").replace(/\\/g, "/") : "";
 
 	if (!normalizedCwd) {
-		return path
+		// If no CWD, just escape spaces in the original path
+		return escapePath(processedPath);
 	}
 
 	// Remove trailing slash from cwd if it exists
 	if (normalizedCwd.endsWith("/")) {
-		normalizedCwd = normalizedCwd.slice(0, -1)
+		normalizedCwd = normalizedCwd.slice(0, -1);
 	}
 
 	// Always use case-insensitive comparison for path matching
-	const lowerPath = normalizedPath.toLowerCase()
-	const lowerCwd = normalizedCwd.toLowerCase()
+	const lowerPath = processedPath.toLowerCase();
+	const lowerCwd = normalizedCwd.toLowerCase();
 
 	if (lowerPath.startsWith(lowerCwd)) {
-		const relativePath = normalizedPath.substring(normalizedCwd.length)
+		const relativePath = processedPath.substring(normalizedCwd.length);
 		// Ensure there's a slash after the @ symbol when we create the mention path
-		return "@" + (relativePath.startsWith("/") ? relativePath : "/" + relativePath)
+		let mentionPath = "@" + (relativePath.startsWith("/") ? relativePath : "/" + relativePath);
+
+		/**
+		 * Space escaping logic for file paths
+		 *
+		 * This is the first step in our multi-level escaping strategy.
+		 * When a path contains spaces, we escape them with backslashes to ensure proper parsing.
+		 *
+		 * THE ESCAPING PIPELINE:
+		 * =====================
+		 * 1. We replace any already escaped spaces with a temporary marker.
+		 * 2. We escape regular spaces with a single backslash.
+		 * 3. We replace our markers with double backslashes.
+		 *
+		 * This produces paths like: "@/path/with\ spaces/file.txt"
+		 *
+		 * NOTE: Later, when this path is used with insertMention(), those escaped spaces
+		 * will undergo a second round of escaping, resulting in double backslashes.
+		 * This is necessary to preserve the escapes through the entire text processing pipeline.
+		 */
+		// Use the helper function to escape the path
+		return escapePath(mentionPath);
 	}
 
-	return path
+	// If path doesn't start with CWD, escape spaces in the processed path
+	// Use the helper function to escape the path
+	return escapePath(processedPath);
 }
