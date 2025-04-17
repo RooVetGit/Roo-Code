@@ -190,6 +190,16 @@
 	"followUpSuggest": {
 		"copyToInput": "Copy to input (same as shift + click)"
 	},
+	"notebook": {
+		"wantsToRead": "Roo wants to read the active notebook",
+		"didRead": "Roo did read the active notebook",
+		"wantsToEdit": "Roo wants to edit the active notebook",
+		"didEdit": "Roo edited the active notebook",
+		"wantsToExecute": "Roo wants to execute cell(s) of the active notebook",
+		"didExecute": "Roo executed cells of the active notebook",
+		"wantsToSave": "Roo wants to save the active notebook",
+		"didSave": "Roo saved the active notebook"
+	},
 	"browser": {
 		"rooWantsToUse": "Roo wants to use the browser:",
 		"consoleLogs": "Console Logs",

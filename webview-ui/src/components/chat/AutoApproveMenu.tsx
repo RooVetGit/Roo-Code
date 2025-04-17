@@ -25,6 +25,9 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		alwaysAllowModeSwitch,
 		alwaysAllowSubtasks,
 		alwaysApproveResubmit,
+		alwaysAllowNotebookRead,
+		alwaysAllowNotebookEdit,
+		alwaysAllowNotebookExecute,
 		setAlwaysAllowReadOnly,
 		setAlwaysAllowWrite,
 		setAlwaysAllowExecute,
@@ -33,6 +36,9 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		setAlwaysAllowModeSwitch,
 		setAlwaysAllowSubtasks,
 		setAlwaysApproveResubmit,
+		setAlwaysAllowNotebookRead,
+		setAlwaysAllowNotebookEdit,
+		setAlwaysAllowNotebookExecute,
 	} = useExtensionState()
 
 	const { t } = useAppTranslation()
@@ -66,6 +72,15 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 				case "alwaysApproveResubmit":
 					setAlwaysApproveResubmit(value)
 					break
+				case "alwaysAllowNotebookRead":
+					setAlwaysAllowNotebookRead(value)
+					break
+				case "alwaysAllowNotebookEdit":
+					setAlwaysAllowNotebookEdit(value)
+					break
+				case "alwaysAllowNotebookExecute":
+					setAlwaysAllowNotebookExecute(value)
+					break
 			}
 		},
 		[
@@ -77,6 +92,9 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 			setAlwaysAllowModeSwitch,
 			setAlwaysAllowSubtasks,
 			setAlwaysApproveResubmit,
+			setAlwaysAllowNotebookRead,
+			setAlwaysAllowNotebookEdit,
+			setAlwaysAllowNotebookExecute,
 		],
 	)
 
@@ -92,6 +110,9 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 			alwaysAllowModeSwitch: alwaysAllowModeSwitch,
 			alwaysAllowSubtasks: alwaysAllowSubtasks,
 			alwaysApproveResubmit: alwaysApproveResubmit,
+			alwaysAllowNotebookRead: alwaysAllowNotebookRead,
+			alwaysAllowNotebookEdit: alwaysAllowNotebookEdit,
+			alwaysAllowNotebookExecute: alwaysAllowNotebookExecute,
 		}),
 		[
 			alwaysAllowReadOnly,
@@ -102,6 +123,9 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 			alwaysAllowModeSwitch,
 			alwaysAllowSubtasks,
 			alwaysApproveResubmit,
+			alwaysAllowNotebookRead,
+			alwaysAllowNotebookEdit,
+			alwaysAllowNotebookExecute,
 		],
 	)
 

@@ -26,6 +26,7 @@
 		"notifications": "通知",
 		"contextManagement": "上下文管理",
 		"terminal": "終端機",
+		"notebook": "筆記本",
 		"advanced": "進階",
 		"experimental": "實驗性功能",
 		"language": "語言",
@@ -79,6 +80,18 @@
 			"allowedCommandsDescription": "當「始終核准執行操作」啟用時可以自動執行的命令前綴。新增 * 以允許所有命令（請謹慎使用）。",
 			"commandPlaceholder": "輸入命令前綴（例如 'git '）",
 			"addButton": "新增"
+		},
+		"notebookRead": {
+			"label": "NB 讀取",
+			"description": "自動讀取目前作用中的筆記本而無需核准"
+		},
+		"notebookEdit": {
+			"label": "NB 編輯",
+			"description": "自動編輯目前作用中的筆記本而無需核准"
+		},
+		"notebookExecute": {
+			"label": "NB 執行",
+			"description": "自動執行目前作用中筆記本中的儲存格而無需核准"
 		}
 	},
 	"providers": {
@@ -483,6 +496,16 @@
 		"showgreeting": {
 			"label": "顯示歡迎訊息",
 			"description": "啟用後，Roo 將顯示歡迎訊息與介紹。"
+		}
+	},
+	"notebook": {
+		"maxOutputSize": {
+			"label": "筆記本輸出大小限制",
+			"description": "筆記本儲存格輸出的最大字元數"
+		},
+		"timeoutSeconds": {
+			"label": "筆記本執行逾時時間",
+			"description": "等待筆記本儲存格執行的最長時間（秒）"
 		}
 	}
 }

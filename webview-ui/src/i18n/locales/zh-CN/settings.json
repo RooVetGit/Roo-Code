@@ -27,6 +27,7 @@
 		"notifications": "通知",
 		"contextManagement": "上下文管理",
 		"terminal": "终端",
+		"notebook": "笔记本",
 		"advanced": "高级",
 		"experimental": "实验性功能",
 		"language": "语言",
@@ -79,6 +80,18 @@
 			"allowedCommandsDescription": "当\"自动批准命令行操作\"启用时可以自动执行的命令前缀。添加 * 以允许所有命令（谨慎使用）。",
 			"commandPlaceholder": "输入命令前缀（例如 'git '）",
 			"addButton": "添加"
+		},
+		"notebookRead": {
+			"label": "NB 读取",
+			"description": "自动读取当前活动的笔记本而无需批准"
+		},
+		"notebookEdit": {
+			"label": "NB 编辑",
+			"description": "自动编辑当前活动的笔记本而无需批准"
+		},
+		"notebookExecute": {
+			"label": "NB 执行",
+			"description": "自动执行当前活动笔记本中的单元格而无需批准"
 		}
 	},
 	"providers": {
@@ -484,6 +497,16 @@
 		"showgreeting": {
 			"label": "显示欢迎消息",
 			"description": "启用后，Roo 将显示欢迎语和简介。"
+		}
+	},
+	"notebook": {
+		"maxOutputSize": {
+			"label": "笔记本输出大小限制",
+			"description": "笔记本单元格输出的最大字符数"
+		},
+		"timeoutSeconds": {
+			"label": "笔记本执行超时时间",
+			"description": "等待笔记本单元格执行的最长时间（秒）"
 		}
 	}
 }

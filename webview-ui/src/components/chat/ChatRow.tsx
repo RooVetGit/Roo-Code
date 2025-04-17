@@ -601,6 +601,97 @@ export const ChatRowContent = ({
 						</div>
 					</>
 				)
+			case "readNotebook":
+				return (
+					<>
+						<div style={headerStyle}>
+							{toolIcon("notebook")}
+							<span style={{ fontWeight: "bold" }}>
+								{message.type === "ask"
+									? t("chat:notebook.wantsToRead", "Roo wants to read the active notebook")
+									: t("chat:notebook.didRead", "Roo did read the active notebook")}
+							</span>
+						</div>
+						{tool.content && (
+							<CodeAccordian
+								isLoading={message.partial}
+								code={tool.content}
+								language="markdown"
+								isExpanded={isExpanded}
+								onToggleExpand={onToggleExpand}
+							/>
+						)}
+					</>
+				)
+			case "editNotebook":
+				return (
+					<>
+						<div style={headerStyle}>
+							{toolIcon("edit")}
+							<span style={{ fontWeight: "bold" }}>
+								{message.type === "ask"
+									? t("chat:notebook.wantsToEdit", "Roo wants to edit the active notebook")
+									: t("chat:notebook.didEdit", "Roo edited the active notebook")}
+							</span>
+						</div>
+						{tool.content && (
+							<CodeAccordian
+								isLoading={message.partial}
+								code={tool.content}
+								language="markdown"
+								isExpanded={isExpanded}
+								onToggleExpand={onToggleExpand}
+							/>
+						)}
+					</>
+				)
+			case "executeNotebook":
+				return (
+					<>
+						<div style={headerStyle}>
+							{toolIcon("run")}
+							<span style={{ fontWeight: "bold" }}>
+								{message.type === "ask"
+									? t(
+											"chat:notebook.wantsToExecute",
+											"Roo wants to execute cell(s) of the active notebook",
+										)
+									: t("chat:notebook.didExecute", "Roo executed cells of the active notebook")}
+							</span>
+						</div>
+						{tool.content && (
+							<CodeAccordian
+								isLoading={message.partial}
+								code={tool.content}
+								language="markdown"
+								isExpanded={isExpanded}
+								onToggleExpand={onToggleExpand}
+							/>
+						)}
+					</>
+				)
+			case "saveNotebook":
+				return (
+					<>
+						<div style={headerStyle}>
+							{toolIcon("save")}
+							<span style={{ fontWeight: "bold" }}>
+								{message.type === "ask"
+									? t("chat:notebook.wantsToSave", "Roo wants to save the active notebook")
+									: t("chat:notebook.didSave", "Roo saved the active notebook")}
+							</span>
+						</div>
+						{tool.content && (
+							<CodeAccordian
+								isLoading={message.partial}
+								code={tool.content}
+								language="markdown"
+								isExpanded={isExpanded}
+								onToggleExpand={onToggleExpand}
+							/>
+						)}
+					</>
+				)
 			default:
 				return null
 		}

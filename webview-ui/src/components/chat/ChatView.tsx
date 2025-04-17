@@ -77,6 +77,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		customModes,
 		telemetrySetting,
 		showGreeting,
+		alwaysAllowNotebookRead,
+		alwaysAllowNotebookEdit,
+		alwaysAllowNotebookExecute,
 	} = useExtensionState()
 
 	//const task = messages.length > 0 ? (messages[0].say === "task" ? messages[0] : undefined) : undefined) : undefined
@@ -173,6 +176,22 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 								case "finishTask":
 									setPrimaryButtonText(t("chat:completeSubtaskAndReturn"))
 									setSecondaryButtonText(undefined)
+									break
+								case "readNotebook":
+									setPrimaryButtonText(t("chat:approve.title"))
+									setSecondaryButtonText(t("chat:reject.title"))
+									break
+								case "editNotebook":
+									setPrimaryButtonText(t("chat:approve.title"))
+									setSecondaryButtonText(t("chat:reject.title"))
+									break
+								case "executeNotebook":
+									setPrimaryButtonText(t("chat:approve.title"))
+									setSecondaryButtonText(t("chat:reject.title"))
+									break
+								case "saveNotebook":
+									setPrimaryButtonText(t("chat:approve.title"))
+									setSecondaryButtonText(t("chat:reject.title"))
 									break
 								default:
 									setPrimaryButtonText(t("chat:approve.title"))
@@ -705,6 +724,19 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					return alwaysAllowSubtasks
 				}
 
+				// Handle notebook operations
+				if (tool?.tool === "readNotebook") {
+					return alwaysAllowNotebookRead
+				}
+
+				if (tool?.tool === "editNotebook" || tool?.tool === "saveNotebook") {
+					return alwaysAllowNotebookEdit
+				}
+
+				if (tool?.tool === "executeNotebook") {
+					return alwaysAllowNotebookExecute
+				}
+
 				const isOutsideWorkspace = !!tool.isOutsideWorkspace
 
 				if (isReadOnlyToolAction(message)) {
@@ -733,6 +765,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			isMcpToolAlwaysAllowed,
 			alwaysAllowModeSwitch,
 			alwaysAllowSubtasks,
+			alwaysAllowNotebookRead,
+			alwaysAllowNotebookEdit,
+			alwaysAllowNotebookExecute,
 		],
 	)
 

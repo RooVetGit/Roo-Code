@@ -87,6 +87,16 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setPinnedApiConfigs: (value: Record<string, boolean>) => void
 	togglePinnedApiConfig: (configName: string) => void
 	setShowGreeting: (value: boolean) => void
+	notebookMaxOutputSize?: number
+	setNotebookMaxOutputSize: (value: number) => void
+	notebookTimeoutSeconds?: number
+	setNotebookTimeoutSeconds: (value: number) => void
+	alwaysAllowNotebookRead?: boolean
+	setAlwaysAllowNotebookRead: (value: boolean) => void
+	alwaysAllowNotebookEdit?: boolean
+	setAlwaysAllowNotebookEdit: (value: boolean) => void
+	alwaysAllowNotebookExecute?: boolean
+	setAlwaysAllowNotebookExecute: (value: boolean) => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -96,6 +106,9 @@ export const mergeExtensionState = (prevState: ExtensionState, newState: Extensi
 		customModePrompts: prevCustomModePrompts,
 		customSupportPrompts: prevCustomSupportPrompts,
 		experiments: prevExperiments,
+		alwaysAllowNotebookRead: prevAlwaysAllowNotebookRead,
+		alwaysAllowNotebookEdit: prevAlwaysAllowNotebookEdit,
+		alwaysAllowNotebookExecute: prevAlwaysAllowNotebookExecute,
 		...prevRest
 	} = prevState
 
@@ -104,6 +117,9 @@ export const mergeExtensionState = (prevState: ExtensionState, newState: Extensi
 		customModePrompts: newCustomModePrompts,
 		customSupportPrompts: newCustomSupportPrompts,
 		experiments: newExperiments,
+		alwaysAllowNotebookRead: newAlwaysAllowNotebookRead,
+		alwaysAllowNotebookEdit: newAlwaysAllowNotebookEdit,
+		alwaysAllowNotebookExecute: newAlwaysAllowNotebookExecute,
 		...newRest
 	} = newState
 
@@ -111,11 +127,23 @@ export const mergeExtensionState = (prevState: ExtensionState, newState: Extensi
 	const customSupportPrompts = { ...prevCustomSupportPrompts, ...newCustomSupportPrompts }
 	const experiments = { ...prevExperiments, ...newExperiments }
 	const rest = { ...prevRest, ...newRest }
+	const alwaysAllowNotebookRead = newAlwaysAllowNotebookRead ?? prevAlwaysAllowNotebookRead
+	const alwaysAllowNotebookEdit = newAlwaysAllowNotebookEdit ?? prevAlwaysAllowNotebookEdit
+	const alwaysAllowNotebookExecute = newAlwaysAllowNotebookExecute ?? prevAlwaysAllowNotebookExecute
 
 	// Note that we completely replace the previous apiConfiguration object with
 	// a new one since the state that is broadcast is the entire apiConfiguration
 	// and therefore merging is not necessary.
-	return { ...rest, apiConfiguration, customModePrompts, customSupportPrompts, experiments }
+	return {
+		...rest,
+		apiConfiguration,
+		customModePrompts,
+		customSupportPrompts,
+		experiments,
+		alwaysAllowNotebookRead,
+		alwaysAllowNotebookEdit,
+		alwaysAllowNotebookExecute,
+	}
 }
 
 export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -164,6 +192,11 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		terminalZshOhMy: false, // Default Oh My Zsh integration setting
 		terminalZshP10k: false, // Default Powerlevel10k integration setting
 		terminalZdotdir: false, // Default ZDOTDIR handling setting
+		notebookMaxOutputSize: 2000,
+		notebookTimeoutSeconds: 30,
+		alwaysAllowNotebookRead: false,
+		alwaysAllowNotebookEdit: false,
+		alwaysAllowNotebookExecute: false,
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
@@ -294,6 +327,9 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setTerminalShellIntegrationTimeout: (value) =>
 			setState((prevState) => ({ ...prevState, terminalShellIntegrationTimeout: value })),
 		setTerminalZdotdir: (value) => setState((prevState) => ({ ...prevState, terminalZdotdir: value })),
+		setNotebookMaxOutputSize: (value) => setState((prevState) => ({ ...prevState, notebookMaxOutputSize: value })),
+		setNotebookTimeoutSeconds: (value) =>
+			setState((prevState) => ({ ...prevState, notebookTimeoutSeconds: value })),
 		setMcpEnabled: (value) => setState((prevState) => ({ ...prevState, mcpEnabled: value })),
 		setEnableMcpServerCreation: (value) =>
 			setState((prevState) => ({ ...prevState, enableMcpServerCreation: value })),
@@ -333,6 +369,12 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 
 				return { ...prevState, pinnedApiConfigs: newPinned }
 			}),
+		setAlwaysAllowNotebookRead: (value: boolean) =>
+			setState((prevState) => ({ ...prevState, alwaysAllowNotebookRead: value })),
+		setAlwaysAllowNotebookEdit: (value: boolean) =>
+			setState((prevState) => ({ ...prevState, alwaysAllowNotebookEdit: value })),
+		setAlwaysAllowNotebookExecute: (value: boolean) =>
+			setState((prevState) => ({ ...prevState, alwaysAllowNotebookExecute: value })),
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

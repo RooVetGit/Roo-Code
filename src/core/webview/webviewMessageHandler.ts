@@ -777,6 +777,12 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				Terminal.setTerminalZdotdir(message.bool)
 			}
 			break
+		case "notebookMaxOutputSize":
+			await updateGlobalState("notebookMaxOutputSize", message.value)
+			break
+		case "notebookTimeoutSeconds":
+			await updateGlobalState("notebookTimeoutSeconds", message.value)
+			break
 		case "mode":
 			await provider.handleModeSwitch(message.text as Mode)
 			break
@@ -976,6 +982,18 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				await updateGlobalState("pinnedApiConfigs", updatedPinned)
 				await provider.postStateToWebview()
 			}
+			break
+		case "alwaysAllowNotebookRead":
+			await updateGlobalState("alwaysAllowNotebookRead", message.bool ?? false)
+			await provider.postStateToWebview()
+			break
+		case "alwaysAllowNotebookEdit":
+			await updateGlobalState("alwaysAllowNotebookEdit", message.bool ?? false)
+			await provider.postStateToWebview()
+			break
+		case "alwaysAllowNotebookExecute":
+			await updateGlobalState("alwaysAllowNotebookExecute", message.bool ?? false)
+			await provider.postStateToWebview()
 			break
 		case "enhancementApiConfigId":
 			await updateGlobalState("enhancementApiConfigId", message.text)

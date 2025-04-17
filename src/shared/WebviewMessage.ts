@@ -126,6 +126,11 @@ export interface WebviewMessage {
 		| "searchFiles"
 		| "toggleApiConfigPin"
 		| "showGreeting"
+		| "notebookMaxOutputSize"
+		| "notebookTimeoutSeconds"
+		| "alwaysAllowNotebookRead"
+		| "alwaysAllowNotebookEdit"
+		| "alwaysAllowNotebookExecute"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
