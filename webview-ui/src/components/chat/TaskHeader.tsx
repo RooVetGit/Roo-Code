@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next"
 import { vscode } from "@/utils/vscode"
 import { formatLargeNumber } from "@/utils/format"
 import { calculateTokenDistribution, getMaxTokensForModel } from "@/utils/model-utils"
-import { Button } from "@/components/ui"
+import { Button, Badge } from "@/components/ui"
 
 import { ClineMessage } from "../../../../src/shared/ExtensionMessage"
 import { mentionRegexGlobal } from "../../../../src/shared/context-mentions"
@@ -17,6 +17,7 @@ import { useExtensionState } from "../../context/ExtensionStateContext"
 import Thumbnails from "../common/Thumbnails"
 import { normalizeApiConfiguration } from "../settings/ApiOptions"
 import { DeleteTaskDialog } from "../history/DeleteTaskDialog"
+import { cn } from "@/lib/utils"
 
 interface TaskHeaderProps {
 	task: ClineMessage
@@ -55,10 +56,22 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 	const shouldShowPromptCacheInfo = doesModelSupportPromptCache && apiConfiguration?.apiProvider !== "openrouter"
 
 	return (
-		<div className="py-[10px] px-[13px]">
+		<div className="py-2 px-3">
 			<div
-				className={`rounded p-[10px] flex flex-col gap-[6px] relative z-1 outline hover:outline-vscode-badge-foreground hover:text-vscode-badge-foreground transition-color duration-500 ${!!isTaskExpanded ? "outline-vscode-badge-foreground text-vscode-badge-foreground" : "outline-vscode-badge-foreground/80 text-vscode-badge-foreground/80"}`}>
-				<div className="flex justify-between items-center">
+				className={cn(
+					"rounded p-[10px] flex flex-col gap-[6px] relative z-1 outline",
+					!!isTaskExpanded
+						? "outline-vscode-panel-border text-vscode-foreground"
+						: "outline-vscode-panel-border/80 text-vscode-foreground/80",
+				)}>
+				<VSCodeButton
+					appearance="icon"
+					onClick={onClose}
+					className="absolute top-1 right-1 text-vscode-foreground"
+					title={t("chat:task.closeAndStart")}>
+					<span className="codicon codicon-close"></span>
+				</VSCodeButton>
+				<div className="flex justify-between items-center mr-4">
 					<div
 						className="flex items-center cursor-pointer -ml-0.5 select-none grow min-w-0"
 						onClick={() => setIsTaskExpanded(!isTaskExpanded)}>
@@ -73,14 +86,6 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 							{!isTaskExpanded && <span className="ml-1">{highlightMentions(task.text, false)}</span>}
 						</div>
 					</div>
-
-					<VSCodeButton
-						appearance="icon"
-						onClick={onClose}
-						className="ml-1.5 shrink-0 text-vscode-badge-foreground"
-						title={t("chat:task.closeAndStart")}>
-						<span className="codicon codicon-close"></span>
-					</VSCodeButton>
 				</div>
 				{/* Collapsed state: Track context and cost if we have any */}
 				{!isTaskExpanded && contextWindow > 0 && (
@@ -90,11 +95,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 							contextTokens={contextTokens || 0}
 							maxTokens={getMaxTokensForModel(selectedModelInfo, apiConfiguration)}
 						/>
-						{!!totalCost && (
-							<div className="ml-2.5 bg-vscode-editor-foreground text-vscode-editor-background py-0.5 px-1 rounded-full text-[11px] font-medium inline-block shrink-0">
-								${totalCost?.toFixed(2)}
-							</div>
-						)}
+						{!!totalCost && <Badge variant="secondary">${totalCost?.toFixed(2)}</Badge>}
 					</div>
 				)}
 				{/* Expanded state: Show task text and images */}
