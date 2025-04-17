@@ -2067,6 +2067,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		// 2. ToolResultBlockParam's content/context text arrays if it contains "<feedback>" (see formatToolDeniedFeedback, attemptCompletion, executeCommand, and consecutiveMistakeCount >= 3) or "<answer>" (see askFollowupQuestion), we place all user generated content in these tags so they can effectively be used as markers for when we should parse mentions)
 		const parsedUserContent = await Promise.all(
 			userContent.map(async (block) => {
+				const { maxReadFileLine } = (await this.providerRef.deref()?.getState()) || {}
 				const shouldProcessMentions = (text: string) => text.includes("<task>") || text.includes("<feedback>")
 
 				if (block.type === "text") {
@@ -2077,7 +2078,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 								block.text,
 								this.cwd,
 								this.urlContentFetcher,
+
 								this.fileContextTracker,
+								maxReadFileLine,
 							),
 						}
 					}
@@ -2092,6 +2095,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 									this.cwd,
 									this.urlContentFetcher,
 									this.fileContextTracker,
+									maxReadFileLine,
 								),
 							}
 						}
@@ -2107,6 +2111,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 											this.cwd,
 											this.urlContentFetcher,
 											this.fileContextTracker,
+											maxReadFileLine,
 										),
 									}
 								}
