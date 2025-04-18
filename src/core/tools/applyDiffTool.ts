@@ -73,6 +73,7 @@ export async function applyDiffTool(
 
 			if (!fileExists) {
 				cline.consecutiveMistakeCount++
+				cline.recordToolUsage({ toolName: "apply_diff", success: false })
 				const formattedError = `File does not exist at path: ${absolutePath}\n\n<error_details>\nThe specified file could not be found. Please verify the file path and try again.\n</error_details>`
 				await cline.say("error", formattedError)
 				pushToolResult(formattedError)

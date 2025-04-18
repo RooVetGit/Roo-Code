@@ -69,6 +69,7 @@ export async function readFileTool(
 				if (isNaN(startLine)) {
 					// Invalid start_line
 					cline.consecutiveMistakeCount++
+					cline.recordToolUsage({ toolName: "read_file", success: false })
 					await cline.say("error", `Failed to parse start_line: ${startLineStr}`)
 					pushToolResult(`<file><path>${relPath}</path><error>Invalid start_line value</error></file>`)
 					return
@@ -84,6 +85,7 @@ export async function readFileTool(
 				if (isNaN(endLine)) {
 					// Invalid end_line
 					cline.consecutiveMistakeCount++
+					cline.recordToolUsage({ toolName: "read_file", success: false })
 					await cline.say("error", `Failed to parse end_line: ${endLineStr}`)
 					pushToolResult(`<file><path>${relPath}</path><error>Invalid end_line value</error></file>`)
 					return

@@ -21,6 +21,7 @@ export async function askFollowupQuestionTool(
 		} else {
 			if (!question) {
 				cline.consecutiveMistakeCount++
+				cline.recordToolUsage({ toolName: "ask_followup_question", success: false })
 				pushToolResult(await cline.sayAndCreateMissingParamError("ask_followup_question", "question"))
 				return
 			}
