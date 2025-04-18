@@ -89,7 +89,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 			maxOutputTokens = undefined
 		}
 
-		return { id, info, thinkingConfig }
+		return { id, info, thinkingConfig, maxOutputTokens }
 	}
 
 	async completePrompt(prompt: string): Promise<string> {
