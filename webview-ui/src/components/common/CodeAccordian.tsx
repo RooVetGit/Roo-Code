@@ -67,7 +67,13 @@ const CodeAccordian = ({
 						MozUserSelect: "none",
 						msUserSelect: "none",
 					}}
+					className={`${isLoading ? "animate-pulse" : ""}`}
 					onClick={isLoading ? undefined : onToggleExpand}>
+					{isLoading && (
+						<div className="flex items-center">
+							<span className="codicon codicon-loading animate-spin mr-1" />
+						</div>
+					)}
 					{isFeedback || isConsoleLogs ? (
 						<div style={{ display: "flex", alignItems: "center" }}>
 							<span
