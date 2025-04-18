@@ -24,7 +24,7 @@ function convertAnthropicContentToGemini(content: string | Anthropic.ContentBloc
 					},
 				}
 			case "tool_result": {
-				if (!block.content || !Array.isArray(block.content)) {
+				if (!block.content) {
 					return []
 				}
 
