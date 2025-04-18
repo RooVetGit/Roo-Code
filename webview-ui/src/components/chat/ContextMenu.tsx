@@ -12,6 +12,7 @@ interface ContextMenuProps {
 	onSelect: (type: ContextMenuOptionType, value?: string) => void
 	// Remove props related to calculation, as options are now passed in
 	// searchQuery: string
+	// inputValue: string
 	onMouseDown: () => void
 	selectedIndex: number
 	setSelectedIndex: (index: number) => void
@@ -26,6 +27,7 @@ interface ContextMenuProps {
 const ContextMenu: React.FC<ContextMenuProps> = ({
 	onSelect,
 	// searchQuery, // Removed
+	// inputValue, // Removed
 	onMouseDown,
 	selectedIndex,
 	setSelectedIndex,
@@ -41,7 +43,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 	// Remove internal calculation, use the prop directly
 	// const filteredOptions = useMemo(() => {
 	// 	return getContextMenuOptions(searchQuery, selectedType, queryItems, dynamicSearchResults, modes)
-	// }, [searchQuery, selectedType, queryItems, dynamicSearchResults, modes])
+	// }, [searchQuery, inputValue, selectedType, queryItems, dynamicSearchResults, modes])
 
 	useEffect(() => {
 		if (menuRef.current) {
@@ -113,21 +115,38 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 			case ContextMenuOptionType.OpenedFile:
 			case ContextMenuOptionType.Folder:
 				if (option.value) {
+					// remove trailing slash
+					const path = removeLeadingNonAlphanumeric(option.value || "").replace(/\/$/, "")
+					const pathList = path.split("/")
+					const filename = pathList.at(-1)
+					const folderPath = pathList.slice(0, -1).join("/")
 					return (
-						<>
-							<span>/</span>
-							{option.value?.startsWith("/.") && <span>.</span>}
+						<div
+							style={{
+								flex: 1,
+								overflow: "hidden",
+								display: "flex",
+								gap: "0.5em",
+								whiteSpace: "nowrap",
+								alignItems: "center",
+								justifyContent: "space-between",
+								textAlign: "left",
+							}}>
+							<span>{filename}</span>
 							<span
 								style={{
 									whiteSpace: "nowrap",
 									overflow: "hidden",
 									textOverflow: "ellipsis",
 									direction: "rtl",
-									textAlign: "left",
+									textAlign: "right",
+									flex: 1,
+									opacity: 0.75,
+									fontSize: "0.75em",
 								}}>
-								{removeLeadingNonAlphanumeric(option.value || "") + "\u200E"}
+								{folderPath}
 							</span>
-						</>
+						</div>
 					)
 				} else {
 					return <span>Add {option.type === ContextMenuOptionType.File ? "File" : "Folder"}</span>
@@ -194,10 +213,9 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 							key={`${option.type}-${option.value || index}`}
 							onClick={() => isOptionSelectable(option) && onSelect(option.type, option.value)}
 							style={{
-								padding: "8px 12px",
+								padding: "4px 6px",
 								cursor: isOptionSelectable(option) ? "pointer" : "default",
 								color: "var(--vscode-dropdown-foreground)",
-								borderBottom: "1px solid var(--vscode-editorGroup-border)",
 								display: "flex",
 								alignItems: "center",
 								justifyContent: "space-between",
@@ -237,7 +255,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 								!option.value && (
 									<i
 										className="codicon codicon-chevron-right"
-										style={{ fontSize: "14px", flexShrink: 0, marginLeft: 8 }}
+										style={{ fontSize: "10px", flexShrink: 0, marginLeft: 8 }}
 									/>
 								)}
 							{(option.type === ContextMenuOptionType.Problems ||
@@ -249,7 +267,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 									option.value)) && (
 								<i
 									className="codicon codicon-add"
-									style={{ fontSize: "14px", flexShrink: 0, marginLeft: 8 }}
+									style={{ fontSize: "10px", flexShrink: 0, marginLeft: 8 }}
 								/>
 							)}
 						</div>
@@ -257,7 +275,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 				) : (
 					<div
 						style={{
-							padding: "12px",
+							padding: "4px",
 							display: "flex",
 							alignItems: "center",
 							justifyContent: "center",

@@ -1,19 +1,18 @@
+import path from "path"
+import delay from "delay"
 import * as vscode from "vscode"
 
 import { Cline } from "../Cline"
 import { ClineSayTool } from "../../shared/ExtensionMessage"
-import { ToolUse } from "../assistant-message"
 import { formatResponse } from "../prompts/responses"
-import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "./types"
+import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
-import path from "path"
 import { fileExistsAtPath } from "../../utils/fs"
-import { addLineNumbers, stripLineNumbers } from "../../integrations/misc/extract-text"
+import { addLineNumbers, stripLineNumbers, everyLineHasLineNumbers } from "../../integrations/misc/extract-text"
 import { getReadablePath } from "../../utils/path"
 import { isPathOutsideWorkspace } from "../../utils/pathUtils"
-import { everyLineHasLineNumbers } from "../../integrations/misc/extract-text"
-import delay from "delay"
 import { detectCodeOmission } from "../../integrations/editor/detect-omission"
+import { unescapeHtmlEntities } from "../../utils/text-normalization"
 
 export async function writeToFileTool(
 	cline: Cline,
@@ -60,13 +59,7 @@ export async function writeToFileTool(
 	}
 
 	if (!cline.api.getModel().id.includes("claude")) {
-		// it seems not just llama models are doing cline, but also gemini and potentially others
-		if (newContent.includes("&gt;") || newContent.includes("&lt;") || newContent.includes("&quot;")) {
-			newContent = newContent
-				.replace(/&gt;/g, ">")
-				.replace(/&lt;/g, "<")
-				.replace(/&quot;/g, '"')
-		}
+		newContent = unescapeHtmlEntities(newContent)
 	}
 
 	// Determine if the path is outside the workspace

@@ -1,8 +1,7 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta"
-import axios, { AxiosRequestConfig } from "axios"
+import axios from "axios"
 import OpenAI from "openai"
-import delay from "delay"
 
 import { ApiHandlerOptions, ModelInfo, openRouterDefaultModelId, openRouterDefaultModelInfo } from "../../shared/api"
 import { parseApiPrice } from "../../utils/cost"
@@ -10,10 +9,9 @@ import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStreamChunk, ApiStreamUsageChunk } from "../transform/stream"
 import { convertToR1Format } from "../transform/r1-format"
 
-import { DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
+import { DEFAULT_HEADERS, DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
 import { getModelParams, SingleCompletionHandler } from ".."
 import { BaseProvider } from "./base-provider"
-import { defaultHeaders } from "./openai"
 
 const OPENROUTER_DEFAULT_PROVIDER_NAME = "[default]"
 
@@ -22,6 +20,12 @@ type OpenRouterChatCompletionParams = OpenAI.Chat.ChatCompletionCreateParams & {
 	transforms?: string[]
 	include_reasoning?: boolean
 	thinking?: BetaThinkingConfigParam
+	// https://openrouter.ai/docs/use-cases/reasoning-tokens
+	reasoning?: {
+		effort?: "high" | "medium" | "low"
+		max_tokens?: number
+		exclude?: boolean
+	}
 }
 
 export class OpenRouterHandler extends BaseProvider implements SingleCompletionHandler {
@@ -35,14 +39,14 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		const baseURL = this.options.openRouterBaseUrl || "https://openrouter.ai/api/v1"
 		const apiKey = this.options.openRouterApiKey ?? "not-provided"
 
-		this.client = new OpenAI({ baseURL, apiKey, defaultHeaders })
+		this.client = new OpenAI({ baseURL, apiKey, defaultHeaders: DEFAULT_HEADERS })
 	}
 
 	override async *createMessage(
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
 	): AsyncGenerator<ApiStreamChunk> {
-		let { id: modelId, maxTokens, thinking, temperature, topP } = this.getModel()
+		let { id: modelId, maxTokens, thinking, temperature, topP, reasoningEffort } = this.getModel()
 
 		// Convert Anthropic messages to OpenAI format.
 		let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
@@ -70,13 +74,16 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 						},
 					],
 				}
+
 				// Add cache_control to the last two user messages
 				// (note: this works because we only ever add one user message at a time, but if we added multiple we'd need to mark the user message before the last assistant message)
 				const lastTwoUserMessages = openAiMessages.filter((msg) => msg.role === "user").slice(-2)
+
 				lastTwoUserMessages.forEach((msg) => {
 					if (typeof msg.content === "string") {
 						msg.content = [{ type: "text", text: msg.content }]
 					}
+
 					if (Array.isArray(msg.content)) {
 						// NOTE: this is fine since env details will always be added at the end. but if it weren't there, and the user added a image_url type message, it would pop a text part before it and then move it after to the end.
 						let lastTextPart = msg.content.filter((part) => part.type === "text").pop()
@@ -113,6 +120,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 				}),
 			// This way, the transforms field will only be included in the parameters when openRouterUseMiddleOutTransform is true.
 			...((this.options.openRouterUseMiddleOutTransform ?? true) && { transforms: ["middle-out"] }),
+			...(reasoningEffort && { reasoning: { effort: reasoningEffort } }),
 		}
 
 		const stream = await this.client.chat.completions.create(completionParams)

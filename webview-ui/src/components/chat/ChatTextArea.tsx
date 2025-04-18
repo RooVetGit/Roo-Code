@@ -207,6 +207,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			() =>
 				getContextMenuOptions(
 					searchQuery,
+					inputValue,
 					selectedType,
 					queryItems,
 					fileSearchResults,
@@ -214,7 +215,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					hiddenBuiltInModes,
 					customModes,
 				),
-			[searchQuery, selectedType, queryItems, fileSearchResults, customModes, hiddenBuiltInModes],
+			[searchQuery, inputValue, selectedType, queryItems, fileSearchResults, customModes, hiddenBuiltInModes], // Add inputValue to dependency array
 		)
 
 		useEffect(() => {
@@ -321,6 +322,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							const direction = event.key === "ArrowUp" ? -1 : 1
 							const options = getContextMenuOptions(
 								searchQuery,
+								inputValue,
 								selectedType,
 								queryItems,
 								fileSearchResults,
@@ -360,6 +362,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						event.preventDefault()
 						const selectedOption = getContextMenuOptions(
 							searchQuery,
+							inputValue,
 							selectedType,
 							queryItems,
 							fileSearchResults,
@@ -635,7 +638,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				e.preventDefault()
 				setIsDraggingOver(false)
 
-				const text = e.dataTransfer.getData("text")
+				const text = e.dataTransfer.getData("application/vnd.code.uri-list")
 				if (text) {
 					// Split text on newlines to handle multiple files
 					const lines = text.split(/\r?\n/).filter((line) => line.trim() !== "")
@@ -809,7 +812,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 									setSelectedIndex={setSelectedMenuIndex}
 									loading={searchLoading}
 									// Remove props that are no longer needed in ContextMenu
-									// searchQuery, selectedType, queryItems, modes, dynamicSearchResults
+									// searchQuery, inputValue, selectedType, queryItems, modes, dynamicSearchResults
 								/>
 							</div>
 						)}
@@ -1066,7 +1069,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 										vscode.postMessage({ type: "loadApiConfigurationById", text: value })
 									}
 								}}
-								contentClassName="max-h-[300px] overflow-y-auto"
 								triggerClassName="w-full text-ellipsis overflow-hidden"
 								itemClassName="group"
 								renderItem={({ type, value, label, pinned }) => {

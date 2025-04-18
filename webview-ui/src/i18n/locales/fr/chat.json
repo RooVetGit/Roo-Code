@@ -1,5 +1,5 @@
 {
-	"greeting": "Que peut faire Roo pour vous ?",
+	"greeting": "Bienvenue sur Roo Code",
 	"task": {
 		"title": "Tâche",
 		"seeMore": "Voir plus",
@@ -7,7 +7,7 @@
 		"tokens": "Tokens :",
 		"cache": "Cache :",
 		"apiCost": "Coût API :",
-		"contextWindow": "Fenêtre de contexte :",
+		"contextWindow": "Durée du contexte :",
 		"closeAndStart": "Fermer la tâche et en commencer une nouvelle",
 		"export": "Exporter l'historique des tâches",
 		"delete": "Supprimer la tâche (Shift + Clic pour ignorer la confirmation)"
@@ -65,7 +65,7 @@
 		"tooltip": "Annuler l'opération actuelle"
 	},
 	"scrollToBottom": "Défiler jusqu'au bas du chat",
-	"aboutMe": "Grâce aux dernières avancées en matière de capacités de codage agent, je peux gérer des tâches complexes de développement logiciel étape par étape. Avec des outils qui me permettent de créer et d'éditer des fichiers, d'explorer des projets complexes, d'utiliser le navigateur et d'exécuter des commandes de terminal (après votre autorisation), je peux vous aider de manières qui vont au-delà de la complétion de code ou du support technique. Je peux même utiliser MCP pour créer de nouveaux outils et étendre mes propres capacités.",
+	"onboarding": "Grâce aux dernières avancées en matière de capacités de codage agent, je peux gérer des tâches complexes de développement logiciel étape par étape. Avec des outils qui me permettent de créer et d'éditer des fichiers, d'explorer des projets complexes, d'utiliser le navigateur et d'exécuter des commandes de terminal (après votre autorisation), je peux vous aider de manières qui vont au-delà de la complétion de code ou du support technique. Je peux même utiliser MCP pour créer de nouveaux outils et étendre mes propres capacités.",
 	"selectMode": "Sélectionner le mode d'interaction",
 	"selectApiConfig": "Sélectionner la configuration API",
 	"enhancePrompt": "Améliorer la requête avec un contexte supplémentaire",
@@ -171,49 +171,7 @@
 	"autoApprove": {
 		"title": "Auto-approbation :",
 		"none": "Aucune",
-		"description": "L'auto-approbation permet à Roo Code d'effectuer des actions sans demander d'autorisation. Activez-la uniquement pour les actions auxquelles vous faites entièrement confiance. Configuration plus détaillée disponible dans les <settingsLink>Paramètres</settingsLink>.",
-		"actions": {
-			"readFiles": {
-				"label": "Lire fichiers et répertoires",
-				"shortName": "Lecture",
-				"description": "Permet l'accès en lecture à n'importe quel fichier sur votre ordinateur."
-			},
-			"editFiles": {
-				"label": "Éditer des fichiers",
-				"shortName": "Édition",
-				"description": "Permet la modification de n'importe quel fichier sur votre ordinateur."
-			},
-			"executeCommands": {
-				"label": "Exécuter des commandes approuvées",
-				"shortName": "Commandes",
-				"description": "Permet l'exécution de commandes de terminal approuvées. Vous pouvez configurer cela dans le panneau des paramètres."
-			},
-			"useBrowser": {
-				"label": "Utiliser le navigateur",
-				"shortName": "Navigateur",
-				"description": "Permet de lancer et d'interagir avec n'importe quel site web dans un navigateur sans interface."
-			},
-			"useMcp": {
-				"label": "Utiliser les serveurs MCP",
-				"shortName": "MCP",
-				"description": "Permet l'utilisation de serveurs MCP configurés qui peuvent modifier le système de fichiers ou interagir avec des APIs."
-			},
-			"switchModes": {
-				"label": "Changer de modes",
-				"shortName": "Modes",
-				"description": "Permet le changement automatique entre différents modes sans nécessiter d'approbation."
-			},
-			"subtasks": {
-				"label": "Créer et terminer des sous-tâches",
-				"shortName": "Sous-tâches",
-				"description": "Permet la création et l'achèvement de sous-tâches sans nécessiter d'approbation."
-			},
-			"retryRequests": {
-				"label": "Réessayer les requêtes échouées",
-				"shortName": "Réessais",
-				"description": "Réessaie automatiquement les requêtes API échouées lorsque le fournisseur renvoie une réponse d'erreur."
-			}
-		}
+		"description": "L'auto-approbation permet à Roo Code d'effectuer des actions sans demander d'autorisation. Activez-la uniquement pour les actions auxquelles vous faites entièrement confiance. Configuration plus détaillée disponible dans les <settingsLink>Paramètres</settingsLink>."
 	},
 	"reasoning": {
 		"thinking": "Réflexion",
@@ -223,10 +181,14 @@
 		"copyToInput": "Copier vers l'entrée (ou Shift + clic)"
 	},
 	"announcement": {
-		"title": "Faites-en plus avec les Tâches Boomerang 🪃",
-		"description": "Divisez le travail en sous-tâches, chacune s'exécutant dans un mode spécialisé, comme code, architect, debug ou un mode personnalisé.",
-		"learnMore": "En savoir plus →",
-		"hideButton": "Masquer l'annonce"
+		"title": "🎉 Roo Code 3.12 est sortie",
+		"description": "Roo Code 3.12 apporte de nouvelles fonctionnalités et améliorations basées sur vos retours.",
+		"whatsNew": "Quoi de neuf",
+		"feature1": "<bold>Support Grok</bold> : Ajout du fournisseur xAI et des options d'effort de raisonnement pour Grok sur OpenRouter",
+		"feature2": "<bold>Améliorations de l'édition des différences</bold> : Configuration par profil et meilleure normalisation des chaînes pour moins d'erreurs",
+		"feature3": "<bold>Améliorations des points de contrôle</bold> : Points de contrôle plus rapides et plus fiables",
+		"hideButton": "Masquer l'annonce",
+		"detailsDiscussLinks": "Obtenez plus de détails et participez aux discussions sur <discordLink>Discord</discordLink> et <redditLink>Reddit</redditLink> 🚀"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo veut utiliser le navigateur :",

@@ -28,6 +28,7 @@ export const providerNames = [
 	"requesty",
 	"human-relay",
 	"fake-ai",
+	"xai",
 ] as const
 
 export const providerNamesSchema = z.enum(providerNames)
@@ -43,19 +44,6 @@ export const toolGroups = ["read", "edit", "browser", "command", "mcp", "modes"]
 export const toolGroupsSchema = z.enum(toolGroups)
 
 export type ToolGroup = z.infer<typeof toolGroupsSchema>
-
-/**
- * CheckpointStorage
- */
-
-export const checkpointStorages = ["task", "workspace"] as const
-
-export const checkpointStoragesSchema = z.enum(checkpointStorages)
-
-export type CheckpointStorage = z.infer<typeof checkpointStoragesSchema>
-
-export const isCheckpointStorage = (value: string): value is CheckpointStorage =>
-	checkpointStorages.includes(value as CheckpointStorage)
 
 /**
  * Language
@@ -288,7 +276,7 @@ export type CustomSupportPrompts = z.infer<typeof customSupportPromptsSchema>
  * ExperimentId
  */
 
-export const experimentIds = ["search_and_replace", "insert_content", "powerSteering"] as const
+export const experimentIds = ["search_and_replace", "insert_content", "powerSteering", "append_to_file"] as const
 
 export const experimentIdsSchema = z.enum(experimentIds)
 
@@ -302,6 +290,7 @@ const experimentsSchema = z.object({
 	search_and_replace: z.boolean(),
 	insert_content: z.boolean(),
 	powerSteering: z.boolean(),
+	append_to_file: z.boolean(),
 })
 
 export type Experiments = z.infer<typeof experimentsSchema>
@@ -318,6 +307,7 @@ export const providerSettingsSchema = z.object({
 	apiModelId: z.string().optional(),
 	apiKey: z.string().optional(),
 	anthropicBaseUrl: z.string().optional(),
+	anthropicUseAuthToken: z.boolean().optional(),
 	// Glama
 	glamaModelId: z.string().optional(),
 	glamaModelInfo: modelInfoSchema.nullish(),
@@ -392,6 +382,8 @@ export const providerSettingsSchema = z.object({
 	requestyApiKey: z.string().optional(),
 	requestyModelId: z.string().optional(),
 	requestyModelInfo: modelInfoSchema.nullish(),
+	// X.AI (Grok)
+	xaiApiKey: z.string().optional(),
 	// Claude 3.7 Sonnet Thinking
 	modelMaxTokens: z.number().optional(),
 	modelMaxThinkingTokens: z.number().optional(),
@@ -400,6 +392,8 @@ export const providerSettingsSchema = z.object({
 	modelTemperature: z.number().nullish(),
 	reasoningEffort: reasoningEffortsSchema.optional(),
 	rateLimitSeconds: z.number().optional(),
+	diffEnabled: z.boolean().optional(),
+	fuzzyMatchThreshold: z.number().optional(),
 	// Fake AI
 	fakeAi: z.unknown().optional(),
 })
@@ -414,6 +408,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	apiModelId: undefined,
 	apiKey: undefined,
 	anthropicBaseUrl: undefined,
+	anthropicUseAuthToken: undefined,
 	// Glama
 	glamaModelId: undefined,
 	glamaModelInfo: undefined,
@@ -488,8 +483,12 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	modelTemperature: undefined,
 	reasoningEffort: undefined,
 	rateLimitSeconds: undefined,
+	diffEnabled: undefined,
+	fuzzyMatchThreshold: undefined,
 	// Fake AI
 	fakeAi: undefined,
+	// X.AI (Grok)
+	xaiApiKey: undefined,
 }
 
 export const PROVIDER_SETTINGS_KEYS = Object.keys(providerSettingsRecord) as Keys<ProviderSettings>[]
@@ -530,7 +529,6 @@ export const globalSettingsSchema = z.object({
 	cachedChromeHostUrl: z.string().optional(),
 
 	enableCheckpoints: z.boolean().optional(),
-	checkpointStorage: checkpointStoragesSchema.optional(),
 
 	ttsEnabled: z.boolean().optional(),
 	ttsSpeed: z.number().optional(),
@@ -607,7 +605,6 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	remoteBrowserHost: undefined,
 
 	enableCheckpoints: undefined,
-	checkpointStorage: undefined,
 
 	ttsEnabled: undefined,
 	ttsSpeed: undefined,
@@ -679,6 +676,7 @@ export type SecretState = Pick<
 	| "mistralApiKey"
 	| "unboundApiKey"
 	| "requestyApiKey"
+	| "xaiApiKey"
 >
 
 type SecretStateRecord = Record<Keys<SecretState>, undefined>
@@ -697,6 +695,7 @@ const secretStateRecord: SecretStateRecord = {
 	mistralApiKey: undefined,
 	unboundApiKey: undefined,
 	requestyApiKey: undefined,
+	xaiApiKey: undefined,
 }
 
 export const SECRET_STATE_KEYS = Object.keys(secretStateRecord) as Keys<SecretState>[]

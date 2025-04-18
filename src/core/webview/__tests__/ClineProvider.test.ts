@@ -407,7 +407,6 @@ describe("ClineProvider", () => {
 			ttsEnabled: false,
 			diffEnabled: false,
 			enableCheckpoints: false,
-			checkpointStorage: "task",
 			writeDelayMs: 1000,
 			browserViewportSize: "900x600",
 			fuzzyMatchThreshold: 1.0,
@@ -830,7 +829,6 @@ describe("ClineProvider", () => {
 			mode: "code",
 			diffEnabled: true,
 			enableCheckpoints: false,
-			checkpointStorage: "task",
 			fuzzyMatchThreshold: 1.0,
 			experiments: experimentDefault,
 		} as any)
@@ -849,7 +847,6 @@ describe("ClineProvider", () => {
 			customInstructions: modeCustomInstructions,
 			enableDiff: true,
 			enableCheckpoints: false,
-			checkpointStorage: "task",
 			fuzzyMatchThreshold: 1.0,
 			task: "Test task",
 			experiments: experimentDefault,

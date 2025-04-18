@@ -1,5 +1,57 @@
 # Roo Code Changelog
 
+## [3.12.3] - 2025-04-17
+
+- Fix character escaping issues in Gemini diff edits
+- Support dragging and dropping tabs into the chat box (thanks @NyxJae!)
+- Make sure slash commands only fire at the beginning of the chat box (thanks @logosstone!)
+
+## [3.12.2] - 2025-04-16
+
+- Add OpenAI o3 & 4o-mini (thanks @PeterDaveHello!)
+- Improve file/folder context mention UI (thanks @elianiva!)
+- Improve diff error telemetry
+
+## [3.12.1] - 2025-04-16
+
+- Bugfix to Edit button visibility in the select dropdowns
+
+## [3.12.0] - 2025-04-15
+
+- Add xAI provider and expose reasoning effort options for Grok on OpenRouter (thanks Cline!)
+- Make diff editing config per-profile and improve pre-diff string normalization
+- Make checkpoints faster and more reliable
+- Add a search bar to mode and profile select dropdowns (thanks @samhvw8!)
+- Add telemetry for code action usage, prompt enhancement usage, and consecutive mistake errors
+- Suppress zero cost values in the task header (thanks @do-it!)
+- Make JSON parsing safer to avoid crashing the webview on bad input
+- Allow users to bind a keyboard shortcut for accepting suggestions or input in the chat view (thanks @axkirillov!)
+
+## [3.11.17] - 2025-04-14
+
+- Improvements to OpenAI cache reporting and cost estimates (thanks @monotykamary and Cline!)
+- Visual improvements to the auto-approve toggles (thanks @sachasayan!)
+- Bugfix to diff apply logic (thanks @avtc for the test case!) and telemetry to track errors going forward
+- Fix race condition in capturing short-running terminal commands (thanks @KJ7LNW!)
+- Fix eslint error (thanks @nobu007!)
+
+## [3.11.16] - 2025-04-14
+
+- Add gpt-4.1, gpt-4.1-mini, and gpt-4.1-nano to the OpenAI provider
+- Include model ID in environment details and when exporting tasks (thanks @feifei325!)
+
+## [3.11.15] - 2025-04-13
+
+- Add ability to filter task history by workspace (thanks @samhvw8!)
+- Fix Node.js version in the .tool-versions file (thanks @bogdan0083!)
+- Fix duplicate suggested mentions for open tabs (thanks @samhvw8!)
+- Fix Bedrock ARN validation and token expiry issue when using profiles (thanks @vagadiya!)
+- Add Anthropic option to pass API token as Authorization header instead of X-Api-Key (thanks @mecab!)
+- Better documentation for adding new settings (thanks @KJ7LNW!)
+- Localize package.json (thanks @samhvw8!)
+- Add option to hide the welcome message and fix the background color for the new profile dialog (thanks @zhangtony239!)
+- Restore the focus ring for the VSCodeButton component (thanks @pokutuna!)
+
 ## [3.11.14] - 2025-04-11
 
 - Support symbolic links in rules folders to directories and other symbolic links (thanks @taisukeoe!)

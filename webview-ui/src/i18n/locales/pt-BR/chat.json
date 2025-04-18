@@ -1,5 +1,5 @@
 {
-	"greeting": "O que o Roo pode fazer por você?",
+	"greeting": "Bem-vindo ao Roo Code",
 	"task": {
 		"title": "Tarefa",
 		"seeMore": "Ver mais",
@@ -65,7 +65,7 @@
 		"tooltip": "Cancelar a operação atual"
 	},
 	"scrollToBottom": "Rolar para o final do chat",
-	"aboutMe": "Graças aos mais recentes avanços em capacidades de codificação agentiva, posso lidar com tarefas complexas de desenvolvimento de software passo a passo. Com ferramentas que me permitem criar e editar arquivos, explorar projetos complexos, usar o navegador e executar comandos de terminal (após sua permissão), posso ajudar de maneiras que vão além da conclusão de código ou suporte técnico. Posso até usar o MCP para criar novas ferramentas e expandir minhas próprias capacidades.",
+	"onboarding": "<strong>Sua lista de tarefas neste espaço de trabalho está vazia.</strong> Comece digitando uma tarefa abaixo. Não sabe como começar? Leia mais sobre o que o Roo pode fazer por você nos <DocsLink>documentos</DocsLink>.",
 	"selectMode": "Selecionar modo de interação",
 	"selectApiConfig": "Selecionar configuração de API",
 	"enhancePrompt": "Aprimorar prompt com contexto adicional",
@@ -171,49 +171,7 @@
 	"autoApprove": {
 		"title": "Aprovação automática:",
 		"none": "Nenhuma",
-		"description": "A aprovação automática permite que o Roo Code execute ações sem pedir permissão. Ative apenas para ações nas quais você confia totalmente. Configuração mais detalhada disponível nas <settingsLink>Configurações</settingsLink>.",
-		"actions": {
-			"readFiles": {
-				"label": "Ler arquivos e diretórios",
-				"shortName": "Leitura",
-				"description": "Permite acesso para ler qualquer arquivo em seu computador."
-			},
-			"editFiles": {
-				"label": "Editar arquivos",
-				"shortName": "Edição",
-				"description": "Permite a modificação de quaisquer arquivos em seu computador."
-			},
-			"executeCommands": {
-				"label": "Executar comandos aprovados",
-				"shortName": "Comandos",
-				"description": "Permite a execução de comandos de terminal aprovados. Você pode configurar isso no painel de configurações."
-			},
-			"useBrowser": {
-				"label": "Usar o navegador",
-				"shortName": "Navegador",
-				"description": "Permite a capacidade de iniciar e interagir com qualquer site em um navegador headless."
-			},
-			"useMcp": {
-				"label": "Usar servidores MCP",
-				"shortName": "MCP",
-				"description": "Permite o uso de servidores MCP configurados que podem modificar o sistema de arquivos ou interagir com APIs."
-			},
-			"switchModes": {
-				"label": "Alternar modos",
-				"shortName": "Modos",
-				"description": "Permite a alternância automática entre diferentes modos sem exigir aprovação."
-			},
-			"subtasks": {
-				"label": "Criar e completar subtarefas",
-				"shortName": "Subtarefas",
-				"description": "Permite a criação e conclusão de subtarefas sem exigir aprovação."
-			},
-			"retryRequests": {
-				"label": "Retentar requisições falhas",
-				"shortName": "Retentativas",
-				"description": "Retenta automaticamente requisições de API falhas quando o provedor retorna uma resposta de erro."
-			}
-		}
+		"description": "A aprovação automática permite que o Roo Code execute ações sem pedir permissão. Ative apenas para ações nas quais você confia totalmente. Configuração mais detalhada disponível nas <settingsLink>Configurações</settingsLink>."
 	},
 	"reasoning": {
 		"thinking": "Pensando",
@@ -223,10 +181,14 @@
 		"copyToInput": "Copiar para entrada (ou Shift + clique)"
 	},
 	"announcement": {
-		"title": "Faça mais com Tarefas Boomerang 🪃",
-		"description": "Divida o trabalho em subtarefas, cada uma executando em um modo especializado, como code, architect, debug ou um modo personalizado.",
-		"learnMore": "Saiba mais →",
-		"hideButton": "Ocultar anúncio"
+		"title": "🎉 Roo Code 3.12 Lançado",
+		"description": "Roo Code 3.12 traz novos recursos e melhorias baseados no seu feedback.",
+		"whatsNew": "O que há de novo",
+		"feature1": "<bold>Suporte ao Grok</bold>: Adicionado o provedor xAI e opções de esforço de raciocínio para Grok no OpenRouter",
+		"feature2": "<bold>Melhorias na edição de diferenças</bold>: Configuração por perfil e melhor normalização de strings para menos erros",
+		"feature3": "<bold>Melhorias nos pontos de verificação</bold>: Pontos de verificação mais rápidos e confiáveis",
+		"hideButton": "Ocultar anúncio",
+		"detailsDiscussLinks": "Obtenha mais detalhes e participe da discussão no <discordLink>Discord</discordLink> e <redditLink>Reddit</redditLink> 🚀"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo quer usar o navegador:",

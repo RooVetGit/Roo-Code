@@ -21,6 +21,7 @@ import { UnboundHandler } from "./providers/unbound"
 import { RequestyHandler } from "./providers/requesty"
 import { HumanRelayHandler } from "./providers/human-relay"
 import { FakeAIHandler } from "./providers/fake-ai"
+import { XAIHandler } from "./providers/xai"
 
 export interface SingleCompletionHandler {
 	completePrompt(prompt: string): Promise<string>
@@ -78,6 +79,8 @@ export function buildApiHandler(configuration: ApiConfiguration): ApiHandler {
 			return new HumanRelayHandler(options)
 		case "fake-ai":
 			return new FakeAIHandler(options)
+		case "xai":
+			return new XAIHandler(options)
 		default:
 			return new AnthropicHandler(options)
 	}
@@ -88,21 +91,25 @@ export function getModelParams({
 	model,
 	defaultMaxTokens,
 	defaultTemperature = 0,
+	defaultReasoningEffort,
 }: {
 	options: ApiHandlerOptions
 	model: ModelInfo
 	defaultMaxTokens?: number
 	defaultTemperature?: number
+	defaultReasoningEffort?: "low" | "medium" | "high"
 }) {
 	const {
 		modelMaxTokens: customMaxTokens,
 		modelMaxThinkingTokens: customMaxThinkingTokens,
 		modelTemperature: customTemperature,
+		reasoningEffort: customReasoningEffort,
 	} = options
 
 	let maxTokens = model.maxTokens ?? defaultMaxTokens
 	let thinking: BetaThinkingConfigParam | undefined = undefined
 	let temperature = customTemperature ?? defaultTemperature
+	const reasoningEffort = customReasoningEffort ?? defaultReasoningEffort
 
 	if (model.thinking) {
 		// Only honor `customMaxTokens` for thinking models.
@@ -118,5 +125,5 @@ export function getModelParams({
 		temperature = 1.0
 	}
 
-	return { maxTokens, thinking, temperature }
+	return { maxTokens, thinking, temperature, reasoningEffort }
 }

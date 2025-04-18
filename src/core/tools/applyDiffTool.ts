@@ -1,15 +1,17 @@
-import { ClineSayTool } from "../../shared/ExtensionMessage"
-import { getReadablePath } from "../../utils/path"
-import { ToolUse } from "../assistant-message"
-import { Cline } from "../Cline"
-import { RemoveClosingTag } from "./types"
-import { formatResponse } from "../prompts/responses"
-import { AskApproval, HandleError, PushToolResult } from "./types"
-import { fileExistsAtPath } from "../../utils/fs"
-import { addLineNumbers } from "../../integrations/misc/extract-text"
 import path from "path"
 import fs from "fs/promises"
+
+import { ClineSayTool } from "../../shared/ExtensionMessage"
+import { getReadablePath } from "../../utils/path"
+import { Cline } from "../Cline"
+import { ToolUse, RemoveClosingTag } from "../../shared/tools"
+import { formatResponse } from "../prompts/responses"
+import { AskApproval, HandleError, PushToolResult } from "../../shared/tools"
+import { fileExistsAtPath } from "../../utils/fs"
+import { addLineNumbers } from "../../integrations/misc/extract-text"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
+import { telemetryService } from "../../services/telemetry/TelemetryService"
+import { unescapeHtmlEntities } from "../../utils/text-normalization"
 
 export async function applyDiffTool(
 	cline: Cline,
@@ -20,7 +22,11 @@ export async function applyDiffTool(
 	removeClosingTag: RemoveClosingTag,
 ) {
 	const relPath: string | undefined = block.params.path
-	const diffContent: string | undefined = block.params.diff
+	let diffContent: string | undefined = block.params.diff
+
+	if (diffContent && !cline.api.getModel().id.includes("claude")) {
+		diffContent = unescapeHtmlEntities(diffContent)
+	}
 
 	const sharedMessageProps: ClineSayTool = {
 		tool: "appliedDiff",
@@ -77,7 +83,6 @@ export async function applyDiffTool(
 				originalContent,
 				diffContent,
 				parseInt(block.params.start_line ?? ""),
-				parseInt(block.params.end_line ?? ""),
 			)) ?? {
 				success: false,
 				error: "No diff strategy available",
@@ -89,6 +94,9 @@ export async function applyDiffTool(
 				const currentCount = (cline.consecutiveMistakeCountForApplyDiff.get(relPath) || 0) + 1
 				cline.consecutiveMistakeCountForApplyDiff.set(relPath, currentCount)
 				let formattedError = ""
+
+				telemetryService.captureDiffApplicationError(cline.taskId, currentCount)
+
 				if (diffResult.failParts && diffResult.failParts.length > 0) {
 					for (const failPart of diffResult.failParts) {
 						if (failPart.success) {
