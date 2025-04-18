@@ -7,7 +7,9 @@
 		"editModesConfig": "Editar configuración de modos",
 		"editGlobalModes": "Editar modos globales",
 		"editProjectModes": "Editar modos del proyecto (.roomodes)",
-		"createModeHelpText": "¡Haz clic en + para crear un nuevo modo personalizado, o simplemente pídele a Roo en el chat que te cree uno!"
+		"createModeHelpText": "¡Haz clic en + para crear un nuevo modo personalizado, o simplemente pídele a Roo en el chat que te cree uno!",
+		"hideBuiltInModes": "Ocultar modos integrados",
+		"showBuiltInModes": "Mostrar modos integrados"
 	},
 	"apiConfiguration": {
 		"title": "Configuración de API",

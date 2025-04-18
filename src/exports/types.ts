@@ -354,6 +354,7 @@ type GlobalSettings = {
 		  }
 		| undefined
 	enhancementApiConfigId?: string | undefined
+	hiddenBuiltInModes?: string[] | undefined
 }
 
 export type { GlobalSettings }

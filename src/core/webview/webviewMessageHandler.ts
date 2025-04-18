@@ -1354,6 +1354,10 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await provider.postStateToWebview()
 			break
 		}
+		case "updateHiddenBuiltInModes":
+			await updateGlobalState("hiddenBuiltInModes", message.hiddenModes ?? [])
+			await provider.postStateToWebview()
+			break
 	}
 }
 

@@ -125,6 +125,7 @@ export interface WebviewMessage {
 		| "maxReadFileLine"
 		| "searchFiles"
 		| "toggleApiConfigPin"
+		| "updateHiddenBuiltInModes"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
@@ -150,6 +151,7 @@ export interface WebviewMessage {
 	source?: "global" | "project"
 	requestId?: string
 	ids?: string[]
+	hiddenModes?: string[]
 }
 
 export const checkoutDiffPayloadSchema = z.object({

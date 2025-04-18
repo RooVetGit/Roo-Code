@@ -17,6 +17,7 @@ import {
 	getRoleDefinition,
 	getCustomInstructions,
 	getAllModes,
+	modes as builtInModes, // Import built-in modes separately
 	ModeConfig,
 	GroupEntry,
 } from "../../../../src/shared/modes"
@@ -29,6 +30,7 @@ import { Tab, TabContent, TabHeader } from "../common/Tab"
 import i18next from "i18next"
 import { useAppTranslation } from "../../i18n/TranslationContext"
 import { Trans } from "react-i18next"
+import { Eye, EyeOff } from "lucide-react" // Import icons
 
 // Get all available groups that should show in prompts view
 const availableGroups = (Object.keys(TOOL_GROUPS) as ToolGroup[]).filter((group) => !TOOL_GROUPS[group].alwaysAvailable)
@@ -45,6 +47,15 @@ function getGroupName(group: GroupEntry): ToolGroup {
 }
 
 const PromptsView = ({ onDone }: PromptsViewProps) => {
+	// Helper function to calculate the next state for hidden built-in modes
+	const calculateNextHiddenModes = (currentlyHidden: boolean, builtInModesList: readonly ModeConfig[]): string[] => {
+		// Accept readonly array
+		if (currentlyHidden) {
+			return [] // If currently hidden, next state is visible (empty array)
+		} else {
+			return builtInModesList.map((m) => m.slug) // If currently visible, next state is hidden (all built-in slugs)
+		}
+	}
 	const { t } = useAppTranslation()
 
 	const {
@@ -58,10 +69,26 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 		customInstructions,
 		setCustomInstructions,
 		customModes,
+		hiddenBuiltInModes, // Get hidden modes state
+		setHiddenBuiltInModes, // Get setter for hidden modes
 	} = useExtensionState()
 
 	// Memoize modes to preserve array order
-	const modes = useMemo(() => getAllModes(customModes), [customModes])
+	// Combine built-in and custom modes
+	const allModes = useMemo(() => getAllModes(customModes), [customModes])
+	// Filter modes based on hidden state for display
+	const visibleModes = useMemo(
+		() =>
+			allModes.filter(
+				(m) => !hiddenBuiltInModes.includes(m.slug) || customModes?.some((cm) => cm.slug === m.slug),
+			),
+		[allModes, customModes, hiddenBuiltInModes],
+	)
+	// Check if built-in modes are currently hidden
+	const areBuiltInModesHidden = useMemo(
+		() => builtInModes.every((bim) => hiddenBuiltInModes.includes(bim.slug)),
+		[hiddenBuiltInModes],
+	)
 
 	const [testPrompt, setTestPrompt] = useState("")
 	const [isEnhancing, setIsEnhancing] = useState(false)
@@ -140,8 +167,8 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 	// Helper function to get current mode's config
 	const getCurrentMode = useCallback((): ModeConfig | undefined => {
 		const findMode = (m: ModeConfig): boolean => m.slug === mode
-		return customModes?.find(findMode) || modes.find(findMode)
-	}, [mode, customModes, modes])
+		return customModes?.find(findMode) || allModes.find(findMode) // Use allModes here for internal logic
+	}, [mode, customModes, allModes]) // Fix dependency array
 
 	// Helper function to safely access mode properties
 	const getModeProperty = <T extends keyof ModeConfig>(
@@ -267,9 +294,9 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 
 	const isNameOrSlugTaken = useCallback(
 		(name: string, slug: string) => {
-			return modes.some((m) => m.slug === slug || m.name === name)
+			return allModes.some((m) => m.slug === slug || m.name === name) // Check against allModes
 		},
-		[modes],
+		[allModes], // Fix dependency array
 	)
 
 	const openCreateModeDialog = useCallback(() => {
@@ -409,6 +436,26 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 								title={t("prompts:modes.createNewMode")}>
 								<span className="codicon codicon-add"></span>
 							</Button>
+							{/* Toggle Built-in Modes Button */}
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={() => {
+									// Use the helper function to calculate the next state
+									const newHiddenModes = calculateNextHiddenModes(areBuiltInModesHidden, builtInModes)
+									setHiddenBuiltInModes(newHiddenModes) // Update local state immediately for UI feedback
+									vscode.postMessage({
+										type: "updateHiddenBuiltInModes",
+										hiddenModes: newHiddenModes,
+									})
+								}}
+								title={
+									areBuiltInModesHidden
+										? t("prompts:modes.showBuiltInModes")
+										: t("prompts:modes.hideBuiltInModes")
+								}>
+								{areBuiltInModesHidden ? <EyeOff size={16} /> : <Eye size={16} />}
+							</Button>
 							<div className="relative inline-block">
 								<Button
 									variant="ghost"
@@ -470,8 +517,9 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 						{t("prompts:modes.createModeHelpText")}
 					</div>
 
+					{/* Render mode tabs using visibleModes */}
 					<div className="flex gap-2 items-center mb-3 flex-wrap py-1">
-						{modes.map((modeConfig) => {
+						{visibleModes.map((modeConfig) => {
 							const isActive = mode === modeConfig.slug
 							return (
 								<button
