@@ -18,7 +18,7 @@ describe("RequestyHandler", () => {
 		requestyApiKey: "test-key",
 		requestyModelId: "test-model",
 		requestyModelInfo: {
-			maxTokens: 8192,
+			maxTokens: 64_000,
 			contextWindow: 200_000,
 			supportsImages: true,
 			supportsComputerUse: true,

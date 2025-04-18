@@ -309,7 +309,7 @@ describe("VertexHandler", () => {
 					},
 				],
 				generationConfig: {
-					maxOutputTokens: 8192,
+					maxOutputTokens: 64_000,
 					temperature: 0,
 				},
 			})
@@ -914,7 +914,7 @@ describe("VertexHandler", () => {
 			})
 
 			const result = handler.getModel()
-			expect(result.maxTokens).toBe(8192)
+			expect(result.maxTokens).toBe(64_000)
 			expect(result.thinking).toBeUndefined()
 			expect(result.temperature).toBe(0)
 		})
