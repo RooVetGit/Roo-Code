@@ -34,9 +34,7 @@ export const FollowUpSuggest = ({ suggestions = [], onSuggestionClick, ts = 1 }:
 						className="text-left whitespace-normal break-words w-full h-auto py-3 justify-start pr-8"
 						onClick={(event) => handleSuggestionClick(suggestion, event)}
 						aria-label={suggestion}>
-						<div className="flex flex-row items-center gap-2">
-							<div>{suggestion}</div>
-						</div>
+						<div>{suggestion}</div>
 					</Button>
 					<div
 						className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
