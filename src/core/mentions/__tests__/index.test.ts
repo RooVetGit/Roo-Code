@@ -144,6 +144,46 @@ Detailed commit message with multiple lines
 			expect(result).toContain(`<git_commit hash="${commitHash}">`)
 			expect(result).toContain(`Error fetching commit info: ${errorMessage}`)
 		})
+
+		it("should parse file paths with spaces", async () => {
+			// Mock the file content fetching
+			const fileContent = "This is the content of the file with spaces in its name"
+
+			// Mock the getFileOrFolderContent function (which is called internally by parseMentions)
+			// This is done by mocking the fs.readFile that would be called inside getFileOrFolderContent
+			const fs = require("fs/promises")
+			jest.spyOn(fs, "readFile").mockResolvedValue(fileContent)
+			jest.spyOn(fs, "stat").mockResolvedValue({ isFile: () => true, isDirectory: () => false } as any)
+
+			const filePath = "/path/with spaces/my file.txt"
+			const result = await parseMentions(`Check out this file @${filePath}`, mockCwd, mockUrlContentFetcher)
+
+			// Verify the file path with spaces was correctly parsed
+			expect(result).toContain(`'path/with spaces/my file.txt' (see below for file content)`)
+			expect(result).toContain(`<file_content path="path/with spaces/my file.txt">`)
+		})
+
+		it("should parse folder paths with spaces", async () => {
+			// Mock the folder content fetching
+			const folderContent = "├── file1.txt\n├── file2.txt\n└── subfolder/"
+
+			// Mock the getFileOrFolderContent function (which is called internally by parseMentions)
+			// This is done by mocking the fs.readdir and fs.stat that would be called inside getFileOrFolderContent
+			const fs = require("fs/promises")
+			jest.spyOn(fs, "readdir").mockResolvedValue([
+				{ name: "file1.txt", isFile: () => true, isDirectory: () => false },
+				{ name: "file2.txt", isFile: () => true, isDirectory: () => false },
+				{ name: "subfolder", isFile: () => false, isDirectory: () => true }
+			])
+			jest.spyOn(fs, "stat").mockResolvedValue({ isFile: () => false, isDirectory: () => true } as any)
+
+			const folderPath = "/folder with spaces/"
+			const result = await parseMentions(`Check out this folder @${folderPath}`, mockCwd, mockUrlContentFetcher)
+
+			// Verify the folder path with spaces was correctly parsed
+			expect(result).toContain(`'folder with spaces/' (see below for folder content)`)
+			expect(result).toContain(`<folder_content path="folder with spaces/">`)
+		})
 	})
 
 	describe("openMention", () => {
