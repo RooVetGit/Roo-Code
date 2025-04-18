@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 
 import { Slider } from "@/components/ui"
@@ -16,25 +17,28 @@ interface ThinkingBudgetProps {
 export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, modelInfo }: ThinkingBudgetProps) => {
 	const { t } = useAppTranslation()
 
-	if (!modelInfo || !modelInfo.thinking || !modelInfo.maxTokens) {
-		return null
-	}
+	const isThinkingModel = modelInfo && modelInfo.thinking && modelInfo.maxTokens
 
 	const customMaxOutputTokens = apiConfiguration.modelMaxTokens || DEFAULT_MAX_OUTPUT_TOKENS
+	const customMaxThinkingTokens = apiConfiguration.modelMaxThinkingTokens || DEFAULT_MAX_THINKING_TOKENS
 
 	// Dynamically expand or shrink the max thinking budget based on the custom
 	// max output tokens so that there's always a 20% buffer.
-	const modelMaxThinkingTokens = modelInfo.maxThinkingTokens
+	const modelMaxThinkingTokens = modelInfo?.maxThinkingTokens
 		? Math.min(modelInfo.maxThinkingTokens, Math.floor(0.8 * customMaxOutputTokens))
 		: Math.floor(0.8 * customMaxOutputTokens)
 
-	let customMaxThinkingTokens = apiConfiguration.modelMaxThinkingTokens || DEFAULT_MAX_THINKING_TOKENS
+	// If the custom max thinking tokens are going to exceed it's limit due
+	// to the custom max output tokens being reduced then we need to shrink it
+	// appropriately.
+	useEffect(() => {
+		if (isThinkingModel && customMaxThinkingTokens > modelMaxThinkingTokens) {
+			console.log(`setApiConfigurationField("modelMaxThinkingTokens", ${modelMaxThinkingTokens})`)
+			setApiConfigurationField("modelMaxThinkingTokens", modelMaxThinkingTokens)
+		}
+	}, [isThinkingModel, customMaxThinkingTokens, modelMaxThinkingTokens, setApiConfigurationField])
 
-	if (customMaxThinkingTokens > modelMaxThinkingTokens) {
-		customMaxThinkingTokens = modelMaxThinkingTokens
-	}
-
-	return (
+	return isThinkingModel ? (
 		<>
 			<div className="flex flex-col gap-1">
 				<div className="font-medium">{t("settings:thinkingBudget.maxTokens")}</div>
@@ -63,5 +67,5 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 				</div>
 			</div>
 		</>
-	)
+	) : null
 }
