@@ -45,15 +45,16 @@ function convertAnthropicContentToGemini(content: string | Anthropic.ContentBloc
 				const imageParts: Part[] = []
 
 				block.content.forEach((item) => {
-					if (item.type === "text") {
-						textParts.push(item.text)
-					} else if (item.type === "image") {
-						if (item.source.type === "base64") {
-							imageParts.push({
-								inlineData: { data: item.source.data, mimeType: item.source.media_type },
-							})
-						}
-					}
+				       if (item.type === "text") {
+		                               textParts.push(item.text);
+		                               continue;
+	                                }
+	                                if (item.type === "image" && item.source.type === "base64") {
+		                                const { data, media_type } = item.source;
+		                                imageParts.push({
+			                                inlineData: { data, mimeType: media_type },
+		                                });
+	                                }
 				})
 
 				// Create content text with a note about images if present
