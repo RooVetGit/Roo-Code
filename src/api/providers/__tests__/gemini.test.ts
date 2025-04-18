@@ -23,7 +23,7 @@ describe("GeminiHandler", () => {
 		})
 
 		// Replace the client with our mock
-		handler.client = {
+		handler["client"] = {
 			models: {
 				generateContentStream: mockGenerateContentStream,
 				generateContent: mockGenerateContent,
@@ -55,7 +55,7 @@ describe("GeminiHandler", () => {
 
 		it("should handle text messages correctly", async () => {
 			// Setup the mock implementation to return an async generator
-			;(handler.client.models.generateContentStream as jest.Mock).mockResolvedValue({
+			;(handler["client"].models.generateContentStream as jest.Mock).mockResolvedValue({
 				[Symbol.asyncIterator]: async function* () {
 					yield { text: "Hello" }
 					yield { text: " world!" }
@@ -87,7 +87,7 @@ describe("GeminiHandler", () => {
 			})
 
 			// Verify the call to generateContentStream
-			expect(handler.client.models.generateContentStream).toHaveBeenCalledWith(
+			expect(handler["client"].models.generateContentStream).toHaveBeenCalledWith(
 				expect.objectContaining({
 					model: GEMINI_20_FLASH_THINKING_NAME,
 					config: expect.objectContaining({
@@ -100,7 +100,7 @@ describe("GeminiHandler", () => {
 
 		it("should handle API errors", async () => {
 			const mockError = new Error("Gemini API error")
-			;(handler.client.models.generateContentStream as jest.Mock).mockRejectedValue(mockError)
+			;(handler["client"].models.generateContentStream as jest.Mock).mockRejectedValue(mockError)
 
 			const stream = handler.createMessage(systemPrompt, mockMessages)
 
@@ -115,7 +115,7 @@ describe("GeminiHandler", () => {
 	describe("completePrompt", () => {
 		it("should complete prompt successfully", async () => {
 			// Mock the response with text property
-			;(handler.client.models.generateContent as jest.Mock).mockResolvedValue({
+			;(handler["client"].models.generateContent as jest.Mock).mockResolvedValue({
 				text: "Test response",
 			})
 
@@ -123,7 +123,7 @@ describe("GeminiHandler", () => {
 			expect(result).toBe("Test response")
 
 			// Verify the call to generateContent
-			expect(handler.client.models.generateContent).toHaveBeenCalledWith({
+			expect(handler["client"].models.generateContent).toHaveBeenCalledWith({
 				model: GEMINI_20_FLASH_THINKING_NAME,
 				contents: [{ role: "user", parts: [{ text: "Test prompt" }] }],
 				config: {
@@ -135,7 +135,7 @@ describe("GeminiHandler", () => {
 
 		it("should handle API errors", async () => {
 			const mockError = new Error("Gemini API error")
-			;(handler.client.models.generateContent as jest.Mock).mockRejectedValue(mockError)
+			;(handler["client"].models.generateContent as jest.Mock).mockRejectedValue(mockError)
 
 			await expect(handler.completePrompt("Test prompt")).rejects.toThrow(
 				"Gemini completion error: Gemini API error",
@@ -144,7 +144,7 @@ describe("GeminiHandler", () => {
 
 		it("should handle empty response", async () => {
 			// Mock the response with empty text
-			;(handler.client.models.generateContent as jest.Mock).mockResolvedValue({
+			;(handler["client"].models.generateContent as jest.Mock).mockResolvedValue({
 				text: "",
 			})
 
