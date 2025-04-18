@@ -67,7 +67,6 @@ import { listFilesTool } from "./tools/listFilesTool"
 import { readFileTool } from "./tools/readFileTool"
 import { writeToFileTool } from "./tools/writeToFileTool"
 import { applyDiffTool } from "./tools/applyDiffTool"
-import { insertContentTool } from "./tools/insertContentTool"
 import { searchAndReplaceTool } from "./tools/searchAndReplaceTool"
 import { listCodeDefinitionNamesTool } from "./tools/listCodeDefinitionNamesTool"
 import { searchFilesTool } from "./tools/searchFilesTool"
@@ -1414,8 +1413,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 							return `[${block.name} for '${block.params.regex}'${
 								block.params.file_pattern ? ` in '${block.params.file_pattern}'` : ""
 							}]`
-						case "insert_content":
-							return `[${block.name} for '${block.params.path}']`
 						case "search_and_replace":
 							return `[${block.name} for '${block.params.path}']`
 						case "list_files":
@@ -1440,6 +1437,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 							const modeName = getModeBySlug(mode, customModes)?.name ?? mode
 							return `[${block.name} in ${modeName} mode: '${message}']`
 						}
+						default:
+							return `[${block.name}]`
 					}
 				}
 
@@ -1596,9 +1595,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 						break
 					case "apply_diff":
 						await applyDiffTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
-						break
-					case "insert_content":
-						await insertContentTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
 						break
 					case "search_and_replace":
 						await searchAndReplaceTool(

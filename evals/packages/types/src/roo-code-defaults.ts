@@ -57,7 +57,6 @@ export const rooCodeDefaults: RooCodeSettings = {
 	fuzzyMatchThreshold: 1.0,
 	experiments: {
 		search_and_replace: false,
-		insert_content: false,
 		powerSteering: false,
 		append_to_file: false,
 	},
