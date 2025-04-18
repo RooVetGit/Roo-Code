@@ -27,7 +27,7 @@ export const anthropicModels = {
 		thinking: true,
 	},
 	"claude-3-7-sonnet-20250219": {
-		maxTokens: 8192,
+		maxTokens: 64_000,
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsComputerUse: true,
@@ -166,7 +166,7 @@ export const bedrockModels = {
 		cachableFields: ["system"],
 	},
 	"anthropic.claude-3-7-sonnet-20250219-v1:0": {
-		maxTokens: 8192,
+		maxTokens: 64_000,
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsComputerUse: true,
@@ -425,7 +425,7 @@ export const bedrockModels = {
 // https://glama.ai/models
 export const glamaDefaultModelId = "anthropic/claude-3-7-sonnet"
 export const glamaDefaultModelInfo: ModelInfo = {
-	maxTokens: 8192,
+	maxTokens: 64_000,
 	contextWindow: 200_000,
 	supportsImages: true,
 	supportsComputerUse: true,
@@ -442,7 +442,7 @@ export const glamaDefaultModelInfo: ModelInfo = {
 // https://requesty.ai/router-2
 export const requestyDefaultModelId = "anthropic/claude-3-7-sonnet-latest"
 export const requestyDefaultModelInfo: ModelInfo = {
-	maxTokens: 8192,
+	maxTokens: 64_000,
 	contextWindow: 200_000,
 	supportsImages: true,
 	supportsComputerUse: true,
@@ -459,7 +459,7 @@ export const requestyDefaultModelInfo: ModelInfo = {
 // https://openrouter.ai/models?order=newest&supported_parameters=tools
 export const openRouterDefaultModelId = "anthropic/claude-3.7-sonnet"
 export const openRouterDefaultModelInfo: ModelInfo = {
-	maxTokens: 8192,
+	maxTokens: 64_000,
 	contextWindow: 200_000,
 	supportsImages: true,
 	supportsComputerUse: true,
@@ -550,7 +550,7 @@ export const vertexModels = {
 		outputPrice: 5,
 	},
 	"claude-3-7-sonnet@20250219:thinking": {
-		maxTokens: 64_000,
+		maxTokens: 128_000,
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsComputerUse: true,
@@ -562,7 +562,7 @@ export const vertexModels = {
 		thinking: true,
 	},
 	"claude-3-7-sonnet@20250219": {
-		maxTokens: 8192,
+		maxTokens: 64_000,
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsComputerUse: true,
