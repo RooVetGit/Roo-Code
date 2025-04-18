@@ -278,7 +278,7 @@ const ContextWindowProgress = ({ contextWindow, contextTokens, maxTokens }: Cont
 					/>
 
 					{/* Main progress bar container */}
-					<div className="flex items-center h-1 rounded-[2px] overflow-hidden w-full bg-[color-mix(in_srgb,var(--vscode-badge-foreground)_20%,transparent)]">
+					<div className="flex items-center h-1 rounded-[2px] overflow-hidden w-full bg-[color-mix(in_srgb,var(--vscode-foreground)_20%,transparent)]">
 						{/* Current tokens container */}
 						<div className="relative h-full" style={{ width: `${currentPercent}%` }}>
 							{/* Invisible overlay for current tokens section */}
@@ -291,7 +291,7 @@ const ContextWindowProgress = ({ contextWindow, contextTokens, maxTokens }: Cont
 								data-testid="context-tokens-used"
 							/>
 							{/* Current tokens used - darkest */}
-							<div className="h-full w-full bg-[var(--vscode-badge-foreground)] transition-width duration-300 ease-out" />
+							<div className="h-full w-full bg-[var(--vscode-foreground)] transition-width duration-300 ease-out" />
 						</div>
 
 						{/* Container for reserved tokens */}
@@ -305,7 +305,7 @@ const ContextWindowProgress = ({ contextWindow, contextTokens, maxTokens }: Cont
 								data-testid="context-reserved-tokens"
 							/>
 							{/* Reserved for output section - medium gray */}
-							<div className="h-full w-full bg-[color-mix(in_srgb,var(--vscode-badge-foreground)_30%,transparent)] transition-width duration-300 ease-out" />
+							<div className="h-full w-full bg-[color-mix(in_srgb,var(--vscode-foreground)_30%,transparent)] transition-width duration-300 ease-out" />
 						</div>
 
 						{/* Empty section (if any) */}
