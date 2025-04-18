@@ -84,7 +84,7 @@ export const taskMetrics = sqliteTable("taskMetrics", {
 	cacheReads: integer({ mode: "number" }).notNull(),
 	cost: real().notNull(),
 	duration: integer({ mode: "number" }).notNull(),
-	toolUsage: blob({ mode: "json" }).$type<ToolUsage>(),
+	toolUsage: text({ mode: "json" }).$type<ToolUsage>(),
 	createdAt: integer({ mode: "timestamp" }).notNull(),
 })
 

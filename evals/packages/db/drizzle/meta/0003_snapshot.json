@@ -1,7 +1,7 @@
 {
 	"version": "6",
 	"dialect": "sqlite",
-	"id": "a7a893e2-373a-4706-bcd4-772e2525db62",
+	"id": "61d48d20-f662-445d-9962-cf9cb165cbe7",
 	"prevId": "f49d9b0b-fda9-467a-9adb-c941d6cbf7ce",
 	"tables": {
 		"runs": {
@@ -165,7 +165,7 @@
 				},
 				"toolUsage": {
 					"name": "toolUsage",
-					"type": "blob",
+					"type": "text",
 					"primaryKey": false,
 					"notNull": false,
 					"autoincrement": false
