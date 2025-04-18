@@ -583,12 +583,14 @@ Only use a single line of '=======' between search and replacement content, beca
 		const diffContent = toolUse.params.diff
 		if (diffContent) {
 			const icon = "diff-multiple"
-			const searchBlockCount = (diffContent.match(/SEARCH/g) || []).length
 			if (toolUse.partial) {
-				if (diffContent.length < 1000 || (diffContent.length / 50) % 10 === 0) {
-					return { icon, text: `${searchBlockCount}` }
+				if (Math.floor(diffContent.length / 10) % 10 === 0) {
+					const searchBlockCount = (diffContent.match(/SEARCH/g) || []).length
+					const dots = ".".repeat(Math.floor(diffContent.length / 100) % 4)
+					return { icon, text: `${searchBlockCount} ${dots}` }
 				}
 			} else if (result) {
+				const searchBlockCount = (diffContent.match(/SEARCH/g) || []).length
 				if (result.failParts?.length) {
 					return {
 						icon,
