@@ -265,7 +265,6 @@ type GlobalSettings = {
 	remoteBrowserHost?: string | undefined
 	cachedChromeHostUrl?: string | undefined
 	enableCheckpoints?: boolean | undefined
-	showGreeting?: boolean | undefined
 	ttsEnabled?: boolean | undefined
 	ttsSpeed?: number | undefined
 	soundEnabled?: boolean | undefined
@@ -290,6 +289,7 @@ type GlobalSettings = {
 				search_and_replace: boolean
 				insert_content: boolean
 				powerSteering: boolean
+				append_to_file: boolean
 		  }
 		| undefined
 	language?:

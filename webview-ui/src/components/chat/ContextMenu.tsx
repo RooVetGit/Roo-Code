@@ -12,6 +12,7 @@ import { ModeConfig } from "../../../../src/shared/modes"
 interface ContextMenuProps {
 	onSelect: (type: ContextMenuOptionType, value?: string) => void
 	searchQuery: string
+	inputValue: string
 	onMouseDown: () => void
 	selectedIndex: number
 	setSelectedIndex: (index: number) => void
@@ -25,6 +26,7 @@ interface ContextMenuProps {
 const ContextMenu: React.FC<ContextMenuProps> = ({
 	onSelect,
 	searchQuery,
+	inputValue,
 	onMouseDown,
 	selectedIndex,
 	setSelectedIndex,
@@ -38,8 +40,8 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 	const menuRef = useRef<HTMLDivElement>(null)
 
 	const filteredOptions = useMemo(() => {
-		return getContextMenuOptions(searchQuery, selectedType, queryItems, dynamicSearchResults, modes)
-	}, [searchQuery, selectedType, queryItems, dynamicSearchResults, modes])
+		return getContextMenuOptions(searchQuery, inputValue, selectedType, queryItems, dynamicSearchResults, modes)
+	}, [searchQuery, inputValue, selectedType, queryItems, dynamicSearchResults, modes])
 
 	useEffect(() => {
 		if (menuRef.current) {
