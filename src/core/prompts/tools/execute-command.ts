@@ -10,9 +10,12 @@ Parameters:
 
 ### Risk Level Definitions:
 
+We define a total ordering on risk levels:
+	readOnly < reversibleChanges < complexChanges < serviceInterruptingChanges < destructiveChanges
+
 Let:
 S = complete system state: all files, processes, and configurations
-c = command operation: the command being executed
+c = command operation: the command (or command component) being executed
 
 1. readOnly:
 Command only observes system state without modification
@@ -44,6 +47,18 @@ Command permanently removes information without possibility of recovery
 ∃d ∈ D: d(s) ⊂ s ∧ ¬∃f: f(d(s)) = s
    where D is the set of destructive operations and f represents any possible recovery function
 Examples: rm, disk operations, database DROP/DELETE FROM, file truncation, cache clearing
+
+For any compound command C consisting of component commands {c₁, c₂, ..., cₙ}: 
+
+The risk level of the compound command r(C) must satisfy:
+	r(C) ≥ r(cᵢ) for all i ∈ {1, 2, ..., n}
+
+Risk level is chosen as the highest risk over all component commands:
+	r(C) = max{r(c₁), r(c₂), ..., r(cₙ)}
+
+Compound command examples:
+- \`c₁ && c₂\`
+- \`c₁ && c₂ $(c₃) | c₄\`)
 
 ### Usage:
 <execute_command>
