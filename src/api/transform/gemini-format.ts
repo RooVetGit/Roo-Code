@@ -24,7 +24,6 @@ export function convertAnthropicContentToGemini(content: string | Anthropic.Cont
 					},
 				}
 			case "tool_result": {
-				// Skip empty tool results
 				if (!block.content) {
 					return []
 				}
@@ -32,20 +31,12 @@ export function convertAnthropicContentToGemini(content: string | Anthropic.Cont
 				// Extract tool name from tool_use_id (e.g., "calculator-123" -> "calculator")
 				const toolName = block.tool_use_id.split("-")[0]
 
-				// Handle string content
 				if (typeof block.content === "string") {
 					return {
-						functionResponse: {
-							name: toolName,
-							response: {
-								name: toolName,
-								content: block.content,
-							},
-						},
+						functionResponse: { name: toolName, response: { name: toolName, content: block.content } },
 					}
 				}
 
-				// Handle array content
 				if (Array.isArray(block.content)) {
 					const textParts: string[] = []
 					const imageParts: Part[] = []
@@ -56,10 +47,7 @@ export function convertAnthropicContentToGemini(content: string | Anthropic.Cont
 						} else if (item.type === "image") {
 							if (item.source.type === "base64") {
 								imageParts.push({
-									inlineData: {
-										data: item.source.data,
-										mimeType: item.source.media_type,
-									},
+									inlineData: { data: item.source.data, mimeType: item.source.media_type },
 								})
 							}
 						}
@@ -67,22 +55,11 @@ export function convertAnthropicContentToGemini(content: string | Anthropic.Cont
 
 					// Create content text with a note about images if present
 					const contentText =
-						textParts.join("\n\n") +
-						(imageParts.length > 0
-							? (textParts.length > 0 ? "\n\n" : "\n\n") + "(See next part for image)"
-							: "")
+						textParts.join("\n\n") + (imageParts.length > 0 ? "\n\n(See next part for image)" : "")
 
 					// Return function response followed by any images
 					return [
-						{
-							functionResponse: {
-								name: toolName,
-								response: {
-									name: toolName,
-									content: contentText,
-								},
-							},
-						},
+						{ functionResponse: { name: toolName, response: { name: toolName, content: contentText } } },
 						...imageParts,
 					]
 				}
