@@ -2,7 +2,7 @@ import { createRun, finishRun } from "../runs.js"
 import { createTask } from "../tasks.js"
 import { createTaskMetrics } from "../taskMetrics.js"
 
-describe("finishRun", async () => {
+describe("finishRun", () => {
 	it("aggregates task metrics, including tool usage", async () => {
 		const run = await createRun({ model: "gpt-4.1-mini", socketPath: "/tmp/roo.sock" })
 
