@@ -33,7 +33,6 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 	// appropriately.
 	useEffect(() => {
 		if (isThinkingModel && customMaxThinkingTokens > modelMaxThinkingTokens) {
-			console.log(`setApiConfigurationField("modelMaxThinkingTokens", ${modelMaxThinkingTokens})`)
 			setApiConfigurationField("modelMaxThinkingTokens", modelMaxThinkingTokens)
 		}
 	}, [isThinkingModel, customMaxThinkingTokens, modelMaxThinkingTokens, setApiConfigurationField])
