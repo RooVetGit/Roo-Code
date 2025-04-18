@@ -3,6 +3,9 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 
 import { GeminiHandler } from "../gemini"
+import { geminiDefaultModelId } from "../../../shared/api"
+
+const GEMINI_20_FLASH_THINKING_NAME = "gemini-2.0-flash-thinking-exp-1219"
 
 describe("GeminiHandler", () => {
 	let handler: GeminiHandler
@@ -15,7 +18,7 @@ describe("GeminiHandler", () => {
 
 		handler = new GeminiHandler({
 			apiKey: "test-key",
-			apiModelId: "gemini-2.0-flash-thinking-exp-1219",
+			apiModelId: GEMINI_20_FLASH_THINKING_NAME,
 			geminiApiKey: "test-key",
 		})
 
@@ -32,7 +35,7 @@ describe("GeminiHandler", () => {
 	describe("constructor", () => {
 		it("should initialize with provided config", () => {
 			expect(handler["options"].geminiApiKey).toBe("test-key")
-			expect(handler["options"].apiModelId).toBe("gemini-2.0-flash-thinking-exp-1219")
+			expect(handler["options"].apiModelId).toBe(GEMINI_20_FLASH_THINKING_NAME)
 		})
 	})
 
@@ -86,7 +89,7 @@ describe("GeminiHandler", () => {
 			// Verify the call to generateContentStream
 			expect(handler.client.models.generateContentStream).toHaveBeenCalledWith(
 				expect.objectContaining({
-					model: "gemini-2.0-flash-thinking-exp-1219",
+					model: GEMINI_20_FLASH_THINKING_NAME,
 					config: expect.objectContaining({
 						temperature: 0,
 						systemInstruction: systemPrompt,
@@ -121,7 +124,7 @@ describe("GeminiHandler", () => {
 
 			// Verify the call to generateContent
 			expect(handler.client.models.generateContent).toHaveBeenCalledWith({
-				model: "gemini-2.0-flash-thinking-exp-1219",
+				model: GEMINI_20_FLASH_THINKING_NAME,
 				contents: [{ role: "user", parts: [{ text: "Test prompt" }] }],
 				config: {
 					httpOptions: undefined,
@@ -153,7 +156,7 @@ describe("GeminiHandler", () => {
 	describe("getModel", () => {
 		it("should return correct model info", () => {
 			const modelInfo = handler.getModel()
-			expect(modelInfo.id).toBe("gemini-2.0-flash-thinking-exp-1219")
+			expect(modelInfo.id).toBe(GEMINI_20_FLASH_THINKING_NAME)
 			expect(modelInfo.info).toBeDefined()
 			expect(modelInfo.info.maxTokens).toBe(8192)
 			expect(modelInfo.info.contextWindow).toBe(32_767)
@@ -165,7 +168,7 @@ describe("GeminiHandler", () => {
 				geminiApiKey: "test-key",
 			})
 			const modelInfo = invalidHandler.getModel()
-			expect(modelInfo.id).toBe("gemini-2.0-flash-001") // Default model
+			expect(modelInfo.id).toBe(geminiDefaultModelId) // Default model
 		})
 	})
 })
