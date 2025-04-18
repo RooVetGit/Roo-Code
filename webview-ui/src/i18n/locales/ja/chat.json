@@ -10,7 +10,9 @@
 		"contextWindow": "コンテキストウィンドウ:",
 		"closeAndStart": "タスクを閉じて新しいタスクを開始",
 		"export": "タスク履歴をエクスポート",
-		"delete": "タスクを削除（Shift + クリックで確認をスキップ）"
+		"delete": "タスクを削除（Shift + クリックで確認をスキップ）",
+		"contextLimitTipTitle": "注意:",
+		"contextLimitTipText": "コンテキストが最大制限に近づいています。切り捨てを防ぐために新しいタスクウィンドウを開始することをお勧めします。"
 	},
 	"unpin": "ピン留めを解除",
 	"pin": "ピン留め",

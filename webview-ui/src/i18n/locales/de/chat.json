@@ -10,7 +10,9 @@
 		"contextWindow": "Kontextfenster:",
 		"closeAndStart": "Aufgabe schließen und neue starten",
 		"export": "Aufgabenverlauf exportieren",
-		"delete": "Aufgabe löschen (Shift + Klick zum Überspringen der Bestätigung)"
+		"delete": "Aufgabe löschen (Shift + Klick zum Überspringen der Bestätigung)",
+		"contextLimitTipTitle": "Hinweis:",
+		"contextLimitTipText": "Der Kontext nähert sich dem maximalen Limit. Es wird empfohlen, ein neues Aufgabenfenster zu starten, um eine Kürzung zu vermeiden."
 	},
 	"unpin": "Lösen von oben",
 	"pin": "Anheften",
