@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next"
 import { vscode } from "@/utils/vscode"
 import { formatLargeNumber } from "@/utils/format"
 import { calculateTokenDistribution, getMaxTokensForModel } from "@/utils/model-utils"
-import { Button, Badge } from "@/components/ui"
+import { Button } from "@/components/ui"
 
 import { ClineMessage } from "../../../../src/shared/ExtensionMessage"
 import { mentionRegexGlobal } from "../../../../src/shared/context-mentions"
@@ -17,6 +17,7 @@ import Thumbnails from "../common/Thumbnails"
 import { normalizeApiConfiguration } from "../settings/ApiOptions"
 import { DeleteTaskDialog } from "../history/DeleteTaskDialog"
 import { cn } from "@/lib/utils"
+import { VSCodeBadge } from "@vscode/webview-ui-toolkit/react"
 
 interface TaskHeaderProps {
 	task: ClineMessage
@@ -95,7 +96,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 							contextTokens={contextTokens || 0}
 							maxTokens={getMaxTokensForModel(selectedModelInfo, apiConfiguration)}
 						/>
-						{!!totalCost && <Badge>${totalCost.toFixed(2)}</Badge>}
+						{!!totalCost && <VSCodeBadge>${totalCost.toFixed(2)}</VSCodeBadge>}
 					</div>
 				)}
 				{/* Expanded state: Show task text and images */}
