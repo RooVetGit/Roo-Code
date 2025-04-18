@@ -1,7 +1,7 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import { Content, Part } from "@google/genai"
 
-function convertAnthropicContentToGemini(content: string | Anthropic.ContentBlockParam[]): Part[] {
+export function convertAnthropicContentToGemini(content: string | Anthropic.ContentBlockParam[]): Part[] {
 	if (typeof content === "string") {
 		return [{ text: content }]
 	}
@@ -44,18 +44,14 @@ function convertAnthropicContentToGemini(content: string | Anthropic.ContentBloc
 				const textParts: string[] = []
 				const imageParts: Part[] = []
 
-				block.content.forEach((item) => {
-				       if (item.type === "text") {
-		                               textParts.push(item.text);
-		                               continue;
-	                                }
-	                                if (item.type === "image" && item.source.type === "base64") {
-		                                const { data, media_type } = item.source;
-		                                imageParts.push({
-			                                inlineData: { data, mimeType: media_type },
-		                                });
-	                                }
-				})
+				for (const item of block.content) {
+					if (item.type === "text") {
+						textParts.push(item.text)
+					} else if (item.type === "image" && item.source.type === "base64") {
+						const { data, media_type } = item.source
+						imageParts.push({ inlineData: { data, mimeType: media_type } })
+					}
+				}
 
 				// Create content text with a note about images if present
 				const contentText =

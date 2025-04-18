@@ -9,7 +9,7 @@ import {
 import { SingleCompletionHandler } from "../"
 import type { ApiHandlerOptions, GeminiModelId, ModelInfo } from "../../shared/api"
 import { geminiDefaultModelId, geminiModels } from "../../shared/api"
-import { convertAnthropicMessageToGemini } from "../transform/gemini-format"
+import { convertAnthropicContentToGemini, convertAnthropicMessageToGemini } from "../transform/gemini-format"
 import type { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 
@@ -116,6 +116,27 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 			}
 
 			throw error
+		}
+	}
+
+	override async countTokens(content: Array<Anthropic.Messages.ContentBlockParam>): Promise<number> {
+		try {
+			const { id: model } = this.getModel()
+
+			const response = await this.client.models.countTokens({
+				model,
+				contents: convertAnthropicContentToGemini(content),
+			})
+
+			if (!response.totalTokens) {
+				console.warn("Gemini token counting returned undefined, using fallback")
+				return super.countTokens(content)
+			}
+
+			return response.totalTokens
+		} catch (error) {
+			console.warn("Gemini token counting failed, using fallback", error)
+			return super.countTokens(content)
 		}
 	}
 }
