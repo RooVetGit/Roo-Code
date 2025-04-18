@@ -92,12 +92,13 @@ const StyledMarkdown = styled.div`
 	}
 
 	code:not(pre > code) {
+		font-size: 0.9em;
 		font-family: var(--vscode-editor-font-family, monospace);
 		color: var(--vscode-textPreformat-foreground, #f78383);
 		background-color: var(--vscode-textCodeBlock-background, #1e1e1e);
 		padding: 0px 2px;
 		border-radius: 3px;
-		border: 1px solid var(--vscode-textSeparator-foreground, #424242);
+		border: 1px solid var(--vscode-tab-border, #424242);
 		white-space: pre-line;
 		word-break: break-word;
 		overflow-wrap: anywhere;
