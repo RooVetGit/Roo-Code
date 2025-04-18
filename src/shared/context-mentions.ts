@@ -9,7 +9,7 @@ Mention regex:
   - `/@`:
 	- **@**: The mention must start with the '@' symbol.
 
-  - `((?:\/|\w+:\/\/)(?:[^\s]|\s(?=[^\s]))+?|problems\b|git-changes\b)`:
+  - `((?:\/|\w+:\/\/)[^\r\n]*?(?=\s*$|\s+@|[.,;:!?](?=[\s\r\n]|$))|problems\b|git-changes\b)`:
 	- **Capturing Group (`(...)`)**: Captures the part of the string that matches one of the specified patterns.
 	- `(?:\/|\w+:\/\/)`:
 	  - **Non-Capturing Group (`(?:...)`)**: Groups the alternatives without capturing them for back-referencing.
@@ -18,10 +18,11 @@ Mention regex:
 	  - `|`: Logical OR.
 	  - `\w+:\/\/`:
 		- **Protocol (`\w+://`)**: Matches URLs that start with a word character sequence followed by '://', such as 'http://', 'https://', 'ftp://', etc.
-	- `(?:[^\s]|\s(?=[^\s]))+?`:
-	  - **Character Pattern**: Matches either a non-whitespace character OR a whitespace character that is followed by a non-whitespace character.
-	  - **This allows spaces within file paths while preventing trailing spaces**.
-	  - **Non-Greedy (`+?`)**: Ensures the smallest possible match, preventing the inclusion of trailing punctuation.
+	- `[^\r\n]*?(?=\s*$|\s+@|[.,;:!?](?=[\s\r\n]|$))`:
+	  - **Character Pattern**: Matches any characters except line breaks.
+	  - **Followed by a lookahead**: Ensures the match ends at the end of the line, before another @ symbol, or before punctuation followed by whitespace or end of line.
+	  - **This allows spaces within file paths while properly handling path boundaries**.
+	  - **Non-Greedy (`*?`)**: Ensures the smallest possible match.
 	- `|`: Logical OR.
 	- `problems\b`:
 	  - **Exact Word ('problems')**: Matches the exact word 'problems'.
@@ -40,6 +41,7 @@ Mention regex:
 - **Summary**:
   - The regex effectively matches:
 	- Mentions that are file or folder paths starting with '/' and can contain spaces within the path (e.g., 'my folder/my file.txt').
+	  The regex now properly handles paths with multiple spaces and ensures the entire path is captured.
 	- URLs that start with a protocol (like 'http://') followed by any non-whitespace characters (including query parameters).
 	- The exact word 'problems'.
 	- The exact word 'git-changes'.
@@ -51,7 +53,7 @@ Mention regex:
 
 */
 export const mentionRegex =
-	/@((?:\/|\w+:\/\/)(?:[^\s]|\s(?=[^\s]))+?|[a-f0-9]{7,40}\b|problems\b|git-changes\b|terminal\b)(?=[.,;:!?]?(?=[\s\r\n]|$))/
+	/@((?:\/|\w+:\/\/)[^\r\n]*?(?=\s*$|\s+@|[.,;:!?](?=[\s\r\n]|$))|[a-f0-9]{7,40}\b|problems\b|git-changes\b|terminal\b)(?=[.,;:!?]?(?=[\s\r\n]|$))/
 export const mentionRegexGlobal = new RegExp(mentionRegex.source, "g")
 
 export interface MentionSuggestion {

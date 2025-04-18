@@ -280,8 +280,9 @@ export function shouldShowContextMenu(text: string, position: number): boolean {
 
 	const textAfterAt = beforeCursor.slice(atIndex + 1)
 
-	// Check if there's any whitespace after the '@'
-	if (/\s/.test(textAfterAt)) return false
+	// Check if there's any whitespace immediately after the '@'
+	// This only checks the first character after @ to allow for paths with spaces
+	if (textAfterAt.startsWith(" ")) return false
 
 	// Don't show the menu if it's clearly a URL
 	if (textAfterAt.toLowerCase().startsWith("http")) {

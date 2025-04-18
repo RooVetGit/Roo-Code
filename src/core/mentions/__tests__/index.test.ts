@@ -155,7 +155,17 @@ Detailed commit message with multiple lines
 			jest.spyOn(fs, "readFile").mockResolvedValue(fileContent)
 			jest.spyOn(fs, "stat").mockResolvedValue({ isFile: () => true, isDirectory: () => false } as any)
 
+			// Test with a file path containing spaces
 			const filePath = "/path/with spaces/my file.txt"
+
+			// First, verify that the regex pattern correctly matches the entire path
+			// Import the regex pattern directly to test it
+			const { mentionRegexGlobal } = require("../../../shared/context-mentions")
+			const mentionMatch = `@${filePath}`.match(mentionRegexGlobal)
+			expect(mentionMatch).not.toBeNull()
+			expect(mentionMatch![0]).toBe(`@${filePath}`)
+
+			// Now test the full parseMentions function
 			const result = await parseMentions(`Check out this file @${filePath}`, mockCwd, mockUrlContentFetcher)
 
 			// Verify the file path with spaces was correctly parsed
