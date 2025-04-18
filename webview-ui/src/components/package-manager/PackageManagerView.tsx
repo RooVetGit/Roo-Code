@@ -20,12 +20,10 @@ const PackageManagerView: React.FC<PackageManagerViewProps> = ({ onDone, stateMa
 	const [tagSearch, setTagSearch] = useState("")
 	const [isTagInputActive, setIsTagInputActive] = useState(false)
 
-	// Fetch items only on first mount or when no items exist
+	// Fetch items on first mount
 	useEffect(() => {
-		if (state.allItems.length === 0 && !state.isFetching) {
-			manager.transition({ type: "FETCH_ITEMS" })
-		}
-	}, [manager, state.allItems.length, state.isFetching])
+		manager.transition({ type: "FETCH_ITEMS" })
+	}, [manager])
 
 	// Memoize all available tags
 	const allTags = useMemo(

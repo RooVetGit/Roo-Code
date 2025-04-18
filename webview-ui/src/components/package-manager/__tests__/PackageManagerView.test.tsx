@@ -2,6 +2,7 @@ import { render, screen, fireEvent, act } from "@testing-library/react"
 import PackageManagerView from "../PackageManagerView"
 import { ComponentMetadata, PackageManagerItem } from "../../../../../src/services/package-manager/types"
 import { TranslationProvider } from "@/i18n/TranslationContext"
+import { PackageManagerViewStateManager } from "../PackageManagerViewStateManager"
 
 // Mock vscode API for external communication
 const mockPostMessage = jest.fn()
@@ -90,12 +91,14 @@ describe("PackageManagerView", () => {
 		})
 	})
 
+	const mockStateManager = new PackageManagerViewStateManager()
+
 	const renderWithTranslation = (ui: React.ReactElement) => {
 		return render(<TranslationProvider>{ui}</TranslationProvider>)
 	}
 
 	it("should automatically fetch items on mount", async () => {
-		renderWithTranslation(<PackageManagerView />)
+		renderWithTranslation(<PackageManagerView stateManager={mockStateManager} />)
 
 		// Should immediately trigger a fetch
 		expect(mockPostMessage).toHaveBeenCalledWith({
@@ -143,7 +146,7 @@ describe("PackageManagerView", () => {
 	})
 
 	it("should update display items when receiving filtered results from backend", async () => {
-		renderWithTranslation(<PackageManagerView />)
+		renderWithTranslation(<PackageManagerView stateManager={mockStateManager} />)
 
 		// Load initial items
 		await act(async () => {

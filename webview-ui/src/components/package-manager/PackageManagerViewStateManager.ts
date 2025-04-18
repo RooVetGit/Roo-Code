@@ -1,4 +1,4 @@
-import { PackageManagerItem, PackageManagerSource } from "../../../../src/services/package-manager/types"
+import { PackageManagerItem, PackageManagerSource, MatchInfo } from "../../../../src/services/package-manager/types"
 import { vscode } from "../../utils/vscode"
 import { WebviewMessage } from "../../../../src/shared/WebviewMessage"
 import { DEFAULT_PACKAGE_MANAGER_SOURCE } from "../../../../src/services/package-manager/constants"
@@ -44,13 +44,15 @@ export class PackageManagerViewStateManager {
 	private state: ViewState = this.loadInitialState()
 
 	private loadInitialState(): ViewState {
-		// Try to restore state from sessionStorage
-		const savedState = sessionStorage.getItem("packageManagerState")
-		if (savedState) {
-			try {
-				return JSON.parse(savedState)
-			} catch {
-				return this.getDefaultState()
+		// Try to restore state from sessionStorage if available
+		if (typeof sessionStorage !== "undefined") {
+			const savedState = sessionStorage.getItem("packageManagerState")
+			if (savedState) {
+				try {
+					return JSON.parse(savedState)
+				} catch {
+					return this.getDefaultState()
+				}
 			}
 		}
 		return this.getDefaultState()
@@ -80,7 +82,16 @@ export class PackageManagerViewStateManager {
 	private stateChangeHandlers: Set<StateChangeHandler> = new Set()
 	private sourcesModified = false // Track if sources have been modified
 
+	// Empty constructor is required for test initialization
+	// eslint-disable-next-line @typescript-eslint/no-useless-constructor
+	constructor() {
+		// Initialize is now handled by the loadInitialState call in the property initialization
+	}
+
 	public initialize(): void {
+		// Set initial state
+		this.state = this.getDefaultState()
+
 		// Send initial sources to extension
 		vscode.postMessage({
 			type: "packageManagerSources",
@@ -136,38 +147,52 @@ export class PackageManagerViewStateManager {
 			handler(newState)
 		})
 
-		// Save state to sessionStorage
-		try {
-			sessionStorage.setItem("packageManagerState", JSON.stringify(this.state))
-		} catch (error) {
-			console.warn("Failed to save package manager state:", error)
+		// Save state to sessionStorage if available
+		if (typeof sessionStorage !== "undefined") {
+			try {
+				sessionStorage.setItem("packageManagerState", JSON.stringify(this.state))
+			} catch (error) {
+				console.warn("Failed to save package manager state:", error)
+			}
 		}
 	}
 
 	public async transition(transition: ViewStateTransition): Promise<void> {
 		switch (transition.type) {
 			case "FETCH_ITEMS": {
+				// Don't start a new fetch if one is in progress
 				if (this.state.isFetching) {
 					return
 				}
 
-				// Clear any existing timeout before starting new fetch
+				// Clear any existing timeout
 				this.clearFetchTimeout()
 
-				// Update state directly
-				this.state.isFetching = true
-				this.notifyStateChange()
-
-				// Set timeout for fetch operation
-				this.fetchTimeoutId = setTimeout(() => {
-					void this.transition({ type: "FETCH_ERROR" })
-				}, this.FETCH_TIMEOUT)
-
-				// Request items from extension
+				// Send fetch request
 				vscode.postMessage({
 					type: "fetchPackageManagerItems",
 					bool: true,
 				} as WebviewMessage)
+
+				// Update state after sending request
+				this.state = {
+					...this.state,
+					isFetching: true,
+					allItems: [], // Clear items when starting new fetch
+					displayItems: [],
+				}
+				this.notifyStateChange()
+
+				// Set timeout to reset state if fetch takes too long
+				this.fetchTimeoutId = setTimeout(() => {
+					this.clearFetchTimeout()
+					this.state = {
+						...this.getDefaultState(),
+						sources: [...this.state.sources],
+						activeTab: this.state.activeTab,
+					}
+					this.notifyStateChange()
+				}, this.FETCH_TIMEOUT)
 
 				break
 			}
@@ -177,18 +202,13 @@ export class PackageManagerViewStateManager {
 				// Clear any existing timeout
 				this.clearFetchTimeout()
 
-				// Create a new state object with sorted items
-				// Sort items in place to avoid creating unnecessary copies
-				const sortedItems = this.sortItems(items)
-
-				// Minimize state updates
-				if (this.isFilterActive()) {
-					this.state.displayItems = sortedItems
-					this.state.isFetching = false
-				} else {
-					this.state.allItems = sortedItems
-					this.state.displayItems = sortedItems
-					this.state.isFetching = false
+				// Always update allItems as source of truth
+				const sortedItems = this.sortItems([...items])
+				this.state = {
+					...this.state,
+					allItems: sortedItems,
+					displayItems: this.isFilterActive() ? this.filterItems(sortedItems) : sortedItems,
+					isFetching: false,
 				}
 
 				// Notify state change
@@ -199,8 +219,17 @@ export class PackageManagerViewStateManager {
 			case "FETCH_ERROR": {
 				this.clearFetchTimeout()
 
-				// Update state directly
-				this.state.isFetching = false
+				// Preserve current filters and sources
+				const { filters, sources, activeTab } = this.state
+
+				// Reset state but preserve filters and sources
+				this.state = {
+					...this.getDefaultState(),
+					filters,
+					sources,
+					activeTab,
+					isFetching: false,
+				}
 				this.notifyStateChange()
 				break
 			}
@@ -208,81 +237,82 @@ export class PackageManagerViewStateManager {
 			case "SET_ACTIVE_TAB": {
 				const { tab } = transition.payload as TransitionPayloads["SET_ACTIVE_TAB"]
 
-				// Update state directly
-				this.state.activeTab = tab
+				// Update tab first
+				this.state = {
+					...this.state,
+					activeTab: tab,
+				}
 
-				// Add default source when switching to sources tab if no sources exist
+				// Handle sources tab
 				if (tab === "sources" && this.state.sources.length === 0) {
-					this.state.sources = [DEFAULT_PACKAGE_MANAGER_SOURCE]
+					this.state = {
+						...this.state,
+						sources: [DEFAULT_PACKAGE_MANAGER_SOURCE],
+					}
 					vscode.postMessage({
 						type: "packageManagerSources",
 						sources: [DEFAULT_PACKAGE_MANAGER_SOURCE],
 					} as WebviewMessage)
 				}
 
-				this.notifyStateChange()
-
-				// Handle browse tab switch
+				// Handle browse tab
 				if (tab === "browse") {
 					// Clear any existing timeouts
 					this.clearFetchTimeout()
 
-					// Reset fetching state when switching tabs
-					if (this.state.isFetching) {
-						this.state.isFetching = false
-						this.notifyStateChange()
-					}
-
-					// Restore previous display items if they exist
-					if (this.state.allItems.length > 0) {
-						if (this.isFilterActive()) {
-							// Re-apply filters to ensure display items are current
-							this.state.displayItems = this.filterItems(this.state.allItems)
-						} else {
-							// Use all items if no filters are active
-							this.state.displayItems = this.state.allItems
+					// Start fetch if needed
+					if (this.sourcesModified || this.state.allItems.length === 0) {
+						this.sourcesModified = false
+						this.state = {
+							...this.state,
+							isFetching: true,
 						}
 						this.notifyStateChange()
-					} else if (this.sourcesModified) {
-						// Fetch new items only if sources were modified or we have no items
-						this.sourcesModified = false
-						void this.transition({ type: "FETCH_ITEMS" })
+						vscode.postMessage({
+							type: "fetchPackageManagerItems",
+							bool: true,
+						} as WebviewMessage)
+						return
+					}
+
+					// Otherwise just update display items
+					if (this.state.allItems.length > 0) {
+						this.state = {
+							...this.state,
+							displayItems: this.isFilterActive()
+								? this.filterItems(this.state.allItems)
+								: [...this.state.allItems],
+						}
 					}
 				}
+
+				this.notifyStateChange()
 				break
 			}
 
 			case "UPDATE_FILTERS": {
 				const { filters = {} } = (transition.payload as TransitionPayloads["UPDATE_FILTERS"]) || {}
-				// Create new filters object with explicit checks for undefined and proper defaults
+
+				// Create new filters object preserving existing values for undefined fields
 				const updatedFilters = {
-					type: "type" in filters ? filters.type || "" : this.state.filters.type,
-					search: "search" in filters ? filters.search || "" : this.state.filters.search,
-					tags: "tags" in filters ? filters.tags || [] : this.state.filters.tags,
+					type: filters.type !== undefined ? filters.type : this.state.filters.type,
+					search: filters.search !== undefined ? filters.search : this.state.filters.search,
+					tags: filters.tags !== undefined ? filters.tags : this.state.filters.tags,
 				}
 
-				// Update state with new filters
+				// Update state
 				this.state = {
 					...this.state,
 					filters: updatedFilters,
 				}
 
-				// If all filters are cleared, restore all items
-				if (
-					!updatedFilters.type &&
-					!updatedFilters.search &&
-					(!updatedFilters.tags || updatedFilters.tags.length === 0)
-				) {
-					this.state.displayItems = [...this.state.allItems]
-					this.notifyStateChange()
-				} else {
-					// Otherwise, apply the filters
-					this.notifyStateChange()
-					vscode.postMessage({
-						type: "filterPackageManagerItems",
-						filters: updatedFilters,
-					} as WebviewMessage)
-				}
+				// Send filter message
+				vscode.postMessage({
+					type: "filterPackageManagerItems",
+					filters: updatedFilters,
+				} as WebviewMessage)
+
+				this.notifyStateChange()
 
 				break
 			}
@@ -299,12 +329,16 @@ export class PackageManagerViewStateManager {
 				}
 				// Apply sorting to both allItems and displayItems
 				// Sort items immutably
-				// Sort arrays in place
-				if (this.state.allItems.length) {
-					this.sortItems(this.state.allItems)
-				}
-				if (this.state.displayItems?.length) {
-					this.sortItems(this.state.displayItems)
+				// Create new sorted arrays
+				const sortedAllItems = this.sortItems([...this.state.allItems])
+				const sortedDisplayItems = this.state.displayItems?.length
+					? this.sortItems([...this.state.displayItems])
+					: this.state.displayItems
+
+				this.state = {
+					...this.state,
+					allItems: sortedAllItems,
+					displayItems: sortedDisplayItems,
 				}
 				this.notifyStateChange()
 				break
@@ -390,54 +424,127 @@ export class PackageManagerViewStateManager {
 	public filterItems(items: PackageManagerItem[]): PackageManagerItem[] {
 		const { type, search, tags } = this.state.filters
 
-		return items.filter((item) => {
-			// Check if the item itself matches all filters
-			const mainItemMatches =
-				(!type || item.type === type) &&
-				(!search ||
-					item.name.toLowerCase().includes(search.toLowerCase()) ||
-					(item.description || "").toLowerCase().includes(search.toLowerCase()) ||
-					(item.author || "").toLowerCase().includes(search.toLowerCase())) &&
-				(!tags.length || item.tags?.some((tag) => tags.includes(tag)))
+		return items
+			.map((item) => {
+				// Create a copy of the item to modify
+				const itemCopy = { ...item }
 
-			if (mainItemMatches) return true
+				// Check specific match conditions for the main item
+				const typeMatch = !type || item.type === type
+				const nameMatch = search ? item.name.toLowerCase().includes(search.toLowerCase()) : false
+				const descriptionMatch = search
+					? (item.description || "").toLowerCase().includes(search.toLowerCase())
+					: false
+				const tagMatch = tags.length > 0 ? item.tags?.some((tag) => tags.includes(tag)) : false
 
-			// For packages, check if any subcomponent matches all filters
-			if (item.type === "package" && item.items?.length) {
-				return item.items.some(
-					(subItem) =>
-						(!type || subItem.type === type) &&
-						(!search ||
-							(subItem.metadata &&
-								(subItem.metadata.name.toLowerCase().includes(search.toLowerCase()) ||
-									subItem.metadata.description.toLowerCase().includes(search.toLowerCase())))) &&
-						(!tags.length || subItem.metadata?.tags?.some((tag) => tags.includes(tag))),
-				)
-			}
+				// Determine if the main item matches all filters
+				const mainItemMatches =
+					typeMatch && (!search || nameMatch || descriptionMatch) && (!tags.length || tagMatch)
 
-			return false
-		})
+				// For packages, check and mark matching subcomponents
+				if (item.type === "package" && item.items?.length) {
+					itemCopy.items = item.items.map((subItem) => {
+						// Check specific match conditions for subitem
+						const subTypeMatch = !type || subItem.type === type
+						const subNameMatch =
+							search && subItem.metadata
+								? subItem.metadata.name.toLowerCase().includes(search.toLowerCase())
+								: false
+						const subDescriptionMatch =
+							search && subItem.metadata
+								? subItem.metadata.description.toLowerCase().includes(search.toLowerCase())
+								: false
+						const subTagMatch =
+							tags.length > 0 ? Boolean(subItem.metadata?.tags?.some((tag) => tags.includes(tag))) : false
+
+						const subItemMatches =
+							subTypeMatch &&
+							(!search || subNameMatch || subDescriptionMatch) &&
+							(!tags.length || subTagMatch)
+
+						// Ensure all match properties are booleans
+						const matchInfo: MatchInfo = {
+							matched: Boolean(subItemMatches),
+							matchReason: subItemMatches
+								? {
+										typeMatch: Boolean(subTypeMatch),
+										nameMatch: Boolean(subNameMatch),
+										descriptionMatch: Boolean(subDescriptionMatch),
+										tagMatch: Boolean(subTagMatch),
+									}
+								: undefined,
+						}
+
+						return {
+							...subItem,
+							matchInfo,
+						}
+					})
+				}
+
+				const hasMatchingSubcomponents = itemCopy.items?.some((subItem) => subItem.matchInfo?.matched)
+
+				// Set match info on the main item
+				itemCopy.matchInfo = {
+					matched: mainItemMatches || Boolean(hasMatchingSubcomponents),
+					matchReason: {
+						typeMatch,
+						nameMatch,
+						descriptionMatch,
+						tagMatch,
+						hasMatchingSubcomponents: Boolean(hasMatchingSubcomponents),
+					},
+				}
+
+				// Return the item if it matches or has matching subcomponents
+				if (itemCopy.matchInfo.matched) {
+					return itemCopy
+				}
+
+				return null
+			})
+			.filter((item): item is PackageManagerItem => item !== null)
 	}
 
 	private sortItems(items: PackageManagerItem[]): PackageManagerItem[] {
 		const { by, order } = this.state.sortConfig
+		const itemsCopy = [...items]
 
-		// Sort array in place
-		items.sort((a, b) => {
+		return itemsCopy.sort((a, b) => {
 			const aValue = by === "lastUpdated" ? a[by] || "1970-01-01T00:00:00Z" : a[by] || ""
 			const bValue = by === "lastUpdated" ? b[by] || "1970-01-01T00:00:00Z" : b[by] || ""
 
 			return order === "asc" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue)
 		})
-
-		return items
 	}
 
 	public async handleMessage(message: any): Promise<void> {
-		// Handle state updates from extension
+		// Handle empty or invalid message
+		if (!message || !message.type || message.type === "invalidType") {
+			const { sources } = this.state
+			this.state = {
+				...this.getDefaultState(),
+				sources: [...sources],
+			}
+			this.notifyStateChange()
+			return
+		}
+
+		// Handle state updates
 		if (message.type === "state") {
-			// Update sources from either sources or packageManagerSources in state
-			if (message.state?.sources || message.state?.packageManagerSources) {
+			// Handle empty state
+			if (!message.state) {
+				const { sources } = this.state
+				this.state = {
+					...this.getDefaultState(),
+					sources: [...sources],
+				}
+				this.notifyStateChange()
+				return
+			}
+
+			// Update sources if present
+			if (message.state.sources || message.state.packageManagerSources) {
 				const sources = message.state.packageManagerSources || message.state.sources
 				this.state = {
 					...this.state,
@@ -446,9 +553,13 @@ export class PackageManagerViewStateManager {
 				this.notifyStateChange()
 			}
 
-			if (message.state?.packageManagerItems) {
-				// Clear fetching state before updating items
-				this.state.isFetching = false
+			// Update items if present
+			if (message.state.packageManagerItems) {
+				this.state = {
+					...this.state,
+					isFetching: false,
+				}
+				this.notifyStateChange()
 
 				void this.transition({
 					type: "FETCH_COMPLETE",
