@@ -492,7 +492,8 @@ export const vertexModels = {
 		supportsPromptCache: false,
 		inputPrice: 0.15,
 		outputPrice: 0.6,
-		thinking: true, // TODO: Max thinking budget is 24_576, so we need a new `ModelInfo` property for this.
+		thinking: true,
+		maxThinkingTokens: 24_576,
 	},
 	"gemini-2.5-flash-preview-04-17": {
 		maxTokens: 65_535,
@@ -657,7 +658,8 @@ export const geminiModels = {
 		supportsPromptCache: false,
 		inputPrice: 0.15,
 		outputPrice: 0.6,
-		thinking: true, // TODO: Max thinking budget is 24_576, so we need a new `ModelInfo` property for this.
+		thinking: true,
+		maxThinkingTokens: 24_576,
 	},
 	"gemini-2.5-flash-preview-04-17": {
 		maxTokens: 65_535,
