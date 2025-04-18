@@ -71,8 +71,10 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		let thinkingConfig: ThinkingConfig | undefined = undefined
 		let maxOutputTokens: number | undefined = undefined
 
-		if (id?.endsWith(":thinking")) {
-			id = id.slice(0, -9) as GeminiModelId
+		const thinkingSuffix = ":thinking"
+
+		if (id?.endsWith(thinkingSuffix)) {
+			id = id.slice(0, -thinkingSuffix.length) as GeminiModelId
 			info = geminiModels[id]
 
 			thinkingConfig = this.options.modelMaxThinkingTokens
