@@ -15,7 +15,7 @@ import { BaseProvider } from "./base-provider"
 
 export class GeminiHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
-	public client: GoogleGenAI
+	private client: GoogleGenAI
 
 	constructor(options: ApiHandlerOptions) {
 		super()
