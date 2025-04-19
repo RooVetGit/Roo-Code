@@ -1,4 +1,4 @@
-<div align="center">
+1`q <div align="center">
 <sub>
 
 English • [Català](locales/ca/README.md) • [Deutsch](locales/de/README.md) • [Español](locales/es/README.md) • [Français](locales/fr/README.md) • [हिन्दी](locales/hi/README.md) • [Italiano](locales/it/README.md)
@@ -49,13 +49,13 @@ Check out the [CHANGELOG](CHANGELOG.md) for detailed updates and fixes.
 
 ---
 
-## 🎉 Roo Code 3.12 Released
+## 🎉 Roo Code 3.13 Released
 
-Roo Code 3.12 brings new features and improvements based on your feedback!
+Roo Code 3.13 brings new features and improvements based on your feedback!
 
-- **Grok Support** - Added the xAI provider and Grok reasoning effort options on OpenRouter.
-- **Diff Editing Improvements** - Per-profile configuration and better string normalization for fewer errors.
-- **Checkpoint Enhancements** - Faster and more reliable checkpoints.
+- **Gemini 2.5 Flash Thinking** - You can now use the thinking variant of Gemini 2.5 flash models and specify a thinking token budget.
+- **UI Improvements** - The task header, chat view, history preview, and welcome view have been visually upgraded.
+- **Bug Fixes** - More reliable diff edits & more.
 
 ---
 
