@@ -184,7 +184,7 @@
 		"title": "🎉 Roo Code 3.13 已发布",
 		"description": "Roo Code 3.13 带来基于您反馈的新功能和改进。",
 		"whatsNew": "新特性",
-		"feature1": "<bold>Gemini 2.5 Flash Thinking</bold>: 现在可以使用 Gemini 2.5 flash 模型的 thinking 变体并指定 thinking Token 预算",
+		"feature1": "<bold>Gemini 2.5 Flash Thinking</bold>: 现在可以使用 Gemini 2.5 Flash 的 thinking 变体并指定 thinking Token 预算",
 		"feature2": "<bold>UI 改进</bold>: 任务标题、聊天视图、历史预览和欢迎视图已进行视觉升级",
 		"feature3": "<bold>错误修复</bold>: 更可靠的差异编辑等功能",
 		"hideButton": "隐藏公告",

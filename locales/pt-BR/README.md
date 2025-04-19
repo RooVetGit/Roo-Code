@@ -51,7 +51,7 @@ Confira o [CHANGELOG](../CHANGELOG.md) para atualizações e correções detalha
 
 O Roo Code 3.13 traz novas funcionalidades e melhorias baseadas no seu feedback!
 
-- **Gemini 2.5 Flash Thinking** - Agora você pode usar a variante thinking dos modelos Gemini 2.5 flash e especificar um orçamento de tokens para thinking.
+- **Gemini 2.5 Flash Thinking** - Agora você pode usar a variante thinking do Gemini 2.5 Flash e especificar um orçamento de tokens para thinking.
 - **Melhorias na UI** - O cabeçalho de tarefas, visualização de chat, pré-visualização do histórico e tela de boas-vindas foram visualmente aprimorados.
 - **Correções de bugs** - Edição de diferenças mais confiável e muito mais.
 

@@ -184,7 +184,7 @@
 		"title": "🎉 Roo Code 3.13 publicat",
 		"description": "Roo Code 3.13 porta noves funcionalitats i millores basades en els teus comentaris.",
 		"whatsNew": "Novetats",
-		"feature1": "<bold>Gemini 2.5 Flash Thinking</bold>: Ara pots utilitzar la variant thinking dels models Gemini 2.5 flash i especificar un pressupost de tokens per a thinking",
+		"feature1": "<bold>Gemini 2.5 Flash Thinking</bold>: Ara pots utilitzar la variant thinking de Gemini 2.5 Flash i especificar un pressupost de tokens per a thinking",
 		"feature2": "<bold>Millores d'interfície</bold>: La capçalera de tasques, la vista de xat, la previsualització d'historial i la vista de benvinguda han estat visualment millorades",
 		"feature3": "<bold>Correccions d'errors</bold>: Edicions de diferències més fiables i més",
 		"hideButton": "Amagar anunci",

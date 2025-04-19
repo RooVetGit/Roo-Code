@@ -51,7 +51,7 @@ Detaylı güncellemeler ve düzeltmeler için [CHANGELOG](../CHANGELOG.md) dosya
 
 Roo Code 3.13 geri bildirimlerinize dayanarak yeni özellikler ve iyileştirmeler getiriyor!
 
-- **Gemini 2.5 Flash Thinking** - Artık Gemini 2.5 flash modellerinin düşünme varyantını kullanabilir ve düşünme token bütçesini belirleyebilirsiniz.
+- **Gemini 2.5 Flash Thinking** - Artık Gemini 2.5 Flash'ın düşünme varyantını kullanabilir ve düşünme token bütçesini belirleyebilirsiniz.
 - **UI İyileştirmeleri** - Görev başlığı, sohbet görünümü, geçmiş önizlemesi ve karşılama görünümü görsel olarak yükseltildi.
 - **Hata Düzeltmeleri** - Daha güvenilir diff düzenlemeleri ve daha fazlası.
 
