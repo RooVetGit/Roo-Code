@@ -392,3 +392,136 @@ input[cmdk-input]:focus {
 .custom-markdown > pre {
 	background-color: transparent !important;
 }
+/**
+ * VSCode UI Component Defaults
+ * Apply consistent styling to VSCode WebUI components
+ * These effects are for dark mode only
+ */
+
+@media (prefers-color-scheme: dark) {
+	/* Common styles for VSCode components */
+	vscode-button,
+	vscode-dropdown,
+	vscode-input,
+	vscode-progress-ring,
+	vscode-tag,
+	vscode-text-area,
+	vscode-text-field,
+	vscode-progress,
+	vscode-divider,
+	vscode-option,
+	vscode-data-grid {
+		border-radius: var(--radius-sm);
+		background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.05));
+		border-color: var(--vscode-input-border);
+		border-width: 0.5px;
+	}
+
+	/* Specific overrides for certain components */
+	vscode-checkbox::part(control),
+	vscode-radio::part(control),
+	vscode-switch::part(switch) {
+		border-radius: var(--radius-sm);
+		border-color: var(--vscode-input-border);
+	}
+
+	vscode-progress::part(progress),
+	vscode-progress::part(bar) {
+		border-radius: var(--radius-sm);
+	}
+
+	vscode-dropdown::part(control),
+	vscode-dropdown::part(listbox) {
+		border-radius: var(--radius-sm);
+		border-color: var(--vscode-input-border);
+	}
+
+	/* Active/focus states */
+	vscode-button:focus,
+	vscode-checkbox:focus,
+	vscode-dropdown:focus,
+	vscode-input:focus,
+	vscode-radio:focus,
+	vscode-text-field:focus,
+	vscode-text-area:focus {
+		outline-color: var(--vscode-focusBorder);
+		outline-width: 1px;
+		outline-offset: 1px;
+	}
+
+	/* Global rounded-sm for buttons, textareas, and textfields */
+	button,
+	vscode-button,
+	textarea,
+	input[type="text"] {
+		background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.05));
+		border-radius: var(--radius-sm);
+		border-color: var(--color-gray-500) !important;
+		border-width: 0.5px !important;
+	}
+
+	/* Glass/shimmer effect for buttons on hover */
+	button:hover,
+	vscode-button:hover::part(control) {
+		position: relative;
+		overflow: hidden;
+		background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.05));
+	}
+
+	button:hover::after,
+	vscode-button:hover::part(control)::after {
+		content: "";
+		position: absolute;
+		top: -50%;
+		left: -50%;
+		width: 200%;
+		height: 200%;
+		background: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(255, 255, 255, 0.1) 30%, rgba(0, 0, 0, 0) 75%);
+		transform: rotate(30deg);
+		animation: shimmer 1s forwards;
+		pointer-events: none;
+	}
+
+	@keyframes shimmer {
+		0% {
+			transform: translateX(-100%) rotate(30deg);
+		}
+		100% {
+			transform: translateX(100%) rotate(30deg);
+		}
+	}
+
+	/* Subtle top-left background light effect */
+	body {
+		background-image: radial-gradient(circle at top left, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 50%);
+	}
+
+	/* Light source effect for elements */
+	.light-source-effect {
+		box-shadow:
+			inset 1px 1px 0 rgba(255, 255, 255, 0.05),
+			inset -1px -1px 0 rgba(0, 0, 0, 0.05);
+	}
+
+	/* Apply subtle top-left highlight to cards */
+	.card,
+	[class*="card-"],
+	.shadow-sm,
+	.shadow,
+	.shadow-md {
+		position: relative;
+	}
+
+	.card::before,
+	[class*="card-"]::before,
+	.shadow-sm::before,
+	.shadow::before,
+	.shadow-md::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+		border-radius: inherit;
+		pointer-events: none;
+	}
+}

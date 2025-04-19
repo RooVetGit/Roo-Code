@@ -33,7 +33,7 @@ const HistoryPreview = ({ showHistoryView }: HistoryPreviewProps) => {
 				)}
 				{tasks.length === 0 && (
 					<>
-						<p className="outline rounded p-4">
+						<p className=" border-[#555] p-2 text-lg text-center mx-8">
 							<Trans
 								i18nKey="chat:onboarding"
 								components={{

@@ -374,6 +374,8 @@
 		"package": "npm-run-all -l -p build:webview build:esbuild check-types lint",
 		"pretest": "npm run compile",
 		"dev": "cd webview-ui && npm run dev",
+		"dev:code": "code --extensionDevelopmentPath=. --enable-proposed-api=roo-cline",
+		"dev:insiders": "code-insiders --extensionDevelopmentPath=. --enable-proposed-api=roo-cline",
 		"test": "node scripts/run-tests.js",
 		"test:extension": "jest -w=40%",
 		"test:webview": "cd webview-ui && npm run test",
