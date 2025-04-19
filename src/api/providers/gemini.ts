@@ -40,8 +40,6 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 			},
 		}
 
-		console.log("params", params)
-
 		const result = await this.client.models.generateContentStream(params)
 
 		let lastUsageMetadata: GenerateContentResponseUsageMetadata | undefined
