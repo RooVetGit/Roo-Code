@@ -341,6 +341,13 @@ async function execRipgrep(rgPath: string, args: string[], limit: number): Promi
 		let output = ""
 		let results: string[] = []
 
+		// Set timeout to avoid hanging
+		const timeoutId = setTimeout(() => {
+			rgProcess.kill()
+			console.warn("ripgrep timed out, returning partial results")
+			resolve(results.slice(0, limit))
+		}, 10_000)
+
 		// Process stdout data as it comes in
 		rgProcess.stdout.on("data", (data) => {
 			output += data.toString()
@@ -349,6 +356,7 @@ async function execRipgrep(rgPath: string, args: string[], limit: number): Promi
 			// Kill the process if we've reached the limit
 			if (results.length >= limit) {
 				rgProcess.kill()
+				clearTimeout(timeoutId) // Clear the timeout when we kill the process due to reaching the limit
 			}
 		})
 
@@ -356,13 +364,6 @@ async function execRipgrep(rgPath: string, args: string[], limit: number): Promi
 		rgProcess.stderr.on("data", (data) => {
 			console.error(`ripgrep stderr: ${data}`)
 		})
-
-		// Set timeout to avoid hanging
-		const timeoutId = setTimeout(() => {
-			rgProcess.kill()
-			console.warn("ripgrep timed out, returning partial results")
-			resolve(results.slice(0, limit))
-		}, 10_000)
 
 		// Handle process completion
 		rgProcess.on("close", (code) => {

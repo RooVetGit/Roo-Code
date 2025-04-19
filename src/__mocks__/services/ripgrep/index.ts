@@ -43,6 +43,6 @@ export const regexSearchFiles = jest
  * @param maxLength - Optional maximum length (can be undefined)
  * @returns The original line or empty string if undefined
  */
-export const truncateLine = jest.fn().mockImplementation((line: string, maxLength?: number): string => {
+export const truncateLine = jest.fn().mockImplementation((line?: string, maxLength?: number): string => {
 	return line || ""
 })
