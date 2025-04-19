@@ -9,9 +9,9 @@ const isTestEnv = process.env.NODE_ENV === "test" || process.env.JEST_WORKER_ID 
 // Detect environment - browser vs Node.js
 const isBrowser = typeof window !== "undefined" && typeof window.document !== "undefined"
 
-// Define interface for VSCode extension process
-interface VSCodeProcess extends NodeJS.Process {
-	resourcesPath?: string
+// Type for the VSCode process with optional resourcesPath
+type VSCodeProcess = NodeJS.Process & {
+	resourcesPath?: string | undefined
 }
 
 // Type cast process to custom interface with resourcesPath
