@@ -13,6 +13,7 @@ import { serializeError } from "serialize-error"
 import * as vscode from "vscode"
 
 // schemas
+import { ModelInfo } from "../shared/api"; // Added for getSyncTokenizerForModel
 import { TokenUsage, ToolUsage, ToolName } from "../schemas"
 
 // api
@@ -89,10 +90,22 @@ import { parseMentions } from "./mentions"
 import { FileContextTracker } from "./context-tracking/FileContextTracker"
 import { RooIgnoreController } from "./ignore/RooIgnoreController"
 import { type AssistantMessageContent, parseAssistantMessage } from "./assistant-message"
-import { truncateConversationIfNeeded } from "./sliding-window"
+import { ContextManager } from "./context/context-management/ContextManager"
+// Removed incorrect import: import { ContextManagerState } from "./context/context-management/types"
 import { ClineProvider } from "./webview/ClineProvider"
 import { validateToolUse } from "./mode-validator"
 import { MultiSearchReplaceDiffStrategy } from "./diff/strategies/multi-search-replace"
+
+// Placeholder for where the actual sync tokenizer logic would live or be imported from
+// This function needs to be implemented or provided elsewhere in the codebase.
+function getSyncTokenizerForModel(modelId: string): (text: string) => number {
+	// Actual implementation would involve loading the correct tokenizer
+	// based on modelId (e.g., using tiktoken or a similar library).
+	// Returning a dummy for now as per instructions (can't add dependencies).
+	console.warn(`Using dummy sync tokenizer for model: ${modelId}. Needs proper implementation.`);
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	return (text: string) => Math.ceil(text.length / 4); // Replace with actual tokenizer call
+}
 
 type UserContent = Array<Anthropic.Messages.ContentBlockParam>
 
@@ -142,6 +155,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 	readonly apiConfiguration: ApiConfiguration
 	api: ApiHandler
 	private fileContextTracker: FileContextTracker
+	private contextManager: ContextManager;
 	private urlContentFetcher: UrlContentFetcher
 	browserSession: BrowserSession
 	didEditFile: boolean = false
@@ -226,8 +240,24 @@ export class Cline extends EventEmitter<ClineEvents> {
 		})
 		this.apiConfiguration = apiConfiguration
 		this.api = buildApiHandler(apiConfiguration)
-		this.urlContentFetcher = new UrlContentFetcher(provider.context)
-		this.browserSession = new BrowserSession(provider.context)
+		// Instantiate ContextManager earlier and pass correct dependencies
+		if (!provider) { // Check if provider exists directly
+			throw new Error("ClineProvider reference is missing during Cline construction");
+		}
+		// Get the synchronous tokenizer function based on the current model info
+		const currentModel = this.api.getModel();
+		const currentModelInfo = currentModel.info;
+		const syncTokenizer = getSyncTokenizerForModel(currentModel.id); // Pass model ID
+
+		this.contextManager = new ContextManager(
+			provider.contextProxy, // Pass ContextProxy from provider
+			this.taskId,
+			syncTokenizer, // Pass the synchronous tokenizer function
+			{ currentModelInfo } // Pass model info object
+		);
+		// NOTE: contextManager.initializeContextHistory() is now called in Cline.create
+		this.urlContentFetcher = new UrlContentFetcher(provider.context) // Use provider.context for this service
+		this.browserSession = new BrowserSession(provider.context) // Use provider.context for this service
 		this.customInstructions = customInstructions
 		this.diffEnabled = enableDiff
 		this.fuzzyMatchThreshold = fuzzyMatchThreshold
@@ -266,13 +296,22 @@ export class Cline extends EventEmitter<ClineEvents> {
 		const { images, task, historyItem } = options
 		let promise
 
-		if (images || task) {
-			promise = instance.startTask(task, images)
-		} else if (historyItem) {
-			promise = instance.resumeTaskFromHistory()
-		} else {
-			throw new Error("Either historyItem or task/images must be provided")
-		}
+		// Initialize context history before starting the main task loop
+		promise = instance.contextManager.initializeContextHistory()
+			.catch(error => {
+				console.error("Failed to initialize ContextManager history in Cline.create:", error);
+				// Allow task to continue even if history init fails, but log the error.
+			})
+			.then(() => {
+				// Now proceed with starting or resuming the task
+				if (images || task) {
+					return instance.startTask(task, images);
+				} else if (historyItem) {
+					return instance.resumeTaskFromHistory();
+				} else {
+					throw new Error("Either historyItem or task/images must be provided");
+				}
+			});
 
 		return [instance, promise]
 	}
@@ -1034,19 +1073,24 @@ export class Cline extends EventEmitter<ClineEvents> {
 			const modelInfo = this.api.getModel().info
 			const maxTokens = modelInfo.thinking
 				? this.apiConfiguration.modelMaxTokens || DEFAULT_THINKING_MODEL_MAX_TOKENS
-				: modelInfo.maxTokens
-			const contextWindow = modelInfo.contextWindow
-			const trimmedMessages = await truncateConversationIfNeeded({
-				messages: this.apiConversationHistory,
-				totalTokens,
-				maxTokens,
-				contextWindow,
-				apiHandler: this.api,
-			})
+				: modelInfo.maxTokens // This maxTokens seems specific to the old logic, ContextManager uses modelInfo directly
+			// ContextManager now handles token calculation and truncation internally based on model info.
+			// Ensure ContextManager has the latest model info before processing
+			         const currentModelInfo = this.api.getModel().info;
+			         this.contextManager.updateModelInfo(currentModelInfo);
 
-			if (trimmedMessages !== this.apiConversationHistory) {
-				await this.overwriteApiConversationHistory(trimmedMessages)
+			// Call processHistoryForApi to get the history ready for the API call.
+			const { processedHistory } = await this.contextManager.processHistoryForApi(
+				this.apiConversationHistory,
+				this.clineMessages, // Pass clineMessages for context
+			             totalTokens // Pass the previous request's total token count
+			);
+
+			if (processedHistory !== this.apiConversationHistory) {
+				// Overwrite the history only if ContextManager returned a modified version
+				await this.overwriteApiConversationHistory(processedHistory);
 			}
+			// ContextManager handles persistence of its own state internally.
 		}
 
 		// Clean conversation history by:
@@ -2484,6 +2528,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 				await this.overwriteApiConversationHistory(
 					this.apiConversationHistory.filter((m) => !m.ts || m.ts < ts),
 				)
+				// Truncate ContextManager's internal history updates based on the checkpoint timestamp
+				await this.contextManager.truncateHistoryUpdatesAtTimestamp(ts);
 
 				const deletedMessages = this.clineMessages.slice(index + 1)
 

@@ -8,4 +8,5 @@ export const GlobalFileNames = {
 	unboundModels: "unbound_models.json",
 	customModes: "custom_modes.json",
 	taskMetadata: "task_metadata.json",
+	contextHistory: "context_history.json",
 }

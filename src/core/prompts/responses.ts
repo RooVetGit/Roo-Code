@@ -17,6 +17,11 @@ export const formatResponse = {
 	rooIgnoreError: (path: string) =>
 		`Access to ${path} is blocked by the .rooignore file settings. You must try to continue in the task without using this file, or ask the user to update the .rooignore file.`,
 
+
+	duplicateFileReadNotice: () => `[Content of file previously shown]`,
+
+	contextTruncationNotice: () => `[NOTE] Some previous conversation history has been removed to make room for the current context.`,
+
 	noToolsUsed: () =>
 		`[ERROR] You did not use a tool in your previous response! Please retry with a tool use.
 
