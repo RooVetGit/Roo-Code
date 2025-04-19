@@ -359,6 +359,15 @@
 			}
 		}
 	},
+	"interface": {
+		"poweruser": {
+			"warning": "पावर यूजर फ़ीचर - सावधानी से उपयोग करें!"
+		},
+		"cssOverlay": {
+			"label": "ग्लोबल CSS ओवरले संपादित करें",
+			"description": "Roo Code की उपस्थिति को अनुकूलित करने के लिए अपने स्वयं के CSS नियम जोड़ें। परिवर्तन सहेजने पर तुरंत लागू होते हैं।"
+		}
+	},
 	"experimental": {
 		"warning": "⚠️",
 		"DIFF_STRATEGY_UNIFIED": {

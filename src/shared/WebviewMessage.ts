@@ -44,6 +44,8 @@ export interface WebviewMessage {
 		| "requestLmStudioModels"
 		| "openImage"
 		| "openFile"
+		| "openCustomCssFile"
+		| "closeCustomCssFile"
 		| "openMention"
 		| "cancelTask"
 		| "refreshOpenRouterModels"
@@ -125,6 +127,7 @@ export interface WebviewMessage {
 		| "maxReadFileLine"
 		| "searchFiles"
 		| "toggleApiConfigPin"
+		| "loadCustomCssContent"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse

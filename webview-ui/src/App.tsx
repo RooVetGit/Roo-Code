@@ -80,6 +80,26 @@ const App = () => {
 			if (message.type === "acceptInput") {
 				chatViewRef.current?.acceptInput()
 			}
+
+			// Handle receiving custom CSS content from the backend
+			if (message.type === "customCssContent") {
+				const cssContent = message.text || ""
+				const styleElementId = "custom-css-style"
+				let styleElement = document.getElementById(styleElementId) as HTMLStyleElement | null
+
+				if (!styleElement) {
+					// Create the style element if it doesn't exist
+					styleElement = document.createElement("style")
+					styleElement.id = styleElementId
+					// Append to the end of <head> to ensure higher priority
+					document.head.appendChild(styleElement)
+				}
+				// Update the content of the style element
+				if (styleElement.textContent !== cssContent) {
+					styleElement.textContent = cssContent
+					console.log("Applied custom CSS.")
+				}
+			}
 		},
 		[switchTab],
 	)
@@ -99,8 +119,11 @@ const App = () => {
 		}
 	}, [telemetrySetting, telemetryKey, machineId, didHydrateState])
 
-	// Tell the extension that we are ready to receive messages.
-	useEffect(() => vscode.postMessage({ type: "webviewDidLaunch" }), [])
+	// Tell the extension that we are ready to receive messages and request initial custom CSS.
+	useEffect(() => {
+		vscode.postMessage({ type: "webviewDidLaunch" })
+		vscode.postMessage({ type: "loadCustomCssContent" }) // Request CSS on launch
+	}, [])
 
 	if (!didHydrateState) {
 		return null

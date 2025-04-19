@@ -359,6 +359,15 @@
 			}
 		}
 	},
+	"interface": {
+		"poweruser": {
+			"warning": "Power user feature - use with caution!"
+		},
+		"cssOverlay": {
+			"label": "Edit Global CSS Overlay",
+			"description": "Add your own CSS rules to customize the appearance of Roo Code. Changes apply immediately on save."
+		}
+	},
 	"experimental": {
 		"warning": "⚠️",
 		"DIFF_STRATEGY_UNIFIED": {

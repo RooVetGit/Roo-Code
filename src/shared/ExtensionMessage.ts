@@ -68,6 +68,7 @@ export interface ExtensionMessage {
 		| "maxReadFileLine"
 		| "fileSearchResults"
 		| "toggleApiConfigPin"
+		| "customCssContent"
 		| "acceptInput"
 	text?: string
 	action?:

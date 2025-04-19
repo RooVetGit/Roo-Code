@@ -51,7 +51,8 @@
 		"failed_delete_repo": "Nie udało się usunąć powiązanego repozytorium lub gałęzi pomocniczej: {{error}}",
 		"failed_remove_directory": "Nie udało się usunąć katalogu zadania: {{error}}",
 		"custom_storage_path_unusable": "Niestandardowa ścieżka przechowywania \"{{path}}\" nie jest użyteczna, zostanie użyta domyślna ścieżka",
-		"cannot_access_path": "Nie można uzyskać dostępu do ścieżki {{path}}: {{error}}"
+		"cannot_access_path": "Nie można uzyskać dostępu do ścieżki {{path}}: {{error}}",
+		"open_custom_css": "Błąd podczas otwierania lub tworzenia niestandardowego pliku CSS: {{error}}"
 	},
 	"warnings": {
 		"no_terminal_content": "Nie wybrano zawartości terminala",
@@ -85,6 +86,9 @@
 		"path_placeholder": "D:\\RooCodeStorage",
 		"enter_absolute_path": "Wprowadź pełną ścieżkę (np. D:\\RooCodeStorage lub /home/user/storage)",
 		"enter_valid_path": "Wprowadź prawidłową ścieżkę"
+	},
+	"custom_css": {
+		"initial_comment": "Dodaj tutaj swoje niestandardowe reguły CSS. Te reguły nadpiszą domyślne style. Ten edytor zamknie się automatycznie po kliknięciu 'Gotowe', a zawartość tego pliku zostanie zastosowana natychmiast po każdym kliknięciu 'Zapisz'. Pamiętaj, że jeśli Roo Code zachowuje się nieoczekiwanie z powodu edycji w tym pliku, możesz ręcznie edytować lub usunąć plik custom.css w {{path}}, aby go odzyskać."
 	},
 	"input": {
 		"task_prompt": "Co ma zrobić Roo?",

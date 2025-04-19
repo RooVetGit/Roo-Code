@@ -51,7 +51,8 @@
 		"failed_delete_repo": "刪除關聯的影子倉庫或分支失敗：{{error}}",
 		"failed_remove_directory": "刪除工作目錄失敗：{{error}}",
 		"custom_storage_path_unusable": "自訂儲存路徑 \"{{path}}\" 無法使用，將使用預設路徑",
-		"cannot_access_path": "無法存取路徑 {{path}}：{{error}}"
+		"cannot_access_path": "無法存取路徑 {{path}}：{{error}}",
+		"open_custom_css": "開啟或建立自訂 CSS 檔案時發生錯誤：{{error}}"
 	},
 	"warnings": {
 		"no_terminal_content": "沒有選擇終端機內容",
@@ -85,6 +86,9 @@
 		"path_placeholder": "D:\\RooCodeStorage",
 		"enter_absolute_path": "請輸入絕對路徑（例如 D:\\RooCodeStorage 或 /home/user/storage）",
 		"enter_valid_path": "請輸入有效的路徑"
+	},
+	"custom_css": {
+		"initial_comment": "在此處新增您的自訂 CSS 規則。這些規則將覆寫預設樣式。此編輯器會在您點擊「完成」時自動關閉，且此檔案的內容會在每次「儲存」時立即套用。請記住，如果 Roo Code 因編輯此檔案而出現非預期行為，您可以手動編輯或刪除位於 {{path}} 的 custom.css 來復原。"
 	},
 	"input": {
 		"task_prompt": "讓 Roo 做什麼？",

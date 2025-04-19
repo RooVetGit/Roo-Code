@@ -76,6 +76,14 @@ export async function getCacheDirectoryPath(globalStoragePath: string): Promise<
 	return cacheDir
 }
 
+export async function getCustomCssPath(globalStoragePath: string): Promise<string> {
+	const basePath = await getStorageBasePath(globalStoragePath)
+	// Store custom CSS in a dedicated 'Roo-Code' subfolder within the base storage path
+	const rooCodeDir = path.join(basePath, "Roo-Code")
+	await fs.mkdir(rooCodeDir, { recursive: true }) // Ensure the subdirectory exists
+	return path.join(rooCodeDir, "custom.css")
+}
+
 /**
  * Prompts the user to set a custom storage path
  * Displays an input box allowing the user to enter a custom path

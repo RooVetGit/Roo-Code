@@ -359,6 +359,15 @@
 			}
 		}
 	},
+	"interface": {
+		"poweruser": {
+			"warning": "Funkcja dla zaawansowanych użytkowników - używaj ostrożnie!"
+		},
+		"cssOverlay": {
+			"label": "Edytuj globalną nakładkę CSS",
+			"description": "Dodaj własne reguły CSS, aby dostosować wygląd Roo Code. Zmiany są stosowane natychmiast po zapisaniu."
+		}
+	},
 	"experimental": {
 		"warning": "⚠️",
 		"DIFF_STRATEGY_UNIFIED": {

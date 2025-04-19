@@ -51,7 +51,8 @@
 		"failed_delete_repo": "删除关联的影子仓库或分支失败：{{error}}",
 		"failed_remove_directory": "删除任务目录失败：{{error}}",
 		"custom_storage_path_unusable": "自定义存储路径 \"{{path}}\" 不可用，将使用默认路径",
-		"cannot_access_path": "无法访问路径 {{path}}：{{error}}"
+		"cannot_access_path": "无法访问路径 {{path}}：{{error}}",
+		"open_custom_css": "打开或创建自定义 CSS 文件时出错：{{error}}"
 	},
 	"warnings": {
 		"no_terminal_content": "没有选择终端内容",
@@ -85,6 +86,9 @@
 		"path_placeholder": "D:\\RooCodeStorage",
 		"enter_absolute_path": "请输入绝对路径（例如 D:\\RooCodeStorage 或 /home/user/storage）",
 		"enter_valid_path": "请输入有效的路径"
+	},
+	"custom_css": {
+		"initial_comment": "在此处添加您的自定义 CSS 规则。这些规则将覆盖默认样式。本编辑器会随着您点击 `完成` 而自动关闭，在您每次 `保存` 时，本文件的所有内容会立即应用。请牢记，当因编辑此文件导致 Roo Code 异常时，您可以前往{{path}}手动编辑或删除custom.css来恢复。"
 	},
 	"input": {
 		"task_prompt": "让Roo做什么？",

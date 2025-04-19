@@ -359,6 +359,15 @@
 			}
 		}
 	},
+	"interface": {
+		"poweruser": {
+			"warning": "Power-User-Funktion - mit Vorsicht verwenden!"
+		},
+		"cssOverlay": {
+			"label": "Globale CSS-Überlagerung bearbeiten",
+			"description": "Füge deine eigenen CSS-Regeln hinzu, um das Aussehen von Roo Code anzupassen. Änderungen werden beim Speichern sofort angewendet."
+		}
+	},
 	"experimental": {
 		"warning": "⚠️",
 		"DIFF_STRATEGY_UNIFIED": {

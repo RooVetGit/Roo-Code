@@ -359,6 +359,15 @@
 			}
 		}
 	},
+	"interface": {
+		"poweruser": {
+			"warning": "Funció per a usuaris avançats: utilitzar amb precaució!"
+		},
+		"cssOverlay": {
+			"label": "Editar superposició CSS global",
+			"description": "Afegeix les teves pròpies regles CSS per personalitzar l'aparença de Roo Code. Els canvis s'apliquen immediatament en desar."
+		}
+	},
 	"experimental": {
 		"warning": "⚠️",
 		"DIFF_STRATEGY_UNIFIED": {

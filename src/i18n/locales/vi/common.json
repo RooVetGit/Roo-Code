@@ -51,7 +51,8 @@
 		"failed_delete_repo": "Không thể xóa kho lưu trữ hoặc nhánh liên quan: {{error}}",
 		"failed_remove_directory": "Không thể xóa thư mục nhiệm vụ: {{error}}",
 		"custom_storage_path_unusable": "Đường dẫn lưu trữ tùy chỉnh \"{{path}}\" không thể sử dụng được, sẽ sử dụng đường dẫn mặc định",
-		"cannot_access_path": "Không thể truy cập đường dẫn {{path}}: {{error}}"
+		"cannot_access_path": "Không thể truy cập đường dẫn {{path}}: {{error}}",
+		"open_custom_css": "Lỗi khi mở hoặc tạo tệp CSS tùy chỉnh: {{error}}"
 	},
 	"warnings": {
 		"no_terminal_content": "Không có nội dung terminal được chọn",
@@ -85,6 +86,9 @@
 		"path_placeholder": "D:\\RooCodeStorage",
 		"enter_absolute_path": "Vui lòng nhập đường dẫn tuyệt đối (ví dụ: D:\\RooCodeStorage hoặc /home/user/storage)",
 		"enter_valid_path": "Vui lòng nhập đường dẫn hợp lệ"
+	},
+	"custom_css": {
+		"initial_comment": "Thêm các quy tắc CSS tùy chỉnh của bạn vào đây. Các quy tắc này sẽ ghi đè các kiểu mặc định. Trình chỉnh sửa này sẽ tự động đóng khi bạn nhấp vào 'Xong', và nội dung của tệp này sẽ được áp dụng ngay lập tức mỗi khi bạn 'Lưu'. Hãy nhớ rằng, nếu Roo Code hoạt động không mong muốn do các chỉnh sửa trong tệp này, bạn có thể chỉnh sửa hoặc xóa thủ công custom.css tại {{path}} để khôi phục."
 	},
 	"input": {
 		"task_prompt": "Bạn muốn Roo làm gì?",

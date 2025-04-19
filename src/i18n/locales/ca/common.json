@@ -55,7 +55,8 @@
 		"failed_delete_repo": "Ha fallat l'eliminació del repositori o branca associada: {{error}}",
 		"failed_remove_directory": "Ha fallat l'eliminació del directori de tasques: {{error}}",
 		"custom_storage_path_unusable": "La ruta d'emmagatzematge personalitzada \"{{path}}\" no és utilitzable, s'utilitzarà la ruta predeterminada",
-		"cannot_access_path": "No es pot accedir a la ruta {{path}}: {{error}}"
+		"cannot_access_path": "No es pot accedir a la ruta {{path}}: {{error}}",
+		"open_custom_css": "Error en obrir o crear el fitxer CSS personalitzat: {{error}}"
 	},
 	"warnings": {
 		"no_terminal_content": "No s'ha seleccionat contingut de terminal",
@@ -89,5 +90,8 @@
 		"path_placeholder": "D:\\RooCodeStorage",
 		"enter_absolute_path": "Introdueix una ruta completa (p. ex. D:\\RooCodeStorage o /home/user/storage)",
 		"enter_valid_path": "Introdueix una ruta vàlida"
+	},
+	"custom_css": {
+		"initial_comment": "Afegeix aquí les teves regles CSS personalitzades. Aquestes regles sobreescriuran els estils predeterminats. Aquest editor es tancarà automàticament quan facis clic a 'Fet', i el contingut d'aquest fitxer s'aplicarà immediatament cada cop que facis 'Desa'. Recorda, si Roo Code es comporta de manera inesperada a causa de les edicions en aquest fitxer, pots editar o eliminar manualment custom.css a {{path}} per recuperar-lo."
 	}
 }

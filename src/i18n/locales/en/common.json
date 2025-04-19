@@ -51,7 +51,8 @@
 		"failed_remove_directory": "Failed to remove task directory: {{error}}",
 		"custom_storage_path_unusable": "Custom storage path \"{{path}}\" is unusable, will use default path",
 		"cannot_access_path": "Cannot access path {{path}}: {{error}}",
-		"failed_update_project_mcp": "Failed to update project MCP servers"
+		"failed_update_project_mcp": "Failed to update project MCP servers",
+		"open_custom_css": "Error opening or creating custom CSS file: {{error}}"
 	},
 	"warnings": {
 		"no_terminal_content": "No terminal content selected",
@@ -85,6 +86,9 @@
 		"path_placeholder": "D:\\RooCodeStorage",
 		"enter_absolute_path": "Please enter an absolute path (e.g. D:\\RooCodeStorage or /home/user/storage)",
 		"enter_valid_path": "Please enter a valid path"
+	},
+	"custom_css": {
+		"initial_comment": "Add your custom CSS rules here. These rules will override the default styles. This editor will close automatically when you click 'Done', and the contents of this file will be applied immediately each time you 'Save'. Remember, if Roo Code behaves unexpectedly due to edits in this file, you can manually edit or delete custom.css at {{path}} to recover."
 	},
 	"input": {
 		"task_prompt": "What should Roo do?",
