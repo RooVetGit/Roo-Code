@@ -40,7 +40,9 @@ export const InterfaceSettings = ({ onChangeDetected, ...props }: InterfaceSetti
 							<ExternalLink className="w-4 h-4 mr-1" />
 						</span>
 					</VSCodeButton>
-					{t("settings:interface.cssOverlay.description")}
+					<div className="text-vscode-descriptionForeground text-sm mt-1">
+						{t("settings:interface.cssOverlay.description")}
+					</div>
 				</fieldset>
 			</Section>
 		</div>

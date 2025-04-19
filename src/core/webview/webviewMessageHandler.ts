@@ -980,7 +980,11 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				} catch (statError) {
 					if ((statError as NodeJS.ErrnoException)?.code === "ENOENT") {
 						// File doesn't exist, create it with a comment
-						await fs.writeFile(customCssPath, `/* ${t("common:custom_css.initial_comment")} */\n`, "utf8")
+						await fs.writeFile(
+							customCssPath,
+							`/* ${t("common:custom_css.initial_comment", { path: customCssDir })} */\n`,
+							"utf8",
+						)
 						provider.log(`Created custom CSS file at: ${customCssPath}`)
 					} else {
 						// Other stat error
