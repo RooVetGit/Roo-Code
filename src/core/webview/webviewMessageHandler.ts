@@ -42,6 +42,7 @@ import { SYSTEM_PROMPT } from "../prompts/system"
 import { buildApiHandler } from "../../api"
 import { GlobalState } from "../../schemas"
 import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
+import { getCustomCssPath } from "../../shared/storagePathManager"
 
 export const webviewMessageHandler = async (provider: ClineProvider, message: WebviewMessage) => {
 	// Utility functions provided for concise get/update of global state via contextProxy API.
@@ -957,6 +958,77 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await updateGlobalState("maxReadFileLine", message.value)
 			await provider.postStateToWebview()
 			break
+		case "openCustomCssFile": {
+			try {
+				const globalStoragePath = provider.context.globalStorageUri.fsPath
+				const customCssPath = await getCustomCssPath(globalStoragePath)
+				const customCssDir = path.dirname(customCssPath)
+
+				// Ensure directory exists
+				try {
+					await fs.mkdir(customCssDir, { recursive: true })
+				} catch (mkdirError) {
+					// Ignore if directory already exists, re-throw otherwise
+					if ((mkdirError as NodeJS.ErrnoException)?.code !== "EEXIST") {
+						throw mkdirError
+					}
+				}
+
+				// Ensure file exists
+				try {
+					await fs.stat(customCssPath)
+				} catch (statError) {
+					if ((statError as NodeJS.ErrnoException)?.code === "ENOENT") {
+						// File doesn't exist, create it with a comment
+						await fs.writeFile(customCssPath, `/* ${t("common:custom_css.initial_comment")} */\n`, "utf8")
+						provider.log(`Created custom CSS file at: ${customCssPath}`)
+					} else {
+						// Other stat error
+						throw statError
+					}
+				}
+
+				// Open the file
+				await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(customCssPath))
+			} catch (error) {
+				const errorMessage = error instanceof Error ? error.message : String(error)
+				provider.log(`Error opening or creating custom CSS file: ${errorMessage}`)
+				vscode.window.showErrorMessage(t("common:errors.open_custom_css", { error: errorMessage }))
+			}
+			break
+		}
+		case "closeCustomCssFile": {
+			try {
+				const globalStoragePath = provider.context.globalStorageUri.fsPath
+				const customCssPath = await getCustomCssPath(globalStoragePath)
+				const customCssUri = vscode.Uri.file(customCssPath)
+
+				// Find and close the tab for the custom.css file
+				let tabToClose: vscode.Tab | undefined
+				for (const tabGroup of vscode.window.tabGroups.all) {
+					tabToClose = tabGroup.tabs.find(
+						(tab) =>
+							tab.input instanceof vscode.TabInputText && tab.input.uri.fsPath === customCssUri.fsPath,
+					)
+					if (tabToClose) break // Found the tab
+				}
+
+				if (tabToClose) {
+					const success = await vscode.window.tabGroups.close(tabToClose)
+					if (success) {
+						provider.log(`Closed custom CSS file tab: ${customCssPath}`)
+					} else {
+						provider.log(`Failed to close custom CSS file tab: ${customCssPath}`)
+					}
+				} else {
+					provider.log(`Custom CSS file tab not found: ${customCssPath}`)
+				}
+			} catch (error) {
+				const errorMessage = error instanceof Error ? error.message : String(error)
+				provider.log(`Error closing custom CSS file editor: ${errorMessage}`)
+			}
+			break
+		}
 		case "toggleApiConfigPin":
 			if (message.text) {
 				const currentPinned = getGlobalState("pinnedApiConfigs") ?? {}
@@ -972,6 +1044,27 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				await provider.postStateToWebview()
 			}
 			break
+		case "loadCustomCssContent": {
+			let cssContent = ""
+			try {
+				const globalStoragePath = provider.context.globalStorageUri.fsPath
+				const customCssPath = await getCustomCssPath(globalStoragePath)
+				// Check if file exists before attempting to read
+				if (await fileExistsAtPath(customCssPath)) {
+					cssContent = await fs.readFile(customCssPath, "utf8")
+					provider.log(`Loaded custom CSS content from: ${customCssPath}`)
+				} else {
+					provider.log(`Custom CSS file not found at: ${customCssPath}. Sending empty content.`)
+				}
+			} catch (error) {
+				const errorMessage = error instanceof Error ? error.message : String(error)
+				provider.log(`Error reading custom CSS file: ${errorMessage}`)
+				// Send empty content in case of error
+			}
+			// Send content (or empty string on error/not found) back to webview
+			await provider.postMessageToWebview({ type: "customCssContent", text: cssContent })
+			break
+		}
 		case "enhancementApiConfigId":
 			await updateGlobalState("enhancementApiConfigId", message.text)
 			await provider.postStateToWebview()
