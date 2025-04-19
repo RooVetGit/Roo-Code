@@ -297,7 +297,7 @@ function isIgnoredByGitignore(dirName: string, gitignorePatterns: string[]): boo
 		}
 		// Wildcard patterns
 		else if (pattern.includes("*")) {
-			const regexPattern = pattern.replace(/\./g, "\\.").replace(/\*/g, ".*")
+			const regexPattern = pattern.replace(/\\/g, "\\\\").replace(/\./g, "\\.").replace(/\*/g, ".*")
 			const regex = new RegExp(`^${regexPattern}$`)
 			if (regex.test(dirName)) {
 				return true
