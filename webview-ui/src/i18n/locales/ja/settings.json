@@ -359,6 +359,15 @@
 			}
 		}
 	},
+	"interface": {
+		"poweruser": {
+			"warning": "パワーユーザー機能 - 注意して使用してください！"
+		},
+		"cssOverlay": {
+			"label": "グローバルCSSオーバーレイを編集",
+			"description": "独自のCSSルールを追加してRoo Codeの外観をカスタマイズします。変更は保存時にすぐに適用されます。"
+		}
+	},
 	"experimental": {
 		"warning": "⚠️",
 		"DIFF_STRATEGY_UNIFIED": {

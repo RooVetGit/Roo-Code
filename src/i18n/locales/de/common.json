@@ -51,7 +51,8 @@
 		"failed_delete_repo": "Fehler beim Löschen des zugehörigen Shadow-Repositorys oder -Zweigs: {{error}}",
 		"failed_remove_directory": "Fehler beim Entfernen des Aufgabenverzeichnisses: {{error}}",
 		"custom_storage_path_unusable": "Benutzerdefinierter Speicherpfad \"{{path}}\" ist nicht verwendbar, Standardpfad wird verwendet",
-		"cannot_access_path": "Zugriff auf Pfad {{path}} nicht möglich: {{error}}"
+		"cannot_access_path": "Zugriff auf Pfad {{path}} nicht möglich: {{error}}",
+		"open_custom_css": "Fehler beim Öffnen oder Erstellen der benutzerdefinierten CSS-Datei: {{error}}"
 	},
 	"warnings": {
 		"no_terminal_content": "Kein Terminal-Inhalt ausgewählt",
@@ -85,6 +86,9 @@
 		"path_placeholder": "D:\\RooCodeStorage",
 		"enter_absolute_path": "Bitte gib einen absoluten Pfad ein (z.B. D:\\RooCodeStorage oder /home/user/storage)",
 		"enter_valid_path": "Bitte gib einen gültigen Pfad ein"
+	},
+	"custom_css": {
+		"initial_comment": "Füge hier deine benutzerdefinierten CSS-Regeln hinzu. Diese Regeln überschreiben die Standardstile. Dieser Editor wird automatisch geschlossen, wenn du auf 'Fertig' klickst, und der Inhalt dieser Datei wird bei jedem 'Speichern' sofort angewendet. Denk daran, wenn Roo Code aufgrund von Änderungen in dieser Datei unerwartet reagiert, kannst du custom.css unter {{path}} manuell bearbeiten oder löschen, um es wiederherzustellen."
 	},
 	"input": {
 		"task_prompt": "Was soll Roo tun?",

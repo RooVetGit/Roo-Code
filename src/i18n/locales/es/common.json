@@ -51,7 +51,8 @@
 		"failed_delete_repo": "Error al eliminar el repositorio o rama asociada: {{error}}",
 		"failed_remove_directory": "Error al eliminar el directorio de tareas: {{error}}",
 		"custom_storage_path_unusable": "La ruta de almacenamiento personalizada \"{{path}}\" no es utilizable, se usará la ruta predeterminada",
-		"cannot_access_path": "No se puede acceder a la ruta {{path}}: {{error}}"
+		"cannot_access_path": "No se puede acceder a la ruta {{path}}: {{error}}",
+		"open_custom_css": "Error al abrir o crear el archivo CSS personalizado: {{error}}"
 	},
 	"warnings": {
 		"no_terminal_content": "No hay contenido de terminal seleccionado",
@@ -85,6 +86,9 @@
 		"path_placeholder": "D:\\RooCodeStorage",
 		"enter_absolute_path": "Por favor, ingresa una ruta absoluta (por ejemplo, D:\\RooCodeStorage o /home/user/storage)",
 		"enter_valid_path": "Por favor, ingresa una ruta válida"
+	},
+	"custom_css": {
+		"initial_comment": "Añade aquí tus reglas CSS personalizadas. Estas reglas sobrescribirán los estilos predeterminados. Este editor se cerrará automáticamente cuando hagas clic en 'Hecho', y el contenido de este archivo se aplicará inmediatamente cada vez que hagas clic en 'Guardar'. Recuerda, si Roo Code se comporta de forma inesperada debido a las ediciones en este archivo, puedes editar o eliminar manualmente custom.css en {{path}} para recuperarlo."
 	},
 	"input": {
 		"task_prompt": "¿Qué debe hacer Roo?",

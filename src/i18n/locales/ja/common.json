@@ -51,7 +51,8 @@
 		"failed_delete_repo": "関連するシャドウリポジトリまたはブランチの削除に失敗しました：{{error}}",
 		"failed_remove_directory": "タスクディレクトリの削除に失敗しました：{{error}}",
 		"custom_storage_path_unusable": "カスタムストレージパス \"{{path}}\" が使用できないため、デフォルトパスを使用します",
-		"cannot_access_path": "パス {{path}} にアクセスできません：{{error}}"
+		"cannot_access_path": "パス {{path}} にアクセスできません：{{error}}",
+		"open_custom_css": "カスタムCSSファイルのオープンまたは作成中にエラーが発生しました：{{error}}"
 	},
 	"warnings": {
 		"no_terminal_content": "選択されたターミナルコンテンツがありません",
@@ -85,6 +86,9 @@
 		"path_placeholder": "D:\\RooCodeStorage",
 		"enter_absolute_path": "絶対パスを入力してください（例：D:\\RooCodeStorage または /home/user/storage）",
 		"enter_valid_path": "有効なパスを入力してください"
+	},
+	"custom_css": {
+		"initial_comment": "ここにカスタムCSSルールを追加します。これらのルールはデフォルトのスタイルを上書きします。このエディターは「完了」をクリックすると自動的に閉じられ、このファイルの内容は「保存」するたびにすぐに適用されます。このファイルの編集によりRoo Codeが予期せず動作した場合、{{path}}にあるcustom.cssを手動で編集または削除して回復できることを覚えておいてください。"
 	},
 	"input": {
 		"task_prompt": "Rooにどんなことをさせますか？",

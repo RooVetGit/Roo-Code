@@ -359,6 +359,15 @@
 			}
 		}
 	},
+	"interface": {
+		"poweruser": {
+			"warning": "進階使用者功能 - 請謹慎使用！"
+		},
+		"cssOverlay": {
+			"label": "編輯全域 CSS 覆蓋層",
+			"description": "新增您自己的 CSS 規則來自訂 Roo Code 的外觀。變更會在儲存時立即套用。"
+		}
+	},
 	"experimental": {
 		"warning": "⚠️",
 		"DIFF_STRATEGY_UNIFIED": {

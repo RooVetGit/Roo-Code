@@ -359,6 +359,15 @@
 			}
 		}
 	},
+	"interface": {
+		"poweruser": {
+			"warning": "高级用户功能 - 谨慎使用！"
+		},
+		"cssOverlay": {
+			"label": "编辑全局CSS叠加层",
+			"description": "添加您自己的 CSS 规则以自定义 Roo Code 的外观。更改将在保存时立即应用。"
+		}
+	},
 	"experimental": {
 		"warning": "⚠️",
 		"DIFF_STRATEGY_UNIFIED": {

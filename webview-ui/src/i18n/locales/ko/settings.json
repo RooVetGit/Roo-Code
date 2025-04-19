@@ -359,6 +359,15 @@
 			}
 		}
 	},
+	"interface": {
+		"poweruser": {
+			"warning": "파워 유저 기능 - 주의해서 사용하세요!"
+		},
+		"cssOverlay": {
+			"label": "전역 CSS 오버레이 편집",
+			"description": "자신만의 CSS 규칙을 추가하여 Roo Code의 모양을 사용자 정의하세요. 변경 사항은 저장 시 즉시 적용됩니다."
+		}
+	},
 	"experimental": {
 		"warning": "⚠️",
 		"DIFF_STRATEGY_UNIFIED": {

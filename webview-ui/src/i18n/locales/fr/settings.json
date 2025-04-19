@@ -359,6 +359,15 @@
 			}
 		}
 	},
+	"interface": {
+		"poweruser": {
+			"warning": "Fonctionnalité pour utilisateur avancé - à utiliser avec précaution !"
+		},
+		"cssOverlay": {
+			"label": "Modifier la superposition CSS globale",
+			"description": "Ajoutez vos propres règles CSS pour personnaliser l'apparence de Roo Code. Les modifications s'appliquent immédiatement lors de l'enregistrement."
+		}
+	},
 	"experimental": {
 		"warning": "⚠️",
 		"DIFF_STRATEGY_UNIFIED": {

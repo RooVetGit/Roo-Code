@@ -51,7 +51,8 @@
 		"failed_delete_repo": "관련 shadow 저장소 또는 브랜치 삭제 실패: {{error}}",
 		"failed_remove_directory": "작업 디렉토리 제거 실패: {{error}}",
 		"custom_storage_path_unusable": "사용자 지정 저장 경로 \"{{path}}\"를 사용할 수 없어 기본 경로를 사용합니다",
-		"cannot_access_path": "경로 {{path}}에 접근할 수 없습니다: {{error}}"
+		"cannot_access_path": "경로 {{path}}에 접근할 수 없습니다: {{error}}",
+		"open_custom_css": "사용자 지정 CSS 파일을 열거나 생성하는 중 오류 발생: {{error}}"
 	},
 	"warnings": {
 		"no_terminal_content": "선택된 터미널 내용이 없습니다",
@@ -85,6 +86,9 @@
 		"path_placeholder": "D:\\RooCodeStorage",
 		"enter_absolute_path": "절대 경로를 입력하세요 (예: D:\\RooCodeStorage 또는 /home/user/storage)",
 		"enter_valid_path": "유효한 경로를 입력하세요"
+	},
+	"custom_css": {
+		"initial_comment": "여기에 사용자 지정 CSS 규칙을 추가하세요. 이 규칙은 기본 스타일을 덮어씁니다. 이 편집기는 '완료'를 클릭하면 자동으로 닫히며, 이 파일의 내용은 '저장'할 때마다 즉시 적용됩니다. 이 파일 편집으로 인해 Roo Code가 예기치 않게 작동하는 경우, {{path}}에서 custom.css를 수동으로 편집하거나 삭제하여 복구할 수 있음을 기억하세요."
 	},
 	"input": {
 		"task_prompt": "Roo에게 무엇을 시킬까요?",

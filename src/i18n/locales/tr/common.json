@@ -51,7 +51,8 @@
 		"failed_delete_repo": "İlişkili gölge depo veya dal silinemedi: {{error}}",
 		"failed_remove_directory": "Görev dizini kaldırılamadı: {{error}}",
 		"custom_storage_path_unusable": "Özel depolama yolu \"{{path}}\" kullanılamıyor, varsayılan yol kullanılacak",
-		"cannot_access_path": "{{path}} yoluna erişilemiyor: {{error}}"
+		"cannot_access_path": "{{path}} yoluna erişilemiyor: {{error}}",
+		"open_custom_css": "Özel CSS dosyası açılırken veya oluşturulurken hata oluştu: {{error}}"
 	},
 	"warnings": {
 		"no_terminal_content": "Seçili terminal içeriği yok",
@@ -85,6 +86,9 @@
 		"path_placeholder": "D:\\RooCodeStorage",
 		"enter_absolute_path": "Lütfen mutlak bir yol girin (örn. D:\\RooCodeStorage veya /home/user/storage)",
 		"enter_valid_path": "Lütfen geçerli bir yol girin"
+	},
+	"custom_css": {
+		"initial_comment": "Özel CSS kurallarınızı buraya ekleyin. Bu kurallar varsayılan stilleri geçersiz kılacaktır. Bu düzenleyici 'Bitti'ye tıkladığınızda otomatik olarak kapanacak ve bu dosyanın içeriği her 'Kaydet' dediğinizde hemen uygulanacaktır. Unutmayın, bu dosyadaki düzenlemeler nedeniyle Roo Code beklenmedik şekilde davranırsa, kurtarmak için {{path}} adresindeki custom.css dosyasını manuel olarak düzenleyebilir veya silebilirsiniz."
 	},
 	"input": {
 		"task_prompt": "Roo ne yapsın?",

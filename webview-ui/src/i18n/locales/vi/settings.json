@@ -359,6 +359,15 @@
 			}
 		}
 	},
+	"interface": {
+		"poweruser": {
+			"warning": "Tính năng dành cho người dùng thành thạo - sử dụng cẩn thận!"
+		},
+		"cssOverlay": {
+			"label": "Chỉnh sửa lớp phủ CSS toàn cục",
+			"description": "Thêm các quy tắc CSS của riêng bạn để tùy chỉnh giao diện của Roo Code. Các thay đổi được áp dụng ngay lập tức khi lưu."
+		}
+	},
 	"experimental": {
 		"warning": "⚠️",
 		"DIFF_STRATEGY_UNIFIED": {
