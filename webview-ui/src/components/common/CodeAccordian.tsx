@@ -121,11 +121,8 @@ const CodeAccordian = ({
 						maxWidth: "100%",
 					}}>
 					<CodeBlock
-						source={`${"```"}${diff !== undefined ? "diff" : inferredLanguage}\n${(
-							code ??
-							diff ??
-							""
-						).trim()}\n${"```"}`}
+						source={(code ?? diff ?? "").trim()}
+						language={diff !== undefined ? "diff" : inferredLanguage}
 					/>
 				</div>
 			)}
