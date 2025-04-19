@@ -496,7 +496,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				.update("allowedCommands", message.commands, vscode.ConfigurationTarget.Global)
 			break
 		case "openMcpSettings": {
-			const mcpSettingsFilePath = await provider.getMcpHub()?.getMcpSettingsFilePath()
+			const mcpSettingsFilePath = await provider.getMcpHub()?.getGlobalConfigPath(provider)
 			if (mcpSettingsFilePath) {
 				openFile(mcpSettingsFilePath)
 			}
