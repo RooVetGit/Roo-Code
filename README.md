@@ -1,4 +1,4 @@
-1`q <div align="center">
+<div align="center">
 <sub>
 
 English • [Català](locales/ca/README.md) • [Deutsch](locales/de/README.md) • [Español](locales/es/README.md) • [Français](locales/fr/README.md) • [हिन्दी](locales/hi/README.md) • [Italiano](locales/it/README.md)
