@@ -54,6 +54,11 @@ import { getWorkspacePath } from "../../utils/path"
 import { webviewMessageHandler } from "./webviewMessageHandler"
 import { WebviewMessage } from "../../shared/WebviewMessage"
 
+function getFontAliasingSetting(): string | undefined {
+	const fontAliasingSetting = vscode.workspace.getConfiguration("workbench").get("fontAliasing")
+	return typeof fontAliasingSetting === "string" ? fontAliasingSetting : undefined
+}
+
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
  * https://github.com/KumarVariable/vscode-extension-sidebar-html/blob/master/src/customSidebarViewProvider.ts
@@ -448,14 +453,21 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		// Listen for when color changes
 		vscode.workspace.onDidChangeConfiguration(
 			async (e) => {
-				if (e && e.affectsConfiguration("workbench.colorTheme")) {
+				if (e.affectsConfiguration("workbench.colorTheme")) {
 					// Sends latest theme name to webview
 					await this.postMessageToWebview({ type: "theme", text: JSON.stringify(await getTheme()) })
+				}
+				if (e.affectsConfiguration("workbench.fontAliasing")) {
+					const fontAliasing = getFontAliasingSetting()
+					await this.postMessageToWebview({ type: "fontAliasing", value: fontAliasing })
 				}
 			},
 			null,
 			this.disposables,
 		)
+
+		const initialFontAliasing = getFontAliasingSetting()
+		await this.postMessageToWebview({ type: "fontAliasing", value: initialFontAliasing })
 
 		// If the extension is starting a new session, clear previous task state.
 		await this.removeClineFromStack()

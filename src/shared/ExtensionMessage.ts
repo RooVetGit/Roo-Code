@@ -68,8 +68,10 @@ export interface ExtensionMessage {
 		| "maxReadFileLine"
 		| "fileSearchResults"
 		| "toggleApiConfigPin"
+		| "fontAliasing"
 		| "acceptInput"
 	text?: string
+	value?: string
 	action?:
 		| "chatButtonClicked"
 		| "mcpButtonClicked"
