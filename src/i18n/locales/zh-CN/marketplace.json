@@ -1,0 +1,25 @@
+{
+	"type-group": {
+		"modes": "模式",
+		"mcp-servers": "MCP服务器",
+		"prompts": "提示",
+		"packages": "包",
+		"generic-type": "{{type}}",
+		"match": "匹配"
+	},
+	"item-card": {
+		"type-mode": "模式",
+		"type-mcp-server": "MCP服务器",
+		"type-prompt": "提示",
+		"type-package": "包",
+		"type-other": "其他",
+		"by-author": "作者：{{author}}",
+		"authors-profile": "作者主页",
+		"remove-tag-filter": "移除标签过滤器：{{tag}}",
+		"filter-by-tag": "按标签过滤：{{tag}}",
+		"component-details": "组件详情",
+		"match-count": "{{count}}个匹配",
+		"view": "查看",
+		"source": "源码"
+	}
+}

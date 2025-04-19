@@ -4,6 +4,7 @@ import fs from "fs/promises"
 import EventEmitter from "events"
 
 import { Anthropic } from "@anthropic-ai/sdk"
+import { DEFAULT_MARKETPLACE_SOURCE } from "../../services/marketplace/constants"
 import delay from "delay"
 import axios from "axios"
 import pWaitFor from "p-wait-for"
@@ -37,6 +38,7 @@ import { getTheme } from "../../integrations/theme/getTheme"
 import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
+import { MarketplaceManager } from "../../services/marketplace"
 import { ShadowCheckpointService } from "../../services/checkpoints/ShadowCheckpointService"
 import { fileExistsAtPath } from "../../utils/fs"
 import { setSoundEnabled } from "../../utils/sound"
@@ -75,6 +77,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		return this._workspaceTracker
 	}
 	protected mcpHub?: McpHub // Change from private to protected
+	private marketplaceManager?: MarketplaceManager
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
@@ -760,7 +763,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	 * @param webview A reference to the extension webview
 	 */
 	private setWebviewMessageListener(webview: vscode.Webview) {
-		const onReceiveMessage = async (message: WebviewMessage) => webviewMessageHandler(this, message)
+		const onReceiveMessage = async (message: WebviewMessage) =>
+			webviewMessageHandler(this, message, this.marketplaceManager)
 
 		webview.onDidReceiveMessage(onReceiveMessage, null, this.disposables)
 	}
@@ -1217,6 +1221,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			showRooIgnoredFiles,
 			language,
 			maxReadFileLine,
+			marketplaceSources,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
@@ -1224,8 +1229,12 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const allowedCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
 		const cwd = this.cwd
 
+		const marketplaceItems = this.marketplaceManager?.getCurrentItems() || []
+
 		return {
 			version: this.context.extension?.packageJSON?.version ?? "",
+			marketplaceItems,
+			marketplaceSources: marketplaceSources ?? [],
 			apiConfiguration,
 			customInstructions,
 			alwaysAllowReadOnly: alwaysAllowReadOnly ?? false,
@@ -1383,6 +1392,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 			maxReadFileLine: stateValues.maxReadFileLine ?? 500,
+			marketplaceSources: stateValues.marketplaceSources ?? [DEFAULT_MARKETPLACE_SOURCE],
 		}
 	}
 
@@ -1475,6 +1485,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	// Add public getter
 	public getMcpHub(): McpHub | undefined {
 		return this.mcpHub
+	}
+
+	/**
+	 * Set the marketplace manager instance
+	 * @param marketplaceManager The marketplace manager instance
+	 */
+	public setMarketplaceManager(marketplaceManager: MarketplaceManager) {
+		this.marketplaceManager = marketplaceManager
 	}
 
 	/**

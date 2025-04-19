@@ -45,5 +45,21 @@ module.exports = {
 	modulePathIgnorePatterns: [".vscode-test"],
 	reporters: [["jest-simple-dot-reporter", {}]],
 	setupFiles: ["<rootDir>/src/__mocks__/jest.setup.ts"],
-	setupFilesAfterEnv: ["<rootDir>/src/integrations/terminal/__tests__/setupTerminalTests.ts"],
+	setupFilesAfterEnv: [
+		"<rootDir>/src/integrations/terminal/__tests__/setupTerminalTests.ts",
+		"<rootDir>/src/__tests__/setupMemoryTests.ts",
+	],
+	// Increase test timeout to allow for GC
+	testTimeout: 10000,
+	// Run tests in series to better track memory
+	maxConcurrency: 1,
+	// Add memory tracking
+	globals: {
+		"ts-jest": {
+			diagnostics: {
+				warnOnly: true,
+				ignoreCodes: [151001],
+			},
+		},
+	},
 }

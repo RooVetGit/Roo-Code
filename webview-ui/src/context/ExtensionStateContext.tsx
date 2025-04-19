@@ -11,6 +11,8 @@ import { Mode, CustomModePrompts, defaultModeSlug, defaultPrompts, ModeConfig } 
 import { CustomSupportPrompts } from "../../../src/shared/support-prompt"
 import { experimentDefault, ExperimentId } from "../../../src/shared/experiments"
 import { TelemetrySetting } from "../../../src/shared/TelemetrySetting"
+import { MarketplaceSource } from "../../../src/services/marketplace/types"
+import { DEFAULT_MARKETPLACE_SOURCE } from "../../../src/services/marketplace/constants"
 
 export interface ExtensionStateContextType extends ExtensionState {
 	didHydrateState: boolean
@@ -86,6 +88,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	pinnedApiConfigs?: Record<string, boolean>
 	setPinnedApiConfigs: (value: Record<string, boolean>) => void
 	togglePinnedApiConfig: (configName: string) => void
+	setMarketplaceSources: (value: MarketplaceSource[]) => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -158,6 +161,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		showRooIgnoredFiles: true, // Default to showing .rooignore'd files with lock symbol (current behavior).
 		renderContext: "sidebar",
 		maxReadFileLine: 500, // Default max read file line limit
+		marketplaceSources: [DEFAULT_MARKETPLACE_SOURCE],
 		pinnedApiConfigs: {}, // Empty object for pinned API configs
 		terminalZshOhMy: false, // Default Oh My Zsh integration setting
 		terminalZshP10k: false, // Default Powerlevel10k integration setting
@@ -182,8 +186,23 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			switch (message.type) {
 				case "state": {
 					const newState = message.state!
+					console.log("DEBUG: ExtensionStateContext received state message:", {
+						hasApiConfig: !!newState.apiConfiguration,
+						hasMarketplaceItems: !!newState.marketplaceItems,
+						marketplaceItemsCount: newState.marketplaceItems?.length || 0,
+					})
+
 					setState((prevState) => mergeExtensionState(prevState, newState))
-					setShowWelcome(!checkExistKey(newState.apiConfiguration))
+
+					const shouldShowWelcome = !checkExistKey(newState.apiConfiguration)
+					console.log(
+						"DEBUG: Setting showWelcome to",
+						shouldShowWelcome,
+						"based on apiConfiguration check:",
+						newState.apiConfiguration ? "has config" : "missing config",
+					)
+
+					setShowWelcome(shouldShowWelcome)
 					setDidHydrateState(true)
 					break
 				}
@@ -330,6 +349,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 
 				return { ...prevState, pinnedApiConfigs: newPinned }
 			}),
+		setMarketplaceSources: (value) => setState((prevState) => ({ ...prevState, marketplaceSources: value })),
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

@@ -1,0 +1,25 @@
+{
+	"type-group": {
+		"modes": "モード",
+		"mcp-servers": "MCPサーバー",
+		"prompts": "プロンプト",
+		"packages": "パッケージ",
+		"generic-type": "{{type}}",
+		"match": "一致"
+	},
+	"item-card": {
+		"type-mode": "モード",
+		"type-mcp-server": "MCPサーバー",
+		"type-prompt": "プロンプト",
+		"type-package": "パッケージ",
+		"type-other": "その他",
+		"by-author": "作成者：{{author}}",
+		"authors-profile": "作成者のプロフィール",
+		"remove-tag-filter": "タグフィルターを削除：{{tag}}",
+		"filter-by-tag": "タグでフィルター：{{tag}}",
+		"component-details": "コンポーネントの詳細",
+		"match-count": "{{count}}件の一致",
+		"view": "表示",
+		"source": "ソース"
+	}
+}

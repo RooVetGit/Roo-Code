@@ -15,6 +15,7 @@ import {
 import { McpServer } from "./mcp"
 import { GitCommit } from "../utils/git"
 import { Mode } from "./modes"
+import { MarketplaceItem, MarketplaceSource } from "../services/marketplace/types"
 
 export type { ApiConfigMeta, ToolProgressStatus }
 
@@ -68,6 +69,7 @@ export interface ExtensionMessage {
 		| "maxReadFileLine"
 		| "fileSearchResults"
 		| "toggleApiConfigPin"
+		| "repositoryRefreshComplete"
 		| "acceptInput"
 	text?: string
 	action?:
@@ -76,6 +78,7 @@ export interface ExtensionMessage {
 		| "settingsButtonClicked"
 		| "historyButtonClicked"
 		| "promptsButtonClicked"
+		| "marketplaceButtonClicked"
 		| "didBecomeVisible"
 		| "focusInput"
 	invoke?: "newChat" | "sendMessage" | "primaryButtonClick" | "secondaryButtonClick" | "setChatBoxMessage"
@@ -112,6 +115,8 @@ export interface ExtensionMessage {
 		label?: string
 	}>
 	error?: string
+	items?: MarketplaceItem[]
+	url?: string // For repositoryRefreshComplete
 }
 
 export type ExtensionState = Pick<
@@ -206,6 +211,8 @@ export type ExtensionState = Pick<
 
 	renderContext: "sidebar" | "editor"
 	settingsImportedAt?: number
+	marketplaceSources?: MarketplaceSource[]
+	marketplaceItems?: MarketplaceItem[]
 }
 
 export type { ClineMessage, ClineAsk, ClineSay }

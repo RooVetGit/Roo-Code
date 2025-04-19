@@ -1,0 +1,25 @@
+{
+	"type-group": {
+		"modes": "Modlar",
+		"mcp-servers": "MCP Sunucuları",
+		"prompts": "Komutlar",
+		"packages": "Paketler",
+		"generic-type": "{{type}}lar",
+		"match": "eşleşme"
+	},
+	"item-card": {
+		"type-mode": "Mod",
+		"type-mcp-server": "MCP Sunucusu",
+		"type-prompt": "Komut",
+		"type-package": "Paket",
+		"type-other": "Diğer",
+		"by-author": "yazar: {{author}}",
+		"authors-profile": "Yazar Profili",
+		"remove-tag-filter": "Etiket filtresini kaldır: {{tag}}",
+		"filter-by-tag": "Etikete göre filtrele: {{tag}}",
+		"component-details": "Bileşen Detayları",
+		"match-count": "{{count}} eşleşme",
+		"view": "Görüntüle",
+		"source": "Kaynak"
+	}
+}

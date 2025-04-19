@@ -1,0 +1,25 @@
+{
+	"type-group": {
+		"modes": "Modi",
+		"mcp-servers": "MCP-Server",
+		"prompts": "Prompts",
+		"packages": "Pakete",
+		"generic-type": "{{type}}",
+		"match": "Treffer"
+	},
+	"item-card": {
+		"type-mode": "Modus",
+		"type-mcp-server": "MCP-Server",
+		"type-prompt": "Prompt",
+		"type-package": "Paket",
+		"type-other": "Sonstiges",
+		"by-author": "von {{author}}",
+		"authors-profile": "Autorenprofil",
+		"remove-tag-filter": "Tag-Filter entfernen: {{tag}}",
+		"filter-by-tag": "Nach Tag filtern: {{tag}}",
+		"component-details": "Komponentendetails",
+		"match-count": "{{count}} Treffer",
+		"view": "Ansehen",
+		"source": "Quelle"
+	}
+}

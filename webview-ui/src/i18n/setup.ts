@@ -37,6 +37,8 @@ i18next.use(initReactI18next).init({
 	interpolation: {
 		escapeValue: false, // React already escapes by default
 	},
+	defaultNS: "marketplace",
+	ns: ["marketplace"],
 })
 
 export function loadTranslations() {

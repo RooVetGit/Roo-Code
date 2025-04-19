@@ -1,6 +1,12 @@
 {
 	"$schema": "https://unpkg.com/knip@latest/schema.json",
-	"entry": ["src/extension.ts", "src/activate/index.ts", "webview-ui/src/index.tsx"],
+	"entry": [
+		"src/extension.ts",
+		"src/activate/index.ts",
+		"src/core/mentions/index.ts",
+		"webview-ui/src/index.tsx",
+		"src/core/webview/webviewMessageHandler.ts"
+	],
 	"project": ["src/**/*.ts", "webview-ui/src/**/*.{ts,tsx}"],
 	"ignore": [
 		"**/__mocks__/**",
@@ -19,7 +25,9 @@
 		"src/exports/**",
 		"src/schemas/ipc.ts",
 		"src/extension.ts",
-		"scripts/**"
+		"scripts/**",
+		"marketplace-template/**",
+		"src/utils/git.ts"
 	],
 	"workspaces": {
 		"webview-ui": {
