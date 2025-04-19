@@ -30,12 +30,17 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 			model,
 			contents: messages.map(convertAnthropicMessageToGemini),
 			config: {
+				httpOptions: this.options.googleGeminiBaseUrl
+					? { baseUrl: this.options.googleGeminiBaseUrl }
+					: undefined,
 				thinkingConfig,
 				maxOutputTokens,
 				temperature: this.options.modelTemperature ?? 0,
 				systemInstruction: systemPrompt,
 			},
 		}
+
+		console.log("params", params)
 
 		const result = await this.client.models.generateContentStream(params)
 
