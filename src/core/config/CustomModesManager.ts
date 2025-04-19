@@ -3,12 +3,14 @@ import * as path from "path"
 import * as fs from "fs/promises"
 import { customModesSettingsSchema } from "../../schemas"
 import { ModeConfig } from "../../shared/modes"
-import { fileExistsAtPath } from "../../utils/fs"
+import { fileExistsAtPath, ensureDirectory } from "../../utils/fs"
 import { arePathsEqual, getWorkspacePath } from "../../utils/path"
 import { logger } from "../../utils/logging"
-import { GlobalFileNames } from "../../shared/globalFileNames"
+import { GlobalFileNames, ModeFileLocations } from "../../shared/globalFileNames"
+import { readYamlFile, writeYamlFile } from "../../utils/yaml"
+import { loadModeFromYaml, loadAllModesFromYaml, saveModeToYaml } from "../../utils/modes"
 
-const ROOMODES_FILENAME = ".roomodes"
+const ROOMODES_FILENAME = ModeFileLocations.LEGACY_ROOMODES
 
 export class CustomModesManager {
 	private disposables: vscode.Disposable[] = []
@@ -20,7 +22,130 @@ export class CustomModesManager {
 		private readonly onUpdate: () => Promise<void>,
 	) {
 		// TODO: We really shouldn't have async methods in the constructor.
-		this.watchCustomModesFiles()
+		// First migrate legacy modes to YAML, then watch for changes
+		this.migrateToYaml()
+			.then(() => {
+				this.watchCustomModesFiles()
+			})
+			.catch((error) => {
+				console.error("Failed to migrate modes to YAML:", error)
+				// Fall back to standard initialization
+				this.watchCustomModesFiles()
+			})
+	}
+
+	/**
+	 * Automatically migrate modes from JSON to YAML format
+	 */
+	private async migrateToYaml(): Promise<void> {
+		// First try to migrate workspace-specific modes
+		await this.migrateWorkspaceModes()
+
+		// Then migrate global modes
+		await this.migrateGlobalModes()
+	}
+
+	/**
+	 * Migrate workspace-specific modes from .roomodes to YAML
+	 */
+	private async migrateWorkspaceModes(): Promise<void> {
+		const roomodesPath = await this.getWorkspaceRoomodes()
+
+		// Skip if no .roomodes file exists
+		if (!roomodesPath) return
+
+		// Check if we've already migrated (based on a flag in globalState)
+		const isMigrated = this.context.globalState.get(`migrated-workspace-${roomodesPath}`, false)
+		if (isMigrated) return
+
+		try {
+			// Read and parse .roomodes
+			const modesJson = await this.loadModesFromFile(roomodesPath)
+			if (modesJson.length === 0) return
+
+			// Create .roo/modes directory
+			const workspaceRoot = getWorkspacePath()
+			const modesDir = path.join(workspaceRoot, ModeFileLocations.MODES_DIRECTORY)
+			await ensureDirectory(modesDir)
+
+			let migratedCount = 0
+
+			// Process each mode
+			for (const mode of modesJson) {
+				// Look for corresponding rules file
+				const rulesPath = path.join(workspaceRoot, `.roorules-${mode.slug}`)
+				let rules = ""
+
+				if (await fileExistsAtPath(rulesPath)) {
+					rules = await fs.readFile(rulesPath, "utf-8")
+				}
+
+				// Write YAML file - don't include rules in the YAML file since we're keeping separate rules files
+				await saveModeToYaml(mode, this.context.globalStorageUri.fsPath)
+				migratedCount++
+
+				// No need to migrate rules since we're keeping them in separate files
+			}
+
+			// Set flag to avoid migrating again
+			await this.context.globalState.update(`migrated-workspace-${roomodesPath}`, true)
+
+			if (migratedCount > 0) {
+				// Notify user (subtle notification)
+				vscode.window.showInformationMessage(
+					`Successfully migrated ${migratedCount} workspace custom modes to YAML format in .roo/modes/`,
+				)
+			}
+		} catch (error) {
+			console.error("Error during workspace mode migration:", error)
+			// Don't throw - we'll fall back to legacy formats
+		}
+	}
+
+	/**
+	 * Migrate global modes from JSON settings to YAML
+	 */
+	private async migrateGlobalModes(): Promise<void> {
+		// Check if we've already migrated global modes
+		const isMigrated = this.context.globalState.get("migrated-global-modes", false)
+		if (isMigrated) return
+
+		try {
+			// Get the global JSON modes file
+			const settingsPath = await this.getCustomModesFilePath()
+			const globalModes = await this.loadModesFromFile(settingsPath)
+
+			if (globalModes.length === 0) return
+
+			// Create global modes directory
+			const globalModesDir = path.join(this.context.globalStorageUri.fsPath, "modes")
+			await ensureDirectory(globalModesDir)
+
+			let migratedCount = 0
+
+			// Process each mode
+			for (const mode of globalModes) {
+				// Skip if already in project mode
+				if (mode.source === "project") continue
+
+				// Write YAML file
+				await saveModeToYaml(mode, this.context.globalStorageUri.fsPath)
+				migratedCount++
+			}
+
+			// Set flag to avoid migrating again
+			await this.context.globalState.update("migrated-global-modes", true)
+
+			if (migratedCount > 0) {
+				// Notify user (subtle notification)
+				vscode.window.showInformationMessage(
+					`Successfully migrated ${migratedCount} global custom modes to YAML format`,
+				)
+			}
+		} catch (error) {
+			console.error("Error during global mode migration:", error)
+			// Don't throw - we'll fall back to legacy formats
+		}
 	}
 
 	private async queueWrite(operation: () => Promise<void>): Promise<void> {
@@ -183,37 +308,40 @@ export class CustomModesManager {
 	}
 
 	async getCustomModes(): Promise<ModeConfig[]> {
-		// Get modes from settings file
+		// First check for modes in YAML format
+		const yamlProjectModes = await loadAllModesFromYaml(true) // Workspace YAML modes
+		const yamlGlobalModes = await loadAllModesFromYaml(false, this.context.globalStorageUri.fsPath) // Global YAML modes
+
+		// Then check legacy formats
 		const settingsPath = await this.getCustomModesFilePath()
 		const settingsModes = await this.loadModesFromFile(settingsPath)
 
-		// Get modes from .roomodes if it exists
 		const roomodesPath = await this.getWorkspaceRoomodes()
 		const roomodesModes = roomodesPath ? await this.loadModesFromFile(roomodesPath) : []
 
-		// Create maps to store modes by source
-		const projectModes = new Map<string, ModeConfig>()
-		const globalModes = new Map<string, ModeConfig>()
+		// Create a map to merge modes with correct precedence
+		// Order of precedence: YAML project > JSON project > YAML global > JSON global
+		const slugsMap = new Map<string, ModeConfig>()
 
-		// Add project modes (they take precedence)
-		for (const mode of roomodesModes) {
-			projectModes.set(mode.slug, { ...mode, source: "project" as const })
-		}
-
-		// Add global modes
+		// Add in reverse order of precedence
 		for (const mode of settingsModes) {
-			if (!projectModes.has(mode.slug)) {
-				globalModes.set(mode.slug, { ...mode, source: "global" as const })
-			}
+			slugsMap.set(mode.slug, { ...mode, source: "global" })
 		}
 
-		// Combine modes in the correct order: project modes first, then global modes
-		const mergedModes = [
-			...roomodesModes.map((mode) => ({ ...mode, source: "project" as const })),
-			...settingsModes
-				.filter((mode) => !projectModes.has(mode.slug))
-				.map((mode) => ({ ...mode, source: "global" as const })),
-		]
+		for (const mode of yamlGlobalModes) {
+			slugsMap.set(mode.slug, mode)
+		}
+
+		for (const mode of roomodesModes) {
+			slugsMap.set(mode.slug, { ...mode, source: "project" })
+		}
+
+		for (const mode of yamlProjectModes) {
+			slugsMap.set(mode.slug, mode)
+		}
+
+		// Convert map back to array
+		const mergedModes = Array.from(slugsMap.values())
 
 		await this.context.globalState.update("customModes", mergedModes)
 		return mergedModes
@@ -221,7 +349,6 @@ export class CustomModesManager {
 	async updateCustomMode(slug: string, config: ModeConfig): Promise<void> {
 		try {
 			const isProjectMode = config.source === "project"
-			let targetPath: string
 
 			if (isProjectMode) {
 				const workspaceFolders = vscode.workspace.workspaceFolders
@@ -229,22 +356,30 @@ export class CustomModesManager {
 					logger.error("Failed to update project mode: No workspace folder found", { slug })
 					throw new Error("No workspace folder found for project-specific mode")
 				}
-				const workspaceRoot = getWorkspacePath()
-				targetPath = path.join(workspaceRoot, ROOMODES_FILENAME)
-				const exists = await fileExistsAtPath(targetPath)
-				logger.info(`${exists ? "Updating" : "Creating"} project mode in ${ROOMODES_FILENAME}`, {
-					slug,
-					workspace: workspaceRoot,
-				})
-			} else {
-				targetPath = await this.getCustomModesFilePath()
+			}
+
+			// Ensure source is set correctly
+			const modeWithSource = {
+				...config,
+				source: isProjectMode ? ("project" as const) : ("global" as const),
 			}
 
 			await this.queueWrite(async () => {
-				// Ensure source is set correctly based on target file
-				const modeWithSource = {
-					...config,
-					source: isProjectMode ? ("project" as const) : ("global" as const),
+				// Save to YAML format
+				await saveModeToYaml(modeWithSource, this.context.globalStorageUri.fsPath)
+
+				// Also update the legacy format for backward compatibility
+				let targetPath: string
+
+				if (isProjectMode) {
+					const workspaceRoot = getWorkspacePath()
+					targetPath = path.join(workspaceRoot, ROOMODES_FILENAME)
+					logger.info(`Updating ${slug} in both YAML and legacy JSON formats`, {
+						slug,
+						workspace: workspaceRoot,
+					})
+				} else {
+					targetPath = await this.getCustomModesFilePath()
 				}
 
 				await this.updateModesInFile(targetPath, (modes) => {
@@ -282,12 +417,39 @@ export class CustomModesManager {
 	}
 
 	private async refreshMergedState(): Promise<void> {
-		const settingsPath = await this.getCustomModesFilePath()
-		const roomodesPath = await this.getWorkspaceRoomodes()
+		// Get all modes from both formats
+		const yamlProjectModes = await loadAllModesFromYaml(true) // Workspace YAML modes
+		const yamlGlobalModes = await loadAllModesFromYaml(false, this.context.globalStorageUri.fsPath) // Global YAML modes
 
+		// Legacy JSON formats
+		const settingsPath = await this.getCustomModesFilePath()
 		const settingsModes = await this.loadModesFromFile(settingsPath)
+
+		const roomodesPath = await this.getWorkspaceRoomodes()
 		const roomodesModes = roomodesPath ? await this.loadModesFromFile(roomodesPath) : []
-		const mergedModes = await this.mergeCustomModes(roomodesModes, settingsModes)
+
+		// Use the same merging logic as in getCustomModes
+		const slugsMap = new Map<string, ModeConfig>()
+
+		// Add in reverse order of precedence
+		for (const mode of settingsModes) {
+			slugsMap.set(mode.slug, { ...mode, source: "global" })
+		}
+
+		for (const mode of yamlGlobalModes) {
+			slugsMap.set(mode.slug, mode)
+		}
+
+		for (const mode of roomodesModes) {
+			slugsMap.set(mode.slug, { ...mode, source: "project" })
+		}
+
+		for (const mode of yamlProjectModes) {
+			slugsMap.set(mode.slug, mode)
+		}
+
+		// Convert map back to array
+		const mergedModes = Array.from(slugsMap.values())
 
 		await this.context.globalState.update("customModes", mergedModes)
 		await this.onUpdate()
@@ -295,27 +457,46 @@ export class CustomModesManager {
 
 	async deleteCustomMode(slug: string): Promise<void> {
 		try {
+			// Check legacy JSON formats
 			const settingsPath = await this.getCustomModesFilePath()
 			const roomodesPath = await this.getWorkspaceRoomodes()
 
 			const settingsModes = await this.loadModesFromFile(settingsPath)
 			const roomodesModes = roomodesPath ? await this.loadModesFromFile(roomodesPath) : []
 
-			// Find the mode in either file
+			// Find the mode in either JSON file
 			const projectMode = roomodesModes.find((m) => m.slug === slug)
 			const globalMode = settingsModes.find((m) => m.slug === slug)
 
-			if (!projectMode && !globalMode) {
-				throw new Error("Write error: Mode not found")
+			// Also check YAML formats
+			const workspaceRoot = getWorkspacePath()
+			const projectYamlPath = path.join(workspaceRoot, ModeFileLocations.MODES_DIRECTORY, `${slug}.yaml`)
+			const globalYamlPath = path.join(this.context.globalStorageUri.fsPath, "modes", `${slug}.yaml`)
+
+			const projectYamlExists = await fileExistsAtPath(projectYamlPath)
+			const globalYamlExists = await fileExistsAtPath(globalYamlPath)
+
+			if (!projectMode && !globalMode && !projectYamlExists && !globalYamlExists) {
+				throw new Error("Write error: Mode not found in any format")
 			}
 
 			await this.queueWrite(async () => {
-				// Delete from project first if it exists there
+				// Delete from YAML formats first
+				if (projectYamlExists) {
+					await fs.unlink(projectYamlPath)
+					logger.info(`Deleted YAML mode file: ${projectYamlPath}`)
+				}
+
+				if (globalYamlExists) {
+					await fs.unlink(globalYamlPath)
+					logger.info(`Deleted YAML mode file: ${globalYamlPath}`)
+				}
+
+				// Delete from legacy JSON formats for backward compatibility
 				if (projectMode && roomodesPath) {
 					await this.updateModesInFile(roomodesPath, (modes) => modes.filter((m) => m.slug !== slug))
 				}
 
-				// Delete from global settings if it exists there
 				if (globalMode) {
 					await this.updateModesInFile(settingsPath, (modes) => modes.filter((m) => m.slug !== slug))
 				}
@@ -323,9 +504,9 @@ export class CustomModesManager {
 				await this.refreshMergedState()
 			})
 		} catch (error) {
-			vscode.window.showErrorMessage(
-				`Failed to delete custom mode: ${error instanceof Error ? error.message : String(error)}`,
-			)
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			logger.error("Failed to delete custom mode", { slug, error: errorMessage })
+			vscode.window.showErrorMessage(`Failed to delete custom mode: ${errorMessage}`)
 		}
 	}
 
@@ -337,14 +518,50 @@ export class CustomModesManager {
 
 	async resetCustomModes(): Promise<void> {
 		try {
+			// Clear legacy JSON format
 			const filePath = await this.getCustomModesFilePath()
 			await fs.writeFile(filePath, JSON.stringify({ customModes: [] }, null, 2))
+
+			// Clear global YAML modes
+			try {
+				const globalModesDir = path.join(this.context.globalStorageUri.fsPath, "modes")
+				if (await fileExistsAtPath(globalModesDir)) {
+					const files = await fs.readdir(globalModesDir)
+					for (const file of files) {
+						if (file.endsWith(".yaml") || file.endsWith(".yml")) {
+							await fs.unlink(path.join(globalModesDir, file))
+							logger.info(`Deleted global YAML mode: ${file}`)
+						}
+					}
+				}
+			} catch (yamlError) {
+				console.error("Error clearing global YAML modes:", yamlError)
+			}
+
+			// Clear workspace YAML modes
+			try {
+				const workspaceRoot = getWorkspacePath()
+				const workspaceModesDir = path.join(workspaceRoot, ModeFileLocations.MODES_DIRECTORY)
+				if (await fileExistsAtPath(workspaceModesDir)) {
+					const files = await fs.readdir(workspaceModesDir)
+					for (const file of files) {
+						if (file.endsWith(".yaml") || file.endsWith(".yml")) {
+							await fs.unlink(path.join(workspaceModesDir, file))
+							logger.info(`Deleted workspace YAML mode: ${file}`)
+						}
+					}
+				}
+			} catch (yamlError) {
+				console.error("Error clearing workspace YAML modes:", yamlError)
+			}
+
+			// Update global state
 			await this.context.globalState.update("customModes", [])
 			await this.onUpdate()
 		} catch (error) {
-			vscode.window.showErrorMessage(
-				`Failed to reset custom modes: ${error instanceof Error ? error.message : String(error)}`,
-			)
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			logger.error("Failed to reset custom modes", { error: errorMessage })
+			vscode.window.showErrorMessage(`Failed to reset custom modes: ${errorMessage}`)
 		}
 	}
 
