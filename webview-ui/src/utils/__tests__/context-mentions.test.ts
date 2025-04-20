@@ -373,13 +373,18 @@ describe("shouldShowContextMenu", () => {
 		expect(shouldShowContextMenu("@problems", 9)).toBe(true)
 	})
 
-	it("should return true for file paths with spaces", () => {
-		// Test with a file path containing spaces
-		expect(shouldShowContextMenu("@/path/to/my file.txt", 20)).toBe(true)
+	it("should return true for file paths with escaped spaces", () => {
+		// Test with a file path containing escaped spaces
+		expect(shouldShowContextMenu("@/path/to/my\\ file.txt", 20)).toBe(true)
 	})
 
-	it("should return true for folder paths with spaces", () => {
-		// Test with a folder path containing spaces
-		expect(shouldShowContextMenu("@/path/to/my folder/", 20)).toBe(true)
+	it("should return true for folder paths with escaped spaces", () => {
+		// Test with a folder path containing escaped spaces
+		expect(shouldShowContextMenu("@/path/to/my\\ folder/", 20)).toBe(true)
+	})
+
+	it("should return true for nested paths with multiple escaped spaces", () => {
+		// Test with a deeply nested path containing multiple escaped spaces
+		expect(shouldShowContextMenu("@/root\\ dir/my\\ documents/project\\ files/file.txt", 50)).toBe(true)
 	})
 })

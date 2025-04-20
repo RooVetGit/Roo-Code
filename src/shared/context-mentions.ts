@@ -18,10 +18,11 @@ Mention regex:
 	  - `|`: Logical OR.
 	  - `\w+:\/\/`:
 		- **Protocol (`\w+://`)**: Matches URLs that start with a word character sequence followed by '://', such as 'http://', 'https://', 'ftp://', etc.
-	- `[^\r\n]*?(?=\s*$|\s+@|[.,;:!?](?=[\s\r\n]|$))`:
-	  - **Character Pattern**: Matches any characters except line breaks.
+	- `[^\s\r\n]*?(?:\\\\\s[^\s\r\n]*?)*?(?=\s*$|\s+@|[.,;:!?](?=[\s\r\n]|$))`:
+	  - **Character Pattern**: Matches any characters except whitespace and line breaks.
+	  - **Escaped Spaces**: The `(?:\\\\\s[^\s\r\n]*?)*?` part allows for escaped spaces (like `\\s`) in the path.
 	  - **Followed by a lookahead**: Ensures the match ends at the end of the line, before another @ symbol, or before punctuation followed by whitespace or end of line.
-	  - **This allows spaces within file paths while properly handling path boundaries**.
+	  - **This handles paths with escaped spaces (e.g., `my\\ folder/my\\ file.txt`)**.
 	  - **Non-Greedy (`*?`)**: Ensures the smallest possible match.
 	- `|`: Logical OR.
 	- `problems\b`:
@@ -40,8 +41,8 @@ Mention regex:
 
 - **Summary**:
   - The regex effectively matches:
-	- Mentions that are file or folder paths starting with '/' and can contain spaces within the path (e.g., 'my folder/my file.txt').
-	  The regex now properly handles paths with multiple spaces and ensures the entire path is captured.
+	- Mentions that are file or folder paths starting with '/' and can contain escaped spaces within the path (e.g., 'my\\ folder/my\\ file.txt').
+	  The regex properly handles paths with escaped spaces and ensures the entire path is captured.
 	- URLs that start with a protocol (like 'http://') followed by any non-whitespace characters (including query parameters).
 	- The exact word 'problems'.
 	- The exact word 'git-changes'.
@@ -53,7 +54,7 @@ Mention regex:
 
 */
 export const mentionRegex =
-	/@((?:\/|\w+:\/\/)[^\r\n]*?(?=\s*$|\s+@|[.,;:!?](?=[\s\r\n]|$))|[a-f0-9]{7,40}\b|problems\b|git-changes\b|terminal\b)(?=[.,;:!?]?(?=[\s\r\n]|$))/
+	/@((?:\/|\w+:\/\/)[^\s\r\n]*?(?:\\\\\s[^\s\r\n]*?)*?(?=\s*$|\s+@|[.,;:!?](?=[\s\r\n]|$))|[a-f0-9]{7,40}\b|problems\b|git-changes\b|terminal\b)(?=[.,;:!?]?(?=[\s\r\n]|$))/
 export const mentionRegexGlobal = new RegExp(mentionRegex.source, "g")
 
 export interface MentionSuggestion {

@@ -47,21 +47,24 @@ export async function parseMentions(
 ): Promise<string> {
 	const mentions: Set<string> = new Set()
 	let parsedText = text.replace(mentionRegexGlobal, (match, mention) => {
-		mentions.add(mention)
-		if (mention.startsWith("http")) {
-			return `'${mention}' (see below for site content)`
-		} else if (mention.startsWith("/")) {
-			const mentionPath = mention.slice(1)
+		// Unescape spaces in the mention (convert "\\s" to " ")
+		const unescapedMention = mention.replace(/\\\\\s/g, " ")
+		mentions.add(unescapedMention)
+
+		if (unescapedMention.startsWith("http")) {
+			return `'${unescapedMention}' (see below for site content)`
+		} else if (unescapedMention.startsWith("/")) {
+			const mentionPath = unescapedMention.slice(1)
 			return mentionPath.endsWith("/")
 				? `'${mentionPath}' (see below for folder content)`
 				: `'${mentionPath}' (see below for file content)`
-		} else if (mention === "problems") {
+		} else if (unescapedMention === "problems") {
 			return `Workspace Problems (see below for diagnostics)`
-		} else if (mention === "git-changes") {
+		} else if (unescapedMention === "git-changes") {
 			return `Working directory changes (see below for details)`
-		} else if (/^[a-f0-9]{7,40}$/.test(mention)) {
-			return `Git commit '${mention}' (see below for commit info)`
-		} else if (mention === "terminal") {
+		} else if (/^[a-f0-9]{7,40}$/.test(unescapedMention)) {
+			return `Git commit '${unescapedMention}' (see below for commit info)`
+		} else if (unescapedMention === "terminal") {
 			return `Terminal Output (see below for output)`
 		}
 		return match

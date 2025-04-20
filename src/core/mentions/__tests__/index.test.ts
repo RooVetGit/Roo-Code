@@ -145,7 +145,7 @@ Detailed commit message with multiple lines
 			expect(result).toContain(`Error fetching commit info: ${errorMessage}`)
 		})
 
-		it("should parse file paths with spaces", async () => {
+		it("should parse file paths with escaped spaces", async () => {
 			// Mock the file content fetching
 			const fileContent = "This is the content of the file with spaces in its name"
 
@@ -155,8 +155,8 @@ Detailed commit message with multiple lines
 			jest.spyOn(fs, "readFile").mockResolvedValue(fileContent)
 			jest.spyOn(fs, "stat").mockResolvedValue({ isFile: () => true, isDirectory: () => false } as any)
 
-			// Test with a file path containing spaces
-			const filePath = "/path/with spaces/my file.txt"
+			// Test with a file path containing escaped spaces
+			const filePath = "/path/with\\ spaces/my\\ file.txt"
 
 			// First, verify that the regex pattern correctly matches the entire path
 			// Import the regex pattern directly to test it
@@ -168,14 +168,14 @@ Detailed commit message with multiple lines
 			// Now test the full parseMentions function
 			const result = await parseMentions(`Check out this file @${filePath}`, mockCwd, mockUrlContentFetcher)
 
-			// Verify the file path with spaces was correctly parsed
+			// Verify the file path with escaped spaces was correctly parsed
+			// The spaces should be unescaped when displayed
 			expect(result).toContain(`'path/with spaces/my file.txt' (see below for file content)`)
 			expect(result).toContain(`<file_content path="path/with spaces/my file.txt">`)
 		})
 
-		it("should parse folder paths with spaces", async () => {
+		it("should parse folder paths with escaped spaces", async () => {
 			// Mock the folder content fetching
-			const folderContent = "├── file1.txt\n├── file2.txt\n└── subfolder/"
 
 			// Mock the getFileOrFolderContent function (which is called internally by parseMentions)
 			// This is done by mocking the fs.readdir and fs.stat that would be called inside getFileOrFolderContent
@@ -187,12 +187,47 @@ Detailed commit message with multiple lines
 			])
 			jest.spyOn(fs, "stat").mockResolvedValue({ isFile: () => false, isDirectory: () => true } as any)
 
-			const folderPath = "/folder with spaces/"
+			// Test with a folder path containing escaped spaces
+			const folderPath = "/folder\\ with\\ spaces/"
+
+			// First, verify that the regex pattern correctly matches the entire path
+			const { mentionRegexGlobal } = require("../../../shared/context-mentions")
+			const mentionMatch = `@${folderPath}`.match(mentionRegexGlobal)
+			expect(mentionMatch).not.toBeNull()
+			expect(mentionMatch![0]).toBe(`@${folderPath}`)
+
 			const result = await parseMentions(`Check out this folder @${folderPath}`, mockCwd, mockUrlContentFetcher)
 
-			// Verify the folder path with spaces was correctly parsed
+			// Verify the folder path with escaped spaces was correctly parsed
+			// The spaces should be unescaped when displayed
 			expect(result).toContain(`'folder with spaces/' (see below for folder content)`)
 			expect(result).toContain(`<folder_content path="folder with spaces/">`)
+		})
+
+		it("should parse nested paths with multiple escaped spaces", async () => {
+			// Mock the file content fetching
+			const fileContent = "This is the content of the file with multiple spaces in its path"
+
+			// Mock the getFileOrFolderContent function
+			const fs = require("fs/promises")
+			jest.spyOn(fs, "readFile").mockResolvedValue(fileContent)
+			jest.spyOn(fs, "stat").mockResolvedValue({ isFile: () => true, isDirectory: () => false } as any)
+
+			// Test with a deeply nested path containing multiple escaped spaces
+			const filePath = "/root\\ dir/my\\ documents/project\\ files/important\\ notes/final\\ draft\\ v2.txt"
+
+			// Verify the regex pattern correctly matches the entire path
+			const { mentionRegexGlobal } = require("../../../shared/context-mentions")
+			const mentionMatch = `@${filePath}`.match(mentionRegexGlobal)
+			expect(mentionMatch).not.toBeNull()
+			expect(mentionMatch![0]).toBe(`@${filePath}`)
+
+			// Test the full parseMentions function
+			const result = await parseMentions(`Check out this file @${filePath}`, mockCwd, mockUrlContentFetcher)
+
+			// Verify the complex path was correctly parsed with all spaces unescaped
+			expect(result).toContain(`'root dir/my documents/project files/important notes/final draft v2.txt' (see below for file content)`)
+			expect(result).toContain(`<file_content path="root dir/my documents/project files/important notes/final draft v2.txt">`)
 		})
 	})
 
