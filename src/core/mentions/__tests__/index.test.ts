@@ -156,7 +156,7 @@ Detailed commit message with multiple lines
 			jest.spyOn(fs, "stat").mockResolvedValue({ isFile: () => true, isDirectory: () => false } as any)
 
 			// Test with a file path containing escaped spaces
-			const filePath = "/path/with\\ spaces/my\\ file.txt"
+			const filePath = "/path/with\ spaces/my\ file.txt"
 
 			// First, verify that the regex pattern correctly matches the entire path
 			// Import the regex pattern directly to test it
@@ -188,7 +188,7 @@ Detailed commit message with multiple lines
 			jest.spyOn(fs, "stat").mockResolvedValue({ isFile: () => false, isDirectory: () => true } as any)
 
 			// Test with a folder path containing escaped spaces
-			const folderPath = "/folder\\ with\\ spaces/"
+			const folderPath = "/folder\ with\ spaces/"
 
 			// First, verify that the regex pattern correctly matches the entire path
 			const { mentionRegexGlobal } = require("../../../shared/context-mentions")
@@ -214,7 +214,7 @@ Detailed commit message with multiple lines
 			jest.spyOn(fs, "stat").mockResolvedValue({ isFile: () => true, isDirectory: () => false } as any)
 
 			// Test with a deeply nested path containing multiple escaped spaces
-			const filePath = "/root\\ dir/my\\ documents/project\\ files/important\\ notes/final\\ draft\\ v2.txt"
+			const filePath = "/root\ dir/my\ documents/project\ files/important\ notes/final\ draft\ v2.txt"
 
 			// Verify the regex pattern correctly matches the entire path
 			const { mentionRegexGlobal } = require("../../../shared/context-mentions")

@@ -47,8 +47,8 @@ export async function parseMentions(
 ): Promise<string> {
 	const mentions: Set<string> = new Set()
 	let parsedText = text.replace(mentionRegexGlobal, (match, mention) => {
-		// Unescape spaces in the mention (convert "\\s" to " ")
-		const unescapedMention = mention.replace(/\\\\\s/g, " ")
+		// Unescape spaces in the mention (convert "\s" to " ")
+		const unescapedMention = mention.replace(/\\\s/g, " ")
 		mentions.add(unescapedMention)
 
 		if (unescapedMention.startsWith("http")) {
