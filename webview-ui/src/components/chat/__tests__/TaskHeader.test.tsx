@@ -3,7 +3,7 @@
 import React from "react"
 import { render, screen } from "@testing-library/react"
 import TaskHeader from "../TaskHeader"
-import { ApiConfiguration } from "../../../../../src/shared/api"
+import { ApiConfiguration } from "@roo/shared/api"
 
 // Mock the vscode API
 jest.mock("@/utils/vscode", () => ({
