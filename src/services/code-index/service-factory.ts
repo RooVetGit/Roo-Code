@@ -3,7 +3,7 @@ import { OpenAiEmbedder } from "./embedders/openai"
 import { CodeIndexOllamaEmbedder } from "./embedders/ollama"
 import { EmbedderProvider, getDefaultModelId, getModelDimension } from "../../shared/embeddingModels"
 import { QdrantVectorStore } from "./vector-store/qdrant-client"
-import { CodeParser, DirectoryScanner, FileWatcher } from "./processors"
+import { codeParser, CodeParser, DirectoryScanner, FileWatcher } from "./processors"
 import { ICodeParser, IEmbedder, IFileWatcher, IVectorStore } from "./interfaces"
 import { CodeIndexConfigManager } from "./config-manager"
 
@@ -80,13 +80,6 @@ export class CodeIndexServiceFactory {
 	}
 
 	/**
-	 * Creates a code parser instance.
-	 */
-	protected createCodeParser(): ICodeParser {
-		return new CodeParser()
-	}
-
-	/**
 	 * Creates a directory scanner instance with its required dependencies.
 	 */
 	protected createDirectoryScanner(
@@ -125,7 +118,7 @@ export class CodeIndexServiceFactory {
 
 		const embedder = this.createEmbedder()
 		const vectorStore = this.createVectorStore()
-		const parser = this.createCodeParser()
+		const parser = codeParser
 		const scanner = this.createDirectoryScanner(embedder, vectorStore, parser)
 		const fileWatcher = this.createFileWatcher(context, embedder, vectorStore)
 

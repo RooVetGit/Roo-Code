@@ -2,8 +2,8 @@ import { readFile } from "fs/promises"
 import { createHash } from "crypto"
 import * as path from "path"
 import * as treeSitter from "web-tree-sitter"
-import * as languageQueries from "../../tree-sitter/queries"
-import { loadRequiredLanguageParsers } from "../../tree-sitter/languageParser"
+import { extensions as treeSitterExtensions } from "../../tree-sitter"
+import { LanguageParser, loadRequiredLanguageParsers } from "../../tree-sitter/languageParser"
 import { ICodeParser, CodeBlock } from "../interfaces"
 
 const MIN_BLOCK_LINES = 3
@@ -66,7 +66,7 @@ export class CodeParser implements ICodeParser {
 	 * @returns Boolean indicating if the language is supported
 	 */
 	private isSupportedLanguage(extension: string): boolean {
-		return Object.keys(languageQueries).includes(extension.slice(1))
+		return treeSitterExtensions.includes(extension)
 	}
 
 	/**
@@ -95,7 +95,13 @@ export class CodeParser implements ICodeParser {
 		maxBlockLines: number,
 	): Promise<CodeBlock[]> {
 		const ext = path.extname(filePath).slice(1).toLowerCase()
-		const languages = await loadRequiredLanguageParsers([ext])
+		let languages: LanguageParser | undefined
+		try {
+			languages = await loadRequiredLanguageParsers([filePath])
+		} catch (error) {
+			console.error(`Error loading language parser for ${filePath}:`, error)
+			return []
+		}
 
 		if (!languages || !languages[ext]) {
 			return []
