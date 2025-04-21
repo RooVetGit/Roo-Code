@@ -137,6 +137,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		remoteBrowserEnabled,
 		maxReadFileLine,
 		codebaseIndexConfig,
+		codebaseIndexModels,
 	} = cachedState
 
 	// Make sure apiConfiguration is initialized and managed by SettingsView.
@@ -516,6 +517,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 
 				<div ref={codeIndexRef}>
 					<CodeIndexSettings
+						codebaseIndexModels={codebaseIndexModels}
 						codebaseIndexConfig={codebaseIndexConfig}
 						apiConfiguration={apiConfiguration}
 						setApiConfigurationField={setApiConfigurationField}

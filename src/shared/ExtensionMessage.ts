@@ -170,6 +170,7 @@ export type ExtensionState = Pick<
 	| "customSupportPrompts"
 	| "enhancementApiConfigId"
 	| "codebaseIndexConfig"
+	| "codebaseIndexModels"
 > & {
 	version: string
 	clineMessages: ClineMessage[]

@@ -168,6 +168,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			codebaseIndexEmbedderBaseUrl: "",
 			codebaseIndexEmbedderModelId: "",
 		},
+		codebaseIndexModels: { ollama: {}, openai: {} },
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)

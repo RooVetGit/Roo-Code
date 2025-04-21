@@ -24,9 +24,10 @@ import { SectionHeader } from "./SectionHeader"
 import { SetCachedStateField } from "./types"
 import { ExtensionStateContextType } from "@/context/ExtensionStateContext"
 import { ApiConfiguration } from "../../../../src/shared/api"
-import { CodebaseIndexConfig } from "../../../../src/schemas"
-
+import { CodebaseIndexConfig, CodebaseIndexModels } from "../../../../src/schemas"
+import { EmbedderProvider } from "../../../../src/shared/embeddingModels"
 interface CodeIndexSettingsProps {
+	codebaseIndexModels: CodebaseIndexModels | undefined
 	codebaseIndexConfig: CodebaseIndexConfig | undefined
 	apiConfiguration: ApiConfiguration
 	setCachedStateField: SetCachedStateField<keyof ExtensionStateContextType>
@@ -42,6 +43,7 @@ interface IndexingStatusUpdateMessage {
 }
 
 export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
+	codebaseIndexModels,
 	codebaseIndexConfig,
 	apiConfiguration,
 	setCachedStateField,
@@ -49,6 +51,14 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 }) => {
 	const [systemStatus, setSystemStatus] = useState("Standby")
 	const [indexingMessage, setIndexingMessage] = useState("")
+
+	// Safely calculate available models for current provider
+	const currentProvider = codebaseIndexConfig?.codebaseIndexEmbedderProvider
+	const modelsForProvider =
+		currentProvider === "openai" || currentProvider === "ollama"
+			? codebaseIndexModels?.[currentProvider]
+			: codebaseIndexModels?.openai
+	const availableModelIds = Object.keys(modelsForProvider || {})
 
 	useEffect(() => {
 		// Request initial indexing status from extension host
@@ -70,7 +80,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 		return () => {
 			window.removeEventListener("message", handleMessage)
 		}
-	}, [codebaseIndexConfig])
+	}, [codebaseIndexConfig, codebaseIndexModels])
 	return (
 		<>
 			<SectionHeader>
@@ -98,14 +108,41 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 							<VSCodeDropdown
 								id="embedder-dropdown"
 								value={codebaseIndexConfig?.codebaseIndexEmbedderProvider || "openai"}
+								onChange={(e: any) => {
+									const newProvider = e.target.value as EmbedderProvider
+									const models = codebaseIndexModels?.[newProvider]
+									const modelIds = models ? Object.keys(models) : []
+									const defaultModelId = modelIds.length > 0 ? modelIds[0] : "" // Use empty string if no models
+
+									if (codebaseIndexConfig) {
+										setCachedStateField("codebaseIndexConfig", {
+											...codebaseIndexConfig,
+											codebaseIndexEmbedderProvider: newProvider,
+											codebaseIndexEmbedderModelId: defaultModelId,
+										})
+									}
+								}}>
+								<VSCodeOption value="openai">OpenAI</VSCodeOption>
+								<VSCodeOption value="ollama">Ollama</VSCodeOption>
+							</VSCodeDropdown>
+						</div>
+
+						<div style={{ fontWeight: "normal", marginBottom: "4px" }}>Model:</div>
+						<div className="flex items-center gap-2">
+							<VSCodeDropdown
+								id="model-dropdown"
+								value={codebaseIndexConfig?.codebaseIndexEmbedderModelId || ""}
 								onChange={(e: any) =>
 									setCachedStateField("codebaseIndexConfig", {
 										...codebaseIndexConfig,
-										codebaseIndexEmbedderProvider: e.target.value,
+										codebaseIndexEmbedderModelId: e.target.value,
 									})
 								}>
-								<VSCodeOption value="openai">OpenAI</VSCodeOption>
-								<VSCodeOption value="ollama">Ollama</VSCodeOption>
+								{availableModelIds.map((modelId) => (
+									<VSCodeOption key={modelId} value={modelId}>
+										{modelId}
+									</VSCodeOption>
+								))}
 							</VSCodeDropdown>
 						</div>
 
@@ -134,19 +171,6 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 											})
 										}>
 										Ollama URL:
-									</VSCodeTextField>
-								</div>
-
-								<div className="space-y-2">
-									<VSCodeTextField
-										value={codebaseIndexConfig.codebaseIndexEmbedderModelId || ""}
-										onInput={(e: any) =>
-											setCachedStateField("codebaseIndexConfig", {
-												...codebaseIndexConfig,
-												codebaseIndexEmbedderModelId: e.target.value,
-											})
-										}>
-										Ollama Model:
 									</VSCodeTextField>
 								</div>
 							</>

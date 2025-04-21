@@ -142,6 +142,13 @@ export const codebaseIndexConfigSchema = z.object({
 
 export type CodebaseIndexConfig = z.infer<typeof codebaseIndexConfigSchema>
 
+export const codebaseIndexModelsSchema = z.object({
+	openai: z.record(z.string(), z.object({ dimension: z.number() })).optional(),
+	ollama: z.record(z.string(), z.object({ dimension: z.number() })).optional(),
+})
+
+export type CodebaseIndexModels = z.infer<typeof codebaseIndexModelsSchema>
+
 export type ApiConfigMeta = z.infer<typeof apiConfigMetaSchema>
 
 /**
@@ -396,8 +403,6 @@ export const providerSettingsSchema = z.object({
 	// Code Index
 	codeIndexOpenAiKey: z.string().optional(),
 	codeIndexQdrantApiKey: z.string().optional(),
-	codeIndexEmbedderBaseUrl: z.string().optional(),
-	codeIndexEmbedderModelId: z.string().optional(),
 	// Claude 3.7 Sonnet Thinking
 	modelTemperature: z.number().nullish(),
 	modelMaxTokens: z.number().optional(),
@@ -485,8 +490,6 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	// Code Index
 	codeIndexOpenAiKey: undefined,
 	codeIndexQdrantApiKey: undefined,
-	codeIndexEmbedderBaseUrl: undefined,
-	codeIndexEmbedderModelId: undefined,
 	// Claude 3.7 Sonnet Thinking
 	modelTemperature: undefined,
 	modelMaxTokens: undefined,
@@ -515,6 +518,7 @@ export const globalSettingsSchema = z.object({
 	autoApprovalEnabled: z.boolean().optional(),
 	alwaysAllowReadOnly: z.boolean().optional(),
 	alwaysAllowReadOnlyOutsideWorkspace: z.boolean().optional(),
+	codebaseIndexModels: codebaseIndexModelsSchema.optional(),
 	codebaseIndexConfig: codebaseIndexConfigSchema.optional(),
 	alwaysAllowWrite: z.boolean().optional(),
 	alwaysAllowWriteOutsideWorkspace: z.boolean().optional(),
@@ -576,6 +580,7 @@ export type GlobalSettings = z.infer<typeof globalSettingsSchema>
 type GlobalSettingsRecord = Record<Keys<GlobalSettings>, undefined>
 
 const globalSettingsRecord: GlobalSettingsRecord = {
+	codebaseIndexModels: undefined,
 	codebaseIndexConfig: undefined,
 	currentApiConfigName: undefined,
 	listApiConfigMeta: undefined,

@@ -55,6 +55,7 @@ import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { getWorkspacePath } from "../../utils/path"
 import { webviewMessageHandler } from "./webviewMessageHandler"
 import { WebviewMessage } from "../../shared/WebviewMessage"
+import { EMBEDDING_MODEL_PROFILES } from "../../shared/embeddingModels"
 
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -346,17 +347,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		if (!this.contextProxy.isInitialized) {
 			await this.contextProxy.initialize()
-
-			// Load CodeIndexManager configuration after contextProxy (and secrets) are initialized.
 			this.codeIndexManager
 				.loadConfiguration()
 				.then(() => {
-					// Optional: Log success after config/indexing finishes.
+					this.updateGlobalState("codebaseIndexModels", EMBEDDING_MODEL_PROFILES)
+
 					this.outputChannel.appendLine("CodeIndexManager configuration loaded successfully (async).")
 				})
 				.catch((error) => {
-					// Log errors from the configuration/indexing process.
-					// Use console.error for better visibility in developer tools if needed.
 					console.error(
 						"[resolveWebviewView] Error during background CodeIndexManager configuration/indexing:",
 						error,
@@ -364,8 +362,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					this.outputChannel.appendLine(
 						`[Error] Background CodeIndexManager configuration/indexing failed: ${error.message || error}`,
 					)
-					// Optionally notify the user via a non-modal message
-					// vscode.window.showWarningMessage(`Roo-Code index initialization failed: ${error.message}`);
 				})
 		}
 
@@ -1246,6 +1242,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			language,
 			maxReadFileLine,
 			codebaseIndexConfig,
+			codebaseIndexModels,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
@@ -1321,6 +1318,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			renderContext: this.renderContext,
 			maxReadFileLine: maxReadFileLine ?? 500,
 			settingsImportedAt: this.settingsImportedAt,
+			codebaseIndexModels: codebaseIndexModels ?? {
+				openai: {},
+				ollama: {},
+			},
 			codebaseIndexConfig: codebaseIndexConfig ?? {
 				codebaseIndexEnabled: false,
 				codebaseIndexQdrantUrl: "",
@@ -1410,6 +1411,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 			maxReadFileLine: stateValues.maxReadFileLine ?? 500,
+			codebaseIndexModels: stateValues.codebaseIndexModels ?? {
+				openai: {},
+				ollama: {},
+			},
 			codebaseIndexConfig: stateValues.codebaseIndexConfig ?? {
 				codebaseIndexEnabled: false,
 				codebaseIndexQdrantUrl: "",
