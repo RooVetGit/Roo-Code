@@ -17,7 +17,7 @@ import { BaseProvider } from "./base-provider"
 export class GeminiHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
 	private client: GoogleGenAI
-	private contentCaches: Map<string, string>
+	private contentCaches: Map<string, { key: string; count: number }>
 
 	constructor(options: ApiHandlerOptions) {
 		super()
@@ -34,26 +34,27 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		const { id: model, thinkingConfig, maxOutputTokens, supportsPromptCache } = this.getModel()
 
 		const contents = messages.map(convertAnthropicMessageToGemini)
-		let uncachedContent: Content | undefined = undefined
+		let uncachedContent: Content[] | undefined = undefined
 		let cachedContent: string | undefined = undefined
 		let cacheWriteTokens: number = 0
 
 		// https://ai.google.dev/gemini-api/docs/caching?lang=node
 		if (supportsPromptCache && taskId) {
-			cachedContent = this.contentCaches.get(taskId)
+			const cacheEntry = this.contentCaches.get(taskId)
 
-			if (cachedContent) {
-				uncachedContent = convertAnthropicMessageToGemini(messages[messages.length - 1])
+			if (cacheEntry) {
+				uncachedContent = contents.slice(cacheEntry.count, contents.length)
+				cachedContent = cacheEntry.key
 			}
 
-			const updatedCachedContent = await this.client.caches.create({
+			const newCacheEntry = await this.client.caches.create({
 				model,
 				config: { contents, systemInstruction, ttl: "300s" },
 			})
 
-			if (updatedCachedContent.name) {
-				this.contentCaches.set(taskId, updatedCachedContent.name)
-				cacheWriteTokens = updatedCachedContent.usageMetadata?.totalTokenCount ?? 0
+			if (newCacheEntry.name) {
+				this.contentCaches.set(taskId, { key: newCacheEntry.name, count: contents.length })
+				cacheWriteTokens = newCacheEntry.usageMetadata?.totalTokenCount ?? 0
 			}
 		}
 
