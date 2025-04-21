@@ -125,6 +125,7 @@ export interface WebviewMessage {
 		| "maxReadFileLine"
 		| "searchFiles"
 		| "toggleApiConfigPin"
+		| "stickyModesEnabled"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse

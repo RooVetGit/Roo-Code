@@ -354,6 +354,7 @@ type GlobalSettings = {
 		  }
 		| undefined
 	enhancementApiConfigId?: string | undefined
+	stickyModesEnabled?: boolean | undefined
 }
 
 type ClineMessage = {

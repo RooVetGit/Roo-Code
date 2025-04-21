@@ -357,6 +357,7 @@ type GlobalSettings = {
 		  }
 		| undefined
 	enhancementApiConfigId?: string | undefined
+	stickyModesEnabled?: boolean | undefined
 }
 
 export type { GlobalSettings }

@@ -939,6 +939,10 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await updateGlobalState("showRooIgnoredFiles", message.bool ?? true)
 			await provider.postStateToWebview()
 			break
+		case "stickyModesEnabled":
+			await updateGlobalState("stickyModesEnabled", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
 		case "maxReadFileLine":
 			await updateGlobalState("maxReadFileLine", message.value)
 			await provider.postStateToWebview()
