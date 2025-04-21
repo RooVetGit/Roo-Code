@@ -123,6 +123,16 @@ export const toolErrorsRelations = relations(toolErrors, ({ one }) => ({
 	task: one(tasks, { fields: [toolErrors.taskId], references: [tasks.id] }),
 }))
 
+export type ToolError = typeof toolErrors.$inferSelect
+
+export const insertToolErrorSchema = createInsertSchema(toolErrors)
+	.omit({ id: true, createdAt: true })
+	.extend({ toolUsage: toolUsageSchema.optional() })
+
+export type InsertToolError = Omit<typeof toolErrors.$inferInsert, "id" | "createdAt">
+
+export type UpdateToolError = Partial<Omit<ToolError, "id" | "createdAt">>
+
 /**
  * schema
  */
