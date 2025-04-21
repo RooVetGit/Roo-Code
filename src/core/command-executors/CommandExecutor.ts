@@ -6,6 +6,7 @@ export interface ExecuteCommandOptions {
 	cwd: string
 	taskId?: string
 	onLine: (line: string, process?: TerminalProcess) => void
+	onStarted: (controller?: AbortController) => void
 	onCompleted: (output: string | undefined) => void
 	onShellExecutionComplete: (details: ExitCodeDetails) => void
 	onNoShellIntegration?: (message: string) => void

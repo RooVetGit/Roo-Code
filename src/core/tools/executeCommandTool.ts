@@ -128,6 +128,7 @@ export async function executeCommand(
 			didContinue = true
 			process?.continue() // Continue past the await.
 		},
+		onStarted: () => {},
 		onCompleted: (output) => {
 			result = output ?? ""
 			completed = true

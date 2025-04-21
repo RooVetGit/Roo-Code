@@ -3,18 +3,16 @@ import { execa, ExecaError } from "execa"
 import { CommandExecutor, ExecuteCommandOptions } from "./CommandExecutor"
 
 export class ExecaCommandExecutor extends CommandExecutor {
-	async execute({
-		command,
-		cwd,
-		taskId,
-		onLine,
-		onShellExecutionComplete,
-		onCompleted,
-	}: ExecuteCommandOptions): Promise<void> {
+	async execute({ command, cwd, onLine, onShellExecutionComplete, onStarted, onCompleted }: ExecuteCommandOptions) {
 		let output = ""
 
 		try {
-			for await (const line of execa({ shell: true, cwd })`${command}`) {
+			const controller = new AbortController()
+			const cancelSignal = controller.signal
+			const stream = execa({ shell: true, cwd, cancelSignal })`${command}`
+			onStarted(controller)
+
+			for await (const line of stream) {
 				output += line
 				onLine(line)
 			}
