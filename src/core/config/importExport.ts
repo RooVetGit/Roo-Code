@@ -49,8 +49,16 @@ export const importSettings = async ({ providerSettingsManager, contextProxy }: 
 		}
 
 		await providerSettingsManager.import(newProviderProfiles)
-
 		await contextProxy.setValues(globalSettings)
+
+		// Roo uses providerSettingsManager to manage api configs, but Cline uses ContextProxy, and to due to some legacy
+		// code from it, we need to set the the provider setttings here as well.
+		// For the future we should remove the provider from the proxy and keep providerSettingsManager as source of truth for apiConfig.
+		const firstApiConfig = Object.values(providerProfiles.apiConfigs)[0]
+		if (firstApiConfig) {
+			contextProxy.setProviderSettings(firstApiConfig)
+		}
+
 		contextProxy.setValue("currentApiConfigName", providerProfiles.currentApiConfigName)
 		contextProxy.setValue("listApiConfigMeta", await providerSettingsManager.listConfig())
 
