@@ -10,14 +10,14 @@ import {
 	ClineSayBrowserAction,
 	ClineSayTool,
 	ExtensionMessage,
-} from "../../../../src/shared/ExtensionMessage"
-import { McpServer, McpTool } from "../../../../src/shared/mcp"
-import { findLast } from "../../../../src/shared/array"
-import { combineApiRequests } from "../../../../src/shared/combineApiRequests"
-import { combineCommandSequences } from "../../../../src/shared/combineCommandSequences"
-import { getApiMetrics } from "../../../../src/shared/getApiMetrics"
-import { useExtensionState } from "../../context/ExtensionStateContext"
-import { vscode } from "../../utils/vscode"
+} from "@roo/shared/ExtensionMessage"
+import { McpServer, McpTool } from "@roo/shared/mcp"
+import { findLast } from "@roo/shared/array"
+import { combineApiRequests } from "@roo/shared/combineApiRequests"
+import { combineCommandSequences } from "@roo/shared/combineCommandSequences"
+import { getApiMetrics } from "@roo/shared/getApiMetrics"
+import { useExtensionState } from "@src/context/ExtensionStateContext"
+import { vscode } from "@src/utils/vscode"
 import HistoryPreview from "../history/HistoryPreview"
 import RooHero from "../welcome/RooHero"
 import { normalizeApiConfiguration } from "../settings/ApiOptions"
@@ -27,9 +27,10 @@ import ChatRow from "./ChatRow"
 import ChatTextArea from "./ChatTextArea"
 import TaskHeader from "./TaskHeader"
 import AutoApproveMenu from "./AutoApproveMenu"
-import { AudioType } from "../../../../src/shared/WebviewMessage"
-import { validateCommand } from "../../utils/command-validation"
-import { getAllModes } from "../../../../src/shared/modes"
+import SystemPromptWarning from "./SystemPromptWarning"
+import { AudioType } from "@roo/shared/WebviewMessage"
+import { validateCommand } from "@src/utils/command-validation"
+import { getAllModes } from "@roo/shared/modes"
 import TelemetryBanner from "../common/TelemetryBanner"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import removeMd from "remove-markdown"
@@ -77,6 +78,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		alwaysAllowSubtasks,
 		customModes,
 		telemetrySetting,
+		hasSystemPromptOverride,
 	} = useExtensionState()
 
 	//const task = messages.length > 0 ? (messages[0].say === "task" ? messages[0] : undefined) : undefined) : undefined
@@ -1204,6 +1206,13 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						contextTokens={apiMetrics.contextTokens}
 						onClose={handleTaskCloseButtonClick}
 					/>
+
+					{/* System prompt override warning */}
+					{hasSystemPromptOverride && (
+						<div className="px-3">
+							<SystemPromptWarning />
+						</div>
+					)}
 
 					{/* Checkpoint warning message */}
 					{showCheckpointWarning && (

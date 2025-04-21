@@ -1,9 +1,8 @@
 import { distance } from "fastest-levenshtein"
 
-import { DiffStrategy, DiffResult } from "../types"
 import { addLineNumbers, everyLineHasLineNumbers, stripLineNumbers } from "../../../integrations/misc/extract-text"
 import { ToolProgressStatus } from "../../../shared/ExtensionMessage"
-import { ToolUse } from "../../../shared/tools"
+import { ToolUse, DiffStrategy, DiffResult } from "../../../shared/tools"
 import { normalizeString } from "../../../utils/text-normalization"
 
 const BUFFER_LINES = 40 // Number of extra context lines to show before and after matches
@@ -430,14 +429,6 @@ Only use a single line of '=======' between search and replacement content, beca
 				const exactStartIndex = startLine - 1
 				const searchLen = searchLines.length
 				const exactEndIndex = exactStartIndex + searchLen - 1
-
-				if (exactStartIndex < 0 || exactEndIndex >= resultLines.length) {
-					diffResults.push({
-						success: false,
-						error: `Line range ${startLine}-${startLine + searchLen - 1} is invalid (file has ${resultLines.length} lines)\n\nDebug Info:\n- Requested Range: lines ${startLine}-${startLine + searchLen - 1}\n- File Bounds: lines 1-${resultLines.length}`,
-					})
-					continue
-				}
 
 				// Try exact match first
 				const originalChunk = resultLines.slice(exactStartIndex, exactEndIndex + 1).join("\n")

@@ -181,12 +181,12 @@
 		"copyToInput": "Copier vers l'entrée (ou Shift + clic)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.12 est sortie",
-		"description": "Roo Code 3.12 apporte de nouvelles fonctionnalités et améliorations basées sur vos retours.",
+		"title": "🎉 Roo Code 3.13 est sortie",
+		"description": "Roo Code 3.13 apporte de nouvelles fonctionnalités et améliorations basées sur vos retours.",
 		"whatsNew": "Quoi de neuf",
-		"feature1": "<bold>Support Grok</bold> : Ajout du fournisseur xAI et des options d'effort de raisonnement pour Grok sur OpenRouter",
-		"feature2": "<bold>Améliorations de l'édition des différences</bold> : Configuration par profil et meilleure normalisation des chaînes pour moins d'erreurs",
-		"feature3": "<bold>Améliorations des points de contrôle</bold> : Points de contrôle plus rapides et plus fiables",
+		"feature1": "<bold>Gemini 2.5 Flash Thinking</bold> : Tu peux maintenant utiliser la variante thinking de Gemini 2.5 Flash et spécifier un budget de tokens pour thinking",
+		"feature2": "<bold>Améliorations de l'interface</bold> : L'en-tête des tâches, la vue de chat, l'aperçu de l'historique et la vue d'accueil ont été visuellement améliorés",
+		"feature3": "<bold>Corrections de bugs</bold> : Éditions de différences plus fiables et plus",
 		"hideButton": "Masquer l'annonce",
 		"detailsDiscussLinks": "Obtenez plus de détails et participez aux discussions sur <discordLink>Discord</discordLink> et <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -211,5 +211,6 @@
 			"scrollUp": "Défiler vers le haut",
 			"close": "Fermer le navigateur"
 		}
-	}
+	},
+	"systemPromptWarning": "AVERTISSEMENT : Remplacement d'instructions système personnalisées actif. Cela peut gravement perturber la fonctionnalité et provoquer un comportement imprévisible."
 }
