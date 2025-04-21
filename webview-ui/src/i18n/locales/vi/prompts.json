@@ -7,7 +7,9 @@
 		"editModesConfig": "Chỉnh sửa cấu hình chế độ",
 		"editGlobalModes": "Chỉnh sửa chế độ toàn cục",
 		"editProjectModes": "Chỉnh sửa chế độ dự án (.roomodes)",
-		"createModeHelpText": "Nhấn + để tạo chế độ tùy chỉnh mới, hoặc chỉ cần yêu cầu Roo trong chat tạo một chế độ cho bạn!"
+		"createModeHelpText": "Nhấn + để tạo chế độ tùy chỉnh mới, hoặc chỉ cần yêu cầu Roo trong chat tạo một chế độ cho bạn!",
+		"hideBuiltInModes": "Ẩn các chế độ tích hợp",
+		"showBuiltInModes": "Hiển thị các chế độ tích hợp"
 	},
 	"apiConfiguration": {
 		"title": "Cấu hình API",

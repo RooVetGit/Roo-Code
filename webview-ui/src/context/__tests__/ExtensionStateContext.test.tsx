@@ -188,6 +188,7 @@ describe("mergeExtensionState", () => {
 			enableMcpServerCreation: false,
 			clineMessages: [],
 			taskHistory: [],
+			hiddenBuiltInModes: [],
 			shouldShowAnnouncement: false,
 			enableCheckpoints: true,
 			writeDelayMs: 1000,
