@@ -24,8 +24,9 @@ export async function insertContentTool(
 	const content: string | undefined = block.params.content
 
 	const sharedMessageProps: ClineSayTool = {
-		tool: "appliedDiff",
+		tool: "insertContent",
 		path: getReadablePath(cline.cwd, removeClosingTag("path", relPath)),
+		lineNumber: line ? parseInt(line, 10) : undefined,
 	}
 
 	try {
@@ -111,7 +112,11 @@ export async function insertContentTool(
 
 		await cline.diffViewProvider.update(updatedContent, true)
 
-		const completeMessage = JSON.stringify({ ...sharedMessageProps, diff } satisfies ClineSayTool)
+		const completeMessage = JSON.stringify({
+			...sharedMessageProps,
+			diff,
+			lineNumber: lineNumber,
+		} satisfies ClineSayTool)
 
 		const didApprove = await cline
 			.ask("tool", completeMessage, false)
@@ -141,8 +146,9 @@ export async function insertContentTool(
 		}
 
 		const userFeedbackDiff = JSON.stringify({
-			tool: "appliedDiff",
+			tool: "insertContent",
 			path: getReadablePath(cline.cwd, relPath),
+			lineNumber: lineNumber,
 			diff: userEdits,
 		} satisfies ClineSayTool)
 

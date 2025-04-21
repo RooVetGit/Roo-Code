@@ -11,7 +11,7 @@ Parameters:
 	      Use any positive number to insert before that line
 - content: (required) The content to insert at the specified line
 
-Example:
+Example for inserting imports at start of file:
 <insert_content>
 <path>src/utils.ts</path>
 <line>1</line>
@@ -19,5 +19,15 @@ Example:
 // Add imports at start of file
 import { sum } from './math';
 </content>
-</insert_content>`
+</insert_content>
+
+Example for appending to the end of file:
+<insert_content>
+<path>src/utils.ts</path>
+<line>0</line>
+<content>
+// This is the end of the file
+</content>
+</insert_content>
+`
 }
