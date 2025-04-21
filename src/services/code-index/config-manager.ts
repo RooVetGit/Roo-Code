@@ -2,33 +2,8 @@ import * as vscode from "vscode"
 import { ApiHandlerOptions } from "../../shared/api"
 import { ContextProxy } from "../../core/config/ContextProxy"
 import { EmbedderProvider } from "./interfaces/manager"
-
-/**
- * Configuration state for the code indexing feature
- */
-export interface CodeIndexConfig {
-	isEnabled: boolean
-	isConfigured: boolean
-	embedderProvider: EmbedderProvider
-	openAiOptions?: ApiHandlerOptions
-	ollamaOptions?: ApiHandlerOptions
-	qdrantUrl?: string
-	qdrantApiKey?: string
-}
-
-/**
- * Snapshot of previous configuration used to determine if a restart is required
- */
-type PreviousConfigSnapshot = {
-	enabled: boolean
-	configured: boolean
-	embedderProvider: EmbedderProvider
-	openAiKey?: string
-	ollamaBaseUrl?: string
-	ollamaModelId?: string
-	qdrantUrl?: string
-	qdrantApiKey?: string
-}
+import { getModelDimension, getDefaultModelId } from "../../shared/embeddingModels"
+import { CodeIndexConfig, PreviousConfigSnapshot } from "./interfaces/config"
 
 /**
  * Manages configuration state and validation for the code indexing feature.
@@ -37,6 +12,7 @@ type PreviousConfigSnapshot = {
 export class CodeIndexConfigManager {
 	private isEnabled: boolean = false
 	private embedderProvider: EmbedderProvider = "openai"
+	private modelId?: string
 	private openAiOptions?: ApiHandlerOptions
 	private ollamaOptions?: ApiHandlerOptions
 	private qdrantUrl?: string
@@ -53,12 +29,14 @@ export class CodeIndexConfigManager {
 			isEnabled: boolean
 			isConfigured: boolean
 			embedderProvider: EmbedderProvider
+			modelId?: string
 			openAiOptions?: ApiHandlerOptions
 			ollamaOptions?: ApiHandlerOptions
 			qdrantUrl?: string
 			qdrantApiKey?: string
 		}
 		requiresRestart: boolean
+		requiresClear: boolean
 	}> {
 		console.log("[CodeIndexConfigManager] Loading configuration...")
 
@@ -66,9 +44,9 @@ export class CodeIndexConfigManager {
 			enabled: this.isEnabled,
 			configured: this.isConfigured(),
 			embedderProvider: this.embedderProvider,
+			modelId: this.modelId,
 			openAiKey: this.openAiOptions?.openAiNativeApiKey,
 			ollamaBaseUrl: this.ollamaOptions?.ollamaBaseUrl,
-			ollamaModelId: this.ollamaOptions?.ollamaModelId,
 			qdrantUrl: this.qdrantUrl,
 			qdrantApiKey: this.qdrantApiKey,
 		}
@@ -98,11 +76,24 @@ export class CodeIndexConfigManager {
 		this.openAiOptions = { openAiNativeApiKey: openAiKey }
 
 		this.embedderProvider = codebaseIndexEmbedderProvider === "ollama" ? "ollama" : "openai"
+		this.modelId = codebaseIndexEmbedderModelId || undefined
 
 		this.ollamaOptions = {
 			ollamaBaseUrl: codebaseIndexEmbedderBaseUrl,
-			ollamaModelId: codebaseIndexEmbedderModelId,
 		}
+
+		const previousModelId =
+			previousConfigSnapshot.modelId ?? getDefaultModelId(previousConfigSnapshot.embedderProvider)
+		const currentModelId = this.modelId ?? getDefaultModelId(this.embedderProvider)
+		const previousDimension = previousModelId
+			? getModelDimension(previousConfigSnapshot.embedderProvider, previousModelId)
+			: undefined
+		const currentDimension = currentModelId ? getModelDimension(this.embedderProvider, currentModelId) : undefined
+		const requiresClear =
+			previousDimension !== undefined && currentDimension !== undefined && previousDimension !== currentDimension
+		console.log(
+			`[CodeIndexConfigManager] Dimension check: Previous=${previousDimension}, Current=${currentDimension}, Changed=${requiresClear}`,
+		)
 
 		return {
 			configSnapshot: previousConfigSnapshot,
@@ -110,12 +101,14 @@ export class CodeIndexConfigManager {
 				isEnabled: this.isEnabled,
 				isConfigured: this.isConfigured(),
 				embedderProvider: this.embedderProvider,
+				modelId: this.modelId,
 				openAiOptions: this.openAiOptions,
 				ollamaOptions: this.ollamaOptions,
 				qdrantUrl: this.qdrantUrl,
 				qdrantApiKey: this.qdrantApiKey,
 			},
 			requiresRestart: this._didConfigChangeRequireRestart(previousConfigSnapshot),
+			requiresClear,
 		}
 	}
 
@@ -153,20 +146,20 @@ export class CodeIndexConfigManager {
 		if (this.isEnabled || prev.enabled) {
 			// Check for embedder type change
 			if (prev.embedderProvider !== this.embedderProvider) return true
+			if (prev.modelId !== this.modelId) return true // Any model change requires restart
 
-			// Check OpenAI key change if using OpenAI
-			if (this.embedderProvider === "openai" && prev.openAiKey !== this.openAiOptions?.openAiNativeApiKey) {
-				return true
+			// Check OpenAI settings change if using OpenAI
+			if (this.embedderProvider === "openai") {
+				if (prev.openAiKey !== this.openAiOptions?.openAiNativeApiKey) return true
+				// Model ID check moved above
 			}
 
 			// Check Ollama settings change if using Ollama
 			if (this.embedderProvider === "ollama") {
-				if (
-					prev.ollamaBaseUrl !== this.ollamaOptions?.ollamaBaseUrl ||
-					prev.ollamaModelId !== this.ollamaOptions?.ollamaModelId
-				) {
+				if (prev.ollamaBaseUrl !== this.ollamaOptions?.ollamaBaseUrl) {
 					return true
 				}
+				// Model ID check moved above
 			}
 
 			// Check Qdrant settings changes
@@ -186,6 +179,7 @@ export class CodeIndexConfigManager {
 			isEnabled: this.isEnabled,
 			isConfigured: this.isConfigured(),
 			embedderProvider: this.embedderProvider,
+			modelId: this.modelId,
 			openAiOptions: this.openAiOptions,
 			ollamaOptions: this.ollamaOptions,
 			qdrantUrl: this.qdrantUrl,
@@ -222,5 +216,12 @@ export class CodeIndexConfigManager {
 			url: this.qdrantUrl,
 			apiKey: this.qdrantApiKey,
 		}
+	}
+
+	/**
+	 * Gets the current model ID being used for embeddings.
+	 */
+	public get currentModelId(): string | undefined {
+		return this.modelId
 	}
 }

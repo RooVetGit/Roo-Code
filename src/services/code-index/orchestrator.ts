@@ -132,6 +132,7 @@ export class CodeIndexOrchestrator {
 		this.stateManager.setSystemState("Indexing", "Initializing services...")
 
 		try {
+			this.configManager.loadConfiguration()
 			const services = this.serviceFactory.createServices(this.context)
 			this._vectorStore = services.vectorStore
 			this._scanner = services.scanner

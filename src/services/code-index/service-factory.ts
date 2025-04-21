@@ -1,7 +1,7 @@
 import * as vscode from "vscode"
-import { ApiHandlerOptions } from "../../shared/api"
 import { OpenAiEmbedder } from "./embedders/openai"
 import { CodeIndexOllamaEmbedder } from "./embedders/ollama"
+import { EmbedderProvider, getDefaultModelId, getModelDimension } from "../../shared/embeddingModels"
 import { QdrantVectorStore } from "./vector-store/qdrant-client"
 import { CodeParser, DirectoryScanner, FileWatcher } from "./processors"
 import { ICodeParser, IEmbedder, IFileWatcher, IVectorStore } from "./interfaces"
@@ -22,19 +22,30 @@ export class CodeIndexServiceFactory {
 	protected createEmbedder(): IEmbedder {
 		const config = this.configManager.getConfig()
 
-		if (config.embedderType === "openai") {
+		const provider = config.embedderProvider as EmbedderProvider // Cast for type safety
+		const defaultModel = getDefaultModelId(provider)
+
+		if (provider === "openai") {
 			if (!config.openAiOptions?.openAiNativeApiKey) {
 				throw new Error("OpenAI configuration missing for embedder creation")
 			}
-			return new OpenAiEmbedder(config.openAiOptions)
-		} else if (config.embedderType === "ollama") {
+			// Use apiModelId from options, fallback to default
+			const modelId = config.openAiOptions.apiModelId ?? defaultModel
+			// TODO: Update OpenAiEmbedder constructor to accept modelId
+			// return new OpenAiEmbedder(config.openAiOptions, modelId)
+			return new OpenAiEmbedder(config.openAiOptions) // Reverted temporarily
+		} else if (provider === "ollama") {
 			if (!config.ollamaOptions?.ollamaBaseUrl) {
 				throw new Error("Ollama configuration missing for embedder creation")
 			}
-			return new CodeIndexOllamaEmbedder(config.ollamaOptions)
+			// Use apiModelId from options, fallback to default
+			const modelId = config.ollamaOptions.apiModelId ?? defaultModel
+			// TODO: Update CodeIndexOllamaEmbedder constructor to accept modelId
+			// return new CodeIndexOllamaEmbedder(config.ollamaOptions, modelId)
+			return new CodeIndexOllamaEmbedder(config.ollamaOptions) // Reverted temporarily
 		}
 
-		throw new Error(`Invalid embedder type configured: ${config.embedderType}`)
+		throw new Error(`Invalid embedder type configured: ${config.embedderProvider}`)
 	}
 
 	/**
@@ -43,11 +54,29 @@ export class CodeIndexServiceFactory {
 	protected createVectorStore(): IVectorStore {
 		const config = this.configManager.getConfig()
 
+		const provider = config.embedderProvider as EmbedderProvider
+		const defaultModel = getDefaultModelId(provider)
+		// Determine the modelId based on the provider and config, using apiModelId
+		const modelId =
+			provider === "openai"
+				? (config.openAiOptions?.apiModelId ?? defaultModel)
+				: (config.ollamaOptions?.apiModelId ?? defaultModel)
+
+		const vectorSize = getModelDimension(provider, modelId)
+
+		if (vectorSize === undefined) {
+			throw new Error(
+				`Could not determine vector dimension for model '${modelId}'. Check model profiles or config.`,
+			)
+		}
+
 		if (!config.qdrantUrl) {
+			// This check remains important
 			throw new Error("Qdrant URL missing for vector store creation")
 		}
 
-		return new QdrantVectorStore(this.workspacePath, config.qdrantUrl, config.qdrantApiKey)
+		// Assuming constructor is updated: new QdrantVectorStore(workspacePath, url, vectorSize, apiKey?)
+		return new QdrantVectorStore(this.workspacePath, config.qdrantUrl, vectorSize, config.qdrantApiKey)
 	}
 
 	/**

@@ -175,8 +175,6 @@ type ProviderSettings = {
 		| undefined
 	codeIndexOpenAiKey?: string | undefined
 	codeIndexQdrantApiKey?: string | undefined
-	codeIndexEmbedderBaseUrl?: string | undefined
-	codeIndexEmbedderModelId?: string | undefined
 	modelTemperature?: (number | null) | undefined
 	modelMaxTokens?: number | undefined
 	modelMaxThinkingTokens?: number | undefined
@@ -238,6 +236,24 @@ type GlobalSettings = {
 	autoApprovalEnabled?: boolean | undefined
 	alwaysAllowReadOnly?: boolean | undefined
 	alwaysAllowReadOnlyOutsideWorkspace?: boolean | undefined
+	codebaseIndexModels?:
+		| {
+				openai?:
+					| {
+							[x: string]: {
+								dimension: number
+							}
+					  }
+					| undefined
+				ollama?:
+					| {
+							[x: string]: {
+								dimension: number
+							}
+					  }
+					| undefined
+		  }
+		| undefined
 	codebaseIndexConfig?:
 		| {
 				codebaseIndexEnabled?: boolean | undefined

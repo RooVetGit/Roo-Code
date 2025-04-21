@@ -10,7 +10,7 @@ import { Payload, VectorStoreSearchResult } from "../interfaces"
  */
 export class QdrantVectorStore implements IVectorStore {
 	private readonly QDRANT_URL = "http://localhost:6333"
-	private readonly VECTOR_SIZE = 1536
+	private readonly vectorSize!: number
 	private readonly DISTANCE_METRIC = "Cosine"
 
 	private client: QdrantClient
@@ -21,9 +21,9 @@ export class QdrantVectorStore implements IVectorStore {
 	 * @param workspacePath Path to the workspace
 	 * @param url Optional URL to the Qdrant server
 	 */
-	constructor(workspacePath: string, url?: string, apiKey?: string) {
+	constructor(workspacePath: string, url: string, vectorSize: number, apiKey?: string) {
 		this.client = new QdrantClient({
-			url: url || this.QDRANT_URL,
+			url: url ?? this.QDRANT_URL,
 			apiKey,
 			headers: {
 				"User-Agent": "Roo-Code",
@@ -32,6 +32,7 @@ export class QdrantVectorStore implements IVectorStore {
 
 		// Generate collection name from workspace path
 		const hash = createHash("sha256").update(workspacePath).digest("hex")
+		this.vectorSize = vectorSize
 		this.collectionName = `ws-${hash.substring(0, 16)}`
 	}
 
@@ -50,7 +51,7 @@ export class QdrantVectorStore implements IVectorStore {
 			if (!collectionExists) {
 				await this.client.createCollection(this.collectionName, {
 					vectors: {
-						size: this.VECTOR_SIZE,
+						size: this.vectorSize,
 						distance: this.DISTANCE_METRIC,
 					},
 				})

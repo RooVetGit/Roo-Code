@@ -88,8 +88,18 @@ export class CodeIndexManager {
 	 * Loads persisted configuration from globalState.
 	 */
 	public async loadConfiguration(): Promise<void> {
-		const { requiresRestart } = await this._configManager.loadConfiguration()
-		if (requiresRestart) {
+		const { requiresRestart, requiresClear } = await this._configManager.loadConfiguration()
+
+		if (requiresClear) {
+			console.log("[CodeIndexManager] Embedding dimension changed. Clearing existing index data...")
+			await this.clearIndexData()
+			// No need to explicitly set requiresRestart = true, as requiresClear implies a restart need.
+		}
+
+		if (requiresRestart || requiresClear) {
+			console.log(
+				`[CodeIndexManager] Configuration change requires restart (Restart: ${requiresRestart}, Dimension Changed: ${requiresClear}). Starting indexing...`,
+			)
 			await this.startIndexing()
 		}
 	}
