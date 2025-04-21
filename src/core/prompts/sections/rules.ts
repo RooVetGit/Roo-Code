@@ -15,12 +15,8 @@ function getEditingInstructions(diffStrategy?: DiffStrategy, experiments?: Recor
 	}
 
 	availableTools.push("append_to_file (for appending content to the end of files)")
-
 	availableTools.push("insert_content (for adding lines to existing files)")
-
-	if (experiments?.["search_and_replace"]) {
-		availableTools.push("search_and_replace (for finding and replacing individual pieces of text)")
-	}
+	availableTools.push("search_and_replace (for finding and replacing individual pieces of text)")
 
 	// Base editing instruction mentioning all available tools
 	if (availableTools.length > 1) {
@@ -35,11 +31,9 @@ function getEditingInstructions(diffStrategy?: DiffStrategy, experiments?: Recor
 		"- The insert_content tool adds lines of text to files at a specific line number, such as adding a new function to a JavaScript file or inserting a new route in a Python file. Use line number 0 to append at the end of the file, or any positive number to insert before that line.",
 	)
 
-	if (experiments?.["search_and_replace"]) {
-		instructions.push(
-			"- The search_and_replace tool finds and replaces text or regex in files. This tool allows you to search for a specific regex pattern or text and replace it with another value. Be cautious when using this tool to ensure you are replacing the correct text. It can support multiple operations at once.",
-		)
-	}
+	instructions.push(
+		"- The search_and_replace tool finds and replaces text or regex in files. This tool allows you to search for a specific regex pattern or text and replace it with another value. Be cautious when using this tool to ensure you are replacing the correct text. It can support multiple operations at once.",
+	)
 
 	if (availableTools.length > 1) {
 		instructions.push(

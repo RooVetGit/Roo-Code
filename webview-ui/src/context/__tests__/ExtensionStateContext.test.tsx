@@ -207,9 +207,7 @@ describe("mergeExtensionState", () => {
 		const prevState: ExtensionState = {
 			...baseState,
 			apiConfiguration: { modelMaxTokens: 1234, modelMaxThinkingTokens: 123 },
-			experiments: {
-				search_and_replace: true,
-			} as Record<ExperimentId, boolean>,
+			experiments: {} as Record<ExperimentId, boolean>,
 		}
 
 		const newState: ExtensionState = {
@@ -228,7 +226,6 @@ describe("mergeExtensionState", () => {
 		})
 
 		expect(result.experiments).toEqual({
-			search_and_replace: true,
 			powerSteering: true,
 		})
 	})
