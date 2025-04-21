@@ -18,7 +18,7 @@ jest.mock("@vscode/webview-ui-toolkit/react", () => ({
 }))
 
 // Mock the ExtensionStateContext
-jest.mock("../../../context/ExtensionStateContext", () => ({
+jest.mock("@src/context/ExtensionStateContext", () => ({
 	useExtensionState: () => ({
 		apiConfiguration: {
 			apiProvider: "anthropic",

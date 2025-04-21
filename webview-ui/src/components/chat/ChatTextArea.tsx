@@ -17,7 +17,7 @@ import {
 	removeMention,
 	shouldShowContextMenu,
 	SearchResult,
-} from "@/utils/context-mentions"
+} from "@src/utils/context-mentions"
 import { convertToMentionPath } from "@/utils/path-mentions"
 import { SelectDropdown, DropdownOptionType, Button } from "@/components/ui"
 
