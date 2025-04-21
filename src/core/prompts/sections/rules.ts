@@ -14,16 +14,12 @@ function getEditingInstructions(diffStrategy?: DiffStrategy, experiments?: Recor
 		availableTools.push("write_to_file (for creating new files or complete file rewrites)")
 	}
 
-	availableTools.push("append_to_file (for appending content to the end of files)")
 	availableTools.push("insert_content (for adding lines to existing files)")
 	availableTools.push("search_and_replace (for finding and replacing individual pieces of text)")
 
 	// Base editing instruction mentioning all available tools
 	if (availableTools.length > 1) {
-		instructions.push(
-			`- For editing files, you have access to these tools: ${availableTools.join(", ")}.`,
-			"- The append_to_file tool adds content to the end of files, such as appending new log entries or adding new data records. This tool will always add the content at the end of the file.",
-		)
+		instructions.push(`- For editing files, you have access to these tools: ${availableTools.join(", ")}.`)
 	}
 
 	// Additional details for experimental features
