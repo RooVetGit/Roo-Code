@@ -26,6 +26,7 @@
 		"notifications": "Notificações",
 		"contextManagement": "Gestão de contexto",
 		"terminal": "Terminal",
+		"miscellaneous": "Diversos",
 		"advanced": "Avançado",
 		"experimental": "Recursos experimentais",
 		"language": "Idioma",
@@ -334,6 +335,13 @@
 		"zshP10k": {
 			"label": "Ativar integração Powerlevel10k",
 			"description": "Quando ativado, define POWERLEVEL9K_TERM_SHELL_INTEGRATION=true para habilitar os recursos de integração do shell Powerlevel10k. (experimental)"
+		}
+	},
+	"miscellaneous": {
+		"description": "Várias configurações que não se encaixam em outras categorias.",
+		"stickyModes": {
+			"label": "Ativar modos fixos",
+			"description": "Quando ativado, o Roo lembrará o último modelo usado para cada modo e o selecionará automaticamente ao retornar a esse modo."
 		}
 	},
 	"advanced": {

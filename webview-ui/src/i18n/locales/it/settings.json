@@ -26,6 +26,7 @@
 		"notifications": "Notifiche",
 		"contextManagement": "Gestione del contesto",
 		"terminal": "Terminal",
+		"miscellaneous": "Varie",
 		"advanced": "Avanzate",
 		"experimental": "Funzionalità sperimentali",
 		"language": "Lingua",
@@ -334,6 +335,13 @@
 		"zshP10k": {
 			"label": "Abilita integrazione Powerlevel10k",
 			"description": "Quando abilitato, imposta POWERLEVEL9K_TERM_SHELL_INTEGRATION=true per abilitare le funzionalità di integrazione della shell Powerlevel10k. (sperimentale)"
+		}
+	},
+	"miscellaneous": {
+		"description": "Impostazioni varie che non rientrano in altre categorie.",
+		"stickyModes": {
+			"label": "Abilita modalità sticky",
+			"description": "Quando abilitato, Roo ricorderà l'ultimo modello usato per ogni modalità e lo selezionerà automaticamente quando si torna a quella modalità."
 		}
 	},
 	"advanced": {

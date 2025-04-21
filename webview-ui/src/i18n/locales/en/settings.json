@@ -26,6 +26,7 @@
 		"notifications": "Notifications",
 		"contextManagement": "Context Management",
 		"terminal": "Terminal",
+		"miscellaneous": "Miscellaneous",
 		"advanced": "Advanced",
 		"experimental": "Experimental Features",
 		"language": "Language",
@@ -334,6 +335,13 @@
 		"zdotdir": {
 			"label": "Enable ZDOTDIR handling",
 			"description": "When enabled, creates a temporary directory for ZDOTDIR to handle zsh shell integration properly. This ensures VSCode shell integration works correctly with zsh while preserving your zsh configuration. (experimental)"
+		}
+	},
+	"miscellaneous": {
+		"description": "Various settings that don't fit into other categories.",
+		"stickyModes": {
+			"label": "Enable sticky modes",
+			"description": "When enabled, Roo will remember the last used model for each mode and automatically select it when switching back to that mode."
 		}
 	},
 	"advanced": {

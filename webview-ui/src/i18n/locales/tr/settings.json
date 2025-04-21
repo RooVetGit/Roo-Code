@@ -26,6 +26,7 @@
 		"notifications": "Bildirimler",
 		"contextManagement": "Bağlam Yönetimi",
 		"terminal": "Terminal",
+		"miscellaneous": "Diğer",
 		"advanced": "Gelişmiş",
 		"experimental": "Deneysel Özellikler",
 		"language": "Dil",
@@ -334,6 +335,13 @@
 		"zshP10k": {
 			"label": "Powerlevel10k entegrasyonunu etkinleştir",
 			"description": "Etkinleştirildiğinde, Powerlevel10k kabuk entegrasyon özelliklerini etkinleştirmek için POWERLEVEL9K_TERM_SHELL_INTEGRATION=true ayarlar. (deneysel)"
+		}
+	},
+	"miscellaneous": {
+		"description": "Diğer kategorilere uymayan çeşitli ayarlar.",
+		"stickyModes": {
+			"label": "Yapışkan modları etkinleştir",
+			"description": "Etkinleştirildiğinde, Roo her mod için en son kullanılan modeli hatırlar ve o moda geri döndüğünüzde otomatik olarak seçer."
 		}
 	},
 	"advanced": {

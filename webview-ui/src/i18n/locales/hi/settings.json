@@ -26,6 +26,7 @@
 		"notifications": "सूचनाएँ",
 		"contextManagement": "संदर्भ प्रबंधन",
 		"terminal": "टर्मिनल",
+		"miscellaneous": "विविध",
 		"advanced": "उन्नत",
 		"experimental": "प्रायोगिक सुविधाएँ",
 		"language": "भाषा",
@@ -334,6 +335,13 @@
 		"zshP10k": {
 			"label": "Powerlevel10k एकीकरण सक्षम करें",
 			"description": "सक्षम होने पर, Powerlevel10k शेल एकीकरण सुविधाओं को सक्षम करने के लिए POWERLEVEL9K_TERM_SHELL_INTEGRATION=true सेट करता है। (प्रयोगात्मक)"
+		}
+	},
+	"miscellaneous": {
+		"description": "ऐसे विभिन्न सेटिंग्स जो अन्य श्रेणियों में फिट नहीं होती हैं।",
+		"stickyModes": {
+			"label": "स्टिकी मोड सक्षम करें",
+			"description": "सक्षम होने पर, Roo प्रत्येक मोड के लिए अंतिम उपयोग किए गए मॉडल को याद रखेगा और उस मोड पर वापस स्विच करते समय स्वचालित रूप से इसे चुनेगा।"
 		}
 	},
 	"advanced": {

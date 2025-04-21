@@ -27,6 +27,7 @@
 		"notifications": "通知",
 		"contextManagement": "上下文管理",
 		"terminal": "终端",
+		"miscellaneous": "其他",
 		"advanced": "高级",
 		"experimental": "实验性功能",
 		"language": "语言",
@@ -334,6 +335,13 @@
 		"zshP10k": {
 			"label": "启用 Powerlevel10k 集成",
 			"description": "启用后，设置 POWERLEVEL9K_TERM_SHELL_INTEGRATION=true 以启用 Powerlevel10k shell 集成功能。（实验性）"
+		}
+	},
+	"miscellaneous": {
+		"description": "各种不适合其他类别的设置。",
+		"stickyModes": {
+			"label": "启用粘性模式",
+			"description": "启用后，Roo将记住每个模式最后使用的模型，并在切换回该模式时自动选择它。"
 		}
 	},
 	"advanced": {

@@ -26,6 +26,7 @@
 		"notifications": "Thông báo",
 		"contextManagement": "Quản lý ngữ cảnh",
 		"terminal": "Terminal",
+		"miscellaneous": "Khác",
 		"advanced": "Nâng cao",
 		"experimental": "Tính năng thử nghiệm",
 		"language": "Ngôn ngữ",
@@ -334,6 +335,13 @@
 		"zshP10k": {
 			"label": "Bật tích hợp Powerlevel10k",
 			"description": "Khi được bật, đặt POWERLEVEL9K_TERM_SHELL_INTEGRATION=true để kích hoạt các tính năng tích hợp shell của Powerlevel10k. (thử nghiệm)"
+		}
+	},
+	"miscellaneous": {
+		"description": "Các cài đặt khác không thuộc các danh mục khác.",
+		"stickyModes": {
+			"label": "Bật chế độ dính",
+			"description": "Khi được bật, Roo sẽ ghi nhớ mô hình được sử dụng cuối cùng cho mỗi chế độ và tự động chọn nó khi chuyển trở lại chế độ đó."
 		}
 	},
 	"advanced": {

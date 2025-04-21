@@ -26,6 +26,7 @@
 		"notifications": "알림",
 		"contextManagement": "컨텍스트 관리",
 		"terminal": "터미널",
+		"miscellaneous": "기타",
 		"advanced": "고급",
 		"experimental": "실험적 기능",
 		"language": "언어",
@@ -334,6 +335,13 @@
 		"zshP10k": {
 			"label": "Powerlevel10k 통합 활성화",
 			"description": "활성화하면 POWERLEVEL9K_TERM_SHELL_INTEGRATION=true를 설정하여 Powerlevel10k 셸 통합 기능을 활성화합니다. (실험적)"
+		}
+	},
+	"miscellaneous": {
+		"description": "다른 카테고리에 속하지 않는 다양한 설정입니다.",
+		"stickyModes": {
+			"label": "스티키 모드 활성화",
+			"description": "활성화하면 Roo가 각 모드에서 마지막으로 사용한 모델을 기억하고 해당 모드로 다시 전환할 때 자동으로 선택합니다."
 		}
 	},
 	"advanced": {

@@ -26,6 +26,7 @@
 		"notifications": "通知",
 		"contextManagement": "コンテキスト管理",
 		"terminal": "ターミナル",
+		"miscellaneous": "その他",
 		"advanced": "詳細設定",
 		"experimental": "実験的機能",
 		"language": "言語",
@@ -334,6 +335,13 @@
 		"zshP10k": {
 			"label": "Powerlevel10k 統合を有効化",
 			"description": "有効にすると、POWERLEVEL9K_TERM_SHELL_INTEGRATION=true を設定して Powerlevel10k シェル統合機能を有効にします。（実験的）"
+		}
+	},
+	"miscellaneous": {
+		"description": "その他のカテゴリに該当しないさまざまな設定。",
+		"stickyModes": {
+			"label": "スティッキーモードを有効にする",
+			"description": "有効にすると、Rooは各モードで最後に使用したモデルを記憶し、そのモードに戻ったときに自動的に選択します。"
 		}
 	},
 	"advanced": {

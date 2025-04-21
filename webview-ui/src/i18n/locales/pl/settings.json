@@ -26,6 +26,7 @@
 		"notifications": "Powiadomienia",
 		"contextManagement": "Zarządzanie kontekstem",
 		"terminal": "Terminal",
+		"miscellaneous": "Różne",
 		"advanced": "Zaawansowane",
 		"experimental": "Funkcje eksperymentalne",
 		"language": "Język",
@@ -334,6 +335,13 @@
 		"zshP10k": {
 			"label": "Włącz integrację Powerlevel10k",
 			"description": "Po włączeniu ustawia POWERLEVEL9K_TERM_SHELL_INTEGRATION=true, aby włączyć funkcje integracji powłoki Powerlevel10k. (eksperymentalne)"
+		}
+	},
+	"miscellaneous": {
+		"description": "Różne ustawienia, które nie pasują do innych kategorii.",
+		"stickyModes": {
+			"label": "Włącz tryby przyklejone",
+			"description": "Po włączeniu Roo zapamięta ostatnio używany model dla każdego trybu i automatycznie go wybierze po powrocie do tego trybu."
 		}
 	},
 	"advanced": {
