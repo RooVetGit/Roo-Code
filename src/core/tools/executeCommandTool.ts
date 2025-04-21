@@ -1,17 +1,17 @@
 import fs from "fs/promises"
 import * as path from "path"
 
+import delay from "delay"
+
 import { Cline } from "../Cline"
 import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag, ToolResponse } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
-import { VSCodeCommandExecutor } from "../command-executors/VSCodeCommandExecutor"
 import { Terminal } from "../../integrations/terminal/Terminal"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
-import delay from "delay"
 import { ExitCodeDetails } from "../../integrations/terminal/TerminalProcess"
 import { execaCommandExecutor } from "../command-executors/ExecaCommandExecutor"
-import { vsCodeCommandExecutor } from "../command-executors/VSCodeCommandExecutor"
+// import { vsCodeCommandExecutor } from "../command-executors/VSCodeCommandExecutor"
 
 export async function executeCommandTool(
 	cline: Cline,
