@@ -277,8 +277,18 @@ describe("importExport", () => {
 	it("should call updateCustomMode for each custom mode in config", async () => {
 		;(vscode.window.showOpenDialog as jest.Mock).mockResolvedValue([{ fsPath: "/mock/path/settings.json" }])
 		const customModes = [
-			{ slug: "mode1", name: "Mode One" },
-			{ slug: "mode2", name: "Mode Two" },
+			{
+				slug: "mode1",
+				name: "Mode One",
+				roleDefinition: "Custom role one",
+				groups: [],
+			},
+			{
+				slug: "mode2",
+				name: "Mode Two",
+				roleDefinition: "Custom role two",
+				groups: [],
+			},
 		]
 		const mockFileContent = JSON.stringify({
 			providerProfiles: {
