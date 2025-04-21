@@ -40,6 +40,11 @@ export interface IVectorStore {
 	clearCollection(): Promise<void>
 
 	/**
+	 * Deletes the entire collection.
+	 */
+	deleteCollection(): Promise<void>
+
+	/**
 	 * Checks if the collection exists
 	 * @returns Promise resolving to boolean indicating if the collection exists
 	 */

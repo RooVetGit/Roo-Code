@@ -146,6 +146,24 @@ export class QdrantVectorStore implements IVectorStore {
 	}
 
 	/**
+	 * Deletes the entire collection.
+	 */
+	async deleteCollection(): Promise<void> {
+		try {
+			// Check if collection exists before attempting deletion to avoid errors
+			if (await this.collectionExists()) {
+				await this.client.deleteCollection(this.collectionName)
+				console.log(`[QdrantVectorStore] Collection ${this.collectionName} deleted.`)
+			} else {
+				console.log(`[QdrantVectorStore] Collection ${this.collectionName} does not exist, skipping deletion.`)
+			}
+		} catch (error) {
+			console.error(`[QdrantVectorStore] Failed to delete collection ${this.collectionName}:`, error)
+			throw error // Re-throw to allow calling code to handle it
+		}
+	}
+
+	/**
 	 * Clears all points from the collection
 	 */
 	async clearCollection(): Promise<void> {

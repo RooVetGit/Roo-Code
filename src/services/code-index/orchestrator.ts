@@ -217,8 +217,8 @@ export class CodeIndexOrchestrator {
 						this._vectorStore = services.vectorStore
 					}
 
-					await this._vectorStore.clearCollection()
-					console.log("[CodeIndexOrchestrator] Vector collection cleared.")
+					await this._vectorStore.deleteCollection()
+					console.log("[CodeIndexOrchestrator] Vector collection deleted.")
 				} else {
 					console.warn("[CodeIndexOrchestrator] Service not configured, skipping vector collection clear.")
 				}
