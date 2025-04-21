@@ -682,9 +682,13 @@ export const geminiModels = {
 		maxTokens: 65_535,
 		contextWindow: 1_048_576,
 		supportsImages: true,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 2.5,
 		outputPrice: 15,
+		// Context caching price:
+		// $0.31, prompts <= 200k tokens
+		// $0.625, prompts > 200k
+		// $4.50 / 1,000,000 tokens per hour
 	},
 	"gemini-2.0-flash-001": {
 		maxTokens: 8192,

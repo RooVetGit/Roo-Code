@@ -1075,7 +1075,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			return { role, content }
 		})
 
-		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory)
+		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory, this.taskId)
 		const iterator = stream[Symbol.asyncIterator]()
 
 		try {
