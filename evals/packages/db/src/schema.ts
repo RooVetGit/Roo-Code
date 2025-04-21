@@ -2,7 +2,14 @@ import { sqliteTable, text, real, integer, blob, uniqueIndex } from "drizzle-orm
 import { relations } from "drizzle-orm"
 import { createInsertSchema } from "drizzle-zod"
 
-import { RooCodeSettings, ToolUsage, exerciseLanguages, rooCodeSettingsSchema, toolUsageSchema } from "@evals/types"
+import {
+	RooCodeSettings,
+	ToolUsage,
+	exerciseLanguages,
+	rooCodeSettingsSchema,
+	toolNames,
+	toolUsageSchema,
+} from "@evals/types"
 
 /**
  * runs
@@ -97,6 +104,24 @@ export const insertTaskMetricsSchema = createInsertSchema(taskMetrics)
 export type InsertTaskMetrics = Omit<typeof taskMetrics.$inferInsert, "id" | "createdAt">
 
 export type UpdateTaskMetrics = Partial<Omit<TaskMetrics, "id" | "createdAt">>
+
+/**
+ * toolErrors
+ */
+
+export const toolErrors = sqliteTable("toolErrors", {
+	id: integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
+	runId: integer({ mode: "number" }).references(() => runs.id),
+	taskId: integer({ mode: "number" }).references(() => tasks.id),
+	toolName: text({ enum: toolNames }).notNull(),
+	error: text().notNull(),
+	createdAt: integer({ mode: "timestamp" }).notNull(),
+})
+
+export const toolErrorsRelations = relations(toolErrors, ({ one }) => ({
+	run: one(runs, { fields: [toolErrors.runId], references: [runs.id] }),
+	task: one(tasks, { fields: [toolErrors.taskId], references: [tasks.id] }),
+}))
 
 /**
  * schema
