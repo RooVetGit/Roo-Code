@@ -311,9 +311,37 @@ export class MetadataScanner {
 		parentPath: string = "",
 	): Promise<void> {
 		try {
-			const entries = await fs.readdir(packageDir, { withFileTypes: true })
+			// First check for explicitly listed items in package metadata
+			const metadataPath = path.join(packageDir, "metadata.en.yml")
+			try {
+				const content = await fs.readFile(metadataPath, "utf-8")
+				const parsed = yaml.load(content) as PackageMetadata
 
-			// Process directories sequentially
+				if (parsed.items) {
+					for (const item of parsed.items) {
+						// For relative paths starting with ../, resolve from package directory
+						const itemPath = path.join(packageDir, item.path)
+						const subMetadata = await this.loadComponentMetadata(itemPath)
+						if (subMetadata) {
+							const localizedSubMetadata = this.getLocalizedMetadata(subMetadata)
+							if (localizedSubMetadata) {
+								packageItem.items = packageItem.items || []
+								packageItem.items.push({
+									type: localizedSubMetadata.type,
+									path: item.path,
+									metadata: localizedSubMetadata,
+									lastUpdated: await this.getLastModifiedDate(itemPath),
+								})
+							}
+						}
+					}
+				}
+			} catch (error) {
+				// Ignore errors reading metadata.en.yml - we'll still scan subdirectories
+			}
+
+			// Then scan subdirectories for implicit components
+			const entries = await fs.readdir(packageDir, { withFileTypes: true })
 			for (const entry of entries) {
 				if (!entry.isDirectory()) continue
 
