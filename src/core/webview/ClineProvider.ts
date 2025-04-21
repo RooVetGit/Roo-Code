@@ -28,10 +28,10 @@ import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { HistoryItem } from "../../shared/HistoryItem"
 import { ExtensionMessage } from "../../shared/ExtensionMessage"
-import { Mode, PromptComponent, defaultModeSlug, getModeBySlug, getGroupName } from "../../shared/modes"
+import { Mode, PromptComponent, defaultModeSlug } from "../../shared/modes"
 import { experimentDefault } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
-import { Terminal, TERMINAL_SHELL_INTEGRATION_TIMEOUT } from "../../integrations/terminal/Terminal"
+import { Terminal, DEFAULT_TERMINAL_SHELL_INTEGRATION_TIMEOUT } from "../../integrations/terminal/Terminal"
 import { downloadTask } from "../../integrations/misc/export-markdown"
 import { getTheme } from "../../integrations/theme/getTheme"
 import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
@@ -370,7 +370,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			}) => {
 				setSoundEnabled(soundEnabled ?? false)
 				Terminal.setShellIntegrationTimeout(
-					terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT,
+					terminalShellIntegrationTimeout ?? DEFAULT_TERMINAL_SHELL_INTEGRATION_TIMEOUT,
 				)
 				Terminal.setCommandDelay(terminalCommandDelay ?? 0)
 				Terminal.setTerminalZshClearEolMark(terminalZshClearEolMark ?? true)
@@ -1274,7 +1274,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			cachedChromeHostUrl: cachedChromeHostUrl,
 			writeDelayMs: writeDelayMs ?? 1000,
 			terminalOutputLineLimit: terminalOutputLineLimit ?? 500,
-			terminalShellIntegrationTimeout: terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT,
+			terminalShellIntegrationTimeout:
+				terminalShellIntegrationTimeout ?? DEFAULT_TERMINAL_SHELL_INTEGRATION_TIMEOUT,
 			terminalCommandDelay: terminalCommandDelay ?? 0,
 			terminalPowershellCounter: terminalPowershellCounter ?? false,
 			terminalZshClearEolMark: terminalZshClearEolMark ?? true,
@@ -1367,7 +1368,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			writeDelayMs: stateValues.writeDelayMs ?? 1000,
 			terminalOutputLineLimit: stateValues.terminalOutputLineLimit ?? 500,
 			terminalShellIntegrationTimeout:
-				stateValues.terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT,
+				stateValues.terminalShellIntegrationTimeout ?? DEFAULT_TERMINAL_SHELL_INTEGRATION_TIMEOUT,
 			terminalCommandDelay: stateValues.terminalCommandDelay ?? 0,
 			terminalPowershellCounter: stateValues.terminalPowershellCounter ?? false,
 			terminalZshClearEolMark: stateValues.terminalZshClearEolMark ?? true,

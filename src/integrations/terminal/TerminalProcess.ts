@@ -94,6 +94,7 @@ export interface ExitCodeDetails {
 	signalName?: string
 	coreDumpPossible?: boolean
 }
+
 import { Terminal } from "./Terminal"
 
 export interface TerminalProcessEvents {
@@ -123,6 +124,7 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 	private lastRetrievedIndex: number = 0
 	isHot: boolean = false
 	command: string = ""
+
 	constructor(terminal: Terminal) {
 		super()
 
@@ -240,6 +242,7 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 			coreDumpPossible: coreDumpPossible.has(signal),
 		}
 	}
+
 	private hotTimer: NodeJS.Timeout | null = null
 
 	async run(command: string) {
@@ -485,6 +488,7 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 	private emitRemainingBufferIfListening() {
 		if (this.isListening) {
 			const remainingBuffer = this.getUnretrievedOutput()
+
 			if (remainingBuffer !== "") {
 				this.emit("line", remainingBuffer)
 			}

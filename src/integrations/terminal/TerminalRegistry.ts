@@ -1,11 +1,18 @@
 import * as vscode from "vscode"
 import * as path from "path"
+
 import { arePathsEqual } from "../../utils/path"
 import { Terminal } from "./Terminal"
 import { TerminalProcess } from "./TerminalProcess"
 
-// Although vscode.window.terminals provides a list of all open terminals, there's no way to know whether they're busy or not (exitStatus does not provide useful information for most commands). In order to prevent creating too many terminals, we need to keep track of terminals through the life of the extension, as well as session specific terminals for the life of a task (to get latest unretrieved output).
-// Since we have promises keeping track of terminal processes, we get the added benefit of keep track of busy terminals even after a task is closed.
+// Although vscode.window.terminals provides a list of all open terminals,
+// there's no way to know whether they're busy or not (exitStatus does not
+// provide useful information for most commands). In order to prevent creating
+// too many terminals, we need to keep track of terminals through the life of
+// the extension, as well as session specific terminals for the life of a task
+// (to get latest unretrieved output).
+// Since we have promises keeping track of terminal processes, we get the added
+// benefit of keep track of busy terminals even after a task is closed.
 export class TerminalRegistry {
 	private static terminals: Terminal[] = []
 	private static nextTerminalId = 1
@@ -17,11 +24,13 @@ export class TerminalRegistry {
 		if (this.isInitialized) {
 			throw new Error("TerminalRegistry.initialize() should only be called once")
 		}
+
 		this.isInitialized = true
 
 		// Register handler for terminal close events to clean up temporary directories
 		const closeDisposable = vscode.window.onDidCloseTerminal((terminal) => {
 			const terminalInfo = this.getTerminalByVSCETerminal(terminal)
+
 			if (terminalInfo) {
 				// Clean up temporary directory if it exists
 				if (this.terminalTmpDirs.has(terminalInfo.id)) {
@@ -29,6 +38,7 @@ export class TerminalRegistry {
 				}
 			}
 		})
+
 		this.disposables.push(closeDisposable)
 
 		try {

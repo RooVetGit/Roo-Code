@@ -1,11 +1,13 @@
 import * as vscode from "vscode"
 import pWaitFor from "p-wait-for"
+
 import { ExitCodeDetails, mergePromise, TerminalProcess, TerminalProcessResultPromise } from "./TerminalProcess"
 import { truncateOutput, applyRunLengthEncoding } from "../misc/extract-text"
-// Import TerminalRegistry here to avoid circular dependencies
+
+// Import TerminalRegistry here to avoid circular dependencies.
 const { TerminalRegistry } = require("./TerminalRegistry")
 
-export const TERMINAL_SHELL_INTEGRATION_TIMEOUT = 5000
+export const DEFAULT_TERMINAL_SHELL_INTEGRATION_TIMEOUT = 5_000
 
 export interface CommandCallbacks {
 	onLine?: (line: string, process: TerminalProcess) => void
@@ -15,7 +17,7 @@ export interface CommandCallbacks {
 }
 
 export class Terminal {
-	private static shellIntegrationTimeout: number = TERMINAL_SHELL_INTEGRATION_TIMEOUT
+	private static shellIntegrationTimeout: number = DEFAULT_TERMINAL_SHELL_INTEGRATION_TIMEOUT
 	private static commandDelay: number = 0
 	private static powershellCounter: boolean = false
 	private static terminalZshClearEolMark: boolean = true
@@ -212,7 +214,9 @@ export class Terminal {
 			})
 
 			// Wait for shell integration before executing the command
-			pWaitFor(() => this.terminal.shellIntegration !== undefined, { timeout: Terminal.shellIntegrationTimeout })
+			pWaitFor(() => this.terminal.shellIntegration !== undefined, {
+				timeout: Terminal.getShellIntegrationTimeout(),
+			})
 				.then(() => {
 					// Clean up temporary directory if shell integration is available, zsh did its job:
 					TerminalRegistry.zshCleanupTmpDir(this.id)
@@ -222,11 +226,13 @@ export class Terminal {
 				})
 				.catch(() => {
 					console.log(`[Terminal ${this.id}] Shell integration not available. Command execution aborted.`)
+
 					// Clean up temporary directory if shell integration is not available
 					TerminalRegistry.zshCleanupTmpDir(this.id)
+
 					process.emit(
 						"no_shell_integration",
-						`Shell integration initialization sequence '\\x1b]633;A' was not received within ${Terminal.shellIntegrationTimeout / 1000}s. Shell integration has been disabled for this terminal instance. Increase the timeout in the settings if necessary.`,
+						`Shell integration initialization sequence '\\x1b]633;A' was not received within ${Terminal.getShellIntegrationTimeout() / 1000}s. Shell integration has been disabled for this terminal instance. Increase the timeout in the settings if necessary.`,
 					)
 				})
 		})
@@ -297,7 +303,7 @@ export class Terminal {
 	}
 
 	public static getShellIntegrationTimeout(): number {
-		return Terminal.shellIntegrationTimeout
+		return Math.min(Terminal.shellIntegrationTimeout, DEFAULT_TERMINAL_SHELL_INTEGRATION_TIMEOUT)
 	}
 
 	/**

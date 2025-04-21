@@ -80,14 +80,14 @@ export const TerminalSettings = ({
 					</label>
 					<div className="flex items-center gap-2">
 						<Slider
-							min={1000}
-							max={60000}
-							step={1000}
-							value={[terminalShellIntegrationTimeout ?? 5000]}
+							min={5_000}
+							max={60_000}
+							step={1_000}
+							value={[terminalShellIntegrationTimeout ?? 5_000]}
 							onValueChange={([value]) =>
 								setCachedStateField(
 									"terminalShellIntegrationTimeout",
-									Math.min(60000, Math.max(1000, value)),
+									Math.min(60_000, Math.max(5_000, value)),
 								)
 							}
 						/>
