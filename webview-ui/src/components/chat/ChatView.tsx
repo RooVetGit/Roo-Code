@@ -74,6 +74,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		alwaysAllowWriteOutsideWorkspace,
 		alwaysAllowExecute,
 		alwaysAllowMcp,
+		alwaysAllowExtTools,
 		allowedCommands,
 		writeDelayMs,
 		mode,
@@ -247,6 +248,13 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							setPrimaryButtonText(t("chat:approve.title"))
 							setSecondaryButtonText(t("chat:reject.title"))
 							break
+						case "use_ext_tool":
+							setTextAreaDisabled(isPartial)
+							setClineAsk("use_ext_tool")
+							setEnableButtons(!isPartial)
+							setPrimaryButtonText(t("chat:approve.title"))
+							setSecondaryButtonText(t("chat:reject.title"))
+							break
 						case "completion_result":
 							// extension waiting for feedback. but we can just present a new task button
 							if (!isPartial) {
@@ -402,6 +410,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						case "command": // User can provide feedback to a tool or command use.
 						case "command_output": // User can send input to command stdin.
 						case "use_mcp_server":
+						case "use_ext_tool":
 						case "completion_result": // If this happens then the user has feedback for the completion result.
 						case "resume_task":
 						case "resume_completed_task":
@@ -448,6 +457,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				case "tool":
 				case "browser_action_launch":
 				case "use_mcp_server":
+				case "use_ext_tool":
 				case "resume_task":
 				case "mistake_limit_reached":
 					// Only send text/images if they exist
@@ -502,6 +512,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				case "tool":
 				case "browser_action_launch":
 				case "use_mcp_server":
+				case "use_ext_tool":
 					// Only send text/images if they exist
 					if (trimmedInput || (images && images.length > 0)) {
 						vscode.postMessage({
@@ -748,6 +759,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				return alwaysAllowMcp && isMcpToolAlwaysAllowed(message)
 			}
 
+			if (message.ask === "use_ext_tool") {
+				return alwaysAllowExtTools
+			}
+
 			if (message.ask === "command") {
 				return alwaysAllowExecute && isAllowedCommand(message)
 			}
@@ -811,6 +826,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			isAllowedCommand,
 			alwaysAllowMcp,
 			isMcpToolAlwaysAllowed,
+			alwaysAllowExtTools,
 			alwaysAllowModeSwitch,
 			alwaysAllowSubtasks,
 		],
@@ -1152,6 +1168,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		alwaysAllowWriteOutsideWorkspace,
 		alwaysAllowExecute,
 		alwaysAllowMcp,
+		alwaysAllowExtTools,
 		messages,
 		allowedCommands,
 		mcpServers,

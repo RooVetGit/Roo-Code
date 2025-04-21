@@ -56,6 +56,7 @@ export const generateSystemPrompt = async (provider: ClineProvider, message: Web
 		cwd,
 		canUseBrowserTool,
 		mcpEnabled ? provider.getMcpHub() : undefined,
+		provider.getExtensionToolManager(),
 		diffStrategy,
 		browserViewportSize ?? "900x600",
 		mode,

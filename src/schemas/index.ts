@@ -42,7 +42,7 @@ export type ProviderName = z.infer<typeof providerNamesSchema>
  * ToolGroup
  */
 
-export const toolGroups = ["read", "edit", "browser", "command", "mcp", "modes"] as const
+export const toolGroups = ["read", "edit", "browser", "command", "mcp", "ext", "modes"] as const
 
 export const toolGroupsSchema = z.enum(toolGroups)
 
@@ -574,6 +574,7 @@ export const globalSettingsSchema = z.object({
 	alwaysApproveResubmit: z.boolean().optional(),
 	requestDelaySeconds: z.number().optional(),
 	alwaysAllowMcp: z.boolean().optional(),
+	alwaysAllowExtTools: z.boolean().optional(),
 	alwaysAllowModeSwitch: z.boolean().optional(),
 	alwaysAllowSubtasks: z.boolean().optional(),
 	alwaysAllowExecute: z.boolean().optional(),
@@ -653,6 +654,7 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	alwaysApproveResubmit: undefined,
 	requestDelaySeconds: undefined,
 	alwaysAllowMcp: undefined,
+	alwaysAllowExtTools: undefined,
 	alwaysAllowModeSwitch: undefined,
 	alwaysAllowSubtasks: undefined,
 	alwaysAllowExecute: undefined,
@@ -800,6 +802,7 @@ export const clineAsks = [
 	"mistake_limit_reached",
 	"browser_action_launch",
 	"use_mcp_server",
+	"use_ext_tool",
 ] as const
 
 export const clineAskSchema = z.enum(clineAsks)
@@ -826,6 +829,8 @@ export const clineSays = [
 	"browser_action_result",
 	"mcp_server_request_started",
 	"mcp_server_response",
+	"extension_tool_request_started",
+	"extension_tool_response",
 	"subtask_result",
 	"checkpoint_saved",
 	"rooignore_error",
@@ -898,6 +903,7 @@ export const toolNames = [
 	"list_code_definition_names",
 	"browser_action",
 	"use_mcp_tool",
+	"use_ext_tool",
 	"access_mcp_resource",
 	"ask_followup_question",
 	"attempt_completion",

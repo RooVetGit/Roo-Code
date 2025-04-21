@@ -20,6 +20,7 @@ import {
 	getObjectiveSection,
 	getSharedToolUseSection,
 	getMcpServersSection,
+	getExtToolsSection,
 	getToolUseGuidelinesSection,
 	getCapabilitiesSection,
 	getModesSection,
@@ -28,6 +29,7 @@ import {
 } from "./sections"
 import { loadSystemPromptFile } from "./sections/custom-system-prompt"
 import { formatLanguage } from "../../shared/language"
+import { ExtensionToolManager } from "../../exports/extensionToolApi"
 
 async function generatePrompt(
 	context: vscode.ExtensionContext,
@@ -35,6 +37,7 @@ async function generatePrompt(
 	supportsComputerUse: boolean,
 	mode: Mode,
 	mcpHub?: McpHub,
+	extensionToolManager?: ExtensionToolManager,
 	diffStrategy?: DiffStrategy,
 	browserViewportSize?: string,
 	promptComponent?: PromptComponent,
@@ -57,10 +60,13 @@ async function generatePrompt(
 	const modeConfig = getModeBySlug(mode, customModeConfigs) || modes.find((m) => m.slug === mode) || modes[0]
 	const roleDefinition = promptComponent?.roleDefinition || modeConfig.roleDefinition
 
-	const [modesSection, mcpServersSection] = await Promise.all([
+	const [modesSection, mcpServersSection, extToolsSection] = await Promise.all([
 		getModesSection(context),
 		modeConfig.groups.some((groupEntry) => getGroupName(groupEntry) === "mcp")
 			? getMcpServersSection(mcpHub, effectiveDiffStrategy, enableMcpServerCreation)
+			: Promise.resolve(""),
+		modeConfig.groups.some((groupEntry) => getGroupName(groupEntry) === "ext")
+			? getExtToolsSection(extensionToolManager)
 			: Promise.resolve(""),
 	])
 
@@ -77,6 +83,7 @@ ${getToolDescriptionsForMode(
 	effectiveDiffStrategy,
 	browserViewportSize,
 	mcpHub,
+	extensionToolManager,
 	customModeConfigs,
 	experiments,
 )}
@@ -84,6 +91,8 @@ ${getToolDescriptionsForMode(
 ${getToolUseGuidelinesSection()}
 
 ${mcpServersSection}
+
+${extToolsSection}
 
 ${getCapabilitiesSection(cwd, supportsComputerUse, mcpHub, effectiveDiffStrategy)}
 
@@ -105,6 +114,7 @@ export const SYSTEM_PROMPT = async (
 	cwd: string,
 	supportsComputerUse: boolean,
 	mcpHub?: McpHub,
+	extensionToolManager?: ExtensionToolManager,
 	diffStrategy?: DiffStrategy,
 	browserViewportSize?: string,
 	mode: Mode = defaultModeSlug,
@@ -172,6 +182,7 @@ ${customInstructions}`
 		supportsComputerUse,
 		currentMode.slug,
 		mcpHub,
+		extensionToolManager,
 		effectiveDiffStrategy,
 		browserViewportSize,
 		promptComponent,
