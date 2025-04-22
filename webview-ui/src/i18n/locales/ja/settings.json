@@ -72,6 +72,24 @@
 	},
 	"autoApprove": {
 		"description": "Rooが承認なしで自動的に操作を実行できるようにします。AIを完全に信頼し、関連するセキュリティリスクを理解している場合にのみ、これらの設定を有効にしてください。",
+		"commandRiskLevel": {
+			"label": "自動実行の許可リスクレベル",
+			"description": "以下の静的に許可されたコマンドに加えて、この設定は自動コマンド実行に許可されるリスクレベルを制御します。AIモデルは実行される各コマンドのリスクを評価するため、システム指示内でリスクレベルを分類する形式的に定義された述語論理規則に従うAIを信頼することになります。上位レベルには、それ以前のすべてのレベルが含まれます。",
+			"disabled": "無効",
+			"disabledDesc": "リスク分析は無効です",
+			"none": "なし",
+			"noneDesc": "リスク分析のみを提供",
+			"readOnly": "読み取り専用",
+			"readOnlyDesc": "安全な読み取り専用操作",
+			"reversibleChanges": "可逆的な変更",
+			"reversibleChangesDesc": "単一コマンドで元に戻すことが可能",
+			"complexChanges": "複雑な変更",
+			"complexChangesDesc": "元に戻すことが容易ではないか不可能ですが、明らかな破壊的変更ではありません",
+			"serviceInterruptingChanges": "サービス中断",
+			"serviceInterruptingChangesDesc": "このホストの可用性やアクセスに影響を与える可能性があります",
+			"destructiveChanges": "破壊的な変更",
+			"destructiveChangesDesc": "データ損失を伴う恒久的な変更"
+		},
 		"readOnly": {
 			"label": "読み取り",
 			"description": "有効にすると、Rooは承認ボタンをクリックすることなく、自動的にディレクトリの内容を表示してファイルを読み取ります。",

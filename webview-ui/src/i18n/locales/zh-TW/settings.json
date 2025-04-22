@@ -72,6 +72,24 @@
 	},
 	"autoApprove": {
 		"description": "允許 Roo 無需核准即執行操作。僅在您完全信任 AI 並了解相關安全風險時啟用這些設定。",
+		"commandRiskLevel": {
+			"label": "允許自動執行的風險等級",
+			"description": "除了下方靜態允許的指令外，此設定控制自動執行指令時允許的風險等級。AI 模型會評估每個執行指令的風險，因此您需要信任 AI 遵循系統指示中正式定義的謂詞邏輯規則來分類風險等級。每個更高級別都包含之前的所有級別。",
+			"disabled": "已停用",
+			"disabledDesc": "風險分析已停用",
+			"none": "無",
+			"noneDesc": "僅提供風險分析",
+			"readOnly": "唯讀",
+			"readOnlyDesc": "安全的唯讀操作",
+			"reversibleChanges": "可逆變更",
+			"reversibleChangesDesc": "可透過單一指令進行反向操作",
+			"complexChanges": "複雜變更",
+			"complexChangesDesc": "還原操作非常困難或不可能，但不會造成明顯破壞",
+			"serviceInterruptingChanges": "服務中斷",
+			"serviceInterruptingChangesDesc": "可能影響此主機的可用性或存取",
+			"destructiveChanges": "破壞性變更",
+			"destructiveChangesDesc": "預期會造成資料遺失的永久性變更"
+		},
 		"readOnly": {
 			"label": "讀取",
 			"description": "啟用後，Roo 將自動檢視目錄內容並讀取檔案，無需點選核准按鈕。",

@@ -72,6 +72,24 @@
 	},
 	"autoApprove": {
 		"description": "Cho phép Roo tự động thực hiện các hoạt động mà không cần phê duyệt. Chỉ bật những cài đặt này nếu bạn hoàn toàn tin tưởng AI và hiểu rõ các rủi ro bảo mật liên quan.",
+		"commandRiskLevel": {
+			"label": "Mức độ rủi ro cho phép tự động thực thi",
+			"description": "Ngoài các lệnh được cho phép tĩnh bên dưới, cài đặt này kiểm soát mức độ rủi ro được phép cho việc tự động thực thi lệnh. Mô hình AI đánh giá rủi ro cho mỗi lệnh được thực thi, vì vậy bạn tin tưởng rằng AI sẽ tuân theo các quy tắc logic vị từ được định nghĩa chính thức để phân loại các mức độ rủi ro trong hướng dẫn hệ thống. Mỗi cấp độ cao hơn bao gồm tất cả các cấp độ trước đó.",
+			"disabled": "Vô hiệu hóa",
+			"disabledDesc": "Phân tích rủi ro bị vô hiệu hóa",
+			"none": "Không",
+			"noneDesc": "Chỉ cung cấp phân tích rủi ro",
+			"readOnly": "Chỉ đọc",
+			"readOnlyDesc": "Các thao tác chỉ đọc an toàn",
+			"reversibleChanges": "Thay đổi có thể hoàn tác",
+			"reversibleChangesDesc": "Có thể thực hiện thao tác ngược lại bằng một lệnh duy nhất",
+			"complexChanges": "Thay đổi phức tạp",
+			"complexChangesDesc": "Việc hoàn tác không đơn giản hoặc không thể, nhưng không rõ ràng là phá hủy",
+			"serviceInterruptingChanges": "Gián đoạn dịch vụ",
+			"serviceInterruptingChangesDesc": "Có thể ảnh hưởng đến khả năng truy cập hoặc sử dụng máy chủ này",
+			"destructiveChanges": "Thay đổi phá hủy",
+			"destructiveChangesDesc": "Thay đổi vĩnh viễn với dự kiến mất dữ liệu"
+		},
 		"readOnly": {
 			"label": "Đọc",
 			"description": "Khi được bật, Roo sẽ tự động xem nội dung thư mục và đọc tệp mà không yêu cầu bạn nhấp vào nút Phê duyệt.",

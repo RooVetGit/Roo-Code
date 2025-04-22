@@ -72,6 +72,24 @@
 	},
 	"autoApprove": {
 		"description": "Roo가 승인 없이 자동으로 작업을 수행할 수 있도록 허용합니다. AI를 완전히 신뢰하고 관련 보안 위험을 이해하는 경우에만 이러한 설정을 활성화하세요.",
+		"commandRiskLevel": {
+			"label": "허용된 자동 실행 위험 수준",
+			"description": "아래의 정적으로 허용된 명령 외에도, 이 설정은 자동 명령 실행에 허용되는 위험 수준을 제어합니다. AI 모델은 실행되는 각 명령에 대한 위험을 평가하므로, AI가 시스템 지침에서 위험 수준을 분류하는 공식적으로 정의된 술어 논리 규칙을 따를 것이라고 신뢰하는 것입니다. 각 상위 수준은 이전의 모든 수준을 포함합니다.",
+			"disabled": "비활성화됨",
+			"disabledDesc": "위험 분석이 비활성화됨",
+			"none": "없음",
+			"noneDesc": "위험 분석만 제공",
+			"readOnly": "읽기 전용",
+			"readOnlyDesc": "안전한 읽기 전용 작업",
+			"reversibleChanges": "되돌릴 수 있는 변경",
+			"reversibleChangesDesc": "단일 명령으로 역작업이 가능함",
+			"complexChanges": "복잡한 변경",
+			"complexChangesDesc": "되돌리기가 간단하지 않거나 불가능하지만, 명백히 파괴적이지는 않음",
+			"serviceInterruptingChanges": "서비스 중단",
+			"serviceInterruptingChangesDesc": "이 호스트의 가용성이나 접근성에 영향을 미칠 수 있음",
+			"destructiveChanges": "파괴적 변경",
+			"destructiveChangesDesc": "데이터 손실이 예상되는 영구적 변경"
+		},
 		"readOnly": {
 			"label": "읽기",
 			"description": "활성화되면 Roo는 승인 버튼을 클릭하지 않고도 자동으로 디렉토리 내용을 보고 파일을 읽습니다.",

@@ -72,6 +72,24 @@
 	},
 	"autoApprove": {
 		"description": "Permitir que Roo realice operaciones automáticamente sin requerir aprobación. Habilite esta configuración solo si confía plenamente en la IA y comprende los riesgos de seguridad asociados.",
+		"commandRiskLevel": {
+			"label": "Nivel de riesgo permitido para ejecución automática",
+			"description": "Además de los comandos permitidos estáticamente a continuación, esta configuración controla el nivel de riesgo permitido para la ejecución automática de comandos. El modelo de IA evalúa el riesgo de cada comando ejecutado, por lo que confías en que la IA siga las reglas de lógica de predicados formalmente definidas que categorizan los niveles de riesgo en las instrucciones del sistema. Cada nivel superior incluye todos los niveles anteriores.",
+			"disabled": "Desactivado",
+			"disabledDesc": "El análisis de riesgo está desactivado",
+			"none": "Ninguno",
+			"noneDesc": "Solo proporcionar análisis de riesgo",
+			"readOnly": "Solo lectura",
+			"readOnlyDesc": "Operaciones seguras de solo lectura",
+			"reversibleChanges": "Cambio reversible",
+			"reversibleChangesDesc": "Es posible una operación inversa con un solo comando",
+			"complexChanges": "Cambio complejo",
+			"complexChangesDesc": "La reversión es no trivial o imposible, pero no abiertamente destructiva",
+			"serviceInterruptingChanges": "Interrupción de servicio",
+			"serviceInterruptingChangesDesc": "Puede afectar la disponibilidad o el acceso a este host",
+			"destructiveChanges": "Cambios destructivos",
+			"destructiveChangesDesc": "Alteración permanente con expectativa de pérdida de datos"
+		},
 		"readOnly": {
 			"label": "Lectura",
 			"description": "Cuando está habilitado, Roo verá automáticamente el contenido del directorio y leerá archivos sin que necesite hacer clic en el botón Aprobar.",

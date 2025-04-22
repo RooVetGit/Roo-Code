@@ -72,6 +72,24 @@
 	},
 	"autoApprove": {
 		"description": "Sta Roo toe om automatisch handelingen uit te voeren zonder goedkeuring. Schakel deze instellingen alleen in als je de AI volledig vertrouwt en de bijbehorende beveiligingsrisico's begrijpt.",
+		"commandRiskLevel": {
+			"label": "Toegestaan risiconiveau voor automatische uitvoering",
+			"description": "Naast de hieronder statisch toegestane opdrachten, bepaalt deze instelling het risiconiveau dat is toegestaan voor automatische opdrachtuitvoering. Het AI-model evalueert het risico voor elke uitgevoerde opdracht, dus je vertrouwt erop dat de AI de formeel gedefinieerde predicaatlogische regels volgt die risiconiveaus categoriseren in de systeeminstructies. Elk hoger niveau omvat alle voorgaande niveaus.",
+			"disabled": "Uitgeschakeld",
+			"disabledDesc": "Risicoanalyse is uitgeschakeld",
+			"none": "Geen",
+			"noneDesc": "Alleen risicoanalyse bieden",
+			"readOnly": "Alleen-lezen",
+			"readOnlyDesc": "Veilige alleen-lezen operaties",
+			"reversibleChanges": "Omkeerbare wijziging",
+			"reversibleChangesDesc": "Een inverse operatie met één opdracht is mogelijk",
+			"complexChanges": "Complexe wijziging",
+			"complexChangesDesc": "Omkering is niet triviaal of onmogelijk, maar niet openlijk destructief",
+			"serviceInterruptingChanges": "Service-onderbrekend",
+			"serviceInterruptingChangesDesc": "Kan de beschikbaarheid of toegang tot deze host beïnvloeden",
+			"destructiveChanges": "Destructieve wijzigingen",
+			"destructiveChangesDesc": "Permanente wijziging met verwachting van gegevensverlies"
+		},
 		"readOnly": {
 			"label": "Lezen",
 			"description": "Indien ingeschakeld, bekijkt Roo automatisch de inhoud van mappen en leest bestanden zonder dat je op de Goedkeuren-knop hoeft te klikken.",

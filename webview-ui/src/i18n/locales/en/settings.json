@@ -78,7 +78,7 @@
 			"disabled": "Disabled",
 			"disabledDesc": "Risk analysis is disabled",
 			"none": "None",
-			"noneDesc": "No risk-evaluated execution is allowed",
+			"noneDesc": "Only provide risk analysis",
 			"readOnly": "Read Only",
 			"readOnlyDesc": "Safe read-only operations",
 			"reversibleChanges": "Reversible Change",

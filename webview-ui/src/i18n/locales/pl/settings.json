@@ -72,6 +72,24 @@
 	},
 	"autoApprove": {
 		"description": "Pozwól Roo na automatyczne wykonywanie operacji bez wymagania zatwierdzenia. Włącz te ustawienia tylko jeśli w pełni ufasz AI i rozumiesz związane z tym zagrożenia bezpieczeństwa.",
+		"commandRiskLevel": {
+			"label": "Dozwolony poziom ryzyka automatycznego wykonania",
+			"description": "Oprócz statycznie dozwolonych poleceń poniżej, to ustawienie kontroluje poziom ryzyka dozwolony dla automatycznego wykonywania poleceń. Model AI ocenia ryzyko dla każdego wykonywanego polecenia, więc ufasz, że AI przestrzega formalnie zdefiniowanych reguł logiki predykatów, które kategoryzują poziomy ryzyka w instrukcjach systemowych. Każdy wyższy poziom zawiera wszystkie poprzednie poziomy.",
+			"disabled": "Wyłączone",
+			"disabledDesc": "Analiza ryzyka jest wyłączona",
+			"none": "Brak",
+			"noneDesc": "Tylko dostarczanie analizy ryzyka",
+			"readOnly": "Tylko do odczytu",
+			"readOnlyDesc": "Bezpieczne operacje tylko do odczytu",
+			"reversibleChanges": "Zmiany odwracalne",
+			"reversibleChangesDesc": "Możliwa jest operacja odwrotna za pomocą jednego polecenia",
+			"complexChanges": "Zmiany złożone",
+			"complexChangesDesc": "Odwrócenie jest nietrywialne lub niemożliwe, ale nie jawnie destrukcyjne",
+			"serviceInterruptingChanges": "Przerwanie usługi",
+			"serviceInterruptingChangesDesc": "Może wpłynąć na dostępność lub dostęp do tego hosta",
+			"destructiveChanges": "Zmiany destrukcyjne",
+			"destructiveChangesDesc": "Trwała zmiana z oczekiwaną utratą danych"
+		},
 		"readOnly": {
 			"label": "Odczyt",
 			"description": "Gdy włączone, Roo automatycznie będzie wyświetlać zawartość katalogów i czytać pliki bez konieczności klikania przycisku Zatwierdź.",

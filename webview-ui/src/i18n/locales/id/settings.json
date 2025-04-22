@@ -72,6 +72,24 @@
 	},
 	"autoApprove": {
 		"description": "Izinkan Roo untuk secara otomatis melakukan operasi tanpa memerlukan persetujuan. Aktifkan pengaturan ini hanya jika kamu sepenuhnya mempercayai AI dan memahami risiko keamanan yang terkait.",
+		"commandRiskLevel": {
+			"label": "Allowed Auto-Execute Risk Level",
+			"description": "Selain perintah yang diizinkan secara statis di bawah ini, pengaturan ini mengontrol tingkat risiko yang diizinkan untuk eksekusi perintah otomatis. Model AI mengevaluasi risiko untuk setiap perintah yang dijalankan, jadi kamu mempercayai AI untuk mengikuti aturan logika predikat yang didefinisikan secara formal yang mengkategorikan tingkat risiko dalam instruksi sistem. Setiap level yang lebih tinggi mencakup semua level sebelumnya.",
+			"disabled": "Dinonaktifkan",
+			"disabledDesc": "Analisis risiko dinonaktifkan",
+			"none": "Tidak Ada",
+			"noneDesc": "Hanya menyediakan analisis risiko",
+			"readOnly": "Hanya Baca",
+			"readOnlyDesc": "Operasi hanya-baca yang aman",
+			"reversibleChanges": "Perubahan Dapat Dibalik",
+			"reversibleChangesDesc": "Operasi pembalikan dengan satu perintah dimungkinkan",
+			"complexChanges": "Perubahan Kompleks",
+			"complexChangesDesc": "Pembalikan tidak sepele atau tidak mungkin, tetapi tidak secara terbuka destruktif",
+			"serviceInterruptingChanges": "Gangguan Layanan",
+			"serviceInterruptingChangesDesc": "Dapat memengaruhi ketersediaan atau akses ke host ini",
+			"destructiveChanges": "Perubahan Destruktif",
+			"destructiveChangesDesc": "Perubahan permanen dengan ekspektasi kehilangan data"
+		},
 		"readOnly": {
 			"label": "Baca",
 			"description": "Ketika diaktifkan, Roo akan secara otomatis melihat konten direktori dan membaca file tanpa memerlukan kamu mengklik tombol Setujui.",

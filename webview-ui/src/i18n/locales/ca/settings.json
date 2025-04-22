@@ -72,6 +72,24 @@
 	},
 	"autoApprove": {
 		"description": "Permet que Roo realitzi operacions automàticament sense requerir aprovació. Activeu aquesta configuració només si confieu plenament en la IA i enteneu els riscos de seguretat associats.",
+		"commandRiskLevel": {
+			"label": "Nivell de risc permès per a l'execució automàtica",
+			"description": "A més de les ordres permeses estàticament a continuació, aquesta configuració controla el nivell de risc permès per a l'execució automàtica d'ordres. El model d'IA avalua el risc per a cada ordre executada, per tant confieu que la IA segueixi les regles de lògica de predicats formalment definides que categoritzen els nivells de risc en les instruccions del sistema. Cada nivell superior inclou tots els nivells anteriors.",
+			"disabled": "Desactivat",
+			"disabledDesc": "L'anàlisi de risc està desactivada",
+			"none": "Cap",
+			"noneDesc": "Només proporciona anàlisi de risc",
+			"readOnly": "Només lectura",
+			"readOnlyDesc": "Operacions segures de només lectura",
+			"reversibleChanges": "Canvi reversible",
+			"reversibleChangesDesc": "És possible una operació inversa amb una sola ordre",
+			"complexChanges": "Canvi complex",
+			"complexChangesDesc": "La reversió és no trivial o impossible, però no obertament destructiva",
+			"serviceInterruptingChanges": "Interrupció del servei",
+			"serviceInterruptingChangesDesc": "Pot afectar la disponibilitat o l'accés a aquest host",
+			"destructiveChanges": "Canvis destructius",
+			"destructiveChangesDesc": "Alteració permanent amb expectativa de pèrdua de dades"
+		},
 		"readOnly": {
 			"label": "Llegir",
 			"description": "Quan està activat, Roo veurà automàticament el contingut del directori i llegirà fitxers sense que calgui fer clic al botó Aprovar.",
