@@ -190,7 +190,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		}
 	}
 
-	private calculateCost({
+	public calculateCost({
 		info,
 		inputTokens,
 		outputTokens,
