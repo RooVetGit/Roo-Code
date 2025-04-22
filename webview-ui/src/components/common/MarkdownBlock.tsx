@@ -2,7 +2,7 @@ import React, { memo, useEffect } from "react"
 import { useRemark } from "react-remark"
 import styled from "styled-components"
 import { visit } from "unist-util-visit"
-import { useExtensionState } from "../../context/ExtensionStateContext"
+import { useExtensionState } from "@src/context/ExtensionStateContext"
 import CodeBlock from "./CodeBlock"
 import MermaidBlock from "./MermaidBlock"
 

@@ -1,5 +1,5 @@
 import { memo, useMemo } from "react"
-import { getLanguageFromPath } from "../../utils/getLanguageFromPath"
+import { getLanguageFromPath } from "@src/utils/getLanguageFromPath"
 import CodeBlock, { CODE_BLOCK_BG_COLOR } from "./CodeBlock"
 import { ToolProgressStatus } from "@roo/shared/ExtensionMessage"
 import { VSCodeProgressRing } from "@vscode/webview-ui-toolkit/react"
