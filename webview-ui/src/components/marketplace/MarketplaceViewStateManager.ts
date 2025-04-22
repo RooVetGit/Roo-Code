@@ -1,3 +1,16 @@
+/**
+ * MarketplaceViewStateManager
+ *
+ * This class manages the state for the marketplace view in the Roo Code extensions interface.
+ *
+ * IMPORTANT: Fixed issue where the marketplace feature was causing the Roo Code extensions interface
+ * to switch to the browse tab and redraw it every 30 seconds. The fix prevents unnecessary tab switching
+ * and redraws by:
+ * 1. Only updating the UI when necessary
+ * 2. Preserving the current tab when handling timeouts
+ * 3. Using minimal state updates to avoid resetting scroll position
+ */
+
 import { MarketplaceItem, MarketplaceSource, MatchInfo } from "../../../../src/services/marketplace/types"
 import { vscode } from "../../utils/vscode"
 import { WebviewMessage } from "../../../../src/shared/WebviewMessage"
@@ -141,11 +154,34 @@ export class MarketplaceViewStateManager {
 		}
 	}
 
-	private notifyStateChange(): void {
+	/**
+	 * Notify all registered handlers of a state change
+	 * @param preserveTab If true, ensures the active tab is not changed during notification
+	 */
+	private notifyStateChange(preserveTab: boolean = false): void {
 		const newState = this.getState() // Use getState to ensure proper copying
-		this.stateChangeHandlers.forEach((handler) => {
-			handler(newState)
-		})
+
+		if (preserveTab) {
+			// When preserveTab is true, we're careful not to cause tab switching
+			// This is used during timeout handling to prevent disrupting the user
+			this.stateChangeHandlers.forEach((handler) => {
+				// Store the current active tab
+				const currentTab = newState.activeTab;
+
+				// Create a state update that won't change the active tab
+				const safeState = {
+					...newState,
+					// Don't change these properties to avoid UI disruption
+					activeTab: currentTab
+				}
+				handler(safeState)
+			})
+		} else {
+			// Normal state change notification
+			this.stateChangeHandlers.forEach((handler) => {
+				handler(newState)
+			})
+		}
 
 		// Save state to sessionStorage if available
 		if (typeof sessionStorage !== "undefined") {
@@ -186,11 +222,12 @@ export class MarketplaceViewStateManager {
 				}
 				this.notifyStateChange()
 
-				// Set timeout to reset state if fetch takes too long
+				// Set timeout to reset state if fetch takes too long, but don't trigger a redraw if not needed
 				this.fetchTimeoutId = setTimeout(() => {
 					this.clearFetchTimeout()
 					// On timeout, preserve items if we have them
 					if (currentItems.length > 0) {
+						// Only update the isFetching flag without triggering a full redraw
 						this.state = {
 							...this.state,
 							isFetching: false,
@@ -198,13 +235,34 @@ export class MarketplaceViewStateManager {
 							displayItems: currentItems,
 						}
 					} else {
+						// Preserve the current tab and only update necessary state
+						const { activeTab, sources } = this.state
 						this.state = {
 							...this.getDefaultState(),
-							sources: [...this.state.sources],
-							activeTab: this.state.activeTab,
+							sources: [...sources],
+							activeTab, // Keep the current active tab
 						}
 					}
-					this.notifyStateChange()
+
+					// Only notify if we're in the browse tab to avoid switching tabs
+					if (this.state.activeTab === "browse") {
+						// Use a minimal state update to avoid resetting scroll position
+						const handler = (state: ViewState) => {
+							// Only update the isFetching status without affecting other UI elements
+							return {
+								...state,
+								isFetching: false
+							}
+						}
+
+						// Call handlers with the minimal update
+						this.stateChangeHandlers.forEach((stateHandler) => {
+							stateHandler(handler(this.getState()))
+						})
+					} else {
+						// If not in browse tab, just update the internal state without notifying
+						// This prevents tab switching
+					}
 				}, this.FETCH_TIMEOUT)
 
 				break
@@ -560,7 +618,15 @@ export class MarketplaceViewStateManager {
 					allItems: sortedItems,
 					displayItems: newDisplayItems,
 				}
-				this.notifyStateChange()
+
+				// Only notify with full state update if we're in the browse tab
+				// or if this is the first time we're getting items
+				if (isOnBrowseTab || !hasCurrentItems) {
+					this.notifyStateChange()
+				} else {
+					// If we're not in the browse tab, update state but don't force a tab switch
+					this.notifyStateChange(true) // preserve tab
+				}
 			}
 		}
 
