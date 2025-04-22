@@ -291,15 +291,8 @@ export async function getOpenRouterModels(options?: ApiHandlerOptions) {
 					modelInfo.maxTokens = 8192
 					break
 				case rawModel.id.startsWith("google/gemini-2.5-pro-preview-03-25"):
-					modelInfo.supportsPromptCache = true
-					break
 				case rawModel.id.startsWith("google/gemini-2.0-flash-001"):
-					modelInfo.supportsPromptCache = true
-					break
 				case rawModel.id.startsWith("google/gemini-flash-1.5"):
-					modelInfo.supportsPromptCache = true
-					break
-				case rawModel.id.startsWith("google/gemini-pro-1.5"):
 					modelInfo.supportsPromptCache = true
 					break
 				default:
