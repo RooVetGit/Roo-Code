@@ -275,7 +275,9 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			provider.getCurrentCline()?.handleWebviewAskResponse(message.askResponse!, message.text, message.images)
 			break
 		case "terminalOperation":
-			provider.getCurrentCline()?.handleTerminalOperation(message.terminalOperation)
+			if (message.terminalOperation) {
+				provider.getCurrentCline()?.handleTerminalOperation(message.terminalOperation)
+			}
 			break
 		case "clearTask":
 			// clear task resets the current session and allows for a new task to be started, if this session is a subtask - it allows the parent task to be resumed
