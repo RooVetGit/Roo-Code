@@ -19,7 +19,7 @@ export const SendMessageSchema = z.object({
 	message: z
 		.string()
 		.describe(
-			"The message to send for giving some feedback or provide some relections at current task. You can use @ with relative path to add context, or use an absolute path when you want take some references from local files",
+			"The message to send for giving some feedback or provide some reflections at current task. You can use @ with relative path to add context, or use an absolute path when you want to take some references from local files",
 		),
 })
 
