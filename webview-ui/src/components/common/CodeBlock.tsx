@@ -507,6 +507,15 @@ const CodeBlock = memo(
 				}
 				if (!preRef.current) return
 
+				// Only handle wheel events if the inner container has a scrollbar,
+				// otherwise let the browser handle the default scrolling
+				const hasScrollbar = preRef.current.scrollHeight > preRef.current.clientHeight
+
+				// Pass through events if we don't need special handling
+				if (!hasScrollbar) {
+					return
+				}
+
 				const scrollContainer = getScrollContainer()
 				if (!scrollContainer) return
 
@@ -514,11 +523,6 @@ const CodeBlock = memo(
 				const isAtVeryTop = preRef.current.scrollTop === 0
 				const isAtVeryBottom =
 					Math.abs(preRef.current.scrollHeight - preRef.current.scrollTop - preRef.current.clientHeight) < 1
-
-				// No need to set userHasScrolled here anymore, the scroll listener handles it
-				// if (e.deltaY < 0 && !isAtVeryTop) {
-				// 	setUserHasScrolled(true)
-				// }
 
 				// Handle scrolling at container boundaries
 				if ((e.deltaY < 0 && isAtVeryTop) || (e.deltaY > 0 && isAtVeryBottom)) {
@@ -537,15 +541,11 @@ const CodeBlock = memo(
 
 			// Add wheel event listener to inner container
 			const preElement = preRef.current
-			if (preElement) {
-				preElement.addEventListener("wheel", handleWheel, { passive: false })
-			}
+			preElement.addEventListener("wheel", handleWheel, { passive: false })
 
 			// Clean up
 			return () => {
-				if (preElement) {
-					preElement.removeEventListener("wheel", handleWheel)
-				}
+				preElement.removeEventListener("wheel", handleWheel)
 
 				// Cancel any ongoing animation
 				if (animationFrameId) {
