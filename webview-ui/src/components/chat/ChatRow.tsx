@@ -1063,6 +1063,7 @@ export const ChatRowContent = ({
 
 					// Get risk level and determine color/icon based on it
 					const risk = message.metadata?.risk || ""
+					const riskAnalysis = message.metadata?.risk_analysis || ""
 					const riskStyles = {
 						readOnly: {
 							color: "var(--vscode-testing-iconPassed)",
@@ -1105,23 +1106,29 @@ export const ChatRowContent = ({
 									backgroundColor: CODE_BLOCK_BG_COLOR,
 								}}>
 								<CodeBlock source={`${"```"}shell\n${command}\n${"```"}`} forceWrap={true} />
-								{risk && (
+								{(riskAnalysis || risk) && (
 									<div
 										style={{
 											padding: "4px 8px",
-											color: riskStyle?.color || "var(--vscode-editorWarning-foreground)",
 											fontSize: "0.85em",
-											display: "flex",
-											alignItems: "center",
-											gap: "4px",
 											backgroundColor: "var(--vscode-editor-background)",
 											borderTop: "1px solid var(--vscode-editorGroup-border)",
 										}}>
-										<span
-											className={`codicon codicon-${riskStyle?.icon || "warning"}`}
-											style={{ color: riskStyle?.color }}></span>
-										<span style={{ color: riskStyle?.color }}>
-											{t(`settings:autoApprove.commandRiskLevel.${risk}`)}
+										<span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+											{risk && (
+												<i
+													className={`codicon codicon-${riskStyle?.icon || "warning"}`}
+													style={{ color: riskStyle?.color }}
+												/>
+											)}
+											<span>
+												{risk && (
+													<span style={{ color: riskStyle?.color }}>
+														{t(`settings:autoApprove.commandRiskLevel.${risk}`)}
+													</span>
+												)}
+												{riskAnalysis && (risk ? ": " : "") + String(riskAnalysis)}
+											</span>
 										</span>
 									</div>
 								)}
