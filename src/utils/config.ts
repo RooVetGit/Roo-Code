@@ -12,9 +12,11 @@ export async function injectEnv(config: string | Record<PropertyKey, any>, notFo
 	let _config: string = isObject ? JSON.stringify(config) : config
 
 	_config = _config.replace(/\$\{env:([\w\.]+)\}/g, (_, name) => {
-		if (!process.env[name]) console.warn(`[injectEnv] env variable ${name} referenced but not found in process.env`)
+		// Check if null or undefined
+		if (process.env[name] == null)
+			console.warn(`[injectEnv] env variable ${name} referenced but not found in process.env`)
 
-		return process.env[name] || notFoundValue
+		return process.env[name] ?? notFoundValue
 	})
 
 	return isObject ? JSON.parse(_config) : _config
