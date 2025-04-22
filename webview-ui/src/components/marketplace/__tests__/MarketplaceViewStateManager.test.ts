@@ -725,6 +725,78 @@ describe("MarketplaceViewStateManager", () => {
 			expect(state.allItems).toHaveLength(1)
 		})
 
+		it("should not switch tabs when timeout occurs while in sources tab", async () => {
+			// First switch to sources tab
+			await manager.transition({
+				type: "SET_ACTIVE_TAB",
+				payload: { tab: "sources" },
+			})
+
+			// Start a fetch
+			await manager.transition({ type: "FETCH_ITEMS" })
+
+			// Set up a state change handler to track tab changes
+			let tabSwitched = false
+			const unsubscribe = manager.onStateChange((state) => {
+				if (state.activeTab === "browse") {
+					tabSwitched = true
+				}
+			})
+
+			// Fast-forward past the timeout
+			jest.advanceTimersByTime(30000)
+
+			// Clean up the handler
+			unsubscribe()
+
+			// Verify the tab didn't switch to browse
+			expect(tabSwitched).toBe(false)
+			const state = manager.getState()
+			expect(state.activeTab).toBe("sources")
+		})
+
+		it("should make minimal state updates when timeout occurs in browse tab", async () => {
+			// First ensure we're in browse tab
+			await manager.transition({
+				type: "SET_ACTIVE_TAB",
+				payload: { tab: "browse" },
+			})
+
+			// Add some items
+			const testItems = [createTestItem(), createTestItem({ name: "Item 2" })]
+			await manager.transition({
+				type: "FETCH_COMPLETE",
+				payload: { items: testItems },
+			})
+
+			// Start a new fetch
+			await manager.transition({ type: "FETCH_ITEMS" })
+
+			// Track state changes
+			let stateChangeCount = 0
+			const unsubscribe = manager.onStateChange(() => {
+				stateChangeCount++
+			})
+
+			// Reset the counter since we've already had state changes
+			stateChangeCount = 0
+
+			// Fast-forward past the timeout
+			jest.advanceTimersByTime(30000)
+
+			// Clean up the handler
+			unsubscribe()
+
+			// Verify we got a state update
+			expect(stateChangeCount).toBe(1)
+
+			// Verify the items were preserved
+			const state = manager.getState()
+			expect(state.allItems).toHaveLength(2)
+			expect(state.isFetching).toBe(false)
+			expect(state.activeTab).toBe("browse")
+		})
+
 		it("should prevent concurrent fetches during timeout period", async () => {
 			jest.clearAllMocks() // Clear mock to ignore initialize() call
 
