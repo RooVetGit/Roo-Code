@@ -230,13 +230,10 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		let cacheWriteCost = 0
 		let cacheReadCost = 0
 
-		// Cache Writes: Charged at the input token cost plus 5 minutes of cache storage.
-		// Example: Cache write cost = Input token price + (Cache storage price × (5 minutes / 60 minutes))
 		if (cacheWriteTokens) {
 			cacheWriteCost = cacheWritesPrice * (cacheWriteTokens / 1_000_000) * (CACHE_TTL / 60)
 		}
 
-		// Cache Reads: Charged at 0.25 × the original input token cost.
 		if (cacheReadTokens) {
 			const uncachedReadTokens = inputTokens - cacheReadTokens
 			cacheReadCost = cacheReadsPrice * (cacheReadTokens / 1_000_000)
