@@ -167,7 +167,6 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			}
 
 			if (chunk.usage) {
-				console.log("chunk.usage", chunk.usage)
 				lastUsage = chunk.usage
 			}
 		}
