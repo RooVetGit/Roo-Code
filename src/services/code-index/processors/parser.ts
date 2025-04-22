@@ -15,6 +15,9 @@ const MAX_BLOCK_LINES = 100
 export class CodeParser implements ICodeParser {
 	private loadedParsers: LanguageParser = {}
 	private pendingLoads: Map<string, Promise<LanguageParser>> = new Map()
+	// Markdown files are excluded because the current parser logic cannot effectively handle
+	// potentially large Markdown sections without a tree-sitter-like child node structure for chunking
+	private readonly _supportedExtensions = treeSitterExtensions.filter((ext) => ext !== ".md" && ext !== ".markdown")
 
 	/**
 	 * Parses a code file into code blocks
@@ -69,7 +72,7 @@ export class CodeParser implements ICodeParser {
 	 * @returns Boolean indicating if the language is supported
 	 */
 	private isSupportedLanguage(extension: string): boolean {
-		return treeSitterExtensions.includes(extension)
+		return this._supportedExtensions.includes(extension)
 	}
 
 	/**
