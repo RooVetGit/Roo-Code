@@ -32,13 +32,15 @@ export class ExecaTerminalProcess extends EventEmitter<RooTerminalProcessEvents>
 				cancelSignal: this.controller.signal,
 			})`${command}`
 
+			this.emit("line", "")
+
 			for await (const line of stream) {
 				this.fullOutput += line
 				this.fullOutput += "\n"
 
 				const now = Date.now()
 
-				if (this.isListening && (now - this.lastEmitTime_ms > 100 || this.lastEmitTime_ms === 0)) {
+				if (this.isListening && (now - this.lastEmitTime_ms > 250 || this.lastEmitTime_ms === 0)) {
 					this.emitRemainingBufferIfListening()
 					this.lastEmitTime_ms = now
 				}
@@ -51,7 +53,10 @@ export class ExecaTerminalProcess extends EventEmitter<RooTerminalProcessEvents>
 		} catch (error) {
 			if (error instanceof ExecaError) {
 				console.error(`[ExecaTerminalProcess] shell execution error: ${error.message}`)
-				this.emit("shell_execution_complete", { exitCode: error.exitCode, signalName: error.signal })
+				this.emit("shell_execution_complete", {
+					exitCode: error.exitCode ?? 1,
+					signalName: error.signal,
+				})
 			} else {
 				this.emit("shell_execution_complete", { exitCode: 1 })
 			}
@@ -67,6 +72,10 @@ export class ExecaTerminalProcess extends EventEmitter<RooTerminalProcessEvents>
 		this.emit("continue")
 	}
 
+	public abort() {
+		this.controller?.abort()
+	}
+
 	public hasUnretrievedOutput() {
 		return this.lastRetrievedIndex < this.fullOutput.length
 	}
@@ -78,7 +87,7 @@ export class ExecaTerminalProcess extends EventEmitter<RooTerminalProcessEvents>
 		if (this.isStreamClosed) {
 			endIndex = outputToProcess.length
 		} else {
-			let endIndex = outputToProcess.lastIndexOf("\n")
+			endIndex = outputToProcess.lastIndexOf("\n")
 
 			if (endIndex === -1) {
 				return ""

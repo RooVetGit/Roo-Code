@@ -207,7 +207,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							setClineAsk("command_output")
 							setEnableButtons(true)
 							setPrimaryButtonText(t("chat:proceedWhileRunning.title"))
-							setSecondaryButtonText(undefined)
+							setSecondaryButtonText(t("chat:killCommand.title"))
 							break
 						case "use_mcp_server":
 							setTextAreaDisabled(isPartial)
@@ -443,6 +443,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const handleSecondaryButtonClick = useCallback(
 		(text?: string, images?: string[]) => {
 			const trimmedInput = text?.trim()
+
 			if (isStreaming) {
 				vscode.postMessage({ type: "cancelTask" })
 				setDidClickCancel(true)
@@ -469,14 +470,14 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						})
 					} else {
 						// responds to the API with a "This operation failed" and lets it try again
-						vscode.postMessage({
-							type: "askResponse",
-							askResponse: "noButtonClicked",
-						})
+						vscode.postMessage({ type: "askResponse", askResponse: "noButtonClicked" })
 					}
 					// Clear input state after sending
 					setInputValue("")
 					setSelectedImages([])
+					break
+				case "command_output":
+					vscode.postMessage({ type: "askResponse", askResponse: "noButtonClicked" })
 					break
 			}
 			setTextAreaDisabled(true)

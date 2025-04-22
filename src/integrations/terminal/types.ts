@@ -12,6 +12,7 @@ export interface RooTerminalCallbacks {
 
 export interface RooTerminalProcess {
 	continue: () => void
+	abort: () => void
 }
 
 export interface RooTerminalProcessEvents {

@@ -500,6 +500,10 @@ export class TerminalProcess extends EventEmitter<RooTerminalProcessEvents> {
 		this.emit("continue")
 	}
 
+	public abort() {
+		// TODO
+	}
+
 	/**
 	 * Checks if this process has unretrieved output
 	 * @returns true if there is output that hasn't been fully retrieved yet

@@ -73,7 +73,7 @@ export async function executeCommand(
 	cline: Cline,
 	command: string,
 	customCwd?: string,
-	terminalProvider: "vscode" | "execa" = "vscode",
+	terminalProvider: "vscode" | "execa" = "execa",
 ): Promise<[boolean, ToolResponse]> {
 	let workingDir: string
 
@@ -98,69 +98,50 @@ export async function executeCommand(
 	// workingDir = terminalInfo.getCurrentWorkingDirectory()
 	const workingDirInfo = workingDir ? ` from '${workingDir.toPosix()}'` : ""
 
-	let userFeedback: { text?: string; images?: string[] } | undefined
-	let runInBackground: boolean | undefined = undefined
+	let message: { text?: string; images?: string[] } | undefined
+	let runInBackground = false
 	let completed = false
 	let result: string = ""
 	let exitDetails: ExitCodeDetails | undefined
 	const { terminalOutputLineLimit = 500 } = (await cline.providerRef.deref()?.getState()) ?? {}
 
-	const debounceLineLimit = 100 // Flush after this many lines.
-	const debounceTimeoutMs = 200 // Flush after this much time inactivity (ms).
-	let buffer: string[] = []
-	let debounceTimer: NodeJS.Timeout | null = null
-
-	async function flush(process?: RooTerminalProcess) {
-		if (debounceTimer) {
-			clearTimeout(debounceTimer)
-			debounceTimer = null
-		}
-
-		if (buffer.length === 0) {
-			return
-		}
-
-		const output = buffer.join("\n")
-		buffer = []
-
-		result = Terminal.compressTerminalOutput(result + output, terminalOutputLineLimit)
-		const compressed = Terminal.compressTerminalOutput(output, terminalOutputLineLimit)
-		cline.say("command_output", compressed)
-
-		if (typeof runInBackground !== "undefined") {
-			return
-		}
-
-		console.log(`ask command_output: waiting for response`)
-		const { response, text, images } = await cline.ask("command_output", compressed)
-		console.log(`ask command_output =>`, response)
-
-		if (response === "yesButtonClicked") {
-			runInBackground = false
-		} else {
-			runInBackground = true
-			userFeedback = { text, images }
-		}
-
-		process?.continue()
-	}
-
 	const callbacks = {
-		onLine: async (line: string, process: RooTerminalProcess) => {
-			buffer.push(line)
+		onLine: async (output: string, process: RooTerminalProcess) => {
+			const compressed = Terminal.compressTerminalOutput(output, terminalOutputLineLimit)
+			cline.say("command_output", compressed)
 
-			if (buffer.length >= debounceLineLimit) {
-				await flush(process)
-			} else {
-				if (debounceTimer) {
-					clearTimeout(debounceTimer)
-				}
-
-				debounceTimer = setTimeout(() => flush(process), debounceTimeoutMs)
+			if (runInBackground) {
+				return
 			}
+
+			try {
+				const { response, text, images } = await cline.ask("command_output", compressed)
+				console.log(`ask command_output =>`, response)
+				runInBackground = true
+
+				if (response === "yesButtonClicked") {
+					// Continue running the command in the background.
+					process.continue()
+				} else if (response === "noButtonClicked") {
+					// Abort the command with a SIGINT.
+					process.abort()
+				} else {
+					// Continue running the command in the background, but inject
+					// the message into the context.
+					message = { text, images }
+					process.continue()
+				}
+			} catch (_error) {}
 		},
-		onCompleted: () => (completed = true),
-		onShellExecutionComplete: (details: ExitCodeDetails) => (exitDetails = details),
+		onCompleted: (output: string | undefined) => {
+			console.log(`onCompleted =>`, output)
+			result = Terminal.compressTerminalOutput(output ?? "", terminalOutputLineLimit)
+			completed = true
+		},
+		onShellExecutionComplete: (details: ExitCodeDetails) => {
+			console.log(`onShellExecutionComplete =>`, details)
+			exitDetails = details
+		},
 		onNoShellIntegration: async (message: string) => {
 			telemetryService.captureShellIntegrationError(cline.taskId)
 			await cline.say("shell_integration_warning", message)
@@ -178,14 +159,6 @@ export async function executeCommand(
 
 	await terminal.runCommand(command, callbacks)
 
-	if (debounceTimer) {
-		clearTimeout(debounceTimer)
-		debounceTimer = null
-	}
-
-	// If there are any lines in the buffer, flush them to `result`.
-	await flush()
-
 	// Wait for a short delay to ensure all messages are sent to the webview.
 	// This delay allows time for non-awaited promises to be created and
 	// for their associated messages to be sent to the webview, maintaining
@@ -193,24 +166,25 @@ export async function executeCommand(
 	// grouping command_output messages despite any gaps anyways).
 	await delay(50)
 
-	if (userFeedback) {
-		await cline.say("user_feedback", userFeedback.text, userFeedback.images)
+	if (message) {
+		const { text, images } = message
+		await cline.say("user_feedback", text, images)
 
 		return [
 			true,
 			formatResponse.toolResult(
 				`Command is still running in terminal ${workingDirInfo}.${
 					result.length > 0 ? `\nHere's the output so far:\n${result}` : ""
-				}\n\nThe user provided the following feedback:\n<feedback>\n${userFeedback.text}\n</feedback>`,
-				userFeedback.images,
+				}\n\nThe user provided the following feedback:\n<feedback>\n${text}\n</feedback>`,
+				images,
 			),
 		]
-	} else if (completed) {
+	} else if (completed || exitDetails) {
 		let exitStatus: string = ""
 
 		if (exitDetails !== undefined) {
-			if (exitDetails.signal) {
-				exitStatus = `Process terminated by signal ${exitDetails.signal} (${exitDetails.signalName})`
+			if (exitDetails.signalName) {
+				exitStatus = `Process terminated by signal ${exitDetails.signalName}`
 
 				if (exitDetails.coreDumpPossible) {
 					exitStatus += " - core dump possible"
@@ -238,8 +212,15 @@ export async function executeCommand(
 		// }
 
 		const outputInfo = `\nOutput:\n${result}`
+		console.log(`Command executed in terminal ${workingDirInfo}. ${exitStatus}${outputInfo}`)
 		return [false, `Command executed in terminal ${workingDirInfo}. ${exitStatus}${outputInfo}`]
 	} else {
+		console.log(
+			`Command is still running in terminal ${workingDirInfo}.${
+				result.length > 0 ? `\nHere's the output so far:\n${result}` : ""
+			}\n\nYou will be updated on the terminal status and new output in the future.`,
+		)
+
 		return [
 			false,
 			`Command is still running in terminal ${workingDirInfo}.${
