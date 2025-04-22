@@ -1,7 +1,6 @@
 import type { Anthropic } from "@anthropic-ai/sdk"
 import {
 	GoogleGenAI,
-	ThinkingConfig,
 	type GenerateContentResponseUsageMetadata,
 	type GenerateContentParameters,
 	type Content,
