@@ -2,8 +2,8 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import { ApiHandler } from ".."
 import { ModelInfo } from "../../shared/api"
 import { ApiStream } from "../transform/stream"
-import { Tiktoken } from "js-tiktoken/lite"
-import o200kBase from "js-tiktoken/ranks/o200k_base"
+import { Tiktoken } from "tiktoken/lite"
+import o200kBase from "tiktoken/encoders/o200k_base"
 
 // Reuse the fudge factor used in the original code
 const TOKEN_FUDGE_FACTOR = 1.5
@@ -34,7 +34,7 @@ export abstract class BaseProvider implements ApiHandler {
 
 		// Lazily create and cache the encoder if it doesn't exist
 		if (!this.encoder) {
-			this.encoder = new Tiktoken(o200kBase)
+			this.encoder = new Tiktoken(o200kBase.bpe_ranks, o200kBase.special_tokens, o200kBase.pat_str)
 		}
 
 		// Process each content block using the cached encoder

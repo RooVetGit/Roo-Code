@@ -853,7 +853,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 
 		const wasRecent = lastClineMessage?.ts && Date.now() - lastClineMessage.ts < 30_000
-		
+
 		newUserContent.push({
 			type: "text",
 			text:
@@ -1050,10 +1050,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 			const DEFAULT_THINKING_MODEL_MAX_TOKENS = 16_384
 
 			const modelInfo = this.api.getModel().info
+
 			const maxTokens = modelInfo.thinking
 				? this.apiConfiguration.modelMaxTokens || DEFAULT_THINKING_MODEL_MAX_TOKENS
 				: modelInfo.maxTokens
+
 			const contextWindow = modelInfo.contextWindow
+
 			const trimmedMessages = await truncateConversationIfNeeded({
 				messages: this.apiConversationHistory,
 				totalTokens,
