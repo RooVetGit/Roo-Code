@@ -13,6 +13,9 @@ const MAX_BLOCK_LINES = 100
  * Implementation of the code parser interface
  */
 export class CodeParser implements ICodeParser {
+	private loadedParsers: LanguageParser = {}
+	private pendingLoads: Map<string, Promise<LanguageParser>> = new Map()
+
 	/**
 	 * Parses a code file into code blocks
 	 * @param filePath Path to the file to parse
@@ -95,19 +98,40 @@ export class CodeParser implements ICodeParser {
 		maxBlockLines: number,
 	): Promise<CodeBlock[]> {
 		const ext = path.extname(filePath).slice(1).toLowerCase()
-		let languages: LanguageParser | undefined
-		try {
-			languages = await loadRequiredLanguageParsers([filePath])
-		} catch (error) {
-			console.error(`Error loading language parser for ${filePath}:`, error)
+
+		// Check if we already have the parser loaded
+		if (!this.loadedParsers[ext]) {
+			const pendingLoad = this.pendingLoads.get(ext)
+			if (pendingLoad) {
+				try {
+					await pendingLoad
+				} catch (error) {
+					console.error(`Error in pending parser load for ${filePath}:`, error)
+					return []
+				}
+			} else {
+				const loadPromise = loadRequiredLanguageParsers([filePath])
+				this.pendingLoads.set(ext, loadPromise)
+				try {
+					const newParsers = await loadPromise
+					if (newParsers) {
+						this.loadedParsers = { ...this.loadedParsers, ...newParsers }
+					}
+				} catch (error) {
+					console.error(`Error loading language parser for ${filePath}:`, error)
+					return []
+				} finally {
+					this.pendingLoads.delete(ext)
+				}
+			}
+		}
+
+		const language = this.loadedParsers[ext]
+		if (!language) {
+			console.warn(`No parser available for file extension: ${ext}`)
 			return []
 		}
 
-		if (!languages || !languages[ext]) {
-			return []
-		}
-
-		const language = languages[ext]
 		const tree = language.parser.parse(content)
 
 		// We don't need to get the query string from languageQueries since it's already loaded
