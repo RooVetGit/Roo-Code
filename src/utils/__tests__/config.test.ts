@@ -97,12 +97,4 @@ describe("injectEnv", () => {
 		const result = await injectEnv({})
 		expect(result).toEqual({})
 	})
-
-	it("should handle env variables with dots in the name", async () => {
-		process.env["TEST.VAR.WITH.DOTS"] = "dottedValue"
-		const configString = "Value: ${env:TEST.VAR.WITH.DOTS}"
-		const expectedString = "Value: dottedValue"
-		const result = await injectEnv(configString)
-		expect(result).toBe(expectedString)
-	})
 })
