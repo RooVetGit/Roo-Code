@@ -31,6 +31,10 @@ Get started with $20 of free credits to experience the power of Gemini 2.5 Pro, 
 - [Substack](https://blog.kilocode.ai/) (blog)
 - [Product Hunt](https://www.producthunt.com/products/kilocode) (vote)
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Kilo-Org/kilocode/refs/heads/main/kilo.gif" width="100%" />
+</p>
+
 ## Key Features
 
 - **Code Generation:** Generate code using natural language.
