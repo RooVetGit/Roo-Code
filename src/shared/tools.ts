@@ -67,6 +67,7 @@ export const toolParamNames = [
 	"start_line",
 	"end_line",
 	"risk",
+	"risk_analysis",
 ] as const
 
 export type ToolParamName = (typeof toolParamNames)[number]
@@ -82,7 +83,7 @@ export interface ToolUse {
 export interface ExecuteCommandToolUse extends ToolUse {
 	name: "execute_command"
 	// Pick<Record<ToolParamName, string>, "command"> makes "command" required, but Partial<> makes it optional
-	params: Partial<Pick<Record<ToolParamName, string>, "command" | "cwd" | "risk">>
+	params: Partial<Pick<Record<ToolParamName, string>, "command" | "cwd" | "risk" | "risk_analysis">>
 }
 
 export interface ReadFileToolUse extends ToolUse {

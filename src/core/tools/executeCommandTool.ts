@@ -40,7 +40,8 @@ export async function executeCommandTool(
 	let command: string | undefined = block.params.command
 	const customCwd: string | undefined = block.params.cwd
 	const commandRisk: string | undefined = block.params.risk
-	const metadata = commandRisk ? { risk: commandRisk } : undefined
+	const riskAnalysis: string | undefined = block.params.risk_analysis
+	const metadata = commandRisk ? { risk: commandRisk, risk_analysis: riskAnalysis } : undefined
 
 	try {
 		if (block.partial) {
@@ -59,6 +60,12 @@ export async function executeCommandTool(
 			if (!commandRisk) {
 				cline.consecutiveMistakeCount++
 				pushToolResult(await cline.sayAndCreateMissingParamError("execute_command", "risk"))
+				return
+			}
+
+			if (!riskAnalysis) {
+				cline.consecutiveMistakeCount++
+				pushToolResult(await cline.sayAndCreateMissingParamError("execute_command", "risk_analysis"))
 				return
 			}
 
