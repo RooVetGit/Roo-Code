@@ -28,6 +28,25 @@ type OpenRouterChatCompletionParams = OpenAI.Chat.ChatCompletionCreateParams & {
 	}
 }
 
+// See `OpenAI.Chat.Completions.ChatCompletionChunk["usage"]`
+// `CompletionsAPI.CompletionUsage`
+interface CompletionUsage {
+	completion_tokens?: number
+	prompt_tokens?: number
+	total_tokens?: number
+	cost?: number
+
+	/**
+	 * Breakdown of tokens used in a completion.
+	 */
+	// completion_tokens_details?: CompletionUsage.CompletionTokensDetails;
+
+	/**
+	 * Breakdown of tokens used in the prompt.
+	 */
+	// prompt_tokens_details?: CompletionUsage.PromptTokensDetails;
+}
+
 export class OpenRouterHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
 	private client: OpenAI
@@ -46,7 +65,15 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
 	): AsyncGenerator<ApiStreamChunk> {
-		let { id: modelId, maxTokens, thinking, temperature, topP, reasoningEffort } = this.getModel()
+		let {
+			id: modelId,
+			maxTokens,
+			thinking,
+			temperature,
+			supportsPromptCache,
+			topP,
+			reasoningEffort,
+		} = this.getModel()
 
 		// Convert Anthropic messages to OpenAI format.
 		let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
@@ -59,46 +86,42 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			openAiMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
 		}
 
-		// prompt caching: https://openrouter.ai/docs/prompt-caching
-		// this is specifically for claude models (some models may 'support prompt caching' automatically without this)
-		switch (true) {
-			case modelId.startsWith("anthropic/"):
-				openAiMessages[0] = {
-					role: "system",
-					content: [
-						{
-							type: "text",
-							text: systemPrompt,
-							// @ts-ignore-next-line
-							cache_control: { type: "ephemeral" },
-						},
-					],
+		// Prompt caching: https://openrouter.ai/docs/prompt-caching
+		// Now with Gemini support: https://openrouter.ai/docs/features/prompt-caching
+		if (supportsPromptCache) {
+			openAiMessages[0] = {
+				role: "system",
+				content: [
+					{
+						type: "text",
+						text: systemPrompt,
+						// @ts-ignore-next-line
+						cache_control: { type: "ephemeral" },
+					},
+				],
+			}
+
+			// Add cache_control to the last two user messages
+			// (note: this works because we only ever add one user message at a time, but if we added multiple we'd need to mark the user message before the last assistant message)
+			const lastTwoUserMessages = openAiMessages.filter((msg) => msg.role === "user").slice(-2)
+
+			lastTwoUserMessages.forEach((msg) => {
+				if (typeof msg.content === "string") {
+					msg.content = [{ type: "text", text: msg.content }]
 				}
 
-				// Add cache_control to the last two user messages
-				// (note: this works because we only ever add one user message at a time, but if we added multiple we'd need to mark the user message before the last assistant message)
-				const lastTwoUserMessages = openAiMessages.filter((msg) => msg.role === "user").slice(-2)
+				if (Array.isArray(msg.content)) {
+					// NOTE: this is fine since env details will always be added at the end. but if it weren't there, and the user added a image_url type message, it would pop a text part before it and then move it after to the end.
+					let lastTextPart = msg.content.filter((part) => part.type === "text").pop()
 
-				lastTwoUserMessages.forEach((msg) => {
-					if (typeof msg.content === "string") {
-						msg.content = [{ type: "text", text: msg.content }]
+					if (!lastTextPart) {
+						lastTextPart = { type: "text", text: "..." }
+						msg.content.push(lastTextPart)
 					}
-
-					if (Array.isArray(msg.content)) {
-						// NOTE: this is fine since env details will always be added at the end. but if it weren't there, and the user added a image_url type message, it would pop a text part before it and then move it after to the end.
-						let lastTextPart = msg.content.filter((part) => part.type === "text").pop()
-
-						if (!lastTextPart) {
-							lastTextPart = { type: "text", text: "..." }
-							msg.content.push(lastTextPart)
-						}
-						// @ts-ignore-next-line
-						lastTextPart["cache_control"] = { type: "ephemeral" }
-					}
-				})
-				break
-			default:
-				break
+					// @ts-ignore-next-line
+					lastTextPart["cache_control"] = { type: "ephemeral" }
+				}
+			})
 		}
 
 		// https://openrouter.ai/docs/transforms
@@ -125,9 +148,9 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 
 		const stream = await this.client.chat.completions.create(completionParams)
 
-		let lastUsage
+		let lastUsage: CompletionUsage | undefined = undefined
 
-		for await (const chunk of stream as unknown as AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>) {
+		for await (const chunk of stream) {
 			// OpenRouter returns an error object instead of the OpenAI SDK throwing an error.
 			if ("error" in chunk) {
 				const error = chunk.error as { message?: string; code?: number }
@@ -152,16 +175,12 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		}
 
 		if (lastUsage) {
-			yield this.processUsageMetrics(lastUsage)
-		}
-	}
-
-	processUsageMetrics(usage: any): ApiStreamUsageChunk {
-		return {
-			type: "usage",
-			inputTokens: usage?.prompt_tokens || 0,
-			outputTokens: usage?.completion_tokens || 0,
-			totalCost: usage?.cost || 0,
+			yield {
+				type: "usage",
+				inputTokens: lastUsage.prompt_tokens || 0,
+				outputTokens: lastUsage.completion_tokens || 0,
+				totalCost: lastUsage?.cost || 0,
+			}
 		}
 	}
 
@@ -171,7 +190,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 
 		let id = modelId ?? openRouterDefaultModelId
 		const info = modelInfo ?? openRouterDefaultModelInfo
-
+		const supportsPromptCache = modelInfo?.supportsPromptCache
 		const isDeepSeekR1 = id.startsWith("deepseek/deepseek-r1") || modelId === "perplexity/sonar-reasoning"
 		const defaultTemperature = isDeepSeekR1 ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0
 		const topP = isDeepSeekR1 ? 0.95 : undefined
@@ -180,6 +199,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			id,
 			info,
 			...getModelParams({ options: this.options, model: info, defaultTemperature }),
+			supportsPromptCache,
 			topP,
 		}
 	}
@@ -268,6 +288,24 @@ export async function getOpenRouterModels(options?: ApiHandlerOptions) {
 					modelInfo.cacheWritesPrice = 0.3
 					modelInfo.cacheReadsPrice = 0.03
 					modelInfo.maxTokens = 8192
+					break
+				// case rawModel.id.startsWith("google/gemini-2.5-flash-preview"):
+				// 	modelInfo.supportsPromptCache = true
+				// 	break
+				case rawModel.id.startsWith("google/gemini-2.5-pro-preview-03-25"):
+					modelInfo.supportsPromptCache = true
+					break
+				case rawModel.id.startsWith("google/gemini-2.0-flash-001"):
+					modelInfo.supportsPromptCache = true
+					break
+				// case rawModel.id.startsWith("google/gemini-2.0-flash-lite-001"):
+				// 	modelInfo.supportsPromptCache = true
+				// 	break
+				case rawModel.id.startsWith("google/gemini-flash-1.5"):
+					modelInfo.supportsPromptCache = true
+					break
+				case rawModel.id.startsWith("google/gemini-pro-1.5"):
+					modelInfo.supportsPromptCache = true
 					break
 				default:
 					break
