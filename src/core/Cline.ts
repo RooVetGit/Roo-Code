@@ -307,9 +307,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 	}
 
 	private async addToApiConversationHistory(message: Anthropic.MessageParam) {
-		const messageWithTs = { ...message, ts: Date.now() }
+		const ts = Date.now()
+		const messageWithTs = { ...message, ts }
 		this.apiConversationHistory.push(messageWithTs)
 		await this.saveApiConversationHistory()
+		console.log(`addToApiConversationHistory: ${Date.now() - ts}ms`)
 	}
 
 	async overwriteApiConversationHistory(newHistory: Anthropic.MessageParam[]) {
@@ -362,7 +364,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 		this.emit("message", { action: "updated", message: partialMessage })
 	}
 
+	private taskDirSize = 0
+	private taskDirSizeCheckedAt = 0
+	private readonly taskDirSizeCheckInterval = 30_000
+
 	private async saveClineMessages() {
+		const ts = Date.now()
+
 		try {
 			const taskDir = await this.ensureTaskDirectoryExists()
 			const filePath = path.join(taskDir, GlobalFileNames.uiMessages)
@@ -381,14 +389,15 @@ export class Cline extends EventEmitter<ClineEvents> {
 					)
 				]
 
-			let taskDirSize = 0
-
-			try {
-				taskDirSize = await getFolderSize.loose(taskDir)
-			} catch (err) {
-				console.error(
-					`[saveClineMessages] failed to get task directory size (${taskDir}): ${err instanceof Error ? err.message : String(err)}`,
-				)
+			if (Date.now() - this.taskDirSizeCheckedAt > this.taskDirSizeCheckInterval) {
+				try {
+					this.taskDirSize = await getFolderSize.loose(taskDir)
+					this.taskDirSizeCheckedAt = Date.now()
+				} catch (err) {
+					console.error(
+						`[saveClineMessages] failed to get task directory size (${taskDir}): ${err instanceof Error ? err.message : String(err)}`,
+					)
+				}
 			}
 
 			await this.providerRef.deref()?.updateTaskHistory({
@@ -401,12 +410,14 @@ export class Cline extends EventEmitter<ClineEvents> {
 				cacheWrites: tokenUsage.totalCacheWrites,
 				cacheReads: tokenUsage.totalCacheReads,
 				totalCost: tokenUsage.totalCost,
-				size: taskDirSize,
+				size: this.taskDirSize,
 				workspace: this.cwd,
 			})
 		} catch (error) {
 			console.error("Failed to save cline messages:", error)
 		}
+
+		console.log(`saveClineMessages: ${Date.now() - ts}ms`)
 	}
 
 	// Communicate with webview
@@ -1885,11 +1896,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 			// now add to apiconversationhistory
 			// need to save assistant responses to file before proceeding to tool use since user can exit at any moment and we wouldn't be able to save the assistant's response
 			let didEndLoop = false
+
 			if (assistantMessage.length > 0) {
 				await this.addToApiConversationHistory({
 					role: "assistant",
 					content: [{ type: "text", text: assistantMessage }],
 				})
+
 				telemetryService.captureConversationMessage(this.taskId, "assistant")
 
 				// NOTE: this comment is here for future reference - this was a workaround for userMessageContent not getting set to true. It was due to it not recursively calling for partial blocks when didRejectTool, so it would get stuck waiting for a partial block to complete before it could continue.
