@@ -7,11 +7,11 @@ import { Cline } from "../Cline"
 import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag, ToolResponse } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
-import { Terminal } from "../../integrations/terminal/Terminal"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
-import { ExitCodeDetails } from "../../integrations/terminal/TerminalProcess"
-import { execaCommandExecutor } from "../command-executors/ExecaCommandExecutor"
-// import { vsCodeCommandExecutor } from "../command-executors/VSCodeCommandExecutor"
+import { ExitCodeDetails, RooTerminalProcess } from "../../integrations/terminal/types"
+import { TerminalRegistry } from "../../integrations/terminal/TerminalRegistry"
+import { Terminal } from "../../integrations/terminal/Terminal"
+import { ExecaTerminal } from "../../integrations/terminal/ExecaTerminal"
 
 export async function executeCommandTool(
 	cline: Cline,
@@ -73,6 +73,7 @@ export async function executeCommand(
 	cline: Cline,
 	command: string,
 	customCwd?: string,
+	terminalProvider: "vscode" | "execa" = "vscode",
 ): Promise<[boolean, ToolResponse]> {
 	let workingDir: string
 
@@ -95,61 +96,102 @@ export async function executeCommand(
 	// a different working directory so that the model will know where the
 	// command actually executed:
 	// workingDir = terminalInfo.getCurrentWorkingDirectory()
-
 	const workingDirInfo = workingDir ? ` from '${workingDir.toPosix()}'` : ""
 
 	let userFeedback: { text?: string; images?: string[] } | undefined
-	let didContinue = false
+	let runInBackground: boolean | undefined = undefined
 	let completed = false
 	let result: string = ""
 	let exitDetails: ExitCodeDetails | undefined
 	const { terminalOutputLineLimit = 500 } = (await cline.providerRef.deref()?.getState()) ?? {}
 
-	const commandExecutor = execaCommandExecutor // vsCodeCommandExecutor
+	const debounceLineLimit = 100 // Flush after this many lines.
+	const debounceTimeoutMs = 200 // Flush after this much time inactivity (ms).
+	let buffer: string[] = []
+	let debounceTimer: NodeJS.Timeout | null = null
 
-	await commandExecutor.execute({
-		command,
-		cwd: workingDir,
-		taskId: cline.taskId,
-		onLine: async (line, process) => {
-			if (didContinue) {
-				cline.say("command_output", Terminal.compressTerminalOutput(line, terminalOutputLineLimit))
-				return
-			}
+	async function flush(process?: RooTerminalProcess) {
+		if (debounceTimer) {
+			clearTimeout(debounceTimer)
+			debounceTimer = null
+		}
 
-			const { response, text, images } = await cline.ask("command_output", line)
+		if (buffer.length === 0) {
+			return
+		}
 
-			if (response === "yesButtonClicked") {
-				// Proceed while running.
+		const output = buffer.join("\n")
+		buffer = []
+
+		result = Terminal.compressTerminalOutput(result + output, terminalOutputLineLimit)
+		const compressed = Terminal.compressTerminalOutput(output, terminalOutputLineLimit)
+		cline.say("command_output", compressed)
+
+		if (typeof runInBackground !== "undefined") {
+			return
+		}
+
+		console.log(`ask command_output: waiting for response`)
+		const { response, text, images } = await cline.ask("command_output", compressed)
+		console.log(`ask command_output =>`, response)
+
+		if (response === "yesButtonClicked") {
+			runInBackground = false
+		} else {
+			runInBackground = true
+			userFeedback = { text, images }
+		}
+
+		process?.continue()
+	}
+
+	const callbacks = {
+		onLine: async (line: string, process: RooTerminalProcess) => {
+			buffer.push(line)
+
+			if (buffer.length >= debounceLineLimit) {
+				await flush(process)
 			} else {
-				userFeedback = { text, images }
-			}
+				if (debounceTimer) {
+					clearTimeout(debounceTimer)
+				}
 
-			didContinue = true
-			process?.continue() // Continue past the await.
+				debounceTimer = setTimeout(() => flush(process), debounceTimeoutMs)
+			}
 		},
-		onStarted: () => {},
-		onCompleted: (output) => {
-			result = output ?? ""
-			completed = true
-		},
-		onShellExecutionComplete: (details) => {
-			exitDetails = details
-		},
-		onNoShellIntegration: async (message) => {
+		onCompleted: () => (completed = true),
+		onShellExecutionComplete: (details: ExitCodeDetails) => (exitDetails = details),
+		onNoShellIntegration: async (message: string) => {
 			telemetryService.captureShellIntegrationError(cline.taskId)
 			await cline.say("shell_integration_warning", message)
 		},
-	})
+	}
 
-	// Wait for a short delay to ensure all messages are sent to the webview
+	let terminal: Terminal | ExecaTerminal
+
+	if (terminalProvider === "vscode") {
+		terminal = await TerminalRegistry.getOrCreateTerminal(workingDir, !!workingDir, cline.taskId)
+		terminal.terminal.show()
+	} else {
+		terminal = new ExecaTerminal(workingDir)
+	}
+
+	await terminal.runCommand(command, callbacks)
+
+	if (debounceTimer) {
+		clearTimeout(debounceTimer)
+		debounceTimer = null
+	}
+
+	// If there are any lines in the buffer, flush them to `result`.
+	await flush()
+
+	// Wait for a short delay to ensure all messages are sent to the webview.
 	// This delay allows time for non-awaited promises to be created and
 	// for their associated messages to be sent to the webview, maintaining
 	// the correct order of messages (although the webview is smart about
 	// grouping command_output messages despite any gaps anyways).
 	await delay(50)
-
-	result = Terminal.compressTerminalOutput(result, terminalOutputLineLimit)
 
 	if (userFeedback) {
 		await cline.say("user_feedback", userFeedback.text, userFeedback.images)

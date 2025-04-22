@@ -2,9 +2,12 @@
 
 import * as vscode from "vscode"
 import { execSync } from "child_process"
-import { TerminalProcess, ExitCodeDetails } from "../TerminalProcess"
+
+import { ExitCodeDetails } from "../types"
+import { TerminalProcess } from "../TerminalProcess"
 import { Terminal } from "../Terminal"
 import { TerminalRegistry } from "../TerminalRegistry"
+
 // Mock the vscode module
 jest.mock("vscode", () => {
 	// Store event handlers so we can trigger them in tests

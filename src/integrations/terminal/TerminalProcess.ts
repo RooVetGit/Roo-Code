@@ -88,42 +88,23 @@ import stripAnsi from "strip-ansi"
 import * as vscode from "vscode"
 import { inspect } from "util"
 
-export interface ExitCodeDetails {
-	exitCode: number | undefined
-	signal?: number | undefined
-	signalName?: string
-	coreDumpPossible?: boolean
-}
-
+import { RooTerminalProcessEvents, ExitCodeDetails } from "./types"
 import { Terminal } from "./Terminal"
 
-export interface TerminalProcessEvents {
-	line: [line: string]
-	continue: []
-	completed: [output?: string]
-	error: [error: Error]
-	no_shell_integration: [message: string]
-	/**
-	 * Emitted when a shell execution completes
-	 * @param id The terminal ID
-	 * @param exitDetails Contains exit code and signal information if process was terminated by signal
-	 */
-	shell_execution_complete: [exitDetails: ExitCodeDetails]
-	stream_available: [stream: AsyncIterable<string>]
-}
-
-// how long to wait after a process outputs anything before we consider it "cool" again
+// How long to wait after a process outputs anything before we consider it "cool" again.
 const PROCESS_HOT_TIMEOUT_NORMAL = 2_000
 const PROCESS_HOT_TIMEOUT_COMPILING = 15_000
 
-export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
+export class TerminalProcess extends EventEmitter<RooTerminalProcessEvents> {
+	public command: string = ""
+	public isHot: boolean = false
+
 	private isListening: boolean = true
 	private terminalInfo: Terminal
 	private lastEmitTime_ms: number = 0
 	private fullOutput: string = ""
 	private lastRetrievedIndex: number = 0
-	isHot: boolean = false
-	command: string = ""
+	private hotTimer: NodeJS.Timeout | null = null
 
 	constructor(terminal: Terminal) {
 		super()
@@ -243,8 +224,6 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 		}
 	}
 
-	private hotTimer: NodeJS.Timeout | null = null
-
 	async run(command: string) {
 		this.command = command
 		const terminal = this.terminalInfo.terminal
@@ -288,10 +267,12 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 			const defaultWindowsShellProfile = vscode.workspace
 				.getConfiguration("terminal.integrated.defaultProfile")
 				.get("windows")
+
 			const isPowerShell =
 				process.platform === "win32" &&
 				(defaultWindowsShellProfile === null ||
 					(defaultWindowsShellProfile as string)?.toLowerCase().includes("powershell"))
+
 			if (isPowerShell) {
 				let commandToExecute = command
 
@@ -309,10 +290,12 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 			} else {
 				terminal.shellIntegration.executeCommand(command)
 			}
+
 			this.isHot = true
 
 			// Wait for stream to be available
 			let stream: AsyncIterable<string>
+
 			try {
 				stream = await streamAvailable
 			} catch (error) {
@@ -351,6 +334,7 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 				if (!commandOutputStarted) {
 					preOutput += data
 					const match = this.matchAfterVsceStartMarkers(data)
+
 					if (match !== undefined) {
 						commandOutputStarted = true
 						data = match
@@ -368,22 +352,28 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 				this.fullOutput += data
 
 				// For non-immediately returning commands we want to show loading spinner
-				// right away but this wouldnt happen until it emits a line break, so
+				// right away but this wouldn't happen until it emits a line break, so
 				// as soon as we get any output we emit to let webview know to show spinner
 				const now = Date.now()
+
 				if (this.isListening && (now - this.lastEmitTime_ms > 100 || this.lastEmitTime_ms === 0)) {
 					this.emitRemainingBufferIfListening()
 					this.lastEmitTime_ms = now
 				}
 
-				// 2. Set isHot depending on the command.
+				// Set isHot depending on the command.
 				// This stalls API requests until terminal is cool again.
 				this.isHot = true
+
 				if (this.hotTimer) {
 					clearTimeout(this.hotTimer)
 				}
-				// these markers indicate the command is some kind of local dev server recompiling the app, which we want to wait for output of before sending request to cline
+
+				// these markers indicate the command is some kind of local dev
+				// server recompiling the app, which we want to wait for output
+				// of before sending request to Roo Code.
 				const compilingMarkers = ["compiling", "building", "bundling", "transpiling", "generating", "starting"]
+
 				const markerNullifiers = [
 					"compiled",
 					"success",
@@ -398,9 +388,11 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 					"error",
 					"fail",
 				]
+
 				const isCompiling =
 					compilingMarkers.some((marker) => data.toLowerCase().includes(marker.toLowerCase())) &&
 					!markerNullifiers.some((nullifier) => data.toLowerCase().includes(nullifier.toLowerCase()))
+
 				this.hotTimer = setTimeout(
 					() => {
 						this.isHot = false
@@ -450,16 +442,21 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 			// fullOutput begins after C marker so we only need to trim off D marker
 			// (if D exists, see VSCode bug# 237208):
 			const match = this.matchBeforeVsceEndMarkers(this.fullOutput)
+
 			if (match !== undefined) {
 				this.fullOutput = match
 			}
 
 			// console.debug(`[Terminal Process] processed output via ${matchSource}: ` + inspect(output, { colors: false, breakLength: Infinity }))
 
-			// for now we don't want this delaying requests since we don't send diagnostics automatically anymore (previous: "even though the command is finished, we still want to consider it 'hot' in case so that api request stalls to let diagnostics catch up")
+			// For now we don't want this delaying requests since we don't send
+			// diagnostics automatically anymore (previous: "even though the
+			// command is finished, we still want to consider it 'hot' in case
+			// so that api request stalls to let diagnostics catch up").
 			if (this.hotTimer) {
 				clearTimeout(this.hotTimer)
 			}
+
 			this.isHot = false
 
 			this.emit("completed", this.removeEscapeSequences(this.fullOutput))
@@ -470,12 +467,13 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 			console.warn(
 				"[TerminalProcess] Shell integration not available. Command sent without knowledge of response.",
 			)
+
 			this.emit(
 				"no_shell_integration",
 				"Command was submitted; output is not available, as shell integration is inactive.",
 			)
 
-			// unknown, but trigger the event
+			// Unknown, but trigger the event
 			this.emit(
 				"completed",
 				"<shell integration is not available, so terminal output and command execution status is unknown>",
@@ -537,6 +535,7 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 			if (this.terminalInfo && !this.terminalInfo.isStreamClosed()) {
 				// Stream still running - only process complete lines
 				endIndex = outputToProcess.lastIndexOf("\n")
+
 				if (endIndex === -1) {
 					// No complete lines
 					return ""
@@ -573,18 +572,20 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 			prefixLength = 0
 		} else {
 			startIndex = data.indexOf(prefix)
+
 			if (startIndex === -1) {
 				return undefined
 			}
+
 			if (bell.length > 0) {
 				// Find the bell character after the prefix
 				const bellIndex = data.indexOf(bell, startIndex + prefix.length)
+
 				if (bellIndex === -1) {
 					return undefined
 				}
 
 				const distanceToBell = bellIndex - startIndex
-
 				prefixLength = distanceToBell + bell.length
 			} else {
 				prefixLength = prefix.length
@@ -598,6 +599,7 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 			endIndex = data.length
 		} else {
 			endIndex = data.indexOf(suffix, contentStart)
+
 			if (endIndex === -1) {
 				return undefined
 			}
@@ -686,21 +688,4 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 
 		return match133 !== undefined ? match133 : match633
 	}
-}
-
-export type TerminalProcessResultPromise = TerminalProcess & Promise<void>
-
-// Similar to execa's ResultPromise, this lets us create a mixin of both a TerminalProcess and a Promise: https://github.com/sindresorhus/execa/blob/main/lib/methods/promise.js
-export function mergePromise(process: TerminalProcess, promise: Promise<void>): TerminalProcessResultPromise {
-	const nativePromisePrototype = (async () => {})().constructor.prototype
-	const descriptors = ["then", "catch", "finally"].map(
-		(property) => [property, Reflect.getOwnPropertyDescriptor(nativePromisePrototype, property)] as const,
-	)
-	for (const [property, descriptor] of descriptors) {
-		if (descriptor) {
-			const value = descriptor.value.bind(promise)
-			Reflect.defineProperty(process, property, { ...descriptor, value })
-		}
-	}
-	return process as TerminalProcessResultPromise
 }

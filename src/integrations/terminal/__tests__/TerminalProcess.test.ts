@@ -2,7 +2,8 @@
 
 import * as vscode from "vscode"
 
-import { TerminalProcess, mergePromise } from "../TerminalProcess"
+import { mergePromise } from "../mergePromise"
+import { TerminalProcess } from "../TerminalProcess"
 import { Terminal } from "../Terminal"
 import { TerminalRegistry } from "../TerminalRegistry"
 

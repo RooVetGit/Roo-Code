@@ -1,22 +1,18 @@
 import * as vscode from "vscode"
 import pWaitFor from "p-wait-for"
 
-import { ExitCodeDetails, mergePromise, TerminalProcess, TerminalProcessResultPromise } from "./TerminalProcess"
 import { truncateOutput, applyRunLengthEncoding } from "../misc/extract-text"
+
+import { ExitCodeDetails, RooTerminal, RooTerminalCallbacks } from "./types"
+import { TerminalProcess } from "./TerminalProcess"
+import { RooTerminalProcessResultPromise, mergePromise } from "./mergePromise"
 
 // Import TerminalRegistry here to avoid circular dependencies.
 const { TerminalRegistry } = require("./TerminalRegistry")
 
 export const DEFAULT_TERMINAL_SHELL_INTEGRATION_TIMEOUT = 5_000
 
-export interface CommandCallbacks {
-	onLine?: (line: string, process: TerminalProcess) => void
-	onCompleted?: (output: string | undefined, process: TerminalProcess) => void
-	onShellExecutionComplete?: (details: ExitCodeDetails, process: TerminalProcess) => void
-	onNoShellIntegration?: (message: string, process: TerminalProcess) => void
-}
-
-export class Terminal {
+export class Terminal implements RooTerminal {
 	private static shellIntegrationTimeout: number = DEFAULT_TERMINAL_SHELL_INTEGRATION_TIMEOUT
 	private static commandDelay: number = 0
 	private static powershellCounter: boolean = false
@@ -170,40 +166,23 @@ export class Terminal {
 		return output
 	}
 
-	public runCommand(command: string, callbacks?: CommandCallbacks): TerminalProcessResultPromise {
+	public runCommand(command: string, callbacks: RooTerminalCallbacks): RooTerminalProcessResultPromise {
 		// We set busy before the command is running because the terminal may be waiting
 		// on terminal integration, and we must prevent another instance from selecting
 		// the terminal for use during that time.
 		this.busy = true
 
-		// Create process immediately
 		const process = new TerminalProcess(this)
-
-		// Store the command on the process for reference
 		process.command = command
-
-		// Set process on terminal
 		this.process = process
 
-		// Set up event handlers from callbacks before starting process
+		// Set up event handlers from callbacks before starting process.
 		// This ensures that we don't miss any events because they are
 		// configured before the process starts.
-		if (callbacks) {
-			if (callbacks.onLine) {
-				process.on("line", (line) => callbacks.onLine!(line, process))
-			}
-			if (callbacks.onCompleted) {
-				process.once("completed", (output) => callbacks.onCompleted!(output, process))
-			}
-			if (callbacks.onShellExecutionComplete) {
-				process.once("shell_execution_complete", (details) =>
-					callbacks.onShellExecutionComplete!(details, process),
-				)
-			}
-			if (callbacks.onNoShellIntegration) {
-				process.once("no_shell_integration", (msg) => callbacks.onNoShellIntegration!(msg, process))
-			}
-		}
+		process.on("line", (line) => callbacks.onLine(line, process))
+		process.once("completed", (output) => callbacks.onCompleted(output, process))
+		process.once("shell_execution_complete", (details) => callbacks.onShellExecutionComplete(details, process))
+		process.once("no_shell_integration", (msg) => callbacks.onNoShellIntegration(msg, process))
 
 		const promise = new Promise<void>((resolve, reject) => {
 			// Set up event handlers
@@ -277,11 +256,14 @@ export class Terminal {
 			// Process multi-line content
 			const lines = terminalContents.split("\n")
 			const lastLine = lines.pop()?.trim()
+
 			if (lastLine) {
 				let i = lines.length - 1
+
 				while (i >= 0 && !lines[i].trim().startsWith(lastLine)) {
 					i--
 				}
+
 				terminalContents = lines.slice(Math.max(i, 0)).join("\n")
 			}
 

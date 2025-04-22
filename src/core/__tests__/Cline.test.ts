@@ -12,6 +12,10 @@ import { ClineProvider } from "../webview/ClineProvider"
 import { ApiConfiguration, ModelInfo } from "../../shared/api"
 import { ApiStreamChunk } from "../../api/transform/stream"
 
+jest.mock("execa", () => ({
+	execa: jest.fn(),
+}))
+
 // Mock RooIgnoreController
 jest.mock("../ignore/RooIgnoreController")
 
