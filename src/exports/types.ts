@@ -307,6 +307,7 @@ type GlobalSettings = {
 				| "ko"
 				| "pl"
 				| "pt-BR"
+				| "ru"
 				| "tr"
 				| "vi"
 				| "zh-CN"
