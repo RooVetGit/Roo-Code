@@ -6,7 +6,7 @@ import OpenAI from "openai"
 import { ApiHandlerOptions, ModelInfo, openRouterDefaultModelId, openRouterDefaultModelInfo } from "../../shared/api"
 import { parseApiPrice } from "../../utils/cost"
 import { convertToOpenAiMessages } from "../transform/openai-format"
-import { ApiStreamChunk, ApiStreamUsageChunk } from "../transform/stream"
+import { ApiStreamChunk } from "../transform/stream"
 import { convertToR1Format } from "../transform/r1-format"
 
 import { DEFAULT_HEADERS, DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
@@ -30,21 +30,18 @@ type OpenRouterChatCompletionParams = OpenAI.Chat.ChatCompletionCreateParams & {
 
 // See `OpenAI.Chat.Completions.ChatCompletionChunk["usage"]`
 // `CompletionsAPI.CompletionUsage`
+// See also: https://openrouter.ai/docs/use-cases/usage-accounting
 interface CompletionUsage {
 	completion_tokens?: number
+	completion_tokens_details?: {
+		reasoning_tokens?: number
+	}
 	prompt_tokens?: number
+	prompt_tokens_details?: {
+		cached_tokens?: number
+	}
 	total_tokens?: number
 	cost?: number
-
-	/**
-	 * Breakdown of tokens used in a completion.
-	 */
-	// completion_tokens_details?: CompletionUsage.CompletionTokensDetails;
-
-	/**
-	 * Breakdown of tokens used in the prompt.
-	 */
-	// prompt_tokens_details?: CompletionUsage.PromptTokensDetails;
 }
 
 export class OpenRouterHandler extends BaseProvider implements SingleCompletionHandler {
@@ -160,16 +157,17 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 
 			const delta = chunk.choices[0]?.delta
 
-			if ("reasoning" in delta && delta.reasoning) {
-				yield { type: "reasoning", text: delta.reasoning } as ApiStreamChunk
+			if ("reasoning" in delta && delta.reasoning && typeof delta.reasoning === "string") {
+				yield { type: "reasoning", text: delta.reasoning }
 			}
 
 			if (delta?.content) {
 				fullResponseText += delta.content
-				yield { type: "text", text: delta.content } as ApiStreamChunk
+				yield { type: "text", text: delta.content }
 			}
 
 			if (chunk.usage) {
+				console.log("chunk.usage", chunk.usage)
 				lastUsage = chunk.usage
 			}
 		}
@@ -179,7 +177,11 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 				type: "usage",
 				inputTokens: lastUsage.prompt_tokens || 0,
 				outputTokens: lastUsage.completion_tokens || 0,
-				totalCost: lastUsage?.cost || 0,
+				// Waiting on OpenRouter to figure out what this represents in the Gemini case
+				// and how to best support it.
+				// cacheReadTokens: lastUsage.prompt_tokens_details?.cached_tokens,
+				reasoningTokens: lastUsage.completion_tokens_details?.reasoning_tokens,
+				totalCost: lastUsage.cost || 0,
 			}
 		}
 	}
