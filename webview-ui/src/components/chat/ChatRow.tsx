@@ -1114,7 +1114,9 @@ export const ChatRowContent = ({
 											backgroundColor: "var(--vscode-editor-background)",
 											borderTop: "1px solid var(--vscode-editorGroup-border)",
 										}}>
-										<span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+										<span
+											style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
+											title={t(`settings:autoApprove.commandRiskLevel.${risk}Desc`)}>
 											{risk && (
 												<i
 													className={`codicon codicon-${riskStyle?.icon || "warning"}`}
@@ -1123,7 +1125,11 @@ export const ChatRowContent = ({
 											)}
 											<span>
 												{risk && (
-													<span style={{ color: riskStyle?.color }}>
+													<span
+														style={{
+															color: riskStyle?.color,
+															cursor: "help",
+														}}>
 														{t(`settings:autoApprove.commandRiskLevel.${risk}`)}
 													</span>
 												)}
