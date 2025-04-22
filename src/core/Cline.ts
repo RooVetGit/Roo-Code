@@ -46,6 +46,7 @@ import { UrlContentFetcher } from "../services/browser/UrlContentFetcher"
 import { listFiles } from "../services/glob/list-files"
 import { BrowserSession } from "../services/browser/BrowserSession"
 import { McpHub } from "../services/mcp/McpHub"
+import { McpServerManager } from "../services/mcp/McpServerManager"
 import { telemetryService } from "../services/telemetry/TelemetryService"
 import { CheckpointServiceOptions, RepoPerTaskCheckpointService } from "../services/checkpoints"
 
@@ -844,8 +845,15 @@ export class Cline extends EventEmitter<ClineEvents> {
 			return "just now"
 		})()
 
-		const wasRecent = lastClineMessage?.ts && Date.now() - lastClineMessage.ts < 30_000
+		const lastTaskResumptionIndex = newUserContent.findIndex(
+			(x) => x.type === "text" && x.text.startsWith("[TASK RESUMPTION]"),
+		)
+		if (lastTaskResumptionIndex !== -1) {
+			newUserContent.splice(lastTaskResumptionIndex, newUserContent.length - lastTaskResumptionIndex)
+		}
 
+		const wasRecent = lastClineMessage?.ts && Date.now() - lastClineMessage.ts < 30_000
+		
 		newUserContent.push({
 			type: "text",
 			text:
@@ -969,12 +977,19 @@ export class Cline extends EventEmitter<ClineEvents> {
 		this.lastApiRequestTime = Date.now()
 
 		if (mcpEnabled ?? true) {
-			mcpHub = this.providerRef.deref()?.getMcpHub()
-			if (!mcpHub) {
-				throw new Error("MCP hub not available")
+			const provider = this.providerRef.deref()
+			if (!provider) {
+				throw new Error("Provider reference lost during view transition")
 			}
+
+			// Wait for MCP hub initialization through McpServerManager
+			mcpHub = await McpServerManager.getInstance(provider.context, provider)
+			if (!mcpHub) {
+				throw new Error("Failed to get MCP hub from server manager")
+			}
+
 			// Wait for MCP servers to be connected before generating system prompt
-			await pWaitFor(() => mcpHub!.isConnecting !== true, { timeout: 10_000 }).catch(() => {
+			await pWaitFor(() => !mcpHub!.isConnecting, { timeout: 10_000 }).catch(() => {
 				console.error("MCP servers failed to connect in time")
 			})
 		}
@@ -1604,6 +1619,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 						...formatResponse.imageBlocks(images),
 					],
 				)
+
+				await this.say("user_feedback", text, images)
 
 				// Track consecutive mistake errors in telemetry
 				telemetryService.captureConsecutiveMistakeError(this.taskId)
