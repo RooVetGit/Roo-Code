@@ -72,18 +72,15 @@ describe("GeminiHandler", () => {
 
 			// Should have 3 chunks: 'Hello', ' world!', and usage info
 			expect(chunks.length).toBe(3)
-			expect(chunks[0]).toEqual({
-				type: "text",
-				text: "Hello",
-			})
-			expect(chunks[1]).toEqual({
-				type: "text",
-				text: " world!",
-			})
+			expect(chunks[0]).toEqual({ type: "text", text: "Hello" })
+			expect(chunks[1]).toEqual({ type: "text", text: " world!" })
 			expect(chunks[2]).toEqual({
 				type: "usage",
 				inputTokens: 10,
 				outputTokens: 5,
+				cacheReadTokens: undefined,
+				cacheWriteTokens: undefined,
+				thinkingTokens: undefined,
 			})
 
 			// Verify the call to generateContentStream

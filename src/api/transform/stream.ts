@@ -17,5 +17,6 @@ export interface ApiStreamUsageChunk {
 	outputTokens: number
 	cacheWriteTokens?: number
 	cacheReadTokens?: number
-	totalCost?: number // openrouter
+	thinkingTokens?: number
+	totalCost?: number
 }

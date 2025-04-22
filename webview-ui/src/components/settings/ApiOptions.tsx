@@ -1691,6 +1691,7 @@ const ApiOptions = ({
 					)}
 
 					<ModelInfoView
+						apiProvider={selectedProvider}
 						selectedModelId={selectedModelId}
 						modelInfo={selectedModelInfo}
 						isDescriptionExpanded={isDescriptionExpanded}

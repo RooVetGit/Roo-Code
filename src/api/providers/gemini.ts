@@ -14,6 +14,8 @@ import { convertAnthropicContentToGemini, convertAnthropicMessageToGemini } from
 import type { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 
+const CACHE_TTL = 5
+
 export class GeminiHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
 	private client: GoogleGenAI
@@ -31,15 +33,15 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		messages: Anthropic.Messages.MessageParam[],
 		taskId?: string,
 	): ApiStream {
-		const { id: model, thinkingConfig, maxOutputTokens, supportsPromptCache } = this.getModel()
+		const { id: model, thinkingConfig, maxOutputTokens, info } = this.getModel()
 
 		const contents = messages.map(convertAnthropicMessageToGemini)
 		let uncachedContent: Content[] | undefined = undefined
 		let cachedContent: string | undefined = undefined
-		let cacheWriteTokens: number = 0
+		let cacheWriteTokens: number | undefined = undefined
 
 		// https://ai.google.dev/gemini-api/docs/caching?lang=node
-		if (supportsPromptCache && taskId) {
+		if (info.supportsPromptCache && taskId) {
 			const cacheEntry = this.contentCaches.get(taskId)
 
 			if (cacheEntry) {
@@ -49,7 +51,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 
 			const newCacheEntry = await this.client.caches.create({
 				model,
-				config: { contents, systemInstruction, ttl: "300s" },
+				config: { contents, systemInstruction, ttl: `${CACHE_TTL * 60}s` },
 			})
 
 			if (newCacheEntry.name) {
@@ -89,26 +91,31 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 
 		if (lastUsageMetadata) {
 			const inputTokens = lastUsageMetadata.promptTokenCount ?? 0
-			const cachedInputTokens = lastUsageMetadata.cachedContentTokenCount ?? 0
 			const outputTokens = lastUsageMetadata.candidatesTokenCount ?? 0
+			const cacheReadTokens = lastUsageMetadata.cachedContentTokenCount
+			const thinkingTokens = lastUsageMetadata.thoughtsTokenCount
+
+			const totalCost = this.calculateCost({
+				info,
+				inputTokens,
+				outputTokens,
+				cacheWriteTokens,
+				cacheReadTokens,
+			})
 
 			yield {
 				type: "usage",
-				inputTokens: inputTokens - cachedInputTokens,
+				inputTokens,
 				outputTokens,
 				cacheWriteTokens,
-				cacheReadTokens: cachedInputTokens,
+				cacheReadTokens,
+				thinkingTokens,
+				totalCost,
 			}
 		}
 	}
 
-	override getModel(): {
-		id: GeminiModelId
-		info: ModelInfo
-		thinkingConfig?: ThinkingConfig
-		maxOutputTokens?: number
-		supportsPromptCache?: boolean
-	} {
+	override getModel() {
 		let id = this.options.apiModelId ? (this.options.apiModelId as GeminiModelId) : geminiDefaultModelId
 		let info: ModelInfo = geminiModels[id]
 
@@ -125,7 +132,6 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 						? { thinkingBudget: this.options.modelMaxThinkingTokens }
 						: undefined,
 					maxOutputTokens: this.options.modelMaxTokens ?? info.maxTokens ?? undefined,
-					supportsPromptCache: info.supportsPromptCache,
 				}
 			}
 		}
@@ -135,7 +141,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 			info = geminiModels[geminiDefaultModelId]
 		}
 
-		return { id, info, supportsPromptCache: info.supportsPromptCache }
+		return { id, info }
 	}
 
 	async completePrompt(prompt: string): Promise<string> {
@@ -182,5 +188,61 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 			console.warn("Gemini token counting failed, using fallback", error)
 			return super.countTokens(content)
 		}
+	}
+
+	private calculateCost({
+		info,
+		inputTokens,
+		outputTokens,
+		cacheWriteTokens,
+		cacheReadTokens,
+	}: {
+		info: ModelInfo
+		inputTokens: number
+		outputTokens: number
+		cacheWriteTokens?: number
+		cacheReadTokens?: number
+	}) {
+		if (!info.inputPrice || !info.outputPrice || !info.cacheWritesPrice || !info.cacheReadsPrice) {
+			return undefined
+		}
+
+		let inputPrice = info.inputPrice
+		let outputPrice = info.outputPrice
+		let cacheWritesPrice = info.cacheWritesPrice
+		let cacheReadsPrice = info.cacheReadsPrice
+
+		// If there's tiered pricing then adjust the input and output token prices
+		// based on the input tokens used.
+		if (info.tiers) {
+			const tier = info.tiers.find((tier) => inputTokens <= tier.contextWindow)
+
+			if (tier) {
+				inputPrice = tier.inputPrice ?? inputPrice
+				outputPrice = tier.outputPrice ?? outputPrice
+				cacheWritesPrice = tier.cacheWritesPrice ?? cacheWritesPrice
+				cacheReadsPrice = tier.cacheReadsPrice ?? cacheReadsPrice
+			}
+		}
+
+		let inputTokensCost = inputPrice * (inputTokens / 1_000_000)
+		let outputTokensCost = outputPrice * (outputTokens / 1_000_000)
+		let cacheWriteCost = 0
+		let cacheReadCost = 0
+
+		// Cache Writes: Charged at the input token cost plus 5 minutes of cache storage.
+		// Example: Cache write cost = Input token price + (Cache storage price × (5 minutes / 60 minutes))
+		if (cacheWriteTokens) {
+			cacheWriteCost = cacheWritesPrice * (cacheWriteTokens / 1_000_000) * (CACHE_TTL / 60)
+		}
+
+		// Cache Reads: Charged at 0.25 × the original input token cost.
+		if (cacheReadTokens) {
+			const uncachedReadTokens = inputTokens - cacheReadTokens
+			cacheReadCost = cacheReadsPrice * (cacheReadTokens / 1_000_000)
+			inputTokensCost = inputPrice * (uncachedReadTokens / 1_000_000)
+		}
+
+		return inputTokensCost + outputTokensCost + cacheWriteCost + cacheReadCost
 	}
 }
