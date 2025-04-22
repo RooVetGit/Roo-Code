@@ -42,6 +42,7 @@ export abstract class BaseProvider implements ApiHandler {
 			if (block.type === "text") {
 				// Use tiktoken for text token counting
 				const text = block.text || ""
+
 				if (text.length > 0) {
 					const tokens = this.encoder.encode(text)
 					totalTokens += tokens.length
@@ -49,6 +50,7 @@ export abstract class BaseProvider implements ApiHandler {
 			} else if (block.type === "image") {
 				// For images, calculate based on data size
 				const imageSource = block.source
+
 				if (imageSource && typeof imageSource === "object" && "data" in imageSource) {
 					const base64Data = imageSource.data as string
 					totalTokens += Math.ceil(Math.sqrt(base64Data.length))
