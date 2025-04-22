@@ -404,6 +404,18 @@ export class Cline extends EventEmitter<ClineEvents> {
 				size: taskDirSize,
 				workspace: this.cwd,
 			})
+
+			this.providerRef.deref()?.eventHub?.distribute({
+				event: "LastRelevantMessage",
+				data: {
+					type: lastRelevantMessage.type,
+					ask: lastRelevantMessage.ask,
+					say: lastRelevantMessage.say,
+					text: lastRelevantMessage.text,
+					partial: lastRelevantMessage.partial,
+					reasoning: lastRelevantMessage.reasoning,
+				},
+			})
 		} catch (error) {
 			console.error("Failed to save cline messages:", error)
 		}
@@ -1886,8 +1898,32 @@ export class Cline extends EventEmitter<ClineEvents> {
 				// 	this.userMessageContentReady = true
 				// }
 
-				await pWaitFor(() => this.userMessageContentReady)
+				const startTime = Date.now()
+				let didTimeout = false
 
+				// Wait for userMessageContentReady with a 2-second timeout
+				await pWaitFor(
+					() => {
+						if (this.userMessageContentReady) return true
+						if (Date.now() - startTime >= 2000) {
+							didTimeout = true
+							return true // exit after 2 seconds even if not ready
+						}
+						return false
+					},
+					{ interval: 100 },
+				)
+				// Distribute EndCurrentTurn event if timed out
+				// If timed out meaning Roo-Code is waiting for the external user input message, then we send such signal and let handler return the last relevant message as tool call's response
+				if (didTimeout) {
+					this.providerRef.deref()?.eventHub?.distribute({
+						event: "EndCurrentTurn",
+						data: {
+							taskId: this.taskId,
+						},
+					})
+					await pWaitFor(() => this.userMessageContentReady)
+				}
 				// if the model did not tool use, then we need to tell it to either use a tool or attempt_completion
 				const didToolUse = this.assistantMessageContent.some((block) => block.type === "tool_use")
 				if (!didToolUse) {
