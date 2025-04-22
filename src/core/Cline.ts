@@ -52,6 +52,7 @@ import { CheckpointServiceOptions, RepoPerTaskCheckpointService } from "../servi
 // integrations
 import { DIFF_VIEW_URI_SCHEME, DiffViewProvider } from "../integrations/editor/DiffViewProvider"
 import { findToolName, formatContentBlockToMarkdown } from "../integrations/misc/export-markdown"
+import { RooTerminalProcess } from "../integrations/terminal/types"
 import { Terminal } from "../integrations/terminal/Terminal"
 import { TerminalRegistry } from "../integrations/terminal/TerminalRegistry"
 
@@ -192,6 +193,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 	// metrics
 	private toolUsage: ToolUsage = {}
 
+	// terminal
+	public terminalProcess?: RooTerminalProcess
+
 	constructor({
 		provider,
 		apiConfiguration,
@@ -203,7 +207,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 		task,
 		images,
 		historyItem,
-		experiments,
 		startTask = true,
 		rootTask,
 		parentTask,
@@ -519,6 +522,14 @@ export class Cline extends EventEmitter<ClineEvents> {
 		this.askResponse = askResponse
 		this.askResponseText = text
 		this.askResponseImages = images
+	}
+
+	async handleTerminalOperation(terminalOperation: "continue" | "abort") {
+		if (terminalOperation === "continue") {
+			this.terminalProcess?.continue()
+		} else if (terminalOperation === "abort") {
+			this.terminalProcess?.abort()
+		}
 	}
 
 	async say(
@@ -2055,23 +2066,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 			}).catch(() => {})
 		}
 
-		// we want to get diagnostics AFTER terminal cools down for a few reasons: terminal could be scaffolding a project, dev servers (compilers like webpack) will first re-compile and then send diagnostics, etc
-		/*
-		let diagnosticsDetails = ""
-		const diagnostics = await this.diagnosticsMonitor.getCurrentDiagnostics(this.didEditFile || terminalWasBusy) // if cline ran a command (ie npm install) or edited the workspace then wait a bit for updated diagnostics
-		for (const [uri, fileDiagnostics] of diagnostics) {
-			const problems = fileDiagnostics.filter((d) => d.severity === vscode.DiagnosticSeverity.Error)
-			if (problems.length > 0) {
-				diagnosticsDetails += `\n## ${path.relative(this.cwd, uri.fsPath)}`
-				for (const diagnostic of problems) {
-					// let severity = diagnostic.severity === vscode.DiagnosticSeverity.Error ? "Error" : "Warning"
-					const line = diagnostic.range.start.line + 1 // VSCode lines are 0-indexed
-					const source = diagnostic.source ? `[${diagnostic.source}] ` : ""
-					diagnosticsDetails += `\n- ${source}Line ${line}: ${diagnostic.message}`
-				}
-			}
-		}
-		*/
 		this.didEditFile = false // reset, this lets us know when to wait for saved files to update terminals
 
 		// waiting for updated diagnostics lets terminal output be the most up-to-date possible

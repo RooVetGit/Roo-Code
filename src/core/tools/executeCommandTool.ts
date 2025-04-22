@@ -73,7 +73,7 @@ export async function executeCommand(
 	cline: Cline,
 	command: string,
 	customCwd?: string,
-	terminalProvider: "vscode" | "execa" = "execa",
+	terminalProvider: "vscode" | "execa" = "vscode",
 ): Promise<[boolean, ToolResponse]> {
 	let workingDir: string
 
@@ -116,30 +116,19 @@ export async function executeCommand(
 
 			try {
 				const { response, text, images } = await cline.ask("command_output", compressed)
-				console.log(`ask command_output =>`, response)
 				runInBackground = true
 
-				if (response === "yesButtonClicked") {
-					// Continue running the command in the background.
-					process.continue()
-				} else if (response === "noButtonClicked") {
-					// Abort the command with a SIGINT.
-					process.abort()
-				} else {
-					// Continue running the command in the background, but inject
-					// the message into the context.
+				if (response === "messageResponse") {
 					message = { text, images }
 					process.continue()
 				}
 			} catch (_error) {}
 		},
 		onCompleted: (output: string | undefined) => {
-			console.log(`onCompleted =>`, output)
 			result = Terminal.compressTerminalOutput(output ?? "", terminalOutputLineLimit)
 			completed = true
 		},
 		onShellExecutionComplete: (details: ExitCodeDetails) => {
-			console.log(`onShellExecutionComplete =>`, details)
 			exitDetails = details
 		},
 		onNoShellIntegration: async (message: string) => {
@@ -157,7 +146,10 @@ export async function executeCommand(
 		terminal = new ExecaTerminal(workingDir)
 	}
 
-	await terminal.runCommand(command, callbacks)
+	const process = terminal.runCommand(command, callbacks)
+	cline.terminalProcess = process
+	await process
+	cline.terminalProcess = undefined
 
 	// Wait for a short delay to ensure all messages are sent to the webview.
 	// This delay allows time for non-awaited promises to be created and

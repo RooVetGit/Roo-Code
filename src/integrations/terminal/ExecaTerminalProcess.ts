@@ -26,7 +26,7 @@ export class ExecaTerminalProcess extends EventEmitter<RooTerminalProcessEvents>
 		this.controller = new AbortController()
 
 		try {
-			const stream = execa({
+			const subprocess = execa({
 				shell: true,
 				cwd: this.terminalRef.deref()?.getCurrentWorkingDirectory(),
 				cancelSignal: this.controller.signal,
@@ -34,7 +34,7 @@ export class ExecaTerminalProcess extends EventEmitter<RooTerminalProcessEvents>
 
 			this.emit("line", "")
 
-			for await (const line of stream) {
+			for await (const line of subprocess) {
 				this.fullOutput += line
 				this.fullOutput += "\n"
 

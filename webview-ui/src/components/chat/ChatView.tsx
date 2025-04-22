@@ -403,7 +403,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			switch (clineAsk) {
 				case "api_req_failed":
 				case "command":
-				case "command_output":
 				case "tool":
 				case "browser_action_launch":
 				case "use_mcp_server":
@@ -418,10 +417,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							images: images,
 						})
 					} else {
-						vscode.postMessage({
-							type: "askResponse",
-							askResponse: "yesButtonClicked",
-						})
+						vscode.postMessage({ type: "askResponse", askResponse: "yesButtonClicked" })
 					}
 					// Clear input state after sending
 					setInputValue("")
@@ -429,8 +425,11 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					break
 				case "completion_result":
 				case "resume_completed_task":
-					// extension waiting for feedback. but we can just present a new task button
+					// Waiting for feedback, but we can just present a new task button
 					startNewTask()
+					break
+				case "command_output":
+					vscode.postMessage({ type: "terminalOperation", terminalOperation: "continue" })
 					break
 			}
 			setTextAreaDisabled(true)
@@ -469,7 +468,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							images: images,
 						})
 					} else {
-						// responds to the API with a "This operation failed" and lets it try again
+						// Responds to the API with a "This operation failed" and lets it try again
 						vscode.postMessage({ type: "askResponse", askResponse: "noButtonClicked" })
 					}
 					// Clear input state after sending
@@ -477,7 +476,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					setSelectedImages([])
 					break
 				case "command_output":
-					vscode.postMessage({ type: "askResponse", askResponse: "noButtonClicked" })
+					vscode.postMessage({ type: "terminalOperation", terminalOperation: "abort" })
 					break
 			}
 			setTextAreaDisabled(true)

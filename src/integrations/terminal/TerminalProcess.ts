@@ -501,7 +501,10 @@ export class TerminalProcess extends EventEmitter<RooTerminalProcessEvents> {
 	}
 
 	public abort() {
-		// TODO
+		if (this.isListening) {
+			// Send SIGINT using CTRL+C
+			this.terminalInfo.terminal.sendText("\x03")
+		}
 	}
 
 	/**
