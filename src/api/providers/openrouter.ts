@@ -86,7 +86,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 
 					if (Array.isArray(msg.content)) {
 						// NOTE: this is fine since env details will always be added at the end. but if it weren't there, and the user added a image_url type message, it would pop a text part before it and then move it after to the end.
-						let lastTextPart = msg.content.filter((part) => part.type === "text").pop()
+						let lastTextPart = msg.content.filter((part: OpenAI.Chat.ChatCompletionContentPart) => part.type === "text").pop()
 
 						if (!lastTextPart) {
 							lastTextPart = { type: "text", text: "..." }
@@ -222,6 +222,7 @@ export async function getOpenRouterModels(options?: ApiHandlerOptions) {
 				maxTokens: rawModel.top_provider?.max_completion_tokens,
 				contextWindow: rawModel.context_length,
 				supportsImages: rawModel.architecture?.modality?.includes("image"),
+				supportsComputerUse: true, // Enable for all OpenRouter models
 				supportsPromptCache: false,
 				inputPrice: parseApiPrice(rawModel.pricing?.prompt),
 				outputPrice: parseApiPrice(rawModel.pricing?.completion),
@@ -232,7 +233,7 @@ export async function getOpenRouterModels(options?: ApiHandlerOptions) {
 			// NOTE: this needs to be synced with api.ts/openrouter default model info.
 			switch (true) {
 				case rawModel.id.startsWith("anthropic/claude-3.7-sonnet"):
-					modelInfo.supportsComputerUse = true
+					// modelInfo.supportsComputerUse = true // Removed: Handled by default now
 					modelInfo.supportsPromptCache = true
 					modelInfo.cacheWritesPrice = 3.75
 					modelInfo.cacheReadsPrice = 0.3
@@ -245,7 +246,7 @@ export async function getOpenRouterModels(options?: ApiHandlerOptions) {
 					modelInfo.maxTokens = 8192
 					break
 				case rawModel.id.startsWith("anthropic/claude-3.5-sonnet"):
-					modelInfo.supportsComputerUse = true
+					// modelInfo.supportsComputerUse = true // Removed: Handled by default now
 					modelInfo.supportsPromptCache = true
 					modelInfo.cacheWritesPrice = 3.75
 					modelInfo.cacheReadsPrice = 0.3
