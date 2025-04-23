@@ -48,14 +48,14 @@ export async function applyDiffTool(
 		} else {
 			if (!relPath) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolUsage({ toolName: "apply_diff", success: false })
+				cline.recordToolError("apply_diff")
 				pushToolResult(await cline.sayAndCreateMissingParamError("apply_diff", "path"))
 				return
 			}
 
 			if (!diffContent) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolUsage({ toolName: "apply_diff", success: false })
+				cline.recordToolError("apply_diff")
 				pushToolResult(await cline.sayAndCreateMissingParamError("apply_diff", "diff"))
 				return
 			}
@@ -73,7 +73,7 @@ export async function applyDiffTool(
 
 			if (!fileExists) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolUsage({ toolName: "apply_diff", success: false })
+				cline.recordToolError("apply_diff")
 				const formattedError = `File does not exist at path: ${absolutePath}\n\n<error_details>\nThe specified file could not be found. Please verify the file path and try again.\n</error_details>`
 				await cline.say("error", formattedError)
 				pushToolResult(formattedError)
@@ -96,7 +96,6 @@ export async function applyDiffTool(
 
 			if (!diffResult.success) {
 				cline.consecutiveMistakeCount++
-				cline.recordToolUsage({ toolName: "apply_diff", success: false })
 				const currentCount = (cline.consecutiveMistakeCountForApplyDiff.get(relPath) || 0) + 1
 				cline.consecutiveMistakeCountForApplyDiff.set(relPath, currentCount)
 				let formattedError = ""
@@ -127,6 +126,8 @@ export async function applyDiffTool(
 				if (currentCount >= 2) {
 					await cline.say("diff_error", formattedError)
 				}
+
+				cline.recordToolError("apply_diff", formattedError)
 
 				pushToolResult(formattedError)
 				return
@@ -193,7 +194,7 @@ export async function applyDiffTool(
 						)}\n</final_file_content>\n\n` +
 						`Please note:\n` +
 						`1. You do not need to re-write the file with these changes, as they have already been applied.\n` +
-						`2. Proceed with the task using cline updated file content as the new baseline.\n` +
+						`2. Proceed with the task using this updated file content as the new baseline.\n` +
 						`3. If the user's edits have addressed part of the task or changed the requirements, adjust your approach accordingly.` +
 						`${newProblemsMessage}`,
 				)
@@ -203,7 +204,6 @@ export async function applyDiffTool(
 				)
 			}
 
-			cline.recordToolUsage({ toolName: "apply_diff" })
 			await cline.diffViewProvider.reset()
 
 			return

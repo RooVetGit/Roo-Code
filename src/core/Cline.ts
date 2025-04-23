@@ -39,20 +39,20 @@ import { GlobalFileNames } from "../shared/globalFileNames"
 import { defaultModeSlug, getModeBySlug, getFullModeDetails, isToolAllowedForMode } from "../shared/modes"
 import { EXPERIMENT_IDS, experiments as Experiments, ExperimentId } from "../shared/experiments"
 import { formatLanguage } from "../shared/language"
-import { ToolParamName, ToolResponse } from "../shared/tools"
+import { ToolParamName, ToolResponse, DiffStrategy } from "../shared/tools"
 
 // services
 import { UrlContentFetcher } from "../services/browser/UrlContentFetcher"
 import { listFiles } from "../services/glob/list-files"
 import { BrowserSession } from "../services/browser/BrowserSession"
 import { McpHub } from "../services/mcp/McpHub"
+import { McpServerManager } from "../services/mcp/McpServerManager"
 import { telemetryService } from "../services/telemetry/TelemetryService"
 import { CheckpointServiceOptions, RepoPerTaskCheckpointService } from "../services/checkpoints"
 
 // integrations
 import { DIFF_VIEW_URI_SCHEME, DiffViewProvider } from "../integrations/editor/DiffViewProvider"
 import { findToolName, formatContentBlockToMarkdown } from "../integrations/misc/export-markdown"
-import { ExitCodeDetails, TerminalProcess } from "../integrations/terminal/TerminalProcess"
 import { Terminal } from "../integrations/terminal/Terminal"
 import { TerminalRegistry } from "../integrations/terminal/TerminalRegistry"
 
@@ -79,7 +79,6 @@ import { askFollowupQuestionTool } from "./tools/askFollowupQuestionTool"
 import { switchModeTool } from "./tools/switchModeTool"
 import { attemptCompletionTool } from "./tools/attemptCompletionTool"
 import { newTaskTool } from "./tools/newTaskTool"
-import { appendToFileTool } from "./tools/appendToFileTool"
 
 // prompts
 import { formatResponse } from "./prompts/responses"
@@ -92,8 +91,8 @@ import { RooIgnoreController } from "./ignore/RooIgnoreController"
 import { type AssistantMessageContent, parseAssistantMessage } from "./assistant-message"
 import { truncateConversationIfNeeded } from "./sliding-window"
 import { ClineProvider } from "./webview/ClineProvider"
-import { DiffStrategy, getDiffStrategy } from "./diff/DiffStrategy"
 import { validateToolUse } from "./mode-validator"
+import { MultiSearchReplaceDiffStrategy } from "./diff/strategies/multi-search-replace"
 
 type UserContent = Array<Anthropic.Messages.ContentBlockParam>
 
@@ -108,6 +107,7 @@ export type ClineEvents = {
 	taskSpawned: [taskId: string]
 	taskCompleted: [taskId: string, tokenUsage: TokenUsage, toolUsage: ToolUsage]
 	taskTokenUsageUpdated: [taskId: string, tokenUsage: TokenUsage]
+	taskToolFailed: [taskId: string, tool: ToolName, error: string]
 }
 
 export type ClineOptions = {
@@ -247,8 +247,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			telemetryService.captureTaskCreated(this.taskId)
 		}
 
-		// Initialize diffStrategy based on current state.
-		this.updateDiffStrategy(experiments ?? {})
+		this.diffStrategy = new MultiSearchReplaceDiffStrategy(this.fuzzyMatchThreshold)
 
 		onCreated?.(this)
 
@@ -283,15 +282,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 		return getWorkspacePath(path.join(os.homedir(), "Desktop"))
 	}
 
-	// Add method to update diffStrategy.
-	async updateDiffStrategy(experiments: Partial<Record<ExperimentId, boolean>>) {
-		this.diffStrategy = getDiffStrategy({
-			model: this.api.getModel().id,
-			experiments,
-			fuzzyMatchThreshold: this.fuzzyMatchThreshold,
-		})
-	}
-
 	// Storing task to disk for history
 
 	private async ensureTaskDirectoryExists(): Promise<string> {
@@ -308,9 +298,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 	private async getSavedApiConversationHistory(): Promise<Anthropic.MessageParam[]> {
 		const filePath = path.join(await this.ensureTaskDirectoryExists(), GlobalFileNames.apiConversationHistory)
 		const fileExists = await fileExistsAtPath(filePath)
+
 		if (fileExists) {
 			return JSON.parse(await fs.readFile(filePath, "utf8"))
 		}
+
 		return []
 	}
 
@@ -349,6 +341,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 				return data
 			}
 		}
+
 		return []
 	}
 
@@ -378,7 +371,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 			const tokenUsage = this.getTokenUsage()
 			this.emit("taskTokenUsageUpdated", this.taskId, tokenUsage)
 
-			const taskMessage = this.clineMessages[0] // first message is always the task say
+			const taskMessage = this.clineMessages[0] // First message is always the task say
+
 			const lastRelevantMessage =
 				this.clineMessages[
 					findLastIndex(
@@ -851,8 +845,15 @@ export class Cline extends EventEmitter<ClineEvents> {
 			return "just now"
 		})()
 
-		const wasRecent = lastClineMessage?.ts && Date.now() - lastClineMessage.ts < 30_000
+		const lastTaskResumptionIndex = newUserContent.findIndex(
+			(x) => x.type === "text" && x.text.startsWith("[TASK RESUMPTION]"),
+		)
+		if (lastTaskResumptionIndex !== -1) {
+			newUserContent.splice(lastTaskResumptionIndex, newUserContent.length - lastTaskResumptionIndex)
+		}
 
+		const wasRecent = lastClineMessage?.ts && Date.now() - lastClineMessage.ts < 30_000
+		
 		newUserContent.push({
 			type: "text",
 			text:
@@ -913,11 +914,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 	}
 
 	async abortTask(isAbandoned = false) {
-		// if (this.abort) {
-		// 	console.log(`[subtasks] already aborted task ${this.taskId}.${this.instanceId}`)
-		// 	return
-		// }
-
 		console.log(`[subtasks] aborting task ${this.taskId}.${this.instanceId}`)
 
 		// Will stop any autonomously running promises.
@@ -947,162 +943,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 		if (this.isStreaming && this.diffViewProvider.isEditing) {
 			await this.diffViewProvider.revertChanges()
 		}
+		// Save the countdown message in the automatic retry or other content
+		await this.saveClineMessages()
 	}
 
 	// Tools
-
-	async executeCommandTool(command: string, customCwd?: string): Promise<[boolean, ToolResponse]> {
-		let workingDir: string
-		if (!customCwd) {
-			workingDir = this.cwd
-		} else if (path.isAbsolute(customCwd)) {
-			workingDir = customCwd
-		} else {
-			workingDir = path.resolve(this.cwd, customCwd)
-		}
-
-		// Check if directory exists
-		try {
-			await fs.access(workingDir)
-		} catch (error) {
-			return [false, `Working directory '${workingDir}' does not exist.`]
-		}
-
-		const terminalInfo = await TerminalRegistry.getOrCreateTerminal(workingDir, !!customCwd, this.taskId)
-
-		// Update the working directory in case the terminal we asked for has
-		// a different working directory so that the model will know where the
-		// command actually executed:
-		workingDir = terminalInfo.getCurrentWorkingDirectory()
-
-		const workingDirInfo = workingDir ? ` from '${workingDir.toPosix()}'` : ""
-		terminalInfo.terminal.show() // weird visual bug when creating new terminals (even manually) where there's an empty space at the top.
-		let userFeedback: { text?: string; images?: string[] } | undefined
-		let didContinue = false
-		let completed = false
-		let result: string = ""
-		let exitDetails: ExitCodeDetails | undefined
-		const { terminalOutputLineLimit = 500 } = (await this.providerRef.deref()?.getState()) ?? {}
-
-		const sendCommandOutput = async (line: string, terminalProcess: TerminalProcess): Promise<void> => {
-			try {
-				const { response, text, images } = await this.ask("command_output", line)
-				if (response === "yesButtonClicked") {
-					// proceed while running
-				} else {
-					userFeedback = { text, images }
-				}
-				didContinue = true
-				terminalProcess.continue() // continue past the await
-			} catch {
-				// This can only happen if this ask promise was ignored, so ignore this error
-			}
-		}
-
-		const process = terminalInfo.runCommand(command, {
-			onLine: (line, process) => {
-				if (!didContinue) {
-					sendCommandOutput(Terminal.compressTerminalOutput(line, terminalOutputLineLimit), process)
-				} else {
-					this.say("command_output", Terminal.compressTerminalOutput(line, terminalOutputLineLimit))
-				}
-			},
-			onCompleted: (output) => {
-				result = output ?? ""
-				completed = true
-			},
-			onShellExecutionComplete: (details) => {
-				exitDetails = details
-			},
-			onNoShellIntegration: async (message) => {
-				await this.say("shell_integration_warning", message)
-			},
-		})
-
-		await process
-
-		// Wait for a short delay to ensure all messages are sent to the webview
-		// This delay allows time for non-awaited promises to be created and
-		// for their associated messages to be sent to the webview, maintaining
-		// the correct order of messages (although the webview is smart about
-		// grouping command_output messages despite any gaps anyways)
-		await delay(50)
-
-		result = Terminal.compressTerminalOutput(result, terminalOutputLineLimit)
-
-		// keep in case we need it to troubleshoot user issues, but this should be removed in the future
-		// if everything looks good:
-		console.debug(
-			"[execute_command status]",
-			JSON.stringify(
-				{
-					completed,
-					userFeedback,
-					hasResult: result.length > 0,
-					exitDetails,
-					terminalId: terminalInfo.id,
-					workingDir: workingDirInfo,
-					isTerminalBusy: terminalInfo.busy,
-				},
-				null,
-				2,
-			),
-		)
-
-		if (userFeedback) {
-			await this.say("user_feedback", userFeedback.text, userFeedback.images)
-			return [
-				true,
-				formatResponse.toolResult(
-					`Command is still running in terminal ${terminalInfo.id}${workingDirInfo}.${
-						result.length > 0 ? `\nHere's the output so far:\n${result}` : ""
-					}\n\nThe user provided the following feedback:\n<feedback>\n${userFeedback.text}\n</feedback>`,
-					userFeedback.images,
-				),
-			]
-		} else if (completed) {
-			let exitStatus: string = ""
-			if (exitDetails !== undefined) {
-				if (exitDetails.signal) {
-					exitStatus = `Process terminated by signal ${exitDetails.signal} (${exitDetails.signalName})`
-					if (exitDetails.coreDumpPossible) {
-						exitStatus += " - core dump possible"
-					}
-				} else if (exitDetails.exitCode === undefined) {
-					result += "<VSCE exit code is undefined: terminal output and command execution status is unknown.>"
-					exitStatus = `Exit code: <undefined, notify user>`
-				} else {
-					if (exitDetails.exitCode !== 0) {
-						exitStatus += "Command execution was not successful, inspect the cause and adjust as needed.\n"
-					}
-					exitStatus += `Exit code: ${exitDetails.exitCode}`
-				}
-			} else {
-				result += "<VSCE exitDetails == undefined: terminal output and command execution status is unknown.>"
-				exitStatus = `Exit code: <undefined, notify user>`
-			}
-
-			let workingDirInfo: string = workingDir ? ` within working directory '${workingDir.toPosix()}'` : ""
-			const newWorkingDir = terminalInfo.getCurrentWorkingDirectory()
-
-			if (newWorkingDir !== workingDir) {
-				workingDirInfo += `\nNOTICE: Your command changed the working directory for this terminal to '${newWorkingDir.toPosix()}' so you MUST adjust future commands accordingly because they will be executed in this directory`
-			}
-
-			const outputInfo = `\nOutput:\n${result}`
-			return [
-				false,
-				`Command executed in terminal ${terminalInfo.id}${workingDirInfo}. ${exitStatus}${outputInfo}`,
-			]
-		} else {
-			return [
-				false,
-				`Command is still running in terminal ${terminalInfo.id}${workingDirInfo}.${
-					result.length > 0 ? `\nHere's the output so far:\n${result}` : ""
-				}\n\nYou will be updated on the terminal status and new output in the future.`,
-			]
-		}
-	}
 
 	async *attemptApiRequest(previousApiReqIndex: number, retryAttempt: number = 0): ApiStream {
 		let mcpHub: McpHub | undefined
@@ -1134,12 +979,19 @@ export class Cline extends EventEmitter<ClineEvents> {
 		this.lastApiRequestTime = Date.now()
 
 		if (mcpEnabled ?? true) {
-			mcpHub = this.providerRef.deref()?.getMcpHub()
-			if (!mcpHub) {
-				throw new Error("MCP hub not available")
+			const provider = this.providerRef.deref()
+			if (!provider) {
+				throw new Error("Provider reference lost during view transition")
 			}
+
+			// Wait for MCP hub initialization through McpServerManager
+			mcpHub = await McpServerManager.getInstance(provider.context, provider)
+			if (!mcpHub) {
+				throw new Error("Failed to get MCP hub from server manager")
+			}
+
 			// Wait for MCP servers to be connected before generating system prompt
-			await pWaitFor(() => mcpHub!.isConnecting !== true, { timeout: 10_000 }).catch(() => {
+			await pWaitFor(() => !mcpHub!.isConnecting, { timeout: 10_000 }).catch(() => {
 				console.error("MCP servers failed to connect in time")
 			})
 		}
@@ -1406,8 +1258,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 							return `[${block.name} for '${block.params.task}']`
 						case "write_to_file":
 							return `[${block.name} for '${block.params.path}']`
-						case "append_to_file":
-							return `[${block.name} for '${block.params.path}']`
 						case "apply_diff":
 							return `[${block.name} for '${block.params.path}']`
 						case "search_files":
@@ -1566,6 +1416,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 				}
 
 				if (!block.partial) {
+					this.recordToolUsage(block.name)
 					telemetryService.captureToolUsage(this.taskId, block.name)
 				}
 
@@ -1590,9 +1441,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 				switch (block.name) {
 					case "write_to_file":
 						await writeToFileTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
-						break
-					case "append_to_file":
-						await appendToFileTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
 						break
 					case "apply_diff":
 						await applyDiffTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
@@ -1774,6 +1622,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 					],
 				)
 
+				await this.say("user_feedback", text, images)
+
 				// Track consecutive mistake errors in telemetry
 				telemetryService.captureConsecutiveMistakeError(this.taskId)
 			}
@@ -1807,7 +1657,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			}
 		}
 
-		// Getting verbose details is an expensive operation, it uses globby to
+		// Getting verbose details is an expensive operation, it uses ripgrep to
 		// top-down build file structure of project which for large projects can
 		// take a few seconds. For the best UX we show a placeholder api_req_started
 		// message with a loading spinner as this happens.
@@ -2699,15 +2549,23 @@ export class Cline extends EventEmitter<ClineEvents> {
 		return getApiMetrics(combineApiRequests(combineCommandSequences(this.clineMessages.slice(1))))
 	}
 
-	public recordToolUsage({ toolName, success = true }: { toolName: ToolName; success?: boolean }) {
+	public recordToolUsage(toolName: ToolName) {
 		if (!this.toolUsage[toolName]) {
 			this.toolUsage[toolName] = { attempts: 0, failures: 0 }
 		}
 
 		this.toolUsage[toolName].attempts++
+	}
 
-		if (!success) {
-			this.toolUsage[toolName].failures++
+	public recordToolError(toolName: ToolName, error?: string) {
+		if (!this.toolUsage[toolName]) {
+			this.toolUsage[toolName] = { attempts: 0, failures: 0 }
+		}
+
+		this.toolUsage[toolName].failures++
+
+		if (error) {
+			this.emit("taskToolFailed", this.taskId, toolName, error)
 		}
 	}
 

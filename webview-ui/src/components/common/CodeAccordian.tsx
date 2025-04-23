@@ -1,7 +1,7 @@
 import { memo, useMemo } from "react"
-import { getLanguageFromPath } from "../../utils/getLanguageFromPath"
+import { getLanguageFromPath } from "@src/utils/getLanguageFromPath"
 import CodeBlock, { CODE_BLOCK_BG_COLOR } from "./CodeBlock"
-import { ToolProgressStatus } from "../../../../src/shared/ExtensionMessage"
+import { ToolProgressStatus } from "@roo/shared/ExtensionMessage"
 
 interface CodeAccordianProps {
 	code?: string
@@ -14,6 +14,7 @@ interface CodeAccordianProps {
 	onToggleExpand: () => void
 	isLoading?: boolean
 	progressStatus?: ToolProgressStatus
+	forceWrap?: boolean
 }
 
 /*
@@ -38,6 +39,7 @@ const CodeAccordian = ({
 	onToggleExpand,
 	isLoading,
 	progressStatus,
+	forceWrap,
 }: CodeAccordianProps) => {
 	const inferredLanguage = useMemo(
 		() => code && (language ?? (path ? getLanguageFromPath(path) : undefined)),
@@ -132,6 +134,7 @@ const CodeAccordian = ({
 							diff ??
 							""
 						).trim()}\n${"```"}`}
+						forceWrap={forceWrap}
 					/>
 				</div>
 			)}

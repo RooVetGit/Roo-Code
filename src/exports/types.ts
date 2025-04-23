@@ -32,6 +32,7 @@ type ProviderSettings = {
 	glamaModelInfo?:
 		| ({
 				maxTokens?: (number | null) | undefined
+				maxThinkingTokens?: (number | null) | undefined
 				contextWindow: number
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
@@ -54,6 +55,7 @@ type ProviderSettings = {
 	openRouterModelInfo?:
 		| ({
 				maxTokens?: (number | null) | undefined
+				maxThinkingTokens?: (number | null) | undefined
 				contextWindow: number
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
@@ -96,6 +98,7 @@ type ProviderSettings = {
 	openAiCustomModelInfo?:
 		| ({
 				maxTokens?: (number | null) | undefined
+				maxThinkingTokens?: (number | null) | undefined
 				contextWindow: number
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
@@ -141,6 +144,7 @@ type ProviderSettings = {
 	unboundModelInfo?:
 		| ({
 				maxTokens?: (number | null) | undefined
+				maxThinkingTokens?: (number | null) | undefined
 				contextWindow: number
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
@@ -162,6 +166,7 @@ type ProviderSettings = {
 	requestyModelInfo?:
 		| ({
 				maxTokens?: (number | null) | undefined
+				maxThinkingTokens?: (number | null) | undefined
 				contextWindow: number
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
@@ -286,8 +291,6 @@ type GlobalSettings = {
 	fuzzyMatchThreshold?: number | undefined
 	experiments?:
 		| {
-				search_and_replace: boolean
-				insert_content: boolean
 				powerSteering: boolean
 		  }
 		| undefined
@@ -546,6 +549,29 @@ type RooCodeEvents = {
 			totalCost: number
 			contextTokens: number
 		},
+	]
+	taskToolFailed: [
+		string,
+		(
+			| "execute_command"
+			| "read_file"
+			| "write_to_file"
+			| "apply_diff"
+			| "insert_content"
+			| "search_and_replace"
+			| "search_files"
+			| "list_files"
+			| "list_code_definition_names"
+			| "browser_action"
+			| "use_mcp_tool"
+			| "access_mcp_resource"
+			| "ask_followup_question"
+			| "attempt_completion"
+			| "switch_mode"
+			| "new_task"
+			| "fetch_instructions"
+		),
+		string,
 	]
 }
 

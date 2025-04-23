@@ -120,7 +120,12 @@
 		"didRead": "Roo ha llegit aquest fitxer:",
 		"wantsToEdit": "Roo vol editar aquest fitxer:",
 		"wantsToEditOutsideWorkspace": "Roo vol editar aquest fitxer fora de l'espai de treball:",
-		"wantsToCreate": "Roo vol crear un nou fitxer:"
+		"wantsToCreate": "Roo vol crear un nou fitxer:",
+		"wantsToSearchReplace": "Roo vol realitzar cerca i substitució en aquest fitxer:",
+		"didSearchReplace": "Roo ha realitzat cerca i substitució en aquest fitxer:",
+		"wantsToInsert": "Roo vol inserir contingut en aquest fitxer:",
+		"wantsToInsertWithLineNumber": "Roo vol inserir contingut a la línia {{lineNumber}} d'aquest fitxer:",
+		"wantsToInsertAtEnd": "Roo vol afegir contingut al final d'aquest fitxer:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo vol veure els fitxers de nivell superior en aquest directori:",
@@ -181,12 +186,12 @@
 		"copyToInput": "Copiar a l'entrada (o Shift + clic)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.12 publicat",
-		"description": "Roo Code 3.12 porta noves funcionalitats i millores basades en els teus comentaris.",
+		"title": "🎉 Roo Code 3.13 publicat",
+		"description": "Roo Code 3.13 porta noves funcionalitats i millores basades en els teus comentaris.",
 		"whatsNew": "Novetats",
-		"feature1": "<bold>Suport per a Grok</bold>: Afegit el proveïdor xAI i opcions d'esforç de raonament per a Grok a OpenRouter",
-		"feature2": "<bold>Millores en l'edició de diferències</bold>: Configuració per perfil i millor normalització de cadenes per reduir errors",
-		"feature3": "<bold>Millores en els punts de control</bold>: Punts de control més ràpids i fiables",
+		"feature1": "<bold>Gemini 2.5 Flash Thinking</bold>: Ara pots utilitzar la variant thinking de Gemini 2.5 Flash i especificar un pressupost de tokens per a thinking",
+		"feature2": "<bold>Millores d'interfície</bold>: La capçalera de tasques, la vista de xat, la previsualització d'historial i la vista de benvinguda han estat visualment millorades",
+		"feature3": "<bold>Correccions d'errors</bold>: Edicions de diferències més fiables i més",
 		"hideButton": "Amagar anunci",
 		"detailsDiscussLinks": "Obtingues més detalls i participa a <discordLink>Discord</discordLink> i <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -211,5 +216,6 @@
 			"scrollUp": "Desplaçar amunt",
 			"close": "Tancar navegador"
 		}
-	}
+	},
+	"systemPromptWarning": "ADVERTÈNCIA: S'ha activat una substitució personalitzada d'instruccions del sistema. Això pot trencar greument la funcionalitat i causar un comportament impredictible."
 }
