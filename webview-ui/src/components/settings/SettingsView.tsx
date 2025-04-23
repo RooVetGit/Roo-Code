@@ -435,13 +435,13 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			</TabHeader>
 
 			{/* Tab list with overflow dropdown */}
-			<div className="flex items-center pr-5">
+			<div className="flex items-center px-5">
 				{" "}
-				{/* Added pr-5 here */}
+				{/* Changed pr-5 to px-5 */}
 				{/* Scrollable tab container */}
 				<div
 					ref={scrollContainerRef} // Assign ref
-					className={cn(settingsTabsContainer, scrollbarHideClasses, "w-full", "px-5")}
+					className={cn(settingsTabsContainer, scrollbarHideClasses, "w-full")} // Removed px-5
 					onWheel={handleWheelScroll} // Add wheel handler
 				>
 					<TabList
