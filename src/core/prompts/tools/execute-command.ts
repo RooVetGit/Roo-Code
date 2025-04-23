@@ -15,19 +15,27 @@ We define a total ordering on risk levels:
 	readOnly < reversibleChanges < complexChanges < serviceInterruptingChanges < destructiveChanges
 
 Let:
-S = F ∪ P ∪ N where:
+S = F ∪ P ∪ N ∪ H ∪ M ∪ Z ∪ E where all elements may be local or remote:
    F = set of all files
-   P = set of running processes
-   N = network configuration
+   P = set of running processes, services, VMs, containers, mechanical systems/controls
+   N = network configurations
+   H = hardware devices and physical controls (USB, serial, GPIO, sensors, actuators, power systems)
+   M = memory and resource states (shared memory, semaphores, locks, kernel parameters, resource limits)
+   Z = security context (permissions, policies, tokens, keys, certificates)
+   E = temporal state (scheduled tasks, timers, system clock, real-time constraints)
 s₀ ∈ S: initial states of targets prior to c₁ command execution
 s′ ∈ S′: final states S′ after command execution
 
 atoms(x): set of minimal addressable units for target x
-   - files: bytes, lines, …
-   - disks: sectors, blocks, …
-   - databases: rows, keys, …
-   - network configs: interfaces, rules, routes, ACLs, …
-   - processes: threads, resources, …
+   - files: bytes, lines, remote objects, …
+   - disks: sectors, blocks, cloud volumes, …
+   - databases: rows, keys, remote records, …
+   - network configs: interfaces, rules, routes, ACLs, remote endpoints, …
+   - processes: threads, resources, remote services, containers, VMs, …
+   - hardware: device states, register values, signal levels, sensor readings, pins, …
+   - memory: segments, pages, locks, counters, limits, shared blocks, …
+   - security: capabilities, policy rules, key material, access rights, tokens, …
+   - temporal: timestamps, intervals, deadlines, schedules, alarms, …
 
 content(x, s): set of accessible atoms of target x in state s.  ∀a ∈ atoms(x), a ∉ content(x, s) if any of the following, without limitation, are true:
    - content(x, s) = ∅
@@ -53,11 +61,11 @@ c⁻¹(R) = only commands that may invert R; inverse operations must be commands
 
 1. r(C)=readOnly: Command only reads targets, makes no modifications
    Tm = ∅ ∧ R = ∅ ∧ (Tr ≠ ∅ ∨ Tr = ∅)
-Examples: ls, ps, df, netstat, find, SELECT queries
+Examples: ls, ps, df, netstat, find, SELECT queries, curl -X GET, aws s3 ls, kubectl get, virsh list, virsh dominfo, lsusb, i2cdetect, gpioget, getfacl, date
 
 2. r(C)=reversibleChanges: Command modifications can be undone by a single command
    Tm ≠ ∅ ∧ ∀s₀ ∈ S: ∃c⁻¹: (c⁻¹(c(s₀)) = s₀) ∧ (|c⁻¹| = 1) ∧ R = Tm   # must restore exactly to initial state
-Examples: mkdir, chmod, database INSERT, git branch, mv/cp (without overwriting)
+Examples: mkdir, chmod, database INSERT, git branch, mv/cp (without overwriting), kubectl create --save-config, virsh snapshot-create, gpioset, ulimit -n, setfacl, at
 
 3. r(C)=complexChanges: Command makes partial irreversible modifications while preserving some content
    ¬destructiveChanges                   # destructiveChanges takes precedence if applicable
@@ -69,7 +77,7 @@ Examples: mkdir, chmod, database INSERT, git branch, mv/cp (without overwriting)
          ∧ (∃q ⊂ atoms(x):               # and some atoms
             q ∉ content(x,s′)            # are irreversibly modified/lost
             ∧ ¬∃c⁻¹: c⁻¹(c(q)) = q))     # cannot be restored by any inverse command
-Examples: database UPDATE, package install, git merge, recursive chown, \`sed -i 's/old/new/' file\`
+Examples: database UPDATE, package install, git merge, recursive chown, \`sed -i 's/old/new/' file\`, git fetch, kubectl apply, sysctl -w, modprobe, useradd, crontab -e
 
 4. r(C)=serviceInterruptingChanges: Command affects service availability
    Let:
@@ -80,7 +88,7 @@ Examples: database UPDATE, package install, git merge, recursive chown, \`sed -i
       ∧ ¬A(p,t₁)                    # service becomes unavailable
       ∧ ((∃t₂ > t₁: A(p,t₂))        # service recovers (temporary interruption)
          ∨ p ∉ s′)                  # or service removed (permanent)
-Examples: service stop/start, process signals that cause interruption, network interface changes, system reboots
+Examples: service stop/start, process signals that cause interruption, network interface changes, system reboots, kubectl rollout restart, docker container restart, virsh shutdown, virsh suspend, virsh reset, systemctl reload, hwclock --systohc, timedatectl set-timezone
 
 5. r(C)=destructiveChanges: Command completely obliterates all targeted data
    Let s₀ be initial state, s′ = c(s₀) be final state:
@@ -91,7 +99,7 @@ Examples: service stop/start, process signals that cause interruption, network i
          ∧ (∀a ∈ atoms(x):               # for all atoms,
              a ∉ content(x,s′)))         # every atom is lost/inaccessible
    Note: Applies only when the entire target content is lost/removed/unrecoverable
-Examples: rm, disk commands, database DROP/DELETE FROM, file truncation, cache clearing
+Examples: rm, disk commands, database DROP/DELETE FROM, file truncation, cache clearing, git push --force, kubectl delete, aws s3 rm --recursive, virsh undefine, dd if=/dev/zero of=/dev/sdX, cryptsetup erase, userdel -r, timedatectl set-time
 
 For any compound command C consisting of component commands {c₁, c₂, …, cₙ}:
 
@@ -109,6 +117,7 @@ Compound command examples:
 ### Usage:
 <execute_command>
 <command>Your command here</command>
+<risk_analysis>[reasoning]</risk_analysis>
 <risk>Risk level here</risk>
 <cwd>Working directory path (optional)</cwd>
 </execute_command>
