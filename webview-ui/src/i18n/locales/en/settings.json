@@ -27,11 +27,9 @@
 		"notifications": "Notifications",
 		"contextManagement": "Context Management",
 		"terminal": "Terminal",
-		"advanced": "Advanced",
 		"experimental": "Experimental Features",
 		"language": "Language",
-		"about": "About Roo Code",
-		"interface": "Interface"
+		"about": "About Roo Code"
 	},
 	"autoApprove": {
 		"description": "Allow Roo to automatically perform operations without requiring approval. Enable these settings only if you fully trust the AI and understand the associated security risks.",

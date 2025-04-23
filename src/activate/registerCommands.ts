@@ -88,8 +88,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 			// Post original action message
 			visibleProvider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
 			// Also explicitly post the visibility message to trigger scroll reliably
-			console.log("[settingsButtonClicked] Posting 'settingsVisible' message.")
-			visibleProvider.postMessageToWebview({ type: "settingsVisible" })
+			visibleProvider.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
 		},
 		"roo-cline.historyButtonClicked": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
@@ -170,10 +169,7 @@ export const openClineInNewTab = async ({ context, outputChannel }: Omit<Registe
 		(e) => {
 			const panel = e.webviewPanel
 			if (panel.visible) {
-				console.log("Roo Code tab panel became visible, posting message...")
-				panel.webview.postMessage({ type: "settingsVisible" }) // Use the same message type as in SettingsView.tsx
-			} else {
-				console.log("Roo Code tab panel became hidden.")
+				panel.webview.postMessage({ type: "action", action: "didBecomeVisible" }) // Use the same message type as in SettingsView.tsx
 			}
 		},
 		null, // First null is for `thisArgs`

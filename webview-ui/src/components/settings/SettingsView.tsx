@@ -9,7 +9,7 @@ import React, {
 	useRef,
 	useState,
 	WheelEvent,
-} from "react" // Add useLayoutEffect
+} from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import {
 	CheckCheck,
@@ -322,8 +322,6 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 	// Store direct DOM element refs for each tab
 	const tabRefs = useRef<Record<SectionName, HTMLButtonElement | null>>({} as any)
 
-	// Removed useEffect for pre-populating refs
-
 	// Sections definition - no longer includes refs
 	const sections: { id: SectionName; icon: LucideIcon }[] = useMemo(
 		() => [
@@ -351,57 +349,35 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 	// Function to scroll the active tab into view
 	const scrollToActiveTab = useCallback(
 		(checkVisibility = false) => {
-			console.log(`[scrollToActiveTab] Called. checkVisibility: ${checkVisibility}, activeTab: ${activeTab}`) // Log entry
-			const activeTabElement = tabRefs.current[activeTab] // Remove ?.current
+			const activeTabElement = tabRefs.current[activeTab]
 			const containerElement = scrollContainerRef.current
 
-			if (!activeTabElement) {
-				console.warn(`[scrollToActiveTab] activeTabElement for tab '${activeTab}' not found.`) // Log missing ref
-				return
-			}
-			if (!containerElement) {
-				console.warn(`[scrollToActiveTab] containerElement not found.`) // Log missing ref
+			// Don't scroll if refs aren't ready
+			if (!activeTabElement || !containerElement) {
 				return
 			}
 
-			// Use nodeName for simpler logging
-			console.log(
-				`[scrollToActiveTab] Refs found: activeTabElement=${activeTabElement.nodeName}, containerElement=${containerElement.nodeName}`,
-			) // Log refs found
 			let shouldScroll = true
 			if (checkVisibility) {
-				console.log(`[scrollToActiveTab] Checking visibility...`) // Log visibility check start
-				// Calculate the visible range within the scroll container
+				// Calculate visibility
 				const visibleLeft = containerElement.scrollLeft
 				const visibleRight = containerElement.scrollLeft + containerElement.clientWidth
-
-				// Calculate the tab's position within the scroll container
 				const tabLeft = activeTabElement.offsetLeft
 				const tabRight = activeTabElement.offsetLeft + activeTabElement.offsetWidth
-
-				// Check if the tab is fully within the visible range
 				const isVisible = tabLeft >= visibleLeft && tabRight <= visibleRight
-				console.log(
-					`[scrollToActiveTab] Visibility check: tabLeft=${tabLeft}, tabRight=${tabRight}, visibleLeft=${visibleLeft}, visibleRight=${visibleRight}, isVisible=${isVisible}`,
-				) // Log visibility details
 				shouldScroll = !isVisible
-			} else {
-				console.log(`[scrollToActiveTab] Skipping visibility check (scrolling unconditionally).`) // Log unconditional scroll path
 			}
+			// If not checking visibility, shouldScroll remains true (unconditional scroll)
 
 			if (shouldScroll) {
-				console.log(`[scrollToActiveTab] Scrolling tab '${activeTab}' into view.`) // Log scroll action
 				activeTabElement.scrollIntoView({
-					behavior: "auto", // Use instant scrolling
+					behavior: "auto",
 					block: "nearest",
 					inline: "center",
 				})
-			} else {
-				console.log(`[scrollToActiveTab] Scroll not needed (shouldScroll is false).`) // Log scroll skipped
 			}
-			// Removed redundant 'else' block for ref check, handled by early returns.
 		},
-		[activeTab], // Dependency on activeTab ensures the correct tab element is used
+		[activeTab],
 	)
 
 	// Effect to scroll when the active tab *changes* (e.g., user click)
@@ -415,11 +391,10 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 	// Use useLayoutEffect to ensure refs are available after DOM mutations.
 	useLayoutEffect(() => {
 		const handleMessage = (event: MessageEvent) => {
-			const message = event.data // The object sent from postMessage
-			if (message.type === "settingsVisible") {
-				console.log("Received settingsVisible message from extension (LayoutEffect).")
-				// No setTimeout needed, useLayoutEffect runs after DOM updates
-				scrollToActiveTab(false) // Pass false to scroll unconditionally
+			const message = event.data
+			if (message.type === "action" && message.action === "didBecomeVisible") {
+				// Scroll unconditionally when view becomes visible
+				scrollToActiveTab(false)
 			}
 		}
 
@@ -513,41 +488,32 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			{/* Tab list with overflow dropdown */}
 			<div className="flex items-center px-5">
 				{" "}
-				{/* Changed pr-5 to px-5 */}
 				{/* Scrollable tab container */}
-				<div
-					ref={scrollContainerRef} // Assign ref
-					className={cn(settingsTabsContainer, scrollbarHideClasses, "w-full")}
-					// onWheel prop removed, listener added via useEffect
-				>
+				<div ref={scrollContainerRef} className={cn(settingsTabsContainer, scrollbarHideClasses, "w-full")}>
 					<TabList
 						value={activeTab}
 						onValueChange={(value) => handleTabChange(value as SectionName)}
 						className={cn(settingsTabList, "w-full min-w-max")}
 						data-testid="settings-tab-list">
-						{sections.map(
-							(
-								{ id, icon: Icon }, // Remove 'ref' from destructuring
-							) => (
-								<TabTrigger
-									key={id}
-									ref={(element) => (tabRefs.current[id] = element)} // Keep callback ref here
-									value={id}
-									className={cn(
-										activeTab === id
-											? `${settingsTabTrigger} ${settingsTabTriggerActive}`
-											: settingsTabTrigger,
-										"flex-shrink-0", // Prevent tabs from shrinking
-										"focus:ring-0", // Remove the focus ring styling
-									)}
-									data-testid={`tab-${id}`}>
-									<div className="flex items-center gap-2">
-										<Icon className="w-4 h-4" />
-										<span>{t(`settings:sections.${id}`)}</span>
-									</div>
-								</TabTrigger>
-							),
-						)}
+						{sections.map(({ id, icon: Icon }) => (
+							<TabTrigger
+								key={id}
+								ref={(element) => (tabRefs.current[id] = element)} // Keep callback ref here
+								value={id}
+								className={cn(
+									activeTab === id
+										? `${settingsTabTrigger} ${settingsTabTriggerActive}`
+										: settingsTabTrigger,
+									"flex-shrink-0", // Prevent tabs from shrinking
+									"focus:ring-0", // Remove the focus ring styling
+								)}
+								data-testid={`tab-${id}`}>
+								<div className="flex items-center gap-2">
+									<Icon className="w-4 h-4" />
+									<span>{t(`settings:sections.${id}`)}</span>
+								</div>
+							</TabTrigger>
+						))}
 					</TabList>
 				</div>
 				{/* "More" dropdown button - always show it */}
@@ -556,7 +522,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 						<Button
 							variant="ghost"
 							size="icon"
-							className="ml-1 h-8 w-8 rounded-md flex-shrink-0"
+							className="ml-1 rounded-md flex-shrink-0"
 							aria-label={t("settings:common.more")}
 							data-testid="more-tabs-button">
 							<MoreHorizontal className="h-4 w-4" />

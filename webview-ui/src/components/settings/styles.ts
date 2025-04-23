@@ -78,7 +78,7 @@ export const StyledMarkdown = styled.div`
 `
 
 // Settings tab styles as CSS class names for use with cn function
-export const settingsTabsContainer = "overflow-x-auto" // Changed from overflow-hidden to enable horizontal scrolling
+export const settingsTabsContainer = "overflow-x-auto"
 
 export const settingsTabList = "flex flex-nowrap border-b border-vscode-sideBar-background"
 
