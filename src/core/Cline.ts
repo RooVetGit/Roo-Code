@@ -317,11 +317,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 	}
 
 	private async addToApiConversationHistory(message: Anthropic.MessageParam) {
-		const ts = Date.now()
-		const messageWithTs = { ...message, ts }
+		const messageWithTs = { ...message, ts: Date.now() }
 		this.apiConversationHistory.push(messageWithTs)
 		await this.saveApiConversationHistory()
-		console.log(`addToApiConversationHistory: ${Date.now() - ts}ms`)
 	}
 
 	async overwriteApiConversationHistory(newHistory: Anthropic.MessageParam[]) {
@@ -381,8 +379,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 	private readonly taskDirSizeCheckInterval = 30_000
 
 	private async saveClineMessages() {
-		const ts = Date.now()
-
 		try {
 			const taskDir = await this.ensureTaskDirectoryExists()
 			const filePath = path.join(taskDir, GlobalFileNames.uiMessages)
@@ -402,9 +398,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 				]
 
 			if (Date.now() - this.taskDirSizeCheckedAt > this.taskDirSizeCheckInterval) {
+				this.taskDirSizeCheckedAt = Date.now()
+
 				try {
 					this.taskDirSize = await getFolderSize.loose(taskDir)
-					this.taskDirSizeCheckedAt = Date.now()
 				} catch (err) {
 					console.error(
 						`[saveClineMessages] failed to get task directory size (${taskDir}): ${err instanceof Error ? err.message : String(err)}`,
@@ -428,8 +425,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 		} catch (error) {
 			console.error("Failed to save cline messages:", error)
 		}
-
-		console.log(`saveClineMessages: ${Date.now() - ts}ms`)
 	}
 
 	// Communicate with webview
