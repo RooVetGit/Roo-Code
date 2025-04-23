@@ -89,13 +89,13 @@ export const ChatRowContent = ({
 	const [showCopySuccess, setShowCopySuccess] = useState(false)
 	const { copyWithFeedback } = useCopyToClipboard()
 
-	const [cost, apiReqCancelReason, apiReqStreamingFailedMessage] = useMemo(() => {
+	const [cost, apiReqCancelReason, apiReqStreamingFailedMessage, thoughtsTokenCount] = useMemo(() => {
 		if (message.text !== null && message.text !== undefined && message.say === "api_req_started") {
 			const info = safeJsonParse<ClineApiReqInfo>(message.text)
-			return [info?.cost, info?.cancelReason, info?.streamingFailedMessage]
+			return [info?.cost, info?.cancelReason, info?.streamingFailedMessage, info?.thoughtsTokenCount]
 		}
 
-		return [undefined, undefined, undefined]
+		return [undefined, undefined, undefined, undefined]
 	}, [message.text, message.say])
 
 	// When resuming task, last wont be api_req_failed but a resume_task
@@ -814,6 +814,15 @@ export const ChatRowContent = ({
 								<div style={{ display: "flex", alignItems: "center", gap: "10px", flexGrow: 1 }}>
 									{icon}
 									{title}
+									{thoughtsTokenCount !== undefined && thoughtsTokenCount > 0 && (
+										<VSCodeBadge>
+											<span
+												className="codicon codicon-lightbulb"
+												style={{ marginRight: "4px" }}
+											/>
+											{thoughtsTokenCount.toLocaleString()}
+										</VSCodeBadge>
+									)}
 									<VSCodeBadge
 										style={{ opacity: cost !== null && cost !== undefined && cost > 0 ? 1 : 0 }}>
 										${Number(cost || 0)?.toFixed(4)}

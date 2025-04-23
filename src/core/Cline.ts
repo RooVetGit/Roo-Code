@@ -1692,6 +1692,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 			let inputTokens = 0
 			let outputTokens = 0
 			let totalCost: number | undefined
+			let thoughtsTokenCount: number | undefined
+			let thinkingBudget: number | undefined
 
 			// update api_req_started. we can't use api_req_finished anymore since it's a unique case where it could come after a streaming message (ie in the middle of being updated or executed)
 			// fortunately api_req_finished was always parsed out for the gui anyways, so it remains solely for legacy purposes to keep track of prices in tasks from history
@@ -1703,6 +1705,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 					tokensOut: outputTokens,
 					cacheWrites: cacheWriteTokens,
 					cacheReads: cacheReadTokens,
+					thoughtsTokenCount,
+					thinkingBudget: thinkingBudget,
 					cost:
 						totalCost ??
 						calculateApiCostAnthropic(
@@ -1796,6 +1800,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 							cacheWriteTokens += chunk.cacheWriteTokens ?? 0
 							cacheReadTokens += chunk.cacheReadTokens ?? 0
 							totalCost = chunk.totalCost
+							if (typeof chunk.thoughtsTokenCount === "number") {
+								thoughtsTokenCount = (thoughtsTokenCount ?? 0) + chunk.thoughtsTokenCount
+							}
+							thinkingBudget = chunk.thinkingBudget
 							break
 						case "text":
 							assistantMessage += chunk.text

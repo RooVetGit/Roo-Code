@@ -28,6 +28,8 @@ interface TaskHeaderProps {
 	cacheReads?: number
 	totalCost: number
 	contextTokens: number
+	thoughtsTokenCount?: number
+	thinkingBudget?: number
 	onClose: () => void
 }
 
@@ -40,6 +42,8 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 	cacheReads,
 	totalCost,
 	contextTokens,
+	thoughtsTokenCount,
+	thinkingBudget,
 	onClose,
 }) => {
 	const { t } = useTranslation()
@@ -67,7 +71,9 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 				<div className="flex justify-between items-center gap-2">
 					<div
 						className="flex items-center cursor-pointer -ml-0.5 select-none grow min-w-0"
-						onClick={() => setIsTaskExpanded(!isTaskExpanded)}>
+						onClick={() => setIsTaskExpanded(!isTaskExpanded)}
+						data-testid="task-header" // Added data-testid here
+					>
 						<div className="flex items-center shrink-0">
 							<span className={`codicon codicon-chevron-${isTaskExpanded ? "down" : "right"}`}></span>
 						</div>
@@ -145,6 +151,13 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 										<i className="codicon codicon-arrow-down text-xs font-bold -mb-0.5" />
 										{formatLargeNumber(tokensOut || 0)}
 									</span>
+									{thoughtsTokenCount !== undefined && thinkingBudget !== undefined && (
+										<span className="flex items-center gap-[3px]" data-testid="thinking-metrics">
+											<i className="codicon codicon-lightbulb text-xs font-bold -mb-0.5" />
+											{formatLargeNumber(thoughtsTokenCount ?? 0)}/
+											{formatLargeNumber(thinkingBudget ?? 0)}
+										</span>
+									)}
 								</div>
 								{!totalCost && <TaskActions item={currentTaskItem} />}
 							</div>

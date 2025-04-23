@@ -1216,6 +1216,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						cacheReads={apiMetrics.totalCacheReads}
 						totalCost={apiMetrics.totalCost}
 						contextTokens={apiMetrics.contextTokens}
+						thoughtsTokenCount={apiMetrics.thoughtsTokenCount}
+						thinkingBudget={apiMetrics.thinkingBudget}
 						onClose={handleTaskCloseButtonClick}
 					/>
 

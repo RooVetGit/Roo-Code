@@ -430,6 +430,8 @@ type TokenUsage = {
 	totalCacheReads?: number | undefined
 	totalCost: number
 	contextTokens: number
+	thoughtsTokenCount?: number | undefined
+	thinkingBudget?: number | undefined
 }
 
 type RooCodeEvents = {
@@ -522,6 +524,8 @@ type RooCodeEvents = {
 			totalCacheReads?: number | undefined
 			totalCost: number
 			contextTokens: number
+			thoughtsTokenCount?: number | undefined
+			thinkingBudget?: number | undefined
 		},
 		{
 			[x: string]: {
@@ -539,6 +543,8 @@ type RooCodeEvents = {
 			totalCacheReads?: number | undefined
 			totalCost: number
 			contextTokens: number
+			thoughtsTokenCount?: number | undefined
+			thinkingBudget?: number | undefined
 		},
 	]
 	taskToolFailed: [

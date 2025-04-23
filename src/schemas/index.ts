@@ -812,6 +812,8 @@ export const tokenUsageSchema = z.object({
 	totalCacheReads: z.number().optional(),
 	totalCost: z.number(),
 	contextTokens: z.number(),
+	thoughtsTokenCount: z.number().optional(),
+	thinkingBudget: z.number().optional(),
 })
 
 export type TokenUsage = z.infer<typeof tokenUsageSchema>

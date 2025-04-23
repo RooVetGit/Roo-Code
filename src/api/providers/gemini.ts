@@ -10,7 +10,7 @@ import { SingleCompletionHandler } from "../"
 import type { ApiHandlerOptions, GeminiModelId, ModelInfo } from "../../shared/api"
 import { geminiDefaultModelId, geminiModels } from "../../shared/api"
 import { convertAnthropicContentToGemini, convertAnthropicMessageToGemini } from "../transform/gemini-format"
-import type { ApiStream } from "../transform/stream"
+import type { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 
 export class GeminiHandler extends BaseProvider implements SingleCompletionHandler {
@@ -59,7 +59,9 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 				type: "usage",
 				inputTokens: lastUsageMetadata.promptTokenCount ?? 0,
 				outputTokens: lastUsageMetadata.candidatesTokenCount ?? 0,
-			}
+				thoughtsTokenCount: lastUsageMetadata.thoughtsTokenCount ?? undefined,
+				thinkingBudget: thinkingConfig?.thinkingBudget,
+			} satisfies ApiStreamUsageChunk
 		}
 	}
 
@@ -70,20 +72,27 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		maxOutputTokens?: number
 	} {
 		let id = this.options.apiModelId ? (this.options.apiModelId as GeminiModelId) : geminiDefaultModelId
-		let info: ModelInfo = geminiModels[id]
+		const thinkingSuffix = ":thinking"
 		let thinkingConfig: ThinkingConfig | undefined = undefined
 		let maxOutputTokens: number | undefined = undefined
 
-		const thinkingSuffix = ":thinking"
+		// If this is a thinking model, get the info before modifying the ID
+		// so we can access the maxThinkingTokens value
+		let info: ModelInfo = geminiModels[id]
+		const originalInfo = id?.endsWith(thinkingSuffix) ? info : undefined
 
-		if (id?.endsWith(thinkingSuffix)) {
+		if (originalInfo) {
+			console.log("modelMaxThinkingTokens debug:", {
+				value: this.options.modelMaxThinkingTokens,
+				type: typeof this.options.modelMaxThinkingTokens,
+				infoMaxThinkingTokens: originalInfo.maxThinkingTokens,
+			})
+			const maxThinkingTokens = this.options.modelMaxThinkingTokens ?? originalInfo.maxThinkingTokens ?? 4096
+			thinkingConfig = { thinkingBudget: maxThinkingTokens }
+
+			// Remove thinking suffix and get base model info
 			id = id.slice(0, -thinkingSuffix.length) as GeminiModelId
 			info = geminiModels[id]
-
-			thinkingConfig = this.options.modelMaxThinkingTokens
-				? { thinkingBudget: this.options.modelMaxThinkingTokens }
-				: undefined
-
 			maxOutputTokens = this.options.modelMaxTokens ?? info.maxTokens ?? undefined
 		}
 

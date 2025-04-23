@@ -14,10 +14,10 @@ import { ClineMessage } from "./ExtensionMessage"
  *
  * @example
  * const messages = [
- *   { type: "say", say: "api_req_started", text: '{"request":"GET /api/data","tokensIn":10,"tokensOut":20,"cost":0.005}', ts: 1000 }
+ *   { type: "say", say: "api_req_started", text: '{"request":"GET /api/data","tokensIn":10,"tokensOut":20,"cost":0.005,"thoughtsTokenCount":5,"thinkingBudget":1000}', ts: 1000 }
  * ];
- * const { totalTokensIn, totalTokensOut, totalCost } = getApiMetrics(messages);
- * // Result: { totalTokensIn: 10, totalTokensOut: 20, totalCost: 0.005 }
+ * const { totalTokensIn, totalTokensOut, totalCost, thoughtsTokenCount, thinkingBudget } = getApiMetrics(messages);
+ * // Result: { totalTokensIn: 10, totalTokensOut: 20, totalCost: 0.005, thoughtsTokenCount: 5, thinkingBudget: 1000 }
  */
 export function getApiMetrics(messages: ClineMessage[]) {
 	const result: TokenUsage = {
@@ -27,14 +27,18 @@ export function getApiMetrics(messages: ClineMessage[]) {
 		totalCacheReads: undefined,
 		totalCost: 0,
 		contextTokens: 0,
+		thoughtsTokenCount: undefined,
+		thinkingBudget: undefined,
 	}
 
 	// Helper function to get total tokens from a message
 	const getTotalTokensFromMessage = (message: ClineMessage): number => {
 		if (!message.text) return 0
 		try {
-			const { tokensIn, tokensOut, cacheWrites, cacheReads } = JSON.parse(message.text)
-			return (tokensIn || 0) + (tokensOut || 0) + (cacheWrites || 0) + (cacheReads || 0)
+			const { tokensIn, tokensOut, cacheWrites, cacheReads, thoughtsTokenCount } = JSON.parse(message.text)
+			return (
+				(tokensIn || 0) + (tokensOut || 0) + (cacheWrites || 0) + (cacheReads || 0) + (thoughtsTokenCount || 0)
+			)
 		} catch {
 			return 0
 		}
@@ -51,8 +55,12 @@ export function getApiMetrics(messages: ClineMessage[]) {
 	// Calculate running totals
 	messages.forEach((message) => {
 		if (message.type === "say" && message.say === "api_req_started" && message.text) {
+			console.log(`[DEBUG getApiMetrics] Processing api_req_started message text: ${message.text}`) // Added log
 			try {
-				const { tokensIn, tokensOut, cacheWrites, cacheReads, cost } = JSON.parse(message.text)
+				const parsedData = JSON.parse(message.text)
+				console.log(`[DEBUG getApiMetrics] Parsed data:`, parsedData) // Added log
+				const { tokensIn, tokensOut, cacheWrites, cacheReads, cost, thoughtsTokenCount, thinkingBudget } =
+					parsedData
 
 				if (typeof tokensIn === "number") {
 					result.totalTokensIn += tokensIn
@@ -69,7 +77,14 @@ export function getApiMetrics(messages: ClineMessage[]) {
 				if (typeof cost === "number") {
 					result.totalCost += cost
 				}
+				if (typeof thoughtsTokenCount === "number") {
+					result.thoughtsTokenCount = (result.thoughtsTokenCount ?? 0) + thoughtsTokenCount
+				}
+				if (typeof thinkingBudget === "number") {
+					result.thinkingBudget = thinkingBudget
+				}
 
+				// If this is the last api request with tokens, use its total for context size
 				// If this is the last api request with tokens, use its total for context size
 				if (message === lastApiReq) {
 					result.contextTokens = getTotalTokensFromMessage(message)
