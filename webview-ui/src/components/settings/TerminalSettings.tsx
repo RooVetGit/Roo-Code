@@ -58,10 +58,14 @@ export const TerminalSettings = ({
 		vscode.postMessage({ type: "getVSCodeSetting", setting: "terminal.integrated.inheritEnv" })
 	}, [])
 	useEffect(() => {
-		const handler = (event: MessageEvent<{ type: string; setting?: string; value?: boolean }>) => {
+		const handler = (event: MessageEvent<{ type: string; setting?: string; value?: boolean; error?: string }>) => {
 			const message = event.data
-			if (message.type === "vscodeSetting" && message.setting === "terminal.integrated.inheritEnv") {
-				setInheritEnv(message.value ?? true)
+			if (message.type === "vsCodeSetting" && message.setting === "terminal.integrated.inheritEnv") {
+				if (message.error) {
+					console.error("Failed to get terminal setting:", message.error)
+				} else {
+					setInheritEnv(message.value ?? true)
+				}
 			}
 		}
 		window.addEventListener("message", handler)

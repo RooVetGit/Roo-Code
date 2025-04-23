@@ -599,8 +599,17 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		case "getVSCodeSetting":
 			if (message.setting) {
-				const value = vscode.workspace.getConfiguration().get(message.setting)
-				await provider.postMessageToWebview({ type: "vscodeSetting", setting: message.setting, value })
+				try {
+					const value = vscode.workspace.getConfiguration().get(message.setting)
+					await provider.postMessageToWebview({ type: "vsCodeSetting", setting: message.setting, value })
+				} catch (error) {
+					console.error(`Failed to get VSCode setting ${message.setting}:`, error)
+					await provider.postMessageToWebview({
+						type: "vsCodeSetting",
+						setting: message.setting,
+						error: `Failed to get setting: ${error.message}`,
+					})
+				}
 			}
 			break
 		case "alwaysApproveResubmit":

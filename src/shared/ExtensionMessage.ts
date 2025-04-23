@@ -68,7 +68,7 @@ export interface ExtensionMessage {
 		| "acceptInput"
 		| "setHistoryPreviewCollapsed"
 		| "commandExecutionStatus"
-		| "vscodeSetting"
+		| "vsCodeSetting"
 	text?: string
 	action?:
 		| "chatButtonClicked"

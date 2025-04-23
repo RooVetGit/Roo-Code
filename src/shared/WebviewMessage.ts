@@ -53,6 +53,7 @@ export interface WebviewMessage {
 		| "cancelTask"
 		| "updateVSCodeSetting"
 		| "getVSCodeSetting"
+		| "vsCodeSetting"
 		| "alwaysAllowBrowser"
 		| "alwaysAllowMcp"
 		| "alwaysAllowModeSwitch"
