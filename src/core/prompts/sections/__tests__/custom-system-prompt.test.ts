@@ -1,4 +1,4 @@
-// src/core/prompts/sections/__tests__/custom-system-prompt.test.ts
+import path from "path"
 import { readFile } from "fs/promises"
 import { Mode } from "../../../../shared/modes" // Adjusted import path
 import { loadSystemPromptFile, PromptVariables } from "../custom-system-prompt"
@@ -17,7 +17,7 @@ describe("loadSystemPromptFile", () => {
 	const mockCwd = "/mock/cwd"
 	const mockMode: Mode = "test" // Use Mode type, e.g., 'test'
 	// Corrected expected file path format
-	const expectedFilePath = `${mockCwd}/.roo/system-prompt-${mockMode}`
+	const expectedFilePath = path.join(mockCwd, ".roo", `system-prompt-${mockMode}`)
 
 	beforeEach(() => {
 		// Clear mocks before each test
