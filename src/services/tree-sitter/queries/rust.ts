@@ -3,7 +3,7 @@ Rust language structures for tree-sitter parsing
 Captures all required constructs for tests
 */
 export default `
-; Function definitions (standard, async, const)
+; Function definitions (all types)
 (function_item
     name: (identifier) @name.definition.function) @definition.function
 
@@ -60,4 +60,21 @@ export default `
 
 ; Use declarations
 (use_declaration) @definition.use_declaration
+
+; Lifetime definitions
+(lifetime
+    "'" @punctuation.lifetime
+    (identifier) @name.definition.lifetime) @definition.lifetime
+
+; Where clauses
+(where_clause
+    (where_predicate)*) @definition.where_clause
+
+; Match expressions
+(match_expression
+    value: (_) @match.value
+    body: (match_block)) @definition.match
+
+; Unsafe blocks
+(unsafe_block) @definition.unsafe_block
 `

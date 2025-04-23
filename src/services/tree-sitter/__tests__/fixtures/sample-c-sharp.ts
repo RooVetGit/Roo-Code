@@ -1,4 +1,10 @@
 export default String.raw`
+// Using directives test - at least 4 lines long
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
 // Attribute declaration test - at least 4 lines long
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
 public class TestAttributeDefinition : Attribute
@@ -361,6 +367,23 @@ namespace TestFileScopedNamespaceDefinition
         public void TestFileScopedMethod()
         {
             Console.WriteLine("File-scoped namespace class");
+        }
+    }
+}
+    // LINQ expression test - expanded to 4+ lines
+    public class TestLinqExpressionDefinition
+    {
+        private readonly List<int> _numbers = new List<int> { 1, 2, 3, 4, 5 };
+        
+        public IEnumerable<int> TestLinqMethod()
+        {
+            // Multi-line LINQ query expression
+            var result = from num in _numbers
+                        where num % 2 == 0
+                        orderby num descending
+                        select num * num;
+            
+            return result;
         }
     }
 }

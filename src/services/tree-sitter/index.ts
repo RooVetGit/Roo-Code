@@ -7,9 +7,11 @@ import { parseMarkdown } from "./markdownParser"
 import { RooIgnoreController } from "../../core/ignore/RooIgnoreController"
 
 const extensions = [
+	"tla",
 	"js",
 	"jsx",
 	"ts",
+	"vue",
 	"tsx",
 	"py",
 	// Rust
@@ -28,14 +30,44 @@ const extensions = [
 	"java",
 	"php",
 	"swift",
+	// Solidity
+	"sol",
 	// Kotlin
 	"kt",
 	"kts",
+	// Elixir
+	"ex",
+	"exs",
+	// Elisp
+	"el",
+	// HTML
+	"html",
+	"htm",
 	// Markdown
 	"md",
 	"markdown",
 	// JSON
 	"json",
+	// CSS
+	"css",
+	// SystemRDL
+	"rdl",
+	// OCaml
+	"ml",
+	"mli",
+	// Lua
+	"lua",
+	// Scala
+	"scala",
+	// TOML
+	"toml",
+	// Zig
+	"zig",
+	// Elm
+	"elm",
+	// Embedded Template
+	"ejs",
+	"erb",
 ].map((e) => `.${e}`)
 
 export async function parseSourceCodeDefinitionsForFile(

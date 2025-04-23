@@ -2,6 +2,9 @@
 C# Tree-Sitter Query Patterns
 */
 export default `
+; Using directives
+(using_directive) @name.definition.using
+
 ; Namespace declarations (including file-scoped)
 (namespace_declaration
   name: (identifier) @name.definition.namespace)
@@ -54,4 +57,7 @@ export default `
 (type_parameter_list
   (type_parameter
     name: (identifier) @name.definition.type_parameter))
+
+; LINQ expressions
+(query_expression) @name.definition.linq_expression
 `

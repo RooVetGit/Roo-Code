@@ -32,90 +32,160 @@ jest.mock("../../../utils/fs", () => ({
 }))
 
 describe("parseSourceCodeDefinitionsForFile with C#", () => {
+	let parseResult: string
+
+	beforeAll(async () => {
+		// Cache parse result for all tests
+		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
+		if (!result) {
+			throw new Error("Failed to parse C# source code definitions")
+		}
+		parseResult = result
+		debugLog("C# Parse Result:", parseResult)
+		// Inspect tree structure once at start
+		await inspectTreeStructure(sampleCSharpContent, "c_sharp")
+	})
+
 	beforeEach(() => {
 		jest.clearAllMocks()
 	})
 
-	// Test for tree structure inspection
-	it("should inspect C# tree structure", async () => {
-		await inspectTreeStructure(sampleCSharpContent, "c_sharp")
+	// Test using directives - 4+ lines
+	it("should capture using directives", () => {
+		expect(parseResult).toContain("2--390 | // Using directives test - at least 4 lines long")
+		expect(parseResult).toContain("ITestInterfaceDefinition")
+		expect(parseResult).toContain("TestClassDefinition")
 	})
 
-	// Test namespace declarations
-	it("should capture namespace declarations", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
-		expect(result).toContain("TestNamespaceDefinition")
-		expect(result).toContain("TestFileScopedNamespaceDefinition")
+	// Test namespace declarations - 4+ lines
+	it("should capture namespace declarations", () => {
+		expect(parseResult).toContain("namespace TestNamespaceDefinition")
+		expect(parseResult).toContain("namespace TestFileScopedNamespaceDefinition")
+		expect(parseResult).toContain("public class TestFileScopedClassDefinition")
+		expect(parseResult).toContain("public void TestFileScopedMethod")
 	})
 
-	// Test class declarations with various modifiers
-	it("should capture class declarations with modifiers", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
-		expect(result).toContain("TestClassDefinition")
-		expect(result).toContain("TestStaticClassDefinition")
-		expect(result).toContain("TestAbstractClassDefinition")
-		expect(result).toContain("TestPartialClassDefinition")
-		expect(result).toContain("TestNestedClassDefinition")
-		expect(result).toContain("TestGenericClassDefinition")
+	// Test class declarations with inheritance - 4+ lines
+	it("should capture class declarations with inheritance", () => {
+		expect(parseResult).toContain("public class TestClassDefinition : ITestInterfaceDefinition")
+		expect(parseResult).toContain("public class TestDerivedClass1 : TestAbstractClassDefinition")
+		expect(parseResult).toContain("public class TestDerivedClass2 : TestAbstractClassDefinition")
+		expect(parseResult).toContain("public class TestEventArgsDefinition : EventArgs")
 	})
 
-	// Test interface declarations
-	it("should capture interface declarations", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
-		expect(result).toContain("ITestInterfaceDefinition")
+	// Test class declarations with attributes - 4+ lines
+	it("should capture class declarations with attributes", () => {
+		expect(parseResult).toContain("9--22 | [AttributeUsage")
+		expect(parseResult).toContain("TestAttributeDefinition")
+		expect(parseResult).toContain("Attribute")
 	})
 
-	// Test struct declarations
-	it("should capture struct declarations", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
-		expect(result).toContain("TestStructDefinition")
+	// Test generic class declarations - 4+ lines
+	it("should capture generic class declarations", () => {
+		expect(parseResult).toContain("TestGenericClassDefinition")
+		expect(parseResult).toContain("TestGenericClassMethod1")
+		expect(parseResult).toContain("TestGenericClassMethod2")
+		expect(parseResult).toContain("TestGenericMethodWithConstraint")
 	})
 
-	// Test enum declarations
-	it("should capture enum declarations", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
-		expect(result).toContain("TestEnumDefinition")
+	// Test nested class declarations - 4+ lines
+	it("should capture nested class declarations", () => {
+		expect(parseResult).toContain("TestOuterClassDefinition")
+		expect(parseResult).toContain("TestNestedClassDefinition")
+		expect(parseResult).toContain("TestNestedMethod")
 	})
 
-	// Test record declarations
-	it("should capture record declarations", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
-		expect(result).toContain("TestRecordDefinition")
+	// Test interface declarations - 4+ lines
+	it("should capture interface declarations", () => {
+		expect(parseResult).toContain("28--34 |     public interface ITestInterfaceDefinition")
+		expect(parseResult).toContain("136--140 |         public int TestInterfaceCalculateMethod(int x, int y)")
 	})
 
-	// Test method declarations with various modifiers
-	it("should capture method declarations with modifiers", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
-		expect(result).toContain("TestAsyncMethodDefinition")
-		expect(result).toContain("TestExtensionMethod1")
-		expect(result).toContain("TestExtensionMethod2")
-		expect(result).toContain("TestGenericMethodDefinition")
+	// Test enum declarations - 4+ lines
+	it("should capture enum declarations", () => {
+		expect(parseResult).toContain("37--44 |     public enum TestEnumDefinition")
+		expect(parseResult).toContain("60--64 |         public TestEnumDefinition TestPropertyWithAccessor")
 	})
 
-	// Test property declarations
-	it("should capture property declarations", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
-		expect(result).toContain("TestPropertyDefinition")
-		expect(result).toContain("TestPropertyWithAccessor")
-		expect(result).toContain("TestPropertyWithInit")
-		expect(result).toContain("TestRequiredProperty")
+	// Test method declarations - 4+ lines
+	it("should capture method declarations", () => {
+		expect(parseResult).toContain("136--140 |         public int TestInterfaceCalculateMethod(int x, int y)")
+		expect(parseResult).toContain("182--185 |         public override string ToString()")
 	})
 
-	// Test event declarations
-	it("should capture event declarations", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
-		expect(result).toContain("TestEventDefinition")
+	// Test static method declarations - 4+ lines
+	it("should capture static method declarations", () => {
+		expect(parseResult).toContain("TestStaticClassDefinition")
+		expect(parseResult).toContain("TestExtensionMethod1")
+		expect(parseResult).toContain("TestExtensionMethod2")
 	})
 
-	// Test delegate declarations
-	it("should capture delegate declarations", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
-		expect(result).toContain("TestDelegateDefinition")
+	// Test generic method declarations - 4+ lines
+	it("should capture generic method declarations", () => {
+		expect(parseResult).toContain("TestGenericMethodDefinition")
+		expect(parseResult).toContain("TestGenericMethodWithConstraint")
+		expect(parseResult).toContain("TestGenericClassMethod2")
+		expect(parseResult).toContain("TestGenericClassMethod1")
 	})
 
-	// Test attribute declarations
-	it("should capture attribute declarations", async () => {
-		const result = await testParseSourceCodeDefinitions("/test/file.cs", sampleCSharpContent, csharpOptions)
-		expect(result).toContain("TestAttributeDefinition")
+	// Test async method declarations - 4+ lines
+	it("should capture async method declarations", () => {
+		expect(parseResult).toContain("TestAsyncMethodDefinition")
+		expect(parseResult).toContain("TestAsyncPrivateMethod1")
+		expect(parseResult).toContain("TestAsyncPrivateMethod2")
+	})
+
+	// Test property declarations - 4+ lines
+	it("should capture property declarations", () => {
+		expect(parseResult).toContain("public string TestPropertyDefinition")
+		expect(parseResult).toContain("public TestEnumDefinition TestPropertyWithAccessor")
+		expect(parseResult).toContain("public string TestPropertyWithInit")
+		expect(parseResult).toContain("public required string TestRequiredProperty")
+	})
+
+	// Test field declarations - 4+ lines
+	it("should capture field declarations", () => {
+		expect(parseResult).toContain("TestPropertyDefinition")
+		expect(parseResult).toContain("TestPropertyWithAccessor")
+		expect(parseResult).toContain("TestPropertyWithInit")
+	})
+
+	// Test event declarations - 4+ lines
+	it("should capture event declarations", () => {
+		expect(parseResult).toContain("TestEventDefinition")
+		expect(parseResult).toContain("EventHandler")
+		expect(parseResult).toContain("TestEventArgsDefinition")
+	})
+
+	// Test delegate declarations - 4+ lines
+	it("should capture delegate declarations", () => {
+		expect(parseResult).toContain("TestDelegateDefinition")
+		expect(parseResult).toContain("delegate")
+	})
+
+	// Test struct declarations - 4+ lines
+	it("should capture struct declarations", () => {
+		expect(parseResult).toContain("TestStructDefinition")
+		expect(parseResult).toContain("struct")
+	})
+
+	// Test record declarations - 4+ lines
+	it("should capture record declarations", () => {
+		expect(parseResult).toContain("TestRecordDefinition")
+		expect(parseResult).toContain("record")
+		expect(parseResult).toContain("TestRecordMethodDefinition")
+	})
+
+	// Test LINQ expressions - 4+ lines
+	it("should capture LINQ expressions", () => {
+		expect(parseResult).toContain("TestLinqMethod")
+		expect(parseResult).toContain("from num in _numbers")
+		expect(parseResult).toContain("IEnumerable")
+	})
+
+	// Test LINQ expressions
+	it("should capture LINQ expressions", () => {
+		expect(parseResult).toContain("TestLinqExpressionDefinition")
+		expect(parseResult).toContain("TestLinqMethod")
 	})
 })

@@ -1,207 +1,308 @@
 export default String.raw`
-// Function definitions - capturing standard, async, and const functions
-fn standard_function_definition(
+// Function definition tests - standard, async, and const functions
+fn test_function_definition(
     param1: i32,
     param2: &str,
-    param3: Option<String>
+    param3: Option<String>,
+    param4: Vec<u8>
 ) -> Result<i32, String> {
-    println!("Standard function with parameters");
+    println!("Function definition test");
     let result = param1 + param3.map_or(0, |s| s.len() as i32);
     Ok(result)
 }
 
-async fn async_function_definition(
+async fn test_async_function_definition(
     url: &str,
     timeout: std::time::Duration,
-    retry_count: u32
+    retry_count: u32,
+    headers: Vec<(&str, &str)>
 ) -> Result<String, Box<dyn std::error::Error>> {
-    println!("Async function with parameters");
+    println!("Async function test");
     println!("URL: {}, timeout: {:?}, retries: {}", url, timeout, retry_count);
-    Ok(String::from("Async response"))
+    Ok(String::from("Async test response"))
 }
 
-const fn const_function_definition<T: Copy>(
+const fn test_const_function_definition<T: Copy + std::fmt::Debug>(
     value: T,
-    multiplier: usize
+    multiplier: usize,
+    prefix: &'static str,
+    suffix: &'static str
 ) -> [T; 4] {
-    println!("Const function for compile-time evaluation");
+    println!("Const function test");
     [value; 4]
 }
 
-// Struct definitions - capturing standard, tuple, and unit structs
-struct standard_struct_definition {
-    field1: String,
-    field2: i32,
-    field3: Option<Vec<f64>>,
-    field4: std::collections::HashMap<String, i32>,
+// Struct definition tests - standard, tuple, and unit structs
+// Note: Unit structs are exempt from 4-line requirement due to language syntax
+struct test_struct_definition {
+    name: String,
+    value: i32,
+    data: Option<Vec<f64>>,
+    metadata: std::collections::HashMap<String, i32>,
+    created_at: std::time::SystemTime,
 }
 
-struct tuple_struct_definition(
+struct test_tuple_struct_definition(
     String,
     i32,
     Option<Vec<f64>>,
-    std::collections::HashMap<String, i32>
+    std::collections::HashMap<String, i32>,
+    std::time::SystemTime
 );
 
-struct unit_struct_definition;
+// Unit struct - exempt from 4-line requirement
+struct test_unit_struct_definition;
 
-// Enum definitions - capturing variants with and without data
-enum enum_definition {
-    UnitVariant,
-    TupleVariant(String, i32, f64),
-    StructVariant {
-        name: String,
-        value: i32,
-        data: Option<Vec<f64>>,
-    },
-    MultipleVariants(
+// Enum definition tests
+enum test_enum_definition {
+    // Unit variant - exempt from 4-line requirement
+    TestUnitVariant,
+    
+    // Tuple variant with multiple fields
+    TestTupleVariant(
         String,
         i32,
         f64,
-        Option<Box<enum_definition>>
+        Vec<u8>
     ),
-}
-
-// Trait definitions - capturing default and required methods
-trait trait_definition {
-    // Required methods without implementation
-    fn required_trait_method(&self, param: i32) -> bool;
-    fn required_trait_method_with_generics<T: Clone>(&self, param: T) -> Option<T>;
     
-    // Default methods with implementation
-    fn default_trait_method(&self) -> String {
-        String::from("Default implementation in trait")
-    }
-    
-    fn another_default_trait_method(&self, prefix: &str) -> String {
-        format!("{}: {}", prefix, self.default_trait_method())
-    }
-}
-
-// Impl blocks - capturing trait and inherent implementations
-impl standard_struct_definition {
-    // Inherent implementation
-    fn inherent_implementation_method(
-        &self,
-        multiplier: i32
-    ) -> i32 {
-        self.field2 * multiplier
-    }
-    
-    fn inherent_static_method(
+    // Struct variant with fields
+    TestStructVariant {
         name: String,
-        value: i32
+        value: i32,
+        data: Option<Vec<f64>>,
+        timestamp: std::time::SystemTime
+    },
+    
+    // Recursive variant
+    TestRecursiveVariant(
+        String,
+        Box<test_enum_definition>
+    )
+}
+
+// Trait definition test
+trait test_trait_definition {
+    // Required method
+    fn test_required_method(
+        &self,
+        input: &str,
+        count: usize
+    ) -> Result<String, Box<dyn std::error::Error>>;
+    
+    // Method with generics
+    fn test_generic_method<T: std::fmt::Debug + Clone>(
+        &self,
+        data: T,
+        prefix: &str
+    ) -> Option<T>;
+    
+    // Default implementation
+    fn test_default_method(
+        &self,
+        message: &str
+    ) -> String {
+        format!("Default implementation: {}", message)
+    }
+}
+
+// Implementation test
+impl test_struct_definition {
+    fn test_implementation_method(
+        &self,
+        multiplier: i32,
+        offset: i32,
+        scale_factor: f64
+    ) -> i32 {
+        (self.value * multiplier + offset) as i32
+    }
+    
+    fn test_static_method(
+        name: String,
+        value: i32,
+        metadata: std::collections::HashMap<String, i32>
     ) -> Self {
         Self {
-            field1: name,
-            field2: value,
-            field3: None,
-            field4: std::collections::HashMap::new(),
+            name,
+            value,
+            data: None,
+            metadata,
+            created_at: std::time::SystemTime::now(),
         }
     }
 }
 
-impl trait_definition for standard_struct_definition {
-    // Trait implementation
-    fn required_trait_method(
+// Trait implementation test
+impl test_trait_definition for test_struct_definition {
+    fn test_required_method(
         &self,
-        param: i32
-    ) -> bool {
-        self.field2 > param
+        input: &str,
+        count: usize
+    ) -> Result<String, Box<dyn std::error::Error>> {
+        Ok(format!("{}: {}", self.name, input.repeat(count)))
     }
     
-    fn required_trait_method_with_generics<T: Clone>(
+    fn test_generic_method<T: std::fmt::Debug + Clone>(
         &self,
-        param: T
+        data: T,
+        prefix: &str
     ) -> Option<T> {
-        if self.field2 > 0 {
-            Some(param)
+        if self.value > 0 {
+            Some(data)
         } else {
             None
         }
     }
 }
 
-// Module definitions - capturing mod and use declarations
-mod module_definition {
+// Module definition test
+mod test_module_definition {
     use std::collections::HashMap;
     use std::io::{self, Read, Write};
+    use std::time::{Duration, SystemTime};
     use super::{
-        standard_struct_definition,
-        trait_definition,
-        enum_definition
+        test_struct_definition,
+        test_trait_definition,
+        test_enum_definition
     };
     
-    pub fn module_function(
-        param: &standard_struct_definition
+    pub fn test_module_function(
+        param: &test_struct_definition,
+        timeout: Duration,
+        retry_count: u32
     ) -> io::Result<String> {
-        Ok(format!("Module function: {}", param.field1))
+        Ok(format!("Module test: {}", param.name))
     }
 }
 
-// Macro definitions - capturing declarative and procedural macros
-macro_rules! declarative_macro_definition {
-    // Simple pattern
-    ($expr:expr) => {
-        println!("Macro expanded: {}", $expr);
+// Macro definition tests
+macro_rules! test_macro_definition {
+    // Basic pattern
+    ($test_expr:expr) => {
+        println!("Test macro: {}", $test_expr)
     };
     
-    // Multiple patterns with different formats
-    ($expr:expr, $($arg:expr),*) => {
+    // Complex pattern with repetition
+    ($test_expr:expr, $($test_arg:expr),+ $(,)?) => {
         {
-            print!("Macro expanded: {}", $expr);
+            print!("Test macro: {}", $test_expr);
             $(
-                print!(", {}", $arg);
-            )*
-            println!("");
+                print!(", argument: {}", $test_arg);
+            )+
+            println!();
+        }
+    };
+    
+    // Pattern with different types
+    ($test_expr:expr, $test_ident:ident, $test_ty:ty) => {
+        {
+            let $test_ident: $test_ty = $test_expr;
+            println!("Test macro with type: {}", stringify!($test_ty));
         }
     };
 }
 
-// Procedural macros would typically be defined in a separate crate with #[proc_macro]
-// This is a stand-in example showing what would be the usage in code
+// Procedural macro test - shows typical usage
 #[derive(
-    procedural_macro_definition,
     Debug,
     Clone,
-    PartialEq
+    PartialEq,
+    test_procedural_macro_definition,
+    serde::Serialize,
+    serde::Deserialize
 )]
-struct struct_with_procedural_macros {
-    field1: String,
-    field2: i32,
+struct test_proc_macro_struct {
+    test_field1: String,
+    test_field2: i32,
+    test_field3: Option<Vec<String>>,
+    test_field4: std::time::SystemTime,
 }
 
-// Type aliases - capturing basic and generic types
-type type_alias_definition = fn(i32, &str) -> Result<String, std::io::Error>;
+// Type alias tests - Note: Simple type aliases are exempt from 4-line requirement
+type test_type_alias = fn(i32, &str) -> Result<String, std::io::Error>;
 
-type generic_type_alias_definition<T, E> = Result<
-    std::collections::HashMap<String, T>,
-    Box<dyn std::error::Error + Send + Sync + 'static>
->;
+// Complex generic type alias
+type test_generic_type_alias<T, E> = Result<
+    std::collections::HashMap<String, Vec<T>>,
+    Box<dyn std::error::Error + Send + Sync + E>
+> where T: Clone + Send + 'static, E: std::error::Error + 'static;
 
-// Const/Static items - capturing both forms
-const constant_item_definition: f64 = 3.14159265358979323846;
+// Const and static tests
+const TEST_CONSTANT_DEFINITION: f64 =
+    3.141592653589793238462643383279502884197169399375105820974944592307816406286;
 
-static static_item_definition: &str =
-    "This is a static string that lives for the entire program duration";
+static TEST_STATIC_DEFINITION: &str =
+    "This is a test static string\n\
+     that spans multiple lines\n\
+     to meet the four-line requirement\n\
+     for proper testing purposes";
 
-// Lifetime parameters - capturing annotations and bounds
-struct lifetime_parameters_definition<'a, 'b: 'a> {
-    reference1: &'a str,
-    reference2: &'b str,
-    reference3: &'a [&'b str],
-    reference4: std::collections::HashMap<&'a str, &'b str>,
+// Lifetime parameter tests
+struct test_lifetime_definition<'short, 'long: 'short> {
+    test_ref1: &'short str,
+    test_ref2: &'long str,
+    test_ref3: &'short [&'long str],
+    test_ref4: std::collections::HashMap<&'short str, &'long str>,
+    test_ref5: Box<dyn test_trait_definition + 'long>,
 }
 
-impl<'shorter, 'longer: 'shorter> lifetime_parameters_definition<'shorter, 'longer> {
-    fn lifetime_method_definition<'a, 'b>(
+impl<'short, 'long: 'short> test_lifetime_definition<'short, 'long> {
+    fn test_lifetime_method<'a, 'b>(
         &'a self,
-        param: &'b str
-    ) -> &'shorter str
+        input: &'b str,
+        data: &'short [&'long str]
+    ) -> &'short str
     where
         'b: 'a,
+        'short: 'b,
     {
-        self.reference1
+        self.test_ref1
+    }
+}
+
+// Additional test structures
+// Unsafe block test
+impl test_struct_definition {
+    unsafe fn test_unsafe_function(
+        ptr: *const i32,
+        len: usize,
+        offset: isize
+    ) -> Option<i32> {
+        if ptr.is_null() {
+            return None;
+        }
+        Some(*ptr.offset(offset))
+    }
+}
+
+// Where clause test
+fn test_where_clause_function<T, U, V>(
+    t: T,
+    u: U,
+    v: V
+) -> Result<T, Box<dyn std::error::Error>>
+where
+    T: Clone + std::fmt::Debug,
+    U: AsRef<str> + 'static,
+    V: Into<String> + Send,
+{
+    println!("Testing where clause: {:?}", t);
+    Ok(t)
+}
+
+// Pattern matching test
+fn test_match_expression(
+    value: test_enum_definition
+) -> String {
+    match value {
+        test_enum_definition::TestUnitVariant =>
+            "Unit variant".to_string(),
+        test_enum_definition::TestTupleVariant(s, i, f, v) =>
+            format!("Tuple: {}, {}, {}, {:?}", s, i, f, v),
+        test_enum_definition::TestStructVariant { name, value, data, timestamp } =>
+            format!("Struct: {}, {}, {:?}, {:?}", name, value, data, timestamp),
+        test_enum_definition::TestRecursiveVariant(_, _) =>
+            "Recursive variant".to_string(),
     }
 }
 `
