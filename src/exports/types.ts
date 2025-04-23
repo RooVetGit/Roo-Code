@@ -47,6 +47,15 @@ type ProviderSettings = {
 				minTokensPerCachePoint?: number | undefined
 				maxCachePoints?: number | undefined
 				cachableFields?: string[] | undefined
+				tiers?:
+					| {
+							contextWindow: number
+							inputPrice?: number | undefined
+							outputPrice?: number | undefined
+							cacheWritesPrice?: number | undefined
+							cacheReadsPrice?: number | undefined
+					  }[]
+					| undefined
 		  } | null)
 		| undefined
 	glamaApiKey?: string | undefined
@@ -70,6 +79,15 @@ type ProviderSettings = {
 				minTokensPerCachePoint?: number | undefined
 				maxCachePoints?: number | undefined
 				cachableFields?: string[] | undefined
+				tiers?:
+					| {
+							contextWindow: number
+							inputPrice?: number | undefined
+							outputPrice?: number | undefined
+							cacheWritesPrice?: number | undefined
+							cacheReadsPrice?: number | undefined
+					  }[]
+					| undefined
 		  } | null)
 		| undefined
 	openRouterBaseUrl?: string | undefined
@@ -113,6 +131,15 @@ type ProviderSettings = {
 				minTokensPerCachePoint?: number | undefined
 				maxCachePoints?: number | undefined
 				cachableFields?: string[] | undefined
+				tiers?:
+					| {
+							contextWindow: number
+							inputPrice?: number | undefined
+							outputPrice?: number | undefined
+							cacheWritesPrice?: number | undefined
+							cacheReadsPrice?: number | undefined
+					  }[]
+					| undefined
 		  } | null)
 		| undefined
 	openAiUseAzure?: boolean | undefined
@@ -159,6 +186,15 @@ type ProviderSettings = {
 				minTokensPerCachePoint?: number | undefined
 				maxCachePoints?: number | undefined
 				cachableFields?: string[] | undefined
+				tiers?:
+					| {
+							contextWindow: number
+							inputPrice?: number | undefined
+							outputPrice?: number | undefined
+							cacheWritesPrice?: number | undefined
+							cacheReadsPrice?: number | undefined
+					  }[]
+					| undefined
 		  } | null)
 		| undefined
 	requestyApiKey?: string | undefined
@@ -181,6 +217,15 @@ type ProviderSettings = {
 				minTokensPerCachePoint?: number | undefined
 				maxCachePoints?: number | undefined
 				cachableFields?: string[] | undefined
+				tiers?:
+					| {
+							contextWindow: number
+							inputPrice?: number | undefined
+							outputPrice?: number | undefined
+							cacheWritesPrice?: number | undefined
+							cacheReadsPrice?: number | undefined
+					  }[]
+					| undefined
 		  } | null)
 		| undefined
 	xaiApiKey?: string | undefined
@@ -291,7 +336,6 @@ type GlobalSettings = {
 	fuzzyMatchThreshold?: number | undefined
 	experiments?:
 		| {
-				insert_content: boolean
 				powerSteering: boolean
 		  }
 		| undefined
@@ -557,7 +601,6 @@ type RooCodeEvents = {
 			| "execute_command"
 			| "read_file"
 			| "write_to_file"
-			| "append_to_file"
 			| "apply_diff"
 			| "insert_content"
 			| "search_and_replace"
