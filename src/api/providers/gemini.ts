@@ -30,7 +30,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 	async *createMessage(
 		systemInstruction: string,
 		messages: Anthropic.Messages.MessageParam[],
-		taskId?: string,
+		cacheKey?: string,
 	): ApiStream {
 		const { id: model, thinkingConfig, maxOutputTokens, info } = this.getModel()
 
@@ -40,8 +40,8 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		let cacheWriteTokens: number | undefined = undefined
 
 		// https://ai.google.dev/gemini-api/docs/caching?lang=node
-		if (info.supportsPromptCache && taskId) {
-			const cacheEntry = this.contentCaches.get(taskId)
+		if (info.supportsPromptCache && cacheKey) {
+			const cacheEntry = this.contentCaches.get(cacheKey)
 
 			if (cacheEntry) {
 				uncachedContent = contents.slice(cacheEntry.count, contents.length)
@@ -54,7 +54,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 			})
 
 			if (newCacheEntry.name) {
-				this.contentCaches.set(taskId, { key: newCacheEntry.name, count: contents.length })
+				this.contentCaches.set(cacheKey, { key: newCacheEntry.name, count: contents.length })
 				cacheWriteTokens = newCacheEntry.usageMetadata?.totalTokenCount ?? 0
 			}
 		}
