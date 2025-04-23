@@ -27,6 +27,9 @@ import { migrateSettings } from "./utils/migrateSettings"
 import { handleUri, registerCommands, registerCodeActions, registerTerminalActions } from "./activate"
 import { formatLanguage } from "./shared/language"
 
+import { runSseServer } from "./services/mcp/SseServer"
+import { NotificationEventHub } from "./services/mcp/NotificationEventHub"
+
 /**
  * Built using https://github.com/microsoft/vscode-webview-ui-toolkit
  *
@@ -65,8 +68,8 @@ export async function activate(context: vscode.ExtensionContext) {
 	if (!context.globalState.get("allowedCommands")) {
 		context.globalState.update("allowedCommands", defaultCommands)
 	}
-
-	const provider = new ClineProvider(context, outputChannel, "sidebar")
+	const eventHub = new NotificationEventHub()
+	const provider = new ClineProvider(context, outputChannel, "sidebar", eventHub)
 	telemetryService.setProvider(provider)
 
 	context.subscriptions.push(
@@ -121,7 +124,9 @@ export async function activate(context: vscode.ExtensionContext) {
 	// Implements the `RooCodeAPI` interface.
 	const socketPath = process.env.ROO_CODE_IPC_SOCKET_PATH
 	const enableLogging = typeof socketPath === "string"
-	return new API(outputChannel, provider, socketPath, enableLogging)
+	const api = new API(outputChannel, provider, socketPath, enableLogging)
+	runSseServer(eventHub, api)
+	return api
 }
 
 // This method is called when your extension is deactivated
