@@ -36,7 +36,7 @@
 		"description": "Allow Roo to automatically perform operations without requiring approval. Enable these settings only if you fully trust the AI and understand the associated security risks.",
 		"readOnly": {
 			"label": "Read",
-			"description": "When enabled, Roo will automatically view directory contents and read files without requiring you to click the Approve button.",
+			"description": "When enabled, Roo will automatically view directory contents, read single files (read_file), and read multiple files (read_multiple_files) without requiring you to click the Approve button.",
 			"outsideWorkspace": {
 				"label": "Include files outside workspace",
 				"description": "Allow Roo to read files outside the current workspace without requiring approval."
@@ -380,6 +380,10 @@
 		"MULTI_SEARCH_AND_REPLACE": {
 			"name": "Use experimental multi block diff tool",
 			"description": "When enabled, Roo will use multi block diff tool. This will try to update multiple code blocks in the file in one request."
+		},
+		"READ_MULTIPLE_FILES": {
+			"name": "Use experimental read multiple files tool",
+			"description": "Enable the experimental read multiple files tool, allowing Roo to read multiple files in a single operation. This might be more efficient but is still under development."
 		}
 	},
 	"temperature": {

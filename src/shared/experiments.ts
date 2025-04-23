@@ -5,6 +5,7 @@ export type { ExperimentId }
 
 export const EXPERIMENT_IDS = {
 	POWER_STEERING: "powerSteering",
+	READ_MULTIPLE_FILES: "readMultipleFiles",
 } as const satisfies Record<string, ExperimentId>
 
 type _AssertExperimentIds = AssertEqual<Equals<ExperimentId, Values<typeof EXPERIMENT_IDS>>>
@@ -17,6 +18,7 @@ interface ExperimentConfig {
 
 export const experimentConfigsMap: Record<ExperimentKey, ExperimentConfig> = {
 	POWER_STEERING: { enabled: false },
+	READ_MULTIPLE_FILES: { enabled: false },
 }
 
 export const experimentDefault = Object.fromEntries(

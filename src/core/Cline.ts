@@ -37,7 +37,7 @@ import { HistoryItem } from "../shared/HistoryItem"
 import { ClineAskResponse } from "../shared/WebviewMessage"
 import { GlobalFileNames } from "../shared/globalFileNames"
 import { defaultModeSlug, getModeBySlug, getFullModeDetails, isToolAllowedForMode } from "../shared/modes"
-import { EXPERIMENT_IDS, experiments as Experiments, ExperimentId } from "../shared/experiments"
+import { EXPERIMENT_IDS, experiments as Experiments, ExperimentId, experimentDefault } from "../shared/experiments" // Import experimentDefault
 import { formatLanguage } from "../shared/language"
 import { ToolParamName, ToolResponse, DiffStrategy } from "../shared/tools"
 
@@ -79,6 +79,7 @@ import { askFollowupQuestionTool } from "./tools/askFollowupQuestionTool"
 import { switchModeTool } from "./tools/switchModeTool"
 import { attemptCompletionTool } from "./tools/attemptCompletionTool"
 import { newTaskTool } from "./tools/newTaskTool"
+import { readMultipleFilesTool } from "./tools/readMultipleFilesTool" // Import the new tool
 
 // prompts
 import { formatResponse } from "./prompts/responses"
@@ -853,7 +854,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 
 		const wasRecent = lastClineMessage?.ts && Date.now() - lastClineMessage.ts < 30_000
-		
+
 		newUserContent.push({
 			type: "text",
 			text:
@@ -1290,7 +1291,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 							const modeName = getModeBySlug(mode, customModes)?.name ?? mode
 							return `[${block.name} in ${modeName} mode: '${message}']`
 						}
+						case "read_multiple_files": // Add case for the new tool
+							return `[${block.name} for '${block.params.paths}']`
 					}
+					// Add a default return for safety, although all tool names should be covered
+					return `[${block.name}]`
 				}
 
 				if (this.didRejectTool) {
@@ -1460,7 +1465,33 @@ export class Cline extends EventEmitter<ClineEvents> {
 						break
 					case "read_file":
 						await readFileTool(this, block, askApproval, handleError, pushToolResult, removeClosingTag)
-
+						break
+					// Add case for the new tool
+					case "read_multiple_files":
+						const { experiments: currentExperiments } = (await this.providerRef.deref()?.getState()) ?? {}
+						// Use experimentDefault as fallback instead of {}
+						if (
+							Experiments.isEnabled(
+								currentExperiments ?? experimentDefault,
+								EXPERIMENT_IDS.READ_MULTIPLE_FILES,
+							)
+						) {
+							await readMultipleFilesTool(
+								this,
+								block,
+								askApproval,
+								handleError,
+								pushToolResult,
+								removeClosingTag,
+							)
+						} else {
+							// Handle case where experiment is not enabled
+							pushToolResult(
+								formatResponse.toolError(
+									"The 'read_multiple_files' tool is experimental and not enabled.",
+								),
+							)
+						}
 						break
 					case "fetch_instructions":
 						await fetchInstructionsTool(this, block, askApproval, handleError, pushToolResult)

@@ -63,6 +63,7 @@ export const toolParamNames = [
 	"ignore_case",
 	"start_line",
 	"end_line",
+	"paths", // Add paths parameter name
 ] as const
 
 export type ToolParamName = (typeof toolParamNames)[number]
@@ -84,6 +85,12 @@ export interface ExecuteCommandToolUse extends ToolUse {
 export interface ReadFileToolUse extends ToolUse {
 	name: "read_file"
 	params: Partial<Pick<Record<ToolParamName, string>, "path" | "start_line" | "end_line">>
+}
+
+// Add specific interface for read_multiple_files
+export interface ReadMultipleFilesToolUse extends ToolUse {
+	name: "read_multiple_files"
+	params: Partial<Pick<Record<ToolParamName, string>, "paths">>
 }
 
 export interface FetchInstructionsToolUse extends ToolUse {
@@ -181,6 +188,7 @@ export const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
 	new_task: "create new task",
 	insert_content: "insert content",
 	search_and_replace: "search and replace",
+	read_multiple_files: "read multiple files",
 } as const
 
 export type { ToolGroup }
@@ -188,7 +196,14 @@ export type { ToolGroup }
 // Define available tool groups.
 export const TOOL_GROUPS: Record<ToolGroup, ToolGroupConfig> = {
 	read: {
-		tools: ["read_file", "fetch_instructions", "search_files", "list_files", "list_code_definition_names"],
+		tools: [
+			"read_file",
+			"read_multiple_files",
+			"fetch_instructions",
+			"search_files",
+			"list_files",
+			"list_code_definition_names",
+		],
 	},
 	edit: {
 		tools: ["apply_diff", "write_to_file", "insert_content", "search_and_replace"],

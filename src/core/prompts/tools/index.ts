@@ -20,6 +20,7 @@ import { getUseMcpToolDescription } from "./use-mcp-tool"
 import { getAccessMcpResourceDescription } from "./access-mcp-resource"
 import { getSwitchModeDescription } from "./switch-mode"
 import { getNewTaskDescription } from "./new-task"
+import { getReadMultipleFilesDescription } from "./read-multiple-files" // Import new description
 
 // Map of tool names to their description functions
 const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined> = {
@@ -41,6 +42,7 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 	search_and_replace: (args) => getSearchAndReplaceDescription(args),
 	apply_diff: (args) =>
 		args.diffStrategy ? args.diffStrategy.getToolDescription({ cwd: args.cwd, toolOptions: args.toolOptions }) : "",
+	read_multiple_files: (args) => getReadMultipleFilesDescription(args), // Add new tool to map
 }
 
 export function getToolDescriptionsForMode(

@@ -277,7 +277,7 @@ export type CustomSupportPrompts = z.infer<typeof customSupportPromptsSchema>
  * ExperimentId
  */
 
-export const experimentIds = ["powerSteering"] as const
+export const experimentIds = ["powerSteering", "readMultipleFiles"] as const
 
 export const experimentIdsSchema = z.enum(experimentIds)
 
@@ -289,6 +289,7 @@ export type ExperimentId = z.infer<typeof experimentIdsSchema>
 
 const experimentsSchema = z.object({
 	powerSteering: z.boolean(),
+	readMultipleFiles: z.boolean(),
 })
 
 export type Experiments = z.infer<typeof experimentsSchema>
@@ -834,6 +835,7 @@ export const toolNames = [
 	"switch_mode",
 	"new_task",
 	"fetch_instructions",
+	"read_multiple_files",
 ] as const
 
 export const toolNamesSchema = z.enum(toolNames)

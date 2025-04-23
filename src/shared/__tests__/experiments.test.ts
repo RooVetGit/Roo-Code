@@ -14,22 +14,35 @@ describe("experiments", () => {
 		it("returns false when experiment is not enabled", () => {
 			const experiments: Record<ExperimentId, boolean> = {
 				powerSteering: false,
+				readMultipleFiles: false, // Add new experiment
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(false)
+			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.READ_MULTIPLE_FILES)).toBe(false) // Add assertion
 		})
 
 		it("returns true when experiment is enabled", () => {
 			const experiments: Record<ExperimentId, boolean> = {
 				powerSteering: true,
+				readMultipleFiles: true, // Add new experiment
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(true)
+			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.READ_MULTIPLE_FILES)).toBe(true) // Add assertion
 		})
 
-		it("returns false when experiment is not present", () => {
-			const experiments: Record<ExperimentId, boolean> = {
-				powerSteering: false,
+		it("returns default value when experiment is not present in config", () => {
+			// Simulate a scenario where the config might be missing an experiment
+			const experiments: Partial<Record<ExperimentId, boolean>> = {
+				powerSteering: true,
+				// readMultipleFiles is missing
 			}
-			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(false)
+			// It should fall back to the default value (false for readMultipleFiles)
+			expect(
+				Experiments.isEnabled(experiments as Record<ExperimentId, boolean>, EXPERIMENT_IDS.READ_MULTIPLE_FILES),
+			).toBe(false)
+			// Ensure existing experiment check still works
+			expect(
+				Experiments.isEnabled(experiments as Record<ExperimentId, boolean>, EXPERIMENT_IDS.POWER_STEERING),
+			).toBe(true)
 		})
 	})
 })

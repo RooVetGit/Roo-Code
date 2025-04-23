@@ -292,6 +292,7 @@ type GlobalSettings = {
 	experiments?:
 		| {
 				powerSteering: boolean
+				readMultipleFiles: boolean
 		  }
 		| undefined
 	language?:
@@ -570,6 +571,7 @@ type RooCodeEvents = {
 			| "switch_mode"
 			| "new_task"
 			| "fetch_instructions"
+			| "read_multiple_files"
 		),
 		string,
 	]
