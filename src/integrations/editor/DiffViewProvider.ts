@@ -173,25 +173,8 @@ export class DiffViewProvider {
 
 		// If the original document was open, try to focus it.
 		// VS Code should handle showing the updated content automatically since the file was saved.
-		if (this.documentWasOpen && this.originalViewColumn) {
-			// Find the editor for the original document and reveal it
-			const originalEditor = vscode.window.visibleTextEditors.find(
-				(editor) =>
-					arePathsEqual(editor.document.uri.fsPath, absolutePath) &&
-					editor.viewColumn === this.originalViewColumn,
-			)
-			if (originalEditor) {
-				// Reveal a range (e.g., the start) to ensure focus
-				const position = new vscode.Position(0, 0)
-				originalEditor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.AtTop)
-			} else {
-				// Fallback if editor not found (shouldn't happen often if documentWasOpen is true)
-				await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
-					preview: false,
-					viewColumn: this.originalViewColumn,
-				})
-			}
-		}
+		// If the original document was open, try to focus it.
+		await this._focusOriginalDocument(absolutePath, this.originalViewColumn)
 
 		/*
 		Getting diagnostics before and after the file edit is a better approach than
@@ -276,23 +259,8 @@ export class DiffViewProvider {
 
 			// If the document was originally open, ensure it's focused.
 			// The revert logic already applied the original content and saved.
-			if (this.documentWasOpen && this.originalViewColumn) {
-				const originalEditor = vscode.window.visibleTextEditors.find(
-					(editor) =>
-						arePathsEqual(editor.document.uri.fsPath, absolutePath) &&
-						editor.viewColumn === this.originalViewColumn,
-				)
-				if (originalEditor) {
-					const position = new vscode.Position(0, 0)
-					originalEditor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.AtTop)
-				} else {
-					// Fallback
-					await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
-						preview: false,
-						viewColumn: this.originalViewColumn,
-					})
-				}
-			}
+			// If the document was originally open, ensure it's focused.
+			await this._focusOriginalDocument(absolutePath, this.originalViewColumn)
 		}
 
 		// edit is done
@@ -399,6 +367,29 @@ export class DiffViewProvider {
 			result = stripBom(result)
 		} while (result !== previous)
 		return result
+	}
+
+	private async _focusOriginalDocument(
+		absolutePath: string,
+		viewColumn: vscode.ViewColumn | undefined,
+	): Promise<void> {
+		if (this.documentWasOpen && viewColumn) {
+			// Find the editor for the original document and reveal it
+			const originalEditor = vscode.window.visibleTextEditors.find(
+				(editor) => arePathsEqual(editor.document.uri.fsPath, absolutePath) && editor.viewColumn === viewColumn,
+			)
+			if (originalEditor) {
+				// Reveal a range (e.g., the start) to ensure focus
+				const position = new vscode.Position(0, 0)
+				originalEditor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.AtTop)
+			} else {
+				// Fallback if editor not found
+				await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
+					preview: false,
+					viewColumn: viewColumn,
+				})
+			}
+		}
 	}
 
 	// close editor if open?
