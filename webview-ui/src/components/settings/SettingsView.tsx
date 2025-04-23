@@ -4,11 +4,12 @@ import React, {
 	useCallback,
 	useEffect,
 	useImperativeHandle,
+	useLayoutEffect,
 	useMemo,
 	useRef,
 	useState,
 	WheelEvent,
-} from "react"
+} from "react" // Add useLayoutEffect
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import {
 	CheckCheck,
@@ -318,32 +319,26 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		[isChangeDetected],
 	)
 
-	// Create refs for each tab
-	const tabRefs = useRef<Record<SectionName, React.RefObject<HTMLButtonElement>>>({} as any)
+	// Store direct DOM element refs for each tab
+	const tabRefs = useRef<Record<SectionName, HTMLButtonElement | null>>({} as any)
 
-	// Initialize refs for each section
-	useEffect(() => {
-		sectionNames.forEach((name) => {
-			if (!tabRefs.current[name]) {
-				tabRefs.current[name] = React.createRef<HTMLButtonElement>()
-			}
-		})
-	}, [])
+	// Removed useEffect for pre-populating refs
 
-	const sections: { id: SectionName; icon: LucideIcon; ref: React.RefObject<HTMLButtonElement> }[] = useMemo(
+	// Sections definition - no longer includes refs
+	const sections: { id: SectionName; icon: LucideIcon }[] = useMemo(
 		() => [
-			{ id: "providers", icon: Webhook, ref: tabRefs.current.providers || React.createRef() },
-			{ id: "autoApprove", icon: CheckCheck, ref: tabRefs.current.autoApprove || React.createRef() },
-			{ id: "browser", icon: SquareMousePointer, ref: tabRefs.current.browser || React.createRef() },
-			{ id: "checkpoints", icon: GitBranch, ref: tabRefs.current.checkpoints || React.createRef() },
-			{ id: "notifications", icon: Bell, ref: tabRefs.current.notifications || React.createRef() },
-			{ id: "contextManagement", icon: Database, ref: tabRefs.current.contextManagement || React.createRef() },
-			{ id: "terminal", icon: SquareTerminal, ref: tabRefs.current.terminal || React.createRef() },
-			{ id: "experimental", icon: FlaskConical, ref: tabRefs.current.experimental || React.createRef() },
-			{ id: "language", icon: Globe, ref: tabRefs.current.language || React.createRef() },
-			{ id: "about", icon: Info, ref: tabRefs.current.about || React.createRef() },
+			{ id: "providers", icon: Webhook },
+			{ id: "autoApprove", icon: CheckCheck },
+			{ id: "browser", icon: SquareMousePointer },
+			{ id: "checkpoints", icon: GitBranch },
+			{ id: "notifications", icon: Bell },
+			{ id: "contextManagement", icon: Database },
+			{ id: "terminal", icon: SquareTerminal },
+			{ id: "experimental", icon: FlaskConical },
+			{ id: "language", icon: Globe },
+			{ id: "about", icon: Info },
 		],
-		[tabRefs],
+		[], // No dependencies needed now
 	)
 
 	// Update target section logic to set active tab
@@ -353,55 +348,136 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		}
 	}, [targetSection])
 
-	// Add effect to conditionally scroll the active tab into view when it changes
-	useEffect(() => {
-		const activeTabElement = tabRefs.current[activeTab]?.current
-		const containerElement = scrollContainerRef.current
+	// Function to scroll the active tab into view
+	const scrollToActiveTab = useCallback(
+		(checkVisibility = false) => {
+			console.log(`[scrollToActiveTab] Called. checkVisibility: ${checkVisibility}, activeTab: ${activeTab}`) // Log entry
+			const activeTabElement = tabRefs.current[activeTab] // Remove ?.current
+			const containerElement = scrollContainerRef.current
 
-		if (activeTabElement && containerElement) {
-			// Calculate the visible range within the scroll container
-			const visibleLeft = containerElement.scrollLeft
-			const visibleRight = containerElement.scrollLeft + containerElement.clientWidth
+			if (!activeTabElement) {
+				console.warn(`[scrollToActiveTab] activeTabElement for tab '${activeTab}' not found.`) // Log missing ref
+				return
+			}
+			if (!containerElement) {
+				console.warn(`[scrollToActiveTab] containerElement not found.`) // Log missing ref
+				return
+			}
 
-			// Calculate the tab's position within the scroll container
-			const tabLeft = activeTabElement.offsetLeft
-			const tabRight = activeTabElement.offsetLeft + activeTabElement.offsetWidth
+			// Use nodeName for simpler logging
+			console.log(
+				`[scrollToActiveTab] Refs found: activeTabElement=${activeTabElement.nodeName}, containerElement=${containerElement.nodeName}`,
+			) // Log refs found
+			let shouldScroll = true
+			if (checkVisibility) {
+				console.log(`[scrollToActiveTab] Checking visibility...`) // Log visibility check start
+				// Calculate the visible range within the scroll container
+				const visibleLeft = containerElement.scrollLeft
+				const visibleRight = containerElement.scrollLeft + containerElement.clientWidth
 
-			// Check if the tab is fully within the visible range
-			const isVisible = tabLeft >= visibleLeft && tabRight <= visibleRight
+				// Calculate the tab's position within the scroll container
+				const tabLeft = activeTabElement.offsetLeft
+				const tabRight = activeTabElement.offsetLeft + activeTabElement.offsetWidth
 
-			// Only scroll if the tab is not fully visible
-			if (!isVisible) {
+				// Check if the tab is fully within the visible range
+				const isVisible = tabLeft >= visibleLeft && tabRight <= visibleRight
+				console.log(
+					`[scrollToActiveTab] Visibility check: tabLeft=${tabLeft}, tabRight=${tabRight}, visibleLeft=${visibleLeft}, visibleRight=${visibleRight}, isVisible=${isVisible}`,
+				) // Log visibility details
+				shouldScroll = !isVisible
+			} else {
+				console.log(`[scrollToActiveTab] Skipping visibility check (scrolling unconditionally).`) // Log unconditional scroll path
+			}
+
+			if (shouldScroll) {
+				console.log(`[scrollToActiveTab] Scrolling tab '${activeTab}' into view.`) // Log scroll action
 				activeTabElement.scrollIntoView({
 					behavior: "auto", // Use instant scrolling
 					block: "nearest",
 					inline: "center",
 				})
+			} else {
+				console.log(`[scrollToActiveTab] Scroll not needed (shouldScroll is false).`) // Log scroll skipped
+			}
+			// Removed redundant 'else' block for ref check, handled by early returns.
+		},
+		[activeTab], // Dependency on activeTab ensures the correct tab element is used
+	)
+
+	// Effect to scroll when the active tab *changes* (e.g., user click)
+	// Only scrolls if the tab isn't already fully visible.
+	useEffect(() => {
+		scrollToActiveTab(true) // Pass true to check visibility before scrolling
+	}, [activeTab, scrollToActiveTab]) // Depend on activeTab and the scroll function itself
+
+	// Effect to scroll when the webview becomes *visible*
+	// Scrolls unconditionally to center the active tab.
+	// Use useLayoutEffect to ensure refs are available after DOM mutations.
+	useLayoutEffect(() => {
+		const handleMessage = (event: MessageEvent) => {
+			const message = event.data // The object sent from postMessage
+			if (message.type === "settingsVisible") {
+				console.log("Received settingsVisible message from extension (LayoutEffect).")
+				// No setTimeout needed, useLayoutEffect runs after DOM updates
+				scrollToActiveTab(false) // Pass false to scroll unconditionally
 			}
 		}
-	}, [activeTab])
+
+		window.addEventListener("message", handleMessage)
+
+		// Cleanup listener on unmount
+		return () => {
+			window.removeEventListener("message", handleMessage)
+		}
+	}, [scrollToActiveTab]) // Depend on the scroll function
 
 	// Handle horizontal scrolling with mouse wheel
 	const handleWheelScroll = useCallback((event: WheelEvent<HTMLDivElement>) => {
-		const container = scrollContainerRef.current
+		// Cast target to HTMLElement for broader compatibility if needed, but ref should give correct type
+		const container = event.currentTarget as HTMLDivElement // Use event.currentTarget
 		if (container) {
 			// Use deltaY for vertical scroll wheels (most common)
-			// Adjust sensitivity as needed
-			const scrollAmount = event.deltaY * 2 // Multiplier for sensitivity
+			const scrollAmount = event.deltaY * 2 // Adjust sensitivity
 
-			// Check if scrolling is possible
+			// Check if horizontal scrolling is possible and needed
 			if (container.scrollWidth > container.clientWidth) {
-				container.scrollLeft += scrollAmount
-				// Prevent default page scrolling if horizontal scroll happened
-				if (
-					(scrollAmount < 0 && container.scrollLeft > 0) ||
-					(scrollAmount > 0 && container.scrollLeft < container.scrollWidth - container.clientWidth)
-				) {
-					event.preventDefault()
+				const currentScrollLeft = container.scrollLeft
+				const maxScrollLeft = container.scrollWidth - container.clientWidth
+
+				// Calculate new scroll position
+				let newScrollLeft = currentScrollLeft + scrollAmount
+
+				// Prevent scrolling beyond boundaries
+				newScrollLeft = Math.max(0, Math.min(newScrollLeft, maxScrollLeft))
+
+				// Only prevent default if a horizontal scroll actually happens
+				if (newScrollLeft !== currentScrollLeft) {
+					container.scrollLeft = newScrollLeft
+					event.preventDefault() // Prevent default vertical page scroll
 				}
 			}
 		}
-	}, [])
+	}, []) // No dependencies needed as it uses event.currentTarget
+
+	// Effect to attach wheel listener with passive: false
+	useEffect(() => {
+		const containerElement = scrollContainerRef.current
+
+		if (containerElement) {
+			// Type assertion for the event handler
+			const wheelHandler = (event: Event) => handleWheelScroll(event as unknown as WheelEvent<HTMLDivElement>)
+
+			containerElement.addEventListener("wheel", wheelHandler, { passive: false })
+
+			// Cleanup function
+			return () => {
+				// Check if element still exists before removing listener
+				if (containerElement) {
+					containerElement.removeEventListener("wheel", wheelHandler)
+				}
+			}
+		}
+	}, [handleWheelScroll]) // Re-attach if handleWheelScroll changes (though it shouldn't with empty deps)
 
 	return (
 		<Tab>
@@ -441,33 +517,37 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 				{/* Scrollable tab container */}
 				<div
 					ref={scrollContainerRef} // Assign ref
-					className={cn(settingsTabsContainer, scrollbarHideClasses, "w-full")} // Removed px-5
-					onWheel={handleWheelScroll} // Add wheel handler
+					className={cn(settingsTabsContainer, scrollbarHideClasses, "w-full")}
+					// onWheel prop removed, listener added via useEffect
 				>
 					<TabList
 						value={activeTab}
 						onValueChange={(value) => handleTabChange(value as SectionName)}
 						className={cn(settingsTabList, "w-full min-w-max")}
 						data-testid="settings-tab-list">
-						{sections.map(({ id, icon: Icon, ref }) => (
-							<TabTrigger
-								key={id}
-								ref={ref}
-								value={id}
-								className={cn(
-									activeTab === id
-										? `${settingsTabTrigger} ${settingsTabTriggerActive}`
-										: settingsTabTrigger,
-									"flex-shrink-0", // Prevent tabs from shrinking
-									"focus:ring-0", // Remove the focus ring styling
-								)}
-								data-testid={`tab-${id}`}>
-								<div className="flex items-center gap-2">
-									<Icon className="w-4 h-4" />
-									<span>{t(`settings:sections.${id}`)}</span>
-								</div>
-							</TabTrigger>
-						))}
+						{sections.map(
+							(
+								{ id, icon: Icon }, // Remove 'ref' from destructuring
+							) => (
+								<TabTrigger
+									key={id}
+									ref={(element) => (tabRefs.current[id] = element)} // Keep callback ref here
+									value={id}
+									className={cn(
+										activeTab === id
+											? `${settingsTabTrigger} ${settingsTabTriggerActive}`
+											: settingsTabTrigger,
+										"flex-shrink-0", // Prevent tabs from shrinking
+										"focus:ring-0", // Remove the focus ring styling
+									)}
+									data-testid={`tab-${id}`}>
+									<div className="flex items-center gap-2">
+										<Icon className="w-4 h-4" />
+										<span>{t(`settings:sections.${id}`)}</span>
+									</div>
+								</TabTrigger>
+							),
+						)}
 					</TabList>
 				</div>
 				{/* "More" dropdown button - always show it */}

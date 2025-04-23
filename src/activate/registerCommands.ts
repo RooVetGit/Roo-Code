@@ -85,7 +85,11 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		"roo-cline.settingsButtonClicked": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
 			if (!visibleProvider) return
+			// Post original action message
 			visibleProvider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
+			// Also explicitly post the visibility message to trigger scroll reliably
+			console.log("[settingsButtonClicked] Posting 'settingsVisible' message.")
+			visibleProvider.postMessageToWebview({ type: "settingsVisible" })
 		},
 		"roo-cline.historyButtonClicked": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
@@ -161,10 +165,29 @@ export const openClineInNewTab = async ({ context, outputChannel }: Omit<Registe
 
 	await tabProvider.resolveWebviewView(newPanel)
 
+	// Add listener for visibility changes to notify webview
+	newPanel.onDidChangeViewState(
+		(e) => {
+			const panel = e.webviewPanel
+			if (panel.visible) {
+				console.log("Roo Code tab panel became visible, posting message...")
+				panel.webview.postMessage({ type: "settingsVisible" }) // Use the same message type as in SettingsView.tsx
+			} else {
+				console.log("Roo Code tab panel became hidden.")
+			}
+		},
+		null, // First null is for `thisArgs`
+		context.subscriptions, // Register listener for disposal
+	)
+
 	// Handle panel closing events.
-	newPanel.onDidDispose(() => {
-		setPanel(undefined, "tab")
-	})
+	newPanel.onDidDispose(
+		() => {
+			setPanel(undefined, "tab")
+		},
+		null,
+		context.subscriptions, // Also register dispose listener
+	)
 
 	// Lock the editor group so clicking on files doesn't open them over the panel.
 	await delay(100)
