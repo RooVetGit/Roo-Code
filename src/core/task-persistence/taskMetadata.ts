@@ -1,3 +1,4 @@
+import NodeCache from "node-cache"
 import getFolderSize from "get-folder-size"
 
 import { ClineMessage } from "../../shared/ExtensionMessage"
@@ -7,6 +8,8 @@ import { getApiMetrics } from "../../shared/getApiMetrics"
 import { findLastIndex } from "../../shared/array"
 import { HistoryItem } from "../../shared/HistoryItem"
 import { getTaskDirectoryPath } from "../../shared/storagePathManager"
+
+const taskSizeCache = new NodeCache({ stdTTL: 5 * 60, checkperiod: 30 })
 
 export type TaskMetadataOptions = {
 	messages: ClineMessage[]
@@ -29,14 +32,15 @@ export async function taskMetadata({
 	const lastRelevantMessage =
 		messages[findLastIndex(messages, (m) => !(m.ask === "resume_task" || m.ask === "resume_completed_task"))]
 
-	let taskDirSize = 0
+	let taskDirSize = taskSizeCache.get<number>(taskDir)
 
-	try {
-		taskDirSize = await getFolderSize.loose(taskDir)
-	} catch (error) {
-		console.error(
-			`[taskMetadata] getFolderSize.loose failed -> ${error instanceof Error ? error.message : String(error)}`,
-		)
+	if (taskDirSize === undefined) {
+		try {
+			taskDirSize = await getFolderSize.loose(taskDir)
+			taskSizeCache.set<number>(taskDir, taskDirSize)
+		} catch (error) {
+			taskDirSize = 0
+		}
 	}
 
 	const tokenUsage = getApiMetrics(combineApiRequests(combineCommandSequences(messages.slice(1))))
