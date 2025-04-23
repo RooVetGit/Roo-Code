@@ -1,4 +1,14 @@
-import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
+import React, {
+	forwardRef,
+	memo,
+	useCallback,
+	useEffect,
+	useImperativeHandle,
+	useMemo,
+	useRef,
+	useState,
+	WheelEvent,
+} from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import {
 	CheckCheck,
@@ -105,6 +115,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 	const confirmDialogHandler = useRef<() => void>()
 
 	const [cachedState, setCachedState] = useState(extensionState)
+	const scrollContainerRef = useRef<HTMLDivElement>(null) // Ref for the scrollable container
 
 	const {
 		alwaysAllowReadOnly,
@@ -342,24 +353,55 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		}
 	}, [targetSection])
 
-	// Add effect to scroll the active tab into view when it changes
+	// Add effect to conditionally scroll the active tab into view when it changes
 	useEffect(() => {
 		const activeTabElement = tabRefs.current[activeTab]?.current
-		const tabContainer = document.querySelector(`.${settingsTabsContainer.split(" ")[0]}`)
+		const containerElement = scrollContainerRef.current
 
-		if (activeTabElement && tabContainer) {
-			// Calculate the scroll position to center the tab
-			const containerWidth = tabContainer.clientWidth
-			const tabWidth = activeTabElement.offsetWidth
+		if (activeTabElement && containerElement) {
+			// Calculate the visible range within the scroll container
+			const visibleLeft = containerElement.scrollLeft
+			const visibleRight = containerElement.scrollLeft + containerElement.clientWidth
+
+			// Calculate the tab's position within the scroll container
 			const tabLeft = activeTabElement.offsetLeft
+			const tabRight = activeTabElement.offsetLeft + activeTabElement.offsetWidth
 
-			// Center the tab in the container
-			const scrollPosition = tabLeft - containerWidth / 2 + tabWidth / 2
+			// Check if the tab is fully within the visible range
+			const isVisible = tabLeft >= visibleLeft && tabRight <= visibleRight
 
-			// Set the scroll position directly for a snappier experience
-			tabContainer.scrollLeft = scrollPosition
+			// Only scroll if the tab is not fully visible
+			if (!isVisible) {
+				activeTabElement.scrollIntoView({
+					behavior: "auto", // Use instant scrolling
+					block: "nearest",
+					inline: "center",
+				})
+			}
 		}
 	}, [activeTab])
+
+	// Handle horizontal scrolling with mouse wheel
+	const handleWheelScroll = useCallback((event: WheelEvent<HTMLDivElement>) => {
+		const container = scrollContainerRef.current
+		if (container) {
+			// Use deltaY for vertical scroll wheels (most common)
+			// Adjust sensitivity as needed
+			const scrollAmount = event.deltaY * 2 // Multiplier for sensitivity
+
+			// Check if scrolling is possible
+			if (container.scrollWidth > container.clientWidth) {
+				container.scrollLeft += scrollAmount
+				// Prevent default page scrolling if horizontal scroll happened
+				if (
+					(scrollAmount < 0 && container.scrollLeft > 0) ||
+					(scrollAmount > 0 && container.scrollLeft < container.scrollWidth - container.clientWidth)
+				) {
+					event.preventDefault()
+				}
+			}
+		}
+	}, [])
 
 	return (
 		<Tab>
@@ -393,9 +435,15 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			</TabHeader>
 
 			{/* Tab list with overflow dropdown */}
-			<div className="flex items-center">
-				{/* Show only the first 5 tabs and the active tab if it's not in the first 5 */}
-				<div className={cn(settingsTabsContainer, scrollbarHideClasses, "w-full")}>
+			<div className="flex items-center pr-5">
+				{" "}
+				{/* Added pr-5 here */}
+				{/* Scrollable tab container */}
+				<div
+					ref={scrollContainerRef} // Assign ref
+					className={cn(settingsTabsContainer, scrollbarHideClasses, "w-full", "px-5")}
+					onWheel={handleWheelScroll} // Add wheel handler
+				>
 					<TabList
 						value={activeTab}
 						onValueChange={(value) => handleTabChange(value as SectionName)}
@@ -422,7 +470,6 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 						))}
 					</TabList>
 				</div>
-
 				{/* "More" dropdown button - always show it */}
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
