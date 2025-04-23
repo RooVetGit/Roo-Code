@@ -345,12 +345,19 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 	// Add effect to scroll the active tab into view when it changes
 	useEffect(() => {
 		const activeTabElement = tabRefs.current[activeTab]?.current
-		if (activeTabElement) {
-			activeTabElement.scrollIntoView({
-				behavior: "smooth",
-				inline: "center", // Center the tab in the visible area
-				block: "nearest", // Don't scroll vertically
-			})
+		const tabContainer = document.querySelector(`.${settingsTabsContainer.split(" ")[0]}`)
+
+		if (activeTabElement && tabContainer) {
+			// Calculate the scroll position to center the tab
+			const containerWidth = tabContainer.clientWidth
+			const tabWidth = activeTabElement.offsetWidth
+			const tabLeft = activeTabElement.offsetLeft
+
+			// Center the tab in the container
+			const scrollPosition = tabLeft - containerWidth / 2 + tabWidth / 2
+
+			// Set the scroll position directly for a snappier experience
+			tabContainer.scrollLeft = scrollPosition
 		}
 	}, [activeTab])
 
