@@ -1,6 +1,4 @@
-import { RooTerminalProcess } from "./types"
-
-export type RooTerminalProcessResultPromise = RooTerminalProcess & Promise<void>
+import type { RooTerminalProcess, RooTerminalProcessResultPromise } from "./types"
 
 // Similar to execa's ResultPromise, this lets us create a mixin of both a
 // TerminalProcess and a Promise:

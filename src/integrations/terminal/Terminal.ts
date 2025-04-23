@@ -3,16 +3,22 @@ import pWaitFor from "p-wait-for"
 
 import { truncateOutput, applyRunLengthEncoding } from "../misc/extract-text"
 
-import { ExitCodeDetails, RooTerminal, RooTerminalCallbacks } from "./types"
+import type {
+	RooTerminalCallbacks,
+	RooTerminalProcessResultPromise,
+	RooTerminalProcess,
+	ExitCodeDetails,
+} from "./types"
+import { BaseTerminal } from "./BaseTerminal"
 import { TerminalProcess } from "./TerminalProcess"
-import { RooTerminalProcessResultPromise, mergePromise } from "./mergePromise"
+import { mergePromise } from "./mergePromise"
 
 // Import TerminalRegistry here to avoid circular dependencies.
 const { TerminalRegistry } = require("./TerminalRegistry")
 
 export const DEFAULT_TERMINAL_SHELL_INTEGRATION_TIMEOUT = 5_000
 
-export class Terminal implements RooTerminal {
+export class Terminal extends BaseTerminal {
 	private static shellIntegrationTimeout: number = DEFAULT_TERMINAL_SHELL_INTEGRATION_TIMEOUT
 	private static commandDelay: number = 0
 	private static powershellCounter: boolean = false
@@ -26,29 +32,26 @@ export class Terminal implements RooTerminal {
 	public id: number
 	public running: boolean
 	private streamClosed: boolean
-	public process?: TerminalProcess
 	public taskId?: string
+
 	public cmdCounter: number = 0
-	public completedProcesses: TerminalProcess[] = []
-	private initialCwd: string
+	public completedProcesses: RooTerminalProcess[] = []
 
 	constructor(id: number, terminal: vscode.Terminal, cwd: string) {
+		super(cwd)
+
 		this.id = id
 		this.terminal = terminal
 		this.busy = false
 		this.running = false
 		this.streamClosed = false
-
-		// Initial working directory is used as a fallback when
-		// shell integration is not yet initialized or unavailable:
-		this.initialCwd = cwd
 	}
 
 	/**
 	 * Gets the current working directory from shell integration or falls back to initial cwd
 	 * @returns The current working directory
 	 */
-	public getCurrentWorkingDirectory(): string {
+	public override getCurrentWorkingDirectory(): string {
 		return this.terminal.shellIntegration?.cwd ? this.terminal.shellIntegration.cwd.fsPath : this.initialCwd
 	}
 
@@ -112,6 +115,7 @@ export class Terminal implements RooTerminal {
 		} else if (this.completedProcesses.length > 0) {
 			return this.completedProcesses[0].command || ""
 		}
+
 		return ""
 	}
 
@@ -128,7 +132,7 @@ export class Terminal implements RooTerminal {
 	 * Gets all processes with unretrieved output
 	 * @returns Array of processes with unretrieved output
 	 */
-	public getProcessesWithOutput(): TerminalProcess[] {
+	public getProcessesWithOutput() {
 		// Clean the queue first to remove any processes without output
 		this.cleanCompletedProcessQueue()
 		return [...this.completedProcesses]
@@ -160,7 +164,7 @@ export class Terminal implements RooTerminal {
 		return output
 	}
 
-	public runCommand(command: string, callbacks: RooTerminalCallbacks): RooTerminalProcessResultPromise {
+	public override runCommand(command: string, callbacks: RooTerminalCallbacks): RooTerminalProcessResultPromise {
 		// We set busy before the command is running because the terminal may be waiting
 		// on terminal integration, and we must prevent another instance from selecting
 		// the terminal for use during that time.

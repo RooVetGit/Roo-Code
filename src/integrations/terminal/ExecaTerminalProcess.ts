@@ -1,17 +1,10 @@
-import { EventEmitter } from "events"
-
 import { execa, ExecaError } from "execa"
 
-import type { RooTerminal, RooTerminalProcessEvents } from "./types"
+import type { RooTerminal } from "./types"
+import { BaseTerminalProcess } from "./BaseTerminalProcess"
 
-export class ExecaTerminalProcess extends EventEmitter<RooTerminalProcessEvents> {
-	public command: string = ""
-
+export class ExecaTerminalProcess extends BaseTerminalProcess {
 	private terminalRef: WeakRef<RooTerminal>
-	private isListening: boolean = true
-	private lastEmitTime_ms: number = 0
-	private fullOutput: string = ""
-	private lastRetrievedIndex: number = 0
 	private controller?: AbortController
 	private isStreamClosed: boolean = false
 
@@ -21,14 +14,24 @@ export class ExecaTerminalProcess extends EventEmitter<RooTerminalProcessEvents>
 		this.terminalRef = new WeakRef(terminal)
 	}
 
-	public async run(command: string) {
+	public get terminal(): RooTerminal {
+		const terminal = this.terminalRef.deref()
+
+		if (!terminal) {
+			throw new Error("Unable to dereference terminal")
+		}
+
+		return terminal
+	}
+
+	public override async run(command: string) {
 		this.command = command
 		this.controller = new AbortController()
 
 		try {
 			const subprocess = execa({
 				shell: true,
-				cwd: this.terminalRef.deref()?.getCurrentWorkingDirectory(),
+				cwd: this.terminal.getCurrentWorkingDirectory(),
 				cancelSignal: this.controller.signal,
 			})`${command}`
 
@@ -66,21 +69,21 @@ export class ExecaTerminalProcess extends EventEmitter<RooTerminalProcessEvents>
 		this.emit("continue")
 	}
 
-	public continue() {
+	public override continue() {
 		this.isListening = false
 		this.removeAllListeners("line")
 		this.emit("continue")
 	}
 
-	public abort() {
+	public override abort() {
 		this.controller?.abort()
 	}
 
-	public hasUnretrievedOutput() {
+	public override hasUnretrievedOutput() {
 		return this.lastRetrievedIndex < this.fullOutput.length
 	}
 
-	public getUnretrievedOutput() {
+	public override getUnretrievedOutput() {
 		let outputToProcess = this.fullOutput.slice(this.lastRetrievedIndex)
 		let endIndex = -1
 

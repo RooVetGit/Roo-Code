@@ -83,150 +83,64 @@
 		6. You MUST direct your user to read this message in full
 */
 
-import { EventEmitter } from "events"
 import stripAnsi from "strip-ansi"
 import * as vscode from "vscode"
 import { inspect } from "util"
 
-import { RooTerminalProcessEvents, ExitCodeDetails } from "./types"
+import type { ExitCodeDetails } from "./types"
+import { BaseTerminalProcess } from "./BaseTerminalProcess"
 import { Terminal } from "./Terminal"
 
 // How long to wait after a process outputs anything before we consider it "cool" again.
 const PROCESS_HOT_TIMEOUT_NORMAL = 2_000
 const PROCESS_HOT_TIMEOUT_COMPILING = 15_000
 
-export class TerminalProcess extends EventEmitter<RooTerminalProcessEvents> {
-	public command: string = ""
-	public isHot: boolean = false
-
-	private isListening: boolean = true
-	private terminalInfo: Terminal
-	private lastEmitTime_ms: number = 0
-	private fullOutput: string = ""
-	private lastRetrievedIndex: number = 0
+export class TerminalProcess extends BaseTerminalProcess {
+	private terminalRef: WeakRef<Terminal>
 	private hotTimer: NodeJS.Timeout | null = null
 
 	constructor(terminal: Terminal) {
 		super()
 
 		// Store terminal info for later use
-		this.terminalInfo = terminal
+		this.terminalRef = new WeakRef(terminal)
 
 		// Set up event handlers
 		this.once("completed", () => {
-			if (this.terminalInfo) {
-				this.terminalInfo.busy = false
+			const terminal = this.terminalRef.deref()
+
+			if (terminal) {
+				terminal.busy = false
 			}
 		})
 
 		this.once("no_shell_integration", () => {
-			if (this.terminalInfo) {
-				console.log(`no_shell_integration received for terminal ${this.terminalInfo.id}`)
+			const terminal = this.terminalRef.deref()
+
+			if (terminal) {
+				console.log(`no_shell_integration received for terminal ${terminal.id}`)
 				this.emit("completed", "<no shell integration>")
-				this.terminalInfo.busy = false
-				this.terminalInfo.setActiveStream(undefined)
+				terminal.busy = false
+				terminal.setActiveStream(undefined)
 				this.continue()
 			}
 		})
 	}
 
-	static interpretExitCode(exitCode: number | undefined): ExitCodeDetails {
-		if (exitCode === undefined) {
-			return { exitCode }
+	public get terminal(): Terminal {
+		const terminal = this.terminalRef.deref()
+
+		if (!terminal) {
+			throw new Error("Unable to dereference terminal")
 		}
 
-		if (exitCode <= 128) {
-			return { exitCode }
-		}
-
-		const signal = exitCode - 128
-		const signals: Record<number, string> = {
-			// Standard signals
-			1: "SIGHUP",
-			2: "SIGINT",
-			3: "SIGQUIT",
-			4: "SIGILL",
-			5: "SIGTRAP",
-			6: "SIGABRT",
-			7: "SIGBUS",
-			8: "SIGFPE",
-			9: "SIGKILL",
-			10: "SIGUSR1",
-			11: "SIGSEGV",
-			12: "SIGUSR2",
-			13: "SIGPIPE",
-			14: "SIGALRM",
-			15: "SIGTERM",
-			16: "SIGSTKFLT",
-			17: "SIGCHLD",
-			18: "SIGCONT",
-			19: "SIGSTOP",
-			20: "SIGTSTP",
-			21: "SIGTTIN",
-			22: "SIGTTOU",
-			23: "SIGURG",
-			24: "SIGXCPU",
-			25: "SIGXFSZ",
-			26: "SIGVTALRM",
-			27: "SIGPROF",
-			28: "SIGWINCH",
-			29: "SIGIO",
-			30: "SIGPWR",
-			31: "SIGSYS",
-
-			// Real-time signals base
-			34: "SIGRTMIN",
-
-			// SIGRTMIN+n signals
-			35: "SIGRTMIN+1",
-			36: "SIGRTMIN+2",
-			37: "SIGRTMIN+3",
-			38: "SIGRTMIN+4",
-			39: "SIGRTMIN+5",
-			40: "SIGRTMIN+6",
-			41: "SIGRTMIN+7",
-			42: "SIGRTMIN+8",
-			43: "SIGRTMIN+9",
-			44: "SIGRTMIN+10",
-			45: "SIGRTMIN+11",
-			46: "SIGRTMIN+12",
-			47: "SIGRTMIN+13",
-			48: "SIGRTMIN+14",
-			49: "SIGRTMIN+15",
-
-			// SIGRTMAX-n signals
-			50: "SIGRTMAX-14",
-			51: "SIGRTMAX-13",
-			52: "SIGRTMAX-12",
-			53: "SIGRTMAX-11",
-			54: "SIGRTMAX-10",
-			55: "SIGRTMAX-9",
-			56: "SIGRTMAX-8",
-			57: "SIGRTMAX-7",
-			58: "SIGRTMAX-6",
-			59: "SIGRTMAX-5",
-			60: "SIGRTMAX-4",
-			61: "SIGRTMAX-3",
-			62: "SIGRTMAX-2",
-			63: "SIGRTMAX-1",
-			64: "SIGRTMAX",
-		}
-
-		// These signals may produce core dumps:
-		//   SIGQUIT, SIGILL, SIGABRT, SIGBUS, SIGFPE, SIGSEGV
-		const coreDumpPossible = new Set([3, 4, 6, 7, 8, 11])
-
-		return {
-			exitCode,
-			signal,
-			signalName: signals[signal] || `Unknown Signal (${signal})`,
-			coreDumpPossible: coreDumpPossible.has(signal),
-		}
+		return terminal
 	}
 
-	async run(command: string) {
+	public override async run(command: string) {
 		this.command = command
-		const terminal = this.terminalInfo.terminal
+
+		const terminal = this.terminal.terminal
 
 		if (terminal.shellIntegration && terminal.shellIntegration.executeCommand) {
 			// Create a promise that resolves when the stream becomes available
@@ -278,7 +192,7 @@ export class TerminalProcess extends EventEmitter<RooTerminalProcessEvents> {
 
 				// Only add the PowerShell counter workaround if enabled
 				if (Terminal.getPowershellCounter()) {
-					commandToExecute += ` ; "(Roo/PS Workaround: ${this.terminalInfo.cmdCounter++})" > $null`
+					commandToExecute += ` ; "(Roo/PS Workaround: ${this.terminal.cmdCounter++})" > $null`
 				}
 
 				// Only add the sleep command if the command delay is greater than 0
@@ -308,7 +222,7 @@ export class TerminalProcess extends EventEmitter<RooTerminalProcessEvents> {
 					"<VSCE shell integration stream did not start: terminal output and command execution status is unknown>",
 				)
 
-				this.terminalInfo.busy = false
+				this.terminal.busy = false
 
 				// Emit continue event to allow execution to proceed
 				this.emit("continue")
@@ -402,9 +316,7 @@ export class TerminalProcess extends EventEmitter<RooTerminalProcessEvents> {
 			}
 
 			// Set streamClosed immediately after stream ends
-			if (this.terminalInfo) {
-				this.terminalInfo.setActiveStream(undefined)
-			}
+			this.terminal.setActiveStream(undefined)
 
 			// Wait for shell execution to complete and handle exit details
 			const exitDetails = await shellExecutionComplete
@@ -483,42 +395,26 @@ export class TerminalProcess extends EventEmitter<RooTerminalProcessEvents> {
 		this.emit("continue")
 	}
 
-	private emitRemainingBufferIfListening() {
-		if (this.isListening) {
-			const remainingBuffer = this.getUnretrievedOutput()
-
-			if (remainingBuffer !== "") {
-				this.emit("line", remainingBuffer)
-			}
-		}
-	}
-
-	continue() {
+	public override continue() {
 		this.emitRemainingBufferIfListening()
 		this.isListening = false
 		this.removeAllListeners("line")
 		this.emit("continue")
 	}
 
-	public abort() {
+	public override abort() {
 		if (this.isListening) {
 			// Send SIGINT using CTRL+C
-			this.terminalInfo.terminal.sendText("\x03")
+			this.terminal.terminal.sendText("\x03")
 		}
 	}
 
-	/**
-	 * Checks if this process has unretrieved output
-	 * @returns true if there is output that hasn't been fully retrieved yet
-	 */
-	hasUnretrievedOutput(): boolean {
+	public override hasUnretrievedOutput(): boolean {
 		// If the process is still active or has unretrieved content, return true
 		return this.lastRetrievedIndex < this.fullOutput.length
 	}
 
-	// Returns complete lines with their carriage returns.
-	// The final line may lack a carriage return if the program didn't send one.
-	getUnretrievedOutput(): string {
+	public override getUnretrievedOutput(): string {
 		// Get raw unretrieved output
 		let outputToProcess = this.fullOutput.slice(this.lastRetrievedIndex)
 
@@ -539,7 +435,7 @@ export class TerminalProcess extends EventEmitter<RooTerminalProcessEvents> {
 		//   For active streams: return only complete lines (up to last \n).
 		//   For closed streams: return all remaining content.
 		if (endIndex === -1) {
-			if (this.terminalInfo && !this.terminalInfo.isStreamClosed()) {
+			if (!this.terminal.isStreamClosed()) {
 				// Stream still running - only process complete lines
 				endIndex = outputToProcess.lastIndexOf("\n")
 
@@ -562,6 +458,16 @@ export class TerminalProcess extends EventEmitter<RooTerminalProcessEvents> {
 
 		// Clean and return output
 		return this.removeEscapeSequences(outputToProcess)
+	}
+
+	private emitRemainingBufferIfListening() {
+		if (this.isListening) {
+			const remainingBuffer = this.getUnretrievedOutput()
+
+			if (remainingBuffer !== "") {
+				this.emit("line", remainingBuffer)
+			}
+		}
 	}
 
 	private stringIndexMatch(

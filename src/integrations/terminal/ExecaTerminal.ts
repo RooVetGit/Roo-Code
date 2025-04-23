@@ -1,21 +1,10 @@
-import { RooTerminal, RooTerminalCallbacks } from "./types"
+import type { RooTerminalCallbacks, RooTerminalProcessResultPromise } from "./types"
+import { BaseTerminal } from "./BaseTerminal"
 import { ExecaTerminalProcess } from "./ExecaTerminalProcess"
-import { RooTerminalProcessResultPromise, mergePromise } from "./mergePromise"
+import { mergePromise } from "./mergePromise"
 
-export class ExecaTerminal implements RooTerminal {
-	public process?: ExecaTerminalProcess
-
-	private initialCwd: string
-
-	constructor(cwd: string) {
-		this.initialCwd = cwd
-	}
-
-	public getCurrentWorkingDirectory(): string {
-		return this.initialCwd
-	}
-
-	public runCommand(command: string, callbacks: RooTerminalCallbacks): RooTerminalProcessResultPromise {
+export class ExecaTerminal extends BaseTerminal {
+	public override runCommand(command: string, callbacks: RooTerminalCallbacks): RooTerminalProcessResultPromise {
 		const process = new ExecaTerminalProcess(this)
 		process.command = command
 		this.process = process

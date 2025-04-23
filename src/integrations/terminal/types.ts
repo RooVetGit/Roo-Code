@@ -1,6 +1,8 @@
+import EventEmitter from "events"
+
 export interface RooTerminal {
 	getCurrentWorkingDirectory(): string
-	runCommand: (command: string, callbacks: RooTerminalCallbacks) => Promise<void>
+	runCommand: (command: string, callbacks: RooTerminalCallbacks) => RooTerminalProcessResultPromise
 }
 
 export interface RooTerminalCallbacks {
@@ -10,10 +12,17 @@ export interface RooTerminalCallbacks {
 	onNoShellIntegration: (message: string, process: RooTerminalProcess) => void
 }
 
-export interface RooTerminalProcess {
+export interface RooTerminalProcess extends EventEmitter<RooTerminalProcessEvents> {
+	command: string
+	isHot: boolean
+	run: (command: string) => Promise<void>
 	continue: () => void
 	abort: () => void
+	hasUnretrievedOutput: () => boolean
+	getUnretrievedOutput: () => string
 }
+
+export type RooTerminalProcessResultPromise = RooTerminalProcess & Promise<void>
 
 export interface RooTerminalProcessEvents {
 	line: [line: string]

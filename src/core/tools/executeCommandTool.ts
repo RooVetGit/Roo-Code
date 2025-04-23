@@ -130,7 +130,7 @@ export async function executeCommand(
 		},
 	}
 
-	let terminal: Terminal | ExecaTerminal
+	let terminal
 
 	if (terminalProvider === "vscode") {
 		terminal = await TerminalRegistry.getOrCreateTerminal(workingDir, !!customCwd, cline.taskId)
