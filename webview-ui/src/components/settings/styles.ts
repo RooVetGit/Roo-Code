@@ -76,3 +76,26 @@ export const StyledMarkdown = styled.div`
 		}
 	}
 `
+
+// Settings tab styles as CSS class names for use with cn function
+export const settingsTabsContainer = "overflow-x-auto" // Changed from overflow-hidden to enable horizontal scrolling
+
+export const settingsTabList = "flex flex-nowrap border-b border-vscode-sideBar-background"
+
+export const settingsTabTrigger =
+	"flex-none whitespace-nowrap px-4 py-2 border-b-2 border-transparent text-vscode-foreground opacity-70 transition-all"
+
+export const settingsTabTriggerActive = "opacity-100 border-vscode-focusBorder"
+
+// Utility class to hide scrollbars while maintaining scroll functionality
+export const ScrollbarHide = styled.div`
+	scrollbar-width: none; /* Firefox */
+	-ms-overflow-style: none; /* IE and Edge */
+	&::-webkit-scrollbar {
+		display: none; /* Chrome, Safari, and Opera */
+	}
+`
+
+// Tailwind-compatible class names for hiding scrollbars
+export const scrollbarHideClasses =
+	"scrollbar-hide [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"

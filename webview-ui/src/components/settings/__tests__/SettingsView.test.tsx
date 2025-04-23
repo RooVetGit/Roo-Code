@@ -1,5 +1,6 @@
 // npx jest src/components/settings/__tests__/SettingsView.test.ts
 
+import React from "react"
 import { render, screen, fireEvent } from "@testing-library/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
@@ -83,6 +84,24 @@ jest.mock("@vscode/webview-ui-toolkit/react", () => ({
 		<input type="radio" value={value} checked={checked} onChange={onChange} />
 	),
 	VSCodeRadioGroup: ({ children, value, onChange }: any) => <div onChange={onChange}>{children}</div>,
+}))
+
+// Mock Tab components
+jest.mock("../../../components/common/Tab", () => ({
+	...jest.requireActual("../../../components/common/Tab"),
+	Tab: ({ children }: any) => <div>{children}</div>,
+	TabHeader: ({ children }: any) => <div>{children}</div>,
+	TabContent: ({ children }: any) => <div>{children}</div>,
+	TabList: ({ children, value, onValueChange, "data-testid": dataTestId }: any) => (
+		<div data-testid={dataTestId} data-value={value}>
+			{children}
+		</div>
+	),
+	TabTrigger: ({ children, value, "data-testid": dataTestId, onClick }: any) => (
+		<button data-testid={dataTestId} data-value={value} onClick={onClick}>
+			{children}
+		</button>
+	),
 }))
 
 // Mock Slider component
@@ -361,6 +380,60 @@ describe("SettingsView - Allowed Commands", () => {
 		expect(vscode.postMessage).toHaveBeenLastCalledWith({
 			type: "allowedCommands",
 			commands: [],
+		})
+	})
+
+	describe("SettingsView - Tab Navigation", () => {
+		beforeEach(() => {
+			jest.clearAllMocks()
+		})
+
+		it("renders with providers tab active by default", () => {
+			renderSettingsView()
+
+			// Check that the tab list is rendered
+			const tabList = screen.getByTestId("settings-tab-list")
+			expect(tabList).toBeInTheDocument()
+
+			// Check that providers content is visible
+			expect(screen.getByTestId("api-config-management")).toBeInTheDocument()
+		})
+
+		it("shows unsaved changes dialog when switching tabs with unsaved changes", () => {
+			renderSettingsView()
+
+			// Make a change to create unsaved changes
+			const soundCheckbox = screen.getByTestId("sound-enabled-checkbox")
+			fireEvent.click(soundCheckbox)
+
+			// Try to switch tabs by clicking on a tab
+			const tabTrigger = screen.getByTestId("tab-browser")
+			fireEvent.click(tabTrigger)
+
+			// Check that unsaved changes dialog is shown
+			expect(screen.getByText("settings:unsavedChangesDialog.title")).toBeInTheDocument()
+		})
+
+		it("shows the More dropdown button", () => {
+			renderSettingsView()
+
+			// Check that the More button is rendered
+			expect(screen.getByTestId("more-tabs-button")).toBeInTheDocument()
+		})
+
+		it("allows switching tabs via the dropdown menu", () => {
+			renderSettingsView()
+
+			// Open the dropdown menu
+			const moreButton = screen.getByTestId("more-tabs-button")
+			fireEvent.click(moreButton)
+
+			// Click on a tab in the dropdown
+			const dropdownTab = screen.getByTestId("dropdown-tab-browser")
+			fireEvent.click(dropdownTab)
+
+			// Check that the browser content is visible
+			expect(screen.getByText("settings:browser.enable.label")).toBeInTheDocument()
 		})
 	})
 

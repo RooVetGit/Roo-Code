@@ -4,7 +4,8 @@
 		"done": "Done",
 		"cancel": "Cancel",
 		"reset": "Reset",
-		"select": "Select"
+		"select": "Select",
+		"more": "More"
 	},
 	"header": {
 		"title": "Settings",
