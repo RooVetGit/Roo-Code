@@ -162,9 +162,12 @@ export async function executeCommand(
 		return [
 			true,
 			formatResponse.toolResult(
-				`Command is still running in terminal ${workingDir ? ` from '${workingDir.toPosix()}'` : ""}.${
-					result.length > 0 ? `\nHere's the output so far:\n${result}` : ""
-				}\n\nThe user provided the following feedback:\n<feedback>\n${text}\n</feedback>`,
+				[
+					`Command is still running in terminal from '${terminal.getCurrentWorkingDirectory().toPosix()}'.`,
+					result.length > 0 ? `Here's the output so far:\n${result}\n` : "\n",
+					`The user provided the following feedback:`,
+					`<feedback>\n${text}\n</feedback>`,
+				].join("\n"),
 				images,
 			),
 		]
@@ -193,28 +196,22 @@ export async function executeCommand(
 			exitStatus = `Exit code: <undefined, notify user>`
 		}
 
-		let workingDirInfo: string = workingDir ? ` within working directory '${workingDir.toPosix()}'` : ""
+		let workingDirInfo = ` within working directory '${workingDir.toPosix()}'`
 		const newWorkingDir = terminal.getCurrentWorkingDirectory()
 
 		if (newWorkingDir !== workingDir) {
 			workingDirInfo += `\nNOTICE: Your command changed the working directory for this terminal to '${newWorkingDir.toPosix()}' so you MUST adjust future commands accordingly because they will be executed in this directory`
 		}
 
-		const outputInfo = `\nOutput:\n${result}`
-		console.log(`Command executed in terminal ${workingDirInfo}. ${exitStatus}${outputInfo}`)
-		return [false, `Command executed in terminal ${workingDirInfo}. ${exitStatus}${outputInfo}`]
+		return [false, `Command executed in terminal ${workingDirInfo}. ${exitStatus}\nOutput:\n${result}`]
 	} else {
-		console.log(
-			`Command is still running in terminal ${workingDir ? ` from '${workingDir.toPosix()}'` : ""}.${
-				result.length > 0 ? `\nHere's the output so far:\n${result}` : ""
-			}\n\nYou will be updated on the terminal status and new output in the future.`,
-		)
-
 		return [
 			false,
-			`Command is still running in terminal ${workingDir ? ` from '${workingDir.toPosix()}'` : ""}.${
-				result.length > 0 ? `\nHere's the output so far:\n${result}` : ""
-			}\n\nYou will be updated on the terminal status and new output in the future.`,
+			[
+				`Command is still running in terminal ${workingDir ? ` from '${workingDir.toPosix()}'` : ""}.`,
+				result.length > 0 ? `Here's the output so far:\n${result}\n` : "\n",
+				"You will be updated on the terminal status and new output in the future.`",
+			].join("\n"),
 		]
 	}
 }
