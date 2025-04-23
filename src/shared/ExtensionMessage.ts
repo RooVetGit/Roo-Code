@@ -68,6 +68,7 @@ export interface ExtensionMessage {
 		| "acceptInput"
 		| "setHistoryPreviewCollapsed"
 		| "commandExecutionStatus"
+		| "vscodeSetting"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -104,6 +105,8 @@ export interface ExtensionMessage {
 	promptText?: string
 	results?: { path: string; type: "file" | "folder"; label?: string }[]
 	error?: string
+	setting?: string
+	value?: any
 }
 
 export type ExtensionState = Pick<

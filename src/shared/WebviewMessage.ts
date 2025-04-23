@@ -51,6 +51,8 @@ export interface WebviewMessage {
 		| "openFile"
 		| "openMention"
 		| "cancelTask"
+		| "updateVSCodeSetting"
+		| "getVSCodeSetting"
 		| "alwaysAllowBrowser"
 		| "alwaysAllowMcp"
 		| "alwaysAllowModeSwitch"
@@ -133,7 +135,7 @@ export interface WebviewMessage {
 	apiConfiguration?: ApiConfiguration
 	images?: string[]
 	bool?: boolean
-	value?: number
+	value?: number | boolean | any // Allow number for most messages, boolean for VSCode settings
 	commands?: string[]
 	audioType?: AudioType
 	serverName?: string
@@ -145,6 +147,7 @@ export interface WebviewMessage {
 	dataUrls?: string[]
 	values?: Record<string, any>
 	query?: string
+	setting?: string
 	slug?: string
 	modeConfig?: ModeConfig
 	timeout?: number

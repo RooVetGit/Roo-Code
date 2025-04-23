@@ -592,6 +592,17 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await updateGlobalState("fuzzyMatchThreshold", message.value)
 			await provider.postStateToWebview()
 			break
+		case "updateVSCodeSetting":
+			if (message.setting && message.value !== undefined) {
+				await vscode.workspace.getConfiguration().update(message.setting, message.value, true)
+			}
+			break
+		case "getVSCodeSetting":
+			if (message.setting) {
+				const value = vscode.workspace.getConfiguration().get(message.setting)
+				await provider.postMessageToWebview({ type: "vscodeSetting", setting: message.setting, value })
+			}
+			break
 		case "alwaysApproveResubmit":
 			await updateGlobalState("alwaysApproveResubmit", message.bool ?? false)
 			await provider.postStateToWebview()
