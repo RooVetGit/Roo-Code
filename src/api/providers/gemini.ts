@@ -92,7 +92,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 			const inputTokens = lastUsageMetadata.promptTokenCount ?? 0
 			const outputTokens = lastUsageMetadata.candidatesTokenCount ?? 0
 			const cacheReadTokens = lastUsageMetadata.cachedContentTokenCount
-			const thinkingTokens = lastUsageMetadata.thoughtsTokenCount
+			const reasoningTokens = lastUsageMetadata.thoughtsTokenCount
 
 			const totalCost = this.calculateCost({
 				info,
@@ -108,7 +108,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 				outputTokens,
 				cacheWriteTokens,
 				cacheReadTokens,
-				thinkingTokens,
+				reasoningTokens,
 				totalCost,
 			}
 		}
