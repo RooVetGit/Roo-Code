@@ -2,6 +2,7 @@ import { memo, useMemo } from "react"
 import { getLanguageFromPath } from "@src/utils/getLanguageFromPath"
 import CodeBlock, { CODE_BLOCK_BG_COLOR } from "./CodeBlock"
 import { ToolProgressStatus } from "@roo/shared/ExtensionMessage"
+import { VSCodeProgressRing } from "@vscode/webview-ui-toolkit/react"
 
 interface CodeAccordianProps {
 	code?: string
@@ -71,11 +72,7 @@ const CodeAccordian = ({
 					}}
 					className={`${isLoading ? "animate-pulse" : ""}`}
 					onClick={isLoading ? undefined : onToggleExpand}>
-					{isLoading && (
-						<div className="flex items-center">
-							<span className="codicon codicon-loading animate-spin mr-1" aria-label="Loading" role="status" />
-						</div>
-					)}
+					{isLoading && <VSCodeProgressRing className="size-3 mr-2" />}
 					{isFeedback || isConsoleLogs ? (
 						<div style={{ display: "flex", alignItems: "center" }}>
 							<span
