@@ -403,3 +403,15 @@ input[cmdk-input]:focus {
 .codicon[class*="codicon-"] {
 	text-rendering: geometricPrecision !important;
 }
+
+/* Style for MentionNode in LexicalTextArea */
+.mention-highlight {
+	background-color: var(--vscode-editor-selectionBackground);
+	color: inherit;
+	padding: 1px 3px;
+	border-radius: 3px;
+	cursor: default;
+	text-decoration: none;
+	word-break: keep-all;
+	white-space: nowrap;
+}
