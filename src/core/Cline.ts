@@ -853,7 +853,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 
 		const wasRecent = lastClineMessage?.ts && Date.now() - lastClineMessage.ts < 30_000
-		
+
 		newUserContent.push({
 			type: "text",
 			text:
@@ -943,6 +943,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 		if (this.isStreaming && this.diffViewProvider.isEditing) {
 			await this.diffViewProvider.revertChanges()
 		}
+		// Save the countdown message in the automatic retry or other content
+		await this.saveClineMessages()
 	}
 
 	// Tools
