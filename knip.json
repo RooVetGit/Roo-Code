@@ -1,7 +1,7 @@
 {
 	"$schema": "https://unpkg.com/knip@latest/schema.json",
-	"entry": ["src/extension.ts", "src/activate/index.ts", "webview-ui/src/index.tsx"],
-	"project": ["src/**/*.ts", "webview-ui/src/**/*.{ts,tsx}"],
+	"entry": ["src/extension.ts", "src/activate/index.ts", "webview-ui/src/index.tsx", "settings-webview/src/main.tsx"],
+	"project": ["src/**/*.ts", "webview-ui/src/**/*.{ts,tsx}", "settings-webview/src/**/*.{ts,tsx}"],
 	"ignore": [
 		"**/__mocks__/**",
 		"**/__tests__/**",
@@ -24,6 +24,10 @@
 	"workspaces": {
 		"webview-ui": {
 			"entry": ["src/index.tsx"],
+			"project": ["src/**/*.{ts,tsx}"]
+		},
+		"settings-webview": {
+			"entry": ["src/main.tsx"],
 			"project": ["src/**/*.{ts,tsx}"]
 		}
 	}
