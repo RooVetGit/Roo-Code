@@ -49,13 +49,7 @@ export class Terminal implements RooTerminal {
 	 * @returns The current working directory
 	 */
 	public getCurrentWorkingDirectory(): string {
-		// Try to get the cwd from shell integration if available
-		if (this.terminal.shellIntegration?.cwd) {
-			return this.terminal.shellIntegration.cwd.fsPath
-		} else {
-			// Fall back to the initial cwd
-			return this.initialCwd
-		}
+		return this.terminal.shellIntegration?.cwd ? this.terminal.shellIntegration.cwd.fsPath : this.initialCwd
 	}
 
 	/**

@@ -85,18 +85,11 @@ export async function executeCommand(
 		workingDir = path.resolve(cline.cwd, customCwd)
 	}
 
-	// Check if directory exists
 	try {
 		await fs.access(workingDir)
 	} catch (error) {
 		return [false, `Working directory '${workingDir}' does not exist.`]
 	}
-
-	// Update the working directory in case the terminal we asked for has
-	// a different working directory so that the model will know where the
-	// command actually executed:
-	// workingDir = terminalInfo.getCurrentWorkingDirectory()
-	const workingDirInfo = workingDir ? ` from '${workingDir.toPosix()}'` : ""
 
 	let message: { text?: string; images?: string[] } | undefined
 	let runInBackground = false
@@ -140,8 +133,12 @@ export async function executeCommand(
 	let terminal: Terminal | ExecaTerminal
 
 	if (terminalProvider === "vscode") {
-		terminal = await TerminalRegistry.getOrCreateTerminal(workingDir, !!workingDir, cline.taskId)
+		terminal = await TerminalRegistry.getOrCreateTerminal(workingDir, !!customCwd, cline.taskId)
 		terminal.terminal.show()
+		// Update the working directory in case the terminal we asked for has
+		// a different working directory so that the model will know where the
+		// command actually executed.
+		workingDir = terminal.getCurrentWorkingDirectory()
 	} else {
 		terminal = new ExecaTerminal(workingDir)
 	}
@@ -165,7 +162,7 @@ export async function executeCommand(
 		return [
 			true,
 			formatResponse.toolResult(
-				`Command is still running in terminal ${workingDirInfo}.${
+				`Command is still running in terminal ${workingDir ? ` from '${workingDir.toPosix()}'` : ""}.${
 					result.length > 0 ? `\nHere's the output so far:\n${result}` : ""
 				}\n\nThe user provided the following feedback:\n<feedback>\n${text}\n</feedback>`,
 				images,
@@ -197,25 +194,25 @@ export async function executeCommand(
 		}
 
 		let workingDirInfo: string = workingDir ? ` within working directory '${workingDir.toPosix()}'` : ""
-		// const newWorkingDir = terminalInfo.getCurrentWorkingDirectory()
+		const newWorkingDir = terminal.getCurrentWorkingDirectory()
 
-		// if (newWorkingDir !== workingDir) {
-		// 	workingDirInfo += `\nNOTICE: Your command changed the working directory for this terminal to '${newWorkingDir.toPosix()}' so you MUST adjust future commands accordingly because they will be executed in this directory`
-		// }
+		if (newWorkingDir !== workingDir) {
+			workingDirInfo += `\nNOTICE: Your command changed the working directory for this terminal to '${newWorkingDir.toPosix()}' so you MUST adjust future commands accordingly because they will be executed in this directory`
+		}
 
 		const outputInfo = `\nOutput:\n${result}`
 		console.log(`Command executed in terminal ${workingDirInfo}. ${exitStatus}${outputInfo}`)
 		return [false, `Command executed in terminal ${workingDirInfo}. ${exitStatus}${outputInfo}`]
 	} else {
 		console.log(
-			`Command is still running in terminal ${workingDirInfo}.${
+			`Command is still running in terminal ${workingDir ? ` from '${workingDir.toPosix()}'` : ""}.${
 				result.length > 0 ? `\nHere's the output so far:\n${result}` : ""
 			}\n\nYou will be updated on the terminal status and new output in the future.`,
 		)
 
 		return [
 			false,
-			`Command is still running in terminal ${workingDirInfo}.${
+			`Command is still running in terminal ${workingDir ? ` from '${workingDir.toPosix()}'` : ""}.${
 				result.length > 0 ? `\nHere's the output so far:\n${result}` : ""
 			}\n\nYou will be updated on the terminal status and new output in the future.`,
 		]
