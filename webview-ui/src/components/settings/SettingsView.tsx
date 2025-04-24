@@ -41,6 +41,10 @@ import {
 	AlertDialogHeader,
 	AlertDialogFooter,
 	Button,
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
 } from "@/components/ui"
 
 import { Tab, TabContent, TabHeader, TabList, TabTrigger } from "../common/Tab"
@@ -428,26 +432,53 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 					className={cn(settingsTabList)}
 					data-compact={isCompactMode}
 					data-testid="settings-tab-list">
-					{sections.map(({ id, icon: Icon }) => (
-						<TabTrigger
-							key={id}
-							ref={(element) => (tabRefs.current[id] = element)}
-							value={id}
-							className={cn(
-								activeTab === id
-									? `${settingsTabTrigger} ${settingsTabTriggerActive}`
-									: settingsTabTrigger,
-								"focus:ring-0", // Remove the focus ring styling
-							)}
-							data-testid={`tab-${id}`}
-							data-compact={isCompactMode}
-							title={isCompactMode ? t(`settings:sections.${id}`) : undefined}>
-							<div className={cn("flex items-center gap-2", isCompactMode && "justify-center")}>
-								<Icon className="w-4 h-4" />
-								<span className="tab-label">{t(`settings:sections.${id}`)}</span>
-							</div>
-						</TabTrigger>
-					))}
+					{sections.map(({ id, icon: Icon }) => {
+						const isSelected = id === activeTab
+						const onSelect = () => handleTabChange(id)
+
+						// Base TabTrigger component definition
+						// We pass isSelected manually for styling, but onSelect is handled conditionally
+						const triggerComponent = (
+							<TabTrigger
+								ref={(element) => (tabRefs.current[id] = element)}
+								value={id}
+								isSelected={isSelected} // Pass manually for styling state
+								className={cn(
+									isSelected // Use manual isSelected for styling
+										? `${settingsTabTrigger} ${settingsTabTriggerActive}`
+										: settingsTabTrigger,
+									"focus:ring-0", // Remove the focus ring styling
+								)}
+								data-testid={`tab-${id}`}
+								data-compact={isCompactMode}>
+								<div className={cn("flex items-center gap-2", isCompactMode && "justify-center")}>
+									<Icon className="w-4 h-4" />
+									<span className="tab-label">{t(`settings:sections.${id}`)}</span>
+								</div>
+							</TabTrigger>
+						)
+
+						if (isCompactMode) {
+							// Wrap in Tooltip and manually add onClick to the trigger
+							return (
+								<TooltipProvider key={id} delayDuration={0}>
+									<Tooltip>
+										<TooltipTrigger asChild onClick={onSelect}>
+											{/* Clone to avoid ref issues if triggerComponent itself had a key */}
+											{React.cloneElement(triggerComponent)}
+										</TooltipTrigger>
+										<TooltipContent side="right" className="text-base p-1.5">
+											<p>{t(`settings:sections.${id}`)}</p>
+										</TooltipContent>
+									</Tooltip>
+								</TooltipProvider>
+							)
+						} else {
+							// Render trigger directly; TabList will inject onSelect via cloning
+							// Ensure the element passed to TabList has the key
+							return React.cloneElement(triggerComponent, { key: id })
+						}
+					})}
 				</TabList>
 
 				{/* Content area */}
