@@ -7,6 +7,7 @@ import { LanguageModelChatSelector } from "vscode"
 import { Checkbox } from "vscrui"
 import { VSCodeLink, VSCodeRadio, VSCodeRadioGroup, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 import { ExternalLinkIcon } from "@radix-ui/react-icons"
+import { ReasoningEffort as ReasoningEffortType } from "@roo/schemas"
 
 import {
 	ApiConfiguration,
@@ -851,6 +852,38 @@ const ApiOptions = ({
 						)}
 					</div>
 
+					<div className="flex flex-col gap-1">
+						<Checkbox
+							checked={apiConfiguration?.enableReasoningEffort ?? false}
+							onChange={(checked: boolean) => {
+								setApiConfigurationField("enableReasoningEffort", checked)
+
+								if (!checked) {
+									const currentInfo =
+										apiConfiguration?.openAiCustomModelInfo || openAiModelInfoSaneDefaults
+									const { reasoningEffort, ...restInfo } = currentInfo
+									setApiConfigurationField("openAiCustomModelInfo", restInfo)
+								}
+							}}>
+							{t("settings:providers.setReasoningLevel")}
+						</Checkbox>
+						{apiConfiguration?.enableReasoningEffort === true && (
+							<ReasoningEffort
+								apiConfiguration={{
+									...apiConfiguration,
+									reasoningEffort: apiConfiguration.openAiCustomModelInfo?.reasoningEffort,
+								}}
+								setApiConfigurationField={(field, value) => {
+									if (field === "reasoningEffort") {
+										setApiConfigurationField("openAiCustomModelInfo", {
+											...(apiConfiguration?.openAiCustomModelInfo || openAiModelInfoSaneDefaults),
+											reasoningEffort: value as ReasoningEffortType,
+										})
+									}
+								}}
+							/>
+						)}
+					</div>
 					<div className="flex flex-col gap-3">
 						<div className="text-sm text-vscode-descriptionForeground whitespace-pre-line">
 							{t("settings:providers.customModel.capabilities")}

@@ -50,6 +50,7 @@ const initWorkspaceRepo = async ({
 }
 
 describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
+	// Add timeout here
 	"CheckpointService",
 	(klass, prefix) => {
 		const taskId = "test-task"
@@ -633,4 +634,5 @@ describe.each([[RepoPerTaskCheckpointService, "RepoPerTaskCheckpointService"]])(
 			})
 		})
 	},
+	15000, // Add 15-second timeout
 )

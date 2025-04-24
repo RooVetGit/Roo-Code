@@ -238,6 +238,7 @@ describe("Cline", () => {
 			apiProvider: "anthropic",
 			apiModelId: "claude-3-5-sonnet-20241022",
 			apiKey: "test-api-key", // Add API key to mock config
+			enableReasoningEffort: false,
 		}
 
 		// Mock provider methods
@@ -475,10 +476,12 @@ describe("Cline", () => {
 				const configWithImages = {
 					...mockApiConfig,
 					apiModelId: "claude-3-sonnet",
+					enableReasoningEffort: false,
 				}
 				const configWithoutImages = {
 					...mockApiConfig,
 					apiModelId: "gpt-3.5-turbo",
+					enableReasoningEffort: false,
 				}
 
 				// Create test conversation history with mixed content
