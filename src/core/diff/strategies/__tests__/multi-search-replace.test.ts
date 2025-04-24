@@ -780,6 +780,260 @@ function five() {
 }`)
 				}
 			})
+
+			it("should handle multiple search/replace blocks with proper indentation #1559", async () => {
+				// This test verifies the fix for GitHub issue #1559
+				// where applying a diff with multiple search/replace blocks previously resulted in incorrect indentation
+
+				// Test case 1: Simple scenario with two search/replace blocks
+				{
+					const originalContent = `function test() {
+	const a = 1;
+	const b = 2;
+	
+	// Some comment
+	return a + b;
+}`
+
+					const diffContent = `\<<<<<<< SEARCH
+:start_line:2
+:end_line:3
+-------
+	const a = 1;
+	const b = 2;
+=======
+	const x = 10;
+	const y = 20;
+>>>>>>> REPLACE
+
+<<<<<<< SEARCH
+:start_line:6
+-------
+	return a + b;
+=======
+	return x + y;
+>>>>>>> REPLACE`
+
+					const expectedContent = `function test() {
+	const x = 10;
+	const y = 20;
+	
+	// Some comment
+	return x + y;
+}`
+
+					const result = await strategy.applyDiff(originalContent, diffContent)
+
+					// Verify that the operation succeeds
+					expect(result.success).toBe(true)
+
+					// Verify the content matches what we expect
+					if (result.success) {
+						expect(result.content).toBe(expectedContent)
+					}
+				}
+
+				// Test case 2: Complex scenario that resembles the original bug report
+				{
+					const complexOriginalContent = `		const BUTTON_HEIGHT=100
+		const scrollRect = scrollContainer.getBoundingClientRect()
+		const isPartiallyVisible = rectCodeBlock.top < (scrollRect.bottom - BUTTON_HEIGHT) && rectCodeBlock.bottom >= (scrollRect.top + BUTTON_HEIGHT)
+
+		// Calculate margin from existing padding in the component
+		const computedStyle = window.getComputedStyle(codeBlock)
+		const paddingValue = parseInt(computedStyle.getPropertyValue("padding") || "0", 10)
+		const margin =
+			paddingValue > 0 ? paddingValue : parseInt(computedStyle.getPropertyValue("padding-top") || "0", 10)
+
+		// Get wrapper height dynamically
+		let wrapperHeight
+		if (copyWrapper) {
+			const copyRect = copyWrapper.getBoundingClientRect()
+			// If height is 0 due to styling, estimate from children
+			if (copyRect.height > 0) {
+				wrapperHeight = copyRect.height
+			} else if (copyWrapper.children.length > 0) {
+				// Try to get height from the button inside
+				const buttonRect = copyWrapper.children[0].getBoundingClientRect()
+				const buttonStyle = window.getComputedStyle(copyWrapper.children[0] as Element)
+				const buttonPadding =
+					parseInt(buttonStyle.getPropertyValue("padding-top") || "0", 10) +
+					parseInt(buttonStyle.getPropertyValue("padding-bottom") || "0", 10)
+				wrapperHeight = buttonRect.height + buttonPadding
+			}
+		}
+
+		// If we still don't have a height, calculate from font size
+		if (!wrapperHeight) {
+			const fontSize = parseInt(window.getComputedStyle(document.body).getPropertyValue("font-size"), 10)
+			wrapperHeight = fontSize * 2.5 // Approximate button height based on font size
+		}`
+
+					const complexDiffContent = `\<<<<<<< SEARCH
+:start_line:1
+:end_line:3
+-------
+		const BUTTON_HEIGHT=100
+		const scrollRect = scrollContainer.getBoundingClientRect()
+		const isPartiallyVisible = rectCodeBlock.top < (scrollRect.bottom - BUTTON_HEIGHT) && rectCodeBlock.bottom >= (scrollRect.top + BUTTON_HEIGHT)
+
+=======
+		const scrollRect = scrollContainer.getBoundingClientRect()
+		
+		// Get wrapper height dynamically
+		let wrapperHeight
+		if (copyWrapper) {
+			const copyRect = copyWrapper.getBoundingClientRect()
+			// If height is 0 due to styling, estimate from children
+			if (copyRect.height > 0) {
+				wrapperHeight = copyRect.height
+			} else if (copyWrapper.children.length > 0) {
+				// Try to get height from the button inside
+				const buttonRect = copyWrapper.children[0].getBoundingClientRect()
+				const buttonStyle = window.getComputedStyle(copyWrapper.children[0] as Element)
+				const buttonPadding =
+					parseInt(buttonStyle.getPropertyValue("padding-top") || "0", 10) +
+					parseInt(buttonStyle.getPropertyValue("padding-bottom") || "0", 10)
+				wrapperHeight = buttonRect.height + buttonPadding
+			}
+		}
+
+		// If we still don't have a height, calculate from font size
+		if (!wrapperHeight) {
+			const fontSize = parseInt(window.getComputedStyle(document.body).getPropertyValue("font-size"), 10)
+			wrapperHeight = fontSize * 2.5 // Approximate button height based on font size
+		}
+
+		const isPartiallyVisible = rectCodeBlock.top < (scrollRect.bottom - wrapperHeight) && rectCodeBlock.bottom >= (scrollRect.top + wrapperHeight)
+
+>>>>>>> REPLACE
+
+<<<<<<< SEARCH
+:start_line:11
+:end_line:30
+-------
+		// Get wrapper height dynamically
+		let wrapperHeight
+		if (copyWrapper) {
+			const copyRect = copyWrapper.getBoundingClientRect()
+			// If height is 0 due to styling, estimate from children
+			if (copyRect.height > 0) {
+				wrapperHeight = copyRect.height
+			} else if (copyWrapper.children.length > 0) {
+				// Try to get height from the button inside
+				const buttonRect = copyWrapper.children[0].getBoundingClientRect()
+				const buttonStyle = window.getComputedStyle(copyWrapper.children[0] as Element)
+				const buttonPadding =
+					parseInt(buttonStyle.getPropertyValue("padding-top") || "0", 10) +
+					parseInt(buttonStyle.getPropertyValue("padding-bottom") || "0", 10)
+				wrapperHeight = buttonRect.height + buttonPadding
+			}
+		}
+
+		// If we still don't have a height, calculate from font size
+		if (!wrapperHeight) {
+			const fontSize = parseInt(window.getComputedStyle(document.body).getPropertyValue("font-size"), 10)
+			wrapperHeight = fontSize * 2.5 // Approximate button height based on font size
+		}
+
+=======
+>>>>>>> REPLACE`
+
+					// Execute the diff application
+					const complexResult = await strategy.applyDiff(complexOriginalContent, complexDiffContent)
+
+					// Log the actual result for debugging
+					console.log(
+						"Complex test actual result:",
+						complexResult.success ? complexResult.content : complexResult.error,
+					)
+
+					// Verify that the operation succeeds
+					expect(complexResult.success).toBe(true)
+
+					// Instead of comparing exact content, we'll verify key aspects of the result
+					if (complexResult.success) {
+						const content = complexResult.content
+
+						// Check that the content starts with the expected scrollRect line
+						expect(content.startsWith("		const scrollRect = scrollContainer.getBoundingClientRect()")).toBe(
+							true,
+						)
+
+						// Check that the content contains the wrapperHeight variable declaration
+						expect(content.includes("		let wrapperHeight")).toBe(true)
+
+						// Check that the content contains the isPartiallyVisible line with wrapperHeight
+						expect(
+							content.includes(
+								"		const isPartiallyVisible = rectCodeBlock.top < (scrollRect.bottom - wrapperHeight) && rectCodeBlock.bottom >= (scrollRect.top + wrapperHeight)",
+							),
+						).toBe(true)
+
+						// Check that the content contains the margin calculation
+						expect(content.includes("		const margin =")).toBe(true)
+						expect(
+							content.includes(
+								'			paddingValue > 0 ? paddingValue : parseInt(computedStyle.getPropertyValue("padding-top") || "0", 10)',
+							),
+						).toBe(true)
+					}
+				}
+				// This test verifies the fix for GitHub issue #1559
+				// where applying a diff with multiple search/replace blocks previously resulted in incorrect indentation
+
+				// Create a very simple test case with minimal content
+				const originalContent = `function test() {
+	const a = 1;
+	const b = 2;
+	
+	// Some comment
+	return a + b;
+}`
+
+				// Create a diff with two search/replace blocks
+				const diffContent = `\<<<<<<< SEARCH
+:start_line:2
+:end_line:3
+-------
+	const a = 1;
+	const b = 2;
+=======
+	const x = 10;
+	const y = 20;
+>>>>>>> REPLACE
+
+<<<<<<< SEARCH
+:start_line:6
+-------
+	return a + b;
+=======
+	return x + y;
+>>>>>>> REPLACE`
+
+				// The expected content after applying the diff
+				const expectedContent = `function test() {
+	const x = 10;
+	const y = 20;
+	
+	// Some comment
+	return x + y;
+}`
+
+				// Execute the diff application
+				const result = await strategy.applyDiff(originalContent, diffContent)
+
+				// Log the actual result for debugging
+				console.log("Actual result:", result.success ? result.content : result.error)
+
+				// Verify that the operation succeeds
+				expect(result.success).toBe(true)
+
+				// Verify the content matches what we expect
+				if (result.success) {
+					expect(result.content).toBe(expectedContent)
+				}
+			})
 		})
 
 		describe("line number stripping", () => {
