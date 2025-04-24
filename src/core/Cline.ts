@@ -1,4 +1,3 @@
-import fs from "fs/promises"
 import * as path from "path"
 import os from "os"
 import crypto from "crypto"
@@ -8,7 +7,6 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import cloneDeep from "clone-deep"
 import delay from "delay"
 import pWaitFor from "p-wait-for"
-import getFolderSize from "get-folder-size"
 import { serializeError } from "serialize-error"
 import * as vscode from "vscode"
 
@@ -58,7 +56,6 @@ import { TerminalRegistry } from "../integrations/terminal/TerminalRegistry"
 
 // utils
 import { calculateApiCostAnthropic } from "../utils/cost"
-import { fileExistsAtPath } from "../utils/fs"
 import { arePathsEqual, getWorkspacePath } from "../utils/path"
 
 // tools
@@ -93,6 +90,7 @@ import { truncateConversationIfNeeded } from "./sliding-window"
 import { ClineProvider } from "./webview/ClineProvider"
 import { validateToolUse } from "./mode-validator"
 import { MultiSearchReplaceDiffStrategy } from "./diff/strategies/multi-search-replace"
+import { readApiMessages, saveApiMessages, readTaskMessages, saveTaskMessages, taskMetadata } from "./task-persistence"
 
 type UserContent = Array<Anthropic.Messages.ContentBlockParam>
 
@@ -136,34 +134,42 @@ export class Cline extends EventEmitter<ClineEvents> {
 	readonly rootTask: Cline | undefined = undefined
 	readonly parentTask: Cline | undefined = undefined
 	readonly taskNumber: number
+
 	isPaused: boolean = false
 	pausedModeSlug: string = defaultModeSlug
 	private pauseInterval: NodeJS.Timeout | undefined
 
 	readonly apiConfiguration: ApiConfiguration
 	api: ApiHandler
+	private promptCacheKey: string
+
+	rooIgnoreController?: RooIgnoreController
 	private fileContextTracker: FileContextTracker
 	private urlContentFetcher: UrlContentFetcher
 	browserSession: BrowserSession
 	didEditFile: boolean = false
 	customInstructions?: string
+
 	diffStrategy?: DiffStrategy
 	diffEnabled: boolean = false
 	fuzzyMatchThreshold: number
 
 	apiConversationHistory: (Anthropic.MessageParam & { ts?: number })[] = []
 	clineMessages: ClineMessage[] = []
-	rooIgnoreController?: RooIgnoreController
+
 	private askResponse?: ClineAskResponse
 	private askResponseText?: string
 	private askResponseImages?: string[]
 	private lastMessageTs?: number
+
 	// Not private since it needs to be accessible by tools.
 	consecutiveMistakeCount: number = 0
 	consecutiveMistakeLimit: number
 	consecutiveMistakeCountForApplyDiff: Map<string, number> = new Map()
+
 	// Not private since it needs to be accessible by tools.
 	providerRef: WeakRef<ClineProvider>
+	private readonly globalStoragePath: string
 	private abort: boolean = false
 	didFinishAbortingStream = false
 	abandoned = false
@@ -203,7 +209,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 		task,
 		images,
 		historyItem,
-		experiments,
 		startTask = true,
 		rootTask,
 		parentTask,
@@ -222,11 +227,15 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 		this.rooIgnoreController = new RooIgnoreController(this.cwd)
 		this.fileContextTracker = new FileContextTracker(provider, this.taskId)
+
 		this.rooIgnoreController.initialize().catch((error) => {
 			console.error("Failed to initialize RooIgnoreController:", error)
 		})
+
 		this.apiConfiguration = apiConfiguration
 		this.api = buildApiHandler(apiConfiguration)
+		this.promptCacheKey = crypto.randomUUID()
+
 		this.urlContentFetcher = new UrlContentFetcher(provider.context)
 		this.browserSession = new BrowserSession(provider.context)
 		this.customInstructions = customInstructions
@@ -234,6 +243,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		this.fuzzyMatchThreshold = fuzzyMatchThreshold
 		this.consecutiveMistakeLimit = consecutiveMistakeLimit
 		this.providerRef = new WeakRef(provider)
+		this.globalStoragePath = provider.context.globalStorageUri.fsPath
 		this.diffViewProvider = new DiffViewProvider(this.cwd)
 		this.enableCheckpoints = enableCheckpoints
 
@@ -284,26 +294,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 	// Storing task to disk for history
 
-	private async ensureTaskDirectoryExists(): Promise<string> {
-		const globalStoragePath = this.providerRef.deref()?.context.globalStorageUri.fsPath
-		if (!globalStoragePath) {
-			throw new Error("Global storage uri is invalid")
-		}
-
-		// Use storagePathManager to retrieve the task storage directory
-		const { getTaskDirectoryPath } = await import("../shared/storagePathManager")
-		return getTaskDirectoryPath(globalStoragePath, this.taskId)
-	}
-
 	private async getSavedApiConversationHistory(): Promise<Anthropic.MessageParam[]> {
-		const filePath = path.join(await this.ensureTaskDirectoryExists(), GlobalFileNames.apiConversationHistory)
-		const fileExists = await fileExistsAtPath(filePath)
-
-		if (fileExists) {
-			return JSON.parse(await fs.readFile(filePath, "utf8"))
-		}
-
-		return []
+		return readApiMessages({ taskId: this.taskId, globalStoragePath: this.globalStoragePath })
 	}
 
 	private async addToApiConversationHistory(message: Anthropic.MessageParam) {
@@ -319,8 +311,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 	private async saveApiConversationHistory() {
 		try {
-			const filePath = path.join(await this.ensureTaskDirectoryExists(), GlobalFileNames.apiConversationHistory)
-			await fs.writeFile(filePath, JSON.stringify(this.apiConversationHistory))
+			await saveApiMessages({
+				messages: this.apiConversationHistory,
+				taskId: this.taskId,
+				globalStoragePath: this.globalStoragePath,
+			})
 		} catch (error) {
 			// in the off chance this fails, we don't want to stop the task
 			console.error("Failed to save API conversation history:", error)
@@ -328,21 +323,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 	}
 
 	private async getSavedClineMessages(): Promise<ClineMessage[]> {
-		const filePath = path.join(await this.ensureTaskDirectoryExists(), GlobalFileNames.uiMessages)
-
-		if (await fileExistsAtPath(filePath)) {
-			return JSON.parse(await fs.readFile(filePath, "utf8"))
-		} else {
-			// check old location
-			const oldPath = path.join(await this.ensureTaskDirectoryExists(), "claude_messages.json")
-			if (await fileExistsAtPath(oldPath)) {
-				const data = JSON.parse(await fs.readFile(oldPath, "utf8"))
-				await fs.unlink(oldPath) // remove old file
-				return data
-			}
-		}
-
-		return []
+		return readTaskMessages({ taskId: this.taskId, globalStoragePath: this.globalStoragePath })
 	}
 
 	private async addToClineMessages(message: ClineMessage) {
@@ -353,6 +334,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 	}
 
 	public async overwriteClineMessages(newMessages: ClineMessage[]) {
+		// Reset the the prompt cache key since we've altered the conversation history.
+		this.promptCacheKey = crypto.randomUUID()
 		this.clineMessages = newMessages
 		await this.saveClineMessages()
 	}
@@ -364,46 +347,23 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 	private async saveClineMessages() {
 		try {
-			const taskDir = await this.ensureTaskDirectoryExists()
-			const filePath = path.join(taskDir, GlobalFileNames.uiMessages)
-			await fs.writeFile(filePath, JSON.stringify(this.clineMessages))
+			await saveTaskMessages({
+				messages: this.clineMessages,
+				taskId: this.taskId,
+				globalStoragePath: this.globalStoragePath,
+			})
 
-			const tokenUsage = this.getTokenUsage()
-			this.emit("taskTokenUsageUpdated", this.taskId, tokenUsage)
-
-			const taskMessage = this.clineMessages[0] // First message is always the task say
-
-			const lastRelevantMessage =
-				this.clineMessages[
-					findLastIndex(
-						this.clineMessages,
-						(m) => !(m.ask === "resume_task" || m.ask === "resume_completed_task"),
-					)
-				]
-
-			let taskDirSize = 0
-
-			try {
-				taskDirSize = await getFolderSize.loose(taskDir)
-			} catch (err) {
-				console.error(
-					`[saveClineMessages] failed to get task directory size (${taskDir}): ${err instanceof Error ? err.message : String(err)}`,
-				)
-			}
-
-			await this.providerRef.deref()?.updateTaskHistory({
-				id: this.taskId,
-				number: this.taskNumber,
-				ts: lastRelevantMessage.ts,
-				task: taskMessage.text ?? "",
-				tokensIn: tokenUsage.totalTokensIn,
-				tokensOut: tokenUsage.totalTokensOut,
-				cacheWrites: tokenUsage.totalCacheWrites,
-				cacheReads: tokenUsage.totalCacheReads,
-				totalCost: tokenUsage.totalCost,
-				size: taskDirSize,
+			const { historyItem, tokenUsage } = await taskMetadata({
+				messages: this.clineMessages,
+				taskId: this.taskId,
+				taskNumber: this.taskNumber,
+				globalStoragePath: this.globalStoragePath,
 				workspace: this.cwd,
 			})
+
+			this.emit("taskTokenUsageUpdated", this.taskId, tokenUsage)
+
+			await this.providerRef.deref()?.updateTaskHistory(historyItem)
 		} catch (error) {
 			console.error("Failed to save cline messages:", error)
 		}
@@ -652,6 +612,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			modifiedClineMessages,
 			(m) => !(m.ask === "resume_task" || m.ask === "resume_completed_task"),
 		)
+
 		if (lastRelevantMessageIndex !== -1) {
 			modifiedClineMessages.splice(lastRelevantMessageIndex + 1)
 		}
@@ -661,6 +622,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			modifiedClineMessages,
 			(m) => m.type === "say" && m.say === "api_req_started",
 		)
+
 		if (lastApiReqStartedIndex !== -1) {
 			const lastApiReqStarted = modifiedClineMessages[lastApiReqStartedIndex]
 			const { cost, cancelReason }: ClineApiReqInfo = JSON.parse(lastApiReqStarted.text || "{}")
@@ -845,6 +807,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 			return "just now"
 		})()
 
+		const lastTaskResumptionIndex = newUserContent.findIndex(
+			(x) => x.type === "text" && x.text.startsWith("[TASK RESUMPTION]"),
+		)
+		if (lastTaskResumptionIndex !== -1) {
+			newUserContent.splice(lastTaskResumptionIndex, newUserContent.length - lastTaskResumptionIndex)
+		}
+
 		const wasRecent = lastClineMessage?.ts && Date.now() - lastClineMessage.ts < 30_000
 
 		newUserContent.push({
@@ -936,6 +905,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 		if (this.isStreaming && this.diffViewProvider.isEditing) {
 			await this.diffViewProvider.revertChanges()
 		}
+		// Save the countdown message in the automatic retry or other content
+		await this.saveClineMessages()
 	}
 
 	// Tools
@@ -1041,10 +1012,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 			const DEFAULT_THINKING_MODEL_MAX_TOKENS = 16_384
 
 			const modelInfo = this.api.getModel().info
+
 			const maxTokens = modelInfo.thinking
 				? this.apiConfiguration.modelMaxTokens || DEFAULT_THINKING_MODEL_MAX_TOKENS
 				: modelInfo.maxTokens
+
 			const contextWindow = modelInfo.contextWindow
+
 			const trimmedMessages = await truncateConversationIfNeeded({
 				messages: this.apiConversationHistory,
 				totalTokens,
@@ -1083,7 +1057,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			return { role, content }
 		})
 
-		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory)
+		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory, this.promptCacheKey)
 		const iterator = stream[Symbol.asyncIterator]()
 
 		try {
@@ -1613,6 +1587,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 					],
 				)
 
+				await this.say("user_feedback", text, images)
+
 				// Track consecutive mistake errors in telemetry
 				telemetryService.captureConsecutiveMistakeError(this.taskId)
 			}
@@ -1871,11 +1847,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 			// now add to apiconversationhistory
 			// need to save assistant responses to file before proceeding to tool use since user can exit at any moment and we wouldn't be able to save the assistant's response
 			let didEndLoop = false
+
 			if (assistantMessage.length > 0) {
 				await this.addToApiConversationHistory({
 					role: "assistant",
 					content: [{ type: "text", text: assistantMessage }],
 				})
+
 				telemetryService.captureConversationMessage(this.taskId, "assistant")
 
 				// NOTE: this comment is here for future reference - this was a workaround for userMessageContent not getting set to true. It was due to it not recursively calling for partial blocks when didRejectTool, so it would get stuck waiting for a partial block to complete before it could continue.

@@ -187,7 +187,6 @@ export class DiffViewProvider {
 
 		// If the original document was open, try to focus it.
 		// VS Code should handle showing the updated content automatically since the file was saved.
-		// If the original document was open, try to focus it.
 		await this._focusOriginalDocument(absolutePath, this.originalViewColumn)
 
 		/*
@@ -275,7 +274,6 @@ export class DiffViewProvider {
 			// The revert logic already applied the original content and saved.
 			await this._focusOriginalDocument(absolutePath, this.originalViewColumn)
 		}
-
 		// edit is done
 		await this.reset()
 	}
