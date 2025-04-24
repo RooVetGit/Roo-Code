@@ -148,7 +148,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		if (lastUsageMetadata) {
 			const inputTokens = lastUsageMetadata.promptTokenCount ?? 0
 			const outputTokens = lastUsageMetadata.candidatesTokenCount ?? 0
-			const cacheWriteTokens = cacheWrite ? inputTokens : 0
+			const cacheWriteTokens = cacheWrite ? inputTokens : undefined
 			const cacheReadTokens = lastUsageMetadata.cachedContentTokenCount
 			const reasoningTokens = lastUsageMetadata.thoughtsTokenCount
 

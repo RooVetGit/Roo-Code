@@ -7,6 +7,7 @@ import {
 	openRouterDefaultModelId,
 	openRouterDefaultModelInfo,
 	PROMPT_CACHING_MODELS,
+	OPTIONAL_PROMPT_CACHING_MODELS,
 } from "../../shared/api"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStreamChunk } from "../transform/stream"
@@ -195,11 +196,12 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		return {
 			id,
 			info,
+			// maxTokens, thinking, temperature, reasoningEffort
 			...getModelParams({ options: this.options, model: info, defaultTemperature }),
 			topP,
 			promptCache: {
 				supported: PROMPT_CACHING_MODELS.has(id),
-				optional: PROMPT_CACHING_MODELS.has(id),
+				optional: OPTIONAL_PROMPT_CACHING_MODELS.has(id),
 			},
 		}
 	}
