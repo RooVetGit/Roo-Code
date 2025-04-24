@@ -68,7 +68,8 @@ export async function getOpenRouterModels(options?: ApiHandlerOptions) {
 				? parseApiPrice(rawModel.pricing?.input_cache_read)
 				: undefined
 
-			const supportsPromptCache = !!cacheWritesPrice && !!cacheReadsPrice
+			const supportsPromptCache =
+				typeof cacheWritesPrice !== "undefined" && typeof cacheReadsPrice !== "undefined"
 
 			const modelInfo: ModelInfo = {
 				maxTokens: rawModel.top_provider?.max_completion_tokens,

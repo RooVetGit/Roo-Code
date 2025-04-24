@@ -9,7 +9,7 @@ import { PROMPT_CACHING_MODELS } from "../../../../shared/api"
 import { getOpenRouterModels } from "../openrouter"
 
 nockBack.fixtures = path.join(__dirname, "fixtures")
-nockBack.setMode("dryrun")
+nockBack.setMode("lockdown")
 
 describe("OpenRouter API", () => {
 	describe("getOpenRouterModels", () => {
