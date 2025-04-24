@@ -22,7 +22,7 @@
 	"sections": {
 		"providers": "Providers",
 		"autoApprove": "Auto-Approve",
-		"browser": "Browser / Computer Use",
+		"browser": "Browser / Computer",
 		"checkpoints": "Checkpoints",
 		"notifications": "Notifications",
 		"contextManagement": "Context Management",

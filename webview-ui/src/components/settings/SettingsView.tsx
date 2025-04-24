@@ -8,7 +8,6 @@ import React, {
 	useMemo,
 	useRef,
 	useState,
-	WheelEvent,
 } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import {
@@ -24,7 +23,6 @@ import {
 	Globe,
 	Info,
 	LucideIcon,
-	MoreHorizontal,
 } from "lucide-react"
 
 import { ExperimentId } from "@roo/shared/experiments"
@@ -43,10 +41,6 @@ import {
 	AlertDialogHeader,
 	AlertDialogFooter,
 	Button,
-	DropdownMenu,
-	DropdownMenuTrigger,
-	DropdownMenuContent,
-	DropdownMenuItem,
 } from "@/components/ui"
 
 import { Tab, TabContent, TabHeader, TabList, TabTrigger } from "../common/Tab"
@@ -65,13 +59,7 @@ import { LanguageSettings } from "./LanguageSettings"
 import { About } from "./About"
 import { Section } from "./Section"
 import { cn } from "@/lib/utils"
-import {
-	settingsTabsContainer,
-	settingsTabList,
-	settingsTabTrigger,
-	settingsTabTriggerActive,
-	scrollbarHideClasses,
-} from "./styles"
+import { settingsTabsContainer, settingsTabList, settingsTabTrigger, settingsTabTriggerActive } from "./styles"
 
 export interface SettingsViewRef {
 	checkUnsaveChanges: (then: () => void) => void
@@ -116,7 +104,6 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 	const confirmDialogHandler = useRef<() => void>()
 
 	const [cachedState, setCachedState] = useState(extensionState)
-	const scrollContainerRef = useRef<HTMLDivElement>(null) // Ref for the scrollable container
 
 	const {
 		alwaysAllowReadOnly,
@@ -322,6 +309,28 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 	// Store direct DOM element refs for each tab
 	const tabRefs = useRef<Record<SectionName, HTMLButtonElement | null>>({} as any)
 
+	// Track whether we're in compact mode
+	const [isCompactMode, setIsCompactMode] = useState(false)
+	const containerRef = useRef<HTMLDivElement>(null)
+
+	// Setup resize observer to detect when we should switch to compact mode
+	useEffect(() => {
+		if (!containerRef.current) return
+
+		const observer = new ResizeObserver((entries) => {
+			for (const entry of entries) {
+				// If container width is less than 500px, switch to compact mode
+				setIsCompactMode(entry.contentRect.width < 500)
+			}
+		})
+
+		observer.observe(containerRef.current)
+
+		return () => {
+			observer.disconnect()
+		}
+	}, [])
+
 	// Sections definition - no longer includes refs
 	const sections: { id: SectionName; icon: LucideIcon }[] = useMemo(
 		() => [
@@ -346,113 +355,38 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		}
 	}, [targetSection])
 
-	// Function to scroll the active tab into view
-	const scrollToActiveTab = useCallback(
-		(checkVisibility = false) => {
-			const activeTabElement = tabRefs.current[activeTab]
-			const containerElement = scrollContainerRef.current
+	// Function to scroll the active tab into view for vertical layout
+	const scrollToActiveTab = useCallback(() => {
+		const activeTabElement = tabRefs.current[activeTab]
 
-			// Don't scroll if refs aren't ready
-			if (!activeTabElement || !containerElement) {
-				return
-			}
+		if (activeTabElement) {
+			activeTabElement.scrollIntoView({
+				behavior: "auto",
+				block: "nearest",
+			})
+		}
+	}, [activeTab])
 
-			let shouldScroll = true
-			if (checkVisibility) {
-				// Calculate visibility
-				const visibleLeft = containerElement.scrollLeft
-				const visibleRight = containerElement.scrollLeft + containerElement.clientWidth
-				const tabLeft = activeTabElement.offsetLeft
-				const tabRight = activeTabElement.offsetLeft + activeTabElement.offsetWidth
-				const isVisible = tabLeft >= visibleLeft && tabRight <= visibleRight
-				shouldScroll = !isVisible
-			}
-			// If not checking visibility, shouldScroll remains true (unconditional scroll)
-
-			if (shouldScroll) {
-				activeTabElement.scrollIntoView({
-					behavior: "auto",
-					block: "nearest",
-					inline: "center",
-				})
-			}
-		},
-		[activeTab],
-	)
-
-	// Effect to scroll when the active tab *changes* (e.g., user click)
-	// Only scrolls if the tab isn't already fully visible.
+	// Effect to scroll when the active tab changes
 	useEffect(() => {
-		scrollToActiveTab(true) // Pass true to check visibility before scrolling
-	}, [activeTab, scrollToActiveTab]) // Depend on activeTab and the scroll function itself
+		scrollToActiveTab()
+	}, [activeTab, scrollToActiveTab])
 
-	// Effect to scroll when the webview becomes *visible*
-	// Scrolls unconditionally to center the active tab.
-	// Use useLayoutEffect to ensure refs are available after DOM mutations.
+	// Effect to scroll when the webview becomes visible
 	useLayoutEffect(() => {
 		const handleMessage = (event: MessageEvent) => {
 			const message = event.data
 			if (message.type === "action" && message.action === "didBecomeVisible") {
-				// Scroll unconditionally when view becomes visible
-				scrollToActiveTab(false)
+				scrollToActiveTab()
 			}
 		}
 
 		window.addEventListener("message", handleMessage)
 
-		// Cleanup listener on unmount
 		return () => {
 			window.removeEventListener("message", handleMessage)
 		}
-	}, [scrollToActiveTab]) // Depend on the scroll function
-
-	// Handle horizontal scrolling with mouse wheel
-	const handleWheelScroll = useCallback((event: WheelEvent<HTMLDivElement>) => {
-		// Cast target to HTMLElement for broader compatibility if needed, but ref should give correct type
-		const container = event.currentTarget as HTMLDivElement // Use event.currentTarget
-		if (container) {
-			// Use deltaY for vertical scroll wheels (most common)
-			const scrollAmount = event.deltaY * 2 // Adjust sensitivity
-
-			// Check if horizontal scrolling is possible and needed
-			if (container.scrollWidth > container.clientWidth) {
-				const currentScrollLeft = container.scrollLeft
-				const maxScrollLeft = container.scrollWidth - container.clientWidth
-
-				// Calculate new scroll position
-				let newScrollLeft = currentScrollLeft + scrollAmount
-
-				// Prevent scrolling beyond boundaries
-				newScrollLeft = Math.max(0, Math.min(newScrollLeft, maxScrollLeft))
-
-				// Only prevent default if a horizontal scroll actually happens
-				if (newScrollLeft !== currentScrollLeft) {
-					container.scrollLeft = newScrollLeft
-					event.preventDefault() // Prevent default vertical page scroll
-				}
-			}
-		}
-	}, []) // No dependencies needed as it uses event.currentTarget
-
-	// Effect to attach wheel listener with passive: false
-	useEffect(() => {
-		const containerElement = scrollContainerRef.current
-
-		if (containerElement) {
-			// Type assertion for the event handler
-			const wheelHandler = (event: Event) => handleWheelScroll(event as unknown as WheelEvent<HTMLDivElement>)
-
-			containerElement.addEventListener("wheel", wheelHandler, { passive: false })
-
-			// Cleanup function
-			return () => {
-				// Check if element still exists before removing listener
-				if (containerElement) {
-					containerElement.removeEventListener("wheel", wheelHandler)
-				}
-			}
-		}
-	}, [handleWheelScroll]) // Re-attach if handleWheelScroll changes (though it shouldn't with empty deps)
+	}, [scrollToActiveTab])
 
 	return (
 		<Tab>
@@ -485,217 +419,189 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 				</div>
 			</TabHeader>
 
-			{/* Tab list with overflow dropdown */}
-			<div className="flex items-center px-5">
-				{" "}
-				{/* Scrollable tab container */}
-				<div ref={scrollContainerRef} className={cn(settingsTabsContainer, scrollbarHideClasses, "w-full")}>
-					<TabList
-						value={activeTab}
-						onValueChange={(value) => handleTabChange(value as SectionName)}
-						className={cn(settingsTabList, "w-full min-w-max")}
-						data-testid="settings-tab-list">
-						{sections.map(({ id, icon: Icon }) => (
-							<TabTrigger
-								key={id}
-								ref={(element) => (tabRefs.current[id] = element)} // Keep callback ref here
-								value={id}
-								className={cn(
-									activeTab === id
-										? `${settingsTabTrigger} ${settingsTabTriggerActive}`
-										: settingsTabTrigger,
-									"flex-shrink-0", // Prevent tabs from shrinking
-									"focus:ring-0", // Remove the focus ring styling
-								)}
-								data-testid={`tab-${id}`}>
-								<div className="flex items-center gap-2">
-									<Icon className="w-4 h-4" />
-									<span>{t(`settings:sections.${id}`)}</span>
-								</div>
-							</TabTrigger>
-						))}
-					</TabList>
-				</div>
-				{/* "More" dropdown button - always show it */}
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button
-							variant="ghost"
-							size="icon"
-							className="ml-1 rounded-md flex-shrink-0"
-							aria-label={t("settings:common.more")}
-							data-testid="more-tabs-button">
-							<MoreHorizontal className="h-4 w-4" />
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end">
-						{sections.map(({ id, icon: Icon }) => (
-							<DropdownMenuItem
-								key={id}
-								onClick={() => handleTabChange(id)}
-								className={cn(
-									activeTab === id ? "bg-vscode-list-activeSelectionBackground" : "",
-									"focus:ring-0 focus:outline-none", // Remove the focus ring styling
-								)}
-								data-testid={`dropdown-tab-${id}`}>
-								<Icon className="mr-2 h-4 w-4" />
-								<span>{t(`settings:sections.${id}`)}</span>
-							</DropdownMenuItem>
-						))}
-					</DropdownMenuContent>
-				</DropdownMenu>
-			</div>
-
-			<TabContent className="p-0">
-				{/* Providers Section */}
-				{activeTab === "providers" && (
-					<div>
-						<SectionHeader>
-							<div className="flex items-center gap-2">
-								<Webhook className="w-4" />
-								<div>{t("settings:sections.providers")}</div>
+			{/* Vertical tabs layout */}
+			<div ref={containerRef} className={cn(settingsTabsContainer, isCompactMode && "narrow")}>
+				{/* Tab sidebar */}
+				<TabList
+					value={activeTab}
+					onValueChange={(value) => handleTabChange(value as SectionName)}
+					className={cn(settingsTabList)}
+					data-compact={isCompactMode}
+					data-testid="settings-tab-list">
+					{sections.map(({ id, icon: Icon }) => (
+						<TabTrigger
+							key={id}
+							ref={(element) => (tabRefs.current[id] = element)}
+							value={id}
+							className={cn(
+								activeTab === id
+									? `${settingsTabTrigger} ${settingsTabTriggerActive}`
+									: settingsTabTrigger,
+								"focus:ring-0", // Remove the focus ring styling
+							)}
+							data-testid={`tab-${id}`}
+							data-compact={isCompactMode}
+							title={isCompactMode ? t(`settings:sections.${id}`) : undefined}>
+							<div className={cn("flex items-center gap-2", isCompactMode && "justify-center")}>
+								<Icon className="w-4 h-4" />
+								<span className="tab-label">{t(`settings:sections.${id}`)}</span>
 							</div>
-						</SectionHeader>
+						</TabTrigger>
+					))}
+				</TabList>
 
-						<Section>
-							<ApiConfigManager
-								currentApiConfigName={currentApiConfigName}
-								listApiConfigMeta={listApiConfigMeta}
-								onSelectConfig={(configName: string) =>
-									checkUnsaveChanges(() =>
-										vscode.postMessage({ type: "loadApiConfiguration", text: configName }),
-									)
-								}
-								onDeleteConfig={(configName: string) =>
-									vscode.postMessage({ type: "deleteApiConfiguration", text: configName })
-								}
-								onRenameConfig={(oldName: string, newName: string) => {
-									vscode.postMessage({
-										type: "renameApiConfiguration",
-										values: { oldName, newName },
-										apiConfiguration,
-									})
-									prevApiConfigName.current = newName
-								}}
-								onUpsertConfig={(configName: string) =>
-									vscode.postMessage({
-										type: "upsertApiConfiguration",
-										text: configName,
-										apiConfiguration,
-									})
-								}
-							/>
-							<ApiOptions
-								uriScheme={uriScheme}
-								apiConfiguration={apiConfiguration}
-								setApiConfigurationField={setApiConfigurationField}
-								errorMessage={errorMessage}
-								setErrorMessage={setErrorMessage}
-							/>
-						</Section>
-					</div>
-				)}
+				{/* Content area */}
+				<TabContent className="p-0 flex-1 overflow-auto">
+					{/* Providers Section */}
+					{activeTab === "providers" && (
+						<div>
+							<SectionHeader>
+								<div className="flex items-center gap-2">
+									<Webhook className="w-4" />
+									<div>{t("settings:sections.providers")}</div>
+								</div>
+							</SectionHeader>
 
-				{/* Auto-Approve Section */}
-				{activeTab === "autoApprove" && (
-					<AutoApproveSettings
-						alwaysAllowReadOnly={alwaysAllowReadOnly}
-						alwaysAllowReadOnlyOutsideWorkspace={alwaysAllowReadOnlyOutsideWorkspace}
-						alwaysAllowWrite={alwaysAllowWrite}
-						alwaysAllowWriteOutsideWorkspace={alwaysAllowWriteOutsideWorkspace}
-						writeDelayMs={writeDelayMs}
-						alwaysAllowBrowser={alwaysAllowBrowser}
-						alwaysApproveResubmit={alwaysApproveResubmit}
-						requestDelaySeconds={requestDelaySeconds}
-						alwaysAllowMcp={alwaysAllowMcp}
-						alwaysAllowModeSwitch={alwaysAllowModeSwitch}
-						alwaysAllowSubtasks={alwaysAllowSubtasks}
-						alwaysAllowExecute={alwaysAllowExecute}
-						allowedCommands={allowedCommands}
-						setCachedStateField={setCachedStateField}
-					/>
-				)}
+							<Section>
+								<ApiConfigManager
+									currentApiConfigName={currentApiConfigName}
+									listApiConfigMeta={listApiConfigMeta}
+									onSelectConfig={(configName: string) =>
+										checkUnsaveChanges(() =>
+											vscode.postMessage({ type: "loadApiConfiguration", text: configName }),
+										)
+									}
+									onDeleteConfig={(configName: string) =>
+										vscode.postMessage({ type: "deleteApiConfiguration", text: configName })
+									}
+									onRenameConfig={(oldName: string, newName: string) => {
+										vscode.postMessage({
+											type: "renameApiConfiguration",
+											values: { oldName, newName },
+											apiConfiguration,
+										})
+										prevApiConfigName.current = newName
+									}}
+									onUpsertConfig={(configName: string) =>
+										vscode.postMessage({
+											type: "upsertApiConfiguration",
+											text: configName,
+											apiConfiguration,
+										})
+									}
+								/>
+								<ApiOptions
+									uriScheme={uriScheme}
+									apiConfiguration={apiConfiguration}
+									setApiConfigurationField={setApiConfigurationField}
+									errorMessage={errorMessage}
+									setErrorMessage={setErrorMessage}
+								/>
+							</Section>
+						</div>
+					)}
 
-				{/* Browser Section */}
-				{activeTab === "browser" && (
-					<BrowserSettings
-						browserToolEnabled={browserToolEnabled}
-						browserViewportSize={browserViewportSize}
-						screenshotQuality={screenshotQuality}
-						remoteBrowserHost={remoteBrowserHost}
-						remoteBrowserEnabled={remoteBrowserEnabled}
-						setCachedStateField={setCachedStateField}
-					/>
-				)}
+					{/* Auto-Approve Section */}
+					{activeTab === "autoApprove" && (
+						<AutoApproveSettings
+							alwaysAllowReadOnly={alwaysAllowReadOnly}
+							alwaysAllowReadOnlyOutsideWorkspace={alwaysAllowReadOnlyOutsideWorkspace}
+							alwaysAllowWrite={alwaysAllowWrite}
+							alwaysAllowWriteOutsideWorkspace={alwaysAllowWriteOutsideWorkspace}
+							writeDelayMs={writeDelayMs}
+							alwaysAllowBrowser={alwaysAllowBrowser}
+							alwaysApproveResubmit={alwaysApproveResubmit}
+							requestDelaySeconds={requestDelaySeconds}
+							alwaysAllowMcp={alwaysAllowMcp}
+							alwaysAllowModeSwitch={alwaysAllowModeSwitch}
+							alwaysAllowSubtasks={alwaysAllowSubtasks}
+							alwaysAllowExecute={alwaysAllowExecute}
+							allowedCommands={allowedCommands}
+							setCachedStateField={setCachedStateField}
+						/>
+					)}
 
-				{/* Checkpoints Section */}
-				{activeTab === "checkpoints" && (
-					<CheckpointSettings
-						enableCheckpoints={enableCheckpoints}
-						setCachedStateField={setCachedStateField}
-					/>
-				)}
+					{/* Browser Section */}
+					{activeTab === "browser" && (
+						<BrowserSettings
+							browserToolEnabled={browserToolEnabled}
+							browserViewportSize={browserViewportSize}
+							screenshotQuality={screenshotQuality}
+							remoteBrowserHost={remoteBrowserHost}
+							remoteBrowserEnabled={remoteBrowserEnabled}
+							setCachedStateField={setCachedStateField}
+						/>
+					)}
 
-				{/* Notifications Section */}
-				{activeTab === "notifications" && (
-					<NotificationSettings
-						ttsEnabled={ttsEnabled}
-						ttsSpeed={ttsSpeed}
-						soundEnabled={soundEnabled}
-						soundVolume={soundVolume}
-						setCachedStateField={setCachedStateField}
-					/>
-				)}
+					{/* Checkpoints Section */}
+					{activeTab === "checkpoints" && (
+						<CheckpointSettings
+							enableCheckpoints={enableCheckpoints}
+							setCachedStateField={setCachedStateField}
+						/>
+					)}
 
-				{/* Context Management Section */}
-				{activeTab === "contextManagement" && (
-					<ContextManagementSettings
-						maxOpenTabsContext={maxOpenTabsContext}
-						maxWorkspaceFiles={maxWorkspaceFiles ?? 200}
-						showRooIgnoredFiles={showRooIgnoredFiles}
-						maxReadFileLine={maxReadFileLine}
-						setCachedStateField={setCachedStateField}
-					/>
-				)}
+					{/* Notifications Section */}
+					{activeTab === "notifications" && (
+						<NotificationSettings
+							ttsEnabled={ttsEnabled}
+							ttsSpeed={ttsSpeed}
+							soundEnabled={soundEnabled}
+							soundVolume={soundVolume}
+							setCachedStateField={setCachedStateField}
+						/>
+					)}
 
-				{/* Terminal Section */}
-				{activeTab === "terminal" && (
-					<TerminalSettings
-						terminalOutputLineLimit={terminalOutputLineLimit}
-						terminalShellIntegrationTimeout={terminalShellIntegrationTimeout}
-						terminalCommandDelay={terminalCommandDelay}
-						terminalPowershellCounter={terminalPowershellCounter}
-						terminalZshClearEolMark={terminalZshClearEolMark}
-						terminalZshOhMy={terminalZshOhMy}
-						terminalZshP10k={terminalZshP10k}
-						terminalZdotdir={terminalZdotdir}
-						setCachedStateField={setCachedStateField}
-					/>
-				)}
+					{/* Context Management Section */}
+					{activeTab === "contextManagement" && (
+						<ContextManagementSettings
+							maxOpenTabsContext={maxOpenTabsContext}
+							maxWorkspaceFiles={maxWorkspaceFiles ?? 200}
+							showRooIgnoredFiles={showRooIgnoredFiles}
+							maxReadFileLine={maxReadFileLine}
+							setCachedStateField={setCachedStateField}
+						/>
+					)}
 
-				{/* Experimental Section */}
-				{activeTab === "experimental" && (
-					<ExperimentalSettings
-						setCachedStateField={setCachedStateField}
-						setExperimentEnabled={setExperimentEnabled}
-						experiments={experiments}
-					/>
-				)}
+					{/* Terminal Section */}
+					{activeTab === "terminal" && (
+						<TerminalSettings
+							terminalOutputLineLimit={terminalOutputLineLimit}
+							terminalShellIntegrationTimeout={terminalShellIntegrationTimeout}
+							terminalCommandDelay={terminalCommandDelay}
+							terminalPowershellCounter={terminalPowershellCounter}
+							terminalZshClearEolMark={terminalZshClearEolMark}
+							terminalZshOhMy={terminalZshOhMy}
+							terminalZshP10k={terminalZshP10k}
+							terminalZdotdir={terminalZdotdir}
+							setCachedStateField={setCachedStateField}
+						/>
+					)}
 
-				{/* Language Section */}
-				{activeTab === "language" && (
-					<LanguageSettings language={language || "en"} setCachedStateField={setCachedStateField} />
-				)}
+					{/* Experimental Section */}
+					{activeTab === "experimental" && (
+						<ExperimentalSettings
+							setCachedStateField={setCachedStateField}
+							setExperimentEnabled={setExperimentEnabled}
+							experiments={experiments}
+						/>
+					)}
 
-				{/* About Section */}
-				{activeTab === "about" && (
-					<About
-						version={version}
-						telemetrySetting={telemetrySetting}
-						setTelemetrySetting={setTelemetrySetting}
-					/>
-				)}
-			</TabContent>
+					{/* Language Section */}
+					{activeTab === "language" && (
+						<LanguageSettings language={language || "en"} setCachedStateField={setCachedStateField} />
+					)}
+
+					{/* About Section */}
+					{activeTab === "about" && (
+						<About
+							version={version}
+							telemetrySetting={telemetrySetting}
+							setTelemetrySetting={setTelemetrySetting}
+						/>
+					)}
+				</TabContent>
+			</div>
 
 			<AlertDialog open={isDiscardDialogShow} onOpenChange={setDiscardDialogShow}>
 				<AlertDialogContent>

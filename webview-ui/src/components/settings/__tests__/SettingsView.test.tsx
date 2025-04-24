@@ -174,6 +174,10 @@ describe("SettingsView - Sound Settings", () => {
 	it("initializes with tts disabled by default", () => {
 		renderSettingsView()
 
+		// First click on the notifications tab
+		const notificationsTab = screen.getByTestId("tab-notifications")
+		fireEvent.click(notificationsTab)
+
 		const ttsCheckbox = screen.getByTestId("tts-enabled-checkbox")
 		expect(ttsCheckbox).not.toBeChecked()
 
@@ -184,6 +188,10 @@ describe("SettingsView - Sound Settings", () => {
 	it("initializes with sound disabled by default", () => {
 		renderSettingsView()
 
+		// First click on the notifications tab
+		const notificationsTab = screen.getByTestId("tab-notifications")
+		fireEvent.click(notificationsTab)
+
 		const soundCheckbox = screen.getByTestId("sound-enabled-checkbox")
 		expect(soundCheckbox).not.toBeChecked()
 
@@ -193,6 +201,10 @@ describe("SettingsView - Sound Settings", () => {
 
 	it("toggles tts setting and sends message to VSCode", () => {
 		renderSettingsView()
+
+		// First click on the notifications tab
+		const notificationsTab = screen.getByTestId("tab-notifications")
+		fireEvent.click(notificationsTab)
 
 		const ttsCheckbox = screen.getByTestId("tts-enabled-checkbox")
 
@@ -215,6 +227,10 @@ describe("SettingsView - Sound Settings", () => {
 	it("toggles sound setting and sends message to VSCode", () => {
 		renderSettingsView()
 
+		// First click on the notifications tab
+		const notificationsTab = screen.getByTestId("tab-notifications")
+		fireEvent.click(notificationsTab)
+
 		const soundCheckbox = screen.getByTestId("sound-enabled-checkbox")
 
 		// Enable sound
@@ -236,6 +252,10 @@ describe("SettingsView - Sound Settings", () => {
 	it("shows tts slider when sound is enabled", () => {
 		renderSettingsView()
 
+		// First click on the notifications tab
+		const notificationsTab = screen.getByTestId("tab-notifications")
+		fireEvent.click(notificationsTab)
+
 		// Enable tts
 		const ttsCheckbox = screen.getByTestId("tts-enabled-checkbox")
 		fireEvent.click(ttsCheckbox)
@@ -249,6 +269,10 @@ describe("SettingsView - Sound Settings", () => {
 	it("shows volume slider when sound is enabled", () => {
 		renderSettingsView()
 
+		// First click on the notifications tab
+		const notificationsTab = screen.getByTestId("tab-notifications")
+		fireEvent.click(notificationsTab)
+
 		// Enable sound
 		const soundCheckbox = screen.getByTestId("sound-enabled-checkbox")
 		fireEvent.click(soundCheckbox)
@@ -261,6 +285,10 @@ describe("SettingsView - Sound Settings", () => {
 
 	it("updates speed and sends message to VSCode when slider changes", () => {
 		renderSettingsView()
+
+		// First click on the notifications tab
+		const notificationsTab = screen.getByTestId("tab-notifications")
+		fireEvent.click(notificationsTab)
 
 		// Enable tts
 		const ttsCheckbox = screen.getByTestId("tts-enabled-checkbox")
@@ -283,6 +311,10 @@ describe("SettingsView - Sound Settings", () => {
 
 	it("updates volume and sends message to VSCode when slider changes", () => {
 		renderSettingsView()
+
+		// First click on the notifications tab
+		const notificationsTab = screen.getByTestId("tab-notifications")
+		fireEvent.click(notificationsTab)
 
 		// Enable sound
 		const soundCheckbox = screen.getByTestId("sound-enabled-checkbox")
@@ -324,6 +356,10 @@ describe("SettingsView - Allowed Commands", () => {
 	it("shows allowed commands section when alwaysAllowExecute is enabled", () => {
 		renderSettingsView()
 
+		// First click on the autoApprove tab
+		const autoApproveTab = screen.getByTestId("tab-autoApprove")
+		fireEvent.click(autoApproveTab)
+
 		// Enable always allow execute
 		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
 		fireEvent.click(executeCheckbox)
@@ -334,6 +370,10 @@ describe("SettingsView - Allowed Commands", () => {
 
 	it("adds new command to the list", () => {
 		renderSettingsView()
+
+		// First click on the autoApprove tab
+		const autoApproveTab = screen.getByTestId("tab-autoApprove")
+		fireEvent.click(autoApproveTab)
 
 		// Enable always allow execute
 		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
@@ -358,6 +398,10 @@ describe("SettingsView - Allowed Commands", () => {
 
 	it("removes command from the list", () => {
 		renderSettingsView()
+
+		// First click on the autoApprove tab
+		const autoApproveTab = screen.getByTestId("tab-autoApprove")
+		fireEvent.click(autoApproveTab)
 
 		// Enable always allow execute
 		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
@@ -402,6 +446,11 @@ describe("SettingsView - Allowed Commands", () => {
 		it("shows unsaved changes dialog when switching tabs with unsaved changes", () => {
 			renderSettingsView()
 
+			// First click on the notifications tab
+			const notificationsTab = screen.getByTestId("tab-notifications")
+			fireEvent.click(notificationsTab)
+
+			// Wait for the tab content to be rendered
 			// Make a change to create unsaved changes
 			const soundCheckbox = screen.getByTestId("sound-enabled-checkbox")
 			fireEvent.click(soundCheckbox)
@@ -414,31 +463,30 @@ describe("SettingsView - Allowed Commands", () => {
 			expect(screen.getByText("settings:unsavedChangesDialog.title")).toBeInTheDocument()
 		})
 
-		it("shows the More dropdown button", () => {
+		it("allows direct tab navigation", () => {
 			renderSettingsView()
 
-			// Check that the More button is rendered
-			expect(screen.getByTestId("more-tabs-button")).toBeInTheDocument()
+			// Click on a browser tab
+			const browserTab = screen.getByTestId("tab-browser")
+			fireEvent.click(browserTab)
+
+			// Check that we've switched to the browser tab
+			expect(screen.getByTestId("tab-browser").getAttribute("data-value")).toBe("browser")
 		})
+	})
+})
 
-		it("allows switching tabs via the dropdown menu", () => {
-			renderSettingsView()
-
-			// Open the dropdown menu
-			const moreButton = screen.getByTestId("more-tabs-button")
-			fireEvent.click(moreButton)
-
-			// Click on a tab in the dropdown
-			const dropdownTab = screen.getByTestId("dropdown-tab-browser")
-			fireEvent.click(dropdownTab)
-
-			// Check that the browser content is visible
-			expect(screen.getByText("settings:browser.enable.label")).toBeInTheDocument()
-		})
+describe("SettingsView - Duplicate Commands", () => {
+	beforeEach(() => {
+		jest.clearAllMocks()
 	})
 
 	it("prevents duplicate commands", () => {
 		renderSettingsView()
+
+		// First click on the autoApprove tab
+		const autoApproveTab = screen.getByTestId("tab-autoApprove")
+		fireEvent.click(autoApproveTab)
 
 		// Enable always allow execute
 		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
@@ -463,6 +511,10 @@ describe("SettingsView - Allowed Commands", () => {
 
 	it("saves allowed commands when clicking Save", () => {
 		renderSettingsView()
+
+		// First click on the autoApprove tab
+		const autoApproveTab = screen.getByTestId("tab-autoApprove")
+		fireEvent.click(autoApproveTab)
 
 		// Enable always allow execute
 		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
