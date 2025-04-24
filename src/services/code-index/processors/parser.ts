@@ -8,6 +8,7 @@ import { ICodeParser, CodeBlock } from "../interfaces"
 
 const MIN_BLOCK_LINES = 3
 const MAX_BLOCK_LINES = 100
+const MAX_BLOCK_CHARS = 20000
 
 /**
  * Implementation of the code parser interface
@@ -150,34 +151,113 @@ export class CodeParser implements ICodeParser {
 			const lineSpan = currentNode.endPosition.row - currentNode.startPosition.row + 1
 
 			if (lineSpan >= minBlockLines && lineSpan <= maxBlockLines) {
-				const identifier =
-					currentNode.childForFieldName("name")?.text ||
-					currentNode.children.find((c) => c.type === "identifier")?.text ||
-					null
-				const type = currentNode.type
-				const start_line = currentNode.startPosition.row + 1
-				const end_line = currentNode.endPosition.row + 1
-				const content = currentNode.text
-				const segmentHash = createHash("sha256")
-					.update(`${filePath}-${start_line}-${end_line}-${content}`)
-					.digest("hex")
+				if (currentNode.text.length > MAX_BLOCK_CHARS) {
+					if (currentNode.children.length > 0) {
+						queue.push(...currentNode.children)
+					} else {
+						const chunkedBlocks = this._chunkLeafNodeByLines(
+							currentNode,
+							filePath,
+							fileHash,
+							MAX_BLOCK_CHARS,
+						)
+						results.push(...chunkedBlocks)
+					}
+				} else {
+					const identifier =
+						currentNode.childForFieldName("name")?.text ||
+						currentNode.children.find((c) => c.type === "identifier")?.text ||
+						null
+					const type = currentNode.type
+					const start_line = currentNode.startPosition.row + 1
+					const end_line = currentNode.endPosition.row + 1
+					const content = currentNode.text
+					const segmentHash = createHash("sha256")
+						.update(`${filePath}-${start_line}-${end_line}-${content}`)
+						.digest("hex")
 
-				results.push({
-					file_path: filePath,
-					identifier,
-					type,
-					start_line,
-					end_line,
-					content,
-					segmentHash,
-					fileHash,
-				})
+					results.push({
+						file_path: filePath,
+						identifier,
+						type,
+						start_line,
+						end_line,
+						content,
+						segmentHash,
+						fileHash,
+					})
+				}
 			} else if (lineSpan > maxBlockLines) {
 				queue.push(...currentNode.children)
 			}
 		}
 
 		return results
+	}
+
+	private _chunkLeafNodeByLines(
+		node: treeSitter.SyntaxNode,
+		filePath: string,
+		fileHash: string,
+		maxChars: number,
+	): CodeBlock[] {
+		const chunks: CodeBlock[] = []
+		const lines = node.text.split("\n")
+		let currentChunk: string[] = []
+		let currentChunkLength = 0
+		let currentStartLine = node.startPosition.row + 1
+		let chunkStartLine = currentStartLine
+
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i]
+			if (currentChunkLength + line.length > maxChars && currentChunk.length > 0) {
+				// Push current chunk
+				const content = currentChunk.join("\n")
+				const segmentHash = createHash("sha256")
+					.update(`${filePath}-${chunkStartLine}-${currentStartLine + i - 1}-${content}`)
+					.digest("hex")
+
+				chunks.push({
+					file_path: filePath,
+					identifier: null,
+					type: node.type,
+					start_line: chunkStartLine,
+					end_line: currentStartLine + i - 1,
+					content,
+					segmentHash,
+					fileHash,
+				})
+
+				// Start new chunk
+				currentChunk = [line]
+				currentChunkLength = line.length
+				chunkStartLine = currentStartLine + i
+			} else {
+				currentChunk.push(line)
+				currentChunkLength += line.length
+			}
+		}
+
+		// Push remaining chunk
+		if (currentChunk.length > 0) {
+			const content = currentChunk.join("\n")
+			const segmentHash = createHash("sha256")
+				.update(`${filePath}-${chunkStartLine}-${currentStartLine + lines.length - 1}-${content}`)
+				.digest("hex")
+
+			chunks.push({
+				file_path: filePath,
+				identifier: null,
+				type: node.type,
+				start_line: chunkStartLine,
+				end_line: currentStartLine + lines.length - 1,
+				content,
+				segmentHash,
+				fileHash,
+			})
+		}
+
+		return chunks
 	}
 }
 
