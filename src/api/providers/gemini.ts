@@ -57,7 +57,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		let cacheWriteTokens: number | undefined = undefined
 
 		// The minimum input token count for context caching is 4,096.
-		// For a basic appoximation we assume 4 characters per token.
+		// For a basic approximation we assume 4 characters per token.
 		// We can use tiktoken eventually to get a more accurat token count.
 		// https://ai.google.dev/gemini-api/docs/caching?lang=node
 		// https://ai.google.dev/gemini-api/docs/tokens?lang=node
