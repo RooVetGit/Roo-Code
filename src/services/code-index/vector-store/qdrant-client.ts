@@ -121,26 +121,36 @@ export class QdrantVectorStore implements IVectorStore {
 	 * @param filePath Path of the file to delete points for
 	 */
 	async deletePointsByFilePath(filePath: string): Promise<void> {
+		return this.deletePointsByMultipleFilePaths([filePath])
+	}
+
+	async deletePointsByMultipleFilePaths(filePaths: string[]): Promise<void> {
+		if (filePaths.length === 0) {
+			return
+		}
+
 		try {
 			const workspaceRoot = getWorkspacePath()
-			const absolutePath = path.resolve(workspaceRoot, filePath)
-			const normalizedAbsolutePath = path.normalize(absolutePath)
+			const normalizedPaths = filePaths.map((filePath) => {
+				const absolutePath = path.resolve(workspaceRoot, filePath)
+				return path.normalize(absolutePath)
+			})
+
+			const filter = {
+				should: normalizedPaths.map((normalizedPath) => ({
+					key: "filePath",
+					match: {
+						value: normalizedPath,
+					},
+				})),
+			}
 
 			await this.client.delete(this.collectionName, {
-				filter: {
-					must: [
-						{
-							key: "filePath",
-							match: {
-								value: normalizedAbsolutePath,
-							},
-						},
-					],
-				},
+				filter,
 				wait: true,
 			})
 		} catch (error) {
-			console.error("Failed to delete points by file path:", error)
+			console.error("Failed to delete points by file paths:", error)
 			throw error
 		}
 	}

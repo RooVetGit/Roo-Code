@@ -35,6 +35,12 @@ export interface IVectorStore {
 	deletePointsByFilePath(filePath: string): Promise<void>
 
 	/**
+	 * Deletes points by multiple file paths
+	 * @param filePaths Array of file paths to delete points for
+	 */
+	deletePointsByMultipleFilePaths(filePaths: string[]): Promise<void>
+
+	/**
 	 * Clears all points from the collection
 	 */
 	clearCollection(): Promise<void>
