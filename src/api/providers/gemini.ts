@@ -30,8 +30,10 @@ type CacheEntry = {
 
 export class GeminiHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
+
 	private client: GoogleGenAI
 	private contentCaches: NodeCache
+	private isCacheBusy = false
 
 	constructor(options: ApiHandlerOptions) {
 		super()
@@ -65,8 +67,6 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 			cacheKey &&
 			contentsLength > 4 * CONTEXT_CACHE_TOKEN_MINIMUM
 
-		console.log(`[GeminiHandler] isCacheAvailable=${isCacheAvailable}, contentsLength=${contentsLength}`)
-
 		if (isCacheAvailable) {
 			const cacheEntry = this.contentCaches.get<CacheEntry>(cacheKey)
 
@@ -78,32 +78,38 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 				)
 			}
 
-			const timestamp = Date.now()
+			if (!this.isCacheBusy) {
+				this.isCacheBusy = true
+				const timestamp = Date.now()
 
-			const config: CreateCachedContentConfig = {
-				contents,
-				systemInstruction,
-				ttl: `${CACHE_TTL * 60}s`,
-				httpOptions: { timeout: 10_000 },
+				this.client.caches
+					.create({
+						model,
+						config: {
+							contents,
+							systemInstruction,
+							ttl: `${CACHE_TTL * 60}s`,
+							httpOptions: { timeout: 120_000 },
+						},
+					})
+					.then((result) => {
+						const { name, usageMetadata } = result
+
+						if (name) {
+							this.contentCaches.set<CacheEntry>(cacheKey, { key: name, count: contents.length })
+							cacheWriteTokens = usageMetadata?.totalTokenCount ?? 0
+							console.log(
+								`[GeminiHandler] cached ${contents.length} messages (${cacheWriteTokens} tokens) in ${Date.now() - timestamp}ms`,
+							)
+						}
+					})
+					.catch((error) => {
+						console.error(`[GeminiHandler] caches.create error`, error)
+					})
+					.finally(() => {
+						this.isCacheBusy = false
+					})
 			}
-
-			this.client.caches
-				.create({ model, config })
-				.then((result) => {
-					console.log(`[GeminiHandler] caches.create result -> ${JSON.stringify(result)}`)
-					const { name, usageMetadata } = result
-
-					if (name) {
-						this.contentCaches.set<CacheEntry>(cacheKey, { key: name, count: contents.length })
-						cacheWriteTokens = usageMetadata?.totalTokenCount ?? 0
-						console.log(
-							`[GeminiHandler] cached ${contents.length} messages (${cacheWriteTokens} tokens) in ${Date.now() - timestamp}ms`,
-						)
-					}
-				})
-				.catch((error) => {
-					console.error(`[GeminiHandler] caches.create error`, error)
-				})
 		}
 
 		const isCacheUsed = !!cachedContent
