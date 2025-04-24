@@ -74,7 +74,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 		// Batch processing accumulators
 		let batchBlocks: CodeBlock[] = []
 		let batchTexts: string[] = []
-		let batchFileInfos: { filePath: string; fileHash: string }[] = []
+		let batchFileInfos: { filePath: string; fileHash: string; isNew: boolean }[] = []
 
 		for (const filePath of supportedPaths) {
 			try {
@@ -113,7 +113,11 @@ export class DirectoryScanner implements IDirectoryScanner {
 					// Add to batch accumulators
 					batchBlocks.push(...blocks)
 					batchTexts.push(...blocks.map((block) => block.content))
-					batchFileInfos.push({ filePath, fileHash: currentFileHash })
+					batchFileInfos.push({
+						filePath,
+						fileHash: currentFileHash,
+						isNew: !oldHashes[filePath],
+					})
 
 					// Process batch if threshold reached
 					if (batchBlocks.length >= DirectoryScanner.BATCH_SEGMENT_THRESHOLD) {
@@ -206,7 +210,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 	private async processBatch(
 		batchBlocks: CodeBlock[],
 		batchTexts: string[],
-		batchFileInfos: { filePath: string; fileHash: string }[],
+		batchFileInfos: { filePath: string; fileHash: string; isNew: boolean }[],
 		newHashes: Record<string, string>,
 		onError?: (error: Error) => void,
 	): Promise<void> {
@@ -220,16 +224,22 @@ export class DirectoryScanner implements IDirectoryScanner {
 			attempts++
 			try {
 				// --- Deletion Step ---
-				const uniqueFilePaths = [...new Set(batchFileInfos.map((info) => info.filePath))]
+				const uniqueFilePaths = [
+					...new Set(
+						batchFileInfos
+							.filter((info) => !info.isNew) // Only modified files (not new)
+							.map((info) => info.filePath),
+					),
+				]
 				console.log(
 					`[DirectoryScanner] Deleting existing points for ${uniqueFilePaths.length} file(s) in batch...`,
 				)
-				for (const filePath of uniqueFilePaths) {
+				if (uniqueFilePaths.length > 0) {
 					try {
-						await this.qdrantClient.deletePointsByFilePath(filePath)
+						await this.qdrantClient.deletePointsByMultipleFilePaths(uniqueFilePaths)
 					} catch (deleteError) {
 						console.error(
-							`[DirectoryScanner] Failed to delete points for ${filePath} before upsert:`,
+							`[DirectoryScanner] Failed to delete points for ${uniqueFilePaths.length} files before upsert:`,
 							deleteError,
 						)
 						// Re-throw the error to stop processing this batch attempt
