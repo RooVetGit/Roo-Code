@@ -78,7 +78,10 @@ export async function getOpenRouterModels(options?: ApiHandlerOptions) {
 				thinking: rawModel.id === "anthropic/claude-3.7-sonnet:thinking",
 			}
 
-			// NOTE: This needs to be synced with api.ts/openrouter default model info.
+			// Then OpenRouter model definition doesn't give us any hints about computer use,
+			// so we need to set that manually.
+			// The ideal `maxTokens` values are model dependent, but we should probably DRY
+			// this up and use the values defined for the Anthropic providers.
 			switch (true) {
 				case rawModel.id.startsWith("anthropic/claude-3.7-sonnet"):
 					modelInfo.supportsComputerUse = true
