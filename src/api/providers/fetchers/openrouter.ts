@@ -63,7 +63,7 @@ export async function getOpenRouterModels(options?: ApiHandlerOptions) {
 				: undefined
 
 			// Disable prompt caching for Gemini models for now.
-			const supportsPromptCache = !!cacheWritesPrice && !!cacheWritesPrice && !rawModel.id.startsWith("google")
+			const supportsPromptCache = !!cacheWritesPrice && !!cacheReadsPrice && !rawModel.id.startsWith("google")
 
 			const modelInfo: ModelInfo = {
 				maxTokens: rawModel.top_provider?.max_completion_tokens,
