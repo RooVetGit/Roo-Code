@@ -4,6 +4,9 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRe
 import { useDeepCompareEffect, useEvent, useMount } from "react-use"
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
 import styled from "styled-components"
+import removeMd from "remove-markdown"
+import { Trans } from "react-i18next"
+
 import {
 	ClineAsk,
 	ClineMessage,
@@ -16,11 +19,19 @@ import { findLast } from "@roo/shared/array"
 import { combineApiRequests } from "@roo/shared/combineApiRequests"
 import { combineCommandSequences } from "@roo/shared/combineCommandSequences"
 import { getApiMetrics } from "@roo/shared/getApiMetrics"
+import { AudioType } from "@roo/shared/WebviewMessage"
+import { getAllModes } from "@roo/shared/modes"
+
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { vscode } from "@src/utils/vscode"
+import { normalizeApiConfiguration } from "@src/utils/normalizeApiConfiguration"
+import { validateCommand } from "@src/utils/command-validation"
+import { useAppTranslation } from "@src/i18n/TranslationContext"
+
+import TelemetryBanner from "../common/TelemetryBanner"
 import HistoryPreview from "../history/HistoryPreview"
 import RooHero from "../welcome/RooHero"
-import { normalizeApiConfiguration } from "../settings/ApiOptions"
+
 import Announcement from "./Announcement"
 import BrowserSessionRow from "./BrowserSessionRow"
 import ChatRow from "./ChatRow"
@@ -28,13 +39,7 @@ import ChatTextArea from "./ChatTextArea"
 import TaskHeader from "./TaskHeader"
 import AutoApproveMenu from "./AutoApproveMenu"
 import SystemPromptWarning from "./SystemPromptWarning"
-import { AudioType } from "@roo/shared/WebviewMessage"
-import { validateCommand } from "@src/utils/command-validation"
-import { getAllModes } from "@roo/shared/modes"
-import TelemetryBanner from "../common/TelemetryBanner"
-import { useAppTranslation } from "@/i18n/TranslationContext"
-import removeMd from "remove-markdown"
-import { Trans } from "react-i18next"
+
 interface ChatViewProps {
 	isHidden: boolean
 	showAnnouncement: boolean
@@ -591,8 +596,13 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				case "api_req_deleted": // aggregated api_req metrics from deleted messages
 					return false
 				case "api_req_retry_delayed":
-					// Only show the retry message if it's the last message
-					return message === modifiedMessages.at(-1)
+					// Only show the retry message if it's the last message or the last messages is api_req_retry_delayed+resume_task
+					const last1 = modifiedMessages.at(-1)
+					const last2 = modifiedMessages.at(-2)
+					if (last1?.ask === "resume_task" && last2 === message) {
+						return true
+					}
+					return message === last1
 				case "text":
 					// Sometimes cline returns an empty text message, we don't want to render these. (We also use a say text for user messages, so in case they just sent images we still render that)
 					if ((message.text ?? "") === "" && (message.images?.length ?? 0) === 0) {

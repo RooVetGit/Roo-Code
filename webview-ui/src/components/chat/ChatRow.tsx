@@ -21,7 +21,7 @@ import { ReasoningBlock } from "./ReasoningBlock"
 import Thumbnails from "../common/Thumbnails"
 import McpResourceRow from "../mcp/McpResourceRow"
 import McpToolRow from "../mcp/McpToolRow"
-import { highlightMentions } from "./TaskHeader"
+import { Mention } from "./Mention"
 import { CheckpointSaved } from "./checkpoints/CheckpointSaved"
 import { FollowUpSuggest } from "./FollowUpSuggest"
 
@@ -323,35 +323,13 @@ export const ChatRowContent = ({
 			case "searchAndReplace":
 				return (
 					<>
-						<div className="flex items-center gap-2.5 mb-2.5">
+						<div style={headerStyle}>
 							{toolIcon("replace")}
-							<span className="font-bold">
+							<span style={{ fontWeight: "bold" }}>
 								{message.type === "ask"
 									? t("chat:fileOperations.wantsToSearchReplace")
 									: t("chat:fileOperations.didSearchReplace")}
 							</span>
-						</div>
-						<div className="mb-2.5">
-							<div className="flex items-center gap-2.5 mb-1.5">
-								<span className="text-vscode-descriptionForeground">Search:</span>
-								<code>{tool.search}</code>
-								{tool.useRegex && <span className="text-vscode-descriptionForeground">(regex)</span>}
-								{tool.ignoreCase && (
-									<span className="text-vscode-descriptionForeground">(case-insensitive)</span>
-								)}
-							</div>
-							<div className="flex items-center gap-2.5 mb-1.5">
-								<span className="text-vscode-descriptionForeground">Replace:</span>
-								<code>{tool.replace}</code>
-							</div>
-							{(tool.startLine !== undefined || tool.endLine !== undefined) && (
-								<div className="flex items-center gap-2.5">
-									<span className="text-vscode-descriptionForeground">Lines:</span>
-									<code>
-										{tool.startLine ?? 1} - {tool.endLine ?? "end"}
-									</code>
-								</div>
-							)}
 						</div>
 						<CodeAccordian
 							progressStatus={message.progressStatus}
@@ -889,7 +867,9 @@ export const ChatRowContent = ({
 					return (
 						<div className="bg-vscode-editor-background border rounded-xs p-1 overflow-hidden whitespace-pre-wrap word-break-break-word overflow-wrap-anywhere">
 							<div className="flex justify-between gap-2">
-								<div className="flex-grow px-2 py-1">{highlightMentions(message.text)}</div>
+								<div className="flex-grow px-2 py-1">
+									<Mention text={message.text} withShadow />
+								</div>
 								<Button
 									variant="ghost"
 									size="icon"
@@ -1196,6 +1176,7 @@ export const ChatRowContent = ({
 													language="json"
 													isExpanded={true}
 													onToggleExpand={onToggleExpand}
+													forceWrap={true}
 												/>
 											</div>
 										)}
