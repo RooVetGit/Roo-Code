@@ -1,10 +1,8 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta"
-import axios from "axios"
 import OpenAI from "openai"
 
 import { ApiHandlerOptions, ModelInfo, openRouterDefaultModelId, openRouterDefaultModelInfo } from "../../shared/api"
-import { parseApiPrice } from "../../utils/cost"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStreamChunk } from "../transform/stream"
 import { convertToR1Format } from "../transform/r1-format"
@@ -62,15 +60,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
 	): AsyncGenerator<ApiStreamChunk> {
-		let {
-			id: modelId,
-			maxTokens,
-			thinking,
-			temperature,
-			supportsPromptCache,
-			topP,
-			reasoningEffort,
-		} = this.getModel()
+		let { id: modelId, maxTokens, thinking, temperature, topP, reasoningEffort, info } = this.getModel()
 
 		// Convert Anthropic messages to OpenAI format.
 		let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
@@ -87,7 +77,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		// Now with Gemini support: https://openrouter.ai/docs/features/prompt-caching
 		// Note that we don't check the `ModelInfo` object because it is cached
 		// in the settings for OpenRouter.
-		if (this.isPromptCacheSupported(modelId)) {
+		if (this.isPromptCacheSupported({ id: modelId, ...info })) {
 			openAiMessages[0] = {
 				role: "system",
 				// @ts-ignore-next-line
@@ -228,95 +218,16 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		return completion.choices[0]?.message?.content || ""
 	}
 
-	private isPromptCacheSupported(modelId: string) {
-		return (
-			modelId.startsWith("anthropic/claude-3.7-sonnet") ||
-			modelId.startsWith("anthropic/claude-3.5-sonnet") ||
-			modelId.startsWith("anthropic/claude-3-opus") ||
-			modelId.startsWith("anthropic/claude-3-haiku")
-		)
-	}
-}
-
-export async function getOpenRouterModels(options?: ApiHandlerOptions) {
-	const models: Record<string, ModelInfo> = {}
-
-	const baseURL = options?.openRouterBaseUrl || "https://openrouter.ai/api/v1"
-
-	try {
-		const response = await axios.get(`${baseURL}/models`)
-		const rawModels = response.data.data
-
-		for (const rawModel of rawModels) {
-			const modelInfo: ModelInfo = {
-				maxTokens: rawModel.top_provider?.max_completion_tokens,
-				contextWindow: rawModel.context_length,
-				supportsImages: rawModel.architecture?.modality?.includes("image"),
-				supportsPromptCache: false,
-				inputPrice: parseApiPrice(rawModel.pricing?.prompt),
-				outputPrice: parseApiPrice(rawModel.pricing?.completion),
-				description: rawModel.description,
-				thinking: rawModel.id === "anthropic/claude-3.7-sonnet:thinking",
-			}
-
-			// NOTE: This needs to be synced with api.ts/openrouter default model info.
-			switch (true) {
-				case rawModel.id.startsWith("anthropic/claude-3.7-sonnet"):
-					modelInfo.supportsComputerUse = true
-					modelInfo.supportsPromptCache = true
-					modelInfo.cacheWritesPrice = 3.75
-					modelInfo.cacheReadsPrice = 0.3
-					modelInfo.maxTokens = rawModel.id === "anthropic/claude-3.7-sonnet:thinking" ? 128_000 : 8192
-					break
-				case rawModel.id.startsWith("anthropic/claude-3.5-sonnet-20240620"):
-					modelInfo.supportsPromptCache = true
-					modelInfo.cacheWritesPrice = 3.75
-					modelInfo.cacheReadsPrice = 0.3
-					modelInfo.maxTokens = 8192
-					break
-				case rawModel.id.startsWith("anthropic/claude-3.5-sonnet"):
-					modelInfo.supportsComputerUse = true
-					modelInfo.supportsPromptCache = true
-					modelInfo.cacheWritesPrice = 3.75
-					modelInfo.cacheReadsPrice = 0.3
-					modelInfo.maxTokens = 8192
-					break
-				case rawModel.id.startsWith("anthropic/claude-3-5-haiku"):
-					modelInfo.supportsPromptCache = true
-					modelInfo.cacheWritesPrice = 1.25
-					modelInfo.cacheReadsPrice = 0.1
-					modelInfo.maxTokens = 8192
-					break
-				case rawModel.id.startsWith("anthropic/claude-3-opus"):
-					modelInfo.supportsPromptCache = true
-					modelInfo.cacheWritesPrice = 18.75
-					modelInfo.cacheReadsPrice = 1.5
-					modelInfo.maxTokens = 8192
-					break
-				case rawModel.id.startsWith("anthropic/claude-3-haiku"):
-					modelInfo.supportsPromptCache = true
-					modelInfo.cacheWritesPrice = 0.3
-					modelInfo.cacheReadsPrice = 0.03
-					modelInfo.maxTokens = 8192
-					break
-				/* TODO: uncomment once we confirm it's working
-				case rawModel.id.startsWith("google/gemini-2.5-pro-preview-03-25"):
-				case rawModel.id.startsWith("google/gemini-2.0-flash-001"):
-				case rawModel.id.startsWith("google/gemini-flash-1.5"):
-					modelInfo.supportsPromptCache = true
-					break
-				*/
-				default:
-					break
-			}
-
-			models[rawModel.id] = modelInfo
+	private isPromptCacheSupported(model: ModelInfo & { id: string }) {
+		if (!model.supportsPromptCache) {
+			return false
 		}
-	} catch (error) {
-		console.error(
-			`Error fetching OpenRouter models: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+
+		return (
+			model.id.startsWith("anthropic/claude-3.7-sonnet") ||
+			model.id.startsWith("anthropic/claude-3.5-sonnet") ||
+			model.id.startsWith("anthropic/claude-3-opus") ||
+			model.id.startsWith("anthropic/claude-3-haiku")
 		)
 	}
-
-	return models
 }
