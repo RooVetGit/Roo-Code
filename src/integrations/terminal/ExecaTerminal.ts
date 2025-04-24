@@ -4,6 +4,14 @@ import { ExecaTerminalProcess } from "./ExecaTerminalProcess"
 import { mergePromise } from "./mergePromise"
 
 export class ExecaTerminal extends BaseTerminal {
+	constructor(id: number, cwd: string) {
+		super("execa", id, cwd)
+	}
+
+	public override isClosed(): boolean {
+		return false
+	}
+
 	public override runCommand(command: string, callbacks: RooTerminalCallbacks): RooTerminalProcessResultPromise {
 		const process = new ExecaTerminalProcess(this)
 		process.command = command

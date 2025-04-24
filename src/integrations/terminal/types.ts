@@ -1,8 +1,20 @@
 import EventEmitter from "events"
 
+export type RooTerminalProvider = "vscode" | "execa"
+
 export interface RooTerminal {
+	id: number
+	busy: boolean
+	running: boolean
+	taskId?: string
+	process?: RooTerminalProcess
 	getCurrentWorkingDirectory(): string
+	isClosed: () => boolean
 	runCommand: (command: string, callbacks: RooTerminalCallbacks) => RooTerminalProcessResultPromise
+	setActiveStream(stream: AsyncIterable<string> | undefined): void
+	shellExecutionComplete(exitDetails: ExitCodeDetails): void
+	getProcessesWithOutput(): RooTerminalProcess[]
+	getUnretrievedOutput(): string
 }
 
 export interface RooTerminalCallbacks {

@@ -1,54 +1,31 @@
 import * as vscode from "vscode"
 import pWaitFor from "p-wait-for"
 
-import { truncateOutput, applyRunLengthEncoding } from "../misc/extract-text"
-
-import type {
-	RooTerminalCallbacks,
-	RooTerminalProcessResultPromise,
-	RooTerminalProcess,
-	ExitCodeDetails,
-} from "./types"
+import type { RooTerminalCallbacks, RooTerminalProcessResultPromise } from "./types"
 import { BaseTerminal } from "./BaseTerminal"
 import { TerminalProcess } from "./TerminalProcess"
+import { ShellIntegrationManager } from "./ShellIntegrationManager"
 import { mergePromise } from "./mergePromise"
 
-// Import TerminalRegistry here to avoid circular dependencies.
-const { TerminalRegistry } = require("./TerminalRegistry")
-
-export const DEFAULT_TERMINAL_SHELL_INTEGRATION_TIMEOUT = 5_000
-
 export class Terminal extends BaseTerminal {
-	private static shellIntegrationTimeout: number = DEFAULT_TERMINAL_SHELL_INTEGRATION_TIMEOUT
-	private static commandDelay: number = 0
-	private static powershellCounter: boolean = false
-	private static terminalZshClearEolMark: boolean = true
-	private static terminalZshOhMy: boolean = false
-	private static terminalZshP10k: boolean = false
-	private static terminalZdotdir: boolean = false
-
 	public terminal: vscode.Terminal
-	public busy: boolean
-	public id: number
-	public running: boolean
-	private streamClosed: boolean
-	public taskId?: string
 
 	public cmdCounter: number = 0
-	public completedProcesses: RooTerminalProcess[] = []
 
-	constructor(id: number, terminal: vscode.Terminal, cwd: string) {
-		super(cwd)
+	constructor(id: number, terminal: vscode.Terminal | undefined, cwd: string) {
+		super("vscode", id, cwd)
 
-		this.id = id
-		this.terminal = terminal
-		this.busy = false
-		this.running = false
-		this.streamClosed = false
+		const env = Terminal.getEnv()
+		const iconPath = new vscode.ThemeIcon("rocket")
+		this.terminal = terminal ?? vscode.window.createTerminal({ cwd, name: "Roo Code", iconPath, env })
+
+		if (Terminal.getTerminalZdotdir()) {
+			ShellIntegrationManager.terminalTmpDirs.set(id, env.ZDOTDIR)
+		}
 	}
 
 	/**
-	 * Gets the current working directory from shell integration or falls back to initial cwd
+	 * Gets the current working directory from shell integration or falls back to initial cwd.
 	 * @returns The current working directory
 	 */
 	public override getCurrentWorkingDirectory(): string {
@@ -56,112 +33,11 @@ export class Terminal extends BaseTerminal {
 	}
 
 	/**
-	 * Checks if the stream is closed
+	 * The exit status of the terminal will be undefined while the terminal is
+	 * active. (This value is set when onDidCloseTerminal is fired.)
 	 */
-	public isStreamClosed(): boolean {
-		return this.streamClosed
-	}
-
-	/**
-	 * Sets the active stream for this terminal and notifies the process
-	 * @param stream The stream to set, or undefined to clean up
-	 * @throws Error if process is undefined when a stream is provided
-	 */
-	public setActiveStream(stream: AsyncIterable<string> | undefined): void {
-		if (stream) {
-			// New stream is available
-			if (!this.process) {
-				this.running = false
-				console.warn(
-					`[Terminal ${this.id}] process is undefined, so cannot set terminal stream (probably user-initiated non-Roo command)`,
-				)
-				return
-			}
-
-			this.streamClosed = false
-			this.process.emit("stream_available", stream)
-		} else {
-			// Stream is being closed
-			this.streamClosed = true
-		}
-	}
-
-	/**
-	 * Handles shell execution completion for this terminal
-	 * @param exitDetails The exit details of the shell execution
-	 */
-	public shellExecutionComplete(exitDetails: ExitCodeDetails): void {
-		this.busy = false
-
-		if (this.process) {
-			// Add to the front of the queue (most recent first)
-			if (this.process.hasUnretrievedOutput()) {
-				this.completedProcesses.unshift(this.process)
-			}
-
-			this.process.emit("shell_execution_complete", exitDetails)
-			this.process = undefined
-		}
-	}
-
-	/**
-	 * Gets the last executed command
-	 * @returns The last command string or empty string if none
-	 */
-	public getLastCommand(): string {
-		// Return the command from the active process or the most recent process in the queue
-		if (this.process) {
-			return this.process.command || ""
-		} else if (this.completedProcesses.length > 0) {
-			return this.completedProcesses[0].command || ""
-		}
-
-		return ""
-	}
-
-	/**
-	 * Cleans the process queue by removing processes that no longer have unretrieved output
-	 * or don't belong to the current task
-	 */
-	public cleanCompletedProcessQueue(): void {
-		// Keep only processes with unretrieved output
-		this.completedProcesses = this.completedProcesses.filter((process) => process.hasUnretrievedOutput())
-	}
-
-	/**
-	 * Gets all processes with unretrieved output
-	 * @returns Array of processes with unretrieved output
-	 */
-	public getProcessesWithOutput() {
-		// Clean the queue first to remove any processes without output
-		this.cleanCompletedProcessQueue()
-		return [...this.completedProcesses]
-	}
-
-	/**
-	 * Gets all unretrieved output from both active and completed processes
-	 * @returns Combined unretrieved output from all processes
-	 */
-	public getUnretrievedOutput(): string {
-		let output = ""
-
-		// First check completed processes to maintain chronological order
-		for (const process of this.completedProcesses) {
-			const processOutput = process.getUnretrievedOutput()
-			if (processOutput) {
-				output += processOutput
-			}
-		}
-
-		// Then check active process for most recent output
-		const activeOutput = this.process?.getUnretrievedOutput()
-		if (activeOutput) {
-			output += activeOutput
-		}
-
-		this.cleanCompletedProcessQueue()
-
-		return output
+	public override isClosed(): boolean {
+		return this.terminal.exitStatus !== undefined
 	}
 
 	public override runCommand(command: string, callbacks: RooTerminalCallbacks): RooTerminalProcessResultPromise {
@@ -196,7 +72,7 @@ export class Terminal extends BaseTerminal {
 			})
 				.then(() => {
 					// Clean up temporary directory if shell integration is available, zsh did its job:
-					TerminalRegistry.zshCleanupTmpDir(this.id)
+					ShellIntegrationManager.zshCleanupTmpDir(this.id)
 
 					// Run the command in the terminal
 					process.run(command)
@@ -205,7 +81,7 @@ export class Terminal extends BaseTerminal {
 					console.log(`[Terminal ${this.id}] Shell integration not available. Command execution aborted.`)
 
 					// Clean up temporary directory if shell integration is not available
-					TerminalRegistry.zshCleanupTmpDir(this.id)
+					ShellIntegrationManager.zshCleanupTmpDir(this.id)
 
 					process.emit(
 						"no_shell_integration",
@@ -273,116 +149,44 @@ export class Terminal extends BaseTerminal {
 		}
 	}
 
-	/**
-	 * Compresses terminal output by applying run-length encoding and truncating to line limit
-	 * @param input The terminal output to compress
-	 * @returns The compressed terminal output
-	 */
-	public static setShellIntegrationTimeout(timeoutMs: number): void {
-		Terminal.shellIntegrationTimeout = timeoutMs
-	}
+	public static getEnv(): Record<string, string> {
+		const env: Record<string, string> = {
+			PAGER: "cat",
 
-	public static getShellIntegrationTimeout(): number {
-		return Math.min(Terminal.shellIntegrationTimeout, DEFAULT_TERMINAL_SHELL_INTEGRATION_TIMEOUT)
-	}
+			// VTE must be disabled because it prevents the prompt command from executing
+			// See https://wiki.gnome.org/Apps/Terminal/VTE
+			VTE_VERSION: "0",
+		}
 
-	/**
-	 * Sets the command delay in milliseconds
-	 * @param delayMs The delay in milliseconds
-	 */
-	public static setCommandDelay(delayMs: number): void {
-		Terminal.commandDelay = delayMs
-	}
+		// Set Oh My Zsh shell integration if enabled
+		if (Terminal.getTerminalZshOhMy()) {
+			env.ITERM_SHELL_INTEGRATION_INSTALLED = "Yes"
+		}
 
-	/**
-	 * Gets the command delay in milliseconds
-	 * @returns The command delay in milliseconds
-	 */
-	public static getCommandDelay(): number {
-		return Terminal.commandDelay
-	}
+		// Set Powerlevel10k shell integration if enabled
+		if (Terminal.getTerminalZshP10k()) {
+			env.POWERLEVEL9K_TERM_SHELL_INTEGRATION = "true"
+		}
 
-	/**
-	 * Sets whether to use the PowerShell counter workaround
-	 * @param enabled Whether to enable the PowerShell counter workaround
-	 */
-	public static setPowershellCounter(enabled: boolean): void {
-		Terminal.powershellCounter = enabled
-	}
+		// VSCode bug#237208: Command output can be lost due to a race between completion
+		// sequences and consumers. Add delay via PROMPT_COMMAND to ensure the
+		// \x1b]633;D escape sequence arrives after command output is processed.
+		// Only add this if commandDelay is not zero
+		if (Terminal.getCommandDelay() > 0) {
+			env.PROMPT_COMMAND = `sleep ${Terminal.getCommandDelay() / 1000}`
+		}
 
-	/**
-	 * Gets whether to use the PowerShell counter workaround
-	 * @returns Whether the PowerShell counter workaround is enabled
-	 */
-	public static getPowershellCounter(): boolean {
-		return Terminal.powershellCounter
-	}
+		// Clear the ZSH EOL mark to prevent issues with command output interpretation
+		// when output ends with special characters like '%'
+		if (Terminal.getTerminalZshClearEolMark()) {
+			env.PROMPT_EOL_MARK = ""
+		}
 
-	/**
-	 * Sets whether to clear the ZSH EOL mark
-	 * @param enabled Whether to clear the ZSH EOL mark
-	 */
-	public static setTerminalZshClearEolMark(enabled: boolean): void {
-		Terminal.terminalZshClearEolMark = enabled
-	}
+		// Handle ZDOTDIR for zsh if enabled
+		if (Terminal.getTerminalZdotdir()) {
+			env.ZDOTDIR = ShellIntegrationManager.zshInitTmpDir(env)
+		}
 
-	/**
-	 * Gets whether to clear the ZSH EOL mark
-	 * @returns Whether the ZSH EOL mark clearing is enabled
-	 */
-	public static getTerminalZshClearEolMark(): boolean {
-		return Terminal.terminalZshClearEolMark
-	}
-
-	/**
-	 * Sets whether to enable Oh My Zsh shell integration
-	 * @param enabled Whether to enable Oh My Zsh shell integration
-	 */
-	public static setTerminalZshOhMy(enabled: boolean): void {
-		Terminal.terminalZshOhMy = enabled
-	}
-
-	/**
-	 * Gets whether Oh My Zsh shell integration is enabled
-	 * @returns Whether Oh My Zsh shell integration is enabled
-	 */
-	public static getTerminalZshOhMy(): boolean {
-		return Terminal.terminalZshOhMy
-	}
-
-	/**
-	 * Sets whether to enable Powerlevel10k shell integration
-	 * @param enabled Whether to enable Powerlevel10k shell integration
-	 */
-	public static setTerminalZshP10k(enabled: boolean): void {
-		Terminal.terminalZshP10k = enabled
-	}
-
-	/**
-	 * Gets whether Powerlevel10k shell integration is enabled
-	 * @returns Whether Powerlevel10k shell integration is enabled
-	 */
-	public static getTerminalZshP10k(): boolean {
-		return Terminal.terminalZshP10k
-	}
-
-	public static compressTerminalOutput(input: string, lineLimit: number): string {
-		return truncateOutput(applyRunLengthEncoding(input), lineLimit)
-	}
-
-	/**
-	 * Sets whether to enable ZDOTDIR handling for zsh
-	 * @param enabled Whether to enable ZDOTDIR handling
-	 */
-	public static setTerminalZdotdir(enabled: boolean): void {
-		Terminal.terminalZdotdir = enabled
-	}
-
-	/**
-	 * Gets whether ZDOTDIR handling is enabled
-	 * @returns Whether ZDOTDIR handling is enabled
-	 */
-	public static getTerminalZdotdir(): boolean {
-		return Terminal.terminalZdotdir
+		return env
 	}
 }
