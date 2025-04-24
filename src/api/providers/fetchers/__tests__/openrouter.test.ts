@@ -4,7 +4,7 @@ import path from "path"
 
 import { back as nockBack } from "nock"
 
-import { getOpenRouterModels } from "../openrouter"
+import { getOpenRouterModels, modelsSupportingPromptCache } from "../openrouter"
 
 nockBack.fixtures = path.join(__dirname, "fixtures")
 nockBack.setMode("dryrun")
@@ -16,40 +16,19 @@ describe("OpenRouter API", () => {
 
 			const models = await getOpenRouterModels()
 
-			const modelsSupportingPromptCache = Object.entries(models)
-				.filter(([_, model]) => model.supportsPromptCache)
-				.map(([id, _]) => id)
-				.sort()
+			expect(
+				Object.entries(models)
+					.filter(([_, model]) => model.supportsPromptCache)
+					.map(([id, _]) => id)
+					.sort(),
+			).toEqual(Array.from(modelsSupportingPromptCache).sort())
 
-			expect(modelsSupportingPromptCache).toEqual([
-				"anthropic/claude-3-haiku",
-				"anthropic/claude-3-haiku:beta",
-				"anthropic/claude-3-opus",
-				"anthropic/claude-3-opus:beta",
-				"anthropic/claude-3-sonnet",
-				"anthropic/claude-3-sonnet:beta",
-				"anthropic/claude-3.5-haiku",
-				"anthropic/claude-3.5-haiku-20241022",
-				"anthropic/claude-3.5-haiku-20241022:beta",
-				"anthropic/claude-3.5-haiku:beta",
-				"anthropic/claude-3.5-sonnet",
-				"anthropic/claude-3.5-sonnet-20240620",
-				"anthropic/claude-3.5-sonnet-20240620:beta",
-				"anthropic/claude-3.5-sonnet:beta",
-				"anthropic/claude-3.7-sonnet",
-				"anthropic/claude-3.7-sonnet:beta",
-				"anthropic/claude-3.7-sonnet:thinking",
-				"google/gemini-2.0-flash-001",
-				"google/gemini-flash-1.5",
-				"google/gemini-flash-1.5-8b",
-			])
-
-			const modelsSupportingComputerUse = Object.entries(models)
-				.filter(([_, model]) => model.supportsComputerUse)
-				.map(([id, _]) => id)
-				.sort()
-
-			expect(modelsSupportingComputerUse).toEqual([
+			expect(
+				Object.entries(models)
+					.filter(([_, model]) => model.supportsComputerUse)
+					.map(([id, _]) => id)
+					.sort(),
+			).toEqual([
 				"anthropic/claude-3.5-sonnet",
 				"anthropic/claude-3.5-sonnet:beta",
 				"anthropic/claude-3.7-sonnet",

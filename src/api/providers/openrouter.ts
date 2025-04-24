@@ -10,6 +10,7 @@ import { convertToR1Format } from "../transform/r1-format"
 import { DEFAULT_HEADERS, DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
 import { getModelParams, SingleCompletionHandler } from ".."
 import { BaseProvider } from "./base-provider"
+import { modelsSupportingPromptCache } from "./fetchers/openrouter"
 
 const OPENROUTER_DEFAULT_PROVIDER_NAME = "[default]"
 
@@ -76,8 +77,8 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		// Prompt caching: https://openrouter.ai/docs/prompt-caching
 		// Now with Gemini support: https://openrouter.ai/docs/features/prompt-caching
 		// Note that we don't check the `ModelInfo` object because it is cached
-		// in the settings for OpenRouter.
-		if (this.isPromptCacheSupported({ id: modelId, ...info })) {
+		// in the settings for OpenRouter and the value could be stale.
+		if (modelsSupportingPromptCache.has(modelId)) {
 			openAiMessages[0] = {
 				role: "system",
 				// @ts-ignore-next-line
@@ -181,7 +182,6 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 
 		let id = modelId ?? openRouterDefaultModelId
 		const info = modelInfo ?? openRouterDefaultModelInfo
-		const supportsPromptCache = modelInfo?.supportsPromptCache
 		const isDeepSeekR1 = id.startsWith("deepseek/deepseek-r1") || modelId === "perplexity/sonar-reasoning"
 		const defaultTemperature = isDeepSeekR1 ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0
 		const topP = isDeepSeekR1 ? 0.95 : undefined
@@ -190,7 +190,6 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			id,
 			info,
 			...getModelParams({ options: this.options, model: info, defaultTemperature }),
-			supportsPromptCache,
 			topP,
 		}
 	}
@@ -216,18 +215,5 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 
 		const completion = response as OpenAI.Chat.ChatCompletion
 		return completion.choices[0]?.message?.content || ""
-	}
-
-	private isPromptCacheSupported(model: ModelInfo & { id: string }) {
-		if (!model.supportsPromptCache) {
-			return false
-		}
-
-		return (
-			model.id.startsWith("anthropic/claude-3.7-sonnet") ||
-			model.id.startsWith("anthropic/claude-3.5-sonnet") ||
-			model.id.startsWith("anthropic/claude-3-opus") ||
-			model.id.startsWith("anthropic/claude-3-haiku")
-		)
 	}
 }
