@@ -37,6 +37,7 @@ type ProviderSettings = {
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
 				supportsPromptCache: boolean
+				isPromptCacheOptional?: boolean | undefined
 				inputPrice?: number | undefined
 				outputPrice?: number | undefined
 				cacheWritesPrice?: number | undefined
@@ -47,6 +48,15 @@ type ProviderSettings = {
 				minTokensPerCachePoint?: number | undefined
 				maxCachePoints?: number | undefined
 				cachableFields?: string[] | undefined
+				tiers?:
+					| {
+							contextWindow: number
+							inputPrice?: number | undefined
+							outputPrice?: number | undefined
+							cacheWritesPrice?: number | undefined
+							cacheReadsPrice?: number | undefined
+					  }[]
+					| undefined
 		  } | null)
 		| undefined
 	glamaApiKey?: string | undefined
@@ -60,6 +70,7 @@ type ProviderSettings = {
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
 				supportsPromptCache: boolean
+				isPromptCacheOptional?: boolean | undefined
 				inputPrice?: number | undefined
 				outputPrice?: number | undefined
 				cacheWritesPrice?: number | undefined
@@ -70,6 +81,15 @@ type ProviderSettings = {
 				minTokensPerCachePoint?: number | undefined
 				maxCachePoints?: number | undefined
 				cachableFields?: string[] | undefined
+				tiers?:
+					| {
+							contextWindow: number
+							inputPrice?: number | undefined
+							outputPrice?: number | undefined
+							cacheWritesPrice?: number | undefined
+							cacheReadsPrice?: number | undefined
+					  }[]
+					| undefined
 		  } | null)
 		| undefined
 	openRouterBaseUrl?: string | undefined
@@ -103,6 +123,7 @@ type ProviderSettings = {
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
 				supportsPromptCache: boolean
+				isPromptCacheOptional?: boolean | undefined
 				inputPrice?: number | undefined
 				outputPrice?: number | undefined
 				cacheWritesPrice?: number | undefined
@@ -113,6 +134,15 @@ type ProviderSettings = {
 				minTokensPerCachePoint?: number | undefined
 				maxCachePoints?: number | undefined
 				cachableFields?: string[] | undefined
+				tiers?:
+					| {
+							contextWindow: number
+							inputPrice?: number | undefined
+							outputPrice?: number | undefined
+							cacheWritesPrice?: number | undefined
+							cacheReadsPrice?: number | undefined
+					  }[]
+					| undefined
 		  } | null)
 		| undefined
 	openAiUseAzure?: boolean | undefined
@@ -149,6 +179,7 @@ type ProviderSettings = {
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
 				supportsPromptCache: boolean
+				isPromptCacheOptional?: boolean | undefined
 				inputPrice?: number | undefined
 				outputPrice?: number | undefined
 				cacheWritesPrice?: number | undefined
@@ -159,6 +190,15 @@ type ProviderSettings = {
 				minTokensPerCachePoint?: number | undefined
 				maxCachePoints?: number | undefined
 				cachableFields?: string[] | undefined
+				tiers?:
+					| {
+							contextWindow: number
+							inputPrice?: number | undefined
+							outputPrice?: number | undefined
+							cacheWritesPrice?: number | undefined
+							cacheReadsPrice?: number | undefined
+					  }[]
+					| undefined
 		  } | null)
 		| undefined
 	requestyApiKey?: string | undefined
@@ -171,6 +211,7 @@ type ProviderSettings = {
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
 				supportsPromptCache: boolean
+				isPromptCacheOptional?: boolean | undefined
 				inputPrice?: number | undefined
 				outputPrice?: number | undefined
 				cacheWritesPrice?: number | undefined
@@ -181,17 +222,27 @@ type ProviderSettings = {
 				minTokensPerCachePoint?: number | undefined
 				maxCachePoints?: number | undefined
 				cachableFields?: string[] | undefined
+				tiers?:
+					| {
+							contextWindow: number
+							inputPrice?: number | undefined
+							outputPrice?: number | undefined
+							cacheWritesPrice?: number | undefined
+							cacheReadsPrice?: number | undefined
+					  }[]
+					| undefined
 		  } | null)
 		| undefined
 	xaiApiKey?: string | undefined
 	modelMaxTokens?: number | undefined
 	modelMaxThinkingTokens?: number | undefined
 	includeMaxTokens?: boolean | undefined
-	modelTemperature?: (number | null) | undefined
 	reasoningEffort?: ("low" | "medium" | "high") | undefined
-	rateLimitSeconds?: number | undefined
+	promptCachingEnabled?: boolean | undefined
 	diffEnabled?: boolean | undefined
 	fuzzyMatchThreshold?: number | undefined
+	modelTemperature?: (number | null) | undefined
+	rateLimitSeconds?: number | undefined
 	fakeAi?: unknown | undefined
 }
 
@@ -286,6 +337,7 @@ type GlobalSettings = {
 	terminalZshOhMy?: boolean | undefined
 	terminalZshP10k?: boolean | undefined
 	terminalZdotdir?: boolean | undefined
+	terminalCompressProgressBar?: boolean | undefined
 	rateLimitSeconds?: number | undefined
 	diffEnabled?: boolean | undefined
 	fuzzyMatchThreshold?: number | undefined
@@ -308,6 +360,7 @@ type GlobalSettings = {
 				| "ko"
 				| "pl"
 				| "pt-BR"
+				| "ru"
 				| "tr"
 				| "vi"
 				| "zh-CN"
