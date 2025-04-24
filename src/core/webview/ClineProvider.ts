@@ -79,7 +79,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
-	public readonly latestAnnouncementId = "apr-18-2025-3-13" // Update for v3.13.0 announcement
+	public readonly latestAnnouncementId = "apr-23-2025-3-14" // Update for v3.14.0 announcement
 	public readonly contextProxy: ContextProxy
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
@@ -622,6 +622,13 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			"codicon.css",
 		])
 
+		const materialIconsUri = getUri(webview, this.contextProxy.extensionUri, [
+			"node_modules",
+			"vscode-material-icons",
+			"generated",
+			"icons",
+		])
+
 		const imagesUri = getUri(webview, this.contextProxy.extensionUri, ["assets", "images"])
 
 		const file = "src/index.tsx"
@@ -656,7 +663,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					<link rel="stylesheet" type="text/css" href="${stylesUri}">
 					<link href="${codiconsUri}" rel="stylesheet" />
 					<script nonce="${nonce}">
-						window.IMAGES_BASE_URI = "${imagesUri}"					
+						window.IMAGES_BASE_URI = "${imagesUri}"
+						window.MATERIAL_ICONS_BASE_URI = "${materialIconsUri}"
 					</script>
 					<title>Roo Code</title>
 				</head>
@@ -706,6 +714,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			"codicon.css",
 		])
 
+		// The material icons from the React build output
+		const materialIconsUri = getUri(webview, this.contextProxy.extensionUri, [
+			"node_modules",
+			"vscode-material-icons",
+			"generated",
+			"icons",
+		])
+
 		const imagesUri = getUri(webview, this.contextProxy.extensionUri, ["assets", "images"])
 
 		// const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "assets", "main.js"))
@@ -742,6 +758,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			<link href="${codiconsUri}" rel="stylesheet" />
 			<script nonce="${nonce}">
 				window.IMAGES_BASE_URI = "${imagesUri}"
+				window.MATERIAL_ICONS_BASE_URI = "${materialIconsUri}"
 			</script>
             <title>Roo Code</title>
           </head>
@@ -1226,6 +1243,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			showRooIgnoredFiles,
 			language,
 			maxReadFileLine,
+			terminalCompressProgressBar,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
@@ -1305,10 +1323,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			telemetryKey,
 			machineId,
 			showRooIgnoredFiles: showRooIgnoredFiles ?? true,
-			language,
+			language: language ?? formatLanguage(vscode.env.language),
 			renderContext: this.renderContext,
 			maxReadFileLine: maxReadFileLine ?? 500,
 			settingsImportedAt: this.settingsImportedAt,
+			terminalCompressProgressBar: terminalCompressProgressBar ?? true,
 			hasSystemPromptOverride,
 		}
 	}
@@ -1374,6 +1393,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			terminalZshOhMy: stateValues.terminalZshOhMy ?? false,
 			terminalZshP10k: stateValues.terminalZshP10k ?? false,
 			terminalZdotdir: stateValues.terminalZdotdir ?? false,
+			terminalCompressProgressBar: stateValues.terminalCompressProgressBar ?? true,
 			mode: stateValues.mode ?? defaultModeSlug,
 			language: stateValues.language ?? formatLanguage(vscode.env.language),
 			mcpEnabled: stateValues.mcpEnabled ?? true,
