@@ -18,6 +18,7 @@ export class DiffViewProvider {
 	private createdDirs: string[] = []
 	private documentWasOpen = false
 	private originalViewColumn?: vscode.ViewColumn // Store the original view column
+	private userFocusedEditorInfo?: { uri: vscode.Uri; viewColumn: vscode.ViewColumn } // Store user's focus before diff
 	private relPath?: string
 	private newContent?: string
 	private activeDiffEditor?: vscode.TextEditor
@@ -25,7 +26,6 @@ export class DiffViewProvider {
 	private activeLineController?: DecorationController
 	private streamedLines: string[] = []
 	private preDiagnostics: [vscode.Uri, vscode.Diagnostic[]][] = []
-
 	constructor(private cwd: string) {}
 
 	async open(relPath: string): Promise<void> {
@@ -83,6 +83,20 @@ export class DiffViewProvider {
 				break // Found the relevant tab, no need to check others
 			}
 		}
+
+		// Store the currently focused editor before opening the diff
+		const activeEditor = vscode.window.activeTextEditor
+		if (activeEditor && activeEditor.viewColumn !== undefined) {
+			// Check if viewColumn is defined
+			this.userFocusedEditorInfo = {
+				uri: activeEditor.document.uri,
+				viewColumn: activeEditor.viewColumn, // Now guaranteed to be defined
+			}
+		} else {
+			// If no active editor or viewColumn is undefined, reset the info
+			this.userFocusedEditorInfo = undefined
+		}
+
 		this.activeDiffEditor = await this.openDiffEditor()
 		this.fadedOverlayController = new DecorationController("fadedOverlay", this.activeDiffEditor)
 		this.activeLineController = new DecorationController("activeLine", this.activeDiffEditor)
@@ -259,7 +273,6 @@ export class DiffViewProvider {
 
 			// If the document was originally open, ensure it's focused.
 			// The revert logic already applied the original content and saved.
-			// If the document was originally open, ensure it's focused.
 			await this._focusOriginalDocument(absolutePath, this.originalViewColumn)
 		}
 
@@ -308,9 +321,16 @@ export class DiffViewProvider {
 			const disposable = vscode.window.onDidChangeActiveTextEditor((editor) => {
 				if (editor && arePathsEqual(editor.document.uri.fsPath, uri.fsPath)) {
 					disposable.dispose()
+					// Diff editor is now active, resolve the promise
 					resolve(editor)
 				}
 			})
+			const options: vscode.TextDocumentShowOptions = {
+				// preserveFocus: true, // Removed to prevent focus issues
+			}
+			if (this.originalViewColumn !== undefined) {
+				options.viewColumn = this.originalViewColumn
+			}
 			vscode.commands.executeCommand(
 				"vscode.diff",
 				vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${fileName}`).with({
@@ -318,6 +338,7 @@ export class DiffViewProvider {
 				}),
 				uri,
 				`${fileName}: ${fileExists ? "Original ↔ Roo's Changes" : "New File"} (Editable)`,
+				options, // Add options here
 			)
 			// This may happen on very slow machines ie project idx
 			setTimeout(() => {
@@ -371,24 +392,74 @@ export class DiffViewProvider {
 
 	private async _focusOriginalDocument(
 		absolutePath: string,
-		viewColumn: vscode.ViewColumn | undefined,
+		viewColumn: vscode.ViewColumn | undefined, // Note: viewColumn here is the original view column of the *modified* file's tab, if it was open
 	): Promise<void> {
-		if (this.documentWasOpen && viewColumn) {
-			// Find the editor for the original document and reveal it
+		let focusRestoredOrHandled = false
+
+		// Priority 1: Try to restore focus to the editor the user had focused *before* the diff started
+		if (this.userFocusedEditorInfo) {
+			try {
+				await vscode.window.showTextDocument(this.userFocusedEditorInfo.uri, {
+					viewColumn: this.userFocusedEditorInfo.viewColumn,
+					preserveFocus: false, // Force focus back
+				})
+				console.log("Focus restored to originally focused editor:", this.userFocusedEditorInfo.uri.fsPath)
+				focusRestoredOrHandled = true // Mark as handled
+			} catch (error) {
+				console.warn("Failed to restore focus to originally focused editor, proceeding with fallbacks:", error)
+				// Focus restoration failed, fallbacks might be needed below
+			}
+		} else {
+			// If no editor was focused initially, we still might need to handle new files
+			console.log("No initial editor focus detected, checking for new file case.")
+			// Let the new file logic below handle it.
+		}
+
+		// Handle newly created files *regardless* of initial focus state or restoration success
+		if (!this.documentWasOpen) {
+			try {
+				await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
+					preview: false, // Ensure it's not a preview tab
+					viewColumn: vscode.ViewColumn.Active, // Open in the active column
+					preserveFocus: false, // Force focus
+				})
+				console.log("Opened and focused newly created file:", absolutePath)
+				focusRestoredOrHandled = true // Mark as handled
+			} catch (error) {
+				console.error("Failed to show newly created document:", error)
+				// Even if it fails, we consider the attempt 'handled' for new files.
+				focusRestoredOrHandled = true
+			}
+		}
+
+		// Fallback logic for *existing* documents (only runs if focus restoration failed AND it wasn't a new file)
+		if (!focusRestoredOrHandled && this.documentWasOpen && viewColumn) {
+			console.log("Executing fallback logic for existing document as primary focus restore failed.")
+			// Fallback 1: Try to focus the editor tab corresponding to the *modified* file
 			const originalEditor = vscode.window.visibleTextEditors.find(
 				(editor) => arePathsEqual(editor.document.uri.fsPath, absolutePath) && editor.viewColumn === viewColumn,
 			)
 			if (originalEditor) {
-				// Reveal a range (e.g., the start) to ensure focus
 				const position = new vscode.Position(0, 0)
 				originalEditor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.AtTop)
+				console.log("Focus set to modified file's original editor (fallback 1):", absolutePath)
 			} else {
-				// Fallback if editor not found
-				await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
-					preview: false,
-					viewColumn: viewColumn,
-				})
+				// Fallback 2: Open the modified file if its editor wasn't found
+				try {
+					await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
+						preview: false,
+						viewColumn: viewColumn,
+						preserveFocus: false, // Force focus
+					})
+					console.log("Opened modified file's editor (fallback 2):", absolutePath)
+				} catch (error) {
+					console.error("Failed to show modified document (fallback 2):", error)
+				}
 			}
+		} else if (!focusRestoredOrHandled) {
+			console.log(
+				"No specific focus action taken (focus restore might have succeeded, or it was a new file handled above, or fallbacks for existing file didn't apply).",
+			)
 		}
 	}
 
@@ -400,6 +471,7 @@ export class DiffViewProvider {
 		this.createdDirs = []
 		this.documentWasOpen = false
 		this.originalViewColumn = undefined // Reset stored view column
+		this.userFocusedEditorInfo = undefined // Reset stored user focus info
 		this.activeDiffEditor = undefined
 		this.fadedOverlayController = undefined
 		this.activeLineController = undefined
