@@ -119,7 +119,7 @@ export async function testParseSourceCodeDefinitions(
 }
 
 // Helper function to inspect tree structure
-export async function inspectTreeStructure(content: string, language: string = "typescript"): Promise<void> {
+export async function inspectTreeStructure(content: string, language: string = "typescript"): Promise<string> {
 	const TreeSitter = await initializeTreeSitter()
 	const parser = new TreeSitter()
 	const wasmPath = path.join(process.cwd(), `dist/tree-sitter-${language}.wasm`)
@@ -131,4 +131,5 @@ export async function inspectTreeStructure(content: string, language: string = "
 
 	// Print the tree structure
 	debugLog(`TREE STRUCTURE (${language}):\n${tree.rootNode.toString()}`)
+	return tree.rootNode.toString()
 }
