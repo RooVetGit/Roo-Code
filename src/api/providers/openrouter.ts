@@ -2,15 +2,19 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta"
 import OpenAI from "openai"
 
-import { ApiHandlerOptions, ModelInfo, openRouterDefaultModelId, openRouterDefaultModelInfo } from "../../shared/api"
+import {
+	ApiHandlerOptions,
+	openRouterDefaultModelId,
+	openRouterDefaultModelInfo,
+	PROMPT_CACHING_MODELS,
+} from "../../shared/api"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStreamChunk } from "../transform/stream"
 import { convertToR1Format } from "../transform/r1-format"
 
+import { getModelParams, SingleCompletionHandler } from "../index"
 import { DEFAULT_HEADERS, DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
-import { getModelParams, SingleCompletionHandler } from ".."
 import { BaseProvider } from "./base-provider"
-import { modelsSupportingPromptCache } from "./fetchers/openrouter"
 
 const OPENROUTER_DEFAULT_PROVIDER_NAME = "[default]"
 
@@ -78,7 +82,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		// Now with Gemini support: https://openrouter.ai/docs/features/prompt-caching
 		// Note that we don't check the `ModelInfo` object because it is cached
 		// in the settings for OpenRouter and the value could be stale.
-		if (modelsSupportingPromptCache.has(modelId)) {
+		if (PROMPT_CACHING_MODELS.has(modelId)) {
 			openAiMessages[0] = {
 				role: "system",
 				// @ts-ignore-next-line

@@ -110,26 +110,3 @@ export async function getOpenRouterModels(options?: ApiHandlerOptions) {
 
 	return models
 }
-
-export const modelsSupportingPromptCache = new Set([
-	"anthropic/claude-3-haiku",
-	"anthropic/claude-3-haiku:beta",
-	"anthropic/claude-3-opus",
-	"anthropic/claude-3-opus:beta",
-	"anthropic/claude-3-sonnet",
-	"anthropic/claude-3-sonnet:beta",
-	"anthropic/claude-3.5-haiku",
-	"anthropic/claude-3.5-haiku-20241022",
-	"anthropic/claude-3.5-haiku-20241022:beta",
-	"anthropic/claude-3.5-haiku:beta",
-	"anthropic/claude-3.5-sonnet",
-	"anthropic/claude-3.5-sonnet-20240620",
-	"anthropic/claude-3.5-sonnet-20240620:beta",
-	"anthropic/claude-3.5-sonnet:beta",
-	"anthropic/claude-3.7-sonnet",
-	"anthropic/claude-3.7-sonnet:beta",
-	"anthropic/claude-3.7-sonnet:thinking",
-	// "google/gemini-2.0-flash-001",
-	// "google/gemini-flash-1.5",
-	// "google/gemini-flash-1.5-8b",
-])

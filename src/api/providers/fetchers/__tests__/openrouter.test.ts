@@ -4,7 +4,9 @@ import path from "path"
 
 import { back as nockBack } from "nock"
 
-import { getOpenRouterModels, modelsSupportingPromptCache } from "../openrouter"
+import { PROMPT_CACHING_MODELS } from "../../../../shared/api"
+
+import { getOpenRouterModels } from "../openrouter"
 
 nockBack.fixtures = path.join(__dirname, "fixtures")
 nockBack.setMode("dryrun")
@@ -21,7 +23,7 @@ describe("OpenRouter API", () => {
 					.filter(([_, model]) => model.supportsPromptCache)
 					.map(([id, _]) => id)
 					.sort(),
-			).toEqual(Array.from(modelsSupportingPromptCache).sort())
+			).toEqual(Array.from(PROMPT_CACHING_MODELS).sort())
 
 			expect(
 				Object.entries(models)
