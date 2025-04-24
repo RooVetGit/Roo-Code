@@ -46,6 +46,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		const { id: model, thinkingConfig, maxOutputTokens, info } = this.getModel()
 
 		const contents = messages.map(convertAnthropicMessageToGemini)
+		// This is just an approximation for now; we can use tiktoken eventually.
 		const contentsLength = systemInstruction.length + getMessagesLength(contents)
 
 		let uncachedContent: Content[] | undefined = undefined
