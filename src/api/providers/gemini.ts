@@ -21,6 +21,8 @@ import { BaseProvider } from "./base-provider"
 
 const CACHE_TTL = 5
 
+const CONTEXT_CACHE_TOKEN_MINIMUM = 4096
+
 type CacheEntry = {
 	key: string
 	count: number
@@ -46,19 +48,25 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		const { id: model, thinkingConfig, maxOutputTokens, info } = this.getModel()
 
 		const contents = messages.map(convertAnthropicMessageToGemini)
-		// This is just an approximation for now; we can use tiktoken eventually.
 		const contentsLength = systemInstruction.length + getMessagesLength(contents)
 
 		let uncachedContent: Content[] | undefined = undefined
 		let cachedContent: string | undefined = undefined
 		let cacheWriteTokens: number | undefined = undefined
 
+		// The minimum input token count for context caching is 4,096.
+		// For a basic appoximation we assume 4 characters per token.
+		// We can use tiktoken eventually to get a more accurat token count.
+		// https://ai.google.dev/gemini-api/docs/caching?lang=node
+		// https://ai.google.dev/gemini-api/docs/tokens?lang=node
 		const isCacheAvailable =
-			info.supportsPromptCache && this.options.promptCachingEnabled && cacheKey && contentsLength > 16_384
+			info.supportsPromptCache &&
+			this.options.promptCachingEnabled &&
+			cacheKey &&
+			contentsLength > 4 * CONTEXT_CACHE_TOKEN_MINIMUM
 
 		console.log(`[GeminiHandler] isCacheAvailable=${isCacheAvailable}, contentsLength=${contentsLength}`)
 
-		// https://ai.google.dev/gemini-api/docs/caching?lang=node
 		if (isCacheAvailable) {
 			const cacheEntry = this.contentCaches.get<CacheEntry>(cacheKey)
 
