@@ -1,7 +1,4 @@
 import { ModelInfo, ProviderName, ProviderSettings } from "../schemas"
-import { REASONING_MODELS } from "../api/providers/constants"
-
-export { REASONING_MODELS }
 
 export type { ModelInfo, ProviderName as ApiProvider }
 
@@ -682,7 +679,8 @@ export const geminiModels = {
 		maxTokens: 65_535,
 		contextWindow: 1_048_576,
 		supportsImages: true,
-		supportsPromptCache: true,
+		supportsPromptCache: false,
+		isPromptCacheOptional: true,
 		inputPrice: 2.5, // This is the pricing for prompts above 200k tokens.
 		outputPrice: 15,
 		cacheReadsPrice: 0.625,
@@ -706,7 +704,8 @@ export const geminiModels = {
 		maxTokens: 8192,
 		contextWindow: 1_048_576,
 		supportsImages: true,
-		supportsPromptCache: true,
+		supportsPromptCache: false,
+		isPromptCacheOptional: true,
 		inputPrice: 0.1,
 		outputPrice: 0.4,
 		cacheReadsPrice: 0.025,
@@ -756,7 +755,8 @@ export const geminiModels = {
 		maxTokens: 8192,
 		contextWindow: 1_048_576,
 		supportsImages: true,
-		supportsPromptCache: true,
+		supportsPromptCache: false,
+		isPromptCacheOptional: true,
 		inputPrice: 0.15, // This is the pricing for prompts above 128k tokens.
 		outputPrice: 0.6,
 		cacheReadsPrice: 0.0375,
@@ -1396,3 +1396,32 @@ export const vscodeLlmModels = {
 		maxInputTokens: number
 	}
 >
+
+/**
+ * Constants
+ */
+
+export const REASONING_MODELS = new Set(["x-ai/grok-3-mini-beta", "grok-3-mini-beta", "grok-3-mini-fast-beta"])
+
+export const PROMPT_CACHING_MODELS = new Set([
+	"anthropic/claude-3-haiku",
+	"anthropic/claude-3-haiku:beta",
+	"anthropic/claude-3-opus",
+	"anthropic/claude-3-opus:beta",
+	"anthropic/claude-3-sonnet",
+	"anthropic/claude-3-sonnet:beta",
+	"anthropic/claude-3.5-haiku",
+	"anthropic/claude-3.5-haiku-20241022",
+	"anthropic/claude-3.5-haiku-20241022:beta",
+	"anthropic/claude-3.5-haiku:beta",
+	"anthropic/claude-3.5-sonnet",
+	"anthropic/claude-3.5-sonnet-20240620",
+	"anthropic/claude-3.5-sonnet-20240620:beta",
+	"anthropic/claude-3.5-sonnet:beta",
+	"anthropic/claude-3.7-sonnet",
+	"anthropic/claude-3.7-sonnet:beta",
+	"anthropic/claude-3.7-sonnet:thinking",
+	// "google/gemini-2.0-flash-001",
+	// "google/gemini-flash-1.5",
+	// "google/gemini-flash-1.5-8b",
+])
