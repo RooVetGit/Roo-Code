@@ -1,6 +1,6 @@
 {
-	"extension.displayName": "Roo Code",
-	"extension.description": "在您的编辑器中提供完整的 AI 代理开发团队。前身为 Roo Cline。",
+	"extension.displayName": "Roo Code (原名 Roo Cline)",
+	"extension.description": "在你的编辑器中提供完整的 AI 代理开发团队。",
 	"command.newTask.title": "新建任务",
 	"command.explainCode.title": "解释代码",
 	"command.fixCode.title": "修复代码",
@@ -14,6 +14,7 @@
 	"command.terminal.explainCommand.title": "解释此命令",
 	"command.terminal.fixCommandInCurrentTask.title": "修复此命令（当前任务）",
 	"command.terminal.explainCommandInCurrentTask.title": "解释此命令（当前任务）",
+	"command.acceptInput.title": "接受输入/建议",
 	"views.activitybar.title": "Roo Code",
 	"views.contextMenu.label": "Roo Code",
 	"views.terminalMenu.label": "Roo Code",

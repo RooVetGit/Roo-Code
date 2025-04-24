@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { Trans } from "react-i18next"
-import { getRequestyAuthUrl, getOpenRouterAuthUrl, getGlamaAuthUrl } from "../../oauth/urls"
+import { getRequestyAuthUrl, getOpenRouterAuthUrl, getGlamaAuthUrl } from "@src/oauth/urls"
 import { useDebounce, useEvent } from "react-use"
 import { LanguageModelChatSelector } from "vscode"
 import { Checkbox } from "vscrui"
@@ -11,53 +11,45 @@ import { ExternalLinkIcon } from "@radix-ui/react-icons"
 import {
 	ApiConfiguration,
 	ModelInfo,
-	anthropicDefaultModelId,
-	anthropicModels,
 	azureOpenAiDefaultApiVersion,
-	bedrockDefaultModelId,
-	bedrockModels,
-	deepSeekDefaultModelId,
-	deepSeekModels,
-	geminiDefaultModelId,
-	geminiModels,
 	glamaDefaultModelId,
 	glamaDefaultModelInfo,
 	mistralDefaultModelId,
-	mistralModels,
 	openAiModelInfoSaneDefaults,
-	openAiNativeDefaultModelId,
-	openAiNativeModels,
 	openRouterDefaultModelId,
 	openRouterDefaultModelInfo,
-	vertexDefaultModelId,
-	vertexModels,
 	unboundDefaultModelId,
 	unboundDefaultModelInfo,
 	requestyDefaultModelId,
 	requestyDefaultModelInfo,
 	ApiProvider,
-} from "../../../../src/shared/api"
-import { ExtensionMessage } from "../../../../src/shared/ExtensionMessage"
+} from "@roo/shared/api"
+import { ExtensionMessage } from "@roo/shared/ExtensionMessage"
+import { AWS_REGIONS } from "@roo/shared/aws_regions"
 
-import { vscode } from "@/utils/vscode"
-import { validateApiConfiguration, validateModelId, validateBedrockArn } from "@/utils/validate"
+import { vscode } from "@src/utils/vscode"
+import { validateApiConfiguration, validateModelId, validateBedrockArn } from "@src/utils/validate"
+import { normalizeApiConfiguration } from "@src/utils/normalizeApiConfiguration"
 import {
 	useOpenRouterModelProviders,
 	OPENROUTER_DEFAULT_PROVIDER_NAME,
-} from "@/components/ui/hooks/useOpenRouterModelProviders"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator, Button } from "@/components/ui"
-import { MODELS_BY_PROVIDER, PROVIDERS, VERTEX_REGIONS } from "./constants"
-import { AWS_REGIONS } from "../../../../src/shared/aws_regions"
+} from "@src/components/ui/hooks/useOpenRouterModelProviders"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Button } from "@src/components/ui"
+
 import { VSCodeButtonLink } from "../common/VSCodeButtonLink"
+
+import { MODELS_BY_PROVIDER, PROVIDERS, VERTEX_REGIONS, REASONING_MODELS } from "./constants"
 import { ModelInfoView } from "./ModelInfoView"
 import { ModelPicker } from "./ModelPicker"
 import { TemperatureControl } from "./TemperatureControl"
 import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
+import { DiffSettingsControl } from "./DiffSettingsControl"
 import { ApiErrorMessage } from "./ApiErrorMessage"
 import { ThinkingBudget } from "./ThinkingBudget"
 import { R1FormatSetting } from "./R1FormatSetting"
 import { OpenRouterBalanceDisplay } from "./OpenRouterBalanceDisplay"
 import { RequestyBalanceDisplay } from "./RequestyBalanceDisplay"
+import { ReasoningEffort } from "./ReasoningEffort"
 
 interface ApiOptionsProps {
 	uriScheme: string | undefined
@@ -128,6 +120,13 @@ const ApiOptions = ({
 		() => normalizeApiConfiguration(apiConfiguration),
 		[apiConfiguration],
 	)
+
+	// Update apiConfiguration.aiModelId whenever selectedModelId changes.
+	useEffect(() => {
+		if (selectedModelId) {
+			setApiConfigurationField("apiModelId", selectedModelId)
+		}
+	}, [selectedModelId, setApiConfigurationField])
 
 	// Debounced refresh model updates, only executed 250ms after the user
 	// stops typing.
@@ -268,6 +267,7 @@ const ApiOptions = ({
 	// Helper function to get the documentation URL and name for the currently selected provider
 	const getSelectedProviderDocUrl = (): { url: string; name: string } | undefined => {
 		const displayName = getProviderDisplayName(selectedProvider)
+
 		if (!displayName) {
 			return undefined
 		}
@@ -280,6 +280,49 @@ const ApiOptions = ({
 			name: displayName,
 		}
 	}
+
+	const onApiProviderChange = useCallback(
+		(value: ApiProvider) => {
+			// It would be much easier to have a single attribute that stores
+			// the modelId, but we have a separate attribute for each of
+			// OpenRouter, Glama, Unbound, and Requesty.
+			// If you switch to one of these providers and the corresponding
+			// modelId is not set then you immediately end up in an error state.
+			// To address that we set the modelId to the default value for th
+			// provider if it's not already set.
+			switch (value) {
+				case "openrouter":
+					if (!apiConfiguration.openRouterModelId) {
+						setApiConfigurationField("openRouterModelId", openRouterDefaultModelId)
+					}
+					break
+				case "glama":
+					if (!apiConfiguration.glamaModelId) {
+						setApiConfigurationField("glamaModelId", glamaDefaultModelId)
+					}
+					break
+				case "unbound":
+					if (!apiConfiguration.unboundModelId) {
+						setApiConfigurationField("unboundModelId", unboundDefaultModelId)
+					}
+					break
+				case "requesty":
+					if (!apiConfiguration.requestyModelId) {
+						setApiConfigurationField("requestyModelId", requestyDefaultModelId)
+					}
+					break
+			}
+
+			setApiConfigurationField("apiProvider", value)
+		},
+		[
+			setApiConfigurationField,
+			apiConfiguration.openRouterModelId,
+			apiConfiguration.glamaModelId,
+			apiConfiguration.unboundModelId,
+			apiConfiguration.requestyModelId,
+		],
+	)
 
 	return (
 		<div className="flex flex-col gap-3">
@@ -299,16 +342,12 @@ const ApiOptions = ({
 						</div>
 					)}
 				</div>
-				<Select
-					value={selectedProvider}
-					onValueChange={(value) => setApiConfigurationField("apiProvider", value as ApiProvider)}>
+				<Select value={selectedProvider} onValueChange={(value) => onApiProviderChange(value as ApiProvider)}>
 					<SelectTrigger className="w-full">
 						<SelectValue placeholder={t("settings:common.select")} />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="openrouter">OpenRouter</SelectItem>
-						<SelectSeparator />
-						{PROVIDERS.filter((p) => p.value !== "openrouter").map(({ value, label }) => (
+						{PROVIDERS.map(({ value, label }) => (
 							<SelectItem key={value} value={value}>
 								{label}
 							</SelectItem>
@@ -1435,6 +1474,27 @@ const ApiOptions = ({
 				</>
 			)}
 
+			{selectedProvider === "xai" && (
+				<>
+					<VSCodeTextField
+						value={apiConfiguration?.xaiApiKey || ""}
+						type="password"
+						onInput={handleInputChange("xaiApiKey")}
+						placeholder={t("settings:placeholders.apiKey")}
+						className="w-full">
+						<label className="block font-medium mb-1">{t("settings:providers.xaiApiKey")}</label>
+					</VSCodeTextField>
+					<div className="text-sm text-vscode-descriptionForeground -mt-2">
+						{t("settings:providers.apiKeyStorageNotice")}
+					</div>
+					{!apiConfiguration?.xaiApiKey && (
+						<VSCodeButtonLink href="https://api.x.ai/docs" appearance="secondary">
+							{t("settings:providers.getXaiApiKey")}
+						</VSCodeButtonLink>
+					)}
+				</>
+			)}
+
 			{selectedProvider === "unbound" && (
 				<>
 					<VSCodeTextField
@@ -1657,12 +1717,15 @@ const ApiOptions = ({
 								})()}
 						</>
 					)}
+
 					<ModelInfoView
+						apiProvider={selectedProvider}
 						selectedModelId={selectedModelId}
 						modelInfo={selectedModelInfo}
 						isDescriptionExpanded={isDescriptionExpanded}
 						setIsDescriptionExpanded={setIsDescriptionExpanded}
 					/>
+
 					<ThinkingBudget
 						key={`${selectedProvider}-${selectedModelId}`}
 						apiConfiguration={apiConfiguration}
@@ -1672,8 +1735,20 @@ const ApiOptions = ({
 				</>
 			)}
 
+			{REASONING_MODELS.has(selectedModelId) && (
+				<ReasoningEffort
+					apiConfiguration={apiConfiguration}
+					setApiConfigurationField={setApiConfigurationField}
+				/>
+			)}
+
 			{!fromWelcomeView && (
 				<>
+					<DiffSettingsControl
+						diffEnabled={apiConfiguration.diffEnabled}
+						fuzzyMatchThreshold={apiConfiguration.fuzzyMatchThreshold}
+						onChange={(field, value) => setApiConfigurationField(field, value)}
+					/>
 					<TemperatureControl
 						value={apiConfiguration?.modelTemperature}
 						onChange={handleInputChange("modelTemperature", noTransform)}
@@ -1687,111 +1762,6 @@ const ApiOptions = ({
 			)}
 		</div>
 	)
-}
-
-export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
-	const provider = apiConfiguration?.apiProvider || "anthropic"
-	const modelId = apiConfiguration?.apiModelId
-
-	const getProviderData = (models: Record<string, ModelInfo>, defaultId: string) => {
-		let selectedModelId: string
-		let selectedModelInfo: ModelInfo
-
-		if (modelId && modelId in models) {
-			selectedModelId = modelId
-			selectedModelInfo = models[modelId]
-		} else {
-			selectedModelId = defaultId
-			selectedModelInfo = models[defaultId]
-		}
-
-		return { selectedProvider: provider, selectedModelId, selectedModelInfo }
-	}
-
-	switch (provider) {
-		case "anthropic":
-			return getProviderData(anthropicModels, anthropicDefaultModelId)
-		case "bedrock":
-			// Special case for custom ARN
-			if (modelId === "custom-arn") {
-				return {
-					selectedProvider: provider,
-					selectedModelId: "custom-arn",
-					selectedModelInfo: {
-						maxTokens: 5000,
-						contextWindow: 128_000,
-						supportsPromptCache: false,
-						supportsImages: true,
-					},
-				}
-			}
-			return getProviderData(bedrockModels, bedrockDefaultModelId)
-		case "vertex":
-			return getProviderData(vertexModels, vertexDefaultModelId)
-		case "gemini":
-			return getProviderData(geminiModels, geminiDefaultModelId)
-		case "deepseek":
-			return getProviderData(deepSeekModels, deepSeekDefaultModelId)
-		case "openai-native":
-			return getProviderData(openAiNativeModels, openAiNativeDefaultModelId)
-		case "mistral":
-			return getProviderData(mistralModels, mistralDefaultModelId)
-		case "openrouter":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.openRouterModelId || openRouterDefaultModelId,
-				selectedModelInfo: apiConfiguration?.openRouterModelInfo || openRouterDefaultModelInfo,
-			}
-		case "glama":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.glamaModelId || glamaDefaultModelId,
-				selectedModelInfo: apiConfiguration?.glamaModelInfo || glamaDefaultModelInfo,
-			}
-		case "unbound":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.unboundModelId || unboundDefaultModelId,
-				selectedModelInfo: apiConfiguration?.unboundModelInfo || unboundDefaultModelInfo,
-			}
-		case "requesty":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.requestyModelId || requestyDefaultModelId,
-				selectedModelInfo: apiConfiguration?.requestyModelInfo || requestyDefaultModelInfo,
-			}
-		case "openai":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.openAiModelId || "",
-				selectedModelInfo: apiConfiguration?.openAiCustomModelInfo || openAiModelInfoSaneDefaults,
-			}
-		case "ollama":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.ollamaModelId || "",
-				selectedModelInfo: openAiModelInfoSaneDefaults,
-			}
-		case "lmstudio":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.lmStudioModelId || "",
-				selectedModelInfo: openAiModelInfoSaneDefaults,
-			}
-		case "vscode-lm":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.vsCodeLmModelSelector
-					? `${apiConfiguration.vsCodeLmModelSelector.vendor}/${apiConfiguration.vsCodeLmModelSelector.family}`
-					: "",
-				selectedModelInfo: {
-					...openAiModelInfoSaneDefaults,
-					supportsImages: false, // VSCode LM API currently doesn't support images.
-				},
-			}
-		default:
-			return getProviderData(anthropicModels, anthropicDefaultModelId)
-	}
 }
 
 export default memo(ApiOptions)

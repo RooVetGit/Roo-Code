@@ -1,6 +1,6 @@
 {
-	"extension.displayName": "Roo Code",
-	"extension.description": "A whole dev team of AI agents in your editor. Previously Roo Cline.",
+	"extension.displayName": "Roo Code (prev. Roo Cline)",
+	"extension.description": "A whole dev team of AI agents in your editor.",
 	"views.contextMenu.label": "Roo Code",
 	"views.terminalMenu.label": "Roo Code",
 	"views.activitybar.title": "Roo Code",
@@ -23,6 +23,7 @@
 	"command.terminal.explainCommand.title": "Explain This Command",
 	"command.terminal.fixCommandInCurrentTask.title": "Fix This Command (Current Task)",
 	"command.terminal.explainCommandInCurrentTask.title": "Explain This Command (Current Task)",
+	"command.acceptInput.title": "Accept Input/Suggestion",
 	"configuration.title": "Roo Code",
 	"commands.allowedCommands.description": "Commands that can be auto-executed when 'Always approve execute operations' is enabled",
 	"settings.vsCodeLmModelSelector.description": "Settings for VSCode Language Model API",

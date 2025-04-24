@@ -49,6 +49,7 @@ import { ACTION_NAMES } from "../CodeActionProvider"
 import { Cline, ClineOptions } from "../Cline"
 import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
+import { getSystemPromptFilePath } from "../prompts/sections/custom-system-prompt"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { getWorkspacePath } from "../../utils/path"
 import { webviewMessageHandler } from "./webviewMessageHandler"
@@ -78,7 +79,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
-	public readonly latestAnnouncementId = "apr-04-2025-boomerang" // update for Boomerang Tasks announcement
+	public readonly latestAnnouncementId = "apr-18-2025-3-13" // Update for v3.13.0 announcement
 	public readonly contextProxy: ContextProxy
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
@@ -269,6 +270,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		promptType: keyof typeof ACTION_NAMES,
 		params: Record<string, string | any[]>,
 	): Promise<void> {
+		// Capture telemetry for code action usage
+		telemetryService.captureCodeActionUsed(promptType)
+
 		const visibleProvider = await ClineProvider.getInstance()
 
 		if (!visibleProvider) {
@@ -302,6 +306,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		promptType: "TERMINAL_ADD_TO_CONTEXT" | "TERMINAL_FIX" | "TERMINAL_EXPLAIN",
 		params: Record<string, string | any[]>,
 	): Promise<void> {
+		// Capture telemetry for terminal action usage
+		telemetryService.captureCodeActionUsed(promptType)
 		const visibleProvider = await ClineProvider.getInstance()
 		if (!visibleProvider) {
 			return
@@ -478,7 +484,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				| "customInstructions"
 				| "enableDiff"
 				| "enableCheckpoints"
-				| "checkpointStorage"
 				| "fuzzyMatchThreshold"
 				| "consecutiveMistakeLimit"
 				| "experiments"
@@ -490,7 +495,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			customModePrompts,
 			diffEnabled: enableDiff,
 			enableCheckpoints,
-			checkpointStorage,
 			fuzzyMatchThreshold,
 			mode,
 			customInstructions: globalInstructions,
@@ -506,7 +510,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			customInstructions: effectiveInstructions,
 			enableDiff,
 			enableCheckpoints,
-			checkpointStorage,
 			fuzzyMatchThreshold,
 			task,
 			images,
@@ -535,7 +538,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			customModePrompts,
 			diffEnabled: enableDiff,
 			enableCheckpoints,
-			checkpointStorage,
 			fuzzyMatchThreshold,
 			mode,
 			customInstructions: globalInstructions,
@@ -545,38 +547,12 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const modePrompt = customModePrompts?.[mode] as PromptComponent
 		const effectiveInstructions = [globalInstructions, modePrompt?.customInstructions].filter(Boolean).join("\n\n")
 
-		const taskId = historyItem.id
-		const globalStorageDir = this.contextProxy.globalStorageUri.fsPath
-		const workspaceDir = this.cwd
-
-		const checkpoints: Pick<ClineOptions, "enableCheckpoints" | "checkpointStorage"> = {
-			enableCheckpoints,
-			checkpointStorage,
-		}
-
-		if (enableCheckpoints) {
-			try {
-				checkpoints.checkpointStorage = await ShadowCheckpointService.getTaskStorage({
-					taskId,
-					globalStorageDir,
-					workspaceDir,
-				})
-
-				this.log(
-					`[ClineProvider#initClineWithHistoryItem] Using ${checkpoints.checkpointStorage} storage for ${taskId}`,
-				)
-			} catch (error) {
-				checkpoints.enableCheckpoints = false
-				this.log(`[ClineProvider#initClineWithHistoryItem] Error getting task storage: ${error.message}`)
-			}
-		}
-
 		const cline = new Cline({
 			provider: this,
 			apiConfiguration,
 			customInstructions: effectiveInstructions,
 			enableDiff,
-			...checkpoints,
+			enableCheckpoints,
 			fuzzyMatchThreshold,
 			historyItem,
 			experiments,
@@ -646,6 +622,13 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			"codicon.css",
 		])
 
+		const materialIconsUri = getUri(webview, this.contextProxy.extensionUri, [
+			"node_modules",
+			"vscode-material-icons",
+			"generated",
+			"icons",
+		])
+
 		const imagesUri = getUri(webview, this.contextProxy.extensionUri, ["assets", "images"])
 
 		const file = "src/index.tsx"
@@ -681,6 +664,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					<link href="${codiconsUri}" rel="stylesheet" />
 					<script nonce="${nonce}">
 						window.IMAGES_BASE_URI = "${imagesUri}"
+						window.MATERIAL_ICONS_BASE_URI = "${materialIconsUri}"
 					</script>
 					<title>Roo Code</title>
 				</head>
@@ -730,6 +714,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			"codicon.css",
 		])
 
+		// The material icons from the React build output
+		const materialIconsUri = getUri(webview, this.contextProxy.extensionUri, [
+			"node_modules",
+			"vscode-material-icons",
+			"generated",
+			"icons",
+		])
+
 		const imagesUri = getUri(webview, this.contextProxy.extensionUri, ["assets", "images"])
 
 		// const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "assets", "main.js"))
@@ -766,6 +758,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			<link href="${codiconsUri}" rel="stylesheet" />
 			<script nonce="${nonce}">
 				window.IMAGES_BASE_URI = "${imagesUri}"
+				window.MATERIAL_ICONS_BASE_URI = "${materialIconsUri}"
 			</script>
             <title>Roo Code</title>
           </head>
@@ -1186,6 +1179,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		this.postMessageToWebview({ type: "state", state })
 	}
 
+	/**
+	 * Checks if there is a file-based system prompt override for the given mode
+	 */
+	async hasFileBasedSystemPromptOverride(mode: Mode): Promise<boolean> {
+		const promptFilePath = getSystemPromptFilePath(this.cwd, mode)
+		return await fileExistsAtPath(promptFilePath)
+	}
+
 	async getStateToPostToWebview() {
 		const {
 			apiConfiguration,
@@ -1205,7 +1206,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			ttsSpeed,
 			diffEnabled,
 			enableCheckpoints,
-			checkpointStorage,
 			taskHistory,
 			soundVolume,
 			browserViewportSize,
@@ -1242,7 +1242,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			telemetrySetting,
 			showRooIgnoredFiles,
 			language,
-			showGreeting,
 			maxReadFileLine,
 			terminalCompressProgressBar,
 		} = await this.getState()
@@ -1251,6 +1250,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const machineId = vscode.env.machineId
 		const allowedCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
 		const cwd = this.cwd
+
+		// Check if there's a system prompt override for the current mode
+		const currentMode = mode ?? defaultModeSlug
+		const hasSystemPromptOverride = await this.hasFileBasedSystemPromptOverride(currentMode)
 
 		return {
 			version: this.context.extension?.packageJSON?.version ?? "",
@@ -1278,7 +1281,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			ttsSpeed: ttsSpeed ?? 1.0,
 			diffEnabled: diffEnabled ?? true,
 			enableCheckpoints: enableCheckpoints ?? true,
-			checkpointStorage: checkpointStorage ?? "task",
 			shouldShowAnnouncement:
 				telemetrySetting !== "unset" && lastShownAnnouncementId !== this.latestAnnouncementId,
 			allowedCommands,
@@ -1325,8 +1327,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			renderContext: this.renderContext,
 			maxReadFileLine: maxReadFileLine ?? 500,
 			settingsImportedAt: this.settingsImportedAt,
-			showGreeting: showGreeting ?? true, // Ensure showGreeting is included in the returned state
 			terminalCompressProgressBar: terminalCompressProgressBar ?? true,
+			hasSystemPromptOverride,
 		}
 	}
 
@@ -1357,6 +1359,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			apiConfiguration: providerSettings,
 			lastShownAnnouncementId: stateValues.lastShownAnnouncementId,
 			customInstructions: stateValues.customInstructions,
+			apiModelId: stateValues.apiModelId,
 			alwaysAllowReadOnly: stateValues.alwaysAllowReadOnly ?? false,
 			alwaysAllowReadOnlyOutsideWorkspace: stateValues.alwaysAllowReadOnlyOutsideWorkspace ?? false,
 			alwaysAllowWrite: stateValues.alwaysAllowWrite ?? false,
@@ -1373,7 +1376,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			ttsSpeed: stateValues.ttsSpeed ?? 1.0,
 			diffEnabled: stateValues.diffEnabled ?? true,
 			enableCheckpoints: stateValues.enableCheckpoints ?? true,
-			checkpointStorage: stateValues.checkpointStorage ?? "task",
 			soundVolume: stateValues.soundVolume,
 			browserViewportSize: stateValues.browserViewportSize ?? "900x600",
 			screenshotQuality: stateValues.screenshotQuality ?? 75,
@@ -1415,7 +1417,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 			maxReadFileLine: stateValues.maxReadFileLine ?? 500,
-			showGreeting: stateValues.showGreeting ?? true, // Ensure showGreeting is returned by getState
 		}
 	}
 

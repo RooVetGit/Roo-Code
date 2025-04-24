@@ -6,9 +6,10 @@ export const rooCodeDefaults: RooCodeSettings = {
 
 	// modelTemperature: null,
 	// reasoningEffort: "high",
+	rateLimitSeconds: 0,
 
 	pinnedApiConfigs: {},
-	lastShownAnnouncementId: "apr-04-2025-boomerang",
+	lastShownAnnouncementId: "apr-18-2025-3-13",
 
 	autoApprovalEnabled: true,
 	alwaysAllowReadOnly: true,
@@ -44,19 +45,17 @@ export const rooCodeDefaults: RooCodeSettings = {
 	maxReadFileLine: 500,
 
 	terminalOutputLineLimit: 500,
-	terminalShellIntegrationTimeout: 30_000,
-	// terminalCommandDelay: 0,
-	// terminalPowershellCounter: false,
-	// terminalZshClearEolMark: true,
-	// terminalZshOhMy: true,
-	// terminalZshP10k: false,
-	// terminalZdotdir: true,
+	terminalShellIntegrationTimeout: 30000,
+	terminalCommandDelay: 0,
+	terminalPowershellCounter: false,
+	terminalZshClearEolMark: true,
+	terminalZshOhMy: true,
+	terminalZshP10k: false,
+	terminalZdotdir: true,
 
-	diffEnabled: false,
+	diffEnabled: true,
 	fuzzyMatchThreshold: 1.0,
 	experiments: {
-		search_and_replace: false,
-		insert_content: false,
 		powerSteering: false,
 	},
 

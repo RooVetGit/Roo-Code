@@ -285,10 +285,6 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 
 			cline.on("taskModeSwitched", (taskId, mode) => this.emit(RooCodeEventName.TaskModeSwitched, taskId, mode))
 
-			cline.on("taskTokenUsageUpdated", (_, usage) =>
-				this.emit(RooCodeEventName.TaskTokenUsageUpdated, cline.taskId, usage),
-			)
-
 			cline.on("taskAskResponded", () => this.emit(RooCodeEventName.TaskAskResponded, cline.taskId))
 
 			cline.on("taskAborted", () => {
@@ -296,18 +292,26 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 				this.taskMap.delete(cline.taskId)
 			})
 
-			cline.on("taskCompleted", async (_, usage) => {
-				this.emit(RooCodeEventName.TaskCompleted, cline.taskId, usage)
+			cline.on("taskCompleted", async (_, tokenUsage, toolUsage) => {
+				this.emit(RooCodeEventName.TaskCompleted, cline.taskId, tokenUsage, toolUsage)
 				this.taskMap.delete(cline.taskId)
 
 				await this.fileLog(
-					`[${new Date().toISOString()}] taskCompleted -> ${cline.taskId} | ${JSON.stringify(usage, null, 2)}\n`,
+					`[${new Date().toISOString()}] taskCompleted -> ${cline.taskId} | ${JSON.stringify(tokenUsage, null, 2)} | ${JSON.stringify(toolUsage, null, 2)}\n`,
 				)
 			})
 
 			cline.on("taskSpawned", (childTaskId) => this.emit(RooCodeEventName.TaskSpawned, cline.taskId, childTaskId))
 			cline.on("taskPaused", () => this.emit(RooCodeEventName.TaskPaused, cline.taskId))
 			cline.on("taskUnpaused", () => this.emit(RooCodeEventName.TaskUnpaused, cline.taskId))
+
+			cline.on("taskTokenUsageUpdated", (_, usage) =>
+				this.emit(RooCodeEventName.TaskTokenUsageUpdated, cline.taskId, usage),
+			)
+
+			cline.on("taskToolFailed", (taskId, tool, error) =>
+				this.emit(RooCodeEventName.TaskToolFailed, taskId, tool, error),
+			)
 
 			this.emit(RooCodeEventName.TaskCreated, cline.taskId)
 		})

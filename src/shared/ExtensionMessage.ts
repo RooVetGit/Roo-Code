@@ -5,7 +5,6 @@ import {
 	ProviderSettings as ApiConfiguration,
 	HistoryItem,
 	ModeConfig,
-	CheckpointStorage,
 	TelemetrySetting,
 	ExperimentId,
 	ClineAsk,
@@ -69,6 +68,7 @@ export interface ExtensionMessage {
 		| "maxReadFileLine"
 		| "fileSearchResults"
 		| "toggleApiConfigPin"
+		| "acceptInput"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -142,8 +142,6 @@ export type ExtensionState = Pick<
 	| "remoteBrowserEnabled"
 	| "remoteBrowserHost"
 	// | "enableCheckpoints" // Optional in GlobalSettings, required here.
-	// | "checkpointStorage" // Optional in GlobalSettings, required here.
-	| "showGreeting"
 	| "ttsEnabled"
 	| "ttsSpeed"
 	| "soundEnabled"
@@ -188,7 +186,6 @@ export type ExtensionState = Pick<
 	requestDelaySeconds: number
 
 	enableCheckpoints: boolean
-	checkpointStorage: CheckpointStorage
 	maxOpenTabsContext: number // Maximum number of VSCode open tabs to include in context (0-500)
 	maxWorkspaceFiles: number // Maximum number of files to include in current working directory details (0-500)
 	showRooIgnoredFiles: boolean // Whether to show .rooignore'd files in listings
@@ -228,6 +225,8 @@ export interface ClineSayTool {
 		| "switchMode"
 		| "newTask"
 		| "finishTask"
+		| "searchAndReplace"
+		| "insertContent"
 	path?: string
 	diff?: string
 	content?: string
@@ -236,6 +235,13 @@ export interface ClineSayTool {
 	mode?: string
 	reason?: string
 	isOutsideWorkspace?: boolean
+	search?: string
+	replace?: string
+	useRegex?: boolean
+	ignoreCase?: boolean
+	startLine?: number
+	endLine?: number
+	lineNumber?: number
 }
 
 // Must keep in sync with system prompt.

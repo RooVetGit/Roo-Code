@@ -1,6 +1,6 @@
 {
-	"extension.displayName": "Roo Code",
-	"extension.description": "Ein komplettes KI-Agenten-Entwicklungsteam in Ihrem Editor. Früher bekannt als Roo Cline.",
+	"extension.displayName": "Roo Code (ehemals Roo Cline)",
+	"extension.description": "Ein komplettes KI-Agenten-Entwicklungsteam in deinem Editor.",
 	"command.newTask.title": "Neue Aufgabe",
 	"command.explainCode.title": "Code Erklären",
 	"command.fixCode.title": "Code Reparieren",
@@ -14,6 +14,7 @@
 	"command.terminal.explainCommand.title": "Diesen Befehl Erklären",
 	"command.terminal.fixCommandInCurrentTask.title": "Diesen Befehl Reparieren (Aktuelle Aufgabe)",
 	"command.terminal.explainCommandInCurrentTask.title": "Diesen Befehl Erklären (Aktuelle Aufgabe)",
+	"command.acceptInput.title": "Eingabe/Vorschlag Akzeptieren",
 	"views.activitybar.title": "Roo Code",
 	"views.contextMenu.label": "Roo Code",
 	"views.terminalMenu.label": "Roo Code",

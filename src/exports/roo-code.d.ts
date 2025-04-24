@@ -20,6 +20,7 @@ type ProviderSettings = {
 				| "requesty"
 				| "human-relay"
 				| "fake-ai"
+				| "xai"
 		  )
 		| undefined
 	apiModelId?: string | undefined
@@ -30,6 +31,7 @@ type ProviderSettings = {
 	glamaModelInfo?:
 		| ({
 				maxTokens?: (number | null) | undefined
+				maxThinkingTokens?: (number | null) | undefined
 				contextWindow: number
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
@@ -44,6 +46,15 @@ type ProviderSettings = {
 				minTokensPerCachePoint?: number | undefined
 				maxCachePoints?: number | undefined
 				cachableFields?: string[] | undefined
+				tiers?:
+					| {
+							contextWindow: number
+							inputPrice?: number | undefined
+							outputPrice?: number | undefined
+							cacheWritesPrice?: number | undefined
+							cacheReadsPrice?: number | undefined
+					  }[]
+					| undefined
 		  } | null)
 		| undefined
 	glamaApiKey?: string | undefined
@@ -52,6 +63,7 @@ type ProviderSettings = {
 	openRouterModelInfo?:
 		| ({
 				maxTokens?: (number | null) | undefined
+				maxThinkingTokens?: (number | null) | undefined
 				contextWindow: number
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
@@ -66,6 +78,15 @@ type ProviderSettings = {
 				minTokensPerCachePoint?: number | undefined
 				maxCachePoints?: number | undefined
 				cachableFields?: string[] | undefined
+				tiers?:
+					| {
+							contextWindow: number
+							inputPrice?: number | undefined
+							outputPrice?: number | undefined
+							cacheWritesPrice?: number | undefined
+							cacheReadsPrice?: number | undefined
+					  }[]
+					| undefined
 		  } | null)
 		| undefined
 	openRouterBaseUrl?: string | undefined
@@ -94,6 +115,7 @@ type ProviderSettings = {
 	openAiCustomModelInfo?:
 		| ({
 				maxTokens?: (number | null) | undefined
+				maxThinkingTokens?: (number | null) | undefined
 				contextWindow: number
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
@@ -108,6 +130,15 @@ type ProviderSettings = {
 				minTokensPerCachePoint?: number | undefined
 				maxCachePoints?: number | undefined
 				cachableFields?: string[] | undefined
+				tiers?:
+					| {
+							contextWindow: number
+							inputPrice?: number | undefined
+							outputPrice?: number | undefined
+							cacheWritesPrice?: number | undefined
+							cacheReadsPrice?: number | undefined
+					  }[]
+					| undefined
 		  } | null)
 		| undefined
 	openAiUseAzure?: boolean | undefined
@@ -139,6 +170,7 @@ type ProviderSettings = {
 	unboundModelInfo?:
 		| ({
 				maxTokens?: (number | null) | undefined
+				maxThinkingTokens?: (number | null) | undefined
 				contextWindow: number
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
@@ -153,6 +185,15 @@ type ProviderSettings = {
 				minTokensPerCachePoint?: number | undefined
 				maxCachePoints?: number | undefined
 				cachableFields?: string[] | undefined
+				tiers?:
+					| {
+							contextWindow: number
+							inputPrice?: number | undefined
+							outputPrice?: number | undefined
+							cacheWritesPrice?: number | undefined
+							cacheReadsPrice?: number | undefined
+					  }[]
+					| undefined
 		  } | null)
 		| undefined
 	requestyApiKey?: string | undefined
@@ -160,6 +201,7 @@ type ProviderSettings = {
 	requestyModelInfo?:
 		| ({
 				maxTokens?: (number | null) | undefined
+				maxThinkingTokens?: (number | null) | undefined
 				contextWindow: number
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
@@ -174,14 +216,26 @@ type ProviderSettings = {
 				minTokensPerCachePoint?: number | undefined
 				maxCachePoints?: number | undefined
 				cachableFields?: string[] | undefined
+				tiers?:
+					| {
+							contextWindow: number
+							inputPrice?: number | undefined
+							outputPrice?: number | undefined
+							cacheWritesPrice?: number | undefined
+							cacheReadsPrice?: number | undefined
+					  }[]
+					| undefined
 		  } | null)
 		| undefined
+	xaiApiKey?: string | undefined
 	modelMaxTokens?: number | undefined
 	modelMaxThinkingTokens?: number | undefined
 	includeMaxTokens?: boolean | undefined
 	modelTemperature?: (number | null) | undefined
 	reasoningEffort?: ("low" | "medium" | "high") | undefined
 	rateLimitSeconds?: number | undefined
+	diffEnabled?: boolean | undefined
+	fuzzyMatchThreshold?: number | undefined
 	fakeAi?: unknown | undefined
 }
 
@@ -210,6 +264,7 @@ type GlobalSettings = {
 							| "requesty"
 							| "human-relay"
 							| "fake-ai"
+							| "xai"
 					  )
 					| undefined
 		  }[]
@@ -257,8 +312,6 @@ type GlobalSettings = {
 	remoteBrowserHost?: string | undefined
 	cachedChromeHostUrl?: string | undefined
 	enableCheckpoints?: boolean | undefined
-	checkpointStorage?: ("task" | "workspace") | undefined
-	showGreeting?: boolean | undefined
 	ttsEnabled?: boolean | undefined
 	ttsSpeed?: number | undefined
 	soundEnabled?: boolean | undefined
@@ -281,8 +334,6 @@ type GlobalSettings = {
 	fuzzyMatchThreshold?: number | undefined
 	experiments?:
 		| {
-				search_and_replace: boolean
-				insert_content: boolean
 				powerSteering: boolean
 		  }
 		| undefined
@@ -518,6 +569,12 @@ type RooCodeEvents = {
 			totalCost: number
 			contextTokens: number
 		},
+		{
+			[x: string]: {
+				attempts: number
+				failures: number
+			}
+		},
 	]
 	taskTokenUsageUpdated: [
 		string,
@@ -529,6 +586,29 @@ type RooCodeEvents = {
 			totalCost: number
 			contextTokens: number
 		},
+	]
+	taskToolFailed: [
+		string,
+		(
+			| "execute_command"
+			| "read_file"
+			| "write_to_file"
+			| "apply_diff"
+			| "insert_content"
+			| "search_and_replace"
+			| "search_files"
+			| "list_files"
+			| "list_code_definition_names"
+			| "browser_action"
+			| "use_mcp_tool"
+			| "access_mcp_resource"
+			| "ask_followup_question"
+			| "attempt_completion"
+			| "switch_mode"
+			| "new_task"
+			| "fetch_instructions"
+		),
+		string,
 	]
 }
 
@@ -547,6 +627,7 @@ declare enum RooCodeEventName {
 	TaskSpawned = "taskSpawned",
 	TaskCompleted = "taskCompleted",
 	TaskTokenUsageUpdated = "taskTokenUsageUpdated",
+	TaskToolFailed = "taskToolFailed",
 }
 
 type RooCodeSettings = GlobalSettings & ProviderSettings

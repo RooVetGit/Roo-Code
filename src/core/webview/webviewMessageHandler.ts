@@ -4,7 +4,7 @@ import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 
 import { ClineProvider } from "./ClineProvider"
-import { CheckpointStorage, Language, ApiConfigMeta } from "../../schemas"
+import { Language, ApiConfigMeta } from "../../schemas"
 import { changeLanguage, t } from "../../i18n"
 import { ApiConfiguration } from "../../shared/api"
 import { supportPrompt } from "../../shared/support-prompt"
@@ -38,10 +38,10 @@ import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { TelemetrySetting } from "../../shared/TelemetrySetting"
 import { getWorkspacePath } from "../../utils/path"
 import { Mode, defaultModeSlug, getModeBySlug, getGroupName } from "../../shared/modes"
-import { getDiffStrategy } from "../diff/DiffStrategy"
 import { SYSTEM_PROMPT } from "../prompts/system"
 import { buildApiHandler } from "../../api"
 import { GlobalState } from "../../schemas"
+import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
 
 export const webviewMessageHandler = async (provider: ClineProvider, message: WebviewMessage) => {
 	// Utility functions provided for concise get/update of global state via contextProxy API.
@@ -149,20 +149,6 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			provider.readModelsFromCache(GlobalFileNames.requestyModels).then((requestyModels) => {
 				if (requestyModels) {
 					provider.postMessageToWebview({ type: "requestyModels", requestyModels })
-				}
-			})
-
-			getRequestyModels().then(async (requestyModels) => {
-				if (Object.keys(requestyModels).length > 0) {
-					await provider.writeModelsToCache(GlobalFileNames.requestyModels, requestyModels)
-					await provider.postMessageToWebview({ type: "requestyModels", requestyModels })
-
-					const { apiConfiguration } = await provider.getState()
-
-					if (apiConfiguration.requestyModelId) {
-						await updateGlobalState("requestyModelInfo", requestyModels[apiConfiguration.requestyModelId])
-						await provider.postStateToWebview()
-					}
 				}
 			})
 
@@ -413,7 +399,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 
 			break
 		case "refreshRequestyModels":
-			const requestyModels = await getRequestyModels()
+			const requestyModels = await getRequestyModels(message.values?.apiKey)
 
 			if (Object.keys(requestyModels).length > 0) {
 				await provider.writeModelsToCache(GlobalFileNames.requestyModels, requestyModels)
@@ -645,20 +631,9 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await updateGlobalState("diffEnabled", diffEnabled)
 			await provider.postStateToWebview()
 			break
-		case "showGreeting":
-			const showGreeting = message.bool ?? true
-			await updateGlobalState("showGreeting", showGreeting)
-			await provider.postStateToWebview()
-			break
 		case "enableCheckpoints":
 			const enableCheckpoints = message.bool ?? true
 			await updateGlobalState("enableCheckpoints", enableCheckpoints)
-			await provider.postStateToWebview()
-			break
-		case "checkpointStorage":
-			console.log(`[ClineProvider] checkpointStorage: ${message.text}`)
-			const checkpointStorage = message.text ?? "task"
-			await updateGlobalState("checkpointStorage", checkpointStorage as CheckpointStorage)
 			await provider.postStateToWebview()
 			break
 		case "browserViewportSize":
@@ -1027,6 +1002,10 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 						),
 					)
 
+					// Capture telemetry for prompt enhancement
+					const currentCline = provider.getCurrentCline()
+					telemetryService.capturePromptEnhanced(currentCline?.taskId)
+
 					await provider.postMessageToWebview({
 						type: "enhancedPrompt",
 						text: enhancedPrompt,
@@ -1386,12 +1365,7 @@ const generateSystemPrompt = async (provider: ClineProvider, message: WebviewMes
 		language,
 	} = await provider.getState()
 
-	// Create diffStrategy based on current model and settings.
-	const diffStrategy = getDiffStrategy({
-		model: apiConfiguration.apiModelId || apiConfiguration.openRouterModelId || "",
-		experiments,
-		fuzzyMatchThreshold,
-	})
+	const diffStrategy = new MultiSearchReplaceDiffStrategy(fuzzyMatchThreshold)
 
 	const cwd = provider.cwd
 
