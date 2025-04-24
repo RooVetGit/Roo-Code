@@ -89,19 +89,42 @@ jest.mock("@vscode/webview-ui-toolkit/react", () => ({
 // Mock Tab components
 jest.mock("../../../components/common/Tab", () => ({
 	...jest.requireActual("../../../components/common/Tab"),
-	Tab: ({ children }: any) => <div>{children}</div>,
-	TabHeader: ({ children }: any) => <div>{children}</div>,
-	TabContent: ({ children }: any) => <div>{children}</div>,
-	TabList: ({ children, value, onValueChange, "data-testid": dataTestId }: any) => (
-		<div data-testid={dataTestId} data-value={value}>
-			{children}
-		</div>
-	),
-	TabTrigger: ({ children, value, "data-testid": dataTestId, onClick }: any) => (
-		<button data-testid={dataTestId} data-value={value} onClick={onClick}>
-			{children}
-		</button>
-	),
+	Tab: ({ children }: any) => <div data-testid="tab-container">{children}</div>,
+	TabHeader: ({ children }: any) => <div data-testid="tab-header">{children}</div>,
+	TabContent: ({ children }: any) => <div data-testid="tab-content">{children}</div>,
+	TabList: ({ children, value, onValueChange, "data-testid": dataTestId }: any) => {
+		// Store onValueChange in a global variable so TabTrigger can access it
+		;(window as any).__onValueChange = onValueChange
+		return (
+			<div data-testid={dataTestId} data-value={value}>
+				{children}
+			</div>
+		)
+	},
+	TabTrigger: ({ children, value, "data-testid": dataTestId, onClick, isSelected }: any) => {
+		// This function simulates clicking on a tab and making its content visible
+		const handleClick = () => {
+			if (onClick) onClick()
+			// Access onValueChange from the global variable
+			const onValueChange = (window as any).__onValueChange
+			if (onValueChange) onValueChange(value)
+			// Make all tab contents invisible
+			document.querySelectorAll("[data-tab-content]").forEach((el) => {
+				;(el as HTMLElement).style.display = "none"
+			})
+			// Make this tab's content visible
+			const tabContent = document.querySelector(`[data-tab-content="${value}"]`)
+			if (tabContent) {
+				;(tabContent as HTMLElement).style.display = "block"
+			}
+		}
+
+		return (
+			<button data-testid={dataTestId} data-value={value} data-selected={isSelected} onClick={handleClick}>
+				{children}
+			</button>
+		)
+	},
 }))
 
 // Mock Slider component
@@ -152,7 +175,7 @@ const renderSettingsView = () => {
 	const onDone = jest.fn()
 	const queryClient = new QueryClient()
 
-	render(
+	const result = render(
 		<ExtensionStateContextProvider>
 			<QueryClientProvider client={queryClient}>
 				<SettingsView onDone={onDone} />
@@ -163,7 +186,22 @@ const renderSettingsView = () => {
 	// Hydrate initial state.
 	mockPostMessage({})
 
-	return { onDone }
+	// Helper function to activate a tab and ensure its content is visible
+	const activateTab = (tabId: string) => {
+		const tab = screen.getByTestId(`tab-${tabId}`)
+		fireEvent.click(tab)
+
+		// Force a re-render to ensure tab content is visible
+		result.rerender(
+			<ExtensionStateContextProvider>
+				<QueryClientProvider client={queryClient}>
+					<SettingsView onDone={onDone} targetSection={tabId} />
+				</QueryClientProvider>
+			</ExtensionStateContextProvider>,
+		)
+	}
+
+	return { onDone, activateTab }
 }
 
 describe("SettingsView - Sound Settings", () => {
@@ -174,9 +212,9 @@ describe("SettingsView - Sound Settings", () => {
 	it("initializes with tts disabled by default", () => {
 		renderSettingsView()
 
-		// First click on the notifications tab
-		const notificationsTab = screen.getByTestId("tab-notifications")
-		fireEvent.click(notificationsTab)
+		// Activate the notifications tab using our helper
+		const { activateTab } = renderSettingsView()
+		activateTab("notifications")
 
 		const ttsCheckbox = screen.getByTestId("tts-enabled-checkbox")
 		expect(ttsCheckbox).not.toBeChecked()
@@ -188,9 +226,9 @@ describe("SettingsView - Sound Settings", () => {
 	it("initializes with sound disabled by default", () => {
 		renderSettingsView()
 
-		// First click on the notifications tab
-		const notificationsTab = screen.getByTestId("tab-notifications")
-		fireEvent.click(notificationsTab)
+		// Activate the notifications tab using our helper
+		const { activateTab } = renderSettingsView()
+		activateTab("notifications")
 
 		const soundCheckbox = screen.getByTestId("sound-enabled-checkbox")
 		expect(soundCheckbox).not.toBeChecked()
@@ -202,9 +240,9 @@ describe("SettingsView - Sound Settings", () => {
 	it("toggles tts setting and sends message to VSCode", () => {
 		renderSettingsView()
 
-		// First click on the notifications tab
-		const notificationsTab = screen.getByTestId("tab-notifications")
-		fireEvent.click(notificationsTab)
+		// Activate the notifications tab using our helper
+		const { activateTab } = renderSettingsView()
+		activateTab("notifications")
 
 		const ttsCheckbox = screen.getByTestId("tts-enabled-checkbox")
 
@@ -227,9 +265,9 @@ describe("SettingsView - Sound Settings", () => {
 	it("toggles sound setting and sends message to VSCode", () => {
 		renderSettingsView()
 
-		// First click on the notifications tab
-		const notificationsTab = screen.getByTestId("tab-notifications")
-		fireEvent.click(notificationsTab)
+		// Activate the notifications tab using our helper
+		const { activateTab } = renderSettingsView()
+		activateTab("notifications")
 
 		const soundCheckbox = screen.getByTestId("sound-enabled-checkbox")
 
@@ -252,9 +290,9 @@ describe("SettingsView - Sound Settings", () => {
 	it("shows tts slider when sound is enabled", () => {
 		renderSettingsView()
 
-		// First click on the notifications tab
-		const notificationsTab = screen.getByTestId("tab-notifications")
-		fireEvent.click(notificationsTab)
+		// Activate the notifications tab using our helper
+		const { activateTab } = renderSettingsView()
+		activateTab("notifications")
 
 		// Enable tts
 		const ttsCheckbox = screen.getByTestId("tts-enabled-checkbox")
@@ -269,9 +307,9 @@ describe("SettingsView - Sound Settings", () => {
 	it("shows volume slider when sound is enabled", () => {
 		renderSettingsView()
 
-		// First click on the notifications tab
-		const notificationsTab = screen.getByTestId("tab-notifications")
-		fireEvent.click(notificationsTab)
+		// Activate the notifications tab using our helper
+		const { activateTab } = renderSettingsView()
+		activateTab("notifications")
 
 		// Enable sound
 		const soundCheckbox = screen.getByTestId("sound-enabled-checkbox")
@@ -286,9 +324,9 @@ describe("SettingsView - Sound Settings", () => {
 	it("updates speed and sends message to VSCode when slider changes", () => {
 		renderSettingsView()
 
-		// First click on the notifications tab
-		const notificationsTab = screen.getByTestId("tab-notifications")
-		fireEvent.click(notificationsTab)
+		// Activate the notifications tab using our helper
+		const { activateTab } = renderSettingsView()
+		activateTab("notifications")
 
 		// Enable tts
 		const ttsCheckbox = screen.getByTestId("tts-enabled-checkbox")
@@ -356,9 +394,9 @@ describe("SettingsView - Allowed Commands", () => {
 	it("shows allowed commands section when alwaysAllowExecute is enabled", () => {
 		renderSettingsView()
 
-		// First click on the autoApprove tab
-		const autoApproveTab = screen.getByTestId("tab-autoApprove")
-		fireEvent.click(autoApproveTab)
+		// Activate the autoApprove tab using our helper
+		const { activateTab } = renderSettingsView()
+		activateTab("autoApprove")
 
 		// Enable always allow execute
 		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
@@ -371,9 +409,9 @@ describe("SettingsView - Allowed Commands", () => {
 	it("adds new command to the list", () => {
 		renderSettingsView()
 
-		// First click on the autoApprove tab
-		const autoApproveTab = screen.getByTestId("tab-autoApprove")
-		fireEvent.click(autoApproveTab)
+		// Activate the autoApprove tab using our helper
+		const { activateTab } = renderSettingsView()
+		activateTab("autoApprove")
 
 		// Enable always allow execute
 		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
@@ -399,9 +437,9 @@ describe("SettingsView - Allowed Commands", () => {
 	it("removes command from the list", () => {
 		renderSettingsView()
 
-		// First click on the autoApprove tab
-		const autoApproveTab = screen.getByTestId("tab-autoApprove")
-		fireEvent.click(autoApproveTab)
+		// Activate the autoApprove tab using our helper
+		const { activateTab } = renderSettingsView()
+		activateTab("autoApprove")
 
 		// Enable always allow execute
 		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
@@ -446,9 +484,9 @@ describe("SettingsView - Allowed Commands", () => {
 		it("shows unsaved changes dialog when switching tabs with unsaved changes", () => {
 			renderSettingsView()
 
-			// First click on the notifications tab
-			const notificationsTab = screen.getByTestId("tab-notifications")
-			fireEvent.click(notificationsTab)
+			// Activate the notifications tab using our helper
+			const { activateTab } = renderSettingsView()
+			activateTab("notifications")
 
 			// Wait for the tab content to be rendered
 			// Make a change to create unsaved changes
@@ -484,9 +522,9 @@ describe("SettingsView - Duplicate Commands", () => {
 	it("prevents duplicate commands", () => {
 		renderSettingsView()
 
-		// First click on the autoApprove tab
-		const autoApproveTab = screen.getByTestId("tab-autoApprove")
-		fireEvent.click(autoApproveTab)
+		// Activate the autoApprove tab using our helper
+		const { activateTab } = renderSettingsView()
+		activateTab("autoApprove")
 
 		// Enable always allow execute
 		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
@@ -512,9 +550,9 @@ describe("SettingsView - Duplicate Commands", () => {
 	it("saves allowed commands when clicking Save", () => {
 		renderSettingsView()
 
-		// First click on the autoApprove tab
-		const autoApproveTab = screen.getByTestId("tab-autoApprove")
-		fireEvent.click(autoApproveTab)
+		// Activate the autoApprove tab using our helper
+		const { activateTab } = renderSettingsView()
+		activateTab("autoApprove")
 
 		// Enable always allow execute
 		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
