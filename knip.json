@@ -1,6 +1,6 @@
 {
 	"$schema": "https://unpkg.com/knip@latest/schema.json",
-	"entry": ["src/extension.ts", "src/activate/index.ts", "webview-ui/src/index.tsx"],
+	"entry": ["plugins/vscode/extension.ts", "src/activate/index.ts", "webview-ui/src/index.tsx"],
 	"project": ["src/**/*.ts", "webview-ui/src/**/*.{ts,tsx}"],
 	"ignore": [
 		"**/__mocks__/**",
@@ -19,7 +19,10 @@
 		"src/exports/**",
 		"src/schemas/ipc.ts",
 		"src/extension.ts",
-		"scripts/**"
+		"scripts/**",
+		"plugins/vscode/src/extension.ts",
+		"plugins/vscode/scripts/**",
+		"plugins/vscode/build.js"
 	],
 	"workspaces": {
 		"webview-ui": {
