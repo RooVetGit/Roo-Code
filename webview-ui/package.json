@@ -5,7 +5,6 @@
 	"type": "module",
 	"scripts": {
 		"lint": "eslint src/**/*.ts src/**/*.tsx",
-		"lint-fix": "eslint src/**/*.ts src/**/*.tsx --fix",
 		"check-types": "tsc",
 		"test": "jest -w=40%",
 		"dev": "vite",
