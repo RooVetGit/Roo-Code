@@ -3,8 +3,9 @@ import axios from "axios"
 import OpenAI from "openai"
 
 import { ApiHandlerOptions, glamaDefaultModelId, glamaDefaultModelInfo } from "../../shared/api"
-import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStream } from "../transform/stream"
+import { convertToOpenAiMessages } from "../transform/openai-format"
+import { addCacheControlDirectives } from "../transform/caching"
 import { SingleCompletionHandler } from "../index"
 import { RouterProvider } from "./router-provider"
 
@@ -36,31 +37,7 @@ export class GlamaHandler extends RouterProvider implements SingleCompletionHand
 		]
 
 		if (modelId.startsWith("anthropic/claude-3")) {
-			openAiMessages[0] = {
-				role: "system",
-				// @ts-ignore-next-line
-				content: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
-			}
-
-			const lastTwoUserMessages = openAiMessages.filter((msg) => msg.role === "user").slice(-2)
-
-			lastTwoUserMessages.forEach((msg) => {
-				if (typeof msg.content === "string") {
-					msg.content = [{ type: "text", text: msg.content }]
-				}
-
-				if (Array.isArray(msg.content)) {
-					let lastTextPart = msg.content.filter((part) => part.type === "text").pop()
-
-					if (!lastTextPart) {
-						lastTextPart = { type: "text", text: "..." }
-						msg.content.push(lastTextPart)
-					}
-
-					// @ts-ignore-next-line
-					lastTextPart["cache_control"] = { type: "ephemeral" }
-				}
-			})
+			addCacheControlDirectives(systemPrompt, openAiMessages)
 		}
 
 		// Required by Anthropic; other providers default to max tokens allowed.
@@ -82,9 +59,7 @@ export class GlamaHandler extends RouterProvider implements SingleCompletionHand
 		}
 
 		const { data: completion, response } = await this.client.chat.completions
-			.create(requestOptions, {
-				headers: DEFAULT_HEADERS,
-			})
+			.create(requestOptions, { headers: DEFAULT_HEADERS })
 			.withResponse()
 
 		const completionRequestId = response.headers.get("x-completion-request-id")
