@@ -13,7 +13,7 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 	// Batching and retry constants
 	private static readonly MAX_BATCH_TOKENS = 100000
 	private static readonly MAX_ITEM_TOKENS = 8191
-	private static readonly MAX_BATCH_ITEMS = 2048
+	private static readonly MAX_BATCH_ITEMS = 15
 	private static readonly MAX_RETRIES = 3
 	private static readonly INITIAL_DELAY_MS = 500
 
