@@ -32,7 +32,7 @@ describe("OpenRouterHandler", () => {
 		})
 	})
 
-	describe("getModel", () => {
+	describe("fetchModel", () => {
 		it("returns correct model info when options are provided", async () => {
 			const handler = new OpenRouterHandler(mockOptions)
 			const result = await handler.fetchModel()
