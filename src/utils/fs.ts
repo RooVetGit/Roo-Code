@@ -45,3 +45,13 @@ export async function fileExistsAtPath(filePath: string): Promise<boolean> {
 		return false
 	}
 }
+
+/**
+ * Ensures a directory exists, creating it if it doesn't
+ *
+ * @param dirPath - The path to the directory to ensure exists
+ * @returns A promise that resolves when the directory exists
+ */
+export async function ensureDirectory(dirPath: string): Promise<void> {
+	await fs.mkdir(dirPath, { recursive: true })
+}
