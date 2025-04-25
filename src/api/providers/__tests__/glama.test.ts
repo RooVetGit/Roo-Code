@@ -19,31 +19,18 @@ jest.mock("openai", () => {
 						const stream = {
 							[Symbol.asyncIterator]: async function* () {
 								yield {
-									choices: [
-										{
-											delta: { content: "Test response" },
-											index: 0,
-										},
-									],
+									choices: [{ delta: { content: "Test response" }, index: 0 }],
 									usage: null,
 								}
 								yield {
-									choices: [
-										{
-											delta: {},
-											index: 0,
-										},
-									],
-									usage: {
-										prompt_tokens: 10,
-										completion_tokens: 5,
-										total_tokens: 15,
-									},
+									choices: [{ delta: {}, index: 0 }],
+									usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
 								}
 							},
 						}
 
 						const result = mockCreate(...args)
+
 						if (args[0].stream) {
 							mockWithResponse.mockReturnValue(
 								Promise.resolve({
@@ -58,6 +45,7 @@ jest.mock("openai", () => {
 							)
 							result.withResponse = mockWithResponse
 						}
+
 						return result
 					},
 				},
@@ -72,10 +60,10 @@ describe("GlamaHandler", () => {
 
 	beforeEach(() => {
 		mockOptions = {
-			apiModelId: "anthropic/claude-3-7-sonnet",
-			glamaModelId: "anthropic/claude-3-7-sonnet",
 			glamaApiKey: "test-api-key",
+			glamaModelId: "anthropic/claude-3-7-sonnet",
 		}
+
 		handler = new GlamaHandler(mockOptions)
 		mockCreate.mockClear()
 		mockWithResponse.mockClear()
@@ -101,7 +89,7 @@ describe("GlamaHandler", () => {
 	describe("constructor", () => {
 		it("should initialize with provided options", () => {
 			expect(handler).toBeInstanceOf(GlamaHandler)
-			expect(handler.getModel().id).toBe(mockOptions.apiModelId)
+			expect(handler.getModel().id).toBe(mockOptions.glamaModelId)
 		})
 	})
 
@@ -152,7 +140,7 @@ describe("GlamaHandler", () => {
 			expect(result).toBe("Test response")
 			expect(mockCreate).toHaveBeenCalledWith(
 				expect.objectContaining({
-					model: mockOptions.apiModelId,
+					model: mockOptions.glamaModelId,
 					messages: [{ role: "user", content: "Test prompt" }],
 					temperature: 0,
 					max_tokens: 8192,
@@ -196,13 +184,20 @@ describe("GlamaHandler", () => {
 		})
 	})
 
-	describe("getModel", () => {
-		it("should return model info", () => {
-			const modelInfo = handler.getModel()
-			expect(modelInfo.id).toBe(mockOptions.apiModelId)
+	describe("fetchModel", () => {
+		it("should return model info", async () => {
+			const modelInfo = await handler.fetchModel()
+			expect(modelInfo.id).toBe(mockOptions.glamaModelId)
 			expect(modelInfo.info).toBeDefined()
 			expect(modelInfo.info.maxTokens).toBe(8192)
 			expect(modelInfo.info.contextWindow).toBe(200_000)
+		})
+
+		it("should return default model when invalid model provided", async () => {
+			const handlerWithInvalidModel = new GlamaHandler({ ...mockOptions, glamaModelId: "invalid/model" })
+			const modelInfo = await handlerWithInvalidModel.fetchModel()
+			expect(modelInfo.id).toBe("anthropic/claude-3-7-sonnet")
+			expect(modelInfo.info).toBeDefined()
 		})
 	})
 })
