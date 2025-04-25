@@ -14,7 +14,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 	private static readonly QDRANT_CODE_BLOCK_NAMESPACE = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 	private static readonly MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB
 	private static readonly MAX_LIST_FILES_LIMIT = 1_000
-	private static readonly BATCH_SEGMENT_THRESHOLD = 20 // Number of code segments to batch for embeddings/upserts
+	private static readonly BATCH_SEGMENT_THRESHOLD = 15 // Number of code segments to batch for embeddings/upserts
 	private static readonly MAX_BATCH_RETRIES = 3
 	private static readonly INITIAL_RETRY_DELAY_MS = 500
 
@@ -111,20 +111,29 @@ export class DirectoryScanner implements IDirectoryScanner {
 				// Process embeddings if configured
 				if (this.embedder && this.qdrantClient && blocks.length > 0) {
 					// Add to batch accumulators
-					batchBlocks.push(...blocks)
-					batchTexts.push(...blocks.map((block) => block.content))
-					batchFileInfos.push({
-						filePath,
-						fileHash: currentFileHash,
-						isNew: !oldHashes[filePath],
-					})
+					let addedBlocksFromFile = false
+					for (const block of blocks) {
+						const trimmedContent = block.content.trim()
+						if (trimmedContent) {
+							batchBlocks.push(block)
+							batchTexts.push(trimmedContent)
+							addedBlocksFromFile = true
+						}
+					}
+					if (addedBlocksFromFile) {
+						batchFileInfos.push({
+							filePath,
+							fileHash: currentFileHash,
+							isNew: !oldHashes[filePath],
+						})
 
-					// Process batch if threshold reached
-					if (batchBlocks.length >= DirectoryScanner.BATCH_SEGMENT_THRESHOLD) {
-						await this.processBatch(batchBlocks, batchTexts, batchFileInfos, newHashes, onError)
-						batchBlocks = []
-						batchTexts = []
-						batchFileInfos = []
+						// Process batch if threshold reached
+						if (batchBlocks.length >= DirectoryScanner.BATCH_SEGMENT_THRESHOLD) {
+							await this.processBatch(batchBlocks, batchTexts, batchFileInfos, newHashes, onError)
+							batchBlocks = []
+							batchTexts = []
+							batchFileInfos = []
+						}
 					}
 				} else {
 					// Only update hash if not being processed in a batch
