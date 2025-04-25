@@ -467,8 +467,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 											{/* Clone to avoid ref issues if triggerComponent itself had a key */}
 											{React.cloneElement(triggerComponent)}
 										</TooltipTrigger>
-										<TooltipContent side="right" className="text-base p-1.5">
-											<p>{t(`settings:sections.${id}`)}</p>
+										<TooltipContent side="right" className="text-base">
+											<p className="m-0">{t(`settings:sections.${id}`)}</p>
 										</TooltipContent>
 									</Tooltip>
 								</TooltipProvider>
