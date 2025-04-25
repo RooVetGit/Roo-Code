@@ -335,11 +335,12 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	async resolveWebviewView(webviewView: vscode.WebviewView | vscode.WebviewPanel) {
 		this.log("Resolving webview view")
-		this.view = webviewView
 
 		if (!this.contextProxy.isInitialized) {
 			await this.contextProxy.initialize()
 		}
+
+		this.view = webviewView
 
 		// Set panel reference according to webview type
 		if ("onDidChangeViewState" in webviewView) {
