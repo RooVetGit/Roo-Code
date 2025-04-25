@@ -11,7 +11,7 @@ import { formatLargeNumber } from "@src/utils/format"
 import { cn } from "@src/lib/utils"
 import { Button } from "@src/components/ui"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
-import { useSelectedModel } from "@src/utils/normalizeApiConfiguration"
+import { useSelectedModel } from "@/components/ui/hooks/useSelectedModel"
 
 import Thumbnails from "../common/Thumbnails"
 
@@ -19,7 +19,7 @@ import { TaskActions } from "./TaskActions"
 import { ContextWindowProgress } from "./ContextWindowProgress"
 import { Mention } from "./Mention"
 
-interface TaskHeaderProps {
+export interface TaskHeaderProps {
 	task: ClineMessage
 	tokensIn: number
 	tokensOut: number

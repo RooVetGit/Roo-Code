@@ -6,7 +6,7 @@ import { ChevronsUpDown, Check, X } from "lucide-react"
 import { ProviderSettings, ModelInfo } from "@roo/schemas"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
-import { useSelectedModel } from "@src/utils/normalizeApiConfiguration"
+import { useSelectedModel } from "@/components/ui/hooks/useSelectedModel"
 import { cn } from "@src/lib/utils"
 import {
 	Command,

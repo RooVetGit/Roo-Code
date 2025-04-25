@@ -25,7 +25,8 @@ import { AWS_REGIONS } from "@roo/shared/aws_regions"
 
 import { vscode } from "@src/utils/vscode"
 import { validateApiConfiguration, validateModelId, validateBedrockArn } from "@src/utils/validate"
-import { useRouterModels, useSelectedModel } from "@src/utils/normalizeApiConfiguration"
+import { useRouterModels } from "@/components/ui/hooks/useRouterModels"
+import { useSelectedModel } from "@/components/ui/hooks/useSelectedModel"
 import {
 	useOpenRouterModelProviders,
 	OPENROUTER_DEFAULT_PROVIDER_NAME,
@@ -48,7 +49,7 @@ import { DiffSettingsControl } from "./DiffSettingsControl"
 import { TemperatureControl } from "./TemperatureControl"
 import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
 
-interface ApiOptionsProps {
+export interface ApiOptionsProps {
 	uriScheme: string | undefined
 	apiConfiguration: ApiConfiguration
 	setApiConfigurationField: <K extends keyof ApiConfiguration>(field: K, value: ApiConfiguration[K]) => void
