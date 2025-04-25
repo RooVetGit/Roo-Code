@@ -1,11 +1,8 @@
-import { ApiConfiguration, ModelInfo } from "@roo/shared/api"
 import i18next from "i18next"
 
-export function validateApiConfiguration(apiConfiguration?: ApiConfiguration): string | undefined {
-	if (!apiConfiguration) {
-		return undefined
-	}
+import { ApiConfiguration, isRouterName, RouterModels } from "@roo/shared/api"
 
+export function validateApiConfiguration(apiConfiguration: ApiConfiguration): string | undefined {
 	switch (apiConfiguration.apiProvider) {
 		case "openrouter":
 			if (!apiConfiguration.openRouterApiKey) {
@@ -113,89 +110,41 @@ export function validateBedrockArn(arn: string, region?: string) {
 	}
 
 	// ARN is valid and region matches (or no region was provided to check against)
-	return {
-		isValid: true,
-		arnRegion,
-		errorMessage: undefined,
-	}
+	return { isValid: true, arnRegion, errorMessage: undefined }
 }
 
-export function validateModelId(
-	apiConfiguration?: ApiConfiguration,
-	routerModels?: Record<"openrouter" | "glama" | "unbound" | "requesty", Record<string, ModelInfo>>,
-): string | undefined {
-	if (!apiConfiguration) {
+export function validateModelId(apiConfiguration: ApiConfiguration, routerModels?: RouterModels): string | undefined {
+	const provider = apiConfiguration.apiProvider ?? ""
+
+	if (!isRouterName(provider)) {
 		return undefined
 	}
 
-	switch (apiConfiguration.apiProvider) {
+	let modelId: string | undefined
+
+	switch (provider) {
 		case "openrouter":
-			const modelId = apiConfiguration.openRouterModelId
-
-			if (!modelId) {
-				return i18next.t("settings:validation.modelId")
-			}
-
-			if (
-				routerModels?.openrouter &&
-				Object.keys(routerModels.openrouter).length > 1 &&
-				!Object.keys(routerModels.openrouter).includes(modelId)
-			) {
-				return i18next.t("settings:validation.modelAvailability", { modelId })
-			}
-
+			modelId = apiConfiguration.openRouterModelId
 			break
-
 		case "glama":
-			const glamaModelId = apiConfiguration.glamaModelId
-
-			if (!glamaModelId) {
-				return i18next.t("settings:validation.modelId")
-			}
-
-			if (
-				routerModels?.glama &&
-				Object.keys(routerModels.glama).length > 1 &&
-				!Object.keys(routerModels.glama).includes(glamaModelId)
-			) {
-				return i18next.t("settings:validation.modelAvailability", { modelId: glamaModelId })
-			}
-
+			modelId = apiConfiguration.glamaModelId
 			break
-
 		case "unbound":
-			const unboundModelId = apiConfiguration.unboundModelId
-
-			if (!unboundModelId) {
-				return i18next.t("settings:validation.modelId")
-			}
-
-			if (
-				routerModels?.unbound &&
-				Object.keys(routerModels.unbound).length > 1 &&
-				!Object.keys(routerModels.unbound).includes(unboundModelId)
-			) {
-				return i18next.t("settings:validation.modelAvailability", { modelId: unboundModelId })
-			}
-
+			modelId = apiConfiguration.unboundModelId
 			break
-
 		case "requesty":
-			const requestyModelId = apiConfiguration.requestyModelId
-
-			if (!requestyModelId) {
-				return i18next.t("settings:validation.modelId")
-			}
-
-			if (
-				routerModels?.requesty &&
-				Object.keys(routerModels.requesty).length > 1 &&
-				!Object.keys(routerModels.requesty).includes(requestyModelId)
-			) {
-				return i18next.t("settings:validation.modelAvailability", { modelId: requestyModelId })
-			}
-
+			modelId = apiConfiguration.requestyModelId
 			break
+	}
+
+	if (!modelId) {
+		return i18next.t("settings:validation.modelId")
+	}
+
+	const models = routerModels?.[provider]
+
+	if (models && Object.keys(models).length > 1 && !Object.keys(models).includes(modelId)) {
+		return i18next.t("settings:validation.modelAvailability", { modelId })
 	}
 
 	return undefined

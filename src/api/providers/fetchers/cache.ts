@@ -5,21 +5,15 @@ import NodeCache from "node-cache"
 
 import { ContextProxy } from "../../../core/config/ContextProxy"
 import { getCacheDirectoryPath } from "../../../shared/storagePathManager"
+import { RouterName, ModelRecord } from "../../../shared/api"
 import { fileExistsAtPath } from "../../../utils/fs"
-import type { ModelInfo } from "../../../schemas"
+
 import { getOpenRouterModels } from "./openrouter"
 import { getRequestyModels } from "./requesty"
 import { getGlamaModels } from "./glama"
 import { getUnboundModels } from "./unbound"
 
-export type RouterName = "openrouter" | "requesty" | "glama" | "unbound"
-
-export type ModelRecord = Record<string, ModelInfo>
-
-const memoryCache = new NodeCache({
-	stdTTL: 5 * 60,
-	checkperiod: 5 * 60,
-})
+const memoryCache = new NodeCache({ stdTTL: 5 * 60, checkperiod: 5 * 60 })
 
 async function writeModels(router: RouterName, data: ModelRecord) {
 	const filename = `${router}_models.json`
@@ -48,6 +42,7 @@ export const getModels = async (router: RouterName): Promise<ModelRecord> => {
 	let models = memoryCache.get<ModelRecord>(router)
 
 	if (models) {
+		// console.log(`[getModels] NodeCache hit for ${router} -> ${Object.keys(models).length}`)
 		return models
 	}
 
@@ -67,10 +62,12 @@ export const getModels = async (router: RouterName): Promise<ModelRecord> => {
 	}
 
 	if (Object.keys(models).length > 0) {
+		// console.log(`[getModels] API fetch for ${router} -> ${Object.keys(models).length}`)
 		memoryCache.set(router, models)
 
 		try {
 			await writeModels(router, models)
+			// console.log(`[getModels] wrote ${router} models to file cache`)
 		} catch (error) {}
 
 		return models
@@ -78,6 +75,7 @@ export const getModels = async (router: RouterName): Promise<ModelRecord> => {
 
 	try {
 		models = await readModels(router)
+		// console.log(`[getModels] read ${router} models from file cache`)
 	} catch (error) {}
 
 	return models ?? {}

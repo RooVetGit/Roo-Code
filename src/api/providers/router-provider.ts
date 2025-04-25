@@ -1,8 +1,8 @@
 import OpenAI from "openai"
 
-import { ApiHandlerOptions, ModelInfo } from "../../shared/api"
+import { ApiHandlerOptions, RouterName, ModelRecord, ModelInfo } from "../../shared/api"
 import { BaseProvider } from "./base-provider"
-import { RouterName, ModelRecord, getModels } from "./fetchers/cache"
+import { getModels } from "./fetchers/cache"
 
 type RouterProviderOptions = {
 	name: RouterName

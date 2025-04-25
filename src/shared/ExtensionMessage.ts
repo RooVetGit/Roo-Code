@@ -1,5 +1,6 @@
+import { GitCommit } from "../utils/git"
+
 import {
-	ModelInfo,
 	GlobalSettings,
 	ApiConfigMeta,
 	ProviderSettings as ApiConfiguration,
@@ -13,8 +14,8 @@ import {
 	ClineMessage,
 } from "../schemas"
 import { McpServer } from "./mcp"
-import { GitCommit } from "../utils/git"
 import { Mode } from "./modes"
+import { RouterModels } from "./api"
 
 export type { ApiConfigMeta, ToolProgressStatus }
 
@@ -84,7 +85,7 @@ export interface ExtensionMessage {
 		path?: string
 	}>
 	partialMessage?: ClineMessage
-	routerModels?: Record<"openrouter" | "requesty" | "glama" | "unbound", Record<string, ModelInfo>>
+	routerModels?: RouterModels
 	openAiModels?: string[]
 	ollamaModels?: string[]
 	lmStudioModels?: string[]

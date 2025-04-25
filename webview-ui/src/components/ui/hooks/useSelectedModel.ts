@@ -1,5 +1,6 @@
 import {
 	ApiConfiguration,
+	RouterModels,
 	ModelInfo,
 	anthropicDefaultModelId,
 	anthropicModels,
@@ -26,7 +27,7 @@ import {
 	unboundDefaultModelId,
 } from "@roo/shared/api"
 
-import { type RouterModels, useRouterModels } from "./useRouterModels"
+import { useRouterModels } from "./useRouterModels"
 
 export const useSelectedModel = (apiConfiguration?: ApiConfiguration) => {
 	const { data: routerModels, isLoading, isError } = useRouterModels()

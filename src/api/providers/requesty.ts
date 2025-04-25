@@ -1,11 +1,11 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 
-import { ModelInfo, requestyDefaultModelId, requestyDefaultModelInfo } from "../../shared/api"
+import { ModelInfo, ModelRecord, requestyDefaultModelId, requestyDefaultModelInfo } from "../../shared/api"
 import { calculateApiCostOpenAI } from "../../utils/cost"
 import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { OpenAiHandler, OpenAiHandlerOptions } from "./openai"
-import { ModelRecord, getModels } from "./fetchers/cache"
+import { getModels } from "./fetchers/cache"
 
 // Requesty usage includes an extra field for Anthropic use cases.
 // Safely cast the prompt token details section to the appropriate structure.
