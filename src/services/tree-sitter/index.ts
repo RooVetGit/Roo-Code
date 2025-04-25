@@ -6,6 +6,8 @@ import { fileExistsAtPath } from "../../utils/fs"
 import { parseMarkdown } from "./markdownParser"
 import { RooIgnoreController } from "../../core/ignore/RooIgnoreController"
 
+const MIN_COMPONENT_LINES = 4
+
 const extensions = [
 	"tla",
 	"js",
@@ -104,7 +106,7 @@ export async function parseSourceCodeDefinitionsForFile(
 		const markdownCaptures = parseMarkdown(fileContent)
 
 		// Process the captures
-		const markdownDefinitions = processCaptures(markdownCaptures, lines, "markdown", 4)
+		const markdownDefinitions = processCaptures(markdownCaptures, lines, "markdown")
 
 		if (markdownDefinitions) {
 			return `# ${path.basename(filePath)}\n${markdownDefinitions}`
@@ -180,7 +182,7 @@ export async function parseSourceCodeForDefinitionsTopLevel(
 			const markdownCaptures = parseMarkdown(fileContent)
 
 			// Process the captures
-			const markdownDefinitions = processCaptures(markdownCaptures, lines, "markdown", 4)
+			const markdownDefinitions = processCaptures(markdownCaptures, lines, "markdown")
 
 			if (markdownDefinitions) {
 				result += `# ${path.relative(dirPath, file).toPosix()}\n${markdownDefinitions}\n`
@@ -240,12 +242,7 @@ This approach allows us to focus on the most relevant parts of the code (defined
  * @param minComponentLines - Minimum number of lines for a component to be included
  * @returns A formatted string with definitions
  */
-function processCaptures(
-	captures: any[],
-	lines: string[],
-	language: string,
-	minComponentLines: number = 4,
-): string | null {
+function processCaptures(captures: any[], lines: string[], language: string): string | null {
 	// Determine if HTML filtering is needed for this language
 	const needsHtmlFiltering = ["jsx", "tsx"].includes(language)
 
@@ -290,7 +287,7 @@ function processCaptures(
 		const lineCount = endLine - startLine + 1
 
 		// Skip components that don't span enough lines
-		if (lineCount < minComponentLines) {
+		if (lineCount < MIN_COMPONENT_LINES) {
 			return
 		}
 
@@ -328,7 +325,7 @@ function processCaptures(
 				const contextSpan = contextEnd - node.parent.startPosition.row + 1
 
 				// Only include context if it spans multiple lines
-				if (contextSpan >= minComponentLines) {
+				if (contextSpan >= MIN_COMPONENT_LINES) {
 					// Add the full range first
 					const rangeKey = `${node.parent.startPosition.row}-${contextEnd}`
 					if (!processedLines.has(rangeKey)) {
@@ -360,9 +357,6 @@ async function parseFile(
 	languageParsers: LanguageParser,
 	rooIgnoreController?: RooIgnoreController,
 ): Promise<string | null> {
-	// Minimum number of lines for a component to be included
-	const MIN_COMPONENT_LINES = 4
-
 	// Check if we have permission to access this file
 	if (rooIgnoreController && !rooIgnoreController.validateAccess(filePath)) {
 		return null
@@ -389,7 +383,7 @@ async function parseFile(
 		const lines = fileContent.split("\n")
 
 		// Process the captures
-		return processCaptures(captures, lines, extLang, MIN_COMPONENT_LINES)
+		return processCaptures(captures, lines, extLang)
 	} catch (error) {
 		console.log(`Error parsing file: ${error}\n`)
 		// Return null on parsing error to avoid showing error messages in the output
