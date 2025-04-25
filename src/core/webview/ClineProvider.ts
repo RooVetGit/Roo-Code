@@ -16,18 +16,15 @@ import {
 	ApiConfiguration,
 	ApiProvider,
 	requestyDefaultModelId,
-	requestyDefaultModelInfo,
 	openRouterDefaultModelId,
-	openRouterDefaultModelInfo,
 	glamaDefaultModelId,
-	glamaDefaultModelInfo,
 } from "../../shared/api"
 import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { HistoryItem } from "../../shared/HistoryItem"
 import { ExtensionMessage } from "../../shared/ExtensionMessage"
-import { Mode, PromptComponent, defaultModeSlug, getModeBySlug, getGroupName } from "../../shared/modes"
+import { Mode, PromptComponent, defaultModeSlug } from "../../shared/modes"
 import { experimentDefault } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
 import { Terminal, TERMINAL_SHELL_INTEGRATION_TIMEOUT } from "../../integrations/terminal/Terminal"
@@ -339,6 +336,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	async resolveWebviewView(webviewView: vscode.WebviewView | vscode.WebviewPanel) {
 		this.log("Resolving webview view")
 		this.view = webviewView
+
+		if (!this.contextProxy.isInitialized) {
+			await this.contextProxy.initialize()
+		}
 
 		// Set panel reference according to webview type
 		if ("onDidChangeViewState" in webviewView) {

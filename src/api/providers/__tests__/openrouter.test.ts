@@ -1,24 +1,14 @@
 // npx jest src/api/providers/__tests__/openrouter.test.ts
 
-import axios from "axios"
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 
 import { OpenRouterHandler } from "../openrouter"
-import { ApiHandlerOptions, ModelInfo } from "../../../shared/api"
+import { ApiHandlerOptions } from "../../../shared/api"
 
 // Mock dependencies
 jest.mock("openai")
-jest.mock("axios")
 jest.mock("delay", () => jest.fn(() => Promise.resolve()))
-
-const mockOpenRouterModelInfo: ModelInfo = {
-	maxTokens: 1000,
-	contextWindow: 2000,
-	supportsPromptCache: false,
-	inputPrice: 0.01,
-	outputPrice: 0.02,
-}
 
 describe("OpenRouterHandler", () => {
 	const mockOptions: ApiHandlerOptions = {
@@ -26,9 +16,7 @@ describe("OpenRouterHandler", () => {
 		openRouterModelId: "anthropic/claude-3.7-sonnet",
 	}
 
-	beforeEach(() => {
-		jest.clearAllMocks()
-	})
+	beforeEach(() => jest.clearAllMocks())
 
 	it("initializes with correct options", () => {
 		const handler = new OpenRouterHandler(mockOptions)
@@ -183,7 +171,6 @@ describe("OpenRouterHandler", () => {
 			;(OpenAI as jest.MockedClass<typeof OpenAI>).prototype.chat = {
 				completions: { create: mockCreate },
 			} as any
-			;(axios.get as jest.Mock).mockResolvedValue({ data: { data: {} } })
 
 			await handler.createMessage("test", []).next()
 
@@ -209,7 +196,6 @@ describe("OpenRouterHandler", () => {
 			;(OpenAI as jest.MockedClass<typeof OpenAI>).prototype.chat = {
 				completions: { create: mockCreate },
 			} as any
-			;(axios.get as jest.Mock).mockResolvedValue({ data: { data: {} } })
 
 			const messages: Anthropic.Messages.MessageParam[] = [
 				{ role: "user", content: "message 1" },
