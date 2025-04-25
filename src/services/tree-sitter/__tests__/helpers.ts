@@ -1,10 +1,9 @@
 import { jest } from "@jest/globals"
-import { parseSourceCodeDefinitionsForFile } from ".."
+import { parseSourceCodeDefinitionsForFile, setMinComponentLines } from ".."
 import * as fs from "fs/promises"
 import * as path from "path"
 import Parser from "web-tree-sitter"
 import tsxQuery from "../queries/tsx"
-
 // Mock setup
 jest.mock("fs/promises")
 export const mockedFs = jest.mocked(fs)
@@ -74,6 +73,9 @@ export async function testParseSourceCodeDefinitions(
 		extKey?: string
 	} = {},
 ): Promise<string | undefined> {
+	// Set minimum component lines to 0 for tests
+	setMinComponentLines(0)
+
 	// Set default options
 	const wasmFile = options.wasmFile || "tree-sitter-tsx.wasm"
 	const queryString = options.queryString || tsxQuery

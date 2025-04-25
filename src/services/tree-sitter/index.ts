@@ -6,7 +6,25 @@ import { fileExistsAtPath } from "../../utils/fs"
 import { parseMarkdown } from "./markdownParser"
 import { RooIgnoreController } from "../../core/ignore/RooIgnoreController"
 
-const MIN_COMPONENT_LINES = 4
+// Private constant
+const DEFAULT_MIN_COMPONENT_LINES_VALUE = 4
+
+// Getter function for MIN_COMPONENT_LINES (for easier testing)
+let currentMinComponentLines = DEFAULT_MIN_COMPONENT_LINES_VALUE
+
+/**
+ * Get the current minimum number of lines for a component to be included
+ */
+export function getMinComponentLines(): number {
+	return currentMinComponentLines
+}
+
+/**
+ * Set the minimum number of lines for a component (for testing)
+ */
+export function setMinComponentLines(value: number): void {
+	currentMinComponentLines = value
+}
 
 const extensions = [
 	"tla",
@@ -287,7 +305,7 @@ function processCaptures(captures: any[], lines: string[], language: string): st
 		const lineCount = endLine - startLine + 1
 
 		// Skip components that don't span enough lines
-		if (lineCount < MIN_COMPONENT_LINES) {
+		if (lineCount < getMinComponentLines()) {
 			return
 		}
 
@@ -325,7 +343,7 @@ function processCaptures(captures: any[], lines: string[], language: string): st
 				const contextSpan = contextEnd - node.parent.startPosition.row + 1
 
 				// Only include context if it spans multiple lines
-				if (contextSpan >= MIN_COMPONENT_LINES) {
+				if (contextSpan >= getMinComponentLines()) {
 					// Add the full range first
 					const rangeKey = `${node.parent.startPosition.row}-${contextEnd}`
 					if (!processedLines.has(rangeKey)) {
