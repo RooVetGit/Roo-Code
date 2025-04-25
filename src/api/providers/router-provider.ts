@@ -43,7 +43,7 @@ export abstract class RouterProvider extends BaseProvider {
 		this.client = new OpenAI({ baseURL, apiKey })
 	}
 
-	protected async fetchModel() {
+	public async fetchModel() {
 		this.models = await getModels(this.name)
 		return this.getModel()
 	}
