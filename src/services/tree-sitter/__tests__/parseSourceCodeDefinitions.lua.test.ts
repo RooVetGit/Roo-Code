@@ -1,15 +1,8 @@
-import { describe, expect, it, jest, beforeAll, beforeEach } from "@jest/globals"
-import { parseSourceCodeDefinitionsForFile } from ".."
-import * as fs from "fs/promises"
-import * as path from "path"
-import Parser from "web-tree-sitter"
-import { fileExistsAtPath } from "../../../utils/fs"
-import { loadRequiredLanguageParsers } from "../languageParser"
-import { luaQuery } from "../queries"
-import { initializeTreeSitter, testParseSourceCodeDefinitions, inspectTreeStructure, debugLog } from "./helpers"
+import { describe, expect, it, beforeAll } from "@jest/globals"
+import { testParseSourceCodeDefinitions } from "./helpers"
 import sampleLuaContent from "./fixtures/sample-lua"
+import { luaQuery } from "../queries"
 
-// Lua test options
 const luaOptions = {
 	language: "lua",
 	wasmFile: "tree-sitter-lua.wasm",
@@ -17,51 +10,42 @@ const luaOptions = {
 	extKey: "lua",
 }
 
-// Mock file system operations
-jest.mock("fs/promises")
-const mockedFs = jest.mocked(fs)
+describe("Lua Source Code Definition Tests", () => {
+	let parseResult: string | undefined
 
-// Mock loadRequiredLanguageParsers
-jest.mock("../languageParser", () => ({
-	loadRequiredLanguageParsers: jest.fn(),
-}))
-
-// Mock fileExistsAtPath to return true for our test paths
-jest.mock("../../../utils/fs", () => ({
-	fileExistsAtPath: jest.fn().mockImplementation(() => Promise.resolve(true)),
-}))
-
-describe("parseSourceCodeDefinitionsForFile with Lua", () => {
 	beforeAll(async () => {
-		await initializeTreeSitter()
+		parseResult = await testParseSourceCodeDefinitions("file.lua", sampleLuaContent, luaOptions)
+		expect(parseResult).toBeDefined()
 	})
 
-	it("should inspect Lua tree structure", async () => {
-		await inspectTreeStructure(sampleLuaContent, "lua")
+	it("should parse global function definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*function test_function/)
 	})
 
-	it("should parse Lua function definitions", async () => {
-		const result = await testParseSourceCodeDefinitions("test.lua", sampleLuaContent, luaOptions)
-		expect(result).toContain("test_function")
-		expect(result).toContain("test_local_function")
+	it("should parse local function definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*local function test_local_function/)
 	})
 
-	it("should parse Lua table definitions", async () => {
-		const result = await testParseSourceCodeDefinitions("test.lua", sampleLuaContent, luaOptions)
-		expect(result).toContain("test_table_with_methods")
-		expect(result).toContain("test_table")
-		expect(result).toContain("test_array_table")
+	it("should parse method definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*function test_module\.test_module_function/)
 	})
 
-	it("should parse Lua variable declarations", async () => {
-		const result = await testParseSourceCodeDefinitions("test.lua", sampleLuaContent, luaOptions)
-		expect(result).toContain("test_variable_declaration")
-		expect(result).toContain("test_local_variable")
+	it("should parse table declarations with methods", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*local test_table_with_methods = {/)
 	})
 
-	it("should parse Lua module definitions", async () => {
-		const result = await testParseSourceCodeDefinitions("test.lua", sampleLuaContent, luaOptions)
-		expect(result).toContain("test_module")
-		expect(result).toContain("test_module_function")
+	it("should parse table declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*local test_table = {/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*local test_array_table = {/)
+	})
+
+	it("should parse global variable declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*test_variable_declaration =/)
+	})
+
+	it("should parse local variable declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*local test_local_variable =/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*local test_require =/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*local test_module =/)
 	})
 })

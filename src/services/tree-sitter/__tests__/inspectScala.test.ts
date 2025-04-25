@@ -12,11 +12,14 @@ describe("inspectScala", () => {
 	}
 
 	it("should inspect Scala tree structure", async () => {
-		await inspectTreeStructure(sampleScala, "scala")
+		const result = await inspectTreeStructure(sampleScala, "scala")
+		expect(result).toBeDefined()
 	})
 
 	it("should parse Scala definitions", async () => {
 		const result = await testParseSourceCodeDefinitions("test.scala", sampleScala, testOptions)
+		expect(result).toBeDefined()
+		expect(result).toMatch(/\d+--\d+ \|/)
 		debugLog("Scala parse result:", result)
 	})
 })

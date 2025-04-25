@@ -16,7 +16,8 @@ describe("inspectLua", () => {
 	})
 
 	it("should parse Lua definitions", async () => {
-		const result = await testParseSourceCodeDefinitions("test.lua", sampleLuaContent, testOptions)
+		const result = await testParseSourceCodeDefinitions("file.lua", sampleLuaContent, testOptions)
+		expect(result).toBeDefined() // Confirm parse succeeded
 		debugLog("Lua parse result:", result)
 	})
 })

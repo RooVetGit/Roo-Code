@@ -36,7 +36,7 @@ describe("parseSourceCodeDefinitionsForFile with Elixir", () => {
 
 	beforeAll(async () => {
 		// Cache parse result for all tests
-		parseResult = await testParseSourceCodeDefinitions("/test/file.ex", sampleElixirContent, elixirOptions)
+		parseResult = (await testParseSourceCodeDefinitions("/test/file.ex", sampleElixirContent, elixirOptions))!
 		debugLog("Elixir Parse Result:", parseResult)
 	})
 
@@ -44,65 +44,54 @@ describe("parseSourceCodeDefinitionsForFile with Elixir", () => {
 		jest.clearAllMocks()
 	})
 
-	// Test for tree structure inspection
-	it("should inspect Elixir tree structure", async () => {
-		await inspectTreeStructure(sampleElixirContent, "elixir")
+	it("should parse module definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| defmodule TestModuleDefinition do/)
+		expect(parseResult).toMatch(/\d+--\d+ \| defmodule TestBehaviourDefinition do/)
+		expect(parseResult).toMatch(/\d+--\d+ \| defmodule TestModuleDefinitionTest do/)
+		debugLog("Module definitions found:", parseResult.match(/defmodule[\s\S]*?end/g))
 	})
 
-	// Test module definitions
-	it("should capture module definitions", () => {
-		expect(parseResult).toContain("TestModuleDefinition")
-		expect(parseResult).toContain("TestBehaviourDefinition")
-		expect(parseResult).toContain("TestModuleDefinitionTest")
+	it("should parse function definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|   def test_function_definition/)
+		expect(parseResult).toMatch(/\d+--\d+ \|   def test_pipeline_definition/)
+		expect(parseResult).toMatch(/\d+--\d+ \|   def test_comprehension_definition/)
+		expect(parseResult).toMatch(/\d+--\d+ \|   def test_sigil_definition/)
+		debugLog("Function definitions found:", parseResult.match(/def[\s\S]*?end/g))
 	})
 
-	// Test function definitions
-	it("should capture function definitions", () => {
-		expect(parseResult).toContain("test_function_definition")
-		expect(parseResult).toContain("test_pipeline_definition")
-		expect(parseResult).toContain("test_comprehension_definition")
-		expect(parseResult).toContain("test_sigil_definition")
+	it("should parse macro definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|   defmacro test_macro_definition/)
+		debugLog("Macro definitions found:", parseResult.match(/defmacro[\s\S]*?end/g))
 	})
 
-	// Test macro definitions
-	it("should capture macro definitions", () => {
-		expect(parseResult).toContain("test_macro_definition")
+	it("should parse protocol implementations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|   defimpl String\.Chars/)
+		debugLog("Protocol implementations found:", parseResult.match(/defimpl[\s\S]*?end/g))
 	})
 
-	// Test protocol and implementation definitions
-	it("should capture protocol and implementation definitions", () => {
-		expect(parseResult).toContain("String.Chars")
-		expect(parseResult).toContain("TestModuleDefinition")
+	it("should parse behaviour callbacks", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|   @callback test_behaviour_callback/)
+		debugLog("Behaviour callbacks found:", parseResult.match(/@callback[\s\S]*?\)/g))
 	})
 
-	// Test behaviour definitions
-	it("should capture behaviour definitions", () => {
-		expect(parseResult).toContain("test_behaviour_callback")
+	it("should parse struct definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|   defstruct \[/)
+		debugLog("Struct definitions found:", parseResult.match(/defstruct[\s\S]*?\]/g))
 	})
 
-	// Test struct definitions
-	it("should capture struct definitions", () => {
-		expect(parseResult).toContain("defstruct [")
+	it("should parse guard definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|   defguard test_guard_definition/)
+		debugLog("Guard definitions found:", parseResult.match(/defguard[\s\S]*?end/g))
 	})
 
-	// Test guard definitions
-	it("should capture guard definitions", () => {
-		expect(parseResult).toContain("test_guard_definition")
+	it("should parse module attributes", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|   @test_attribute_definition/)
+		expect(parseResult).toMatch(/\d+--\d+ \| @moduledoc/)
+		debugLog("Module attributes found:", parseResult.match(/@[\s\S]*?\]/g))
 	})
 
-	// Test sigil definitions
-	it("should capture sigil definitions", () => {
-		expect(parseResult).toContain("~s")
-	})
-
-	// Test attribute definitions
-	it("should capture attribute definitions", () => {
-		expect(parseResult).toContain("@test_attribute_definition")
-		expect(parseResult).toContain("@moduledoc")
-	})
-
-	// Test test definitions
-	it("should capture test definitions", () => {
-		expect(parseResult).toContain("test_definition")
+	it("should parse test definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|   test "test_definition"/)
+		debugLog("Test definitions found:", parseResult.match(/test[\s\S]*?end/g))
 	})
 })

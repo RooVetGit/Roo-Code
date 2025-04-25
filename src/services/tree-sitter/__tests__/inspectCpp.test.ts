@@ -1,9 +1,9 @@
-import { describe, it } from "@jest/globals"
+import { describe, it, expect } from "@jest/globals"
 import { inspectTreeStructure, testParseSourceCodeDefinitions } from "./helpers"
 import { cppQuery } from "../queries"
 import sampleCppContent from "./fixtures/sample-cpp"
 
-describe("inspectCpp", () => {
+describe("C++ Tree-sitter Parser", () => {
 	const testOptions = {
 		language: "cpp",
 		wasmFile: "tree-sitter-cpp.wasm",
@@ -11,11 +11,13 @@ describe("inspectCpp", () => {
 		extKey: "cpp",
 	}
 
-	it("should inspect C++ tree structure", async () => {
+	it("should properly parse structures", async () => {
+		// First run inspectTreeStructure to get query structure output
 		await inspectTreeStructure(sampleCppContent, "cpp")
-	})
 
-	it("should parse C++ definitions", async () => {
-		await testParseSourceCodeDefinitions("test.cpp", sampleCppContent, testOptions)
+		// Then run testParseSourceCodeDefinitions to get line numbers
+		const result = await testParseSourceCodeDefinitions("test.cpp", sampleCppContent, testOptions)
+		expect(result).toBeDefined()
+		expect(result).toMatch(/\d+--\d+ \|/)
 	})
 })

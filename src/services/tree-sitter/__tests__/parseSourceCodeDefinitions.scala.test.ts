@@ -6,7 +6,7 @@ import Parser from "web-tree-sitter"
 import { fileExistsAtPath } from "../../../utils/fs"
 import { loadRequiredLanguageParsers } from "../languageParser"
 import { scalaQuery } from "../queries"
-import { initializeTreeSitter, testParseSourceCodeDefinitions, inspectTreeStructure, debugLog } from "./helpers"
+import { initializeTreeSitter, testParseSourceCodeDefinitions } from "./helpers"
 import { sampleScala as sampleScalaContent } from "./fixtures/sample-scala"
 
 // Scala test options
@@ -32,50 +32,68 @@ jest.mock("../../../utils/fs", () => ({
 }))
 
 describe("parseSourceCodeDefinitionsForFile with Scala", () => {
+	let parseResult: string | undefined
+
 	beforeAll(async () => {
 		await initializeTreeSitter()
+		parseResult = await testParseSourceCodeDefinitions("test.scala", sampleScalaContent, scalaOptions)
+		expect(parseResult).toBeDefined()
 	})
 
-	it("should inspect Scala tree structure", async () => {
-		await inspectTreeStructure(sampleScalaContent, "scala")
+	beforeEach(() => {
+		expect(parseResult).toBeDefined()
 	})
 
-	it("should parse Scala package declarations", async () => {
-		const result = await testParseSourceCodeDefinitions("test.scala", sampleScalaContent, scalaOptions)
-		expect(result).toContain("com.example")
+	it("should parse package declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| package com\.example\.test/)
 	})
 
-	it("should parse Scala class definitions", async () => {
-		const result = await testParseSourceCodeDefinitions("test.scala", sampleScalaContent, scalaOptions)
-		expect(result).toContain("TestCaseClass")
-		expect(result).toContain("PatternMatcher")
-		expect(result).toContain("AbstractBase")
-		expect(result).toContain("ForComprehension")
+	it("should parse class declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| class PatternMatcher/)
+		expect(parseResult).toMatch(/\d+--\d+ \| class ForComprehension/)
+		expect(parseResult).toMatch(/\d+--\d+ \| implicit class RichString/)
 	})
 
-	it("should parse Scala trait definitions", async () => {
-		const result = await testParseSourceCodeDefinitions("test.scala", sampleScalaContent, scalaOptions)
-		expect(result).toContain("TestTrait")
+	it("should parse case class and case object declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| case class TestCaseClass\[A, B\]/)
+		expect(parseResult).toMatch(/\d+--\d+ \| case object SingletonValue extends AbstractBase/)
 	})
 
-	it("should parse Scala object definitions", async () => {
-		const result = await testParseSourceCodeDefinitions("test.scala", sampleScalaContent, scalaOptions)
-		expect(result).toContain("Types")
-		expect(result).toContain("Variables")
+	it("should parse abstract class and trait declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| abstract class AbstractBase \{/)
+		expect(parseResult).toMatch(/\d+--\d+ \| trait TestTrait \{/)
 	})
 
-	it("should parse Scala method definitions", async () => {
-		const result = await testParseSourceCodeDefinitions("test.scala", sampleScalaContent, scalaOptions)
-		expect(result).toContain("processItems")
+	it("should parse object declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| object Types \{/)
+		expect(parseResult).toMatch(/\d+--\d+ \| object Variables \{/)
 	})
 
-	it("should parse Scala value definitions", async () => {
-		const result = await testParseSourceCodeDefinitions("test.scala", sampleScalaContent, scalaOptions)
-		expect(result).toContain("heavyComputation")
+	it("should parse method declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|   def testMatch\(value: Any\): Int = value match/)
+		expect(parseResult).toMatch(/\d+--\d+ \|   def processItems\(items: List\[Int\]\): List\[Int\]/)
 	})
 
-	it("should parse Scala type definitions", async () => {
-		const result = await testParseSourceCodeDefinitions("test.scala", sampleScalaContent, scalaOptions)
-		expect(result).toContain("T")
+	it("should parse value declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|   lazy val heavyComputation: Int = \{/)
+		expect(parseResult).toMatch(/\d+--\d+ \|   val immutableValue: Int = 42/)
 	})
+
+	it("should parse variable declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|   var mutableValue: String = "changeable"/)
+	})
+
+	it("should parse type definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|   type StringMap\[T\] = Map\[String, T\]/)
+	})
+
+	/*
+	TODO: The following structures can be parsed by tree-sitter but lack query support:
+
+	1. Pattern Matching:
+		  (match_expression value: (identifier) body: (case_block))
+
+	2. For Comprehensions:
+		  (for_expression enumerators: (enumerators))
+	*/
 })

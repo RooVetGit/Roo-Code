@@ -30,4 +30,11 @@ export const elispQuery = `
   . (symbol) @name.definition.group) @_group
   (#eq? @_def "defgroup")
   (#match? @name.definition.group "^[^;]"))
+
+; Advice definitions - match defadvice specifically and avoid comments
+((list
+  . (symbol) @_def
+  . (symbol) @name.definition.advice) @_advice
+  (#eq? @_def "defadvice")
+  (#match? @name.definition.advice "^[^;]"))
 `

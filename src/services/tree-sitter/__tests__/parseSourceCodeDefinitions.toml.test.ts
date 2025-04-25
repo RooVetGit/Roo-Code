@@ -1,40 +1,78 @@
-import { describe, it } from "@jest/globals"
-import { debugLog, testParseSourceCodeDefinitions } from "./helpers"
+import { describe, it, expect, beforeAll } from "@jest/globals"
+import { testParseSourceCodeDefinitions } from "./helpers"
 import { tomlQuery } from "../queries"
 import { sampleToml } from "./fixtures/sample-toml"
 
-describe("parseSourceCodeDefinitions (TOML)", () => {
-	const testOptions = {
-		language: "toml",
-		wasmFile: "tree-sitter-toml.wasm",
-		queryString: tomlQuery,
-		extKey: "toml",
-	}
+describe("TOML Source Code Definition Tests", () => {
+	let parseResult: string
 
-	it("should inspect TOML tree structure", async () => {
-		const result = await testParseSourceCodeDefinitions("test.toml", sampleToml, testOptions)
-		debugLog("All definitions:", result)
-
-		// Verify result is a string containing expected definitions
+	beforeAll(async () => {
+		const result = await testParseSourceCodeDefinitions("test.toml", sampleToml, {
+			language: "toml",
+			wasmFile: "tree-sitter-toml.wasm",
+			queryString: tomlQuery,
+			extKey: "toml",
+		})
+		expect(result).toBeDefined()
 		expect(typeof result).toBe("string")
-		expect(result).toContain("# test.toml")
+		parseResult = result as string
+	})
 
-		// Table declarations
-		expect(result).toMatch(/\d+--\d+ \| \[database\]/)
-		expect(result).toMatch(/\d+--\d+ \| \[servers\]/)
-		expect(result).toMatch(/\d+--\d+ \| \[owner\.personal\]/)
+	it("should parse tables", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*\[database\]/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*\[servers\]/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*\[owner\.personal\]/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*\[complex_values\]/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*\[mixed_content\]/)
+	})
 
-		// Array of tables
-		expect(result).toMatch(/\d+--\d+ \| \[\[products\]\]/)
+	it("should parse table arrays", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*\[\[products\]\]/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*\[\[products\]\]  # Array of tables/)
+	})
 
-		// Complex tables and structures
-		expect(result).toMatch(/\d+--\d+ \| \[complex_values\]/)
-		expect(result).toMatch(/\d+--\d+ \| \[mixed_content\]/)
+	it("should parse inline tables", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*alpha = \{ ip = "10\.0\.0\.1", role = "frontend" \}/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*beta = \{ ip = "10\.0\.0\.2", role = "backend" \}/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*metadata = \{ created = 2024-01-01, updated = 2024-04-13 \}/)
+	})
 
-		// Arrays and multi-line strings
-		expect(result).toMatch(/\d+--\d+ \| strings = \[/)
-		expect(result).toMatch(/\d+--\d+ \| dates = \[/)
-		expect(result).toMatch(/\d+--\d+ \| description = """/)
-		expect(result).toMatch(/\d+--\d+ \| features = \[/)
+	it("should parse arrays", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*ports = \[ 8001, 8001, 8002 \]/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*strings = \[/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*numbers = \[ 42, -17, 3\.14, 1e10 \]/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*dates = \[/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*features = \[/)
+	})
+
+	it("should parse strings", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*server = "192\.168\.1\.1"/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*name = "Tom Preston-Werner"/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*description = """/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*'''/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*"""/)
+	})
+
+	it("should parse numbers", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*connection_max = 5000/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*sku = 738594937/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*numbers = \[ 42, -17, 3\.14, 1e10 \]/)
+	})
+
+	it("should parse booleans", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*enabled = true/)
+	})
+
+	it("should parse dates and times", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*dob = 1979-05-27T07:32:00-08:00/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*1979-05-27T07:32:00-08:00/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*1979-05-27/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*07:32:00/)
+	})
+
+	it("should parse dotted keys", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*"dotted\.key\.example" = "value"/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*physical\.color = "orange"/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*physical\.shape = "round"/)
 	})
 })

@@ -1,4 +1,4 @@
-import { describe, it } from "@jest/globals"
+import { describe, it, expect } from "@jest/globals"
 import { inspectTreeStructure, testParseSourceCodeDefinitions } from "./helpers"
 import { ocamlQuery } from "../queries"
 import { sampleOCaml } from "./fixtures/sample-ocaml"
@@ -12,10 +12,16 @@ describe("inspectOCaml", () => {
 	}
 
 	it("should inspect OCaml tree structure", async () => {
-		await inspectTreeStructure(sampleOCaml, "ocaml")
+		const result = await inspectTreeStructure(sampleOCaml, "ocaml")
+		expect(result).toBeDefined()
+		expect(result.length).toBeGreaterThan(0)
 	})
 
 	it("should parse OCaml definitions", async () => {
-		await testParseSourceCodeDefinitions("test.ml", sampleOCaml, testOptions)
+		const result = await testParseSourceCodeDefinitions("test.ml", sampleOCaml, testOptions)
+		expect(result).toBeDefined()
+		expect(result).toMatch(/\d+--\d+ \| module StringSet/)
+		expect(result).toMatch(/\d+--\d+ \| type shape/)
+		expect(result).toMatch(/\d+--\d+ \| let rec process_list/)
 	})
 })

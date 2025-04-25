@@ -22,40 +22,38 @@ describe("parseSourceCodeDefinitions.javascript", () => {
 		result = parseResult
 	})
 
-	it("should capture function declarations", async () => {
-		expect(result).toContain("testFunctionDefinition(")
-		expect(result).toContain("testAsyncFunctionDefinition(")
-		expect(result).toContain("testGeneratorFunctionDefinition(")
+	it("should parse import/export statements", () => {
+		expect(result).toMatch(/\d+--\d+ \|\s*\/\/ Import statements test/)
 	})
 
-	it("should capture arrow functions", async () => {
-		expect(result).toContain("testArrowFunctionDefinition =")
+	it("should parse function declarations", () => {
+		expect(result).toMatch(/\d+--\d+ \|\s*function testFunctionDefinition\(/)
+		expect(result).toMatch(/\d+--\d+ \|\s*async function testAsyncFunctionDefinition\(/)
+		expect(result).toMatch(/\d+--\d+ \|\s*function\* testGeneratorFunctionDefinition\(/)
+		expect(result).toMatch(/\d+--\d+ \|\s*const testArrowFunctionDefinition =/)
 	})
 
-	it("should capture class declarations and methods", async () => {
-		expect(result).toContain("class TestClassDefinition")
-		expect(result).toContain("testMethodDefinition(")
-		expect(result).toContain("testStaticMethodDefinition(")
-		expect(result).toContain("testGetterDefinition")
-		expect(result).toContain("testSetterDefinition")
+	it("should parse class declarations", () => {
+		expect(result).toMatch(/\d+--\d+ \|\s*class TestClassDefinition {/)
+		expect(result).toMatch(/\d+--\d+ \|\s*testMethodDefinition\(/)
+		expect(result).toMatch(/\d+--\d+ \|\s*static testStaticMethodDefinition\(/)
+		expect(result).toMatch(/\d+--\d+ \|\s*get testGetterDefinition\(\) {/)
+		expect(result).toMatch(/\d+--\d+ \|\s*set testSetterDefinition\(/)
 	})
 
-	it("should capture object literals and methods", async () => {
-		expect(result).toContain("testObjectLiteralDefinition =")
-		expect(result).toContain("methodInObject(")
-		expect(result).toContain("computedProperty")
+	it("should parse object literal declarations", () => {
+		expect(result).toMatch(/\d+--\d+ \|\s*const testObjectLiteralDefinition = {/)
+		expect(result).toMatch(/\d+--\d+ \|\s*methodInObject\(/)
+		expect(result).toMatch(/\d+--\d+ \|\s*get computedProperty\(\) {/)
 	})
 
-	it("should capture JSX elements", async () => {
-		expect(result).toContain("testJsxElementDefinition =")
+	it("should parse JSX element declarations", () => {
+		expect(result).toMatch(/\d+--\d+ \|\s*const testJsxElementDefinition =/)
 	})
 
-	it("should capture decorated classes", async () => {
-		// We can capture the decorator and class
-		expect(result).toContain("@testDecoratorDefinition")
-		expect(result).toContain("class TestDecoratedClassDefinition")
+	it("should parse decorator declarations", () => {
+		expect(result).toMatch(/\d+--\d+ \|\s*@testDecoratorDefinition/)
+		expect(result).toMatch(/\d+--\d+ \|\s*class TestDecoratedClassDefinition {/)
+		expect(result).toMatch(/\d+--\d+ \|\s*@testDecoratorDefinition/)
 	})
-
-	// Note: Decorated methods are captured as part of their containing class
-	// due to tree-sitter's AST structure for decorators
 })

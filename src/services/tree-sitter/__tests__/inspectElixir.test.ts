@@ -12,10 +12,15 @@ describe("inspectElixir", () => {
 	}
 
 	it("should inspect Elixir tree structure", async () => {
-		await inspectTreeStructure(sampleElixirContent, "elixir")
+		const result = await inspectTreeStructure(sampleElixirContent, "elixir")
+		expect(result).toBeDefined()
+		expect(result.length).toBeGreaterThan(0)
 	})
 
 	it("should parse Elixir definitions", async () => {
-		await testParseSourceCodeDefinitions("test.ex", sampleElixirContent, testOptions)
+		const result = await testParseSourceCodeDefinitions("test.ex", sampleElixirContent, testOptions)
+		expect(result).toBeDefined()
+		expect(result).toContain("--")
+		expect(result).toMatch(/\d+--\d+ \|/)
 	})
 })

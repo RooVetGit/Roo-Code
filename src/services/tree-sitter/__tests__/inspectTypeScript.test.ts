@@ -11,11 +11,15 @@ describe("inspectTypeScript", () => {
 		extKey: "ts",
 	}
 
-	it("should inspect TypeScript tree structure", async () => {
-		await inspectTreeStructure(sampleTypeScriptContent, "typescript")
+	it("should successfully inspect TypeScript tree structure", async () => {
+		// Should execute without throwing
+		await expect(inspectTreeStructure(sampleTypeScriptContent, "typescript")).resolves.not.toThrow()
 	})
 
-	it("should parse TypeScript definitions", async () => {
-		await testParseSourceCodeDefinitions("test.ts", sampleTypeScriptContent, testOptions)
+	it("should successfully parse TypeScript definitions", async () => {
+		const result = await testParseSourceCodeDefinitions("test.ts", sampleTypeScriptContent, testOptions)
+		expect(result).toBeDefined()
+		expect(result).toMatch(/\d+--\d+ \|/) // Verify line number format
+		expect(result).toMatch(/interface TestInterfaceDefinition/) // Verify some content
 	})
 })

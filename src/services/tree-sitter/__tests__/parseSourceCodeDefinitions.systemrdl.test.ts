@@ -1,43 +1,55 @@
-import { describe, it, expect } from "@jest/globals"
+import { describe, it, expect, beforeAll } from "@jest/globals"
 import { testParseSourceCodeDefinitions } from "./helpers"
 import systemrdlQuery from "../queries/systemrdl"
 import sampleSystemRDLContent from "./fixtures/sample-systemrdl"
 
-describe("parseSourceCodeDefinitions.systemrdl", () => {
-	const testOptions = {
-		language: "systemrdl",
-		wasmFile: "tree-sitter-systemrdl.wasm",
-		queryString: systemrdlQuery,
-		extKey: "rdl",
-	}
+describe("SystemRDL Source Code Definition Tests", () => {
+	let parseResult: string
 
-	it("should parse SystemRDL component definitions", async () => {
-		const result = await testParseSourceCodeDefinitions("test.rdl", sampleSystemRDLContent, testOptions)
-		expect(result).toContain("addrmap top_map {")
-		expect(result).toContain("reg block_ctrl {")
-		expect(result).toContain("reg status_reg {")
-		expect(result).toContain("reg complex_reg {")
-	})
-
-	it("should parse SystemRDL field definitions", async () => {
-		const result = await testParseSourceCodeDefinitions("test.rdl", sampleSystemRDLContent, testOptions)
-		expect(result).toContain("field {")
-	})
-
-	it("should parse SystemRDL property definitions", async () => {
-		const result = await testParseSourceCodeDefinitions("test.rdl", sampleSystemRDLContent, testOptions)
-		expect(result).toContain("property my_custom_prop {")
-	})
-
-	it("should parse SystemRDL parameter definitions", async () => {
-		const result = await testParseSourceCodeDefinitions("test.rdl", sampleSystemRDLContent, testOptions)
-		// Parameter definitions are not captured in the current output
+	beforeAll(async () => {
+		const result = await testParseSourceCodeDefinitions("test.rdl", sampleSystemRDLContent, {
+			language: "systemrdl",
+			wasmFile: "tree-sitter-systemrdl.wasm",
+			queryString: systemrdlQuery,
+			extKey: "rdl",
+		})
 		expect(result).toBeDefined()
+		expect(typeof result).toBe("string")
+		parseResult = result as string
 	})
 
-	it("should parse SystemRDL enum definitions", async () => {
-		const result = await testParseSourceCodeDefinitions("test.rdl", sampleSystemRDLContent, testOptions)
-		expect(result).toContain("enum error_types {")
-		expect(result).toContain("enum interrupt_type {")
+	it("should parse component definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*addrmap top_map {/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*reg block_ctrl {/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*reg status_reg {/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*reg complex_reg {/)
+	})
+
+	it("should parse field definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*field {/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*} enable\[1:0\];/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*field {/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*} status;/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*field {/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*} errors\[3:0\];/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*field {/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*} ctrl\[7:0\];/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*field {/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*} status\[15:8\];/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*field {/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*} flags\[23:16\];/)
+	})
+
+	it("should parse property definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*property my_custom_prop {/)
+	})
+
+	it("should parse parameter definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*parameter DATA_WIDTH {/)
+	})
+
+	it("should parse enum definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*enum error_types {/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*enum interrupt_type {/)
 	})
 })

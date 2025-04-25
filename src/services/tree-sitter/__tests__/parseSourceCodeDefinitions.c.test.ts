@@ -1,168 +1,114 @@
-import { describe, it } from "@jest/globals"
-import { testParseSourceCodeDefinitions, debugLog } from "./helpers"
+import { describe, it, beforeAll } from "@jest/globals"
+import { testParseSourceCodeDefinitions } from "./helpers"
 import { cQuery } from "../queries"
 import sampleCContent from "./fixtures/sample-c"
 
-describe("parseSourceCodeDefinitionsForFile with C", () => {
-	const testOptions = {
-		language: "c",
-		wasmFile: "tree-sitter-c.wasm",
-		queryString: cQuery,
-		extKey: "c",
-	}
+describe("C Source Code Definition Tests", () => {
+	let parseResult: string
 
-	// Single test to inspect tree structure
-	it("should inspect C tree structure", async () => {
-		const result = await testParseSourceCodeDefinitions("test.c", sampleCContent, testOptions)
+	beforeAll(async () => {
+		const result = await testParseSourceCodeDefinitions("test.c", sampleCContent, {
+			language: "c",
+			wasmFile: "tree-sitter-c.wasm",
+			queryString: cQuery,
+			extKey: "c",
+		})
 		if (!result || !result.match(/\d+--\d+ \|/)) {
 			throw new Error("Failed to parse C tree structure")
 		}
-		debugLog("C Tree Structure Result:", result)
+		parseResult = result
 	})
 
-	// Test all function-related constructs
-	it("should capture function constructs", async () => {
-		const result = await testParseSourceCodeDefinitions("test.c", sampleCContent, testOptions)
-		const lines = result?.split("\n") || []
-		const functionPatterns = [
-			/\d+--\d+ \| void multiline_prototype\(/,
-			/\d+--\d+ \| void function_pointer_prototype\(/,
-			/\d+--\d+ \| int variadic_prototype\(/,
-			/\d+--\d+ \| int basic_multitype_function\(/,
-			/\d+--\d+ \| void array_param_function\(/,
-			/\d+--\d+ \| void pointer_param_function\(/,
-			/\d+--\d+ \| int variadic_impl_function\(/,
-		]
+	it("should parse function declarations and definitions", () => {
+		// Regular function declarations
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*void multiline_prototype\(/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*void void_param_prototype\(/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*void function_pointer_prototype\(/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*int variadic_prototype\(/)
 
-		for (const pattern of functionPatterns) {
-			if (!lines.some((line) => pattern.test(line))) {
-				throw new Error(`Missing function pattern: ${pattern}`)
-			}
-		}
-		debugLog(
-			"Function Constructs:",
-			lines.filter((l) => l.includes("function")),
-		)
+		// Function definitions
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*int basic_multitype_function\(/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*void array_param_function\(/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*void pointer_param_function\(/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*int variadic_impl_function\(/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*void test_pointer_function\(/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*int test_variadic_function\(/)
 	})
 
-	// Test all struct-related constructs
-	it("should capture struct constructs", async () => {
-		const result = await testParseSourceCodeDefinitions("test.c", sampleCContent, testOptions)
-		const lines = result?.split("\n") || []
-		const structPatterns = [
-			/\d+--\d+ \| union basic_types_struct/,
-			/\d+--\d+ \| struct nested_struct/,
-			/\d+--\d+ \| struct bitfield_struct/,
-			/\d+--\d+ \| struct callback_struct/,
-			/\d+--\d+ \| struct aligned_struct/,
-			/\d+--\d+ \| struct anonymous_union_struct/,
-		]
+	it("should parse struct definitions", () => {
+		// Regular structs
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*struct nested_struct \{/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*struct bitfield_struct \{/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*struct callback_struct \{/)
 
-		for (const pattern of structPatterns) {
-			if (!lines.some((line) => pattern.test(line))) {
-				throw new Error(`Missing struct pattern: ${pattern}`)
-			}
-		}
-		debugLog(
-			"Struct Constructs:",
-			lines.filter((l) => l.includes("struct")),
-		)
+		// Special struct types
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*struct anonymous_union_struct \{/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*struct aligned_struct \{/)
+
+		// Global struct
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*static struct config_struct \{/)
 	})
 
-	// Test all union constructs
-	it("should capture union constructs", async () => {
-		const result = await testParseSourceCodeDefinitions("test.c", sampleCContent, testOptions)
-		const lines = result?.split("\n") || []
-		const unionPatterns = [/\d+--\d+ \| union multitype_data_union/, /\d+--\d+ \| union bitfield_union/]
+	it("should parse union definitions", () => {
+		// Regular unions
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*union multitype_data_union \{/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*union bitfield_union \{/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*union basic_types_struct \{/)
 
-		for (const pattern of unionPatterns) {
-			if (!lines.some((line) => pattern.test(line))) {
-				throw new Error(`Missing union pattern: ${pattern}`)
-			}
-		}
-		debugLog(
-			"Union Constructs:",
-			lines.filter((l) => l.includes("union")),
-		)
+		// Anonymous union in struct
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*struct anonymous_union_struct \{/)
 	})
 
-	// Test all enum constructs
-	it("should capture enum constructs", async () => {
-		const result = await testParseSourceCodeDefinitions("test.c", sampleCContent, testOptions)
-		const lines = result?.split("\n") || []
-		const enumPatterns = [
-			/\d+--\d+ \| enum sequential_value_enum/,
-			/\d+--\d+ \| enum explicit_value_enum/,
-			/\d+--\d+ \| enum mixed_value_enum/,
-		]
+	it("should parse enum definitions", () => {
+		// Sequential value enums
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*enum sequential_value_enum \{/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*enum TestBasicEnum \{/)
 
-		for (const pattern of enumPatterns) {
-			if (!lines.some((line) => pattern.test(line))) {
-				throw new Error(`Missing enum pattern: ${pattern}`)
-			}
-		}
-		debugLog(
-			"Enum Constructs:",
-			lines.filter((l) => l.includes("enum")),
-		)
+		// Explicit value enums
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*enum explicit_value_enum \{/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*enum TestValuedEnum \{/)
+
+		// Mixed value enums
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*enum mixed_value_enum \{/)
 	})
 
-	// Test all typedef constructs
-	it("should capture typedef constructs", async () => {
-		const result = await testParseSourceCodeDefinitions("test.c", sampleCContent, testOptions)
-		const lines = result?.split("\n") || []
-		const typedefPatterns = [/\d+--\d+ \| typedef struct \{/]
+	it("should parse typedef declarations", () => {
+		// Anonymous struct typedefs
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*typedef struct \{/)
 
-		for (const pattern of typedefPatterns) {
-			if (!lines.some((line) => pattern.test(line))) {
-				throw new Error(`Missing typedef pattern: ${pattern}`)
-			}
-		}
-		debugLog(
-			"Typedef Constructs:",
-			lines.filter((l) => l.includes("typedef")),
-		)
+		// Basic type typedefs
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*typedef unsigned long long timestamp_typedef/)
+
+		// Function pointer typedef usage
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*extern TEST_COMPARE_FUNC test_get_comparator/)
 	})
 
-	// Test all preprocessor constructs
-	it("should capture preprocessor constructs", async () => {
-		const result = await testParseSourceCodeDefinitions("test.c", sampleCContent, testOptions)
-		const lines = result?.split("\n") || []
-		const macroPatterns = [
-			/\d+--\d+ \| #define TEST_MIN\(a,b\) \(/,
-			/\d+--\d+ \| #define TEST_MAX\(a,b\) \(/,
-			/\d+--\d+ \| \s+#define TEST_DEBUG_LOG\(level, msg, \.\.\.\) do \{/,
-		]
+	it("should parse preprocessor definitions", () => {
+		// Object-like macros
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*#define MAX_SIZE 1024/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*#define TEST_OS "windows"/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*#define TEST_OS "unix"/)
 
-		for (const pattern of macroPatterns) {
-			if (!lines.some((line) => pattern.test(line))) {
-				throw new Error(`Missing macro pattern: ${pattern}`)
-			}
-		}
-		debugLog(
-			"Preprocessor Constructs:",
-			lines.filter((l) => l.includes("#define")),
-		)
+		// Function-like macros
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*#define TEST_MIN\(a,b\)/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*#define TEST_MAX\(a,b\)/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*#define TEST_DEBUG_LOG\(level, msg, \.\.\.\)/)
+
+		// Conditional compilation
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*#ifdef _WIN32/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*#if TEST_DEBUG_LEVEL >= 2/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*#ifdef TEST_ENABLE_LOGGING/)
 	})
 
-	// Test all global variable constructs
-	it("should capture global variable constructs", async () => {
-		const result = await testParseSourceCodeDefinitions("test.c", sampleCContent, testOptions)
-		const lines = result?.split("\n") || []
-		const varPatterns = [
-			/\d+--\d+ \| static const int MAGIC_NUMBER =/,
-			/\d+--\d+ \| static const char\* const BUILD_INFO\[\]/,
-			/\d+--\d+ \| static struct config_struct/,
-		]
+	it("should parse global variable declarations", () => {
+		// Basic global variables
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*static const int MAGIC_NUMBER =/)
 
-		for (const pattern of varPatterns) {
-			if (!lines.some((line) => pattern.test(line))) {
-				throw new Error(`Missing variable pattern: ${pattern}`)
-			}
-		}
-		debugLog(
-			"Global Variable Constructs:",
-			lines.filter((l) => l.includes("static")),
-		)
+		// Array variables
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*static const char\* const BUILD_INFO\[\]/)
+
+		// Struct variables
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*static struct config_struct/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*\} DEFAULT_CONFIG =/)
 	})
 })

@@ -1,3 +1,13 @@
+/*
+TODO: The following structures can be parsed by tree-sitter but lack query support:
+
+1. Variable Definition:
+   (defvar name value docstring)
+
+2. Constant Definition:
+   (defconst name value docstring)
+*/
+
 import { describe, it, expect } from "@jest/globals"
 import { testParseSourceCodeDefinitions } from "./helpers"
 import { elispQuery } from "../queries/elisp"
@@ -11,23 +21,47 @@ describe("parseSourceCodeDefinitions.elisp", () => {
 		extKey: "el",
 	}
 
-	it("should parse Elisp definitions", async () => {
-		const result = await testParseSourceCodeDefinitions("test.el", sampleElispContent, testOptions)
+	let parseResult: string = ""
+
+	beforeAll(async () => {
+		const result = await testParseSourceCodeDefinitions("file.el", sampleElispContent, testOptions)
 		expect(result).toBeDefined()
+		if (!result) {
+			throw new Error("Failed to parse source code definitions")
+		}
+		parseResult = result
+	})
 
-		// Verify all definition types are captured
-		// Test core definitions
-		expect(result).toMatch(/\d+--\d+ \| \(defun test-function/)
-		expect(result).toMatch(/\d+--\d+ \| \(defmacro test-macro/)
-		expect(result).toMatch(/\d+--\d+ \| \(defcustom test-custom/)
-		expect(result).toMatch(/\d+--\d+ \| \(defface test-face/)
-		expect(result).toMatch(/\d+--\d+ \| \(defgroup test-group/)
+	it("should parse function definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| \(defun test-function/)
+	})
 
-		// Verify line numbers are included
-		expect(result).toMatch(/\d+--\d+ \|/)
+	it("should parse macro definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| \(defmacro test-macro/)
+	})
 
-		// Verify the number of definitions
-		const matches = result?.match(/\d+--\d+ \|/g) || []
-		expect(matches.length).toBe(5) // Function, macro, custom, face, group
+	it("should parse custom form definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| \(defcustom test-custom/)
+	})
+
+	it("should parse face definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| \(defface test-face/)
+	})
+
+	it("should parse advice definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| \(defadvice test-advice/)
+	})
+
+	it("should parse group definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| \(defgroup test-group nil/)
+	})
+
+	it("should verify total number of definitions", () => {
+		const matches = parseResult.match(/\d+--\d+ \|/g) || []
+		expect(matches.length).toBe(6) // All supported definition types
+	})
+
+	it("should verify file header is present", () => {
+		expect(parseResult).toMatch(/# file\.el/)
 	})
 })

@@ -12,10 +12,13 @@ describe("inspectJava", () => {
 	}
 
 	it("should inspect Java tree structure", async () => {
-		await inspectTreeStructure(sampleJavaContent, "java")
+		const result = await inspectTreeStructure(sampleJavaContent, "java")
+		expect(result).toBeTruthy()
 	})
 
 	it("should parse Java definitions", async () => {
-		await testParseSourceCodeDefinitions("test.java", sampleJavaContent, testOptions)
+		const result = await testParseSourceCodeDefinitions("test.java", sampleJavaContent, testOptions)
+		expect(result).toBeTruthy()
+		expect(result).toMatch(/\d+--\d+ \| /) // Verify line number format
 	})
 })

@@ -1,34 +1,77 @@
-import { describe, test } from "@jest/globals"
+import { describe, it, expect, beforeAll } from "@jest/globals"
 import sampleGoContent from "./fixtures/sample-go"
 import { testParseSourceCodeDefinitions } from "./helpers"
+import goQuery from "../queries/go"
 
-describe("Go Code Definitions", () => {
-	// Cache result to avoid repeated parsing
-	let result: string | undefined
+describe("Go Source Code Definition Tests", () => {
+	let parseResult: string
 
-	// Get result once for all tests
 	beforeAll(async () => {
-		result = await testParseSourceCodeDefinitions("test.go", sampleGoContent, {
+		const testOptions = {
 			language: "go",
 			wasmFile: "tree-sitter-go.wasm",
-			queryString: require("../queries/go").default,
+			queryString: goQuery,
 			extKey: "go",
-		})
+		}
+
+		const result = await testParseSourceCodeDefinitions("file.go", sampleGoContent, testOptions)
+		expect(result).toBeDefined()
+		parseResult = result as string
 	})
 
-	test("should parse Go structures", async () => {
-		expect(result).toBeDefined()
-		expect(typeof result).toBe("string")
+	it("should parse package declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*package main/)
+	})
 
-		// Verify each structure type is captured
-		expect(result).toContain("type TestInterfaceDefinition interface") // Interface
-		expect(result).toContain("type TestStructDefinition struct") // Struct
-		expect(result).toContain("type TestTypeDefinition struct") // Type
-		expect(result).toContain("func TestFunctionDefinition") // Function
-		expect(result).toContain("func (t *TestStructDefinition) TestMethodDefinition") // Method
-		expect(result).toContain("func TestChannelDefinition") // Channel
-		expect(result).toContain("func TestGoroutineDefinition") // Goroutine
-		expect(result).toContain("func TestDeferDefinition") // Defer
-		expect(result).toContain("func TestSelectDefinition") // Select
+	it("should parse import declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*"fmt"/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*"sync"/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*"time"/)
+	})
+
+	it("should parse const declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*TestConstDefinition1 = "test1"/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*TestConstDefinition2 = "test2"/)
+	})
+
+	it("should parse var declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*TestVarDefinition1 string = "var1"/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*TestVarDefinition2 int\s*= 42/)
+	})
+
+	it("should parse interface declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*type TestInterfaceDefinition interface/)
+	})
+
+	it("should parse struct declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*type TestStructDefinition struct/)
+	})
+
+	it("should parse type declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*type TestTypeDefinition struct/)
+	})
+
+	it("should parse function declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*func TestFunctionDefinition\(/)
+	})
+
+	it("should parse method declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*func \(t \*TestStructDefinition\) TestMethodDefinition\(/)
+	})
+
+	it("should parse channel function declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*func TestChannelDefinition\(/)
+	})
+
+	it("should parse goroutine function declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*func TestGoroutineDefinition\(\)/)
+	})
+
+	it("should parse defer function declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*func TestDeferDefinition\(\)/)
+	})
+
+	it("should parse select function declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*func TestSelectDefinition\(/)
 	})
 })

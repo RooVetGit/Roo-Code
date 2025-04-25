@@ -1,48 +1,38 @@
-import { describe, it } from "@jest/globals"
-import { debugLog, testParseSourceCodeDefinitions } from "./helpers"
-import { zigQuery } from "../queries"
+import { describe, it, expect, beforeAll } from "@jest/globals"
+import { testParseSourceCodeDefinitions } from "./helpers"
 import { sampleZig } from "./fixtures/sample-zig"
+import { zigQuery } from "../queries"
 
-describe("parseSourceCodeDefinitions (Zig)", () => {
-	const testOptions = {
-		language: "zig",
-		wasmFile: "tree-sitter-zig.wasm",
-		queryString: zigQuery,
-		extKey: "zig",
-	}
+describe("Zig Source Code Definition Tests", () => {
+	let parseResult: string
 
-	it("should inspect Zig tree structure", async () => {
-		const result = await testParseSourceCodeDefinitions("test.zig", sampleZig, testOptions)
-		debugLog("All definitions:", result)
-
-		// Verify result is a string containing expected definitions
+	beforeAll(async () => {
+		const result = await testParseSourceCodeDefinitions("file.zig", sampleZig, {
+			language: "zig",
+			wasmFile: "tree-sitter-zig.wasm",
+			queryString: zigQuery,
+			extKey: "zig",
+		})
+		expect(result).toBeDefined()
 		expect(typeof result).toBe("string")
-		expect(result).toContain("# test.zig")
+		parseResult = result as string
+	})
 
-		// Struct declarations
-		expect(result).toMatch(/\d+--\d+ \| pub const Point = struct/)
-		expect(result).toMatch(/\d+--\d+ \| pub const Vector = struct/)
+	it("should parse function definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| pub fn main\(\) !void/)
+		expect(parseResult).toMatch(/\d+--\d+ \|     pub fn init\(x: f32, y: f32\) Point/)
+		expect(parseResult).toMatch(/\d+--\d+ \|     pub fn distance\(self: Point\) f32/)
+	})
 
-		// Container declarations
-		expect(result).toMatch(/\d+--\d+ \| pub const Point = struct \{/)
-		expect(result).toMatch(/\d+--\d+ \| const Direction = enum \{/)
-		expect(result).toMatch(/\d+--\d+ \| pub const Vector = struct \{/)
+	it("should parse container definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| pub const Point = struct/)
+		expect(parseResult).toMatch(/\d+--\d+ \| pub const Vector = struct/)
+		expect(parseResult).toMatch(/\d+--\d+ \| const Direction = enum/)
+	})
 
-		// Function declarations
-		expect(result).toMatch(/\d+--\d+ \| pub fn main\(\) !void \{/)
-
-		// Variable declarations
-		expect(result).toMatch(/\d+--\d+ \| const std = @import\("std"\)/)
-
-		// Variable declarations
-		expect(result).toMatch(/\d+--\d+ \| const std = @import\("std"\)/)
-
-		// Container declarations
-		expect(result).toMatch(/\d+--\d+ \| pub const Point = struct \{/)
-		expect(result).toMatch(/\d+--\d+ \| const Direction = enum \{/)
-		expect(result).toMatch(/\d+--\d+ \| pub const Vector = struct \{/)
-
-		// Function declarations
-		expect(result).toMatch(/\d+--\d+ \| pub fn main\(\) !void \{/)
+	it("should parse variable definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| const std = @import\("std"\)/)
+		expect(parseResult).toMatch(/\d+--\d+ \| var global_point: Point/)
+		expect(parseResult).toMatch(/\d+--\d+ \| pub const VERSION: u32/)
 	})
 })

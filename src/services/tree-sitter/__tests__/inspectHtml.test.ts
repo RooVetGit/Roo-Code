@@ -12,10 +12,13 @@ describe("inspectHtml", () => {
 	}
 
 	it("should inspect HTML tree structure", async () => {
-		await inspectTreeStructure(sampleHtmlContent, "html")
+		// Should execute without error
+		await expect(inspectTreeStructure(sampleHtmlContent, "html")).resolves.not.toThrow()
 	})
 
 	it("should parse HTML definitions", async () => {
-		await testParseSourceCodeDefinitions("test.html", sampleHtmlContent, testOptions)
+		const result = await testParseSourceCodeDefinitions("test.html", sampleHtmlContent, testOptions)
+		expect(result).toBeDefined()
+		expect(result).toMatch(/\d+--\d+ \| </)
 	})
 })

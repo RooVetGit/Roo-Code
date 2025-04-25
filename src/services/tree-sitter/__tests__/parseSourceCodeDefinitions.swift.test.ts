@@ -1,4 +1,4 @@
-import { describe, expect, it, jest, beforeEach } from "@jest/globals"
+import { describe, expect, it, jest, beforeEach, beforeAll } from "@jest/globals"
 import { parseSourceCodeDefinitionsForFile } from ".."
 import * as fs from "fs/promises"
 import * as path from "path"
@@ -6,7 +6,7 @@ import Parser from "web-tree-sitter"
 import { fileExistsAtPath } from "../../../utils/fs"
 import { loadRequiredLanguageParsers } from "../languageParser"
 import { swiftQuery } from "../queries"
-import { initializeTreeSitter, testParseSourceCodeDefinitions, debugLog } from "./helpers"
+import { initializeTreeSitter, testParseSourceCodeDefinitions } from "./helpers"
 import sampleSwiftContent from "./fixtures/sample-swift"
 
 // Swift test options
@@ -39,7 +39,6 @@ describe("parseSourceCodeDefinitionsForFile with Swift", () => {
 	beforeAll(async () => {
 		// Parse Swift code once and store the result
 		parsedResult = await testParseSourceCodeDefinitions("/test/file.swift", sampleSwiftContent, testOptions)
-		debugLog("Swift code parsed once and cached for all tests")
 	})
 
 	beforeEach(() => {
@@ -48,91 +47,64 @@ describe("parseSourceCodeDefinitionsForFile with Swift", () => {
 
 	// Single test for class declarations (standard, final, open, and inheriting classes)
 	it("should capture class declarations with all modifiers", async () => {
-		debugLog("Testing class declarations")
-		// Check for standard class
-		expect(parsedResult).toContain("class StandardClassDefinition")
-		// Check for final class
-		expect(parsedResult).toContain("final class FinalClassDefinition")
-		// Check for open class
-		expect(parsedResult).toContain("open class OpenClassDefinition")
-		// Check for class with inheritance and protocol conformance
-		expect(parsedResult).toContain("class InheritingClassDefinition: StandardClassDefinition, ProtocolDefinition")
+		expect(parsedResult).toMatch(/\d+--\d+ \|\s*class StandardClassDefinition/)
+		expect(parsedResult).toMatch(/\d+--\d+ \|\s*final class FinalClassDefinition/)
+		expect(parsedResult).toMatch(/\d+--\d+ \|\s*open class OpenClassDefinition/)
+		expect(parsedResult).toMatch(
+			/\d+--\d+ \|\s*class InheritingClassDefinition: StandardClassDefinition, ProtocolDefinition/,
+		)
 	})
 
 	// Single test for struct declarations (standard and generic structs)
 	it("should capture struct declarations", async () => {
-		debugLog("Testing struct declarations")
-		// Check for standard struct
-		expect(parsedResult).toContain("struct StandardStructDefinition")
-		// Check for generic struct with constraints
-		expect(parsedResult).toContain("struct GenericStructDefinition<T: Comparable, U>")
+		expect(parsedResult).toMatch(/\d+--\d+ \|\s*struct StandardStructDefinition/)
+		expect(parsedResult).toMatch(/\d+--\d+ \|\s*struct GenericStructDefinition<T: Comparable, U>/)
 	})
 
 	// Single test for protocol declarations (basic and with associated types)
 	it("should capture protocol declarations", async () => {
-		debugLog("Testing protocol declarations")
-		// Check for basic protocol with requirements
-		expect(parsedResult).toContain("protocol ProtocolDefinition")
-		// Check for protocol with associated type
-		expect(parsedResult).toContain("protocol AssociatedTypeProtocolDefinition")
+		expect(parsedResult).toMatch(/\d+--\d+ \|\s*protocol ProtocolDefinition/)
+		expect(parsedResult).toMatch(/\d+--\d+ \|\s*protocol AssociatedTypeProtocolDefinition/)
 	})
 
 	// Single test for extension declarations (for class, struct, and protocol)
 	it("should capture extension declarations", async () => {
-		debugLog("Testing extension declarations")
-		// Check for class extension
-		expect(parsedResult).toContain("extension StandardClassDefinition")
-		// Check for struct extension
-		expect(parsedResult).toContain("extension StandardStructDefinition")
-		// Check for protocol extension
-		expect(parsedResult).toContain("extension ProtocolDefinition")
+		expect(parsedResult).toMatch(/\d+--\d+ \|\s*extension StandardClassDefinition/)
+		expect(parsedResult).toMatch(/\d+--\d+ \|\s*extension StandardStructDefinition/)
+		expect(parsedResult).toMatch(/\d+--\d+ \|\s*extension ProtocolDefinition/)
 	})
 
 	// Single test for method declarations (instance and type methods)
 	it("should capture method declarations", async () => {
-		debugLog("Testing method declarations")
-		// Check for instance method
-		expect(parsedResult).toContain("func instanceMethodDefinition")
-		// Check for type/static method
-		expect(parsedResult).toContain("static func typeMethodDefinition")
+		expect(parsedResult).toMatch(/\d+--\d+ \|\s*func instanceMethodDefinition/)
+		expect(parsedResult).toMatch(/\d+--\d+ \|\s*static func typeMethodDefinition/)
 	})
 
 	// Single test for property declarations (stored and computed)
 	it("should capture property declarations", async () => {
-		debugLog("Testing property declarations")
-		// Check for stored property with observers
-		expect(parsedResult).toContain("var storedPropertyWithObserver: Int = 0")
-		// Check for computed property
-		expect(parsedResult).toContain("var computedProperty: String")
+		expect(parsedResult).toMatch(/\d+--\d+ \|\s*var storedPropertyWithObserver: Int = 0/)
+		expect(parsedResult).toMatch(/\d+--\d+ \|\s*var computedProperty: String/)
 	})
 
 	// Single test for initializer declarations (designated and convenience)
 	it("should capture initializer declarations", async () => {
-		debugLog("Testing initializer declarations")
-		// Check for designated initializer
-		expect(parsedResult).toContain("init(")
-		// Check for convenience initializer
-		expect(parsedResult).toContain("convenience init(")
+		expect(parsedResult).toMatch(/\d+--\d+ \|\s*init\(/)
+		expect(parsedResult).toMatch(/\d+--\d+ \|\s*convenience init\(/)
 	})
 
 	// Single test for deinitializer declarations
 	it("should capture deinitializer declarations", async () => {
-		debugLog("Testing deinitializer declarations")
-		expect(parsedResult).toContain("deinit")
+		expect(parsedResult).toMatch(/\d+--\d+ \|\s*deinit/)
 	})
 
 	// Single test for subscript declarations
 	it("should capture subscript declarations", async () => {
-		debugLog("Testing subscript declarations")
-		expect(parsedResult).toContain("subscript(")
+		expect(parsedResult).toMatch(/\d+--\d+ \|\s*subscript\(/)
 	})
 
 	// Single test for type alias declarations
 	it("should capture type alias declarations", async () => {
-		debugLog("Testing type alias declarations")
-		// The tree-sitter grammar currently only captures the complex type alias
-		// with generic constraints but not the simple one
-		expect(parsedResult).toContain("typealias DictionaryOfArrays<")
-		expect(parsedResult).toContain("class TypeAliasContainer")
+		expect(parsedResult).toMatch(/\d+--\d+ \|\s*typealias DictionaryOfArrays</)
+		expect(parsedResult).toMatch(/\d+--\d+ \|\s*class TypeAliasContainer/)
 	})
 })

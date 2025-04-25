@@ -8,21 +8,46 @@ describe("parseSourceCodeDefinitions (Embedded Template)", () => {
 		language: "embedded_template",
 		wasmFile: "tree-sitter-embedded_template.wasm",
 		queryString: embeddedTemplateQuery,
-		extKey: "erb", // Use the actual file extension since parseSourceCodeDefinitionsForFile uses the file extension
-		minComponentLines: 1, // Allow single-line expressions
+		extKey: "erb",
+		minComponentLines: 4,
 	}
 
-	it("should inspect embedded template tree structure", async () => {
+	let parseResult: string = ""
+
+	beforeAll(async () => {
 		const result = await testParseSourceCodeDefinitions("test.erb", sampleEmbeddedTemplateContent, testOptions)
-		debugLog("All definitions:", result)
+		if (!result) {
+			throw new Error("Failed to parse source code definitions")
+		}
+		parseResult = result
+		debugLog("All definitions:", parseResult)
+	})
 
-		// Verify result is a string containing expected definitions
-		expect(typeof result).toBe("string")
-		expect(result).toContain("# test.erb")
+	it("should detect multi-line comments", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| <%# Multi-line comment block explaining/)
+	})
 
-		// Code blocks
-		expect(result).toMatch(/\d+--\d+ \| <% def complex_helper/)
-		expect(result).toMatch(/\d+--\d+ \| <% class TemplateHelper/)
-		expect(result).toMatch(/\d+--\d+ \| <% module TemplateUtils/)
+	it("should detect function definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| <% def complex_helper\(param1, param2\)/)
+		expect(parseResult).toMatch(/\d+--\d+ \| <% def render_navigation\(items\)/)
+	})
+
+	it("should detect class definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| <% class TemplateHelper/)
+	})
+
+	it("should detect module definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| <% module TemplateUtils/)
+	})
+
+	it("should detect control structures", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s+<% if user\.authenticated\? %>/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s+<% user\.posts\.each do \|post\| %>/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s+<% if post\.has_comments\? %>/)
+	})
+
+	it("should detect content blocks", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| <% content_for :header do/)
+		expect(parseResult).toMatch(/\d+--\d+ \| <% content_for :main do/)
 	})
 })

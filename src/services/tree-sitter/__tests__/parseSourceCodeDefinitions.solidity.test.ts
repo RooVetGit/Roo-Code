@@ -1,110 +1,77 @@
 import { describe, it, expect } from "@jest/globals"
-import { testParseSourceCodeDefinitions, debugLog } from "./helpers"
+import { testParseSourceCodeDefinitions } from "./helpers"
 import { solidityQuery } from "../queries"
+import { sampleSolidity } from "./fixtures/sample-solidity"
 
-const sampleSolidity = `
-contract ExampleToken is ERC20, Ownable {
-    string public constant name = "Example";
-    uint256 private _totalSupply;
-    mapping(address => uint256) private _balances;
-    mapping(address => mapping(address => uint256)) private _allowances;
-
-    function transferWithCallback(
-        address recipient,
-        uint256 amount,
-        bytes calldata data
-    ) public payable returns (bool success) {
-        require(recipient != address(0), "Invalid recipient");
-        require(amount <= balanceOf(msg.sender), "Insufficient balance");
-        _transfer(msg.sender, recipient, amount);
-        return true;
-    }
-
-    event TokenTransfer(
-        address indexed from,
-        address indexed to,
-        uint256 amount,
-        bytes data,
-        uint256 timestamp
-    );
-
-    modifier onlyValidAmount(uint256 amount) {
-        require(
-            amount > 0 && amount <= _totalSupply,
-            "Invalid amount specified"
-        );
-        require(
-            _balances[msg.sender] >= amount,
-            "Insufficient balance"
-        );
-        _;
-    }
-
-    struct TokenMetadata {
-        string name;
-        string symbol;
-        uint8 decimals;
-        address owner;
-        bool isPaused;
-        uint256 creationTime;
-    }
-}
-
-library TokenUtils {
-    function validateTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal pure returns (bool) {
-        require(from != address(0), "Invalid sender");
-        require(to != address(0), "Invalid recipient");
-        require(amount > 0, "Invalid amount");
-        return true;
-    }
-}`
-
-describe("parseSourceCodeDefinitions.solidity", () => {
-	const testOptions = {
-		language: "solidity",
-		wasmFile: "tree-sitter-solidity.wasm",
-		queryString: solidityQuery,
-		extKey: "sol",
-	}
-	let parseResult: string | undefined
+describe("Solidity Source Code Definition Tests", () => {
+	let parseResult: string
 
 	beforeAll(async () => {
-		parseResult = await testParseSourceCodeDefinitions("test.sol", sampleSolidity, testOptions)
-		debugLog("Parse result:", parseResult)
+		const result = await testParseSourceCodeDefinitions("test.sol", sampleSolidity, {
+			language: "solidity",
+			wasmFile: "tree-sitter-solidity.wasm",
+			queryString: solidityQuery,
+			extKey: "sol",
+		})
+		expect(result).toBeDefined()
+		expect(typeof result).toBe("string")
+		parseResult = result as string
 	})
 
-	it("should capture contract definition", () => {
-		expect(parseResult).toBeDefined()
-		expect(parseResult?.includes("ExampleToken")).toBe(true)
+	it("should parse contract declarations", () => {
+		expect(parseResult).toMatch(/22--102 \| contract TestContract is ITestInterface/)
+		expect(parseResult).toMatch(/5--9 \| interface ITestInterface/)
+		expect(parseResult).toMatch(/11--20 \| library MathLib/)
 	})
 
-	it("should capture function definition", () => {
-		expect(parseResult).toBeDefined()
-		expect(parseResult?.includes("transferWithCallback")).toBe(true)
+	it("should parse using directives", () => {
+		expect(parseResult).toMatch(/23--23 \|     using MathLib for uint256;/)
 	})
 
-	it("should capture event definition", () => {
-		expect(parseResult).toBeDefined()
-		expect(parseResult?.includes("TokenTransfer")).toBe(true)
+	it("should parse type declarations", () => {
+		expect(parseResult).toMatch(/25--30 \|     struct UserInfo {/)
+		expect(parseResult).toMatch(/32--37 \|     enum UserRole {/)
 	})
 
-	it("should capture modifier definition", () => {
-		expect(parseResult).toBeDefined()
-		expect(parseResult?.includes("onlyValidAmount")).toBe(true)
+	it("should parse state variable declarations", () => {
+		expect(parseResult).toMatch(/39--39 \|     uint256 private immutable totalSupply;/)
+		expect(parseResult).toMatch(/40--40 \|     mapping\(address => UserInfo\) private users;/)
+		expect(parseResult).toMatch(/41--41 \|     UserRole\[\] private roles;/)
+	})
+	it("should parse function declarations", () => {
+		expect(parseResult).toMatch(/70--87 \|     function transfer\(/)
+		expect(parseResult).toMatch(/89--93 \|     function interfaceFunction\(/)
+		expect(parseResult).toMatch(
+			/6--6 \|     function interfaceFunction\(uint256 value\) external returns \(bool\);/,
+		)
+		expect(parseResult).toMatch(
+			/12--14 \|     function add\(uint256 a, uint256 b\) internal pure returns \(uint256\) {/,
+		)
+		expect(parseResult).toMatch(
+			/16--19 \|     function subtract\(uint256 a, uint256 b\) internal pure returns \(uint256\) {/,
+		)
 	})
 
-	it("should capture struct definition", () => {
-		expect(parseResult).toBeDefined()
-		expect(parseResult?.includes("TokenMetadata")).toBe(true)
+	it("should parse constructor declarations", () => {
+		expect(parseResult).toMatch(/63--68 \|     constructor\(uint256 _initialSupply\) {/)
 	})
 
-	it("should capture library definition", () => {
-		expect(parseResult).toBeDefined()
-		expect(parseResult?.includes("TokenUtils")).toBe(true)
-		expect(parseResult?.includes("validateTransfer")).toBe(true)
+	it("should parse special function declarations", () => {
+		expect(parseResult).toMatch(/95--97 \|     fallback\(\) external payable {/)
+		expect(parseResult).toMatch(/99--101 \|     receive\(\) external payable {/)
+	})
+
+	it("should parse event declarations", () => {
+		expect(parseResult).toMatch(/43--47 \|     event Transfer\(/)
+		expect(parseResult).toMatch(/7--7 \|     event InterfaceEvent\(address indexed sender, uint256 value\);/)
+	})
+
+	it("should parse error declarations", () => {
+		expect(parseResult).toMatch(/49--53 \|     error InsufficientBalance\(/)
+		expect(parseResult).toMatch(/8--8 \|     error InterfaceError\(string message\);/)
+	})
+
+	it("should parse modifier declarations", () => {
+		expect(parseResult).toMatch(/55--61 \|     modifier onlyAdmin\(\) {/)
 	})
 })

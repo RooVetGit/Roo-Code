@@ -7,13 +7,17 @@ export default `
   (package_identifier) @name.definition.package)
 
 ; Import declarations
-(import_declaration) @name.definition.import
+(import_declaration
+  (import_spec_list
+    (import_spec path: (_) @name.definition.import)))
 
 ; Const declarations
-(const_declaration) @name.definition.const
+(const_declaration
+  (const_spec name: (identifier) @name.definition.const))
 
 ; Var declarations
-(var_declaration) @name.definition.var
+(var_declaration
+  (var_spec name: (identifier) @name.definition.var))
 
 ; Interface declarations
 (type_declaration

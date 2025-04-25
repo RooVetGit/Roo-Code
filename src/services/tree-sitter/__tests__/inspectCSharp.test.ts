@@ -12,10 +12,13 @@ describe("inspectCSharp", () => {
 	}
 
 	it("should inspect C# tree structure", async () => {
-		await inspectTreeStructure(sampleCSharpContent, "c_sharp")
+		// Should execute without throwing
+		await expect(inspectTreeStructure(sampleCSharpContent, "c_sharp")).resolves.not.toThrow()
 	})
 
 	it("should parse C# definitions", async () => {
-		await testParseSourceCodeDefinitions("test.cs", sampleCSharpContent, testOptions)
+		const result = await testParseSourceCodeDefinitions("test.cs", sampleCSharpContent, testOptions)
+		expect(result).toBeDefined()
+		expect(result).toMatch(/\d+--\d+ \|/)
 	})
 })

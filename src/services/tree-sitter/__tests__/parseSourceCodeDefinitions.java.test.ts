@@ -5,8 +5,18 @@ import * as path from "path"
 import { fileExistsAtPath } from "../../../utils/fs"
 import { loadRequiredLanguageParsers } from "../languageParser"
 import { javaQuery } from "../queries"
-import { initializeTreeSitter, testParseSourceCodeDefinitions, inspectTreeStructure, debugLog } from "./helpers"
+import { testParseSourceCodeDefinitions } from "./helpers"
 import sampleJavaContent from "./fixtures/sample-java"
+
+/*
+TODO: The following structures can be parsed by tree-sitter but lack query support:
+
+1. Import Declarations:
+   (import_declaration (scoped_identifier))
+
+2. Field Declarations:
+   (field_declaration (modifiers) type: (type_identifier) declarator: (variable_declarator))
+*/
 
 // Java test options
 const testOptions = {
@@ -34,87 +44,70 @@ describe("parseSourceCodeDefinitionsForFile with Java", () => {
 	let parseResult: string = ""
 
 	beforeAll(async () => {
-		// Cache parse result for all tests
 		const result = await testParseSourceCodeDefinitions("/test/file.java", sampleJavaContent, testOptions)
 		if (!result) {
 			throw new Error("Failed to parse Java source code")
 		}
 		parseResult = result
-		debugLog("Java Parse Result:", parseResult)
 	})
 
 	beforeEach(() => {
 		jest.clearAllMocks()
 	})
 
-	// Test for tree structure inspection
-	it("should inspect Java tree structure", async () => {
-		await inspectTreeStructure(sampleJavaContent, "java")
+	it("should parse package declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*package test\.package\.definition/)
 	})
 
-	// Test module declarations
-	it("should capture module declarations", () => {
-		expect(parseResult).toContain("test.module.definition")
+	it("should parse module declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*module test\.module\.definition/)
 	})
 
-	// Test module and package declarations
-	it("should capture module declarations", () => {
-		expect(parseResult).toMatch(/\d+--\d+ \| module test\.module\.definition/) // Match module declaration
+	it("should parse annotation declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*@Target/)
 	})
 
-	// Package declarations are skipped since they cannot meet the 4-line requirement
-	// and are not included in the output
-
-	// Test annotation declarations
-	it("should capture annotation declarations", () => {
-		expect(parseResult).toContain("TestAnnotationDefinition")
+	it("should parse interface declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*public interface TestInterfaceDefinition/)
 	})
 
-	// Test interface declarations
-	it("should capture interface declarations", () => {
-		expect(parseResult).toContain("TestInterfaceDefinition")
+	it("should parse enum declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*public enum TestEnumDefinition/)
 	})
 
-	// Test enum declarations
-	it("should capture enum declarations", () => {
-		expect(parseResult).toContain("TestEnumDefinition")
+	it("should parse class declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*@TestAnnotationDefinition\(/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*implements TestInterfaceDefinition<T>/)
 	})
 
-	// Test class declarations
-	it("should capture class declarations", () => {
-		expect(parseResult).toContain("TestClassDefinition")
+	it("should parse abstract class declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*public abstract class TestAbstractClassDefinition/)
 	})
 
-	// Test record declarations
-	it("should capture record declarations", () => {
-		expect(parseResult).toContain("TestRecordDefinition")
+	it("should parse inner class declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*public class TestInnerClassDefinition/)
 	})
 
-	// Test abstract class declarations
-	it("should capture abstract class declarations", () => {
-		expect(parseResult).toContain("TestAbstractClassDefinition")
+	it("should parse static nested class declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*public static class TestStaticNestedClassDefinition/)
 	})
 
-	// Test inner class declarations
-	it("should capture inner class declarations", () => {
-		expect(parseResult).toContain("TestInnerClassDefinition")
+	it("should parse record declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*public record TestRecordDefinition/)
 	})
 
-	// Test static nested class declarations
-	it("should capture static nested class declarations", () => {
-		expect(parseResult).toContain("TestStaticNestedClassDefinition")
+	it("should parse constructor declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*public TestClassDefinition\(/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*public TestInnerClassDefinition\(/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*public TestStaticNestedClassDefinition\(/)
 	})
 
-	// Test constructor declarations
-	it("should capture constructors", () => {
-		expect(parseResult).toContain("TestClassDefinition")
-	})
-
-	// Test method declarations
-	it("should capture method declarations", () => {
-		expect(parseResult).toContain("testInterfaceMethod")
-		expect(parseResult).toContain("testInterfaceDefaultMethod")
-		expect(parseResult).toContain("testGenericMethodDefinition")
-		expect(parseResult).toContain("testAbstractMethod")
+	it("should parse method declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*void testInterfaceMethod\(/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*default String testInterfaceDefaultMethod\(/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*public <R extends Comparable<R>> R testGenericMethodDefinition\(/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*public String formatMessage\(/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*public abstract String testAbstractMethod\(/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*public void testInnerMethod\(/)
 	})
 })

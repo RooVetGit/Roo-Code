@@ -12,10 +12,14 @@ describe("inspectJavaScript", () => {
 	}
 
 	it("should inspect JavaScript tree structure", async () => {
-		await inspectTreeStructure(sampleJavaScriptContent, "javascript")
+		// Should not throw
+		await expect(inspectTreeStructure(sampleJavaScriptContent, "javascript")).resolves.not.toThrow()
 	})
 
 	it("should parse JavaScript definitions", async () => {
-		await testParseSourceCodeDefinitions("test.js", sampleJavaScriptContent, testOptions)
+		const result = await testParseSourceCodeDefinitions("test.js", sampleJavaScriptContent, testOptions)
+		expect(result).toBeDefined()
+		expect(result).toMatch(/\d+--\d+ \| /)
+		expect(result).toMatch(/function testFunctionDefinition/)
 	})
 })

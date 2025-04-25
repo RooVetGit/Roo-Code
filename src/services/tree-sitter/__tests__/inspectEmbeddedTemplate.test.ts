@@ -8,14 +8,17 @@ describe("inspectEmbeddedTemplate", () => {
 		language: "embedded_template",
 		wasmFile: "tree-sitter-embedded_template.wasm",
 		queryString: embeddedTemplateQuery,
-		extKey: "embedded_template",
+		extKey: "erb", // Match the file extension we're using
 	}
 
 	it("should inspect embedded template tree structure", async () => {
-		await inspectTreeStructure(sampleEmbeddedTemplateContent, "embedded_template")
+		const result = await inspectTreeStructure(sampleEmbeddedTemplateContent, "embedded_template")
+		expect(result).toBeTruthy()
 	})
 
 	it("should parse embedded template definitions", async () => {
-		await testParseSourceCodeDefinitions("test.erb", sampleEmbeddedTemplateContent, testOptions)
+		const result = await testParseSourceCodeDefinitions("test.erb", sampleEmbeddedTemplateContent, testOptions)
+		expect(result).toBeTruthy()
+		expect(result).toMatch(/\d+--\d+ \|/) // Verify line number format
 	})
 })

@@ -12,9 +12,8 @@ describe("inspectSwift", () => {
 	}
 
 	it("should inspect Swift tree structure", async () => {
-		// This test only validates that the function completes successfully
-		const result = await inspectTreeStructure(sampleSwiftContent, "swift")
-		expect(result).toBeUndefined()
+		// Should execute without throwing
+		await expect(inspectTreeStructure(sampleSwiftContent, "swift")).resolves.not.toThrow()
 	})
 
 	it("should parse Swift definitions", async () => {

@@ -1,4 +1,23 @@
-import { describe, it } from "@jest/globals"
+/*
+TODO: The following C++ structures can be parsed by tree-sitter but lack query support:
+
+1. Virtual Methods:
+   (field_declaration (virtual) type: (primitive_type) declarator: (function_declarator))
+
+2. Default Methods:
+   (default_method_clause)
+
+3. Field Initializer Lists:
+   (field_initializer_list (field_initializer))
+
+4. Base Class Clauses:
+   (base_class_clause (access_specifier) (type_identifier))
+
+5. Type Aliases:
+   (alias_declaration name: (type_identifier) type: (type_descriptor))
+*/
+
+import { describe, it, expect, beforeAll } from "@jest/globals"
 import { debugLog, testParseSourceCodeDefinitions } from "./helpers"
 import { cppQuery } from "../queries"
 import sampleCppContent from "./fixtures/sample-cpp"
@@ -11,67 +30,78 @@ describe("parseSourceCodeDefinitions (C++)", () => {
 		extKey: "cpp",
 	}
 
-	it("should inspect C++ tree structure", async () => {
-		const result = await testParseSourceCodeDefinitions("test.cpp", sampleCppContent, testOptions)
-		debugLog("All definitions:", result)
+	let parseResult: string
 
-		// Verify result is a string containing expected definitions
+	beforeAll(async () => {
+		const result = await testParseSourceCodeDefinitions("test.cpp", sampleCppContent, testOptions)
+		expect(result).toBeDefined()
 		expect(typeof result).toBe("string")
 		expect(result).toContain("# test.cpp")
+		parseResult = result as string
+	})
 
-		// Function declarations
-		expect(result).toMatch(/\d+--\d+ \| void function_with_implementation\(/)
-		expect(result).toMatch(/\d+--\d+ \| void multiline_function_prototype\(/)
+	it("should parse function declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| void multiline_function_prototype\(/)
+		expect(parseResult).toMatch(/\d+--\d+ \| void function_with_implementation\(/)
+	})
 
-		// Struct declarations
-		expect(result).toMatch(/\d+--\d+ \| struct four_field_struct/)
+	it("should parse struct declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| struct four_field_struct/)
+	})
 
-		// Class declarations
-		expect(result).toMatch(/\d+--\d+ \| class base_class_definition/)
-		expect(result).toMatch(/\d+--\d+ \| class constructor_test/)
+	it("should parse class declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| class base_class_definition/)
+		expect(parseResult).toMatch(/\d+--\d+ \| class template_class_definition/)
+	})
 
-		// Union declarations
-		expect(result).toMatch(/\d+--\d+ \| union four_member_union/)
+	it("should parse union declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| union four_member_union/)
+	})
 
-		// Enum declarations
-		expect(result).toMatch(/\d+--\d+ \| enum class scoped_enumeration/)
+	it("should parse enum declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| enum class scoped_enumeration/)
+	})
 
-		// Typedef declarations
-		expect(result).toMatch(/\d+--\d+ \| typedef std::vector/)
+	it("should parse typedef declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| typedef std::vector</)
+	})
 
-		// Namespace declarations
-		expect(result).toMatch(/\d+--\d+ \| namespace deeply_nested_namespace/)
-		expect(result).toMatch(/\d+--\d+ \| \s+namespace inner/)
-		expect(result).toMatch(/\d+--\d+ \| \{/)
+	it("should parse namespace declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| namespace deeply_nested_namespace/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*namespace inner/)
+	})
 
-		// Template declarations
-		expect(result).toMatch(/\d+--\d+ \| template</)
-		expect(result).toMatch(/\d+--\d+ \| class template_class_definition/)
-		expect(result).toMatch(/\d+--\d+ \| \{/)
+	it("should parse template declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| template</)
+	})
 
-		// Macro definitions
-		expect(result).toMatch(/\d+--\d+ \| #define MULTI_LINE_MACRO\(x, y\)/)
+	it("should parse macro definitions", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| #define MULTI_LINE_MACRO\(x, y\)/)
+	})
 
-		// Variable declarations
-		expect(result).toMatch(/\d+--\d+ \| static const std::map</)
-		expect(result).toMatch(/\d+--\d+ \| \{/)
+	it("should parse variable declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \| static const std::map</)
+	})
 
-		// Constructor declarations
-		expect(result).toMatch(/\d+--\d+ \| \s+constructor_test\(/)
-		expect(result).toMatch(/\d+--\d+ \| \{/)
+	it("should parse constructor declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*constructor_test\(/)
+	})
 
-		// Destructor declarations
-		expect(result).toMatch(/\d+--\d+ \| \s+~destructor_test/)
+	it("should parse destructor declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*~destructor_test\(\)/)
+	})
 
-		// Operator overloads
-		expect(result).toMatch(/\d+--\d+ \| \s+bool operator==/)
-		expect(result).toMatch(/\d+--\d+ \| \s+bool operator</)
-		expect(result).toMatch(/\d+--\d+ \| \{/)
+	it("should parse operator overloads", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*bool operator==/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*bool operator</)
+	})
 
-		// Friend declarations
-		expect(result).toMatch(/\d+--\d+ \| class friendship_class/)
+	it("should parse friend declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*friend class friend_class;/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*friend void friend_function\(/)
+	})
 
-		// Using declarations
-		expect(result).toMatch(/\d+--\d+ \| class using_declaration_test :/)
+	it("should parse using declarations", () => {
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*using base_class_definition::virtual_method;/)
 	})
 })
