@@ -798,36 +798,44 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		await this.updateGlobalState("mode", newMode)
 
-		// Load the saved API config for the new mode if it exists
-		const savedConfigId = await this.providerSettingsManager.getModeConfigId(newMode)
-		const listApiConfig = await this.providerSettingsManager.listConfig()
+		const stickyModesEnabled = this.getGlobalState("stickyModesEnabled") ?? true
 
-		// Update listApiConfigMeta first to ensure UI has latest data
-		await this.updateGlobalState("listApiConfigMeta", listApiConfig)
+		if (stickyModesEnabled) {
+			// Load the saved API config for the new mode if it exists
+			const savedConfigId = await this.providerSettingsManager.getModeConfigId(newMode)
+			const listApiConfig = await this.providerSettingsManager.listConfig()
 
-		// If this mode has a saved config, use it
-		if (savedConfigId) {
-			const config = listApiConfig?.find((c) => c.id === savedConfigId)
+			// Update listApiConfigMeta first to ensure UI has latest data
+			await this.updateGlobalState("listApiConfigMeta", listApiConfig)
 
-			if (config?.name) {
-				const apiConfig = await this.providerSettingsManager.loadConfig(config.name)
+			// If this mode has a saved config, use it
+			if (savedConfigId) {
+				const config = listApiConfig?.find((c) => c.id === savedConfigId)
 
-				await Promise.all([
-					this.updateGlobalState("currentApiConfigName", config.name),
-					this.updateApiConfiguration(apiConfig),
-				])
-			}
-		} else {
-			// If no saved config for this mode, save current config as default
-			const currentApiConfigName = this.getGlobalState("currentApiConfigName")
+				if (config?.name) {
+					const apiConfig = await this.providerSettingsManager.loadConfig(config.name)
 
-			if (currentApiConfigName) {
-				const config = listApiConfig?.find((c) => c.name === currentApiConfigName)
+					await Promise.all([
+						this.updateGlobalState("currentApiConfigName", config.name),
+						this.updateApiConfiguration(apiConfig),
+					])
+				}
+			} else {
+				// If no saved config for this mode, save current config as default
+				const currentApiConfigName = this.getGlobalState("currentApiConfigName")
 
-				if (config?.id) {
-					await this.providerSettingsManager.setModeConfig(newMode, config.id)
+				if (currentApiConfigName) {
+					const config = listApiConfig?.find((c) => c.name === currentApiConfigName)
+
+					if (config?.id) {
+						await this.providerSettingsManager.setModeConfig(newMode, config.id)
+					}
 				}
 			}
+		} else {
+			// If sticky modes are disabled, ensure we don't accidentally load a stale config
+			const listApiConfig = await this.providerSettingsManager.listConfig()
+			await this.updateGlobalState("listApiConfigMeta", listApiConfig)
 		}
 
 		await this.postStateToWebview()
@@ -1243,6 +1251,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			showRooIgnoredFiles,
 			language,
 			maxReadFileLine,
+			stickyModesEnabled,
 			terminalCompressProgressBar,
 		} = await this.getState()
 
@@ -1329,6 +1338,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			settingsImportedAt: this.settingsImportedAt,
 			terminalCompressProgressBar: terminalCompressProgressBar ?? true,
 			hasSystemPromptOverride,
+			stickyModesEnabled: stickyModesEnabled ?? true,
 		}
 	}
 
@@ -1417,6 +1427,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 			maxReadFileLine: stateValues.maxReadFileLine ?? 500,
+			stickyModesEnabled: stateValues.stickyModesEnabled ?? true,
 		}
 	}
 

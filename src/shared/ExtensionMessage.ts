@@ -172,6 +172,7 @@ export type ExtensionState = Pick<
 	| "customModePrompts"
 	| "customSupportPrompts"
 	| "enhancementApiConfigId"
+	| "stickyModesEnabled"
 > & {
 	version: string
 	clineMessages: ClineMessage[]

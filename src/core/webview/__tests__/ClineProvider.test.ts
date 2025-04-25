@@ -416,6 +416,7 @@ describe("ClineProvider", () => {
 			showRooIgnoredFiles: true,
 			renderContext: "sidebar",
 			maxReadFileLine: 500,
+			stickyModesEnabled: true,
 		}
 
 		const message: ExtensionMessage = {
@@ -535,6 +536,36 @@ describe("ClineProvider", () => {
 
 		expect(updateGlobalStateSpy).toHaveBeenCalledWith("writeDelayMs", 2000)
 		expect(mockContext.globalState.update).toHaveBeenCalledWith("writeDelayMs", 2000)
+		expect(mockPostMessage).toHaveBeenCalled()
+	})
+
+	test("stickyModesEnabled defaults to true when not set", async () => {
+		// Mock globalState.get to return undefined for stickyModesEnabled
+		;(mockContext.globalState.get as jest.Mock).mockImplementation((key: string) => {
+			if (key === "stickyModesEnabled") {
+				return undefined
+			}
+			return null
+		})
+
+		const state = await provider.getState()
+		expect(state.stickyModesEnabled).toBe(true)
+	})
+
+	test("handles stickyModesEnabled message", async () => {
+		await provider.resolveWebviewView(mockWebviewView)
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+
+		// Test setting to false
+		await messageHandler({ type: "stickyModesEnabled", bool: false })
+		expect(updateGlobalStateSpy).toHaveBeenCalledWith("stickyModesEnabled", false)
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("stickyModesEnabled", false)
+		expect(mockPostMessage).toHaveBeenCalled()
+
+		// Test setting to true
+		await messageHandler({ type: "stickyModesEnabled", bool: true })
+		expect(updateGlobalStateSpy).toHaveBeenCalledWith("stickyModesEnabled", true)
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("stickyModesEnabled", true)
 		expect(mockPostMessage).toHaveBeenCalled()
 	})
 
@@ -1599,6 +1630,45 @@ describe("ClineProvider", () => {
 
 			// Verify current config was saved as default for new mode
 			expect(provider.providerSettingsManager.setModeConfig).toHaveBeenCalledWith("architect", "current-id")
+
+			// Verify state was posted to webview
+			expect(mockPostMessage).toHaveBeenCalledWith(expect.objectContaining({ type: "state" }))
+		})
+
+		test("does NOT load/save config when stickyModesEnabled is false", async () => {
+			// Mock globalState to return stickyModesEnabled: false
+			mockContext.globalState.get = jest.fn((key: string) => {
+				if (key === "stickyModesEnabled") return false
+				if (key === "mode") return "code" // Start in some mode
+				return undefined
+			})
+
+			// Re-initialize provider with updated mock context
+			provider = new ClineProvider(mockContext, mockOutputChannel)
+			await provider.resolveWebviewView(mockWebviewView)
+
+			const mockProviderSettingsManager = {
+				getModeConfigId: jest.fn(),
+				listConfig: jest.fn().mockResolvedValue([]), // Still need to list configs
+				loadConfig: jest.fn(),
+				setModeConfig: jest.fn(),
+			}
+			;(provider as any).providerSettingsManager = mockProviderSettingsManager
+
+			// Switch to architect mode
+			await provider.handleModeSwitch("architect")
+
+			// Verify mode was updated
+			expect(mockContext.globalState.update).toHaveBeenCalledWith("mode", "architect")
+
+			// Verify config loading/saving methods were NOT called
+			expect(mockProviderSettingsManager.getModeConfigId).not.toHaveBeenCalled()
+			expect(mockProviderSettingsManager.loadConfig).not.toHaveBeenCalled()
+			expect(mockProviderSettingsManager.setModeConfig).not.toHaveBeenCalled()
+
+			// Verify listConfig and updateGlobalState("listApiConfigMeta", ...) were still called
+			expect(mockProviderSettingsManager.listConfig).toHaveBeenCalled()
+			expect(mockContext.globalState.update).toHaveBeenCalledWith("listApiConfigMeta", [])
 
 			// Verify state was posted to webview
 			expect(mockPostMessage).toHaveBeenCalledWith(expect.objectContaining({ type: "state" }))

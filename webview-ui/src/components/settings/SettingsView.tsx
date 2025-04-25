@@ -8,6 +8,7 @@ import {
 	Bell,
 	Database,
 	SquareTerminal,
+	Settings as SettingsIcon, // renamed to avoid conflict with component name
 	FlaskConical,
 	AlertTriangle,
 	Globe,
@@ -49,6 +50,7 @@ import { CheckpointSettings } from "./CheckpointSettings"
 import { NotificationSettings } from "./NotificationSettings"
 import { ContextManagementSettings } from "./ContextManagementSettings"
 import { TerminalSettings } from "./TerminalSettings"
+import { MiscellaneousSettings } from "./MiscellaneousSettings"
 import { ExperimentalSettings } from "./ExperimentalSettings"
 import { LanguageSettings } from "./LanguageSettings"
 import { About } from "./About"
@@ -66,6 +68,7 @@ const sectionNames = [
 	"notifications",
 	"contextManagement",
 	"terminal",
+	"miscellaneous",
 	"experimental",
 	"language",
 	"about",
@@ -131,6 +134,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		terminalZshOhMy,
 		terminalZshP10k,
 		terminalZdotdir,
+		stickyModesEnabled,
 		writeDelayMs,
 		showRooIgnoredFiles,
 		remoteBrowserEnabled,
@@ -245,6 +249,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "terminalZshOhMy", bool: terminalZshOhMy })
 			vscode.postMessage({ type: "terminalZshP10k", bool: terminalZshP10k })
 			vscode.postMessage({ type: "terminalZdotdir", bool: terminalZdotdir })
+			vscode.postMessage({ type: "stickyModesEnabled", bool: stickyModesEnabled })
 			vscode.postMessage({ type: "terminalCompressProgressBar", bool: terminalCompressProgressBar })
 			vscode.postMessage({ type: "mcpEnabled", bool: mcpEnabled })
 			vscode.postMessage({ type: "alwaysApproveResubmit", bool: alwaysApproveResubmit })
@@ -290,6 +295,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 	const notificationsRef = useRef<HTMLDivElement>(null)
 	const contextManagementRef = useRef<HTMLDivElement>(null)
 	const terminalRef = useRef<HTMLDivElement>(null)
+	const miscellaneousRef = useRef<HTMLDivElement>(null)
 	const experimentalRef = useRef<HTMLDivElement>(null)
 	const languageRef = useRef<HTMLDivElement>(null)
 	const aboutRef = useRef<HTMLDivElement>(null)
@@ -303,6 +309,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			{ id: "notifications", icon: Bell, ref: notificationsRef },
 			{ id: "contextManagement", icon: Database, ref: contextManagementRef },
 			{ id: "terminal", icon: SquareTerminal, ref: terminalRef },
+			{ id: "miscellaneous", icon: SettingsIcon, ref: miscellaneousRef },
 			{ id: "experimental", icon: FlaskConical, ref: experimentalRef },
 			{ id: "language", icon: Globe, ref: languageRef },
 			{ id: "about", icon: Info, ref: aboutRef },
@@ -315,6 +322,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			notificationsRef,
 			contextManagementRef,
 			terminalRef,
+			miscellaneousRef,
 			experimentalRef,
 		],
 	)
@@ -493,6 +501,13 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 						terminalZshP10k={terminalZshP10k}
 						terminalZdotdir={terminalZdotdir}
 						terminalCompressProgressBar={terminalCompressProgressBar}
+						setCachedStateField={setCachedStateField}
+					/>
+				</div>
+
+				<div ref={miscellaneousRef}>
+					<MiscellaneousSettings
+						stickyModesEnabled={stickyModesEnabled}
 						setCachedStateField={setCachedStateField}
 					/>
 				</div>
