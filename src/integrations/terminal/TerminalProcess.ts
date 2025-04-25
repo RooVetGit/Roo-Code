@@ -318,8 +318,9 @@ export class TerminalProcess extends BaseTerminalProcess {
 			// Set streamClosed immediately after stream ends
 			this.terminal.setActiveStream(undefined)
 
-			// Wait for shell execution to complete and handle exit details
-			const exitDetails = await shellExecutionComplete
+			// Wait for shell execution to complete
+			await shellExecutionComplete
+
 			this.isHot = false
 
 			if (commandOutputStarted) {
@@ -435,7 +436,7 @@ export class TerminalProcess extends BaseTerminalProcess {
 		//   For active streams: return only complete lines (up to last \n).
 		//   For closed streams: return all remaining content.
 		if (endIndex === -1) {
-			if (!this.terminal.isStreamClosed()) {
+			if (!this.terminal.isStreamClosed) {
 				// Stream still running - only process complete lines
 				endIndex = outputToProcess.lastIndexOf("\n")
 

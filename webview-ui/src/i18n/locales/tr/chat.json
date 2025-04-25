@@ -190,12 +190,12 @@
 		"copyToInput": "Giriş alanına kopyala (veya Shift + tıklama)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.13 Yayınlandı",
-		"description": "Roo Code 3.13 geri bildirimlerinize dayalı yeni özellikler ve iyileştirmeler getiriyor.",
+		"title": "🎉 Roo Code 3.14 Yayınlandı",
+		"description": "Roo Code 3.14 geri bildirimlerinize dayalı yeni özellikler ve iyileştirmeler getiriyor.",
 		"whatsNew": "Yenilikler",
-		"feature1": "<bold>Gemini 2.5 Flash Thinking</bold>: Artık Gemini 2.5 Flash'ın thinking varyantını kullanabilir ve thinking için token bütçesi belirleyebilirsiniz",
-		"feature2": "<bold>UI İyileştirmeleri</bold>: Görev başlığı, sohbet görünümü, geçmiş önizlemesi ve karşılama ekranı görsel olarak yükseltildi",
-		"feature3": "<bold>Hata Düzeltmeleri</bold>: Daha güvenilir fark düzenlemeleri ve daha fazlası",
+		"feature1": "<bold>Geliştirilmiş Düzenleme Araçları</bold>: <code>search_and_replace</code> ve <code>insert_content</code> araçları iyileştirildi ve deneysel statüsünden çıkarıldı",
+		"feature2": "<bold>Apply_diff İyileştirmeleri</bold>: <code>apply_diff</code> aracını geliştirmeye devam ediyoruz",
+		"feature3": "<bold>Çok Sayıda Diğer İyileştirme</bold>: Eklenti genelinde sayısız düzeltme ve geliştirme",
 		"hideButton": "Duyuruyu gizle",
 		"detailsDiscussLinks": "<discordLink>Discord</discordLink> ve <redditLink>Reddit</redditLink> üzerinde daha fazla ayrıntı edinin ve tartışmalara katılın 🚀"
 	},

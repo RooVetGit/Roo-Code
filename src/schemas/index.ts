@@ -61,6 +61,7 @@ export const languages = [
 	"ko",
 	"pl",
 	"pt-BR",
+	"ru",
 	"tr",
 	"vi",
 	"zh-CN",
@@ -104,6 +105,7 @@ export const modelInfoSchema = z.object({
 	supportsImages: z.boolean().optional(),
 	supportsComputerUse: z.boolean().optional(),
 	supportsPromptCache: z.boolean(),
+	isPromptCacheOptional: z.boolean().optional(),
 	inputPrice: z.number().optional(),
 	outputPrice: z.number().optional(),
 	cacheWritesPrice: z.number().optional(),
@@ -319,12 +321,10 @@ export const providerSettingsSchema = z.object({
 	anthropicUseAuthToken: z.boolean().optional(),
 	// Glama
 	glamaModelId: z.string().optional(),
-	glamaModelInfo: modelInfoSchema.nullish(),
 	glamaApiKey: z.string().optional(),
 	// OpenRouter
 	openRouterApiKey: z.string().optional(),
 	openRouterModelId: z.string().optional(),
-	openRouterModelInfo: modelInfoSchema.nullish(),
 	openRouterBaseUrl: z.string().optional(),
 	openRouterSpecificProvider: z.string().optional(),
 	openRouterUseMiddleOutTransform: z.boolean().optional(),
@@ -386,11 +386,9 @@ export const providerSettingsSchema = z.object({
 	// Unbound
 	unboundApiKey: z.string().optional(),
 	unboundModelId: z.string().optional(),
-	unboundModelInfo: modelInfoSchema.nullish(),
 	// Requesty
 	requestyApiKey: z.string().optional(),
 	requestyModelId: z.string().optional(),
-	requestyModelInfo: modelInfoSchema.nullish(),
 	// X.AI (Grok)
 	xaiApiKey: z.string().optional(),
 	// Claude 3.7 Sonnet Thinking
@@ -398,11 +396,12 @@ export const providerSettingsSchema = z.object({
 	modelMaxThinkingTokens: z.number().optional(),
 	// Generic
 	includeMaxTokens: z.boolean().optional(),
-	modelTemperature: z.number().nullish(),
 	reasoningEffort: reasoningEffortsSchema.optional(),
-	rateLimitSeconds: z.number().optional(),
+	promptCachingEnabled: z.boolean().optional(),
 	diffEnabled: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
+	modelTemperature: z.number().nullish(),
+	rateLimitSeconds: z.number().optional(),
 	// Fake AI
 	fakeAi: z.unknown().optional(),
 })
@@ -420,12 +419,10 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	anthropicUseAuthToken: undefined,
 	// Glama
 	glamaModelId: undefined,
-	glamaModelInfo: undefined,
 	glamaApiKey: undefined,
 	// OpenRouter
 	openRouterApiKey: undefined,
 	openRouterModelId: undefined,
-	openRouterModelInfo: undefined,
 	openRouterBaseUrl: undefined,
 	openRouterSpecificProvider: undefined,
 	openRouterUseMiddleOutTransform: undefined,
@@ -479,21 +476,20 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	// Unbound
 	unboundApiKey: undefined,
 	unboundModelId: undefined,
-	unboundModelInfo: undefined,
 	// Requesty
 	requestyApiKey: undefined,
 	requestyModelId: undefined,
-	requestyModelInfo: undefined,
 	// Claude 3.7 Sonnet Thinking
 	modelMaxTokens: undefined,
 	modelMaxThinkingTokens: undefined,
 	// Generic
 	includeMaxTokens: undefined,
-	modelTemperature: undefined,
 	reasoningEffort: undefined,
-	rateLimitSeconds: undefined,
+	promptCachingEnabled: undefined,
 	diffEnabled: undefined,
 	fuzzyMatchThreshold: undefined,
+	modelTemperature: undefined,
+	rateLimitSeconds: undefined,
 	// Fake AI
 	fakeAi: undefined,
 	// X.AI (Grok)
@@ -557,6 +553,7 @@ export const globalSettingsSchema = z.object({
 	terminalZshOhMy: z.boolean().optional(),
 	terminalZshP10k: z.boolean().optional(),
 	terminalZdotdir: z.boolean().optional(),
+	terminalCompressProgressBar: z.boolean().optional(),
 
 	rateLimitSeconds: z.number().optional(),
 	diffEnabled: z.boolean().optional(),
@@ -632,6 +629,7 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	terminalZshOhMy: undefined,
 	terminalZshP10k: undefined,
 	terminalZdotdir: undefined,
+	terminalCompressProgressBar: undefined,
 
 	rateLimitSeconds: undefined,
 	diffEnabled: undefined,

@@ -11,7 +11,6 @@ import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { ExitCodeDetails, RooTerminalProcess } from "../../integrations/terminal/types"
 import { TerminalRegistry } from "../../integrations/terminal/TerminalRegistry"
 import { Terminal } from "../../integrations/terminal/Terminal"
-import { ExecaTerminal } from "../../integrations/terminal/ExecaTerminal"
 
 export async function executeCommandTool(
 	cline: Cline,
@@ -130,21 +129,20 @@ export async function executeCommand(
 		},
 	}
 
-	let terminal
+	const terminal = await TerminalRegistry.getOrCreateTerminal(workingDir, !!customCwd, cline.taskId, terminalProvider)
 
-	if (terminalProvider === "vscode") {
-		terminal = await TerminalRegistry.getOrCreateTerminal(workingDir, !!customCwd, cline.taskId)
+	if (terminal instanceof Terminal) {
 		terminal.terminal.show()
+
 		// Update the working directory in case the terminal we asked for has
 		// a different working directory so that the model will know where the
 		// command actually executed.
 		workingDir = terminal.getCurrentWorkingDirectory()
-	} else {
-		terminal = new ExecaTerminal(workingDir)
 	}
 
 	const process = terminal.runCommand(command, callbacks)
 	cline.terminalProcess = process
+
 	await process
 	cline.terminalProcess = undefined
 

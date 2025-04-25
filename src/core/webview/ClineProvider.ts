@@ -15,13 +15,9 @@ import { setPanel } from "../../activate/registerCommands"
 import {
 	ApiConfiguration,
 	ApiProvider,
-	ModelInfo,
 	requestyDefaultModelId,
-	requestyDefaultModelInfo,
 	openRouterDefaultModelId,
-	openRouterDefaultModelInfo,
 	glamaDefaultModelId,
-	glamaDefaultModelInfo,
 } from "../../shared/api"
 import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
@@ -31,7 +27,7 @@ import { ExtensionMessage } from "../../shared/ExtensionMessage"
 import { Mode, PromptComponent, defaultModeSlug } from "../../shared/modes"
 import { experimentDefault } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
-import { Terminal, DEFAULT_TERMINAL_SHELL_INTEGRATION_TIMEOUT } from "../../integrations/terminal/Terminal"
+import { Terminal } from "../../integrations/terminal/Terminal"
 import { downloadTask } from "../../integrations/misc/export-markdown"
 import { getTheme } from "../../integrations/theme/getTheme"
 import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
@@ -79,8 +75,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
-	public readonly latestAnnouncementId = "apr-18-2025-3-13" // Update for v3.13.0 announcement
-	public readonly contextProxy: ContextProxy
+	public readonly latestAnnouncementId = "apr-23-2025-3-14" // Update for v3.14.0 announcement
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
 
@@ -88,11 +83,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		readonly context: vscode.ExtensionContext,
 		private readonly outputChannel: vscode.OutputChannel,
 		private readonly renderContext: "sidebar" | "editor" = "sidebar",
+		public readonly contextProxy: ContextProxy,
 	) {
 		super()
 
 		this.log("ClineProvider instantiated")
-		this.contextProxy = new ContextProxy(context)
 		ClineProvider.activeInstances.add(this)
 
 		// Register this provider with the telemetry service to enable it to add
@@ -370,7 +365,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			}) => {
 				setSoundEnabled(soundEnabled ?? false)
 				Terminal.setShellIntegrationTimeout(
-					terminalShellIntegrationTimeout ?? DEFAULT_TERMINAL_SHELL_INTEGRATION_TIMEOUT,
+					terminalShellIntegrationTimeout ?? Terminal.defaultShellIntegrationTimeout,
 				)
 				Terminal.setCommandDelay(terminalCommandDelay ?? 0)
 				Terminal.setTerminalZshClearEolMark(terminalZshClearEolMark ?? true)
@@ -939,29 +934,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		return getSettingsDirectoryPath(globalStoragePath)
 	}
 
-	private async ensureCacheDirectoryExists() {
-		const { getCacheDirectoryPath } = await import("../../shared/storagePathManager")
-		const globalStoragePath = this.contextProxy.globalStorageUri.fsPath
-		return getCacheDirectoryPath(globalStoragePath)
-	}
-
-	async writeModelsToCache<T>(filename: string, data: T) {
-		const cacheDir = await this.ensureCacheDirectoryExists()
-		await fs.writeFile(path.join(cacheDir, filename), JSON.stringify(data))
-	}
-
-	async readModelsFromCache(filename: string): Promise<Record<string, ModelInfo> | undefined> {
-		const filePath = path.join(await this.ensureCacheDirectoryExists(), filename)
-		const fileExists = await fileExistsAtPath(filePath)
-
-		if (fileExists) {
-			const fileContents = await fs.readFile(filePath, "utf8")
-			return JSON.parse(fileContents)
-		}
-
-		return undefined
-	}
-
 	// OpenRouter
 
 	async handleOpenRouterCallback(code: string) {
@@ -990,7 +962,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			apiProvider: "openrouter",
 			openRouterApiKey: apiKey,
 			openRouterModelId: apiConfiguration?.openRouterModelId || openRouterDefaultModelId,
-			openRouterModelInfo: apiConfiguration?.openRouterModelInfo || openRouterDefaultModelInfo,
 		}
 
 		await this.upsertApiConfiguration(currentApiConfigName, newConfiguration)
@@ -1021,7 +992,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			apiProvider: "glama",
 			glamaApiKey: apiKey,
 			glamaModelId: apiConfiguration?.glamaModelId || glamaDefaultModelId,
-			glamaModelInfo: apiConfiguration?.glamaModelInfo || glamaDefaultModelInfo,
 		}
 
 		await this.upsertApiConfiguration(currentApiConfigName, newConfiguration)
@@ -1037,7 +1007,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			apiProvider: "requesty",
 			requestyApiKey: code,
 			requestyModelId: apiConfiguration?.requestyModelId || requestyDefaultModelId,
-			requestyModelInfo: apiConfiguration?.requestyModelInfo || requestyDefaultModelInfo,
 		}
 
 		await this.upsertApiConfiguration(currentApiConfigName, newConfiguration)
@@ -1243,6 +1212,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			showRooIgnoredFiles,
 			language,
 			maxReadFileLine,
+			terminalCompressProgressBar,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
@@ -1291,8 +1261,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			cachedChromeHostUrl: cachedChromeHostUrl,
 			writeDelayMs: writeDelayMs ?? 1000,
 			terminalOutputLineLimit: terminalOutputLineLimit ?? 500,
-			terminalShellIntegrationTimeout:
-				terminalShellIntegrationTimeout ?? DEFAULT_TERMINAL_SHELL_INTEGRATION_TIMEOUT,
+			terminalShellIntegrationTimeout: terminalShellIntegrationTimeout ?? Terminal.defaultShellIntegrationTimeout,
 			terminalCommandDelay: terminalCommandDelay ?? 0,
 			terminalPowershellCounter: terminalPowershellCounter ?? false,
 			terminalZshClearEolMark: terminalZshClearEolMark ?? true,
@@ -1323,10 +1292,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			telemetryKey,
 			machineId,
 			showRooIgnoredFiles: showRooIgnoredFiles ?? true,
-			language,
+			language: language ?? formatLanguage(vscode.env.language),
 			renderContext: this.renderContext,
 			maxReadFileLine: maxReadFileLine ?? 500,
 			settingsImportedAt: this.settingsImportedAt,
+			terminalCompressProgressBar: terminalCompressProgressBar ?? true,
 			hasSystemPromptOverride,
 		}
 	}
@@ -1385,13 +1355,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			writeDelayMs: stateValues.writeDelayMs ?? 1000,
 			terminalOutputLineLimit: stateValues.terminalOutputLineLimit ?? 500,
 			terminalShellIntegrationTimeout:
-				stateValues.terminalShellIntegrationTimeout ?? DEFAULT_TERMINAL_SHELL_INTEGRATION_TIMEOUT,
+				stateValues.terminalShellIntegrationTimeout ?? Terminal.defaultShellIntegrationTimeout,
 			terminalCommandDelay: stateValues.terminalCommandDelay ?? 0,
 			terminalPowershellCounter: stateValues.terminalPowershellCounter ?? false,
 			terminalZshClearEolMark: stateValues.terminalZshClearEolMark ?? true,
 			terminalZshOhMy: stateValues.terminalZshOhMy ?? false,
 			terminalZshP10k: stateValues.terminalZshP10k ?? false,
 			terminalZdotdir: stateValues.terminalZdotdir ?? false,
+			terminalCompressProgressBar: stateValues.terminalCompressProgressBar ?? true,
 			mode: stateValues.mode ?? defaultModeSlug,
 			language: stateValues.language ?? formatLanguage(vscode.env.language),
 			mcpEnabled: stateValues.mcpEnabled ?? true,

@@ -1,4 +1,4 @@
-import { truncateOutput, applyRunLengthEncoding } from "../misc/extract-text"
+import { truncateOutput, applyRunLengthEncoding, processBackspaces, processCarriageReturns } from "../misc/extract-text"
 
 import type {
 	RooTerminalProvider,
@@ -156,6 +156,7 @@ export abstract class BaseTerminal implements RooTerminal {
 	private static terminalZshOhMy: boolean = false
 	private static terminalZshP10k: boolean = false
 	private static terminalZdotdir: boolean = false
+	private static compressProgressBar: boolean = true
 
 	/**
 	 * Compresses terminal output by applying run-length encoding and truncating to line limit
@@ -250,8 +251,20 @@ export abstract class BaseTerminal implements RooTerminal {
 		return BaseTerminal.terminalZshP10k
 	}
 
+	/**
+	 * Compresses terminal output by applying run-length encoding and truncating to line limit
+	 * @param input The terminal output to compress
+	 * @returns The compressed terminal output
+	 */
 	public static compressTerminalOutput(input: string, lineLimit: number): string {
-		return truncateOutput(applyRunLengthEncoding(input), lineLimit)
+		let processedInput = input
+
+		if (BaseTerminal.compressProgressBar) {
+			processedInput = processCarriageReturns(processedInput)
+			processedInput = processBackspaces(processedInput)
+		}
+
+		return truncateOutput(applyRunLengthEncoding(processedInput), lineLimit)
 	}
 
 	/**
@@ -268,5 +281,21 @@ export abstract class BaseTerminal implements RooTerminal {
 	 */
 	public static getTerminalZdotdir(): boolean {
 		return BaseTerminal.terminalZdotdir
+	}
+
+	/**
+	 * Sets whether to compress progress bar output by processing carriage returns
+	 * @param enabled Whether to enable progress bar compression
+	 */
+	public static setCompressProgressBar(enabled: boolean): void {
+		BaseTerminal.compressProgressBar = enabled
+	}
+
+	/**
+	 * Gets whether progress bar compression is enabled
+	 * @returns Whether progress bar compression is enabled
+	 */
+	public static getCompressProgressBar(): boolean {
+		return BaseTerminal.compressProgressBar
 	}
 }

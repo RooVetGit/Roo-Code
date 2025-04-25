@@ -15,6 +15,8 @@ export interface RooTerminal {
 	shellExecutionComplete(exitDetails: ExitCodeDetails): void
 	getProcessesWithOutput(): RooTerminalProcess[]
 	getUnretrievedOutput(): string
+	getLastCommand(): string
+	cleanCompletedProcessQueue(): void
 }
 
 export interface RooTerminalCallbacks {
