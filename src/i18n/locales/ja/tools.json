@@ -4,6 +4,20 @@
 		"linesFromToEnd": " ({{start}}行目-最後まで)",
 		"linesFromStartTo": " (1-{{end}}行目)",
 		"definitionsOnly": " (定義のみ)",
-		"maxLines": " (最大{{max}}行)"
+		"maxLines": " (最大{{max}}行)",
+		"multipleFiles": "{{count}} ファイル",
+		"error": {
+			"invalidArrayFormat": "ファイルパス配列の形式が無効です: {{value}}。文字列のJSON配列が必要です。",
+			"invalidJsonArray": "ファイルパス配列を解析できませんでした: {{value}}。有効な文字列のJSON配列を提供してください。",
+			"incompleteJsonArray": "ファイルパス配列が不完全または不正な形式です: {{value}}。JSON配列のように見えますが、閉じ括弧がないか、その他の理由で無効です。",
+			"noValidPaths": "有効なファイルパスが提供されていません。",
+			"tooManyFiles": "要求されたファイルが多すぎます ({{count}})。許可される最大数は {{max}} です。",
+			"lineParamsMultipleFiles": "'start_line' および 'end_line' パラメータは、単一ファイルを読み取る場合にのみ使用できます。",
+			"invalidStartLine": "start_line の値が無効です: {{value}}。正の整数である必要があります。",
+			"invalidEndLine": "end_line の値が無効です: {{value}}。正の整数である必要があります。",
+			"fileNotFound": "ファイルが見つかりません: {{path}}",
+			"countingLines": "ファイル {{path}} の行数カウント中にエラーが発生しました: {{message}}",
+			"readingFile": "ファイル {{path}} の読み取り中にエラーが発生しました: {{message}}"
+		}
 	}
 }

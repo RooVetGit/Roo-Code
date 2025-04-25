@@ -4,6 +4,20 @@
 		"linesFromToEnd": " (dòng {{start}}-cuối)",
 		"linesFromStartTo": " (dòng 1-{{end}})",
 		"definitionsOnly": " (chỉ định nghĩa)",
-		"maxLines": " (tối đa {{max}} dòng)"
+		"maxLines": " (tối đa {{max}} dòng)",
+		"multipleFiles": "{{count}} tệp",
+		"error": {
+			"invalidArrayFormat": "Định dạng không hợp lệ cho mảng đường dẫn tệp: {{value}}. Dự kiến một mảng JSON gồm các chuỗi.",
+			"invalidJsonArray": "Không thể phân tích cú pháp mảng đường dẫn tệp: {{value}}. Vui lòng cung cấp một mảng JSON gồm các chuỗi hợp lệ.",
+			"incompleteJsonArray": "Mảng đường dẫn tệp không đầy đủ hoặc bị lỗi định dạng: {{value}}. Nó trông giống như một mảng JSON nhưng thiếu dấu ngoặc vuông đóng hoặc không hợp lệ.",
+			"noValidPaths": "Không có đường dẫn tệp hợp lệ nào được cung cấp.",
+			"tooManyFiles": "Yêu cầu quá nhiều tệp ({{count}}). Số lượng tối đa cho phép là {{max}}.",
+			"lineParamsMultipleFiles": "Tham số 'start_line' và 'end_line' chỉ có thể được sử dụng khi đọc một tệp duy nhất.",
+			"invalidStartLine": "Giá trị start_line không hợp lệ: {{value}}. Phải là số nguyên dương.",
+			"invalidEndLine": "Giá trị end_line không hợp lệ: {{value}}. Phải là số nguyên dương.",
+			"fileNotFound": "Không tìm thấy tệp: {{path}}",
+			"countingLines": "Lỗi khi đếm dòng trong tệp {{path}}: {{message}}",
+			"readingFile": "Lỗi khi đọc tệp {{path}}: {{message}}"
+		}
 	}
 }

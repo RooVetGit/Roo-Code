@@ -4,6 +4,20 @@
 		"linesFromToEnd": " (línies {{start}}-final)",
 		"linesFromStartTo": " (línies 1-{{end}})",
 		"definitionsOnly": " (només definicions)",
-		"maxLines": " (màxim {{max}} línies)"
+		"maxLines": " (màxim {{max}} línies)",
+		"multipleFiles": "{{count}} fitxers",
+		"error": {
+			"invalidArrayFormat": "Format no vàlid per a la matriu de rutes de fitxer: {{value}}. S'esperava una matriu JSON de cadenes.",
+			"invalidJsonArray": "No s'ha pogut analitzar la matriu de rutes de fitxer: {{value}}. Proporciona una matriu JSON de cadenes vàlida.",
+			"incompleteJsonArray": "Matriu de rutes de fitxer incompleta o mal formada: {{value}}. Sembla una matriu JSON però falta el claudàtor de tancament o no és vàlida d'una altra manera.",
+			"noValidPaths": "No s'han proporcionat rutes de fitxer vàlides.",
+			"tooManyFiles": "S'han sol·licitat massa fitxers ({{count}}). El màxim permès és {{max}}.",
+			"lineParamsMultipleFiles": "Els paràmetres 'start_line' i 'end_line' només es poden utilitzar en llegir un sol fitxer.",
+			"invalidStartLine": "Valor de start_line no vàlid: {{value}}. Ha de ser un enter positiu.",
+			"invalidEndLine": "Valor d'end_line no vàlid: {{value}}. Ha de ser un enter positiu.",
+			"fileNotFound": "Fitxer no trobat: {{path}}",
+			"countingLines": "Error en comptar les línies del fitxer {{path}}: {{message}}",
+			"readingFile": "Error en llegir el fitxer {{path}}: {{message}}"
+		}
 	}
 }

@@ -4,6 +4,20 @@
 		"linesFromToEnd": " (строки {{start}}-конец)",
 		"linesFromStartTo": " (строки 1-{{end}})",
 		"definitionsOnly": " (только определения)",
-		"maxLines": " (макс. {{max}} строк)"
+		"maxLines": " (макс. {{max}} строк)",
+		"multipleFiles": "{{count}} файлов",
+		"error": {
+			"invalidArrayFormat": "Неверный формат массива путей к файлам: {{value}}. Ожидался массив строк JSON.",
+			"invalidJsonArray": "Не удалось разобрать массив путей к файлам: {{value}}. Укажи действительный массив строк JSON.",
+			"incompleteJsonArray": "Неполный или некорректный массив путей к файлам: {{value}}. Похоже на массив JSON, но отсутствует закрывающая скобка или он недействителен по другой причине.",
+			"noValidPaths": "Не указаны действительные пути к файлам.",
+			"tooManyFiles": "Запрошено слишком много файлов ({{count}}). Максимально допустимое количество: {{max}}.",
+			"lineParamsMultipleFiles": "Параметры 'start_line' и 'end_line' можно использовать только при чтении одного файла.",
+			"invalidStartLine": "Неверное значение start_line: {{value}}. Должно быть положительным целым числом.",
+			"invalidEndLine": "Неверное значение end_line: {{value}}. Должно быть положительным целым числом.",
+			"fileNotFound": "Файл не найден: {{path}}",
+			"countingLines": "Ошибка при подсчете строк в файле {{path}}: {{message}}",
+			"readingFile": "Ошибка при чтении файла {{path}}: {{message}}"
+		}
 	}
 }

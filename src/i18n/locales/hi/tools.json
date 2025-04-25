@@ -4,6 +4,20 @@
 		"linesFromToEnd": " (पंक्तियाँ {{start}}-अंत)",
 		"linesFromStartTo": " (पंक्तियाँ 1-{{end}})",
 		"definitionsOnly": " (केवल परिभाषाएँ)",
-		"maxLines": " (अधिकतम {{max}} पंक्तियाँ)"
+		"maxLines": " (अधिकतम {{max}} पंक्तियाँ)",
+		"multipleFiles": "{{count}} फ़ाइलें",
+		"error": {
+			"invalidArrayFormat": "फ़ाइल पथ ऐरे के लिए अमान्य प्रारूप: {{value}}। स्ट्रिंग्स का JSON ऐरे अपेक्षित है।",
+			"invalidJsonArray": "फ़ाइल पथ ऐरे को पार्स नहीं किया जा सका: {{value}}। कृपया स्ट्रिंग्स का एक मान्य JSON ऐरे प्रदान करें।",
+			"incompleteJsonArray": "अधूरा या विकृत फ़ाइल पथ ऐरे: {{value}}। यह JSON ऐरे जैसा दिखता है लेकिन इसमें समापन ब्रैकेट गायब है या अन्यथा अमान्य है।",
+			"noValidPaths": "कोई मान्य फ़ाइल पथ प्रदान नहीं किए गए।",
+			"tooManyFiles": "बहुत अधिक फ़ाइलें अनुरोधित ({{count}})। अधिकतम अनुमत {{max}} है।",
+			"lineParamsMultipleFiles": "'start_line' और 'end_line' पैरामीटर केवल एक फ़ाइल पढ़ते समय उपयोग किए जा सकते हैं।",
+			"invalidStartLine": "अमान्य start_line मान: {{value}}। एक सकारात्मक पूर्णांक होना चाहिए।",
+			"invalidEndLine": "अमान्य end_line मान: {{value}}। एक सकारात्मक पूर्णांक होना चाहिए।",
+			"fileNotFound": "फ़ाइल नहीं मिली: {{path}}",
+			"countingLines": "फ़ाइल {{path}} में पंक्तियों की गणना करने में त्रुटि: {{message}}",
+			"readingFile": "फ़ाइल {{path}} पढ़ने में त्रुटि: {{message}}"
+		}
 	}
 }

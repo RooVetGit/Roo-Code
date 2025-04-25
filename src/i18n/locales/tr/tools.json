@@ -4,6 +4,20 @@
 		"linesFromToEnd": " (satır {{start}}-son)",
 		"linesFromStartTo": " (satır 1-{{end}})",
 		"definitionsOnly": " (sadece tanımlar)",
-		"maxLines": " (maks. {{max}} satır)"
+		"maxLines": " (maks. {{max}} satır)",
+		"multipleFiles": "{{count}} dosya",
+		"error": {
+			"invalidArrayFormat": "Dosya yolu dizisi için geçersiz biçim: {{value}}. Bir JSON dize dizisi bekleniyor.",
+			"invalidJsonArray": "Dosya yolu dizisi ayrıştırılamadı: {{value}}. Lütfen geçerli bir JSON dize dizisi sağlayın.",
+			"incompleteJsonArray": "Eksik veya hatalı biçimlendirilmiş dosya yolu dizisi: {{value}}. Bir JSON dizisi gibi görünüyor ancak kapanış köşeli parantezi eksik veya başka bir şekilde geçersiz.",
+			"noValidPaths": "Geçerli dosya yolu sağlanmadı.",
+			"tooManyFiles": "Çok fazla dosya istendi ({{count}}). İzin verilen maksimum sayı {{max}}.",
+			"lineParamsMultipleFiles": "'start_line' ve 'end_line' parametreleri yalnızca tek bir dosya okunurken kullanılabilir.",
+			"invalidStartLine": "Geçersiz start_line değeri: {{value}}. Pozitif bir tamsayı olmalıdır.",
+			"invalidEndLine": "Geçersiz end_line değeri: {{value}}. Pozitif bir tamsayı olmalıdır.",
+			"fileNotFound": "Dosya bulunamadı: {{path}}",
+			"countingLines": "{{path}} dosyasındaki satırlar sayılırken hata oluştu: {{message}}",
+			"readingFile": "{{path}} dosyası okunurken hata oluştu: {{message}}"
+		}
 	}
 }

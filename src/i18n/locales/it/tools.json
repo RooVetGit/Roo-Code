@@ -4,6 +4,20 @@
 		"linesFromToEnd": " (righe {{start}}-fine)",
 		"linesFromStartTo": " (righe 1-{{end}})",
 		"definitionsOnly": " (solo definizioni)",
-		"maxLines": " (max {{max}} righe)"
+		"maxLines": " (max {{max}} righe)",
+		"multipleFiles": "{{count}} file",
+		"error": {
+			"invalidArrayFormat": "Formato non valido per l'array di percorsi file: {{value}}. Previsto un array JSON di stringhe.",
+			"invalidJsonArray": "Impossibile analizzare l'array di percorsi file: {{value}}. Fornisci un array JSON di stringhe valido.",
+			"incompleteJsonArray": "Array di percorsi file incompleto o malformato: {{value}}. Sembra un array JSON ma manca la parentesi quadra di chiusura o è altrimenti non valido.",
+			"noValidPaths": "Nessun percorso file valido fornito.",
+			"tooManyFiles": "Troppi file richiesti ({{count}}). Il massimo consentito è {{max}}.",
+			"lineParamsMultipleFiles": "I parametri 'start_line' e 'end_line' possono essere usati solo leggendo un singolo file.",
+			"invalidStartLine": "Valore start_line non valido: {{value}}. Deve essere un intero positivo.",
+			"invalidEndLine": "Valore end_line non valido: {{value}}. Deve essere un intero positivo.",
+			"fileNotFound": "File non trovato: {{path}}",
+			"countingLines": "Errore nel conteggio delle righe nel file {{path}}: {{message}}",
+			"readingFile": "Errore durante la lettura del file {{path}}: {{message}}"
+		}
 	}
 }

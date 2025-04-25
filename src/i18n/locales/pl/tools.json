@@ -4,6 +4,20 @@
 		"linesFromToEnd": " (linie {{start}}-koniec)",
 		"linesFromStartTo": " (linie 1-{{end}})",
 		"definitionsOnly": " (tylko definicje)",
-		"maxLines": " (maks. {{max}} linii)"
+		"maxLines": " (maks. {{max}} linii)",
+		"multipleFiles": "{{count}} plików",
+		"error": {
+			"invalidArrayFormat": "Nieprawidłowy format tablicy ścieżek plików: {{value}}. Oczekiwano tablicy JSON ciągów znaków.",
+			"invalidJsonArray": "Nie można przeanalizować tablicy ścieżek plików: {{value}}. Podaj prawidłową tablicę JSON ciągów znaków.",
+			"incompleteJsonArray": "Niekompletna lub źle sformatowana tablica ścieżek plików: {{value}}. Wygląda jak tablica JSON, ale brakuje nawiasu zamykającego lub jest nieprawidłowa w inny sposób.",
+			"noValidPaths": "Nie podano prawidłowych ścieżek plików.",
+			"tooManyFiles": "Zażądano zbyt wielu plików ({{count}}). Maksymalna dozwolona liczba to {{max}}.",
+			"lineParamsMultipleFiles": "Parametry 'start_line' i 'end_line' mogą być używane tylko podczas odczytu pojedynczego pliku.",
+			"invalidStartLine": "Nieprawidłowa wartość start_line: {{value}}. Musi być dodatnią liczbą całkowitą.",
+			"invalidEndLine": "Nieprawidłowa wartość end_line: {{value}}. Musi być dodatnią liczbą całkowitą.",
+			"fileNotFound": "Nie znaleziono pliku: {{path}}",
+			"countingLines": "Błąd podczas liczenia linii w pliku {{path}}: {{message}}",
+			"readingFile": "Błąd podczas odczytu pliku {{path}}: {{message}}"
+		}
 	}
 }

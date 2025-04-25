@@ -4,6 +4,20 @@
 		"linesFromToEnd": " (第 {{start}} 行至末尾)",
 		"linesFromStartTo": " (第 1-{{end}} 行)",
 		"definitionsOnly": " (仅定义)",
-		"maxLines": " (最多 {{max}} 行)"
+		"maxLines": " (最多 {{max}} 行)",
+		"multipleFiles": "{{count}} 个文件",
+		"error": {
+			"invalidArrayFormat": "文件路径数组格式无效：{{value}}。应为 JSON 字符串数组。",
+			"invalidJsonArray": "无法解析文件路径数组：{{value}}。请提供有效的 JSON 字符串数组。",
+			"incompleteJsonArray": "文件路径数组不完整或格式错误：{{value}}。它看起来像 JSON 数组，但缺少右方括号或存在其他无效之处。",
+			"noValidPaths": "未提供有效的文件路径。",
+			"tooManyFiles": "请求的文件过多 ({{count}})。允许的最大数量为 {{max}}。",
+			"lineParamsMultipleFiles": "参数 'start_line' 和 'end_line' 只能在读取单个文件时使用。",
+			"invalidStartLine": "start_line 值无效：{{value}}。必须为正整数。",
+			"invalidEndLine": "end_line 值无效：{{value}}。必须为正整数。",
+			"fileNotFound": "文件未找到：{{path}}",
+			"countingLines": "计算文件 {{path}} 行数时出错：{{message}}",
+			"readingFile": "读取文件 {{path}} 时出错：{{message}}"
+		}
 	}
 }
