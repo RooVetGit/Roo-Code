@@ -55,22 +55,29 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				baseURL,
 				apiKey,
 				apiVersion: this.options.azureApiVersion || azureOpenAiDefaultApiVersion,
-				defaultHeaders,
+				defaultHeaders: {
+					...defaultHeaders,
+					...(this.options.openAiHostHeader ? { Host: this.options.openAiHostHeader } : {}),
+				},
 			})
 		} else {
-			this.client = new OpenAI({ baseURL, apiKey, defaultHeaders })
+			this.client = new OpenAI({
+				baseURL,
+				apiKey,
+				defaultHeaders: {
+					...defaultHeaders,
+					...(this.options.openAiHostHeader ? { Host: this.options.openAiHostHeader } : {}),
+				},
+			})
 		}
 	}
 
 	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
-		if (this.options.openAiBaseUrl?.startsWith("https")) {
-			throw new Error("URL not supported")
-		}
-		
 		const modelInfo = this.getModel().info
 		const modelUrl = this.options.openAiBaseUrl ?? ""
 		const modelId = this.options.openAiModelId ?? ""
 		const enabledR1Format = this.options.openAiR1FormatEnabled ?? false
+		const enabledLegacyFormat = this.options.openAiLegacyFormat ?? false
 		const isAzureAiInference = this._isAzureAiInference(modelUrl)
 		const urlHost = this._getUrlHost(modelUrl)
 		const deepseekReasoner = modelId.includes("deepseek-reasoner") || enabledR1Format
@@ -89,7 +96,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			let convertedMessages
 			if (deepseekReasoner) {
 				convertedMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
-			} else if (ark) {
+			} else if (ark || enabledLegacyFormat) {
 				convertedMessages = [systemMessage, ...convertToSimpleMessages(messages)]
 			} else {
 				if (modelInfo.supportsPromptCache) {
@@ -130,12 +137,14 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				}
 			}
 
+			const isGrokXAI = this._isGrokXAI(this.options.openAiBaseUrl)
+
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
 				model: modelId,
 				temperature: this.options.modelTemperature ?? (deepseekReasoner ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0),
 				messages: convertedMessages,
 				stream: true as const,
-				stream_options: { include_usage: true },
+				...(isGrokXAI ? {} : { stream_options: { include_usage: true } }),
 			}
 			if (this.options.includeMaxTokens) {
 				requestOptions.max_tokens = modelInfo.maxTokens
@@ -194,7 +203,9 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				model: modelId,
 				messages: deepseekReasoner
 					? convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
-					: [systemMessage, ...convertToOpenAiMessages(messages)],
+					: enabledLegacyFormat
+						? [systemMessage, ...convertToSimpleMessages(messages)]
+						: [systemMessage, ...convertToOpenAiMessages(messages)],
 			}
 
 			const response = await this.client.chat.completions.create(
@@ -228,9 +239,6 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	}
 
 	async completePrompt(prompt: string): Promise<string> {
-		if (this.options.openAiBaseUrl?.startsWith("https")) {
-			throw new Error("URL not supported")
-		}
 		try {
 			const isAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
@@ -256,11 +264,10 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
 	): ApiStream {
-		if (this.options.openAiBaseUrl?.startsWith("https")) {
-			throw new Error("URL not supported")
-		}
 		if (this.options.openAiStreamingEnabled ?? true) {
 			const methodIsAzureAiInference = this._isAzureAiInference(this.options.openAiBaseUrl)
+
+			const isGrokXAI = this._isGrokXAI(this.options.openAiBaseUrl)
 
 			const stream = await this.client.chat.completions.create(
 				{
@@ -273,7 +280,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 						...convertToOpenAiMessages(messages),
 					],
 					stream: true,
-					stream_options: { include_usage: true },
+					...(isGrokXAI ? {} : { stream_options: { include_usage: true } }),
 					reasoning_effort: this.getModel().info.reasoningEffort,
 				},
 				methodIsAzureAiInference ? { path: AZURE_AI_INFERENCE_PATH } : {},
@@ -334,16 +341,18 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		}
 	}
 
+	private _isGrokXAI(baseUrl?: string): boolean {
+		const urlHost = this._getUrlHost(baseUrl)
+		return urlHost.includes("x.ai")
+	}
+
 	private _isAzureAiInference(baseUrl?: string): boolean {
 		const urlHost = this._getUrlHost(baseUrl)
 		return urlHost.endsWith(".services.ai.azure.com")
 	}
 }
 
-export async function getOpenAiModels(baseUrl?: string, apiKey?: string) {
-	if (baseUrl?.startsWith("https")) {
-		throw new Error("URL not supported")
-	}
+export async function getOpenAiModels(baseUrl?: string, apiKey?: string, hostHeader?: string) {
 	try {
 		if (!baseUrl) {
 			return []
@@ -354,9 +363,18 @@ export async function getOpenAiModels(baseUrl?: string, apiKey?: string) {
 		}
 
 		const config: Record<string, any> = {}
+		const headers: Record<string, string> = {}
 
 		if (apiKey) {
-			config["headers"] = { Authorization: `Bearer ${apiKey}` }
+			headers["Authorization"] = `Bearer ${apiKey}`
+		}
+
+		if (hostHeader) {
+			headers["Host"] = hostHeader
+		}
+
+		if (Object.keys(headers).length > 0) {
+			config["headers"] = headers
 		}
 
 		const response = await axios.get(`${baseUrl}/models`, config)

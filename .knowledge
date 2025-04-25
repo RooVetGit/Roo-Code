@@ -1,0 +1,7 @@
+{
+    "0": {
+        "index": 0,
+        "description": "mention指令(即'@'指令)处理逻辑",
+        "detail": "parseMentions函数处理以下类型的@mention指令：\n1. 文件路径（以/开头） - 显示文件或文件夹内容\n2. 问题视图（problems） - 显示工作区诊断问题\n3. 终端输出（terminal） - 显示最新终端输出\n4. URL链接（http开头） - 获取并显示网页内容\n5. Git变更（git-changes） - 显示工作目录变更\n6. Git提交哈希（7-40位十六进制） - 显示提交信息\n\n实现位置：src/core/mentions/index.ts"
+    }
+}

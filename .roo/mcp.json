@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "local_knowledge": {
+      "command": "python",
+      "args": [
+        "-m",
+        "local_knowledge"
+      ]
+    }
+  }
+}

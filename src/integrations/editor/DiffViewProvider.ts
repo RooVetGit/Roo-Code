@@ -18,6 +18,7 @@ export class DiffViewProvider {
 	originalContent: string | undefined
 	private createdDirs: string[] = []
 	private documentWasOpen = false
+	private originalViewColumn?: vscode.ViewColumn // Store the original view column
 	private relPath?: string
 	private newContent?: string
 	private activeDiffEditor?: vscode.TextEditor
@@ -66,11 +67,22 @@ export class DiffViewProvider {
 			.filter(
 				(tab) => tab.input instanceof vscode.TabInputText && arePathsEqual(tab.input.uri.fsPath, absolutePath),
 			)
+		// Check if the document is already open and store its state
+		// DO NOT close the original tab to preserve pin status
 		for (const tab of tabs) {
-			if (!tab.isDirty) {
-				await vscode.window.tabGroups.close(tab)
+			if (tab.input instanceof vscode.TabInputText && arePathsEqual(tab.input.uri.fsPath, absolutePath)) {
+				this.originalViewColumn = tab.group.viewColumn
+				this.documentWasOpen = true
+				// Ensure the tab is not dirty before proceeding, but don't close it
+				if (tab.isDirty) {
+					// Find the document associated with the tab and save it
+					const doc = vscode.workspace.textDocuments.find((d) => arePathsEqual(d.uri.fsPath, absolutePath))
+					if (doc) {
+						await doc.save()
+					}
+				}
+				break // Found the relevant tab, no need to check others
 			}
-			this.documentWasOpen = true
 		}
 		this.activeDiffEditor = await this.openDiffEditor()
 		this.fadedOverlayController = new DecorationController("fadedOverlay", this.activeDiffEditor)
@@ -116,14 +128,8 @@ export class DiffViewProvider {
 			this.fadedOverlayController.updateOverlayAfterLine(currentLine, document.lineCount)
 			// Scroll to the current line
 			this.scrollEditorToLine(currentLine)
-			if (diffLines.length < 400) {
-				await delay(1);
-			}
 			if (diffLines.length < 100) {
-				await delay(2);
-			}
-			if (diffLines.length < 25) {
-				await delay(3);
+				await delay(1);
 			}
 		}
 
@@ -170,8 +176,30 @@ export class DiffViewProvider {
 			await updatedDocument.save()
 		}
 
-		await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), { preview: false })
+		// Close the diff view first
 		await this.closeAllDiffViews()
+
+		// If the original document was open, try to focus it.
+		// VS Code should handle showing the updated content automatically since the file was saved.
+		if (this.documentWasOpen && this.originalViewColumn) {
+			// Find the editor for the original document and reveal it
+			const originalEditor = vscode.window.visibleTextEditors.find(
+				(editor) =>
+					arePathsEqual(editor.document.uri.fsPath, absolutePath) &&
+					editor.viewColumn === this.originalViewColumn,
+			)
+			if (originalEditor) {
+				// Reveal a range (e.g., the start) to ensure focus
+				const position = new vscode.Position(0, 0)
+				originalEditor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.AtTop)
+			} else {
+				// Fallback if editor not found (shouldn't happen often if documentWasOpen is true)
+				await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
+					preview: false,
+					viewColumn: this.originalViewColumn,
+				})
+			}
+		}
 
 		/*
 		Getting diagnostics before and after the file edit is a better approach than
@@ -251,12 +279,28 @@ export class DiffViewProvider {
 			await vscode.workspace.applyEdit(edit)
 			await updatedDocument.save()
 			console.log(`File ${absolutePath} has been reverted to its original content.`)
-			if (this.documentWasOpen) {
-				await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
-					preview: false,
-				})
-			}
+			// Close the diff view first
 			await this.closeAllDiffViews()
+
+			// If the document was originally open, ensure it's focused.
+			// The revert logic already applied the original content and saved.
+			if (this.documentWasOpen && this.originalViewColumn) {
+				const originalEditor = vscode.window.visibleTextEditors.find(
+					(editor) =>
+						arePathsEqual(editor.document.uri.fsPath, absolutePath) &&
+						editor.viewColumn === this.originalViewColumn,
+				)
+				if (originalEditor) {
+					const position = new vscode.Position(0, 0)
+					originalEditor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.AtTop)
+				} else {
+					// Fallback
+					await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
+						preview: false,
+						viewColumn: this.originalViewColumn,
+					})
+				}
+			}
 		}
 
 		// edit is done
@@ -372,6 +416,7 @@ export class DiffViewProvider {
 		this.originalContent = undefined
 		this.createdDirs = []
 		this.documentWasOpen = false
+		this.originalViewColumn = undefined // Reset stored view column
 		this.activeDiffEditor = undefined
 		this.fadedOverlayController = undefined
 		this.activeLineController = undefined

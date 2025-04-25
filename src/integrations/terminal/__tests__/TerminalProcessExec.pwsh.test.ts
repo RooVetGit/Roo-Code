@@ -17,6 +17,7 @@ jest.mock("vscode", () => {
 	const eventHandlers = {
 		startTerminalShellExecution: null,
 		endTerminalShellExecution: null,
+		closeTerminal: null,
 	}
 
 	return {
@@ -33,6 +34,10 @@ jest.mock("vscode", () => {
 			}),
 			onDidEndTerminalShellExecution: jest.fn().mockImplementation((handler) => {
 				eventHandlers.endTerminalShellExecution = handler
+				return { dispose: jest.fn() }
+			}),
+			onDidCloseTerminal: jest.fn().mockImplementation((handler) => {
+				eventHandlers.closeTerminal = handler
 				return { dispose: jest.fn() }
 			}),
 		},
@@ -225,8 +230,6 @@ describePlatform("TerminalProcess with PowerShell Command Output", () => {
 	beforeAll(() => {
 		// Initialize TerminalRegistry event handlers
 		TerminalRegistry.initialize()
-		// Log environment info
-		console.log(`Running PowerShell tests with PowerShell Core available: ${hasPwsh}`)
 	})
 
 	beforeEach(() => {

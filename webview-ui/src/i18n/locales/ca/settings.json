@@ -29,12 +29,13 @@
 		"advanced": "Avançat",
 		"experimental": "Funcions experimentals",
 		"language": "Idioma",
-		"about": "Sobre Roo Code"
+		"about": "Sobre Roo Code",
+		"interface": "Interfície"
 	},
 	"autoApprove": {
 		"description": "Permet que Roo realitzi operacions automàticament sense requerir aprovació. Activeu aquesta configuració només si confieu plenament en la IA i enteneu els riscos de seguretat associats.",
 		"readOnly": {
-			"label": "Aprovar sempre operacions de només lectura",
+			"label": "Llegir",
 			"description": "Quan està activat, Roo veurà automàticament el contingut del directori i llegirà fitxers sense que calgui fer clic al botó Aprovar.",
 			"outsideWorkspace": {
 				"label": "Incloure fitxers fora de l'espai de treball",
@@ -42,7 +43,7 @@
 			}
 		},
 		"write": {
-			"label": "Aprovar sempre operacions d'escriptura",
+			"label": "Escriure",
 			"description": "Crear i editar fitxers automàticament sense requerir aprovació",
 			"delayLabel": "Retard després d'escriptura per permetre que els diagnòstics detectin possibles problemes",
 			"outsideWorkspace": {
@@ -51,29 +52,28 @@
 			}
 		},
 		"browser": {
-			"label": "Aprovar sempre accions del navegador",
-			"description": "Realitzar accions del navegador automàticament sense requerir aprovació",
-			"note": "Nota: Només s'aplica quan el model admet l'ús de l'ordinador"
+			"label": "Navegador",
+			"description": "Realitzar accions del navegador automàticament sense requerir aprovació. Nota: Només s'aplica quan el model admet l'ús de l'ordinador"
 		},
 		"retry": {
-			"label": "Tornar a intentar sempre sol·licituds d'API fallides",
+			"label": "Reintentar",
 			"description": "Tornar a intentar sol·licituds d'API fallides automàticament quan el servidor retorna una resposta d'error",
 			"delayLabel": "Retard abans de tornar a intentar la sol·licitud"
 		},
 		"mcp": {
-			"label": "Aprovar sempre eines MCP",
+			"label": "MCP",
 			"description": "Habilitar l'aprovació automàtica d'eines MCP individuals a la vista de Servidors MCP (requereix tant aquesta configuració com la casella \"Permetre sempre\" de l'eina)"
 		},
 		"modeSwitch": {
-			"label": "Aprovar sempre canvis de mode",
+			"label": "Mode",
 			"description": "Canviar automàticament entre diferents modes sense requerir aprovació"
 		},
 		"subtasks": {
-			"label": "Aprovar sempre creació i finalització de subtasques",
+			"label": "Subtasques",
 			"description": "Permetre la creació i finalització de subtasques sense requerir aprovació"
 		},
 		"execute": {
-			"label": "Aprovar sempre operacions d'execució permeses",
+			"label": "Executar",
 			"description": "Executar automàticament comandes de terminal permeses sense requerir aprovació",
 			"allowedCommands": "Comandes d'auto-execució permeses",
 			"allowedCommandsDescription": "Prefixos de comandes que poden ser executats automàticament quan \"Aprovar sempre operacions d'execució\" està habilitat. Afegeix * per permetre totes les comandes (usar amb precaució).",
@@ -101,10 +101,12 @@
 		"searchPlaceholder": "Cerca perfils",
 		"noMatchFound": "No s'han trobat perfils coincidents",
 		"vscodeLmDescription": "L'API del model de llenguatge de VS Code us permet executar models proporcionats per altres extensions de VS Code (incloent-hi, però no limitat a, GitHub Copilot). La manera més senzilla de començar és instal·lar les extensions Copilot i Copilot Chat des del VS Code Marketplace.",
-		"awsCustomArnUse": "Introduïu un ARN vàlid d'AWS Bedrock per al model que voleu utilitzar. Exemples de format:",
+		"awsCustomArnUse": "Introduïu un ARN vàlid d'Amazon Bedrock per al model que voleu utilitzar. Exemples de format:",
 		"awsCustomArnDesc": "Assegureu-vos que la regió a l'ARN coincideix amb la regió d'AWS seleccionada anteriorment.",
 		"apiKeyStorageNotice": "Les claus API s'emmagatzemen de forma segura a l'Emmagatzematge Secret de VSCode",
 		"useCustomBaseUrl": "Utilitzar URL base personalitzada",
+		"useHostHeader": "Utilitzar capçalera Host personalitzada",
+		"useLegacyFormat": "Utilitzar el format d'API OpenAI antic",
 		"openRouterTransformsText": "Comprimir prompts i cadenes de missatges a la mida del context (<a>Transformacions d'OpenRouter</a>)",
 		"model": "Model",
 		"getOpenRouterApiKey": "Obtenir clau API d'OpenRouter",
@@ -114,6 +116,7 @@
 		"getRequestyApiKey": "Obtenir clau API de Requesty",
 		"anthropicApiKey": "Clau API d'Anthropic",
 		"getAnthropicApiKey": "Obtenir clau API d'Anthropic",
+		"anthropicUseAuthToken": "Passar la clau API d'Anthropic com a capçalera d'autorització en lloc de X-Api-Key",
 		"deepSeekApiKey": "Clau API de DeepSeek",
 		"getDeepSeekApiKey": "Obtenir clau API de DeepSeek",
 		"geminiApiKey": "Clau API de Gemini",
@@ -125,6 +128,8 @@
 		"getMistralApiKey": "Obtenir clau API de Mistral / Codestral",
 		"codestralBaseUrl": "URL base de Codestral (opcional)",
 		"codestralBaseUrlDesc": "Establir una URL alternativa per al model Codestral.",
+		"xaiApiKey": "Clau API de xAI",
+		"getXaiApiKey": "Obtenir clau API de xAI",
 		"awsCredentials": "Credencials d'AWS",
 		"awsProfile": "Perfil d'AWS",
 		"awsProfileName": "Nom del perfil d'AWS",
@@ -218,6 +223,16 @@
 				}
 			},
 			"resetDefaults": "Restablir als valors per defecte"
+		},
+		"rateLimitSeconds": {
+			"label": "Límit de freqüència",
+			"description": "Temps mínim entre sol·licituds d'API."
+		},
+		"reasoningEffort": {
+			"label": "Esforç de raonament del model",
+			"high": "Alt",
+			"medium": "Mitjà",
+			"low": "Baix"
 		}
 	},
 	"browser": {
@@ -295,13 +310,37 @@
 		"shellIntegrationTimeout": {
 			"label": "Temps d'espera d'integració de shell del terminal",
 			"description": "Temps màxim d'espera per a la inicialització de la integració de shell abans d'executar comandes. Per a usuaris amb temps d'inici de shell llargs, aquest valor pot necessitar ser augmentat si veieu errors \"Shell Integration Unavailable\" al terminal."
+		},
+		"compressProgressBar": {
+			"label": "Comprimir sortida de barra de progrés",
+			"description": "Quan està habilitat, processa la sortida del terminal amb retorns de carro (\\r) per simular com un terminal real mostraria el contingut. Això elimina els estats intermedis de les barres de progrés, mantenint només l'estat final, la qual cosa conserva espai de context per a informació més rellevant."
+		},
+		"zdotdir": {
+			"label": "Habilitar gestió de ZDOTDIR",
+			"description": "Quan està habilitat, crea un directori temporal per a ZDOTDIR per gestionar correctament la integració del shell zsh. Això assegura que la integració del shell de VSCode funcioni correctament amb zsh mentre es preserva la teva configuració de zsh. (experimental)"
+		},
+		"commandDelay": {
+			"label": "Retard de comanda del terminal",
+			"description": "Retard en mil·lisegons a afegir després de l'execució de la comanda. La configuració predeterminada de 0 desactiva completament el retard. Això pot ajudar a assegurar que la sortida de la comanda es capturi completament en terminals amb problemes de temporització. En la majoria de terminals s'implementa establint `PROMPT_COMMAND='sleep N'` i Powershell afegeix `start-sleep` al final de cada comanda. Originalment era una solució per al error VSCode#237208 i pot no ser necessari."
+		},
+		"powershellCounter": {
+			"label": "Habilita la solució temporal del comptador PowerShell",
+			"description": "Quan està habilitat, afegeix un comptador a les comandes PowerShell per assegurar l'execució correcta de les comandes. Això ajuda amb els terminals PowerShell que poden tenir problemes amb la captura de sortida."
+		},
+		"zshClearEolMark": {
+			"label": "Neteja la marca EOL de ZSH",
+			"description": "Quan està habilitat, neteja la marca de final de línia de ZSH establint PROMPT_EOL_MARK=''. Això evita problemes amb la interpretació de la sortida de comandes quan acaba amb caràcters especials com '%'."
+		},
+		"zshOhMy": {
+			"label": "Habilita la integració Oh My Zsh",
+			"description": "Quan està habilitat, estableix ITERM_SHELL_INTEGRATION_INSTALLED=Yes per habilitar les característiques d'integració del shell Oh My Zsh. (experimental)"
+		},
+		"zshP10k": {
+			"label": "Habilita la integració Powerlevel10k",
+			"description": "Quan està habilitat, estableix POWERLEVEL9K_TERM_SHELL_INTEGRATION=true per habilitar les característiques d'integració del shell Powerlevel10k. (experimental)"
 		}
 	},
 	"advanced": {
-		"rateLimit": {
-			"label": "Límit de freqüència",
-			"description": "Temps mínim entre sol·licituds d'API."
-		},
 		"diff": {
 			"label": "Habilitar edició mitjançant diffs",
 			"description": "Quan està habilitat, Roo podrà editar fitxers més ràpidament i rebutjarà automàticament escriptures completes de fitxers truncats. Funciona millor amb l'últim model Claude 3.7 Sonnet.",
@@ -346,6 +385,10 @@
 			"name": "Utilitzar eina diff de blocs múltiples experimental",
 			"description": "Quan està activat, Roo utilitzarà l'eina diff de blocs múltiples. Això intentarà actualitzar múltiples blocs de codi a l'arxiu en una sola petició."
 		}
+	},
+	"promptCaching": {
+		"label": "Habilitar emmagatzematge en caché de prompts",
+		"description": "Quan està habilitat, Roo utilitzarà aquest model amb la memòria cau de prompts activada per reduir costos."
 	},
 	"temperature": {
 		"useCustom": "Utilitzar temperatura personalitzada",
@@ -401,7 +444,7 @@
 	},
 	"validation": {
 		"apiKey": "Heu de proporcionar una clau API vàlida.",
-		"awsRegion": "Heu de triar una regió per utilitzar AWS Bedrock.",
+		"awsRegion": "Heu de triar una regió per utilitzar Amazon Bedrock.",
 		"googleCloud": "Heu de proporcionar un ID de projecte i regió de Google Cloud vàlids.",
 		"modelId": "Heu de proporcionar un ID de model vàlid.",
 		"modelSelector": "Heu de proporcionar un selector de model vàlid.",

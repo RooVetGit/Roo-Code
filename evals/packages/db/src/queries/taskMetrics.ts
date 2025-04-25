@@ -5,10 +5,8 @@ import type { InsertTaskMetrics, UpdateTaskMetrics } from "../schema.js"
 import { insertTaskMetricsSchema, taskMetrics } from "../schema.js"
 import { db } from "../db.js"
 
-const table = taskMetrics
-
 export const findTaskMetrics = async (id: number) => {
-	const run = await db.query.taskMetrics.findFirst({ where: eq(table.id, id) })
+	const run = await db.query.taskMetrics.findFirst({ where: eq(taskMetrics.id, id) })
 
 	if (!run) {
 		throw new RecordNotFoundError()
@@ -19,7 +17,7 @@ export const findTaskMetrics = async (id: number) => {
 
 export const createTaskMetrics = async (args: InsertTaskMetrics) => {
 	const records = await db
-		.insert(table)
+		.insert(taskMetrics)
 		.values({
 			...insertTaskMetricsSchema.parse(args),
 			createdAt: new Date(),
@@ -36,7 +34,7 @@ export const createTaskMetrics = async (args: InsertTaskMetrics) => {
 }
 
 export const updateTaskMetrics = async (id: number, values: UpdateTaskMetrics) => {
-	const records = await db.update(table).set(values).where(eq(table.id, id)).returning()
+	const records = await db.update(taskMetrics).set(values).where(eq(taskMetrics.id, id)).returning()
 	const record = records[0]
 
 	if (!record) {

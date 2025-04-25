@@ -83,6 +83,9 @@
 	"edit": "✍编辑...",
 	"forNextMode": "用于下一个模式",
 	"error": "错误",
+	"diffError": {
+		"title": "编辑失败"
+	},
 	"troubleMessage": "Roo遇到问题...",
 	"apiRequest": {
 		"title": "🙂API请求",
@@ -94,6 +97,7 @@
 	"checkpoint": {
 		"initial": "📌初始检查点",
 		"regular": "📌检查点",
+		"initializingWarning": "正在初始化检查点...如果耗时过长，你可以在<settingsLink>设置</settingsLink>中禁用检查点并重新启动任务。",
 		"menu": {
 			"viewDiff": "📚查看差异",
 			"restore": "🔖恢复检查点",
@@ -116,7 +120,12 @@
 		"didRead": "📖Roo已读取此文件:",
 		"wantsToEdit": "✍Roo想编辑此文件:",
 		"wantsToEditOutsideWorkspace": "✍Roo想编辑此工作区外的文件:",
-		"wantsToCreate": "✍Roo想创建新文件:"
+		"wantsToCreate": "✍Roo想创建新文件:",
+		"wantsToSearchReplace": "想在此文件中搜索和替换:",
+		"didSearchReplace": "已完成搜索和替换:",
+		"wantsToInsert": "想在此文件中插入内容:",
+		"wantsToInsertWithLineNumber": "想在第 {{lineNumber}} 行插入内容:",
+		"wantsToInsertAtEnd": "想在文件末尾添加内容:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "📁Roo想查看此目录中的顶层文件:",
@@ -143,7 +152,12 @@
 	},
 	"subtasks": {
 		"wantsToCreate": "📑Roo想在<code>{{mode}}</code>模式下创建新子任务:",
-		"wantsToFinish": "📑Roo想完成此子任务"
+		"wantsToFinish": "📑Roo想完成此子任务",
+		"newTaskContent": "子任务说明",
+		"completionContent": "子任务已完成",
+		"resultContent": "子任务结果",
+		"defaultResult": "请继续下一个任务。",
+		"completionInstructions": "子任务已完成！您可以查看结果并提出修改或下一步建议。如果一切正常，请确认以将结果返回给主任务。"
 	},
 	"questions": {
 		"hasQuestion": "🤔Roo有一个问题:"
@@ -151,7 +165,10 @@
 	"taskCompleted": "🥳任务完成",
 	"shellIntegration": {
 		"unavailable": "Shell集成不可用",
-		"troubleshooting": "仍有问题吗？"
+		"troubleshooting": "仍有问题吗？",
+		"checkSettings": "检查设置页面中的终端解决方案",
+		"updateVSCode": "更新VSCode",
+		"supportedShell": "确保使用受支持的shell：zsh、bash、fish或PowerShell"
 	},
 	"powershell": {
 		"issues": "看起来您遇到了Windows PowerShell问题，请参阅此"
@@ -159,49 +176,7 @@
 	"autoApprove": {
 		"title": "自动批准:",
 		"none": "无",
-		"description": "允许Roo直接执行操作无需确认，请谨慎启用。前往<settingsLink>设置</settingsLink>调整",
-		"actions": {
-			"readFiles": {
-				"label": "读取文件和目录",
-				"shortName": "读取",
-				"description": "允许读取系统中的文件内容"
-			},
-			"editFiles": {
-				"label": "编辑文件",
-				"shortName": "编辑",
-				"description": "允许修改系统中的文件"
-			},
-			"executeCommands": {
-				"label": "执行命令",
-				"shortName": "命令",
-				"description": "允许执行终端命令。"
-			},
-			"useBrowser": {
-				"label": "浏览器",
-				"shortName": "浏览器",
-				"description": "允许通过无头浏览器访问网站"
-			},
-			"useMcp": {
-				"label": "MCP服务",
-				"shortName": "MCP",
-				"description": "允许访问配置好的 MCP 服务（可能涉及文件系统或API操作）"
-			},
-			"switchModes": {
-				"label": "切换模式",
-				"shortName": "模式",
-				"description": "允许自动切换工作模式"
-			},
-			"subtasks": {
-				"label": "创建和完成子任务",
-				"shortName": "子任务",
-				"description": "允许自主创建和管理子任务"
-			},
-			"retryRequests": {
-				"label": "重试失败的请求",
-				"shortName": "重试",
-				"description": "API请求失败时自动重试"
-			}
-		}
+		"description": "允许Roo直接执行操作无需确认，请谨慎启用。前往<settingsLink>设置</settingsLink>调整"
 	},
 	"reasoning": {
 		"thinking": "思考中",
@@ -211,10 +186,14 @@
 		"copyToInput": "复制到输入框（或按住Shift点击）"
 	},
 	"announcement": {
-		"title": "允许任务拆分",
-		"description": "将复杂任务拆分到不同模式（编程/架构/调试）执行",
-		"learnMore": "了解更多 →",
-		"hideButton": "隐藏公告"
+		"title": "🎉 Roo Code 3.14 已发布",
+		"description": "Roo Code 3.14 带来基于您反馈的新功能和改进。",
+		"whatsNew": "新特性",
+		"feature1": "<bold>编辑工具增强</bold>: <code>search_and_replace</code> 和 <code>insert_content</code> 工具已得到改进，并从实验性状态毕业",
+		"feature2": "<bold>差异更新修复</bold>: 我们持续改进 <code>apply_diff</code> 工具",
+		"feature3": "<bold>海量其他改进</bold>: 扩展中众多的修复和增强功能",
+		"hideButton": "隐藏公告",
+		"detailsDiscussLinks": "在 <discordLink>Discord</discordLink> 和 <redditLink>Reddit</redditLink> 获取更多详情并参与讨论 🚀"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo想使用浏览器:",
@@ -237,5 +216,6 @@
 			"scrollUp": "向上滚动",
 			"close": "关闭浏览器"
 		}
-	}
+	},
+	"systemPromptWarning": "警告：自定义系统提示词覆盖已激活。这可能严重破坏功能并导致不可预测的行为。"
 }

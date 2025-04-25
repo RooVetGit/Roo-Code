@@ -3,6 +3,7 @@ import {
 	ConverseStreamCommand,
 	ConverseCommand,
 	BedrockRuntimeClientConfig,
+	ContentBlock,
 } from "@aws-sdk/client-bedrock-runtime"
 import { fromIni } from "@aws-sdk/credential-providers"
 import { Anthropic } from "@anthropic-ai/sdk"
@@ -22,7 +23,8 @@ import { Message, SystemContentBlock } from "@aws-sdk/client-bedrock-runtime"
 // New cache-related imports
 import { MultiPointStrategy } from "../transform/cache-strategy/multi-point-strategy"
 import { ModelInfo as CacheModelInfo } from "../transform/cache-strategy/types"
-import { AWS_BEDROCK_REGION_INFO } from "../../shared/aws_regions"
+import { AMAZON_BEDROCK_REGION_INFO } from "../../shared/aws_regions"
+import { convertToBedrockConverseMessages as sharedConverter } from "../transform/bedrock-converse-format"
 
 const BEDROCK_DEFAULT_TEMPERATURE = 0.3
 const BEDROCK_MAX_TOKENS = 4096
@@ -169,6 +171,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			// Use profile-based credentials if enabled and profile is set
 			clientConfig.credentials = fromIni({
 				profile: this.options.awsProfile,
+				ignoreCache: true,
 			})
 		} else if (this.options.awsAccessKey && this.options.awsSecretKey) {
 			// Use direct credentials if provided
@@ -433,7 +436,18 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		modelInfo?: any,
 		conversationId?: string, // Optional conversation ID to track cache points across messages
 	): { system: SystemContentBlock[]; messages: Message[] } {
-		// Convert model info to expected format
+		// First convert messages using shared converter for proper image handling
+		const convertedMessages = sharedConverter(anthropicMessages as Anthropic.Messages.MessageParam[])
+
+		// If prompt caching is disabled, return the converted messages directly
+		if (!usePromptCache) {
+			return {
+				system: systemMessage ? [{ text: systemMessage } as SystemContentBlock] : [],
+				messages: convertedMessages,
+			}
+		}
+
+		// Convert model info to expected format for cache strategy
 		const cacheModelInfo: CacheModelInfo = {
 			maxTokens: modelInfo?.maxTokens || 8192,
 			contextWindow: modelInfo?.contextWindow || 200_000,
@@ -442,18 +456,6 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			minTokensPerCachePoint: modelInfo?.minTokensPerCachePoint || 50,
 			cachableFields: modelInfo?.cachableFields || [],
 		}
-
-		// Clean messages by removing any existing cache points
-		const cleanedMessages = anthropicMessages.map((msg) => {
-			if (typeof msg.content === "string") {
-				return msg
-			}
-			const cleaned = {
-				...msg,
-				content: this.removeCachePoints(msg.content),
-			}
-			return cleaned
-		})
 
 		// Get previous cache point placements for this conversation if available
 		const previousPlacements =
@@ -465,21 +467,36 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		const config = {
 			modelInfo: cacheModelInfo,
 			systemPrompt: systemMessage,
-			messages: cleanedMessages as Anthropic.Messages.MessageParam[],
+			messages: anthropicMessages as Anthropic.Messages.MessageParam[],
 			usePromptCache,
 			previousCachePointPlacements: previousPlacements,
 		}
 
-		// Determine optimal cache points
+		// Get cache point placements
 		let strategy = new MultiPointStrategy(config)
-		const result = strategy.determineOptimalCachePoints()
+		const cacheResult = strategy.determineOptimalCachePoints()
 
 		// Store cache point placements for future use if conversation ID is provided
-		if (conversationId && result.messageCachePointPlacements) {
-			this.previousCachePointPlacements[conversationId] = result.messageCachePointPlacements
+		if (conversationId && cacheResult.messageCachePointPlacements) {
+			this.previousCachePointPlacements[conversationId] = cacheResult.messageCachePointPlacements
 		}
 
-		return result
+		// Apply cache points to the properly converted messages
+		const messagesWithCache = convertedMessages.map((msg, index) => {
+			const placement = cacheResult.messageCachePointPlacements?.find((p) => p.index === index)
+			if (placement) {
+				return {
+					...msg,
+					content: [...(msg.content || []), { cachePoint: { type: "default" } } as ContentBlock],
+				}
+			}
+			return msg
+		})
+
+		return {
+			system: systemMessage ? [{ text: systemMessage } as SystemContentBlock] : [],
+			messages: messagesWithCache,
+		}
 	}
 
 	/************************************************************************************
@@ -495,7 +512,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 
 	private parseArn(arn: string, region?: string) {
 		/*
-		 * VIA Roo analysis: platform-independent Regex. It's designed to parse AWS Bedrock ARNs and doesn't rely on any platform-specific features
+		 * VIA Roo analysis: platform-independent Regex. It's designed to parse Amazon Bedrock ARNs and doesn't rely on any platform-specific features
 		 * like file path separators, line endings, or case sensitivity behaviors. The forward slashes in the regex are properly escaped and
 		 * represent literal characters in the AWS ARN format, not filesystem paths. This regex will function consistently across Windows,
 		 * macOS, Linux, and any other operating system where JavaScript runs.
@@ -515,7 +532,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		 * match[4] - The resource ID (e.g., "anthropic.claude-3-sonnet-20240229-v1:0")
 		 */
 
-		const arnRegex = /^arn:aws:bedrock:([^:]+):([^:]*):(?:([^\/]+)\/(.+)|([^\/]+))$/
+		const arnRegex = /^arn:aws:(?:bedrock|sagemaker):([^:]+):([^:]*):(?:([^\/]+)\/([\w\.\-:]+)|([^\/]+))$/
 		let match = arn.match(arnRegex)
 
 		if (match && match[1] && match[3] && match[4]) {
@@ -562,7 +579,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			region: undefined,
 			modelType: undefined,
 			modelId: undefined,
-			errorMessage: "Invalid ARN format. ARN should follow the AWS Bedrock ARN pattern.",
+			errorMessage: "Invalid ARN format. ARN should follow the Amazon Bedrock ARN pattern.",
 			crossRegionInference: false,
 		}
 	}
@@ -700,16 +717,16 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 
 	/************************************************************************************
 	 *
-	 *     AWS REGIONS
+	 *     AMAZON REGIONS
 	 *
 	 *************************************************************************************/
 
 	private static getPrefixList(): string[] {
-		return Object.keys(AWS_BEDROCK_REGION_INFO)
+		return Object.keys(AMAZON_BEDROCK_REGION_INFO)
 	}
 
 	private static getPrefixForRegion(region: string): string | undefined {
-		for (const [prefix, info] of Object.entries(AWS_BEDROCK_REGION_INFO)) {
+		for (const [prefix, info] of Object.entries(AMAZON_BEDROCK_REGION_INFO)) {
 			if (info.pattern && region.startsWith(info.pattern)) {
 				return prefix
 			}
@@ -718,7 +735,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	}
 
 	private static prefixIsMultiRegion(arnPrefix: string): boolean {
-		for (const [prefix, info] of Object.entries(AWS_BEDROCK_REGION_INFO)) {
+		for (const [prefix, info] of Object.entries(AMAZON_BEDROCK_REGION_INFO)) {
 			if (arnPrefix === prefix) {
 				if (info?.multiRegion) return info.multiRegion
 				else return false
@@ -791,7 +808,7 @@ Suggestions:
 2. Split your request into smaller chunks
 3. Use a model with a larger context window
 4. If rate limited, reduce request frequency
-5. Check your AWS Bedrock quotas and limits`,
+5. Check your Amazon Bedrock quotas and limits`,
 			logLevel: "error",
 		},
 		ON_DEMAND_NOT_SUPPORTED: {

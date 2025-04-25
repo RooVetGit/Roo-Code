@@ -16,7 +16,6 @@ import { outputChannelLog } from "./log"
 export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 	private readonly outputChannel: vscode.OutputChannel
 	private readonly sidebarProvider: ClineProvider
-	private tabProvider?: ClineProvider
 	private readonly context: vscode.ExtensionContext
 	private readonly ipc?: IpcServer
 	private readonly taskMap = new Map<string, ClineProvider>()
@@ -100,13 +99,11 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 			await vscode.commands.executeCommand("workbench.action.files.revert")
 			await vscode.commands.executeCommand("workbench.action.closeAllEditors")
 
-			if (!this.tabProvider) {
-				this.tabProvider = await openClineInNewTab({ context: this.context, outputChannel: this.outputChannel })
-				this.registerListeners(this.tabProvider)
-			}
-
-			provider = this.tabProvider
+			provider = await openClineInNewTab({ context: this.context, outputChannel: this.outputChannel })
+			this.registerListeners(provider)
 		} else {
+			await vscode.commands.executeCommand("roo-cline.SidebarProvider.focus")
+
 			provider = this.sidebarProvider
 		}
 
@@ -132,12 +129,27 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		return taskId
 	}
 
+	public async resumeTask(taskId: string): Promise<void> {
+		const { historyItem } = await this.sidebarProvider.getTaskWithId(taskId)
+		await this.sidebarProvider.initClineWithHistoryItem(historyItem)
+		await this.sidebarProvider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
+	}
+
+	public async isTaskInHistory(taskId: string): Promise<boolean> {
+		try {
+			await this.sidebarProvider.getTaskWithId(taskId)
+			return true
+		} catch {
+			return false
+		}
+	}
+
 	public getCurrentTaskStack() {
 		return this.sidebarProvider.getCurrentTaskStack()
 	}
 
 	public async clearCurrentTask(lastMessage?: string) {
-		await this.sidebarProvider.finishSubTask(lastMessage)
+		await this.sidebarProvider.finishSubTask(lastMessage ?? "")
 		await this.sidebarProvider.postStateToWebview()
 	}
 
@@ -172,6 +184,7 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 
 	public async setConfiguration(values: RooCodeSettings) {
 		await this.sidebarProvider.setValues(values)
+		await this.sidebarProvider.providerSettingsManager.saveConfig(values.currentApiConfigName || "default", values)
 		await this.sidebarProvider.postStateToWebview()
 	}
 
@@ -218,10 +231,7 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 			throw new Error(`Profile with name "${name}" does not exist`)
 		}
 
-		await this.setConfiguration({
-			...currentSettings,
-			currentApiConfigName: profile.name,
-		})
+		await this.setConfiguration({ ...currentSettings, currentApiConfigName: profile.name })
 	}
 
 	public getActiveProfile() {
@@ -275,10 +285,6 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 
 			cline.on("taskModeSwitched", (taskId, mode) => this.emit(RooCodeEventName.TaskModeSwitched, taskId, mode))
 
-			cline.on("taskTokenUsageUpdated", (_, usage) =>
-				this.emit(RooCodeEventName.TaskTokenUsageUpdated, cline.taskId, usage),
-			)
-
 			cline.on("taskAskResponded", () => this.emit(RooCodeEventName.TaskAskResponded, cline.taskId))
 
 			cline.on("taskAborted", () => {
@@ -286,18 +292,26 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 				this.taskMap.delete(cline.taskId)
 			})
 
-			cline.on("taskCompleted", async (_, usage) => {
-				this.emit(RooCodeEventName.TaskCompleted, cline.taskId, usage)
+			cline.on("taskCompleted", async (_, tokenUsage, toolUsage) => {
+				this.emit(RooCodeEventName.TaskCompleted, cline.taskId, tokenUsage, toolUsage)
 				this.taskMap.delete(cline.taskId)
 
 				await this.fileLog(
-					`[${new Date().toISOString()}] taskCompleted -> ${cline.taskId} | ${JSON.stringify(usage, null, 2)}\n`,
+					`[${new Date().toISOString()}] taskCompleted -> ${cline.taskId} | ${JSON.stringify(tokenUsage, null, 2)} | ${JSON.stringify(toolUsage, null, 2)}\n`,
 				)
 			})
 
 			cline.on("taskSpawned", (childTaskId) => this.emit(RooCodeEventName.TaskSpawned, cline.taskId, childTaskId))
 			cline.on("taskPaused", () => this.emit(RooCodeEventName.TaskPaused, cline.taskId))
 			cline.on("taskUnpaused", () => this.emit(RooCodeEventName.TaskUnpaused, cline.taskId))
+
+			cline.on("taskTokenUsageUpdated", (_, usage) =>
+				this.emit(RooCodeEventName.TaskTokenUsageUpdated, cline.taskId, usage),
+			)
+
+			cline.on("taskToolFailed", (taskId, tool, error) =>
+				this.emit(RooCodeEventName.TaskToolFailed, taskId, tool, error),
+			)
 
 			this.emit(RooCodeEventName.TaskCreated, cline.taskId)
 		})

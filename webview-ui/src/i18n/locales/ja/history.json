@@ -1,5 +1,5 @@
 {
-	"recentTasks": "最近のタスク",
+	"recentTasks": "Recent Tasks",
 	"viewAll": "すべて表示",
 	"tokens": "Tokens: ↑{{in}} ↓{{out}}",
 	"cache": "キャッシュ: +{{writes}} → {{reads}}",
@@ -34,5 +34,6 @@
 	"deleteTasks": "タスクを削除",
 	"confirmDeleteTasks": "{{count}} 件のタスクを削除してもよろしいですか？",
 	"deleteTasksWarning": "削除されたタスクは復元できません。続行してもよろしいですか？",
-	"deleteItems": "{{count}} 項目を削除"
+	"deleteItems": "{{count}} 項目を削除",
+	"showAllWorkspaces": "すべてのワークスペースのタスクを表示"
 }

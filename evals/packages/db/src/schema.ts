@@ -2,7 +2,14 @@ import { sqliteTable, text, real, integer, blob, uniqueIndex } from "drizzle-orm
 import { relations } from "drizzle-orm"
 import { createInsertSchema } from "drizzle-zod"
 
-import { GlobalSettings, exerciseLanguages, rooCodeSettingsSchema } from "@evals/types"
+import {
+	RooCodeSettings,
+	ToolUsage,
+	exerciseLanguages,
+	rooCodeSettingsSchema,
+	toolNames,
+	toolUsageSchema,
+} from "@evals/types"
 
 /**
  * runs
@@ -13,9 +20,10 @@ export const runs = sqliteTable("runs", {
 	taskMetricsId: integer({ mode: "number" }).references(() => taskMetrics.id),
 	model: text().notNull(),
 	description: text(),
-	settings: blob({ mode: "json" }).$type<GlobalSettings>(),
+	settings: blob({ mode: "json" }).$type<RooCodeSettings>(),
 	pid: integer({ mode: "number" }),
 	socketPath: text().notNull(),
+	concurrency: integer({ mode: "number" }).default(2).notNull(),
 	passed: integer({ mode: "number" }).default(0).notNull(),
 	failed: integer({ mode: "number" }).default(0).notNull(),
 	createdAt: integer({ mode: "timestamp" }).notNull(),
@@ -83,16 +91,47 @@ export const taskMetrics = sqliteTable("taskMetrics", {
 	cacheReads: integer({ mode: "number" }).notNull(),
 	cost: real().notNull(),
 	duration: integer({ mode: "number" }).notNull(),
+	toolUsage: text({ mode: "json" }).$type<ToolUsage>(),
 	createdAt: integer({ mode: "timestamp" }).notNull(),
 })
 
 export type TaskMetrics = typeof taskMetrics.$inferSelect
 
-export const insertTaskMetricsSchema = createInsertSchema(taskMetrics).omit({ id: true, createdAt: true })
+export const insertTaskMetricsSchema = createInsertSchema(taskMetrics)
+	.omit({ id: true, createdAt: true })
+	.extend({ toolUsage: toolUsageSchema.optional() })
 
 export type InsertTaskMetrics = Omit<typeof taskMetrics.$inferInsert, "id" | "createdAt">
 
 export type UpdateTaskMetrics = Partial<Omit<TaskMetrics, "id" | "createdAt">>
+
+/**
+ * toolErrors
+ */
+
+export const toolErrors = sqliteTable("toolErrors", {
+	id: integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
+	runId: integer({ mode: "number" }).references(() => runs.id),
+	taskId: integer({ mode: "number" }).references(() => tasks.id),
+	toolName: text({ enum: toolNames }).notNull(),
+	error: text().notNull(),
+	createdAt: integer({ mode: "timestamp" }).notNull(),
+})
+
+export const toolErrorsRelations = relations(toolErrors, ({ one }) => ({
+	run: one(runs, { fields: [toolErrors.runId], references: [runs.id] }),
+	task: one(tasks, { fields: [toolErrors.taskId], references: [tasks.id] }),
+}))
+
+export type ToolError = typeof toolErrors.$inferSelect
+
+export const insertToolErrorSchema = createInsertSchema(toolErrors)
+	.omit({ id: true, createdAt: true })
+	.extend({ toolUsage: toolUsageSchema.optional() })
+
+export type InsertToolError = Omit<typeof toolErrors.$inferInsert, "id" | "createdAt">
+
+export type UpdateToolError = Partial<Omit<ToolError, "id" | "createdAt">>
 
 /**
  * schema

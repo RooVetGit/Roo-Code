@@ -1,15 +1,21 @@
-import React from "react"
+// npx jest src/__tests__/ContextWindowProgress.test.tsx
+
 import { render, screen } from "@testing-library/react"
 import "@testing-library/jest-dom"
-import TaskHeader from "../components/chat/TaskHeader"
+import TaskHeader from "@src/components/chat/TaskHeader"
 
 // Mock formatLargeNumber function
 jest.mock("@/utils/format", () => ({
 	formatLargeNumber: jest.fn((num) => num.toString()),
 }))
 
+// Mock VSCodeBadge component for all tests
+jest.mock("@vscode/webview-ui-toolkit/react", () => ({
+	VSCodeBadge: ({ children }: { children: React.ReactNode }) => <div data-testid="vscode-badge">{children}</div>,
+}))
+
 // Mock ExtensionStateContext since we use useExtensionState
-jest.mock("../context/ExtensionStateContext", () => ({
+jest.mock("@src/context/ExtensionStateContext", () => ({
 	useExtensionState: jest.fn(() => ({
 		apiConfiguration: {
 			apiProvider: "openai",
@@ -24,8 +30,8 @@ jest.mock("../context/ExtensionStateContext", () => ({
 }))
 
 // Mock highlighting function to avoid JSX parsing issues in tests
-jest.mock("../components/chat/TaskHeader", () => {
-	const originalModule = jest.requireActual("../components/chat/TaskHeader")
+jest.mock("@src/components/chat/TaskHeader", () => {
+	const originalModule = jest.requireActual("@src/components/chat/TaskHeader")
 	return {
 		__esModule: true,
 		...originalModule,
@@ -68,7 +74,9 @@ describe("ContextWindowProgress", () => {
 		})
 
 		// Check for basic elements
-		expect(screen.getByTestId("context-window-label")).toBeInTheDocument()
+		// The context-window-label is not part of the ContextWindowProgress component
+		// but rather part of the parent TaskHeader component in expanded state
+		expect(screen.getByTestId("context-tokens-count")).toBeInTheDocument()
 		expect(screen.getByTestId("context-tokens-count")).toHaveTextContent("1000") // contextTokens
 		// The actual context window might be different than what we pass in
 		// due to the mock returning a default value from the API config
@@ -83,7 +91,8 @@ describe("ContextWindowProgress", () => {
 
 		// In the current implementation, the component is still displayed with zero values
 		// rather than being hidden completely
-		expect(screen.getByTestId("context-window-label")).toBeInTheDocument()
+		// The context-window-label is not part of the ContextWindowProgress component
+		expect(screen.getByTestId("context-tokens-count")).toBeInTheDocument()
 		expect(screen.getByTestId("context-tokens-count")).toHaveTextContent("0")
 	})
 
@@ -117,8 +126,8 @@ describe("ContextWindowProgress", () => {
 
 		// We can't reliably test computed styles in JSDOM, so we'll just check
 		// that the component appears to be working correctly by checking for expected elements
-		expect(screen.getByTestId("context-window-label")).toBeInTheDocument()
+		// The context-window-label is not part of the ContextWindowProgress component
+		expect(screen.getByTestId("context-tokens-count")).toBeInTheDocument()
 		expect(screen.getByTestId("context-tokens-count")).toHaveTextContent("1000")
-		expect(screen.getByText("1000")).toBeInTheDocument()
 	})
 })

@@ -12,8 +12,6 @@ import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStream,ApiStreamUsageChunk } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 
-const crypto = require('crypto');
-const zlib = require('zlib');
 import { v4 as uuidv4 } from 'uuid'
 import { compressWithGzip, encryptData } from './tools'
 

@@ -9,13 +9,13 @@
 		"OPENROUTER_MODEL_ID",
 		"PROMPT_PATH",
 		"WORKSPACE_PATH",
-		"BENCHMARKS_DB_PATH"
+		"BENCHMARKS_DB_PATH",
+		"TURSO_CONNECTION_URL",
+		"TURSO_AUTH_TOKEN"
 	],
 	"tasks": {
 		"lint": {},
-		"check-types": {
-			"dependsOn": []
-		},
+		"check-types": {},
 		"test": {},
 		"format": {},
 		"dev": {

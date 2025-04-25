@@ -9,7 +9,8 @@ import {
 	VSCodeRadioGroup,
 	VSCodeRadio,
 } from "@vscode/webview-ui-toolkit/react"
-import { useExtensionState } from "../../context/ExtensionStateContext"
+
+import { useExtensionState } from "@src/context/ExtensionStateContext"
 import {
 	Mode,
 	PromptComponent,
@@ -18,15 +19,15 @@ import {
 	getAllModes,
 	ModeConfig,
 	GroupEntry,
-} from "../../../../src/shared/modes"
-import { modeConfigSchema } from "../../../../src/schemas"
-import { supportPrompt, SupportPromptType } from "../../../../src/shared/support-prompt"
+} from "@roo/shared/modes"
+import { modeConfigSchema } from "@roo/schemas"
+import { supportPrompt, SupportPromptType } from "@roo/shared/support-prompt"
 
-import { TOOL_GROUPS, ToolGroup } from "../../../../src/shared/tool-groups"
-import { vscode } from "../../utils/vscode"
+import { TOOL_GROUPS, ToolGroup } from "@roo/shared/tools"
+import { vscode } from "@src/utils/vscode"
 import { Tab, TabContent, TabHeader } from "../common/Tab"
 import i18next from "i18next"
-import { useAppTranslation } from "../../i18n/TranslationContext"
+import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { Trans } from "react-i18next"
 
 // Get all available groups that should show in prompts view
@@ -339,6 +340,12 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 					setSelectedPromptTitle(`System Prompt (${message.mode} mode)`)
 					setIsDialogOpen(true)
 				}
+			} else if (message.type === "CodebasePrompt") {
+				if (message.text) {
+					setSelectedPromptContent(message.text)
+					setSelectedPromptTitle(`CodeBase`)
+					setIsDialogOpen(true)
+				}
 			}
 		}
 
@@ -618,10 +625,10 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 								<div className="font-bold">{t("prompts:tools.title")}</div>
 								{findModeBySlug(mode, customModes) && (
 									<Button
-											variant="ghost"
-											size="icon"
-											onClick={() => setIsToolsEditMode(!isToolsEditMode)}
-											title={
+										variant="ghost"
+										size="icon"
+										onClick={() => setIsToolsEditMode(!isToolsEditMode)}
+										title={
 											isToolsEditMode
 												? t("prompts:tools.doneEditing")
 												: t("prompts:tools.editTools")
@@ -798,7 +805,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 												// Open or create an empty file
 												vscode.postMessage({
 													type: "openFile",
-													text: `./.clinerules-${currentMode.slug}`,
+													text: `./.roo/rules-${currentMode.slug}/rules.md`,
 													values: {
 														create: true,
 														content: "",
@@ -935,7 +942,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 										onClick={() =>
 											vscode.postMessage({
 												type: "openFile",
-												text: "./.clinerules",
+												text: "./.roo/rules/rules.md",
 												values: {
 													create: true,
 													content: "",
@@ -946,6 +953,38 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 								),
 							}}
 						/>
+					</div>
+				</div>
+
+				<div
+					style={{
+						paddingBottom: "30px",
+						marginBottom: "20px",
+						borderBottom: "1px solid var(--vscode-input-border)",
+					}}>
+					<h3 style={{ color: "var(--vscode-foreground)", marginBottom: "20px" }}>
+						{t("prompts:codebase.title")}
+					</h3>
+
+					<div className="text-sm text-vscode-descriptionForeground mb-2">
+						{t("prompts:codebase.description", { language: i18next.language })}
+					</div>
+
+					<div style={{ display: "flex", gap: "8px" }}>
+						<Button
+							variant="default"
+							onClick={() => {
+								const currentMode = getCurrentMode()
+								if (currentMode) {
+									vscode.postMessage({
+										type: "getCodeBaseSupport",
+										mode: currentMode.slug,
+									})
+								}
+							}}
+							data-testid="preview-prompt-button">
+							{t("prompts:codebase.preview")}
+						</Button>
 					</div>
 				</div>
 

@@ -35,13 +35,18 @@
 	"customInstructions": {
 		"title": "模式专属规则（可选）",
 		"resetToDefault": "重置为默认值",
-		"description": "为{{modeName}}模式添加特定行为指南。",
-		"loadFromFile": "特定于 {{mode}} 模式的专属规则也可以从工作区中的 <span>.clinerules-{{slug}}</span> 加载。"
+		"description": "{{modeName}}模式的专属规则",
+		"loadFromFile": "支持从<span>.roo/rules-{{slug}}/</span>目录读取配置（.roorules-{{slug}}和.clinerules-{{slug}}已弃用并将很快停止工作）。"
 	},
 	"globalCustomInstructions": {
 		"title": "所有模式的自定义指令",
-		"description": "这些指令适用于所有模式。它们提供了一套基本行为，可以通过下面的模式特定指令来增强。\n如果您希望Roo使用不同于编辑器显示语言({{language}})的语言进行思考和对话，您可以在这里指定。",
-		"loadFromFile": "规则也可以从工作区中的 <span>.clinerules</span> 加载。"
+		"description": "所有模式通用规则\n当前语言：{{language}}",
+		"loadFromFile": "支持从<span>.roo/rules/</span>目录读取全局配置（.roorules和.clinerules已弃用并将很快停止工作）。"
+	},
+	"codebase": {
+		"title": "CodeBase支持",
+		"preview": "查看可用CodeBase",
+		"description":"这里展示了当前已完成嵌入，并插入CodeBase的文件列表。在您使用CodeBase功能时，会自动对他们进行索引。"
 	},
 	"systemPrompt": {
 		"preview": "预览系统提示词",

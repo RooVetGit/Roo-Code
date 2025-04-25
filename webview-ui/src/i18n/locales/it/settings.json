@@ -29,12 +29,13 @@
 		"advanced": "Avanzate",
 		"experimental": "Funzionalità sperimentali",
 		"language": "Lingua",
-		"about": "Informazioni su Roo Code"
+		"about": "Informazioni su Roo Code",
+		"interface": "Interfaccia"
 	},
 	"autoApprove": {
 		"description": "Permetti a Roo di eseguire automaticamente operazioni senza richiedere approvazione. Abilita queste impostazioni solo se ti fidi completamente dell'IA e comprendi i rischi di sicurezza associati.",
 		"readOnly": {
-			"label": "Approva sempre operazioni di sola lettura",
+			"label": "Leggi",
 			"description": "Quando abilitato, Roo visualizzerà automaticamente i contenuti della directory e leggerà i file senza richiedere di cliccare sul pulsante Approva.",
 			"outsideWorkspace": {
 				"label": "Includi file al di fuori dell'area di lavoro",
@@ -42,7 +43,7 @@
 			}
 		},
 		"write": {
-			"label": "Approva sempre operazioni di scrittura",
+			"label": "Scrivi",
 			"description": "Crea e modifica automaticamente i file senza richiedere approvazione",
 			"delayLabel": "Ritardo dopo le scritture per consentire alla diagnostica di rilevare potenziali problemi",
 			"outsideWorkspace": {
@@ -51,29 +52,28 @@
 			}
 		},
 		"browser": {
-			"label": "Approva sempre azioni del browser",
-			"description": "Esegui automaticamente azioni del browser senza richiedere approvazione",
-			"note": "Nota: Si applica solo quando il modello supporta l'uso del computer"
+			"label": "Browser",
+			"description": "Esegui automaticamente azioni del browser senza richiedere approvazione. Nota: Si applica solo quando il modello supporta l'uso del computer"
 		},
 		"retry": {
-			"label": "Riprova sempre le richieste API fallite",
+			"label": "Riprova",
 			"description": "Riprova automaticamente le richieste API fallite quando il server restituisce una risposta di errore",
 			"delayLabel": "Ritardo prima di riprovare la richiesta"
 		},
 		"mcp": {
-			"label": "Approva sempre strumenti MCP",
+			"label": "MCP",
 			"description": "Abilita l'approvazione automatica dei singoli strumenti MCP nella vista Server MCP (richiede sia questa impostazione che la casella \"Consenti sempre\" dello strumento)"
 		},
 		"modeSwitch": {
-			"label": "Approva sempre cambi di modalità",
+			"label": "Modalità",
 			"description": "Passa automaticamente tra diverse modalità senza richiedere approvazione"
 		},
 		"subtasks": {
-			"label": "Approva sempre creazione e completamento di attività secondarie",
+			"label": "Sottoattività",
 			"description": "Consenti la creazione e il completamento di attività secondarie senza richiedere approvazione"
 		},
 		"execute": {
-			"label": "Approva sempre operazioni di esecuzione consentite",
+			"label": "Esegui",
 			"description": "Esegui automaticamente i comandi del terminale consentiti senza richiedere approvazione",
 			"allowedCommands": "Comandi di auto-esecuzione consentiti",
 			"allowedCommandsDescription": "Prefissi di comando che possono essere auto-eseguiti quando \"Approva sempre operazioni di esecuzione\" è abilitato. Aggiungi * per consentire tutti i comandi (usare con cautela).",
@@ -101,7 +101,7 @@
 		"searchPlaceholder": "Cerca profili",
 		"noMatchFound": "Nessun profilo corrispondente trovato",
 		"vscodeLmDescription": "L'API del Modello di Linguaggio di VS Code consente di eseguire modelli forniti da altre estensioni di VS Code (incluso, ma non limitato a, GitHub Copilot). Il modo più semplice per iniziare è installare le estensioni Copilot e Copilot Chat dal VS Code Marketplace.",
-		"awsCustomArnUse": "Inserisci un ARN AWS Bedrock valido per il modello che desideri utilizzare. Esempi di formato:",
+		"awsCustomArnUse": "Inserisci un ARN Amazon Bedrock valido per il modello che desideri utilizzare. Esempi di formato:",
 		"awsCustomArnDesc": "Assicurati che la regione nell'ARN corrisponda alla regione AWS selezionata sopra.",
 		"openRouterApiKey": "Chiave API OpenRouter",
 		"getOpenRouterApiKey": "Ottieni chiave API OpenRouter",
@@ -109,11 +109,14 @@
 		"glamaApiKey": "Chiave API Glama",
 		"getGlamaApiKey": "Ottieni chiave API Glama",
 		"useCustomBaseUrl": "Usa URL base personalizzato",
+		"useHostHeader": "Usa intestazione Host personalizzata",
+		"useLegacyFormat": "Usa formato API OpenAI legacy",
 		"requestyApiKey": "Chiave API Requesty",
 		"getRequestyApiKey": "Ottieni chiave API Requesty",
 		"openRouterTransformsText": "Comprimi prompt e catene di messaggi alla dimensione del contesto (<a>Trasformazioni OpenRouter</a>)",
 		"anthropicApiKey": "Chiave API Anthropic",
 		"getAnthropicApiKey": "Ottieni chiave API Anthropic",
+		"anthropicUseAuthToken": "Passa la chiave API Anthropic come header di autorizzazione invece di X-Api-Key",
 		"deepSeekApiKey": "Chiave API DeepSeek",
 		"getDeepSeekApiKey": "Ottieni chiave API DeepSeek",
 		"geminiApiKey": "Chiave API Gemini",
@@ -125,6 +128,8 @@
 		"getMistralApiKey": "Ottieni chiave API Mistral / Codestral",
 		"codestralBaseUrl": "URL base Codestral (opzionale)",
 		"codestralBaseUrlDesc": "Imposta un URL opzionale per i modelli Codestral.",
+		"xaiApiKey": "Chiave API xAI",
+		"getXaiApiKey": "Ottieni chiave API xAI",
 		"awsCredentials": "Credenziali AWS",
 		"awsProfile": "Profilo AWS",
 		"awsProfileName": "Nome profilo AWS",
@@ -218,6 +223,16 @@
 				}
 			},
 			"resetDefaults": "Ripristina valori predefiniti"
+		},
+		"rateLimitSeconds": {
+			"label": "Limite di frequenza",
+			"description": "Tempo minimo tra le richieste API."
+		},
+		"reasoningEffort": {
+			"label": "Sforzo di ragionamento del modello",
+			"high": "Alto",
+			"medium": "Medio",
+			"low": "Basso"
 		}
 	},
 	"browser": {
@@ -295,13 +310,37 @@
 		"shellIntegrationTimeout": {
 			"label": "Timeout integrazione shell del terminale",
 			"description": "Tempo massimo di attesa per l'inizializzazione dell'integrazione della shell prima di eseguire i comandi. Per gli utenti con tempi di avvio della shell lunghi, questo valore potrebbe dover essere aumentato se si vedono errori \"Shell Integration Unavailable\" nel terminale."
+		},
+		"compressProgressBar": {
+			"label": "Comprimi output barre di progresso",
+			"description": "Quando abilitato, elabora l'output del terminale con ritorni a capo (\\r) per simulare come un terminale reale visualizzerebbe il contenuto. Questo rimuove gli stati intermedi delle barre di progresso, mantenendo solo lo stato finale, il che conserva spazio di contesto per informazioni più rilevanti."
+		},
+		"zdotdir": {
+			"label": "Abilita gestione ZDOTDIR",
+			"description": "Quando abilitato, crea una directory temporanea per ZDOTDIR per gestire correttamente l'integrazione della shell zsh. Questo assicura che l'integrazione della shell VSCode funzioni correttamente con zsh mantenendo la tua configurazione zsh. (sperimentale)"
+		},
+		"commandDelay": {
+			"label": "Ritardo comando terminale",
+			"description": "Ritardo in millisecondi da aggiungere dopo l'esecuzione del comando. L'impostazione predefinita di 0 disabilita completamente il ritardo. Questo può aiutare a garantire che l'output del comando sia catturato completamente nei terminali con problemi di temporizzazione. Nella maggior parte dei terminali viene implementato impostando `PROMPT_COMMAND='sleep N'` e Powershell aggiunge `start-sleep` alla fine di ogni comando. In origine era una soluzione per il bug VSCode#237208 e potrebbe non essere necessario."
+		},
+		"powershellCounter": {
+			"label": "Abilita soluzione temporanea contatore PowerShell",
+			"description": "Quando abilitato, aggiunge un contatore ai comandi PowerShell per garantire la corretta esecuzione dei comandi. Questo aiuta con i terminali PowerShell che potrebbero avere problemi con la cattura dell'output."
+		},
+		"zshClearEolMark": {
+			"label": "Cancella marcatore fine riga ZSH",
+			"description": "Quando abilitato, cancella il marcatore di fine riga ZSH impostando PROMPT_EOL_MARK=''. Questo previene problemi con l'interpretazione dell'output dei comandi quando termina con caratteri speciali come '%'."
+		},
+		"zshOhMy": {
+			"label": "Abilita integrazione Oh My Zsh",
+			"description": "Quando abilitato, imposta ITERM_SHELL_INTEGRATION_INSTALLED=Yes per abilitare le funzionalità di integrazione della shell Oh My Zsh. (sperimentale)"
+		},
+		"zshP10k": {
+			"label": "Abilita integrazione Powerlevel10k",
+			"description": "Quando abilitato, imposta POWERLEVEL9K_TERM_SHELL_INTEGRATION=true per abilitare le funzionalità di integrazione della shell Powerlevel10k. (sperimentale)"
 		}
 	},
 	"advanced": {
-		"rateLimit": {
-			"label": "Limite di frequenza",
-			"description": "Tempo minimo tra le richieste API."
-		},
 		"diff": {
 			"label": "Abilita modifica tramite diff",
 			"description": "Quando abilitato, Roo sarà in grado di modificare i file più velocemente e rifiuterà automaticamente scritture di file completi troncati. Funziona meglio con l'ultimo modello Claude 3.7 Sonnet.",
@@ -346,6 +385,10 @@
 			"name": "Usa strumento diff multi-blocco sperimentale",
 			"description": "Quando abilitato, Roo utilizzerà lo strumento diff multi-blocco. Questo tenterà di aggiornare più blocchi di codice nel file in una singola richiesta."
 		}
+	},
+	"promptCaching": {
+		"label": "Abilita cache dei prompt",
+		"description": "Quando abilitato, Roo utilizzerà questo modello con la cache dei prompt attivata per ridurre i costi."
 	},
 	"temperature": {
 		"useCustom": "Usa temperatura personalizzata",
@@ -401,7 +444,7 @@
 	},
 	"validation": {
 		"apiKey": "È necessario fornire una chiave API valida.",
-		"awsRegion": "È necessario scegliere una regione per utilizzare AWS Bedrock.",
+		"awsRegion": "È necessario scegliere una regione per utilizzare Amazon Bedrock.",
 		"googleCloud": "È necessario fornire un ID progetto e una regione Google Cloud validi.",
 		"modelId": "È necessario fornire un ID modello valido.",
 		"modelSelector": "È necessario fornire un selettore di modello valido.",
