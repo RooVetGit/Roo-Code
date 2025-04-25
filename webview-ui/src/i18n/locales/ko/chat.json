@@ -10,7 +10,9 @@
 		"contextWindow": "컨텍스트 창:",
 		"closeAndStart": "작업 닫고 새 작업 시작",
 		"export": "작업 기록 내보내기",
-		"delete": "작업 삭제 (Shift + 클릭으로 확인 생략)"
+		"delete": "작업 삭제 (Shift + 클릭으로 확인 생략)",
+		"contextLimitTipTitle": "참고:",
+		"contextLimitTipText": "컨텍스트가 최대 한도에 도달하고 있습니다. 잘림을 방지하려면 새 작업 창을 시작하는 것이 좋습니다."
 	},
 	"unpin": "고정 해제하기",
 	"pin": "고정하기",

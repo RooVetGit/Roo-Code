@@ -10,7 +10,9 @@
 		"contextWindow": "Finestra de context:",
 		"closeAndStart": "Tancar tasca i iniciar-ne una de nova",
 		"export": "Exportar historial de tasques",
-		"delete": "Eliminar tasca (Shift + Clic per ometre confirmació)"
+		"delete": "Eliminar tasca (Shift + Clic per ometre confirmació)",
+		"contextLimitTipTitle": "Nota:",
+		"contextLimitTipText": "El context està arribant al límit màxim. Es recomana iniciar una nova finestra de tasca per evitar la truncació."
 	},
 	"unpin": "Desfixar",
 	"pin": "Fixar",
