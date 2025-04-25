@@ -109,7 +109,34 @@ export class ContextProxy {
 			return value === undefined || value === null ? defaultValue : value
 		}
 
-		const value = this.stateCache[key]
+		let value = this.stateCache[key]
+
+		// Ensure maxConcurrentFileReads is treated as a number
+		// Special handling for maxConcurrentFileReads to ensure it's a number
+		if (key === "maxConcurrentFileReads") {
+			if (typeof value === "string") {
+				const parsedValue = parseInt(value, 10)
+				if (!isNaN(parsedValue)) {
+					// Return the parsed number, cast to the expected generic type
+					return parsedValue as GlobalState[K]
+				} else {
+					// Log warning and let default value logic handle it
+					logger.warn(
+						`Failed to parse maxConcurrentFileReads setting ('${value}') as number. Using default.`,
+					)
+					value = undefined // Ensure default value is used below
+				}
+			} else if (typeof value !== 'number' && value !== undefined) {
+				// Log warning for unexpected types and use default
+				logger.warn(
+					`Unexpected type for maxConcurrentFileReads setting ('${typeof value}'). Using default.`,
+				)
+				value = undefined // Ensure default value is used below
+			}
+			// If value is already a number or undefined, proceed normally
+		}
+
+		// Return the cached value or the provided default
 		return value !== undefined ? value : defaultValue
 	}
 

@@ -952,6 +952,18 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await updateGlobalState("maxReadFileLine", message.value)
 			await provider.postStateToWebview()
 			break
+		case "maxConcurrentFileReads":
+			const valueToSave = message.value; // Capture the value intended for saving
+			await updateGlobalState("maxConcurrentFileReads", valueToSave);
+
+			// Add logging here:
+			const savedValue = getGlobalState("maxConcurrentFileReads"); // Read back immediately
+			provider.log(`[Settings Update] Attempted to save maxConcurrentFileReads: ${valueToSave} (Type: ${typeof valueToSave})`);
+			provider.log(`[Settings Update] Read back maxConcurrentFileReads immediately: ${savedValue} (Type: ${typeof savedValue})`);
+			// End of added logging
+
+			await provider.postStateToWebview();
+			break;
 		case "toggleApiConfigPin":
 			if (message.text) {
 				const currentPinned = getGlobalState("pinnedApiConfigs") ?? {}

@@ -13,6 +13,7 @@ import { countFileLines } from "../../integrations/misc/line-counter"
 import { readLines } from "../../integrations/misc/read-lines"
 import { extractTextFromFile, addLineNumbers } from "../../integrations/misc/extract-text"
 import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
+import { RooCodeSettings } from "../../schemas" // Import the settings type
 
 export async function readFileTool(
 	cline: Cline,
@@ -22,130 +23,253 @@ export async function readFileTool(
 	pushToolResult: PushToolResult,
 	removeClosingTag: RemoveClosingTag,
 ) {
-	const relPath: string | undefined = block.params.path
+	const pathParam: string | undefined = block.params.path
 	const startLineStr: string | undefined = block.params.start_line
 	const endLineStr: string | undefined = block.params.end_line
 
-	// Get the full path and determine if it's outside the workspace
-	const fullPath = relPath ? path.resolve(cline.cwd, removeClosingTag("path", relPath)) : ""
-	const isOutsideWorkspace = isPathOutsideWorkspace(fullPath)
+	let relPaths: string[] = []
+	let parseError = false
 
-	const sharedMessageProps: ClineSayTool = {
-		tool: "readFile",
-		path: getReadablePath(cline.cwd, removeClosingTag("path", relPath)),
-		isOutsideWorkspace,
+	if (!pathParam) {
+		cline.consecutiveMistakeCount++
+		cline.recordToolError("read_file")
+		const errorMsg = await cline.sayAndCreateMissingParamError("read_file", "path")
+		pushToolResult(`<tool_error tool_name="read_file">${errorMsg}</tool_error>`)
+		return
 	}
-	try {
-		if (block.partial) {
-			const partialMessage = JSON.stringify({ ...sharedMessageProps, content: undefined } satisfies ClineSayTool)
-			await cline.ask("tool", partialMessage, block.partial).catch(() => {})
+
+	const cleanedPathParam = removeClosingTag("path", pathParam)
+
+	// Try parsing as JSON array with improved error handling
+	if (cleanedPathParam.startsWith('[') && cleanedPathParam.includes('"')) {
+		// Check if it looks like a JSON array but doesn't end correctly
+		if (!cleanedPathParam.endsWith(']')) {
+			cline.consecutiveMistakeCount++
+			cline.recordToolError("read_file")
+			const errorMsg = t("tools:readFile.error.incompleteJsonArray", { value: cleanedPathParam })
+			await cline.say("error", errorMsg)
+			pushToolResult(`<tool_error tool_name="read_file">${errorMsg}</tool_error>`)
 			return
-		} else {
-			if (!relPath) {
+		}
+		try {
+			const parsed = JSON.parse(cleanedPathParam)
+			if (Array.isArray(parsed) && parsed.every((p) => typeof p === "string")) {
+				relPaths = parsed
+			} else {
+				// Parsed successfully but not an array of strings
 				cline.consecutiveMistakeCount++
 				cline.recordToolError("read_file")
-				const errorMsg = await cline.sayAndCreateMissingParamError("read_file", "path")
-				pushToolResult(`<file><path></path><error>${errorMsg}</error></file>`)
+				const errorMsg = t("tools:readFile.error.invalidArrayFormat", { value: cleanedPathParam })
+				await cline.say("error", errorMsg)
+				pushToolResult(`<tool_error tool_name="read_file">${errorMsg}</tool_error>`)
 				return
 			}
+		} catch (e) {
+			// JSON parsing failed but it looked like an attempt at JSON
+			cline.consecutiveMistakeCount++
+			cline.recordToolError("read_file")
+			const errorMsg = t("tools:readFile.error.invalidJsonArray", { value: cleanedPathParam })
+			await cline.say("error", errorMsg)
+			pushToolResult(`<tool_error tool_name="read_file">${errorMsg}</tool_error>`)
+			return
+		}
+	} else {
+		// Not JSON, treat as a single path
+		relPaths = [cleanedPathParam]
+	}
 
-			const { maxReadFileLine = 500 } = (await cline.providerRef.deref()?.getState()) ?? {}
-			const isFullRead = maxReadFileLine === -1
+	// Filter out empty paths
+	relPaths = relPaths.filter((p) => p.trim() !== "")
 
-			// Check if we're doing a line range read
-			let isRangeRead = false
-			let startLine: number | undefined = undefined
-			let endLine: number | undefined = undefined
+	if (relPaths.length === 0) {
+		cline.consecutiveMistakeCount++
+		cline.recordToolError("read_file")
+		const errorMsg = t("tools:readFile.error.noValidPaths")
+		await cline.say("error", errorMsg)
+		pushToolResult(`<tool_error tool_name="read_file">${errorMsg}</tool_error>`)
+		return
+	}
 
-			// Check if we have either range parameter and we're not doing a full read
-			if (!isFullRead && (startLineStr || endLineStr)) {
-				isRangeRead = true
-			}
+	// Get provider and state safely
+	const provider = cline.providerRef.deref()
+	const state = provider ? await provider.getState() : {} // Get state or default to empty object
 
-			// Parse start_line if provided
-			if (startLineStr) {
-				startLine = parseInt(startLineStr)
+	// Use Partial<RooCodeSettings> for better type safety with defaults
+	const {
+		maxReadFileLine = 500,
+		maxConcurrentFileReads = 1,
+		alwaysAllowReadOnly = false,
+		alwaysAllowReadOnlyOutsideWorkspace = false,
+	}: Partial<RooCodeSettings> = state // Apply type here
 
-				if (isNaN(startLine)) {
-					// Invalid start_line
-					cline.consecutiveMistakeCount++
-					cline.recordToolError("read_file")
-					await cline.say("error", `Failed to parse start_line: ${startLineStr}`)
-					pushToolResult(`<file><path>${relPath}</path><error>Invalid start_line value</error></file>`)
-					return
-				}
+	// Validate against maxConcurrentFileReads
+	if (relPaths.length > maxConcurrentFileReads) {
+		cline.consecutiveMistakeCount++
+		cline.recordToolError("read_file")
+		const errorMsg = t("tools:readFile.error.tooManyFiles", { count: relPaths.length, max: maxConcurrentFileReads })
+		await cline.say("error", errorMsg)
+		pushToolResult(`<tool_error tool_name="read_file">${errorMsg}</tool_error>`)
+		return
+	}
 
-				startLine -= 1 // Convert to 0-based index
-			}
+	// Check for line range parameters (only valid for single file)
+	if ((startLineStr || endLineStr) && relPaths.length > 1) {
+		cline.consecutiveMistakeCount++
+		cline.recordToolError("read_file")
+		const errorMsg = t("tools:readFile.error.lineParamsMultipleFiles")
+		await cline.say("error", errorMsg)
+		pushToolResult(`<tool_error tool_name="read_file">${errorMsg}</tool_error>`)
+		return
+	}
 
-			// Parse end_line if provided
-			if (endLineStr) {
-				endLine = parseInt(endLineStr)
+	const isFullRead = maxReadFileLine === -1
 
-				if (isNaN(endLine)) {
-					// Invalid end_line
-					cline.consecutiveMistakeCount++
-					cline.recordToolError("read_file")
-					await cline.say("error", `Failed to parse end_line: ${endLineStr}`)
-					pushToolResult(`<file><path>${relPath}</path><error>Invalid end_line value</error></file>`)
-					return
-				}
+	// Check if we're doing a line range read
+	let isRangeRead = false
+	let startLine: number | undefined = undefined
+	let endLine: number | undefined = undefined
 
-				// Convert to 0-based index
-				endLine -= 1
-			}
+	// Check if we have either range parameter and we're not doing a full read
+	if (!isFullRead && (startLineStr || endLineStr)) {
+		isRangeRead = true
+	}
 
-			const accessAllowed = cline.rooIgnoreController?.validateAccess(relPath)
+	// Parse start_line if provided
+	if (startLineStr) {
+		startLine = parseInt(startLineStr)
+		if (isNaN(startLine)) {
+			cline.consecutiveMistakeCount++
+			cline.recordToolError("read_file")
+			const errorMsg = t("tools:readFile.error.invalidStartLine", { value: startLineStr })
+			await cline.say("error", errorMsg)
+			pushToolResult(`<tool_error tool_name="read_file">${errorMsg}</tool_error>`)
+			return
+		}
+		startLine -= 1 // Convert to 0-based index
+	}
 
-			if (!accessAllowed) {
-				await cline.say("rooignore_error", relPath)
-				const errorMsg = formatResponse.rooIgnoreError(relPath)
-				pushToolResult(`<file><path>${relPath}</path><error>${errorMsg}</error></file>`)
-				return
-			}
+	// Parse end_line if provided
+	if (endLineStr) {
+		endLine = parseInt(endLineStr)
+		if (isNaN(endLine)) {
+			cline.consecutiveMistakeCount++
+			cline.recordToolError("read_file")
+			const errorMsg = t("tools:readFile.error.invalidEndLine", { value: endLineStr })
+			await cline.say("error", errorMsg)
+			pushToolResult(`<tool_error tool_name="read_file">${errorMsg}</tool_error>`)
+			return
+		}
+		endLine -= 1 // Convert to 0-based index
+	}
 
-			// Create line snippet description for approval message
-			let lineSnippet = ""
+	// --- Approval Logic ---
+	let needsApproval = false
+	const pathsRequiringApproval: string[] = []
+	const absolutePaths: string[] = []
 
-			if (isFullRead) {
-				// No snippet for full read
-			} else if (startLine !== undefined && endLine !== undefined) {
-				lineSnippet = t("tools:readFile.linesRange", { start: startLine + 1, end: endLine + 1 })
-			} else if (startLine !== undefined) {
-				lineSnippet = t("tools:readFile.linesFromToEnd", { start: startLine + 1 })
-			} else if (endLine !== undefined) {
-				lineSnippet = t("tools:readFile.linesFromStartTo", { end: endLine + 1 })
-			} else if (maxReadFileLine === 0) {
-				lineSnippet = t("tools:readFile.definitionsOnly")
-			} else if (maxReadFileLine > 0) {
-				lineSnippet = t("tools:readFile.maxLines", { max: maxReadFileLine })
-			}
+	for (const relPath of relPaths) {
+		const absolutePath = path.resolve(cline.cwd, relPath)
+		absolutePaths.push(absolutePath)
 
-			cline.consecutiveMistakeCount = 0
-			const absolutePath = path.resolve(cline.cwd, relPath)
+		const accessAllowed = cline.rooIgnoreController?.validateAccess(relPath)
+		if (!accessAllowed) {
+			await cline.say("rooignore_error", relPath)
+			const errorMsg = formatResponse.rooIgnoreError(relPath)
+			// Push individual error for this file, but continue processing others
+			pushToolResult(`<file_error path="${relPath}" reason="${errorMsg}"/>`)
+			continue // Skip this file
+		}
 
-			const completeMessage = JSON.stringify({
-				...sharedMessageProps,
-				content: absolutePath,
-				reason: lineSnippet,
-			} satisfies ClineSayTool)
+		const isOutside = isPathOutsideWorkspace(absolutePath)
+		const requiresThisFileApproval =
+			(isOutside && !alwaysAllowReadOnlyOutsideWorkspace) || (!isOutside && !alwaysAllowReadOnly)
 
-			const didApprove = await askApproval("tool", completeMessage)
+		if (requiresThisFileApproval) {
+			needsApproval = true
+			pathsRequiringApproval.push(getReadablePath(cline.cwd, relPath))
+		}
+	}
 
-			if (!didApprove) {
-				return
-			}
+	// If any file requires approval, ask once for the batch
+	if (needsApproval) {
+		// Create line snippet description for approval message
+		let lineSnippet = ""
+		if (isFullRead) {
+			// No snippet for full read
+		} else if (startLine !== undefined && endLine !== undefined) {
+			lineSnippet = t("tools:readFile.linesRange", { start: startLine + 1, end: endLine + 1 })
+		} else if (startLine !== undefined) {
+			lineSnippet = t("tools:readFile.linesFromToEnd", { start: startLine + 1 })
+		} else if (endLine !== undefined) {
+			lineSnippet = t("tools:readFile.linesFromStartTo", { end: endLine + 1 })
+		} else if (maxReadFileLine === 0) {
+			lineSnippet = t("tools:readFile.definitionsOnly")
+		} else if (maxReadFileLine > 0) {
+			lineSnippet = t("tools:readFile.maxLines", { max: maxReadFileLine })
+		}
 
+		const approvalMessageContent =
+			pathsRequiringApproval.length === 1
+				? pathsRequiringApproval[0]
+				: t("tools:readFile.multipleFiles", { count: pathsRequiringApproval.length })
+
+		const completeMessage = JSON.stringify({
+			tool: "readFile",
+			path: approvalMessageContent, // Show single path or "X files"
+			isOutsideWorkspace: pathsRequiringApproval.some((p) => isPathOutsideWorkspace(path.resolve(cline.cwd, p))), // True if any are outside
+			content: approvalMessageContent, // Use path/count for content display
+			reason: lineSnippet,
+		} satisfies ClineSayTool)
+
+		const didApprove = await askApproval("tool", completeMessage)
+		if (!didApprove) {
+			// User denied approval for the batch
+			pushToolResult(`<tool_error tool_name="read_file">${t("common:errors.userDeniedApproval")}</tool_error>`)
+			return
+		}
+	}
+	// --- End Approval Logic ---
+
+	cline.consecutiveMistakeCount = 0
+	const results: string[] = []
+
+	for (let i = 0; i < relPaths.length; i++) {
+		const relPath = relPaths[i]
+		const absolutePath = absolutePaths[i] // Use pre-resolved path
+
+		// Re-check rooignore in case it was skipped during approval check
+		if (!cline.rooIgnoreController?.validateAccess(relPath)) {
+			// This check might be redundant if the approval logic already pushed an error,
+			// but ensures consistency if approval wasn't needed.
+			const errorMsg = formatResponse.rooIgnoreError(relPath)
+			results.push(`<file_error path="${relPath}" reason="${errorMsg}"/>`)
+			continue
+		}
+
+		try {
 			// Count total lines in the file
-			let totalLines = 0
-
+			let totalLines = 0;
 			try {
-				totalLines = await countFileLines(absolutePath)
-			} catch (error) {
-				console.error(`Error counting lines in file ${absolutePath}:`, error)
+				// Log before counting using the provider's logger
+				cline.providerRef.deref()?.log(`[readFileTool] Counting lines for: ${absolutePath}`);
+				totalLines = await countFileLines(absolutePath);
+				cline.providerRef.deref()?.log(`[readFileTool] Counted ${totalLines} lines for: ${absolutePath}`);
+			} catch (error: any) {
+				// Log the specific error during counting using the provider's logger
+				cline.providerRef.deref()?.log(`[readFileTool] Error counting lines for ${relPath} (${absolutePath}): ${error?.message}`);
+				
+				// Handle specific file error using relPath, not the entire array
+				if (error.code === "ENOENT") {
+					const errorMsg = t("tools:readFile.error.fileNotFound", { path: relPath });
+					results.push(`<file_error path="${relPath}" reason="${errorMsg}"/>`);
+				} else {
+					const errorMsg = t("tools:readFile.error.countingLines", { path: relPath, message: error.message });
+					results.push(`<file_error path="${relPath}" reason="${errorMsg}"/>`);
+				}
+				continue; // Skip to next file on error
 			}
 
-			// now execute the tool like normal
+			// Now execute the tool like normal for this file
 			let content: string
 			let isFileTruncated = false
 			let sourceCodeDef = ""
@@ -178,7 +302,7 @@ export async function readFileTool(
 				content = await extractTextFromFile(absolutePath)
 			}
 
-			// Create variables to store XML components
+			// Create variables to store XML components for this file
 			let xmlInfo = ""
 			let contentTag = ""
 
@@ -206,13 +330,16 @@ export async function readFileTool(
 				const displayEndLine = endLine !== undefined ? endLine + 1 : totalLines
 				lineRangeAttr = ` lines="${displayStartLine}-${displayEndLine}"`
 
-				// Maintain exact format expected by tests
-				contentTag = `<content${lineRangeAttr}>\n${content}</content>\n`
+				contentTag = `<content${lineRangeAttr}>\n${content}\n</content>\n` // Added newline before closing tag
 			}
 			// maxReadFileLine=0 for non-range reads
-			else if (maxReadFileLine === 0) {
+			else if (maxReadFileLine === 0 && !isRangeRead) { // Ensure range reads still show content even if maxReadFileLine is 0
 				// Skip content tag for maxReadFileLine=0 (definitions only mode)
 				contentTag = ""
+				// Still add definitions if available and truncated (though truncation might not happen if maxReadFileLine is 0)
+				if (sourceCodeDef) {
+					xmlInfo += `<list_code_definition_names>${sourceCodeDef}</list_code_definition_names>\n`
+				}
 			}
 			// Normal case: non-empty files with content (non-range reads)
 			else {
@@ -225,22 +352,30 @@ export async function readFileTool(
 
 				const lineRangeAttr = ` lines="1-${lines}"`
 
-				// Maintain exact format expected by tests
-				contentTag = `<content${lineRangeAttr}>\n${content}</content>\n`
+				contentTag = `<content${lineRangeAttr}>\n${content}\n</content>\n` // Added newline before closing tag
 			}
 
 			// Track file read operation
-			if (relPath) {
-				await cline.getFileContextTracker().trackFileContext(relPath, "read_tool" as RecordSource)
-			}
+			await cline.getFileContextTracker().trackFileContext(relPath, "read_tool" as RecordSource)
 
-			// Format the result into the required XML structure
-			const xmlResult = `<file><path>${relPath}</path>\n${contentTag}${xmlInfo}</file>`
-			pushToolResult(xmlResult)
+			// Format the result for this file
+			const fileResult = `<file_content path="${relPath}">\n${contentTag}${xmlInfo}</file_content>`
+			results.push(fileResult)
+		} catch (error: any) {
+			// Log general errors during reading/processing using the provider's logger
+			cline.providerRef.deref()?.log(`[readFileTool] Error processing file ${relPath} (${absolutePath}): ${error?.message}`);
+			const errorMsg = t("tools:readFile.error.readingFile", { path: relPath, message: error.message });
+			results.push(`<file_error path="${relPath}" reason="${errorMsg}"/>`);
+			// Continue to the next file
 		}
-	} catch (error) {
-		const errorMsg = error instanceof Error ? error.message : String(error)
-		pushToolResult(`<file><path>${relPath || ""}</path><error>Error reading file: ${errorMsg}</error></file>`)
-		await handleError("reading file", error)
+	} // End loop through paths
+
+	// Aggregate results and push
+	if (results.length > 0) {
+		const finalResult = `<read_result>\n${results.join("\n")}\n</read_result>`
+		pushToolResult(finalResult)
+	} else {
+		// This case might happen if all paths resulted in errors handled within the loop
+		pushToolResult(`<read_result/>`)
 	}
 }

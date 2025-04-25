@@ -553,6 +553,12 @@ export const globalSettingsSchema = z.object({
 	showRooIgnoredFiles: z.boolean().optional(),
 	maxReadFileLine: z.number().optional(),
 
+	/**
+	 * Controls the maximum number of files the 'read_file' tool can process concurrently.
+	 * @default 1
+	 */
+	maxConcurrentFileReads: z.number().optional(),
+
 	terminalOutputLineLimit: z.number().optional(),
 	terminalShellIntegrationTimeout: z.number().optional(),
 	terminalCommandDelay: z.number().optional(),
@@ -628,6 +634,7 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	maxWorkspaceFiles: undefined,
 	showRooIgnoredFiles: undefined,
 	maxReadFileLine: undefined,
+	maxConcurrentFileReads: undefined,
 
 	terminalOutputLineLimit: undefined,
 	terminalShellIntegrationTimeout: undefined,
