@@ -118,6 +118,6 @@ function getSelectedModelInfo({
 				supportsImages: false, // VSCode LM API currently doesn't support images.
 			}
 		default:
-			return anthropicModels[id as keyof typeof anthropicModels] ?? anthropicDefaultModelId
+			return anthropicModels[id as keyof typeof anthropicModels] ?? anthropicModels[anthropicDefaultModelId]
 	}
 }
