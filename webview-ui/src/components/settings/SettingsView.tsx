@@ -153,7 +153,6 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		maxReadFileLine,
 	} = cachedState
 
-	// Make sure apiConfiguration is initialized and managed by SettingsView.
 	const apiConfiguration = useMemo(() => cachedState.apiConfiguration ?? {}, [cachedState.apiConfiguration])
 
 	useEffect(() => {
@@ -311,7 +310,9 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 	)
 
 	// Store direct DOM element refs for each tab
-	const tabRefs = useRef<Record<SectionName, HTMLButtonElement | null>>({} as any)
+	const tabRefs = useRef<Record<SectionName, HTMLButtonElement | null>>(
+		Object.fromEntries(sectionNames.map((name) => [name, null])) as Record<SectionName, HTMLButtonElement | null>,
+	)
 
 	// Track whether we're in compact mode
 	const [isCompactMode, setIsCompactMode] = useState(false)
@@ -331,11 +332,10 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		observer.observe(containerRef.current)
 
 		return () => {
-			observer.disconnect()
+			observer?.disconnect()
 		}
 	}, [])
 
-	// Sections definition - no longer includes refs
 	const sections: { id: SectionName; icon: LucideIcon }[] = useMemo(
 		() => [
 			{ id: "providers", icon: Webhook },

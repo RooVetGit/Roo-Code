@@ -1,5 +1,3 @@
-// npx jest src/components/settings/__tests__/SettingsView.test.ts
-
 import React from "react"
 import { render, screen, fireEvent } from "@testing-library/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -210,7 +208,7 @@ describe("SettingsView - Sound Settings", () => {
 	it("initializes with tts disabled by default", () => {
 		// Render once and get the activateTab helper
 		const { activateTab } = renderSettingsView()
-		
+
 		// Activate the notifications tab
 		activateTab("notifications")
 
@@ -224,7 +222,7 @@ describe("SettingsView - Sound Settings", () => {
 	it("initializes with sound disabled by default", () => {
 		// Render once and get the activateTab helper
 		const { activateTab } = renderSettingsView()
-		
+
 		// Activate the notifications tab
 		activateTab("notifications")
 
@@ -238,7 +236,7 @@ describe("SettingsView - Sound Settings", () => {
 	it("toggles tts setting and sends message to VSCode", () => {
 		// Render once and get the activateTab helper
 		const { activateTab } = renderSettingsView()
-		
+
 		// Activate the notifications tab
 		activateTab("notifications")
 
@@ -263,7 +261,7 @@ describe("SettingsView - Sound Settings", () => {
 	it("toggles sound setting and sends message to VSCode", () => {
 		// Render once and get the activateTab helper
 		const { activateTab } = renderSettingsView()
-		
+
 		// Activate the notifications tab
 		activateTab("notifications")
 
@@ -288,7 +286,7 @@ describe("SettingsView - Sound Settings", () => {
 	it("shows tts slider when sound is enabled", () => {
 		// Render once and get the activateTab helper
 		const { activateTab } = renderSettingsView()
-		
+
 		// Activate the notifications tab
 		activateTab("notifications")
 
@@ -305,7 +303,7 @@ describe("SettingsView - Sound Settings", () => {
 	it("shows volume slider when sound is enabled", () => {
 		// Render once and get the activateTab helper
 		const { activateTab } = renderSettingsView()
-		
+
 		// Activate the notifications tab
 		activateTab("notifications")
 
@@ -322,7 +320,7 @@ describe("SettingsView - Sound Settings", () => {
 	it("updates speed and sends message to VSCode when slider changes", () => {
 		// Render once and get the activateTab helper
 		const { activateTab } = renderSettingsView()
-		
+
 		// Activate the notifications tab
 		activateTab("notifications")
 
@@ -348,7 +346,7 @@ describe("SettingsView - Sound Settings", () => {
 	it("updates volume and sends message to VSCode when slider changes", () => {
 		// Render once and get the activateTab helper
 		const { activateTab } = renderSettingsView()
-		
+
 		// Activate the notifications tab
 		activateTab("notifications")
 
@@ -392,7 +390,7 @@ describe("SettingsView - Allowed Commands", () => {
 	it("shows allowed commands section when alwaysAllowExecute is enabled", () => {
 		// Render once and get the activateTab helper
 		const { activateTab } = renderSettingsView()
-		
+
 		// Activate the autoApprove tab
 		activateTab("autoApprove")
 
@@ -407,7 +405,7 @@ describe("SettingsView - Allowed Commands", () => {
 	it("adds new command to the list", () => {
 		// Render once and get the activateTab helper
 		const { activateTab } = renderSettingsView()
-		
+
 		// Activate the autoApprove tab
 		activateTab("autoApprove")
 
@@ -435,7 +433,7 @@ describe("SettingsView - Allowed Commands", () => {
 	it("removes command from the list", () => {
 		// Render once and get the activateTab helper
 		const { activateTab } = renderSettingsView()
-		
+
 		// Activate the autoApprove tab
 		activateTab("autoApprove")
 
@@ -482,7 +480,7 @@ describe("SettingsView - Allowed Commands", () => {
 		it("shows unsaved changes dialog when clicking Done with unsaved changes", () => {
 			// Render once and get the activateTab helper
 			const { activateTab } = renderSettingsView()
-			
+
 			// Activate the notifications tab
 			activateTab("notifications")
 
@@ -507,7 +505,7 @@ describe("SettingsView - Allowed Commands", () => {
 					</QueryClientProvider>
 				</ExtensionStateContextProvider>,
 			)
-			
+
 			// Hydrate initial state
 			mockPostMessage({})
 
@@ -525,7 +523,7 @@ describe("SettingsView - Duplicate Commands", () => {
 	it("prevents duplicate commands", () => {
 		// Render once and get the activateTab helper
 		const { activateTab } = renderSettingsView()
-		
+
 		// Activate the autoApprove tab
 		activateTab("autoApprove")
 
@@ -553,7 +551,7 @@ describe("SettingsView - Duplicate Commands", () => {
 	it("saves allowed commands when clicking Save", () => {
 		// Render once and get the activateTab helper
 		const { activateTab } = renderSettingsView()
-		
+
 		// Activate the autoApprove tab
 		activateTab("autoApprove")
 
