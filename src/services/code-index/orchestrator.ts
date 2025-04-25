@@ -147,7 +147,10 @@ export class CodeIndexOrchestrator {
 			this.stateManager.setSystemState("Indexing", "Services ready. Starting workspace scan...")
 
 			const result = await this._scanner.scanDirectory(this.workspacePath, this.context, (batchError: Error) => {
-				this.stateManager.setSystemState("Error", `Failed during initial scan batch: ${batchError.message}`)
+				console.error(
+					`[CodeIndexOrchestrator] Error during initial scan batch: ${batchError.message}`,
+					batchError,
+				)
 			})
 
 			if (!result) {
