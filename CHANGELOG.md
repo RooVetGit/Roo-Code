@@ -1,5 +1,16 @@
 # Roo Code Changelog
 
+## [3.14.2] - 2025-04-24
+
+- Enable prompt caching for Gemini (with some improvements)
+- Allow users to turn prompt caching on / off for Gemini 2.5 on OpenRouter
+- Compress terminal output with backspace characters (thanks @KJ7LNW)
+- Add Russian language (Спасибо @asychin)
+
+## [3.14.1] - 2025-04-24
+
+- Disable Gemini caching while we investigate issues reported by the community.
+
 ## [3.14.0] - 2025-04-23
 
 - Add prompt caching for `gemini-2.5-pro-preview-03-25` in the Gemini provider (Vertex and OpenRouter coming soon!)
@@ -8,7 +19,7 @@
 - Make the list_files tool more efficient and smarter about excluding directories like .git/
 - Fix file drag and drop on Windows and when using SSH tunnels (thanks @NyxJae!)
 - Correctly revert changes and suggest alternative tools when write_to_file fails on a missing line count
-- Allow interpolation of `workspace`, `mode`,  `language`, `shell`, and `operatingSystem` into custom system prompt overrides (thanks @daniel-lxs!)
+- Allow interpolation of `workspace`, `mode`, `language`, `shell`, and `operatingSystem` into custom system prompt overrides (thanks @daniel-lxs!)
 - Fix interpolation bug in the “add to context” code action (thanks @elianiva!)
 - Preserve editor state and prevent tab unpinning during diffs (thanks @seedlord!)
 - Improvements to icon rendering on Linux (thanks @elianiva!)

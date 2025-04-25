@@ -66,22 +66,11 @@ export class DiffViewProvider {
 			.filter(
 				(tab) => tab.input instanceof vscode.TabInputText && arePathsEqual(tab.input.uri.fsPath, absolutePath),
 			)
-		// Check if the document is already open and store its state
-		// DO NOT close the original tab to preserve pin status
 		for (const tab of tabs) {
-			if (tab.input instanceof vscode.TabInputText && arePathsEqual(tab.input.uri.fsPath, absolutePath)) {
-				this.originalViewColumn = tab.group.viewColumn
-				this.documentWasOpen = true
-				// Ensure the tab is not dirty before proceeding, but don't close it
-				if (tab.isDirty) {
-					// Find the document associated with the tab and save it
-					const doc = vscode.workspace.textDocuments.find((d) => arePathsEqual(d.uri.fsPath, absolutePath))
-					if (doc) {
-						await doc.save()
-					}
-				}
-				break // Found the relevant tab, no need to check others
+			if (!tab.isDirty) {
+				await vscode.window.tabGroups.close(tab)
 			}
+			this.documentWasOpen = true
 		}
 
 		// Store the currently focused editor before opening the diff
@@ -182,7 +171,7 @@ export class DiffViewProvider {
 			await updatedDocument.save()
 		}
 
-		// Close the diff view first
+		await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), { preview: false })
 		await this.closeAllDiffViews()
 
 		// If the original document was open, try to focus it.
@@ -267,12 +256,14 @@ export class DiffViewProvider {
 			await vscode.workspace.applyEdit(edit)
 			await updatedDocument.save()
 			console.log(`File ${absolutePath} has been reverted to its original content.`)
+
 			// Close the diff view first
 			await this.closeAllDiffViews()
 
 			// If the document was originally open, ensure it's focused.
 			// The revert logic already applied the original content and saved.
 			await this._focusOriginalDocument(absolutePath, this.originalViewColumn)
+
 		}
 		// edit is done
 		await this.reset()
