@@ -6,13 +6,14 @@ import { CloudUpload, CloudDownload } from "lucide-react"
 
 import { ClineMessage } from "@roo/shared/ExtensionMessage"
 
-import { getMaxTokensForModel } from "@/utils/model-utils"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui"
+import { getMaxTokensForModel } from "@src/utils/model-utils"
+import { formatLargeNumber } from "@src/utils/format"
+import { cn } from "@src/lib/utils"
+import { Button } from "@src/components/ui"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
+import { normalizeApiConfiguration } from "@src/utils/normalizeApiConfiguration"
 
 import Thumbnails from "../common/Thumbnails"
-import { normalizeApiConfiguration } from "../settings/ApiOptions"
 
 import { TaskActions } from "./TaskActions"
 import { ContextWindowProgress } from "./ContextWindowProgress"
@@ -141,36 +142,38 @@ const TaskHeader = ({
 									{typeof tokensIn === "number" && tokensIn > 0 && (
 										<span className="flex items-center gap-0.5">
 											<i className="codicon codicon-arrow-up text-xs font-bold" />
-											{tokensIn}
+											{formatLargeNumber(tokensIn)}
 										</span>
 									)}
 									{typeof tokensOut === "number" && tokensOut > 0 && (
 										<span className="flex items-center gap-0.5">
 											<i className="codicon codicon-arrow-down text-xs font-bold" />
-											{tokensOut}
+											{formatLargeNumber(tokensOut)}
 										</span>
 									)}
 								</div>
 								{!totalCost && <TaskActions item={currentTaskItem} />}
 							</div>
 
-							{doesModelSupportPromptCache && (cacheReads || cacheWrites) && (
-								<div className="flex items-center gap-1 flex-wrap h-[20px]">
-									<span className="font-bold">{t("chat:task.cache")}</span>
-									{typeof cacheWrites === "number" && cacheWrites > 0 && (
-										<span className="flex items-center gap-0.5">
-											<CloudUpload size={16} />
-											{cacheWrites}
-										</span>
-									)}
-									{typeof cacheReads === "number" && cacheReads > 0 && (
-										<span className="flex items-center gap-0.5">
-											<CloudDownload size={16} />
-											{cacheReads}
-										</span>
-									)}
-								</div>
-							)}
+							{doesModelSupportPromptCache &&
+								((typeof cacheReads === "number" && cacheReads > 0) ||
+									(typeof cacheWrites === "number" && cacheWrites > 0)) && (
+									<div className="flex items-center gap-1 flex-wrap h-[20px]">
+										<span className="font-bold">{t("chat:task.cache")}</span>
+										{typeof cacheWrites === "number" && cacheWrites > 0 && (
+											<span className="flex items-center gap-0.5">
+												<CloudUpload size={16} />
+												{formatLargeNumber(cacheWrites)}
+											</span>
+										)}
+										{typeof cacheReads === "number" && cacheReads > 0 && (
+											<span className="flex items-center gap-0.5">
+												<CloudDownload size={16} />
+												{formatLargeNumber(cacheReads)}
+											</span>
+										)}
+									</div>
+								)}
 
 							{!!totalCost && (
 								<div className="flex justify-between items-center h-[20px]">

@@ -1,7 +1,4 @@
 import { ModelInfo, ProviderName, ProviderSettings } from "../schemas"
-import { REASONING_MODELS } from "../api/providers/constants"
-
-export { REASONING_MODELS }
 
 export type { ModelInfo, ProviderName as ApiProvider }
 
@@ -682,17 +679,37 @@ export const geminiModels = {
 		maxTokens: 65_535,
 		contextWindow: 1_048_576,
 		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 2.5,
+		supportsPromptCache: true,
+		isPromptCacheOptional: true,
+		inputPrice: 2.5, // This is the pricing for prompts above 200k tokens.
 		outputPrice: 15,
+		cacheReadsPrice: 0.625,
+		cacheWritesPrice: 4.5,
+		tiers: [
+			{
+				contextWindow: 200_000,
+				inputPrice: 1.25,
+				outputPrice: 10,
+				cacheReadsPrice: 0.31,
+			},
+			{
+				contextWindow: Infinity,
+				inputPrice: 2.5,
+				outputPrice: 15,
+				cacheReadsPrice: 0.625,
+			},
+		],
 	},
 	"gemini-2.0-flash-001": {
 		maxTokens: 8192,
 		contextWindow: 1_048_576,
 		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
+		supportsPromptCache: true,
+		isPromptCacheOptional: true,
+		inputPrice: 0.1,
+		outputPrice: 0.4,
+		cacheReadsPrice: 0.025,
+		cacheWritesPrice: 1.0,
 	},
 	"gemini-2.0-flash-lite-preview-02-05": {
 		maxTokens: 8192,
@@ -738,9 +755,26 @@ export const geminiModels = {
 		maxTokens: 8192,
 		contextWindow: 1_048_576,
 		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
+		supportsPromptCache: true,
+		isPromptCacheOptional: true,
+		inputPrice: 0.15, // This is the pricing for prompts above 128k tokens.
+		outputPrice: 0.6,
+		cacheReadsPrice: 0.0375,
+		cacheWritesPrice: 1.0,
+		tiers: [
+			{
+				contextWindow: 128_000,
+				inputPrice: 0.075,
+				outputPrice: 0.3,
+				cacheReadsPrice: 0.01875,
+			},
+			{
+				contextWindow: Infinity,
+				inputPrice: 0.15,
+				outputPrice: 0.6,
+				cacheReadsPrice: 0.0375,
+			},
+		],
 	},
 	"gemini-1.5-flash-exp-0827": {
 		maxTokens: 8192,
@@ -1053,7 +1087,7 @@ export const mistralModels = {
 
 // Unbound Security
 // https://www.unboundsecurity.ai/ai-gateway
-export const unboundDefaultModelId = "anthropic/claude-3-5-sonnet-20241022"
+export const unboundDefaultModelId = "anthropic/claude-3-7-sonnet-20250219"
 export const unboundDefaultModelInfo: ModelInfo = {
 	maxTokens: 8192,
 	contextWindow: 200_000,
@@ -1362,3 +1396,53 @@ export const vscodeLlmModels = {
 		maxInputTokens: number
 	}
 >
+
+/**
+ * Constants
+ */
+
+// These models support reasoning efforts.
+export const REASONING_MODELS = new Set(["x-ai/grok-3-mini-beta", "grok-3-mini-beta", "grok-3-mini-fast-beta"])
+
+// These models support prompt caching.
+export const PROMPT_CACHING_MODELS = new Set([
+	"anthropic/claude-3-haiku",
+	"anthropic/claude-3-haiku:beta",
+	"anthropic/claude-3-opus",
+	"anthropic/claude-3-opus:beta",
+	"anthropic/claude-3-sonnet",
+	"anthropic/claude-3-sonnet:beta",
+	"anthropic/claude-3.5-haiku",
+	"anthropic/claude-3.5-haiku-20241022",
+	"anthropic/claude-3.5-haiku-20241022:beta",
+	"anthropic/claude-3.5-haiku:beta",
+	"anthropic/claude-3.5-sonnet",
+	"anthropic/claude-3.5-sonnet-20240620",
+	"anthropic/claude-3.5-sonnet-20240620:beta",
+	"anthropic/claude-3.5-sonnet:beta",
+	"anthropic/claude-3.7-sonnet",
+	"anthropic/claude-3.7-sonnet:beta",
+	"anthropic/claude-3.7-sonnet:thinking",
+	"google/gemini-2.5-pro-preview-03-25",
+	"google/gemini-2.0-flash-001",
+	"google/gemini-flash-1.5",
+	"google/gemini-flash-1.5-8b",
+])
+
+// These models don't have prompt caching enabled by default (you can turn it on
+// in settings).
+export const OPTIONAL_PROMPT_CACHING_MODELS = new Set([
+	"google/gemini-2.5-pro-preview-03-25",
+	"google/gemini-2.0-flash-001",
+	"google/gemini-flash-1.5",
+	"google/gemini-flash-1.5-8b",
+])
+
+// https://www.anthropic.com/news/3-5-models-and-computer-use
+export const COMPUTER_USE_MODELS = new Set([
+	"anthropic/claude-3.5-sonnet",
+	"anthropic/claude-3.5-sonnet:beta",
+	"anthropic/claude-3.7-sonnet",
+	"anthropic/claude-3.7-sonnet:beta",
+	"anthropic/claude-3.7-sonnet:thinking",
+])

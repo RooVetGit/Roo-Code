@@ -61,6 +61,7 @@ export const languages = [
 	"ko",
 	"pl",
 	"pt-BR",
+	"ru",
 	"tr",
 	"vi",
 	"zh-CN",
@@ -104,6 +105,7 @@ export const modelInfoSchema = z.object({
 	supportsImages: z.boolean().optional(),
 	supportsComputerUse: z.boolean().optional(),
 	supportsPromptCache: z.boolean(),
+	isPromptCacheOptional: z.boolean().optional(),
 	inputPrice: z.number().optional(),
 	outputPrice: z.number().optional(),
 	cacheWritesPrice: z.number().optional(),
@@ -114,6 +116,17 @@ export const modelInfoSchema = z.object({
 	minTokensPerCachePoint: z.number().optional(),
 	maxCachePoints: z.number().optional(),
 	cachableFields: z.array(z.string()).optional(),
+	tiers: z
+		.array(
+			z.object({
+				contextWindow: z.number(),
+				inputPrice: z.number().optional(),
+				outputPrice: z.number().optional(),
+				cacheWritesPrice: z.number().optional(),
+				cacheReadsPrice: z.number().optional(),
+			}),
+		)
+		.optional(),
 })
 
 export type ModelInfo = z.infer<typeof modelInfoSchema>
@@ -387,11 +400,12 @@ export const providerSettingsSchema = z.object({
 	modelMaxThinkingTokens: z.number().optional(),
 	// Generic
 	includeMaxTokens: z.boolean().optional(),
-	modelTemperature: z.number().nullish(),
 	reasoningEffort: reasoningEffortsSchema.optional(),
-	rateLimitSeconds: z.number().optional(),
+	promptCachingEnabled: z.boolean().optional(),
 	diffEnabled: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
+	modelTemperature: z.number().nullish(),
+	rateLimitSeconds: z.number().optional(),
 	// Fake AI
 	fakeAi: z.unknown().optional(),
 })
@@ -478,11 +492,12 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	modelMaxThinkingTokens: undefined,
 	// Generic
 	includeMaxTokens: undefined,
-	modelTemperature: undefined,
 	reasoningEffort: undefined,
-	rateLimitSeconds: undefined,
+	promptCachingEnabled: undefined,
 	diffEnabled: undefined,
 	fuzzyMatchThreshold: undefined,
+	modelTemperature: undefined,
+	rateLimitSeconds: undefined,
 	// Fake AI
 	fakeAi: undefined,
 	// X.AI (Grok)
@@ -546,6 +561,7 @@ export const globalSettingsSchema = z.object({
 	terminalZshOhMy: z.boolean().optional(),
 	terminalZshP10k: z.boolean().optional(),
 	terminalZdotdir: z.boolean().optional(),
+	terminalCompressProgressBar: z.boolean().optional(),
 
 	rateLimitSeconds: z.number().optional(),
 	diffEnabled: z.boolean().optional(),
@@ -621,6 +637,7 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	terminalZshOhMy: undefined,
 	terminalZshP10k: undefined,
 	terminalZdotdir: undefined,
+	terminalCompressProgressBar: undefined,
 
 	rateLimitSeconds: undefined,
 	diffEnabled: undefined,
