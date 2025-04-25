@@ -2,7 +2,6 @@ import { OpenAI } from "openai"
 import { OpenAiNativeHandler } from "../../../api/providers/openai-native"
 import { ApiHandlerOptions } from "../../../shared/api"
 import { IEmbedder, EmbeddingResponse } from "../interfaces"
-import { getEncoding, Tiktoken } from "js-tiktoken"
 
 /**
  * OpenAI implementation of the embedder interface with batching and rate limiting
@@ -10,7 +9,6 @@ import { getEncoding, Tiktoken } from "js-tiktoken"
 export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 	private embeddingsClient: OpenAI
 	private readonly defaultModelId: string
-	private tokenizer: Tiktoken
 
 	// Batching and retry constants
 	private static readonly MAX_BATCH_TOKENS = 100000
@@ -28,7 +26,6 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 		const apiKey = this.options.openAiNativeApiKey ?? "not-provided"
 		this.embeddingsClient = new OpenAI({ apiKey })
 		this.defaultModelId = options.openAiEmbeddingModelId || "text-embedding-3-small"
-		this.tokenizer = getEncoding("cl100k_base")
 	}
 
 	/**
@@ -50,7 +47,7 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 
 			for (let i = 0; i < remainingTexts.length; i++) {
 				const text = remainingTexts[i]
-				const itemTokens = this.tokenizer.encode(text).length
+				const itemTokens = Math.ceil(text.length / 4)
 
 				if (itemTokens > OpenAiEmbedder.MAX_ITEM_TOKENS) {
 					console.warn(
