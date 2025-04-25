@@ -11,7 +11,6 @@ import { LexicalComposer } from "@lexical/react/LexicalComposer"
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin"
 import { ContentEditable } from "@lexical/react/LexicalContentEditable"
 import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin"
-import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
 import {
@@ -24,8 +23,6 @@ import {
 	CLEAR_HISTORY_COMMAND,
 	COMMAND_PRIORITY_EDITOR,
 	createCommand,
-	EditorState,
-	LexicalEditor,
 	LexicalNode,
 	LexicalCommand,
 	TextNode,
@@ -197,31 +194,38 @@ const LexicalTextArea = forwardRef<LexicalTextAreaHandle, LexicalTextAreaProps>(
 			}
 		}, [value, editor])
 
-		// --- OnChange Handler ---
-		const handleOnChange = (editorState: EditorState, currentEditor: LexicalEditor, tags: Set<string>) => {
-			if (isFirstRender.current) return
+		// --- Event Handlers ---
+		const handleInternalFocus = (event: React.FocusEvent<HTMLDivElement>) => {
+			setIsFocused(true)
+			onFocus(event)
+		}
 
-			editorState.read(() => {
-				const plainText = $getRoot().getTextContent()
+		const handleInternalBlur = (event: React.FocusEvent<HTMLDivElement>) => {
+			setTimeout(() => {
+				setIsFocused(false)
+				onBlur(event)
+			}, 100)
+		}
 
-				if (plainText !== value) {
-					onChange(plainText)
-				}
+		const handleKeyDown = async (event: React.KeyboardEvent<HTMLDivElement>) => {
+			// Context Menu Logic - Check before Lexical update
+			let showMenu = false
+			let menuType: "mention" | "command" | null = null
+			let query = ""
 
-				// Context Menu Logic
+			editor.getEditorState().read(() => {
 				const selection = $getSelection()
-				let showMenu = false
-				let menuType: "mention" | "command" | null = null
-				let query = ""
 
 				if ($isRangeSelection(selection) && selection.isCollapsed()) {
 					const anchor = selection.anchor
 					const anchorNode = anchor.getNode()
 					const anchorOffset = anchor.offset
 
-					if (anchorNode instanceof TextNode) {
+					let textBeforeCursor = ""
+
+					if ($isRangeSelection(selection) && selection.isCollapsed() && anchorNode instanceof TextNode) {
 						const textContent = anchorNode.getTextContent()
-						const textBeforeCursor = textContent.substring(0, anchorOffset)
+						textBeforeCursor = textContent.substring(0, anchorOffset)
 
 						const root = $getRoot()
 						const firstParagraph = root.getFirstChild()
@@ -235,9 +239,25 @@ const LexicalTextArea = forwardRef<LexicalTextAreaHandle, LexicalTextAreaProps>(
 								query = textBeforeCursor.substring(1)
 							}
 						}
+					}
 
-						// handles mention
-						if (!showMenu) {
+					// handles mention
+					if (!showMenu) {
+						// Check if the pressed key is '@'
+						if (event.key === "@") {
+							// Check if '@' is at the start or preceded by whitespace in the current text before cursor
+							const charBeforeCursor =
+								textBeforeCursor.length > 0 ? textBeforeCursor[textBeforeCursor.length - 1] : null
+							if (
+								textBeforeCursor.length === 0 ||
+								(charBeforeCursor !== null && /\s/.test(charBeforeCursor))
+							) {
+								showMenu = true
+								menuType = "mention"
+								query = "" // Initial query is empty after typing '@'
+							}
+						} else {
+							// For other keys, check if we are currently in a mention query
 							const mentionMatch = textBeforeCursor.match(/@([^\s@]*)$/)
 							if (mentionMatch) {
 								const charBeforeMention = textBeforeCursor[mentionMatch.index! - 1]
@@ -250,32 +270,46 @@ const LexicalTextArea = forwardRef<LexicalTextAreaHandle, LexicalTextAreaProps>(
 						}
 					}
 				}
+			})
 
-				onShowContextMenu(showMenu, menuType)
-				if (menuType === "mention") {
-					onMentionQueryChange(query)
-					onCommandQueryChange("")
-				} else if (menuType === "command") {
-					onCommandQueryChange(query)
-					onMentionQueryChange("")
-				} else {
-					onCommandQueryChange("")
-					onMentionQueryChange("")
+			// If Enter is pressed and a menu is expected, prevent default behavior
+			if (event.key === "Enter" && showMenu) {
+				event.preventDefault()
+				event.stopPropagation()
+				// Do not return here, allow the rest of the handler to update menu state
+			}
+
+			console.log({ showMenu, menuType })
+
+			// Call context menu handlers immediately
+			onShowContextMenu(showMenu, menuType)
+			if (menuType === "mention") {
+				onMentionQueryChange(query)
+				onCommandQueryChange("")
+			} else if (menuType === "command") {
+				onCommandQueryChange(query)
+				onMentionQueryChange("")
+			} else {
+				onCommandQueryChange("")
+				onMentionQueryChange("")
+			}
+
+			// Continue with Lexical update for text content changes
+			editor.update(() => {
+				if (isFirstRender.current) {
+					isFirstRender.current = false
+					return
+				}
+
+				const plainText = $getRoot().getTextContent()
+
+				// if the text content is not equal to the value, update the value
+				if (plainText !== value) {
+					onChange(plainText)
 				}
 			})
-		}
 
-		// --- Event Handlers ---
-		const handleInternalFocus = (event: React.FocusEvent<HTMLDivElement>) => {
-			setIsFocused(true)
-			onFocus(event)
-		}
-
-		const handleInternalBlur = (event: React.FocusEvent<HTMLDivElement>) => {
-			setTimeout(() => {
-				setIsFocused(false)
-				onBlur(event)
-			}, 100)
+			onKeyDown(event)
 		}
 
 		// --- Drop/Drag Handlers ---
@@ -603,9 +637,9 @@ const LexicalTextArea = forwardRef<LexicalTextAreaHandle, LexicalTextAreaProps>(
 								outline: "none", // Remove default browser outline
 								tabSize: 4, // Standard tab size
 							}}
-							onKeyDown={onKeyDown}
 							onFocus={handleInternalFocus}
 							onBlur={handleInternalBlur}
+							onKeyDown={handleKeyDown}
 						/>
 					}
 					placeholder={
@@ -628,7 +662,6 @@ const LexicalTextArea = forwardRef<LexicalTextAreaHandle, LexicalTextAreaProps>(
 					}
 					ErrorBoundary={LexicalErrorBoundary} // Basic error boundary
 				/>
-				<OnChangePlugin onChange={handleOnChange} ignoreSelectionChange={true} />
 				<HistoryPlugin />
 				<AutosizePlugin contentEditableRef={contentEditableRef} onHeightChange={onHeightChange} />
 			</div>
