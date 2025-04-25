@@ -1,6 +1,10 @@
-import { UnboundHandler } from "../unbound"
-import { ApiHandlerOptions } from "../../../shared/api"
+// npx jest src/api/providers/__tests__/unbound.test.ts
+
 import { Anthropic } from "@anthropic-ai/sdk"
+
+import { ApiHandlerOptions } from "../../../shared/api"
+
+import { UnboundHandler } from "../unbound"
 
 // Mock OpenAI client
 const mockCreate = jest.fn()

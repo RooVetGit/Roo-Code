@@ -35,7 +35,7 @@ export class RequestyHandler extends OpenAiHandler {
 
 	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
 		this.models = await getModels("requesty")
-		return super.createMessage(systemPrompt, messages)
+		yield* super.createMessage(systemPrompt, messages)
 	}
 
 	override getModel(): { id: string; info: ModelInfo } {

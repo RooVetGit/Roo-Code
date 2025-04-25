@@ -193,7 +193,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		}
 	}
 
-	private async fetchModel() {
+	public async fetchModel() {
 		this.models = await getModels("openrouter")
 		return this.getModel()
 	}

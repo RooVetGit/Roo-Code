@@ -1,7 +1,6 @@
 // npx jest src/api/providers/__tests__/glama.test.ts
 
 import { Anthropic } from "@anthropic-ai/sdk"
-import axios from "axios"
 
 import { GlamaHandler } from "../glama"
 import { ApiHandlerOptions } from "../../../shared/api"
@@ -116,40 +115,15 @@ describe("GlamaHandler", () => {
 		]
 
 		it("should handle streaming responses", async () => {
-			// Mock axios for token usage request
-			const mockAxios = jest.spyOn(axios, "get").mockResolvedValueOnce({
-				data: {
-					tokenUsage: {
-						promptTokens: 10,
-						completionTokens: 5,
-						cacheCreationInputTokens: 0,
-						cacheReadInputTokens: 0,
-					},
-					totalCostUsd: "0.00",
-				},
-			})
-
 			const stream = handler.createMessage(systemPrompt, messages)
 			const chunks: any[] = []
+
 			for await (const chunk of stream) {
 				chunks.push(chunk)
 			}
 
-			expect(chunks.length).toBe(2) // Text chunk and usage chunk
-			expect(chunks[0]).toEqual({
-				type: "text",
-				text: "Test response",
-			})
-			expect(chunks[1]).toEqual({
-				type: "usage",
-				inputTokens: 10,
-				outputTokens: 5,
-				cacheWriteTokens: 0,
-				cacheReadTokens: 0,
-				totalCost: 0,
-			})
-
-			mockAxios.mockRestore()
+			expect(chunks.length).toBe(1)
+			expect(chunks[0]).toEqual({ type: "text", text: "Test response" })
 		})
 
 		it("should handle API errors", async () => {
@@ -204,16 +178,16 @@ describe("GlamaHandler", () => {
 			mockCreate.mockClear()
 
 			const nonAnthropicOptions = {
-				apiModelId: "openai/gpt-4",
-				glamaModelId: "openai/gpt-4",
 				glamaApiKey: "test-key",
+				glamaModelId: "openai/gpt-4o",
 			}
+
 			const nonAnthropicHandler = new GlamaHandler(nonAnthropicOptions)
 
 			await nonAnthropicHandler.completePrompt("Test prompt")
 			expect(mockCreate).toHaveBeenCalledWith(
 				expect.objectContaining({
-					model: "openai/gpt-4",
+					model: "openai/gpt-4o",
 					messages: [{ role: "user", content: "Test prompt" }],
 					temperature: 0,
 				}),

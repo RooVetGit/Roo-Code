@@ -23,7 +23,8 @@ export class UnboundHandler extends RouterProvider implements SingleCompletionHa
 			name: "unbound",
 			baseURL: "https://api.getunbound.ai/v1",
 			apiKey: options.unboundApiKey,
-			modelId: options.unboundModelId ?? unboundDefaultModelId,
+			modelId: options.unboundModelId,
+			defaultModelId: unboundDefaultModelId,
 			defaultModelInfo: unboundDefaultModelInfo,
 		})
 	}

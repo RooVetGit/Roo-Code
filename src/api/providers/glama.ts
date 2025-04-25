@@ -21,7 +21,8 @@ export class GlamaHandler extends RouterProvider implements SingleCompletionHand
 			name: "unbound",
 			baseURL: "https://glama.ai/api/gateway/openai/v1",
 			apiKey: options.glamaApiKey,
-			modelId: options.glamaModelId ?? glamaDefaultModelId,
+			modelId: options.glamaModelId,
+			defaultModelId: glamaDefaultModelId,
 			defaultModelInfo: glamaDefaultModelInfo,
 		})
 	}
