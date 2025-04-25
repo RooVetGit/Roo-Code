@@ -33,24 +33,20 @@ export interface ExtensionMessage {
 		| "action"
 		| "state"
 		| "selectedImages"
-		| "ollamaModels"
-		| "lmStudioModels"
 		| "theme"
 		| "workspaceUpdated"
 		| "invoke"
 		| "partialMessage"
-		| "openRouterModels"
-		| "glamaModels"
-		| "unboundModels"
-		| "requestyModels"
-		| "openAiModels"
 		| "mcpServers"
 		| "enhancedPrompt"
 		| "commitSearchResults"
 		| "listApiConfig"
+		| "routerModels"
+		| "openAiModels"
+		| "ollamaModels"
+		| "lmStudioModels"
 		| "vsCodeLmModels"
 		| "vsCodeLmApiAvailable"
-		| "requestVsCodeLmModels"
 		| "updatePrompt"
 		| "systemPrompt"
 		| "autoApprovalEnabled"
@@ -81,9 +77,6 @@ export interface ExtensionMessage {
 	invoke?: "newChat" | "sendMessage" | "primaryButtonClick" | "secondaryButtonClick" | "setChatBoxMessage"
 	state?: ExtensionState
 	images?: string[]
-	ollamaModels?: string[]
-	lmStudioModels?: string[]
-	vsCodeLmModels?: { vendor?: string; family?: string; version?: string; id?: string }[]
 	filePaths?: string[]
 	openedTabs?: Array<{
 		label: string
@@ -91,11 +84,11 @@ export interface ExtensionMessage {
 		path?: string
 	}>
 	partialMessage?: ClineMessage
-	openRouterModels?: Record<string, ModelInfo>
-	glamaModels?: Record<string, ModelInfo>
-	unboundModels?: Record<string, ModelInfo>
-	requestyModels?: Record<string, ModelInfo>
+	routerModels?: Record<"openrouter" | "requesty" | "glama" | "unbound", Record<string, ModelInfo>>
 	openAiModels?: string[]
+	ollamaModels?: string[]
+	lmStudioModels?: string[]
+	vsCodeLmModels?: { vendor?: string; family?: string; version?: string; id?: string }[]
 	mcpServers?: McpServer[]
 	commits?: GitCommit[]
 	listApiConfig?: ApiConfigMeta[]
@@ -106,11 +99,7 @@ export interface ExtensionMessage {
 	values?: Record<string, any>
 	requestId?: string
 	promptText?: string
-	results?: Array<{
-		path: string
-		type: "file" | "folder"
-		label?: string
-	}>
+	results?: { path: string; type: "file" | "folder"; label?: string }[]
 	error?: string
 }
 

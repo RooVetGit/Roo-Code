@@ -122,10 +122,7 @@ export function validateBedrockArn(arn: string, region?: string) {
 
 export function validateModelId(
 	apiConfiguration?: ApiConfiguration,
-	glamaModels?: Record<string, ModelInfo>,
-	openRouterModels?: Record<string, ModelInfo>,
-	unboundModels?: Record<string, ModelInfo>,
-	requestyModels?: Record<string, ModelInfo>,
+	routerModels?: Record<"openrouter" | "glama" | "unbound" | "requesty", Record<string, ModelInfo>>,
 ): string | undefined {
 	if (!apiConfiguration) {
 		return undefined
@@ -140,9 +137,9 @@ export function validateModelId(
 			}
 
 			if (
-				openRouterModels &&
-				Object.keys(openRouterModels).length > 1 &&
-				!Object.keys(openRouterModels).includes(modelId)
+				routerModels?.openrouter &&
+				Object.keys(routerModels.openrouter).length > 1 &&
+				!Object.keys(routerModels.openrouter).includes(modelId)
 			) {
 				return i18next.t("settings:validation.modelAvailability", { modelId })
 			}
@@ -157,9 +154,9 @@ export function validateModelId(
 			}
 
 			if (
-				glamaModels &&
-				Object.keys(glamaModels).length > 1 &&
-				!Object.keys(glamaModels).includes(glamaModelId)
+				routerModels?.glama &&
+				Object.keys(routerModels.glama).length > 1 &&
+				!Object.keys(routerModels.glama).includes(glamaModelId)
 			) {
 				return i18next.t("settings:validation.modelAvailability", { modelId: glamaModelId })
 			}
@@ -174,9 +171,9 @@ export function validateModelId(
 			}
 
 			if (
-				unboundModels &&
-				Object.keys(unboundModels).length > 1 &&
-				!Object.keys(unboundModels).includes(unboundModelId)
+				routerModels?.unbound &&
+				Object.keys(routerModels.unbound).length > 1 &&
+				!Object.keys(routerModels.unbound).includes(unboundModelId)
 			) {
 				return i18next.t("settings:validation.modelAvailability", { modelId: unboundModelId })
 			}
@@ -191,9 +188,9 @@ export function validateModelId(
 			}
 
 			if (
-				requestyModels &&
-				Object.keys(requestyModels).length > 1 &&
-				!Object.keys(requestyModels).includes(requestyModelId)
+				routerModels?.requesty &&
+				Object.keys(routerModels.requesty).length > 1 &&
+				!Object.keys(routerModels.requesty).includes(requestyModelId)
 			) {
 				return i18next.t("settings:validation.modelAvailability", { modelId: requestyModelId })
 			}

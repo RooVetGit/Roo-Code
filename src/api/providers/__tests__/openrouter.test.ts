@@ -24,7 +24,6 @@ describe("OpenRouterHandler", () => {
 	const mockOptions: ApiHandlerOptions = {
 		openRouterApiKey: "test-key",
 		openRouterModelId: "test-model",
-		openRouterModelInfo: mockOpenRouterModelInfo,
 	}
 
 	beforeEach(() => {
@@ -52,7 +51,6 @@ describe("OpenRouterHandler", () => {
 
 			expect(result).toEqual({
 				id: mockOptions.openRouterModelId,
-				info: mockOptions.openRouterModelInfo,
 				maxTokens: 1000,
 				thinking: undefined,
 				temperature: 0,
@@ -77,11 +75,6 @@ describe("OpenRouterHandler", () => {
 			const handler = new OpenRouterHandler({
 				openRouterApiKey: "test-key",
 				openRouterModelId: "test-model",
-				openRouterModelInfo: {
-					...mockOpenRouterModelInfo,
-					maxTokens: 128_000,
-					thinking: true,
-				},
 				modelMaxTokens: 32_768,
 				modelMaxThinkingTokens: 16_384,
 			})
@@ -188,10 +181,6 @@ describe("OpenRouterHandler", () => {
 		it("adds cache control for supported models", async () => {
 			const handler = new OpenRouterHandler({
 				...mockOptions,
-				openRouterModelInfo: {
-					...mockOpenRouterModelInfo,
-					supportsPromptCache: true,
-				},
 				openRouterModelId: "anthropic/claude-3.5-sonnet",
 			})
 

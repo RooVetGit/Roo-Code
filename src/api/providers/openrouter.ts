@@ -16,6 +16,7 @@ import { convertToR1Format } from "../transform/r1-format"
 import { getModelParams, SingleCompletionHandler } from "../index"
 import { DEFAULT_HEADERS, DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
 import { BaseProvider } from "./base-provider"
+import { ModelRecord, getModels } from "./fetchers/cache"
 
 const OPENROUTER_DEFAULT_PROVIDER_NAME = "[default]"
 
@@ -51,6 +52,7 @@ interface CompletionUsage {
 export class OpenRouterHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
 	private client: OpenAI
+	protected models: ModelRecord = {}
 
 	constructor(options: ApiHandlerOptions) {
 		super()
@@ -66,7 +68,15 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		systemPrompt: string,
 		messages: Anthropic.Messages.MessageParam[],
 	): AsyncGenerator<ApiStreamChunk> {
-		let { id: modelId, maxTokens, thinking, temperature, topP, reasoningEffort, promptCache } = this.getModel()
+		let {
+			id: modelId,
+			maxTokens,
+			thinking,
+			temperature,
+			topP,
+			reasoningEffort,
+			promptCache,
+		} = await this.fetchModel()
 
 		// Convert Anthropic messages to OpenAI format.
 		let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
@@ -183,22 +193,27 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		}
 	}
 
-	override getModel() {
-		const modelId = this.options.openRouterModelId
-		const modelInfo = this.options.openRouterModelInfo
+	private async fetchModel() {
+		this.models = await getModels("openrouter")
+		return this.getModel()
+	}
 
-		let id = modelId ?? openRouterDefaultModelId
-		const info = modelInfo ?? openRouterDefaultModelInfo
-		const isDeepSeekR1 = id.startsWith("deepseek/deepseek-r1") || modelId === "perplexity/sonar-reasoning"
-		const defaultTemperature = isDeepSeekR1 ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0
-		const topP = isDeepSeekR1 ? 0.95 : undefined
+	override getModel() {
+		const id = this.options.openRouterModelId ?? openRouterDefaultModelId
+		const info = this.models[id] ?? openRouterDefaultModelInfo
+
+		const isDeepSeekR1 = id.startsWith("deepseek/deepseek-r1") || id === "perplexity/sonar-reasoning"
 
 		return {
 			id,
 			info,
 			// maxTokens, thinking, temperature, reasoningEffort
-			...getModelParams({ options: this.options, model: info, defaultTemperature }),
-			topP,
+			...getModelParams({
+				options: this.options,
+				model: info,
+				defaultTemperature: isDeepSeekR1 ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0,
+			}),
+			topP: isDeepSeekR1 ? 0.95 : undefined,
 			promptCache: {
 				supported: PROMPT_CACHING_MODELS.has(id),
 				optional: OPTIONAL_PROMPT_CACHING_MODELS.has(id),
@@ -207,7 +222,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 	}
 
 	async completePrompt(prompt: string) {
-		let { id: modelId, maxTokens, thinking, temperature } = this.getModel()
+		let { id: modelId, maxTokens, thinking, temperature } = await this.fetchModel()
 
 		const completionParams: OpenRouterChatCompletionParams = {
 			model: modelId,

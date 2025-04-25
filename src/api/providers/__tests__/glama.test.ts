@@ -207,12 +207,6 @@ describe("GlamaHandler", () => {
 				apiModelId: "openai/gpt-4",
 				glamaModelId: "openai/gpt-4",
 				glamaApiKey: "test-key",
-				glamaModelInfo: {
-					maxTokens: 4096,
-					contextWindow: 8192,
-					supportsImages: true,
-					supportsPromptCache: false,
-				},
 			}
 			const nonAnthropicHandler = new GlamaHandler(nonAnthropicOptions)
 

@@ -24,7 +24,7 @@ import { getAllModes } from "@roo/shared/modes"
 
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { vscode } from "@src/utils/vscode"
-import { normalizeApiConfiguration } from "@src/utils/normalizeApiConfiguration"
+import { useSelectedModel } from "@src/utils/normalizeApiConfiguration"
 import { validateCommand } from "@src/utils/command-validation"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 
@@ -490,16 +490,14 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		startNewTask()
 	}, [startNewTask])
 
-	const { selectedModelInfo } = useMemo(() => {
-		return normalizeApiConfiguration(apiConfiguration)
-	}, [apiConfiguration])
+	const { info: model } = useSelectedModel(apiConfiguration)
 
 	const selectImages = useCallback(() => {
 		vscode.postMessage({ type: "selectImages" })
 	}, [])
 
 	const shouldDisableImages =
-		!selectedModelInfo.supportsImages || textAreaDisabled || selectedImages.length >= MAX_IMAGES_PER_MESSAGE
+		!model?.supportsImages || textAreaDisabled || selectedImages.length >= MAX_IMAGES_PER_MESSAGE
 
 	const handleMessage = useCallback(
 		(e: MessageEvent) => {
@@ -1216,7 +1214,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						task={task}
 						tokensIn={apiMetrics.totalTokensIn}
 						tokensOut={apiMetrics.totalTokensOut}
-						doesModelSupportPromptCache={selectedModelInfo.supportsPromptCache}
+						doesModelSupportPromptCache={model?.supportsPromptCache ?? false}
 						cacheWrites={apiMetrics.totalCacheWrites}
 						cacheReads={apiMetrics.totalCacheReads}
 						totalCost={apiMetrics.totalCost}

@@ -41,7 +41,6 @@ describe("ModelPicker", () => {
 		defaultModelId: "model1",
 		defaultModelInfo: modelInfo,
 		modelIdKey: "glamaModelId" as const,
-		modelInfoKey: "glamaModelInfo" as const,
 		serviceName: "Test Service",
 		serviceUrl: "https://test.service",
 		recommendedModel: "recommended-model",
@@ -84,7 +83,6 @@ describe("ModelPicker", () => {
 
 		// Verify the API config was updated.
 		expect(mockSetApiConfigurationField).toHaveBeenCalledWith(defaultProps.modelIdKey, "model2")
-		expect(mockSetApiConfigurationField).toHaveBeenCalledWith(defaultProps.modelInfoKey, mockModels.model2)
 	})
 
 	it("allows setting a custom model ID that's not in the predefined list", async () => {
@@ -126,9 +124,6 @@ describe("ModelPicker", () => {
 		// Verify the API config was updated with the custom model ID
 		expect(mockSetApiConfigurationField).toHaveBeenCalledWith(defaultProps.modelIdKey, customModelId)
 		// The model info should be set to the default since this is a custom model
-		expect(mockSetApiConfigurationField).toHaveBeenCalledWith(
-			defaultProps.modelInfoKey,
-			defaultProps.defaultModelInfo,
-		)
+		expect(mockSetApiConfigurationField).toHaveBeenCalledWith(defaultProps.defaultModelInfo)
 	})
 })

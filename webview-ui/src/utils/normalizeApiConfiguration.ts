@@ -9,133 +9,152 @@ import {
 	deepSeekModels,
 	geminiDefaultModelId,
 	geminiModels,
-	glamaDefaultModelId,
-	glamaDefaultModelInfo,
 	mistralDefaultModelId,
 	mistralModels,
 	openAiModelInfoSaneDefaults,
 	openAiNativeDefaultModelId,
 	openAiNativeModels,
-	openRouterDefaultModelId,
-	openRouterDefaultModelInfo,
 	vertexDefaultModelId,
 	vertexModels,
-	unboundDefaultModelId,
-	unboundDefaultModelInfo,
-	requestyDefaultModelId,
-	requestyDefaultModelInfo,
 	xaiDefaultModelId,
 	xaiModels,
 	vscodeLlmModels,
 	vscodeLlmDefaultModelId,
+	openRouterDefaultModelId,
+	requestyDefaultModelId,
+	glamaDefaultModelId,
+	unboundDefaultModelId,
 } from "@roo/shared/api"
 
-export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
-	const provider = apiConfiguration?.apiProvider || "anthropic"
-	const modelId = apiConfiguration?.apiModelId
+import { vscode } from "@src/utils/vscode"
+import { ExtensionMessage } from "@roo/shared/ExtensionMessage"
+import { useQuery } from "@tanstack/react-query"
 
-	const getProviderData = (models: Record<string, ModelInfo>, defaultId: string) => {
-		let selectedModelId: string
-		let selectedModelInfo: ModelInfo
+type RouterModels = Record<"openrouter" | "requesty" | "glama" | "unbound", Record<string, ModelInfo>>
 
-		if (modelId && modelId in models) {
-			selectedModelId = modelId
-			selectedModelInfo = models[modelId]
-		} else {
-			selectedModelId = defaultId
-			selectedModelInfo = models[defaultId]
+export const getRouterModels = async () =>
+	new Promise<RouterModels>((resolve, reject) => {
+		const cleanup = () => {
+			window.removeEventListener("message", handler)
 		}
 
-		return { selectedProvider: provider, selectedModelId, selectedModelInfo }
-	}
+		const timeout = setTimeout(() => {
+			cleanup()
+			reject(new Error("Router models request timed out"))
+		}, 10000)
 
-	switch (provider) {
-		case "anthropic":
-			return getProviderData(anthropicModels, anthropicDefaultModelId)
-		case "xai":
-			return getProviderData(xaiModels, xaiDefaultModelId)
-		case "bedrock":
-			// Special case for custom ARN
-			if (modelId === "custom-arn") {
-				return {
-					selectedProvider: provider,
-					selectedModelId: "custom-arn",
-					selectedModelInfo: {
-						maxTokens: 5000,
-						contextWindow: 128_000,
-						supportsPromptCache: false,
-						supportsImages: true,
-					},
+		const handler = (event: MessageEvent) => {
+			const message: ExtensionMessage = event.data
+
+			if (message.type === "routerModels") {
+				clearTimeout(timeout)
+				cleanup()
+
+				if (message.routerModels) {
+					console.log("message.routerModels", message.routerModels)
+					resolve(message.routerModels)
+				} else {
+					reject(new Error("No router models in response"))
 				}
 			}
-			return getProviderData(bedrockModels, bedrockDefaultModelId)
-		case "vertex":
-			return getProviderData(vertexModels, vertexDefaultModelId)
-		case "gemini":
-			return getProviderData(geminiModels, geminiDefaultModelId)
-		case "deepseek":
-			return getProviderData(deepSeekModels, deepSeekDefaultModelId)
-		case "openai-native":
-			return getProviderData(openAiNativeModels, openAiNativeDefaultModelId)
-		case "mistral":
-			return getProviderData(mistralModels, mistralDefaultModelId)
+		}
+
+		window.addEventListener("message", handler)
+		vscode.postMessage({ type: "requestRouterModels" })
+	})
+
+export const useRouterModels = () => useQuery({ queryKey: ["routerModels"], queryFn: getRouterModels })
+
+export const useSelectedModel = (apiConfiguration?: ApiConfiguration) => {
+	const { data: routerModels, isLoading, isError } = useRouterModels()
+	const provider = apiConfiguration?.apiProvider || "anthropic"
+	const id = apiConfiguration ? getSelectedModelId({ provider, apiConfiguration }) : anthropicDefaultModelId
+	const info = routerModels ? getSelectedModelInfo({ provider, id, apiConfiguration, routerModels }) : undefined
+	return { provider, id, info, isLoading, isError }
+}
+
+function getSelectedModelId({ provider, apiConfiguration }: { provider: string; apiConfiguration: ApiConfiguration }) {
+	switch (provider) {
 		case "openrouter":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.openRouterModelId || openRouterDefaultModelId,
-				selectedModelInfo: apiConfiguration?.openRouterModelInfo || openRouterDefaultModelInfo,
-			}
-		case "glama":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.glamaModelId || glamaDefaultModelId,
-				selectedModelInfo: apiConfiguration?.glamaModelInfo || glamaDefaultModelInfo,
-			}
-		case "unbound":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.unboundModelId || unboundDefaultModelId,
-				selectedModelInfo: apiConfiguration?.unboundModelInfo || unboundDefaultModelInfo,
-			}
+			return apiConfiguration.openRouterModelId ?? openRouterDefaultModelId
 		case "requesty":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.requestyModelId || requestyDefaultModelId,
-				selectedModelInfo: apiConfiguration?.requestyModelInfo || requestyDefaultModelInfo,
-			}
+			return apiConfiguration.requestyModelId ?? requestyDefaultModelId
+		case "glama":
+			return apiConfiguration.glamaModelId ?? glamaDefaultModelId
+		case "unbound":
+			return apiConfiguration.unboundModelId ?? unboundDefaultModelId
 		case "openai":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.openAiModelId || "",
-				selectedModelInfo: apiConfiguration?.openAiCustomModelInfo || openAiModelInfoSaneDefaults,
-			}
+			return apiConfiguration.openAiModelId || ""
 		case "ollama":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.ollamaModelId || "",
-				selectedModelInfo: openAiModelInfoSaneDefaults,
-			}
+			return apiConfiguration.ollamaModelId || ""
 		case "lmstudio":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.lmStudioModelId || "",
-				selectedModelInfo: openAiModelInfoSaneDefaults,
+			return apiConfiguration.lmStudioModelId || ""
+		case "vscode-lm":
+			return apiConfiguration?.vsCodeLmModelSelector
+				? `${apiConfiguration.vsCodeLmModelSelector.vendor}/${apiConfiguration.vsCodeLmModelSelector.family}`
+				: ""
+		default:
+			return apiConfiguration.apiModelId ?? anthropicDefaultModelId
+	}
+}
+
+function getSelectedModelInfo({
+	provider,
+	id,
+	apiConfiguration,
+	routerModels,
+}: {
+	provider: string
+	id: string
+	apiConfiguration?: ApiConfiguration
+	routerModels: RouterModels
+}): ModelInfo {
+	switch (provider) {
+		case "openrouter":
+			return routerModels.openrouter[id] ?? routerModels.openrouter[openRouterDefaultModelId]
+		case "requesty":
+			return routerModels.requesty[id] ?? routerModels.requesty[requestyDefaultModelId]
+		case "glama":
+			return routerModels.glama[id] ?? routerModels.glama[glamaDefaultModelId]
+		case "unbound":
+			return routerModels.unbound[id] ?? routerModels.unbound[unboundDefaultModelId]
+		case "xai":
+			return xaiModels[id as keyof typeof xaiModels] ?? xaiModels[xaiDefaultModelId]
+		case "bedrock":
+			// Special case for custom ARN.
+			if (id === "custom-arn") {
+				return { maxTokens: 5000, contextWindow: 128_000, supportsPromptCache: false, supportsImages: true }
 			}
+
+			return bedrockModels[id as keyof typeof bedrockModels] ?? bedrockModels[bedrockDefaultModelId]
+		case "vertex":
+			return vertexModels[id as keyof typeof vertexModels] ?? vertexModels[vertexDefaultModelId]
+		case "gemini":
+			return geminiModels[id as keyof typeof geminiModels] ?? geminiModels[geminiDefaultModelId]
+		case "deepseek":
+			return deepSeekModels[id as keyof typeof deepSeekModels] ?? deepSeekModels[deepSeekDefaultModelId]
+		case "openai-native":
+			return (
+				openAiNativeModels[id as keyof typeof openAiNativeModels] ??
+				openAiNativeModels[openAiNativeDefaultModelId]
+			)
+		case "mistral":
+			return mistralModels[id as keyof typeof mistralModels] ?? mistralModels[mistralDefaultModelId]
+		case "openai":
+			return apiConfiguration?.openAiCustomModelInfo || openAiModelInfoSaneDefaults
+		case "ollama":
+			return openAiModelInfoSaneDefaults
+		case "lmstudio":
+			return openAiModelInfoSaneDefaults
 		case "vscode-lm":
 			const modelFamily = apiConfiguration?.vsCodeLmModelSelector?.family ?? vscodeLlmDefaultModelId
-			const modelInfo = {
+
+			return {
 				...openAiModelInfoSaneDefaults,
 				...vscodeLlmModels[modelFamily as keyof typeof vscodeLlmModels],
 				supportsImages: false, // VSCode LM API currently doesn't support images.
 			}
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.vsCodeLmModelSelector
-					? `${apiConfiguration.vsCodeLmModelSelector.vendor}/${apiConfiguration.vsCodeLmModelSelector.family}`
-					: "",
-				selectedModelInfo: modelInfo,
-			}
 		default:
-			return getProviderData(anthropicModels, anthropicDefaultModelId)
+			return anthropicModels[id as keyof typeof anthropicModels] ?? anthropicDefaultModelId
 	}
 }
