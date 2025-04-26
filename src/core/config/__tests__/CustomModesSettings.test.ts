@@ -160,12 +160,49 @@ describe("CustomModesSettings", () => {
 					{
 						...validMode,
 						customInstructions: "Optional instructions",
+						enabledForSwitching: false,
 					},
 				],
 			}
 
 			// TypeScript compilation will fail if the type is incorrect
 			expect(settings.customModes[0].customInstructions).toBeDefined()
+			expect(settings.customModes[0].enabledForSwitching).toBeDefined()
+		})
+
+		test("enabledForSwitching can be set to false", () => {
+			const settings = {
+				customModes: [
+					{
+						...validMode,
+						enabledForSwitching: false,
+					},
+				],
+			}
+
+			expect(() => {
+				customModesSettingsSchema.parse(settings)
+			}).not.toThrow()
+			expect(settings.customModes[0].enabledForSwitching).toBe(false)
+		})
+
+		test("enabledForSwitching can be undefined (default to enabled)", () => {
+			const settings = {
+				customModes: [
+					{
+						...validMode,
+						// enabledForSwitching is not specified
+					},
+				],
+			}
+
+			expect(() => {
+				customModesSettingsSchema.parse(settings)
+			}).not.toThrow()
+			// Since validMode doesn't have enabledForSwitching, it should be undefined
+			// which means it's enabled by default
+			const parsedSettings = customModesSettingsSchema.parse(settings)
+			expect(parsedSettings.customModes[0].enabledForSwitching).toBeUndefined()
 		})
 	})
 })

@@ -32,6 +32,10 @@
 		"resetToDefault": "Restablecer a valores predeterminados",
 		"description": "Define la experiencia y personalidad de Roo para este modo. Esta descripción determina cómo Roo se presenta y aborda las tareas."
 	},
+	"enabledForSwitching": {
+		"label": "Habilitar este modo para cambio por IA",
+		"description": "Cuando está deshabilitado, este modo no se incluirá en el mensaje del sistema de la IA y la IA no podrá cambiar a este modo. Aún puedes seleccionar este modo manualmente."
+	},
 	"customInstructions": {
 		"title": "Instrucciones personalizadas para el modo (opcional)",
 		"resetToDefault": "Restablecer a valores predeterminados",

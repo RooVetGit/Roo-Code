@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "vscrui"
 import {
 	VSCodeTextArea,
 	VSCodeDropdown,
 	VSCodeOption,
 	VSCodeTextField,
-	VSCodeCheckbox,
 	VSCodeRadioGroup,
 	VSCodeRadio,
 } from "@vscode/webview-ui-toolkit/react"
@@ -19,6 +19,7 @@ import {
 	getAllModes,
 	ModeConfig,
 	GroupEntry,
+	getEnabledForSwitching,
 } from "@roo/shared/modes"
 import { modeConfigSchema } from "@roo/schemas"
 import { supportPrompt, SupportPromptType } from "@roo/shared/support-prompt"
@@ -158,6 +159,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 	const [newModeCustomInstructions, setNewModeCustomInstructions] = useState("")
 	const [newModeGroups, setNewModeGroups] = useState<GroupEntry[]>(availableGroups)
 	const [newModeSource, setNewModeSource] = useState<ModeSource>("global")
+	const [newModeEnabledForSwitching, setNewModeEnabledForSwitching] = useState<boolean>(true)
 
 	// Field-specific error states
 	const [nameError, setNameError] = useState<string>("")
@@ -174,6 +176,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 		setNewModeRoleDefinition("")
 		setNewModeCustomInstructions("")
 		setNewModeSource("global")
+		setNewModeEnabledForSwitching(true)
 		// Reset error states
 		setNameError("")
 		setSlugError("")
@@ -221,6 +224,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 			customInstructions: newModeCustomInstructions.trim() || undefined,
 			groups: newModeGroups,
 			source,
+			enabledForSwitching: newModeEnabledForSwitching ? undefined : false,
 		}
 
 		// Validate the mode against the schema
@@ -262,6 +266,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 		newModeCustomInstructions,
 		newModeGroups,
 		newModeSource,
+		newModeEnabledForSwitching,
 		updateCustomMode,
 	])
 
@@ -288,35 +293,9 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 		setIsCreateModeDialogOpen(true)
 	}, [generateSlug, isNameOrSlugTaken])
 
-	// Handler for group checkbox changes
-	const handleGroupChange = useCallback(
-		(group: ToolGroup, isCustomMode: boolean, customMode: ModeConfig | undefined) =>
-			(e: Event | React.FormEvent<HTMLElement>) => {
-				if (!isCustomMode) return // Prevent changes to built-in modes
-				const target = (e as CustomEvent)?.detail?.target || (e.target as HTMLInputElement)
-				const checked = target.checked
-				const oldGroups = customMode?.groups || []
-				let newGroups: GroupEntry[]
-				if (checked) {
-					newGroups = [...oldGroups, group]
-				} else {
-					newGroups = oldGroups.filter((g) => getGroupName(g) !== group)
-				}
-				if (customMode) {
-					const source = customMode.source || "global"
-					updateCustomMode(customMode.slug, {
-						...customMode,
-						groups: newGroups,
-						source,
-					})
-				}
-			},
-		[updateCustomMode],
-	)
-
 	// Handle clicks outside the config menu
 	useEffect(() => {
-		const handleClickOutside = (event: MouseEvent) => {
+		const handleClickOutside = (_: MouseEvent) => {
 			if (showConfigMenu) {
 				setShowConfigMenu(false)
 			}
@@ -532,6 +511,42 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 						</div>
 					)}
 					<div style={{ marginBottom: "16px" }}>
+						<div className="mt-3 mb-4">
+							<Checkbox
+								checked={(() => {
+									const customMode = findModeBySlug(mode, customModes)
+									const prompt = customModePrompts?.[mode] as PromptComponent
+									return (
+										customMode?.enabledForSwitching ??
+										prompt?.enabledForSwitching ??
+										getEnabledForSwitching(mode, customModes)
+									)
+								})()}
+								onChange={(checked) => {
+									const customMode = findModeBySlug(mode, customModes)
+									if (customMode) {
+										// For custom modes, update the JSON file
+										updateCustomMode(mode, {
+											...customMode,
+											enabledForSwitching: checked ? true : false,
+											source: customMode.source || "global",
+										})
+									} else {
+										// For built-in modes, update the prompts
+										const existingPrompt = customModePrompts?.[mode] as PromptComponent
+										updateAgentPrompt(mode, {
+											...existingPrompt,
+											enabledForSwitching: checked ? true : false,
+										})
+									}
+								}}
+								data-testid={`${getCurrentMode()?.slug || "code"}-enabled-for-switching-checkbox`}>
+								{t("prompts:enabledForSwitching.label")}
+							</Checkbox>
+							<div className="text-xs text-vscode-descriptionForeground ml-6 mt-1">
+								{t("prompts:enabledForSwitching.description")}
+							</div>
+						</div>
 						<div className="flex justify-between items-center mb-1">
 							<div className="font-bold">{t("prompts:roleDefinition.title")}</div>
 							{!findModeBySlug(mode, customModes) && (
@@ -648,10 +663,27 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 											: currentMode?.groups?.some((g) => getGroupName(g) === group)
 
 										return (
-											<VSCodeCheckbox
+											<Checkbox
 												key={group}
 												checked={isGroupEnabled}
-												onChange={handleGroupChange(group, Boolean(isCustomMode), customMode)}
+												onChange={(checked) => {
+													if (!isCustomMode) return // Prevent changes to built-in modes
+													const oldGroups = customMode?.groups || []
+													let newGroups: GroupEntry[]
+													if (checked) {
+														newGroups = [...oldGroups, group]
+													} else {
+														newGroups = oldGroups.filter((g) => getGroupName(g) !== group)
+													}
+													if (customMode) {
+														const source = customMode.source || "global"
+														updateCustomMode(customMode.slug, {
+															...customMode,
+															groups: newGroups,
+															source,
+														})
+													}
+												}}
 												disabled={!isCustomMode}>
 												{t(`prompts:tools.toolNames.${group}`)}
 												{group === "edit" && (
@@ -673,7 +705,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 														})()}
 													</div>
 												)}
-											</VSCodeCheckbox>
+											</Checkbox>
 										)
 									})}
 								</div>
@@ -1260,6 +1292,19 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 										{roleDefinitionError}
 									</div>
 								)}
+								<div className="mt-3">
+									<Checkbox
+										checked={newModeEnabledForSwitching}
+										onChange={(checked) => {
+											setNewModeEnabledForSwitching(checked)
+										}}
+										data-testid="new-mode-enabled-for-switching-checkbox">
+										{t("prompts:enabledForSwitching.label")}
+									</Checkbox>
+									<div className="text-xs text-vscode-descriptionForeground ml-6 mt-1">
+										{t("prompts:enabledForSwitching.description")}
+									</div>
+								</div>
 							</div>
 							<div style={{ marginBottom: "16px" }}>
 								<div style={{ fontWeight: "bold", marginBottom: "4px" }}>
@@ -1280,13 +1325,10 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 										gap: "8px",
 									}}>
 									{availableGroups.map((group) => (
-										<VSCodeCheckbox
+										<Checkbox
 											key={group}
 											checked={newModeGroups.some((g) => getGroupName(g) === group)}
-											onChange={(e: Event | React.FormEvent<HTMLElement>) => {
-												const target =
-													(e as CustomEvent)?.detail?.target || (e.target as HTMLInputElement)
-												const checked = target.checked
+											onChange={(checked) => {
 												if (checked) {
 													setNewModeGroups([...newModeGroups, group])
 												} else {
@@ -1296,7 +1338,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 												}
 											}}>
 											{t(`prompts:tools.toolNames.${group}`)}
-										</VSCodeCheckbox>
+										</Checkbox>
 									))}
 								</div>
 								{groupsError && (

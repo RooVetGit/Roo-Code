@@ -32,6 +32,10 @@
 		"resetToDefault": "Restaurar para padrão",
 		"description": "Defina a expertise e personalidade do Roo para este modo. Esta descrição molda como o Roo se apresenta e aborda tarefas."
 	},
+	"enabledForSwitching": {
+		"label": "Habilitar este modo para troca pela IA",
+		"description": "Quando desabilitado, este modo não será incluído no prompt do sistema da IA e não poderá ser alternado pela IA. Você ainda pode selecionar este modo manualmente."
+	},
 	"customInstructions": {
 		"title": "Instruções personalizadas específicas do modo (opcional)",
 		"resetToDefault": "Restaurar para padrão",

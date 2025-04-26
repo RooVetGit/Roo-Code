@@ -32,6 +32,10 @@
 		"resetToDefault": "Restablir a valors predeterminats",
 		"description": "Definiu l'experiència i personalitat de Roo per a aquest mode. Aquesta descripció determina com Roo es presenta i aborda les tasques."
 	},
+	"enabledForSwitching": {
+		"label": "Habilitar aquest mode per a canvi per IA",
+		"description": "Quan està desactivat, aquest mode no s'inclourà al prompt del sistema de la IA i la IA no podrà canviar a aquest mode. Encara podeu seleccionar aquest mode manualment."
+	},
 	"customInstructions": {
 		"title": "Instruccions personalitzades específiques del mode (opcional)",
 		"resetToDefault": "Restablir a valors predeterminats",

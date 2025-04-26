@@ -255,6 +255,7 @@ export async function getAllModesWithPrompts(context: vscode.ExtensionContext): 
 		...mode,
 		roleDefinition: customModePrompts[mode.slug]?.roleDefinition ?? mode.roleDefinition,
 		customInstructions: customModePrompts[mode.slug]?.customInstructions ?? mode.customInstructions,
+		enabledForSwitching: customModePrompts[mode.slug]?.enabledForSwitching,
 	}))
 }
 
@@ -295,6 +296,7 @@ export async function getFullModeDetails(
 		...baseMode,
 		roleDefinition: promptComponent?.roleDefinition || baseMode.roleDefinition,
 		customInstructions: fullCustomInstructions,
+		enabledForSwitching: promptComponent?.enabledForSwitching,
 	}
 }
 
@@ -316,4 +318,22 @@ export function getCustomInstructions(modeSlug: string, customModes?: ModeConfig
 		return ""
 	}
 	return mode.customInstructions ?? ""
+}
+
+export function getEnabledForSwitching(modeSlug: string, customModes?: ModeConfig[]): boolean {
+	const mode = getModeBySlug(modeSlug, customModes)
+	if (!mode) {
+		console.warn(`No mode found for slug: ${modeSlug}`)
+		return true
+	}
+	return mode.enabledForSwitching ?? true
+}
+
+// Check if any modes are enabled for switching
+export async function hasAnySwitchableModes(context: vscode.ExtensionContext): Promise<boolean> {
+	// Get all modes (built-in and custom)
+	const allModes = await getAllModesWithPrompts(context)
+
+	// Check if any mode is enabled for switching
+	return allModes.some((mode) => mode.enabledForSwitching !== false)
 }

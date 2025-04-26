@@ -39,7 +39,7 @@ export async function switchModeTool(
 			// Verify the mode exists
 			const targetMode = getModeBySlug(mode_slug, (await cline.providerRef.deref()?.getState())?.customModes)
 
-			if (!targetMode) {
+			if (!targetMode || targetMode.enabledForSwitching === false) {
 				cline.recordToolError("switch_mode")
 				pushToolResult(formatResponse.toolError(`Invalid mode: ${mode_slug}`))
 				return

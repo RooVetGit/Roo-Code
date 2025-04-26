@@ -32,6 +32,10 @@
 		"resetToDefault": "Ripristina predefiniti",
 		"description": "Definisci l'esperienza e la personalità di Roo per questa modalità. Questa descrizione modella come Roo si presenta e affronta i compiti."
 	},
+	"enabledForSwitching": {
+		"label": "Abilita questa modalità per il cambio da parte dell'IA",
+		"description": "Quando disabilitata, questa modalità non sarà inclusa nel prompt di sistema dell'IA e non potrà essere selezionata dall'IA. Potrai comunque selezionarla manualmente."
+	},
 	"customInstructions": {
 		"title": "Istruzioni personalizzate specifiche per la modalità (opzionale)",
 		"resetToDefault": "Ripristina predefiniti",

@@ -32,6 +32,10 @@
 		"resetToDefault": "Varsayılana sıfırla",
 		"description": "Bu mod için Roo'nun uzmanlığını ve kişiliğini tanımlayın. Bu açıklama, Roo'nun kendini nasıl sunduğunu ve görevlere nasıl yaklaştığını şekillendirir."
 	},
+	"enabledForSwitching": {
+		"label": "Bu modu yapay zeka geçişi için etkinleştir",
+		"description": "Devre dışı bırakıldığında, bu mod yapay zekanın sistem isteminde yer almaz ve yapay zeka tarafından bu moda geçiş yapılamaz. Bu modu manuel olarak seçmeye devam edebilirsiniz."
+	},
 	"customInstructions": {
 		"title": "Moda özgü özel talimatlar (isteğe bağlı)",
 		"resetToDefault": "Varsayılana sıfırla",

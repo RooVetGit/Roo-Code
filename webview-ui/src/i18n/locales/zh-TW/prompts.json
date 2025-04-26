@@ -32,6 +32,10 @@
 		"resetToDefault": "重設為預設值",
 		"description": "定義此模式下 Roo 的專業知識和個性。此描述會形塑 Roo 如何展現自己並處理工作。"
 	},
+	"enabledForSwitching": {
+		"label": "允許 AI 切換至此模式",
+		"description": "停用時，此模式不會包含在 AI 的系統提示詞中，且 AI 無法切換至此模式。您仍可手動選擇此模式。"
+	},
 	"customInstructions": {
 		"title": "模式專屬自訂指令（選用）",
 		"resetToDefault": "重設為預設值",

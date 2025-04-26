@@ -195,4 +195,86 @@ describe("PromptsView", () => {
 			text: undefined,
 		})
 	})
+
+	it("handles enabledForSwitching checkbox correctly for built-in modes", async () => {
+		renderPromptsView()
+
+		// Find the enabledForSwitching checkbox
+		const checkbox = screen.getByTestId("code-enabled-for-switching-checkbox")
+		expect(checkbox).toBeInTheDocument()
+
+		// Checkbox should be checked by default
+		expect(checkbox).toBeChecked()
+
+		// Uncheck the checkbox
+		await fireEvent.click(checkbox)
+
+		// Verify it updates the prompt correctly
+		expect(vscode.postMessage).toHaveBeenCalledWith({
+			type: "updatePrompt",
+			promptMode: "code",
+			customPrompt: { enabledForSwitching: false },
+		})
+
+		// Check the checkbox again
+		await fireEvent.click(checkbox)
+
+		// Verify it updates the prompt correctly
+		expect(vscode.postMessage).toHaveBeenCalledWith({
+			type: "updatePrompt",
+			promptMode: "code",
+			customPrompt: { enabledForSwitching: undefined },
+		})
+	})
+
+	it("handles enabledForSwitching checkbox correctly for custom modes", async () => {
+		const customMode = {
+			slug: "custom-mode",
+			name: "Custom Mode",
+			roleDefinition: "Custom role",
+			groups: [],
+			source: "global",
+		}
+
+		renderPromptsView({
+			...mockExtensionState,
+			mode: "custom-mode",
+			customModes: [customMode],
+		})
+
+		// Find the enabledForSwitching checkbox
+		const checkbox = screen.getByTestId("custom-mode-enabled-for-switching-checkbox")
+		expect(checkbox).toBeInTheDocument()
+
+		// Checkbox should be checked by default
+		expect(checkbox).toBeChecked()
+
+		// Uncheck the checkbox
+		await fireEvent.click(checkbox)
+
+		// Verify it updates the custom mode correctly
+		expect(vscode.postMessage).toHaveBeenCalledWith({
+			type: "updateCustomMode",
+			slug: "custom-mode",
+			modeConfig: {
+				...customMode,
+				enabledForSwitching: false,
+				source: "global",
+			},
+		})
+
+		// Check the checkbox again
+		await fireEvent.click(checkbox)
+
+		// Verify it updates the custom mode correctly
+		expect(vscode.postMessage).toHaveBeenCalledWith({
+			type: "updateCustomMode",
+			slug: "custom-mode",
+			modeConfig: {
+				...customMode,
+				enabledForSwitching: undefined,
+				source: "global",
+			},
+		})
+	})
 })

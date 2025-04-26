@@ -32,6 +32,10 @@
 		"resetToDefault": "重置为默认值",
 		"description": "设定专业领域和应答风格"
 	},
+	"enabledForSwitching": {
+		"label": "允许AI切换至此模式",
+		"description": "禁用时，此模式不会包含在AI的系统提示词中，且AI无法切换至此模式。您仍可手动选择此模式。"
+	},
 	"customInstructions": {
 		"title": "模式专属规则（可选）",
 		"resetToDefault": "重置为默认值",

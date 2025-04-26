@@ -32,6 +32,10 @@
 		"resetToDefault": "Réinitialiser aux valeurs par défaut",
 		"description": "Définissez l'expertise et la personnalité de Roo pour ce mode. Cette description façonne la manière dont Roo se présente et aborde les tâches."
 	},
+	"enabledForSwitching": {
+		"label": "Activer ce mode pour le changement par l'IA",
+		"description": "Lorsqu'il est désactivé, ce mode ne sera pas inclus dans l'invite système de l'IA et ne pourra pas être sélectionné par l'IA. Vous pouvez toujours sélectionner ce mode manuellement."
+	},
 	"customInstructions": {
 		"title": "Instructions personnalisées spécifiques au mode (optionnel)",
 		"resetToDefault": "Réinitialiser aux valeurs par défaut",

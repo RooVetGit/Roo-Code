@@ -32,6 +32,10 @@
 		"resetToDefault": "Reset to default",
 		"description": "Define Roo's expertise and personality for this mode. This description shapes how Roo presents itself and approaches tasks."
 	},
+	"enabledForSwitching": {
+		"label": "Enable this mode for AI switching",
+		"description": "When disabled, this mode won't be included in the AI's system prompt and can't be switched to by the AI. You can still manually select this mode."
+	},
 	"customInstructions": {
 		"title": "Mode-specific Custom Instructions (optional)",
 		"resetToDefault": "Reset to default",

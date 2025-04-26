@@ -32,6 +32,10 @@
 		"resetToDefault": "Przywróć domyślne",
 		"description": "Zdefiniuj wiedzę specjalistyczną i osobowość Roo dla tego trybu. Ten opis kształtuje, jak Roo prezentuje się i podchodzi do zadań."
 	},
+	"enabledForSwitching": {
+		"label": "Włącz ten tryb dla przełączania przez AI",
+		"description": "Gdy wyłączone, ten tryb nie będzie uwzględniony w podpowiedzi systemowej AI i AI nie będzie mogła przełączyć się na ten tryb. Nadal możesz ręcznie wybrać ten tryb."
+	},
 	"customInstructions": {
 		"title": "Niestandardowe instrukcje dla trybu (opcjonalne)",
 		"resetToDefault": "Przywróć domyślne",

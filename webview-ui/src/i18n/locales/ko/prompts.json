@@ -32,6 +32,10 @@
 		"resetToDefault": "기본값으로 재설정",
 		"description": "이 모드에 대한 Roo의 전문성과 성격을 정의하세요. 이 설명은 Roo가 자신을 어떻게 표현하고 작업에 접근하는지 형성합니다."
 	},
+	"enabledForSwitching": {
+		"label": "AI가 이 모드로 전환할 수 있도록 활성화",
+		"description": "비활성화되면 이 모드는 AI의 시스템 프롬프트에 포함되지 않으며 AI가 이 모드로 전환할 수 없습니다. 사용자는 여전히 수동으로 이 모드를 선택할 수 있습니다."
+	},
 	"customInstructions": {
 		"title": "모드별 사용자 지정 지침 (선택 사항)",
 		"resetToDefault": "기본값으로 재설정",

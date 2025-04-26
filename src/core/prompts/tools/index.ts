@@ -20,6 +20,19 @@ import { getUseMcpToolDescription } from "./use-mcp-tool"
 import { getAccessMcpResourceDescription } from "./access-mcp-resource"
 import { getSwitchModeDescription } from "./switch-mode"
 import { getNewTaskDescription } from "./new-task"
+import { DiffStrategy } from "../../diff/DiffStrategy"
+import { McpHub } from "../../../services/mcp/McpHub"
+import {
+	Mode,
+	ModeConfig,
+	getModeConfig,
+	isToolAllowedForMode,
+	getGroupName,
+	hasAnySwitchableModes,
+} from "../../../shared/modes"
+import { ToolName, TOOL_GROUPS, ALWAYS_AVAILABLE_TOOLS } from "../../../shared/tool-groups"
+import { ToolArgs } from "./types"
+import { ExtensionContext } from "vscode"
 
 // Map of tool names to their description functions
 const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined> = {
@@ -43,16 +56,17 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 		args.diffStrategy ? args.diffStrategy.getToolDescription({ cwd: args.cwd, toolOptions: args.toolOptions }) : "",
 }
 
-export function getToolDescriptionsForMode(
+export async function getToolDescriptionsForMode(
 	mode: Mode,
 	cwd: string,
 	supportsComputerUse: boolean,
+	context: ExtensionContext,
 	diffStrategy?: DiffStrategy,
 	browserViewportSize?: string,
 	mcpHub?: McpHub,
 	customModes?: ModeConfig[],
 	experiments?: Record<string, boolean>,
-): string {
+): Promise<string> {
 	const config = getModeConfig(mode, customModes)
 	const args: ToolArgs = {
 		cwd,
@@ -86,8 +100,14 @@ export function getToolDescriptionsForMode(
 		}
 	})
 
-	// Add always available tools
-	ALWAYS_AVAILABLE_TOOLS.forEach((tool) => tools.add(tool))
+	// Add always available tools except switch_mode if no modes are switchable
+	ALWAYS_AVAILABLE_TOOLS.forEach(async (tool) => {
+		// Skip adding switch_mode tool if no modes are switchable
+		if (tool === "switch_mode" && !(await hasAnySwitchableModes(context))) {
+			return
+		}
+		tools.add(tool)
+	})
 
 	// Map tool descriptions for allowed tools
 	const descriptions = Array.from(tools).map((toolName) => {
