@@ -28,11 +28,8 @@ jobs:
         run: npm run compile
       - name: Check types
         run: npm run check-types
-      - name: Lint extension
-        run: npx eslint -c .eslintrc.json --debug --max-warnings=0 src/**/*.ts
-      - name: Lint webview
-        working-directory: webview-ui
-        run: npx eslint -c .eslintrc.json --debug --max-warnings=0 src/**/*.ts src/**/*.tsx
+      - name: Lint
+        run: npm run lint
 
   check-translations:
     runs-on: ubuntu-latest
