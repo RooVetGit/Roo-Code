@@ -136,7 +136,8 @@ export interface WebviewMessage {
 	apiConfiguration?: ApiConfiguration
 	images?: string[]
 	bool?: boolean
-	value?: number | boolean | any // Allow number for most messages, boolean for VSCode settings
+	value?: number
+	vscodeSettingValue?: unknown
 	commands?: string[]
 	audioType?: AudioType
 	serverName?: string

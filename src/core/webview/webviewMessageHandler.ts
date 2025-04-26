@@ -592,11 +592,21 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await updateGlobalState("fuzzyMatchThreshold", message.value)
 			await provider.postStateToWebview()
 			break
-		case "updateVSCodeSetting":
+		case "updateVSCodeSetting": {
+			// Allowlist of VSCode settings that can be updated
+			// Add new settings here when needed for future expansion
+			const ALLOWED_VSCODE_SETTINGS = ["terminal.integrated.inheritEnv"] as const
+
 			if (message.setting && message.value !== undefined) {
+				if (!ALLOWED_VSCODE_SETTINGS.includes(message.setting as (typeof ALLOWED_VSCODE_SETTINGS)[number])) {
+					provider.log(`Attempted to update restricted VSCode setting: ${message.setting}`)
+					vscode.window.showErrorMessage(`Cannot update restricted VSCode setting: ${message.setting}`)
+					break
+				}
 				await vscode.workspace.getConfiguration().update(message.setting, message.value, true)
 			}
 			break
+		}
 		case "getVSCodeSetting":
 			if (message.setting) {
 				try {
@@ -608,6 +618,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 						type: "vsCodeSetting",
 						setting: message.setting,
 						error: `Failed to get setting: ${error.message}`,
+						value: undefined,
 					})
 				}
 			}
