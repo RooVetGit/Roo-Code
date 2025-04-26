@@ -3,10 +3,16 @@
 import React from "react"
 import { render, screen } from "@testing-library/react"
 
+import { ExtensionStateContextProvider } from "@src/context/ExtensionStateContext"
+
 import { CommandExecution } from "../CommandExecution"
 
 jest.mock("@src/lib/utils", () => ({
 	cn: (...inputs: any[]) => inputs.filter(Boolean).join(" "),
+}))
+
+jest.mock("lucide-react", () => ({
+	ChevronDown: () => <div data-testid="chevron-down">ChevronDown</div>,
 }))
 
 jest.mock("react-virtuoso", () => ({
@@ -23,9 +29,17 @@ jest.mock("react-virtuoso", () => ({
 }))
 
 describe("CommandExecution", () => {
+	const renderComponent = (command: string, output: string) => {
+		return render(
+			<ExtensionStateContextProvider>
+				<CommandExecution command={command} output={output} />
+			</ExtensionStateContextProvider>,
+		)
+	}
+
 	it("renders command output with virtualized list", () => {
 		const testOutput = "Line 1\nLine 2\nLine 3"
-		render(<CommandExecution command="ls" output={testOutput} isExpanded={false} />)
+		renderComponent("ls", testOutput)
 		expect(screen.getByTestId("virtuoso-container")).toBeInTheDocument()
 		expect(screen.getByText("Line 1")).toBeInTheDocument()
 		expect(screen.getByText("Line 2")).toBeInTheDocument()
@@ -33,7 +47,7 @@ describe("CommandExecution", () => {
 	})
 
 	it("handles empty output", () => {
-		render(<CommandExecution command="ls" output="" isExpanded={false} />)
+		renderComponent("ls", "")
 		expect(screen.getByTestId("virtuoso-container")).toBeInTheDocument()
 		expect(screen.getByTestId("virtuoso-item-0")).toBeInTheDocument()
 		expect(screen.queryByTestId("virtuoso-item-1")).not.toBeInTheDocument()
@@ -41,7 +55,7 @@ describe("CommandExecution", () => {
 
 	it("handles large output", () => {
 		const largeOutput = Array.from({ length: 1000 }, (_, i) => `Line ${i + 1}`).join("\n")
-		render(<CommandExecution command="ls" output={largeOutput} isExpanded={false} />)
+		renderComponent("ls", largeOutput)
 		expect(screen.getByTestId("virtuoso-container")).toBeInTheDocument()
 		expect(screen.getByText("Line 1")).toBeInTheDocument()
 		expect(screen.getByText("Line 1000")).toBeInTheDocument()
