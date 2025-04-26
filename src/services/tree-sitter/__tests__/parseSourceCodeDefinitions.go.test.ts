@@ -1,3 +1,22 @@
+/*
+TODO: The following structures can be parsed by tree-sitter but lack query support:
+
+1. Anonymous Functions (func_literal):
+   (func_literal parameters: (parameter_list) body: (block ...))
+   - Currently visible in goroutine and defer statements
+   - Would enable capturing lambda/closure definitions
+
+2. Map Types (map_type):
+   (map_type key: (type_identifier) value: (interface_type))
+   - Currently visible in struct field declarations
+   - Would enable capturing map type definitions
+
+3. Pointer Types (pointer_type):
+   (pointer_type (type_identifier))
+   - Currently visible in method receiver declarations
+   - Would enable capturing pointer type definitions
+*/
+
 import { describe, it, expect, beforeAll } from "@jest/globals"
 import sampleGoContent from "./fixtures/sample-go"
 import { testParseSourceCodeDefinitions } from "./helpers"

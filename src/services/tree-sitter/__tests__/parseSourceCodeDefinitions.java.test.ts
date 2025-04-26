@@ -1,9 +1,4 @@
 import { describe, expect, it, jest, beforeAll, beforeEach } from "@jest/globals"
-import { parseSourceCodeDefinitionsForFile } from ".."
-import * as fs from "fs/promises"
-import * as path from "path"
-import { fileExistsAtPath } from "../../../utils/fs"
-import { loadRequiredLanguageParsers } from "../languageParser"
 import { javaQuery } from "../queries"
 import { testParseSourceCodeDefinitions } from "./helpers"
 import sampleJavaContent from "./fixtures/sample-java"
@@ -13,9 +8,15 @@ TODO: The following structures can be parsed by tree-sitter but lack query suppo
 
 1. Import Declarations:
    (import_declaration (scoped_identifier))
+   - Tree-sitter successfully parses import statements but no query pattern exists
+   - Example from inspect output: 'import java.util.List;'
+   - Would enable capturing package dependencies and API usage
 
 2. Field Declarations:
    (field_declaration (modifiers) type: (type_identifier) declarator: (variable_declarator))
+   - Current query pattern needs enhancement to fully capture modifier information
+   - Example from inspect output: 'private static final int count = 0;'
+   - Would improve field visibility and mutability analysis
 */
 
 // Java test options
@@ -25,20 +26,6 @@ const testOptions = {
 	queryString: javaQuery,
 	extKey: "java",
 }
-
-// Mock file system operations
-jest.mock("fs/promises")
-const mockedFs = jest.mocked(fs)
-
-// Mock loadRequiredLanguageParsers
-jest.mock("../languageParser", () => ({
-	loadRequiredLanguageParsers: jest.fn(),
-}))
-
-// Mock fileExistsAtPath to return true for our test paths
-jest.mock("../../../utils/fs", () => ({
-	fileExistsAtPath: jest.fn().mockImplementation(() => Promise.resolve(true)),
-}))
 
 describe("parseSourceCodeDefinitionsForFile with Java", () => {
 	let parseResult: string = ""

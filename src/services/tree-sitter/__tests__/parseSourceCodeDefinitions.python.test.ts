@@ -1,3 +1,27 @@
+/*
+TODO: The following structures can be parsed by tree-sitter but lack query support:
+
+1. String Interpolation (f-strings):
+   (string (string_start) (interpolation expression: (identifier)) (string_content) (string_end))
+   Example: f"{result}: {param3}"
+
+2. Complex Type Annotations with Generics:
+   (type (generic_type (identifier) (type_parameter (type (generic_type)))))
+   Example: dict[str, Union[List[int], Dict[str, bool], Optional[ComplexType]]]
+
+3. Multiple Context Managers in With Statements:
+   (with_clause (with_item) (with_item) (with_item))
+   Example: with (open('file1.txt') as f1, open('file2.txt') as f2)
+
+4. Pattern Matching with As-Patterns:
+   (case_pattern (as_pattern (case_pattern (class_pattern)) (identifier)))
+   Example: case {"name": str() as name, "age": int() as age}
+
+5. Nested Function Definitions with Scope Modifiers:
+   (function_definition (block (function_definition (block (nonlocal_statement) (global_statement)))))
+   Example: Nested functions with nonlocal/global declarations
+*/
+
 import { describe, expect, it, beforeAll } from "@jest/globals"
 import { testParseSourceCodeDefinitions, debugLog } from "./helpers"
 import { samplePythonContent } from "./fixtures/sample-python"

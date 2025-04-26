@@ -1,3 +1,36 @@
+/*
+TODO: The following structures can be parsed by tree-sitter but lack query support:
+
+1. React Hooks:
+   (call_expression
+     function: (member_expression
+       object: (identifier) @react
+       property: [(property_identifier) @hook_name]))
+   - Affects useState, useEffect, useRef, useCallback, useMemo
+   - Currently visible in parse tests but no query patterns exist
+
+2. Context Providers/Consumers:
+   (jsx_element
+     open_tag: (jsx_opening_element
+       name: (member_expression
+         object: (identifier) @context
+         property: [(property_identifier) @provider
+                   (property_identifier) @consumer])))
+   - Can be parsed as JSX elements but no specific capture patterns
+
+3. React Event Handlers:
+   (arrow_function
+     parameters: (formal_parameters
+       (required_parameter
+         pattern: (identifier)
+         type: (type_annotation
+           (generic_type
+             name: (nested_type_identifier
+               module: (identifier) @react
+               name: (type_identifier) @event_type)))))
+   - Parsed but no specific patterns for React synthetic events
+*/
+
 import { describe, expect, it, jest, beforeAll } from "@jest/globals"
 import { testParseSourceCodeDefinitions, mockedFs } from "./helpers"
 import sampleTsxContent from "./fixtures/sample-tsx"

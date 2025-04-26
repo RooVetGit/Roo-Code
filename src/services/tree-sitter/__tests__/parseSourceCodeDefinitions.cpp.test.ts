@@ -3,22 +3,27 @@ TODO: The following C++ structures can be parsed by tree-sitter but lack query s
 
 1. Virtual Methods:
    (field_declaration (virtual) type: (primitive_type) declarator: (function_declarator))
+   Example: virtual void method() = 0;
 
 2. Default Methods:
    (default_method_clause)
+   Example: virtual ~base_class_definition() = default;
 
 3. Field Initializer Lists:
    (field_initializer_list (field_initializer))
+   Example: constructor() : field1(value1), field2(value2) {}
 
 4. Base Class Clauses:
    (base_class_clause (access_specifier) (type_identifier))
+   Example: class derived : public base {}
 
 5. Type Aliases:
    (alias_declaration name: (type_identifier) type: (type_descriptor))
+   Example: using size_type = std::size_t;
 */
 
 import { describe, it, expect, beforeAll } from "@jest/globals"
-import { debugLog, testParseSourceCodeDefinitions } from "./helpers"
+import { testParseSourceCodeDefinitions } from "./helpers"
 import { cppQuery } from "../queries"
 import sampleCppContent from "./fixtures/sample-cpp"
 

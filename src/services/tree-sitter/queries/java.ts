@@ -52,4 +52,22 @@ export default `
   (class_body
     (class_declaration
       name: (identifier) @name.definition.static_nested_class))) @definition.static_nested_class
+
+; Lambda expressions
+(lambda_expression) @definition.lambda
+
+; Field declarations
+(field_declaration
+  (modifiers)?
+  type: (_)
+  declarator: (variable_declarator
+    name: (identifier) @name.definition.field)) @definition.field
+
+; Import declarations
+(import_declaration
+  (scoped_identifier) @name.definition.import) @definition.import
+
+; Type parameters
+(type_parameters
+  (type_parameter) @name.definition.type_parameter) @definition.type_parameter
 `
