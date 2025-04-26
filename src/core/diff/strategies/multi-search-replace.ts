@@ -369,7 +369,10 @@ Only use a single line of '=======' between search and replacement content, beca
 
 		for (const replacement of replacements) {
 			let { searchContent, replaceContent } = replacement
-			let startLine = replacement.startLine + (replacement.startLine === 0 ? 0 : delta)
+			// Store original start line for search window calculation
+			const originalStartLine = replacement.startLine
+			// Calculate the adjusted start line for reporting/context, applying delta *after* finding the match
+			let adjustedStartLine = originalStartLine + (originalStartLine === 0 ? 0 : delta)
 
 			// First unescape any escaped markers in the content
 			searchContent = this.unescapeMarkers(searchContent)
@@ -411,7 +414,8 @@ Only use a single line of '=======' between search and replacement content, beca
 				continue
 			}
 
-			let endLine = replacement.startLine + searchLines.length - 1
+			// Use original start line for end line calculation relative to the original file state
+			let originalEndLine = originalStartLine + searchLines.length - 1
 
 			// Initialize search variables
 			let matchIndex = -1
@@ -424,40 +428,59 @@ Only use a single line of '=======' between search and replacement content, beca
 			let searchEndIndex = resultLines.length
 
 			// Validate and handle line range if provided
-			if (startLine) {
-				// Convert to 0-based index
-				const exactStartIndex = startLine - 1
+			if (originalStartLine) {
+				// Convert original start line to 0-based index for the *current* resultLines
+				const exactStartIndex = originalStartLine - 1
 				const searchLen = searchLines.length
 				const exactEndIndex = exactStartIndex + searchLen - 1
 
-				// Try exact match first
-				const originalChunk = resultLines.slice(exactStartIndex, exactEndIndex + 1).join("\n")
-				const similarity = getSimilarity(originalChunk, searchChunk)
-				if (similarity >= this.fuzzyThreshold) {
-					matchIndex = exactStartIndex
-					bestMatchScore = similarity
-					bestMatchContent = originalChunk
-				} else {
-					// Set bounds for buffered search
-					searchStartIndex = Math.max(0, startLine - (this.bufferLines + 1))
-					searchEndIndex = Math.min(resultLines.length, startLine + searchLines.length + this.bufferLines)
+				// Check if the exact range is valid within the current resultLines
+				if (exactStartIndex >= 0 && exactEndIndex < resultLines.length) {
+					// Try exact match first using a slightly relaxed threshold (0.99)
+					const originalChunk = resultLines.slice(exactStartIndex, exactEndIndex + 1).join("\n")
+					const similarity = getSimilarity(originalChunk, searchChunk)
+					// Use 1.0 threshold if fuzzyThreshold is 1.0, otherwise use 0.99 for initial check
+					const initialCheckThreshold = this.fuzzyThreshold === 1.0 ? 1.0 : 0.99
+					if (similarity >= initialCheckThreshold) {
+						matchIndex = exactStartIndex
+						bestMatchScore = similarity
+						bestMatchContent = originalChunk
+					}
+				}
+
+				// If exact match failed or range was invalid, set bounds for buffered search
+				// Use the *original* start line to calculate the search window in the *current* resultLines
+				if (matchIndex === -1) {
+					searchStartIndex = Math.max(0, originalStartLine - (this.bufferLines + 1))
+					searchEndIndex = Math.min(
+						resultLines.length,
+						originalStartLine + searchLines.length + this.bufferLines,
+					)
 				}
 			}
 
-			// If no match found yet, try middle-out search within bounds
+			// Determine the effective fuzzy threshold for this block
+			// Use strict 1.0 if fuzzyThreshold is 1.0, otherwise use the specified threshold
+			const effectiveThreshold = this.fuzzyThreshold === 1.0 ? 1.0 : this.fuzzyThreshold
+
+			// If no exact match found yet, try middle-out fuzzy search within bounds
 			if (matchIndex === -1) {
 				const {
 					bestScore,
 					bestMatchIndex,
 					bestMatchContent: midContent,
 				} = fuzzySearch(resultLines, searchChunk, searchStartIndex, searchEndIndex)
-				matchIndex = bestMatchIndex
-				bestMatchScore = bestScore
-				bestMatchContent = midContent
+
+				// Check against the effective threshold
+				if (bestMatchIndex !== -1 && bestScore >= effectiveThreshold) {
+					matchIndex = bestMatchIndex
+					bestMatchScore = bestScore
+					bestMatchContent = midContent
+				}
 			}
 
 			// Try aggressive line number stripping as a fallback if regular matching fails
-			if (matchIndex === -1 || bestMatchScore < this.fuzzyThreshold) {
+			if (matchIndex === -1) {
 				// Strip both search and replace content once (simultaneously)
 				const aggressiveSearchContent = stripLineNumbers(searchContent, true)
 				const aggressiveReplaceContent = stripLineNumbers(replaceContent, true)
@@ -471,7 +494,9 @@ Only use a single line of '=======' between search and replacement content, beca
 					bestMatchIndex,
 					bestMatchContent: aggContent,
 				} = fuzzySearch(resultLines, aggressiveSearchChunk, searchStartIndex, searchEndIndex)
-				if (bestMatchIndex !== -1 && bestScore >= this.fuzzyThreshold) {
+
+				// Check against the effective threshold
+				if (bestMatchIndex !== -1 && bestScore >= effectiveThreshold) {
 					matchIndex = bestMatchIndex
 					bestMatchScore = bestScore
 					bestMatchContent = aggContent
@@ -483,77 +508,89 @@ Only use a single line of '=======' between search and replacement content, beca
 				} else {
 					// No match found with either method
 					const originalContentSection =
-						startLine !== undefined && endLine !== undefined
-							? `\n\nOriginal Content:\n${addLineNumbers(
+						originalStartLine !== undefined && originalEndLine !== undefined
+							? `\n\nOriginal Content (around line ${originalStartLine}):\n${addLineNumbers(
 									resultLines
 										.slice(
-											Math.max(0, startLine - 1 - this.bufferLines),
-											Math.min(resultLines.length, endLine + this.bufferLines),
+											// Show context based on original line numbers, clamped to current bounds
+											Math.max(0, originalStartLine - 1 - this.bufferLines),
+											Math.min(resultLines.length, originalEndLine + this.bufferLines),
 										)
 										.join("\n"),
-									Math.max(1, startLine - this.bufferLines),
+									// Start numbering from the calculated start line
+									Math.max(1, originalStartLine - this.bufferLines),
 								)}`
 							: `\n\nOriginal Content:\n${addLineNumbers(resultLines.join("\n"))}`
 
 					const bestMatchSection = bestMatchContent
-						? `\n\nBest Match Found:\n${addLineNumbers(bestMatchContent, matchIndex + 1)}`
-						: `\n\nBest Match Found:\n(no match)`
+						? `\n\nBest Fuzzy Match Found (Score: ${Math.floor(bestMatchScore * 100)}%):\n${addLineNumbers(bestMatchContent, matchIndex + 1)}`
+						: `\n\nBest Fuzzy Match Found:\n(no match below threshold)`
 
-					const lineRange = startLine ? ` at line: ${startLine}` : ""
+					const lineRange = originalStartLine ? ` near original line: ${originalStartLine}` : ""
+					const thresholdInfo = `(${Math.floor(bestMatchScore * 100)}% similar, needs ${Math.floor(effectiveThreshold * 100)}%)`
 
 					diffResults.push({
 						success: false,
-						error: `No sufficiently similar match found${lineRange} (${Math.floor(bestMatchScore * 100)}% similar, needs ${Math.floor(this.fuzzyThreshold * 100)}%)\n\nDebug Info:\n- Similarity Score: ${Math.floor(bestMatchScore * 100)}%\n- Required Threshold: ${Math.floor(this.fuzzyThreshold * 100)}%\n- Search Range: ${startLine ? `starting at line ${startLine}` : "start to end"}\n- Tried both standard and aggressive line number stripping\n- Tip: Use the read_file tool to get the latest content of the file before attempting to use the apply_diff tool again, as the file content may have changed\n\nSearch Content:\n${searchChunk}${bestMatchSection}${originalContentSection}`,
+						error: `No sufficiently similar match found${lineRange} ${thresholdInfo}\n\nDebug Info:\n- Similarity Score: ${Math.floor(bestMatchScore * 100)}%\n- Required Threshold: ${Math.floor(effectiveThreshold * 100)}%\n- Search Range: Lines ${searchStartIndex + 1} to ${searchEndIndex}\n- Tried standard and aggressive line number stripping\n- Tip: Use read_file to verify the current file content, as it might have changed.\n\nSearch Content:\n${searchChunk}${bestMatchSection}${originalContentSection}`,
 					})
-					continue
+					continue // Skip to the next replacement block
 				}
 			}
 
-			// Get the matched lines from the original content
+			// --- Start: Robust Indentation Logic ---
 			const matchedLines = resultLines.slice(matchIndex, matchIndex + searchLines.length)
 
-			// Get the exact indentation (preserving tabs/spaces) of each line
-			const originalIndents = matchedLines.map((line) => {
-				const match = line.match(/^[\t ]*/)
-				return match ? match[0] : ""
-			})
+			// Calculate the indentation of the *first line being replaced* in the target file
+			const targetBaseIndentMatch = matchedLines[0]?.match(/^[\t ]*/)
+			const targetBaseIndent = targetBaseIndentMatch ? targetBaseIndentMatch[0] : ""
 
-			// Get the exact indentation of each line in the search block
-			const searchIndents = searchLines.map((line) => {
-				const match = line.match(/^[\t ]*/)
-				return match ? match[0] : ""
-			})
+			// Calculate the indentation of the *first line* of the search block
+			const searchBaseIndentMatch = searchLines[0]?.match(/^[\t ]*/)
+			const searchBaseIndent = searchBaseIndentMatch ? searchBaseIndentMatch[0] : ""
 
-			// Apply the replacement while preserving exact indentation
-			const indentedReplaceLines = replaceLines.map((line, i) => {
-				// Get the matched line's exact indentation
-				const matchedIndent = originalIndents[0] || ""
+			// Determine the primary indentation character (tab or space) from targetBaseIndent
+			const targetIndentChar = targetBaseIndent.startsWith("\t") ? "\t" : " "
 
-				// Get the current line's indentation relative to the search content
+			// Calculate the indentation of the *first line* of the replacement block
+			const replaceBaseIndentMatch = replaceLines[0]?.match(/^[\t ]*/)
+			const replaceBaseIndent = replaceBaseIndentMatch ? replaceBaseIndentMatch[0] : ""
+
+			// Apply indentation to replacement lines based on difference from searchBaseIndent
+			const indentedReplaceLines = replaceLines.map((line) => {
+				// Get current line's indent
 				const currentIndentMatch = line.match(/^[\t ]*/)
 				const currentIndent = currentIndentMatch ? currentIndentMatch[0] : ""
-				const searchBaseIndent = searchIndents[0] || ""
+				let finalIndent = ""
 
-				// Calculate the relative indentation level
-				const searchBaseLevel = searchBaseIndent.length
-				const currentLevel = currentIndent.length
-				const relativeLevel = currentLevel - searchBaseLevel
+				// Calculate relative indentation based on the SEARCH block's base indent
+				if (currentIndent.startsWith(searchBaseIndent)) {
+					// Indented or same level relative to search base: Append the relative part to target base
+					const relativePart = currentIndent.substring(searchBaseIndent.length)
+					finalIndent = targetBaseIndent + relativePart
+				} else if (searchBaseIndent.startsWith(currentIndent)) {
+					// De-dented relative to search base: Remove the difference length from target base
+					const diffLength = searchBaseIndent.length - currentIndent.length
+					const finalLength = Math.max(0, targetBaseIndent.length - diffLength)
+					finalIndent = targetBaseIndent.substring(0, finalLength)
+				} else {
+					// Unrelated indentation structure (e.g., mixed tabs/spaces):
+					// Fallback: Use targetBaseIndent. This preserves the original file's
+					// base level for the block but doesn't apply complex relative changes.
+					finalIndent = targetBaseIndent
+				}
 
-				// If relative level is negative, remove indentation from matched indent
-				// If positive, add to matched indent
-				const finalIndent =
-					relativeLevel < 0
-						? matchedIndent.slice(0, Math.max(0, matchedIndent.length + relativeLevel))
-						: matchedIndent + currentIndent.slice(searchBaseLevel)
-
-				return finalIndent + line.trim()
+				// Combine the calculated final indent with the non-indented part of the line
+				return finalIndent + line.trimStart()
 			})
+			// --- End: Robust Indentation Logic ---
 
 			// Construct the final content
 			const beforeMatch = resultLines.slice(0, matchIndex)
 			const afterMatch = resultLines.slice(matchIndex + searchLines.length)
 			resultLines = [...beforeMatch, ...indentedReplaceLines, ...afterMatch]
-			delta = delta - matchedLines.length + replaceLines.length
+
+			// Update delta based on the change in line count for *this specific block*
+			delta = delta - searchLines.length + replaceLines.length
 			appliedCount++
 		}
 		const finalContent = resultLines.join(lineEnding)
