@@ -37,7 +37,7 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 	access_mcp_resource: (args) => getAccessMcpResourceDescription(args),
 	switch_mode: () => getSwitchModeDescription(),
 	new_task: (args) => getNewTaskDescription(args),
-	// insert_content: (args) => getInsertContentDescription(args),
+	insert_content: (args) => getInsertContentDescription(args),
 	search_and_replace: (args) => getSearchAndReplaceDescription(args),
 	apply_diff: (args) =>
 		args.diffStrategy ? args.diffStrategy.getToolDescription({ cwd: args.cwd, toolOptions: args.toolOptions }) : "",
