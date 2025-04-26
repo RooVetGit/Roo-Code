@@ -13,6 +13,7 @@ import { Section } from "./Section"
 type TerminalSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	terminalOutputLineLimit?: number
 	terminalShellIntegrationTimeout?: number
+	terminalShellIntegrationDisabled?: boolean
 	terminalCommandDelay?: number
 	terminalPowershellCounter?: boolean
 	terminalZshClearEolMark?: boolean
@@ -23,6 +24,7 @@ type TerminalSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	setCachedStateField: SetCachedStateField<
 		| "terminalOutputLineLimit"
 		| "terminalShellIntegrationTimeout"
+		| "terminalShellIntegrationDisabled"
 		| "terminalCommandDelay"
 		| "terminalPowershellCounter"
 		| "terminalZshClearEolMark"
@@ -36,6 +38,7 @@ type TerminalSettingsProps = HTMLAttributes<HTMLDivElement> & {
 export const TerminalSettings = ({
 	terminalOutputLineLimit,
 	terminalShellIntegrationTimeout,
+	terminalShellIntegrationDisabled,
 	terminalCommandDelay,
 	terminalPowershellCounter,
 	terminalZshClearEolMark,
@@ -110,6 +113,19 @@ export const TerminalSettings = ({
 					</div>
 					<div className="text-vscode-descriptionForeground text-sm mt-1">
 						{t("settings:terminal.shellIntegrationTimeout.description")}
+					</div>
+				</div>
+
+				<div>
+					<VSCodeCheckbox
+						checked={terminalShellIntegrationDisabled ?? false}
+						onChange={(e: any) =>
+							setCachedStateField("terminalShellIntegrationDisabled", e.target.checked)
+						}>
+						<span className="font-medium">{t("settings:terminal.shellIntegrationDisabled.label")}</span>
+					</VSCodeCheckbox>
+					<div className="text-vscode-descriptionForeground text-sm mt-1">
+						{t("settings:terminal.shellIntegrationDisabled.description")}
 					</div>
 				</div>
 

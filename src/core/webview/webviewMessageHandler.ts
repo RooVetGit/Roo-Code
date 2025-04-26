@@ -614,6 +614,13 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				Terminal.setShellIntegrationTimeout(message.value)
 			}
 			break
+		case "terminalShellIntegrationDisabled":
+			await updateGlobalState("terminalShellIntegrationDisabled", message.bool)
+			await provider.postStateToWebview()
+			if (message.bool !== undefined) {
+				Terminal.setShellIntegrationDisabled(message.bool)
+			}
+			break
 		case "terminalCommandDelay":
 			await updateGlobalState("terminalCommandDelay", message.value)
 			await provider.postStateToWebview()

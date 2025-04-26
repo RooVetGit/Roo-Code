@@ -150,6 +150,7 @@ export abstract class BaseTerminal implements RooTerminal {
 
 	public static defaultShellIntegrationTimeout = 5_000
 	private static shellIntegrationTimeout: number = BaseTerminal.defaultShellIntegrationTimeout
+	private static shellIntegrationDisabled: boolean = false
 	private static commandDelay: number = 0
 	private static powershellCounter: boolean = false
 	private static terminalZshClearEolMark: boolean = true
@@ -169,6 +170,14 @@ export abstract class BaseTerminal implements RooTerminal {
 
 	public static getShellIntegrationTimeout(): number {
 		return Math.min(BaseTerminal.shellIntegrationTimeout, BaseTerminal.defaultShellIntegrationTimeout)
+	}
+
+	public static setShellIntegrationDisabled(disabled: boolean): void {
+		BaseTerminal.shellIntegrationDisabled = disabled
+	}
+
+	public static getShellIntegrationDisabled(): boolean {
+		return BaseTerminal.shellIntegrationDisabled
 	}
 
 	/**

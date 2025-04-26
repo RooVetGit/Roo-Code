@@ -72,7 +72,6 @@ export async function executeCommand(
 	cline: Cline,
 	command: string,
 	customCwd?: string,
-	terminalProvider: "vscode" | "execa" = "vscode",
 ): Promise<[boolean, ToolResponse]> {
 	let workingDir: string
 
@@ -95,7 +94,11 @@ export async function executeCommand(
 	let completed = false
 	let result: string = ""
 	let exitDetails: ExitCodeDetails | undefined
-	const { terminalOutputLineLimit = 500 } = (await cline.providerRef.deref()?.getState()) ?? {}
+
+	const clineProvider = await cline.providerRef.deref()
+	const clineProviderState = await clineProvider?.getState()
+	const { terminalOutputLineLimit = 500, terminalShellIntegrationDisabled = false } = clineProviderState ?? {}
+	const terminalProvider = terminalShellIntegrationDisabled ? "execa" : "vscode"
 
 	const callbacks = {
 		onLine: async (output: string, process: RooTerminalProcess) => {
