@@ -1986,6 +1986,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 		// It could be useful for cline to know if the user went from one or no file to another between messages, so we always include this context
 		details += "\n\n# VSCode Visible Files"
+
 		const visibleFilePaths = vscode.window.visibleTextEditors
 			?.map((editor) => editor.document?.uri?.fsPath)
 			.filter(Boolean)
@@ -2039,28 +2040,31 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 
 		if (busyTerminals.length > 0) {
-			// wait for terminals to cool down
+			// Wait for terminals to cool down.
 			await pWaitFor(() => busyTerminals.every((t) => !TerminalRegistry.isProcessHot(t.id)), {
 				interval: 100,
 				timeout: 15_000,
 			}).catch(() => {})
 		}
 
-		this.didEditFile = false // reset, this lets us know when to wait for saved files to update terminals
+		// Reset, this lets us know when to wait for saved files to update terminals.
+		this.didEditFile = false
 
-		// waiting for updated diagnostics lets terminal output be the most up-to-date possible
+		// Waiting for updated diagnostics lets terminal output be the most
+		// up-to-date possible.
 		let terminalDetails = ""
+
 		if (busyTerminals.length > 0) {
-			// terminals are cool, let's retrieve their output
+			// Terminals are cool, let's retrieve their output.
 			terminalDetails += "\n\n# Actively Running Terminals"
+
 			for (const busyTerminal of busyTerminals) {
 				terminalDetails += `\n## Original command: \`${busyTerminal.getLastCommand()}\``
 				let newOutput = TerminalRegistry.getUnretrievedOutput(busyTerminal.id)
+
 				if (newOutput) {
 					newOutput = Terminal.compressTerminalOutput(newOutput, terminalOutputLineLimit)
 					terminalDetails += `\n### New Output\n${newOutput}`
-				} else {
-					// details += `\n(Still running, no new output)` // don't want to show this right after running the command
 				}
 			}
 		}

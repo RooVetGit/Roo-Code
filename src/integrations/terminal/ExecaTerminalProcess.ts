@@ -6,7 +6,6 @@ import { BaseTerminalProcess } from "./BaseTerminalProcess"
 export class ExecaTerminalProcess extends BaseTerminalProcess {
 	private terminalRef: WeakRef<RooTerminal>
 	private controller?: AbortController
-	private isStreamClosed: boolean = false
 
 	constructor(terminal: RooTerminal) {
 		super()
@@ -29,6 +28,8 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 		this.controller = new AbortController()
 
 		try {
+			this.isHot = true
+
 			const subprocess = execa({
 				shell: true,
 				cwd: this.terminal.getCurrentWorkingDirectory(),
@@ -38,8 +39,7 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 			this.emit("line", "")
 
 			for await (const line of subprocess) {
-				this.fullOutput += line
-				this.fullOutput += "\n"
+				this.fullOutput += `${line}\n`
 
 				const now = Date.now()
 
@@ -47,10 +47,9 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 					this.emitRemainingBufferIfListening()
 					this.lastEmitTime_ms = now
 				}
-			}
 
-			this.isStreamClosed = true
-			this.emitRemainingBufferIfListening()
+				this.startHotTimer(line)
+			}
 
 			this.emit("shell_execution_complete", { exitCode: 0 })
 		} catch (error) {
@@ -65,6 +64,8 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 			}
 		}
 
+		this.emitRemainingBufferIfListening()
+		this.stopHotTimer()
 		this.emit("completed", this.fullOutput)
 		this.emit("continue")
 	}
@@ -85,19 +86,13 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 
 	public override getUnretrievedOutput() {
 		let outputToProcess = this.fullOutput.slice(this.lastRetrievedIndex)
-		let endIndex = -1
+		let endIndex = outputToProcess.lastIndexOf("\n")
 
-		if (this.isStreamClosed) {
-			endIndex = outputToProcess.length
-		} else {
-			endIndex = outputToProcess.lastIndexOf("\n")
-
-			if (endIndex === -1) {
-				return ""
-			}
-
-			endIndex++
+		if (endIndex === -1) {
+			return ""
 		}
+
+		endIndex++
 
 		this.lastRetrievedIndex += endIndex
 		return outputToProcess.slice(0, endIndex)

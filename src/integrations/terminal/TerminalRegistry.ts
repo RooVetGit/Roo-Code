@@ -218,12 +218,8 @@ export class TerminalRegistry {
 	}
 
 	/**
-	 * Gets background terminals (taskId undefined) that have unretrieved output or are still running
-	 * @param busy Whether to get busy or non-busy terminals
-	 * @returns Array of Terminal objects
-	 */
-	/**
-	 * Gets background terminals (taskId undefined) filtered by busy state
+	 * Gets background terminals (taskId undefined) that have unretrieved output
+	 * or are still running.
 	 * @param busy Whether to get busy or non-busy terminals
 	 * @returns Array of Terminal objects
 	 */

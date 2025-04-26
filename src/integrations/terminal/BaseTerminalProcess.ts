@@ -4,7 +4,9 @@ import type { RooTerminalProcess, RooTerminalProcessEvents, ExitCodeDetails } fr
 
 export abstract class BaseTerminalProcess extends EventEmitter<RooTerminalProcessEvents> implements RooTerminalProcess {
 	public command: string = ""
+
 	public isHot: boolean = false
+	protected hotTimer: NodeJS.Timeout | null = null
 
 	protected isListening: boolean = true
 	protected lastEmitTime_ms: number = 0
@@ -134,4 +136,51 @@ export abstract class BaseTerminalProcess extends EventEmitter<RooTerminalProces
 	 * @returns The unretrieved output
 	 */
 	abstract getUnretrievedOutput(): string
+
+	protected startHotTimer(data: string) {
+		this.isHot = true
+
+		if (this.hotTimer) {
+			clearTimeout(this.hotTimer)
+		}
+
+		this.hotTimer = setTimeout(() => (this.isHot = false), BaseTerminalProcess.isCompiling(data) ? 15_000 : 2_000)
+	}
+
+	protected stopHotTimer() {
+		if (this.hotTimer) {
+			clearTimeout(this.hotTimer)
+		}
+
+		this.isHot = false
+	}
+
+	// These markers indicate the command is some kind of local dev
+	// server recompiling the app, which we want to wait for output
+	// of before sending request to Roo Code.
+	private static compilingMarkers = ["compiling", "building", "bundling", "transpiling", "generating", "starting"]
+
+	private static compilingMarkerNullifiers = [
+		"compiled",
+		"success",
+		"finish",
+		"complete",
+		"succeed",
+		"done",
+		"end",
+		"stop",
+		"exit",
+		"terminate",
+		"error",
+		"fail",
+	]
+
+	private static isCompiling(data: string): boolean {
+		return (
+			BaseTerminalProcess.compilingMarkers.some((marker) => data.toLowerCase().includes(marker.toLowerCase())) &&
+			!BaseTerminalProcess.compilingMarkerNullifiers.some((nullifier) =>
+				data.toLowerCase().includes(nullifier.toLowerCase()),
+			)
+		)
+	}
 }
