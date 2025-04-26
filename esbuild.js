@@ -48,7 +48,7 @@ const copyWasmFiles = {
 				console.log(`Copying ${wasmFiles.length} tree-sitter WASM files to dist directory`)
 
 				wasmFiles.forEach((filename) => {
-					fs.copyFileSync(path.join(languageWasmDir, filename), path.join(targetDir, filename))
+					fs.copyFileSync(path.join(languageWasmDir, filename), path.join(distDir, filename))
 				})
 			} else {
 				console.warn(`Tree-sitter WASM directory not found: ${languageWasmDir}`)
