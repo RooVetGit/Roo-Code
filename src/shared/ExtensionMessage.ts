@@ -10,7 +10,6 @@ import type {
 	OrganizationAllowList,
 	CloudUserInfo,
 	ShareVisibility,
-	CommandRiskLevel,
 } from "@roo-code/types"
 
 import { GitCommit } from "../utils/git"
