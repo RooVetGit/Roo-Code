@@ -1256,7 +1256,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						</div>
 					)}
 					<div
-						className={` w-full flex flex-col gap-4 m-auto ${isExpanded && tasks.length > 0 ? "mt-0" : ""} p-10 pt-5`}>
+						className={` w-full flex flex-col gap-4 m-auto ${isExpanded && tasks.length > 0 ? "mt-0" : ""} p-4 pt-5`}>
 						<RooHero />
 						{telemetrySetting === "unset" && <TelemetryBanner />}
 						{/* Show the task history preview if expanded and tasks exist */}
