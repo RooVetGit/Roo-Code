@@ -65,9 +65,27 @@
 		"tooltip": "取消当前操作"
 	},
 	"scrollToBottom": "滚动到聊天底部",
+	"about": "通过 AI 辅助生成、重构和调试代码。<br />查看我们的 <DocsLink>文档</DocsLink> 了解更多信息。",
 	"onboarding": "<strong>此工作区中的任务列表为空。</strong> 请在下方输入任务开始。 不确定如何开始？ 在 <DocsLink>文档</DocsLink> 中阅读更多关于 Roo 可以为您做什么的信息。",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "任务拆分",
+			"description": "将任务拆分为更小、更易于管理的部分。"
+		},
+		"stickyModels": {
+			"title": "粘性模式",
+			"description": "每个模式 都会记住 您上次使用的模型"
+		},
+		"tools": {
+			"title": "工具",
+			"description": "允许 AI 通过浏览网络、运行命令等方式解决问题。"
+		},
+		"customizableModes": {
+			"title": "自定义模式",
+			"description": "具有专属行为和指定模型的特定角色"
+		}
+	},
 	"selectMode": "选择交互模式",
-	"selectApiConfig": "选择API配置",
 	"enhancePrompt": "增强提示词",
 	"addImages": "添加图片到消息",
 	"sendMessage": "发送消息",
@@ -186,12 +204,12 @@
 		"copyToInput": "复制到输入框（或按住Shift点击）"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.13 已发布",
-		"description": "Roo Code 3.13 带来基于您反馈的新功能和改进。",
+		"title": "🎉 Roo Code 3.14 已发布",
+		"description": "Roo Code 3.14 带来基于您反馈的新功能和改进。",
 		"whatsNew": "新特性",
-		"feature1": "<bold>Gemini 2.5 Flash Thinking</bold>: 现在可以使用 Gemini 2.5 Flash 的 thinking 变体并指定 thinking Token 预算",
-		"feature2": "<bold>UI 改进</bold>: 任务标题、聊天视图、历史预览和欢迎视图已进行视觉升级",
-		"feature3": "<bold>错误修复</bold>: 更可靠的差异编辑等功能",
+		"feature1": "<bold>编辑工具增强</bold>: <code>search_and_replace</code> 和 <code>insert_content</code> 工具已得到改进，并从实验性状态毕业",
+		"feature2": "<bold>差异更新修复</bold>: 我们持续改进 <code>apply_diff</code> 工具",
+		"feature3": "<bold>海量其他改进</bold>: 扩展中众多的修复和增强功能",
 		"hideButton": "隐藏公告",
 		"detailsDiscussLinks": "在 <discordLink>Discord</discordLink> 和 <redditLink>Reddit</redditLink> 获取更多详情并参与讨论 🚀"
 	},
@@ -217,5 +235,6 @@
 			"close": "关闭浏览器"
 		}
 	},
-	"systemPromptWarning": "警告：自定义系统提示词覆盖已激活。这可能严重破坏功能并导致不可预测的行为。"
+	"systemPromptWarning": "警告：自定义系统提示词覆盖已激活。这可能严重破坏功能并导致不可预测的行为。",
+	"selectApiConfig": "选择 API 配置"
 }
