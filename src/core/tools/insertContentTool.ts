@@ -78,6 +78,13 @@ export async function insertContentTool(
 			return
 		}
 
+		if (lineNumber !== 0) {
+			cline.consecutiveMistakeCount++
+			cline.recordToolError("insert_content")
+			pushToolResult(formatResponse.toolError("Invalid line number: only append is supported so line must be 0"))
+			return
+		}
+
 		cline.consecutiveMistakeCount = 0
 
 		// Read the file
