@@ -1,6 +1,6 @@
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 import { useState, useEffect } from "react"
-import { Trans } from "react-i18next"
+import { Trans as _Trans } from "react-i18next"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { useCopyToClipboard } from "@src/utils/clipboard"
@@ -115,7 +115,6 @@ const BentoGrid = ({ telemetrySetting }: BentoGridProps) => {
 				{/* Box 1: Logo Card */}
 				<div className="col-span-full md:col-span-1 row-span-1 bg-[var(--vscode-editorWidget-background)] rounded-2xl overflow-hidden">
 					<div className="p-5 flex flex-col items-center justify-center h-full">
-						<h2 className="text-lg font-bold mb-3 text-vscode-editor-foreground">Roo</h2>
 						<div className="flex items-center justify-center w-full">
 							<RooHero />
 						</div>
@@ -124,24 +123,16 @@ const BentoGrid = ({ telemetrySetting }: BentoGridProps) => {
 
 				{/* Box 2: Intro Text Card */}
 				<div className="col-span-full md:col-span-2 row-span-1 bg-[var(--vscode-editorWidget-background)] rounded-2xl overflow-hidden">
-					<div className="p-5 flex flex-col items-start text-left h-full">
+					<div className="p-5 flex flex-col items-start text-left h-full justify-center">
 						<h2 className="text-lg font-bold mb-3 text-vscode-editor-foreground">About</h2>
-						<p className="text-vscode-editor-foreground leading-relaxed text-sm">
-							<Trans
-								i18nKey="chat:about"
-								components={{
-									DocsLink: (
-										<a
-											href="https://docs.roocode.com/"
-											target="_blank"
-											rel="noopener noreferrer"
-											className="text-vscode-textLink-foreground hover:underline font-medium">
-											the docs
-										</a>
-									),
-								}}
-							/>
+						<p className="text-vscode-editor-foreground leading-relaxed text-sm mb-3">
+							Your AI coding assistant with powerful tools and specialized modes.
 						</p>
+						<VSCodeButton
+							onClick={() => window.open("https://docs.roocode.com/", "_blank", "noopener,noreferrer")}
+							className="mt-2">
+							Docs
+						</VSCodeButton>
 					</div>
 				</div>
 
