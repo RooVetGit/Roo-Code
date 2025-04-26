@@ -73,7 +73,7 @@
 	"autoApprove": {
 		"description": "允许 Roo 自动执行操作而无需批准。只有在您完全信任 AI 并了解相关安全风险的情况下才启用这些设置。",
 		"readOnly": {
-			"label": "读取",
+			"label": "只读",
 			"description": "启用后，Roo 将自动浏览目录和读取文件内容，无需人工确认。",
 			"outsideWorkspace": {
 				"label": "包含工作区外的文件",
