@@ -1214,7 +1214,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			maxReadFileLine,
 			terminalCompressProgressBar,
 			historyPreviewCollapsed,
-			commandRiskLevel,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
