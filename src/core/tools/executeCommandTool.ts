@@ -15,19 +15,7 @@ import { ExitCodeDetails, RooTerminalCallbacks, RooTerminalProcess } from "../..
 import { TerminalRegistry } from "../../integrations/terminal/TerminalRegistry"
 import { Terminal } from "../../integrations/terminal/Terminal"
 import { CommandRiskLevel, commandRiskLevels } from "../../schemas"
-
-// Function to validate risk level
-export const isValidRiskLevel = (risk: string): boolean => {
-	return risk !== undefined && risk !== "none" && commandRiskLevels.includes(risk as CommandRiskLevel)
-}
-
-// Function to check if risk is allowed
-export const isRiskAllowed = (userRiskLevel: CommandRiskLevel, cmdRiskLevel: CommandRiskLevel): boolean => {
-	if (userRiskLevel === "none") return false
-	const userRiskIndex = commandRiskLevels.indexOf(userRiskLevel)
-	const cmdRiskIndex = commandRiskLevels.indexOf(cmdRiskLevel)
-	return cmdRiskIndex <= userRiskIndex
-}
+import { isValidRiskLevel } from "../../../webview-ui/src/utils/commandRiskUtils"
 
 class ShellIntegrationError extends Error {}
 
@@ -81,7 +69,7 @@ export async function executeCommandTool(
 
 			// Check if the risk level is valid
 			if (commandRisk && (!isValidRiskLevel(commandRisk) || commandRisk === "none")) {
-				const errorMessage = `Invalid risk level: "${commandRisk}". Valid risk levels are: ${commandRiskLevels.filter((r) => r !== "none").join(", ")}`
+				const errorMessage = `Invalid risk level: "${commandRisk}". Valid risk levels are: ${commandRiskLevels.filter((r: CommandRiskLevel) => r !== "none").join(", ")}`
 				pushToolResult(formatResponse.toolError(errorMessage))
 				return
 			}
