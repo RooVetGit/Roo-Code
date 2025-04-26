@@ -208,7 +208,7 @@ export async function executeCommand(
 			[
 				`Command is still running in terminal ${workingDir ? ` from '${workingDir.toPosix()}'` : ""}.`,
 				result.length > 0 ? `Here's the output so far:\n${result}\n` : "\n",
-				"You will be updated on the terminal status and new output in the future.`",
+				"You will be updated on the terminal status and new output in the future.",
 			].join("\n"),
 		]
 	}
