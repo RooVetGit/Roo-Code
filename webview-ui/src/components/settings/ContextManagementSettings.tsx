@@ -1,6 +1,6 @@
 import { HTMLAttributes } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
-import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeCheckbox, VSCodeDivider } from "@vscode/webview-ui-toolkit/react"
 import { Database } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -14,9 +14,13 @@ type ContextManagementSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	maxOpenTabsContext: number
 	maxWorkspaceFiles: number
 	showRooIgnoredFiles?: boolean
+	maxConcurrentFileReads?: number
 	maxReadFileLine?: number
 	setCachedStateField: SetCachedStateField<
-		"maxOpenTabsContext" | "maxWorkspaceFiles" | "showRooIgnoredFiles" | "maxReadFileLine"
+		| "maxOpenTabsContext"
+		| "maxWorkspaceFiles"
+		| "showRooIgnoredFiles"
+		| "maxConcurrentFileReads" | "maxReadFileLine"
 	>
 }
 
@@ -24,6 +28,7 @@ export const ContextManagementSettings = ({
 	maxOpenTabsContext,
 	maxWorkspaceFiles,
 	showRooIgnoredFiles,
+	maxConcurrentFileReads,
 	setCachedStateField,
 	maxReadFileLine,
 	className,
@@ -89,6 +94,26 @@ export const ContextManagementSettings = ({
 					</VSCodeCheckbox>
 					<div className="text-vscode-descriptionForeground text-sm mt-1">
 						{t("settings:contextManagement.rooignore.description")}
+					</div>
+				</div>
+
+				<div>
+					<span className="block font-medium mb-1">
+						{t("settings:contextManagement.maxConcurrentFileReads.label")}
+					</span>
+					<div className="flex items-center gap-2">
+						<Slider
+							min={1}
+							max={10}
+							step={1}
+							value={[maxConcurrentFileReads ?? 1]} // Default to 1 if undefined
+							onValueChange={([value]) => setCachedStateField("maxConcurrentFileReads", value)}
+							data-testid="max-concurrent-file-reads-slider"
+						/>
+						<span className="w-10">{maxConcurrentFileReads ?? 1}</span>
+					</div>
+					<div className="text-vscode-descriptionForeground text-sm mt-1">
+						{t("settings:contextManagement.maxConcurrentFileReads.description")}
 					</div>
 				</div>
 

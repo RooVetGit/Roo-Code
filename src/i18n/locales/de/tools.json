@@ -4,6 +4,20 @@
 		"linesFromToEnd": " (Zeilen {{start}}-Ende)",
 		"linesFromStartTo": " (Zeilen 1-{{end}})",
 		"definitionsOnly": " (nur Definitionen)",
-		"maxLines": " (maximal {{max}} Zeilen)"
+		"maxLines": " (maximal {{max}} Zeilen)",
+		"multipleFiles": "{{count}} Dateien",
+		"error": {
+			"invalidArrayFormat": "Ungültiges Format für Dateipfad-Array: {{value}}. Erwartet wurde ein JSON-Array von Zeichenketten.",
+			"invalidJsonArray": "Dateipfad-Array konnte nicht geparst werden: {{value}}. Bitte gib ein gültiges JSON-Array von Zeichenketten an.",
+			"incompleteJsonArray": "Unvollständiges oder fehlerhaftes Dateipfad-Array: {{value}}. Es sieht aus wie ein JSON-Array, aber die schließende Klammer fehlt oder es ist anderweitig ungültig.",
+			"noValidPaths": "Es wurden keine gültigen Dateipfade angegeben.",
+			"tooManyFiles": "Zu viele Dateien angefordert ({{count}}). Das Maximum ist {{max}}.",
+			"lineParamsMultipleFiles": "Die Parameter 'start_line' und 'end_line' können nur beim Lesen einer einzelnen Datei verwendet werden.",
+			"invalidStartLine": "Ungültiger start_line-Wert: {{value}}. Muss eine positive ganze Zahl sein.",
+			"invalidEndLine": "Ungültiger end_line-Wert: {{value}}. Muss eine positive ganze Zahl sein.",
+			"fileNotFound": "Datei nicht gefunden: {{path}}",
+			"countingLines": "Fehler beim Zählen der Zeilen in Datei {{path}}: {{message}}",
+			"readingFile": "Fehler beim Lesen der Datei {{path}}: {{message}}"
+		}
 	}
 }

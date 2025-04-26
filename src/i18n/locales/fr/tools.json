@@ -4,6 +4,20 @@
 		"linesFromToEnd": " (lignes {{start}}-fin)",
 		"linesFromStartTo": " (lignes 1-{{end}})",
 		"definitionsOnly": " (définitions uniquement)",
-		"maxLines": " (max {{max}} lignes)"
+		"maxLines": " (max {{max}} lignes)",
+		"multipleFiles": "{{count}} fichiers",
+		"error": {
+			"invalidArrayFormat": "Format invalide pour le tableau de chemins de fichiers : {{value}}. Attendu : un tableau JSON de chaînes.",
+			"invalidJsonArray": "Impossible d'analyser le tableau de chemins de fichiers : {{value}}. Veuillez fournir un tableau JSON de chaînes valide.",
+			"incompleteJsonArray": "Tableau de chemins de fichiers incomplet ou mal formé : {{value}}. Il ressemble à un tableau JSON mais il manque le crochet de fermeture ou est invalide.",
+			"noValidPaths": "Aucun chemin de fichier valide n'a été fourni.",
+			"tooManyFiles": "Trop de fichiers demandés ({{count}}). Le maximum autorisé est {{max}}.",
+			"lineParamsMultipleFiles": "Les paramètres 'start_line' et 'end_line' ne peuvent être utilisés que lors de la lecture d'un seul fichier.",
+			"invalidStartLine": "Valeur de start_line invalide : {{value}}. Doit être un entier positif.",
+			"invalidEndLine": "Valeur d'end_line invalide : {{value}}. Doit être un entier positif.",
+			"fileNotFound": "Fichier non trouvé : {{path}}",
+			"countingLines": "Erreur lors du comptage des lignes dans le fichier {{path}} : {{message}}",
+			"readingFile": "Erreur lors de la lecture du fichier {{path}} : {{message}}"
+		}
 	}
 }

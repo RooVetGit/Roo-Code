@@ -138,3 +138,105 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		expect(addLineNumbers).toHaveBeenCalled()
 	})
 })
+
+// Test suite for path parameter parsing
+describe("read_file tool path parameter parsing", () => {
+	// Variable to hold the imported function
+	let readFileTool: any;
+	// Variable to hold the mock t function for this suite - DECLARE HERE
+	let localMockT: jest.Mock;
+	const mockCline = {
+		consecutiveMistakeCount: 0,
+		recordToolError: jest.fn(),
+		say: jest.fn(),
+		providerRef: { // Mock providerRef and deref
+			deref: () => ({
+				log: jest.fn(), // Mock the log function
+				getState: jest.fn().mockResolvedValue({ // Mock getState
+					maxReadFileLine: 500,
+					maxConcurrentFileReads: 1,
+					alwaysAllowReadOnly: false,
+					alwaysAllowReadOnlyOutsideWorkspace: false,
+				}),
+			}),
+		},
+		cwd: "/test/workspace", // Mock cwd
+		rooIgnoreController: { // Mock rooIgnoreController
+			validateAccess: jest.fn().mockReturnValue(true),
+		},
+		getFileContextTracker: jest.fn(() => ({ // Mock getFileContextTracker
+			trackFileContext: jest.fn().mockResolvedValue(undefined),
+		})),
+	} as any // Use 'any' for simplicity in mocking
+
+	const mockAskApproval = jest.fn().mockResolvedValue(true)
+	const mockHandleError = jest.fn()
+	const mockPushToolResult = jest.fn()
+	const mockRemoveClosingTag = jest.fn(); // Define mock inside describe
+
+	beforeEach(() => {
+		// Reset modules to ensure fresh mocks for this suite
+		jest.resetModules();
+
+		// ASSIGN mock implementation for t here
+		localMockT = jest.fn((key, params) => {
+			if (key === "tools:readFile.error.incompleteJsonArray") {
+				return `Incomplete or malformed file path array: ${params?.value}. It looks like a JSON array but is missing the closing bracket or is otherwise invalid.`
+			}
+			return key
+		});
+
+		// Apply the mock for i18n specifically for this suite
+		jest.doMock("../../i18n", () => ({
+			t: localMockT,
+		}));
+
+		// Require the module *after* setting up the mock
+		readFileTool = require("../tools/readFileTool").readFileTool;
+
+		// Reset other mocks before each test
+		jest.clearAllMocks()
+		mockCline.consecutiveMistakeCount = 0
+		mockCline.recordToolError.mockClear();
+		mockCline.say.mockClear();
+		mockAskApproval.mockClear();
+		mockHandleError.mockClear();
+		mockPushToolResult.mockClear();
+		mockRemoveClosingTag.mockClear();
+		mockRemoveClosingTag.mockImplementation((_tag: string, value: string | undefined): string | undefined => value);
+	})
+
+	it("should return incompleteJsonArray error for malformed JSON array string", async () => {
+		const incompleteJsonPath = '["file1.txt", "file2.txt"' // Missing closing bracket
+
+		const block = {
+			tool_name: "read_file",
+			tool_id: "1",
+			params: {
+				path: incompleteJsonPath,
+			},
+		}
+
+		await readFileTool(
+			mockCline,
+			block,
+			mockAskApproval,
+			mockHandleError,
+			mockPushToolResult,
+			mockRemoveClosingTag, // Pass the mock function as argument
+		)
+
+		expect(mockCline.recordToolError).toHaveBeenCalledWith("read_file")
+		expect(localMockT).toHaveBeenCalledWith("tools:readFile.error.incompleteJsonArray", { value: incompleteJsonPath })
+		expect(mockCline.say).toHaveBeenCalledWith(
+			"error",
+			// Use the mock function directly to get the expected string
+			localMockT("tools:readFile.error.incompleteJsonArray", { value: incompleteJsonPath }),
+		)
+		expect(mockPushToolResult).toHaveBeenCalledWith(
+			`<tool_error tool_name="read_file">Incomplete or malformed file path array: ${incompleteJsonPath}. It looks like a JSON array but is missing the closing bracket or is otherwise invalid.</tool_error>`,
+		)
+	})
+
+	// Add more tests for other parsing scenarios (valid JSON, single path, invalid format, etc.) if needed
+})

@@ -4,6 +4,20 @@
 		"linesFromToEnd": " (lines {{start}}-end)",
 		"linesFromStartTo": " (lines 1-{{end}})",
 		"definitionsOnly": " (definitions only)",
-		"maxLines": " (max {{max}} lines)"
+		"maxLines": " (max {{max}} lines)",
+		"multipleFiles": "{{count}} files",
+		"error": {
+			"invalidArrayFormat": "Invalid format for file path array: {{value}}. Expected a JSON array of strings.",
+			"invalidJsonArray": "Could not parse file path array: {{value}}. Please provide a valid JSON array of strings.",
+			"incompleteJsonArray": "Incomplete or malformed file path array: {{value}}. It looks like a JSON array but is missing the closing bracket or is otherwise invalid.",
+			"noValidPaths": "No valid file paths were provided.",
+			"tooManyFiles": "Too many files requested ({{count}}). The maximum allowed is {{max}}.",
+			"lineParamsMultipleFiles": "The 'start_line' and 'end_line' parameters can only be used when reading a single file.",
+			"invalidStartLine": "Invalid start_line value: {{value}}. Must be a positive integer.",
+			"invalidEndLine": "Invalid end_line value: {{value}}. Must be a positive integer.",
+			"fileNotFound": "File not found: {{path}}",
+			"countingLines": "Error counting lines in file {{path}}: {{message}}",
+			"readingFile": "Error reading file {{path}}: {{message}}"
+		}
 	}
 }

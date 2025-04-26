@@ -300,6 +300,10 @@
 			"description": "Roo llegeix aquest nombre de línies quan el model omet els valors d'inici/final. Si aquest nombre és menor que el total del fitxer, Roo genera un índex de números de línia de les definicions de codi. Casos especials: -1 indica a Roo que llegeixi tot el fitxer (sense indexació), i 0 indica que no llegeixi cap línia i proporcioni només índexs de línia per a un context mínim. Valors més baixos minimitzen l'ús inicial de context, permetent lectures posteriors de rangs de línies precisos. Les sol·licituds amb inici/final explícits no estan limitades per aquesta configuració.",
 			"lines": "línies",
 			"always_full_read": "Llegeix sempre el fitxer sencer"
+		},
+		"maxConcurrentFileReads": {
+			"label": "Límit de lectures de fitxers concurrents",
+			"description": "Nombre màxim de fitxers que l'eina 'read_file' pot processar simultàniament. Valors més alts poden accelerar la lectura de múltiples fitxers petits però augmenten l'ús de memòria."
 		}
 	},
 	"terminal": {

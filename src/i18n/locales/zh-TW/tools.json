@@ -4,6 +4,20 @@
 		"linesFromToEnd": " (第 {{start}} 行至結尾)",
 		"linesFromStartTo": " (第 1-{{end}} 行)",
 		"definitionsOnly": " (僅定義)",
-		"maxLines": " (最多 {{max}} 行)"
+		"maxLines": " (最多 {{max}} 行)",
+		"multipleFiles": "{{count}} 個檔案",
+		"error": {
+			"invalidArrayFormat": "檔案路徑陣列格式無效：{{value}}。應為 JSON 字串陣列。",
+			"invalidJsonArray": "無法解析檔案路徑陣列：{{value}}。請提供有效的 JSON 字串陣列。",
+			"incompleteJsonArray": "檔案路徑陣列不完整或格式錯誤：{{value}}。它看起來像 JSON 陣列，但缺少右方括號或存在其他無效之處。",
+			"noValidPaths": "未提供有效的檔案路徑。",
+			"tooManyFiles": "請求的檔案過多 ({{count}})。允許的最大數量為 {{max}}。",
+			"lineParamsMultipleFiles": "參數 'start_line' 和 'end_line' 只能在讀取單一檔案時使用。",
+			"invalidStartLine": "start_line 值無效：{{value}}。必須為正整數。",
+			"invalidEndLine": "end_line 值無效：{{value}}。必須為正整數。",
+			"fileNotFound": "找不到檔案：{{path}}",
+			"countingLines": "計算檔案 {{path}} 行數時出錯：{{message}}",
+			"readingFile": "讀取檔案 {{path}} 時出錯：{{message}}"
+		}
 	}
 }

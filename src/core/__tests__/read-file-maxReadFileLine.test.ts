@@ -66,7 +66,8 @@ describe("read_file tool with maxReadFileLine setting", () => {
 	const fileContent = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
 	const numberedFileContent = "1 | Line 1\n2 | Line 2\n3 | Line 3\n4 | Line 4\n5 | Line 5\n"
 	const sourceCodeDef = "\n\n# file.txt\n1--5 | Content"
-	const expectedFullFileXml = `<file><path>${testFilePath}</path>\n<content lines="1-5">\n${numberedFileContent}</content>\n</file>`
+	// Define the new expected structure with wrappers
+	const expectedFullFileXml = `<read_result>\n<file_content path="${testFilePath}">\n<content lines="1-5">\n${numberedFileContent}\n</content>\n</file_content>\n</read_result>`
 
 	// Mocked functions with correct types
 	const mockedCountFileLines = countFileLines as jest.MockedFunction<typeof countFileLines>
@@ -112,6 +113,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		mockProvider = {
 			getState: jest.fn(),
 			deref: jest.fn().mockReturnThis(),
+			log: jest.fn(), // Add mock log function
 		}
 
 		// Setup Cline instance with mock methods
@@ -201,7 +203,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
 			expect(mockedReadLines).not.toHaveBeenCalled()
 			expect(mockedParseSourceCodeDefinitionsForFile).not.toHaveBeenCalled()
-			expect(result).toBe(expectedFullFileXml)
+			expect(result).toBe(expectedFullFileXml) // Updated expectedFullFileXml definition
 		})
 
 		it("should ignore range parameters and read entire file when maxReadFileLine is -1", async () => {
@@ -221,7 +223,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
 			expect(mockedReadLines).not.toHaveBeenCalled()
 			expect(mockedParseSourceCodeDefinitionsForFile).not.toHaveBeenCalled()
-			expect(result).toBe(expectedFullFileXml)
+			expect(result).toBe(expectedFullFileXml) // Updated expectedFullFileXml definition
 		})
 
 		it("should not show line snippet in approval message when maxReadFileLine is -1", async () => {
@@ -265,14 +267,17 @@ describe("read_file tool with maxReadFileLine setting", () => {
 				mockCline.rooIgnoreController,
 			)
 
-			// Verify XML structure
-			expect(result).toContain(`<file><path>${testFilePath}</path>`)
+			// Verify XML structure within the new wrappers
+			expect(result).toContain(`<read_result>`)
+			expect(result).toContain(`<file_content path="${testFilePath}">`)
 			expect(result).toContain("<notice>Showing only 0 of 5 total lines")
 			expect(result).toContain("</notice>")
 			expect(result).toContain("<list_code_definition_names>")
 			expect(result).toContain(sourceCodeDef.trim())
 			expect(result).toContain("</list_code_definition_names>")
-			expect(result).not.toContain("<content") // No content when maxReadFileLine is 0
+			expect(result).toContain(`</file_content>`)
+			expect(result).toContain(`</read_result>`)
+			expect(result).not.toContain("<content") // Still no content tag
 		})
 	})
 
@@ -294,8 +299,9 @@ describe("read_file tool with maxReadFileLine setting", () => {
 				mockCline.rooIgnoreController,
 			)
 
-			// Verify XML structure
-			expect(result).toContain(`<file><path>${testFilePath}</path>`)
+			// Verify XML structure within the new wrappers
+			expect(result).toContain(`<read_result>`)
+			expect(result).toContain(`<file_content path="${testFilePath}">`)
 			expect(result).toContain('<content lines="1-3">')
 			expect(result).toContain("1 | Line 1")
 			expect(result).toContain("2 | Line 2")
@@ -306,8 +312,12 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			expect(result).toContain("<list_code_definition_names>")
 			expect(result).toContain(sourceCodeDef.trim())
 			expect(result).toContain("</list_code_definition_names>")
+			// Note: The duplicate list_code_definition_names check might be a test artifact or bug, keeping it for now
 			expect(result).toContain("<list_code_definition_names>")
 			expect(result).toContain(sourceCodeDef.trim())
+			expect(result).toContain("</list_code_definition_names>")
+			expect(result).toContain(`</file_content>`)
+			expect(result).toContain(`</read_result>`)
 		})
 	})
 
@@ -322,7 +332,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 
 			// Verify
 			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
-			expect(result).toBe(expectedFullFileXml)
+			expect(result).toBe(expectedFullFileXml) // Updated expectedFullFileXml definition
 		})
 
 		it("should read with extractTextFromFile when file has few lines", async () => {
@@ -336,8 +346,8 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			// Verify
 			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
 			expect(mockedReadLines).not.toHaveBeenCalled()
-			// Create a custom expected XML with lines="1-3" since totalLines is 3
-			const expectedXml = `<file><path>${testFilePath}</path>\n<content lines="1-3">\n${numberedFileContent}</content>\n</file>`
+			// Create a custom expected XML with lines="1-3" and wrappers
+			const expectedXml = `<read_result>\n<file_content path="${testFilePath}">\n<content lines="1-3">\n${numberedFileContent}\n</content>\n</file_content>\n</read_result>`
 			expect(result).toBe(expectedXml)
 		})
 	})
@@ -376,8 +386,8 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			// Verify
 			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
 			expect(mockedReadLines).not.toHaveBeenCalled()
-			// Create a custom expected XML with lines="1-3" for binary files
-			const expectedXml = `<file><path>${testFilePath}</path>\n<content lines="1-3">\n${numberedFileContent}</content>\n</file>`
+			// Create a custom expected XML with lines="1-3" and wrappers for binary files
+			const expectedXml = `<read_result>\n<file_content path="${testFilePath}">\n<content lines="1-3">\n${numberedFileContent}\n</content>\n</file_content>\n</read_result>`
 			expect(result).toBe(expectedXml)
 		})
 	})
@@ -397,13 +407,16 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			expect(mockedReadLines).toHaveBeenCalledWith(absoluteFilePath, 3, 1) // end_line - 1, start_line - 1
 			expect(addLineNumbersSpy).toHaveBeenCalledWith(expect.any(String), 2) // start with proper line numbers
 
-			// Verify XML structure with lines attribute
-			expect(rangeResult).toContain(`<file><path>${testFilePath}</path>`)
+			// Verify XML structure within the new wrappers
+			expect(rangeResult).toContain(`<read_result>`)
+			expect(rangeResult).toContain(`<file_content path="${testFilePath}">`)
 			expect(rangeResult).toContain(`<content lines="2-4">`)
 			expect(rangeResult).toContain("2 | Line 2")
 			expect(rangeResult).toContain("3 | Line 3")
 			expect(rangeResult).toContain("4 | Line 4")
 			expect(rangeResult).toContain("</content>")
+			expect(rangeResult).toContain(`</file_content>`)
+			expect(rangeResult).toContain(`</read_result>`)
 		})
 	})
 })

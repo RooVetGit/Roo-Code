@@ -4,6 +4,20 @@
 		"linesFromToEnd": " (linhas {{start}}-fim)",
 		"linesFromStartTo": " (linhas 1-{{end}})",
 		"definitionsOnly": " (apenas definições)",
-		"maxLines": " (máx. {{max}} linhas)"
+		"maxLines": " (máx. {{max}} linhas)",
+		"multipleFiles": "{{count}} arquivos",
+		"error": {
+			"invalidArrayFormat": "Formato inválido para array de caminhos de arquivo: {{value}}. Esperado um array JSON de strings.",
+			"invalidJsonArray": "Não foi possível analisar o array de caminhos de arquivo: {{value}}. Forneça um array JSON de strings válido.",
+			"incompleteJsonArray": "Array de caminhos de arquivo incompleto ou malformado: {{value}}. Parece um array JSON, mas falta o colchete de fechamento ou está inválido.",
+			"noValidPaths": "Nenhum caminho de arquivo válido foi fornecido.",
+			"tooManyFiles": "Muitos arquivos solicitados ({{count}}). O máximo permitido é {{max}}.",
+			"lineParamsMultipleFiles": "Os parâmetros 'start_line' e 'end_line' só podem ser usados ao ler um único arquivo.",
+			"invalidStartLine": "Valor de start_line inválido: {{value}}. Deve ser um inteiro positivo.",
+			"invalidEndLine": "Valor de end_line inválido: {{value}}. Deve ser um inteiro positivo.",
+			"fileNotFound": "Arquivo não encontrado: {{path}}",
+			"countingLines": "Erro ao contar linhas no arquivo {{path}}: {{message}}",
+			"readingFile": "Erro ao ler o arquivo {{path}}: {{message}}"
+		}
 	}
 }
