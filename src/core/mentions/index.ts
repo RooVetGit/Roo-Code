@@ -7,6 +7,7 @@ import { isBinaryFile } from "isbinaryfile"
 import { openFile } from "../../integrations/misc/open-file"
 import { UrlContentFetcher } from "../../services/browser/UrlContentFetcher"
 import { mentionRegexGlobal } from "../../shared/context-mentions"
+
 import { extractTextFromFile } from "../../integrations/misc/extract-text"
 import { diagnosticsToProblemsString } from "../../integrations/diagnostics"
 import { getCommitInfo, getWorkingState } from "../../utils/git"
