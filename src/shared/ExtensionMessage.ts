@@ -66,6 +66,7 @@ export interface ExtensionMessage {
 		| "fileSearchResults"
 		| "toggleApiConfigPin"
 		| "acceptInput"
+		| "setHistoryPreviewCollapsed"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -198,6 +199,7 @@ export type ExtensionState = Pick<
 
 	renderContext: "sidebar" | "editor"
 	settingsImportedAt?: number
+	historyPreviewCollapsed?: boolean
 }
 
 export type { ClineMessage, ClineAsk, ClineSay }
