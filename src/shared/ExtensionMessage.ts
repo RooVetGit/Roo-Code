@@ -12,7 +12,6 @@ import {
 	ClineSay,
 	ToolProgressStatus,
 	ClineMessage,
-	CommandRiskLevel,
 } from "../schemas"
 import { McpServer } from "./mcp"
 import { Mode } from "./modes"
