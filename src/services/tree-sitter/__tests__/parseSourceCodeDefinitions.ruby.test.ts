@@ -1,8 +1,4 @@
 import { describe, expect, it, jest, beforeEach } from "@jest/globals"
-import { parseSourceCodeDefinitionsForFile } from ".."
-import * as fs from "fs/promises"
-import { fileExistsAtPath } from "../../../utils/fs"
-import { loadRequiredLanguageParsers } from "../languageParser"
 import { rubyQuery } from "../queries"
 import { testParseSourceCodeDefinitions, debugLog } from "./helpers"
 import sampleRubyContent from "./fixtures/sample-ruby"

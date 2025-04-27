@@ -1,5 +1,5 @@
 import { describe, it, beforeAll, beforeEach } from "@jest/globals"
-import { testParseSourceCodeDefinitions, inspectTreeStructure, debugLog } from "./helpers"
+import { testParseSourceCodeDefinitions, debugLog } from "./helpers"
 import { cssQuery } from "../queries"
 import sampleCSSContent from "./fixtures/sample-css"
 

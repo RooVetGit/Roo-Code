@@ -4,7 +4,6 @@ import * as fs from "fs/promises"
 import * as path from "path"
 import Parser from "web-tree-sitter"
 import tsxQuery from "../queries/tsx"
-import goQuery from "../queries/go"
 // Mock setup
 jest.mock("fs/promises")
 export const mockedFs = jest.mocked(fs)

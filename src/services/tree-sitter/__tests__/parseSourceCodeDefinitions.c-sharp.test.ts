@@ -6,14 +6,8 @@ TODO: The following structures can be parsed by tree-sitter but lack query suppo
 */
 
 import { describe, expect, it, jest, beforeEach } from "@jest/globals"
-import { parseSourceCodeDefinitionsForFile } from ".."
-import * as fs from "fs/promises"
-import * as path from "path"
-import Parser from "web-tree-sitter"
-import { fileExistsAtPath } from "../../../utils/fs"
-import { loadRequiredLanguageParsers } from "../languageParser"
 import { csharpQuery } from "../queries"
-import { initializeTreeSitter, testParseSourceCodeDefinitions, inspectTreeStructure, debugLog } from "./helpers"
+import { testParseSourceCodeDefinitions } from "./helpers"
 import sampleCSharpContent from "./fixtures/sample-c-sharp"
 
 // C# test options
@@ -26,7 +20,6 @@ const csharpOptions = {
 
 // Mock file system operations
 jest.mock("fs/promises")
-const mockedFs = jest.mocked(fs)
 
 // Mock loadRequiredLanguageParsers
 jest.mock("../languageParser", () => ({

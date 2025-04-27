@@ -1,12 +1,6 @@
 import { describe, expect, it, jest, beforeEach, beforeAll } from "@jest/globals"
-import { parseSourceCodeDefinitionsForFile } from ".."
-import * as fs from "fs/promises"
-import * as path from "path"
-import Parser from "web-tree-sitter"
-import { fileExistsAtPath } from "../../../utils/fs"
-import { loadRequiredLanguageParsers } from "../languageParser"
 import { swiftQuery } from "../queries"
-import { initializeTreeSitter, testParseSourceCodeDefinitions } from "./helpers"
+import { testParseSourceCodeDefinitions } from "./helpers"
 import sampleSwiftContent from "./fixtures/sample-swift"
 
 // Swift test options
@@ -19,7 +13,6 @@ const testOptions = {
 
 // Mock fs module
 jest.mock("fs/promises")
-const mockedFs = fs as jest.Mocked<typeof fs>
 
 // Mock languageParser module
 jest.mock("../languageParser", () => ({
