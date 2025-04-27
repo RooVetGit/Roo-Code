@@ -3,7 +3,7 @@ import { useAppTranslation } from "@/i18n/TranslationContext"
 
 import { Slider } from "@/components/ui"
 
-import { ApiConfiguration, ModelInfo } from "../../../../src/shared/api"
+import { ApiConfiguration, ModelInfo } from "@roo/shared/api"
 
 const DEFAULT_MAX_OUTPUT_TOKENS = 16_384
 const DEFAULT_MAX_THINKING_TOKENS = 8_192
@@ -17,7 +17,7 @@ interface ThinkingBudgetProps {
 export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, modelInfo }: ThinkingBudgetProps) => {
 	const { t } = useAppTranslation()
 
-	const isThinkingModel = modelInfo && modelInfo.thinking && modelInfo.maxTokens
+	const isThinkingModel = !!modelInfo && !!modelInfo.thinking && !!modelInfo.maxTokens
 
 	const customMaxOutputTokens = apiConfiguration.modelMaxTokens || DEFAULT_MAX_OUTPUT_TOKENS
 	const customMaxThinkingTokens = apiConfiguration.modelMaxThinkingTokens || DEFAULT_MAX_THINKING_TOKENS
@@ -54,7 +54,7 @@ export const ThinkingBudget = ({ apiConfiguration, setApiConfigurationField, mod
 			</div>
 			<div className="flex flex-col gap-1">
 				<div className="font-medium">{t("settings:thinkingBudget.maxThinkingTokens")}</div>
-				<div className="flex items-center gap-1">
+				<div className="flex items-center gap-1" data-testid="thinking-budget">
 					<Slider
 						min={1024}
 						max={modelMaxThinkingTokens}

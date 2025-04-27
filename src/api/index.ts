@@ -28,7 +28,8 @@ export interface SingleCompletionHandler {
 }
 
 export interface ApiHandler {
-	createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream
+	createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[], cacheKey?: string): ApiStream
+
 	getModel(): { id: string; info: ModelInfo }
 
 	/**
@@ -76,7 +77,7 @@ export function buildApiHandler(configuration: ApiConfiguration): ApiHandler {
 		case "requesty":
 			return new RequestyHandler(options)
 		case "human-relay":
-			return new HumanRelayHandler(options)
+			return new HumanRelayHandler()
 		case "fake-ai":
 			return new FakeAIHandler(options)
 		case "xai":

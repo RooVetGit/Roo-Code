@@ -1,19 +1,19 @@
 import { render, fireEvent, screen } from "@testing-library/react"
 import ChatTextArea from "../ChatTextArea"
-import { useExtensionState } from "../../../context/ExtensionStateContext"
-import { vscode } from "../../../utils/vscode"
-import { defaultModeSlug } from "../../../../../src/shared/modes"
-import * as pathMentions from "../../../utils/path-mentions"
+import { useExtensionState } from "@src/context/ExtensionStateContext"
+import { vscode } from "@src/utils/vscode"
+import { defaultModeSlug } from "@roo/shared/modes"
+import * as pathMentions from "@src/utils/path-mentions"
 
 // Mock modules
-jest.mock("../../../utils/vscode", () => ({
+jest.mock("@src/utils/vscode", () => ({
 	vscode: {
 		postMessage: jest.fn(),
 	},
 }))
-jest.mock("../../../components/common/CodeBlock")
-jest.mock("../../../components/common/MarkdownBlock")
-jest.mock("../../../utils/path-mentions", () => ({
+jest.mock("@src/components/common/CodeBlock")
+jest.mock("@src/components/common/MarkdownBlock")
+jest.mock("@src/utils/path-mentions", () => ({
 	convertToMentionPath: jest.fn((path, cwd) => {
 		// Simple mock implementation that mimics the real function's behavior
 		if (cwd && path.toLowerCase().startsWith(cwd.toLowerCase())) {
@@ -29,7 +29,7 @@ const mockPostMessage = vscode.postMessage as jest.Mock
 const mockConvertToMentionPath = pathMentions.convertToMentionPath as jest.Mock
 
 // Mock ExtensionStateContext
-jest.mock("../../../context/ExtensionStateContext")
+jest.mock("@src/context/ExtensionStateContext")
 
 // Custom query function to get the enhance prompt button
 const getEnhancePromptButton = () => {
@@ -360,7 +360,7 @@ describe("ChatTextArea", () => {
 			const outsidePath = "/Users/other/project/file.js"
 
 			// Mock the convertToMentionPath function to return the original path for paths outside cwd
-			mockConvertToMentionPath.mockImplementationOnce((path, cwd) => {
+			mockConvertToMentionPath.mockImplementationOnce((path, _cwd) => {
 				return path // Return original path for this test
 			})
 

@@ -2,11 +2,9 @@ import * as vscode from "vscode"
 
 import { SYSTEM_PROMPT } from "../system"
 import { McpHub } from "../../../services/mcp/McpHub"
-import { ClineProvider } from "../../../core/webview/ClineProvider"
 import { defaultModeSlug, modes, Mode, ModeConfig } from "../../../shared/modes"
 import "../../../utils/path" // Import path utils to get access to toPosix string extension.
 import { addCustomInstructions } from "../sections/custom-instructions"
-import { EXPERIMENT_IDS } from "../../../shared/experiments"
 import { MultiSearchReplaceDiffStrategy } from "../../diff/strategies/multi-search-replace"
 
 // Mock the sections
@@ -119,14 +117,6 @@ const mockContext = {
 	},
 } as unknown as vscode.ExtensionContext
 
-// Create a minimal mock of ClineProvider
-const mockProvider = {
-	ensureMcpServersDirectoryExists: async () => "/mock/mcp/path",
-	ensureSettingsDirectoryExists: async () => "/mock/settings/path",
-	postMessageToWebview: async () => {},
-	context: mockContext,
-} as unknown as ClineProvider
-
 // Instead of extending McpHub, create a mock that implements just what we need
 const createMockMcpHub = (): McpHub =>
 	({
@@ -170,10 +160,7 @@ describe("SYSTEM_PROMPT", () => {
 
 	beforeEach(() => {
 		// Reset experiments before each test to ensure they're disabled by default
-		experiments = {
-			[EXPERIMENT_IDS.SEARCH_AND_REPLACE]: false,
-			[EXPERIMENT_IDS.INSERT_BLOCK]: false,
-		}
+		experiments = {}
 	})
 
 	beforeEach(() => {
@@ -478,179 +465,12 @@ describe("SYSTEM_PROMPT", () => {
 		expect(prompt.indexOf(modes[0].roleDefinition)).toBeLessThan(prompt.indexOf("TOOL USE"))
 	})
 
-	describe("experimental tools", () => {
-		it("should disable experimental tools by default", async () => {
-			// Set experiments to explicitly disable experimental tools
-			const experimentsConfig = {
-				[EXPERIMENT_IDS.SEARCH_AND_REPLACE]: false,
-				[EXPERIMENT_IDS.INSERT_BLOCK]: false,
-			}
-
-			// Reset experiments
-			experiments = experimentsConfig
-
-			const prompt = await SYSTEM_PROMPT(
-				mockContext,
-				"/test/path",
-				false, // supportsComputerUse
-				undefined, // mcpHub
-				undefined, // diffStrategy
-				undefined, // browserViewportSize
-				defaultModeSlug, // mode
-				undefined, // customModePrompts
-				undefined, // customModes
-				undefined, // globalCustomInstructions
-				undefined, // diffEnabled
-				experimentsConfig, // Explicitly disable experimental tools
-				true, // enableMcpServerCreation
-			)
-
-			// Check that experimental tool sections are not included
-			const toolSections = prompt.split("\n## ").slice(1)
-			const toolNames = toolSections.map((section) => section.split("\n")[0].trim())
-			expect(toolNames).not.toContain("search_and_replace")
-			expect(toolNames).not.toContain("insert_content")
-			expect(prompt).toMatchSnapshot()
-		})
-
-		it("should enable experimental tools when explicitly enabled", async () => {
-			// Set experiments for testing experimental features
-			const experimentsEnabled = {
-				[EXPERIMENT_IDS.SEARCH_AND_REPLACE]: true,
-				[EXPERIMENT_IDS.INSERT_BLOCK]: true,
-			}
-
-			// Reset default experiments
-			experiments = undefined
-
-			const prompt = await SYSTEM_PROMPT(
-				mockContext,
-				"/test/path",
-				false, // supportsComputerUse
-				undefined, // mcpHub
-				undefined, // diffStrategy
-				undefined, // browserViewportSize
-				defaultModeSlug, // mode
-				undefined, // customModePrompts
-				undefined, // customModes
-				undefined, // globalCustomInstructions
-				undefined, // diffEnabled
-				experimentsEnabled, // Use the enabled experiments
-				true, // enableMcpServerCreation
-			)
-
-			// Get all tool sections
-			const toolSections = prompt.split("## ").slice(1) // Split by section headers and remove first non-tool part
-			const toolNames = toolSections.map((section) => section.split("\n")[0].trim())
-
-			// Verify experimental tools are included in the prompt when enabled
-			expect(toolNames).toContain("search_and_replace")
-			expect(toolNames).toContain("insert_content")
-			expect(prompt).toMatchSnapshot()
-		})
-
-		it("should selectively enable experimental tools", async () => {
-			// Set experiments for testing selective enabling
-			const experimentsSelective = {
-				[EXPERIMENT_IDS.SEARCH_AND_REPLACE]: true,
-				[EXPERIMENT_IDS.INSERT_BLOCK]: false,
-			}
-
-			// Reset default experiments
-			experiments = undefined
-
-			const prompt = await SYSTEM_PROMPT(
-				mockContext,
-				"/test/path",
-				false, // supportsComputerUse
-				undefined, // mcpHub
-				undefined, // diffStrategy
-				undefined, // browserViewportSize
-				defaultModeSlug, // mode
-				undefined, // customModePrompts
-				undefined, // customModes
-				undefined, // globalCustomInstructions
-				undefined, // diffEnabled
-				experimentsSelective, // Use the selective experiments
-				true, // enableMcpServerCreation
-			)
-
-			// Get all tool sections
-			const toolSections = prompt.split("## ").slice(1) // Split by section headers and remove first non-tool part
-			const toolNames = toolSections.map((section) => section.split("\n")[0].trim())
-
-			// Verify only enabled experimental tools are included
-			expect(toolNames).toContain("search_and_replace")
-			expect(toolNames).not.toContain("insert_content")
-			expect(prompt).toMatchSnapshot()
-		})
-
-		it("should list all available editing tools in base instruction", async () => {
-			const experiments = {
-				[EXPERIMENT_IDS.SEARCH_AND_REPLACE]: true,
-				[EXPERIMENT_IDS.INSERT_BLOCK]: true,
-			}
-
-			const prompt = await SYSTEM_PROMPT(
-				mockContext,
-				"/test/path",
-				false,
-				undefined,
-				new MultiSearchReplaceDiffStrategy(),
-				undefined,
-				defaultModeSlug,
-				undefined,
-				undefined,
-				undefined,
-				true, // diffEnabled
-				experiments, // experiments
-				true, // enableMcpServerCreation
-			)
-
-			// Verify base instruction lists all available tools
-			expect(prompt).toContain("apply_diff (for replacing lines in existing files)")
-			expect(prompt).toContain("write_to_file (for creating new files or complete file rewrites)")
-			expect(prompt).toContain("insert_content (for adding lines to existing files)")
-			expect(prompt).toContain("search_and_replace (for finding and replacing individual pieces of text)")
-		})
-		it("should provide detailed instructions for each enabled tool", async () => {
-			const experiments = {
-				[EXPERIMENT_IDS.SEARCH_AND_REPLACE]: true,
-				[EXPERIMENT_IDS.INSERT_BLOCK]: true,
-			}
-
-			const prompt = await SYSTEM_PROMPT(
-				mockContext,
-				"/test/path",
-				false,
-				undefined,
-				new MultiSearchReplaceDiffStrategy(),
-				undefined,
-				defaultModeSlug,
-				undefined,
-				undefined,
-				undefined,
-				true, // diffEnabled
-				experiments,
-				true, // enableMcpServerCreation
-			)
-
-			// Verify detailed instructions for each tool
-			expect(prompt).toContain(
-				"You should always prefer using other editing tools over write_to_file when making changes to existing files since write_to_file is much slower and cannot handle large files.",
-			)
-			expect(prompt).toContain("The insert_content tool adds lines of text to files")
-			expect(prompt).toContain("The search_and_replace tool finds and replaces text or regex in files")
-		})
-	})
-
 	afterAll(() => {
 		jest.restoreAllMocks()
 	})
 })
 
 describe("addCustomInstructions", () => {
-	let experiments: Record<string, boolean> | undefined
 	beforeAll(() => {
 		// Ensure fs mock is properly initialized
 		const mockFs = jest.requireMock("fs/promises")
@@ -662,9 +482,6 @@ describe("addCustomInstructions", () => {
 			}
 			throw new Error(`ENOENT: no such file or directory, mkdir '${path}'`)
 		})
-
-		// Initialize experiments as undefined by default
-		experiments = undefined
 	})
 
 	beforeEach(() => {

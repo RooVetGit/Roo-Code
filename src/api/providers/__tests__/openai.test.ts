@@ -1,7 +1,6 @@
 import { OpenAiHandler } from "../openai"
 import { ApiHandlerOptions } from "../../../shared/api"
 import { Anthropic } from "@anthropic-ai/sdk"
-import { DEEP_SEEK_DEFAULT_TEMPERATURE } from "../constants"
 
 // Mock OpenAI client
 const mockCreate = jest.fn()
@@ -177,7 +176,7 @@ describe("OpenAiHandler", () => {
 			const stream = handler.createMessage("system prompt", testMessages)
 
 			await expect(async () => {
-				for await (const chunk of stream) {
+				for await (const _chunk of stream) {
 					// Should not reach here
 				}
 			}).rejects.toThrow("API Error")
@@ -192,7 +191,7 @@ describe("OpenAiHandler", () => {
 			const stream = handler.createMessage("system prompt", testMessages)
 
 			await expect(async () => {
-				for await (const chunk of stream) {
+				for await (const _chunk of stream) {
 					// Should not reach here
 				}
 			}).rejects.toThrow("Rate limit exceeded")

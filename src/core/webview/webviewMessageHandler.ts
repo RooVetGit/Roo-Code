@@ -8,11 +8,10 @@ import { Language, ApiConfigMeta } from "../../schemas"
 import { changeLanguage, t } from "../../i18n"
 import { ApiConfiguration } from "../../shared/api"
 import { supportPrompt } from "../../shared/support-prompt"
-import { GlobalFileNames } from "../../shared/globalFileNames"
 
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
 import { checkExistKey } from "../../shared/checkExistApiConfig"
-import { EXPERIMENT_IDS, experimentDefault, ExperimentId } from "../../shared/experiments"
+import { experimentDefault } from "../../shared/experiments"
 import { Terminal } from "../../integrations/terminal/Terminal"
 import { openFile, openImage } from "../../integrations/misc/open-file"
 import { selectImages } from "../../integrations/misc/process-images"
@@ -25,10 +24,6 @@ import { playTts, setTtsEnabled, setTtsSpeed, stopTts } from "../../utils/tts"
 import { singleCompletionHandler } from "../../utils/single-completion-handler"
 import { searchCommits } from "../../utils/git"
 import { exportSettings, importSettings } from "../config/importExport"
-import { getOpenRouterModels } from "../../api/providers/openrouter"
-import { getGlamaModels } from "../../api/providers/glama"
-import { getUnboundModels } from "../../api/providers/unbound"
-import { getRequestyModels } from "../../api/providers/requesty"
 import { getOpenAiModels } from "../../api/providers/openai"
 import { getOllamaModels } from "../../api/providers/ollama"
 import { getVsCodeLmModels } from "../../api/providers/vscode-lm"
@@ -45,9 +40,7 @@ import { GlobalState } from "../../schemas"
 import { MarketplaceManager } from "../../services/marketplace"
 import { handleMarketplaceMessages } from "./marketplaceMessageHandler"
 import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
-
-// Track if marketplace data has been loaded
-let marketplaceDataLoaded = false
+import { getModels } from "../../api/providers/fetchers/cache"
 
 export const webviewMessageHandler = async (
 	provider: ClineProvider,
@@ -65,11 +58,8 @@ export const webviewMessageHandler = async (
 			const customModes = await provider.customModesManager.getCustomModes()
 			await updateGlobalState("customModes", customModes)
 
-			// Don't handle marketplace messages in webviewDidLaunch
-			// They will be handled by the fetchMarketplaceItems case
-			console.log(
-				`DEBUG: webviewDidLaunch - skipping marketplace handling, will be triggered by explicit fetchMarketplaceItems`,
-			)
+			provider.postStateToWebview()
+			provider.workspaceTracker?.initializeFilePaths() // Don't await.
 
 			console.log(`DEBUG: About to call postStateToWebview`)
 			await provider.postStateToWebview()
@@ -86,118 +76,13 @@ export const webviewMessageHandler = async (
 				provider.postMessageToWebview({ type: "theme", text: JSON.stringify(theme) })
 			})
 
-			// If MCP Hub is already initialized, update the webview with current server list
-			console.log(`DEBUG: Getting MCP Hub`)
+			// If MCP Hub is already initialized, update the webview with
+			// current server list.
 			const mcpHub = provider.getMcpHub()
+
 			if (mcpHub) {
-				console.log(`DEBUG: MCP Hub exists, getting servers`)
-				const servers = mcpHub!.getAllServers()
-				console.log(`DEBUG: Got servers, posting to webview`)
-				provider.postMessageToWebview({
-					type: "mcpServers",
-					mcpServers: servers,
-				})
-				console.log(`DEBUG: Posted MCP servers to webview`)
-			} else {
-				console.log(`DEBUG: MCP Hub is undefined, skipping server list update`)
+				provider.postMessageToWebview({ type: "mcpServers", mcpServers: mcpHub.getAllServers() })
 			}
-
-			// Post last cached models in case the call to endpoint fails.
-			provider.readModelsFromCache(GlobalFileNames.openRouterModels).then((openRouterModels) => {
-				if (openRouterModels) {
-					provider.postMessageToWebview({ type: "openRouterModels", openRouterModels })
-				}
-			})
-
-			// GUI relies on model info to be up-to-date to provide
-			// the most accurate pricing, so we need to fetch the
-			// latest details on launch.
-			// We do this for all users since many users switch
-			// between api providers and if they were to switch back
-			// to OpenRouter it would be showing outdated model info
-			// if we hadn't retrieved the latest at this point
-			// (see normalizeApiConfiguration > openrouter).
-			const { apiConfiguration: currentApiConfig } = await provider.getState()
-			getOpenRouterModels(currentApiConfig).then(async (openRouterModels) => {
-				if (Object.keys(openRouterModels).length > 0) {
-					await provider.writeModelsToCache(GlobalFileNames.openRouterModels, openRouterModels)
-					await provider.postMessageToWebview({ type: "openRouterModels", openRouterModels })
-
-					// Update model info in state (this needs to be
-					// done here since we don't want to update state
-					// while settings is open, and we may refresh
-					// models there).
-					const { apiConfiguration } = await provider.getState()
-
-					if (apiConfiguration.openRouterModelId) {
-						await updateGlobalState(
-							"openRouterModelInfo",
-							openRouterModels[apiConfiguration.openRouterModelId],
-						)
-						await provider.postStateToWebview()
-					}
-				}
-			})
-
-			provider.readModelsFromCache(GlobalFileNames.glamaModels).then((glamaModels) => {
-				if (glamaModels) {
-					provider.postMessageToWebview({ type: "glamaModels", glamaModels })
-				}
-			})
-
-			getGlamaModels().then(async (glamaModels) => {
-				if (Object.keys(glamaModels).length > 0) {
-					await provider.writeModelsToCache(GlobalFileNames.glamaModels, glamaModels)
-					await provider.postMessageToWebview({ type: "glamaModels", glamaModels })
-
-					const { apiConfiguration } = await provider.getState()
-
-					if (apiConfiguration.glamaModelId) {
-						await updateGlobalState("glamaModelInfo", glamaModels[apiConfiguration.glamaModelId])
-						await provider.postStateToWebview()
-					}
-				}
-			})
-
-			provider.readModelsFromCache(GlobalFileNames.unboundModels).then((unboundModels) => {
-				if (unboundModels) {
-					provider.postMessageToWebview({ type: "unboundModels", unboundModels })
-				}
-			})
-
-			getUnboundModels().then(async (unboundModels) => {
-				if (Object.keys(unboundModels).length > 0) {
-					await provider.writeModelsToCache(GlobalFileNames.unboundModels, unboundModels)
-					await provider.postMessageToWebview({ type: "unboundModels", unboundModels })
-
-					const { apiConfiguration } = await provider.getState()
-
-					if (apiConfiguration?.unboundModelId) {
-						await updateGlobalState("unboundModelInfo", unboundModels[apiConfiguration.unboundModelId])
-						await provider.postStateToWebview()
-					}
-				}
-			})
-
-			provider.readModelsFromCache(GlobalFileNames.requestyModels).then((requestyModels) => {
-				if (requestyModels) {
-					provider.postMessageToWebview({ type: "requestyModels", requestyModels })
-				}
-			})
-
-			getRequestyModels().then(async (requestyModels) => {
-				if (Object.keys(requestyModels).length > 0) {
-					await provider.writeModelsToCache(GlobalFileNames.requestyModels, requestyModels)
-					await provider.postMessageToWebview({ type: "requestyModels", requestyModels })
-
-					const { apiConfiguration } = await provider.getState()
-
-					if (apiConfiguration.requestyModelId) {
-						await updateGlobalState("requestyModelInfo", requestyModels[apiConfiguration.requestyModelId])
-						await provider.postStateToWebview()
-					}
-				}
-			})
 
 			provider.providerSettingsManager
 				.listConfig()
@@ -265,7 +150,7 @@ export const webviewMessageHandler = async (
 		case "fetchMarketplaceItems":
 			if (marketplaceManager) {
 				try {
-					const result = await handleMarketplaceMessages(provider, message, marketplaceManager!)
+					await handleMarketplaceMessages(provider, message, marketplaceManager!)
 				} catch (error) {
 					console.error(`DEBUG: Error handling marketplace message: ${error}`)
 				}
@@ -408,6 +293,7 @@ export const webviewMessageHandler = async (
 			const { success } = await importSettings({
 				providerSettingsManager: provider.providerSettingsManager,
 				contextProxy: provider.contextProxy,
+				customModesManager: provider.customModesManager,
 			})
 
 			if (success) {
@@ -427,51 +313,32 @@ export const webviewMessageHandler = async (
 		case "resetState":
 			await provider.resetState()
 			break
-		case "refreshOpenRouterModels": {
-			const { apiConfiguration: configForRefresh } = await provider.getState()
-			const openRouterModels = await getOpenRouterModels(configForRefresh)
+		case "requestRouterModels":
+			const [openRouterModels, requestyModels, glamaModels, unboundModels] = await Promise.all([
+				getModels("openrouter"),
+				getModels("requesty"),
+				getModels("glama"),
+				getModels("unbound"),
+			])
 
-			if (Object.keys(openRouterModels).length > 0) {
-				await provider.writeModelsToCache(GlobalFileNames.openRouterModels, openRouterModels)
-				await provider.postMessageToWebview({ type: "openRouterModels", openRouterModels })
-			}
-
+			provider.postMessageToWebview({
+				type: "routerModels",
+				routerModels: {
+					openrouter: openRouterModels,
+					requesty: requestyModels,
+					glama: glamaModels,
+					unbound: unboundModels,
+				},
+			})
 			break
-		}
-		case "refreshGlamaModels":
-			const glamaModels = await getGlamaModels()
-
-			if (Object.keys(glamaModels).length > 0) {
-				await provider.writeModelsToCache(GlobalFileNames.glamaModels, glamaModels)
-				await provider.postMessageToWebview({ type: "glamaModels", glamaModels })
-			}
-
-			break
-		case "refreshUnboundModels":
-			const unboundModels = await getUnboundModels()
-
-			if (Object.keys(unboundModels).length > 0) {
-				await provider.writeModelsToCache(GlobalFileNames.unboundModels, unboundModels)
-				await provider.postMessageToWebview({ type: "unboundModels", unboundModels })
-			}
-
-			break
-		case "refreshRequestyModels":
-			const requestyModels = await getRequestyModels()
-
-			if (Object.keys(requestyModels).length > 0) {
-				await provider.writeModelsToCache(GlobalFileNames.requestyModels, requestyModels)
-				await provider.postMessageToWebview({ type: "requestyModels", requestyModels })
-			}
-
-			break
-		case "refreshOpenAiModels":
+		case "requestOpenAiModels":
 			if (message?.values?.baseUrl && message?.values?.apiKey) {
 				const openAiModels = await getOpenAiModels(
 					message?.values?.baseUrl,
 					message?.values?.apiKey,
 					message?.values?.hostHeader,
 				)
+
 				provider.postMessageToWebview({ type: "openAiModels", openAiModels })
 			}
 
@@ -816,6 +683,13 @@ export const webviewMessageHandler = async (
 				Terminal.setTerminalZdotdir(message.bool)
 			}
 			break
+		case "terminalCompressProgressBar":
+			await updateGlobalState("terminalCompressProgressBar", message.bool)
+			await provider.postStateToWebview()
+			if (message.bool !== undefined) {
+				Terminal.setCompressProgressBar(message.bool)
+			}
+			break
 		case "mode":
 			await provider.handleModeSwitch(message.text as Mode)
 			break
@@ -1000,6 +874,10 @@ export const webviewMessageHandler = async (
 		case "maxReadFileLine":
 			await updateGlobalState("maxReadFileLine", message.value)
 			await provider.postStateToWebview()
+			break
+		case "setHistoryPreviewCollapsed": // Add the new case handler
+			await updateGlobalState("historyPreviewCollapsed", message.bool ?? false)
+			// No need to call postStateToWebview here as the UI already updated optimistically
 			break
 		case "toggleApiConfigPin":
 			if (message.text) {
@@ -1477,5 +1355,6 @@ const generateSystemPrompt = async (provider: ClineProvider, message: WebviewMes
 		language,
 		rooIgnoreInstructions,
 	)
+
 	return systemPrompt
 }

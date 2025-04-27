@@ -1,5 +1,6 @@
 import { z } from "zod"
-import { ApiConfiguration, ApiProvider } from "./api"
+
+import { ApiConfiguration } from "./api"
 import { Mode, PromptComponent, ModeConfig } from "./modes"
 import { MarketplaceSource } from "../services/marketplace/types"
 
@@ -41,17 +42,15 @@ export interface WebviewMessage {
 		| "importSettings"
 		| "exportSettings"
 		| "resetState"
+		| "requestRouterModels"
+		| "requestOpenAiModels"
 		| "requestOllamaModels"
 		| "requestLmStudioModels"
+		| "requestVsCodeLmModels"
 		| "openImage"
 		| "openFile"
 		| "openMention"
 		| "cancelTask"
-		| "refreshOpenRouterModels"
-		| "refreshGlamaModels"
-		| "refreshUnboundModels"
-		| "refreshRequestyModels"
-		| "refreshOpenAiModels"
 		| "alwaysAllowBrowser"
 		| "alwaysAllowMcp"
 		| "alwaysAllowModeSwitch"
@@ -88,13 +87,13 @@ export interface WebviewMessage {
 		| "terminalZshOhMy"
 		| "terminalZshP10k"
 		| "terminalZdotdir"
+		| "terminalCompressProgressBar"
 		| "mcpEnabled"
 		| "enableMcpServerCreation"
 		| "searchCommits"
 		| "alwaysApproveResubmit"
 		| "requestDelaySeconds"
 		| "setApiConfigPassword"
-		| "requestVsCodeLmModels"
 		| "mode"
 		| "updatePrompt"
 		| "updateSupportPrompt"
@@ -133,6 +132,7 @@ export interface WebviewMessage {
 		| "refreshMarketplaceSource"
 		| "repositoryRefreshComplete"
 		| "openExternal"
+		| "setHistoryPreviewCollapsed"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
@@ -161,6 +161,8 @@ export interface WebviewMessage {
 	sources?: MarketplaceSource[]
 	filters?: { type?: string; search?: string; tags?: string[] }
 	url?: string // For openExternal
+	hasSystemPromptOverride?: boolean
+	historyPreviewCollapsed?: boolean
 }
 
 export const checkoutDiffPayloadSchema = z.object({

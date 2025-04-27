@@ -65,9 +65,27 @@
 		"tooltip": "Cancelar la operación actual"
 	},
 	"scrollToBottom": "Desplazarse al final del chat",
+	"about": "Genera, refactoriza y depura código con asistencia de IA.<br />Consulta nuestra <DocsLink>documentación</DocsLink> para obtener más información.",
 	"onboarding": "<strong>Tu lista de tareas en este espacio de trabajo está vacía.</strong> Comienza escribiendo una tarea abajo. ¿No estás seguro cómo empezar? Lee más sobre lo que Roo puede hacer por ti en <DocsLink>la documentación</DocsLink>.",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "Tareas Boomerang",
+			"description": "Divide las tareas en partes más pequeñas y manejables."
+		},
+		"stickyModels": {
+			"title": "Modos persistentes",
+			"description": "Cada modo recuerda tu último modelo utilizado"
+		},
+		"tools": {
+			"title": "Herramientas",
+			"description": "Permite que la IA resuelva problemas navegando por la web, ejecutando comandos y mucho más."
+		},
+		"customizableModes": {
+			"title": "Modos personalizables",
+			"description": "Personalidades especializadas con sus propios comportamientos y modelos asignados"
+		}
+	},
 	"selectMode": "Seleccionar modo de interacción",
-	"selectApiConfig": "Seleccionar configuración de API",
 	"enhancePrompt": "Mejorar el mensaje con contexto adicional",
 	"addImages": "Agregar imágenes al mensaje",
 	"sendMessage": "Enviar mensaje",
@@ -120,7 +138,12 @@
 		"didRead": "Roo leyó este archivo:",
 		"wantsToEdit": "Roo quiere editar este archivo:",
 		"wantsToEditOutsideWorkspace": "Roo quiere editar este archivo fuera del espacio de trabajo:",
-		"wantsToCreate": "Roo quiere crear un nuevo archivo:"
+		"wantsToCreate": "Roo quiere crear un nuevo archivo:",
+		"wantsToSearchReplace": "Roo quiere realizar búsqueda y reemplazo en este archivo:",
+		"didSearchReplace": "Roo realizó búsqueda y reemplazo en este archivo:",
+		"wantsToInsert": "Roo quiere insertar contenido en este archivo:",
+		"wantsToInsertWithLineNumber": "Roo quiere insertar contenido en este archivo en la línea {{lineNumber}}:",
+		"wantsToInsertAtEnd": "Roo quiere añadir contenido al final de este archivo:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo quiere ver los archivos de nivel superior en este directorio:",
@@ -181,12 +204,12 @@
 		"copyToInput": "Copiar a la entrada (o Shift + clic)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.12 publicado",
-		"description": "Roo Code 3.12 trae nuevas funcionalidades y mejoras basadas en tus comentarios.",
+		"title": "🎉 Roo Code 3.14 publicado",
+		"description": "Roo Code 3.14 trae nuevas funcionalidades y mejoras basadas en tus comentarios.",
 		"whatsNew": "Novedades",
-		"feature1": "<bold>Soporte Grok</bold>: Añadido el proveedor xAI y opciones de esfuerzo de razonamiento para Grok en OpenRouter",
-		"feature2": "<bold>Mejoras en edición de diferencias</bold>: Configuración por perfil y mejor normalización de cadenas para menos errores",
-		"feature3": "<bold>Mejoras en puntos de control</bold>: Puntos de control más rápidos y confiables",
+		"feature1": "<bold>Herramientas de edición mejoradas</bold>: Las herramientas <code>search_and_replace</code> y <code>insert_content</code> han sido mejoradas y ya no son experimentales",
+		"feature2": "<bold>Mejoras en apply_diff</bold>: Continuamos trabajando en mejorar la herramienta <code>apply_diff</code>",
+		"feature3": "<bold>Montones de otras mejoras</bold>: Numerosas correcciones y mejoras en toda la extensión",
 		"hideButton": "Ocultar anuncio",
 		"detailsDiscussLinks": "Obtén más detalles y participa en <discordLink>Discord</discordLink> y <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -211,5 +234,7 @@
 			"scrollUp": "Desplazar hacia arriba",
 			"close": "Cerrar navegador"
 		}
-	}
+	},
+	"systemPromptWarning": "ADVERTENCIA: Anulación de instrucciones del sistema personalizada activa. Esto puede romper gravemente la funcionalidad y causar un comportamiento impredecible.",
+	"selectApiConfig": "Seleccionar configuración de API"
 }
