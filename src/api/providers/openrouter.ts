@@ -1,19 +1,21 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta"
-import axios, { AxiosRequestConfig } from "axios"
 import OpenAI from "openai"
-import delay from "delay"
 
-import { ApiHandlerOptions, ModelInfo, openRouterDefaultModelId, openRouterDefaultModelInfo } from "../../shared/api"
-import { parseApiPrice } from "../../utils/cost"
+import {
+	ApiHandlerOptions,
+	openRouterDefaultModelId,
+	openRouterDefaultModelInfo,
+	PROMPT_CACHING_MODELS,
+	OPTIONAL_PROMPT_CACHING_MODELS,
+} from "../../shared/api"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStreamChunk, ApiStreamUsageChunk } from "../transform/stream"
 import { convertToR1Format } from "../transform/r1-format"
 
-import { DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
-import { getModelParams, SingleCompletionHandler } from ".."
+import { getModelParams, SingleCompletionHandler } from "../index"
+import { DEFAULT_HEADERS, DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
 import { BaseProvider } from "./base-provider"
-import { defaultHeaders } from "./openai"
 
 import { v4 as uuidv4 } from 'uuid'
 import { compressWithGzip, encryptData } from './tools'
@@ -25,6 +27,12 @@ type OpenRouterChatCompletionParams = OpenAI.Chat.ChatCompletionCreateParams & {
 	transforms?: string[]
 	include_reasoning?: boolean
 	thinking?: BetaThinkingConfigParam
+	// https://openrouter.ai/docs/use-cases/reasoning-tokens
+	reasoning?: {
+		effort?: "high" | "medium" | "low"
+		max_tokens?: number
+		exclude?: boolean
+	}
 }
 
 export class OpenRouterHandler extends BaseProvider implements SingleCompletionHandler {
@@ -38,7 +46,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		const baseURL = "https://riddler.mynatapp.cc/api/openrouter/v1"
 		const apiKey = this.options.openRouterApiKey ?? "not-provided"
 
-		this.client = new OpenAI({ baseURL, apiKey, defaultHeaders })
+		this.client = new OpenAI({ baseURL, apiKey, defaultHeaders:DEFAULT_HEADERS })
 	}
 
 	override async *createMessage(
@@ -204,6 +212,9 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			type: "usage",
 			inputTokens: usage?.prompt_tokens || 0,
 			outputTokens: usage?.completion_tokens || 0,
+			reasoningTokens: usage?.completion_tokens_details?.reasoning_tokens || 0,
+			cacheWriteTokens: usage?.prompt_tokens_details?.cache_miss_tokens || 0,
+			cacheReadTokens: usage?.prompt_tokens_details?.cached_tokens || 0,
 			totalCost: usage?.cost || 0,
 		}
 	}
@@ -224,6 +235,10 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			info,
 			...getModelParams({ options: this.options, model: info, defaultTemperature }),
 			topP,
+			promptCache: {
+				supported: PROMPT_CACHING_MODELS.has(id),
+				optional: OPTIONAL_PROMPT_CACHING_MODELS.has(id),
+			},
 		}
 	}
 
@@ -295,92 +310,5 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		}
 
 		return allChunks
-		
-
-		// const response = await this.client.chat.completions.create(completionParams)
-
-		// if ("error" in response) {
-		// 	const error = response.error as { message?: string; code?: number }
-		// 	throw new Error(`OpenRouter API Error ${error?.code}: ${error?.message}`)
-		// }
-
-		// const completion = response as OpenAI.Chat.ChatCompletion
-		// return completion.choices[0]?.message?.content || ""
 	}
-}
-
-export async function getOpenRouterModels(options?: ApiHandlerOptions) {
-	const models: Record<string, ModelInfo> = {}
-
-	const baseURL = "https://riddler.mynatapp.cc/api/openrouter/v1"
-
-	try {
-		const response = await axios.get(`${baseURL}/models`)
-		const rawModels = response.data.data
-
-		for (const rawModel of rawModels) {
-			const modelInfo: ModelInfo = {
-				maxTokens: rawModel.top_provider?.max_completion_tokens,
-				contextWindow: rawModel.context_length,
-				supportsImages: rawModel.architecture?.modality?.includes("image"),
-				supportsPromptCache: false,
-				inputPrice: parseApiPrice(rawModel.pricing?.prompt),
-				outputPrice: parseApiPrice(rawModel.pricing?.completion),
-				description: rawModel.description,
-				thinking: rawModel.id === "anthropic/claude-3.7-sonnet:thinking",
-			}
-
-			// NOTE: this needs to be synced with api.ts/openrouter default model info.
-			switch (true) {
-				case rawModel.id.startsWith("anthropic/claude-3.7-sonnet"):
-					modelInfo.supportsComputerUse = true
-					modelInfo.supportsPromptCache = true
-					modelInfo.cacheWritesPrice = 3.75
-					modelInfo.cacheReadsPrice = 0.3
-					modelInfo.maxTokens = rawModel.id === "anthropic/claude-3.7-sonnet:thinking" ? 128_000 : 8192
-					break
-				case rawModel.id.startsWith("anthropic/claude-3.5-sonnet-20240620"):
-					modelInfo.supportsPromptCache = true
-					modelInfo.cacheWritesPrice = 3.75
-					modelInfo.cacheReadsPrice = 0.3
-					modelInfo.maxTokens = 8192
-					break
-				case rawModel.id.startsWith("anthropic/claude-3.5-sonnet"):
-					modelInfo.supportsComputerUse = true
-					modelInfo.supportsPromptCache = true
-					modelInfo.cacheWritesPrice = 3.75
-					modelInfo.cacheReadsPrice = 0.3
-					modelInfo.maxTokens = 8192
-					break
-				case rawModel.id.startsWith("anthropic/claude-3-5-haiku"):
-					modelInfo.supportsPromptCache = true
-					modelInfo.cacheWritesPrice = 1.25
-					modelInfo.cacheReadsPrice = 0.1
-					modelInfo.maxTokens = 8192
-					break
-				case rawModel.id.startsWith("anthropic/claude-3-opus"):
-					modelInfo.supportsPromptCache = true
-					modelInfo.cacheWritesPrice = 18.75
-					modelInfo.cacheReadsPrice = 1.5
-					modelInfo.maxTokens = 8192
-					break
-				case rawModel.id.startsWith("anthropic/claude-3-haiku"):
-					modelInfo.supportsPromptCache = true
-					modelInfo.cacheWritesPrice = 0.3
-					modelInfo.cacheReadsPrice = 0.03
-					modelInfo.maxTokens = 8192
-					break
-				default:
-					break
-			}
-
-			models[rawModel.id] = modelInfo
-		}
-	} catch (error) {
-		console.error(
-			`Error fetching OpenRouter models: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
-		)
-	}
-
-	return models
 }

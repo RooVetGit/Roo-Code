@@ -98,7 +98,7 @@ const TaskHeader = ({
 							contextTokens={contextTokens || 0}
 							maxTokens={getMaxTokensForModel(selectedModelInfo, apiConfiguration)}
 						/>
-						{!!totalCost && <VSCodeBadge>${totalCost.toFixed(2)}</VSCodeBadge>}
+						{!!totalCost && <VSCodeBadge>${totalCost.toFixed(3)}</VSCodeBadge>}
 					</div>
 				)}
 				{/* Expanded state: Show task text and images */}
@@ -179,7 +179,7 @@ const TaskHeader = ({
 								<div className="flex justify-between items-center h-[20px]">
 									<div className="flex items-center gap-1">
 										<span className="font-bold">{t("chat:task.apiCost")}</span>
-										<span>${totalCost?.toFixed(2)}</span>
+										<span>${totalCost?.toFixed(3)}</span>
 									</div>
 									<TaskActions item={currentTaskItem} />
 								</div>
