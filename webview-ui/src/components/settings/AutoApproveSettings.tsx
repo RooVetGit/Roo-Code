@@ -2,9 +2,9 @@ import { HTMLAttributes, useState } from "react"
 import { X } from "lucide-react"
 
 import { useAppTranslation } from "@/i18n/TranslationContext"
-import { VSCodeTextField, VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
 import { vscode } from "@/utils/vscode"
-import { Button, Slider } from "@/components/ui"
+import { Button, Input, Slider } from "@/components/ui"
 
 import { SetCachedStateField } from "./types"
 import { SectionHeader } from "./SectionHeader"
@@ -203,7 +203,7 @@ export const AutoApproveSettings = ({
 						</div>
 
 						<div className="flex gap-2">
-							<VSCodeTextField
+							<Input
 								value={commandInput}
 								onInput={(e: any) => setCommandInput(e.target.value)}
 								onKeyDown={(e: any) => {
@@ -216,7 +216,7 @@ export const AutoApproveSettings = ({
 								className="grow"
 								data-testid="command-input"
 							/>
-							<Button onClick={handleAddCommand} data-testid="add-command-button">
+							<Button className="h-8" onClick={handleAddCommand} data-testid="add-command-button">
 								{t("settings:autoApprove.execute.addButton")}
 							</Button>
 						</div>

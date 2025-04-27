@@ -2,8 +2,6 @@ import React, { useState, useEffect, useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import {
 	VSCodeTextArea,
-	VSCodeDropdown,
-	VSCodeOption,
 	VSCodeTextField,
 	VSCodeCheckbox,
 	VSCodeRadioGroup,
@@ -29,6 +27,25 @@ import { Tab, TabContent, TabHeader } from "../common/Tab"
 import i18next from "i18next"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { Trans } from "react-i18next"
+import {
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList,
+	Input,
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+	Textarea,
+} from "../ui"
+import { ChevronsUpDown, X } from "lucide-react"
 
 // Get all available groups that should show in prompts view
 const availableGroups = (Object.keys(TOOL_GROUPS) as ToolGroup[]).filter((group) => !TOOL_GROUPS[group].alwaysAvailable)
@@ -73,6 +90,8 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 	const [isCreateModeDialogOpen, setIsCreateModeDialogOpen] = useState(false)
 	const [activeSupportTab, setActiveSupportTab] = useState<SupportPromptType>("ENHANCE")
 	const [isSystemPromptDisclosureOpen, setIsSystemPromptDisclosureOpen] = useState(false)
+	const [searchValue, setSearchValue] = useState("")
+	const [open, onOpenChange] = useState(false)
 
 	// Direct update functions
 	const updateAgentPrompt = useCallback(
@@ -471,23 +490,80 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 					</div>
 
 					<div className="flex gap-2 items-center mb-3 flex-wrap py-1">
-						{modes.map((modeConfig) => {
-							const isActive = mode === modeConfig.slug
-							return (
-								<button
-									key={modeConfig.slug}
-									data-testid={`${modeConfig.slug}-tab`}
-									data-active={isActive ? "true" : "false"}
-									onClick={() => handleModeSwitch(modeConfig)}
-									className={`px-2 py-1 border-none rounded cursor-pointer font-bold ${
-										isActive
-											? "bg-vscode-button-background text-vscode-button-foreground opacity-100"
-											: "bg-transparent text-vscode-foreground opacity-80"
-									}`}>
-									{modeConfig.name}
-								</button>
-							)
-						})}
+						<Popover open={open} onOpenChange={onOpenChange}>
+							<PopoverTrigger asChild>
+								<Button
+									variant="combobox"
+									role="combobox"
+									aria-expanded={open}
+									className="grow justify-between"
+									// Use select-component data-testid for test compatibility
+									data-testid="select-component">
+									<div>{getCurrentMode()?.name}</div>
+									<ChevronsUpDown className="opacity-50" />
+								</Button>
+							</PopoverTrigger>
+							<PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)]">
+								<Command>
+									<div className="relative">
+										<CommandInput
+											value={searchValue}
+											onValueChange={setSearchValue}
+											placeholder={t("settings:providers.searchPlaceholder")}
+											className="h-9 mr-4"
+											data-testid="profile-search-input"
+										/>
+										{searchValue.length > 0 && (
+											<div className="absolute right-2 top-0 bottom-0 flex items-center justify-center">
+												<X
+													className="text-vscode-input-foreground opacity-50 hover:opacity-100 size-4 p-0.5 cursor-pointer"
+													onClick={() => setSearchValue("")}
+												/>
+											</div>
+										)}
+									</div>
+									<CommandList>
+										<CommandEmpty>
+											{searchValue && (
+												<div className="py-2 px-1 text-sm">
+													{t("settings:providers.noMatchFound")}
+												</div>
+											)}
+										</CommandEmpty>
+										<CommandGroup>
+											{modes
+												.filter((modeConfig) =>
+													searchValue
+														? modeConfig.name
+																.toLowerCase()
+																.includes(searchValue.toLowerCase()) ||
+															modeConfig.slug
+																.toLowerCase()
+																.includes(searchValue.toLowerCase())
+														: true,
+												)
+												.map((config) => (
+													<CommandItem
+														key={config.name}
+														value={config.slug}
+														onSelect={(value) => {
+															handleModeSwitch(
+																modes.find((m) => m.slug === value) || modes[0],
+															)
+															onOpenChange(false)
+														}}
+														data-testid={`profile-option-${config.slug}`}>
+														<div className="flex-1 flex items-center justify-between">
+															{config.name}
+															<span className="text-foreground/70">{config.slug}</span>
+														</div>
+													</CommandItem>
+												))}
+										</CommandGroup>
+									</CommandList>
+								</Command>
+							</PopoverContent>
+						</Popover>
 					</div>
 				</div>
 
@@ -498,7 +574,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							<div className="flex-1">
 								<div className="font-bold mb-1">{t("prompts:createModeDialog.name.label")}</div>
 								<div className="flex gap-2">
-									<VSCodeTextField
+									<Input
 										value={getModeProperty(findModeBySlug(mode, customModes), "name") ?? ""}
 										onChange={(e: Event | React.FormEvent<HTMLElement>) => {
 											const target =
@@ -553,7 +629,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 						<div className="text-sm text-vscode-descriptionForeground mb-2">
 							{t("prompts:roleDefinition.description")}
 						</div>
-						<VSCodeTextArea
+						<Textarea
 							value={(() => {
 								const customMode = findModeBySlug(mode, customModes)
 								const prompt = customModePrompts?.[mode] as PromptComponent
@@ -561,7 +637,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							})()}
 							onChange={(e) => {
 								const value =
-									(e as CustomEvent)?.detail?.target?.value ||
+									(e as unknown as CustomEvent)?.detail?.target?.value ||
 									((e as any).target as HTMLTextAreaElement).value
 								const customMode = findModeBySlug(mode, customModes)
 								if (customMode) {
@@ -578,8 +654,8 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 									})
 								}
 							}}
+							className="resize-y"
 							rows={4}
-							resize="vertical"
 							style={{ width: "100%" }}
 							data-testid={`${getCurrentMode()?.slug || "code"}-prompt-textarea`}
 						/>
@@ -591,22 +667,25 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 								{t("prompts:apiConfiguration.title")}
 							</div>
 							<div style={{ marginBottom: "8px" }}>
-								<VSCodeDropdown
-									value={currentApiConfigName || ""}
-									onChange={(e: any) => {
-										const value = e.detail?.target?.value || e.target?.value
+								<Select
+									value={currentApiConfigName}
+									onValueChange={(value) => {
 										vscode.postMessage({
 											type: "loadApiConfiguration",
 											text: value,
 										})
-									}}
-									className="w-full">
-									{(listApiConfigMeta || []).map((config) => (
-										<VSCodeOption key={config.id} value={config.name}>
-											{config.name}
-										</VSCodeOption>
-									))}
-								</VSCodeDropdown>
+									}}>
+									<SelectTrigger className="w-full">
+										<SelectValue placeholder={t("settings:common.select")} />
+									</SelectTrigger>
+									<SelectContent>
+										{(listApiConfigMeta || []).map((config) => (
+											<SelectItem key={config.id} value={config.name}>
+												{config.name}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
 								<div className="text-xs mt-1.5 text-vscode-descriptionForeground">
 									{t("prompts:apiConfiguration.select")}
 								</div>
@@ -736,7 +815,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 								modeName: getCurrentMode()?.name || "Code",
 							})}
 						</div>
-						<VSCodeTextArea
+						<Textarea
 							value={(() => {
 								const customMode = findModeBySlug(mode, customModes)
 								const prompt = customModePrompts?.[mode] as PromptComponent
@@ -748,7 +827,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							})()}
 							onChange={(e) => {
 								const value =
-									(e as CustomEvent)?.detail?.target?.value ||
+									(e as unknown as CustomEvent)?.detail?.target?.value ||
 									((e as any).target as HTMLTextAreaElement).value
 								const customMode = findModeBySlug(mode, customModes)
 								if (customMode) {
@@ -768,8 +847,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 								}
 							}}
 							rows={4}
-							resize="vertical"
-							style={{ width: "100%" }}
+							className="w-full resize-y"
 							data-testid={`${getCurrentMode()?.slug || "code"}-custom-instructions-textarea`}
 						/>
 						<div
@@ -905,11 +983,11 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 					<div className="text-sm text-vscode-descriptionForeground mb-2">
 						{t("prompts:globalCustomInstructions.description", { language: i18next.language })}
 					</div>
-					<VSCodeTextArea
+					<Textarea
 						value={customInstructions ?? ""}
 						onChange={(e) => {
 							const value =
-								(e as CustomEvent)?.detail?.target?.value ||
+								(e as unknown as CustomEvent)?.detail?.target?.value ||
 								((e as any).target as HTMLTextAreaElement).value
 							setCustomInstructions(value || undefined)
 							vscode.postMessage({
@@ -918,8 +996,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							})
 						}}
 						rows={4}
-						resize="vertical"
-						className="w-full"
+						className="w-full resize-y"
 						data-testid="global-custom-instructions-textarea"
 					/>
 					<div className="text-xs text-vscode-descriptionForeground mt-1.5 mb-10">
@@ -968,28 +1045,20 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							flexWrap: "wrap",
 							padding: "4px 0",
 						}}>
-						{Object.keys(supportPrompt.default).map((type) => (
-							<button
-								key={type}
-								data-testid={`${type}-tab`}
-								data-active={activeSupportTab === type ? "true" : "false"}
-								onClick={() => setActiveSupportTab(type as SupportPromptType)}
-								style={{
-									padding: "4px 8px",
-									border: "none",
-									background: activeSupportTab === type ? "var(--vscode-button-background)" : "none",
-									color:
-										activeSupportTab === type
-											? "var(--vscode-button-foreground)"
-											: "var(--vscode-foreground)",
-									cursor: "pointer",
-									opacity: activeSupportTab === type ? 1 : 0.8,
-									borderRadius: "3px",
-									fontWeight: "bold",
-								}}>
-								{t(`prompts:supportPrompts.types.${type}.label`)}
-							</button>
-						))}
+						<Select
+							value={activeSupportTab}
+							onValueChange={(type) => setActiveSupportTab(type as SupportPromptType)}>
+							<SelectTrigger className="w-full">
+								<SelectValue placeholder={t("settings:common.select")} />
+							</SelectTrigger>
+							<SelectContent>
+								{Object.keys(supportPrompt.default).map((type) => (
+									<SelectItem key={type} value={type}>
+										{t(`prompts:supportPrompts.types.${type}.label`)}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
 					</div>
 
 					{/* Support prompt description */}
@@ -1021,18 +1090,17 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							</Button>
 						</div>
 
-						<VSCodeTextArea
+						<Textarea
 							value={getSupportPromptValue(activeSupportTab)}
 							onChange={(e) => {
 								const value =
-									(e as CustomEvent)?.detail?.target?.value ||
+									(e as unknown as CustomEvent)?.detail?.target?.value ||
 									((e as any).target as HTMLTextAreaElement).value
 								const trimmedValue = value.trim()
 								updateSupportPrompt(activeSupportTab, trimmedValue || undefined)
 							}}
 							rows={6}
-							resize="vertical"
-							style={{ width: "100%" }}
+							className="resize-y w-full"
 						/>
 
 						{activeSupportTab === "ENHANCE" && (
@@ -1058,27 +1126,31 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 												{t("prompts:supportPrompts.enhance.apiConfigDescription")}
 											</div>
 										</div>
-										<VSCodeDropdown
+										<Select
 											value={enhancementApiConfigId || ""}
-											data-testid="api-config-dropdown"
-											onChange={(e: any) => {
-												const value = e.detail?.target?.value || e.target?.value
+											onValueChange={(value) => {
 												setEnhancementApiConfigId(value)
 												vscode.postMessage({
 													type: "enhancementApiConfigId",
 													text: value,
 												})
-											}}
-											style={{ width: "300px" }}>
-											<VSCodeOption value="">
-												{t("prompts:supportPrompts.enhance.useCurrentConfig")}
-											</VSCodeOption>
-											{(listApiConfigMeta || []).map((config) => (
-												<VSCodeOption key={config.id} value={config.id}>
-													{config.name}
-												</VSCodeOption>
-											))}
-										</VSCodeDropdown>
+											}}>
+											<SelectTrigger data-testid="api-config-select">
+												<SelectValue
+													placeholder={t("prompts:supportPrompts.enhance.useCurrentConfig")}
+												/>
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="">
+													{t("prompts:supportPrompts.enhance.useCurrentConfig")}
+												</SelectItem>
+												{(listApiConfigMeta || []).map((config) => (
+													<SelectItem key={config.id} value={config.id}>
+														{config.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
 									</div>
 								</div>
 
