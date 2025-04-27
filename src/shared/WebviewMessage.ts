@@ -2,7 +2,7 @@ import { z } from "zod"
 
 import { ApiConfiguration } from "./api"
 import { Mode, PromptComponent, ModeConfig } from "./modes"
-import { MarketplaceSource } from "../services/marketplace/types"
+import { MarketplaceItem, MarketplaceSource } from "../services/marketplace/types"
 
 export type ClineAskResponse = "yesButtonClicked" | "noButtonClicked" | "messageResponse"
 
@@ -129,6 +129,7 @@ export interface WebviewMessage {
 		| "fetchMarketplaceItems"
 		| "filterMarketplaceItems"
 		| "marketplaceButtonClicked"
+		| "installMarketplaceItem"
 		| "refreshMarketplaceSource"
 		| "repositoryRefreshComplete"
 		| "openExternal"
@@ -161,6 +162,7 @@ export interface WebviewMessage {
 	sources?: MarketplaceSource[]
 	filters?: { type?: string; search?: string; tags?: string[] }
 	url?: string // For openExternal
+	marketplaceItem?: MarketplaceItem
 	hasSystemPromptOverride?: boolean
 	historyPreviewCollapsed?: boolean
 }

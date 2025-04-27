@@ -55,6 +55,7 @@
 		"card": {
 			"by": "by {{author}}",
 			"from": "from {{source}}",
+			"install": "Install",
 			"viewSource": "View",
 			"viewOnSource": "View on {{source}}"
 		}

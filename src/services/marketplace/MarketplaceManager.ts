@@ -564,4 +564,27 @@ export class MarketplaceManager {
 			}
 		}
 	}
+
+	async installMarketplaceItem(item: MarketplaceItem) {
+		if (!vscode.workspace.workspaceFolders?.length)
+			return vscode.window.showErrorMessage("Cannot load current workspace folder")
+
+		if (!item.binaryUrl || !item.binaryHash)
+			return vscode.window.showErrorMessage("Item does not have a binary URL or hash")
+
+		const workspacePath = vscode.workspace.workspaceFolders[0].uri.fsPath
+		const { hookable } = await import("roo-rocket")
+		const { unpackFromUrl } = await import("config-rocket/cli")
+
+		vscode.window.showInformationMessage(`Installing item: "${item.name}"`)
+		await unpackFromUrl(item.binaryUrl, {
+			hookable,
+			nonAssemblyBehavior: true,
+			sha256: item.binaryHash,
+			cwd: workspacePath
+		})
+		vscode.window.showInformationMessage(`Item "${item.name}" installed successfully`)
+
+		return true
+	}
 }

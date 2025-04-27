@@ -8,6 +8,8 @@ export const baseMetadataSchema = z.object({
 	name: z.string().min(1, "Name is required"),
 	description: z.string(),
 	version: z.string().regex(/^\d+\.\d+\.\d+$/, "Version must be in semver format (e.g., 1.0.0)"),
+	binaryUrl: z.string().url("Binary URL must be a valid URL").optional(),
+	binaryHash: z.string().optional(),
 	tags: z.array(z.string()).optional(),
 	author: z.string().optional(),
 	authorUrl: z.string().url("Author URL must be a valid URL").optional(),

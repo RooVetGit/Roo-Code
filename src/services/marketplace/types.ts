@@ -24,6 +24,8 @@ export interface BaseMetadata {
 	name: string
 	description: string
 	version: string
+	binaryUrl?: string
+	binaryHash?: string
 	tags?: string[]
 	author?: string
 	authorUrl?: string
@@ -78,6 +80,8 @@ export interface MarketplaceItem {
 	authorUrl?: string
 	tags?: string[]
 	version?: string
+	binaryUrl?: string
+	binaryHash?: string
 	lastUpdated?: string
 	sourceUrl?: string
 	defaultBranch?: string
