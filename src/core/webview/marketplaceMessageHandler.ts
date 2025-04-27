@@ -223,7 +223,7 @@ export async function handleMarketplaceMessages(
 					await marketplaceManager.installMarketplaceItem(message.marketplaceItem)
 				} catch (error) {
 					vscode.window.showErrorMessage(
-						`Failed to open URL: ${error instanceof Error ? error.message : String(error)}`,
+						`Failed to install item "${message.marketplaceItem.name}": ${error instanceof Error ? error.message : String(error)}`,
 					)
 				}
 			} else {
