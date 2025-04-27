@@ -29,15 +29,9 @@ docs/_site/
 
 #Local lint config
 .eslintrc.local.json
+
 #Logging
 logs
-
-# Roo-specific files
-.roorules*
-.roomodes
-.clinerules
-memory-bank/
-.roo/**
 
 # Vite development
 .vite-port
