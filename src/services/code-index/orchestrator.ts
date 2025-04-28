@@ -146,12 +146,31 @@ export class CodeIndexOrchestrator {
 
 			this.stateManager.setSystemState("Indexing", "Services ready. Starting workspace scan...")
 
-			const result = await this._scanner.scanDirectory(this.workspacePath, this.context, (batchError: Error) => {
-				console.error(
-					`[CodeIndexOrchestrator] Error during initial scan batch: ${batchError.message}`,
-					batchError,
-				)
-			})
+			let cumulativeBlocksIndexed = 0
+			let cumulativeBlocksFoundSoFar = 0
+
+			const handleFileParsed = (fileBlockCount: number) => {
+				cumulativeBlocksFoundSoFar += fileBlockCount
+				this.stateManager.reportBlockIndexingProgress(cumulativeBlocksIndexed, cumulativeBlocksFoundSoFar)
+			}
+
+			const handleBlocksIndexed = (indexedCount: number) => {
+				cumulativeBlocksIndexed += indexedCount
+				this.stateManager.reportBlockIndexingProgress(cumulativeBlocksIndexed, cumulativeBlocksFoundSoFar)
+			}
+
+			const result = await this._scanner.scanDirectory(
+				this.workspacePath,
+				this.context,
+				(batchError: Error) => {
+					console.error(
+						`[CodeIndexOrchestrator] Error during initial scan batch: ${batchError.message}`,
+						batchError,
+					)
+				},
+				handleBlocksIndexed,
+				handleFileParsed,
+			)
 
 			if (!result) {
 				throw new Error("Scan failed, is scanner initialized?")
@@ -160,7 +179,7 @@ export class CodeIndexOrchestrator {
 			const { stats } = result
 
 			console.log(
-				`[CodeIndexOrchestrator] Initial scan complete. Processed: ${stats.processed}, Skipped: ${stats.skipped}`,
+				`[CodeIndexOrchestrator] Initial scan complete. Processed Files: ${stats.processed}, Skipped Files: ${stats.skipped}, Blocks Found: ${result.totalBlockCount}, Blocks Indexed: ${cumulativeBlocksIndexed}`,
 			)
 
 			await this._startWatcher()

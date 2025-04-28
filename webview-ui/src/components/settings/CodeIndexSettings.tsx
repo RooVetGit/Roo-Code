@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react"
+import * as ProgressPrimitive from "@radix-ui/react-progress"
 import { Database } from "lucide-react"
 import { vscode } from "../../utils/vscode"
 import {
@@ -39,6 +40,8 @@ interface IndexingStatusUpdateMessage {
 	values: {
 		systemStatus: string
 		message?: string
+		processedBlockCount: number
+		totalBlockCount: number
 	}
 }
 
@@ -49,8 +52,12 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 	setCachedStateField,
 	setApiConfigurationField,
 }) => {
-	const [systemStatus, setSystemStatus] = useState("Standby")
-	const [indexingMessage, setIndexingMessage] = useState("")
+	const [indexingStatus, setIndexingStatus] = useState({
+		systemStatus: "Standby",
+		message: "",
+		processedBlockCount: 0,
+		totalBlockCount: 0,
+	})
 
 	// Safely calculate available models for current provider
 	const currentProvider = codebaseIndexConfig?.codebaseIndexEmbedderProvider
@@ -69,8 +76,10 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 		// Set up message listener for status updates
 		const handleMessage = (event: MessageEvent<IndexingStatusUpdateMessage>) => {
 			if (event.data.type === "indexingStatusUpdate") {
-				setSystemStatus(event.data.values.systemStatus)
-				setIndexingMessage(event.data.values.message || "")
+				setIndexingStatus({
+					...event.data.values,
+					message: event.data.values.message || "",
+				})
 			}
 		}
 
@@ -203,20 +212,58 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 								className={`
 									inline-block w-3 h-3 rounded-full mr-2
 									${
-										systemStatus === "Standby"
+										indexingStatus.systemStatus === "Standby"
 											? "bg-gray-400"
-											: systemStatus === "Indexing"
+											: indexingStatus.systemStatus === "Indexing"
 												? "bg-yellow-500 animate-pulse"
-												: systemStatus === "Indexed"
+												: indexingStatus.systemStatus === "Indexed"
 													? "bg-green-500"
-													: systemStatus === "Error"
+													: indexingStatus.systemStatus === "Error"
 														? "bg-red-500"
 														: "bg-gray-400"
 									}
 								`}></span>
-							{systemStatus}
-							{indexingMessage ? ` - ${indexingMessage}` : ""}
+							{indexingStatus.systemStatus}
+							{indexingStatus.systemStatus !== "Indexing" && indexingStatus.message
+								? ` - ${indexingStatus.message}`
+								: ""}
 						</div>
+
+						{indexingStatus.systemStatus === "Indexing" && (
+							<div className="mt-4 space-y-1">
+								<p className="text-sm text-muted-foreground">
+									{indexingStatus.message || "Indexing in progress..."}
+								</p>
+								<ProgressPrimitive.Root
+									className="relative h-2 w-full overflow-hidden rounded-full bg-secondary"
+									value={
+										indexingStatus.totalBlockCount > 0
+											? (indexingStatus.processedBlockCount / indexingStatus.totalBlockCount) *
+												100
+											: indexingStatus.totalBlockCount === 0 &&
+												  indexingStatus.processedBlockCount === 0
+												? 100
+												: 0
+									}>
+									<ProgressPrimitive.Indicator
+										className="h-full w-full flex-1 bg-primary transition-transform duration-300 ease-in-out"
+										style={{
+											transform: `translateX(-${
+												100 -
+												(indexingStatus.totalBlockCount > 0
+													? (indexingStatus.processedBlockCount /
+															indexingStatus.totalBlockCount) *
+														100
+													: indexingStatus.totalBlockCount === 0 &&
+														  indexingStatus.processedBlockCount === 0
+														? 100
+														: 0)
+											}%)`,
+										}}
+									/>
+								</ProgressPrimitive.Root>
+							</div>
+						)}
 
 						<div className="flex gap-2 mt-4">
 							<VSCodeButton
@@ -229,7 +276,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 											!codebaseIndexConfig.codebaseIndexEmbedderModelId)) ||
 									!apiConfiguration.codeIndexQdrantApiKey ||
 									!codebaseIndexConfig.codebaseIndexQdrantUrl ||
-									systemStatus === "Indexing"
+									indexingStatus.systemStatus === "Indexing"
 								}>
 								Start Indexing
 							</VSCodeButton>

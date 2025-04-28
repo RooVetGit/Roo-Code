@@ -12,11 +12,9 @@ export class CodeIndexStateManager {
 	private _systemStatus: IndexingState = "Standby"
 	private _statusMessage: string = ""
 	private _fileStatuses: Record<string, string> = {}
-	private _progressEmitter = new vscode.EventEmitter<{
-		systemStatus: IndexingState
-		fileStatuses: Record<string, string>
-		message?: string
-	}>()
+	private _processedBlockCount: number = 0
+	private _totalBlockCount: number = 0
+	private _progressEmitter = new vscode.EventEmitter<ReturnType<typeof this.getCurrentStatus>>()
 
 	// Webview provider reference for status updates
 	private webviewProvider?: { postMessage: (msg: any) => void }
@@ -42,6 +40,8 @@ export class CodeIndexStateManager {
 			systemStatus: this._systemStatus,
 			fileStatuses: this._fileStatuses,
 			message: this._statusMessage,
+			processedBlockCount: this._processedBlockCount,
+			totalBlockCount: this._totalBlockCount,
 		}
 	}
 
@@ -56,12 +56,19 @@ export class CodeIndexStateManager {
 			if (message !== undefined) {
 				this._statusMessage = message
 			}
+
+			// Reset progress counters if moving to a non-indexing state or starting fresh
+			if (newState !== "Indexing") {
+				this._processedBlockCount = 0
+				this._totalBlockCount = 0
+				// Optionally clear the message or set a default for non-indexing states
+				if (newState === "Standby" && message === undefined) this._statusMessage = "Ready."
+				if (newState === "Indexed" && message === undefined) this._statusMessage = "Index up-to-date."
+				if (newState === "Error" && message === undefined) this._statusMessage = "An error occurred."
+			}
+
 			this.postStatusUpdate()
-			this._progressEmitter.fire({
-				systemStatus: this._systemStatus,
-				fileStatuses: this._fileStatuses,
-				message: this._statusMessage,
-			})
+			this._progressEmitter.fire(this.getCurrentStatus())
 			console.log(
 				`[CodeIndexStateManager] System state changed to: ${this._systemStatus}${
 					message ? ` (${message})` : ""
@@ -87,11 +94,7 @@ export class CodeIndexStateManager {
 
 		if (stateChanged) {
 			this.postStatusUpdate()
-			this._progressEmitter.fire({
-				systemStatus: this._systemStatus,
-				fileStatuses: this._fileStatuses,
-				message: this._statusMessage,
-			})
+			this._progressEmitter.fire(this.getCurrentStatus())
 		}
 	}
 
@@ -99,13 +102,34 @@ export class CodeIndexStateManager {
 		if (this.webviewProvider) {
 			this.webviewProvider.postMessage({
 				type: "indexingStatusUpdate",
-				values: {
-					systemStatus: this._systemStatus,
-					message: this._statusMessage,
-					// Optionally include fileStatuses if the webview needs it
-					// fileStatuses: this._fileStatuses
-				},
+				values: this.getCurrentStatus(),
 			})
+		}
+	}
+
+	public reportBlockIndexingProgress(processedBlocks: number, totalBlocks: number): void {
+		const progressChanged = processedBlocks !== this._processedBlockCount || totalBlocks !== this._totalBlockCount
+
+		// Update if progress changes OR if the system wasn't already in 'Indexing' state
+		if (progressChanged || this._systemStatus !== "Indexing") {
+			this._processedBlockCount = processedBlocks
+			this._totalBlockCount = totalBlocks
+
+			const message = `Indexed ${this._processedBlockCount} / ${this._totalBlockCount} blocks found`
+			const oldStatus = this._systemStatus
+			const oldMessage = this._statusMessage
+
+			this._systemStatus = "Indexing" // Ensure state is Indexing
+			this._statusMessage = message
+
+			// Only fire update if status, message or progress actually changed
+			if (oldStatus !== this._systemStatus || oldMessage !== this._statusMessage || progressChanged) {
+				this.postStatusUpdate()
+				this._progressEmitter.fire(this.getCurrentStatus())
+				console.log(
+					`[CodeIndexStateManager] Block Progress: ${message} (${this._processedBlockCount}/${this._totalBlockCount})`,
+				)
+			}
 		}
 	}
 

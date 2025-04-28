@@ -40,7 +40,9 @@ export class DirectoryScanner implements IDirectoryScanner {
 		directoryPath: string,
 		context?: vscode.ExtensionContext,
 		onError?: (error: Error) => void,
-	): Promise<{ codeBlocks: CodeBlock[]; stats: { processed: number; skipped: number } }> {
+		onBlocksIndexed?: (indexedCount: number) => void,
+		onFileParsed?: (fileBlockCount: number) => void,
+	): Promise<{ codeBlocks: CodeBlock[]; stats: { processed: number; skipped: number }; totalBlockCount: number }> {
 		// Get all files recursively (handles .gitignore automatically)
 		const [allPaths, _] = await listFiles(directoryPath, true, DirectoryScanner.MAX_LIST_FILES_LIMIT)
 
@@ -86,6 +88,9 @@ export class DirectoryScanner implements IDirectoryScanner {
 		let currentBatchFileInfos: { filePath: string; fileHash: string; isNew: boolean }[] = []
 		const activeBatchPromises: Promise<void>[] = []
 
+		// Initialize block counter
+		let totalBlockCount = 0
+
 		// Process all files in parallel with concurrency control
 		const parsePromises = supportedPaths.map((filePath) =>
 			parseLimiter(async () => {
@@ -117,6 +122,8 @@ export class DirectoryScanner implements IDirectoryScanner {
 
 					// File is new or changed - parse it using the injected parser function
 					const blocks = await this.codeParser.parseFile(filePath, { content, fileHash: currentFileHash })
+					const fileBlockCount = blocks.length
+					onFileParsed?.(fileBlockCount)
 					codeBlocks.push(...blocks)
 					processedCount++
 
@@ -128,6 +135,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 							const trimmedContent = block.content.trim()
 							if (trimmedContent) {
 								const release = await mutex.acquire()
+								totalBlockCount += fileBlockCount
 								try {
 									currentBatchBlocks.push(block)
 									currentBatchTexts.push(trimmedContent)
@@ -159,6 +167,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 												batchFileInfos,
 												newHashes,
 												onError,
+												onBlocksIndexed,
 											),
 										)
 										activeBatchPromises.push(batchPromise)
@@ -198,7 +207,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 
 				// Queue final batch processing
 				const batchPromise = batchLimiter(() =>
-					this.processBatch(batchBlocks, batchTexts, batchFileInfos, newHashes, onError),
+					this.processBatch(batchBlocks, batchTexts, batchFileInfos, newHashes, onError, onBlocksIndexed),
 				)
 				activeBatchPromises.push(batchPromise)
 			} finally {
@@ -244,6 +253,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 				processed: processedCount,
 				skipped: skippedCount,
 			},
+			totalBlockCount,
 		}
 	}
 
@@ -278,6 +288,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 		batchFileInfos: { filePath: string; fileHash: string; isNew: boolean }[],
 		newHashes: Record<string, string>,
 		onError?: (error: Error) => void,
+		onBlocksIndexed?: (indexedCount: number) => void,
 	): Promise<void> {
 		if (batchBlocks.length === 0) return
 
@@ -343,6 +354,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 
 				// Upsert points to Qdrant
 				await this.qdrantClient.upsertPoints(points)
+				onBlocksIndexed?.(batchBlocks.length)
 
 				// Update hashes for successfully processed files in this batch
 				for (const fileInfo of batchFileInfos) {
