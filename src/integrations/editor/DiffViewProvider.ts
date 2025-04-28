@@ -17,6 +17,7 @@ export class DiffViewProvider {
 	originalContent: string | undefined
 	private createdDirs: string[] = []
 	private documentWasOpen = false
+	private originalViewColumn?: vscode.ViewColumn // Store the original view column
 	private relPath?: string
 	private newContent?: string
 	private activeDiffEditor?: vscode.TextEditor
@@ -65,11 +66,22 @@ export class DiffViewProvider {
 			.filter(
 				(tab) => tab.input instanceof vscode.TabInputText && arePathsEqual(tab.input.uri.fsPath, absolutePath),
 			)
+		// Check if the document is already open and store its state
+		// DO NOT close the original tab to preserve pin status
 		for (const tab of tabs) {
-			if (!tab.isDirty) {
-				await vscode.window.tabGroups.close(tab)
+			if (tab.input instanceof vscode.TabInputText && arePathsEqual(tab.input.uri.fsPath, absolutePath)) {
+				this.originalViewColumn = tab.group.viewColumn
+				this.documentWasOpen = true
+				// Ensure the tab is not dirty before proceeding, but don't close it
+				if (tab.isDirty) {
+					// Find the document associated with the tab and save it
+					const doc = vscode.workspace.textDocuments.find((d) => arePathsEqual(d.uri.fsPath, absolutePath))
+					if (doc) {
+						await doc.save()
+					}
+				}
+				break // Found the relevant tab, no need to check others
 			}
-			this.documentWasOpen = true
 		}
 		this.activeDiffEditor = await this.openDiffEditor()
 		this.fadedOverlayController = new DecorationController("fadedOverlay", this.activeDiffEditor)
@@ -385,6 +397,7 @@ export class DiffViewProvider {
 		this.originalContent = undefined
 		this.createdDirs = []
 		this.documentWasOpen = false
+		this.originalViewColumn = undefined // Reset stored view column
 		this.activeDiffEditor = undefined
 		this.fadedOverlayController = undefined
 		this.activeLineController = undefined
