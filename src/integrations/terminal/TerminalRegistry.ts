@@ -162,7 +162,7 @@ export class TerminalRegistry {
 		// matching directory.
 		if (taskId) {
 			terminal = terminals.find((t) => {
-				if (t.busy || t.taskId !== taskId) {
+				if (t.busy || t.taskId !== taskId || t.provider !== provider) {
 					return false
 				}
 
@@ -179,7 +179,7 @@ export class TerminalRegistry {
 		// Second priority: Find any available terminal with matching directory.
 		if (!terminal) {
 			terminal = terminals.find((t) => {
-				if (t.busy) {
+				if (t.busy || t.provider !== provider) {
 					return false
 				}
 
@@ -196,7 +196,7 @@ export class TerminalRegistry {
 		// Third priority: Find any non-busy terminal (only if directory is not
 		// required).
 		if (!terminal && !requiredCwd) {
-			terminal = terminals.find((t) => !t.busy)
+			terminal = terminals.find((t) => !t.busy && t.provider === provider)
 		}
 
 		// If no suitable terminal found, create a new one.

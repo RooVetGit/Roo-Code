@@ -2110,7 +2110,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			}
 		}
 
-		console.log(`[Cline#getEnvironmentDetails] terminalDetails: ${terminalDetails}`)
+		// console.log(`[Cline#getEnvironmentDetails] terminalDetails: ${terminalDetails}`)
 
 		// Add recently modified files section.
 		const recentlyModifiedFiles = this.fileContextTracker.getAndClearRecentlyModifiedFiles()

@@ -3,6 +3,7 @@ import EventEmitter from "events"
 export type RooTerminalProvider = "vscode" | "execa"
 
 export interface RooTerminal {
+	provider: RooTerminalProvider
 	id: number
 	busy: boolean
 	running: boolean
