@@ -1,6 +1,4 @@
-import { ToolArgs } from "./types"
-
-export function getCodebaseSearchDescription(args: ToolArgs): string {
+export function getCodebaseSearchDescription(): string {
 	return `## codebase_search
 Description: Search the codebase for relevant files based on a query. Use this when the user asks a question about the codebase that requires finding specific files or code snippets.
 Parameters:

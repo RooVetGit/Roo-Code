@@ -3,7 +3,7 @@ import { OpenAiEmbedder } from "./embedders/openai"
 import { CodeIndexOllamaEmbedder } from "./embedders/ollama"
 import { EmbedderProvider, getDefaultModelId, getModelDimension } from "../../shared/embeddingModels"
 import { QdrantVectorStore } from "./vector-store/qdrant-client"
-import { codeParser, CodeParser, DirectoryScanner, FileWatcher } from "./processors"
+import { codeParser, DirectoryScanner, FileWatcher } from "./processors"
 import { ICodeParser, IEmbedder, IFileWatcher, IVectorStore } from "./interfaces"
 import { CodeIndexConfigManager } from "./config-manager"
 
@@ -22,26 +22,17 @@ export class CodeIndexServiceFactory {
 	protected createEmbedder(): IEmbedder {
 		const config = this.configManager.getConfig()
 
-		const provider = config.embedderProvider as EmbedderProvider // Cast for type safety
-		const defaultModel = getDefaultModelId(provider)
+		const provider = config.embedderProvider as EmbedderProvider
 
 		if (provider === "openai") {
 			if (!config.openAiOptions?.openAiNativeApiKey) {
 				throw new Error("OpenAI configuration missing for embedder creation")
 			}
-			// Use apiModelId from options, fallback to default
-			const modelId = config.openAiOptions.apiModelId ?? defaultModel
-			// TODO: Update OpenAiEmbedder constructor to accept modelId
-			// return new OpenAiEmbedder(config.openAiOptions, modelId)
 			return new OpenAiEmbedder(config.openAiOptions) // Reverted temporarily
 		} else if (provider === "ollama") {
 			if (!config.ollamaOptions?.ollamaBaseUrl) {
 				throw new Error("Ollama configuration missing for embedder creation")
 			}
-			// Use apiModelId from options, fallback to default
-			const modelId = config.ollamaOptions.apiModelId ?? defaultModel
-			// TODO: Update CodeIndexOllamaEmbedder constructor to accept modelId
-			// return new CodeIndexOllamaEmbedder(config.ollamaOptions, modelId)
 			return new CodeIndexOllamaEmbedder(config.ollamaOptions) // Reverted temporarily
 		}
 

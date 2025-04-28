@@ -2,12 +2,6 @@ import * as vscode from "vscode"
 
 export type IndexingState = "Standby" | "Indexing" | "Indexed" | "Error"
 
-// Define the structure for progress updates
-export interface IndexProgressUpdate {
-	systemStatus: IndexingState
-	message?: string // For details like error messages or current activity
-}
-
 export class CodeIndexStateManager {
 	private _systemStatus: IndexingState = "Standby"
 	private _statusMessage: string = ""
