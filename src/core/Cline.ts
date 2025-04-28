@@ -405,7 +405,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			if (!provider) {
 				throw new Error("[Cline.ts ask] Cannot wait for input, provider reference lost.")
 			}
-			await provider.postMessageToWebview({ type: "acceptInput" })
+			await provider.postMessageToWebview({ type: "enableChatInput" }) // <<< Use the new dedicated message type
 
 			// Wait for handleWebviewAskResponse to set this.askResponse
 			await pWaitFor(() => this.askResponse !== undefined, { interval: 100 })

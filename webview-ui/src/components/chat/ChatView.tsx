@@ -47,7 +47,7 @@ export interface ChatViewProps {
 }
 
 export interface ChatViewRef {
-	// acceptInput: () => void // We keep this for now in case it's used elsewhere, but comment it out
+	acceptInput: () => void // We keep this for now in case it's used elsewhere, but comment it out
 	enableChatInput: () => void // Add the new function signature
 }
 
@@ -1229,7 +1229,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	}, [handleKeyDown])
 
 	useImperativeHandle(ref, () => ({
-		// Keep the old acceptInput logic for now, just in case
 		acceptInput: () => {
 			if (enableButtons && primaryButtonText) {
 				handlePrimaryButtonClick(inputValue, selectedImages)
@@ -1237,17 +1236,12 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				handleSendMessage(inputValue, selectedImages)
 			}
 		},
-		// --- ADD THE NEW FUNCTION ---
 		enableChatInput: () => {
 			console.log("[ChatView.tsx] enableChatInput() called.")
-			setTextAreaDisabled((prevState) => {
-				console.log(`[ChatView.tsx] Setting textAreaDisabled from ${prevState} to false via enableChatInput.`)
-				return false
-			})
+			setTextAreaDisabled(false)
 			console.log("[ChatView.tsx] Focusing text area via enableChatInput.")
 			textAreaRef.current?.focus()
 		},
-		// --- END NEW FUNCTION ---
 	}))
 
 	return (
