@@ -572,24 +572,24 @@ export class MarketplaceManager {
 			target = 'project'
 		} = options || {}
 
-		if (!vscode.workspace.workspaceFolders?.length)
+		if (target === 'project' && !vscode.workspace.workspaceFolders?.length)
 			return vscode.window.showErrorMessage("Cannot load current workspace folder")
+
+		const cwd = target === 'project'
+			? vscode.workspace.workspaceFolders![0].uri.fsPath
+			: await this.ensureSettingsDirectoryExists()
+		const { createHookable } = await import("roo-rocket")
+		const { unpackFromUrl } = await import("config-rocket/cli")
 
 		if (!item.binaryUrl || !item.binaryHash)
 			return vscode.window.showErrorMessage("Item does not have a binary URL or hash")
-
-		const cwd = target === 'global'
-			? await this.ensureSettingsDirectoryExists()
-			: vscode.workspace.workspaceFolders[0].uri.fsPath
-		const { createHookable } = await import("roo-rocket")
-		const { unpackFromUrl } = await import("config-rocket/cli")
 
 		// Create a custom hookable instance to support global installations
 		// Currently, we only supports `.roomodes` and `.roo/mcp.json` files for global installation.
 		const customHookable = createHookable()
 		customHookable.hook('onExtract', ({ unzipped }) => {
 			const allowedFiles = new Set(['.roo/mcp.json', '.roomodes'])
-			console.log({unzipped})
+			console.log({ unzipped })
 			for (const key in unzipped) {
 				if (!allowedFiles.has(key))
 					throw new Error('Unsupported file for global installation: ' + key)
