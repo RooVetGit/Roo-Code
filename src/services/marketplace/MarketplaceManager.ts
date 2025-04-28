@@ -14,9 +14,10 @@ import {
 import { validateSource, validateSources } from "../../shared/MarketplaceValidation"
 import { getUserLocale } from "./utils"
 import { GlobalFileNames } from "src/shared/globalFileNames"
-import { assertsMpContext, MarketplaceContext, registerMarketplaceHooks } from "roo-rocket"
-import { uint8IsConfigPackWithParameters } from 'config-rocket'
+import { TerminalRegistry } from "src/integrations/terminal/TerminalRegistry"
+import { assertsMpContext, createHookable, MarketplaceContext, registerMarketplaceHooks } from "roo-rocket"
 import { unpackFromUint8 } from "config-rocket/cli"
+import { uint8IsConfigPackWithParameters } from 'config-rocket'
 
 /**
  * Service for managing marketplace data
@@ -583,8 +584,6 @@ export class MarketplaceManager {
 		const cwd = target === 'project'
 			? vscode.workspace.workspaceFolders![0].uri.fsPath
 			: await this.ensureSettingsDirectoryExists()
-		const { createHookable } = await import("roo-rocket")
-		const { unpackFromUrl } = await import("config-rocket/cli")
 
 		if (!item.binaryUrl || !item.binaryHash)
 			return vscode.window.showErrorMessage("Item does not have a binary URL or hash")
@@ -605,9 +604,38 @@ export class MarketplaceManager {
 		const binaryUint8 = await fetchBinary(item.binaryUrl)
 
 		// Install via CLI if binary is a configurable pack.
+		// TODO: think of a way to send the binary to the npx process
 		if (await uint8IsConfigPackWithParameters(binaryUint8)) {
-			vscode.window.showInformationMessage(`"${item.name}" is a configurable pack, invoking CLI to install...`)
-			vscode.window.showInformationMessage(`*CLI install WIP*`)
+			vscode.window.showInformationMessage(`"${item.name}" is configurable, install through interactive CLI...`)
+
+			let pResult: string[] = []
+			let pExitCode: number | undefined
+			// We don't want to create a new terminal at the global dir, so I'm not using cwd here
+			const terminalClass = await TerminalRegistry.getOrCreateTerminal(vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath ?? '', false, `IMI-${item.name}`)
+			terminalClass.terminal.show()
+			await terminalClass.runCommand(`npx --yes roo-rocket@latest --mp="${JSON.stringify(mpContext).replaceAll(/"/g, '\\"')}" --cwd="${cwd}" --sha256="${item.binaryHash}" --url="${item.binaryUrl}"`, {
+				onLine: (line) => {
+					pResult.push(line)
+				},
+				onShellExecutionComplete: (details) => {
+					pExitCode = details.exitCode
+				},
+			})
+
+			if (pExitCode === 0)
+				vscode.window.showInformationMessage(`"${item.name}" CLI reported success!`)
+			else {
+				console.error(pResult)
+				// Revert so error search is potentially faster
+				pResult.reverse()
+				// Search for error line in the result
+				const errorLine = (
+					pResult.find(line => /^((\r)?\n)+ ERROR  /.test(line)) ?? // Prefer formatting error
+					pResult.find(line => /error/i.test(line)) ?? // General error
+					'N/A'
+				)
+				return vscode.window.showErrorMessage(`"${item.name}" CLI reported error: (${pExitCode}): ${errorLine}`)
+			}
 		}
 		// Fast install for non-configurable packs.
 		else {
