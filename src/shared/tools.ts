@@ -103,6 +103,11 @@ export interface InsertCodeBlockToolUse extends ToolUse {
 	params: Partial<Pick<Record<ToolParamName, string>, "path" | "line" | "content">>
 }
 
+export interface CodebaseSearchToolUse extends ToolUse {
+	name: "codebase_search"
+	params: Partial<Pick<Record<ToolParamName, string>, "query" | "limit">>
+}
+
 export interface SearchFilesToolUse extends ToolUse {
 	name: "search_files"
 	params: Partial<Pick<Record<ToolParamName, string>, "path" | "regex" | "file_pattern">>
@@ -191,7 +196,14 @@ export type { ToolGroup }
 // Define available tool groups.
 export const TOOL_GROUPS: Record<ToolGroup, ToolGroupConfig> = {
 	read: {
-		tools: ["read_file", "fetch_instructions", "search_files", "list_files", "list_code_definition_names"],
+		tools: [
+			"read_file",
+			"fetch_instructions",
+			"search_files",
+			"list_files",
+			"list_code_definition_names",
+			"codebase_search",
+		],
 	},
 	edit: {
 		tools: ["apply_diff", "write_to_file", "insert_content", "search_and_replace"],
