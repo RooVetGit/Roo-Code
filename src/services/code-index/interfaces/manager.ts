@@ -75,4 +75,6 @@ export type EmbedderProvider = "openai" | "ollama"
 export interface IndexProgressUpdate {
 	systemStatus: IndexingState
 	message?: string
+	processedBlockCount?: number
+	totalBlockCount?: number
 }
