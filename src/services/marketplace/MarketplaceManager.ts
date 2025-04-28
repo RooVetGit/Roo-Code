@@ -14,6 +14,7 @@ import {
 import { validateSource, validateSources } from "../../shared/MarketplaceValidation"
 import { getUserLocale } from "./utils"
 import { GlobalFileNames } from "src/shared/globalFileNames"
+import { assertsMpContext, MarketplaceContext, registerMarketplaceHooks } from "roo-rocket"
 
 /**
  * Service for managing marketplace data
@@ -584,25 +585,22 @@ export class MarketplaceManager {
 		if (!item.binaryUrl || !item.binaryHash)
 			return vscode.window.showErrorMessage("Item does not have a binary URL or hash")
 
+		// Creates `mpContext` to delegate context to `roo-rocket`
+		const mpContext = (target === 'project'
+			? { target }
+			: {
+				target,
+				globalFileNames: {
+					mcp: GlobalFileNames.mcpSettings,
+					mode: GlobalFileNames.customModes,
+				}
+			}
+		) satisfies MarketplaceContext
+		assertsMpContext(mpContext)
+
 		// Create a custom hookable instance to support global installations
-		// Currently, we only supports `.roomodes` and `.roo/mcp.json` files for global installation.
 		const customHookable = createHookable()
-		customHookable.hook('onExtract', ({ unzipped }) => {
-			const allowedFiles = new Set(['.roo/mcp.json', '.roomodes'])
-			console.log({ unzipped })
-			for (const key in unzipped) {
-				if (!allowedFiles.has(key))
-					throw new Error('Unsupported file for global installation: ' + key)
-			}
-		})
-		customHookable.hook('onFileOutput', (state) => {
-			if (target === 'global') {
-				if (state.filePath.endsWith('/.roo/mcp.json'))
-					state.filePath = state.filePath.replace('.roo/mcp.json', GlobalFileNames.mcpSettings)
-				else if (state.filePath.endsWith('/.roomodes'))
-					state.filePath = state.filePath.replace('.roomodes', GlobalFileNames.customModes)
-			}
-		})
+		registerMarketplaceHooks(customHookable, mpContext)
 
 		vscode.window.showInformationMessage(`Installing item: "${item.name}"`)
 		await unpackFromUrl(item.binaryUrl, {
