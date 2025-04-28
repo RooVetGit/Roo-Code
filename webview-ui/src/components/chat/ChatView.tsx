@@ -26,12 +26,11 @@ import { vscode } from "@src/utils/vscode"
 import { useSelectedModel } from "@/components/ui/hooks/useSelectedModel"
 import { validateCommand } from "@src/utils/command-validation"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
+import { useCopyToClipboard as _useCopyToClipboard } from "@src/utils/clipboard"
 
-import TelemetryBanner from "../common/TelemetryBanner"
-import HistoryPreview from "../history/HistoryPreview"
-import RooHero from "@src/components/welcome/RooHero"
-import RooTips from "@src/components/welcome/RooTips"
+import _TelemetryBanner from "../common/TelemetryBanner"
 import Announcement from "./Announcement"
+import BentoGrid from "./BentoGrid"
 import BrowserSessionRow from "./BrowserSessionRow"
 import ChatRow from "./ChatRow"
 import ChatTextArea from "./ChatTextArea"
@@ -62,7 +61,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const modeShortcutText = `${isMac ? "⌘" : "Ctrl"} + . ${t("chat:forNextMode")}`
 	const {
 		clineMessages: messages,
-		taskHistory,
+		taskHistory: _taskHistory, // Prefix with underscore to indicate it's unused
 		apiConfiguration,
 		mcpServers,
 		alwaysAllowBrowser,
@@ -1241,41 +1240,12 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					)}
 				</>
 			) : (
-				<div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4">
-					{/* Moved Task Bar Header Here */}
-					{tasks.length !== 0 && (
-						<div className="flex text-vscode-descriptionForeground w-full mx-auto px-5 pt-3">
-							<div className="flex items-center gap-1 cursor-pointer" onClick={toggleExpanded}>
-								{tasks.length < 10 && (
-									<span className={`font-medium text-xs `}>{t("history:recentTasks")}</span>
-								)}
-								<span
-									className={`codicon  ${isExpanded ? "codicon-eye" : "codicon-eye-closed"} scale-90`}
-								/>
-							</div>
-						</div>
-					)}
-					<div
-						className={` w-full flex flex-col gap-4 m-auto ${isExpanded && tasks.length > 0 ? "mt-0" : ""} p-10 pt-5`}>
-						<RooHero />
-						{telemetrySetting === "unset" && <TelemetryBanner />}
-						{/* Show the task history preview if expanded and tasks exist */}
-						{taskHistory.length > 0 && isExpanded && <HistoryPreview />}
-						<p className="ext-vscode-editor-foreground leading-tight font-vscode text-center">
-							<Trans
-								i18nKey="chat:about"
-								components={{
-									DocsLink: (
-										<a href="https://docs.roocode.com/" target="_blank" rel="noopener noreferrer">
-											the docs
-										</a>
-									),
-								}}
-							/>
-						</p>
-						<RooTips cycle={false} />
-					</div>
-				</div>
+				<BentoGrid
+					tasks={tasks}
+					isExpanded={isExpanded}
+					toggleExpanded={toggleExpanded}
+					telemetrySetting={telemetrySetting}
+				/>
 			)}
 
 			{/* 
