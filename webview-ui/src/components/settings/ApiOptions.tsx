@@ -874,8 +874,11 @@ const ApiOptions = ({
 								}}
 								setApiConfigurationField={(field, value) => {
 									if (field === "reasoningEffort") {
+										const openAiCustomModelInfo =
+											apiConfiguration.openAiCustomModelInfo || openAiModelInfoSaneDefaults
+
 										setApiConfigurationField("openAiCustomModelInfo", {
-											...(apiConfiguration.openAiCustomModelInfo || openAiModelInfoSaneDefaults),
+											...openAiCustomModelInfo,
 											reasoningEffort: value as ReasoningEffortType,
 										})
 									}
