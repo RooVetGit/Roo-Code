@@ -110,7 +110,8 @@
 		"failed": "API Request Failed",
 		"streaming": "API Request...",
 		"cancelled": "API Request Cancelled",
-		"streamingFailed": "API Streaming Failed"
+		"streamingFailed": "API Streaming Failed",
+		"viewDetailsTooltip": "View API Request Details"
 	},
 	"checkpoint": {
 		"initial": "Initial Checkpoint",
@@ -130,6 +131,7 @@
 		"current": "Current"
 	},
 	"instructions": {
+		"viewInstructions": "View Instructions",
 		"wantsToFetch": "Roo wants to fetch detailed instructions to assist with the current task"
 	},
 	"fileOperations": {
@@ -153,7 +155,10 @@
 		"wantsToViewDefinitions": "Roo wants to view source code definition names used in this directory:",
 		"didViewDefinitions": "Roo viewed source code definition names used in this directory:",
 		"wantsToSearch": "Roo wants to search this directory for <code>{{regex}}</code>:",
-		"didSearch": "Roo searched this directory for <code>{{regex}}</code>:"
+		"didSearch": "Roo searched this directory for <code>{{regex}}</code>:",
+		"viewDefinitions": "View Definitions",
+		"viewFileList": "View File List",
+		"viewSearchResults": "View Search Results"
 	},
 	"commandOutput": "Command Output",
 	"response": "Response",
@@ -186,6 +191,17 @@
 		"title": "Edit Unsuccessful"
 	},
 	"troubleMessage": "Roo is having trouble...",
+<<<<<<< HEAD
+=======
+	"shellIntegration": {
+		"unavailable": "Shell Integration Unavailable",
+		"troubleshooting": "Still having trouble? Click here for shell integration documentation.",
+		"troubleshootingGuide": "Still having trouble? Click here for shell integration documentation.",
+		"checkSettings": "Check terminal workarounds in the settings page",
+		"updateVSCode": "Update VSCode",
+		"supportedShell": "Make sure you're using a supported shell: zsh, bash, fish, or PowerShell"
+	},
+>>>>>>> ac8700e57 (WIP: d28e1262 Catch all code accordions, highlight them, consolidate into ViewOutputBlock)
 	"powershell": {
 		"issues": "It seems like you're having Windows PowerShell issues, please see this"
 	},
@@ -233,6 +249,7 @@
 			"close": "Close browser"
 		}
 	},
+<<<<<<< HEAD
 	"codeblock": {
 		"tooltips": {
 			"expand": "Expand code block",
@@ -248,4 +265,14 @@
 		"description": "Your command is being executed without VSCode terminal shell integration. To suppress this warning you can disable shell integration in the <strong>Terminal</strong> section of the <settingsLink>Roo Code settings</settingsLink> or troubleshoot VSCode terminal integration using the link below.",
 		"troubleshooting": "Click here for shell integration documentation."
 	}
+=======
+	"systemPromptWarning": "WARNING: Custom system prompt override active. This can severely break functionality and cause unpredictable behavior.",
+	"copyAsMarkdown": "Copy as markdown",
+	"filePathFormat": " ({{filePath}})",
+	"viewCommandOutput": "View Command Output",
+	"viewFeedbackDiff": "View Feedback Diff",
+	"viewChanges": "View Changes",
+	"viewDiff": "View Diff",
+	"viewFileContent": "View File Content"
+>>>>>>> ac8700e57 (WIP: d28e1262 Catch all code accordions, highlight them, consolidate into ViewOutputBlock)
 }

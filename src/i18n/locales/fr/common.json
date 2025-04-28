@@ -90,10 +90,21 @@
 		"task_prompt": "Que doit faire Roo ?",
 		"task_placeholder": "Écris ta tâche ici"
 	},
+<<<<<<< HEAD
 	"settings": {
 		"providers": {
 			"groqApiKey": "Clé API Groq",
 			"getGroqApiKey": "Obtenir la clé API Groq"
 		}
+=======
+	"chat": {
+		"shellIntegration": {
+			"troubleshootingGuide": "guide de dépannage"
+		},
+		"copyAsMarkdown": "Copier en tant que markdown",
+		"response": "Réponse",
+		"arguments": "Arguments",
+		"filePathFormat": " ({{filePath}})"
+>>>>>>> ac8700e57 (WIP: d28e1262 Catch all code accordions, highlight them, consolidate into ViewOutputBlock)
 	}
 }

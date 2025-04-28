@@ -90,10 +90,21 @@
 		"task_prompt": "让Roo做什么？",
 		"task_placeholder": "在这里输入任务"
 	},
+<<<<<<< HEAD
 	"settings": {
 		"providers": {
 			"groqApiKey": "Groq API 密钥",
 			"getGroqApiKey": "获取 Groq API 密钥"
 		}
+=======
+	"chat": {
+		"shellIntegration": {
+			"troubleshootingGuide": "故障排除指南"
+		},
+		"copyAsMarkdown": "复制为Markdown",
+		"response": "响应",
+		"arguments": "参数",
+		"filePathFormat": " ({{filePath}})"
+>>>>>>> ac8700e57 (WIP: d28e1262 Catch all code accordions, highlight them, consolidate into ViewOutputBlock)
 	}
 }

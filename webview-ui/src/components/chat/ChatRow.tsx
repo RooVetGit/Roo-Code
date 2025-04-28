@@ -17,6 +17,8 @@ import { Button } from "@src/components/ui"
 
 import CodeAccordian, { removeLeadingNonAlphanumeric } from "../common/CodeAccordian"
 import CodeBlock from "../common/CodeBlock"
+import ApiRequestDetailsBlock from "./ApiRequestDetailsBlock"
+
 import MarkdownBlock from "../common/MarkdownBlock"
 import { ReasoningBlock } from "./ReasoningBlock"
 import Thumbnails from "../common/Thumbnails"
@@ -30,6 +32,7 @@ import { ProgressIndicator } from "./ProgressIndicator"
 import { Markdown } from "./Markdown"
 import { CommandExecution } from "./CommandExecution"
 import { CommandExecutionError } from "./CommandExecutionError"
+import ViewOutputBlock from "../common/ViewOutputBlock"
 
 interface ChatRowProps {
 	message: ClineMessage
@@ -82,7 +85,7 @@ export default ChatRow
 export const ChatRowContent = ({
 	message,
 	lastModifiedMessage,
-	isExpanded,
+	// isExpanded, // Removed unused prop
 	isLast,
 	isStreaming,
 	onToggleExpand,
@@ -243,13 +246,13 @@ export const ChatRowContent = ({
 									: t("chat:fileOperations.wantsToEdit")}
 							</span>
 						</div>
-						<CodeAccordian
-							progressStatus={message.progressStatus}
-							isLoading={message.partial}
-							diff={tool.diff!}
-							path={tool.path!}
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+						<ViewOutputBlock
+							iconName={tool.tool === "appliedDiff" ? "diff" : "edit"}
+							title={t("chat:viewDiff") ?? "View Diff"}
+							content={tool.diff || ""}
+							language="diff"
+							filePath={tool.path}
+							tooltip={t("chat:viewDiff") ?? "View Diff"}
 						/>
 					</>
 				)
@@ -268,13 +271,13 @@ export const ChatRowContent = ({
 											})}
 							</span>
 						</div>
-						<CodeAccordian
-							progressStatus={message.progressStatus}
-							isLoading={message.partial}
-							diff={tool.diff!}
-							path={tool.path!}
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+						<ViewOutputBlock
+							iconName="insert"
+							title={t("chat:viewChanges") ?? "View Changes"}
+							content={tool.diff || ""}
+							language="diff"
+							filePath={tool.path}
+							tooltip={t("chat:viewChanges") ?? "View Changes"}
 						/>
 					</>
 				)
@@ -289,13 +292,13 @@ export const ChatRowContent = ({
 									: t("chat:fileOperations.didSearchReplace")}
 							</span>
 						</div>
-						<CodeAccordian
-							progressStatus={message.progressStatus}
-							isLoading={message.partial}
-							diff={tool.diff!}
-							path={tool.path!}
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+						<ViewOutputBlock
+							iconName="replace"
+							title={t("chat:viewDiff") ?? "View Diff"}
+							content={tool.diff || ""}
+							language="diff"
+							filePath={tool.path}
+							tooltip={t("chat:viewDiff") ?? "View Diff"}
 						/>
 					</>
 				)
@@ -306,12 +309,13 @@ export const ChatRowContent = ({
 							{toolIcon("new-file")}
 							<span className="font-bold">{t("chat:fileOperations.wantsToCreate")}</span>
 						</div>
-						<CodeAccordian
-							isLoading={message.partial}
-							code={tool.content!}
-							path={tool.path!}
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+						<ViewOutputBlock
+							iconName="new-file"
+							title={t("chat:viewFileContent") ?? "View File Content"}
+							content={tool.content || ""}
+							language={tool.path?.split(".").pop() || "txt"}
+							filePath={tool.path}
+							tooltip={t("chat:viewFileContent") ?? "View File Content"}
 						/>
 					</>
 				)
@@ -352,11 +356,12 @@ export const ChatRowContent = ({
 							{toolIcon("file-code")}
 							<span className="font-bold">{t("chat:instructions.wantsToFetch")}</span>
 						</div>
-						<CodeAccordian
-							isLoading={message.partial}
-							code={tool.content!}
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+						<ViewOutputBlock
+							iconName="book"
+							title={t("chat:instructions.viewInstructions") ?? "View Instructions"}
+							content={tool.content || ""}
+							language="markdown"
+							tooltip={t("chat:instructions.viewInstructions") ?? "View Instructions"}
 						/>
 					</>
 				)
@@ -371,12 +376,13 @@ export const ChatRowContent = ({
 									: t("chat:directoryOperations.didViewTopLevel")}
 							</span>
 						</div>
-						<CodeAccordian
-							code={tool.content!}
-							path={tool.path!}
-							language="shell-session"
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+						<ViewOutputBlock
+							iconName="folder-opened"
+							title={t("chat:directoryOperations.viewFileList") ?? "View File List"}
+							content={tool.content || ""}
+							language="plaintext"
+							filePath={tool.path}
+							tooltip={t("chat:directoryOperations.viewFileList") ?? "View File List"}
 						/>
 					</>
 				)
@@ -391,12 +397,13 @@ export const ChatRowContent = ({
 									: t("chat:directoryOperations.didViewRecursive")}
 							</span>
 						</div>
-						<CodeAccordian
-							code={tool.content!}
-							path={tool.path!}
-							language="shell-session"
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+						<ViewOutputBlock
+							iconName="folder-opened"
+							title={t("chat:directoryOperations.viewFileList") ?? "View File List"}
+							content={tool.content || ""}
+							language="plaintext"
+							filePath={tool.path}
+							tooltip={t("chat:directoryOperations.viewFileList") ?? "View File List"}
 						/>
 					</>
 				)
@@ -411,11 +418,13 @@ export const ChatRowContent = ({
 									: t("chat:directoryOperations.didViewDefinitions")}
 							</span>
 						</div>
-						<CodeAccordian
-							code={tool.content!}
-							path={tool.path!}
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+						<ViewOutputBlock
+							iconName="symbol-class"
+							title={t("chat:directoryOperations.viewDefinitions") ?? "View Definitions"}
+							content={tool.content || ""}
+							language="plaintext"
+							filePath={tool.path}
+							tooltip={t("chat:directoryOperations.viewDefinitions") ?? "View Definitions"}
 						/>
 					</>
 				)
@@ -440,12 +449,13 @@ export const ChatRowContent = ({
 								)}
 							</span>
 						</div>
-						<CodeAccordian
-							code={tool.content!}
-							path={tool.path! + (tool.filePattern ? `/(${tool.filePattern})` : "")}
-							language="log"
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+						<ViewOutputBlock
+							iconName="search"
+							title={t("chat:directoryOperations.viewSearchResults") ?? "View Search Results"}
+							content={tool.content || ""}
+							language="plaintext"
+							filePath={tool.path}
+							tooltip={t("chat:directoryOperations.viewSearchResults") ?? "View Search Results"}
 						/>
 					</>
 				)
@@ -736,7 +746,6 @@ export const ChatRowContent = ({
 										${Number(cost || 0)?.toFixed(4)}
 									</VSCodeBadge>
 								</div>
-								<span className={`codicon codicon-chevron-${isExpanded ? "up" : "down"}`}></span>
 							</div>
 							{(((cost === null || cost === undefined) && apiRequestFailedMessage) ||
 								apiReqStreamingFailedMessage) && (
@@ -751,7 +760,7 @@ export const ChatRowContent = ({
 												<a
 													href="https://github.com/cline/cline/wiki/TroubleShooting-%E2%80%90-%22PowerShell-is-not-recognized-as-an-internal-or-external-command%22"
 													style={{ color: "inherit", textDecoration: "underline" }}>
-													troubleshooting guide
+													{t("chat:shellIntegration.troubleshootingGuide")}
 												</a>
 												.
 											</>
@@ -760,16 +769,13 @@ export const ChatRowContent = ({
 								</>
 							)}
 
-							{isExpanded && (
-								<div style={{ marginTop: "10px" }}>
-									<CodeAccordian
-										code={safeJsonParse<any>(message.text)?.request}
-										language="markdown"
-										isExpanded={true}
-										onToggleExpand={onToggleExpand}
-									/>
-								</div>
-							)}
+							<ApiRequestDetailsBlock
+								message={message}
+								icon={icon}
+								cost={cost}
+								apiRequestFailedMessage={apiRequestFailedMessage}
+								apiReqStreamingFailedMessage={apiReqStreamingFailedMessage}
+							/>
 						</>
 					)
 				case "api_req_finished":
@@ -811,11 +817,12 @@ export const ChatRowContent = ({
 								marginTop: -10,
 								width: "100%",
 							}}>
-							<CodeAccordian
-								diff={tool?.diff!}
-								isFeedback={true}
-								isExpanded={isExpanded}
-								onToggleExpand={onToggleExpand}
+							<ViewOutputBlock
+								iconName="diff"
+								title={t("chat:viewFeedbackDiff") ?? "View Feedback Diff"}
+								content={tool?.diff || ""}
+								language="diff"
+								tooltip={t("chat:viewFeedbackDiff") ?? "View Feedback Diff"}
 							/>
 						</div>
 					)

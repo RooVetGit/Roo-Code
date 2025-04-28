@@ -90,10 +90,21 @@
 		"task_prompt": "Roo에게 무엇을 시킬까요?",
 		"task_placeholder": "여기에 작업을 입력하세요"
 	},
+<<<<<<< HEAD
 	"settings": {
 		"providers": {
 			"groqApiKey": "Groq API 키",
 			"getGroqApiKey": "Groq API 키 받기"
 		}
+=======
+	"chat": {
+		"shellIntegration": {
+			"troubleshootingGuide": "문제 해결 가이드"
+		},
+		"copyAsMarkdown": "마크다운으로 복사",
+		"response": "응답",
+		"arguments": "인수",
+		"filePathFormat": " ({{filePath}})"
+>>>>>>> ac8700e57 (WIP: d28e1262 Catch all code accordions, highlight them, consolidate into ViewOutputBlock)
 	}
 }

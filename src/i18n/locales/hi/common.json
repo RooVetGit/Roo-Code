@@ -90,10 +90,21 @@
 		"task_prompt": "Roo को क्या करना है?",
 		"task_placeholder": "अपना कार्य यहाँ लिखें"
 	},
+<<<<<<< HEAD
 	"settings": {
 		"providers": {
 			"groqApiKey": "ग्रोक एपीआई कुंजी",
 			"getGroqApiKey": "ग्रोक एपीआई कुंजी प्राप्त करें"
 		}
+=======
+	"chat": {
+		"shellIntegration": {
+			"troubleshootingGuide": "समस्या निवारण गाइड"
+		},
+		"copyAsMarkdown": "मार्कडाउन के रूप में कॉपी करें",
+		"response": "उत्तर",
+		"arguments": "तर्क",
+		"filePathFormat": " ({{filePath}})"
+>>>>>>> ac8700e57 (WIP: d28e1262 Catch all code accordions, highlight them, consolidate into ViewOutputBlock)
 	}
 }

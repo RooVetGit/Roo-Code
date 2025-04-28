@@ -90,10 +90,21 @@
 		"task_prompt": "Bạn muốn Roo làm gì?",
 		"task_placeholder": "Nhập nhiệm vụ của bạn ở đây"
 	},
+<<<<<<< HEAD
 	"settings": {
 		"providers": {
 			"groqApiKey": "Khóa API Groq",
 			"getGroqApiKey": "Lấy khóa API Groq"
 		}
+=======
+	"chat": {
+		"shellIntegration": {
+			"troubleshootingGuide": "hướng dẫn khắc phục sự cố"
+		},
+		"copyAsMarkdown": "Sao chép dưới dạng markdown",
+		"response": "Phản hồi",
+		"arguments": "Các đối số",
+		"filePathFormat": " ({{filePath}})"
+>>>>>>> ac8700e57 (WIP: d28e1262 Catch all code accordions, highlight them, consolidate into ViewOutputBlock)
 	}
 }

@@ -7,6 +7,8 @@ import { useExtensionState } from "@src/context/ExtensionStateContext"
 
 import CodeBlock from "./CodeBlock"
 import MermaidBlock from "./MermaidBlock"
+import ViewOutputBlock from "./ViewOutputBlock" // Import the new component
+// Removed unused vscode import
 
 interface MarkdownBlockProps {
 	markdown?: string
@@ -164,7 +166,22 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 						if (child.props?.className?.includes("language-mermaid")) {
 							return child
 						}
+
+						// Check for diffs
+						if (child.props?.className?.includes("language-diff")) {
+							// Use a ViewOutputBlock for diff content
+							return (
+								<ViewOutputBlock
+									iconName="code"
+									title={`View Diff`}
+									content={children.toString()}
+									tooltip={`View Diff`}
+								/>
+							)
+						}
+
 					}
+						
 
 					// For all other code blocks, use CodeBlock with copy button
 					const codeNode = children?.[0]
@@ -189,7 +206,18 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 						const codeText = String(props.children || "")
 						return <MermaidBlock code={codeText} />
 					}
-
+					if (className.includes("language-diff")) {
+						const codeText = String(props.children || "")
+						return (
+							<ViewOutputBlock
+								iconName="code"
+								title={`View Diff`}
+								content={codeText}
+								language="diff"
+								tooltip={`View Diff`}
+							/>
+						)
+					}
 					return <code {...props} />
 				},
 			},
