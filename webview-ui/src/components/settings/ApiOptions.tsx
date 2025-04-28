@@ -3,7 +3,13 @@ import { useDebounce, useEvent } from "react-use"
 import { Trans } from "react-i18next"
 import { LanguageModelChatSelector } from "vscode"
 import { Checkbox } from "vscrui"
-import { VSCodeLink, VSCodeRadio, VSCodeRadioGroup, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
+import {
+	VSCodeButton,
+	VSCodeLink,
+	VSCodeRadio,
+	VSCodeRadioGroup,
+	VSCodeTextField,
+} from "@vscode/webview-ui-toolkit/react"
 import { ExternalLinkIcon } from "@radix-ui/react-icons"
 
 import { ReasoningEffort as ReasoningEffortType } from "@roo/schemas"
@@ -77,7 +83,6 @@ const ApiOptions = ({
 	const [anthropicBaseUrlSelected, setAnthropicBaseUrlSelected] = useState(!!apiConfiguration?.anthropicBaseUrl)
 	const [azureApiVersionSelected, setAzureApiVersionSelected] = useState(!!apiConfiguration?.azureApiVersion)
 	const [openRouterBaseUrlSelected, setOpenRouterBaseUrlSelected] = useState(!!apiConfiguration?.openRouterBaseUrl)
-	const [openAiHostHeaderSelected, setOpenAiHostHeaderSelected] = useState(!!apiConfiguration?.openAiHostHeader)
 	const [openAiLegacyFormatSelected, setOpenAiLegacyFormatSelected] = useState(!!apiConfiguration?.openAiLegacyFormat)
 	const [googleGeminiBaseUrlSelected, setGoogleGeminiBaseUrlSelected] = useState(
 		!!apiConfiguration?.googleGeminiBaseUrl,
@@ -123,7 +128,8 @@ const ApiOptions = ({
 					values: {
 						baseUrl: apiConfiguration?.openAiBaseUrl,
 						apiKey: apiConfiguration?.openAiApiKey,
-						hostHeader: apiConfiguration?.openAiHostHeader,
+						customHeaders: {}, // Reserved for any additional headers
+						openAiHeaders: apiConfiguration?.openAiHeaders,
 					},
 				})
 			} else if (selectedProvider === "ollama") {
@@ -829,25 +835,90 @@ const ApiOptions = ({
 						)}
 					</div>
 
-					<div>
-						<Checkbox
-							checked={openAiHostHeaderSelected}
-							onChange={(checked: boolean) => {
-								setOpenAiHostHeaderSelected(checked)
+					{/* Custom Headers UI */}
+					<div className="mb-4">
+						<div className="flex justify-between items-center mb-2">
+							<label className="block font-medium">{t("settings:providers.customHeaders")}</label>
+							<VSCodeButton
+								appearance="icon"
+								title={t("settings:common.add")}
+								onClick={() => {
+									const currentHeaders = { ...(apiConfiguration?.openAiHeaders || {}) }
+									// Use an empty string as key - user will fill it in
+									// The key will be properly set when the user types in the field
+									currentHeaders[""] = ""
+									handleInputChange("openAiHeaders")({
+										target: {
+											value: currentHeaders,
+										},
+									})
+								}}>
+								<span className="codicon codicon-add"></span>
+							</VSCodeButton>
+						</div>
+						{Object.keys(apiConfiguration?.openAiHeaders || {}).length === 0 ? (
+							<div className="text-sm text-vscode-descriptionForeground">
+								{t("settings:providers.noCustomHeaders")}
+							</div>
+						) : (
+							Object.entries(apiConfiguration?.openAiHeaders || {}).map(([key, value], index) => (
+								<div key={index} className="flex items-center mb-2">
+									<VSCodeTextField
+										value={key}
+										className="flex-1 mr-2"
+										placeholder={t("settings:providers.headerName")}
+										onInput={(e: any) => {
+											const currentHeaders = apiConfiguration?.openAiHeaders ?? {}
+											const newValue = e.target.value
 
-								if (!checked) {
-									setApiConfigurationField("openAiHostHeader", "")
-								}
-							}}>
-							{t("settings:providers.useHostHeader")}
-						</Checkbox>
-						{openAiHostHeaderSelected && (
-							<VSCodeTextField
-								value={apiConfiguration?.openAiHostHeader || ""}
-								onInput={handleInputChange("openAiHostHeader")}
-								placeholder="custom-api-hostname.example.com"
-								className="w-full mt-1"
-							/>
+											if (newValue && newValue !== key) {
+												const { [key]: _, ...rest } = currentHeaders
+												handleInputChange("openAiHeaders")({
+													target: {
+														value: {
+															...rest,
+															[newValue]: value,
+														},
+													},
+												})
+											}
+										}}
+									/>
+									<VSCodeTextField
+										value={value}
+										className="flex-1 mr-2"
+										placeholder={t("settings:providers.headerValue")}
+										onInput={(e: any) => {
+											handleInputChange("openAiHeaders")({
+												target: {
+													value: {
+														...(apiConfiguration?.openAiHeaders ?? {}),
+														[key]: e.target.value,
+													},
+												},
+											})
+										}}
+									/>
+									<VSCodeButton
+										appearance="icon"
+										title={t("settings:common.remove")}
+										onClick={() => {
+											const { [key]: _, ...rest } = apiConfiguration?.openAiHeaders ?? {}
+
+											// Ensure we always maintain an empty object even when removing the last header
+											// This prevents the field from becoming undefined or null
+											const newHeaders = Object.keys(rest).length === 0 ? {} : rest
+
+											handleInputChange("openAiHeaders")({
+												target: {
+													value: newHeaders,
+												},
+											})
+										}}>
+										<span className="codicon codicon-trash"></span>
+									</VSCodeButton>
+								</div>
+							))
 						)}
 					</div>
 
