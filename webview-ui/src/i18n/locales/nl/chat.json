@@ -1,89 +1,89 @@
 {
 	"greeting": "Welkom bij Roo Code",
 	"task": {
-		"title": "Taak",
-		"seeMore": "Meer zien",
-		"seeLess": "Minder zien",
-		"tokens": "Tokens:",
-		"cache": "Cache:",
-		"apiCost": "API Kosten:",
-		"contextWindow": "Context Lengte:",
-		"closeAndStart": "Taak sluiten en nieuwe starten",
-		"export": "Taakgeschiedenis exporteren",
-		"delete": "Taak Verwijderen (Shift + Klik om bevestiging over te slaan)"
+	  "title": "Taak",
+	  "seeMore": "Meer zien",
+	  "seeLess": "Minder zien",
+	  "tokens": "Tokens:",
+	  "cache": "Cache:",
+	  "apiCost": "API Kosten:",
+	  "contextWindow": "Context Lengte:",
+	  "closeAndStart": "Taak sluiten en nieuwe starten",
+	  "export": "Taakgeschiedenis exporteren",
+	  "delete": "Taak Verwijderen (Shift + Klik om bevestiging over te slaan)"
 	},
 	"unpin": "Losmaken",
 	"pin": "Vastmaken",
 	"retry": {
-		"title": "Opnieuw Proberen",
-		"tooltip": "Probeer de bewerking opnieuw"
+	  "title": "Opnieuw Proberen",
+	  "tooltip": "Probeer de bewerking opnieuw"
 	},
 	"startNewTask": {
-		"title": "Nieuwe Taak Starten",
-		"tooltip": "Begin een nieuwe taak"
+	  "title": "Nieuwe Taak Starten",
+	  "tooltip": "Begin een nieuwe taak"
 	},
 	"proceedAnyways": {
-		"title": "Toch Doorgaan",
-		"tooltip": "Doorgaan terwijl commando wordt uitgevoerd"
+	  "title": "Toch Doorgaan",
+	  "tooltip": "Doorgaan terwijl commando wordt uitgevoerd"
 	},
 	"save": {
-		"title": "Opslaan",
-		"tooltip": "Bestandswijzigingen opslaan"
+	  "title": "Opslaan",
+	  "tooltip": "Bestandswijzigingen opslaan"
 	},
 	"tokenProgress": {
-		"availableSpace": "Available space: {{amount}} tokens",
-		"tokensUsed": "Gebruikte tokens: {{used}} van {{total}}",
-		"reservedForResponse": "Gereserveerd voor modelantwoord: {{amount}} tokens"
+	  "availableSpace": "Available space: {{amount}} tokens",
+	  "tokensUsed": "Gebruikte tokens: {{used}} van {{total}}",
+	  "reservedForResponse": "Gereserveerd voor modelantwoord: {{amount}} tokens"
 	},
 	"reject": {
-		"title": "Afwijzen",
-		"tooltip": "Deze actie afwijzen"
+	  "title": "Afwijzen",
+	  "tooltip": "Deze actie afwijzen"
 	},
 	"completeSubtaskAndReturn": "Subtaak Voltooien en Terugkeren",
 	"approve": {
-		"title": "Goedkeuren",
-		"tooltip": "Deze actie goedkeuren"
+	  "title": "Goedkeuren",
+	  "tooltip": "Deze actie goedkeuren"
 	},
 	"runCommand": {
-		"title": "Commando Uitvoeren",
-		"tooltip": "Voer dit commando uit"
+	  "title": "Commando Uitvoeren",
+	  "tooltip": "Voer dit commando uit"
 	},
 	"proceedWhileRunning": {
-		"title": "Doorgaan Tijdens Uitvoering",
-		"tooltip": "Doorgaan ondanks waarschuwingen"
+	  "title": "Doorgaan Tijdens Uitvoering",
+	  "tooltip": "Doorgaan ondanks waarschuwingen"
 	},
 	"resumeTask": {
-		"title": "Taak Hervatten",
-		"tooltip": "De huidige taak voortzetten"
+	  "title": "Taak Hervatten",
+	  "tooltip": "De huidige taak voortzetten"
 	},
 	"terminate": {
-		"title": "Beëindigen",
-		"tooltip": "De huidige taak beëindigen"
+	  "title": "Beëindigen",
+	  "tooltip": "De huidige taak beëindigen"
 	},
 	"cancel": {
-		"title": "Annuleren",
-		"tooltip": "De huidige bewerking annuleren"
+	  "title": "Annuleren",
+	  "tooltip": "De huidige bewerking annuleren"
 	},
 	"scrollToBottom": "Scroll naar beneden in chat",
 	"about": "Genereer, refactor en debug code met AI-ondersteuning.<br />Bekijk onze <DocsLink>documentatie</DocsLink> voor meer informatie.",
 	"onboarding": "Je takenlijst in deze workspace is leeg.",
 	"rooTips": {
-		"boomerangTasks": {
-			"title": "Boomerang Taken",
-			"description": "Splits taken op in kleinere, beheerbare delen"
-		},
-		"stickyModels": {
-			"title": "Sticky Modellen",
-			"description": "Elke modus onthoudt je laatst gebruikte model"
-		},
-		"tools": {
-			"title": "Tools",
-			"description": "Sta de AI toe problemen op te lossen door op het web te browsen, commando's uit te voeren en meer"
-		},
-		"customizableModes": {
-			"title": "Aanpasbare Modi",
-			"description": "Gespecialiseerde persona's met hun eigen gedragingen en toegewezen modellen"
-		}
+	  "boomerangTasks": {
+		"title": "Boomerang Taken",
+		"description": "Splits taken op in kleinere, beheerbare delen"
+	  },
+	  "stickyModels": {
+		"title": "Sticky Modellen",
+		"description": "Elke modus onthoudt je laatst gebruikte model"
+	  },
+	  "tools": {
+		"title": "Tools",
+		"description": "Sta de AI toe problemen op te lossen door op het web te browsen, commando's uit te voeren en meer"
+	  },
+	  "customizableModes": {
+		"title": "Aanpasbare Modi",
+		"description": "Gespecialiseerde persona's met hun eigen gedragingen en toegewezen modellen"
+	  }
 	},
 	"selectMode": "Selecteer modus voor interactie",
 	"selectApiConfig": "Selecteer API-configuratie",
@@ -102,138 +102,139 @@
 	"edit": "Bewerken...",
 	"forNextMode": "voor volgende modus",
 	"apiRequest": {
-		"title": "API Verzoek",
-		"failed": "API Verzoek Mislukt",
-		"streaming": "API Verzoek...",
-		"cancelled": "API Verzoek Geannuleerd",
-		"streamingFailed": "API Streaming Mislukt"
+	  "title": "API Verzoek",
+	  "failed": "API Verzoek Mislukt",
+	  "streaming": "API Verzoek...",
+	  "cancelled": "API Verzoek Geannuleerd",
+	  "streamingFailed": "API Streaming Mislukt"
 	},
 	"checkpoint": {
-		"initial": "Initieel Checkpoint",
-		"regular": "Checkpoint",
-		"initializingWarning": "Checkpoint wordt nog geïnitialiseerd... Als dit te lang duurt, kun je checkpoints uitschakelen in de <settingsLink>instellingen</settingsLink> en je taak herstarten.",
-		"menu": {
-			"viewDiff": "Diff Bekijken",
-			"restore": "Checkpoint Herstellen",
-			"restoreFiles": "Bestanden Herstellen",
-			"restoreFilesDescription": "Herstelt de bestanden van je project naar een snapshot genomen op dit punt.",
-			"restoreFilesAndTask": "Bestanden & Taak Herstellen",
-			"confirm": "Bevestigen",
-			"cancel": "Annuleren",
-			"cannotUndo": "Deze actie kan niet ongedaan worden gemaakt.",
-			"restoreFilesAndTaskDescription": "Herstelt de bestanden van je project naar een snapshot genomen op dit punt en verwijdert alle berichten na dit punt."
-		},
-		"current": "Huidig"
+	  "initial": "Initieel Checkpoint",
+	  "regular": "Checkpoint",
+	  "initializingWarning": "Checkpoint wordt nog geïnitialiseerd... Als dit te lang duurt, kun je checkpoints uitschakelen in de <settingsLink>instellingen</settingsLink> en je taak herstarten.",
+	  "menu": {
+		"viewDiff": "Diff Bekijken",
+		"restore": "Checkpoint Herstellen",
+		"restoreFiles": "Bestanden Herstellen",
+		"restoreFilesDescription": "Herstelt de bestanden van je project naar een snapshot genomen op dit punt.",
+		"restoreFilesAndTask": "Bestanden & Taak Herstellen",
+		"confirm": "Bevestigen",
+		"cancel": "Annuleren",
+		"cannotUndo": "Deze actie kan niet ongedaan worden gemaakt.",
+		"restoreFilesAndTaskDescription": "Herstelt de bestanden van je project naar een snapshot genomen op dit punt en verwijdert alle berichten na dit punt."
+	  },
+	  "current": "Huidig"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo wil gedetailleerde instructies ophalen om te helpen met de huidige taak"
+	  "wantsToFetch": "Roo wil gedetailleerde instructies ophalen om te helpen met de huidige taak"
 	},
 	"fileOperations": {
-		"wantsToRead": "Roo wil dit bestand lezen:",
-		"wantsToReadOutsideWorkspace": "Roo wil dit bestand buiten de workspace lezen:",
-		"didRead": "Roo heeft dit bestand gelezen:",
-		"wantsToEdit": "Roo wil dit bestand bewerken:",
-		"wantsToEditOutsideWorkspace": "Roo wil dit bestand buiten de workspace bewerken:",
-		"wantsToCreate": "Roo wil een nieuw bestand aanmaken:",
-		"wantsToSearchReplace": "Roo wil zoeken en vervangen in dit bestand:",
-		"didSearchReplace": "Roo heeft zoeken en vervangen uitgevoerd op dit bestand:",
-		"wantsToInsert": "Roo wil inhoud invoegen in dit bestand:",
-		"wantsToInsertWithLineNumber": "Roo wil inhoud invoegen in dit bestand op regel {{lineNumber}}:",
-		"wantsToInsertAtEnd": "Roo wil inhoud toevoegen aan het einde van dit bestand:"
+	  "wantsToRead": "Roo wil dit bestand lezen:",
+	  "wantsToReadOutsideWorkspace": "Roo wil dit bestand buiten de workspace lezen:",
+	  "didRead": "Roo heeft dit bestand gelezen:",
+	  "wantsToEdit": "Roo wil dit bestand bewerken:",
+	  "wantsToEditOutsideWorkspace": "Roo wil dit bestand buiten de workspace bewerken:",
+	  "wantsToCreate": "Roo wil een nieuw bestand aanmaken:",
+	  "wantsToSearchReplace": "Roo wil zoeken en vervangen in dit bestand:",
+	  "didSearchReplace": "Roo heeft zoeken en vervangen uitgevoerd op dit bestand:",
+	  "wantsToInsert": "Roo wil inhoud invoegen in dit bestand:",
+	  "wantsToInsertWithLineNumber": "Roo wil inhoud invoegen in dit bestand op regel {{lineNumber}}:",
+	  "wantsToInsertAtEnd": "Roo wil inhoud toevoegen aan het einde van dit bestand:"
 	},
 	"directoryOperations": {
-		"wantsToViewTopLevel": "Roo wil de bestanden op het hoogste niveau in deze map bekijken:",
-		"didViewTopLevel": "Roo heeft de bestanden op het hoogste niveau in deze map bekeken:",
-		"wantsToViewRecursive": "Roo wil alle bestanden in deze map recursief bekijken:",
-		"didViewRecursive": "Roo heeft alle bestanden in deze map recursief bekeken:",
-		"wantsToViewDefinitions": "Roo wil namen van broncode definities gebruikt in deze map bekijken:",
-		"didViewDefinitions": "Roo heeft namen van broncode definities gebruikt in deze map bekeken:",
-		"wantsToSearch": "Roo wil deze map doorzoeken op <code>{{regex}}</code>:",
-		"didSearch": "Roo heeft deze map doorzocht op <code>{{regex}}</code>:"
+	  "wantsToViewTopLevel": "Roo wil de bestanden op het hoogste niveau in deze map bekijken:",
+	  "didViewTopLevel": "Roo heeft de bestanden op het hoogste niveau in deze map bekeken:",
+	  "wantsToViewRecursive": "Roo wil alle bestanden in deze map recursief bekijken:",
+	  "didViewRecursive": "Roo heeft alle bestanden in deze map recursief bekeken:",
+	  "wantsToViewDefinitions": "Roo wil namen van broncode definities gebruikt in deze map bekijken:",
+	  "didViewDefinitions": "Roo heeft namen van broncode definities gebruikt in deze map bekeken:",
+	  "wantsToSearch": "Roo wil deze map doorzoeken op <code>{{regex}}</code>:",
+	  "didSearch": "Roo heeft deze map doorzocht op <code>{{regex}}</code>:"
 	},
 	"commandOutput": "Commando Output",
 	"response": "Antwoord",
 	"arguments": "Argumenten",
 	"mcp": {
-		"wantsToUseTool": "Roo wil een tool gebruiken op de {{serverName}} MCP server:",
-		"wantsToAccessResource": "Roo wil een resource benaderen op de {{serverName}} MCP server:"
+	  "wantsToUseTool": "Roo wil een tool gebruiken op de {{serverName}} MCP server:",
+	  "wantsToAccessResource": "Roo wil een resource benaderen op de {{serverName}} MCP server:"
 	},
 	"modes": {
-		"wantsToSwitch": "Roo wil overschakelen naar {{mode}} modus",
-		"wantsToSwitchWithReason": "Roo wil overschakelen naar {{mode}} modus omdat: {{reason}}",
-		"didSwitch": "Roo is overgeschakeld naar {{mode}} modus",
-		"didSwitchWithReason": "Roo is overgeschakeld naar {{mode}} modus omdat: {{reason}}"
+	  "wantsToSwitch": "Roo wil overschakelen naar {{mode}} modus",
+	  "wantsToSwitchWithReason": "Roo wil overschakelen naar {{mode}} modus omdat: {{reason}}",
+	  "didSwitch": "Roo is overgeschakeld naar {{mode}} modus",
+	  "didSwitchWithReason": "Roo is overgeschakeld naar {{mode}} modus omdat: {{reason}}"
 	},
 	"subtasks": {
-		"wantsToCreate": "Roo wil een nieuwe subtaak aanmaken in {{mode}} modus:",
-		"wantsToFinish": "Roo wil deze subtaak voltooien",
-		"newTaskContent": "Subtaak Instructies",
-		"completionContent": "Subtaak Voltooid",
-		"resultContent": "Subtaak Resultaten",
-		"defaultResult": "Ga verder met de volgende taak.",
-		"completionInstructions": "Subtaak voltooid! Je kunt de resultaten bekijken en eventuele correcties of volgende stappen voorstellen. Als alles er goed uitziet, bevestig dan om het resultaat terug te sturen naar de hoofdtaak."
+	  "wantsToCreate": "Roo wil een nieuwe subtaak aanmaken in {{mode}} modus:",
+	  "wantsToFinish": "Roo wil deze subtaak voltooien",
+	  "newTaskContent": "Subtaak Instructies",
+	  "completionContent": "Subtaak Voltooid",
+	  "resultContent": "Subtaak Resultaten",
+	  "defaultResult": "Ga verder met de volgende taak.",
+	  "completionInstructions": "Subtaak voltooid! Je kunt de resultaten bekijken en eventuele correcties of volgende stappen voorstellen. Als alles er goed uitziet, bevestig dan om het resultaat terug te sturen naar de hoofdtaak."
 	},
 	"questions": {
-		"hasQuestion": "Roo heeft een vraag:"
+	  "hasQuestion": "Roo heeft een vraag:"
 	},
 	"taskCompleted": "Taak Voltooid",
 	"error": "Fout",
 	"diffError": {
-		"title": "Bewerken Mislukt"
+	  "title": "Bewerken Mislukt"
 	},
 	"troubleMessage": "Roo heeft moeite...",
 	"shellIntegration": {
-		"unavailable": "Shell Integratie Niet Beschikbaar",
-		"troubleshooting": "Nog steeds problemen? Klik hier voor shell integratie documentatie.",
-		"checkSettings": "Controleer terminal workarounds op de instellingenpagina",
-		"updateVSCode": "VSCode Bijwerken",
-		"supportedShell": "Zorg ervoor dat je een ondersteunde shell gebruikt: zsh, bash, fish of PowerShell"
+	  "unavailable": "Shell Integratie Niet Beschikbaar",
+	  "troubleshooting": "Nog steeds problemen? Klik hier voor shell integratie documentatie.",
+	  "checkSettings": "Controleer terminal workarounds op de instellingenpagina",
+	  "updateVSCode": "VSCode Bijwerken",
+	  "supportedShell": "Zorg ervoor dat je een ondersteunde shell gebruikt: zsh, bash, fish of PowerShell"
 	},
 	"powershell": {
-		"issues": "Het lijkt erop dat je problemen hebt met Windows PowerShell, zie hiervoor"
+	  "issues": "Het lijkt erop dat je problemen hebt met Windows PowerShell, zie hiervoor"
 	},
 	"autoApprove": {
-		"title": "Automatisch goedkeuren:",
-		"none": "Geen",
-		"description": "Automatisch goedkeuren stelt Roo Code in staat acties uit te voeren zonder toestemming te vragen. Schakel dit alleen in voor acties die je volledig vertrouwt. Meer gedetailleerde configuratie is beschikbaar in de <settingsLink>Instellingen</settingsLink>."
+	  "title": "Automatisch goedkeuren:",
+	  "none": "Geen",
+	  "description": "Automatisch goedkeuren stelt Roo Code in staat acties uit te voeren zonder toestemming te vragen. Schakel dit alleen in voor acties die je volledig vertrouwt. Meer gedetailleerde configuratie is beschikbaar in de <settingsLink>Instellingen</settingsLink>."
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.14 Uitgebracht",
-		"description": "Roo Code 3.14 brengt nieuwe functies en verbeteringen op basis van jouw feedback.",
-		"whatsNew": "Wat is Nieuw",
-		"feature1": "<bold>Verbeterde Bewerkingstools</bold>: De <code>search_and_replace</code> en <code>insert_content</code> tools zijn verbeterd en hebben de experimentele status verlaten",
-		"feature2": "<bold>Diff Toepassen Fixes</bold>: We blijven werken aan het verbeteren van de <code>apply_diff</code> tool",
-		"feature3": "<bold>Tal van Andere Verbeteringen</bold>: Talrijke fixes en verbeteringen in de hele extensie",
-		"hideButton": "Aankondiging verbergen",
-		"detailsDiscussLinks": "Krijg meer details en discussieer in <discordLink>Discord</discordLink> en <redditLink>Reddit</RedditLink> 🚀"
+	  "title": "🎉 Roo Code 3.14 Uitgebracht",
+	  "description": "Roo Code 3.14 brengt nieuwe functies en verbeteringen op basis van jouw feedback.",
+	  "whatsNew": "Wat is Nieuw",
+	  "feature1": "<bold>Verbeterde Bewerkingstools</bold>: De <code>search_and_replace</code> en <code>insert_content</code> tools zijn verbeterd en hebben de experimentele status verlaten",
+	  "feature2": "<bold>Diff Toepassen Fixes</bold>: We blijven werken aan het verbeteren van de <code>apply_diff</code> tool",
+	  "feature3": "<bold>Tal van Andere Verbeteringen</bold>: Talrijke fixes en verbeteringen in de hele extensie",
+	  "hideButton": "Aankondiging verbergen",
+	  "detailsDiscussLinks": "Krijg meer details en discussieer in <discordLink>Discord</discordLink> en <redditLink>Reddit</RedditLink> 🚀"
 	},
 	"reasoning": {
-		"thinking": "Denkt",
-		"seconds": "{{count}}s"
+	  "thinking": "Denkt",
+	  "seconds": "{{count}}s"
 	},
 	"followUpSuggest": {
-		"copyToInput": "Kopiëren naar invoer (hetzelfde als shift + klik)"
+	  "copyToInput": "Kopiëren naar invoer (hetzelfde als shift + klik)"
 	},
 	"browser": {
-		"rooWantsToUse": "Roo wil de browser gebruiken:",
-		"consoleLogs": "Console Logs",
-		"noNewLogs": "(Geen nieuwe logs)",
-		"screenshot": "Browser screenshot",
-		"cursor": "cursor",
-		"navigation": {
-			"step": "Step {{current}} of {{total}}",
-			"previous": "Vorige",
-			"next": "Volgende"
-		},
-		"sessionStarted": "Browser Sessie Gestart",
-		"actions": {
-			"title": "Browse Action: ",
-			"launch": "Browser starten op {{url}}",
-			"click": "Klikken ({{coordinate}})",
-			"type": "Typ \"{{text}}\"",
-			"scrollDown": "Naar beneden scrollen",
-			"scrollUp": "Naar boven scrollen",
-			"close": "Browser sluiten"
-		}
+	  "rooWantsToUse": "Roo wil de browser gebruiken:",
+	  "consoleLogs": "Console Logs",
+	  "noNewLogs": "(Geen nieuwe logs)",
+	  "screenshot": "Browser screenshot",
+	  "cursor": "cursor",
+	  "navigation": {
+		"step": "Step {{current}} of {{total}}",
+		"previous": "Vorige",
+		"next": "Volgende"
+	  },
+	  "sessionStarted": "Browser Sessie Gestart",
+	  "actions": {
+		"title": "Browse Action: ",
+		"launch": "Browser starten op {{url}}",
+		"click": "Klikken ({{coordinate}})",
+		"type": "Typ \"{{text}}\"",
+		"scrollDown": "Naar beneden scrollen",
+		"scrollUp": "Naar boven scrollen",
+		"close": "Browser sluiten"
+	  }
 	},
 	"systemPromptWarning": "WAARSCHUWING: Aangepaste systeem prompt override actief. Dit kan de functionaliteit ernstig verstoren en onvoorspelbaar gedrag veroorzaken."
+  }
