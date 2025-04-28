@@ -74,14 +74,7 @@ describe("GeminiHandler", () => {
 			expect(chunks.length).toBe(3)
 			expect(chunks[0]).toEqual({ type: "text", text: "Hello" })
 			expect(chunks[1]).toEqual({ type: "text", text: " world!" })
-			expect(chunks[2]).toEqual({
-				type: "usage",
-				inputTokens: 10,
-				outputTokens: 5,
-				cacheReadTokens: undefined,
-				cacheWriteTokens: undefined,
-				thinkingTokens: undefined,
-			})
+			expect(chunks[2]).toEqual({ type: "usage", inputTokens: 10, outputTokens: 5 })
 
 			// Verify the call to generateContentStream
 			expect(handler["client"].models.generateContentStream).toHaveBeenCalledWith(
@@ -102,7 +95,7 @@ describe("GeminiHandler", () => {
 			const stream = handler.createMessage(systemPrompt, mockMessages)
 
 			await expect(async () => {
-				for await (const chunk of stream) {
+				for await (const _chunk of stream) {
 					// Should throw before yielding any chunks
 				}
 			}).rejects.toThrow()
