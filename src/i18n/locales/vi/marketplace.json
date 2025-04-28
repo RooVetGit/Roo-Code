@@ -1,0 +1,25 @@
+{
+	"type-group": {
+		"modes": "Chế độ",
+		"mcp-servers": "Máy chủ MCP",
+		"prompts": "Gợi ý",
+		"packages": "Gói",
+		"generic-type": "{{type}}",
+		"match": "phù hợp"
+	},
+	"item-card": {
+		"type-mode": "Chế độ",
+		"type-mcp-server": "Máy chủ MCP",
+		"type-prompt": "Gợi ý",
+		"type-package": "Gói",
+		"type-other": "Khác",
+		"by-author": "bởi {{author}}",
+		"authors-profile": "Hồ sơ tác giả",
+		"remove-tag-filter": "Xóa bộ lọc thẻ: {{tag}}",
+		"filter-by-tag": "Lọc theo thẻ: {{tag}}",
+		"component-details": "Chi tiết thành phần",
+		"match-count": "{{count}} kết quả phù hợp",
+		"view": "Xem",
+		"source": "Nguồn"
+	}
+}

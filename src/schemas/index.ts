@@ -573,6 +573,15 @@ export const globalSettingsSchema = z.object({
 	customModePrompts: customModePromptsSchema.optional(),
 	customSupportPrompts: customSupportPromptsSchema.optional(),
 	enhancementApiConfigId: z.string().optional(),
+	marketplaceSources: z
+		.array(
+			z.object({
+				url: z.string(),
+				name: z.string().optional(),
+				enabled: z.boolean(),
+			}),
+		)
+		.optional(),
 	historyPreviewCollapsed: z.boolean().optional(),
 })
 
@@ -651,7 +660,8 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	customSupportPrompts: undefined,
 	enhancementApiConfigId: undefined,
 	cachedChromeHostUrl: undefined,
-	historyPreviewCollapsed: undefined, 
+	marketplaceSources: undefined,
+	historyPreviewCollapsed: undefined,
 }
 
 export const GLOBAL_SETTINGS_KEYS = Object.keys(globalSettingsRecord) as Keys<GlobalSettings>[]

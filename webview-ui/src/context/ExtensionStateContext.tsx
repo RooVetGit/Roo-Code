@@ -11,6 +11,8 @@ import { Mode, CustomModePrompts, defaultModeSlug, defaultPrompts, ModeConfig } 
 import { CustomSupportPrompts } from "@roo/shared/support-prompt"
 import { experimentDefault, ExperimentId } from "@roo/shared/experiments"
 import { TelemetrySetting } from "@roo/shared/TelemetrySetting"
+import { DEFAULT_MARKETPLACE_SOURCE } from "@roo/services/marketplace/constants"
+import { MarketplaceSource } from "@roo/services/marketplace/types"
 
 export interface ExtensionStateContextType extends ExtensionState {
 	historyPreviewCollapsed?: boolean // Add the new state property
@@ -88,6 +90,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	pinnedApiConfigs?: Record<string, boolean>
 	setPinnedApiConfigs: (value: Record<string, boolean>) => void
 	togglePinnedApiConfig: (configName: string) => void
+	setMarketplaceSources: (value: MarketplaceSource[]) => void
 	terminalCompressProgressBar?: boolean
 	setTerminalCompressProgressBar: (value: boolean) => void
 	setHistoryPreviewCollapsed: (value: boolean) => void
@@ -163,6 +166,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		showRooIgnoredFiles: true, // Default to showing .rooignore'd files with lock symbol (current behavior).
 		renderContext: "sidebar",
 		maxReadFileLine: 500, // Default max read file line limit
+		marketplaceSources: [DEFAULT_MARKETPLACE_SOURCE],
 		pinnedApiConfigs: {}, // Empty object for pinned API configs
 		terminalZshOhMy: false, // Default Oh My Zsh integration setting
 		terminalZshP10k: false, // Default Powerlevel10k integration setting
@@ -189,8 +193,23 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			switch (message.type) {
 				case "state": {
 					const newState = message.state!
+					console.log("DEBUG: ExtensionStateContext received state message:", {
+						hasApiConfig: !!newState.apiConfiguration,
+						hasMarketplaceItems: !!newState.marketplaceItems,
+						marketplaceItemsCount: newState.marketplaceItems?.length || 0,
+					})
+
 					setState((prevState) => mergeExtensionState(prevState, newState))
-					setShowWelcome(!checkExistKey(newState.apiConfiguration))
+
+					const shouldShowWelcome = !checkExistKey(newState.apiConfiguration)
+					console.log(
+						"DEBUG: Setting showWelcome to",
+						shouldShowWelcome,
+						"based on apiConfiguration check:",
+						newState.apiConfiguration ? "has config" : "missing config",
+					)
+
+					setShowWelcome(shouldShowWelcome)
 					setDidHydrateState(true)
 					break
 				}
@@ -339,6 +358,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 
 				return { ...prevState, pinnedApiConfigs: newPinned }
 			}),
+		setMarketplaceSources: (value) => setState((prevState) => ({ ...prevState, marketplaceSources: value })),
 		setHistoryPreviewCollapsed: (value) =>
 			setState((prevState) => ({ ...prevState, historyPreviewCollapsed: value })), // Implement the setter
 	}

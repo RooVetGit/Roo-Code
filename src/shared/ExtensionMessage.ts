@@ -15,6 +15,7 @@ import {
 } from "../schemas"
 import { McpServer } from "./mcp"
 import { Mode } from "./modes"
+import { MarketplaceItem, MarketplaceSource } from "../services/marketplace/types"
 import { RouterModels } from "./api"
 
 export type { ApiConfigMeta, ToolProgressStatus }
@@ -65,6 +66,7 @@ export interface ExtensionMessage {
 		| "maxReadFileLine"
 		| "fileSearchResults"
 		| "toggleApiConfigPin"
+		| "repositoryRefreshComplete"
 		| "acceptInput"
 		| "setHistoryPreviewCollapsed"
 	text?: string
@@ -74,6 +76,7 @@ export interface ExtensionMessage {
 		| "settingsButtonClicked"
 		| "historyButtonClicked"
 		| "promptsButtonClicked"
+		| "marketplaceButtonClicked"
 		| "didBecomeVisible"
 		| "focusInput"
 	invoke?: "newChat" | "sendMessage" | "primaryButtonClick" | "secondaryButtonClick" | "setChatBoxMessage"
@@ -103,6 +106,8 @@ export interface ExtensionMessage {
 	promptText?: string
 	results?: { path: string; type: "file" | "folder"; label?: string }[]
 	error?: string
+	items?: MarketplaceItem[]
+	url?: string // For repositoryRefreshComplete
 }
 
 export type ExtensionState = Pick<
@@ -198,6 +203,8 @@ export type ExtensionState = Pick<
 
 	renderContext: "sidebar" | "editor"
 	settingsImportedAt?: number
+	marketplaceSources?: MarketplaceSource[]
+	marketplaceItems?: MarketplaceItem[]
 	historyPreviewCollapsed?: boolean
 }
 

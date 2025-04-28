@@ -1,0 +1,25 @@
+{
+	"type-group": {
+		"modes": "Modes",
+		"mcp-servers": "Servidors MCP",
+		"prompts": "Prompts",
+		"packages": "Paquets",
+		"generic-type": "{{type}}s",
+		"match": "coincidència"
+	},
+	"item-card": {
+		"type-mode": "Mode",
+		"type-mcp-server": "Servidor MCP",
+		"type-prompt": "Prompt",
+		"type-package": "Paquet",
+		"type-other": "Altres",
+		"by-author": "per {{author}}",
+		"authors-profile": "Perfil de l'autor",
+		"remove-tag-filter": "Eliminar filtre d'etiqueta: {{tag}}",
+		"filter-by-tag": "Filtrar per etiqueta: {{tag}}",
+		"component-details": "Detalls del component",
+		"match-count": "{{count}} coincidènci{{count !== 1 ? 'es' : 'a'}}",
+		"view": "Veure",
+		"source": "Font"
+	}
+}

@@ -96,6 +96,11 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		"roo-cline.helpButtonClicked": () => {
 			vscode.env.openExternal(vscode.Uri.parse("https://docs.roocode.com"))
 		},
+		"roo-cline.marketplaceButtonClicked": () => {
+			const visibleProvider = getVisibleProviderOrLog(outputChannel)
+			if (!visibleProvider) return
+			visibleProvider.postMessageToWebview({ type: "action", action: "marketplaceButtonClicked" })
+		},
 		"roo-cline.showHumanRelayDialog": (params: { requestId: string; promptText: string }) => {
 			const panel = getPanel()
 

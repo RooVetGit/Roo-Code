@@ -36,10 +36,17 @@ import { Mode, defaultModeSlug, getModeBySlug, getGroupName } from "../../shared
 import { SYSTEM_PROMPT } from "../prompts/system"
 import { buildApiHandler } from "../../api"
 import { GlobalState } from "../../schemas"
+
+import { MarketplaceManager } from "../../services/marketplace"
+import { handleMarketplaceMessages } from "./marketplaceMessageHandler"
 import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
 import { getModels } from "../../api/providers/fetchers/cache"
 
-export const webviewMessageHandler = async (provider: ClineProvider, message: WebviewMessage) => {
+export const webviewMessageHandler = async (
+	provider: ClineProvider,
+	message: WebviewMessage,
+	marketplaceManager?: MarketplaceManager,
+) => {
 	// Utility functions provided for concise get/update of global state via contextProxy API.
 	const getGlobalState = <K extends keyof GlobalState>(key: K) => provider.contextProxy.getValue(key)
 	const updateGlobalState = async <K extends keyof GlobalState>(key: K, value: GlobalState[K]) =>
@@ -54,7 +61,20 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			provider.postStateToWebview()
 			provider.workspaceTracker?.initializeFilePaths() // Don't await.
 
-			getTheme().then((theme) => provider.postMessageToWebview({ type: "theme", text: JSON.stringify(theme) }))
+			console.log(`DEBUG: About to call postStateToWebview`)
+			await provider.postStateToWebview()
+			console.log(`DEBUG: After calling postStateToWebview`)
+
+			console.log(`DEBUG: About to initialize workspace tracker file paths`)
+			provider.workspaceTracker?.initializeFilePaths() // don't await
+			console.log(`DEBUG: After initializing workspace tracker file paths`)
+
+			// Continue with the rest of the webviewDidLaunch case
+			console.log(`DEBUG: Continuing with webviewDidLaunch case`)
+			getTheme().then((theme) => {
+				console.log(`DEBUG: Got theme, posting to webview`)
+				provider.postMessageToWebview({ type: "theme", text: JSON.stringify(theme) })
+			})
 
 			// If MCP Hub is already initialized, update the webview with
 			// current server list.
@@ -126,6 +146,17 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			})
 
 			provider.isViewLaunched = true
+			break
+		case "fetchMarketplaceItems":
+			if (marketplaceManager) {
+				try {
+					await handleMarketplaceMessages(provider, message, marketplaceManager!)
+				} catch (error) {
+					console.error(`DEBUG: Error handling marketplace message: ${error}`)
+				}
+			} else {
+				console.log(`DEBUG: marketplaceManager is undefined, skipping marketplace message handling`)
+			}
 			break
 		case "newTask":
 			// Code that should run in response to the hello message command
@@ -1246,8 +1277,23 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		}
 	}
-}
 
+	if (
+		marketplaceManager &&
+		(message.type === "marketplaceSources" ||
+			message.type === "openExternal" ||
+			message.type === "refreshMarketplaceSource" ||
+			message.type === "filterMarketplaceItems")
+	) {
+		try {
+			console.log(`DEBUG: Routing ${message.type} message to marketplaceMessageHandler`)
+			const result = await handleMarketplaceMessages(provider, message, marketplaceManager)
+			console.log(`DEBUG: Marketplace message handled successfully: ${message.type}, result: ${result}`)
+		} catch (error) {
+			console.error(`DEBUG: Error handling marketplace message: ${error}`)
+		}
+	}
+}
 const generateSystemPrompt = async (provider: ClineProvider, message: WebviewMessage) => {
 	const {
 		apiConfiguration,

@@ -2,6 +2,7 @@ import { z } from "zod"
 
 import { ApiConfiguration } from "./api"
 import { Mode, PromptComponent, ModeConfig } from "./modes"
+import { MarketplaceSource } from "../services/marketplace/types"
 
 export type ClineAskResponse = "yesButtonClicked" | "noButtonClicked" | "messageResponse"
 
@@ -124,6 +125,13 @@ export interface WebviewMessage {
 		| "maxReadFileLine"
 		| "searchFiles"
 		| "toggleApiConfigPin"
+		| "marketplaceSources"
+		| "fetchMarketplaceItems"
+		| "filterMarketplaceItems"
+		| "marketplaceButtonClicked"
+		| "refreshMarketplaceSource"
+		| "repositoryRefreshComplete"
+		| "openExternal"
 		| "setHistoryPreviewCollapsed"
 	text?: string
 	disabled?: boolean
@@ -150,6 +158,9 @@ export interface WebviewMessage {
 	source?: "global" | "project"
 	requestId?: string
 	ids?: string[]
+	sources?: MarketplaceSource[]
+	filters?: { type?: string; search?: string; tags?: string[] }
+	url?: string // For openExternal
 	hasSystemPromptOverride?: boolean
 	historyPreviewCollapsed?: boolean
 }

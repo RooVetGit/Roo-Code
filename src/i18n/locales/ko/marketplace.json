@@ -1,0 +1,25 @@
+{
+	"type-group": {
+		"modes": "모드",
+		"mcp-servers": "MCP 서버",
+		"prompts": "프롬프트",
+		"packages": "패키지",
+		"generic-type": "{{type}}",
+		"match": "일치"
+	},
+	"item-card": {
+		"type-mode": "모드",
+		"type-mcp-server": "MCP 서버",
+		"type-prompt": "프롬프트",
+		"type-package": "패키지",
+		"type-other": "기타",
+		"by-author": "작성자: {{author}}",
+		"authors-profile": "작성자 프로필",
+		"remove-tag-filter": "태그 필터 제거: {{tag}}",
+		"filter-by-tag": "태그로 필터링: {{tag}}",
+		"component-details": "컴포넌트 상세정보",
+		"match-count": "{{count}}개 일치",
+		"view": "보기",
+		"source": "소스"
+	}
+}

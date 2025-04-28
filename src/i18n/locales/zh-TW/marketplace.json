@@ -1,0 +1,25 @@
+{
+	"type-group": {
+		"modes": "模式",
+		"mcp-servers": "MCP伺服器",
+		"prompts": "提示",
+		"packages": "套件",
+		"generic-type": "{{type}}",
+		"match": "符合"
+	},
+	"item-card": {
+		"type-mode": "模式",
+		"type-mcp-server": "MCP伺服器",
+		"type-prompt": "提示",
+		"type-package": "套件",
+		"type-other": "其他",
+		"by-author": "作者：{{author}}",
+		"authors-profile": "作者個人檔案",
+		"remove-tag-filter": "移除標籤篩選：{{tag}}",
+		"filter-by-tag": "依標籤篩選：{{tag}}",
+		"component-details": "元件詳細資訊",
+		"match-count": "{{count}}個符合",
+		"view": "檢視",
+		"source": "原始碼"
+	}
+}

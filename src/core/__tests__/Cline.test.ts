@@ -606,15 +606,22 @@ describe("Cline", () => {
 					},
 				]
 
-				clineWithImages.abandoned = true
-				await taskWithImages.catch(() => {})
+				try {
+					clineWithImages.abandoned = true
+					await taskWithImages.catch(() => {})
 
-				clineWithoutImages.abandoned = true
-				await taskWithoutImages.catch(() => {})
+					clineWithoutImages.abandoned = true
+					await taskWithoutImages.catch(() => {})
 
-				// Trigger API requests
-				await clineWithImages.recursivelyMakeClineRequests([{ type: "text", text: "test request" }])
-				await clineWithoutImages.recursivelyMakeClineRequests([{ type: "text", text: "test request" }])
+					// Trigger API requests
+					await Promise.all([
+						clineWithImages.recursivelyMakeClineRequests([{ type: "text", text: "test request" }]),
+						clineWithoutImages.recursivelyMakeClineRequests([{ type: "text", text: "test request" }]),
+					])
+				} finally {
+					// Clean up
+					await Promise.all([clineWithImages.abortTask(true), clineWithoutImages.abortTask(true)])
+				}
 
 				// Get the calls
 				const imagesCalls = imagesSpy.mock.calls
