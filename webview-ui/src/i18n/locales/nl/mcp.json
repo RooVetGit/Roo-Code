@@ -1,0 +1,52 @@
+{
+	"title": "MCP Servers",
+	"done": "Klaar",
+	"description": "Het <0>Model Context Protocol</0> maakt communicatie mogelijk met lokaal draaiende MCP servers die extra tools en resources bieden om de mogelijkheden van Roo uit te breiden. Je kunt <1>door de community gemaakte servers</1> gebruiken of Roo vragen nieuwe tools te maken specifiek voor jouw workflow (bijv. \"voeg een tool toe die de nieuwste npm docs ophaalt\").",
+	"enableToggle": {
+		"title": "MCP Servers Inschakelen",
+		"description": "Indien ingeschakeld, kan Roo interageren met MCP servers voor geavanceerde functionaliteit. Als je geen MCP gebruikt, kun je dit uitschakelen om het tokengebruik van Roo te verminderen."
+	},
+	"enableServerCreation": {
+		"title": "Aanmaken MCP Server Inschakelen",
+		"description": "Indien ingeschakeld, kan Roo je helpen nieuwe MCP servers aan te maken via commando's zoals \"voeg een nieuwe tool toe aan...\". Als je geen MCP servers hoeft aan te maken, kun je dit uitschakelen om het tokengebruik van Roo te verminderen."
+	},
+	"editGlobalMCP": "Globale MCP Bewerken",
+	"editProjectMCP": "Project MCP Bewerken",
+	"tool": {
+		"alwaysAllow": "Altijd toestaan",
+		"parameters": "Parameters",
+		"noDescription": "Geen beschrijving"
+	},
+	"tabs": {
+		"tools": "Tools",
+		"resources": "Resources"
+	},
+	"emptyState": {
+		"noTools": "Geen tools gevonden",
+		"noResources": "Geen resources gevonden"
+	},
+	"networkTimeout": {
+		"label": "Netwerk Timeout",
+		"description": "Maximale wachttijd voor serverantwoorden",
+		"options": {
+			"15seconds": "15 seconden",
+			"30seconds": "30 seconden",
+			"1minute": "1 minuut",
+			"5minutes": "5 minuten",
+			"10minutes": "10 minuten",
+			"15minutes": "15 minuten",
+			"30minutes": "30 minuten",
+			"60minutes": "60 minuten"
+		}
+	},
+	"deleteDialog": {
+		"title": "MCP Server Verwijderen",
+		"description": "Weet je zeker dat je de MCP server \"{{serverName}}\" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+		"cancel": "Annuleren",
+		"delete": "Verwijderen"
+	},
+	"serverStatus": {
+		"retrying": "Opnieuw proberen...",
+		"retryConnection": "Verbinding Opnieuw Proberen"
+	}
+}

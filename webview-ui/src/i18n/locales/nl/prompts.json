@@ -1,0 +1,147 @@
+{
+	"title": "Prompts",
+	"done": "Klaar",
+	"modes": {
+		"title": "Modi",
+		"createNewMode": "Nieuwe modus aanmaken",
+		"editModesConfig": "Modusconfiguratie bewerken",
+		"editGlobalModes": "Globale modi bewerken",
+		"editProjectModes": "Projectmodi bewerken (.roomodes)",
+		"createModeHelpText": "Klik op de + om een nieuwe aangepaste modus aan te maken, of vraag Roo gewoon in de chat om er een voor je aan te maken!"
+	},
+	"apiConfiguration": {
+		"title": "API Configuratie",
+		"select": "Selecteer welke API-configuratie je wilt gebruiken voor deze modus"
+	},
+	"tools": {
+		"title": "Beschikbare Tools",
+		"builtInModesText": "Tools voor ingebouwde modi kunnen niet worden gewijzigd",
+		"editTools": "Tools bewerken",
+		"doneEditing": "Klaar met bewerken",
+		"allowedFiles": "Toegestane bestanden:",
+		"toolNames": {
+			"read": "Bestanden Lezen",
+			"edit": "Bestanden Bewerken",
+			"browser": "Browser Gebruiken",
+			"command": "Commando's Uitvoeren",
+			"mcp": "MCP Gebruiken"
+		}
+	},
+	"roleDefinition": {
+		"title": "Rol Definitie",
+		"resetToDefault": "Terugzetten naar standaard",
+		"description": "Definieer de expertise en persoonlijkheid van Roo voor deze modus. Deze beschrijving bepaalt hoe Roo zich presenteert en taken benadert."
+	},
+	"customInstructions": {
+		"title": "Modus-specifieke Aangepaste Instructies (optioneel)",
+		"resetToDefault": "Terugzetten naar standaard",
+		"description": "Voeg gedragsrichtlijnen toe specifiek voor de {{modeName}} modus.",
+		"loadFromFile": "Aangepaste instructies specifiek voor de {{mode}} modus kunnen ook worden geladen vanuit de <span>.roo/rules-{{slug}}/</span> map in je workspace (.roorules-{{slug}} en .clinerules-{{slug}} zijn verouderd en zullen binnenkort niet meer werken)."
+	},
+	"globalCustomInstructions": {
+		"title": "Aangepaste Instructies voor Alle Modi",
+		"description": "Deze instructies zijn van toepassing op alle modi. Ze bieden een basisset aan gedragingen die kunnen worden uitgebreid met modus-specifieke instructies hieronder.\nAls je wilt dat Roo in een andere taal denkt en spreekt dan de weergavetaal van je editor ({{language}}), kun je dat hier opgeven.",
+		"loadFromFile": "Instructies kunnen ook worden geladen vanuit de <span>.roo/rules/</span> map in je workspace (.roorules en .clinerules zijn verouderd en zullen binnenkort niet meer werken)."
+	},
+	"systemPrompt": {
+		"preview": "Voorbeeld Systeem Prompt",
+		"copy": "Systeem prompt kopiëren naar klembord",
+		"title": "Systeem Prompt ({{modeName}} modus)"
+	},
+	"supportPrompts": {
+		"title": "Support Prompts",
+		"resetPrompt": "{{promptType}} prompt terugzetten naar standaard",
+		"prompt": "Prompt",
+		"enhance": {
+			"apiConfiguration": "API Configuratie",
+			"apiConfigDescription": "Je kunt een API-configuratie selecteren om altijd te gebruiken voor het verbeteren van prompts, of gewoon gebruiken wat momenteel is geselecteerd",
+			"useCurrentConfig": "Gebruik momenteel geselecteerde API-configuratie",
+			"testPromptPlaceholder": "Voer een prompt in om de verbetering te testen",
+			"previewButton": "Voorbeeld Prompt Verbetering"
+		},
+		"types": {
+			"ENHANCE": {
+				"label": "Prompt Verbeteren",
+				"description": "Gebruik promptverbetering om op maat gemaakte suggesties of verbeteringen voor je invoer te krijgen. Dit zorgt ervoor dat Roo je intentie begrijpt en de best mogelijke antwoorden geeft. Beschikbaar via het ✨ icoon in de chat."
+			},
+			"EXPLAIN": {
+				"label": "Code Uitleggen",
+				"description": "Krijg gedetailleerde uitleg van codefragmenten, functies of hele bestanden. Handig voor het begrijpen van complexe code of het leren van nieuwe patronen. Beschikbaar in code-acties (lampje-icoon in de editor) en het editor contextmenu (rechtermuisklik op geselecteerde code)."
+			},
+			"FIX": {
+				"label": "Problemen Fixen",
+				"description": "Get help identifying and resolving bugs, errors, or code quality issues. Provides step-by-step guidance for fixing problems. Available in code actions (lightbulb icon in the editor) and the editor context menu (right-click on selected code)."
+			},
+			"IMPROVE": {
+				"label": "Code Verbeteren",
+				"description": "Receive suggestions for code optimization, better practices, and architectural improvements while maintaining functionality. Available in code actions (lightbulb icon in the editor) and the editor context menu (right-click on selected code)."
+			},
+			"ADD_TO_CONTEXT": {
+				"label": "Toevoegen aan Context",
+				"description": "Add context to your current task or conversation. Useful for providing additional information or clarifications. Available in code actions (lightbulb icon in the editor) and the editor context menu (right-click on selected code)."
+			},
+			"TERMINAL_ADD_TO_CONTEXT": {
+				"label": "Terminalinhoud Toevoegen aan Context",
+				"description": "Add terminal output to your current task or conversation. Useful for providing command outputs or logs. Available in the terminal context menu (right-click on selected terminal content)."
+			},
+			"TERMINAL_FIX": {
+				"label": "Terminal Commando Fixen",
+				"description": "Get help fixing terminal commands that failed or need improvement. Available in the terminal context menu (right-click on selected terminal content)."
+			},
+			"TERMINAL_EXPLAIN": {
+				"label": "Terminal Commando Uitleggen",
+				"description": "Get detailed explanations of terminal commands and their outputs. Available in the terminal context menu (right-click on selected terminal content)."
+			},
+			"NEW_TASK": {
+				"label": "Nieuwe Taak Starten",
+				"description": "Start een nieuwe taak met gebruikersinvoer. Beschikbaar in het Command Palette."
+			}
+		}
+	},
+	"advancedSystemPrompt": {
+		"title": "Geavanceerd: Systeem Prompt Overrulen",
+		"description": "Je kunt de systeem prompt voor deze modus volledig vervangen (afgezien van de roldefinitie en aangepaste instructies) door een bestand aan te maken op <span>.roo/system-prompt-{{slug}}</span> in je workspace. Dit is een zeer geavanceerde functie die ingebouwde beveiligingen en consistentiecontroles omzeilt (vooral rond toolgebruik), dus wees voorzichtig!"
+	},
+	"createModeDialog": {
+		"title": "Nieuwe Modus Aanmaken",
+		"close": "Sluiten",
+		"name": {
+			"label": "Naam",
+			"placeholder": "Voer modusnaam in"
+		},
+		"slug": {
+			"label": "Slug",
+			"description": "De slug wordt gebruikt in URL's en bestandsnamen. Deze moet kleine letters bevatten en alleen letters, cijfers en koppeltekens."
+		},
+		"saveLocation": {
+			"label": "Opslaglocatie",
+			"description": "Kies waar je deze modus wilt opslaan. Project-specifieke modi hebben voorrang op globale modi.",
+			"global": {
+				"label": "Globaal",
+				"description": "Beschikbaar in alle workspaces"
+			},
+			"project": {
+				"label": "Project-specifiek (.roomodes)",
+				"description": "Alleen beschikbaar in deze workspace, heeft voorrang op globaal"
+			}
+		},
+		"roleDefinition": {
+			"label": "Rol Definitie",
+			"description": "Definieer de expertise en persoonlijkheid van Roo voor deze modus."
+		},
+		"tools": {
+			"label": "Beschikbare Tools",
+			"description": "Selecteer welke tools deze modus kan gebruiken."
+		},
+		"customInstructions": {
+			"label": "Aangepaste Instructies (optioneel)",
+			"description": "Voeg gedragsrichtlijnen toe specifiek voor deze modus."
+		},
+		"buttons": {
+			"cancel": "Annuleren",
+			"create": "Modus Aanmaken"
+		},
+		"deleteMode": "Modus verwijderen"
+	},
+	"allFiles": "alle bestanden"
+}
