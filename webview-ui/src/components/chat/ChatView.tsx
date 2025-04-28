@@ -371,51 +371,24 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	const handleSendMessage = useCallback(
 		(text: string, images: string[]) => {
+			console.log(
+				`[ChatView.tsx handleSendMessage] Fired. text: "${text}", images: ${images.length}, clineAsk: ${clineAsk}, mode: ${mode}`,
+			)
 			text = text.trim()
-			let messageSent = false // Flag to track if we actually sent a message
 
 			if (text || images.length > 0) {
 				if (messages.length === 0) {
-					// First message starts a new task
+					console.log("[ChatView.tsx handleSendMessage] Condition: First message (newTask).")
 					vscode.postMessage({ type: "newTask", text, images })
-					messageSent = true
-				} else if (clineAsk) {
-					// Handle explicit asks from the backend
-					switch (clineAsk) {
-						case "followup":
-						case "tool":
-						case "browser_action_launch":
-						case "command": // User can provide feedback to a tool or command use.
-						case "command_output": // User can send input to command stdin.
-						case "use_mcp_server":
-						case "completion_result": // If this happens then the user has feedback for the completion result.
-						case "resume_task":
-						case "resume_completed_task":
-						case "mistake_limit_reached":
-							vscode.postMessage({ type: "askResponse", askResponse: "messageResponse", text, images })
-							messageSent = true
-							break
-						// Ensure all relevant ask types that accept messageResponse are included
-					}
-				} else if (mode === "chat") {
-					// Check if specifically in chat mode
-					// If not the first message, no explicit ask, BUT in chat mode: send continuation.
-					vscode.postMessage({ type: "askResponse", askResponse: "messageResponse", text, images })
-					messageSent = true
-				}
-
-				// Only reset the input if we actually sent a message
-				if (messageSent) {
-					handleChatReset()
 				} else {
-					console.warn(
-						"[ChatView.tsx] handleSendMessage called but no condition met to send message. Input not reset.",
-					)
+					vscode.postMessage({ type: "askResponse", askResponse: "messageResponse", text, images })
 				}
+				handleChatReset()
+			} else {
+				console.log("[ChatView.tsx handleSendMessage] No text or images provided. No message sent.")
 			}
 		},
-		// Add 'mode' to dependencies
-		[messages.length, clineAsk, handleChatReset, mode],
+		[messages.length, clineAsk, handleChatReset, mode], // Keep mode dependency for logging
 	)
 
 	const handleSetChatBoxMessage = useCallback(

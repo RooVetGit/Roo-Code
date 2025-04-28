@@ -405,10 +405,16 @@ export class Cline extends EventEmitter<ClineEvents> {
 			if (!provider) {
 				throw new Error("[Cline.ts ask] Cannot wait for input, provider reference lost.")
 			}
-			await provider.postMessageToWebview({ type: "enableChatInput" }) // <<< Use the new dedicated message type
+			await provider.postMessageToWebview({ type: "enableChatInput" })
 
-			// Wait for handleWebviewAskResponse to set this.askResponse
-			await pWaitFor(() => this.askResponse !== undefined, { interval: 100 })
+			// abort is crusial here to prevent blocking user input on switch mode
+			await pWaitFor(() => this.askResponse !== undefined || this.abort, { interval: 100 })
+
+			if (this.abort) {
+				throw new Error(
+					`[Cline#ask chat_input_wait] Task ${this.taskId}.${this.instanceId} aborted while waiting for user input.`,
+				)
+			}
 
 			console.log("[Cline.ts ask] Resuming after chat input received.")
 			const result = { response: this.askResponse!, text: this.askResponseText, images: this.askResponseImages }
@@ -1064,18 +1070,16 @@ export class Cline extends EventEmitter<ClineEvents> {
 		console.log(`Model: ${this.api.getModel().id}, Context window: ${modelInfo.contextWindow} tokens`)
 
 		// Detailed debug info on each message
-		if (mode === "chat") {
-			console.log(`\n======= MINIMAL MODE DEBUG INFO =======`)
-			console.log(`System prompt: ${systemPrompt}...`)
-			console.log(
-				`\nLast user message content: ${
-					this.apiConversationHistory.length > 0 &&
-					this.apiConversationHistory[this.apiConversationHistory.length - 1].role === "user"
-						? JSON.stringify(this.apiConversationHistory[this.apiConversationHistory.length - 1].content)
-						: "No user message"
-				}...`,
-			)
-		}
+		console.log(`\n======= MINIMAL MODE DEBUG INFO =======`)
+		console.log(`System prompt: ${systemPrompt}...`)
+		console.log(
+			`\nLast user message content: ${
+				this.apiConversationHistory.length > 0 &&
+				this.apiConversationHistory[this.apiConversationHistory.length - 1].role === "user"
+					? JSON.stringify(this.apiConversationHistory[this.apiConversationHistory.length - 1].content)
+					: "No user message"
+			}...`,
+		)
 
 		// If the previous API request's total token usage is close to the context window, truncate the conversation history to free up space for the new request
 		if (previousApiReqIndex >= 0) {
@@ -1955,57 +1959,34 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 				await pWaitFor(() => this.userMessageContentReady)
 
-				// if the model did not tool use, then we need to tell it to either use a tool or attempt_completion
-				const didToolUse = this.assistantMessageContent.some((block) => block.type === "tool_use")
-				if (!didToolUse) {
-					// --- Get provider and mode ---
-					const provider = this.providerRef.deref()
-					const { mode } = (await provider?.getState()) ?? {}
+				// --- Get provider and mode ---
+				const provider = this.providerRef.deref()
+				const { mode } = (await provider?.getState()) ?? {}
 
-					if (mode !== "chat") {
-						// Non-chat mode, no tool use: Add feedback and recurse internally
+				if (mode === "chat") {
+					// Handle chat mode continuation/termination
+					const nextUserContent = await this._handleChatResponse()
+					if (nextUserContent) {
+						return await this.recursivelyMakeClineRequests(nextUserContent, false)
+					} else {
+						didEndLoop = true
+					}
+				} else {
+					// Original logic for non-chat modes
+					const didToolUse = this.assistantMessageContent.some((block) => block.type === "tool_use")
+					if (!didToolUse) {
+						// if the model did not tool use, then we need to tell it to either use a tool or attempt_completion
 						this.userMessageContent.push({
 							type: "text",
 							text: formatResponse.noToolsUsed(),
 						})
 						this.consecutiveMistakeCount++
-						// Continue the loop by recursing with the feedback message
-						// Return the boolean result of this recursive call
-						return await this.recursivelyMakeClineRequests(this.userMessageContent, false)
-					} else {
-						// Chat mode, no tool use: Use ask('chat_input_wait') to pause and get input
-						console.log("[Cline.ts] Chat mode, no tool use. Waiting for next user input via ask.")
-						const { response, text, images } = await this.ask("chat_input_wait")
-
-						if (response === "messageResponse") {
-							// User provided input
-							const nextUserContent: UserContent = []
-							if (text) nextUserContent.push({ type: "text", text })
-							if (images) nextUserContent.push(...formatResponse.imageBlocks(images))
-
-							if (nextUserContent.length > 0) {
-								// Add user input to UI (ask doesn't add messages for chat_input_wait)
-								await this.say("user_feedback", text, images)
-								// Recurse with the new user input
-								return await this.recursivelyMakeClineRequests(nextUserContent, false)
-							} else {
-								// Resumed but no content? End the loop.
-								console.warn("[Cline.ts] Resumed chat wait but received no content.")
-								return true
-							}
-						} else {
-							// User likely cancelled or something went wrong during the ask wait. End the loop.
-							console.log("[Cline.ts] Chat input wait did not receive messageResponse.")
-							return true
-						}
 					}
-				} else {
-					// Tool use detected: tool results are already prepared in this.userMessageContent
-					// by presentAssistantMessage. Continue the loop by recursing.
-					return await this.recursivelyMakeClineRequests(this.userMessageContent, false)
+					const recDidEndLoop = await this.recursivelyMakeClineRequests(this.userMessageContent)
+					didEndLoop = recDidEndLoop
 				}
 			} else {
-				// if there's no assistant_responses, that means we got no text or tool_use content blocks from API which we should assume is an error
+				// if there's no assistant_responses, that means we got no text or tool_use content blocks from API
 				await this.say(
 					"error",
 					"Unexpected API Response: The language model did not provide any assistant messages. This may indicate an issue with the API or the model's output.",
@@ -2014,9 +1995,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 					role: "assistant",
 					content: [{ type: "text", text: "Failure: I did not provide a response." }],
 				})
+				didEndLoop = true
 			}
 
-			return didEndLoop // will always be false for now
+			return didEndLoop
 		} catch (error) {
 			// This should never happen since the only thing that can throw an
 			// error is the attemptApiRequest, which is wrapped in a try catch
@@ -2672,5 +2654,34 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 	public getToolUsage() {
 		return this.toolUsage
+	}
+
+	// --- Add the new private method here ---
+	private async _handleChatResponse(): Promise<UserContent | null> {
+		// Chat mode: Always wait for user input after assistant's turn.
+		console.log("[Cline.ts] Chat mode. Waiting for next user input via ask.")
+		const { response, text, images } = await this.ask("chat_input_wait")
+
+		if (response === "messageResponse") {
+			// User provided input
+			const nextUserContent: UserContent = []
+			if (text) nextUserContent.push({ type: "text", text })
+			if (images) nextUserContent.push(...formatResponse.imageBlocks(images))
+
+			if (nextUserContent.length > 0) {
+				// Add user input to UI (ask doesn't add messages for chat_input_wait)
+				await this.say("user_feedback", text, images)
+				// Return content for next recursion
+				return nextUserContent
+			} else {
+				// Resumed but no content? End the loop.
+				console.warn("[Cline.ts] Resumed chat wait but received no content.")
+				return null // Signal loop termination
+			}
+		} else {
+			// User likely cancelled or something went wrong during the ask wait. End the loop.
+			console.log("[Cline.ts] Chat input wait did not receive messageResponse.")
+			return null // Signal loop termination
+		}
 	}
 }
