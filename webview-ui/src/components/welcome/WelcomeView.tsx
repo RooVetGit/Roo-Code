@@ -117,7 +117,10 @@ const WelcomeView = () => {
 					<div className="flex justify-end">
 						<VSCodeLink
 							href="#"
-							onClick={e => { e.preventDefault(); vscode.postMessage({ type: "importSettings" }) }}
+							onClick={(e) => {
+								e.preventDefault()
+								vscode.postMessage({ type: "importSettings" })
+							}}
 							className="text-sm">
 							{t("welcome:importSettings")}
 						</VSCodeLink>
