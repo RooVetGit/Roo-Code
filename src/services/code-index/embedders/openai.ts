@@ -13,7 +13,6 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 	// Batching and retry constants
 	private static readonly MAX_BATCH_TOKENS = 100000
 	private static readonly MAX_ITEM_TOKENS = 8191
-	private static readonly MAX_BATCH_ITEMS = 15
 	private static readonly MAX_RETRIES = 3
 	private static readonly INITIAL_DELAY_MS = 500
 
@@ -57,10 +56,7 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 					continue
 				}
 
-				if (
-					currentBatchTokens + itemTokens <= OpenAiEmbedder.MAX_BATCH_TOKENS &&
-					currentBatch.length < OpenAiEmbedder.MAX_BATCH_ITEMS
-				) {
+				if (currentBatchTokens + itemTokens <= OpenAiEmbedder.MAX_BATCH_TOKENS) {
 					currentBatch.push(text)
 					currentBatchTokens += itemTokens
 					processedIndices.push(i)

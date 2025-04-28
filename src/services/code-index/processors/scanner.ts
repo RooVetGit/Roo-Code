@@ -8,15 +8,19 @@ import * as vscode from "vscode"
 import { CodeBlock, ICodeParser, IEmbedder, IVectorStore, IDirectoryScanner } from "../interfaces"
 import { createHash } from "crypto"
 import { v5 as uuidv5 } from "uuid"
+import pLimit from "p-limit"
+import { Mutex } from "async-mutex"
 
 export class DirectoryScanner implements IDirectoryScanner {
 	// Constants moved inside the class
 	private static readonly QDRANT_CODE_BLOCK_NAMESPACE = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 	private static readonly MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB
 	private static readonly MAX_LIST_FILES_LIMIT = 1_000
-	private static readonly BATCH_SEGMENT_THRESHOLD = 15 // Number of code segments to batch for embeddings/upserts
+	private static readonly BATCH_SEGMENT_THRESHOLD = 30 // Number of code segments to batch for embeddings/upserts
 	private static readonly MAX_BATCH_RETRIES = 3
 	private static readonly INITIAL_RETRY_DELAY_MS = 500
+	private static readonly PARSING_CONCURRENCY = 10
+	private static readonly BATCH_PROCESSING_CONCURRENCY = 10
 
 	constructor(
 		private readonly embedder: IEmbedder,
@@ -71,87 +75,139 @@ export class DirectoryScanner implements IDirectoryScanner {
 		let processedCount = 0
 		let skippedCount = 0
 
-		// Batch processing accumulators
-		let batchBlocks: CodeBlock[] = []
-		let batchTexts: string[] = []
-		let batchFileInfos: { filePath: string; fileHash: string; isNew: boolean }[] = []
+		// Initialize parallel processing tools
+		const parseLimiter = pLimit(DirectoryScanner.PARSING_CONCURRENCY) // Concurrency for file parsing
+		const batchLimiter = pLimit(DirectoryScanner.BATCH_PROCESSING_CONCURRENCY) // Concurrency for batch processing
+		const mutex = new Mutex()
 
-		for (const filePath of supportedPaths) {
+		// Shared batch accumulators (protected by mutex)
+		let currentBatchBlocks: CodeBlock[] = []
+		let currentBatchTexts: string[] = []
+		let currentBatchFileInfos: { filePath: string; fileHash: string; isNew: boolean }[] = []
+		const activeBatchPromises: Promise<void>[] = []
+
+		// Process all files in parallel with concurrency control
+		const parsePromises = supportedPaths.map((filePath) =>
+			parseLimiter(async () => {
+				try {
+					// Check file size
+					const stats = await stat(filePath)
+					if (stats.size > DirectoryScanner.MAX_FILE_SIZE_BYTES) {
+						skippedCount++ // Skip large files
+						return
+					}
+
+					// Read file content
+					const content = await vscode.workspace.fs
+						.readFile(vscode.Uri.file(filePath))
+						.then((buffer) => Buffer.from(buffer).toString("utf-8"))
+
+					// Calculate current hash
+					const currentFileHash = createHash("sha256").update(content).digest("hex")
+					processedFiles.add(filePath)
+
+					// Check against cache
+					const cachedFileHash = oldHashes[filePath]
+					if (cachedFileHash === currentFileHash) {
+						// File is unchanged
+						newHashes[filePath] = currentFileHash
+						skippedCount++
+						return
+					}
+
+					// File is new or changed - parse it using the injected parser function
+					const blocks = await this.codeParser.parseFile(filePath, { content, fileHash: currentFileHash })
+					codeBlocks.push(...blocks)
+					processedCount++
+
+					// Process embeddings if configured
+					if (this.embedder && this.qdrantClient && blocks.length > 0) {
+						// Add to batch accumulators
+						let addedBlocksFromFile = false
+						for (const block of blocks) {
+							const trimmedContent = block.content.trim()
+							if (trimmedContent) {
+								const release = await mutex.acquire()
+								try {
+									currentBatchBlocks.push(block)
+									currentBatchTexts.push(trimmedContent)
+									addedBlocksFromFile = true
+
+									if (addedBlocksFromFile) {
+										currentBatchFileInfos.push({
+											filePath,
+											fileHash: currentFileHash,
+											isNew: !oldHashes[filePath],
+										})
+									}
+
+									// Check if batch threshold is met
+									if (currentBatchBlocks.length >= DirectoryScanner.BATCH_SEGMENT_THRESHOLD) {
+										// Copy current batch data and clear accumulators
+										const batchBlocks = [...currentBatchBlocks]
+										const batchTexts = [...currentBatchTexts]
+										const batchFileInfos = [...currentBatchFileInfos]
+										currentBatchBlocks = []
+										currentBatchTexts = []
+										currentBatchFileInfos = []
+
+										// Queue batch processing
+										const batchPromise = batchLimiter(() =>
+											this.processBatch(
+												batchBlocks,
+												batchTexts,
+												batchFileInfos,
+												newHashes,
+												onError,
+											),
+										)
+										activeBatchPromises.push(batchPromise)
+									}
+								} finally {
+									release()
+								}
+							}
+						}
+					} else {
+						// Only update hash if not being processed in a batch
+						newHashes[filePath] = currentFileHash
+					}
+				} catch (error) {
+					console.error(`Error processing file ${filePath}:`, error)
+					if (onError) {
+						onError(error instanceof Error ? error : new Error(`Unknown error processing file ${filePath}`))
+					}
+				}
+			}),
+		)
+
+		// Wait for all parsing to complete
+		await Promise.all(parsePromises)
+
+		// Process any remaining items in batch
+		if (currentBatchBlocks.length > 0) {
+			const release = await mutex.acquire()
 			try {
-				// Check file size
-				const stats = await stat(filePath)
-				if (stats.size > DirectoryScanner.MAX_FILE_SIZE_BYTES) {
-					skippedCount++ // Skip large files
-					continue
-				}
+				// Copy current batch data and clear accumulators
+				const batchBlocks = [...currentBatchBlocks]
+				const batchTexts = [...currentBatchTexts]
+				const batchFileInfos = [...currentBatchFileInfos]
+				currentBatchBlocks = []
+				currentBatchTexts = []
+				currentBatchFileInfos = []
 
-				// Read file content
-				const content = await vscode.workspace.fs
-					.readFile(vscode.Uri.file(filePath))
-					.then((buffer) => Buffer.from(buffer).toString("utf-8"))
-
-				// Calculate current hash
-				const currentFileHash = createHash("sha256").update(content).digest("hex")
-				processedFiles.add(filePath)
-
-				// Check against cache
-				const cachedFileHash = oldHashes[filePath]
-				if (cachedFileHash === currentFileHash) {
-					// File is unchanged
-					newHashes[filePath] = currentFileHash
-					skippedCount++
-					continue
-				}
-
-				// File is new or changed - parse it using the injected parser function
-				const blocks = await this.codeParser.parseFile(filePath, { content, fileHash: currentFileHash })
-				codeBlocks.push(...blocks)
-				processedCount++
-
-				// Process embeddings if configured
-				if (this.embedder && this.qdrantClient && blocks.length > 0) {
-					// Add to batch accumulators
-					let addedBlocksFromFile = false
-					for (const block of blocks) {
-						const trimmedContent = block.content.trim()
-						if (trimmedContent) {
-							batchBlocks.push(block)
-							batchTexts.push(trimmedContent)
-							addedBlocksFromFile = true
-						}
-					}
-					if (addedBlocksFromFile) {
-						batchFileInfos.push({
-							filePath,
-							fileHash: currentFileHash,
-							isNew: !oldHashes[filePath],
-						})
-
-						// Process batch if threshold reached
-						if (batchBlocks.length >= DirectoryScanner.BATCH_SEGMENT_THRESHOLD) {
-							await this.processBatch(batchBlocks, batchTexts, batchFileInfos, newHashes, onError)
-							batchBlocks = []
-							batchTexts = []
-							batchFileInfos = []
-						}
-					}
-				} else {
-					// Only update hash if not being processed in a batch
-					newHashes[filePath] = currentFileHash
-				}
-			} catch (error) {
-				console.error(`Error processing file ${filePath}:`, error)
-				if (onError) {
-					onError(error instanceof Error ? error : new Error(`Unknown error processing file ${filePath}`))
-				}
-				// Continue processing other files even if one fails
+				// Queue final batch processing
+				const batchPromise = batchLimiter(() =>
+					this.processBatch(batchBlocks, batchTexts, batchFileInfos, newHashes, onError),
+				)
+				activeBatchPromises.push(batchPromise)
+			} finally {
+				release()
 			}
 		}
 
-		// Process any remaining items in batch
-		if (batchBlocks.length > 0) {
-			await this.processBatch(batchBlocks, batchTexts, batchFileInfos, newHashes, onError)
-		}
+		// Wait for all batch processing to complete
+		await Promise.all(activeBatchPromises)
 
 		// Handle deleted files (don't add them to newHashes)
 		if (cachePath) {
