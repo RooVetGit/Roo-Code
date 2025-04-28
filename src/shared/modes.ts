@@ -60,6 +60,15 @@ export const modes: readonly ModeConfig[] = [
 		groups: ["read", "edit", "browser", "command", "mcp"],
 	},
 	{
+		slug: "chat",
+		name: "💬 Chat (minimal token usage)",
+		roleDefinition:
+			"You are Roo, a simple chat assistant that only processes files manually attached with '@context' by the user.",
+		groups: ["read", "edit"],
+		customInstructions:
+			"This is a direct chat mode. You will ONLY have access to files explicitly attached by the user using '@context'. No automatic context, no auto-loaded files, no workspace awareness. Treat this as a clean environment where only explicitly shared files exist.",
+	},
+	{
 		slug: "architect",
 		name: "🏗️ Architect",
 		roleDefinition:

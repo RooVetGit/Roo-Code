@@ -49,6 +49,21 @@ async function generatePrompt(
 		throw new Error("Extension context is required for generating system prompt")
 	}
 
+	// Special handling for code-minimal mode
+	if (mode === "chat") {
+		// Get the full mode config to ensure we have the role definition
+		const modeConfig = getModeBySlug(mode, customModeConfigs) || modes.find((m) => m.slug === mode) || modes[0]
+		const roleDefinition = promptComponent?.roleDefinition || modeConfig.roleDefinition
+		const customInstructionsText = promptComponent?.customInstructions || modeConfig.customInstructions || ""
+		const globalCustomInstructionsText = globalCustomInstructions || ""
+
+		// Extremely minimal prompt for code-minimal mode
+		return `${roleDefinition}
+
+${customInstructionsText}
+${globalCustomInstructionsText}`
+	}
+
 	// If diff is disabled, don't pass the diffStrategy
 	const effectiveDiffStrategy = diffEnabled ? diffStrategy : undefined
 

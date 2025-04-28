@@ -363,7 +363,17 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				const isComposing = event.nativeEvent?.isComposing ?? false
 				if (event.key === "Enter" && !event.shiftKey && !isComposing) {
 					event.preventDefault()
-					onSend()
+
+					console.log(`[ChatTextArea.tsx] Enter pressed. textAreaDisabled: ${textAreaDisabled}`)
+
+					if (!textAreaDisabled) {
+						console.log("[ChatTextArea.tsx] Calling onSend().")
+						onSend()
+					} else {
+						console.warn(
+							"[ChatTextArea.tsx] Enter pressed, but onSend() NOT called because textAreaDisabled is true.",
+						)
+					}
 				}
 
 				if (event.key === "Backspace" && !isComposing) {
@@ -416,6 +426,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				queryItems,
 				customModes,
 				fileSearchResults,
+				textAreaDisabled,
 			],
 		)
 

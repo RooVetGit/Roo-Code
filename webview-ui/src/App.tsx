@@ -78,7 +78,13 @@ const App = () => {
 			}
 
 			if (message.type === "acceptInput") {
-				chatViewRef.current?.acceptInput()
+				console.log("[App.tsx] Received 'acceptInput' message from backend.")
+				if (chatViewRef.current) {
+					console.log("[App.tsx] Calling chatViewRef.current.enableChatInput().")
+					chatViewRef.current?.enableChatInput()
+				} else {
+					console.error("[App.tsx] chatViewRef is null when trying to call enableChatInput.")
+				}
 			}
 		},
 		[switchTab],

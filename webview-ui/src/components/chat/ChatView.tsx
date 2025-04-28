@@ -47,7 +47,8 @@ export interface ChatViewProps {
 }
 
 export interface ChatViewRef {
-	acceptInput: () => void
+	// acceptInput: () => void // We keep this for now in case it's used elsewhere, but comment it out
+	enableChatInput: () => void // Add the new function signature
 }
 
 export const MAX_IMAGES_PER_MESSAGE = 20 // Anthropic limits to 20 images
@@ -371,10 +372,15 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const handleSendMessage = useCallback(
 		(text: string, images: string[]) => {
 			text = text.trim()
+			let messageSent = false // Flag to track if we actually sent a message
+
 			if (text || images.length > 0) {
 				if (messages.length === 0) {
+					// First message starts a new task
 					vscode.postMessage({ type: "newTask", text, images })
+					messageSent = true
 				} else if (clineAsk) {
+					// Handle explicit asks from the backend
 					switch (clineAsk) {
 						case "followup":
 						case "tool":
@@ -387,14 +393,29 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						case "resume_completed_task":
 						case "mistake_limit_reached":
 							vscode.postMessage({ type: "askResponse", askResponse: "messageResponse", text, images })
+							messageSent = true
 							break
-						// There is no other case that a textfield should be enabled.
+						// Ensure all relevant ask types that accept messageResponse are included
 					}
+				} else if (mode === "chat") {
+					// Check if specifically in chat mode
+					// If not the first message, no explicit ask, BUT in chat mode: send continuation.
+					vscode.postMessage({ type: "askResponse", askResponse: "messageResponse", text, images })
+					messageSent = true
 				}
-				handleChatReset()
+
+				// Only reset the input if we actually sent a message
+				if (messageSent) {
+					handleChatReset()
+				} else {
+					console.warn(
+						"[ChatView.tsx] handleSendMessage called but no condition met to send message. Input not reset.",
+					)
+				}
 			}
 		},
-		[messages.length, clineAsk, handleChatReset],
+		// Add 'mode' to dependencies
+		[messages.length, clineAsk, handleChatReset, mode],
 	)
 
 	const handleSetChatBoxMessage = useCallback(
@@ -1208,6 +1229,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	}, [handleKeyDown])
 
 	useImperativeHandle(ref, () => ({
+		// Keep the old acceptInput logic for now, just in case
 		acceptInput: () => {
 			if (enableButtons && primaryButtonText) {
 				handlePrimaryButtonClick(inputValue, selectedImages)
@@ -1215,6 +1237,17 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				handleSendMessage(inputValue, selectedImages)
 			}
 		},
+		// --- ADD THE NEW FUNCTION ---
+		enableChatInput: () => {
+			console.log("[ChatView.tsx] enableChatInput() called.")
+			setTextAreaDisabled((prevState) => {
+				console.log(`[ChatView.tsx] Setting textAreaDisabled from ${prevState} to false via enableChatInput.`)
+				return false
+			})
+			console.log("[ChatView.tsx] Focusing text area via enableChatInput.")
+			textAreaRef.current?.focus()
+		},
+		// --- END NEW FUNCTION ---
 	}))
 
 	return (
