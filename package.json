@@ -447,7 +447,7 @@
 		"cheerio": "^1.0.0",
 		"chokidar": "^4.0.1",
 		"clone-deep": "^4.0.1",
-		"config-rocket": "^0.3.19",
+		"config-rocket": "^0.3.20",
 		"default-shell": "^2.2.0",
 		"delay": "^6.0.0",
 		"diff": "^5.2.0",

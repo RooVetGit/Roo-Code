@@ -15,6 +15,8 @@ import { validateSource, validateSources } from "../../shared/MarketplaceValidat
 import { getUserLocale } from "./utils"
 import { GlobalFileNames } from "src/shared/globalFileNames"
 import { assertsMpContext, MarketplaceContext, registerMarketplaceHooks } from "roo-rocket"
+import { uint8IsConfigPackWithParameters } from 'config-rocket'
+import { unpackFromUint8 } from "config-rocket/cli"
 
 /**
  * Service for managing marketplace data
@@ -573,6 +575,8 @@ export class MarketplaceManager {
 			target = 'project'
 		} = options || {}
 
+		vscode.window.showInformationMessage(`Installing item: "${item.name}"`)
+
 		if (target === 'project' && !vscode.workspace.workspaceFolders?.length)
 			return vscode.window.showErrorMessage("Cannot load current workspace folder")
 
@@ -598,18 +602,29 @@ export class MarketplaceManager {
 		) satisfies MarketplaceContext
 		assertsMpContext(mpContext)
 
-		// Create a custom hookable instance to support global installations
-		const customHookable = createHookable()
-		registerMarketplaceHooks(customHookable, mpContext)
+		const binaryUint8 = await fetchBinary(item.binaryUrl)
 
-		vscode.window.showInformationMessage(`Installing item: "${item.name}"`)
-		await unpackFromUrl(item.binaryUrl, {
-			hookable: customHookable,
-			nonAssemblyBehavior: true,
-			sha256: item.binaryHash,
-			cwd
-		})
-		vscode.window.showInformationMessage(`Item "${item.name}" installed successfully`)
+		// Install via CLI if binary is a configurable pack.
+		if (await uint8IsConfigPackWithParameters(binaryUint8)) {
+			vscode.window.showInformationMessage(`"${item.name}" is a configurable pack, invoking CLI to install...`)
+			vscode.window.showInformationMessage(`*CLI install WIP*`)
+		}
+		// Fast install for non-configurable packs.
+		else {
+			// Create a custom hookable instance to support global installations
+			const customHookable = createHookable()
+			registerMarketplaceHooks(customHookable, mpContext)
+
+			vscode.window.showInformationMessage(`"${item.name}" is non-configurable, fast install...`)
+			await unpackFromUint8(binaryUint8, {
+				hookable: customHookable,
+				nonAssemblyBehavior: true,
+				sha256: item.binaryHash,
+				cwd
+			})
+			vscode.window.showInformationMessage(`"${item.name}" installed successfully`)
+		}
+
 
 		return true
 	}
@@ -622,4 +637,12 @@ export class MarketplaceManager {
 		await fs.mkdir(settingsDir, { recursive: true })
 		return settingsDir
 	}
+}
+
+async function fetchBinary(url: string) {
+	const res = await fetch(url)
+	if (!res.ok)
+		throw new Error(`Failed to download binary from ${url}`)
+
+	return new Uint8Array(await res.arrayBuffer())
 }
