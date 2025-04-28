@@ -130,3 +130,12 @@ export interface LocalizationOptions {
 	userLocale: string
 	fallbackLocale: string
 }
+
+export interface InstallMarketplaceItemOptions {
+	/**
+	 * Specify the installation target
+	 * 
+	 * @default 'project'
+	 */
+	target?: 'global' | 'project'
+}

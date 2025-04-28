@@ -218,16 +218,16 @@ export async function handleMarketplaceMessages(
 		}
 
 		case "installMarketplaceItem": {
-			if (message.marketplaceItem) {
+			if (message.mpItem) {
 				try {
-					await marketplaceManager.installMarketplaceItem(message.marketplaceItem)
+					await marketplaceManager.installMarketplaceItem(message.mpItem, message.mpInstallOptions)
 				} catch (error) {
 					vscode.window.showErrorMessage(
-						`Failed to install item "${message.marketplaceItem.name}": ${error instanceof Error ? error.message : String(error)}`,
+						`Failed to install item "${message.mpItem.name}":\n${error instanceof Error ? error.message : String(error)}`,
 					)
 				}
 			} else {
-				console.error("Marketplace: installMarketplaceItem called without `marketplaceItem`")
+				console.error("Marketplace: installMarketplaceItem called without `mpItem`")
 			}
 			return true
 		}

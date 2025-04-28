@@ -9,9 +9,11 @@ import {
 	ComponentType,
 	ComponentMetadata,
 	LocalizationOptions,
+	InstallMarketplaceItemOptions,
 } from "./types"
 import { validateSource, validateSources } from "../../shared/MarketplaceValidation"
 import { getUserLocale } from "./utils"
+import { GlobalFileNames } from "src/shared/globalFileNames"
 
 /**
  * Service for managing marketplace data
@@ -565,26 +567,61 @@ export class MarketplaceManager {
 		}
 	}
 
-	async installMarketplaceItem(item: MarketplaceItem) {
+	async installMarketplaceItem(item: MarketplaceItem, options?: InstallMarketplaceItemOptions) {
+		const {
+			target = 'project'
+		} = options || {}
+
 		if (!vscode.workspace.workspaceFolders?.length)
 			return vscode.window.showErrorMessage("Cannot load current workspace folder")
 
 		if (!item.binaryUrl || !item.binaryHash)
 			return vscode.window.showErrorMessage("Item does not have a binary URL or hash")
 
-		const workspacePath = vscode.workspace.workspaceFolders[0].uri.fsPath
-		const { hookable } = await import("roo-rocket")
+		const cwd = target === 'global'
+			? await this.ensureSettingsDirectoryExists()
+			: vscode.workspace.workspaceFolders[0].uri.fsPath
+		const { createHookable } = await import("roo-rocket")
 		const { unpackFromUrl } = await import("config-rocket/cli")
+
+		// Create a custom hookable instance to support global installations
+		// Currently, we only supports `.roomodes` and `.roo/mcp.json` files for global installation.
+		const customHookable = createHookable()
+		customHookable.hook('onExtract', ({ unzipped }) => {
+			const allowedFiles = new Set(['.roo/mcp.json', '.roomodes'])
+			console.log({unzipped})
+			for (const key in unzipped) {
+				if (!allowedFiles.has(key))
+					throw new Error('Unsupported file for global installation: ' + key)
+			}
+		})
+		customHookable.hook('onFileOutput', (state) => {
+			if (target === 'global') {
+				if (state.filePath.endsWith('/.roo/mcp.json'))
+					state.filePath = state.filePath.replace('.roo/mcp.json', GlobalFileNames.mcpSettings)
+				else if (state.filePath.endsWith('/.roomodes'))
+					state.filePath = state.filePath.replace('.roomodes', GlobalFileNames.customModes)
+			}
+		})
 
 		vscode.window.showInformationMessage(`Installing item: "${item.name}"`)
 		await unpackFromUrl(item.binaryUrl, {
-			hookable,
+			hookable: customHookable,
 			nonAssemblyBehavior: true,
 			sha256: item.binaryHash,
-			cwd: workspacePath
+			cwd
 		})
 		vscode.window.showInformationMessage(`Item "${item.name}" installed successfully`)
 
 		return true
+	}
+
+	/**
+	 * Copied from `src/core/config/CustomModesManager.ts`, if in the future we add ClineProvider ref to this class, we can remove this and use the one from there.
+	 */
+	private async ensureSettingsDirectoryExists(): Promise<string> {
+		const settingsDir = path.join(this.context.globalStorageUri.fsPath, "settings")
+		await fs.mkdir(settingsDir, { recursive: true })
+		return settingsDir
 	}
 }

@@ -7,7 +7,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { MoreVertical, ExternalLink, Download } from "lucide-react"
-import { MarketplaceItem } from "../../../../../src/services/marketplace/types"
+import { InstallMarketplaceItemOptions, MarketplaceItem } from "../../../../../src/services/marketplace/types"
 import { vscode } from "@/utils/vscode"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 
@@ -22,10 +22,11 @@ export const MarketplaceItemActionsMenu: React.FC<MarketplaceItemActionsMenuProp
 }) => {
 	const { t } = useAppTranslation()
 
-	const handleInstall = () => {
+	const handleInstall = (options?: InstallMarketplaceItemOptions) => {
 		vscode.postMessage({
 			type: "installMarketplaceItem",
-			marketplaceItem: item
+			mpItem: item,
+			mpInstallOptions: options
 		})
 	}
 
@@ -49,11 +50,19 @@ export const MarketplaceItemActionsMenu: React.FC<MarketplaceItemActionsMenuProp
 					<span>{t("marketplace:items.card.viewSource")}</span>
 				</DropdownMenuItem>
 
-				{/* Install Item */}
+				{/* Install (Project) */}
 				{showInstallButton && (
-					<DropdownMenuItem onClick={handleInstall}>
+					<DropdownMenuItem onClick={() => handleInstall({target: 'project'})}>
 						<Download className="mr-2 h-4 w-4" />
-						<span>{t("marketplace:items.card.install")}</span>
+						<span>{t("marketplace:items.card.installProject")}</span>
+					</DropdownMenuItem>
+				)}
+
+				{/* Install (Global) */}
+				{showInstallButton && (
+					<DropdownMenuItem onClick={() => handleInstall({target: 'global'})}>
+						<Download className="mr-2 h-4 w-4" />
+						<span>{t("marketplace:items.card.installGlobal")}</span>
 					</DropdownMenuItem>
 				)}
 			</DropdownMenuContent>
