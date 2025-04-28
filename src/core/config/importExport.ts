@@ -6,10 +6,10 @@ import * as vscode from "vscode"
 import { z } from "zod"
 
 import { globalSettingsSchema } from "../../schemas"
+
 import { ProviderSettingsManager, providerProfilesSchema } from "./ProviderSettingsManager"
 import { ContextProxy } from "./ContextProxy"
 import { CustomModesManager } from "./CustomModesManager"
-import { ProviderSettings } from "../../exports/types"
 
 type ImportOptions = {
 	providerSettingsManager: ProviderSettingsManager
@@ -63,15 +63,18 @@ export const importSettings = async ({ providerSettingsManager, contextProxy, cu
 		await providerSettingsManager.import(newProviderProfiles)
 		await contextProxy.setValues(globalSettings)
 
-		// For the future we should remove the provider from the proxy and keep
-		// providerSettingsManager as source of truth for apiConfig.
-		const providerSettings: ProviderSettings = Object.values(providerProfiles.apiConfigs)[0]
+		// Set the current provider.
+		const currentProviderName = providerProfiles.currentApiConfigName
+		const currentProvider = providerProfiles.apiConfigs[currentProviderName]
+		contextProxy.setValue("currentApiConfigName", currentProviderName)
 
-		if (providerSettings) {
-			contextProxy.setProviderSettings(providerSettings)
+		// TODO: It seems like we don't need to have the provider settings in
+		// the proxy; we can just use providerSettingsManager as the source of
+		// truth.
+		if (currentProvider) {
+			contextProxy.setProviderSettings(currentProvider)
 		}
 
-		contextProxy.setValue("currentApiConfigName", providerProfiles.currentApiConfigName)
 		contextProxy.setValue("listApiConfigMeta", await providerSettingsManager.listConfig())
 
 		return { providerProfiles, globalSettings, success: true }
