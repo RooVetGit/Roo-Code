@@ -8,21 +8,19 @@ import { reasoningEfforts, ReasoningEffort as ReasoningEffortType } from "@roo/s
 interface ReasoningEffortProps {
 	apiConfiguration: ApiConfiguration
 	setApiConfigurationField: <K extends keyof ApiConfiguration>(field: K, value: ApiConfiguration[K]) => void
-	value?: ReasoningEffortType | undefined
 }
 
-export const ReasoningEffort = ({ apiConfiguration, setApiConfigurationField, value }: ReasoningEffortProps) => {
+export const ReasoningEffort = ({ apiConfiguration, setApiConfigurationField }: ReasoningEffortProps) => {
 	const { t } = useAppTranslation()
+
 	return (
-		<div className="flex flex-col gap-1 mt-1">
+		<div className="flex flex-col gap-1">
 			<div className="flex justify-between items-center">
 				<label className="block font-medium mb-1">{t("settings:providers.reasoningEffort.label")}</label>
 			</div>
 			<Select
-				value={value ?? apiConfiguration.reasoningEffort}
-				onValueChange={(newValue) => {
-					setApiConfigurationField("reasoningEffort", newValue as ReasoningEffortType)
-				}}>
+				value={apiConfiguration.reasoningEffort}
+				onValueChange={(value) => setApiConfigurationField("reasoningEffort", value as ReasoningEffortType)}>
 				<SelectTrigger className="w-full">
 					<SelectValue placeholder={t("settings:common.select")} />
 				</SelectTrigger>
