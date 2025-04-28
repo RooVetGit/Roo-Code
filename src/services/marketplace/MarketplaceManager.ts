@@ -606,7 +606,7 @@ export class MarketplaceManager {
 		// Install via CLI if binary is a configurable pack.
 		// TODO: think of a way to send the binary to the npx process
 		if (await uint8IsConfigPackWithParameters(binaryUint8)) {
-			vscode.window.showInformationMessage(`"${item.name}" is configurable, install through interactive CLI...`)
+			vscode.window.showInformationMessage(`"${item.name}" is configurable, invoking interactive CLI...`)
 
 			let pResult: string[] = []
 			let pExitCode: number | undefined
