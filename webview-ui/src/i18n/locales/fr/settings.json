@@ -233,7 +233,8 @@
 			"high": "Élevé",
 			"medium": "Moyen",
 			"low": "Faible"
-		}
+		},
+		"setReasoningLevel": "Activer l'effort de raisonnement"
 	},
 	"browser": {
 		"enable": {
@@ -310,6 +311,10 @@
 		"shellIntegrationTimeout": {
 			"label": "Délai d'intégration du shell du terminal",
 			"description": "Temps maximum d'attente pour l'initialisation de l'intégration du shell avant d'exécuter des commandes. Pour les utilisateurs avec des temps de démarrage de shell longs, cette valeur peut nécessiter d'être augmentée si vous voyez des erreurs \"Shell Integration Unavailable\" dans le terminal."
+		},
+		"shellIntegrationDisabled": {
+			"label": "Désactiver l'intégration du shell du terminal",
+			"description": "Active ceci si les commandes du terminal ne fonctionnent pas correctement ou si tu vois des erreurs 'Shell Integration Unavailable'. Cela utilise une méthode plus simple pour exécuter les commandes, en contournant certaines fonctionnalités avancées du terminal."
 		},
 		"compressProgressBar": {
 			"label": "Compresser la sortie des barres de progression",
