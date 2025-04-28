@@ -2,7 +2,7 @@
 
 import { Anthropic } from "@anthropic-ai/sdk"
 
-import { ApiHandlerOptions, unboundDefaultModelId } from "../../../shared/api"
+import { ApiHandlerOptions } from "../../../shared/api"
 
 import { UnboundHandler } from "../unbound"
 
@@ -70,7 +70,7 @@ describe("UnboundHandler", () => {
 	beforeEach(() => {
 		mockOptions = {
 			unboundApiKey: "test-api-key",
-			unboundModelId: unboundDefaultModelId,
+			unboundModelId: "anthropic/claude-3-5-sonnet-20241022",
 		}
 
 		handler = new UnboundHandler(mockOptions)
@@ -133,7 +133,7 @@ describe("UnboundHandler", () => {
 
 			expect(mockCreate).toHaveBeenCalledWith(
 				expect.objectContaining({
-					model: "claude-3-7-sonnet-20250219",
+					model: "claude-3-5-sonnet-20241022",
 					messages: expect.any(Array),
 					stream: true,
 				}),
@@ -174,7 +174,7 @@ describe("UnboundHandler", () => {
 
 			expect(mockCreate).toHaveBeenCalledWith(
 				expect.objectContaining({
-					model: "claude-3-7-sonnet-20250219",
+					model: "claude-3-5-sonnet-20241022",
 					messages: [{ role: "user", content: "Test prompt" }],
 					temperature: 0,
 					max_tokens: 8192,
