@@ -205,10 +205,10 @@ export class TerminalProcess extends BaseTerminalProcess {
 			this.startHotTimer(data)
 		}
 
-		// Set streamClosed immediately after stream ends
+		// Set streamClosed immediately after stream ends.
 		this.terminal.setActiveStream(undefined)
 
-		// Wait for shell execution to complete
+		// Wait for shell execution to complete.
 		await shellExecutionComplete
 
 		this.isHot = false

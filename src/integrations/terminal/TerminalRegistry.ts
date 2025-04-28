@@ -23,14 +23,18 @@ export class TerminalRegistry {
 	private static disposables: vscode.Disposable[] = []
 	private static isInitialized = false
 
-	static initialize() {
+	public static initialize() {
 		if (this.isInitialized) {
 			throw new Error("TerminalRegistry.initialize() should only be called once")
 		}
 
 		this.isInitialized = true
 
-		// Register handler for terminal close events to clean up temporary directories
+		// TODO: This initialization code is VSCode specific, and therefore
+		// should probably live elsewhere.
+
+		// Register handler for terminal close events to clean up temporary
+		// directories.
 		const closeDisposable = vscode.window.onDidCloseTerminal((terminal) => {
 			const terminalInfo = this.getTerminalByVSCETerminal(terminal)
 
@@ -45,12 +49,12 @@ export class TerminalRegistry {
 			const startDisposable = vscode.window.onDidStartTerminalShellExecution?.(
 				async (e: vscode.TerminalShellExecutionStartEvent) => {
 					// Get a handle to the stream as early as possible:
-					const stream = e?.execution.read()
+					const stream = e.execution.read()
 					const terminalInfo = this.getTerminalByVSCETerminal(e.terminal)
 
 					console.info("[onDidStartTerminalShellExecution] Shell execution started:", {
-						hasExecution: !!e?.execution,
-						command: e?.execution?.commandLine?.value,
+						hasExecution: !!e.execution,
+						command: e.execution?.commandLine?.value,
 						terminalId: terminalInfo?.id,
 					})
 
@@ -73,11 +77,11 @@ export class TerminalRegistry {
 				async (e: vscode.TerminalShellExecutionEndEvent) => {
 					const terminalInfo = this.getTerminalByVSCETerminal(e.terminal)
 					const process = terminalInfo?.process
-					const exitDetails = TerminalProcess.interpretExitCode(e?.exitCode)
+					const exitDetails = TerminalProcess.interpretExitCode(e.exitCode)
 
 					console.info("[TerminalRegistry] Shell execution ended:", {
-						hasExecution: !!e?.execution,
-						command: e?.execution?.commandLine?.value,
+						hasExecution: !!e.execution,
+						command: e.execution?.commandLine?.value,
 						terminalId: terminalInfo?.id,
 						...exitDetails,
 					})
@@ -87,29 +91,25 @@ export class TerminalRegistry {
 							"[onDidEndTerminalShellExecution] Shell execution ended, but not from a Roo-registered terminal:",
 							e,
 						)
+
 						return
 					}
 
 					if (!terminalInfo.running) {
 						console.error(
 							"[TerminalRegistry] Shell execution end event received, but process is not running for terminal:",
-							{
-								terminalId: terminalInfo?.id,
-								command: process?.command,
-								exitCode: e?.exitCode,
-							},
+							{ terminalId: terminalInfo?.id, command: process?.command, exitCode: e.exitCode },
 						)
+
 						return
 					}
 
 					if (!process) {
 						console.error(
 							"[TerminalRegistry] Shell execution end event received on running terminal, but process is undefined:",
-							{
-								terminalId: terminalInfo.id,
-								exitCode: e?.exitCode,
-							},
+							{ terminalId: terminalInfo.id, exitCode: e.exitCode },
 						)
+
 						return
 					}
 
@@ -126,7 +126,7 @@ export class TerminalRegistry {
 		}
 	}
 
-	static createTerminal(cwd: string, provider: RooTerminalProvider): RooTerminal {
+	public static createTerminal(cwd: string, provider: RooTerminalProvider): RooTerminal {
 		let newTerminal
 
 		if (provider === "vscode") {
@@ -140,68 +140,103 @@ export class TerminalRegistry {
 		return newTerminal
 	}
 
-	static getTerminal(id: number): RooTerminal | undefined {
-		const terminal = this.terminals.find((t) => t.id === id)
+	/**
+	 * Gets an existing terminal or creates a new one for the given working
+	 * directory.
+	 *
+	 * @param cwd The working directory path
+	 * @param requiredCwd Whether the working directory is required (if false, may reuse any non-busy terminal)
+	 * @param taskId Optional task ID to associate with the terminal
+	 * @returns A Terminal instance
+	 */
+	public static async getOrCreateTerminal(
+		cwd: string,
+		requiredCwd: boolean = false,
+		taskId?: string,
+		provider: RooTerminalProvider = "vscode",
+	): Promise<RooTerminal> {
+		const terminals = this.getAllTerminals()
+		let terminal: RooTerminal | undefined
 
-		if (terminal?.isClosed()) {
-			this.removeTerminal(id)
-			return undefined
+		// First priority: Find a terminal already assigned to this task with
+		// matching directory.
+		if (taskId) {
+			terminal = terminals.find((t) => {
+				if (t.busy || t.taskId !== taskId) {
+					return false
+				}
+
+				const terminalCwd = t.getCurrentWorkingDirectory()
+
+				if (!terminalCwd) {
+					return false
+				}
+
+				return arePathsEqual(vscode.Uri.file(cwd).fsPath, terminalCwd)
+			})
 		}
+
+		// Second priority: Find any available terminal with matching directory.
+		if (!terminal) {
+			terminal = terminals.find((t) => {
+				if (t.busy) {
+					return false
+				}
+
+				const terminalCwd = t.getCurrentWorkingDirectory()
+
+				if (!terminalCwd) {
+					return false
+				}
+
+				return arePathsEqual(vscode.Uri.file(cwd).fsPath, terminalCwd)
+			})
+		}
+
+		// Third priority: Find any non-busy terminal (only if directory is not
+		// required).
+		if (!terminal && !requiredCwd) {
+			terminal = terminals.find((t) => !t.busy)
+		}
+
+		// If no suitable terminal found, create a new one.
+		if (!terminal) {
+			terminal = this.createTerminal(cwd, provider)
+		}
+
+		terminal.taskId = taskId
 
 		return terminal
 	}
 
 	/**
-	 * Gets a terminal by its VSCode terminal instance
-	 * @param terminal The VSCode terminal instance
-	 * @returns The Terminal object, or undefined if not found
-	 */
-	static getTerminalByVSCETerminal(terminal: vscode.Terminal): RooTerminal | undefined {
-		const found = this.terminals.find((t) => t instanceof Terminal && t.terminal === terminal)
-
-		if (found?.isClosed()) {
-			this.removeTerminal(found.id)
-			return undefined
-		}
-
-		return found
-	}
-
-	static removeTerminal(id: number) {
-		ShellIntegrationManager.zshCleanupTmpDir(id)
-		this.terminals = this.terminals.filter((t) => t.id !== id)
-	}
-
-	static getAllTerminals(): RooTerminal[] {
-		this.terminals = this.terminals.filter((t) => !t.isClosed())
-		return this.terminals
-	}
-
-	/**
-	 * Gets unretrieved output from a terminal process
-	 * @param terminalId The terminal ID
+	 * Gets unretrieved output from a terminal process.
+	 *
+	 * @param id The terminal ID
 	 * @returns The unretrieved output as a string, or empty string if terminal not found
 	 */
-	static getUnretrievedOutput(terminalId: number): string {
-		return this.getTerminal(terminalId)?.getUnretrievedOutput() ?? ""
+	public static getUnretrievedOutput(id: number): string {
+		return this.getTerminalById(id)?.getUnretrievedOutput() ?? ""
 	}
 
 	/**
-	 * Checks if a terminal process is "hot" (recently active)
-	 * @param terminalId The terminal ID
+	 * Checks if a terminal process is "hot" (recently active).
+	 *
+	 * @param id The terminal ID
 	 * @returns True if the process is hot, false otherwise
 	 */
-	static isProcessHot(terminalId: number): boolean {
-		return this.getTerminal(terminalId)?.process?.isHot ?? false
+	public static isProcessHot(id: number): boolean {
+		return this.getTerminalById(id)?.process?.isHot ?? false
 	}
 
 	/**
-	 * Gets terminals filtered by busy state and optionally by task ID
+	 * Gets terminals filtered by busy state and optionally by task id.
+	 *
 	 * @param busy Whether to get busy or non-busy terminals
 	 * @param taskId Optional task ID to filter terminals by
 	 * @returns Array of Terminal objects
 	 */
-	static getTerminals(busy: boolean, taskId?: string): RooTerminal[] {
+	public static getTerminals(busy: boolean, taskId?: string): RooTerminal[] {
 		return this.getAllTerminals().filter((t) => {
 			// Filter by busy state.
 			if (t.busy !== busy) {
@@ -220,40 +255,40 @@ export class TerminalRegistry {
 	/**
 	 * Gets background terminals (taskId undefined) that have unretrieved output
 	 * or are still running.
+	 *
 	 * @param busy Whether to get busy or non-busy terminals
 	 * @returns Array of Terminal objects
 	 */
-	static getBackgroundTerminals(busy?: boolean): RooTerminal[] {
+	public static getBackgroundTerminals(busy?: boolean): RooTerminal[] {
 		return this.getAllTerminals().filter((t) => {
-			// Only get background terminals (taskId undefined)
+			// Only get background terminals (taskId undefined).
 			if (t.taskId !== undefined) {
 				return false
 			}
 
-			// If busy is undefined, return all background terminals
+			// If busy is undefined, return all background terminals.
 			if (busy === undefined) {
 				return t.getProcessesWithOutput().length > 0 || t.process?.hasUnretrievedOutput()
 			}
 
-			// Filter by busy state
+			// Filter by busy state.
 			return t.busy === busy
 		})
 	}
 
-	static cleanup() {
-		// Clean up all temporary directories
+	public static cleanup() {
+		// Clean up all temporary directories.
 		ShellIntegrationManager.clear()
 		this.disposables.forEach((disposable) => disposable.dispose())
 		this.disposables = []
 	}
 
 	/**
-	 * Releases all terminals associated with a task
+	 * Releases all terminals associated with a task.
+	 *
 	 * @param taskId The task ID
 	 */
-	static releaseTerminalsForTask(taskId?: string): void {
-		if (!taskId) return
-
+	public static releaseTerminalsForTask(taskId: string): void {
 		this.terminals.forEach((terminal) => {
 			if (terminal.taskId === taskId) {
 				terminal.taskId = undefined
@@ -261,68 +296,40 @@ export class TerminalRegistry {
 		})
 	}
 
-	/**
-	 * Gets an existing terminal or creates a new one for the given working directory
-	 * @param cwd The working directory path
-	 * @param requiredCwd Whether the working directory is required (if false, may reuse any non-busy terminal)
-	 * @param taskId Optional task ID to associate with the terminal
-	 * @returns A Terminal instance
-	 */
-	static async getOrCreateTerminal(
-		cwd: string,
-		requiredCwd: boolean = false,
-		taskId?: string,
-		provider: RooTerminalProvider = "vscode",
-	): Promise<RooTerminal> {
-		const terminals = this.getAllTerminals()
-		let terminal: RooTerminal | undefined
+	private static getAllTerminals(): RooTerminal[] {
+		this.terminals = this.terminals.filter((t) => !t.isClosed())
+		return this.terminals
+	}
 
-		// First priority: Find a terminal already assigned to this task with matching directory
-		if (taskId) {
-			terminal = terminals.find((t) => {
-				if (t.busy || t.taskId !== taskId) {
-					return false
-				}
+	private static getTerminalById(id: number): RooTerminal | undefined {
+		const terminal = this.terminals.find((t) => t.id === id)
 
-				const terminalCwd = t.getCurrentWorkingDirectory()
-
-				if (!terminalCwd) {
-					return false
-				}
-
-				return arePathsEqual(vscode.Uri.file(cwd).fsPath, terminalCwd)
-			})
+		if (terminal?.isClosed()) {
+			this.removeTerminal(id)
+			return undefined
 		}
-
-		// Second priority: Find any available terminal with matching directory
-		if (!terminal) {
-			terminal = terminals.find((t) => {
-				if (t.busy) {
-					return false
-				}
-
-				const terminalCwd = t.getCurrentWorkingDirectory()
-
-				if (!terminalCwd) {
-					return false
-				}
-
-				return arePathsEqual(vscode.Uri.file(cwd).fsPath, terminalCwd)
-			})
-		}
-
-		// Third priority: Find any non-busy terminal (only if directory is not required)
-		if (!terminal && !requiredCwd) {
-			terminal = terminals.find((t) => !t.busy)
-		}
-
-		// If no suitable terminal found, create a new one
-		if (!terminal) {
-			terminal = this.createTerminal(cwd, provider)
-		}
-
-		terminal.taskId = taskId
 
 		return terminal
+	}
+
+	/**
+	 * Gets a terminal by its VSCode terminal instance
+	 * @param terminal The VSCode terminal instance
+	 * @returns The Terminal object, or undefined if not found
+	 */
+	private static getTerminalByVSCETerminal(terminal: vscode.Terminal): RooTerminal | undefined {
+		const found = this.terminals.find((t) => t instanceof Terminal && t.terminal === terminal)
+
+		if (found?.isClosed()) {
+			this.removeTerminal(found.id)
+			return undefined
+		}
+
+		return found
+	}
+
+	private static removeTerminal(id: number) {
+		ShellIntegrationManager.zshCleanupTmpDir(id)
+		this.terminals = this.terminals.filter((t) => t.id !== id)
 	}
 }

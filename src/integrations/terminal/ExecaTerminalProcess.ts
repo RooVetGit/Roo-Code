@@ -36,6 +36,7 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 				cancelSignal: this.controller.signal,
 			})`${command}`
 
+			this.terminal.setActiveStream(subprocess)
 			this.emit("line", "")
 
 			for await (const line of subprocess) {
@@ -64,6 +65,7 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 			}
 		}
 
+		this.terminal.setActiveStream(undefined)
 		this.emitRemainingBufferIfListening()
 		this.stopHotTimer()
 		this.emit("completed", this.fullOutput)
@@ -85,17 +87,22 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 	}
 
 	public override getUnretrievedOutput() {
-		let outputToProcess = this.fullOutput.slice(this.lastRetrievedIndex)
-		let endIndex = outputToProcess.lastIndexOf("\n")
+		let output = this.fullOutput.slice(this.lastRetrievedIndex)
+		let index = output.lastIndexOf("\n")
 
-		if (endIndex === -1) {
+		if (index === -1) {
 			return ""
 		}
 
-		endIndex++
+		index++
+		this.lastRetrievedIndex += index
 
-		this.lastRetrievedIndex += endIndex
-		return outputToProcess.slice(0, endIndex)
+		// console.log(
+		// 	`[ExecaTerminalProcess#getUnretrievedOutput] fullOutput.length=${this.fullOutput.length} lastRetrievedIndex=${this.lastRetrievedIndex}`,
+		// 	output.slice(0, index),
+		// )
+
+		return output.slice(0, index)
 	}
 
 	private emitRemainingBufferIfListening() {
@@ -103,10 +110,10 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 			return
 		}
 
-		const remainingBuffer = this.getUnretrievedOutput()
+		const output = this.getUnretrievedOutput()
 
-		if (remainingBuffer !== "") {
-			this.emit("line", remainingBuffer)
+		if (output !== "") {
+			this.emit("line", output)
 		}
 	}
 }

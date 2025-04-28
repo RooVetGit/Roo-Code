@@ -27,11 +27,7 @@ export const CommandExecution = forwardRef<HTMLDivElement, CommandExecutionProps
 				})}
 				onClick={() => setIsExpanded(!isExpanded)}>
 				<Line>{command}</Line>
-				<ChevronDown
-					className={cn("size-4 transition-transform duration-300", {
-						"rotate-180": isExpanded,
-					})}
-				/>
+				<ChevronDown className={cn("size-4 transition-transform duration-300", { "rotate-180": isExpanded })} />
 			</div>
 			<div className={cn("h-[200px]", { hidden: !isExpanded })}>
 				<Virtuoso

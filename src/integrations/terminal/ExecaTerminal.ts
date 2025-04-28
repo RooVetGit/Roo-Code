@@ -8,6 +8,9 @@ export class ExecaTerminal extends BaseTerminal {
 		super("execa", id, cwd)
 	}
 
+	/**
+	 * Unlike the VSCode terminal, this is never closed.
+	 */
 	public override isClosed(): boolean {
 		return false
 	}
