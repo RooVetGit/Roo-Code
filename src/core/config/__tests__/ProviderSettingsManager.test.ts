@@ -12,8 +12,14 @@ const mockSecrets = {
 	delete: jest.fn(),
 }
 
+const mockGlobalState = {
+	get: jest.fn(),
+	update: jest.fn(),
+}
+
 const mockContext = {
 	secrets: mockSecrets,
+	globalState: mockGlobalState,
 } as unknown as ExtensionContext
 
 describe("ProviderSettingsManager", () => {
@@ -35,7 +41,7 @@ describe("ProviderSettingsManager", () => {
 			expect(mockSecrets.store).not.toHaveBeenCalled()
 		})
 
-		it("should not initialize config if it exists", async () => {
+		it("should not initialize config if it exists and migrations are complete", async () => {
 			mockSecrets.get.mockResolvedValue(
 				JSON.stringify({
 					currentApiConfigName: "default",
@@ -43,7 +49,13 @@ describe("ProviderSettingsManager", () => {
 						default: {
 							config: {},
 							id: "default",
+							diffEnabled: true,
+							fuzzyMatchThreshold: 1.0,
 						},
+					},
+					migrations: {
+						rateLimitSecondsMigrated: true,
+						diffSettingsMigrated: true,
 					},
 				}),
 			)
@@ -66,6 +78,10 @@ describe("ProviderSettingsManager", () => {
 							apiProvider: "anthropic",
 						},
 					},
+					migrations: {
+						rateLimitSecondsMigrated: true,
+						diffSettingsMigrated: true,
+					},
 				}),
 			)
 
@@ -73,9 +89,47 @@ describe("ProviderSettingsManager", () => {
 
 			// Should have written the config with new IDs
 			expect(mockSecrets.store).toHaveBeenCalled()
-			const storedConfig = JSON.parse(mockSecrets.store.mock.calls[0][1])
+			const calls = mockSecrets.store.mock.calls
+			const storedConfig = JSON.parse(calls[calls.length - 1][1]) // Get the latest call
 			expect(storedConfig.apiConfigs.default.id).toBeTruthy()
 			expect(storedConfig.apiConfigs.test.id).toBeTruthy()
+		})
+
+		it("should call migrateRateLimitSeconds if it has not done so already", async () => {
+			mockGlobalState.get.mockResolvedValue(42)
+
+			mockSecrets.get.mockResolvedValue(
+				JSON.stringify({
+					currentApiConfigName: "default",
+					apiConfigs: {
+						default: {
+							config: {},
+							id: "default",
+							rateLimitSeconds: undefined,
+						},
+						test: {
+							apiProvider: "anthropic",
+							rateLimitSeconds: undefined,
+						},
+						existing: {
+							apiProvider: "anthropic",
+							// this should not really be possible, unless someone has loaded a hand edited config,
+							// but we don't overwrite so we'll check that
+							rateLimitSeconds: 43,
+						},
+					},
+					migrations: {
+						rateLimitSecondsMigrated: false,
+					},
+				}),
+			)
+
+			await providerSettingsManager.initialize()
+
+			const storedConfig = JSON.parse(mockSecrets.store.mock.calls[1][1])
+			expect(storedConfig.apiConfigs.default.rateLimitSeconds).toEqual(42)
+			expect(storedConfig.apiConfigs.test.rateLimitSeconds).toEqual(42)
+			expect(storedConfig.apiConfigs.existing.rateLimitSeconds).toEqual(43)
 		})
 
 		it("should throw error if secrets storage fails", async () => {
@@ -105,6 +159,9 @@ describe("ProviderSettingsManager", () => {
 					architect: "default",
 					ask: "default",
 				},
+				migrations: {
+					rateLimitSecondsMigrated: false,
+				},
 			}
 
 			mockSecrets.get.mockResolvedValue(JSON.stringify(existingConfig))
@@ -124,6 +181,9 @@ describe("ProviderSettingsManager", () => {
 					code: "default",
 					architect: "default",
 					ask: "default",
+				},
+				migrations: {
+					rateLimitSecondsMigrated: false,
 				},
 			}
 
@@ -201,6 +261,9 @@ describe("ProviderSettingsManager", () => {
 						id: "test-id",
 					},
 				},
+				migrations: {
+					rateLimitSecondsMigrated: false,
+				},
 			}
 
 			mockSecrets.get.mockResolvedValue(JSON.stringify(existingConfig))
@@ -220,6 +283,9 @@ describe("ProviderSettingsManager", () => {
 						apiKey: "new-key",
 						id: "test-id",
 					},
+				},
+				migrations: {
+					rateLimitSecondsMigrated: false,
 				},
 			}
 
@@ -256,6 +322,9 @@ describe("ProviderSettingsManager", () => {
 						apiProvider: "anthropic",
 						id: "test-id",
 					},
+				},
+				migrations: {
+					rateLimitSecondsMigrated: false,
 				},
 			}
 
@@ -312,8 +381,12 @@ describe("ProviderSettingsManager", () => {
 						id: "test-id",
 					},
 				},
+				migrations: {
+					rateLimitSecondsMigrated: false,
+				},
 			}
 
+			mockGlobalState.get.mockResolvedValue(42)
 			mockSecrets.get.mockResolvedValue(JSON.stringify(existingConfig))
 
 			const config = await providerSettingsManager.loadConfig("test")
@@ -325,7 +398,7 @@ describe("ProviderSettingsManager", () => {
 			})
 
 			// Get the stored config to check the structure
-			const storedConfig = JSON.parse(mockSecrets.store.mock.calls[0][1])
+			const storedConfig = JSON.parse(mockSecrets.store.mock.calls[1][1])
 			expect(storedConfig.currentApiConfigName).toBe("test")
 			expect(storedConfig.apiConfigs.test).toEqual({
 				apiProvider: "anthropic",
@@ -372,6 +445,45 @@ describe("ProviderSettingsManager", () => {
 				"Failed to load config: Error: Failed to write provider profiles to secrets: Error: Storage failed",
 			)
 		})
+
+		it("should remove invalid profiles during load", async () => {
+			const invalidConfig = {
+				currentApiConfigName: "valid",
+				apiConfigs: {
+					valid: {
+						apiProvider: "anthropic",
+						apiKey: "valid-key",
+						apiModelId: "claude-3-opus-20240229",
+						rateLimitSeconds: 0,
+					},
+					invalid: {
+						// Invalid API provider.
+						id: "x.ai",
+						apiProvider: "x.ai",
+					},
+					// Incorrect type.
+					anotherInvalid: "not an object",
+				},
+				migrations: {
+					rateLimitSecondsMigrated: true,
+				},
+			}
+
+			mockSecrets.get.mockResolvedValue(JSON.stringify(invalidConfig))
+
+			await providerSettingsManager.initialize()
+
+			const storeCalls = mockSecrets.store.mock.calls
+			expect(storeCalls.length).toBeGreaterThan(0) // Ensure store was called at least once.
+			const finalStoredConfigJson = storeCalls[storeCalls.length - 1][1]
+
+			const storedConfig = JSON.parse(finalStoredConfigJson)
+			expect(storedConfig.apiConfigs.valid).toBeDefined()
+			expect(storedConfig.apiConfigs.invalid).toBeUndefined()
+			expect(storedConfig.apiConfigs.anotherInvalid).toBeUndefined()
+			expect(Object.keys(storedConfig.apiConfigs)).toEqual(["valid"])
+			expect(storedConfig.currentApiConfigName).toBe("valid")
+		})
 	})
 
 	describe("ResetAllConfigs", () => {
@@ -408,6 +520,9 @@ describe("ProviderSettingsManager", () => {
 						apiProvider: "anthropic",
 						id: "test-id",
 					},
+				},
+				migrations: {
+					rateLimitSecondsMigrated: false,
 				},
 			}
 

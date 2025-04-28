@@ -1,6 +1,5 @@
 // npx jest src/components/settings/__tests__/ApiConfigManager.test.tsx
 
-import React from "react"
 import { render, screen, fireEvent, within } from "@testing-library/react"
 
 import ApiConfigManager from "../ApiConfigManager"
@@ -21,14 +20,14 @@ jest.mock("@vscode/webview-ui-toolkit/react", () => ({
 
 jest.mock("@/components/ui", () => ({
 	...jest.requireActual("@/components/ui"),
-	Dialog: ({ children, open, onOpenChange }: any) => (
+	Dialog: ({ children, open }: any) => (
 		<div role="dialog" aria-modal="true" style={{ display: open ? "block" : "none" }} data-testid="dialog">
 			{children}
 		</div>
 	),
 	DialogContent: ({ children }: any) => <div data-testid="dialog-content">{children}</div>,
 	DialogTitle: ({ children }: any) => <div data-testid="dialog-title">{children}</div>,
-	Button: ({ children, onClick, disabled, variant, "data-testid": dataTestId }: any) => (
+	Button: ({ children, onClick, disabled, "data-testid": dataTestId }: any) => (
 		<button onClick={onClick} disabled={disabled} data-testid={dataTestId}>
 			{children}
 		</button>
@@ -42,7 +41,35 @@ jest.mock("@/components/ui", () => ({
 			data-testid={dataTestId}
 		/>
 	),
-	Select: ({ children, value, onValueChange }: any) => (
+	// New components for searchable dropdown
+	Popover: ({ children, open }: any) => (
+		<div className="popover" style={{ position: "relative" }}>
+			{children}
+			{open && <div className="popover-content" style={{ position: "absolute", top: "100%", left: 0 }}></div>}
+		</div>
+	),
+	PopoverTrigger: ({ children }: any) => <div className="popover-trigger">{children}</div>,
+	PopoverContent: ({ children }: any) => <div className="popover-content">{children}</div>,
+	Command: ({ children }: any) => <div className="command">{children}</div>,
+	CommandInput: ({ value, onValueChange, placeholder, className, "data-testid": dataTestId }: any) => (
+		<input
+			value={value}
+			onChange={(e) => onValueChange(e.target.value)}
+			placeholder={placeholder}
+			className={className}
+			data-testid={dataTestId}
+		/>
+	),
+	CommandList: ({ children }: any) => <div className="command-list">{children}</div>,
+	CommandEmpty: ({ children }: any) => (children ? <div className="command-empty">{children}</div> : null),
+	CommandGroup: ({ children }: any) => <div className="command-group">{children}</div>,
+	CommandItem: ({ children, value, onSelect }: any) => (
+		<div className="command-item" onClick={() => onSelect(value)} data-value={value}>
+			{children}
+		</div>
+	),
+	// Keep old components for backward compatibility
+	Select: ({ value, onValueChange }: any) => (
 		<select
 			value={value}
 			onChange={(e) => {
@@ -215,8 +242,20 @@ describe("ApiConfigManager", () => {
 	it("allows selecting a different config", () => {
 		render(<ApiConfigManager {...defaultProps} />)
 
-		const select = screen.getByTestId("select-component")
-		fireEvent.change(select, { target: { value: "Another Config" } })
+		// Click the select component to open the dropdown
+		const selectButton = screen.getByTestId("select-component")
+		fireEvent.click(selectButton)
+
+		// Find all command items and click the one with "Another Config"
+		const commandItems = document.querySelectorAll(".command-item")
+		// Find the item with "Another Config" text
+		const anotherConfigItem = Array.from(commandItems).find((item) => item.textContent?.includes("Another Config"))
+
+		if (!anotherConfigItem) {
+			throw new Error("Could not find 'Another Config' option")
+		}
+
+		fireEvent.click(anotherConfigItem)
 
 		expect(mockOnSelectConfig).toHaveBeenCalledWith("Another Config")
 	})

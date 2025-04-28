@@ -1,5 +1,5 @@
 {
-	"greeting": "Co Roo może dla Ciebie zrobić?",
+	"greeting": "Witamy w Roo Code",
 	"task": {
 		"title": "Zadanie",
 		"seeMore": "Zobacz więcej",
@@ -12,6 +12,8 @@
 		"export": "Eksportuj historię zadań",
 		"delete": "Usuń zadanie (Shift + Kliknięcie, aby pominąć potwierdzenie)"
 	},
+	"unpin": "Odepnij",
+	"pin": "Przypnij",
 	"tokenProgress": {
 		"availableSpace": "Dostępne miejsce: {{amount}} tokenów",
 		"tokensUsed": "Wykorzystane tokeny: {{used}} z {{total}}",
@@ -50,6 +52,10 @@
 		"title": "Kontynuuj podczas wykonywania",
 		"tooltip": "Kontynuuj pomimo ostrzeżeń"
 	},
+	"killCommand": {
+		"title": "Zatrzymaj polecenie",
+		"tooltip": "Zatrzymaj bieżące polecenie"
+	},
 	"resumeTask": {
 		"title": "Wznów zadanie",
 		"tooltip": "Kontynuuj bieżące zadanie"
@@ -63,9 +69,27 @@
 		"tooltip": "Anuluj bieżącą operację"
 	},
 	"scrollToBottom": "Przewiń do dołu czatu",
-	"aboutMe": "Dzięki najnowszym przełomom w zdolnościach kodowania agentowego, mogę krok po kroku obsługiwać złożone zadania związane z tworzeniem oprogramowania. Dzięki narzędziom, które pozwalają mi tworzyć i edytować pliki, eksplorować złożone projekty, korzystać z przeglądarki i wykonywać polecenia terminala (po udzieleniu zgody), mogę pomagać w sposób wykraczający poza uzupełnianie kodu czy wsparcie techniczne. Mogę nawet używać MCP do tworzenia nowych narzędzi i rozszerzania własnych możliwości.",
+	"about": "Generuj, refaktoryzuj i debuguj kod z pomocą sztucznej inteligencji.<br />Sprawdź naszą <DocsLink>dokumentację</DocsLink>, aby dowiedzieć się więcej.",
+	"onboarding": "<strong>Twoja lista zadań w tym obszarze roboczym jest pusta.</strong> Zacznij od wpisania zadania poniżej. Nie wiesz, jak zacząć? Przeczytaj więcej o tym, co Roo może dla Ciebie zrobić w <DocsLink>dokumentacji</DocsLink>.",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "Zadania bumerangowe",
+			"description": "Podziel zadania na mniejsze, łatwiejsze do zarządzania części."
+		},
+		"stickyModels": {
+			"title": "Tryby trwałe",
+			"description": "Każdy tryb zapamiętuje ostatnio używany model"
+		},
+		"tools": {
+			"title": "Narzędzia",
+			"description": "Pozwól sztucznej inteligencji rozwiązywać problemy, przeglądając sieć, uruchamiając polecenia i nie tylko."
+		},
+		"customizableModes": {
+			"title": "Konfigurowalne tryby",
+			"description": "Wyspecjalizowane persona z własnymi zachowaniami i przypisanymi modelami"
+		}
+	},
 	"selectMode": "Wybierz tryb interakcji",
-	"selectApiConfig": "Wybierz konfigurację API",
 	"enhancePrompt": "Ulepsz podpowiedź dodatkowym kontekstem",
 	"addImages": "Dodaj obrazy do wiadomości",
 	"sendMessage": "Wyślij wiadomość",
@@ -81,6 +105,9 @@
 	"edit": "Edytuj...",
 	"forNextMode": "dla następnego trybu",
 	"error": "Błąd",
+	"diffError": {
+		"title": "Edycja nieudana"
+	},
 	"troubleMessage": "Roo ma problemy...",
 	"apiRequest": {
 		"title": "Zapytanie API",
@@ -92,6 +119,7 @@
 	"checkpoint": {
 		"initial": "Początkowy punkt kontrolny",
 		"regular": "Punkt kontrolny",
+		"initializingWarning": "Trwa inicjalizacja punktu kontrolnego... Jeśli to trwa zbyt długo, możesz wyłączyć punkty kontrolne w <settingsLink>ustawieniach</settingsLink> i uruchomić zadanie ponownie.",
 		"menu": {
 			"viewDiff": "Zobacz różnice",
 			"restore": "Przywróć punkt kontrolny",
@@ -114,7 +142,12 @@
 		"didRead": "Roo przeczytał ten plik:",
 		"wantsToEdit": "Roo chce edytować ten plik:",
 		"wantsToEditOutsideWorkspace": "Roo chce edytować ten plik poza obszarem roboczym:",
-		"wantsToCreate": "Roo chce utworzyć nowy plik:"
+		"wantsToCreate": "Roo chce utworzyć nowy plik:",
+		"wantsToSearchReplace": "Roo chce wykonać wyszukiwanie i zamianę w tym pliku:",
+		"didSearchReplace": "Roo wykonał wyszukiwanie i zamianę w tym pliku:",
+		"wantsToInsert": "Roo chce wstawić zawartość do tego pliku:",
+		"wantsToInsertWithLineNumber": "Roo chce wstawić zawartość do tego pliku w linii {{lineNumber}}:",
+		"wantsToInsertAtEnd": "Roo chce dodać zawartość na końcu tego pliku:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo chce zobaczyć pliki najwyższego poziomu w tym katalogu:",
@@ -141,7 +174,12 @@
 	},
 	"subtasks": {
 		"wantsToCreate": "Roo chce utworzyć nowe podzadanie w trybie <code>{{mode}}</code>:",
-		"wantsToFinish": "Roo chce zakończyć to podzadanie"
+		"wantsToFinish": "Roo chce zakończyć to podzadanie",
+		"newTaskContent": "Instrukcje podzadania",
+		"completionContent": "Podzadanie zakończone",
+		"resultContent": "Wyniki podzadania",
+		"defaultResult": "Proszę kontynuować następne zadanie.",
+		"completionInstructions": "Podzadanie zakończone! Możesz przejrzeć wyniki i zasugerować poprawki lub następne kroki. Jeśli wszystko wygląda dobrze, potwierdź, aby zwrócić wynik do zadania nadrzędnego."
 	},
 	"questions": {
 		"hasQuestion": "Roo ma pytanie:"
@@ -149,7 +187,10 @@
 	"taskCompleted": "Zadanie zakończone",
 	"shellIntegration": {
 		"unavailable": "Integracja powłoki niedostępna",
-		"troubleshooting": "Nadal masz problemy?"
+		"troubleshooting": "Nadal masz problemy? Kliknij tutaj, aby zobaczyć dokumentację integracji powłoki.",
+		"checkSettings": "Sprawdź obejścia terminala na stronie ustawień",
+		"updateVSCode": "Zaktualizuj VSCode",
+		"supportedShell": "Upewnij się, że używasz obsługiwanej powłoki: zsh, bash, fish lub PowerShell"
 	},
 	"powershell": {
 		"issues": "Wygląda na to, że masz problemy z Windows PowerShell, proszę zapoznaj się z tym"
@@ -157,63 +198,22 @@
 	"autoApprove": {
 		"title": "Automatyczne zatwierdzanie:",
 		"none": "Brak",
-		"description": "Automatyczne zatwierdzanie pozwala Roo Code wykonywać działania bez pytania o pozwolenie. Włącz tylko dla działań, którym w pełni ufasz.",
-		"actions": {
-			"readFiles": {
-				"label": "Czytaj pliki i katalogi",
-				"shortName": "Czytanie",
-				"description": "Pozwala na dostęp do odczytu dowolnego pliku na Twoim komputerze."
-			},
-			"editFiles": {
-				"label": "Edytuj pliki",
-				"shortName": "Edycja",
-				"description": "Pozwala na modyfikację dowolnych plików na Twoim komputerze."
-			},
-			"executeCommands": {
-				"label": "Wykonuj zatwierdzone polecenia",
-				"shortName": "Polecenia",
-				"description": "Pozwala na wykonywanie zatwierdzonych poleceń terminala. Możesz to skonfigurować w panelu ustawień."
-			},
-			"useBrowser": {
-				"label": "Używaj przeglądarki",
-				"shortName": "Przeglądarka",
-				"description": "Pozwala na uruchamianie i interakcję z dowolną stroną internetową w przeglądarce bezinterfejsowej."
-			},
-			"useMcp": {
-				"label": "Używaj serwerów MCP",
-				"shortName": "MCP",
-				"description": "Pozwala na korzystanie ze skonfigurowanych serwerów MCP, które mogą modyfikować system plików lub wchodzić w interakcje z API."
-			},
-			"switchModes": {
-				"label": "Przełączaj tryby",
-				"shortName": "Tryby",
-				"description": "Pozwala na automatyczne przełączanie między różnymi trybami bez wymagania zatwierdzenia."
-			},
-			"subtasks": {
-				"label": "Twórz i kończ podzadania",
-				"shortName": "Podzadania",
-				"description": "Pozwala na tworzenie i kończenie podzadań bez wymagania zatwierdzenia."
-			},
-			"retryRequests": {
-				"label": "Ponów nieudane zapytania",
-				"shortName": "Ponowienia",
-				"description": "Automatycznie ponawia nieudane zapytania API, gdy dostawca zwraca odpowiedź z błędem."
-			}
-		}
+		"description": "Automatyczne zatwierdzanie pozwala Roo Code wykonywać działania bez pytania o pozwolenie. Włącz tylko dla działań, którym w pełni ufasz. Bardziej szczegółowa konfiguracja dostępna w <settingsLink>Ustawieniach</settingsLink>."
 	},
 	"reasoning": {
 		"thinking": "Myślenie",
 		"seconds": "{{count}} s"
 	},
+	"followUpSuggest": {
+		"copyToInput": "Kopiuj do pola wprowadzania (lub Shift + kliknięcie)"
+	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.10 wydany",
-		"description": "Roo Code 3.10 przynosi potężne usprawnienia produktywności!",
+		"title": "🎉 Roo Code 3.14 wydany",
+		"description": "Roo Code 3.14 przynosi nowe funkcje i ulepszenia na podstawie Twoich opinii.",
 		"whatsNew": "Co nowego",
-		"feature1": "Sugerowane odpowiedzi na pytania",
-		"feature2": "Ulepszenia obsługi dużych plików",
-		"feature3": "Przebudowane wyszukiwanie plików przez @-wzmianki",
-		"feature4": "",
-		"feature5": "",
+		"feature1": "<bold>Ulepszone narzędzia edycji</bold>: Narzędzia <code>search_and_replace</code> i <code>insert_content</code> zostały ulepszone i nie są już eksperymentalne",
+		"feature2": "<bold>Poprawki apply_diff</bold>: Kontynuujemy pracę nad ulepszaniem narzędzia <code>apply_diff</code>",
+		"feature3": "<bold>Mnóstwo innych ulepszeń</bold>: Liczne poprawki i usprawnienia w całym rozszerzeniu",
 		"hideButton": "Ukryj ogłoszenie",
 		"detailsDiscussLinks": "Uzyskaj więcej szczegółów i dołącz do dyskusji na <discordLink>Discord</discordLink> i <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -238,5 +238,7 @@
 			"scrollUp": "Przewiń w górę",
 			"close": "Zamknij przeglądarkę"
 		}
-	}
+	},
+	"systemPromptWarning": "OSTRZEŻENIE: Aktywne niestandardowe zastąpienie instrukcji systemowych. Może to poważnie zakłócić funkcjonalność i powodować nieprzewidywalne zachowanie.",
+	"selectApiConfig": "Wybierz konfigurację API"
 }

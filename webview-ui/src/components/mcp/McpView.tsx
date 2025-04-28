@@ -1,6 +1,6 @@
 import { useState } from "react"
+import { Button } from "@/components/ui/button"
 import {
-	VSCodeButton,
 	VSCodeCheckbox,
 	VSCodeLink,
 	VSCodePanels,
@@ -8,13 +8,13 @@ import {
 	VSCodePanelView,
 } from "@vscode/webview-ui-toolkit/react"
 
-import { McpServer } from "../../../../src/shared/mcp"
+import { McpServer } from "@roo/shared/mcp"
 
 import { vscode } from "@/utils/vscode"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui"
 
-import { useExtensionState } from "../../context/ExtensionStateContext"
-import { useAppTranslation } from "../../i18n/TranslationContext"
+import { useExtensionState } from "@src/context/ExtensionStateContext"
+import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { Trans } from "react-i18next"
 import { Tab, TabContent, TabHeader } from "../common/Tab"
 import McpToolRow from "./McpToolRow"
@@ -39,7 +39,7 @@ const McpView = ({ onDone }: McpViewProps) => {
 		<Tab>
 			<TabHeader className="flex justify-between items-center">
 				<h3 className="text-vscode-foreground m-0">{t("mcp:title")}</h3>
-				<VSCodeButton onClick={onDone}>{t("mcp:done")}</VSCodeButton>
+				<Button onClick={onDone}>{t("mcp:done")}</Button>
 			</TabHeader>
 
 			<TabContent>
@@ -100,24 +100,24 @@ const McpView = ({ onDone }: McpViewProps) => {
 
 						{/* Edit Settings Buttons */}
 						<div style={{ marginTop: "10px", width: "100%", display: "flex", gap: "10px" }}>
-							<VSCodeButton
-								appearance="secondary"
+							<Button
+								variant="secondary"
 								style={{ flex: 1 }}
 								onClick={() => {
 									vscode.postMessage({ type: "openMcpSettings" })
 								}}>
 								<span className="codicon codicon-edit" style={{ marginRight: "6px" }}></span>
 								{t("mcp:editGlobalMCP")}
-							</VSCodeButton>
-							<VSCodeButton
-								appearance="secondary"
+							</Button>
+							<Button
+								variant="secondary"
 								style={{ flex: 1 }}
 								onClick={() => {
 									vscode.postMessage({ type: "openProjectMcpSettings" })
 								}}>
 								<span className="codicon codicon-edit" style={{ marginRight: "6px" }}></span>
 								{t("mcp:editProjectMCP")}
-							</VSCodeButton>
+							</Button>
 						</div>
 					</>
 				)}
@@ -229,19 +229,21 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 				<div
 					style={{ display: "flex", alignItems: "center", marginRight: "8px" }}
 					onClick={(e) => e.stopPropagation()}>
-					<VSCodeButton
-						appearance="icon"
+					<Button
+						variant="ghost"
+						size="icon"
 						onClick={() => setShowDeleteConfirm(true)}
 						style={{ marginRight: "8px" }}>
 						<span className="codicon codicon-trash" style={{ fontSize: "14px" }}></span>
-					</VSCodeButton>
-					<VSCodeButton
-						appearance="icon"
+					</Button>
+					<Button
+						variant="ghost"
+						size="icon"
 						onClick={handleRestart}
 						disabled={server.status === "connecting"}
 						style={{ marginRight: "8px" }}>
 						<span className="codicon codicon-refresh" style={{ fontSize: "14px" }}></span>
-					</VSCodeButton>
+					</Button>
 					<div
 						role="switch"
 						aria-checked={!server.disabled}
@@ -320,15 +322,15 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 						}}>
 						{server.error}
 					</div>
-					<VSCodeButton
-						appearance="secondary"
+					<Button
+						variant="secondary"
 						onClick={handleRestart}
 						disabled={server.status === "connecting"}
 						style={{ width: "calc(100% - 20px)", margin: "0 10px 10px 10px" }}>
 						{server.status === "connecting"
 							? t("mcp:serverStatus.retrying")
 							: t("mcp:serverStatus.retryConnection")}
-					</VSCodeButton>
+					</Button>
 				</div>
 			) : (
 				isExpanded && (
@@ -444,12 +446,12 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 						</DialogDescription>
 					</DialogHeader>
 					<DialogFooter>
-						<VSCodeButton appearance="secondary" onClick={() => setShowDeleteConfirm(false)}>
+						<Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>
 							{t("mcp:deleteDialog.cancel")}
-						</VSCodeButton>
-						<VSCodeButton appearance="primary" onClick={handleDelete}>
+						</Button>
+						<Button variant="default" onClick={handleDelete}>
 							{t("mcp:deleteDialog.delete")}
-						</VSCodeButton>
+						</Button>
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>

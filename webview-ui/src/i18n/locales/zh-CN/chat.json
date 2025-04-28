@@ -1,21 +1,23 @@
 {
-	"greeting": "Roo能为您做什么？",
+	"greeting": "欢迎使用 Roo Code",
 	"task": {
 		"title": "任务",
-		"seeMore": "查看更多",
-		"seeLess": "查看更少",
-		"tokens": "Tokens:",
+		"seeMore": "展开",
+		"seeLess": "收起",
+		"tokens": "Token 用量:",
 		"cache": "缓存:",
-		"apiCost": "API成本:",
-		"contextWindow": "上下文窗口:",
+		"apiCost": "API 费用:",
+		"contextWindow": "上下文长度：",
 		"closeAndStart": "关闭任务并开始新任务",
 		"export": "导出任务历史",
 		"delete": "删除任务（Shift + 点击跳过确认）"
 	},
+	"unpin": "取消置顶",
+	"pin": "置顶",
 	"tokenProgress": {
-		"availableSpace": "可用空间: {{amount}} tokens",
-		"tokensUsed": "已使用tokens: {{used}} / {{total}}",
-		"reservedForResponse": "为模型响应保留: {{amount}} tokens"
+		"availableSpace": "可用: {{amount}}",
+		"tokensUsed": "已使用: {{used}} / {{total}}",
+		"reservedForResponse": "已保留: {{amount}}"
 	},
 	"retry": {
 		"title": "重试",
@@ -26,7 +28,7 @@
 		"tooltip": "开始一个新任务"
 	},
 	"proceedAnyways": {
-		"title": "仍继续",
+		"title": "仍然继续",
 		"tooltip": "在命令执行时继续"
 	},
 	"save": {
@@ -47,15 +49,19 @@
 		"tooltip": "执行此命令"
 	},
 	"proceedWhileRunning": {
-		"title": "运行时继续",
-		"tooltip": "尽管有警告仍继续"
+		"title": "强制继续",
+		"tooltip": "忽略运行中的命令并继续"
+	},
+	"killCommand": {
+		"title": "终止命令",
+		"tooltip": "终止当前命令"
 	},
 	"resumeTask": {
 		"title": "恢复任务",
 		"tooltip": "继续当前任务"
 	},
 	"terminate": {
-		"title": "终止",
+		"title": "结束",
 		"tooltip": "结束当前任务"
 	},
 	"cancel": {
@@ -63,17 +69,35 @@
 		"tooltip": "取消当前操作"
 	},
 	"scrollToBottom": "滚动到聊天底部",
-	"aboutMe": "由于代理编码能力的最新突破，我可以逐步处理复杂的软件开发任务。通过允许我创建和编辑文件、探索复杂项目、使用浏览器和执行终端命令（在您授权后）的工具，我可以以超越代码补全或技术支持的方式帮助您。我甚至可以使用MCP创建新工具并扩展自己的能力。",
+	"about": "通过 AI 辅助生成、重构和调试代码。<br />查看我们的 <DocsLink>文档</DocsLink> 了解更多信息。",
+	"onboarding": "<strong>此工作区中的任务列表为空。</strong> 请在下方输入任务开始。 不确定如何开始？ 在 <DocsLink>文档</DocsLink> 中阅读更多关于 Roo 可以为您做什么的信息。",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "任务拆分",
+			"description": "将任务拆分为更小、更易于管理的部分。"
+		},
+		"stickyModels": {
+			"title": "粘性模式",
+			"description": "每个模式 都会记住 您上次使用的模型"
+		},
+		"tools": {
+			"title": "工具",
+			"description": "允许 AI 通过浏览网络、运行命令等方式解决问题。"
+		},
+		"customizableModes": {
+			"title": "自定义模式",
+			"description": "具有专属行为和指定模型的特定角色"
+		}
+	},
 	"selectMode": "选择交互模式",
-	"selectApiConfig": "选择API配置",
-	"enhancePrompt": "使用附加上下文增强提示",
+	"enhancePrompt": "增强提示词",
 	"addImages": "添加图片到消息",
 	"sendMessage": "发送消息",
 	"typeMessage": "输入消息...",
 	"typeTask": "在此处输入您的任务...",
 	"addContext": "@添加上下文，/切换模式",
-	"dragFiles": "按住shift拖动文件",
-	"dragFilesImages": "按住shift拖动文件/图片",
+	"dragFiles": "Shift+拖拽文件",
+	"dragFilesImages": "Shift+拖拽文件/图片",
 	"enhancePromptDescription": "'增强提示'按钮通过提供额外上下文、澄清或重新表述来帮助改进您的请求。尝试在此处输入请求，然后再次点击按钮查看其工作原理。",
 	"errorReadingFile": "读取文件时出错:",
 	"noValidImages": "没有处理有效图片",
@@ -81,6 +105,9 @@
 	"edit": "编辑...",
 	"forNextMode": "用于下一个模式",
 	"error": "错误",
+	"diffError": {
+		"title": "编辑失败"
+	},
 	"troubleMessage": "Roo遇到问题...",
 	"apiRequest": {
 		"title": "API请求",
@@ -92,16 +119,17 @@
 	"checkpoint": {
 		"initial": "初始检查点",
 		"regular": "检查点",
+		"initializingWarning": "正在初始化检查点...如果耗时过长，你可以在<settingsLink>设置</settingsLink>中禁用检查点并重新启动任务。",
 		"menu": {
 			"viewDiff": "查看差异",
 			"restore": "恢复检查点",
 			"restoreFiles": "恢复文件",
-			"restoreFilesDescription": "将您的项目文件恢复到此时点拍摄的快照。",
+			"restoreFilesDescription": "将项目文件恢复到此检查点状态",
 			"restoreFilesAndTask": "恢复文件和任务",
 			"confirm": "确认",
 			"cancel": "取消",
 			"cannotUndo": "此操作无法撤消。",
-			"restoreFilesAndTaskDescription": "将您的项目文件恢复到此时点拍摄的快照，并删除此点之后的所有消息。"
+			"restoreFilesAndTaskDescription": "恢复文件至此时状态，并清除后续对话记录"
 		},
 		"current": "当前"
 	},
@@ -109,39 +137,49 @@
 		"wantsToFetch": "Roo 想要获取详细指示以协助当前任务"
 	},
 	"fileOperations": {
-		"wantsToRead": "Roo想读取此文件:",
-		"wantsToReadOutsideWorkspace": "Roo想读取此工作区外的文件:",
-		"didRead": "Roo已读取此文件:",
-		"wantsToEdit": "Roo想编辑此文件:",
-		"wantsToEditOutsideWorkspace": "Roo想编辑此工作区外的文件:",
-		"wantsToCreate": "Roo想创建新文件:"
+		"wantsToRead": "需要读取文件:",
+		"wantsToReadOutsideWorkspace": "请求访问外部文件:",
+		"didRead": "已读取文件:",
+		"wantsToEdit": "需要编辑文件:",
+		"wantsToEditOutsideWorkspace": "需要编辑外部文件:",
+		"wantsToCreate": "需要新建文件:",
+		"wantsToSearchReplace": "需要在此文件中搜索和替换:",
+		"didSearchReplace": "已完成搜索和替换:",
+		"wantsToInsert": "需要在此文件中插入内容:",
+		"wantsToInsertWithLineNumber": "需要在第 {{lineNumber}} 行插入内容:",
+		"wantsToInsertAtEnd": "需要在文件末尾添加内容:"
 	},
 	"directoryOperations": {
-		"wantsToViewTopLevel": "Roo想查看此目录中的顶层文件:",
-		"didViewTopLevel": "Roo已查看此目录中的顶层文件:",
-		"wantsToViewRecursive": "Roo想递归查看此目录中的所有文件:",
-		"didViewRecursive": "Roo已递归查看此目录中的所有文件:",
+		"wantsToViewTopLevel": "需要查看目录文件列表:",
+		"didViewTopLevel": "已查看目录文件列表:",
+		"wantsToViewRecursive": "需要查看目录所有文件:",
+		"didViewRecursive": "已查看目录所有文件:",
 		"wantsToViewDefinitions": "Roo想查看此目录中使用的源代码定义名称:",
 		"didViewDefinitions": "Roo已查看此目录中使用的源代码定义名称:",
-		"wantsToSearch": "Roo想在此目录中搜索 <code>{{regex}}</code>:",
-		"didSearch": "Roo已在此目录中搜索 <code>{{regex}}</code>:"
+		"wantsToSearch": "需要搜索内容: {{regex}}",
+		"didSearch": "已完成内容搜索: {{regex}}"
 	},
 	"commandOutput": "命令输出",
 	"response": "响应",
 	"arguments": "参数",
 	"mcp": {
-		"wantsToUseTool": "Roo想在{{serverName}} MCP服务器上使用工具:",
-		"wantsToAccessResource": "Roo想访问{{serverName}} MCP服务器上的资源:"
+		"wantsToUseTool": "Roo想在{{serverName}} MCP上使用工具:",
+		"wantsToAccessResource": "Roo想访问{{serverName}} MCP服务上的资源:"
 	},
 	"modes": {
-		"wantsToSwitch": "Roo想切换到<code>{{mode}}</code>模式",
-		"wantsToSwitchWithReason": "Roo想切换到<code>{{mode}}</code>模式，原因: {{reason}}",
-		"didSwitch": "Roo已切换到<code>{{mode}}</code>模式",
-		"didSwitchWithReason": "Roo已切换到<code>{{mode}}</code>模式，原因: {{reason}}"
+		"wantsToSwitch": "即将切换至{{mode}}模式",
+		"wantsToSwitchWithReason": "即将切换至{{mode}}模式（原因：{{reason}}）",
+		"didSwitch": "已切换至{{mode}}模式",
+		"didSwitchWithReason": "已切换至{{mode}}模式（原因：{{reason}}）"
 	},
 	"subtasks": {
 		"wantsToCreate": "Roo想在<code>{{mode}}</code>模式下创建新子任务:",
-		"wantsToFinish": "Roo想完成此子任务"
+		"wantsToFinish": "Roo想完成此子任务",
+		"newTaskContent": "子任务说明",
+		"completionContent": "子任务已完成",
+		"resultContent": "子任务结果",
+		"defaultResult": "请继续下一个任务。",
+		"completionInstructions": "子任务已完成！您可以查看结果并提出修改或下一步建议。如果一切正常，请确认以将结果返回给主任务。"
 	},
 	"questions": {
 		"hasQuestion": "Roo有一个问题:"
@@ -149,7 +187,10 @@
 	"taskCompleted": "任务完成",
 	"shellIntegration": {
 		"unavailable": "Shell集成不可用",
-		"troubleshooting": "仍有问题吗？"
+		"troubleshooting": "仍有问题吗？点击此处查看Shell集成文档。",
+		"checkSettings": "检查设置页面中的终端解决方案",
+		"updateVSCode": "更新VSCode",
+		"supportedShell": "确保使用受支持的shell：zsh、bash、fish或PowerShell"
 	},
 	"powershell": {
 		"issues": "看起来您遇到了Windows PowerShell问题，请参阅此"
@@ -157,65 +198,24 @@
 	"autoApprove": {
 		"title": "自动批准:",
 		"none": "无",
-		"description": "自动批准允许Roo Code无需请求许可即可执行操作。仅为您完全信任的操作启用。",
-		"actions": {
-			"readFiles": {
-				"label": "读取文件和目录",
-				"shortName": "读取",
-				"description": "允许访问读取计算机上的任何文件。"
-			},
-			"editFiles": {
-				"label": "编辑文件",
-				"shortName": "编辑",
-				"description": "允许修改计算机上的任何文件。"
-			},
-			"executeCommands": {
-				"label": "执行已批准的命令",
-				"shortName": "命令",
-				"description": "允许执行已批准的终端命令。您可以在设置面板中配置此项。"
-			},
-			"useBrowser": {
-				"label": "使用浏览器",
-				"shortName": "浏览器",
-				"description": "允许在无头浏览器中启动并与任何网站交互的能力。"
-			},
-			"useMcp": {
-				"label": "使用MCP服务器",
-				"shortName": "MCP",
-				"description": "允许使用可能修改文件系统或与API交互的已配置MCP服务器。"
-			},
-			"switchModes": {
-				"label": "切换模式",
-				"shortName": "模式",
-				"description": "允许在不需要批准的情况下自动切换不同模式。"
-			},
-			"subtasks": {
-				"label": "创建和完成子任务",
-				"shortName": "子任务",
-				"description": "允许在不需要批准的情况下创建和完成子任务。"
-			},
-			"retryRequests": {
-				"label": "重试失败的请求",
-				"shortName": "重试",
-				"description": "当提供者返回错误响应时自动重试失败的API请求。"
-			}
-		}
+		"description": "允许直接执行操作无需确认，请谨慎启用。前往<settingsLink>设置</settingsLink>调整"
 	},
 	"reasoning": {
 		"thinking": "思考中",
 		"seconds": "{{count}}秒"
 	},
+	"followUpSuggest": {
+		"copyToInput": "复制到输入框（或按住Shift点击）"
+	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.10 已发布",
-		"description": "Roo Code 3.10带来强大的生产力提升！",
+		"title": "🎉 Roo Code 3.14 已发布",
+		"description": "Roo Code 3.14 带来基于您反馈的新功能和改进。",
 		"whatsNew": "新特性",
-		"feature1": "问题的建议回答",
-		"feature2": "改进的大文件处理",
-		"feature3": "重建的@-提及文件查找",
-		"feature4": "",
-		"feature5": "",
+		"feature1": "<bold>编辑工具增强</bold>: <code>search_and_replace</code> 和 <code>insert_content</code> 工具已得到改进，并从实验性状态毕业",
+		"feature2": "<bold>差异更新修复</bold>: 我们持续改进 <code>apply_diff</code> 工具",
+		"feature3": "<bold>海量其他改进</bold>: 扩展中众多的修复和增强功能",
 		"hideButton": "隐藏公告",
-		"detailsDiscussLinks": "在<discordLink>Discord</discordLink>和<redditLink>Reddit</redditLink>获取更多详情并参与讨论 🚀"
+		"detailsDiscussLinks": "在 <discordLink>Discord</discordLink> 和 <redditLink>Reddit</redditLink> 获取更多详情并参与讨论 🚀"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo想使用浏览器:",
@@ -231,12 +231,14 @@
 		"sessionStarted": "浏览器会话已启动",
 		"actions": {
 			"title": "浏览器操作: ",
-			"launch": "在 {{url}} 启动浏览器",
+			"launch": "访问 {{url}}",
 			"click": "点击 ({{coordinate}})",
 			"type": "输入 \"{{text}}\"",
 			"scrollDown": "向下滚动",
 			"scrollUp": "向上滚动",
 			"close": "关闭浏览器"
 		}
-	}
+	},
+	"systemPromptWarning": "警告：自定义系统提示词覆盖已激活。这可能严重破坏功能并导致不可预测的行为。",
+	"selectApiConfig": "选择 API 配置"
 }

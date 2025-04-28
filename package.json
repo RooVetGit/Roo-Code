@@ -1,9 +1,9 @@
 {
 	"name": "roo-cline",
-	"displayName": "Roo Code (prev. Roo Cline)",
-	"description": "A whole dev team of AI agents in your editor.",
+	"displayName": "%extension.displayName%",
+	"description": "%extension.description%",
 	"publisher": "RooVeterinaryInc",
-	"version": "3.10.5",
+	"version": "3.14.3",
 	"icon": "assets/icons/icon.png",
 	"galleryBanner": {
 		"color": "#617A91",
@@ -11,7 +11,7 @@
 	},
 	"engines": {
 		"vscode": "^1.84.0",
-		"node": ">=20.18.1"
+		"node": "20.18.1"
 	},
 	"author": {
 		"name": "Roo Code"
@@ -54,18 +54,18 @@
 		"submenus": [
 			{
 				"id": "roo-code.contextMenu",
-				"label": "Roo Code"
+				"label": "%views.contextMenu.label%"
 			},
 			{
 				"id": "roo-code.terminalMenu",
-				"label": "Roo Code"
+				"label": "%views.terminalMenu.label%"
 			}
 		],
 		"viewsContainers": {
 			"activitybar": [
 				{
 					"id": "roo-cline-ActivityBar",
-					"title": "Roo Code",
+					"title": "%views.activitybar.title%",
 					"icon": "assets/icons/icon.svg"
 				}
 			]
@@ -82,98 +82,108 @@
 		"commands": [
 			{
 				"command": "roo-cline.plusButtonClicked",
-				"title": "New Task",
+				"title": "%command.newTask.title%",
 				"icon": "$(add)"
 			},
 			{
 				"command": "roo-cline.mcpButtonClicked",
-				"title": "MCP Servers",
+				"title": "%command.mcpServers.title%",
 				"icon": "$(server)"
 			},
 			{
 				"command": "roo-cline.promptsButtonClicked",
-				"title": "Prompts",
+				"title": "%command.prompts.title%",
 				"icon": "$(notebook)"
 			},
 			{
 				"command": "roo-cline.historyButtonClicked",
-				"title": "History",
+				"title": "%command.history.title%",
 				"icon": "$(history)"
 			},
 			{
 				"command": "roo-cline.popoutButtonClicked",
-				"title": "Open in Editor",
+				"title": "%command.openInEditor.title%",
 				"icon": "$(link-external)"
 			},
 			{
 				"command": "roo-cline.settingsButtonClicked",
-				"title": "Settings",
+				"title": "%command.settings.title%",
 				"icon": "$(settings-gear)"
 			},
 			{
 				"command": "roo-cline.helpButtonClicked",
-				"title": "Documentation",
+				"title": "%command.documentation.title%",
 				"icon": "$(question)"
 			},
 			{
 				"command": "roo-cline.openInNewTab",
-				"title": "Open In New Tab",
-				"category": "Roo Code"
+				"title": "%command.openInNewTab.title%",
+				"category": "%configuration.title%"
 			},
 			{
 				"command": "roo-cline.explainCode",
-				"title": "Explain Code",
-				"category": "Roo Code"
+				"title": "%command.explainCode.title%",
+				"category": "%configuration.title%"
 			},
 			{
 				"command": "roo-cline.fixCode",
-				"title": "Fix Code",
-				"category": "Roo Code"
+				"title": "%command.fixCode.title%",
+				"category": "%configuration.title%"
 			},
 			{
 				"command": "roo-cline.improveCode",
-				"title": "Improve Code",
-				"category": "Roo Code"
+				"title": "%command.improveCode.title%",
+				"category": "%configuration.title%"
 			},
 			{
 				"command": "roo-cline.addToContext",
-				"title": "Add To Context",
-				"category": "Roo Code"
+				"title": "%command.addToContext.title%",
+				"category": "%configuration.title%"
 			},
 			{
 				"command": "roo-cline.newTask",
-				"title": "New Task",
-				"category": "Roo Code"
+				"title": "%command.newTask.title%",
+				"category": "%configuration.title%"
 			},
 			{
 				"command": "roo-cline.terminalAddToContext",
-				"title": "Add Terminal Content to Context",
+				"title": "%command.terminal.addToContext.title%",
 				"category": "Terminal"
 			},
 			{
 				"command": "roo-cline.terminalFixCommand",
-				"title": "Fix This Command",
+				"title": "%command.terminal.fixCommand.title%",
 				"category": "Terminal"
 			},
 			{
 				"command": "roo-cline.terminalExplainCommand",
-				"title": "Explain This Command",
+				"title": "%command.terminal.explainCommand.title%",
 				"category": "Terminal"
 			},
 			{
 				"command": "roo-cline.terminalFixCommandInCurrentTask",
-				"title": "Fix This Command (Current Task)",
+				"title": "%command.terminal.fixCommandInCurrentTask.title%",
 				"category": "Terminal"
 			},
 			{
 				"command": "roo-cline.terminalExplainCommandInCurrentTask",
-				"title": "Explain This Command (Current Task)",
+				"title": "%command.terminal.explainCommandInCurrentTask.title%",
 				"category": "Terminal"
 			},
 			{
 				"command": "roo-cline.setCustomStoragePath",
-				"title": "Set Custom Storage Path",
-				"category": "Roo Code"
+				"title": "%command.setCustomStoragePath.title%",
+				"category": "%configuration.title%"
+			},
+			{
+				"command": "roo-cline.focusInput",
+				"title": "%command.focusInput.title%",
+				"category": "%configuration.title%"
+			},
+			{
+				"command": "roo.acceptInput",
+				"title": "%command.acceptInput.title%",
+				"category": "%configuration.title%"
 			}
 		],
 		"menus": {
@@ -185,19 +195,19 @@
 			],
 			"roo-code.contextMenu": [
 				{
-					"command": "roo-cline.explainCode",
+					"command": "roo-cline.addToContext",
 					"group": "1_actions@1"
 				},
 				{
-					"command": "roo-cline.fixCode",
+					"command": "roo-cline.explainCode",
 					"group": "1_actions@2"
 				},
 				{
-					"command": "roo-cline.improveCode",
+					"command": "roo-cline.fixCode",
 					"group": "1_actions@3"
 				},
 				{
-					"command": "roo-cline.addToContext",
+					"command": "roo-cline.improveCode",
 					"group": "1_actions@4"
 				}
 			],
@@ -265,10 +275,47 @@
 					"group": "navigation@7",
 					"when": "view == roo-cline.SidebarProvider"
 				}
+			],
+			"editor/title": [
+				{
+					"command": "roo-cline.plusButtonClicked",
+					"group": "navigation@1",
+					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				},
+				{
+					"command": "roo-cline.promptsButtonClicked",
+					"group": "navigation@2",
+					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				},
+				{
+					"command": "roo-cline.mcpButtonClicked",
+					"group": "navigation@3",
+					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				},
+				{
+					"command": "roo-cline.historyButtonClicked",
+					"group": "navigation@4",
+					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				},
+				{
+					"command": "roo-cline.popoutButtonClicked",
+					"group": "navigation@5",
+					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				},
+				{
+					"command": "roo-cline.settingsButtonClicked",
+					"group": "navigation@6",
+					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				},
+				{
+					"command": "roo-cline.helpButtonClicked",
+					"group": "navigation@7",
+					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				}
 			]
 		},
 		"configuration": {
-			"title": "Roo Code",
+			"title": "%configuration.title%",
 			"properties": {
 				"roo-cline.allowedCommands": {
 					"type": "array",
@@ -283,26 +330,26 @@
 						"git diff",
 						"git show"
 					],
-					"description": "Commands that can be auto-executed when 'Always approve execute operations' is enabled"
+					"description": "%commands.allowedCommands.description%"
 				},
 				"roo-cline.vsCodeLmModelSelector": {
 					"type": "object",
 					"properties": {
 						"vendor": {
 							"type": "string",
-							"description": "The vendor of the language model (e.g. copilot)"
+							"description": "%settings.vsCodeLmModelSelector.vendor.description%"
 						},
 						"family": {
 							"type": "string",
-							"description": "The family of the language model (e.g. gpt-4)"
+							"description": "%settings.vsCodeLmModelSelector.family.description%"
 						}
 					},
-					"description": "Settings for VSCode Language Model API"
+					"description": "%settings.vsCodeLmModelSelector.description%"
 				},
 				"roo-cline.customStoragePath": {
 					"type": "string",
 					"default": "",
-					"description": "Custom storage path. Leave empty to use the default location. Supports absolute paths (e.g. 'D:\\RooCodeStorage')"
+					"description": "%settings.customStoragePath.description%"
 				}
 			}
 		}
@@ -312,27 +359,23 @@
 		"build:webview": "cd webview-ui && npm run build",
 		"build:esbuild": "node esbuild.js --production",
 		"compile": "tsc -p . --outDir out && node esbuild.js",
-		"install:all": "npm install npm-run-all && npm run install:_all",
-		"install:_all": "npm-run-all -p install-*",
+		"install:all": "npm install npm-run-all && npm-run-all -l -p install-*",
 		"install-extension": "npm install",
 		"install-webview": "cd webview-ui && npm install",
 		"install-e2e": "cd e2e && npm install",
-		"install-benchmark": "cd benchmark && npm install",
-		"lint": "npm-run-all -p lint:*",
-		"lint:extension": "eslint src --ext ts",
+		"lint": "npm-run-all -l -p lint:*",
+		"lint:extension": "eslint src --ext .ts",
 		"lint:webview": "cd webview-ui && npm run lint",
 		"lint:e2e": "cd e2e && npm run lint",
-		"lint:benchmark": "cd benchmark && npm run lint",
-		"check-types": "npm-run-all -p check-types:*",
+		"check-types": "npm-run-all -l -p check-types:*",
 		"check-types:extension": "tsc --noEmit",
 		"check-types:webview": "cd webview-ui && npm run check-types",
 		"check-types:e2e": "cd e2e && npm run check-types",
-		"check-types:benchmark": "cd benchmark && npm run check-types",
-		"package": "npm-run-all -p build:webview build:esbuild check-types lint",
+		"package": "npm-run-all -l -p build:webview build:esbuild check-types lint",
 		"pretest": "npm run compile",
 		"dev": "cd webview-ui && npm run dev",
-		"test": "npm-run-all -p test:*",
-		"test:extension": "jest",
+		"test": "node scripts/run-tests.js",
+		"test:extension": "jest -w=40%",
 		"test:webview": "cd webview-ui && npm run test",
 		"prepare": "husky",
 		"publish:marketplace": "vsce publish && ovsx publish",
@@ -340,17 +383,19 @@
 		"version-packages": "changeset version && npm install --package-lock-only",
 		"vscode:prepublish": "npm run package",
 		"vsix": "rimraf bin && mkdirp bin && npx vsce package --out bin",
-		"watch": "npm-run-all -p watch:*",
+		"watch": "npm-run-all -l -p watch:*",
 		"watch:esbuild": "node esbuild.js --watch",
 		"watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
 		"watch-tests": "tsc -p . -w --outDir out",
 		"changeset": "changeset",
 		"knip": "knip --include files",
-		"clean": "npm-run-all -p clean:*",
+		"clean": "npm-run-all -l -p clean:*",
 		"clean:extension": "rimraf bin dist out",
 		"clean:webview": "cd webview-ui && npm run clean",
 		"clean:e2e": "cd e2e && npm run clean",
-		"clean:benchmark": "cd benchmark && npm run clean",
+		"vscode-test": "npm-run-all -l -p vscode-test:*",
+		"vscode-test:extension": "tsc -p . --outDir out && node esbuild.js",
+		"vscode-test:webview": "cd webview-ui && npm run build",
 		"update-contributors": "node scripts/update-contributors.js",
 		"generate-types": "tsx scripts/generate-types.mts"
 	},
@@ -358,9 +403,9 @@
 		"@anthropic-ai/bedrock-sdk": "^0.10.2",
 		"@anthropic-ai/sdk": "^0.37.0",
 		"@anthropic-ai/vertex-sdk": "^0.7.0",
-		"@aws-sdk/client-bedrock-runtime": "^3.706.0",
+		"@aws-sdk/client-bedrock-runtime": "^3.779.0",
 		"@google-cloud/vertexai": "^1.9.3",
-		"@google/generative-ai": "^0.18.0",
+		"@google/genai": "^0.9.0",
 		"@mistralai/mistralai": "^1.3.6",
 		"@modelcontextprotocol/sdk": "^1.7.0",
 		"@types/clone-deep": "^4.0.4",
@@ -382,12 +427,12 @@
 		"fastest-levenshtein": "^1.0.16",
 		"fzf": "^0.5.2",
 		"get-folder-size": "^5.0.0",
-		"globby": "^14.0.2",
 		"i18next": "^24.2.2",
 		"isbinaryfile": "^5.0.2",
-		"js-tiktoken": "^1.0.19",
 		"mammoth": "^1.8.0",
 		"monaco-vscode-textmate-theme-converter": "^0.1.7",
+		"node-cache": "^5.1.2",
+		"node-ipc": "^12.0.0",
 		"openai": "^4.78.1",
 		"os-name": "^6.0.0",
 		"p-wait-for": "^5.0.2",
@@ -405,9 +450,11 @@
 		"string-similarity": "^4.0.4",
 		"strip-ansi": "^7.1.0",
 		"strip-bom": "^5.0.0",
+		"tiktoken": "^1.0.21",
 		"tmp": "^0.2.3",
 		"tree-sitter-wasms": "^0.1.11",
 		"turndown": "^7.2.0",
+		"vscode-material-icons": "^0.1.1",
 		"web-tree-sitter": "^0.22.6",
 		"zod": "^3.23.8"
 	},
@@ -420,10 +467,14 @@
 		"@types/diff-match-patch": "^1.0.36",
 		"@types/glob": "^8.1.0",
 		"@types/jest": "^29.5.14",
+		"@types/mocha": "^10.0.10",
 		"@types/node": "20.x",
+		"@types/node-ipc": "^9.2.3",
 		"@types/string-similarity": "^4.0.2",
 		"@typescript-eslint/eslint-plugin": "^7.14.1",
 		"@typescript-eslint/parser": "^7.11.0",
+		"@vscode/test-electron": "^2.5.2",
+		"@vscode/vsce": "^3.3.2",
 		"esbuild": "^0.24.0",
 		"eslint": "^8.57.0",
 		"execa": "^9.5.2",
@@ -434,6 +485,7 @@
 		"knip": "^5.44.4",
 		"lint-staged": "^15.2.11",
 		"mkdirp": "^3.0.1",
+		"nock": "^14.0.4",
 		"npm-run-all": "^4.1.5",
 		"prettier": "^3.4.2",
 		"rimraf": "^6.0.1",

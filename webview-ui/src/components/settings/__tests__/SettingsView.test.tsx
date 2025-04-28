@@ -9,11 +9,7 @@ import { ExtensionStateContextProvider } from "@/context/ExtensionStateContext"
 import SettingsView from "../SettingsView"
 
 // Mock vscode API
-jest.mock("../../../utils/vscode", () => ({
-	vscode: {
-		postMessage: jest.fn(),
-	},
-}))
+jest.mock("@src/utils/vscode", () => ({ vscode: { postMessage: jest.fn() } }))
 
 // Mock all lucide-react icons with a proxy to handle any icon requested
 jest.mock("lucide-react", () => {
@@ -79,10 +75,10 @@ jest.mock("@vscode/webview-ui-toolkit/react", () => ({
 		/>
 	),
 	VSCodeLink: ({ children, href }: any) => <a href={href || "#"}>{children}</a>,
-	VSCodeRadio: ({ children, value, checked, onChange }: any) => (
+	VSCodeRadio: ({ value, checked, onChange }: any) => (
 		<input type="radio" value={value} checked={checked} onChange={onChange} />
 	),
-	VSCodeRadioGroup: ({ children, value, onChange }: any) => <div onChange={onChange}>{children}</div>,
+	VSCodeRadioGroup: ({ children, onChange }: any) => <div onChange={onChange}>{children}</div>,
 }))
 
 // Mock Slider component
@@ -306,7 +302,7 @@ describe("SettingsView - Allowed Commands", () => {
 		renderSettingsView()
 
 		// Enable always allow execute
-		const executeCheckbox = screen.getByTestId("always-allow-execute-checkbox")
+		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
 		fireEvent.click(executeCheckbox)
 		// Verify allowed commands section appears
 		expect(screen.getByTestId("allowed-commands-heading")).toBeInTheDocument()
@@ -317,7 +313,7 @@ describe("SettingsView - Allowed Commands", () => {
 		renderSettingsView()
 
 		// Enable always allow execute
-		const executeCheckbox = screen.getByTestId("always-allow-execute-checkbox")
+		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
 		fireEvent.click(executeCheckbox)
 
 		// Add a new command
@@ -341,7 +337,7 @@ describe("SettingsView - Allowed Commands", () => {
 		renderSettingsView()
 
 		// Enable always allow execute
-		const executeCheckbox = screen.getByTestId("always-allow-execute-checkbox")
+		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
 		fireEvent.click(executeCheckbox)
 
 		// Add a command
@@ -368,7 +364,7 @@ describe("SettingsView - Allowed Commands", () => {
 		renderSettingsView()
 
 		// Enable always allow execute
-		const executeCheckbox = screen.getByTestId("always-allow-execute-checkbox")
+		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
 		fireEvent.click(executeCheckbox)
 
 		// Add a command twice
@@ -392,7 +388,7 @@ describe("SettingsView - Allowed Commands", () => {
 		renderSettingsView()
 
 		// Enable always allow execute
-		const executeCheckbox = screen.getByTestId("always-allow-execute-checkbox")
+		const executeCheckbox = screen.getByTestId("always-allow-execute-toggle")
 		fireEvent.click(executeCheckbox)
 
 		// Add a command

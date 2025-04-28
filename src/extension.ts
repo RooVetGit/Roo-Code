@@ -15,6 +15,7 @@ try {
 import "./utils/path" // Necessary to have access to String.prototype.toPosix.
 
 import { initializeI18n } from "./i18n"
+import { ContextProxy } from "./core/config/ContextProxy"
 import { ClineProvider } from "./core/webview/ClineProvider"
 import { CodeActionProvider } from "./core/CodeActionProvider"
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
@@ -66,7 +67,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		context.globalState.update("allowedCommands", defaultCommands)
 	}
 
-	const provider = new ClineProvider(context, outputChannel, "sidebar")
+	const contextProxy = await ContextProxy.getInstance(context)
+	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy)
 	telemetryService.setProvider(provider)
 
 	context.subscriptions.push(
@@ -115,8 +117,13 @@ export async function activate(context: vscode.ExtensionContext) {
 	registerCodeActions(context)
 	registerTerminalActions(context)
 
+	// Allows other extensions to activate once Roo is ready.
+	vscode.commands.executeCommand("roo-cline.activationCompleted")
+
 	// Implements the `RooCodeAPI` interface.
-	return new API(outputChannel, provider)
+	const socketPath = process.env.ROO_CODE_IPC_SOCKET_PATH
+	const enableLogging = typeof socketPath === "string"
+	return new API(outputChannel, provider, socketPath, enableLogging)
 }
 
 // This method is called when your extension is deactivated

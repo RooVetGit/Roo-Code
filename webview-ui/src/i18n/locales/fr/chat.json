@@ -1,5 +1,5 @@
 {
-	"greeting": "Que peut faire Roo pour vous ?",
+	"greeting": "Bienvenue sur Roo Code",
 	"task": {
 		"title": "Tâche",
 		"seeMore": "Voir plus",
@@ -7,11 +7,13 @@
 		"tokens": "Tokens :",
 		"cache": "Cache :",
 		"apiCost": "Coût API :",
-		"contextWindow": "Fenêtre de contexte :",
+		"contextWindow": "Durée du contexte :",
 		"closeAndStart": "Fermer la tâche et en commencer une nouvelle",
 		"export": "Exporter l'historique des tâches",
 		"delete": "Supprimer la tâche (Shift + Clic pour ignorer la confirmation)"
 	},
+	"unpin": "Désépingler",
+	"pin": "Épingler",
 	"tokenProgress": {
 		"availableSpace": "Espace disponible : {{amount}} tokens",
 		"tokensUsed": "Tokens utilisés : {{used}} sur {{total}}",
@@ -50,6 +52,10 @@
 		"title": "Continuer pendant l'exécution",
 		"tooltip": "Continuer malgré les avertissements"
 	},
+	"killCommand": {
+		"title": "Arrêter la commande",
+		"tooltip": "Arrêter la commande actuelle"
+	},
 	"resumeTask": {
 		"title": "Reprendre la tâche",
 		"tooltip": "Continuer la tâche actuelle"
@@ -63,9 +69,27 @@
 		"tooltip": "Annuler l'opération actuelle"
 	},
 	"scrollToBottom": "Défiler jusqu'au bas du chat",
-	"aboutMe": "Grâce aux dernières avancées en matière de capacités de codage agent, je peux gérer des tâches complexes de développement logiciel étape par étape. Avec des outils qui me permettent de créer et d'éditer des fichiers, d'explorer des projets complexes, d'utiliser le navigateur et d'exécuter des commandes de terminal (après votre autorisation), je peux vous aider de manières qui vont au-delà de la complétion de code ou du support technique. Je peux même utiliser MCP pour créer de nouveaux outils et étendre mes propres capacités.",
+	"about": "Générer, refactoriser et déboguer du code avec l'assistance de l'IA.<br />Consultez notre <DocsLink>documentation</DocsLink> pour en savoir plus.",
+	"onboarding": "Grâce aux dernières avancées en matière de capacités de codage agent, je peux gérer des tâches complexes de développement logiciel étape par étape. Avec des outils qui me permettent de créer et d'éditer des fichiers, d'explorer des projets complexes, d'utiliser le navigateur et d'exécuter des commandes de terminal (après votre autorisation), je peux vous aider de manières qui vont au-delà de la complétion de code ou du support technique. Je peux même utiliser MCP pour créer de nouveaux outils et étendre mes propres capacités.",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "Tâches Boomerang",
+			"description": "Divisez les tâches en parties plus petites et gérables."
+		},
+		"stickyModels": {
+			"title": "Modes persistants",
+			"description": "Chaque mode se souvient de votre dernier modèle utilisé"
+		},
+		"tools": {
+			"title": "Outils",
+			"description": "Permettez à l'IA de résoudre des problèmes en naviguant sur le Web, en exécutant des commandes, et plus encore."
+		},
+		"customizableModes": {
+			"title": "Modes personnalisables",
+			"description": "Des personas spécialisés avec leurs propres comportements et modèles assignés"
+		}
+	},
 	"selectMode": "Sélectionner le mode d'interaction",
-	"selectApiConfig": "Sélectionner la configuration API",
 	"enhancePrompt": "Améliorer la requête avec un contexte supplémentaire",
 	"addImages": "Ajouter des images au message",
 	"sendMessage": "Envoyer le message",
@@ -81,6 +105,9 @@
 	"edit": "Éditer...",
 	"forNextMode": "pour le prochain mode",
 	"error": "Erreur",
+	"diffError": {
+		"title": "Modification échouée"
+	},
 	"troubleMessage": "Roo rencontre des difficultés...",
 	"apiRequest": {
 		"title": "Requête API",
@@ -92,6 +119,7 @@
 	"checkpoint": {
 		"initial": "Point de contrôle initial",
 		"regular": "Point de contrôle",
+		"initializingWarning": "Initialisation du point de contrôle en cours... Si cela prend trop de temps, tu peux désactiver les points de contrôle dans les <settingsLink>paramètres</settingsLink> et redémarrer ta tâche.",
 		"menu": {
 			"viewDiff": "Voir les différences",
 			"restore": "Restaurer le point de contrôle",
@@ -111,7 +139,12 @@
 		"didRead": "Roo a lu ce fichier :",
 		"wantsToEdit": "Roo veut éditer ce fichier :",
 		"wantsToEditOutsideWorkspace": "Roo veut éditer ce fichier en dehors de l'espace de travail :",
-		"wantsToCreate": "Roo veut créer un nouveau fichier :"
+		"wantsToCreate": "Roo veut créer un nouveau fichier :",
+		"wantsToSearchReplace": "Roo veut effectuer une recherche et remplacement sur ce fichier :",
+		"didSearchReplace": "Roo a effectué une recherche et remplacement sur ce fichier :",
+		"wantsToInsert": "Roo veut insérer du contenu dans ce fichier :",
+		"wantsToInsertWithLineNumber": "Roo veut insérer du contenu dans ce fichier à la ligne {{lineNumber}} :",
+		"wantsToInsertAtEnd": "Roo veut ajouter du contenu à la fin de ce fichier :"
 	},
 	"instructions": {
 		"wantsToFetch": "Roo veut récupérer des instructions détaillées pour aider à la tâche actuelle"
@@ -141,7 +174,12 @@
 	},
 	"subtasks": {
 		"wantsToCreate": "Roo veut créer une nouvelle sous-tâche en mode <code>{{mode}}</code> :",
-		"wantsToFinish": "Roo veut terminer cette sous-tâche"
+		"wantsToFinish": "Roo veut terminer cette sous-tâche",
+		"newTaskContent": "Instructions de la sous-tâche",
+		"completionContent": "Sous-tâche terminée",
+		"resultContent": "Résultats de la sous-tâche",
+		"defaultResult": "Veuillez continuer avec la tâche suivante.",
+		"completionInstructions": "Sous-tâche terminée ! Vous pouvez examiner les résultats et suggérer des corrections ou les prochaines étapes. Si tout semble bon, confirmez pour retourner le résultat à la tâche parente."
 	},
 	"questions": {
 		"hasQuestion": "Roo a une question :"
@@ -149,7 +187,10 @@
 	"taskCompleted": "Tâche terminée",
 	"shellIntegration": {
 		"unavailable": "Intégration du shell indisponible",
-		"troubleshooting": "Toujours des problèmes ?"
+		"troubleshooting": "Toujours des problèmes ? Cliquez ici pour la documentation d'intégration du shell.",
+		"checkSettings": "Vérifie les solutions de contournement du terminal dans les paramètres",
+		"updateVSCode": "Mets à jour VSCode",
+		"supportedShell": "Assure-toi d'utiliser un shell supporté : zsh, bash, fish ou PowerShell"
 	},
 	"powershell": {
 		"issues": "Il semble que vous rencontriez des problèmes avec Windows PowerShell, veuillez consulter ce"
@@ -157,63 +198,22 @@
 	"autoApprove": {
 		"title": "Auto-approbation :",
 		"none": "Aucune",
-		"description": "L'auto-approbation permet à Roo Code d'effectuer des actions sans demander d'autorisation. Activez-la uniquement pour les actions auxquelles vous faites entièrement confiance.",
-		"actions": {
-			"readFiles": {
-				"label": "Lire fichiers et répertoires",
-				"shortName": "Lecture",
-				"description": "Permet l'accès en lecture à n'importe quel fichier sur votre ordinateur."
-			},
-			"editFiles": {
-				"label": "Éditer des fichiers",
-				"shortName": "Édition",
-				"description": "Permet la modification de n'importe quel fichier sur votre ordinateur."
-			},
-			"executeCommands": {
-				"label": "Exécuter des commandes approuvées",
-				"shortName": "Commandes",
-				"description": "Permet l'exécution de commandes de terminal approuvées. Vous pouvez configurer cela dans le panneau des paramètres."
-			},
-			"useBrowser": {
-				"label": "Utiliser le navigateur",
-				"shortName": "Navigateur",
-				"description": "Permet de lancer et d'interagir avec n'importe quel site web dans un navigateur sans interface."
-			},
-			"useMcp": {
-				"label": "Utiliser les serveurs MCP",
-				"shortName": "MCP",
-				"description": "Permet l'utilisation de serveurs MCP configurés qui peuvent modifier le système de fichiers ou interagir avec des APIs."
-			},
-			"switchModes": {
-				"label": "Changer de modes",
-				"shortName": "Modes",
-				"description": "Permet le changement automatique entre différents modes sans nécessiter d'approbation."
-			},
-			"subtasks": {
-				"label": "Créer et terminer des sous-tâches",
-				"shortName": "Sous-tâches",
-				"description": "Permet la création et l'achèvement de sous-tâches sans nécessiter d'approbation."
-			},
-			"retryRequests": {
-				"label": "Réessayer les requêtes échouées",
-				"shortName": "Réessais",
-				"description": "Réessaie automatiquement les requêtes API échouées lorsque le fournisseur renvoie une réponse d'erreur."
-			}
-		}
+		"description": "L'auto-approbation permet à Roo Code d'effectuer des actions sans demander d'autorisation. Activez-la uniquement pour les actions auxquelles vous faites entièrement confiance. Configuration plus détaillée disponible dans les <settingsLink>Paramètres</settingsLink>."
 	},
 	"reasoning": {
 		"thinking": "Réflexion",
 		"seconds": "{{count}}s"
 	},
+	"followUpSuggest": {
+		"copyToInput": "Copier vers l'entrée (ou Shift + clic)"
+	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.10 est sortie",
-		"description": "Roo Code 3.10 apporte de puissantes améliorations de productivité !",
+		"title": "🎉 Roo Code 3.14 est sortie",
+		"description": "Roo Code 3.14 apporte de nouvelles fonctionnalités et améliorations basées sur vos retours.",
 		"whatsNew": "Quoi de neuf",
-		"feature1": "Réponses suggérées aux questions",
-		"feature2": "Gestion améliorée des fichiers volumineux",
-		"feature3": "Recherche de fichiers par @-mention reconstruite",
-		"feature4": "",
-		"feature5": "",
+		"feature1": "<bold>Outils d'édition améliorés</bold> : Les outils <code>search_and_replace</code> et <code>insert_content</code> ont été améliorés et ne sont plus expérimentaux",
+		"feature2": "<bold>Corrections pour apply_diff</bold> : Nous continuons à travailler sur l'amélioration de l'outil <code>apply_diff</code>",
+		"feature3": "<bold>Quantité d'autres améliorations</bold> : Nombreuses corrections et optimisations dans toute l'extension",
 		"hideButton": "Masquer l'annonce",
 		"detailsDiscussLinks": "Obtenez plus de détails et participez aux discussions sur <discordLink>Discord</discordLink> et <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -238,5 +238,7 @@
 			"scrollUp": "Défiler vers le haut",
 			"close": "Fermer le navigateur"
 		}
-	}
+	},
+	"systemPromptWarning": "AVERTISSEMENT : Remplacement d'instructions système personnalisées actif. Cela peut gravement perturber la fonctionnalité et provoquer un comportement imprévisible.",
+	"selectApiConfig": "Sélectionner la configuration de l’API"
 }

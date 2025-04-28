@@ -3,8 +3,11 @@ import { VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 import { Trans } from "react-i18next"
 import { ChevronsUpDown, Check, X } from "lucide-react"
 
-import { useAppTranslation } from "@/i18n/TranslationContext"
-import { cn } from "@/lib/utils"
+import { ProviderSettings, ModelInfo } from "@roo/schemas"
+
+import { useAppTranslation } from "@src/i18n/TranslationContext"
+import { useSelectedModel } from "@/components/ui/hooks/useSelectedModel"
+import { cn } from "@src/lib/utils"
 import {
 	Command,
 	CommandEmpty,
@@ -16,44 +19,34 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 	Button,
-} from "@/components/ui"
+} from "@src/components/ui"
 
-import { ApiConfiguration, ModelInfo } from "../../../../src/shared/api"
-
-import { normalizeApiConfiguration } from "./ApiOptions"
 import { ThinkingBudget } from "./ThinkingBudget"
 import { ModelInfoView } from "./ModelInfoView"
 
-type ExtractType<T> = NonNullable<
-	{ [K in keyof ApiConfiguration]: Required<ApiConfiguration>[K] extends T ? K : never }[keyof ApiConfiguration]
->
-
-type ModelIdKeys = NonNullable<
-	{ [K in keyof ApiConfiguration]: K extends `${string}ModelId` ? K : never }[keyof ApiConfiguration]
+type ModelIdKey = keyof Pick<
+	ProviderSettings,
+	"glamaModelId" | "openRouterModelId" | "unboundModelId" | "requestyModelId" | "openAiModelId"
 >
 
 interface ModelPickerProps {
 	defaultModelId: string
-	defaultModelInfo?: ModelInfo
 	models: Record<string, ModelInfo> | null
-	modelIdKey: ModelIdKeys
-	modelInfoKey: ExtractType<ModelInfo>
+	modelIdKey: ModelIdKey
 	serviceName: string
 	serviceUrl: string
-	apiConfiguration: ApiConfiguration
-	setApiConfigurationField: <K extends keyof ApiConfiguration>(field: K, value: ApiConfiguration[K]) => void
+	apiConfiguration: ProviderSettings
+	setApiConfigurationField: <K extends keyof ProviderSettings>(field: K, value: ProviderSettings[K]) => void
 }
 
 export const ModelPicker = ({
 	defaultModelId,
 	models,
 	modelIdKey,
-	modelInfoKey,
 	serviceName,
 	serviceUrl,
 	apiConfiguration,
 	setApiConfigurationField,
-	defaultModelInfo,
 }: ModelPickerProps) => {
 	const { t } = useAppTranslation()
 
@@ -63,26 +56,23 @@ export const ModelPicker = ({
 	const searchInputRef = useRef<HTMLInputElement>(null)
 	const modelIds = useMemo(() => Object.keys(models ?? {}).sort((a, b) => a.localeCompare(b)), [models])
 
-	const { selectedModelId, selectedModelInfo } = useMemo(
-		() => normalizeApiConfiguration(apiConfiguration),
-		[apiConfiguration],
-	)
+	const { id: selectedModelId, info: selectedModelInfo } = useSelectedModel(apiConfiguration)
 
 	const [searchValue, setSearchValue] = useState(selectedModelId || "")
 
 	const onSelect = useCallback(
 		(modelId: string) => {
-			if (!modelId) return
+			if (!modelId) {
+				return
+			}
 
 			setOpen(false)
-			const modelInfo = models?.[modelId]
 			setApiConfigurationField(modelIdKey, modelId)
-			setApiConfigurationField(modelInfoKey, modelInfo ?? defaultModelInfo)
 
 			// Delay to ensure the popover is closed before setting the search value.
 			setTimeout(() => setSearchValue(modelId), 100)
 		},
-		[modelIdKey, modelInfoKey, models, setApiConfigurationField, defaultModelInfo],
+		[modelIdKey, setApiConfigurationField],
 	)
 
 	const onOpenChange = useCallback(
@@ -182,6 +172,7 @@ export const ModelPicker = ({
 			</div>
 			{selectedModelId && selectedModelInfo && (
 				<ModelInfoView
+					apiProvider={apiConfiguration.apiProvider}
 					selectedModelId={selectedModelId}
 					modelInfo={selectedModelInfo}
 					isDescriptionExpanded={isDescriptionExpanded}
@@ -200,10 +191,7 @@ export const ModelPicker = ({
 						serviceLink: <VSCodeLink href={serviceUrl} className="text-sm" />,
 						defaultModelLink: <VSCodeLink onClick={() => onSelect(defaultModelId)} className="text-sm" />,
 					}}
-					values={{
-						serviceName,
-						defaultModelId,
-					}}
+					values={{ serviceName, defaultModelId }}
 				/>
 			</div>
 		</>

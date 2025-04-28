@@ -1,174 +1,63 @@
 import * as vscode from "vscode"
 import pWaitFor from "p-wait-for"
-import { ExitCodeDetails, mergePromise, TerminalProcess, TerminalProcessResultPromise } from "./TerminalProcess"
-import { truncateOutput, applyRunLengthEncoding } from "../misc/extract-text"
 
-export const TERMINAL_SHELL_INTEGRATION_TIMEOUT = 5000
+import type { RooTerminalCallbacks, RooTerminalProcessResultPromise } from "./types"
+import { BaseTerminal } from "./BaseTerminal"
+import { TerminalProcess } from "./TerminalProcess"
+import { ShellIntegrationManager } from "./ShellIntegrationManager"
+import { mergePromise } from "./mergePromise"
 
-export class Terminal {
-	private static shellIntegrationTimeout: number = TERMINAL_SHELL_INTEGRATION_TIMEOUT
-
+export class Terminal extends BaseTerminal {
 	public terminal: vscode.Terminal
-	public busy: boolean
-	public id: number
-	public running: boolean
-	private streamClosed: boolean
-	public process?: TerminalProcess
-	public taskId?: string
+
 	public cmdCounter: number = 0
-	public completedProcesses: TerminalProcess[] = []
-	private initialCwd: string
 
-	constructor(id: number, terminal: vscode.Terminal, cwd: string) {
-		this.id = id
-		this.terminal = terminal
-		this.busy = false
-		this.running = false
-		this.streamClosed = false
+	constructor(id: number, terminal: vscode.Terminal | undefined, cwd: string) {
+		super("vscode", id, cwd)
 
-		// Initial working directory is used as a fallback when
-		// shell integration is not yet initialized or unavailable:
-		this.initialCwd = cwd
+		const env = Terminal.getEnv()
+		const iconPath = new vscode.ThemeIcon("rocket")
+		this.terminal = terminal ?? vscode.window.createTerminal({ cwd, name: "Roo Code", iconPath, env })
+
+		if (Terminal.getTerminalZdotdir()) {
+			ShellIntegrationManager.terminalTmpDirs.set(id, env.ZDOTDIR)
+		}
 	}
 
 	/**
-	 * Gets the current working directory from shell integration or falls back to initial cwd
+	 * Gets the current working directory from shell integration or falls back to initial cwd.
 	 * @returns The current working directory
 	 */
-	public getCurrentWorkingDirectory(): string {
-		// Try to get the cwd from shell integration if available
-		if (this.terminal.shellIntegration?.cwd) {
-			return this.terminal.shellIntegration.cwd.fsPath
-		} else {
-			// Fall back to the initial cwd
-			return this.initialCwd
-		}
+	public override getCurrentWorkingDirectory(): string {
+		return this.terminal.shellIntegration?.cwd ? this.terminal.shellIntegration.cwd.fsPath : this.initialCwd
 	}
 
 	/**
-	 * Checks if the stream is closed
+	 * The exit status of the terminal will be undefined while the terminal is
+	 * active. (This value is set when onDidCloseTerminal is fired.)
 	 */
-	public isStreamClosed(): boolean {
-		return this.streamClosed
+	public override isClosed(): boolean {
+		return this.terminal.exitStatus !== undefined
 	}
 
-	/**
-	 * Sets the active stream for this terminal and notifies the process
-	 * @param stream The stream to set, or undefined to clean up
-	 * @throws Error if process is undefined when a stream is provided
-	 */
-	public setActiveStream(stream: AsyncIterable<string> | undefined): void {
-		if (stream) {
-			// New stream is available
-			if (!this.process) {
-				this.running = false
-				console.warn(
-					`[Terminal ${this.id}] process is undefined, so cannot set terminal stream (probably user-initiated non-Roo command)`,
-				)
-				return
-			}
-
-			this.streamClosed = false
-			this.process.emit("stream_available", stream)
-		} else {
-			// Stream is being closed
-			this.streamClosed = true
-		}
-	}
-
-	/**
-	 * Handles shell execution completion for this terminal
-	 * @param exitDetails The exit details of the shell execution
-	 */
-	public shellExecutionComplete(exitDetails: ExitCodeDetails): void {
-		this.busy = false
-
-		if (this.process) {
-			// Add to the front of the queue (most recent first)
-			if (this.process.hasUnretrievedOutput()) {
-				this.completedProcesses.unshift(this.process)
-			}
-
-			this.process.emit("shell_execution_complete", exitDetails)
-			this.process = undefined
-		}
-	}
-
-	/**
-	 * Gets the last executed command
-	 * @returns The last command string or empty string if none
-	 */
-	public getLastCommand(): string {
-		// Return the command from the active process or the most recent process in the queue
-		if (this.process) {
-			return this.process.command || ""
-		} else if (this.completedProcesses.length > 0) {
-			return this.completedProcesses[0].command || ""
-		}
-		return ""
-	}
-
-	/**
-	 * Cleans the process queue by removing processes that no longer have unretrieved output
-	 * or don't belong to the current task
-	 */
-	public cleanCompletedProcessQueue(): void {
-		// Keep only processes with unretrieved output
-		this.completedProcesses = this.completedProcesses.filter((process) => process.hasUnretrievedOutput())
-	}
-
-	/**
-	 * Gets all processes with unretrieved output
-	 * @returns Array of processes with unretrieved output
-	 */
-	public getProcessesWithOutput(): TerminalProcess[] {
-		// Clean the queue first to remove any processes without output
-		this.cleanCompletedProcessQueue()
-		return [...this.completedProcesses]
-	}
-
-	/**
-	 * Gets all unretrieved output from both active and completed processes
-	 * @returns Combined unretrieved output from all processes
-	 */
-	public getUnretrievedOutput(): string {
-		let output = ""
-
-		// First check completed processes to maintain chronological order
-		for (const process of this.completedProcesses) {
-			const processOutput = process.getUnretrievedOutput()
-			if (processOutput) {
-				output += processOutput
-			}
-		}
-
-		// Then check active process for most recent output
-		const activeOutput = this.process?.getUnretrievedOutput()
-		if (activeOutput) {
-			output += activeOutput
-		}
-
-		this.cleanCompletedProcessQueue()
-
-		return output
-	}
-
-	public runCommand(command: string): TerminalProcessResultPromise {
+	public override runCommand(command: string, callbacks: RooTerminalCallbacks): RooTerminalProcessResultPromise {
 		// We set busy before the command is running because the terminal may be waiting
 		// on terminal integration, and we must prevent another instance from selecting
 		// the terminal for use during that time.
 		this.busy = true
 
-		// Create process immediately
 		const process = new TerminalProcess(this)
-
-		// Store the command on the process for reference
 		process.command = command
-
-		// Set process on terminal
 		this.process = process
 
-		// Create a promise for command completion
+		// Set up event handlers from callbacks before starting process.
+		// This ensures that we don't miss any events because they are
+		// configured before the process starts.
+		process.on("line", (line) => callbacks.onLine(line, process))
+		process.once("completed", (output) => callbacks.onCompleted(output, process))
+		process.once("shell_execution_complete", (details) => callbacks.onShellExecutionComplete(details, process))
+		process.once("no_shell_integration", (msg) => callbacks.onNoShellIntegration(msg, process))
+
 		const promise = new Promise<void>((resolve, reject) => {
 			// Set up event handlers
 			process.once("continue", () => resolve())
@@ -178,15 +67,25 @@ export class Terminal {
 			})
 
 			// Wait for shell integration before executing the command
-			pWaitFor(() => this.terminal.shellIntegration !== undefined, { timeout: Terminal.shellIntegrationTimeout })
+			pWaitFor(() => this.terminal.shellIntegration !== undefined, {
+				timeout: Terminal.getShellIntegrationTimeout(),
+			})
 				.then(() => {
+					// Clean up temporary directory if shell integration is available, zsh did its job:
+					ShellIntegrationManager.zshCleanupTmpDir(this.id)
+
+					// Run the command in the terminal
 					process.run(command)
 				})
 				.catch(() => {
 					console.log(`[Terminal ${this.id}] Shell integration not available. Command execution aborted.`)
+
+					// Clean up temporary directory if shell integration is not available
+					ShellIntegrationManager.zshCleanupTmpDir(this.id)
+
 					process.emit(
 						"no_shell_integration",
-						"Shell integration initialization sequence '\\x1b]633;A' was not received within 4 seconds. Shell integration has been disabled for this terminal instance. Increase the timeout in the settings if necessary.",
+						`Shell integration initialization sequence '\\x1b]633;A' was not received within ${Terminal.getShellIntegrationTimeout() / 1000}s. Shell integration has been disabled for this terminal instance. Increase the timeout in the settings if necessary.`,
 					)
 				})
 		})
@@ -231,11 +130,14 @@ export class Terminal {
 			// Process multi-line content
 			const lines = terminalContents.split("\n")
 			const lastLine = lines.pop()?.trim()
+
 			if (lastLine) {
 				let i = lines.length - 1
+
 				while (i >= 0 && !lines[i].trim().startsWith(lastLine)) {
 					i--
 				}
+
 				terminalContents = lines.slice(Math.max(i, 0)).join("\n")
 			}
 
@@ -247,16 +149,44 @@ export class Terminal {
 		}
 	}
 
-	/**
-	 * Compresses terminal output by applying run-length encoding and truncating to line limit
-	 * @param input The terminal output to compress
-	 * @returns The compressed terminal output
-	 */
-	public static setShellIntegrationTimeout(timeoutMs: number): void {
-		Terminal.shellIntegrationTimeout = timeoutMs
-	}
+	public static getEnv(): Record<string, string> {
+		const env: Record<string, string> = {
+			PAGER: "cat",
 
-	public static compressTerminalOutput(input: string, lineLimit: number): string {
-		return truncateOutput(applyRunLengthEncoding(input), lineLimit)
+			// VTE must be disabled because it prevents the prompt command from executing
+			// See https://wiki.gnome.org/Apps/Terminal/VTE
+			VTE_VERSION: "0",
+		}
+
+		// Set Oh My Zsh shell integration if enabled
+		if (Terminal.getTerminalZshOhMy()) {
+			env.ITERM_SHELL_INTEGRATION_INSTALLED = "Yes"
+		}
+
+		// Set Powerlevel10k shell integration if enabled
+		if (Terminal.getTerminalZshP10k()) {
+			env.POWERLEVEL9K_TERM_SHELL_INTEGRATION = "true"
+		}
+
+		// VSCode bug#237208: Command output can be lost due to a race between completion
+		// sequences and consumers. Add delay via PROMPT_COMMAND to ensure the
+		// \x1b]633;D escape sequence arrives after command output is processed.
+		// Only add this if commandDelay is not zero
+		if (Terminal.getCommandDelay() > 0) {
+			env.PROMPT_COMMAND = `sleep ${Terminal.getCommandDelay() / 1000}`
+		}
+
+		// Clear the ZSH EOL mark to prevent issues with command output interpretation
+		// when output ends with special characters like '%'
+		if (Terminal.getTerminalZshClearEolMark()) {
+			env.PROMPT_EOL_MARK = ""
+		}
+
+		// Handle ZDOTDIR for zsh if enabled
+		if (Terminal.getTerminalZdotdir()) {
+			env.ZDOTDIR = ShellIntegrationManager.zshInitTmpDir(env)
+		}
+
+		return env
 	}
 }

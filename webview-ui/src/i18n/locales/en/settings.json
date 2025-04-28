@@ -29,12 +29,13 @@
 		"advanced": "Advanced",
 		"experimental": "Experimental Features",
 		"language": "Language",
-		"about": "About Roo Code"
+		"about": "About Roo Code",
+		"interface": "Interface"
 	},
 	"autoApprove": {
 		"description": "Allow Roo to automatically perform operations without requiring approval. Enable these settings only if you fully trust the AI and understand the associated security risks.",
 		"readOnly": {
-			"label": "Always approve read-only operations",
+			"label": "Read",
 			"description": "When enabled, Roo will automatically view directory contents and read files without requiring you to click the Approve button.",
 			"outsideWorkspace": {
 				"label": "Include files outside workspace",
@@ -42,7 +43,7 @@
 			}
 		},
 		"write": {
-			"label": "Always approve write operations",
+			"label": "Write",
 			"description": "Automatically create and edit files without requiring approval",
 			"delayLabel": "Delay after writes to allow diagnostics to detect potential problems",
 			"outsideWorkspace": {
@@ -51,29 +52,28 @@
 			}
 		},
 		"browser": {
-			"label": "Always approve browser actions",
-			"description": "Automatically perform browser actions without requiring approval",
-			"note": "Note: Only applies when the model supports computer use"
+			"label": "Browser",
+			"description": "Automatically perform browser actions without requiring approval. Note: Only applies when the model supports computer use"
 		},
 		"retry": {
-			"label": "Always retry failed API requests",
+			"label": "Retry",
 			"description": "Automatically retry failed API requests when server returns an error response",
 			"delayLabel": "Delay before retrying the request"
 		},
 		"mcp": {
-			"label": "Always approve MCP tools",
+			"label": "MCP",
 			"description": "Enable auto-approval of individual MCP tools in the MCP Servers view (requires both this setting and the tool's individual \"Always allow\" checkbox)"
 		},
 		"modeSwitch": {
-			"label": "Always approve mode switching",
+			"label": "Mode",
 			"description": "Automatically switch between different modes without requiring approval"
 		},
 		"subtasks": {
-			"label": "Always approve creation & completion of subtasks",
+			"label": "Subtasks",
 			"description": "Allow creation and completion of subtasks without requiring approval"
 		},
 		"execute": {
-			"label": "Always approve allowed execute operations",
+			"label": "Execute",
 			"description": "Automatically execute allowed terminal commands without requiring approval",
 			"allowedCommands": "Allowed Auto-Execute Commands",
 			"allowedCommandsDescription": "Command prefixes that can be auto-executed when \"Always approve execute operations\" is enabled. Add * to allow all commands (use with caution).",
@@ -82,6 +82,7 @@
 		}
 	},
 	"providers": {
+		"providerDocumentation": "{{provider}} documentation",
 		"configProfile": "Configuration Profile",
 		"description": "Save different API configurations to quickly switch between providers and settings.",
 		"apiProvider": "API Provider",
@@ -97,8 +98,10 @@
 		"enterProfileName": "Enter profile name",
 		"createProfile": "Create Profile",
 		"cannotDeleteOnlyProfile": "Cannot delete the only profile",
+		"searchPlaceholder": "Search profiles",
+		"noMatchFound": "No matching profiles found",
 		"vscodeLmDescription": " The VS Code Language Model API allows you to run models provided by other VS Code extensions (including but not limited to GitHub Copilot). The easiest way to get started is to install the Copilot and Copilot Chat extensions from the VS Code Marketplace.",
-		"awsCustomArnUse": "Enter a valid AWS Bedrock ARN for the model you want to use. Format examples:",
+		"awsCustomArnUse": "Enter a valid Amazon Bedrock ARN for the model you want to use. Format examples:",
 		"awsCustomArnDesc": "Make sure the region in the ARN matches your selected AWS Region above.",
 		"openRouterApiKey": "OpenRouter API Key",
 		"getOpenRouterApiKey": "Get OpenRouter API Key",
@@ -106,11 +109,14 @@
 		"glamaApiKey": "Glama API Key",
 		"getGlamaApiKey": "Get Glama API Key",
 		"useCustomBaseUrl": "Use custom base URL",
+		"useHostHeader": "Use custom Host header",
+		"useLegacyFormat": "Use legacy OpenAI API format",
 		"requestyApiKey": "Requesty API Key",
 		"getRequestyApiKey": "Get Requesty API Key",
 		"openRouterTransformsText": "Compress prompts and message chains to the context size (<a>OpenRouter Transforms</a>)",
 		"anthropicApiKey": "Anthropic API Key",
 		"getAnthropicApiKey": "Get Anthropic API Key",
+		"anthropicUseAuthToken": "Pass Anthropic API Key as Authorization header instead of X-Api-Key",
 		"deepSeekApiKey": "DeepSeek API Key",
 		"getDeepSeekApiKey": "Get DeepSeek API Key",
 		"geminiApiKey": "Gemini API Key",
@@ -122,6 +128,8 @@
 		"getMistralApiKey": "Get Mistral / Codestral API Key",
 		"codestralBaseUrl": "Codestral Base URL (Optional)",
 		"codestralBaseUrlDesc": "Set an alternative URL for the Codestral model.",
+		"xaiApiKey": "xAI API Key",
+		"getXaiApiKey": "Get xAI API Key",
 		"awsCredentials": "AWS Credentials",
 		"awsProfile": "AWS Profile",
 		"awsProfileName": "AWS Profile Name",
@@ -130,6 +138,9 @@
 		"awsSessionToken": "AWS Session Token",
 		"awsRegion": "AWS Region",
 		"awsCrossRegion": "Use cross-region inference",
+		"enablePromptCaching": "Enable prompt caching",
+		"enablePromptCachingTitle": "Enable prompt caching to improve performance and reduce costs for supported models.",
+		"cacheUsageNote": "Note: If you don't see cache usage, try selecting a different model and then selecting your desired model again.",
 		"vscodeLmModel": "Language Model",
 		"vscodeLmWarning": "Note: This is a very experimental integration and provider support will vary. If you get an error about a model not being supported, that's an issue on the provider's end.",
 		"googleCloudSetup": {
@@ -212,6 +223,16 @@
 				}
 			},
 			"resetDefaults": "Reset to Defaults"
+		},
+		"rateLimitSeconds": {
+			"label": "Rate limit",
+			"description": "Minimum time between API requests."
+		},
+		"reasoningEffort": {
+			"label": "Model Reasoning Effort",
+			"high": "High",
+			"medium": "Medium",
+			"low": "Low"
 		}
 	},
 	"browser": {
@@ -289,13 +310,41 @@
 		"shellIntegrationTimeout": {
 			"label": "Terminal shell integration timeout",
 			"description": "Maximum time to wait for shell integration to initialize before executing commands. For users with long shell startup times, this value may need to be increased if you see \"Shell Integration Unavailable\" errors in the terminal."
+		},
+		"shellIntegrationDisabled": {
+			"label": "Disable terminal shell integration",
+			"description": "Enable this if terminal commands aren't working correctly or you see 'Shell Integration Unavailable' errors. This uses a simpler method to run commands, bypassing some advanced terminal features."
+		},
+		"commandDelay": {
+			"label": "Terminal command delay",
+			"description": "Delay in milliseconds to add after command execution. The default setting of 0 disables the delay completely. This can help ensure command output is fully captured in terminals with timing issues. In most terminals it is implemented by setting `PROMPT_COMMAND='sleep N'` and Powershell appends `start-sleep` to the end of each command. Originally was workaround for VSCode bug#237208 and may not be needed."
+		},
+		"compressProgressBar": {
+			"label": "Compress progress bar output",
+			"description": "When enabled, processes terminal output with carriage returns (\\r) to simulate how a real terminal would display content. This removes intermediate progress bar states, retaining only the final state, which conserves context space for more relevant information."
+		},
+		"powershellCounter": {
+			"label": "Enable PowerShell counter workaround",
+			"description": "When enabled, adds a counter to PowerShell commands to ensure proper command execution. This helps with PowerShell terminals that might have issues with command output capture."
+		},
+		"zshClearEolMark": {
+			"label": "Clear ZSH EOL mark",
+			"description": "When enabled, clears the ZSH end-of-line mark by setting PROMPT_EOL_MARK=''. This prevents issues with command output interpretation when output ends with special characters like '%'."
+		},
+		"zshOhMy": {
+			"label": "Enable Oh My Zsh integration",
+			"description": "When enabled, sets ITERM_SHELL_INTEGRATION_INSTALLED=Yes to enable Oh My Zsh shell integration features. (experimental)"
+		},
+		"zshP10k": {
+			"label": "Enable Powerlevel10k integration",
+			"description": "When enabled, sets POWERLEVEL9K_TERM_SHELL_INTEGRATION=true to enable Powerlevel10k shell integration features. (experimental)"
+		},
+		"zdotdir": {
+			"label": "Enable ZDOTDIR handling",
+			"description": "When enabled, creates a temporary directory for ZDOTDIR to handle zsh shell integration properly. This ensures VSCode shell integration works correctly with zsh while preserving your zsh configuration. (experimental)"
 		}
 	},
 	"advanced": {
-		"rateLimit": {
-			"label": "Rate limit",
-			"description": "Minimum time between API requests."
-		},
 		"diff": {
 			"label": "Enable editing through diffs",
 			"description": "When enabled, Roo will be able to edit files more quickly and will automatically reject truncated full-file writes. Works best with the latest Claude 3.7 Sonnet model.",
@@ -320,7 +369,7 @@
 	},
 	"experimental": {
 		"warning": "⚠️",
-		"DIFF_STRATEGY": {
+		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Use experimental unified diff strategy",
 			"description": "Enable the experimental unified diff strategy. This strategy might reduce the number of retries caused by model errors but may cause unexpected behavior or incorrect edits. Only enable if you understand the risks and are willing to carefully review all changes."
 		},
@@ -340,6 +389,10 @@
 			"name": "Use experimental multi block diff tool",
 			"description": "When enabled, Roo will use multi block diff tool. This will try to update multiple code blocks in the file in one request."
 		}
+	},
+	"promptCaching": {
+		"label": "Enable prompt caching",
+		"description": "When enabled, Roo will use this model with prompt caching turned on in order to reduce costs."
 	},
 	"temperature": {
 		"useCustom": "Use custom temperature",
@@ -365,7 +418,8 @@
 		"azureApiVersion": "Set Azure API version",
 		"gemini": {
 			"freeRequests": "* Free up to {{count}} requests per minute. After that, billing depends on prompt size.",
-			"pricingDetails": "For more info, see pricing details."
+			"pricingDetails": "For more info, see pricing details.",
+			"billingEstimate": "* Billing is an estimate - exact cost depends on prompt size."
 		}
 	},
 	"modelPicker": {
@@ -393,7 +447,7 @@
 	},
 	"validation": {
 		"apiKey": "You must provide a valid API key.",
-		"awsRegion": "You must choose a region to use with AWS Bedrock.",
+		"awsRegion": "You must choose a region to use with Amazon Bedrock.",
 		"googleCloud": "You must provide a valid Google Cloud Project ID and Region.",
 		"modelId": "You must provide a valid model ID.",
 		"modelSelector": "You must provide a valid model selector.",

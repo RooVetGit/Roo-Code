@@ -1,27 +1,26 @@
 import { render, fireEvent, screen } from "@testing-library/react"
 import ChatTextArea from "../ChatTextArea"
-import { useExtensionState } from "../../../context/ExtensionStateContext"
-import { vscode } from "../../../utils/vscode"
-import { defaultModeSlug } from "../../../../../src/shared/modes"
-import * as pathMentions from "../../../utils/path-mentions"
-import { formatPath } from "../../../../../src/shared/formatPath"
+import { useExtensionState } from "@src/context/ExtensionStateContext"
+import { vscode } from "@src/utils/vscode"
+import { defaultModeSlug } from "@roo/shared/modes"
+import * as pathMentions from "@src/utils/path-mentions"
 
 // Mock modules
-jest.mock("../../../utils/vscode", () => ({
+jest.mock("@src/utils/vscode", () => ({
 	vscode: {
 		postMessage: jest.fn(),
 	},
 }))
-jest.mock("../../../components/common/CodeBlock")
-jest.mock("../../../components/common/MarkdownBlock")
-jest.mock("../../../utils/path-mentions", () => ({
+jest.mock("@src/components/common/CodeBlock")
+jest.mock("@src/components/common/MarkdownBlock")
+jest.mock("@src/utils/path-mentions", () => ({
 	convertToMentionPath: jest.fn((path, cwd) => {
 		// Simple mock implementation that mimics the real function's behavior
-		if (path.startsWith(cwd)) {
+		if (cwd && path.toLowerCase().startsWith(cwd.toLowerCase())) {
 			const relativePath = path.substring(cwd.length)
-			// Ensure there's a slash after the @ symbol when we create the mention path
-			return "@" + formatPath(relativePath, "unix", false)
+			return "@" + (relativePath.startsWith("/") ? relativePath : "/" + relativePath)
 		}
+		return path
 	}),
 }))
 
@@ -30,7 +29,7 @@ const mockPostMessage = vscode.postMessage as jest.Mock
 const mockConvertToMentionPath = pathMentions.convertToMentionPath as jest.Mock
 
 // Mock ExtensionStateContext
-jest.mock("../../../context/ExtensionStateContext")
+jest.mock("@src/context/ExtensionStateContext")
 
 // Custom query function to get the enhance prompt button
 const getEnhancePromptButton = () => {
@@ -48,6 +47,7 @@ describe("ChatTextArea", () => {
 		setInputValue: jest.fn(),
 		onSend: jest.fn(),
 		textAreaDisabled: false,
+		selectApiConfigDisabled: false,
 		onSelectImages: jest.fn(),
 		shouldDisableImages: false,
 		placeholderText: "Type a message...",
@@ -68,7 +68,6 @@ describe("ChatTextArea", () => {
 			apiConfiguration: {
 				apiProvider: "anthropic",
 			},
-			osInfo: "unix",
 		})
 	})
 
@@ -194,7 +193,6 @@ describe("ChatTextArea", () => {
 				filePaths: [],
 				openedTabs: [],
 				cwd: mockCwd,
-				osInfo: "unix",
 			})
 			mockConvertToMentionPath.mockClear()
 		})
@@ -220,8 +218,8 @@ describe("ChatTextArea", () => {
 
 			// Verify convertToMentionPath was called for each file path
 			expect(mockConvertToMentionPath).toHaveBeenCalledTimes(2)
-			expect(mockConvertToMentionPath).toHaveBeenCalledWith("/Users/test/project/file1.js", mockCwd, "unix")
-			expect(mockConvertToMentionPath).toHaveBeenCalledWith("/Users/test/project/file2.js", mockCwd, "unix")
+			expect(mockConvertToMentionPath).toHaveBeenCalledWith("/Users/test/project/file1.js", mockCwd)
+			expect(mockConvertToMentionPath).toHaveBeenCalledWith("/Users/test/project/file2.js", mockCwd)
 
 			// Verify setInputValue was called with the correct value
 			// The mock implementation of convertToMentionPath will convert the paths to @/file1.js and @/file2.js
@@ -307,7 +305,7 @@ describe("ChatTextArea", () => {
 			})
 
 			// Verify convertToMentionPath was called with the long path
-			expect(mockConvertToMentionPath).toHaveBeenCalledWith(longPath, mockCwd, "unix")
+			expect(mockConvertToMentionPath).toHaveBeenCalledWith(longPath, mockCwd)
 
 			// The mock implementation will convert it to @/very/long/path/...
 			expect(setInputValue).toHaveBeenCalledWith(
@@ -342,10 +340,10 @@ describe("ChatTextArea", () => {
 
 			// Verify convertToMentionPath was called for each path
 			expect(mockConvertToMentionPath).toHaveBeenCalledTimes(4)
-			expect(mockConvertToMentionPath).toHaveBeenCalledWith(specialPath1, mockCwd, "unix")
-			expect(mockConvertToMentionPath).toHaveBeenCalledWith(specialPath2, mockCwd, "unix")
-			expect(mockConvertToMentionPath).toHaveBeenCalledWith(specialPath3, mockCwd, "unix")
-			expect(mockConvertToMentionPath).toHaveBeenCalledWith(specialPath4, mockCwd, "unix")
+			expect(mockConvertToMentionPath).toHaveBeenCalledWith(specialPath1, mockCwd)
+			expect(mockConvertToMentionPath).toHaveBeenCalledWith(specialPath2, mockCwd)
+			expect(mockConvertToMentionPath).toHaveBeenCalledWith(specialPath3, mockCwd)
+			expect(mockConvertToMentionPath).toHaveBeenCalledWith(specialPath4, mockCwd)
 
 			// Verify setInputValue was called with the correct value
 			expect(setInputValue).toHaveBeenCalledWith(
@@ -362,7 +360,7 @@ describe("ChatTextArea", () => {
 			const outsidePath = "/Users/other/project/file.js"
 
 			// Mock the convertToMentionPath function to return the original path for paths outside cwd
-			mockConvertToMentionPath.mockImplementationOnce((path, cwd) => {
+			mockConvertToMentionPath.mockImplementationOnce((path, _cwd) => {
 				return path // Return original path for this test
 			})
 
@@ -379,7 +377,7 @@ describe("ChatTextArea", () => {
 			})
 
 			// Verify convertToMentionPath was called with the outside path
-			expect(mockConvertToMentionPath).toHaveBeenCalledWith(outsidePath, mockCwd, "unix")
+			expect(mockConvertToMentionPath).toHaveBeenCalledWith(outsidePath, mockCwd)
 
 			// Verify setInputValue was called with the original path
 			expect(setInputValue).toHaveBeenCalledWith("/Users/other/project/file.js ")
@@ -409,6 +407,23 @@ describe("ChatTextArea", () => {
 
 			// Verify setInputValue was not called
 			expect(setInputValue).not.toHaveBeenCalled()
+		})
+	})
+
+	describe("selectApiConfig", () => {
+		// Helper function to get the API config dropdown
+		const getApiConfigDropdown = () => {
+			return screen.getByTitle("chat:selectApiConfig")
+		}
+		it("should be enabled independently of textAreaDisabled", () => {
+			render(<ChatTextArea {...defaultProps} textAreaDisabled={true} selectApiConfigDisabled={false} />)
+			const apiConfigDropdown = getApiConfigDropdown()
+			expect(apiConfigDropdown).not.toHaveAttribute("disabled")
+		})
+		it("should be disabled when selectApiConfigDisabled is true", () => {
+			render(<ChatTextArea {...defaultProps} textAreaDisabled={true} selectApiConfigDisabled={true} />)
+			const apiConfigDropdown = getApiConfigDropdown()
+			expect(apiConfigDropdown).toHaveAttribute("disabled")
 		})
 	})
 })

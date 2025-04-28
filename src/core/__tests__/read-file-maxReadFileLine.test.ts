@@ -1,19 +1,33 @@
-const DEBUG = false
+// npx jest src/core/__tests__/read-file-maxReadFileLine.test.ts
 
 import * as path from "path"
+
 import { countFileLines } from "../../integrations/misc/line-counter"
 import { readLines } from "../../integrations/misc/read-lines"
-import { extractTextFromFile, addLineNumbers } from "../../integrations/misc/extract-text"
+import { extractTextFromFile } from "../../integrations/misc/extract-text"
 import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
 import { isBinaryFile } from "isbinaryfile"
-import { ReadFileToolUse } from "../assistant-message"
-import { Cline } from "../Cline"
-import { ClineProvider } from "../webview/ClineProvider"
+import { ReadFileToolUse } from "../../shared/tools"
 
 // Mock dependencies
 jest.mock("../../integrations/misc/line-counter")
 jest.mock("../../integrations/misc/read-lines")
-jest.mock("../../integrations/misc/extract-text")
+jest.mock("../../integrations/misc/extract-text", () => {
+	const actual = jest.requireActual("../../integrations/misc/extract-text")
+	// Create a spy on the actual addLineNumbers function
+	const addLineNumbersSpy = jest.spyOn(actual, "addLineNumbers")
+
+	return {
+		...actual,
+		// Expose the spy so tests can access it
+		__addLineNumbersSpy: addLineNumbersSpy,
+		extractTextFromFile: jest.fn(),
+	}
+})
+
+// Get a reference to the spy
+const addLineNumbersSpy = jest.requireMock("../../integrations/misc/extract-text").__addLineNumbersSpy
+
 jest.mock("../../services/tree-sitter")
 jest.mock("isbinaryfile")
 jest.mock("../ignore/RooIgnoreController", () => ({
@@ -21,7 +35,7 @@ jest.mock("../ignore/RooIgnoreController", () => ({
 		initialize() {
 			return Promise.resolve()
 		}
-		validateAccess(filePath: string) {
+		validateAccess() {
 			return true
 		}
 	},
@@ -45,281 +59,350 @@ jest.mock("path", () => {
 })
 
 describe("read_file tool with maxReadFileLine setting", () => {
-	// Mock original implementation first to use in tests
-	const originalCountFileLines = jest.requireActual("../../integrations/misc/line-counter").countFileLines
-	const originalReadLines = jest.requireActual("../../integrations/misc/read-lines").readLines
-	const originalExtractTextFromFile = jest.requireActual("../../integrations/misc/extract-text").extractTextFromFile
-	const originalAddLineNumbers = jest.requireActual("../../integrations/misc/extract-text").addLineNumbers
-	const originalParseSourceCodeDefinitionsForFile =
-		jest.requireActual("../../services/tree-sitter").parseSourceCodeDefinitionsForFile
-	const originalIsBinaryFile = jest.requireActual("isbinaryfile").isBinaryFile
-
-	let cline: Cline
-	let mockProvider: any
+	// Test data
 	const testFilePath = "test/file.txt"
-	const absoluteFilePath = "/home/ewheeler/src/roo/roo-main/test/file.txt"
+	const absoluteFilePath = "/test/file.txt"
 	const fileContent = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
-	const numberedFileContent = "1 | Line 1\n2 | Line 2\n3 | Line 3\n4 | Line 4\n5 | Line 5"
+	const numberedFileContent = "1 | Line 1\n2 | Line 2\n3 | Line 3\n4 | Line 4\n5 | Line 5\n"
 	const sourceCodeDef = "\n\n# file.txt\n1--5 | Content"
+	const expectedFullFileXml = `<file><path>${testFilePath}</path>\n<content lines="1-5">\n${numberedFileContent}</content>\n</file>`
+
+	// Mocked functions with correct types
+	const mockedCountFileLines = countFileLines as jest.MockedFunction<typeof countFileLines>
+	const mockedReadLines = readLines as jest.MockedFunction<typeof readLines>
+	const mockedExtractTextFromFile = extractTextFromFile as jest.MockedFunction<typeof extractTextFromFile>
+	const mockedParseSourceCodeDefinitionsForFile = parseSourceCodeDefinitionsForFile as jest.MockedFunction<
+		typeof parseSourceCodeDefinitionsForFile
+	>
+
+	// Variable to control what content is used by the mock - set in beforeEach
+	let mockInputContent = ""
+
+	const mockedIsBinaryFile = isBinaryFile as jest.MockedFunction<typeof isBinaryFile>
+	const mockedPathResolve = path.resolve as jest.MockedFunction<typeof path.resolve>
+
+	// Mock instances
+	const mockCline: any = {}
+	let mockProvider: any
+	let toolResult: string | undefined
 
 	beforeEach(() => {
-		jest.resetAllMocks()
+		jest.clearAllMocks()
 
-		// Reset mocks to simulate original behavior
-		;(countFileLines as jest.Mock).mockImplementation(originalCountFileLines)
-		;(readLines as jest.Mock).mockImplementation(originalReadLines)
-		;(extractTextFromFile as jest.Mock).mockImplementation(originalExtractTextFromFile)
-		;(parseSourceCodeDefinitionsForFile as jest.Mock).mockImplementation(originalParseSourceCodeDefinitionsForFile)
-		;(isBinaryFile as jest.Mock).mockImplementation(originalIsBinaryFile)
+		// Setup path resolution
+		mockedPathResolve.mockReturnValue(absoluteFilePath)
 
-		// Default mock implementations
-		;(countFileLines as jest.Mock).mockResolvedValue(5)
-		;(readLines as jest.Mock).mockResolvedValue(fileContent)
-		;(extractTextFromFile as jest.Mock).mockResolvedValue(numberedFileContent)
-		// Use the real addLineNumbers function
-		;(addLineNumbers as jest.Mock).mockImplementation(originalAddLineNumbers)
-		;(parseSourceCodeDefinitionsForFile as jest.Mock).mockResolvedValue(sourceCodeDef)
-		;(isBinaryFile as jest.Mock).mockResolvedValue(false)
+		// Setup mocks for file operations
+		mockedIsBinaryFile.mockResolvedValue(false)
 
-		// Add spy to debug the readLines calls
-		const readLinesSpy = jest.spyOn(require("../../integrations/misc/read-lines"), "readLines")
+		// Set the default content for the mock
+		mockInputContent = fileContent
 
-		// Mock path.resolve to return a predictable path
-		;(path.resolve as jest.Mock).mockReturnValue(absoluteFilePath)
+		// Setup the extractTextFromFile mock implementation with the current mockInputContent
+		mockedExtractTextFromFile.mockImplementation((_filePath) => {
+			const actual = jest.requireActual("../../integrations/misc/extract-text")
+			return Promise.resolve(actual.addLineNumbers(mockInputContent))
+		})
 
-		// Create mock provider
+		// No need to setup the extractTextFromFile mock implementation here
+		// as it's already defined at the module level
+
+		// Setup mock provider
 		mockProvider = {
 			getState: jest.fn(),
 			deref: jest.fn().mockReturnThis(),
 		}
 
-		// Create a Cline instance with the necessary configuration
-		cline = new Cline({
-			provider: mockProvider,
-			apiConfiguration: { apiProvider: "anthropic" } as any,
-			task: "Test read_file tool", // Required to satisfy constructor check
-			startTask: false, // Prevent actual task initialization
+		// Setup Cline instance with mock methods
+		mockCline.cwd = "/"
+		mockCline.task = "Test"
+		mockCline.providerRef = mockProvider
+		mockCline.rooIgnoreController = {
+			validateAccess: jest.fn().mockReturnValue(true),
+		}
+		mockCline.say = jest.fn().mockResolvedValue(undefined)
+		mockCline.ask = jest.fn().mockResolvedValue(true)
+		mockCline.presentAssistantMessage = jest.fn()
+		mockCline.getFileContextTracker = jest.fn().mockReturnValue({
+			trackFileContext: jest.fn().mockResolvedValue(undefined),
 		})
+		mockCline.recordToolUsage = jest.fn().mockReturnValue(undefined)
+		mockCline.recordToolError = jest.fn().mockReturnValue(undefined)
+		// Reset tool result
+		toolResult = undefined
+	})
 
-		// Set up the read_file tool use
-		const readFileToolUse: ReadFileToolUse = {
+	/**
+	 * Helper function to execute the read file tool with different maxReadFileLine settings
+	 */
+	async function executeReadFileTool(
+		params: Partial<ReadFileToolUse["params"]> = {},
+		options: {
+			maxReadFileLine?: number
+			totalLines?: number
+			skipAddLineNumbersCheck?: boolean // Flag to skip addLineNumbers check
+		} = {},
+	): Promise<string | undefined> {
+		// Configure mocks based on test scenario
+		const maxReadFileLine = options.maxReadFileLine ?? 500
+		const totalLines = options.totalLines ?? 5
+
+		mockProvider.getState.mockResolvedValue({ maxReadFileLine })
+		mockedCountFileLines.mockResolvedValue(totalLines)
+
+		// Reset the spy before each test
+		addLineNumbersSpy.mockClear()
+
+		// Create a tool use object
+		const toolUse: ReadFileToolUse = {
 			type: "tool_use",
 			name: "read_file",
 			params: {
 				path: testFilePath,
+				...params,
 			},
 			partial: false,
 		}
 
-		// Set up the Cline instance for testing
-		const clineAny = cline as any
+		// Import the tool implementation dynamically to avoid hoisting issues
+		const { readFileTool } = require("../tools/readFileTool")
 
-		// Set up the required properties for the test
-		clineAny.assistantMessageContent = [readFileToolUse]
-		clineAny.currentStreamingContentIndex = 0
-		clineAny.userMessageContent = []
-		clineAny.presentAssistantMessageLocked = false
-		clineAny.didCompleteReadingStream = true
-		clineAny.didRejectTool = false
-		clineAny.didAlreadyUseTool = false
+		// Execute the tool
+		await readFileTool(
+			mockCline,
+			toolUse,
+			mockCline.ask,
+			jest.fn(),
+			(result: string) => {
+				toolResult = result
+			},
+			(param: string, value: string) => value,
+		)
 
-		// Mock methods that would be called during presentAssistantMessage
-		clineAny.say = jest.fn().mockResolvedValue(undefined)
-		clineAny.ask = jest.fn().mockImplementation((type, message) => {
-			return Promise.resolve({ response: "yesButtonClicked" })
+		// Verify addLineNumbers was called appropriately
+		if (!options.skipAddLineNumbersCheck) {
+			expect(addLineNumbersSpy).toHaveBeenCalled()
+		} else {
+			expect(addLineNumbersSpy).not.toHaveBeenCalled()
+		}
+
+		return toolResult
+	}
+	describe("when maxReadFileLine is negative", () => {
+		it("should read the entire file using extractTextFromFile", async () => {
+			// Setup - use default mockInputContent
+			mockInputContent = fileContent
+
+			// Execute
+			const result = await executeReadFileTool({}, { maxReadFileLine: -1 })
+
+			// Verify
+			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
+			expect(mockedReadLines).not.toHaveBeenCalled()
+			expect(mockedParseSourceCodeDefinitionsForFile).not.toHaveBeenCalled()
+			expect(result).toBe(expectedFullFileXml)
+		})
+
+		it("should ignore range parameters and read entire file when maxReadFileLine is -1", async () => {
+			// Setup - use default mockInputContent
+			mockInputContent = fileContent
+
+			// Execute with range parameters
+			const result = await executeReadFileTool(
+				{
+					start_line: "2",
+					end_line: "4",
+				},
+				{ maxReadFileLine: -1 },
+			)
+
+			// Verify that extractTextFromFile is still used (not readLines)
+			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
+			expect(mockedReadLines).not.toHaveBeenCalled()
+			expect(mockedParseSourceCodeDefinitionsForFile).not.toHaveBeenCalled()
+			expect(result).toBe(expectedFullFileXml)
+		})
+
+		it("should not show line snippet in approval message when maxReadFileLine is -1", async () => {
+			// This test verifies the line snippet behavior for the approval message
+			// Setup - use default mockInputContent
+			mockInputContent = fileContent
+
+			// Execute - we'll reuse executeReadFileTool to run the tool
+			await executeReadFileTool({}, { maxReadFileLine: -1 })
+
+			// Verify the empty line snippet for full read was passed to the approval message
+			// Look at the parameters passed to the 'ask' method in the approval message
+			const askCall = mockCline.ask.mock.calls[0]
+			const completeMessage = JSON.parse(askCall[1])
+
+			// Verify the reason (lineSnippet) is empty or undefined for full read
+			expect(completeMessage.reason).toBeFalsy()
 		})
 	})
 
-	// Helper function to get user message content
-	const getUserMessageContent = (clineInstance: Cline) => {
-		const clineAny = clineInstance as any
-		return clineAny.userMessageContent
-	}
+	describe("when maxReadFileLine is 0", () => {
+		it("should return an empty content with source code definitions", async () => {
+			// Setup - for maxReadFileLine = 0, the implementation won't call readLines
+			mockedParseSourceCodeDefinitionsForFile.mockResolvedValue(sourceCodeDef)
 
-	// Helper function to validate response lines
-	const validateResponseLines = (
-		responseLines: string[],
-		options: {
-			expectedLineCount: number
-			shouldContainLines?: number[]
-			shouldNotContainLines?: number[]
-		},
-	) => {
-		if (options.shouldContainLines) {
-			const contentLines = responseLines.filter((line) => line.includes("Line "))
-			expect(contentLines.length).toBe(options.expectedLineCount)
-			options.shouldContainLines.forEach((lineNum) => {
-				expect(contentLines[lineNum - 1]).toContain(`Line ${lineNum}`)
+			// Execute - skip addLineNumbers check as it's not called for maxReadFileLine=0
+			const result = await executeReadFileTool(
+				{},
+				{
+					maxReadFileLine: 0,
+					totalLines: 5,
+					skipAddLineNumbersCheck: true,
+				},
+			)
+
+			// Verify
+			expect(mockedExtractTextFromFile).not.toHaveBeenCalled()
+			expect(mockedReadLines).not.toHaveBeenCalled() // Per implementation line 141
+			expect(mockedParseSourceCodeDefinitionsForFile).toHaveBeenCalledWith(
+				absoluteFilePath,
+				mockCline.rooIgnoreController,
+			)
+
+			// Verify XML structure
+			expect(result).toContain(`<file><path>${testFilePath}</path>`)
+			expect(result).toContain("<notice>Showing only 0 of 5 total lines")
+			expect(result).toContain("</notice>")
+			expect(result).toContain("<list_code_definition_names>")
+			expect(result).toContain(sourceCodeDef.trim())
+			expect(result).toContain("</list_code_definition_names>")
+			expect(result).not.toContain("<content") // No content when maxReadFileLine is 0
+		})
+	})
+
+	describe("when maxReadFileLine is less than file length", () => {
+		it("should read only maxReadFileLine lines and add source code definitions", async () => {
+			// Setup
+			const content = "Line 1\nLine 2\nLine 3"
+			mockedReadLines.mockResolvedValue(content)
+			mockedParseSourceCodeDefinitionsForFile.mockResolvedValue(sourceCodeDef)
+
+			// Execute
+			const result = await executeReadFileTool({}, { maxReadFileLine: 3 })
+
+			// Verify - check behavior but not specific implementation details
+			expect(mockedExtractTextFromFile).not.toHaveBeenCalled()
+			expect(mockedReadLines).toHaveBeenCalled()
+			expect(mockedParseSourceCodeDefinitionsForFile).toHaveBeenCalledWith(
+				absoluteFilePath,
+				mockCline.rooIgnoreController,
+			)
+
+			// Verify XML structure
+			expect(result).toContain(`<file><path>${testFilePath}</path>`)
+			expect(result).toContain('<content lines="1-3">')
+			expect(result).toContain("1 | Line 1")
+			expect(result).toContain("2 | Line 2")
+			expect(result).toContain("3 | Line 3")
+			expect(result).toContain("</content>")
+			expect(result).toContain("<notice>Showing only 3 of 5 total lines")
+			expect(result).toContain("</notice>")
+			expect(result).toContain("<list_code_definition_names>")
+			expect(result).toContain(sourceCodeDef.trim())
+			expect(result).toContain("</list_code_definition_names>")
+			expect(result).toContain("<list_code_definition_names>")
+			expect(result).toContain(sourceCodeDef.trim())
+		})
+	})
+
+	describe("when maxReadFileLine equals or exceeds file length", () => {
+		it("should use extractTextFromFile when maxReadFileLine > totalLines", async () => {
+			// Setup
+			mockedCountFileLines.mockResolvedValue(5) // File shorter than maxReadFileLine
+			mockInputContent = fileContent
+
+			// Execute
+			const result = await executeReadFileTool({}, { maxReadFileLine: 10, totalLines: 5 })
+
+			// Verify
+			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
+			expect(result).toBe(expectedFullFileXml)
+		})
+
+		it("should read with extractTextFromFile when file has few lines", async () => {
+			// Setup
+			mockedCountFileLines.mockResolvedValue(3) // File shorter than maxReadFileLine
+			mockInputContent = fileContent
+
+			// Execute
+			const result = await executeReadFileTool({}, { maxReadFileLine: 5, totalLines: 3 })
+
+			// Verify
+			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
+			expect(mockedReadLines).not.toHaveBeenCalled()
+			// Create a custom expected XML with lines="1-3" since totalLines is 3
+			const expectedXml = `<file><path>${testFilePath}</path>\n<content lines="1-3">\n${numberedFileContent}</content>\n</file>`
+			expect(result).toBe(expectedXml)
+		})
+	})
+
+	describe("when file is binary", () => {
+		it("should always use extractTextFromFile regardless of maxReadFileLine", async () => {
+			// Setup
+			mockedIsBinaryFile.mockResolvedValue(true)
+			// For binary files, we're using a maxReadFileLine of 3 and totalLines is assumed to be 3
+			mockedCountFileLines.mockResolvedValue(3)
+
+			// For binary files, we need a special mock implementation that doesn't use addLineNumbers
+			// Save the original mock implementation
+			const originalMockImplementation = mockedExtractTextFromFile.getMockImplementation()
+			// Create a special mock implementation that doesn't call addLineNumbers
+			mockedExtractTextFromFile.mockImplementation(() => {
+				return Promise.resolve(numberedFileContent)
 			})
-		}
 
-		if (options.shouldNotContainLines) {
-			options.shouldNotContainLines.forEach((lineNum) => {
-				expect(responseLines.some((line) => line.includes(`Line ${lineNum}`))).toBe(false)
+			// Reset the spy to clear any previous calls
+			addLineNumbersSpy.mockClear()
+
+			// Execute - skip addLineNumbers check as we're directly providing the numbered content
+			const result = await executeReadFileTool(
+				{},
+				{
+					maxReadFileLine: 3,
+					totalLines: 3,
+					skipAddLineNumbersCheck: true,
+				},
+			)
+
+			// Restore the original mock implementation after the test
+			mockedExtractTextFromFile.mockImplementation(originalMockImplementation)
+
+			// Verify
+			expect(mockedExtractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
+			expect(mockedReadLines).not.toHaveBeenCalled()
+			// Create a custom expected XML with lines="1-3" for binary files
+			const expectedXml = `<file><path>${testFilePath}</path>\n<content lines="1-3">\n${numberedFileContent}</content>\n</file>`
+			expect(result).toBe(expectedXml)
+		})
+	})
+
+	describe("with range parameters", () => {
+		it("should honor start_line and end_line when provided", async () => {
+			// Setup
+			mockedReadLines.mockResolvedValue("Line 2\nLine 3\nLine 4")
+
+			// Execute using executeReadFileTool with range parameters
+			const rangeResult = await executeReadFileTool({
+				start_line: "2",
+				end_line: "4",
 			})
-		}
-	}
 
-	interface TestExpectations {
-		extractTextCalled: boolean
-		readLinesCalled: boolean
-		sourceCodeDefCalled: boolean
-		readLinesParams?: [string, number, number]
-		responseValidation: {
-			expectedLineCount: number
-			shouldContainLines?: number[]
-			shouldNotContainLines?: number[]
-		}
-		expectedContent?: string
-		truncationMessage?: string
-		includeSourceCodeDef?: boolean
-	}
+			// Verify
+			expect(mockedReadLines).toHaveBeenCalledWith(absoluteFilePath, 3, 1) // end_line - 1, start_line - 1
+			expect(addLineNumbersSpy).toHaveBeenCalledWith(expect.any(String), 2) // start with proper line numbers
 
-	interface TestCase {
-		name: string
-		maxReadFileLine: number
-		setup?: () => void
-		expectations: TestExpectations
-	}
-
-	// Test cases
-	const testCases: TestCase[] = [
-		{
-			name: "read entire file when maxReadFileLine is -1",
-			maxReadFileLine: -1,
-			expectations: {
-				extractTextCalled: true,
-				readLinesCalled: false,
-				sourceCodeDefCalled: false,
-				responseValidation: {
-					expectedLineCount: 5,
-					shouldContainLines: [1, 2, 3, 4, 5],
-				},
-				expectedContent: numberedFileContent,
-			},
-		},
-		{
-			name: "read entire file when maxReadFileLine >= file length",
-			maxReadFileLine: 10,
-			expectations: {
-				extractTextCalled: true,
-				readLinesCalled: false,
-				sourceCodeDefCalled: false,
-				responseValidation: {
-					expectedLineCount: 5,
-					shouldContainLines: [1, 2, 3, 4, 5],
-				},
-				expectedContent: numberedFileContent,
-			},
-		},
-		{
-			name: "read zero lines and only provide line declaration definitions when maxReadFileLine is 0",
-			maxReadFileLine: 0,
-			expectations: {
-				extractTextCalled: false,
-				readLinesCalled: false,
-				sourceCodeDefCalled: true,
-				responseValidation: {
-					expectedLineCount: 0,
-				},
-				truncationMessage: `[Showing only 0 of 5 total lines. Use start_line and end_line if you need to read more]`,
-				includeSourceCodeDef: true,
-			},
-		},
-		{
-			name: "read maxReadFileLine lines and provide line declaration definitions when maxReadFileLine < file length",
-			maxReadFileLine: 3,
-			setup: () => {
-				jest.clearAllMocks()
-				;(countFileLines as jest.Mock).mockResolvedValue(5)
-				;(readLines as jest.Mock).mockImplementation((path, endLine, startLine = 0) => {
-					const lines = fileContent.split("\n")
-					const actualEndLine = endLine !== undefined ? Math.min(endLine, lines.length - 1) : lines.length - 1
-					const actualStartLine = startLine !== undefined ? Math.min(startLine, lines.length - 1) : 0
-					const requestedLines = lines.slice(actualStartLine, actualEndLine + 1)
-					return Promise.resolve(requestedLines.join("\n"))
-				})
-			},
-			expectations: {
-				extractTextCalled: false,
-				readLinesCalled: true,
-				sourceCodeDefCalled: true,
-				readLinesParams: [absoluteFilePath, 2, 0],
-				responseValidation: {
-					expectedLineCount: 3,
-					shouldContainLines: [1, 2, 3],
-					shouldNotContainLines: [4, 5],
-				},
-				truncationMessage: `[Showing only 3 of 5 total lines. Use start_line and end_line if you need to read more]`,
-				includeSourceCodeDef: true,
-			},
-		},
-	]
-
-	test.each(testCases)("should $name", async (testCase) => {
-		// Setup
-		if (testCase.setup) {
-			testCase.setup()
-		}
-		mockProvider.getState.mockResolvedValue({ maxReadFileLine: testCase.maxReadFileLine })
-
-		// Execute
-		await cline.presentAssistantMessage()
-
-		// Verify mock calls
-		if (testCase.expectations.extractTextCalled) {
-			expect(extractTextFromFile).toHaveBeenCalledWith(absoluteFilePath)
-		} else {
-			expect(extractTextFromFile).not.toHaveBeenCalled()
-		}
-
-		if (testCase.expectations.readLinesCalled) {
-			const params = testCase.expectations.readLinesParams
-			if (!params) {
-				throw new Error("readLinesParams must be defined when readLinesCalled is true")
-			}
-			expect(readLines).toHaveBeenCalledWith(...params)
-		} else {
-			expect(readLines).not.toHaveBeenCalled()
-		}
-
-		if (testCase.expectations.sourceCodeDefCalled) {
-			expect(parseSourceCodeDefinitionsForFile).toHaveBeenCalled()
-		} else {
-			expect(parseSourceCodeDefinitionsForFile).not.toHaveBeenCalled()
-		}
-
-		// Verify response content
-		const userMessageContent = getUserMessageContent(cline)
-
-		if (DEBUG) {
-			console.log(`\n=== Test: ${testCase.name} ===`)
-			console.log(`maxReadFileLine: ${testCase.maxReadFileLine}`)
-			console.log("Response content:", JSON.stringify(userMessageContent, null, 2))
-		}
-		const responseLines = userMessageContent[1].text.split("\n")
-
-		if (DEBUG) {
-			console.log(`Number of lines in response: ${responseLines.length}`)
-		}
-
-		expect(userMessageContent.length).toBe(2)
-		expect(userMessageContent[0].text).toBe(`[read_file for '${testFilePath}'] Result:`)
-
-		if (testCase.expectations.expectedContent) {
-			expect(userMessageContent[1].text).toBe(testCase.expectations.expectedContent)
-		}
-
-		if (testCase.expectations.responseValidation) {
-			validateResponseLines(responseLines, testCase.expectations.responseValidation)
-		}
-
-		if (testCase.expectations.truncationMessage) {
-			expect(userMessageContent[1].text).toContain(testCase.expectations.truncationMessage)
-		}
-
-		if (testCase.expectations.includeSourceCodeDef) {
-			expect(userMessageContent[1].text).toContain(sourceCodeDef)
-		}
+			// Verify XML structure with lines attribute
+			expect(rangeResult).toContain(`<file><path>${testFilePath}</path>`)
+			expect(rangeResult).toContain(`<content lines="2-4">`)
+			expect(rangeResult).toContain("2 | Line 2")
+			expect(rangeResult).toContain("3 | Line 3")
+			expect(rangeResult).toContain("4 | Line 4")
+			expect(rangeResult).toContain("</content>")
+		})
 	})
 })

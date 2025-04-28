@@ -1,5 +1,5 @@
 {
-	"greeting": "Roo có thể giúp gì cho bạn?",
+	"greeting": "Chào mừng đến với Roo Code",
 	"task": {
 		"title": "Nhiệm vụ",
 		"seeMore": "Xem thêm",
@@ -7,11 +7,13 @@
 		"tokens": "Tokens:",
 		"cache": "Bộ nhớ đệm:",
 		"apiCost": "Chi phí API:",
-		"contextWindow": "Cửa sổ ngữ cảnh:",
+		"contextWindow": "Chiều dài bối cảnh:",
 		"closeAndStart": "Đóng nhiệm vụ và bắt đầu nhiệm vụ mới",
 		"export": "Xuất lịch sử nhiệm vụ",
 		"delete": "Xóa nhiệm vụ (Shift + Click để bỏ qua xác nhận)"
 	},
+	"unpin": "Bỏ ghim khỏi đầu",
+	"pin": "Ghim lên đầu",
 	"tokenProgress": {
 		"availableSpace": "Không gian khả dụng: {{amount}} tokens",
 		"tokensUsed": "Tokens đã sử dụng: {{used}} trong {{total}}",
@@ -50,6 +52,10 @@
 		"title": "Tiếp tục trong khi chạy",
 		"tooltip": "Tiếp tục bất chấp cảnh báo"
 	},
+	"killCommand": {
+		"title": "Dừng lệnh",
+		"tooltip": "Dừng lệnh hiện tại"
+	},
 	"resumeTask": {
 		"title": "Tiếp tục nhiệm vụ",
 		"tooltip": "Tiếp tục nhiệm vụ hiện tại"
@@ -63,9 +69,27 @@
 		"tooltip": "Hủy thao tác hiện tại"
 	},
 	"scrollToBottom": "Cuộn xuống cuối cuộc trò chuyện",
-	"aboutMe": "Nhờ những đột phá mới nhất trong khả năng lập trình tác nhân, tôi có thể xử lý các nhiệm vụ phát triển phần mềm phức tạp từng bước một. Với các công cụ cho phép tôi tạo và chỉnh sửa tệp, khám phá các dự án phức tạp, sử dụng trình duyệt và thực thi lệnh terminal (sau khi bạn cấp quyền), tôi có thể hỗ trợ bạn theo cách vượt xa việc hoàn thành mã hoặc hỗ trợ kỹ thuật. Tôi thậm chí có thể sử dụng MCP để tạo các công cụ mới và mở rộng khả năng của mình.",
+	"about": "Tạo, tái cấu trúc và gỡ lỗi mã bằng sự hỗ trợ của AI.<br />Kiểm tra <DocsLink>tài liệu</DocsLink> của chúng tôi để tìm hiểu thêm.",
+	"onboarding": "<strong>Danh sách nhiệm vụ của bạn trong không gian làm việc này trống.</strong> Bắt đầu bằng cách nhập nhiệm vụ bên dưới. Bạn không chắc chắn nên bắt đầu như thế nào? Đọc thêm về những gì Roo có thể làm cho bạn trong <DocsLink>tài liệu</DocsLink>.",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "Nhiệm vụ Boomerang",
+			"description": "Chia nhỏ các nhiệm vụ thành các phần nhỏ hơn, dễ quản lý hơn."
+		},
+		"stickyModels": {
+			"title": "Chế độ dính",
+			"description": "Mỗi chế độ ghi nhớ mô hình đã sử dụng cuối cùng của bạn"
+		},
+		"tools": {
+			"title": "Công cụ",
+			"description": "Cho phép AI giải quyết vấn đề bằng cách duyệt web, chạy lệnh, v.v."
+		},
+		"customizableModes": {
+			"title": "Chế độ tùy chỉnh",
+			"description": "Các nhân vật chuyên biệt với hành vi riêng và mô hình được chỉ định"
+		}
+	},
 	"selectMode": "Chọn chế độ tương tác",
-	"selectApiConfig": "Chọn cấu hình API",
 	"enhancePrompt": "Nâng cao yêu cầu với ngữ cảnh bổ sung",
 	"addImages": "Thêm hình ảnh vào tin nhắn",
 	"sendMessage": "Gửi tin nhắn",
@@ -81,6 +105,9 @@
 	"edit": "Chỉnh sửa...",
 	"forNextMode": "cho chế độ tiếp theo",
 	"error": "Lỗi",
+	"diffError": {
+		"title": "Chỉnh sửa không thành công"
+	},
 	"troubleMessage": "Roo đang gặp sự cố...",
 	"apiRequest": {
 		"title": "Yêu cầu API",
@@ -92,6 +119,7 @@
 	"checkpoint": {
 		"initial": "Điểm kiểm tra ban đầu",
 		"regular": "Điểm kiểm tra",
+		"initializingWarning": "Đang khởi tạo điểm kiểm tra... Nếu quá trình này mất quá nhiều thời gian, bạn có thể vô hiệu hóa điểm kiểm tra trong <settingsLink>cài đặt</settingsLink> và khởi động lại tác vụ của bạn.",
 		"menu": {
 			"viewDiff": "Xem khác biệt",
 			"restore": "Khôi phục điểm kiểm tra",
@@ -114,7 +142,12 @@
 		"didRead": "Roo đã đọc tệp này:",
 		"wantsToEdit": "Roo muốn chỉnh sửa tệp này:",
 		"wantsToEditOutsideWorkspace": "Roo muốn chỉnh sửa tệp này bên ngoài không gian làm việc:",
-		"wantsToCreate": "Roo muốn tạo một tệp mới:"
+		"wantsToCreate": "Roo muốn tạo một tệp mới:",
+		"wantsToSearchReplace": "Roo muốn thực hiện tìm kiếm và thay thế trong tệp này:",
+		"didSearchReplace": "Roo đã thực hiện tìm kiếm và thay thế trong tệp này:",
+		"wantsToInsert": "Roo muốn chèn nội dung vào tệp này:",
+		"wantsToInsertWithLineNumber": "Roo muốn chèn nội dung vào dòng {{lineNumber}} của tệp này:",
+		"wantsToInsertAtEnd": "Roo muốn thêm nội dung vào cuối tệp này:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo muốn xem các tệp cấp cao nhất trong thư mục này:",
@@ -141,7 +174,12 @@
 	},
 	"subtasks": {
 		"wantsToCreate": "Roo muốn tạo một nhiệm vụ phụ mới trong chế độ <code>{{mode}}</code>:",
-		"wantsToFinish": "Roo muốn hoàn thành nhiệm vụ phụ này"
+		"wantsToFinish": "Roo muốn hoàn thành nhiệm vụ phụ này",
+		"newTaskContent": "Hướng dẫn nhiệm vụ phụ",
+		"completionContent": "Nhiệm vụ phụ đã hoàn thành",
+		"resultContent": "Kết quả nhiệm vụ phụ",
+		"defaultResult": "Vui lòng tiếp tục với nhiệm vụ tiếp theo.",
+		"completionInstructions": "Nhiệm vụ phụ đã hoàn thành! Bạn có thể xem lại kết quả và đề xuất các sửa đổi hoặc bước tiếp theo. Nếu mọi thứ có vẻ tốt, hãy xác nhận để trả kết quả về nhiệm vụ chính."
 	},
 	"questions": {
 		"hasQuestion": "Roo có một câu hỏi:"
@@ -149,7 +187,10 @@
 	"taskCompleted": "Nhiệm vụ hoàn thành",
 	"shellIntegration": {
 		"unavailable": "Tích hợp shell không khả dụng",
-		"troubleshooting": "Vẫn gặp vấn đề?"
+		"troubleshooting": "Vẫn gặp vấn đề? Nhấp vào đây để xem tài liệu tích hợp shell.",
+		"checkSettings": "Kiểm tra các giải pháp thay thế cho terminal trong trang cài đặt",
+		"updateVSCode": "Cập nhật VSCode",
+		"supportedShell": "Đảm bảo bạn đang sử dụng shell được hỗ trợ: zsh, bash, fish hoặc PowerShell"
 	},
 	"powershell": {
 		"issues": "Có vẻ như bạn đang gặp vấn đề với Windows PowerShell, vui lòng xem"
@@ -157,63 +198,22 @@
 	"autoApprove": {
 		"title": "Tự động phê duyệt:",
 		"none": "Không",
-		"description": "Tự động phê duyệt cho phép Roo Code thực hiện hành động mà không cần xin phép. Chỉ bật cho các hành động bạn hoàn toàn tin tưởng.",
-		"actions": {
-			"readFiles": {
-				"label": "Đọc tệp và thư mục",
-				"shortName": "Đọc",
-				"description": "Cho phép truy cập để đọc bất kỳ tệp nào trên máy tính của bạn."
-			},
-			"editFiles": {
-				"label": "Chỉnh sửa tệp",
-				"shortName": "Chỉnh sửa",
-				"description": "Cho phép chỉnh sửa bất kỳ tệp nào trên máy tính của bạn."
-			},
-			"executeCommands": {
-				"label": "Thực thi lệnh đã phê duyệt",
-				"shortName": "Lệnh",
-				"description": "Cho phép thực thi lệnh terminal đã được phê duyệt. Bạn có thể cấu hình điều này trong bảng cài đặt."
-			},
-			"useBrowser": {
-				"label": "Sử dụng trình duyệt",
-				"shortName": "Trình duyệt",
-				"description": "Cho phép khả năng khởi chạy và tương tác với bất kỳ trang web nào trong trình duyệt không giao diện."
-			},
-			"useMcp": {
-				"label": "Sử dụng máy chủ MCP",
-				"shortName": "MCP",
-				"description": "Cho phép sử dụng máy chủ MCP đã cấu hình có thể sửa đổi hệ thống tệp hoặc tương tác với API."
-			},
-			"switchModes": {
-				"label": "Chuyển đổi chế độ",
-				"shortName": "Chế độ",
-				"description": "Cho phép tự động chuyển đổi giữa các chế độ khác nhau mà không cần phê duyệt."
-			},
-			"subtasks": {
-				"label": "Tạo & hoàn thành nhiệm vụ phụ",
-				"shortName": "Nhiệm vụ phụ",
-				"description": "Cho phép tạo và hoàn thành các nhiệm vụ phụ mà không cần phê duyệt."
-			},
-			"retryRequests": {
-				"label": "Thử lại yêu cầu thất bại",
-				"shortName": "Thử lại",
-				"description": "Tự động thử lại các yêu cầu API thất bại khi nhà cung cấp trả về phản hồi lỗi."
-			}
-		}
+		"description": "Tự động phê duyệt cho phép Roo Code thực hiện hành động mà không cần xin phép. Chỉ bật cho các hành động bạn hoàn toàn tin tưởng. Cấu hình chi tiết hơn có sẵn trong <settingsLink>Cài đặt</settingsLink>."
 	},
 	"reasoning": {
 		"thinking": "Đang suy nghĩ",
 		"seconds": "{{count}} giây"
 	},
+	"followUpSuggest": {
+		"copyToInput": "Sao chép vào ô nhập liệu (hoặc Shift + nhấp chuột)"
+	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.10 Đã phát hành",
-		"description": "Roo Code 3.10 mang đến những cải tiến năng suất mạnh mẽ!",
+		"title": "🎉 Roo Code 3.14 Đã phát hành",
+		"description": "Roo Code 3.14 mang đến các tính năng và cải tiến mới dựa trên phản hồi của bạn.",
 		"whatsNew": "Có gì mới",
-		"feature1": "Gợi ý phản hồi cho câu hỏi",
-		"feature2": "Cải thiện xử lý tệp tin lớn",
-		"feature3": "Xây dựng lại tìm kiếm tệp tin bằng @-mention",
-		"feature4": "",
-		"feature5": "",
+		"feature1": "<bold>Công cụ chỉnh sửa được cải thiện</bold>: Các công cụ <code>search_and_replace</code> và <code>insert_content</code> đã được cải thiện và chuyển từ trạng thái thử nghiệm thành chính thức",
+		"feature2": "<bold>Sửa lỗi apply_diff</bold>: Chúng tôi tiếp tục cải thiện công cụ <code>apply_diff</code>",
+		"feature3": "<bold>Rất nhiều cải tiến khác</bold>: Vô số sửa lỗi và cải tiến trong toàn bộ tiện ích mở rộng",
 		"hideButton": "Ẩn thông báo",
 		"detailsDiscussLinks": "Nhận thêm chi tiết và thảo luận tại <discordLink>Discord</discordLink> và <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -238,5 +238,7 @@
 			"scrollUp": "Cuộn lên",
 			"close": "Đóng trình duyệt"
 		}
-	}
+	},
+	"systemPromptWarning": "CẢNH BÁO: Đã kích hoạt ghi đè lệnh nhắc hệ thống tùy chỉnh. Điều này có thể phá vỡ nghiêm trọng chức năng và gây ra hành vi không thể dự đoán.",
+	"selectApiConfig": "Chọn cấu hình API"
 }

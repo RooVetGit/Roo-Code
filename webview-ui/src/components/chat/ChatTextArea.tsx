@@ -2,10 +2,10 @@ import React, { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, us
 import { useEvent } from "react-use"
 import DynamicTextArea from "react-textarea-autosize"
 
-import { mentionRegex, mentionRegexGlobal } from "../../../../src/shared/context-mentions"
-import { WebviewMessage } from "../../../../src/shared/WebviewMessage"
-import { Mode, getAllModes } from "../../../../src/shared/modes"
-import { ExtensionMessage } from "../../../../src/shared/ExtensionMessage"
+import { mentionRegex, mentionRegexGlobal } from "@roo/shared/context-mentions"
+import { WebviewMessage } from "@roo/shared/WebviewMessage"
+import { Mode, getAllModes } from "@roo/shared/modes"
+import { ExtensionMessage } from "@roo/shared/ExtensionMessage"
 
 import { vscode } from "@/utils/vscode"
 import { useExtensionState } from "@/context/ExtensionStateContext"
@@ -17,7 +17,7 @@ import {
 	removeMention,
 	shouldShowContextMenu,
 	SearchResult,
-} from "@/utils/context-mentions"
+} from "@src/utils/context-mentions"
 import { convertToMentionPath } from "@/utils/path-mentions"
 import { SelectDropdown, DropdownOptionType, Button } from "@/components/ui"
 
@@ -32,6 +32,7 @@ interface ChatTextAreaProps {
 	inputValue: string
 	setInputValue: (value: string) => void
 	textAreaDisabled: boolean
+	selectApiConfigDisabled: boolean
 	placeholderText: string
 	selectedImages: string[]
 	setSelectedImages: React.Dispatch<React.SetStateAction<string[]>>
@@ -50,6 +51,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			inputValue,
 			setInputValue,
 			textAreaDisabled,
+			selectApiConfigDisabled,
 			placeholderText,
 			selectedImages,
 			setSelectedImages,
@@ -70,12 +72,10 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			currentApiConfigName,
 			listApiConfigMeta,
 			customModes,
-			cwd, 
-			osInfo,
+			cwd,
 			pinnedApiConfigs,
 			togglePinnedApiConfig,
-		} =
-			useExtensionState()
+		} = useExtensionState()
 
 		// Find the ID and display text for the currently selected API configuration
 		const { currentConfigId, displayName } = useMemo(() => {
@@ -94,11 +94,12 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 		// Close dropdown when clicking outside.
 		useEffect(() => {
-			const handleClickOutside = (event: MouseEvent) => {
+			const handleClickOutside = () => {
 				if (showDropdown) {
 					setShowDropdown(false)
 				}
 			}
+
 			document.addEventListener("mousedown", handleClickOutside)
 			return () => document.removeEventListener("mousedown", handleClickOutside)
 		}, [showDropdown])
@@ -189,7 +190,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					.filter((tab) => tab.path)
 					.map((tab) => ({
 						type: ContextMenuOptionType.OpenedFile,
-						value: tab.path,
+						value: "/" + tab.path,
 					})),
 				...filePaths
 					.map((file) => "/" + file)
@@ -305,11 +306,11 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							const direction = event.key === "ArrowUp" ? -1 : 1
 							const options = getContextMenuOptions(
 								searchQuery,
+								inputValue,
 								selectedType,
 								queryItems,
 								fileSearchResults,
 								getAllModes(customModes),
-								osInfo,
 							)
 							const optionsLength = options.length
 
@@ -342,11 +343,11 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						event.preventDefault()
 						const selectedOption = getContextMenuOptions(
 							searchQuery,
+							inputValue,
 							selectedType,
 							queryItems,
 							fileSearchResults,
 							getAllModes(customModes),
-							osInfo,
 						)[selectedMenuIndex]
 						if (
 							selectedOption &&
@@ -402,20 +403,19 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				}
 			},
 			[
-				showContextMenu,
-				selectedMenuIndex,
-				searchQuery,
-				selectedType,
-				queryItems,
-				fileSearchResults,
-				customModes,
-				osInfo,
-				handleMentionSelect,
 				onSend,
+				showContextMenu,
+				searchQuery,
+				selectedMenuIndex,
+				handleMentionSelect,
+				selectedType,
 				inputValue,
 				cursorPosition,
-				justDeletedSpaceAfterMention,
 				setInputValue,
+				justDeletedSpaceAfterMention,
+				queryItems,
+				customModes,
+				fileSearchResults,
 			],
 		)
 
@@ -615,7 +615,10 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				e.preventDefault()
 				setIsDraggingOver(false)
 
-				const text = e.dataTransfer.getData("text")
+				const textFieldList = e.dataTransfer.getData("text")
+				const textUriList = e.dataTransfer.getData("application/vnd.code.uri-list")
+				// When textFieldList is empty, it may attempt to use textUriList obtained from drag-and-drop tabs; if not empty, it will use textFieldList.
+				const text = textFieldList || textUriList
 				if (text) {
 					// Split text on newlines to handle multiple files
 					const lines = text.split(/\r?\n/).filter((line) => line.trim() !== "")
@@ -629,7 +632,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						for (let i = 0; i < lines.length; i++) {
 							const line = lines[i]
 							// Convert each path to a mention-friendly format
-							const mentionText = convertToMentionPath(line, cwd, osInfo)
+							const mentionText = convertToMentionPath(line, cwd)
 							newValue += mentionText
 							totalLength += mentionText.length
 
@@ -696,15 +699,16 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				}
 			},
 			[
-				textAreaDisabled,
-				inputValue,
 				cursorPosition,
-				setInputValue,
 				cwd,
-				osInfo,
+				inputValue,
+				setInputValue,
+				setCursorPosition,
+				setIntendedCursorPosition,
+				textAreaDisabled,
 				shouldDisableImages,
-				t,
 				setSelectedImages,
+				t,
 			],
 		)
 
@@ -782,6 +786,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								<ContextMenu
 									onSelect={handleMentionSelect}
 									searchQuery={searchQuery}
+									inputValue={inputValue}
 									onMouseDown={handleMenuMouseDown}
 									selectedIndex={selectedMenuIndex}
 									setSelectedIndex={setSelectedMenuIndex}
@@ -790,7 +795,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 									modes={getAllModes(customModes)}
 									loading={searchLoading}
 									dynamicSearchResults={fileSearchResults}
-									os={osInfo}
 								/>
 							</div>
 						)}
@@ -819,7 +823,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 									"leading-vscode-editor-line-height",
 									"py-2",
 									"px-[9px]",
-									"z-[1000]",
+									"z-10",
 								)}
 								style={{
 									color: "transparent",
@@ -980,7 +984,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						<div className={cn("flex-1", "min-w-0", "overflow-hidden")}>
 							<SelectDropdown
 								value={currentConfigId}
-								disabled={textAreaDisabled}
+								disabled={selectApiConfigDisabled}
 								title={t("chat:selectApiConfig")}
 								placeholder={displayName} // Always show the current name
 								options={[
@@ -1031,12 +1035,15 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 								]}
 								onChange={(value) => {
 									if (value === "settingsButtonClicked") {
-										vscode.postMessage({ type: "loadApiConfiguration", text: value })
+										vscode.postMessage({
+											type: "loadApiConfiguration",
+											text: value,
+											values: { section: "providers" },
+										})
 									} else {
 										vscode.postMessage({ type: "loadApiConfigurationById", text: value })
 									}
 								}}
-								contentClassName="max-h-[300px] overflow-y-auto"
 								triggerClassName="w-full text-ellipsis overflow-hidden"
 								itemClassName="group"
 								renderItem={({ type, value, label, pinned }) => {

@@ -68,6 +68,9 @@
 
 	--color-vscode-editorGroup-border: var(--vscode-editorGroup-border);
 
+	--color-vscode-editorWarning-foreground: var(--vscode-editorWarning-foreground);
+	--color-vscode-editorWarning-background: var(--vscode-editorWarning-background);
+
 	--color-vscode-button-foreground: var(--vscode-button-foreground);
 	--color-vscode-button-background: var(--vscode-button-background);
 	--color-vscode-button-secondaryForeground: var(--vscode-button-secondaryForeground);
@@ -166,6 +169,11 @@
 	code {
 		background-color: var(--vscode-textCodeBlock-background);
 	}
+
+	/* Search result highlighting */
+	.history-item-highlight {
+		@apply underline;
+	}
 }
 
 /* Form Element Focus States */
@@ -176,10 +184,6 @@ textarea:focus {
 
 .focus\:outline-0 {
 	outline: 0 !important; /* Allow tailwind to override the `textarea:focus` rule */
-}
-
-vscode-button::part(control):focus {
-	outline: none;
 }
 
 /**
@@ -390,4 +394,12 @@ input[cmdk-input]:focus {
 
 .custom-markdown > pre {
 	background-color: transparent !important;
+}
+
+/*
+ * Use geometric precision for codicons to avoid blurriness 
+ */
+
+.codicon[class*="codicon-"] {
+	text-rendering: geometricPrecision !important;
 }

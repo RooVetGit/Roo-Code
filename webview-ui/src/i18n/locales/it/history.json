@@ -1,5 +1,5 @@
 {
-	"recentTasks": "Attività recenti",
+	"recentTasks": "Compiti",
 	"viewAll": "Vedi tutto",
 	"tokens": "Tokens: ↑{{in}} ↓{{out}}",
 	"cache": "Cache: +{{writes}} → {{reads}}",
@@ -34,5 +34,6 @@
 	"deleteTasks": "Elimina attività",
 	"confirmDeleteTasks": "Sei sicuro di voler eliminare {{count}} attività?",
 	"deleteTasksWarning": "Le attività eliminate non possono essere recuperate. Assicurati di voler continuare.",
-	"deleteItems": "Elimina {{count}} elementi"
+	"deleteItems": "Elimina {{count}} elementi",
+	"showAllWorkspaces": "Mostra attività da tutti gli spazi di lavoro"
 }

@@ -3,10 +3,10 @@ import { convertToMentionPath } from "../path-mentions"
 describe("path-mentions", () => {
 	describe("convertToMentionPath", () => {
 		it("should convert an absolute path to a mention path when it starts with cwd", () => {
-			// win32-style paths
-			expect(
-				convertToMentionPath("C:\\Users\\user\\project\\file.txt", "C:\\Users\\user\\project", "win32"),
-			).toBe("@\\file.txt")
+			// Windows-style paths
+			expect(convertToMentionPath("C:\\Users\\user\\project\\file.txt", "C:\\Users\\user\\project")).toBe(
+				"@/file.txt",
+			)
 
 			// Unix-style paths
 			expect(convertToMentionPath("/Users/user/project/file.txt", "/Users/user/project")).toBe("@/file.txt")
@@ -31,14 +31,29 @@ describe("path-mentions", () => {
 		})
 
 		it("should normalize backslashes to forward slashes", () => {
-			expect(
-				convertToMentionPath("C:\\Users\\user\\project\\subdir\\file.txt", "C:\\Users\\user\\project", "win32"),
-			).toBe("@\\subdir\\file.txt")
+			expect(convertToMentionPath("C:\\Users\\user\\project\\subdir\\file.txt", "C:\\Users\\user\\project")).toBe(
+				"@/subdir/file.txt",
+			)
 		})
 
 		it("should handle nested paths correctly", () => {
 			expect(convertToMentionPath("/Users/user/project/nested/deeply/file.txt", "/Users/user/project")).toBe(
 				"@/nested/deeply/file.txt",
+			)
+		})
+
+		it("should strip file:// protocol from paths if present", () => {
+			// Without cwd
+			expect(convertToMentionPath("file:///Users/user/project/file.txt")).toBe("/Users/user/project/file.txt")
+
+			// With cwd - should strip protocol and then apply mention path logic
+			expect(convertToMentionPath("file:///Users/user/project/file.txt", "/Users/user/project")).toBe(
+				"@/file.txt",
+			)
+
+			// With Windows paths
+			expect(convertToMentionPath("file://C:/Users/user/project/file.txt", "C:/Users/user/project")).toBe(
+				"@/file.txt",
 			)
 		})
 	})

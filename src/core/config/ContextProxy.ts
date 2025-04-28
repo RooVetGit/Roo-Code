@@ -1,19 +1,22 @@
 import * as vscode from "vscode"
+import { ZodError } from "zod"
 
 import {
 	PROVIDER_SETTINGS_KEYS,
-	ProviderSettings,
-	providerSettingsSchema,
-	GlobalSettings,
-	globalSettingsSchema,
-	RooCodeSettings,
+	GLOBAL_SETTINGS_KEYS,
 	SECRET_STATE_KEYS,
-	SecretState,
-	isSecretStateKey,
 	GLOBAL_STATE_KEYS,
+	ProviderSettings,
+	GlobalSettings,
+	SecretState,
 	GlobalState,
+	RooCodeSettings,
+	providerSettingsSchema,
+	globalSettingsSchema,
+	isSecretStateKey,
 } from "../../schemas"
 import { logger } from "../../utils/logging"
+import { telemetryService } from "../../services/telemetry/TelemetryService"
 
 type GlobalStateKey = keyof GlobalState
 type SecretStateKey = keyof SecretState
@@ -50,6 +53,7 @@ export class ContextProxy {
 	public async initialize() {
 		for (const key of GLOBAL_STATE_KEYS) {
 			try {
+				// Revert to original assignment
 				this.stateCache[key] = this.originalContext.globalState.get(key)
 			} catch (error) {
 				logger.error(`Error loading global ${key}: ${error instanceof Error ? error.message : String(error)}`)
@@ -151,7 +155,17 @@ export class ContextProxy {
 	 */
 
 	public getGlobalSettings(): GlobalSettings {
-		return globalSettingsSchema.parse({ ...this.stateCache })
+		const values = this.getValues()
+
+		try {
+			return globalSettingsSchema.parse(values)
+		} catch (error) {
+			if (error instanceof ZodError) {
+				telemetryService.captureSchemaValidationError({ schemaName: "GlobalSettings", error })
+			}
+
+			return GLOBAL_SETTINGS_KEYS.reduce((acc, key) => ({ ...acc, [key]: values[key] }), {} as GlobalSettings)
+		}
 	}
 
 	/**
@@ -159,7 +173,17 @@ export class ContextProxy {
 	 */
 
 	public getProviderSettings(): ProviderSettings {
-		return providerSettingsSchema.parse(this.getValues())
+		const values = this.getValues()
+
+		try {
+			return providerSettingsSchema.parse(values)
+		} catch (error) {
+			if (error instanceof ZodError) {
+				telemetryService.captureSchemaValidationError({ schemaName: "ProviderSettings", error })
+			}
+
+			return PROVIDER_SETTINGS_KEYS.reduce((acc, key) => ({ ...acc, [key]: values[key] }), {} as ProviderSettings)
+		}
 	}
 
 	public async setProviderSettings(values: ProviderSettings) {
@@ -207,9 +231,15 @@ export class ContextProxy {
 		try {
 			const globalSettings = globalSettingsExportSchema.parse(this.getValues())
 
+			// Exports should only contain global settings, so this skips project custom modes (those exist in the .roomode folder)
+			globalSettings.customModes = globalSettings.customModes?.filter((mode) => mode.source === "global")
+
 			return Object.fromEntries(Object.entries(globalSettings).filter(([_, value]) => value !== undefined))
 		} catch (error) {
-			console.log(error.message)
+			if (error instanceof ZodError) {
+				telemetryService.captureSchemaValidationError({ schemaName: "GlobalSettings", error })
+			}
+
 			return undefined
 		}
 	}
@@ -230,5 +260,26 @@ export class ContextProxy {
 		])
 
 		await this.initialize()
+	}
+
+	private static _instance: ContextProxy | null = null
+
+	static get instance() {
+		if (!this._instance) {
+			throw new Error("ContextProxy not initialized")
+		}
+
+		return this._instance
+	}
+
+	static async getInstance(context: vscode.ExtensionContext) {
+		if (this._instance) {
+			return this._instance
+		}
+
+		this._instance = new ContextProxy(context)
+		await this._instance.initialize()
+
+		return this._instance
 	}
 }

@@ -21,47 +21,17 @@ type ProviderSettings = {
 				| "requesty"
 				| "human-relay"
 				| "fake-ai"
+				| "xai"
 		  )
 		| undefined
 	apiModelId?: string | undefined
 	apiKey?: string | undefined
 	anthropicBaseUrl?: string | undefined
+	anthropicUseAuthToken?: boolean | undefined
 	glamaModelId?: string | undefined
-	glamaModelInfo?:
-		| {
-				maxTokens?: number | undefined
-				contextWindow: number
-				supportsImages?: boolean | undefined
-				supportsComputerUse?: boolean | undefined
-				supportsPromptCache: boolean
-				inputPrice?: number | undefined
-				outputPrice?: number | undefined
-				cacheWritesPrice?: number | undefined
-				cacheReadsPrice?: number | undefined
-				description?: string | undefined
-				reasoningEffort?: ("low" | "medium" | "high") | undefined
-				thinking?: boolean | undefined
-		  }
-		| undefined
 	glamaApiKey?: string | undefined
 	openRouterApiKey?: string | undefined
 	openRouterModelId?: string | undefined
-	openRouterModelInfo?:
-		| {
-				maxTokens?: number | undefined
-				contextWindow: number
-				supportsImages?: boolean | undefined
-				supportsComputerUse?: boolean | undefined
-				supportsPromptCache: boolean
-				inputPrice?: number | undefined
-				outputPrice?: number | undefined
-				cacheWritesPrice?: number | undefined
-				cacheReadsPrice?: number | undefined
-				description?: string | undefined
-				reasoningEffort?: ("low" | "medium" | "high") | undefined
-				thinking?: boolean | undefined
-		  }
-		| undefined
 	openRouterBaseUrl?: string | undefined
 	openRouterSpecificProvider?: string | undefined
 	openRouterUseMiddleOutTransform?: boolean | undefined
@@ -81,15 +51,19 @@ type ProviderSettings = {
 	vertexRegion?: string | undefined
 	openAiBaseUrl?: string | undefined
 	openAiApiKey?: string | undefined
+	openAiHostHeader?: string | undefined
+	openAiLegacyFormat?: boolean | undefined
 	openAiR1FormatEnabled?: boolean | undefined
 	openAiModelId?: string | undefined
 	openAiCustomModelInfo?:
-		| {
-				maxTokens?: number | undefined
+		| ({
+				maxTokens?: (number | null) | undefined
+				maxThinkingTokens?: (number | null) | undefined
 				contextWindow: number
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
 				supportsPromptCache: boolean
+				isPromptCacheOptional?: boolean | undefined
 				inputPrice?: number | undefined
 				outputPrice?: number | undefined
 				cacheWritesPrice?: number | undefined
@@ -97,7 +71,19 @@ type ProviderSettings = {
 				description?: string | undefined
 				reasoningEffort?: ("low" | "medium" | "high") | undefined
 				thinking?: boolean | undefined
-		  }
+				minTokensPerCachePoint?: number | undefined
+				maxCachePoints?: number | undefined
+				cachableFields?: string[] | undefined
+				tiers?:
+					| {
+							contextWindow: number
+							inputPrice?: number | undefined
+							outputPrice?: number | undefined
+							cacheWritesPrice?: number | undefined
+							cacheReadsPrice?: number | undefined
+					  }[]
+					| undefined
+		  } | null)
 		| undefined
 	openAiUseAzure?: boolean | undefined
 	azureApiVersion?: string | undefined
@@ -125,44 +111,18 @@ type ProviderSettings = {
 	deepSeekApiKey?: string | undefined
 	unboundApiKey?: string | undefined
 	unboundModelId?: string | undefined
-	unboundModelInfo?:
-		| {
-				maxTokens?: number | undefined
-				contextWindow: number
-				supportsImages?: boolean | undefined
-				supportsComputerUse?: boolean | undefined
-				supportsPromptCache: boolean
-				inputPrice?: number | undefined
-				outputPrice?: number | undefined
-				cacheWritesPrice?: number | undefined
-				cacheReadsPrice?: number | undefined
-				description?: string | undefined
-				reasoningEffort?: ("low" | "medium" | "high") | undefined
-				thinking?: boolean | undefined
-		  }
-		| undefined
 	requestyApiKey?: string | undefined
 	requestyModelId?: string | undefined
-	requestyModelInfo?:
-		| {
-				maxTokens?: number | undefined
-				contextWindow: number
-				supportsImages?: boolean | undefined
-				supportsComputerUse?: boolean | undefined
-				supportsPromptCache: boolean
-				inputPrice?: number | undefined
-				outputPrice?: number | undefined
-				cacheWritesPrice?: number | undefined
-				cacheReadsPrice?: number | undefined
-				description?: string | undefined
-				reasoningEffort?: ("low" | "medium" | "high") | undefined
-				thinking?: boolean | undefined
-		  }
-		| undefined
-	modelTemperature?: (number | null) | undefined
+	xaiApiKey?: string | undefined
 	modelMaxTokens?: number | undefined
 	modelMaxThinkingTokens?: number | undefined
 	includeMaxTokens?: boolean | undefined
+	reasoningEffort?: ("low" | "medium" | "high") | undefined
+	promptCachingEnabled?: boolean | undefined
+	diffEnabled?: boolean | undefined
+	fuzzyMatchThreshold?: number | undefined
+	modelTemperature?: (number | null) | undefined
+	rateLimitSeconds?: number | undefined
 	fakeAi?: unknown | undefined
 }
 
@@ -193,6 +153,7 @@ type GlobalSettings = {
 							| "requesty"
 							| "human-relay"
 							| "fake-ai"
+							| "xai"
 					  )
 					| undefined
 		  }[]
@@ -216,6 +177,7 @@ type GlobalSettings = {
 				cacheReads?: number | undefined
 				totalCost: number
 				size?: number | undefined
+				workspace?: string | undefined
 		  }[]
 		| undefined
 	autoApprovalEnabled?: boolean | undefined
@@ -237,8 +199,8 @@ type GlobalSettings = {
 	screenshotQuality?: number | undefined
 	remoteBrowserEnabled?: boolean | undefined
 	remoteBrowserHost?: string | undefined
+	cachedChromeHostUrl?: string | undefined
 	enableCheckpoints?: boolean | undefined
-	checkpointStorage?: ("task" | "workspace") | undefined
 	ttsEnabled?: boolean | undefined
 	ttsSpeed?: number | undefined
 	soundEnabled?: boolean | undefined
@@ -249,16 +211,20 @@ type GlobalSettings = {
 	maxReadFileLine?: number | undefined
 	terminalOutputLineLimit?: number | undefined
 	terminalShellIntegrationTimeout?: number | undefined
+	terminalShellIntegrationDisabled?: boolean | undefined
+	terminalCommandDelay?: number | undefined
+	terminalPowershellCounter?: boolean | undefined
+	terminalZshClearEolMark?: boolean | undefined
+	terminalZshOhMy?: boolean | undefined
+	terminalZshP10k?: boolean | undefined
+	terminalZdotdir?: boolean | undefined
+	terminalCompressProgressBar?: boolean | undefined
 	rateLimitSeconds?: number | undefined
 	diffEnabled?: boolean | undefined
 	fuzzyMatchThreshold?: number | undefined
 	experiments?:
 		| {
-				experimentalDiffStrategy: boolean
-				search_and_replace: boolean
-				insert_content: boolean
 				powerSteering: boolean
-				multi_search_and_replace: boolean
 		  }
 		| undefined
 	language?:
@@ -274,6 +240,7 @@ type GlobalSettings = {
 				| "ko"
 				| "pl"
 				| "pt-BR"
+				| "ru"
 				| "tr"
 				| "vi"
 				| "zh-CN"
@@ -324,6 +291,7 @@ type GlobalSettings = {
 		  }
 		| undefined
 	enhancementApiConfigId?: string | undefined
+	historyPreviewCollapsed?: boolean | undefined
 }
 
 export type { GlobalSettings }
@@ -365,8 +333,10 @@ type ClineMessage = {
 				| "browser_action_result"
 				| "mcp_server_request_started"
 				| "mcp_server_response"
+				| "subtask_result"
 				| "checkpoint_saved"
 				| "rooignore_error"
+				| "diff_error"
 		  )
 		| undefined
 	text?: string | undefined
@@ -399,3 +369,133 @@ type TokenUsage = {
 }
 
 export type { TokenUsage }
+
+type RooCodeEvents = {
+	message: [
+		{
+			taskId: string
+			action: "created" | "updated"
+			message: {
+				ts: number
+				type: "ask" | "say"
+				ask?:
+					| (
+							| "followup"
+							| "command"
+							| "command_output"
+							| "completion_result"
+							| "tool"
+							| "api_req_failed"
+							| "resume_task"
+							| "resume_completed_task"
+							| "mistake_limit_reached"
+							| "browser_action_launch"
+							| "use_mcp_server"
+					  )
+					| undefined
+				say?:
+					| (
+							| "error"
+							| "api_req_started"
+							| "api_req_finished"
+							| "api_req_retried"
+							| "api_req_retry_delayed"
+							| "api_req_deleted"
+							| "text"
+							| "reasoning"
+							| "completion_result"
+							| "user_feedback"
+							| "user_feedback_diff"
+							| "command_output"
+							| "shell_integration_warning"
+							| "browser_action"
+							| "browser_action_result"
+							| "mcp_server_request_started"
+							| "mcp_server_response"
+							| "subtask_result"
+							| "checkpoint_saved"
+							| "rooignore_error"
+							| "diff_error"
+					  )
+					| undefined
+				text?: string | undefined
+				images?: string[] | undefined
+				partial?: boolean | undefined
+				reasoning?: string | undefined
+				conversationHistoryIndex?: number | undefined
+				checkpoint?:
+					| {
+							[x: string]: unknown
+					  }
+					| undefined
+				progressStatus?:
+					| {
+							icon?: string | undefined
+							text?: string | undefined
+					  }
+					| undefined
+			}
+		},
+	]
+	taskCreated: [string]
+	taskStarted: [string]
+	taskModeSwitched: [string, string]
+	taskPaused: [string]
+	taskUnpaused: [string]
+	taskAskResponded: [string]
+	taskAborted: [string]
+	taskSpawned: [string, string]
+	taskCompleted: [
+		string,
+		{
+			totalTokensIn: number
+			totalTokensOut: number
+			totalCacheWrites?: number | undefined
+			totalCacheReads?: number | undefined
+			totalCost: number
+			contextTokens: number
+		},
+		{
+			[x: string]: {
+				attempts: number
+				failures: number
+			}
+		},
+	]
+	taskTokenUsageUpdated: [
+		string,
+		{
+			totalTokensIn: number
+			totalTokensOut: number
+			totalCacheWrites?: number | undefined
+			totalCacheReads?: number | undefined
+			totalCost: number
+			contextTokens: number
+		},
+	]
+	taskToolFailed: [
+		string,
+		(
+			| "execute_command"
+			| "read_file"
+			| "write_to_file"
+			| "apply_diff"
+			| "insert_content"
+			| "search_and_replace"
+			| "search_files"
+			| "list_files"
+			| "list_code_definition_names"
+			| "browser_action"
+			| "use_mcp_tool"
+			| "access_mcp_resource"
+			| "ask_followup_question"
+			| "attempt_completion"
+			| "switch_mode"
+			| "new_task"
+			| "fetch_instructions"
+		),
+		string,
+	]
+}
+
+export type { RooCodeEvents }

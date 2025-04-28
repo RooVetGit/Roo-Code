@@ -9,6 +9,7 @@ import { setSoundEnabled } from "../../../utils/sound"
 import { setTtsEnabled } from "../../../utils/tts"
 import { defaultModeSlug } from "../../../shared/modes"
 import { experimentDefault } from "../../../shared/experiments"
+import { ContextProxy } from "../../config/ContextProxy"
 
 // Mock setup must come before imports
 jest.mock("../../prompts/sections/custom-instructions")
@@ -40,8 +41,11 @@ jest.mock("../../../services/browser/BrowserSession", () => ({
 
 // Mock browserDiscovery
 jest.mock("../../../services/browser/browserDiscovery", () => ({
-	discoverChromeInstances: jest.fn().mockImplementation(async () => {
+	discoverChromeHostUrl: jest.fn().mockImplementation(async () => {
 		return "http://localhost:9222"
+	}),
+	tryChromeHostUrl: jest.fn().mockImplementation(async (url) => {
+		return url === "http://localhost:9222"
 	}),
 }))
 
@@ -78,7 +82,7 @@ const mockAddCustomInstructions = jest.fn().mockResolvedValue("Combined instruct
 
 // Mock delay module
 jest.mock("delay", () => {
-	const delayFn = (ms: number) => Promise.resolve()
+	const delayFn = (_ms: number) => Promise.resolve()
 	delayFn.createDelay = () => delayFn
 	delayFn.reject = () => Promise.reject(new Error("Delay rejected"))
 	delayFn.range = () => Promise.resolve()
@@ -111,13 +115,6 @@ jest.mock(
 	{ virtual: true },
 )
 
-// Mock DiffStrategy
-jest.mock("../../diff/DiffStrategy", () => ({
-	getDiffStrategy: jest.fn().mockImplementation(() => ({
-		getToolDescription: jest.fn().mockReturnValue("apply_diff tool description"),
-	})),
-}))
-
 // Mock dependencies
 jest.mock("vscode", () => ({
 	ExtensionContext: jest.fn(),
@@ -140,7 +137,7 @@ jest.mock("vscode", () => ({
 			get: jest.fn().mockReturnValue([]),
 			update: jest.fn(),
 		}),
-		onDidChangeConfiguration: jest.fn().mockImplementation((callback) => ({
+		onDidChangeConfiguration: jest.fn().mockImplementation(() => ({
 			dispose: jest.fn(),
 		})),
 		onDidSaveTextDocument: jest.fn(() => ({ dispose: jest.fn() })),
@@ -215,7 +212,7 @@ jest.mock("../../Cline", () => ({
 	Cline: jest
 		.fn()
 		.mockImplementation(
-			(provider, apiConfiguration, customInstructions, diffEnabled, fuzzyMatchThreshold, task, taskId) => ({
+			(_provider, _apiConfiguration, _customInstructions, _diffEnabled, _fuzzyMatchThreshold, _task, taskId) => ({
 				api: undefined,
 				abortTask: jest.fn(),
 				handleWebviewAskResponse: jest.fn(),
@@ -234,7 +231,7 @@ jest.mock("../../Cline", () => ({
 
 // Mock extract-text
 jest.mock("../../../integrations/misc/extract-text", () => ({
-	extractTextFromFile: jest.fn().mockImplementation(async (filePath: string) => {
+	extractTextFromFile: jest.fn().mockImplementation(async (_filePath: string) => {
 		const content = "const x = 1;\nconst y = 2;\nconst z = 3;"
 		const lines = content.split("\n")
 		return lines.map((line, index) => `${index + 1} | ${line}`).join("\n")
@@ -311,6 +308,7 @@ describe("ClineProvider", () => {
 
 		// Mock webview
 		mockPostMessage = jest.fn()
+
 		mockWebviewView = {
 			webview: {
 				postMessage: mockPostMessage,
@@ -324,12 +322,10 @@ describe("ClineProvider", () => {
 				callback()
 				return { dispose: jest.fn() }
 			}),
-			onDidChangeVisibility: jest.fn().mockImplementation((callback) => {
-				return { dispose: jest.fn() }
-			}),
+			onDidChangeVisibility: jest.fn().mockImplementation(() => ({ dispose: jest.fn() })),
 		} as unknown as vscode.WebviewView
 
-		provider = new ClineProvider(mockContext, mockOutputChannel)
+		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
 
 		// @ts-ignore - Access private property for testing
 		updateGlobalStateSpy = jest.spyOn(provider.contextProxy, "setValue")
@@ -361,6 +357,8 @@ describe("ClineProvider", () => {
 		provider = new ClineProvider(
 			{ ...mockContext, extensionMode: vscode.ExtensionMode.Development },
 			mockOutputChannel,
+			"sidebar",
+			new ContextProxy(mockContext),
 		)
 		;(axios.get as jest.Mock).mockRejectedValueOnce(new Error("Network error"))
 
@@ -375,7 +373,7 @@ describe("ClineProvider", () => {
 
 		// Verify Content Security Policy contains the necessary PostHog domains
 		expect(mockWebviewView.webview.html).toContain(
-			"connect-src https://openrouter.ai https://us.i.posthog.com https://us-assets.i.posthog.com;",
+			"connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com;",
 		)
 		expect(mockWebviewView.webview.html).toContain("script-src 'nonce-")
 	})
@@ -385,7 +383,6 @@ describe("ClineProvider", () => {
 
 		const mockState: ExtensionState = {
 			version: "1.0.0",
-			osInfo: "unix",
 			clineMessages: [],
 			taskHistory: [],
 			shouldShowAnnouncement: false,
@@ -405,14 +402,12 @@ describe("ClineProvider", () => {
 			ttsEnabled: false,
 			diffEnabled: false,
 			enableCheckpoints: false,
-			checkpointStorage: "task",
 			writeDelayMs: 1000,
 			browserViewportSize: "900x600",
 			fuzzyMatchThreshold: 1.0,
 			mcpEnabled: true,
 			enableMcpServerCreation: false,
 			requestDelaySeconds: 5,
-			rateLimitSeconds: 0,
 			mode: defaultModeSlug,
 			customModes: [],
 			experiments: experimentDefault,
@@ -817,7 +812,6 @@ describe("ClineProvider", () => {
 		const modeCustomInstructions = "Code mode instructions"
 		const mockApiConfig = {
 			apiProvider: "openrouter",
-			openRouterModelInfo: { supportsComputerUse: true },
 		}
 
 		jest.spyOn(provider, "getState").mockResolvedValue({
@@ -828,7 +822,6 @@ describe("ClineProvider", () => {
 			mode: "code",
 			diffEnabled: true,
 			enableCheckpoints: false,
-			checkpointStorage: "task",
 			fuzzyMatchThreshold: 1.0,
 			experiments: experimentDefault,
 		} as any)
@@ -847,7 +840,6 @@ describe("ClineProvider", () => {
 			customInstructions: modeCustomInstructions,
 			enableDiff: true,
 			enableCheckpoints: false,
-			checkpointStorage: "task",
 			fuzzyMatchThreshold: 1.0,
 			task: "Test task",
 			experiments: experimentDefault,
@@ -915,7 +907,7 @@ describe("ClineProvider", () => {
 		} as unknown as vscode.ExtensionContext
 
 		// Create new provider with updated mock context
-		provider = new ClineProvider(mockContext, mockOutputChannel)
+		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
 		await provider.resolveWebviewView(mockWebviewView)
 		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
 
@@ -1061,7 +1053,7 @@ describe("ClineProvider", () => {
 			// Reset and setup mock
 			mockAddCustomInstructions.mockClear()
 			mockAddCustomInstructions.mockImplementation(
-				(modeInstructions: string, globalInstructions: string, cwd: string) => {
+				(modeInstructions: string, globalInstructions: string, _cwd: string) => {
 					return Promise.resolve(modeInstructions || globalInstructions || "")
 				},
 			)
@@ -1078,16 +1070,6 @@ describe("ClineProvider", () => {
 			jest.spyOn(provider, "getState").mockResolvedValue({
 				apiConfiguration: {
 					apiProvider: "openrouter" as const,
-					openRouterModelInfo: {
-						supportsComputerUse: true,
-						supportsPromptCache: false,
-						maxTokens: 4096,
-						contextWindow: 8192,
-						supportsImages: false,
-						inputPrice: 0.0,
-						outputPrice: 0.0,
-						description: undefined,
-					},
 				},
 				mcpEnabled: true,
 				enableMcpServerCreation: false,
@@ -1111,16 +1093,6 @@ describe("ClineProvider", () => {
 			jest.spyOn(provider, "getState").mockResolvedValue({
 				apiConfiguration: {
 					apiProvider: "openrouter" as const,
-					openRouterModelInfo: {
-						supportsComputerUse: true,
-						supportsPromptCache: false,
-						maxTokens: 4096,
-						contextWindow: 8192,
-						supportsImages: false,
-						inputPrice: 0.0,
-						outputPrice: 0.0,
-						description: undefined,
-					},
 				},
 				mcpEnabled: false,
 				enableMcpServerCreation: false,
@@ -1188,19 +1160,17 @@ describe("ClineProvider", () => {
 				}),
 			}))
 
-			// Mock getState to return experimentalDiffStrategy, diffEnabled and fuzzyMatchThreshold
+			// Mock getState to return diffEnabled and fuzzyMatchThreshold
 			jest.spyOn(provider, "getState").mockResolvedValue({
 				apiConfiguration: {
 					apiProvider: "openrouter",
 					apiModelId: "test-model",
-					openRouterModelInfo: { supportsComputerUse: true },
 				},
 				customModePrompts: {},
 				mode: "code",
 				enableMcpServerCreation: true,
 				mcpEnabled: false,
 				browserViewportSize: "900x600",
-				experimentalDiffStrategy: true,
 				diffEnabled: true,
 				fuzzyMatchThreshold: 0.8,
 				experiments: experimentDefault,
@@ -1251,13 +1221,11 @@ describe("ClineProvider", () => {
 				apiConfiguration: {
 					apiProvider: "openrouter",
 					apiModelId: "test-model",
-					openRouterModelInfo: { supportsComputerUse: true },
 				},
 				customModePrompts: {},
 				mode: "code",
 				mcpEnabled: false,
 				browserViewportSize: "900x600",
-				experimentalDiffStrategy: true,
 				diffEnabled: false,
 				fuzzyMatchThreshold: 0.8,
 				experiments: experimentDefault,
@@ -1293,7 +1261,6 @@ describe("ClineProvider", () => {
 			jest.spyOn(provider, "getState").mockResolvedValue({
 				apiConfiguration: {
 					apiProvider: "openrouter",
-					openRouterModelInfo: { supportsComputerUse: true },
 				},
 				customModePrompts: {
 					architect: { customInstructions: "Architect mode instructions" },
@@ -1916,9 +1883,9 @@ describe("ClineProvider", () => {
 				type: "testBrowserConnection",
 			})
 
-			// Verify discoverChromeInstances was called
-			const { discoverChromeInstances } = require("../../../services/browser/browserDiscovery")
-			expect(discoverChromeInstances).toHaveBeenCalled()
+			// Verify discoverChromeHostUrl was called
+			const { discoverChromeHostUrl } = require("../../../services/browser/browserDiscovery")
+			expect(discoverChromeHostUrl).toHaveBeenCalled()
 
 			// Verify postMessage was called with success result
 			expect(mockPostMessage).toHaveBeenCalledWith(
@@ -1926,77 +1893,6 @@ describe("ClineProvider", () => {
 					type: "browserConnectionResult",
 					success: true,
 					text: expect.stringContaining("Auto-discovered and tested connection to Chrome"),
-				}),
-			)
-		})
-
-		test("handles discoverBrowser message", async () => {
-			// Get the message handler
-			const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
-
-			// Test browser discovery
-			await messageHandler({
-				type: "discoverBrowser",
-			})
-
-			// Verify discoverChromeInstances was called
-			const { discoverChromeInstances } = require("../../../services/browser/browserDiscovery")
-			expect(discoverChromeInstances).toHaveBeenCalled()
-
-			// Verify postMessage was called with success result
-			expect(mockPostMessage).toHaveBeenCalledWith(
-				expect.objectContaining({
-					type: "browserConnectionResult",
-					success: true,
-					text: expect.stringContaining("Successfully discovered and connected to Chrome"),
-				}),
-			)
-		})
-
-		test("handles errors during browser discovery", async () => {
-			// Mock discoverChromeInstances to throw an error
-			const { discoverChromeInstances } = require("../../../services/browser/browserDiscovery")
-			discoverChromeInstances.mockImplementationOnce(() => {
-				throw new Error("Discovery error")
-			})
-
-			// Get the message handler
-			const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
-
-			// Test browser discovery with error
-			await messageHandler({
-				type: "discoverBrowser",
-			})
-
-			// Verify postMessage was called with error result
-			expect(mockPostMessage).toHaveBeenCalledWith(
-				expect.objectContaining({
-					type: "browserConnectionResult",
-					success: false,
-					text: expect.stringContaining("Error discovering browser"),
-				}),
-			)
-		})
-
-		test("handles case when no browsers are discovered", async () => {
-			// Mock discoverChromeInstances to return null (no browsers found)
-			const { discoverChromeInstances } = require("../../../services/browser/browserDiscovery")
-			discoverChromeInstances.mockImplementationOnce(() => null)
-
-			// Get the message handler
-			const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
-
-			// Test browser discovery with no browsers found
-			await messageHandler({
-				type: "discoverBrowser",
-			})
-
-			// Verify postMessage was called with failure result
-			expect(mockPostMessage).toHaveBeenCalledWith(
-				expect.objectContaining({
-					type: "browserConnectionResult",
-					success: false,
-					text: expect.stringContaining("No Chrome instances found"),
 				}),
 			)
 		})
@@ -2055,7 +1951,7 @@ describe("Project MCP Settings", () => {
 			onDidChangeVisibility: jest.fn(),
 		} as unknown as vscode.WebviewView
 
-		provider = new ClineProvider(mockContext, mockOutputChannel)
+		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
 	})
 
 	test("handles openProjectMcpSettings message", async () => {
@@ -2099,7 +1995,7 @@ describe("Project MCP Settings", () => {
 		await messageHandler({ type: "openProjectMcpSettings" })
 
 		// Verify error message was shown
-		expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("no_workspace")
+		expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("errors.no_workspace")
 	})
 
 	test.skip("handles openProjectMcpSettings file creation error", async () => {
@@ -2130,7 +2026,6 @@ describe.skip("ContextProxy integration", () => {
 	let mockContext: vscode.ExtensionContext
 	let mockOutputChannel: vscode.OutputChannel
 	let mockContextProxy: any
-	let mockGlobalStateUpdate: jest.Mock
 
 	beforeEach(() => {
 		// Reset mocks
@@ -2150,12 +2045,8 @@ describe.skip("ContextProxy integration", () => {
 		} as unknown as vscode.ExtensionContext
 
 		mockOutputChannel = { appendLine: jest.fn() } as unknown as vscode.OutputChannel
-		provider = new ClineProvider(mockContext, mockOutputChannel)
-
-		// @ts-ignore - accessing private property for testing
-		mockContextProxy = provider.contextProxy
-
-		mockGlobalStateUpdate = mockContext.globalState.update as jest.Mock
+		mockContextProxy = new ContextProxy(mockContext)
+		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", mockContextProxy)
 	})
 
 	test("updateGlobalState uses contextProxy", async () => {
@@ -2213,7 +2104,7 @@ describe("getTelemetryProperties", () => {
 		} as unknown as vscode.ExtensionContext
 
 		mockOutputChannel = { appendLine: jest.fn() } as unknown as vscode.OutputChannel
-		provider = new ClineProvider(mockContext, mockOutputChannel)
+		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
 
 		// Setup Cline instance with mocked getModel method
 		const { Cline } = require("../../Cline")

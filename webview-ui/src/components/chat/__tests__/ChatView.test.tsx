@@ -1,8 +1,13 @@
+// npx jest src/components/chat/__tests__/ChatView.test.tsx
+
 import React from "react"
-import { render, waitFor } from "@testing-library/react"
-import ChatView from "../ChatView"
-import { ExtensionStateContextProvider } from "../../../context/ExtensionStateContext"
-import { vscode } from "../../../utils/vscode"
+import { render, waitFor, act } from "@testing-library/react"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+
+import { ExtensionStateContextProvider } from "@src/context/ExtensionStateContext"
+import { vscode } from "@src/utils/vscode"
+
+import ChatView, { ChatViewProps } from "../ChatView"
 
 // Define minimal types needed for testing
 interface ClineMessage {
@@ -25,7 +30,7 @@ interface ExtensionState {
 }
 
 // Mock vscode API
-jest.mock("../../../utils/vscode", () => ({
+jest.mock("@src/utils/vscode", () => ({
 	vscode: {
 		postMessage: jest.fn(),
 	},
@@ -60,29 +65,30 @@ interface ChatTextAreaProps {
 	shouldDisableImages?: boolean
 }
 
+const mockInputRef = React.createRef<HTMLInputElement>()
+const mockFocus = jest.fn()
+
 jest.mock("../ChatTextArea", () => {
 	const mockReact = require("react")
 	return {
 		__esModule: true,
 		default: mockReact.forwardRef(function MockChatTextArea(
 			props: ChatTextAreaProps,
-			ref: React.ForwardedRef<HTMLInputElement>,
+			ref: React.ForwardedRef<{ focus: () => void }>,
 		) {
+			// Use useImperativeHandle to expose the mock focus method
+			React.useImperativeHandle(ref, () => ({
+				focus: mockFocus,
+			}))
+
 			return (
 				<div data-testid="chat-textarea">
-					<input ref={ref} type="text" onChange={(e) => props.onSend(e.target.value)} />
+					<input ref={mockInputRef} type="text" onChange={(e) => props.onSend(e.target.value)} />
 				</div>
 			)
 		}),
 	}
 })
-
-jest.mock("../TaskHeader", () => ({
-	__esModule: true,
-	default: function MockTaskHeader({ task }: { task: ClineMessage }) {
-		return <div data-testid="task-header">{JSON.stringify(task)}</div>
-	},
-}))
 
 // Mock VSCode components
 jest.mock("@vscode/webview-ui-toolkit/react", () => ({
@@ -143,22 +149,29 @@ const mockPostMessage = (state: Partial<ExtensionState>) => {
 	)
 }
 
+const defaultProps: ChatViewProps = {
+	isHidden: false,
+	showAnnouncement: false,
+	hideAnnouncement: () => {},
+}
+
+const queryClient = new QueryClient()
+
+const renderChatView = (props: Partial<ChatViewProps> = {}) => {
+	return render(
+		<ExtensionStateContextProvider>
+			<QueryClientProvider client={queryClient}>
+				<ChatView {...defaultProps} {...props} />
+			</QueryClientProvider>
+		</ExtensionStateContextProvider>,
+	)
+}
+
 describe("ChatView - Auto Approval Tests", () => {
-	beforeEach(() => {
-		jest.clearAllMocks()
-	})
+	beforeEach(() => jest.clearAllMocks())
 
 	it("does not auto-approve any actions when autoApprovalEnabled is false", () => {
-		render(
-			<ExtensionStateContextProvider>
-				<ChatView
-					isHidden={false}
-					showAnnouncement={false}
-					hideAnnouncement={() => {}}
-					showHistoryView={() => {}}
-				/>
-			</ExtensionStateContextProvider>,
-		)
+		renderChatView()
 
 		// First hydrate state with initial task
 		mockPostMessage({
@@ -232,16 +245,7 @@ describe("ChatView - Auto Approval Tests", () => {
 	})
 
 	it("auto-approves browser actions when alwaysAllowBrowser is enabled", async () => {
-		render(
-			<ExtensionStateContextProvider>
-				<ChatView
-					isHidden={false}
-					showAnnouncement={false}
-					hideAnnouncement={() => {}}
-					showHistoryView={() => {}}
-				/>
-			</ExtensionStateContextProvider>,
-		)
+		renderChatView()
 
 		// First hydrate state with initial task
 		mockPostMessage({
@@ -288,16 +292,7 @@ describe("ChatView - Auto Approval Tests", () => {
 	})
 
 	it("auto-approves read-only tools when alwaysAllowReadOnly is enabled", async () => {
-		render(
-			<ExtensionStateContextProvider>
-				<ChatView
-					isHidden={false}
-					showAnnouncement={false}
-					hideAnnouncement={() => {}}
-					showHistoryView={() => {}}
-				/>
-			</ExtensionStateContextProvider>,
-		)
+		renderChatView()
 
 		// First hydrate state with initial task
 		mockPostMessage({
@@ -345,16 +340,7 @@ describe("ChatView - Auto Approval Tests", () => {
 
 	describe("Write Tool Auto-Approval Tests", () => {
 		it("auto-approves write tools when alwaysAllowWrite is enabled and message is a tool request", async () => {
-			render(
-				<ExtensionStateContextProvider>
-					<ChatView
-						isHidden={false}
-						showAnnouncement={false}
-						hideAnnouncement={() => {}}
-						showHistoryView={() => {}}
-					/>
-				</ExtensionStateContextProvider>,
-			)
+			renderChatView()
 
 			// First hydrate state with initial task
 			mockPostMessage({
@@ -403,16 +389,7 @@ describe("ChatView - Auto Approval Tests", () => {
 		})
 
 		it("does not auto-approve write operations when alwaysAllowWrite is enabled but message is not a tool request", () => {
-			render(
-				<ExtensionStateContextProvider>
-					<ChatView
-						isHidden={false}
-						showAnnouncement={false}
-						hideAnnouncement={() => {}}
-						showHistoryView={() => {}}
-					/>
-				</ExtensionStateContextProvider>,
-			)
+			renderChatView()
 
 			// First hydrate state with initial task
 			mockPostMessage({
@@ -458,16 +435,7 @@ describe("ChatView - Auto Approval Tests", () => {
 	})
 
 	it("auto-approves allowed commands when alwaysAllowExecute is enabled", async () => {
-		render(
-			<ExtensionStateContextProvider>
-				<ChatView
-					isHidden={false}
-					showAnnouncement={false}
-					hideAnnouncement={() => {}}
-					showHistoryView={() => {}}
-				/>
-			</ExtensionStateContextProvider>,
-		)
+		renderChatView()
 
 		// First hydrate state with initial task
 		mockPostMessage({
@@ -516,16 +484,7 @@ describe("ChatView - Auto Approval Tests", () => {
 	})
 
 	it("does not auto-approve disallowed commands even when alwaysAllowExecute is enabled", () => {
-		render(
-			<ExtensionStateContextProvider>
-				<ChatView
-					isHidden={false}
-					showAnnouncement={false}
-					hideAnnouncement={() => {}}
-					showHistoryView={() => {}}
-				/>
-			</ExtensionStateContextProvider>,
-		)
+		renderChatView()
 
 		// First hydrate state with initial task
 		mockPostMessage({
@@ -573,16 +532,7 @@ describe("ChatView - Auto Approval Tests", () => {
 
 	describe("Command Chaining Tests", () => {
 		it("auto-approves chained commands when all parts are allowed", async () => {
-			render(
-				<ExtensionStateContextProvider>
-					<ChatView
-						isHidden={false}
-						showAnnouncement={false}
-						hideAnnouncement={() => {}}
-						showHistoryView={() => {}}
-					/>
-				</ExtensionStateContextProvider>,
-			)
+			renderChatView()
 
 			// Test various allowed command chaining scenarios
 			const allowedChainedCommands = [
@@ -648,16 +598,7 @@ describe("ChatView - Auto Approval Tests", () => {
 		})
 
 		it("does not auto-approve chained commands when any part is disallowed", () => {
-			render(
-				<ExtensionStateContextProvider>
-					<ChatView
-						isHidden={false}
-						showAnnouncement={false}
-						hideAnnouncement={() => {}}
-						showHistoryView={() => {}}
-					/>
-				</ExtensionStateContextProvider>,
-			)
+			renderChatView()
 
 			// Test various command chaining scenarios with disallowed parts
 			const disallowedChainedCommands = [
@@ -720,16 +661,7 @@ describe("ChatView - Auto Approval Tests", () => {
 		})
 
 		it("handles complex PowerShell command chains correctly", async () => {
-			render(
-				<ExtensionStateContextProvider>
-					<ChatView
-						isHidden={false}
-						showAnnouncement={false}
-						hideAnnouncement={() => {}}
-						showHistoryView={() => {}}
-					/>
-				</ExtensionStateContextProvider>,
-			)
+			renderChatView()
 
 			// Test PowerShell specific command chains
 			const powershellCommands = {
@@ -841,21 +773,10 @@ describe("ChatView - Auto Approval Tests", () => {
 })
 
 describe("ChatView - Sound Playing Tests", () => {
-	beforeEach(() => {
-		jest.clearAllMocks()
-	})
+	beforeEach(() => jest.clearAllMocks())
 
 	it("does not play sound for auto-approved browser actions", async () => {
-		render(
-			<ExtensionStateContextProvider>
-				<ChatView
-					isHidden={false}
-					showAnnouncement={false}
-					hideAnnouncement={() => {}}
-					showHistoryView={() => {}}
-				/>
-			</ExtensionStateContextProvider>,
-		)
+		renderChatView()
 
 		// First hydrate state with initial task and streaming
 		mockPostMessage({
@@ -907,16 +828,7 @@ describe("ChatView - Sound Playing Tests", () => {
 	})
 
 	it("plays notification sound for non-auto-approved browser actions", async () => {
-		render(
-			<ExtensionStateContextProvider>
-				<ChatView
-					isHidden={false}
-					showAnnouncement={false}
-					hideAnnouncement={() => {}}
-					showHistoryView={() => {}}
-				/>
-			</ExtensionStateContextProvider>,
-		)
+		renderChatView()
 
 		// First hydrate state with initial task and streaming
 		mockPostMessage({
@@ -970,16 +882,7 @@ describe("ChatView - Sound Playing Tests", () => {
 	})
 
 	it("plays celebration sound for completion results", async () => {
-		render(
-			<ExtensionStateContextProvider>
-				<ChatView
-					isHidden={false}
-					showAnnouncement={false}
-					hideAnnouncement={() => {}}
-					showHistoryView={() => {}}
-				/>
-			</ExtensionStateContextProvider>,
-		)
+		renderChatView()
 
 		// First hydrate state with initial task and streaming
 		mockPostMessage({
@@ -1029,16 +932,7 @@ describe("ChatView - Sound Playing Tests", () => {
 	})
 
 	it("plays progress_loop sound for api failures", async () => {
-		render(
-			<ExtensionStateContextProvider>
-				<ChatView
-					isHidden={false}
-					showAnnouncement={false}
-					hideAnnouncement={() => {}}
-					showHistoryView={() => {}}
-				/>
-			</ExtensionStateContextProvider>,
-		)
+		renderChatView()
 
 		// First hydrate state with initial task and streaming
 		mockPostMessage({
@@ -1085,5 +979,95 @@ describe("ChatView - Sound Playing Tests", () => {
 				audioType: "progress_loop",
 			})
 		})
+	})
+})
+
+describe("ChatView - Focus Grabbing Tests", () => {
+	beforeEach(() => jest.clearAllMocks())
+
+	it("does not grab focus when follow-up question presented", async () => {
+		const sleep = async (timeout: number) => {
+			await act(async () => {
+				await new Promise((resolve) => setTimeout(resolve, timeout))
+			})
+		}
+
+		renderChatView()
+
+		// First hydrate state with initial task and streaming
+		mockPostMessage({
+			autoApprovalEnabled: true,
+			alwaysAllowBrowser: true,
+			clineMessages: [
+				{
+					type: "say",
+					say: "task",
+					ts: Date.now(),
+					text: "Initial task",
+				},
+				{
+					type: "say",
+					say: "api_req_started",
+					ts: Date.now(),
+					text: JSON.stringify({}),
+					partial: true,
+				},
+			],
+		})
+
+		// process messages
+		await sleep(0)
+		// wait for focus updates (can take 50msecs)
+		await sleep(100)
+
+		const FOCUS_CALLS_ON_INIT = 2
+		expect(mockFocus).toHaveBeenCalledTimes(FOCUS_CALLS_ON_INIT)
+
+		// Finish task, and send the followup ask message (streaming unfinished)
+		mockPostMessage({
+			autoApprovalEnabled: true,
+			alwaysAllowBrowser: true,
+			clineMessages: [
+				{
+					type: "say",
+					say: "task",
+					ts: Date.now(),
+					text: "Initial task",
+				},
+				{
+					type: "ask",
+					ask: "followup",
+					ts: Date.now(),
+					text: JSON.stringify({}),
+					partial: true,
+				},
+			],
+		})
+
+		// allow messages to be processed
+		await sleep(0)
+
+		// Finish the followup ask message (streaming finished)
+		mockPostMessage({
+			autoApprovalEnabled: true,
+			alwaysAllowBrowser: true,
+			clineMessages: [
+				{
+					type: "ask",
+					ask: "followup",
+					ts: Date.now(),
+					text: JSON.stringify({}),
+				},
+			],
+		})
+
+		// allow messages to be processed
+		await sleep(0)
+
+		// wait for focus updates (can take 50msecs)
+		await sleep(100)
+
+		// focus() should not have been called again
+		expect(mockFocus).toHaveBeenCalledTimes(FOCUS_CALLS_ON_INIT)
 	})
 })

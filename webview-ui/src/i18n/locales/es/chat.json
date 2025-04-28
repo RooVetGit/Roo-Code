@@ -1,5 +1,5 @@
 {
-	"greeting": "¿Qué puede hacer Roo por ti?",
+	"greeting": "Bienvenido a Roo Code",
 	"task": {
 		"title": "Tarea",
 		"seeMore": "Ver más",
@@ -7,11 +7,13 @@
 		"tokens": "Tokens:",
 		"cache": "Caché:",
 		"apiCost": "Costo de API:",
-		"contextWindow": "Ventana de contexto:",
+		"contextWindow": "Longitud del contexto:",
 		"closeAndStart": "Cerrar tarea e iniciar una nueva",
 		"export": "Exportar historial de tareas",
 		"delete": "Eliminar tarea (Shift + Clic para omitir confirmación)"
 	},
+	"unpin": "Desfijar",
+	"pin": "Fijar",
 	"retry": {
 		"title": "Reintentar",
 		"tooltip": "Intenta la operación de nuevo"
@@ -50,6 +52,10 @@
 		"title": "Continuar mientras se ejecuta",
 		"tooltip": "Continuar a pesar de las advertencias"
 	},
+	"killCommand": {
+		"title": "Terminar comando",
+		"tooltip": "Terminar el comando actual"
+	},
 	"resumeTask": {
 		"title": "Reanudar tarea",
 		"tooltip": "Reanudar la tarea actual"
@@ -63,9 +69,27 @@
 		"tooltip": "Cancelar la operación actual"
 	},
 	"scrollToBottom": "Desplazarse al final del chat",
-	"aboutMe": "Gracias a los últimos avances en capacidades de codificación agentiva, puedo manejar tareas complejas de desarrollo de software paso a paso. Con herramientas que me permiten crear y editar archivos, explorar proyectos complejos, usar el navegador y ejecutar comandos de terminal (después de tu aprobación), puedo ayudarte de maneras que van más allá de la finalización de código o el soporte técnico. Incluso puedo usar MCP para crear nuevas herramientas y ampliar mis propias capacidades.",
+	"about": "Genera, refactoriza y depura código con asistencia de IA.<br />Consulta nuestra <DocsLink>documentación</DocsLink> para obtener más información.",
+	"onboarding": "<strong>Tu lista de tareas en este espacio de trabajo está vacía.</strong> Comienza escribiendo una tarea abajo. ¿No estás seguro cómo empezar? Lee más sobre lo que Roo puede hacer por ti en <DocsLink>la documentación</DocsLink>.",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "Tareas Boomerang",
+			"description": "Divide las tareas en partes más pequeñas y manejables."
+		},
+		"stickyModels": {
+			"title": "Modos persistentes",
+			"description": "Cada modo recuerda tu último modelo utilizado"
+		},
+		"tools": {
+			"title": "Herramientas",
+			"description": "Permite que la IA resuelva problemas navegando por la web, ejecutando comandos y mucho más."
+		},
+		"customizableModes": {
+			"title": "Modos personalizables",
+			"description": "Personalidades especializadas con sus propios comportamientos y modelos asignados"
+		}
+	},
 	"selectMode": "Seleccionar modo de interacción",
-	"selectApiConfig": "Seleccionar configuración de API",
 	"enhancePrompt": "Mejorar el mensaje con contexto adicional",
 	"addImages": "Agregar imágenes al mensaje",
 	"sendMessage": "Enviar mensaje",
@@ -81,6 +105,9 @@
 	"edit": "Editar...",
 	"forNextMode": "para el siguiente modo",
 	"error": "Error",
+	"diffError": {
+		"title": "Edición fallida"
+	},
 	"troubleMessage": "Roo está teniendo problemas...",
 	"apiRequest": {
 		"title": "Solicitud API",
@@ -92,6 +119,7 @@
 	"checkpoint": {
 		"initial": "Punto de control inicial",
 		"regular": "Punto de control",
+		"initializingWarning": "Todavía inicializando el punto de control... Si esto tarda demasiado, puedes desactivar los puntos de control en la <settingsLink>configuración</settingsLink> y reiniciar tu tarea.",
 		"menu": {
 			"viewDiff": "Ver diferencias",
 			"restore": "Restaurar punto de control",
@@ -114,7 +142,12 @@
 		"didRead": "Roo leyó este archivo:",
 		"wantsToEdit": "Roo quiere editar este archivo:",
 		"wantsToEditOutsideWorkspace": "Roo quiere editar este archivo fuera del espacio de trabajo:",
-		"wantsToCreate": "Roo quiere crear un nuevo archivo:"
+		"wantsToCreate": "Roo quiere crear un nuevo archivo:",
+		"wantsToSearchReplace": "Roo quiere realizar búsqueda y reemplazo en este archivo:",
+		"didSearchReplace": "Roo realizó búsqueda y reemplazo en este archivo:",
+		"wantsToInsert": "Roo quiere insertar contenido en este archivo:",
+		"wantsToInsertWithLineNumber": "Roo quiere insertar contenido en este archivo en la línea {{lineNumber}}:",
+		"wantsToInsertAtEnd": "Roo quiere añadir contenido al final de este archivo:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo quiere ver los archivos de nivel superior en este directorio:",
@@ -141,7 +174,12 @@
 	},
 	"subtasks": {
 		"wantsToCreate": "Roo quiere crear una nueva subtarea en modo <code>{{mode}}</code>:",
-		"wantsToFinish": "Roo quiere finalizar esta subtarea"
+		"wantsToFinish": "Roo quiere finalizar esta subtarea",
+		"newTaskContent": "Instrucciones de la subtarea",
+		"completionContent": "Subtarea completada",
+		"resultContent": "Resultados de la subtarea",
+		"defaultResult": "Por favor, continúa con la siguiente tarea.",
+		"completionInstructions": "¡Subtarea completada! Puedes revisar los resultados y sugerir correcciones o próximos pasos. Si todo se ve bien, confirma para devolver el resultado a la tarea principal."
 	},
 	"questions": {
 		"hasQuestion": "Roo tiene una pregunta:"
@@ -149,7 +187,10 @@
 	"taskCompleted": "Tarea completada",
 	"shellIntegration": {
 		"unavailable": "Integración de shell no disponible",
-		"troubleshooting": "¿Sigues teniendo problemas?"
+		"troubleshooting": "¿Sigues teniendo problemas? Haz clic aquí para ver la documentación de integración de shell.",
+		"checkSettings": "Revisa los ajustes alternativos de terminal en la página de configuración",
+		"updateVSCode": "Actualiza VSCode",
+		"supportedShell": "Asegúrate de usar un shell compatible: zsh, bash, fish o PowerShell"
 	},
 	"powershell": {
 		"issues": "Parece que estás teniendo problemas con Windows PowerShell, por favor consulta esta"
@@ -157,63 +198,22 @@
 	"autoApprove": {
 		"title": "Auto-aprobar:",
 		"none": "Ninguno",
-		"description": "Auto-aprobar permite a Roo Code realizar acciones sin pedir permiso. Habilita solo para acciones en las que confíes plenamente.",
-		"actions": {
-			"readFiles": {
-				"label": "Leer archivos y directorios",
-				"shortName": "Leer",
-				"description": "Permite acceso para leer cualquier archivo en tu computadora."
-			},
-			"editFiles": {
-				"label": "Editar archivos",
-				"shortName": "Editar",
-				"description": "Permite la modificación de cualquier archivo en tu computadora."
-			},
-			"executeCommands": {
-				"label": "Ejecutar comandos aprobados",
-				"shortName": "Comandos",
-				"description": "Permite la ejecución de comandos de terminal aprobados. Puedes configurar esto en el panel de configuración."
-			},
-			"useBrowser": {
-				"label": "Usar el navegador",
-				"shortName": "Navegador",
-				"description": "Permite la capacidad de iniciar e interactuar con cualquier sitio web en un navegador sin interfaz."
-			},
-			"useMcp": {
-				"label": "Usar servidores MCP",
-				"shortName": "MCP",
-				"description": "Permite el uso de servidores MCP configurados que pueden modificar el sistema de archivos o interactuar con APIs."
-			},
-			"switchModes": {
-				"label": "Cambiar modos",
-				"shortName": "Modos",
-				"description": "Permite el cambio automático entre diferentes modos sin requerir aprobación."
-			},
-			"subtasks": {
-				"label": "Crear y completar subtareas",
-				"shortName": "Subtareas",
-				"description": "Permite la creación y finalización de subtareas sin requerir aprobación."
-			},
-			"retryRequests": {
-				"label": "Reintentar solicitudes fallidas",
-				"shortName": "Reintentos",
-				"description": "Reintenta automáticamente las solicitudes API fallidas cuando el proveedor devuelve una respuesta de error."
-			}
-		}
+		"description": "Auto-aprobar permite a Roo Code realizar acciones sin pedir permiso. Habilita solo para acciones en las que confíes plenamente. Configuración más detallada disponible en <settingsLink>Configuración</settingsLink>."
 	},
 	"reasoning": {
 		"thinking": "Pensando",
 		"seconds": "{{count}}s"
 	},
+	"followUpSuggest": {
+		"copyToInput": "Copiar a la entrada (o Shift + clic)"
+	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.10 publicado",
-		"description": "¡Roo Code 3.10 trae potentes mejoras de productividad!",
+		"title": "🎉 Roo Code 3.14 publicado",
+		"description": "Roo Code 3.14 trae nuevas funcionalidades y mejoras basadas en tus comentarios.",
 		"whatsNew": "Novedades",
-		"feature1": "Respuestas sugeridas a preguntas",
-		"feature2": "Mejor manejo de archivos grandes",
-		"feature3": "Búsquedas de archivos con @-mención reconstruidas",
-		"feature4": "",
-		"feature5": "",
+		"feature1": "<bold>Herramientas de edición mejoradas</bold>: Las herramientas <code>search_and_replace</code> y <code>insert_content</code> han sido mejoradas y ya no son experimentales",
+		"feature2": "<bold>Mejoras en apply_diff</bold>: Continuamos trabajando en mejorar la herramienta <code>apply_diff</code>",
+		"feature3": "<bold>Montones de otras mejoras</bold>: Numerosas correcciones y mejoras en toda la extensión",
 		"hideButton": "Ocultar anuncio",
 		"detailsDiscussLinks": "Obtén más detalles y participa en <discordLink>Discord</discordLink> y <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -238,5 +238,7 @@
 			"scrollUp": "Desplazar hacia arriba",
 			"close": "Cerrar navegador"
 		}
-	}
+	},
+	"systemPromptWarning": "ADVERTENCIA: Anulación de instrucciones del sistema personalizada activa. Esto puede romper gravemente la funcionalidad y causar un comportamiento impredecible.",
+	"selectApiConfig": "Seleccionar configuración de API"
 }
