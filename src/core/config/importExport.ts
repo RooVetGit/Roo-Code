@@ -9,6 +9,7 @@ import { globalSettingsSchema } from "../../schemas"
 import { ProviderSettingsManager, providerProfilesSchema } from "./ProviderSettingsManager"
 import { ContextProxy } from "./ContextProxy"
 import { CustomModesManager } from "./CustomModesManager"
+import { ProviderSettings } from "../../exports/types"
 
 type ImportOptions = {
 	providerSettingsManager: ProviderSettingsManager
@@ -38,6 +39,7 @@ export const importSettings = async ({ providerSettingsManager, contextProxy, cu
 
 	try {
 		const previousProviderProfiles = await providerSettingsManager.export()
+
 		const { providerProfiles: newProviderProfiles, globalSettings } = schema.parse(
 			JSON.parse(await fs.readFile(uris[0].fsPath, "utf-8")),
 		)
@@ -61,12 +63,12 @@ export const importSettings = async ({ providerSettingsManager, contextProxy, cu
 		await providerSettingsManager.import(newProviderProfiles)
 		await contextProxy.setValues(globalSettings)
 
-		// Roo uses providerSettingsManager to manage api configs, but Cline uses ContextProxy, and to due to some legacy
-		// code from it, we need to set the the provider setttings here as well.
-		// For the future we should remove the provider from the proxy and keep providerSettingsManager as source of truth for apiConfig.
-		const firstApiConfig = Object.values(providerProfiles.apiConfigs)[0]
-		if (firstApiConfig) {
-			contextProxy.setProviderSettings(firstApiConfig)
+		// For the future we should remove the provider from the proxy and keep
+		// providerSettingsManager as source of truth for apiConfig.
+		const providerSettings: ProviderSettings = Object.values(providerProfiles.apiConfigs)[0]
+
+		if (providerSettings) {
+			contextProxy.setProviderSettings(providerSettings)
 		}
 
 		contextProxy.setValue("currentApiConfigName", providerProfiles.currentApiConfigName)
