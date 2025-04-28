@@ -1,7 +1,8 @@
+// npx jest src/api/providers/__tests__/openai.test.ts
+
 import { OpenAiHandler } from "../openai"
 import { ApiHandlerOptions } from "../../../shared/api"
 import { Anthropic } from "@anthropic-ai/sdk"
-import { DEEP_SEEK_DEFAULT_TEMPERATURE } from "../constants"
 
 // Mock OpenAI client
 const mockCreate = jest.fn()
@@ -156,6 +157,39 @@ describe("OpenAiHandler", () => {
 			expect(textChunks).toHaveLength(1)
 			expect(textChunks[0].text).toBe("Test response")
 		})
+		it("should include reasoning_effort when reasoning effort is enabled", async () => {
+			const reasoningOptions: ApiHandlerOptions = {
+				...mockOptions,
+				enableReasoningEffort: true,
+				openAiCustomModelInfo: { contextWindow: 128_000, supportsPromptCache: false, reasoningEffort: "high" },
+			}
+			const reasoningHandler = new OpenAiHandler(reasoningOptions)
+			const stream = reasoningHandler.createMessage(systemPrompt, messages)
+			// Consume the stream to trigger the API call
+			for await (const _chunk of stream) {
+			}
+			// Assert the mockCreate was called with reasoning_effort
+			expect(mockCreate).toHaveBeenCalled()
+			const callArgs = mockCreate.mock.calls[0][0]
+			expect(callArgs.reasoning_effort).toBe("high")
+		})
+
+		it("should not include reasoning_effort when reasoning effort is disabled", async () => {
+			const noReasoningOptions: ApiHandlerOptions = {
+				...mockOptions,
+				enableReasoningEffort: false,
+				openAiCustomModelInfo: { contextWindow: 128_000, supportsPromptCache: false },
+			}
+			const noReasoningHandler = new OpenAiHandler(noReasoningOptions)
+			const stream = noReasoningHandler.createMessage(systemPrompt, messages)
+			// Consume the stream to trigger the API call
+			for await (const _chunk of stream) {
+			}
+			// Assert the mockCreate was called without reasoning_effort
+			expect(mockCreate).toHaveBeenCalled()
+			const callArgs = mockCreate.mock.calls[0][0]
+			expect(callArgs.reasoning_effort).toBeUndefined()
+		})
 	})
 
 	describe("error handling", () => {
@@ -177,7 +211,7 @@ describe("OpenAiHandler", () => {
 			const stream = handler.createMessage("system prompt", testMessages)
 
 			await expect(async () => {
-				for await (const chunk of stream) {
+				for await (const _chunk of stream) {
 					// Should not reach here
 				}
 			}).rejects.toThrow("API Error")
@@ -192,7 +226,7 @@ describe("OpenAiHandler", () => {
 			const stream = handler.createMessage("system prompt", testMessages)
 
 			await expect(async () => {
-				for await (const chunk of stream) {
+				for await (const _chunk of stream) {
 					// Should not reach here
 				}
 			}).rejects.toThrow("Rate limit exceeded")

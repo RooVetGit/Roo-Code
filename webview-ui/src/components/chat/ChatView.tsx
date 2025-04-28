@@ -3,7 +3,9 @@ import debounce from "debounce"
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
 import { useDeepCompareEffect, useEvent, useMount } from "react-use"
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
-import styled from "styled-components"
+import removeMd from "remove-markdown"
+import { Trans } from "react-i18next"
+
 import {
 	ClineAsk,
 	ClineMessage,
@@ -16,11 +18,19 @@ import { findLast } from "@roo/shared/array"
 import { combineApiRequests } from "@roo/shared/combineApiRequests"
 import { combineCommandSequences } from "@roo/shared/combineCommandSequences"
 import { getApiMetrics } from "@roo/shared/getApiMetrics"
+import { AudioType } from "@roo/shared/WebviewMessage"
+import { getAllModes } from "@roo/shared/modes"
+
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { vscode } from "@src/utils/vscode"
+import { useSelectedModel } from "@/components/ui/hooks/useSelectedModel"
+import { validateCommand } from "@src/utils/command-validation"
+import { useAppTranslation } from "@src/i18n/TranslationContext"
+
+import TelemetryBanner from "../common/TelemetryBanner"
 import HistoryPreview from "../history/HistoryPreview"
-import RooHero from "../welcome/RooHero"
-import { normalizeApiConfiguration } from "../settings/ApiOptions"
+import RooHero from "@src/components/welcome/RooHero"
+import RooTips from "@src/components/welcome/RooTips"
 import Announcement from "./Announcement"
 import BrowserSessionRow from "./BrowserSessionRow"
 import ChatRow from "./ChatRow"
@@ -28,18 +38,12 @@ import ChatTextArea from "./ChatTextArea"
 import TaskHeader from "./TaskHeader"
 import AutoApproveMenu from "./AutoApproveMenu"
 import SystemPromptWarning from "./SystemPromptWarning"
-import { AudioType } from "@roo/shared/WebviewMessage"
-import { validateCommand } from "@src/utils/command-validation"
-import { getAllModes } from "@roo/shared/modes"
-import TelemetryBanner from "../common/TelemetryBanner"
-import { useAppTranslation } from "@/i18n/TranslationContext"
-import removeMd from "remove-markdown"
-import { Trans } from "react-i18next"
-interface ChatViewProps {
+import { useTaskSearch } from "../history/useTaskSearch"
+
+export interface ChatViewProps {
 	isHidden: boolean
 	showAnnouncement: boolean
 	hideAnnouncement: () => void
-	showHistoryView: () => void
 }
 
 export interface ChatViewRef {
@@ -51,13 +55,12 @@ export const MAX_IMAGES_PER_MESSAGE = 20 // Anthropic limits to 20 images
 const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0
 
 const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewProps> = (
-	{ isHidden, showAnnouncement, hideAnnouncement, showHistoryView },
+	{ isHidden, showAnnouncement, hideAnnouncement },
 	ref,
 ) => {
 	const { t } = useAppTranslation()
 	const modeShortcutText = `${isMac ? "⌘" : "Ctrl"} + . ${t("chat:forNextMode")}`
 	const {
-		version,
 		clineMessages: messages,
 		taskHistory,
 		apiConfiguration,
@@ -79,12 +82,31 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		customModes,
 		telemetrySetting,
 		hasSystemPromptOverride,
+		historyPreviewCollapsed, // Added historyPreviewCollapsed
 	} = useExtensionState()
 
-	//const task = messages.length > 0 ? (messages[0].say === "task" ? messages[0] : undefined) : undefined) : undefined
-	const task = useMemo(() => messages.at(0), [messages]) // leaving this less safe version here since if the first message is not a task, then the extension is in a bad state and needs to be debugged (see Cline.abort)
+	const { tasks } = useTaskSearch()
+
+	// Initialize expanded state based on the persisted setting (default to expanded if undefined)
+	const [isExpanded, setIsExpanded] = useState(
+		historyPreviewCollapsed === undefined ? true : !historyPreviewCollapsed,
+	)
+
+	const toggleExpanded = useCallback(() => {
+		const newState = !isExpanded
+		setIsExpanded(newState)
+		// Send message to extension to persist the new collapsed state
+		vscode.postMessage({ type: "setHistoryPreviewCollapsed", bool: !newState })
+	}, [isExpanded])
+
+	// Leaving this less safe version here since if the first message is not a
+	// task, then the extension is in a bad state and needs to be debugged (see
+	// Cline.abort).
+	const task = useMemo(() => messages.at(0), [messages])
+
 	const modifiedMessages = useMemo(() => combineApiRequests(combineCommandSequences(messages.slice(1))), [messages])
-	// has to be after api_req_finished are all reduced into api_req_started messages
+
+	// Has to be after api_req_finished are all reduced into api_req_started messages.
 	const apiMetrics = useMemo(() => getApiMetrics(modifiedMessages), [modifiedMessages])
 
 	const [inputValue, setInputValue] = useState("")
@@ -169,6 +191,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 								case "editedExistingFile":
 								case "appliedDiff":
 								case "newFileCreated":
+								case "insertContent":
 									setPrimaryButtonText(t("chat:save.title"))
 									setSecondaryButtonText(t("chat:reject.title"))
 									break
@@ -207,7 +230,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							setClineAsk("command_output")
 							setEnableButtons(true)
 							setPrimaryButtonText(t("chat:proceedWhileRunning.title"))
-							setSecondaryButtonText(undefined)
+							setSecondaryButtonText(t("chat:killCommand.title"))
 							break
 						case "use_mcp_server":
 							setTextAreaDisabled(isPartial)
@@ -251,7 +274,13 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							break
 						case "api_req_started":
 							if (secondLastMessage?.ask === "command_output") {
-								// if the last ask is a command_output, and we receive an api_req_started, then that means the command has finished and we don't need input from the user anymore (in every other case, the user has to interact with input field or buttons to continue, which does the following automatically)
+								// If the last ask is a command_output, and we
+								// receive an api_req_started, then that means
+								// the command has finished and we don't need
+								// input from the user anymore (in every other
+								// case, the user has to interact with input
+								// field or buttons to continue, which does the
+								// following automatically).
 								setInputValue("")
 								setTextAreaDisabled(true)
 								setSelectedImages([])
@@ -260,7 +289,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							}
 							break
 						case "api_req_finished":
-						case "task":
 						case "error":
 						case "text":
 						case "browser_action":
@@ -269,7 +297,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						case "mcp_server_request_started":
 						case "mcp_server_response":
 						case "completion_result":
-						case "tool":
 							break
 					}
 					break
@@ -397,7 +424,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			switch (clineAsk) {
 				case "api_req_failed":
 				case "command":
-				case "command_output":
 				case "tool":
 				case "browser_action_launch":
 				case "use_mcp_server":
@@ -412,10 +438,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							images: images,
 						})
 					} else {
-						vscode.postMessage({
-							type: "askResponse",
-							askResponse: "yesButtonClicked",
-						})
+						vscode.postMessage({ type: "askResponse", askResponse: "yesButtonClicked" })
 					}
 					// Clear input state after sending
 					setInputValue("")
@@ -423,8 +446,11 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					break
 				case "completion_result":
 				case "resume_completed_task":
-					// extension waiting for feedback. but we can just present a new task button
+					// Waiting for feedback, but we can just present a new task button
 					startNewTask()
+					break
+				case "command_output":
+					vscode.postMessage({ type: "terminalOperation", terminalOperation: "continue" })
 					break
 			}
 			setTextAreaDisabled(true)
@@ -437,6 +463,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const handleSecondaryButtonClick = useCallback(
 		(text?: string, images?: string[]) => {
 			const trimmedInput = text?.trim()
+
 			if (isStreaming) {
 				vscode.postMessage({ type: "cancelTask" })
 				setDidClickCancel(true)
@@ -462,15 +489,15 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							images: images,
 						})
 					} else {
-						// responds to the API with a "This operation failed" and lets it try again
-						vscode.postMessage({
-							type: "askResponse",
-							askResponse: "noButtonClicked",
-						})
+						// Responds to the API with a "This operation failed" and lets it try again
+						vscode.postMessage({ type: "askResponse", askResponse: "noButtonClicked" })
 					}
 					// Clear input state after sending
 					setInputValue("")
 					setSelectedImages([])
+					break
+				case "command_output":
+					vscode.postMessage({ type: "terminalOperation", terminalOperation: "abort" })
 					break
 			}
 			setTextAreaDisabled(true)
@@ -484,16 +511,14 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		startNewTask()
 	}, [startNewTask])
 
-	const { selectedModelInfo } = useMemo(() => {
-		return normalizeApiConfiguration(apiConfiguration)
-	}, [apiConfiguration])
+	const { info: model } = useSelectedModel(apiConfiguration)
 
 	const selectImages = useCallback(() => {
 		vscode.postMessage({ type: "selectImages" })
 	}, [])
 
 	const shouldDisableImages =
-		!selectedModelInfo.supportsImages || textAreaDisabled || selectedImages.length >= MAX_IMAGES_PER_MESSAGE
+		!model?.supportsImages || textAreaDisabled || selectedImages.length >= MAX_IMAGES_PER_MESSAGE
 
 	const handleMessage = useCallback(
 		(e: MessageEvent) => {
@@ -590,8 +615,13 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				case "api_req_deleted": // aggregated api_req metrics from deleted messages
 					return false
 				case "api_req_retry_delayed":
-					// Only show the retry message if it's the last message
-					return message === modifiedMessages.at(-1)
+					// Only show the retry message if it's the last message or the last messages is api_req_retry_delayed+resume_task
+					const last1 = modifiedMessages.at(-1)
+					const last2 = modifiedMessages.at(-2)
+					if (last1?.ask === "resume_task" && last2 === message) {
+						return true
+					}
+					return message === last1
 				case "text":
 					// Sometimes cline returns an empty text message, we don't want to render these. (We also use a say text for user messages, so in case they just sent images we still render that)
 					if ((message.text ?? "") === "" && (message.images?.length ?? 0) === 0) {
@@ -629,7 +659,13 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				return true
 			}
 			const tool = JSON.parse(message.text)
-			return ["editedExistingFile", "appliedDiff", "newFileCreated"].includes(tool.tool)
+			return [
+				"editedExistingFile",
+				"appliedDiff",
+				"newFileCreated",
+				"searchAndReplace",
+				"insertContent",
+			].includes(tool.tool)
 		}
 		return false
 	}, [])
@@ -1182,24 +1218,15 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	}))
 
 	return (
-		<div
-			style={{
-				position: "fixed",
-				top: 0,
-				left: 0,
-				right: 0,
-				bottom: 0,
-				display: isHidden ? "none" : "flex",
-				flexDirection: "column",
-				overflow: "hidden",
-			}}>
+		<div className={isHidden ? "hidden" : "fixed top-0 left-0 right-0 bottom-0 flex flex-col overflow-hidden"}>
+			{showAnnouncement && <Announcement hideAnnouncement={hideAnnouncement} />}
 			{task ? (
 				<>
 					<TaskHeader
 						task={task}
 						tokensIn={apiMetrics.totalTokensIn}
 						tokensOut={apiMetrics.totalTokensOut}
-						doesModelSupportPromptCache={selectedModelInfo.supportsPromptCache}
+						doesModelSupportPromptCache={model?.supportsPromptCache ?? false}
 						cacheWrites={apiMetrics.totalCacheWrites}
 						cacheReads={apiMetrics.totalCacheReads}
 						totalCost={apiMetrics.totalCost}
@@ -1222,20 +1249,40 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					)}
 				</>
 			) : (
-				<div
-					style={{
-						flex: "1 1 0", // flex-grow: 1, flex-shrink: 1, flex-basis: 0
-						minHeight: 0,
-						overflowY: "auto",
-						display: "flex",
-						flexDirection: "column",
-						paddingBottom: "10px",
-					}}>
-					{telemetrySetting === "unset" && <TelemetryBanner />}
-					{showAnnouncement && <Announcement version={version} hideAnnouncement={hideAnnouncement} />}
-
-					<RooHero />
-					{taskHistory.length > 0 && <HistoryPreview showHistoryView={showHistoryView} />}
+				<div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4">
+					{/* Moved Task Bar Header Here */}
+					{tasks.length !== 0 && (
+						<div className="flex text-vscode-descriptionForeground w-full mx-auto px-5 pt-3">
+							<div className="flex items-center gap-1 cursor-pointer" onClick={toggleExpanded}>
+								{tasks.length < 10 && (
+									<span className={`font-medium text-xs `}>{t("history:recentTasks")}</span>
+								)}
+								<span
+									className={`codicon  ${isExpanded ? "codicon-eye" : "codicon-eye-closed"} scale-90`}
+								/>
+							</div>
+						</div>
+					)}
+					<div
+						className={` w-full flex flex-col gap-4 m-auto ${isExpanded && tasks.length > 0 ? "mt-0" : ""} p-10 pt-5`}>
+						<RooHero />
+						{telemetrySetting === "unset" && <TelemetryBanner />}
+						{/* Show the task history preview if expanded and tasks exist */}
+						{taskHistory.length > 0 && isExpanded && <HistoryPreview />}
+						<p className="ext-vscode-editor-foreground leading-tight font-vscode text-center">
+							<Trans
+								i18nKey="chat:about"
+								components={{
+									DocsLink: (
+										<a href="https://docs.roocode.com/" target="_blank" rel="noopener noreferrer">
+											the docs
+										</a>
+									),
+								}}
+							/>
+						</p>
+						<RooTips cycle={false} />
+					</div>
 				</div>
 			)}
 
@@ -1255,28 +1302,20 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			//    but becomes scrollable when the viewport is too small
 			*/}
 			{!task && (
-				<AutoApproveMenu
-					style={{
-						marginBottom: -2,
-						flex: "0 1 auto", // flex-grow: 0, flex-shrink: 1, flex-basis: auto
-						minHeight: 0,
-					}}
-				/>
+				<div className="mb-[-2px] flex-initial min-h-0">
+					<AutoApproveMenu />
+				</div>
 			)}
 
 			{task && (
 				<>
-					<div style={{ flexGrow: 1, display: "flex" }} ref={scrollContainerRef}>
+					<div className="grow flex" ref={scrollContainerRef}>
 						<Virtuoso
 							ref={virtuosoRef}
 							key={task.ts} // trick to make sure virtuoso re-renders when task changes, and we use initialTopMostItemIndex to start at the bottom
-							className="scrollable"
-							style={{
-								flexGrow: 1,
-								overflowY: "scroll", // always show scrollbar
-							}}
+							className="scrollable grow overflow-y-scroll"
 							components={{
-								Footer: () => <div style={{ height: 5 }} />, // Add empty padding at the bottom
+								Footer: () => <div className="h-[5px]" />, // Add empty padding at the bottom
 							}}
 							// increasing top by 3_000 to prevent jumping around when user collapses a row
 							increaseViewportBy={{ top: 3_000, bottom: Number.MAX_SAFE_INTEGER }} // hack to make sure the last message is always rendered to get truly perfect scroll to bottom animation when new messages are added (Number.MAX_SAFE_INTEGER is safe for arithmetic operations, which is all virtuoso uses this value for in src/sizeRangeSystem.ts)
@@ -1295,40 +1334,33 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					</div>
 					<AutoApproveMenu />
 					{showScrollToBottom ? (
-						<div
-							style={{
-								display: "flex",
-								padding: "10px 15px 0px 15px",
-							}}>
-							<ScrollToBottomButton
+						<div className="flex px-[15px] pt-[10px]">
+							<div
+								className="bg-[color-mix(in_srgb,_var(--vscode-toolbar-hoverBackground)_55%,_transparent)] rounded-[3px] overflow-hidden cursor-pointer flex justify-center items-center flex-1 h-[25px] hover:bg-[color-mix(in_srgb,_var(--vscode-toolbar-hoverBackground)_90%,_transparent)] active:bg-[color-mix(in_srgb,_var(--vscode-toolbar-hoverBackground)_70%,_transparent)]"
 								onClick={() => {
 									scrollToBottomSmooth()
 									disableAutoScrollRef.current = false
 								}}
 								title={t("chat:scrollToBottom")}>
-								<span className="codicon codicon-chevron-down" style={{ fontSize: "18px" }}></span>
-							</ScrollToBottomButton>
+								<span className="codicon codicon-chevron-down text-[18px]"></span>
+							</div>
 						</div>
 					) : (
 						<div
-							style={{
-								opacity:
-									primaryButtonText || secondaryButtonText || isStreaming
-										? enableButtons || (isStreaming && !didClickCancel)
-											? 1
-											: 0.5
-										: 0,
-								display: "flex",
-								padding: `${primaryButtonText || secondaryButtonText || isStreaming ? "10" : "0"}px 15px 0px 15px`,
-							}}>
+							className={`flex ${
+								primaryButtonText || secondaryButtonText || isStreaming ? "px-[15px] pt-[10px]" : "p-0"
+							} ${
+								primaryButtonText || secondaryButtonText || isStreaming
+									? enableButtons || (isStreaming && !didClickCancel)
+										? "opacity-100"
+										: "opacity-50"
+									: "opacity-0"
+							}`}>
 							{primaryButtonText && !isStreaming && (
 								<VSCodeButton
 									appearance="primary"
 									disabled={!enableButtons}
-									style={{
-										flex: secondaryButtonText ? 1 : 2,
-										marginRight: secondaryButtonText ? "6px" : "0",
-									}}
+									className={secondaryButtonText ? "flex-1 mr-[6px]" : "flex-[2] mr-0"}
 									title={
 										primaryButtonText === t("chat:retry.title")
 											? t("chat:retry.tooltip")
@@ -1349,7 +1381,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 																		? t("chat:proceedWhileRunning.tooltip")
 																		: undefined
 									}
-									onClick={(e) => handlePrimaryButtonClick(inputValue, selectedImages)}>
+									onClick={() => handlePrimaryButtonClick(inputValue, selectedImages)}>
 									{primaryButtonText}
 								</VSCodeButton>
 							)}
@@ -1357,10 +1389,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 								<VSCodeButton
 									appearance="secondary"
 									disabled={!enableButtons && !(isStreaming && !didClickCancel)}
-									style={{
-										flex: isStreaming ? 2 : 1,
-										marginLeft: isStreaming ? 0 : "6px",
-									}}
+									className={isStreaming ? "flex-[2] ml-0" : "flex-1 ml-[6px]"}
 									title={
 										isStreaming
 											? t("chat:cancel.tooltip")
@@ -1372,7 +1401,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 														? t("chat:terminate.tooltip")
 														: undefined
 									}
-									onClick={(e) => handleSecondaryButtonClick(inputValue, selectedImages)}>
+									onClick={() => handleSecondaryButtonClick(inputValue, selectedImages)}>
 									{isStreaming ? t("chat:cancel.title") : secondaryButtonText}
 								</VSCodeButton>
 							)}
@@ -1409,25 +1438,5 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 }
 
 const ChatView = forwardRef(ChatViewComponent)
-
-const ScrollToBottomButton = styled.div`
-	background-color: color-mix(in srgb, var(--vscode-toolbar-hoverBackground) 55%, transparent);
-	border-radius: 3px;
-	overflow: hidden;
-	cursor: pointer;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	flex: 1;
-	height: 25px;
-
-	&:hover {
-		background-color: color-mix(in srgb, var(--vscode-toolbar-hoverBackground) 90%, transparent);
-	}
-
-	&:active {
-		background-color: color-mix(in srgb, var(--vscode-toolbar-hoverBackground) 70%, transparent);
-	}
-`
 
 export default ChatView

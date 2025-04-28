@@ -1,6 +1,6 @@
 import { DiffStrategy } from "../../../shared/tools"
 
-function getEditingInstructions(diffStrategy?: DiffStrategy, experiments?: Record<string, boolean>): string {
+function getEditingInstructions(diffStrategy?: DiffStrategy): string {
 	const instructions: string[] = []
 	const availableTools: string[] = []
 
@@ -14,35 +14,22 @@ function getEditingInstructions(diffStrategy?: DiffStrategy, experiments?: Recor
 		availableTools.push("write_to_file (for creating new files or complete file rewrites)")
 	}
 
-	availableTools.push("append_to_file (for appending content to the end of files)")
-
-	if (experiments?.["insert_content"]) {
-		availableTools.push("insert_content (for adding lines to existing files)")
-	}
-	if (experiments?.["search_and_replace"]) {
-		availableTools.push("search_and_replace (for finding and replacing individual pieces of text)")
-	}
+	availableTools.push("insert_content (for adding lines to existing files)")
+	availableTools.push("search_and_replace (for finding and replacing individual pieces of text)")
 
 	// Base editing instruction mentioning all available tools
 	if (availableTools.length > 1) {
-		instructions.push(
-			`- For editing files, you have access to these tools: ${availableTools.join(", ")}.`,
-			"- The append_to_file tool adds content to the end of files, such as appending new log entries or adding new data records. This tool will always add the content at the end of the file.",
-		)
+		instructions.push(`- For editing files, you have access to these tools: ${availableTools.join(", ")}.`)
 	}
 
 	// Additional details for experimental features
-	if (experiments?.["insert_content"]) {
-		instructions.push(
-			"- The insert_content tool adds lines of text to files, such as adding a new function to a JavaScript file or inserting a new route in a Python file. This tool will insert it at the specified line location. It can support multiple operations at once.",
-		)
-	}
+	instructions.push(
+		"- The insert_content tool adds lines of text to files at a specific line number, such as adding a new function to a JavaScript file or inserting a new route in a Python file. Use line number 0 to append at the end of the file, or any positive number to insert before that line.",
+	)
 
-	if (experiments?.["search_and_replace"]) {
-		instructions.push(
-			"- The search_and_replace tool finds and replaces text or regex in files. This tool allows you to search for a specific regex pattern or text and replace it with another value. Be cautious when using this tool to ensure you are replacing the correct text. It can support multiple operations at once.",
-		)
-	}
+	instructions.push(
+		"- The search_and_replace tool finds and replaces text or regex in files. This tool allows you to search for a specific regex pattern or text and replace it with another value. Be cautious when using this tool to ensure you are replacing the correct text. It can support multiple operations at once.",
+	)
 
 	if (availableTools.length > 1) {
 		instructions.push(
@@ -57,12 +44,7 @@ function getEditingInstructions(diffStrategy?: DiffStrategy, experiments?: Recor
 	return instructions.join("\n")
 }
 
-export function getRulesSection(
-	cwd: string,
-	supportsComputerUse: boolean,
-	diffStrategy?: DiffStrategy,
-	experiments?: Record<string, boolean> | undefined,
-): string {
+export function getRulesSection(cwd: string, supportsComputerUse: boolean, diffStrategy?: DiffStrategy): string {
 	return `====
 
 RULES
@@ -74,7 +56,7 @@ RULES
 - Before using the execute_command tool, you must first think about the SYSTEM INFORMATION context provided to understand the user's environment and tailor your commands to ensure they are compatible with their system. You must also consider if the command you need to run should be executed in a specific directory outside of the current working directory '${cwd.toPosix()}', and if so prepend with \`cd\`'ing into that directory && then executing the command (as one command since you are stuck operating from '${cwd.toPosix()}'). For example, if you needed to run \`npm install\` in a project outside of '${cwd.toPosix()}', you would need to prepend with a \`cd\` i.e. pseudocode for this would be \`cd (path to project) && (command, in this case npm install)\`.
 - When using the search_files tool, craft your regex patterns carefully to balance specificity and flexibility. Based on the user's task you may use it to find code patterns, TODO comments, function definitions, or any text-based information across the project. The results include context, so analyze the surrounding code to better understand the matches. Leverage the search_files tool in combination with other tools for more comprehensive analysis. For example, use it to find specific code patterns, then use read_file to examine the full context of interesting matches before using ${diffStrategy ? "apply_diff or write_to_file" : "write_to_file"} to make informed changes.
 - When creating a new project (such as an app, website, or any software project), organize all new files within a dedicated project directory unless the user specifies otherwise. Use appropriate file paths when writing files, as the write_to_file tool will automatically create any necessary directories. Structure the project logically, adhering to best practices for the specific type of project being created. Unless otherwise specified, new projects should be easily run without additional setup, for example most projects can be built in HTML, CSS, and JavaScript - which you can open in a browser.
-${getEditingInstructions(diffStrategy, experiments)}
+${getEditingInstructions(diffStrategy)}
 - Some modes have restrictions on which files they can edit. If you attempt to edit a restricted file, the operation will be rejected with a FileRestrictionError that will specify which file patterns are allowed for the current mode.
 - Be sure to consider the type of project (e.g. Python, JavaScript, web application) when determining the appropriate structure and files to include. Also consider what files may be most relevant to accomplishing the task, for example looking at a project's manifest file would help you understand the project's dependencies, which you could incorporate into any code you write.
   * For example, in architect mode trying to edit app.js would be rejected because architect mode can only edit files matching "\\.md$"
