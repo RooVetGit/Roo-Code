@@ -1,11 +1,14 @@
 {
-
 	"extension": {
 		"name": "Roo Code",
 		"description": "Een heel team van AI-ontwikkelaars in je editor."
 	},
-
-"welcome": "Welkom, {{name}}! Je hebt {{count}} meldingen.",
+	"number_format": {
+		"thousand_suffix": "k",
+		"million_suffix": "m",
+		"billion_suffix": "b"
+	},
+	"welcome": "Welkom, {{name}}! Je hebt {{count}} meldingen.",
 	"items": {
 		"zero": "Geen items",
 		"one": "Eén item",

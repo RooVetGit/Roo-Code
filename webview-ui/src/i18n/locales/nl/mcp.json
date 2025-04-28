@@ -48,5 +48,6 @@
 	"serverStatus": {
 		"retrying": "Opnieuw proberen...",
 		"retryConnection": "Verbinding Opnieuw Proberen"
+
 	}
 }

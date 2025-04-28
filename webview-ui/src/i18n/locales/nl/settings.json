@@ -1,490 +1,122 @@
 {
-	"common": {
-		"save": "Save",
-		"done": "Done",
-		"cancel": "Cancel",
-		"reset": "Reset",
-		"select": "Select"
-	},
-	"header": {
-		"title": "Settings",
-		"saveButtonTooltip": "Save changes",
-		"nothingChangedTooltip": "Nothing changed",
-		"doneButtonTooltip": "Discard unsaved changes and close settings panel"
-	},
-	"unsavedChangesDialog": {
-		"title": "Unsaved Changes",
-		"description": "Do you want to discard changes and continue?",
-		"cancelButton": "Cancel",
-		"discardButton": "Discard changes"
-	},
-	"sections": {
-		"providers": "Providers",
-		"autoApprove": "Auto-Approve",
-		"browser": "Browser / Computer Use",
-		"checkpoints": "Checkpoints",
-		"notifications": "Notifications",
-		"contextManagement": "Context Management",
-		"terminal": "Terminal",
-		"advanced": "Advanced",
-		"experimental": "Experimental Features",
-		"language": "Language",
-		"about": "About Roo Code",
-		"interface": "Interface"
-	},
-	"autoApprove": {
-		"description": "Allow Roo to automatically perform operations without requiring approval. Enable these settings only if you fully trust the AI and understand the associated security risks.",
-		"readOnly": {
-			"label": "Read",
-			"description": "When enabled, Roo will automatically view directory contents and read files without requiring you to click the Approve button.",
-			"outsideWorkspace": {
-				"label": "Include files outside workspace",
-				"description": "Allow Roo to read files outside the current workspace without requiring approval."
-			}
-		},
-		"write": {
-			"label": "Write",
-			"description": "Automatically create and edit files without requiring approval",
-			"delayLabel": "Delay after writes to allow diagnostics to detect potential problems",
-			"outsideWorkspace": {
-				"label": "Include files outside workspace",
-				"description": "Allow Roo to create and edit files outside the current workspace without requiring approval."
-			}
-		},
-		"browser": {
-			"label": "Browser",
-			"description": "Automatically perform browser actions without requiring approval. Note: Only applies when the model supports computer use"
-		},
-		"retry": {
-			"label": "Retry",
-			"description": "Automatically retry failed API requests when server returns an error response",
-			"delayLabel": "Delay before retrying the request"
-		},
-		"mcp": {
-			"label": "MCP",
-			"description": "Enable auto-approval of individual MCP tools in the MCP Servers view (requires both this setting and the tool's individual \"Always allow\" checkbox)"
-		},
-		"modeSwitch": {
-			"label": "Mode",
-			"description": "Automatically switch between different modes without requiring approval"
-		},
-		"subtasks": {
-			"label": "Subtasks",
-			"description": "Allow creation and completion of subtasks without requiring approval"
-		},
-		"execute": {
-			"label": "Execute",
-			"description": "Automatically execute allowed terminal commands without requiring approval",
-			"allowedCommands": "Allowed Auto-Execute Commands",
-			"allowedCommandsDescription": "Command prefixes that can be auto-executed when \"Always approve execute operations\" is enabled. Add * to allow all commands (use with caution).",
-			"commandPlaceholder": "Enter command prefix (e.g., 'git ')",
-			"addButton": "Add"
-		}
-	},
-	"providers": {
-		"providerDocumentation": "{{provider}} documentation",
-		"configProfile": "Configuration Profile",
-		"description": "Save different API configurations to quickly switch between providers and settings.",
-		"apiProvider": "API Provider",
-		"model": "Model",
-		"nameEmpty": "Name cannot be empty",
-		"nameExists": "A profile with this name already exists",
-		"deleteProfile": "Delete Profile",
-		"invalidArnFormat": "Invalid ARN format. Please check the examples above.",
-		"enterNewName": "Enter new name",
-		"addProfile": "Add Profile",
-		"renameProfile": "Rename Profile",
-		"newProfile": "New Configuration Profile",
-		"enterProfileName": "Enter profile name",
-		"createProfile": "Create Profile",
-		"cannotDeleteOnlyProfile": "Cannot delete the only profile",
-		"searchPlaceholder": "Search profiles",
-		"noMatchFound": "No matching profiles found",
-		"vscodeLmDescription": " The VS Code Language Model API allows you to run models provided by other VS Code extensions (including but not limited to GitHub Copilot). The easiest way to get started is to install the Copilot and Copilot Chat extensions from the VS Code Marketplace.",
-		"awsCustomArnUse": "Enter a valid Amazon Bedrock ARN for the model you want to use. Format examples:",
-		"awsCustomArnDesc": "Make sure the region in the ARN matches your selected AWS Region above.",
-		"openRouterApiKey": "OpenRouter API Key",
-		"getOpenRouterApiKey": "Get OpenRouter API Key",
-		"apiKeyStorageNotice": "API keys are stored securely in VSCode's Secret Storage",
-		"glamaApiKey": "Glama API Key",
-		"getGlamaApiKey": "Get Glama API Key",
-		"useCustomBaseUrl": "Use custom base URL",
-		"useHostHeader": "Use custom Host header",
-		"useLegacyFormat": "Use legacy OpenAI API format",
-		"requestyApiKey": "Requesty API Key",
-		"getRequestyApiKey": "Get Requesty API Key",
-		"openRouterTransformsText": "Compress prompts and message chains to the context size (<a>OpenRouter Transforms</a>)",
-		"anthropicApiKey": "Anthropic API Key",
-		"getAnthropicApiKey": "Get Anthropic API Key",
-		"anthropicUseAuthToken": "Pass Anthropic API Key as Authorization header instead of X-Api-Key",
-		"deepSeekApiKey": "DeepSeek API Key",
-		"getDeepSeekApiKey": "Get DeepSeek API Key",
-		"geminiApiKey": "Gemini API Key",
-		"getGeminiApiKey": "Get Gemini API Key",
-		"openAiApiKey": "OpenAI API Key",
-		"openAiBaseUrl": "Base URL",
-		"getOpenAiApiKey": "Get OpenAI API Key",
-		"mistralApiKey": "Mistral API Key",
-		"getMistralApiKey": "Get Mistral / Codestral API Key",
-		"codestralBaseUrl": "Codestral Base URL (Optional)",
-		"codestralBaseUrlDesc": "Set an alternative URL for the Codestral model.",
-		"xaiApiKey": "xAI API Key",
-		"getXaiApiKey": "Get xAI API Key",
-		"awsCredentials": "AWS Credentials",
-		"awsProfile": "AWS Profile",
-		"awsProfileName": "AWS Profile Name",
-		"awsAccessKey": "AWS Access Key",
-		"awsSecretKey": "AWS Secret Key",
-		"awsSessionToken": "AWS Session Token",
-		"awsRegion": "AWS Region",
-		"awsCrossRegion": "Use cross-region inference",
-		"enablePromptCaching": "Enable prompt caching",
-		"enablePromptCachingTitle": "Enable prompt caching to improve performance and reduce costs for supported models.",
-		"cacheUsageNote": "Note: If you don't see cache usage, try selecting a different model and then selecting your desired model again.",
-		"vscodeLmModel": "Language Model",
-		"vscodeLmWarning": "Note: This is a very experimental integration and provider support will vary. If you get an error about a model not being supported, that's an issue on the provider's end.",
-		"googleCloudSetup": {
-			"title": "To use Google Cloud Vertex AI, you need to:",
-			"step1": "1. Create a Google Cloud account, enable the Vertex AI API & enable the desired Claude models.",
-			"step2": "2. Install the Google Cloud CLI & configure application default credentials.",
-			"step3": "3. Or create a service account with credentials."
-		},
-		"googleCloudCredentials": "Google Cloud Credentials",
-		"googleCloudKeyFile": "Google Cloud Key File Path",
-		"googleCloudProjectId": "Google Cloud Project ID",
-		"googleCloudRegion": "Google Cloud Region",
-		"lmStudio": {
-			"baseUrl": "Base URL (optional)",
-			"modelId": "Model ID",
-			"speculativeDecoding": "Enable Speculative Decoding",
-			"draftModelId": "Draft Model ID",
-			"draftModelDesc": "Draft model must be from the same model family for speculative decoding to work correctly.",
-			"selectDraftModel": "Select Draft Model",
-			"noModelsFound": "No draft models found. Please ensure LM Studio is running with Server Mode enabled.",
-			"description": "LM Studio allows you to run models locally on your computer. For instructions on how to get started, see their <a>quickstart guide</a>. You will also need to start LM Studio's <b>local server</b> feature to use it with this extension. <span>Note:</span> Roo Code uses complex prompts and works best with Claude models. Less capable models may not work as expected."
-		},
-		"ollama": {
-			"baseUrl": "Base URL (optional)",
-			"modelId": "Model ID",
-			"description": "Ollama allows you to run models locally on your computer. For instructions on how to get started, see their quickstart guide.",
-			"warning": "Note: Roo Code uses complex prompts and works best with Claude models. Less capable models may not work as expected."
-		},
-		"unboundApiKey": "Unbound API Key",
-		"getUnboundApiKey": "Get Unbound API Key",
-		"humanRelay": {
-			"description": "No API key is required, but the user needs to help copy and paste the information to the web chat AI.",
-			"instructions": "During use, a dialog box will pop up and the current message will be copied to the clipboard automatically. You need to paste these to web versions of AI (such as ChatGPT or Claude), then copy the AI's reply back to the dialog box and click the confirm button."
-		},
-		"openRouter": {
-			"providerRouting": {
-				"title": "OpenRouter Provider Routing",
-				"description": "OpenRouter routes requests to the best available providers for your model. By default, requests are load balanced across the top providers to maximize uptime. However, you can choose a specific provider to use for this model.",
-				"learnMore": "Learn more about provider routing"
-			}
-		},
-		"customModel": {
-			"capabilities": "Configure the capabilities and pricing for your custom OpenAI-compatible model. Be careful when specifying the model capabilities, as they can affect how Roo Code performs.",
-			"maxTokens": {
-				"label": "Max Output Tokens",
-				"description": "Maximum number of tokens the model can generate in a response. (Specify -1 to allow the server to set the max tokens.)"
-			},
-			"contextWindow": {
-				"label": "Context Window Size",
-				"description": "Total tokens (input + output) the model can process."
-			},
-			"imageSupport": {
-				"label": "Image Support",
-				"description": "Is this model capable of processing and understanding images?"
-			},
-			"computerUse": {
-				"label": "Computer Use",
-				"description": "Is this model capable of interacting with a browser? (e.g. Claude 3.7 Sonnet)."
-			},
-			"promptCache": {
-				"label": "Prompt Caching",
-				"description": "Is this model capable of caching prompts?"
-			},
-			"pricing": {
-				"input": {
-					"label": "Input Price",
-					"description": "Cost per million tokens in the input/prompt. This affects the cost of sending context and instructions to the model."
-				},
-				"output": {
-					"label": "Output Price",
-					"description": "Cost per million tokens in the model's response. This affects the cost of generated content and completions."
-				},
-				"cacheReads": {
-					"label": "Cache Reads Price",
-					"description": "Cost per million tokens for reading from the cache. This is the price charged when a cached response is retrieved."
-				},
-				"cacheWrites": {
-					"label": "Cache Writes Price",
-					"description": "Cost per million tokens for writing to the cache. This is the price charged when a prompt is cached for the first time."
-				}
-			},
-			"resetDefaults": "Reset to Defaults"
-		},
-		"rateLimitSeconds": {
-			"label": "Rate limit",
-			"description": "Minimum time between API requests."
-		},
-		"reasoningEffort": {
-			"label": "Model Reasoning Effort",
-			"high": "High",
-			"medium": "Medium",
-			"low": "Low"
-		}
-	},
-	"browser": {
-		"enable": {
-			"label": "Enable browser tool",
-			"description": "When enabled, Roo can use a browser to interact with websites when using models that support computer use."
-		},
-		"viewport": {
-			"label": "Viewport size",
-			"description": "Select the viewport size for browser interactions. This affects how websites are displayed and interacted with.",
-			"options": {
-				"largeDesktop": "Large Desktop (1280x800)",
-				"smallDesktop": "Small Desktop (900x600)",
-				"tablet": "Tablet (768x1024)",
-				"mobile": "Mobile (360x640)"
-			}
-		},
-		"screenshotQuality": {
-			"label": "Screenshot quality",
-			"description": "Adjust the WebP quality of browser screenshots. Higher values provide clearer screenshots but increase token usage."
-		},
-		"remote": {
-			"label": "Use remote browser connection",
-			"description": "Connect to a Chrome browser running with remote debugging enabled (--remote-debugging-port=9222).",
-			"urlPlaceholder": "Custom URL (e.g., http://localhost:9222)",
-			"testButton": "Test Connection",
-			"testingButton": "Testing...",
-			"instructions": "Enter the DevTools Protocol host address or leave empty to auto-discover Chrome local instances. The Test Connection button will try the custom URL if provided, or auto-discover if the field is empty."
-		}
-	},
-	"checkpoints": {
-		"enable": {
-			"label": "Enable automatic checkpoints",
-			"description": "When enabled, Roo will automatically create checkpoints during task execution, making it easy to review changes or revert to earlier states."
-		}
-	},
-	"notifications": {
-		"sound": {
-			"label": "Enable sound effects",
-			"description": "When enabled, Roo will play sound effects for notifications and events.",
-			"volumeLabel": "Volume"
-		},
-		"tts": {
-			"label": "Enable text-to-speech",
-			"description": "When enabled, Roo will read aloud its responses using text-to-speech.",
-			"speedLabel": "Speed"
-		}
-	},
-	"contextManagement": {
-		"description": "Control what information is included in the AI's context window, affecting token usage and response quality",
-		"openTabs": {
-			"label": "Open tabs context limit",
-			"description": "Maximum number of VSCode open tabs to include in context. Higher values provide more context but increase token usage."
-		},
-		"workspaceFiles": {
-			"label": "Workspace files context limit",
-			"description": "Maximum number of files to include in current working directory details. Higher values provide more context but increase token usage."
-		},
-		"rooignore": {
-			"label": "Show .rooignore'd files in lists and searches",
-			"description": "When enabled, files matching patterns in .rooignore will be shown in lists with a lock symbol. When disabled, these files will be completely hidden from file lists and searches."
-		},
-		"maxReadFile": {
-			"label": "File read auto-truncate threshold",
-			"description": "Roo reads this number of lines when the model omits start/end values. If this number is less than the file's total, Roo generates a line number index of code definitions. Special cases: -1 instructs Roo to read the entire file (without indexing), and 0 instructs it to read no lines and provides line indexes only for minimal context. Lower values minimize initial context usage, enabling precise subsequent line-range reads. Explicit start/end requests are not limited by this setting.",
-			"lines": "lines",
-			"always_full_read": "Always read entire file"
-		}
-	},
-	"terminal": {
-		"outputLineLimit": {
-			"label": "Terminal output limit",
-			"description": "Maximum number of lines to include in terminal output when executing commands. When exceeded lines will be removed from the middle, saving tokens."
-		},
-		"shellIntegrationTimeout": {
-			"label": "Terminal shell integration timeout",
-			"description": "Maximum time to wait for shell integration to initialize before executing commands. For users with long shell startup times, this value may need to be increased if you see \"Shell Integration Unavailable\" errors in the terminal."
-		},
-		"commandDelay": {
-			"label": "Terminal command delay",
-			"description": "Delay in milliseconds to add after command execution. The default setting of 0 disables the delay completely. This can help ensure command output is fully captured in terminals with timing issues. In most terminals it is implemented by setting `PROMPT_COMMAND='sleep N'` and Powershell appends `start-sleep` to the end of each command. Originally was workaround for VSCode bug#237208 and may not be needed."
-		},
-		"compressProgressBar": {
-			"label": "Compress progress bar output",
-			"description": "When enabled, processes terminal output with carriage returns (\\r) to simulate how a real terminal would display content. This removes intermediate progress bar states, retaining only the final state, which conserves context space for more relevant information."
-		},
-		"powershellCounter": {
-			"label": "Enable PowerShell counter workaround",
-			"description": "When enabled, adds a counter to PowerShell commands to ensure proper command execution. This helps with PowerShell terminals that might have issues with command output capture."
-		},
-		"zshClearEolMark": {
-			"label": "Clear ZSH EOL mark",
-			"description": "When enabled, clears the ZSH end-of-line mark by setting PROMPT_EOL_MARK=''. This prevents issues with command output interpretation when output ends with special characters like '%'."
-		},
-		"zshOhMy": {
-			"label": "Enable Oh My Zsh integration",
-			"description": "When enabled, sets ITERM_SHELL_INTEGRATION_INSTALLED=Yes to enable Oh My Zsh shell integration features. (experimental)"
-		},
-		"zshP10k": {
-			"label": "Enable Powerlevel10k integration",
-			"description": "When enabled, sets POWERLEVEL9K_TERM_SHELL_INTEGRATION=true to enable Powerlevel10k shell integration features. (experimental)"
-		},
-		"zdotdir": {
-			"label": "Enable ZDOTDIR handling",
-			"description": "When enabled, creates a temporary directory for ZDOTDIR to handle zsh shell integration properly. This ensures VSCode shell integration works correctly with zsh while preserving your zsh configuration. (experimental)"
-		}
-	},
-	"advanced": {
-		"diff": {
-			"label": "Enable editing through diffs",
-			"description": "When enabled, Roo will be able to edit files more quickly and will automatically reject truncated full-file writes. Works best with the latest Claude 3.7 Sonnet model.",
-			"strategy": {
-				"label": "Diff strategy",
-				"options": {
-					"standard": "Standard (Single block)",
-					"multiBlock": "Experimental: Multi-block diff",
-					"unified": "Experimental: Unified diff"
-				},
-				"descriptions": {
-					"standard": "Standard diff strategy applies changes to a single code block at a time.",
-					"unified": "Unified diff strategy takes multiple approaches to applying diffs and chooses the best approach.",
-					"multiBlock": "Multi-block diff strategy allows updating multiple code blocks in a file in one request."
-				}
-			},
-			"matchPrecision": {
-				"label": "Match precision",
-				"description": "This slider controls how precisely code sections must match when applying diffs. Lower values allow more flexible matching but increase the risk of incorrect replacements. Use values below 100% with extreme caution."
-			}
-		}
-	},
-	"experimental": {
-		"warning": "⚠️",
-		"DIFF_STRATEGY_UNIFIED": {
-			"name": "Use experimental unified diff strategy",
-			"description": "Enable the experimental unified diff strategy. This strategy might reduce the number of retries caused by model errors but may cause unexpected behavior or incorrect edits. Only enable if you understand the risks and are willing to carefully review all changes."
-		},
-		"SEARCH_AND_REPLACE": {
-			"name": "Use experimental search and replace tool",
-			"description": "Enable the experimental search and replace tool, allowing Roo to replace multiple instances of a search term in one request."
-		},
-		"INSERT_BLOCK": {
-			"name": "Use experimental insert content tool",
-			"description": "Enable the experimental insert content tool, allowing Roo to insert content at specific line numbers without needing to create a diff."
-		},
-		"POWER_STEERING": {
-			"name": "Use experimental \"power steering\" mode",
-			"description": "When enabled, Roo will remind the model about the details of its current mode definition more frequently. This will lead to stronger adherence to role definitions and custom instructions, but will use more tokens per message."
-		},
-		"MULTI_SEARCH_AND_REPLACE": {
-			"name": "Use experimental multi block diff tool",
-			"description": "When enabled, Roo will use multi block diff tool. This will try to update multiple code blocks in the file in one request."
-		}
-	},
-	"promptCaching": {
-		"label": "Enable prompt caching",
-		"description": "When enabled, Roo will use this model with prompt caching turned on in order to reduce costs."
-	},
-	"temperature": {
-		"useCustom": "Use custom temperature",
-		"description": "Controls randomness in the model's responses.",
-		"rangeDescription": "Higher values make output more random, lower values make it more deterministic."
-	},
-	"modelInfo": {
-		"supportsImages": "Supports images",
-		"noImages": "Does not support images",
-		"supportsComputerUse": "Supports computer use",
-		"noComputerUse": "Does not support computer use",
-		"supportsPromptCache": "Supports prompt caching",
-		"noPromptCache": "Does not support prompt caching",
-		"maxOutput": "Max output",
-		"inputPrice": "Input price",
-		"outputPrice": "Output price",
-		"cacheReadsPrice": "Cache reads price",
-		"cacheWritesPrice": "Cache writes price",
-		"enableStreaming": "Enable streaming",
-		"enableR1Format": "Enable R1 model parameters",
-		"enableR1FormatTips": "Must be enabled when using R1 models such as QWQ to prevent 400 errors",
-		"useAzure": "Use Azure",
-		"azureApiVersion": "Set Azure API version",
-		"gemini": {
-			"freeRequests": "* Free up to {{count}} requests per minute. After that, billing depends on prompt size.",
-			"pricingDetails": "For more info, see pricing details.",
-			"billingEstimate": "* Billing is an estimate - exact cost depends on prompt size."
-		}
-	},
-	"modelPicker": {
-		"automaticFetch": "The extension automatically fetches the latest list of models available on <serviceLink>{{serviceName}}</serviceLink>. If you're unsure which model to choose, Roo Code works best with <defaultModelLink>{{defaultModelId}}</defaultModelLink>. You can also try searching \"free\" for no-cost options currently available.",
-		"label": "Model",
-		"searchPlaceholder": "Search",
-		"noMatchFound": "No match found",
-		"useCustomModel": "Use custom: {{modelId}}"
-	},
-	"footer": {
-		"feedback": "If you have any questions or feedback, feel free to open an issue at <githubLink>github.com/RooVetGit/Roo-Code</githubLink> or join <redditLink>reddit.com/r/RooCode</redditLink> or <discordLink>discord.gg/roocode</discordLink>",
-		"telemetry": {
-			"label": "Allow anonymous error and usage reporting",
-			"description": "Help improve Roo Code by sending anonymous usage data and error reports. No code, prompts, or personal information is ever sent. See our privacy policy for more details."
-		},
-		"settings": {
-			"import": "Import",
-			"export": "Export",
-			"reset": "Reset"
-		}
-	},
-	"thinkingBudget": {
-		"maxTokens": "Max Tokens",
-		"maxThinkingTokens": "Max Thinking Tokens"
-	},
-	"validation": {
-		"apiKey": "You must provide a valid API key.",
-		"awsRegion": "You must choose a region to use with Amazon Bedrock.",
-		"googleCloud": "You must provide a valid Google Cloud Project ID and Region.",
-		"modelId": "You must provide a valid model ID.",
-		"modelSelector": "You must provide a valid model selector.",
-		"openAi": "You must provide a valid base URL, API key, and model ID.",
-		"arn": {
-			"invalidFormat": "Invalid ARN format. Please check the format requirements.",
-			"regionMismatch": "Warning: The region in your ARN ({{arnRegion}}) does not match your selected region ({{region}}). This may cause access issues. The provider will use the region from the ARN."
-		},
-		"modelAvailability": "The model ID ({{modelId}}) you provided is not available. Please choose a different model."
-	},
-	"placeholders": {
-		"apiKey": "Enter API Key...",
-		"profileName": "Enter profile name",
-		"accessKey": "Enter Access Key...",
-		"secretKey": "Enter Secret Key...",
-		"sessionToken": "Enter Session Token...",
-		"credentialsJson": "Enter Credentials JSON...",
-		"keyFilePath": "Enter Key File Path...",
-		"projectId": "Enter Project ID...",
-		"customArn": "Enter ARN (e.g. arn:aws:bedrock:us-east-1:123456789012:foundation-model/my-model)",
-		"baseUrl": "Enter base URL...",
-		"modelId": {
-			"lmStudio": "e.g. meta-llama-3.1-8b-instruct",
-			"lmStudioDraft": "e.g. lmstudio-community/llama-3.2-1b-instruct",
-			"ollama": "e.g. llama3.1"
-		},
-		"numbers": {
-			"maxTokens": "e.g. 4096",
-			"contextWindow": "e.g. 128000",
-			"inputPrice": "e.g. 0.0001",
-			"outputPrice": "e.g. 0.0002",
-			"cacheWritePrice": "e.g. 0.00005"
-		}
-	},
-	"defaults": {
-		"ollamaUrl": "Default: http://localhost:11434",
-		"lmStudioUrl": "Default: http://localhost:1234",
-		"geminiUrl": "Default: https://generativelanguage.googleapis.com"
-	},
-	"labels": {
-		"customArn": "Custom ARN",
-		"useCustomArn": "Use custom ARN..."
+	"settings": {
+		"general": "Algemeen",
+		"language": "Taal",
+		"theme": "Thema",
+		"notifications": "Meldingen",
+		"privacy": "Privacy",
+		"security": "Beveiliging",
+		"account": "Account",
+		"appearance": "Uiterlijk",
+		"accessibility": "Toegankelijkheid",
+		"about": "Over",
+		"help": "Help",
+		"feedback": "Feedback",
+		"update": "Bijwerken",
+		"version": "Versie",
+		"terms_of_service": "Servicevoorwaarden",
+		"privacy_policy": "Privacybeleid",
+		"contact_us": "Contacteer ons",
+		"logout": "Uitloggen",
+		"login": "Inloggen",
+		"register": "Registreren",
+		"username": "Gebruikersnaam",
+		"password": "Wachtwoord",
+		"confirm_password": "Bevestig wachtwoord",
+		"email": "E-mail",
+		"phone": "Telefoon",
+		"address": "Adres",
+		"city": "Stad",
+		"state": "Staat",
+		"zip_code": "Postcode",
+		"country": "Land",
+		"dark_mode": "Donkere modus",
+		"light_mode": "Lichte modus",
+		"system_default": "Systeemstandaard",
+		"enable_notifications": "Meldingen inschakelen",
+		"disable_notifications": "Meldingen uitschakelen",
+		"enable_privacy_mode": "Privacy modus inschakelen",
+		"disable_privacy_mode": "Privacy modus uitschakelen",
+		"enable_security_features": "Beveiligingsfuncties inschakelen",
+		"disable_security_features": "Beveiligingsfuncties uitschakelen",
+		"save_changes": "Wijzigingen opslaan",
+		"cancel_changes": "Wijzigingen annuleren",
+		"reset_settings": "Instellingen resetten",
+		"delete_account": "Account verwijderen",
+		"delete_account_confirmation": "Weet je zeker dat je je account wilt verwijderen?",
+		"yes": "Ja",
+		"no": "Nee",
+		"settings_updated": "Instellingen bijgewerkt",
+		"settings_reset": "Instellingen gereset",
+		"account_deleted": "Account verwijderd",
+		"account_created": "Account aangemaakt",
+		"account_updated": "Account bijgewerkt",
+		"password_updated": "Wachtwoord bijgewerkt",
+		"email_updated": "E-mail bijgewerkt",
+		"phone_updated": "Telefoon bijgewerkt",
+		"address_updated": "Adres bijgewerkt",
+		"city_updated": "Stad bijgewerkt",
+		"state_updated": "Staat bijgewerkt",
+		"zip_code_updated": "Postcode bijgewerkt",
+		"country_updated": "Land bijgewerkt",
+		"language_updated": "Taal bijgewerkt",
+		"theme_updated": "Thema bijgewerkt",
+		"dark_mode_enabled": "Donkere modus ingeschakeld",
+		"light_mode_enabled": "Lichte modus ingeschakeld",
+		"notifications_enabled": "Meldingen ingeschakeld",
+		"notifications_disabled": "Meldingen uitgeschakeld",
+		"privacy_mode_enabled": "Privacy modus ingeschakeld",
+		"privacy_mode_disabled": "Privacy modus uitgeschakeld",
+		"security_features_enabled": "Beveiligingsfuncties ingeschakeld",
+		"security_features_disabled": "Beveiligingsfuncties uitgeschakeld",
+		"changes_saved": "Wijzigingen opgeslagen",
+		"changes_cancelled": "Wijzigingen geannuleerd",
+		"settings_help": "Hulp bij instellingen",
+		"settings_about": "Over instellingen",
+		"settings_feedback": "Feedback over instellingen",
+		"settings_report_issue": "Probleem melden met instellingen",
+		"settings_block_user": "Gebruiker blokkeren voor instellingen",
+		"settings_unblock_user": "Gebruiker deblokkeren voor instellingen",
+		"settings_mute_user": "Gebruiker dempen voor instellingen",
+		"settings_unmute_user": "Dempen van gebruiker opheffen voor instellingen",
+		"settings_delete_message_confirmation": "Weet je zeker dat je dit instellingenbericht wilt verwijderen?",
+		"settings_message_deleted": "Instellingenbericht verwijderd",
+		"settings_message_sent": "Instellingenbericht verzonden",
+		"settings_message_edited": "Instellingenbericht bewerkt",
+		"settings_message_forwarded": "Instellingenbericht doorgestuurd",
+		"settings_message_copied": "Instellingenbericht gekopieerd",
+		"settings_message_pasted": "Instellingenbericht geplakt",
+		"settings_message_selected": "Instellingenbericht geselecteerd",
+		"settings_message_cleared": "Instellingenbericht gewist",
+		"settings_message_searched": "Instellingenbericht gezocht",
+		"settings_message_settings_updated": "Instellingen voor instellingenbericht bijgewerkt",
+		"settings_message_help_requested": "Hulp gevraagd bij instellingenbericht",
+		"settings_message_about_viewed": "Over instellingenbericht bekeken",
+		"settings_message_logged_out": "Uitgelogd van instellingenbericht",
+		"settings_message_logged_in": "Ingelogd voor instellingenbericht",
+		"settings_message_registered": "Geregistreerd voor instellingenbericht",
+		"settings_message_username_updated": "Gebruikersnaam voor instellingenbericht bijgewerkt",
+		"settings_message_password_updated": "Wachtwoord voor instellingenbericht bijgewerkt",
+		"settings_message_email_updated": "E-mail voor instellingenbericht bijgewerkt",
+		"settings_message_phone_updated": "Telefoon voor instellingenbericht bijgewerkt",
+		"settings_message_address_updated": "Adres voor instellingenbericht bijgewerkt",
+		"settings_message_city_updated": "Stad voor instellingenbericht bijgewerkt",
+		"settings_message_state_updated": "Staat voor instellingenbericht bijgewerkt",
+		"settings_message_zip_code_updated": "Postcode voor instellingenbericht bijgewerkt",
+		"settings_message_country_updated": "Land voor instellingenbericht bijgewerkt",
+		"settings_message_language_updated": "Taal voor instellingenbericht bijgewerkt",
+		"settings_message_theme_updated": "Thema voor instellingenbericht bijgewerkt",
+		"settings_message_dark_mode_enabled": "Donkere modus voor instellingenbericht ingeschakeld",
+		"settings_message_light_mode_enabled": "Lichte modus voor instellingenbericht ingeschakeld",
+		"settings_message_notifications_updated": "Meldingen voor instellingenbericht bijgewerkt",
+		"settings_message_privacy_policy_viewed": "Privacybeleid voor instellingenbericht bekeken",
+		"settings_message_terms_of_service_viewed": "Servicevoorwaarden voor instellingenbericht bekeken",
+		"settings_message_feedback_submitted": "Feedback over instellingenbericht ingediend",
+		"settings_message_issue_reported": "Probleem met instellingenbericht gemeld",
+		"settings_message_user_blocked": "Gebruiker geblokkeerd voor instellingenbericht",
+		"settings_message_user_unblocked": "Gebruiker gedeblokkeerd voor instellingenbericht",
+		"settings_message_user_muted": "Gebruiker gedempt voor instellingenbericht",
+		"settings_message_user_unmuted": "Dempen van gebruiker opgeheven voor instellingenbericht"
+
 	}
 }

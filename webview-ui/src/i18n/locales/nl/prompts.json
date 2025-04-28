@@ -131,7 +131,7 @@
 		},
 		"tools": {
 			"label": "Beschikbare Tools",
-			"description": "Selecteer welke tools deze modus kan gebruiken."
+			"desciption": "Selecteer welke tools deze modus kan gebruiken."
 		},
 		"customInstructions": {
 			"label": "Aangepaste Instructies (optioneel)",
@@ -144,4 +144,5 @@
 		"deleteMode": "Modus verwijderen"
 	},
 	"allFiles": "alle bestanden"
+	}
 }

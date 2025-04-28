@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState } from "react"
+/// <reference types="react" />
+import React, { useCallback, useMemo, useState, useEffect } from "react"
 import { Trans } from "react-i18next"
 import { VSCodeCheckbox, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 
@@ -11,7 +12,7 @@ interface AutoApproveMenuProps {
 	style?: React.CSSProperties
 }
 
-const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
+const AutoApproveMenu: React.FC<AutoApproveMenuProps> = ({ style = {} }: AutoApproveMenuProps) => {
 	const [isExpanded, setIsExpanded] = useState(false)
 
 	const {
@@ -80,18 +81,18 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		],
 	)
 
-	const toggleExpanded = useCallback(() => setIsExpanded((prev) => !prev), [])
+	const toggleExpanded = useCallback(() => setIsExpanded((prev: boolean) => !prev), [])
 
 	const toggles = useMemo(
 		() => ({
-			alwaysAllowReadOnly: alwaysAllowReadOnly,
-			alwaysAllowWrite: alwaysAllowWrite,
-			alwaysAllowExecute: alwaysAllowExecute,
-			alwaysAllowBrowser: alwaysAllowBrowser,
-			alwaysAllowMcp: alwaysAllowMcp,
-			alwaysAllowModeSwitch: alwaysAllowModeSwitch,
-			alwaysAllowSubtasks: alwaysAllowSubtasks,
-			alwaysApproveResubmit: alwaysApproveResubmit,
+			alwaysAllowReadOnly,
+			alwaysAllowWrite,
+			alwaysAllowExecute,
+			alwaysAllowBrowser,
+			alwaysAllowMcp,
+			alwaysAllowModeSwitch,
+			alwaysAllowSubtasks,
+			alwaysApproveResubmit,
 		}),
 		[
 			alwaysAllowReadOnly,
@@ -105,16 +106,28 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		],
 	)
 
-	const enabledActionsList = Object.entries(toggles)
-		.filter(([_key, value]) => !!value)
-		.map(([key]) => t(autoApproveSettingsConfig[key as AutoApproveSetting].labelKey))
-		.join(", ")
+	const enabledActions = Object.values(toggles).filter(Boolean)
+	const hasEnabledActions = enabledActions.length > 0
+	const enabledActionsList = hasEnabledActions
+		? Object.entries(toggles)
+			.filter(([_key, value]) => !!value)
+			.map(([key]) => t(autoApproveSettingsConfig[key as AutoApproveSetting].labelKey))
+			.join(", ")
+		: t("chat:autoApprove.none")
 
 	const handleOpenSettings = useCallback(
 		() =>
 			window.postMessage({ type: "action", action: "settingsButtonClicked", values: { section: "autoApprove" } }),
 		[],
 	)
+
+	// Auto-uncheck if no actions are enabled
+	useEffect(() => {
+		if (autoApprovalEnabled && !hasEnabledActions) {
+			setAutoApprovalEnabled(false)
+			vscode.postMessage({ type: "autoApprovalEnabled", bool: false })
+		}
+	}, [autoApprovalEnabled, hasEnabledActions, setAutoApprovalEnabled])
 
 	return (
 		<div
@@ -136,14 +149,20 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 					cursor: "pointer",
 				}}
 				onClick={toggleExpanded}>
-				<div onClick={(e) => e.stopPropagation()}>
+				<div onClick={(e: React.MouseEvent) => e.stopPropagation()}>
 					<VSCodeCheckbox
 						checked={autoApprovalEnabled ?? false}
 						onChange={() => {
-							const newValue = !(autoApprovalEnabled ?? false)
-							setAutoApprovalEnabled(newValue)
-							vscode.postMessage({ type: "autoApprovalEnabled", bool: newValue })
+							if (!isExpanded) {
+								const newValue = !(autoApprovalEnabled ?? false)
+								if (newValue && !hasEnabledActions) {
+									return // Prevent checking if no actions enabled
+								}
+								setAutoApprovalEnabled(newValue)
+								vscode.postMessage({ type: "autoApprovalEnabled", bool: newValue })
+							}
 						}}
+						disabled={isExpanded || (!autoApprovalEnabled && !hasEnabledActions)}
 					/>
 				</div>
 				<div
@@ -170,7 +189,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 							flex: 1,
 							minWidth: 0,
 						}}>
-						{enabledActionsList || t("chat:autoApprove.none")}
+						{enabledActionsList}
 					</span>
 					<span
 						className={`codicon codicon-chevron-${isExpanded ? "down" : "right"}`}
