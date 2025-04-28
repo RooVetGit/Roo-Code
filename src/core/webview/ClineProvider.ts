@@ -9,7 +9,7 @@ import axios from "axios"
 import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 
-import { GlobalState, ProviderSettings, RooCodeSettings } from "../../schemas"
+import { GlobalState, ProviderSettings, RooCodeSettings, CommandRiskLevel } from "../../schemas"
 import { t } from "../../i18n"
 import { setPanel } from "../../activate/registerCommands"
 import {
@@ -1270,6 +1270,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			terminalZshP10k: terminalZshP10k ?? false,
 			terminalZdotdir: terminalZdotdir ?? false,
 			fuzzyMatchThreshold: fuzzyMatchThreshold ?? 1.0,
+			commandRiskLevel: (this.contextProxy.getGlobalState("commandRiskLevel") ?? "none") as CommandRiskLevel,
 			mcpEnabled: mcpEnabled ?? true,
 			enableMcpServerCreation: enableMcpServerCreation ?? true,
 			alwaysApproveResubmit: alwaysApproveResubmit ?? false,
@@ -1389,6 +1390,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 			maxReadFileLine: stateValues.maxReadFileLine ?? 500,
 			historyPreviewCollapsed: stateValues.historyPreviewCollapsed ?? false,
+			commandRiskLevel: stateValues.commandRiskLevel ?? "none",
 		}
 	}
 

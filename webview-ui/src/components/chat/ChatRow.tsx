@@ -1061,6 +1061,32 @@ export const ChatRowContent = ({
 						}
 					}
 
+					// Get risk level and determine color/icon based on it
+					const risk = message.metadata?.risk || ""
+					const riskAnalysis = message.metadata?.risk_analysis || ""
+					const riskStyles = {
+						readOnly: {
+							color: "var(--vscode-testing-iconPassed)",
+							icon: "pass",
+						},
+						reversibleChanges: {
+							color: "var(--vscode-notificationsInfoIcon-foreground)",
+							icon: "sync",
+						},
+						complexChanges: {
+							color: "var(--vscode-editorWarning-foreground)",
+							icon: "warning",
+						},
+						serviceInterruptingChanges: {
+							color: "var(--vscode-editorError-foreground)",
+							icon: "bell",
+						},
+						destructiveChanges: {
+							color: "var(--vscode-problemsErrorIcon-foreground)",
+							icon: "error",
+						},
+					}
+					const riskStyle = risk ? riskStyles[risk as keyof typeof riskStyles] : null
 					const { command, output } = splitMessage(message.text || "")
 					return (
 						<>
@@ -1080,6 +1106,38 @@ export const ChatRowContent = ({
 									backgroundColor: CODE_BLOCK_BG_COLOR,
 								}}>
 								<CodeBlock source={`${"```"}shell\n${command}\n${"```"}`} forceWrap={true} />
+								{(riskAnalysis || risk) && (
+									<div
+										style={{
+											padding: "4px 8px",
+											fontSize: "0.85em",
+											backgroundColor: "var(--vscode-editor-background)",
+											borderTop: "1px solid var(--vscode-editorGroup-border)",
+										}}>
+										<span
+											style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
+											title={t(`settings:autoApprove.commandRiskLevel.${risk}Desc`)}>
+											{risk && (
+												<i
+													className={`codicon codicon-${riskStyle?.icon || "warning"}`}
+													style={{ color: riskStyle?.color }}
+												/>
+											)}
+											<span>
+												{risk && (
+													<span
+														style={{
+															color: riskStyle?.color,
+															cursor: "help",
+														}}>
+														{t(`settings:autoApprove.commandRiskLevel.${risk}`)}
+													</span>
+												)}
+												{riskAnalysis && (risk ? ": " : "") + String(riskAnalysis)}
+											</span>
+										</span>
+									</div>
+								)}
 								{output.length > 0 && (
 									<div style={{ width: "100%" }}>
 										<div
