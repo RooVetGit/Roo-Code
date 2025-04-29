@@ -18,7 +18,7 @@ import { ShellIntegrationManager } from "./ShellIntegrationManager"
 // benefit of keep track of busy terminals even after a task is closed.
 
 export class TerminalRegistry {
-	private static terminals: RooTerminal[] = []
+	public static terminals: RooTerminal[] = []
 	private static nextTerminalId = 1
 	private static disposables: vscode.Disposable[] = []
 	private static isInitialized = false
