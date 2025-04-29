@@ -103,7 +103,7 @@ export async function executeCommandTool(
 	}
 }
 
-type ExecuteCommandOptions = {
+export type ExecuteCommandOptions = {
 	command: string
 	customCwd?: string
 	terminalShellIntegrationDisabled?: boolean
