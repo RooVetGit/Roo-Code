@@ -345,25 +345,22 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	async resolveWebviewView(webviewView: vscode.WebviewView | vscode.WebviewPanel) {
 		this.log("Resolving webview view")
 
-		if (!this.contextProxy.isInitialized) {
-			await this.contextProxy.initialize()
-			this.codeIndexManager
-				.loadConfiguration()
-				.then(() => {
-					this.updateGlobalState("codebaseIndexModels", EMBEDDING_MODEL_PROFILES)
+		this.codeIndexManager
+			.loadConfiguration()
+			.then(() => {
+				this.updateGlobalState("codebaseIndexModels", EMBEDDING_MODEL_PROFILES)
 
-					this.outputChannel.appendLine("CodeIndexManager configuration loaded successfully (async).")
-				})
-				.catch((error) => {
-					console.error(
-						"[resolveWebviewView] Error during background CodeIndexManager configuration/indexing:",
-						error,
-					)
-					this.outputChannel.appendLine(
-						`[Error] Background CodeIndexManager configuration/indexing failed: ${error.message || error}`,
-					)
-				})
-		}
+				this.outputChannel.appendLine("CodeIndexManager configuration loaded successfully (async).")
+			})
+			.catch((error) => {
+				console.error(
+					"[resolveWebviewView] Error during background CodeIndexManager configuration/indexing:",
+					error,
+				)
+				this.outputChannel.appendLine(
+					`[Error] Background CodeIndexManager configuration/indexing failed: ${error.message || error}`,
+				)
+			})
 
 		this.view = webviewView
 
