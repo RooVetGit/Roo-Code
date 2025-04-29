@@ -3,7 +3,7 @@ import { RooIgnoreController } from "../../../core/ignore/RooIgnoreController"
 import { stat } from "fs/promises"
 import * as path from "path"
 import { getWorkspacePath } from "../../../utils/path"
-import { extensions } from "../../tree-sitter"
+import { scannerExtensions } from "../shared/supported-extensions"
 import * as vscode from "vscode"
 import { CodeBlock, ICodeParser, IEmbedder, IVectorStore, IDirectoryScanner } from "../interfaces"
 import { createHash } from "crypto"
@@ -15,7 +15,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 	// Constants moved inside the class
 	private static readonly QDRANT_CODE_BLOCK_NAMESPACE = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 	private static readonly MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB
-	private static readonly MAX_LIST_FILES_LIMIT = 1_000
+	private static readonly MAX_LIST_FILES_LIMIT = 1_500
 	private static readonly BATCH_SEGMENT_THRESHOLD = 30 // Number of code segments to batch for embeddings/upserts
 	private static readonly MAX_BATCH_RETRIES = 3
 	private static readonly INITIAL_RETRY_DELAY_MS = 500
@@ -60,7 +60,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 		// Filter by supported extensions
 		const supportedPaths = allowedPaths.filter((filePath) => {
 			const ext = path.extname(filePath).toLowerCase()
-			return extensions.includes(ext)
+			return scannerExtensions.includes(ext)
 		})
 
 		// Initialize cache

@@ -3,8 +3,8 @@ import * as path from "path"
 import { createHash } from "crypto"
 import { RooIgnoreController } from "../../../core/ignore/RooIgnoreController"
 import { getWorkspacePath } from "../../../utils/path"
-import { extensions } from "../../tree-sitter"
 import { v5 as uuidv5 } from "uuid"
+import { scannerExtensions } from "../shared/supported-extensions"
 import { IFileWatcher, FileProcessingResult, IEmbedder, IVectorStore } from "../interfaces"
 import { codeParser } from "./parser"
 
@@ -68,7 +68,10 @@ export class FileWatcher implements IFileWatcher {
 		}
 
 		// Create file watcher
-		const filePattern = new vscode.RelativePattern(this.workspacePath, `**/*{${Object.keys(extensions).join(",")}}`)
+		const filePattern = new vscode.RelativePattern(
+			this.workspacePath,
+			`**/*{${scannerExtensions.map((e) => e.substring(1)).join(",")}}`,
+		)
 		this.fileWatcher = vscode.workspace.createFileSystemWatcher(filePattern)
 
 		// Register event handlers
