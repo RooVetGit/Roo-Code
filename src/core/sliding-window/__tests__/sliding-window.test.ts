@@ -3,10 +3,13 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 
 import { ModelInfo } from "../../../shared/api"
-import { ApiHandler } from "../../../api"
 import { BaseProvider } from "../../../api/providers/base-provider"
-import { TOKEN_BUFFER_PERCENTAGE } from "../index"
-import { estimateTokenCount, truncateConversation, truncateConversationIfNeeded } from "../index"
+import {
+	TOKEN_BUFFER_PERCENTAGE,
+	estimateTokenCount,
+	truncateConversation,
+	truncateConversationIfNeeded,
+} from "../index"
 
 // Create a mock ApiHandler for testing
 class MockApiHandler extends BaseProvider {
@@ -253,7 +256,6 @@ describe("truncateConversationIfNeeded", () => {
 
 	it("should not truncate if tokens are below max tokens threshold", async () => {
 		const modelInfo = createModelInfo(100000, 30000)
-		const maxTokens = 100000 - 30000 // 70000
 		const dynamicBuffer = modelInfo.contextWindow * TOKEN_BUFFER_PERCENTAGE // 10000
 		const totalTokens = 70000 - dynamicBuffer - 1 // Just below threshold - buffer
 
@@ -272,7 +274,6 @@ describe("truncateConversationIfNeeded", () => {
 
 	it("should truncate if tokens are above max tokens threshold", async () => {
 		const modelInfo = createModelInfo(100000, 30000)
-		const maxTokens = 100000 - 30000 // 70000
 		const totalTokens = 70001 // Above threshold
 
 		// Create messages with very small content in the last one to avoid token overflow
@@ -412,7 +413,6 @@ describe("truncateConversationIfNeeded", () => {
 
 	it("should truncate if tokens are within TOKEN_BUFFER_PERCENTAGE of the threshold", async () => {
 		const modelInfo = createModelInfo(100000, 30000)
-		const maxTokens = 100000 - 30000 // 70000
 		const dynamicBuffer = modelInfo.contextWindow * TOKEN_BUFFER_PERCENTAGE // 10% of 100000 = 10000
 		const totalTokens = 70000 - dynamicBuffer + 1 // Just within the dynamic buffer of threshold (70000)
 

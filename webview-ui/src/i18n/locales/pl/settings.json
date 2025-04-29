@@ -233,7 +233,8 @@
 			"high": "Wysoki",
 			"medium": "Średni",
 			"low": "Niski"
-		}
+		},
+		"setReasoningLevel": "Włącz wysiłek rozumowania"
 	},
 	"browser": {
 		"enable": {
@@ -311,6 +312,14 @@
 			"label": "Limit czasu integracji powłoki terminala",
 			"description": "Maksymalny czas oczekiwania na inicjalizację integracji powłoki przed wykonaniem poleceń. Dla użytkowników z długim czasem uruchamiania powłoki, ta wartość może wymagać zwiększenia, jeśli widzisz błędy \"Shell Integration Unavailable\" w terminalu."
 		},
+		"shellIntegrationDisabled": {
+			"label": "Wyłącz integrację powłoki terminala",
+			"description": "Włącz tę opcję, jeśli polecenia terminala nie działają poprawnie lub widzisz błędy 'Shell Integration Unavailable'. Używa to prostszej metody uruchamiania poleceń, omijając niektóre zaawansowane funkcje terminala."
+		},
+		"compressProgressBar": {
+			"label": "Kompresuj wyjście pasków postępu",
+			"description": "Po włączeniu, przetwarza wyjście terminala z powrotami karetki (\\r), aby symulować sposób wyświetlania treści przez prawdziwy terminal. Usuwa to pośrednie stany pasków postępu, zachowując tylko stan końcowy, co oszczędza przestrzeń kontekstową dla bardziej istotnych informacji."
+		},
 		"zdotdir": {
 			"label": "Włącz obsługę ZDOTDIR",
 			"description": "Po włączeniu tworzy tymczasowy katalog dla ZDOTDIR, aby poprawnie obsłużyć integrację powłoki zsh. Zapewnia to prawidłowe działanie integracji powłoki VSCode z zsh, zachowując twoją konfigurację zsh. (eksperymentalne)"
@@ -381,6 +390,10 @@
 			"name": "Użyj eksperymentalnego narzędzia diff wieloblokowego",
 			"description": "Po włączeniu, Roo użyje narzędzia diff wieloblokowego. Spróbuje to zaktualizować wiele bloków kodu w pliku w jednym żądaniu."
 		}
+	},
+	"promptCaching": {
+		"label": "Włącz buforowanie podpowiedzi",
+		"description": "Po włączeniu, Roo będzie używać tego modelu z włączonym buforowaniem promptów w celu zmniejszenia kosztów."
 	},
 	"temperature": {
 		"useCustom": "Użyj niestandardowej temperatury",

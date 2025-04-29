@@ -1,69 +1,55 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from "react"
-import { useAppTranslation } from "@/i18n/TranslationContext"
-import { Trans } from "react-i18next"
-import { getRequestyAuthUrl, getOpenRouterAuthUrl, getGlamaAuthUrl } from "@src/oauth/urls"
 import { useDebounce, useEvent } from "react-use"
+import { Trans } from "react-i18next"
 import { LanguageModelChatSelector } from "vscode"
 import { Checkbox } from "vscrui"
 import { VSCodeLink, VSCodeRadio, VSCodeRadioGroup, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 import { ExternalLinkIcon } from "@radix-ui/react-icons"
 
+import { ReasoningEffort as ReasoningEffortType } from "@roo/schemas"
 import {
 	ApiConfiguration,
 	ModelInfo,
-	anthropicDefaultModelId,
-	anthropicModels,
 	azureOpenAiDefaultApiVersion,
-	bedrockDefaultModelId,
-	bedrockModels,
-	deepSeekDefaultModelId,
-	deepSeekModels,
-	geminiDefaultModelId,
-	geminiModels,
 	glamaDefaultModelId,
-	glamaDefaultModelInfo,
 	mistralDefaultModelId,
-	mistralModels,
 	openAiModelInfoSaneDefaults,
-	openAiNativeDefaultModelId,
-	openAiNativeModels,
 	openRouterDefaultModelId,
-	openRouterDefaultModelInfo,
-	vertexDefaultModelId,
-	vertexModels,
 	unboundDefaultModelId,
-	unboundDefaultModelInfo,
 	requestyDefaultModelId,
-	requestyDefaultModelInfo,
-	xaiDefaultModelId,
-	xaiModels,
 	ApiProvider,
 } from "@roo/shared/api"
 import { ExtensionMessage } from "@roo/shared/ExtensionMessage"
 
-import { vscode } from "@/utils/vscode"
-import { validateApiConfiguration, validateModelId, validateBedrockArn } from "@/utils/validate"
+import { vscode } from "@src/utils/vscode"
+import { validateApiConfiguration, validateModelId, validateBedrockArn } from "@src/utils/validate"
+import { useAppTranslation } from "@src/i18n/TranslationContext"
+import { useRouterModels } from "@src/components/ui/hooks/useRouterModels"
+import { useSelectedModel } from "@src/components/ui/hooks/useSelectedModel"
 import {
 	useOpenRouterModelProviders,
 	OPENROUTER_DEFAULT_PROVIDER_NAME,
-} from "@/components/ui/hooks/useOpenRouterModelProviders"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator, Button } from "@/components/ui"
-import { MODELS_BY_PROVIDER, PROVIDERS, VERTEX_REGIONS, REASONING_MODELS } from "./constants"
-import { AWS_REGIONS } from "@roo/shared/aws_regions"
+} from "@src/components/ui/hooks/useOpenRouterModelProviders"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Button } from "@src/components/ui"
+import { getRequestyAuthUrl, getOpenRouterAuthUrl, getGlamaAuthUrl } from "@src/oauth/urls"
+
 import { VSCodeButtonLink } from "../common/VSCodeButtonLink"
+
+import { MODELS_BY_PROVIDER, PROVIDERS, VERTEX_REGIONS, REASONING_MODELS, AWS_REGIONS } from "./constants"
 import { ModelInfoView } from "./ModelInfoView"
 import { ModelPicker } from "./ModelPicker"
-import { TemperatureControl } from "./TemperatureControl"
-import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
-import { DiffSettingsControl } from "./DiffSettingsControl"
 import { ApiErrorMessage } from "./ApiErrorMessage"
 import { ThinkingBudget } from "./ThinkingBudget"
 import { R1FormatSetting } from "./R1FormatSetting"
 import { OpenRouterBalanceDisplay } from "./OpenRouterBalanceDisplay"
 import { RequestyBalanceDisplay } from "./RequestyBalanceDisplay"
 import { ReasoningEffort } from "./ReasoningEffort"
+import { PromptCachingControl } from "./PromptCachingControl"
+import { DiffSettingsControl } from "./DiffSettingsControl"
+import { TemperatureControl } from "./TemperatureControl"
+import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
 
-interface ApiOptionsProps {
+export interface ApiOptionsProps {
 	uriScheme: string | undefined
 	apiConfiguration: ApiConfiguration
 	setApiConfigurationField: <K extends keyof ApiConfiguration>(field: K, value: ApiConfiguration[K]) => void
@@ -85,22 +71,6 @@ const ApiOptions = ({
 	const [ollamaModels, setOllamaModels] = useState<string[]>([])
 	const [lmStudioModels, setLmStudioModels] = useState<string[]>([])
 	const [vsCodeLmModels, setVsCodeLmModels] = useState<LanguageModelChatSelector[]>([])
-
-	const [openRouterModels, setOpenRouterModels] = useState<Record<string, ModelInfo>>({
-		[openRouterDefaultModelId]: openRouterDefaultModelInfo,
-	})
-
-	const [glamaModels, setGlamaModels] = useState<Record<string, ModelInfo>>({
-		[glamaDefaultModelId]: glamaDefaultModelInfo,
-	})
-
-	const [unboundModels, setUnboundModels] = useState<Record<string, ModelInfo>>({
-		[unboundDefaultModelId]: unboundDefaultModelInfo,
-	})
-
-	const [requestyModels, setRequestyModels] = useState<Record<string, ModelInfo>>({
-		[requestyDefaultModelId]: requestyDefaultModelInfo,
-	})
 
 	const [openAiModels, setOpenAiModels] = useState<Record<string, ModelInfo> | null>(null)
 
@@ -128,10 +98,13 @@ const ApiOptions = ({
 		[setApiConfigurationField],
 	)
 
-	const { selectedProvider, selectedModelId, selectedModelInfo } = useMemo(
-		() => normalizeApiConfiguration(apiConfiguration),
-		[apiConfiguration],
-	)
+	const {
+		provider: selectedProvider,
+		id: selectedModelId,
+		info: selectedModelInfo,
+	} = useSelectedModel(apiConfiguration)
+
+	const { data: routerModels } = useRouterModels()
 
 	// Update apiConfiguration.aiModelId whenever selectedModelId changes.
 	useEffect(() => {
@@ -144,20 +117,9 @@ const ApiOptions = ({
 	// stops typing.
 	useDebounce(
 		() => {
-			if (selectedProvider === "openrouter") {
-				vscode.postMessage({ type: "refreshOpenRouterModels" })
-			} else if (selectedProvider === "glama") {
-				vscode.postMessage({ type: "refreshGlamaModels" })
-			} else if (selectedProvider === "unbound") {
-				vscode.postMessage({ type: "refreshUnboundModels" })
-			} else if (selectedProvider === "requesty") {
+			if (selectedProvider === "openai") {
 				vscode.postMessage({
-					type: "refreshRequestyModels",
-					values: { apiKey: apiConfiguration?.requestyApiKey },
-				})
-			} else if (selectedProvider === "openai") {
-				vscode.postMessage({
-					type: "refreshOpenAiModels",
+					type: "requestOpenAiModels",
 					values: {
 						baseUrl: apiConfiguration?.openAiBaseUrl,
 						apiKey: apiConfiguration?.openAiApiKey,
@@ -185,43 +147,23 @@ const ApiOptions = ({
 
 	useEffect(() => {
 		const apiValidationResult =
-			validateApiConfiguration(apiConfiguration) ||
-			validateModelId(apiConfiguration, glamaModels, openRouterModels, unboundModels, requestyModels)
-
+			validateApiConfiguration(apiConfiguration) || validateModelId(apiConfiguration, routerModels)
 		setErrorMessage(apiValidationResult)
-	}, [apiConfiguration, glamaModels, openRouterModels, setErrorMessage, unboundModels, requestyModels])
+	}, [apiConfiguration, routerModels, setErrorMessage])
 
 	const { data: openRouterModelProviders } = useOpenRouterModelProviders(apiConfiguration?.openRouterModelId, {
 		enabled:
 			selectedProvider === "openrouter" &&
 			!!apiConfiguration?.openRouterModelId &&
-			apiConfiguration.openRouterModelId in openRouterModels,
+			routerModels?.openrouter &&
+			Object.keys(routerModels.openrouter).length > 1 &&
+			apiConfiguration.openRouterModelId in routerModels.openrouter,
 	})
 
 	const onMessage = useCallback((event: MessageEvent) => {
 		const message: ExtensionMessage = event.data
 
 		switch (message.type) {
-			case "openRouterModels": {
-				const updatedModels = message.openRouterModels ?? {}
-				setOpenRouterModels({ [openRouterDefaultModelId]: openRouterDefaultModelInfo, ...updatedModels })
-				break
-			}
-			case "glamaModels": {
-				const updatedModels = message.glamaModels ?? {}
-				setGlamaModels({ [glamaDefaultModelId]: glamaDefaultModelInfo, ...updatedModels })
-				break
-			}
-			case "unboundModels": {
-				const updatedModels = message.unboundModels ?? {}
-				setUnboundModels({ [unboundDefaultModelId]: unboundDefaultModelInfo, ...updatedModels })
-				break
-			}
-			case "requestyModels": {
-				const updatedModels = message.requestyModels ?? {}
-				setRequestyModels({ [requestyDefaultModelId]: requestyDefaultModelInfo, ...updatedModels })
-				break
-			}
 			case "openAiModels": {
 				const updatedModels = message.openAiModels ?? []
 				setOpenAiModels(Object.fromEntries(updatedModels.map((item) => [item, openAiModelInfoSaneDefaults])))
@@ -279,6 +221,7 @@ const ApiOptions = ({
 	// Helper function to get the documentation URL and name for the currently selected provider
 	const getSelectedProviderDocUrl = (): { url: string; name: string } | undefined => {
 		const displayName = getProviderDisplayName(selectedProvider)
+
 		if (!displayName) {
 			return undefined
 		}
@@ -291,6 +234,49 @@ const ApiOptions = ({
 			name: displayName,
 		}
 	}
+
+	const onApiProviderChange = useCallback(
+		(value: ApiProvider) => {
+			// It would be much easier to have a single attribute that stores
+			// the modelId, but we have a separate attribute for each of
+			// OpenRouter, Glama, Unbound, and Requesty.
+			// If you switch to one of these providers and the corresponding
+			// modelId is not set then you immediately end up in an error state.
+			// To address that we set the modelId to the default value for th
+			// provider if it's not already set.
+			switch (value) {
+				case "openrouter":
+					if (!apiConfiguration.openRouterModelId) {
+						setApiConfigurationField("openRouterModelId", openRouterDefaultModelId)
+					}
+					break
+				case "glama":
+					if (!apiConfiguration.glamaModelId) {
+						setApiConfigurationField("glamaModelId", glamaDefaultModelId)
+					}
+					break
+				case "unbound":
+					if (!apiConfiguration.unboundModelId) {
+						setApiConfigurationField("unboundModelId", unboundDefaultModelId)
+					}
+					break
+				case "requesty":
+					if (!apiConfiguration.requestyModelId) {
+						setApiConfigurationField("requestyModelId", requestyDefaultModelId)
+					}
+					break
+			}
+
+			setApiConfigurationField("apiProvider", value)
+		},
+		[
+			setApiConfigurationField,
+			apiConfiguration.openRouterModelId,
+			apiConfiguration.glamaModelId,
+			apiConfiguration.unboundModelId,
+			apiConfiguration.requestyModelId,
+		],
+	)
 
 	return (
 		<div className="flex flex-col gap-3">
@@ -310,16 +296,12 @@ const ApiOptions = ({
 						</div>
 					)}
 				</div>
-				<Select
-					value={selectedProvider}
-					onValueChange={(value) => setApiConfigurationField("apiProvider", value as ApiProvider)}>
+				<Select value={selectedProvider} onValueChange={(value) => onApiProviderChange(value as ApiProvider)}>
 					<SelectTrigger className="w-full">
 						<SelectValue placeholder={t("settings:common.select")} />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="openrouter">OpenRouter</SelectItem>
-						<SelectSeparator />
-						{PROVIDERS.filter((p) => p.value !== "openrouter").map(({ value, label }) => (
+						{PROVIDERS.map(({ value, label }) => (
 							<SelectItem key={value} value={value}>
 								{label}
 							</SelectItem>
@@ -796,10 +778,8 @@ const ApiOptions = ({
 						apiConfiguration={apiConfiguration}
 						setApiConfigurationField={setApiConfigurationField}
 						defaultModelId="gpt-4o"
-						defaultModelInfo={openAiModelInfoSaneDefaults}
 						models={openAiModels}
 						modelIdKey="openAiModelId"
-						modelInfoKey="openAiCustomModelInfo"
 						serviceName="OpenAI"
 						serviceUrl="https://platform.openai.com"
 					/>
@@ -871,6 +851,41 @@ const ApiOptions = ({
 						)}
 					</div>
 
+					<div className="flex flex-col gap-1">
+						<Checkbox
+							checked={apiConfiguration.enableReasoningEffort ?? false}
+							onChange={(checked: boolean) => {
+								setApiConfigurationField("enableReasoningEffort", checked)
+
+								if (!checked) {
+									const { reasoningEffort: _, ...openAiCustomModelInfo } =
+										apiConfiguration.openAiCustomModelInfo || openAiModelInfoSaneDefaults
+
+									setApiConfigurationField("openAiCustomModelInfo", openAiCustomModelInfo)
+								}
+							}}>
+							{t("settings:providers.setReasoningLevel")}
+						</Checkbox>
+						{!!apiConfiguration.enableReasoningEffort && (
+							<ReasoningEffort
+								apiConfiguration={{
+									...apiConfiguration,
+									reasoningEffort: apiConfiguration.openAiCustomModelInfo?.reasoningEffort,
+								}}
+								setApiConfigurationField={(field, value) => {
+									if (field === "reasoningEffort") {
+										const openAiCustomModelInfo =
+											apiConfiguration.openAiCustomModelInfo || openAiModelInfoSaneDefaults
+
+										setApiConfigurationField("openAiCustomModelInfo", {
+											...openAiCustomModelInfo,
+											reasoningEffort: value as ReasoningEffortType,
+										})
+									}
+								}}
+							/>
+						)}
+					</div>
 					<div className="flex flex-col gap-3">
 						<div className="text-sm text-vscode-descriptionForeground whitespace-pre-line">
 							{t("settings:providers.customModel.capabilities")}
@@ -1506,10 +1521,8 @@ const ApiOptions = ({
 					apiConfiguration={apiConfiguration}
 					setApiConfigurationField={setApiConfigurationField}
 					defaultModelId={openRouterDefaultModelId}
-					defaultModelInfo={openRouterDefaultModelInfo}
-					models={openRouterModels}
+					models={routerModels?.openrouter ?? {}}
 					modelIdKey="openRouterModelId"
-					modelInfoKey="openRouterModelInfo"
 					serviceName="OpenRouter"
 					serviceUrl="https://openrouter.ai/models"
 				/>
@@ -1529,16 +1542,7 @@ const ApiOptions = ({
 						</div>
 						<Select
 							value={apiConfiguration?.openRouterSpecificProvider || OPENROUTER_DEFAULT_PROVIDER_NAME}
-							onValueChange={(value) => {
-								if (openRouterModelProviders[value]) {
-									setApiConfigurationField("openRouterModelInfo", {
-										...apiConfiguration.openRouterModelInfo,
-										...openRouterModelProviders[value],
-									})
-								}
-
-								setApiConfigurationField("openRouterSpecificProvider", value)
-							}}>
+							onValueChange={(value) => setApiConfigurationField("openRouterSpecificProvider", value)}>
 							<SelectTrigger className="w-full">
 								<SelectValue placeholder={t("settings:common.select")} />
 							</SelectTrigger>
@@ -1567,9 +1571,7 @@ const ApiOptions = ({
 					apiConfiguration={apiConfiguration}
 					setApiConfigurationField={setApiConfigurationField}
 					defaultModelId={glamaDefaultModelId}
-					defaultModelInfo={glamaDefaultModelInfo}
-					models={glamaModels}
-					modelInfoKey="glamaModelInfo"
+					models={routerModels?.glama ?? {}}
 					modelIdKey="glamaModelId"
 					serviceName="Glama"
 					serviceUrl="https://glama.ai/models"
@@ -1580,9 +1582,7 @@ const ApiOptions = ({
 				<ModelPicker
 					apiConfiguration={apiConfiguration}
 					defaultModelId={unboundDefaultModelId}
-					defaultModelInfo={unboundDefaultModelInfo}
-					models={unboundModels}
-					modelInfoKey="unboundModelInfo"
+					models={routerModels?.unbound ?? {}}
 					modelIdKey="unboundModelId"
 					serviceName="Unbound"
 					serviceUrl="https://api.getunbound.ai/models"
@@ -1595,10 +1595,8 @@ const ApiOptions = ({
 					apiConfiguration={apiConfiguration}
 					setApiConfigurationField={setApiConfigurationField}
 					defaultModelId={requestyDefaultModelId}
-					defaultModelInfo={requestyDefaultModelInfo}
-					models={requestyModels}
+					models={routerModels?.requesty ?? {}}
 					modelIdKey="requestyModelId"
-					modelInfoKey="requestyModelInfo"
 					serviceName="Requesty"
 					serviceUrl="https://requesty.ai"
 				/>
@@ -1691,6 +1689,7 @@ const ApiOptions = ({
 					)}
 
 					<ModelInfoView
+						apiProvider={selectedProvider}
 						selectedModelId={selectedModelId}
 						modelInfo={selectedModelInfo}
 						isDescriptionExpanded={isDescriptionExpanded}
@@ -1713,6 +1712,13 @@ const ApiOptions = ({
 				/>
 			)}
 
+			{selectedModelInfo && selectedModelInfo.supportsPromptCache && selectedModelInfo.isPromptCacheOptional && (
+				<PromptCachingControl
+					apiConfiguration={apiConfiguration}
+					setApiConfigurationField={setApiConfigurationField}
+				/>
+			)}
+
 			{!fromWelcomeView && (
 				<>
 					<DiffSettingsControl
@@ -1721,7 +1727,7 @@ const ApiOptions = ({
 						onChange={(field, value) => setApiConfigurationField(field, value)}
 					/>
 					<TemperatureControl
-						value={apiConfiguration?.modelTemperature}
+						value={apiConfiguration.modelTemperature}
 						onChange={handleInputChange("modelTemperature", noTransform)}
 						maxValue={2}
 					/>
@@ -1733,113 +1739,6 @@ const ApiOptions = ({
 			)}
 		</div>
 	)
-}
-
-export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
-	const provider = apiConfiguration?.apiProvider || "anthropic"
-	const modelId = apiConfiguration?.apiModelId
-
-	const getProviderData = (models: Record<string, ModelInfo>, defaultId: string) => {
-		let selectedModelId: string
-		let selectedModelInfo: ModelInfo
-
-		if (modelId && modelId in models) {
-			selectedModelId = modelId
-			selectedModelInfo = models[modelId]
-		} else {
-			selectedModelId = defaultId
-			selectedModelInfo = models[defaultId]
-		}
-
-		return { selectedProvider: provider, selectedModelId, selectedModelInfo }
-	}
-
-	switch (provider) {
-		case "anthropic":
-			return getProviderData(anthropicModels, anthropicDefaultModelId)
-		case "xai":
-			return getProviderData(xaiModels, xaiDefaultModelId)
-		case "bedrock":
-			// Special case for custom ARN
-			if (modelId === "custom-arn") {
-				return {
-					selectedProvider: provider,
-					selectedModelId: "custom-arn",
-					selectedModelInfo: {
-						maxTokens: 5000,
-						contextWindow: 128_000,
-						supportsPromptCache: false,
-						supportsImages: true,
-					},
-				}
-			}
-			return getProviderData(bedrockModels, bedrockDefaultModelId)
-		case "vertex":
-			return getProviderData(vertexModels, vertexDefaultModelId)
-		case "gemini":
-			return getProviderData(geminiModels, geminiDefaultModelId)
-		case "deepseek":
-			return getProviderData(deepSeekModels, deepSeekDefaultModelId)
-		case "openai-native":
-			return getProviderData(openAiNativeModels, openAiNativeDefaultModelId)
-		case "mistral":
-			return getProviderData(mistralModels, mistralDefaultModelId)
-		case "openrouter":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.openRouterModelId || openRouterDefaultModelId,
-				selectedModelInfo: apiConfiguration?.openRouterModelInfo || openRouterDefaultModelInfo,
-			}
-		case "glama":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.glamaModelId || glamaDefaultModelId,
-				selectedModelInfo: apiConfiguration?.glamaModelInfo || glamaDefaultModelInfo,
-			}
-		case "unbound":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.unboundModelId || unboundDefaultModelId,
-				selectedModelInfo: apiConfiguration?.unboundModelInfo || unboundDefaultModelInfo,
-			}
-		case "requesty":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.requestyModelId || requestyDefaultModelId,
-				selectedModelInfo: apiConfiguration?.requestyModelInfo || requestyDefaultModelInfo,
-			}
-		case "openai":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.openAiModelId || "",
-				selectedModelInfo: apiConfiguration?.openAiCustomModelInfo || openAiModelInfoSaneDefaults,
-			}
-		case "ollama":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.ollamaModelId || "",
-				selectedModelInfo: openAiModelInfoSaneDefaults,
-			}
-		case "lmstudio":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.lmStudioModelId || "",
-				selectedModelInfo: openAiModelInfoSaneDefaults,
-			}
-		case "vscode-lm":
-			return {
-				selectedProvider: provider,
-				selectedModelId: apiConfiguration?.vsCodeLmModelSelector
-					? `${apiConfiguration.vsCodeLmModelSelector.vendor}/${apiConfiguration.vsCodeLmModelSelector.family}`
-					: "",
-				selectedModelInfo: {
-					...openAiModelInfoSaneDefaults,
-					supportsImages: false, // VSCode LM API currently doesn't support images.
-				},
-			}
-		default:
-			return getProviderData(anthropicModels, anthropicDefaultModelId)
-	}
 }
 
 export default memo(ApiOptions)
