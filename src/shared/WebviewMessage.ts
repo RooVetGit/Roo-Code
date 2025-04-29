@@ -79,6 +79,7 @@ export interface WebviewMessage {
 		| "enhancedPrompt"
 		| "draggedImages"
 		| "deleteMessage"
+		| "resendMessage" // Add new message type
 		| "terminalOutputLineLimit"
 		| "terminalShellIntegrationTimeout"
 		| "terminalCommandDelay"
@@ -170,4 +171,12 @@ export const checkoutRestorePayloadSchema = z.object({
 
 export type CheckpointRestorePayload = z.infer<typeof checkoutRestorePayloadSchema>
 
-export type WebViewMessagePayload = CheckpointDiffPayload | CheckpointRestorePayload
+export type WebViewMessagePayload = CheckpointDiffPayload | CheckpointRestorePayload | ResendMessagePayload // Add new payload type
+
+// Define payload for resendMessage
+export const resendMessagePayloadSchema = z.object({
+	originalMessageId: z.string(),
+	editedText: z.string(),
+})
+
+export type ResendMessagePayload = z.infer<typeof resendMessagePayloadSchema>

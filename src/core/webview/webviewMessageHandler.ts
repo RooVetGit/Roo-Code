@@ -4,13 +4,19 @@ import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 
 import { ClineProvider } from "./ClineProvider"
+import { Cline } from "../Cline"
+import delay from "delay"
 import { Language, ApiConfigMeta } from "../../schemas"
 import { changeLanguage, t } from "../../i18n"
 import { ApiConfiguration } from "../../shared/api"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
-
-import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
+import {
+	checkoutDiffPayloadSchema,
+	checkoutRestorePayloadSchema,
+	resendMessagePayloadSchema,
+	WebviewMessage,
+} from "../../shared/WebviewMessage"
 import { checkExistKey } from "../../shared/checkExistApiConfig"
 import { EXPERIMENT_IDS, experimentDefault, ExperimentId } from "../../shared/experiments"
 import { Terminal } from "../../integrations/terminal/Terminal"
@@ -41,7 +47,87 @@ import { Mode, defaultModeSlug, getModeBySlug, getGroupName } from "../../shared
 import { getDiffStrategy } from "../diff/DiffStrategy"
 import { SYSTEM_PROMPT } from "../prompts/system"
 import { buildApiHandler } from "../../api"
-import { GlobalState } from "../../schemas"
+import { GlobalState, ClineMessage as ClineMessageType } from "../../schemas" // Import ClineMessageType if needed for clarity
+// Cline import moved near ClineProvider
+
+// Helper function to handle the "Resend Only" logic (delete messages and send new one)
+// Renamed function to reflect its sole purpose: deleting messages for resend operation
+async function _deleteMessagesForResend(
+	provider: ClineProvider,
+	cline: Cline,
+	originalMessageIndex: number,
+	originalMessageTs: number, // Timestamp to find the message and its API history entry
+) {
+	// Use the current clineMessages, as restoreCheckpoint doesn't affect it
+	const newClineMessages = cline.clineMessages.slice(0, originalMessageIndex)
+	await cline.overwriteClineMessages(newClineMessages)
+
+	// API History Deletion
+	const apiHistory = [...cline.apiConversationHistory]
+	// Mimic deleteMessage logic: find first entry at or after 1 second before the original message timestamp
+	const timeCutoff = originalMessageTs - 1000
+	const apiHistoryIndex = apiHistory.findIndex((entry) => entry.ts && entry.ts >= timeCutoff)
+	if (apiHistoryIndex !== -1) {
+		const newApiHistory = apiHistory.slice(0, apiHistoryIndex)
+		await cline.overwriteApiConversationHistory(newApiHistory)
+	} else {
+		provider.log(
+			`[Resend Sequence] Resend Delete Helper: No matching API history entry found for ts ${originalMessageTs}. Skipping history overwrite.`,
+		)
+	}
+}
+
+// Helper function to encapsulate the common sequence of actions for resending a message
+async function _resendMessageSequence(
+	provider: ClineProvider,
+	taskId: string,
+	originalMessageIndex: number,
+	originalMessageTimestamp: number,
+	editedText: string,
+	images: ClineMessageType["images"],
+): Promise<boolean> {
+	// 1. Get the current cline instance *before* deletion to pass to the delete helper
+	const currentCline = provider.getCurrentCline()
+	// Ensure it's the correct Cline instance for the task before proceeding
+	if (!currentCline || currentCline.taskId !== taskId) {
+		provider.log(
+			`[Resend Sequence] Error: Could not get current cline instance before deletion for task ${taskId}.`,
+		)
+		vscode.window.showErrorMessage(
+			t("common:errors.resend_failed", { defaultValue: "Failed to get task state for resend." }),
+		)
+		return false
+	}
+
+	// 2. Delete messages using the helper
+	await _deleteMessagesForResend(provider, currentCline, originalMessageIndex, originalMessageTimestamp)
+
+	// 3. Re-initialize Cline with the history item (which now reflects the deleted messages)
+	const { historyItem } = await provider.getTaskWithId(taskId)
+	if (!historyItem) {
+		provider.log(`[Resend Sequence] Error: Failed to retrieve history item for task ${taskId}.`)
+		vscode.window.showErrorMessage(
+			t("common:errors.resend_failed", { defaultValue: "Failed to get task history for resend." }),
+		)
+		return false // Indicate failure
+	}
+	const newCline = await provider.initClineWithHistoryItem(historyItem)
+	if (!newCline) {
+		provider.log(
+			`[Resend Sequence] Error: Failed to re-initialize Cline with updated history item for task ${taskId}.`,
+		)
+		vscode.window.showErrorMessage(
+			t("common:errors.resend_failed", { defaultValue: "Failed to reload task state for resend." }),
+		)
+		return false // Indicate failure
+	}
+
+	// 4. Send the edited message using the newly initialized Cline instance
+	await delay(100) // Add delay to mitigate race condition
+	await newCline.handleWebviewAskResponse("messageResponse", editedText, images)
+
+	return true // Indicate success
+}
 
 export const webviewMessageHandler = async (provider: ClineProvider, message: WebviewMessage) => {
 	// Utility functions provided for concise get/update of global state via contextProxy API.
@@ -928,6 +1014,180 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 
 					await provider.initClineWithHistoryItem(historyItem)
 				}
+			}
+			break
+		}
+
+		// Add the new case for resendMessage
+		case "resendMessage": {
+			const cline = provider.getCurrentCline()
+			if (!cline) {
+				provider.log("Error: Cline not found for resendMessage.")
+				return
+			}
+
+			const payloadResult = resendMessagePayloadSchema.safeParse(message.payload)
+			if (!payloadResult.success) {
+				provider.log(`Error: Invalid payload for resendMessage: ${payloadResult.error.message}`)
+				return
+			}
+			const { originalMessageId, editedText } = payloadResult.data
+
+			try {
+				// Find message by timestamp
+				const originalMessageTs = Number(originalMessageId)
+				const originalMessageIndex = cline.clineMessages.findIndex((msg) => msg.ts === originalMessageTs)
+
+				if (originalMessageIndex === -1) {
+					provider.log(
+						`Error: Original message with ID ${originalMessageId} (ts: ${originalMessageTs}) not found for resend.`,
+					)
+					vscode.window.showErrorMessage(
+						t("common:errors.message_not_found", { defaultValue: "Original message not found." }),
+					)
+					return
+				}
+
+				const originalMessage = cline.clineMessages[originalMessageIndex]
+				if (!originalMessage || typeof originalMessage.ts !== "number") {
+					// Basic check
+					provider.log(`Error: Original message ${originalMessageId} is missing required data (timestamp).`)
+					vscode.window.showErrorMessage(
+						t("common:errors.resend_failed", {
+							defaultValue: "Failed to resend message due to missing data.",
+						}),
+					)
+					return
+				}
+				const originalMessageTimestamp = originalMessage.ts
+
+				// Checkpoint Logic & Confirmation Check
+				const checkpointService = await cline.getAvailableCheckpointServiceForResend()
+
+				let requiresConfirmation = false
+				if (checkpointService && checkpointService.checkpoints.length > 0) {
+					const latestCommitHash = checkpointService!.checkpoints[checkpointService!.checkpoints.length - 1]
+					const latestTimestampEntry = checkpointService!.timestamps.find(
+						(e: { commitHash: string; timestamp: number }) => e.commitHash === latestCommitHash,
+					)
+					const latestCheckpointTimestamp = latestTimestampEntry?.timestamp
+
+					if (latestCheckpointTimestamp && originalMessageTimestamp < latestCheckpointTimestamp) {
+						requiresConfirmation = true
+						provider.log(
+							`[ResendMessage] Message timestamp ${originalMessageTimestamp} is before latest checkpoint ${latestCheckpointTimestamp}. Confirmation required.`,
+						)
+					}
+				}
+
+				// Restore confirmation
+				let performUndo = false
+				if (requiresConfirmation) {
+					const resendOnlyOption = t("common:buttons.resend_only", { defaultValue: "Resend Only" })
+					const undoAndResendOption = t("common:buttons.undo_and_resend", {
+						defaultValue: "Undo Changes and Resend",
+					})
+					const answer = await vscode.window.showInformationMessage(
+						t("common:confirmation.resend_checkpoint_warning", {
+							defaultValue:
+								"Workspace files may have changed since this message was sent. Undoing changes will restore files to the state before this message.",
+						}),
+						{ modal: true },
+						resendOnlyOption,
+						undoAndResendOption,
+					)
+
+					if (answer === undoAndResendOption) {
+						performUndo = true
+					} else if (answer === resendOnlyOption) {
+						performUndo = false
+					} else {
+						// User cancelled (closed dialog or hit Esc)
+						provider.log("[ResendMessage] User cancelled operation.")
+						return
+					}
+				}
+
+				// Perform Actions
+				if (performUndo && checkpointService) {
+					const previousCommitHash = checkpointService!.findCheckpointBefore(originalMessageTimestamp)
+					if (previousCommitHash) {
+						await provider.cancelTask() // Cancel any ongoing agent work
+						try {
+							await checkpointService!.restoreCheckpoint(previousCommitHash)
+							provider.log(
+								`[WebviewMessageHandler] Checkpoint ${previousCommitHash} restored successfully.`,
+							)
+							// Call the extracted sequence function
+							const success = await _resendMessageSequence(
+								provider,
+								cline.taskId,
+								originalMessageIndex,
+								originalMessageTimestamp,
+								editedText,
+								originalMessage.images,
+							)
+							if (!success) {
+								// Errors are logged and shown within the sequence function
+								provider.log(
+									`[ResendMessage] Resend (Undo Path): _resendMessageSequence failed for task ${cline.taskId}.`,
+								)
+								// No need to return here as the sequence function handles user feedback
+							} else {
+								provider.log(
+									`[ResendMessage] Resend (Undo Path): _resendMessageSequence completed for task ${cline.taskId}.`,
+								)
+							}
+						} catch (error) {
+							const errorMessage = error instanceof Error ? error.message : String(error)
+							provider.log(`Error during checkpoint restore for resend: ${errorMessage}`)
+							vscode.window.showErrorMessage(
+								t("common:errors.checkpoint_failed", { defaultValue: "Failed to restore checkpoint." }),
+							)
+							return // Stop processing if restore failed
+						}
+					} else {
+						// Inform user that undo failed, then proceed with resend only
+						provider.log(
+							`[ResendMessage] Warning: Could not find a checkpoint before timestamp ${originalMessageTimestamp} to restore to.`,
+						)
+						vscode.window.showWarningMessage(
+							t("common:warnings.checkpoint_restore_unavailable", {
+								defaultValue: "Could not restore files to the state before the message.",
+							}),
+						)
+						return
+					}
+				} else {
+					// 'Resend Only' path (either chosen by user, no confirmation needed, or checkpoint service unavailable)
+					provider.log(`[ResendMessage] 'Resend Only' path selected or required for task ${cline.taskId}.`)
+					// Call the extracted sequence function
+					const success = await _resendMessageSequence(
+						provider,
+						cline.taskId,
+						originalMessageIndex,
+						originalMessageTimestamp,
+						editedText,
+						originalMessage.images,
+					)
+					if (!success) {
+						// Errors are logged and shown within the sequence function
+						provider.log(
+							`[ResendMessage] Resend (Resend Only Path): _resendMessageSequence failed for task ${cline.taskId}.`,
+						)
+						// No need to return here
+					} else {
+						provider.log(
+							`[ResendMessage] Resend (Resend Only Path): _resendMessageSequence completed for task ${cline.taskId}.`,
+						)
+					}
+				}
+			} catch (error) {
+				const errorMessage = error instanceof Error ? error.message : String(error)
+				provider.log(`Error handling resendMessage: ${errorMessage}`)
+				vscode.window.showErrorMessage(
+					t("common:errors.resend_failed", { defaultValue: "Failed to resend message." }),
+				)
 			}
 			break
 		}

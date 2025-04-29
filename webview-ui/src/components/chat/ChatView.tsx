@@ -1088,6 +1088,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							handleSendMessage(answer, [])
 						}
 					}}
+					onChatReset={handleChatReset} // Add this prop
 				/>
 			)
 		},
@@ -1099,6 +1100,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			isStreaming,
 			toggleRowExpansion,
 			handleSendMessage,
+			handleChatReset,
 		],
 	)
 
