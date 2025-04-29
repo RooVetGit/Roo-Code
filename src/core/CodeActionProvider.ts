@@ -1,19 +1,17 @@
 import * as vscode from "vscode"
+
 import { EditorUtils } from "./EditorUtils"
 
-export const ACTION_NAMES = {
-	EXPLAIN: "Roo Code: Explain Code",
-	FIX: "Roo Code: Fix Code",
-	FIX_LOGIC: "Roo Code: Fix Logic",
-	IMPROVE: "Roo Code: Improve Code",
-	ADD_TO_CONTEXT: "Roo Code: Add to Context",
-	NEW_TASK: "Roo Code: New Task",
+type CodeActionName = "FIX" | "ADD_TO_CONTEXT" | "NEW_TASK"
+
+export const ACTION_NAMES: Record<CodeActionName, string> = {
+	FIX: "Fix in Roo Code",
+	ADD_TO_CONTEXT: "Add to Roo Code",
+	NEW_TASK: "New Roo Code Task",
 } as const
 
-export const COMMAND_IDS = {
-	EXPLAIN: "roo-cline.explainCode",
+export const COMMAND_IDS: Record<CodeActionName, string> = {
 	FIX: "roo-cline.fixCode",
-	IMPROVE: "roo-cline.improveCode",
 	ADD_TO_CONTEXT: "roo-cline.addToContext",
 	NEW_TASK: "roo-cline.newTask",
 } as const
@@ -30,18 +28,6 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
 		return action
 	}
 
-	private createActionPair(
-		baseTitle: string,
-		kind: vscode.CodeActionKind,
-		baseCommand: string,
-		args: any[],
-	): vscode.CodeAction[] {
-		return [
-			this.createAction(`${baseTitle} in New Task`, kind, baseCommand, args),
-			this.createAction(`${baseTitle} in Current Task`, kind, `${baseCommand}InCurrentTask`, args),
-		]
-	}
-
 	public provideCodeActions(
 		document: vscode.TextDocument,
 		range: vscode.Range | vscode.Selection,
@@ -49,6 +35,7 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
 	): vscode.ProviderResult<(vscode.CodeAction | vscode.Command)[]> {
 		try {
 			const effectiveRange = EditorUtils.getEffectiveRange(document, range)
+
 			if (!effectiveRange) {
 				return []
 			}
@@ -70,56 +57,23 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
 				),
 			)
 
-			actions.push(
-				...this.createActionPair(ACTION_NAMES.EXPLAIN, vscode.CodeActionKind.QuickFix, COMMAND_IDS.EXPLAIN, [
-					filePath,
-					effectiveRange.text,
-					effectiveRange.range.start.line + 1,
-					effectiveRange.range.end.line + 1,
-				]),
-			)
-
 			if (context.diagnostics.length > 0) {
 				const relevantDiagnostics = context.diagnostics.filter((d) =>
 					EditorUtils.hasIntersectingRange(effectiveRange.range, d.range),
 				)
 
 				if (relevantDiagnostics.length > 0) {
-					const diagnosticMessages = relevantDiagnostics.map(EditorUtils.createDiagnosticData)
 					actions.push(
-						...this.createActionPair(ACTION_NAMES.FIX, vscode.CodeActionKind.QuickFix, COMMAND_IDS.FIX, [
+						this.createAction(ACTION_NAMES.FIX, vscode.CodeActionKind.QuickFix, COMMAND_IDS.FIX, [
 							filePath,
 							effectiveRange.text,
 							effectiveRange.range.start.line + 1,
 							effectiveRange.range.end.line + 1,
-							diagnosticMessages,
+							relevantDiagnostics.map(EditorUtils.createDiagnosticData),
 						]),
 					)
 				}
-			} else {
-				actions.push(
-					...this.createActionPair(ACTION_NAMES.FIX_LOGIC, vscode.CodeActionKind.QuickFix, COMMAND_IDS.FIX, [
-						filePath,
-						effectiveRange.text,
-						effectiveRange.range.start.line + 1,
-						effectiveRange.range.end.line + 1,
-					]),
-				)
 			}
-
-			actions.push(
-				...this.createActionPair(
-					ACTION_NAMES.IMPROVE,
-					vscode.CodeActionKind.RefactorRewrite,
-					COMMAND_IDS.IMPROVE,
-					[
-						filePath,
-						effectiveRange.text,
-						effectiveRange.range.start.line + 1,
-						effectiveRange.range.end.line + 1,
-					],
-				),
-			)
 
 			return actions
 		} catch (error) {

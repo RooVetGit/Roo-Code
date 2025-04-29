@@ -279,17 +279,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const prompt = supportPrompt.create(promptType, params, customSupportPrompts)
 
 		if (command.endsWith("addToContext")) {
-			await visibleProvider.postMessageToWebview({
-				type: "invoke",
-				invoke: "setChatBoxMessage",
-				text: prompt,
-			})
-
-			return
-		}
-
-		if (visibleProvider.getCurrentCline() && command.endsWith("InCurrentTask")) {
-			await visibleProvider.postMessageToWebview({ type: "invoke", invoke: "sendMessage", text: prompt })
+			await visibleProvider.postMessageToWebview({ type: "invoke", invoke: "setChatBoxMessage", text: prompt })
 			return
 		}
 
