@@ -131,6 +131,11 @@
 				"category": "%configuration.title%"
 			},
 			{
+				"command": "roo-cline.improveCode",
+				"title": "%command.improveCode.title%",
+				"category": "%configuration.title%"
+			},
+			{
 				"command": "roo-cline.addToContext",
 				"title": "%command.addToContext.title%",
 				"category": "%configuration.title%"
@@ -186,6 +191,10 @@
 				{
 					"command": "roo-cline.explainCode",
 					"group": "1_actions@2"
+				},
+				{
+					"command": "roo-cline.improveCode",
+					"group": "1_actions@3"
 				}
 			],
 			"terminal/context": [

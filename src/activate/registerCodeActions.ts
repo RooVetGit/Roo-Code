@@ -1,19 +1,16 @@
 import * as vscode from "vscode"
 
-import { ACTION_NAMES, COMMAND_IDS } from "../core/CodeActionProvider"
+import { type CodeActionName, type CodeActionId, COMMAND_IDS } from "../core/CodeActionProvider"
 import { EditorUtils } from "../core/EditorUtils"
 import { ClineProvider } from "../core/webview/ClineProvider"
 
 export const registerCodeActions = (context: vscode.ExtensionContext) => {
+	registerCodeAction(context, COMMAND_IDS.EXPLAIN, "EXPLAIN")
 	registerCodeAction(context, COMMAND_IDS.FIX, "FIX")
 	registerCodeAction(context, COMMAND_IDS.ADD_TO_CONTEXT, "ADD_TO_CONTEXT")
 }
 
-const registerCodeAction = (
-	context: vscode.ExtensionContext,
-	command: string,
-	promptType: keyof typeof ACTION_NAMES,
-) => {
+const registerCodeAction = (context: vscode.ExtensionContext, command: CodeActionId, promptType: CodeActionName) => {
 	let userInput: string | undefined
 
 	context.subscriptions.push(
@@ -31,7 +28,11 @@ const registerCodeAction = (
 			} else {
 				// Called directly from command palette.
 				const context = EditorUtils.getEditorContext()
-				if (!context) return
+
+				if (!context) {
+					return
+				}
+
 				;({ filePath, selectedText, startLine, endLine, diagnostics } = context)
 			}
 

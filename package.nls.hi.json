@@ -4,6 +4,7 @@
 	"command.newTask.title": "नया कार्य",
 	"command.explainCode.title": "कोड समझाएं",
 	"command.fixCode.title": "कोड ठीक करें",
+	"command.improveCode.title": "कोड सुधारें",
 	"command.addToContext.title": "संदर्भ में जोड़ें",
 	"command.openInNewTab.title": "नए टैब में खोलें",
 	"command.focusInput.title": "इनपुट फ़ील्ड पर फोकस करें",

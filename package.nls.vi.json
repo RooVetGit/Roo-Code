@@ -4,6 +4,7 @@
 	"command.newTask.title": "Tác Vụ Mới",
 	"command.explainCode.title": "Giải Thích Mã",
 	"command.fixCode.title": "Sửa Mã",
+	"command.improveCode.title": "Cải Thiện Mã",
 	"command.addToContext.title": "Thêm vào Ngữ Cảnh",
 	"command.openInNewTab.title": "Mở trong Tab Mới",
 	"command.focusInput.title": "Tập Trung vào Trường Nhập",

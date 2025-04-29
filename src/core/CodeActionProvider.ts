@@ -2,7 +2,13 @@ import * as vscode from "vscode"
 
 import { EditorUtils } from "./EditorUtils"
 
-type CodeActionName = "EXPLAIN" | "FIX" | "ADD_TO_CONTEXT" | "NEW_TASK"
+export type CodeActionName = "EXPLAIN" | "FIX" | "ADD_TO_CONTEXT" | "NEW_TASK"
+
+export type CodeActionId =
+	| "roo-cline.explainCode"
+	| "roo-cline.fixCode"
+	| "roo-cline.addToContext"
+	| "roo-cline.newTask"
 
 export const ACTION_NAMES: Record<CodeActionName, string> = {
 	EXPLAIN: "Explain with Roo Code",
@@ -11,7 +17,7 @@ export const ACTION_NAMES: Record<CodeActionName, string> = {
 	NEW_TASK: "New Roo Code Task",
 } as const
 
-export const COMMAND_IDS: Record<CodeActionName, string> = {
+export const COMMAND_IDS: Record<CodeActionName, CodeActionId> = {
 	EXPLAIN: "roo-cline.explainCode",
 	FIX: "roo-cline.fixCode",
 	ADD_TO_CONTEXT: "roo-cline.addToContext",

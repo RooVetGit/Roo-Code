@@ -4,6 +4,7 @@
 	"command.newTask.title": "Nouvelle Tâche",
 	"command.explainCode.title": "Expliquer le Code",
 	"command.fixCode.title": "Corriger le Code",
+	"command.improveCode.title": "Améliorer le Code",
 	"command.addToContext.title": "Ajouter au Contexte",
 	"command.openInNewTab.title": "Ouvrir dans un Nouvel Onglet",
 	"command.focusInput.title": "Focus sur le Champ de Saisie",

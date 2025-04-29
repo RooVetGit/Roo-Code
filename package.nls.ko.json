@@ -4,6 +4,7 @@
 	"command.newTask.title": "새 작업",
 	"command.explainCode.title": "코드 설명",
 	"command.fixCode.title": "코드 수정",
+	"command.improveCode.title": "코드 개선",
 	"command.addToContext.title": "컨텍스트에 추가",
 	"command.openInNewTab.title": "새 탭에서 열기",
 	"command.focusInput.title": "입력 필드 포커스",
