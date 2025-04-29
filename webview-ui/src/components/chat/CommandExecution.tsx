@@ -2,6 +2,7 @@ import { forwardRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { useExtensionState } from "@src/context/ExtensionStateContext"
+import { BaseTerminal } from "../../../../src/integrations/terminal/BaseTerminal"
 import CodeBlock, { CODE_BLOCK_BG_COLOR } from "../common/CodeBlock"
 
 interface CommandExecutionProps {
@@ -11,8 +12,9 @@ interface CommandExecutionProps {
 
 export const CommandExecution = forwardRef<HTMLDivElement, CommandExecutionProps>(({ command, output }, ref) => {
 	const { t } = useTranslation()
-	const { terminalShellIntegrationDisabled = false } = useExtensionState()
+	const { terminalShellIntegrationDisabled = false, terminalOutputLineLimit = 500 } = useExtensionState()
 	const [isExpanded, setIsExpanded] = useState(terminalShellIntegrationDisabled)
+	const compressedOutput = BaseTerminal.compressTerminalOutput(output, terminalOutputLineLimit)
 
 	const onToggleExpand = () => {
 		setIsExpanded(!isExpanded)
@@ -45,7 +47,7 @@ export const CommandExecution = forwardRef<HTMLDivElement, CommandExecutionProps
 							<span className={`codicon codicon-chevron-${isExpanded ? "down" : "right"}`}></span>
 							<span style={{ fontSize: "0.8em" }}>{t("chat:commandOutput")}</span>
 						</div>
-						{isExpanded && <CodeBlock source={output} language="log" />}
+						{isExpanded && <CodeBlock source={compressedOutput} language="log" />}
 					</div>
 				)}
 			</div>
