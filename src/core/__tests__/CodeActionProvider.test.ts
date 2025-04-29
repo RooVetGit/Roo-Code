@@ -4,7 +4,7 @@ import * as vscode from "vscode"
 
 import { EditorUtils } from "../EditorUtils"
 
-import { CodeActionProvider, ACTION_NAMES } from "../CodeActionProvider"
+import { CodeActionProvider, ACTION_TITLES } from "../CodeActionProvider"
 
 // Mock VSCode API
 jest.mock("vscode", () => ({
@@ -78,8 +78,10 @@ describe("CodeActionProvider", () => {
 		it("should provide explain, improve, fix logic, and add to context actions by default", () => {
 			const actions = provider.provideCodeActions(mockDocument, mockRange, mockContext)
 
-			expect(actions).toHaveLength(1)
-			expect((actions as any)[0].title).toBe(ACTION_NAMES.ADD_TO_CONTEXT)
+			expect(actions).toHaveLength(3)
+			expect((actions as any)[0].title).toBe(ACTION_TITLES.ADD_TO_CONTEXT)
+			expect((actions as any)[1].title).toBe(ACTION_TITLES.EXPLAIN)
+			expect((actions as any)[2].title).toBe(ACTION_TITLES.IMPROVE)
 		})
 
 		it("should provide fix action instead of fix logic when diagnostics exist", () => {
@@ -90,8 +92,8 @@ describe("CodeActionProvider", () => {
 			const actions = provider.provideCodeActions(mockDocument, mockRange, mockContext)
 
 			expect(actions).toHaveLength(2)
-			expect((actions as any).some((a: any) => a.title === `${ACTION_NAMES.FIX}`)).toBe(true)
-			expect((actions as any).some((a: any) => a.title === `${ACTION_NAMES.ADD_TO_CONTEXT}`)).toBe(true)
+			expect((actions as any).some((a: any) => a.title === `${ACTION_TITLES.FIX}`)).toBe(true)
+			expect((actions as any).some((a: any) => a.title === `${ACTION_TITLES.ADD_TO_CONTEXT}`)).toBe(true)
 		})
 
 		it("should return empty array when no effective range", () => {

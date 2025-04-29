@@ -7,6 +7,7 @@ import { ClineProvider } from "../core/webview/ClineProvider"
 export const registerCodeActions = (context: vscode.ExtensionContext) => {
 	registerCodeAction(context, COMMAND_IDS.EXPLAIN, "EXPLAIN")
 	registerCodeAction(context, COMMAND_IDS.FIX, "FIX")
+	registerCodeAction(context, COMMAND_IDS.IMPROVE, "IMPROVE")
 	registerCodeAction(context, COMMAND_IDS.ADD_TO_CONTEXT, "ADD_TO_CONTEXT")
 }
 
