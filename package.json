@@ -151,16 +151,6 @@
 				"category": "Terminal"
 			},
 			{
-				"command": "roo-cline.terminalFixCommandInCurrentTask",
-				"title": "%command.terminal.fixCommandInCurrentTask.title%",
-				"category": "Terminal"
-			},
-			{
-				"command": "roo-cline.terminalExplainCommandInCurrentTask",
-				"title": "%command.terminal.explainCommandInCurrentTask.title%",
-				"category": "Terminal"
-			},
-			{
 				"command": "roo-cline.setCustomStoragePath",
 				"title": "%command.setCustomStoragePath.title%",
 				"category": "%configuration.title%"
@@ -207,14 +197,6 @@
 				{
 					"command": "roo-cline.terminalExplainCommand",
 					"group": "1_actions@3"
-				},
-				{
-					"command": "roo-cline.terminalFixCommandInCurrentTask",
-					"group": "1_actions@5"
-				},
-				{
-					"command": "roo-cline.terminalExplainCommandInCurrentTask",
-					"group": "1_actions@6"
 				}
 			],
 			"view/title": [

@@ -294,6 +294,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		// Capture telemetry for terminal action usage
 		telemetryService.captureCodeActionUsed(promptType)
 		const visibleProvider = await ClineProvider.getInstance()
+
 		if (!visibleProvider) {
 			return
 		}
@@ -303,20 +304,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const prompt = supportPrompt.create(promptType, params, customSupportPrompts)
 
 		if (command.endsWith("AddToContext")) {
-			await visibleProvider.postMessageToWebview({
-				type: "invoke",
-				invoke: "setChatBoxMessage",
-				text: prompt,
-			})
-			return
-		}
-
-		if (visibleProvider.getCurrentCline() && command.endsWith("InCurrentTask")) {
-			await visibleProvider.postMessageToWebview({
-				type: "invoke",
-				invoke: "sendMessage",
-				text: prompt,
-			})
+			await visibleProvider.postMessageToWebview({ type: "invoke", invoke: "setChatBoxMessage", text: prompt })
 			return
 		}
 
