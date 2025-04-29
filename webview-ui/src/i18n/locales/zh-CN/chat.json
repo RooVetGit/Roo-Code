@@ -115,7 +115,8 @@
 		"failed": "API请求失败",
 		"streaming": "API请求...",
 		"cancelled": "API请求已取消",
-		"streamingFailed": "API流式传输失败"
+		"streamingFailed": "API流式传输失败",
+		"viewDetailsTooltip": "查看 API 请求详细信息"
 	},
 	"checkpoint": {
 		"initial": "初始检查点",
@@ -135,7 +136,8 @@
 		"current": "当前"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo 想要获取详细指示以协助当前任务"
+		"wantsToFetch": "Roo 想要获取详细指示以协助当前任务",
+		"viewInstructions": "查看指示"
 	},
 	"fileOperations": {
 		"wantsToRead": "需要读取文件:",
@@ -148,7 +150,10 @@
 		"didSearchReplace": "已完成搜索和替换:",
 		"wantsToInsert": "需要在此文件中插入内容:",
 		"wantsToInsertWithLineNumber": "需要在第 {{lineNumber}} 行插入内容:",
-		"wantsToInsertAtEnd": "需要在文件末尾添加内容:"
+		"wantsToInsertAtEnd": "需要在文件末尾添加内容:",
+		"viewDefinitions": "查看定义",
+		"viewFileList": "查看文件列表",
+		"viewSearchResults": "查看搜索结果"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "需要查看目录文件列表:",
@@ -158,7 +163,10 @@
 		"wantsToViewDefinitions": "Roo想查看此目录中使用的源代码定义名称:",
 		"didViewDefinitions": "Roo已查看此目录中使用的源代码定义名称:",
 		"wantsToSearch": "需要搜索内容: {{regex}}",
-		"didSearch": "已完成内容搜索: {{regex}}"
+		"didSearch": "已完成内容搜索: {{regex}}",
+		"viewDefinitions": "查看定义",
+		"viewFileList": "查看文件列表",
+		"viewSearchResults": "查看搜索结果"
 	},
 	"commandOutput": "命令输出",
 	"response": "响应",
@@ -186,6 +194,17 @@
 		"hasQuestion": "Roo有一个问题:"
 	},
 	"taskCompleted": "任务完成",
+<<<<<<< HEAD
+=======
+	"shellIntegration": {
+		"unavailable": "Shell集成不可用",
+		"troubleshooting": "仍有问题吗？点击此处查看Shell集成文档。",
+		"checkSettings": "检查设置页面中的终端解决方案",
+		"updateVSCode": "更新VSCode",
+		"supportedShell": "确保使用受支持的shell：zsh、bash、fish或PowerShell",
+		"troubleshootingGuide": "仍有问题吗？点击此处查看Shell集成文档。"
+	},
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 	"powershell": {
 		"issues": "看起来您遇到了Windows PowerShell问题，请参阅此"
 	},
@@ -243,9 +262,20 @@
 		}
 	},
 	"systemPromptWarning": "警告：自定义系统提示词覆盖已激活。这可能严重破坏功能并导致不可预测的行为。",
+<<<<<<< HEAD
 	"shellIntegration": {
 		"title": "命令执行警告",
 		"description": "您的命令正在没有 VSCode 终端 shell 集成的情况下执行。要隐藏此警告，您可以在 <settingsLink>Roo Code 设置</settingsLink>的 <strong>Terminal</strong> 部分禁用 shell 集成，或使用下方链接排查 VSCode 终端集成问题。",
 		"troubleshooting": "点击此处查看 shell 集成文档。"
 	}
+=======
+	"selectApiConfig": "选择 API 配置",
+	"copyAsMarkdown": "复制为 markdown",
+	"filePathFormat": " ({{filePath}})",
+	"viewCommandOutput": "查看命令输出",
+	"viewFeedbackDiff": "查看反馈差异",
+	"viewChanges": "查看更改",
+	"viewDiff": "查看差异",
+	"viewFileContent": "查看文件内容"
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 }

@@ -69,7 +69,7 @@ class ApiRequestContentProvider implements vscode.TextDocumentContentProvider {
 // Content provider for generic tool outputs
 class ToolOutputContentProvider implements vscode.TextDocumentContentProvider {
 	provideTextDocumentContent(uri: vscode.Uri): string {
-		const contentId = uri.query
+		const contentId = uri.path
 		return (
 			toolOutputContentStore.get(contentId)?.content ||
 			`// Error: Could not find tool output for ID: ${contentId}`

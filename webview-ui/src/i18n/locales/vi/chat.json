@@ -115,7 +115,8 @@
 		"failed": "Yêu cầu API thất bại",
 		"streaming": "Yêu cầu API...",
 		"cancelled": "Yêu cầu API đã hủy",
-		"streamingFailed": "Streaming API thất bại"
+		"streamingFailed": "Streaming API thất bại",
+		"viewDetailsTooltip": "Xem chi tiết yêu cầu API"
 	},
 	"checkpoint": {
 		"initial": "Điểm kiểm tra ban đầu",
@@ -135,7 +136,8 @@
 		"current": "Hiện tại"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo muốn lấy hướng dẫn chi tiết để hỗ trợ nhiệm vụ hiện tại"
+		"wantsToFetch": "Roo muốn lấy hướng dẫn chi tiết để hỗ trợ nhiệm vụ hiện tại",
+		"viewInstructions": "Xem hướng dẫn"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo muốn đọc tệp này:",
@@ -148,7 +150,10 @@
 		"didSearchReplace": "Roo đã thực hiện tìm kiếm và thay thế trong tệp này:",
 		"wantsToInsert": "Roo muốn chèn nội dung vào tệp này:",
 		"wantsToInsertWithLineNumber": "Roo muốn chèn nội dung vào dòng {{lineNumber}} của tệp này:",
-		"wantsToInsertAtEnd": "Roo muốn thêm nội dung vào cuối tệp này:"
+		"wantsToInsertAtEnd": "Roo muốn thêm nội dung vào cuối tệp này:",
+		"viewDefinitions": "Xem định nghĩa",
+		"viewFileList": "Xem danh sách tệp",
+		"viewSearchResults": "Xem kết quả tìm kiếm"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo muốn xem các tệp cấp cao nhất trong thư mục này:",
@@ -158,7 +163,10 @@
 		"wantsToViewDefinitions": "Roo muốn xem tên định nghĩa mã nguồn được sử dụng trong thư mục này:",
 		"didViewDefinitions": "Roo đã xem tên định nghĩa mã nguồn được sử dụng trong thư mục này:",
 		"wantsToSearch": "Roo muốn tìm kiếm trong thư mục này cho <code>{{regex}}</code>:",
-		"didSearch": "Roo đã tìm kiếm trong thư mục này cho <code>{{regex}}</code>:"
+		"didSearch": "Roo đã tìm kiếm trong thư mục này cho <code>{{regex}}</code>:",
+		"viewDefinitions": "Xem định nghĩa",
+		"viewFileList": "Xem danh sách tệp",
+		"viewSearchResults": "Xem kết quả tìm kiếm"
 	},
 	"commandOutput": "Kết quả lệnh",
 	"response": "Phản hồi",
@@ -186,6 +194,17 @@
 		"hasQuestion": "Roo có một câu hỏi:"
 	},
 	"taskCompleted": "Nhiệm vụ hoàn thành",
+<<<<<<< HEAD
+=======
+	"shellIntegration": {
+		"unavailable": "Tích hợp shell không khả dụng",
+		"troubleshooting": "Vẫn gặp vấn đề? Nhấp vào đây để xem tài liệu tích hợp shell.",
+		"checkSettings": "Kiểm tra các giải pháp thay thế cho terminal trong trang cài đặt",
+		"updateVSCode": "Cập nhật VSCode",
+		"supportedShell": "Đảm bảo bạn đang sử dụng shell được hỗ trợ: zsh, bash, fish hoặc PowerShell",
+		"troubleshootingGuide": "Vẫn gặp vấn đề? Nhấp vào đây để xem tài liệu tích hợp shell."
+	},
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 	"powershell": {
 		"issues": "Có vẻ như bạn đang gặp vấn đề với Windows PowerShell, vui lòng xem"
 	},
@@ -243,9 +262,20 @@
 		}
 	},
 	"systemPromptWarning": "CẢNH BÁO: Đã kích hoạt ghi đè lệnh nhắc hệ thống tùy chỉnh. Điều này có thể phá vỡ nghiêm trọng chức năng và gây ra hành vi không thể dự đoán.",
+<<<<<<< HEAD
 	"shellIntegration": {
 		"title": "Cảnh báo thực thi lệnh",
 		"description": "Lệnh của bạn đang được thực thi mà không có tích hợp shell terminal VSCode. Để ẩn cảnh báo này, bạn có thể vô hiệu hóa tích hợp shell trong phần <strong>Terminal</strong> của <settingsLink>cài đặt Roo Code</settingsLink> hoặc khắc phục sự cố tích hợp terminal VSCode bằng liên kết bên dưới.",
 		"troubleshooting": "Nhấp vào đây để xem tài liệu tích hợp shell."
 	}
+=======
+	"selectApiConfig": "Chọn cấu hình API",
+	"copyAsMarkdown": "Sao chép dưới dạng markdown",
+	"filePathFormat": " ({{filePath}})",
+	"viewCommandOutput": "Xem đầu ra lệnh",
+	"viewFeedbackDiff": "Xem sự khác biệt phản hồi",
+	"viewChanges": "Xem thay đổi",
+	"viewDiff": "Xem khác biệt",
+	"viewFileContent": "Xem nội dung tệp"
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 }

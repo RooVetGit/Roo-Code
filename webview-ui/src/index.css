@@ -475,4 +475,6 @@ input[cmdk-input]:focus {
 	to {
 		opacity: 1;
 	}
+.roo-tool-use {
+	@apply min-h-7 rounded py-2 px-3 items-center cursor-pointer select-none border  bg-vscode-editor-background;
 }

@@ -110,7 +110,8 @@
 		"failed": "API-запрос не выполнен",
 		"streaming": "API-запрос...",
 		"cancelled": "API-запрос отменен",
-		"streamingFailed": "Ошибка потокового API-запроса"
+		"streamingFailed": "Ошибка потокового API-запроса",
+		"viewDetailsTooltip": "Просмотреть детали API-запроса"
 	},
 	"checkpoint": {
 		"initial": "Начальная точка сохранения",
@@ -130,7 +131,8 @@
 		"current": "Текущая"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo хочет получить подробные инструкции для помощи с текущей задачей"
+		"wantsToFetch": "Roo хочет получить подробные инструкции для помощи с текущей задачей",
+		"viewInstructions": "Просмотреть инструкции"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo хочет прочитать этот файл:",
@@ -143,7 +145,10 @@
 		"didSearchReplace": "Roo выполнил поиск и замену в этом файле:",
 		"wantsToInsert": "Roo хочет вставить содержимое в этот файл:",
 		"wantsToInsertWithLineNumber": "Roo хочет вставить содержимое в этот файл на строку {{lineNumber}}:",
-		"wantsToInsertAtEnd": "Roo хочет добавить содержимое в конец этого файла:"
+		"wantsToInsertAtEnd": "Roo хочет добавить содержимое в конец этого файла:",
+		"viewDefinitions": "Просмотреть определения",
+		"viewFileList": "Просмотреть список файлов",
+		"viewSearchResults": "Просмотреть результаты поиска"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo хочет просмотреть файлы верхнего уровня в этой директории:",
@@ -153,7 +158,10 @@
 		"wantsToViewDefinitions": "Roo хочет просмотреть имена определений исходного кода в этой директории:",
 		"didViewDefinitions": "Roo просмотрел имена определений исходного кода в этой директории:",
 		"wantsToSearch": "Roo хочет выполнить поиск в этой директории по <code>{{regex}}</code>:",
-		"didSearch": "Roo выполнил поиск в этой директории по <code>{{regex}}</code>:"
+		"didSearch": "Roo выполнил поиск в этой директории по <code>{{regex}}</code>:",
+		"viewDefinitions": "Просмотреть определения",
+		"viewFileList": "Просмотреть список файлов",
+		"viewSearchResults": "Просмотреть результаты поиска"
 	},
 	"commandOutput": "Вывод команды",
 	"response": "Ответ",
@@ -186,6 +194,17 @@
 		"title": "Не удалось выполнить редактирование"
 	},
 	"troubleMessage": "У Roo возникли проблемы...",
+<<<<<<< HEAD
+=======
+	"shellIntegration": {
+		"unavailable": "Интеграция с оболочкой недоступна",
+		"troubleshooting": "Все еще есть проблемы? Кликните здесь для документации по интеграции с оболочкой.",
+		"checkSettings": "Проверьте обходные решения для терминала на странице настроек",
+		"updateVSCode": "Обновите VSCode",
+		"supportedShell": "Убедитесь, что вы используете поддерживаемую оболочку: zsh, bash, fish или PowerShell",
+		"troubleshootingGuide": "Все еще есть проблемы? Кликните здесь для документации по интеграции с оболочкой."
+	},
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 	"powershell": {
 		"issues": "Похоже, у вас проблемы с Windows PowerShell, пожалуйста, ознакомьтесь с этим"
 	},
@@ -233,6 +252,7 @@
 			"close": "Закрыть браузер"
 		}
 	},
+<<<<<<< HEAD
 	"codeblock": {
 		"tooltips": {
 			"expand": "Развернуть блок кода",
@@ -248,4 +268,15 @@
 		"description": "Ваша команда выполняется без интеграции оболочки терминала VSCode. Чтобы скрыть это предупреждение, вы можете отключить интеграцию оболочки в разделе <strong>Terminal</strong> в <settingsLink>настройках Roo Code</settingsLink> или устранить проблемы с интеграцией терминала VSCode, используя ссылку ниже.",
 		"troubleshooting": "Нажмите здесь для просмотра документации по интеграции оболочки."
 	}
+=======
+	"systemPromptWarning": "ПРЕДУПРЕЖДЕНИЕ: Активна пользовательская системная подсказка. Это может серьезно нарушить работу и вызвать непредсказуемое поведение.",
+	"selectApiConfig": "Выберите конфигурацию API",
+	"copyAsMarkdown": "Скопировать как markdown",
+	"filePathFormat": " ({{filePath}})",
+	"viewCommandOutput": "Просмотреть вывод команды",
+	"viewFeedbackDiff": "Просмотреть разницу отзывов",
+	"viewChanges": "Просмотреть изменения",
+	"viewDiff": "Просмотреть разницу",
+	"viewFileContent": "Просмотреть содержимое файла"
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 }

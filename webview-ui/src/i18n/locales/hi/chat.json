@@ -115,7 +115,8 @@
 		"failed": "API अनुरोध विफल हुआ",
 		"streaming": "API अनुरोध...",
 		"cancelled": "API अनुरोध रद्द किया गया",
-		"streamingFailed": "API स्ट्रीमिंग विफल हुई"
+		"streamingFailed": "API स्ट्रीमिंग विफल हुई",
+		"viewDetailsTooltip": "API अनुरोध विवरण देखें"
 	},
 	"checkpoint": {
 		"initial": "प्रारंभिक चेकपॉइंट",
@@ -135,7 +136,8 @@
 		"current": "वर्तमान"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo को वर्तमान कार्य में सहायता के लिए विस्तृत निर्देश प्राप्त करना है"
+		"wantsToFetch": "Roo को वर्तमान कार्य में सहायता के लिए विस्तृत निर्देश प्राप्त करना है",
+		"viewInstructions": "निर्देश देखें"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo इस फ़ाइल को पढ़ना चाहता है:",
@@ -148,7 +150,10 @@
 		"didSearchReplace": "Roo ने इस फ़ाइल में खोज और प्रतिस्थापन किया:",
 		"wantsToInsert": "Roo इस फ़ाइल में सामग्री डालना चाहता है:",
 		"wantsToInsertWithLineNumber": "Roo इस फ़ाइल की {{lineNumber}} लाइन पर सामग्री डालना चाहता है:",
-		"wantsToInsertAtEnd": "Roo इस फ़ाइल के अंत में सामग्री जोड़ना चाहता है:"
+		"wantsToInsertAtEnd": "Roo इस फ़ाइल के अंत में सामग्री जोड़ना चाहता है:",
+		"viewDefinitions": "परिभाषाएँ देखें",
+		"viewFileList": "फ़ाइल सूची देखें",
+		"viewSearchResults": "खोज परिणाम देखें"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo इस निर्देशिका में शीर्ष स्तर की फ़ाइलें देखना चाहता है:",
@@ -158,7 +163,10 @@
 		"wantsToViewDefinitions": "Roo इस निर्देशिका में उपयोग किए गए सोर्स कोड परिभाषा नामों को देखना चाहता है:",
 		"didViewDefinitions": "Roo ने इस निर्देशिका में उपयोग किए गए सोर्स कोड परिभाषा नामों को देखा:",
 		"wantsToSearch": "Roo इस निर्देशिका में <code>{{regex}}</code> के लिए खोज करना चाहता है:",
-		"didSearch": "Roo ने इस निर्देशिका में <code>{{regex}}</code> के लिए खोज की:"
+		"didSearch": "Roo ने इस निर्देशिका में <code>{{regex}}</code> के लिए खोज की:",
+		"viewDefinitions": "परिभाषाएँ देखें",
+		"viewFileList": "फ़ाइल सूची देखें",
+		"viewSearchResults": "खोज परिणाम देखें"
 	},
 	"commandOutput": "कमांड आउटपुट",
 	"response": "प्रतिक्रिया",
@@ -186,6 +194,17 @@
 		"hasQuestion": "Roo का एक प्रश्न है:"
 	},
 	"taskCompleted": "कार्य पूरा हुआ",
+<<<<<<< HEAD
+=======
+	"shellIntegration": {
+		"unavailable": "शेल एकीकरण अनुपलब्ध",
+		"troubleshooting": "अभी भी समस्या है? शेल एकीकरण दस्तावेज़ के लिए यहाँ क्लिक करें।",
+		"checkSettings": "सेटिंग्स पेज में टर्मिनल वर्कअराउंड जांचें",
+		"updateVSCode": "VSCode अपडेट करें",
+		"supportedShell": "सुनिश्चित करें कि आप समर्थित शेल का उपयोग कर रहे हैं: zsh, bash, fish या PowerShell",
+		"troubleshootingGuide": "अभी भी समस्या है? शेल एकीकरण दस्तावेज़ के लिए यहाँ क्लिक करें।"
+	},
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 	"powershell": {
 		"issues": "ऐसा लगता है कि आपको Windows PowerShell के साथ समस्याएँ हो रही हैं, कृपया इसे देखें"
 	},
@@ -243,9 +262,20 @@
 		}
 	},
 	"systemPromptWarning": "चेतावनी: कस्टम सिस्टम प्रॉम्प्ट ओवरराइड सक्रिय है। यह कार्यक्षमता को गंभीर रूप से बाधित कर सकता है और अनियमित व्यवहार का कारण बन सकता है.",
+<<<<<<< HEAD
 	"shellIntegration": {
 		"title": "कमांड निष्पादन चेतावनी",
 		"description": "आपका कमांड VSCode टर्मिनल शेल इंटीग्रेशन के बिना निष्पादित हो रहा है। इस चेतावनी को दबाने के लिए आप <settingsLink>Roo Code सेटिंग्स</settingsLink> के <strong>Terminal</strong> अनुभाग में शेल इंटीग्रेशन को अक्षम कर सकते हैं या नीचे दिए गए लिंक का उपयोग करके VSCode टर्मिनल इंटीग्रेशन की समस्या का समाधान कर सकते हैं।",
 		"troubleshooting": "शेल इंटीग्रेशन दस्तावेज़ के लिए यहां क्लिक करें।"
 	}
+=======
+	"selectApiConfig": "एपीआई कॉन्फ़िगरेशन का चयन करें",
+	"copyAsMarkdown": "मार्कडाउन के रूप में कॉपी करें",
+	"filePathFormat": " ({{filePath}})",
+	"viewCommandOutput": "कमांड आउटपुट देखें",
+	"viewFeedbackDiff": "प्रतिक्रिया अंतर देखें",
+	"viewChanges": "परिवर्तन देखें",
+	"viewDiff": "अंतर देखें",
+	"viewFileContent": "फ़ाइल सामग्री देखें"
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 }

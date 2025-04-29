@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next"
 import React from "react"
 import { vscode } from "@src/utils/vscode"
-import { CODE_BLOCK_BG_COLOR } from "./CodeBlock"
 interface ViewOutputBlockProps {
 	iconName: string
 	title: string
@@ -31,40 +30,16 @@ export const ViewOutputBlock: React.FC<ViewOutputBlockProps> = ({
 	const displayTitle = filePath ? `${title}${t("chat:filePathFormat", { filePath })}` : title
 
 	return (
-		<div
-			style={{
-				backgroundColor: CODE_BLOCK_BG_COLOR,
-				overflow: "hidden",
-
-				marginTop: 10, // Default margin, can be overridden with className or style prop if needed
-			}}
-			className="view-output-block border border-purple-300 text-purple-300 rounded-lg p-2" // Add a class for potential external styling
-		>
+		<div className="roo-tool-use border-purple-300/30">
+			{/* Rely on select-none for user selection */}
 			<div
-				style={{
-					display: "flex",
-					alignItems: "center",
-					padding: "9px 10px",
-					cursor: "pointer",
-					userSelect: "none",
-					WebkitUserSelect: "none",
-					MozUserSelect: "none",
-					msUserSelect: "none",
-				}}
+				className="flex items-center cursor-pointer select-none gap-4"
 				onClick={handleClick}
 				title={tooltip || title}>
-				<span className={`codicon codicon-${iconName}`} style={{ marginRight: "10px" }}></span>
-				<span
-					style={{
-						whiteSpace: "nowrap",
-						overflow: "hidden",
-						textOverflow: "ellipsis",
-						marginRight: "8px",
-					}}>
-					{displayTitle}
-				</span>
-				<div style={{ flexGrow: 1 }}></div>
-				<span className={`codicon codicon-link-external`} style={{ fontSize: 13.5, margin: "1px 0" }}></span>
+				<span className={`codicon codicon-${iconName}  text-purple-300/70`}></span>
+				<span className="whitespace-nowrap overflow-hidden text-ellipsis">{displayTitle}</span>
+				<div className="flex-grow"></div>
+				<span className={`codicon codicon-link-external text-[13.5px] `}></span>
 			</div>
 		</div>
 	)

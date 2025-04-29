@@ -115,7 +115,8 @@
 		"failed": "API 요청 실패",
 		"streaming": "API 요청...",
 		"cancelled": "API 요청 취소됨",
-		"streamingFailed": "API 스트리밍 실패"
+		"streamingFailed": "API 스트리밍 실패",
+		"viewDetailsTooltip": "API 요청 세부 정보 보기"
 	},
 	"checkpoint": {
 		"initial": "초기 체크포인트",
@@ -135,7 +136,8 @@
 		"current": "현재"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo는 현재 작업을 지원하기 위해 자세한 지침을 가져오려고 합니다"
+		"wantsToFetch": "Roo는 현재 작업을 지원하기 위해 자세한 지침을 가져오려고 합니다",
+		"viewInstructions": "지침 보기"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo가 이 파일을 읽고 싶어합니다:",
@@ -148,7 +150,10 @@
 		"didSearchReplace": "Roo가 이 파일에서 검색 및 바꾸기를 수행했습니다:",
 		"wantsToInsert": "Roo가 이 파일에 내용을 삽입하고 싶어합니다:",
 		"wantsToInsertWithLineNumber": "Roo가 이 파일의 {{lineNumber}}번 줄에 내용을 삽입하고 싶어합니다:",
-		"wantsToInsertAtEnd": "Roo가 이 파일의 끝에 내용을 추가하고 싶어합니다:"
+		"wantsToInsertAtEnd": "Roo가 이 파일의 끝에 내용을 추가하고 싶어합니다:",
+		"viewDefinitions": "정의 보기",
+		"viewFileList": "파일 목록 보기",
+		"viewSearchResults": "검색 결과 보기"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo가 이 디렉토리의 최상위 파일을 보고 싶어합니다:",
@@ -158,7 +163,10 @@
 		"wantsToViewDefinitions": "Roo가 이 디렉토리에서 사용된 소스 코드 정의 이름을 보고 싶어합니다:",
 		"didViewDefinitions": "Roo가 이 디렉토리에서 사용된 소스 코드 정의 이름을 보았습니다:",
 		"wantsToSearch": "Roo가 이 디렉토리에서 <code>{{regex}}</code>을(를) 검색하고 싶어합니다:",
-		"didSearch": "Roo가 이 디렉토리에서 <code>{{regex}}</code>을(를) 검색했습니다:"
+		"didSearch": "Roo가 이 디렉토리에서 <code>{{regex}}</code>을(를) 검색했습니다:",
+		"viewDefinitions": "정의 보기",
+		"viewFileList": "파일 목록 보기",
+		"viewSearchResults": "검색 결과 보기"
 	},
 	"commandOutput": "명령 출력",
 	"response": "응답",
@@ -186,6 +194,17 @@
 		"hasQuestion": "Roo에게 질문이 있습니다:"
 	},
 	"taskCompleted": "작업 완료",
+<<<<<<< HEAD
+=======
+	"shellIntegration": {
+		"unavailable": "쉘 통합 사용 불가",
+		"troubleshooting": "여전히 문제가 있나요? 쉘 통합 문서를 보려면 여기를 클릭하세요.",
+		"checkSettings": "설정 페이지에서 터미널 해결 방법을 확인하세요",
+		"updateVSCode": "VSCode를 업데이트하세요",
+		"supportedShell": "지원되는 쉘을 사용하고 있는지 확인하세요: zsh, bash, fish 또는 PowerShell",
+		"troubleshootingGuide": "여전히 문제가 있나요? 쉘 통합 문서를 보려면 여기를 클릭하세요."
+	},
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 	"powershell": {
 		"issues": "Windows PowerShell에 문제가 있는 것 같습니다. 다음을 참조하세요"
 	},
@@ -243,9 +262,20 @@
 		}
 	},
 	"systemPromptWarning": "경고: 사용자 정의 시스템 프롬프트 재정의가 활성화되었습니다. 이로 인해 기능이 심각하게 손상되고 예측할 수 없는 동작이 발생할 수 있습니다.",
+<<<<<<< HEAD
 	"shellIntegration": {
 		"title": "명령 실행 경고",
 		"description": "명령이 VSCode 터미널 쉘 통합 없이 실행되고 있습니다. 이 경고를 숨기려면 <settingsLink>Roo Code 설정</settingsLink>의 <strong>Terminal</strong> 섹션에서 쉘 통합을 비활성화하거나 아래 링크를 사용하여 VSCode 터미널 통합 문제를 해결하세요.",
 		"troubleshooting": "쉘 통합 문서를 보려면 여기를 클릭하세요."
 	}
+=======
+	"selectApiConfig": "API 구성 선택",
+	"copyAsMarkdown": "마크다운으로 복사",
+	"filePathFormat": " ({{filePath}})",
+	"viewCommandOutput": "명령 출력 보기",
+	"viewFeedbackDiff": "피드백 차이 보기",
+	"viewChanges": "변경 사항 보기",
+	"viewDiff": "차이점 보기",
+	"viewFileContent": "파일 내용 보기"
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 }

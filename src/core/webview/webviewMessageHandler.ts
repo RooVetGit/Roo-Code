@@ -527,34 +527,33 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		}
 		case "soundEnabled":
 			const soundEnabled = message.bool ?? true
-			break
-		case "showToolOutput":
-			{
-				const content = message.content
-				const language = message.language || "plaintext" // Default to plaintext if language not provided
-				if (typeof content === "string") {
-					try {
-						// Use the generic content provider
-						const customUri = ToolOutputContentProvider.addContent(content, language)
-						// Open the document using the custom URI
-						await vscode.window.showTextDocument(customUri, {
-							preview: true,
-							viewColumn: vscode.ViewColumn.Active,
-						})
-					} catch (error) {
-						vscode.window.showErrorMessage(`Failed to open tool output: ${error}`)
-						provider.log(`Error opening tool output via content provider: ${error}`)
-					}
-				} else {
-					vscode.window.showWarningMessage("Could not display tool output: Invalid content received.")
-					provider.log(`Received invalid content for showToolOutput: ${typeof content}`)
-				}
-				break
-			}
 			await updateGlobalState("soundEnabled", soundEnabled)
-			setSoundEnabled(soundEnabled) // Add this line to update the sound utility
+			setSoundEnabled(soundEnabled) // Update the sound utility
 			await provider.postStateToWebview()
-			break
+			break // Correctly placed break for soundEnabled case
+		case "showToolOutput": {
+			const content = message.content
+			const language = message.language || "plaintext" // Default to plaintext if language not provided
+			if (typeof content === "string") {
+				try {
+					// Use the generic content provider
+					const customUri = ToolOutputContentProvider.addContent(content, language)
+					// Open the document using the custom URI
+					await vscode.window.showTextDocument(customUri, {
+						preview: true,
+						viewColumn: vscode.ViewColumn.Active,
+					})
+				} catch (error) {
+					vscode.window.showErrorMessage(`Failed to open tool output: ${error}`)
+					provider.log(`Error opening tool output via content provider: ${error}`)
+				}
+			} else {
+				vscode.window.showWarningMessage("Could not display tool output: Invalid content received.")
+				provider.log(`Received invalid content for showToolOutput: ${typeof content}`)
+			}
+			break // Correct break for showToolOutput case
+		}
+		// Removed misplaced lines from here
 		case "soundVolume":
 			const soundVolume = message.value ?? 0.5
 			await updateGlobalState("soundVolume", soundVolume)
