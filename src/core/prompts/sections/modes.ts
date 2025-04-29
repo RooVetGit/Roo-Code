@@ -1,8 +1,8 @@
 import * as path from "path"
 import * as vscode from "vscode"
 import { promises as fs } from "fs"
+
 import { ModeConfig, getAllModesWithPrompts } from "../../../shared/modes"
-import { GlobalFileNames } from "../../../shared/globalFileNames"
 
 export async function getModesSection(context: vscode.ExtensionContext): Promise<string> {
 	const settingsDir = path.join(context.globalStorageUri.fsPath, "settings")
@@ -18,12 +18,12 @@ MODES
 - These are the currently available modes:
 ${allModes.map((mode: ModeConfig) => `  * "${mode.name}" mode (${mode.slug}) - ${mode.roleDefinition.split(".")[0]}`).join("\n")}`
 
-	modesContent += `
-If the user asks you to create or edit a new mode for this project, you should read the instructions by using the fetch_instructions tool, like this:
-<fetch_instructions>
-<task>create_mode</task>
-</fetch_instructions>
-`
+// 	modesContent += `
+// If the user asks you to create or edit a new mode for this project, you should read the instructions by using the fetch_instructions tool, like this:
+// <fetch_instructions>
+// <task>create_mode</task>
+// </fetch_instructions>
+// `
 
 	return modesContent
 }

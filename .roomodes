@@ -34,6 +34,13 @@
         ]
       ],
       "source": "project"
+    },
+    {
+      "slug": "ces",
+      "name": "ces",
+      "roleDefinition": "ces",
+      "groups": [],
+      "source": "project"
     }
   ]
 }

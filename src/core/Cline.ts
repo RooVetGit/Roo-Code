@@ -80,6 +80,7 @@ import { newTaskTool } from "./tools/newTaskTool"
 // prompts
 import { formatResponse } from "./prompts/responses"
 import { SYSTEM_PROMPT } from "./prompts/system"
+import { addCodebaseInToConversation } from "./prompts/constant_prompt"
 
 // ... everything else
 import { parseMentions } from "./mentions"
@@ -991,8 +992,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 				enableMcpServerCreation,
 				language,
 				rooIgnoreInstructions,
-				this.apiConversationHistory, // Pass conversation history
-				this,
 			)
 		})()
 
@@ -1059,7 +1058,12 @@ export class Cline extends EventEmitter<ClineEvents> {
 			return { role, content }
 		})
 
-		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory, this.promptCacheKey)
+
+		const ConversationHistoryWithCodebase = cloneDeep(cleanConversationHistory) 
+		// 将codebase加入会话上下文
+		await addCodebaseInToConversation(ConversationHistoryWithCodebase, mcpHub, this)
+
+		const stream = this.api.createMessage(systemPrompt, ConversationHistoryWithCodebase, this.promptCacheKey)
 		const iterator = stream[Symbol.asyncIterator]()
 
 		try {

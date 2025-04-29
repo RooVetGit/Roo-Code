@@ -3,7 +3,6 @@ import {
 	modes,
 	CustomModePrompts,
 	PromptComponent,
-	getRoleDefinition,
 	defaultModeSlug,
 	ModeConfig,
 	getModeBySlug,
@@ -28,9 +27,6 @@ import {
 } from "./sections"
 import { loadSystemPromptFile } from "./sections/custom-system-prompt"
 import { formatLanguage } from "../../shared/language"
-import { generateConstMcpPrompt } from "./constant_prompt"
-import { Anthropic } from "@anthropic-ai/sdk"
-import { Cline } from "../Cline"
 
 async function generatePrompt(
 	context: vscode.ExtensionContext,
@@ -48,8 +44,6 @@ async function generatePrompt(
 	enableMcpServerCreation?: boolean,
 	language?: string,
 	rooIgnoreInstructions?: string,
-	conversation?: (Anthropic.MessageParam & { ts?: number })[], // 新增参数：接收对话信息
-	cline?: Cline,
 ): Promise<string> {
 	if (!context) {
 		throw new Error("Extension context is required for generating system prompt")
@@ -61,9 +55,6 @@ async function generatePrompt(
 	// Get the full mode config to ensure we have the role definition
 	const modeConfig = getModeBySlug(mode, customModeConfigs) || modes.find((m) => m.slug === mode) || modes[0]
 	const roleDefinition = promptComponent?.roleDefinition || modeConfig.roleDefinition
-
-	// 获取MCP代码上下文，传递对话信息
-	const mcpCodeContext = await generateConstMcpPrompt(mcpHub, conversation, cline)
 
 	const [modesSection, mcpServersSection] = await Promise.all([
 		getModesSection(context),
@@ -87,21 +78,19 @@ ${getToolDescriptionsForMode(
 	experiments,
 )}
 
-${getToolUseGuidelinesSection()}
+${modeConfig.groups.length? getToolUseGuidelinesSection():""}
 
 ${mcpServersSection}
 
-${getCapabilitiesSection(cwd, supportsComputerUse, mcpHub, effectiveDiffStrategy)}
+${modeConfig.groups.length? getCapabilitiesSection(cwd, supportsComputerUse, mcpHub, effectiveDiffStrategy, modeConfig):""}
 
 ${modesSection}
 
-${getRulesSection(cwd, supportsComputerUse, effectiveDiffStrategy, experiments)}
+${modeConfig.groups.length? getRulesSection(cwd, supportsComputerUse, effectiveDiffStrategy, modeConfig):""}
 
-${getSystemInfoSection(cwd, mode, customModeConfigs)}
+${getSystemInfoSection(cwd)}
 
-${getObjectiveSection()}
-
-${mcpCodeContext}
+${modeConfig.groups.length? getObjectiveSection():""}
 
 ${await addCustomInstructions(promptComponent?.customInstructions || modeConfig.customInstructions || "", globalCustomInstructions || "", cwd, mode, { language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions })}`
 
@@ -124,8 +113,6 @@ export const SYSTEM_PROMPT = async (
 	enableMcpServerCreation?: boolean,
 	language?: string,
 	rooIgnoreInstructions?: string,
-	conversation?: Array<any>, // 新增参数：接收对话信息
-	cline?: Cline,
 ): Promise<string> => {
 	if (!context) {
 		throw new Error("Extension context is required for generating system prompt")
@@ -192,7 +179,5 @@ ${customInstructions}`
 		enableMcpServerCreation,
 		language,
 		rooIgnoreInstructions,
-		conversation, // 传递对话信息参数
-		cline,
 	)
 }

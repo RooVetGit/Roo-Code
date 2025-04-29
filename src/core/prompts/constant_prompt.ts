@@ -1,6 +1,7 @@
-import { any } from "zod"
+
 import { McpHub } from "../../services/mcp/McpHub"
 import { Cline } from "../Cline"
+import { Anthropic } from "@anthropic-ai/sdk"
 
 /**
  * 生成MCP相关的提示内容
@@ -129,6 +130,45 @@ ${contextContent}
     return ""
   }
 }
+
+export async function addCodebaseInToConversation(cleanConversationHistory :{
+    role: "user" | "assistant";
+    content: string | Anthropic.Messages.ContentBlockParam[];
+  }[], 
+mcpHub?: McpHub, cline?:Cline) {
+  // 将CodeBase加入最后一个对话块
+  const lastMessage = cleanConversationHistory.at(-1); 
+  if (lastMessage && (typeof lastMessage.content === "string" || Array.isArray(lastMessage.content))) {
+    const mcpCodeContext = await generateConstMcpPrompt(mcpHub, cleanConversationHistory, cline)
+    if (mcpCodeContext && mcpCodeContext !== "") {
+      
+      const CodeBaseContext = `
+${mcpCodeContext}
+
+The above context is obtained through the codebase tool, and you should prioritize using these contexts to solve the user's problems. However, these contexts may be lagging, so if you have already obtained the content of the same file through the file reading tool or if you have edited the file, please take the result of the file reading tool or your edit as the standard.
+`
+      if (Array.isArray(lastMessage.content)) {
+        lastMessage.content.push({
+          type: "text",
+          text: CodeBaseContext,
+        });
+      } else if (typeof lastMessage.content === "string") {
+        lastMessage.content = [
+          {
+            type: "text",
+            text: lastMessage.content // 原始文本内容
+          },
+          {
+            type: "text", 
+            text: CodeBaseContext
+          }
+        ];
+      }
+    }
+  }
+}
+
+
 
 
 
