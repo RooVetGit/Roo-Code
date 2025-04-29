@@ -1,5 +1,5 @@
 {
-	"greeting": "Co Roo może dla Ciebie zrobić?",
+	"greeting": "Witamy w Roo Code",
 	"task": {
 		"title": "Zadanie",
 		"seeMore": "Zobacz więcej",
@@ -52,6 +52,10 @@
 		"title": "Kontynuuj podczas wykonywania",
 		"tooltip": "Kontynuuj pomimo ostrzeżeń"
 	},
+	"killCommand": {
+		"title": "Zatrzymaj polecenie",
+		"tooltip": "Zatrzymaj bieżące polecenie"
+	},
 	"resumeTask": {
 		"title": "Wznów zadanie",
 		"tooltip": "Kontynuuj bieżące zadanie"
@@ -65,9 +69,27 @@
 		"tooltip": "Anuluj bieżącą operację"
 	},
 	"scrollToBottom": "Przewiń do dołu czatu",
-	"aboutMe": "Dzięki najnowszym przełomom w zdolnościach kodowania agentowego, mogę krok po kroku obsługiwać złożone zadania związane z tworzeniem oprogramowania. Dzięki narzędziom, które pozwalają mi tworzyć i edytować pliki, eksplorować złożone projekty, korzystać z przeglądarki i wykonywać polecenia terminala (po udzieleniu zgody), mogę pomagać w sposób wykraczający poza uzupełnianie kodu czy wsparcie techniczne. Mogę nawet używać MCP do tworzenia nowych narzędzi i rozszerzania własnych możliwości.",
+	"about": "Generuj, refaktoryzuj i debuguj kod z pomocą sztucznej inteligencji.<br />Sprawdź naszą <DocsLink>dokumentację</DocsLink>, aby dowiedzieć się więcej.",
+	"onboarding": "<strong>Twoja lista zadań w tym obszarze roboczym jest pusta.</strong> Zacznij od wpisania zadania poniżej. Nie wiesz, jak zacząć? Przeczytaj więcej o tym, co Roo może dla Ciebie zrobić w <DocsLink>dokumentacji</DocsLink>.",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "Zadania bumerangowe",
+			"description": "Podziel zadania na mniejsze, łatwiejsze do zarządzania części."
+		},
+		"stickyModels": {
+			"title": "Tryby trwałe",
+			"description": "Każdy tryb zapamiętuje ostatnio używany model"
+		},
+		"tools": {
+			"title": "Narzędzia",
+			"description": "Pozwól sztucznej inteligencji rozwiązywać problemy, przeglądając sieć, uruchamiając polecenia i nie tylko."
+		},
+		"customizableModes": {
+			"title": "Konfigurowalne tryby",
+			"description": "Wyspecjalizowane persona z własnymi zachowaniami i przypisanymi modelami"
+		}
+	},
 	"selectMode": "Wybierz tryb interakcji",
-	"selectApiConfig": "Wybierz konfigurację API",
 	"enhancePrompt": "Ulepsz podpowiedź dodatkowym kontekstem",
 	"addImages": "Dodaj obrazy do wiadomości",
 	"sendMessage": "Wyślij wiadomość",
@@ -120,7 +142,12 @@
 		"didRead": "Roo przeczytał ten plik:",
 		"wantsToEdit": "Roo chce edytować ten plik:",
 		"wantsToEditOutsideWorkspace": "Roo chce edytować ten plik poza obszarem roboczym:",
-		"wantsToCreate": "Roo chce utworzyć nowy plik:"
+		"wantsToCreate": "Roo chce utworzyć nowy plik:",
+		"wantsToSearchReplace": "Roo chce wykonać wyszukiwanie i zamianę w tym pliku:",
+		"didSearchReplace": "Roo wykonał wyszukiwanie i zamianę w tym pliku:",
+		"wantsToInsert": "Roo chce wstawić zawartość do tego pliku:",
+		"wantsToInsertWithLineNumber": "Roo chce wstawić zawartość do tego pliku w linii {{lineNumber}}:",
+		"wantsToInsertAtEnd": "Roo chce dodać zawartość na końcu tego pliku:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo chce zobaczyć pliki najwyższego poziomu w tym katalogu:",
@@ -181,12 +208,12 @@
 		"copyToInput": "Kopiuj do pola wprowadzania (lub Shift + kliknięcie)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.12 wydany",
-		"description": "Roo Code 3.12 przynosi nowe funkcje i ulepszenia na podstawie Twoich opinii.",
+		"title": "🎉 Roo Code 3.14 wydany",
+		"description": "Roo Code 3.14 przynosi nowe funkcje i ulepszenia na podstawie Twoich opinii.",
 		"whatsNew": "Co nowego",
-		"feature1": "<bold>Wsparcie dla Grok</bold>: Dodano dostawcę xAI i opcje wysiłku rozumowania Grok na OpenRouter",
-		"feature2": "<bold>Ulepszenia edycji różnic</bold>: Konfiguracja dla poszczególnych profili i lepsza normalizacja ciągów znaków dla mniejszej liczby błędów",
-		"feature3": "<bold>Ulepszenia punktów kontrolnych</bold>: Szybsze i bardziej niezawodne punkty kontrolne",
+		"feature1": "<bold>Ulepszone narzędzia edycji</bold>: Narzędzia <code>search_and_replace</code> i <code>insert_content</code> zostały ulepszone i nie są już eksperymentalne",
+		"feature2": "<bold>Poprawki apply_diff</bold>: Kontynuujemy pracę nad ulepszaniem narzędzia <code>apply_diff</code>",
+		"feature3": "<bold>Mnóstwo innych ulepszeń</bold>: Liczne poprawki i usprawnienia w całym rozszerzeniu",
 		"hideButton": "Ukryj ogłoszenie",
 		"detailsDiscussLinks": "Uzyskaj więcej szczegółów i dołącz do dyskusji na <discordLink>Discord</discordLink> i <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -211,5 +238,7 @@
 			"scrollUp": "Przewiń w górę",
 			"close": "Zamknij przeglądarkę"
 		}
-	}
+	},
+	"systemPromptWarning": "OSTRZEŻENIE: Aktywne niestandardowe zastąpienie instrukcji systemowych. Może to poważnie zakłócić funkcjonalność i powodować nieprzewidywalne zachowanie.",
+	"selectApiConfig": "Wybierz konfigurację API"
 }

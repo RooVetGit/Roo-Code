@@ -1,5 +1,5 @@
 {
-	"greeting": "Was kann Roo für dich tun?",
+	"greeting": "Willkommen bei Roo Code",
 	"task": {
 		"title": "Aufgabe",
 		"seeMore": "Mehr anzeigen",
@@ -52,6 +52,10 @@
 		"title": "Während Ausführung fortfahren",
 		"tooltip": "Trotz Warnungen fortfahren"
 	},
+	"killCommand": {
+		"title": "Befehl abbrechen",
+		"tooltip": "Aktuellen Befehl abbrechen"
+	},
 	"resumeTask": {
 		"title": "Aufgabe fortsetzen",
 		"tooltip": "Aktuelle Aufgabe fortsetzen"
@@ -65,9 +69,27 @@
 		"tooltip": "Aktuelle Operation abbrechen"
 	},
 	"scrollToBottom": "Zum Chat-Ende scrollen",
-	"aboutMe": "Dank neuester Durchbrüche in agentischen Coding-Fähigkeiten kann ich komplexe Softwareentwicklungsaufgaben schrittweise bearbeiten. Mit Werkzeugen, die mir erlauben, Dateien zu erstellen und zu bearbeiten, komplexe Projekte zu erkunden, den Browser zu nutzen und Terminalbefehle auszuführen (nachdem du die Erlaubnis erteilt hast), kann ich dir auf Weisen helfen, die über Code-Vervollständigung oder technischen Support hinausgehen. Ich kann sogar MCP nutzen, um neue Werkzeuge zu erstellen und meine eigenen Fähigkeiten zu erweitern.",
+	"about": "Generiere, überarbeite und debugge Code mit KI-Unterstützung.<br />Weitere Informationen findest du in unserer <DocsLink>Dokumentation</DocsLink>.",
+	"onboarding": "<strong>Deine Aufgabenliste in diesem Arbeitsbereich ist leer.</strong> Beginne mit der Eingabe einer Aufgabe unten. Du bist dir nicht sicher, wie du anfangen sollst? Lies mehr darüber, was Roo für dich tun kann, in <DocsLink>den Dokumenten</DocsLink>.",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "Bumerang-Aufgaben",
+			"description": "Teile Aufgaben in kleinere, überschaubare Teile auf."
+		},
+		"stickyModels": {
+			"title": "Sticky Modi",
+			"description": "Jeder Modus merkt sich dein zuletzt verwendetes Modell"
+		},
+		"tools": {
+			"title": "Tools",
+			"description": "Erlaube der KI, Probleme durch Surfen im Web, Ausführen von Befehlen und mehr zu lösen."
+		},
+		"customizableModes": {
+			"title": "Anpassbare Modi",
+			"description": "Spezialisierte Personas mit eigenem Verhalten und zugewiesenen Modellen"
+		}
+	},
 	"selectMode": "Interaktionsmodus auswählen",
-	"selectApiConfig": "API-Konfiguration auswählen",
 	"enhancePrompt": "Prompt mit zusätzlichem Kontext verbessern",
 	"addImages": "Bilder zur Nachricht hinzufügen",
 	"sendMessage": "Nachricht senden",
@@ -120,7 +142,12 @@
 		"didRead": "Roo hat diese Datei gelesen:",
 		"wantsToEdit": "Roo möchte diese Datei bearbeiten:",
 		"wantsToEditOutsideWorkspace": "Roo möchte diese Datei außerhalb des Arbeitsbereichs bearbeiten:",
-		"wantsToCreate": "Roo möchte eine neue Datei erstellen:"
+		"wantsToCreate": "Roo möchte eine neue Datei erstellen:",
+		"wantsToSearchReplace": "Roo möchte in dieser Datei suchen und ersetzen:",
+		"didSearchReplace": "Roo hat Suchen und Ersetzen in dieser Datei durchgeführt:",
+		"wantsToInsert": "Roo möchte Inhalte in diese Datei einfügen:",
+		"wantsToInsertWithLineNumber": "Roo möchte Inhalte in diese Datei in Zeile {{lineNumber}} einfügen:",
+		"wantsToInsertAtEnd": "Roo möchte Inhalte am Ende dieser Datei anhängen:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo möchte die Dateien auf oberster Ebene in diesem Verzeichnis anzeigen:",
@@ -181,12 +208,12 @@
 		"copyToInput": "In Eingabefeld kopieren (oder Shift + Klick)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.12 veröffentlicht",
-		"description": "Roo Code 3.12 bringt neue Funktionen und Verbesserungen basierend auf deinem Feedback.",
+		"title": "🎉 Roo Code 3.14 veröffentlicht",
+		"description": "Roo Code 3.14 bringt neue Funktionen und Verbesserungen basierend auf deinem Feedback.",
 		"whatsNew": "Was ist neu",
-		"feature1": "<bold>Grok Unterstützung</bold>: Der xAI-Anbieter wurde hinzugefügt, mit Reasoning-Effort-Optionen für Grok auf OpenRouter",
-		"feature2": "<bold>Diff-Bearbeitungsverbesserungen</bold>: Profilspezifische Konfiguration und bessere String-Normalisierung für weniger Fehler",
-		"feature3": "<bold>Checkpoint-Verbesserungen</bold>: Schnellere und zuverlässigere Checkpoints",
+		"feature1": "<bold>Verbesserte Bearbeitungswerkzeuge</bold>: Die <code>search_and_replace</code> und <code>insert_content</code> Tools wurden verbessert und sind nicht mehr experimentell",
+		"feature2": "<bold>Diff Apply Fixes</bold>: Wir arbeiten weiterhin an der Verbesserung des <code>apply_diff</code> Tools",
+		"feature3": "<bold>Zahlreiche andere Verbesserungen</bold>: Viele Fehlerbehebungen und Optimierungen in der gesamten Erweiterung",
 		"hideButton": "Ankündigung ausblenden",
 		"detailsDiscussLinks": "Erhalte mehr Details und diskutiere auf <discordLink>Discord</discordLink> und <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -211,5 +238,7 @@
 			"scrollUp": "Nach oben scrollen",
 			"close": "Browser schließen"
 		}
-	}
+	},
+	"systemPromptWarning": "WARNUNG: Benutzerdefinierte Systemaufforderung aktiv. Dies kann die Funktionalität erheblich beeinträchtigen und zu unvorhersehbarem Verhalten führen.",
+	"selectApiConfig": "API-Konfiguration auswählen"
 }

@@ -1,15 +1,16 @@
 import { desc, eq, inArray, sql, sum } from "drizzle-orm"
 
+import { ToolUsage } from "@evals/types"
+
 import { RecordNotFoundError, RecordNotCreatedError } from "./errors.js"
 import type { InsertRun, UpdateRun } from "../schema.js"
 import { insertRunSchema, schema } from "../schema.js"
 import { db } from "../db.js"
 import { createTaskMetrics } from "./taskMetrics.js"
-
-const table = schema.runs
+import { getTasks } from "./tasks.js"
 
 export const findRun = async (id: number) => {
-	const run = await db.query.runs.findFirst({ where: eq(table.id, id) })
+	const run = await db.query.runs.findFirst({ where: eq(schema.runs.id, id) })
 
 	if (!run) {
 		throw new RecordNotFoundError()
@@ -20,7 +21,7 @@ export const findRun = async (id: number) => {
 
 export const createRun = async (args: InsertRun) => {
 	const records = await db
-		.insert(table)
+		.insert(schema.runs)
 		.values({
 			...insertRunSchema.parse(args),
 			createdAt: new Date(),
@@ -37,7 +38,7 @@ export const createRun = async (args: InsertRun) => {
 }
 
 export const updateRun = async (id: number, values: UpdateRun) => {
-	const records = await db.update(table).set(values).where(eq(table.id, id)).returning()
+	const records = await db.update(schema.runs).set(values).where(eq(schema.runs.id, id)).returning()
 	const record = records[0]
 
 	if (!record) {
@@ -47,7 +48,8 @@ export const updateRun = async (id: number, values: UpdateRun) => {
 	return record
 }
 
-export const getRuns = async () => db.query.runs.findMany({ orderBy: desc(table.id), with: { taskMetrics: true } })
+export const getRuns = async () =>
+	db.query.runs.findMany({ orderBy: desc(schema.runs.id), with: { taskMetrics: true } })
 
 export const finishRun = async (runId: number) => {
 	const [values] = await db
@@ -71,17 +73,30 @@ export const finishRun = async (runId: number) => {
 		throw new RecordNotFoundError()
 	}
 
+	const tasks = await getTasks(runId)
+
+	const toolUsage = tasks.reduce((acc, task) => {
+		Object.entries(task.taskMetrics?.toolUsage || {}).forEach(([key, { attempts, failures }]) => {
+			const tool = key as keyof ToolUsage
+			acc[tool] ??= { attempts: 0, failures: 0 }
+			acc[tool].attempts += attempts
+			acc[tool].failures += failures
+		})
+
+		return acc
+	}, {} as ToolUsage)
+
 	const { passed, failed, ...rest } = values
-	const taskMetrics = await createTaskMetrics(rest)
+	const taskMetrics = await createTaskMetrics({ ...rest, toolUsage })
 	await updateRun(runId, { taskMetricsId: taskMetrics.id, passed, failed })
 
-	const run = await db.query.runs.findFirst({ where: eq(table.id, runId), with: { taskMetrics: true } })
+	const run = await findRun(runId)
 
 	if (!run) {
 		throw new RecordNotFoundError()
 	}
 
-	return run
+	return { ...run, taskMetrics }
 }
 
 export const deleteRun = async (runId: number) => {

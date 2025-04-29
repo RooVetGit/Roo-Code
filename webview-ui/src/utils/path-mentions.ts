@@ -12,11 +12,37 @@
  * @returns A mention-friendly path
  */
 export function convertToMentionPath(path: string, cwd?: string): string {
-	const normalizedPath = path.replace(/\\/g, "/")
+	// Strip file:// or vscode-remote:// protocol if present
+	let pathWithoutProtocol = path
+
+	if (path.startsWith("file://")) {
+		pathWithoutProtocol = path.substring(7)
+	} else if (path.startsWith("vscode-remote://")) {
+		const protocolStripped = path.substring("vscode-remote://".length)
+		const firstSlashIndex = protocolStripped.indexOf("/")
+		if (firstSlashIndex !== -1) {
+			pathWithoutProtocol = protocolStripped.substring(firstSlashIndex + 1)
+		} else {
+			pathWithoutProtocol = ""
+		}
+	}
+
+	try {
+		pathWithoutProtocol = decodeURIComponent(pathWithoutProtocol)
+		// Fix: Remove leading slash for Windows paths like /d:/...
+		if (pathWithoutProtocol.startsWith("/") && pathWithoutProtocol[2] === ":") {
+			pathWithoutProtocol = pathWithoutProtocol.substring(1)
+		}
+	} catch (e) {
+		// Log error if decoding fails, but continue with the potentially problematic path
+		console.error("Error decoding URI component in convertToMentionPath:", e, pathWithoutProtocol)
+	}
+
+	const normalizedPath = pathWithoutProtocol.replace(/\\/g, "/")
 	let normalizedCwd = cwd ? cwd.replace(/\\/g, "/") : ""
 
 	if (!normalizedCwd) {
-		return path
+		return pathWithoutProtocol
 	}
 
 	// Remove trailing slash from cwd if it exists
@@ -34,5 +60,5 @@ export function convertToMentionPath(path: string, cwd?: string): string {
 		return "@" + (relativePath.startsWith("/") ? relativePath : "/" + relativePath)
 	}
 
-	return path
+	return pathWithoutProtocol
 }
