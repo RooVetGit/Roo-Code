@@ -1,5 +1,4 @@
 import React, { useMemo, useCallback } from "react"
-import { Button } from "@/components/ui/button"
 import { MarketplaceItem } from "../../../../../src/services/marketplace/types"
 import { vscode } from "@/utils/vscode"
 import { groupItemsByType, GroupedItems } from "../utils/grouping"
@@ -7,6 +6,7 @@ import { ExpandableSection } from "./ExpandableSection"
 import { TypeGroup } from "./TypeGroup"
 import { ViewState } from "../MarketplaceViewStateManager"
 import { useAppTranslation } from "@/i18n/TranslationContext"
+import { MarketplaceItemActionsMenu } from "./MarketplaceItemActionsMenu"
 
 interface MarketplaceItemCardProps {
 	item: MarketplaceItem
@@ -64,7 +64,7 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({
 	}, [item.type])
 
 	// Memoize URL calculation
-	const urlToOpen = useMemo(() => {
+	const itemSourceUrl = useMemo(() => {
 		if (item.sourceUrl && isValidUrl(item.sourceUrl)) {
 			return item.sourceUrl
 		}
@@ -80,12 +80,12 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({
 		return url
 	}, [item.sourceUrl, item.repoUrl, item.defaultBranch, item.path])
 
-	const handleOpenUrl = useCallback(() => {
+	const handleOpenSourceUrl = useCallback(() => {
 		vscode.postMessage({
 			type: "openExternal",
-			url: urlToOpen,
+			url: itemSourceUrl,
 		})
-	}, [urlToOpen])
+	}, [itemSourceUrl])
 
 	// Group items by type
 	const groupedItems = useMemo(() => {
@@ -194,18 +194,7 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({
 					)}
 				</div>
 
-				<Button
-					onClick={handleOpenUrl}
-					aria-label={
-						item.sourceUrl && isValidUrl(item.sourceUrl)
-							? ""
-							: item.sourceName || t("marketplace:items.card.viewSource")
-					}>
-					<span
-						className={`codicon codicon-link-external${!item.sourceUrl || !isValidUrl(item.sourceUrl) ? " mr-2" : ""}`}></span>
-					{(!item.sourceUrl || !isValidUrl(item.sourceUrl)) &&
-						(item.sourceName || t("marketplace:items.card.viewSource"))}
-				</Button>
+				<MarketplaceItemActionsMenu item={item} handleOpenSourceUrl={handleOpenSourceUrl} />
 			</div>
 
 			{item.type === "package" && (

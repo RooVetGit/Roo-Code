@@ -253,6 +253,8 @@ export class MetadataScanner {
 			description: metadata.description,
 			type: metadata.type,
 			version: metadata.version,
+			binaryUrl: metadata.binaryUrl,
+			binaryHash: metadata.binaryHash,
 			tags: metadata.tags,
 			url: `${repoUrl}/tree/main/${urlPath}`,
 			repoUrl,

@@ -55,6 +55,8 @@
 		"card": {
 			"by": "by {{author}}",
 			"from": "from {{source}}",
+			"installProject": "Install (Project)",
+			"installGlobal": "Install (Global)",
 			"viewSource": "View",
 			"viewOnSource": "View on {{source}}"
 		}

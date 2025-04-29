@@ -24,6 +24,8 @@ export interface BaseMetadata {
 	name: string
 	description: string
 	version: string
+	binaryUrl?: string
+	binaryHash?: string
 	tags?: string[]
 	author?: string
 	authorUrl?: string
@@ -78,6 +80,8 @@ export interface MarketplaceItem {
 	authorUrl?: string
 	tags?: string[]
 	version?: string
+	binaryUrl?: string
+	binaryHash?: string
 	lastUpdated?: string
 	sourceUrl?: string
 	defaultBranch?: string
@@ -125,4 +129,13 @@ export type LocalizedMetadata<T> = {
 export interface LocalizationOptions {
 	userLocale: string
 	fallbackLocale: string
+}
+
+export interface InstallMarketplaceItemOptions {
+	/**
+	 * Specify the installation target
+	 * 
+	 * @default 'project'
+	 */
+	target?: 'global' | 'project'
 }
