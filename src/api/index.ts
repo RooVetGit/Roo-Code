@@ -95,8 +95,6 @@ export function buildApiHandler(configuration: ApiConfiguration): ApiHandler {
 		case "chutes":
 			return new ChutesHandler(options)
 		default:
-			// Ensure the default case handles unknown providers gracefully or throws an error
-			// For now, defaulting to Anthropic as before
 			return new AnthropicHandler(options)
 	}
 }
