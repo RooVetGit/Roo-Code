@@ -5,7 +5,7 @@ import { EditorUtils } from "./EditorUtils"
 type CodeActionName = "FIX" | "ADD_TO_CONTEXT" | "NEW_TASK"
 
 export const ACTION_NAMES: Record<CodeActionName, string> = {
-	FIX: "Fix in Roo Code",
+	FIX: "Fix with Roo Code",
 	ADD_TO_CONTEXT: "Add to Roo Code",
 	NEW_TASK: "New Roo Code Task",
 } as const
