@@ -113,7 +113,9 @@ export const TerminalSettings = ({
 						<div>
 							<VSCodeCheckbox
 								checked={terminalCompressProgressBar ?? true}
-								onChange={(e: any) => setCachedStateField("terminalCompressProgressBar", e.target.checked)}
+								onChange={(e: any) =>
+									setCachedStateField("terminalCompressProgressBar", e.target.checked)
+								}
 								data-testid="terminal-compress-progress-bar-checkbox">
 								<span className="font-medium">{t("settings:terminal.compressProgressBar.label")}</span>
 							</VSCodeCheckbox>
@@ -123,7 +125,6 @@ export const TerminalSettings = ({
 						</div>
 					</div>
 				</div>
-
 
 				{/* Advanced Settings */}
 				<div className="flex flex-col gap-3 mt-6">
@@ -135,62 +136,6 @@ export const TerminalSettings = ({
 						{t("settings:terminal.advanced.description")}
 					</p>
 					<div className="pl-3 border-vscode-button-background">
-
-						<div>
-							<VSCodeCheckbox
-								checked={terminalShellIntegrationDisabled ?? false}
-								onChange={(e: any) =>
-									setCachedStateField("terminalShellIntegrationDisabled", e.target.checked)
-								}>
-								<span className="font-medium">{t("settings:terminal.shellIntegrationDisabled.label")}</span>
-							</VSCodeCheckbox>
-							<div className="text-vscode-descriptionForeground text-sm mt-1">
-								{t("settings:terminal.shellIntegrationDisabled.description")}
-							</div>
-						</div>
-						<div>
-							<label className="block font-medium mb-1">
-								{t("settings:terminal.shellIntegrationTimeout.label")}
-							</label>
-							<div className="flex items-center gap-2">
-								<Slider
-									min={1000}
-									max={60000}
-									step={1000}
-									value={[terminalShellIntegrationTimeout ?? 5000]}
-									onValueChange={([value]) =>
-										setCachedStateField(
-											"terminalShellIntegrationTimeout",
-											Math.min(60000, Math.max(1000, value)),
-										)
-									}
-								/>
-								<span className="w-10">{(terminalShellIntegrationTimeout ?? 5000) / 1000}s</span>
-							</div>
-							<div className="text-vscode-descriptionForeground text-sm mt-1">
-								{t("settings:terminal.shellIntegrationTimeout.description")}
-							</div>
-						</div>
-
-						<div>
-							<label className="block font-medium mb-1">{t("settings:terminal.commandDelay.label")}</label>
-							<div className="flex items-center gap-2">
-								<Slider
-									min={0}
-									max={1000}
-									step={10}
-									value={[terminalCommandDelay ?? 0]}
-									onValueChange={([value]) =>
-										setCachedStateField("terminalCommandDelay", Math.min(1000, Math.max(0, value)))
-									}
-								/>
-								<span className="w-10">{terminalCommandDelay ?? 50}ms</span>
-							</div>
-							<div className="text-vscode-descriptionForeground text-sm mt-1">
-								{t("settings:terminal.commandDelay.description")}
-							</div>
-						</div>
-
 						<div>
 							<VSCodeCheckbox
 								checked={inheritEnv}
@@ -212,65 +157,139 @@ export const TerminalSettings = ({
 
 						<div>
 							<VSCodeCheckbox
-								checked={terminalPowershellCounter ?? false}
+								checked={terminalShellIntegrationDisabled ?? false}
 								onChange={(e: any) =>
-									setCachedStateField("terminalPowershellCounter", e.target.checked)
-								}
-								data-testid="terminal-powershell-counter-checkbox">
-								<span className="font-medium">{t("settings:terminal.powershellCounter.label")}</span>
+									setCachedStateField("terminalShellIntegrationDisabled", e.target.checked)
+								}>
+								<span className="font-medium">
+									{t("settings:terminal.shellIntegrationDisabled.label")}
+								</span>
 							</VSCodeCheckbox>
 							<div className="text-vscode-descriptionForeground text-sm mt-1">
-								{t("settings:terminal.powershellCounter.description")}
+								{t("settings:terminal.shellIntegrationDisabled.description")}
 							</div>
 						</div>
+						{!terminalShellIntegrationDisabled && (
+							<>
+								<div>
+									<label className="block font-medium mb-1">
+										{t("settings:terminal.shellIntegrationTimeout.label")}
+									</label>
+									<div className="flex items-center gap-2">
+										<Slider
+											min={1000}
+											max={60000}
+											step={1000}
+											value={[terminalShellIntegrationTimeout ?? 5000]}
+											onValueChange={([value]) =>
+												setCachedStateField(
+													"terminalShellIntegrationTimeout",
+													Math.min(60000, Math.max(1000, value)),
+												)
+											}
+										/>
+										<span className="w-10">
+											{(terminalShellIntegrationTimeout ?? 5000) / 1000}s
+										</span>
+									</div>
+									<div className="text-vscode-descriptionForeground text-sm mt-1">
+										{t("settings:terminal.shellIntegrationTimeout.description")}
+									</div>
+								</div>
 
-						<div>
-							<VSCodeCheckbox
-								checked={terminalZshClearEolMark ?? true}
-								onChange={(e: any) => setCachedStateField("terminalZshClearEolMark", e.target.checked)}
-								data-testid="terminal-zsh-clear-eol-mark-checkbox">
-								<span className="font-medium">{t("settings:terminal.zshClearEolMark.label")}</span>
-							</VSCodeCheckbox>
-							<div className="text-vscode-descriptionForeground text-sm mt-1">
-								{t("settings:terminal.zshClearEolMark.description")}
-							</div>
-						</div>
+								<div>
+									<label className="block font-medium mb-1">
+										{t("settings:terminal.commandDelay.label")}
+									</label>
+									<div className="flex items-center gap-2">
+										<Slider
+											min={0}
+											max={1000}
+											step={10}
+											value={[terminalCommandDelay ?? 0]}
+											onValueChange={([value]) =>
+												setCachedStateField(
+													"terminalCommandDelay",
+													Math.min(1000, Math.max(0, value)),
+												)
+											}
+										/>
+										<span className="w-10">{terminalCommandDelay ?? 50}ms</span>
+									</div>
+									<div className="text-vscode-descriptionForeground text-sm mt-1">
+										{t("settings:terminal.commandDelay.description")}
+									</div>
+								</div>
 
-						<div>
-							<VSCodeCheckbox
-								checked={terminalZshOhMy ?? false}
-								onChange={(e: any) => setCachedStateField("terminalZshOhMy", e.target.checked)}
-								data-testid="terminal-zsh-oh-my-checkbox">
-								<span className="font-medium">{t("settings:terminal.zshOhMy.label")}</span>
-							</VSCodeCheckbox>
-							<div className="text-vscode-descriptionForeground text-sm mt-1">
-								{t("settings:terminal.zshOhMy.description")}
-							</div>
-						</div>
+								<div>
+									<VSCodeCheckbox
+										checked={terminalPowershellCounter ?? false}
+										onChange={(e: any) =>
+											setCachedStateField("terminalPowershellCounter", e.target.checked)
+										}
+										data-testid="terminal-powershell-counter-checkbox">
+										<span className="font-medium">
+											{t("settings:terminal.powershellCounter.label")}
+										</span>
+									</VSCodeCheckbox>
+									<div className="text-vscode-descriptionForeground text-sm mt-1">
+										{t("settings:terminal.powershellCounter.description")}
+									</div>
+								</div>
 
-						<div>
-							<VSCodeCheckbox
-								checked={terminalZshP10k ?? false}
-								onChange={(e: any) => setCachedStateField("terminalZshP10k", e.target.checked)}
-								data-testid="terminal-zsh-p10k-checkbox">
-								<span className="font-medium">{t("settings:terminal.zshP10k.label")}</span>
-							</VSCodeCheckbox>
-							<div className="text-vscode-descriptionForeground text-sm mt-1">
-								{t("settings:terminal.zshP10k.description")}
-							</div>
-						</div>
+								<div>
+									<VSCodeCheckbox
+										checked={terminalZshClearEolMark ?? true}
+										onChange={(e: any) =>
+											setCachedStateField("terminalZshClearEolMark", e.target.checked)
+										}
+										data-testid="terminal-zsh-clear-eol-mark-checkbox">
+										<span className="font-medium">
+											{t("settings:terminal.zshClearEolMark.label")}
+										</span>
+									</VSCodeCheckbox>
+									<div className="text-vscode-descriptionForeground text-sm mt-1">
+										{t("settings:terminal.zshClearEolMark.description")}
+									</div>
+								</div>
 
-						<div>
-							<VSCodeCheckbox
-								checked={terminalZdotdir ?? false}
-								onChange={(e: any) => setCachedStateField("terminalZdotdir", e.target.checked)}
-								data-testid="terminal-zdotdir-checkbox">
-								<span className="font-medium">{t("settings:terminal.zdotdir.label")}</span>
-							</VSCodeCheckbox>
-							<div className="text-vscode-descriptionForeground text-sm mt-1">
-								{t("settings:terminal.zdotdir.description")}
-							</div>
-						</div>
+								<div>
+									<VSCodeCheckbox
+										checked={terminalZshOhMy ?? false}
+										onChange={(e: any) => setCachedStateField("terminalZshOhMy", e.target.checked)}
+										data-testid="terminal-zsh-oh-my-checkbox">
+										<span className="font-medium">{t("settings:terminal.zshOhMy.label")}</span>
+									</VSCodeCheckbox>
+									<div className="text-vscode-descriptionForeground text-sm mt-1">
+										{t("settings:terminal.zshOhMy.description")}
+									</div>
+								</div>
+
+								<div>
+									<VSCodeCheckbox
+										checked={terminalZshP10k ?? false}
+										onChange={(e: any) => setCachedStateField("terminalZshP10k", e.target.checked)}
+										data-testid="terminal-zsh-p10k-checkbox">
+										<span className="font-medium">{t("settings:terminal.zshP10k.label")}</span>
+									</VSCodeCheckbox>
+									<div className="text-vscode-descriptionForeground text-sm mt-1">
+										{t("settings:terminal.zshP10k.description")}
+									</div>
+								</div>
+
+								<div>
+									<VSCodeCheckbox
+										checked={terminalZdotdir ?? false}
+										onChange={(e: any) => setCachedStateField("terminalZdotdir", e.target.checked)}
+										data-testid="terminal-zdotdir-checkbox">
+										<span className="font-medium">{t("settings:terminal.zdotdir.label")}</span>
+									</VSCodeCheckbox>
+									<div className="text-vscode-descriptionForeground text-sm mt-1">
+										{t("settings:terminal.zdotdir.description")}
+									</div>
+								</div>
+							</>
+						)}
 					</div>
 				</div>
 			</Section>
