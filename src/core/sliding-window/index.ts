@@ -17,8 +17,15 @@ export async function estimateTokenCount(
 	content: Array<Anthropic.Messages.ContentBlockParam>,
 	apiHandler: ApiHandler,
 ): Promise<number> {
-	if (!content || content.length === 0) return 0
-	return apiHandler.countTokens(content)
+	if (!content || content.length === 0) {
+		return 0
+	}
+
+	const now = performance.now()
+	const count = await apiHandler.countTokens(content)
+	const duration = performance.now() - now
+	console.log(`[sliding-window] token count -> ${count} (${duration}ms)`)
+	return count
 }
 
 /**

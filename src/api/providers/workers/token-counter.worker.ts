@@ -10,7 +10,7 @@ parentPort?.on("message", async (content: Array<ContentBlock>) => {
 			const now = performance.now()
 			const result = await countTokens(content)
 			const duration = performance.now() - now
-			console.log(`token count -> ${result} (${duration}ms)`)
+			console.log(`[token-counter] token count -> ${result} (${duration}ms)`)
 			parentPort?.postMessage(result)
 		}
 	} catch (error) {
