@@ -108,6 +108,47 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	// Has to be after api_req_finished are all reduced into api_req_started messages.
 	const apiMetrics = useMemo(() => getApiMetrics(modifiedMessages), [modifiedMessages])
+	// Calculate cost history for the chart
+	const costHistory = useMemo(() => {
+		let cumulativeCost = 0
+		// 1. Filter messages to get only finished API requests
+		const finishedApiRequests = modifiedMessages.filter((message) => {
+			if (message.say === "api_req_started" && message.text) {
+				try {
+					const info = JSON.parse(message.text)
+					return typeof info.cost === "number" && !isNaN(info.cost)
+				} catch {
+					return false // Ignore messages with invalid JSON
+				}
+			}
+			return false
+		})
+
+		// 2. Map over the filtered requests to build the history
+		return finishedApiRequests.map((message, index) => {
+			const requestIndex = index + 1 // Use array index for reliable sequencing
+			let currentRequestReportedCost = 0 // Renamed for clarity
+			try {
+				// We know cost exists and is valid due to the filter above
+				currentRequestReportedCost = JSON.parse(message.text!).cost
+				// console.log(`[Cost Chart Debug] Req Index: ${requestIndex}, TS: ${message.ts}, Reported Cost: ${currentRequestReportedCost}`); // REMOVED LOGGING
+			} catch (e) {
+				console.error("Error parsing cost during history calculation:", e)
+				// Should not happen due to filter, but good to handle
+			}
+
+			// The cost reported in the message IS the delta for this specific request.
+			const costDelta = currentRequestReportedCost
+			// Add the current request's cost (delta) to the running cumulative total.
+			cumulativeCost += currentRequestReportedCost
+
+			return {
+				requestIndex,
+				cumulativeCost,
+				costDelta: costDelta > 0 ? costDelta : 0, // Ensure delta isn't negative
+			}
+		})
+	}, [modifiedMessages])
 
 	const [inputValue, setInputValue] = useState("")
 	const textAreaRef = useRef<HTMLTextAreaElement>(null)
@@ -1230,6 +1271,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						cacheWrites={apiMetrics.totalCacheWrites}
 						cacheReads={apiMetrics.totalCacheReads}
 						totalCost={apiMetrics.totalCost}
+						costHistory={costHistory} // Pass the calculated cost history
 						contextTokens={apiMetrics.contextTokens}
 						onClose={handleTaskCloseButtonClick}
 					/>

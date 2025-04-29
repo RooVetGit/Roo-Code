@@ -1,7 +1,6 @@
-import { memo, useRef, useState } from "react"
+import { memo, useRef, useState, useCallback } from "react" // Import useCallback
 import { useWindowSize } from "react-use"
 import { useTranslation } from "react-i18next"
-import { VSCodeBadge } from "@vscode/webview-ui-toolkit/react"
 import { CloudUpload, CloudDownload } from "lucide-react"
 
 import { ClineMessage } from "@roo/shared/ExtensionMessage"
@@ -18,6 +17,18 @@ import Thumbnails from "../common/Thumbnails"
 import { TaskActions } from "./TaskActions"
 import { ContextWindowProgress } from "./ContextWindowProgress"
 import { Mention } from "./Mention"
+import CostTrendChart from "./CostTrendChart"
+import CostSparkline from "./CostSparkline" // Import the sparkline component
+
+// Define the structure for cost history data points (matching CostTrendChart)
+interface CostHistoryDataPoint {
+	requestIndex: number
+	cumulativeCost: number
+	costDelta: number
+}
+
+// Define the type for the view mode
+export type CostViewMode = "cumulative" | "task"
 
 export interface TaskHeaderProps {
 	task: ClineMessage
@@ -27,6 +38,7 @@ export interface TaskHeaderProps {
 	cacheWrites?: number
 	cacheReads?: number
 	totalCost: number
+	costHistory: CostHistoryDataPoint[] // Add the new prop type
 	contextTokens: number
 	onClose: () => void
 }
@@ -39,6 +51,7 @@ const TaskHeader = ({
 	cacheWrites,
 	cacheReads,
 	totalCost,
+	costHistory, // Destructure the new prop
 	contextTokens,
 	onClose,
 }: TaskHeaderProps) => {
@@ -46,6 +59,13 @@ const TaskHeader = ({
 	const { apiConfiguration, currentTaskItem } = useExtensionState()
 	const { info: model } = useSelectedModel(apiConfiguration)
 	const [isTaskExpanded, setIsTaskExpanded] = useState(false)
+	// Lift state up: Manage view mode here
+	const [costViewMode, setCostViewMode] = useState<CostViewMode>("cumulative")
+
+	// Callback to update the view mode
+	const handleCostViewModeChange = useCallback((newMode: CostViewMode) => {
+		setCostViewMode(newMode)
+	}, [])
 
 	const textContainerRef = useRef<HTMLDivElement>(null)
 	const textRef = useRef<HTMLDivElement>(null)
@@ -92,13 +112,27 @@ const TaskHeader = ({
 				</div>
 				{/* Collapsed state: Track context and cost if we have any */}
 				{!isTaskExpanded && contextWindow > 0 && (
-					<div className={`w-full flex flex-row gap-1 h-auto`}>
+					<div className={`w-full flex flex-row items-center gap-1 h-auto`}>
+						{" "}
+						{/* Added items-center */}
 						<ContextWindowProgress
 							contextWindow={contextWindow}
 							contextTokens={contextTokens || 0}
 							maxTokens={getMaxTokensForModel(model, apiConfiguration)}
 						/>
-						{!!totalCost && <VSCodeBadge>${totalCost.toFixed(2)}</VSCodeBadge>}
+						{/* Cost Display */}
+						<div className="flex items-center gap-1 ml-auto rounded-md px-1 py-0.5">
+							{" "}
+							{/* Removed border classes */}
+							{/* Add Sparkline back - Pass viewMode */}
+							{costHistory && costHistory.length > 1 && (
+								<CostSparkline data={costHistory} height={16} width={35} viewMode={costViewMode} />
+							)}
+							{/* Apply default foreground color and remove explicit size */}
+							{!!totalCost && (
+								<span className="text-[var(--vscode-foreground)]">${totalCost.toFixed(2)}</span>
+							)}
+						</div>
 					</div>
 				)}
 				{/* Expanded state: Show task text and images */}
@@ -182,6 +216,19 @@ const TaskHeader = ({
 										<span>${totalCost?.toFixed(2)}</span>
 									</div>
 									<TaskActions item={currentTaskItem} />
+								</div>
+							)}
+							{/* Render the cost trend chart if history is available - Pass state and handler */}
+							{costHistory && costHistory.length > 0 && (
+								<div className="mt-2">
+									{" "}
+									{/* Add some margin */}
+									<CostTrendChart
+										data={costHistory}
+										costThreshold={2.0}
+										viewMode={costViewMode}
+										onViewModeChange={handleCostViewModeChange}
+									/>
 								</div>
 							)}
 						</div>
