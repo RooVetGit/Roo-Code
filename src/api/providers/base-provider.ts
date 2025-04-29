@@ -28,25 +28,11 @@ export abstract class BaseProvider implements ApiHandler {
 		const worker = await workerManager.initializeWorker("token-counter", "workers/token-counter.worker.js")
 
 		return new Promise((resolve, reject) => {
-			const messageHandler = (result: number | { error: string }) => {
-				worker.removeListener("message", messageHandler)
-				worker.removeListener("error", errorHandler)
+			worker.once("message", (result: number | { error: string }) =>
+				typeof result === "number" ? resolve(result) : reject(new Error(result.error)),
+			)
 
-				if (typeof result === "number") {
-					resolve(result)
-				} else {
-					reject(new Error(result.error))
-				}
-			}
-
-			const errorHandler = (error: Error) => {
-				worker.removeListener("message", messageHandler)
-				worker.removeListener("error", errorHandler)
-				reject(error)
-			}
-
-			worker.once("message", messageHandler)
-			worker.once("error", errorHandler)
+			worker.once("error", (error: Error) => reject(error))
 
 			worker.postMessage(content)
 		})
