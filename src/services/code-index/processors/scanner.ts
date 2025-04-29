@@ -15,7 +15,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 	// Constants moved inside the class
 	private static readonly QDRANT_CODE_BLOCK_NAMESPACE = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 	private static readonly MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB
-	private static readonly MAX_LIST_FILES_LIMIT = 1_500
+	private static readonly MAX_LIST_FILES_LIMIT = 2_000
 	private static readonly BATCH_SEGMENT_THRESHOLD = 30 // Number of code segments to batch for embeddings/upserts
 	private static readonly MAX_BATCH_RETRIES = 3
 	private static readonly INITIAL_RETRY_DELAY_MS = 500
