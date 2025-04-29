@@ -66,7 +66,7 @@ describe("ChutesHandler", () => {
 
 	test("should return specified model when valid model is provided", () => {
 		// Using an actual model ID from the Chutes API response
-		const testModelId: ChutesModelId = "Qwen/Qwen2.5-72B-Instruct"
+		const testModelId: ChutesModelId = "deepseek-ai/DeepSeek-R1"
 		const handlerWithModel = new ChutesHandler({ apiModelId: testModelId }) // Instantiate ChutesHandler
 		const model = handlerWithModel.getModel()
 
@@ -95,7 +95,9 @@ describe("ChutesHandler", () => {
 		const errorMessage = "Chutes API error"
 		mockCreate.mockRejectedValueOnce(new Error(errorMessage))
 
-		await expect(handler.completePrompt("test prompt")).rejects.toThrow(`Chutes AI completion error: ${errorMessage}`) // Updated error message prefix
+		await expect(handler.completePrompt("test prompt")).rejects.toThrow(
+			`Chutes AI completion error: ${errorMessage}`,
+		) // Updated error message prefix
 	})
 
 	test("createMessage should yield text content from stream", async () => {
@@ -141,7 +143,8 @@ describe("ChutesHandler", () => {
 							done: false,
 							value: {
 								choices: [{ delta: {} }], // Needs to have choices array to avoid error
-								usage: { // Assuming standard OpenAI usage fields
+								usage: {
+									// Assuming standard OpenAI usage fields
 									prompt_tokens: 10,
 									completion_tokens: 20,
 								},
@@ -158,7 +161,8 @@ describe("ChutesHandler", () => {
 
 		// Verify the usage data
 		expect(firstChunk.done).toBe(false)
-		expect(firstChunk.value).toEqual({ // Updated expected usage structure
+		expect(firstChunk.value).toEqual({
+			// Updated expected usage structure
 			type: "usage",
 			inputTokens: 10,
 			outputTokens: 20,

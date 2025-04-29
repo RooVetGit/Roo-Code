@@ -64,7 +64,7 @@ describe("GroqHandler", () => {
 	})
 
 	test("should return specified model when valid model is provided", () => {
-		const testModelId: GroqModelId = "llama3-70b-8192" // Use a valid Groq model ID and type
+		const testModelId: GroqModelId = "llama-3.3-70b-versatile" // Use a valid Groq model ID and type
 		const handlerWithModel = new GroqHandler({ apiModelId: testModelId }) // Instantiate GroqHandler
 		const model = handlerWithModel.getModel()
 
@@ -143,7 +143,8 @@ describe("GroqHandler", () => {
 							done: false,
 							value: {
 								choices: [{ delta: {} }], // Needs to have choices array to avoid error
-								usage: { // Assuming standard OpenAI usage fields
+								usage: {
+									// Assuming standard OpenAI usage fields
 									prompt_tokens: 10,
 									completion_tokens: 20,
 								},
@@ -160,7 +161,8 @@ describe("GroqHandler", () => {
 
 		// Verify the usage data
 		expect(firstChunk.done).toBe(false)
-		expect(firstChunk.value).toEqual({ // Updated expected usage structure
+		expect(firstChunk.value).toEqual({
+			// Updated expected usage structure
 			type: "usage",
 			inputTokens: 10,
 			outputTokens: 20,
@@ -171,7 +173,7 @@ describe("GroqHandler", () => {
 
 	test("createMessage should pass correct parameters to Groq client", async () => {
 		// Setup a handler with specific model
-		const modelId: GroqModelId = "llama3-8b-8192" // Use a valid Groq model ID and type
+		const modelId: GroqModelId = "llama-3.1-8b-instant" // Use a valid Groq model ID and type
 		const modelInfo = groqModels[modelId] // Use groqModels
 		const handlerWithModel = new GroqHandler({ apiModelId: modelId }) // Instantiate GroqHandler
 

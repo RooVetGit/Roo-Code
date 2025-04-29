@@ -1224,9 +1224,6 @@ export const xaiModels = {
 // Groq
 // https://console.groq.com/docs/models
 export type GroqModelId =
-	| "llama3-70b-8192"
-	| "llama3-8b-8192"
-	| "gemma2-9b-it"
 	| "llama-3.1-8b-instant"
 	| "llama-3.3-70b-versatile"
 	| "meta-llama/llama-4-scout-17b-16e-instruct"
@@ -1234,37 +1231,9 @@ export type GroqModelId =
 	| "mistral-saba-24b"
 	| "qwen-qwq-32b"
 	| "deepseek-r1-distill-llama-70b"
-	| "allam-2-7b"
-export const groqDefaultModelId: GroqModelId = "llama3-70b-8192" // Defaulting to Llama3 70B
+export const groqDefaultModelId: GroqModelId = "llama-3.3-70b-versatile" // Defaulting to Llama3 70B Versatile
 export const groqModels = {
 	// Models based on API response: https://api.groq.com/openai/v1/models
-	"llama3-70b-8192": {
-		maxTokens: 8192,
-		contextWindow: 8192,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "Meta Llama 3 70B model, 8K context.",
-	},
-	"llama3-8b-8192": {
-		maxTokens: 8192,
-		contextWindow: 8192,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "Meta Llama 3 8B model, 8K context.",
-	},
-	"gemma2-9b-it": {
-		maxTokens: 8192,
-		contextWindow: 8192,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "Google Gemma 2 9B IT model, 8K context.",
-	},
 	"llama-3.1-8b-instant": {
 		maxTokens: 131072,
 		contextWindow: 131072,
@@ -1328,92 +1297,33 @@ export const groqModels = {
 		outputPrice: 0,
 		description: "DeepSeek R1 Distill Llama 70B model, 128K context.",
 	},
-	"allam-2-7b": {
-		maxTokens: 4096,
-		contextWindow: 4096,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "SDAIA Allam 2 7B model, 4K context.",
-	},
 } as const satisfies Record<string, ModelInfo>
 
 // Chutes AI
 // https://llm.chutes.ai/v1 (OpenAI compatible)
 export type ChutesModelId =
-	| "Qwen/Qwen2.5-72B-Instruct"
-	| "Qwen/Qwen3-32B"
-	| "Qwen/Qwen3-8B"
 	| "deepseek-ai/DeepSeek-R1"
 	| "deepseek-ai/DeepSeek-V3"
 	| "unsloth/Llama-3.3-70B-Instruct"
 	| "chutesai/Llama-4-Scout-17B-16E-Instruct"
-	| "unsloth/gemma-3-27b-it"
-	| "unsloth/gemma-2-9b-it"
 	| "unsloth/Mistral-Nemo-Instruct-2407"
-	| "deepseek-ai/DeepSeek-R1-Distill-Qwen-14B"
-	| "unsloth/Llama-3.2-3B-Instruct"
-	| "open-r1/OlympicCoder-32B"
-	| "RekaAI/reka-flash-3"
-	| "moonshotai/Moonlight-16B-A3B-Instruct"
 	| "unsloth/gemma-3-12b-it"
-	| "unsloth/gemma-3-1b-it"
-	| "allenai/Molmo-7B-D-0924"
 	| "NousResearch/DeepHermes-3-Llama-3-8B-Preview"
-	| "chutesai/Mistral-Small-3.1-24B-Instruct-2503"
 	| "unsloth/gemma-3-4b-it"
-	| "mrfakename/mistral-small-3.1-24b-instruct-2503-hf"
 	| "nvidia/Llama-3_3-Nemotron-Super-49B-v1"
 	| "nvidia/Llama-3_1-Nemotron-Ultra-253B-v1"
 	| "chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8"
 	| "deepseek-ai/DeepSeek-V3-Base"
 	| "deepseek-ai/DeepSeek-R1-Zero"
 	| "deepseek-ai/DeepSeek-V3-0324"
-	| "ArliAI/QwQ-32B-ArliAI-RpR-v1"
-	| "agentica-org/DeepCoder-14B-Preview"
-	| "shisa-ai/shisa-v2-llama3.3-70b"
-	| "THUDM/GLM-4-32B-0414"
-	| "THUDM/GLM-Z1-32B-0414"
 	| "microsoft/MAI-DS-R1-FP8"
-	| "chutesai/Llama-3.1-405B-FP8"
 	| "tngtech/DeepSeek-R1T-Chimera"
-	| "Qwen/Qwen3-235B-A22B"
-	| "Qwen/Qwen3-14B"
-	| "hugging-quants/Meta-Llama-3.1-70B-Instruct-AWQ-INT4"
 // Defaulting to a capable model found in the API response
-export const chutesDefaultModelId: ChutesModelId = "Qwen/Qwen2.5-72B-Instruct"
+export const chutesDefaultModelId: ChutesModelId = "deepseek-ai/DeepSeek-R1"
 export const chutesModels = {
 	// Models based on API response: https://llm.chutes.ai/v1/models
 	// Note: maxTokens (output limit) is not explicitly provided, using contextWindow or a default.
 	// Pricing is typically 0 for these models via Chutes.
-	"Qwen/Qwen2.5-72B-Instruct": {
-		maxTokens: 32768,
-		contextWindow: 32768,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "Qwen 2.5 72B Instruct model.",
-	},
-	"Qwen/Qwen3-32B": {
-		maxTokens: 32768, // Estimate
-		contextWindow: 40960,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "Qwen 3 32B model.",
-	},
-	"Qwen/Qwen3-8B": {
-		maxTokens: 32768, // Estimate
-		contextWindow: 40960,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "Qwen 3 8B model.",
-	},
 	"deepseek-ai/DeepSeek-R1": {
 		maxTokens: 32768, // Estimate
 		contextWindow: 163840,
@@ -1450,24 +1360,6 @@ export const chutesModels = {
 		outputPrice: 0,
 		description: "ChutesAI Llama 4 Scout 17B Instruct model, 512K context.",
 	},
-	"unsloth/gemma-3-27b-it": {
-		maxTokens: 32768, // Estimate
-		contextWindow: 96000,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "Unsloth Gemma 3 27B IT model.",
-	},
-	"unsloth/gemma-2-9b-it": {
-		maxTokens: 8192,
-		contextWindow: 8192,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "Unsloth Gemma 2 9B IT model.",
-	},
 	"unsloth/Mistral-Nemo-Instruct-2407": {
 		maxTokens: 32768, // Estimate
 		contextWindow: 128000,
@@ -1476,51 +1368,6 @@ export const chutesModels = {
 		inputPrice: 0,
 		outputPrice: 0,
 		description: "Unsloth Mistral Nemo Instruct model.",
-	},
-	"deepseek-ai/DeepSeek-R1-Distill-Qwen-14B": {
-		maxTokens: 32768, // Estimate
-		contextWindow: 64000,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "DeepSeek R1 Distill Qwen 14B model.",
-	},
-	"unsloth/Llama-3.2-3B-Instruct": {
-		maxTokens: 32768, // Estimate
-		contextWindow: 64000,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "Unsloth Llama 3.2 3B Instruct model.",
-	},
-	"open-r1/OlympicCoder-32B": {
-		maxTokens: 32768,
-		contextWindow: 32768,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "Open R1 OlympicCoder 32B model.",
-	},
-	"RekaAI/reka-flash-3": {
-		maxTokens: 32768,
-		contextWindow: 32768,
-		supportsImages: false, // Reka Flash usually supports images, but API doesn't specify
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "Reka Flash 3 model.",
-	},
-	"moonshotai/Moonlight-16B-A3B-Instruct": {
-		maxTokens: 8192,
-		contextWindow: 8192,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "Moonshot AI Moonlight 16B Instruct model.",
 	},
 	"unsloth/gemma-3-12b-it": {
 		maxTokens: 32768, // Estimate
@@ -1531,24 +1378,6 @@ export const chutesModels = {
 		outputPrice: 0,
 		description: "Unsloth Gemma 3 12B IT model.",
 	},
-	"unsloth/gemma-3-1b-it": {
-		maxTokens: 32768,
-		contextWindow: 32768,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "Unsloth Gemma 3 1B IT model.",
-	},
-	"allenai/Molmo-7B-D-0924": {
-		maxTokens: 4096,
-		contextWindow: 4096,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "AllenAI Molmo 7B model.",
-	},
 	"NousResearch/DeepHermes-3-Llama-3-8B-Preview": {
 		maxTokens: 32768, // Estimate
 		contextWindow: 131072,
@@ -1558,15 +1387,6 @@ export const chutesModels = {
 		outputPrice: 0,
 		description: "Nous DeepHermes 3 Llama 3 8B Preview model.",
 	},
-	"chutesai/Mistral-Small-3.1-24B-Instruct-2503": {
-		maxTokens: 32768, // Estimate
-		contextWindow: 96000,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "ChutesAI Mistral Small 3.1 24B Instruct model.",
-	},
 	"unsloth/gemma-3-4b-it": {
 		maxTokens: 32768, // Estimate
 		contextWindow: 131072,
@@ -1575,15 +1395,6 @@ export const chutesModels = {
 		inputPrice: 0,
 		outputPrice: 0,
 		description: "Unsloth Gemma 3 4B IT model.",
-	},
-	"mrfakename/mistral-small-3.1-24b-instruct-2503-hf": {
-		maxTokens: 32768,
-		contextWindow: 32768,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "Mistral Small 3.1 24B Instruct HF model.",
 	},
 	"nvidia/Llama-3_3-Nemotron-Super-49B-v1": {
 		maxTokens: 32768, // Estimate
@@ -1639,51 +1450,6 @@ export const chutesModels = {
 		outputPrice: 0,
 		description: "DeepSeek V3 (0324) model.",
 	},
-	"ArliAI/QwQ-32B-ArliAI-RpR-v1": {
-		maxTokens: 32768,
-		contextWindow: 32768,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "ArliAI QwQ 32B RpR v1 model.",
-	},
-	"agentica-org/DeepCoder-14B-Preview": {
-		maxTokens: 32768, // Estimate
-		contextWindow: 96000,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "Agentica DeepCoder 14B Preview model.",
-	},
-	"shisa-ai/shisa-v2-llama3.3-70b": {
-		maxTokens: 32768,
-		contextWindow: 32768,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "Shisa V2 Llama 3.3 70B model.",
-	},
-	"THUDM/GLM-4-32B-0414": {
-		maxTokens: 32768,
-		contextWindow: 32768,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "THUDM GLM-4 32B (0414) model.",
-	},
-	"THUDM/GLM-Z1-32B-0414": {
-		maxTokens: 32768,
-		contextWindow: 32768,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "THUDM GLM-Z1 32B (0414) model.",
-	},
 	"microsoft/MAI-DS-R1-FP8": {
 		maxTokens: 32768, // Estimate
 		contextWindow: 163840,
@@ -1693,15 +1459,6 @@ export const chutesModels = {
 		outputPrice: 0,
 		description: "Microsoft MAI-DS-R1 FP8 model.",
 	},
-	"chutesai/Llama-3.1-405B-FP8": {
-		maxTokens: 32768, // Estimate
-		contextWindow: 64000,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "ChutesAI Llama 3.1 405B FP8 model.",
-	},
 	"tngtech/DeepSeek-R1T-Chimera": {
 		maxTokens: 32768, // Estimate
 		contextWindow: 163840,
@@ -1710,33 +1467,6 @@ export const chutesModels = {
 		inputPrice: 0,
 		outputPrice: 0,
 		description: "TNGTech DeepSeek R1T Chimera model.",
-	},
-	"Qwen/Qwen3-235B-A22B": {
-		maxTokens: 32768, // Estimate
-		contextWindow: 40960,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "Qwen 3 235B A22B model.",
-	},
-	"Qwen/Qwen3-14B": {
-		maxTokens: 32768, // Estimate
-		contextWindow: 40960,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "Qwen 3 14B model.",
-	},
-	"hugging-quants/Meta-Llama-3.1-70B-Instruct-AWQ-INT4": {
-		maxTokens: 32768, // Estimate
-		contextWindow: 96000,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-		description: "HuggingQuants Llama 3.1 70B Instruct AWQ INT4 model.",
 	},
 } as const satisfies Record<string, ModelInfo>
 
