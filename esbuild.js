@@ -31,12 +31,28 @@ const copyWasmFiles = {
 		build.onEnd(() => {
 			const nodeModulesDir = path.join(__dirname, "node_modules")
 			const distDir = path.join(__dirname, "dist")
+			const outDir = path.join(__dirname, "out") // Define outDir
+
+			// Ensure destination directories exist
+			fs.mkdirSync(distDir, { recursive: true })
+			try {
+				fs.mkdirSync(outDir, { recursive: true })
+			} catch (e) {}
 
 			// tiktoken
 			fs.copyFileSync(
 				path.join(nodeModulesDir, "tiktoken", "tiktoken_bg.wasm"),
 				path.join(distDir, "tiktoken_bg.wasm"),
 			)
+			// Also copy tiktoken wasm to outDir
+			try {
+				fs.copyFileSync(
+					path.join(nodeModulesDir, "tiktoken", "tiktoken_bg.wasm"),
+					path.join(outDir, "tiktoken_bg.wasm"),
+				)
+			} catch (e) {
+				console.warn("Could not copy tiktoken wasm to out directory:", e.message)
+			}
 
 			// Copy language-specific WASM files
 			const languageWasmDir = path.join(__dirname, "node_modules", "tree-sitter-wasms", "out")
@@ -48,8 +64,16 @@ const copyWasmFiles = {
 				console.log(`Copying ${wasmFiles.length} tree-sitter WASM files to dist directory`)
 
 				wasmFiles.forEach((filename) => {
+					// Copy to dist
 					fs.copyFileSync(path.join(languageWasmDir, filename), path.join(distDir, filename))
+					// Also copy to out
+					try {
+						fs.copyFileSync(path.join(languageWasmDir, filename), path.join(outDir, filename))
+					} catch (e) {
+						console.warn(`Could not copy ${filename} to out directory:`, e.message)
+					}
 				})
+				console.log(`Copied tree-sitter WASM files to dist and out directories`)
 			} else {
 				console.warn(`Tree-sitter WASM directory not found: ${languageWasmDir}`)
 			}
