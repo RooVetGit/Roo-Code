@@ -473,6 +473,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			mode,
 			customInstructions: globalInstructions,
 			experiments,
+			// Context Synthesization Settings (Added)
+			enableContextSummarization,
+			contextSummarizationTriggerThreshold,
+			contextSummarizationInitialStaticTurns,
+			contextSummarizationRecentTurns,
 		} = await this.getState()
 
 		const modePrompt = customModePrompts?.[mode] as PromptComponent
@@ -492,6 +497,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			parentTask,
 			taskNumber: this.clineStack.length + 1,
 			onCreated: (cline) => this.emit("clineCreated", cline),
+			// Pass synthesization settings to Cline (Added)
+			enableContextSummarization,
+			contextSummarizationTriggerThreshold,
+			contextSummarizationInitialStaticTurns,
+			contextSummarizationRecentTurns,
 			...options,
 		})
 
@@ -516,6 +526,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			mode,
 			customInstructions: globalInstructions,
 			experiments,
+			// Context Synthesization Settings (Added)
+			enableContextSummarization,
+			contextSummarizationTriggerThreshold,
+			contextSummarizationInitialStaticTurns,
+			contextSummarizationRecentTurns,
 		} = await this.getState()
 
 		const modePrompt = customModePrompts?.[mode] as PromptComponent
@@ -534,6 +549,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			parentTask: historyItem.parentTask,
 			taskNumber: historyItem.number,
 			onCreated: (cline) => this.emit("clineCreated", cline),
+			// Pass synthesization settings to Cline (Added)
+			enableContextSummarization,
+			contextSummarizationTriggerThreshold,
+			contextSummarizationInitialStaticTurns,
+			contextSummarizationRecentTurns,
 		})
 
 		await this.addClineToStack(cline)
@@ -1194,6 +1214,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			maxReadFileLine,
 			terminalCompressProgressBar,
 			historyPreviewCollapsed,
+			// Context Synthesization Settings (Added)
+			enableContextSummarization,
+			contextSummarizationTriggerThreshold,
+			contextSummarizationInitialStaticTurns,
+			contextSummarizationRecentTurns,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
@@ -1281,6 +1306,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			terminalCompressProgressBar: terminalCompressProgressBar ?? true,
 			hasSystemPromptOverride,
 			historyPreviewCollapsed: historyPreviewCollapsed ?? false,
+			// Context Synthesization Settings (Added)
+			enableContextSummarization: enableContextSummarization ?? false,
+			contextSummarizationTriggerThreshold: contextSummarizationTriggerThreshold ?? 80,
+			contextSummarizationInitialStaticTurns: contextSummarizationInitialStaticTurns ?? 5,
+			contextSummarizationRecentTurns: contextSummarizationRecentTurns ?? 10,
 		}
 	}
 
@@ -1371,6 +1401,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 			maxReadFileLine: stateValues.maxReadFileLine ?? 500,
 			historyPreviewCollapsed: stateValues.historyPreviewCollapsed ?? false,
+			// Context Synthesization Settings (Added)
+			enableContextSummarization: stateValues.enableContextSummarization ?? false,
+			contextSummarizationTriggerThreshold: stateValues.contextSummarizationTriggerThreshold ?? 80,
+			contextSummarizationInitialStaticTurns: stateValues.contextSummarizationInitialStaticTurns ?? 5,
+			contextSummarizationRecentTurns: stateValues.contextSummarizationRecentTurns ?? 10,
 		}
 	}
 

@@ -38,6 +38,7 @@ import ChatTextArea from "./ChatTextArea"
 import TaskHeader from "./TaskHeader"
 import AutoApproveMenu from "./AutoApproveMenu"
 import SystemPromptWarning from "./SystemPromptWarning"
+import SynthesizingIndicator from "./SynthesizingIndicator"
 import { useTaskSearch } from "../history/useTaskSearch"
 
 export interface ChatViewProps {
@@ -1248,6 +1249,11 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							<CheckpointWarningMessage />
 						</div>
 					)}
+
+					{/* Synthesizing status indicator */}
+					<div className="px-3">
+						<SynthesizingIndicator />
+					</div>
 				</>
 			) : (
 				<div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4">

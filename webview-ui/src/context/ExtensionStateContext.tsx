@@ -20,6 +20,10 @@ export interface ExtensionStateContextType extends ExtensionState {
 	mcpServers: McpServer[]
 	hasSystemPromptOverride?: boolean
 	currentCheckpoint?: string
+	synthesizationStatus?: {
+		status: "started" | "completed" | "failed"
+		text: string
+	}
 	filePaths: string[]
 	openedTabs: Array<{ label: string; isActive: boolean; path?: string }>
 	setApiConfiguration: (config: ApiConfiguration) => void
@@ -93,6 +97,16 @@ export interface ExtensionStateContextType extends ExtensionState {
 	terminalCompressProgressBar?: boolean
 	setTerminalCompressProgressBar: (value: boolean) => void
 	setHistoryPreviewCollapsed: (value: boolean) => void
+
+	// Context Synthesization Setters
+	enableContextSummarization: boolean
+	setEnableContextSummarization: (value: boolean) => void
+	contextSummarizationTriggerThreshold: number
+	setContextSummarizationTriggerThreshold: (value: number) => void
+	contextSummarizationInitialStaticTurns: number
+	setContextSummarizationInitialStaticTurns: (value: number) => void
+	contextSummarizationRecentTurns: number
+	setContextSummarizationRecentTurns: (value: number) => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -171,6 +185,12 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		terminalZdotdir: false, // Default ZDOTDIR handling setting
 		terminalCompressProgressBar: true, // Default to compress progress bar output
 		historyPreviewCollapsed: false, // Initialize the new state (default to expanded)
+
+		// Context Synthesization Defaults (Added)
+		enableContextSummarization: false,
+		contextSummarizationTriggerThreshold: 80,
+		contextSummarizationInitialStaticTurns: 5,
+		contextSummarizationRecentTurns: 10,
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
@@ -230,6 +250,41 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 				}
 				case "currentCheckpointUpdated": {
 					setCurrentCheckpoint(message.text)
+					break
+				}
+				case "synthesizationStatus": {
+					// For "started" status, update the state immediately
+					if (message.status === "started") {
+						setState((prevState) => ({
+							...prevState,
+							synthesizationStatus: {
+								status: message.status as "started" | "completed" | "failed",
+								text: message.text || "",
+							},
+						}))
+					}
+					// For "completed" or "failed" status, update and then clear after delay
+					else if (message.status === "completed" || message.status === "failed") {
+						// First update the status
+						setState((prevState) => ({
+							...prevState,
+							synthesizationStatus: {
+								status: message.status as "completed" | "failed",
+								text: message.text || "",
+							},
+						}))
+
+						// Then clear it after a delay
+						const timer = setTimeout(() => {
+							setState((prevState) => ({
+								...prevState,
+								synthesizationStatus: undefined,
+							}))
+						}, 3000) // Reduced to 3 seconds for better UX
+
+						// Clean up the timer if component unmounts
+						return () => clearTimeout(timer)
+					}
 					break
 				}
 				case "listApiConfig": {
@@ -345,6 +400,24 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			}),
 		setHistoryPreviewCollapsed: (value) =>
 			setState((prevState) => ({ ...prevState, historyPreviewCollapsed: value })), // Implement the setter
+
+		// Context Synthesization Setters Implementation
+		setEnableContextSummarization: (value) => {
+			setState((prevState) => ({ ...prevState, enableContextSummarization: value }))
+			vscode.postMessage({ type: "enableContextSummarization", bool: value })
+		},
+		setContextSummarizationTriggerThreshold: (value) => {
+			setState((prevState) => ({ ...prevState, contextSummarizationTriggerThreshold: value }))
+			vscode.postMessage({ type: "contextSummarizationTriggerThreshold", value })
+		},
+		setContextSummarizationInitialStaticTurns: (value) => {
+			setState((prevState) => ({ ...prevState, contextSummarizationInitialStaticTurns: value }))
+			vscode.postMessage({ type: "contextSummarizationInitialStaticTurns", value })
+		},
+		setContextSummarizationRecentTurns: (value) => {
+			setState((prevState) => ({ ...prevState, contextSummarizationRecentTurns: value }))
+			vscode.postMessage({ type: "contextSummarizationRecentTurns", value })
+		},
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

@@ -51,7 +51,8 @@
 		"failed_delete_repo": "関連するシャドウリポジトリまたはブランチの削除に失敗しました：{{error}}",
 		"failed_remove_directory": "タスクディレクトリの削除に失敗しました：{{error}}",
 		"custom_storage_path_unusable": "カスタムストレージパス \"{{path}}\" が使用できないため、デフォルトパスを使用します",
-		"cannot_access_path": "パス {{path}} にアクセスできません：{{error}}"
+		"cannot_access_path": "パス {{path}} にアクセスできません：{{error}}",
+		"synthesization_failed": "会話コンテキストの合成に失敗しました。"
 	},
 	"warnings": {
 		"no_terminal_content": "選択されたターミナルコンテンツがありません",
@@ -67,7 +68,9 @@
 		"mcp_server_not_found": "サーバー\"{{serverName}}\"が設定内に見つかりません",
 		"custom_storage_path_set": "カスタムストレージパスが設定されました：{{path}}",
 		"default_storage_path": "デフォルトのストレージパスに戻りました",
-		"settings_imported": "設定が正常にインポートされました。"
+		"settings_imported": "設定が正常にインポートされました。",
+		"synthesizing_context": "会話コンテキストを合成中...",
+		"synthesization_complete": "会話コンテキストの合成が完了しました。"
 	},
 	"answers": {
 		"yes": "はい",

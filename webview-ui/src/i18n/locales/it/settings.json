@@ -301,6 +301,25 @@
 			"description": "Roo legge questo numero di righe quando il modello omette i valori di inizio/fine. Se questo numero è inferiore al totale del file, Roo genera un indice dei numeri di riga delle definizioni di codice. Casi speciali: -1 indica a Roo di leggere l'intero file (senza indicizzazione), e 0 indica di non leggere righe e fornire solo indici di riga per un contesto minimo. Valori più bassi minimizzano l'utilizzo iniziale del contesto, permettendo successive letture precise di intervalli di righe. Le richieste con inizio/fine espliciti non sono limitate da questa impostazione.",
 			"lines": "righe",
 			"always_full_read": "Leggi sempre l'intero file"
+		},
+		"synthesization": {
+			"enable": {
+				"label": "Abilita riassunto del contesto",
+				"description": "Se abilitato, i turni di conversazione più vecchi verranno riassunti invece di essere troncati all'avvicinarsi del limite di contesto. Ciò preserva più informazioni ma comporta costi aggiuntivi di token per il riassunto."
+			},
+			"triggerThreshold": {
+				"label": "Soglia di attivazione del riassunto",
+				"description": "Percentuale della dimensione della finestra di contesto alla quale attivare il riassunto (es. 80%)."
+			},
+			"initialTurns": {
+				"label": "Turni iniziali da mantenere",
+				"description": "Numero di messaggi di conversazione iniziali (prompt di sistema + utente/assistente) da mantenere sempre con tutti i dettagli."
+			},
+			"recentTurns": {
+				"label": "Turni recenti da mantenere",
+				"description": "Numero dei messaggi di conversazione più recenti da mantenere sempre con tutti i dettagli."
+			},
+			"turns": "messaggi"
 		}
 	},
 	"terminal": {

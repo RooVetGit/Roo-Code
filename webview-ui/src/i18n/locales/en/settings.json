@@ -301,6 +301,25 @@
 			"description": "Roo reads this number of lines when the model omits start/end values. If this number is less than the file's total, Roo generates a line number index of code definitions. Special cases: -1 instructs Roo to read the entire file (without indexing), and 0 instructs it to read no lines and provides line indexes only for minimal context. Lower values minimize initial context usage, enabling precise subsequent line-range reads. Explicit start/end requests are not limited by this setting.",
 			"lines": "lines",
 			"always_full_read": "Always read entire file"
+		},
+		"synthesization": {
+			"enable": {
+				"label": "Enable automatic context synthesization",
+				"description": "When enabled, older conversation turns will be synthesized instead of truncated when the context limit is approached. This preserves more information but incurs additional token costs for synthesization."
+			},
+			"triggerThreshold": {
+				"label": "Synthesization trigger threshold",
+				"description": "Percentage of the context window size at which synthesization should be triggered (e.g., 80%)."
+			},
+			"initialTurns": {
+				"label": "Initial turns to keep",
+				"description": "Number of initial conversation messages (system prompt + user/assistant) to always keep in full detail."
+			},
+			"recentTurns": {
+				"label": "Recent turns to keep",
+				"description": "Number of the most recent conversation messages to always keep in full detail."
+			},
+			"turns": "messages"
 		}
 	},
 	"terminal": {

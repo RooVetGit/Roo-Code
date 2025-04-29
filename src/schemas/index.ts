@@ -558,6 +558,12 @@ export const globalSettingsSchema = z.object({
 	terminalZdotdir: z.boolean().optional(),
 	terminalCompressProgressBar: z.boolean().optional(),
 
+	// Context Synthesization Settings
+	enableContextSummarization: z.boolean().optional(),
+	contextSummarizationTriggerThreshold: z.number().optional(), // Percentage (e.g., 80)
+	contextSummarizationInitialStaticTurns: z.number().optional(), // Number of initial turns to keep
+	contextSummarizationRecentTurns: z.number().optional(), // Number of recent turns to keep
+
 	rateLimitSeconds: z.number().optional(),
 	diffEnabled: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
@@ -635,6 +641,12 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	terminalZshP10k: undefined,
 	terminalZdotdir: undefined,
 	terminalCompressProgressBar: undefined,
+
+	// Context Synthesization Settings
+	enableContextSummarization: undefined,
+	contextSummarizationTriggerThreshold: undefined,
+	contextSummarizationInitialStaticTurns: undefined,
+	contextSummarizationRecentTurns: undefined,
 
 	rateLimitSeconds: undefined,
 	diffEnabled: undefined,
@@ -773,6 +785,7 @@ export const clineSays = [
 	"checkpoint_saved",
 	"rooignore_error",
 	"diff_error",
+	"summarizing",
 ] as const
 
 export const clineSaySchema = z.enum(clineSays)

@@ -301,6 +301,25 @@
 			"description": "O Roo lê este número de linhas quando o modelo omite valores de início/fim. Se este número for menor que o total do arquivo, o Roo gera um índice de números de linha das definições de código. Casos especiais: -1 instrui o Roo a ler o arquivo inteiro (sem indexação), e 0 instrui a não ler linhas e fornecer apenas índices de linha para contexto mínimo. Valores mais baixos minimizam o uso inicial de contexto, permitindo leituras posteriores precisas de intervalos de linhas. Requisições com início/fim explícitos não são limitadas por esta configuração.",
 			"lines": "linhas",
 			"always_full_read": "Sempre ler o arquivo inteiro"
+		},
+		"synthesization": {
+			"enable": {
+				"label": "Habilitar resumo de contexto",
+				"description": "Quando habilitado, os turnos de conversa mais antigos serão resumidos em vez de truncados quando o limite de contexto for atingido. Isso preserva mais informações, mas incorre em custos adicionais de token para o resumo."
+			},
+			"triggerThreshold": {
+				"label": "Limite de gatilho do resumo",
+				"description": "Percentual do tamanho da janela de contexto em que o resumo deve ser acionado (por exemplo, 80%)."
+			},
+			"initialTurns": {
+				"label": "Turnos iniciais a manter",
+				"description": "Número de mensagens iniciais da conversa (prompt do sistema + usuário/assistente) a serem sempre mantidas em detalhes completos."
+			},
+			"recentTurns": {
+				"label": "Turnos recentes a manter",
+				"description": "Número das mensagens de conversa mais recentes a serem sempre mantidas em detalhes completos."
+			},
+			"turns": "mensagens"
 		}
 	},
 	"terminal": {

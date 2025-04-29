@@ -51,7 +51,8 @@
 		"failed_delete_repo": "Nie udało się usunąć powiązanego repozytorium lub gałęzi pomocniczej: {{error}}",
 		"failed_remove_directory": "Nie udało się usunąć katalogu zadania: {{error}}",
 		"custom_storage_path_unusable": "Niestandardowa ścieżka przechowywania \"{{path}}\" nie jest użyteczna, zostanie użyta domyślna ścieżka",
-		"cannot_access_path": "Nie można uzyskać dostępu do ścieżki {{path}}: {{error}}"
+		"cannot_access_path": "Nie można uzyskać dostępu do ścieżki {{path}}: {{error}}",
+		"synthesization_failed": "Nie udało się zsyntetyzować kontekstu rozmowy."
 	},
 	"warnings": {
 		"no_terminal_content": "Nie wybrano zawartości terminala",
@@ -67,7 +68,9 @@
 		"mcp_server_not_found": "Serwer \"{{serverName}}\" nie znaleziony w konfiguracji",
 		"custom_storage_path_set": "Ustawiono niestandardową ścieżkę przechowywania: {{path}}",
 		"default_storage_path": "Wznowiono używanie domyślnej ścieżki przechowywania",
-		"settings_imported": "Ustawienia zaimportowane pomyślnie."
+		"settings_imported": "Ustawienia zaimportowane pomyślnie.",
+		"synthesizing_context": "Syntetyzowanie kontekstu rozmowy...",
+		"synthesization_complete": "Synteza kontekstu rozmowy zakończona."
 	},
 	"answers": {
 		"yes": "Tak",

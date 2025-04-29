@@ -51,7 +51,8 @@
 		"failed_delete_repo": "İlişkili gölge depo veya dal silinemedi: {{error}}",
 		"failed_remove_directory": "Görev dizini kaldırılamadı: {{error}}",
 		"custom_storage_path_unusable": "Özel depolama yolu \"{{path}}\" kullanılamıyor, varsayılan yol kullanılacak",
-		"cannot_access_path": "{{path}} yoluna erişilemiyor: {{error}}"
+		"cannot_access_path": "{{path}} yoluna erişilemiyor: {{error}}",
+		"synthesization_failed": "Konuşma bağlamı sentezlenemedi."
 	},
 	"warnings": {
 		"no_terminal_content": "Seçili terminal içeriği yok",
@@ -67,7 +68,9 @@
 		"mcp_server_not_found": "Yapılandırmada \"{{serverName}}\" sunucusu bulunamadı",
 		"custom_storage_path_set": "Özel depolama yolu ayarlandı: {{path}}",
 		"default_storage_path": "Varsayılan depolama yoluna geri dönüldü",
-		"settings_imported": "Ayarlar başarıyla içe aktarıldı."
+		"settings_imported": "Ayarlar başarıyla içe aktarıldı.",
+		"synthesizing_context": "Konuşma bağlamı sentezleniyor...",
+		"synthesization_complete": "Konuşma bağlamı sentezi tamamlandı."
 	},
 	"answers": {
 		"yes": "Evet",

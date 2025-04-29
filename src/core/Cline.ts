@@ -86,10 +86,11 @@ import { parseMentions } from "./mentions"
 import { FileContextTracker } from "./context-tracking/FileContextTracker"
 import { RooIgnoreController } from "./ignore/RooIgnoreController"
 import { type AssistantMessageContent, parseAssistantMessage } from "./assistant-message"
-import { truncateConversationIfNeeded } from "./sliding-window"
+import { truncateConversationIfNeeded, estimateTokenCount } from "./sliding-window" // Added estimateTokenCount
 import { ClineProvider } from "./webview/ClineProvider"
 import { validateToolUse } from "./mode-validator"
 import { MultiSearchReplaceDiffStrategy } from "./diff/strategies/multi-search-replace"
+import { ContextSynthesizer } from "../services/synthesization/ContextSynthesizer" // Updated to ContextSynthesizer
 import { readApiMessages, saveApiMessages, readTaskMessages, saveTaskMessages, taskMetadata } from "./task-persistence"
 
 type UserContent = Array<Anthropic.Messages.ContentBlockParam>
@@ -125,6 +126,11 @@ export type ClineOptions = {
 	parentTask?: Cline
 	taskNumber?: number
 	onCreated?: (cline: Cline) => void
+	// Context Synthesization Settings
+	enableContextSummarization?: boolean // Already added
+	contextSummarizationTriggerThreshold?: number // Already added
+	contextSummarizationInitialStaticTurns?: number // Already added
+	contextSummarizationRecentTurns?: number // Already added
 }
 
 export class Cline extends EventEmitter<ClineEvents> {
@@ -154,6 +160,12 @@ export class Cline extends EventEmitter<ClineEvents> {
 	diffStrategy?: DiffStrategy
 	diffEnabled: boolean = false
 	fuzzyMatchThreshold: number
+
+	// Context Synthesization Settings (Added)
+	readonly enableContextSummarization: boolean
+	readonly contextSummarizationTriggerThreshold: number
+	readonly contextSummarizationInitialStaticTurns: number
+	readonly contextSummarizationRecentTurns: number
 
 	apiConversationHistory: (Anthropic.MessageParam & { ts?: number })[] = []
 	clineMessages: ClineMessage[] = []
@@ -218,6 +230,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 		parentTask,
 		taskNumber = -1,
 		onCreated,
+		// Context Synthesization Settings (Added)
+		enableContextSummarization = false,
+		contextSummarizationTriggerThreshold = 80,
+		contextSummarizationInitialStaticTurns = 5,
+		contextSummarizationRecentTurns = 10,
 	}: ClineOptions) {
 		super()
 
@@ -254,6 +271,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 		this.globalStoragePath = provider.context.globalStorageUri.fsPath
 		this.diffViewProvider = new DiffViewProvider(this.cwd)
 		this.enableCheckpoints = enableCheckpoints
+
+		this.enableContextSummarization = enableContextSummarization
+		this.contextSummarizationTriggerThreshold = contextSummarizationTriggerThreshold
+		this.contextSummarizationInitialStaticTurns = contextSummarizationInitialStaticTurns
+		this.contextSummarizationRecentTurns = contextSummarizationRecentTurns
 
 		this.rootTask = rootTask
 		this.parentTask = parentTask
@@ -353,7 +375,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		this.emit("message", { action: "updated", message: partialMessage })
 	}
 
-	private async saveClineMessages() {
+	public async saveClineMessages() {
 		try {
 			await saveTaskMessages({
 				messages: this.clineMessages,
@@ -1016,15 +1038,17 @@ export class Cline extends EventEmitter<ClineEvents> {
 			)
 		})()
 
-		// If the previous API request's total token usage is close to the context window, truncate the conversation history to free up space for the new request
+		// If the previous API request's total token usage is close to the context window,
+		// either truncate or summarize the conversation history based on settings.
 		if (previousApiReqIndex >= 0) {
 			const previousRequest = this.clineMessages[previousApiReqIndex]?.text
 
 			if (!previousRequest) {
-				return
+				return 
 			}
 
 			const {
+				// These tokens are from the *previous* request's response, not the current history size
 				tokensIn = 0,
 				tokensOut = 0,
 				cacheWrites = 0,
@@ -1043,17 +1067,102 @@ export class Cline extends EventEmitter<ClineEvents> {
 				: modelInfo.maxTokens
 
 			const contextWindow = modelInfo.contextWindow
+			let historyModifiedBySynthesization = false // Flag to track if synthesization updated history
 
-			const trimmedMessages = await truncateConversationIfNeeded({
-				messages: this.apiConversationHistory,
-				totalTokens,
-				maxTokens,
-				contextWindow,
-				apiHandler: this.api,
-			})
+			if (this.enableContextSummarization) {
+				// --- Synthesizing Logic ---
+				const currentTokens = await this._estimateTotalTokenCount(this.apiConversationHistory)
+				const triggerTokenCount = contextWindow * (this.contextSummarizationTriggerThreshold / 100)
 
-			if (trimmedMessages !== this.apiConversationHistory) {
-				await this.overwriteApiConversationHistory(trimmedMessages)
+				this.providerRef
+					.deref()
+					?.log(`[Synthesizing] Current tokens: ${currentTokens}, Trigger: ${triggerTokenCount}`)
+
+				if (currentTokens >= triggerTokenCount) {
+					this.providerRef.deref()?.log(`[Synthesizing] Threshold met. Attempting synthesizing.`)
+					const initialMessagesToKeep = this.contextSummarizationInitialStaticTurns
+					const recentMessagesToKeep = this.contextSummarizationRecentTurns
+
+					// Ensure slice points are valid and don't overlap negatively
+					if (
+						this.apiConversationHistory.length > initialMessagesToKeep + recentMessagesToKeep &&
+						initialMessagesToKeep >= 0 &&
+						recentMessagesToKeep >= 0
+					) {
+						const initialSliceEnd = initialMessagesToKeep
+						const recentSliceStart = this.apiConversationHistory.length - recentMessagesToKeep
+
+						if (initialSliceEnd < recentSliceStart) {
+							const initialMessages = this.apiConversationHistory.slice(0, initialSliceEnd)
+							const recentMessages = this.apiConversationHistory.slice(recentSliceStart)
+							const messagesToSynthesize = this.apiConversationHistory.slice(
+								initialSliceEnd,
+								recentSliceStart,
+							)
+
+							this.providerRef
+								.deref()
+								?.log(
+									`[Synthesizing] Slicing: Keep Initial ${initialMessages.length}, Synthesize ${messagesToSynthesize.length}, Keep Recent ${recentMessages.length}`,
+								)
+
+							// Instantiate the synthesizer (consider using a dedicated API handler/model later)
+							const synthesizer = new ContextSynthesizer(this.api)
+							const summaryMessage = await synthesizer.synthesize(messagesToSynthesize)
+
+							if (summaryMessage) {
+								const newHistory = [...initialMessages, summaryMessage, ...recentMessages]
+								this.providerRef
+									.deref()
+									?.log(
+										`[Synthesizing] Synthesizing successful. New history length: ${newHistory.length}`,
+									)
+								// Add a system message to notify the user in the UI
+								await this.say("text", "[Older conversation turns synthesized to preserve context]")
+								await this.overwriteApiConversationHistory(newHistory)
+								historyModifiedBySynthesization = true // Mark history as modified
+							} else {
+								this.providerRef
+									.deref()
+									?.log(`[Synthesizing] Synthesizing failed. Falling back to truncation.`)
+								// Fall through to truncation if synthesization fails
+							}
+						} else {
+							this.providerRef
+								.deref()
+								?.log(
+									`[Synthesizing] Skipping: initialSliceEnd (${initialSliceEnd}) >= recentSliceStart (${recentSliceStart}). Not enough messages between initial/recent turns.`,
+								)
+							// Fall through to truncation if slicing is not possible
+						}
+					} else {
+						this.providerRef
+							.deref()
+							?.log(
+								`[Synthesizing] Skipping: Not enough messages (${this.apiConversationHistory.length}) to satisfy keep counts (${initialMessagesToKeep} + ${recentMessagesToKeep}).`,
+							)
+						// Fall through to truncation if history is too short
+					}
+				}
+				// If synthesization is enabled but threshold not met, do nothing and proceed.
+			}
+
+			// --- Truncation Logic (Only run if synthesization didn't modify history) ---
+			if (!historyModifiedBySynthesization) {
+				// Note: totalTokens here refers to the previous response size, used by truncateConversationIfNeeded
+				// to estimate if the *next* request might overflow.
+				const trimmedMessages = await truncateConversationIfNeeded({
+					messages: this.apiConversationHistory, // Use potentially already summarized history if synthesization failed above
+					totalTokens, // From previous response metrics
+					maxTokens,
+					contextWindow,
+					apiHandler: this.api,
+				})
+
+				if (trimmedMessages !== this.apiConversationHistory) {
+					this.providerRef.deref()?.log(`[Synthesizing] Truncation applied as fallback.`)
+					await this.overwriteApiConversationHistory(trimmedMessages)
+				}
 			}
 		}
 
@@ -2570,5 +2679,95 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 	public getToolUsage() {
 		return this.toolUsage
+	}
+
+	/**
+	 * Estimates the total token count for an array of messages.
+	 * @param messages The messages to count tokens for.
+	 * @returns A promise resolving to the estimated total token count.
+	 */
+	private async _estimateTotalTokenCount(messages: Anthropic.MessageParam[]): Promise<number> {
+		let totalTokens = 0
+		for (const message of messages) {
+			const content = message.content
+			if (Array.isArray(content)) {
+				totalTokens += await estimateTokenCount(content, this.api)
+			} else if (typeof content === "string") {
+				totalTokens += await estimateTokenCount([{ type: "text", text: content }], this.api)
+			}
+		}
+		return totalTokens
+	}
+
+	/**
+	 * Manually triggers synthesization of the conversation context.
+	 * @param isManualTrigger Whether this synthesization was manually triggered by the user.
+	 * @returns A promise that resolves when synthesization is complete.
+	 */
+	public async synthesizeConversationContext(_isManualTrigger: boolean = false): Promise<void> {
+		// Skip if synthesizing is disabled
+		if (!this.enableContextSummarization) {
+			this.providerRef.deref()?.log("[Synthesizing] Context synthesizing is disabled.")
+			return
+		}
+
+		const initialMessagesToKeep = this.contextSummarizationInitialStaticTurns
+		const recentMessagesToKeep = this.contextSummarizationRecentTurns
+
+		// Ensure we have enough messages to synthesize
+		if (this.apiConversationHistory.length <= initialMessagesToKeep + recentMessagesToKeep) {
+			this.providerRef
+				.deref()
+				?.log(
+					`[Synthesizing] Not enough messages to synthesize. Need more than ${initialMessagesToKeep + recentMessagesToKeep} messages.`,
+				)
+			return
+		}
+
+		// Calculate slice points
+		const initialSliceEnd = initialMessagesToKeep
+		const recentSliceStart = this.apiConversationHistory.length - recentMessagesToKeep
+
+		// Ensure slice points don't overlap
+		if (initialSliceEnd >= recentSliceStart) {
+			this.providerRef
+				.deref()
+				?.log(
+					`[Synthesizing] Skipping: initialSliceEnd (${initialSliceEnd}) >= recentSliceStart (${recentSliceStart}). Not enough messages between initial/recent turns.`,
+				)
+			return
+		}
+
+		// Slice the conversation history
+		const initialMessages = this.apiConversationHistory.slice(0, initialSliceEnd)
+		const recentMessages = this.apiConversationHistory.slice(recentSliceStart)
+		const messagesToSynthesize = this.apiConversationHistory.slice(initialSliceEnd, recentSliceStart)
+
+		this.providerRef
+			.deref()
+			?.log(
+				`[Synthesizing] Slicing: Keep Initial ${initialMessages.length}, Synthesize ${messagesToSynthesize.length}, Keep Recent ${recentMessages.length}`,
+			)
+
+		// Create synthesizer and generate synthesis
+		const synthesizer = new ContextSynthesizer(this.api)
+		const summaryMessage = await synthesizer.synthesize(messagesToSynthesize)
+
+		if (!summaryMessage) {
+			this.providerRef.deref()?.log(`[Synthesizing] Failed to generate synthesis.`)
+			return
+		}
+
+		// Create new history with summary
+		const newHistory = [...initialMessages, summaryMessage, ...recentMessages]
+
+		// Update the conversation history
+		await this.overwriteApiConversationHistory(newHistory)
+
+		this.providerRef
+			.deref()
+			?.log(
+				`[Synthesizing] Successfully synthesized ${messagesToSynthesize.length} messages. New history length: ${newHistory.length}`,
+			)
 	}
 }

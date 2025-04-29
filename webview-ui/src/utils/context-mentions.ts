@@ -1,7 +1,11 @@
 import { mentionRegex } from "@roo/shared/context-mentions"
 import { Fzf } from "fzf"
 import { ModeConfig } from "@roo/shared/modes"
-import * as path from "path"
+
+// Simple basename function to replace path.basename
+function basename(filepath: string): string {
+	return filepath.split("/").pop() || filepath
+}
 
 export interface SearchResult {
 	path: string
@@ -77,6 +81,7 @@ export enum ContextMenuOptionType {
 	Git = "git",
 	NoResults = "noResults",
 	Mode = "mode", // Add mode type
+	Synthesize = "synthesize", // Add synthesize type
 }
 
 export interface ContextMenuQueryItem {
@@ -164,6 +169,11 @@ export function getContextMenuOptions(
 		}
 
 		return [
+			{
+				type: ContextMenuOptionType.Synthesize,
+				label: "Synthesize",
+				description: "Compress conversation history",
+			},
 			{ type: ContextMenuOptionType.Problems },
 			{ type: ContextMenuOptionType.Terminal },
 			{ type: ContextMenuOptionType.URL },
@@ -192,6 +202,13 @@ export function getContextMenuOptions(
 	}
 	if ("terminal".startsWith(lowerQuery)) {
 		suggestions.push({ type: ContextMenuOptionType.Terminal })
+	}
+	if ("synthesize".startsWith(lowerQuery)) {
+		suggestions.push({
+			type: ContextMenuOptionType.Synthesize,
+			label: "Synthesize",
+			description: "Compress conversation history",
+		})
 	}
 	if (query.startsWith("http")) {
 		suggestions.push({ type: ContextMenuOptionType.URL, value: query })
@@ -241,7 +258,7 @@ export function getContextMenuOptions(
 		return {
 			type: result.type === "folder" ? ContextMenuOptionType.Folder : ContextMenuOptionType.File,
 			value: formattedPath,
-			label: result.label || path.basename(result.path),
+			label: result.label || basename(result.path),
 			description: formattedPath,
 		}
 	})

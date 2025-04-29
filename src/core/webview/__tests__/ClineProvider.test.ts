@@ -425,6 +425,11 @@ describe("ClineProvider", () => {
 			showRooIgnoredFiles: true,
 			renderContext: "sidebar",
 			maxReadFileLine: 500,
+			// Context Synthesization Defaults (Added for test)
+			enableContextSummarization: false,
+			contextSummarizationTriggerThreshold: 80,
+			contextSummarizationInitialStaticTurns: 5,
+			contextSummarizationRecentTurns: 10,
 		}
 
 		const message: ExtensionMessage = {
@@ -727,6 +732,68 @@ describe("ClineProvider", () => {
 		expect(mockContext.globalState.update).toHaveBeenCalledWith("showRooIgnoredFiles", false)
 		expect(mockPostMessage).toHaveBeenCalled()
 		expect((await provider.getState()).showRooIgnoredFiles).toBe(false)
+	})
+
+	test("handles context synthesization settings messages", async () => {
+		await provider.resolveWebviewView(mockWebviewView)
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+
+		// Test enableContextSummarization
+		await messageHandler({ type: "enableContextSummarization", bool: true })
+		expect(updateGlobalStateSpy).toHaveBeenCalledWith("enableContextSummarization", true)
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("enableContextSummarization", true)
+		expect(mockPostMessage).toHaveBeenCalled()
+		expect((await provider.getState()).enableContextSummarization).toBe(true)
+
+		await messageHandler({ type: "enableContextSummarization", bool: false })
+		expect(updateGlobalStateSpy).toHaveBeenCalledWith("enableContextSummarization", false)
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("enableContextSummarization", false)
+		expect(mockPostMessage).toHaveBeenCalled()
+		expect((await provider.getState()).enableContextSummarization).toBe(false)
+
+		// Test contextSummarizationTriggerThreshold
+		await messageHandler({ type: "contextSummarizationTriggerThreshold", value: 90 })
+		expect(updateGlobalStateSpy).toHaveBeenCalledWith("contextSummarizationTriggerThreshold", 90)
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("contextSummarizationTriggerThreshold", 90)
+		expect(mockPostMessage).toHaveBeenCalled()
+		expect((await provider.getState()).contextSummarizationTriggerThreshold).toBe(90)
+
+		// Test contextSummarizationInitialStaticTurns
+		await messageHandler({ type: "contextSummarizationInitialStaticTurns", value: 3 })
+		expect(updateGlobalStateSpy).toHaveBeenCalledWith("contextSummarizationInitialStaticTurns", 3)
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("contextSummarizationInitialStaticTurns", 3)
+		expect(mockPostMessage).toHaveBeenCalled()
+		expect((await provider.getState()).contextSummarizationInitialStaticTurns).toBe(3)
+
+		// Test contextSummarizationRecentTurns
+		await messageHandler({ type: "contextSummarizationRecentTurns", value: 15 })
+		expect(updateGlobalStateSpy).toHaveBeenCalledWith("contextSummarizationRecentTurns", 15)
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("contextSummarizationRecentTurns", 15)
+		expect(mockPostMessage).toHaveBeenCalled()
+		expect((await provider.getState()).contextSummarizationRecentTurns).toBe(15)
+	})
+
+	test("context synthesization settings have correct default values", async () => {
+		// Mock globalState.get to return undefined for the new settings
+		;(mockContext.globalState.get as jest.Mock).mockImplementation((key: string) => {
+			if (
+				[
+					"enableContextSummarization",
+					"contextSummarizationTriggerThreshold",
+					"contextSummarizationInitialStaticTurns",
+					"contextSummarizationRecentTurns",
+				].includes(key)
+			) {
+				return undefined
+			}
+			return null // Return null for other keys to avoid interference
+		})
+
+		const state = await provider.getState()
+		expect(state.enableContextSummarization).toBe(false)
+		expect(state.contextSummarizationTriggerThreshold).toBe(80)
+		expect(state.contextSummarizationInitialStaticTurns).toBe(5)
+		expect(state.contextSummarizationRecentTurns).toBe(10)
 	})
 
 	test("handles request delay settings messages", async () => {

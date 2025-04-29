@@ -47,6 +47,7 @@
 		"create_mcp_json": "Failed to create or open .roo/mcp.json: {{error}}",
 		"hmr_not_running": "Local development server is not running, HMR will not work. Please run 'npm run dev' before launching the extension to enable HMR.",
 		"retrieve_current_mode": "Error: failed to retrieve current mode from state.",
+		"synthesization_failed": "Failed to synthesize conversation context.",
 		"failed_delete_repo": "Failed to delete associated shadow repository or branch: {{error}}",
 		"failed_remove_directory": "Failed to remove task directory: {{error}}",
 		"custom_storage_path_unusable": "Custom storage path \"{{path}}\" is unusable, will use default path",
@@ -67,7 +68,9 @@
 		"mcp_server_not_found": "Server \"{{serverName}}\" not found in configuration",
 		"custom_storage_path_set": "Custom storage path set: {{path}}",
 		"default_storage_path": "Reverted to using default storage path",
-		"settings_imported": "Settings imported successfully."
+		"settings_imported": "Settings imported successfully.",
+		"synthesizing_context": "Synthesizing conversation context...",
+		"synthesization_complete": "Conversation context synthesization complete."
 	},
 	"answers": {
 		"yes": "Yes",

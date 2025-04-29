@@ -301,6 +301,25 @@
 			"description": "自动读取文件行数设置：-1=完整读取 0=仅生成行号索引，较小值可节省token，支持后续使用行号进行读取。",
 			"lines": "行",
 			"always_full_read": "始终读取整个文件"
+		},
+		"synthesization": {
+			"enable": {
+				"label": "启用上下文摘要",
+				"description": "启用后，当接近上下文限制时，较早的对话轮次将被摘要而不是截断。这可以保留更多信息，但会产生额外的 token 费用用于摘要。"
+			},
+			"triggerThreshold": {
+				"label": "摘要触发阈值",
+				"description": "应触发摘要的上下文窗口大小百分比（例如 80%）。"
+			},
+			"initialTurns": {
+				"label": "保留的初始轮次",
+				"description": "始终保留完整细节的初始对话消息数量（系统提示 + 用户/助手）。"
+			},
+			"recentTurns": {
+				"label": "保留的最近轮次",
+				"description": "始终保留完整细节的最近对话消息数量。"
+			},
+			"turns": "条消息"
 		}
 	},
 	"terminal": {

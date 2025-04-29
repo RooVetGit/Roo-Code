@@ -252,6 +252,14 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				setShowContextMenu(false)
 				setSelectedType(null)
 
+				if (type === ContextMenuOptionType.Synthesize) {
+					// Handle synthesize action - trigger manual synthesizing
+					vscode.postMessage({ type: "manualSynthesize" })
+					setShowContextMenu(false)
+					setSelectedType(null)
+					return
+				}
+
 				if (textAreaRef.current) {
 					let insertValue = value || ""
 
@@ -266,6 +274,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					} else if (type === ContextMenuOptionType.Git) {
 						insertValue = value || ""
 					}
+
+					// Note: The Summarize case is handled above before this block
 
 					const { newValue, mentionIndex } = insertMention(
 						textAreaRef.current.value,

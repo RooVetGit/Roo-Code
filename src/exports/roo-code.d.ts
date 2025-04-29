@@ -217,6 +217,10 @@ type GlobalSettings = {
 	terminalZshP10k?: boolean | undefined
 	terminalZdotdir?: boolean | undefined
 	terminalCompressProgressBar?: boolean | undefined
+	enableContextSummarization?: boolean | undefined
+	contextSummarizationTriggerThreshold?: number | undefined
+	contextSummarizationInitialStaticTurns?: number | undefined
+	contextSummarizationRecentTurns?: number | undefined
 	rateLimitSeconds?: number | undefined
 	diffEnabled?: boolean | undefined
 	fuzzyMatchThreshold?: number | undefined
@@ -333,6 +337,7 @@ type ClineMessage = {
 				| "checkpoint_saved"
 				| "rooignore_error"
 				| "diff_error"
+				| "summarizing"
 		  )
 		| undefined
 	text?: string | undefined
@@ -408,6 +413,7 @@ type RooCodeEvents = {
 							| "checkpoint_saved"
 							| "rooignore_error"
 							| "diff_error"
+							| "summarizing"
 					  )
 					| undefined
 				text?: string | undefined

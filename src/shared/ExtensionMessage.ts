@@ -67,6 +67,7 @@ export interface ExtensionMessage {
 		| "toggleApiConfigPin"
 		| "acceptInput"
 		| "setHistoryPreviewCollapsed"
+		| "synthesizationStatus"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -103,6 +104,7 @@ export interface ExtensionMessage {
 	promptText?: string
 	results?: { path: string; type: "file" | "folder"; label?: string }[]
 	error?: string
+	status?: "started" | "completed" | "failed"
 }
 
 export type ExtensionState = Pick<
@@ -164,6 +166,11 @@ export type ExtensionState = Pick<
 	| "customModePrompts"
 	| "customSupportPrompts"
 	| "enhancementApiConfigId"
+	// Context Synthesization Settings (Added)
+	| "enableContextSummarization"
+	| "contextSummarizationTriggerThreshold"
+	| "contextSummarizationInitialStaticTurns"
+	| "contextSummarizationRecentTurns"
 > & {
 	version: string
 	clineMessages: ClineMessage[]
@@ -200,6 +207,12 @@ export type ExtensionState = Pick<
 	renderContext: "sidebar" | "editor"
 	settingsImportedAt?: number
 	historyPreviewCollapsed?: boolean
+
+	// Context Synthesization Settings (Required part)
+	enableContextSummarization: boolean
+	contextSummarizationTriggerThreshold: number
+	contextSummarizationInitialStaticTurns: number
+	contextSummarizationRecentTurns: number
 }
 
 export type { ClineMessage, ClineAsk, ClineSay }

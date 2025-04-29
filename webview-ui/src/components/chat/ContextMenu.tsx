@@ -89,6 +89,8 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 				return <span>Problems</span>
 			case ContextMenuOptionType.Terminal:
 				return <span>Terminal</span>
+			case ContextMenuOptionType.Synthesize:
+				return <span>{option.label || "Synthesize"}</span>
 			case ContextMenuOptionType.URL:
 				return <span>Paste URL to fetch contents</span>
 			case ContextMenuOptionType.NoResults:
@@ -175,6 +177,8 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 				return "link"
 			case ContextMenuOptionType.Git:
 				return "git-commit"
+			case ContextMenuOptionType.Synthesize:
+				return "archive"
 			case ContextMenuOptionType.NoResults:
 				return "info"
 			default:

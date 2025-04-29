@@ -127,6 +127,13 @@ export interface WebviewMessage {
 		| "searchFiles"
 		| "toggleApiConfigPin"
 		| "setHistoryPreviewCollapsed"
+		// Context Synthesizing Settings
+		| "enableContextSummarization"
+		| "contextSummarizationTriggerThreshold"
+		| "contextSummarizationInitialStaticTurns"
+		| "contextSummarizationRecentTurns"
+		| "manualSynthesize"
+		| "synthesizationStatus"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
@@ -155,6 +162,7 @@ export interface WebviewMessage {
 	hasSystemPromptOverride?: boolean
 	terminalOperation?: "continue" | "abort"
 	historyPreviewCollapsed?: boolean
+	status?: "started" | "completed" | "failed"
 }
 
 export const checkoutDiffPayloadSchema = z.object({

@@ -860,6 +860,60 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await updateGlobalState("historyPreviewCollapsed", message.bool ?? false)
 			// No need to call postStateToWebview here as the UI already updated optimistically
 			break
+		// Context Synthesization Settings
+		case "enableContextSummarization":
+			await updateGlobalState("enableContextSummarization", message.bool ?? false)
+			await provider.postStateToWebview()
+			break
+		case "contextSummarizationTriggerThreshold":
+			await updateGlobalState("contextSummarizationTriggerThreshold", message.value ?? 80)
+			await provider.postStateToWebview()
+			break
+		case "contextSummarizationInitialStaticTurns":
+			await updateGlobalState("contextSummarizationInitialStaticTurns", message.value ?? 5)
+			await provider.postStateToWebview()
+			break
+		case "contextSummarizationRecentTurns":
+			await updateGlobalState("contextSummarizationRecentTurns", message.value ?? 10)
+			await provider.postStateToWebview()
+			break
+		case "manualSynthesize":
+			// Trigger manual synthesizing of the conversation context
+			const currentCline = provider.getCurrentCline()
+			if (currentCline) {
+				// First send a message to the webview to show a progress indicator
+				void provider.postMessageToWebview({
+					type: "synthesizationStatus",
+					status: "started",
+					text: t("common:info.synthesizing_context"),
+				})
+
+				// Use a non-blocking approach with proper error handling
+				try {
+					// Trigger the synthesizing process directly without adding system messages
+					await currentCline.synthesizeConversationContext(true) // true indicates manual trigger
+
+					// Send a message to the webview to hide the progress indicator
+					void provider.postMessageToWebview({
+						type: "synthesizationStatus",
+						status: "completed",
+						text: t("common:info.synthesization_complete"),
+					})
+				} catch (error) {
+					provider.log(
+						`Error during manual synthesizing: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+					)
+
+					// Update the UI to show the error
+					void provider.postMessageToWebview({
+						type: "synthesizationStatus",
+						status: "failed",
+						text: t("common:errors.synthesization_failed"),
+					})
+				}
+			}
+			break
+		// --- End Context Synthesization ---
 		case "toggleApiConfigPin":
 			if (message.text) {
 				const currentPinned = getGlobalState("pinnedApiConfigs") ?? {}

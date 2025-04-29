@@ -301,6 +301,25 @@
 			"description": "Roo lit ce nombre de lignes lorsque le modèle omet les valeurs de début/fin. Si ce nombre est inférieur au total du fichier, Roo génère un index des numéros de ligne des définitions de code. Cas spéciaux : -1 indique à Roo de lire le fichier entier (sans indexation), et 0 indique de ne lire aucune ligne et de fournir uniquement les index de ligne pour un contexte minimal. Des valeurs plus basses minimisent l'utilisation initiale du contexte, permettant des lectures ultérieures de plages de lignes précises. Les requêtes avec début/fin explicites ne sont pas limitées par ce paramètre.",
 			"lines": "lignes",
 			"always_full_read": "Toujours lire le fichier entier"
+		},
+		"synthesization": {
+			"enable": {
+				"label": "Activer le résumé du contexte",
+				"description": "Lorsque cette option est activée, les anciens tours de conversation seront résumés au lieu d'être tronqués à l'approche de la limite de contexte. Cela préserve plus d'informations mais entraîne des coûts de token supplémentaires pour le résumé."
+			},
+			"triggerThreshold": {
+				"label": "Seuil de déclenchement du résumé",
+				"description": "Pourcentage de la taille de la fenêtre de contexte auquel le résumé doit être déclenché (par ex., 80%)."
+			},
+			"initialTurns": {
+				"label": "Tours initiaux à conserver",
+				"description": "Nombre de messages de conversation initiaux (prompt système + utilisateur/assistant) à toujours conserver en détail."
+			},
+			"recentTurns": {
+				"label": "Tours récents à conserver",
+				"description": "Nombre des messages de conversation les plus récents à toujours conserver en détail."
+			},
+			"turns": "messages"
 		}
 	},
 	"terminal": {

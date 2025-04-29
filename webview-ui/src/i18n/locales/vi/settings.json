@@ -301,6 +301,25 @@
 			"description": "Roo đọc số dòng này khi mô hình không chỉ định giá trị bắt đầu/kết thúc. Nếu số này nhỏ hơn tổng số dòng của tệp, Roo sẽ tạo một chỉ mục số dòng của các định nghĩa mã. Trường hợp đặc biệt: -1 chỉ thị Roo đọc toàn bộ tệp (không tạo chỉ mục), và 0 chỉ thị không đọc dòng nào và chỉ cung cấp chỉ mục dòng cho ngữ cảnh tối thiểu. Giá trị thấp hơn giảm thiểu việc sử dụng ngữ cảnh ban đầu, cho phép đọc chính xác các phạm vi dòng sau này. Các yêu cầu có chỉ định bắt đầu/kết thúc rõ ràng không bị giới hạn bởi cài đặt này.",
 			"lines": "dòng",
 			"always_full_read": "Luôn đọc toàn bộ tệp"
+		},
+		"synthesization": {
+			"enable": {
+				"label": "Bật tóm tắt ngữ cảnh",
+				"description": "Khi được bật, các lượt trò chuyện cũ hơn sẽ được tóm tắt thay vì bị cắt bớt khi đạt đến giới hạn ngữ cảnh. Điều này bảo toàn nhiều thông tin hơn nhưng phải trả thêm chi phí token cho việc tóm tắt."
+			},
+			"triggerThreshold": {
+				"label": "Ngưỡng kích hoạt tóm tắt",
+				"description": "Phần trăm kích thước cửa sổ ngữ cảnh mà tại đó việc tóm tắt sẽ được kích hoạt (ví dụ: 80%)."
+			},
+			"initialTurns": {
+				"label": "Lượt ban đầu cần giữ lại",
+				"description": "Số lượng tin nhắn trò chuyện ban đầu (lời nhắc hệ thống + người dùng/trợ lý) luôn được giữ lại đầy đủ chi tiết."
+			},
+			"recentTurns": {
+				"label": "Lượt gần đây cần giữ lại",
+				"description": "Số lượng tin nhắn trò chuyện gần đây nhất luôn được giữ lại đầy đủ chi tiết."
+			},
+			"turns": "tin nhắn"
 		}
 	},
 	"terminal": {
