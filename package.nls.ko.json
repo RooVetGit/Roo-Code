@@ -2,6 +2,7 @@
 	"extension.displayName": "Roo Code (이전 Roo Cline)",
 	"extension.description": "에디터에서 작동하는 AI 에이전트 개발팀.",
 	"command.newTask.title": "새 작업",
+	"command.explainCode.title": "코드 설명",
 	"command.fixCode.title": "코드 수정",
 	"command.addToContext.title": "컨텍스트에 추가",
 	"command.openInNewTab.title": "새 탭에서 열기",

@@ -12,6 +12,7 @@
 	"command.settings.title": "Settings",
 	"command.documentation.title": "Documentation",
 	"command.openInNewTab.title": "Open In New Tab",
+	"command.explainCode.title": "Explain Code",
 	"command.fixCode.title": "Fix Code",
 	"command.addToContext.title": "Add To Context",
 	"command.focusInput.title": "Focus Input Field",

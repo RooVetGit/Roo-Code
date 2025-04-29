@@ -2,15 +2,17 @@ import * as vscode from "vscode"
 
 import { EditorUtils } from "./EditorUtils"
 
-type CodeActionName = "FIX" | "ADD_TO_CONTEXT" | "NEW_TASK"
+type CodeActionName = "EXPLAIN" | "FIX" | "ADD_TO_CONTEXT" | "NEW_TASK"
 
 export const ACTION_NAMES: Record<CodeActionName, string> = {
+	EXPLAIN: "Explain with Roo Code",
 	FIX: "Fix with Roo Code",
 	ADD_TO_CONTEXT: "Add to Roo Code",
 	NEW_TASK: "New Roo Code Task",
 } as const
 
 export const COMMAND_IDS: Record<CodeActionName, string> = {
+	EXPLAIN: "roo-cline.explainCode",
 	FIX: "roo-cline.fixCode",
 	ADD_TO_CONTEXT: "roo-cline.addToContext",
 	NEW_TASK: "roo-cline.newTask",
@@ -55,6 +57,15 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
 						effectiveRange.range.end.line + 1,
 					],
 				),
+			)
+
+			actions.push(
+				this.createAction(ACTION_NAMES.EXPLAIN, vscode.CodeActionKind.QuickFix, COMMAND_IDS.EXPLAIN, [
+					filePath,
+					effectiveRange.text,
+					effectiveRange.range.start.line + 1,
+					effectiveRange.range.end.line + 1,
+				]),
 			)
 
 			if (context.diagnostics.length > 0) {

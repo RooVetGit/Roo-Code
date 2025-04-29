@@ -10,6 +10,7 @@ suite("Roo Code Extension", () => {
 			"roo-cline.popoutButtonClicked",
 			"roo-cline.settingsButtonClicked",
 			"roo-cline.openInNewTab",
+			"roo-cline.explainCode",
 			"roo-cline.fixCode",
 		]
 

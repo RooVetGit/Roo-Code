@@ -2,6 +2,7 @@
 	"extension.displayName": "Roo Code (önceden Roo Cline)",
 	"extension.description": "Düzenleyicinde tam bir AI ajanları geliştirme ekibi.",
 	"command.newTask.title": "Yeni Görev",
+	"command.explainCode.title": "Kodu Açıkla",
 	"command.fixCode.title": "Kodu Düzelt",
 	"command.addToContext.title": "Bağlama Ekle",
 	"command.openInNewTab.title": "Yeni Sekmede Aç",
