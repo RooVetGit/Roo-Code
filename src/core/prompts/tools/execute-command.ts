@@ -34,7 +34,10 @@ T = Tr ∪ Tm: intended targets
     Tr ⊆ S: read-only targets
     Tm = {x | x ∈ S ∨ (x ∉ S ∧ x ∈ S′)}: modifiable/creatable targets
 R = {x | (x ∈ s₀ ∧ c(x) ≠ x) ∨ (x ∉ s₀ ∧ x ∈ S′)}: modified/created elements
-c⁻¹(R): inverse operations
+c⁻¹(R): inverse operations known to be possible with only knowledge of S′ (eg, when all other context knowledge is lost); inverse operations exclude, without limitation:
+    - data restored from unconfirmed sources like hypothetical backups
+    - knowledge within this conversation context
+    - knowledge assumed to be within the user's mind
 
 r(C)=readOnly ⟺
     Tm = ∅ ∧
@@ -46,16 +49,14 @@ r(C)=readOnly ⟺
 r(C)=reversibleChanges ⟺
     Tm ≠ ∅ ∧
     ∀s₀ ∈ S: ∃c⁻¹: (c⁻¹(c(s₀))=s₀) ∧ (|c⁻¹|=1) ∧
-    R = Tm
+    R = Tm ∧
+    (∀x ∈ R: content(x,s₀) = ∅ ∨ ∃y ∈ R: content(x,s₀) ⊆ content(y,s′))
 
 r(C)=complexChanges ⟺
-    ¬destructiveChanges ∧
-    Tm ≠ ∅ ∧
-    ∃s′=c(s₀):
-        (R ⊆ Tm) ∧
-        (∀x ∈ R:
-            (∃p ⊂ atoms(x): p ∈ content(x,s′)) ∧
-            (∃q ⊂ atoms(x): q ∉ content(x,s′) ∧ ¬∃c⁻¹: c⁻¹(c(q))=q))
+    ¬readOnly ∧
+    ¬reversibleChanges ∧
+    ¬serviceInterruptingChanges ∧
+    ¬destructiveChanges
 
 r(C)=serviceInterruptingChanges ⟺
     ∃p ∈ Tm ∩ P, ∃t₁ ∈ ℝ⁺:
@@ -65,11 +66,8 @@ r(C)=serviceInterruptingChanges ⟺
     where A(x,t): availability at time t
 
 r(C)=destructiveChanges ⟺
-    (∃x ∈ s₀: x ∉ s′) ∨
     (R ⊈ Tm) ∨
-    (∃x ∈ s₀:
-        content(x,s₀) ≠ ∅ ∧
-        (∀a ∈ atoms(x): a ∉ content(x,s′)))
+    (∃x ∈ s₀: content(x,s₀) ≠ ∅ ∧ content(x,s′) = ∅)
 
 For compound commands:
     r(C) = max{r(c₁), r(c₂), …, r(cₙ)}
