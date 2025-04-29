@@ -29,7 +29,20 @@ atoms(x):        minimal addressable units
 content(x,s):    accessible atoms in s
 a ∉ content(x,s) if deleted, truncated, overwritten, corrupted, encrypted with lost key
 
-C = {c₁,c₂,…,cₙ}:  command sequence
+Let command sequence C={c₁,…,cₙ} introduce the partial function  
+   c: S ⇀ S′  
+by the operational judgments  
+   ⟨C,s⟩⇓s′ iff C, started in s, terminates normally in s′  
+   ⟨C,s⟩⇑   iff C, started in s, aborts with an error.  
+
+Then  
+   c(s)=s′ ↔ ⟨C,s⟩⇓s′  
+   c(s)↑   ↔ ⟨C,s⟩⇑  
+
+Finally  
+   Dom(C) ≔ dom(c)  
+   Im(C)  ≔ ran(c) = c[Dom(C)]
+
 T = Tr ∪ Tm: intended targets
     Tr ⊆ S: read-only targets
     Tm = {x | x ∈ S ∨ (x ∉ S ∧ x ∈ S′)}: modifiable/creatable targets
@@ -46,11 +59,16 @@ r(C)=readOnly ⟺
     S′ = S ∧
     (∀x ∈ S: content(x,s₀) = content(x,s′))
 
-r(C)=reversibleChanges ⟺
-    Tm ≠ ∅ ∧
-    ∀s₀ ∈ S: ∃c⁻¹: (c⁻¹(c(s₀))=s₀) ∧ (|c⁻¹|=1) ∧
-    R = Tm ∧
-    (∀x ∈ R: content(x,s₀) = ∅ ∨ ∃y ∈ R: content(x,s₀) ⊆ content(y,s′))
+r(C)=reversibleChanges ⟺ [
+        (Tm ≠ ∅) ∧
+        (R = Tm) ∧
+        (∃c⁻¹: Im(C) → Dom(C).
+            ∀s ∈ Dom(C).
+                c⁻¹( c(s) ) = s)
+    ] ⟺ [
+        ∀ s₁, s₂ ∈ Dom(C).  
+                (c(s₁) = c(s₂) → s₁ = s₂)
+    ]
 
 r(C)=complexChanges ⟺
     ¬readOnly ∧
