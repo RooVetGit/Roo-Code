@@ -59,7 +59,7 @@ describe("mentionRegex and mentionRegexGlobal", () => {
 			}
 
 			// Test mentionRegexGlobal (all matches)
-			const globalMatches = [...input.matchAll(mentionRegexGlobal)].map((m) => m[0])
+			const globalMatches = Array.from(input.matchAll(mentionRegexGlobal)).map((m) => m[0])
 			if (expected) {
 				expect(globalMatches).toEqual(expected)
 			} else {
@@ -70,7 +70,7 @@ describe("mentionRegex and mentionRegexGlobal", () => {
 
 	it("should correctly capture the mention part (group 1)", () => {
 		const input = "Mention @/path/to/escaped\\ file.txt and @problems"
-		const matches = [...input.matchAll(mentionRegexGlobal)]
+		const matches = Array.from(input.matchAll(mentionRegexGlobal))
 
 		expect(matches.length).toBe(2)
 		expect(matches[0][1]).toBe("/path/to/escaped\\ file.txt") // Group 1 should not include '@'
