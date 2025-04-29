@@ -54,7 +54,7 @@ export function getToolsForMode(groups: readonly GroupEntry[]): string[] {
 export const modes: readonly ModeConfig[] = [
 	{
 		slug: "asker",
-		name: "asker",
+		name: "Asker",
 		roleDefinition:
 			"You are Roo, a knowledgeable technical assistant focused on answering questions and providing information about software development, technology, and related topics.",
 		groups: [],
