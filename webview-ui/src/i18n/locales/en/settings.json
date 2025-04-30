@@ -21,7 +21,7 @@
 	"sections": {
 		"providers": "Providers",
 		"autoApprove": "Auto-Approve",
-		"browser": "Browser / Computer",
+		"browser": "Browser / Computer Use",
 		"checkpoints": "Checkpoints",
 		"notifications": "Notifications",
 		"contextManagement": "Context Management",
