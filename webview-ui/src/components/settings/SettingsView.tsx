@@ -63,7 +63,15 @@ import { LanguageSettings } from "./LanguageSettings"
 import { About } from "./About"
 import { Section } from "./Section"
 import { cn } from "@/lib/utils"
-import { settingsTabsContainer, settingsTabList, settingsTabTrigger, settingsTabTriggerActive } from "./styles"
+// Removed: import { settingsTabsContainer, settingsTabList, settingsTabTrigger, settingsTabTriggerActive } from "./styles"
+
+// Inserted settings* definitions (originally lines 87-96 from styles.ts)
+export const settingsTabsContainer = "flex flex-1 overflow-hidden [&.narrow_.tab-label]:hidden"
+export const settingsTabList =
+	"w-48 data-[compact=true]:w-12 flex-shrink-0 flex flex-col overflow-y-auto overflow-x-hidden border-r border-vscode-sideBar-background"
+export const settingsTabTrigger =
+	"whitespace-nowrap overflow-hidden min-w-0 h-12 px-4 py-3 box-border flex items-center border-l-2 border-transparent text-vscode-foreground opacity-70 hover:bg-vscode-list-hoverBackground data-[compact=true]:w-12 data-[compact=true]:p-4"
+export const settingsTabTriggerActive = "opacity-100 border-vscode-focusBorder bg-vscode-list-activeSelectionBackground"
 
 export interface SettingsViewRef {
 	checkUnsaveChanges: (then: () => void) => void
