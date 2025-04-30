@@ -13,13 +13,16 @@ module.exports = {
 		"^@vscode/webview-ui-toolkit/react$": "<rootDir>/src/__mocks__/@vscode/webview-ui-toolkit/react.ts",
 		"^@/(.*)$": "<rootDir>/src/$1",
 		'^@roo/(.*)$': '<rootDir>/../src/$1',
-		'^@src/(.*)$': '<rootDir>/src/$1',		
+		'^@src/(.*)$': '<rootDir>/src/$1',
 		"^src/i18n/setup$": "<rootDir>/src/__mocks__/i18n/setup.ts",
 		"^\\.\\./setup$": "<rootDir>/src/__mocks__/i18n/setup.ts",
 		"^\\./setup$": "<rootDir>/src/__mocks__/i18n/setup.ts",
 		"^src/i18n/TranslationContext$": "<rootDir>/src/__mocks__/i18n/TranslationContext.tsx",
 		"^\\.\\./TranslationContext$": "<rootDir>/src/__mocks__/i18n/TranslationContext.tsx",
-		"^\\./TranslationContext$": "<rootDir>/src/__mocks__/i18n/TranslationContext.tsx"
+		"^\\./TranslationContext$": "<rootDir>/src/__mocks__/i18n/TranslationContext.tsx",
+		"^unist-util-visit$": "<rootDir>/src/__mocks__/unist-util-visit.ts",
+		"^shiki$": "<rootDir>/src/__mocks__/shiki.ts",
+		"^mermaid$": "<rootDir>/src/__mocks__/mermaid.ts"
 	},
 	reporters: [["jest-simple-dot-reporter", {}]],
 	transformIgnorePatterns: [

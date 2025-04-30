@@ -8,10 +8,11 @@ import { ClineMessage } from "@roo/shared/ExtensionMessage"
 
 import { getMaxTokensForModel } from "@src/utils/model-utils"
 import { formatLargeNumber } from "@src/utils/format"
+import { useExtensionState } from "@src/context/ExtensionStateContext"
+import { useSelectedModel } from "@src/components/ui/hooks/useSelectedModel"
 import { cn } from "@src/lib/utils"
 import { Button } from "@src/components/ui"
-import { useExtensionState } from "@src/context/ExtensionStateContext"
-import { useSelectedModel } from "@/components/ui/hooks/useSelectedModel"
+import { MarkdownBlock } from "@src/components/common/MarkdownBlock"
 
 import Thumbnails from "../common/Thumbnails"
 
@@ -115,7 +116,7 @@ const TaskHeader = ({
 									WebkitLineClamp: "unset",
 									WebkitBoxOrient: "vertical",
 								}}>
-								<Mention text={task.text} />
+								<MarkdownBlock markdown={task.text} renderMentions />
 							</div>
 						</div>
 						{task.images && task.images.length > 0 && <Thumbnails images={task.images} />}

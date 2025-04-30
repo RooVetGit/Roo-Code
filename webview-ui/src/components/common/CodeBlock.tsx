@@ -1,27 +1,39 @@
 import { memo, useEffect, useRef, useCallback, useState } from "react"
-import styled from "styled-components"
+import { type ShikiTransformer, bundledLanguages } from "shiki"
+
 import { useCopyToClipboard } from "@src/utils/clipboard"
 import { getHighlighter, isLanguageLoaded, normalizeLanguage, ExtendedLanguage } from "@src/utils/highlighter"
-import { bundledLanguages } from "shiki"
-import type { ShikiTransformer } from "shiki"
-export const CODE_BLOCK_BG_COLOR = "var(--vscode-editor-background, --vscode-sideBar-background, rgb(30 30 30))"
-export const WRAPPER_ALPHA = "cc" // 80% opacity
-// Configuration constants
-export const WINDOW_SHADE_SETTINGS = {
-	transitionDelayS: 0.2,
-	collapsedHeight: 500, // Default collapsed height in pixels
-}
 
-// Tolerance in pixels for determining when a container is considered "at the bottom"
-export const SCROLL_SNAP_TOLERANCE = 20
+import {
+	CodeBlockContainer,
+	StyledPre,
+	LanguageSelect,
+	CodeBlockButtonWrapper,
+	CodeBlockButton,
+	ButtonIcon,
+} from "./CodeBlock.styles"
 
-/*
-overflowX: auto + inner div with padding results in an issue where the top/left/bottom padding renders but the right padding inside does not count as overflow as the width of the element is not exceeded. Once the inner div is outside the boundaries of the parent it counts as overflow.
-https://stackoverflow.com/questions/60778406/why-is-padding-right-clipped-with-overflowscroll/77292459#77292459
-this fixes the issue of right padding clipped off 
-“ideal” size in a given axis when given infinite available space--allows the syntax highlighter to grow to largest possible width including its padding
-minWidth: "max-content",
-*/
+export { CODE_BLOCK_BG_COLOR } from "./CodeBlock.styles"
+
+const WINDOW_SHADE_SETTINGS = { transitionDelayS: 0.2, collapsedHeight: 500 }
+
+// Tolerance in pixels for determining when a container is considered "at the bottom".
+const SCROLL_SNAP_TOLERANCE = 20
+
+/**
+ * CSS Overflow Handling:
+ * When using overflowX: auto with an inner div that has padding, an issue occurs where
+ * the top, left, and bottom padding render correctly, but the right padding gets clipped.
+ * This happens because the right padding doesn't count as overflow until the inner div's
+ * content exceeds the parent's width boundaries.
+ *
+ * Solution:
+ * Setting minWidth: "max-content" fixes this issue by allowing the syntax highlighter
+ * to grow to its largest possible width (including padding) when given infinite available space.
+ * This ensures the right padding is properly displayed and not clipped off.
+ *
+ * Reference: https://stackoverflow.com/questions/60778406/why-is-padding-right-clipped-with-overflowscroll/77292459#77292459
+ */
 
 interface CodeBlockProps {
 	source?: string
@@ -34,181 +46,7 @@ interface CodeBlockProps {
 	onLanguageChange?: (language: string) => void
 }
 
-const ButtonIcon = styled.span`
-	display: inline-block;
-	width: 1.2em;
-	text-align: center;
-	vertical-align: middle;
-`
-
-const CodeBlockButton = styled.button`
-	background: transparent;
-	border: none;
-	color: var(--vscode-foreground);
-	cursor: var(--copy-button-cursor, default);
-	padding: 4px;
-	margin: 0 0px;
-	display: flex;
-	align-items: center;
-	opacity: 0.4;
-	border-radius: 3px;
-	pointer-events: var(--copy-button-events, none);
-	margin-left: 4px;
-	height: 24px;
-
-	&:hover {
-		background: var(--vscode-toolbar-hoverBackground);
-		opacity: 1;
-	}
-`
-
-const CodeBlockButtonWrapper = styled.div`
-	position: fixed;
-	top: var(--copy-button-top);
-	right: var(--copy-button-right, 8px);
-	height: auto;
-	z-index: 100;
-	background: ${CODE_BLOCK_BG_COLOR}${WRAPPER_ALPHA};
-	overflow: visible;
-	pointer-events: none;
-	opacity: var(--copy-button-opacity, 0);
-	padding: 4px 6px;
-	border-radius: 3px;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-
-	&:hover {
-		background: var(--vscode-editor-background);
-		opacity: 1 !important;
-	}
-
-	${CodeBlockButton} {
-		position: relative;
-		top: 0;
-		right: 0;
-	}
-`
-
-const CodeBlockContainer = styled.div`
-	position: relative;
-	overflow: hidden;
-	border-bottom: 4px solid var(--vscode-sideBar-background);
-	background-color: ${CODE_BLOCK_BG_COLOR};
-
-	${CodeBlockButtonWrapper} {
-		opacity: 0;
-		pointer-events: none;
-		transition: opacity 0.2s; /* Keep opacity transition for buttons */
-	}
-
-	&[data-partially-visible="true"]:hover ${CodeBlockButtonWrapper} {
-		opacity: 1;
-		pointer-events: all;
-		cursor: pointer;
-	}
-`
-
-export const StyledPre = styled.div<{
-	preStyle?: React.CSSProperties
-	wordwrap?: "true" | "false" | undefined
-	windowshade?: "true" | "false"
-	collapsedHeight?: number
-}>`
-	background-color: ${CODE_BLOCK_BG_COLOR};
-	max-height: ${({ windowshade, collapsedHeight }) =>
-		windowshade === "true" ? `${collapsedHeight || WINDOW_SHADE_SETTINGS.collapsedHeight}px` : "none"};
-	overflow-y: auto;
-	padding: 10px;
-	// transition: max-height ${WINDOW_SHADE_SETTINGS.transitionDelayS} ease-out;
-	border-radius: 5px;
-	${({ preStyle }) => preStyle && { ...preStyle }}
-
-	pre {
-		background-color: ${CODE_BLOCK_BG_COLOR};
-		border-radius: 5px;
-		margin: 0;
-		padding: 10px;
-		width: 100%;
-		box-sizing: border-box;
-	}
-
-	pre,
-	code {
-		/* Undefined wordwrap defaults to true (pre-wrap) behavior */
-		white-space: ${({ wordwrap }) => (wordwrap === "false" ? "pre" : "pre-wrap")};
-		word-break: ${({ wordwrap }) => (wordwrap === "false" ? "normal" : "normal")};
-		overflow-wrap: ${({ wordwrap }) => (wordwrap === "false" ? "normal" : "break-word")};
-		font-size: var(--vscode-editor-font-size, var(--vscode-font-size, 12px));
-		font-family: var(--vscode-editor-font-family);
-	}
-
-	pre > code {
-		.hljs-deletion {
-			background-color: var(--vscode-diffEditor-removedTextBackground);
-			display: inline-block;
-			width: 100%;
-		}
-		.hljs-addition {
-			background-color: var(--vscode-diffEditor-insertedTextBackground);
-			display: inline-block;
-			width: 100%;
-		}
-	}
-
-	.hljs {
-		color: var(--vscode-editor-foreground, #fff);
-		background-color: ${CODE_BLOCK_BG_COLOR};
-	}
-`
-
-const LanguageSelect = styled.select`
-	font-size: 12px;
-	color: var(--vscode-foreground);
-	opacity: 0.4;
-	font-family: monospace;
-	appearance: none;
-	background: transparent;
-	border: none;
-	cursor: pointer;
-	padding: 4px;
-	margin: 0;
-	vertical-align: middle;
-	height: 24px;
-
-	& option {
-		background: var(--vscode-editor-background);
-		color: var(--vscode-foreground);
-		padding: 0;
-		margin: 0;
-	}
-
-	&::-webkit-scrollbar {
-		width: 6px;
-	}
-
-	&::-webkit-scrollbar-thumb {
-		background: var(--vscode-scrollbarSlider-background);
-	}
-
-	&::-webkit-scrollbar-track {
-		background: var(--vscode-editor-background);
-	}
-
-	&:hover {
-		opacity: 1;
-		background: var(--vscode-toolbar-hoverBackground);
-		border-radius: 3px;
-	}
-
-	&:focus {
-		opacity: 1;
-		outline: none;
-		border-radius: 3px;
-	}
-`
-
-const CodeBlock = memo(
+export const CodeBlock = memo(
 	({
 		source,
 		rawSource,
@@ -233,6 +71,7 @@ const CodeBlock = memo(
 		// Update current language when prop changes, but only if user hasn't made a selection
 		useEffect(() => {
 			const normalizedLang = normalizeLanguage(language)
+
 			if (normalizedLang !== currentLanguage && !userChangedLanguageRef.current) {
 				setCurrentLanguage(normalizedLang)
 			}
@@ -241,6 +80,7 @@ const CodeBlock = memo(
 		// Syntax highlighting with cached Shiki instance
 		useEffect(() => {
 			const fallback = `<pre style="padding: 0; margin: 0;"><code class="hljs language-${currentLanguage || "txt"}">${source || ""}</code></pre>`
+
 			const highlight = async () => {
 				// Show plain text if language needs to be loaded
 				if (currentLanguage && !isLanguageLoaded(currentLanguage)) {
@@ -281,10 +121,8 @@ const CodeBlock = memo(
 
 		// Check if content height exceeds collapsed height whenever content changes
 		useEffect(() => {
-			const codeBlock = codeBlockRef.current
-			if (codeBlock) {
-				const actualHeight = codeBlock.scrollHeight
-				setShowCollapseButton(actualHeight >= WINDOW_SHADE_SETTINGS.collapsedHeight)
+			if (codeBlockRef.current) {
+				setShowCollapseButton(codeBlockRef.current.scrollHeight >= WINDOW_SHADE_SETTINGS.collapsedHeight)
 			}
 		}, [highlightedCode])
 
@@ -297,44 +135,50 @@ const CodeBlock = memo(
 		// Effect to listen to scroll events and update the ref
 		useEffect(() => {
 			const preElement = preRef.current
-			if (!preElement) return
+
+			if (!preElement) {
+				return
+			}
 
 			const handleScroll = () => {
 				const isAtBottom =
 					Math.abs(preElement.scrollHeight - preElement.scrollTop - preElement.clientHeight) <
 					SCROLL_SNAP_TOLERANCE
+
 				wasScrolledUpRef.current = !isAtBottom
 			}
 
 			preElement.addEventListener("scroll", handleScroll, { passive: true })
+
 			// Initial check in case it starts scrolled up
 			handleScroll()
 
-			return () => {
-				preElement.removeEventListener("scroll", handleScroll)
-			}
+			return () => preElement.removeEventListener("scroll", handleScroll)
 		}, []) // Empty dependency array: runs once on mount
 
 		// Effect to track outer container scroll position
 		useEffect(() => {
 			const scrollContainer = document.querySelector('[data-virtuoso-scroller="true"]')
-			if (!scrollContainer) return
+
+			if (!scrollContainer) {
+				return
+			}
 
 			const handleOuterScroll = () => {
 				const isAtBottom =
 					Math.abs(scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight) <
 					SCROLL_SNAP_TOLERANCE
+
 				outerContainerNearBottomRef.current = isAtBottom
 			}
 
 			scrollContainer.addEventListener("scroll", handleOuterScroll, { passive: true })
+
 			// Initial check
 			handleOuterScroll()
 
-			return () => {
-				scrollContainer.removeEventListener("scroll", handleOuterScroll)
-			}
-		}, []) // Empty dependency array: runs once on mount
+			return () => scrollContainer.removeEventListener("scroll", handleOuterScroll)
+		}, [])
 
 		// Store whether we should scroll after highlighting completes
 		const shouldScrollAfterHighlightRef = useRef(false)
@@ -352,16 +196,24 @@ const CodeBlock = memo(
 		const updateCodeBlockButtonPosition = useCallback((forceHide = false) => {
 			const codeBlock = codeBlockRef.current
 			const copyWrapper = copyButtonWrapperRef.current
-			if (!codeBlock) return
+
+			if (!codeBlock) {
+				return
+			}
 
 			const rectCodeBlock = codeBlock.getBoundingClientRect()
 			const scrollContainer = document.querySelector('[data-virtuoso-scroller="true"]')
-			if (!scrollContainer) return
+
+			if (!scrollContainer) {
+				return
+			}
 
 			// Get wrapper height dynamically
 			let wrapperHeight
+
 			if (copyWrapper) {
 				const copyRect = copyWrapper.getBoundingClientRect()
+
 				// If height is 0 due to styling, estimate from children
 				if (copyRect.height > 0) {
 					wrapperHeight = copyRect.height
@@ -407,6 +259,7 @@ const CodeBlock = memo(
 					scrollRect.top + margin,
 					Math.min(rectCodeBlock.bottom - wrapperHeight - margin, rectCodeBlock.top + margin),
 				)
+
 				const rightPosition = Math.max(margin, scrollRect.right - rectCodeBlock.right + margin)
 
 				codeBlock.style.setProperty("--copy-button-top", `${topPosition}px`)
@@ -626,13 +479,12 @@ const CodeBlock = memo(
 									textAlign: "right",
 									marginRight: 0,
 								}}
-								onClick={(e) => {
-									e.currentTarget.focus()
-								}}
+								onClick={(e) => e.currentTarget.focus()}
 								onChange={(e) => {
 									const newLang = normalizeLanguage(e.target.value)
 									userChangedLanguageRef.current = true
 									setCurrentLanguage(newLang)
+
 									if (onLanguageChange) {
 										onLanguageChange(newLang)
 									}
@@ -677,7 +529,10 @@ const CodeBlock = memo(
 									// Get the current code block element and scrollable container
 									const codeBlock = codeBlockRef.current
 									const scrollContainer = document.querySelector('[data-virtuoso-scroller="true"]')
-									if (!codeBlock || !scrollContainer) return
+
+									if (!codeBlock || !scrollContainer) {
+										return
+									}
 
 									// Toggle window shade state
 									setWindowShade(!windowShade)
@@ -685,15 +540,9 @@ const CodeBlock = memo(
 									// After UI updates, ensure code block is visible and update button position
 									setTimeout(
 										() => {
-											codeBlock.scrollIntoView({
-												behavior: "smooth",
-												block: "nearest",
-											})
-
+											codeBlock.scrollIntoView({ behavior: "smooth", block: "nearest" })
 											// Wait for scroll to complete before updating button position
-											setTimeout(() => {
-												updateCodeBlockButtonPosition()
-											}, 50)
+											setTimeout(() => updateCodeBlockButtonPosition(), 50)
 										},
 										WINDOW_SHADE_SETTINGS.transitionDelayS * 1000 + 50,
 									)
