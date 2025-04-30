@@ -167,6 +167,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 	consecutiveMistakeCount: number = 0
 	consecutiveMistakeLimit: number
 	consecutiveMistakeCountForApplyDiff: Map<string, number> = new Map()
+	consecutiveMistakeCountForInsertContent: Map<string, number> = new Map()
 
 	// Not private since it needs to be accessible by tools.
 	providerRef: WeakRef<ClineProvider>

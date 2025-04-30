@@ -34,6 +34,7 @@ export class PostHogClient {
 			DIFF_APPLICATION_ERROR: "Diff Application Error",
 			SHELL_INTEGRATION_ERROR: "Shell Integration Error",
 			CONSECUTIVE_MISTAKE_ERROR: "Consecutive Mistake Error",
+			INSERT_CONTENT_ERROR: "Insert Content Error",
 		},
 	}
 
