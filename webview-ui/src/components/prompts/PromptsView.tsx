@@ -366,12 +366,25 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 		})
 	}
 
-	const handleAgentReset = (modeSlug: string, type: "roleDefinition" | "customInstructions") => {
+	const handleAgentReset = (
+		modeSlug: string,
+		type:
+			| "roleDefinition"
+			| "customInstructions"
+			| "objectiveSectionOverride"
+			| "rulesSectionOverride"
+			| "capabilitiesSectionOverride",
+	) => {
 		// Only reset for built-in modes
 		const existingPrompt = customModePrompts?.[modeSlug] as PromptComponent
 		const updatedPrompt = { ...existingPrompt }
-		delete updatedPrompt[type] // Remove the field entirely to ensure it reloads from defaults
 
+		// Remove the field entirely to ensure it reloads from defaults
+		if (type in updatedPrompt) {
+			delete updatedPrompt[type]
+		}
+
+		// Send update with cleaned prompt object
 		vscode.postMessage({
 			type: "updatePrompt",
 			promptMode: modeSlug,
@@ -598,6 +611,180 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							data-testid={`${getCurrentMode()?.slug || "code"}-prompt-textarea`}
 						/>
 					</div>
+					{/* Objective Section Override */}
+					<div style={{ marginBottom: "16px" }}>
+						<div className="flex justify-between items-center mb-1">
+							<div className="font-bold">{t("prompts:objectiveOverride.title")}</div>
+							{!findModeBySlug(visualMode, customModes) && (
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={() => {
+										const currentMode = getCurrentMode()
+										if (currentMode?.slug) {
+											handleAgentReset(currentMode.slug, "objectiveSectionOverride")
+										}
+									}}
+									title={t("prompts:objectiveOverride.resetToDefault")}
+									data-testid="objective-override-reset">
+									<span className="codicon codicon-discard"></span>
+								</Button>
+							)}
+						</div>
+						<div className="text-sm text-vscode-descriptionForeground mb-2">
+							{t("prompts:objectiveOverride.description")}
+						</div>
+						<VSCodeTextArea
+							value={(() => {
+								const customMode = findModeBySlug(visualMode, customModes)
+								const prompt = customModePrompts?.[visualMode] as PromptComponent
+								return (
+									customMode?.objectiveSectionOverride ??
+									prompt?.objectiveSectionOverride ??
+									getCurrentMode()?.objectiveSectionOverride ??
+									""
+								)
+							})()}
+							onChange={(e) => {
+								const value =
+									(e as CustomEvent)?.detail?.target?.value ||
+									((e as any).target as HTMLTextAreaElement).value
+								const customMode = findModeBySlug(visualMode, customModes)
+								if (customMode) {
+									updateCustomMode(visualMode, {
+										...customMode,
+										objectiveSectionOverride: value.trim() || undefined,
+										source: customMode.source || "global",
+									})
+								} else {
+									updateAgentPrompt(visualMode, {
+										objectiveSectionOverride: value.trim() || undefined,
+									})
+								}
+							}}
+							rows={4}
+							resize="vertical"
+							style={{ width: "100%" }}
+							data-testid={`${getCurrentMode()?.slug || "code"}-objective-override-textarea`}
+						/>
+					</div>
+
+					{/* Rules Section Override */}
+					<div style={{ marginBottom: "16px" }}>
+						<div className="flex justify-between items-center mb-1">
+							<div className="font-bold">{t("prompts:rulesOverride.title")}</div>
+							{!findModeBySlug(visualMode, customModes) && (
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={() => {
+										const currentMode = getCurrentMode()
+										if (currentMode?.slug) {
+											handleAgentReset(currentMode.slug, "rulesSectionOverride")
+										}
+									}}
+									title={t("prompts:rulesOverride.resetToDefault")}
+									data-testid="rules-override-reset">
+									<span className="codicon codicon-discard"></span>
+								</Button>
+							)}
+						</div>
+						<div className="text-sm text-vscode-descriptionForeground mb-2">
+							{t("prompts:rulesOverride.description")}
+						</div>
+						<VSCodeTextArea
+							value={(() => {
+								const customMode = findModeBySlug(visualMode, customModes)
+								const prompt = customModePrompts?.[visualMode] as PromptComponent
+								return (
+									customMode?.rulesSectionOverride ??
+									prompt?.rulesSectionOverride ??
+									getCurrentMode()?.rulesSectionOverride ??
+									""
+								)
+							})()}
+							onChange={(e) => {
+								const value =
+									(e as CustomEvent)?.detail?.target?.value ||
+									((e as any).target as HTMLTextAreaElement).value
+								const customMode = findModeBySlug(visualMode, customModes)
+								if (customMode) {
+									updateCustomMode(visualMode, {
+										...customMode,
+										rulesSectionOverride: value.trim() || undefined,
+										source: customMode.source || "global",
+									})
+								} else {
+									updateAgentPrompt(visualMode, {
+										rulesSectionOverride: value.trim() || undefined,
+									})
+								}
+							}}
+							rows={4}
+							resize="vertical"
+							style={{ width: "100%" }}
+							data-testid={`${getCurrentMode()?.slug || "code"}-rules-override-textarea`}
+						/>
+					</div>
+
+					{/* Capabilities Section Override */}
+					<div style={{ marginBottom: "16px" }}>
+						<div className="flex justify-between items-center mb-1">
+							<div className="font-bold">{t("prompts:capabilitiesOverride.title")}</div>
+							{!findModeBySlug(visualMode, customModes) && (
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={() => {
+										const currentMode = getCurrentMode()
+										if (currentMode?.slug) {
+											handleAgentReset(currentMode.slug, "capabilitiesSectionOverride")
+										}
+									}}
+									title={t("prompts:capabilitiesOverride.resetToDefault")}
+									data-testid="capabilities-override-reset">
+									<span className="codicon codicon-discard"></span>
+								</Button>
+							)}
+						</div>
+						<div className="text-sm text-vscode-descriptionForeground mb-2">
+							{t("prompts:capabilitiesOverride.description")}
+						</div>
+						<VSCodeTextArea
+							value={(() => {
+								const customMode = findModeBySlug(visualMode, customModes)
+								const prompt = customModePrompts?.[visualMode] as PromptComponent
+								return (
+									customMode?.capabilitiesSectionOverride ??
+									prompt?.capabilitiesSectionOverride ??
+									getCurrentMode()?.capabilitiesSectionOverride ??
+									""
+								)
+							})()}
+							onChange={(e) => {
+								const value =
+									(e as CustomEvent)?.detail?.target?.value ||
+									((e as any).target as HTMLTextAreaElement).value
+								const customMode = findModeBySlug(visualMode, customModes)
+								if (customMode) {
+									updateCustomMode(visualMode, {
+										...customMode,
+										capabilitiesSectionOverride: value.trim() || undefined,
+										source: customMode.source || "global",
+									})
+								} else {
+									updateAgentPrompt(visualMode, {
+										capabilitiesSectionOverride: value.trim() || undefined,
+									})
+								}
+							}}
+							rows={4}
+							resize="vertical"
+							style={{ width: "100%" }}
+							data-testid={`${getCurrentMode()?.slug || "code"}-capabilities-override-textarea`}
+						/>
+					</div>
+
 					{/* Mode settings */}
 					<>
 						<div style={{ marginBottom: "12px" }}>
