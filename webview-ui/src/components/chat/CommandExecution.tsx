@@ -32,6 +32,10 @@ export const CommandExecution = forwardRef<HTMLDivElement, CommandExecutionProps
 
 		const onMessage = useCallback(
 			(event: MessageEvent) => {
+				if (!executionId) {
+					return
+				}
+
 				const message: ExtensionMessage = event.data
 
 				if (message.type === "commandExecutionStatus") {
