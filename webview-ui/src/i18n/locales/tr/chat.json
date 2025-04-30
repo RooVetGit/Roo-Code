@@ -185,13 +185,6 @@
 		"hasQuestion": "Roo'nun bir sorusu var:"
 	},
 	"taskCompleted": "Görev Tamamlandı",
-	"shellIntegration": {
-		"unavailable": "Kabuk Entegrasyonu Kullanılamıyor",
-		"troubleshooting": "Hala sorun mu yaşıyorsunuz? Kabuk entegrasyonu belgelerine göz atmak için buraya tıklayın.",
-		"checkSettings": "Ayarlar sayfasındaki terminal geçici çözümlerini kontrol et",
-		"updateVSCode": "VSCode'u güncelle",
-		"supportedShell": "Desteklenen bir kabuk kullandığından emin ol: zsh, bash, fish veya PowerShell"
-	},
 	"powershell": {
 		"issues": "Windows PowerShell ile ilgili sorunlar yaşıyor gibi görünüyorsunuz, lütfen şu konuya bakın"
 	},

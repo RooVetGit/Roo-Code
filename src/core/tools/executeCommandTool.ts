@@ -74,6 +74,9 @@ export async function executeCommandTool(
 
 				pushToolResult(result)
 			} catch (error: unknown) {
+				await cline.say("shell_integration_warning")
+				clineProvider?.setValue("terminalShellIntegrationDisabled", true)
+
 				if (error instanceof ShellIntegrationError) {
 					const [rejected, result] = await executeCommand(cline, {
 						...options,
@@ -86,11 +89,6 @@ export async function executeCommandTool(
 
 					pushToolResult(result)
 				} else {
-					await cline.say(
-						"shell_integration_warning",
-						error instanceof Error ? error.message : "Unknown error",
-					)
-
 					pushToolResult(`Command failed to execute in terminal due to a shell integration error.`)
 				}
 			}

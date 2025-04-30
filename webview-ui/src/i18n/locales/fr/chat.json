@@ -185,13 +185,6 @@
 		"hasQuestion": "Roo a une question :"
 	},
 	"taskCompleted": "Tâche terminée",
-	"shellIntegration": {
-		"unavailable": "Intégration du shell indisponible",
-		"troubleshooting": "Toujours des problèmes ? Cliquez ici pour la documentation d'intégration du shell.",
-		"checkSettings": "Vérifie les solutions de contournement du terminal dans les paramètres",
-		"updateVSCode": "Mets à jour VSCode",
-		"supportedShell": "Assure-toi d'utiliser un shell supporté : zsh, bash, fish ou PowerShell"
-	},
 	"powershell": {
 		"issues": "Il semble que vous rencontriez des problèmes avec Windows PowerShell, veuillez consulter ce"
 	},
