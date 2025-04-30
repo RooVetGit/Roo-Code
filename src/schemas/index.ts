@@ -743,6 +743,11 @@ export const clineAsks = [
 	"mistake_limit_reached",
 	"browser_action_launch",
 	"use_mcp_server",
+<<<<<<< HEAD
+=======
+	"finishTask",
+	"chat_input_wait",
+>>>>>>> 3305e297 (feat: add support of simple chat with minimal prompt)
 ] as const
 
 export const clineAskSchema = z.enum(clineAsks)

@@ -80,6 +80,14 @@ const App = () => {
 			if (message.type === "acceptInput") {
 				chatViewRef.current?.acceptInput()
 			}
+
+			if (message.type === "enableChatInput") {
+				if (chatViewRef.current) {
+					chatViewRef.current?.enableChatInput()
+				} else {
+					console.error("[App.tsx] chatViewRef is null when trying to call enableChatInput.")
+				}
+			}
 		},
 		[switchTab],
 	)

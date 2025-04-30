@@ -398,6 +398,39 @@ export class Cline extends EventEmitter<ClineEvents> {
 			throw new Error(`[Cline#ask] task ${this.taskId}.${this.instanceId} aborted`)
 		}
 
+		// --- ADD LOGIC FOR chat_input_wait ---
+		if (type === "chat_input_wait") {
+			console.log("[Cline.ts ask] Waiting for chat input...")
+			this.askResponse = undefined // Clear previous response state
+			this.askResponseText = undefined
+			this.askResponseImages = undefined
+			// Don't add a visible message for this internal state
+			// Signal UI to enable input
+			const provider = this.providerRef.deref()
+			if (!provider) {
+				throw new Error("[Cline.ts ask] Cannot wait for input, provider reference lost.")
+			}
+			await provider.postMessageToWebview({ type: "enableChatInput" })
+
+			// abort is crusial here to prevent blocking user input on switch mode
+			await pWaitFor(() => this.askResponse !== undefined || this.abort, { interval: 100 })
+
+			if (this.abort) {
+				throw new Error(
+					`[Cline#ask chat_input_wait] Task ${this.taskId}.${this.instanceId} aborted while waiting for user input.`,
+				)
+			}
+
+			console.log("[Cline.ts ask] Resuming after chat input received.")
+			const result = { response: this.askResponse!, text: this.askResponseText, images: this.askResponseImages }
+			this.askResponse = undefined // Clear state for next potential ask
+			this.askResponseText = undefined
+			this.askResponseImages = undefined
+			this.emit("taskAskResponded") // Emit standard event
+			return result
+		}
+		// --- END LOGIC FOR chat_input_wait ---
+
 		let askTs: number
 
 		if (partial !== undefined) {
@@ -857,8 +890,18 @@ export class Cline extends EventEmitter<ClineEvents> {
 	}
 
 	private async initiateTaskLoop(userContent: UserContent): Promise<void> {
-		// Kicks off the checkpoints initialization process in the background.
-		this.getCheckpointService()
+		// Only kickoff checkpoints for non-chat modes
+		const provider = this.providerRef.deref()
+		const { mode } = (await provider?.getState()) ?? {}
+
+		// Skip checkpoints for continuous chat modes
+		if (mode !== "chat") {
+			// Kicks off the checkpoints initialization process in the background.
+			this.getCheckpointService()
+		} else {
+			// Disable checkpoints for chat modes
+			this.enableCheckpoints = false
+		}
 
 		let nextUserContent = userContent
 		let includeFileDetails = true
@@ -881,10 +924,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 			// as he can.
 
 			if (didEndLoop) {
-				// For now a task never 'completes'. This will only happen if
-				// the user hits max requests and denies resetting the count.
+				// If recursivelyMakeClineRequests returns true, it means the loop should end
+				// This happens on error, abort, or when chat mode needs user input.
 				break
 			} else {
+				// If recursivelyMakeClineRequests returns false, it means the model didn't end the loop
+				// (e.g., it completed a turn without using a tool in non-chat mode).
+				// We need to prepare the input for the next iteration of this loop.
 				nextUserContent = [{ type: "text", text: formatResponse.noToolsUsed() }]
 				this.consecutiveMistakeCount++
 			}
@@ -1015,6 +1061,30 @@ export class Cline extends EventEmitter<ClineEvents> {
 				rooIgnoreInstructions,
 			)
 		})()
+
+		// =================================
+		// DEBUG: Log API request details
+		// =================================
+		console.log(`\n\n========== ROO CODE API REQUEST (${new Date().toISOString()}) ==========`)
+		console.log(`Mode: ${mode || "default"}`)
+		console.log(`System prompt length: ${systemPrompt.length} characters`)
+		console.log(`Conversation history: ${this.apiConversationHistory.length} messages`)
+
+		// Count total tokens in system prompt + conversation history
+		const modelInfo = this.api.getModel().info
+		console.log(`Model: ${this.api.getModel().id}, Context window: ${modelInfo.contextWindow} tokens`)
+
+		// Detailed debug info on each message
+		console.log(`\n======= MINIMAL MODE DEBUG INFO =======`)
+		console.log(`System prompt: ${systemPrompt}...`)
+		console.log(
+			`\nLast user message content: ${
+				this.apiConversationHistory.length > 0 &&
+				this.apiConversationHistory[this.apiConversationHistory.length - 1].role === "user"
+					? JSON.stringify(this.apiConversationHistory[this.apiConversationHistory.length - 1].content)
+					: "No user message"
+			}...`,
+		)
 
 		// If the previous API request's total token usage is close to the context window, truncate the conversation history to free up space for the new request
 		if (previousApiReqIndex >= 0) {
@@ -1204,7 +1274,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 					// (have to do this for partial and complete since sending content in thinking tags to markdown renderer will automatically be removed)
 					// Remove end substrings of <thinking or </thinking (below xml parsing is only for opening tags)
 					// (this is done with the xml parsing below now, but keeping here for reference)
-					// content = content.replace(/<\/?t(?:h(?:i(?:n(?:k(?:i(?:n(?:g)?)?)?$/, "")
+					// content = content.replace(/<\/?t(?:h(?:i(?:n(?:k(?:i(?:n(?:g)?)?)?)?$/, "")
 					// Remove all instances of <thinking> (with optional line break after) and </thinking> (with optional line break before)
 					// - Needs to be separate since we dont want to remove the line break before the first tag
 					// - Needs to happen before the xml parsing below
@@ -1550,7 +1620,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		if (!block.partial || this.didRejectTool || this.didAlreadyUseTool) {
 			// block is finished streaming and executing
 			if (this.currentStreamingContentIndex === this.assistantMessageContent.length - 1) {
-				// its okay that we increment if !didCompleteReadingStream, it'll just return bc out of bounds and as streaming continues it will call presentAssitantMessage if a new block is ready. if streaming is finished then we set userMessageContentReady to true when out of bounds. This gracefully allows the stream to continue on and all potential content blocks be presented.
+				// its okay that we increment if !didCompleteReadingStream, it'll just return bc out of bounds and as streaming continues it will call presentAssistantMessage if a new block is ready. if streaming is finished then we set userMessageContentReady to true when out of bounds. This gracefully allows the stream to continue on and all potential content blocks be presented.
 				// last block is complete and it is finished executing
 				this.userMessageContentReady = true // will allow pwaitfor to continue
 			}
@@ -1894,20 +1964,34 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 				await pWaitFor(() => this.userMessageContentReady)
 
-				// if the model did not tool use, then we need to tell it to either use a tool or attempt_completion
-				const didToolUse = this.assistantMessageContent.some((block) => block.type === "tool_use")
-				if (!didToolUse) {
-					this.userMessageContent.push({
-						type: "text",
-						text: formatResponse.noToolsUsed(),
-					})
-					this.consecutiveMistakeCount++
-				}
+				// --- Get provider and mode ---
+				const provider = this.providerRef.deref()
+				const { mode } = (await provider?.getState()) ?? {}
 
-				const recDidEndLoop = await this.recursivelyMakeClineRequests(this.userMessageContent)
-				didEndLoop = recDidEndLoop
+				if (mode === "chat") {
+					// Handle chat mode continuation/termination
+					const nextUserContent = await this._handleChatResponse()
+					if (nextUserContent) {
+						return await this.recursivelyMakeClineRequests(nextUserContent, false)
+					} else {
+						didEndLoop = true
+					}
+				} else {
+					// Original logic for non-chat modes
+					const didToolUse = this.assistantMessageContent.some((block) => block.type === "tool_use")
+					if (!didToolUse) {
+						// if the model did not tool use, then we need to tell it to either use a tool or attempt_completion
+						this.userMessageContent.push({
+							type: "text",
+							text: formatResponse.noToolsUsed(),
+						})
+						this.consecutiveMistakeCount++
+					}
+					const recDidEndLoop = await this.recursivelyMakeClineRequests(this.userMessageContent)
+					didEndLoop = recDidEndLoop
+				}
 			} else {
-				// if there's no assistant_responses, that means we got no text or tool_use content blocks from API which we should assume is an error
+				// if there's no assistant_responses, that means we got no text or tool_use content blocks from API
 				await this.say(
 					"error",
 					"Unexpected API Response: The language model did not provide any assistant messages. This may indicate an issue with the API or the model's output.",
@@ -1916,9 +2000,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 					role: "assistant",
 					content: [{ type: "text", text: "Failure: I did not provide a response." }],
 				})
+				didEndLoop = true
 			}
 
-			return didEndLoop // will always be false for now
+			return didEndLoop
 		} catch (error) {
 			// This should never happen since the only thing that can throw an
 			// error is the attemptApiRequest, which is wrapped in a try catch
@@ -2001,10 +2086,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 	}
 
 	async getEnvironmentDetails(includeFileDetails: boolean = false) {
+		const state = await this.providerRef.deref()?.getState()
+
+		if (state?.mode === "chat") return ""
+
 		let details = ""
 
-		const { terminalOutputLineLimit = 500, maxWorkspaceFiles = 200 } =
-			(await this.providerRef.deref()?.getState()) ?? {}
+		const { terminalOutputLineLimit = 500, maxWorkspaceFiles = 200 } = state ?? {}
 
 		// It could be useful for cline to know if the user went from one or no file to another between messages, so we always include this context
 		details += "\n\n# VSCode Visible Files"
@@ -2201,6 +2289,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 		details += `\n\n# Current Mode\n`
 		details += `<slug>${currentMode}</slug>\n`
+
 		details += `<name>${modeDetails.name}</name>\n`
 		details += `<model>${apiModelId}</model>\n`
 
@@ -2570,5 +2659,34 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 	public getToolUsage() {
 		return this.toolUsage
+	}
+
+	// --- Add the new private method here ---
+	private async _handleChatResponse(): Promise<UserContent | null> {
+		// Chat mode: Always wait for user input after assistant's turn.
+		console.log("[Cline.ts] Chat mode. Waiting for next user input via ask.")
+		const { response, text, images } = await this.ask("chat_input_wait")
+
+		if (response === "messageResponse") {
+			// User provided input
+			const nextUserContent: UserContent = []
+			if (text) nextUserContent.push({ type: "text", text })
+			if (images) nextUserContent.push(...formatResponse.imageBlocks(images))
+
+			if (nextUserContent.length > 0) {
+				// Add user input to UI (ask doesn't add messages for chat_input_wait)
+				await this.say("user_feedback", text, images)
+				// Return content for next recursion
+				return nextUserContent
+			} else {
+				// Resumed but no content? End the loop.
+				console.warn("[Cline.ts] Resumed chat wait but received no content.")
+				return null // Signal loop termination
+			}
+		} else {
+			// User likely cancelled or something went wrong during the ask wait. End the loop.
+			console.log("[Cline.ts] Chat input wait did not receive messageResponse.")
+			return null // Signal loop termination
+		}
 	}
 }

@@ -47,7 +47,8 @@ export interface ChatViewProps {
 }
 
 export interface ChatViewRef {
-	acceptInput: () => void
+	acceptInput: () => void // We keep this for now in case it's used elsewhere, but comment it out
+	enableChatInput: () => void // Add the new function signature
 }
 
 export const MAX_IMAGES_PER_MESSAGE = 20 // Anthropic limits to 20 images
@@ -370,31 +371,24 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	const handleSendMessage = useCallback(
 		(text: string, images: string[]) => {
+			console.log(
+				`[ChatView.tsx handleSendMessage] Fired. text: "${text}", images: ${images.length}, clineAsk: ${clineAsk}, mode: ${mode}`,
+			)
 			text = text.trim()
+
 			if (text || images.length > 0) {
 				if (messages.length === 0) {
+					console.log("[ChatView.tsx handleSendMessage] Condition: First message (newTask).")
 					vscode.postMessage({ type: "newTask", text, images })
-				} else if (clineAsk) {
-					switch (clineAsk) {
-						case "followup":
-						case "tool":
-						case "browser_action_launch":
-						case "command": // User can provide feedback to a tool or command use.
-						case "command_output": // User can send input to command stdin.
-						case "use_mcp_server":
-						case "completion_result": // If this happens then the user has feedback for the completion result.
-						case "resume_task":
-						case "resume_completed_task":
-						case "mistake_limit_reached":
-							vscode.postMessage({ type: "askResponse", askResponse: "messageResponse", text, images })
-							break
-						// There is no other case that a textfield should be enabled.
-					}
+				} else {
+					vscode.postMessage({ type: "askResponse", askResponse: "messageResponse", text, images })
 				}
 				handleChatReset()
+			} else {
+				console.log("[ChatView.tsx handleSendMessage] No text or images provided. No message sent.")
 			}
 		},
-		[messages.length, clineAsk, handleChatReset],
+		[messages.length, clineAsk, handleChatReset, mode], // Keep mode dependency for logging
 	)
 
 	const handleSetChatBoxMessage = useCallback(
@@ -1215,6 +1209,12 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			} else if (!textAreaDisabled && (inputValue.trim() || selectedImages.length > 0)) {
 				handleSendMessage(inputValue, selectedImages)
 			}
+		},
+		enableChatInput: () => {
+			console.log("[ChatView.tsx] enableChatInput() called.")
+			setTextAreaDisabled(false)
+			console.log("[ChatView.tsx] Focusing text area via enableChatInput.")
+			textAreaRef.current?.focus()
 		},
 	}))
 

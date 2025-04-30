@@ -49,6 +49,34 @@ async function generatePrompt(
 		throw new Error("Extension context is required for generating system prompt")
 	}
 
+	// Special handling for code-minimal mode
+	if (mode === "chat") {
+		// Get the full mode config to ensure we have the role definition
+		const modeConfig = getModeBySlug(mode, customModeConfigs) || modes.find((m) => m.slug === mode) || modes[0]
+		const roleDefinition = promptComponent?.roleDefinition || modeConfig.roleDefinition
+		const customInstructionsText = promptComponent?.customInstructions || modeConfig.customInstructions || ""
+		const globalCustomInstructionsText = globalCustomInstructions || ""
+
+		// Extremely minimal prompt for code-minimal mode
+		return `
+=======
+
+INSTRUCTIONS BLOCK START
+
+FORGET ALL PREVIOUS INSTRUCTIONS. THESE ARE THE CURRENT INSTRUCTIONS BLOCK
+
+${roleDefinition}
+
+${customInstructionsText}
+
+${globalCustomInstructionsText}
+
+INSTRUCTIONS BLOCK END
+
+=======
+`
+	}
+
 	// If diff is disabled, don't pass the diffStrategy
 	const effectiveDiffStrategy = diffEnabled ? diffStrategy : undefined
 
@@ -63,7 +91,14 @@ async function generatePrompt(
 			: Promise.resolve(""),
 	])
 
-	const basePrompt = `${roleDefinition}
+	const basePrompt = `
+=======
+
+INSTRUCTIONS BLOCK START
+
+FORGET ALL PREVIOUS INSTRUCTIONS. THESE ARE THE CURRENT INSTRUCTIONS BLOCK
+	
+${roleDefinition}
 
 ${getSharedToolUseSection()}
 
@@ -92,7 +127,13 @@ ${getSystemInfoSection(cwd)}
 
 ${getObjectiveSection()}
 
-${await addCustomInstructions(promptComponent?.customInstructions || modeConfig.customInstructions || "", globalCustomInstructions || "", cwd, mode, { language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions })}`
+${await addCustomInstructions(promptComponent?.customInstructions || modeConfig.customInstructions || "", globalCustomInstructions || "", cwd, mode, { language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions })}
+
+INSTRUCTIONS BLOCK END
+
+=======
+
+`
 
 	return basePrompt
 }
