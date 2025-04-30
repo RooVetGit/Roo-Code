@@ -204,16 +204,13 @@ export async function insertContentTool(
 		const completeMessage = JSON.stringify({
 			...sharedMessageProps,
 			diff,
-			lineNumber: lineNumber,
+			lineNumber: lineNumber + 1,
 		} satisfies ClineSayTool)
 
-		const didApprove = await cline
-			.ask("tool", completeMessage, false)
-			.then((response) => response.response === "yesButtonClicked")
+		const didApprove = await askApproval("tool", completeMessage)
 
 		if (!didApprove) {
 			await cline.diffViewProvider.revertChanges()
-			pushToolResult("Changes were rejected by the user.")
 			return
 		}
 
