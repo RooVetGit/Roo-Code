@@ -170,6 +170,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							setSecondaryButtonText(t("chat:startNewTask.title"))
 							break
 						case "followup":
+							if (!isPartial) {
+								playSound("notification")
+							}
 							setTextAreaDisabled(isPartial)
 							setClineAsk("followup")
 							// setting enable buttons to `false` would trigger a focus grab when
@@ -234,6 +237,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							setSecondaryButtonText(t("chat:killCommand.title"))
 							break
 						case "use_mcp_server":
+							if (!isAutoApproved(lastMessage) && !isPartial) {
+								playSound("notification")
+							}
 							setTextAreaDisabled(isPartial)
 							setClineAsk("use_mcp_server")
 							setEnableButtons(!isPartial)
@@ -252,6 +258,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							setSecondaryButtonText(undefined)
 							break
 						case "resume_task":
+							if (!isAutoApproved(lastMessage) && !isPartial) {
+								playSound("notification")
+							}
 							setTextAreaDisabled(false)
 							setClineAsk("resume_task")
 							setEnableButtons(true)
@@ -260,6 +269,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							setDidClickCancel(false) // special case where we reset the cancel button state
 							break
 						case "resume_completed_task":
+							if (!isPartial) {
+								playSound("celebration")
+							}
 							setTextAreaDisabled(false)
 							setClineAsk("resume_completed_task")
 							setEnableButtons(true)
