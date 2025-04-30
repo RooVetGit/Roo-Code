@@ -1,8 +1,8 @@
-import { memo, useRef, useState } from "react"
+import { memo, useRef, useState, useCallback } from "react" // Added useCallback
 import { useWindowSize } from "react-use"
 import { useTranslation } from "react-i18next"
 import { VSCodeBadge } from "@vscode/webview-ui-toolkit/react"
-import { CloudUpload, CloudDownload } from "lucide-react"
+import { CloudUpload, CloudDownload, Eye, EyeOff } from "lucide-react" // Added Eye, EyeOff
 
 import { ClineMessage } from "@roo/shared/ExtensionMessage"
 
@@ -11,13 +11,14 @@ import { formatLargeNumber } from "@src/utils/format"
 import { cn } from "@src/lib/utils"
 import { Button } from "@src/components/ui"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
-import { useSelectedModel } from "@/components/ui/hooks/useSelectedModel"
+import { useSelectedModel } from "@src/components/ui/hooks/useSelectedModel" // Corrected path
 
 import Thumbnails from "../common/Thumbnails"
 
 import { TaskActions } from "./TaskActions"
 import { ContextWindowProgress } from "./ContextWindowProgress"
 import { Mention } from "./Mention"
+import CostTrendChart from "./CostTrendChart"
 
 export interface TaskHeaderProps {
 	task: ClineMessage
@@ -29,6 +30,7 @@ export interface TaskHeaderProps {
 	totalCost: number
 	contextTokens: number
 	onClose: () => void
+	costHistory?: { requestIndex: number; cumulativeCost: number; costDelta: number }[]
 }
 
 const TaskHeader = ({
@@ -41,17 +43,37 @@ const TaskHeader = ({
 	totalCost,
 	contextTokens,
 	onClose,
+	costHistory,
 }: TaskHeaderProps) => {
 	const { t } = useTranslation()
 	const { apiConfiguration, currentTaskItem } = useExtensionState()
 	const { info: model } = useSelectedModel(apiConfiguration)
 	const [isTaskExpanded, setIsTaskExpanded] = useState(false)
+	// State for chart hover details
+	const [chartHoverData, setChartHoverData] = useState<{ isHovering: boolean; index?: number; cost?: number } | null>(
+		null,
+	)
+	const [isChartVisible, setIsChartVisible] = useState(true) // State for chart visibility
 
 	const textContainerRef = useRef<HTMLDivElement>(null)
 	const textRef = useRef<HTMLDivElement>(null)
 	const contextWindow = model?.contextWindow || 1
 
 	const { width: windowWidth } = useWindowSize()
+
+	// Callback for CostTrendChart hover changes
+	const handleChartHoverChange = useCallback(
+		(hoverData: { isHovering: boolean; index?: number; cost?: number } | null) => {
+			setChartHoverData(hoverData)
+		},
+		[],
+	) // Empty dependency array as setChartHoverData is stable
+
+	const toggleChartVisibility = useCallback(() => {
+		setIsChartVisible((prev) => !prev)
+	}, [])
+
+	// Removed console log
 
 	return (
 		<div className="py-2 px-3">
@@ -184,6 +206,68 @@ const TaskHeader = ({
 									<TaskActions item={currentTaskItem} />
 								</div>
 							)}
+
+							{/* Cost Trend Chart */}
+							{(() => {
+								// console.log("TaskHeader costHistory:", costHistory);
+								return (
+									costHistory &&
+									costHistory.length > 0 && (
+										<div className="flex flex-col">
+											{" "}
+											{/* Removed mt-2, rely on parent gap-1 */}
+											{/* Row for Title, Hover Data, and Actions */}
+											<div className="flex justify-between items-center h-[20px]">
+												{" "}
+												{/* Match height and layout */}
+												<div className="flex items-center gap-1">
+													{" "}
+													{/* Group title and hover data */}
+													<span className="font-bold">Cost Chart:</span> {/* Updated title */}
+													{/* Display hover data next to title */}
+													{chartHoverData?.isHovering &&
+														chartHoverData.cost !== undefined &&
+														chartHoverData.index !== undefined && (
+															<span>
+																{" "}
+																{/* Use plain span like API Cost value */}
+																Request {chartHoverData.index}: $
+																{chartHoverData.cost.toFixed(2)}{" "}
+																{/* Updated hover text */}
+															</span>
+														)}
+												</div>
+												{/* Action Buttons Area */}
+												<div className="flex items-center gap-1">
+													{/* Visibility Toggle Button */}
+													<Button
+														variant="ghost"
+														size="icon"
+														onClick={toggleChartVisibility}
+														title={
+															isChartVisible
+																? t("chat:task.hideChart")
+																: t("chat:task.showChart")
+														}
+														className="shrink-0 w-5 h-5">
+														{" "}
+														{/* Removed margin adjustment */}
+														{isChartVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+													</Button>
+													{/* Other action buttons could go here */}
+												</div>
+											</div>
+											{/* Chart Component - Conditionally Rendered */}
+											{isChartVisible && (
+												<CostTrendChart
+													data={costHistory}
+													onHoverChange={handleChartHoverChange}
+												/>
+											)}
+										</div>
+									)
+								)
+							})()}
 						</div>
 					</>
 				)}
