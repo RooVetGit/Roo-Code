@@ -491,6 +491,14 @@ const ApiOptions = ({
 			{selectedProvider === "openai-native" && (
 				<>
 					<VSCodeTextField
+						value={apiConfiguration?.openAiNativeBaseUrl || ""}
+						type="url"
+						onInput={handleInputChange("openAiNativeBaseUrl")}
+						placeholder={t("settings:placeholders.baseUrl")}
+						className="w-full">
+						<label className="block font-medium mb-1">{t("settings:providers.openAiBaseUrl")}</label>
+					</VSCodeTextField>
+					<VSCodeTextField
 						value={apiConfiguration?.openAiNativeApiKey || ""}
 						type="password"
 						onInput={handleInputChange("openAiNativeApiKey")}
