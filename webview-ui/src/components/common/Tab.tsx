@@ -75,7 +75,7 @@ export const TabTrigger = forwardRef<
 		isSelected?: boolean
 		onSelect?: () => void
 	}
->(({ children, className, value, isSelected, onSelect, ...props }, ref) => {
+>(({ children, className, value: _value, isSelected, onSelect, ...props }, ref) => {
 	return (
 		<button
 			ref={ref}
