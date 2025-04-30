@@ -1,5 +1,4 @@
 import { z } from "zod"
-import { ComponentType } from "./types"
 
 /**
  * Base metadata schema with common fields

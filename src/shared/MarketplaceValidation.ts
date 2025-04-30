@@ -120,8 +120,6 @@ export function validateSourceDuplicates(
 	newSource?: MarketplaceSource,
 ): ValidationError[] {
 	const errors: ValidationError[] = []
-	const urlMap = new Map<string, number>()
-	const nameMap = new Map<string, number>()
 
 	// Process existing sources
 	const seen = new Set<string>()

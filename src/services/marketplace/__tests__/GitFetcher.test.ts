@@ -2,12 +2,7 @@ import * as vscode from "vscode"
 import { GitFetcher } from "../GitFetcher"
 import * as fs from "fs/promises"
 import * as path from "path"
-import { Dirent, Stats } from "fs"
 import simpleGit, { SimpleGit } from "simple-git"
-import { MetadataScanner } from "../MetadataScanner"
-import { exec, ChildProcess } from "child_process"
-import { promisify } from "util"
-import { EventEmitter } from "events"
 
 // Mock simpleGit
 jest.mock("simple-git", () => {
@@ -54,21 +49,21 @@ const mockContext = {
 } as vscode.ExtensionContext
 
 // Create mock Dirent objects
-const createMockDirent = (name: string, isDir: boolean): Dirent => {
-	return {
-		name,
-		isDirectory: () => isDir,
-		isFile: () => !isDir,
-		isBlockDevice: () => false,
-		isCharacterDevice: () => false,
-		isFIFO: () => false,
-		isSocket: () => false,
-		isSymbolicLink: () => false,
-		// These are readonly in the real Dirent
-		path: "",
-		parentPath: "",
-	} as Dirent
-}
+// const createMockDirent = (name: string, isDir: boolean): Dirent => {
+// 	return {
+// 		name,
+// 		isDirectory: () => isDir,
+// 		isFile: () => !isDir,
+// 		isBlockDevice: () => false,
+// 		isCharacterDevice: () => false,
+// 		isFIFO: () => false,
+// 		isSocket: () => false,
+// 		isSymbolicLink: () => false,
+// 		// These are readonly in the real Dirent
+// 		path: "",
+// 		parentPath: "",
+// 	} as Dirent
+// }
 
 describe("GitFetcher", () => {
 	let gitFetcher: GitFetcher
@@ -341,7 +336,7 @@ describe("GitFetcher", () => {
 
 			it("should pass when metadata.en.yml exists", async () => {
 				// Mock fs.stat to simulate existing file
-				;(fs.stat as jest.Mock).mockImplementation((path: string) => {
+				;(fs.stat as jest.Mock).mockImplementation(() => {
 					return Promise.resolve({} as any)
 				})
 

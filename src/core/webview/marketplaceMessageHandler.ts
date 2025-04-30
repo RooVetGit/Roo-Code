@@ -1,11 +1,9 @@
 import * as vscode from "vscode"
 import { ClineProvider } from "./ClineProvider"
 import { WebviewMessage } from "../../shared/WebviewMessage"
-import { ExtensionMessage } from "../../shared/ExtensionMessage"
 import {
 	MarketplaceManager,
 	ComponentType,
-	MarketplaceItem,
 	MarketplaceSource,
 	validateSources,
 	ValidationError,
@@ -42,7 +40,7 @@ export async function handleMarketplaceMessages(
 			}
 
 			// Check if we need to force refresh using type assertion
-			const forceRefresh = (message as any).forceRefresh === true
+			// const forceRefresh = (message as any).forceRefresh === true
 			try {
 				marketplaceManager.isFetching = true
 
@@ -58,9 +56,6 @@ export async function handleMarketplaceMessages(
 						// Save the default sources
 						await provider.contextProxy.setValue("marketplaceSources", sources)
 					}
-
-					// Add timing information
-					const startTime = Date.now()
 
 					// Fetch items from all enabled sources
 					const enabledSources = sources.filter((s) => s.enabled)
@@ -91,8 +86,6 @@ export async function handleMarketplaceMessages(
 						})
 						marketplaceManager.isFetching = false
 					}
-
-					const endTime = Date.now()
 
 					// The items are already stored in PackageManagerManager's currentItems
 					// No need to store in global state

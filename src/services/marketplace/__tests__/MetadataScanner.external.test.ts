@@ -1,5 +1,4 @@
 import * as path from "path"
-import { MetadataScanner } from "../MetadataScanner"
 import { GitFetcher } from "../GitFetcher"
 import * as vscode from "vscode"
 

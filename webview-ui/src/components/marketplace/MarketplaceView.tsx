@@ -14,7 +14,7 @@ interface MarketplaceViewProps {
 	onDone?: () => void
 	stateManager: MarketplaceViewStateManager
 }
-const MarketplaceView: React.FC<MarketplaceViewProps> = ({ onDone, stateManager }) => {
+const MarketplaceView: React.FC<MarketplaceViewProps> = ({ stateManager }) => {
 	const { t } = useAppTranslation()
 	const [state, manager] = useStateManager(stateManager)
 

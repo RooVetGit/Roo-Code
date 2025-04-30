@@ -112,13 +112,12 @@ describe("PackageManagerManager", () => {
 
 	let manager: MarketplaceManager
 	let metadataScanner: MetadataScanner
-	let realItems: MarketplaceItem[]
 
 	beforeAll(async () => {
 		// Load real data from the template
 		const templatePath = path.resolve(__dirname, "../../../../marketplace-template")
 		metadataScanner = new MetadataScanner()
-		realItems = await metadataScanner.scanDirectory(templatePath, "https://example.com")
+		await metadataScanner.scanDirectory(templatePath, "https://example.com")
 	})
 
 	beforeEach(() => {
@@ -674,7 +673,8 @@ describe("Concurrency Control", () => {
 		const operation2 = manager.getMarketplaceItems([source])
 
 		// Wait for both to complete
-		const [result1, result2] = await Promise.all([operation1, operation2])
+		// const [result1, result2] =
+		await Promise.all([operation1, operation2])
 
 		// Verify getRepositoryData was only called once
 		expect(getRepoSpy).toHaveBeenCalledTimes(1)
@@ -698,7 +698,8 @@ describe("Concurrency Control", () => {
 			let metadataScanDuringGit = false
 
 			// Mock git operation to resolve immediately
-			const fetchRepoSpy = jest.spyOn(GitFetcher.prototype, "fetchRepository").mockImplementation(async () => {
+			// const fetchRepoSpy =
+			jest.spyOn(GitFetcher.prototype, "fetchRepository").mockImplementation(async () => {
 				isGitOperationActive = true
 				isGitOperationActive = false
 				return {
@@ -709,7 +710,8 @@ describe("Concurrency Control", () => {
 			})
 
 			// Mock metadata scanner to check if git operation is active
-			const scanDirSpy = jest.spyOn(MetadataScanner.prototype, "scanDirectory").mockImplementation(async () => {
+			// const scanDirSpy =
+			jest.spyOn(MetadataScanner.prototype, "scanDirectory").mockImplementation(async () => {
 				if (isGitOperationActive) {
 					metadataScanDuringGit = true
 				}

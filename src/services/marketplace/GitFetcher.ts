@@ -234,7 +234,8 @@ export class GitFetcher {
 			}
 
 			// Get current branch using existing git instance
-			const branch = (await this.git?.revparse(["--abbrev-ref", "HEAD"])) || "main"
+			// const branch =
+			;(await this.git?.revparse(["--abbrev-ref", "HEAD"])) || "main"
 		} catch (error) {
 			throw new Error(
 				`Failed to clone/pull repository: ${error instanceof Error ? error.message : String(error)}`,

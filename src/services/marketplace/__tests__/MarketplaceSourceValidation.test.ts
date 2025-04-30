@@ -5,7 +5,6 @@ import {
 	validateSourceDuplicates,
 	validateSource,
 	validateSources,
-	ValidationError,
 } from "../../../shared/MarketplaceValidation"
 import { MarketplaceSource } from "../types"
 

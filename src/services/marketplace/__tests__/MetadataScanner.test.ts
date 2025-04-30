@@ -14,7 +14,6 @@ import { jest } from "@jest/globals"
 import { Dirent, Stats } from "fs"
 import { MetadataScanner } from "../MetadataScanner"
 import { SimpleGit } from "simple-git"
-import { ComponentMetadata, LocalizationOptions, LocalizedMetadata, PackageMetadata } from "../types"
 import * as fs from "fs/promises"
 
 // Helper function to normalize paths for test assertions

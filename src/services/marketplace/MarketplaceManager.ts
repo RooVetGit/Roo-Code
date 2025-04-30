@@ -11,13 +11,12 @@ import {
 	LocalizationOptions,
 	InstallMarketplaceItemOptions,
 } from "./types"
-import { validateSource, validateSources } from "../../shared/MarketplaceValidation"
 import { getUserLocale } from "./utils"
 import { GlobalFileNames } from "src/shared/globalFileNames"
 import { TerminalRegistry } from "src/integrations/terminal/TerminalRegistry"
 import { assertsMpContext, createHookable, MarketplaceContext, registerMarketplaceHooks } from "roo-rocket"
 import { unpackFromUint8 } from "config-rocket/cli"
-import { uint8IsConfigPackWithParameters } from 'config-rocket/cli'
+import { uint8IsConfigPackWithParameters } from "config-rocket/cli"
 
 /**
  * Service for managing marketplace data
@@ -572,32 +571,32 @@ export class MarketplaceManager {
 	}
 
 	async installMarketplaceItem(item: MarketplaceItem, options?: InstallMarketplaceItemOptions) {
-		const {
-			target = 'project'
-		} = options || {}
+		const { target = "project" } = options || {}
 
 		vscode.window.showInformationMessage(`Installing item: "${item.name}"`)
 
-		if (target === 'project' && !vscode.workspace.workspaceFolders?.length)
+		if (target === "project" && !vscode.workspace.workspaceFolders?.length)
 			return vscode.window.showErrorMessage("Cannot load current workspace folder")
 
-		const cwd = target === 'project'
-			? vscode.workspace.workspaceFolders![0].uri.fsPath
-			: await this.ensureSettingsDirectoryExists()
+		const cwd =
+			target === "project"
+				? vscode.workspace.workspaceFolders![0].uri.fsPath
+				: await this.ensureSettingsDirectoryExists()
 
 		if (!item.binaryUrl || !item.binaryHash)
 			return vscode.window.showErrorMessage("Item does not have a binary URL or hash")
 
 		// Creates `mpContext` to delegate context to `roo-rocket`
-		const mpContext = (target === 'project'
-			? { target }
-			: {
-				target,
-				globalFileNames: {
-					mcp: GlobalFileNames.mcpSettings,
-					mode: GlobalFileNames.customModes,
-				}
-			}
+		const mpContext = (
+			target === "project"
+				? { target }
+				: {
+						target,
+						globalFileNames: {
+							mcp: GlobalFileNames.mcpSettings,
+							mode: GlobalFileNames.customModes,
+						},
+					}
 		) satisfies MarketplaceContext
 		assertsMpContext(mpContext)
 
@@ -611,29 +610,34 @@ export class MarketplaceManager {
 			let pResult: string[] = []
 			let pExitCode: number | undefined
 			// We don't want to create a new terminal at the global dir, so I'm not using cwd here
-			const terminalClass = await TerminalRegistry.getOrCreateTerminal(vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath ?? '', false, `IMI-${item.name}`)
+			const terminalClass = await TerminalRegistry.getOrCreateTerminal(
+				vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath ?? "",
+				false,
+				`IMI-${item.name}`,
+			)
 			terminalClass.terminal.show()
-			await terminalClass.runCommand(`npx --yes roo-rocket@latest --mp="${JSON.stringify(mpContext).replaceAll(/"/g, '\\"')}" --cwd="${cwd}" --sha256="${item.binaryHash}" --url="${item.binaryUrl}"`, {
-				onLine: (line) => {
-					pResult.push(line)
+			await terminalClass.runCommand(
+				`npx --yes roo-rocket@latest --mp="${JSON.stringify(mpContext).replaceAll(/"/g, '\\"')}" --cwd="${cwd}" --sha256="${item.binaryHash}" --url="${item.binaryUrl}"`,
+				{
+					onLine: (line) => {
+						pResult.push(line)
+					},
+					onShellExecutionComplete: (details) => {
+						pExitCode = details.exitCode
+					},
 				},
-				onShellExecutionComplete: (details) => {
-					pExitCode = details.exitCode
-				},
-			})
+			)
 
-			if (pExitCode === 0)
-				vscode.window.showInformationMessage(`"${item.name}" CLI reported success!`)
+			if (pExitCode === 0) vscode.window.showInformationMessage(`"${item.name}" CLI reported success!`)
 			else {
 				console.error(pResult)
 				// Revert so error search is potentially faster
 				pResult.reverse()
 				// Search for error line in the result
-				const errorLine = (
-					pResult.find(line => /^((\r)?\n)+ ERROR  /.test(line)) ?? // Prefer formatting error
-					pResult.find(line => /error/i.test(line)) ?? // General error
-					'N/A'
-				)
+				const errorLine =
+					pResult.find((line) => /^((\r)?\n)+ ERROR  /.test(line)) ?? // Prefer formatting error
+					pResult.find((line) => /error/i.test(line)) ?? // General error
+					"N/A"
 				return vscode.window.showErrorMessage(`"${item.name}" CLI reported error: (${pExitCode}): ${errorLine}`)
 			}
 		}
@@ -648,11 +652,10 @@ export class MarketplaceManager {
 				hookable: customHookable,
 				nonAssemblyBehavior: true,
 				sha256: item.binaryHash,
-				cwd
+				cwd,
 			})
 			vscode.window.showInformationMessage(`"${item.name}" installed successfully`)
 		}
-
 
 		return true
 	}
@@ -669,8 +672,7 @@ export class MarketplaceManager {
 
 async function fetchBinary(url: string) {
 	const res = await fetch(url)
-	if (!res.ok)
-		throw new Error(`Failed to download binary from ${url}`)
+	if (!res.ok) throw new Error(`Failed to download binary from ${url}`)
 
 	return new Uint8Array(await res.arrayBuffer())
 }
