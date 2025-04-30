@@ -233,7 +233,8 @@
 			"high": "高",
 			"medium": "中",
 			"low": "低"
-		}
+		},
+		"setReasoningLevel": "推論労力を有効にする"
 	},
 	"browser": {
 		"enable": {
@@ -310,6 +311,10 @@
 		"shellIntegrationTimeout": {
 			"label": "ターミナルシェル統合タイムアウト",
 			"description": "コマンドを実行する前にシェル統合の初期化を待つ最大時間。シェルの起動時間が長いユーザーの場合、ターミナルで「Shell Integration Unavailable」エラーが表示される場合は、この値を増やす必要があるかもしれません。"
+		},
+		"shellIntegrationDisabled": {
+			"label": "ターミナルシェル統合を無効にする",
+			"description": "ターミナルコマンドが正しく機能しない場合や、「シェル統合が利用できません」というエラーが表示される場合は、これを有効にします。これにより、一部の高度なターミナル機能をバイパスして、コマンドを実行するより簡単な方法が使用されます。"
 		},
 		"compressProgressBar": {
 			"label": "プログレスバー出力を圧縮",

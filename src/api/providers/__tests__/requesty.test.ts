@@ -1,6 +1,8 @@
+// npx jest src/api/providers/__tests__/requesty.test.ts
+
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
-import { ApiHandlerOptions, ModelInfo, requestyDefaultModelInfo } from "../../../shared/api"
+import { ApiHandlerOptions, ModelInfo } from "../../../shared/api"
 import { RequestyHandler } from "../requesty"
 import { convertToOpenAiMessages } from "../../transform/openai-format"
 import { convertToR1Format } from "../../transform/r1-format"
@@ -9,6 +11,22 @@ import { convertToR1Format } from "../../transform/r1-format"
 jest.mock("openai")
 jest.mock("../../transform/openai-format")
 jest.mock("../../transform/r1-format")
+jest.mock("../fetchers/cache", () => ({
+	getModels: jest.fn().mockResolvedValue({
+		"test-model": {
+			maxTokens: 8192,
+			contextWindow: 200_000,
+			supportsImages: true,
+			supportsComputerUse: true,
+			supportsPromptCache: true,
+			inputPrice: 3.0,
+			outputPrice: 15.0,
+			cacheWritesPrice: 3.75,
+			cacheReadsPrice: 0.3,
+			description: "Test model description",
+		},
+	}),
+}))
 
 describe("RequestyHandler", () => {
 	let handler: RequestyHandler
@@ -40,9 +58,7 @@ describe("RequestyHandler", () => {
 		jest.clearAllMocks()
 
 		// Setup mock create function that preserves params
-		let lastParams: any
-		mockCreate = jest.fn().mockImplementation((params) => {
-			lastParams = params
+		mockCreate = jest.fn().mockImplementation((_params) => {
 			return {
 				[Symbol.asyncIterator]: async function* () {
 					yield {

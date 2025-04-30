@@ -66,19 +66,31 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		"roo-cline.activationCompleted": () => {},
 		"roo-cline.plusButtonClicked": async () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
-			if (!visibleProvider) return
+
+			if (!visibleProvider) {
+				return
+			}
+
 			await visibleProvider.removeClineFromStack()
 			await visibleProvider.postStateToWebview()
 			await visibleProvider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		},
 		"roo-cline.mcpButtonClicked": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
-			if (!visibleProvider) return
+
+			if (!visibleProvider) {
+				return
+			}
+
 			visibleProvider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
 		},
 		"roo-cline.promptsButtonClicked": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
-			if (!visibleProvider) return
+
+			if (!visibleProvider) {
+				return
+			}
+
 			visibleProvider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" })
 		},
 		"roo-cline.popoutButtonClicked": () => openClineInNewTab({ context, outputChannel }),
@@ -93,7 +105,11 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		},
 		"roo-cline.historyButtonClicked": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
-			if (!visibleProvider) return
+
+			if (!visibleProvider) {
+				return
+			}
+
 			visibleProvider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
 		},
 		"roo-cline.helpButtonClicked": () => {
@@ -121,6 +137,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		"roo-cline.focusInput": async () => {
 			try {
 				const panel = getPanel()
+
 				if (!panel) {
 					await vscode.commands.executeCommand("workbench.view.extension.roo-cline-ActivityBar")
 				} else if (panel === tabPanel) {
@@ -135,7 +152,11 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		},
 		"roo.acceptInput": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
-			if (!visibleProvider) return
+
+			if (!visibleProvider) {
+				return
+			}
+
 			visibleProvider.postMessageToWebview({ type: "acceptInput" })
 		},
 	}

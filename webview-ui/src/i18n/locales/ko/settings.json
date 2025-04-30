@@ -233,7 +233,8 @@
 			"high": "높음",
 			"medium": "중간",
 			"low": "낮음"
-		}
+		},
+		"setReasoningLevel": "추론 노력 활성화"
 	},
 	"browser": {
 		"enable": {
@@ -310,6 +311,10 @@
 		"shellIntegrationTimeout": {
 			"label": "터미널 쉘 통합 타임아웃",
 			"description": "명령을 실행하기 전에 쉘 통합이 초기화될 때까지 기다리는 최대 시간. 쉘 시작 시간이 긴 사용자의 경우, 터미널에서 \"Shell Integration Unavailable\" 오류가 표시되면 이 값을 늘려야 할 수 있습니다."
+		},
+		"shellIntegrationDisabled": {
+			"label": "터미널 셸 통합 비활성화",
+			"description": "터미널 명령이 올바르게 작동하지 않거나 '셸 통합을 사용할 수 없음' 오류가 표시되는 경우 이 옵션을 활성화합니다. 이렇게 하면 일부 고급 터미널 기능을 우회하여 명령을 실행하는 더 간단한 방법을 사용합니다."
 		},
 		"compressProgressBar": {
 			"label": "진행 표시줄 출력 압축",

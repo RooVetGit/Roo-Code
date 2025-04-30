@@ -27,7 +27,7 @@ import { ExtensionMessage } from "../../shared/ExtensionMessage"
 import { Mode, PromptComponent, defaultModeSlug } from "../../shared/modes"
 import { experimentDefault } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
-import { Terminal, TERMINAL_SHELL_INTEGRATION_TIMEOUT } from "../../integrations/terminal/Terminal"
+import { Terminal } from "../../integrations/terminal/Terminal"
 import { downloadTask } from "../../integrations/misc/export-markdown"
 import { getTheme } from "../../integrations/theme/getTheme"
 import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
@@ -41,7 +41,7 @@ import { ContextProxy } from "../config/ContextProxy"
 import { ProviderSettingsManager } from "../config/ProviderSettingsManager"
 import { CustomModesManager } from "../config/CustomModesManager"
 import { buildApiHandler } from "../../api"
-import { ACTION_NAMES } from "../CodeActionProvider"
+import { CodeActionName } from "../CodeActionProvider"
 import { Cline, ClineOptions } from "../Cline"
 import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
@@ -262,7 +262,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	public static async handleCodeAction(
 		command: string,
-		promptType: keyof typeof ACTION_NAMES,
+		promptType: CodeActionName,
 		params: Record<string, string | any[]>,
 	): Promise<void> {
 		// Capture telemetry for code action usage
@@ -276,20 +276,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		const { customSupportPrompts } = await visibleProvider.getState()
 
+		// TODO: Improve type safety for promptType.
 		const prompt = supportPrompt.create(promptType, params, customSupportPrompts)
 
 		if (command.endsWith("addToContext")) {
-			await visibleProvider.postMessageToWebview({
-				type: "invoke",
-				invoke: "setChatBoxMessage",
-				text: prompt,
-			})
-
-			return
-		}
-
-		if (visibleProvider.getCurrentCline() && command.endsWith("InCurrentTask")) {
-			await visibleProvider.postMessageToWebview({ type: "invoke", invoke: "sendMessage", text: prompt })
+			await visibleProvider.postMessageToWebview({ type: "invoke", invoke: "setChatBoxMessage", text: prompt })
 			return
 		}
 
@@ -304,6 +295,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		// Capture telemetry for terminal action usage
 		telemetryService.captureCodeActionUsed(promptType)
 		const visibleProvider = await ClineProvider.getInstance()
+
 		if (!visibleProvider) {
 			return
 		}
@@ -313,20 +305,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const prompt = supportPrompt.create(promptType, params, customSupportPrompts)
 
 		if (command.endsWith("AddToContext")) {
-			await visibleProvider.postMessageToWebview({
-				type: "invoke",
-				invoke: "setChatBoxMessage",
-				text: prompt,
-			})
-			return
-		}
-
-		if (visibleProvider.getCurrentCline() && command.endsWith("InCurrentTask")) {
-			await visibleProvider.postMessageToWebview({
-				type: "invoke",
-				invoke: "sendMessage",
-				text: prompt,
-			})
+			await visibleProvider.postMessageToWebview({ type: "invoke", invoke: "setChatBoxMessage", text: prompt })
 			return
 		}
 
@@ -354,25 +333,25 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		// Initialize out-of-scope variables that need to recieve persistent global state values
 		this.getState().then(
 			({
-				soundEnabled,
-				terminalShellIntegrationTimeout,
-				terminalCommandDelay,
-				terminalZshClearEolMark,
-				terminalZshOhMy,
-				terminalZshP10k,
-				terminalPowershellCounter,
-				terminalZdotdir,
+				soundEnabled = false,
+				terminalShellIntegrationTimeout = Terminal.defaultShellIntegrationTimeout,
+				terminalShellIntegrationDisabled = false,
+				terminalCommandDelay = 0,
+				terminalZshClearEolMark = true,
+				terminalZshOhMy = false,
+				terminalZshP10k = false,
+				terminalPowershellCounter = false,
+				terminalZdotdir = false,
 			}) => {
-				setSoundEnabled(soundEnabled ?? false)
-				Terminal.setShellIntegrationTimeout(
-					terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT,
-				)
-				Terminal.setCommandDelay(terminalCommandDelay ?? 0)
-				Terminal.setTerminalZshClearEolMark(terminalZshClearEolMark ?? true)
-				Terminal.setTerminalZshOhMy(terminalZshOhMy ?? false)
-				Terminal.setTerminalZshP10k(terminalZshP10k ?? false)
-				Terminal.setPowershellCounter(terminalPowershellCounter ?? false)
-				Terminal.setTerminalZdotdir(terminalZdotdir ?? false)
+				setSoundEnabled(soundEnabled)
+				Terminal.setShellIntegrationTimeout(terminalShellIntegrationTimeout)
+				Terminal.setShellIntegrationDisabled(terminalShellIntegrationDisabled)
+				Terminal.setCommandDelay(terminalCommandDelay)
+				Terminal.setTerminalZshClearEolMark(terminalZshClearEolMark)
+				Terminal.setTerminalZshOhMy(terminalZshOhMy)
+				Terminal.setTerminalZshP10k(terminalZshP10k)
+				Terminal.setPowershellCounter(terminalPowershellCounter)
+				Terminal.setTerminalZdotdir(terminalZdotdir)
 			},
 		)
 
@@ -748,7 +727,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
             <meta name="theme-color" content="#000000">
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:; script-src 'nonce-${nonce}' https://us-assets.i.posthog.com; connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com;">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:; script-src ${webview.cspSource} 'wasm-unsafe-eval' 'nonce-${nonce}' https://us-assets.i.posthog.com 'strict-dynamic'; connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com;">
             <link rel="stylesheet" type="text/css" href="${stylesUri}">
 			<link href="${codiconsUri}" rel="stylesheet" />
 			<script nonce="${nonce}">
@@ -1185,6 +1164,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			writeDelayMs,
 			terminalOutputLineLimit,
 			terminalShellIntegrationTimeout,
+			terminalShellIntegrationDisabled,
 			terminalCommandDelay,
 			terminalPowershellCounter,
 			terminalZshClearEolMark,
@@ -1262,7 +1242,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			cachedChromeHostUrl: cachedChromeHostUrl,
 			writeDelayMs: writeDelayMs ?? 1000,
 			terminalOutputLineLimit: terminalOutputLineLimit ?? 500,
-			terminalShellIntegrationTimeout: terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT,
+			terminalShellIntegrationTimeout: terminalShellIntegrationTimeout ?? Terminal.defaultShellIntegrationTimeout,
+			terminalShellIntegrationDisabled: terminalShellIntegrationDisabled ?? false,
 			terminalCommandDelay: terminalCommandDelay ?? 0,
 			terminalPowershellCounter: terminalPowershellCounter ?? false,
 			terminalZshClearEolMark: terminalZshClearEolMark ?? true,
@@ -1357,7 +1338,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			writeDelayMs: stateValues.writeDelayMs ?? 1000,
 			terminalOutputLineLimit: stateValues.terminalOutputLineLimit ?? 500,
 			terminalShellIntegrationTimeout:
-				stateValues.terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT,
+				stateValues.terminalShellIntegrationTimeout ?? Terminal.defaultShellIntegrationTimeout,
+			terminalShellIntegrationDisabled: stateValues.terminalShellIntegrationDisabled ?? false,
 			terminalCommandDelay: stateValues.terminalCommandDelay ?? 0,
 			terminalPowershellCounter: stateValues.terminalPowershellCounter ?? false,
 			terminalZshClearEolMark: stateValues.terminalZshClearEolMark ?? true,
@@ -1521,8 +1503,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		// Add model ID if available
 		const currentCline = this.getCurrentCline()
+
 		if (currentCline?.api) {
 			const { id: modelId } = currentCline.api.getModel()
+
 			if (modelId) {
 				properties.modelId = modelId
 			}
