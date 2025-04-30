@@ -233,5 +233,10 @@
 		}
 	},
 	"systemPromptWarning": "WARNUNG: Benutzerdefinierte Systemaufforderung aktiv. Dies kann die Funktionalität erheblich beeinträchtigen und zu unvorhersehbarem Verhalten führen.",
-	"selectApiConfig": "API-Konfiguration auswählen"
+	"selectApiConfig": "API-Konfiguration auswählen",
+	"shellIntegration": {
+		"title": "Shell-Integration nicht verfügbar",
+		"description": "Dein Befehl wird ohne VSCode-Shell-Integration ausgeführt. Du kannst die Shell-Integration im Bereich <strong>Terminal</strong> in den <settingsLink>Roo Code Einstellungen</settingsLink> wieder aktivieren.",
+		"troubleshooting": "Klicke hier für die Shell-Integrations-Dokumentation."
+	}
 }

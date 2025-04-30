@@ -233,5 +233,10 @@
 		}
 	},
 	"systemPromptWarning": "UYARI: Özel sistem komut geçersiz kılma aktif. Bu işlevselliği ciddi şekilde bozabilir ve öngörülemeyen davranışlara neden olabilir.",
-	"selectApiConfig": "API yapılandırmasını seçin"
+	"selectApiConfig": "API yapılandırmasını seçin",
+	"shellIntegration": {
+		"title": "Kabuk Entegrasyonu Kullanılamıyor",
+		"description": "Komutunuz VSCode kabuk entegrasyonu olmadan çalıştırılıyor. <settingsLink>Roo Code ayarları</settingsLink>'nın <strong>Terminal</strong> bölümünden kabuk entegrasyonunu yeniden etkinleştirebilirsiniz.",
+		"troubleshooting": "Kabuk entegrasyonu belgeleri için buraya tıklayın."
+	}
 }

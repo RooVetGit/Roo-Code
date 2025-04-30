@@ -233,5 +233,10 @@
 		}
 	},
 	"systemPromptWarning": "ATTENZIONE: Sovrascrittura personalizzata delle istruzioni di sistema attiva. Questo può compromettere gravemente le funzionalità e causare comportamenti imprevedibili.",
-	"selectApiConfig": "Seleziona la configurazione API"
+	"selectApiConfig": "Seleziona la configurazione API",
+	"shellIntegration": {
+		"title": "Integrazione Shell non disponibile",
+		"description": "Il tuo comando viene eseguito senza l'integrazione shell di VSCode. Puoi riattivare l'integrazione shell nella sezione <strong>Terminal</strong> delle <settingsLink>impostazioni di Roo Code</settingsLink>.",
+		"troubleshooting": "Clicca qui per la documentazione sull'integrazione shell."
+	}
 }

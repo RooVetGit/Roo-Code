@@ -233,5 +233,10 @@
 		}
 	},
 	"systemPromptWarning": "警告：自訂系統提示詞覆蓋已啟用。這可能嚴重破壞功能並導致不可預測的行為。",
-	"selectApiConfig": "選取 API 設定"
+	"selectApiConfig": "選取 API 設定",
+	"shellIntegration": {
+		"title": "Shell 整合不可用",
+		"description": "您的命令正在沒有 VSCode shell 整合的情況下執行。您可以在 <settingsLink>Roo Code 設定</settingsLink> 的 <strong>終端機</strong> 部分重新啟用 shell 整合。",
+		"troubleshooting": "點擊此處查看 shell 整合文件。"
+	}
 }

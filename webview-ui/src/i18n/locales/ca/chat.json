@@ -233,5 +233,10 @@
 		}
 	},
 	"systemPromptWarning": "ADVERTÈNCIA: S'ha activat una substitució personalitzada d'instruccions del sistema. Això pot trencar greument la funcionalitat i causar un comportament impredictible.",
-	"selectApiConfig": "Seleccioneu la configuració de l'API"
+	"selectApiConfig": "Seleccioneu la configuració de l'API",
+	"shellIntegration": {
+		"title": "Integració de Shell no disponible",
+		"description": "La teva ordre s'està executant sense la integració de shell de VSCode. Pots tornar a activar la integració de shell a la secció <strong>Terminal</strong> de la <settingsLink>configuració de Roo Code</settingsLink>.",
+		"troubleshooting": "Fes clic aquí per a la documentació d'integració de shell."
+	}
 }

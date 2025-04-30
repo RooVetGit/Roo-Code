@@ -233,5 +233,10 @@
 		}
 	},
 	"systemPromptWarning": "CẢNH BÁO: Đã kích hoạt ghi đè lệnh nhắc hệ thống tùy chỉnh. Điều này có thể phá vỡ nghiêm trọng chức năng và gây ra hành vi không thể dự đoán.",
-	"selectApiConfig": "Chọn cấu hình API"
+	"selectApiConfig": "Chọn cấu hình API",
+	"shellIntegration": {
+		"title": "Tích hợp Shell không khả dụng",
+		"description": "Lệnh của bạn đang được thực thi mà không có tích hợp shell VSCode. Bạn có thể kích hoạt lại tích hợp shell trong phần <strong>Terminal</strong> của <settingsLink>cài đặt Roo Code</settingsLink>.",
+		"troubleshooting": "Nhấp vào đây để xem tài liệu về tích hợp shell."
+	}
 }

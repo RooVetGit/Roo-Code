@@ -233,5 +233,10 @@
 		}
 	},
 	"systemPromptWarning": "AVERTISSEMENT : Remplacement d'instructions système personnalisées actif. Cela peut gravement perturber la fonctionnalité et provoquer un comportement imprévisible.",
-	"selectApiConfig": "Sélectionner la configuration de l’API"
+	"selectApiConfig": "Sélectionner la configuration de l'API",
+	"shellIntegration": {
+		"title": "Intégration Shell non disponible",
+		"description": "Votre commande est exécutée sans l'intégration shell de VSCode. Vous pouvez réactiver l'intégration shell dans la section <strong>Terminal</strong> des <settingsLink>paramètres de Roo Code</settingsLink>.",
+		"troubleshooting": "Cliquez ici pour la documentation d'intégration shell."
+	}
 }
