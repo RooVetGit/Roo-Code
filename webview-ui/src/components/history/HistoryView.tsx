@@ -83,6 +83,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 						<Button
 							variant={isSelectionMode ? "default" : "secondary"}
 							onClick={toggleSelectionMode}
+							data-testid="toggle-selection-mode-button"
 							title={
 								isSelectionMode
 									? `${t("history:exitSelectionMode")}`
@@ -217,8 +218,10 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 								"bg-vscode-list-activeSelectionBackground":
 									isSelectionMode && selectedTaskIds.includes(item.id),
 							})}
-							onClick={(e) => {
-								if (!isSelectionMode || !(e.target as HTMLElement).closest(".task-checkbox")) {
+							onClick={() => {
+								if (isSelectionMode) {
+									toggleTaskSelection(item.id, !selectedTaskIds.includes(item.id))
+								} else {
 									vscode.postMessage({ type: "showTaskWithId", text: item.id })
 								}
 							}}>
