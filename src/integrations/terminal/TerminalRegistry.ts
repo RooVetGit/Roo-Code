@@ -52,9 +52,8 @@ export class TerminalRegistry {
 					const stream = e.execution.read()
 					const terminal = this.getTerminalByVSCETerminal(e.terminal)
 
-					console.info("[onDidStartTerminalShellExecution] Shell execution started:", {
-						hasExecution: !!e.execution,
-						command: e.execution?.commandLine?.value,
+					console.info("[onDidStartTerminalShellExecution]", {
+						command: e.execution.commandLine.value,
 						terminalId: terminal?.id,
 					})
 
@@ -79,9 +78,8 @@ export class TerminalRegistry {
 					const process = terminal?.process
 					const exitDetails = TerminalProcess.interpretExitCode(e.exitCode)
 
-					console.info("[TerminalRegistry] Shell execution ended:", {
-						hasExecution: !!e.execution,
-						command: e.execution?.commandLine?.value,
+					console.info("[onDidEndTerminalShellExecution]", {
+						command: e.execution.commandLine.value,
 						terminalId: terminal?.id,
 						...exitDetails,
 					})
