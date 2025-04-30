@@ -75,6 +75,9 @@ const ApiOptions = ({
 	const [openAiModels, setOpenAiModels] = useState<Record<string, ModelInfo> | null>(null)
 
 	const [anthropicBaseUrlSelected, setAnthropicBaseUrlSelected] = useState(!!apiConfiguration?.anthropicBaseUrl)
+	const [openAiNativeBaseUrlSelected, setOpenAiNativeBaseUrlSelected] = useState(
+		!!apiConfiguration?.openAiNativeBaseUrl,
+	)
 	const [azureApiVersionSelected, setAzureApiVersionSelected] = useState(!!apiConfiguration?.azureApiVersion)
 	const [openRouterBaseUrlSelected, setOpenRouterBaseUrlSelected] = useState(!!apiConfiguration?.openRouterBaseUrl)
 	const [openAiHostHeaderSelected, setOpenAiHostHeaderSelected] = useState(!!apiConfiguration?.openAiHostHeader)
@@ -490,14 +493,28 @@ const ApiOptions = ({
 
 			{selectedProvider === "openai-native" && (
 				<>
-					<VSCodeTextField
-						value={apiConfiguration?.openAiNativeBaseUrl || ""}
-						type="url"
-						onInput={handleInputChange("openAiNativeBaseUrl")}
-						placeholder={t("settings:placeholders.baseUrl")}
-						className="w-full">
-						<label className="block font-medium mb-1">{t("settings:providers.openAiBaseUrl")}</label>
-					</VSCodeTextField>
+					<Checkbox
+						checked={openAiNativeBaseUrlSelected}
+						onChange={(checked: boolean) => {
+							setOpenAiNativeBaseUrlSelected(checked)
+
+							if (!checked) {
+								setApiConfigurationField("openAiNativeBaseUrl", "")
+							}
+						}}>
+						{t("settings:providers.useCustomBaseUrl")}
+					</Checkbox>
+					{openAiNativeBaseUrlSelected && (
+						<>
+							<VSCodeTextField
+								value={apiConfiguration?.openAiNativeBaseUrl || ""}
+								type="url"
+								onInput={handleInputChange("openAiNativeBaseUrl")}
+								placeholder="https://api.openai.com/v1"
+								className="w-full mt-1"
+							/>
+						</>
+					)}
 					<VSCodeTextField
 						value={apiConfiguration?.openAiNativeApiKey || ""}
 						type="password"
