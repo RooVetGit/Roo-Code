@@ -9,6 +9,7 @@ import { scannerExtensions } from "../shared/supported-extensions"
 const MAX_BLOCK_CHARS = 1000
 const MIN_BLOCK_CHARS = 100
 const MIN_CHUNK_REMAINDER_CHARS = 200 // Minimum characters for the *next* chunk after a split
+const MAX_CHARS_TOLERANCE_FACTOR = 1.15 // 15% tolerance for max chars
 
 /**
  * Implementation of the code parser interface
@@ -150,7 +151,7 @@ export class CodeParser implements ICodeParser {
 			// Check if the node meets the minimum character requirement
 			if (currentNode.text.length >= MIN_BLOCK_CHARS) {
 				// If it also exceeds the maximum character limit, try to break it down
-				if (currentNode.text.length > MAX_BLOCK_CHARS) {
+				if (currentNode.text.length > MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR) {
 					if (currentNode.children.length > 0) {
 						// If it has children, process them instead
 						queue.push(...currentNode.children)
