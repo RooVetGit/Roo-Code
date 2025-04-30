@@ -171,7 +171,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 
 					{/* Select all control in selection mode */}
 					{isSelectionMode && tasks.length > 0 && (
-						<div className="flex items-center py-1 px-2 bg-vscode-editor-background rounded">
+						<div className="flex items-center py-1">
 							<div className="flex items-center gap-2">
 								<Checkbox
 									checked={tasks.length > 0 && selectedTaskIds.length === tasks.length}
@@ -225,7 +225,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 									vscode.postMessage({ type: "showTaskWithId", text: item.id })
 								}
 							}}>
-							<div className="flex items-start p-3 gap-2">
+							<div className="flex items-start p-3 gap-2 ml-2">
 								{/* Show checkbox in selection mode */}
 								{isSelectionMode && (
 									<div
