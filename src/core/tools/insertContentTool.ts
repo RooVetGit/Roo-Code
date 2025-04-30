@@ -8,6 +8,8 @@ import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
 import { fileExistsAtPath } from "../../utils/fs"
 import { insertGroups } from "../diff/insert-groups"
+import { telemetryService } from "../../services/telemetry/TelemetryService"
+import { addLineNumbers } from "../../integrations/misc/extract-text"
 
 const CONTENT_UPDATE_DELAY = 200
 
@@ -95,11 +97,23 @@ export async function insertContentTool(
 			const absolutePath = path.resolve(cline.cwd, relPath)
 			const fileExists = await fileExistsAtPath(absolutePath)
 
+			const accessAllowed = cline.rooIgnoreController?.validateAccess(relPath)
+			if (!accessAllowed) {
+				await cline.say("rooignore_error", relPath)
+				pushToolResult(formatResponse.toolError(formatResponse.rooIgnoreError(relPath)))
+				return
+			}
+
 			if (!fileExists) {
 				cline.consecutiveMistakeCount++
 				cline.recordToolError("insert_content")
 				const formattedError = `File does not exist at path: ${absolutePath}\n\n<error_details>\nThe specified file could not be found. Please verify the file path and try again.\n</error_details>`
-				await cline.say("error", formattedError)
+				const currentCount = (cline.consecutiveMistakeCountForInsertContent?.get(relPath) || 0) + 1
+				cline.consecutiveMistakeCountForInsertContent?.set(relPath, currentCount)
+				telemetryService.captureInsertContentError(cline.taskId, currentCount)
+				if (currentCount >= 2) {
+					await cline.say("error", formattedError)
+				}
 				pushToolResult(formattedError)
 				return
 			}
@@ -141,10 +155,20 @@ export async function insertContentTool(
 		const absolutePath = path.resolve(cline.cwd, relPath)
 		const fileExists = await fileExistsAtPath(absolutePath)
 
+		const accessAllowed = cline.rooIgnoreController?.validateAccess(relPath)
+		if (!accessAllowed) {
+			await cline.say("rooignore_error", relPath)
+			pushToolResult(formatResponse.toolError(formatResponse.rooIgnoreError(relPath)))
+			return
+		}
+
 		if (!fileExists) {
 			cline.consecutiveMistakeCount++
 			cline.recordToolError("insert_content")
 			const formattedError = `File does not exist at path: ${absolutePath}\n\n<error_details>\nThe specified file could not be found. Please verify the file path and try again.\n</error_details>`
+			const currentCount = (cline.consecutiveMistakeCountForInsertContent?.get(relPath) || 0) + 1
+			cline.consecutiveMistakeCountForInsertContent?.set(relPath, currentCount)
+			telemetryService.captureInsertContentError(cline.taskId, currentCount)
 			await cline.say("error", formattedError)
 			pushToolResult(formattedError)
 			return
@@ -175,6 +199,8 @@ export async function insertContentTool(
 			return
 		}
 
+		cline.consecutiveMistakeCount = 0
+		cline.consecutiveMistakeCountForInsertContent?.delete(relPath)
 		const completeMessage = JSON.stringify({
 			...sharedMessageProps,
 			diff,
@@ -221,7 +247,7 @@ export async function insertContentTool(
 		pushToolResult(
 			`The user made the following updates to your content:\n\n${userEdits}\n\n` +
 				`The updated content has been successfully saved to ${relPath.toPosix()}. Here is the full, updated content of the file:\n\n` +
-				`<final_file_content path="${relPath.toPosix()}">\n${finalContent}\n</final_file_content>\n\n` +
+				`<final_file_content path="${relPath.toPosix()}">\n${addLineNumbers(finalContent || "")}\n</final_file_content>\n\n` +
 				`Please note:\n` +
 				`1. You do not need to re-write the file with these changes, as they have already been applied.\n` +
 				`2. Proceed with the task using this updated file content as the new baseline.\n` +
