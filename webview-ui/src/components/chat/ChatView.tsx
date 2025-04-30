@@ -181,7 +181,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							setSecondaryButtonText(undefined)
 							break
 						case "tool":
-							if (!isAutoApproved(lastMessage)) {
+							if (!isAutoApproved(lastMessage) && !isPartial) {
 								playSound("notification")
 							}
 							setTextAreaDisabled(isPartial)
@@ -207,7 +207,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							}
 							break
 						case "browser_action_launch":
-							if (!isAutoApproved(lastMessage)) {
+							if (!isAutoApproved(lastMessage) && !isPartial) {
 								playSound("notification")
 							}
 							setTextAreaDisabled(isPartial)
@@ -217,7 +217,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							setSecondaryButtonText(t("chat:reject.title"))
 							break
 						case "command":
-							if (!isAutoApproved(lastMessage)) {
+							if (!isAutoApproved(lastMessage) && !isPartial) {
 								playSound("notification")
 							}
 							setTextAreaDisabled(isPartial)
@@ -242,7 +242,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							break
 						case "completion_result":
 							// extension waiting for feedback. but we can just present a new task button
-							playSound("celebration")
+							if (!isPartial) {
+								playSound("celebration")
+							}
 							setTextAreaDisabled(isPartial)
 							setClineAsk("completion_result")
 							setEnableButtons(!isPartial)
@@ -822,37 +824,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						lastTtsRef.current = text
 					} catch (error) {
 						console.error("Failed to execute text-to-speech:", error)
-					}
-				}
-			}
-		}
-
-		// Only execute when isStreaming changes from true to false.
-		if (wasStreaming && !isStreaming && lastMessage) {
-			// Play appropriate sound based on lastMessage content.
-			if (lastMessage.type === "ask") {
-				// Don't play sounds for auto-approved actions
-				if (!isAutoApproved(lastMessage)) {
-					switch (lastMessage.ask) {
-						case "api_req_failed":
-						case "mistake_limit_reached":
-							playSound("progress_loop")
-							break
-						case "followup":
-							if (!lastMessage.partial) {
-								playSound("notification")
-							}
-							break
-						case "tool":
-						case "browser_action_launch":
-						case "resume_task":
-						case "use_mcp_server":
-							playSound("notification")
-							break
-						case "completion_result":
-						case "resume_completed_task":
-							playSound("celebration")
-							break
 					}
 				}
 			}
