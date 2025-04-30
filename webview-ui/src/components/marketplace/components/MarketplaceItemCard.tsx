@@ -44,7 +44,7 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({
 			case "package":
 				return t("marketplace:filters.type.package")
 			default:
-				return t("marketplace:filters.type.all")
+				return "N/A"
 		}
 	}, [item.type, t])
 
