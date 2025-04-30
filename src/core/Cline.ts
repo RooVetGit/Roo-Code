@@ -134,6 +134,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 	readonly rootTask: Cline | undefined = undefined
 	readonly parentTask: Cline | undefined = undefined
 	readonly taskNumber: number
+	readonly workspacePath: string
 
 	isPaused: boolean = false
 	pausedModeSlug: string = defaultModeSlug
@@ -225,6 +226,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 
 		this.taskId = historyItem ? historyItem.id : crypto.randomUUID()
+		// normal use-case is usually retry similar history task with new workspace
+		this.workspacePath = parentTask
+			? parentTask.workspacePath
+			: getWorkspacePath(path.join(os.homedir(), "Desktop"))
 		this.instanceId = crypto.randomUUID().slice(0, 8)
 		this.taskNumber = -1
 
@@ -292,7 +297,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 	}
 
 	get cwd() {
-		return getWorkspacePath(path.join(os.homedir(), "Desktop"))
+		return this.workspacePath
 	}
 
 	// Storing task to disk for history
@@ -925,7 +930,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 	async *attemptApiRequest(previousApiReqIndex: number, retryAttempt: number = 0): ApiStream {
 		let mcpHub: McpHub | undefined
 
-		const { apiConfiguration, mcpEnabled, alwaysApproveResubmit, requestDelaySeconds } =
+		const { apiConfiguration, mcpEnabled, autoApprovalEnabled, alwaysApproveResubmit, requestDelaySeconds } =
 			(await this.providerRef.deref()?.getState()) ?? {}
 
 		let rateLimitDelay = 0
@@ -1088,7 +1093,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			this.isWaitingForFirstChunk = false
 		} catch (error) {
 			// note that this api_req_failed ask is unique in that we only present this option if the api hasn't streamed any content yet (ie it fails on the first chunk due), as it would allow them to hit a retry button. However if the api failed mid-stream, it could be in any arbitrary state where some tools may have executed, so that error is handled differently and requires cancelling the task entirely.
-			if (alwaysApproveResubmit) {
+			if (autoApprovalEnabled && alwaysApproveResubmit) {
 				let errorMsg
 
 				if (error.error?.metadata?.raw) {
@@ -2053,15 +2058,15 @@ export class Cline extends EventEmitter<ClineEvents> {
 			...TerminalRegistry.getBackgroundTerminals(false),
 		]
 
-		if (busyTerminals.length > 0 && this.didEditFile) {
-			await delay(300) // delay after saving file to let terminals catch up
-		}
-
 		if (busyTerminals.length > 0) {
+			if (this.didEditFile) {
+				await delay(300) // Delay after saving file to let terminals catch up.
+			}
+
 			// Wait for terminals to cool down.
 			await pWaitFor(() => busyTerminals.every((t) => !TerminalRegistry.isProcessHot(t.id)), {
 				interval: 100,
-				timeout: 15_000,
+				timeout: 5_000,
 			}).catch(() => {})
 		}
 

@@ -11,6 +11,10 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 		super()
 
 		this.terminalRef = new WeakRef(terminal)
+
+		this.once("completed", () => {
+			this.terminal.busy = false
+		})
 	}
 
 	public get terminal(): RooTerminal {
@@ -36,7 +40,7 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 				cancelSignal: this.controller.signal,
 			})`${command}`
 
-			this.terminal.setActiveStream(subprocess)
+			this.terminal.setActiveStream(subprocess, subprocess.pid)
 			this.emit("line", "")
 
 			for await (const line of subprocess) {
@@ -56,10 +60,7 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 		} catch (error) {
 			if (error instanceof ExecaError) {
 				console.error(`[ExecaTerminalProcess] shell execution error: ${error.message}`)
-				this.emit("shell_execution_complete", {
-					exitCode: error.exitCode ?? 1,
-					signalName: error.signal,
-				})
+				this.emit("shell_execution_complete", { exitCode: error.exitCode ?? 0, signalName: error.signal })
 			} else {
 				this.emit("shell_execution_complete", { exitCode: 1 })
 			}

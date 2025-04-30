@@ -75,7 +75,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
-	public readonly latestAnnouncementId = "apr-23-2025-3-14" // Update for v3.14.0 announcement
+	public readonly latestAnnouncementId = "apr-30-2025-3-15" // Update for v3.15.0 announcement
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
 
@@ -1503,8 +1503,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		// Add model ID if available
 		const currentCline = this.getCurrentCline()
+
 		if (currentCline?.api) {
 			const { id: modelId } = currentCline.api.getModel()
+
 			if (modelId) {
 				properties.modelId = modelId
 			}
