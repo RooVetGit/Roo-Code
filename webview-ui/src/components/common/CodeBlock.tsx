@@ -4,6 +4,9 @@ import rehypeHighlight, { Options } from "rehype-highlight"
 import styled from "styled-components"
 import { visit } from "unist-util-visit"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
+import 'highlight.js/styles/github-dark.css'
+import hljs from 'highlight.js/lib/core'
+import { registerLanguages } from '@src/utils/highlightLanguages'
 
 export const CODE_BLOCK_BG_COLOR = "var(--vscode-editor-background, --vscode-sideBar-background, rgb(30 30 30))"
 
@@ -60,11 +63,27 @@ const StyledMarkdown = styled.div<{ forceWrap: boolean }>`
 		border-radius: 5px;
 		background-color: ${CODE_BLOCK_BG_COLOR};
 		font-size: var(--vscode-editor-font-size, var(--vscode-font-size, 12px));
-		font-family: var(--vscode-editor-font-family);
+		font-family: 'JetBrains Mono', 'Fira Code', Consolas, 'Courier New', monospace;
+    
+		@font-face {
+			font-family: 'code-chinese';
+			src: local('Microsoft YaHei'), local('PingFang SC'), local('SimHei');
+			unicode-range: U+4E00-9FFF, U+3400-4DBF, U+20000-2A6DF, U+2A700-2B73F, U+2B740-2B81F, U+2B820-2CEAF;
+		}
+		
+		font-family: 'JetBrains Mono', 'Fira Code', Consolas, 'code-chinese', 'Courier New', monospace, var(--vscode-font-family);
 	}
 
 	code:not(pre > code) {
-		font-family: var(--vscode-editor-font-family);
+		font-family: 'JetBrains Mono', 'Fira Code', Consolas, 'Courier New', monospace;
+    
+		@font-face {
+			font-family: 'code-chinese';
+			src: local('Microsoft YaHei'), local('PingFang SC'), local('SimHei');
+			unicode-range: U+4E00-9FFF, U+3400-4DBF, U+20000-2A6DF, U+2A700-2B73F, U+2B740-2B81F, U+2B820-2CEAF;
+		}
+		
+		font-family: 'JetBrains Mono', 'Fira Code', Consolas, 'code-chinese', 'Courier New', monospace, var(--vscode-font-family);
 		color: #f78383;
 	}
 
@@ -110,6 +129,9 @@ const StyledPre = styled.pre<{ theme: any }>`
 			.join("")}
 `
 
+// 初始化时注册语言支持 - 移到组件外部
+registerLanguages();
+
 const CodeBlock = memo(({ source, forceWrap = false }: CodeBlockProps) => {
 	const { theme } = useExtensionState()
 	const [reactContent, setMarkdownSource] = useRemark({
@@ -128,10 +150,21 @@ const CodeBlock = memo(({ source, forceWrap = false }: CodeBlockProps) => {
 			},
 		],
 		rehypePlugins: [
-			rehypeHighlight as any,
-			{
-				// languages: {},
-			} as Options,
+			[rehypeHighlight as any, {
+				detect: true,
+				ignoreMissing: true,
+				highlight: (code: string, lang: string) => {
+					const language = lang || 'plaintext'
+					if (hljs.getLanguage(language)) {
+						try {
+							return hljs.highlight(code, { language, ignoreIllegals: true }).value
+						} catch (err) {
+							console.warn(`Failed to highlight ${language} code:`, err)
+						}
+					}
+					return code
+				}
+			} as Options],
 		],
 		rehypeReactOptions: {
 			components: {

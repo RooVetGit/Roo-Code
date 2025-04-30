@@ -6,6 +6,9 @@ import { visit } from "unist-util-visit"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { CODE_BLOCK_BG_COLOR } from "./CodeBlock"
 import MermaidBlock from "./MermaidBlock"
+import 'highlight.js/styles/github-dark.css'
+import hljs from 'highlight.js/lib/core'
+import { registerLanguages } from '@src/utils/highlightLanguages'
 
 interface MarkdownBlockProps {
 	markdown?: string
@@ -88,11 +91,27 @@ const StyledMarkdown = styled.div`
 		border-radius: 3px;
 		background-color: ${CODE_BLOCK_BG_COLOR};
 		font-size: var(--vscode-editor-font-size, var(--vscode-font-size, 12px));
-		font-family: var(--vscode-editor-font-family);
+		font-family: 'JetBrains Mono', 'Fira Code', Consolas, 'Courier New', monospace;
+    
+		@font-face {
+			font-family: 'code-chinese';
+			src: local('Microsoft YaHei'), local('PingFang SC'), local('SimHei');
+			unicode-range: U+4E00-9FFF, U+3400-4DBF, U+20000-2A6DF, U+2A700-2B73F, U+2B740-2B81F, U+2B820-2CEAF;
+		}
+		
+		font-family: 'JetBrains Mono', 'Fira Code', Consolas, 'code-chinese', 'Courier New', monospace, var(--vscode-font-family);
 	}
 
 	code:not(pre > code) {
-		font-family: var(--vscode-editor-font-family, monospace);
+		font-family: 'JetBrains Mono', 'Fira Code', Consolas, 'Courier New', monospace;
+    
+		@font-face {
+			font-family: 'code-chinese';
+			src: local('Microsoft YaHei'), local('PingFang SC'), local('SimHei');
+			unicode-range: U+4E00-9FFF, U+3400-4DBF, U+20000-2A6DF, U+2A700-2B73F, U+2B740-2B81F, U+2B820-2CEAF;
+		}
+		
+		font-family: 'JetBrains Mono', 'Fira Code', Consolas, 'code-chinese', 'Courier New', monospace, var(--vscode-font-family);
 		color: var(--vscode-textPreformat-foreground, #f78383);
 		background-color: var(--vscode-textCodeBlock-background, #1e1e1e);
 		padding: 0px 2px;
@@ -170,6 +189,9 @@ const StyledPre = styled.pre<{ theme: any }>`
 			.join("")}
 `
 
+// 注册所有支持的语言
+registerLanguages();
+
 const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 	const { theme } = useExtensionState()
 	const [reactContent, setMarkdown] = useRemark({
@@ -188,10 +210,21 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 			},
 		],
 		rehypePlugins: [
-			rehypeHighlight as any,
-			{
-				// languages: {},
-			} as Options,
+			[rehypeHighlight as any, {
+				detect: true,
+				ignoreMissing: true,
+				highlight: (code: string, lang: string) => {
+					const language = lang || 'plaintext'
+					if (hljs.getLanguage(language)) {
+						try {
+							return hljs.highlight(code, { language, ignoreIllegals: true }).value
+						} catch (err) {
+							console.warn(`Failed to highlight ${language} code:`, err)
+						}
+					}
+					return code
+				}
+			} as Options],
 		],
 		rehypeReactOptions: {
 			components: {
