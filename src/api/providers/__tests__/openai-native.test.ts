@@ -1,7 +1,7 @@
+import { Anthropic } from "@anthropic-ai/sdk"
+
 import { OpenAiNativeHandler } from "../openai-native"
 import { ApiHandlerOptions } from "../../../shared/api"
-import OpenAI from "openai"
-import { Anthropic } from "@anthropic-ai/sdk"
 
 // Mock OpenAI client
 const mockCreate = jest.fn()
@@ -76,7 +76,7 @@ describe("OpenAiNativeHandler", () => {
 
 	beforeEach(() => {
 		mockOptions = {
-			apiModelId: "gpt-4o",
+			apiModelId: "gpt-4.1",
 			openAiNativeApiKey: "test-api-key",
 		}
 		handler = new OpenAiNativeHandler(mockOptions)
@@ -91,7 +91,7 @@ describe("OpenAiNativeHandler", () => {
 
 		it("should initialize with empty API key", () => {
 			const handlerWithoutKey = new OpenAiNativeHandler({
-				apiModelId: "gpt-4o",
+				apiModelId: "gpt-4.1",
 				openAiNativeApiKey: "",
 			})
 			expect(handlerWithoutKey).toBeInstanceOf(OpenAiNativeHandler)
@@ -116,7 +116,7 @@ describe("OpenAiNativeHandler", () => {
 			mockCreate.mockRejectedValueOnce(new Error("API Error"))
 			const stream = handler.createMessage(systemPrompt, messages)
 			await expect(async () => {
-				for await (const chunk of stream) {
+				for await (const _chunk of stream) {
 					// Should not reach here
 				}
 			}).rejects.toThrow("API Error")
@@ -153,7 +153,12 @@ describe("OpenAiNativeHandler", () => {
 				results.push(result)
 			}
 
-			expect(results).toEqual([{ type: "usage", inputTokens: 0, outputTokens: 0 }])
+			// Verify essential fields directly
+			expect(results.length).toBe(1)
+			expect(results[0].type).toBe("usage")
+			// Use type assertion to avoid TypeScript errors
+			expect((results[0] as any).inputTokens).toBe(0)
+			expect((results[0] as any).outputTokens).toBe(0)
 
 			// Verify developer role is used for system prompt with o1 model
 			expect(mockCreate).toHaveBeenCalledWith({
@@ -196,7 +201,7 @@ describe("OpenAiNativeHandler", () => {
 		beforeEach(() => {
 			handler = new OpenAiNativeHandler({
 				...mockOptions,
-				apiModelId: "gpt-4o",
+				apiModelId: "gpt-4.1",
 			})
 		})
 
@@ -221,15 +226,21 @@ describe("OpenAiNativeHandler", () => {
 				results.push(result)
 			}
 
-			expect(results).toEqual([
-				{ type: "text", text: "Hello" },
-				{ type: "text", text: " there" },
-				{ type: "text", text: "!" },
-				{ type: "usage", inputTokens: 10, outputTokens: 5 },
-			])
+			// Verify text responses individually
+			expect(results.length).toBe(4)
+			expect(results[0]).toMatchObject({ type: "text", text: "Hello" })
+			expect(results[1]).toMatchObject({ type: "text", text: " there" })
+			expect(results[2]).toMatchObject({ type: "text", text: "!" })
+
+			// Check usage data fields but use toBeCloseTo for floating point comparison
+			expect(results[3].type).toBe("usage")
+			// Use type assertion to avoid TypeScript errors
+			expect((results[3] as any).inputTokens).toBe(10)
+			expect((results[3] as any).outputTokens).toBe(5)
+			expect((results[3] as any).totalCost).toBeCloseTo(0.00006, 6)
 
 			expect(mockCreate).toHaveBeenCalledWith({
-				model: "gpt-4o",
+				model: "gpt-4.1",
 				temperature: 0,
 				messages: [
 					{ role: "system", content: systemPrompt },
@@ -261,19 +272,25 @@ describe("OpenAiNativeHandler", () => {
 				results.push(result)
 			}
 
-			expect(results).toEqual([
-				{ type: "text", text: "Hello" },
-				{ type: "usage", inputTokens: 10, outputTokens: 5 },
-			])
+			// Verify responses individually
+			expect(results.length).toBe(2)
+			expect(results[0]).toMatchObject({ type: "text", text: "Hello" })
+
+			// Check usage data fields but use toBeCloseTo for floating point comparison
+			expect(results[1].type).toBe("usage")
+			// Use type assertion to avoid TypeScript errors
+			expect((results[1] as any).inputTokens).toBe(10)
+			expect((results[1] as any).outputTokens).toBe(5)
+			expect((results[1] as any).totalCost).toBeCloseTo(0.00006, 6)
 		})
 	})
 
 	describe("completePrompt", () => {
-		it("should complete prompt successfully with gpt-4o model", async () => {
+		it("should complete prompt successfully with gpt-4.1 model", async () => {
 			const result = await handler.completePrompt("Test prompt")
 			expect(result).toBe("Test response")
 			expect(mockCreate).toHaveBeenCalledWith({
-				model: "gpt-4o",
+				model: "gpt-4.1",
 				messages: [{ role: "user", content: "Test prompt" }],
 				temperature: 0,
 			})
@@ -357,8 +374,8 @@ describe("OpenAiNativeHandler", () => {
 			const modelInfo = handler.getModel()
 			expect(modelInfo.id).toBe(mockOptions.apiModelId)
 			expect(modelInfo.info).toBeDefined()
-			expect(modelInfo.info.maxTokens).toBe(16384)
-			expect(modelInfo.info.contextWindow).toBe(128_000)
+			expect(modelInfo.info.maxTokens).toBe(32768)
+			expect(modelInfo.info.contextWindow).toBe(1047576)
 		})
 
 		it("should handle undefined model ID", () => {
@@ -366,7 +383,7 @@ describe("OpenAiNativeHandler", () => {
 				openAiNativeApiKey: "test-api-key",
 			})
 			const modelInfo = handlerWithoutModel.getModel()
-			expect(modelInfo.id).toBe("gpt-4o") // Default model
+			expect(modelInfo.id).toBe("gpt-4.1") // Default model
 			expect(modelInfo.info).toBeDefined()
 		})
 	})

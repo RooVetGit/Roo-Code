@@ -1,30 +1,32 @@
-import { VSCodeBadge, VSCodeButton, VSCodeProgressRing } from "@vscode/webview-ui-toolkit/react"
-import deepEqual from "fast-deep-equal"
 import React, { memo, useEffect, useMemo, useRef, useState } from "react"
 import { useSize } from "react-use"
-import { useCopyToClipboard } from "../../utils/clipboard"
 import { useTranslation, Trans } from "react-i18next"
-import {
-	ClineApiReqInfo,
-	ClineAskUseMcpServer,
-	ClineMessage,
-	ClineSayTool,
-} from "../../../../src/shared/ExtensionMessage"
-import { COMMAND_OUTPUT_STRING } from "../../../../src/shared/combineCommandSequences"
-import { useExtensionState } from "../../context/ExtensionStateContext"
-import { findMatchingResourceOrTemplate } from "../../utils/mcp"
-import { vscode } from "../../utils/vscode"
+import deepEqual from "fast-deep-equal"
+import { VSCodeBadge, VSCodeButton } from "@vscode/webview-ui-toolkit/react"
+
+import { ClineApiReqInfo, ClineAskUseMcpServer, ClineMessage, ClineSayTool } from "@roo/shared/ExtensionMessage"
+import { splitCommandOutput, COMMAND_OUTPUT_STRING } from "@roo/shared/combineCommandSequences"
+import { safeJsonParse } from "@roo/shared/safeJsonParse"
+
+import { useCopyToClipboard } from "@src/utils/clipboard"
+import { useExtensionState } from "@src/context/ExtensionStateContext"
+import { findMatchingResourceOrTemplate } from "@src/utils/mcp"
+import { vscode } from "@src/utils/vscode"
+import { Button } from "@src/components/ui"
+
 import CodeAccordian, { removeLeadingNonAlphanumeric } from "../common/CodeAccordian"
 import CodeBlock, { CODE_BLOCK_BG_COLOR } from "../common/CodeBlock"
-import CommandOutputViewer from "../common/CommandOutputViewer"
 import { ReasoningBlock } from "./ReasoningBlock"
 import Thumbnails from "../common/Thumbnails"
 import McpResourceRow from "../mcp/McpResourceRow"
 import McpToolRow from "../mcp/McpToolRow"
-import { highlightMentions } from "./TaskHeader"
+
+import { Mention } from "./Mention"
 import { CheckpointSaved } from "./checkpoints/CheckpointSaved"
-import FollowUpSuggest from "./FollowUpSuggest"
+import { FollowUpSuggest } from "./FollowUpSuggest"
 import { Markdown } from "@/components/ui/markdown/Markdown"
+import { ProgressIndicator } from "./ProgressIndicator"
+import { CommandExecution } from "./CommandExecution"
 
 interface ChatRowProps {
 	message: ClineMessage
@@ -161,8 +163,8 @@ export const ChatRowContent = ({
 
 	const [cost, apiReqCancelReason, apiReqStreamingFailedMessage] = useMemo(() => {
 		if (message.text !== null && message.text !== undefined && message.say === "api_req_started") {
-			const info: ClineApiReqInfo = JSON.parse(message.text)
-			return [info.cost, info.cancelReason, info.streamingFailedMessage]
+			const info = safeJsonParse<ClineApiReqInfo>(message.text)
+			return [info?.cost, info?.cancelReason, info?.streamingFailedMessage]
 		}
 
 		return [undefined, undefined, undefined]
@@ -216,7 +218,10 @@ export const ChatRowContent = ({
 					<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:runCommand.title")}:</span>,
 				]
 			case "use_mcp_server":
-				const mcpServerUse = JSON.parse(message.text || "{}") as ClineAskUseMcpServer
+				const mcpServerUse = safeJsonParse<ClineAskUseMcpServer>(message.text)
+				if (mcpServerUse === undefined) {
+					return [null, null]
+				}
 				return [
 					isMcpServerResponding ? (
 						<ProgressIndicator />
@@ -252,11 +257,8 @@ export const ChatRowContent = ({
 						}}>
 						<span
 							className={`codicon codicon-${iconName}`}
-							style={{
-								color,
-								fontSize: 16,
-								marginBottom: "-1.5px",
-							}}></span>
+							style={{ color, fontSize: 16, marginBottom: "-1.5px" }}
+						/>
 					</div>
 				)
 				return [
@@ -295,7 +297,8 @@ export const ChatRowContent = ({
 				return [
 					<span
 						className="codicon codicon-question"
-						style={{ color: normalColor, marginBottom: "-1.5px" }}></span>,
+						style={{ color: normalColor, marginBottom: "-1.5px" }}
+					/>,
 					<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:questions.hasQuestion")}</span>,
 				]
 			default:
@@ -308,6 +311,7 @@ export const ChatRowContent = ({
 		alignItems: "center",
 		gap: "10px",
 		marginBottom: "10px",
+		wordBreak: "break-word",
 	}
 
 	const pStyle: React.CSSProperties = {
@@ -317,16 +321,14 @@ export const ChatRowContent = ({
 		overflowWrap: "anywhere",
 	}
 
-	const tool = useMemo(() => {
-		if (message.ask === "tool" || message.say === "tool") {
-			return JSON.parse(message.text || "{}") as ClineSayTool
-		}
-		return null
-	}, [message.ask, message.say, message.text])
+	const tool = useMemo(
+		() => (message.ask === "tool" ? safeJsonParse<ClineSayTool>(message.text) : null),
+		[message.ask, message.text],
+	)
 
 	const followUpData = useMemo(() => {
 		if (message.type === "ask" && message.ask === "followup" && !message.partial) {
-			return JSON.parse(message.text || "{}")
+			return safeJsonParse<any>(message.text)
 		}
 		return null
 	}, [message.type, message.ask, message.partial, message.text])
@@ -349,6 +351,52 @@ export const ChatRowContent = ({
 								{tool.isOutsideWorkspace
 									? t("chat:fileOperations.wantsToEditOutsideWorkspace")
 									: t("chat:fileOperations.wantsToEdit")}
+							</span>
+						</div>
+						<CodeAccordian
+							progressStatus={message.progressStatus}
+							isLoading={message.partial}
+							diff={tool.diff!}
+							path={tool.path!}
+							isExpanded={isExpanded}
+							onToggleExpand={onToggleExpand}
+						/>
+					</>
+				)
+			case "insertContent":
+				return (
+					<>
+						<div style={headerStyle}>
+							{toolIcon("insert")}
+							<span style={{ fontWeight: "bold" }}>
+								{tool.isOutsideWorkspace
+									? t("chat:fileOperations.wantsToEditOutsideWorkspace")
+									: tool.lineNumber === 0
+										? t("chat:fileOperations.wantsToInsertAtEnd")
+										: t("chat:fileOperations.wantsToInsertWithLineNumber", {
+												lineNumber: tool.lineNumber,
+											})}
+							</span>
+						</div>
+						<CodeAccordian
+							progressStatus={message.progressStatus}
+							isLoading={message.partial}
+							diff={tool.diff!}
+							path={tool.path!}
+							isExpanded={isExpanded}
+							onToggleExpand={onToggleExpand}
+						/>
+					</>
+				)
+			case "searchAndReplace":
+				return (
+					<>
+						<div style={headerStyle}>
+							{toolIcon("replace")}
+							<span style={{ fontWeight: "bold" }}>
+								{message.type === "ask"
+									? t("chat:fileOperations.wantsToSearchReplace")
+									: t("chat:fileOperations.didSearchReplace")}
 							</span>
 						</div>
 						<CodeAccordian
@@ -390,12 +438,6 @@ export const ChatRowContent = ({
 									: t("chat:fileOperations.didRead")}
 							</span>
 						</div>
-						{/* <CodeAccordian
-							code={tool.content!}
-							path={tool.path!}
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
-						/> */}
 						<div
 							style={{
 								borderRadius: 3,
@@ -537,7 +579,7 @@ export const ChatRowContent = ({
 						<CodeAccordian
 							code={tool.content!}
 							path={tool.path! + (tool.filePattern ? `/(${tool.filePattern})` : "")}
-							language="plaintext"
+							language="log"
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
 						/>
@@ -757,10 +799,7 @@ export const ChatRowContent = ({
 											backgroundColor: "var(--vscode-editor-background)",
 											borderTop: "none",
 										}}>
-										<CodeBlock
-											source={`${"```"}plaintext\n${message.text || ""}\n${"```"}`}
-											forceWrap={true}
-										/>
+										<CodeBlock source={`${"```"}plaintext\n${message.text || ""}\n${"```"}`} />
 									</div>
 								)}
 							</div>
@@ -860,46 +899,13 @@ export const ChatRowContent = ({
 											</>
 										)}
 									</p>
-
-									{/* {apiProvider === "" && (
-											<div
-												style={{
-													display: "flex",
-													alignItems: "center",
-													backgroundColor:
-														"color-mix(in srgb, var(--vscode-errorForeground) 20%, transparent)",
-													color: "var(--vscode-editor-foreground)",
-													padding: "6px 8px",
-													borderRadius: "3px",
-													margin: "10px 0 0 0",
-													fontSize: "12px",
-												}}>
-												<i
-													className="codicon codicon-warning"
-													style={{
-														marginRight: 6,
-														fontSize: 16,
-														color: "var(--vscode-errorForeground)",
-													}}></i>
-												<span>
-													Uh-oh, this could be a problem on end. We've been alerted and
-													will resolve this ASAP. You can also{" "}
-													<a
-														href=""
-														style={{ color: "inherit", textDecoration: "underline" }}>
-														contact us
-													</a>
-													.
-												</span>
-											</div>
-										)} */}
 								</>
 							)}
 
 							{isExpanded && (
 								<div style={{ marginTop: "10px" }}>
 									<CodeAccordian
-										code={JSON.parse(message.text || "{}").request}
+										code={safeJsonParse<any>(message.text)?.request}
 										language="markdown"
 										isExpanded={true}
 										onToggleExpand={onToggleExpand}
@@ -922,47 +928,21 @@ export const ChatRowContent = ({
 					)
 				case "user_feedback":
 					return (
-						<div
-							style={{
-								backgroundColor: "var(--vscode-badge-background)",
-								color: "var(--vscode-badge-foreground)",
-								borderRadius: "3px",
-								padding: "9px",
-								overflow: "hidden",
-								whiteSpace: "pre-wrap",
-								wordBreak: "break-word",
-								overflowWrap: "anywhere",
-							}}>
-							<div
-								style={{
-									display: "flex",
-									justifyContent: "space-between",
-									alignItems: "flex-start",
-									gap: "10px",
-								}}>
-								<span style={{ display: "block", flexGrow: 1, padding: "4px" }}>
-									{highlightMentions(message.text)}
-								</span>
-								<VSCodeButton
-									appearance="icon"
-									style={{
-										padding: "3px",
-										flexShrink: 0,
-										height: "24px",
-										marginTop: "-3px",
-										marginBottom: "-3px",
-										marginRight: "-6px",
-									}}
+						<div className="bg-vscode-editor-background border rounded-xs p-1 overflow-hidden whitespace-pre-wrap word-break-break-word overflow-wrap-anywhere">
+							<div className="flex justify-between gap-2">
+								<div className="flex-grow px-2 py-1">
+									<Mention text={message.text} withShadow />
+								</div>
+								<Button
+									variant="ghost"
+									size="icon"
 									disabled={isStreaming}
 									onClick={(e) => {
 										e.stopPropagation()
-										vscode.postMessage({
-											type: "deleteMessage",
-											value: message.ts,
-										})
+										vscode.postMessage({ type: "deleteMessage", value: message.ts })
 									}}>
-									<span className="codicon codicon-trash"></span>
-								</VSCodeButton>
+									<span className="codicon codicon-trash" />
+								</Button>
 							</div>
 							{message.images && message.images.length > 0 && (
 								<Thumbnails images={message.images} style={{ marginTop: "8px" }} />
@@ -970,7 +950,7 @@ export const ChatRowContent = ({
 						</div>
 					)
 				case "user_feedback_diff":
-					const tool = JSON.parse(message.text || "{}") as ClineSayTool
+					const tool = safeJsonParse<ClineSayTool>(message.text)
 					return (
 						<div
 							style={{
@@ -978,7 +958,7 @@ export const ChatRowContent = ({
 								width: "100%",
 							}}>
 							<CodeAccordian
-								diff={tool.diff!}
+								diff={tool?.diff!}
 								isFeedback={true}
 								isExpanded={isExpanded}
 								onToggleExpand={onToggleExpand}
@@ -1122,87 +1102,32 @@ export const ChatRowContent = ({
 						</>
 					)
 				case "command":
-					const splitMessage = (text: string) => {
-						const outputIndex = text.indexOf(COMMAND_OUTPUT_STRING)
-						if (outputIndex === -1) {
-							return { command: text, output: "" }
-						}
-						return {
-							command: text.slice(0, outputIndex).trim(),
-							output: text
-								.slice(outputIndex + COMMAND_OUTPUT_STRING.length)
-								.trim()
-								.split("")
-								.map((char) => {
-									switch (char) {
-										case "\t":
-											return "→   "
-										case "\b":
-											return "⌫"
-										case "\f":
-											return "⏏"
-										case "\v":
-											return "⇳"
-										default:
-											return char
-									}
-								})
-								.join(""),
-						}
-					}
+					const { command, output } = splitCommandOutput(message.text || "")
 
-					const { command, output } = splitMessage(message.text || "")
 					return (
 						<>
 							<div style={headerStyle}>
 								{icon}
 								{title}
 							</div>
-							{/* <Terminal
-								rawOutput={command + (output ? "\n" + output : "")}
-								shouldAllowInput={!!isCommandExecuting && output.length > 0}
-							/> */}
-							<div
-								style={{
-									borderRadius: 3,
-									border: "1px solid var(--vscode-editorGroup-border)",
-									overflow: "hidden",
-									backgroundColor: CODE_BLOCK_BG_COLOR,
-								}}>
-								<CodeBlock source={`${"```"}shell\n${command}\n${"```"}`} forceWrap={true} />
-								{output.length > 0 && (
-									<div style={{ width: "100%" }}>
-										<div
-											onClick={onToggleExpand}
-											style={{
-												display: "flex",
-												alignItems: "center",
-												gap: "4px",
-												width: "100%",
-												justifyContent: "flex-start",
-												cursor: "pointer",
-												padding: `2px 8px ${isExpanded ? 0 : 8}px 8px`,
-											}}>
-											<span
-												className={`codicon codicon-chevron-${isExpanded ? "down" : "right"}`}></span>
-											<span style={{ fontSize: "0.8em" }}>{t("chat:commandOutput")}</span>
-										</div>
-										{isExpanded && <CommandOutputViewer output={output} />}
-									</div>
-								)}
-							</div>
+							<CommandExecution command={command} output={output} />
 						</>
 					)
 				case "use_mcp_server":
-					const useMcpServer = JSON.parse(message.text || "{}") as ClineAskUseMcpServer
+					const useMcpServer = safeJsonParse<ClineAskUseMcpServer>(message.text)
+
+					if (!useMcpServer) {
+						return null
+					}
+
 					const server = mcpServers.find((server) => server.name === useMcpServer.serverName)
+
 					return (
 						<>
 							<div style={headerStyle}>
 								{icon}
 								{title}
 							</div>
-
 							<div
 								style={{
 									background: "var(--vscode-textCodeBlock-background)",
@@ -1228,7 +1153,6 @@ export const ChatRowContent = ({
 										}}
 									/>
 								)}
-
 								{useMcpServer.type === "use_mcp_tool" && (
 									<>
 										<div onClick={(e) => e.stopPropagation()}>
@@ -1314,18 +1238,3 @@ export const ChatRowContent = ({
 			}
 	}
 }
-
-export const ProgressIndicator = () => (
-	<div
-		style={{
-			width: "16px",
-			height: "16px",
-			display: "flex",
-			alignItems: "center",
-			justifyContent: "center",
-		}}>
-		<div style={{ transform: "scale(0.55)", transformOrigin: "center" }}>
-			<VSCodeProgressRing />
-		</div>
-	</div>
-)

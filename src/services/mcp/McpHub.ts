@@ -1,5 +1,5 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
-import { StdioClientTransport, StdioServerParameters } from "@modelcontextprotocol/sdk/client/stdio.js"
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js"
 import ReconnectingEventSource from "reconnecting-eventsource"
 import {
@@ -30,6 +30,7 @@ import {
 } from "../../shared/mcp"
 import { fileExistsAtPath } from "../../utils/fs"
 import { arePathsEqual } from "../../utils/path"
+import { injectEnv } from "../../utils/config"
 
 export type McpConnection = {
 	server: McpServer
@@ -204,11 +205,7 @@ export class McpHub {
 	 * @param error The error object
 	 */
 	private showErrorMessage(message: string, error: unknown): void {
-		const errorMessage = error instanceof Error ? error.message : `${error}`
 		console.error(`${message}:`, error)
-		// if (vscode.window && typeof vscode.window.showErrorMessage === 'function') {
-		// 	vscode.window.showErrorMessage(`${message}: ${errorMessage}`)
-		// }
 	}
 
 	public setupWorkspaceFoldersWatcher(): void {
@@ -452,7 +449,7 @@ export class McpHub {
 					args: config.args,
 					cwd: config.cwd,
 					env: {
-						...config.env,
+						...(config.env ? await injectEnv(config.env) : {}),
 						...(process.env.PATH ? { PATH: process.env.PATH } : {}),
 					},
 					stderr: "pipe",

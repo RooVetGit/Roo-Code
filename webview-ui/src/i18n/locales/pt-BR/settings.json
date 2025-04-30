@@ -35,7 +35,7 @@
 	"autoApprove": {
 		"description": "Permitir que o Roo realize operações automaticamente sem exigir aprovação. Ative essas configurações apenas se confiar totalmente na IA e compreender os riscos de segurança associados.",
 		"readOnly": {
-			"label": "Aprovar sempre operações somente de leitura",
+			"label": "Leitura",
 			"description": "Quando ativado, o Roo visualizará automaticamente o conteúdo do diretório e lerá arquivos sem que você precise clicar no botão Aprovar.",
 			"outsideWorkspace": {
 				"label": "Incluir arquivos fora do espaço de trabalho",
@@ -43,7 +43,7 @@
 			}
 		},
 		"write": {
-			"label": "Aprovar sempre operações de escrita",
+			"label": "Escrita",
 			"description": "Criar e editar arquivos automaticamente sem exigir aprovação",
 			"delayLabel": "Atraso após escritas para permitir que diagnósticos detectem problemas potenciais",
 			"outsideWorkspace": {
@@ -52,29 +52,28 @@
 			}
 		},
 		"browser": {
-			"label": "Aprovar sempre ações do navegador",
-			"description": "Realizar ações do navegador automaticamente sem exigir aprovação",
-			"note": "Nota: Aplica-se apenas quando o modelo suporta uso do computador"
+			"label": "Navegador",
+			"description": "Realizar ações do navegador automaticamente sem exigir aprovação. Nota: Aplica-se apenas quando o modelo suporta uso do computador"
 		},
 		"retry": {
-			"label": "Sempre tentar novamente requisições de API com falha",
+			"label": "Tentar novamente",
 			"description": "Tentar novamente automaticamente requisições de API com falha quando o servidor retorna uma resposta de erro",
 			"delayLabel": "Atraso antes de tentar novamente a requisição"
 		},
 		"mcp": {
-			"label": "Aprovar sempre ferramentas MCP",
+			"label": "MCP",
 			"description": "Ativar aprovação automática de ferramentas MCP individuais na visualização de Servidores MCP (requer tanto esta configuração quanto a caixa de seleção \"Permitir sempre\" da ferramenta)"
 		},
 		"modeSwitch": {
-			"label": "Aprovar sempre troca de modos",
+			"label": "Modo",
 			"description": "Alternar automaticamente entre diferentes modos sem exigir aprovação"
 		},
 		"subtasks": {
-			"label": "Aprovar sempre criação e conclusão de subtarefas",
+			"label": "Subtarefas",
 			"description": "Permitir a criação e conclusão de subtarefas sem exigir aprovação"
 		},
 		"execute": {
-			"label": "Aprovar sempre operações de execução permitidas",
+			"label": "Executar",
 			"description": "Executar automaticamente comandos de terminal permitidos sem exigir aprovação",
 			"allowedCommands": "Comandos de auto-execução permitidos",
 			"allowedCommandsDescription": "Prefixos de comando que podem ser auto-executados quando \"Aprovar sempre operações de execução\" está ativado. Adicione * para permitir todos os comandos (use com cautela).",
@@ -129,6 +128,8 @@
 		"getMistralApiKey": "Obter chave de API Mistral / Codestral",
 		"codestralBaseUrl": "URL Base Codestral (Opcional)",
 		"codestralBaseUrlDesc": "Defina uma URL alternativa para o modelo Codestral.",
+		"xaiApiKey": "Chave de API xAI",
+		"getXaiApiKey": "Obter chave de API xAI",
 		"awsCredentials": "Credenciais AWS",
 		"awsProfile": "Perfil AWS",
 		"awsProfileName": "Nome do Perfil AWS",
@@ -226,7 +227,14 @@
 		"rateLimitSeconds": {
 			"label": "Limite de taxa",
 			"description": "Tempo mínimo entre requisições de API."
-		}
+		},
+		"reasoningEffort": {
+			"label": "Esforço de raciocínio do modelo",
+			"high": "Alto",
+			"medium": "Médio",
+			"low": "Baixo"
+		},
+		"setReasoningLevel": "Habilitar esforço de raciocínio"
 	},
 	"browser": {
 		"enable": {
@@ -304,6 +312,14 @@
 			"label": "Tempo limite de integração do shell do terminal",
 			"description": "Tempo máximo de espera para a inicialização da integração do shell antes de executar comandos. Para usuários com tempos de inicialização de shell longos, este valor pode precisar ser aumentado se você vir erros \"Shell Integration Unavailable\" no terminal."
 		},
+		"shellIntegrationDisabled": {
+			"label": "Desativar integração do shell do terminal",
+			"description": "Ative isso se os comandos do terminal não estiverem funcionando corretamente ou se você vir erros de 'Shell Integration Unavailable'. Isso usa um método mais simples para executar comandos, ignorando alguns recursos avançados do terminal."
+		},
+		"compressProgressBar": {
+			"label": "Comprimir saída de barras de progresso",
+			"description": "Quando ativado, processa a saída do terminal com retornos de carro (\\r) para simular como um terminal real exibiria o conteúdo. Isso remove os estados intermediários das barras de progresso, mantendo apenas o estado final, o que conserva espaço de contexto para informações mais relevantes."
+		},
 		"zdotdir": {
 			"label": "Ativar gerenciamento do ZDOTDIR",
 			"description": "Quando ativado, cria um diretório temporário para o ZDOTDIR para lidar corretamente com a integração do shell zsh. Isso garante que a integração do shell do VSCode funcione corretamente com o zsh enquanto preserva sua configuração do zsh. (experimental)"
@@ -374,6 +390,10 @@
 			"name": "Usar ferramenta diff de múltiplos blocos experimental",
 			"description": "Quando ativado, o Roo usará a ferramenta diff de múltiplos blocos. Isso tentará atualizar vários blocos de código no arquivo em uma única solicitação."
 		}
+	},
+	"promptCaching": {
+		"label": "Ativar cache de prompts",
+		"description": "Quando ativado, o Roo usará este modelo com o cache de prompts ativado para reduzir custos."
 	},
 	"temperature": {
 		"useCustom": "Usar temperatura personalizada",
@@ -472,11 +492,5 @@
 	"labels": {
 		"customArn": "ARN personalizado",
 		"useCustomArn": "Usar ARN personalizado..."
-	},
-	"interface": {
-		"showgreeting": {
-			"label": "Mostrar mensagem de boas-vindas",
-			"description": "Quando ativado, o Roo exibirá uma mensagem de boas-vindas e introdução."
-		}
 	}
 }

@@ -1,4 +1,3 @@
-import fs from "fs/promises"
 import * as path from "path"
 import os from "os"
 import crypto from "crypto"
@@ -8,29 +7,17 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import cloneDeep from "clone-deep"
 import delay from "delay"
 import pWaitFor from "p-wait-for"
-import getFolderSize from "get-folder-size"
 import { serializeError } from "serialize-error"
 import * as vscode from "vscode"
 
-import { TokenUsage } from "../schemas"
+// schemas
+import { TokenUsage, ToolUsage, ToolName } from "../schemas"
+
+// api
 import { ApiHandler, buildApiHandler } from "../api"
 import { ApiStream } from "../api/transform/stream"
-import { DIFF_VIEW_URI_SCHEME, DiffViewProvider } from "../integrations/editor/DiffViewProvider"
-import {
-	CheckpointServiceOptions,
-	RepoPerTaskCheckpointService,
-	RepoPerWorkspaceCheckpointService,
-} from "../services/checkpoints"
-import { findToolName, formatContentBlockToMarkdown } from "../integrations/misc/export-markdown"
-import { fetchInstructionsTool } from "./tools/fetchInstructionsTool"
-import { listFilesTool } from "./tools/listFilesTool"
-import { readFileTool } from "./tools/readFileTool"
-import { ExitCodeDetails } from "../integrations/terminal/TerminalProcess"
-import { Terminal } from "../integrations/terminal/Terminal"
-import { TerminalRegistry } from "../integrations/terminal/TerminalRegistry"
-import { UrlContentFetcher } from "../services/browser/UrlContentFetcher"
-import { listFiles } from "../services/glob/list-files"
-import { CheckpointStorage } from "../shared/checkpoints"
+
+// shared
 import { ApiConfiguration } from "../shared/api"
 import { findLastIndex } from "../shared/array"
 import { combineApiRequests } from "../shared/combineApiRequests"
@@ -46,27 +33,35 @@ import {
 import { getApiMetrics } from "../shared/getApiMetrics"
 import { HistoryItem } from "../shared/HistoryItem"
 import { ClineAskResponse } from "../shared/WebviewMessage"
-import { GlobalFileNames } from "../shared/globalFileNames"
-import { defaultModeSlug, getModeBySlug, getFullModeDetails } from "../shared/modes"
+import { defaultModeSlug, getModeBySlug, getFullModeDetails, isToolAllowedForMode } from "../shared/modes"
 import { EXPERIMENT_IDS, experiments as Experiments, ExperimentId } from "../shared/experiments"
-import { calculateApiCostAnthropic } from "../utils/cost"
-import { fileExistsAtPath } from "../utils/fs"
-import { arePathsEqual } from "../utils/path"
-import { parseMentions } from "./mentions"
-import { FileContextTracker } from "./context-tracking/FileContextTracker"
-import { RooIgnoreController } from "./ignore/RooIgnoreController"
-import { AssistantMessageContent, parseAssistantMessage, ToolParamName, ToolUseName } from "./assistant-message"
-import { formatResponse } from "./prompts/responses"
-import { SYSTEM_PROMPT } from "./prompts/system"
-import { truncateConversationIfNeeded } from "./sliding-window"
-import { ClineProvider } from "./webview/ClineProvider"
-import { BrowserSession } from "../services/browser/BrowserSession"
 import { formatLanguage } from "../shared/language"
+import { ToolParamName, ToolResponse, DiffStrategy } from "../shared/tools"
+
+// services
+import { UrlContentFetcher } from "../services/browser/UrlContentFetcher"
+import { listFiles } from "../services/glob/list-files"
+import { BrowserSession } from "../services/browser/BrowserSession"
 import { McpHub } from "../services/mcp/McpHub"
-import { DiffStrategy, getDiffStrategy } from "./diff/DiffStrategy"
+import { McpServerManager } from "../services/mcp/McpServerManager"
 import { telemetryService } from "../services/telemetry/TelemetryService"
-import { validateToolUse, isToolAllowedForMode, ToolName } from "./mode-validator"
-import { getWorkspacePath } from "../utils/path"
+import { CheckpointServiceOptions, RepoPerTaskCheckpointService } from "../services/checkpoints"
+
+// integrations
+import { DIFF_VIEW_URI_SCHEME, DiffViewProvider } from "../integrations/editor/DiffViewProvider"
+import { findToolName, formatContentBlockToMarkdown } from "../integrations/misc/export-markdown"
+import { RooTerminalProcess } from "../integrations/terminal/types"
+import { Terminal } from "../integrations/terminal/Terminal"
+import { TerminalRegistry } from "../integrations/terminal/TerminalRegistry"
+
+// utils
+import { calculateApiCostAnthropic } from "../utils/cost"
+import { arePathsEqual, getWorkspacePath } from "../utils/path"
+
+// tools
+import { fetchInstructionsTool } from "./tools/fetchInstructionsTool"
+import { listFilesTool } from "./tools/listFilesTool"
+import { readFileTool } from "./tools/readFileTool"
 import { writeToFileTool } from "./tools/writeToFileTool"
 import { applyDiffTool } from "./tools/applyDiffTool"
 import { insertContentTool } from "./tools/insertContentTool"
@@ -82,7 +77,21 @@ import { switchModeTool } from "./tools/switchModeTool"
 import { attemptCompletionTool } from "./tools/attemptCompletionTool"
 import { newTaskTool } from "./tools/newTaskTool"
 
-export type ToolResponse = string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam>
+// prompts
+import { formatResponse } from "./prompts/responses"
+import { SYSTEM_PROMPT } from "./prompts/system"
+
+// ... everything else
+import { parseMentions } from "./mentions"
+import { FileContextTracker } from "./context-tracking/FileContextTracker"
+import { RooIgnoreController } from "./ignore/RooIgnoreController"
+import { type AssistantMessageContent, parseAssistantMessage } from "./assistant-message"
+import { truncateConversationIfNeeded } from "./sliding-window"
+import { ClineProvider } from "./webview/ClineProvider"
+import { validateToolUse } from "./mode-validator"
+import { MultiSearchReplaceDiffStrategy } from "./diff/strategies/multi-search-replace"
+import { readApiMessages, saveApiMessages, readTaskMessages, saveTaskMessages, taskMetadata } from "./task-persistence"
+
 type UserContent = Array<Anthropic.Messages.ContentBlockParam>
 
 export type ClineEvents = {
@@ -94,8 +103,9 @@ export type ClineEvents = {
 	taskAskResponded: []
 	taskAborted: []
 	taskSpawned: [taskId: string]
-	taskCompleted: [taskId: string, usage: TokenUsage]
-	taskTokenUsageUpdated: [taskId: string, usage: TokenUsage]
+	taskCompleted: [taskId: string, tokenUsage: TokenUsage, toolUsage: ToolUsage]
+	taskTokenUsageUpdated: [taskId: string, tokenUsage: TokenUsage]
+	taskToolFailed: [taskId: string, tool: ToolName, error: string]
 }
 
 export type ClineOptions = {
@@ -104,7 +114,6 @@ export type ClineOptions = {
 	customInstructions?: string
 	enableDiff?: boolean
 	enableCheckpoints?: boolean
-	checkpointStorage?: CheckpointStorage
 	fuzzyMatchThreshold?: number
 	consecutiveMistakeLimit?: number
 	task?: string
@@ -125,34 +134,43 @@ export class Cline extends EventEmitter<ClineEvents> {
 	readonly rootTask: Cline | undefined = undefined
 	readonly parentTask: Cline | undefined = undefined
 	readonly taskNumber: number
+	readonly workspacePath: string
+
 	isPaused: boolean = false
 	pausedModeSlug: string = defaultModeSlug
 	private pauseInterval: NodeJS.Timeout | undefined
 
 	readonly apiConfiguration: ApiConfiguration
 	api: ApiHandler
+	private promptCacheKey: string
+
+	rooIgnoreController?: RooIgnoreController
 	private fileContextTracker: FileContextTracker
 	private urlContentFetcher: UrlContentFetcher
 	browserSession: BrowserSession
 	didEditFile: boolean = false
 	customInstructions?: string
+
 	diffStrategy?: DiffStrategy
 	diffEnabled: boolean = false
 	fuzzyMatchThreshold: number
 
 	apiConversationHistory: (Anthropic.MessageParam & { ts?: number })[] = []
 	clineMessages: ClineMessage[] = []
-	rooIgnoreController?: RooIgnoreController
+
 	private askResponse?: ClineAskResponse
 	private askResponseText?: string
 	private askResponseImages?: string[]
 	private lastMessageTs?: number
+
 	// Not private since it needs to be accessible by tools.
 	consecutiveMistakeCount: number = 0
 	consecutiveMistakeLimit: number
 	consecutiveMistakeCountForApplyDiff: Map<string, number> = new Map()
+
 	// Not private since it needs to be accessible by tools.
 	providerRef: WeakRef<ClineProvider>
+	private readonly globalStoragePath: string
 	private abort: boolean = false
 	didFinishAbortingStream = false
 	abandoned = false
@@ -162,8 +180,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 	// checkpoints
 	private enableCheckpoints: boolean
-	private checkpointStorage: CheckpointStorage
-	private checkpointService?: RepoPerTaskCheckpointService | RepoPerWorkspaceCheckpointService
+	private checkpointService?: RepoPerTaskCheckpointService
+	private checkpointServiceInitializing = false
 
 	// streaming
 	isWaitingForFirstChunk = false
@@ -178,19 +196,23 @@ export class Cline extends EventEmitter<ClineEvents> {
 	private didAlreadyUseTool = false
 	private didCompleteReadingStream = false
 
+	// metrics
+	private toolUsage: ToolUsage = {}
+
+	// terminal
+	public terminalProcess?: RooTerminalProcess
+
 	constructor({
 		provider,
 		apiConfiguration,
 		customInstructions,
 		enableDiff = false,
 		enableCheckpoints = true,
-		checkpointStorage = "task",
 		fuzzyMatchThreshold = 1.0,
 		consecutiveMistakeLimit = 3,
 		task,
 		images,
 		historyItem,
-		experiments,
 		startTask = true,
 		rootTask,
 		parentTask,
@@ -204,16 +226,24 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 
 		this.taskId = historyItem ? historyItem.id : crypto.randomUUID()
+		// normal use-case is usually retry similar history task with new workspace
+		this.workspacePath = parentTask
+			? parentTask.workspacePath
+			: getWorkspacePath(path.join(os.homedir(), "Desktop"))
 		this.instanceId = crypto.randomUUID().slice(0, 8)
 		this.taskNumber = -1
 
 		this.rooIgnoreController = new RooIgnoreController(this.cwd)
 		this.fileContextTracker = new FileContextTracker(provider, this.taskId)
+
 		this.rooIgnoreController.initialize().catch((error) => {
 			console.error("Failed to initialize RooIgnoreController:", error)
 		})
+
 		this.apiConfiguration = apiConfiguration
 		this.api = buildApiHandler(apiConfiguration)
+		this.promptCacheKey = crypto.randomUUID()
+
 		this.urlContentFetcher = new UrlContentFetcher(provider.context)
 		this.browserSession = new BrowserSession(provider.context)
 		this.customInstructions = customInstructions
@@ -221,9 +251,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 		this.fuzzyMatchThreshold = fuzzyMatchThreshold
 		this.consecutiveMistakeLimit = consecutiveMistakeLimit
 		this.providerRef = new WeakRef(provider)
+		this.globalStoragePath = provider.context.globalStorageUri.fsPath
 		this.diffViewProvider = new DiffViewProvider(this.cwd)
 		this.enableCheckpoints = enableCheckpoints
-		this.checkpointStorage = checkpointStorage
 
 		this.rootTask = rootTask
 		this.parentTask = parentTask
@@ -235,8 +265,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			telemetryService.captureTaskCreated(this.taskId)
 		}
 
-		// Initialize diffStrategy based on current state.
-		this.updateDiffStrategy(experiments ?? {})
+		this.diffStrategy = new MultiSearchReplaceDiffStrategy(this.fuzzyMatchThreshold)
 
 		onCreated?.(this)
 
@@ -268,38 +297,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 	}
 
 	get cwd() {
-		return getWorkspacePath(path.join(os.homedir(), "Desktop"))
-	}
-
-	// Add method to update diffStrategy.
-	async updateDiffStrategy(experiments: Partial<Record<ExperimentId, boolean>>) {
-		this.diffStrategy = getDiffStrategy({
-			model: this.api.getModel().id,
-			experiments,
-			fuzzyMatchThreshold: this.fuzzyMatchThreshold,
-		})
+		return this.workspacePath
 	}
 
 	// Storing task to disk for history
 
-	private async ensureTaskDirectoryExists(): Promise<string> {
-		const globalStoragePath = this.providerRef.deref()?.context.globalStorageUri.fsPath
-		if (!globalStoragePath) {
-			throw new Error("Global storage uri is invalid")
-		}
-
-		// Use storagePathManager to retrieve the task storage directory
-		const { getTaskDirectoryPath } = await import("../shared/storagePathManager")
-		return getTaskDirectoryPath(globalStoragePath, this.taskId)
-	}
-
 	private async getSavedApiConversationHistory(): Promise<Anthropic.MessageParam[]> {
-		const filePath = path.join(await this.ensureTaskDirectoryExists(), GlobalFileNames.apiConversationHistory)
-		const fileExists = await fileExistsAtPath(filePath)
-		if (fileExists) {
-			return JSON.parse(await fs.readFile(filePath, "utf8"))
-		}
-		return []
+		return readApiMessages({ taskId: this.taskId, globalStoragePath: this.globalStoragePath })
 	}
 
 	private async addToApiConversationHistory(message: Anthropic.MessageParam) {
@@ -315,8 +319,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 	private async saveApiConversationHistory() {
 		try {
-			const filePath = path.join(await this.ensureTaskDirectoryExists(), GlobalFileNames.apiConversationHistory)
-			await fs.writeFile(filePath, JSON.stringify(this.apiConversationHistory))
+			await saveApiMessages({
+				messages: this.apiConversationHistory,
+				taskId: this.taskId,
+				globalStoragePath: this.globalStoragePath,
+			})
 		} catch (error) {
 			// in the off chance this fails, we don't want to stop the task
 			console.error("Failed to save API conversation history:", error)
@@ -324,20 +331,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 	}
 
 	private async getSavedClineMessages(): Promise<ClineMessage[]> {
-		const filePath = path.join(await this.ensureTaskDirectoryExists(), GlobalFileNames.uiMessages)
-
-		if (await fileExistsAtPath(filePath)) {
-			return JSON.parse(await fs.readFile(filePath, "utf8"))
-		} else {
-			// check old location
-			const oldPath = path.join(await this.ensureTaskDirectoryExists(), "claude_messages.json")
-			if (await fileExistsAtPath(oldPath)) {
-				const data = JSON.parse(await fs.readFile(oldPath, "utf8"))
-				await fs.unlink(oldPath) // remove old file
-				return data
-			}
-		}
-		return []
+		return readTaskMessages({ taskId: this.taskId, globalStoragePath: this.globalStoragePath })
 	}
 
 	private async addToClineMessages(message: ClineMessage) {
@@ -348,6 +342,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 	}
 
 	public async overwriteClineMessages(newMessages: ClineMessage[]) {
+		// Reset the the prompt cache key since we've altered the conversation history.
+		this.promptCacheKey = crypto.randomUUID()
 		this.clineMessages = newMessages
 		await this.saveClineMessages()
 	}
@@ -357,51 +353,25 @@ export class Cline extends EventEmitter<ClineEvents> {
 		this.emit("message", { action: "updated", message: partialMessage })
 	}
 
-	getTokenUsage() {
-		const usage = getApiMetrics(combineApiRequests(combineCommandSequences(this.clineMessages.slice(1))))
-		this.emit("taskTokenUsageUpdated", this.taskId, usage)
-		return usage
-	}
-
 	private async saveClineMessages() {
 		try {
-			const taskDir = await this.ensureTaskDirectoryExists()
-			const filePath = path.join(taskDir, GlobalFileNames.uiMessages)
-			await fs.writeFile(filePath, JSON.stringify(this.clineMessages))
-			// combined as they are in ChatView
-			const apiMetrics = this.getTokenUsage()
-			const taskMessage = this.clineMessages[0] // first message is always the task say
-			const lastRelevantMessage =
-				this.clineMessages[
-					findLastIndex(
-						this.clineMessages,
-						(m) => !(m.ask === "resume_task" || m.ask === "resume_completed_task"),
-					)
-				]
+			await saveTaskMessages({
+				messages: this.clineMessages,
+				taskId: this.taskId,
+				globalStoragePath: this.globalStoragePath,
+			})
 
-			let taskDirSize = 0
-
-			try {
-				taskDirSize = await getFolderSize.loose(taskDir)
-			} catch (err) {
-				console.error(
-					`[saveClineMessages] failed to get task directory size (${taskDir}): ${err instanceof Error ? err.message : String(err)}`,
-				)
-			}
-
-			await this.providerRef.deref()?.updateTaskHistory({
-				id: this.taskId,
-				number: this.taskNumber,
-				ts: lastRelevantMessage.ts,
-				task: taskMessage.text ?? "",
-				tokensIn: apiMetrics.totalTokensIn,
-				tokensOut: apiMetrics.totalTokensOut,
-				cacheWrites: apiMetrics.totalCacheWrites,
-				cacheReads: apiMetrics.totalCacheReads,
-				totalCost: apiMetrics.totalCost,
-				size: taskDirSize,
+			const { historyItem, tokenUsage } = await taskMetadata({
+				messages: this.clineMessages,
+				taskId: this.taskId,
+				taskNumber: this.taskNumber,
+				globalStoragePath: this.globalStoragePath,
 				workspace: this.cwd,
 			})
+
+			this.emit("taskTokenUsageUpdated", this.taskId, tokenUsage)
+
+			await this.providerRef.deref()?.updateTaskHistory(historyItem)
 		} catch (error) {
 			console.error("Failed to save cline messages:", error)
 		}
@@ -519,6 +489,14 @@ export class Cline extends EventEmitter<ClineEvents> {
 		this.askResponseImages = images
 	}
 
+	async handleTerminalOperation(terminalOperation: "continue" | "abort") {
+		if (terminalOperation === "continue") {
+			this.terminalProcess?.continue()
+		} else if (terminalOperation === "abort") {
+			this.terminalProcess?.abort()
+		}
+	}
+
 	async say(
 		type: ClineSay,
 		text?: string,
@@ -580,7 +558,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 	}
 
-	async sayAndCreateMissingParamError(toolName: ToolUseName, paramName: string, relPath?: string) {
+	async sayAndCreateMissingParamError(toolName: ToolName, paramName: string, relPath?: string) {
 		await this.say(
 			"error",
 			`Roo tried to use ${toolName}${
@@ -650,6 +628,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			modifiedClineMessages,
 			(m) => !(m.ask === "resume_task" || m.ask === "resume_completed_task"),
 		)
+
 		if (lastRelevantMessageIndex !== -1) {
 			modifiedClineMessages.splice(lastRelevantMessageIndex + 1)
 		}
@@ -659,6 +638,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			modifiedClineMessages,
 			(m) => m.type === "say" && m.say === "api_req_started",
 		)
+
 		if (lastApiReqStartedIndex !== -1) {
 			const lastApiReqStarted = modifiedClineMessages[lastApiReqStartedIndex]
 			const { cost, cancelReason }: ClineApiReqInfo = JSON.parse(lastApiReqStarted.text || "{}")
@@ -843,6 +823,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 			return "just now"
 		})()
 
+		const lastTaskResumptionIndex = newUserContent.findIndex(
+			(x) => x.type === "text" && x.text.startsWith("[TASK RESUMPTION]"),
+		)
+		if (lastTaskResumptionIndex !== -1) {
+			newUserContent.splice(lastTaskResumptionIndex, newUserContent.length - lastTaskResumptionIndex)
+		}
+
 		const wasRecent = lastClineMessage?.ts && Date.now() - lastClineMessage.ts < 30_000
 
 		newUserContent.push({
@@ -905,11 +892,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 	}
 
 	async abortTask(isAbandoned = false) {
-		// if (this.abort) {
-		// 	console.log(`[subtasks] already aborted task ${this.taskId}.${this.instanceId}`)
-		// 	return
-		// }
-
 		console.log(`[subtasks] aborting task ${this.taskId}.${this.instanceId}`)
 
 		// Will stop any autonomously running promises.
@@ -939,147 +921,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 		if (this.isStreaming && this.diffViewProvider.isEditing) {
 			await this.diffViewProvider.revertChanges()
 		}
+		// Save the countdown message in the automatic retry or other content
+		await this.saveClineMessages()
 	}
 
 	// Tools
-
-	async executeCommandTool(command: string, customCwd?: string): Promise<[boolean, ToolResponse]> {
-		let workingDir: string
-		if (!customCwd) {
-			workingDir = this.cwd
-		} else if (path.isAbsolute(customCwd)) {
-			workingDir = customCwd
-		} else {
-			workingDir = path.resolve(this.cwd, customCwd)
-		}
-
-		// Check if directory exists
-		try {
-			await fs.access(workingDir)
-		} catch (error) {
-			return [false, `Working directory '${workingDir}' does not exist.`]
-		}
-
-		const terminalInfo = await TerminalRegistry.getOrCreateTerminal(workingDir, !!customCwd, this.taskId)
-
-		// Update the working directory in case the terminal we asked for has
-		// a different working directory so that the model will know where the
-		// command actually executed:
-		workingDir = terminalInfo.getCurrentWorkingDirectory()
-
-		const workingDirInfo = workingDir ? ` from '${workingDir.toPosix()}'` : ""
-		terminalInfo.terminal.show() // weird visual bug when creating new terminals (even manually) where there's an empty space at the top.
-		const process = terminalInfo.runCommand(command)
-
-		let userFeedback: { text?: string; images?: string[] } | undefined
-		let didContinue = false
-		const sendCommandOutput = async (line: string): Promise<void> => {
-			try {
-				const { response, text, images } = await this.ask("command_output", line)
-				if (response === "yesButtonClicked") {
-					// proceed while running
-				} else {
-					userFeedback = { text, images }
-				}
-				didContinue = true
-				process.continue() // continue past the await
-			} catch {
-				// This can only happen if this ask promise was ignored, so ignore this error
-			}
-		}
-
-		const { terminalOutputLineLimit = 500 } = (await this.providerRef.deref()?.getState()) ?? {}
-
-		process.on("line", (line) => {
-			if (!didContinue) {
-				sendCommandOutput(Terminal.compressTerminalOutput(line, terminalOutputLineLimit))
-			} else {
-				this.say("command_output", Terminal.compressTerminalOutput(line, terminalOutputLineLimit))
-			}
-		})
-
-		let completed = false
-		let result: string = ""
-		let exitDetails: ExitCodeDetails | undefined
-		process.once("completed", (output?: string) => {
-			// Use provided output if available, otherwise keep existing result.
-			result = output ?? ""
-			completed = true
-		})
-
-		process.once("shell_execution_complete", (details: ExitCodeDetails) => {
-			exitDetails = details
-		})
-
-		process.once("no_shell_integration", async (message: string) => {
-			await this.say("shell_integration_warning", message)
-		})
-
-		await process
-
-		// Wait for a short delay to ensure all messages are sent to the webview
-		// This delay allows time for non-awaited promises to be created and
-		// for their associated messages to be sent to the webview, maintaining
-		// the correct order of messages (although the webview is smart about
-		// grouping command_output messages despite any gaps anyways)
-		await delay(50)
-
-		result = Terminal.compressTerminalOutput(result, terminalOutputLineLimit)
-
-		if (userFeedback) {
-			await this.say("user_feedback", userFeedback.text, userFeedback.images)
-			return [
-				true,
-				formatResponse.toolResult(
-					`Command is still running in terminal ${terminalInfo.id}${workingDirInfo}.${
-						result.length > 0 ? `\nHere's the output so far:\n${result}` : ""
-					}\n\nThe user provided the following feedback:\n<feedback>\n${userFeedback.text}\n</feedback>`,
-					userFeedback.images,
-				),
-			]
-		} else if (completed) {
-			let exitStatus: string = ""
-			if (exitDetails !== undefined) {
-				if (exitDetails.signal) {
-					exitStatus = `Process terminated by signal ${exitDetails.signal} (${exitDetails.signalName})`
-					if (exitDetails.coreDumpPossible) {
-						exitStatus += " - core dump possible"
-					}
-				} else if (exitDetails.exitCode === undefined) {
-					result += "<VSCE exit code is undefined: terminal output and command execution status is unknown.>"
-					exitStatus = `Exit code: <undefined, notify user>`
-				} else {
-					if (exitDetails.exitCode !== 0) {
-						exitStatus += "Command execution was not successful, inspect the cause and adjust as needed.\n"
-					}
-					exitStatus += `Exit code: ${exitDetails.exitCode}`
-				}
-			} else {
-				result += "<VSCE exitDetails == undefined: terminal output and command execution status is unknown.>"
-				exitStatus = `Exit code: <undefined, notify user>`
-			}
-
-			let workingDirInfo: string = workingDir ? ` within working directory '${workingDir.toPosix()}'` : ""
-			const newWorkingDir = terminalInfo.getCurrentWorkingDirectory()
-
-			if (newWorkingDir !== workingDir) {
-				workingDirInfo += `\nNOTICE: Your command changed the working directory for this terminal to '${newWorkingDir.toPosix()}' so you MUST adjust future commands accordingly because they will be executed in this directory`
-			}
-
-			const outputInfo = `\nOutput:\n${result}`
-			return [
-				false,
-				`Command executed in terminal ${terminalInfo.id}${workingDirInfo}. ${exitStatus}${outputInfo}`,
-			]
-		} else {
-			return [
-				false,
-				`Command is still running in terminal ${terminalInfo.id}${workingDirInfo}.${
-					result.length > 0 ? `\nHere's the output so far:\n${result}` : ""
-				}\n\nYou will be updated on the terminal status and new output in the future.`,
-			]
-		}
-	}
 
 	async *attemptApiRequest(previousApiReqIndex: number, retryAttempt: number = 0): ApiStream {
 		let mcpHub: McpHub | undefined
@@ -1111,12 +957,21 @@ export class Cline extends EventEmitter<ClineEvents> {
 		this.lastApiRequestTime = Date.now()
 
 		if (mcpEnabled ?? true) {
-			mcpHub = this.providerRef.deref()?.getMcpHub()
-			if (!mcpHub) {
-				throw new Error("MCP hub not available")
+			const provider = this.providerRef.deref()
+
+			if (!provider) {
+				throw new Error("Provider reference lost during view transition")
 			}
+
+			// Wait for MCP hub initialization through McpServerManager
+			mcpHub = await McpServerManager.getInstance(provider.context, provider)
+
+			if (!mcpHub) {
+				throw new Error("Failed to get MCP hub from server manager")
+			}
+
 			// Wait for MCP servers to be connected before generating system prompt
-			await pWaitFor(() => mcpHub!.isConnecting !== true, { timeout: 10_000 }).catch(() => {
+			await pWaitFor(() => !mcpHub!.isConnecting, { timeout: 10_000 }).catch(() => {
 				console.error("MCP servers failed to connect in time")
 			})
 		}
@@ -1132,12 +987,16 @@ export class Cline extends EventEmitter<ClineEvents> {
 			browserToolEnabled,
 			language,
 		} = (await this.providerRef.deref()?.getState()) ?? {}
+
 		const { customModes } = (await this.providerRef.deref()?.getState()) ?? {}
+
 		const systemPrompt = await (async () => {
 			const provider = this.providerRef.deref()
+
 			if (!provider) {
 				throw new Error("Provider not available")
 			}
+
 			return SYSTEM_PROMPT(
 				provider.context,
 				this.cwd,
@@ -1160,7 +1019,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 		// If the previous API request's total token usage is close to the context window, truncate the conversation history to free up space for the new request
 		if (previousApiReqIndex >= 0) {
 			const previousRequest = this.clineMessages[previousApiReqIndex]?.text
-			if (!previousRequest) return
+
+			if (!previousRequest) {
+				return
+			}
 
 			const {
 				tokensIn = 0,
@@ -1175,10 +1037,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 			const DEFAULT_THINKING_MODEL_MAX_TOKENS = 16_384
 
 			const modelInfo = this.api.getModel().info
+
 			const maxTokens = modelInfo.thinking
 				? this.apiConfiguration.modelMaxTokens || DEFAULT_THINKING_MODEL_MAX_TOKENS
 				: modelInfo.maxTokens
+
 			const contextWindow = modelInfo.contextWindow
+
 			const trimmedMessages = await truncateConversationIfNeeded({
 				messages: this.apiConversationHistory,
 				totalTokens,
@@ -1217,7 +1082,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			return { role, content }
 		})
 
-		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory)
+		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory, this.promptCacheKey)
 		const iterator = stream[Symbol.asyncIterator]()
 
 		try {
@@ -1284,11 +1149,14 @@ export class Cline extends EventEmitter<ClineEvents> {
 					"api_req_failed",
 					error.message ?? JSON.stringify(serializeError(error), null, 2),
 				)
+
 				if (response !== "yesButtonClicked") {
 					// this will never happen since if noButtonClicked, we will clear current task, aborting this instance
 					throw new Error("API request failed")
 				}
+
 				await this.say("api_req_retried")
+
 				// delegate generator output from the recursive call
 				yield* this.attemptApiRequest(previousApiReqIndex)
 				return
@@ -1541,6 +1409,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 				}
 
 				if (!block.partial) {
+					this.recordToolUsage(block.name)
 					telemetryService.captureToolUsage(this.taskId, block.name)
 				}
 
@@ -1665,9 +1534,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 
 		const recentlyModifiedFiles = this.fileContextTracker.getAndClearCheckpointPossibleFile()
+
 		if (recentlyModifiedFiles.length > 0) {
-			// TODO: we can track what file changes were made and only checkpoint those files, this will be save storage
-			this.checkpointSave()
+			// TODO: We can track what file changes were made and only
+			// checkpoint those files, this will be save storage.
+			await this.checkpointSave()
 		}
 
 		/*
@@ -1743,6 +1614,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 						...formatResponse.imageBlocks(images),
 					],
 				)
+
+				await this.say("user_feedback", text, images)
+
+				// Track consecutive mistake errors in telemetry
+				telemetryService.captureConsecutiveMistakeError(this.taskId)
 			}
 			this.consecutiveMistakeCount = 0
 		}
@@ -1774,7 +1650,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			}
 		}
 
-		// Getting verbose details is an expensive operation, it uses globby to
+		// Getting verbose details is an expensive operation, it uses ripgrep to
 		// top-down build file structure of project which for large projects can
 		// take a few seconds. For the best UX we show a placeholder api_req_started
 		// message with a loading spinner as this happens.
@@ -1999,11 +1875,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 			// now add to apiconversationhistory
 			// need to save assistant responses to file before proceeding to tool use since user can exit at any moment and we wouldn't be able to save the assistant's response
 			let didEndLoop = false
+
 			if (assistantMessage.length > 0) {
 				await this.addToApiConversationHistory({
 					role: "assistant",
 					content: [{ type: "text", text: assistantMessage }],
 				})
+
 				telemetryService.captureConversationMessage(this.taskId, "assistant")
 
 				// NOTE: this comment is here for future reference - this was a workaround for userMessageContent not getting set to true. It was due to it not recursively calling for partial blocks when didRejectTool, so it would get stuck waiting for a partial block to complete before it could continue.
@@ -2042,8 +1920,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 			return didEndLoop // will always be false for now
 		} catch (error) {
-			// this should never happen since the only thing that can throw an error is the attemptApiRequest, which is wrapped in a try catch that sends an ask where if noButtonClicked, will clear current task and destroy this instance. However to avoid unhandled promise rejection, we will end this loop which will end execution of this instance (see startTask)
-			return true // needs to be true so parent loop knows to end task
+			// This should never happen since the only thing that can throw an
+			// error is the attemptApiRequest, which is wrapped in a try catch
+			// that sends an ask where if noButtonClicked, will clear current
+			// task and destroy this instance. However to avoid unhandled
+			// promise rejection, we will end this loop which will end execution
+			// of this instance (see `startTask`).
+			return true // Needs to be true so parent loop knows to end task.
 		}
 	}
 
@@ -2125,6 +2008,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 		// It could be useful for cline to know if the user went from one or no file to another between messages, so we always include this context
 		details += "\n\n# VSCode Visible Files"
+
 		const visibleFilePaths = vscode.window.visibleTextEditors
 			?.map((editor) => editor.document?.uri?.fsPath)
 			.filter(Boolean)
@@ -2163,110 +2047,96 @@ export class Cline extends EventEmitter<ClineEvents> {
 			details += "\n(No open tabs)"
 		}
 
-		// Get task-specific and background terminals
+		// Get task-specific and background terminals.
 		const busyTerminals = [
 			...TerminalRegistry.getTerminals(true, this.taskId),
 			...TerminalRegistry.getBackgroundTerminals(true),
 		]
+
 		const inactiveTerminals = [
 			...TerminalRegistry.getTerminals(false, this.taskId),
 			...TerminalRegistry.getBackgroundTerminals(false),
 		]
 
-		if (busyTerminals.length > 0 && this.didEditFile) {
-			await delay(300) // delay after saving file to let terminals catch up
-		}
-
 		if (busyTerminals.length > 0) {
-			// wait for terminals to cool down
+			if (this.didEditFile) {
+				await delay(300) // Delay after saving file to let terminals catch up.
+			}
+
+			// Wait for terminals to cool down.
 			await pWaitFor(() => busyTerminals.every((t) => !TerminalRegistry.isProcessHot(t.id)), {
 				interval: 100,
-				timeout: 15_000,
+				timeout: 5_000,
 			}).catch(() => {})
 		}
 
-		// we want to get diagnostics AFTER terminal cools down for a few reasons: terminal could be scaffolding a project, dev servers (compilers like webpack) will first re-compile and then send diagnostics, etc
-		/*
-		let diagnosticsDetails = ""
-		const diagnostics = await this.diagnosticsMonitor.getCurrentDiagnostics(this.didEditFile || terminalWasBusy) // if cline ran a command (ie npm install) or edited the workspace then wait a bit for updated diagnostics
-		for (const [uri, fileDiagnostics] of diagnostics) {
-			const problems = fileDiagnostics.filter((d) => d.severity === vscode.DiagnosticSeverity.Error)
-			if (problems.length > 0) {
-				diagnosticsDetails += `\n## ${path.relative(this.cwd, uri.fsPath)}`
-				for (const diagnostic of problems) {
-					// let severity = diagnostic.severity === vscode.DiagnosticSeverity.Error ? "Error" : "Warning"
-					const line = diagnostic.range.start.line + 1 // VSCode lines are 0-indexed
-					const source = diagnostic.source ? `[${diagnostic.source}] ` : ""
-					diagnosticsDetails += `\n- ${source}Line ${line}: ${diagnostic.message}`
-				}
-			}
-		}
-		*/
-		this.didEditFile = false // reset, this lets us know when to wait for saved files to update terminals
+		// Reset, this lets us know when to wait for saved files to update terminals.
+		this.didEditFile = false
 
-		// waiting for updated diagnostics lets terminal output be the most up-to-date possible
+		// Waiting for updated diagnostics lets terminal output be the most
+		// up-to-date possible.
 		let terminalDetails = ""
+
 		if (busyTerminals.length > 0) {
-			// terminals are cool, let's retrieve their output
+			// Terminals are cool, let's retrieve their output.
 			terminalDetails += "\n\n# Actively Running Terminals"
+
 			for (const busyTerminal of busyTerminals) {
 				terminalDetails += `\n## Original command: \`${busyTerminal.getLastCommand()}\``
 				let newOutput = TerminalRegistry.getUnretrievedOutput(busyTerminal.id)
+
 				if (newOutput) {
 					newOutput = Terminal.compressTerminalOutput(newOutput, terminalOutputLineLimit)
 					terminalDetails += `\n### New Output\n${newOutput}`
-				} else {
-					// details += `\n(Still running, no new output)` // don't want to show this right after running the command
 				}
 			}
 		}
 
-		// First check if any inactive terminals in this task have completed processes with output
+		// First check if any inactive terminals in this task have completed
+		// processes with output.
 		const terminalsWithOutput = inactiveTerminals.filter((terminal) => {
 			const completedProcesses = terminal.getProcessesWithOutput()
 			return completedProcesses.length > 0
 		})
 
-		// Only add the header if there are terminals with output
+		// Only add the header if there are terminals with output.
 		if (terminalsWithOutput.length > 0) {
 			terminalDetails += "\n\n# Inactive Terminals with Completed Process Output"
 
-			// Process each terminal with output
+			// Process each terminal with output.
 			for (const inactiveTerminal of terminalsWithOutput) {
 				let terminalOutputs: string[] = []
 
-				// Get output from completed processes queue
+				// Get output from completed processes queue.
 				const completedProcesses = inactiveTerminal.getProcessesWithOutput()
+
 				for (const process of completedProcesses) {
 					let output = process.getUnretrievedOutput()
+
 					if (output) {
 						output = Terminal.compressTerminalOutput(output, terminalOutputLineLimit)
 						terminalOutputs.push(`Command: \`${process.command}\`\n${output}`)
 					}
 				}
 
-				// Clean the queue after retrieving output
+				// Clean the queue after retrieving output.
 				inactiveTerminal.cleanCompletedProcessQueue()
 
-				// Add this terminal's outputs to the details
+				// Add this terminal's outputs to the details.
 				if (terminalOutputs.length > 0) {
 					terminalDetails += `\n## Terminal ${inactiveTerminal.id}`
-					terminalOutputs.forEach((output, index) => {
+					terminalOutputs.forEach((output) => {
 						terminalDetails += `\n### New Output\n${output}`
 					})
 				}
 			}
 		}
 
-		// details += "\n\n# VSCode Workspace Errors"
-		// if (diagnosticsDetails) {
-		// 	details += diagnosticsDetails
-		// } else {
-		// 	details += "\n(No errors detected)"
-		// }
+		// console.log(`[Cline#getEnvironmentDetails] terminalDetails: ${terminalDetails}`)
 
-		// Add recently modified files section
+		// Add recently modified files section.
 		const recentlyModifiedFiles = this.fileContextTracker.getAndClearRecentlyModifiedFiles()
+
 		if (recentlyModifiedFiles.length > 0) {
 			details +=
 				"\n\n# Recently Modified Files\nThese files have been modified since you last accessed them (file was just edited so you may need to re-read it before editing):"
@@ -2279,8 +2149,9 @@ export class Cline extends EventEmitter<ClineEvents> {
 			details += terminalDetails
 		}
 
-		// Add current time information with timezone
+		// Add current time information with timezone.
 		const now = new Date()
+
 		const formatter = new Intl.DateTimeFormat(undefined, {
 			year: "numeric",
 			month: "numeric",
@@ -2290,6 +2161,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			second: "numeric",
 			hour12: true,
 		})
+
 		const timeZone = formatter.resolvedOptions().timeZone
 		const timeZoneOffset = -now.getTimezoneOffset() / 60 // Convert to hours and invert sign to match conventional notation
 		const timeZoneOffsetHours = Math.floor(Math.abs(timeZoneOffset))
@@ -2297,44 +2169,52 @@ export class Cline extends EventEmitter<ClineEvents> {
 		const timeZoneOffsetStr = `${timeZoneOffset >= 0 ? "+" : "-"}${timeZoneOffsetHours}:${timeZoneOffsetMinutes.toString().padStart(2, "0")}`
 		details += `\n\n# Current Time\n${formatter.format(now)} (${timeZone}, UTC${timeZoneOffsetStr})`
 
-		// Add context tokens information
+		// Add context tokens information.
 		const { contextTokens, totalCost } = getApiMetrics(this.clineMessages)
 		const modelInfo = this.api.getModel().info
 		const contextWindow = modelInfo.contextWindow
+
 		const contextPercentage =
 			contextTokens && contextWindow ? Math.round((contextTokens / contextWindow) * 100) : undefined
+
 		details += `\n\n# Current Context Size (Tokens)\n${contextTokens ? `${contextTokens.toLocaleString()} (${contextPercentage}%)` : "(Not available)"}`
 		details += `\n\n# Current Cost\n${totalCost !== null ? `$${totalCost.toFixed(2)}` : "(Not available)"}`
-		// Add current mode and any mode-specific warnings
+
+		// Add current mode and any mode-specific warnings.
 		const {
 			mode,
 			customModes,
+			apiModelId,
 			customModePrompts,
 			experiments = {} as Record<ExperimentId, boolean>,
 			customInstructions: globalCustomInstructions,
 			language,
 		} = (await this.providerRef.deref()?.getState()) ?? {}
+
 		const currentMode = mode ?? defaultModeSlug
+
 		const modeDetails = await getFullModeDetails(currentMode, customModes, customModePrompts, {
 			cwd: this.cwd,
 			globalCustomInstructions,
 			language: language ?? formatLanguage(vscode.env.language),
 		})
+
 		details += `\n\n# Current Mode\n`
 		details += `<slug>${currentMode}</slug>\n`
 		details += `<name>${modeDetails.name}</name>\n`
+		details += `<model>${apiModelId}</model>\n`
+
 		if (Experiments.isEnabled(experiments ?? {}, EXPERIMENT_IDS.POWER_STEERING)) {
 			details += `<role>${modeDetails.roleDefinition}</role>\n`
+
 			if (modeDetails.customInstructions) {
 				details += `<custom_instructions>${modeDetails.customInstructions}</custom_instructions>\n`
 			}
 		}
 
-		// Add warning if not in code mode
+		// Add warning if not in code mode.
 		if (
-			!isToolAllowedForMode("write_to_file", currentMode, customModes ?? [], {
-				apply_diff: this.diffEnabled,
-			}) &&
+			!isToolAllowedForMode("write_to_file", currentMode, customModes ?? [], { apply_diff: this.diffEnabled }) &&
 			!isToolAllowedForMode("apply_diff", currentMode, customModes ?? [], { apply_diff: this.diffEnabled })
 		) {
 			const currentModeName = getModeBySlug(currentMode, customModes)?.name ?? currentMode
@@ -2345,13 +2225,16 @@ export class Cline extends EventEmitter<ClineEvents> {
 		if (includeFileDetails) {
 			details += `\n\n# Current Workspace Directory (${this.cwd.toPosix()}) Files\n`
 			const isDesktop = arePathsEqual(this.cwd, path.join(os.homedir(), "Desktop"))
+
 			if (isDesktop) {
-				// don't want to immediately access desktop since it would show permission popup
+				// Don't want to immediately access desktop since it would show
+				// permission popup.
 				details += "(Desktop files not shown automatically. Use list_files to explore if needed.)"
 			} else {
 				const maxFiles = maxWorkspaceFiles ?? 200
 				const [files, didHitLimit] = await listFiles(this.cwd, true, maxFiles)
 				const { showRooIgnoredFiles = true } = (await this.providerRef.deref()?.getState()) ?? {}
+
 				const result = formatResponse.formatFilesList(
 					this.cwd,
 					files,
@@ -2359,6 +2242,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 					this.rooIgnoreController,
 					showRooIgnoredFiles,
 				)
+
 				details += result
 			}
 		}
@@ -2377,6 +2261,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 			return this.checkpointService
 		}
 
+		if (this.checkpointServiceInitializing) {
+			console.log("[Cline#getCheckpointService] checkpoint service is still initializing")
+			return undefined
+		}
+
 		const log = (message: string) => {
 			console.log(message)
 
@@ -2387,11 +2276,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 			}
 		}
 
+		console.log("[Cline#getCheckpointService] initializing checkpoints service")
+
 		try {
 			const workspaceDir = getWorkspacePath()
 
 			if (!workspaceDir) {
-				log("[Cline#initializeCheckpoints] workspace folder not found, disabling checkpoints")
+				log("[Cline#getCheckpointService] workspace folder not found, disabling checkpoints")
 				this.enableCheckpoints = false
 				return undefined
 			}
@@ -2399,7 +2290,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			const globalStorageDir = this.providerRef.deref()?.context.globalStorageUri.fsPath
 
 			if (!globalStorageDir) {
-				log("[Cline#initializeCheckpoints] globalStorageDir not found, disabling checkpoints")
+				log("[Cline#getCheckpointService] globalStorageDir not found, disabling checkpoints")
 				this.enableCheckpoints = false
 				return undefined
 			}
@@ -2411,28 +2302,26 @@ export class Cline extends EventEmitter<ClineEvents> {
 				log,
 			}
 
-			// Only `task` is supported at the moment until we figure out how
-			// to fully isolate the `workspace` variant.
-			// const service =
-			// 	this.checkpointStorage === "task"
-			// 		? RepoPerTaskCheckpointService.create(options)
-			// 		: RepoPerWorkspaceCheckpointService.create(options)
-
 			const service = RepoPerTaskCheckpointService.create(options)
 
+			this.checkpointServiceInitializing = true
+
 			service.on("initialize", () => {
+				log("[Cline#getCheckpointService] service initialized")
+
 				try {
 					const isCheckpointNeeded =
 						typeof this.clineMessages.find(({ say }) => say === "checkpoint_saved") === "undefined"
 
 					this.checkpointService = service
+					this.checkpointServiceInitializing = false
 
 					if (isCheckpointNeeded) {
-						log("[Cline#initializeCheckpoints] no checkpoints found, saving initial checkpoint")
+						log("[Cline#getCheckpointService] no checkpoints found, saving initial checkpoint")
 						this.checkpointSave()
 					}
 				} catch (err) {
-					log("[Cline#initializeCheckpoints] caught error in on('initialize'), disabling checkpoints")
+					log("[Cline#getCheckpointService] caught error in on('initialize'), disabling checkpoints")
 					this.enableCheckpoints = false
 				}
 			})
@@ -2442,21 +2331,23 @@ export class Cline extends EventEmitter<ClineEvents> {
 					this.providerRef.deref()?.postMessageToWebview({ type: "currentCheckpointUpdated", text: to })
 
 					this.say("checkpoint_saved", to, undefined, undefined, { isFirst, from, to }).catch((err) => {
-						log("[Cline#initializeCheckpoints] caught unexpected error in say('checkpoint_saved')")
+						log("[Cline#getCheckpointService] caught unexpected error in say('checkpoint_saved')")
 						console.error(err)
 					})
 				} catch (err) {
 					log(
-						"[Cline#initializeCheckpoints] caught unexpected error in on('checkpoint'), disabling checkpoints",
+						"[Cline#getCheckpointService] caught unexpected error in on('checkpoint'), disabling checkpoints",
 					)
 					console.error(err)
 					this.enableCheckpoints = false
 				}
 			})
 
+			log("[Cline#getCheckpointService] initializing shadow git")
+
 			service.initShadowGit().catch((err) => {
 				log(
-					`[Cline#initializeCheckpoints] caught unexpected error in initShadowGit, disabling checkpoints (${err.message})`,
+					`[Cline#getCheckpointService] caught unexpected error in initShadowGit, disabling checkpoints (${err.message})`,
 				)
 				console.error(err)
 				this.enableCheckpoints = false
@@ -2464,7 +2355,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 			return service
 		} catch (err) {
-			log("[Cline#initializeCheckpoints] caught unexpected error, disabling checkpoints")
+			log("[Cline#getCheckpointService] caught unexpected error, disabling checkpoints")
 			this.enableCheckpoints = false
 			return undefined
 		}
@@ -2488,6 +2379,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 				},
 				{ interval, timeout },
 			)
+
 			return service
 		} catch (err) {
 			return undefined
@@ -2549,7 +2441,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 	}
 
-	public checkpointSave() {
+	public async checkpointSave() {
 		const service = this.getCheckpointService()
 
 		if (!service) {
@@ -2560,6 +2452,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			this.providerRef
 				.deref()
 				?.log("[checkpointSave] checkpoints didn't initialize in time, disabling checkpoints for this task")
+
 			this.enableCheckpoints = false
 			return
 		}
@@ -2567,7 +2460,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		telemetryService.captureCheckpointCreated(this.taskId)
 
 		// Start the checkpoint process in the background.
-		service.saveCheckpoint(`Task: ${this.taskId}, Time: ${Date.now()}`).catch((err) => {
+		return service.saveCheckpoint(`Task: ${this.taskId}, Time: ${Date.now()}`).catch((err) => {
 			console.error("[Cline#checkpointSave] caught unexpected error, disabling checkpoints", err)
 			this.enableCheckpoints = false
 		})
@@ -2647,5 +2540,35 @@ export class Cline extends EventEmitter<ClineEvents> {
 	// Public accessor for fileContextTracker
 	public getFileContextTracker(): FileContextTracker {
 		return this.fileContextTracker
+	}
+
+	// Metrics
+
+	public getTokenUsage() {
+		return getApiMetrics(combineApiRequests(combineCommandSequences(this.clineMessages.slice(1))))
+	}
+
+	public recordToolUsage(toolName: ToolName) {
+		if (!this.toolUsage[toolName]) {
+			this.toolUsage[toolName] = { attempts: 0, failures: 0 }
+		}
+
+		this.toolUsage[toolName].attempts++
+	}
+
+	public recordToolError(toolName: ToolName, error?: string) {
+		if (!this.toolUsage[toolName]) {
+			this.toolUsage[toolName] = { attempts: 0, failures: 0 }
+		}
+
+		this.toolUsage[toolName].failures++
+
+		if (error) {
+			this.emit("taskToolFailed", this.taskId, toolName, error)
+		}
+	}
+
+	public getToolUsage() {
+		return this.toolUsage
 	}
 }

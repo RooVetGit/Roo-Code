@@ -1,5 +1,5 @@
 {
-	"greeting": "Roo 可以為您做些什麼？",
+	"greeting": "歡迎使用 Roo Code",
 	"task": {
 		"title": "工作",
 		"seeMore": "顯示更多",
@@ -7,7 +7,7 @@
 		"tokens": "Tokens:",
 		"cache": "快取：",
 		"apiCost": "API 費用：",
-		"contextWindow": "上下文視窗：",
+		"contextWindow": "上下文長度：",
 		"closeAndStart": "關閉現有工作並開始一項新的工作",
 		"export": "匯出工作紀錄",
 		"delete": "刪除工作（按住 Shift 並點選可跳過確認）"
@@ -52,6 +52,10 @@
 		"title": "執行時繼續",
 		"tooltip": "儘管有警告仍繼續執行"
 	},
+	"killCommand": {
+		"title": "終止指令",
+		"tooltip": "終止目前的指令"
+	},
 	"resumeTask": {
 		"title": "繼續工作",
 		"tooltip": "繼續目前的工作"
@@ -65,9 +69,27 @@
 		"tooltip": "取消目前操作"
 	},
 	"scrollToBottom": "捲動至對話框底部",
-	"aboutMe": "由於程式代理功能的最新突破，我能夠逐步處理複雜的軟體開發工作。透過允許我建立和編輯檔案、探索複雜專案、使用瀏覽器和執行終端機命令（在您授權後）的工具，我可以以超越程式碼補全或技術支援的方式協助您。我甚至可以使用 MCP 建立新工具並擴展自己的能力。",
+	"about": "透過 AI 輔助產生、重構和偵錯程式碼。<br />查看我們的 <DocsLink>說明文件</DocsLink> 以瞭解更多資訊。",
+	"onboarding": "<strong>您在此工作區中的工作清單是空的。</strong> 請在下方輸入工作以開始。 不確定如何開始？ 在 <DocsLink>說明文件</DocsLink> 中閱讀更多關於 Roo 能為您做什麼的資訊。",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "任務拆分",
+			"description": "將任務拆分為更小、更易於管理的部分。"
+		},
+		"stickyModels": {
+			"title": "黏性模式",
+			"description": "每個模式都會記住您上次使用的模型"
+		},
+		"tools": {
+			"title": "工具",
+			"description": "允許 AI 透過瀏覽網路、執行命令等方式解決問題。"
+		},
+		"customizableModes": {
+			"title": "自訂模式",
+			"description": "具有專屬行為和指定模型的特定角色"
+		}
+	},
 	"selectMode": "選擇互動模式",
-	"selectApiConfig": "選擇 API 設定",
 	"enhancePrompt": "使用額外內容增強提示",
 	"addImages": "新增圖片到訊息中",
 	"sendMessage": "傳送訊息",
@@ -120,7 +142,12 @@
 		"didRead": "Roo 已讀取此檔案：",
 		"wantsToEdit": "Roo 想要編輯此檔案：",
 		"wantsToEditOutsideWorkspace": "Roo 想要編輯此工作區外的檔案：",
-		"wantsToCreate": "Roo 想要建立新檔案："
+		"wantsToCreate": "Roo 想要建立新檔案：",
+		"wantsToSearchReplace": "Roo 想要在此檔案中搜尋和取代：",
+		"didSearchReplace": "Roo 已在此檔案執行搜尋和取代：",
+		"wantsToInsert": "Roo 想要在此檔案中插入內容：",
+		"wantsToInsertWithLineNumber": "Roo 想要在此檔案第 {{lineNumber}} 行插入內容：",
+		"wantsToInsertAtEnd": "Roo 想要在此檔案末尾新增內容："
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo 想要檢視此目錄中最上層的檔案：",
@@ -171,49 +198,7 @@
 	"autoApprove": {
 		"title": "自動核准：",
 		"none": "無",
-		"description": "自動核准讓 Roo Code 可以在無需徵求您同意的情況下執行動作。請僅對您完全信任的動作啟用此功能。您可以在<settingsLink>設定</settingsLink>中進行更詳細的調整。",
-		"actions": {
-			"readFiles": {
-				"label": "讀取檔案和目錄",
-				"shortName": "讀取",
-				"description": "允許存取電腦上的任何檔案。"
-			},
-			"editFiles": {
-				"label": "編輯檔案",
-				"shortName": "編輯",
-				"description": "允許修改電腦上的任何檔案。"
-			},
-			"executeCommands": {
-				"label": "執行已核准的命令",
-				"shortName": "命令",
-				"description": "允許執行已核准的終端機命令。您可以在設定面板中調整此設定。"
-			},
-			"useBrowser": {
-				"label": "使用瀏覽器",
-				"shortName": "瀏覽器",
-				"description": "允許在無介面瀏覽器中啟動並與任何網站互動。"
-			},
-			"useMcp": {
-				"label": "使用 MCP 伺服器",
-				"shortName": "MCP",
-				"description": "允許使用已設定的 MCP 伺服器，這些伺服器可能會修改檔案系統或與 API 進行互動。"
-			},
-			"switchModes": {
-				"label": "切換模式",
-				"shortName": "模式",
-				"description": "允許在不需要核准的情況下自動切換不同模式。"
-			},
-			"subtasks": {
-				"label": "建立和完成子工作",
-				"shortName": "子工作",
-				"description": "允許在不需要核准的情況下建立和完成子工作。"
-			},
-			"retryRequests": {
-				"label": "重試失敗的請求",
-				"shortName": "重試",
-				"description": "當服務提供者回傳錯誤回應時自動重試失敗的 API 請求。"
-			}
-		}
+		"description": "自動核准讓 Roo Code 可以在無需徵求您同意的情況下執行動作。請僅對您完全信任的動作啟用此功能。您可以在<settingsLink>設定</settingsLink>中進行更詳細的調整。"
 	},
 	"reasoning": {
 		"thinking": "思考中",
@@ -223,10 +208,14 @@
 		"copyToInput": "複製到輸入框（或按住 Shift 並點選）"
 	},
 	"announcement": {
-		"title": "使用迴旋鏢任務完成更多工作 🪃",
-		"description": "將工作拆分成子任務，每個子任務在專門的模式中執行，如 code、architect、debug 或自訂模式。",
-		"learnMore": "了解更多 →",
-		"hideButton": "隱藏公告"
+		"title": "🎉 Roo Code 3.14 已發布",
+		"description": "Roo Code 3.14 帶來基於您意見回饋的新功能與改進。",
+		"whatsNew": "新功能",
+		"feature1": "<bold>編輯工具增強</bold>: <code>search_and_replace</code> 和 <code>insert_content</code> 工具已獲改進，並從實驗階段升級為正式功能",
+		"feature2": "<bold>差異更新修復</bold>: 我們持續改進 <code>apply_diff</code> 工具",
+		"feature3": "<bold>大量其他改進</bold>: 擴充套件中眾多的修復和增強功能",
+		"hideButton": "隱藏公告",
+		"detailsDiscussLinks": "在 <discordLink>Discord</discordLink> 和 <redditLink>Reddit</redditLink> 取得更多詳細資訊並參與討論 🚀"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo 想要使用瀏覽器：",
@@ -249,5 +238,7 @@
 			"scrollUp": "向上捲動",
 			"close": "關閉瀏覽器"
 		}
-	}
+	},
+	"systemPromptWarning": "警告：自訂系統提示詞覆蓋已啟用。這可能嚴重破壞功能並導致不可預測的行為。",
+	"selectApiConfig": "選取 API 設定"
 }

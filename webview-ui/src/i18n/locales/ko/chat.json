@@ -1,5 +1,5 @@
 {
-	"greeting": "Roo가 어떻게 도와드릴까요?",
+	"greeting": "Roo Code에 오신 것을 환영합니다",
 	"task": {
 		"title": "작업",
 		"seeMore": "더 보기",
@@ -52,6 +52,10 @@
 		"title": "실행 중에도 계속",
 		"tooltip": "경고에도 불구하고 계속 진행"
 	},
+	"killCommand": {
+		"title": "명령 종료",
+		"tooltip": "현재 명령 종료"
+	},
 	"resumeTask": {
 		"title": "작업 재개",
 		"tooltip": "현재 작업 계속하기"
@@ -65,9 +69,27 @@
 		"tooltip": "현재 작업 취소"
 	},
 	"scrollToBottom": "채팅 하단으로 스크롤",
-	"aboutMe": "최신 에이전트 코딩 기능의 발전 덕분에 복잡한 소프트웨어 개발 작업을 단계별로 처리할 수 있습니다. 파일 생성 및 편집, 복잡한 프로젝트 탐색, 브라우저 사용, 터미널 명령 실행(승인 후)을 가능하게 하는 도구를 통해 코드 완성이나 기술 지원을 넘어서는 방식으로 도움을 드릴 수 있습니다. MCP를 사용하여 새로운 도구를 만들고 자체 기능을 확장할 수도 있습니다.",
+	"about": "AI 지원으로 코드를 생성, 리팩터링 및 디버깅합니다. 자세한 내용은 <DocsLink>문서</DocsLink>를 확인하세요.",
+	"onboarding": "<strong>이 작업 공간의 작업 목록이 비어 있습니다.</strong> 아래에 작업을 입력하여 시작하세요. 어떻게 시작해야 할지 모르겠나요? Roo가 무엇을 할 수 있는지 <DocsLink>문서</DocsLink>에서 자세히 알아보세요.",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "부메랑 작업",
+			"description": "작업을 더 작고 관리하기 쉬운 부분으로 나눕니다."
+		},
+		"stickyModels": {
+			"title": "스티키 모드",
+			"description": "각 모드는 마지막으로 사용한 모델을 기억합니다."
+		},
+		"tools": {
+			"title": "도구",
+			"description": "AI가 웹 탐색, 명령 실행 등으로 문제를 해결하도록 허용합니다."
+		},
+		"customizableModes": {
+			"title": "사용자 정의 모드",
+			"description": "고유한 동작과 할당된 모델을 가진 전문 페르소나"
+		}
+	},
 	"selectMode": "상호작용 모드 선택",
-	"selectApiConfig": "API 구성 선택",
 	"enhancePrompt": "추가 컨텍스트로 프롬프트 향상",
 	"addImages": "메시지에 이미지 추가",
 	"sendMessage": "메시지 보내기",
@@ -120,7 +142,12 @@
 		"didRead": "Roo가 이 파일을 읽었습니다:",
 		"wantsToEdit": "Roo가 이 파일을 편집하고 싶어합니다:",
 		"wantsToEditOutsideWorkspace": "Roo가 워크스페이스 외부의 이 파일을 편집하고 싶어합니다:",
-		"wantsToCreate": "Roo가 새 파일을 만들고 싶어합니다:"
+		"wantsToCreate": "Roo가 새 파일을 만들고 싶어합니다:",
+		"wantsToSearchReplace": "Roo가 이 파일에서 검색 및 바꾸기를 수행하고 싶어합니다:",
+		"didSearchReplace": "Roo가 이 파일에서 검색 및 바꾸기를 수행했습니다:",
+		"wantsToInsert": "Roo가 이 파일에 내용을 삽입하고 싶어합니다:",
+		"wantsToInsertWithLineNumber": "Roo가 이 파일의 {{lineNumber}}번 줄에 내용을 삽입하고 싶어합니다:",
+		"wantsToInsertAtEnd": "Roo가 이 파일의 끝에 내용을 추가하고 싶어합니다:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo가 이 디렉토리의 최상위 파일을 보고 싶어합니다:",
@@ -171,49 +198,7 @@
 	"autoApprove": {
 		"title": "자동 승인:",
 		"none": "없음",
-		"description": "자동 승인을 사용하면 Roo Code가 권한을 요청하지 않고 작업을 수행할 수 있습니다. 완전히 신뢰할 수 있는 작업에만 활성화하세요. 더 자세한 구성은 <settingsLink>설정</settingsLink>에서 사용할 수 있습니다.",
-		"actions": {
-			"readFiles": {
-				"label": "파일 및 디렉토리 읽기",
-				"shortName": "읽기",
-				"description": "컴퓨터의 모든 파일을 읽을 수 있는 액세스 권한을 허용합니다."
-			},
-			"editFiles": {
-				"label": "파일 편집",
-				"shortName": "편집",
-				"description": "컴퓨터의 모든 파일을 수정할 수 있는 권한을 허용합니다."
-			},
-			"executeCommands": {
-				"label": "승인된 명령 실행",
-				"shortName": "명령",
-				"description": "승인된 터미널 명령 실행을 허용합니다. 설정 패널에서 구성할 수 있습니다."
-			},
-			"useBrowser": {
-				"label": "브라우저 사용",
-				"shortName": "브라우저",
-				"description": "헤드리스 브라우저에서 모든 웹사이트를 실행하고 상호작용할 수 있는 기능을 허용합니다."
-			},
-			"useMcp": {
-				"label": "MCP 서버 사용",
-				"shortName": "MCP",
-				"description": "파일 시스템을 수정하거나 API와 상호작용할 수 있는 구성된 MCP 서버 사용을 허용합니다."
-			},
-			"switchModes": {
-				"label": "모드 전환",
-				"shortName": "모드",
-				"description": "승인 없이 다른 모드 간 자동 전환을 허용합니다."
-			},
-			"subtasks": {
-				"label": "하위 작업 생성 및 완료",
-				"shortName": "하위 작업",
-				"description": "승인 없이 하위 작업 생성 및 완료를 허용합니다."
-			},
-			"retryRequests": {
-				"label": "실패한 요청 재시도",
-				"shortName": "재시도",
-				"description": "제공자가 오류 응답을 반환할 때 실패한 API 요청을 자동으로 재시도합니다."
-			}
-		}
+		"description": "자동 승인을 사용하면 Roo Code가 권한을 요청하지 않고 작업을 수행할 수 있습니다. 완전히 신뢰할 수 있는 작업에만 활성화하세요. 더 자세한 구성은 <settingsLink>설정</settingsLink>에서 사용할 수 있습니다."
 	},
 	"reasoning": {
 		"thinking": "생각 중",
@@ -223,10 +208,14 @@
 		"copyToInput": "입력창에 복사 (또는 Shift + 클릭)"
 	},
 	"announcement": {
-		"title": "부메랑 태스크로 더 많은 작업 수행 🪃",
-		"description": "작업을 하위 태스크로 분할하여 각각 code, architect, debug 또는 사용자 정의 모드와 같은 전문 모드에서 실행하세요.",
-		"learnMore": "더 알아보기 →",
-		"hideButton": "공지 숨기기"
+		"title": "🎉 Roo Code 3.14 출시",
+		"description": "Roo Code 3.14는 사용자 피드백을 기반으로 새로운 기능과 개선사항을 제공합니다.",
+		"whatsNew": "새로운 기능",
+		"feature1": "<bold>개선된 편집 도구</bold>: <code>search_and_replace</code>와 <code>insert_content</code> 도구가 개선되어 실험 상태에서 정식 기능으로 전환되었습니다",
+		"feature2": "<bold>apply_diff 수정</bold>: <code>apply_diff</code> 도구를 지속적으로 개선하고 있습니다",
+		"feature3": "<bold>수많은 기타 개선사항</bold>: 확장 프로그램 전체에 걸친 다양한 수정 및 향상된 기능",
+		"hideButton": "공지 숨기기",
+		"detailsDiscussLinks": "<discordLink>Discord</discordLink>와 <redditLink>Reddit</redditLink>에서 더 자세한 정보를 확인하고 논의하세요 🚀"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo가 브라우저를 사용하고 싶어합니다:",
@@ -249,5 +238,7 @@
 			"scrollUp": "위로 스크롤",
 			"close": "브라우저 닫기"
 		}
-	}
+	},
+	"systemPromptWarning": "경고: 사용자 정의 시스템 프롬프트 재정의가 활성화되었습니다. 이로 인해 기능이 심각하게 손상되고 예측할 수 없는 동작이 발생할 수 있습니다.",
+	"selectApiConfig": "API 구성 선택"
 }

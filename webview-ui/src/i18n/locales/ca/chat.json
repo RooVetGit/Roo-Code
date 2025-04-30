@@ -1,5 +1,5 @@
 {
-	"greeting": "Què pot fer Roo per tu?",
+	"greeting": "Benvingut a Roo Code",
 	"task": {
 		"title": "Tasca",
 		"seeMore": "Veure més",
@@ -52,6 +52,10 @@
 		"title": "Continuar mentre s'executa",
 		"tooltip": "Continua malgrat els advertiments"
 	},
+	"killCommand": {
+		"title": "Atura l'ordre",
+		"tooltip": "Atura l'ordre actual"
+	},
 	"resumeTask": {
 		"title": "Reprendre la tasca",
 		"tooltip": "Repren la tasca actual"
@@ -65,9 +69,27 @@
 		"tooltip": "Cancel·la l'operació actual"
 	},
 	"scrollToBottom": "Desplaça't al final del xat",
-	"aboutMe": "Gràcies als últims avenços en capacitats de codificació intel·ligent, puc gestionar tasques complexes de desenvolupament de programari pas a pas. Amb eines que em permeten crear i editar fitxers, explorar projectes complexos, utilitzar el navegador i executar ordres de terminal (després que em donis permís), puc ajudar-te de maneres que van més enllà de la finalització de codi o el suport tècnic. Fins i tot puc utilitzar MCP per crear noves eines i ampliar les meves capacitats.",
+	"about": "Genera, refactoritza i depura codi amb l'ajuda de la IA.<br />Consulta la nostra <DocsLink>documentació</DocsLink> per obtenir més informació.",
+	"onboarding": "<strong> La vostra llista de tasques en aquest espai de treball està buida. </strong> Comença escrivint una tasca a continuació. \nNo esteu segur per on començar? \nMés informació sobre què pot fer Roo als documents.",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "Tasques Boomerang",
+			"description": "Divideix les tasques en parts més petites i manejables."
+		},
+		"stickyModels": {
+			"title": "Modes persistents",
+			"description": "Cada mode recorda el vostre darrer model utilitzat"
+		},
+		"tools": {
+			"title": "Eines",
+			"description": "Permet que la IA resolgui problemes navegant per la web, executant ordres i molt més."
+		},
+		"customizableModes": {
+			"title": "Modes personalitzables",
+			"description": "Personalitats especialitzades amb comportaments propis i models assignats"
+		}
+	},
 	"selectMode": "Selecciona el mode d'interacció",
-	"selectApiConfig": "Selecciona la configuració de l'API",
 	"enhancePrompt": "Millora la sol·licitud amb context addicional",
 	"addImages": "Afegeix imatges al missatge",
 	"sendMessage": "Envia el missatge",
@@ -120,7 +142,12 @@
 		"didRead": "Roo ha llegit aquest fitxer:",
 		"wantsToEdit": "Roo vol editar aquest fitxer:",
 		"wantsToEditOutsideWorkspace": "Roo vol editar aquest fitxer fora de l'espai de treball:",
-		"wantsToCreate": "Roo vol crear un nou fitxer:"
+		"wantsToCreate": "Roo vol crear un nou fitxer:",
+		"wantsToSearchReplace": "Roo vol realitzar cerca i substitució en aquest fitxer:",
+		"didSearchReplace": "Roo ha realitzat cerca i substitució en aquest fitxer:",
+		"wantsToInsert": "Roo vol inserir contingut en aquest fitxer:",
+		"wantsToInsertWithLineNumber": "Roo vol inserir contingut a la línia {{lineNumber}} d'aquest fitxer:",
+		"wantsToInsertAtEnd": "Roo vol afegir contingut al final d'aquest fitxer:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo vol veure els fitxers de nivell superior en aquest directori:",
@@ -171,49 +198,7 @@
 	"autoApprove": {
 		"title": "Aprovació automàtica:",
 		"none": "Cap",
-		"description": "L'aprovació automàtica permet a Roo Code realitzar accions sense demanar permís. Activa-la només per a accions en les que confies plenament. Configuració més detallada disponible a la <settingsLink>Configuració</settingsLink>.",
-		"actions": {
-			"readFiles": {
-				"label": "Llegir fitxers i directoris",
-				"shortName": "Lectura",
-				"description": "Permet l'accés per llegir qualsevol fitxer al teu ordinador."
-			},
-			"editFiles": {
-				"label": "Editar fitxers",
-				"shortName": "Edició",
-				"description": "Permet la modificació de qualsevol fitxer al teu ordinador."
-			},
-			"executeCommands": {
-				"label": "Executar ordres aprovades",
-				"shortName": "Ordres",
-				"description": "Permet l'execució d'ordres de terminal aprovades. Pots configurar-ho al panell de configuració."
-			},
-			"useBrowser": {
-				"label": "Utilitzar el navegador",
-				"shortName": "Navegador",
-				"description": "Permet la capacitat d'iniciar i interactuar amb qualsevol lloc web en un navegador headless."
-			},
-			"useMcp": {
-				"label": "Utilitzar servidors MCP",
-				"shortName": "MCP",
-				"description": "Permet l'ús de servidors MCP configurats que poden modificar el sistema de fitxers o interactuar amb APIs."
-			},
-			"switchModes": {
-				"label": "Canviar modes",
-				"shortName": "Modes",
-				"description": "Permet el canvi automàtic entre diferents modes sense requerir aprovació."
-			},
-			"subtasks": {
-				"label": "Crear i completar subtasques",
-				"shortName": "Subtasques",
-				"description": "Permet la creació i finalització de subtasques sense requerir aprovació."
-			},
-			"retryRequests": {
-				"label": "Reintentar sol·licituds fallides",
-				"shortName": "Reintents",
-				"description": "Reintenta automàticament les sol·licituds API fallides quan el proveïdor retorna una resposta d'error."
-			}
-		}
+		"description": "L'aprovació automàtica permet a Roo Code realitzar accions sense demanar permís. Activa-la només per a accions en les que confies plenament. Configuració més detallada disponible a la <settingsLink>Configuració</settingsLink>."
 	},
 	"reasoning": {
 		"thinking": "Pensant",
@@ -223,10 +208,14 @@
 		"copyToInput": "Copiar a l'entrada (o Shift + clic)"
 	},
 	"announcement": {
-		"title": "Fes més amb Tasques Boomerang 🪃",
-		"description": "Divideix la feina en subtasques, cadascuna executant-se en un mode especialitzat, com code, architect, debug o un mode personalitzat.",
-		"learnMore": "Saber-ne més →",
-		"hideButton": "Amagar anunci"
+		"title": "🎉 Roo Code 3.14 publicat",
+		"description": "Roo Code 3.14 porta noves funcionalitats i millores basades en els teus comentaris.",
+		"whatsNew": "Novetats",
+		"feature1": "<bold>Eines d'edició millorades</bold>: Les eines <code>search_and_replace</code> i <code>insert_content</code> han estat millorades i ja no són experimentals",
+		"feature2": "<bold>Millores a apply_diff</bold>: Continuem treballant per millorar l'eina <code>apply_diff</code>",
+		"feature3": "<bold>Moltes altres millores</bold>: Nombroses correccions i optimitzacions a tota l'extensió",
+		"hideButton": "Amagar anunci",
+		"detailsDiscussLinks": "Obtingues més detalls i participa a <discordLink>Discord</discordLink> i <redditLink>Reddit</redditLink> 🚀"
 	},
 	"browser": {
 		"rooWantsToUse": "Roo vol utilitzar el navegador:",
@@ -249,5 +238,7 @@
 			"scrollUp": "Desplaçar amunt",
 			"close": "Tancar navegador"
 		}
-	}
+	},
+	"systemPromptWarning": "ADVERTÈNCIA: S'ha activat una substitució personalitzada d'instruccions del sistema. Això pot trencar greument la funcionalitat i causar un comportament impredictible.",
+	"selectApiConfig": "Seleccioneu la configuració de l'API"
 }

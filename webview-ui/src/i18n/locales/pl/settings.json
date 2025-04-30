@@ -35,7 +35,7 @@
 	"autoApprove": {
 		"description": "Pozwól Roo na automatyczne wykonywanie operacji bez wymagania zatwierdzenia. Włącz te ustawienia tylko jeśli w pełni ufasz AI i rozumiesz związane z tym zagrożenia bezpieczeństwa.",
 		"readOnly": {
-			"label": "Zawsze zatwierdzaj operacje tylko do odczytu",
+			"label": "Odczyt",
 			"description": "Gdy włączone, Roo automatycznie będzie wyświetlać zawartość katalogów i czytać pliki bez konieczności klikania przycisku Zatwierdź.",
 			"outsideWorkspace": {
 				"label": "Uwzględnij pliki poza obszarem roboczym",
@@ -43,7 +43,7 @@
 			}
 		},
 		"write": {
-			"label": "Zawsze zatwierdzaj operacje zapisu",
+			"label": "Zapis",
 			"description": "Automatycznie twórz i edytuj pliki bez konieczności zatwierdzania",
 			"delayLabel": "Opóźnienie po zapisach, aby umożliwić diagnostyce wykrycie potencjalnych problemów",
 			"outsideWorkspace": {
@@ -52,29 +52,28 @@
 			}
 		},
 		"browser": {
-			"label": "Zawsze zatwierdzaj akcje przeglądarki",
-			"description": "Automatycznie wykonuj akcje przeglądarki bez konieczności zatwierdzania",
-			"note": "Uwaga: Dotyczy tylko gdy model obsługuje używanie komputera"
+			"label": "Przeglądarka",
+			"description": "Automatycznie wykonuj akcje przeglądarki bez konieczności zatwierdzania. Uwaga: Dotyczy tylko gdy model obsługuje używanie komputera"
 		},
 		"retry": {
-			"label": "Zawsze ponawiaj nieudane żądania API",
+			"label": "Ponów",
 			"description": "Automatycznie ponawiaj nieudane żądania API, gdy serwer zwraca odpowiedź z błędem",
 			"delayLabel": "Opóźnienie przed ponowieniem żądania"
 		},
 		"mcp": {
-			"label": "Zawsze zatwierdzaj narzędzia MCP",
+			"label": "MCP",
 			"description": "Włącz automatyczne zatwierdzanie poszczególnych narzędzi MCP w widoku Serwerów MCP (wymaga zarówno tego ustawienia, jak i pola wyboru \"Zawsze zezwalaj\" narzędzia)"
 		},
 		"modeSwitch": {
-			"label": "Zawsze zatwierdzaj przełączanie trybów",
+			"label": "Tryb",
 			"description": "Automatycznie przełączaj między różnymi trybami bez konieczności zatwierdzania"
 		},
 		"subtasks": {
-			"label": "Zawsze zatwierdzaj tworzenie i ukończenie podzadań",
+			"label": "Podzadania",
 			"description": "Zezwalaj na tworzenie i ukończenie podzadań bez konieczności zatwierdzania"
 		},
 		"execute": {
-			"label": "Zawsze zatwierdzaj dozwolone operacje wykonania",
+			"label": "Wykonaj",
 			"description": "Automatycznie wykonuj dozwolone polecenia terminala bez konieczności zatwierdzania",
 			"allowedCommands": "Dozwolone polecenia auto-wykonania",
 			"allowedCommandsDescription": "Prefiksy poleceń, które mogą być automatycznie wykonywane, gdy \"Zawsze zatwierdzaj operacje wykonania\" jest włączone. Dodaj * aby zezwolić na wszystkie polecenia (używaj z ostrożnością).",
@@ -129,6 +128,8 @@
 		"getMistralApiKey": "Uzyskaj klucz API Mistral / Codestral",
 		"codestralBaseUrl": "URL bazowy Codestral (opcjonalnie)",
 		"codestralBaseUrlDesc": "Ustaw opcjonalny URL dla modeli Codestral.",
+		"xaiApiKey": "Klucz API xAI",
+		"getXaiApiKey": "Uzyskaj klucz API xAI",
 		"awsCredentials": "Poświadczenia AWS",
 		"awsProfile": "Profil AWS",
 		"awsProfileName": "Nazwa profilu AWS",
@@ -226,7 +227,14 @@
 		"rateLimitSeconds": {
 			"label": "Limit szybkości",
 			"description": "Minimalny czas między żądaniami API."
-		}
+		},
+		"reasoningEffort": {
+			"label": "Wysiłek rozumowania modelu",
+			"high": "Wysoki",
+			"medium": "Średni",
+			"low": "Niski"
+		},
+		"setReasoningLevel": "Włącz wysiłek rozumowania"
 	},
 	"browser": {
 		"enable": {
@@ -304,6 +312,14 @@
 			"label": "Limit czasu integracji powłoki terminala",
 			"description": "Maksymalny czas oczekiwania na inicjalizację integracji powłoki przed wykonaniem poleceń. Dla użytkowników z długim czasem uruchamiania powłoki, ta wartość może wymagać zwiększenia, jeśli widzisz błędy \"Shell Integration Unavailable\" w terminalu."
 		},
+		"shellIntegrationDisabled": {
+			"label": "Wyłącz integrację powłoki terminala",
+			"description": "Włącz tę opcję, jeśli polecenia terminala nie działają poprawnie lub widzisz błędy 'Shell Integration Unavailable'. Używa to prostszej metody uruchamiania poleceń, omijając niektóre zaawansowane funkcje terminala."
+		},
+		"compressProgressBar": {
+			"label": "Kompresuj wyjście pasków postępu",
+			"description": "Po włączeniu, przetwarza wyjście terminala z powrotami karetki (\\r), aby symulować sposób wyświetlania treści przez prawdziwy terminal. Usuwa to pośrednie stany pasków postępu, zachowując tylko stan końcowy, co oszczędza przestrzeń kontekstową dla bardziej istotnych informacji."
+		},
 		"zdotdir": {
 			"label": "Włącz obsługę ZDOTDIR",
 			"description": "Po włączeniu tworzy tymczasowy katalog dla ZDOTDIR, aby poprawnie obsłużyć integrację powłoki zsh. Zapewnia to prawidłowe działanie integracji powłoki VSCode z zsh, zachowując twoją konfigurację zsh. (eksperymentalne)"
@@ -374,6 +390,10 @@
 			"name": "Użyj eksperymentalnego narzędzia diff wieloblokowego",
 			"description": "Po włączeniu, Roo użyje narzędzia diff wieloblokowego. Spróbuje to zaktualizować wiele bloków kodu w pliku w jednym żądaniu."
 		}
+	},
+	"promptCaching": {
+		"label": "Włącz buforowanie podpowiedzi",
+		"description": "Po włączeniu, Roo będzie używać tego modelu z włączonym buforowaniem promptów w celu zmniejszenia kosztów."
 	},
 	"temperature": {
 		"useCustom": "Użyj niestandardowej temperatury",
@@ -472,11 +492,5 @@
 	"labels": {
 		"customArn": "Niestandardowy ARN",
 		"useCustomArn": "Użyj niestandardowego ARN..."
-	},
-	"interface": {
-		"showgreeting": {
-			"label": "Pokaż wiadomość powitalną",
-			"description": "Gdy włączone, Roo wyświetli wiadomość powitalną i wprowadzenie."
-		}
 	}
 }

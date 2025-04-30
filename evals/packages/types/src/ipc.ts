@@ -50,12 +50,12 @@ export type TaskCommand = z.infer<typeof taskCommandSchema>
  * TaskEvent
  */
 
+export enum EvalEventName {
+	Pass = "pass",
+	Fail = "fail",
+}
+
 export const taskEventSchema = z.discriminatedUnion("eventName", [
-	z.object({
-		eventName: z.literal(RooCodeEventName.Connect),
-		payload: z.unknown(),
-		taskId: z.number(),
-	}),
 	z.object({
 		eventName: z.literal(RooCodeEventName.Message),
 		payload: rooCodeEventsSchema.shape[RooCodeEventName.Message],
@@ -111,6 +111,21 @@ export const taskEventSchema = z.discriminatedUnion("eventName", [
 		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskTokenUsageUpdated],
 		taskId: z.number().optional(),
 	}),
+	z.object({
+		eventName: z.literal(RooCodeEventName.TaskToolFailed),
+		payload: rooCodeEventsSchema.shape[RooCodeEventName.TaskToolFailed],
+		taskId: z.number().optional(),
+	}),
+	z.object({
+		eventName: z.literal(EvalEventName.Pass),
+		payload: z.undefined(),
+		taskId: z.number(),
+	}),
+	z.object({
+		eventName: z.literal(EvalEventName.Fail),
+		payload: z.undefined(),
+		taskId: z.number(),
+	}),
 ])
 
 export type TaskEvent = z.infer<typeof taskEventSchema>
@@ -125,6 +140,7 @@ export enum IpcMessageType {
 	Ack = "Ack",
 	TaskCommand = "TaskCommand",
 	TaskEvent = "TaskEvent",
+	EvalEvent = "EvalEvent",
 }
 
 export enum IpcOrigin {

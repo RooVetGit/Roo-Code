@@ -1,6 +1,6 @@
 {
-	"extension.displayName": "Roo Code",
-	"extension.description": "आपके एडिटर में एआई एजेंट्स की पूरी डेवलपमेंट टीम। पहले Roo Cline के नाम से जाना जाता था।",
+	"extension.displayName": "Roo Code (पहले Roo Cline)",
+	"extension.description": "आपके एडिटर में एआई एजेंट्स की पूरी डेवलपमेंट टीम।",
 	"command.newTask.title": "नया कार्य",
 	"command.explainCode.title": "कोड समझाएं",
 	"command.fixCode.title": "कोड ठीक करें",
@@ -12,8 +12,7 @@
 	"command.terminal.addToContext.title": "टर्मिनल सामग्री को संदर्भ में जोड़ें",
 	"command.terminal.fixCommand.title": "यह कमांड ठीक करें",
 	"command.terminal.explainCommand.title": "यह कमांड समझाएं",
-	"command.terminal.fixCommandInCurrentTask.title": "यह कमांड ठीक करें (वर्तमान कार्य)",
-	"command.terminal.explainCommandInCurrentTask.title": "यह कमांड समझाएं (वर्तमान कार्य)",
+	"command.acceptInput.title": "इनपुट/सुझाव स्वीकारें",
 	"views.activitybar.title": "Roo Code",
 	"views.contextMenu.label": "Roo Code",
 	"views.terminalMenu.label": "Roo Code",

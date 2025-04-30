@@ -15,23 +15,19 @@ import { setPanel } from "../../activate/registerCommands"
 import {
 	ApiConfiguration,
 	ApiProvider,
-	ModelInfo,
 	requestyDefaultModelId,
-	requestyDefaultModelInfo,
 	openRouterDefaultModelId,
-	openRouterDefaultModelInfo,
 	glamaDefaultModelId,
-	glamaDefaultModelInfo,
 } from "../../shared/api"
 import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { HistoryItem } from "../../shared/HistoryItem"
 import { ExtensionMessage } from "../../shared/ExtensionMessage"
-import { Mode, PromptComponent, defaultModeSlug, getModeBySlug, getGroupName } from "../../shared/modes"
+import { Mode, PromptComponent, defaultModeSlug } from "../../shared/modes"
 import { experimentDefault } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
-import { Terminal, TERMINAL_SHELL_INTEGRATION_TIMEOUT } from "../../integrations/terminal/Terminal"
+import { Terminal } from "../../integrations/terminal/Terminal"
 import { downloadTask } from "../../integrations/misc/export-markdown"
 import { getTheme } from "../../integrations/theme/getTheme"
 import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
@@ -45,10 +41,11 @@ import { ContextProxy } from "../config/ContextProxy"
 import { ProviderSettingsManager } from "../config/ProviderSettingsManager"
 import { CustomModesManager } from "../config/CustomModesManager"
 import { buildApiHandler } from "../../api"
-import { ACTION_NAMES } from "../CodeActionProvider"
+import { CodeActionName } from "../CodeActionProvider"
 import { Cline, ClineOptions } from "../Cline"
 import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
+import { getSystemPromptFilePath } from "../prompts/sections/custom-system-prompt"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { getWorkspacePath } from "../../utils/path"
 import { webviewMessageHandler } from "./webviewMessageHandler"
@@ -78,8 +75,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
-	public readonly latestAnnouncementId = "apr-04-2025-boomerang" // update for Boomerang Tasks announcement
-	public readonly contextProxy: ContextProxy
+	public readonly latestAnnouncementId = "apr-23-2025-3-14" // Update for v3.14.0 announcement
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
 
@@ -87,11 +83,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		readonly context: vscode.ExtensionContext,
 		private readonly outputChannel: vscode.OutputChannel,
 		private readonly renderContext: "sidebar" | "editor" = "sidebar",
+		public readonly contextProxy: ContextProxy,
 	) {
 		super()
 
 		this.log("ClineProvider instantiated")
-		this.contextProxy = new ContextProxy(context)
 		ClineProvider.activeInstances.add(this)
 
 		// Register this provider with the telemetry service to enable it to add
@@ -266,9 +262,12 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	public static async handleCodeAction(
 		command: string,
-		promptType: keyof typeof ACTION_NAMES,
+		promptType: CodeActionName,
 		params: Record<string, string | any[]>,
 	): Promise<void> {
+		// Capture telemetry for code action usage
+		telemetryService.captureCodeActionUsed(promptType)
+
 		const visibleProvider = await ClineProvider.getInstance()
 
 		if (!visibleProvider) {
@@ -277,20 +276,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		const { customSupportPrompts } = await visibleProvider.getState()
 
+		// TODO: Improve type safety for promptType.
 		const prompt = supportPrompt.create(promptType, params, customSupportPrompts)
 
 		if (command.endsWith("addToContext")) {
-			await visibleProvider.postMessageToWebview({
-				type: "invoke",
-				invoke: "setChatBoxMessage",
-				text: prompt,
-			})
-
-			return
-		}
-
-		if (visibleProvider.getCurrentCline() && command.endsWith("InCurrentTask")) {
-			await visibleProvider.postMessageToWebview({ type: "invoke", invoke: "sendMessage", text: prompt })
+			await visibleProvider.postMessageToWebview({ type: "invoke", invoke: "setChatBoxMessage", text: prompt })
 			return
 		}
 
@@ -302,7 +292,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		promptType: "TERMINAL_ADD_TO_CONTEXT" | "TERMINAL_FIX" | "TERMINAL_EXPLAIN",
 		params: Record<string, string | any[]>,
 	): Promise<void> {
+		// Capture telemetry for terminal action usage
+		telemetryService.captureCodeActionUsed(promptType)
 		const visibleProvider = await ClineProvider.getInstance()
+
 		if (!visibleProvider) {
 			return
 		}
@@ -312,20 +305,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const prompt = supportPrompt.create(promptType, params, customSupportPrompts)
 
 		if (command.endsWith("AddToContext")) {
-			await visibleProvider.postMessageToWebview({
-				type: "invoke",
-				invoke: "setChatBoxMessage",
-				text: prompt,
-			})
-			return
-		}
-
-		if (visibleProvider.getCurrentCline() && command.endsWith("InCurrentTask")) {
-			await visibleProvider.postMessageToWebview({
-				type: "invoke",
-				invoke: "sendMessage",
-				text: prompt,
-			})
+			await visibleProvider.postMessageToWebview({ type: "invoke", invoke: "setChatBoxMessage", text: prompt })
 			return
 		}
 
@@ -353,25 +333,25 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		// Initialize out-of-scope variables that need to recieve persistent global state values
 		this.getState().then(
 			({
-				soundEnabled,
-				terminalShellIntegrationTimeout,
-				terminalCommandDelay,
-				terminalZshClearEolMark,
-				terminalZshOhMy,
-				terminalZshP10k,
-				terminalPowershellCounter,
-				terminalZdotdir,
+				soundEnabled = false,
+				terminalShellIntegrationTimeout = Terminal.defaultShellIntegrationTimeout,
+				terminalShellIntegrationDisabled = false,
+				terminalCommandDelay = 0,
+				terminalZshClearEolMark = true,
+				terminalZshOhMy = false,
+				terminalZshP10k = false,
+				terminalPowershellCounter = false,
+				terminalZdotdir = false,
 			}) => {
-				setSoundEnabled(soundEnabled ?? false)
-				Terminal.setShellIntegrationTimeout(
-					terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT,
-				)
-				Terminal.setCommandDelay(terminalCommandDelay ?? 0)
-				Terminal.setTerminalZshClearEolMark(terminalZshClearEolMark ?? true)
-				Terminal.setTerminalZshOhMy(terminalZshOhMy ?? false)
-				Terminal.setTerminalZshP10k(terminalZshP10k ?? false)
-				Terminal.setPowershellCounter(terminalPowershellCounter ?? false)
-				Terminal.setTerminalZdotdir(terminalZdotdir ?? false)
+				setSoundEnabled(soundEnabled)
+				Terminal.setShellIntegrationTimeout(terminalShellIntegrationTimeout)
+				Terminal.setShellIntegrationDisabled(terminalShellIntegrationDisabled)
+				Terminal.setCommandDelay(terminalCommandDelay)
+				Terminal.setTerminalZshClearEolMark(terminalZshClearEolMark)
+				Terminal.setTerminalZshOhMy(terminalZshOhMy)
+				Terminal.setTerminalZshP10k(terminalZshP10k)
+				Terminal.setPowershellCounter(terminalPowershellCounter)
+				Terminal.setTerminalZdotdir(terminalZdotdir)
 			},
 		)
 
@@ -478,7 +458,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				| "customInstructions"
 				| "enableDiff"
 				| "enableCheckpoints"
-				| "checkpointStorage"
 				| "fuzzyMatchThreshold"
 				| "consecutiveMistakeLimit"
 				| "experiments"
@@ -490,7 +469,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			customModePrompts,
 			diffEnabled: enableDiff,
 			enableCheckpoints,
-			checkpointStorage,
 			fuzzyMatchThreshold,
 			mode,
 			customInstructions: globalInstructions,
@@ -506,7 +484,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			customInstructions: effectiveInstructions,
 			enableDiff,
 			enableCheckpoints,
-			checkpointStorage,
 			fuzzyMatchThreshold,
 			task,
 			images,
@@ -535,7 +512,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			customModePrompts,
 			diffEnabled: enableDiff,
 			enableCheckpoints,
-			checkpointStorage,
 			fuzzyMatchThreshold,
 			mode,
 			customInstructions: globalInstructions,
@@ -545,38 +521,12 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const modePrompt = customModePrompts?.[mode] as PromptComponent
 		const effectiveInstructions = [globalInstructions, modePrompt?.customInstructions].filter(Boolean).join("\n\n")
 
-		const taskId = historyItem.id
-		const globalStorageDir = this.contextProxy.globalStorageUri.fsPath
-		const workspaceDir = this.cwd
-
-		const checkpoints: Pick<ClineOptions, "enableCheckpoints" | "checkpointStorage"> = {
-			enableCheckpoints,
-			checkpointStorage,
-		}
-
-		if (enableCheckpoints) {
-			try {
-				checkpoints.checkpointStorage = await ShadowCheckpointService.getTaskStorage({
-					taskId,
-					globalStorageDir,
-					workspaceDir,
-				})
-
-				this.log(
-					`[ClineProvider#initClineWithHistoryItem] Using ${checkpoints.checkpointStorage} storage for ${taskId}`,
-				)
-			} catch (error) {
-				checkpoints.enableCheckpoints = false
-				this.log(`[ClineProvider#initClineWithHistoryItem] Error getting task storage: ${error.message}`)
-			}
-		}
-
 		const cline = new Cline({
 			provider: this,
 			apiConfiguration,
 			customInstructions: effectiveInstructions,
 			enableDiff,
-			...checkpoints,
+			enableCheckpoints,
 			fuzzyMatchThreshold,
 			historyItem,
 			experiments,
@@ -646,6 +596,13 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			"codicon.css",
 		])
 
+		const materialIconsUri = getUri(webview, this.contextProxy.extensionUri, [
+			"node_modules",
+			"vscode-material-icons",
+			"generated",
+			"icons",
+		])
+
 		const imagesUri = getUri(webview, this.contextProxy.extensionUri, ["assets", "images"])
 
 		const file = "src/index.tsx"
@@ -681,6 +638,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					<link href="${codiconsUri}" rel="stylesheet" />
 					<script nonce="${nonce}">
 						window.IMAGES_BASE_URI = "${imagesUri}"
+						window.MATERIAL_ICONS_BASE_URI = "${materialIconsUri}"
 					</script>
 					<title>Roo Code</title>
 				</head>
@@ -730,6 +688,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			"codicon.css",
 		])
 
+		// The material icons from the React build output
+		const materialIconsUri = getUri(webview, this.contextProxy.extensionUri, [
+			"node_modules",
+			"vscode-material-icons",
+			"generated",
+			"icons",
+		])
+
 		const imagesUri = getUri(webview, this.contextProxy.extensionUri, ["assets", "images"])
 
 		// const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "assets", "main.js"))
@@ -761,11 +727,12 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
             <meta name="theme-color" content="#000000">
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:; script-src 'nonce-${nonce}' 'wasm-unsafe-eval' https://us-assets.i.posthog.com; connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com;">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:; script-src ${webview.cspSource} 'wasm-unsafe-eval' 'nonce-${nonce}' https://us-assets.i.posthog.com 'strict-dynamic'; connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com;">
             <link rel="stylesheet" type="text/css" href="${stylesUri}">
 			<link href="${codiconsUri}" rel="stylesheet" />
 			<script nonce="${nonce}">
 				window.IMAGES_BASE_URI = "${imagesUri}"
+				window.MATERIAL_ICONS_BASE_URI = "${materialIconsUri}"
 			</script>
             <title>Roo Code</title>
           </head>
@@ -946,29 +913,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		return getSettingsDirectoryPath(globalStoragePath)
 	}
 
-	private async ensureCacheDirectoryExists() {
-		const { getCacheDirectoryPath } = await import("../../shared/storagePathManager")
-		const globalStoragePath = this.contextProxy.globalStorageUri.fsPath
-		return getCacheDirectoryPath(globalStoragePath)
-	}
-
-	async writeModelsToCache<T>(filename: string, data: T) {
-		const cacheDir = await this.ensureCacheDirectoryExists()
-		await fs.writeFile(path.join(cacheDir, filename), JSON.stringify(data))
-	}
-
-	async readModelsFromCache(filename: string): Promise<Record<string, ModelInfo> | undefined> {
-		const filePath = path.join(await this.ensureCacheDirectoryExists(), filename)
-		const fileExists = await fileExistsAtPath(filePath)
-
-		if (fileExists) {
-			const fileContents = await fs.readFile(filePath, "utf8")
-			return JSON.parse(fileContents)
-		}
-
-		return undefined
-	}
-
 	// OpenRouter
 
 	async handleOpenRouterCallback(code: string) {
@@ -997,7 +941,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			apiProvider: "openrouter",
 			openRouterApiKey: apiKey,
 			openRouterModelId: apiConfiguration?.openRouterModelId || openRouterDefaultModelId,
-			openRouterModelInfo: apiConfiguration?.openRouterModelInfo || openRouterDefaultModelInfo,
 		}
 
 		await this.upsertApiConfiguration(currentApiConfigName, newConfiguration)
@@ -1028,7 +971,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			apiProvider: "glama",
 			glamaApiKey: apiKey,
 			glamaModelId: apiConfiguration?.glamaModelId || glamaDefaultModelId,
-			glamaModelInfo: apiConfiguration?.glamaModelInfo || glamaDefaultModelInfo,
 		}
 
 		await this.upsertApiConfiguration(currentApiConfigName, newConfiguration)
@@ -1044,7 +986,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			apiProvider: "requesty",
 			requestyApiKey: code,
 			requestyModelId: apiConfiguration?.requestyModelId || requestyDefaultModelId,
-			requestyModelInfo: apiConfiguration?.requestyModelInfo || requestyDefaultModelInfo,
 		}
 
 		await this.upsertApiConfiguration(currentApiConfigName, newConfiguration)
@@ -1186,6 +1127,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		this.postMessageToWebview({ type: "state", state })
 	}
 
+	/**
+	 * Checks if there is a file-based system prompt override for the given mode
+	 */
+	async hasFileBasedSystemPromptOverride(mode: Mode): Promise<boolean> {
+		const promptFilePath = getSystemPromptFilePath(this.cwd, mode)
+		return await fileExistsAtPath(promptFilePath)
+	}
+
 	async getStateToPostToWebview() {
 		const {
 			apiConfiguration,
@@ -1205,7 +1154,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			ttsSpeed,
 			diffEnabled,
 			enableCheckpoints,
-			checkpointStorage,
 			taskHistory,
 			soundVolume,
 			browserViewportSize,
@@ -1216,6 +1164,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			writeDelayMs,
 			terminalOutputLineLimit,
 			terminalShellIntegrationTimeout,
+			terminalShellIntegrationDisabled,
 			terminalCommandDelay,
 			terminalPowershellCounter,
 			terminalZshClearEolMark,
@@ -1242,14 +1191,19 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			telemetrySetting,
 			showRooIgnoredFiles,
 			language,
-			showGreeting,
 			maxReadFileLine,
+			terminalCompressProgressBar,
+			historyPreviewCollapsed,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
 		const machineId = vscode.env.machineId
 		const allowedCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
 		const cwd = this.cwd
+
+		// Check if there's a system prompt override for the current mode
+		const currentMode = mode ?? defaultModeSlug
+		const hasSystemPromptOverride = await this.hasFileBasedSystemPromptOverride(currentMode)
 
 		return {
 			version: this.context.extension?.packageJSON?.version ?? "",
@@ -1277,7 +1231,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			ttsSpeed: ttsSpeed ?? 1.0,
 			diffEnabled: diffEnabled ?? true,
 			enableCheckpoints: enableCheckpoints ?? true,
-			checkpointStorage: checkpointStorage ?? "task",
 			shouldShowAnnouncement:
 				telemetrySetting !== "unset" && lastShownAnnouncementId !== this.latestAnnouncementId,
 			allowedCommands,
@@ -1289,7 +1242,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			cachedChromeHostUrl: cachedChromeHostUrl,
 			writeDelayMs: writeDelayMs ?? 1000,
 			terminalOutputLineLimit: terminalOutputLineLimit ?? 500,
-			terminalShellIntegrationTimeout: terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT,
+			terminalShellIntegrationTimeout: terminalShellIntegrationTimeout ?? Terminal.defaultShellIntegrationTimeout,
+			terminalShellIntegrationDisabled: terminalShellIntegrationDisabled ?? false,
 			terminalCommandDelay: terminalCommandDelay ?? 0,
 			terminalPowershellCounter: terminalPowershellCounter ?? false,
 			terminalZshClearEolMark: terminalZshClearEolMark ?? true,
@@ -1320,11 +1274,13 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			telemetryKey,
 			machineId,
 			showRooIgnoredFiles: showRooIgnoredFiles ?? true,
-			language,
+			language: language ?? formatLanguage(vscode.env.language),
 			renderContext: this.renderContext,
 			maxReadFileLine: maxReadFileLine ?? 500,
 			settingsImportedAt: this.settingsImportedAt,
-			showGreeting: showGreeting ?? true, // Ensure showGreeting is included in the returned state
+			terminalCompressProgressBar: terminalCompressProgressBar ?? true,
+			hasSystemPromptOverride,
+			historyPreviewCollapsed: historyPreviewCollapsed ?? false,
 		}
 	}
 
@@ -1355,6 +1311,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			apiConfiguration: providerSettings,
 			lastShownAnnouncementId: stateValues.lastShownAnnouncementId,
 			customInstructions: stateValues.customInstructions,
+			apiModelId: stateValues.apiModelId,
 			alwaysAllowReadOnly: stateValues.alwaysAllowReadOnly ?? false,
 			alwaysAllowReadOnlyOutsideWorkspace: stateValues.alwaysAllowReadOnlyOutsideWorkspace ?? false,
 			alwaysAllowWrite: stateValues.alwaysAllowWrite ?? false,
@@ -1371,7 +1328,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			ttsSpeed: stateValues.ttsSpeed ?? 1.0,
 			diffEnabled: stateValues.diffEnabled ?? true,
 			enableCheckpoints: stateValues.enableCheckpoints ?? true,
-			checkpointStorage: stateValues.checkpointStorage ?? "task",
 			soundVolume: stateValues.soundVolume,
 			browserViewportSize: stateValues.browserViewportSize ?? "900x600",
 			screenshotQuality: stateValues.screenshotQuality ?? 75,
@@ -1382,13 +1338,15 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			writeDelayMs: stateValues.writeDelayMs ?? 1000,
 			terminalOutputLineLimit: stateValues.terminalOutputLineLimit ?? 500,
 			terminalShellIntegrationTimeout:
-				stateValues.terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT,
+				stateValues.terminalShellIntegrationTimeout ?? Terminal.defaultShellIntegrationTimeout,
+			terminalShellIntegrationDisabled: stateValues.terminalShellIntegrationDisabled ?? false,
 			terminalCommandDelay: stateValues.terminalCommandDelay ?? 0,
 			terminalPowershellCounter: stateValues.terminalPowershellCounter ?? false,
 			terminalZshClearEolMark: stateValues.terminalZshClearEolMark ?? true,
 			terminalZshOhMy: stateValues.terminalZshOhMy ?? false,
 			terminalZshP10k: stateValues.terminalZshP10k ?? false,
 			terminalZdotdir: stateValues.terminalZdotdir ?? false,
+			terminalCompressProgressBar: stateValues.terminalCompressProgressBar ?? true,
 			mode: stateValues.mode ?? defaultModeSlug,
 			language: stateValues.language ?? formatLanguage(vscode.env.language),
 			mcpEnabled: stateValues.mcpEnabled ?? true,
@@ -1412,7 +1370,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 			maxReadFileLine: stateValues.maxReadFileLine ?? 500,
-			showGreeting: stateValues.showGreeting ?? true, // Ensure showGreeting is returned by getState
+			historyPreviewCollapsed: stateValues.historyPreviewCollapsed ?? false,
 		}
 	}
 

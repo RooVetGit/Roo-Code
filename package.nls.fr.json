@@ -1,6 +1,6 @@
 {
-	"extension.displayName": "Roo Code",
-	"extension.description": "Une équipe complète de développement d'agents IA dans votre éditeur. Anciennement Roo Cline.",
+	"extension.displayName": "Roo Code (anciennement Roo Cline)",
+	"extension.description": "Une équipe complète de développement d'agents IA dans votre éditeur.",
 	"command.newTask.title": "Nouvelle Tâche",
 	"command.explainCode.title": "Expliquer le Code",
 	"command.fixCode.title": "Corriger le Code",
@@ -12,8 +12,7 @@
 	"command.terminal.addToContext.title": "Ajouter le Contenu du Terminal au Contexte",
 	"command.terminal.fixCommand.title": "Corriger cette Commande",
 	"command.terminal.explainCommand.title": "Expliquer cette Commande",
-	"command.terminal.fixCommandInCurrentTask.title": "Corriger cette Commande (Tâche Actuelle)",
-	"command.terminal.explainCommandInCurrentTask.title": "Expliquer cette Commande (Tâche Actuelle)",
+	"command.acceptInput.title": "Accepter l'Entrée/Suggestion",
 	"views.activitybar.title": "Roo Code",
 	"views.contextMenu.label": "Roo Code",
 	"views.terminalMenu.label": "Roo Code",

@@ -8,19 +8,17 @@ import {
 	Bell,
 	Database,
 	SquareTerminal,
-	Cog,
 	FlaskConical,
 	AlertTriangle,
 	Globe,
 	Info,
 	LucideIcon,
-	Monitor,
 } from "lucide-react"
 import { CaretSortIcon } from "@radix-ui/react-icons"
 
-import { ExperimentId } from "../../../../src/shared/experiments"
-import { TelemetrySetting } from "../../../../src/shared/TelemetrySetting"
-import { ApiConfiguration } from "../../../../src/shared/api"
+import { ExperimentId } from "@roo/shared/experiments"
+import { TelemetrySetting } from "@roo/shared/TelemetrySetting"
+import { ApiConfiguration } from "@roo/shared/api"
 
 import { vscode } from "@/utils/vscode"
 import { ExtensionStateContextType, useExtensionState } from "@/context/ExtensionStateContext"
@@ -48,11 +46,9 @@ import ApiOptions from "./ApiOptions"
 import { AutoApproveSettings } from "./AutoApproveSettings"
 import { BrowserSettings } from "./BrowserSettings"
 import { CheckpointSettings } from "./CheckpointSettings"
-import { InterfaceSettings } from "./InterfaceSettings"
 import { NotificationSettings } from "./NotificationSettings"
 import { ContextManagementSettings } from "./ContextManagementSettings"
 import { TerminalSettings } from "./TerminalSettings"
-import { AdvancedSettings } from "./AdvancedSettings"
 import { ExperimentalSettings } from "./ExperimentalSettings"
 import { LanguageSettings } from "./LanguageSettings"
 import { About } from "./About"
@@ -67,11 +63,9 @@ const sectionNames = [
 	"autoApprove",
 	"browser",
 	"checkpoints",
-	"interface",
 	"notifications",
 	"contextManagement",
 	"terminal",
-	"advanced",
 	"experimental",
 	"language",
 	"about",
@@ -115,7 +109,6 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		browserToolEnabled,
 		browserViewportSize,
 		enableCheckpoints,
-		checkpointStorage,
 		diffEnabled,
 		experiments,
 		fuzzyMatchThreshold,
@@ -132,6 +125,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		telemetrySetting,
 		terminalOutputLineLimit,
 		terminalShellIntegrationTimeout,
+		terminalShellIntegrationDisabled,
 		terminalCommandDelay,
 		terminalPowershellCounter,
 		terminalZshClearEolMark,
@@ -142,7 +136,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		showRooIgnoredFiles,
 		remoteBrowserEnabled,
 		maxReadFileLine,
-		showGreeting,
+		terminalCompressProgressBar,
 	} = cachedState
 
 	// Make sure apiConfiguration is initialized and managed by SettingsView.
@@ -238,7 +232,6 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "soundVolume", value: soundVolume })
 			vscode.postMessage({ type: "diffEnabled", bool: diffEnabled })
 			vscode.postMessage({ type: "enableCheckpoints", bool: enableCheckpoints })
-			vscode.postMessage({ type: "checkpointStorage", text: checkpointStorage })
 			vscode.postMessage({ type: "browserViewportSize", text: browserViewportSize })
 			vscode.postMessage({ type: "remoteBrowserHost", text: remoteBrowserHost })
 			vscode.postMessage({ type: "remoteBrowserEnabled", bool: remoteBrowserEnabled })
@@ -247,12 +240,14 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "screenshotQuality", value: screenshotQuality ?? 75 })
 			vscode.postMessage({ type: "terminalOutputLineLimit", value: terminalOutputLineLimit ?? 500 })
 			vscode.postMessage({ type: "terminalShellIntegrationTimeout", value: terminalShellIntegrationTimeout })
+			vscode.postMessage({ type: "terminalShellIntegrationDisabled", bool: terminalShellIntegrationDisabled })
 			vscode.postMessage({ type: "terminalCommandDelay", value: terminalCommandDelay })
 			vscode.postMessage({ type: "terminalPowershellCounter", bool: terminalPowershellCounter })
 			vscode.postMessage({ type: "terminalZshClearEolMark", bool: terminalZshClearEolMark })
 			vscode.postMessage({ type: "terminalZshOhMy", bool: terminalZshOhMy })
 			vscode.postMessage({ type: "terminalZshP10k", bool: terminalZshP10k })
 			vscode.postMessage({ type: "terminalZdotdir", bool: terminalZdotdir })
+			vscode.postMessage({ type: "terminalCompressProgressBar", bool: terminalCompressProgressBar })
 			vscode.postMessage({ type: "mcpEnabled", bool: mcpEnabled })
 			vscode.postMessage({ type: "alwaysApproveResubmit", bool: alwaysApproveResubmit })
 			vscode.postMessage({ type: "requestDelaySeconds", value: requestDelaySeconds })
@@ -266,7 +261,6 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "alwaysAllowSubtasks", bool: alwaysAllowSubtasks })
 			vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
 			vscode.postMessage({ type: "telemetrySetting", text: telemetrySetting })
-			vscode.postMessage({ type: "showGreeting", bool: showGreeting })
 			setChangeDetected(false)
 		}
 	}
@@ -295,11 +289,9 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 	const autoApproveRef = useRef<HTMLDivElement>(null)
 	const browserRef = useRef<HTMLDivElement>(null)
 	const checkpointsRef = useRef<HTMLDivElement>(null)
-	const interfaceRef = useRef<HTMLDivElement>(null)
 	const notificationsRef = useRef<HTMLDivElement>(null)
 	const contextManagementRef = useRef<HTMLDivElement>(null)
 	const terminalRef = useRef<HTMLDivElement>(null)
-	const advancedRef = useRef<HTMLDivElement>(null)
 	const experimentalRef = useRef<HTMLDivElement>(null)
 	const languageRef = useRef<HTMLDivElement>(null)
 	const aboutRef = useRef<HTMLDivElement>(null)
@@ -310,11 +302,9 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			{ id: "autoApprove", icon: CheckCheck, ref: autoApproveRef },
 			{ id: "browser", icon: SquareMousePointer, ref: browserRef },
 			{ id: "checkpoints", icon: GitBranch, ref: checkpointsRef },
-			{ id: "interface", icon: Monitor, ref: interfaceRef },
 			{ id: "notifications", icon: Bell, ref: notificationsRef },
 			{ id: "contextManagement", icon: Database, ref: contextManagementRef },
 			{ id: "terminal", icon: SquareTerminal, ref: terminalRef },
-			{ id: "advanced", icon: Cog, ref: advancedRef },
 			{ id: "experimental", icon: FlaskConical, ref: experimentalRef },
 			{ id: "language", icon: Globe, ref: languageRef },
 			{ id: "about", icon: Info, ref: aboutRef },
@@ -324,11 +314,9 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			autoApproveRef,
 			browserRef,
 			checkpointsRef,
-			interfaceRef,
 			notificationsRef,
 			contextManagementRef,
 			terminalRef,
-			advancedRef,
 			experimentalRef,
 		],
 	)
@@ -472,13 +460,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 				<div ref={checkpointsRef}>
 					<CheckpointSettings
 						enableCheckpoints={enableCheckpoints}
-						checkpointStorage={checkpointStorage}
 						setCachedStateField={setCachedStateField}
 					/>
-				</div>
-
-				<div ref={interfaceRef}>
-					<InterfaceSettings showGreeting={showGreeting} setCachedStateField={setCachedStateField} />
 				</div>
 
 				<div ref={notificationsRef}>
@@ -505,20 +488,14 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 					<TerminalSettings
 						terminalOutputLineLimit={terminalOutputLineLimit}
 						terminalShellIntegrationTimeout={terminalShellIntegrationTimeout}
+						terminalShellIntegrationDisabled={terminalShellIntegrationDisabled}
 						terminalCommandDelay={terminalCommandDelay}
 						terminalPowershellCounter={terminalPowershellCounter}
 						terminalZshClearEolMark={terminalZshClearEolMark}
 						terminalZshOhMy={terminalZshOhMy}
 						terminalZshP10k={terminalZshP10k}
 						terminalZdotdir={terminalZdotdir}
-						setCachedStateField={setCachedStateField}
-					/>
-				</div>
-
-				<div ref={advancedRef}>
-					<AdvancedSettings
-						diffEnabled={diffEnabled}
-						fuzzyMatchThreshold={fuzzyMatchThreshold}
+						terminalCompressProgressBar={terminalCompressProgressBar}
 						setCachedStateField={setCachedStateField}
 					/>
 				</div>
