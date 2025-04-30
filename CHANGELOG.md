@@ -1,6 +1,6 @@
 # Roo Code Changelog
 
-## [3.15.1] - 2025-04-30
+## 3.15.1 - 2025-04-30
 
 - Capture stderr in execa-spawned processes
 - Play sound only when action needed from the user (thanks @olearycrew)
