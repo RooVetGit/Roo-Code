@@ -53,7 +53,7 @@ export class TerminalRegistry {
 					const terminal = this.getTerminalByVSCETerminal(e.terminal)
 
 					console.info("[onDidStartTerminalShellExecution]", {
-						command: e.execution.commandLine.value,
+						command: e.execution?.commandLine?.value,
 						terminalId: terminal?.id,
 					})
 
@@ -79,7 +79,7 @@ export class TerminalRegistry {
 					const exitDetails = TerminalProcess.interpretExitCode(e.exitCode)
 
 					console.info("[onDidEndTerminalShellExecution]", {
-						command: e.execution.commandLine.value,
+						command: e.execution?.commandLine?.value,
 						terminalId: terminal?.id,
 						...exitDetails,
 					})
