@@ -70,7 +70,7 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({ data, onHoverChange }) 
 		const costDeltas = data.map((d) => d.costDelta)
 
 		// Cast to any to bypass TypeScript error - uPlot actually accepts regular arrays
-		return [requestIndices, costDeltas] as any
+		return [requestIndices, costDeltas] as [number[], number[]]
 	}, [data])
 
 	// 2. Define uPlot Options using resolved styles
@@ -194,7 +194,6 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({ data, onHoverChange }) 
 
 							// Ensure data is valid before calling callback
 							if (typeof requestIndex === "number" && typeof costDelta === "number") {
-								console.log(`[CostTrendChart Hover] Index: ${requestIndex}, CostDelta: ${costDelta}`) // <-- Add logging
 								onHoverChange({ isHovering: true, index: requestIndex, cost: costDelta })
 							} else {
 								// Data point invalid, treat as not hovering
@@ -231,7 +230,8 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({ data, onHoverChange }) 
 
 			try {
 				// Create new uPlot instance
-				const uplotInstance = new uPlot(options, uplotData, chartRef.current)
+				// Cast uplotData here where we know it's not empty, acknowledging uPlot's runtime flexibility
+				const uplotInstance = new uPlot(options, uplotData as uPlot.AlignedData, chartRef.current)
 				uplotInstanceRef.current = uplotInstance
 				// console.log("uPlot instance created successfully");
 			} catch (error) {
