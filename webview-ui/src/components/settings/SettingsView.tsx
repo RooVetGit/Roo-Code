@@ -302,23 +302,26 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 
 	useImperativeHandle(ref, () => ({ checkUnsaveChanges }), [checkUnsaveChanges])
 
-	const onConfirmDialogResult = useCallback((confirm: boolean) => {
-		if (confirm) {
-			confirmDialogHandler.current?.()
-		}
-	}, [])
+	const onConfirmDialogResult = useCallback(
+		(confirm: boolean) => {
+			if (confirm) {
+				// Discard changes: Reset state and flag
+				setCachedState(extensionState) // Revert to original state
+				setChangeDetected(false) // Reset change flag
+				confirmDialogHandler.current?.() // Execute the pending action (e.g., tab switch)
+			}
+			// If confirm is false (Cancel), do nothing, dialog closes automatically
+		},
+		[extensionState], // Depend on extensionState to get the latest original state
+	)
 
 	// Handle tab changes with unsaved changes check
 	const handleTabChange = useCallback(
 		(newTab: SectionName) => {
-			if (isChangeDetected) {
-				confirmDialogHandler.current = () => setActiveTab(newTab)
-				setDiscardDialogShow(true)
-			} else {
-				setActiveTab(newTab)
-			}
+			// Directly switch tab without checking for unsaved changes
+			setActiveTab(newTab)
 		},
-		[isChangeDetected],
+		[], // No dependency on isChangeDetected needed anymore
 	)
 
 	// Store direct DOM element refs for each tab
