@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useEvent } from "react-use"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
-import { ExtensionMessage } from "../../src/shared/ExtensionMessage"
+import { ExtensionMessage } from "@roo/shared/ExtensionMessage"
 import TranslationProvider from "./i18n/TranslationContext"
 
 import { vscode } from "./utils/vscode"
@@ -123,7 +123,6 @@ const App = () => {
 				isHidden={tab !== "chat"}
 				showAnnouncement={showAnnouncement}
 				hideAnnouncement={() => setShowAnnouncement(false)}
-				showHistoryView={() => switchTab("history")}
 			/>
 			<HumanRelayDialog
 				isOpen={humanRelayDialogState.isOpen}

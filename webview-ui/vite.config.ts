@@ -1,9 +1,25 @@
-import path from "path"
+import { resolve } from "path"
 import fs from "fs"
 
-import { defineConfig } from "vite"
+import { defineConfig, type Plugin } from "vite"
 import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
+
+function wasmPlugin(): Plugin {
+	return {
+		name: "wasm",
+		async load(id: string) {
+			if (id.endsWith(".wasm")) {
+				const wasmBinary = await import(id)
+
+				return `
+          			const wasmModule = new WebAssembly.Module(${wasmBinary.default});
+          			export default wasmModule;
+        		`
+			}
+		},
+	}
+}
 
 // Custom plugin to write the server port to a file
 const writePortToFile = () => {
@@ -17,7 +33,7 @@ const writePortToFile = () => {
 
 				if (port) {
 					// Write to a file in the project root
-					const portFilePath = path.resolve(__dirname, "../.vite-port")
+					const portFilePath = resolve(__dirname, "../.vite-port")
 					fs.writeFileSync(portFilePath, port.toString())
 					console.log(`[Vite Plugin] Server started on port ${port}`)
 					console.log(`[Vite Plugin] Port information written to ${portFilePath}`)
@@ -31,10 +47,12 @@ const writePortToFile = () => {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-	plugins: [react(), tailwindcss(), writePortToFile()],
+	plugins: [react(), tailwindcss(), writePortToFile(), wasmPlugin()],
 	resolve: {
 		alias: {
-			"@": path.resolve(__dirname, "./src"),
+			"@": resolve(__dirname, "./src"),
+			"@src": resolve(__dirname, "./src"),
+			"@roo": resolve(__dirname, "../src"),
 		},
 	},
 	build: {
@@ -63,4 +81,8 @@ export default defineConfig({
 		"process.platform": JSON.stringify(process.platform),
 		"process.env.VSCODE_TEXTMATE_DEBUG": JSON.stringify(process.env.VSCODE_TEXTMATE_DEBUG),
 	},
+	optimizeDeps: {
+		exclude: ["@vscode/codicons", "vscode-oniguruma", "shiki"],
+	},
+	assetsInclude: ["**/*.wasm"],
 })

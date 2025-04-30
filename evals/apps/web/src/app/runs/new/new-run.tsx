@@ -94,8 +94,7 @@ export function NewRun() {
 					}
 
 					const openRouterModelId = openRouterModel.id
-					const openRouterModelInfo = openRouterModel.modelInfo
-					values.settings = { ...(values.settings || {}), openRouterModelId, openRouterModelInfo }
+					values.settings = { ...(values.settings || {}), openRouterModelId }
 				}
 
 				const { id } = await createRun(values)
@@ -158,6 +157,7 @@ export function NewRun() {
 					.parse(JSON.parse(await file.text()))
 
 				const providerSettings = providerProfiles.apiConfigs[providerProfiles.currentApiConfigName] ?? {}
+
 				const {
 					apiProvider,
 					apiModelId,
@@ -177,6 +177,7 @@ export function NewRun() {
 					case "gemini":
 					case "mistral":
 					case "openai-native":
+					case "xai":
 					case "vertex":
 						setValue("model", apiModelId ?? "")
 						break

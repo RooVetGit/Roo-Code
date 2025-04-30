@@ -1,45 +1,41 @@
-import { GeminiHandler } from "../gemini"
-import { Anthropic } from "@anthropic-ai/sdk"
-import { GoogleGenerativeAI } from "@google/generative-ai"
+// npx jest src/api/providers/__tests__/gemini.test.ts
 
-// Mock the Google Generative AI SDK
-jest.mock("@google/generative-ai", () => ({
-	GoogleGenerativeAI: jest.fn().mockImplementation(() => ({
-		getGenerativeModel: jest.fn().mockReturnValue({
-			generateContentStream: jest.fn(),
-			generateContent: jest.fn().mockResolvedValue({
-				response: {
-					text: () => "Test response",
-				},
-			}),
-		}),
-	})),
-}))
+import { Anthropic } from "@anthropic-ai/sdk"
+
+import { GeminiHandler } from "../gemini"
+import { geminiDefaultModelId, type ModelInfo } from "../../../shared/api"
+
+const GEMINI_20_FLASH_THINKING_NAME = "gemini-2.0-flash-thinking-exp-1219"
 
 describe("GeminiHandler", () => {
 	let handler: GeminiHandler
 
 	beforeEach(() => {
+		// Create mock functions
+		const mockGenerateContentStream = jest.fn()
+		const mockGenerateContent = jest.fn()
+		const mockGetGenerativeModel = jest.fn()
+
 		handler = new GeminiHandler({
 			apiKey: "test-key",
-			apiModelId: "gemini-2.0-flash-thinking-exp-1219",
+			apiModelId: GEMINI_20_FLASH_THINKING_NAME,
 			geminiApiKey: "test-key",
 		})
+
+		// Replace the client with our mock
+		handler["client"] = {
+			models: {
+				generateContentStream: mockGenerateContentStream,
+				generateContent: mockGenerateContent,
+				getGenerativeModel: mockGetGenerativeModel,
+			},
+		} as any
 	})
 
 	describe("constructor", () => {
 		it("should initialize with provided config", () => {
 			expect(handler["options"].geminiApiKey).toBe("test-key")
-			expect(handler["options"].apiModelId).toBe("gemini-2.0-flash-thinking-exp-1219")
-		})
-
-		it.skip("should throw if API key is missing", () => {
-			expect(() => {
-				new GeminiHandler({
-					apiModelId: "gemini-2.0-flash-thinking-exp-1219",
-					geminiApiKey: "",
-				})
-			}).toThrow("API key is required for Google Gemini")
+			expect(handler["options"].apiModelId).toBe(GEMINI_20_FLASH_THINKING_NAME)
 		})
 	})
 
@@ -58,24 +54,14 @@ describe("GeminiHandler", () => {
 		const systemPrompt = "You are a helpful assistant"
 
 		it("should handle text messages correctly", async () => {
-			// Mock the stream response
-			const mockStream = {
-				stream: [{ text: () => "Hello" }, { text: () => " world!" }],
-				response: {
-					usageMetadata: {
-						promptTokenCount: 10,
-						candidatesTokenCount: 5,
-					},
+			// Setup the mock implementation to return an async generator
+			;(handler["client"].models.generateContentStream as jest.Mock).mockResolvedValue({
+				[Symbol.asyncIterator]: async function* () {
+					yield { text: "Hello" }
+					yield { text: " world!" }
+					yield { usageMetadata: { promptTokenCount: 10, candidatesTokenCount: 5 } }
 				},
-			}
-
-			// Setup the mock implementation
-			const mockGenerateContentStream = jest.fn().mockResolvedValue(mockStream)
-			const mockGetGenerativeModel = jest.fn().mockReturnValue({
-				generateContentStream: mockGenerateContentStream,
 			})
-
-			;(handler["client"] as any).getGenerativeModel = mockGetGenerativeModel
 
 			const stream = handler.createMessage(systemPrompt, mockMessages)
 			const chunks = []
@@ -86,85 +72,52 @@ describe("GeminiHandler", () => {
 
 			// Should have 3 chunks: 'Hello', ' world!', and usage info
 			expect(chunks.length).toBe(3)
-			expect(chunks[0]).toEqual({
-				type: "text",
-				text: "Hello",
-			})
-			expect(chunks[1]).toEqual({
-				type: "text",
-				text: " world!",
-			})
-			expect(chunks[2]).toEqual({
-				type: "usage",
-				inputTokens: 10,
-				outputTokens: 5,
-			})
+			expect(chunks[0]).toEqual({ type: "text", text: "Hello" })
+			expect(chunks[1]).toEqual({ type: "text", text: " world!" })
+			expect(chunks[2]).toEqual({ type: "usage", inputTokens: 10, outputTokens: 5 })
 
-			// Verify the model configuration
-			expect(mockGetGenerativeModel).toHaveBeenCalledWith(
-				{
-					model: "gemini-2.0-flash-thinking-exp-1219",
-					systemInstruction: systemPrompt,
-				},
-				{
-					baseUrl: undefined,
-				},
-			)
-
-			// Verify generation config
-			expect(mockGenerateContentStream).toHaveBeenCalledWith(
+			// Verify the call to generateContentStream
+			expect(handler["client"].models.generateContentStream).toHaveBeenCalledWith(
 				expect.objectContaining({
-					generationConfig: {
+					model: GEMINI_20_FLASH_THINKING_NAME,
+					config: expect.objectContaining({
 						temperature: 0,
-					},
+						systemInstruction: systemPrompt,
+					}),
 				}),
 			)
 		})
 
 		it("should handle API errors", async () => {
 			const mockError = new Error("Gemini API error")
-			const mockGenerateContentStream = jest.fn().mockRejectedValue(mockError)
-			const mockGetGenerativeModel = jest.fn().mockReturnValue({
-				generateContentStream: mockGenerateContentStream,
-			})
-
-			;(handler["client"] as any).getGenerativeModel = mockGetGenerativeModel
+			;(handler["client"].models.generateContentStream as jest.Mock).mockRejectedValue(mockError)
 
 			const stream = handler.createMessage(systemPrompt, mockMessages)
 
 			await expect(async () => {
-				for await (const chunk of stream) {
+				for await (const _chunk of stream) {
 					// Should throw before yielding any chunks
 				}
-			}).rejects.toThrow("Gemini API error")
+			}).rejects.toThrow()
 		})
 	})
 
 	describe("completePrompt", () => {
 		it("should complete prompt successfully", async () => {
-			const mockGenerateContent = jest.fn().mockResolvedValue({
-				response: {
-					text: () => "Test response",
-				},
+			// Mock the response with text property
+			;(handler["client"].models.generateContent as jest.Mock).mockResolvedValue({
+				text: "Test response",
 			})
-			const mockGetGenerativeModel = jest.fn().mockReturnValue({
-				generateContent: mockGenerateContent,
-			})
-			;(handler["client"] as any).getGenerativeModel = mockGetGenerativeModel
 
 			const result = await handler.completePrompt("Test prompt")
 			expect(result).toBe("Test response")
-			expect(mockGetGenerativeModel).toHaveBeenCalledWith(
-				{
-					model: "gemini-2.0-flash-thinking-exp-1219",
-				},
-				{
-					baseUrl: undefined,
-				},
-			)
-			expect(mockGenerateContent).toHaveBeenCalledWith({
+
+			// Verify the call to generateContent
+			expect(handler["client"].models.generateContent).toHaveBeenCalledWith({
+				model: GEMINI_20_FLASH_THINKING_NAME,
 				contents: [{ role: "user", parts: [{ text: "Test prompt" }] }],
-				generationConfig: {
+				config: {
+					httpOptions: undefined,
 					temperature: 0,
 				},
 			})
@@ -172,11 +125,7 @@ describe("GeminiHandler", () => {
 
 		it("should handle API errors", async () => {
 			const mockError = new Error("Gemini API error")
-			const mockGenerateContent = jest.fn().mockRejectedValue(mockError)
-			const mockGetGenerativeModel = jest.fn().mockReturnValue({
-				generateContent: mockGenerateContent,
-			})
-			;(handler["client"] as any).getGenerativeModel = mockGetGenerativeModel
+			;(handler["client"].models.generateContent as jest.Mock).mockRejectedValue(mockError)
 
 			await expect(handler.completePrompt("Test prompt")).rejects.toThrow(
 				"Gemini completion error: Gemini API error",
@@ -184,15 +133,10 @@ describe("GeminiHandler", () => {
 		})
 
 		it("should handle empty response", async () => {
-			const mockGenerateContent = jest.fn().mockResolvedValue({
-				response: {
-					text: () => "",
-				},
+			// Mock the response with empty text
+			;(handler["client"].models.generateContent as jest.Mock).mockResolvedValue({
+				text: "",
 			})
-			const mockGetGenerativeModel = jest.fn().mockReturnValue({
-				generateContent: mockGenerateContent,
-			})
-			;(handler["client"] as any).getGenerativeModel = mockGetGenerativeModel
 
 			const result = await handler.completePrompt("Test prompt")
 			expect(result).toBe("")
@@ -202,7 +146,7 @@ describe("GeminiHandler", () => {
 	describe("getModel", () => {
 		it("should return correct model info", () => {
 			const modelInfo = handler.getModel()
-			expect(modelInfo.id).toBe("gemini-2.0-flash-thinking-exp-1219")
+			expect(modelInfo.id).toBe(GEMINI_20_FLASH_THINKING_NAME)
 			expect(modelInfo.info).toBeDefined()
 			expect(modelInfo.info.maxTokens).toBe(8192)
 			expect(modelInfo.info.contextWindow).toBe(32_767)
@@ -214,7 +158,92 @@ describe("GeminiHandler", () => {
 				geminiApiKey: "test-key",
 			})
 			const modelInfo = invalidHandler.getModel()
-			expect(modelInfo.id).toBe("gemini-2.0-flash-001") // Default model
+			expect(modelInfo.id).toBe(geminiDefaultModelId) // Default model
+		})
+	})
+
+	describe("calculateCost", () => {
+		// Mock ModelInfo based on gemini-1.5-flash-latest pricing (per 1M tokens)
+		// Removed 'id' and 'name' as they are not part of ModelInfo type directly
+		const mockInfo: ModelInfo = {
+			inputPrice: 0.125, // $/1M tokens
+			outputPrice: 0.375, // $/1M tokens
+			cacheWritesPrice: 0.125, // Assume same as input for test
+			cacheReadsPrice: 0.125 * 0.25, // Assume 0.25x input for test
+			contextWindow: 1_000_000,
+			maxTokens: 8192,
+			supportsPromptCache: true, // Enable cache calculations for tests
+		}
+
+		it("should calculate cost correctly based on input and output tokens", () => {
+			const inputTokens = 10000 // Use larger numbers for per-million pricing
+			const outputTokens = 20000
+			// Added non-null assertions (!) as mockInfo guarantees these values
+			const expectedCost =
+				(inputTokens / 1_000_000) * mockInfo.inputPrice! + (outputTokens / 1_000_000) * mockInfo.outputPrice!
+
+			const cost = handler.calculateCost({ info: mockInfo, inputTokens, outputTokens })
+			expect(cost).toBeCloseTo(expectedCost)
+		})
+
+		it("should return 0 if token counts are zero", () => {
+			// Note: The method expects numbers, not undefined. Passing undefined would be a type error.
+			// The calculateCost method itself returns undefined if prices are missing, but 0 if tokens are 0 and prices exist.
+			expect(handler.calculateCost({ info: mockInfo, inputTokens: 0, outputTokens: 0 })).toBe(0)
+		})
+
+		it("should handle only input tokens", () => {
+			const inputTokens = 5000
+			// Added non-null assertion (!)
+			const expectedCost = (inputTokens / 1_000_000) * mockInfo.inputPrice!
+			expect(handler.calculateCost({ info: mockInfo, inputTokens, outputTokens: 0 })).toBeCloseTo(expectedCost)
+		})
+
+		it("should handle only output tokens", () => {
+			const outputTokens = 15000
+			// Added non-null assertion (!)
+			const expectedCost = (outputTokens / 1_000_000) * mockInfo.outputPrice!
+			expect(handler.calculateCost({ info: mockInfo, inputTokens: 0, outputTokens })).toBeCloseTo(expectedCost)
+		})
+
+		it("should calculate cost with cache write tokens", () => {
+			const inputTokens = 10000
+			const outputTokens = 20000
+			const cacheWriteTokens = 5000
+			const CACHE_TTL = 5 // Match the constant in gemini.ts
+
+			// Added non-null assertions (!)
+			const expectedInputCost = (inputTokens / 1_000_000) * mockInfo.inputPrice!
+			const expectedOutputCost = (outputTokens / 1_000_000) * mockInfo.outputPrice!
+			const expectedCacheWriteCost =
+				mockInfo.cacheWritesPrice! * (cacheWriteTokens / 1_000_000) * (CACHE_TTL / 60)
+			const expectedCost = expectedInputCost + expectedOutputCost + expectedCacheWriteCost
+
+			const cost = handler.calculateCost({ info: mockInfo, inputTokens, outputTokens, cacheWriteTokens })
+			expect(cost).toBeCloseTo(expectedCost)
+		})
+
+		it("should calculate cost with cache read tokens", () => {
+			const inputTokens = 10000 // Total logical input
+			const outputTokens = 20000
+			const cacheReadTokens = 8000 // Part of inputTokens read from cache
+
+			const uncachedReadTokens = inputTokens - cacheReadTokens
+			// Added non-null assertions (!)
+			const expectedInputCost = (uncachedReadTokens / 1_000_000) * mockInfo.inputPrice!
+			const expectedOutputCost = (outputTokens / 1_000_000) * mockInfo.outputPrice!
+			const expectedCacheReadCost = mockInfo.cacheReadsPrice! * (cacheReadTokens / 1_000_000)
+			const expectedCost = expectedInputCost + expectedOutputCost + expectedCacheReadCost
+
+			const cost = handler.calculateCost({ info: mockInfo, inputTokens, outputTokens, cacheReadTokens })
+			expect(cost).toBeCloseTo(expectedCost)
+		})
+
+		it("should return undefined if pricing info is missing", () => {
+			// Create a copy and explicitly set a price to undefined
+			const incompleteInfo: ModelInfo = { ...mockInfo, outputPrice: undefined }
+			const cost = handler.calculateCost({ info: incompleteInfo, inputTokens: 1000, outputTokens: 1000 })
+			expect(cost).toBeUndefined()
 		})
 	})
 })

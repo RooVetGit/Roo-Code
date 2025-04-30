@@ -1,5 +1,5 @@
 {
-	"greeting": "Roo 可以為您做些什麼？",
+	"greeting": "歡迎使用 Roo Code",
 	"task": {
 		"title": "工作",
 		"seeMore": "顯示更多",
@@ -7,7 +7,7 @@
 		"tokens": "Tokens:",
 		"cache": "快取：",
 		"apiCost": "API 費用：",
-		"contextWindow": "上下文視窗：",
+		"contextWindow": "上下文長度：",
 		"closeAndStart": "關閉現有工作並開始一項新的工作",
 		"export": "匯出工作紀錄",
 		"delete": "刪除工作（按住 Shift 並點選可跳過確認）"
@@ -52,6 +52,10 @@
 		"title": "執行時繼續",
 		"tooltip": "儘管有警告仍繼續執行"
 	},
+	"killCommand": {
+		"title": "終止指令",
+		"tooltip": "終止目前的指令"
+	},
 	"resumeTask": {
 		"title": "繼續工作",
 		"tooltip": "繼續目前的工作"
@@ -65,9 +69,27 @@
 		"tooltip": "取消目前操作"
 	},
 	"scrollToBottom": "捲動至對話框底部",
-	"aboutMe": "由於程式代理功能的最新突破，我能夠逐步處理複雜的軟體開發工作。透過允許我建立和編輯檔案、探索複雜專案、使用瀏覽器和執行終端機命令（在您授權後）的工具，我可以以超越程式碼補全或技術支援的方式協助您。我甚至可以使用 MCP 建立新工具並擴展自己的能力。",
+	"about": "透過 AI 輔助產生、重構和偵錯程式碼。<br />查看我們的 <DocsLink>說明文件</DocsLink> 以瞭解更多資訊。",
+	"onboarding": "<strong>您在此工作區中的工作清單是空的。</strong> 請在下方輸入工作以開始。 不確定如何開始？ 在 <DocsLink>說明文件</DocsLink> 中閱讀更多關於 Roo 能為您做什麼的資訊。",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "任務拆分",
+			"description": "將任務拆分為更小、更易於管理的部分。"
+		},
+		"stickyModels": {
+			"title": "黏性模式",
+			"description": "每個模式都會記住您上次使用的模型"
+		},
+		"tools": {
+			"title": "工具",
+			"description": "允許 AI 透過瀏覽網路、執行命令等方式解決問題。"
+		},
+		"customizableModes": {
+			"title": "自訂模式",
+			"description": "具有專屬行為和指定模型的特定角色"
+		}
+	},
 	"selectMode": "選擇互動模式",
-	"selectApiConfig": "選擇 API 設定",
 	"enhancePrompt": "使用額外內容增強提示",
 	"addImages": "新增圖片到訊息中",
 	"sendMessage": "傳送訊息",
@@ -120,7 +142,12 @@
 		"didRead": "Roo 已讀取此檔案：",
 		"wantsToEdit": "Roo 想要編輯此檔案：",
 		"wantsToEditOutsideWorkspace": "Roo 想要編輯此工作區外的檔案：",
-		"wantsToCreate": "Roo 想要建立新檔案："
+		"wantsToCreate": "Roo 想要建立新檔案：",
+		"wantsToSearchReplace": "Roo 想要在此檔案中搜尋和取代：",
+		"didSearchReplace": "Roo 已在此檔案執行搜尋和取代：",
+		"wantsToInsert": "Roo 想要在此檔案中插入內容：",
+		"wantsToInsertWithLineNumber": "Roo 想要在此檔案第 {{lineNumber}} 行插入內容：",
+		"wantsToInsertAtEnd": "Roo 想要在此檔案末尾新增內容："
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo 想要檢視此目錄中最上層的檔案：",
@@ -181,12 +208,12 @@
 		"copyToInput": "複製到輸入框（或按住 Shift 並點選）"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.12 已發布",
-		"description": "Roo Code 3.12 帶來基於您意見回饋的新功能與改進。",
+		"title": "🎉 Roo Code 3.14 已發布",
+		"description": "Roo Code 3.14 帶來基於您意見回饋的新功能與改進。",
 		"whatsNew": "新功能",
-		"feature1": "<bold>Grok 支援</bold>: 新增 xAI 提供者並在 OpenRouter 上提供 Grok 推理強度選項",
-		"feature2": "<bold>差異編輯改進</bold>: 依設定檔配置及改進字串正規化以減少錯誤",
-		"feature3": "<bold>檢查點強化</bold>: 更快速且更可靠的檢查點功能",
+		"feature1": "<bold>編輯工具增強</bold>: <code>search_and_replace</code> 和 <code>insert_content</code> 工具已獲改進，並從實驗階段升級為正式功能",
+		"feature2": "<bold>差異更新修復</bold>: 我們持續改進 <code>apply_diff</code> 工具",
+		"feature3": "<bold>大量其他改進</bold>: 擴充套件中眾多的修復和增強功能",
 		"hideButton": "隱藏公告",
 		"detailsDiscussLinks": "在 <discordLink>Discord</discordLink> 和 <redditLink>Reddit</redditLink> 取得更多詳細資訊並參與討論 🚀"
 	},
@@ -211,5 +238,7 @@
 			"scrollUp": "向上捲動",
 			"close": "關閉瀏覽器"
 		}
-	}
+	},
+	"systemPromptWarning": "警告：自訂系統提示詞覆蓋已啟用。這可能嚴重破壞功能並導致不可預測的行為。",
+	"selectApiConfig": "選取 API 設定"
 }

@@ -29,47 +29,9 @@ type ProviderSettings = {
 	anthropicBaseUrl?: string | undefined
 	anthropicUseAuthToken?: boolean | undefined
 	glamaModelId?: string | undefined
-	glamaModelInfo?:
-		| ({
-				maxTokens?: (number | null) | undefined
-				contextWindow: number
-				supportsImages?: boolean | undefined
-				supportsComputerUse?: boolean | undefined
-				supportsPromptCache: boolean
-				inputPrice?: number | undefined
-				outputPrice?: number | undefined
-				cacheWritesPrice?: number | undefined
-				cacheReadsPrice?: number | undefined
-				description?: string | undefined
-				reasoningEffort?: ("low" | "medium" | "high") | undefined
-				thinking?: boolean | undefined
-				minTokensPerCachePoint?: number | undefined
-				maxCachePoints?: number | undefined
-				cachableFields?: string[] | undefined
-		  } | null)
-		| undefined
 	glamaApiKey?: string | undefined
 	openRouterApiKey?: string | undefined
 	openRouterModelId?: string | undefined
-	openRouterModelInfo?:
-		| ({
-				maxTokens?: (number | null) | undefined
-				contextWindow: number
-				supportsImages?: boolean | undefined
-				supportsComputerUse?: boolean | undefined
-				supportsPromptCache: boolean
-				inputPrice?: number | undefined
-				outputPrice?: number | undefined
-				cacheWritesPrice?: number | undefined
-				cacheReadsPrice?: number | undefined
-				description?: string | undefined
-				reasoningEffort?: ("low" | "medium" | "high") | undefined
-				thinking?: boolean | undefined
-				minTokensPerCachePoint?: number | undefined
-				maxCachePoints?: number | undefined
-				cachableFields?: string[] | undefined
-		  } | null)
-		| undefined
 	openRouterBaseUrl?: string | undefined
 	openRouterSpecificProvider?: string | undefined
 	openRouterUseMiddleOutTransform?: boolean | undefined
@@ -96,10 +58,12 @@ type ProviderSettings = {
 	openAiCustomModelInfo?:
 		| ({
 				maxTokens?: (number | null) | undefined
+				maxThinkingTokens?: (number | null) | undefined
 				contextWindow: number
 				supportsImages?: boolean | undefined
 				supportsComputerUse?: boolean | undefined
 				supportsPromptCache: boolean
+				isPromptCacheOptional?: boolean | undefined
 				inputPrice?: number | undefined
 				outputPrice?: number | undefined
 				cacheWritesPrice?: number | undefined
@@ -110,11 +74,21 @@ type ProviderSettings = {
 				minTokensPerCachePoint?: number | undefined
 				maxCachePoints?: number | undefined
 				cachableFields?: string[] | undefined
+				tiers?:
+					| {
+							contextWindow: number
+							inputPrice?: number | undefined
+							outputPrice?: number | undefined
+							cacheWritesPrice?: number | undefined
+							cacheReadsPrice?: number | undefined
+					  }[]
+					| undefined
 		  } | null)
 		| undefined
 	openAiUseAzure?: boolean | undefined
 	azureApiVersion?: string | undefined
 	openAiStreamingEnabled?: boolean | undefined
+	enableReasoningEffort?: boolean | undefined
 	ollamaModelId?: string | undefined
 	ollamaBaseUrl?: string | undefined
 	vsCodeLmModelSelector?:
@@ -138,55 +112,18 @@ type ProviderSettings = {
 	deepSeekApiKey?: string | undefined
 	unboundApiKey?: string | undefined
 	unboundModelId?: string | undefined
-	unboundModelInfo?:
-		| ({
-				maxTokens?: (number | null) | undefined
-				contextWindow: number
-				supportsImages?: boolean | undefined
-				supportsComputerUse?: boolean | undefined
-				supportsPromptCache: boolean
-				inputPrice?: number | undefined
-				outputPrice?: number | undefined
-				cacheWritesPrice?: number | undefined
-				cacheReadsPrice?: number | undefined
-				description?: string | undefined
-				reasoningEffort?: ("low" | "medium" | "high") | undefined
-				thinking?: boolean | undefined
-				minTokensPerCachePoint?: number | undefined
-				maxCachePoints?: number | undefined
-				cachableFields?: string[] | undefined
-		  } | null)
-		| undefined
 	requestyApiKey?: string | undefined
 	requestyModelId?: string | undefined
-	requestyModelInfo?:
-		| ({
-				maxTokens?: (number | null) | undefined
-				contextWindow: number
-				supportsImages?: boolean | undefined
-				supportsComputerUse?: boolean | undefined
-				supportsPromptCache: boolean
-				inputPrice?: number | undefined
-				outputPrice?: number | undefined
-				cacheWritesPrice?: number | undefined
-				cacheReadsPrice?: number | undefined
-				description?: string | undefined
-				reasoningEffort?: ("low" | "medium" | "high") | undefined
-				thinking?: boolean | undefined
-				minTokensPerCachePoint?: number | undefined
-				maxCachePoints?: number | undefined
-				cachableFields?: string[] | undefined
-		  } | null)
-		| undefined
 	xaiApiKey?: string | undefined
 	modelMaxTokens?: number | undefined
 	modelMaxThinkingTokens?: number | undefined
 	includeMaxTokens?: boolean | undefined
-	modelTemperature?: (number | null) | undefined
 	reasoningEffort?: ("low" | "medium" | "high") | undefined
-	rateLimitSeconds?: number | undefined
+	promptCachingEnabled?: boolean | undefined
 	diffEnabled?: boolean | undefined
 	fuzzyMatchThreshold?: number | undefined
+	modelTemperature?: (number | null) | undefined
+	rateLimitSeconds?: number | undefined
 	fakeAi?: unknown | undefined
 }
 
@@ -265,7 +202,6 @@ type GlobalSettings = {
 	remoteBrowserHost?: string | undefined
 	cachedChromeHostUrl?: string | undefined
 	enableCheckpoints?: boolean | undefined
-	showGreeting?: boolean | undefined
 	ttsEnabled?: boolean | undefined
 	ttsSpeed?: number | undefined
 	soundEnabled?: boolean | undefined
@@ -276,19 +212,19 @@ type GlobalSettings = {
 	maxReadFileLine?: number | undefined
 	terminalOutputLineLimit?: number | undefined
 	terminalShellIntegrationTimeout?: number | undefined
+	terminalShellIntegrationDisabled?: boolean | undefined
 	terminalCommandDelay?: number | undefined
 	terminalPowershellCounter?: boolean | undefined
 	terminalZshClearEolMark?: boolean | undefined
 	terminalZshOhMy?: boolean | undefined
 	terminalZshP10k?: boolean | undefined
 	terminalZdotdir?: boolean | undefined
+	terminalCompressProgressBar?: boolean | undefined
 	rateLimitSeconds?: number | undefined
 	diffEnabled?: boolean | undefined
 	fuzzyMatchThreshold?: number | undefined
 	experiments?:
 		| {
-				search_and_replace: boolean
-				insert_content: boolean
 				powerSteering: boolean
 		  }
 		| undefined
@@ -305,6 +241,7 @@ type GlobalSettings = {
 				| "ko"
 				| "pl"
 				| "pt-BR"
+				| "ru"
 				| "tr"
 				| "vi"
 				| "zh-CN"
@@ -355,6 +292,7 @@ type GlobalSettings = {
 		  }
 		| undefined
 	enhancementApiConfigId?: string | undefined
+	historyPreviewCollapsed?: boolean | undefined
 }
 
 export type { GlobalSettings }
@@ -375,12 +313,10 @@ type ClineMessage = {
 				| "mistake_limit_reached"
 				| "browser_action_launch"
 				| "use_mcp_server"
-				| "finishTask"
 		  )
 		| undefined
 	say?:
 		| (
-				| "task"
 				| "error"
 				| "api_req_started"
 				| "api_req_finished"
@@ -393,15 +329,11 @@ type ClineMessage = {
 				| "user_feedback"
 				| "user_feedback_diff"
 				| "command_output"
-				| "tool"
 				| "shell_integration_warning"
 				| "browser_action"
 				| "browser_action_result"
-				| "command"
 				| "mcp_server_request_started"
 				| "mcp_server_response"
-				| "new_task_started"
-				| "new_task"
 				| "subtask_result"
 				| "checkpoint_saved"
 				| "rooignore_error"
@@ -460,12 +392,10 @@ type RooCodeEvents = {
 							| "mistake_limit_reached"
 							| "browser_action_launch"
 							| "use_mcp_server"
-							| "finishTask"
 					  )
 					| undefined
 				say?:
 					| (
-							| "task"
 							| "error"
 							| "api_req_started"
 							| "api_req_finished"
@@ -478,15 +408,11 @@ type RooCodeEvents = {
 							| "user_feedback"
 							| "user_feedback_diff"
 							| "command_output"
-							| "tool"
 							| "shell_integration_warning"
 							| "browser_action"
 							| "browser_action_result"
-							| "command"
 							| "mcp_server_request_started"
 							| "mcp_server_response"
-							| "new_task_started"
-							| "new_task"
 							| "subtask_result"
 							| "checkpoint_saved"
 							| "rooignore_error"
@@ -530,6 +456,12 @@ type RooCodeEvents = {
 			totalCost: number
 			contextTokens: number
 		},
+		{
+			[x: string]: {
+				attempts: number
+				failures: number
+			}
+		},
 	]
 	taskTokenUsageUpdated: [
 		string,
@@ -541,6 +473,29 @@ type RooCodeEvents = {
 			totalCost: number
 			contextTokens: number
 		},
+	]
+	taskToolFailed: [
+		string,
+		(
+			| "execute_command"
+			| "read_file"
+			| "write_to_file"
+			| "apply_diff"
+			| "insert_content"
+			| "search_and_replace"
+			| "search_files"
+			| "list_files"
+			| "list_code_definition_names"
+			| "browser_action"
+			| "use_mcp_tool"
+			| "access_mcp_resource"
+			| "ask_followup_question"
+			| "attempt_completion"
+			| "switch_mode"
+			| "new_task"
+			| "fetch_instructions"
+		),
+		string,
 	]
 }
 

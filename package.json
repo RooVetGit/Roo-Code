@@ -3,7 +3,7 @@
 	"displayName": "%extension.displayName%",
 	"description": "%extension.description%",
 	"publisher": "RooVeterinaryInc",
-	"version": "3.12.0",
+	"version": "3.14.3",
 	"icon": "assets/icons/icon.png",
 	"galleryBanner": {
 		"color": "#617A91",
@@ -161,16 +161,6 @@
 				"category": "Terminal"
 			},
 			{
-				"command": "roo-cline.terminalFixCommandInCurrentTask",
-				"title": "%command.terminal.fixCommandInCurrentTask.title%",
-				"category": "Terminal"
-			},
-			{
-				"command": "roo-cline.terminalExplainCommandInCurrentTask",
-				"title": "%command.terminal.explainCommandInCurrentTask.title%",
-				"category": "Terminal"
-			},
-			{
 				"command": "roo-cline.setCustomStoragePath",
 				"title": "%command.setCustomStoragePath.title%",
 				"category": "%configuration.title%"
@@ -203,12 +193,8 @@
 					"group": "1_actions@2"
 				},
 				{
-					"command": "roo-cline.fixCode",
-					"group": "1_actions@3"
-				},
-				{
 					"command": "roo-cline.improveCode",
-					"group": "1_actions@4"
+					"group": "1_actions@3"
 				}
 			],
 			"terminal/context": [
@@ -229,14 +215,6 @@
 				{
 					"command": "roo-cline.terminalExplainCommand",
 					"group": "1_actions@3"
-				},
-				{
-					"command": "roo-cline.terminalFixCommandInCurrentTask",
-					"group": "1_actions@5"
-				},
-				{
-					"command": "roo-cline.terminalExplainCommandInCurrentTask",
-					"group": "1_actions@6"
 				}
 			],
 			"view/title": [
@@ -364,7 +342,7 @@
 		"install-webview": "cd webview-ui && npm install",
 		"install-e2e": "cd e2e && npm install",
 		"lint": "npm-run-all -l -p lint:*",
-		"lint:extension": "eslint src/**/*.ts",
+		"lint:extension": "eslint src --ext .ts",
 		"lint:webview": "cd webview-ui && npm run lint",
 		"lint:e2e": "cd e2e && npm run lint",
 		"check-types": "npm-run-all -l -p check-types:*",
@@ -404,8 +382,7 @@
 		"@anthropic-ai/sdk": "^0.37.0",
 		"@anthropic-ai/vertex-sdk": "^0.7.0",
 		"@aws-sdk/client-bedrock-runtime": "^3.779.0",
-		"@google-cloud/vertexai": "^1.9.3",
-		"@google/generative-ai": "^0.18.0",
+		"@google/genai": "^0.9.0",
 		"@mistralai/mistralai": "^1.3.6",
 		"@modelcontextprotocol/sdk": "^1.7.0",
 		"@types/clone-deep": "^4.0.4",
@@ -427,12 +404,11 @@
 		"fastest-levenshtein": "^1.0.16",
 		"fzf": "^0.5.2",
 		"get-folder-size": "^5.0.0",
-		"globby": "^14.0.2",
 		"i18next": "^24.2.2",
 		"isbinaryfile": "^5.0.2",
-		"js-tiktoken": "^1.0.19",
 		"mammoth": "^1.8.0",
 		"monaco-vscode-textmate-theme-converter": "^0.1.7",
+		"node-cache": "^5.1.2",
 		"node-ipc": "^12.0.0",
 		"openai": "^4.78.1",
 		"os-name": "^6.0.0",
@@ -451,10 +427,13 @@
 		"string-similarity": "^4.0.4",
 		"strip-ansi": "^7.1.0",
 		"strip-bom": "^5.0.0",
+		"tiktoken": "^1.0.21",
 		"tmp": "^0.2.3",
 		"tree-sitter-wasms": "^0.1.11",
 		"turndown": "^7.2.0",
+		"vscode-material-icons": "^0.1.1",
 		"web-tree-sitter": "^0.22.6",
+		"workerpool": "^9.2.0",
 		"zod": "^3.23.8"
 	},
 	"devDependencies": {
@@ -468,6 +447,7 @@
 		"@types/jest": "^29.5.14",
 		"@types/mocha": "^10.0.10",
 		"@types/node": "20.x",
+		"@types/node-cache": "^4.1.3",
 		"@types/node-ipc": "^9.2.3",
 		"@types/string-similarity": "^4.0.2",
 		"@typescript-eslint/eslint-plugin": "^7.14.1",
@@ -484,6 +464,7 @@
 		"knip": "^5.44.4",
 		"lint-staged": "^15.2.11",
 		"mkdirp": "^3.0.1",
+		"nock": "^14.0.4",
 		"npm-run-all": "^4.1.5",
 		"prettier": "^3.4.2",
 		"rimraf": "^6.0.1",

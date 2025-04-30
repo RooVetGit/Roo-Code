@@ -1,5 +1,5 @@
 {
-	"greeting": "Roo có thể giúp gì cho bạn?",
+	"greeting": "Chào mừng đến với Roo Code",
 	"task": {
 		"title": "Nhiệm vụ",
 		"seeMore": "Xem thêm",
@@ -7,7 +7,7 @@
 		"tokens": "Tokens:",
 		"cache": "Bộ nhớ đệm:",
 		"apiCost": "Chi phí API:",
-		"contextWindow": "Cửa sổ ngữ cảnh:",
+		"contextWindow": "Chiều dài bối cảnh:",
 		"closeAndStart": "Đóng nhiệm vụ và bắt đầu nhiệm vụ mới",
 		"export": "Xuất lịch sử nhiệm vụ",
 		"delete": "Xóa nhiệm vụ (Shift + Click để bỏ qua xác nhận)"
@@ -52,6 +52,10 @@
 		"title": "Tiếp tục trong khi chạy",
 		"tooltip": "Tiếp tục bất chấp cảnh báo"
 	},
+	"killCommand": {
+		"title": "Dừng lệnh",
+		"tooltip": "Dừng lệnh hiện tại"
+	},
 	"resumeTask": {
 		"title": "Tiếp tục nhiệm vụ",
 		"tooltip": "Tiếp tục nhiệm vụ hiện tại"
@@ -65,9 +69,27 @@
 		"tooltip": "Hủy thao tác hiện tại"
 	},
 	"scrollToBottom": "Cuộn xuống cuối cuộc trò chuyện",
-	"aboutMe": "Nhờ những đột phá mới nhất trong khả năng lập trình tác nhân, tôi có thể xử lý các nhiệm vụ phát triển phần mềm phức tạp từng bước một. Với các công cụ cho phép tôi tạo và chỉnh sửa tệp, khám phá các dự án phức tạp, sử dụng trình duyệt và thực thi lệnh terminal (sau khi bạn cấp quyền), tôi có thể hỗ trợ bạn theo cách vượt xa việc hoàn thành mã hoặc hỗ trợ kỹ thuật. Tôi thậm chí có thể sử dụng MCP để tạo các công cụ mới và mở rộng khả năng của mình.",
+	"about": "Tạo, tái cấu trúc và gỡ lỗi mã bằng sự hỗ trợ của AI.<br />Kiểm tra <DocsLink>tài liệu</DocsLink> của chúng tôi để tìm hiểu thêm.",
+	"onboarding": "<strong>Danh sách nhiệm vụ của bạn trong không gian làm việc này trống.</strong> Bắt đầu bằng cách nhập nhiệm vụ bên dưới. Bạn không chắc chắn nên bắt đầu như thế nào? Đọc thêm về những gì Roo có thể làm cho bạn trong <DocsLink>tài liệu</DocsLink>.",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "Nhiệm vụ Boomerang",
+			"description": "Chia nhỏ các nhiệm vụ thành các phần nhỏ hơn, dễ quản lý hơn."
+		},
+		"stickyModels": {
+			"title": "Chế độ dính",
+			"description": "Mỗi chế độ ghi nhớ mô hình đã sử dụng cuối cùng của bạn"
+		},
+		"tools": {
+			"title": "Công cụ",
+			"description": "Cho phép AI giải quyết vấn đề bằng cách duyệt web, chạy lệnh, v.v."
+		},
+		"customizableModes": {
+			"title": "Chế độ tùy chỉnh",
+			"description": "Các nhân vật chuyên biệt với hành vi riêng và mô hình được chỉ định"
+		}
+	},
 	"selectMode": "Chọn chế độ tương tác",
-	"selectApiConfig": "Chọn cấu hình API",
 	"enhancePrompt": "Nâng cao yêu cầu với ngữ cảnh bổ sung",
 	"addImages": "Thêm hình ảnh vào tin nhắn",
 	"sendMessage": "Gửi tin nhắn",
@@ -120,7 +142,12 @@
 		"didRead": "Roo đã đọc tệp này:",
 		"wantsToEdit": "Roo muốn chỉnh sửa tệp này:",
 		"wantsToEditOutsideWorkspace": "Roo muốn chỉnh sửa tệp này bên ngoài không gian làm việc:",
-		"wantsToCreate": "Roo muốn tạo một tệp mới:"
+		"wantsToCreate": "Roo muốn tạo một tệp mới:",
+		"wantsToSearchReplace": "Roo muốn thực hiện tìm kiếm và thay thế trong tệp này:",
+		"didSearchReplace": "Roo đã thực hiện tìm kiếm và thay thế trong tệp này:",
+		"wantsToInsert": "Roo muốn chèn nội dung vào tệp này:",
+		"wantsToInsertWithLineNumber": "Roo muốn chèn nội dung vào dòng {{lineNumber}} của tệp này:",
+		"wantsToInsertAtEnd": "Roo muốn thêm nội dung vào cuối tệp này:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo muốn xem các tệp cấp cao nhất trong thư mục này:",
@@ -181,12 +208,12 @@
 		"copyToInput": "Sao chép vào ô nhập liệu (hoặc Shift + nhấp chuột)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.12 Đã phát hành",
-		"description": "Roo Code 3.12 mang đến các tính năng và cải tiến mới dựa trên phản hồi của bạn.",
+		"title": "🎉 Roo Code 3.14 Đã phát hành",
+		"description": "Roo Code 3.14 mang đến các tính năng và cải tiến mới dựa trên phản hồi của bạn.",
 		"whatsNew": "Có gì mới",
-		"feature1": "<bold>Hỗ trợ Grok</bold>: Đã thêm nhà cung cấp xAI và các tùy chọn nỗ lực suy luận Grok trên OpenRouter",
-		"feature2": "<bold>Cải tiến chỉnh sửa khác biệt</bold>: Cấu hình theo hồ sơ và chuẩn hóa chuỗi tốt hơn để giảm lỗi",
-		"feature3": "<bold>Nâng cao điểm kiểm tra</bold>: Điểm kiểm tra nhanh hơn và đáng tin cậy hơn",
+		"feature1": "<bold>Công cụ chỉnh sửa được cải thiện</bold>: Các công cụ <code>search_and_replace</code> và <code>insert_content</code> đã được cải thiện và chuyển từ trạng thái thử nghiệm thành chính thức",
+		"feature2": "<bold>Sửa lỗi apply_diff</bold>: Chúng tôi tiếp tục cải thiện công cụ <code>apply_diff</code>",
+		"feature3": "<bold>Rất nhiều cải tiến khác</bold>: Vô số sửa lỗi và cải tiến trong toàn bộ tiện ích mở rộng",
 		"hideButton": "Ẩn thông báo",
 		"detailsDiscussLinks": "Nhận thêm chi tiết và thảo luận tại <discordLink>Discord</discordLink> và <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -211,5 +238,7 @@
 			"scrollUp": "Cuộn lên",
 			"close": "Đóng trình duyệt"
 		}
-	}
+	},
+	"systemPromptWarning": "CẢNH BÁO: Đã kích hoạt ghi đè lệnh nhắc hệ thống tùy chỉnh. Điều này có thể phá vỡ nghiêm trọng chức năng và gây ra hành vi không thể dự đoán.",
+	"selectApiConfig": "Chọn cấu hình API"
 }

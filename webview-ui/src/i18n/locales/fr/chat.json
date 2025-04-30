@@ -1,5 +1,5 @@
 {
-	"greeting": "Que peut faire Roo pour vous ?",
+	"greeting": "Bienvenue sur Roo Code",
 	"task": {
 		"title": "Tâche",
 		"seeMore": "Voir plus",
@@ -7,7 +7,7 @@
 		"tokens": "Tokens :",
 		"cache": "Cache :",
 		"apiCost": "Coût API :",
-		"contextWindow": "Fenêtre de contexte :",
+		"contextWindow": "Durée du contexte :",
 		"closeAndStart": "Fermer la tâche et en commencer une nouvelle",
 		"export": "Exporter l'historique des tâches",
 		"delete": "Supprimer la tâche (Shift + Clic pour ignorer la confirmation)"
@@ -52,6 +52,10 @@
 		"title": "Continuer pendant l'exécution",
 		"tooltip": "Continuer malgré les avertissements"
 	},
+	"killCommand": {
+		"title": "Arrêter la commande",
+		"tooltip": "Arrêter la commande actuelle"
+	},
 	"resumeTask": {
 		"title": "Reprendre la tâche",
 		"tooltip": "Continuer la tâche actuelle"
@@ -65,9 +69,27 @@
 		"tooltip": "Annuler l'opération actuelle"
 	},
 	"scrollToBottom": "Défiler jusqu'au bas du chat",
-	"aboutMe": "Grâce aux dernières avancées en matière de capacités de codage agent, je peux gérer des tâches complexes de développement logiciel étape par étape. Avec des outils qui me permettent de créer et d'éditer des fichiers, d'explorer des projets complexes, d'utiliser le navigateur et d'exécuter des commandes de terminal (après votre autorisation), je peux vous aider de manières qui vont au-delà de la complétion de code ou du support technique. Je peux même utiliser MCP pour créer de nouveaux outils et étendre mes propres capacités.",
+	"about": "Générer, refactoriser et déboguer du code avec l'assistance de l'IA.<br />Consultez notre <DocsLink>documentation</DocsLink> pour en savoir plus.",
+	"onboarding": "Grâce aux dernières avancées en matière de capacités de codage agent, je peux gérer des tâches complexes de développement logiciel étape par étape. Avec des outils qui me permettent de créer et d'éditer des fichiers, d'explorer des projets complexes, d'utiliser le navigateur et d'exécuter des commandes de terminal (après votre autorisation), je peux vous aider de manières qui vont au-delà de la complétion de code ou du support technique. Je peux même utiliser MCP pour créer de nouveaux outils et étendre mes propres capacités.",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "Tâches Boomerang",
+			"description": "Divisez les tâches en parties plus petites et gérables."
+		},
+		"stickyModels": {
+			"title": "Modes persistants",
+			"description": "Chaque mode se souvient de votre dernier modèle utilisé"
+		},
+		"tools": {
+			"title": "Outils",
+			"description": "Permettez à l'IA de résoudre des problèmes en naviguant sur le Web, en exécutant des commandes, et plus encore."
+		},
+		"customizableModes": {
+			"title": "Modes personnalisables",
+			"description": "Des personas spécialisés avec leurs propres comportements et modèles assignés"
+		}
+	},
 	"selectMode": "Sélectionner le mode d'interaction",
-	"selectApiConfig": "Sélectionner la configuration API",
 	"enhancePrompt": "Améliorer la requête avec un contexte supplémentaire",
 	"addImages": "Ajouter des images au message",
 	"sendMessage": "Envoyer le message",
@@ -117,7 +139,12 @@
 		"didRead": "Roo a lu ce fichier :",
 		"wantsToEdit": "Roo veut éditer ce fichier :",
 		"wantsToEditOutsideWorkspace": "Roo veut éditer ce fichier en dehors de l'espace de travail :",
-		"wantsToCreate": "Roo veut créer un nouveau fichier :"
+		"wantsToCreate": "Roo veut créer un nouveau fichier :",
+		"wantsToSearchReplace": "Roo veut effectuer une recherche et remplacement sur ce fichier :",
+		"didSearchReplace": "Roo a effectué une recherche et remplacement sur ce fichier :",
+		"wantsToInsert": "Roo veut insérer du contenu dans ce fichier :",
+		"wantsToInsertWithLineNumber": "Roo veut insérer du contenu dans ce fichier à la ligne {{lineNumber}} :",
+		"wantsToInsertAtEnd": "Roo veut ajouter du contenu à la fin de ce fichier :"
 	},
 	"instructions": {
 		"wantsToFetch": "Roo veut récupérer des instructions détaillées pour aider à la tâche actuelle"
@@ -181,12 +208,12 @@
 		"copyToInput": "Copier vers l'entrée (ou Shift + clic)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.12 est sortie",
-		"description": "Roo Code 3.12 apporte de nouvelles fonctionnalités et améliorations basées sur vos retours.",
+		"title": "🎉 Roo Code 3.14 est sortie",
+		"description": "Roo Code 3.14 apporte de nouvelles fonctionnalités et améliorations basées sur vos retours.",
 		"whatsNew": "Quoi de neuf",
-		"feature1": "<bold>Support Grok</bold> : Ajout du fournisseur xAI et des options d'effort de raisonnement pour Grok sur OpenRouter",
-		"feature2": "<bold>Améliorations de l'édition des différences</bold> : Configuration par profil et meilleure normalisation des chaînes pour moins d'erreurs",
-		"feature3": "<bold>Améliorations des points de contrôle</bold> : Points de contrôle plus rapides et plus fiables",
+		"feature1": "<bold>Outils d'édition améliorés</bold> : Les outils <code>search_and_replace</code> et <code>insert_content</code> ont été améliorés et ne sont plus expérimentaux",
+		"feature2": "<bold>Corrections pour apply_diff</bold> : Nous continuons à travailler sur l'amélioration de l'outil <code>apply_diff</code>",
+		"feature3": "<bold>Quantité d'autres améliorations</bold> : Nombreuses corrections et optimisations dans toute l'extension",
 		"hideButton": "Masquer l'annonce",
 		"detailsDiscussLinks": "Obtenez plus de détails et participez aux discussions sur <discordLink>Discord</discordLink> et <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -211,5 +238,7 @@
 			"scrollUp": "Défiler vers le haut",
 			"close": "Fermer le navigateur"
 		}
-	}
+	},
+	"systemPromptWarning": "AVERTISSEMENT : Remplacement d'instructions système personnalisées actif. Cela peut gravement perturber la fonctionnalité et provoquer un comportement imprévisible.",
+	"selectApiConfig": "Sélectionner la configuration de l’API"
 }

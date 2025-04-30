@@ -1,8 +1,8 @@
-import { DiffStrategy, DiffResult } from "../types"
-import { addLineNumbers, everyLineHasLineNumbers, stripLineNumbers } from "../../../integrations/misc/extract-text"
 import { distance } from "fastest-levenshtein"
+
+import { addLineNumbers, everyLineHasLineNumbers, stripLineNumbers } from "../../../integrations/misc/extract-text"
 import { ToolProgressStatus } from "../../../shared/ExtensionMessage"
-import { ToolUse } from "../../assistant-message"
+import { ToolUse, DiffStrategy, DiffResult } from "../../../shared/tools"
 import { normalizeString } from "../../../utils/text-normalization"
 
 const BUFFER_LINES = 40 // Number of extra context lines to show before and after matches
@@ -185,6 +185,7 @@ Only use a single line of '=======' between search and replacement content, beca
 			.replace(/^\\=======/gm, "=======")
 			.replace(/^\\>>>>>>>/gm, ">>>>>>>")
 			.replace(/^\\-------/gm, "-------")
+			.replace(/^\\:end_line:/gm, ":end_line:")
 			.replace(/^\\:start_line:/gm, ":start_line:")
 	}
 
@@ -202,7 +203,7 @@ Only use a single line of '=======' between search and replacement content, beca
 		const SEARCH_PREFIX = "<<<<<<<"
 		const REPLACE_PREFIX = ">>>>>>>"
 
-		const reportMergeConflictError = (found: string, expected: string) => ({
+		const reportMergeConflictError = (found: string, _expected: string) => ({
 			success: false,
 			error:
 				`ERROR: Special marker '${found}' found in your diff content at line ${state.line}:\n` +
@@ -321,25 +322,28 @@ Only use a single line of '=======' between search and replacement content, beca
 			3. ((?:\:start_line:\s*(\d+)\s*\n))?  
 			  Optionally matches a “:start_line:” line. The outer capturing group is group 1 and the inner (\d+) is group 2.
 
-			4. ((?<!\\)-------\s*\n)?  
+			4. ((?:\:end_line:\s*(\d+)\s*\n))?  
+			  Optionally matches a “:end_line:” line. Group 3 is the whole match and group 4 is the digits.
+
+			5. ((?<!\\)-------\s*\n)?  
 			  Optionally matches the “-------” marker line (group 5).
 
-			5. ([\s\S]*?)(?:\n)?  
+			6. ([\s\S]*?)(?:\n)?  
 			  Non‐greedy match for the “search content” (group 6) up to the next marker.
 
-			6. (?:(?<=\n)(?<!\\)=======\s*\n)  
+			7. (?:(?<=\n)(?<!\\)=======\s*\n)  
 			  Matches the “=======” marker on its own line.
 
-			7. ([\s\S]*?)(?:\n)?  
+			8. ([\s\S]*?)(?:\n)?  
 			  Non‐greedy match for the “replace content” (group 7).
 
-			8. (?:(?<=\n)(?<!\\)>>>>>>> REPLACE)(?=\n|$)  
+			9. (?:(?<=\n)(?<!\\)>>>>>>> REPLACE)(?=\n|$)  
 			  Matches the final “>>>>>>> REPLACE” marker on its own line (and requires a following newline or the end of file).
 		*/
 
 		let matches = [
 			...diffContent.matchAll(
-				/(?:^|\n)(?<!\\)<<<<<<< SEARCH\s*\n((?:\:start_line:\s*(\d+)\s*\n))?((?<!\\)-------\s*\n)?([\s\S]*?)(?:\n)?(?:(?<=\n)(?<!\\)=======\s*\n)([\s\S]*?)(?:\n)?(?:(?<=\n)(?<!\\)>>>>>>> REPLACE)(?=\n|$)/g,
+				/(?:^|\n)(?<!\\)<<<<<<< SEARCH\s*\n((?:\:start_line:\s*(\d+)\s*\n))?((?:\:end_line:\s*(\d+)\s*\n))?((?<!\\)-------\s*\n)?([\s\S]*?)(?:\n)?(?:(?<=\n)(?<!\\)=======\s*\n)([\s\S]*?)(?:\n)?(?:(?<=\n)(?<!\\)>>>>>>> REPLACE)(?=\n|$)/g,
 			),
 		]
 
@@ -358,8 +362,8 @@ Only use a single line of '=======' between search and replacement content, beca
 		const replacements = matches
 			.map((match) => ({
 				startLine: Number(match[2] ?? 0),
-				searchContent: match[4],
-				replaceContent: match[5],
+				searchContent: match[6],
+				replaceContent: match[7],
 			}))
 			.sort((a, b) => a.startLine - b.startLine)
 
@@ -425,14 +429,6 @@ Only use a single line of '=======' between search and replacement content, beca
 				const exactStartIndex = startLine - 1
 				const searchLen = searchLines.length
 				const exactEndIndex = exactStartIndex + searchLen - 1
-
-				if (exactStartIndex < 0 || exactEndIndex >= resultLines.length) {
-					diffResults.push({
-						success: false,
-						error: `Line range ${startLine}-${startLine + searchLen - 1} is invalid (file has ${resultLines.length} lines)\n\nDebug Info:\n- Requested Range: lines ${startLine}-${startLine + searchLen - 1}\n- File Bounds: lines 1-${resultLines.length}`,
-					})
-					continue
-				}
 
 				// Try exact match first
 				const originalChunk = resultLines.slice(exactStartIndex, exactEndIndex + 1).join("\n")
@@ -529,7 +525,7 @@ Only use a single line of '=======' between search and replacement content, beca
 			})
 
 			// Apply the replacement while preserving exact indentation
-			const indentedReplaceLines = replaceLines.map((line, i) => {
+			const indentedReplaceLines = replaceLines.map((line) => {
 				// Get the matched line's exact indentation
 				const matchedIndent = originalIndents[0] || ""
 
@@ -578,12 +574,13 @@ Only use a single line of '=======' between search and replacement content, beca
 		const diffContent = toolUse.params.diff
 		if (diffContent) {
 			const icon = "diff-multiple"
-			const searchBlockCount = (diffContent.match(/SEARCH/g) || []).length
 			if (toolUse.partial) {
-				if (diffContent.length < 1000 || (diffContent.length / 50) % 10 === 0) {
+				if (Math.floor(diffContent.length / 10) % 10 === 0) {
+					const searchBlockCount = (diffContent.match(/SEARCH/g) || []).length
 					return { icon, text: `${searchBlockCount}` }
 				}
 			} else if (result) {
+				const searchBlockCount = (diffContent.match(/SEARCH/g) || []).length
 				if (result.failParts?.length) {
 					return {
 						icon,
