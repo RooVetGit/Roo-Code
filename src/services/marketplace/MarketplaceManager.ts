@@ -15,8 +15,7 @@ import { getUserLocale } from "./utils"
 import { GlobalFileNames } from "src/shared/globalFileNames"
 import { TerminalRegistry } from "src/integrations/terminal/TerminalRegistry"
 import { assertsMpContext, createHookable, MarketplaceContext, registerMarketplaceHooks } from "roo-rocket"
-import { assertsBinarySha256, unpackFromUint8 } from "config-rocket/cli"
-import { uint8IsConfigPackWithParameters } from "config-rocket/cli"
+import { assertsBinarySha256, unpackFromUint8, uint8IsConfigPackWithParameters } from "config-rocket/cli"
 
 /**
  * Service for managing marketplace data
