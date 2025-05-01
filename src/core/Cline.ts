@@ -1031,10 +1031,123 @@ export class Cline extends EventEmitter<ClineEvents> {
 			}
 		}
 
-		// Clean conversation history by:
-		// 1. Converting to Anthropic.MessageParam by spreading only the API-required properties
-		// 2. Converting image blocks to text descriptions if model doesn't support images
-		const cleanConversationHistory = this.apiConversationHistory.map(({ role, content }) => {
+		// Apply filtering logic to keep only the most recent environment_detail and file<open> content blocks
+		let latestEnvDetailsTs: number | undefined = undefined
+		// Key: "filePath" or "filePath:lineRange"
+		const latestFileOpenTimestamps = new Map<string, number>()
+		const latestWriteToFileTimestamps = new Map<string, number>()
+
+		// Helper function to extract file path and line range from text blocks
+		const extractFileInfo = (text: string): { filePath: string; fileKey: string } | null => {
+			try {
+				const pathMatch = text.match(/<path>(.*?)<\/path>/)
+				if (!pathMatch || !pathMatch[1]) return null
+
+				const filePath = pathMatch[1]
+				const contentMatch = text.match(/<content lines="(.*?)">/)
+				const lineRange = contentMatch && contentMatch[1] ? contentMatch[1] : null
+				// Use path:lines as key if lines exist, otherwise just path
+				const fileKey = lineRange ? `${filePath}:${lineRange}` : filePath
+
+				return { filePath, fileKey }
+			} catch (e) {
+				console.error("Failed to parse file info from block:", e)
+				return null
+			}
+		}
+
+		// Iterate from newest to oldest to find the latest timestamps for blocks
+		for (let i = this.apiConversationHistory.length - 1; i >= 0; i--) {
+			const message = this.apiConversationHistory[i]
+			if (!message.ts) continue // Skip messages without timestamps if any
+			if (Array.isArray(message.content)) {
+				for (const block of message.content) {
+					if (block.type === "text") {
+						if (message.role === "user") {
+							if (block.text.startsWith("<environment_details>") && latestEnvDetailsTs === undefined) {
+								latestEnvDetailsTs = message.ts
+							} else if (block.text.startsWith("<file>")) {
+								const fileInfo = extractFileInfo(block.text)
+								if (fileInfo && !latestFileOpenTimestamps.has(fileInfo.fileKey)) {
+									latestFileOpenTimestamps.set(fileInfo.fileKey, message.ts)
+								}
+							}
+						} else if (message.role === "assistant") {
+							if (block.text.startsWith("<write_to_file>")) {
+								const fileInfo = extractFileInfo(block.text)
+								if (fileInfo && !latestWriteToFileTimestamps.has(fileInfo.filePath)) {
+									latestWriteToFileTimestamps.set(fileInfo.filePath, message.ts!)
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Helper function to filter environment details blocks
+		const shouldKeepEnvDetails = (block: Anthropic.TextBlockParam, messageTs?: number): boolean => {
+			if (block.text.startsWith("<environment_details>")) {
+				return messageTs === latestEnvDetailsTs
+			}
+			return true
+		}
+
+		// Helper function to filter file blocks
+		const shouldKeepFileBlock = (block: Anthropic.TextBlockParam, messageTs?: number): boolean => {
+			if (block.text.startsWith("<file>")) {
+				const fileInfo = extractFileInfo(block.text)
+				if (fileInfo) {
+					return messageTs === latestFileOpenTimestamps.get(fileInfo.fileKey)
+				}
+			}
+			return true
+		}
+
+		// Helper function to filter write_to_file blocks
+		const shouldKeepWriteToFileBlock = (block: Anthropic.TextBlockParam, messageTs?: number): boolean => {
+			if (block.text.startsWith("<write_to_file>")) {
+				const fileInfo = extractFileInfo(block.text)
+				if (fileInfo) {
+					return messageTs === latestWriteToFileTimestamps.get(fileInfo.filePath)
+				}
+			}
+			return true
+		}
+
+		// Create a new history array with filtered content blocks
+		const historyWithFilteredBlocks: (Anthropic.MessageParam & { ts?: number })[] = []
+		for (const message of this.apiConversationHistory) {
+			if (message.role === "user" && Array.isArray(message.content)) {
+				const newContent = message.content.filter((block) => {
+					if (block.type === "text") {
+						return shouldKeepEnvDetails(block, message.ts) && shouldKeepFileBlock(block, message.ts)
+					}
+					return true // Keep all other block types
+				})
+				// Only add the message if it still has content
+				if (newContent.length > 0) {
+					historyWithFilteredBlocks.push({ ...message, content: newContent })
+				}
+			} else if (message.role === "assistant" && Array.isArray(message.content)) {
+				const newContent = message.content.filter((block) => {
+					if (block.type === "text") {
+						return shouldKeepWriteToFileBlock(block, message.ts)
+					}
+					return true // Keep all other block types
+				})
+				// Only add the message if it still has content
+				if (newContent.length > 0) {
+					historyWithFilteredBlocks.push({ ...message, content: newContent })
+				}
+			} else {
+				// Keep other message types (like non-array content)
+				historyWithFilteredBlocks.push(message)
+			}
+		}
+
+		// The existing image handling logic should be applied to historyWithFilteredBlocks
+		const cleanConversationHistory = historyWithFilteredBlocks.map(({ role, content }) => {
 			// Handle array content (could contain image blocks)
 			if (Array.isArray(content)) {
 				if (!this.api.getModel().info.supportsImages) {
