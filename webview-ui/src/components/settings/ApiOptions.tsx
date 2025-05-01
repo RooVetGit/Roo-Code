@@ -80,6 +80,11 @@ const ApiOptions = ({
 
 	const [openAiModels, setOpenAiModels] = useState<Record<string, ModelInfo> | null>(null)
 
+	const [customHeaders, setCustomHeaders] = useState<[string, string][]>(() => {
+		const headers = apiConfiguration?.openAiHeaders || {}
+		return Object.entries(headers)
+	})
+
 	const [anthropicBaseUrlSelected, setAnthropicBaseUrlSelected] = useState(!!apiConfiguration?.anthropicBaseUrl)
 	const [azureApiVersionSelected, setAzureApiVersionSelected] = useState(!!apiConfiguration?.azureApiVersion)
 	const [openRouterBaseUrlSelected, setOpenRouterBaseUrlSelected] = useState(!!apiConfiguration?.openRouterBaseUrl)
@@ -87,6 +92,71 @@ const ApiOptions = ({
 	const [googleGeminiBaseUrlSelected, setGoogleGeminiBaseUrlSelected] = useState(
 		!!apiConfiguration?.googleGeminiBaseUrl,
 	)
+
+	const handleAddCustomHeader = useCallback(() => {
+		// Only update the local state to show the new row in the UI
+		setCustomHeaders((prev) => [...prev, ["", ""]])
+		// Do not update the main configuration yet, wait for user input
+	}, [])
+
+	const handleUpdateHeaderKey = useCallback((index: number, newKey: string) => {
+		setCustomHeaders((prev) => {
+			const updated = [...prev]
+			if (updated[index]) {
+				updated[index] = [newKey, updated[index][1]]
+			}
+			return updated
+		})
+	}, [])
+
+	const handleUpdateHeaderValue = useCallback((index: number, newValue: string) => {
+		setCustomHeaders((prev) => {
+			const updated = [...prev]
+			if (updated[index]) {
+				updated[index] = [updated[index][0], newValue]
+			}
+			return updated
+		})
+	}, [])
+
+	const handleRemoveCustomHeader = useCallback((index: number) => {
+		setCustomHeaders((prev) => prev.filter((_, i) => i !== index))
+	}, [])
+
+	// Helper to convert array of tuples to object (filtering out empty keys)
+	const convertHeadersToObject = (headers: [string, string][]): Record<string, string> => {
+		const result: Record<string, string> = {}
+
+		// Process each header tuple
+		for (const [key, value] of headers) {
+			const trimmedKey = key.trim()
+
+			// Skip empty keys
+			if (!trimmedKey) continue
+
+			// For duplicates, the last one in the array wins
+			// This matches how HTTP headers work in general
+			result[trimmedKey] = value.trim()
+		}
+
+		return result
+	}
+
+	// Debounced effect to update the main configuration when local customHeaders state stabilizes
+	useDebounce(
+		() => {
+			const currentConfigHeaders = apiConfiguration?.openAiHeaders || {}
+			const newHeadersObject = convertHeadersToObject(customHeaders)
+
+			// Only update if the processed object is different from the current config
+			if (JSON.stringify(currentConfigHeaders) !== JSON.stringify(newHeadersObject)) {
+				setApiConfigurationField("openAiHeaders", newHeadersObject)
+			}
+		},
+		300,
+		[customHeaders, apiConfiguration?.openAiHeaders, setApiConfigurationField],
+	)
+
 	const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
 	const noTransform = <T,>(value: T) => value
 
@@ -123,13 +193,15 @@ const ApiOptions = ({
 	useDebounce(
 		() => {
 			if (selectedProvider === "openai") {
+				// Use our custom headers state to build the headers object
+				const headerObject = convertHeadersToObject(customHeaders)
 				vscode.postMessage({
 					type: "requestOpenAiModels",
 					values: {
 						baseUrl: apiConfiguration?.openAiBaseUrl,
 						apiKey: apiConfiguration?.openAiApiKey,
 						customHeaders: {}, // Reserved for any additional headers
-						openAiHeaders: apiConfiguration?.openAiHeaders,
+						openAiHeaders: headerObject,
 					},
 				})
 			} else if (selectedProvider === "ollama") {
@@ -148,6 +220,7 @@ const ApiOptions = ({
 			apiConfiguration?.openAiApiKey,
 			apiConfiguration?.ollamaBaseUrl,
 			apiConfiguration?.lmStudioBaseUrl,
+			customHeaders,
 		],
 	)
 
@@ -842,79 +915,33 @@ const ApiOptions = ({
 							<VSCodeButton
 								appearance="icon"
 								title={t("settings:common.add")}
-								onClick={() => {
-									const currentHeaders = { ...(apiConfiguration?.openAiHeaders || {}) }
-									// Use an empty string as key - user will fill it in
-									// The key will be properly set when the user types in the field
-									currentHeaders[""] = ""
-									handleInputChange("openAiHeaders")({
-										target: {
-											value: currentHeaders,
-										},
-									})
-								}}>
+								onClick={handleAddCustomHeader}>
 								<span className="codicon codicon-add"></span>
 							</VSCodeButton>
 						</div>
-						{Object.keys(apiConfiguration?.openAiHeaders || {}).length === 0 ? (
+						{!customHeaders.length ? (
 							<div className="text-sm text-vscode-descriptionForeground">
 								{t("settings:providers.noCustomHeaders")}
 							</div>
 						) : (
-							Object.entries(apiConfiguration?.openAiHeaders || {}).map(([key, value], index) => (
+							customHeaders.map(([key, value], index) => (
 								<div key={index} className="flex items-center mb-2">
 									<VSCodeTextField
 										value={key}
 										className="flex-1 mr-2"
 										placeholder={t("settings:providers.headerName")}
-										onInput={(e: any) => {
-											const currentHeaders = apiConfiguration?.openAiHeaders ?? {}
-											const newValue = e.target.value
-
-											if (newValue && newValue !== key) {
-												const { [key]: _, ...rest } = currentHeaders
-												handleInputChange("openAiHeaders")({
-													target: {
-														value: {
-															...rest,
-															[newValue]: value,
-														},
-													},
-												})
-											}
-										}}
+										onInput={(e: any) => handleUpdateHeaderKey(index, e.target.value)}
 									/>
 									<VSCodeTextField
 										value={value}
 										className="flex-1 mr-2"
 										placeholder={t("settings:providers.headerValue")}
-										onInput={(e: any) => {
-											handleInputChange("openAiHeaders")({
-												target: {
-													value: {
-														...(apiConfiguration?.openAiHeaders ?? {}),
-														[key]: e.target.value,
-													},
-												},
-											})
-										}}
+										onInput={(e: any) => handleUpdateHeaderValue(index, e.target.value)}
 									/>
 									<VSCodeButton
 										appearance="icon"
 										title={t("settings:common.remove")}
-										onClick={() => {
-											const { [key]: _, ...rest } = apiConfiguration?.openAiHeaders ?? {}
-
-											// Ensure we always maintain an empty object even when removing the last header
-											// This prevents the field from becoming undefined or null
-											const newHeaders = Object.keys(rest).length === 0 ? {} : rest
-
-											handleInputChange("openAiHeaders")({
-												target: {
-													value: newHeaders,
-												},
-											})
-										}}>
+										onClick={() => handleRemoveCustomHeader(index)}>
 										<span className="codicon codicon-trash"></span>
 									</VSCodeButton>
 								</div>
