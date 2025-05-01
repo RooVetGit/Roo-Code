@@ -99,7 +99,7 @@ export const ContextManagementSettings = ({
 							<Input
 								type="number"
 								pattern="-?[0-9]*"
-								className="w-24 bg-vscode-input-background text-vscode-input-foreground px-2 py-1 rounded text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50"
+								className="w-24 bg-vscode-input-background text-vscode-input-foreground border border-vscode-input-border px-2 py-1 rounded text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50"
 								value={maxReadFileLine ?? 500}
 								min={-1}
 								onChange={(e) => {
