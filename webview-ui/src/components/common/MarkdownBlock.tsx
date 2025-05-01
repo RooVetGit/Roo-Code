@@ -3,6 +3,7 @@ import { useRemark } from "react-remark"
 import styled from "styled-components"
 import { visit } from "unist-util-visit"
 
+import { vscode } from "@src/utils/vscode"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 
 import CodeBlock from "./CodeBlock"
@@ -138,6 +139,38 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 		rehypePlugins: [],
 		rehypeReactOptions: {
 			components: {
+				a: ({ href, children }: any) => {
+					return (
+						<a
+							href={href}
+							onClick={(e) => {
+								e.preventDefault()
+								// Handle absolute vs project-relative paths
+								let filePath = href.replace("file://", "")
+
+								// Extract line number if present
+								const match = filePath.match(/(.*):(\d+)(-\d+)?$/)
+								let values = undefined
+								if (match) {
+									filePath = match[1]
+									values = { line: parseInt(match[2]) }
+								}
+
+								// Add ./ prefix if needed
+								if (!filePath.startsWith("/") && !filePath.startsWith("./")) {
+									filePath = "./" + filePath
+								}
+
+								vscode.postMessage({
+									type: "openFile",
+									text: filePath,
+									values,
+								})
+							}}>
+							{children}
+						</a>
+					)
+				},
 				pre: ({ node: _, children }: any) => {
 					// Check for Mermaid diagrams first
 					if (Array.isArray(children) && children.length === 1 && React.isValidElement(children[0])) {
