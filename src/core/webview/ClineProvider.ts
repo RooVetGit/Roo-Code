@@ -478,6 +478,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			Pick<
 				TaskOptions,
 				"enableDiff" | "enableCheckpoints" | "fuzzyMatchThreshold" | "consecutiveMistakeLimit" | "experiments"
+				| "attachedFiles"
 			>
 		> = {},
 	) {
