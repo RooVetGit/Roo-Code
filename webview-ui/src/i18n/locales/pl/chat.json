@@ -52,6 +52,10 @@
 		"title": "Kontynuuj podczas wykonywania",
 		"tooltip": "Kontynuuj pomimo ostrzeżeń"
 	},
+	"killCommand": {
+		"title": "Zatrzymaj polecenie",
+		"tooltip": "Zatrzymaj bieżące polecenie"
+	},
 	"resumeTask": {
 		"title": "Wznów zadanie",
 		"tooltip": "Kontynuuj bieżące zadanie"
@@ -65,9 +69,27 @@
 		"tooltip": "Anuluj bieżącą operację"
 	},
 	"scrollToBottom": "Przewiń do dołu czatu",
+	"about": "Generuj, refaktoryzuj i debuguj kod z pomocą sztucznej inteligencji.<br />Sprawdź naszą <DocsLink>dokumentację</DocsLink>, aby dowiedzieć się więcej.",
 	"onboarding": "<strong>Twoja lista zadań w tym obszarze roboczym jest pusta.</strong> Zacznij od wpisania zadania poniżej. Nie wiesz, jak zacząć? Przeczytaj więcej o tym, co Roo może dla Ciebie zrobić w <DocsLink>dokumentacji</DocsLink>.",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "Zadania bumerangowe",
+			"description": "Podziel zadania na mniejsze, łatwiejsze do zarządzania części."
+		},
+		"stickyModels": {
+			"title": "Tryby trwałe",
+			"description": "Każdy tryb zapamiętuje ostatnio używany model"
+		},
+		"tools": {
+			"title": "Narzędzia",
+			"description": "Pozwól sztucznej inteligencji rozwiązywać problemy, przeglądając sieć, uruchamiając polecenia i nie tylko."
+		},
+		"customizableModes": {
+			"title": "Konfigurowalne tryby",
+			"description": "Wyspecjalizowane persona z własnymi zachowaniami i przypisanymi modelami"
+		}
+	},
 	"selectMode": "Wybierz tryb interakcji",
-	"selectApiConfig": "Wybierz konfigurację API",
 	"enhancePrompt": "Ulepsz podpowiedź dodatkowym kontekstem",
 	"addImages": "Dodaj obrazy do wiadomości",
 	"sendMessage": "Wyślij wiadomość",
@@ -120,7 +142,12 @@
 		"didRead": "Roo przeczytał ten plik:",
 		"wantsToEdit": "Roo chce edytować ten plik:",
 		"wantsToEditOutsideWorkspace": "Roo chce edytować ten plik poza obszarem roboczym:",
-		"wantsToCreate": "Roo chce utworzyć nowy plik:"
+		"wantsToCreate": "Roo chce utworzyć nowy plik:",
+		"wantsToSearchReplace": "Roo chce wykonać wyszukiwanie i zamianę w tym pliku:",
+		"didSearchReplace": "Roo wykonał wyszukiwanie i zamianę w tym pliku:",
+		"wantsToInsert": "Roo chce wstawić zawartość do tego pliku:",
+		"wantsToInsertWithLineNumber": "Roo chce wstawić zawartość do tego pliku w linii {{lineNumber}}:",
+		"wantsToInsertAtEnd": "Roo chce dodać zawartość na końcu tego pliku:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo chce zobaczyć pliki najwyższego poziomu w tym katalogu:",
@@ -158,13 +185,6 @@
 		"hasQuestion": "Roo ma pytanie:"
 	},
 	"taskCompleted": "Zadanie zakończone",
-	"shellIntegration": {
-		"unavailable": "Integracja powłoki niedostępna",
-		"troubleshooting": "Nadal masz problemy? Kliknij tutaj, aby zobaczyć dokumentację integracji powłoki.",
-		"checkSettings": "Sprawdź obejścia terminala na stronie ustawień",
-		"updateVSCode": "Zaktualizuj VSCode",
-		"supportedShell": "Upewnij się, że używasz obsługiwanej powłoki: zsh, bash, fish lub PowerShell"
-	},
 	"powershell": {
 		"issues": "Wygląda na to, że masz problemy z Windows PowerShell, proszę zapoznaj się z tym"
 	},
@@ -181,12 +201,12 @@
 		"copyToInput": "Kopiuj do pola wprowadzania (lub Shift + kliknięcie)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.12 wydany",
-		"description": "Roo Code 3.12 przynosi nowe funkcje i ulepszenia na podstawie Twoich opinii.",
+		"title": "🎉 Roo Code 3.15 wydany",
+		"description": "Roo Code 3.15 przynosi nowe funkcje i ulepszenia na podstawie Twoich opinii.",
 		"whatsNew": "Co nowego",
-		"feature1": "<bold>Wsparcie dla Grok</bold>: Dodano dostawcę xAI i opcje wysiłku rozumowania Grok na OpenRouter",
-		"feature2": "<bold>Ulepszenia edycji różnic</bold>: Konfiguracja dla poszczególnych profili i lepsza normalizacja ciągów znaków dla mniejszej liczby błędów",
-		"feature3": "<bold>Ulepszenia punktów kontrolnych</bold>: Szybsze i bardziej niezawodne punkty kontrolne",
+		"feature1": "<bold>Buforowanie podpowiedzi dla Vertex</bold>: Dodano obsługę buforowania podpowiedzi dla Vertex AI, poprawiając czasy odpowiedzi i zmniejszając koszty API",
+		"feature2": "<bold>Mechanizm awaryjny dla Terminala</bold>: Zaimplementowano mechanizm awaryjny w przypadku awarii integracji powłoki terminala VSCode",
+		"feature3": "<bold>Ulepszone fragmenty kodu</bold>: Ulepszono renderowanie i interakcję z fragmentami kodu w interfejsie czatu",
 		"hideButton": "Ukryj ogłoszenie",
 		"detailsDiscussLinks": "Uzyskaj więcej szczegółów i dołącz do dyskusji na <discordLink>Discord</discordLink> i <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -211,5 +231,12 @@
 			"scrollUp": "Przewiń w górę",
 			"close": "Zamknij przeglądarkę"
 		}
+	},
+	"systemPromptWarning": "OSTRZEŻENIE: Aktywne niestandardowe zastąpienie instrukcji systemowych. Może to poważnie zakłócić funkcjonalność i powodować nieprzewidywalne zachowanie.",
+	"selectApiConfig": "Wybierz konfigurację API",
+	"shellIntegration": {
+		"title": "Integracja powłoki niedostępna",
+		"description": "Twoje polecenie jest wykonywane bez integracji powłoki VSCode. Możesz ponownie włączyć integrację powłoki w sekcji <strong>Terminal</strong> w <settingsLink>ustawieniach Roo Code</settingsLink>.",
+		"troubleshooting": "Kliknij tutaj, aby zobaczyć dokumentację integracji powłoki."
 	}
 }

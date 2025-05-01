@@ -1,9 +1,8 @@
 import { distance } from "fastest-levenshtein"
 
-import { DiffStrategy, DiffResult } from "../types"
 import { addLineNumbers, everyLineHasLineNumbers, stripLineNumbers } from "../../../integrations/misc/extract-text"
 import { ToolProgressStatus } from "../../../shared/ExtensionMessage"
-import { ToolUse } from "../../../shared/tools"
+import { ToolUse, DiffStrategy, DiffResult } from "../../../shared/tools"
 import { normalizeString } from "../../../utils/text-normalization"
 
 const BUFFER_LINES = 40 // Number of extra context lines to show before and after matches
@@ -204,7 +203,7 @@ Only use a single line of '=======' between search and replacement content, beca
 		const SEARCH_PREFIX = "<<<<<<<"
 		const REPLACE_PREFIX = ">>>>>>>"
 
-		const reportMergeConflictError = (found: string, expected: string) => ({
+		const reportMergeConflictError = (found: string, _expected: string) => ({
 			success: false,
 			error:
 				`ERROR: Special marker '${found}' found in your diff content at line ${state.line}:\n` +
@@ -431,14 +430,6 @@ Only use a single line of '=======' between search and replacement content, beca
 				const searchLen = searchLines.length
 				const exactEndIndex = exactStartIndex + searchLen - 1
 
-				if (exactStartIndex < 0 || exactEndIndex >= resultLines.length) {
-					diffResults.push({
-						success: false,
-						error: `Line range ${startLine}-${startLine + searchLen - 1} is invalid (file has ${resultLines.length} lines)\n\nDebug Info:\n- Requested Range: lines ${startLine}-${startLine + searchLen - 1}\n- File Bounds: lines 1-${resultLines.length}`,
-					})
-					continue
-				}
-
 				// Try exact match first
 				const originalChunk = resultLines.slice(exactStartIndex, exactEndIndex + 1).join("\n")
 				const similarity = getSimilarity(originalChunk, searchChunk)
@@ -534,7 +525,7 @@ Only use a single line of '=======' between search and replacement content, beca
 			})
 
 			// Apply the replacement while preserving exact indentation
-			const indentedReplaceLines = replaceLines.map((line, i) => {
+			const indentedReplaceLines = replaceLines.map((line) => {
 				// Get the matched line's exact indentation
 				const matchedIndent = originalIndents[0] || ""
 
@@ -583,12 +574,13 @@ Only use a single line of '=======' between search and replacement content, beca
 		const diffContent = toolUse.params.diff
 		if (diffContent) {
 			const icon = "diff-multiple"
-			const searchBlockCount = (diffContent.match(/SEARCH/g) || []).length
 			if (toolUse.partial) {
-				if (diffContent.length < 1000 || (diffContent.length / 50) % 10 === 0) {
+				if (Math.floor(diffContent.length / 10) % 10 === 0) {
+					const searchBlockCount = (diffContent.match(/SEARCH/g) || []).length
 					return { icon, text: `${searchBlockCount}` }
 				}
 			} else if (result) {
+				const searchBlockCount = (diffContent.match(/SEARCH/g) || []).length
 				if (result.failParts?.length) {
 					return {
 						icon,

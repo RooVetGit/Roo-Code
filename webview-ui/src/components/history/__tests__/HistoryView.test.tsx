@@ -2,12 +2,12 @@
 
 import { render, screen, fireEvent, within, act } from "@testing-library/react"
 import HistoryView from "../HistoryView"
-import { useExtensionState } from "../../../context/ExtensionStateContext"
-import { vscode } from "../../../utils/vscode"
+import { useExtensionState } from "@src/context/ExtensionStateContext"
+import { vscode } from "@src/utils/vscode"
 
-jest.mock("../../../context/ExtensionStateContext")
-jest.mock("../../../utils/vscode")
-jest.mock("../../../i18n/TranslationContext")
+jest.mock("@src/context/ExtensionStateContext")
+jest.mock("@src/utils/vscode")
+jest.mock("@src/i18n/TranslationContext")
 jest.mock("react-virtuoso", () => ({
 	Virtuoso: ({ data, itemContent }: any) => (
 		<div data-testid="virtuoso-container">
@@ -146,6 +146,23 @@ describe("HistoryView", () => {
 			type: "showTaskWithId",
 			text: "1",
 		})
+	})
+
+	it("handles selection mode clicks", async () => {
+		const onDone = jest.fn()
+		render(<HistoryView onDone={onDone} />)
+
+		// Go to selection mode
+		fireEvent.click(screen.getByTestId("toggle-selection-mode-button"))
+
+		const taskContainer = screen.getByTestId("task-item-1")
+
+		// Click anywhere in the task item
+		fireEvent.click(taskContainer)
+
+		// Check the box instead of sending a message to open the task
+		expect(within(taskContainer).getByRole("checkbox")).toBeChecked()
+		expect(vscode.postMessage).not.toHaveBeenCalled()
 	})
 
 	describe("task deletion", () => {

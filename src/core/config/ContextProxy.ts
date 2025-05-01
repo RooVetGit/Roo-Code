@@ -53,6 +53,7 @@ export class ContextProxy {
 	public async initialize() {
 		for (const key of GLOBAL_STATE_KEYS) {
 			try {
+				// Revert to original assignment
 				this.stateCache[key] = this.originalContext.globalState.get(key)
 			} catch (error) {
 				logger.error(`Error loading global ${key}: ${error instanceof Error ? error.message : String(error)}`)
@@ -229,6 +230,10 @@ export class ContextProxy {
 	public async export(): Promise<GlobalSettings | undefined> {
 		try {
 			const globalSettings = globalSettingsExportSchema.parse(this.getValues())
+
+			// Exports should only contain global settings, so this skips project custom modes (those exist in the .roomode folder)
+			globalSettings.customModes = globalSettings.customModes?.filter((mode) => mode.source === "global")
+
 			return Object.fromEntries(Object.entries(globalSettings).filter(([_, value]) => value !== undefined))
 		} catch (error) {
 			if (error instanceof ZodError) {
@@ -255,5 +260,26 @@ export class ContextProxy {
 		])
 
 		await this.initialize()
+	}
+
+	private static _instance: ContextProxy | null = null
+
+	static get instance() {
+		if (!this._instance) {
+			throw new Error("ContextProxy not initialized")
+		}
+
+		return this._instance
+	}
+
+	static async getInstance(context: vscode.ExtensionContext) {
+		if (this._instance) {
+			return this._instance
+		}
+
+		this._instance = new ContextProxy(context)
+		await this._instance.initialize()
+
+		return this._instance
 	}
 }

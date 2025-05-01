@@ -52,6 +52,10 @@
 		"title": "Proceed While Running",
 		"tooltip": "Continue despite warnings"
 	},
+	"killCommand": {
+		"title": "Kill Command",
+		"tooltip": "Kill the current command"
+	},
 	"resumeTask": {
 		"title": "Resume Task",
 		"tooltip": "Continue the current task"
@@ -65,7 +69,26 @@
 		"tooltip": "Cancel the current operation"
 	},
 	"scrollToBottom": "Scroll to bottom of chat",
-	"onboarding": "<strong>Your task list in this workspace is empty.</strong> Start by typing in a task below. Not sure how to begin? Read more about what Roo can do for you in <DocsLink>the docs</DocsLink>.",
+	"about": "Generate, refactor, and debug code with AI assistance.<br />Check out our <DocsLink>documentation</DocsLink> to learn more.",
+	"onboarding": "Your task list in this workspace is empty.",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "Boomerang Tasks",
+			"description": "Split tasks into smaller, manageable parts"
+		},
+		"stickyModels": {
+			"title": "Sticky Models",
+			"description": "Each mode remembers your last used model"
+		},
+		"tools": {
+			"title": "Tools",
+			"description": "Allow the AI to solve problems by browsing the web, running commands, and more"
+		},
+		"customizableModes": {
+			"title": "Customizable Modes",
+			"description": "Specialized personas with their own behaviors and assigned models"
+		}
+	},
 	"selectMode": "Select mode for interaction",
 	"selectApiConfig": "Select API configuration",
 	"enhancePrompt": "Enhance prompt with additional context",
@@ -115,7 +138,12 @@
 		"didRead": "Roo read this file:",
 		"wantsToEdit": "Roo wants to edit this file:",
 		"wantsToEditOutsideWorkspace": "Roo wants to edit this file outside of the workspace:",
-		"wantsToCreate": "Roo wants to create a new file:"
+		"wantsToCreate": "Roo wants to create a new file:",
+		"wantsToSearchReplace": "Roo wants to search and replace in this file:",
+		"didSearchReplace": "Roo performed search and replace on this file:",
+		"wantsToInsert": "Roo wants to insert content into this file:",
+		"wantsToInsertWithLineNumber": "Roo wants to insert content into this file at line {{lineNumber}}:",
+		"wantsToInsertAtEnd": "Roo wants to append content to the end of this file:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo wants to view the top level files in this directory:",
@@ -158,13 +186,6 @@
 		"title": "Edit Unsuccessful"
 	},
 	"troubleMessage": "Roo is having trouble...",
-	"shellIntegration": {
-		"unavailable": "Shell Integration Unavailable",
-		"troubleshooting": "Still having trouble? Click here for shell integration documentation.",
-		"checkSettings": "Check terminal workarounds in the settings page",
-		"updateVSCode": "Update VSCode",
-		"supportedShell": "Make sure you're using a supported shell: zsh, bash, fish, or PowerShell"
-	},
 	"powershell": {
 		"issues": "It seems like you're having Windows PowerShell issues, please see this"
 	},
@@ -174,12 +195,12 @@
 		"description": "Auto-approve allows Roo Code to perform actions without asking for permission. Only enable for actions you fully trust. More detailed configuration available in <settingsLink>Settings</settingsLink>."
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.12 Released",
-		"description": "Roo Code 3.12 brings new features and improvements based on your feedback.",
+		"title": "🎉 Roo Code 3.15 Released",
+		"description": "Roo Code 3.15 brings new features and improvements based on your feedback.",
 		"whatsNew": "What's New",
-		"feature1": "<bold>Grok Support</bold>: Added the xAI provider and Grok reasoning effort options on OpenRouter",
-		"feature2": "<bold>Diff Editing Improvements</bold>: Per-profile configuration and better string normalization for fewer errors",
-		"feature3": "<bold>Checkpoint Enhancements</bold>: Faster and more reliable checkpoints",
+		"feature1": "<bold>Prompt Caching for Vertex</bold>: Added prompt caching support for Vertex AI, improving response times and reducing API costs",
+		"feature2": "<bold>Terminal Fallback</bold>: Implemented a fallback mechanism when VSCode terminal shell integration fails",
+		"feature3": "<bold>Improved Code Snippets</bold>: Enhanced code snippet rendering and interaction in the chat interface",
 		"hideButton": "Hide announcement",
 		"detailsDiscussLinks": "Get more details and discuss in <discordLink>Discord</discordLink> and <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -211,5 +232,11 @@
 			"scrollUp": "Scroll up",
 			"close": "Close browser"
 		}
+	},
+	"systemPromptWarning": "WARNING: Custom system prompt override active. This can severely break functionality and cause unpredictable behavior.",
+	"shellIntegration": {
+		"title": "Shell Integration Unavailable",
+		"description": "Your command is being executed without VSCode shell integration. You can re-enable shell integration in the <strong>Terminal</strong> section of the <settingsLink>Roo Code settings</settingsLink>.",
+		"troubleshooting": "Click here for shell integration documentation."
 	}
 }

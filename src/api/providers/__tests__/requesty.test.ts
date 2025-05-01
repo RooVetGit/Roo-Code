@@ -1,6 +1,8 @@
+// npx jest src/api/providers/__tests__/requesty.test.ts
+
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
-import { ApiHandlerOptions, ModelInfo, requestyDefaultModelInfo } from "../../../shared/api"
+import { ApiHandlerOptions, ModelInfo } from "../../../shared/api"
 import { RequestyHandler } from "../requesty"
 import { convertToOpenAiMessages } from "../../transform/openai-format"
 import { convertToR1Format } from "../../transform/r1-format"
@@ -9,15 +11,9 @@ import { convertToR1Format } from "../../transform/r1-format"
 jest.mock("openai")
 jest.mock("../../transform/openai-format")
 jest.mock("../../transform/r1-format")
-
-describe("RequestyHandler", () => {
-	let handler: RequestyHandler
-	let mockCreate: jest.Mock
-
-	const defaultOptions: ApiHandlerOptions = {
-		requestyApiKey: "test-key",
-		requestyModelId: "test-model",
-		requestyModelInfo: {
+jest.mock("../fetchers/cache", () => ({
+	getModels: jest.fn().mockResolvedValue({
+		"test-model": {
 			maxTokens: 8192,
 			contextWindow: 200_000,
 			supportsImages: true,
@@ -27,9 +23,32 @@ describe("RequestyHandler", () => {
 			outputPrice: 15.0,
 			cacheWritesPrice: 3.75,
 			cacheReadsPrice: 0.3,
-			description:
-				"Claude 3.7 Sonnet is an advanced large language model with improved reasoning, coding, and problem-solving capabilities. It introduces a hybrid reasoning approach, allowing users to choose between rapid responses and extended, step-by-step processing for complex tasks. The model demonstrates notable improvements in coding, particularly in front-end development and full-stack updates, and excels in agentic workflows, where it can autonomously navigate multi-step processes. Claude 3.7 Sonnet maintains performance parity with its predecessor in standard mode while offering an extended reasoning mode for enhanced accuracy in math, coding, and instruction-following tasks. Read more at the [blog post here](https://www.anthropic.com/news/claude-3-7-sonnet)",
+			description: "Test model description",
 		},
+	}),
+}))
+
+describe("RequestyHandler", () => {
+	let handler: RequestyHandler
+	let mockCreate: jest.Mock
+
+	const modelInfo: ModelInfo = {
+		maxTokens: 8192,
+		contextWindow: 200_000,
+		supportsImages: true,
+		supportsComputerUse: true,
+		supportsPromptCache: true,
+		inputPrice: 3.0,
+		outputPrice: 15.0,
+		cacheWritesPrice: 3.75,
+		cacheReadsPrice: 0.3,
+		description:
+			"Claude 3.7 Sonnet is an advanced large language model with improved reasoning, coding, and problem-solving capabilities. It introduces a hybrid reasoning approach, allowing users to choose between rapid responses and extended, step-by-step processing for complex tasks. The model demonstrates notable improvements in coding, particularly in front-end development and full-stack updates, and excels in agentic workflows, where it can autonomously navigate multi-step processes. Claude 3.7 Sonnet maintains performance parity with its predecessor in standard mode while offering an extended reasoning mode for enhanced accuracy in math, coding, and instruction-following tasks. Read more at the [blog post here](https://www.anthropic.com/news/claude-3-7-sonnet)",
+	}
+
+	const defaultOptions: ApiHandlerOptions = {
+		requestyApiKey: "test-key",
+		requestyModelId: "test-model",
 		openAiStreamingEnabled: true,
 		includeMaxTokens: true, // Add this to match the implementation
 	}
@@ -39,9 +58,7 @@ describe("RequestyHandler", () => {
 		jest.clearAllMocks()
 
 		// Setup mock create function that preserves params
-		let lastParams: any
-		mockCreate = jest.fn().mockImplementation((params) => {
-			lastParams = params
+		mockCreate = jest.fn().mockImplementation((_params) => {
 			return {
 				[Symbol.asyncIterator]: async function* () {
 					yield {
@@ -185,7 +202,7 @@ describe("RequestyHandler", () => {
 					],
 					stream: true,
 					stream_options: { include_usage: true },
-					max_tokens: defaultOptions.requestyModelInfo?.maxTokens,
+					max_tokens: modelInfo.maxTokens,
 				})
 			})
 
@@ -279,20 +296,17 @@ describe("RequestyHandler", () => {
 			const result = handler.getModel()
 			expect(result).toEqual({
 				id: defaultOptions.requestyModelId,
-				info: defaultOptions.requestyModelInfo,
+				info: modelInfo,
 			})
 		})
 
 		it("should use sane defaults when no model info provided", () => {
-			handler = new RequestyHandler({
-				...defaultOptions,
-				requestyModelInfo: undefined,
-			})
-
+			handler = new RequestyHandler(defaultOptions)
 			const result = handler.getModel()
+
 			expect(result).toEqual({
 				id: defaultOptions.requestyModelId,
-				info: defaultOptions.requestyModelInfo,
+				info: modelInfo,
 			})
 		})
 	})

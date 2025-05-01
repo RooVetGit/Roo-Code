@@ -1,13 +1,13 @@
 import { useCallback, useState } from "react"
-import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
-import { useExtensionState } from "../../context/ExtensionStateContext"
-import { validateApiConfiguration } from "../../utils/validate"
-import { vscode } from "../../utils/vscode"
+import { VSCodeButton, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
+import { useExtensionState } from "@src/context/ExtensionStateContext"
+import { validateApiConfiguration } from "@src/utils/validate"
+import { vscode } from "@src/utils/vscode"
 import ApiOptions from "../settings/ApiOptions"
 import { Tab, TabContent } from "../common/Tab"
 import { Trans } from "react-i18next"
-import { useAppTranslation } from "../../i18n/TranslationContext"
-import { getRequestyAuthUrl, getOpenRouterAuthUrl } from "../../oauth/urls"
+import { useAppTranslation } from "@src/i18n/TranslationContext"
+import { getRequestyAuthUrl, getOpenRouterAuthUrl } from "@src/oauth/urls"
 import RooHero from "./RooHero"
 import knuthShuffle from "knuth-shuffle-seeded"
 
@@ -17,7 +17,7 @@ const WelcomeView = () => {
 	const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
 
 	const handleSubmit = useCallback(() => {
-		const error = validateApiConfiguration(apiConfiguration)
+		const error = apiConfiguration ? validateApiConfiguration(apiConfiguration) : undefined
 
 		if (error) {
 			setErrorMessage(error)
@@ -38,6 +38,7 @@ const WelcomeView = () => {
 		<Tab>
 			<TabContent className="flex flex-col gap-5">
 				<RooHero />
+				<h2 className="mx-auto">{t("chat:greeting")}</h2>
 
 				<div className="outline rounded p-4">
 					<Trans i18nKey="welcome:introduction" />
@@ -113,6 +114,17 @@ const WelcomeView = () => {
 			</TabContent>
 			<div className="sticky bottom-0 bg-vscode-sideBar-background p-5">
 				<div className="flex flex-col gap-1">
+					<div className="flex justify-end">
+						<VSCodeLink
+							href="#"
+							onClick={(e) => {
+								e.preventDefault()
+								vscode.postMessage({ type: "importSettings" })
+							}}
+							className="text-sm">
+							{t("welcome:importSettings")}
+						</VSCodeLink>
+					</div>
 					<VSCodeButton onClick={handleSubmit} appearance="primary">
 						{t("welcome:start")}
 					</VSCodeButton>

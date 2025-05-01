@@ -52,6 +52,10 @@
 		"title": "强制继续",
 		"tooltip": "忽略运行中的命令并继续"
 	},
+	"killCommand": {
+		"title": "终止命令",
+		"tooltip": "终止当前命令"
+	},
 	"resumeTask": {
 		"title": "恢复任务",
 		"tooltip": "继续当前任务"
@@ -65,9 +69,27 @@
 		"tooltip": "取消当前操作"
 	},
 	"scrollToBottom": "滚动到聊天底部",
+	"about": "通过 AI 辅助生成、重构和调试代码。<br />查看我们的 <DocsLink>文档</DocsLink> 了解更多信息。",
 	"onboarding": "<strong>此工作区中的任务列表为空。</strong> 请在下方输入任务开始。 不确定如何开始？ 在 <DocsLink>文档</DocsLink> 中阅读更多关于 Roo 可以为您做什么的信息。",
+	"rooTips": {
+		"boomerangTasks": {
+			"title": "任务拆分",
+			"description": "将任务拆分为更小、更易于管理的部分。"
+		},
+		"stickyModels": {
+			"title": "粘性模式",
+			"description": "每个模式 都会记住 您上次使用的模型"
+		},
+		"tools": {
+			"title": "工具",
+			"description": "允许 AI 通过浏览网络、运行命令等方式解决问题。"
+		},
+		"customizableModes": {
+			"title": "自定义模式",
+			"description": "具有专属行为和指定模型的特定角色"
+		}
+	},
 	"selectMode": "选择交互模式",
-	"selectApiConfig": "选择API配置",
 	"enhancePrompt": "增强提示词",
 	"addImages": "添加图片到消息",
 	"sendMessage": "发送消息",
@@ -120,7 +142,12 @@
 		"didRead": "已读取文件:",
 		"wantsToEdit": "需要编辑文件:",
 		"wantsToEditOutsideWorkspace": "需要编辑外部文件:",
-		"wantsToCreate": "需要新建文件:"
+		"wantsToCreate": "需要新建文件:",
+		"wantsToSearchReplace": "需要在此文件中搜索和替换:",
+		"didSearchReplace": "已完成搜索和替换:",
+		"wantsToInsert": "需要在此文件中插入内容:",
+		"wantsToInsertWithLineNumber": "需要在第 {{lineNumber}} 行插入内容:",
+		"wantsToInsertAtEnd": "需要在文件末尾添加内容:"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "需要查看目录文件列表:",
@@ -158,13 +185,6 @@
 		"hasQuestion": "Roo有一个问题:"
 	},
 	"taskCompleted": "任务完成",
-	"shellIntegration": {
-		"unavailable": "Shell集成不可用",
-		"troubleshooting": "仍有问题吗？点击此处查看Shell集成文档。",
-		"checkSettings": "检查设置页面中的终端解决方案",
-		"updateVSCode": "更新VSCode",
-		"supportedShell": "确保使用受支持的shell：zsh、bash、fish或PowerShell"
-	},
 	"powershell": {
 		"issues": "看起来您遇到了Windows PowerShell问题，请参阅此"
 	},
@@ -181,12 +201,12 @@
 		"copyToInput": "复制到输入框（或按住Shift点击）"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.12 已发布",
-		"description": "Roo Code 3.12 带来基于您反馈的新功能和改进。",
+		"title": "🎉 Roo Code 3.15 已发布",
+		"description": "Roo Code 3.15 带来基于您反馈的新功能和改进。",
 		"whatsNew": "新特性",
-		"feature1": "<bold>Grok 支持</bold>: 添加 xAI 提供商并在 OpenRouter 上提供 Grok 推理强度选项",
-		"feature2": "<bold>差异编辑改进</bold>: 支持按配置文件设置和改进字符串规范化以减少错误",
-		"feature3": "<bold>检查点增强</bold>: 更快速可靠的检查点功能",
+		"feature1": "<bold>Vertex 提示词缓存</bold>: 为 Vertex AI 添加提示词缓存支持，提高响应速度并降低 API 费用",
+		"feature2": "<bold>终端备选方案</bold>: 实现 VSCode 终端 shell 集成失败时的备选机制",
+		"feature3": "<bold>代码片段优化</bold>: 增强聊天界面中代码片段的渲染和交互体验",
 		"hideButton": "隐藏公告",
 		"detailsDiscussLinks": "在 <discordLink>Discord</discordLink> 和 <redditLink>Reddit</redditLink> 获取更多详情并参与讨论 🚀"
 	},
@@ -211,5 +231,12 @@
 			"scrollUp": "向上滚动",
 			"close": "关闭浏览器"
 		}
+	},
+	"systemPromptWarning": "警告：自定义系统提示词覆盖已激活。这可能严重破坏功能并导致不可预测的行为。",
+	"selectApiConfig": "选择 API 配置",
+	"shellIntegration": {
+		"title": "Shell 集成不可用",
+		"description": "您的命令正在没有 VSCode shell 集成的情况下执行。您可以在 <settingsLink>Roo Code 设置</settingsLink> 的 <strong>终端</strong> 部分重新启用 shell 集成。",
+		"troubleshooting": "点击此处查看 shell 集成文档。"
 	}
 }

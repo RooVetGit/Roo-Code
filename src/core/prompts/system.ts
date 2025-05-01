@@ -3,16 +3,17 @@ import {
 	modes,
 	CustomModePrompts,
 	PromptComponent,
-	getRoleDefinition,
 	defaultModeSlug,
 	ModeConfig,
 	getModeBySlug,
 	getGroupName,
 } from "../../shared/modes"
-import { DiffStrategy } from "../diff/DiffStrategy"
+import { PromptVariables } from "./sections/custom-system-prompt"
+import { DiffStrategy } from "../../shared/tools"
 import { McpHub } from "../../services/mcp/McpHub"
 import { getToolDescriptionsForMode } from "./tools"
 import * as vscode from "vscode"
+import * as os from "os"
 import {
 	getRulesSection,
 	getSystemInfoSection,
@@ -85,9 +86,9 @@ ${getCapabilitiesSection(cwd, supportsComputerUse, mcpHub, effectiveDiffStrategy
 
 ${modesSection}
 
-${getRulesSection(cwd, supportsComputerUse, effectiveDiffStrategy, experiments)}
+${getRulesSection(cwd, supportsComputerUse, effectiveDiffStrategy)}
 
-${getSystemInfoSection(cwd, mode, customModeConfigs)}
+${getSystemInfoSection(cwd)}
 
 ${getObjectiveSection()}
 
@@ -125,7 +126,14 @@ export const SYSTEM_PROMPT = async (
 	}
 
 	// Try to load custom system prompt from file
-	const fileCustomSystemPrompt = await loadSystemPromptFile(cwd, mode)
+	const variablesForPrompt: PromptVariables = {
+		workspace: cwd,
+		mode: mode,
+		language: language ?? formatLanguage(vscode.env.language),
+		shell: vscode.env.shell,
+		operatingSystem: os.type(),
+	}
+	const fileCustomSystemPrompt = await loadSystemPromptFile(cwd, mode, variablesForPrompt)
 
 	// Check if it's a custom mode
 	const promptComponent = getPromptComponent(customModePrompts?.[mode])
@@ -143,6 +151,7 @@ export const SYSTEM_PROMPT = async (
 			mode,
 			{ language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions },
 		)
+
 		// For file-based prompts, don't include the tool sections
 		return `${roleDefinition}
 

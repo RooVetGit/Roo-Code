@@ -1,7 +1,8 @@
 import { memo, useMemo } from "react"
-import { getLanguageFromPath } from "../../utils/getLanguageFromPath"
+import { getLanguageFromPath } from "@src/utils/getLanguageFromPath"
 import CodeBlock, { CODE_BLOCK_BG_COLOR } from "./CodeBlock"
-import { ToolProgressStatus } from "../../../../src/shared/ExtensionMessage"
+import { ToolProgressStatus } from "@roo/shared/ExtensionMessage"
+import { VSCodeProgressRing } from "@vscode/webview-ui-toolkit/react"
 
 interface CodeAccordianProps {
 	code?: string
@@ -67,7 +68,9 @@ const CodeAccordian = ({
 						MozUserSelect: "none",
 						msUserSelect: "none",
 					}}
+					className={`${isLoading ? "animate-pulse" : ""}`}
 					onClick={isLoading ? undefined : onToggleExpand}>
+					{isLoading && <VSCodeProgressRing className="size-3 mr-2" />}
 					{isFeedback || isConsoleLogs ? (
 						<div style={{ display: "flex", alignItems: "center" }}>
 							<span
@@ -114,18 +117,14 @@ const CodeAccordian = ({
 			)}
 			{(!(path || isFeedback || isConsoleLogs) || isExpanded) && (
 				<div
-					//className="code-block-scrollable" this doesn't seem to be necessary anymore, on silicon macs it shows the native mac scrollbar instead of the vscode styled one
 					style={{
 						overflowX: "auto",
 						overflowY: "hidden",
 						maxWidth: "100%",
 					}}>
 					<CodeBlock
-						source={`${"```"}${diff !== undefined ? "diff" : inferredLanguage}\n${(
-							code ??
-							diff ??
-							""
-						).trim()}\n${"```"}`}
+						source={(code ?? diff ?? "").trim()}
+						language={diff !== undefined ? "diff" : inferredLanguage}
 					/>
 				</div>
 			)}

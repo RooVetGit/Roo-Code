@@ -50,12 +50,19 @@ export const toolParamNames = [
 	"mode_slug",
 	"reason",
 	"operations",
+	"line",
 	"mode",
 	"message",
 	"cwd",
 	"follow_up",
 	"task",
 	"size",
+	"search",
+	"replace",
+	"use_regex",
+	"ignore_case",
+	"start_line",
+	"end_line",
 ] as const
 
 export type ToolParamName = (typeof toolParamNames)[number]
@@ -91,7 +98,7 @@ export interface WriteToFileToolUse extends ToolUse {
 
 export interface InsertCodeBlockToolUse extends ToolUse {
 	name: "insert_content"
-	params: Partial<Pick<Record<ToolParamName, string>, "path" | "operations">>
+	params: Partial<Pick<Record<ToolParamName, string>, "path" | "line" | "content">>
 }
 
 export interface SearchFilesToolUse extends ToolUse {
@@ -144,6 +151,12 @@ export interface NewTaskToolUse extends ToolUse {
 	params: Partial<Pick<Record<ToolParamName, string>, "mode" | "message">>
 }
 
+export interface SearchAndReplaceToolUse extends ToolUse {
+	name: "search_and_replace"
+	params: Required<Pick<Record<ToolParamName, string>, "path" | "search" | "replace">> &
+		Partial<Pick<Record<ToolParamName, string>, "use_regex" | "ignore_case" | "start_line" | "end_line">>
+}
+
 // Define tool group configuration
 export type ToolGroupConfig = {
 	tools: readonly string[]
@@ -155,7 +168,6 @@ export const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
 	read_file: "read files",
 	fetch_instructions: "fetch instructions",
 	write_to_file: "write files",
-	append_to_file: "append to files",
 	apply_diff: "apply changes",
 	search_files: "search files",
 	list_files: "list files",
@@ -179,7 +191,7 @@ export const TOOL_GROUPS: Record<ToolGroup, ToolGroupConfig> = {
 		tools: ["read_file", "fetch_instructions", "search_files", "list_files", "list_code_definition_names"],
 	},
 	edit: {
-		tools: ["apply_diff", "write_to_file", "append_to_file", "insert_content", "search_and_replace"],
+		tools: ["apply_diff", "write_to_file", "insert_content", "search_and_replace"],
 	},
 	browser: {
 		tools: ["browser_action"],
@@ -203,3 +215,45 @@ export const ALWAYS_AVAILABLE_TOOLS: ToolName[] = [
 	"switch_mode",
 	"new_task",
 ] as const
+
+export type DiffResult =
+	| { success: true; content: string; failParts?: DiffResult[] }
+	| ({
+			success: false
+			error?: string
+			details?: {
+				similarity?: number
+				threshold?: number
+				matchedRange?: { start: number; end: number }
+				searchContent?: string
+				bestMatch?: string
+			}
+			failParts?: DiffResult[]
+	  } & ({ error: string } | { failParts: DiffResult[] }))
+
+export interface DiffStrategy {
+	/**
+	 * Get the name of this diff strategy for analytics and debugging
+	 * @returns The name of the diff strategy
+	 */
+	getName(): string
+
+	/**
+	 * Get the tool description for this diff strategy
+	 * @param args The tool arguments including cwd and toolOptions
+	 * @returns The complete tool description including format requirements and examples
+	 */
+	getToolDescription(args: { cwd: string; toolOptions?: { [key: string]: string } }): string
+
+	/**
+	 * Apply a diff to the original content
+	 * @param originalContent The original file content
+	 * @param diffContent The diff content in the strategy's format
+	 * @param startLine Optional line number where the search block starts. If not provided, searches the entire file.
+	 * @param endLine Optional line number where the search block ends. If not provided, searches the entire file.
+	 * @returns A DiffResult object containing either the successful result or error details
+	 */
+	applyDiff(originalContent: string, diffContent: string, startLine?: number, endLine?: number): Promise<DiffResult>
+
+	getProgressStatus?(toolUse: ToolUse, result?: any): ToolProgressStatus
+}

@@ -8,6 +8,7 @@ import { AnthropicHandler } from "./providers/anthropic"
 import { AwsBedrockHandler } from "./providers/bedrock"
 import { OpenRouterHandler } from "./providers/openrouter"
 import { VertexHandler } from "./providers/vertex"
+import { AnthropicVertexHandler } from "./providers/anthropic-vertex"
 import { OpenAiHandler } from "./providers/openai"
 import { OllamaHandler } from "./providers/ollama"
 import { LmStudioHandler } from "./providers/lmstudio"
@@ -28,7 +29,8 @@ export interface SingleCompletionHandler {
 }
 
 export interface ApiHandler {
-	createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream
+	createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[], cacheKey?: string): ApiStream
+
 	getModel(): { id: string; info: ModelInfo }
 
 	/**
@@ -44,6 +46,7 @@ export interface ApiHandler {
 
 export function buildApiHandler(configuration: ApiConfiguration): ApiHandler {
 	const { apiProvider, ...options } = configuration
+
 	switch (apiProvider) {
 		case "anthropic":
 			return new AnthropicHandler(options)
@@ -54,7 +57,11 @@ export function buildApiHandler(configuration: ApiConfiguration): ApiHandler {
 		case "bedrock":
 			return new AwsBedrockHandler(options)
 		case "vertex":
-			return new VertexHandler(options)
+			if (options.apiModelId?.startsWith("claude")) {
+				return new AnthropicVertexHandler(options)
+			} else {
+				return new VertexHandler(options)
+			}
 		case "openai":
 			return new OpenAiHandler(options)
 		case "ollama":
@@ -76,7 +83,7 @@ export function buildApiHandler(configuration: ApiConfiguration): ApiHandler {
 		case "requesty":
 			return new RequestyHandler(options)
 		case "human-relay":
-			return new HumanRelayHandler(options)
+			return new HumanRelayHandler()
 		case "fake-ai":
 			return new FakeAIHandler(options)
 		case "xai":
