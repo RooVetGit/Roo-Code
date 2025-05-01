@@ -233,7 +233,8 @@
 			"high": "Hoch",
 			"medium": "Mittel",
 			"low": "Niedrig"
-		}
+		},
+		"setReasoningLevel": "Denkaufwand aktivieren"
 	},
 	"browser": {
 		"enable": {
@@ -310,6 +311,10 @@
 		"shellIntegrationTimeout": {
 			"label": "Terminal-Shell-Integrationszeit-Limit",
 			"description": "Maximale Wartezeit für die Shell-Integration, bevor Befehle ausgeführt werden. Für Benutzer mit langen Shell-Startzeiten musst du diesen Wert möglicherweise erhöhen, wenn du Fehler vom Typ \"Shell Integration Unavailable\" im Terminal siehst."
+		},
+		"shellIntegrationDisabled": {
+			"label": "Terminal-Shell-Integration deaktivieren",
+			"description": "Aktiviere dies, wenn Terminalbefehle nicht korrekt funktionieren oder du Fehler wie 'Shell Integration Unavailable' siehst. Dies verwendet eine einfachere Methode zur Ausführung von Befehlen und umgeht einige erweiterte Terminalfunktionen."
 		},
 		"compressProgressBar": {
 			"label": "Fortschrittsbalken-Ausgabe komprimieren",

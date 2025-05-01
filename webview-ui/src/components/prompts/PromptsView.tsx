@@ -27,25 +27,7 @@ import { Tab, TabContent, TabHeader } from "../common/Tab"
 import i18next from "i18next"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { Trans } from "react-i18next"
-import {
-	Command,
-	CommandEmpty,
-	CommandGroup,
-	CommandInput,
-	CommandItem,
-	CommandList,
-	Input,
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-	Textarea,
-} from "../ui"
-import { ChevronsUpDown, X } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from "../ui"
 
 // Get all available groups that should show in prompts view
 const availableGroups = (Object.keys(TOOL_GROUPS) as ToolGroup[]).filter((group) => !TOOL_GROUPS[group].alwaysAvailable)
@@ -77,6 +59,13 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 		customModes,
 	} = useExtensionState()
 
+	// Use a local state to track the visually active mode
+	// This prevents flickering when switching modes rapidly by:
+	// 1. Updating the UI immediately when a mode is clicked
+	// 2. Not syncing with the backend mode state (which would cause flickering)
+	// 3. Still sending the mode change to the backend for persistence
+	const [visualMode, setVisualMode] = useState(mode)
+
 	// Memoize modes to preserve array order
 	const modes = useMemo(() => getAllModes(customModes), [customModes])
 
@@ -90,8 +79,6 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 	const [isCreateModeDialogOpen, setIsCreateModeDialogOpen] = useState(false)
 	const [activeSupportTab, setActiveSupportTab] = useState<SupportPromptType>("ENHANCE")
 	const [isSystemPromptDisclosureOpen, setIsSystemPromptDisclosureOpen] = useState(false)
-	const [searchValue, setSearchValue] = useState("")
-	const [open, onOpenChange] = useState(false)
 
 	// Direct update functions
 	const updateAgentPrompt = useCallback(
@@ -145,22 +132,25 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 	// Handle mode switching with explicit state initialization
 	const handleModeSwitch = useCallback(
 		(modeConfig: ModeConfig) => {
-			if (modeConfig.slug === mode) return // Prevent unnecessary updates
+			if (modeConfig.slug === visualMode) return // Prevent unnecessary updates
 
-			// First switch the mode
+			// Immediately update visual state for instant feedback
+			setVisualMode(modeConfig.slug)
+
+			// Then send the mode change message to the backend
 			switchMode(modeConfig.slug)
 
 			// Exit tools edit mode when switching modes
 			setIsToolsEditMode(false)
 		},
-		[mode, switchMode, setIsToolsEditMode],
+		[visualMode, switchMode, setIsToolsEditMode],
 	)
 
 	// Helper function to get current mode's config
 	const getCurrentMode = useCallback((): ModeConfig | undefined => {
-		const findMode = (m: ModeConfig): boolean => m.slug === mode
+		const findMode = (m: ModeConfig): boolean => m.slug === visualMode
 		return customModes?.find(findMode) || modes.find(findMode)
-	}, [mode, customModes, modes])
+	}, [visualMode, customModes, modes])
 
 	// Helper function to safely access mode properties
 	const getModeProperty = <T extends keyof ModeConfig>(
@@ -490,99 +480,42 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 					</div>
 
 					<div className="flex gap-2 items-center mb-3 flex-wrap py-1">
-						<Popover open={open} onOpenChange={onOpenChange}>
-							<PopoverTrigger asChild>
-								<Button
-									variant="combobox"
-									role="combobox"
-									aria-expanded={open}
-									className="grow justify-between"
-									// Use select-component data-testid for test compatibility
-									data-testid="select-component">
-									<div>{getCurrentMode()?.name}</div>
-									<ChevronsUpDown className="opacity-50" />
-								</Button>
-							</PopoverTrigger>
-							<PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)]">
-								<Command>
-									<div className="relative">
-										<CommandInput
-											value={searchValue}
-											onValueChange={setSearchValue}
-											placeholder={t("settings:providers.searchPlaceholder")}
-											className="h-9 mr-4"
-											data-testid="profile-search-input"
-										/>
-										{searchValue.length > 0 && (
-											<div className="absolute right-2 top-0 bottom-0 flex items-center justify-center">
-												<X
-													className="text-vscode-input-foreground opacity-50 hover:opacity-100 size-4 p-0.5 cursor-pointer"
-													onClick={() => setSearchValue("")}
-												/>
-											</div>
-										)}
-									</div>
-									<CommandList>
-										<CommandEmpty>
-											{searchValue && (
-												<div className="py-2 px-1 text-sm">
-													{t("settings:providers.noMatchFound")}
-												</div>
-											)}
-										</CommandEmpty>
-										<CommandGroup>
-											{modes
-												.filter((modeConfig) =>
-													searchValue
-														? modeConfig.name
-																.toLowerCase()
-																.includes(searchValue.toLowerCase()) ||
-															modeConfig.slug
-																.toLowerCase()
-																.includes(searchValue.toLowerCase())
-														: true,
-												)
-												.map((config) => (
-													<CommandItem
-														key={config.name}
-														value={config.slug}
-														onSelect={(value) => {
-															handleModeSwitch(
-																modes.find((m) => m.slug === value) || modes[0],
-															)
-															onOpenChange(false)
-														}}
-														data-testid={`profile-option-${config.slug}`}>
-														<div className="flex-1 flex items-center justify-between">
-															{config.name}
-															<span className="text-foreground/70">{config.slug}</span>
-														</div>
-													</CommandItem>
-												))}
-										</CommandGroup>
-									</CommandList>
-								</Command>
-							</PopoverContent>
-						</Popover>
+						{modes.map((modeConfig) => {
+							const isActive = visualMode === modeConfig.slug
+							return (
+								<button
+									key={modeConfig.slug}
+									data-testid={`${modeConfig.slug}-tab`}
+									data-active={isActive ? "true" : "false"}
+									onClick={() => handleModeSwitch(modeConfig)}
+									className={`px-2 py-1 border-none rounded cursor-pointer font-bold ${
+										isActive
+											? "bg-vscode-button-background text-vscode-button-foreground opacity-100"
+											: "bg-transparent text-vscode-foreground opacity-80"
+									}`}>
+									{modeConfig.name}
+								</button>
+							)
+						})}
 					</div>
 				</div>
 
 				<div style={{ marginBottom: "20px" }}>
 					{/* Only show name and delete for custom modes */}
-					{mode && findModeBySlug(mode, customModes) && (
+					{visualMode && findModeBySlug(visualMode, customModes) && (
 						<div className="flex gap-3 mb-4">
 							<div className="flex-1">
 								<div className="font-bold mb-1">{t("prompts:createModeDialog.name.label")}</div>
 								<div className="flex gap-2">
-									<Input
-										value={getModeProperty(findModeBySlug(mode, customModes), "name") ?? ""}
+									<VSCodeTextField
+										value={getModeProperty(findModeBySlug(visualMode, customModes), "name") ?? ""}
 										onChange={(e: Event | React.FormEvent<HTMLElement>) => {
 											const target =
 												(e as CustomEvent)?.detail?.target ||
 												((e as any).target as HTMLInputElement)
-											const customMode = findModeBySlug(mode, customModes)
+											const customMode = findModeBySlug(visualMode, customModes)
 											if (customMode) {
-												updateCustomMode(mode, {
+												updateCustomMode(visualMode, {
 													...customMode,
 													name: target.value,
 													source: customMode.source || "global",
@@ -598,7 +531,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 										onClick={() => {
 											vscode.postMessage({
 												type: "deleteCustomMode",
-												slug: mode,
+												slug: visualMode,
 											})
 										}}>
 										<span className="codicon codicon-trash"></span>
@@ -610,7 +543,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 					<div style={{ marginBottom: "16px" }}>
 						<div className="flex justify-between items-center mb-1">
 							<div className="font-bold">{t("prompts:roleDefinition.title")}</div>
-							{!findModeBySlug(mode, customModes) && (
+							{!findModeBySlug(visualMode, customModes) && (
 								<Button
 									variant="ghost"
 									size="icon"
@@ -631,25 +564,29 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 						</div>
 						<Textarea
 							value={(() => {
-								const customMode = findModeBySlug(mode, customModes)
-								const prompt = customModePrompts?.[mode] as PromptComponent
-								return customMode?.roleDefinition ?? prompt?.roleDefinition ?? getRoleDefinition(mode)
+								const customMode = findModeBySlug(visualMode, customModes)
+								const prompt = customModePrompts?.[visualMode] as PromptComponent
+								return (
+									customMode?.roleDefinition ??
+									prompt?.roleDefinition ??
+									getRoleDefinition(visualMode)
+								)
 							})()}
 							onChange={(e) => {
 								const value =
 									(e as unknown as CustomEvent)?.detail?.target?.value ||
 									((e as any).target as HTMLTextAreaElement).value
-								const customMode = findModeBySlug(mode, customModes)
+								const customMode = findModeBySlug(visualMode, customModes)
 								if (customMode) {
 									// For custom modes, update the JSON file
-									updateCustomMode(mode, {
+									updateCustomMode(visualMode, {
 										...customMode,
 										roleDefinition: value.trim() || "",
 										source: customMode.source || "global",
 									})
 								} else {
 									// For built-in modes, update the prompts
-									updateAgentPrompt(mode, {
+									updateAgentPrompt(visualMode, {
 										roleDefinition: value.trim() || undefined,
 									})
 								}
@@ -696,7 +633,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 						<div className="mb-4">
 							<div className="flex justify-between items-center mb-1">
 								<div className="font-bold">{t("prompts:tools.title")}</div>
-								{findModeBySlug(mode, customModes) && (
+								{findModeBySlug(visualMode, customModes) && (
 									<Button
 										variant="ghost"
 										size="icon"
@@ -711,16 +648,16 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 									</Button>
 								)}
 							</div>
-							{!findModeBySlug(mode, customModes) && (
+							{!findModeBySlug(visualMode, customModes) && (
 								<div className="text-sm text-vscode-descriptionForeground mb-2">
 									{t("prompts:tools.builtInModesText")}
 								</div>
 							)}
-							{isToolsEditMode && findModeBySlug(mode, customModes) ? (
+							{isToolsEditMode && findModeBySlug(visualMode, customModes) ? (
 								<div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2">
 									{availableGroups.map((group) => {
 										const currentMode = getCurrentMode()
-										const isCustomMode = findModeBySlug(mode, customModes)
+										const isCustomMode = findModeBySlug(visualMode, customModes)
 										const customMode = isCustomMode
 										const isGroupEnabled = isCustomMode
 											? customMode?.groups?.some((g) => getGroupName(g) === group)
@@ -789,7 +726,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 								marginBottom: "4px",
 							}}>
 							<div style={{ fontWeight: "bold" }}>{t("prompts:customInstructions.title")}</div>
-							{!findModeBySlug(mode, customModes) && (
+							{!findModeBySlug(visualMode, customModes) && (
 								<Button
 									variant="ghost"
 									size="icon"
@@ -817,8 +754,8 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 						</div>
 						<Textarea
 							value={(() => {
-								const customMode = findModeBySlug(mode, customModes)
-								const prompt = customModePrompts?.[mode] as PromptComponent
+								const customMode = findModeBySlug(visualMode, customModes)
+								const prompt = customModePrompts?.[visualMode] as PromptComponent
 								return (
 									customMode?.customInstructions ??
 									prompt?.customInstructions ??
@@ -829,18 +766,18 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 								const value =
 									(e as unknown as CustomEvent)?.detail?.target?.value ||
 									((e as any).target as HTMLTextAreaElement).value
-								const customMode = findModeBySlug(mode, customModes)
+								const customMode = findModeBySlug(visualMode, customModes)
 								if (customMode) {
 									// For custom modes, update the JSON file
-									updateCustomMode(mode, {
+									updateCustomMode(visualMode, {
 										...customMode,
 										customInstructions: value.trim() || undefined,
 										source: customMode.source || "global",
 									})
 								} else {
 									// For built-in modes, update the prompts
-									const existingPrompt = customModePrompts?.[mode] as PromptComponent
-									updateAgentPrompt(mode, {
+									const existingPrompt = customModePrompts?.[visualMode] as PromptComponent
+									updateAgentPrompt(visualMode, {
 										...existingPrompt,
 										customInstructions: value.trim(),
 									})
@@ -981,7 +918,9 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 					</h3>
 
 					<div className="text-sm text-vscode-descriptionForeground mb-2">
-						{t("prompts:globalCustomInstructions.description", { language: i18next.language })}
+						{t("prompts:globalCustomInstructions.description", {
+							language: i18next.language,
+						})}
 					</div>
 					<Textarea
 						value={customInstructions ?? ""}
@@ -1085,7 +1024,9 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 								variant="ghost"
 								size="icon"
 								onClick={() => handleSupportReset(activeSupportTab)}
-								title={t("prompts:supportPrompts.resetPrompt", { promptType: activeSupportTab })}>
+								title={t("prompts:supportPrompts.resetPrompt", {
+									promptType: activeSupportTab,
+								})}>
 								<span className="codicon codicon-discard"></span>
 							</Button>
 						</div>
@@ -1461,7 +1402,9 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							</Button>
 							<h2 style={{ margin: "0 0 16px" }}>
 								{selectedPromptTitle ||
-									t("prompts:systemPrompt.title", { modeName: getCurrentMode()?.name || "Code" })}
+									t("prompts:systemPrompt.title", {
+										modeName: getCurrentMode()?.name || "Code",
+									})}
 							</h2>
 							<pre
 								style={{

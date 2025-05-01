@@ -88,6 +88,7 @@ type ProviderSettings = {
 	openAiUseAzure?: boolean | undefined
 	azureApiVersion?: string | undefined
 	openAiStreamingEnabled?: boolean | undefined
+	enableReasoningEffort?: boolean | undefined
 	ollamaModelId?: string | undefined
 	ollamaBaseUrl?: string | undefined
 	vsCodeLmModelSelector?:
@@ -211,6 +212,7 @@ type GlobalSettings = {
 	maxReadFileLine?: number | undefined
 	terminalOutputLineLimit?: number | undefined
 	terminalShellIntegrationTimeout?: number | undefined
+	terminalShellIntegrationDisabled?: boolean | undefined
 	terminalCommandDelay?: number | undefined
 	terminalPowershellCounter?: boolean | undefined
 	terminalZshClearEolMark?: boolean | undefined
@@ -311,12 +313,10 @@ type ClineMessage = {
 				| "mistake_limit_reached"
 				| "browser_action_launch"
 				| "use_mcp_server"
-				| "finishTask"
 		  )
 		| undefined
 	say?:
 		| (
-				| "task"
 				| "error"
 				| "api_req_started"
 				| "api_req_finished"
@@ -329,15 +329,11 @@ type ClineMessage = {
 				| "user_feedback"
 				| "user_feedback_diff"
 				| "command_output"
-				| "tool"
 				| "shell_integration_warning"
 				| "browser_action"
 				| "browser_action_result"
-				| "command"
 				| "mcp_server_request_started"
 				| "mcp_server_response"
-				| "new_task_started"
-				| "new_task"
 				| "subtask_result"
 				| "checkpoint_saved"
 				| "rooignore_error"
@@ -356,6 +352,7 @@ type ClineMessage = {
 		| undefined
 	progressStatus?:
 		| {
+				id?: string | undefined
 				icon?: string | undefined
 				text?: string | undefined
 		  }
@@ -396,12 +393,10 @@ type RooCodeEvents = {
 							| "mistake_limit_reached"
 							| "browser_action_launch"
 							| "use_mcp_server"
-							| "finishTask"
 					  )
 					| undefined
 				say?:
 					| (
-							| "task"
 							| "error"
 							| "api_req_started"
 							| "api_req_finished"
@@ -414,15 +409,11 @@ type RooCodeEvents = {
 							| "user_feedback"
 							| "user_feedback_diff"
 							| "command_output"
-							| "tool"
 							| "shell_integration_warning"
 							| "browser_action"
 							| "browser_action_result"
-							| "command"
 							| "mcp_server_request_started"
 							| "mcp_server_response"
-							| "new_task_started"
-							| "new_task"
 							| "subtask_result"
 							| "checkpoint_saved"
 							| "rooignore_error"
@@ -441,6 +432,7 @@ type RooCodeEvents = {
 					| undefined
 				progressStatus?:
 					| {
+							id?: string | undefined
 							icon?: string | undefined
 							text?: string | undefined
 					  }
