@@ -17,7 +17,7 @@ export function addCacheBreakpoints(messages: Anthropic.Messages.MessageParam[])
 	)
 }
 
-function cachedMessage(message: Anthropic.Messages.MessageParam) {
+function cachedMessage(message: Anthropic.Messages.MessageParam): Anthropic.Messages.MessageParam {
 	// For string content, we convert to array format with optional cache control.
 	if (typeof message.content === "string") {
 		return {
