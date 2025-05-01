@@ -721,7 +721,7 @@ describe("Cline", () => {
 				]
 
 				// Trigger API request
-				const iterator = cline.attemptApiRequest(0)
+				const iterator = cline.attemptApiRequest(0, "")
 				await iterator.next()
 
 				// Calculate expected delay for first retry
@@ -845,7 +845,7 @@ describe("Cline", () => {
 				]
 
 				// Trigger API request
-				const iterator = cline.attemptApiRequest(0)
+				const iterator = cline.attemptApiRequest(0, "")
 				await iterator.next()
 
 				// Verify delay is only applied for the countdown

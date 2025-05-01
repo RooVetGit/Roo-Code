@@ -1012,22 +1012,12 @@ export class Cline extends EventEmitter<ClineEvents> {
 		// top-down build file structure of project which for large projects can
 		// take a few seconds. For the best UX we show a placeholder api_req_started
 		// message with a loading spinner as this happens.
-		await this.say(
-			"api_req_started",
-			JSON.stringify({
-				request:
-					userContent.map((block) => formatContentBlockToMarkdown(block)).join("\n\n") + "\n\nLoading...",
-			}),
-		)
+		const userContentRequest =
+			userContent.map((block) => formatContentBlockToMarkdown(block)).join("\n\n") + "\n\nLoading..."
+		await this.say("api_req_started", JSON.stringify({ request: userContentRequest }))
 
-		const parsedUserContent = await this.parseUserContent(userContent)
-		const environmentDetails = await this.getEnvironmentDetails(includeFileDetails)
-
-		// Add environment details as its own text block, separate from tool
-		// results.
-		const finalUserContent = [...parsedUserContent, { type: "text" as const, text: environmentDetails }]
-
-		await this.addToApiConversationHistory({ role: "user", content: finalUserContent })
+		const content = await this.parseUserContent(userContent)
+		await this.addToApiConversationHistory({ role: "user", content })
 		telemetryService.captureConversationMessage(this.taskId, "user")
 
 		// Since we sent off a placeholder api_req_started message to update the
@@ -1035,11 +1025,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 		// potential details for example), we need to update the text of that
 		// message.
 		const lastApiReqIndex = findLastIndex(this.clineMessages, (m) => m.say === "api_req_started")
-
-		this.clineMessages[lastApiReqIndex].text = JSON.stringify({
-			request: finalUserContent.map((block) => formatContentBlockToMarkdown(block)).join("\n\n"),
-		} satisfies ClineApiReqInfo)
-
+		const contentRequest = content.map((block) => formatContentBlockToMarkdown(block)).join("\n\n")
+		this.clineMessages[lastApiReqIndex].text = JSON.stringify({ request: contentRequest })
 		await this.saveClineMessages()
 		await provider?.postStateToWebview()
 
@@ -1137,7 +1124,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 			// Yields only if the first chunk is successful, otherwise will
 			// allow the user to retry the request (most likely due to rate
 			// limit error, which gets thrown on the first chunk).
-			const stream = this.attemptApiRequest(previousApiReqIndex)
+			const environmentDetails = await this.getEnvironmentDetails(includeFileDetails)
+			const stream = this.attemptApiRequest(previousApiReqIndex, environmentDetails)
 			let assistantMessage = ""
 			let reasoningMessage = ""
 			this.isStreaming = true
@@ -1344,7 +1332,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 	}
 
-	public async *attemptApiRequest(previousApiReqIndex: number, retryAttempt: number = 0): ApiStream {
+	public async *attemptApiRequest(
+		previousApiReqIndex: number,
+		environmentDetails: string,
+		retryAttempt: number = 0,
+	): ApiStream {
 		let mcpHub: McpHub | undefined
 
 		const { apiConfiguration, mcpEnabled, autoApprovalEnabled, alwaysApproveResubmit, requestDelaySeconds } =
@@ -1433,6 +1425,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 			)
 		})()
 
+		const messages = this.processMessages(environmentDetails)
+
 		// If the previous API request's total token usage is close to the
 		// context window, truncate the conversation history to free up space
 		// for the new request.
@@ -1465,7 +1459,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			const contextWindow = modelInfo.contextWindow
 
 			const trimmedMessages = await truncateConversationIfNeeded({
-				messages: this.apiConversationHistory,
+				messages,
 				totalTokens,
 				maxTokens,
 				contextWindow,
@@ -1477,33 +1471,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			}
 		}
 
-		// Clean conversation history by:
-		// 1. Converting to Anthropic.MessageParam by spreading only the API-required properties.
-		// 2. Converting image blocks to text descriptions if model doesn't support images.
-		const cleanConversationHistory = this.apiConversationHistory.map(({ role, content }) => {
-			// Handle array content (could contain image blocks).
-			if (Array.isArray(content)) {
-				if (!this.api.getModel().info.supportsImages) {
-					// Convert image blocks to text descriptions.
-					content = content.map((block) => {
-						if (block.type === "image") {
-							// Convert image blocks to text descriptions.
-							// Note: We can't access the actual image content/url due to API limitations,
-							// but we can indicate that an image was present in the conversation.
-							return {
-								type: "text",
-								text: "[Referenced image in conversation]",
-							}
-						}
-						return block
-					})
-				}
-			}
-
-			return { role, content }
-		})
-
-		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory, this.promptCacheKey)
+		const stream = this.api.createMessage(systemPrompt, messages, this.promptCacheKey)
 		const iterator = stream[Symbol.asyncIterator]()
 
 		try {
@@ -1564,7 +1532,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 				// Delegate generator output from the recursive call with
 				// incremented retry count.
-				yield* this.attemptApiRequest(previousApiReqIndex, retryAttempt + 1)
+				yield* this.attemptApiRequest(previousApiReqIndex, environmentDetails, retryAttempt + 1)
 
 				return
 			} else {
@@ -1582,7 +1550,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 				await this.say("api_req_retried")
 
 				// Delegate generator output from the recursive call.
-				yield* this.attemptApiRequest(previousApiReqIndex)
+				yield* this.attemptApiRequest(previousApiReqIndex, environmentDetails)
 				return
 			}
 		}
@@ -2075,6 +2043,53 @@ export class Cline extends EventEmitter<ClineEvents> {
 				return block
 			}),
 		)
+	}
+
+	private processMessages(environmentDetails: string) {
+		const { supportsImages } = this.api.getModel().info
+		let lastUserMessageIndex
+
+		// Process messages by:
+		// 1. Converting to Anthropic.MessageParam by spreading only the API-required properties.
+		// 2. Converting image blocks to text descriptions if model doesn't support images.
+		// 3. Adding environment details to the last user message.
+		const messages = this.apiConversationHistory.map(({ role, content }, index) => {
+			// Handle array content (could contain image blocks).
+			if (Array.isArray(content) && !supportsImages) {
+				// Convert image blocks to text descriptions.
+				// Note: We can't access the actual image content/url due to API limitations,
+				// but we can indicate that an image was present in the conversation.
+				content = content.map((block) =>
+					block.type === "image"
+						? { type: "text" as const, text: "[Referenced image in conversation]" }
+						: block,
+				)
+			}
+
+			if (role === "user") {
+				lastUserMessageIndex = index
+			}
+
+			return { role, content }
+		})
+
+		if (lastUserMessageIndex !== undefined) {
+			const content = messages[lastUserMessageIndex].content
+
+			if (typeof content === "string") {
+				messages[lastUserMessageIndex].content = [
+					{ type: "text" as const, text: content },
+					{ type: "text" as const, text: environmentDetails },
+				]
+			} else {
+				messages[lastUserMessageIndex].content = [
+					...content,
+					{ type: "text" as const, text: environmentDetails },
+				]
+			}
+		}
+
+		return messages
 	}
 
 	// Environment

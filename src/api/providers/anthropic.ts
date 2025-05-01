@@ -1,6 +1,7 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import { Stream as AnthropicStream } from "@anthropic-ai/sdk/streaming"
-import { CacheControlEphemeral } from "@anthropic-ai/sdk/resources"
+import type { MessageParam, TextBlockParam, RawMessageStreamEvent } from "@anthropic-ai/sdk/resources"
+
 import {
 	anthropicDefaultModelId,
 	AnthropicModelId,
@@ -8,10 +9,12 @@ import {
 	ApiHandlerOptions,
 	ModelInfo,
 } from "../../shared/api"
+
 import { ApiStream } from "../transform/stream"
+
+import { SingleCompletionHandler, getModelParams } from "../index"
 import { BaseProvider } from "./base-provider"
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants"
-import { SingleCompletionHandler, getModelParams } from "../index"
 
 export class AnthropicHandler extends BaseProvider implements SingleCompletionHandler {
 	private options: ApiHandlerOptions
@@ -30,10 +33,12 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 		})
 	}
 
-	async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
-		let stream: AnthropicStream<Anthropic.Messages.RawMessageStreamEvent>
-		const cacheControl: CacheControlEphemeral = { type: "ephemeral" }
+	async *createMessage(systemPrompt: string, messages: MessageParam[]): ApiStream {
+		let stream: AnthropicStream<RawMessageStreamEvent>
 		let { id: modelId, maxTokens, thinking, temperature, virtualId } = this.getModel()
+
+		let system: TextBlockParam[]
+		let requestOptions: object | undefined = undefined
 
 		switch (modelId) {
 			case "claude-3-7-sonnet-20250219":
@@ -41,90 +46,32 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 			case "claude-3-5-haiku-20241022":
 			case "claude-3-opus-20240229":
 			case "claude-3-haiku-20240307": {
-				/**
-				 * The latest message will be the new user message, one before
-				 * will be the assistant message from a previous request, and
-				 * the user message before that will be a previously cached user
-				 * message. So we need to mark the latest user message as
-				 * ephemeral to cache it for the next request, and mark the
-				 * second to last user message as ephemeral to let the server
-				 * know the last message to retrieve from the cache for the
-				 * current request.
-				 */
-				const userMsgIndices = messages.reduce(
-					(acc, msg, index) => (msg.role === "user" ? [...acc, index] : acc),
-					[] as number[],
-				)
-
-				const lastUserMsgIndex = userMsgIndices[userMsgIndices.length - 1] ?? -1
-				const secondLastMsgUserIndex = userMsgIndices[userMsgIndices.length - 2] ?? -1
-
-				stream = await this.client.messages.create(
-					{
-						model: modelId,
-						max_tokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
-						temperature,
-						thinking,
-						// Setting cache breakpoint for system prompt so new tasks can reuse it.
-						system: [{ text: systemPrompt, type: "text", cache_control: cacheControl }],
-						messages: messages.map((message, index) => {
-							if (index === lastUserMsgIndex || index === secondLastMsgUserIndex) {
-								return {
-									...message,
-									content:
-										typeof message.content === "string"
-											? [{ type: "text", text: message.content, cache_control: cacheControl }]
-											: message.content.map((content, contentIndex) =>
-													contentIndex === message.content.length - 1
-														? { ...content, cache_control: cacheControl }
-														: content,
-												),
-								}
-							}
-							return message
-						}),
-						stream: true,
-					},
-					(() => {
-						// prompt caching: https://x.com/alexalbert__/status/1823751995901272068
-						// https://github.com/anthropics/anthropic-sdk-typescript?tab=readme-ov-file#default-headers
-						// https://github.com/anthropics/anthropic-sdk-typescript/commit/c920b77fc67bd839bfeb6716ceab9d7c9bbe7393
-
-						const betas = []
-
-						// Check for the thinking-128k variant first
-						if (virtualId === "claude-3-7-sonnet-20250219:thinking") {
-							betas.push("output-128k-2025-02-19")
-						}
-
-						// Then check for models that support prompt caching
-						switch (modelId) {
-							case "claude-3-7-sonnet-20250219":
-							case "claude-3-5-sonnet-20241022":
-							case "claude-3-5-haiku-20241022":
-							case "claude-3-opus-20240229":
-							case "claude-3-haiku-20240307":
-								betas.push("prompt-caching-2024-07-31")
-								return { headers: { "anthropic-beta": betas.join(",") } }
-							default:
-								return undefined
-						}
-					})(),
-				)
+				system = [{ text: systemPrompt, type: "text", cache_control: { type: "ephemeral" } }]
+				addCacheBreakpoints(messages)
+				requestOptions =
+					virtualId === "claude-3-7-sonnet-20250219:thinking"
+						? { headers: { "anthropic-beta": ["output-128k-2025-02-19"] } }
+						: undefined
 				break
 			}
 			default: {
-				stream = (await this.client.messages.create({
-					model: modelId,
-					max_tokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
-					temperature,
-					system: [{ text: systemPrompt, type: "text" }],
-					messages,
-					stream: true,
-				})) as any
+				system = [{ text: systemPrompt, type: "text" }]
 				break
 			}
 		}
+
+		stream = await this.client.messages.create(
+			{
+				model: modelId,
+				max_tokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
+				temperature,
+				thinking,
+				system,
+				messages,
+				stream: true,
+			},
+			requestOptions,
+		)
 
 		for await (const chunk of stream) {
 			switch (chunk.type) {
@@ -198,7 +145,7 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 		let id = modelId && modelId in anthropicModels ? (modelId as AnthropicModelId) : anthropicDefaultModelId
 		const info: ModelInfo = anthropicModels[id]
 
-		// Track the original model ID for special variant handling
+		// Track the original model ID for special variant handling.
 		const virtualId = id
 
 		// The `:thinking` variant is a virtual identifier for the
@@ -211,7 +158,7 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 		return {
 			id,
 			info,
-			virtualId, // Include the original ID to use for header selection
+			virtualId, // Include the original ID to use for header selection.
 			...getModelParams({ options: this.options, model: info, defaultMaxTokens: ANTHROPIC_DEFAULT_MAX_TOKENS }),
 		}
 	}
@@ -232,15 +179,8 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 		return content?.type === "text" ? content.text : ""
 	}
 
-	/**
-	 * Counts tokens for the given content using Anthropic's API
-	 *
-	 * @param content The content blocks to count tokens for
-	 * @returns A promise resolving to the token count
-	 */
 	override async countTokens(content: Array<Anthropic.Messages.ContentBlockParam>): Promise<number> {
 		try {
-			// Use the current model
 			const { id: model } = this.getModel()
 
 			const response = await this.client.messages.countTokens({
@@ -250,11 +190,63 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 
 			return response.input_tokens
 		} catch (error) {
-			// Log error but fallback to tiktoken estimation
 			console.warn("Anthropic token counting failed, using fallback", error)
-
-			// Use the base provider's implementation as fallback
 			return super.countTokens(content)
+		}
+	}
+}
+
+// Using the cache_control parameter, you can define up to 4 cache breakpoints,
+// allowing you to cache different reusable sections separately. For each
+// breakpoint, the system will automatically check for cache hits at previous
+// positions and use the longest matching prefix if one is found.
+//
+// https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
+//
+// The latest message will be the new user message, one before will be the
+// assistant message from a previous request, and the user message before that
+// will be a previously cached user message. So we need to mark the latest user
+// message as ephemeral to cache it for the next request, and mark the second to
+// last user message as ephemeral to let the server know the last message to
+// retrieve from the cache for the current request.
+//
+// The system message will always have a cache breakpoint set.
+const addCacheBreakpoints = (messages: Anthropic.Messages.MessageParam[]): void => {
+	let userMessagesFound = 0
+
+	for (let i = messages.length - 1; i >= 0; i--) {
+		const msg = messages[i]
+
+		if (msg.role !== "user") {
+			continue
+		}
+
+		if (typeof msg.content === "string") {
+			msg.content = [{ type: "text" as const, text: msg.content, cache_control: { type: "ephemeral" as const } }]
+		} else if (Array.isArray(msg.content)) {
+			let lastTextPart: TextBlockParam | undefined
+
+			for (let j = msg.content.length - 1; j >= 0; j--) {
+				const part = msg.content[j]
+
+				if (part.type === "text") {
+					lastTextPart = part
+					break
+				}
+			}
+
+			if (lastTextPart) {
+				lastTextPart.cache_control = { type: "ephemeral" as const }
+			} else {
+				msg.content.push({ type: "text" as const, text: "...", cache_control: { type: "ephemeral" as const } })
+			}
+		}
+
+		userMessagesFound++
+
+		// Stop after finding and modifying the last two user messages.
+		if (userMessagesFound === 2) {
+			break
 		}
 	}
 }
