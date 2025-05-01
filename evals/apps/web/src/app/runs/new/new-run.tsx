@@ -110,7 +110,11 @@ export function NewRun() {
 					const openRouterModel = models.data?.find(({ id }) => id === model)
 
 					if (!openRouterModel) {
-						throw new Error("Model not found.")
+						console.error(
+							`Model not found: ${model}. Available models:`,
+							models.data?.map((m) => m.id),
+						)
+						throw new Error(`Model not found: ${model}. Please try importing the profile again.`)
 					}
 
 					const openRouterModelId = openRouterModel.id
@@ -367,6 +371,8 @@ export function NewRun() {
 												openAiModelId,
 											} = profileSettings || {}
 
+											// Set the model ID based on provider
+											let modelId = ""
 											switch (apiProvider) {
 												case "anthropic":
 												case "bedrock":
@@ -376,29 +382,37 @@ export function NewRun() {
 												case "openai-native":
 												case "xai":
 												case "vertex":
-													setValue("model", apiModelId || "")
+													modelId = apiModelId || ""
 													break
 												case "openrouter":
-													setValue("model", openRouterModelId || "")
+													modelId = openRouterModelId || ""
 													break
 												case "glama":
-													setValue("model", glamaModelId || "")
+													modelId = glamaModelId || ""
 													break
 												case "requesty":
-													setValue("model", requestyModelId || "")
+													modelId = requestyModelId || ""
 													break
 												case "unbound":
-													setValue("model", unboundModelId || "")
+													modelId = unboundModelId || ""
 													break
 												case "openai":
-													setValue("model", openAiModelId || "")
+													modelId = openAiModelId || ""
 													break
 												case "ollama":
-													setValue("model", ollamaModelId || "")
+													modelId = ollamaModelId || ""
 													break
 												case "lmstudio":
-													setValue("model", lmStudioModelId || "")
+													modelId = lmStudioModelId || ""
 													break
+											}
+
+											// Set the model and switch to the appropriate mode
+											setValue("model", modelId)
+											if (apiProvider === "openrouter") {
+												setMode("openrouter")
+											} else {
+												setMode("settings")
 											}
 										}}
 									/>

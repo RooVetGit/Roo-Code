@@ -92,10 +92,13 @@ export function SettingsProfiles({ currentSettings, onSelectProfile }: SettingsP
 			return
 		}
 
+		// Ensure we have a deep copy of the settings to avoid reference issues
+		const settingsCopy = JSON.parse(JSON.stringify(currentSettings))
+
 		const newProfile: SettingsProfile = {
 			id: Date.now().toString(),
 			name: profileName,
-			settings: { ...currentSettings }, // Copy current settings
+			settings: settingsCopy,
 		}
 		console.log("Saving profile with settings:", newProfile.settings) // DEBUG LOG
 
