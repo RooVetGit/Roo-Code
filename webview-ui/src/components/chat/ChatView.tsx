@@ -110,6 +110,32 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	// Has to be after api_req_finished are all reduced into api_req_started messages.
 	const apiMetrics = useMemo(() => getApiMetrics(modifiedMessages), [modifiedMessages])
 
+	// Calculate cost history for the chart
+	const costHistory = useMemo(() => {
+		let cumulativeCost = 0
+		let requestIndex = 0
+		const history: { requestIndex: number; cumulativeCost: number; costDelta: number }[] = []
+
+		modifiedMessages.forEach((message) => {
+			// Look for messages indicating a completed API request with cost
+			if (message.say === "api_req_started" && message.text) {
+				try {
+					const data = JSON.parse(message.text)
+					// Check if cost is defined and not null (indicating request completion)
+					if (data.cost !== undefined && data.cost !== null) {
+						const costDelta = data.cost ?? 0
+						cumulativeCost += costDelta
+						requestIndex++
+						history.push({ requestIndex, cumulativeCost, costDelta })
+					}
+				} catch (e) {
+					// Ignore parsing errors
+				}
+			}
+		})
+		return history
+	}, [modifiedMessages])
+
 	const [inputValue, setInputValue] = useState("")
 	const textAreaRef = useRef<HTMLTextAreaElement>(null)
 	const [textAreaDisabled, setTextAreaDisabled] = useState(false)
@@ -1219,6 +1245,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						totalCost={apiMetrics.totalCost}
 						contextTokens={apiMetrics.contextTokens}
 						onClose={handleTaskCloseButtonClick}
+						costHistory={costHistory} // Pass the calculated cost history
 					/>
 
 					{hasSystemPromptOverride && (
