@@ -159,6 +159,25 @@ function helloWorld() {
 				}
 			})
 
+			it("should replace matching content when end_line is passed in", async () => {
+				const originalContent = 'function hello() {\n    console.log("hello")\n}\n'
+				const diffContent = `test.ts
+<<<<<<< SEARCH
+:start_line:1
+:end_line:1
+-------
+function hello() {
+=======
+function helloWorld() {
+>>>>>>> REPLACE`
+
+				const result = await strategy.applyDiff(originalContent, diffContent)
+				expect(result.success).toBe(true)
+				if (result.success) {
+					expect(result.content).toBe('function helloWorld() {\n    console.log("hello")\n}\n')
+				}
+			})
+
 			it("should match content with different surrounding whitespace", async () => {
 				const originalContent = "\nfunction example() {\n    return 42;\n}\n\n"
 				const diffContent = `test.ts
@@ -2234,6 +2253,85 @@ function process() {
 
 function two() {
     return 2;
+}`)
+			}
+		})
+
+		it("should fail when line range is far outside file bounds", async () => {
+			const originalContent = `
+function one() {
+		  return 1;
+}
+
+function two() {
+		  return 2;
+}
+
+function three() {
+		  return 3;
+}
+`.trim()
+			const diffContent = `test.ts
+<<<<<<< SEARCH
+:start_line:1000
+-------
+function three() {
+		  return 3;
+}
+=======
+function three() {
+		  return "three";
+}
+>>>>>>> REPLACE`
+
+			// Line 1000 is way outside the bounds of the file (10 lines)
+			// and outside of any reasonable buffer range, so it should fail
+			const result = await strategy.applyDiff(originalContent, diffContent, 1000)
+			expect(result.success).toBe(false)
+		})
+
+		it("should find match when line range is slightly out of bounds but within buffer zone", async () => {
+			const originalContent = `
+function one() {
+		  return 1;
+}
+
+function two() {
+		  return 2;
+}
+
+function three() {
+		  return 3;
+}
+`.trim()
+			const diffContent = `test.ts
+<<<<<<< SEARCH
+:start_line:11
+-------
+function three() {
+		  return 3;
+}
+=======
+function three() {
+		  return "three";
+}
+>>>>>>> REPLACE`
+
+			// File only has 10 lines, but we specify line 11
+			// It should still find the match since it's within the buffer zone (5 lines)
+			const result = await strategy.applyDiff(originalContent, diffContent, 11)
+			expect(result.success).toBe(true)
+			if (result.success) {
+				expect(result.content).toBe(`function one() {
+		  return 1;
+}
+
+function two() {
+		  return 2;
+}
+
+function three() {
+		  return "three";
 }`)
 			}
 		})

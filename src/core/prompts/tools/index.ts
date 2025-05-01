@@ -1,3 +1,9 @@
+import { ToolName } from "../../../schemas"
+import { TOOL_GROUPS, ALWAYS_AVAILABLE_TOOLS, DiffStrategy } from "../../../shared/tools"
+import { McpHub } from "../../../services/mcp/McpHub"
+import { Mode, ModeConfig, getModeConfig, isToolAllowedForMode, getGroupName } from "../../../shared/modes"
+
+import { ToolArgs } from "./types"
 import { getExecuteCommandDescription } from "./execute-command"
 import { getReadFileDescription } from "./read-file"
 import { getFetchInstructionsDescription } from "./fetch-instructions"
@@ -14,11 +20,6 @@ import { getUseMcpToolDescription } from "./use-mcp-tool"
 import { getAccessMcpResourceDescription } from "./access-mcp-resource"
 import { getSwitchModeDescription } from "./switch-mode"
 import { getNewTaskDescription } from "./new-task"
-import { DiffStrategy } from "../../diff/DiffStrategy"
-import { McpHub } from "../../../services/mcp/McpHub"
-import { Mode, ModeConfig, getModeConfig, isToolAllowedForMode, getGroupName } from "../../../shared/modes"
-import { ToolName, TOOL_GROUPS, ALWAYS_AVAILABLE_TOOLS } from "../../../shared/tool-groups"
-import { ToolArgs } from "./types"
 
 // Map of tool names to their description functions
 const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined> = {
@@ -69,7 +70,16 @@ export function getToolDescriptionsForMode(
 		const toolGroup = TOOL_GROUPS[groupName]
 		if (toolGroup) {
 			toolGroup.tools.forEach((tool) => {
-				if (isToolAllowedForMode(tool as ToolName, mode, customModes ?? [], experiments ?? {})) {
+				if (
+					isToolAllowedForMode(
+						tool as ToolName,
+						mode,
+						customModes ?? [],
+						undefined,
+						undefined,
+						experiments ?? {},
+					)
+				) {
 					tools.add(tool)
 				}
 			})

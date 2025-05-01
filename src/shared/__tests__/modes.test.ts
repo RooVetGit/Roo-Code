@@ -254,73 +254,6 @@ describe("isToolAllowedForMode", () => {
 
 		expect(isToolAllowedForMode("write_to_file", "markdown-editor", customModes, toolRequirements)).toBe(false)
 	})
-
-	describe("experimental tools", () => {
-		it("disables tools when experiment is disabled", () => {
-			const experiments = {
-				search_and_replace: false,
-				insert_content: false,
-			}
-
-			expect(
-				isToolAllowedForMode(
-					"search_and_replace",
-					"test-exp-mode",
-					customModes,
-					undefined,
-					undefined,
-					experiments,
-				),
-			).toBe(false)
-
-			expect(
-				isToolAllowedForMode("insert_content", "test-exp-mode", customModes, undefined, undefined, experiments),
-			).toBe(false)
-		})
-
-		it("allows tools when experiment is enabled", () => {
-			const experiments = {
-				search_and_replace: true,
-				insert_content: true,
-			}
-
-			expect(
-				isToolAllowedForMode(
-					"search_and_replace",
-					"test-exp-mode",
-					customModes,
-					undefined,
-					undefined,
-					experiments,
-				),
-			).toBe(true)
-
-			expect(
-				isToolAllowedForMode("insert_content", "test-exp-mode", customModes, undefined, undefined, experiments),
-			).toBe(true)
-		})
-
-		it("allows non-experimental tools when experiments are disabled", () => {
-			const experiments = {
-				search_and_replace: false,
-				insert_content: false,
-			}
-
-			expect(
-				isToolAllowedForMode("read_file", "markdown-editor", customModes, undefined, undefined, experiments),
-			).toBe(true)
-			expect(
-				isToolAllowedForMode(
-					"write_to_file",
-					"markdown-editor",
-					customModes,
-					undefined,
-					{ path: "test.md" },
-					experiments,
-				),
-			).toBe(true)
-		})
-	})
 })
 
 describe("FileRestrictionError", () => {
@@ -338,7 +271,7 @@ describe("FileRestrictionError", () => {
 			expect(debugMode).toBeDefined()
 			expect(debugMode).toMatchObject({
 				slug: "debug",
-				name: "Debug",
+				name: "🪲 Debug",
 				roleDefinition:
 					"You are Roo, an expert software debugger specializing in systematic problem diagnosis and resolution.",
 				groups: ["read", "edit", "browser", "command", "mcp"],
@@ -359,7 +292,7 @@ describe("FileRestrictionError", () => {
 			const result = await getFullModeDetails("debug")
 			expect(result).toMatchObject({
 				slug: "debug",
-				name: "Debug",
+				name: "🪲 Debug",
 				roleDefinition:
 					"You are Roo, an expert software debugger specializing in systematic problem diagnosis and resolution.",
 			})

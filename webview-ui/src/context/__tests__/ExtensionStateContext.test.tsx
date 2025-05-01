@@ -2,10 +2,10 @@
 
 import { render, screen, act } from "@testing-library/react"
 
-import { ExtensionState } from "../../../../src/shared/ExtensionMessage"
+import { ExtensionState } from "@roo/shared/ExtensionMessage"
 import { ExtensionStateContextProvider, useExtensionState, mergeExtensionState } from "../ExtensionStateContext"
-import { ExperimentId } from "../../../../src/shared/experiments"
-import { ApiConfiguration } from "../../../../src/shared/api"
+import { ExperimentId } from "@roo/shared/experiments"
+import { ApiConfiguration } from "@roo/shared/api"
 
 // Test component that consumes the context
 const TestComponent = () => {
@@ -207,10 +207,7 @@ describe("mergeExtensionState", () => {
 		const prevState: ExtensionState = {
 			...baseState,
 			apiConfiguration: { modelMaxTokens: 1234, modelMaxThinkingTokens: 123 },
-			experiments: {
-				search_and_replace: true,
-				insert_content: true,
-			} as Record<ExperimentId, boolean>,
+			experiments: {} as Record<ExperimentId, boolean>,
 		}
 
 		const newState: ExtensionState = {
@@ -229,8 +226,6 @@ describe("mergeExtensionState", () => {
 		})
 
 		expect(result.experiments).toEqual({
-			search_and_replace: true,
-			insert_content: true,
 			powerSteering: true,
 		})
 	})

@@ -3,6 +3,7 @@ import {
 	ConverseStreamCommand,
 	ConverseCommand,
 	BedrockRuntimeClientConfig,
+	ContentBlock,
 } from "@aws-sdk/client-bedrock-runtime"
 import { fromIni } from "@aws-sdk/credential-providers"
 import { Anthropic } from "@anthropic-ai/sdk"
@@ -23,6 +24,7 @@ import { Message, SystemContentBlock } from "@aws-sdk/client-bedrock-runtime"
 import { MultiPointStrategy } from "../transform/cache-strategy/multi-point-strategy"
 import { ModelInfo as CacheModelInfo } from "../transform/cache-strategy/types"
 import { AMAZON_BEDROCK_REGION_INFO } from "../../shared/aws_regions"
+import { convertToBedrockConverseMessages as sharedConverter } from "../transform/bedrock-converse-format"
 
 const BEDROCK_DEFAULT_TEMPERATURE = 0.3
 const BEDROCK_MAX_TOKENS = 4096
@@ -434,7 +436,18 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		modelInfo?: any,
 		conversationId?: string, // Optional conversation ID to track cache points across messages
 	): { system: SystemContentBlock[]; messages: Message[] } {
-		// Convert model info to expected format
+		// First convert messages using shared converter for proper image handling
+		const convertedMessages = sharedConverter(anthropicMessages as Anthropic.Messages.MessageParam[])
+
+		// If prompt caching is disabled, return the converted messages directly
+		if (!usePromptCache) {
+			return {
+				system: systemMessage ? [{ text: systemMessage } as SystemContentBlock] : [],
+				messages: convertedMessages,
+			}
+		}
+
+		// Convert model info to expected format for cache strategy
 		const cacheModelInfo: CacheModelInfo = {
 			maxTokens: modelInfo?.maxTokens || 8192,
 			contextWindow: modelInfo?.contextWindow || 200_000,
@@ -443,18 +456,6 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			minTokensPerCachePoint: modelInfo?.minTokensPerCachePoint || 50,
 			cachableFields: modelInfo?.cachableFields || [],
 		}
-
-		// Clean messages by removing any existing cache points
-		const cleanedMessages = anthropicMessages.map((msg) => {
-			if (typeof msg.content === "string") {
-				return msg
-			}
-			const cleaned = {
-				...msg,
-				content: this.removeCachePoints(msg.content),
-			}
-			return cleaned
-		})
 
 		// Get previous cache point placements for this conversation if available
 		const previousPlacements =
@@ -466,21 +467,36 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		const config = {
 			modelInfo: cacheModelInfo,
 			systemPrompt: systemMessage,
-			messages: cleanedMessages as Anthropic.Messages.MessageParam[],
+			messages: anthropicMessages as Anthropic.Messages.MessageParam[],
 			usePromptCache,
 			previousCachePointPlacements: previousPlacements,
 		}
 
-		// Determine optimal cache points
+		// Get cache point placements
 		let strategy = new MultiPointStrategy(config)
-		const result = strategy.determineOptimalCachePoints()
+		const cacheResult = strategy.determineOptimalCachePoints()
 
 		// Store cache point placements for future use if conversation ID is provided
-		if (conversationId && result.messageCachePointPlacements) {
-			this.previousCachePointPlacements[conversationId] = result.messageCachePointPlacements
+		if (conversationId && cacheResult.messageCachePointPlacements) {
+			this.previousCachePointPlacements[conversationId] = cacheResult.messageCachePointPlacements
 		}
 
-		return result
+		// Apply cache points to the properly converted messages
+		const messagesWithCache = convertedMessages.map((msg, index) => {
+			const placement = cacheResult.messageCachePointPlacements?.find((p) => p.index === index)
+			if (placement) {
+				return {
+					...msg,
+					content: [...(msg.content || []), { cachePoint: { type: "default" } } as ContentBlock],
+				}
+			}
+			return msg
+		})
+
+		return {
+			system: systemMessage ? [{ text: systemMessage } as SystemContentBlock] : [],
+			messages: messagesWithCache,
+		}
 	}
 
 	/************************************************************************************
@@ -516,7 +532,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		 * match[4] - The resource ID (e.g., "anthropic.claude-3-sonnet-20240229-v1:0")
 		 */
 
-		const arnRegex = /^arn:aws:bedrock:([^:]+):([^:]*):(?:([^\/]+)\/([\w\.\-:]+)|([^\/]+))$/
+		const arnRegex = /^arn:aws:(?:bedrock|sagemaker):([^:]+):([^:]*):(?:([^\/]+)\/([\w\.\-:]+)|([^\/]+))$/
 		let match = arn.match(arnRegex)
 
 		if (match && match[1] && match[3] && match[4]) {
@@ -587,8 +603,8 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 			// Look for a pattern where the first segment before a dot doesn't contain dots or colons
 			// and the remaining parts still contain at least one dot
 			const genericPrefixMatch = modelId.match(/^([^.:]+)\.(.+\..+)$/)
+
 			if (genericPrefixMatch) {
-				const genericPrefix = genericPrefixMatch[1] + "."
 				return genericPrefixMatch[2]
 			}
 		}
@@ -692,10 +708,11 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		if (Array.isArray(content)) {
 			return content.map((block) => {
 				// Use destructuring to remove cachePoint property
-				const { cachePoint, ...rest } = block
+				const { cachePoint: _, ...rest } = block
 				return rest
 			})
 		}
+
 		return content
 	}
 
@@ -848,7 +865,7 @@ Suggestions:
 	/**
 	 * Formats an error message based on the error type and context
 	 */
-	private formatErrorMessage(error: unknown, errorType: string, isStreamContext: boolean): string {
+	private formatErrorMessage(error: unknown, errorType: string, _isStreamContext: boolean): string {
 		const definition = AwsBedrockHandler.ERROR_TYPES[errorType] || AwsBedrockHandler.ERROR_TYPES.GENERIC
 		let template = definition.messageTemplate
 
