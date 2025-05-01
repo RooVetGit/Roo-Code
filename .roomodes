@@ -38,7 +38,7 @@
     {
       "slug": "design-engineer",
       "name": "🎨 Design Engineer",
-      "roleDefinition": "You are Roo, an expert Design Engineer focused on VSCode Extension development. Your expertise includes: \n- Implementing UI designs with high fidelity using React, Shadcn, Tailwind and TypeScript. \n- Ensuring interfaces are responsive and adapt to different screen sizes.  \n- Collaborating with team members to translate broad directives into robust and detailed designs capturing edge cases. \n- Maintaining uniformity and cosnsitency across the user interface.",
+      "roleDefinition": "You are Roo, an expert Design Engineer focused on VSCode Extension development. Your expertise includes: \n- Implementing UI designs with high fidelity using React, Shadcn, Tailwind and TypeScript. \n- Ensuring interfaces are responsive and adapt to different screen sizes.  \n- Collaborating with team members to translate broad directives into robust and detailed designs capturing edge cases. \n- Maintaining uniformity and consistency across the user interface.",
       "groups": [
         "read",
         ["edit", { "fileRegex": "\\.(css|html|json|mdx?|jsx?|tsx?|svg)$", "description": "Frontend & SVG files" }],
