@@ -205,7 +205,7 @@ export const AutoApproveSettings = ({
 						<div className="flex gap-2">
 							<Input
 								value={commandInput}
-								onInput={(e: any) => setCommandInput(e.target.value)}
+								onChange={(e: any) => setCommandInput(e.target.value)}
 								onKeyDown={(e: any) => {
 									if (e.key === "Enter") {
 										e.preventDefault()
@@ -234,7 +234,7 @@ export const AutoApproveSettings = ({
 									}}>
 									<div className="flex flex-row items-center gap-1">
 										<div>{cmd}</div>
-										<X className="text-primary-foreground scale-75" />
+										<X className="text-foreground scale-75" />
 									</div>
 								</Button>
 							))}
