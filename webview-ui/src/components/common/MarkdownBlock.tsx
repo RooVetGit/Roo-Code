@@ -110,11 +110,14 @@ const StyledMarkdown = styled.div`
 	}
 
 	a {
-		text-decoration: none;
-	}
-	a {
+		color: var(--vscode-textLink-foreground);
+		text-decoration-line: underline;
+		text-decoration-style: dotted;
+		text-decoration-color: var(--vscode-textLink-foreground);
 		&:hover {
-			text-decoration: underline;
+			color: var(--vscode-textLink-activeForeground);
+			text-decoration-style: solid;
+			text-decoration-color: var(--vscode-textLink-activeForeground);
 		}
 	}
 `
