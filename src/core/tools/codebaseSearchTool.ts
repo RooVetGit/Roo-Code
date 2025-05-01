@@ -1,11 +1,12 @@
 import * as vscode from "vscode"
 import { Cline } from "../Cline"
+import { ToolUse } from "../assistant-message"
 import { CodeIndexManager } from "../../services/code-index/manager"
 import { getWorkspacePath } from "../../utils/path"
 import { formatResponse } from "../prompts/responses"
 import { t } from "../../i18n"
 import { VectorStoreSearchResult } from "../../services/code-index/interfaces"
-import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
+import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "./types"
 
 export async function codebaseSearchTool(
 	cline: Cline,
