@@ -1,13 +1,13 @@
 # Roo Code Changelog
 
-## 3.15.1 - 2025-04-30
+## [3.15.1] - 2025-04-30
 
 - Capture stderr in execa-spawned processes
 - Play sound only when action needed from the user (thanks @olearycrew)
 - Make retries respect the global auto approve checkbox
 - Fix a selection mode bug in the history view (thanks @jr)
 
-## 3.15.0 - 2025-04-30
+## [3.15.0] - 2025-04-30
 
 - Add prompt caching to the Google Vertex provider (thanks @ashktn)
 - Add a fallback mechanism for executing terminal commands if VSCode terminal shell integration fails
