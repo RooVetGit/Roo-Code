@@ -461,6 +461,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				| "fuzzyMatchThreshold"
 				| "consecutiveMistakeLimit"
 				| "experiments"
+				| "attachedFiles"
 			>
 		> = {},
 	) {
