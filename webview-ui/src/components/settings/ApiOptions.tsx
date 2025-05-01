@@ -85,6 +85,12 @@ const ApiOptions = ({
 		return Object.entries(headers)
 	})
 
+	// Effect to synchronize internal customHeaders state with prop changes
+	useEffect(() => {
+		const propHeaders = apiConfiguration?.openAiHeaders || {}
+		setCustomHeaders(Object.entries(propHeaders))
+	}, [apiConfiguration?.openAiHeaders])
+
 	const [anthropicBaseUrlSelected, setAnthropicBaseUrlSelected] = useState(!!apiConfiguration?.anthropicBaseUrl)
 	const [azureApiVersionSelected, setAzureApiVersionSelected] = useState(!!apiConfiguration?.azureApiVersion)
 	const [openRouterBaseUrlSelected, setOpenRouterBaseUrlSelected] = useState(!!apiConfiguration?.openRouterBaseUrl)
