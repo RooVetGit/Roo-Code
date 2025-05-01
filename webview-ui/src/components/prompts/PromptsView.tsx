@@ -89,7 +89,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 	const [isToolsEditMode, setIsToolsEditMode] = useState(false)
 	const [showConfigMenu, setShowConfigMenu] = useState(false)
 	const [isCreateModeDialogOpen, setIsCreateModeDialogOpen] = useState(false)
-	const [activeSupportTab, setActiveSupportTab] = useState<SupportPromptType>("ENHANCE")
+	const [activeSupportOption, setActiveSupportOption] = useState<SupportPromptType>("ENHANCE")
 	const [isSystemPromptDisclosureOpen, setIsSystemPromptDisclosureOpen] = useState(false)
 
 	// State for mode selection popover and search
@@ -975,7 +975,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 						})}
 					</div>
 					<Textarea
-						value={customInstructions ?? ""}
+						value={customInstructions}
 						onChange={(e) => {
 							const value =
 								(e as unknown as CustomEvent)?.detail?.target?.value ||
@@ -1018,14 +1018,14 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 					<h3 className="text-vscode-foreground mb-3">{t("prompts:supportPrompts.title")}</h3>
 					<div className="flex gap-4 items-center flex-wrap py-1">
 						<Select
-							value={activeSupportTab}
-							onValueChange={(type) => setActiveSupportTab(type as SupportPromptType)}>
-							<SelectTrigger className="w-full">
+							value={activeSupportOption}
+							onValueChange={(type) => setActiveSupportOption(type as SupportPromptType)}>
+							<SelectTrigger className="w-full" data-testid="support-prompt-select-trigger">
 								<SelectValue placeholder={t("settings:common.select")} />
 							</SelectTrigger>
 							<SelectContent>
 								{Object.keys(supportPrompt.default).map((type) => (
-									<SelectItem key={type} value={type}>
+									<SelectItem key={type} value={type} data-testid={`${type}-option`}>
 										{t(`prompts:supportPrompts.types.${type}.label`)}
 									</SelectItem>
 								))}
@@ -1035,38 +1035,37 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 
 					{/* Support prompt description */}
 					<div className="text-[13px] text-vscode-descriptionForeground my-2 mb-4">
-						{t(`prompts:supportPrompts.types.${activeSupportTab}.description`)}
+						{t(`prompts:supportPrompts.types.${activeSupportOption}.description`)}
 					</div>
 
-					{/* Show active tab content */}
-					<div key={activeSupportTab}>
+					<div key={activeSupportOption}>
 						<div className="flex justify-between items-center mb-1">
 							<div className="font-bold">{t("prompts:supportPrompts.prompt")}</div>
 							<Button
 								variant="ghost"
 								size="icon"
-								onClick={() => handleSupportReset(activeSupportTab)}
+								onClick={() => handleSupportReset(activeSupportOption)}
 								title={t("prompts:supportPrompts.resetPrompt", {
-									promptType: activeSupportTab,
+									promptType: activeSupportOption,
 								})}>
 								<span className="codicon codicon-discard"></span>
 							</Button>
 						</div>
 
 						<Textarea
-							value={getSupportPromptValue(activeSupportTab)}
+							value={getSupportPromptValue(activeSupportOption)}
 							onChange={(e) => {
 								const value =
 									(e as unknown as CustomEvent)?.detail?.target?.value ||
 									((e as any).target as HTMLTextAreaElement).value
 								const trimmedValue = value.trim()
-								updateSupportPrompt(activeSupportTab, trimmedValue || undefined)
+								updateSupportPrompt(activeSupportOption, trimmedValue || undefined)
 							}}
 							rows={6}
 							className="resize-y w-full"
 						/>
 
-						{activeSupportTab === "ENHANCE" && (
+						{activeSupportOption === "ENHANCE" && (
 							<>
 								<div>
 									<div className="text-vscode-foreground text-[13px] mb-5 mt-1.5"></div>
@@ -1100,7 +1099,10 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 													{t("prompts:supportPrompts.enhance.useCurrentConfig")}
 												</SelectItem>
 												{(listApiConfigMeta || []).map((config) => (
-													<SelectItem key={config.id} value={config.id}>
+													<SelectItem
+														key={config.id}
+														value={config.id}
+														data-testid={`${config.id}-option`}>
 														{config.name}
 													</SelectItem>
 												))}
