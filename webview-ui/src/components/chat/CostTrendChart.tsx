@@ -1,340 +1,398 @@
-import React, { useRef, useEffect, useMemo, useState } from "react" // Added useState
-import uPlot, { type Options } from "uplot"
-import "uplot/dist/uPlot.min.css" // Import base uPlot CSS
+import React, { useRef, useEffect, useMemo, useState } from "react"
+import uPlot, { type Options, type AlignedData } from "uplot"
+import "uplot/dist/uPlot.min.css"
 
-// Define the structure of the input data points
-interface CostHistoryDataPoint {
-	requestIndex: number
-	cumulativeCost: number // Kept for data structure consistency, but not plotted
-	costDelta: number // This will be plotted
-}
+// Data is now expected as pre-processed [xValues, yValues]
+type ChartData = AlignedData | undefined // uPlot.AlignedData is typically [number[], number[], ...]
 
-// Define the props for the new component
 interface CostTrendChartProps {
-	data: CostHistoryDataPoint[]
-	// Callback to notify parent about hover state and data
-	onHoverChange: (hoverData: { isHovering: boolean; index?: number; cost?: number } | null) => void
+	chartData: ChartData // Renamed from 'data' and changed type
+	onHoverChange: (hoverData: { isHovering: boolean; index?: number; yValue?: number } | null) => void // Changed 'cost' to 'yValue'
+	yAxisUnit?: string
+	chartLabel?: string // Optional label for the series
+	height?: number // Optional height override
+	showXAxis?: boolean // Prop to control X-axis visibility (re-added)
+	yAxisSide?: "left" | "right" // Prop to control Y-axis side
+	axisFontSize?: string // Optional prop for axis font size
+	syncKey?: string // Optional key for cursor synchronization
+	hideYAxisZero?: boolean // Optional: Hide the zero value on the Y axis
+	showGridLines?: boolean // Optional: Control visibility of grid lines
 }
 
-// Helper function to get computed style with fallback
 const getResolvedStyle = (variableName: string, fallback: string): string => {
 	if (typeof window !== "undefined") {
 		return getComputedStyle(document.documentElement).getPropertyValue(variableName).trim() || fallback
 	}
-	return fallback // Fallback for SSR or testing environments
+	return fallback
 }
 
-const CostTrendChart: React.FC<CostTrendChartProps> = ({ data, onHoverChange }) => {
+const CostTrendChart: React.FC<CostTrendChartProps> = ({
+	chartData, // Use renamed prop
+	onHoverChange,
+	yAxisUnit = "$",
+	chartLabel = "Value", // Default label
+	height = 180, // Default height
+	showXAxis = true, // Default to true (re-added)
+	// hideXAxisElements removed
+	yAxisSide = "left", // Default to LEFT now
+	axisFontSize,
+	syncKey, // Add the new prop
+	hideYAxisZero = false, // Default to false
+	showGridLines = true, // Default to true
+}) => {
 	const chartRef = useRef<HTMLDivElement>(null)
 	const uplotInstanceRef = useRef<uPlot | null>(null)
 
-	// State to hold resolved VS Code theme colors
 	const [resolvedStyles, setResolvedStyles] = useState({
-		foreground: "#cccccc", // Default fallbacks
+		foreground: "#cccccc",
 		buttonForeground: "#ffffff",
 		editorBackground: "#1e1e1e",
 		tabsBorder: "#555555",
 		selectionBackground: "rgba(255, 255, 255, 0.2)",
 		widgetBackground: "#252526",
 		widgetBorder: "#454545",
-		descriptionForeground: "#8b949e", // Added for empty state text
-		fontSize: "13px", // Default font size
-		fontFamily: "sans-serif", // Default font family
+		descriptionForeground: "#8b949e",
+		fontSize: "13px",
+		fontFamily: "sans-serif",
 	})
 
-	// Effect to read styles on mount
+	// Effect to read styles on mount and update on theme change
 	useEffect(() => {
-		setResolvedStyles({
-			foreground: getResolvedStyle("--vscode-foreground", "#cccccc"),
-			buttonForeground: getResolvedStyle("--vscode-button-foreground", "#ffffff"),
-			editorBackground: getResolvedStyle("--vscode-editor-background", "#1e1e1e"),
-			tabsBorder: getResolvedStyle("--vscode-editorGroupHeader-tabsBorder", "#555555"),
-			selectionBackground: getResolvedStyle("--vscode-editor-selectionBackground", "rgba(255, 255, 255, 0.2)"),
-			widgetBackground: getResolvedStyle("--vscode-editorWidget-background", "#252526"),
-			widgetBorder: getResolvedStyle("--vscode-editorWidget-border", "#454545"),
-			descriptionForeground: getResolvedStyle("--vscode-descriptionForeground", "#8b949e"),
-			fontSize: getResolvedStyle("--vscode-font-size", "13px"),
-			fontFamily: getResolvedStyle("--vscode-font-family", "sans-serif"),
-		})
-		// Optional: Add listener for theme changes if available
-	}, [])
-
-	// 1. Transform data for uPlot: [xValues, yValues]
-	const uplotData = useMemo(() => {
-		if (!data || data.length === 0) {
-			return [[], []] // uPlot expects arrays of data for each series
+		const updateStyles = () => {
+			setResolvedStyles({
+				foreground: getResolvedStyle("--vscode-foreground", "#cccccc"),
+				buttonForeground: getResolvedStyle("--vscode-button-foreground", "#ffffff"),
+				editorBackground: getResolvedStyle("--vscode-editor-background", "#1e1e1e"),
+				tabsBorder: getResolvedStyle("--vscode-editorGroupHeader-tabsBorder", "#555555"),
+				selectionBackground: getResolvedStyle(
+					"--vscode-editor-selectionBackground",
+					"rgba(255, 255, 255, 0.2)",
+				),
+				widgetBackground: getResolvedStyle("--vscode-editorWidget-background", "#252526"),
+				widgetBorder: getResolvedStyle("--vscode-editorWidget-border", "#454545"),
+				descriptionForeground: getResolvedStyle("--vscode-descriptionForeground", "#8b949e"),
+				fontSize: getResolvedStyle("--vscode-font-size", "13px"),
+				fontFamily: getResolvedStyle("--vscode-font-family", "sans-serif"),
+			})
 		}
 
-		// Convert to typed arrays for uPlot
-		const requestIndices = data.map((d) => d.requestIndex)
-		const costDeltas = data.map((d) => d.costDelta)
+		updateStyles() // Initial style fetch
 
-		// Cast to any to bypass TypeScript error - uPlot actually accepts regular arrays
-		return [requestIndices, costDeltas] as [number[], number[]]
-	}, [data])
+		// Observe theme changes
+		const observer = new MutationObserver((mutationsList) => {
+			for (const mutation of mutationsList) {
+				if (mutation.type === "attributes" && mutation.attributeName === "class") {
+					// Check specifically for VS Code theme classes if needed, or just update on any class change
+					// Example: (mutation.target as HTMLElement).className.includes('vscode-')
+					updateStyles()
+					break // Only need to update once per batch of mutations
+				}
+			}
+		})
 
-	// 2. Define uPlot Options using resolved styles
-	const options = useMemo(
-		(): Options => ({
-			width: 400, // Initial width, will be updated by resize handler
-			height: 180, // Increased height to prevent legend overflow
-			padding: [10, 10, 0, 0], // [top, right, bottom, left] - Minimal padding
+		observer.observe(document.body, { attributes: true, attributeFilter: ["class"] })
+
+		// Cleanup observer on component unmount
+		return () => observer.disconnect()
+	}, [])
+
+	// Remove the internal uplotData calculation, use chartData prop directly
+	// const uplotData = useMemo(() => { ... }, [data])
+
+	const options = useMemo((): Options => {
+		// Define scale matching functions
+		const matchSyncKeys = (ownScaleKey: string | null, extScaleKey: string | null) => ownScaleKey === extScaleKey // Match if keys are identical
+		// const neverMatch = (ownScaleKey: string | null, extScaleKey: string | null) => false // Removed unused function
+
+		// Use chartData directly for checks
+		const numberOfPoints = chartData?.[0]?.length ?? 0
+		const showPointsOnly = numberOfPoints === 1
+		const pointSize = 6 / (window.devicePixelRatio || 1)
+		const effectiveHeight = height ?? 180 // Use prop or default
+
+		return {
+			width: 400, // This will be overridden by resize handler
+			height: effectiveHeight, // Use effective height
+			padding: [10, 0, 0, 0],
 			series: [
-				{}, // X-axis series (requestIndex) - Options can be added if needed
+				{}, // X-axis series
 				{
-					// Y-axis series (costDelta)
-					label: "Task Cost", // Legend label
-					stroke: resolvedStyles.buttonForeground, // Use resolved value
-					width: 2.5 / (window.devicePixelRatio || 1), // Slightly thicker line for better visibility
-					points: { show: false }, // Hide points on the line itself
-					scale: "$", // Link to the '$' scale defined below
+					label: chartLabel, // Use the chartLabel prop
+					stroke: resolvedStyles.buttonForeground,
+					width: showPointsOnly ? 0 : 2.5 / (window.devicePixelRatio || 1),
+					points: {
+						show: showPointsOnly,
+						size: pointSize,
+						fill: resolvedStyles.buttonForeground,
+						stroke: resolvedStyles.buttonForeground,
+					},
+					scale: "$",
 				},
 			],
 			axes: [
+				// X-Axis Configuration
 				{
-					// X-axis (requestIndex) - Bottom
-					stroke: resolvedStyles.foreground, // Use resolved value
+					show: showXAxis, // Control visibility with the prop
+					stroke: showXAxis ? resolvedStyles.foreground : "transparent", // Hide stroke if axis hidden
 					grid: {
-						stroke: resolvedStyles.tabsBorder, // Use resolved value
+						show: showXAxis && showGridLines, // Hide grid lines if axis hidden OR prop is false
+						stroke: resolvedStyles.tabsBorder,
 						width: 1 / (window.devicePixelRatio || 1),
-						// alpha: 0.5, // alpha might not be directly supported here, use rgba in stroke if needed
 					},
 					ticks: {
-						stroke: resolvedStyles.tabsBorder, // Changed to tabsBorder for darker grey
+						show: showXAxis, // Hide ticks if axis hidden
+						stroke: resolvedStyles.descriptionForeground, // Brighter grey
 						width: 1 / (window.devicePixelRatio || 1),
 						size: 10,
 					},
-					font: `${resolvedStyles.fontSize} ${resolvedStyles.fontFamily}`, // Use resolved font size and family
-					size: 30, // Allocate space for labels if needed, adjust as necessary
-					// label: "Request Index", // Removed label
-					// labelSize: 20, // No longer needed
-					// labelFont: `${resolvedStyles.fontSize} ${resolvedStyles.fontFamily}`, // No longer needed
-					// Label color is typically inherited from axis stroke or font color setting
-					// Ensure integer ticks by specifying increments starting with 1
-					incrs: [1, 2, 5, 10, 20, 50, 100], // Define possible increments for ticks
-					space: 30, // Minimum space between ticks in pixels, adjust as needed
-					// Format X-axis ticks as whole numbers (still useful as a fallback)
-					values: (u: uPlot, ticks: number[]) =>
-						ticks.map((rawValue: number) => Math.round(rawValue).toString()),
+					// Use axisFontSize if provided, otherwise default
+					font: `${axisFontSize || resolvedStyles.fontSize} ${resolvedStyles.fontFamily}`,
+					size: showXAxis ? 30 : 0, // Set size to 0 if hidden to reclaim space
+					incrs: [1, 2, 5, 10, 20, 50, 100],
+					space: 30,
+					// Only format values if axis is shown
+					values: showXAxis
+						? (u: uPlot, ticks: number[]) => {
+								return ticks.map((rawValue: number) => {
+									const roundedValue = Math.round(rawValue)
+									// Don't show 0 on the x-axis label
+									return roundedValue === 0 ? "" : roundedValue.toString()
+								})
+							}
+						: undefined, // Pass undefined if hidden
 				},
+				// Y-Axis Configuration (unchanged)
+				// Y-Axis Configuration
 				{
-					// Y-axis (costDelta) - Right
-					scale: "$", // Link to the '$' scale
-					side: 1, // 1 = right side
-					// align: 1, // Removed potentially invalid align property
-					stroke: resolvedStyles.foreground, // Use resolved value
+					scale: "$", // This scale name is used by the series config
+					side: yAxisSide === "left" ? 3 : 1, // Use prop to set side (1=right, 3=left)
+					stroke: resolvedStyles.foreground,
 					grid: {
-						stroke: resolvedStyles.tabsBorder, // Use resolved value
+						show: showGridLines, // Control grid visibility with prop
+						stroke: resolvedStyles.tabsBorder,
 						width: 1 / (window.devicePixelRatio || 1),
-						// alpha: 0.5,
 					},
 					ticks: {
-						stroke: resolvedStyles.tabsBorder, // Changed to tabsBorder for darker grey
+						stroke: resolvedStyles.descriptionForeground, // Brighter grey
 						width: 1 / (window.devicePixelRatio || 1),
 						size: 10,
 					},
-					font: `${resolvedStyles.fontSize} ${resolvedStyles.fontFamily}`, // Use resolved font size and family
-					// stroke: resolvedStyles.foreground, // This sets the axis line/tick color, text color is often inferred or set by 'font'
-					// Ensure distinct currency ticks
-					incrs: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 50, 100], // Define possible increments for currency ticks
-					space: 30, // Minimum space between ticks in pixels, adjust as needed
-					// Format Y-axis ticks as currency
-					values: (u: uPlot, ticks: number[]) => ticks.map((rawValue: number) => `$${rawValue.toFixed(2)}`),
-					size: 55, // Allocate space for labels like "$1.50" (Keep space for values)
-					// label: "Cost ($)", // Removed label
-					// labelSize: 20, // No longer needed without label
-					// labelFont: `${resolvedStyles.fontSize} ${resolvedStyles.fontFamily}`, // No longer needed without label
-					// Label color is typically inherited from axis stroke or font color setting
-					// size: 40, // Removed erroneous duplicate size property
+					// Use axisFontSize if provided, otherwise default
+					font: `${axisFontSize || resolvedStyles.fontSize} ${resolvedStyles.fontFamily}`,
+					// Add larger increments for token counts
+					incrs: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000],
+					space: 30,
+					// Format based on yAxisUnit, optionally hiding zero
+					values: (u: uPlot, ticks: number[]) =>
+						ticks.map((rawValue: number) => {
+							// Hide zero if the prop is set and value is zero
+							if (hideYAxisZero && rawValue === 0) {
+								return ""
+							}
+							// Otherwise, format as usual
+							if (yAxisUnit === "$") {
+								// Format as currency
+								return `${yAxisUnit}${rawValue.toFixed(2)}`
+							} else {
+								// Format as locale-specific whole number for tokens/cache
+								return rawValue.toLocaleString(undefined, { maximumFractionDigits: 0 })
+							}
+						}),
+					// Increase size to accommodate potentially larger labels
+					size: 65,
 				},
 			],
 			scales: {
 				x: {
-					// Define the scale for the X-axis (requestIndex)
-					time: false, // Treat x-values as numbers, not timestamps
-					auto: true, // Automatically determine range (Reverted)
+					time: false,
+					auto: true,
 				},
 				$: {
-					// Define the scale used by the Y-axis series and axis
-					auto: true, // Automatically determine range based on data
-					range: [0, null], // Ensure Y-axis starts at 0, max auto-determined
+					auto: true,
+					range: [0, null],
 				},
 			},
 			cursor: {
-				// Optional: Customize cursor/tooltip behavior
-				drag: { x: true, y: false, setScale: true }, // Allow horizontal drag-to-zoom
+				lock: true, // Keep lock: true for persistence on hover stop
+				drag: { x: true, y: false, setScale: true },
 				points: {
-					// Style points shown on hover
 					show: true,
 					size: 6 / (window.devicePixelRatio || 1),
-					stroke: resolvedStyles.buttonForeground, // Use resolved value
-					fill: resolvedStyles.editorBackground, // Use resolved value
+					stroke: resolvedStyles.buttonForeground,
+					fill: resolvedStyles.editorBackground,
 				},
 				focus: {
-					prox: 30, // Larger proximity for easier interaction
+					prox: 30,
 				},
-				// Tooltip customization (basic example)
-				// You might need a more complex hook for full tooltip parity if required
-				sync: { key: "cost-chart-sync" }, // Optional: Sync cursor with other charts if needed
+				// Conditionally add sync object only if syncKey is provided
+				...(syncKey && {
+					sync: {
+						key: syncKey,
+						setSeries: true,
+						match: [matchSyncKeys, matchSyncKeys], // Use standard match when sync is enabled
+					},
+				}),
 			},
 			legend: {
-				show: false, // Attempt to disable the default tooltip by hiding the legend
-				// Styling for legend DOM element is handled by injected CSS below
+				show: false,
 			},
 			hooks: {
-				// Hook to capture cursor position changes - needs to be an array
 				setCursor: [
 					(u: uPlot) => {
-						const { idx } = u.cursor // idx is the index of the hovered data point
+						const { idx } = u.cursor
 
 						if (idx != null) {
-							// Cursor is over a data point
-							const requestIndex = u.data[0]?.[idx] // Use optional chaining
-							const costDelta = u.data[1]?.[idx] // Use optional chaining
+							const requestIndex = u.data[0]?.[idx] // X value (request index)
+							const yValue = u.data[1]?.[idx] // Y value (the metric being plotted)
 
-							// Ensure data is valid before calling callback
-							if (typeof requestIndex === "number" && typeof costDelta === "number") {
-								onHoverChange({ isHovering: true, index: requestIndex, cost: costDelta })
+							if (typeof requestIndex === "number" && typeof yValue === "number") {
+								// Pass the raw yValue back
+								onHoverChange({ isHovering: true, index: requestIndex, yValue: yValue })
 							} else {
-								// Data point invalid, treat as not hovering
-								console.log(`[CostTrendChart Hover] Invalid data at uPlot index: ${idx}`) // <-- Add logging
-								onHoverChange({ isHovering: false })
+								onHoverChange({ isHovering: false }) // Reset if data is invalid
 							}
 						} else {
-							// Cursor is not over a data point (or left the plot area)
-							// console.log("[CostTrendChart Hover] Cursor off point"); // Optional logging
-							onHoverChange({ isHovering: false })
+							onHoverChange({ isHovering: false }) // Reset when cursor leaves
 						}
 					},
 				],
-				// Optional: Hook to clear hover state when leaving the plot area
-				// Using hooks.destroy might be more reliable for cleanup on mouseleave
-				// destroy: [(u: uPlot) => {
-				//   onHoverChange({ isHovering: false });
-				// }]
-				// Note: A more robust 'mouseleave' might require adding event listeners directly to chartRef.current
+				// Add hook to draw a border around the plot area when grid lines are hidden
+				draw: [
+					(u: uPlot) => {
+						// Only draw the border if default grid lines are hidden
+						if (!showGridLines) {
+							const ctx = u.ctx // Get context from uPlot instance
+							const { left, top, width, height } = u.bbox // Get plot area bounds
+
+							// Draw the border rectangle
+							ctx.save()
+							ctx.strokeStyle = resolvedStyles.descriptionForeground // Brighter grey
+							ctx.lineWidth = 1 / (window.devicePixelRatio || 1) // Use same width
+							ctx.strokeRect(left, top, width, height)
+							ctx.restore()
+						}
+					},
+				],
 			},
-		}),
-		[resolvedStyles, onHoverChange],
-	) // Recreate options when resolved styles or callback change
+		}
+		// Update dependencies: re-add showXAxis, remove hideXAxisElements
+	}, [
+		resolvedStyles,
+		onHoverChange,
+		chartData,
+		yAxisUnit,
+		chartLabel,
+		height,
+		showXAxis,
+		yAxisSide,
+		axisFontSize,
+		syncKey,
+		hideYAxisZero,
+		showGridLines,
+	])
 
-	// 3. Manage uPlot instance lifecycle and resizing
 	useEffect(() => {
-		// console.log("uPlot effect running, data length:", uplotData[0].length);
-
-		if (chartRef.current && uplotData[0].length > 0) {
-			// console.log("Creating uPlot instance with options:", options);
-
-			// Destroy previous instance if it exists
-			uplotInstanceRef.current?.destroy()
+		// Check chartData instead of uplotData
+		if (chartRef.current && chartData && chartData[0] && chartData[0].length > 0) {
+			uplotInstanceRef.current?.destroy() // Destroy previous instance if exists
 
 			try {
-				// Create new uPlot instance
-				// Cast uplotData here where we know it's not empty, acknowledging uPlot's runtime flexibility
-				const uplotInstance = new uPlot(options, uplotData as uPlot.AlignedData, chartRef.current)
+				// Pass chartData directly
+				const uplotInstance = new uPlot(options, chartData, chartRef.current)
 				uplotInstanceRef.current = uplotInstance
-				// console.log("uPlot instance created successfully");
 			} catch (error) {
 				console.error("Error creating uPlot instance:", error)
-				// console.error("Options used:", options);
-				// console.error("Data used:", uplotData);
 			}
 
-			// Resize handler
 			const handleResize = () => {
 				if (chartRef.current && uplotInstanceRef.current) {
 					uplotInstanceRef.current.setSize({
 						width: chartRef.current.offsetWidth,
-						height: options.height!, // Use height from options
+						height: options.height!,
 					})
 				}
 			}
 
-			// Initial size calculation and event listener setup
-			handleResize() // Set initial size based on container
+			handleResize()
 			window.addEventListener("resize", handleResize)
 
-			// Cleanup on component unmount or before re-creation
 			return () => {
 				window.removeEventListener("resize", handleResize)
 				uplotInstanceRef.current?.destroy()
-				uplotInstanceRef.current = null
+				uplotInstanceRef.current = null // Clear ref on cleanup
 			}
 		} else if (uplotInstanceRef.current) {
-			// If data becomes empty, destroy the existing chart
+			// If data becomes empty/invalid, destroy the existing chart
 			uplotInstanceRef.current.destroy()
 			uplotInstanceRef.current = null
 		}
-		// Ensure effect re-runs if options or data change
-	}, [options, uplotData])
+		// Update dependencies: use chartData instead of uplotData
+	}, [options, chartData])
 
-	// Add custom CSS to override uPlot default styles using resolved colors
-	// Moved BEFORE the early return to comply with Rules of Hooks
 	useEffect(() => {
 		const styleId = "uplot-custom-styles"
-		// Remove existing style tag if present
 		document.getElementById(styleId)?.remove()
 
-		// Only add styles if the chart is actually going to be rendered
-		if (uplotData && uplotData[0].length > 0) {
-			// Add a style tag to the document head
+		// Check chartData instead of uplotData
+		if (chartData && chartData[0] && chartData[0].length > 0) {
 			const styleEl = document.createElement("style")
 			styleEl.id = styleId
 			styleEl.innerHTML = `
-        .u-legend {
-          color: ${resolvedStyles.foreground} !important;
-          background: ${resolvedStyles.editorBackground} !important;
-          /* Add some padding/margin if needed, but be mindful of height */
-          margin-bottom: 5px !important; /* Example margin */
-        }
-        .u-legend th, .u-legend td { /* Target table cells too */
-          color: ${resolvedStyles.foreground} !important;
-          padding: 2px 5px !important; /* Adjust padding */
-        }
-        .u-select {
-          background: ${resolvedStyles.selectionBackground} !important;
-        }
-        .u-tooltip {
-          background: ${resolvedStyles.widgetBackground} !important;
-          border: 1px solid ${resolvedStyles.widgetBorder} !important;
-          color: ${resolvedStyles.foreground} !important;
-          padding: 4px 8px !important;
-          border-radius: 3px !important;
-          font-size: 12px !important;
-          font-family: var(--vscode-font-family) !important;
-          z-index: 10 !important; /* Ensure tooltip is above other elements */
-        }
-        /* Style legend markers if needed */
-         .u-legend .u-marker {
-           border-color: ${resolvedStyles.buttonForeground} !important; /* Example */
-         }
-      `
+	       .u-legend {
+	         color: ${resolvedStyles.foreground} !important;
+	         background: ${resolvedStyles.editorBackground} !important;
+	         margin-bottom: 5px !important;
+	       }
+	       .u-legend th, .u-legend td {
+	         color: ${resolvedStyles.foreground} !important;
+	         padding: 2px 5px !important;
+	       }
+	       .u-select {
+	         background: ${resolvedStyles.selectionBackground} !important;
+	       }
+	       .u-tooltip {
+	         background: ${resolvedStyles.widgetBackground} !important;
+	         border: 1px solid ${resolvedStyles.widgetBorder} !important;
+	         color: ${resolvedStyles.foreground} !important;
+	         padding: 4px 8px !important;
+	         border-radius: 3px !important;
+	         font-size: 12px !important;
+	         font-family: var(--vscode-font-family) !important;
+	         z-index: 10 !important;
+	       }
+	        .u-legend .u-marker {
+	          border-color: ${resolvedStyles.buttonForeground} !important;
+	        }
+	     `
 			document.head.appendChild(styleEl)
 		}
+		// Update dependencies: use chartData instead of uplotData
+	}, [resolvedStyles, chartData])
 
-		// No cleanup needed here as we replace the style tag by ID
-	}, [resolvedStyles, uplotData]) // Re-apply styles if resolvedStyles or data presence change
-
-	// 4. Render the container or empty state message
-	if (!uplotData || uplotData[0].length === 0) {
-		// Display a message if there's no data, maintaining the space
+	// Check chartData instead of uplotData
+	if (!chartData || !chartData[0] || chartData[0].length === 0) {
 		return (
 			<div
 				className="text-xs p-2 flex items-center justify-center"
 				style={{
-					height: `${options.height}px`, // Match chart height from options
+					// Use effective height from options
+					height: `${options.height}px`,
 					width: "100%",
-					color: resolvedStyles.descriptionForeground, // Use resolved color
+					color: resolvedStyles.descriptionForeground,
 				}}>
-				No cost data available yet.
+				No data available for this chart.
 			</div>
 		)
 	}
 
-	// Render the div container for uPlot
-	// Use height from options object
-	// Add position: relative to establish positioning context, but remove overflow: hidden
+	// Use effective height from options
 	return <div ref={chartRef} style={{ width: "100%", height: `${options.height}px`, position: "relative" }} />
 }
 
 export default CostTrendChart
+// Export the ChartType for use in the parent component
+// Assuming ChartType is defined in TaskCostChartSection or needs to be moved/defined here.
+// If it's in TaskCostChartSection, this export might cause circular dependency issues.
+// Consider defining ChartType in a shared types file or directly here if not already shared.
+// For now, commenting out as it depends on TaskCostChartSection structure.
+// export type { ChartType } from "./TaskCostChartSection"
