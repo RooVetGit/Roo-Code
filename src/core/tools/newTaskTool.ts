@@ -15,6 +15,7 @@ export async function newTaskTool(
 ) {
 	const mode: string | undefined = block.params.mode
 	const message: string | undefined = block.params.message
+	const filesParam: string | undefined = block.params.files
 
 	try {
 		if (block.partial) {
@@ -78,7 +79,19 @@ export async function newTaskTool(
 			// Delay to allow mode change to take effect before next tool is executed.
 			await delay(500)
 
-			const newCline = await provider.initClineWithTask(message, undefined, cline)
+			let attachedFiles: string[] = []
+			if (filesParam && filesParam.trim()) {
+				const fileRegex = /<file>(.*?)<\/file>/g
+				for (const match of filesParam.matchAll(fileRegex)) {
+					attachedFiles.push(match[1])
+				}
+			}
+
+			const newCline = await provider.initClineWithTask(message, undefined, cline, {
+				attachedFiles,
+				enableDiff: true,
+				enableCheckpoints: true,
+			})
 			cline.emit("taskSpawned", newCline.taskId)
 
 			pushToolResult(`Successfully created new task in ${targetMode.name} mode with message: ${message}`)

@@ -63,6 +63,7 @@ export const toolParamNames = [
 	"ignore_case",
 	"start_line",
 	"end_line",
+	"files",
 ] as const
 
 export type ToolParamName = (typeof toolParamNames)[number]
@@ -148,7 +149,7 @@ export interface SwitchModeToolUse extends ToolUse {
 
 export interface NewTaskToolUse extends ToolUse {
 	name: "new_task"
-	params: Partial<Pick<Record<ToolParamName, string>, "mode" | "message">>
+	params: Partial<Pick<Record<ToolParamName, string>, "mode" | "message" | "files">>
 }
 
 export interface SearchAndReplaceToolUse extends ToolUse {

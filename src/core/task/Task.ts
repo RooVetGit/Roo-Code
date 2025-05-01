@@ -48,6 +48,7 @@ import { findToolName, formatContentBlockToMarkdown } from "../../integrations/m
 import { RooTerminalProcess } from "../../integrations/terminal/types"
 import { TerminalRegistry } from "../../integrations/terminal/TerminalRegistry"
 
+
 // utils
 import { calculateApiCostAnthropic } from "../../utils/cost"
 import { getWorkspacePath } from "../../utils/path"
@@ -79,6 +80,8 @@ import {
 	checkpointDiff,
 } from "../checkpoints"
 import { processUserContentMentions } from "../mentions/processUserContentMentions"
+import { readLines } from '../../integrations/misc/read-lines'
+import { addLineNumbers } from '../../integrations/misc/extract-text'
 
 export type ClineEvents = {
 	message: [{ action: "created" | "updated"; message: ClineMessage }]
@@ -107,6 +110,7 @@ export type TaskOptions = {
 	historyItem?: HistoryItem
 	experiments?: Record<string, boolean>
 	startTask?: boolean
+  attachedFiles?: string[]
 	rootTask?: Task
 	parentTask?: Task
 	taskNumber?: number
@@ -121,6 +125,8 @@ export class Task extends EventEmitter<ClineEvents> {
 	readonly parentTask: Task | undefined = undefined
 	readonly taskNumber: number
 	readonly workspacePath: string
+
+  public readonly attachedFiles: string[] = []
 
 	providerRef: WeakRef<ClineProvider>
 	private readonly globalStoragePath: string
@@ -198,6 +204,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		consecutiveMistakeLimit = 3,
 		task,
 		images,
+    attachedFiles,
 		historyItem,
 		startTask = true,
 		rootTask,
@@ -243,6 +250,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.rootTask = rootTask
 		this.parentTask = parentTask
 		this.taskNumber = taskNumber
+    this.attachedFiles = attachedFiles || []
 
 		if (historyItem) {
 			telemetryService.captureTaskRestarted(this.taskId)
@@ -594,6 +602,11 @@ export class Task extends EventEmitter<ClineEvents> {
 		this.apiConversationHistory = []
 		await this.providerRef.deref()?.postStateToWebview()
 
+    const providerState = await this.providerRef.deref()?.getState()
+		const workspaceRoot = this.cwd
+		const maxReadFileLine = providerState?.maxReadFileLine ?? 500 // Default to 500
+		const isFullRead = maxReadFileLine === -1
+
 		await this.say("text", task, images)
 		this.isInitialized = true
 
@@ -601,13 +614,55 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		console.log(`[subtasks] task ${this.taskId}.${this.instanceId} starting`)
 
+    const fileContentBlocks: Anthropic.TextBlockParam[] = []
+		for (const relativeFilePath of this.attachedFiles) {
+			if (!relativeFilePath) continue // Skip empty paths
+			const absolutePath = path.join(workspaceRoot, relativeFilePath)
+			try {
+				let content = ""
+				let notice = ""
+				let linesArray: string = ""
+
+				if (!isFullRead && maxReadFileLine > 0) {
+					// Read up to maxReadFileLine lines (0-based index for endLine)
+					linesArray = await readLines(absolutePath, maxReadFileLine - 1, 0)
+					if (linesArray.length >= maxReadFileLine) {
+						notice = `\n<notice>File content limited to first ${maxReadFileLine} lines.</notice>`
+					}
+				} else if (isFullRead || maxReadFileLine === 0) {
+					// Handle full read or definitions-only (max=0)
+					// If maxReadFileLine is 0, readLines defaults to reading all lines, which is fine.
+					// We just won't display the content later if maxReadFileLine is 0.
+					linesArray = await readLines(absolutePath)
+				}
+
+				// Only add content if maxReadFileLine is not 0
+				if (maxReadFileLine !== 0 && linesArray) {
+					content = addLineNumbers(linesArray)
+				} else {
+					// Add notice for definitions-only mode
+					notice = `\n<notice>File content omitted (maxReadFileLine is 0).</notice>`
+				}
+
+				const formattedText = `<file path="${relativeFilePath}">\n${content}${notice}\n</file>`
+				fileContentBlocks.push({ type: "text", text: formattedText })
+			} catch (error) {
+				console.warn(`[startTask] Failed to read attached file ${relativeFilePath}:`, error)
+				// Add an error block to the prompt to inform the AI
+				const errorText = `<file path="${relativeFilePath}">\n<error>Failed to read file: ${error instanceof Error ? error.message : String(error)}</error>\n</file>`
+				fileContentBlocks.push({ type: "text", text: errorText })
+			}
+		}
+
 		await this.initiateTaskLoop([
+			...fileContentBlocks,
 			{
 				type: "text",
-				text: `<task>\n${task}\n</task>`,
+				text: `<task>\n${task ?? ""}\n</task>`,
 			},
 			...imageBlocks,
 		])
+	
 	}
 
 	public async resumePausedTask(lastMessage: string) {
