@@ -99,7 +99,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		// https://openrouter.ai/docs/features/prompt-caching
 		if (isCacheAvailable) {
 			modelId.startsWith("google")
-				? addGeminiCacheBreakpoints(systemPrompt, openAiMessages, 10) // Pass frequency
+				? addGeminiCacheBreakpoints(systemPrompt, openAiMessages)
 				: addAnthropicCacheBreakpoints(systemPrompt, openAiMessages)
 		}
 
