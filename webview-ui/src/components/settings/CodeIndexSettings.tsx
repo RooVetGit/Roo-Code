@@ -274,7 +274,6 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 									(codebaseIndexConfig?.codebaseIndexEmbedderProvider === "ollama" &&
 										(!codebaseIndexConfig.codebaseIndexEmbedderBaseUrl ||
 											!codebaseIndexConfig.codebaseIndexEmbedderModelId)) ||
-									!apiConfiguration.codeIndexQdrantApiKey ||
 									!codebaseIndexConfig.codebaseIndexQdrantUrl ||
 									indexingStatus.systemStatus === "Indexing"
 								}>
