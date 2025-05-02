@@ -21,7 +21,7 @@
 		"tsx": "^4.19.3",
 		"turbo": "^2.5.0",
 		"typescript": "^5.8.3",
-		"typescript-eslint": "^8.29.1",
+		"typescript-eslint": "^8.31.1",
 		"execa": "^9.5.2",
 		"chalk": "^5.3.0",
 		"prompts": "^2.4.2"
