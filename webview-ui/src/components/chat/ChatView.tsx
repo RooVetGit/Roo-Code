@@ -32,6 +32,7 @@ import { useTaskSearch } from "../history/useTaskSearch"
 import HistoryPreview from "../history/HistoryPreview"
 import RooHero from "@src/components/welcome/RooHero"
 import RooTips from "@src/components/welcome/RooTips"
+import { calculateCostHistory } from "@src/utils/costUtils"
 import Announcement from "./Announcement"
 import BrowserSessionRow from "./BrowserSessionRow"
 import ChatRow from "./ChatRow"
@@ -110,51 +111,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	// Has to be after api_req_finished are all reduced into api_req_started messages.
 	const apiMetrics = useMemo(() => getApiMetrics(modifiedMessages), [modifiedMessages])
 
-	// Calculate cost history for the chart, including token and cache data
-	const costHistory = useMemo(() => {
-		let cumulativeCost = 0
-		let requestIndex = 0
-		// Define the structure for the history array, including optional fields
-		const history: {
-			requestIndex: number
-			cumulativeCost: number
-			costDelta: number
-			tokensIn?: number
-			tokensOut?: number
-			cacheReads?: number
-			cacheWrites?: number
-		}[] = []
-
-		modifiedMessages.forEach((message) => {
-			// Look for messages indicating a completed API request with cost and other metrics
-			if (message.say === "api_req_started" && message.text) {
-				try {
-					const data = JSON.parse(message.text)
-					// Check if cost is defined and not null (indicating request completion)
-					if (data.cost !== undefined && data.cost !== null) {
-						const costDelta = data.cost ?? 0
-						cumulativeCost += costDelta
-						requestIndex++
-
-						// Push the extended data point
-						history.push({
-							requestIndex,
-							cumulativeCost,
-							costDelta,
-							tokensIn: data.tokensIn, // Add tokensIn if available
-							tokensOut: data.tokensOut, // Add tokensOut if available
-							cacheReads: data.cacheReads, // Add cacheReads if available
-							cacheWrites: data.cacheWrites, // Add cacheWrites if available
-						})
-					}
-				} catch (e) {
-					console.error("Error parsing api_req_started text for cost history:", e, message.text)
-					// Ignore parsing errors for robustness
-				}
-			}
-		})
-		return history
-	}, [modifiedMessages])
+	const costHistory = useMemo(() => calculateCostHistory(modifiedMessages), [modifiedMessages])
 
 	const [inputValue, setInputValue] = useState("")
 	const textAreaRef = useRef<HTMLTextAreaElement>(null)
