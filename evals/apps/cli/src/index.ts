@@ -17,6 +17,7 @@ import {
 	TaskCommandName,
 	rooCodeDefaults,
 	EvalEventName,
+	ROO_CODE_SETTINGS_KEYS, // <-- Import the keys
 } from "@evals/types"
 import {
 	type Run,
@@ -349,59 +350,36 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 					const mergedSettings = { ...rooCodeDefaults, ...(run.settings || {}) }
 					const provider = mergedSettings.apiProvider
 
-					// 2. Identify common keys (adjust this list based on rooCodeDefaults/shared types)
-					const commonKeys = [
-						"modelTemperature",
-						"reasoningEffort",
-						"includeMaxTokens",
-						"terminalOutputLineLimit",
-						"terminalShellIntegrationTimeout",
-						"terminalCommandDelay",
-						"terminalPowershellCounter",
-						"terminalZshClearEolMark",
-						"terminalZshOhMy",
-						"terminalZshP10k",
-						"terminalZdotdir",
-						"terminalShellIntegrationDisabled",
-						"terminalCompressProgressBar",
-						"allowedCommands",
-						"maxReadFileLine",
-						"maxOpenTabsContext",
-						"maxWorkspaceFiles",
-						"rateLimitSeconds",
-						"requestDelaySeconds",
-						"writeDelayMs",
-						"fuzzyMatchThreshold",
-						"autoApprovalEnabled",
-						"alwaysAllowReadOnly",
-						"alwaysAllowReadOnlyOutsideWorkspace",
-						"alwaysAllowWrite",
-						"alwaysAllowWriteOutsideWorkspace",
-						"alwaysAllowBrowser",
-						"alwaysApproveResubmit",
-						"alwaysAllowMcp",
-						"alwaysAllowModeSwitch",
-						"alwaysAllowSubtasks",
-						"alwaysAllowExecute",
-						"diffEnabled",
-						"customModePrompts", // Assuming this structure is common
-						// Add any other common/global settings here
-					]
+					// 2. Define keys explicitly handled by the provider switch statement below
+					//    These are settings that vary significantly based on the provider.
+					const providerSpecificKeys = new Set<string>([
+						"apiProvider", // Handled separately
+						"openRouterModelId",
+						"openRouterUseMiddleOutTransform",
+						"vertexProjectId",
+						"vertexRegion",
+						"apiModelId", // Used by Vertex and default cases
+						// Add other keys explicitly checked in the switch below if it changes
+					])
 
-					// 3. Build the final config object selectively
+					// 3. Derive common keys by filtering all known settings keys
+					const commonKeys = ROO_CODE_SETTINGS_KEYS.filter((key) => !providerSpecificKeys.has(key))
+
+					// 4. Build the final config object selectively
 					const finalConfig: Record<string, any> = {
 						apiProvider: provider, // Always include the provider
 					}
 
 					// Add common keys found in mergedSettings
 					for (const key of commonKeys) {
+						// Check if the key exists in the merged settings before adding
 						if (key in mergedSettings) {
-							// Use type assertion to satisfy TypeScript's index signature check
+							// Use type assertion carefully, or ensure mergedSettings type covers all keys
 							finalConfig[key] = (mergedSettings as any)[key]
 						}
 					}
 
-					// Add provider-specific keys
+					// 5. Add provider-specific keys
 					switch (provider) {
 						case "openrouter":
 							if (process.env.OPENROUTER_API_KEY) {
