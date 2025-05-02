@@ -621,9 +621,20 @@ export const ChatRowContent = ({
 											}}>
 											{files.map((file) => {
 												return (
-													<VSCodeBadge key={file.path}>
+													<VSCodeBadge
+														key={file.path}
+														className="cursor-pointer transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--vscode-badge-background)_70%,var(--vscode-badge-foreground))] rounded-full overflow-hidden"
+														onClick={() => {
+															vscode.postMessage({
+																type: "openFile",
+																text: "./" + file.path,
+																values: {
+																	line: file.startLine,
+																},
+															})
+														}}>
 														@
-														{file.path.split("/").pop() +
+														{file.path.replace(/\\/g, "/").split("/").pop() +
 															(file.endLine
 																? `:${file.startLine}-${file.endLine}`
 																: file.startLine
