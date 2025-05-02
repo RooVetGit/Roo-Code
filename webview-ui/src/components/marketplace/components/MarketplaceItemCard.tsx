@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from "react"
+import React, { useMemo } from "react"
 import { MarketplaceItem } from "../../../../../src/services/marketplace/types"
 import { vscode } from "@/utils/vscode"
 import { groupItemsByType, GroupedItems } from "../utils/grouping"
@@ -7,6 +7,7 @@ import { TypeGroup } from "./TypeGroup"
 import { ViewState } from "../MarketplaceViewStateManager"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { MarketplaceItemActionsMenu } from "./MarketplaceItemActionsMenu"
+import { isValidUrl } from "@roo/utils/url"
 
 interface MarketplaceItemCardProps {
 	item: MarketplaceItem
@@ -24,14 +25,6 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({
 	setActiveTab,
 }) => {
 	const { t } = useAppTranslation()
-	const isValidUrl = (urlString: string): boolean => {
-		try {
-			new URL(urlString)
-			return true
-		} catch (e) {
-			return false
-		}
-	}
 
 	const typeLabel = useMemo(() => {
 		switch (item.type) {
@@ -62,30 +55,6 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({
 				return "bg-gray-600"
 		}
 	}, [item.type])
-
-	// Memoize URL calculation
-	const itemSourceUrl = useMemo(() => {
-		if (item.sourceUrl && isValidUrl(item.sourceUrl)) {
-			return item.sourceUrl
-		}
-
-		let url = item.repoUrl
-		if (item.defaultBranch) {
-			url = `${url}/tree/${item.defaultBranch}`
-			if (item.path) {
-				const normalizedPath = item.path.replace(/\\/g, "/").replace(/^\/+/, "")
-				url = `${url}/${normalizedPath}`
-			}
-		}
-		return url
-	}, [item.sourceUrl, item.repoUrl, item.defaultBranch, item.path])
-
-	const handleOpenSourceUrl = useCallback(() => {
-		vscode.postMessage({
-			type: "openExternal",
-			url: itemSourceUrl,
-		})
-	}, [itemSourceUrl])
 
 	// Group items by type
 	const groupedItems = useMemo(() => {
@@ -194,7 +163,7 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({
 					)}
 				</div>
 
-				<MarketplaceItemActionsMenu item={item} handleOpenSourceUrl={handleOpenSourceUrl} />
+				<MarketplaceItemActionsMenu item={item} />
 			</div>
 
 			{item.type === "package" && (

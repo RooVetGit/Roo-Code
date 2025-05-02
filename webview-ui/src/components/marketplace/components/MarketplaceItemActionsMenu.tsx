@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useCallback, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import {
 	DropdownMenu,
@@ -10,17 +10,39 @@ import { MoreVertical, ExternalLink, Download } from "lucide-react"
 import { InstallMarketplaceItemOptions, MarketplaceItem } from "../../../../../src/services/marketplace/types"
 import { vscode } from "@/utils/vscode"
 import { useAppTranslation } from "@/i18n/TranslationContext"
+import { isValidUrl } from "@roo/utils/url"
 
 interface MarketplaceItemActionsMenuProps {
 	item: MarketplaceItem
-	handleOpenSourceUrl: () => void
 }
 
 export const MarketplaceItemActionsMenu: React.FC<MarketplaceItemActionsMenuProps> = ({
 	item,
-	handleOpenSourceUrl,
 }) => {
 	const { t } = useAppTranslation()
+
+	const itemSourceUrl = useMemo(() => {
+		if (item.sourceUrl && isValidUrl(item.sourceUrl)) {
+			return item.sourceUrl
+		}
+
+		let url = item.repoUrl
+		if (item.defaultBranch) {
+			url = `${url}/tree/${item.defaultBranch}`
+			if (item.path) {
+				const normalizedPath = item.path.replace(/\\/g, "/").replace(/^\/+/, "")
+				url = `${url}/${normalizedPath}`
+			}
+		}
+		return url
+	}, [item.sourceUrl, item.repoUrl, item.defaultBranch, item.path])
+
+	const handleOpenSourceUrl = useCallback(() => {
+		vscode.postMessage({
+			type: "openExternal",
+			url: itemSourceUrl,
+		})
+	}, [itemSourceUrl])
 
 	const handleInstall = (options?: InstallMarketplaceItemOptions) => {
 		vscode.postMessage({
