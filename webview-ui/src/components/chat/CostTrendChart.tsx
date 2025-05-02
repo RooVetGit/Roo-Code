@@ -256,6 +256,9 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({
 							} else {
 								onHoverChange({ isHovering: false })
 							}
+						} else {
+							// Call hover change with false when idx is null (hover off)
+							onHoverChange({ isHovering: false })
 						}
 					},
 				],
@@ -392,6 +395,7 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({
 
 	return (
 		<div
+			data-testid="cost-trend-chart-container" // Add test ID for specific selection
 			ref={chartRef}
 			style={{
 				width: "100%",
