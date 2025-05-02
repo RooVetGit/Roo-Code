@@ -105,6 +105,7 @@ type ProviderSettings = {
 	geminiApiKey?: string | undefined
 	googleGeminiBaseUrl?: string | undefined
 	openAiNativeApiKey?: string | undefined
+	openAiNativeBaseUrl?: string | undefined
 	mistralApiKey?: string | undefined
 	mistralCodestralUrl?: string | undefined
 	deepSeekBaseUrl?: string | undefined
@@ -347,6 +348,7 @@ type ClineMessage = {
 		| undefined
 	progressStatus?:
 		| {
+				id?: string | undefined
 				icon?: string | undefined
 				text?: string | undefined
 		  }
@@ -422,6 +424,7 @@ type RooCodeEvents = {
 					| undefined
 				progressStatus?:
 					| {
+							id?: string | undefined
 							icon?: string | undefined
 							text?: string | undefined
 					  }

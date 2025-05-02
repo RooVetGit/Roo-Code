@@ -287,6 +287,29 @@ export const customSupportPromptsSchema = z.record(z.string(), z.string().option
 export type CustomSupportPrompts = z.infer<typeof customSupportPromptsSchema>
 
 /**
+ * CommandExecutionStatus
+ */
+
+export const commandExecutionStatusSchema = z.discriminatedUnion("status", [
+	z.object({
+		executionId: z.string(),
+		status: z.literal("running"),
+		pid: z.number().optional(),
+	}),
+	z.object({
+		executionId: z.string(),
+		status: z.literal("exited"),
+		exitCode: z.number().optional(),
+	}),
+	z.object({
+		executionId: z.string(),
+		status: z.literal("fallback"),
+	}),
+])
+
+export type CommandExecutionStatus = z.infer<typeof commandExecutionStatusSchema>
+
+/**
  * ExperimentId
  */
 
@@ -378,6 +401,7 @@ export const providerSettingsSchema = z.object({
 	googleGeminiBaseUrl: z.string().optional(),
 	// OpenAI Native
 	openAiNativeApiKey: z.string().optional(),
+	openAiNativeBaseUrl: z.string().optional(),
 	// Mistral
 	mistralApiKey: z.string().optional(),
 	mistralCodestralUrl: z.string().optional(),
@@ -469,6 +493,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	googleGeminiBaseUrl: undefined,
 	// OpenAI Native
 	openAiNativeApiKey: undefined,
+	openAiNativeBaseUrl: undefined,
 	// Mistral
 	mistralApiKey: undefined,
 	mistralCodestralUrl: undefined,
@@ -784,6 +809,7 @@ export type ClineSay = z.infer<typeof clineSaySchema>
  */
 
 export const toolProgressStatusSchema = z.object({
+	id: z.string().optional(),
 	icon: z.string().optional(),
 	text: z.string().optional(),
 })
@@ -824,6 +850,10 @@ export const tokenUsageSchema = z.object({
 })
 
 export type TokenUsage = z.infer<typeof tokenUsageSchema>
+
+/**
+ * ToolName
+ */
 
 export const toolNames = [
 	"execute_command",
