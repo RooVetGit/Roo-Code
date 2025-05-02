@@ -70,6 +70,7 @@ i18next.use(initReactI18next).init({
 						from: "from {{source}}",
 						viewSource: "View",
 						viewOnSource: "View on {{source}}",
+						actionsMenuLabel: "Actions",
 					},
 				},
 				"type-group": {
