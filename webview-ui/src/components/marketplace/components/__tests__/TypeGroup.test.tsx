@@ -18,7 +18,7 @@ describe("TypeGroup", () => {
 	]
 
 	it("should render type header and items", () => {
-		renderWithProviders(<TypeGroup type="mcp server" items={mockItems} />)
+		renderWithProviders(<TypeGroup type="mcp" items={mockItems} />)
 
 		// Test using translation key with flexible text matching
 		expect(screen.getByText((content, element) => element?.textContent === "MCP Servers")).toBeInTheDocument()
@@ -34,7 +34,7 @@ describe("TypeGroup", () => {
 	it("should format different types correctly", () => {
 		const types = [
 			{ input: "mode", expected: "Modes" },
-			{ input: "mcp server", expected: "MCP Servers" },
+			{ input: "mcp", expected: "MCP Servers" },
 			{ input: "prompt", expected: "Prompts" },
 			{ input: "package", expected: "Packages" },
 			{ input: "custom", expected: "Customs" }, // Uses generic-type with capitalization

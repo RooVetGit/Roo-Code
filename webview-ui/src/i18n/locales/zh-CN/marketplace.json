@@ -12,7 +12,7 @@
 			"label": "按类型筛选：",
 			"all": "所有类型",
 			"mode": "模式",
-			"mcp server": "MCP 服务器",
+			"mcp": "MCP 服务器",
 			"prompt": "提示",
 			"package": "包"
 		},
@@ -35,7 +35,7 @@
 	"type-group": {
 		"match": "匹配",
 		"modes": "模式",
-		"mcp-servers": "MCP 服务器",
+		"mcps": "MCP 服务器",
 		"prompts": "提示",
 		"packages": "包",
 		"generic-type": "{{type}}"

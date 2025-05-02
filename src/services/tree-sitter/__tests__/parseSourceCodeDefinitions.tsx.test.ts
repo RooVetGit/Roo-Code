@@ -601,7 +601,7 @@ it("should detect TypeScript interfaces and HOCs", async function () {
 	    }
 	
 	    const withLogger = <P extends object>(
-	      WrappedComponent: React.ComponentType<P>
+	      WrappedComponent: React.MarketplaceItemType<P>
 	    ) => {
 	      return class WithLogger extends React.Component<P> {
 	        render() {

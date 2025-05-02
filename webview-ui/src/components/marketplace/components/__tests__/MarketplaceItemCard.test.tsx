@@ -21,13 +21,13 @@ describe("MarketplaceItemCard", () => {
 		tags: ["test", "mock"],
 		items: [
 			{
-				type: "mcp server",
+				type: "mcp",
 				path: "test/path",
 				metadata: {
 					name: "Test Server",
 					description: "A test server",
 					version: "1.0.0",
-					type: "mcp server",
+					type: "mcp",
 				},
 			},
 			{
@@ -166,8 +166,8 @@ describe("MarketplaceItemCard", () => {
 			expect(screen.queryByText("2 components")).not.toBeInTheDocument()
 		})
 
-		it("should not show expandable section for mcp server type", () => {
-			const mcpServerItem = { ...mockItem, type: "mcp server" as const }
+		it("should not show expandable section for mcp type", () => {
+			const mcpServerItem = { ...mockItem, type: "mcp" as const }
 			renderWithProviders(<MarketplaceItemCard {...defaultProps} item={mcpServerItem} />)
 
 			expect(screen.queryByText("2 components")).not.toBeInTheDocument()

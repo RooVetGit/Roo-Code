@@ -28,7 +28,7 @@ The Marketplace interface is designed to provide a clean, intuitive experience f
 │ [Browse] [Sources]                                      │
 ├─────────────────────────────────────────────────────────┤
 │ FILTERS                                                 │
-│ Types: □ Mode □ MCP Server □ Package □ Prompt           │
+│ Types: [] Mode  [] MCP Server  [] Package  [] Prompt    │
 │ Search: [                                          ]    │
 │ Tags: [Tag cloud]                                       │
 ├─────────────────────────────────────────────────────────┤

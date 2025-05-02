@@ -1,11 +1,11 @@
 import { MarketplaceManager } from "../MarketplaceManager"
-import { MarketplaceItem, MarketplaceSource, MarketplaceRepository, ComponentType } from "../types"
+import { MarketplaceItem, MarketplaceSource, MarketplaceRepository, MarketplaceItemType } from "../types"
 import { MetadataScanner } from "../MetadataScanner"
 import { GitFetcher } from "../GitFetcher"
 import * as path from "path"
 import * as vscode from "vscode"
 
-describe("PackageManagerManager", () => {
+describe("MarketplaceManager", () => {
 	describe("filterItems", () => {
 		// Create a mock context with required properties
 		const mockContext = {
@@ -74,7 +74,7 @@ describe("PackageManagerManager", () => {
 				{
 					name: "Server Item",
 					description: "A server",
-					type: "mcp server",
+					type: "mcp",
 					url: "test2",
 					repoUrl: "test2",
 				},
@@ -111,14 +111,6 @@ describe("PackageManagerManager", () => {
 	})
 
 	let manager: MarketplaceManager
-	let metadataScanner: MetadataScanner
-
-	beforeAll(async () => {
-		// Load real data from the template
-		const templatePath = path.resolve(__dirname, "../../../../marketplace-template")
-		metadataScanner = new MetadataScanner()
-		await metadataScanner.scanDirectory(templatePath, "https://example.com")
-	})
 
 	beforeEach(() => {
 		const context = {
@@ -130,23 +122,23 @@ describe("PackageManagerManager", () => {
 	describe("Type Filter Behavior", () => {
 		let typeFilterTestItems: MarketplaceItem[]
 
-		test("should include package with MCP server subcomponent when filtering by type 'mcp server'", () => {
+		test("should include package with MCP server subcomponent when filtering by type 'mcp'", () => {
 			const items: MarketplaceItem[] = [
 				{
 					name: "Data Platform Package",
 					description: "A package containing MCP servers",
-					type: "package" as ComponentType,
+					type: "package" as MarketplaceItemType,
 					url: "test/package",
 					repoUrl: "https://example.com",
 					items: [
 						{
-							type: "mcp server" as ComponentType,
+							type: "mcp" as MarketplaceItemType,
 							path: "test/server",
 							metadata: {
 								name: "Data Validator",
 								description: "An MCP server",
 								version: "1.0.0",
-								type: "mcp server" as ComponentType,
+								type: "mcp" as MarketplaceItemType,
 							},
 						},
 					],
@@ -154,13 +146,13 @@ describe("PackageManagerManager", () => {
 				{
 					name: "Standalone Server",
 					description: "A standalone MCP server",
-					type: "mcp server" as ComponentType,
+					type: "mcp" as MarketplaceItemType,
 					url: "test/server",
 					repoUrl: "https://example.com",
 				},
 			]
 
-			const filtered = manager.filterItems(items, { type: "mcp server" })
+			const filtered = manager.filterItems(items, { type: "mcp" })
 			expect(filtered.length).toBe(2)
 			expect(filtered.map((item) => item.name)).toContain("Data Platform Package")
 			expect(filtered.map((item) => item.name)).toContain("Standalone Server")
@@ -178,25 +170,25 @@ describe("PackageManagerManager", () => {
 				{
 					name: "Data Platform Package",
 					description: "A package containing MCP servers",
-					type: "package" as ComponentType,
+					type: "package" as MarketplaceItemType,
 					url: "test/package",
 					repoUrl: "https://example.com",
 					items: [
 						{
-							type: "mcp server" as ComponentType,
+							type: "mcp" as MarketplaceItemType,
 							path: "test/server",
 							metadata: {
 								name: "Data Validator",
 								description: "An MCP server",
 								version: "1.0.0",
-								type: "mcp server" as ComponentType,
+								type: "mcp" as MarketplaceItemType,
 							},
 						},
 					],
 				},
 			]
 
-			const filtered = manager.filterItems(items, { type: "mcp server" })
+			const filtered = manager.filterItems(items, { type: "mcp" })
 			expect(filtered.length).toBe(1)
 			expect(filtered[0].name).toBe("Data Platform Package")
 			expect(filtered[0].matchInfo?.matched).toBe(true)
@@ -225,13 +217,13 @@ describe("PackageManagerManager", () => {
 							},
 						},
 						{
-							type: "mcp server",
+							type: "mcp",
 							path: "test/server",
 							metadata: {
 								name: "Test Server",
 								description: "A test server",
 								version: "1.0.0",
-								type: "mcp server",
+								type: "mcp",
 							},
 						},
 					],
@@ -482,12 +474,12 @@ describe("PackageManagerManager", () => {
 					repoUrl: "https://example.com",
 					items: [
 						{
-							type: "mcp server",
-							path: "mcp servers/data-validator",
+							type: "mcp",
+							path: "mcps/data-validator",
 							metadata: {
 								name: "Data Validator",
 								description: "An MCP server for validating data quality",
-								type: "mcp server",
+								type: "mcp",
 								version: "1.0.0",
 							},
 							lastUpdated: "2025-04-13T10:00:00-07:00",
@@ -543,53 +535,6 @@ describe("PackageManagerManager", () => {
 				},
 			})
 		})
-	})
-
-	// This test was skipped because it depends on the actual content of the marketplace-template
-	// which may change over time
-	it("should find data validator in marketplace-template", async () => {
-		// Load real data from the template
-		const templatePath = path.resolve(__dirname, "../../../../marketplace-template")
-		const scanner = new MetadataScanner()
-		const items = await scanner.scanDirectory(templatePath, "https://example.com")
-
-		// Test 1: Search for "data validator" (lowercase)
-		const filtered1 = manager.filterItems(items, { search: "data validator" })
-
-		// Verify we find the Data Validator component
-		expect(filtered1.length).toBeGreaterThan(0)
-
-		// Find the Data Validator component in the filtered results
-		let foundDataValidator1 = false
-		for (const item of filtered1) {
-			if (item.items) {
-				for (const subItem of item.items) {
-					if (subItem.metadata?.name === "Data Validator") {
-						foundDataValidator1 = true
-						break
-					}
-				}
-			}
-		}
-		expect(foundDataValidator1).toBe(true)
-
-		// Test 2: Search for "DATA VALIDATOR" (uppercase)
-		const filtered2 = manager.filterItems(items, { search: "DATA VALIDATOR" })
-
-		// Verify we find the Data Validator component
-		expect(filtered2.length).toBeGreaterThan(0)
-
-		// Test 3: Search for "validator" (partial match)
-		const filtered3 = manager.filterItems(items, { search: "validator" })
-
-		// Verify we find the Data Validator component
-		expect(filtered3.length).toBeGreaterThan(0)
-
-		// Test 4: Search for "data valid" (partial match)
-		const filtered4 = manager.filterItems(items, { search: "data valid" })
-
-		// Verify we find the Data Validator component
-		expect(filtered4.length).toBeGreaterThan(0)
 	})
 })
 

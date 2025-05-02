@@ -19,7 +19,6 @@
 		"src/exports/**",
 		"src/schemas/ipc.ts",
 		"src/extension.ts",
-		"marketplace-template/**",
 		"scripts/**"
 	],
 	"workspaces": {

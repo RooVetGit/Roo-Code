@@ -12,7 +12,7 @@
 			"label": "依類型篩選：",
 			"all": "所有類型",
 			"mode": "模式",
-			"mcp server": "MCP 伺服器",
+			"mcp": "MCP 伺服器",
 			"prompt": "提示",
 			"package": "套件"
 		},
@@ -35,7 +35,7 @@
 	"type-group": {
 		"match": "符合",
 		"modes": "模式",
-		"mcp-servers": "MCP 伺服器",
+		"mcps": "MCP 伺服器",
 		"prompts": "提示",
 		"packages": "套件",
 		"generic-type": "{{type}}"

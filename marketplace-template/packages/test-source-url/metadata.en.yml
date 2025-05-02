@@ -1,8 +1,0 @@
-name: Test Source URL
-description: A test package with source URL
-type: package
-version: 1.0.0
-sourceUrl: https://example.com/test-package
-tags:
-  - test
-  - source-url

@@ -1,7 +1,7 @@
 {
 	"type-group": {
 		"modes": "Modalità",
-		"mcp-servers": "Server MCP",
+		"mcps": "Server MCP",
 		"prompts": "Prompt",
 		"packages": "Pacchetti",
 		"generic-type": "{{type}}",
@@ -9,7 +9,7 @@
 	},
 	"item-card": {
 		"type-mode": "Modalità",
-		"type-mcp-server": "Server MCP",
+		"type-mcp": "Server MCP",
 		"type-prompt": "Prompt",
 		"type-package": "Pacchetto",
 		"type-other": "Altro",

@@ -1,8 +1,0 @@
-name: "Data Platform Administrator"
-description: "Administrative mode responsible for managing and maintaining the data platform infrastructure"
-type: "mode"
-version: "1.0.0"
-author: "JB Brown"
-authorUrl: "https://www.linkedin.com/in/jbbrown1/"
-tags: ["admin", "platform", "infrastructure", "data-platform"]
-sourceUrl: "https://github.com/example/data-platform/modes/platform-admin"

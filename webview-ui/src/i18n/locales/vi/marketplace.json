@@ -12,7 +12,7 @@
 			"label": "Lọc theo loại:",
 			"all": "Tất cả các loại",
 			"mode": "Chế độ",
-			"mcp server": "Máy chủ MCP",
+			"mcp": "Máy chủ MCP",
 			"prompt": "Prompt",
 			"package": "Gói"
 		},
@@ -35,7 +35,7 @@
 	"type-group": {
 		"match": "Khớp",
 		"modes": "Chế độ",
-		"mcp-servers": "Máy chủ MCP",
+		"mcps": "Máy chủ MCP",
 		"prompts": "Prompt",
 		"packages": "Gói",
 		"generic-type": "{{type}}"

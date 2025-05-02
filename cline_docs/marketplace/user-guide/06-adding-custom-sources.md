@@ -26,7 +26,7 @@ cd your-package-repo
 4. Create the basic repository structure:
 
 ```bash
-mkdir -p packages modes "mcp servers" prompts
+mkdir -p packages modes "mcps" prompts
 touch metadata.en.yml
 ```
 
@@ -66,7 +66,7 @@ repository-root/
 ├── modes/                    # Directory for mode components
 │   └── custom-mode/
 │       └── metadata.en.yml
-├── mcp servers/              # Directory for MCP server components
+├── mcps/              # Directory for MCP server components
 │   └── custom-server/
 │       └── metadata.en.yml
 └── prompts/                  # Directory for prompt components

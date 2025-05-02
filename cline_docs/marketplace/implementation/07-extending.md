@@ -4,19 +4,19 @@ This document provides guidance on extending the Marketplace with new features, 
 
 ## Adding New Component Types
 
-The Marketplace is designed to be extensible, allowing for the addition of new component types beyond the default ones (mode, mcp server, prompt, package).
+The Marketplace is designed to be extensible, allowing for the addition of new component types beyond the default ones (mode, mcp, prompt, package).
 
-### Extending the ComponentType
+### Extending the MarketplaceItemType
 
 To add a new component type:
 
-1. **Update the ComponentType Type**:
+1. **Update the MarketplaceItemType Type**:
 
 ```typescript
 /**
  * Supported component types
  */
-export type ComponentType = "mode" | "prompt" | "package" | "mcp server" | "your-new-type"
+export type MarketplaceItemType = "mode" | "prompt" | "package" | "mcp" | "your-new-type"
 ```
 
 2. **Update Type Label Functions**:
@@ -26,7 +26,7 @@ const getTypeLabel = (type: string) => {
 	switch (type) {
 		case "mode":
 			return "Mode"
-		case "mcp server":
+		case "mcp":
 			return "MCP Server"
 		case "prompt":
 			return "Prompt"
@@ -47,7 +47,7 @@ const getTypeColor = (type: string) => {
 	switch (type) {
 		case "mode":
 			return "bg-blue-600"
-		case "mcp server":
+		case "mcp":
 			return "bg-green-600"
 		case "prompt":
 			return "bg-purple-600"
@@ -68,7 +68,7 @@ const getTypeGroupLabel = (type: string) => {
 	switch (type) {
 		case "mode":
 			return "Modes"
-		case "mcp server":
+		case "mcp":
 			return "MCP Servers"
 		case "prompt":
 			return "Prompts"
@@ -84,7 +84,7 @@ const getTypeGroupLabel = (type: string) => {
 
 ### Directory Structure for New Types
 
-When adding a new component type, follow this directory structure in your package source repository:
+When adding a new component type, follow this directory structure in your source repository:
 
 ```
 repository-root/
@@ -134,7 +134,7 @@ const getTypeIcon = (type: string) => {
 	switch (type) {
 		case "mode":
 			return "codicon-person"
-		case "mcp server":
+		case "mcp":
 			return "codicon-server"
 		case "prompt":
 			return "codicon-comment"
@@ -225,14 +225,14 @@ interface Filters {
 
 ```typescript
 export function filterItems(
-	items: PackageManagerItem[],
+	items: MarketplaceItem[],
 	filters: {
 		type?: string
 		search?: string
 		tags?: string[]
 		yourNewFilter?: string // Add your new filter
 	},
-): PackageManagerItem[] {
+): MarketplaceItem[] {
 	// Existing filter logic...
 
 	// Add your new filter logic
@@ -290,7 +290,7 @@ const [viewMode, setViewMode] = useState<ViewMode>("card")
 
 ```tsx
 const YourNewView: React.FC<{
-	items: PackageManagerItem[]
+	items: MarketplaceItem[]
 	filters: Filters
 	setFilters: (filters: Filters) => void
 }> = ({ items, filters, setFilters }) => {
@@ -357,7 +357,7 @@ To add custom actions for package items:
 1. **Create an Action Handler**:
 
 ```typescript
-const handleCustomAction = (item: PackageManagerItem) => {
+const handleCustomAction = (item: MarketplaceItem) => {
 	vscode.postMessage({
 		type: "customAction",
 		item: item.name,
@@ -446,7 +446,7 @@ To replace or extend existing components:
 1. **Create a Custom Component**:
 
 ```tsx
-const CustomPackageCard: React.FC<PackageManagerItemCardProps> = (props) => {
+const CustomPackageCard: React.FC<MarketplaceItemCardProps> = (props) => {
 	// Your custom implementation
 	return (
 		<div className="custom-package-card">
@@ -463,17 +463,17 @@ const CustomPackageCard: React.FC<PackageManagerItemCardProps> = (props) => {
 
 ```tsx
 interface ComponentOverrides {
-	PackageCard?: React.ComponentType<PackageManagerItemCardProps>
-	ExpandableSection?: React.ComponentType<ExpandableSectionProps>
-	TypeGroup?: React.ComponentType<TypeGroupProps>
+	PackageCard?: React.MarketplaceItemType<MarketplaceItemCardProps>
+	ExpandableSection?: React.MarketplaceItemType<ExpandableSectionProps>
+	TypeGroup?: React.MarketplaceItemType<TypeGroupProps>
 }
 
-const PackageManagerView: React.FC<{
-	initialItems: PackageManagerItem[]
+const MarketplaceView: React.FC<{
+	initialItems: MarketplaceItem[]
 	componentOverrides?: ComponentOverrides
 }> = ({ initialItems, componentOverrides = {} }) => {
 	// Component selection logic
-	const PackageCard = componentOverrides.PackageCard || PackageManagerItemCard
+	const PackageCard = componentOverrides.PackageCard || MarketplaceItemCard
 
 	return (
 		<div className="marketplace">
@@ -529,7 +529,7 @@ const CustomLayout: React.FC<{
 	content={
 		<div className="results-area">
 			{filteredItems.map((item) => (
-				<PackageManagerItemCard
+				<MarketplaceItemCard
 					key={item.name}
 					item={item}
 					filters={filters}
@@ -558,7 +558,7 @@ To add support for new source types:
 interface SourceProvider {
 	type: string
 	canHandle(url: string): boolean
-	fetchItems(url: string): Promise<PackageManagerItem[]>
+	fetchItems(url: string): Promise<MarketplaceItem[]>
 }
 ```
 
@@ -572,7 +572,7 @@ class CustomSourceProvider implements SourceProvider {
 		return url.startsWith("custom://")
 	}
 
-	async fetchItems(url: string): Promise<PackageManagerItem[]> {
+	async fetchItems(url: string): Promise<MarketplaceItem[]> {
 		// Your custom implementation
 		// Fetch items from your custom source
 		return items
@@ -584,7 +584,7 @@ class CustomSourceProvider implements SourceProvider {
 
 ```typescript
 // In your extension code
-const registerSourceProviders = (marketplace: PackageManagerManager) => {
+const registerSourceProviders = (marketplace: MarketplaceManager) => {
 	marketplace.registerSourceProvider(new CustomSourceProvider())
 }
 ```
@@ -635,9 +635,9 @@ To add support for custom messages:
 ```typescript
 // In your extension code
 const extendMessageHandler = () => {
-	const originalHandler = handlePackageManagerMessages
+	const originalHandler = handleMarketplaceMessages
 
-	return async (message: any, marketplace: PackageManagerManager) => {
+	return async (message: any, marketplace: MarketplaceManager) => {
 		// Handle custom messages
 		if (message.type === "yourCustomMessage") {
 			// Your custom message handling
@@ -685,11 +685,11 @@ class ExternalApiClient {
 		this.baseUrl = baseUrl
 	}
 
-	async fetchPackages(): Promise<PackageManagerItem[]> {
+	async fetchPackages(): Promise<MarketplaceItem[]> {
 		const response = await fetch(`${this.baseUrl}/packages`)
 		const data = await response.json()
 
-		// Transform API data to PackageManagerItem format
+		// Transform API data to MarketplaceItem format
 		return data.map((item) => ({
 			name: item.name,
 			description: item.description,
@@ -718,7 +718,7 @@ class ApiSourceProvider implements SourceProvider {
 		return url.startsWith("api://")
 	}
 
-	async fetchItems(url: string): Promise<PackageManagerItem[]> {
+	async fetchItems(url: string): Promise<MarketplaceItem[]> {
 		return this.apiClient.fetchPackages()
 	}
 }
@@ -728,7 +728,7 @@ class ApiSourceProvider implements SourceProvider {
 
 ```typescript
 // In your extension code
-const registerApiProvider = (marketplace: PackageManagerManager) => {
+const registerApiProvider = (marketplace: MarketplaceManager) => {
 	marketplace.registerSourceProvider(new ApiSourceProvider("https://your-api.example.com"))
 }
 ```
@@ -773,7 +773,7 @@ class AuthenticatedApiClient extends ExternalApiClient {
 		this.authProvider = authProvider
 	}
 
-	async fetchPackages(): Promise<PackageManagerItem[]> {
+	async fetchPackages(): Promise<MarketplaceItem[]> {
 		const token = await this.authProvider.getToken()
 
 		if (!token) {

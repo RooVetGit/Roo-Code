@@ -109,7 +109,7 @@ export class GitFetcher {
 		// Get current branch using existing git instance
 		const branch = (await this.git?.revparse(["--abbrev-ref", "HEAD"])) || "main"
 
-		const items = await this.parsePackageManagerItems(repoDir, repoUrl, sourceName || metadata.name)
+		const items = await this.parseMarketplaceItems(repoDir, repoUrl, sourceName || metadata.name)
 
 		return {
 			metadata,
@@ -294,7 +294,7 @@ export class GitFetcher {
 	 * @param sourceName Source repository name
 	 * @returns Array of marketplace items
 	 */
-	private async parsePackageManagerItems(
+	private async parseMarketplaceItems(
 		repoDir: string,
 		repoUrl: string,
 		sourceName: string,

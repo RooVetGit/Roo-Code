@@ -12,7 +12,7 @@
 			"label": "Türe göre filtrele:",
 			"all": "Tüm türler",
 			"mode": "Mod",
-			"mcp server": "MCP Sunucusu",
+			"mcp": "MCP Sunucusu",
 			"prompt": "Prompt",
 			"package": "Paket"
 		},
@@ -35,7 +35,7 @@
 	"type-group": {
 		"match": "Eşleşme",
 		"modes": "Modlar",
-		"mcp-servers": "MCP Sunucuları",
+		"mcps": "MCP Sunucuları",
 		"prompts": "Promptlar",
 		"packages": "Paketler",
 		"generic-type": "{{type}}"

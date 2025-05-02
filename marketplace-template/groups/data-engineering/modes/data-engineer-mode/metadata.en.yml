@@ -1,7 +1,0 @@
-name: "Data Engineer"
-description: "A mode focused on building and maintaining data pipelines, ETL processes, and data infrastructure"
-type: "mode"
-version: "1.0.0"
-author: "JB Brown"
-authorUrl: "https://www.linkedin.com/in/jbbrown1/"
-tags: ["data-engineering", "etl", "pipelines", "infrastructure"]

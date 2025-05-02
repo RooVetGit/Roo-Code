@@ -12,7 +12,7 @@
 			"label": "Nach Typ filtern:",
 			"all": "Alle Typen",
 			"mode": "Modus",
-			"mcp server": "MCP-Server",
+			"mcp": "MCP-Server",
 			"prompt": "Prompt",
 			"package": "Paket"
 		},
@@ -35,7 +35,7 @@
 	"type-group": {
 		"match": "Treffer",
 		"modes": "Modi",
-		"mcp-servers": "MCP-Server",
+		"mcps": "MCP-Server",
 		"prompts": "Prompts",
 		"packages": "Pakete",
 		"generic-type": "{{type}}"

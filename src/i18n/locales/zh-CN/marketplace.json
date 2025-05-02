@@ -1,7 +1,7 @@
 {
 	"type-group": {
 		"modes": "模式",
-		"mcp-servers": "MCP服务器",
+		"mcps": "MCP服务器",
 		"prompts": "提示",
 		"packages": "包",
 		"generic-type": "{{type}}",
@@ -9,7 +9,7 @@
 	},
 	"item-card": {
 		"type-mode": "模式",
-		"type-mcp-server": "MCP服务器",
+		"type-mcp": "MCP服务器",
 		"type-prompt": "提示",
 		"type-package": "包",
 		"type-other": "其他",

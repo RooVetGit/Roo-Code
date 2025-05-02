@@ -103,9 +103,7 @@ const MarketplaceView: React.FC<MarketplaceViewProps> = ({ stateManager }) => {
 											className="p-1 bg-vscode-dropdown-background text-vscode-dropdown-foreground border border-vscode-dropdown-border rounded">
 											<option value="">{t("marketplace:filters.type.all")}</option>
 											<option value="mode">{t("marketplace:filters.type.mode")}</option>
-											<option value="mcp server">
-												{t("marketplace:filters.type.mcp server")}
-											</option>
+											<option value="mcp">{t("marketplace:filters.type.mcp")}</option>
 											<option value="prompt">{t("marketplace:filters.type.prompt")}</option>
 											<option value="package">{t("marketplace:filters.type.package")}</option>
 										</select>

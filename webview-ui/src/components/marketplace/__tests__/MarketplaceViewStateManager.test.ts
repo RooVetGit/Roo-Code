@@ -1,11 +1,11 @@
 import { MarketplaceViewStateManager } from "../MarketplaceViewStateManager"
 import { vscode } from "../../../utils/vscode"
-import { ComponentType, MarketplaceItem, MarketplaceSource } from "../../../../../src/services/marketplace/types"
+import { MarketplaceItemType, MarketplaceItem, MarketplaceSource } from "../../../../../src/services/marketplace/types"
 import { DEFAULT_MARKETPLACE_SOURCE } from "../../../../../src/services/marketplace/constants"
 
 const createTestItem = (overrides = {}): MarketplaceItem => ({
 	name: "test",
-	type: "mode" as ComponentType,
+	type: "mode" as MarketplaceItemType,
 	description: "Test mode",
 	url: "https://github.com/test/repo",
 	repoUrl: "https://github.com/test/repo",

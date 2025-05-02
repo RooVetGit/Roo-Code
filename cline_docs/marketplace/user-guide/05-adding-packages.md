@@ -2,9 +2,9 @@
 
 This guide explains how to create and contribute your own packages to the Roo Code Marketplace. By following these steps, you can share your work with the community and help expand the ecosystem.
 
-## Item Structure and Metadata
+## Package Structure and Metadata
 
-Each item in the Marketplace requires specific metadata files and follows a consistent directory structure.
+Each package in the Marketplace requires specific metadata files and follows a consistent directory structure.
 
 ### Directory Structure
 
@@ -18,7 +18,7 @@ package-name/
 ├── modes/                # Directory for mode components
 │   └── my-mode/
 │       └── metadata.en.yml
-├── mcp servers/          # Directory for MCP server components
+├── mcp/          # Directory for MCP server components
 │   └── my-server/
 │       └── metadata.en.yml
 └── prompts/              # Directory for prompt components
@@ -34,7 +34,7 @@ Metadata files use YAML format and must include specific fields:
 name: "My Package"
 description: "A detailed description of what this package does"
 version: "1.0.0"
-type: "package" # One of: package, mode, mcp server, prompt
+type: "package" # One of: package, mode, mcp, prompt
 tags:
     - tag1
     - tag2
@@ -50,21 +50,22 @@ authorUrl: "http://your.profile.url/" #optional
 Here's how a package might look in the actual source tree:
 
 ```
-Roo-Code-Packages/
+Roo-Code-Marketplace/
 ├── shared-prompts/                # Shared prompts directory
 │   └── data-analysis/
 │       └── metadata.en.yml
 │
-└── data-toolkit/                  # Your package directory
-    ├── metadata.en.yml            # Package metadata
-    ├── metadata.fr.yml            # Localized metadata
-    ├── README.md                  # Documentation
-    ├── modes/                     # Modes directory
-    │   └── data-analyst/
-    │       └── metadata.en.yml
-    └── mcp servers/               # MCP servers directory
-        └── data-processor/
-            └── metadata.en.yml
+└── packages/
+    └──data-toolkit/                  # Your package directory
+        ├── metadata.en.yml            # Package metadata
+        ├── metadata.fr.yml            # Localized metadata
+        ├── README.md                  # Documentation
+        ├── modes/                     # Modes directory
+        │   └── data-analyst/
+        │       └── metadata.en.yml
+        └── mcp/               # MCP servers directory
+            └── data-processor/
+                └── metadata.en.yml
 ```
 
 ### Required Fields
@@ -72,9 +73,9 @@ Roo-Code-Packages/
 - **name**: A clear, descriptive name for your component
 - **description**: A detailed explanation of what your component does
 - **version**: Semantic version number (e.g., "1.0.0")
-- **type**: Component type (one of: "package", "mode", "mcp server", "prompt")
+- **type**: Component type (one of: "package", "mode", "mcp", "prompt")
 - **tags**: (Optional) Array of relevant tags for filtering
-- **items**: (Only for packages) Array of subcomponents with their type and path - when the path is not in the packages directory
+- **items**: (Only for `package`) Array of subcomponents with their type and path - when the path is not in the packages directory
   tree
 - **author**: Your name
 - **authorUrl**: A proile Url that you want people to see. GitHub profile, or linked-in profile for example
@@ -103,7 +104,7 @@ items:
       path: "../shared-prompts/data-analysis"
 
     # Component from a completely different part of the repository
-    - type: "mcp server"
+    - type: "mcp"
       path: "../../other-category/useful-server"
 ```
 
@@ -238,7 +239,7 @@ items:
     # External components (outside this package directory)
     - type: "prompt"
       path: "../shared-prompts/data-cleaning"
-    - type: "mcp server"
+    - type: "mcp"
       path: "../../ml-tools/model-trainer"
     - type: "mode"
       path: "../visualization-tools/chart-creator-mode"

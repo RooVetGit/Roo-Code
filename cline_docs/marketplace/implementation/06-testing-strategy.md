@@ -175,11 +175,11 @@ describe("MetadataScanner", () => {
 })
 ```
 
-#### PackageManagerManager Tests
+#### MarketplaceManager Tests
 
 ```typescript
-describe("PackageManagerManager", () => {
-	let manager: PackageManagerManager
+describe("MarketplaceManager", () => {
+	let manager: MarketplaceManager
 	let mockContext: vscode.ExtensionContext
 
 	beforeEach(() => {
@@ -193,7 +193,7 @@ describe("PackageManagerManager", () => {
 			},
 		} as unknown as vscode.ExtensionContext
 
-		manager = new PackageManagerManager(mockContext)
+		manager = new MarketplaceManager(mockContext)
 	})
 
 	describe("filterItems", () => {
@@ -202,7 +202,7 @@ describe("PackageManagerManager", () => {
 			manager["currentItems"] = [
 				{ name: "Item 1", type: "mode", description: "Test item 1" },
 				{ name: "Item 2", type: "package", description: "Test item 2" },
-			] as PackageManagerItem[]
+			] as MarketplaceItem[]
 
 			const result = manager.filterItems({ type: "mode" })
 
@@ -215,7 +215,7 @@ describe("PackageManagerManager", () => {
 			manager["currentItems"] = [
 				{ name: "Alpha Item", type: "mode", description: "Test item" },
 				{ name: "Beta Item", type: "package", description: "Another test" },
-			] as PackageManagerItem[]
+			] as MarketplaceItem[]
 
 			const result = manager.filterItems({ search: "alpha" })
 
@@ -277,11 +277,11 @@ describe("searchUtils", () => {
 
 Frontend unit tests verify the functionality of UI components:
 
-#### PackageManagerItemCard Tests
+#### MarketplaceItemCard Tests
 
 ```typescript
-describe("PackageManagerItemCard", () => {
-  const mockItem: PackageManagerItem = {
+describe("MarketplaceItemCard", () => {
+  const mockItem: MarketplaceItem = {
     name: "Test Package",
     description: "A test package",
     type: "package",
@@ -302,7 +302,7 @@ describe("PackageManagerItemCard", () => {
 
   it("renders correctly", () => {
     render(
-      <PackageManagerItemCard
+      <MarketplaceItemCard
         item={mockItem}
         filters={mockFilters}
         setFilters={mockSetFilters}
@@ -318,7 +318,7 @@ describe("PackageManagerItemCard", () => {
 
   it("handles tag clicks", () => {
     render(
-      <PackageManagerItemCard
+      <MarketplaceItemCard
         item={mockItem}
         filters={mockFilters}
         setFilters={mockSetFilters}
@@ -421,14 +421,14 @@ Integration tests verify that different components work together correctly.
 
 ```typescript
 describe("Marketplace Integration", () => {
-	let manager: PackageManagerManager
+	let manager: MarketplaceManager
 	let metadataScanner: MetadataScanner
-	let templateItems: PackageManagerItem[]
+	let templateItems: MarketplaceItem[]
 
 	beforeAll(async () => {
 		// Load real data from template
 		metadataScanner = new MetadataScanner()
-		const templatePath = path.resolve(__dirname, "../../../../marketplace-template")
+		const templatePath = path.resolve(__dirname, "marketplace-template")
 		templateItems = await metadataScanner.scanDirectory(templatePath, "https://example.com")
 	})
 
@@ -440,7 +440,7 @@ describe("Marketplace Integration", () => {
 		} as vscode.ExtensionContext
 
 		// Create real instances
-		manager = new PackageManagerManager(context)
+		manager = new MarketplaceManager(context)
 
 		// Set up manager with template data
 		manager["currentItems"] = [...templateItems]
@@ -455,7 +455,7 @@ describe("Marketplace Integration", () => {
 				tagFilters: [],
 			}
 
-			const result = await handlePackageManagerMessages(message, manager)
+			const result = await handleMarketplaceMessages(message, manager)
 
 			expect(result.type).toBe("searchResults")
 			expect(result.data).toHaveLength(1)
@@ -470,7 +470,7 @@ describe("Marketplace Integration", () => {
 				tagFilters: [],
 			}
 
-			const result = await handlePackageManagerMessages(message, manager)
+			const result = await handleMarketplaceMessages(message, manager)
 
 			expect(result.type).toBe("searchResults")
 			expect(result.data.every((item) => item.type === "mode")).toBe(true)
@@ -488,7 +488,7 @@ describe("Marketplace Integration", () => {
 				tagFilters: [],
 			}
 
-			const result = await handlePackageManagerMessages(message, manager)
+			const result = await handleMarketplaceMessages(message, manager)
 
 			expect(result.data.length).toBeGreaterThan(0)
 
@@ -508,7 +508,7 @@ describe("Marketplace Integration", () => {
 
 ```typescript
 describe("Marketplace UI Integration", () => {
-  const mockItems: PackageManagerItem[] = [
+  const mockItems: MarketplaceItem[] = [
     {
       name: "Test Package",
       description: "A test package",
@@ -529,8 +529,8 @@ describe("Marketplace UI Integration", () => {
       ]
     },
     {
-      name: "Another Package",
-      description: "Another test package",
+      name: "Test Mode",
+      description: "Another test item",
       type: "mode",
       url: "https://example.com",
       repoUrl: "https://github.com/example/repo",
@@ -544,28 +544,28 @@ describe("Marketplace UI Integration", () => {
   });
 
   it("should filter items when search is entered", async () => {
-    render(<PackageManagerView initialItems={mockItems} />);
+    render(<MarketplaceView initialItems={mockItems} />);
 
-    // Both packages should be visible initially
+    // Both items should be visible initially
     expect(screen.getByText("Test Package")).toBeInTheDocument();
-    expect(screen.getByText("Another Package")).toBeInTheDocument();
+    expect(screen.getByText("Test Mode")).toBeInTheDocument();
 
     // Enter search term
-    const searchInput = screen.getByPlaceholderText("Search packages...");
+    const searchInput = screen.getByPlaceholderText("Search items...");
     fireEvent.change(searchInput, { target: { value: "another" } });
 
     // Wait for debounce
     await waitFor(() => {
       expect(screen.queryByText("Test Package")).not.toBeInTheDocument();
-      expect(screen.getByText("Another Package")).toBeInTheDocument();
+      expect(screen.getByText("Test Mode")).toBeInTheDocument();
     });
   });
 
   it("should expand details when search matches subcomponents", async () => {
-    render(<PackageManagerView initialItems={mockItems} />);
+    render(<MarketplaceView initialItems={mockItems} />);
 
     // Enter search term that matches a subcomponent
-    const searchInput = screen.getByPlaceholderText("Search packages...");
+    const searchInput = screen.getByPlaceholderText("Search items...");
     fireEvent.change(searchInput, { target: { value: "test mode" } });
 
     // Wait for debounce and expansion
@@ -592,7 +592,7 @@ The Marketplace uses several approaches to manage test data:
 Mock data is used for simple unit tests:
 
 ```typescript
-const mockItems: PackageManagerItem[] = [
+const mockItems: MarketplaceItem[] = [
 	{
 		name: "Test Package",
 		description: "A test package",
@@ -644,12 +644,12 @@ export const metadataFixtures = {
 				},
 			},
 			{
-				type: "mcp server",
+				type: "mcp",
 				path: "/test/path/server",
 				metadata: {
 					name: "Test Server",
 					description: "A test server",
-					type: "mcp server",
+					type: "mcp",
 				},
 			},
 		],
@@ -665,7 +665,7 @@ Real template data is used for integration tests:
 beforeAll(async () => {
 	// Load real data from template
 	metadataScanner = new MetadataScanner()
-	const templatePath = path.resolve(__dirname, "../../../../marketplace-template")
+	const templatePath = path.resolve(__dirname, "marketplace-template")
 	templateItems = await metadataScanner.scanDirectory(templatePath, "https://example.com")
 })
 ```
@@ -676,8 +676,8 @@ Generators create varied test data:
 
 ```typescript
 // Test data generator
-function generatePackageItems(count: number): PackageManagerItem[] {
-	const types: ComponentType[] = ["mode", "mcp server", "package", "prompt"]
+function generatePackageItems(count: number): MarketplaceItem[] {
+	const types: MarketplaceItemType[] = ["mode", "mcp", "package", "prompt"]
 	const tags = ["test", "example", "data", "ui", "server", "client"]
 
 	return Array.from({ length: count }, (_, i) => {
@@ -698,8 +698,8 @@ function generatePackageItems(count: number): PackageManagerItem[] {
 	})
 }
 
-function generateSubcomponents(count: number): PackageManagerItem["items"] {
-	const types: ComponentType[] = ["mode", "mcp server", "prompt"]
+function generateSubcomponents(count: number): MarketplaceItem["items"] {
+	const types: MarketplaceItemType[] = ["mode", "mcp", "prompt"]
 
 	return Array.from({ length: count }, (_, i) => {
 		const type = types[i % types.length]
@@ -739,12 +739,12 @@ This section outlines the test plan for the type filtering functionality in the 
 - **Expected**: Only items with type "mode" are returned
 - **Verification**: Check that the returned items all have type "mode"
 
-**Test: Filter by MCP Server Type**
+**Test: Filter by mcp Type**
 
-- **Input**: Items with various types including "mcp server"
-- **Filter**: `{ type: "mcp server" }`
-- **Expected**: Only items with type "mcp server" are returned
-- **Verification**: Check that the returned items all have type "mcp server"
+- **Input**: Items with various types including "mcp"
+- **Filter**: `{ type: "mcp" }`
+- **Expected**: Only items with type "mcp" are returned
+- **Verification**: Check that the returned items all have type "mcp"
 
 #### 2. Package with Subcomponents Tests
 
@@ -778,7 +778,7 @@ This section outlines the test plan for the type filtering functionality in the 
 
 **Test: Type Filter and Search Term**
 
-- **Input**: Various items including packages with subcomponents
+- **Input**: Various items including packages with subitems
 - **Filter**: `{ type: "mode", search: "test" }`
 - **Expected**: Only items that match both the type filter and the search term are returned
 - **Verification**:
@@ -864,7 +864,7 @@ This section outlines the test plan for the type filtering functionality in the 
 **Test: Invalid Type**
 
 - **Input**: Various items
-- **Filter**: `{ type: "invalid" as ComponentType }`
+- **Filter**: `{ type: "invalid" as MarketplaceItemType }`
 - **Expected**: No items are returned (since none match the invalid type)
 - **Verification**: Check that an empty array is returned
 
@@ -897,9 +897,9 @@ This section outlines the test plan for the type filtering functionality in the 
 
 #### 2. Deep Nesting
 
-**Test: Deeply Nested Packages**
+**Test: Deeply Nested Items**
 
-- **Input**: Packages with deeply nested subcomponents
+- **Input**: Items with deeply nested subcomponents
 - **Filter**: Various filters
 - **Expected**: The filtering correctly handles the nested structure
 - **Verification**: Check that the results are correct for deeply nested structures
@@ -912,7 +912,7 @@ The Marketplace tests are organized by functionality rather than by file structu
 
 ```
 src/services/marketplace/__tests__/
-├── PackageManager.consolidated.test.ts  # Combined tests
+├── Marketplace.consolidated.test.ts  # Combined tests
 ├── searchUtils.test.ts                  # Search utility tests
 └── PackageSubcomponents.test.ts         # Subcomponent tests
 ```
@@ -1011,7 +1011,7 @@ describe("Marketplace Integration", () => {
 
 	// Create fresh manager for each test
 	beforeEach(() => {
-		manager = new PackageManagerManager(mockContext)
+		manager = new MarketplaceManager(mockContext)
 		manager["currentItems"] = [...templateItems]
 	})
 
@@ -1114,7 +1114,7 @@ describe("Complex integration test", () => {
 // Visual debugging for UI tests
 describe("UI component test", () => {
   it("should render correctly", async () => {
-    const { container } = render(<PackageManagerItemCard item={mockItem} />);
+    const { container } = render(<MarketplaceItemCard item={mockItem} />);
 
     // Save screenshot for visual debugging
     if (process.env.SAVE_SCREENSHOTS) {
@@ -1155,9 +1155,9 @@ describe("Search functionality", () => {
 describe("Package filtering", () => {
 	/**
 	 * Scenario: User filters by type and search term
-	 * Given: A list of packages of different types
+	 * Given: A list of items of different types
 	 * When: The user selects a type filter and enters a search term
-	 * Then: Only packages of the selected type containing the search term should be shown
+	 * Then: Only items of the selected type containing the search term should be shown
 	 */
 	it("should combine type and search filters", () => {
 		// Test implementation...

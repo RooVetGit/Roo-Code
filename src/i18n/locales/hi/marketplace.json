@@ -1,7 +1,7 @@
 {
 	"type-group": {
 		"modes": "मोड",
-		"mcp-servers": "एमसीपी सर्वर",
+		"mcps": "एमसीपी सर्वर",
 		"prompts": "प्रॉम्प्ट्स",
 		"packages": "पैकेज",
 		"generic-type": "{{type}}",
@@ -9,7 +9,7 @@
 	},
 	"item-card": {
 		"type-mode": "मोड",
-		"type-mcp-server": "एमसीपी सर्वर",
+		"type-mcp": "एमसीपी सर्वर",
 		"type-prompt": "प्रॉम्प्ट",
 		"type-package": "पैकेज",
 		"type-other": "अन्य",

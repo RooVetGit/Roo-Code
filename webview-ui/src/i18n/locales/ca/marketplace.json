@@ -12,7 +12,7 @@
 			"label": "Filtrar per tipus:",
 			"all": "Tots els tipus",
 			"mode": "Mode",
-			"mcp server": "Servidor MCP",
+			"mcp": "Servidor MCP",
 			"prompt": "Prompt",
 			"package": "Paquet"
 		},
@@ -35,7 +35,7 @@
 	"type-group": {
 		"match": "Coincidència",
 		"modes": "Modes",
-		"mcp-servers": "Servidors MCP",
+		"mcps": "Servidors MCP",
 		"prompts": "Prompts",
 		"packages": "Paquets",
 		"generic-type": "{{type}}"

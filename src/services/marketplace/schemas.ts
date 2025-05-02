@@ -18,7 +18,7 @@ export const baseMetadataSchema = z.object({
 /**
  * Component type validation
  */
-export const componentTypeSchema = z.enum(["mode", "prompt", "package", "mcp server"] as const)
+export const MarketplaceItemTypeSchema = z.enum(["mode", "prompt", "package", "mcp"] as const)
 
 /**
  * Repository metadata schema
@@ -29,14 +29,14 @@ export const repositoryMetadataSchema = baseMetadataSchema
  * Component metadata schema
  */
 export const componentMetadataSchema = baseMetadataSchema.extend({
-	type: componentTypeSchema,
+	type: MarketplaceItemTypeSchema,
 })
 
 /**
  * External item reference schema
  */
 export const externalItemSchema = z.object({
-	type: componentTypeSchema,
+	type: MarketplaceItemTypeSchema,
 	path: z.string().min(1, "Path is required"),
 })
 
@@ -99,7 +99,7 @@ export function validateAnyMetadata(data: unknown) {
 				case "package":
 					return validateMetadata(data, packageMetadataSchema)
 				case "mode":
-				case "mcp server":
+				case "mcp":
 				case "prompt":
 				case "role":
 				case "storage":

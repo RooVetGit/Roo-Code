@@ -1,7 +1,7 @@
 {
 	"type-group": {
 		"modes": "Chế độ",
-		"mcp-servers": "Máy chủ MCP",
+		"mcps": "Máy chủ MCP",
 		"prompts": "Gợi ý",
 		"packages": "Gói",
 		"generic-type": "{{type}}",
@@ -9,7 +9,7 @@
 	},
 	"item-card": {
 		"type-mode": "Chế độ",
-		"type-mcp-server": "Máy chủ MCP",
+		"type-mcp": "Máy chủ MCP",
 		"type-prompt": "Gợi ý",
 		"type-package": "Gói",
 		"type-other": "Khác",

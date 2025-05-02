@@ -4,7 +4,7 @@ import { MarketplaceItem } from "../../../../../../src/services/marketplace/type
 describe("grouping utilities", () => {
 	const mockItems = [
 		{
-			type: "mcp server",
+			type: "mcp",
 			path: "servers/test-server",
 			metadata: {
 				name: "Test Server",
@@ -22,7 +22,7 @@ describe("grouping utilities", () => {
 			},
 		},
 		{
-			type: "mcp server",
+			type: "mcp",
 			path: "servers/another-server",
 			metadata: {
 				name: "Another Server",
@@ -37,10 +37,10 @@ describe("grouping utilities", () => {
 			const result = groupItemsByType(mockItems)
 
 			expect(Object.keys(result)).toHaveLength(2)
-			expect(result["mcp server"].items).toHaveLength(2)
+			expect(result["mcp"].items).toHaveLength(2)
 			expect(result["mode"].items).toHaveLength(1)
 
-			expect(result["mcp server"].items[0].name).toBe("Test Server")
+			expect(result["mcp"].items[0].name).toBe("Test Server")
 			expect(result["mode"].items[0].name).toBe("Test Mode")
 		})
 
@@ -52,18 +52,18 @@ describe("grouping utilities", () => {
 		it("should handle items with missing metadata", () => {
 			const itemsWithMissingData = [
 				{
-					type: "mcp server",
+					type: "mcp",
 					path: "test/path",
 				},
 			] as MarketplaceItem["items"]
 
 			const result = groupItemsByType(itemsWithMissingData)
-			expect(result["mcp server"].items[0].name).toBe("Unnamed item")
+			expect(result["mcp"].items[0].name).toBe("Unnamed item")
 		})
 
 		it("should preserve item order within groups", () => {
 			const result = groupItemsByType(mockItems)
-			const servers = result["mcp server"].items
+			const servers = result["mcp"].items
 
 			expect(servers[0].name).toBe("Test Server")
 			expect(servers[1].name).toBe("Another Server")
@@ -110,7 +110,7 @@ describe("grouping utilities", () => {
 			const groups = groupItemsByType(mockItems)
 			const types = getUniqueTypes(groups)
 
-			expect(types).toEqual(["mcp server", "mode"])
+			expect(types).toEqual(["mcp", "mode"])
 		})
 
 		it("should handle empty groups", () => {

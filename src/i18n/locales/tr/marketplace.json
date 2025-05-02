@@ -1,7 +1,7 @@
 {
 	"type-group": {
 		"modes": "Modlar",
-		"mcp-servers": "MCP Sunucuları",
+		"mcps": "MCP Sunucuları",
 		"prompts": "Komutlar",
 		"packages": "Paketler",
 		"generic-type": "{{type}}lar",
@@ -9,7 +9,7 @@
 	},
 	"item-card": {
 		"type-mode": "Mod",
-		"type-mcp-server": "MCP Sunucusu",
+		"type-mcp": "MCP Sunucusu",
 		"type-prompt": "Komut",
 		"type-package": "Paket",
 		"type-other": "Diğer",

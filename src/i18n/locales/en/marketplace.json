@@ -1,7 +1,7 @@
 {
 	"type-group": {
 		"modes": "Modes",
-		"mcp-servers": "MCP Servers",
+		"mcps": "MCP Servers",
 		"prompts": "Prompts",
 		"packages": "Packages",
 		"generic-type": "{{type}}s",
@@ -9,7 +9,7 @@
 	},
 	"item-card": {
 		"type-mode": "Mode",
-		"type-mcp-server": "MCP Server",
+		"type-mcp": "MCP Server",
 		"type-prompt": "Prompt",
 		"type-package": "Package",
 		"type-other": "Other",

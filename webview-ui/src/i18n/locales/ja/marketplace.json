@@ -12,7 +12,7 @@
 			"label": "タイプでフィルター:",
 			"all": "すべてのタイプ",
 			"mode": "モード",
-			"mcp server": "MCPサーバー",
+			"mcp": "MCPサーバー",
 			"prompt": "プロンプト",
 			"package": "パッケージ"
 		},
@@ -35,7 +35,7 @@
 	"type-group": {
 		"match": "一致",
 		"modes": "モード",
-		"mcp-servers": "MCPサーバー",
+		"mcps": "MCPサーバー",
 		"prompts": "プロンプト",
 		"packages": "パッケージ",
 		"generic-type": "{{type}}"

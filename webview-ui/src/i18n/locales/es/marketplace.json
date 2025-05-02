@@ -12,7 +12,7 @@
 			"label": "Filtrar por tipo:",
 			"all": "Todos los tipos",
 			"mode": "Modo",
-			"mcp server": "Servidor MCP",
+			"mcp": "Servidor MCP",
 			"prompt": "Prompt",
 			"package": "Paquete"
 		},
@@ -35,7 +35,7 @@
 	"type-group": {
 		"match": "Coincidencia",
 		"modes": "Modos",
-		"mcp-servers": "Servidores MCP",
+		"mcps": "Servidores MCP",
 		"prompts": "Prompts",
 		"packages": "Paquetes",
 		"generic-type": "{{type}}"

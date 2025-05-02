@@ -1,6 +1,6 @@
 # Working with Package Details
 
-Marketplace items often contain multiple items organized in a hierarchical structure; these items are referred to as "packages" and must have a type of package. The items organized within a package are referred to as "subcomponents" and have all the same metadata properties of regular items. This guide explains how to work with the details section of package cards to explore and understand the elements within each package.
+Marketplace items often contain multiple items organized in a hierarchical structure; these items are referred to as "Packages" and must have a type of `package`. The items organized within a package are referred to as "subitems" and have all the same metadata properties of regular items. This guide explains how to work with the details section of package cards to explore and understand the elements within each package.
 
 ## Expanding Package Details
 

@@ -1,7 +1,7 @@
 {
 	"type-group": {
 		"modes": "モード",
-		"mcp-servers": "MCPサーバー",
+		"mcps": "MCPサーバー",
 		"prompts": "プロンプト",
 		"packages": "パッケージ",
 		"generic-type": "{{type}}",
@@ -9,7 +9,7 @@
 	},
 	"item-card": {
 		"type-mode": "モード",
-		"type-mcp-server": "MCPサーバー",
+		"type-mcp": "MCPサーバー",
 		"type-prompt": "プロンプト",
 		"type-package": "パッケージ",
 		"type-other": "その他",

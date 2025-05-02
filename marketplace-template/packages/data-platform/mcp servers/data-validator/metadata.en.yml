@@ -1,8 +1,0 @@
-name: "Data Validator"
-description: "An MCP server for validating data quality, schema compliance, and business rules"
-type: "mcp server"
-version: "1.0.0"
-author: "JB Brown"
-authorUrl: "https://www.linkedin.com/in/jbbrown1/"
-tags: ["validation", "data-quality", "schema", "rules-engine", "data-platform"]
-sourceUrl: "https://github.com/example/data-platform/mcp servers/data-validator"

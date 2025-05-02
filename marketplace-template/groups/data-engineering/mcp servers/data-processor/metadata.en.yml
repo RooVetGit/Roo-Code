@@ -1,7 +1,0 @@
-name: "Data Processor"
-description: "An MCP server for processing and transforming data files with support for various formats"
-type: "mcp server"
-version: "1.0.0"
-author: "JB Brown"
-authorUrl: "https://www.linkedin.com/in/jbbrown1/"
-tags: ["data-processing", "etl", "transformation", "data-engineering"]

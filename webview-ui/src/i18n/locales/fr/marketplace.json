@@ -12,7 +12,7 @@
 			"label": "Filtrer par type :",
 			"all": "Tous les types",
 			"mode": "Mode",
-			"mcp server": "Serveur MCP",
+			"mcp": "Serveur MCP",
 			"prompt": "Prompt",
 			"package": "Paquet"
 		},
@@ -35,7 +35,7 @@
 	"type-group": {
 		"match": "Correspondance",
 		"modes": "Modes",
-		"mcp-servers": "Serveurs MCP",
+		"mcps": "Serveurs MCP",
 		"prompts": "Prompts",
 		"packages": "Paquets",
 		"generic-type": "{{type}}"

@@ -6,7 +6,7 @@ import { SimpleGit } from "simple-git"
 import { validateAnyMetadata } from "./schemas"
 import {
 	ComponentMetadata,
-	ComponentType,
+	MarketplaceItemType,
 	LocalizationOptions,
 	LocalizedMetadata,
 	MarketplaceItem,
@@ -76,7 +76,7 @@ export class MetadataScanner {
 			const localizedMetadata = metadata ? this.getLocalizedMetadata(metadata) : null
 
 			if (localizedMetadata) {
-				const item = await this.createPackageManagerItem(
+				const item = await this.createMarketplaceItem(
 					localizedMetadata,
 					componentDir,
 					repoUrl,
@@ -194,8 +194,8 @@ export class MetadataScanner {
 					// Add type field if missing but has a parent directory indicating type
 					if (!parsed.type) {
 						const parentDir = path.basename(componentDir)
-						if (parentDir === "mcp servers" || parentDir === "mcp-servers") {
-							parsed.type = "mcp server"
+						if (parentDir === "mcps") {
+							parsed.type = "mcp"
 						}
 					}
 
@@ -220,14 +220,14 @@ export class MetadataScanner {
 	}
 
 	/**
-	 * Creates a PackageManagerItem from component metadata
+	 * Creates a MarketplaceItem from component metadata
 	 * @param metadata The component metadata
 	 * @param componentDir The component directory
 	 * @param repoUrl The repository URL
 	 * @param sourceName Optional source repository name
-	 * @returns PackageManagerItem or null if invalid
+	 * @returns MarketplaceItem or null if invalid
 	 */
-	private async createPackageManagerItem(
+	private async createMarketplaceItem(
 		metadata: ComponentMetadata,
 		componentDir: string,
 		repoUrl: string,
@@ -235,7 +235,7 @@ export class MetadataScanner {
 		sourceName?: string,
 	): Promise<MarketplaceItem | null> {
 		// Skip if no type or invalid type
-		if (!metadata.type || !this.isValidComponentType(metadata.type)) {
+		if (!metadata.type || !this.isValidMarketplaceItemType(metadata.type)) {
 			return null
 		}
 		// Always use the original root directory for path calculations
@@ -393,8 +393,8 @@ export class MetadataScanner {
 	 * @param type The type to check
 	 * @returns Whether the type is valid
 	 */
-	private isValidComponentType(type: string): type is ComponentType {
-		return ["role", "mcp server", "storage", "mode", "prompt", "package"].includes(type)
+	private isValidMarketplaceItemType(type: string): type is MarketplaceItemType {
+		return ["role", "mcp", "storage", "mode", "prompt", "package"].includes(type)
 	}
 
 	/**

@@ -3,6 +3,8 @@ import { GitFetcher } from "../GitFetcher"
 import * as vscode from "vscode"
 
 describe("MetadataScanner External References", () => {
+	// TODO: remove this note
+	// This test is expected to fail until we update the registry with the new wordings (`mcp server` => `mcp`)
 	it("should find all subcomponents in Project Manager package including external references", async () => {
 		// Create a GitFetcher instance using the project's mock settings directory
 		const mockContext = {
@@ -25,7 +27,7 @@ describe("MetadataScanner External References", () => {
 
 		// Verify one is a mode and one is an MCP server
 		const hasMode = projectManager?.items?.some((item) => item.type === "mode")
-		const hasMcpServer = projectManager?.items?.some((item) => item.type === "mcp server")
+		const hasMcpServer = projectManager?.items?.some((item) => item.type === "mcp")
 		expect(hasMode).toBe(true)
 		expect(hasMcpServer).toBe(true)
 
@@ -34,6 +36,6 @@ describe("MetadataScanner External References", () => {
 			(item) => item.metadata?.name === "Smartsheet MCP - Project Management",
 		)
 		expect(smartsheet).toBeDefined()
-		expect(smartsheet?.type).toBe("mcp server")
+		expect(smartsheet?.type).toBe("mcp")
 	})
 })

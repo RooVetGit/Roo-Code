@@ -14,7 +14,7 @@ import HistoryView from "./components/history/HistoryView"
 import SettingsView, { SettingsViewRef } from "./components/settings/SettingsView"
 import WelcomeView from "./components/welcome/WelcomeView"
 import McpView from "./components/mcp/McpView"
-import PackageManagerView from "./components/marketplace/MarketplaceView"
+import MarketplaceView from "./components/marketplace/MarketplaceView"
 import PromptsView from "./components/prompts/PromptsView"
 import { HumanRelayDialog } from "./components/human-relay/HumanRelayDialog"
 
@@ -125,7 +125,7 @@ const App = () => {
 				<SettingsView ref={settingsRef} onDone={() => setTab("chat")} targetSection={currentSection} />
 			)}
 			{tab === "marketplace" && (
-				<PackageManagerView stateManager={marketplaceStateManager} onDone={() => switchTab("chat")} />
+				<MarketplaceView stateManager={marketplaceStateManager} onDone={() => switchTab("chat")} />
 			)}
 			<ChatView
 				ref={chatViewRef}

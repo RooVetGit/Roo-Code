@@ -9,10 +9,10 @@ This directory contains comprehensive documentation for the Roo Code Marketplace
 The user guide provides end-user documentation for using the Marketplace:
 
 1. [Introduction to Marketplace](./user-guide/01-introduction.md) - Overview and purpose of the Marketplace
-2. [Browsing Packages](./user-guide/02-browsing-packages.md) - Understanding the interface and navigating items
+2. [Browsing Items](./user-guide/02-browsing-items.md) - Understanding the interface and navigating items
 3. [Searching and Filtering](./user-guide/03-searching-and-filtering.md) - Using search and filters to find items
-4. [Working with Package Details](./user-guide/04-working-with-details.md) - Exploring package details and subcomponents
-5. [Adding Packages](./user-guide/05-adding-packages.md) - Creating and contributing your own items and package
+4. [Working with Package Details](./user-guide/04-working-with-details.md) - Exploring package details and items
+5. [Adding Packages](./user-guide/05-adding-packages.md) - Creating and contributing your own items
 6. [Adding Custom Sources](./user-guide/06-adding-custom-sources.md) - Setting up and managing custom sources
 
 ### Implementation Documentation
@@ -29,10 +29,10 @@ The implementation documentation provides technical details for developers:
 The Marketplace provides the following key features:
 
 - **Component Discovery**: Browse and search for items
-- **Package Management**: Add packages of items to your environment
+- **Item Management**: Add/update/remove items to your environment
 - **Custom Sources**: Add your own repositories of team or private Marketplaces
 - **Localization Support**: View items in your preferred language
-- **Filtering**: Filter components by type, search term, and tags
+- **Filtering**: Filter items by type, search term, and tags
 
 ## Default Marketplace Repository
 

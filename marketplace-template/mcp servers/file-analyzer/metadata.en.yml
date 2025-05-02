@@ -1,8 +1,0 @@
-name: "File Analyzer MCP Server"
-description: "An MCP server that analyzes files for code quality, security issues, and performance optimizations"
-type: "mcp server"
-version: "1.0.0"
-author: "JB Brown"
-authorUrl: "https://www.linkedin.com/in/jbbrown1/"
-tags: ["file-analyzer", "code-quality", "security", "performance"]
-sourceUrl: "https://github.com/roo-team/file-analyzer-server"

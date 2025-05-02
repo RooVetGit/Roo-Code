@@ -12,7 +12,7 @@
 			"label": "유형별 필터:",
 			"all": "모든 유형",
 			"mode": "모드",
-			"mcp server": "MCP 서버",
+			"mcp": "MCP 서버",
 			"prompt": "프롬프트",
 			"package": "패키지"
 		},
@@ -35,7 +35,7 @@
 	"type-group": {
 		"match": "일치",
 		"modes": "모드",
-		"mcp-servers": "MCP 서버",
+		"mcps": "MCP 서버",
 		"prompts": "프롬프트",
 		"packages": "패키지",
 		"generic-type": "{{type}}"

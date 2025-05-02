@@ -15,7 +15,7 @@ export interface MatchInfo {
 /**
  * Supported component types
  */
-export type ComponentType = "mode" | "prompt" | "package" | "mcp server"
+export type MarketplaceItemType = "mode" | "prompt" | "package" | "mcp"
 
 /**
  * Base metadata interface
@@ -41,7 +41,7 @@ export interface RepositoryMetadata extends BaseMetadata {}
  * Component metadata with type
  */
 export interface ComponentMetadata extends BaseMetadata {
-	type: ComponentType
+	type: MarketplaceItemType
 }
 
 /**
@@ -50,7 +50,7 @@ export interface ComponentMetadata extends BaseMetadata {
 export interface PackageMetadata extends ComponentMetadata {
 	type: "package"
 	items?: {
-		type: ComponentType
+		type: MarketplaceItemType
 		path: string
 		metadata?: ComponentMetadata
 	}[]
@@ -72,7 +72,7 @@ export interface SubcomponentMetadata extends ComponentMetadata {
 export interface MarketplaceItem {
 	name: string
 	description: string
-	type: ComponentType
+	type: MarketplaceItemType
 	url: string
 	repoUrl: string
 	sourceName?: string
@@ -87,7 +87,7 @@ export interface MarketplaceItem {
 	defaultBranch?: string
 	path?: string // Add path to main item
 	items?: {
-		type: ComponentType
+		type: MarketplaceItemType
 		path: string
 		metadata?: ComponentMetadata
 		lastUpdated?: string
@@ -134,8 +134,8 @@ export interface LocalizationOptions {
 export interface InstallMarketplaceItemOptions {
 	/**
 	 * Specify the installation target
-	 * 
+	 *
 	 * @default 'project'
 	 */
-	target?: 'global' | 'project'
+	target?: "global" | "project"
 }

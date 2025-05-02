@@ -12,7 +12,7 @@
 			"label": "Filtruj według typu:",
 			"all": "Wszystkie typy",
 			"mode": "Tryb",
-			"mcp server": "Serwer MCP",
+			"mcp": "Serwer MCP",
 			"prompt": "Prompt",
 			"package": "Pakiet"
 		},
@@ -35,7 +35,7 @@
 	"type-group": {
 		"match": "Dopasowanie",
 		"modes": "Tryby",
-		"mcp-servers": "Serwery MCP",
+		"mcps": "Serwery MCP",
 		"prompts": "Prompty",
 		"packages": "Pakiety",
 		"generic-type": "{{type}}"

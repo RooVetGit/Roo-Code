@@ -30,8 +30,8 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({
 		switch (item.type) {
 			case "mode":
 				return t("marketplace:filters.type.mode")
-			case "mcp server":
-				return t("marketplace:filters.type.mcp server")
+			case "mcp":
+				return t("marketplace:filters.type.mcp")
 			case "prompt":
 				return t("marketplace:filters.type.prompt")
 			case "package":
@@ -45,7 +45,7 @@ export const MarketplaceItemCard: React.FC<MarketplaceItemCardProps> = ({
 		switch (item.type) {
 			case "mode":
 				return "bg-blue-600"
-			case "mcp server":
+			case "mcp":
 				return "bg-green-600"
 			case "prompt":
 				return "bg-purple-600"

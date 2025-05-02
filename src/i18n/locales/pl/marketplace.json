@@ -1,7 +1,7 @@
 {
 	"type-group": {
 		"modes": "Tryby",
-		"mcp-servers": "Serwery MCP",
+		"mcps": "Serwery MCP",
 		"prompts": "Podpowiedzi",
 		"packages": "Pakiety",
 		"generic-type": "{{type}}y",
@@ -9,7 +9,7 @@
 	},
 	"item-card": {
 		"type-mode": "Tryb",
-		"type-mcp-server": "Serwer MCP",
+		"type-mcp": "Serwer MCP",
 		"type-prompt": "Podpowiedź",
 		"type-package": "Pakiet",
 		"type-other": "Inne",

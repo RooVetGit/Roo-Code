@@ -91,7 +91,7 @@ describe("MetadataScanner", () => {
 				Buffer.from(`
 name: Test Component
 description: A test component
-type: mcp server
+type: mcp
 version: 1.0.0
 sourceUrl: https://example.com/component1
 `),
@@ -101,7 +101,7 @@ sourceUrl: https://example.com/component1
 
 			expect(items).toHaveLength(1)
 			expect(items[0].name).toBe("Test Component")
-			expect(items[0].type).toBe("mcp server")
+			expect(items[0].type).toBe("mcp")
 			expect(items[0].url).toBe("https://example.com/repo/tree/main/component1")
 			expect(items[0].path).toBe("component1")
 			expect(items[0].sourceUrl).toBe("https://example.com/component1")
@@ -139,7 +139,7 @@ sourceUrl: https://example.com/component1
 				Buffer.from(`
 name: Test Component 2
 description: A test component without sourceUrl
-type: mcp server
+type: mcp
 version: 1.0.0
 `),
 			)
@@ -148,7 +148,7 @@ version: 1.0.0
 
 			expect(items).toHaveLength(1)
 			expect(items[0].name).toBe("Test Component 2")
-			expect(items[0].type).toBe("mcp server")
+			expect(items[0].type).toBe("mcp")
 			expect(items[0].url).toBe("https://example.com/repo/tree/main/component2")
 			expect(items[0].path).toBe("component2")
 			expect(items[0].sourceUrl).toBeUndefined()

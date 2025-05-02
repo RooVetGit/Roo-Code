@@ -1,6 +1,0 @@
-name: "Example MCP Server"
-description: "An example MCP server for testing marketplace functionality"
-type: "mcp server"
-version: "1.0.0"
-author: "JB Brown"
-authorUrl: "https://www.linkedin.com/in/jbbrown1/"

@@ -6,7 +6,7 @@ import {
 	MarketplaceItem,
 	MarketplaceRepository,
 	MarketplaceSource,
-	ComponentType,
+	MarketplaceItemType,
 	ComponentMetadata,
 	LocalizationOptions,
 	InstallMarketplaceItemOptions,
@@ -315,7 +315,7 @@ export class MarketplaceManager {
 	 */
 	filterItems(
 		items: MarketplaceItem[],
-		filters: { type?: ComponentType; search?: string; tags?: string[] },
+		filters: { type?: MarketplaceItemType; search?: string; tags?: string[] },
 	): MarketplaceItem[] {
 		// Create cache key from filters
 		const cacheKey = JSON.stringify(filters)
@@ -349,7 +349,7 @@ export class MarketplaceManager {
 	 */
 	private processItemBatch(
 		batch: MarketplaceItem[],
-		filters: { type?: ComponentType; search?: string; tags?: string[] },
+		filters: { type?: MarketplaceItemType; search?: string; tags?: string[] },
 	): MarketplaceItem[] {
 		// Helper functions
 		const normalizeText = (text: string) => text.toLowerCase().replace(/\s+/g, " ").trim()
@@ -514,7 +514,11 @@ export class MarketplaceManager {
 	 * @param filters The filter criteria
 	 * @returns Filtered items
 	 */
-	updateWithFilteredItems(filters: { type?: ComponentType; search?: string; tags?: string[] }): MarketplaceItem[] {
+	updateWithFilteredItems(filters: {
+		type?: MarketplaceItemType
+		search?: string
+		tags?: string[]
+	}): MarketplaceItem[] {
 		const filteredItems = this.filterItems(this.currentItems, filters)
 		this.currentItems = filteredItems
 		return filteredItems
@@ -538,7 +542,7 @@ export class MarketplaceManager {
 	private getSortValue(
 		item:
 			| MarketplaceItem
-			| { type: ComponentType; path: string; metadata?: ComponentMetadata; lastUpdated?: string },
+			| { type: MarketplaceItemType; path: string; metadata?: ComponentMetadata; lastUpdated?: string },
 		sortBy: keyof Pick<MarketplaceItem, "name" | "author" | "lastUpdated">,
 	): string {
 		if ("metadata" in item && item.metadata) {

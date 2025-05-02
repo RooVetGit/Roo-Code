@@ -3,7 +3,7 @@ import { ClineProvider } from "./ClineProvider"
 import { WebviewMessage } from "../../shared/WebviewMessage"
 import {
 	MarketplaceManager,
-	ComponentType,
+	MarketplaceItemType,
 	MarketplaceSource,
 	validateSources,
 	ValidationError,
@@ -87,7 +87,7 @@ export async function handleMarketplaceMessages(
 						marketplaceManager.isFetching = false
 					}
 
-					// The items are already stored in PackageManagerManager's currentItems
+					// The items are already stored in MarketplaceManager's currentItems
 					// No need to store in global state
 
 					// Send state to webview
@@ -100,7 +100,7 @@ export async function handleMarketplaceMessages(
 						type: "state",
 						text: errorMessage,
 					})
-					// The state will already be updated with empty items by PackageManagerManager
+					// The state will already be updated with empty items by MarketplaceManager
 					await provider.postStateToWebview()
 					marketplaceManager.isFetching = false
 				}
@@ -197,7 +197,7 @@ export async function handleMarketplaceMessages(
 				try {
 					// Update filtered items and post state
 					marketplaceManager.updateWithFilteredItems({
-						type: message.filters.type as ComponentType | undefined,
+						type: message.filters.type as MarketplaceItemType | undefined,
 						search: message.filters.search,
 						tags: message.filters.tags,
 					})

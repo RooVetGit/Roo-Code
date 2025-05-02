@@ -137,4 +137,4 @@ The Marketplace provides visual feedback about your current filters:
 
 ---
 
-**Previous**: [Browsing Packages](./02-browsing-packages.md) | **Next**: [Working with Package Details](./04-working-with-details.md)
+**Previous**: [Browsing Items](./02-browsing-items.md) | **Next**: [Working with Package Details](./04-working-with-details.md)

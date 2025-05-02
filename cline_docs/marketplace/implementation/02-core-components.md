@@ -16,46 +16,7 @@ The GitFetcher is responsible for managing Git repository operations, including 
 
 ### Implementation Details
 
-```typescript
-class GitFetcher {
-	private readonly cacheDir: string
-	private metadataScanner: MetadataScanner
-	private git?: SimpleGit
-
-	/**
-	 * Fetch repository data
-	 * @param repoUrl Repository URL
-	 * @param forceRefresh Whether to bypass cache
-	 * @param sourceName Optional source name
-	 * @returns Repository data
-	 */
-	public async fetchRepository(
-		repoUrl: string,
-		forceRefresh = false,
-		sourceName?: string,
-	): Promise<PackageManagerRepository> {
-		// Implementation details
-	}
-
-	/**
-	 * Clone or pull repository
-	 * @param repoUrl Repository URL
-	 * @param repoDir Repository directory
-	 * @param forceRefresh Whether to force refresh
-	 */
-	private async cloneOrPullRepository(repoUrl: string, repoDir: string, forceRefresh: boolean): Promise<void> {
-		// Implementation details
-	}
-
-	/**
-	 * Clean up git locks
-	 * @param repoDir Repository directory
-	 */
-	private async cleanupGitLocks(repoDir: string): Promise<void> {
-		// Implementation details
-	}
-}
-```
+[/src/services/marketplace/GitFetcher.ts](/src/services/marketplace/GitFetcher.ts)
 
 ### Key Algorithms
 
@@ -85,11 +46,11 @@ The repository management process includes:
 
 ## MetadataScanner
 
-The MetadataScanner is responsible for reading and parsing package metadata from repositories.
+The MetadataScanner is responsible for reading and parsing item metadata from repositories.
 
 ### Responsibilities
 
-- Scanning directories for package metadata files
+- Scanning directories for item metadata files
 - Parsing YAML metadata into structured objects
 - Building component hierarchies
 - Supporting localized metadata
@@ -97,40 +58,11 @@ The MetadataScanner is responsible for reading and parsing package metadata from
 
 ### Implementation Details
 
-```typescript
-class MetadataScanner {
-	private git: SimpleGit
-	private localizationOptions: LocalizationOptions
+[/src/services/marketplace/MetadataScanner.ts](/src/services/marketplace/MetadataScanner.ts)
 
-	/**
-	 * Scan directory for package metadata
-	 * @param directoryPath Directory to scan
-	 * @param baseUrl Base repository URL
-	 * @param sourceName Source repository name
-	 * @returns Array of package items
-	 */
-	public async scanDirectory(
-		directoryPath: string,
-		baseUrl?: string,
-		sourceName?: string,
-	): Promise<PackageManagerItem[]> {
-		// Implementation details
-	}
+## MarketplaceManager
 
-	/**
-	 * Parse metadata file
-	 * @param filePath Path to metadata file
-	 * @returns Parsed metadata
-	 */
-	private async parseMetadataFile(filePath: string): Promise<ComponentMetadata> {
-		// Implementation details
-	}
-}
-```
-
-## PackageManagerManager
-
-The PackageManagerManager is the central component that manages marketplace data, caching, and operations.
+The MarketplaceManager is the central component that manages marketplace data, caching, and operations.
 
 ### Responsibilities
 
@@ -138,58 +70,11 @@ The PackageManagerManager is the central component that manages marketplace data
 - Handling repository caching
 - Coordinating with GitFetcher
 - Applying filters and sorting
-- Managing package sources
+- Managing registry sources
 
 ### Implementation Details
 
-```typescript
-class PackageManagerManager {
-	private currentItems: PackageManagerItem[] = []
-	private cache: Map<string, { data: PackageManagerRepository; timestamp: number }>
-	private gitFetcher: GitFetcher
-	private activeSourceOperations = new Set<string>()
-	private isMetadataScanActive = false
-	private pendingOperations: Array<() => Promise<void>> = []
-
-	/**
-	 * Queue an operation to run when no metadata scan is active
-	 */
-	private async queueOperation(operation: () => Promise<void>): Promise<void> {
-		// Implementation details
-	}
-
-	/**
-	 * Get marketplace items from sources
-	 */
-	public async getPackageManagerItems(
-		sources: PackageManagerSource[],
-	): Promise<{ items: PackageManagerItem[]; errors?: string[] }> {
-		// Implementation details
-	}
-
-	/**
-	 * Filter items based on criteria
-	 */
-	public filterItems(
-		items: PackageManagerItem[],
-		filters: { type?: ComponentType; search?: string; tags?: string[] },
-	): PackageManagerItem[] {
-		// Implementation details
-	}
-
-	/**
-	 * Sort items by field
-	 */
-	public sortItems(
-		items: PackageManagerItem[],
-		sortBy: keyof Pick<PackageManagerItem, "name" | "author" | "lastUpdated">,
-		sortOrder: "asc" | "desc",
-		sortSubcomponents: boolean = false,
-	): PackageManagerItem[] {
-		// Implementation details
-	}
-}
-```
+[/src/services/marketplace/MarketplaceManager.ts](/src/services/marketplace/MarketplaceManager.ts)
 
 ### Key Algorithms
 
@@ -225,7 +110,7 @@ The filtering system provides rich functionality:
 
     - Filter parent items
     - Filter subcomponents
-    - Handle package-specific logic
+    - Handle item-specific logic
     - Track match information
 
 2. **Match Information**:
@@ -234,9 +119,9 @@ The filtering system provides rich functionality:
     - Support highlighting
     - Maintain match context
 
-## PackageManagerSourceValidation
+## MarketplaceValidation
 
-The PackageManagerSourceValidation component handles validation of marketplace sources and their configurations.
+The MarketplaceValidation component handles validation of marketplace sources and their configurations.
 
 ### Responsibilities
 
@@ -248,40 +133,7 @@ The PackageManagerSourceValidation component handles validation of marketplace s
 
 ### Implementation Details
 
-```typescript
-export class PackageManagerSourceValidation {
-	/**
-	 * Validates a marketplace source URL
-	 */
-	public static validateSourceUrl(url: string): ValidationError[] {
-		// Implementation details
-	}
-
-	/**
-	 * Validates a marketplace source name
-	 */
-	public static validateSourceName(name?: string): ValidationError[] {
-		// Implementation details
-	}
-
-	/**
-	 * Validates sources for duplicates
-	 */
-	public static validateSourceDuplicates(
-		sources: PackageManagerSource[],
-		newSource?: PackageManagerSource,
-	): ValidationError[] {
-		// Implementation details
-	}
-
-	/**
-	 * Checks if a URL is a valid Git repository URL
-	 */
-	private static isValidGitRepositoryUrl(url: string): boolean {
-		// Implementation details
-	}
-}
-```
+[/src/shared/MarketplaceValidation.ts](/src/shared/MarketplaceValidation.ts)
 
 ### Key Algorithms
 
@@ -309,9 +161,9 @@ The URL validation system supports:
     - Optional .git suffix
     - Subpath support
 
-## PackageManagerViewStateManager
+## MarketplaceViewStateManager
 
-The PackageManagerViewStateManager manages frontend state and synchronization with the backend.
+The MarketplaceViewStateManager manages frontend state and synchronization with the backend.
 
 ### Responsibilities
 
@@ -325,42 +177,7 @@ The PackageManagerViewStateManager manages frontend state and synchronization wi
 
 ### Implementation Details
 
-```typescript
-class PackageManagerViewStateManager {
-	private state: ViewState
-	private stateChangeHandlers: Set<StateChangeHandler>
-	private fetchTimeoutId?: NodeJS.Timeout
-	private sourcesModified: boolean
-
-	/**
-	 * Initialize state manager
-	 */
-	public initialize(): void {
-		// Implementation details
-	}
-
-	/**
-	 * Subscribe to state changes
-	 */
-	public onStateChange(handler: StateChangeHandler): () => void {
-		// Implementation details
-	}
-
-	/**
-	 * Process state transitions
-	 */
-	public async transition(transition: ViewStateTransition): Promise<void> {
-		// Implementation details
-	}
-
-	/**
-	 * Handle incoming messages
-	 */
-	public async handleMessage(message: any): Promise<void> {
-		// Implementation details
-	}
-}
-```
+[/webview-ui/src/components/marketplace/MarketplaceViewStateManager.ts](/webview-ui/src/components/marketplace/MarketplaceViewStateManager.ts)
 
 ## Component Integration
 
@@ -370,15 +187,15 @@ The components work together through well-defined interfaces:
 
 1. **Repository Operations**:
 
-    - PackageManagerManager validates sources with PackageManagerSourceValidation
-    - PackageManagerManager coordinates with GitFetcher
+    - MarketplaceManager validates sources with MarketplaceValidation
+    - MarketplaceManager coordinates with GitFetcher
     - GitFetcher manages repository state
     - MetadataScanner processes repository content
-    - Results flow back to PackageManagerManager
+    - Results flow back to MarketplaceManager
 
 2. **State Management**:
 
-    - PackageManagerManager maintains backend state
+    - MarketplaceManager maintains backend state
     - ViewStateManager handles UI state transitions
     - ViewStateManager processes messages
     - State changes notify subscribers

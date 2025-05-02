@@ -1,7 +1,0 @@
-name: "Data Platform Package"
-description: "A complete data platform solution including roles, servers, and storage systems"
-type: "package"
-version: "1.0.0"
-author: "JB Brown"
-authorUrl: "https://www.linkedin.com/in/jbbrown1/"
-tags: ["data-platform", "enterprise", "data-engineering", "complete-solution"]

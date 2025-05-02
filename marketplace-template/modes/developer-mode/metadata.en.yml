@@ -1,8 +1,0 @@
-name: "Full-Stack Developer Mode"
-description: "A mode for a full-stack developer with expertise in web development, databases, and APIs"
-type: "mode"
-version: "1.0.0"
-author: "JB Brown"
-authorUrl: "https://www.linkedin.com/in/jbbrown1/"
-tags: ["developer", "full-stack", "web", "database", "api"]
-sourceUrl: "https://github.com/roo-team/developer-resources"

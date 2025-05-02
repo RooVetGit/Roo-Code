@@ -1,7 +1,7 @@
 {
 	"type-group": {
 		"modes": "모드",
-		"mcp-servers": "MCP 서버",
+		"mcps": "MCP 서버",
 		"prompts": "프롬프트",
 		"packages": "패키지",
 		"generic-type": "{{type}}",
@@ -9,7 +9,7 @@
 	},
 	"item-card": {
 		"type-mode": "모드",
-		"type-mcp-server": "MCP 서버",
+		"type-mcp": "MCP 서버",
 		"type-prompt": "프롬프트",
 		"type-package": "패키지",
 		"type-other": "기타",

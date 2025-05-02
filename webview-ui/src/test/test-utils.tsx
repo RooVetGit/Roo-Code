@@ -34,7 +34,7 @@ i18next.use(initReactI18next).init({
 						all: "All types",
 						package: "Package",
 						mode: "Mode",
-						"mcp server": "MCP Server",
+						mcp: "MCP Server",
 						prompt: "Prompt",
 					},
 					sort: {
@@ -74,7 +74,7 @@ i18next.use(initReactI18next).init({
 					},
 				},
 				"type-group": {
-					"mcp-servers": "MCP Servers",
+					mcps: "MCP Servers",
 					modes: "Modes",
 					prompts: "Prompts",
 					packages: "Packages",

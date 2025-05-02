@@ -24,7 +24,7 @@ describe("Schema Validation", () => {
 				name: "Test Component",
 				description: "A test component",
 				version: "1.0.0",
-				type: "mcp server",
+				type: "mcp",
 				tags: ["test"],
 			}
 
@@ -37,7 +37,7 @@ describe("Schema Validation", () => {
 				description: "A test package",
 				version: "1.0.0",
 				type: "package",
-				items: [{ type: "mcp server", path: "../external/server" }],
+				items: [{ type: "mcp", path: "../external/server" }],
 			}
 
 			expect(() => validateMetadata(data, packageMetadataSchema)).not.toThrow()
@@ -81,7 +81,7 @@ describe("Schema Validation", () => {
 				name: "Test Component",
 				description: "A test component",
 				version: "1.0.0",
-				type: "mcp server",
+				type: "mcp",
 			}
 
 			expect(() => validateAnyMetadata(data)).not.toThrow()
@@ -93,7 +93,7 @@ describe("Schema Validation", () => {
 				description: "A test package",
 				version: "1.0.0",
 				type: "package",
-				items: [{ type: "mcp server", path: "../external/server" }],
+				items: [{ type: "mcp", path: "../external/server" }],
 			}
 
 			expect(() => validateAnyMetadata(data)).not.toThrow()

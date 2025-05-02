@@ -23,8 +23,8 @@ export const TypeGroup: React.FC<TypeGroupProps> = ({ type, items, className }) 
 		switch (type) {
 			case "mode":
 				return t("marketplace:type-group.modes")
-			case "mcp server":
-				return t("marketplace:type-group.mcp-servers")
+			case "mcp":
+				return t("marketplace:type-group.mcps")
 			case "prompt":
 				return t("marketplace:type-group.prompts")
 			case "package":
