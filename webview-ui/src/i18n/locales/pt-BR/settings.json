@@ -4,7 +4,9 @@
 		"done": "Concluído",
 		"cancel": "Cancelar",
 		"reset": "Redefinir",
-		"select": "Selecionar"
+		"select": "Selecionar",
+		"add": "Adicionar cabeçalho",
+		"remove": "Remover"
 	},
 	"header": {
 		"title": "Configurações",
@@ -111,6 +113,10 @@
 		"useCustomBaseUrl": "Usar URL base personalizado",
 		"useHostHeader": "Usar cabeçalho Host personalizado",
 		"useLegacyFormat": "Usar formato de API OpenAI legado",
+		"customHeaders": "Cabeçalhos personalizados",
+		"headerName": "Nome do cabeçalho",
+		"headerValue": "Valor do cabeçalho",
+		"noCustomHeaders": "Nenhum cabeçalho personalizado definido. Clique no botão + para adicionar um.",
 		"requestyApiKey": "Chave de API Requesty",
 		"getRequestyApiKey": "Obter chave de API Requesty",
 		"openRouterTransformsText": "Comprimir prompts e cadeias de mensagens para o tamanho do contexto (<a>Transformações OpenRouter</a>)",
@@ -338,7 +344,7 @@
 		},
 		"zshOhMy": {
 			"label": "Ativar integração Oh My Zsh",
-			"description": "Quando ativado, define ITERM_SHELL_INTEGRATION_INSTALLED=Yes para habilitar os recursos de integração do shell Oh My Zsh. (experimental)"
+			"description": "Quando ativado, define ITERM_SHELL_INTEGRATION_INSTALLED=Yes para habilitar os recursos de integração do shell Oh My Zsh. A aplicação desta configuração pode exigir a reinicialização do IDE. (experimental)"
 		},
 		"zshP10k": {
 			"label": "Ativar integração Powerlevel10k",
