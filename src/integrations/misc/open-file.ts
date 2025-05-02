@@ -23,6 +23,8 @@ export async function openImage(dataUri: string) {
 interface OpenFileOptions {
 	create?: boolean
 	content?: string
+	startLine?: number
+	endLine?: number
 }
 
 export async function openFile(filePath: string, options: OpenFileOptions = {}) {
@@ -75,7 +77,24 @@ export async function openFile(filePath: string, options: OpenFileOptions = {}) 
 		} catch {} // not essential, sometimes tab operations fail
 
 		const document = await vscode.workspace.openTextDocument(uri)
-		await vscode.window.showTextDocument(document, { preview: false })
+
+		// Create a selection range if line numbers are provided
+		let showOptions: vscode.TextDocumentShowOptions = { preview: false }
+
+		if (options.startLine !== undefined) {
+			const startLine = Math.max(0, options.startLine - 1) // Convert to 0-based index
+			const startPos = new vscode.Position(startLine, 0)
+
+			if (options.endLine !== undefined) {
+				const endLine = Math.max(0, options.endLine - 1) // Convert to 0-based index
+				const endPos = new vscode.Position(endLine, 0)
+				showOptions.selection = new vscode.Range(startPos, endPos)
+			} else {
+				showOptions.selection = new vscode.Range(startPos, startPos)
+			}
+		}
+
+		await vscode.window.showTextDocument(document, showOptions)
 	} catch (error) {
 		if (error instanceof Error) {
 			vscode.window.showErrorMessage(`Could not open file: ${error.message}`)
