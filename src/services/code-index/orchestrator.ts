@@ -111,7 +111,7 @@ export class CodeIndexOrchestrator {
 	 */
 	public async startIndexing(): Promise<void> {
 		if (!this.configManager.isFeatureConfigured) {
-			this.stateManager.setSystemState("Standby", "Cannot start: Missing configuration.")
+			this.stateManager.setSystemState("Standby", "Missing configuration. Save your settings to start indexing.")
 			console.warn("[CodeIndexOrchestrator] Start rejected: Missing configuration.")
 			return
 		}
