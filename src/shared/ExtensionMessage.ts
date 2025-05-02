@@ -16,6 +16,7 @@ import {
 import { McpServer } from "./mcp"
 import { Mode } from "./modes"
 import { RouterModels } from "./api"
+import { AttachedFileSpec } from "./tools"
 
 export type { ProviderSettingsEntry, ToolProgressStatus }
 
@@ -252,6 +253,7 @@ export interface ClineSayTool {
 	endLine?: number
 	lineNumber?: number
 	query?: string
+	files?: AttachedFileSpec[]
 }
 
 // Must keep in sync with system prompt.

@@ -33,7 +33,7 @@ import { getApiMetrics } from "../../shared/getApiMetrics"
 import { HistoryItem } from "../../shared/HistoryItem"
 import { ClineAskResponse } from "../../shared/WebviewMessage"
 import { defaultModeSlug } from "../../shared/modes"
-import { DiffStrategy } from "../../shared/tools"
+import { DiffStrategy, AttachedFileSpec } from "../../shared/tools"
 
 // services
 import { UrlContentFetcher } from "../../services/browser/UrlContentFetcher"
@@ -106,10 +106,10 @@ export type TaskOptions = {
 	consecutiveMistakeLimit?: number
 	task?: string
 	images?: string[]
+	attachedFiles?: string[] | AttachedFileSpec[]
 	historyItem?: HistoryItem
 	experiments?: Record<string, boolean>
 	startTask?: boolean
-  attachedFiles?: string[]
 	rootTask?: Task
 	parentTask?: Task
 	taskNumber?: number
@@ -124,8 +124,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	readonly parentTask: Task | undefined = undefined
 	readonly taskNumber: number
 	readonly workspacePath: string
-
-  public readonly attachedFiles: string[] = []
+	public readonly attachedFiles: (string | AttachedFileSpec)[] = []
 
 	providerRef: WeakRef<ClineProvider>
 	private readonly globalStoragePath: string
@@ -663,6 +662,123 @@ export class Task extends EventEmitter<ClineEvents> {
 
 	// Start / Abort / Resume
 
+	/**
+	 * Formats the content of attached files for inclusion in the task prompt
+	 * @param workspaceRoot The root directory of the workspace
+	 * @param maxReadFileLine Maximum number of lines to read from each file
+	 * @returns Formatted string containing all attached files content
+	 */
+	private async _formatAttachedFilesContent(workspaceRoot: string, maxReadFileLine: number): Promise<string> {
+		const isFullRead = maxReadFileLine === -1
+		let attachedFilesContent = ""
+
+		for (const fileSpec of this.attachedFiles) {
+			// Handle both string and AttachedFileSpec types
+			const isString = typeof fileSpec === "string"
+			const relativeFilePath = isString ? fileSpec : fileSpec.path
+
+			// Get line range information
+			const hasSpecificRange = !isString && (fileSpec.startLine !== undefined || fileSpec.endLine !== undefined)
+			const startLine0Based = isString ? 0 : fileSpec.startLine ? Math.max(0, fileSpec.startLine - 1) : 0
+			const requestedEndLine = isString ? undefined : fileSpec.endLine
+
+			// Convert to 1-based for display
+			const startLine1Based = startLine0Based + 1
+
+			if (!relativeFilePath) continue // Skip empty paths
+
+			const absolutePath = path.join(workspaceRoot, relativeFilePath)
+			try {
+				// If maxReadFileLine is 0 and no specific range was requested, just include the file path
+				if (maxReadFileLine === 0 && !hasSpecificRange) {
+					attachedFilesContent += `${relativeFilePath}\n`
+					continue
+				}
+
+				// Otherwise, attempt to read the file content
+				let linesArray: string = ""
+				let actualEndLine0Based = 0
+				let actualEndLine1Based = 0
+				let truncationNotice = ""
+
+				// Determine effective end line based on settings and requested range
+				if (!isFullRead && maxReadFileLine > 0) {
+					// If we have a specific end line from AttachedFileSpec, use it
+					// otherwise use maxReadFileLine
+					const effectiveEndLine0Based = requestedEndLine
+						? Math.min(requestedEndLine - 1, maxReadFileLine - 1)
+						: maxReadFileLine - 1
+
+					// Read the specified line range
+					linesArray = await readLines(absolutePath, effectiveEndLine0Based, startLine0Based)
+
+					// Recalculate actual end line based on content read
+					truncationNotice = ""
+					if (linesArray) {
+						actualEndLine0Based = startLine0Based + linesArray.split("\n").length - 1
+					} else {
+						actualEndLine0Based = startLine0Based - 1
+					}
+					actualEndLine1Based = actualEndLine0Based + 1
+
+					// Add truncation notice if we hit the maxReadFileLine limit (but only if no specific end line was requested)
+					if (!requestedEndLine && maxReadFileLine > 0 && linesArray.split("\n").length >= maxReadFileLine) {
+						truncationNotice = " File content truncated by max lines setting."
+					} else if (requestedEndLine && actualEndLine1Based < requestedEndLine) {
+						truncationNotice = ` File ended before requested line ${requestedEndLine}.`
+					}
+				} else if (isFullRead) {
+					// Handle full read, but respect startLine and endLine if provided
+					if (requestedEndLine) {
+						const requestedEndLine0Based = requestedEndLine - 1
+						linesArray = await readLines(absolutePath, requestedEndLine0Based, startLine0Based)
+
+						// Recalculate actual end line based on content read
+						truncationNotice = ""
+						if (linesArray) {
+							actualEndLine0Based = startLine0Based + linesArray.split("\n").length - 1
+						} else {
+							actualEndLine0Based = startLine0Based - 1
+						}
+						actualEndLine1Based = actualEndLine0Based + 1
+
+						// Add notice if file ended before requested line
+						if (actualEndLine1Based < requestedEndLine) {
+							truncationNotice = ` File ended before requested line ${requestedEndLine}.`
+						}
+					} else {
+						linesArray = await readLines(absolutePath, undefined, startLine0Based)
+
+						// Calculate actual end line based on content read
+						truncationNotice = ""
+						if (linesArray) {
+							actualEndLine0Based = startLine0Based + linesArray.split("\n").length - 1
+						} else {
+							actualEndLine0Based = startLine0Based - 1
+						}
+						actualEndLine1Based = actualEndLine0Based + 1
+					}
+				}
+
+				// Add header line with path and line range (using 1-based line numbers for display)
+				attachedFilesContent += `${relativeFilePath}:${startLine1Based}:${actualEndLine1Based}${truncationNotice}\n`
+
+				// Add the file content in a markdown code block
+				if (linesArray) {
+					const content = addLineNumbers(linesArray, startLine1Based)
+					attachedFilesContent += "```\n" + content + "```\n\n"
+				}
+			} catch (error) {
+				console.warn(`[_formatAttachedFilesContent] Failed to read attached file ${relativeFilePath}:`, error)
+				// Add an error line with line range information if specified
+				const rangeInfo = hasSpecificRange ? ` (lines ${startLine1Based}-${requestedEndLine || "end"})` : ""
+				attachedFilesContent += `${relativeFilePath}${rangeInfo} Failed to read file: ${error instanceof Error ? error.message : String(error)}\n\n`
+			}
+		}
+
+		return attachedFilesContent
+	}
+
 	private async startTask(task?: string, images?: string[]): Promise<void> {
 		// `conversationHistory` (for API) and `clineMessages` (for webview)
 		// need to be in sync.
@@ -677,7 +793,6 @@ export class Task extends EventEmitter<ClineEvents> {
     const providerState = await this.providerRef.deref()?.getState()
 		const workspaceRoot = this.cwd
 		const maxReadFileLine = providerState?.maxReadFileLine ?? 500 // Default to 500
-		const isFullRead = maxReadFileLine === -1
 
 		await this.say("text", task, images)
 		this.isInitialized = true
@@ -686,55 +801,20 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		console.log(`[subtasks] task ${this.taskId}.${this.instanceId} starting`)
 
-    const fileContentBlocks: Anthropic.TextBlockParam[] = []
-		for (const relativeFilePath of this.attachedFiles) {
-			if (!relativeFilePath) continue // Skip empty paths
-			const absolutePath = path.join(workspaceRoot, relativeFilePath)
-			try {
-				let content = ""
-				let notice = ""
-				let linesArray: string = ""
+		const taskBlock = `<task>\n${task ?? ""}\n</task>`
 
-				if (!isFullRead && maxReadFileLine > 0) {
-					// Read up to maxReadFileLine lines (0-based index for endLine)
-					linesArray = await readLines(absolutePath, maxReadFileLine - 1, 0)
-					if (linesArray.length >= maxReadFileLine) {
-						notice = `\n<notice>File content limited to first ${maxReadFileLine} lines.</notice>`
-					}
-				} else if (isFullRead || maxReadFileLine === 0) {
-					// Handle full read or definitions-only (max=0)
-					// If maxReadFileLine is 0, readLines defaults to reading all lines, which is fine.
-					// We just won't display the content later if maxReadFileLine is 0.
-					linesArray = await readLines(absolutePath)
-				}
+		const attachedFilesContent = await this._formatAttachedFilesContent(workspaceRoot, maxReadFileLine)
 
-				// Only add content if maxReadFileLine is not 0
-				if (maxReadFileLine !== 0 && linesArray) {
-					content = addLineNumbers(linesArray)
-				} else {
-					// Add notice for definitions-only mode
-					notice = `\n<notice>File content omitted (maxReadFileLine is 0).</notice>`
-				}
+		const attachedFilesBlock =
+			this.attachedFiles.length > 0 ? `<attached-files>\n${attachedFilesContent}</attached-files>` : ""
 
-				const formattedText = `<file path="${relativeFilePath}">\n${content}${notice}\n</file>`
-				fileContentBlocks.push({ type: "text", text: formattedText })
-			} catch (error) {
-				console.warn(`[startTask] Failed to read attached file ${relativeFilePath}:`, error)
-				// Add an error block to the prompt to inform the AI
-				const errorText = `<file path="${relativeFilePath}">\n<error>Failed to read file: ${error instanceof Error ? error.message : String(error)}</error>\n</file>`
-				fileContentBlocks.push({ type: "text", text: errorText })
-			}
+		const blocks: Anthropic.ContentBlockParam[] = [{ type: "text", text: taskBlock }, ...imageBlocks]
+
+		if (attachedFilesBlock) {
+			blocks.push({ type: "text", text: attachedFilesBlock })
 		}
 
-		await this.initiateTaskLoop([
-			...fileContentBlocks,
-			{
-				type: "text",
-				text: `<task>\n${task ?? ""}\n</task>`,
-			},
-			...imageBlocks,
-		])
-	
+		await this.initiateTaskLoop(blocks)
 	}
 
 	public async resumePausedTask(lastMessage: string) {

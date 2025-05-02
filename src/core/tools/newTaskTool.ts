@@ -1,6 +1,6 @@
 import delay from "delay"
 
-import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
+import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag, AttachedFileSpec } from "../../shared/tools"
 import { Task } from "../task/Task"
 import { defaultModeSlug, getModeBySlug } from "../../shared/modes"
 import { formatResponse } from "../prompts/responses"
@@ -52,10 +52,36 @@ export async function newTaskTool(
 				return
 			}
 
+			let attachedFiles: AttachedFileSpec[] = []
+			if (filesParam && filesParam.trim()) {
+				const fileRegex = /<file>(.*?)<\/file>/g
+				for (const match of filesParam.matchAll(fileRegex)) {
+					const fileString = match[1]
+					// Parse the file string to extract path and optional line range
+					// Format could be: path/to/file.js or path/to/file.js:10:20
+					const rangeRegex = /^(.*?)(?::(\d+):(\d+))?$/
+					const rangeMatch = fileString.match(rangeRegex)
+
+					if (rangeMatch) {
+						const [, filePath, startLineStr, endLineStr] = rangeMatch
+						const fileSpec: AttachedFileSpec = { path: filePath }
+
+						// Convert line numbers to numbers if they exist
+						if (startLineStr && endLineStr) {
+							fileSpec.startLine = parseInt(startLineStr, 10)
+							fileSpec.endLine = parseInt(endLineStr, 10)
+						}
+
+						attachedFiles.push(fileSpec)
+					}
+				}
+			}
+
 			const toolMessage = JSON.stringify({
 				tool: "newTask",
 				mode: targetMode.name,
 				content: message,
+				files: attachedFiles,
 			})
 
 			const didApprove = await askApproval("tool", toolMessage)
@@ -78,14 +104,6 @@ export async function newTaskTool(
 
 			// Delay to allow mode change to take effect before next tool is executed.
 			await delay(500)
-
-			let attachedFiles: string[] = []
-			if (filesParam && filesParam.trim()) {
-				const fileRegex = /<file>(.*?)<\/file>/g
-				for (const match of filesParam.matchAll(fileRegex)) {
-					attachedFiles.push(match[1])
-				}
-			}
 
 			const newCline = await provider.initClineWithTask(message, undefined, cline, {
 				attachedFiles,
