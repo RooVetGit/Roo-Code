@@ -99,17 +99,20 @@ export class GitFetcher {
 		// Initialize git for this repository
 		this.initGit(repoDir)
 
+		// Find the registry dir
+		const registryDir = await this.findRegistryDir(repoDir)
+
 		// Validate repository structure
-		await this.validateRepositoryStructure(repoDir)
+		await this.validateRegistryStructure(registryDir)
 
 		// Parse repository metadata
-		const metadata = await this.parseRepositoryMetadata(repoDir)
+		const metadata = await this.parseRepositoryMetadata(registryDir)
 
 		// Parse marketplace items
 		// Get current branch using existing git instance
 		const branch = (await this.git?.revparse(["--abbrev-ref", "HEAD"])) || "main"
 
-		const items = await this.parseMarketplaceItems(repoDir, repoUrl, sourceName || metadata.name)
+		const items = await this.parseMarketplaceItems(registryDir, repoUrl, sourceName || metadata.name)
 
 		return {
 			metadata,
@@ -117,6 +120,24 @@ export class GitFetcher {
 			url: repoUrl,
 			defaultBranch: branch,
 		}
+	}
+
+	async findRegistryDir(repoDir: string) {
+		const isRoot = await fs
+			.stat(path.join(repoDir, "metadata.en.yml"))
+			.then(() => true)
+			.catch(() => false)
+
+		if (isRoot) return repoDir
+
+		const isRegistrySubdir = await fs
+			.stat(path.join(repoDir, "registry", "metadata.en.yml"))
+			.then(() => true)
+			.catch(() => false)
+
+		if (isRegistrySubdir) return path.join(repoDir, "registry")
+
+		throw new Error('Invalid repository structure: could not find "registry" metadata')
 	}
 
 	/**
@@ -244,24 +265,16 @@ export class GitFetcher {
 	}
 
 	/**
-	 * Validate repository structure
-	 * @param repoDir Repository directory
+	 * Validate registry structure
+	 * @param repoDir Registry directory
 	 */
-	private async validateRepositoryStructure(repoDir: string): Promise<void> {
+	private async validateRegistryStructure(repoDir: string): Promise<void> {
 		// Check for metadata.en.yml
 		const metadataPath = path.join(repoDir, "metadata.en.yml")
 		try {
 			await fs.stat(metadataPath)
 		} catch {
-			throw new Error("Repository is missing metadata.en.yml file")
-		}
-
-		// Check for README.md
-		const readmePath = path.join(repoDir, "README.md")
-		try {
-			await fs.stat(readmePath)
-		} catch {
-			throw new Error("Repository is missing README.md file")
+			throw new Error("Registry is missing metadata.en.yml file")
 		}
 	}
 

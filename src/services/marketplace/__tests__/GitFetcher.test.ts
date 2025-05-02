@@ -244,19 +244,7 @@ describe("GitFetcher", () => {
 			})
 
 			await expect(gitFetcher.fetchRepository(testRepoUrl)).rejects.toThrow(
-				"Repository is missing metadata.en.yml file",
-			)
-		})
-
-		it("should handle missing README.md", async () => {
-			// Mock repository exists but missing README
-			;(fs.stat as jest.Mock).mockImplementation((path: string) => {
-				if (path.endsWith("README.md")) return Promise.reject(new Error("ENOENT"))
-				return Promise.resolve(true)
-			})
-
-			await expect(gitFetcher.fetchRepository(testRepoUrl)).rejects.toThrow(
-				"Repository is missing README.md file",
+				'Invalid repository structure: could not find "registry" metadata',
 			)
 		})
 	})
@@ -316,8 +304,8 @@ describe("GitFetcher", () => {
 
 	describe("Repository Structure Validation", () => {
 		// Helper function to access private method
-		const validateRepositoryStructure = async (repoDir: string) => {
-			return (gitFetcher as any).validateRepositoryStructure(repoDir)
+		const validateRegistryStructure = async (repoDir: string) => {
+			return (gitFetcher as any).validateRegistryStructure(repoDir)
 		}
 
 		describe("metadata.en.yml validation", () => {
@@ -329,8 +317,8 @@ describe("GitFetcher", () => {
 				})
 
 				// Call the method and expect it to throw
-				await expect(validateRepositoryStructure("/mock/repo")).rejects.toThrow(
-					"Repository is missing metadata.en.yml file",
+				await expect(validateRegistryStructure("/mock/repo")).rejects.toThrow(
+					"Registry is missing metadata.en.yml file",
 				)
 			})
 
@@ -341,7 +329,7 @@ describe("GitFetcher", () => {
 				})
 
 				// Call the method and expect it not to throw
-				await expect(validateRepositoryStructure("/mock/repo")).resolves.not.toThrow()
+				await expect(validateRegistryStructure("/mock/repo")).resolves.not.toThrow()
 			})
 		})
 	})

@@ -189,7 +189,7 @@ classDiagram
         -metadataScanner: MetadataScanner
         +fetchRepository(url): MarketplaceRepository
         -cloneOrPullRepository(url): void
-        -validateRepositoryStructure(dir): void
+        -validateRegistryStructure(dir): void
         -parseRepositoryMetadata(dir): RepositoryMetadata
     }
 
