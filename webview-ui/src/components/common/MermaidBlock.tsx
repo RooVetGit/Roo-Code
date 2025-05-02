@@ -4,6 +4,7 @@ import { useDebounceEffect } from "@src/utils/useDebounceEffect"
 import styled from "styled-components"
 import { vscode } from "@src/utils/vscode"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
+import CodeBlock from "./CodeBlock"
 
 const MERMAID_THEME = {
 	background: "#1e1e1e", // VS Code dark theme background
@@ -218,9 +219,7 @@ export default function MermaidBlock({ code }: MermaidBlockProps) {
 							<div style={{ marginBottom: "8px", color: "var(--vscode-descriptionForeground)" }}>
 								{error}
 							</div>
-							<CodeBlock>
-								<code>{code}</code>
-							</CodeBlock>
+							<CodeBlock language="mermaid" source={code} />
 						</div>
 					)}
 				</div>
@@ -292,22 +291,6 @@ const LoadingMessage = styled.div`
 	color: var(--vscode-descriptionForeground);
 	font-style: italic;
 	font-size: 0.9em;
-`
-
-const CodeBlock = styled.pre`
-	background-color: var(--vscode-editor-background);
-	border: 1px solid var(--vscode-editor-lineHighlightBorder);
-	border-radius: 3px;
-	padding: 8px;
-	overflow: auto;
-	max-height: 200px;
-
-	code {
-		font-family: var(--vscode-editor-font-family);
-		font-size: var(--vscode-editor-font-size);
-		white-space: pre-wrap;
-		word-break: break-all;
-	}
 `
 
 const CopyButton = styled.button`
