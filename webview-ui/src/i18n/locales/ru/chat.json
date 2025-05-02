@@ -10,7 +10,16 @@
 		"contextWindow": "Длина контекста:",
 		"closeAndStart": "Закрыть задачу и начать новую",
 		"export": "Экспортировать историю задач",
-		"delete": "Удалить задачу (Shift + клик для пропуска подтверждения)"
+		"delete": "Удалить задачу (Shift + клик для пропуска подтверждения)",
+		"requestCostChartTitle": "Стоимость Запроса",
+		"totalCostChartTitle": "Общая Стоимость",
+		"tokensInChartTitle": "Входные Токены",
+		"tokensOutChartTitle": "Выходные Токены",
+		"tokensUnit": "токены",
+		"costOverviewTitle": "Обзор Затрат",
+		"requestShort": "Запрос {{index}}",
+		"clickToEnlarge": "Нажмите, чтобы увеличить",
+		"clickToGoBack": "Нажмите, чтобы вернуться к виду сетки"
 	},
 	"unpin": "Открепить",
 	"pin": "Закрепить",
@@ -238,14 +247,5 @@
 		"title": "Интеграция с оболочкой недоступна",
 		"description": "Ваша команда выполняется без интеграции с оболочкой VSCode. Вы можете повторно включить интеграцию с оболочкой в разделе <strong>Терминал</strong> <settingsLink>настроек Roo Code</settingsLink>.",
 		"troubleshooting": "Нажмите здесь для просмотра документации по интеграции с оболочкой."
-	},
-	"task.requestCostChartTitle": "Стоимость Запроса",
-	"task.totalCostChartTitle": "Общая Стоимость",
-	"task.tokensInChartTitle": "Входные Токены",
-	"task.tokensOutChartTitle": "Выходные Токены",
-	"task.tokensUnit": "токены",
-	"task.costOverviewTitle": "Обзор Затрат",
-	"task.requestShort": "Запрос {{index}}",
-	"task.clickToEnlarge": "Нажмите, чтобы увеличить",
-	"task.clickToGoBack": "Нажмите, чтобы вернуться к виду сетки"
+	}
 }

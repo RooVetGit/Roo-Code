@@ -10,7 +10,16 @@
 		"contextWindow": "Finestra de context:",
 		"closeAndStart": "Tancar tasca i iniciar-ne una de nova",
 		"export": "Exportar historial de tasques",
-		"delete": "Eliminar tasca (Shift + Clic per ometre confirmació)"
+		"delete": "Eliminar tasca (Shift + Clic per ometre confirmació)",
+		"requestCostChartTitle": "Cost de la Sol·licitud",
+		"totalCostChartTitle": "Cost Total",
+		"tokensInChartTitle": "Tokens d'Entrada",
+		"tokensOutChartTitle": "Tokens de Sortida",
+		"tokensUnit": "tokens",
+		"costOverviewTitle": "Resum de Costos",
+		"requestShort": "Sol·licitud {{index}}",
+		"clickToEnlarge": "Feu clic per ampliar",
+		"clickToGoBack": "Feu clic per tornar a la vista de graella"
 	},
 	"unpin": "Desfixar",
 	"pin": "Fixar",
@@ -238,14 +247,5 @@
 		"title": "Integració de Shell no disponible",
 		"description": "La teva ordre s'està executant sense la integració de shell de VSCode. Pots tornar a activar la integració de shell a la secció <strong>Terminal</strong> de la <settingsLink>configuració de Roo Code</settingsLink>.",
 		"troubleshooting": "Fes clic aquí per a la documentació d'integració de shell."
-	},
-	"task.requestCostChartTitle": "Cost de la Sol·licitud",
-	"task.totalCostChartTitle": "Cost Total",
-	"task.tokensInChartTitle": "Tokens d'Entrada",
-	"task.tokensOutChartTitle": "Tokens de Sortida",
-	"task.tokensUnit": "tokens",
-	"task.costOverviewTitle": "Resum de Costos",
-	"task.requestShort": "Sol·licitud {{index}}",
-	"task.clickToEnlarge": "Feu clic per ampliar",
-	"task.clickToGoBack": "Feu clic per tornar a la vista de graella"
+	}
 }

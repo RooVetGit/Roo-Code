@@ -10,7 +10,16 @@
 		"contextWindow": "컨텍스트 창:",
 		"closeAndStart": "작업 닫고 새 작업 시작",
 		"export": "작업 기록 내보내기",
-		"delete": "작업 삭제 (Shift + 클릭으로 확인 생략)"
+		"delete": "작업 삭제 (Shift + 클릭으로 확인 생략)",
+		"requestCostChartTitle": "요청 비용",
+		"totalCostChartTitle": "총 비용",
+		"tokensInChartTitle": "입력 토큰",
+		"tokensOutChartTitle": "출력 토큰",
+		"tokensUnit": "토큰",
+		"costOverviewTitle": "비용 개요",
+		"requestShort": "요청 {{index}}",
+		"clickToEnlarge": "클릭하여 확대",
+		"clickToGoBack": "클릭하여 그리드 보기로 돌아가기"
 	},
 	"unpin": "고정 해제하기",
 	"pin": "고정하기",
@@ -238,14 +247,5 @@
 		"title": "Shell 통합 사용 불가",
 		"description": "명령이 VSCode shell 통합 없이 실행되고 있습니다. <settingsLink>Roo Code 설정</settingsLink>의 <strong>터미널</strong> 섹션에서 shell 통합을 다시 활성화할 수 있습니다.",
 		"troubleshooting": "shell 통합 문서를 보려면 여기를 클릭하세요."
-	},
-	"task.requestCostChartTitle": "요청 비용",
-	"task.totalCostChartTitle": "총 비용",
-	"task.tokensInChartTitle": "입력 토큰",
-	"task.tokensOutChartTitle": "출력 토큰",
-	"task.tokensUnit": "토큰",
-	"task.costOverviewTitle": "비용 개요",
-	"task.requestShort": "요청 {{index}}",
-	"task.clickToEnlarge": "클릭하여 확대",
-	"task.clickToGoBack": "클릭하여 그리드 보기로 돌아가기"
+	}
 }

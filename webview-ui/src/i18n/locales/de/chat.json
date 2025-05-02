@@ -10,7 +10,16 @@
 		"contextWindow": "Kontextfenster:",
 		"closeAndStart": "Aufgabe schließen und neue starten",
 		"export": "Aufgabenverlauf exportieren",
-		"delete": "Aufgabe löschen (Shift + Klick zum Überspringen der Bestätigung)"
+		"delete": "Aufgabe löschen (Shift + Klick zum Überspringen der Bestätigung)",
+		"requestCostChartTitle": "Anfragekosten",
+		"totalCostChartTitle": "Gesamtkosten",
+		"tokensInChartTitle": "Eingabe-Tokens",
+		"tokensOutChartTitle": "Ausgabe-Tokens",
+		"tokensUnit": "Tokens",
+		"costOverviewTitle": "Kostenübersicht",
+		"requestShort": "Anfrage {{index}}",
+		"clickToEnlarge": "Klicken zum Vergrößern",
+		"clickToGoBack": "Klicken, um zur Rasteransicht zurückzukehren"
 	},
 	"unpin": "Lösen von oben",
 	"pin": "Anheften",
@@ -238,14 +247,5 @@
 		"title": "Shell-Integration nicht verfügbar",
 		"description": "Dein Befehl wird ohne VSCode-Shell-Integration ausgeführt. Du kannst die Shell-Integration im Bereich <strong>Terminal</strong> in den <settingsLink>Roo Code Einstellungen</settingsLink> wieder aktivieren.",
 		"troubleshooting": "Klicke hier für die Shell-Integrations-Dokumentation."
-	},
-	"task.requestCostChartTitle": "Anfragekosten",
-	"task.totalCostChartTitle": "Gesamtkosten",
-	"task.tokensInChartTitle": "Eingabe-Tokens",
-	"task.tokensOutChartTitle": "Ausgabe-Tokens",
-	"task.tokensUnit": "Tokens",
-	"task.costOverviewTitle": "Kostenübersicht",
-	"task.requestShort": "Anfrage {{index}}",
-	"task.clickToEnlarge": "Klicken zum Vergrößern",
-	"task.clickToGoBack": "Klicken, um zur Rasteransicht zurückzukehren"
+	}
 }

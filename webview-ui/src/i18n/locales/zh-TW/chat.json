@@ -10,7 +10,16 @@
 		"contextWindow": "上下文長度：",
 		"closeAndStart": "關閉現有工作並開始一項新的工作",
 		"export": "匯出工作紀錄",
-		"delete": "刪除工作（按住 Shift 並點選可跳過確認）"
+		"delete": "刪除工作（按住 Shift 並點選可跳過確認）",
+		"requestCostChartTitle": "請求成本",
+		"totalCostChartTitle": "總成本",
+		"tokensInChartTitle": "輸入權杖",
+		"tokensOutChartTitle": "輸出權杖",
+		"tokensUnit": "權杖",
+		"costOverviewTitle": "成本概觀",
+		"requestShort": "請求 {{index}}",
+		"clickToEnlarge": "點擊放大",
+		"clickToGoBack": "點擊返回網格檢視"
 	},
 	"unpin": "取消置頂",
 	"pin": "置頂",
@@ -238,14 +247,5 @@
 		"title": "Shell 整合不可用",
 		"description": "您的命令正在沒有 VSCode shell 整合的情況下執行。您可以在 <settingsLink>Roo Code 設定</settingsLink> 的 <strong>終端機</strong> 部分重新啟用 shell 整合。",
 		"troubleshooting": "點擊此處查看 shell 整合文件。"
-	},
-	"task.requestCostChartTitle": "請求成本",
-	"task.totalCostChartTitle": "總成本",
-	"task.tokensInChartTitle": "輸入權杖",
-	"task.tokensOutChartTitle": "輸出權杖",
-	"task.tokensUnit": "權杖",
-	"task.costOverviewTitle": "成本概觀",
-	"task.requestShort": "請求 {{index}}",
-	"task.clickToEnlarge": "點擊放大",
-	"task.clickToGoBack": "點擊返回網格檢視"
+	}
 }

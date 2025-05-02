@@ -10,7 +10,16 @@
 		"contextWindow": "コンテキストウィンドウ:",
 		"closeAndStart": "タスクを閉じて新しいタスクを開始",
 		"export": "タスク履歴をエクスポート",
-		"delete": "タスクを削除（Shift + クリックで確認をスキップ）"
+		"delete": "タスクを削除（Shift + クリックで確認をスキップ）",
+		"requestCostChartTitle": "リクエストコスト",
+		"totalCostChartTitle": "合計コスト",
+		"tokensInChartTitle": "入力トークン",
+		"tokensOutChartTitle": "出力トークン",
+		"tokensUnit": "トークン",
+		"costOverviewTitle": "コスト概要",
+		"requestShort": "リクエスト {{index}}",
+		"clickToEnlarge": "クリックして拡大",
+		"clickToGoBack": "クリックしてグリッド表示に戻る"
 	},
 	"unpin": "ピン留めを解除",
 	"pin": "ピン留め",
@@ -238,14 +247,5 @@
 		"title": "シェル統合が利用できません",
 		"description": "コマンドはVSCodeシェル統合なしで実行されています。<settingsLink>Roo Code設定</settingsLink>の<strong>ターミナル</strong>セクションでシェル統合を再有効化できます。",
 		"troubleshooting": "シェル統合のドキュメントはこちらをクリック"
-	},
-	"task.requestCostChartTitle": "リクエストコスト",
-	"task.totalCostChartTitle": "合計コスト",
-	"task.tokensInChartTitle": "入力トークン",
-	"task.tokensOutChartTitle": "出力トークン",
-	"task.tokensUnit": "トークン",
-	"task.costOverviewTitle": "コスト概要",
-	"task.requestShort": "リクエスト {{index}}",
-	"task.clickToEnlarge": "クリックして拡大",
-	"task.clickToGoBack": "クリックしてグリッド表示に戻る"
+	}
 }

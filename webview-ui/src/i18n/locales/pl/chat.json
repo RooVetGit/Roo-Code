@@ -10,7 +10,16 @@
 		"contextWindow": "Okno kontekstu:",
 		"closeAndStart": "Zamknij zadanie i rozpocznij nowe",
 		"export": "Eksportuj historię zadań",
-		"delete": "Usuń zadanie (Shift + Kliknięcie, aby pominąć potwierdzenie)"
+		"delete": "Usuń zadanie (Shift + Kliknięcie, aby pominąć potwierdzenie)",
+		"requestCostChartTitle": "Koszt Żądania",
+		"totalCostChartTitle": "Koszt Całkowity",
+		"tokensInChartTitle": "Tokeny Wejściowe",
+		"tokensOutChartTitle": "Tokeny Wyjściowe",
+		"tokensUnit": "tokeny",
+		"costOverviewTitle": "Przegląd Kosztów",
+		"requestShort": "Żądanie {{index}}",
+		"clickToEnlarge": "Kliknij, aby powiększyć",
+		"clickToGoBack": "Kliknij, aby wrócić do widoku siatki"
 	},
 	"unpin": "Odepnij",
 	"pin": "Przypnij",
@@ -238,14 +247,5 @@
 		"title": "Integracja powłoki niedostępna",
 		"description": "Twoje polecenie jest wykonywane bez integracji powłoki VSCode. Możesz ponownie włączyć integrację powłoki w sekcji <strong>Terminal</strong> w <settingsLink>ustawieniach Roo Code</settingsLink>.",
 		"troubleshooting": "Kliknij tutaj, aby zobaczyć dokumentację integracji powłoki."
-	},
-	"task.requestCostChartTitle": "Koszt Żądania",
-	"task.totalCostChartTitle": "Koszt Całkowity",
-	"task.tokensInChartTitle": "Tokeny Wejściowe",
-	"task.tokensOutChartTitle": "Tokeny Wyjściowe",
-	"task.tokensUnit": "tokeny",
-	"task.costOverviewTitle": "Przegląd Kosztów",
-	"task.requestShort": "Żądanie {{index}}",
-	"task.clickToEnlarge": "Kliknij, aby powiększyć",
-	"task.clickToGoBack": "Kliknij, aby wrócić do widoku siatki"
+	}
 }

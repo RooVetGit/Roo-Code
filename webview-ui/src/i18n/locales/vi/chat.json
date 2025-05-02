@@ -10,7 +10,16 @@
 		"contextWindow": "Chiều dài bối cảnh:",
 		"closeAndStart": "Đóng nhiệm vụ và bắt đầu nhiệm vụ mới",
 		"export": "Xuất lịch sử nhiệm vụ",
-		"delete": "Xóa nhiệm vụ (Shift + Click để bỏ qua xác nhận)"
+		"delete": "Xóa nhiệm vụ (Shift + Click để bỏ qua xác nhận)",
+		"requestCostChartTitle": "Chi phí Yêu cầu",
+		"totalCostChartTitle": "Tổng Chi phí",
+		"tokensInChartTitle": "Token Đầu vào",
+		"tokensOutChartTitle": "Token Đầu ra",
+		"tokensUnit": "token",
+		"costOverviewTitle": "Tổng quan Chi phí",
+		"requestShort": "Yêu cầu {{index}}",
+		"clickToEnlarge": "Nhấp để phóng to",
+		"clickToGoBack": "Nhấp để quay lại chế độ xem lưới"
 	},
 	"unpin": "Bỏ ghim khỏi đầu",
 	"pin": "Ghim lên đầu",
@@ -238,14 +247,5 @@
 		"title": "Tích hợp Shell không khả dụng",
 		"description": "Lệnh của bạn đang được thực thi mà không có tích hợp shell VSCode. Bạn có thể kích hoạt lại tích hợp shell trong phần <strong>Terminal</strong> của <settingsLink>cài đặt Roo Code</settingsLink>.",
 		"troubleshooting": "Nhấp vào đây để xem tài liệu về tích hợp shell."
-	},
-	"task.requestCostChartTitle": "Chi phí Yêu cầu",
-	"task.totalCostChartTitle": "Tổng Chi phí",
-	"task.tokensInChartTitle": "Token Đầu vào",
-	"task.tokensOutChartTitle": "Token Đầu ra",
-	"task.tokensUnit": "token",
-	"task.costOverviewTitle": "Tổng quan Chi phí",
-	"task.requestShort": "Yêu cầu {{index}}",
-	"task.clickToEnlarge": "Nhấp để phóng to",
-	"task.clickToGoBack": "Nhấp để quay lại chế độ xem lưới"
+	}
 }

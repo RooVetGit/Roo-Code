@@ -10,7 +10,16 @@
 		"contextWindow": "Janela de contexto:",
 		"closeAndStart": "Fechar tarefa e iniciar nova",
 		"export": "Exportar histórico de tarefas",
-		"delete": "Excluir tarefa (Shift + Clique para pular confirmação)"
+		"delete": "Excluir tarefa (Shift + Clique para pular confirmação)",
+		"requestCostChartTitle": "Custo da Solicitação",
+		"totalCostChartTitle": "Custo Total",
+		"tokensInChartTitle": "Tokens de Entrada",
+		"tokensOutChartTitle": "Tokens de Saída",
+		"tokensUnit": "tokens",
+		"costOverviewTitle": "Visão Geral de Custos",
+		"requestShort": "Solicitação {{index}}",
+		"clickToEnlarge": "Clique para ampliar",
+		"clickToGoBack": "Clique para voltar à visualização em grade"
 	},
 	"unpin": "Desfixar",
 	"pin": "Fixar",
@@ -238,14 +247,5 @@
 		"title": "Integração de Shell Indisponível",
 		"description": "Seu comando está sendo executado sem a integração de shell do VSCode. Você pode reativar a integração de shell na seção <strong>Terminal</strong> das <settingsLink>configurações do Roo Code</settingsLink>.",
 		"troubleshooting": "Clique aqui para a documentação de integração de shell."
-	},
-	"task.requestCostChartTitle": "Custo da Solicitação",
-	"task.totalCostChartTitle": "Custo Total",
-	"task.tokensInChartTitle": "Tokens de Entrada",
-	"task.tokensOutChartTitle": "Tokens de Saída",
-	"task.tokensUnit": "tokens",
-	"task.costOverviewTitle": "Visão Geral de Custos",
-	"task.requestShort": "Solicitação {{index}}",
-	"task.clickToEnlarge": "Clique para ampliar",
-	"task.clickToGoBack": "Clique para voltar à visualização em grade"
+	}
 }

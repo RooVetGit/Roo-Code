@@ -10,7 +10,16 @@
 		"contextWindow": "संदर्भ लंबाई:",
 		"closeAndStart": "कार्य बंद करें और नया शुरू करें",
 		"export": "कार्य इतिहास निर्यात करें",
-		"delete": "कार्य हटाएं (पुष्टि को छोड़ने के लिए Shift + क्लिक)"
+		"delete": "कार्य हटाएं (पुष्टि को छोड़ने के लिए Shift + क्लिक)",
+		"requestCostChartTitle": "अनुरोध लागत",
+		"totalCostChartTitle": "कुल लागत",
+		"tokensInChartTitle": "इनपुट टोकन",
+		"tokensOutChartTitle": "आउटपुट टोकन",
+		"tokensUnit": "टोकन",
+		"costOverviewTitle": "लागत अवलोकन",
+		"requestShort": "अनुरोध {{index}}",
+		"clickToEnlarge": "बड़ा करने के लिए क्लिक करें",
+		"clickToGoBack": "ग्रिड व्यू पर वापस जाने के लिए क्लिक करें"
 	},
 	"unpin": "पिन करें",
 	"pin": "अवपिन करें",
@@ -238,14 +247,5 @@
 		"title": "शेल इंटीग्रेशन अनुपलब्ध",
 		"description": "आपका कमांड VSCode शेल इंटीग्रेशन के बिना निष्पादित हो रहा है। आप <settingsLink>Roo Code सेटिंग्स</settingsLink> के <strong>टर्मिनल</strong> अनुभाग में शेल इंटीग्रेशन को पुनः सक्षम कर सकते हैं।",
 		"troubleshooting": "शेल इंटीग्रेशन दस्तावेज़ के लिए यहां क्लिक करें।"
-	},
-	"task.requestCostChartTitle": "अनुरोध लागत",
-	"task.totalCostChartTitle": "कुल लागत",
-	"task.tokensInChartTitle": "इनपुट टोकन",
-	"task.tokensOutChartTitle": "आउटपुट टोकन",
-	"task.tokensUnit": "टोकन",
-	"task.costOverviewTitle": "लागत अवलोकन",
-	"task.requestShort": "अनुरोध {{index}}",
-	"task.clickToEnlarge": "बड़ा करने के लिए क्लिक करें",
-	"task.clickToGoBack": "ग्रिड व्यू पर वापस जाने के लिए क्लिक करें"
+	}
 }
