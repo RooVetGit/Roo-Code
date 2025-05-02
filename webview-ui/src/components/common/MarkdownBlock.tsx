@@ -146,8 +146,18 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 					return (
 						<a
 							href={href}
+							title={href}
 							onClick={(e) => {
+								// Only process file:// protocol or local file paths
+								const isLocalPath =
+									href.startsWith("file://") || href.startsWith("/") || !href.includes("://")
+
+								if (!isLocalPath) {
+									return
+								}
+
 								e.preventDefault()
+
 								// Handle absolute vs project-relative paths
 								let filePath = href.replace("file://", "")
 
