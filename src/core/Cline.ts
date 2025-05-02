@@ -120,7 +120,7 @@ export type ClineOptions = {
 	consecutiveMistakeLimit?: number
 	task?: string
 	images?: string[]
-	attachedFiles?: string[] | AttachedFileSpec[]
+	attachedFiles?: AttachedFileSpec[]
 	historyItem?: HistoryItem
 	experiments?: Record<string, boolean>
 	startTask?: boolean
@@ -138,7 +138,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 	readonly parentTask: Cline | undefined = undefined
 	readonly taskNumber: number
 	readonly workspacePath: string
-	public readonly attachedFiles: (string | AttachedFileSpec)[] = []
+	public readonly attachedFiles: AttachedFileSpec[] = []
 
 	isPaused: boolean = false
 	pausedModeSlug: string = defaultModeSlug

@@ -465,7 +465,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				| "attachedFiles"
 			>
 		> & {
-			attachedFiles?: (string | AttachedFileSpec)[]
+			attachedFiles?: AttachedFileSpec[]
 		} = {},
 	) {
 		const {
