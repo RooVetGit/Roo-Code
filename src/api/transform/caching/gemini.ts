@@ -3,7 +3,7 @@ import OpenAI from "openai"
 export function addCacheBreakpoints(
 	systemPrompt: string,
 	messages: OpenAI.Chat.ChatCompletionMessageParam[],
-	frequency: number = 5,
+	frequency: number = 10,
 ) {
 	// *Always* cache the system prompt.
 	messages[0] = {

@@ -80,7 +80,21 @@ describe("addCacheBreakpoints", () => {
 			})),
 		]
 
+		expect(messages.length).toEqual(frequency * 2 + 1)
+
 		addCacheBreakpoints(systemPrompt, messages, frequency)
+
+		const indices = []
+
+		for (let i = 0; i < messages.length; i++) {
+			const content = messages[i].content?.[0]
+
+			if (typeof content === "object" && "cache_control" in content) {
+				indices.push(i)
+			}
+		}
+
+		expect(indices).toEqual([0, 5, 10])
 
 		// Check Nth user message (index frequency)
 		expect(messages[frequency].content).toEqual([
