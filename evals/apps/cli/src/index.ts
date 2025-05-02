@@ -40,7 +40,7 @@ type TaskResult = { success: boolean }
 type TaskPromise = Promise<TaskResult>
 
 const TASK_START_DELAY = 10 * 1_000
-const TASK_TIMEOUT = 10 * 60 * 1_000 // Increased to 10 minutes
+const TASK_TIMEOUT = 5 * 60 * 1_000
 const UNIT_TEST_TIMEOUT = 2 * 60 * 1_000
 
 const testCommands: Record<ExerciseLanguage, { commands: string[]; timeout?: number; cwd?: string }> = {
@@ -351,17 +351,39 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 
 					// 2. Identify common keys (adjust this list based on rooCodeDefaults/shared types)
 					const commonKeys = [
-						"modelTemperature", "reasoningEffort", "includeMaxTokens",
-						"terminalOutputLineLimit", "terminalShellIntegrationTimeout", "terminalCommandDelay",
-						"terminalPowershellCounter", "terminalZshClearEolMark", "terminalZshOhMy",
-						"terminalZshP10k", "terminalZdotdir", "terminalShellIntegrationDisabled",
-						"terminalCompressProgressBar", "allowedCommands", "maxReadFileLine",
-						"maxOpenTabsContext", "maxWorkspaceFiles", "rateLimitSeconds",
-						"requestDelaySeconds", "writeDelayMs", "fuzzyMatchThreshold",
-						"autoApprovalEnabled", "alwaysAllowReadOnly", "alwaysAllowReadOnlyOutsideWorkspace",
-						"alwaysAllowWrite", "alwaysAllowWriteOutsideWorkspace", "alwaysAllowBrowser",
-						"alwaysApproveResubmit", "alwaysAllowMcp", "alwaysAllowModeSwitch",
-						"alwaysAllowSubtasks", "alwaysAllowExecute", "diffEnabled",
+						"modelTemperature",
+						"reasoningEffort",
+						"includeMaxTokens",
+						"terminalOutputLineLimit",
+						"terminalShellIntegrationTimeout",
+						"terminalCommandDelay",
+						"terminalPowershellCounter",
+						"terminalZshClearEolMark",
+						"terminalZshOhMy",
+						"terminalZshP10k",
+						"terminalZdotdir",
+						"terminalShellIntegrationDisabled",
+						"terminalCompressProgressBar",
+						"allowedCommands",
+						"maxReadFileLine",
+						"maxOpenTabsContext",
+						"maxWorkspaceFiles",
+						"rateLimitSeconds",
+						"requestDelaySeconds",
+						"writeDelayMs",
+						"fuzzyMatchThreshold",
+						"autoApprovalEnabled",
+						"alwaysAllowReadOnly",
+						"alwaysAllowReadOnlyOutsideWorkspace",
+						"alwaysAllowWrite",
+						"alwaysAllowWriteOutsideWorkspace",
+						"alwaysAllowBrowser",
+						"alwaysApproveResubmit",
+						"alwaysAllowMcp",
+						"alwaysAllowModeSwitch",
+						"alwaysAllowSubtasks",
+						"alwaysAllowExecute",
+						"diffEnabled",
 						"customModePrompts", // Assuming this structure is common
 						// Add any other common/global settings here
 					]
@@ -389,7 +411,8 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 								finalConfig.openRouterModelId = mergedSettings.openRouterModelId
 							}
 							if ("openRouterUseMiddleOutTransform" in mergedSettings) {
-								finalConfig.openRouterUseMiddleOutTransform = mergedSettings.openRouterUseMiddleOutTransform
+								finalConfig.openRouterUseMiddleOutTransform =
+									mergedSettings.openRouterUseMiddleOutTransform
 							}
 							break
 						case "vertex":
@@ -427,7 +450,6 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 					if (run.model) {
 						finalConfig.model = run.model
 					}
-
 
 					return finalConfig
 				})(),
