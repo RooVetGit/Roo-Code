@@ -10,7 +10,17 @@
 		"contextWindow": "Context Length:",
 		"closeAndStart": "Close task and start a new one",
 		"export": "Export task history",
-		"delete": "Delete Task (Shift + Click to skip confirmation)"
+		"delete": "Delete Task (Shift + Click to skip confirmation)",
+		"nextChartType": "Next Chart Type",
+		"requestCostChartTitle": "Request Cost",
+		"totalCostChartTitle": "Total Cost",
+		"tokensInChartTitle": "Input Tokens",
+		"tokensOutChartTitle": "Output Tokens",
+		"chartHoverBase": "Request {{index}}: {{value}}",
+		"tokensUnit": "tokens",
+		"costOverviewTitle": "Cost Overview",
+		"showSingleChart": "Show Single Chart",
+		"showChartGrid": "Show Chart Grid"
 	},
 	"unpin": "Unpin",
 	"pin": "Pin",

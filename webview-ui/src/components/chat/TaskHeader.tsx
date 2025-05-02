@@ -124,7 +124,7 @@ const TaskHeader = ({
 							className="-mt-0.5 text-vscode-font-size overflow-y-auto break-words break-anywhere relative">
 							<div
 								ref={textRef}
-								className="overflow-auto max-h-30 whitespace-pre-wrap break-words break-anywhere"
+								className="overflow-auto max-h-20 whitespace-pre-wrap break-words break-anywhere"
 								style={{
 									display: "-webkit-box",
 									WebkitLineClamp: "unset",
@@ -200,8 +200,8 @@ const TaskHeader = ({
 								</div>
 							)}
 
-							{/* Use the new TaskCostChartSection component */}
-							<TaskCostChartSection costHistory={costHistory} />
+							{/* Use the new TaskCostChartSection component, only show if there's a cost */}
+							{!!totalCost && <TaskCostChartSection costHistory={costHistory} />}
 						</div>
 					</>
 				)}
