@@ -11,6 +11,7 @@ import { CustomSupportPrompts } from "@roo/shared/support-prompt"
 import { experimentDefault, ExperimentId } from "@roo/shared/experiments"
 import { TelemetrySetting } from "@roo/shared/TelemetrySetting"
 import { RouterModels } from "@roo/shared/api"
+import { AttachedFileSpec } from "../../../src/shared/tools"
 
 import { vscode } from "@src/utils/vscode"
 import { convertTextMateToHljs } from "@src/utils/textMateToHljs"
@@ -24,7 +25,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	hasSystemPromptOverride?: boolean
 	currentCheckpoint?: string
 	filePaths: string[]
-  attachedFiles?: string[]
+  attachedFiles?: AttachedFileSpec[]
 	openedTabs: Array<{ label: string; isActive: boolean; path?: string }>
 	condensingApiConfigId?: string
 	setCondensingApiConfigId: (value: string) => void
@@ -194,6 +195,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			codebaseIndexEmbedderModelId: "",
 		},
 		codebaseIndexModels: { ollama: {}, openai: {} },
+		attachedFiles: [],
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
