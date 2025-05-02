@@ -26,6 +26,15 @@ export interface TextContent {
 	partial: boolean
 }
 
+/**
+ * Represents a file to be attached to a task, optionally with line range specifications
+ */
+export interface AttachedFileSpec {
+	path: string
+	startLine?: number
+	endLine?: number
+}
+
 export const toolParamNames = [
 	"command",
 	"path",
