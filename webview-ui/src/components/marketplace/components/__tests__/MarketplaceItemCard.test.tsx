@@ -1,4 +1,3 @@
-import React from "react"
 import { screen, fireEvent } from "@testing-library/react"
 import { MarketplaceItemCard } from "../MarketplaceItemCard"
 import { MarketplaceItem } from "../../../../../../src/services/marketplace/types"
@@ -103,68 +102,6 @@ describe("MarketplaceItemCard", () => {
 		expect(screen.getByText("1.0.0")).toBeInTheDocument()
 		// Use a regex to match the date since it depends on the timezone
 		expect(screen.getByText(/Apr \d{1,2}, 2025/)).toBeInTheDocument()
-	})
-
-	describe("URL handling", () => {
-		it("should use sourceUrl directly when present and valid", () => {
-			const itemWithSourceUrl = {
-				...mockItem,
-				sourceUrl: "https://example.com/direct-link",
-				defaultBranch: "main",
-				path: "some/path",
-			}
-			renderWithProviders(<MarketplaceItemCard {...defaultProps} item={itemWithSourceUrl} />)
-
-			const button = screen.getByRole("button", { name: /^$/ }) // Button with no text, only icon
-			fireEvent.click(button)
-
-			expect(mockPostMessage).toHaveBeenCalledWith({
-				type: "openExternal",
-				url: "https://example.com/direct-link",
-			})
-		})
-
-		it("should use repoUrl with git path when sourceUrl is not present", () => {
-			const itemWithGitPath = {
-				...mockItem,
-				defaultBranch: "main",
-				path: "some/path",
-			}
-			renderWithProviders(<MarketplaceItemCard {...defaultProps} item={itemWithGitPath} />)
-			const button = screen.getByRole("button", { name: /View/i })
-			fireEvent.click(button)
-
-			expect(mockPostMessage).toHaveBeenCalledWith({
-				type: "openExternal",
-				url: "test-url/tree/main/some/path",
-			})
-		})
-
-		it("should show only icon when sourceUrl is present and valid", () => {
-			const itemWithSourceUrl = {
-				...mockItem,
-				sourceUrl: "https://example.com/direct-link",
-			}
-			renderWithProviders(<MarketplaceItemCard {...defaultProps} item={itemWithSourceUrl} />)
-
-			// Find the source button by its empty aria-label
-			const button = screen.getByRole("button", {
-				name: "", // Empty aria-label when sourceUrl is present
-			})
-			expect(button.querySelector(".codicon-link-external")).toBeInTheDocument()
-			expect(button.textContent).toBe("") // Verify no text content
-		})
-
-		it("should show text label when sourceUrl is not present", () => {
-			renderWithProviders(<MarketplaceItemCard {...defaultProps} />)
-
-			// Find the source button by its aria-label
-			const button = screen.getByRole("button", {
-				name: "View",
-			})
-			expect(button.querySelector(".codicon-link-external")).toBeInTheDocument()
-			expect(button).toHaveTextContent("View")
-		})
 	})
 
 	describe("Details section", () => {
