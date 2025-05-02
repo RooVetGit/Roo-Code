@@ -1,9 +1,9 @@
 import React, { useRef, useEffect, useMemo, useState } from "react"
-import uPlot, { type Options, type AlignedData } from "uplot"
+import uPlot, { type Options, type AlignedData, sync } from "uplot"
 import "uplot/dist/uPlot.min.css"
 import { formatLargeNumber } from "@src/utils/format"
 
-const GRID_SYNC = uPlot.sync("cost-charts-grid")
+const GRID_SYNC = sync("cost-charts-grid")
 
 type ChartData = AlignedData | undefined
 
