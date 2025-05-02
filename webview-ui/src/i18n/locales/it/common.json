@@ -9,7 +9,6 @@
 	},
 	"mermaid": {
 		"loading": "Generazione del diagramma mermaid...",
-		"render_error": "Impossibile renderizzare il diagramma",
-		"copy_success": "Codice copiato"
+		"render_error": "Impossibile renderizzare il diagramma"
 	}
 }

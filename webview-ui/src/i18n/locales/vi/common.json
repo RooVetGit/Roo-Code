@@ -9,7 +9,6 @@
 	},
 	"mermaid": {
 		"loading": "Đang tạo biểu đồ mermaid...",
-		"render_error": "Không thể hiển thị biểu đồ",
-		"copy_success": "Đã sao chép mã"
+		"render_error": "Không thể hiển thị biểu đồ"
 	}
 }

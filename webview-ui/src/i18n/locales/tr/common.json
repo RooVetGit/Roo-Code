@@ -9,7 +9,6 @@
 	},
 	"mermaid": {
 		"loading": "Mermaid diyagramı oluşturuluyor...",
-		"render_error": "Diyagram render edilemiyor",
-		"copy_success": "Kod kopyalandı"
+		"render_error": "Diyagram render edilemiyor"
 	}
 }

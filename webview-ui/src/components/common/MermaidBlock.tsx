@@ -4,6 +4,7 @@ import { useDebounceEffect } from "@src/utils/useDebounceEffect"
 import styled from "styled-components"
 import { vscode } from "@src/utils/vscode"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
+import { useCopyToClipboard } from "@src/utils/clipboard"
 import CodeBlock from "./CodeBlock"
 
 const MERMAID_THEME = {
@@ -85,7 +86,7 @@ export default function MermaidBlock({ code }: MermaidBlockProps) {
 	const [isLoading, setIsLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const [isErrorExpanded, setIsErrorExpanded] = useState(false)
-	const [showCopySuccess, setShowCopySuccess] = useState(false)
+	const { showCopyFeedback, copyWithFeedback } = useCopyToClipboard()
 	const { t } = useAppTranslation()
 
 	// 1) Whenever `code` changes, mark that we need to re-render a new chart
@@ -144,22 +145,7 @@ export default function MermaidBlock({ code }: MermaidBlockProps) {
 		}
 	}
 
-	/**
-	 * Copy the mermaid code to clipboard for easier fixing
-	 */
-	const handleCopyCode = () => {
-		navigator.clipboard
-			.writeText(code)
-			.then(() => {
-				setShowCopySuccess(true)
-				setTimeout(() => {
-					setShowCopySuccess(false)
-				}, 1000)
-			})
-			.catch((err) => {
-				console.error("Failed to copy code:", err)
-			})
-	}
+	// Copy functionality handled directly through the copyWithFeedback utility
 
 	return (
 		<MermaidBlockContainer>
@@ -200,11 +186,9 @@ export default function MermaidBlock({ code }: MermaidBlockProps) {
 							<CopyButton
 								onClick={(e) => {
 									e.stopPropagation()
-									handleCopyCode()
+									copyWithFeedback(code, e)
 								}}>
-								<span
-									className={`codicon codicon-${showCopySuccess ? "check" : "copy"}`}
-									title={showCopySuccess ? t("common:mermaid.copy_success") : undefined}></span>
+								<span className={`codicon codicon-${showCopyFeedback ? "check" : "copy"}`}></span>
 							</CopyButton>
 							<span className={`codicon codicon-chevron-${isErrorExpanded ? "up" : "down"}`}></span>
 						</div>

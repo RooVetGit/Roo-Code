@@ -9,7 +9,6 @@
 	},
 	"mermaid": {
 		"loading": "Mermaid-Diagramm wird generiert...",
-		"render_error": "Diagramm kann nicht gerendert werden",
-		"copy_success": "Code kopiert"
+		"render_error": "Diagramm kann nicht gerendert werden"
 	}
 }

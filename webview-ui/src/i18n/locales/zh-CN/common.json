@@ -9,7 +9,6 @@
 	},
 	"mermaid": {
 		"loading": "生成 Mermaid 图表中...",
-		"render_error": "无法渲染图表",
-		"copy_success": "代码已复制"
+		"render_error": "无法渲染图表"
 	}
 }
