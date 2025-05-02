@@ -3,6 +3,7 @@ import mermaid from "mermaid"
 import { useDebounceEffect } from "@src/utils/useDebounceEffect"
 import styled from "styled-components"
 import { vscode } from "@src/utils/vscode"
+import { useAppTranslation } from "@src/i18n/TranslationContext"
 
 const MERMAID_THEME = {
 	background: "#1e1e1e", // VS Code dark theme background
@@ -81,10 +82,15 @@ interface MermaidBlockProps {
 export default function MermaidBlock({ code }: MermaidBlockProps) {
 	const containerRef = useRef<HTMLDivElement>(null)
 	const [isLoading, setIsLoading] = useState(false)
+	const [error, setError] = useState<string | null>(null)
+	const [isErrorExpanded, setIsErrorExpanded] = useState(false)
+	const [showCopySuccess, setShowCopySuccess] = useState(false)
+	const { t } = useAppTranslation()
 
 	// 1) Whenever `code` changes, mark that we need to re-render a new chart
 	useEffect(() => {
 		setIsLoading(true)
+		setError(null)
 	}, [code])
 
 	// 2) Debounce the actual parse/render
@@ -93,12 +99,10 @@ export default function MermaidBlock({ code }: MermaidBlockProps) {
 			if (containerRef.current) {
 				containerRef.current.innerHTML = ""
 			}
+
 			mermaid
-				.parse(code, { suppressErrors: true })
-				.then((isValid) => {
-					if (!isValid) {
-						throw new Error("Invalid or incomplete Mermaid code")
-					}
+				.parse(code)
+				.then(() => {
 					const id = `mermaid-${Math.random().toString(36).substring(2)}`
 					return mermaid.render(id, code)
 				})
@@ -109,7 +113,7 @@ export default function MermaidBlock({ code }: MermaidBlockProps) {
 				})
 				.catch((err) => {
 					console.warn("Mermaid parse/render failed:", err)
-					containerRef.current!.innerHTML = code.replace(/</g, "&lt;").replace(/>/g, "&gt;")
+					setError(err.message || "Failed to render Mermaid diagram")
 				})
 				.finally(() => {
 					setIsLoading(false)
@@ -139,12 +143,90 @@ export default function MermaidBlock({ code }: MermaidBlockProps) {
 		}
 	}
 
+	/**
+	 * Copy the mermaid code to clipboard for easier fixing
+	 */
+	const handleCopyCode = () => {
+		navigator.clipboard
+			.writeText(code)
+			.then(() => {
+				setShowCopySuccess(true)
+				setTimeout(() => {
+					setShowCopySuccess(false)
+				}, 1000)
+			})
+			.catch((err) => {
+				console.error("Failed to copy code:", err)
+			})
+	}
+
 	return (
 		<MermaidBlockContainer>
-			{isLoading && <LoadingMessage>Generating mermaid diagram...</LoadingMessage>}
+			{isLoading && <LoadingMessage>{t("common:mermaid.loading")}</LoadingMessage>}
 
-			{/* The container for the final <svg> or raw code. */}
-			<SvgContainer onClick={handleClick} ref={containerRef} $isLoading={isLoading} />
+			{error ? (
+				<div style={{ marginTop: "0px", overflow: "hidden", marginBottom: "8px" }}>
+					<div
+						style={{
+							borderBottom: isErrorExpanded ? "1px solid var(--vscode-editorGroup-border)" : "none",
+							fontWeight: "normal",
+							fontSize: "var(--vscode-font-size)",
+							color: "var(--vscode-editor-foreground)",
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "space-between",
+							cursor: "pointer",
+						}}
+						onClick={() => setIsErrorExpanded(!isErrorExpanded)}>
+						<div
+							style={{
+								display: "flex",
+								alignItems: "center",
+								gap: "10px",
+								flexGrow: 1,
+							}}>
+							<span
+								className="codicon codicon-warning"
+								style={{
+									color: "var(--vscode-editorWarning-foreground)",
+									opacity: 0.8,
+									fontSize: 16,
+									marginBottom: "-1.5px",
+								}}></span>
+							<span style={{ fontWeight: "bold" }}>{t("common:mermaid.render_error")}</span>
+						</div>
+						<div style={{ display: "flex", alignItems: "center" }}>
+							<CopyButton
+								onClick={(e) => {
+									e.stopPropagation()
+									handleCopyCode()
+								}}>
+								<span
+									className={`codicon codicon-${showCopySuccess ? "check" : "copy"}`}
+									title={showCopySuccess ? t("common:mermaid.copy_success") : undefined}></span>
+							</CopyButton>
+							<span className={`codicon codicon-chevron-${isErrorExpanded ? "up" : "down"}`}></span>
+						</div>
+					</div>
+					{isErrorExpanded && (
+						<div
+							style={{
+								padding: "8px",
+								backgroundColor: "var(--vscode-editor-background)",
+								borderTop: "none",
+							}}>
+							<div style={{ marginBottom: "8px", color: "var(--vscode-descriptionForeground)" }}>
+								{error}
+							</div>
+							<CodeBlock>
+								<code>{code}</code>
+							</CodeBlock>
+						</div>
+					)}
+				</div>
+			) : (
+				<SvgContainer onClick={handleClick} ref={containerRef} $isLoading={isLoading} />
+			)}
 		</MermaidBlockContainer>
 	)
 }
@@ -210,6 +292,39 @@ const LoadingMessage = styled.div`
 	color: var(--vscode-descriptionForeground);
 	font-style: italic;
 	font-size: 0.9em;
+`
+
+const CodeBlock = styled.pre`
+	background-color: var(--vscode-editor-background);
+	border: 1px solid var(--vscode-editor-lineHighlightBorder);
+	border-radius: 3px;
+	padding: 8px;
+	overflow: auto;
+	max-height: 200px;
+
+	code {
+		font-family: var(--vscode-editor-font-family);
+		font-size: var(--vscode-editor-font-size);
+		white-space: pre-wrap;
+		word-break: break-all;
+	}
+`
+
+const CopyButton = styled.button`
+	padding: 3px;
+	height: 24px;
+	margin-right: 4px;
+	color: var(--vscode-editor-foreground);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+
+	&:hover {
+		opacity: 0.8;
+	}
 `
 
 interface SvgContainerProps {
