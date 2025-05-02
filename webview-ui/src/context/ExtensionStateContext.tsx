@@ -11,6 +11,7 @@ import { Mode, CustomModePrompts, defaultModeSlug, defaultPrompts, ModeConfig } 
 import { CustomSupportPrompts } from "@roo/shared/support-prompt"
 import { experimentDefault, ExperimentId } from "@roo/shared/experiments"
 import { TelemetrySetting } from "@roo/shared/TelemetrySetting"
+import { AttachedFileSpec } from "../../../src/shared/tools"
 
 export interface ExtensionStateContextType extends ExtensionState {
 	historyPreviewCollapsed?: boolean // Add the new state property
@@ -22,7 +23,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	currentCheckpoint?: string
 	filePaths: string[]
 	openedTabs: Array<{ label: string; isActive: boolean; path?: string }>
-	attachedFiles?: string[]
+	attachedFiles?: AttachedFileSpec[]
 	setApiConfiguration: (config: ApiConfiguration) => void
 	setCustomInstructions: (value?: string) => void
 	setAlwaysAllowReadOnly: (value: boolean) => void
@@ -172,6 +173,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		terminalZdotdir: false, // Default ZDOTDIR handling setting
 		terminalCompressProgressBar: true, // Default to compress progress bar output
 		historyPreviewCollapsed: false, // Initialize the new state (default to expanded)
+		attachedFiles: [],
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)

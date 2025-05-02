@@ -176,6 +176,8 @@ export type ExtensionState = Pick<
 
 	taskHistory: HistoryItem[]
 
+	attachedFiles?: AttachedFileSpec[]
+
 	writeDelayMs: number
 	requestDelaySeconds: number
 
