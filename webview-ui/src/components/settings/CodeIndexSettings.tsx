@@ -2,13 +2,8 @@ import React, { useState, useEffect } from "react"
 import * as ProgressPrimitive from "@radix-ui/react-progress"
 import { Database } from "lucide-react"
 import { vscode } from "../../utils/vscode"
-import {
-	VSCodeCheckbox,
-	VSCodeTextField,
-	VSCodeButton,
-	VSCodeDropdown,
-	VSCodeOption,
-} from "@vscode/webview-ui-toolkit/react"
+import { VSCodeCheckbox, VSCodeTextField, VSCodeButton } from "@vscode/webview-ui-toolkit/react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -114,11 +109,10 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 					<div className="mt-4 space-y-4">
 						<div style={{ fontWeight: "normal", marginBottom: "4px" }}>Embeddings Provider</div>
 						<div className="flex items-center gap-2">
-							<VSCodeDropdown
-								id="embedder-dropdown"
+							<Select
 								value={codebaseIndexConfig?.codebaseIndexEmbedderProvider || "openai"}
-								onChange={(e: any) => {
-									const newProvider = e.target.value as EmbedderProvider
+								onValueChange={(value) => {
+									const newProvider = value as EmbedderProvider
 									const models = codebaseIndexModels?.[newProvider]
 									const modelIds = models ? Object.keys(models) : []
 									const defaultModelId = modelIds.length > 0 ? modelIds[0] : "" // Use empty string if no models
@@ -131,28 +125,37 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 										})
 									}
 								}}>
-								<VSCodeOption value="openai">OpenAI</VSCodeOption>
-								<VSCodeOption value="ollama">Ollama</VSCodeOption>
-							</VSCodeDropdown>
+								<SelectTrigger className="w-[180px]">
+									<SelectValue placeholder="Select provider" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="openai">OpenAI</SelectItem>
+									<SelectItem value="ollama">Ollama</SelectItem>
+								</SelectContent>
+							</Select>
 						</div>
 
 						<div style={{ fontWeight: "normal", marginBottom: "4px" }}>Model:</div>
 						<div className="flex items-center gap-2">
-							<VSCodeDropdown
-								id="model-dropdown"
+							<Select
 								value={codebaseIndexConfig?.codebaseIndexEmbedderModelId || ""}
-								onChange={(e: any) =>
+								onValueChange={(value) =>
 									setCachedStateField("codebaseIndexConfig", {
 										...codebaseIndexConfig,
-										codebaseIndexEmbedderModelId: e.target.value,
+										codebaseIndexEmbedderModelId: value,
 									})
 								}>
-								{availableModelIds.map((modelId) => (
-									<VSCodeOption key={modelId} value={modelId}>
-										{modelId}
-									</VSCodeOption>
-								))}
-							</VSCodeDropdown>
+								<SelectTrigger className="w-[180px]">
+									<SelectValue placeholder="Select model" />
+								</SelectTrigger>
+								<SelectContent>
+									{availableModelIds.map((modelId) => (
+										<SelectItem key={modelId} value={modelId}>
+											{modelId}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
 						</div>
 
 						{codebaseIndexConfig?.codebaseIndexEmbedderProvider === "openai" && (
