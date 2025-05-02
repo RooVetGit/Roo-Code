@@ -238,5 +238,14 @@
 		"title": "Shell-Integration nicht verfügbar",
 		"description": "Dein Befehl wird ohne VSCode-Shell-Integration ausgeführt. Du kannst die Shell-Integration im Bereich <strong>Terminal</strong> in den <settingsLink>Roo Code Einstellungen</settingsLink> wieder aktivieren.",
 		"troubleshooting": "Klicke hier für die Shell-Integrations-Dokumentation."
-	}
+	},
+	"task.requestCostChartTitle": "Anfragekosten",
+	"task.totalCostChartTitle": "Gesamtkosten",
+	"task.tokensInChartTitle": "Eingabe-Tokens",
+	"task.tokensOutChartTitle": "Ausgabe-Tokens",
+	"task.tokensUnit": "Tokens",
+	"task.costOverviewTitle": "Kostenübersicht",
+	"task.requestShort": "Anfrage {{index}}",
+	"task.clickToEnlarge": "Klicken zum Vergrößern",
+	"task.clickToGoBack": "Klicken, um zur Rasteransicht zurückzukehren"
 }

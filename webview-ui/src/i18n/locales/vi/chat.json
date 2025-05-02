@@ -238,5 +238,14 @@
 		"title": "Tích hợp Shell không khả dụng",
 		"description": "Lệnh của bạn đang được thực thi mà không có tích hợp shell VSCode. Bạn có thể kích hoạt lại tích hợp shell trong phần <strong>Terminal</strong> của <settingsLink>cài đặt Roo Code</settingsLink>.",
 		"troubleshooting": "Nhấp vào đây để xem tài liệu về tích hợp shell."
-	}
+	},
+	"task.requestCostChartTitle": "Chi phí Yêu cầu",
+	"task.totalCostChartTitle": "Tổng Chi phí",
+	"task.tokensInChartTitle": "Token Đầu vào",
+	"task.tokensOutChartTitle": "Token Đầu ra",
+	"task.tokensUnit": "token",
+	"task.costOverviewTitle": "Tổng quan Chi phí",
+	"task.requestShort": "Yêu cầu {{index}}",
+	"task.clickToEnlarge": "Nhấp để phóng to",
+	"task.clickToGoBack": "Nhấp để quay lại chế độ xem lưới"
 }

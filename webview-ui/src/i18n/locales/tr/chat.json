@@ -238,5 +238,14 @@
 		"title": "Kabuk Entegrasyonu Kullanılamıyor",
 		"description": "Komutunuz VSCode kabuk entegrasyonu olmadan çalıştırılıyor. <settingsLink>Roo Code ayarları</settingsLink>'nın <strong>Terminal</strong> bölümünden kabuk entegrasyonunu yeniden etkinleştirebilirsiniz.",
 		"troubleshooting": "Kabuk entegrasyonu belgeleri için buraya tıklayın."
-	}
+	},
+	"task.requestCostChartTitle": "İstek Maliyeti",
+	"task.totalCostChartTitle": "Toplam Maliyet",
+	"task.tokensInChartTitle": "Giriş Tokenları",
+	"task.tokensOutChartTitle": "Çıkış Tokenları",
+	"task.tokensUnit": "token",
+	"task.costOverviewTitle": "Maliyet Genel Bakışı",
+	"task.requestShort": "İstek {{index}}",
+	"task.clickToEnlarge": "Büyütmek için tıklayın",
+	"task.clickToGoBack": "Izgara görünümüne geri dönmek için tıklayın"
 }

@@ -238,5 +238,14 @@
 		"title": "Integrazione Shell non disponibile",
 		"description": "Il tuo comando viene eseguito senza l'integrazione shell di VSCode. Puoi riattivare l'integrazione shell nella sezione <strong>Terminal</strong> delle <settingsLink>impostazioni di Roo Code</settingsLink>.",
 		"troubleshooting": "Clicca qui per la documentazione sull'integrazione shell."
-	}
+	},
+	"task.requestCostChartTitle": "Costo Richiesta",
+	"task.totalCostChartTitle": "Costo Totale",
+	"task.tokensInChartTitle": "Token di Input",
+	"task.tokensOutChartTitle": "Token di Output",
+	"task.tokensUnit": "token",
+	"task.costOverviewTitle": "Panoramica Costi",
+	"task.requestShort": "Richiesta {{index}}",
+	"task.clickToEnlarge": "Clicca per ingrandire",
+	"task.clickToGoBack": "Clicca per tornare alla vista griglia"
 }
