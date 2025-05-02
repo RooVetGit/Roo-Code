@@ -13,6 +13,7 @@ import type { GlobalState, ProviderName, ProviderSettings, RooCodeSettings, Prov
 import { t } from "../../i18n"
 import { setPanel } from "../../activate/registerCommands"
 import { requestyDefaultModelId, openRouterDefaultModelId, glamaDefaultModelId } from "../../shared/api"
+import { AttachedFileSpec } from "../../shared/tools"
 import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
@@ -457,7 +458,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				| "experiments"
 				| "attachedFiles"
 			>
-		> = {},
+		> & {
+			attachedFiles?: (string | AttachedFileSpec)[]
+		} = {},
 	) {
 		const {
 			apiConfiguration,
@@ -1291,6 +1294,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				? (taskHistory || []).find((item: HistoryItem) => item.id === this.getCurrentCline()?.taskId)
 				: undefined,
 			clineMessages: this.getCurrentCline()?.clineMessages || [],
+			attachedFiles: this.getCurrentCline()?.attachedFiles || [],
 			taskHistory: (taskHistory || [])
 				.filter((item: HistoryItem) => item.ts && item.task)
 				.sort((a: HistoryItem, b: HistoryItem) => b.ts - a.ts),

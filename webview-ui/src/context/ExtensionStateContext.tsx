@@ -23,6 +23,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	hasSystemPromptOverride?: boolean
 	currentCheckpoint?: string
 	filePaths: string[]
+  attachedFiles?: string[]
 	openedTabs: Array<{ label: string; isActive: boolean; path?: string }>
 	setApiConfiguration: (config: ProviderSettings) => void
 	setCustomInstructions: (value?: string) => void
