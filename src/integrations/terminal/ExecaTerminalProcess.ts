@@ -38,13 +38,14 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 				shell: true,
 				cwd: this.terminal.getCurrentWorkingDirectory(),
 				cancelSignal: this.controller.signal,
+				all: true,
 			})`${command}`
 
-			this.terminal.setActiveStream(subprocess)
-			this.emit("line", "")
+			const stream = subprocess.iterable({ from: "all", preserveNewlines: true })
+			this.terminal.setActiveStream(stream, subprocess.pid)
 
-			for await (const line of subprocess) {
-				this.fullOutput += `${line}\n`
+			for await (const line of stream) {
+				this.fullOutput += line
 
 				const now = Date.now()
 
@@ -60,11 +61,11 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 		} catch (error) {
 			if (error instanceof ExecaError) {
 				console.error(`[ExecaTerminalProcess] shell execution error: ${error.message}`)
-				this.emit("shell_execution_complete", {
-					exitCode: error.exitCode ?? 1,
-					signalName: error.signal,
-				})
+				this.emit("shell_execution_complete", { exitCode: error.exitCode ?? 0, signalName: error.signal })
 			} else {
+				console.error(
+					`[ExecaTerminalProcess] shell execution error: ${error instanceof Error ? error.message : String(error)}`,
+				)
 				this.emit("shell_execution_complete", { exitCode: 1 })
 			}
 		}

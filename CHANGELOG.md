@@ -1,5 +1,30 @@
 # Roo Code Changelog
 
+## [3.15.1] - 2025-04-30
+
+- Capture stderr in execa-spawned processes
+- Play sound only when action needed from the user (thanks @olearycrew)
+- Make retries respect the global auto approve checkbox
+- Fix a selection mode bug in the history view (thanks @jr)
+
+## [3.15.0] - 2025-04-30
+
+- Add prompt caching to the Google Vertex provider (thanks @ashktn)
+- Add a fallback mechanism for executing terminal commands if VSCode terminal shell integration fails
+- Improve the UI/UX of code snippets in the chat (thanks @KJ7LNW)
+- Add a reasoning effort setting for the OpenAI Compatible provider (thanks @mr-ryan-james)
+- Allow terminal commands to be stopped directly from the chat UI
+- Adjust chat view padding to accommodate small width layouts (thanks @zhangtony239)
+- Fix file mentions for filenames containing spaces
+- Improve the auto-approve toggle buttons for some high-contrast VSCode themes
+- Offload expensive count token operations to a web worker (thanks @samhvw8)
+- Improve support for mult-root workspaces (thanks @snoyiatk)
+- Simplify and streamline Roo Code's quick actions
+- Allow Roo Code settings to be imported from the welcome screen (thanks @julionav)
+- Remove unused types (thanks @wkordalski)
+- Improve the performance of mode switching (thanks @dlab-anton)
+- Fix importing & exporting of custom modes (thanks @julionav)
+
 ## [3.14.3] - 2025-04-25
 
 - Add Boomerang Orchestrator as a built-in mode
