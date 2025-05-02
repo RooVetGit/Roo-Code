@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useRef, useEffect } from "react"
+import React, { useState, useCallback, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import CostTrendChart from "./CostTrendChart"
 import {} from "@src/components/ui"
@@ -19,8 +19,6 @@ interface TaskCostChartSectionProps {
 
 export type ChartType = "costDelta" | "cumulativeCost" | "tokensIn" | "tokensOut" | "gridView"
 
-const NARROW_THRESHOLD_PX = 300
-
 const TaskCostChartSection: React.FC<TaskCostChartSectionProps> = ({ costHistory }) => {
 	const { t } = useTranslation()
 	const [selectedChartType, setSelectedChartType] = useState<ChartType>("gridView")
@@ -31,29 +29,7 @@ const TaskCostChartSection: React.FC<TaskCostChartSectionProps> = ({ costHistory
 		value?: number
 		type?: ChartType
 	} | null>(null)
-	const [_isNarrow, setIsNarrow] = useState(false)
 	const gridContainerRef = useRef<HTMLDivElement>(null)
-
-	useEffect(() => {
-		const container = gridContainerRef.current
-		if (!container) return
-
-		const observer = new ResizeObserver((entries) => {
-			for (let entry of entries) {
-				const width = entry.contentBoxSize?.[0]?.inlineSize ?? entry.contentRect.width
-				setIsNarrow(width < NARROW_THRESHOLD_PX)
-			}
-		})
-
-		observer.observe(container)
-
-		const initialWidth = container.getBoundingClientRect().width
-		setIsNarrow(initialWidth < NARROW_THRESHOLD_PX)
-
-		return () => {
-			observer.disconnect()
-		}
-	}, [selectedChartType])
 
 	const handleChartHoverChange = useCallback(
 		(

@@ -160,7 +160,7 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({
 					},
 					ticks: {
 						show: showXAxis,
-						stroke: resolvedStyles.widgetBorder,
+						stroke: resolvedStyles.tabsBorder, // Use grid color for ticks
 						width: 1 / (window.devicePixelRatio || 1),
 						size: 10,
 					},
@@ -189,7 +189,7 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({
 					},
 					ticks: {
 						show: showYAxis,
-						stroke: resolvedStyles.widgetBorder,
+						stroke: resolvedStyles.tabsBorder, // Use grid color for ticks
 						width: 1 / (window.devicePixelRatio || 1),
 						size: 10,
 					},
