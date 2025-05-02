@@ -1,30 +1,27 @@
 import React, { useRef, useEffect, useMemo, useState } from "react"
 import uPlot, { type Options, type AlignedData } from "uplot"
 import "uplot/dist/uPlot.min.css"
-import { formatLargeNumber } from "@src/utils/format" // Import the formatter
+import { formatLargeNumber } from "@src/utils/format"
 
-// Create a shared sync instance for all charts
-// This needs to be outside the component to be shared across all instances
 const GRID_SYNC = uPlot.sync("cost-charts-grid")
 
-// Data is now expected as pre-processed [xValues, yValues]
-type ChartData = AlignedData | undefined // uPlot.AlignedData is typically [number[], number[], ...]
+type ChartData = AlignedData | undefined
 
 interface CostTrendChartProps {
-	chartData: ChartData // Renamed from 'data' and changed type
-	onHoverChange: (hoverData: { isHovering: boolean; index?: number; yValue?: number } | null) => void // Changed 'cost' to 'yValue'
-	onClick?: (event: MouseEvent) => void // Re-add onClick prop definition
+	chartData: ChartData
+	onHoverChange: (hoverData: { isHovering: boolean; index?: number; yValue?: number } | null) => void
+	onClick?: (event: MouseEvent) => void
 	yAxisUnit?: string
-	chartLabel?: string // Optional label for the series
-	height?: number // Optional height override
-	showXAxis?: boolean // Prop to control X-axis visibility (re-added)
-	showYAxis?: boolean // Prop to control Y-axis visibility
-	yAxisSide?: "left" | "right" // Prop to control Y-axis side
-	axisFontSize?: string // Optional prop for axis font size
-	syncKey?: string // Optional key for cursor synchronization
-	hideYAxisZero?: boolean // Optional: Hide the zero value on the Y axis
-	showGridLines?: boolean // Optional: Control visibility of grid lines
-	padding?: [number, number, number, number] // Optional: Custom padding [top, right, bottom, left]
+	chartLabel?: string
+	height?: number
+	showXAxis?: boolean
+	showYAxis?: boolean
+	yAxisSide?: "left" | "right"
+	axisFontSize?: string
+	syncKey?: string
+	hideYAxisZero?: boolean
+	showGridLines?: boolean
+	padding?: [number, number, number, number]
 }
 
 const getResolvedStyle = (variableName: string, fallback: string): string => {
@@ -35,24 +32,23 @@ const getResolvedStyle = (variableName: string, fallback: string): string => {
 }
 
 const CostTrendChart: React.FC<CostTrendChartProps> = ({
-	chartData, // Use renamed prop
+	chartData,
 	onHoverChange,
-	onClick, // Re-add onClick prop destructuring
+	onClick,
 	yAxisUnit = "$",
-	chartLabel = "Value", // Default label
-	height = 180, // Default height
-	showXAxis = true, // Default to true (re-added)
-	showYAxis = true, // Default to true
-	yAxisSide = "left", // Default to LEFT now
+	chartLabel = "Value",
+	height = 180,
+	showXAxis = true,
+	showYAxis = true,
+	yAxisSide = "left",
 	axisFontSize,
-	syncKey, // Add the new prop
-	hideYAxisZero = false, // Default to false
-	showGridLines = true, // Default to true
-	padding = [10, 0, 0, 0], // Default padding
+	syncKey,
+	hideYAxisZero = false,
+	showGridLines = true,
+	padding = [10, 0, 0, 0],
 }) => {
 	const chartRef = useRef<HTMLDivElement>(null)
 	const uplotInstanceRef = useRef<uPlot | null>(null)
-	// Removed isClickInProgressRef
 
 	const [resolvedStyles, setResolvedStyles] = useState({
 		foreground: "#cccccc",
@@ -67,7 +63,6 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({
 		fontFamily: "sans-serif",
 	})
 
-	// Effect to read styles on mount and update on theme change
 	useEffect(() => {
 		const updateStyles = () => {
 			setResolvedStyles({
@@ -87,9 +82,8 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({
 			})
 		}
 
-		updateStyles() // Initial style fetch
+		updateStyles()
 
-		// Observe theme changes
 		const observer = new MutationObserver((mutationsList) => {
 			for (const mutation of mutationsList) {
 				if (mutation.type === "attributes" && mutation.attributeName === "class") {
@@ -101,34 +95,23 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({
 
 		observer.observe(document.body, { attributes: true, attributeFilter: ["class"] })
 
-		// Cleanup observer on component unmount
 		return () => observer.disconnect()
 	}, [])
 
 	const options = useMemo((): Options => {
-		// Define the click plugin here to close over the onClick prop
 		const clickPlugin = {
 			hooks: {
 				init: (u: uPlot) => {
-					// Only add listener if onClick is provided
 					if (onClick) {
 						const overElement = u.over
 						const handleCaptureClick = (e: MouseEvent) => {
 							if (e.detail === 1) {
-								// Only single clicks
-								// Use stopImmediatePropagation to block ALL other click listeners on this element
 								e.stopImmediatePropagation()
-								onClick(e) // Call the passed React handler
+								onClick(e)
 							}
 						}
-						// Add listener in capture phase
 						overElement.addEventListener("click", handleCaptureClick, { capture: true })
 
-						// Add cleanup for this specific listener to the destroy hook
-						// This ensures the listener is removed when the uPlot instance is destroyed
-						// Note: This might add multiple destroy hooks if options recompute often,
-						// but uPlot handles multiple hooks fine. A more complex ref-based approach
-						// could avoid this but adds complexity.
 						u.hooks.destroy?.push(() => {
 							overElement.removeEventListener("click", handleCaptureClick, { capture: true })
 						})
@@ -143,14 +126,9 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({
 		const pointSize = 6 / (window.devicePixelRatio || 1)
 		const effectiveHeight = height ?? 180
 
-		// Define the type for padding explicitly
 		type PaddingTuple = [number, number, number, number]
 
-		// Create dynamic padding based on y-axis position
-		const dynamicPadding: PaddingTuple =
-			yAxisSide === "right"
-				? [padding[0], 0, padding[2], padding[3]] // Revert to 0 right padding
-				: padding // Use default padding (already a PaddingTuple)
+		const dynamicPadding: PaddingTuple = yAxisSide === "right" ? [padding[0], 0, padding[2], padding[3]] : padding
 
 		return {
 			width: 400,
@@ -161,7 +139,7 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({
 				{
 					label: chartLabel,
 					stroke: resolvedStyles.buttonForeground,
-					width: showPointsOnly ? 0 : 2 / (window.devicePixelRatio || 1), // Halved stroke width
+					width: showPointsOnly ? 0 : 2 / (window.devicePixelRatio || 1),
 					points: {
 						show: showPointsOnly,
 						size: pointSize,
@@ -218,7 +196,6 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({
 					font: `${axisFontSize || resolvedStyles.fontSize} ${resolvedStyles.fontFamily}`,
 					incrs: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000],
 					space: showYAxis ? 30 : 0,
-					// Remove the align property as it's causing TypeScript errors
 					values: showYAxis
 						? (u: uPlot, ticks: number[]) =>
 								ticks.map((rawValue: number) => {
@@ -226,15 +203,13 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({
 										return ""
 									}
 									if (yAxisUnit === "$") {
-										// Keep currency formatting for cost
 										return `${yAxisUnit}${rawValue.toFixed(2)}`
 									} else {
-										// Use formatLargeNumber for other units (tokens, etc.)
 										return formatLargeNumber(rawValue)
 									}
 								})
 						: undefined,
-					size: showYAxis ? (yAxisSide === "right" ? 50 : 65) : 0, // Revert to fixed size (50px) for right axis
+					size: showYAxis ? (yAxisSide === "right" ? 50 : 65) : 0,
 				},
 			],
 			scales: {
@@ -248,7 +223,7 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({
 				},
 			},
 			cursor: {
-				lock: false, // Disable cursor locking on click
+				lock: false,
 				drag: { x: false, y: false, setScale: false },
 				points: {
 					show: true,
@@ -268,13 +243,10 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({
 			legend: {
 				show: false,
 			},
-			// Add the plugin to the options
 			plugins: [clickPlugin],
 			hooks: {
-				// Keep existing hooks
 				setCursor: [
 					(u: uPlot) => {
-						// Restore original setCursor logic
 						const { idx } = u.cursor
 						if (idx != null) {
 							const requestIndex = u.data[0]?.[idx]
@@ -285,7 +257,6 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({
 								onHoverChange({ isHovering: false })
 							}
 						}
-						// Parent component handles mouse leave to clear hover state
 					},
 				],
 				draw: [
@@ -303,11 +274,10 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({
 				],
 			},
 		}
-		// Update dependencies: Add onClick as it's now used in the plugin definition within useMemo
 	}, [
 		resolvedStyles,
 		onHoverChange,
-		onClick, // Add onClick dependency
+		onClick,
 		chartData,
 		yAxisUnit,
 		chartLabel,
@@ -323,22 +293,12 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({
 	])
 
 	useEffect(() => {
-		// Remove all the previous manual event listener logic.
-		// The plugin now handles the click interception.
-
-		// Check chartData instead of uplotData
 		if (chartRef.current && chartData && chartData[0] && chartData[0].length > 0) {
-			uplotInstanceRef.current?.destroy() // Destroy previous instance if exists
+			uplotInstanceRef.current?.destroy()
 
 			try {
-				// Pass chartData directly
-				// The options object now includes the clickPlugin
 				const uplotInstance = new uPlot(options, chartData, chartRef.current)
 				uplotInstanceRef.current = uplotInstance
-
-				// No need to manually attach listeners here anymore
-				// overElement = uplotInstance.over;
-				// ... removed listener attachment logic ...
 			} catch (error) {
 				console.error("Error creating uPlot instance:", error)
 			}
@@ -357,24 +317,19 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({
 
 			return () => {
 				window.removeEventListener("resize", handleResize)
-				// The plugin's destroy hook handles listener cleanup now.
-				// We just need to destroy the uPlot instance itself.
 				uplotInstanceRef.current?.destroy()
-				uplotInstanceRef.current = null // Clear ref on cleanup
+				uplotInstanceRef.current = null
 			}
 		} else if (uplotInstanceRef.current) {
-			// If data becomes empty/invalid, destroy the existing chart
 			uplotInstanceRef.current.destroy()
 			uplotInstanceRef.current = null
 		}
-		// Re-add onClick to dependency array
 	}, [options, chartData, onClick])
 
 	useEffect(() => {
 		const styleId = "uplot-custom-styles"
 		document.getElementById(styleId)?.remove()
 
-		// Check chartData instead of uplotData
 		if (chartData && chartData[0] && chartData[0].length > 0) {
 			const styleEl = document.createElement("style")
 			styleEl.id = styleId
@@ -402,12 +357,10 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({
 			       z-index: 10 !important;
 			     }
 			     .u-over {
-			       /* Prevent the uPlot overlay from intercepting clicks meant for the parent */
 			     }
 			     .u-legend .u-marker {
 			       border-color: ${resolvedStyles.buttonForeground} !important;
 			     }
-			     /* Right-align y-axis values when axis is on the right side */
 			     .u-axis.u-right .u-label,
 			     .u-axis.u-right .u-value,
 			     .u-axis[data-side="1"] .u-label,
@@ -416,23 +369,18 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({
 			       text-align: right !important;
 			     }
 			     
-			     /* Style for right-side y-axis - allow natural positioning */
 			     .u-axis[data-side="1"] {
-			       /* Let uPlot handle positioning naturally */
 			     }
 	     `
 			document.head.appendChild(styleEl)
 		}
-		// Update dependencies: use chartData instead of uplotData
 	}, [resolvedStyles, chartData])
 
-	// Check chartData instead of uplotData
 	if (!chartData || !chartData[0] || chartData[0].length === 0) {
 		return (
 			<div
 				className="text-xs p-2 flex items-center justify-center"
 				style={{
-					// Use effective height from options
 					height: `${options.height}px`,
 					width: "100%",
 					color: resolvedStyles.descriptionForeground,
@@ -442,7 +390,6 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({
 		)
 	}
 
-	// Use effective height from options
 	return (
 		<div
 			ref={chartRef}
@@ -452,7 +399,7 @@ const CostTrendChart: React.FC<CostTrendChartProps> = ({
 				position: "relative",
 				padding: 0,
 				margin: 0,
-				overflow: "visible", // Restore visible overflow
+				overflow: "visible",
 			}}
 		/>
 	)
