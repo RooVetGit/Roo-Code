@@ -35,6 +35,7 @@ export interface ExtensionMessage {
 		| "action"
 		| "state"
 		| "selectedImages"
+		| "attachedFiles"
 		| "theme"
 		| "workspaceUpdated"
 		| "invoke"

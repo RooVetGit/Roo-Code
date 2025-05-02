@@ -106,7 +106,7 @@ export type TaskOptions = {
 	consecutiveMistakeLimit?: number
 	task?: string
 	images?: string[]
-	attachedFiles?: string[] | AttachedFileSpec[]
+	attachedFiles?: AttachedFileSpec[]
 	historyItem?: HistoryItem
 	experiments?: Record<string, boolean>
 	startTask?: boolean
@@ -124,7 +124,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	readonly parentTask: Task | undefined = undefined
 	readonly taskNumber: number
 	readonly workspacePath: string
-	public readonly attachedFiles: (string | AttachedFileSpec)[] = []
+	public readonly attachedFiles: AttachedFileSpec[] = []
 
 	providerRef: WeakRef<ClineProvider>
 	private readonly globalStoragePath: string
