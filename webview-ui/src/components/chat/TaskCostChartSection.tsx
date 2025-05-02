@@ -87,21 +87,7 @@ const TaskCostChartSection: React.FC<TaskCostChartSectionProps> = ({ costHistory
 				return t("chat:task.tokensOutChartTitle", "Output Tokens")
 			case "costDelta":
 			default:
-				return t("chat:task.requestCostChartTitle", "Request Cost")
-		}
-	}
-
-	const getSingleChartTitle = (type: ChartType): string => {
-		switch (type) {
-			case "cumulativeCost":
-				return t("chat:task.totalCostChartTitle", "Total Cost:")
-			case "tokensIn":
-				return t("chat:task.tokensInChartTitle", "Input Tokens:")
-			case "tokensOut":
-				return t("chat:task.tokensOutChartTitle", "Output Tokens:")
-			case "costDelta":
-			default:
-				return t("chat:task.requestCostChartTitle", "Request Cost:")
+				return t("chat:task.requestCostChartTitle", "Request Cost") // Grid view title remains without colon
 		}
 	}
 
@@ -168,29 +154,30 @@ const TaskCostChartSection: React.FC<TaskCostChartSectionProps> = ({ costHistory
 		return null
 	}
 
+	// Determine the title based on the view type, adding colon for single view
 	const displayTitle =
 		selectedChartType === "gridView"
 			? t("chat:task.costOverviewTitle", "Cost Overview")
-			: getSingleChartTitle(selectedChartType)
+			: `${getChartTitle(selectedChartType)}:` // Use grid title function and add colon
 
 	return (
 		<div className="flex flex-col" onMouseLeave={handleMouseLeaveSection}>
+			{/* Single Chart View Header */}
 			{selectedChartType !== "gridView" && (
 				<div className="flex items-center h-[24px] mb-2">
-					{" "}
 					<div className="flex items-center gap-1 flex-grow min-w-0">
-						{" "}
 						<span className="font-bold whitespace-nowrap overflow-hidden text-ellipsis flex-shrink min-w-0">
-							{" "}
 							{displayTitle}
 						</span>
+						{/* Updated Hover Text Format for Single View */}
 						{chartHoverData?.isHovering &&
 							chartHoverData.index !== undefined &&
 							chartHoverData.value !== undefined &&
 							chartHoverData.type !== undefined && (
-								<span className="truncate flex-shrink-0 ml-1 text-vscode-descriptionForeground">
+								<span className="truncate flex-shrink-0 text-vscode-descriptionForeground">
 									{" "}
-									{`${t("chat:task.requestShort", "Request {{index}}:", { index: chartHoverData.index })} ${formatHoverValue(chartHoverData.type, chartHoverData.value)}`}
+									{/* Removed ml-1 */}
+									{`${formatHoverValue(chartHoverData.type, chartHoverData.value)} : ${t("chat:task.requestShort", "Request {{index}}", { index: chartHoverData.index })}`}
 								</span>
 							)}
 					</div>
@@ -236,8 +223,8 @@ const TaskCostChartSection: React.FC<TaskCostChartSectionProps> = ({ costHistory
 										value = dataPoint.tokensOut || 0
 										break
 								}
-								const requestText = `: ${chartHoverData.index}`
-								hoverValueDisplay = `${formatHoverValue(type, value)} ${requestText}`
+								// Corrected Hover Text Format for Grid View: value : index
+								hoverValueDisplay = `${formatHoverValue(type, value)} : ${chartHoverData.index}`
 							}
 						}
 
