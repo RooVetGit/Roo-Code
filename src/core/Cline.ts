@@ -37,6 +37,7 @@ import { defaultModeSlug, getModeBySlug, getFullModeDetails, isToolAllowedForMod
 import { EXPERIMENT_IDS, experiments as Experiments, ExperimentId } from "../shared/experiments"
 import { formatLanguage } from "../shared/language"
 import { ToolParamName, ToolResponse, DiffStrategy } from "../shared/tools"
+import { getTaskDirectoryPath } from "../shared/storagePathManager"
 
 // services
 import { UrlContentFetcher } from "../services/browser/UrlContentFetcher"
@@ -301,6 +302,16 @@ export class Cline extends EventEmitter<ClineEvents> {
 	}
 
 	// Storing task to disk for history
+
+	private async ensureTaskDirectoryExists(): Promise<string> {
+		const globalStoragePath = this.providerRef.deref()?.context.globalStorageUri.fsPath
+		if (!globalStoragePath) {
+			throw new Error("Global storage uri is invalid")
+		}
+
+		// Use storagePathManager to retrieve the task storage directory
+		return getTaskDirectoryPath(globalStoragePath, this.taskId)
+	}
 
 	private async getSavedApiConversationHistory(): Promise<Anthropic.MessageParam[]> {
 		return readApiMessages({ taskId: this.taskId, globalStoragePath: this.globalStoragePath })
