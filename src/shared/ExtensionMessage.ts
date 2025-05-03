@@ -68,11 +68,13 @@ export interface ExtensionMessage {
 		| "acceptInput"
 		| "setHistoryPreviewCollapsed"
 		| "commandExecutionStatus"
+		| "indexingStatusUpdate"
+		| "indexCleared"
+		| "codebaseIndexConfig"
 	text?: string
 	action?:
 		| "chatButtonClicked"
 		| "mcpButtonClicked"
-		| "codebaseIndexConfig"
 		| "settingsButtonClicked"
 		| "historyButtonClicked"
 		| "promptsButtonClicked"

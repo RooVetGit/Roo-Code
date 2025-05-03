@@ -1,12 +1,11 @@
 import * as vscode from "vscode"
 import { Cline } from "../Cline"
-import { ToolUse } from "../assistant-message"
 import { CodeIndexManager } from "../../services/code-index/manager"
 import { getWorkspacePath } from "../../utils/path"
 import { formatResponse } from "../prompts/responses"
 import { t } from "../../i18n"
 import { VectorStoreSearchResult } from "../../services/code-index/interfaces"
-import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "./types"
+import { AskApproval, HandleError, PushToolResult, RemoveClosingTag, ToolUse } from "../../shared/tools"
 
 export async function codebaseSearchTool(
 	cline: Cline,
@@ -132,7 +131,7 @@ export async function codebaseSearchTool(
 
 		// Send results to UI
 		const payload = { tool: toolName, content: jsonResult }
-		await cline.say("tool", JSON.stringify(payload))
+		await cline.say("text", JSON.stringify(payload))
 
 		// Push results to AI
 		const output = `Query: ${query}
