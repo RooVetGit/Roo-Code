@@ -34,6 +34,7 @@ import { CommandExecution } from "./CommandExecution"
 import { CommandExecutionError } from "./CommandExecutionError"
 import { AutoApprovedRequestLimitWarning } from "./AutoApprovedRequestLimitWarning"
 import { CondensingContextRow, ContextCondenseRow } from "./ContextCondenseRow"
+import CodebaseSearchResult from "./CodebaseSearchResult"
 
 interface ChatRowProps {
 	message: ClineMessage
@@ -351,6 +352,71 @@ export const ChatRowContent = ({
 						/>
 					</>
 				)
+			case "codebase_search": {
+				if (message.type === "say") {
+					let parsed: {
+						query: string
+						results: Array<{
+							filePath: string
+							score: number
+							startLine: number
+							endLine: number
+							codeChunk: string
+						}>
+					} | null = null
+					if (typeof tool.content === "object" && tool.content !== null) {
+						parsed = tool.content as {
+							query: string
+							results: Array<{
+								filePath: string
+								score: number
+								startLine: number
+								endLine: number
+								codeChunk: string
+							}>
+						}
+					} else {
+						console.error("codebase_search content is not a valid object:", tool.content)
+						parsed = null
+					}
+
+					const query = parsed?.query || ""
+					const results = parsed?.results || []
+
+					return (
+						<div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+							<div style={{ fontWeight: "bold" }}>
+								{t("chat:codebaseSearch.didSearch", {
+									query,
+									limit: tool.limit,
+									count: results.length,
+								})}
+							</div>
+							{results.map((result, idx) => (
+								<CodebaseSearchResult
+									key={idx}
+									filePath={result.filePath}
+									score={result.score}
+									startLine={result.startLine}
+									endLine={result.endLine}
+									language="plaintext"
+									snippet={result.codeChunk}
+								/>
+							))}
+						</div>
+					)
+				} else if (message.type === "ask") {
+					return (
+						<div style={headerStyle}>
+							{toolIcon("search")}
+							<span style={{ fontWeight: "bold" }}>
+								{t("chat:codebaseSearch.wantsToSearch", { query: tool.query, limit: tool.limit })}
+							</span>
+						</div>
+					)
+				}
+				return null
+			}
 			case "newFileCreated":
 				return (
 					<>

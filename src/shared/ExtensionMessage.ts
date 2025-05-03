@@ -71,10 +71,13 @@ export interface ExtensionMessage {
 		| "vsCodeSetting"
 		| "condenseTaskContextResponse"
 		| "singleRouterModelFetchResponse"
+    | "indexingStatusUpdate"
+    | "indexCleared"
 	text?: string
 	action?:
 		| "chatButtonClicked"
 		| "mcpButtonClicked"
+		| "codebaseIndexConfig"
 		| "settingsButtonClicked"
 		| "historyButtonClicked"
 		| "promptsButtonClicked"
@@ -173,6 +176,8 @@ export type ExtensionState = Pick<
 	| "enhancementApiConfigId"
 	| "condensingApiConfigId"
 	| "customCondensingPrompt"
+	| "codebaseIndexConfig"
+	| "codebaseIndexModels"
 > & {
 	version: string
 	clineMessages: ClineMessage[]
@@ -219,6 +224,7 @@ export interface ClineSayTool {
 		| "editedExistingFile"
 		| "appliedDiff"
 		| "newFileCreated"
+		| "codebase_search"
 		| "readFile"
 		| "fetchInstructions"
 		| "listFilesTopLevel"
@@ -245,6 +251,7 @@ export interface ClineSayTool {
 	startLine?: number
 	endLine?: number
 	lineNumber?: number
+	query?: string
 }
 
 // Must keep in sync with system prompt.

@@ -1320,5 +1320,54 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await provider.postStateToWebview()
 			break
 		}
+		case "codebaseIndexConfig": {
+			const codebaseIndexConfig = message.values ?? {
+				codebaseIndexEnabled: false,
+				codebaseIndexQdrantUrl: "",
+				codebaseIndexEmbedderProvider: "openai",
+				codebaseIndexEmbedderBaseUrl: "",
+				codebaseIndexEmbedderModelId: "",
+			}
+			await updateGlobalState("codebaseIndexConfig", codebaseIndexConfig)
+			await provider.codeIndexManager.loadConfiguration()
+			await provider.postStateToWebview()
+			break
+		}
+		case "requestIndexingStatus": {
+			const status = provider.codeIndexManager!.getCurrentStatus()
+			provider.postMessageToWebview({
+				type: "indexingStatusUpdate",
+				values: status,
+			})
+			break
+		}
+		case "startIndexing": {
+			try {
+				const manager = provider.codeIndexManager!
+				await manager.startIndexing()
+				// Optionally send a confirmation or rely on indexingStatusUpdate
+			} catch (error) {
+				provider.log(`Error starting indexing: ${error instanceof Error ? error.message : String(error)}`)
+				// Optionally send an error message back to the webview
+			}
+			break
+		}
+		case "clearIndexData": {
+			try {
+				const manager = provider.codeIndexManager!
+				await manager.clearIndexData()
+				provider.postMessageToWebview({ type: "indexCleared", values: { success: true } })
+			} catch (error) {
+				provider.log(`Error clearing index data: ${error instanceof Error ? error.message : String(error)}`)
+				provider.postMessageToWebview({
+					type: "indexCleared",
+					values: {
+						success: false,
+						error: error instanceof Error ? error.message : String(error),
+					},
+				})
+			}
+			break
+		}
 	}
 }

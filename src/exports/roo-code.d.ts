@@ -61,6 +61,33 @@ type GlobalSettings = {
 	autoApprovalEnabled?: boolean | undefined
 	alwaysAllowReadOnly?: boolean | undefined
 	alwaysAllowReadOnlyOutsideWorkspace?: boolean | undefined
+	codebaseIndexModels?:
+		| {
+				openai?:
+					| {
+							[x: string]: {
+								dimension: number
+							}
+					  }
+					| undefined
+				ollama?:
+					| {
+							[x: string]: {
+								dimension: number
+							}
+					  }
+					| undefined
+		  }
+		| undefined
+	codebaseIndexConfig?:
+		| {
+				codebaseIndexEnabled?: boolean | undefined
+				codebaseIndexQdrantUrl?: string | undefined
+				codebaseIndexEmbedderProvider?: ("openai" | "ollama") | undefined
+				codebaseIndexEmbedderBaseUrl?: string | undefined
+				codebaseIndexEmbedderModelId?: string | undefined
+		  }
+		| undefined
 	alwaysAllowWrite?: boolean | undefined
 	alwaysAllowWriteOutsideWorkspace?: boolean | undefined
 	writeDelayMs?: number | undefined
@@ -260,6 +287,8 @@ type ProviderSettings = {
 	vertexJsonCredentials?: string | undefined
 	vertexProjectId?: string | undefined
 	vertexRegion?: string | undefined
+  codeIndexOpenAiKey?: string | undefined
+	codeIndexQdrantApiKey?: string | undefined
 	openAiBaseUrl?: string | undefined
 	openAiApiKey?: string | undefined
 	openAiLegacyFormat?: boolean | undefined
@@ -584,6 +613,7 @@ type RooCodeEvents = {
 			| "switch_mode"
 			| "new_task"
 			| "fetch_instructions"
+			| "codebase_search"
 		),
 		string,
 	]

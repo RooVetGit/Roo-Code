@@ -39,6 +39,8 @@ import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { ShadowCheckpointService } from "../../services/checkpoints/ShadowCheckpointService"
+import { CodeIndexManager } from "../../services/code-index/manager"
+import type { IndexProgressUpdate } from "../../services/code-index/interfaces/manager"
 import { fileExistsAtPath } from "../../utils/fs"
 import { setTtsEnabled, setTtsSpeed } from "../../utils/tts"
 import { ContextProxy } from "../config/ContextProxy"
@@ -53,6 +55,7 @@ import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { getWorkspacePath } from "../../utils/path"
 import { webviewMessageHandler } from "./webviewMessageHandler"
 import { WebviewMessage } from "../../shared/WebviewMessage"
+import { EMBEDDING_MODEL_PROFILES } from "../../shared/embeddingModels"
 
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -73,6 +76,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	private disposables: vscode.Disposable[] = []
 	private view?: vscode.WebviewView | vscode.WebviewPanel
 	private clineStack: Task[] = []
+  private codeIndexStatusSubscription?: vscode.Disposable
 	private _workspaceTracker?: WorkspaceTracker // workSpaceTracker read-only for access outside this class
 	public get workspaceTracker(): WorkspaceTracker | undefined {
 		return this._workspaceTracker
@@ -84,6 +88,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	public readonly latestAnnouncementId = "may-21-2025-3-18" // Update for v3.18.0 announcement
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
+	public readonly codeIndexManager: CodeIndexManager
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
@@ -95,6 +100,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		this.log("ClineProvider instantiated")
 		ClineProvider.activeInstances.add(this)
+
+		this.codeIndexManager = CodeIndexManager.getInstance(context, this.contextProxy)
+		context.subscriptions.push(this.codeIndexManager)
+		// Start configuration loading (which might trigger indexing) in the background.
+		// Don't await, allowing activation to continue immediately.
 
 		// Register this provider with the telemetry service to enable it to add
 		// properties like mode and provider.
@@ -320,9 +330,22 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	async resolveWebviewView(webviewView: vscode.WebviewView | vscode.WebviewPanel) {
 		this.log("Resolving webview view")
 
-		if (!this.contextProxy.isInitialized) {
-			await this.contextProxy.initialize()
-		}
+		this.codeIndexManager
+			.loadConfiguration()
+			.then(() => {
+				this.updateGlobalState("codebaseIndexModels", EMBEDDING_MODEL_PROFILES)
+
+				this.outputChannel.appendLine("CodeIndexManager configuration loaded successfully (async).")
+			})
+			.catch((error) => {
+				console.error(
+					"[resolveWebviewView] Error during background CodeIndexManager configuration/indexing:",
+					error,
+				)
+				this.outputChannel.appendLine(
+					`[Error] Background CodeIndexManager configuration/indexing failed: ${error.message || error}`,
+				)
+			})
 
 		this.view = webviewView
 
@@ -382,6 +405,23 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		// Sets up an event listener to listen for messages passed from the webview view context
 		// and executes code based on the message that is recieved
 		this.setWebviewMessageListener(webviewView.webview)
+
+		// Subscribe to code index status updates if the manager exists
+		if (this.codeIndexManager) {
+			this.codeIndexStatusSubscription = this.codeIndexManager.onProgressUpdate((update: IndexProgressUpdate) => {
+				this.postMessageToWebview({
+					type: "indexingStatusUpdate",
+					values: {
+						systemStatus: update.systemStatus,
+						message: update.message,
+						processedBlockCount: update.processedBlockCount,
+						totalBlockCount: update.totalBlockCount,
+					},
+				})
+			})
+			// Add the subscription to the main disposables array
+			this.disposables.push(this.codeIndexStatusSubscription)
+		}
 
 		// Logs show up in bottom panel > Debug Console
 		//console.log("registering listener")
@@ -826,6 +866,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			vscode.window.showErrorMessage(t("common:errors.create_api_config"))
 			return undefined
 		}
+
+		// Load CodeIndexManager configuration after provider settings are updated
+		await this.codeIndexManager.loadConfiguration()
 	}
 
 	async deleteProviderProfile(profileToDelete: ProviderSettingsEntry) {
@@ -1239,6 +1282,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			historyPreviewCollapsed,
 			condensingApiConfigId,
 			customCondensingPrompt,
+			codebaseIndexConfig,
+			codebaseIndexModels,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
@@ -1330,6 +1375,17 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			historyPreviewCollapsed: historyPreviewCollapsed ?? false,
 			condensingApiConfigId,
 			customCondensingPrompt,
+			codebaseIndexModels: codebaseIndexModels ?? {
+				openai: {},
+				ollama: {},
+			},
+			codebaseIndexConfig: codebaseIndexConfig ?? {
+				codebaseIndexEnabled: false,
+				codebaseIndexQdrantUrl: "",
+				codebaseIndexEmbedderProvider: "openai",
+				codebaseIndexEmbedderBaseUrl: "",
+				codebaseIndexEmbedderModelId: "",
+			},
 		}
 	}
 
@@ -1424,6 +1480,17 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			// Explicitly add condensing settings
 			condensingApiConfigId: stateValues.condensingApiConfigId,
 			customCondensingPrompt: stateValues.customCondensingPrompt,
+			codebaseIndexModels: stateValues.codebaseIndexModels ?? {
+				openai: {},
+				ollama: {},
+			},
+			codebaseIndexConfig: stateValues.codebaseIndexConfig ?? {
+				codebaseIndexEnabled: false,
+				codebaseIndexQdrantUrl: "",
+				codebaseIndexEmbedderProvider: "openai",
+				codebaseIndexEmbedderBaseUrl: "",
+				codebaseIndexEmbedderModelId: "",
+			},
 		}
 	}
 
