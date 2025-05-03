@@ -21,6 +21,7 @@ import { TelemetrySetting } from "@roo/shared/TelemetrySetting"
 import { ApiConfiguration } from "@roo/shared/api"
 
 import { vscode } from "@/utils/vscode"
+import { CodeIndexSettings } from "./CodeIndexSettings"
 import { ExtensionStateContextType, useExtensionState } from "@/context/ExtensionStateContext"
 import {
 	AlertDialog,
@@ -69,6 +70,7 @@ const sectionNames = [
 	"experimental",
 	"language",
 	"about",
+	"codeIndex",
 ] as const
 
 type SectionName = (typeof sectionNames)[number]
@@ -137,6 +139,8 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		remoteBrowserEnabled,
 		maxReadFileLine,
 		terminalCompressProgressBar,
+		codebaseIndexConfig,
+		codebaseIndexModels,
 	} = cachedState
 
 	// Make sure apiConfiguration is initialized and managed by SettingsView.
@@ -261,6 +265,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "alwaysAllowSubtasks", bool: alwaysAllowSubtasks })
 			vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
 			vscode.postMessage({ type: "telemetrySetting", text: telemetrySetting })
+			vscode.postMessage({ type: "codebaseIndexConfig", values: codebaseIndexConfig })
 			setChangeDetected(false)
 		}
 	}
@@ -295,6 +300,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 	const experimentalRef = useRef<HTMLDivElement>(null)
 	const languageRef = useRef<HTMLDivElement>(null)
 	const aboutRef = useRef<HTMLDivElement>(null)
+	const codeIndexRef = useRef<HTMLDivElement>(null)
 
 	const sections: { id: SectionName; icon: LucideIcon; ref: React.RefObject<HTMLDivElement> }[] = useMemo(
 		() => [
@@ -308,6 +314,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			{ id: "experimental", icon: FlaskConical, ref: experimentalRef },
 			{ id: "language", icon: Globe, ref: languageRef },
 			{ id: "about", icon: Info, ref: aboutRef },
+			{ id: "codeIndex", icon: Database, ref: codeIndexRef },
 		],
 		[
 			providersRef,
@@ -506,6 +513,16 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 
 				<div ref={languageRef}>
 					<LanguageSettings language={language || "en"} setCachedStateField={setCachedStateField} />
+				</div>
+
+				<div ref={codeIndexRef}>
+					<CodeIndexSettings
+						codebaseIndexModels={codebaseIndexModels}
+						codebaseIndexConfig={codebaseIndexConfig}
+						apiConfiguration={apiConfiguration}
+						setApiConfigurationField={setApiConfigurationField}
+						setCachedStateField={setCachedStateField}
+					/>
 				</div>
 
 				<div ref={aboutRef}>
