@@ -112,6 +112,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 
 			// If `CACHE_WRITE_FREQUENCY` messages have been appended since the
 			// last cache write then write a new cache entry.
+			// TODO: Use a token count instead.
 			if (!cacheEntry || (uncachedContent && uncachedContent.length >= CACHE_WRITE_FREQUENCY)) {
 				isCacheWriteQueued = true
 			}
@@ -327,6 +328,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		systemInstruction: string
 		contents: Content[]
 	}) {
+		// TODO: https://www.npmjs.com/package/p-queue
 		if (this.isCacheBusy) {
 			return
 		}
