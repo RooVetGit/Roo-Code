@@ -4,6 +4,8 @@ import { useCopyToClipboard } from "@src/utils/clipboard"
 import { getHighlighter, isLanguageLoaded, normalizeLanguage, ExtendedLanguage } from "@src/utils/highlighter"
 import { bundledLanguages } from "shiki"
 import type { ShikiTransformer } from "shiki"
+// Import hast types for the transformer using aliases
+import type { Element as HastElement, Text as HastText, ElementContent as HastElementContent } from "hast"
 export const CODE_BLOCK_BG_COLOR = "var(--vscode-editor-background, --vscode-sideBar-background, rgb(30 30 30))"
 export const WRAPPER_ALPHA = "cc" // 80% opacity
 // Configuration constants
@@ -32,6 +34,8 @@ interface CodeBlockProps {
 	collapsedHeight?: number
 	initialWindowShade?: boolean
 	onLanguageChange?: (language: string) => void
+	searchText?: string // Add searchText prop
+	highlightText?: (text: string, searchTerm: string) => React.ReactNode // Keep for consistency, though not used directly by shiki
 }
 
 const ButtonIcon = styled.span`
@@ -218,6 +222,8 @@ const CodeBlock = memo(
 		initialWindowShade = true,
 		collapsedHeight,
 		onLanguageChange,
+		searchText, // Destructure searchText
+		// highlightText is not directly used here but kept for prop consistency
 	}: CodeBlockProps) => {
 		const [wordWrap, setWordWrap] = useState(initialWordWrap)
 		const [windowShade, setWindowShade] = useState(initialWindowShade)
@@ -238,6 +244,62 @@ const CodeBlock = memo(
 			}
 		}, [language, currentLanguage])
 
+		// Shiki transformer for highlighting search text
+		const createSearchHighlightTransformer = (term: string): ShikiTransformer => {
+			const searchTerm = term.toLowerCase() // Case-insensitive search
+			if (!searchTerm) {
+				// Return an empty transformer if search term is empty
+				return {}
+			}
+			return {
+				span(node) {
+					// Check if this span contains a single text node child
+					if (node.children && node.children.length === 1 && node.children[0].type === "text") {
+						const textNode = node.children[0] as HastText // Use aliased HastText type
+						const originalText = textNode.value
+						const lowerText = originalText.toLowerCase()
+						const parts: HastElementContent[] = [] // Use aliased HastElementContent array
+						let lastIndex = 0
+						let matchIndex = lowerText.indexOf(searchTerm, lastIndex)
+
+						while (matchIndex !== -1) {
+							// Add text before the match
+							if (matchIndex > lastIndex) {
+								parts.push({
+									type: "text",
+									value: originalText.substring(lastIndex, matchIndex),
+								} as HastText)
+							}
+							// Add the highlighted match as a <mark> element
+							const matchedText = originalText.substring(matchIndex, matchIndex + searchTerm.length)
+							const markElement: HastElement = {
+								// Use aliased HastElement type
+								type: "element",
+								tagName: "mark",
+								properties: { className: "search-highlight" }, // Add class for styling
+								children: [{ type: "text", value: matchedText } as HastText], // Child must also be valid HastElementContent
+							}
+							parts.push(markElement)
+							lastIndex = matchIndex + searchTerm.length
+							matchIndex = lowerText.indexOf(searchTerm, lastIndex)
+						}
+
+						// Add any remaining text after the last match
+						if (lastIndex < originalText.length) {
+							parts.push({ type: "text", value: originalText.substring(lastIndex) } as HastText)
+						}
+
+						// If parts were created (meaning matches were found), replace the original text node's content
+						if (parts.length > 0) {
+							// Replace the children of the span node, ensuring the type matches HastElementContent[]
+							node.children = parts
+						}
+					}
+					return node // Return the (potentially modified) node
+				},
+			}
+		}
+
 		// Syntax highlighting with cached Shiki instance
 		useEffect(() => {
 			const fallback = `<pre style="padding: 0; margin: 0;"><code class="hljs language-${currentLanguage || "txt"}">${source || ""}</code></pre>`
@@ -248,27 +310,36 @@ const CodeBlock = memo(
 				}
 
 				const highlighter = await getHighlighter(currentLanguage)
+
+				// Base transformers
+				const transformers: ShikiTransformer[] = [
+					{
+						pre(node) {
+							node.properties.style = "padding: 0; margin: 0;"
+							return node
+						},
+						code(node) {
+							// Add hljs classes for consistent styling
+							node.properties.class = `hljs language-${currentLanguage}`
+							return node
+						},
+						line(node) {
+							// Preserve existing line handling
+							node.properties.class = node.properties.class || ""
+							return node
+						},
+					},
+				]
+
+				// Add search highlight transformer if searchText is provided
+				if (searchText && searchText.trim().length > 0) {
+					transformers.push(createSearchHighlightTransformer(searchText))
+				}
+
 				const html = await highlighter.codeToHtml(source || "", {
 					lang: currentLanguage || "txt",
 					theme: document.body.className.toLowerCase().includes("light") ? "github-light" : "github-dark",
-					transformers: [
-						{
-							pre(node) {
-								node.properties.style = "padding: 0; margin: 0;"
-								return node
-							},
-							code(node) {
-								// Add hljs classes for consistent styling
-								node.properties.class = `hljs language-${currentLanguage}`
-								return node
-							},
-							line(node) {
-								// Preserve existing line handling
-								node.properties.class = node.properties.class || ""
-								return node
-							},
-						},
-					] as ShikiTransformer[],
+					transformers: transformers,
 				})
 				setHighlightedCode(html)
 			}
@@ -277,7 +348,8 @@ const CodeBlock = memo(
 				console.error("[CodeBlock] Syntax highlighting error:", e, "\nStack trace:", e.stack)
 				setHighlightedCode(fallback)
 			})
-		}, [source, currentLanguage, collapsedHeight])
+			// Add searchText to dependency array
+		}, [source, currentLanguage, collapsedHeight, searchText])
 
 		// Check if content height exceeds collapsed height whenever content changes
 		useEffect(() => {
@@ -368,7 +440,8 @@ const CodeBlock = memo(
 				} else if (copyWrapper.children.length > 0) {
 					// Try to get height from the button inside
 					const buttonRect = copyWrapper.children[0].getBoundingClientRect()
-					const buttonStyle = window.getComputedStyle(copyWrapper.children[0] as Element)
+					// Remove the incorrect cast to Element, it's already a DOM Element
+					const buttonStyle = window.getComputedStyle(copyWrapper.children[0])
 					const buttonPadding =
 						parseInt(buttonStyle.getPropertyValue("padding-top") || "0", 10) +
 						parseInt(buttonStyle.getPropertyValue("padding-bottom") || "0", 10)

@@ -15,6 +15,9 @@ interface CodeAccordianProps {
 	onToggleExpand: () => void
 	isLoading?: boolean
 	progressStatus?: ToolProgressStatus
+	// Add search props
+	searchText?: string
+	highlightText?: (text: string, searchTerm: string) => React.ReactNode
 }
 
 /*
@@ -39,6 +42,9 @@ const CodeAccordian = ({
 	onToggleExpand,
 	isLoading,
 	progressStatus,
+	// Destructure search props
+	searchText,
+	highlightText,
 }: CodeAccordianProps) => {
 	const inferredLanguage = useMemo(
 		() => code && (language ?? (path ? getLanguageFromPath(path) : undefined)),
@@ -83,7 +89,12 @@ const CodeAccordian = ({
 									textOverflow: "ellipsis",
 									marginRight: "8px",
 								}}>
-								{isFeedback ? "User Edits" : "Console Logs"}
+								{/* Apply highlighting */}
+								{highlightText && searchText
+									? highlightText(isFeedback ? "User Edits" : "Console Logs", searchText)
+									: isFeedback
+										? "User Edits"
+										: "Console Logs"}
 							</span>
 						</div>
 					) : (
@@ -99,7 +110,11 @@ const CodeAccordian = ({
 									direction: "rtl",
 									textAlign: "left",
 								}}>
-								{removeLeadingNonAlphanumeric(path ?? "") + "\u200E"}
+								{/* Apply highlighting, preserving the RTL trick character */}
+								{highlightText && searchText
+									? highlightText(removeLeadingNonAlphanumeric(path ?? ""), searchText)
+									: removeLeadingNonAlphanumeric(path ?? "")}
+								{"\u200E"}
 							</span>
 						</>
 					)}
@@ -108,7 +123,10 @@ const CodeAccordian = ({
 						<>
 							{progressStatus.icon && <span className={`codicon codicon-${progressStatus.icon} mr-1`} />}
 							<span className="mr-1 ml-auto text-vscode-descriptionForeground">
-								{progressStatus.text}
+								{/* Apply highlighting */}
+								{highlightText && searchText
+									? highlightText(progressStatus.text, searchText)
+									: progressStatus.text}
 							</span>
 						</>
 					)}
@@ -125,6 +143,9 @@ const CodeAccordian = ({
 					<CodeBlock
 						source={(code ?? diff ?? "").trim()}
 						language={diff !== undefined ? "diff" : inferredLanguage}
+						// Pass search props down
+						searchText={searchText}
+						highlightText={highlightText}
 					/>
 				</div>
 			)}

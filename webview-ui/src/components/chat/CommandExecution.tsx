@@ -13,12 +13,18 @@ import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { cn } from "@src/lib/utils"
 import { Button } from "@src/components/ui"
 
+import React from "react" // Needed for React.ReactNode
+
 interface CommandExecutionProps {
 	executionId?: string
 	text?: string
+	// Add search props
+	searchText?: string
+	highlightText?: (text: string, searchTerm: string) => React.ReactNode
 }
 
-export const CommandExecution = ({ executionId, text }: CommandExecutionProps) => {
+export const CommandExecution = ({ executionId, text, searchText, highlightText }: CommandExecutionProps) => {
+	// Destructure props
 	const { terminalShellIntegrationDisabled = false } = useExtensionState()
 
 	// If we aren't opening the VSCode terminal for this command then we default
@@ -91,7 +97,13 @@ export const CommandExecution = ({ executionId, text }: CommandExecutionProps) =
 	return (
 		<div className="w-full bg-vscode-editor-background border border-vscode-border rounded-xs p-2">
 			<div className="flex flex-row items-center justify-between gap-2 px-1">
-				<Line className="text-sm whitespace-nowrap overflow-hidden text-ellipsis">{command}</Line>
+				{/* Highlight command text */}
+				<Line
+					className="text-sm whitespace-nowrap overflow-hidden text-ellipsis"
+					searchText={searchText}
+					highlightText={highlightText}>
+					{command}
+				</Line>
 				<div className="flex flex-row items-center gap-1">
 					{status?.status === "started" && (
 						<div className="flex flex-row items-center gap-2 font-mono text-xs">
@@ -137,7 +149,12 @@ export const CommandExecution = ({ executionId, text }: CommandExecutionProps) =
 					<Virtuoso
 						className="h-full"
 						totalCount={lines.length}
-						itemContent={(i) => <Line className="text-sm">{lines[i]}</Line>}
+						// Pass props to Line component in itemContent
+						itemContent={(i) => (
+							<Line className="text-sm" searchText={searchText} highlightText={highlightText}>
+								{lines[i]}
+							</Line>
+						)}
 						followOutput="auto"
 					/>
 				)}
@@ -146,14 +163,24 @@ export const CommandExecution = ({ executionId, text }: CommandExecutionProps) =
 	)
 }
 
-type LineProps = HTMLAttributes<HTMLDivElement>
+// Update LineProps
+type LineProps = HTMLAttributes<HTMLDivElement> & {
+	searchText?: string
+	highlightText?: (text: string, searchTerm: string) => React.ReactNode
+	children?: React.ReactNode // Explicitly add children prop
+}
 
-const Line = ({ className, ...props }: LineProps) => {
+// Update Line component to use highlightText
+const Line = ({ className, children, searchText, highlightText, ...props }: LineProps) => {
+	const content =
+		typeof children === "string" && searchText && highlightText ? highlightText(children, searchText) : children
+
 	return (
 		<div
 			className={cn("font-mono text-vscode-editor-foreground whitespace-pre-wrap break-words", className)}
-			{...props}
-		/>
+			{...props}>
+			{content}
+		</div>
 	)
 }
 

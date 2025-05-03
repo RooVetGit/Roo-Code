@@ -39,9 +39,17 @@ interface ChatRowProps {
 	onToggleExpand: () => void
 	onHeightChange: (isTaller: boolean) => void
 	onSuggestionClick?: (answer: string, event?: React.MouseEvent) => void
+	searchText?: string
+	// Update highlightText signature to include itemIndex
+	highlightText?: (text: string, searchTerm: string, itemIndex: number) => React.ReactNode
+	itemIndex: number // Add itemIndex prop
 }
 
-interface ChatRowContentProps extends Omit<ChatRowProps, "onHeightChange"> {}
+// Update ChatRowContentProps to include itemIndex
+interface ChatRowContentProps extends Omit<ChatRowProps, "onHeightChange" | "message"> {
+	message: ClineMessage // Ensure message is explicitly included
+	itemIndex: number
+}
 
 const ChatRow = memo(
 	(props: ChatRowProps) => {
@@ -63,7 +71,14 @@ const ChatRow = memo(
 			// height starts off at Infinity
 			if (isLast && height !== 0 && height !== Infinity && height !== prevHeightRef.current) {
 				if (!isInitialRender) {
-					onHeightChange(height > prevHeightRef.current)
+					const isTaller = height > prevHeightRef.current
+					console.log(
+						`[ChatRow ${message.ts}] Height changed: ${prevHeightRef.current} -> ${height}. isTaller: ${isTaller}. Calling onHeightChange.`,
+					)
+					// Pass row timestamp for context in ChatView logs
+					onHeightChange(isTaller) // Pass only isTaller
+				} else {
+					// console.log(`[ChatRow ${message.ts}] Initial render height: ${height}`); // Can be noisy
 				}
 				prevHeightRef.current = height
 			}
@@ -86,6 +101,10 @@ export const ChatRowContent = ({
 	isStreaming,
 	onToggleExpand,
 	onSuggestionClick,
+	// Destructure search props and itemIndex
+	searchText,
+	highlightText,
+	itemIndex, // Destructure itemIndex
 }: ChatRowContentProps) => {
 	const { t } = useTranslation()
 	const { mcpServers, alwaysAllowMcp, currentCheckpoint } = useExtensionState()
@@ -130,14 +149,22 @@ export const ChatRowContent = ({
 					<span
 						className="codicon codicon-error"
 						style={{ color: errorColor, marginBottom: "-1.5px" }}></span>,
-					<span style={{ color: errorColor, fontWeight: "bold" }}>{t("chat:error")}</span>,
+					<span style={{ color: errorColor, fontWeight: "bold" }}>
+						{searchText && highlightText
+							? highlightText(t("chat:error"), searchText, itemIndex)
+							: t("chat:error")}
+					</span>,
 				]
 			case "mistake_limit_reached":
 				return [
 					<span
 						className="codicon codicon-error"
 						style={{ color: errorColor, marginBottom: "-1.5px" }}></span>,
-					<span style={{ color: errorColor, fontWeight: "bold" }}>{t("chat:troubleMessage")}</span>,
+					<span style={{ color: errorColor, fontWeight: "bold" }}>
+						{searchText && highlightText
+							? highlightText(t("chat:troubleMessage"), searchText, itemIndex)
+							: t("chat:troubleMessage")}
+					</span>,
 				]
 			case "command":
 				return [
@@ -148,13 +175,21 @@ export const ChatRowContent = ({
 							className="codicon codicon-terminal"
 							style={{ color: normalColor, marginBottom: "-1.5px" }}></span>
 					),
-					<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:runCommand.title")}:</span>,
+					<span style={{ color: normalColor, fontWeight: "bold" }}>
+						{searchText && highlightText
+							? highlightText(t("chat:runCommand.title") + ":", searchText, itemIndex)
+							: t("chat:runCommand.title") + ":"}
+					</span>,
 				]
 			case "use_mcp_server":
 				const mcpServerUse = safeJsonParse<ClineAskUseMcpServer>(message.text)
 				if (mcpServerUse === undefined) {
 					return [null, null]
 				}
+				const mcpTitle =
+					mcpServerUse.type === "use_mcp_tool"
+						? t("chat:mcp.wantsToUseTool", { serverName: mcpServerUse.serverName })
+						: t("chat:mcp.wantsToAccessResource", { serverName: mcpServerUse.serverName })
 				return [
 					isMcpServerResponding ? (
 						<ProgressIndicator />
@@ -164,9 +199,7 @@ export const ChatRowContent = ({
 							style={{ color: normalColor, marginBottom: "-1.5px" }}></span>
 					),
 					<span style={{ color: normalColor, fontWeight: "bold" }}>
-						{mcpServerUse.type === "use_mcp_tool"
-							? t("chat:mcp.wantsToUseTool", { serverName: mcpServerUse.serverName })
-							: t("chat:mcp.wantsToAccessResource", { serverName: mcpServerUse.serverName })}
+						{searchText && highlightText ? highlightText(mcpTitle, searchText, itemIndex) : mcpTitle}
 					</span>,
 				]
 			case "completion_result":
@@ -174,7 +207,11 @@ export const ChatRowContent = ({
 					<span
 						className="codicon codicon-check"
 						style={{ color: successColor, marginBottom: "-1.5px" }}></span>,
-					<span style={{ color: successColor, fontWeight: "bold" }}>{t("chat:taskCompleted")}</span>,
+					<span style={{ color: successColor, fontWeight: "bold" }}>
+						{searchText && highlightText
+							? highlightText(t("chat:taskCompleted"), searchText, itemIndex)
+							: t("chat:taskCompleted")}
+					</span>,
 				]
 			case "api_req_retry_delayed":
 				return []
@@ -194,6 +231,26 @@ export const ChatRowContent = ({
 						/>
 					</div>
 				)
+				let apiReqTitle: string
+				let apiReqColor: string
+				if (apiReqCancelReason !== null && apiReqCancelReason !== undefined) {
+					if (apiReqCancelReason === "user_cancelled") {
+						apiReqTitle = t("chat:apiRequest.cancelled")
+						apiReqColor = normalColor
+					} else {
+						apiReqTitle = t("chat:apiRequest.streamingFailed")
+						apiReqColor = errorColor
+					}
+				} else if (cost !== null && cost !== undefined) {
+					apiReqTitle = t("chat:apiRequest.title")
+					apiReqColor = normalColor
+				} else if (apiRequestFailedMessage) {
+					apiReqTitle = t("chat:apiRequest.failed")
+					apiReqColor = errorColor
+				} else {
+					apiReqTitle = t("chat:apiRequest.streaming")
+					apiReqColor = normalColor
+				}
 				return [
 					apiReqCancelReason !== null && apiReqCancelReason !== undefined ? (
 						apiReqCancelReason === "user_cancelled" ? (
@@ -208,23 +265,9 @@ export const ChatRowContent = ({
 					) : (
 						<ProgressIndicator />
 					),
-					apiReqCancelReason !== null && apiReqCancelReason !== undefined ? (
-						apiReqCancelReason === "user_cancelled" ? (
-							<span style={{ color: normalColor, fontWeight: "bold" }}>
-								{t("chat:apiRequest.cancelled")}
-							</span>
-						) : (
-							<span style={{ color: errorColor, fontWeight: "bold" }}>
-								{t("chat:apiRequest.streamingFailed")}
-							</span>
-						)
-					) : cost !== null && cost !== undefined ? (
-						<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:apiRequest.title")}</span>
-					) : apiRequestFailedMessage ? (
-						<span style={{ color: errorColor, fontWeight: "bold" }}>{t("chat:apiRequest.failed")}</span>
-					) : (
-						<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:apiRequest.streaming")}</span>
-					),
+					<span style={{ color: apiReqColor, fontWeight: "bold" }}>
+						{searchText && highlightText ? highlightText(apiReqTitle, searchText, itemIndex) : apiReqTitle}
+					</span>,
 				]
 			case "followup":
 				return [
@@ -232,12 +275,28 @@ export const ChatRowContent = ({
 						className="codicon codicon-question"
 						style={{ color: normalColor, marginBottom: "-1.5px" }}
 					/>,
-					<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:questions.hasQuestion")}</span>,
+					<span style={{ color: normalColor, fontWeight: "bold" }}>
+						{searchText && highlightText
+							? highlightText(t("chat:questions.hasQuestion"), searchText, itemIndex)
+							: t("chat:questions.hasQuestion")}
+					</span>,
 				]
 			default:
 				return [null, null]
 		}
-	}, [type, isCommandExecuting, message, isMcpServerResponding, apiReqCancelReason, cost, apiRequestFailedMessage, t])
+	}, [
+		type,
+		isCommandExecuting,
+		message,
+		isMcpServerResponding,
+		apiReqCancelReason,
+		cost,
+		apiRequestFailedMessage,
+		t,
+		searchText, // Added
+		highlightText, // Added
+		itemIndex,
+	])
 
 	const headerStyle: React.CSSProperties = {
 		display: "flex",
@@ -281,9 +340,17 @@ export const ChatRowContent = ({
 						<div style={headerStyle}>
 							{toolIcon(tool.tool === "appliedDiff" ? "diff" : "edit")}
 							<span style={{ fontWeight: "bold" }}>
-								{tool.isOutsideWorkspace
-									? t("chat:fileOperations.wantsToEditOutsideWorkspace")
-									: t("chat:fileOperations.wantsToEdit")}
+								{searchText && highlightText
+									? highlightText(
+											tool.isOutsideWorkspace
+												? t("chat:fileOperations.wantsToEditOutsideWorkspace")
+												: t("chat:fileOperations.wantsToEdit"),
+											searchText,
+											itemIndex, // Pass itemIndex
+										)
+									: tool.isOutsideWorkspace
+										? t("chat:fileOperations.wantsToEditOutsideWorkspace")
+										: t("chat:fileOperations.wantsToEdit")}
 							</span>
 						</div>
 						<CodeAccordian
@@ -293,22 +360,29 @@ export const ChatRowContent = ({
 							path={tool.path!}
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
+							searchText={searchText}
+							// Pass highlightText and itemIndex if CodeAccordian needs them
+							// highlightText={highlightText}
+							// itemIndex={itemIndex}
 						/>
 					</>
 				)
 			case "insertContent":
+				const insertTitle = tool.isOutsideWorkspace
+					? t("chat:fileOperations.wantsToEditOutsideWorkspace")
+					: tool.lineNumber === 0
+						? t("chat:fileOperations.wantsToInsertAtEnd")
+						: t("chat:fileOperations.wantsToInsertWithLineNumber", {
+								lineNumber: tool.lineNumber,
+							})
 				return (
 					<>
 						<div style={headerStyle}>
 							{toolIcon("insert")}
 							<span style={{ fontWeight: "bold" }}>
-								{tool.isOutsideWorkspace
-									? t("chat:fileOperations.wantsToEditOutsideWorkspace")
-									: tool.lineNumber === 0
-										? t("chat:fileOperations.wantsToInsertAtEnd")
-										: t("chat:fileOperations.wantsToInsertWithLineNumber", {
-												lineNumber: tool.lineNumber,
-											})}
+								{searchText && highlightText
+									? highlightText(insertTitle, searchText, itemIndex)
+									: insertTitle}
 							</span>
 						</div>
 						<CodeAccordian
@@ -318,18 +392,26 @@ export const ChatRowContent = ({
 							path={tool.path!}
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
+							searchText={searchText}
+							// Pass highlightText and itemIndex if CodeAccordian needs them
+							// highlightText={highlightText}
+							// itemIndex={itemIndex}
 						/>
 					</>
 				)
 			case "searchAndReplace":
+				const searchReplaceTitle =
+					message.type === "ask"
+						? t("chat:fileOperations.wantsToSearchReplace")
+						: t("chat:fileOperations.didSearchReplace")
 				return (
 					<>
 						<div style={headerStyle}>
 							{toolIcon("replace")}
 							<span style={{ fontWeight: "bold" }}>
-								{message.type === "ask"
-									? t("chat:fileOperations.wantsToSearchReplace")
-									: t("chat:fileOperations.didSearchReplace")}
+								{searchText && highlightText
+									? highlightText(searchReplaceTitle, searchText, itemIndex)
+									: searchReplaceTitle}
 							</span>
 						</div>
 						<CodeAccordian
@@ -339,15 +421,24 @@ export const ChatRowContent = ({
 							path={tool.path!}
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
+							searchText={searchText}
+							// Pass highlightText and itemIndex if CodeAccordian needs them
+							// highlightText={highlightText}
+							// itemIndex={itemIndex}
 						/>
 					</>
 				)
 			case "newFileCreated":
+				const newFileTitle = t("chat:fileOperations.wantsToCreate")
 				return (
 					<>
 						<div style={headerStyle}>
 							{toolIcon("new-file")}
-							<span style={{ fontWeight: "bold" }}>{t("chat:fileOperations.wantsToCreate")}</span>
+							<span style={{ fontWeight: "bold" }}>
+								{searchText && highlightText
+									? highlightText(newFileTitle, searchText, itemIndex)
+									: newFileTitle}
+							</span>
 						</div>
 						<CodeAccordian
 							isLoading={message.partial}
@@ -355,20 +446,28 @@ export const ChatRowContent = ({
 							path={tool.path!}
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
+							searchText={searchText}
+							// Pass highlightText and itemIndex if CodeAccordian needs them
+							// highlightText={highlightText}
+							// itemIndex={itemIndex}
 						/>
 					</>
 				)
 			case "readFile":
+				const readFileTitle =
+					message.type === "ask"
+						? tool.isOutsideWorkspace
+							? t("chat:fileOperations.wantsToReadOutsideWorkspace")
+							: t("chat:fileOperations.wantsToRead")
+						: t("chat:fileOperations.didRead")
 				return (
 					<>
 						<div style={headerStyle}>
 							{toolIcon("file-code")}
 							<span style={{ fontWeight: "bold" }}>
-								{message.type === "ask"
-									? tool.isOutsideWorkspace
-										? t("chat:fileOperations.wantsToReadOutsideWorkspace")
-										: t("chat:fileOperations.wantsToRead")
-									: t("chat:fileOperations.didRead")}
+								{searchText && highlightText
+									? highlightText(readFileTitle, searchText, itemIndex)
+									: readFileTitle}
 							</span>
 						</div>
 						<div
@@ -403,8 +502,16 @@ export const ChatRowContent = ({
 										direction: "rtl",
 										textAlign: "left",
 									}}>
-									{removeLeadingNonAlphanumeric(tool.path ?? "") + "\u200E"}
-									{tool.reason}
+									{searchText && highlightText
+										? highlightText(
+												removeLeadingNonAlphanumeric(tool.path ?? "") + "\u200E",
+												searchText,
+												itemIndex,
+											)
+										: removeLeadingNonAlphanumeric(tool.path ?? "") + "\u200E"}
+									{tool.reason && searchText && highlightText
+										? highlightText(tool.reason, searchText, itemIndex)
+										: tool.reason}
 								</span>
 								<div style={{ flexGrow: 1 }}></div>
 								<span
@@ -415,29 +522,42 @@ export const ChatRowContent = ({
 					</>
 				)
 			case "fetchInstructions":
+				const fetchTitle = t("chat:instructions.wantsToFetch")
 				return (
 					<>
 						<div style={headerStyle}>
 							{toolIcon("file-code")}
-							<span style={{ fontWeight: "bold" }}>{t("chat:instructions.wantsToFetch")}</span>
+							<span style={{ fontWeight: "bold" }}>
+								{searchText && highlightText
+									? highlightText(fetchTitle, searchText, itemIndex)
+									: fetchTitle}
+							</span>
 						</div>
 						<CodeAccordian
 							isLoading={message.partial}
 							code={tool.content!}
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
+							searchText={searchText}
+							// Pass highlightText and itemIndex if CodeAccordian needs them
+							// highlightText={highlightText}
+							// itemIndex={itemIndex}
 						/>
 					</>
 				)
 			case "listFilesTopLevel":
+				const listTopLevelTitle =
+					message.type === "ask"
+						? t("chat:directoryOperations.wantsToViewTopLevel")
+						: t("chat:directoryOperations.didViewTopLevel")
 				return (
 					<>
 						<div style={headerStyle}>
 							{toolIcon("folder-opened")}
 							<span style={{ fontWeight: "bold" }}>
-								{message.type === "ask"
-									? t("chat:directoryOperations.wantsToViewTopLevel")
-									: t("chat:directoryOperations.didViewTopLevel")}
+								{searchText && highlightText
+									? highlightText(listTopLevelTitle, searchText, itemIndex)
+									: listTopLevelTitle}
 							</span>
 						</div>
 						<CodeAccordian
@@ -446,18 +566,26 @@ export const ChatRowContent = ({
 							language="shell-session"
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
+							searchText={searchText}
+							// Pass highlightText and itemIndex if CodeAccordian needs them
+							// highlightText={highlightText}
+							// itemIndex={itemIndex}
 						/>
 					</>
 				)
 			case "listFilesRecursive":
+				const listRecursiveTitle =
+					message.type === "ask"
+						? t("chat:directoryOperations.wantsToViewRecursive")
+						: t("chat:directoryOperations.didViewRecursive")
 				return (
 					<>
 						<div style={headerStyle}>
 							{toolIcon("folder-opened")}
 							<span style={{ fontWeight: "bold" }}>
-								{message.type === "ask"
-									? t("chat:directoryOperations.wantsToViewRecursive")
-									: t("chat:directoryOperations.didViewRecursive")}
+								{searchText && highlightText
+									? highlightText(listRecursiveTitle, searchText, itemIndex)
+									: listRecursiveTitle}
 							</span>
 						</div>
 						<CodeAccordian
@@ -466,18 +594,26 @@ export const ChatRowContent = ({
 							language="shell-session"
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
+							searchText={searchText}
+							// Pass highlightText and itemIndex if CodeAccordian needs them
+							// highlightText={highlightText}
+							// itemIndex={itemIndex}
 						/>
 					</>
 				)
 			case "listCodeDefinitionNames":
+				const listDefsTitle =
+					message.type === "ask"
+						? t("chat:directoryOperations.wantsToViewDefinitions")
+						: t("chat:directoryOperations.didViewDefinitions")
 				return (
 					<>
 						<div style={headerStyle}>
 							{toolIcon("file-code")}
 							<span style={{ fontWeight: "bold" }}>
-								{message.type === "ask"
-									? t("chat:directoryOperations.wantsToViewDefinitions")
-									: t("chat:directoryOperations.didViewDefinitions")}
+								{searchText && highlightText
+									? highlightText(listDefsTitle, searchText, itemIndex)
+									: listDefsTitle}
 							</span>
 						</div>
 						<CodeAccordian
@@ -485,21 +621,33 @@ export const ChatRowContent = ({
 							path={tool.path!}
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
+							searchText={searchText}
+							// Pass highlightText and itemIndex if CodeAccordian needs them
+							// highlightText={highlightText}
+							// itemIndex={itemIndex}
 						/>
 					</>
 				)
 			case "searchFiles":
+				const wantsSearchText = t("chat:directoryOperations.wantsToSearch", { regex: tool.regex })
+				const didSearchText = t("chat:directoryOperations.didSearch", { regex: tool.regex })
 				return (
 					<>
 						<div style={headerStyle}>
 							{toolIcon("search")}
 							<span style={{ fontWeight: "bold" }}>
 								{message.type === "ask" ? (
-									<Trans
-										i18nKey="chat:directoryOperations.wantsToSearch"
-										components={{ code: <code>{tool.regex}</code> }}
-										values={{ regex: tool.regex }}
-									/>
+									searchText && highlightText ? (
+										highlightText(wantsSearchText.replace(tool.regex!, ""), searchText, itemIndex) // Pass itemIndex
+									) : (
+										<Trans
+											i18nKey="chat:directoryOperations.wantsToSearch"
+											components={{ code: <code>{tool.regex}</code> }}
+											values={{ regex: tool.regex }}
+										/>
+									)
+								) : searchText && highlightText ? (
+									highlightText(didSearchText.replace(tool.regex!, ""), searchText, itemIndex) // Pass itemIndex
 								) : (
 									<Trans
 										i18nKey="chat:directoryOperations.didSearch"
@@ -507,6 +655,8 @@ export const ChatRowContent = ({
 										values={{ regex: tool.regex }}
 									/>
 								)}
+								{/* Render the regex separately if highlighting, as Trans might interfere */}
+								{searchText && highlightText && <code>{tool.regex}</code>}
 							</span>
 						</div>
 						<CodeAccordian
@@ -515,64 +665,109 @@ export const ChatRowContent = ({
 							language="log"
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
+							searchText={searchText}
+							// Pass highlightText and itemIndex if CodeAccordian needs them
+							// highlightText={highlightText}
+							// itemIndex={itemIndex}
 						/>
 					</>
 				)
 			case "switchMode":
+				const wantsSwitchReasonText = t("chat:modes.wantsToSwitchWithReason", {
+					mode: tool.mode,
+					reason: tool.reason,
+				})
+				const wantsSwitchText = t("chat:modes.wantsToSwitch", { mode: tool.mode })
+				const didSwitchReasonText = t("chat:modes.didSwitchWithReason", {
+					mode: tool.mode,
+					reason: tool.reason,
+				})
+				const didSwitchText = t("chat:modes.didSwitch", { mode: tool.mode })
+
+				const renderSwitchText = (baseText: string, mode: string, reason?: string) => {
+					if (!searchText || !highlightText) {
+						return (
+							<Trans
+								i18nKey={
+									message.type === "ask"
+										? reason
+											? "chat:modes.wantsToSwitchWithReason"
+											: "chat:modes.wantsToSwitch"
+										: reason
+											? "chat:modes.didSwitchWithReason"
+											: "chat:modes.didSwitch"
+								}
+								components={{ code: <code>{mode}</code> }}
+								values={{ mode, reason }}
+							/>
+						)
+					}
+					// Highlight text around the code block
+					const parts = baseText.split(mode)
+					const reasonPart = reason ? baseText.split(reason)[1] || "" : "" // Get text after reason if exists
+					return (
+						<>
+							{highlightText(parts[0] ?? "", searchText, itemIndex)} {/* Pass itemIndex */}
+							<code>{mode}</code>
+							{reason ? (
+								<>
+									{highlightText(parts[1]?.split(reason)[0] ?? "", searchText, itemIndex)}{" "}
+									{/* Pass itemIndex */}
+									{highlightText(reason, searchText, itemIndex)} {/* Pass itemIndex */}
+									{highlightText(reasonPart, searchText, itemIndex)} {/* Pass itemIndex */}
+								</>
+							) : (
+								highlightText(parts[1] ?? "", searchText, itemIndex) // Pass itemIndex
+							)}
+						</>
+					)
+				}
+
 				return (
 					<>
 						<div style={headerStyle}>
 							{toolIcon("symbol-enum")}
 							<span style={{ fontWeight: "bold" }}>
-								{message.type === "ask" ? (
-									<>
-										{tool.reason ? (
-											<Trans
-												i18nKey="chat:modes.wantsToSwitchWithReason"
-												components={{ code: <code>{tool.mode}</code> }}
-												values={{ mode: tool.mode, reason: tool.reason }}
-											/>
-										) : (
-											<Trans
-												i18nKey="chat:modes.wantsToSwitch"
-												components={{ code: <code>{tool.mode}</code> }}
-												values={{ mode: tool.mode }}
-											/>
-										)}
-									</>
-								) : (
-									<>
-										{tool.reason ? (
-											<Trans
-												i18nKey="chat:modes.didSwitchWithReason"
-												components={{ code: <code>{tool.mode}</code> }}
-												values={{ mode: tool.mode, reason: tool.reason }}
-											/>
-										) : (
-											<Trans
-												i18nKey="chat:modes.didSwitch"
-												components={{ code: <code>{tool.mode}</code> }}
-												values={{ mode: tool.mode }}
-											/>
-										)}
-									</>
-								)}
+								{message.type === "ask"
+									? tool.reason
+										? renderSwitchText(wantsSwitchReasonText, tool.mode!, tool.reason)
+										: renderSwitchText(wantsSwitchText, tool.mode!)
+									: tool.reason
+										? renderSwitchText(didSwitchReasonText, tool.mode!, tool.reason)
+										: renderSwitchText(didSwitchText, tool.mode!)}
 							</span>
 						</div>
 					</>
 				)
 			case "newTask":
+				const wantsCreateText = t("chat:subtasks.wantsToCreate", { mode: tool.mode })
+				const newTaskContentTitle = t("chat:subtasks.newTaskContent")
+
+				const renderNewTaskText = (baseText: string, mode: string) => {
+					if (!searchText || !highlightText) {
+						return (
+							<Trans
+								i18nKey="chat:subtasks.wantsToCreate"
+								components={{ code: <code>{mode}</code> }}
+								values={{ mode }}
+							/>
+						)
+					}
+					const parts = baseText.split(mode)
+					return (
+						<>
+							{highlightText(parts[0] || "", searchText, itemIndex)} {/* Pass itemIndex */}
+							<code>{mode}</code>
+							{highlightText(parts[1] || "", searchText, itemIndex)} {/* Pass itemIndex */}
+						</>
+					)
+				}
+
 				return (
 					<>
 						<div style={headerStyle}>
 							{toolIcon("tasklist")}
-							<span style={{ fontWeight: "bold" }}>
-								<Trans
-									i18nKey="chat:subtasks.wantsToCreate"
-									components={{ code: <code>{tool.mode}</code> }}
-									values={{ mode: tool.mode }}
-								/>
-							</span>
+							<span style={{ fontWeight: "bold" }}>{renderNewTaskText(wantsCreateText, tool.mode!)}</span>
 						</div>
 						<div
 							style={{
@@ -596,20 +791,30 @@ export const ChatRowContent = ({
 									gap: "6px",
 								}}>
 								<span className="codicon codicon-arrow-right"></span>
-								{t("chat:subtasks.newTaskContent")}
+								{searchText && highlightText
+									? highlightText(newTaskContentTitle, searchText, itemIndex) // Pass itemIndex
+									: newTaskContentTitle}
 							</div>
 							<div style={{ padding: "12px 16px", backgroundColor: "var(--vscode-editor-background)" }}>
-								<MarkdownBlock markdown={tool.content} />
+								{/* Remove highlight props from MarkdownBlock */}
+								<MarkdownBlock markdown={tool.content} searchText={searchText} />
 							</div>
 						</div>
 					</>
 				)
 			case "finishTask":
+				const finishTitle = t("chat:subtasks.wantsToFinish")
+				const completionContentTitle = t("chat:subtasks.completionContent")
+				const completionInstructions = t("chat:subtasks.completionInstructions")
 				return (
 					<>
 						<div style={headerStyle}>
 							{toolIcon("check-all")}
-							<span style={{ fontWeight: "bold" }}>{t("chat:subtasks.wantsToFinish")}</span>
+							<span style={{ fontWeight: "bold" }}>
+								{searchText && highlightText
+									? highlightText(finishTitle, searchText, itemIndex)
+									: finishTitle}
+							</span>
 						</div>
 						<div
 							style={{
@@ -633,10 +838,13 @@ export const ChatRowContent = ({
 									gap: "6px",
 								}}>
 								<span className="codicon codicon-check"></span>
-								{t("chat:subtasks.completionContent")}
+								{searchText && highlightText
+									? highlightText(completionContentTitle, searchText, itemIndex) // Pass itemIndex
+									: completionContentTitle}
 							</div>
 							<div style={{ padding: "12px 16px", backgroundColor: "var(--vscode-editor-background)" }}>
-								<MarkdownBlock markdown={t("chat:subtasks.completionInstructions")} />
+								{/* Remove highlight props from MarkdownBlock */}
+								<MarkdownBlock markdown={completionInstructions} searchText={searchText} />
 							</div>
 						</div>
 					</>
@@ -817,7 +1025,13 @@ export const ChatRowContent = ({
 								apiReqStreamingFailedMessage) && (
 								<>
 									<p style={{ ...pStyle, color: "var(--vscode-errorForeground)" }}>
-										{apiRequestFailedMessage || apiReqStreamingFailedMessage}
+										{searchText && highlightText
+											? highlightText(
+													apiRequestFailedMessage || apiReqStreamingFailedMessage || "",
+													searchText,
+													itemIndex, // Pass itemIndex
+												)
+											: apiRequestFailedMessage || apiReqStreamingFailedMessage}
 										{apiRequestFailedMessage?.toLowerCase().includes("powershell") && (
 											<>
 												<br />
@@ -842,6 +1056,10 @@ export const ChatRowContent = ({
 										language="markdown"
 										isExpanded={true}
 										onToggleExpand={onToggleExpand}
+										// Pass highlight props if needed inside CodeAccordian
+										// searchText={searchText}
+										// highlightText={highlightText}
+										// itemIndex={itemIndex}
 									/>
 								</div>
 							)}
@@ -852,7 +1070,8 @@ export const ChatRowContent = ({
 				case "text":
 					return (
 						<div>
-							<Markdown markdown={message.text} partial={message.partial} />
+							{/* Remove highlight props from Markdown */}
+							<Markdown markdown={message.text} partial={message.partial} searchText={searchText} />
 						</div>
 					)
 				case "user_feedback":
@@ -891,6 +1110,10 @@ export const ChatRowContent = ({
 								isFeedback={true}
 								isExpanded={isExpanded}
 								onToggleExpand={onToggleExpand}
+								// Pass highlight props if needed inside CodeAccordian
+								// searchText={searchText}
+								// highlightText={highlightText}
+								// itemIndex={itemIndex}
 							/>
 						</div>
 					)
@@ -903,7 +1126,11 @@ export const ChatRowContent = ({
 									{title}
 								</div>
 							)}
-							<p style={{ ...pStyle, color: "var(--vscode-errorForeground)" }}>{message.text}</p>
+							<p style={{ ...pStyle, color: "var(--vscode-errorForeground)" }}>
+								{searchText && highlightText
+									? highlightText(message.text || "", searchText, itemIndex) // Pass itemIndex
+									: message.text}
+							</p>
 						</>
 					)
 				case "completion_result":
@@ -914,7 +1141,8 @@ export const ChatRowContent = ({
 								{title}
 							</div>
 							<div style={{ color: "var(--vscode-charts-green)", paddingTop: 10 }}>
-								<Markdown markdown={message.text} />
+								{/* Remove highlight props from Markdown */}
+								<Markdown markdown={message.text} searchText={searchText} />
 							</div>
 						</>
 					)
@@ -938,6 +1166,10 @@ export const ChatRowContent = ({
 									language="json"
 									isExpanded={true}
 									onToggleExpand={onToggleExpand}
+									// Pass highlight props if needed inside CodeAccordian
+									// searchText={searchText}
+									// highlightText={highlightText}
+									// itemIndex={itemIndex}
 								/>
 							</div>
 						</>
@@ -949,6 +1181,9 @@ export const ChatRowContent = ({
 							commitHash={message.text!}
 							currentHash={currentCheckpoint}
 							checkpoint={message.checkpoint}
+							searchText={searchText} // Pass searchText
+							highlightText={highlightText} // Pass highlightText
+							itemIndex={itemIndex} // Pass itemIndex
 						/>
 					)
 				default:
@@ -961,7 +1196,7 @@ export const ChatRowContent = ({
 								</div>
 							)}
 							<div style={{ paddingTop: 10 }}>
-								<Markdown markdown={message.text} partial={message.partial} />
+								<Markdown markdown={message.text} partial={message.partial} searchText={searchText} />
 							</div>
 						</>
 					)
@@ -975,7 +1210,11 @@ export const ChatRowContent = ({
 								{icon}
 								{title}
 							</div>
-							<p style={{ ...pStyle, color: "var(--vscode-errorForeground)" }}>{message.text}</p>
+							<p style={{ ...pStyle, color: "var(--vscode-errorForeground)" }}>
+								{searchText && highlightText
+									? highlightText(message.text || "", searchText, itemIndex) // Pass itemIndex
+									: message.text}
+							</p>
 						</>
 					)
 				case "command":
@@ -1063,6 +1302,10 @@ export const ChatRowContent = ({
 													language="json"
 													isExpanded={true}
 													onToggleExpand={onToggleExpand}
+													// Pass highlight props if needed inside CodeAccordian
+													// searchText={searchText}
+													// highlightText={highlightText}
+													// itemIndex={itemIndex}
 												/>
 											</div>
 										)}
@@ -1080,7 +1323,12 @@ export const ChatRowContent = ({
 									{title}
 								</div>
 								<div style={{ color: "var(--vscode-charts-green)", paddingTop: 10 }}>
-									<Markdown markdown={message.text} partial={message.partial} />
+									{/* Remove highlight props from Markdown */}
+									<Markdown
+										markdown={message.text}
+										partial={message.partial}
+										searchText={searchText}
+									/>
 								</div>
 							</div>
 						)
@@ -1097,14 +1345,27 @@ export const ChatRowContent = ({
 								</div>
 							)}
 							<div style={{ paddingTop: 10, paddingBottom: 15 }}>
+								{/* Pass highlight props to Markdown */}
 								<Markdown
 									markdown={message.partial === true ? message?.text : followUpData?.question}
+									searchText={searchText}
+									// Remove highlight props from Markdown
+									// highlightText={highlightText}
+									// itemIndex={itemIndex}
 								/>
 							</div>
 							<FollowUpSuggest
 								suggestions={followUpData?.suggest}
 								onSuggestionClick={onSuggestionClick}
 								ts={message?.ts}
+								searchText={searchText}
+								// Adapt the highlightText function signature for FollowUpSuggest
+								highlightText={
+									highlightText
+										? (text: string, searchTerm: string) =>
+												highlightText(text, searchTerm, itemIndex)
+										: undefined
+								}
 							/>
 						</>
 					)

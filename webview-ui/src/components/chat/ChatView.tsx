@@ -7,7 +7,9 @@ import { Trans } from "react-i18next"
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 
 import {
+	ClineApiReqInfo, // Added
 	ClineAsk,
+	ClineAskUseMcpServer, // Added
 	ClineMessage,
 	ClineSayBrowserAction,
 	ClineSayTool,
@@ -20,7 +22,9 @@ import { combineCommandSequences } from "@roo/shared/combineCommandSequences"
 import { getApiMetrics } from "@roo/shared/getApiMetrics"
 import { AudioType } from "@roo/shared/WebviewMessage"
 import { getAllModes } from "@roo/shared/modes"
+import { safeJsonParse } from "@roo/shared/safeJsonParse" // Import safeJsonParse
 
+import { useChatSearch } from "@src/hooks/useChatSearch"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { vscode } from "@src/utils/vscode"
 import { useSelectedModel } from "@/components/ui/hooks/useSelectedModel"
@@ -53,6 +57,238 @@ export interface ChatViewRef {
 
 export const MAX_IMAGES_PER_MESSAGE = 20 // Anthropic limits to 20 images
 
+// Define a type for the translations object
+type TitleTranslations = { [key: string]: string | ((params: any) => string) }
+
+// Function to extract searchable text from messages, now accepting translations, index, and the full list
+const getSearchableTextForChatView = (
+	messageOrGroup: ClineMessage | ClineMessage[],
+	index: number, // Added index
+	list: (ClineMessage | ClineMessage[])[], // Added full list
+	titles: TitleTranslations,
+): string => {
+	let searchableText = ""
+
+	// Inner function to extract text from a single message, now aware of the next message
+	const extractTextFromMessage = (message: ClineMessage, nextMessage?: ClineMessage | ClineMessage[]): string => {
+		// --- Existing text extraction logic ---
+		let text = ""
+		const messageType = message.type === "ask" ? message.ask : message.say
+
+		// Add text content if it exists
+		if (message.text) {
+			try {
+				// Attempt to parse JSON, might be tool details, API info, etc.
+				const parsed = JSON.parse(message.text)
+				if (typeof parsed === "object" && parsed !== null) {
+					// Handle specific structured messages
+					if (message.ask === "tool" || message.say === "user_feedback_diff") {
+						const tool = parsed as ClineSayTool
+						text += `${tool.tool || ""} ${tool.path || ""} ${tool.reason || ""} ${tool.regex || ""} ${tool.mode || ""} ${tool.content || ""} ${tool.diff || ""}`
+					} else if (message.ask === "use_mcp_server") {
+						const mcp = parsed as ClineAskUseMcpServer
+						text += `${mcp.serverName || ""} ${mcp.toolName || ""} ${mcp.uri || ""} ${mcp.arguments || ""}`
+					} else if (message.say === "api_req_started") {
+						const apiInfo = parsed as ClineApiReqInfo
+						text += `${apiInfo.request || ""} ${apiInfo.cancelReason || ""} ${apiInfo.streamingFailedMessage || ""}`
+					} else if (message.say === "browser_action") {
+						const browserAction = parsed as ClineSayBrowserAction
+						text += `${browserAction.action || ""} ${browserAction.coordinate || ""} ${browserAction.text || ""}`
+					} else {
+						// Fallback for other JSON objects: stringify relevant parts or the whole object
+						// Be cautious here to avoid overly verbose text
+						text += JSON.stringify(parsed) // Simple stringify, might need refinement
+					}
+				} else {
+					// If not an object after parsing, treat as plain text
+					text += message.text
+				}
+			} catch (e) {
+				// If JSON parsing fails, treat as plain text
+				text += message.text
+			}
+		}
+
+		// Add specific fields based on message type if not already covered by message.text parsing
+		switch (messageType) {
+			case "error":
+			case "mistake_limit_reached":
+			case "text":
+			case "user_feedback":
+			case "completion_result":
+			case "reasoning":
+			case "subtask_result":
+			case "diff_error":
+				// These types primarily use message.text, which is handled above
+				break
+			case "command":
+				// Command text is already handled if present in message.text
+				break
+			// Add other cases as needed
+		}
+
+		// --- Add title extraction logic ---
+		let titleText: string = "" // Explicitly type as string
+		// const messageType = message.type === "ask" ? message.ask : message.say; // REMOVE duplicate declaration
+		const tool = message.ask === "tool" ? safeJsonParse<ClineSayTool>(message.text) : null
+		const mcpServerUse = message.ask === "use_mcp_server" ? safeJsonParse<ClineAskUseMcpServer>(message.text) : null
+
+		// Helper to safely get title string, handling functions and undefined
+		const getTitle = (key: keyof TitleTranslations, params?: any): string => {
+			const titleValue = titles[key]
+			if (typeof titleValue === "function") {
+				try {
+					return titleValue(params || {}) || ""
+				} catch (e) {
+					console.error(`Error calling title function ${String(key)}:`, e)
+					return ""
+				}
+			}
+			return titleValue || ""
+		}
+
+		switch (messageType) {
+			case "error":
+				titleText = getTitle("errorTitle")
+				break
+			case "mistake_limit_reached":
+				titleText = getTitle("troubleMessage")
+				break
+			case "command":
+				titleText = getTitle("runCommandTitle", {}) + ":"
+				break // Add colon
+			case "use_mcp_server":
+				if (mcpServerUse) {
+					titleText =
+						mcpServerUse.type === "use_mcp_tool"
+							? getTitle("mcpWantsToUseTool", { serverName: mcpServerUse.serverName })
+							: getTitle("mcpWantsToAccessResource", { serverName: mcpServerUse.serverName })
+				}
+				break
+			case "completion_result":
+				titleText = getTitle("taskCompleted")
+				break
+			case "api_req_started":
+				// Simplified title extraction for search
+				titleText = getTitle("apiRequestTitle")
+
+				// --- Look ahead for the actual response text ---
+				if (nextMessage && !Array.isArray(nextMessage) && nextMessage.say === "text" && nextMessage.text) {
+					// Append the response text to the searchable text of the API request row
+					text += ` ${nextMessage.text}`
+				}
+				// --- End look ahead ---
+				break
+			case "followup":
+				titleText = getTitle("hasQuestion")
+				break
+			case "tool":
+				if (tool) {
+					switch (tool.tool) {
+						case "editedExistingFile":
+						case "appliedDiff":
+							titleText = tool.isOutsideWorkspace
+								? getTitle("wantsToEditOutsideWorkspace")
+								: getTitle("wantsToEdit")
+							break
+						case "insertContent":
+							titleText = tool.isOutsideWorkspace
+								? getTitle("wantsToEditOutsideWorkspace")
+								: tool.lineNumber === 0
+									? getTitle("wantsToInsertAtEnd")
+									: getTitle("wantsToInsertWithLineNumber", { lineNumber: tool.lineNumber })
+							break
+						case "searchAndReplace":
+							titleText = getTitle("wantsToSearchReplace")
+							break // Simplified for search
+						case "newFileCreated":
+							titleText = getTitle("wantsToCreate")
+							break
+						case "readFile":
+							titleText = tool.isOutsideWorkspace
+								? getTitle("wantsToReadOutsideWorkspace")
+								: getTitle("wantsToRead")
+							break
+						case "fetchInstructions":
+							titleText = getTitle("wantsToFetch")
+							break
+						case "listFilesTopLevel":
+							titleText = getTitle("wantsToViewTopLevel")
+							break
+						case "listFilesRecursive":
+							titleText = getTitle("wantsToViewRecursive")
+							break
+						case "listCodeDefinitionNames":
+							titleText = getTitle("wantsToViewDefinitions")
+							break
+						case "searchFiles":
+							titleText = getTitle("wantsToSearch", { regex: tool.regex })
+							break
+						case "switchMode":
+							titleText = tool.reason
+								? getTitle("wantsToSwitchWithReason", { mode: tool.mode, reason: tool.reason })
+								: getTitle("wantsToSwitch", { mode: tool.mode })
+							break
+						case "newTask":
+							titleText = getTitle("wantsToCreateSubtask", { mode: tool.mode })
+							break
+						case "finishTask":
+							titleText = getTitle("wantsToFinishSubtask")
+							break
+					}
+				}
+				break
+			case "checkpoint_saved":
+				const checkpointData = safeJsonParse<{ isFirst?: boolean }>(
+					message.checkpoint ? JSON.stringify(message.checkpoint) : undefined,
+				)
+				const checkpointTitle = checkpointData?.isFirst
+					? getTitle("checkpointInitial")
+					: getTitle("checkpointRegular")
+				// // TEMP DEBUG: Add raw checkpoint data to searchable text - REVERTED
+				// const rawCheckpointText = message.checkpoint ? JSON.stringify(message.checkpoint) : "no_checkpoint_data";
+				titleText = checkpointTitle // Use only the title
+				break
+			// Add other cases from ChatRow if necessary
+		}
+
+		// --- Explicitly add followup question and suggestions ---
+		if (messageType === "followup") {
+			const followUpData = safeJsonParse<{ question?: string; suggest?: string[] }>(message.text)
+			if (followUpData) {
+				// Add question if not already present (e.g., if initial parse failed)
+				if (!text.includes(followUpData.question || "___NON_EXISTENT___")) {
+					text += ` ${followUpData.question || ""}`
+				}
+				// Add suggestions
+				if (Array.isArray(followUpData.suggest)) {
+					text += ` ${followUpData.suggest.join(" ")}`
+				}
+			}
+		}
+		// --- End followup handling ---
+
+		// Combine extracted text and title text
+		const combinedText = `${titleText} ${text}`.trim()
+
+		// Remove markdown for cleaner search text
+		return removeMd(combinedText)
+	}
+
+	if (Array.isArray(messageOrGroup)) {
+		// It's a group (BrowserSessionRow) - Lookahead doesn't apply easily here, might need separate logic if API calls happen within sessions
+		messageOrGroup.forEach((message) => {
+			// Pass undefined for nextMessage as we don't have context within the group easily
+			searchableText += extractTextFromMessage(message, undefined) + " "
+		})
+	} else {
+		// It's a single message (ChatRow)
+		const nextItem = list[index + 1] // Get the next item from the full list
+		searchableText = extractTextFromMessage(messageOrGroup, nextItem)
+	}
+
+	return searchableText.trim()
+}
 const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0
 
 const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewProps> = (
@@ -60,6 +296,42 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	ref,
 ) => {
 	const { t } = useAppTranslation()
+
+	// Get translations for titles used in ChatRow
+	const titleTranslations = useMemo<TitleTranslations>(
+		() => ({
+			errorTitle: t("chat:error"),
+			troubleMessage: t("chat:troubleMessage"),
+			runCommandTitle: t("chat:runCommand.title"),
+			mcpWantsToUseTool: t("chat:mcp.wantsToUseTool"),
+			mcpWantsToAccessResource: t("chat:mcp.wantsToAccessResource"),
+			taskCompleted: t("chat:taskCompleted"),
+			apiRequestTitle: t("chat:apiRequest.title"), // Simplified for search
+			hasQuestion: t("chat:questions.hasQuestion"),
+			wantsToEdit: t("chat:fileOperations.wantsToEdit"),
+			wantsToEditOutsideWorkspace: t("chat:fileOperations.wantsToEditOutsideWorkspace"),
+			wantsToInsertAtEnd: t("chat:fileOperations.wantsToInsertAtEnd"),
+			wantsToInsertWithLineNumber: t("chat:fileOperations.wantsToInsertWithLineNumber"),
+			wantsToSearchReplace: t("chat:fileOperations.wantsToSearchReplace"),
+			wantsToCreate: t("chat:fileOperations.wantsToCreate"),
+			wantsToRead: t("chat:fileOperations.wantsToRead"),
+			wantsToReadOutsideWorkspace: t("chat:fileOperations.wantsToReadOutsideWorkspace"),
+			wantsToFetch: t("chat:instructions.wantsToFetch"),
+			wantsToViewTopLevel: t("chat:directoryOperations.wantsToViewTopLevel"),
+			wantsToViewRecursive: t("chat:directoryOperations.wantsToViewRecursive"),
+			wantsToViewDefinitions: t("chat:directoryOperations.wantsToViewDefinitions"),
+			wantsToSearch: t("chat:directoryOperations.wantsToSearch"),
+			wantsToSwitch: t("chat:modes.wantsToSwitch"),
+			wantsToSwitchWithReason: t("chat:modes.wantsToSwitchWithReason"),
+			wantsToCreateSubtask: t("chat:subtasks.wantsToCreate"),
+			wantsToFinishSubtask: t("chat:subtasks.wantsToFinish"),
+			checkpointInitial: t("chat:checkpoint.initial"), // Add checkpoint titles
+			checkpointRegular: t("chat:checkpoint.regular"), // Add checkpoint titles
+			// Add other titles as needed
+		}),
+		[t],
+	)
+
 	const modeShortcutText = `${isMac ? "⌘" : "Ctrl"} + . ${t("chat:forNextMode")}`
 	const {
 		clineMessages: messages,
@@ -944,6 +1216,42 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		})
 	}, [])
 
+	// Chat Search Hook
+	const {
+		showSearch,
+		setShowSearch, // Keep for turning ON
+		closeSearch, // Get the close function
+		debouncedSearchText,
+		highlightText,
+		renderSearchBar,
+		isNavigatingRef, // Destructure the ref
+	} = useChatSearch<ClineMessage | ClineMessage[]>({
+		messages: groupedMessages,
+		virtuosoRef,
+		// Pass the modified function that accepts item, index, and list
+		getSearchableText: (msgOrGroup, idx, list) =>
+			getSearchableTextForChatView(msgOrGroup, idx, list, titleTranslations),
+		disableAutoScrollRef: disableAutoScrollRef, // Pass the ref down
+	})
+
+	// Helper to toggle search visibility
+	const toggleSearch = useCallback(() => setShowSearch((prev: boolean) => !prev), [setShowSearch])
+
+	// Add Ctrl+F / Cmd+F listener to toggle search
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if ((event.ctrlKey || event.metaKey) && event.key === "f") {
+				event.preventDefault() // Prevent browser's default find action
+				toggleSearch() // Use the helper function
+			}
+		}
+
+		window.addEventListener("keydown", handleKeyDown)
+		return () => {
+			window.removeEventListener("keydown", handleKeyDown)
+		}
+	}, [toggleSearch]) // Depend on toggleSearch
+
 	// Scroll when user toggles certain rows.
 	const toggleRowExpansion = useCallback(
 		(ts: number) => {
@@ -969,7 +1277,16 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			}
 
 			if (isCollapsing && isAtBottom) {
-				const timer = setTimeout(() => scrollToBottomAuto(), 0)
+				const timer = setTimeout(() => {
+					console.log(
+						`[ChatView] toggleRowExpansion (Collapsing, At Bottom): isNavigating: ${isNavigatingRef.current}, showSearch: ${showSearch}`,
+					)
+					// Add !showSearch check
+					if (!isNavigatingRef.current && !showSearch) {
+						console.log(`[ChatView] toggleRowExpansion: Scrolling bottom (auto).`)
+						scrollToBottomAuto()
+					}
+				}, 0)
 				return () => clearTimeout(timer)
 			} else if (isLast || isSecondToLast) {
 				if (isCollapsing) {
@@ -977,43 +1294,81 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						return
 					}
 
-					const timer = setTimeout(() => scrollToBottomAuto(), 0)
+					const timer = setTimeout(() => {
+						console.log(
+							`[ChatView] toggleRowExpansion (Collapsing, Last/SecondLast): isNavigating: ${isNavigatingRef.current}, showSearch: ${showSearch}`,
+						)
+						// Add !showSearch check
+						if (!isNavigatingRef.current && !showSearch) {
+							console.log(`[ChatView] toggleRowExpansion: Scrolling bottom (auto).`)
+							scrollToBottomAuto()
+						}
+					}, 0)
 					return () => clearTimeout(timer)
 				} else {
 					const timer = setTimeout(() => {
-						virtuosoRef.current?.scrollToIndex({
-							index: groupedMessages.length - (isLast ? 1 : 2),
-							align: "start",
-						})
+						console.log(
+							`[ChatView] toggleRowExpansion (Expanding, Last/SecondLast): isNavigating: ${isNavigatingRef.current}, showSearch: ${showSearch}`,
+						)
+						// Add !showSearch check
+						if (!isNavigatingRef.current && !showSearch) {
+							const targetIndex = groupedMessages.length - (isLast ? 1 : 2)
+							console.log(`[ChatView] toggleRowExpansion: Scrolling to index ${targetIndex}.`)
+							virtuosoRef.current?.scrollToIndex({
+								index: targetIndex,
+								align: "start",
+							})
+						}
 					}, 0)
 
 					return () => clearTimeout(timer)
 				}
 			}
 		},
-		[groupedMessages, expandedRows, scrollToBottomAuto, isAtBottom],
+		[groupedMessages, expandedRows, scrollToBottomAuto, isAtBottom, showSearch, setExpandedRows, isNavigatingRef], // Added back isNavigatingRef
 	)
 
-	const handleRowHeightChange = useCallback(
-		(isTaller: boolean) => {
-			if (!disableAutoScrollRef.current) {
-				if (isTaller) {
-					scrollToBottomSmooth()
+	// Debounce the height change handler to prevent rapid adjustments during search scrolls
+	// Debounce the height change handler to prevent rapid adjustments during search scrolls
+	const handleRowHeightChange = useMemo(
+		() =>
+			debounce((isTaller: boolean, rowTs?: number) => {
+				// Added rowTs for context
+				const logPrefix = `[ChatView] handleRowHeightChange (debounced for row ${rowTs ?? "unknown"}):`
+				console.log(
+					`${logPrefix} Called. isTaller: ${isTaller}, isNavigating: ${isNavigatingRef.current}, showSearch: ${showSearch}, disableAutoScroll: ${disableAutoScrollRef.current}`,
+				)
+				// Check conditions inside the debounced function
+				if (!disableAutoScrollRef.current && !isNavigatingRef.current && !showSearch) {
+					console.log(`${logPrefix} Conditions met. Scrolling.`)
+					if (isTaller) {
+						scrollToBottomSmooth()
+					} else {
+						// Use timeout 0 to ensure it runs after current stack clears, similar to original logic
+						setTimeout(() => scrollToBottomAuto(), 0)
+					}
 				} else {
-					setTimeout(() => scrollToBottomAuto(), 0)
+					console.log(`${logPrefix} Conditions NOT met. Scroll prevented.`)
 				}
-			}
-		},
-		[scrollToBottomSmooth, scrollToBottomAuto],
+			}, 100), // Debounce time in ms (adjust if needed)
+		[scrollToBottomSmooth, scrollToBottomAuto, showSearch, isNavigatingRef], // Add dependencies used inside debounce
+		// Note: disableAutoScrollRef is a ref, so it doesn't need to be a dependency
 	)
 
 	useEffect(() => {
-		if (!disableAutoScrollRef.current) {
+		console.log(
+			`[ChatView] Effect (groupedMessages.length): Length changed to ${groupedMessages.length}. isNavigating: ${isNavigatingRef.current}, showSearch: ${showSearch}, disableAutoScroll: ${disableAutoScrollRef.current}`,
+		)
+		// Add !showSearch check
+		if (!disableAutoScrollRef.current && !isNavigatingRef.current && !showSearch) {
+			console.log(`[ChatView] Effect (groupedMessages.length): Conditions met. Scrolling bottom (smooth).`)
 			setTimeout(() => scrollToBottomSmooth(), 50)
 			// Don't cleanup since if visibleMessages.length changes it cancels.
 			// return () => clearTimeout(timer)
+		} else {
+			console.log(`[ChatView] Effect (groupedMessages.length): Conditions NOT met. Scroll prevented.`)
 		}
-	}, [groupedMessages.length, scrollToBottomSmooth])
+	}, [groupedMessages.length, scrollToBottomSmooth, showSearch, isNavigatingRef]) // Added dependencies
 
 	const handleWheel = useCallback((event: Event) => {
 		const wheelEvent = event as WheelEvent
@@ -1024,7 +1379,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				disableAutoScrollRef.current = true
 			}
 		}
-	}, [])
+	}, []) // Removed unnecessary dependencies
 
 	useEvent("wheel", handleWheel, window, { passive: true }) // passive improves scrolling performance
 
@@ -1056,6 +1411,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				return (
 					<BrowserSessionRow
 						messages={messageOrGroup}
+						itemIndex={index} // Pass index here
 						isLast={index === groupedMessages.length - 1}
 						lastModifiedMessage={modifiedMessages.at(-1)}
 						onHeightChange={handleRowHeightChange}
@@ -1068,6 +1424,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 								[messageTs]: !prev[messageTs],
 							}))
 						}}
+						// Pass search props
+						searchText={debouncedSearchText}
+						highlightText={highlightText}
 					/>
 				)
 			}
@@ -1077,6 +1436,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				<ChatRow
 					key={messageOrGroup.ts}
 					message={messageOrGroup}
+					itemIndex={index} // Pass the index here
 					isExpanded={expandedRows[messageOrGroup.ts] || false}
 					onToggleExpand={() => toggleRowExpansion(messageOrGroup.ts)}
 					lastModifiedMessage={modifiedMessages.at(-1)}
@@ -1093,6 +1453,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							handleSendMessage(answer, [])
 						}
 					}}
+					// Pass search props
+					searchText={debouncedSearchText}
+					highlightText={highlightText}
 				/>
 			)
 		},
@@ -1104,6 +1467,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			isStreaming,
 			toggleRowExpansion,
 			handleSendMessage,
+			debouncedSearchText, // Added dependency
+			highlightText, // Added dependency
 		],
 	)
 
@@ -1192,6 +1557,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			{showAnnouncement && <Announcement hideAnnouncement={hideAnnouncement} />}
 			{task ? (
 				<>
+					{/* TaskHeader now includes the search button */}
 					<TaskHeader
 						task={task}
 						tokensIn={apiMetrics.totalTokensIn}
@@ -1202,7 +1568,13 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						totalCost={apiMetrics.totalCost}
 						contextTokens={apiMetrics.contextTokens}
 						onClose={handleTaskCloseButtonClick}
+						toggleSearch={toggleSearch} // Pass toggleSearch down (used to turn ON)
+						showSearch={showSearch} // Pass showSearch state down
+						closeSearch={closeSearch} // Pass closeSearch function down
+						t={t} // Pass translation function down
 					/>
+					{/* Render Search Bar within a padded container */}
+					<div className="px-3">{renderSearchBar()}</div>
 
 					{hasSystemPromptOverride && (
 						<div className="px-3">
@@ -1289,12 +1661,17 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							increaseViewportBy={{ top: 3_000, bottom: Number.MAX_SAFE_INTEGER }} // hack to make sure the last message is always rendered to get truly perfect scroll to bottom animation when new messages are added (Number.MAX_SAFE_INTEGER is safe for arithmetic operations, which is all virtuoso uses this value for in src/sizeRangeSystem.ts)
 							data={groupedMessages} // messages is the raw format returned by extension, modifiedMessages is the manipulated structure that combines certain messages of related type, and visibleMessages is the filtered structure that removes messages that should not be rendered
 							itemContent={itemContent}
-							atBottomStateChange={(isAtBottom) => {
-								setIsAtBottom(isAtBottom)
-								if (isAtBottom) {
+							atBottomStateChange={(atBottom) => {
+								// console.log(`[ChatView] Virtuoso atBottomStateChange: ${atBottom}`); // Can be noisy
+								setIsAtBottom(atBottom)
+								if (atBottom) {
+									// console.log("[ChatView] Virtuoso atBottomStateChange: Re-enabling auto-scroll.");
 									disableAutoScrollRef.current = false
 								}
-								setShowScrollToBottom(disableAutoScrollRef.current && !isAtBottom)
+								setShowScrollToBottom(disableAutoScrollRef.current && !atBottom)
+							}}
+							isScrolling={(scrolling) => {
+								console.log(`[ChatView] Virtuoso isScrolling: ${scrolling}`)
 							}}
 							atBottomThreshold={10} // anything lower causes issues with followOutput
 							initialTopMostItemIndex={groupedMessages.length - 1}
@@ -1306,8 +1683,11 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							<div
 								className="bg-[color-mix(in_srgb,_var(--vscode-toolbar-hoverBackground)_55%,_transparent)] rounded-[3px] overflow-hidden cursor-pointer flex justify-center items-center flex-1 h-[25px] hover:bg-[color-mix(in_srgb,_var(--vscode-toolbar-hoverBackground)_90%,_transparent)] active:bg-[color-mix(in_srgb,_var(--vscode-toolbar-hoverBackground)_70%,_transparent)]"
 								onClick={() => {
-									scrollToBottomSmooth()
-									disableAutoScrollRef.current = false
+									// Add !showSearch check (though unlikely needed here as button shouldn't show if search is active)
+									if (!showSearch) {
+										scrollToBottomSmooth()
+										disableAutoScrollRef.current = false
+									}
 								}}
 								title={t("chat:scrollToBottom")}>
 								<span className="codicon codicon-chevron-down text-[18px]"></span>
@@ -1391,8 +1771,15 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				onSelectImages={selectImages}
 				shouldDisableImages={shouldDisableImages}
 				onHeightChange={() => {
-					if (isAtBottom) {
+					console.log(
+						`[ChatView] ChatTextArea onHeightChange: isAtBottom: ${isAtBottom}, isNavigating: ${isNavigatingRef.current}, showSearch: ${showSearch}`,
+					)
+					// Add !showSearch check
+					if (isAtBottom && !isNavigatingRef.current && !showSearch) {
+						console.log(`[ChatView] ChatTextArea onHeightChange: Conditions met. Scrolling bottom (auto).`)
 						scrollToBottomAuto()
+					} else {
+						console.log(`[ChatView] ChatTextArea onHeightChange: Conditions NOT met. Scroll prevented.`)
 					}
 				}}
 				mode={mode}

@@ -7,9 +7,12 @@ import { useExtensionState } from "@src/context/ExtensionStateContext"
 
 import CodeBlock from "./CodeBlock"
 import MermaidBlock from "./MermaidBlock"
+// Removed: import { rehypeHighlightSearch } from "@src/lib/rehype-highlight-search";
+import { applyHighlighting } from "@src/utils/applyHighlighting" // Import the new utility (will be created next)
 
 interface MarkdownBlockProps {
 	markdown?: string
+	searchText?: string // Add searchText prop
 }
 
 /**
@@ -117,7 +120,8 @@ const StyledMarkdown = styled.div`
 	}
 `
 
-const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
+const MarkdownBlock = memo(({ markdown, searchText }: MarkdownBlockProps) => {
+	// Destructure searchText
 	const { theme } = useExtensionState()
 	const [reactContent, setMarkdown] = useRemark({
 		remarkPlugins: [
@@ -134,6 +138,7 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 				}
 			},
 		],
+		// Removed rehypeHighlightSearch plugin
 		rehypePlugins: [],
 		rehypeReactOptions: {
 			components: {
@@ -170,20 +175,24 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 						const codeText = String(props.children || "")
 						return <MermaidBlock code={codeText} />
 					}
-
 					return <code {...props} />
 				},
+				// Removed explicit mark renderer
 			},
 		},
 	})
 
 	useEffect(() => {
 		setMarkdown(markdown || "")
+		// Removed searchText from dependency array
 	}, [markdown, setMarkdown, theme])
+
+	// Apply highlighting after react-remark processing
+	const highlightedContent = applyHighlighting(reactContent, searchText || "")
 
 	return (
 		<div style={{}}>
-			<StyledMarkdown>{reactContent}</StyledMarkdown>
+			<StyledMarkdown>{highlightedContent}</StyledMarkdown>
 		</div>
 	)
 })

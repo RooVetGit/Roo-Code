@@ -9,9 +9,18 @@ type CheckpointSavedProps = {
 	commitHash: string
 	currentHash?: string
 	checkpoint?: Record<string, unknown>
+	searchText?: string
+	highlightText?: (text: string, searchTerm: string, itemIndex: number) => React.ReactNode
+	itemIndex: number // Added itemIndex
 }
 
-export const CheckpointSaved = ({ checkpoint, ...props }: CheckpointSavedProps) => {
+export const CheckpointSaved = ({
+	checkpoint,
+	searchText,
+	highlightText,
+	itemIndex,
+	...props
+}: CheckpointSavedProps) => {
 	const { t } = useTranslation()
 	const isCurrent = props.currentHash === props.commitHash
 
@@ -38,11 +47,25 @@ export const CheckpointSaved = ({ checkpoint, ...props }: CheckpointSavedProps) 
 			<div className="flex gap-2">
 				<span className="codicon codicon-git-commit text-blue-400" />
 				<span className="font-bold">
-					{metadata.isFirst ? t("chat:checkpoint.initial") : t("chat:checkpoint.regular")}
+					{searchText && highlightText
+						? highlightText(
+								metadata.isFirst ? t("chat:checkpoint.initial") : t("chat:checkpoint.regular"),
+								searchText,
+								itemIndex,
+							)
+						: metadata.isFirst
+							? t("chat:checkpoint.initial")
+							: t("chat:checkpoint.regular")}
 				</span>
 				{isCurrent && <span className="text-muted text-sm">{t("chat:checkpoint.current")}</span>}
 			</div>
-			<CheckpointMenu {...props} checkpoint={metadata} />
+			{/* Pass remaining props excluding the ones used here */}
+			<CheckpointMenu
+				ts={props.ts}
+				commitHash={props.commitHash}
+				currentHash={props.currentHash}
+				checkpoint={metadata}
+			/>
 		</div>
 	)
 }
