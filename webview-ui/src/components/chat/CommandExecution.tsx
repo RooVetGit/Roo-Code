@@ -27,7 +27,7 @@ export const CommandExecution = ({ executionId, text }: CommandExecutionProps) =
 
 	const [status, setStatus] = useState<CommandExecutionStatus | null>(null)
 	const [output, setOutput] = useState("")
-	const [command, setCommand] = useState(text)
+	const [command, setCommand] = useState("")
 
 	const lines = useMemo(
 		() => [`$ ${command}`, ...output.split("\n").filter((line) => line.trim() !== "")],
@@ -79,9 +79,7 @@ export const CommandExecution = ({ executionId, text }: CommandExecutionProps) =
 		if (!status && text) {
 			const index = text.indexOf(COMMAND_OUTPUT_STRING)
 
-			if (index === -1) {
-				setCommand(text)
-			} else {
+			if (index !== -1) {
 				setCommand(text.slice(0, index))
 				setOutput(text.slice(index + COMMAND_OUTPUT_STRING.length))
 			}
