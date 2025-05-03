@@ -151,15 +151,15 @@ export async function executeCommand(
 
 	const callbacks: RooTerminalCallbacks = {
 		onLine: async (output: string, process: RooTerminalProcess) => {
-			const status: CommandExecutionStatus = { executionId, status: "output", output }
-			clineProvider?.postMessageToWebview({ type: "commandExecutionStatus", text: JSON.stringify(status) })
+			const compressed = Terminal.compressTerminalOutput(output, terminalOutputLineLimit)
+			cline.say("command_output", compressed)
 
 			if (runInBackground) {
 				return
 			}
 
 			try {
-				const { response, text, images } = await cline.ask("command_output", "")
+				const { response, text, images } = await cline.ask("command_output", compressed)
 				runInBackground = true
 
 				if (response === "messageResponse") {
@@ -170,12 +170,10 @@ export async function executeCommand(
 		},
 		onCompleted: (output: string | undefined) => {
 			result = Terminal.compressTerminalOutput(output ?? "", terminalOutputLineLimit)
-			cline.say("command_output", result)
 			completed = true
 		},
 		onShellExecutionStarted: (pid: number | undefined) => {
-			console.log(`[executeCommand] onShellExecutionStarted: ${pid}`)
-			const status: CommandExecutionStatus = { executionId, status: "started", pid, command }
+			const status: CommandExecutionStatus = { executionId, status: "running", pid }
 			clineProvider?.postMessageToWebview({ type: "commandExecutionStatus", text: JSON.stringify(status) })
 		},
 		onShellExecutionComplete: (details: ExitCodeDetails) => {

@@ -293,14 +293,8 @@ export type CustomSupportPrompts = z.infer<typeof customSupportPromptsSchema>
 export const commandExecutionStatusSchema = z.discriminatedUnion("status", [
 	z.object({
 		executionId: z.string(),
-		status: z.literal("started"),
+		status: z.literal("running"),
 		pid: z.number().optional(),
-		command: z.string(),
-	}),
-	z.object({
-		executionId: z.string(),
-		status: z.literal("output"),
-		output: z.string(),
 	}),
 	z.object({
 		executionId: z.string(),
