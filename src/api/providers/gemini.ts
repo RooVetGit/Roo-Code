@@ -105,9 +105,9 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 			if (cacheEntry) {
 				uncachedContent = contents.slice(cacheEntry.count, contents.length)
 				cachedContent = cacheEntry.key
-				console.log(
-					`[GeminiHandler] using ${cacheEntry.count} cached messages (${cacheEntry.key}) and ${uncachedContent.length} uncached messages`,
-				)
+				// console.log(
+				// 	`[GeminiHandler] using cache entry ${cacheEntry.key} -> ${cacheEntry.count} messages, ${cacheEntry.tokens} tokens (+${uncachedContent.length} uncached messages)`,
+				// )
 			}
 
 			// If `CACHE_WRITE_FREQUENCY` messages have been appended since the
@@ -334,7 +334,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		}
 
 		this.isCacheBusy = true
-		const timestamp = Date.now()
+		// const timestamp = Date.now()
 
 		const previousCacheEntry = this.contentCaches.get<CacheEntry>(cacheKey)
 
@@ -360,19 +360,19 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 
 					this.contentCaches.set<CacheEntry>(cacheKey, newCacheEntry)
 
-					console.log(
-						`[GeminiHandler] created cache entry ${newCacheEntry.key} -> ${newCacheEntry.count} messages, ${newCacheEntry.tokens} tokens (${Date.now() - timestamp}ms)`,
-					)
+					// console.log(
+					// 	`[GeminiHandler] created cache entry ${newCacheEntry.key} -> ${newCacheEntry.count} messages, ${newCacheEntry.tokens} tokens (${Date.now() - timestamp}ms)`,
+					// )
 
 					if (previousCacheEntry) {
-						const timestamp = Date.now()
+						// const timestamp = Date.now()
 
 						this.client.caches
 							.delete({ name: previousCacheEntry.key })
 							.then(() => {
-								console.log(
-									`[GeminiHandler] deleted cache entry ${previousCacheEntry.key} -> ${previousCacheEntry.count} messages, ${previousCacheEntry.tokens} tokens (${Date.now() - timestamp}ms)`,
-								)
+								// console.log(
+								// 	`[GeminiHandler] deleted cache entry ${previousCacheEntry.key} -> ${previousCacheEntry.count} messages, ${previousCacheEntry.tokens} tokens (${Date.now() - timestamp}ms)`,
+								// )
 							})
 							.catch((error) => {
 								console.error(
