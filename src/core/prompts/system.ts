@@ -3,12 +3,12 @@ import {
 	modes,
 	CustomModePrompts,
 	PromptComponent,
-	getRoleDefinition,
 	defaultModeSlug,
 	ModeConfig,
 	getModeBySlug,
 	getGroupName,
 } from "../../shared/modes"
+import { ClineProvider } from "../webview/ClineProvider"
 import { PromptVariables } from "./sections/custom-system-prompt"
 import { DiffStrategy } from "../../shared/tools"
 import { McpHub } from "../../services/mcp/McpHub"
@@ -126,13 +126,15 @@ export const SYSTEM_PROMPT = async (
 		return undefined
 	}
 
-	// Try to load custom system prompt from file
+	const provider = await ClineProvider.getInstance()
+	const { maxReadFileLine = 500 } = provider ? await provider.getState() : {}
 	const variablesForPrompt: PromptVariables = {
 		workspace: cwd,
 		mode: mode,
 		language: language ?? formatLanguage(vscode.env.language),
 		shell: vscode.env.shell,
 		operatingSystem: os.type(),
+		maxReadFileLine,
 	}
 	const fileCustomSystemPrompt = await loadSystemPromptFile(cwd, mode, variablesForPrompt)
 

@@ -9,6 +9,7 @@ export type PromptVariables = {
 	language?: string
 	shell?: string
 	operatingSystem?: string
+	maxReadFileLine?: number
 }
 
 function interpolatePromptContent(content: string, variables: PromptVariables): string {
@@ -19,7 +20,10 @@ function interpolatePromptContent(content: string, variables: PromptVariables): 
 			variables[key as keyof PromptVariables] !== undefined
 		) {
 			const placeholder = new RegExp(`\\{\\{${key}\\}\\}`, "g")
-			interpolatedContent = interpolatedContent.replace(placeholder, variables[key as keyof PromptVariables]!)
+			interpolatedContent = interpolatedContent.replace(
+				placeholder,
+				String(variables[key as keyof PromptVariables]!),
+			)
 		}
 	}
 	return interpolatedContent
