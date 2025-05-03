@@ -71,13 +71,13 @@ export interface ExtensionMessage {
 		| "vsCodeSetting"
 		| "condenseTaskContextResponse"
 		| "singleRouterModelFetchResponse"
-    | "indexingStatusUpdate"
-    | "indexCleared"
+		| "indexingStatusUpdate"
+		| "indexCleared"
+		| "codebaseIndexConfig"
 	text?: string
 	action?:
 		| "chatButtonClicked"
 		| "mcpButtonClicked"
-		| "codebaseIndexConfig"
 		| "settingsButtonClicked"
 		| "historyButtonClicked"
 		| "promptsButtonClicked"
