@@ -1,5 +1,27 @@
 # Roo Code Changelog
 
+## [3.15.4] - 2025-05-04
+
+- Fix a nasty bug that would cause Roo Code to hang, particularly in orchestrator mode
+- Improve Gemini caching efficiency
+
+## [3.15.3] - 2025-05-02
+
+- Terminal: Fix empty command bug
+- Terminal: More robust process killing
+- Optimize Gemini prompt caching for OpenRouter
+- Chat view performance improvements
+
+## [3.15.2] - 2025-05-02
+
+- Fix terminal performance issues
+- Handle Mermaid validation errors
+- Add customizable headers for OpenAI-compatible provider (thanks @mark-bradshaw!)
+- Add config option to overwrite OpenAI's API base (thanks @GOODBOY008!)
+- Fixes to padding and height issues when resizing the sidebar (thanks @zhangtony239!)
+- Remove tool groups from orchestrator mode definition
+- Add telemetry for title button clicks
+
 ## [3.15.1] - 2025-04-30
 
 - Capture stderr in execa-spawned processes

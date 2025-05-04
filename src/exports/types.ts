@@ -51,7 +51,6 @@ type ProviderSettings = {
 	vertexRegion?: string | undefined
 	openAiBaseUrl?: string | undefined
 	openAiApiKey?: string | undefined
-	openAiHostHeader?: string | undefined
 	openAiLegacyFormat?: boolean | undefined
 	openAiR1FormatEnabled?: boolean | undefined
 	openAiModelId?: string | undefined
@@ -89,6 +88,12 @@ type ProviderSettings = {
 	azureApiVersion?: string | undefined
 	openAiStreamingEnabled?: boolean | undefined
 	enableReasoningEffort?: boolean | undefined
+	openAiHostHeader?: string | undefined
+	openAiHeaders?:
+		| {
+				[x: string]: string
+		  }
+		| undefined
 	ollamaModelId?: string | undefined
 	ollamaBaseUrl?: string | undefined
 	vsCodeLmModelSelector?:
@@ -353,7 +358,6 @@ type ClineMessage = {
 		| undefined
 	progressStatus?:
 		| {
-				id?: string | undefined
 				icon?: string | undefined
 				text?: string | undefined
 		  }
@@ -433,7 +437,6 @@ type RooCodeEvents = {
 					| undefined
 				progressStatus?:
 					| {
-							id?: string | undefined
 							icon?: string | undefined
 							text?: string | undefined
 					  }
