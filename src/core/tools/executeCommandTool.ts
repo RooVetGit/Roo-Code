@@ -9,7 +9,7 @@ import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag, To
 import { formatResponse } from "../prompts/responses"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
-import { ExitCodeDetails, RooTerminalCallbacks } from "../../integrations/terminal/types"
+import { ExitCodeDetails, RooTerminalCallbacks, RooTerminalProcess } from "../../integrations/terminal/types"
 import { TerminalRegistry } from "../../integrations/terminal/TerminalRegistry"
 import { Terminal } from "../../integrations/terminal/Terminal"
 
@@ -56,7 +56,6 @@ export async function executeCommandTool(
 			}
 
 			const executionId = cline.lastMessageTs?.toString() ?? Date.now().toString()
-
 			const clineProvider = await cline.providerRef.deref()
 			const clineProviderState = await clineProvider?.getState()
 			const { terminalOutputLineLimit = 500, terminalShellIntegrationDisabled = false } = clineProviderState ?? {}
@@ -141,6 +140,7 @@ export async function executeCommand(
 	}
 
 	let message: { text?: string; images?: string[] } | undefined
+	let runInBackground = false
 	let completed = false
 	let result: string = ""
 	let exitDetails: ExitCodeDetails | undefined
@@ -150,9 +150,23 @@ export async function executeCommand(
 	const clineProvider = await cline.providerRef.deref()
 
 	const callbacks: RooTerminalCallbacks = {
-		onLine: async (output: string) => {
+		onLine: async (output: string, process: RooTerminalProcess) => {
 			const status: CommandExecutionStatus = { executionId, status: "output", output }
 			clineProvider?.postMessageToWebview({ type: "commandExecutionStatus", text: JSON.stringify(status) })
+
+			if (runInBackground) {
+				return
+			}
+
+			try {
+				const { response, text, images } = await cline.ask("command_output", "")
+				runInBackground = true
+
+				if (response === "messageResponse") {
+					message = { text, images }
+					process.continue()
+				}
+			} catch (_error) {}
 		},
 		onCompleted: (output: string | undefined) => {
 			result = Terminal.compressTerminalOutput(output ?? "", terminalOutputLineLimit)
@@ -163,9 +177,6 @@ export async function executeCommand(
 			console.log(`[executeCommand] onShellExecutionStarted: ${pid}`)
 			const status: CommandExecutionStatus = { executionId, status: "started", pid, command }
 			clineProvider?.postMessageToWebview({ type: "commandExecutionStatus", text: JSON.stringify(status) })
-			// This `command_output` message tells the webview to render the
-			// appropriate primary and secondary buttons.
-			cline.say("command_output", "")
 		},
 		onShellExecutionComplete: (details: ExitCodeDetails) => {
 			const status: CommandExecutionStatus = { executionId, status: "exited", exitCode: details.exitCode }
@@ -205,7 +216,8 @@ export async function executeCommand(
 	// Wait for a short delay to ensure all messages are sent to the webview.
 	// This delay allows time for non-awaited promises to be created and
 	// for their associated messages to be sent to the webview, maintaining
-	// the correct order of messages.
+	// the correct order of messages (although the webview is smart about
+	// grouping command_output messages despite any gaps anyways).
 	await delay(50)
 
 	if (message) {

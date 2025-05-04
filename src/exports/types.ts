@@ -310,6 +310,7 @@ type ClineMessage = {
 		| (
 				| "followup"
 				| "command"
+				| "command_output"
 				| "completion_result"
 				| "tool"
 				| "api_req_failed"
@@ -357,7 +358,6 @@ type ClineMessage = {
 		| undefined
 	progressStatus?:
 		| {
-				id?: string | undefined
 				icon?: string | undefined
 				text?: string | undefined
 		  }
@@ -389,6 +389,7 @@ type RooCodeEvents = {
 					| (
 							| "followup"
 							| "command"
+							| "command_output"
 							| "completion_result"
 							| "tool"
 							| "api_req_failed"
@@ -436,7 +437,6 @@ type RooCodeEvents = {
 					| undefined
 				progressStatus?:
 					| {
-							id?: string | undefined
 							icon?: string | undefined
 							text?: string | undefined
 					  }

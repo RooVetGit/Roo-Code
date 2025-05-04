@@ -76,13 +76,13 @@ export async function attemptCompletionTool(
 				}
 
 				// Complete command message.
-				const executionId = Date.now().toString()
-				const didApprove = await askApproval("command", command, { id: executionId })
+				const didApprove = await askApproval("command", command)
 
 				if (!didApprove) {
 					return
 				}
 
+				const executionId = cline.lastMessageTs?.toString() ?? Date.now().toString()
 				const options: ExecuteCommandOptions = { executionId, command }
 				const [userRejected, execCommandResult] = await executeCommand(cline, options)
 

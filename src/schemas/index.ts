@@ -767,6 +767,7 @@ export const isGlobalStateKey = (key: string): key is Keys<GlobalState> =>
 export const clineAsks = [
 	"followup",
 	"command",
+	"command_output",
 	"completion_result",
 	"tool",
 	"api_req_failed",
@@ -816,7 +817,6 @@ export type ClineSay = z.infer<typeof clineSaySchema>
  */
 
 export const toolProgressStatusSchema = z.object({
-	id: z.string().optional(),
 	icon: z.string().optional(),
 	text: z.string().optional(),
 })

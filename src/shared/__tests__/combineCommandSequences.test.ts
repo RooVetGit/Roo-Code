@@ -21,12 +21,19 @@ const messages: ClineMessage[] = [
 	},
 	{ ts: 1745710930748, type: "ask", ask: "command", text: "ping www.google.com", partial: false },
 	{ ts: 1745710930894, type: "say", say: "command_output", text: "", images: undefined },
+	{ ts: 1745710930894, type: "ask", ask: "command_output", text: "" },
 	{
 		ts: 1745710930954,
 		type: "say",
 		say: "command_output",
 		text: "PING www.google.com (142.251.46.228): 56 data bytes\n",
 		images: undefined,
+	},
+	{
+		ts: 1745710930954,
+		type: "ask",
+		ask: "command_output",
+		text: "PING www.google.com (142.251.46.228): 56 data bytes\n",
 	},
 ]
 

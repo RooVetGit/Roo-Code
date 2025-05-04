@@ -39,7 +39,7 @@ export function combineCommandSequences(messages: ClineMessage[]): ClineMessage[
 					break // Stop if we encounter the next command.
 				}
 
-				if (say === "command_output") {
+				if (ask === "command_output" || say === "command_output") {
 					if (!previous) {
 						combinedText += `\n${COMMAND_OUTPUT_STRING}`
 					}
@@ -68,7 +68,7 @@ export function combineCommandSequences(messages: ClineMessage[]): ClineMessage[
 	// Second pass: remove command_outputs and replace original commands with
 	// combined ones.
 	return messages
-		.filter((msg) => msg.say !== "command_output")
+		.filter((msg) => !(msg.ask === "command_output" || msg.say === "command_output"))
 		.map((msg) => {
 			if (msg.type === "ask" && msg.ask === "command") {
 				return combinedCommands.find((cmd) => cmd.ts === msg.ts) || msg
