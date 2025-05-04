@@ -300,6 +300,12 @@ export class Cline extends EventEmitter<ClineEvents> {
 		return this.workspacePath
 	}
 
+	/** Public getter for the checkpoint service instance. */
+	public getCheckpointServiceInstance(): RepoPerTaskCheckpointService | undefined {
+		return this.checkpointService
+	}
+
+
 	// Storing task to disk for history
 
 	private async getSavedApiConversationHistory(): Promise<Anthropic.MessageParam[]> {
@@ -465,9 +471,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			this.lastMessageTs = askTs
 			await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text })
 		}
-
 		await pWaitFor(() => this.askResponse !== undefined || this.lastMessageTs !== askTs, { interval: 100 })
-
 		if (this.lastMessageTs !== askTs) {
 			// Could happen if we send multiple asks in a row i.e. with
 			// command_output. It's important that when we know an ask could
@@ -484,6 +488,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 	}
 
 	async handleWebviewAskResponse(askResponse: ClineAskResponse, text?: string, images?: string[]) {
+		console.log(
+			new Date().toISOString(),
+			`[DEBUG] [Cline ${this.instanceId}] handleWebviewAskResponse called. Setting askResponse=${askResponse}, askResponseText=${text}`,
+		) // DEBUG
 		this.askResponse = askResponse
 		this.askResponseText = text
 		this.askResponseImages = images
@@ -1917,7 +1925,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 					content: [{ type: "text", text: "Failure: I did not provide a response." }],
 				})
 			}
-
 			return didEndLoop // will always be false for now
 		} catch (error) {
 			// This should never happen since the only thing that can throw an
@@ -2384,6 +2391,19 @@ export class Cline extends EventEmitter<ClineEvents> {
 		} catch (err) {
 			return undefined
 		}
+	}
+
+	/**
+	 * Gets the initialized checkpoint service instance if available, logging relevant state for resend context.
+	 * Returns undefined if the service is not available or not initialized.
+	 * @returns The initialized RepoPerTaskCheckpointService instance or undefined.
+	 */
+	public async getAvailableCheckpointServiceForResend(): Promise<RepoPerTaskCheckpointService | undefined> {
+		const service = await this.getInitializedCheckpointService()
+		const serviceAvailable = !!(service && service.isInitialized)
+		// Logs removed as per user request
+
+		return serviceAvailable ? service : undefined
 	}
 
 	public async checkpointDiff({

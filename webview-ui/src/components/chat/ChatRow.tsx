@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useMemo, useRef, useState } from "react"
+import React, { memo, useEffect, useMemo, useRef, useState, useCallback } from "react"
 import { useSize } from "react-use"
 import { useTranslation, Trans } from "react-i18next"
 import deepEqual from "fast-deep-equal"
@@ -39,6 +39,7 @@ interface ChatRowProps {
 	onToggleExpand: () => void
 	onHeightChange: (isTaller: boolean) => void
 	onSuggestionClick?: (answer: string, event?: React.MouseEvent) => void
+	onChatReset?: () => void
 }
 
 interface ChatRowContentProps extends Omit<ChatRowProps, "onHeightChange"> {}
@@ -86,6 +87,7 @@ export const ChatRowContent = ({
 	isStreaming,
 	onToggleExpand,
 	onSuggestionClick,
+	onChatReset,
 }: ChatRowContentProps) => {
 	const { t } = useTranslation()
 	const { mcpServers, alwaysAllowMcp, currentCheckpoint } = useExtensionState()
@@ -93,6 +95,89 @@ export const ChatRowContent = ({
 	const [isDiffErrorExpanded, setIsDiffErrorExpanded] = useState(false)
 	const [showCopySuccess, setShowCopySuccess] = useState(false)
 	const { copyWithFeedback } = useCopyToClipboard()
+
+	const [isEditing, setIsEditing] = useState(false)
+	const [editedContent, setEditedContent] = useState("")
+	const textareaRef = useRef<HTMLTextAreaElement>(null) // For focus and outside click detection
+
+	// Resend message textarea focus management
+	useEffect(() => {
+		if (isEditing && textareaRef.current) {
+			textareaRef.current.focus()
+			// Auto-adjust height initially based on content
+			textareaRef.current.style.height = "auto"
+			textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+		}
+	}, [isEditing])
+
+	// Outside click detection to cancel edit
+	useEffect(() => {
+		if (!isEditing) return
+
+		const handleClickOutside = (event: MouseEvent) => {
+			if (textareaRef.current && !textareaRef.current.contains(event.target as Node)) {
+				setIsEditing(false)
+			}
+		}
+
+		document.addEventListener("mousedown", handleClickOutside)
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside)
+		}
+	}, [isEditing])
+
+	// Handler to start editing - useCallback to prevent unnecessary re-renders if passed down
+	const handleStartEditing = useCallback(() => {
+		// Only allow editing for user's own 'say' messages with text content and not partial
+		if (
+			message.type === "say" &&
+			(message.say === "text" || message.say === "user_feedback") &&
+			message.text &&
+			!message.partial
+		) {
+			setEditedContent(message.text || "")
+			setIsEditing(true)
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps -- message properties are stable within a row render
+	}, [message.type, message.say, message.text, message.partial, message.ts])
+
+	// Handler for textarea change
+	const handleEditChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+		setEditedContent(event.target.value)
+		// Auto-adjust height while typing
+		if (textareaRef.current) {
+			textareaRef.current.style.height = "auto" // Reset height
+			textareaRef.current.style.height = `${event.target.scrollHeight}px`
+		}
+	}
+
+	// Handler for keydown events in textarea (Enter, Escape)
+	const handleEditKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+		if (event.key === "Enter" && !event.shiftKey) {
+			event.preventDefault() // Prevent newline
+			// Check if content actually changed to prevent unnecessary messages
+			const originalText = message.text || ""
+			if (editedContent.trim() !== originalText.trim()) {
+				// Send check confirmation message
+				vscode.postMessage({
+					type: "resendMessage",
+					payload: {
+						originalMessageId: message.ts.toString(), // Convert timestamp number to string
+						editedText: editedContent, // Match backend schema key 'editedText'
+					},
+				})
+				// Call the reset function after posting the message
+				if (onChatReset) {
+					onChatReset()
+				} else {
+					console.error("onChatReset prop is missing in ChatRow")
+				}
+			} // <-- Add missing closing brace for the outer if statement
+			setIsEditing(false) // Ensure setIsEditing is called after handling Enter
+		} else if (event.key === "Escape") {
+			setIsEditing(false)
+		}
+	} // Ensure the function closing brace and semicolon are correct
 
 	const [cost, apiReqCancelReason, apiReqStreamingFailedMessage] = useMemo(() => {
 		if (message.text !== null && message.text !== undefined && message.say === "api_req_started") {
@@ -857,26 +942,57 @@ export const ChatRowContent = ({
 					)
 				case "user_feedback":
 					return (
-						<div className="bg-vscode-editor-background border rounded-xs p-1 overflow-hidden whitespace-pre-wrap word-break-break-word overflow-wrap-anywhere">
-							<div className="flex justify-between gap-2">
-								<div className="flex-grow px-2 py-1">
-									<Mention text={message.text} withShadow />
+						<>
+							{isEditing ? (
+								<textarea
+									ref={textareaRef}
+									value={editedContent}
+									onChange={handleEditChange}
+									onKeyDown={handleEditKeyDown}
+									style={{
+										width: "100%",
+										minHeight: "40px",
+										resize: "none",
+										border: `1px solid var(--vscode-input-border)`,
+										borderRadius: "3px",
+										padding: "8px 10px",
+										backgroundColor: "var(--vscode-input-background)",
+										color: "var(--vscode-input-foreground)",
+										fontFamily: "inherit",
+										fontSize: "inherit",
+										lineHeight: "inherit",
+										boxSizing: "border-box",
+										overflowY: "hidden",
+									}}
+									rows={1}
+								/>
+							) : (
+								<div
+									onClick={handleStartEditing}
+									style={{ cursor: message.text && !message.partial ? "pointer" : "default" }}>
+									<div className="bg-vscode-editor-background border rounded-xs p-1 overflow-hidden whitespace-pre-wrap word-break-break-word overflow-wrap-anywhere">
+										<div className="flex justify-between gap-2">
+											<div className="flex-grow px-2 py-1">
+												<Mention text={message.text} withShadow />
+											</div>
+											<Button
+												variant="ghost"
+												size="icon"
+												disabled={isStreaming}
+												onClick={(e) => {
+													e.stopPropagation()
+													vscode.postMessage({ type: "deleteMessage", value: message.ts })
+												}}>
+												<span className="codicon codicon-trash" />
+											</Button>
+										</div>
+										{message.images && message.images.length > 0 && (
+											<Thumbnails images={message.images} style={{ marginTop: "8px" }} />
+										)}
+									</div>
 								</div>
-								<Button
-									variant="ghost"
-									size="icon"
-									disabled={isStreaming}
-									onClick={(e) => {
-										e.stopPropagation()
-										vscode.postMessage({ type: "deleteMessage", value: message.ts })
-									}}>
-									<span className="codicon codicon-trash" />
-								</Button>
-							</div>
-							{message.images && message.images.length > 0 && (
-								<Thumbnails images={message.images} style={{ marginTop: "8px" }} />
 							)}
-						</div>
+						</>
 					)
 				case "user_feedback_diff":
 					const tool = safeJsonParse<ClineSayTool>(message.text)

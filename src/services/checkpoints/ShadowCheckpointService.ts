@@ -21,6 +21,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 
 	protected _checkpoints: string[] = []
 	protected _baseHash?: string
+	protected checkpointTimestamps: { commitHash: string; timestamp: number }[] = []
 
 	protected readonly dotGitDir: string
 	protected git?: SimpleGit
@@ -37,6 +38,14 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 
 	public get isInitialized() {
 		return !!this.git
+	}
+
+	public get checkpoints(): readonly string[] {
+		return this._checkpoints
+	}
+
+	public get timestamps(): readonly { commitHash: string; timestamp: number }[] {
+		return this.checkpointTimestamps
 	}
 
 	constructor(taskId: string, checkpointsDir: string, workspaceDir: string, log: (message: string) => void) {
@@ -84,7 +93,107 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			}
 
 			await this.writeExcludeFile()
-			this.baseHash = await git.revparse(["HEAD"])
+
+			try {
+				// Check if the repository has any commits yet
+				const logCheck = await git.log(["-n", "1"]).catch(() => null) // Catch error if log fails (e.g., empty repo)
+
+				if (logCheck && logCheck.latest) {
+					// Commits exist, proceed with restoring state
+					let trueInitialCommitHash: string | undefined
+					try {
+						// Find the root commit (the actual initial commit)
+						const initialCommitResult = await git.raw(["rev-list", "--max-parents=0", "HEAD"])
+						trueInitialCommitHash = initialCommitResult?.trim()
+					} catch (revListError) {
+						this.log(
+							`[ERROR] initShadowGit: Failed to get true initial commit hash: ${revListError}. Proceeding without reliable initial commit check.`,
+						)
+					}
+
+					// Get current HEAD, mainly for logging/reference, not for loop logic
+					this.baseHash = await git.revparse(["HEAD"]).catch(() => undefined)
+
+					try {
+						// Get log in reverse chronological order (newest first)
+						const logResult = await git.log({ format: { hash: "%H", timestamp: "%ct" } })
+
+						const recoveredCheckpoints: string[] = []
+						const recoveredTimestamps: { commitHash: string; timestamp: number }[] = []
+						const commits = [...logResult.all].reverse() // Oldest first
+
+						for (const commit of commits) {
+							const commitHash = commit.hash
+							const timestamp = parseInt(commit.timestamp, 10) * 1000
+
+							if (isNaN(timestamp)) {
+								this.log(
+									`[WARN] initShadowGit: Could not parse timestamp for commit ${commitHash}. Skipping.`,
+								)
+								continue
+							}
+
+							// Always add timestamp entry for every commit found
+							recoveredTimestamps.push({ commitHash, timestamp })
+
+							// Add to checkpoints array only if it's NOT the true initial commit
+							if (commitHash !== trueInitialCommitHash) {
+								recoveredCheckpoints.push(commitHash)
+							} else {
+								this.log(
+									`[DEBUG] initShadowGit: Identified commit ${commitHash} as the true initial commit. Not adding to _checkpoints.`,
+								)
+							}
+						}
+
+						// Assign the recovered state
+						this._checkpoints = recoveredCheckpoints
+						// Ensure timestamps are sorted correctly by time
+						this.checkpointTimestamps = recoveredTimestamps.sort((a, b) => a.timestamp - b.timestamp)
+
+						// this.log(`[DEBUG] initShadowGit: Restored _checkpoints: ${JSON.stringify(this._checkpoints)}`);
+						// this.log(`[DEBUG] initShadowGit: Restored checkpointTimestamps: ${JSON.stringify(this.checkpointTimestamps)}`);
+					} catch (logError) {
+						this.log(
+							`[ERROR] initShadowGit: Failed to get git log to restore checkpoint state: ${logError}. State might be incorrect.`,
+						)
+						// Fallback: Initialize minimally
+						this._checkpoints = []
+						this.checkpointTimestamps = []
+						if (this.baseHash) {
+							this.checkpointTimestamps.push({ commitHash: this.baseHash, timestamp: startTime }) // Use startTime as fallback ts
+						} else {
+							this.log(
+								`[WARN] initShadowGit: Fallback (log error) - Could not determine baseHash, state arrays left empty.`,
+							)
+						}
+					}
+				} else {
+					// No commits found, perform initial commit
+					this.log(
+						`[${this.constructor.name}#initShadowGit] Repo exists but has no commits. Performing initial commit.`,
+					)
+					await this.stageAll(git)
+					const { commit } = await git.commit("initial commit", { "--allow-empty": null })
+					this.baseHash = commit
+					if (this.baseHash) {
+						// Initialize state after initial commit
+						this._checkpoints = [] // No checkpoints yet
+						this.checkpointTimestamps = [{ commitHash: this.baseHash, timestamp: Date.now() }] // Use current time for initial commit ts
+					} else {
+						this.log(`[ERROR] initShadowGit: Failed to get commit hash after initial commit.`)
+						this._checkpoints = []
+						this.checkpointTimestamps = []
+					}
+					created = true // Consider this as part of the creation process for logging/events
+				}
+			} catch (repoCheckError) {
+				this.log(
+					`[ERROR] initShadowGit: Error checking existing repo or performing initial commit: ${repoCheckError}. Aborting initialization.`,
+				)
+				// Re-throw the error as this indicates a potentially corrupted state
+				throw repoCheckError
+			}
 		} else {
 			this.log(`[${this.constructor.name}#initShadowGit] creating shadow git repo at ${this.checkpointsDir}`)
 			await git.init()
@@ -96,6 +205,10 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			await this.stageAll(git)
 			const { commit } = await git.commit("initial commit", { "--allow-empty": null })
 			this.baseHash = commit
+			// Record initial timestamp when creating repo
+			if (this.baseHash) {
+				this.checkpointTimestamps = [{ commitHash: this.baseHash, timestamp: startTime }] // Use startTime for consistency
+			}
 			created = true
 		}
 
@@ -109,14 +222,20 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 
 		await onInit?.()
 
-		this.emit("initialize", {
-			type: "initialize",
-			workspaceDir: this.workspaceDir,
-			baseHash: this.baseHash,
-			created,
-			duration,
-		})
-
+		// Only emit initialize event if initialization seems successful (baseHash is set)
+		if (this.baseHash) {
+			this.emit("initialize", {
+				type: "initialize",
+				workspaceDir: this.workspaceDir,
+				baseHash: this.baseHash, // Now guaranteed to be string here
+				created,
+				duration,
+			})
+		} else {
+			this.log(
+				`[ERROR] initShadowGit: Initialization failed or baseHash could not be determined. 'initialize' event not emitted.`,
+			)
+		}
 		return { created, duration }
 	}
 
@@ -228,7 +347,12 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			const isFirst = this._checkpoints.length === 0
 			const fromHash = this._checkpoints[this._checkpoints.length - 1] ?? this.baseHash!
 			const toHash = result.commit || fromHash
+			const currentTimestamp = Date.now() // Capture timestamp before potentially long duration calculation
 			this._checkpoints.push(toHash)
+			// Record timestamp for the new checkpoint
+			if (result.commit) {
+				this.checkpointTimestamps.push({ commitHash: toHash, timestamp: currentTimestamp })
+			}
 			const duration = Date.now() - startTime
 
 			if (isFirst || result.commit) {
@@ -268,6 +392,12 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			const checkpointIndex = this._checkpoints.indexOf(commitHash)
 
 			if (checkpointIndex !== -1) {
+				// Also truncate the timestamp list to keep it in sync
+				const timestampIndex = this.checkpointTimestamps.findIndex((item) => item.commitHash === commitHash)
+				if (timestampIndex !== -1) {
+					this.checkpointTimestamps = this.checkpointTimestamps.slice(0, timestampIndex + 1)
+				}
+				// Truncate the checkpoints list
 				this._checkpoints = this._checkpoints.slice(0, checkpointIndex + 1)
 			}
 
@@ -314,6 +444,35 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		}
 
 		return result
+	}
+
+	/**
+	 * Finds the commit hash of the latest checkpoint created strictly *before* the given timestamp.
+	 * Returns the baseHash if no checkpoint before the timestamp is found.
+	 * @param timestamp The timestamp to compare against.
+	 * @returns The commit hash string or undefined if the list is empty.
+	 */
+	public findCheckpointBefore(timestamp: number): string | undefined {
+		if (!this.checkpointTimestamps || this.checkpointTimestamps.length === 0) {
+			return this.baseHash // Return baseHash if no timestamps recorded yet
+		}
+
+		let foundHash: string | undefined = this.baseHash // Default to baseHash
+
+		// Iterate backwards to find the first checkpoint strictly before the timestamp
+		for (let i = this.checkpointTimestamps.length - 1; i >= 0; i--) {
+			const checkpoint = this.checkpointTimestamps[i]
+			if (checkpoint.timestamp < timestamp) {
+				foundHash = checkpoint.commitHash
+				break // Found the latest one before the target timestamp
+			}
+		}
+
+		// If the loop finishes without finding one (meaning the message is older than the first recorded timestamp),
+		// foundHash remains baseHash (or the hash of the earliest entry if baseHash wasn't set correctly initially).
+		// If the first entry's timestamp is >= timestamp, it correctly returns baseHash.
+
+		return foundHash
 	}
 
 	/**
