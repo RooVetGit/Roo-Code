@@ -9,7 +9,7 @@ import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag, To
 import { formatResponse } from "../prompts/responses"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
-import { ExitCodeDetails, RooTerminalCallbacks, RooTerminalProcess } from "../../integrations/terminal/types"
+import { ExitCodeDetails, RooTerminalCallbacks } from "../../integrations/terminal/types"
 import { TerminalRegistry } from "../../integrations/terminal/TerminalRegistry"
 import { Terminal } from "../../integrations/terminal/Terminal"
 
@@ -140,7 +140,6 @@ export async function executeCommand(
 	}
 
 	let message: { text?: string; images?: string[] } | undefined
-	let runInBackground = false
 	let completed = false
 	let result: string = ""
 	let exitDetails: ExitCodeDetails | undefined
@@ -150,23 +149,9 @@ export async function executeCommand(
 	const clineProvider = await cline.providerRef.deref()
 
 	const callbacks: RooTerminalCallbacks = {
-		onLine: async (output: string, process: RooTerminalProcess) => {
+		onLine: async (output: string) => {
 			const status: CommandExecutionStatus = { executionId, status: "output", output }
 			clineProvider?.postMessageToWebview({ type: "commandExecutionStatus", text: JSON.stringify(status) })
-
-			if (runInBackground) {
-				return
-			}
-
-			try {
-				const { response, text, images } = await cline.ask("command_output", "")
-				runInBackground = true
-
-				if (response === "messageResponse") {
-					message = { text, images }
-					process.continue()
-				}
-			} catch (_error) {}
 		},
 		onCompleted: (output: string | undefined) => {
 			result = Terminal.compressTerminalOutput(output ?? "", terminalOutputLineLimit)
