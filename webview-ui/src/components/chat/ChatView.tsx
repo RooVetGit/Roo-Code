@@ -439,6 +439,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		(text?: string, images?: string[]) => {
 			const trimmedInput = text?.trim()
 
+			console.log(`handlePrimaryButtonClick -> clineAsk=${clineAsk}`, text)
+
 			switch (clineAsk) {
 				case "api_req_failed":
 				case "command":
@@ -748,7 +750,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				return alwaysAllowExecute && isAllowedCommand(message)
 			}
 
-			// For read/write operations, check if it's outside workspace and if we have permission for that
+			// For read/write operations, check if it's outside workspace and
+			// if we have permission for that.
 			if (message.ask === "tool") {
 				let tool: any = {}
 
@@ -1113,13 +1116,19 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		}
 
 		const autoApprove = async () => {
-			if (isAutoApproved(lastMessage)) {
+			if (lastMessage?.ask && isAutoApproved(lastMessage)) {
 				// Add delay for write operations.
-				if (lastMessage?.ask === "tool" && isWriteToolAction(lastMessage)) {
+				if (lastMessage.ask === "tool" && isWriteToolAction(lastMessage)) {
 					await new Promise((resolve) => setTimeout(resolve, writeDelayMs))
 				}
 
-				handlePrimaryButtonClick()
+				vscode.postMessage({ type: "askResponse", askResponse: "yesButtonClicked" })
+
+				setInputValue("")
+				setSelectedImages([])
+				setTextAreaDisabled(true)
+				setClineAsk(undefined)
+				setEnableButtons(false)
 			}
 		}
 		autoApprove()

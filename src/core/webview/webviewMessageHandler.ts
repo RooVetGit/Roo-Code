@@ -184,7 +184,9 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await provider.postStateToWebview()
 			break
 		case "askResponse":
-			provider.getCurrentCline()?.handleWebviewAskResponse(message.askResponse!, message.text, message.images)
+			const instance = provider.getCurrentCline()
+			console.log("askResponse ->", message, !!instance)
+			instance?.handleWebviewAskResponse(message.askResponse!, message.text, message.images)
 			break
 		case "terminalOperation":
 			if (message.terminalOperation) {
