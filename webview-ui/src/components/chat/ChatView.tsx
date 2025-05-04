@@ -40,6 +40,7 @@ import TaskHeader from "./TaskHeader"
 import AutoApproveMenu from "./AutoApproveMenu"
 import SystemPromptWarning from "./SystemPromptWarning"
 import { CheckpointWarning } from "./CheckpointWarning"
+import { jumpToLastCheckpoint } from "@src/utils/checkpoint-navigation" // Added import
 
 export interface ChatViewProps {
 	isHidden: boolean
@@ -537,68 +538,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const shouldDisableImages =
 		!model?.supportsImages || textAreaDisabled || selectedImages.length >= MAX_IMAGES_PER_MESSAGE
 
-	const handleMessage = useCallback(
-		(e: MessageEvent) => {
-			const message: ExtensionMessage = e.data
-
-			switch (message.type) {
-				case "action":
-					switch (message.action!) {
-						case "didBecomeVisible":
-							if (!isHidden && !textAreaDisabled && !enableButtons) {
-								textAreaRef.current?.focus()
-							}
-							break
-						case "focusInput":
-							textAreaRef.current?.focus()
-							break
-					}
-					break
-				case "selectedImages":
-					const newImages = message.images ?? []
-					if (newImages.length > 0) {
-						setSelectedImages((prevImages) =>
-							[...prevImages, ...newImages].slice(0, MAX_IMAGES_PER_MESSAGE),
-						)
-					}
-					break
-				case "invoke":
-					switch (message.invoke!) {
-						case "newChat":
-							handleChatReset()
-							break
-						case "sendMessage":
-							handleSendMessage(message.text ?? "", message.images ?? [])
-							break
-						case "setChatBoxMessage":
-							handleSetChatBoxMessage(message.text ?? "", message.images ?? [])
-							break
-						case "primaryButtonClick":
-							handlePrimaryButtonClick(message.text ?? "", message.images ?? [])
-							break
-						case "secondaryButtonClick":
-							handleSecondaryButtonClick(message.text ?? "", message.images ?? [])
-							break
-					}
-			}
-			// textAreaRef.current is not explicitly required here since React
-			// guarantees that ref will be stable across re-renders, and we're
-			// not using its value but its reference.
-		},
-		[
-			isHidden,
-			textAreaDisabled,
-			enableButtons,
-			handleChatReset,
-			handleSendMessage,
-			handleSetChatBoxMessage,
-			handlePrimaryButtonClick,
-			handleSecondaryButtonClick,
-		],
-	)
-
-	useEvent("message", handleMessage)
-
 	// NOTE: the VSCode window needs to be focused for this to work.
 	useMount(() => textAreaRef.current?.focus())
 
@@ -929,6 +868,85 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 		return result
 	}, [visibleMessages])
+
+	// Define handleMessage *after* groupedMessages and other dependencies
+	const handleMessage = useCallback(
+		(e: MessageEvent) => {
+			const message: ExtensionMessage = e.data
+
+			switch (message.type) {
+				case "action":
+					// Handle jumpToCheckpoint based on message.text FIRST
+					if (message.text === "jumpToCheckpoint") {
+						console.log("[Webview Frontend] Received jumpToCheckpoint message")
+						// Ensure 'groupedMessages' (or the equivalent variable holding the message list) is used
+						jumpToLastCheckpoint(virtuosoRef, groupedMessages, () => {
+							console.log("[Webview Frontend] Checkpoint navigation complete")
+							// Optional: Re-enable auto-scrolling if it was disabled
+							// disableAutoScrollRef.current = false;
+						})
+					} else {
+						// If not jumpToCheckpoint, THEN handle other actions based on message.action
+						// Handle regular action messages that use the action field
+						switch (message.action!) {
+							case "didBecomeVisible":
+								if (!isHidden && !textAreaDisabled && !enableButtons) {
+									textAreaRef.current?.focus()
+								}
+								break
+							case "focusInput":
+								textAreaRef.current?.focus()
+								break
+							// ... other action cases ...
+						}
+					}
+					break // Keep this break for the outer "action" case
+				case "selectedImages":
+					const newImages = message.images ?? []
+					if (newImages.length > 0) {
+						setSelectedImages((prevImages) =>
+							[...prevImages, ...newImages].slice(0, MAX_IMAGES_PER_MESSAGE),
+						)
+					}
+					break
+				case "invoke":
+					switch (message.invoke!) {
+						case "newChat":
+							handleChatReset()
+							break
+						case "sendMessage":
+							handleSendMessage(message.text ?? "", message.images ?? [])
+							break
+						case "setChatBoxMessage":
+							handleSetChatBoxMessage(message.text ?? "", message.images ?? [])
+							break
+						case "primaryButtonClick":
+							handlePrimaryButtonClick(message.text ?? "", message.images ?? [])
+							break
+						case "secondaryButtonClick":
+							handleSecondaryButtonClick(message.text ?? "", message.images ?? [])
+							break
+					}
+					break // Keep this break
+				// Add other message types if needed
+			}
+		},
+		[
+			isHidden,
+			textAreaDisabled,
+			enableButtons,
+			groupedMessages, // Dependency is correctly placed now
+			handleChatReset,
+			handleSendMessage,
+			handleSetChatBoxMessage,
+			handlePrimaryButtonClick,
+			handleSecondaryButtonClick,
+			// virtuosoRef is stable, no need to add
+		],
+	)
+
+	// Register the message handler
+	useEvent("message", handleMessage)
 
 	// scrolling
 

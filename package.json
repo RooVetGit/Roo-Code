@@ -169,6 +169,11 @@
 				"command": "roo.acceptInput",
 				"title": "%command.acceptInput.title%",
 				"category": "%configuration.title%"
+			},
+			{
+				"command": "roo-cline.jumpToLastCheckpoint",
+				"title": "Last Checkpoint",
+				"category": "%configuration.title%"
 			}
 		],
 		"menus": {
@@ -274,6 +279,13 @@
 					"command": "roo-cline.settingsButtonClicked",
 					"group": "navigation@6",
 					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
+				}
+			],
+			"webview/context": [
+				{
+					"command": "roo-cline.jumpToLastCheckpoint",
+					"when": "webviewId == 'roo-cline.SidebarProvider' || webviewId == 'roo-cline.TabPanelProvider'",
+					"group": "navigation"
 				}
 			]
 		},

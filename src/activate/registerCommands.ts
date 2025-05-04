@@ -4,6 +4,7 @@ import delay from "delay"
 import { ClineProvider } from "../core/webview/ClineProvider"
 import { ContextProxy } from "../core/config/ContextProxy"
 import { telemetryService } from "../services/telemetry/TelemetryService"
+import { ExtensionMessage } from "../shared/ExtensionMessage" // Corrected import path and type
 
 import { registerHumanRelayCallback, unregisterHumanRelayCallback, handleHumanRelayResponse } from "./humanRelay"
 import { handleNewTask } from "./handleTask"
@@ -171,6 +172,21 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 			}
 
 			visibleProvider.postMessageToWebview({ type: "acceptInput" })
+		},
+		"roo-cline.jumpToLastCheckpoint": async () => {
+			console.log("[Debug] Native 'roo-cline.jumpToLastCheckpoint' command triggered.")
+			const visibleProvider = getVisibleProviderOrLog(outputChannel)
+			if (visibleProvider) {
+				const message: ExtensionMessage = {
+					// Corrected type annotation
+					type: "action",
+					text: "jumpToCheckpoint", // Use 'text' field for this specific action
+				}
+				console.log("[Debug] Sending 'jumpToCheckpoint' message to webview:", message)
+				await visibleProvider.postMessageToWebview(message)
+			} else {
+				console.log("[Debug] No visible ClineProvider found.")
+			}
 		},
 	}
 }
