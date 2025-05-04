@@ -48,13 +48,14 @@ export async function executeCommandTool(
 
 			cline.consecutiveMistakeCount = 0
 
-			const executionId = Date.now().toString()
 			command = unescapeHtmlEntities(command) // Unescape HTML entities.
-			const didApprove = await askApproval("command", command, { id: executionId })
+			const didApprove = await askApproval("command", command)
 
 			if (!didApprove) {
 				return
 			}
+
+			const executionId = cline.lastMessageTs?.toString() ?? Date.now().toString()
 
 			const clineProvider = await cline.providerRef.deref()
 			const clineProviderState = await clineProvider?.getState()
@@ -162,6 +163,9 @@ export async function executeCommand(
 			console.log(`[executeCommand] onShellExecutionStarted: ${pid}`)
 			const status: CommandExecutionStatus = { executionId, status: "started", pid, command }
 			clineProvider?.postMessageToWebview({ type: "commandExecutionStatus", text: JSON.stringify(status) })
+			// This `command_output` message tells the webview to render the
+			// appropriate primary and secondary buttons.
+			cline.say("command_output", "")
 		},
 		onShellExecutionComplete: (details: ExitCodeDetails) => {
 			const status: CommandExecutionStatus = { executionId, status: "exited", exitCode: details.exitCode }
@@ -201,8 +205,7 @@ export async function executeCommand(
 	// Wait for a short delay to ensure all messages are sent to the webview.
 	// This delay allows time for non-awaited promises to be created and
 	// for their associated messages to be sent to the webview, maintaining
-	// the correct order of messages (although the webview is smart about
-	// grouping command_output messages despite any gaps anyways).
+	// the correct order of messages.
 	await delay(50)
 
 	if (message) {

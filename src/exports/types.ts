@@ -310,7 +310,6 @@ type ClineMessage = {
 		| (
 				| "followup"
 				| "command"
-				| "command_output"
 				| "completion_result"
 				| "tool"
 				| "api_req_failed"
@@ -390,7 +389,6 @@ type RooCodeEvents = {
 					| (
 							| "followup"
 							| "command"
-							| "command_output"
 							| "completion_result"
 							| "tool"
 							| "api_req_failed"

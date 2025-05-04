@@ -116,7 +116,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const [selectedImages, setSelectedImages] = useState<string[]>([])
 
 	// we need to hold on to the ask because useEffect > lastMessage will always let us know when an ask comes in and handle it, but by the time handleMessage is called, the last message might not be the ask anymore (it could be a say that followed)
-	const [clineAsk, setClineAsk] = useState<ClineAsk | undefined>(undefined)
+	const [clineAsk, setClineAsk] = useState<ClineAsk | "command_output" | undefined>(undefined)
 	const [enableButtons, setEnableButtons] = useState<boolean>(false)
 	const [primaryButtonText, setPrimaryButtonText] = useState<string | undefined>(undefined)
 	const [secondaryButtonText, setSecondaryButtonText] = useState<string | undefined>(undefined)
@@ -229,13 +229,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							setPrimaryButtonText(t("chat:runCommand.title"))
 							setSecondaryButtonText(t("chat:reject.title"))
 							break
-						case "command_output":
-							setTextAreaDisabled(false)
-							setClineAsk("command_output")
-							setEnableButtons(true)
-							setPrimaryButtonText(t("chat:proceedWhileRunning.title"))
-							setSecondaryButtonText(t("chat:killCommand.title"))
-							break
 						case "use_mcp_server":
 							if (!isAutoApproved(lastMessage) && !isPartial) {
 								playSound("notification")
@@ -289,8 +282,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							setTextAreaDisabled(true)
 							break
 						case "api_req_started":
-							if (secondLastMessage?.ask === "command_output") {
-								// If the last ask is a command_output, and we
+							if (secondLastMessage?.ask === "command") {
+								// If the last ask is a command, and we
 								// receive an api_req_started, then that means
 								// the command has finished and we don't need
 								// input from the user anymore (in every other
@@ -304,12 +297,18 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 								setEnableButtons(false)
 							}
 							break
+						case "command_output":
+							setTextAreaDisabled(false)
+							setClineAsk("command_output")
+							setEnableButtons(true)
+							setPrimaryButtonText(t("chat:proceedWhileRunning.title"))
+							setSecondaryButtonText(t("chat:killCommand.title"))
+							break
 						case "api_req_finished":
 						case "error":
 						case "text":
 						case "browser_action":
 						case "browser_action_result":
-						case "command_output":
 						case "mcp_server_request_started":
 						case "mcp_server_response":
 						case "completion_result":
@@ -399,7 +398,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						case "tool":
 						case "browser_action_launch":
 						case "command": // User can provide feedback to a tool or command use.
-						case "command_output": // User can send input to command stdin.
 						case "use_mcp_server":
 						case "completion_result": // If this happens then the user has feedback for the completion result.
 						case "resume_task":
@@ -521,6 +519,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					vscode.postMessage({ type: "terminalOperation", terminalOperation: "abort" })
 					break
 			}
+
 			setTextAreaDisabled(true)
 			setClineAsk(undefined)
 			setEnableButtons(false)

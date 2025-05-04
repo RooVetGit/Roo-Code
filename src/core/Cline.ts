@@ -161,7 +161,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 	private askResponse?: ClineAskResponse
 	private askResponseText?: string
 	private askResponseImages?: string[]
-	private lastMessageTs?: number
+	public lastMessageTs?: number
 
 	// Not private since it needs to be accessible by tools.
 	consecutiveMistakeCount: number = 0
@@ -440,7 +440,6 @@ export class Cline extends EventEmitter<ClineEvents> {
 					*/
 					askTs = lastMessage.ts
 					this.lastMessageTs = askTs
-					// lastMessage.ts = askTs
 					lastMessage.text = text
 					lastMessage.partial = false
 					lastMessage.progressStatus = progressStatus
@@ -466,12 +465,20 @@ export class Cline extends EventEmitter<ClineEvents> {
 			await this.addToClineMessages({ ts: askTs, type: "ask", ask: type, text })
 		}
 
+		console.log(`[ask / ${type} / ${askTs}] waiting for ask response`)
+
 		await pWaitFor(() => this.askResponse !== undefined || this.lastMessageTs !== askTs, { interval: 100 })
 
+		const isTsMismatch = this.lastMessageTs !== askTs
+
+		console.log(
+			`[ask / ${type} / ${askTs}] pWaitFor returned, askResponse = ${this.askResponse}, isTsMismatch = ${isTsMismatch}`,
+		)
+
 		if (this.lastMessageTs !== askTs) {
-			// Could happen if we send multiple asks in a row i.e. with
-			// command_output. It's important that when we know an ask could
-			// fail, it is handled gracefully.
+			// Could happen if we send multiple asks in a row.
+			// It's important that when we know an ask could fail it is handled
+			// gracefully.
 			throw new Error("Current ask promise was ignored")
 		}
 

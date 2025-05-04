@@ -767,7 +767,6 @@ export const isGlobalStateKey = (key: string): key is Keys<GlobalState> =>
 export const clineAsks = [
 	"followup",
 	"command",
-	"command_output",
 	"completion_result",
 	"tool",
 	"api_req_failed",
