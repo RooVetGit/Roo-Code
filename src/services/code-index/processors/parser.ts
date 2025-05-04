@@ -89,6 +89,7 @@ export class CodeParser implements ICodeParser {
 	 */
 	private async parseContent(filePath: string, content: string, fileHash: string): Promise<CodeBlock[]> {
 		const ext = path.extname(filePath).slice(1).toLowerCase()
+		const seenSegmentHashes = new Set<string>()
 
 		// Check if we already have the parser loaded
 		if (!this.loadedParsers[ext]) {
@@ -132,7 +133,15 @@ export class CodeParser implements ICodeParser {
 		if (captures.length === 0) {
 			if (content.length >= MIN_BLOCK_CHARS) {
 				// Perform fallback chunking if content is large enough
-				return this._performFallbackChunking(filePath, content, fileHash, MIN_BLOCK_CHARS, MAX_BLOCK_CHARS)
+				const blocks = this._performFallbackChunking(
+					filePath,
+					content,
+					fileHash,
+					MIN_BLOCK_CHARS,
+					MAX_BLOCK_CHARS,
+					seenSegmentHashes,
+				)
+				return blocks
 			} else {
 				// Return empty if content is too small for fallback
 				return []
@@ -163,6 +172,7 @@ export class CodeParser implements ICodeParser {
 							filePath,
 							fileHash,
 							MIN_BLOCK_CHARS, // Pass minChars as requested
+							seenSegmentHashes,
 						)
 						results.push(...chunkedBlocks)
 					}
@@ -180,16 +190,19 @@ export class CodeParser implements ICodeParser {
 						.update(`${filePath}-${start_line}-${end_line}-${content}`)
 						.digest("hex")
 
-					results.push({
-						file_path: filePath,
-						identifier,
-						type,
-						start_line,
-						end_line,
-						content,
-						segmentHash,
-						fileHash,
-					})
+					if (!seenSegmentHashes.has(segmentHash)) {
+						seenSegmentHashes.add(segmentHash)
+						results.push({
+							file_path: filePath,
+							identifier,
+							type,
+							start_line,
+							end_line,
+							content,
+							segmentHash,
+							fileHash,
+						})
+					}
 				}
 			}
 			// Nodes smaller than MIN_BLOCK_CHARS are ignored
@@ -210,6 +223,7 @@ export class CodeParser implements ICodeParser {
 		minChars: number,
 		maxChars: number,
 		minRemainderChars: number,
+		seenSegmentHashes: Set<string>,
 	): CodeBlock[] {
 		const chunks: CodeBlock[] = []
 		let currentChunkLines: string[] = []
@@ -225,16 +239,19 @@ export class CodeParser implements ICodeParser {
 					.update(`${filePath}-${startLine}-${endLine}-${chunkContent}`)
 					.digest("hex")
 
-				chunks.push({
-					file_path: filePath,
-					identifier: null, // Identifier is handled at a higher level if available
-					type: chunkType,
-					start_line: startLine,
-					end_line: endLine,
-					content: chunkContent,
-					segmentHash,
-					fileHash,
-				})
+				if (!seenSegmentHashes.has(segmentHash)) {
+					seenSegmentHashes.add(segmentHash)
+					chunks.push({
+						file_path: filePath,
+						identifier: null, // Identifier is handled at a higher level if available
+						type: chunkType,
+						start_line: startLine,
+						end_line: endLine,
+						content: chunkContent,
+						segmentHash,
+						fileHash,
+					})
+				}
 			}
 			// Reset for the next chunk
 			currentChunkLines = []
@@ -316,6 +333,7 @@ export class CodeParser implements ICodeParser {
 		fileHash: string,
 		minChars: number,
 		maxChars: number,
+		seenSegmentHashes: Set<string>,
 	): CodeBlock[] {
 		const lines = content.split("\n")
 		return this._chunkTextByLines(
@@ -327,6 +345,7 @@ export class CodeParser implements ICodeParser {
 			minChars,
 			maxChars,
 			MIN_CHUNK_REMAINDER_CHARS,
+			seenSegmentHashes,
 		)
 	}
 
@@ -335,6 +354,7 @@ export class CodeParser implements ICodeParser {
 		filePath: string,
 		fileHash: string,
 		minChars: number, // Note: This was previously used as max, now correctly used as min
+		seenSegmentHashes: Set<string>,
 	): CodeBlock[] {
 		const lines = node.text.split("\n")
 		const baseStartLine = node.startPosition.row + 1
@@ -347,6 +367,7 @@ export class CodeParser implements ICodeParser {
 			minChars,
 			MAX_BLOCK_CHARS, // Use the global max
 			MIN_CHUNK_REMAINDER_CHARS,
+			seenSegmentHashes,
 		)
 	}
 }
