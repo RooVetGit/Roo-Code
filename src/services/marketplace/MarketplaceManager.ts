@@ -621,7 +621,7 @@ export class MarketplaceManager {
 			)
 			terminalClass.terminal.show()
 			await terminalClass.runCommand(
-				`npx -y roo-rocket@0.3 --mp="${JSON.stringify(mpContext).replaceAll(/"/g, '\\"')}" --cwd="${cwd}" --url="${item.binaryUrl}"`,
+				`npx -y roo-rocket@0.4 --mp="${JSON.stringify(mpContext).replaceAll(/"/g, '\\"')}" --cwd="${cwd}" --url="${item.binaryUrl}"`,
 				{
 					onLine: (line) => {
 						pResult.push(line)
