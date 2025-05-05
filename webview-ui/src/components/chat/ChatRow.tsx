@@ -352,7 +352,7 @@ export const ChatRowContent = ({
 						/>
 					</>
 				)
-			case "codebase_search": {
+			case "codebaseSearch": {
 				if (message.type === "say") {
 					let parsed: {
 						query: string
