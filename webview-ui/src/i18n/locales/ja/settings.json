@@ -28,11 +28,9 @@
 		"notifications": "通知",
 		"contextManagement": "コンテキスト管理",
 		"terminal": "ターミナル",
-		"advanced": "詳細設定",
 		"experimental": "実験的機能",
 		"language": "言語",
-		"about": "Roo Codeについて",
-		"interface": "インターフェース"
+		"about": "Roo Codeについて"
 	},
 	"autoApprove": {
 		"description": "Rooが承認なしで自動的に操作を実行できるようにします。AIを完全に信頼し、関連するセキュリティリスクを理解している場合にのみ、これらの設定を有効にしてください。",

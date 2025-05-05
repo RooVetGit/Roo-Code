@@ -28,11 +28,9 @@
 		"notifications": "Bildirimler",
 		"contextManagement": "Bağlam Yönetimi",
 		"terminal": "Terminal",
-		"advanced": "Gelişmiş",
 		"experimental": "Deneysel Özellikler",
 		"language": "Dil",
-		"about": "Roo Code Hakkında",
-		"interface": "Arayüz"
+		"about": "Roo Code Hakkında"
 	},
 	"autoApprove": {
 		"description": "Roo'nun onay gerektirmeden otomatik olarak işlemler gerçekleştirmesine izin verin. Bu ayarları yalnızca yapay zekaya tamamen güveniyorsanız ve ilgili güvenlik risklerini anlıyorsanız etkinleştirin.",

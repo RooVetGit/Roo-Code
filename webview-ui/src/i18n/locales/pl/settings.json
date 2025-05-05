@@ -28,11 +28,9 @@
 		"notifications": "Powiadomienia",
 		"contextManagement": "Zarządzanie kontekstem",
 		"terminal": "Terminal",
-		"advanced": "Zaawansowane",
 		"experimental": "Funkcje eksperymentalne",
 		"language": "Język",
-		"about": "O Roo Code",
-		"interface": "Interfejs"
+		"about": "O Roo Code"
 	},
 	"autoApprove": {
 		"description": "Pozwól Roo na automatyczne wykonywanie operacji bez wymagania zatwierdzenia. Włącz te ustawienia tylko jeśli w pełni ufasz AI i rozumiesz związane z tym zagrożenia bezpieczeństwa.",
