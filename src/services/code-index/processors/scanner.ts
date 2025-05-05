@@ -10,6 +10,7 @@ import { createHash } from "crypto"
 import { v5 as uuidv5 } from "uuid"
 import pLimit from "p-limit"
 import { Mutex } from "async-mutex"
+import { CacheManager } from "../cache-manager"
 
 export class DirectoryScanner implements IDirectoryScanner {
 	// Constants moved inside the class
@@ -26,6 +27,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 		private readonly embedder: IEmbedder,
 		private readonly qdrantClient: IVectorStore,
 		private readonly codeParser: ICodeParser,
+		private readonly cacheManager: CacheManager,
 	) {}
 
 	/**
@@ -37,12 +39,12 @@ export class DirectoryScanner implements IDirectoryScanner {
 	 * @returns Promise<{codeBlocks: CodeBlock[], stats: {processed: number, skipped: number}}> Array of parsed code blocks and processing stats
 	 */
 	public async scanDirectory(
-		directoryPath: string,
-		context?: vscode.ExtensionContext,
+		directory: string,
 		onError?: (error: Error) => void,
 		onBlocksIndexed?: (indexedCount: number) => void,
 		onFileParsed?: (fileBlockCount: number) => void,
 	): Promise<{ codeBlocks: CodeBlock[]; stats: { processed: number; skipped: number }; totalBlockCount: number }> {
+		const directoryPath = directory
 		// Get all files recursively (handles .gitignore automatically)
 		const [allPaths, _] = await listFiles(directoryPath, true, DirectoryScanner.MAX_LIST_FILES_LIMIT)
 
@@ -63,15 +65,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 			return scannerExtensions.includes(ext)
 		})
 
-		// Initialize cache
-		const cachePath = context?.globalStorageUri
-			? vscode.Uri.joinPath(
-					context.globalStorageUri,
-					`roo-index-cache-${createHash("sha256").update(directoryPath).digest("hex")}.json`,
-				)
-			: undefined
-		const oldHashes = cachePath ? await this.loadHashCache(cachePath) : {}
-		const newHashes: Record<string, string> = {}
+		// Initialize tracking variables
 		const processedFiles = new Set<string>()
 		const codeBlocks: CodeBlock[] = []
 		let processedCount = 0
@@ -112,10 +106,9 @@ export class DirectoryScanner implements IDirectoryScanner {
 					processedFiles.add(filePath)
 
 					// Check against cache
-					const cachedFileHash = oldHashes[filePath]
+					const cachedFileHash = this.cacheManager.getHash(filePath)
 					if (cachedFileHash === currentFileHash) {
 						// File is unchanged
-						newHashes[filePath] = currentFileHash
 						skippedCount++
 						return
 					}
@@ -145,7 +138,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 										currentBatchFileInfos.push({
 											filePath,
 											fileHash: currentFileHash,
-											isNew: !oldHashes[filePath],
+											isNew: !this.cacheManager.getHash(filePath),
 										})
 									}
 
@@ -165,7 +158,6 @@ export class DirectoryScanner implements IDirectoryScanner {
 												batchBlocks,
 												batchTexts,
 												batchFileInfos,
-												newHashes,
 												onError,
 												onBlocksIndexed,
 											),
@@ -179,7 +171,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 						}
 					} else {
 						// Only update hash if not being processed in a batch
-						newHashes[filePath] = currentFileHash
+						await this.cacheManager.updateHash(filePath, currentFileHash)
 					}
 				} catch (error) {
 					console.error(`Error processing file ${filePath}:`, error)
@@ -207,7 +199,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 
 				// Queue final batch processing
 				const batchPromise = batchLimiter(() =>
-					this.processBatch(batchBlocks, batchTexts, batchFileInfos, newHashes, onError, onBlocksIndexed),
+					this.processBatch(batchBlocks, batchTexts, batchFileInfos, onError, onBlocksIndexed),
 				)
 				activeBatchPromises.push(batchPromise)
 			} finally {
@@ -218,33 +210,29 @@ export class DirectoryScanner implements IDirectoryScanner {
 		// Wait for all batch processing to complete
 		await Promise.all(activeBatchPromises)
 
-		// Handle deleted files (don't add them to newHashes)
-		if (cachePath) {
-			for (const cachedFilePath of Object.keys(oldHashes)) {
-				if (!processedFiles.has(cachedFilePath)) {
-					// File was deleted or is no longer supported/indexed
-					if (this.qdrantClient) {
-						try {
-							console.log(`[DirectoryScanner] Deleting points for deleted file: ${cachedFilePath}`)
-							await this.qdrantClient.deletePointsByFilePath(cachedFilePath)
-						} catch (error) {
-							console.error(`[DirectoryScanner] Failed to delete points for ${cachedFilePath}:`, error)
-							if (onError) {
-								onError(
-									error instanceof Error
-										? error
-										: new Error(`Unknown error deleting points for ${cachedFilePath}`),
-								)
-							}
-							// Decide if we should re-throw or just log
+		// Handle deleted files
+		const oldHashes = this.cacheManager.getAllHashes()
+		for (const cachedFilePath of Object.keys(oldHashes)) {
+			if (!processedFiles.has(cachedFilePath)) {
+				// File was deleted or is no longer supported/indexed
+				if (this.qdrantClient) {
+					try {
+						console.log(`[DirectoryScanner] Deleting points for deleted file: ${cachedFilePath}`)
+						await this.qdrantClient.deletePointsByFilePath(cachedFilePath)
+						await this.cacheManager.deleteHash(cachedFilePath)
+					} catch (error) {
+						console.error(`[DirectoryScanner] Failed to delete points for ${cachedFilePath}:`, error)
+						if (onError) {
+							onError(
+								error instanceof Error
+									? error
+									: new Error(`Unknown error deleting points for ${cachedFilePath}`),
+							)
 						}
+						// Decide if we should re-throw or just log
 					}
-					// The file is implicitly removed from the cache because it's not added to newHashes
 				}
 			}
-
-			// Save the updated cache
-			await this.saveHashCache(cachePath, newHashes)
 		}
 
 		return {
@@ -257,36 +245,10 @@ export class DirectoryScanner implements IDirectoryScanner {
 		}
 	}
 
-	private async loadHashCache(cachePath: vscode.Uri): Promise<Record<string, string>> {
-		try {
-			const fileData = await vscode.workspace.fs.readFile(cachePath)
-			return JSON.parse(Buffer.from(fileData).toString("utf-8"))
-		} catch (error) {
-			if (error instanceof vscode.FileSystemError && error.code === "FileNotFound") {
-				return {} // Cache file doesn't exist yet, return empty object
-			}
-			console.error("Error loading hash cache:", error)
-			return {} // Return empty on other errors to allow indexing to proceed
-		}
-	}
-
-	private async saveHashCache(cachePath: vscode.Uri, hashes: Record<string, string>): Promise<void> {
-		try {
-			// Ensure directory exists
-			await vscode.workspace.fs.createDirectory(vscode.Uri.file(path.dirname(cachePath.fsPath)))
-			// Write file
-			await vscode.workspace.fs.writeFile(cachePath, Buffer.from(JSON.stringify(hashes, null, 2), "utf-8"))
-		} catch (error) {
-			console.error("Error saving hash cache:", error)
-			// Don't re-throw, as failure to save cache shouldn't block the main operation
-		}
-	}
-
 	private async processBatch(
 		batchBlocks: CodeBlock[],
 		batchTexts: string[],
 		batchFileInfos: { filePath: string; fileHash: string; isNew: boolean }[],
-		newHashes: Record<string, string>,
 		onError?: (error: Error) => void,
 		onBlocksIndexed?: (indexedCount: number) => void,
 	): Promise<void> {
@@ -358,7 +320,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 
 				// Update hashes for successfully processed files in this batch
 				for (const fileInfo of batchFileInfos) {
-					newHashes[fileInfo.filePath] = fileInfo.fileHash
+					await this.cacheManager.updateHash(fileInfo.filePath, fileInfo.fileHash)
 				}
 				success = true
 				console.log(`[DirectoryScanner] Successfully processed batch of ${batchBlocks.length} blocks.`)

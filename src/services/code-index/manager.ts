@@ -8,6 +8,7 @@ import { CodeIndexStateManager } from "./state-manager"
 import { CodeIndexServiceFactory } from "./service-factory"
 import { CodeIndexSearchService } from "./search-service"
 import { CodeIndexOrchestrator } from "./orchestrator"
+import { CacheManager } from "./cache-manager"
 
 export class CodeIndexManager {
 	// --- Singleton Implementation ---
@@ -19,6 +20,7 @@ export class CodeIndexManager {
 	private readonly _serviceFactory: CodeIndexServiceFactory
 	private readonly _orchestrator: CodeIndexOrchestrator
 	private readonly _searchService: CodeIndexSearchService
+	private readonly _cacheManager: CacheManager
 
 	public static getInstance(context: vscode.ExtensionContext, contextProxy?: ContextProxy): CodeIndexManager {
 		const workspacePath = getWorkspacePath() // Assumes single workspace for now
@@ -33,7 +35,9 @@ export class CodeIndexManager {
 	}
 
 	public static disposeAll(): void {
-		CodeIndexManager.instances.forEach((instance) => instance.dispose())
+		for (const instance of CodeIndexManager.instances.values()) {
+			instance.dispose()
+		}
 		CodeIndexManager.instances.clear()
 	}
 
@@ -50,19 +54,22 @@ export class CodeIndexManager {
 
 		// Initialize remaining specialized classes
 		this._configManager = new CodeIndexConfigManager(contextProxy)
-		this._serviceFactory = new CodeIndexServiceFactory(this._configManager, workspacePath)
+		this._cacheManager = new CacheManager(context, workspacePath)
+		this._serviceFactory = new CodeIndexServiceFactory(this._configManager, workspacePath, this._cacheManager)
 		this._orchestrator = new CodeIndexOrchestrator(
 			this._configManager,
 			this._stateManager,
 			this._serviceFactory,
 			context,
 			workspacePath,
+			this._cacheManager,
 		)
 		this._searchService = new CodeIndexSearchService(
 			this._configManager,
 			this._stateManager,
 			this._serviceFactory,
 			context,
+			this._cacheManager,
 		)
 	}
 
@@ -109,6 +116,7 @@ export class CodeIndexManager {
 	 */
 
 	public async startIndexing(): Promise<void> {
+		await this._cacheManager.initialize()
 		await this._orchestrator.startIndexing()
 	}
 
@@ -134,6 +142,7 @@ export class CodeIndexManager {
 	 */
 	public async clearIndexData(): Promise<void> {
 		await this._orchestrator.clearIndexData()
+		await this._cacheManager.clearCacheFile()
 	}
 
 	// --- Private Helpers ---
