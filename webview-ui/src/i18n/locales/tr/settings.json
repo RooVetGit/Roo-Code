@@ -4,7 +4,9 @@
 		"done": "Tamamlandı",
 		"cancel": "İptal",
 		"reset": "Sıfırla",
-		"select": "Seç"
+		"select": "Seç",
+		"add": "Başlık Ekle",
+		"remove": "Kaldır"
 	},
 	"header": {
 		"title": "Ayarlar",
@@ -35,7 +37,7 @@
 	"autoApprove": {
 		"description": "Roo'nun onay gerektirmeden otomatik olarak işlemler gerçekleştirmesine izin verin. Bu ayarları yalnızca yapay zekaya tamamen güveniyorsanız ve ilgili güvenlik risklerini anlıyorsanız etkinleştirin.",
 		"readOnly": {
-			"label": "Salt okunur işlemleri her zaman onayla",
+			"label": "Okuma",
 			"description": "Etkinleştirildiğinde, Roo otomatik olarak dizin içeriğini görüntüleyecek ve Onayla düğmesine tıklamanıza gerek kalmadan dosyaları okuyacaktır.",
 			"outsideWorkspace": {
 				"label": "Çalışma alanı dışındaki dosyaları dahil et",
@@ -43,7 +45,7 @@
 			}
 		},
 		"write": {
-			"label": "Yazma işlemlerini her zaman onayla",
+			"label": "Yazma",
 			"description": "Onay gerektirmeden otomatik olarak dosya oluştur ve düzenle",
 			"delayLabel": "Tanılamanın potansiyel sorunları tespit etmesine izin vermek için yazmalardan sonra gecikme",
 			"outsideWorkspace": {
@@ -52,29 +54,28 @@
 			}
 		},
 		"browser": {
-			"label": "Tarayıcı eylemlerini her zaman onayla",
-			"description": "Onay gerektirmeden otomatik olarak tarayıcı eylemleri gerçekleştir",
-			"note": "Not: Yalnızca model bilgisayar kullanımını desteklediğinde geçerlidir"
+			"label": "Tarayıcı",
+			"description": "Onay gerektirmeden otomatik olarak tarayıcı eylemleri gerçekleştir. Not: Yalnızca model bilgisayar kullanımını desteklediğinde geçerlidir"
 		},
 		"retry": {
-			"label": "Başarısız API isteklerini her zaman yeniden dene",
+			"label": "Yeniden Dene",
 			"description": "Sunucu bir hata yanıtı döndürdüğünde başarısız API isteklerini otomatik olarak yeniden dene",
 			"delayLabel": "İsteği yeniden denemeden önce gecikme"
 		},
 		"mcp": {
-			"label": "MCP araçlarını her zaman onayla",
+			"label": "MCP",
 			"description": "MCP Sunucuları görünümünde bireysel MCP araçlarının otomatik onayını etkinleştir (hem bu ayar hem de aracın \"Her zaman izin ver\" onay kutusu gerekir)"
 		},
 		"modeSwitch": {
-			"label": "Mod değiştirmeyi her zaman onayla",
+			"label": "Mod",
 			"description": "Onay gerektirmeden otomatik olarak farklı modlar arasında geçiş yap"
 		},
 		"subtasks": {
-			"label": "Alt görevlerin oluşturulmasını ve tamamlanmasını her zaman onayla",
+			"label": "Alt Görevler",
 			"description": "Onay gerektirmeden alt görevlerin oluşturulmasına ve tamamlanmasına izin ver"
 		},
 		"execute": {
-			"label": "İzin verilen yürütme işlemlerini her zaman onayla",
+			"label": "Yürüt",
 			"description": "Onay gerektirmeden otomatik olarak izin verilen terminal komutlarını yürüt",
 			"allowedCommands": "İzin Verilen Otomatik Yürütme Komutları",
 			"allowedCommandsDescription": "\"Yürütme işlemlerini her zaman onayla\" etkinleştirildiğinde otomatik olarak yürütülebilen komut önekleri. Tüm komutlara izin vermek için * ekleyin (dikkatli kullanın).",
@@ -112,6 +113,10 @@
 		"useCustomBaseUrl": "Özel temel URL kullan",
 		"useHostHeader": "Özel Host başlığı kullan",
 		"useLegacyFormat": "Eski OpenAI API formatını kullan",
+		"customHeaders": "Özel Başlıklar",
+		"headerName": "Başlık adı",
+		"headerValue": "Başlık değeri",
+		"noCustomHeaders": "Tanımlanmış özel başlık yok. Eklemek için + düğmesine tıklayın.",
 		"requestyApiKey": "Requesty API Anahtarı",
 		"getRequestyApiKey": "Requesty API Anahtarı Al",
 		"openRouterTransformsText": "İstem ve mesaj zincirlerini bağlam boyutuna sıkıştır (<a>OpenRouter Dönüşümleri</a>)",
@@ -129,6 +134,8 @@
 		"getMistralApiKey": "Mistral / Codestral API Anahtarı Al",
 		"codestralBaseUrl": "Codestral Temel URL (İsteğe bağlı)",
 		"codestralBaseUrlDesc": "Codestral modeli için alternatif URL ayarlayın.",
+		"xaiApiKey": "xAI API Anahtarı",
+		"getXaiApiKey": "xAI API Anahtarı Al",
 		"awsCredentials": "AWS Kimlik Bilgileri",
 		"awsProfile": "AWS Profili",
 		"awsProfileName": "AWS Profil Adı",
@@ -226,7 +233,14 @@
 		"rateLimitSeconds": {
 			"label": "Hız sınırı",
 			"description": "API istekleri arasındaki minimum süre."
-		}
+		},
+		"reasoningEffort": {
+			"label": "Model Akıl Yürütme Çabası",
+			"high": "Yüksek",
+			"medium": "Orta",
+			"low": "Düşük"
+		},
+		"setReasoningLevel": "Akıl Yürütme Çabasını Etkinleştir"
 	},
 	"browser": {
 		"enable": {
@@ -304,6 +318,14 @@
 			"label": "Terminal kabuk entegrasyonu zaman aşımı",
 			"description": "Komutları yürütmeden önce kabuk entegrasyonunun başlatılması için beklenecek maksimum süre. Kabuk başlatma süresi uzun olan kullanıcılar için, terminalde \"Shell Integration Unavailable\" hatalarını görürseniz bu değerin artırılması gerekebilir."
 		},
+		"shellIntegrationDisabled": {
+			"label": "Terminal kabuk entegrasyonunu devre dışı bırak",
+			"description": "Terminal komutları düzgün çalışmıyorsa veya 'Shell Integration Unavailable' hataları görüyorsanız bunu etkinleştirin. Bu, bazı gelişmiş terminal özelliklerini atlayarak komutları çalıştırmak için daha basit bir yöntem kullanır."
+		},
+		"compressProgressBar": {
+			"label": "İlerleme çubuğu çıktısını sıkıştır",
+			"description": "Etkinleştirildiğinde, satır başı karakteri (\\r) içeren terminal çıktısını işleyerek gerçek bir terminalin içeriği nasıl göstereceğini simüle eder. Bu, ilerleme çubuğunun ara durumlarını kaldırır, yalnızca son durumu korur ve daha alakalı bilgiler için bağlam alanından tasarruf sağlar."
+		},
 		"zdotdir": {
 			"label": "ZDOTDIR işlemeyi etkinleştir",
 			"description": "Etkinleştirildiğinde, zsh kabuğu entegrasyonunu düzgün şekilde işlemek için ZDOTDIR için geçici bir dizin oluşturur. Bu, zsh yapılandırmanızı korurken VSCode kabuk entegrasyonunun zsh ile düzgün çalışmasını sağlar. (deneysel)"
@@ -322,7 +344,7 @@
 		},
 		"zshOhMy": {
 			"label": "Oh My Zsh entegrasyonunu etkinleştir",
-			"description": "Etkinleştirildiğinde, Oh My Zsh kabuk entegrasyon özelliklerini etkinleştirmek için ITERM_SHELL_INTEGRATION_INSTALLED=Yes ayarlar. (deneysel)"
+			"description": "Etkinleştirildiğinde, Oh My Zsh kabuk entegrasyon özelliklerini etkinleştirmek için ITERM_SHELL_INTEGRATION_INSTALLED=Yes ayarlar. Bu ayarın uygulanması IDE'nin yeniden başlatılmasını gerektirebilir. (deneysel)"
 		},
 		"zshP10k": {
 			"label": "Powerlevel10k entegrasyonunu etkinleştir",
@@ -374,6 +396,10 @@
 			"name": "Deneysel çoklu blok diff aracını kullan",
 			"description": "Etkinleştirildiğinde, Roo çoklu blok diff aracını kullanacaktır. Bu, tek bir istekte dosyadaki birden fazla kod bloğunu güncellemeye çalışacaktır."
 		}
+	},
+	"promptCaching": {
+		"label": "Prompt önbelleğini etkinleştir",
+		"description": "Etkinleştirildiğinde, Roo maliyetleri azaltmak için prompt önbelleği açık olan bu modeli kullanacaktır."
 	},
 	"temperature": {
 		"useCustom": "Özel sıcaklık kullan",
@@ -472,11 +498,5 @@
 	"labels": {
 		"customArn": "Özel ARN",
 		"useCustomArn": "Özel ARN kullan..."
-	},
-	"interface": {
-		"showgreeting": {
-			"label": "Karşılama mesajını göster",
-			"description": "Etkinleştirildiğinde, Roo bir karşılama mesajı ve tanıtım gösterecektir."
-		}
 	}
 }

@@ -3,5 +3,12 @@
 		"thousand_suffix": "k",
 		"million_suffix": "m",
 		"billion_suffix": "b"
+	},
+	"ui": {
+		"search_placeholder": "搜尋..."
+	},
+	"mermaid": {
+		"loading": "產生 Mermaid 圖表中...",
+		"render_error": "無法渲染圖表"
 	}
 }

@@ -1,11 +1,13 @@
+// npx jest src/core/__tests__/read-file-maxReadFileLine.test.ts
+
 import * as path from "path"
+
 import { countFileLines } from "../../integrations/misc/line-counter"
 import { readLines } from "../../integrations/misc/read-lines"
-import { extractTextFromFile, addLineNumbers } from "../../integrations/misc/extract-text"
+import { extractTextFromFile } from "../../integrations/misc/extract-text"
 import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
 import { isBinaryFile } from "isbinaryfile"
-import { ReadFileToolUse } from "../assistant-message"
-import { Cline } from "../Cline"
+import { ReadFileToolUse } from "../../shared/tools"
 
 // Mock dependencies
 jest.mock("../../integrations/misc/line-counter")
@@ -69,7 +71,6 @@ describe("read_file tool with maxReadFileLine setting", () => {
 	const mockedCountFileLines = countFileLines as jest.MockedFunction<typeof countFileLines>
 	const mockedReadLines = readLines as jest.MockedFunction<typeof readLines>
 	const mockedExtractTextFromFile = extractTextFromFile as jest.MockedFunction<typeof extractTextFromFile>
-	const mockedAddLineNumbers = addLineNumbers as jest.MockedFunction<typeof addLineNumbers>
 	const mockedParseSourceCodeDefinitionsForFile = parseSourceCodeDefinitionsForFile as jest.MockedFunction<
 		typeof parseSourceCodeDefinitionsForFile
 	>
@@ -98,7 +99,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		mockInputContent = fileContent
 
 		// Setup the extractTextFromFile mock implementation with the current mockInputContent
-		mockedExtractTextFromFile.mockImplementation((filePath) => {
+		mockedExtractTextFromFile.mockImplementation((_filePath) => {
 			const actual = jest.requireActual("../../integrations/misc/extract-text")
 			return Promise.resolve(actual.addLineNumbers(mockInputContent))
 		})
@@ -125,7 +126,8 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		mockCline.getFileContextTracker = jest.fn().mockReturnValue({
 			trackFileContext: jest.fn().mockResolvedValue(undefined),
 		})
-
+		mockCline.recordToolUsage = jest.fn().mockReturnValue(undefined)
+		mockCline.recordToolError = jest.fn().mockReturnValue(undefined)
 		// Reset tool result
 		toolResult = undefined
 	})

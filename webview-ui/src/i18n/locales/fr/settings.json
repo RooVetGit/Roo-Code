@@ -4,7 +4,9 @@
 		"done": "Terminé",
 		"cancel": "Annuler",
 		"reset": "Réinitialiser",
-		"select": "Sélectionner"
+		"select": "Sélectionner",
+		"add": "Ajouter un en-tête",
+		"remove": "Supprimer"
 	},
 	"header": {
 		"title": "Paramètres",
@@ -35,7 +37,7 @@
 	"autoApprove": {
 		"description": "Permettre à Roo d'effectuer automatiquement des opérations sans requérir d'approbation. Activez ces paramètres uniquement si vous faites entièrement confiance à l'IA et que vous comprenez les risques de sécurité associés.",
 		"readOnly": {
-			"label": "Toujours approuver les opérations en lecture seule",
+			"label": "Lecture",
 			"description": "Lorsque cette option est activée, Roo affichera automatiquement le contenu des répertoires et lira les fichiers sans que vous ayez à cliquer sur le bouton Approuver.",
 			"outsideWorkspace": {
 				"label": "Inclure les fichiers en dehors de l'espace de travail",
@@ -43,7 +45,7 @@
 			}
 		},
 		"write": {
-			"label": "Toujours approuver les opérations d'écriture",
+			"label": "Écriture",
 			"description": "Créer et modifier automatiquement des fichiers sans nécessiter d'approbation",
 			"delayLabel": "Délai après les écritures pour permettre aux diagnostics de détecter les problèmes potentiels",
 			"outsideWorkspace": {
@@ -52,29 +54,28 @@
 			}
 		},
 		"browser": {
-			"label": "Toujours approuver les actions du navigateur",
-			"description": "Effectuer automatiquement des actions du navigateur sans nécessiter d'approbation",
-			"note": "Remarque : S'applique uniquement lorsque le modèle prend en charge l'utilisation de l'ordinateur"
+			"label": "Navigateur",
+			"description": "Effectuer automatiquement des actions du navigateur sans nécessiter d'approbation. Remarque : S'applique uniquement lorsque le modèle prend en charge l'utilisation de l'ordinateur"
 		},
 		"retry": {
-			"label": "Toujours réessayer les requêtes API échouées",
+			"label": "Réessayer",
 			"description": "Réessayer automatiquement les requêtes API échouées lorsque le serveur renvoie une réponse d'erreur",
 			"delayLabel": "Délai avant de réessayer la requête"
 		},
 		"mcp": {
-			"label": "Toujours approuver les outils MCP",
+			"label": "MCP",
 			"description": "Activer l'approbation automatique des outils MCP individuels dans la vue des serveurs MCP (nécessite à la fois ce paramètre et la case à cocher \"Toujours autoriser\" de l'outil)"
 		},
 		"modeSwitch": {
-			"label": "Toujours approuver les changements de mode",
+			"label": "Mode",
 			"description": "Basculer automatiquement entre différents modes sans nécessiter d'approbation"
 		},
 		"subtasks": {
-			"label": "Toujours approuver la création et l'achèvement des sous-tâches",
+			"label": "Sous-tâches",
 			"description": "Permettre la création et l'achèvement des sous-tâches sans nécessiter d'approbation"
 		},
 		"execute": {
-			"label": "Toujours approuver les opérations d'exécution autorisées",
+			"label": "Exécuter",
 			"description": "Exécuter automatiquement les commandes de terminal autorisées sans nécessiter d'approbation",
 			"allowedCommands": "Commandes auto-exécutables autorisées",
 			"allowedCommandsDescription": "Préfixes de commandes qui peuvent être auto-exécutés lorsque \"Toujours approuver les opérations d'exécution\" est activé. Ajoutez * pour autoriser toutes les commandes (à utiliser avec précaution).",
@@ -112,6 +113,10 @@
 		"useCustomBaseUrl": "Utiliser une URL de base personnalisée",
 		"useHostHeader": "Utiliser un en-tête Host personnalisé",
 		"useLegacyFormat": "Utiliser le format API OpenAI hérité",
+		"customHeaders": "En-têtes personnalisés",
+		"headerName": "Nom de l'en-tête",
+		"headerValue": "Valeur de l'en-tête",
+		"noCustomHeaders": "Aucun en-tête personnalisé défini. Cliquez sur le bouton + pour en ajouter un.",
 		"requestyApiKey": "Clé API Requesty",
 		"getRequestyApiKey": "Obtenir la clé API Requesty",
 		"openRouterTransformsText": "Compresser les prompts et chaînes de messages à la taille du contexte (<a>Transformations OpenRouter</a>)",
@@ -129,6 +134,8 @@
 		"getMistralApiKey": "Obtenir la clé API Mistral / Codestral",
 		"codestralBaseUrl": "URL de base Codestral (Optionnel)",
 		"codestralBaseUrlDesc": "Définir une URL alternative pour le modèle Codestral.",
+		"xaiApiKey": "Clé API xAI",
+		"getXaiApiKey": "Obtenir la clé API xAI",
 		"awsCredentials": "Identifiants AWS",
 		"awsProfile": "Profil AWS",
 		"awsProfileName": "Nom du profil AWS",
@@ -226,7 +233,14 @@
 		"rateLimitSeconds": {
 			"label": "Limite de débit",
 			"description": "Temps minimum entre les requêtes API."
-		}
+		},
+		"reasoningEffort": {
+			"label": "Effort de raisonnement du modèle",
+			"high": "Élevé",
+			"medium": "Moyen",
+			"low": "Faible"
+		},
+		"setReasoningLevel": "Activer l'effort de raisonnement"
 	},
 	"browser": {
 		"enable": {
@@ -304,6 +318,14 @@
 			"label": "Délai d'intégration du shell du terminal",
 			"description": "Temps maximum d'attente pour l'initialisation de l'intégration du shell avant d'exécuter des commandes. Pour les utilisateurs avec des temps de démarrage de shell longs, cette valeur peut nécessiter d'être augmentée si vous voyez des erreurs \"Shell Integration Unavailable\" dans le terminal."
 		},
+		"shellIntegrationDisabled": {
+			"label": "Désactiver l'intégration du shell du terminal",
+			"description": "Active ceci si les commandes du terminal ne fonctionnent pas correctement ou si tu vois des erreurs 'Shell Integration Unavailable'. Cela utilise une méthode plus simple pour exécuter les commandes, en contournant certaines fonctionnalités avancées du terminal."
+		},
+		"compressProgressBar": {
+			"label": "Compresser la sortie des barres de progression",
+			"description": "Lorsque activé, traite la sortie du terminal avec des retours chariot (\\r) pour simuler l'affichage d'un terminal réel. Cela supprime les états intermédiaires des barres de progression, ne conservant que l'état final, ce qui économise de l'espace de contexte pour des informations plus pertinentes."
+		},
 		"zdotdir": {
 			"label": "Activer la gestion ZDOTDIR",
 			"description": "Lorsque activé, crée un répertoire temporaire pour ZDOTDIR afin de gérer correctement l'intégration du shell zsh. Cela garantit le bon fonctionnement de l'intégration du shell VSCode avec zsh tout en préservant votre configuration zsh. (expérimental)"
@@ -322,7 +344,7 @@
 		},
 		"zshOhMy": {
 			"label": "Activer l'intégration Oh My Zsh",
-			"description": "Lorsqu'activé, définit ITERM_SHELL_INTEGRATION_INSTALLED=Yes pour activer les fonctionnalités d'intégration du shell Oh My Zsh. (expérimental)"
+			"description": "Lorsqu'activé, définit ITERM_SHELL_INTEGRATION_INSTALLED=Yes pour activer les fonctionnalités d'intégration du shell Oh My Zsh. L'application de ce paramètre peut nécessiter le redémarrage de l'IDE. (expérimental)"
 		},
 		"zshP10k": {
 			"label": "Activer l'intégration Powerlevel10k",
@@ -374,6 +396,10 @@
 			"name": "Utiliser l'outil diff multi-blocs expérimental",
 			"description": "Lorsqu'il est activé, Roo utilisera l'outil diff multi-blocs. Cela tentera de mettre à jour plusieurs blocs de code dans le fichier en une seule requête."
 		}
+	},
+	"promptCaching": {
+		"label": "Activer la mise en cache des prompts",
+		"description": "Lorsque cette option est activée, Roo utilisera ce modèle avec la mise en cache des prompts activée afin de réduire les coûts."
 	},
 	"temperature": {
 		"useCustom": "Utiliser une température personnalisée",
@@ -472,11 +498,5 @@
 	"labels": {
 		"customArn": "ARN personnalisé",
 		"useCustomArn": "Utiliser un ARN personnalisé..."
-	},
-	"interface": {
-		"showgreeting": {
-			"label": "Afficher le message de bienvenue",
-			"description": "Lorsque cette option est activée, Roo affichera un message de bienvenue et une introduction."
-		}
 	}
 }

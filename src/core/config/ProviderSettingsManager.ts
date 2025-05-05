@@ -16,6 +16,8 @@ export const providerProfilesSchema = z.object({
 	migrations: z
 		.object({
 			rateLimitSecondsMigrated: z.boolean().optional(),
+			diffSettingsMigrated: z.boolean().optional(),
+			openAiHeadersMigrated: z.boolean().optional(),
 		})
 		.optional(),
 })
@@ -36,6 +38,8 @@ export class ProviderSettingsManager {
 		modeApiConfigs: this.defaultModeApiConfigs,
 		migrations: {
 			rateLimitSecondsMigrated: true, // Mark as migrated on fresh installs
+			diffSettingsMigrated: true, // Mark as migrated on fresh installs
+			openAiHeadersMigrated: true, // Mark as migrated on fresh installs
 		},
 	}
 
@@ -76,7 +80,7 @@ export class ProviderSettingsManager {
 				let isDirty = false
 
 				// Ensure all configs have IDs.
-				for (const [name, apiConfig] of Object.entries(providerProfiles.apiConfigs)) {
+				for (const [_name, apiConfig] of Object.entries(providerProfiles.apiConfigs)) {
 					if (!apiConfig.id) {
 						apiConfig.id = this.generateId()
 						isDirty = true
@@ -85,13 +89,29 @@ export class ProviderSettingsManager {
 
 				// Ensure migrations field exists
 				if (!providerProfiles.migrations) {
-					providerProfiles.migrations = { rateLimitSecondsMigrated: false } // Initialize with default values
+					providerProfiles.migrations = {
+						rateLimitSecondsMigrated: false,
+						diffSettingsMigrated: false,
+						openAiHeadersMigrated: false,
+					} // Initialize with default values
 					isDirty = true
 				}
 
 				if (!providerProfiles.migrations.rateLimitSecondsMigrated) {
 					await this.migrateRateLimitSeconds(providerProfiles)
 					providerProfiles.migrations.rateLimitSecondsMigrated = true
+					isDirty = true
+				}
+
+				if (!providerProfiles.migrations.diffSettingsMigrated) {
+					await this.migrateDiffSettings(providerProfiles)
+					providerProfiles.migrations.diffSettingsMigrated = true
+					isDirty = true
+				}
+
+				if (!providerProfiles.migrations.openAiHeadersMigrated) {
+					await this.migrateOpenAiHeaders(providerProfiles)
+					providerProfiles.migrations.openAiHeadersMigrated = true
 					isDirty = true
 				}
 
@@ -115,22 +135,76 @@ export class ProviderSettingsManager {
 			}
 
 			if (rateLimitSeconds === undefined) {
-				// Failed to get the existing value, use the default
+				// Failed to get the existing value, use the default.
 				rateLimitSeconds = 0
 			}
 
-			for (const [name, apiConfig] of Object.entries(providerProfiles.apiConfigs)) {
+			for (const [_name, apiConfig] of Object.entries(providerProfiles.apiConfigs)) {
 				if (apiConfig.rateLimitSeconds === undefined) {
-					console.log(
-						`[MigrateRateLimitSeconds] Applying rate limit ${rateLimitSeconds}s to profile: ${name}`,
-					)
 					apiConfig.rateLimitSeconds = rateLimitSeconds
 				}
 			}
-
-			console.log(`[MigrateRateLimitSeconds] migration complete`)
 		} catch (error) {
 			console.error(`[MigrateRateLimitSeconds] Failed to migrate rate limit settings:`, error)
+		}
+	}
+
+	private async migrateDiffSettings(providerProfiles: ProviderProfiles) {
+		try {
+			let diffEnabled: boolean | undefined
+			let fuzzyMatchThreshold: number | undefined
+
+			try {
+				diffEnabled = await this.context.globalState.get<boolean>("diffEnabled")
+				fuzzyMatchThreshold = await this.context.globalState.get<number>("fuzzyMatchThreshold")
+			} catch (error) {
+				console.error("[MigrateDiffSettings] Error getting global diff settings:", error)
+			}
+
+			if (diffEnabled === undefined) {
+				// Failed to get the existing value, use the default.
+				diffEnabled = true
+			}
+
+			if (fuzzyMatchThreshold === undefined) {
+				// Failed to get the existing value, use the default.
+				fuzzyMatchThreshold = 1.0
+			}
+
+			for (const [_name, apiConfig] of Object.entries(providerProfiles.apiConfigs)) {
+				if (apiConfig.diffEnabled === undefined) {
+					apiConfig.diffEnabled = diffEnabled
+				}
+				if (apiConfig.fuzzyMatchThreshold === undefined) {
+					apiConfig.fuzzyMatchThreshold = fuzzyMatchThreshold
+				}
+			}
+		} catch (error) {
+			console.error(`[MigrateDiffSettings] Failed to migrate diff settings:`, error)
+		}
+	}
+
+	private async migrateOpenAiHeaders(providerProfiles: ProviderProfiles) {
+		try {
+			for (const [_name, apiConfig] of Object.entries(providerProfiles.apiConfigs)) {
+				// Use type assertion to access the deprecated property safely
+				const configAny = apiConfig as any
+
+				// Check if openAiHostHeader exists but openAiHeaders doesn't
+				if (
+					configAny.openAiHostHeader &&
+					(!apiConfig.openAiHeaders || Object.keys(apiConfig.openAiHeaders || {}).length === 0)
+				) {
+					// Create the headers object with the Host value
+					apiConfig.openAiHeaders = { Host: configAny.openAiHostHeader }
+
+					// Delete the old property to prevent re-migration
+					// This prevents the header from reappearing after deletion
+					configAny.openAiHostHeader = undefined
+				}
+			}
+		} catch (error) {
+			console.error(`[MigrateOpenAiHeaders] Failed to migrate OpenAI headers:`, error)
 		}
 	}
 
@@ -321,7 +395,31 @@ export class ProviderSettingsManager {
 	private async load(): Promise<ProviderProfiles> {
 		try {
 			const content = await this.context.secrets.get(this.secretsKey)
-			return content ? providerProfilesSchema.parse(JSON.parse(content)) : this.defaultProviderProfiles
+
+			if (!content) {
+				return this.defaultProviderProfiles
+			}
+
+			const providerProfiles = providerProfilesSchema
+				.extend({
+					apiConfigs: z.record(z.string(), z.any()),
+				})
+				.parse(JSON.parse(content))
+
+			const apiConfigs = Object.entries(providerProfiles.apiConfigs).reduce(
+				(acc, [key, apiConfig]) => {
+					const result = providerSettingsWithIdSchema.safeParse(apiConfig)
+					return result.success ? { ...acc, [key]: result.data } : acc
+				},
+				{} as Record<string, ProviderSettingsWithId>,
+			)
+
+			return {
+				...providerProfiles,
+				apiConfigs: Object.fromEntries(
+					Object.entries(apiConfigs).filter(([_, apiConfig]) => apiConfig !== null),
+				),
+			}
 		} catch (error) {
 			if (error instanceof ZodError) {
 				telemetryService.captureSchemaValidationError({ schemaName: "ProviderProfiles", error })

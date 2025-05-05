@@ -1,18 +1,19 @@
-import { ToolResponse } from "../Cline"
+import Anthropic from "@anthropic-ai/sdk"
 
-import { ToolUse } from "../assistant-message"
 import { Cline } from "../Cline"
 import {
+	ToolResponse,
+	ToolUse,
 	AskApproval,
 	HandleError,
 	PushToolResult,
 	RemoveClosingTag,
 	ToolDescription,
 	AskFinishSubTaskApproval,
-} from "./types"
+} from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
-import Anthropic from "@anthropic-ai/sdk"
+import { type ExecuteCommandOptions, executeCommand } from "./executeCommandTool"
 
 export async function attemptCompletionTool(
 	cline: Cline,
@@ -26,8 +27,10 @@ export async function attemptCompletionTool(
 ) {
 	const result: string | undefined = block.params.result
 	const command: string | undefined = block.params.command
+
 	try {
 		const lastMessage = cline.clineMessages.at(-1)
+
 		if (block.partial) {
 			if (command) {
 				// the attempt_completion text is done, now we're getting command
@@ -43,7 +46,7 @@ export async function attemptCompletionTool(
 					await cline.say("completion_result", removeClosingTag("result", result), undefined, false)
 
 					telemetryService.captureTaskCompleted(cline.taskId)
-					cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage())
+					cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage(), cline.getToolUsage())
 
 					await cline.ask("command", removeClosingTag("command", command), block.partial).catch(() => {})
 				}
@@ -55,6 +58,7 @@ export async function attemptCompletionTool(
 		} else {
 			if (!result) {
 				cline.consecutiveMistakeCount++
+				cline.recordToolError("attempt_completion")
 				pushToolResult(await cline.sayAndCreateMissingParamError("attempt_completion", "result"))
 				return
 			}
@@ -68,7 +72,7 @@ export async function attemptCompletionTool(
 					// Haven't sent a command message yet so first send completion_result then command.
 					await cline.say("completion_result", result, undefined, false)
 					telemetryService.captureTaskCompleted(cline.taskId)
-					cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage())
+					cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage(), cline.getToolUsage())
 				}
 
 				// Complete command message.
@@ -78,7 +82,9 @@ export async function attemptCompletionTool(
 					return
 				}
 
-				const [userRejected, execCommandResult] = await cline.executeCommandTool(command!)
+				const executionId = cline.lastMessageTs?.toString() ?? Date.now().toString()
+				const options: ExecuteCommandOptions = { executionId, command }
+				const [userRejected, execCommandResult] = await executeCommand(cline, options)
 
 				if (userRejected) {
 					cline.didRejectTool = true
@@ -91,7 +97,7 @@ export async function attemptCompletionTool(
 			} else {
 				await cline.say("completion_result", result, undefined, false)
 				telemetryService.captureTaskCompleted(cline.taskId)
-				cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage())
+				cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage(), cline.getToolUsage())
 			}
 
 			if (cline.parentTask) {
@@ -102,7 +108,7 @@ export async function attemptCompletionTool(
 				}
 
 				// tell the provider to remove the current subtask and resume the previous task in the stack
-				await cline.providerRef.deref()?.finishSubTask(lastMessage?.text ?? "")
+				await cline.providerRef.deref()?.finishSubTask(result)
 				return
 			}
 
@@ -136,13 +142,9 @@ export async function attemptCompletionTool(
 			})
 
 			toolResults.push(...formatResponse.imageBlocks(images))
-
-			cline.userMessageContent.push({
-				type: "text",
-				text: `${toolDescription()} Result:`,
-			})
-
+			cline.userMessageContent.push({ type: "text", text: `${toolDescription()} Result:` })
 			cline.userMessageContent.push(...toolResults)
+
 			return
 		}
 	} catch (error) {

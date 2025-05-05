@@ -1,21 +1,21 @@
-import { DiffStrategy, DiffResult } from "../types"
-import { addLineNumbers, everyLineHasLineNumbers, stripLineNumbers } from "../../../integrations/misc/extract-text"
 import { distance } from "fastest-levenshtein"
+
+import { addLineNumbers, everyLineHasLineNumbers, stripLineNumbers } from "../../../integrations/misc/extract-text"
 import { ToolProgressStatus } from "../../../shared/ExtensionMessage"
-import { ToolUse } from "../../assistant-message"
+import { ToolUse, DiffStrategy, DiffResult } from "../../../shared/tools"
+import { normalizeString } from "../../../utils/text-normalization"
 
 const BUFFER_LINES = 40 // Number of extra context lines to show before and after matches
 
 function getSimilarity(original: string, search: string): number {
+	// Empty searches are no longer supported
 	if (search === "") {
-		return 1
+		return 0
 	}
 
-	// Normalize strings by removing extra whitespace but preserve case
-	const normalizeStr = (str: string) => str.replace(/\s+/g, " ").trim()
-
-	const normalizedOriginal = normalizeStr(original)
-	const normalizedSearch = normalizeStr(search)
+	// Use the normalizeString utility to handle smart quotes and other special characters
+	const normalizedOriginal = normalizeString(original)
+	const normalizedSearch = normalizeString(search)
 
 	if (normalizedOriginal === normalizedSearch) {
 		return 1
@@ -106,7 +106,6 @@ Diff format:
 \`\`\`
 <<<<<<< SEARCH
 :start_line: (required) The line number of original content where the search block starts.
-:end_line: (required) The line number of original content  where the search block ends.
 -------
 [exact content to find including whitespace]
 =======
@@ -131,7 +130,6 @@ Search/Replace content:
 \`\`\`
 <<<<<<< SEARCH
 :start_line:1
-:end_line:5
 -------
 def calculate_total(items):
     total = 0
@@ -150,7 +148,6 @@ Search/Replace content with multi edits:
 \`\`\`
 <<<<<<< SEARCH
 :start_line:1
-:end_line:2
 -------
 def calculate_total(items):
     sum = 0
@@ -161,7 +158,6 @@ def calculate_sum(items):
 
 <<<<<<< SEARCH
 :start_line:4
-:end_line:5
 -------
         total += item
     return total
@@ -207,7 +203,7 @@ Only use a single line of '=======' between search and replacement content, beca
 		const SEARCH_PREFIX = "<<<<<<<"
 		const REPLACE_PREFIX = ">>>>>>>"
 
-		const reportMergeConflictError = (found: string, expected: string) => ({
+		const reportMergeConflictError = (found: string, _expected: string) => ({
 			success: false,
 			error:
 				`ERROR: Special marker '${found}' found in your diff content at line ${state.line}:\n` +
@@ -239,7 +235,6 @@ Only use a single line of '=======' between search and replacement content, beca
 				"CORRECT FORMAT:\n\n" +
 				"<<<<<<< SEARCH\n" +
 				":start_line: (required) The line number of original content where the search block starts.\n" +
-				":end_line: (required) The line number of original content  where the search block ends.\n" +
 				"-------\n" +
 				"[exact content to find including whitespace]\n" +
 				"=======\n" +
@@ -355,7 +350,7 @@ Only use a single line of '=======' between search and replacement content, beca
 		if (matches.length === 0) {
 			return {
 				success: false,
-				error: `Invalid diff format - missing required sections\n\nDebug Info:\n- Expected Format: <<<<<<< SEARCH\\n:start_line: start line\\n:end_line: end line\\n-------\\n[search content]\\n=======\\n[replace content]\\n>>>>>>> REPLACE\n- Tip: Make sure to include start_line/end_line/SEARCH/=======/REPLACE sections with correct markers on new lines`,
+				error: `Invalid diff format - missing required sections\n\nDebug Info:\n- Expected Format: <<<<<<< SEARCH\\n:start_line: start line\\n-------\\n[search content]\\n=======\\n[replace content]\\n>>>>>>> REPLACE\n- Tip: Make sure to include start_line/SEARCH/=======/REPLACE sections with correct markers on new lines`,
 			}
 		}
 		// Detect line ending from original content
@@ -367,7 +362,6 @@ Only use a single line of '=======' between search and replacement content, beca
 		const replacements = matches
 			.map((match) => ({
 				startLine: Number(match[2] ?? 0),
-				endLine: Number(match[4] ?? resultLines.length),
 				searchContent: match[6],
 				replaceContent: match[7],
 			}))
@@ -376,7 +370,6 @@ Only use a single line of '=======' between search and replacement content, beca
 		for (const replacement of replacements) {
 			let { searchContent, replaceContent } = replacement
 			let startLine = replacement.startLine + (replacement.startLine === 0 ? 0 : delta)
-			let endLine = replacement.endLine + delta
 
 			// First unescape any escaped markers in the content
 			searchContent = this.unescapeMarkers(searchContent)
@@ -409,23 +402,16 @@ Only use a single line of '=======' between search and replacement content, beca
 			let searchLines = searchContent === "" ? [] : searchContent.split(/\r?\n/)
 			let replaceLines = replaceContent === "" ? [] : replaceContent.split(/\r?\n/)
 
-			// Validate that empty search requires start line
-			if (searchLines.length === 0 && !startLine) {
+			// Validate that search content is not empty
+			if (searchLines.length === 0) {
 				diffResults.push({
 					success: false,
-					error: `Empty search content requires start_line to be specified\n\nDebug Info:\n- Empty search content is only valid for insertions at a specific line\n- For insertions, specify the line number where content should be inserted`,
+					error: `Empty search content is not allowed\n\nDebug Info:\n- Search content cannot be empty\n- For insertions, provide a specific line using :start_line: and include content to search for\n- For example, match a single line to insert before/after it`,
 				})
 				continue
 			}
 
-			// Validate that empty search requires same start and end line
-			if (searchLines.length === 0 && startLine && endLine && startLine !== endLine) {
-				diffResults.push({
-					success: false,
-					error: `Empty search content requires start_line and end_line to be the same (got ${startLine}-${endLine})\n\nDebug Info:\n- Empty search content is only valid for insertions at a specific line\n- For insertions, use the same line number for both start_line and end_line`,
-				})
-				continue
-			}
+			let endLine = replacement.startLine + searchLines.length - 1
 
 			// Initialize search variables
 			let matchIndex = -1
@@ -438,18 +424,11 @@ Only use a single line of '=======' between search and replacement content, beca
 			let searchEndIndex = resultLines.length
 
 			// Validate and handle line range if provided
-			if (startLine && endLine) {
+			if (startLine) {
 				// Convert to 0-based index
 				const exactStartIndex = startLine - 1
-				const exactEndIndex = endLine - 1
-
-				if (exactStartIndex < 0 || exactEndIndex > resultLines.length || exactStartIndex > exactEndIndex) {
-					diffResults.push({
-						success: false,
-						error: `Line range ${startLine}-${endLine} is invalid (file has ${resultLines.length} lines)\n\nDebug Info:\n- Requested Range: lines ${startLine}-${endLine}\n- File Bounds: lines 1-${resultLines.length}`,
-					})
-					continue
-				}
+				const searchLen = searchLines.length
+				const exactEndIndex = exactStartIndex + searchLen - 1
 
 				// Try exact match first
 				const originalChunk = resultLines.slice(exactStartIndex, exactEndIndex + 1).join("\n")
@@ -461,7 +440,7 @@ Only use a single line of '=======' between search and replacement content, beca
 				} else {
 					// Set bounds for buffered search
 					searchStartIndex = Math.max(0, startLine - (this.bufferLines + 1))
-					searchEndIndex = Math.min(resultLines.length, endLine + this.bufferLines)
+					searchEndIndex = Math.min(resultLines.length, startLine + searchLines.length + this.bufferLines)
 				}
 			}
 
@@ -520,14 +499,11 @@ Only use a single line of '=======' between search and replacement content, beca
 						? `\n\nBest Match Found:\n${addLineNumbers(bestMatchContent, matchIndex + 1)}`
 						: `\n\nBest Match Found:\n(no match)`
 
-					const lineRange =
-						startLine || endLine
-							? ` at ${startLine ? `start: ${startLine}` : "start"} to ${endLine ? `end: ${endLine}` : "end"}`
-							: ""
+					const lineRange = startLine ? ` at line: ${startLine}` : ""
 
 					diffResults.push({
 						success: false,
-						error: `No sufficiently similar match found${lineRange} (${Math.floor(bestMatchScore * 100)}% similar, needs ${Math.floor(this.fuzzyThreshold * 100)}%)\n\nDebug Info:\n- Similarity Score: ${Math.floor(bestMatchScore * 100)}%\n- Required Threshold: ${Math.floor(this.fuzzyThreshold * 100)}%\n- Search Range: ${startLine && endLine ? `lines ${startLine}-${endLine}` : "start to end"}\n- Tried both standard and aggressive line number stripping\n- Tip: Use the read_file tool to get the latest content of the file before attempting to use the apply_diff tool again, as the file content may have changed\n\nSearch Content:\n${searchChunk}${bestMatchSection}${originalContentSection}`,
+						error: `No sufficiently similar match found${lineRange} (${Math.floor(bestMatchScore * 100)}% similar, needs ${Math.floor(this.fuzzyThreshold * 100)}%)\n\nDebug Info:\n- Similarity Score: ${Math.floor(bestMatchScore * 100)}%\n- Required Threshold: ${Math.floor(this.fuzzyThreshold * 100)}%\n- Search Range: ${startLine ? `starting at line ${startLine}` : "start to end"}\n- Tried both standard and aggressive line number stripping\n- Tip: Use the read_file tool to get the latest content of the file before attempting to use the apply_diff tool again, as the file content may have changed\n\nSearch Content:\n${searchChunk}${bestMatchSection}${originalContentSection}`,
 					})
 					continue
 				}
@@ -549,7 +525,7 @@ Only use a single line of '=======' between search and replacement content, beca
 			})
 
 			// Apply the replacement while preserving exact indentation
-			const indentedReplaceLines = replaceLines.map((line, i) => {
+			const indentedReplaceLines = replaceLines.map((line) => {
 				// Get the matched line's exact indentation
 				const matchedIndent = originalIndents[0] || ""
 
@@ -598,12 +574,13 @@ Only use a single line of '=======' between search and replacement content, beca
 		const diffContent = toolUse.params.diff
 		if (diffContent) {
 			const icon = "diff-multiple"
-			const searchBlockCount = (diffContent.match(/SEARCH/g) || []).length
 			if (toolUse.partial) {
-				if (diffContent.length < 1000 || (diffContent.length / 50) % 10 === 0) {
+				if (Math.floor(diffContent.length / 10) % 10 === 0) {
+					const searchBlockCount = (diffContent.match(/SEARCH/g) || []).length
 					return { icon, text: `${searchBlockCount}` }
 				}
 			} else if (result) {
+				const searchBlockCount = (diffContent.match(/SEARCH/g) || []).length
 				if (result.failParts?.length) {
 					return {
 						icon,

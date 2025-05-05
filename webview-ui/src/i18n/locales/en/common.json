@@ -3,5 +3,12 @@
 		"thousand_suffix": "k",
 		"million_suffix": "m",
 		"billion_suffix": "b"
+	},
+	"ui": {
+		"search_placeholder": "Search..."
+	},
+	"mermaid": {
+		"loading": "Generating mermaid diagram...",
+		"render_error": "Unable to Render Diagram"
 	}
 }

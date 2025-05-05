@@ -4,7 +4,9 @@
 		"done": "完成",
 		"cancel": "取消",
 		"reset": "重設",
-		"select": "選擇"
+		"select": "選擇",
+		"add": "新增標頭",
+		"remove": "移除"
 	},
 	"header": {
 		"title": "設定",
@@ -35,7 +37,7 @@
 	"autoApprove": {
 		"description": "允許 Roo 無需核准即執行操作。僅在您完全信任 AI 並了解相關安全風險時啟用這些設定。",
 		"readOnly": {
-			"label": "始終核准唯讀操作",
+			"label": "讀取",
 			"description": "啟用後，Roo 將自動檢視目錄內容並讀取檔案，無需點選核准按鈕。",
 			"outsideWorkspace": {
 				"label": "包含工作區外的檔案",
@@ -43,7 +45,7 @@
 			}
 		},
 		"write": {
-			"label": "始終核准寫入操作",
+			"label": "寫入",
 			"description": "自動建立和編輯文件而無需核准",
 			"delayLabel": "寫入後延遲以允許診斷偵測潛在問題",
 			"outsideWorkspace": {
@@ -52,29 +54,28 @@
 			}
 		},
 		"browser": {
-			"label": "始終核准瀏覽器操作",
-			"description": "自動執行瀏覽器操作而無需核准",
-			"note": "注意：僅適用於模型支援電腦使用時"
+			"label": "瀏覽器",
+			"description": "自動執行瀏覽器操作而無需核准 — 注意：僅適用於模型支援電腦使用時"
 		},
 		"retry": {
-			"label": "始終重試失敗的 API 請求",
+			"label": "重試",
 			"description": "當伺服器回傳錯誤回應時自動重試失敗的 API 請求",
 			"delayLabel": "重試請求前的延遲"
 		},
 		"mcp": {
-			"label": "始終核准 MCP 工具",
+			"label": "MCP",
 			"description": "在 MCP 伺服器檢視中啟用個別 MCP 工具的自動核准（需要此設定和工具的「始終允許」核取方塊）"
 		},
 		"modeSwitch": {
-			"label": "始終核准模式切換",
+			"label": "模式",
 			"description": "自動在不同模式之間切換而無需核准"
 		},
 		"subtasks": {
-			"label": "始終核准子工作的建立和完成",
+			"label": "子工作",
 			"description": "允許建立和完成子工作而無需核准"
 		},
 		"execute": {
-			"label": "始終核准允許的執行操作",
+			"label": "執行",
 			"description": "自動執行允許的終端機命令而無需核准",
 			"allowedCommands": "允許自動執行的命令",
 			"allowedCommandsDescription": "當「始終核准執行操作」啟用時可以自動執行的命令前綴。新增 * 以允許所有命令（請謹慎使用）。",
@@ -112,6 +113,10 @@
 		"useCustomBaseUrl": "使用自訂基礎 URL",
 		"useHostHeader": "使用自訂 Host 標頭",
 		"useLegacyFormat": "使用舊版 OpenAI API 格式",
+		"customHeaders": "自訂標頭",
+		"headerName": "標頭名稱",
+		"headerValue": "標頭值",
+		"noCustomHeaders": "尚未定義自訂標頭。點擊 + 按鈕以新增。",
 		"requestyApiKey": "Requesty API 金鑰",
 		"getRequestyApiKey": "取得 Requesty API 金鑰",
 		"openRouterTransformsText": "將提示和訊息鏈壓縮到上下文大小 (<a>OpenRouter 轉換</a>)",
@@ -129,6 +134,8 @@
 		"getMistralApiKey": "取得 Mistral/Codestral API 金鑰",
 		"codestralBaseUrl": "Codestral 基礎 URL（選用）",
 		"codestralBaseUrlDesc": "設定 Codestral 模型的替代 URL。",
+		"xaiApiKey": "xAI API 金鑰",
+		"getXaiApiKey": "取得 xAI API 金鑰",
 		"awsCredentials": "AWS 認證",
 		"awsProfile": "AWS Profile",
 		"awsProfileName": "AWS Profile 名稱",
@@ -226,7 +233,14 @@
 		"rateLimitSeconds": {
 			"label": "速率限制",
 			"description": "API 請求間的最短時間"
-		}
+		},
+		"reasoningEffort": {
+			"label": "模型推理強度",
+			"high": "高",
+			"medium": "中",
+			"low": "低"
+		},
+		"setReasoningLevel": "啟用推理工作量"
 	},
 	"browser": {
 		"enable": {
@@ -304,6 +318,14 @@
 			"label": "終端機 Shell 整合逾時",
 			"description": "執行命令前等待 Shell 整合初始化的最長時間。如果您的 Shell 啟動較慢，且終端機出現「Shell 整合無法使用」的錯誤訊息，可能需要提高此數值。"
 		},
+		"shellIntegrationDisabled": {
+			"label": "停用終端機 Shell 整合",
+			"description": "如果終端機指令無法正常運作或看到 'Shell Integration Unavailable' 錯誤，請啟用此項。這會使用較簡單的方法執行指令，繞過一些進階終端機功能。"
+		},
+		"compressProgressBar": {
+			"label": "壓縮進度條輸出",
+			"description": "啟用後，將處理包含歸位字元 (\\r) 的終端機輸出，模擬真實終端機顯示內容的方式。這會移除進度條的中間狀態，只保留最終狀態，為更重要的資訊節省上下文空間。"
+		},
 		"zdotdir": {
 			"label": "啟用 ZDOTDIR 處理",
 			"description": "啟用後將建立暫存目錄用於 ZDOTDIR，以正確處理 zsh shell 整合。這確保 VSCode shell 整合能與 zsh 正常運作，同時保留您的 zsh 設定。（實驗性）"
@@ -322,7 +344,7 @@
 		},
 		"zshOhMy": {
 			"label": "啟用 Oh My Zsh 整合",
-			"description": "啟用後，設定 ITERM_SHELL_INTEGRATION_INSTALLED=Yes 以啟用 Oh My Zsh shell 整合功能。（實驗性）"
+			"description": "啟用後，設定 ITERM_SHELL_INTEGRATION_INSTALLED=Yes 以啟用 Oh My Zsh shell 整合功能。套用此設定可能需要重新啟動 IDE。（實驗性）"
 		},
 		"zshP10k": {
 			"label": "啟用 Powerlevel10k 整合",
@@ -374,6 +396,10 @@
 			"name": "使用實驗性多區塊差異比對工具",
 			"description": "啟用後，Roo 將使用多區塊差異比對工具，嘗試在單一請求中更新檔案內的多個程式碼區塊。"
 		}
+	},
+	"promptCaching": {
+		"label": "啟用提示快取",
+		"description": "啟用後，Roo 將使用提示快取功能以降低成本。"
 	},
 	"temperature": {
 		"useCustom": "使用自訂溫度",
@@ -471,11 +497,5 @@
 	"labels": {
 		"customArn": "自訂 ARN",
 		"useCustomArn": "使用自訂 ARN..."
-	},
-	"interface": {
-		"showgreeting": {
-			"label": "顯示歡迎訊息",
-			"description": "啟用後，Roo 將顯示歡迎訊息與介紹。"
-		}
 	}
 }
