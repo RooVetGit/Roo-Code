@@ -33,14 +33,16 @@ export interface IDirectoryScanner {
 	 */
 	scanDirectory(
 		directory: string,
-		context?: vscode.ExtensionContext,
 		onError?: (error: Error) => void,
+		onBlocksIndexed?: (indexedCount: number) => void,
+		onFileParsed?: (fileBlockCount: number) => void,
 	): Promise<{
 		codeBlocks: CodeBlock[]
 		stats: {
 			processed: number
 			skipped: number
 		}
+		totalBlockCount: number
 	}>
 }
 

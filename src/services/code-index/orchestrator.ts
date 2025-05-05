@@ -1,11 +1,11 @@
 import * as vscode from "vscode"
-import { createHash } from "crypto"
 import * as path from "path"
 import { CodeIndexConfigManager } from "./config-manager"
 import { CodeIndexStateManager, IndexingState } from "./state-manager"
 import { CodeIndexServiceFactory } from "./service-factory"
 import { FileProcessingResult, IFileWatcher, IVectorStore } from "./interfaces"
 import { DirectoryScanner } from "./processors"
+import { CacheManager } from "./cache-manager"
 
 /**
  * Manages the code indexing workflow, coordinating between different services and managers.
@@ -23,26 +23,8 @@ export class CodeIndexOrchestrator {
 		private readonly serviceFactory: CodeIndexServiceFactory,
 		private readonly context: vscode.ExtensionContext,
 		private readonly workspacePath: string,
+		private readonly cacheManager: CacheManager,
 	) {}
-
-	/**
-	 * Resets the cache file to an empty state.
-	 */
-	private async _resetCacheFile(): Promise<void> {
-		try {
-			const cacheFileName = `roo-index-cache-${createHash("sha256").update(this.workspacePath).digest("hex")}.json`
-			const cachePath = vscode.Uri.joinPath(this.context.globalStorageUri, cacheFileName)
-
-			try {
-				await vscode.workspace.fs.writeFile(cachePath, Buffer.from("{}", "utf-8"))
-				console.log(`[CodeIndexOrchestrator] Cache file reset (emptied) at ${cachePath.fsPath}`)
-			} catch (error) {
-				console.error("[CodeIndexOrchestrator] Failed to reset (empty) cache file:", error)
-			}
-		} catch (error) {
-			console.error("[CodeIndexOrchestrator] Unexpected error during cache file reset:", error)
-		}
-	}
 
 	/**
 	 * Starts the file watcher if not already running.
@@ -60,7 +42,7 @@ export class CodeIndexOrchestrator {
 		this.stateManager.setSystemState("Indexing", "Initializing file watcher...")
 
 		try {
-			const services = this.serviceFactory.createServices(this.context)
+			const services = this.serviceFactory.createServices(this.context, this.cacheManager)
 			this._fileWatcher = services.fileWatcher
 			await this._fileWatcher.initialize()
 
@@ -133,15 +115,15 @@ export class CodeIndexOrchestrator {
 
 		try {
 			this.configManager.loadConfiguration()
-			const services = this.serviceFactory.createServices(this.context)
+			const services = this.serviceFactory.createServices(this.context, this.cacheManager)
 			this._vectorStore = services.vectorStore
 			this._scanner = services.scanner
 
 			const collectionCreated = await this._vectorStore.initialize()
 
 			if (collectionCreated) {
-				await this._resetCacheFile()
-				console.log("[CodeIndexOrchestrator] Qdrant collection created; cache file emptied.")
+				await this.cacheManager.clearCacheFile()
+				console.log("[CodeIndexOrchestrator] Qdrant collection created; cache cleared.")
 			}
 
 			this.stateManager.setSystemState("Indexing", "Services ready. Starting workspace scan...")
@@ -161,7 +143,6 @@ export class CodeIndexOrchestrator {
 
 			const result = await this._scanner.scanDirectory(
 				this.workspacePath,
-				this.context,
 				(batchError: Error) => {
 					console.error(
 						`[CodeIndexOrchestrator] Error during initial scan batch: ${batchError.message}`,
@@ -193,8 +174,8 @@ export class CodeIndexOrchestrator {
 				console.error("[CodeIndexOrchestrator] Failed to clean up after error:", cleanupError)
 			}
 
-			await this._resetCacheFile()
-			console.log("[CodeIndexOrchestrator] Cleared cache file due to scan error.")
+			await this.cacheManager.clearCacheFile()
+			console.log("[CodeIndexOrchestrator] Cleared cache due to scan error.")
 
 			this.stateManager.setSystemState("Error", `Failed during initial scan: ${error.message || "Unknown error"}`)
 			this.stopWatcher()
@@ -235,7 +216,7 @@ export class CodeIndexOrchestrator {
 			try {
 				if (this.configManager.isFeatureConfigured) {
 					if (!this._vectorStore) {
-						const services = this.serviceFactory.createServices(this.context)
+						const services = this.serviceFactory.createServices(this.context, this.cacheManager)
 						this._vectorStore = services.vectorStore
 					}
 
@@ -249,8 +230,8 @@ export class CodeIndexOrchestrator {
 				this.stateManager.setSystemState("Error", `Failed to clear vector collection: ${error.message}`)
 			}
 
-			await this._resetCacheFile()
-			console.log("[CodeIndexOrchestrator] Cache file emptied.")
+			await this.cacheManager.clearCacheFile()
+			console.log("[CodeIndexOrchestrator] Cache cleared.")
 
 			if (this.stateManager.state !== "Error") {
 				this.stateManager.setSystemState("Standby", "Index data cleared successfully.")
