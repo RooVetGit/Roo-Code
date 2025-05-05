@@ -232,8 +232,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 		// Context Synthesization Settings (Added)
 		enableContextSummarization = false,
 		contextSummarizationTriggerThreshold = 80,
-		contextSummarizationInitialStaticTurns = 5,
-		contextSummarizationRecentTurns = 10,
+		contextSummarizationInitialStaticTurns = 3, // Changed default from 5 to 3
+		contextSummarizationRecentTurns = 3, // Changed default from 10 to 3
 	}: ClineOptions) {
 		super()
 

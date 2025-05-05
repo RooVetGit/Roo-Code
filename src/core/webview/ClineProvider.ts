@@ -1330,8 +1330,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			// Context Synthesization Settings (Added)
 			enableContextSummarization: enableContextSummarization ?? false,
 			contextSummarizationTriggerThreshold: contextSummarizationTriggerThreshold ?? 80,
-			contextSummarizationInitialStaticTurns: contextSummarizationInitialStaticTurns ?? 5,
-			contextSummarizationRecentTurns: contextSummarizationRecentTurns ?? 10,
+			contextSummarizationInitialStaticTurns: contextSummarizationInitialStaticTurns ?? 3, // Changed default from 5 to 3
+			contextSummarizationRecentTurns: contextSummarizationRecentTurns ?? 3, // Changed default from 10 to 3
 		}
 	}
 
@@ -1425,8 +1425,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			// Context Synthesization Settings (Added)
 			enableContextSummarization: stateValues.enableContextSummarization ?? false,
 			contextSummarizationTriggerThreshold: stateValues.contextSummarizationTriggerThreshold ?? 80,
-			contextSummarizationInitialStaticTurns: stateValues.contextSummarizationInitialStaticTurns ?? 5,
-			contextSummarizationRecentTurns: stateValues.contextSummarizationRecentTurns ?? 10,
+			contextSummarizationInitialStaticTurns: stateValues.contextSummarizationInitialStaticTurns ?? 3, // Changed default from 5 to 3
+			contextSummarizationRecentTurns: stateValues.contextSummarizationRecentTurns ?? 3, // Changed default from 10 to 3
 		}
 	}
 

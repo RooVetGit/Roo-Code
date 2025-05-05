@@ -205,7 +205,7 @@ export const ContextManagementSettings = ({
 								type="number"
 								pattern="[0-9]*"
 								className="w-24 bg-vscode-input-background text-vscode-input-foreground border border-vscode-input-border px-2 py-1 rounded text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50"
-								value={contextSummarizationInitialStaticTurns ?? 5}
+								value={contextSummarizationInitialStaticTurns ?? 3} // Changed default display from 5 to 3
 								min={0}
 								onChange={(e) => {
 									const newValue = parseInt(e.target.value, 10)
@@ -235,7 +235,7 @@ export const ContextManagementSettings = ({
 								type="number"
 								pattern="[0-9]*"
 								className="w-24 bg-vscode-input-background text-vscode-input-foreground border border-vscode-input-border px-2 py-1 rounded text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50"
-								value={contextSummarizationRecentTurns ?? 10}
+								value={contextSummarizationRecentTurns ?? 3} // Changed default display from 10 to 3
 								min={0}
 								onChange={(e) => {
 									const newValue = parseInt(e.target.value, 10)
