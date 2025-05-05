@@ -107,7 +107,7 @@ export class CodeIndexManager {
 			console.log(
 				`[CodeIndexManager] Configuration change requires restart (Restart: ${requiresRestart}, Dimension Changed: ${requiresClear}). Starting indexing...`,
 			)
-			await this.startIndexing()
+			this.startIndexing()
 		}
 	}
 
