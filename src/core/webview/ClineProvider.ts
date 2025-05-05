@@ -88,21 +88,21 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	public readonly latestAnnouncementId = "may-21-2025-3-18" // Update for v3.18.0 announcement
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
-	public readonly codeIndexManager: CodeIndexManager
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
 		private readonly outputChannel: vscode.OutputChannel,
 		private readonly renderContext: "sidebar" | "editor" = "sidebar",
 		public readonly contextProxy: ContextProxy,
+		public readonly codeIndexManager?: CodeIndexManager,
 	) {
 		super()
 
 		this.log("ClineProvider instantiated")
 		ClineProvider.activeInstances.add(this)
 
-		this.codeIndexManager = CodeIndexManager.getInstance(context, this.contextProxy)
-		context.subscriptions.push(this.codeIndexManager)
+		this.codeIndexManager = codeIndexManager
+
 		// Start configuration loading (which might trigger indexing) in the background.
 		// Don't await, allowing activation to continue immediately.
 
@@ -330,22 +330,15 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	async resolveWebviewView(webviewView: vscode.WebviewView | vscode.WebviewPanel) {
 		this.log("Resolving webview view")
 
-		this.codeIndexManager
-			.loadConfiguration()
-			.then(() => {
-				this.updateGlobalState("codebaseIndexModels", EMBEDDING_MODEL_PROFILES)
+		if (
+			this.codeIndexManager &&
+			this.codeIndexManager.isFeatureEnabled &&
+			this.codeIndexManager.isFeatureConfigured
+		) {
+			this.updateGlobalState("codebaseIndexModels", EMBEDDING_MODEL_PROFILES)
 
-				this.outputChannel.appendLine("CodeIndexManager configuration loaded successfully (async).")
-			})
-			.catch((error) => {
-				console.error(
-					"[resolveWebviewView] Error during background CodeIndexManager configuration/indexing:",
-					error,
-				)
-				this.outputChannel.appendLine(
-					`[Error] Background CodeIndexManager configuration/indexing failed: ${error.message || error}`,
-				)
-			})
+			this.outputChannel.appendLine("CodeIndexManager configuration loaded")
+		}
 
 		this.view = webviewView
 
@@ -868,7 +861,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		}
 
 		// Load CodeIndexManager configuration after provider settings are updated
-		await this.codeIndexManager.loadConfiguration()
+		if (this.codeIndexManager) {
+			await this.codeIndexManager.loadConfiguration()
+		}
 	}
 
 	async deleteProviderProfile(profileToDelete: ProviderSettingsEntry) {
