@@ -63,9 +63,7 @@ import { LanguageSettings } from "./LanguageSettings"
 import { About } from "./About"
 import { Section } from "./Section"
 import { cn } from "@/lib/utils"
-// Removed: import { settingsTabsContainer, settingsTabList, settingsTabTrigger, settingsTabTriggerActive } from "./styles"
 
-// Inserted settings* definitions (originally lines 87-96 from styles.ts)
 export const settingsTabsContainer = "flex flex-1 overflow-hidden [&.narrow_.tab-label]:hidden"
 export const settingsTabList =
 	"w-48 data-[compact=true]:w-12 flex-shrink-0 flex flex-col overflow-y-auto overflow-x-hidden border-r border-vscode-sideBar-background"
@@ -263,7 +261,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "screenshotQuality", value: screenshotQuality ?? 75 })
 			vscode.postMessage({ type: "terminalOutputLineLimit", value: terminalOutputLineLimit ?? 500 })
 			vscode.postMessage({ type: "terminalShellIntegrationTimeout", value: terminalShellIntegrationTimeout })
-			vscode.postMessage({ type: "terminalShellIntegrationDisabled", bool: terminalShellIntegrationDisabled }) // Added from upstream
+			vscode.postMessage({ type: "terminalShellIntegrationDisabled", bool: terminalShellIntegrationDisabled })
 			vscode.postMessage({ type: "terminalCommandDelay", value: terminalCommandDelay })
 			vscode.postMessage({ type: "terminalPowershellCounter", bool: terminalPowershellCounter })
 			vscode.postMessage({ type: "terminalZshClearEolMark", bool: terminalZshClearEolMark })
@@ -614,7 +612,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 						<TerminalSettings
 							terminalOutputLineLimit={terminalOutputLineLimit}
 							terminalShellIntegrationTimeout={terminalShellIntegrationTimeout}
-							terminalShellIntegrationDisabled={terminalShellIntegrationDisabled} // Added from upstream
+							terminalShellIntegrationDisabled={terminalShellIntegrationDisabled}
 							terminalCommandDelay={terminalCommandDelay}
 							terminalPowershellCounter={terminalPowershellCounter}
 							terminalZshClearEolMark={terminalZshClearEolMark}
