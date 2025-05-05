@@ -678,6 +678,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				"listFilesRecursive",
 				"listCodeDefinitionNames",
 				"searchFiles",
+				"codebaseSearch",
 			].includes(tool.tool)
 		}
 
