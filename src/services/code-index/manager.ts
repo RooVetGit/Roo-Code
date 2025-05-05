@@ -22,10 +22,14 @@ export class CodeIndexManager {
 	private readonly _searchService: CodeIndexSearchService
 	private readonly _cacheManager: CacheManager
 
-	public static getInstance(context: vscode.ExtensionContext, contextProxy?: ContextProxy): CodeIndexManager {
+	public static getInstance(
+		context: vscode.ExtensionContext,
+		contextProxy?: ContextProxy,
+	): CodeIndexManager | undefined {
 		const workspacePath = getWorkspacePath() // Assumes single workspace for now
+
 		if (!workspacePath) {
-			throw new Error("Cannot get CodeIndexManager instance without an active workspace.")
+			return undefined
 		}
 
 		if (!CodeIndexManager.instances.has(workspacePath) && contextProxy) {
