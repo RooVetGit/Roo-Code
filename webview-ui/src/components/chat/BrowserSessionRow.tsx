@@ -21,6 +21,11 @@ interface BrowserSessionRowProps {
 	isLast: boolean
 	onHeightChange: (isTaller: boolean) => void
 	isStreaming: boolean
+	// Add search props
+	searchText?: string
+	// Update highlightText signature
+	highlightText?: (text: string, searchTerm: string, itemIndex: number) => React.ReactNode
+	itemIndex: number // Add itemIndex prop
 }
 
 const BrowserSessionRow = memo((props: BrowserSessionRowProps) => {
@@ -189,13 +194,16 @@ const BrowserSessionRow = memo((props: BrowserSessionRowProps) => {
 			{currentPage?.nextAction?.messages.map((message) => (
 				<BrowserSessionRowContent
 					key={message.ts}
-					{...props}
+					{...props} // Spread props first
 					message={message}
+					searchText={props.searchText}
+					highlightText={props.highlightText}
+					itemIndex={props.itemIndex} // Pass itemIndex down
 					setMaxActionHeight={setMaxActionHeight}
 				/>
 			))}
 			{!isBrowsing && messages.some((m) => m.say === "browser_action_result") && currentPageIndex === 0 && (
-				<BrowserActionBox action={"launch"} text={initialUrl} />
+				<BrowserActionBox action={"launch"} text={initialUrl} itemIndex={props.itemIndex} /> // Pass itemIndex here
 			)}
 		</div>,
 	)
@@ -414,6 +422,10 @@ interface BrowserSessionRowContentProps extends Omit<BrowserSessionRowProps, "me
 	message: ClineMessage
 	setMaxActionHeight: (height: number) => void
 	isStreaming: boolean
+	// Add search props
+	searchText?: string
+	highlightText?: (text: string, searchTerm: string, itemIndex: number) => React.ReactNode
+	itemIndex: number
 }
 
 const BrowserSessionRowContent = ({
@@ -424,6 +436,10 @@ const BrowserSessionRowContent = ({
 	isLast,
 	setMaxActionHeight,
 	isStreaming,
+	// Destructure search props and itemIndex
+	searchText,
+	highlightText,
+	itemIndex, // Destructure itemIndex
 }: BrowserSessionRowContentProps) => {
 	const { t } = useTranslation()
 	const headerStyle: React.CSSProperties = {
@@ -443,6 +459,9 @@ const BrowserSessionRowContent = ({
 						<div style={{ padding: "10px 0 10px 0" }}>
 							<ChatRowContent
 								message={message}
+								searchText={searchText}
+								highlightText={highlightText}
+								itemIndex={itemIndex} // Pass itemIndex to ChatRowContent
 								isExpanded={isExpanded(message.ts)}
 								onToggleExpand={() => {
 									if (message.say === "api_req_started") {
@@ -464,6 +483,9 @@ const BrowserSessionRowContent = ({
 							action={browserAction.action}
 							coordinate={browserAction.coordinate}
 							text={browserAction.text}
+							searchText={searchText}
+							highlightText={highlightText}
+							itemIndex={itemIndex} // Pass itemIndex to BrowserActionBox
 						/>
 					)
 
@@ -501,10 +523,19 @@ const BrowserActionBox = ({
 	action,
 	coordinate,
 	text,
+	// Destructure search props and itemIndex
+	searchText,
+	highlightText,
+	itemIndex, // Destructure itemIndex
 }: {
 	action: BrowserAction
 	coordinate?: string
 	text?: string
+	// Add search props
+	searchText?: string
+	// Update highlightText signature
+	highlightText?: (text: string, searchTerm: string, itemIndex: number) => React.ReactNode
+	itemIndex: number // Add itemIndex prop
 }) => {
 	const { t } = useTranslation()
 	const getBrowserActionText = (action: BrowserAction, coordinate?: string, text?: string) => {
@@ -525,6 +556,11 @@ const BrowserActionBox = ({
 				return action
 		}
 	}
+	const actionText = getBrowserActionText(action, coordinate, text)
+	// Pass itemIndex to highlightText call
+	const displayedActionText =
+		highlightText && searchText ? highlightText(actionText, searchText, itemIndex) : actionText
+
 	return (
 		<div style={{ padding: "10px 0 0 0" }}>
 			<div
@@ -546,7 +582,7 @@ const BrowserActionBox = ({
 							wordBreak: "break-word",
 						}}>
 						<span style={{ fontWeight: 500 }}>{t("chat:browser.actions.title")}</span>
-						{getBrowserActionText(action, coordinate, text)}
+						{displayedActionText}
 					</span>
 				</div>
 			</div>

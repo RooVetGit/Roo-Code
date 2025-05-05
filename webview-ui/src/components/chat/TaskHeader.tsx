@@ -1,15 +1,14 @@
 import { memo, useRef, useState } from "react"
 import { useWindowSize } from "react-use"
-import { useTranslation } from "react-i18next"
-import { VSCodeBadge } from "@vscode/webview-ui-toolkit/react"
-import { CloudUpload, CloudDownload } from "lucide-react"
+// Remove TFunction import, it's not needed
+import { VSCodeBadge, VSCodeButton } from "@vscode/webview-ui-toolkit/react" // Import VSCodeButton
+import { CloudUpload, CloudDownload, Search } from "lucide-react" // Import Search icon
 
 import { ClineMessage } from "@roo/shared/ExtensionMessage"
 
 import { getMaxTokensForModel } from "@src/utils/model-utils"
 import { formatLargeNumber } from "@src/utils/format"
 import { cn } from "@src/lib/utils"
-import { Button } from "@src/components/ui"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { useSelectedModel } from "@/components/ui/hooks/useSelectedModel"
 
@@ -29,6 +28,10 @@ export interface TaskHeaderProps {
 	totalCost: number
 	contextTokens: number
 	onClose: () => void
+	toggleSearch: () => void // Renaming for clarity might be good later, but keep for now
+	showSearch: boolean // Add showSearch state prop
+	closeSearch: () => void // Add closeSearch function prop
+	t: (key: string, options?: Record<string, any>) => string // Correct type for t function
 }
 
 const TaskHeader = ({
@@ -40,9 +43,13 @@ const TaskHeader = ({
 	cacheReads,
 	totalCost,
 	contextTokens,
-	onClose,
+	toggleSearch, // Keep this prop for now
+	showSearch, // Destructure showSearch
+	closeSearch, // Destructure closeSearch
+	t, // Destructure t (use the passed one)
 }: TaskHeaderProps) => {
-	const { t } = useTranslation()
+	// Remove useTranslation hook as 't' is now passed as a prop
+	// const { t } = useTranslation()
 	const { apiConfiguration, currentTaskItem } = useExtensionState()
 	const { info: model } = useSelectedModel(apiConfiguration)
 	const [isTaskExpanded, setIsTaskExpanded] = useState(false)
@@ -81,14 +88,20 @@ const TaskHeader = ({
 							)}
 						</div>
 					</div>
-					<Button
-						variant="ghost"
-						size="icon"
-						onClick={onClose}
-						title={t("chat:task.closeAndStart")}
-						className="shrink-0 w-5 h-5">
-						<span className="codicon codicon-close" />
-					</Button>
+					{/* Group Search and Close buttons */}
+					<div className="flex items-center gap-1 shrink-0">
+						{/* Updated Search Button Logic */}
+						<VSCodeButton
+							appearance="icon"
+							onClick={showSearch ? closeSearch : toggleSearch} // Toggle behavior
+							title={showSearch ? t("chat:search.close") : t("chat:search.title")} // Dynamic title
+							aria-label={showSearch ? t("chat:search.close") : t("chat:search.title")} // Dynamic aria-label
+						>
+							{/* Reduce icon size for better proportion */}
+							<Search size={10} />
+						</VSCodeButton>
+						{/* Close button removed as requested */}
+					</div>
 				</div>
 				{/* Collapsed state: Track context and cost if we have any */}
 				{!isTaskExpanded && contextWindow > 0 && (
