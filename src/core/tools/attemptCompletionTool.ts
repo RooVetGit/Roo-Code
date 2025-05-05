@@ -13,7 +13,7 @@ import {
 } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
-import { executeCommand } from "./executeCommandTool"
+import { type ExecuteCommandOptions, executeCommand } from "./executeCommandTool"
 
 export async function attemptCompletionTool(
 	cline: Cline,
@@ -82,7 +82,9 @@ export async function attemptCompletionTool(
 					return
 				}
 
-				const [userRejected, execCommandResult] = await executeCommand(cline, command!)
+				const executionId = cline.lastMessageTs?.toString() ?? Date.now().toString()
+				const options: ExecuteCommandOptions = { executionId, command }
+				const [userRejected, execCommandResult] = await executeCommand(cline, options)
 
 				if (userRejected) {
 					cline.didRejectTool = true
@@ -106,7 +108,7 @@ export async function attemptCompletionTool(
 				}
 
 				// tell the provider to remove the current subtask and resume the previous task in the stack
-				await cline.providerRef.deref()?.finishSubTask(lastMessage?.text ?? "")
+				await cline.providerRef.deref()?.finishSubTask(result)
 				return
 			}
 

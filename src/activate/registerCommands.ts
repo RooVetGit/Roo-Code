@@ -3,6 +3,7 @@ import delay from "delay"
 
 import { ClineProvider } from "../core/webview/ClineProvider"
 import { ContextProxy } from "../core/config/ContextProxy"
+import { telemetryService } from "../services/telemetry/TelemetryService"
 
 import { registerHumanRelayCallback, unregisterHumanRelayCallback, handleHumanRelayResponse } from "./humanRelay"
 import { handleNewTask } from "./handleTask"
@@ -66,35 +67,66 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		"roo-cline.activationCompleted": () => {},
 		"roo-cline.plusButtonClicked": async () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
-			if (!visibleProvider) return
+
+			if (!visibleProvider) {
+				return
+			}
+
+			telemetryService.captureTitleButtonClicked("plus")
+
 			await visibleProvider.removeClineFromStack()
 			await visibleProvider.postStateToWebview()
 			await visibleProvider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		},
 		"roo-cline.mcpButtonClicked": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
-			if (!visibleProvider) return
+
+			if (!visibleProvider) {
+				return
+			}
+
+			telemetryService.captureTitleButtonClicked("mcp")
+
 			visibleProvider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
 		},
 		"roo-cline.promptsButtonClicked": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
-			if (!visibleProvider) return
+
+			if (!visibleProvider) {
+				return
+			}
+
+			telemetryService.captureTitleButtonClicked("prompts")
+
 			visibleProvider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" })
 		},
-		"roo-cline.popoutButtonClicked": () => openClineInNewTab({ context, outputChannel }),
+		"roo-cline.popoutButtonClicked": () => {
+			telemetryService.captureTitleButtonClicked("popout")
+
+			return openClineInNewTab({ context, outputChannel })
+		},
 		"roo-cline.openInNewTab": () => openClineInNewTab({ context, outputChannel }),
 		"roo-cline.settingsButtonClicked": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
-			if (!visibleProvider) return
+
+			if (!visibleProvider) {
+				return
+			}
+
+			telemetryService.captureTitleButtonClicked("settings")
+
 			visibleProvider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
 		},
 		"roo-cline.historyButtonClicked": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
-			if (!visibleProvider) return
+
+			if (!visibleProvider) {
+				return
+			}
+
+			telemetryService.captureTitleButtonClicked("history")
+
 			visibleProvider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
-		},
-		"roo-cline.helpButtonClicked": () => {
-			vscode.env.openExternal(vscode.Uri.parse("https://docs.roocode.com"))
 		},
 		"roo-cline.showHumanRelayDialog": (params: { requestId: string; promptText: string }) => {
 			const panel = getPanel()
@@ -118,6 +150,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		"roo-cline.focusInput": async () => {
 			try {
 				const panel = getPanel()
+
 				if (!panel) {
 					await vscode.commands.executeCommand("workbench.view.extension.roo-cline-ActivityBar")
 				} else if (panel === tabPanel) {
@@ -132,7 +165,11 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		},
 		"roo.acceptInput": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
-			if (!visibleProvider) return
+
+			if (!visibleProvider) {
+				return
+			}
+
 			visibleProvider.postMessageToWebview({ type: "acceptInput" })
 		},
 	}

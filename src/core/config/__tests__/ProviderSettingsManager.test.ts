@@ -53,9 +53,11 @@ describe("ProviderSettingsManager", () => {
 							fuzzyMatchThreshold: 1.0,
 						},
 					},
+					modeApiConfigs: {},
 					migrations: {
 						rateLimitSecondsMigrated: true,
 						diffSettingsMigrated: true,
+						openAiHeadersMigrated: true,
 					},
 				}),
 			)

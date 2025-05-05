@@ -4,7 +4,9 @@
 		"done": "Fertig",
 		"cancel": "Abbrechen",
 		"reset": "Zurücksetzen",
-		"select": "Auswählen"
+		"select": "Auswählen",
+		"add": "Header hinzufügen",
+		"remove": "Entfernen"
 	},
 	"header": {
 		"title": "Einstellungen",
@@ -111,6 +113,10 @@
 		"useCustomBaseUrl": "Benutzerdefinierte Basis-URL verwenden",
 		"useHostHeader": "Benutzerdefinierten Host-Header verwenden",
 		"useLegacyFormat": "Altes OpenAI API-Format verwenden",
+		"customHeaders": "Benutzerdefinierte Headers",
+		"headerName": "Header-Name",
+		"headerValue": "Header-Wert",
+		"noCustomHeaders": "Keine benutzerdefinierten Headers definiert. Klicke auf die + Schaltfläche, um einen hinzuzufügen.",
 		"requestyApiKey": "Requesty API-Schlüssel",
 		"getRequestyApiKey": "Requesty API-Schlüssel erhalten",
 		"openRouterTransformsText": "Prompts und Nachrichtenketten auf Kontextgröße komprimieren (<a>OpenRouter Transformationen</a>)",
@@ -308,6 +314,14 @@
 		}
 	},
 	"terminal": {
+		"basic": {
+			"label": "Terminal-Einstellungen: Grundlegend",
+			"description": "Grundlegende Terminal-Einstellungen"
+		},
+		"advanced": {
+			"label": "Terminal-Einstellungen: Erweitert",
+			"description": "Die folgenden Optionen erfordern möglicherweise einen Terminal-Neustart, um die Einstellung zu übernehmen."
+		},
 		"outputLineLimit": {
 			"label": "Terminal-Ausgabelimit",
 			"description": "Maximale Anzahl von Zeilen, die in der Terminal-Ausgabe bei der Ausführung von Befehlen enthalten sein sollen. Bei Überschreitung werden Zeilen aus der Mitte entfernt, wodurch Token gespart werden."
@@ -342,11 +356,15 @@
 		},
 		"zshOhMy": {
 			"label": "Oh My Zsh-Integration aktivieren",
-			"description": "Wenn aktiviert, wird ITERM_SHELL_INTEGRATION_INSTALLED=Yes gesetzt, um die Shell-Integrationsfunktionen von Oh My Zsh zu aktivieren. (experimentell)"
+			"description": "Wenn aktiviert, wird ITERM_SHELL_INTEGRATION_INSTALLED=Yes gesetzt, um die Shell-Integrationsfunktionen von Oh My Zsh zu aktivieren. Das Anwenden dieser Einstellung erfordert möglicherweise einen Neustart der IDE. (experimentell)"
 		},
 		"zshP10k": {
 			"label": "Powerlevel10k-Integration aktivieren",
 			"description": "Wenn aktiviert, wird POWERLEVEL9K_TERM_SHELL_INTEGRATION=true gesetzt, um die Shell-Integrationsfunktionen von Powerlevel10k zu aktivieren. (experimentell)"
+		},
+		"inheritEnv": {
+			"label": "Umgebungsvariablen übernehmen",
+			"description": "Wenn aktiviert, übernimmt das Terminal Umgebungsvariablen vom übergeordneten VSCode-Prozess, wie z.B. in Benutzerprofilen definierte Shell-Integrationseinstellungen. Dies schaltet direkt die globale VSCode-Einstellung `terminal.integrated.inheritEnv` um"
 		}
 	},
 	"advanced": {

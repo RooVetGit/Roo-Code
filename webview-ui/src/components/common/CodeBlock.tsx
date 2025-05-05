@@ -598,20 +598,21 @@ const CodeBlock = memo(
 			[source, rawSource, copyWithFeedback],
 		)
 
+		if (source?.length === 0) {
+			return null
+		}
+
 		return (
 			<CodeBlockContainer ref={codeBlockRef}>
-				<StyledPre
-					ref={preRef}
+				<MemoizedStyledPre
+					preRef={preRef}
 					preStyle={preStyle}
-					wordwrap={wordWrap ? "true" : "false"}
-					windowshade={windowShade ? "true" : "false"}
+					wordWrap={wordWrap}
+					windowShade={windowShade}
 					collapsedHeight={collapsedHeight}
-					onMouseDown={() => updateCodeBlockButtonPosition(true)}
-					onMouseUp={() => updateCodeBlockButtonPosition(false)}
-					// onScroll prop is removed - handled by the useEffect scroll listener now
-				>
-					<div dangerouslySetInnerHTML={{ __html: highlightedCode }} />
-				</StyledPre>
+					highlightedCode={highlightedCode}
+					updateCodeBlockButtonPosition={updateCodeBlockButtonPosition}
+				/>
 				{!isSelecting && (
 					<CodeBlockButtonWrapper
 						ref={copyButtonWrapperRef}
@@ -685,10 +686,7 @@ const CodeBlock = memo(
 									// After UI updates, ensure code block is visible and update button position
 									setTimeout(
 										() => {
-											codeBlock.scrollIntoView({
-												behavior: "smooth",
-												block: "nearest",
-											})
+											codeBlock.scrollIntoView({ behavior: "smooth", block: "nearest" })
 
 											// Wait for scroll to complete before updating button position
 											setTimeout(() => {
@@ -717,6 +715,41 @@ const CodeBlock = memo(
 			</CodeBlockContainer>
 		)
 	},
+)
+
+// Memoized content component to prevent unnecessary re-renders of highlighted code
+const MemoizedCodeContent = memo(({ html }: { html: string }) => <div dangerouslySetInnerHTML={{ __html: html }} />)
+
+// Memoized StyledPre component
+const MemoizedStyledPre = memo(
+	({
+		preRef,
+		preStyle,
+		wordWrap,
+		windowShade,
+		collapsedHeight,
+		highlightedCode,
+		updateCodeBlockButtonPosition,
+	}: {
+		preRef: React.RefObject<HTMLDivElement>
+		preStyle?: React.CSSProperties
+		wordWrap: boolean
+		windowShade: boolean
+		collapsedHeight?: number
+		highlightedCode: string
+		updateCodeBlockButtonPosition: (forceHide?: boolean) => void
+	}) => (
+		<StyledPre
+			ref={preRef}
+			preStyle={preStyle}
+			wordwrap={wordWrap ? "true" : "false"}
+			windowshade={windowShade ? "true" : "false"}
+			collapsedHeight={collapsedHeight}
+			onMouseDown={() => updateCodeBlockButtonPosition(true)}
+			onMouseUp={() => updateCodeBlockButtonPosition(false)}>
+			<MemoizedCodeContent html={highlightedCode} />
+		</StyledPre>
+	),
 )
 
 export default CodeBlock
