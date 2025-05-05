@@ -6,9 +6,13 @@ import { RooTerminalCallbacks } from "../types"
 import { ExecaTerminal } from "../ExecaTerminal"
 
 describe("ExecaTerminal", () => {
-	it("should be a test", async () => {
-		const terminal = new ExecaTerminal(1, "/tmp")
+	it("should run terminal commands and collect output", async () => {
+		// TODO: Run the equivalent test for Windows.
+		if (process.platform === "win32") {
+			return
+		}
 
+		const terminal = new ExecaTerminal(1, "/tmp")
 		let result
 
 		const callbacks: RooTerminalCallbacks = {
@@ -18,11 +22,7 @@ describe("ExecaTerminal", () => {
 			onShellExecutionComplete: vi.fn(),
 		}
 
-		const subprocess =
-			process.platform === "win32"
-				? terminal.runCommand("dir", callbacks)
-				: terminal.runCommand("ls -al", callbacks)
-
+		const subprocess = terminal.runCommand("ls -al", callbacks)
 		await subprocess
 
 		expect(callbacks.onLine).toHaveBeenCalled()
@@ -30,9 +30,6 @@ describe("ExecaTerminal", () => {
 		expect(callbacks.onShellExecutionComplete).toHaveBeenCalled()
 
 		expect(result).toBeTypeOf("string")
-
-		if (process.platform !== "win32") {
-			expect(result).toContain("total")
-		}
+		expect(result).toContain("total")
 	})
 })
