@@ -36,7 +36,7 @@ import { ClineAskResponse } from "../shared/WebviewMessage"
 import { defaultModeSlug, getModeBySlug, getFullModeDetails, isToolAllowedForMode } from "../shared/modes"
 import { EXPERIMENT_IDS, experiments as Experiments, ExperimentId } from "../shared/experiments"
 import { formatLanguage } from "../shared/language"
-import { ToolParamName, ToolResponse, DiffStrategy } from "../shared/tools"
+import { ToolParamName, ToolResponse, DiffStrategy, AttachedFileSpec } from "../shared/tools"
 
 // services
 import { UrlContentFetcher } from "../services/browser/UrlContentFetcher"
@@ -53,6 +53,8 @@ import { findToolName, formatContentBlockToMarkdown } from "../integrations/misc
 import { RooTerminalProcess } from "../integrations/terminal/types"
 import { Terminal } from "../integrations/terminal/Terminal"
 import { TerminalRegistry } from "../integrations/terminal/TerminalRegistry"
+import { readLines } from "../integrations/misc/read-lines"
+import { addLineNumbers } from "../integrations/misc/extract-text"
 
 // utils
 import { calculateApiCostAnthropic } from "../utils/cost"
@@ -118,6 +120,7 @@ export type ClineOptions = {
 	consecutiveMistakeLimit?: number
 	task?: string
 	images?: string[]
+	attachedFiles?: AttachedFileSpec[]
 	historyItem?: HistoryItem
 	experiments?: Record<string, boolean>
 	startTask?: boolean
@@ -135,6 +138,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 	readonly parentTask: Cline | undefined = undefined
 	readonly taskNumber: number
 	readonly workspacePath: string
+	public readonly attachedFiles: AttachedFileSpec[] = []
 
 	isPaused: boolean = false
 	pausedModeSlug: string = defaultModeSlug
@@ -212,6 +216,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		consecutiveMistakeLimit = 3,
 		task,
 		images,
+		attachedFiles,
 		historyItem,
 		startTask = true,
 		rootTask,
@@ -258,6 +263,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		this.rootTask = rootTask
 		this.parentTask = parentTask
 		this.taskNumber = taskNumber
+		this.attachedFiles = attachedFiles || []
 
 		if (historyItem) {
 			telemetryService.captureTaskRestarted(this.taskId)
@@ -574,12 +580,133 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 	// Start / Abort / Resume
 
+	/**
+	 * Formats the content of attached files for inclusion in the task prompt
+	 * @param workspaceRoot The root directory of the workspace
+	 * @param maxReadFileLine Maximum number of lines to read from each file
+	 * @returns Formatted string containing all attached files content
+	 */
+	private async _formatAttachedFilesContent(workspaceRoot: string, maxReadFileLine: number): Promise<string> {
+		const isFullRead = maxReadFileLine === -1
+		let attachedFilesContent = ""
+
+		for (const fileSpec of this.attachedFiles) {
+			// Handle both string and AttachedFileSpec types
+			const isString = typeof fileSpec === "string"
+			const relativeFilePath = isString ? fileSpec : fileSpec.path
+
+			// Get line range information
+			const hasSpecificRange = !isString && (fileSpec.startLine !== undefined || fileSpec.endLine !== undefined)
+			const startLine0Based = isString ? 0 : fileSpec.startLine ? Math.max(0, fileSpec.startLine - 1) : 0
+			const requestedEndLine = isString ? undefined : fileSpec.endLine
+
+			// Convert to 1-based for display
+			const startLine1Based = startLine0Based + 1
+
+			if (!relativeFilePath) continue // Skip empty paths
+
+			const absolutePath = path.join(workspaceRoot, relativeFilePath)
+			try {
+				// If maxReadFileLine is 0 and no specific range was requested, just include the file path
+				if (maxReadFileLine === 0 && !hasSpecificRange) {
+					attachedFilesContent += `${relativeFilePath}\n`
+					continue
+				}
+
+				// Otherwise, attempt to read the file content
+				let linesArray: string = ""
+				let actualEndLine0Based = 0
+				let actualEndLine1Based = 0
+				let truncationNotice = ""
+
+				// Determine effective end line based on settings and requested range
+				if (!isFullRead && maxReadFileLine > 0) {
+					// If we have a specific end line from AttachedFileSpec, use it
+					// otherwise use maxReadFileLine
+					const effectiveEndLine0Based = requestedEndLine
+						? Math.min(requestedEndLine - 1, maxReadFileLine - 1)
+						: maxReadFileLine - 1
+
+					// Read the specified line range
+					linesArray = await readLines(absolutePath, effectiveEndLine0Based, startLine0Based)
+
+					// Recalculate actual end line based on content read
+					truncationNotice = ""
+					if (linesArray) {
+						actualEndLine0Based = startLine0Based + linesArray.split("\n").length - 1
+					} else {
+						actualEndLine0Based = startLine0Based - 1
+					}
+					actualEndLine1Based = actualEndLine0Based + 1
+
+					// Add truncation notice if we hit the maxReadFileLine limit (but only if no specific end line was requested)
+					if (!requestedEndLine && maxReadFileLine > 0 && linesArray.split("\n").length >= maxReadFileLine) {
+						truncationNotice = " File content truncated by max lines setting."
+					} else if (requestedEndLine && actualEndLine1Based < requestedEndLine) {
+						truncationNotice = ` File ended before requested line ${requestedEndLine}.`
+					}
+				} else if (isFullRead) {
+					// Handle full read, but respect startLine and endLine if provided
+					if (requestedEndLine) {
+						const requestedEndLine0Based = requestedEndLine - 1
+						linesArray = await readLines(absolutePath, requestedEndLine0Based, startLine0Based)
+
+						// Recalculate actual end line based on content read
+						truncationNotice = ""
+						if (linesArray) {
+							actualEndLine0Based = startLine0Based + linesArray.split("\n").length - 1
+						} else {
+							actualEndLine0Based = startLine0Based - 1
+						}
+						actualEndLine1Based = actualEndLine0Based + 1
+
+						// Add notice if file ended before requested line
+						if (actualEndLine1Based < requestedEndLine) {
+							truncationNotice = ` File ended before requested line ${requestedEndLine}.`
+						}
+					} else {
+						linesArray = await readLines(absolutePath, undefined, startLine0Based)
+
+						// Calculate actual end line based on content read
+						truncationNotice = ""
+						if (linesArray) {
+							actualEndLine0Based = startLine0Based + linesArray.split("\n").length - 1
+						} else {
+							actualEndLine0Based = startLine0Based - 1
+						}
+						actualEndLine1Based = actualEndLine0Based + 1
+					}
+				}
+
+				// Add header line with path and line range (using 1-based line numbers for display)
+				attachedFilesContent += `${relativeFilePath}:${startLine1Based}:${actualEndLine1Based}${truncationNotice}\n`
+
+				// Add the file content in a markdown code block
+				if (linesArray) {
+					const content = addLineNumbers(linesArray, startLine1Based)
+					attachedFilesContent += "```\n" + content + "```\n\n"
+				}
+			} catch (error) {
+				console.warn(`[_formatAttachedFilesContent] Failed to read attached file ${relativeFilePath}:`, error)
+				// Add an error line with line range information if specified
+				const rangeInfo = hasSpecificRange ? ` (lines ${startLine1Based}-${requestedEndLine || "end"})` : ""
+				attachedFilesContent += `${relativeFilePath}${rangeInfo} Failed to read file: ${error instanceof Error ? error.message : String(error)}\n\n`
+			}
+		}
+
+		return attachedFilesContent
+	}
+
 	private async startTask(task?: string, images?: string[]): Promise<void> {
 		// conversationHistory (for API) and clineMessages (for webview) need to be in sync
 		// if the extension process were killed, then on restart the clineMessages might not be empty, so we need to set it to [] when we create a new Cline client (otherwise webview would show stale messages from previous session)
 		this.clineMessages = []
 		this.apiConversationHistory = []
 		await this.providerRef.deref()?.postStateToWebview()
+
+		const providerState = await this.providerRef.deref()?.getState()
+		const workspaceRoot = this.cwd
+		const maxReadFileLine = providerState?.maxReadFileLine ?? 500 // Default to 500
 
 		await this.say("text", task, images)
 		this.isInitialized = true
@@ -588,13 +715,26 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 		console.log(`[subtasks] task ${this.taskId}.${this.instanceId} starting`)
 
-		await this.initiateTaskLoop([
-			{
-				type: "text",
-				text: `<task>\n${task}\n</task>`,
-			},
-			...imageBlocks,
-		])
+		// Create task and image blocks first
+		const taskBlock = `<task>\n${task ?? ""}\n</task>`
+
+		// Process attached files
+		const attachedFilesContent = await this._formatAttachedFilesContent(workspaceRoot, maxReadFileLine)
+
+		// Create the attached files block if there are any attached files
+		const attachedFilesBlock =
+			this.attachedFiles.length > 0 ? `<attached-files>\n${attachedFilesContent}</attached-files>` : ""
+
+		// Combine blocks in the correct order: task, images, then attached files
+		const blocks: Anthropic.ContentBlockParam[] = [{ type: "text", text: taskBlock }, ...imageBlocks]
+
+		// Only add the attached files block if it's not empty
+		if (attachedFilesBlock) {
+			blocks.push({ type: "text", text: attachedFilesBlock })
+		}
+
+		// Initiate the task loop with the properly ordered blocks
+		await this.initiateTaskLoop(blocks)
 	}
 
 	public async resumePausedTask(lastMessage: string) {

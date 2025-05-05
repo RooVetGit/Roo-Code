@@ -16,6 +16,7 @@ import {
 import { McpServer } from "./mcp"
 import { Mode } from "./modes"
 import { RouterModels } from "./api"
+import { AttachedFileSpec } from "./tools"
 
 export type { ApiConfigMeta, ToolProgressStatus }
 
@@ -34,6 +35,7 @@ export interface ExtensionMessage {
 		| "action"
 		| "state"
 		| "selectedImages"
+		| "attachedFiles"
 		| "theme"
 		| "workspaceUpdated"
 		| "invoke"
@@ -175,6 +177,8 @@ export type ExtensionState = Pick<
 
 	taskHistory: HistoryItem[]
 
+	attachedFiles?: AttachedFileSpec[]
+
 	writeDelayMs: number
 	requestDelaySeconds: number
 
@@ -236,6 +240,7 @@ export interface ClineSayTool {
 	startLine?: number
 	endLine?: number
 	lineNumber?: number
+	files?: AttachedFileSpec[]
 }
 
 // Must keep in sync with system prompt.
