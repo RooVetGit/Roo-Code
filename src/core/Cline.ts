@@ -1024,6 +1024,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 				return
 			}
 
+			this.deduplicateReadFileHistory()
+
 			const {
 				tokensIn = 0,
 				tokensOut = 0,
@@ -1168,7 +1170,40 @@ export class Cline extends EventEmitter<ClineEvents> {
 		// this delegates to another generator or iterable object. In this case, it's saying "yield all remaining values from this iterator". This effectively passes along all subsequent chunks from the original stream.
 		yield* iterator
 	}
+	deduplicateReadFileHistory() {
+		for (let i = this.apiConversationHistory.length - 1; i >= 0; i--) {
+			const conversation = this.apiConversationHistory[i]
 
+			if (conversation.role !== "user") continue
+
+			const content = conversation.content
+			if (typeof content === "string") continue
+
+			const firstItem = content[0]
+			if (typeof firstItem === "string" || !("type" in firstItem) || firstItem.type !== "text") continue
+
+			const toolUseText = firstItem.text
+			if (!toolUseText || !toolUseText.startsWith("[read_file for ")) continue
+
+			for (let j = i - 1; j >= 0; j--) {
+				const prevConversation = this.apiConversationHistory[j]
+
+				if (prevConversation.role === "assistant") continue
+
+				const prevContent = prevConversation.content
+				if (typeof prevContent === "string") continue
+
+				const prevFirstItem = prevContent[0]
+				if (typeof prevFirstItem === "string" || !("type" in prevFirstItem) || prevFirstItem.type !== "text")
+					continue
+
+				if (prevFirstItem.text === toolUseText && prevContent.length === 3) {
+					prevContent.splice(1, 1)
+					break
+				}
+			}
+		}
+	}
 	async presentAssistantMessage() {
 		if (this.abort) {
 			throw new Error(`[Cline#presentAssistantMessage] task ${this.taskId}.${this.instanceId} aborted`)
