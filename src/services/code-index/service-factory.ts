@@ -6,6 +6,7 @@ import { QdrantVectorStore } from "./vector-store/qdrant-client"
 import { codeParser, DirectoryScanner, FileWatcher } from "./processors"
 import { ICodeParser, IEmbedder, IFileWatcher, IVectorStore } from "./interfaces"
 import { CodeIndexConfigManager } from "./config-manager"
+import { CacheManager } from "./cache-manager"
 
 /**
  * Factory class responsible for creating and configuring code indexing service dependencies.
@@ -14,6 +15,7 @@ export class CodeIndexServiceFactory {
 	constructor(
 		private readonly configManager: CodeIndexConfigManager,
 		private readonly workspacePath: string,
+		private readonly cacheManager: CacheManager,
 	) {}
 
 	/**
@@ -78,7 +80,7 @@ export class CodeIndexServiceFactory {
 		vectorStore: IVectorStore,
 		parser: ICodeParser,
 	): DirectoryScanner {
-		return new DirectoryScanner(embedder, vectorStore, parser)
+		return new DirectoryScanner(embedder, vectorStore, parser, this.cacheManager)
 	}
 
 	/**
@@ -88,15 +90,19 @@ export class CodeIndexServiceFactory {
 		context: vscode.ExtensionContext,
 		embedder: IEmbedder,
 		vectorStore: IVectorStore,
+		cacheManager: CacheManager,
 	): IFileWatcher {
-		return new FileWatcher(this.workspacePath, context, embedder, vectorStore)
+		return new FileWatcher(this.workspacePath, context, cacheManager, embedder, vectorStore)
 	}
 
 	/**
 	 * Creates all required service dependencies if the service is properly configured.
 	 * @throws Error if the service is not properly configured
 	 */
-	public createServices(context: vscode.ExtensionContext): {
+	public createServices(
+		context: vscode.ExtensionContext,
+		cacheManager: CacheManager,
+	): {
 		embedder: IEmbedder
 		vectorStore: IVectorStore
 		parser: ICodeParser
@@ -111,7 +117,7 @@ export class CodeIndexServiceFactory {
 		const vectorStore = this.createVectorStore()
 		const parser = codeParser
 		const scanner = this.createDirectoryScanner(embedder, vectorStore, parser)
-		const fileWatcher = this.createFileWatcher(context, embedder, vectorStore)
+		const fileWatcher = this.createFileWatcher(context, embedder, vectorStore, cacheManager)
 
 		return {
 			embedder,

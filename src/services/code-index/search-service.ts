@@ -3,6 +3,7 @@ import { VectorStoreSearchResult } from "./interfaces"
 import { CodeIndexConfigManager } from "./config-manager"
 import { CodeIndexStateManager } from "./state-manager"
 import { CodeIndexServiceFactory } from "./service-factory"
+import { CacheManager } from "./cache-manager"
 
 /**
  * Service responsible for searching the code index.
@@ -13,6 +14,7 @@ export class CodeIndexSearchService {
 		private readonly stateManager: CodeIndexStateManager,
 		private readonly serviceFactory: CodeIndexServiceFactory,
 		private readonly context: vscode.ExtensionContext,
+		private readonly cacheManager: CacheManager,
 	) {}
 
 	/**
@@ -35,7 +37,7 @@ export class CodeIndexSearchService {
 
 		try {
 			// Get services from factory
-			const { embedder, vectorStore } = this.serviceFactory.createServices(this.context)
+			const { embedder, vectorStore } = this.serviceFactory.createServices(this.context, this.cacheManager)
 
 			// Generate embedding for query
 			const embeddingResponse = await embedder.createEmbeddings([query])

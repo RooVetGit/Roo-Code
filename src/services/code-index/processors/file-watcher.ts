@@ -7,6 +7,7 @@ import { v5 as uuidv5 } from "uuid"
 import { scannerExtensions } from "../shared/supported-extensions"
 import { IFileWatcher, FileProcessingResult, IEmbedder, IVectorStore } from "../interfaces"
 import { codeParser } from "./parser"
+import { CacheManager } from "../cache-manager"
 
 const QDRANT_CODE_BLOCK_NAMESPACE = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB
@@ -17,8 +18,6 @@ const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB
 export class FileWatcher implements IFileWatcher {
 	private fileWatcher?: vscode.FileSystemWatcher
 	private ignoreController: RooIgnoreController
-	private cachePath: vscode.Uri
-	private fileHashes: Record<string, string> = {}
 
 	private readonly _onDidStartProcessing = new vscode.EventEmitter<string>()
 	private readonly _onDidFinishProcessing = new vscode.EventEmitter<FileProcessingResult>()
@@ -39,34 +38,22 @@ export class FileWatcher implements IFileWatcher {
 	 * @param context VS Code extension context
 	 * @param embedder Optional embedder
 	 * @param vectorStore Optional vector store
+	 * @param cacheManager Cache manager
 	 */
 	constructor(
 		private workspacePath: string,
 		private context: vscode.ExtensionContext,
+		private readonly cacheManager: CacheManager,
 		private embedder?: IEmbedder,
 		private vectorStore?: IVectorStore,
 	) {
 		this.ignoreController = new RooIgnoreController(workspacePath)
-
-		this.cachePath = vscode.Uri.joinPath(
-			context.globalStorageUri,
-			`roo-index-cache-${createHash("sha256").update(workspacePath).digest("hex")}.json`,
-		)
 	}
 
 	/**
 	 * Initializes the file watcher
 	 */
 	async initialize(): Promise<void> {
-		// Load cache
-		try {
-			const cacheData = await vscode.workspace.fs.readFile(this.cachePath)
-			this.fileHashes = JSON.parse(cacheData.toString())
-		} catch (error) {
-			console.log("No cache file found or error reading cache, starting fresh")
-			this.fileHashes = {}
-		}
-
 		// Create file watcher
 		const filePattern = new vscode.RelativePattern(
 			this.workspacePath,
@@ -113,10 +100,7 @@ export class FileWatcher implements IFileWatcher {
 		const filePath = uri.fsPath
 
 		// Delete from cache
-		if (this.fileHashes[filePath]) {
-			delete this.fileHashes[filePath]
-			await this.saveCache()
-		}
+		this.cacheManager.deleteHash(filePath)
 
 		// Delete from vector store
 		if (this.vectorStore) {
@@ -169,7 +153,7 @@ export class FileWatcher implements IFileWatcher {
 			const newHash = createHash("sha256").update(content).digest("hex")
 
 			// Check if file has changed
-			if (this.fileHashes[filePath] === newHash) {
+			if (this.cacheManager.getHash(filePath) === newHash) {
 				const result = {
 					path: filePath,
 					status: "skipped" as const,
@@ -222,8 +206,7 @@ export class FileWatcher implements IFileWatcher {
 			}
 
 			// Update cache
-			this.fileHashes[filePath] = newHash
-			await this.saveCache()
+			this.cacheManager.updateHash(filePath, newHash)
 
 			const result = {
 				path: filePath,
@@ -239,17 +222,6 @@ export class FileWatcher implements IFileWatcher {
 			}
 			this._onDidFinishProcessing.fire(result)
 			return result
-		}
-	}
-
-	/**
-	 * Saves the cache to disk
-	 */
-	private async saveCache(): Promise<void> {
-		try {
-			await vscode.workspace.fs.writeFile(this.cachePath, Buffer.from(JSON.stringify(this.fileHashes, null, 2)))
-		} catch (error) {
-			console.error("Failed to save cache:", error)
 		}
 	}
 }
