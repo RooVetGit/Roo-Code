@@ -842,6 +842,7 @@ export const clineSays = [
 	"checkpoint_saved",
 	"rooignore_error",
 	"diff_error",
+	"codebase_search_result",
 ] as const
 
 export const clineSaySchema = z.enum(clineSays)

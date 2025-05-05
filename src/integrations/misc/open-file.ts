@@ -23,6 +23,8 @@ export async function openImage(dataUri: string) {
 interface OpenFileOptions {
 	create?: boolean
 	content?: string
+	startLine?: number
+	endLine?: number
 }
 
 export async function openFile(filePath: string, options: OpenFileOptions = {}) {
@@ -75,7 +77,26 @@ export async function openFile(filePath: string, options: OpenFileOptions = {}) 
 		} catch {} // not essential, sometimes tab operations fail
 
 		const document = await vscode.workspace.openTextDocument(uri)
-		await vscode.window.showTextDocument(document, { preview: false })
+		const editor = await vscode.window.showTextDocument(document, { preview: false })
+
+		// If startLine and endLine are provided, scroll to that range
+		if (options.startLine !== undefined && options.endLine !== undefined) {
+			// VS Code API uses 0-based line indexing, while our inputs are likely 1-based
+			const startLineIndex = Math.max(0, options.startLine - 1)
+			const endLineIndex = Math.max(0, options.endLine - 1)
+
+			// Create a range from the start of the start line to the end of the end line
+			const range = new vscode.Range(
+				startLineIndex,
+				0,
+				endLineIndex,
+				document.lineAt(Math.min(endLineIndex, document.lineCount - 1)).text.length,
+			)
+
+			// Set the selection and reveal the range
+			editor.selection = new vscode.Selection(range.start, range.end)
+			editor.revealRange(range, vscode.TextEditorRevealType.InCenter)
+		}
 	} catch (error) {
 		if (error instanceof Error) {
 			vscode.window.showErrorMessage(`Could not open file: ${error.message}`)
