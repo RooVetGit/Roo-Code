@@ -85,11 +85,12 @@ const ApiOptions = ({
 		return Object.entries(headers)
 	})
 
-	// Effect to synchronize internal customHeaders state with prop changes
 	useEffect(() => {
 		const propHeaders = apiConfiguration?.openAiHeaders || {}
-		if (JSON.stringify(customHeaders) !== JSON.stringify(Object.entries(propHeaders)))
+
+		if (JSON.stringify(customHeaders) !== JSON.stringify(Object.entries(propHeaders))) {
 			setCustomHeaders(Object.entries(propHeaders))
+		}
 	}, [apiConfiguration?.openAiHeaders, customHeaders])
 
 	const [anthropicBaseUrlSelected, setAnthropicBaseUrlSelected] = useState(!!apiConfiguration?.anthropicBaseUrl)
