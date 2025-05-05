@@ -82,8 +82,8 @@ export async function attemptCompletionTool(
 					return
 				}
 
-				const options: ExecuteCommandOptions = { command }
-
+				const executionId = cline.lastMessageTs?.toString() ?? Date.now().toString()
+				const options: ExecuteCommandOptions = { executionId, command }
 				const [userRejected, execCommandResult] = await executeCommand(cline, options)
 
 				if (userRejected) {
@@ -108,7 +108,7 @@ export async function attemptCompletionTool(
 				}
 
 				// tell the provider to remove the current subtask and resume the previous task in the stack
-				await cline.providerRef.deref()?.finishSubTask(lastMessage?.text ?? "")
+				await cline.providerRef.deref()?.finishSubTask(result)
 				return
 			}
 

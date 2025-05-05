@@ -4,6 +4,7 @@ import * as path from "path"
 import delay from "delay"
 
 import { Cline } from "../Cline"
+import { CommandExecutionStatus } from "../../schemas"
 import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag, ToolResponse } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
@@ -54,11 +55,13 @@ export async function executeCommandTool(
 				return
 			}
 
+			const executionId = cline.lastMessageTs?.toString() ?? Date.now().toString()
 			const clineProvider = await cline.providerRef.deref()
 			const clineProviderState = await clineProvider?.getState()
 			const { terminalOutputLineLimit = 500, terminalShellIntegrationDisabled = false } = clineProviderState ?? {}
 
 			const options: ExecuteCommandOptions = {
+				executionId,
 				command,
 				customCwd,
 				terminalShellIntegrationDisabled,
@@ -74,8 +77,9 @@ export async function executeCommandTool(
 
 				pushToolResult(result)
 			} catch (error: unknown) {
+				const status: CommandExecutionStatus = { executionId, status: "fallback" }
+				clineProvider?.postMessageToWebview({ type: "commandExecutionStatus", text: JSON.stringify(status) })
 				await cline.say("shell_integration_warning")
-				clineProvider?.setValue("terminalShellIntegrationDisabled", true)
 
 				if (error instanceof ShellIntegrationError) {
 					const [rejected, result] = await executeCommand(cline, {
@@ -102,6 +106,7 @@ export async function executeCommandTool(
 }
 
 export type ExecuteCommandOptions = {
+	executionId: string
 	command: string
 	customCwd?: string
 	terminalShellIntegrationDisabled?: boolean
@@ -111,6 +116,7 @@ export type ExecuteCommandOptions = {
 export async function executeCommand(
 	cline: Cline,
 	{
+		executionId,
 		command,
 		customCwd,
 		terminalShellIntegrationDisabled = false,
@@ -141,18 +147,19 @@ export async function executeCommand(
 	let shellIntegrationError: string | undefined
 
 	const terminalProvider = terminalShellIntegrationDisabled ? "execa" : "vscode"
+	const clineProvider = await cline.providerRef.deref()
 
 	const callbacks: RooTerminalCallbacks = {
 		onLine: async (output: string, process: RooTerminalProcess) => {
-			const compressed = Terminal.compressTerminalOutput(output, terminalOutputLineLimit)
-			cline.say("command_output", compressed)
+			const status: CommandExecutionStatus = { executionId, status: "output", output }
+			clineProvider?.postMessageToWebview({ type: "commandExecutionStatus", text: JSON.stringify(status) })
 
 			if (runInBackground) {
 				return
 			}
 
 			try {
-				const { response, text, images } = await cline.ask("command_output", compressed)
+				const { response, text, images } = await cline.ask("command_output", "")
 				runInBackground = true
 
 				if (response === "messageResponse") {
@@ -163,9 +170,19 @@ export async function executeCommand(
 		},
 		onCompleted: (output: string | undefined) => {
 			result = Terminal.compressTerminalOutput(output ?? "", terminalOutputLineLimit)
+			cline.say("command_output", result)
 			completed = true
 		},
-		onShellExecutionComplete: (details: ExitCodeDetails) => (exitDetails = details),
+		onShellExecutionStarted: (pid: number | undefined) => {
+			console.log(`[executeCommand] onShellExecutionStarted: ${pid}`)
+			const status: CommandExecutionStatus = { executionId, status: "started", pid, command }
+			clineProvider?.postMessageToWebview({ type: "commandExecutionStatus", text: JSON.stringify(status) })
+		},
+		onShellExecutionComplete: (details: ExitCodeDetails) => {
+			const status: CommandExecutionStatus = { executionId, status: "exited", exitCode: details.exitCode }
+			clineProvider?.postMessageToWebview({ type: "commandExecutionStatus", text: JSON.stringify(status) })
+			exitDetails = details
+		},
 	}
 
 	if (terminalProvider === "vscode") {

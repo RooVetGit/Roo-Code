@@ -310,7 +310,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				const openAiModels = await getOpenAiModels(
 					message?.values?.baseUrl,
 					message?.values?.apiKey,
-					message?.values?.hostHeader,
+					message?.values?.openAiHeaders,
 				)
 
 				provider.postMessageToWebview({ type: "openAiModels", openAiModels })
@@ -336,7 +336,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			openImage(message.text!)
 			break
 		case "openFile":
-			openFile(message.text!, message.values as { create?: boolean; content?: string })
+			openFile(message.text!, message.values as { create?: boolean; content?: string; line?: number })
 			break
 		case "openMention":
 			openMention(message.text)

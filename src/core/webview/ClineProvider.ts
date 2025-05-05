@@ -75,7 +75,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
-	public readonly latestAnnouncementId = "apr-23-2025-3-14" // Update for v3.14.0 announcement
+	public readonly latestAnnouncementId = "apr-30-2025-3-15" // Update for v3.15.0 announcement
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
 
@@ -1184,6 +1184,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			customSupportPrompts,
 			enhancementApiConfigId,
 			autoApprovalEnabled,
+			customModes,
 			experiments,
 			maxOpenTabsContext,
 			maxWorkspaceFiles,
@@ -1263,7 +1264,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			customSupportPrompts: customSupportPrompts ?? {},
 			enhancementApiConfigId,
 			autoApprovalEnabled: autoApprovalEnabled ?? false,
-			customModes: await this.customModesManager.getCustomModes(),
+			customModes,
 			experiments: experiments ?? experimentDefault,
 			mcpServers: this.mcpHub?.getAllServers() ?? [],
 			maxOpenTabsContext: maxOpenTabsContext ?? 20,
@@ -1514,6 +1515,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		if (currentCline?.diffStrategy) {
 			properties.diffStrategy = currentCline.diffStrategy.getName()
+		}
+
+		// Add isSubtask property that indicates whether this task is a subtask
+		if (currentCline) {
+			properties.isSubtask = !!currentCline.parentTask
 		}
 
 		return properties

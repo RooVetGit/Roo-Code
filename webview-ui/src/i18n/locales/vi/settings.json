@@ -4,7 +4,9 @@
 		"done": "Hoàn thành",
 		"cancel": "Hủy",
 		"reset": "Đặt lại",
-		"select": "Chọn"
+		"select": "Chọn",
+		"add": "Thêm tiêu đề",
+		"remove": "Xóa"
 	},
 	"header": {
 		"title": "Cài đặt",
@@ -111,6 +113,10 @@
 		"useCustomBaseUrl": "Sử dụng URL cơ sở tùy chỉnh",
 		"useHostHeader": "Sử dụng tiêu đề Host tùy chỉnh",
 		"useLegacyFormat": "Sử dụng định dạng API OpenAI cũ",
+		"customHeaders": "Tiêu đề tùy chỉnh",
+		"headerName": "Tên tiêu đề",
+		"headerValue": "Giá trị tiêu đề",
+		"noCustomHeaders": "Chưa có tiêu đề tùy chỉnh nào được định nghĩa. Nhấp vào nút + để thêm.",
 		"requestyApiKey": "Khóa API Requesty",
 		"getRequestyApiKey": "Lấy khóa API Requesty",
 		"anthropicApiKey": "Khóa API Anthropic",
@@ -338,7 +344,7 @@
 		},
 		"zshOhMy": {
 			"label": "Bật tích hợp Oh My Zsh",
-			"description": "Khi được bật, đặt ITERM_SHELL_INTEGRATION_INSTALLED=Yes để kích hoạt các tính năng tích hợp shell của Oh My Zsh. (thử nghiệm)"
+			"description": "Khi được bật, đặt ITERM_SHELL_INTEGRATION_INSTALLED=Yes để kích hoạt các tính năng tích hợp shell của Oh My Zsh. Việc áp dụng cài đặt này có thể yêu cầu khởi động lại IDE. (thử nghiệm)"
 		},
 		"zshP10k": {
 			"label": "Bật tích hợp Powerlevel10k",
