@@ -340,8 +340,6 @@ describe("Cline", () => {
 				// Set up spy.
 				const cleanMessageSpy = jest.fn().mockReturnValue(mockStreamForClean)
 				jest.spyOn(cline.api, "createMessage").mockImplementation(cleanMessageSpy)
-				// Mock loadContext to return unmodified content.
-				jest.spyOn(cline as any, "loadContext").mockImplementation(async (content) => [content, ""])
 
 				// Add test message to conversation history.
 				cline.apiConversationHistory = [
@@ -490,12 +488,6 @@ describe("Cline", () => {
 					set: () => {},
 					configurable: true,
 				})
-
-				jest.spyOn(clineWithImages as any, "loadContext").mockImplementation(async (content) => [content, ""])
-				jest.spyOn(clineWithoutImages as any, "loadContext").mockImplementation(async (content) => [
-					content,
-					"",
-				])
 
 				// Set up mock streams
 				const mockStreamWithImages = (async function* () {
@@ -799,7 +791,7 @@ describe("Cline", () => {
 				await task.catch(() => {})
 			})
 
-			describe("loadContext", () => {
+			describe("parseUserContent", () => {
 				it("should process mentions in task and feedback tags", async () => {
 					const [cline, task] = Cline.create({
 						provider: mockProvider,
@@ -843,7 +835,7 @@ describe("Cline", () => {
 					]
 
 					// Process the content
-					const [processedContent] = await cline["loadContext"](userContent)
+					const processedContent = await cline.parseUserContent(userContent)
 
 					// Regular text should not be processed
 					expect((processedContent[0] as Anthropic.TextBlockParam).text).toBe("Regular text with @/some/path")

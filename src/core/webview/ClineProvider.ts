@@ -1184,6 +1184,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			customSupportPrompts,
 			enhancementApiConfigId,
 			autoApprovalEnabled,
+			customModes,
 			experiments,
 			maxOpenTabsContext,
 			maxWorkspaceFiles,
@@ -1263,7 +1264,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			customSupportPrompts: customSupportPrompts ?? {},
 			enhancementApiConfigId,
 			autoApprovalEnabled: autoApprovalEnabled ?? false,
-			customModes: await this.customModesManager.getCustomModes(),
+			customModes,
 			experiments: experiments ?? experimentDefault,
 			mcpServers: this.mcpHub?.getAllServers() ?? [],
 			maxOpenTabsContext: maxOpenTabsContext ?? 20,
@@ -1514,6 +1515,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		if (currentCline?.diffStrategy) {
 			properties.diffStrategy = currentCline.diffStrategy.getName()
+		}
+
+		// Add isSubtask property that indicates whether this task is a subtask
+		if (currentCline) {
+			properties.isSubtask = !!currentCline.parentTask
 		}
 
 		return properties
