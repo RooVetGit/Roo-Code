@@ -50,7 +50,7 @@ export function getToolDescriptionsForMode(
 	mode: Mode,
 	cwd: string,
 	supportsComputerUse: boolean,
-	codeIndexManager: CodeIndexManager,
+	codeIndexManager?: CodeIndexManager,
 	diffStrategy?: DiffStrategy,
 	browserViewportSize?: string,
 	mcpHub?: McpHub,
@@ -94,7 +94,7 @@ export function getToolDescriptionsForMode(
 	ALWAYS_AVAILABLE_TOOLS.forEach((tool) => tools.add(tool))
 
 	// Conditionally exclude codebase_search if feature is disabled or not configured
-	if (!(codeIndexManager.isFeatureEnabled && codeIndexManager.isFeatureConfigured)) {
+	if (!codeIndexManager || !(codeIndexManager.isFeatureEnabled && codeIndexManager.isFeatureConfigured)) {
 		tools.delete("codebase_search")
 	}
 
