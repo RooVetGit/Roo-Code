@@ -49,24 +49,35 @@ export abstract class BaseOpenAiCompatibleProvider<ModelName extends string>
 
 		this.options = options
 
+		if (!this.options.apiKey) {
+			throw new Error("API key is required")
+		}
+
 		this.client = new OpenAI({
 			baseURL,
-			apiKey: this.options.apiKey ?? "not-provided",
+			apiKey: this.options.apiKey,
 			defaultHeaders: DEFAULT_HEADERS,
 		})
 	}
 
 	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
-		const { id: modelId, info: modelInfo } = this.getModel()
+		const {
+			id: model,
+			info: { maxTokens: max_tokens },
+		} = this.getModel()
 
-		const stream = await this.client.chat.completions.create({
-			model: modelId,
-			max_tokens: modelInfo.maxTokens,
-			temperature: this.options.modelTemperature ?? this.defaultTemperature,
+		const temperature = this.options.modelTemperature ?? this.defaultTemperature
+
+		const params: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
+			model,
+			max_tokens,
+			temperature,
 			messages: [{ role: "system", content: systemPrompt }, ...convertToOpenAiMessages(messages)],
 			stream: true,
 			stream_options: { include_usage: true },
-		})
+		}
+
+		const stream = await this.client.chat.completions.create(params)
 
 		for await (const chunk of stream) {
 			const delta = chunk.choices[0]?.delta
