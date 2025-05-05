@@ -1,8 +1,6 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from "react"
-import { useDebounce, useEvent } from "react-use"
-import { LanguageModelChatSelector } from "vscode"
-import { Checkbox } from "vscrui"
-import { VSCodeLink, VSCodeRadio, VSCodeRadioGroup, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
+import { useDebounce } from "react-use"
+import { VSCodeLink, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 import { ExternalLinkIcon } from "@radix-ui/react-icons"
 
 import {
@@ -14,7 +12,6 @@ import {
 	requestyDefaultModelId,
 	ApiProvider,
 } from "@roo/shared/api"
-import { ExtensionMessage } from "@roo/shared/ExtensionMessage"
 
 import { vscode } from "@src/utils/vscode"
 import { validateApiConfiguration, validateModelId, validateBedrockArn } from "@src/utils/validate"
@@ -30,12 +27,18 @@ import { VSCodeButtonLink } from "@src/components/common/VSCodeButtonLink"
 import { getRequestyAuthUrl, getGlamaAuthUrl } from "@src/oauth/urls"
 
 // Providers
-import { OpenRouter } from "./providers/OpenRouter"
-import { OpenAICompatible } from "./providers/OpenAICompatible"
+import { Anthropic } from "./providers/Anthropic"
 import { Bedrock } from "./providers/Bedrock"
+import { Gemini } from "./providers/Gemini"
 import { LMStudio } from "./providers/LMStudio"
+import { Ollama } from "./providers/Ollama"
+import { OpenAI } from "./providers/OpenAI"
+import { OpenAICompatible } from "./providers/OpenAICompatible"
+import { OpenRouter } from "./providers/OpenRouter"
+import { Vertex } from "./providers/Vertex"
+import { VSCodeLM } from "./providers/VSCodeLM"
 
-import { MODELS_BY_PROVIDER, PROVIDERS, VERTEX_REGIONS, REASONING_MODELS } from "./constants"
+import { MODELS_BY_PROVIDER, PROVIDERS, REASONING_MODELS } from "./constants"
 import { inputEventTransform, noTransform } from "./transforms"
 import { ModelInfoView } from "./ModelInfoView"
 import { ModelPicker } from "./ModelPicker"
@@ -67,9 +70,6 @@ const ApiOptions = ({
 }: ApiOptionsProps) => {
 	const { t } = useAppTranslation()
 
-	const [ollamaModels, setOllamaModels] = useState<string[]>([])
-	const [vsCodeLmModels, setVsCodeLmModels] = useState<LanguageModelChatSelector[]>([])
-
 	const [customHeaders, setCustomHeaders] = useState<[string, string][]>(() => {
 		const headers = apiConfiguration?.openAiHeaders || {}
 		return Object.entries(headers)
@@ -82,15 +82,6 @@ const ApiOptions = ({
 			setCustomHeaders(Object.entries(propHeaders))
 		}
 	}, [apiConfiguration?.openAiHeaders, customHeaders])
-
-	const [anthropicBaseUrlSelected, setAnthropicBaseUrlSelected] = useState(!!apiConfiguration?.anthropicBaseUrl)
-	const [openAiNativeBaseUrlSelected, setOpenAiNativeBaseUrlSelected] = useState(
-		!!apiConfiguration?.openAiNativeBaseUrl,
-	)
-
-	const [googleGeminiBaseUrlSelected, setGoogleGeminiBaseUrlSelected] = useState(
-		!!apiConfiguration?.googleGeminiBaseUrl,
-	)
 
 	// Helper to convert array of tuples to object (filtering out empty keys).
 	const convertHeadersToObject = (headers: [string, string][]): Record<string, string> => {
@@ -161,8 +152,9 @@ const ApiOptions = ({
 	useDebounce(
 		() => {
 			if (selectedProvider === "openai") {
-				// Use our custom headers state to build the headers object
+				// Use our custom headers state to build the headers object.
 				const headerObject = convertHeadersToObject(customHeaders)
+
 				vscode.postMessage({
 					type: "requestOpenAiModels",
 					values: {
@@ -195,6 +187,7 @@ const ApiOptions = ({
 	useEffect(() => {
 		const apiValidationResult =
 			validateApiConfiguration(apiConfiguration) || validateModelId(apiConfiguration, routerModels)
+
 		setErrorMessage(apiValidationResult)
 	}, [apiConfiguration, routerModels, setErrorMessage])
 
@@ -207,27 +200,6 @@ const ApiOptions = ({
 			apiConfiguration.openRouterModelId in routerModels.openrouter,
 	})
 
-	const onMessage = useCallback((event: MessageEvent) => {
-		const message: ExtensionMessage = event.data
-
-		switch (message.type) {
-			case "ollamaModels":
-				{
-					const newModels = message.ollamaModels ?? []
-					setOllamaModels(newModels)
-				}
-				break
-			case "vsCodeLmModels":
-				{
-					const newModels = message.vsCodeLmModels ?? []
-					setVsCodeLmModels(newModels)
-				}
-				break
-		}
-	}, [])
-
-	useEvent("message", onMessage)
-
 	const selectedProviderModelOptions = useMemo(
 		() =>
 			MODELS_BY_PROVIDER[selectedProvider]
@@ -239,16 +211,13 @@ const ApiOptions = ({
 		[selectedProvider],
 	)
 
-	// Base URL for provider documentation
-	const DOC_BASE_URL = "https://docs.roocode.com/providers"
-
-	// Custom URL path mappings for providers with different slugs
+	// Custom URL path mappings for providers with different slugs.
 	const providerUrlSlugs: Record<string, string> = {
 		"openai-native": "openai",
 		openai: "openai-compatible",
 	}
 
-	// Helper function to get provider display name from PROVIDERS constant
+	// Helper function to get provider display name from PROVIDERS constant.
 	const getProviderDisplayName = (providerKey: string): string | undefined => {
 		const provider = PROVIDERS.find((p) => p.value === providerKey)
 		return provider?.label
@@ -266,7 +235,7 @@ const ApiOptions = ({
 		const urlSlug = providerUrlSlugs[selectedProvider] || selectedProvider
 
 		return {
-			url: `${DOC_BASE_URL}/${urlSlug}`,
+			url: `https://docs.roocode.com/providers/${urlSlug}`,
 			name: displayName,
 		}
 	}
@@ -358,57 +327,7 @@ const ApiOptions = ({
 			)}
 
 			{selectedProvider === "anthropic" && (
-				<>
-					<VSCodeTextField
-						value={apiConfiguration?.apiKey || ""}
-						type="password"
-						onInput={handleInputChange("apiKey")}
-						placeholder={t("settings:placeholders.apiKey")}
-						className="w-full">
-						<label className="block font-medium mb-1">{t("settings:providers.anthropicApiKey")}</label>
-					</VSCodeTextField>
-					<div className="text-sm text-vscode-descriptionForeground -mt-2">
-						{t("settings:providers.apiKeyStorageNotice")}
-					</div>
-					{!apiConfiguration?.apiKey && (
-						<VSCodeButtonLink href="https://console.anthropic.com/settings/keys" appearance="secondary">
-							{t("settings:providers.getAnthropicApiKey")}
-						</VSCodeButtonLink>
-					)}
-					<div>
-						<Checkbox
-							checked={anthropicBaseUrlSelected}
-							onChange={(checked: boolean) => {
-								setAnthropicBaseUrlSelected(checked)
-
-								if (!checked) {
-									setApiConfigurationField("anthropicBaseUrl", "")
-									setApiConfigurationField("anthropicUseAuthToken", false) // added
-								}
-							}}>
-							{t("settings:providers.useCustomBaseUrl")}
-						</Checkbox>
-						{anthropicBaseUrlSelected && (
-							<>
-								<VSCodeTextField
-									value={apiConfiguration?.anthropicBaseUrl || ""}
-									type="url"
-									onInput={handleInputChange("anthropicBaseUrl")}
-									placeholder="https://api.anthropic.com"
-									className="w-full mt-1"
-								/>
-
-								{/* added */}
-								<Checkbox
-									checked={apiConfiguration?.anthropicUseAuthToken ?? false}
-									onChange={handleInputChange("anthropicUseAuthToken", noTransform)}
-									className="w-full mt-1">
-									{t("settings:providers.anthropicUseAuthToken")}
-								</Checkbox>
-							</>
-						)}
-					</div>
-				</>
+				<Anthropic apiConfiguration={apiConfiguration} setApiConfigurationField={setApiConfigurationField} />
 			)}
 
 			{selectedProvider === "glama" && (
@@ -465,46 +384,7 @@ const ApiOptions = ({
 			)}
 
 			{selectedProvider === "openai-native" && (
-				<>
-					<Checkbox
-						checked={openAiNativeBaseUrlSelected}
-						onChange={(checked: boolean) => {
-							setOpenAiNativeBaseUrlSelected(checked)
-
-							if (!checked) {
-								setApiConfigurationField("openAiNativeBaseUrl", "")
-							}
-						}}>
-						{t("settings:providers.useCustomBaseUrl")}
-					</Checkbox>
-					{openAiNativeBaseUrlSelected && (
-						<>
-							<VSCodeTextField
-								value={apiConfiguration?.openAiNativeBaseUrl || ""}
-								type="url"
-								onInput={handleInputChange("openAiNativeBaseUrl")}
-								placeholder="https://api.openai.com/v1"
-								className="w-full mt-1"
-							/>
-						</>
-					)}
-					<VSCodeTextField
-						value={apiConfiguration?.openAiNativeApiKey || ""}
-						type="password"
-						onInput={handleInputChange("openAiNativeApiKey")}
-						placeholder={t("settings:placeholders.apiKey")}
-						className="w-full">
-						<label className="block font-medium mb-1">{t("settings:providers.openAiApiKey")}</label>
-					</VSCodeTextField>
-					<div className="text-sm text-vscode-descriptionForeground -mt-2">
-						{t("settings:providers.apiKeyStorageNotice")}
-					</div>
-					{!apiConfiguration?.openAiNativeApiKey && (
-						<VSCodeButtonLink href="https://platform.openai.com/api-keys" appearance="secondary">
-							{t("settings:providers.getOpenAiApiKey")}
-						</VSCodeButtonLink>
-					)}
-				</>
+				<OpenAI apiConfiguration={apiConfiguration} setApiConfigurationField={setApiConfigurationField} />
 			)}
 
 			{selectedProvider === "mistral" && (
@@ -555,115 +435,11 @@ const ApiOptions = ({
 			)}
 
 			{selectedProvider === "vertex" && (
-				<>
-					<div className="text-sm text-vscode-descriptionForeground">
-						<div>{t("settings:providers.googleCloudSetup.title")}</div>
-						<div>
-							<VSCodeLink
-								href="https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-claude#before_you_begin"
-								className="text-sm">
-								{t("settings:providers.googleCloudSetup.step1")}
-							</VSCodeLink>
-						</div>
-						<div>
-							<VSCodeLink
-								href="https://cloud.google.com/docs/authentication/provide-credentials-adc#google-idp"
-								className="text-sm">
-								{t("settings:providers.googleCloudSetup.step2")}
-							</VSCodeLink>
-						</div>
-						<div>
-							<VSCodeLink
-								href="https://developers.google.com/workspace/guides/create-credentials?hl=en#service-account"
-								className="text-sm">
-								{t("settings:providers.googleCloudSetup.step3")}
-							</VSCodeLink>
-						</div>
-					</div>
-					<VSCodeTextField
-						value={apiConfiguration?.vertexJsonCredentials || ""}
-						onInput={handleInputChange("vertexJsonCredentials")}
-						placeholder={t("settings:placeholders.credentialsJson")}
-						className="w-full">
-						<label className="block font-medium mb-1">
-							{t("settings:providers.googleCloudCredentials")}
-						</label>
-					</VSCodeTextField>
-					<VSCodeTextField
-						value={apiConfiguration?.vertexKeyFile || ""}
-						onInput={handleInputChange("vertexKeyFile")}
-						placeholder={t("settings:placeholders.keyFilePath")}
-						className="w-full">
-						<label className="block font-medium mb-1">{t("settings:providers.googleCloudKeyFile")}</label>
-					</VSCodeTextField>
-					<VSCodeTextField
-						value={apiConfiguration?.vertexProjectId || ""}
-						onInput={handleInputChange("vertexProjectId")}
-						placeholder={t("settings:placeholders.projectId")}
-						className="w-full">
-						<label className="block font-medium mb-1">{t("settings:providers.googleCloudProjectId")}</label>
-					</VSCodeTextField>
-					<div>
-						<label className="block font-medium mb-1">{t("settings:providers.googleCloudRegion")}</label>
-						<Select
-							value={apiConfiguration?.vertexRegion || ""}
-							onValueChange={(value) => setApiConfigurationField("vertexRegion", value)}>
-							<SelectTrigger className="w-full">
-								<SelectValue placeholder={t("settings:common.select")} />
-							</SelectTrigger>
-							<SelectContent>
-								{VERTEX_REGIONS.map(({ value, label }) => (
-									<SelectItem key={value} value={value}>
-										{label}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
-				</>
+				<Vertex apiConfiguration={apiConfiguration} setApiConfigurationField={setApiConfigurationField} />
 			)}
 
 			{selectedProvider === "gemini" && (
-				<>
-					<VSCodeTextField
-						value={apiConfiguration?.geminiApiKey || ""}
-						type="password"
-						onInput={handleInputChange("geminiApiKey")}
-						placeholder={t("settings:placeholders.apiKey")}
-						className="w-full">
-						<label className="block font-medium mb-1">{t("settings:providers.geminiApiKey")}</label>
-					</VSCodeTextField>
-					<div className="text-sm text-vscode-descriptionForeground -mt-2">
-						{t("settings:providers.apiKeyStorageNotice")}
-					</div>
-					{!apiConfiguration?.geminiApiKey && (
-						<VSCodeButtonLink href="https://ai.google.dev/" appearance="secondary">
-							{t("settings:providers.getGeminiApiKey")}
-						</VSCodeButtonLink>
-					)}
-					<div>
-						<Checkbox
-							checked={googleGeminiBaseUrlSelected}
-							onChange={(checked: boolean) => {
-								setGoogleGeminiBaseUrlSelected(checked)
-
-								if (!checked) {
-									setApiConfigurationField("googleGeminiBaseUrl", "")
-								}
-							}}>
-							{t("settings:providers.useCustomBaseUrl")}
-						</Checkbox>
-						{googleGeminiBaseUrlSelected && (
-							<VSCodeTextField
-								value={apiConfiguration?.googleGeminiBaseUrl || ""}
-								type="url"
-								onInput={handleInputChange("googleGeminiBaseUrl")}
-								placeholder={t("settings:defaults.geminiUrl")}
-								className="w-full mt-1"
-							/>
-						)}
-					</div>
-				</>
+				<Gemini apiConfiguration={apiConfiguration} setApiConfigurationField={setApiConfigurationField} />
 			)}
 
 			{selectedProvider === "openai" && (
@@ -699,85 +475,11 @@ const ApiOptions = ({
 			)}
 
 			{selectedProvider === "vscode-lm" && (
-				<>
-					<div>
-						<label className="block font-medium mb-1">{t("settings:providers.vscodeLmModel")}</label>
-						{vsCodeLmModels.length > 0 ? (
-							<Select
-								value={
-									apiConfiguration?.vsCodeLmModelSelector
-										? `${apiConfiguration.vsCodeLmModelSelector.vendor ?? ""}/${apiConfiguration.vsCodeLmModelSelector.family ?? ""}`
-										: ""
-								}
-								onValueChange={handleInputChange("vsCodeLmModelSelector", (value) => {
-									const [vendor, family] = value.split("/")
-									return { vendor, family }
-								})}>
-								<SelectTrigger className="w-full">
-									<SelectValue placeholder={t("settings:common.select")} />
-								</SelectTrigger>
-								<SelectContent>
-									{vsCodeLmModels.map((model) => (
-										<SelectItem
-											key={`${model.vendor}/${model.family}`}
-											value={`${model.vendor}/${model.family}`}>
-											{`${model.vendor} - ${model.family}`}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						) : (
-							<div className="text-sm text-vscode-descriptionForeground">
-								{t("settings:providers.vscodeLmDescription")}
-							</div>
-						)}
-					</div>
-					<div className="text-sm text-vscode-errorForeground">{t("settings:providers.vscodeLmWarning")}</div>
-				</>
+				<VSCodeLM apiConfiguration={apiConfiguration} setApiConfigurationField={setApiConfigurationField} />
 			)}
 
 			{selectedProvider === "ollama" && (
-				<>
-					<VSCodeTextField
-						value={apiConfiguration?.ollamaBaseUrl || ""}
-						type="url"
-						onInput={handleInputChange("ollamaBaseUrl")}
-						placeholder={t("settings:defaults.ollamaUrl")}
-						className="w-full">
-						<label className="block font-medium mb-1">{t("settings:providers.ollama.baseUrl")}</label>
-					</VSCodeTextField>
-					<VSCodeTextField
-						value={apiConfiguration?.ollamaModelId || ""}
-						onInput={handleInputChange("ollamaModelId")}
-						placeholder={t("settings:placeholders.modelId.ollama")}
-						className="w-full">
-						<label className="block font-medium mb-1">{t("settings:providers.ollama.modelId")}</label>
-					</VSCodeTextField>
-					{ollamaModels.length > 0 && (
-						<VSCodeRadioGroup
-							value={
-								ollamaModels.includes(apiConfiguration?.ollamaModelId || "")
-									? apiConfiguration?.ollamaModelId
-									: ""
-							}
-							onChange={handleInputChange("ollamaModelId")}>
-							{ollamaModels.map((model) => (
-								<VSCodeRadio
-									key={model}
-									value={model}
-									checked={apiConfiguration?.ollamaModelId === model}>
-									{model}
-								</VSCodeRadio>
-							))}
-						</VSCodeRadioGroup>
-					)}
-					<div className="text-sm text-vscode-descriptionForeground">
-						{t("settings:providers.ollama.description")}
-						<span className="text-vscode-errorForeground ml-1">
-							{t("settings:providers.ollama.warning")}
-						</span>
-					</div>
-				</>
+				<Ollama apiConfiguration={apiConfiguration} setApiConfigurationField={setApiConfigurationField} />
 			)}
 
 			{selectedProvider === "xai" && (
