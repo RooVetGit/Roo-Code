@@ -121,6 +121,8 @@ type ProviderSettings = {
 	requestyApiKey?: string | undefined
 	requestyModelId?: string | undefined
 	xaiApiKey?: string | undefined
+	codeIndexOpenAiKey?: string | undefined
+	codeIndexQdrantApiKey?: string | undefined
 	modelMaxTokens?: number | undefined
 	modelMaxThinkingTokens?: number | undefined
 	includeMaxTokens?: boolean | undefined
@@ -190,6 +192,33 @@ type GlobalSettings = {
 	autoApprovalEnabled?: boolean | undefined
 	alwaysAllowReadOnly?: boolean | undefined
 	alwaysAllowReadOnlyOutsideWorkspace?: boolean | undefined
+	codebaseIndexModels?:
+		| {
+				openai?:
+					| {
+							[x: string]: {
+								dimension: number
+							}
+					  }
+					| undefined
+				ollama?:
+					| {
+							[x: string]: {
+								dimension: number
+							}
+					  }
+					| undefined
+		  }
+		| undefined
+	codebaseIndexConfig?:
+		| {
+				codebaseIndexEnabled?: boolean | undefined
+				codebaseIndexQdrantUrl?: string | undefined
+				codebaseIndexEmbedderProvider?: ("openai" | "ollama") | undefined
+				codebaseIndexEmbedderBaseUrl?: string | undefined
+				codebaseIndexEmbedderModelId?: string | undefined
+		  }
+		| undefined
 	alwaysAllowWrite?: boolean | undefined
 	alwaysAllowWriteOutsideWorkspace?: boolean | undefined
 	writeDelayMs?: number | undefined
@@ -500,6 +529,7 @@ type RooCodeEvents = {
 			| "switch_mode"
 			| "new_task"
 			| "fetch_instructions"
+			| "codebase_search"
 		),
 		string,
 	]

@@ -141,6 +141,26 @@ export const apiConfigMetaSchema = z.object({
 	apiProvider: providerNamesSchema.optional(),
 })
 
+/**
+ * Codebase Index Config
+ */
+export const codebaseIndexConfigSchema = z.object({
+	codebaseIndexEnabled: z.boolean().optional(),
+	codebaseIndexQdrantUrl: z.string().optional(),
+	codebaseIndexEmbedderProvider: z.enum(["openai", "ollama"]).optional(),
+	codebaseIndexEmbedderBaseUrl: z.string().optional(),
+	codebaseIndexEmbedderModelId: z.string().optional(),
+})
+
+export type CodebaseIndexConfig = z.infer<typeof codebaseIndexConfigSchema>
+
+export const codebaseIndexModelsSchema = z.object({
+	openai: z.record(z.string(), z.object({ dimension: z.number() })).optional(),
+	ollama: z.record(z.string(), z.object({ dimension: z.number() })).optional(),
+})
+
+export type CodebaseIndexModels = z.infer<typeof codebaseIndexModelsSchema>
+
 export type ApiConfigMeta = z.infer<typeof apiConfigMetaSchema>
 
 /**
@@ -423,6 +443,9 @@ export const providerSettingsSchema = z.object({
 	requestyModelId: z.string().optional(),
 	// X.AI (Grok)
 	xaiApiKey: z.string().optional(),
+	// Code Index
+	codeIndexOpenAiKey: z.string().optional(),
+	codeIndexQdrantApiKey: z.string().optional(),
 	// Claude 3.7 Sonnet Thinking
 	modelMaxTokens: z.number().optional(),
 	modelMaxThinkingTokens: z.number().optional(),
@@ -514,6 +537,9 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	// Requesty
 	requestyApiKey: undefined,
 	requestyModelId: undefined,
+	// Code Index
+	codeIndexOpenAiKey: undefined,
+	codeIndexQdrantApiKey: undefined,
 	// Claude 3.7 Sonnet Thinking
 	modelMaxTokens: undefined,
 	modelMaxThinkingTokens: undefined,
@@ -549,6 +575,8 @@ export const globalSettingsSchema = z.object({
 	autoApprovalEnabled: z.boolean().optional(),
 	alwaysAllowReadOnly: z.boolean().optional(),
 	alwaysAllowReadOnlyOutsideWorkspace: z.boolean().optional(),
+	codebaseIndexModels: codebaseIndexModelsSchema.optional(),
+	codebaseIndexConfig: codebaseIndexConfigSchema.optional(),
 	alwaysAllowWrite: z.boolean().optional(),
 	alwaysAllowWriteOutsideWorkspace: z.boolean().optional(),
 	writeDelayMs: z.number().optional(),
@@ -617,6 +645,8 @@ export type GlobalSettings = z.infer<typeof globalSettingsSchema>
 type GlobalSettingsRecord = Record<Keys<GlobalSettings>, undefined>
 
 const globalSettingsRecord: GlobalSettingsRecord = {
+	codebaseIndexModels: undefined,
+	codebaseIndexConfig: undefined,
 	currentApiConfigName: undefined,
 	listApiConfigMeta: undefined,
 	pinnedApiConfigs: undefined,
@@ -721,7 +751,11 @@ export type SecretState = Pick<
 	| "unboundApiKey"
 	| "requestyApiKey"
 	| "xaiApiKey"
+	| "codeIndexOpenAiKey"
+	| "codeIndexQdrantApiKey"
 >
+
+export type CodeIndexSecrets = "codeIndexOpenAiKey" | "codeIndexQdrantApiKey"
 
 type SecretStateRecord = Record<Keys<SecretState>, undefined>
 
@@ -740,6 +774,8 @@ const secretStateRecord: SecretStateRecord = {
 	unboundApiKey: undefined,
 	requestyApiKey: undefined,
 	xaiApiKey: undefined,
+	codeIndexOpenAiKey: undefined,
+	codeIndexQdrantApiKey: undefined,
 }
 
 export const SECRET_STATE_KEYS = Object.keys(secretStateRecord) as Keys<SecretState>[]
@@ -880,6 +916,7 @@ export const toolNames = [
 	"switch_mode",
 	"new_task",
 	"fetch_instructions",
+	"codebase_search",
 ] as const
 
 export const toolNamesSchema = z.enum(toolNames)

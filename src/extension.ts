@@ -27,6 +27,7 @@ import { migrateSettings } from "./utils/migrateSettings"
 
 import { handleUri, registerCommands, registerCodeActions, registerTerminalActions } from "./activate"
 import { formatLanguage } from "./shared/language"
+import { CodeIndexManager } from "./services/code-index/manager"
 
 /**
  * Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -68,8 +69,22 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 
 	const contextProxy = await ContextProxy.getInstance(context)
-	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy)
+	const codeIndexManager = CodeIndexManager.getInstance(context, contextProxy)
+
+	try {
+		await codeIndexManager?.loadConfiguration()
+	} catch (error) {
+		outputChannel.appendLine(
+			`[CodeIndexManager] Error during background CodeIndexManager configuration/indexing: ${error.message || error}`,
+		)
+	}
+
+	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy, codeIndexManager)
 	telemetryService.setProvider(provider)
+
+	if (codeIndexManager) {
+		context.subscriptions.push(codeIndexManager)
+	}
 
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(ClineProvider.sideBarId, provider, {
