@@ -1,6 +1,6 @@
 import * as vscode from "vscode"
 import { ClineProvider } from "./ClineProvider"
-import { WebviewMessage } from "../../shared/WebviewMessage"
+import { installMarketplaceItemWithParametersPayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
 import {
 	MarketplaceManager,
 	MarketplaceItemType,
@@ -224,6 +224,32 @@ export async function handleMarketplaceMessages(
 			}
 			return true
 		}
+		case "installMarketplaceItemWithParameters":
+			if (message.payload) {
+				const result = installMarketplaceItemWithParametersPayloadSchema.safeParse(message.payload)
+
+				if (result.success) {
+					const { item, parameters } = result.data
+
+					try {
+						await marketplaceManager.installMarketplaceItem(item, { parameters })
+					} catch (error) {
+						console.error(`Error submitting marketplace parameters: ${error}`)
+						vscode.window.showErrorMessage(
+							`Failed to install item "${item.name}":\n${error instanceof Error ? error.message : String(error)}`,
+						)
+					}
+				} else {
+					console.error("Invalid payload for installMarketplaceItemWithParameters message:", message.payload)
+					vscode.window.showErrorMessage(
+						'Invalid "payload" received for installation: item or parameters missing.',
+					)
+				}
+			}
+			return true
+		case "cancelMarketplaceInstall":
+			vscode.window.showInformationMessage("Marketplace installation cancelled.")
+			return true
 
 		case "refreshMarketplaceSource": {
 			if (message.url) {

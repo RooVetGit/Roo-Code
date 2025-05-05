@@ -13,9 +13,9 @@ import {
 } from "./types"
 import { getUserLocale } from "./utils"
 import { GlobalFileNames } from "../../../src/shared/globalFileNames"
-import { TerminalRegistry } from "../../../src/integrations/terminal/TerminalRegistry"
 import { assertsMpContext, createHookable, MarketplaceContext, registerMarketplaceHooks } from "roo-rocket"
-import { assertsBinarySha256, unpackFromUint8, uint8IsConfigPackWithParameters } from "config-rocket/cli"
+import { assertsBinarySha256, unpackFromUint8, extractRocketConfigFromUint8 } from "config-rocket/cli"
+import { getPanel } from "../../activate/registerCommands"
 
 /**
  * Service for managing marketplace data
@@ -573,8 +573,8 @@ export class MarketplaceManager {
 		}
 	}
 
-	async installMarketplaceItem(item: MarketplaceItem, options?: InstallMarketplaceItemOptions) {
-		const { target = "project" } = options || {}
+	async installMarketplaceItem(item: MarketplaceItem, options?: InstallMarketplaceItemOptions): Promise<void | any> {
+		const { target = "project", parameters } = options || {}
 
 		vscode.window.showInformationMessage(`Installing item: "${item.name}"`)
 
@@ -590,7 +590,7 @@ export class MarketplaceManager {
 			return vscode.window.showErrorMessage("Item does not have a binary URL or hash")
 
 		// Creates `mpContext` to delegate context to `roo-rocket`
-		const mpContext = (
+		const mpContext: MarketplaceContext =
 			target === "project"
 				? { target }
 				: {
@@ -600,58 +600,56 @@ export class MarketplaceManager {
 							mode: GlobalFileNames.customModes,
 						},
 					}
-		) satisfies MarketplaceContext
 		assertsMpContext(mpContext)
 
 		const binaryUint8 = await fetchBinary(item.binaryUrl)
+
+		// `parameters` only exists in flows where we already check everything and then requires parameters input
+		// so we can optimize and skip the latter checks
+		if (parameters) return await _doInstall()
+
+		// Check binary integrity
 		await assertsBinarySha256(binaryUint8, item.binaryHash)
 
-		// Install via CLI if binary is a configurable pack.
-		// TODO: think of a way to send the binary to the npx process
-		if (await uint8IsConfigPackWithParameters(binaryUint8)) {
-			vscode.window.showInformationMessage(`"${item.name}" is configurable, invoking interactive CLI...`)
+		// Extract config and check if it has prompt parameters.
+		const config = await extractRocketConfigFromUint8(binaryUint8)
+		const configHavePromptParameters = config?.parameters?.some((param) => param.resolver.operation === "prompt")
 
-			let pResult: string[] = []
-			let pExitCode: number | undefined
-			// We don't want to create a new terminal at the global dir, so I'm not using cwd here
-			const terminalClass = await TerminalRegistry.getOrCreateTerminal(
-				vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath ?? "",
-				false,
-				`IMI-${item.name}`,
-			)
-			terminalClass.terminal.show()
-			await terminalClass.runCommand(
-				`npx -y roo-rocket@0.4 --mp="${JSON.stringify(mpContext).replaceAll(/"/g, '\\"')}" --cwd="${cwd}" --url="${item.binaryUrl}"`,
-				{
-					onLine: (line) => {
-						pResult.push(line)
-					},
-					onShellExecutionComplete: (details) => {
-						pExitCode = details.exitCode
-					},
-				},
-			)
+		if (configHavePromptParameters) {
+			vscode.window.showInformationMessage(`"${item.name}" is configurable, opening UI form...`)
 
-			if (pExitCode === 0) vscode.window.showInformationMessage(`"${item.name}" CLI reported success!`)
-			else {
-				console.error(pResult)
-				// Revert so error search is potentially faster
-				pResult.reverse()
-				// Search for error line in the result
-				const errorLine =
-					pResult.find((line) => /^((\r)?\n)+ ERROR  /.test(line)) ?? // Prefer formatting error
-					pResult.find((line) => /error/i.test(line)) ?? // General error
-					"N/A"
-				return vscode.window.showErrorMessage(`"${item.name}" CLI reported error: (${pExitCode}): ${errorLine}`)
+			const panel = getPanel()
+			if (panel) {
+				panel.webview.postMessage({
+					type: "openMarketplaceInstallSidebarWithConfig",
+					payload: {
+						item,
+						config,
+					},
+				})
+			} else {
+				vscode.window.showErrorMessage("Could not open UI form: Webview panel not found.")
 			}
+			return false // Stop installation process here, wait for parameters from frontend
 		}
-		// Fast install for non-configurable packs.
-		else {
+
+		await _doInstall()
+		async function _doInstall() {
 			// Create a custom hookable instance to support global installations
 			const customHookable = createHookable()
 			registerMarketplaceHooks(customHookable, mpContext)
 
-			vscode.window.showInformationMessage(`"${item.name}" is non-configurable, fast install...`)
+			// Register hook to set parameters if provided
+			if (parameters)
+				customHookable.hook("onParameter", ({ parameter, resolvedParameters }) => {
+					if (parameter.id in parameters)
+						return (resolvedParameters[parameter.id] = parameters[parameter.id as keyof typeof parameters])
+
+					// If there is unresolved prompt operation, throw error or else it would hang the installation
+					if (parameter.resolver.operation === "prompt") throw new Error("Unexpected prompt operation")
+				})
+
+			vscode.window.showInformationMessage(`"${item.name}" is installing...`)
 			await unpackFromUint8(binaryUint8, {
 				hookable: customHookable,
 				nonAssemblyBehavior: true,
@@ -659,8 +657,6 @@ export class MarketplaceManager {
 			})
 			vscode.window.showInformationMessage(`"${item.name}" installed successfully`)
 		}
-
-		return true
 	}
 
 	/**

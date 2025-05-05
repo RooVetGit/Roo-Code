@@ -69,7 +69,10 @@ export interface ExtensionMessage {
 		| "repositoryRefreshComplete"
 		| "acceptInput"
 		| "setHistoryPreviewCollapsed"
+		| "openMarketplaceInstallSidebarWithConfig"
 	text?: string
+	payload?: any // Add a generic payload for now, can refine later
+	// Expected payload for "openMarketplaceInstallSidebarWithConfig": { item: MarketplaceItem, config: RocketConfig | undefined }
 	action?:
 		| "chatButtonClicked"
 		| "mcpButtonClicked"

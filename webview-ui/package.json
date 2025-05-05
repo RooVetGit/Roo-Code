@@ -56,6 +56,7 @@
 		"rehype-highlight": "^7.0.0",
 		"remark-gfm": "^4.0.1",
 		"remove-markdown": "^0.6.0",
+		"rocket-config": "^1.0.7",
 		"shell-quote": "^1.8.2",
 		"styled-components": "^6.1.13",
 		"tailwind-merge": "^2.6.0",

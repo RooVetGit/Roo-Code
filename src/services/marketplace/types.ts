@@ -1,3 +1,5 @@
+import { RocketConfig } from "config-rocket"
+
 /**
  * Information about why an item matched search/filter criteria
  */
@@ -94,6 +96,7 @@ export interface MarketplaceItem {
 		matchInfo?: MatchInfo // Add match information for subcomponents
 	}[]
 	matchInfo?: MatchInfo // Add match information for the package itself
+	config?: RocketConfig // Revert to using RocketConfig
 }
 
 /**
@@ -138,4 +141,8 @@ export interface InstallMarketplaceItemOptions {
 	 * @default 'project'
 	 */
 	target?: "global" | "project"
+	/**
+	 * Parameters provided by the user for configurable marketplace items
+	 */
+	parameters?: Record<string, any>
 }

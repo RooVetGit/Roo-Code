@@ -1283,6 +1283,8 @@ export const webviewMessageHandler = async (
 		(message.type === "marketplaceSources" ||
 			message.type === "openExternal" ||
 			message.type === "installMarketplaceItem" ||
+			message.type === "installMarketplaceItemWithParameters" ||
+			message.type === "cancelMarketplaceInstall" ||
 			message.type === "refreshMarketplaceSource" ||
 			message.type === "filterMarketplaceItems")
 	) {

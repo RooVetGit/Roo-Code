@@ -18,7 +18,7 @@ export const baseMetadataSchema = z.object({
 /**
  * Component type validation
  */
-export const MarketplaceItemTypeSchema = z.enum(["mode", "prompt", "package", "mcp"] as const)
+export const marketplaceItemTypeSchema = z.enum(["mode", "prompt", "package", "mcp"] as const)
 
 /**
  * Repository metadata schema
@@ -29,14 +29,14 @@ export const repositoryMetadataSchema = baseMetadataSchema
  * Component metadata schema
  */
 export const componentMetadataSchema = baseMetadataSchema.extend({
-	type: MarketplaceItemTypeSchema,
+	type: marketplaceItemTypeSchema,
 })
 
 /**
  * External item reference schema
  */
 export const externalItemSchema = z.object({
-	type: MarketplaceItemTypeSchema,
+	type: marketplaceItemTypeSchema,
 	path: z.string().min(1, "Path is required"),
 })
 
@@ -115,3 +115,63 @@ export function validateAnyMetadata(data: unknown) {
 
 	throw new Error("Invalid metadata: must be an object")
 }
+
+/**
+ * Schema for a single marketplace item parameter
+ */
+export const parameterSchema = z.record(z.string(), z.any())
+
+/**
+ * Schema for a marketplace item
+ */
+export const marketplaceItemSchema = baseMetadataSchema.extend({
+	type: marketplaceItemTypeSchema,
+	url: z.string(),
+	repoUrl: z.string(),
+	sourceName: z.string().optional(),
+	lastUpdated: z.string().optional(),
+	defaultBranch: z.string().optional(),
+	path: z.string().optional(),
+	items: z
+		.array(
+			z.object({
+				type: marketplaceItemTypeSchema,
+				path: z.string(),
+				metadata: componentMetadataSchema.optional(),
+				lastUpdated: z.string().optional(),
+				matchInfo: z
+					.object({
+						// Assuming MatchInfo is an object, adjust if needed
+						matched: z.boolean(),
+						matchReason: z
+							.object({
+								nameMatch: z.boolean().optional(),
+								descriptionMatch: z.boolean().optional(),
+								tagMatch: z.boolean().optional(),
+								typeMatch: z.boolean().optional(),
+								hasMatchingSubcomponents: z.boolean().optional(),
+							})
+							.optional(),
+					})
+					.optional(),
+			}),
+		)
+		.optional(),
+	matchInfo: z
+		.object({
+			// Assuming MatchInfo is an object, adjust if needed
+			matched: z.boolean(),
+			matchReason: z
+				.object({
+					nameMatch: z.boolean().optional(),
+					descriptionMatch: z.boolean().optional(),
+					tagMatch: z.boolean().optional(),
+					typeMatch: z.boolean().optional(),
+					hasMatchingSubcomponents: z.boolean().optional(),
+				})
+				.optional(),
+		})
+		.optional(),
+	parameters: z.record(z.string(), z.any()).optional(),
+	version: z.string().optional(), // Override version to make it optional
+})
