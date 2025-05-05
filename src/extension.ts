@@ -78,7 +78,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	const codeIndexManager = CodeIndexManager.getInstance(context, contextProxy)
 
 	try {
-		await codeIndexManager.loadConfiguration()
+		await codeIndexManager?.loadConfiguration()
 	} catch (error) {
 		outputChannel.appendLine(
 			`[CodeIndexManager] Error during background CodeIndexManager configuration/indexing: ${error.message || error}`,
@@ -88,11 +88,14 @@ export async function activate(context: vscode.ExtensionContext) {
 	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy, codeIndexManager)
 	telemetryService.setProvider(provider)
 
+	if (codeIndexManager) {
+		context.subscriptions.push(codeIndexManager)
+	}
+
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(ClineProvider.sideBarId, provider, {
 			webviewOptions: { retainContextWhenHidden: true },
 		}),
-		codeIndexManager,
 	)
 
 	registerCommands({ context, outputChannel, provider })
