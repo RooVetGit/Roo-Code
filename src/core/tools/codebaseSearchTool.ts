@@ -129,8 +129,8 @@ export async function codebaseSearchTool(
 		})
 
 		// Send results to UI
-		const payload = { tool: toolName, content: jsonResult }
-		await cline.say("text", JSON.stringify(payload))
+		const payload = { tool: "codebaseSearch", content: jsonResult }
+		await cline.say("codebase_search_result", JSON.stringify(payload))
 
 		// Push results to AI
 		const output = `Query: ${query}

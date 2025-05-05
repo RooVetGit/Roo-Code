@@ -443,6 +443,7 @@ type ClineMessage = {
 				| "rooignore_error"
 				| "diff_error"
 				| "condense_context"
+				| "codebase_search_result"
 		  )
 		| undefined
 	text?: string | undefined
@@ -528,6 +529,7 @@ type RooCodeEvents = {
 							| "rooignore_error"
 							| "diff_error"
 							| "condense_context"
+							| "codebase_search_result"
 					  )
 					| undefined
 				text?: string | undefined
