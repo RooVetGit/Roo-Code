@@ -1,5 +1,5 @@
-import React, { useState } from "react"
-import CodeBlock from "../common/CodeBlock"
+import React from "react"
+import { vscode } from "@src/utils/vscode"
 
 interface CodebaseSearchResultProps {
 	filePath: string
@@ -15,38 +15,31 @@ const CodebaseSearchResult: React.FC<CodebaseSearchResultProps> = ({
 	score,
 	startLine,
 	endLine,
-	snippet,
-	language,
+	// These props are required by the interface but not used in this implementation
+	snippet: _snippet,
+	language: _language,
 }) => {
-	const [isCollapsed, setIsCollapsed] = useState(true)
-
-	const toggleCollapse = () => {
-		setIsCollapsed(!isCollapsed)
+	const handleClick = () => {
+		vscode.postMessage({
+			type: "openFile",
+			text: "./" + filePath,
+			values: {
+				line: startLine,
+			},
+		})
 	}
 
 	return (
-		<div style={{ marginBottom: "1rem", padding: "0.5rem", border: "1px solid #ccc", borderRadius: "4px" }}>
-			<div
-				onClick={toggleCollapse}
-				style={{
-					fontWeight: "bold",
-					marginBottom: isCollapsed ? "0" : "0.25rem",
-					cursor: "pointer",
-					display: "flex",
-					justifyContent: "space-between",
-					alignItems: "center",
-				}}>
-				<span>{filePath}</span>
+		<div
+			onClick={handleClick}
+			className="mb-1 p-2 border border-secondary rounded cursor-pointer hover:bg-secondary hover:text-white"
+			title={`Score: ${score.toFixed(2)}`}>
+			<div className="flex justify-between items-center">
+				<span>{filePath.split("/").at(-1)}</span>
 				<span>
 					Lines: {startLine}-{endLine}
 				</span>
 			</div>
-			{!isCollapsed && (
-				<>
-					<div style={{ margin: "0.25rem 0" }}>Score: {score.toFixed(2)}</div>
-					<CodeBlock source={`\`\`\`${language}\n${snippet}\n\`\`\``} />
-				</>
-			)}
 		</div>
 	)
 }
