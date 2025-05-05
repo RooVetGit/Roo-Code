@@ -55,7 +55,7 @@ export async function codebaseSearchTool(
 	approvalMessage = t(translationKey, { query, limit })
 
 	const approvalPayload = {
-		tool: "codebase_search",
+		tool: "codebaseSearch",
 		approvalPrompt: approvalMessage,
 		query: query,
 		limit: limit,
