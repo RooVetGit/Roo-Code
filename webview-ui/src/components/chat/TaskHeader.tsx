@@ -29,6 +29,8 @@ export interface TaskHeaderProps {
 	totalCost: number
 	contextTokens: number
 	onClose: () => void
+	currentViewMode?: 'default' | 'minimalism' | 'stats'
+	onToggleStatsView?: () => void
 }
 
 const TaskHeader = ({
@@ -41,6 +43,8 @@ const TaskHeader = ({
 	totalCost,
 	contextTokens,
 	onClose,
+	currentViewMode,
+	onToggleStatsView
 }: TaskHeaderProps) => {
 	const { t } = useTranslation()
 	const { apiConfiguration, currentTaskItem } = useExtensionState()
@@ -81,14 +85,30 @@ const TaskHeader = ({
 							)}
 						</div>
 					</div>
-					<Button
-						variant="ghost"
-						size="icon"
-						onClick={onClose}
-						title={t("chat:task.closeAndStart")}
-						className="shrink-0 w-5 h-5">
-						<span className="codicon codicon-close" />
-					</Button>
+					<div className="flex shrink-0 items-center space-x-1">
+						{/* Stats view toggle button - Only show when onToggleStatsView is provided */}
+						{onToggleStatsView && (
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={onToggleStatsView}
+								title={t("stats:viewToggle", "Toggle Stats View")}
+								className={cn(
+									"w-5 h-5",
+									currentViewMode === "stats" && "bg-[var(--vscode-button-secondaryBackground)]" // Changed background to dark grey
+								)}>
+								<span className="codicon codicon-graph" />
+							</Button>
+						)}
+						<Button
+							variant="ghost"
+							size="icon"
+							onClick={onClose}
+							title={t("chat:task.closeAndStart")}
+							className="shrink-0 w-5 h-5">
+							<span className="codicon codicon-close" />
+						</Button>
+					</div>
 				</div>
 				{/* Collapsed state: Track context and cost if we have any */}
 				{!isTaskExpanded && contextWindow > 0 && (

@@ -9,7 +9,7 @@ import { changeLanguage, t } from "../../i18n"
 import { ApiConfiguration } from "../../shared/api"
 import { supportPrompt } from "../../shared/support-prompt"
 
-import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
+import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, FileInteraction, WebviewMessage } from "../../shared/WebviewMessage"
 import { checkExistKey } from "../../shared/checkExistApiConfig"
 import { experimentDefault } from "../../shared/experiments"
 import { Terminal } from "../../integrations/terminal/Terminal"
@@ -38,6 +38,7 @@ import { buildApiHandler } from "../../api"
 import { GlobalState } from "../../schemas"
 import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
 import { getModels } from "../../api/providers/fetchers/cache"
+import { getTaskDirectoryPath } from "../../shared/storagePathManager"
 
 export const webviewMessageHandler = async (provider: ClineProvider, message: WebviewMessage) => {
 	// Utility functions provided for concise get/update of global state via contextProxy API.
@@ -1257,6 +1258,131 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await provider.postStateToWebview()
 			break
 		}
+        
+        // File interaction handling
+        case "requestFileInteractions": {
+            if (message.taskId) {
+                try {
+                    // Get the task directory path
+                    const globalStoragePath = provider.contextProxy.globalStorageUri.fsPath
+                    const taskDirPath = await getTaskDirectoryPath(globalStoragePath, message.taskId)
+                    const filePath = path.join(taskDirPath, 'fileInteractions.json')
+                    
+                    // Check if the file exists
+                    const exists = await fileExistsAtPath(filePath)
+                    
+                    if (exists) {
+                        // Read the file
+                        const fileContent = await fs.readFile(filePath, 'utf8')
+                        const interactions = JSON.parse(fileContent) as FileInteraction[]
+                        
+                        // Send the interactions to the webview
+                        await provider.postMessageToWebview({
+                            type: "fileInteractions",
+                            interactions,
+                            taskId: message.taskId
+                        })
+                    } else {
+                        // If file doesn't exist, send current file interactions from the Cline instance
+                        const currentCline = provider.getCurrentCline()
+                        if (currentCline && currentCline.taskId === message.taskId) {
+                            // Extract file interactions from messages
+                            const interactions: FileInteraction[] = []
+                            
+                            currentCline.clineMessages.forEach(message => {
+                                if (message.type === 'ask' && message.ask === 'tool' && message.text) {
+                                    try {
+                                        const payload = JSON.parse(message.text)
+                                        if (payload.fileInteraction) {
+                                            interactions.push({
+                                                ...payload.fileInteraction,
+                                                timestamp: message.ts,
+                                                taskId: currentCline.taskId
+                                            })
+                                        }
+                                    } catch (e) {
+                                        console.error("Failed to parse tool message payload:", e)
+                                    }
+                                }
+                            })
+                            
+                            // Save file interactions for future reference
+                            try {
+                                await fs.mkdir(taskDirPath, { recursive: true })
+                                await fs.writeFile(filePath, JSON.stringify(interactions, null, 2))
+                            } catch (e) {
+                                console.error("Failed to save file interactions:", e)
+                            }
+                            
+                            // Send interactions to webview
+                            await provider.postMessageToWebview({
+                                type: "fileInteractions",
+                                interactions,
+                                taskId: message.taskId
+                            })
+                        } else {
+                            // No file interactions found
+                            await provider.postMessageToWebview({
+                                type: "fileInteractions",
+                                interactions: [],
+                                taskId: message.taskId
+                            })
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error processing file interactions:", error)
+                    await provider.postMessageToWebview({
+                        type: "fileInteractions",
+                        interactions: [],
+                        taskId: message.taskId
+                    })
+                }
+            }
+            break
+        }
+        
+        case "toggleStatsView": {
+            // This is handled directly in the ChatView component
+            // Just logging for now
+            console.log("Toggle stats view requested")
+            break
+        }
+        
+        case "updateFileInteractionHistory": {
+            if (message.taskId && message.interactions) {
+                try {
+                    // Get the task directory path
+                    const globalStoragePath = provider.contextProxy.globalStorageUri.fsPath
+                    const taskDirPath = await getTaskDirectoryPath(globalStoragePath, message.taskId)
+                    const filePath = path.join(taskDirPath, 'fileInteractions.json')
+                    
+                    // Ensure directory exists
+                    await fs.mkdir(taskDirPath, { recursive: true })
+                    
+                    // Save the interactions
+                    await fs.writeFile(filePath, JSON.stringify(message.interactions, null, 2))
+                    
+                    // Update state if needed
+                    const currentState = getGlobalState("fileInteractionHistory") as Record<string, FileInteraction[]> || {}
+                    const updatedHistory = {
+                        ...currentState,
+                        [message.taskId]: message.interactions
+                    }
+                    await updateGlobalState("fileInteractionHistory", updatedHistory)
+                    
+                    // Send back to webview if requested
+                    if (message.requestUpdate) {
+                        await provider.postMessageToWebview({
+                            type: "fileInteractionHistory",
+                            history: updatedHistory
+                        })
+                    }
+                } catch (error) {
+                    console.error("Error saving file interaction history:", error)
+                }
+            }
+            break
+        }
 	}
 }
 

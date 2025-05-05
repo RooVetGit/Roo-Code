@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react"
 import { useEvent } from "react-use"
-import { ApiConfigMeta, ExtensionMessage, ExtensionState } from "@roo/shared/ExtensionMessage"
+import { ApiConfigMeta, ExtensionMessage, ExtensionState, FileInteraction } from "@roo/shared/ExtensionMessage"
 import { ApiConfiguration } from "@roo/shared/api"
 import { vscode } from "@src/utils/vscode"
 import { convertTextMateToHljs } from "@src/utils/textMateToHljs"
@@ -14,6 +14,8 @@ import { TelemetrySetting } from "@roo/shared/TelemetrySetting"
 
 export interface ExtensionStateContextType extends ExtensionState {
 	historyPreviewCollapsed?: boolean // Add the new state property
+	fileInteractions: FileInteraction[] // Add file interactions
+	fileInteractionHistory: Record<string, FileInteraction[]> // Add file interaction history
 	didHydrateState: boolean
 	showWelcome: boolean
 	theme: any
@@ -180,6 +182,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 	const [openedTabs, setOpenedTabs] = useState<Array<{ label: string; isActive: boolean; path?: string }>>([])
 	const [mcpServers, setMcpServers] = useState<McpServer[]>([])
 	const [currentCheckpoint, setCurrentCheckpoint] = useState<string>()
+	const [fileInteractions, setFileInteractions] = useState<FileInteraction[]>([])
+	const [fileInteractionHistory, setFileInteractionHistory] = useState<Record<string, FileInteraction[]>>({})
 
 	const setListApiConfigMeta = useCallback(
 		(value: ApiConfigMeta[]) => setState((prevState) => ({ ...prevState, listApiConfigMeta: value })),
@@ -237,6 +241,18 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 					setListApiConfigMeta(message.listApiConfig ?? [])
 					break
 				}
+				case "fileInteractions": {
+					if (message.interactions) {
+						setFileInteractions(message.interactions)
+					}
+					break
+				}
+				case "fileInteractionHistory": {
+					if (message.history) {
+						setFileInteractionHistory(message.history)
+					}
+					break
+				}
 			}
 		},
 		[setListApiConfigMeta],
@@ -257,6 +273,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		currentCheckpoint,
 		filePaths,
 		openedTabs,
+		fileInteractions,
+		fileInteractionHistory,
 		soundVolume: state.soundVolume,
 		ttsSpeed: state.ttsSpeed,
 		fuzzyMatchThreshold: state.fuzzyMatchThreshold,

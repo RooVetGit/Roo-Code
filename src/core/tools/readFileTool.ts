@@ -45,7 +45,7 @@ export async function readFileTool(
 				cline.consecutiveMistakeCount++
 				cline.recordToolError("read_file")
 				const errorMsg = await cline.sayAndCreateMissingParamError("read_file", "path")
-				pushToolResult(`<file><path></path><error>${errorMsg}</error></file>`)
+				pushToolResult(`<file><path></path><e>${errorMsg}</e></file>`)
 				return
 			}
 
@@ -71,7 +71,7 @@ export async function readFileTool(
 					cline.consecutiveMistakeCount++
 					cline.recordToolError("read_file")
 					await cline.say("error", `Failed to parse start_line: ${startLineStr}`)
-					pushToolResult(`<file><path>${relPath}</path><error>Invalid start_line value</error></file>`)
+					pushToolResult(`<file><path>${relPath}</path><e>Invalid start_line value</e></file>`)
 					return
 				}
 
@@ -87,7 +87,7 @@ export async function readFileTool(
 					cline.consecutiveMistakeCount++
 					cline.recordToolError("read_file")
 					await cline.say("error", `Failed to parse end_line: ${endLineStr}`)
-					pushToolResult(`<file><path>${relPath}</path><error>Invalid end_line value</error></file>`)
+					pushToolResult(`<file><path>${relPath}</path><e>Invalid end_line value</e></file>`)
 					return
 				}
 
@@ -100,7 +100,7 @@ export async function readFileTool(
 			if (!accessAllowed) {
 				await cline.say("rooignore_error", relPath)
 				const errorMsg = formatResponse.rooIgnoreError(relPath)
-				pushToolResult(`<file><path>${relPath}</path><error>${errorMsg}</error></file>`)
+				pushToolResult(`<file><path>${relPath}</path><e>${errorMsg}</e></file>`)
 				return
 			}
 
@@ -124,11 +124,29 @@ export async function readFileTool(
 			cline.consecutiveMistakeCount = 0
 			const absolutePath = path.resolve(cline.cwd, relPath)
 
-			const completeMessage = JSON.stringify({
+			// Create the ClineSayTool object that conforms to the type
+			const completeMessageObj: ClineSayTool = {
 				...sharedMessageProps,
 				content: absolutePath,
-				reason: lineSnippet,
-			} satisfies ClineSayTool)
+				reason: lineSnippet
+			}
+			
+			// Convert to JSON string
+			const completeMessage = JSON.stringify(completeMessageObj)
+
+			// Track file interaction separately (not as part of the ClineSayTool)
+			// This will be handled by the message handler in the webview
+			cline.postMessage?.({
+				type: "trackFileInteraction",
+				fileInteraction: {
+					path: relPath,
+					operation: 'read',
+					timestamp: Date.now(),
+					success: true,
+					isOutsideWorkspace,
+					taskId: cline.taskId
+				}
+			})
 
 			const didApprove = await askApproval("tool", completeMessage)
 
@@ -240,7 +258,7 @@ export async function readFileTool(
 		}
 	} catch (error) {
 		const errorMsg = error instanceof Error ? error.message : String(error)
-		pushToolResult(`<file><path>${relPath || ""}</path><error>Error reading file: ${errorMsg}</error></file>`)
+		pushToolResult(`<file><path>${relPath || ""}</path><e>Error reading file: ${errorMsg}</e></file>`)
 		await handleError("reading file", error)
 	}
 }

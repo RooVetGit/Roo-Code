@@ -198,6 +198,14 @@ export async function writeToFileTool(
 				diff: fileExists
 					? formatResponse.createPrettyPatch(relPath, cline.diffViewProvider.originalContent, newContent)
 					: undefined,
+				fileInteraction: {
+					path: relPath,
+					operation: fileExists ? 'edit' : 'create',
+					timestamp: Date.now(),
+					success: true,
+					isOutsideWorkspace,
+					taskId: cline.taskId
+				}
 			} satisfies ClineSayTool)
 
 			const didApprove = await askApproval("tool", completeMessage)

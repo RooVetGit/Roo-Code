@@ -5,6 +5,7 @@ import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } f
 import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { getReadablePath } from "../../utils/path"
 import { regexSearchFiles } from "../../services/ripgrep"
+import { isPathOutsideWorkspace } from "../../utils/pathUtils"
 
 export async function searchFilesTool(
 	cline: Cline,
@@ -18,11 +19,16 @@ export async function searchFilesTool(
 	const regex: string | undefined = block.params.regex
 	const filePattern: string | undefined = block.params.file_pattern
 
+	// Determine if the path is outside the workspace
+	const fullPath = relDirPath ? path.resolve(cline.cwd, removeClosingTag("path", relDirPath)) : ""
+	const isOutsideWorkspace = isPathOutsideWorkspace(fullPath)
+
 	const sharedMessageProps: ClineSayTool = {
 		tool: "searchFiles",
 		path: getReadablePath(cline.cwd, removeClosingTag("path", relDirPath)),
 		regex: removeClosingTag("regex", regex),
 		filePattern: removeClosingTag("file_pattern", filePattern),
+		isOutsideWorkspace,
 	}
 
 	try {
@@ -57,7 +63,19 @@ export async function searchFilesTool(
 				cline.rooIgnoreController,
 			)
 
-			const completeMessage = JSON.stringify({ ...sharedMessageProps, content: results } satisfies ClineSayTool)
+			const completeMessage = JSON.stringify({ 
+				...sharedMessageProps, 
+				content: results,
+				fileInteraction: {
+					path: relDirPath,
+					operation: 'search',
+					timestamp: Date.now(),
+					success: true,
+					isOutsideWorkspace,
+					taskId: cline.taskId
+				}
+			} satisfies ClineSayTool)
+			
 			const didApprove = await askApproval("tool", completeMessage)
 
 			if (!didApprove) {

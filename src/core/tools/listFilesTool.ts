@@ -6,6 +6,7 @@ import { formatResponse } from "../prompts/responses"
 import { listFiles } from "../../services/glob/list-files"
 import { getReadablePath } from "../../utils/path"
 import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
+import { isPathOutsideWorkspace } from "../../utils/pathUtils"
 
 /**
  * Implements the list_files tool.
@@ -34,9 +35,14 @@ export async function listFilesTool(
 	const recursiveRaw: string | undefined = block.params.recursive
 	const recursive = recursiveRaw?.toLowerCase() === "true"
 
+	// Determine if the path is outside the workspace
+	const fullPath = relDirPath ? path.resolve(cline.cwd, removeClosingTag("path", relDirPath)) : ""
+	const isOutsideWorkspace = isPathOutsideWorkspace(fullPath)
+
 	const sharedMessageProps: ClineSayTool = {
 		tool: !recursive ? "listFilesTopLevel" : "listFilesRecursive",
 		path: getReadablePath(cline.cwd, removeClosingTag("path", relDirPath)),
+		isOutsideWorkspace,
 	}
 
 	try {
@@ -66,7 +72,19 @@ export async function listFilesTool(
 				showRooIgnoredFiles,
 			)
 
-			const completeMessage = JSON.stringify({ ...sharedMessageProps, content: result } satisfies ClineSayTool)
+			const completeMessage = JSON.stringify({ 
+				...sharedMessageProps, 
+				content: result,
+				fileInteraction: {
+					path: relDirPath,
+					operation: 'list',
+					timestamp: Date.now(),
+					success: true,
+					isOutsideWorkspace,
+					taskId: cline.taskId
+				}
+			} satisfies ClineSayTool)
+			
 			const didApprove = await askApproval("tool", completeMessage)
 
 			if (!didApprove) {

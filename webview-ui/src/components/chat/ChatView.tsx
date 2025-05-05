@@ -18,7 +18,7 @@ import { findLast } from "@roo/shared/array"
 import { combineApiRequests } from "@roo/shared/combineApiRequests"
 import { combineCommandSequences } from "@roo/shared/combineCommandSequences"
 import { getApiMetrics } from "@roo/shared/getApiMetrics"
-import { AudioType } from "@roo/shared/WebviewMessage"
+import { AudioType, FileInteraction } from "@roo/shared/WebviewMessage"
 import { getAllModes } from "@roo/shared/modes"
 
 import { useExtensionState } from "@src/context/ExtensionStateContext"
@@ -40,6 +40,7 @@ import TaskHeader from "./TaskHeader"
 import AutoApproveMenu from "./AutoApproveMenu"
 import SystemPromptWarning from "./SystemPromptWarning"
 import { CheckpointWarning } from "./CheckpointWarning"
+import FileStatsView from "./FileStatsView"
 
 export interface ChatViewProps {
 	isHidden: boolean
@@ -93,12 +94,25 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		historyPreviewCollapsed === undefined ? true : !historyPreviewCollapsed,
 	)
 
+	// State for file stats toggle
+	const [showFileStats, setShowFileStats] = useState(false)
+	const [fileInteractions, setFileInteractions] = useState<FileInteraction[]>([])
+
 	const toggleExpanded = useCallback(() => {
 		const newState = !isExpanded
 		setIsExpanded(newState)
 		// Send message to extension to persist the new collapsed state
 		vscode.postMessage({ type: "setHistoryPreviewCollapsed", bool: !newState })
 	}, [isExpanded])
+
+	// Toggle file stats view
+	const toggleFileStats = useCallback(() => {
+		setShowFileStats(prev => !prev)
+		// Request latest file interactions when turning on stats view
+		if (!showFileStats) {
+			vscode.postMessage({ type: "getFileInteractions" })
+		}
+	}, [showFileStats])
 
 	// Leaving this less safe version here since if the first message is not a
 	// task, then the extension is in a bad state and needs to be debugged (see
@@ -109,6 +123,72 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	// Has to be after api_req_finished are all reduced into api_req_started messages.
 	const apiMetrics = useMemo(() => getApiMetrics(modifiedMessages), [modifiedMessages])
+
+	// Extract file interactions from messages
+	const extractFileInteractions = useCallback((messages: ClineMessage[]) => {
+		const interactions: FileInteraction[] = []
+		
+		messages.forEach(message => {
+			if (message.type === "say" && message.say === "text") {
+				// Detect file operations in text messages
+				// This is a simplified example - you'd expand with more sophisticated detection
+				if (message.text && (
+					message.text.includes("read file") || 
+					message.text.includes("wrote file") ||
+					message.text.includes("created file") ||
+					message.text.includes("modified file")
+				)) {
+					const fileMatch = message.text.match(/(?:read|wrote|created|modified) file[:\s]+([^\s\n]+)/)
+					if (fileMatch && fileMatch[1]) {
+						interactions.push({
+							path: fileMatch[1],
+							operation: message.text.includes("read") ? "read" : 
+								message.text.includes("wrote") ? "write" : 
+								message.text.includes("created") ? "create" : "edit",
+							timestamp: message.ts,
+							success: true
+						})
+					}
+				}
+			} else if (message.type === "ask" && message.ask === "tool" && message.text) {
+				try {
+					const tool = JSON.parse(message.text) as ClineSayTool
+					// Process file tools
+					if (["readFile", "editedExistingFile", "newFileCreated", "appliedDiff"].includes(tool.tool)) {
+						let operation: "read" | "write" | "create" | "edit" = "read"
+						if (tool.tool === "readFile") operation = "read"
+						else if (tool.tool === "editedExistingFile") operation = "edit"
+						else if (tool.tool === "newFileCreated") operation = "create"
+						else if (tool.tool === "appliedDiff") operation = "write"
+						
+						interactions.push({
+							path: tool.path || "",
+							operation,
+							timestamp: message.ts,
+							success: true
+						})
+					}
+				} catch (e) {
+					// Fail silently if message text can't be parsed as JSON
+				}
+			}
+		})
+		
+		return interactions
+	}, [])
+
+	// Update file interactions whenever messages change
+	useEffect(() => {
+		const interactions = extractFileInteractions(modifiedMessages)
+		if (interactions.length > 0) {
+			setFileInteractions(interactions)
+			// Notify extension about the new interactions
+			vscode.postMessage({ 
+				type: "updateFileInteractions", 
+				fileInteractions: interactions 
+			})
+		}
+	}, [modifiedMessages, extractFileInteractions])
 
 	const [inputValue, setInputValue] = useState("")
 	const textAreaRef = useRef<HTMLTextAreaElement>(null)
@@ -560,6 +640,22 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						setSelectedImages((prevImages) =>
 							[...prevImages, ...newImages].slice(0, MAX_IMAGES_PER_MESSAGE),
 						)
+					}
+					break
+				case "fileInteractions":
+					// Update file interactions when received from extension
+					if (message.fileInteractions) {
+						setFileInteractions(message.fileInteractions)
+					}
+					break
+				case "toggleFileStats":
+					// Toggle file stats view when requested by TaskHeader
+					setShowFileStats(prev => !prev)
+					break
+				case "trackFileInteraction":
+					// Add a new file interaction from the backend
+					if (message.fileInteraction) {
+						setFileInteractions(prev => [...prev, message.fileInteraction])
 					}
 					break
 				case "invoke":
@@ -1203,6 +1299,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		},
 	}))
 
+	// Determine current view mode
+	const currentViewMode = showFileStats ? 'stats' : 'default'
+
 	return (
 		<div className={isHidden ? "hidden" : "fixed top-0 left-0 right-0 bottom-0 flex flex-col overflow-hidden"}>
 			{showAnnouncement && <Announcement hideAnnouncement={hideAnnouncement} />}
@@ -1218,6 +1317,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						totalCost={apiMetrics.totalCost}
 						contextTokens={apiMetrics.contextTokens}
 						onClose={handleTaskCloseButtonClick}
+						currentViewMode={currentViewMode}
+						onToggleStatsView={toggleFileStats}
 					/>
 
 					{hasSystemPromptOverride && (
@@ -1234,7 +1335,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				</>
 			) : (
 				<div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4">
-					{/* Moved Task Bar Header Here */}
+					{/* Task Bar Header */}
 					{tasks.length !== 0 && (
 						<div className="flex text-vscode-descriptionForeground w-full mx-auto px-5 pt-3">
 							<div className="flex items-center gap-1 cursor-pointer" onClick={toggleExpanded}>
@@ -1293,31 +1394,39 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 			{task && (
 				<>
-					<div className="grow flex" ref={scrollContainerRef}>
-						<Virtuoso
-							ref={virtuosoRef}
-							key={task.ts} // trick to make sure virtuoso re-renders when task changes, and we use initialTopMostItemIndex to start at the bottom
-							className="scrollable grow overflow-y-scroll"
-							components={{
-								Footer: () => <div className="h-[5px]" />, // Add empty padding at the bottom
-							}}
-							// increasing top by 3_000 to prevent jumping around when user collapses a row
-							increaseViewportBy={{ top: 3_000, bottom: Number.MAX_SAFE_INTEGER }} // hack to make sure the last message is always rendered to get truly perfect scroll to bottom animation when new messages are added (Number.MAX_SAFE_INTEGER is safe for arithmetic operations, which is all virtuoso uses this value for in src/sizeRangeSystem.ts)
-							data={groupedMessages} // messages is the raw format returned by extension, modifiedMessages is the manipulated structure that combines certain messages of related type, and visibleMessages is the filtered structure that removes messages that should not be rendered
-							itemContent={itemContent}
-							atBottomStateChange={(isAtBottom) => {
-								setIsAtBottom(isAtBottom)
-								if (isAtBottom) {
-									disableAutoScrollRef.current = false
-								}
-								setShowScrollToBottom(disableAutoScrollRef.current && !isAtBottom)
-							}}
-							atBottomThreshold={10} // anything lower causes issues with followOutput
-							initialTopMostItemIndex={groupedMessages.length - 1}
-						/>
-					</div>
+					{/* Main content area with conditional FileStatsView */}
+					{showFileStats ? (
+						<div className="grow w-full">
+							<FileStatsView fileInteractions={fileInteractions} />
+						</div>
+					) : (
+						<div className="grow flex" ref={scrollContainerRef}>
+							<Virtuoso
+								ref={virtuosoRef}
+								key={task.ts} // trick to make sure virtuoso re-renders when task changes, and we use initialTopMostItemIndex to start at the bottom
+								className="scrollable grow overflow-y-scroll"
+								components={{
+									Footer: () => <div className="h-[5px]" />, // Add empty padding at the bottom
+								}}
+								// increasing top by 3_000 to prevent jumping around when user collapses a row
+								increaseViewportBy={{ top: 3_000, bottom: Number.MAX_SAFE_INTEGER }} // hack to make sure the last message is always rendered to get truly perfect scroll to bottom animation when new messages are added (Number.MAX_SAFE_INTEGER is safe for arithmetic operations, which is all virtuoso uses this value for in src/sizeRangeSystem.ts)
+								data={groupedMessages} // messages is the raw format returned by extension, modifiedMessages is the manipulated structure that combines certain messages of related type, and visibleMessages is the filtered structure that removes messages that should not be rendered
+								itemContent={itemContent}
+								atBottomStateChange={(isAtBottom) => {
+									setIsAtBottom(isAtBottom)
+									if (isAtBottom) {
+										disableAutoScrollRef.current = false
+									}
+									setShowScrollToBottom(disableAutoScrollRef.current && !isAtBottom)
+								}}
+								atBottomThreshold={10} // anything lower causes issues with followOutput
+								initialTopMostItemIndex={groupedMessages.length - 1}
+							/>
+						</div>
+					)}
+					
 					<AutoApproveMenu />
-					{showScrollToBottom ? (
+					{showScrollToBottom && !showFileStats ? (
 						<div className="flex px-[15px] pt-[10px]">
 							<div
 								className="bg-[color-mix(in_srgb,_var(--vscode-toolbar-hoverBackground)_55%,_transparent)] rounded-[3px] overflow-hidden cursor-pointer flex justify-center items-center flex-1 h-[25px] hover:bg-[color-mix(in_srgb,_var(--vscode-toolbar-hoverBackground)_90%,_transparent)] active:bg-[color-mix(in_srgb,_var(--vscode-toolbar-hoverBackground)_70%,_transparent)]"
@@ -1332,15 +1441,15 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					) : (
 						<div
 							className={`flex ${
-								primaryButtonText || secondaryButtonText || isStreaming ? "px-[15px] pt-[10px]" : "p-0"
+								!showFileStats && (primaryButtonText || secondaryButtonText || isStreaming) ? "px-[15px] pt-[10px]" : "p-0"
 							} ${
-								primaryButtonText || secondaryButtonText || isStreaming
+								!showFileStats && (primaryButtonText || secondaryButtonText || isStreaming)
 									? enableButtons || (isStreaming && !didClickCancel)
 										? "opacity-100"
 										: "opacity-50"
 									: "opacity-0"
 							}`}>
-							{primaryButtonText && !isStreaming && (
+							{primaryButtonText && !isStreaming && !showFileStats && (
 								<VSCodeButton
 									appearance="primary"
 									disabled={!enableButtons}
@@ -1369,7 +1478,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 									{primaryButtonText}
 								</VSCodeButton>
 							)}
-							{(secondaryButtonText || isStreaming) && (
+							{(secondaryButtonText || isStreaming) && !showFileStats && (
 								<VSCodeButton
 									appearance="secondary"
 									disabled={!enableButtons && !(isStreaming && !didClickCancel)}
@@ -1398,14 +1507,14 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				ref={textAreaRef}
 				inputValue={inputValue}
 				setInputValue={setInputValue}
-				textAreaDisabled={textAreaDisabled}
+				textAreaDisabled={textAreaDisabled || showFileStats}
 				selectApiConfigDisabled={textAreaDisabled && clineAsk !== "api_req_failed"}
 				placeholderText={placeholderText}
 				selectedImages={selectedImages}
 				setSelectedImages={setSelectedImages}
 				onSend={() => handleSendMessage(inputValue, selectedImages)}
 				onSelectImages={selectImages}
-				shouldDisableImages={shouldDisableImages}
+				shouldDisableImages={shouldDisableImages || showFileStats}
 				onHeightChange={() => {
 					if (isAtBottom) {
 						scrollToBottomAuto()

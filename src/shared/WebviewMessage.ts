@@ -9,6 +9,17 @@ export type PromptMode = Mode | "enhance"
 
 export type AudioType = "notification" | "celebration" | "progress_loop"
 
+export interface FileInteraction {
+  path: string;
+  operation: 'read' | 'write' | 'edit' | 'create' | 'delete' | 'insert' | 'search_replace' | 'list' | 'search';
+  timestamp: number;
+  success?: boolean;
+  isOutsideWorkspace?: boolean;
+  taskId?: string;
+  content?: string; // Optional for content logging
+  diff?: string;    // Optional for diff logging
+}
+
 export interface WebviewMessage {
 	type:
 		| "apiConfiguration"
@@ -127,6 +138,11 @@ export interface WebviewMessage {
 		| "searchFiles"
 		| "toggleApiConfigPin"
 		| "setHistoryPreviewCollapsed"
+        | "fileInteractions"
+        | "fileInteractionHistory"
+        | "updateFileInteractionHistory"
+        | "requestFileInteractions"
+        | "toggleStatsView"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
@@ -155,6 +171,10 @@ export interface WebviewMessage {
 	hasSystemPromptOverride?: boolean
 	terminalOperation?: "continue" | "abort"
 	historyPreviewCollapsed?: boolean
+    fileInteraction?: FileInteraction
+    interactions?: FileInteraction[]
+    taskId?: string
+    history?: Record<string, FileInteraction[]>
 }
 
 export const checkoutDiffPayloadSchema = z.object({
