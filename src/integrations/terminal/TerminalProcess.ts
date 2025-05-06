@@ -254,6 +254,21 @@ export class TerminalProcess extends BaseTerminalProcess {
 		// so that api request stalls to let diagnostics catch up").
 		this.stopHotTimer()
 		this.emit("completed", this.removeEscapeSequences(this.fullOutput))
+
+		// Restore focus to the webview after terminal operation completes
+		const cline = this.terminal.taskId
+			? vscode.extensions.getExtension("RooVetGit.roo-code")?.exports?.getClineProvider?.()?.getCurrentCline?.()
+			: undefined
+
+		if (cline?.provider) {
+			// Use setTimeout to ensure focus restoration happens after terminal operation is fully complete
+			setTimeout(() => {
+				cline.provider.focusWebview().catch((error: Error) => {
+					console.error("[TerminalProcess] Error restoring focus to webview:", error)
+				})
+			}, 100)
+		}
+
 		this.emit("continue")
 	}
 
@@ -261,6 +276,21 @@ export class TerminalProcess extends BaseTerminalProcess {
 		this.emitRemainingBufferIfListening()
 		this.isListening = false
 		this.removeAllListeners("line")
+
+		// Restore focus to the webview after terminal operation is aborted or completed
+		const cline = this.terminal.taskId
+			? vscode.extensions.getExtension("RooVetGit.roo-code")?.exports?.getClineProvider?.()?.getCurrentCline?.()
+			: undefined
+
+		if (cline?.provider) {
+			// Use setTimeout to ensure focus restoration happens after terminal operation is fully complete
+			setTimeout(() => {
+				cline.provider.focusWebview().catch((error: Error) => {
+					console.error("[TerminalProcess] Error restoring focus to webview:", error)
+				})
+			}, 100)
+		}
+
 		this.emit("continue")
 	}
 
