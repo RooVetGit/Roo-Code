@@ -168,7 +168,7 @@ export class CodeIndexManager {
 
 			if (shouldStartOrRestartIndexing) {
 				console.log("[CodeIndexManager] Starting/restarting indexing due to configuration changes")
-				await this.startIndexing()
+				this.startIndexing()
 			} else {
 				console.log(
 					"[CodeIndexManager] Indexing not started/restarted (requiresRestart:",
