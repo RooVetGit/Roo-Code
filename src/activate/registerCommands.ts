@@ -185,7 +185,7 @@ export const openClineInNewTab = async ({ context, outputChannel }: Omit<Registe
 	// don't need to use that event).
 	// https://github.com/microsoft/vscode-extension-samples/blob/main/webview-sample/src/extension.ts
 	const contextProxy = await ContextProxy.getInstance(context)
-	const codeIndexManager = CodeIndexManager.getInstance(context, contextProxy)
+	const codeIndexManager = CodeIndexManager.getInstance(context)
 	const tabProvider = new ClineProvider(context, outputChannel, "editor", contextProxy, codeIndexManager)
 	const lastCol = Math.max(...vscode.window.visibleTextEditors.map((editor) => editor.viewColumn || 0))
 

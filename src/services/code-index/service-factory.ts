@@ -21,7 +21,7 @@ export class CodeIndexServiceFactory {
 	/**
 	 * Creates an embedder instance based on the current configuration.
 	 */
-	protected createEmbedder(): IEmbedder {
+	public createEmbedder(): IEmbedder {
 		const config = this.configManager.getConfig()
 
 		const provider = config.embedderProvider as EmbedderProvider
@@ -44,7 +44,7 @@ export class CodeIndexServiceFactory {
 	/**
 	 * Creates a vector store instance using the current configuration.
 	 */
-	protected createVectorStore(): IVectorStore {
+	public createVectorStore(): IVectorStore {
 		const config = this.configManager.getConfig()
 
 		const provider = config.embedderProvider as EmbedderProvider
@@ -75,7 +75,7 @@ export class CodeIndexServiceFactory {
 	/**
 	 * Creates a directory scanner instance with its required dependencies.
 	 */
-	protected createDirectoryScanner(
+	public createDirectoryScanner(
 		embedder: IEmbedder,
 		vectorStore: IVectorStore,
 		parser: ICodeParser,
@@ -86,7 +86,7 @@ export class CodeIndexServiceFactory {
 	/**
 	 * Creates a file watcher instance with its required dependencies.
 	 */
-	protected createFileWatcher(
+	public createFileWatcher(
 		context: vscode.ExtensionContext,
 		embedder: IEmbedder,
 		vectorStore: IVectorStore,

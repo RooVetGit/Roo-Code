@@ -862,7 +862,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		// Load CodeIndexManager configuration after provider settings are updated
 		if (this.codeIndexManager) {
-			await this.codeIndexManager.loadConfiguration()
+			this.codeIndexManager.dispose()
+			await this.codeIndexManager.initialize(this.contextProxy)
 		}
 	}
 
