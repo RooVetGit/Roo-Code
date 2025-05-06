@@ -18,13 +18,13 @@ export const providerNames = [
 	"lmstudio",
 	"gemini",
 	"openai-native",
-	"xai",
 	"mistral",
 	"deepseek",
 	"unbound",
 	"requesty",
 	"human-relay",
 	"fake-ai",
+	"xai",
 ] as const
 
 export const providerNamesSchema = z.enum(providerNames)
@@ -40,19 +40,6 @@ export const toolGroups = ["read", "edit", "browser", "command", "mcp", "modes"]
 export const toolGroupsSchema = z.enum(toolGroups)
 
 export type ToolGroup = z.infer<typeof toolGroupsSchema>
-
-/**
- * CheckpointStorage
- */
-
-export const checkpointStorages = ["task", "workspace"] as const
-
-export const checkpointStoragesSchema = z.enum(checkpointStorages)
-
-export type CheckpointStorage = z.infer<typeof checkpointStoragesSchema>
-
-export const isCheckpointStorage = (value: string): value is CheckpointStorage =>
-	checkpointStorages.includes(value as CheckpointStorage)
 
 /**
  * Language
@@ -94,22 +81,48 @@ export const telemetrySettingsSchema = z.enum(telemetrySettings)
 export type TelemetrySetting = z.infer<typeof telemetrySettingsSchema>
 
 /**
+ * ReasoningEffort
+ */
+
+export const reasoningEfforts = ["low", "medium", "high"] as const
+
+export const reasoningEffortsSchema = z.enum(reasoningEfforts)
+
+export type ReasoningEffort = z.infer<typeof reasoningEffortsSchema>
+
+/**
  * ModelInfo
  */
 
 export const modelInfoSchema = z.object({
 	maxTokens: z.number().nullish(),
+	maxThinkingTokens: z.number().nullish(),
 	contextWindow: z.number(),
 	supportsImages: z.boolean().optional(),
 	supportsComputerUse: z.boolean().optional(),
 	supportsPromptCache: z.boolean(),
+	isPromptCacheOptional: z.boolean().optional(),
 	inputPrice: z.number().optional(),
 	outputPrice: z.number().optional(),
 	cacheWritesPrice: z.number().optional(),
 	cacheReadsPrice: z.number().optional(),
 	description: z.string().optional(),
-	reasoningEffort: z.enum(["low", "medium", "high"]).optional(),
+	reasoningEffort: reasoningEffortsSchema.optional(),
 	thinking: z.boolean().optional(),
+	minTokensPerCachePoint: z.number().optional(),
+	maxCachePoints: z.number().optional(),
+	cachableFields: z.array(z.string()).optional(),
+	tiers: z
+		.array(
+			z.object({
+				contextWindow: z.number(),
+				inputPrice: z.number().optional(),
+				outputPrice: z.number().optional(),
+				cacheWritesPrice: z.number().optional(),
+				cacheReadsPrice: z.number().optional(),
+			}),
+		)
+		.optional(),
 })
 
 export type ModelInfo = z.infer<typeof modelInfoSchema>
@@ -141,6 +154,7 @@ export const historyItemSchema = z.object({
 	cacheReads: z.number().optional(),
 	totalCost: z.number(),
 	size: z.number().optional(),
+	workspace: z.string().optional(),
 })
 
 export type HistoryItem = z.infer<typeof historyItemSchema>
@@ -269,6 +283,29 @@ export const customSupportPromptsSchema = z.record(z.string(), z.string().option
 export type CustomSupportPrompts = z.infer<typeof customSupportPromptsSchema>
 
 /**
+ * CommandExecutionStatus
+ */
+
+export const commandExecutionStatusSchema = z.discriminatedUnion("status", [
+	z.object({
+		executionId: z.string(),
+		status: z.literal("running"),
+		pid: z.number().optional(),
+	}),
+	z.object({
+		executionId: z.string(),
+		status: z.literal("exited"),
+		exitCode: z.number().optional(),
+	}),
+	z.object({
+		executionId: z.string(),
+		status: z.literal("fallback"),
+	}),
+])
+
+export type CommandExecutionStatus = z.infer<typeof commandExecutionStatusSchema>
+
+/**
  * ExperimentId
  */
 
@@ -318,7 +355,6 @@ export const providerSettingsSchema = z.object({
 	awsRegion: z.string().optional(),
 	awsUseCrossRegionInference: z.boolean().optional(),
 	awsUsePromptCache: z.boolean().optional(),
-	awspromptCacheId: z.string().optional(),
 	awsProfile: z.string().optional(),
 	awsUseProfile: z.boolean().optional(),
 	awsCustomArn: z.string().optional(),
@@ -330,12 +366,15 @@ export const providerSettingsSchema = z.object({
 	// OpenAI
 	openAiBaseUrl: z.string().optional(),
 	openAiApiKey: z.string().optional(),
+	openAiHostHeader: z.string().optional(),
+	openAiLegacyFormat: z.boolean().optional(),
 	openAiR1FormatEnabled: z.boolean().optional(),
 	openAiModelId: z.string().optional(),
-	openAiCustomModelInfo: modelInfoSchema.optional(),
+	openAiCustomModelInfo: modelInfoSchema.nullish(),
 	openAiUseAzure: z.boolean().optional(),
 	azureApiVersion: z.string().optional(),
 	openAiStreamingEnabled: z.boolean().optional(),
+	enableReasoningEffort: z.boolean().optional(),
 	// Ollama
 	ollamaModelId: z.string().optional(),
 	ollamaBaseUrl: z.string().optional(),
@@ -359,8 +398,6 @@ export const providerSettingsSchema = z.object({
 	// OpenAI Native
 	openAiNativeApiKey: z.string().optional(),
 	openAiNativeBaseUrl: z.string().optional(),
-	// XAI
-	xaiApiKey: z.string().optional(),
 	// Mistral
 	mistralApiKey: z.string().optional(),
 	mistralCodestralUrl: z.string().optional(),
@@ -373,13 +410,18 @@ export const providerSettingsSchema = z.object({
 	// Requesty
 	requestyApiKey: z.string().optional(),
 	requestyModelId: z.string().optional(),
+	// X.AI (Grok)
+	xaiApiKey: z.string().optional(),
 	// Claude 3.7 Sonnet Thinking
-	modelMaxTokens: z.number().optional(), // Currently only used by Anthropic hybrid thinking models.
-	modelMaxThinkingTokens: z.number().optional(), // Currently only used by Anthropic hybrid thinking models.
+	modelMaxTokens: z.number().optional(),
+	modelMaxThinkingTokens: z.number().optional(),
 	// Generic
 	includeMaxTokens: z.boolean().optional(),
+	reasoningEffort: reasoningEffortsSchema.optional(),
+	promptCachingEnabled: z.boolean().optional(),
+	diffEnabled: z.boolean().optional(),
+	fuzzyMatchThreshold: z.number().optional(),
 	modelTemperature: z.number().nullish(),
-	reasoningEffort: z.enum(["low", "medium", "high"]).optional(),
 	rateLimitSeconds: z.number().optional(),
 	// Fake AI
 	fakeAi: z.unknown().optional(),
@@ -412,7 +454,6 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	awsRegion: undefined,
 	awsUseCrossRegionInference: undefined,
 	awsUsePromptCache: undefined,
-	awspromptCacheId: undefined,
 	awsProfile: undefined,
 	awsUseProfile: undefined,
 	awsCustomArn: undefined,
@@ -424,14 +465,15 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	// OpenAI
 	openAiBaseUrl: undefined,
 	openAiApiKey: undefined,
+	openAiHostHeader: undefined,
+	openAiLegacyFormat: undefined,
 	openAiR1FormatEnabled: undefined,
 	openAiModelId: undefined,
 	openAiCustomModelInfo: undefined,
 	openAiUseAzure: undefined,
 	azureApiVersion: undefined,
 	openAiStreamingEnabled: undefined,
-	// xAI
-	xaiApiKey: undefined,
+	enableReasoningEffort: undefined,
 	// Ollama
 	ollamaModelId: undefined,
 	ollamaBaseUrl: undefined,
@@ -464,11 +506,16 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	modelMaxThinkingTokens: undefined,
 	// Generic
 	includeMaxTokens: undefined,
-	modelTemperature: undefined,
 	reasoningEffort: undefined,
+	promptCachingEnabled: undefined,
+	diffEnabled: undefined,
+	fuzzyMatchThreshold: undefined,
+	modelTemperature: undefined,
 	rateLimitSeconds: undefined,
 	// Fake AI
 	fakeAi: undefined,
+	// X.AI (Grok)
+	xaiApiKey: undefined,
 }
 
 export const PROVIDER_SETTINGS_KEYS = Object.keys(providerSettingsRecord) as Keys<ProviderSettings>[]
@@ -506,9 +553,9 @@ export const globalSettingsSchema = z.object({
 	screenshotQuality: z.number().optional(),
 	remoteBrowserEnabled: z.boolean().optional(),
 	remoteBrowserHost: z.string().optional(),
+	cachedChromeHostUrl: z.string().optional(),
 
 	enableCheckpoints: z.boolean().optional(),
-	checkpointStorage: checkpointStoragesSchema.optional(),
 
 	ttsEnabled: z.boolean().optional(),
 	ttsSpeed: z.number().optional(),
@@ -522,13 +569,16 @@ export const globalSettingsSchema = z.object({
 
 	terminalOutputLineLimit: z.number().optional(),
 	terminalShellIntegrationTimeout: z.number().optional(),
+	terminalShellIntegrationDisabled: z.boolean().optional(),
 	terminalCommandDelay: z.number().optional(),
 	terminalPowershellCounter: z.boolean().optional(),
 	terminalZshClearEolMark: z.boolean().optional(),
 	terminalZshOhMy: z.boolean().optional(),
 	terminalZshP10k: z.boolean().optional(),
 	terminalZdotdir: z.boolean().optional(),
+	terminalCompressProgressBar: z.boolean().optional(),
 
+	rateLimitSeconds: z.number().optional(),
 	diffEnabled: z.boolean().optional(),
 	fuzzyMatchThreshold: z.number().optional(),
 	experiments: experimentsSchema.optional(),
@@ -546,6 +596,7 @@ export const globalSettingsSchema = z.object({
 	customModePrompts: customModePromptsSchema.optional(),
 	customSupportPrompts: customSupportPromptsSchema.optional(),
 	enhancementApiConfigId: z.string().optional(),
+	historyPreviewCollapsed: z.boolean().optional(),
 })
 
 export type GlobalSettings = z.infer<typeof globalSettingsSchema>
@@ -583,7 +634,6 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	remoteBrowserHost: undefined,
 
 	enableCheckpoints: undefined,
-	checkpointStorage: undefined,
 
 	ttsEnabled: undefined,
 	ttsSpeed: undefined,
@@ -597,13 +647,16 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 
 	terminalOutputLineLimit: undefined,
 	terminalShellIntegrationTimeout: undefined,
+	terminalShellIntegrationDisabled: undefined,
 	terminalCommandDelay: undefined,
 	terminalPowershellCounter: undefined,
 	terminalZshClearEolMark: undefined,
 	terminalZshOhMy: undefined,
 	terminalZshP10k: undefined,
 	terminalZdotdir: undefined,
+	terminalCompressProgressBar: undefined,
 
+	rateLimitSeconds: undefined,
 	diffEnabled: undefined,
 	fuzzyMatchThreshold: undefined,
 	experiments: undefined,
@@ -621,6 +674,8 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	customModePrompts: undefined,
 	customSupportPrompts: undefined,
 	enhancementApiConfigId: undefined,
+	cachedChromeHostUrl: undefined,
+	historyPreviewCollapsed: undefined,
 }
 
 export const GLOBAL_SETTINGS_KEYS = Object.keys(globalSettingsRecord) as Keys<GlobalSettings>[]
@@ -654,6 +709,7 @@ export type SecretState = Pick<
 	| "mistralApiKey"
 	| "unboundApiKey"
 	| "requestyApiKey"
+	| "xaiApiKey"
 >
 
 type SecretStateRecord = Record<Keys<SecretState>, undefined>
@@ -672,6 +728,7 @@ const secretStateRecord: SecretStateRecord = {
 	mistralApiKey: undefined,
 	unboundApiKey: undefined,
 	requestyApiKey: undefined,
+	xaiApiKey: undefined,
 }
 
 export const SECRET_STATE_KEYS = Object.keys(secretStateRecord) as Keys<SecretState>[]
@@ -749,6 +806,7 @@ export type ClineSay = z.infer<typeof clineSaySchema>
  */
 
 export const toolProgressStatusSchema = z.object({
+	id: z.string().optional(),
 	icon: z.string().optional(),
 	text: z.string().optional(),
 })
@@ -798,7 +856,6 @@ export const toolNames = [
 	"execute_command",
 	"read_file",
 	"write_to_file",
-	"append_to_file",
 	"apply_diff",
 	"insert_content",
 	"search_and_replace",

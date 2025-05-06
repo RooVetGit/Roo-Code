@@ -29,6 +29,8 @@ export const providerNames = [
 	"human-relay",
 	"fake-ai",
 	"xai",
+	"groq",
+	"chutes",
 ] as const
 
 export const providerNamesSchema = z.enum(providerNames)
@@ -293,8 +295,14 @@ export type CustomSupportPrompts = z.infer<typeof customSupportPromptsSchema>
 export const commandExecutionStatusSchema = z.discriminatedUnion("status", [
 	z.object({
 		executionId: z.string(),
-		status: z.literal("running"),
+		status: z.literal("started"),
 		pid: z.number().optional(),
+		command: z.string(),
+	}),
+	z.object({
+		executionId: z.string(),
+		status: z.literal("output"),
+		output: z.string(),
 	}),
 	z.object({
 		executionId: z.string(),
@@ -358,7 +366,6 @@ export const providerSettingsSchema = z.object({
 	awsRegion: z.string().optional(),
 	awsUseCrossRegionInference: z.boolean().optional(),
 	awsUsePromptCache: z.boolean().optional(),
-	awspromptCacheId: z.string().optional(),
 	awsProfile: z.string().optional(),
 	awsUseProfile: z.boolean().optional(),
 	awsCustomArn: z.string().optional(),
@@ -370,7 +377,6 @@ export const providerSettingsSchema = z.object({
 	// OpenAI
 	openAiBaseUrl: z.string().optional(),
 	openAiApiKey: z.string().optional(),
-	openAiHostHeader: z.string().optional(),
 	openAiLegacyFormat: z.boolean().optional(),
 	openAiR1FormatEnabled: z.boolean().optional(),
 	openAiModelId: z.string().optional(),
@@ -379,6 +385,8 @@ export const providerSettingsSchema = z.object({
 	azureApiVersion: z.string().optional(),
 	openAiStreamingEnabled: z.boolean().optional(),
 	enableReasoningEffort: z.boolean().optional(),
+	openAiHostHeader: z.string().optional(), // Keep temporarily for backward compatibility during migration
+	openAiHeaders: z.record(z.string(), z.string()).optional(),
 	// Ollama
 	ollamaModelId: z.string().optional(),
 	ollamaBaseUrl: z.string().optional(),
@@ -416,6 +424,10 @@ export const providerSettingsSchema = z.object({
 	requestyModelId: z.string().optional(),
 	// X.AI (Grok)
 	xaiApiKey: z.string().optional(),
+	// Groq
+	groqApiKey: z.string().optional(),
+	// Chutes AI
+	chutesApiKey: z.string().optional(),
 	// Claude 3.7 Sonnet Thinking
 	modelMaxTokens: z.number().optional(),
 	modelMaxThinkingTokens: z.number().optional(),
@@ -458,7 +470,6 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	awsRegion: undefined,
 	awsUseCrossRegionInference: undefined,
 	awsUsePromptCache: undefined,
-	awspromptCacheId: undefined,
 	awsProfile: undefined,
 	awsUseProfile: undefined,
 	awsCustomArn: undefined,
@@ -470,7 +481,6 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	// OpenAI
 	openAiBaseUrl: undefined,
 	openAiApiKey: undefined,
-	openAiHostHeader: undefined,
 	openAiLegacyFormat: undefined,
 	openAiR1FormatEnabled: undefined,
 	openAiModelId: undefined,
@@ -479,6 +489,8 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	azureApiVersion: undefined,
 	openAiStreamingEnabled: undefined,
 	enableReasoningEffort: undefined,
+	openAiHostHeader: undefined, // Keep temporarily for backward compatibility during migration
+	openAiHeaders: undefined,
 	// Ollama
 	ollamaModelId: undefined,
 	ollamaBaseUrl: undefined,
@@ -521,6 +533,10 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	fakeAi: undefined,
 	// X.AI (Grok)
 	xaiApiKey: undefined,
+	// Groq
+	groqApiKey: undefined,
+	// Chutes AI
+	chutesApiKey: undefined,
 }
 
 export const PROVIDER_SETTINGS_KEYS = Object.keys(providerSettingsRecord) as Keys<ProviderSettings>[]
@@ -713,6 +729,8 @@ export type SecretState = Pick<
 	| "unboundApiKey"
 	| "requestyApiKey"
 	| "xaiApiKey"
+	| "groqApiKey"
+	| "chutesApiKey"
 >
 
 type SecretStateRecord = Record<Keys<SecretState>, undefined>
@@ -732,6 +750,8 @@ const secretStateRecord: SecretStateRecord = {
 	unboundApiKey: undefined,
 	requestyApiKey: undefined,
 	xaiApiKey: undefined,
+	groqApiKey: undefined,
+	chutesApiKey: undefined,
 }
 
 export const SECRET_STATE_KEYS = Object.keys(secretStateRecord) as Keys<SecretState>[]
@@ -809,7 +829,6 @@ export type ClineSay = z.infer<typeof clineSaySchema>
  */
 
 export const toolProgressStatusSchema = z.object({
-	id: z.string().optional(),
 	icon: z.string().optional(),
 	text: z.string().optional(),
 })
@@ -850,6 +869,10 @@ export const tokenUsageSchema = z.object({
 })
 
 export type TokenUsage = z.infer<typeof tokenUsageSchema>
+
+/**
+ * ToolName
+ */
 
 export const toolNames = [
 	"execute_command",

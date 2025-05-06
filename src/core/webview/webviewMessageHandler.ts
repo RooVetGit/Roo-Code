@@ -6,7 +6,7 @@ import * as vscode from "vscode"
 import { ClineProvider } from "./ClineProvider"
 import { Language, ApiConfigMeta } from "../../schemas"
 import { changeLanguage, t } from "../../i18n"
-import { ApiConfiguration } from "../../shared/api"
+import { ApiConfiguration, RouterName, toRouterName } from "../../shared/api"
 import { supportPrompt } from "../../shared/support-prompt"
 
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
@@ -32,12 +32,12 @@ import { openMention } from "../mentions"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { TelemetrySetting } from "../../shared/TelemetrySetting"
 import { getWorkspacePath } from "../../utils/path"
-import { Mode, defaultModeSlug, getModeBySlug, getGroupName } from "../../shared/modes"
-import { SYSTEM_PROMPT } from "../prompts/system"
-import { buildApiHandler } from "../../api"
+import { Mode, defaultModeSlug } from "../../shared/modes"
 import { GlobalState } from "../../schemas"
-import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
-import { getModels } from "../../api/providers/fetchers/cache"
+import { getModels, flushModels } from "../../api/providers/fetchers/cache"
+import { generateSystemPrompt } from "./generateSystemPrompt"
+
+const ALLOWED_VSCODE_SETTINGS = new Set(["terminal.integrated.inheritEnv"])
 
 export const webviewMessageHandler = async (provider: ClineProvider, message: WebviewMessage) => {
 	// Utility functions provided for concise get/update of global state via contextProxy API.
@@ -128,14 +128,9 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			provider.isViewLaunched = true
 			break
 		case "newTask":
-			// Code that should run in response to the hello message command
-			//vscode.window.showInformationMessage(message.text!)
-
-			// Send a message to our webview.
-			// You can send any JSON serializable data.
-			// Could also do this in extension .ts
-			//provider.postMessageToWebview({ type: "text", text: `Extension: ${Date.now()}` })
-			// initializing new instance of Cline will make sure that any agentically running promises in old instance don't affect our new task. this essentially creates a fresh slate for the new task
+			// Initializing new instance of Cline will make sure that any
+			// agentically running promises in old instance don't affect our new
+			// task. This essentially creates a fresh slate for the new task.
 			await provider.initClineWithTask(message.text, message.images)
 			break
 		case "apiConfiguration":
@@ -287,12 +282,18 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "resetState":
 			await provider.resetState()
 			break
+		case "flushRouterModels":
+			const routerName: RouterName = toRouterName(message.text)
+			await flushModels(routerName)
+			break
 		case "requestRouterModels":
+			const { apiConfiguration } = await provider.getState()
+
 			const [openRouterModels, requestyModels, glamaModels, unboundModels] = await Promise.all([
-				getModels("openrouter"),
-				getModels("requesty"),
-				getModels("glama"),
-				getModels("unbound"),
+				getModels("openrouter", apiConfiguration.openRouterApiKey),
+				getModels("requesty", apiConfiguration.requestyApiKey),
+				getModels("glama", apiConfiguration.glamaApiKey),
+				getModels("unbound", apiConfiguration.unboundApiKey),
 			])
 
 			provider.postMessageToWebview({
@@ -310,7 +311,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				const openAiModels = await getOpenAiModels(
 					message?.values?.baseUrl,
 					message?.values?.apiKey,
-					message?.values?.hostHeader,
+					message?.values?.openAiHeaders,
 				)
 
 				provider.postMessageToWebview({ type: "openAiModels", openAiModels })
@@ -336,7 +337,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			openImage(message.text!)
 			break
 		case "openFile":
-			openFile(message.text!, message.values as { create?: boolean; content?: string })
+			openFile(message.text!, message.values as { create?: boolean; content?: string; line?: number })
 			break
 		case "openMention":
 			openMention(message.text)
@@ -375,16 +376,29 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		case "allowedCommands":
 			await provider.context.globalState.update("allowedCommands", message.commands)
-			// Also update workspace settings
+
+			// Also update workspace settings.
 			await vscode.workspace
 				.getConfiguration("roo-cline")
 				.update("allowedCommands", message.commands, vscode.ConfigurationTarget.Global)
+
 			break
+		case "openCustomModesSettings": {
+			const customModesFilePath = await provider.customModesManager.getCustomModesFilePath()
+
+			if (customModesFilePath) {
+				openFile(customModesFilePath)
+			}
+
+			break
+		}
 		case "openMcpSettings": {
 			const mcpSettingsFilePath = await provider.getMcpHub()?.getMcpSettingsFilePath()
+
 			if (mcpSettingsFilePath) {
 				openFile(mcpSettingsFilePath)
 			}
+
 			break
 		}
 		case "openProjectMcpSettings": {
@@ -400,20 +414,16 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			try {
 				await fs.mkdir(rooDir, { recursive: true })
 				const exists = await fileExistsAtPath(mcpPath)
+
 				if (!exists) {
 					await fs.writeFile(mcpPath, JSON.stringify({ mcpServers: {} }, null, 2))
 				}
+
 				await openFile(mcpPath)
 			} catch (error) {
 				vscode.window.showErrorMessage(t("common:errors.create_mcp_json", { error: `${error}` }))
 			}
-			break
-		}
-		case "openCustomModesSettings": {
-			const customModesFilePath = await provider.customModesManager.getCustomModesFilePath()
-			if (customModesFilePath) {
-				openFile(customModesFilePath)
-			}
+
 			break
 		}
 		case "deleteMcpServer": {
@@ -559,6 +569,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			if (!message.text) {
 				// Use testBrowserConnection for auto-discovery
 				const chromeHostUrl = await discoverChromeHostUrl()
+
 				if (chromeHostUrl) {
 					// Send the result back to the webview
 					await provider.postMessageToWebview({
@@ -578,6 +589,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 				// Test the provided URL
 				const customHostUrl = message.text
 				const hostIsValid = await tryChromeHostUrl(message.text)
+
 				// Send the result back to the webview
 				await provider.postMessageToWebview({
 					type: "browserConnectionResult",
@@ -591,6 +603,42 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "fuzzyMatchThreshold":
 			await updateGlobalState("fuzzyMatchThreshold", message.value)
 			await provider.postStateToWebview()
+			break
+		case "updateVSCodeSetting": {
+			const { setting, value } = message
+
+			if (setting !== undefined && value !== undefined) {
+				if (ALLOWED_VSCODE_SETTINGS.has(setting)) {
+					await vscode.workspace.getConfiguration().update(setting, value, true)
+				} else {
+					vscode.window.showErrorMessage(`Cannot update restricted VSCode setting: ${setting}`)
+				}
+			}
+
+			break
+		}
+		case "getVSCodeSetting":
+			const { setting } = message
+
+			if (setting) {
+				try {
+					await provider.postMessageToWebview({
+						type: "vsCodeSetting",
+						setting,
+						value: vscode.workspace.getConfiguration().get(setting),
+					})
+				} catch (error) {
+					console.error(`Failed to get VSCode setting ${message.setting}:`, error)
+
+					await provider.postMessageToWebview({
+						type: "vsCodeSetting",
+						setting,
+						error: `Failed to get setting: ${error.message}`,
+						value: undefined,
+					})
+				}
+			}
+
 			break
 		case "alwaysApproveResubmit":
 			await updateGlobalState("alwaysApproveResubmit", message.bool ?? false)
@@ -1258,69 +1306,4 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		}
 	}
-}
-
-const generateSystemPrompt = async (provider: ClineProvider, message: WebviewMessage) => {
-	const {
-		apiConfiguration,
-		customModePrompts,
-		customInstructions,
-		browserViewportSize,
-		diffEnabled,
-		mcpEnabled,
-		fuzzyMatchThreshold,
-		experiments,
-		enableMcpServerCreation,
-		browserToolEnabled,
-		language,
-	} = await provider.getState()
-
-	const diffStrategy = new MultiSearchReplaceDiffStrategy(fuzzyMatchThreshold)
-
-	const cwd = provider.cwd
-
-	const mode = message.mode ?? defaultModeSlug
-	const customModes = await provider.customModesManager.getCustomModes()
-
-	const rooIgnoreInstructions = provider.getCurrentCline()?.rooIgnoreController?.getInstructions()
-
-	// Determine if browser tools can be used based on model support, mode, and user settings
-	let modelSupportsComputerUse = false
-
-	// Create a temporary API handler to check if the model supports computer use
-	// This avoids relying on an active Cline instance which might not exist during preview
-	try {
-		const tempApiHandler = buildApiHandler(apiConfiguration)
-		modelSupportsComputerUse = tempApiHandler.getModel().info.supportsComputerUse ?? false
-	} catch (error) {
-		console.error("Error checking if model supports computer use:", error)
-	}
-
-	// Check if the current mode includes the browser tool group
-	const modeConfig = getModeBySlug(mode, customModes)
-	const modeSupportsBrowser = modeConfig?.groups.some((group) => getGroupName(group) === "browser") ?? false
-
-	// Only enable browser tools if the model supports it, the mode includes browser tools,
-	// and browser tools are enabled in settings
-	const canUseBrowserTool = modelSupportsComputerUse && modeSupportsBrowser && (browserToolEnabled ?? true)
-
-	const systemPrompt = await SYSTEM_PROMPT(
-		provider.context,
-		cwd,
-		canUseBrowserTool,
-		mcpEnabled ? provider.getMcpHub() : undefined,
-		diffStrategy,
-		browserViewportSize ?? "900x600",
-		mode,
-		customModePrompts,
-		customModes,
-		customInstructions,
-		diffEnabled,
-		experiments,
-		enableMcpServerCreation,
-		language,
-		rooIgnoreInstructions,
-	)
-
-	return systemPrompt
 }

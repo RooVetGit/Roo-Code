@@ -90,6 +90,7 @@
 		}
 	},
 	"selectMode": "选择交互模式",
+	"selectApiConfig": "选择 API 配置",
 	"enhancePrompt": "增强提示词",
 	"addImages": "添加图片到消息",
 	"sendMessage": "发送消息",
@@ -201,12 +202,12 @@
 		"copyToInput": "复制到输入框（或按住Shift点击）"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.15 已发布",
-		"description": "Roo Code 3.15 带来基于您反馈的新功能和改进。",
+		"title": "🎉 Roo Code 3.16 已发布",
+		"description": "Roo Code 3.16 带来基于您反馈的新功能和改进。",
 		"whatsNew": "新特性",
-		"feature1": "<bold>Vertex 提示词缓存</bold>: 为 Vertex AI 添加提示词缓存支持，提高响应速度并降低 API 费用",
-		"feature2": "<bold>终端备选方案</bold>: 实现 VSCode 终端 shell 集成失败时的备选机制",
-		"feature3": "<bold>代码片段优化</bold>: 增强聊天界面中代码片段的渲染和交互体验",
+		"feature1": "<bold>Groq 和 Chutes API 提供商</bold>: 添加对 Groq 和 Chutes API 提供商的支持（感谢 @shariqriazz！）",
+		"feature2": "<bold>可点击代码引用</bold>: 模型响应中的代码引用现在可直接导航到源代码行（感谢 @KJ7LNW！）",
+		"feature3": "<bold>MCP 稳定性改进</bold>: 修复多个 bug 以增强 MCP 集成的稳定性",
 		"hideButton": "隐藏公告",
 		"detailsDiscussLinks": "在 <discordLink>Discord</discordLink> 和 <redditLink>Reddit</redditLink> 获取更多详情并参与讨论 🚀"
 	},
@@ -232,11 +233,19 @@
 			"close": "关闭浏览器"
 		}
 	},
+	"codeblock": {
+		"tooltips": {
+			"expand": "展开代码块",
+			"collapse": "收起代码块",
+			"enable_wrap": "启用自动换行",
+			"disable_wrap": "禁用自动换行",
+			"copy_code": "复制代码"
+		}
+	},
 	"systemPromptWarning": "警告：自定义系统提示词覆盖已激活。这可能严重破坏功能并导致不可预测的行为。",
-	"selectApiConfig": "选择 API 配置",
 	"shellIntegration": {
-		"title": "Shell 集成不可用",
-		"description": "您的命令正在没有 VSCode shell 集成的情况下执行。您可以在 <settingsLink>Roo Code 设置</settingsLink> 的 <strong>终端</strong> 部分重新启用 shell 集成。",
+		"title": "命令执行警告",
+		"description": "您的命令正在没有 VSCode 终端 shell 集成的情况下执行。要隐藏此警告，您可以在 <settingsLink>Roo Code 设置</settingsLink>的 <strong>Terminal</strong> 部分禁用 shell 集成，或使用下方链接排查 VSCode 终端集成问题。",
 		"troubleshooting": "点击此处查看 shell 集成文档。"
 	}
 }

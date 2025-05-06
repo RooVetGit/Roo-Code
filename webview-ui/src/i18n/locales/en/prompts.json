@@ -26,7 +26,8 @@
 			"browser": "Use Browser",
 			"command": "Run Commands",
 			"mcp": "Use MCP"
-		}
+		},
+		"noTools": "None"
 	},
 	"roleDefinition": {
 		"title": "Role Definition",
