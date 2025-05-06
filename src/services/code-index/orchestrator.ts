@@ -2,8 +2,7 @@ import * as vscode from "vscode"
 import * as path from "path"
 import { CodeIndexConfigManager } from "./config-manager"
 import { CodeIndexStateManager, IndexingState } from "./state-manager"
-import { CodeIndexServiceFactory } from "./service-factory"
-import { FileProcessingResult, IFileWatcher, IVectorStore } from "./interfaces"
+import { FileProcessingResult, IFileWatcher, IVectorStore, IEmbedder, ICodeParser } from "./interfaces"
 import { DirectoryScanner } from "./processors"
 import { CacheManager } from "./cache-manager"
 
@@ -11,30 +10,26 @@ import { CacheManager } from "./cache-manager"
  * Manages the code indexing workflow, coordinating between different services and managers.
  */
 export class CodeIndexOrchestrator {
-	private _fileWatcher?: IFileWatcher
 	private _fileWatcherSubscriptions: vscode.Disposable[] = []
 	private _isProcessing: boolean = false
-	private _scanner?: DirectoryScanner
-	private _vectorStore?: IVectorStore
 
 	constructor(
 		private readonly configManager: CodeIndexConfigManager,
 		private readonly stateManager: CodeIndexStateManager,
-		private readonly serviceFactory: CodeIndexServiceFactory,
 		private readonly context: vscode.ExtensionContext,
 		private readonly workspacePath: string,
 		private readonly cacheManager: CacheManager,
+		private readonly embedder: IEmbedder,
+		private readonly vectorStore: IVectorStore,
+		private readonly parser: ICodeParser,
+		private readonly scanner: DirectoryScanner,
+		private readonly fileWatcher: IFileWatcher,
 	) {}
 
 	/**
 	 * Starts the file watcher if not already running.
 	 */
 	private async _startWatcher(): Promise<void> {
-		if (this._fileWatcher) {
-			console.log("[CodeIndexOrchestrator] File watcher already running.")
-			return
-		}
-
 		if (!this.configManager.isFeatureConfigured) {
 			throw new Error("Cannot start watcher: Service not configured.")
 		}
@@ -42,15 +37,13 @@ export class CodeIndexOrchestrator {
 		this.stateManager.setSystemState("Indexing", "Initializing file watcher...")
 
 		try {
-			const services = this.serviceFactory.createServices(this.context, this.cacheManager)
-			this._fileWatcher = services.fileWatcher
-			await this._fileWatcher.initialize()
+			await this.fileWatcher.initialize()
 
 			this._fileWatcherSubscriptions = [
-				this._fileWatcher.onDidStartProcessing((filePath: string) => {
+				this.fileWatcher.onDidStartProcessing((filePath: string) => {
 					this._updateFileStatus(filePath, "Processing", `Processing file: ${path.basename(filePath)}`)
 				}),
-				this._fileWatcher.onDidFinishProcessing((event: FileProcessingResult) => {
+				this.fileWatcher.onDidFinishProcessing((event: FileProcessingResult) => {
 					if (event.error) {
 						this._updateFileStatus(event.path, "Error")
 						console.error(`[CodeIndexOrchestrator] Error processing file ${event.path}:`, event.error)
@@ -115,11 +108,7 @@ export class CodeIndexOrchestrator {
 
 		try {
 			this.configManager.loadConfiguration()
-			const services = this.serviceFactory.createServices(this.context, this.cacheManager)
-			this._vectorStore = services.vectorStore
-			this._scanner = services.scanner
-
-			const collectionCreated = await this._vectorStore.initialize()
+			const collectionCreated = await this.vectorStore.initialize()
 
 			if (collectionCreated) {
 				await this.cacheManager.clearCacheFile()
@@ -141,7 +130,7 @@ export class CodeIndexOrchestrator {
 				this.stateManager.reportBlockIndexingProgress(cumulativeBlocksIndexed, cumulativeBlocksFoundSoFar)
 			}
 
-			const result = await this._scanner.scanDirectory(
+			const result = await this.scanner.scanDirectory(
 				this.workspacePath,
 				(batchError: Error) => {
 					console.error(
@@ -169,7 +158,7 @@ export class CodeIndexOrchestrator {
 		} catch (error: any) {
 			console.error("[CodeIndexOrchestrator] Error during indexing:", error)
 			try {
-				await this._vectorStore?.clearCollection()
+				await this.vectorStore.clearCollection()
 			} catch (cleanupError) {
 				console.error("[CodeIndexOrchestrator] Failed to clean up after error:", cleanupError)
 			}
@@ -188,16 +177,13 @@ export class CodeIndexOrchestrator {
 	 * Stops the file watcher and cleans up resources.
 	 */
 	public stopWatcher(): void {
-		if (this._fileWatcher) {
-			this._fileWatcher.dispose()
-			this._fileWatcher = undefined
-			this._fileWatcherSubscriptions.forEach((sub) => sub.dispose())
-			this._fileWatcherSubscriptions = []
-			console.log("[CodeIndexOrchestrator] File watcher stopped.")
+		this.fileWatcher.dispose()
+		this._fileWatcherSubscriptions.forEach((sub) => sub.dispose())
+		this._fileWatcherSubscriptions = []
+		console.log("[CodeIndexOrchestrator] File watcher stopped.")
 
-			if (this.stateManager.state !== "Error") {
-				this.stateManager.setSystemState("Standby", "File watcher stopped.")
-			}
+		if (this.stateManager.state !== "Error") {
+			this.stateManager.setSystemState("Standby", "File watcher stopped.")
 		}
 		this._isProcessing = false
 	}
@@ -215,12 +201,7 @@ export class CodeIndexOrchestrator {
 
 			try {
 				if (this.configManager.isFeatureConfigured) {
-					if (!this._vectorStore) {
-						const services = this.serviceFactory.createServices(this.context, this.cacheManager)
-						this._vectorStore = services.vectorStore
-					}
-
-					await this._vectorStore.deleteCollection()
+					await this.vectorStore.deleteCollection()
 					console.log("[CodeIndexOrchestrator] Vector collection deleted.")
 				} else {
 					console.warn("[CodeIndexOrchestrator] Service not configured, skipping vector collection clear.")
