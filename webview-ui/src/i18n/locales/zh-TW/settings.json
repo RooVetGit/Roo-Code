@@ -23,16 +23,14 @@
 	"sections": {
 		"providers": "供應商",
 		"autoApprove": "自動核准",
-		"browser": "瀏覽器/電腦使用",
+		"browser": "電腦存取",
 		"checkpoints": "檢查點",
 		"notifications": "通知",
-		"contextManagement": "上下文管理",
+		"contextManagement": "上下文",
 		"terminal": "終端機",
-		"advanced": "進階",
-		"experimental": "實驗性功能",
+		"experimental": "實驗性",
 		"language": "語言",
-		"about": "關於 Roo Code",
-		"interface": "介面"
+		"about": "關於 Roo Code"
 	},
 	"autoApprove": {
 		"description": "允許 Roo 無需核准即執行操作。僅在您完全信任 AI 並了解相關安全風險時啟用這些設定。",
@@ -119,13 +117,21 @@
 		"noCustomHeaders": "尚未定義自訂標頭。點擊 + 按鈕以新增。",
 		"requestyApiKey": "Requesty API 金鑰",
 		"getRequestyApiKey": "取得 Requesty API 金鑰",
+		"refreshModels": {
+			"label": "重新整理模型",
+			"hint": "請重新開啟設定以查看最新模型。"
+		},
 		"openRouterTransformsText": "將提示和訊息鏈壓縮到上下文大小 (<a>OpenRouter 轉換</a>)",
 		"anthropicApiKey": "Anthropic API 金鑰",
 		"getAnthropicApiKey": "取得 Anthropic API 金鑰",
 		"anthropicUseAuthToken": "將 Anthropic API 金鑰作為 Authorization 標頭傳遞，而非使用 X-Api-Key",
+		"chutesApiKey": "Chutes API 金鑰",
+		"getChutesApiKey": "取得 Chutes API 金鑰",
 		"deepSeekApiKey": "DeepSeek API 金鑰",
 		"getDeepSeekApiKey": "取得 DeepSeek API 金鑰",
 		"geminiApiKey": "Gemini API 金鑰",
+		"getGroqApiKey": "取得 Groq API 金鑰",
+		"groqApiKey": "Groq API 金鑰",
 		"getGeminiApiKey": "取得 Gemini API 金鑰",
 		"openAiApiKey": "OpenAI API 金鑰",
 		"openAiBaseUrl": "基礎 URL",
@@ -310,6 +316,14 @@
 		}
 	},
 	"terminal": {
+		"basic": {
+			"label": "終端機設定：基本",
+			"description": "基本終端機設定"
+		},
+		"advanced": {
+			"label": "終端機設定：進階",
+			"description": "以下選項可能需要重新啟動終端機才能套用設定"
+		},
 		"outputLineLimit": {
 			"label": "終端機輸出行數限制",
 			"description": "執行命令時終端機輸出的最大行數。超過此限制時，會從中間移除多餘的行數，以節省 token 用量。"
@@ -349,6 +363,10 @@
 		"zshP10k": {
 			"label": "啟用 Powerlevel10k 整合",
 			"description": "啟用後，設定 POWERLEVEL9K_TERM_SHELL_INTEGRATION=true 以啟用 Powerlevel10k shell 整合功能。（實驗性）"
+		},
+		"inheritEnv": {
+			"label": "繼承環境變數",
+			"description": "啟用後，終端機將從 VSCode 父程序繼承環境變數，如使用者設定檔中定義的 shell 整合設定。這直接切換 VSCode 全域設定 `terminal.integrated.inheritEnv`"
 		}
 	},
 	"advanced": {

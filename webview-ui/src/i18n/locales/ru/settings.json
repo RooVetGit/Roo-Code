@@ -23,16 +23,14 @@
 	"sections": {
 		"providers": "Провайдеры",
 		"autoApprove": "Автоодобрение",
-		"browser": "Браузер / Использование компьютера",
+		"browser": "Доступ к компьютеру",
 		"checkpoints": "Контрольные точки",
 		"notifications": "Уведомления",
-		"contextManagement": "Управление контекстом",
+		"contextManagement": "Контекст",
 		"terminal": "Терминал",
-		"advanced": "Дополнительно",
-		"experimental": "Экспериментальные функции",
+		"experimental": "Экспериментальное",
 		"language": "Язык",
-		"about": "О Roo Code",
-		"interface": "Интерфейс"
+		"about": "О Roo Code"
 	},
 	"autoApprove": {
 		"description": "Разрешить Roo автоматически выполнять операции без необходимости одобрения. Включайте эти параметры только если полностью доверяете ИИ и понимаете связанные с этим риски безопасности.",
@@ -119,13 +117,21 @@
 		"noCustomHeaders": "Пользовательские заголовки не определены. Нажмите кнопку +, чтобы добавить.",
 		"requestyApiKey": "Requesty API-ключ",
 		"getRequestyApiKey": "Получить Requesty API-ключ",
+		"refreshModels": {
+			"label": "Обновить модели",
+			"hint": "Пожалуйста, откройте настройки заново, чтобы увидеть последние модели."
+		},
 		"openRouterTransformsText": "Сжимать подсказки и цепочки сообщений до размера контекста (<a>OpenRouter Transforms</a>)",
 		"anthropicApiKey": "Anthropic API-ключ",
 		"getAnthropicApiKey": "Получить Anthropic API-ключ",
 		"anthropicUseAuthToken": "Передавать Anthropic API-ключ как Authorization-заголовок вместо X-Api-Key",
+		"chutesApiKey": "Chutes API-ключ",
+		"getChutesApiKey": "Получить Chutes API-ключ",
 		"deepSeekApiKey": "DeepSeek API-ключ",
 		"getDeepSeekApiKey": "Получить DeepSeek API-ключ",
 		"geminiApiKey": "Gemini API-ключ",
+		"getGroqApiKey": "Получить Groq API-ключ",
+		"groqApiKey": "Groq API-ключ",
 		"getGeminiApiKey": "Получить Gemini API-ключ",
 		"openAiApiKey": "OpenAI API-ключ",
 		"openAiBaseUrl": "Базовый URL",
@@ -310,6 +316,14 @@
 		}
 	},
 	"terminal": {
+		"basic": {
+			"label": "Настройки терминала: Основные",
+			"description": "Основные настройки терминала"
+		},
+		"advanced": {
+			"label": "Настройки терминала: Расширенные",
+			"description": "Следующие параметры могут потребовать перезапуск терминала для применения настроек."
+		},
 		"outputLineLimit": {
 			"label": "Лимит вывода терминала",
 			"description": "Максимальное количество строк, включаемых в вывод терминала при выполнении команд. При превышении строки из середины будут удаляться для экономии токенов."
@@ -349,6 +363,10 @@
 		"zdotdir": {
 			"label": "Включить обработку ZDOTDIR",
 			"description": "Если включено, создаёт временную директорию для ZDOTDIR для корректной интеграции zsh. Это обеспечивает корректную работу интеграции VSCode с zsh, сохраняя вашу конфигурацию. (экспериментально)"
+		},
+		"inheritEnv": {
+			"label": "Наследовать переменные среды",
+			"description": "Если включено, терминал будет наследовать переменные среды от родительского процесса VSCode, такие как настройки интеграции оболочки, определённые в профиле пользователя. Напрямую переключает глобальную настройку VSCode `terminal.integrated.inheritEnv`"
 		}
 	},
 	"advanced": {

@@ -23,16 +23,14 @@
 	"sections": {
 		"providers": "Providers",
 		"autoApprove": "Auto-Approve",
-		"browser": "Browser / Computer Use",
+		"browser": "Browser",
 		"checkpoints": "Checkpoints",
 		"notifications": "Notifications",
-		"contextManagement": "Context Management",
+		"contextManagement": "Context",
 		"terminal": "Terminal",
-		"advanced": "Advanced",
-		"experimental": "Experimental Features",
+		"experimental": "Experimental",
 		"language": "Language",
-		"about": "About Roo Code",
-		"interface": "Interface"
+		"about": "About Roo Code"
 	},
 	"autoApprove": {
 		"description": "Allow Roo to automatically perform operations without requiring approval. Enable these settings only if you fully trust the AI and understand the associated security risks.",
@@ -118,14 +116,22 @@
 		"headerValue": "Header value",
 		"noCustomHeaders": "No custom headers defined. Click the + button to add one.",
 		"requestyApiKey": "Requesty API Key",
+		"refreshModels": {
+			"label": "Refresh Models",
+			"hint": "Please reopen the settings to see the latest models."
+		},
 		"getRequestyApiKey": "Get Requesty API Key",
 		"openRouterTransformsText": "Compress prompts and message chains to the context size (<a>OpenRouter Transforms</a>)",
 		"anthropicApiKey": "Anthropic API Key",
 		"getAnthropicApiKey": "Get Anthropic API Key",
 		"anthropicUseAuthToken": "Pass Anthropic API Key as Authorization header instead of X-Api-Key",
+		"chutesApiKey": "Chutes API Key",
+		"getChutesApiKey": "Get Chutes API Key",
 		"deepSeekApiKey": "DeepSeek API Key",
 		"getDeepSeekApiKey": "Get DeepSeek API Key",
 		"geminiApiKey": "Gemini API Key",
+		"getGroqApiKey": "Get Groq API Key",
+		"groqApiKey": "Groq API Key",
 		"getGeminiApiKey": "Get Gemini API Key",
 		"openAiApiKey": "OpenAI API Key",
 		"openAiBaseUrl": "Base URL",
@@ -310,6 +316,14 @@
 		}
 	},
 	"terminal": {
+		"basic": {
+			"label": "Terminal Settings: Basic",
+			"description": "Basic terminal settings"
+		},
+		"advanced": {
+			"label": "Terminal Settings: Advanced",
+			"description": "The following options may require a terminal restart to apply the setting."
+		},
 		"outputLineLimit": {
 			"label": "Terminal output limit",
 			"description": "Maximum number of lines to include in terminal output when executing commands. When exceeded lines will be removed from the middle, saving tokens."
@@ -340,15 +354,19 @@
 		},
 		"zshOhMy": {
 			"label": "Enable Oh My Zsh integration",
-			"description": "When enabled, sets ITERM_SHELL_INTEGRATION_INSTALLED=Yes to enable Oh My Zsh shell integration features. Applying this setting might require restarting the IDE. (experimental)"
+			"description": "When enabled, sets ITERM_SHELL_INTEGRATION_INSTALLED=Yes to enable Oh My Zsh shell integration features. Applying this setting might require restarting the IDE."
 		},
 		"zshP10k": {
 			"label": "Enable Powerlevel10k integration",
-			"description": "When enabled, sets POWERLEVEL9K_TERM_SHELL_INTEGRATION=true to enable Powerlevel10k shell integration features. (experimental)"
+			"description": "When enabled, sets POWERLEVEL9K_TERM_SHELL_INTEGRATION=true to enable Powerlevel10k shell integration features."
 		},
 		"zdotdir": {
 			"label": "Enable ZDOTDIR handling",
-			"description": "When enabled, creates a temporary directory for ZDOTDIR to handle zsh shell integration properly. This ensures VSCode shell integration works correctly with zsh while preserving your zsh configuration. (experimental)"
+			"description": "When enabled, creates a temporary directory for ZDOTDIR to handle zsh shell integration properly. This ensures VSCode shell integration works correctly with zsh while preserving your zsh configuration."
+		},
+		"inheritEnv": {
+			"label": "Inherit environment variables",
+			"description": "When enabled, the terminal will inherit environment variables from VSCode's parent process, such as user-profile-defined shell integration settings. This directly toggles VSCode global setting `terminal.integrated.inheritEnv`"
 		}
 	},
 	"advanced": {
