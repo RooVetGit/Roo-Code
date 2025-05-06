@@ -35,7 +35,7 @@
     "update_support_prompt": "Bijwerken van ondersteuningsprompt mislukt",
     "reset_support_prompt": "Resetten van ondersteuningsprompt mislukt",
     "enhance_prompt": "Verbeteren van prompt mislukt",
-    "get_system_prompt": "Ophalen van systeem-prompt mislukt",
+    "get_system_prompt": "Ophalen van systeemprompt mislukt",
     "search_commits": "Zoeken naar commits mislukt",
     "save_api_config": "Opslaan van API-configuratie mislukt",
     "create_api_config": "Aanmaken van API-configuratie mislukt",
