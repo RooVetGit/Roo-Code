@@ -357,7 +357,13 @@ export const ChatRowContent = ({
 					<div style={headerStyle}>
 						{toolIcon("search")}
 						<span style={{ fontWeight: "bold" }}>
-							{t("chat:codebaseSearch.wantsToSearch", { query: tool.query, limit: tool.limit || 0 })}
+							{tool.path
+								? t("chat:codebaseSearch.wantsToSearchWithPath", {
+										query: tool.query,
+										limit: tool.limit || 0,
+										path: tool.path,
+									})
+								: t("chat:codebaseSearch.wantsToSearch", { query: tool.query, limit: tool.limit || 0 })}
 						</span>
 					</div>
 				)

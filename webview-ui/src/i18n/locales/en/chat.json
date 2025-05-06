@@ -163,6 +163,7 @@
 	},
 	"codebaseSearch": {
 		"wantsToSearch": "Roo wants to search the codebase for '{{query}}' (limit: {{limit}}):",
+		"wantsToSearchWithPath": "Roo wants to search the codebase for '{{query}}' (limit: {{limit}}) in '{{path}}':",
 		"didSearch": "Found {{count}} result(s) for '{{query}}':"
 	},
 	"commandOutput": "Command Output",

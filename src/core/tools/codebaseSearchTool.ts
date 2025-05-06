@@ -4,9 +4,9 @@ import { Task } from "../task/Task"
 import { CodeIndexManager } from "../../services/code-index/manager"
 import { getWorkspacePath } from "../../utils/path"
 import { formatResponse } from "../prompts/responses"
-import { t } from "../../i18n"
 import { VectorStoreSearchResult } from "../../services/code-index/interfaces"
-import { AskApproval, HandleError, PushToolResult, RemoveClosingTag, ToolUse } from '../../shared/tools'
+import { AskApproval, HandleError, PushToolResult, RemoveClosingTag, ToolUse } from "../../shared/tools"
+import path from "path"
 
 export async function codebaseSearchTool(
   cline: Task,
@@ -29,6 +29,7 @@ export async function codebaseSearchTool(
 	let query: string | undefined = block.params.query
 	let limitStr: string | undefined = block.params.limit
 	let limit: number = 5 // Default limit
+	let directoryPrefix: string | undefined = block.params.path
 
 	if (!query) {
 		cline.consecutiveMistakeCount++
@@ -47,19 +48,18 @@ export async function codebaseSearchTool(
 		}
 	}
 
+	if (directoryPrefix) {
+		directoryPrefix = removeClosingTag("path", directoryPrefix)
+		directoryPrefix = path.normalize(directoryPrefix)
+	}
+
 	// Extract optional sendResultsToUI parameter
-
-	// --- Approval ---
-	const translationKey = "chat:codebaseSearch.wantsToSearch"
-	let approvalMessage: string
-
-	approvalMessage = t(translationKey, { query, limit })
 
 	const approvalPayload = {
 		tool: "codebaseSearch",
-		approvalPrompt: approvalMessage,
 		query: query,
 		limit: limit,
+		path: directoryPrefix,
 		isOutsideWorkspace: false,
 	}
 
@@ -91,7 +91,7 @@ export async function codebaseSearchTool(
 			throw new Error("Code Indexing is not configured (Missing OpenAI Key or Qdrant URL).")
 		}
 
-		const searchResults: VectorStoreSearchResult[] = await manager.searchIndex(query, limit)
+		const searchResults: VectorStoreSearchResult[] = await manager.searchIndex(query, limit, directoryPrefix)
 
 		// 3. Format and push results
 		if (!searchResults || searchResults.length === 0) {
