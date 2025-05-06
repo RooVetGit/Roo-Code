@@ -859,12 +859,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		if (this.getCurrentCline()) {
 			this.getCurrentCline()!.api = buildApiHandler(providerSettings)
 		}
-
-		// Load CodeIndexManager configuration after provider settings are updated
-		if (this.codeIndexManager) {
-			this.codeIndexManager.dispose()
-			await this.codeIndexManager.initialize(this.contextProxy)
-		}
 	}
 
 	async cancelTask() {
