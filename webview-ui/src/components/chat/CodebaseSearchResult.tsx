@@ -20,6 +20,7 @@ const CodebaseSearchResult: React.FC<CodebaseSearchResultProps> = ({
 	language: _language,
 }) => {
 	const handleClick = () => {
+		console.log(filePath)
 		vscode.postMessage({
 			type: "openFile",
 			text: "./" + filePath,

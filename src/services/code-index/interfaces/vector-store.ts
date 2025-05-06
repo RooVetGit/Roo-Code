@@ -26,7 +26,7 @@ export interface IVectorStore {
 	 * @param limit Maximum number of results to return
 	 * @returns Promise resolving to search results
 	 */
-	search(queryVector: number[], limit?: number): Promise<VectorStoreSearchResult[]>
+	search(queryVector: number[], limit?: number, directoryPrefix?: string): Promise<VectorStoreSearchResult[]>
 
 	/**
 	 * Deletes points by file path
