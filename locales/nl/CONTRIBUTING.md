@@ -82,7 +82,7 @@ We willen het aantal bugs aanzienlijk verminderen en geautomatiseerd testen uitb
 
 We willen dat Roo ieders taal spreekt:
 
-- Wij willen dat Roo Code elkeens taal spreekt
+- Wij willen dat Roo Code ieders taal spreekt
 - Queremos que Roo Code hable el idioma de todos
 - हम चाहते हैं कि Roo Code हर किसी की भाषा बोले
 - نريد أن يتحدث Roo Code لغة الجميع
