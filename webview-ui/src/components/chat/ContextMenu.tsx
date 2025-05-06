@@ -88,6 +88,8 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 				)
 			case ContextMenuOptionType.Problems:
 				return <span>Problems</span>
+			case ContextMenuOptionType.CodeBase:
+				return <span>CodeBase</span>
 			case ContextMenuOptionType.Terminal:
 				return <span>Terminal</span>
 			case ContextMenuOptionType.URL:
@@ -167,9 +169,11 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 			case ContextMenuOptionType.File:
 				return "file"
 			case ContextMenuOptionType.Folder:
-				return "folder"
+				return "folder-opened"
 			case ContextMenuOptionType.Problems:
 				return "warning"
+			case ContextMenuOptionType.CodeBase:
+				return "notebook"
 			case ContextMenuOptionType.Terminal:
 				return "terminal"
 			case ContextMenuOptionType.URL:

@@ -77,6 +77,7 @@ export enum ContextMenuOptionType {
 	Git = "git",
 	NoResults = "noResults",
 	Mode = "mode", // Add mode type
+	CodeBase = "codebase",
 }
 
 export interface ContextMenuQueryItem {
@@ -170,6 +171,7 @@ export function getContextMenuOptions(
 			{ type: ContextMenuOptionType.Folder },
 			{ type: ContextMenuOptionType.File },
 			{ type: ContextMenuOptionType.Git },
+			{ type: ContextMenuOptionType.CodeBase },
 		]
 	}
 
@@ -189,6 +191,9 @@ export function getContextMenuOptions(
 	}
 	if ("problems".startsWith(lowerQuery)) {
 		suggestions.push({ type: ContextMenuOptionType.Problems })
+	}
+	if ("codebase".startsWith(lowerQuery)) {
+		suggestions.push({ type: ContextMenuOptionType.CodeBase })
 	}
 	if ("terminal".startsWith(lowerQuery)) {
 		suggestions.push({ type: ContextMenuOptionType.Terminal })

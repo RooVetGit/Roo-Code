@@ -184,6 +184,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			return [
 				{ type: ContextMenuOptionType.Problems, value: "problems" },
 				{ type: ContextMenuOptionType.Terminal, value: "terminal" },
+				{ type: ContextMenuOptionType.CodeBase, value: "codebase" },
 				...gitCommits,
 				...openedTabs
 					.filter((tab) => tab.path)
@@ -264,6 +265,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						insertValue = "terminal"
 					} else if (type === ContextMenuOptionType.Git) {
 						insertValue = value || ""
+					} else if (type === ContextMenuOptionType.CodeBase) {
+						insertValue = "codebase"
 					}
 
 					const { newValue, mentionIndex } = insertMention(
