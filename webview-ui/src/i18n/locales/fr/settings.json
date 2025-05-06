@@ -119,6 +119,10 @@
 		"noCustomHeaders": "Aucun en-tête personnalisé défini. Cliquez sur le bouton + pour en ajouter un.",
 		"requestyApiKey": "Clé API Requesty",
 		"getRequestyApiKey": "Obtenir la clé API Requesty",
+		"refreshModels": {
+			"label": "Actualiser les modèles",
+			"hint": "Veuillez rouvrir les paramètres pour voir les modèles les plus récents."
+		},
 		"openRouterTransformsText": "Compresser les prompts et chaînes de messages à la taille du contexte (<a>Transformations OpenRouter</a>)",
 		"anthropicApiKey": "Clé API Anthropic",
 		"getAnthropicApiKey": "Obtenir la clé API Anthropic",

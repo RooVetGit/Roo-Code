@@ -119,6 +119,10 @@
 		"noCustomHeaders": "No hay encabezados personalizados definidos. Haga clic en el botón + para añadir uno.",
 		"requestyApiKey": "Clave API de Requesty",
 		"getRequestyApiKey": "Obtener clave API de Requesty",
+		"refreshModels": {
+			"label": "Actualizar modelos",
+			"hint": "Por favor, vuelve a abrir la configuración para ver los modelos más recientes."
+		},
 		"openRouterTransformsText": "Comprimir prompts y cadenas de mensajes al tamaño del contexto (<a>Transformaciones de OpenRouter</a>)",
 		"anthropicApiKey": "Clave API de Anthropic",
 		"getAnthropicApiKey": "Obtener clave API de Anthropic",

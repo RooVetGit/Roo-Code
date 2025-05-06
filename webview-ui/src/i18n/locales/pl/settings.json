@@ -119,6 +119,10 @@
 		"noCustomHeaders": "Brak zdefiniowanych niestandardowych nagłówków. Kliknij przycisk +, aby dodać.",
 		"requestyApiKey": "Klucz API Requesty",
 		"getRequestyApiKey": "Uzyskaj klucz API Requesty",
+		"refreshModels": {
+			"label": "Odśwież modele",
+			"hint": "Proszę ponownie otworzyć ustawienia, aby zobaczyć najnowsze modele."
+		},
 		"openRouterTransformsText": "Kompresuj podpowiedzi i łańcuchy wiadomości do rozmiaru kontekstu (<a>Transformacje OpenRouter</a>)",
 		"anthropicApiKey": "Klucz API Anthropic",
 		"getAnthropicApiKey": "Uzyskaj klucz API Anthropic",
