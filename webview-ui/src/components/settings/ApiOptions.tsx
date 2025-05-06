@@ -104,13 +104,14 @@ const ApiOptions = ({
 		return result
 	}
 
-	// Debounced effect to update the main configuration when local customHeaders state stabilizes.
+	// Debounced effect to update the main configuration when local
+	// customHeaders state stabilizes.
 	useDebounce(
 		() => {
 			const currentConfigHeaders = apiConfiguration?.openAiHeaders || {}
 			const newHeadersObject = convertHeadersToObject(customHeaders)
 
-			// Only update if the processed object is different from the current config
+			// Only update if the processed object is different from the current config.
 			if (JSON.stringify(currentConfigHeaders) !== JSON.stringify(newHeadersObject)) {
 				setApiConfigurationField("openAiHeaders", newHeadersObject)
 			}
@@ -140,7 +141,7 @@ const ApiOptions = ({
 
 	const { data: routerModels, refetch: refetchRouterModels } = useRouterModels()
 
-	// Update apiConfiguration.aiModelId whenever selectedModelId changes.
+	// Update `apiModelId` whenever `selectedModelId` changes.
 	useEffect(() => {
 		if (selectedModelId) {
 			setApiConfigurationField("apiModelId", selectedModelId)
