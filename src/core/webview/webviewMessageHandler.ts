@@ -42,6 +42,17 @@ import { handleMarketplaceMessages } from "./marketplaceMessageHandler"
 import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
 import { getModels } from "../../api/providers/fetchers/cache"
 
+const marketplaceMessages = new Set([
+	"marketplaceSources",
+	"openExternal",
+	"fetchMarketplaceItems",
+	"installMarketplaceItem",
+	"installMarketplaceItemWithParameters",
+	"cancelMarketplaceInstall",
+	"refreshMarketplaceSource",
+	"filterMarketplaceItems",
+])
+
 export const webviewMessageHandler = async (
 	provider: ClineProvider,
 	message: WebviewMessage,
@@ -146,17 +157,6 @@ export const webviewMessageHandler = async (
 			})
 
 			provider.isViewLaunched = true
-			break
-		case "fetchMarketplaceItems":
-			if (marketplaceManager) {
-				try {
-					await handleMarketplaceMessages(provider, message, marketplaceManager!)
-				} catch (error) {
-					console.error(`DEBUG: Error handling marketplace message: ${error}`)
-				}
-			} else {
-				console.log(`DEBUG: marketplaceManager is undefined, skipping marketplace message handling`)
-			}
 			break
 		case "newTask":
 			// Code that should run in response to the hello message command
@@ -1278,16 +1278,7 @@ export const webviewMessageHandler = async (
 		}
 	}
 
-	if (
-		marketplaceManager &&
-		(message.type === "marketplaceSources" ||
-			message.type === "openExternal" ||
-			message.type === "installMarketplaceItem" ||
-			message.type === "installMarketplaceItemWithParameters" ||
-			message.type === "cancelMarketplaceInstall" ||
-			message.type === "refreshMarketplaceSource" ||
-			message.type === "filterMarketplaceItems")
-	) {
+	if (marketplaceManager && marketplaceMessages.has(message.type)) {
 		try {
 			console.log(`DEBUG: Routing ${message.type} message to marketplaceMessageHandler`)
 			const result = await handleMarketplaceMessages(provider, message, marketplaceManager)
