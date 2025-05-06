@@ -415,6 +415,10 @@
 			"description": "Cuando está habilitado, Roo usará la herramienta de diff de bloques múltiples. Esto intentará actualizar múltiples bloques de código en el archivo en una sola solicitud."
 		}
 	},
+	"promptCaching": {
+		"label": "Desactivar caché de prompts",
+		"description": "Cuando está marcado, Roo no utilizará el caché de prompts para este modelo."
+	},
 	"temperature": {
 		"useCustom": "Usar temperatura personalizada",
 		"description": "Controla la aleatoriedad en las respuestas del modelo.",

@@ -415,6 +415,10 @@
 			"description": "启用后，Roo 将尝试在一个请求中进行批量搜索和替换。"
 		}
 	},
+	"promptCaching": {
+		"label": "禁用提示词缓存",
+		"description": "选中后，Roo 将不会为此模型使用提示词缓存。"
+	},
 	"temperature": {
 		"useCustom": "使用自定义温度",
 		"description": "控制模型响应的随机性",

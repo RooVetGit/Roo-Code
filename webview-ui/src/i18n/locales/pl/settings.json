@@ -415,6 +415,10 @@
 			"description": "Po włączeniu, Roo użyje narzędzia diff wieloblokowego. Spróbuje to zaktualizować wiele bloków kodu w pliku w jednym żądaniu."
 		}
 	},
+	"promptCaching": {
+		"label": "Wyłącz buforowanie promptów",
+		"description": "Po zaznaczeniu, Roo nie będzie używać buforowania promptów dla tego modelu."
+	},
 	"temperature": {
 		"useCustom": "Użyj niestandardowej temperatury",
 		"description": "Kontroluje losowość w odpowiedziach modelu.",
