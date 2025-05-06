@@ -23,12 +23,12 @@
 	"sections": {
 		"providers": "Providers",
 		"autoApprove": "Auto-Approve",
-		"browser": "Browser / Computer Use",
+		"browser": "Browser",
 		"checkpoints": "Checkpoints",
 		"notifications": "Notifications",
-		"contextManagement": "Context Management",
+		"contextManagement": "Context",
 		"terminal": "Terminal",
-		"experimental": "Experimental Features",
+		"experimental": "Experimental",
 		"language": "Language",
 		"about": "About Roo Code"
 	},

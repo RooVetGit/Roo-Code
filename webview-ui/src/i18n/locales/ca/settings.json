@@ -22,13 +22,13 @@
 	},
 	"sections": {
 		"providers": "Proveïdors",
-		"autoApprove": "Aprovació automàtica",
-		"browser": "Navegador / Ús de l'ordinador",
+		"autoApprove": "Auto-aprovació",
+		"browser": "Accés a l'ordinador",
 		"checkpoints": "Punts de control",
 		"notifications": "Notificacions",
-		"contextManagement": "Gestió de context",
+		"contextManagement": "Context",
 		"terminal": "Terminal",
-		"experimental": "Funcions experimentals",
+		"experimental": "Experimental",
 		"language": "Idioma",
 		"about": "Sobre Roo Code"
 	},

@@ -22,13 +22,13 @@
 	},
 	"sections": {
 		"providers": "Sağlayıcılar",
-		"autoApprove": "Otomatik Onay",
-		"browser": "Tarayıcı / Bilgisayar Kullanımı",
+		"autoApprove": "Oto-Onay",
+		"browser": "Bilgisayar Erişimi",
 		"checkpoints": "Kontrol Noktaları",
 		"notifications": "Bildirimler",
-		"contextManagement": "Bağlam Yönetimi",
+		"contextManagement": "Bağlam",
 		"terminal": "Terminal",
-		"experimental": "Deneysel Özellikler",
+		"experimental": "Deneysel",
 		"language": "Dil",
 		"about": "Roo Code Hakkında"
 	},

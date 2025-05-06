@@ -22,13 +22,13 @@
 	},
 	"sections": {
 		"providers": "Fournisseurs",
-		"autoApprove": "Approbation automatique",
-		"browser": "Navigateur / Utilisation de l'ordinateur",
+		"autoApprove": "Auto-approbation",
+		"browser": "Accès ordinateur",
 		"checkpoints": "Points de contrôle",
 		"notifications": "Notifications",
-		"contextManagement": "Gestion du contexte",
+		"contextManagement": "Contexte",
 		"terminal": "Terminal",
-		"experimental": "Fonctionnalités expérimentales",
+		"experimental": "Expérimental",
 		"language": "Langue",
 		"about": "À propos de Roo Code"
 	},

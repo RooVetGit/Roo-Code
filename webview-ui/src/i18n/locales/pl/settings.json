@@ -22,13 +22,13 @@
 	},
 	"sections": {
 		"providers": "Dostawcy",
-		"autoApprove": "Automatyczne zatwierdzanie",
-		"browser": "Przeglądarka / Użycie komputera",
+		"autoApprove": "Auto-zatwierdzanie",
+		"browser": "Dostęp komputera",
 		"checkpoints": "Punkty kontrolne",
 		"notifications": "Powiadomienia",
-		"contextManagement": "Zarządzanie kontekstem",
+		"contextManagement": "Kontekst",
 		"terminal": "Terminal",
-		"experimental": "Funkcje eksperymentalne",
+		"experimental": "Eksperymentalne",
 		"language": "Język",
 		"about": "O Roo Code"
 	},

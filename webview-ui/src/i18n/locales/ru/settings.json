@@ -23,12 +23,12 @@
 	"sections": {
 		"providers": "Провайдеры",
 		"autoApprove": "Автоодобрение",
-		"browser": "Браузер / Использование компьютера",
+		"browser": "Доступ к компьютеру",
 		"checkpoints": "Контрольные точки",
 		"notifications": "Уведомления",
-		"contextManagement": "Управление контекстом",
+		"contextManagement": "Контекст",
 		"terminal": "Терминал",
-		"experimental": "Экспериментальные функции",
+		"experimental": "Экспериментальное",
 		"language": "Язык",
 		"about": "О Roo Code"
 	},
