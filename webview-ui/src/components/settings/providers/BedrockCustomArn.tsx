@@ -1,9 +1,10 @@
+import { useMemo } from "react"
 import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 
 import { ApiConfiguration } from "@roo/shared/api"
+
 import { validateBedrockArn } from "@src/utils/validate"
 import { useAppTranslation } from "@src/i18n/TranslationContext"
-import { useMemo } from "react"
 
 type BedrockCustomArnProps = {
 	apiConfiguration: ApiConfiguration
@@ -38,13 +39,14 @@ export const BedrockCustomArn = ({ apiConfiguration, setApiConfigurationField }:
 				</ul>
 				{t("settings:providers.awsCustomArnDesc")}
 			</div>
-			{!validation.isValid && (
+			{!validation.isValid ? (
 				<div className="text-sm text-vscode-errorForeground mt-2">
 					{validation.errorMessage || t("settings:providers.invalidArnFormat")}
 				</div>
-			)}
-			{validation.errorMessage && (
-				<div className="text-sm text-vscode-errorForeground mt-2">{validation.errorMessage}</div>
+			) : (
+				validation.errorMessage && (
+					<div className="text-sm text-vscode-errorForeground mt-2">{validation.errorMessage}</div>
+				)
 			)}
 		</>
 	)
