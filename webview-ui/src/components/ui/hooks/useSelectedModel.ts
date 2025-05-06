@@ -1,7 +1,8 @@
 import {
-	ApiConfiguration,
-	RouterModels,
-	ModelInfo,
+	type ProviderName,
+	type ApiConfiguration,
+	type RouterModels,
+	type ModelInfo,
 	anthropicDefaultModelId,
 	anthropicModels,
 	bedrockDefaultModelId,
@@ -50,7 +51,7 @@ function getSelectedModel({
 	apiConfiguration,
 	routerModels,
 }: {
-	provider: string
+	provider: ProviderName
 	apiConfiguration: ApiConfiguration
 	routerModels: RouterModels
 }): { id: string; info: ModelInfo } {
@@ -160,6 +161,9 @@ function getSelectedModel({
 			const info = vscodeLlmModels[modelFamily as keyof typeof vscodeLlmModels]
 			return { id, info: { ...openAiModelInfoSaneDefaults, ...info, supportsImages: false } } // VSCode LM API currently doesn't support images.
 		}
+		// case "anthropic":
+		// case "human-relay":
+		// case "fake-ai":
 		default: {
 			const id = apiConfiguration.apiModelId ?? anthropicDefaultModelId
 			const info = anthropicModels[id as keyof typeof anthropicModels]
