@@ -859,12 +859,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			vscode.window.showErrorMessage(t("common:errors.create_api_config"))
 			return undefined
 		}
-
-		// Load CodeIndexManager configuration after provider settings are updated
-		if (this.codeIndexManager) {
-			this.codeIndexManager.dispose()
-			await this.codeIndexManager.initialize(this.contextProxy)
-		}
 	}
 
 	async deleteProviderProfile(profileToDelete: ProviderSettingsEntry) {
