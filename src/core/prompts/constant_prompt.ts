@@ -33,7 +33,7 @@ export async function generateConstMcpPrompt(mcpHub?: McpHub, conversation?: Arr
       // 提取最近的用户消息
       const recentUserMessages = conversation
         .filter(msg => msg.role === "user" || msg.role === "assistant")
-        .slice(-4);
+        .slice(-8);
       
       if (recentUserMessages.length > 0) {
         // 从最近的用户消息中提取文本
@@ -51,7 +51,7 @@ export async function generateConstMcpPrompt(mcpHub?: McpHub, conversation?: Arr
             return "";
           })
           .join(" ")
-          .slice(0, 500); // 限制长度
+          .slice(0, 512*1024); // 限制长度
       }
     }
 

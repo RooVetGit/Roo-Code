@@ -12,6 +12,9 @@ import { getLatestTerminalOutput } from "../../integrations/terminal/get-latest-
 import { getWorkspacePath } from "../../utils/path"
 import { FileContextTracker } from "../context-tracking/FileContextTracker"
 
+import { generateConstMcpPrompt } from "../prompts/constant_prompt"
+import { Cline } from "../Cline"
+
 export async function openMention(mention?: string): Promise<void> {
 	if (!mention) {
 		return
@@ -44,6 +47,7 @@ export async function parseMentions(
 	cwd: string,
 	urlContentFetcher: UrlContentFetcher,
 	fileContextTracker?: FileContextTracker,
+	cline?:Cline,
 ): Promise<string> {
 	const mentions: Set<string> = new Set()
 	let parsedText = text.replace(mentionRegexGlobal, (match, mention) => {
@@ -63,6 +67,8 @@ export async function parseMentions(
 			return `Git commit '${mention}' (see below for commit info)`
 		} else if (mention === "terminal") {
 			return `Terminal Output (see below for output)`
+		} else if (mention === "codebase") {
+			return ""
 		}
 		return match
 	})
@@ -141,7 +147,12 @@ export async function parseMentions(
 			} catch (error) {
 				parsedText += `\n\n<terminal_output>\nError fetching terminal output: ${error.message}\n</terminal_output>`
 			}
+		} else if (mention === "codebase") {
+			if (cline) {
+				cline.codebase_enable = true
+			}
 		}
+
 	}
 
 	if (urlMention) {

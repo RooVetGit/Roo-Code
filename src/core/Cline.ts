@@ -196,6 +196,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 	private didAlreadyUseTool = false
 	private didCompleteReadingStream = false
 
+	codebase_enable = false
+
 	// metrics
 	private toolUsage: ToolUsage = {}
 
@@ -1059,11 +1061,14 @@ export class Cline extends EventEmitter<ClineEvents> {
 		})
 
 
-		const ConversationHistoryWithCodebase = cloneDeep(cleanConversationHistory) 
+		// const ConversationHistoryWithCodebase = cloneDeep(cleanConversationHistory) 
 		// 将codebase加入会话上下文
-		await addCodebaseInToConversation(ConversationHistoryWithCodebase, mcpHub, this)
+		if (this.codebase_enable) {
+			await addCodebaseInToConversation(cleanConversationHistory, mcpHub, this)
+			this.codebase_enable = false
+		}
 
-		const stream = this.api.createMessage(systemPrompt, ConversationHistoryWithCodebase, this.promptCacheKey)
+		const stream = this.api.createMessage(systemPrompt, cleanConversationHistory, this.promptCacheKey)
 		const iterator = stream[Symbol.asyncIterator]()
 
 		try {
@@ -1922,6 +1927,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 								this.cwd,
 								this.urlContentFetcher,
 								this.fileContextTracker,
+								this,
 							),
 						}
 					}
@@ -1936,6 +1942,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 									this.cwd,
 									this.urlContentFetcher,
 									this.fileContextTracker,
+									this,
 								),
 							}
 						}
@@ -1951,6 +1958,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 											this.cwd,
 											this.urlContentFetcher,
 											this.fileContextTracker,
+											this,
 										),
 									}
 								}
