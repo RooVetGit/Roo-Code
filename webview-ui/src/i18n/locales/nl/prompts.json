@@ -117,7 +117,7 @@
     },
     "saveLocation": {
       "label": "Opslaglocatie",
-      "description": "Kies waar je deze modus wilt opslaan. Projectspecificieke modi hebben voorrang op globale modi.",
+      "description": "Kies waar je deze modus wilt opslaan. Projectspecifieke modi hebben voorrang op globale modi.",
       "global": {
         "label": "Globaal",
         "description": "Beschikbaar in alle werkruimtes"
