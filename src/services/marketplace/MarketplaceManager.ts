@@ -12,10 +12,11 @@ import {
 	InstallMarketplaceItemOptions,
 } from "./types"
 import { getUserLocale } from "./utils"
-import { GlobalFileNames } from "../../../src/shared/globalFileNames"
+import { GlobalFileNames } from "../../shared/globalFileNames"
 import { assertsMpContext, createHookable, MarketplaceContext, registerMarketplaceHooks } from "roo-rocket"
 import { assertsBinarySha256, unpackFromUint8, extractRocketConfigFromUint8 } from "config-rocket/cli"
 import { getPanel } from "../../activate/registerCommands"
+import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
 
 /**
  * Service for managing marketplace data
@@ -584,7 +585,7 @@ export class MarketplaceManager {
 		const cwd =
 			target === "project"
 				? vscode.workspace.workspaceFolders![0].uri.fsPath
-				: await this.ensureSettingsDirectoryExists()
+				: await ensureSettingsDirectoryExists(this.context)
 
 		if (!item.binaryUrl || !item.binaryHash)
 			return vscode.window.showErrorMessage("Item does not have a binary URL or hash")
@@ -657,15 +658,6 @@ export class MarketplaceManager {
 			})
 			vscode.window.showInformationMessage(`"${item.name}" installed successfully`)
 		}
-	}
-
-	/**
-	 * Copied from `src/core/config/CustomModesManager.ts`, if in the future we add ClineProvider ref to this class, we can remove this and use the one from there.
-	 */
-	private async ensureSettingsDirectoryExists(): Promise<string> {
-		const settingsDir = path.join(this.context.globalStorageUri.fsPath, "settings")
-		await fs.mkdir(settingsDir, { recursive: true })
-		return settingsDir
 	}
 }
 

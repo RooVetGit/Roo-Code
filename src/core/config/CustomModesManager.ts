@@ -7,6 +7,7 @@ import { fileExistsAtPath } from "../../utils/fs"
 import { arePathsEqual, getWorkspacePath } from "../../utils/path"
 import { logger } from "../../utils/logging"
 import { GlobalFileNames } from "../../shared/globalFileNames"
+import { ensureSettingsDirectoryExists } from "../../utils/globalContext"
 
 const ROOMODES_FILENAME = ".roomodes"
 
@@ -114,7 +115,7 @@ export class CustomModesManager {
 	}
 
 	async getCustomModesFilePath(): Promise<string> {
-		const settingsDir = await this.ensureSettingsDirectoryExists()
+		const settingsDir = await ensureSettingsDirectoryExists(this.context)
 		const filePath = path.join(settingsDir, GlobalFileNames.customModes)
 		const fileExists = await fileExistsAtPath(filePath)
 		if (!fileExists) {
@@ -327,12 +328,6 @@ export class CustomModesManager {
 				`Failed to delete custom mode: ${error instanceof Error ? error.message : String(error)}`,
 			)
 		}
-	}
-
-	private async ensureSettingsDirectoryExists(): Promise<string> {
-		const settingsDir = path.join(this.context.globalStorageUri.fsPath, "settings")
-		await fs.mkdir(settingsDir, { recursive: true })
-		return settingsDir
 	}
 
 	async resetCustomModes(): Promise<void> {
