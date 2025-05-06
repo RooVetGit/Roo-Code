@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useMemo } from "react" // Removed useState
 import { Trans } from "react-i18next"
 import { VSCodeCheckbox, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 
@@ -9,10 +9,12 @@ import { AutoApproveToggle, AutoApproveSetting, autoApproveSettingsConfig } from
 
 interface AutoApproveMenuProps {
 	style?: React.CSSProperties
+	isExpanded: boolean
+	onToggleExpanded: () => void
 }
 
-const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
-	const [isExpanded, setIsExpanded] = useState(false)
+const AutoApproveMenu = ({ style, isExpanded, onToggleExpanded }: AutoApproveMenuProps) => {
+	// const [isExpanded, setIsExpanded] = useState(false) // State lifted to parent
 
 	const {
 		autoApprovalEnabled,
@@ -80,7 +82,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 		],
 	)
 
-	const toggleExpanded = useCallback(() => setIsExpanded((prev) => !prev), [])
+	// const toggleExpanded = useCallback(() => setIsExpanded((prev) => !prev), []) // Handler lifted to parent
 
 	const toggles = useMemo(
 		() => ({
@@ -119,7 +121,6 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 	return (
 		<div
 			style={{
-				padding: "0 15px",
 				userSelect: "none",
 				borderTop: isExpanded
 					? `0.5px solid color-mix(in srgb, var(--vscode-titleBar-inactiveForeground) 20%, transparent)`
@@ -135,7 +136,7 @@ const AutoApproveMenu = ({ style }: AutoApproveMenuProps) => {
 					padding: isExpanded ? "8px 0" : "8px 0 0 0",
 					cursor: "pointer",
 				}}
-				onClick={toggleExpanded}>
+				onClick={onToggleExpanded}>
 				<div onClick={(e) => e.stopPropagation()}>
 					<VSCodeCheckbox
 						checked={autoApprovalEnabled ?? false}

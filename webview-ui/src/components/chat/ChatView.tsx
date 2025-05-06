@@ -90,8 +90,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	// Initialize expanded state based on the persisted setting (default to expanded if undefined)
 	const [isExpanded, setIsExpanded] = useState(
+		// This is for the history preview
 		historyPreviewCollapsed === undefined ? true : !historyPreviewCollapsed,
 	)
+	const [isAutoApproveMenuExpanded, setIsAutoApproveMenuExpanded] = useState(false) // New state for AutoApproveMenu
 
 	const toggleExpanded = useCallback(() => {
 		const newState = !isExpanded
@@ -99,6 +101,11 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		// Send message to extension to persist the new collapsed state
 		vscode.postMessage({ type: "setHistoryPreviewCollapsed", bool: !newState })
 	}, [isExpanded])
+
+	const toggleAutoApproveMenuExpanded = useCallback(() => {
+		// New callback for AutoApproveMenu
+		setIsAutoApproveMenuExpanded((prev) => !prev)
+	}, [])
 
 	// Leaving this less safe version here since if the first message is not a
 	// task, then the extension is in a bad state and needs to be debugged (see
@@ -1234,19 +1241,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				</>
 			) : (
 				<div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4">
-					{/* Moved Task Bar Header Here */}
-					{tasks.length !== 0 && (
-						<div className="flex text-vscode-descriptionForeground w-full mx-auto px-5 pt-3">
-							<div className="flex items-center gap-1 cursor-pointer" onClick={toggleExpanded}>
-								{tasks.length < 10 && (
-									<span className={`font-medium text-xs `}>{t("history:recentTasks")}</span>
-								)}
-								<span
-									className={`codicon  ${isExpanded ? "codicon-eye" : "codicon-eye-closed"} scale-90`}
-								/>
-							</div>
-						</div>
-					)}
 					<div
 						className={` w-full flex flex-col gap-4 m-auto ${isExpanded && tasks.length > 0 ? "mt-0" : ""} px-3.5 min-[370px]:px-10 pt-5 transition-all duration-300`}>
 						<RooHero />
@@ -1286,8 +1280,21 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			//    but becomes scrollable when the viewport is too small
 			*/}
 			{!task && (
-				<div className="mb-[-2px] flex-initial min-h-0">
-					<AutoApproveMenu />
+				<div className={`mb-[-2px] flex-initial min-h-0 flex items-end justify-between px-5 pt-3`}>
+					{!isAutoApproveMenuExpanded && (
+						<div className="flex text-vscode-descriptionForeground flex-shrink-0 mb-1 mr-2.5">
+							<div className="flex items-center gap-1 cursor-pointer" onClick={toggleExpanded}>
+								<span
+									className={`codicon  ${isExpanded ? "codicon-eye" : "codicon-eye-closed"} scale-90`}
+								/>
+								<span className={`font-medium text-xs `}>{t("history:recentTasks")}</span>
+							</div>
+						</div>
+					)}
+					<AutoApproveMenu
+						isExpanded={isAutoApproveMenuExpanded}
+						onToggleExpanded={toggleAutoApproveMenuExpanded}
+					/>
 				</div>
 			)}
 
@@ -1316,7 +1323,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							initialTopMostItemIndex={groupedMessages.length - 1}
 						/>
 					</div>
-					<AutoApproveMenu />
+					<AutoApproveMenu
+						isExpanded={isAutoApproveMenuExpanded}
+						onToggleExpanded={toggleAutoApproveMenuExpanded}
+					/>
 					{showScrollToBottom ? (
 						<div className="flex px-[15px] pt-[10px]">
 							<div
