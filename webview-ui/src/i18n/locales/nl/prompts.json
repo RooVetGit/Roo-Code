@@ -7,7 +7,8 @@
     "editModesConfig": "Modusconfiguratie bewerken",
     "editGlobalModes": "Globale modi bewerken",
     "editProjectModes": "Projectmodi bewerken (.roomodes)",
-    "createModeHelpText": "Klik op + om een nieuwe aangepaste modus te maken, of vraag Roo in de chat om er een voor je te maken!"
+    "createModeHelpText": "Klik op + om een nieuwe aangepaste modus te maken, of vraag Roo in de chat om er een voor je te maken!",
+    "selectMode": "Modus zoeken"
   },
   "apiConfiguration": {
     "title": "API-configuratie",
