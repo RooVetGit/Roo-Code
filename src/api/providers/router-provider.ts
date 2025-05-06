@@ -44,7 +44,15 @@ export abstract class RouterProvider extends BaseProvider {
 	}
 
 	public async fetchModel() {
-		this.models = await getModels(this.name)
+		// For LiteLLM, we need to pass the API key and base URL
+		if (this.name === "litellm") {
+			const apiKey = this.client.apiKey
+			const baseUrl = this.client.baseURL
+			this.models = await getModels(this.name, apiKey, baseUrl)
+		} else {
+			// For other routers, just pass the API key
+			this.models = await getModels(this.name, this.client.apiKey)
+		}
 		return this.getModel()
 	}
 
