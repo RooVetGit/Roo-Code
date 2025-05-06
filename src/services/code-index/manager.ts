@@ -76,7 +76,6 @@ export class CodeIndexManager {
 	}
 
 	public get isFeatureConfigured(): boolean {
-		this.assertInitialized()
 		return this._configManager!.isFeatureConfigured
 	}
 
@@ -86,53 +85,109 @@ export class CodeIndexManager {
 	 * @returns Object indicating if a restart is needed
 	 */
 	public async initialize(contextProxy: ContextProxy): Promise<{ requiresRestart: boolean }> {
-		// Initialize config manager and load configuration
-		this._configManager = new CodeIndexConfigManager(contextProxy)
+		// 1. ConfigManager Initialization and Configuration Loading
+		if (!this._configManager) {
+			this._configManager = new CodeIndexConfigManager(contextProxy)
+		}
 		const { requiresRestart, requiresClear } = await this._configManager.loadConfiguration()
 
-		// Initialize cache manager
-		this._cacheManager = new CacheManager(this.context, this.workspacePath)
-		await this._cacheManager.initialize()
+		// 2. CacheManager Initialization
+		if (!this._cacheManager) {
+			this._cacheManager = new CacheManager(this.context, this.workspacePath)
+			await this._cacheManager.initialize()
+		}
 
-		// Initialize service factory and dependent services
-		this._serviceFactory = new CodeIndexServiceFactory(this._configManager, this.workspacePath, this._cacheManager)
-
-		// Create shared service instances
-		const embedder = this._serviceFactory.createEmbedder()
-		const vectorStore = this._serviceFactory.createVectorStore()
-		const parser = codeParser
-		const scanner = this._serviceFactory.createDirectoryScanner(embedder, vectorStore, parser)
-		const fileWatcher = this._serviceFactory.createFileWatcher(
-			this.context,
-			embedder,
-			vectorStore,
-			this._cacheManager,
+		// 3. Determine if Core Services Need Recreation
+		const needsServiceRecreation = !this._serviceFactory || requiresRestart
+		console.log(
+			`[CodeIndexManager] ${needsServiceRecreation ? "Initial setup or restart required" : "Configuration loaded, no full re-initialization needed"}`,
 		)
 
-		// Initialize orchestrator
-		this._orchestrator = new CodeIndexOrchestrator(
-			this._configManager,
-			this._stateManager,
-			this.context,
-			this.workspacePath,
-			this._cacheManager,
-			embedder,
-			vectorStore,
-			parser,
-			scanner,
-			fileWatcher,
-		)
+		if (needsServiceRecreation) {
+			console.log("[CodeIndexManager] (Re)initializing core services...")
 
-		// Initialize search service
-		this._searchService = new CodeIndexSearchService(this._configManager, this._stateManager, embedder, vectorStore)
+			// Stop watcher if it exists
+			if (this._orchestrator) {
+				this.stopWatcher()
+				console.log("[CodeIndexManager] Stopped existing watcher")
+			}
 
+			// (Re)Initialize service factory
+			this._serviceFactory = new CodeIndexServiceFactory(
+				this._configManager,
+				this.workspacePath,
+				this._cacheManager,
+			)
+
+			// (Re)Create shared service instances
+			const embedder = this._serviceFactory.createEmbedder()
+			const vectorStore = this._serviceFactory.createVectorStore()
+			const parser = codeParser
+			const scanner = this._serviceFactory.createDirectoryScanner(embedder, vectorStore, parser)
+			const fileWatcher = this._serviceFactory.createFileWatcher(
+				this.context,
+				embedder,
+				vectorStore,
+				this._cacheManager,
+			)
+
+			// (Re)Initialize orchestrator
+			this._orchestrator = new CodeIndexOrchestrator(
+				this._configManager,
+				this._stateManager,
+				this.workspacePath,
+				this._cacheManager,
+				vectorStore,
+				scanner,
+				fileWatcher,
+			)
+
+			// (Re)Initialize search service
+			this._searchService = new CodeIndexSearchService(
+				this._configManager,
+				this._stateManager,
+				embedder,
+				vectorStore,
+			)
+
+			console.log("[CodeIndexManager] Core services (re)initialized")
+		}
+
+		// 4. Handle Data Clearing
 		if (requiresClear) {
-			console.log("[CodeIndexManager] Embedding dimension changed. Clearing existing index data...")
+			console.log("[CodeIndexManager] Configuration requires clearing data")
 			await this.clearIndexData()
 		}
 
-		if (requiresRestart || requiresClear) {
-			this.startIndexing()
+		// 5. Handle Indexing Start/Restart
+		if (this._configManager.isFeatureEnabled && this._configManager.isFeatureConfigured) {
+			const shouldStartOrRestartIndexing =
+				requiresRestart ||
+				requiresClear ||
+				(needsServiceRecreation && (!this._orchestrator || this._orchestrator.state !== "Indexing"))
+
+			if (shouldStartOrRestartIndexing) {
+				console.log("[CodeIndexManager] Starting/restarting indexing due to configuration changes")
+				await this.startIndexing()
+			} else {
+				console.log(
+					"[CodeIndexManager] Indexing not started/restarted (requiresRestart:",
+					requiresRestart,
+					"requiresClear:",
+					requiresClear,
+					"currentState:",
+					this._orchestrator?.state,
+					"needsServiceRecreation:",
+					needsServiceRecreation,
+					")",
+				)
+			}
+		} else {
+			console.log("[CodeIndexManager] Feature not enabled or not configured")
+			if (this._orchestrator && this._orchestrator.state !== "Standby") {
+				this.stopWatcher()
+				console.log("[CodeIndexManager] Stopped watcher as feature is disabled")
+			}
 		}
 
 		return { requiresRestart }

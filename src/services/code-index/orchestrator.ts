@@ -2,7 +2,7 @@ import * as vscode from "vscode"
 import * as path from "path"
 import { CodeIndexConfigManager } from "./config-manager"
 import { CodeIndexStateManager, IndexingState } from "./state-manager"
-import { FileProcessingResult, IFileWatcher, IVectorStore, IEmbedder, ICodeParser } from "./interfaces"
+import { FileProcessingResult, IFileWatcher, IVectorStore } from "./interfaces"
 import { DirectoryScanner } from "./processors"
 import { CacheManager } from "./cache-manager"
 
@@ -16,12 +16,9 @@ export class CodeIndexOrchestrator {
 	constructor(
 		private readonly configManager: CodeIndexConfigManager,
 		private readonly stateManager: CodeIndexStateManager,
-		private readonly context: vscode.ExtensionContext,
 		private readonly workspacePath: string,
 		private readonly cacheManager: CacheManager,
-		private readonly embedder: IEmbedder,
 		private readonly vectorStore: IVectorStore,
-		private readonly parser: ICodeParser,
 		private readonly scanner: DirectoryScanner,
 		private readonly fileWatcher: IFileWatcher,
 	) {}
@@ -107,7 +104,6 @@ export class CodeIndexOrchestrator {
 		this.stateManager.setSystemState("Indexing", "Initializing services...")
 
 		try {
-			this.configManager.loadConfiguration()
 			const collectionCreated = await this.vectorStore.initialize()
 
 			if (collectionCreated) {
