@@ -1,9 +1,9 @@
-import * as vscode from "vscode"
+import * as path from "path"
 import { VectorStoreSearchResult } from "./interfaces"
+import { IEmbedder } from "./interfaces/embedder"
+import { IVectorStore } from "./interfaces/vector-store"
 import { CodeIndexConfigManager } from "./config-manager"
 import { CodeIndexStateManager } from "./state-manager"
-import { CodeIndexServiceFactory } from "./service-factory"
-import { CacheManager } from "./cache-manager"
 
 /**
  * Service responsible for searching the code index.
@@ -12,19 +12,23 @@ export class CodeIndexSearchService {
 	constructor(
 		private readonly configManager: CodeIndexConfigManager,
 		private readonly stateManager: CodeIndexStateManager,
-		private readonly serviceFactory: CodeIndexServiceFactory,
-		private readonly context: vscode.ExtensionContext,
-		private readonly cacheManager: CacheManager,
+		private readonly embedder: IEmbedder,
+		private readonly vectorStore: IVectorStore,
 	) {}
 
 	/**
 	 * Searches the code index for relevant content.
 	 * @param query The search query
 	 * @param limit Maximum number of results to return
+	 * @param directoryPrefix Optional directory path to filter results by
 	 * @returns Array of search results
 	 * @throws Error if the service is not properly configured or ready
 	 */
-	public async searchIndex(query: string, limit: number): Promise<VectorStoreSearchResult[]> {
+	public async searchIndex(
+		query: string,
+		limit: number,
+		directoryPrefix?: string,
+	): Promise<VectorStoreSearchResult[]> {
 		if (!this.configManager.isFeatureEnabled || !this.configManager.isFeatureConfigured) {
 			throw new Error("Code index feature is disabled or not configured.")
 		}
@@ -36,18 +40,21 @@ export class CodeIndexSearchService {
 		}
 
 		try {
-			// Get services from factory
-			const { embedder, vectorStore } = this.serviceFactory.createServices(this.context, this.cacheManager)
-
 			// Generate embedding for query
-			const embeddingResponse = await embedder.createEmbeddings([query])
+			const embeddingResponse = await this.embedder.createEmbeddings([query])
 			const vector = embeddingResponse?.embeddings[0]
 			if (!vector) {
 				throw new Error("Failed to generate embedding for query.")
 			}
 
+			// Handle directory prefix
+			let normalizedPrefix: string | undefined = undefined
+			if (directoryPrefix) {
+				normalizedPrefix = path.normalize(directoryPrefix)
+			}
+
 			// Perform search
-			const results = await vectorStore.search(vector, limit)
+			const results = await this.vectorStore.search(vector, limit, normalizedPrefix)
 			return results
 		} catch (error) {
 			console.error("[CodeIndexSearchService] Error during search:", error)

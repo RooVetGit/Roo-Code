@@ -76,8 +76,29 @@ export class QdrantVectorStore implements IVectorStore {
 		}>,
 	): Promise<void> {
 		try {
+			const processedPoints = points.map((point) => {
+				if (point.payload?.filePath) {
+					const segments = point.payload.filePath.split(path.sep).filter(Boolean)
+					const pathSegments = segments.reduce(
+						(acc: Record<string, string>, segment: string, index: number) => {
+							acc[index.toString()] = segment
+							return acc
+						},
+						{},
+					)
+					return {
+						...point,
+						payload: {
+							...point.payload,
+							pathSegments,
+						},
+					}
+				}
+				return point
+			})
+
 			await this.client.upsert(this.collectionName, {
-				points,
+				points: processedPoints,
 				wait: true,
 			})
 		} catch (error) {
@@ -101,11 +122,29 @@ export class QdrantVectorStore implements IVectorStore {
 	 * @param limit Maximum number of results to return
 	 * @returns Promise resolving to search results
 	 */
-	async search(queryVector: number[], limit: number = 10): Promise<VectorStoreSearchResult[]> {
+	async search(
+		queryVector: number[],
+		limit: number = 10,
+		directoryPrefix?: string,
+	): Promise<VectorStoreSearchResult[]> {
 		try {
+			let filter: any = undefined
+
+			if (directoryPrefix) {
+				const segments = directoryPrefix.split(path.sep).filter(Boolean)
+
+				filter = {
+					must: segments.map((segment, index) => ({
+						key: `pathSegments.${index}`,
+						match: { value: segment },
+					})),
+				}
+			}
+
 			const result = await this.client.search(this.collectionName, {
 				vector: queryVector,
 				limit,
+				filter,
 			})
 			result.filter((r) => this.isPayloadValid(r.payload!))
 

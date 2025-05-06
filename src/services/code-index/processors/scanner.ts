@@ -306,7 +306,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 						id: pointId,
 						vector: embeddings[index],
 						payload: {
-							filePath: normalizedAbsolutePath, // Store normalized absolute path
+							filePath: path.relative(workspaceRoot, normalizedAbsolutePath),
 							codeChunk: block.content,
 							startLine: block.start_line,
 							endLine: block.end_line,
