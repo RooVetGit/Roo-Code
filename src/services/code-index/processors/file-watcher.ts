@@ -1,13 +1,12 @@
 import * as vscode from "vscode"
-import * as path from "path"
 import { createHash } from "crypto"
 import { RooIgnoreController } from "../../../core/ignore/RooIgnoreController"
-import { getWorkspacePath } from "../../../utils/path"
 import { v5 as uuidv5 } from "uuid"
 import { scannerExtensions } from "../shared/supported-extensions"
 import { IFileWatcher, FileProcessingResult, IEmbedder, IVectorStore } from "../interfaces"
 import { codeParser } from "./parser"
 import { CacheManager } from "../cache-manager"
+import { generateNormalizedAbsolutePath, generateRelativeFilePath } from "../shared/get-relative-path"
 
 const QDRANT_CODE_BLOCK_NAMESPACE = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB
@@ -182,10 +181,8 @@ export class FileWatcher implements IFileWatcher {
 				const texts = blocks.map((block) => block.content)
 				const { embeddings } = await this.embedder.createEmbeddings(texts)
 
-				const workspaceRoot = getWorkspacePath()
 				const points = blocks.map((block, index) => {
-					const absolutePath = path.resolve(workspaceRoot, block.file_path)
-					const normalizedAbsolutePath = path.normalize(absolutePath)
+					const normalizedAbsolutePath = generateNormalizedAbsolutePath(block.file_path)
 
 					const stableName = `${normalizedAbsolutePath}:${block.start_line}`
 					const pointId = uuidv5(stableName, QDRANT_CODE_BLOCK_NAMESPACE)
@@ -194,7 +191,7 @@ export class FileWatcher implements IFileWatcher {
 						id: pointId,
 						vector: embeddings[index],
 						payload: {
-							filePath: path.relative(workspaceRoot, normalizedAbsolutePath),
+							filePath: generateRelativeFilePath(normalizedAbsolutePath),
 							codeChunk: block.content,
 							startLine: block.start_line,
 							endLine: block.end_line,
