@@ -2,7 +2,7 @@ import { listFiles } from "../../glob/list-files"
 import { RooIgnoreController } from "../../../core/ignore/RooIgnoreController"
 import { stat } from "fs/promises"
 import * as path from "path"
-import { getWorkspacePath } from "../../../utils/path"
+import { generateNormalizedAbsolutePath, generateRelativeFilePath } from "../shared/get-relative-path"
 import { scannerExtensions } from "../shared/supported-extensions"
 import * as vscode from "vscode"
 import { CodeBlock, ICodeParser, IEmbedder, IVectorStore, IDirectoryScanner } from "../interfaces"
@@ -291,13 +291,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 
 				// Prepare points for Qdrant
 				const points = batchBlocks.map((block, index) => {
-					const workspaceRoot = getWorkspacePath() // Assuming this utility function is available
-					// Ensure the block path is relative to the workspace root before resolving
-					const relativeBlockPath = path.isAbsolute(block.file_path)
-						? path.relative(workspaceRoot, block.file_path)
-						: block.file_path
-					const absolutePath = path.resolve(workspaceRoot, relativeBlockPath)
-					const normalizedAbsolutePath = path.normalize(absolutePath)
+					const normalizedAbsolutePath = generateNormalizedAbsolutePath(block.file_path)
 
 					const stableName = `${normalizedAbsolutePath}:${block.start_line}`
 					const pointId = uuidv5(stableName, DirectoryScanner.QDRANT_CODE_BLOCK_NAMESPACE)
@@ -306,7 +300,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 						id: pointId,
 						vector: embeddings[index],
 						payload: {
-							filePath: path.relative(workspaceRoot, normalizedAbsolutePath),
+							filePath: generateRelativeFilePath(normalizedAbsolutePath),
 							codeChunk: block.content,
 							startLine: block.start_line,
 							endLine: block.end_line,
