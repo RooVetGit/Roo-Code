@@ -24,6 +24,26 @@
 				"group": "tasks",
 				"order": 1
 			}
+		},
+		{
+			"name": "Run Extension (No Watch)",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": ["--extensionDevelopmentPath=${workspaceFolder}"],
+			"sourceMaps": true,
+			"outFiles": ["${workspaceFolder}/dist/**/*.js"],
+			"preLaunchTask": "npm: compile",
+			"env": {
+				"NODE_ENV": "development",
+				"VSCODE_DEBUG_MODE": "true"
+			},
+			"resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"],
+			"presentation": {
+				"hidden": false,
+				"group": "tasks",
+				"order": 2
+			}
 		}
 	]
 }

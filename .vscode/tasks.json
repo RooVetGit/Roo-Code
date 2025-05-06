@@ -4,6 +4,17 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"label": "npm: compile",
+			"type": "npm",
+			"script": "compile",
+			"group": "build",
+			"problemMatcher": "$tsc",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			}
+		},
+		{
 			"label": "watch",
 			"dependsOn": ["npm: dev", "npm: watch:tsc", "npm: watch:esbuild"],
 			"presentation": {
@@ -41,7 +52,7 @@
 			"type": "npm",
 			"script": "watch:esbuild",
 			"group": "build",
-			"problemMatcher": "$esbuild-watch",
+			"problemMatcher": "$tsc-watch",
 			"isBackground": true,
 			"presentation": {
 				"group": "watch",

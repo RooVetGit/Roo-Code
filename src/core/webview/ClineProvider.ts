@@ -547,6 +547,24 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		await this.view?.webview.postMessage(message)
 	}
 
+	/**
+	 * Focuses the webview to ensure user input goes to the chat
+	 * This is particularly important after terminal operations
+	 */
+	public async focusWebview() {
+		if (this.view) {
+			if ("reveal" in this.view) {
+				// For WebviewPanel (editor view)
+				this.view.reveal()
+			} else if ("show" in this.view) {
+				// For WebviewView (sidebar view)
+				this.view.show(true) // true = preserve focus
+			}
+			// Send a message to the webview to focus the input field
+			await this.postMessageToWebview({ type: "invoke", invoke: "setChatBoxMessage" })
+		}
+	}
+
 	private async getHMRHtmlContent(webview: vscode.Webview): Promise<string> {
 		// Try to read the port from the file
 		let localPort = "5173" // Default fallback
