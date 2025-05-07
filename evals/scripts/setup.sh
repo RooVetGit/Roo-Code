@@ -297,20 +297,13 @@ code --install-extension rooveterinaryinc.roo-cline &>/dev/null || exit 1
 if [[ ! -d "../../evals" ]]; then
   echo "🔗 Cloning evals repository..."
   if gh auth status &>/dev/null; then
-    read -p "🔗 Would you like to be able to share eval results (fork repository)? (Y/n): " fork_evals
-
-    if [[ "$fork_evals" =~ ^[Yy]|^$ ]]; then
-      gh repo fork cte/evals --clone ../../evals || exit 1
-    else
-      gh repo clone cte/evals ../../evals || exit 1
-    fi
+    gh repo clone cte/evals ../../evals || exit 1
   else
     git clone https://github.com/cte/evals.git ../../evals || exit 1
   fi
 else
   echo "🔄 Updating existing evals repository..."
-  # Run in a subshell to avoid changing the script's working directory
-  (cd ../../evals && git checkout main && git pull) || { echo "❌ Failed to update evals repository."; exit 1; }
+  (cd ../../evals && git checkout -f && git clean -f -d && git checkout main && git pull) || { echo "❌ Failed to update evals repository."; exit 1; }
   echo "✅ Evals repository is up to date."
 fi
 
