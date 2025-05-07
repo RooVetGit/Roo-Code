@@ -3,6 +3,7 @@ import {
 	ModelInfo,
 	anthropicModels,
 	bedrockModels,
+	cerebrasModels,
 	deepSeekModels,
 	geminiModels,
 	mistralModels,
@@ -20,6 +21,7 @@ export { AWS_REGIONS } from "@roo/shared/aws_regions"
 export const MODELS_BY_PROVIDER: Partial<Record<ProviderName, Record<string, ModelInfo>>> = {
 	anthropic: anthropicModels,
 	bedrock: bedrockModels,
+	cerebras: cerebrasModels,
 	deepseek: deepSeekModels,
 	gemini: geminiModels,
 	mistral: mistralModels,
@@ -33,6 +35,7 @@ export const MODELS_BY_PROVIDER: Partial<Record<ProviderName, Record<string, Mod
 export const PROVIDERS = [
 	{ value: "openrouter", label: "OpenRouter" },
 	{ value: "anthropic", label: "Anthropic" },
+	{ value: "cerebras", label: "Cerebras" },
 	{ value: "gemini", label: "Google Gemini" },
 	{ value: "deepseek", label: "DeepSeek" },
 	{ value: "openai-native", label: "OpenAI" },

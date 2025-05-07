@@ -7,6 +7,8 @@ import {
 	anthropicModels,
 	bedrockDefaultModelId,
 	bedrockModels,
+	cerebrasModels,
+	cerebrasDefaultModelId,
 	deepSeekDefaultModelId,
 	deepSeekModels,
 	geminiDefaultModelId,
@@ -96,6 +98,11 @@ function getSelectedModel({
 			const id = apiConfiguration.apiModelId ?? chutesDefaultModelId
 			const info = chutesModels[id as keyof typeof chutesModels]
 			return info ? { id, info } : { id: chutesDefaultModelId, info: chutesModels[chutesDefaultModelId] }
+		}
+		case "cerebras": {
+			const id = apiConfiguration.apiModelId ?? cerebrasDefaultModelId
+			const info = cerebrasModels[id as keyof typeof cerebrasModels]
+			return info ? { id, info } : { id: cerebrasDefaultModelId, info: cerebrasModels[cerebrasDefaultModelId] }
 		}
 		case "bedrock": {
 			const id = apiConfiguration.apiModelId ?? bedrockDefaultModelId
