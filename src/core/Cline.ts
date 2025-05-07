@@ -848,7 +848,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		this.getCheckpointService()
 
 		let nextUserContent = userContent
-		let includeFileDetails = true
+		let includeFileDetails = false
 
 		this.emit("taskStarted")
 

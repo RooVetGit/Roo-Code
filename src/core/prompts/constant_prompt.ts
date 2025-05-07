@@ -1,5 +1,6 @@
 
 import { McpHub } from "../../services/mcp/McpHub"
+import { McpServer } from "../../shared/mcp"
 import { Cline } from "../Cline"
 import { Anthropic } from "@anthropic-ai/sdk"
 
@@ -13,6 +14,70 @@ import { Anthropic } from "@anthropic-ai/sdk"
 export async function generateConstMcpPrompt(mcpHub?: McpHub, conversation?: Array<any>, cline?:Cline): Promise<string> {
   if (!mcpHub) {
     return ""
+  }
+  if (!conversation) {
+    return ""
+  }
+
+  async function one_part(conversation:string, mcpHub: McpHub, codeContextServer:McpServer, n_results:number = 64) {
+    // 调用code_context服务器中的search_code工具
+    let queries: string[] = []
+    try {
+      // 使用提取的搜索查询来增强相关性
+      const result = conversation ? await mcpHub.callTool(
+        codeContextServer.name, 
+        "get_keywords", 
+        { queries: conversation },
+        codeContextServer.source
+      ) : null
+      
+      if (result && result.content) {
+        // 处理内容数组，提取文本内容
+        if (result.content[0].type === "text") {
+            const contextContent = result.content[0].text
+            queries = contextContent.split("\n").map((item: string) => item.trim())
+        }
+      }
+    } catch (toolError) {
+      console.error("Failed to call get_keywords tool:", toolError)
+      return {"queries":[], "contextContent":""}
+    }
+      
+    if (queries.length > 0) {
+      // 调用code_context服务器中的search_code工具
+      try {
+        // 使用提取的搜索查询来增强相关性
+        const result = await mcpHub.callTool(
+          codeContextServer.name, 
+          "search_code", 
+          { queries,  n_results},
+          codeContextServer.source
+        )
+        
+        if (result && result.content) {
+          // 处理内容数组，提取文本内容
+          const contextContent = result.content
+            .map(item => {
+              if (item.type === "text") {
+                return item.text
+              } else if (item.type === "resource" && item.resource.text) {
+                return item.resource.text
+              }
+              return ""
+            })
+            .filter(Boolean)
+            .join("\n\n")
+            
+          if (contextContent) {
+            return {queries, contextContent}
+          }
+        }
+      } catch (toolError) {
+        console.error("Failed to call search_code tool:", toolError)
+        return {"queries":[], "contextContent":""}
+      }
+    }
+    return {"queries":[], "contextContent":""}
   }
 
   try {
@@ -45,7 +110,7 @@ export async function generateConstMcpPrompt(mcpHub?: McpHub, conversation?: Arr
               return msg.content
                 .filter((block: any) => block.type === "text")
                 .map((block: any) => `<${msg.role}>${block.text}</${msg.role}>\n`)
-                .slice(0, 1) // 限制长度
+                .slice(0, -1) // 限制长度
                 .join(" ");
             }
             return "";
@@ -55,58 +120,29 @@ export async function generateConstMcpPrompt(mcpHub?: McpHub, conversation?: Arr
       }
     }
 
-    // 调用code_context服务器中的search_code工具
-    let Queries: string[] = []
-    try {
-      // 使用提取的搜索查询来增强相关性
-      const result = searchQuery ? await mcpHub.callTool(
-        codeContextServer.name, 
-        "get_keywords", 
-        { queries: searchQuery },
-        codeContextServer.source
-      ) : null
-      
-      if (result && result.content) {
-        // 处理内容数组，提取文本内容
-        if (result.content[0].type === "text") {
-            const contextContent = result.content[0].text
-            Queries = contextContent.split("\n").map((item: string) => item.trim())
-        }
+    const {
+      queries,
+      contextContent
+    } = await one_part(searchQuery, mcpHub, codeContextServer, 48)
+    if (contextContent && contextContent!=="") {
+      if (cline && queries.length > 0 && queries[0] !== "") {
+        await cline.say("text", `正在进行问题重写...\n`)
       }
-    } catch (toolError) {
-      console.error("Failed to call get_keywords tool:", toolError)
-    }
-    
-  if (Queries.length > 0) {
-    // 调用code_context服务器中的search_code工具
-    try {
-      // 使用提取的搜索查询来增强相关性
-      const result = await mcpHub.callTool(
-        codeContextServer.name, 
-        "search_code", 
-        { queries: Queries },
-        codeContextServer.source
-      )
-      
-      if (result && result.content) {
-        // 处理内容数组，提取文本内容
-        const contextContent = result.content
-          .map(item => {
-            if (item.type === "text") {
-              return item.text
-            } else if (item.type === "resource" && item.resource.text) {
-              return item.resource.text
-            }
-            return ""
-          })
-          .filter(Boolean)
-          .join("\n\n")
-          
-        if (contextContent) {
-          if (cline && Queries.length > 0 && Queries[0] !== "") {
-              await cline.say("text", `已在CodeBase中搜索关键词：\n${Queries.map(query => {return `  -> \`${query}\``}).join("\n")}`)
-          }
-          return `
+      searchQuery = 
+`<get_keywords_task>
+${searchQuery}
+</get_keywords_task>
+=======
+<context>
+${contextContent}
+</context>
+`
+      const dst = await one_part(searchQuery, mcpHub, codeContextServer, 24)
+      if (dst.contextContent && dst.contextContent !== "") {
+        if (cline && queries.length > 0 && queries[0] !== "") {
+            await cline.say("text", `已在CodeBase中搜索：\n${queries.map(query => {return `  -> \`${query}\``}).join("\n")}`)
+        }
+        return `
 ====
 
 # CODE CONTEXT
@@ -117,13 +153,9 @@ When solving user problems, please refer to the 'Code Context' information first
 ${contextContent}
 
 `
-        }
       }
-    } catch (toolError) {
-      console.error("Failed to call search_code tool:", toolError)
     }
-  }
-    
+
     return ""
   } catch (error) {
     console.error("Failed to generate MCP prompt:", error)
@@ -146,6 +178,7 @@ mcpHub?: McpHub, cline?:Cline) {
 ${mcpCodeContext}
 
 The above context is obtained through the codebase tool, and you should prioritize using these contexts to solve the user's problems. However, these contexts may be lagging, so if you have already obtained the content of the same file through the file reading tool or if you have edited the file, please take the result of the file reading tool or your edit as the standard.
+When analyzing issues in the codebase context, some code and their sources can be displayed to the user as references.
 `
       if (Array.isArray(lastMessage.content)) {
         lastMessage.content.push({
@@ -176,8 +209,7 @@ The above context is obtained through the codebase tool, and you should prioriti
  * 生成MCP相关的提示内容
  * 
  * @param mcpHub McpHub实例，用于获取代码上下文
- * @param conversation 对话历史信息，用于增强上下文搜索
- * @returns 生成的MCP提示内容
+ * @returns 当前支持rag的文件
  */
 export async function getCodebaseSupport(mcpHub?: McpHub): Promise<string> {
     if (!mcpHub) {

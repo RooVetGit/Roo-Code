@@ -123,7 +123,7 @@ export async function attemptCompletionTool(
 				return
 			}
 
-			await cline.say("user_feedback", text ?? "", images)
+			await cline.say("text", text ?? "", images)
 			const toolResults: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[] = []
 
 			if (commandResult) {

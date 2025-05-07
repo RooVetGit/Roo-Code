@@ -86,7 +86,7 @@ ${modeConfig.groups.length? getCapabilitiesSection(cwd, supportsComputerUse, mcp
 
 ${modesSection}
 
-${modeConfig.groups.length? getRulesSection(cwd, supportsComputerUse, effectiveDiffStrategy, modeConfig):""}
+${getRulesSection(cwd, supportsComputerUse, effectiveDiffStrategy, modeConfig)}
 
 ${getSystemInfoSection(cwd)}
 

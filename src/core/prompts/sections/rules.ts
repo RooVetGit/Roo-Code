@@ -47,7 +47,18 @@ function getEditingInstructions(diffStrategy?: DiffStrategy): string {
 }
 
 export function getRulesSection(cwd: string, supportsComputerUse: boolean, diffStrategy?: DiffStrategy, modeConfig?:ModeConfig): string {
-	const tools_group = modeConfig?.groups
+	const tools_group = modeConfig?.groups || []
+
+	if  (tools_group?.length === 0) {
+		return `====
+
+RULES
+
+- **NEVER refer to tool names when speaking to the USER or in <think> tags.** 
+- If you do not need to use other tools (such as switching modes), every response you make in conversation with the user must use the \`attempt_completion\` tool to inform the user of your conclusion. Even if the information you currently have is not enough to answer the user's question, you should still use the \`attempt_completion\` tool to inform the user that the information is insufficient, state the information you need, and prompt the user to use @codebase (to search for information within the project scope) or @file (if known information exists in this file, information can be obtained by reading a specific file) to provide more information.`
+	}
+
+
 	const read_0 = `
 - The user may provide a file's contents directly in their message, in which case you shouldn't use the read_file tool to get the file contents again since you already have it.
 - When using the search_files tool, craft your regex patterns carefully to balance specificity and flexibility. Based on the user's task you may use it to find code patterns, TODO comments, function definitions, or any text-based information across the project. The results include context, so analyze the surrounding code to better understand the matches. Leverage the search_files tool in combination with other tools for more comprehensive analysis. For example, use it to find specific code patterns, then use read_file to examine the full context of interesting matches before using ${diffStrategy ? "apply_diff or write_to_file" : "write_to_file"} to make informed changes.`
@@ -60,7 +71,7 @@ export function getRulesSection(cwd: string, supportsComputerUse: boolean, diffS
 	const mcp_0 = `
 - MCP operations should be used one at a time, similar to other tool usage. Wait for confirmation of success before proceeding with additional operations.`
 	
-	
+
 	return `====
 
 RULES
@@ -83,7 +94,7 @@ ${!tools_group || tools_group?.includes("edit") ? getEditingInstructions(diffStr
 			? '\n- The user may ask generic non-development tasks, such as "what\'s the latest news" or "look up the weather in San Diego", in which case you might use the browser_action tool to complete the task if it makes sense to do so, rather than trying to create a website or using curl to answer the question. However, if an available MCP server tool or resource can be used instead, you should prefer to use it over browser_action.'
 			: ""
 	}
-- **NEVER refer to tool names when speaking to the USER.** For example, instead of saying 'I need to use the read_file tool to read your file', just say 'I will read your file'.
+- **NEVER refer to tool names when speaking to the USER or in <think> tags.** For example, instead of saying 'I need to use the read_file tool to read your file', just say 'I will read your file'.
 - NEVER end attempt_completion result with a question or request to engage in further conversation! Formulate the end of your result in a way that is final and does not require further input from the user.
 - When presented with images, utilize your vision capabilities to thoroughly examine them and extract meaningful information. Incorporate these insights into your thought process as you accomplish the user's task.
 - At the end of each user message, you will automatically receive environment_details. This information is not written by the user themselves, but is auto-generated to provide potentially relevant context about the project structure and environment. While this information can be valuable for understanding the project context, do not treat it as a direct part of the user's request or response. Use it to inform your actions and decisions, but don't assume the user is explicitly asking about or referring to this information unless they clearly do so in their message. When using environment_details, explain your actions clearly to ensure the user understands, as they may not be aware of these details.${
