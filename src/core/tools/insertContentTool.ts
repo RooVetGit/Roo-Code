@@ -1,7 +1,5 @@
-import delay from "delay"
 import fs from "fs/promises"
 import path from "path"
-
 import { getReadablePath } from "../../utils/path"
 import { Cline } from "../Cline"
 import { ToolUse, AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../../shared/tools"
@@ -10,6 +8,60 @@ import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
 import { fileExistsAtPath } from "../../utils/fs"
 import { insertGroups } from "../diff/insert-groups"
+import { telemetryService } from "../../services/telemetry/TelemetryService"
+import { addLineNumbers } from "../../integrations/misc/extract-text"
+
+import { setImmediate } from "timers"
+const CONTENT_UPDATE_DELAY = () => new Promise((resolve) => setTimeout(resolve, 200))
+
+async function prepareAndShowContent(
+	cline: Cline,
+	absolutePath: string,
+	relPath: string,
+	content: string,
+	lineNumber: number,
+	sharedMessageProps: ClineSayTool,
+	partial: boolean,
+) {
+	const fileContent = !cline.diffViewProvider.isEditing
+		? await fs.readFile(absolutePath, "utf8")
+		: cline.diffViewProvider.originalContent!
+
+	const lines = fileContent.split("\n")
+	const updatedContent = insertGroups(lines, [
+		{
+			index: lineNumber,
+			elements: content.split("\n"),
+		},
+	]).join("\n")
+
+	if (!cline.diffViewProvider.isEditing) {
+		cline.diffViewProvider.editType = "modify"
+		cline.diffViewProvider.originalContent = fileContent
+		await cline.ask("tool", JSON.stringify(sharedMessageProps), true).catch(() => {})
+		await cline.diffViewProvider.open(relPath)
+		await cline.diffViewProvider.update(updatedContent, true, false)
+		cline.diffViewProvider.scrollToFirstDiff()
+	} else {
+		await cline.diffViewProvider.update(updatedContent, true, false)
+	}
+
+	const diff = formatResponse.createPrettyPatch(relPath, fileContent, updatedContent)
+
+	// Send partial message with current state
+	if (partial) {
+		const partialMessage = JSON.stringify({
+			...sharedMessageProps,
+			diff,
+			content, // Include content for CodeAccordian to show during streaming
+		})
+		await cline.ask("tool", partialMessage, partial).catch(() => {})
+	}
+
+	await CONTENT_UPDATE_DELAY()
+
+	return { fileContent, updatedContent, diff }
+}
 
 export async function insertContentTool(
 	cline: Cline,
@@ -23,16 +75,58 @@ export async function insertContentTool(
 	const line: string | undefined = block.params.line
 	const content: string | undefined = block.params.content
 
+	// 0-based lineNumber
+	const lineNumber = line ? parseInt(line, 10) - 1 : undefined
+
 	const sharedMessageProps: ClineSayTool = {
 		tool: "insertContent",
 		path: getReadablePath(cline.cwd, removeClosingTag("path", relPath)),
-		lineNumber: line ? parseInt(line, 10) : undefined,
+
+		// Use 1-based line number for display
+		lineNumber: lineNumber !== undefined ? lineNumber + 1 : undefined,
 	}
 
 	try {
 		if (block.partial) {
-			const partialMessage = JSON.stringify(sharedMessageProps)
-			await cline.ask("tool", partialMessage, block.partial).catch(() => {})
+			// Validate all required parameters exist before proceeding
+			if (!relPath || lineNumber === undefined || !content) {
+				// Wait for all parameters before proceeding
+				return
+			}
+
+			const absolutePath = path.resolve(cline.cwd, relPath)
+			const fileExists = await fileExistsAtPath(absolutePath)
+
+			const accessAllowed = cline.rooIgnoreController?.validateAccess(relPath)
+			if (!accessAllowed) {
+				await cline.say("rooignore_error", relPath)
+				pushToolResult(formatResponse.toolError(formatResponse.rooIgnoreError(relPath)))
+				return
+			}
+
+			if (!fileExists) {
+				cline.consecutiveMistakeCount++
+				cline.recordToolError("insert_content")
+				const formattedError = `File does not exist at path: ${absolutePath}\n\n<error_details>\nThe specified file could not be found. Please verify the file path and try again.\n</error_details>`
+				const currentCount = (cline.consecutiveMistakeCountForInsertContent?.get(relPath) || 0) + 1
+				cline.consecutiveMistakeCountForInsertContent?.set(relPath, currentCount)
+				telemetryService.captureInsertContentError(cline.taskId, currentCount)
+				if (currentCount >= 2) {
+					await cline.say("error", formattedError)
+				}
+				pushToolResult(formattedError)
+				return
+			}
+
+			await prepareAndShowContent(
+				cline,
+				absolutePath,
+				relPath,
+				content,
+				lineNumber,
+				sharedMessageProps,
+				block.partial,
+			)
 			return
 		}
 
@@ -61,17 +155,27 @@ export async function insertContentTool(
 		const absolutePath = path.resolve(cline.cwd, relPath)
 		const fileExists = await fileExistsAtPath(absolutePath)
 
+		const accessAllowed = cline.rooIgnoreController?.validateAccess(relPath)
+		if (!accessAllowed) {
+			await cline.say("rooignore_error", relPath)
+			pushToolResult(formatResponse.toolError(formatResponse.rooIgnoreError(relPath)))
+			return
+		}
+
 		if (!fileExists) {
 			cline.consecutiveMistakeCount++
 			cline.recordToolError("insert_content")
 			const formattedError = `File does not exist at path: ${absolutePath}\n\n<error_details>\nThe specified file could not be found. Please verify the file path and try again.\n</error_details>`
+			const currentCount = (cline.consecutiveMistakeCountForInsertContent?.get(relPath) || 0) + 1
+			cline.consecutiveMistakeCountForInsertContent?.set(relPath, currentCount)
+			telemetryService.captureInsertContentError(cline.taskId, currentCount)
 			await cline.say("error", formattedError)
 			pushToolResult(formattedError)
 			return
 		}
 
-		const lineNumber = parseInt(line, 10)
-		if (isNaN(lineNumber) || lineNumber < 0) {
+		// -1 here is append, so it is allowed:
+		if (lineNumber === undefined || isNaN(lineNumber) || lineNumber < -1) {
 			cline.consecutiveMistakeCount++
 			cline.recordToolError("insert_content")
 			pushToolResult(formatResponse.toolError("Invalid line number. Must be a non-negative integer."))
@@ -80,51 +184,33 @@ export async function insertContentTool(
 
 		cline.consecutiveMistakeCount = 0
 
-		// Read the file
-		const fileContent = await fs.readFile(absolutePath, "utf8")
-		cline.diffViewProvider.editType = "modify"
-		cline.diffViewProvider.originalContent = fileContent
-		const lines = fileContent.split("\n")
-
-		const updatedContent = insertGroups(lines, [
-			{
-				index: lineNumber - 1,
-				elements: content.split("\n"),
-			},
-		]).join("\n")
-
-		// Show changes in diff view
-		if (!cline.diffViewProvider.isEditing) {
-			await cline.ask("tool", JSON.stringify(sharedMessageProps), true).catch(() => {})
-			// First open with original content
-			await cline.diffViewProvider.open(relPath)
-			await cline.diffViewProvider.update(fileContent, false)
-			cline.diffViewProvider.scrollToFirstDiff()
-			await delay(200)
-		}
-
-		const diff = formatResponse.createPrettyPatch(relPath, fileContent, updatedContent)
+		const { diff } = await prepareAndShowContent(
+			cline,
+			absolutePath,
+			relPath,
+			content,
+			lineNumber,
+			sharedMessageProps,
+			block.partial,
+		)
 
 		if (!diff) {
 			pushToolResult(`No changes needed for '${relPath}'`)
 			return
 		}
 
-		await cline.diffViewProvider.update(updatedContent, true)
-
+		cline.consecutiveMistakeCount = 0
+		cline.consecutiveMistakeCountForInsertContent?.delete(relPath)
 		const completeMessage = JSON.stringify({
 			...sharedMessageProps,
 			diff,
-			lineNumber: lineNumber,
+			lineNumber: lineNumber + 1,
 		} satisfies ClineSayTool)
 
-		const didApprove = await cline
-			.ask("tool", completeMessage, false)
-			.then((response) => response.response === "yesButtonClicked")
+		const didApprove = await askApproval("tool", completeMessage)
 
 		if (!didApprove) {
 			await cline.diffViewProvider.revertChanges()
-			pushToolResult("Changes were rejected by the user.")
 			return
 		}
 
@@ -148,7 +234,7 @@ export async function insertContentTool(
 		const userFeedbackDiff = JSON.stringify({
 			tool: "insertContent",
 			path: getReadablePath(cline.cwd, relPath),
-			lineNumber: lineNumber,
+			lineNumber: lineNumber + 1,
 			diff: userEdits,
 		} satisfies ClineSayTool)
 
@@ -157,7 +243,7 @@ export async function insertContentTool(
 		pushToolResult(
 			`The user made the following updates to your content:\n\n${userEdits}\n\n` +
 				`The updated content has been successfully saved to ${relPath.toPosix()}. Here is the full, updated content of the file:\n\n` +
-				`<final_file_content path="${relPath.toPosix()}">\n${finalContent}\n</final_file_content>\n\n` +
+				`<final_file_content path="${relPath.toPosix()}">\n${addLineNumbers(finalContent || "")}\n</final_file_content>\n\n` +
 				`Please note:\n` +
 				`1. You do not need to re-write the file with these changes, as they have already been applied.\n` +
 				`2. Proceed with the task using this updated file content as the new baseline.\n` +

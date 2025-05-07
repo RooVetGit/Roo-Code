@@ -60,16 +60,15 @@ const CodeAccordian = ({
 						display: "flex",
 						alignItems: "center",
 						padding: "9px 10px",
-						cursor: isLoading ? "wait" : "pointer",
+						cursor: "pointer",
 						opacity: isLoading ? 0.7 : 1,
-						// pointerEvents: isLoading ? "none" : "auto",
 						userSelect: "none",
 						WebkitUserSelect: "none",
 						MozUserSelect: "none",
 						msUserSelect: "none",
 					}}
 					className={`${isLoading ? "animate-pulse" : ""}`}
-					onClick={isLoading ? undefined : onToggleExpand}>
+					onClick={onToggleExpand}>
 					{isLoading && <VSCodeProgressRing className="size-3 mr-2" />}
 					{isFeedback || isConsoleLogs ? (
 						<div style={{ display: "flex", alignItems: "center" }}>
