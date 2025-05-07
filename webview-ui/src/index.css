@@ -18,14 +18,6 @@
 @import "tailwindcss/theme.css" layer(theme);
 @import "./preflight.css" layer(base);
 @import "tailwindcss/utilities.css" layer(utilities);
-@keyframes fadeIn {
-	from {
-		opacity: 0;
-	}
-	to {
-		opacity: 1;
-	}
-}
 
 @plugin "tailwindcss-animate";
 
@@ -470,4 +462,17 @@ input[cmdk-input]:focus {
 
 .codicon[class*="codicon-"] {
 	text-rendering: geometricPrecision !important;
+}
+
+/**
+  * Animations
+  */
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
 }
