@@ -348,6 +348,16 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 							fontSize: "13px",
 							borderRadius: "0 0 4px 4px",
 						}}>
+						{server.instructions && (
+							<div
+								style={{
+									paddingTop: "5px 0",
+									opacity: 0.8,
+									fontSize: "12px",
+								}}>
+								{server.instructions}
+							</div>
+						)}
 						<VSCodePanels style={{ marginBottom: "10px" }}>
 							<VSCodePanelTab id="tools">
 								{t("mcp:tabs.tools")} ({server.tools?.length || 0})
