@@ -31,6 +31,7 @@ export const providerNames = [
 	"xai",
 	"groq",
 	"chutes",
+	"cerebras",
 ] as const
 
 export const providerNamesSchema = z.enum(providerNames)
@@ -429,6 +430,9 @@ export const providerSettingsSchema = z.object({
 	groqApiKey: z.string().optional(),
 	// Chutes AI
 	chutesApiKey: z.string().optional(),
+	// Cerebras
+	cerebrasBaseUrl: z.string().optional(),
+	cerebrasApiKey: z.string().optional(),
 	// Claude 3.7 Sonnet Thinking
 	modelMaxTokens: z.number().optional(),
 	modelMaxThinkingTokens: z.number().optional(),
@@ -538,6 +542,9 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	groqApiKey: undefined,
 	// Chutes AI
 	chutesApiKey: undefined,
+	// Cerebras
+	cerebrasBaseUrl: undefined,
+	cerebrasApiKey: undefined,
 }
 
 export const PROVIDER_SETTINGS_KEYS = Object.keys(providerSettingsRecord) as Keys<ProviderSettings>[]

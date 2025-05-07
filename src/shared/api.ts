@@ -1737,6 +1737,53 @@ export type RouterName = (typeof routerNames)[number]
 
 export const isRouterName = (value: string): value is RouterName => routerNames.includes(value as RouterName)
 
+// Cerebras
+// https://inference.cerebras.ai/
+export type CerebrasModelId = keyof typeof cerebrasModels
+export const cerebrasDefaultModelId: CerebrasModelId = "llama-4-scout-17b-16e-instruct"
+export const cerebrasModels = {
+	"llama-4-scout-17b-16e-instruct": {
+		maxTokens: 8192,
+		contextWindow: 128000,
+		supportsImages: false,
+		supportsComputerUse: false,
+		supportsPromptCache: false,
+		inputPrice: 0.65,
+		outputPrice: 0.85,
+		description: "Llama 4 Scout (17B) - ~2600 tokens/s",
+	},
+	"llama3.1-8b": {
+		maxTokens: 8192,
+		contextWindow: 8192,
+		supportsImages: false,
+		supportsComputerUse: false,
+		supportsPromptCache: false,
+		inputPrice: 0.1,
+		outputPrice: 0.1,
+		description: "Llama 3.1 (8B) - ~2200 tokens/s",
+	},
+	"llama-3.3-70b": {
+		maxTokens: 8192,
+		contextWindow: 128000,
+		supportsImages: false,
+		supportsComputerUse: false,
+		supportsPromptCache: false,
+		inputPrice: 0.85,
+		outputPrice: 1.2,
+		description: "Llama 3.3 (70B) - ~2100 tokens/s",
+	},
+	"deepseek-r1-distill-llama-70b": {
+		maxTokens: 8192,
+		contextWindow: 128000,
+		supportsImages: false,
+		supportsComputerUse: false,
+		supportsPromptCache: false,
+		inputPrice: 2.2,
+		outputPrice: 2.5,
+		description: "DeepSeek R1 Distill Llama (70B) - ~1700 tokens/s",
+	},
+} as const satisfies Record<string, ModelInfo>
+
 export function toRouterName(value?: string): RouterName {
 	if (value && isRouterName(value)) {
 		return value

@@ -23,6 +23,7 @@ type ProviderSettings = {
 				| "xai"
 				| "groq"
 				| "chutes"
+				| "cerebras"
 		  )
 		| undefined
 	apiModelId?: string | undefined
@@ -123,6 +124,8 @@ type ProviderSettings = {
 	xaiApiKey?: string | undefined
 	groqApiKey?: string | undefined
 	chutesApiKey?: string | undefined
+	cerebrasBaseUrl?: string | undefined
+	cerebrasApiKey?: string | undefined
 	modelMaxTokens?: number | undefined
 	modelMaxThinkingTokens?: number | undefined
 	includeMaxTokens?: boolean | undefined
@@ -163,6 +166,7 @@ type GlobalSettings = {
 							| "xai"
 							| "groq"
 							| "chutes"
+							| "cerebras"
 					  )
 					| undefined
 		  }[]

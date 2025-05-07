@@ -1,7 +1,7 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta/messages/index.mjs"
 
-import { ApiConfiguration, ModelInfo, ApiHandlerOptions } from "../shared/api"
+import { ApiConfiguration, ModelInfo, ApiHandlerOptions, ProviderName } from "../shared/api"
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./providers/constants"
 import { GlamaHandler } from "./providers/glama"
 import { AnthropicHandler } from "./providers/anthropic"
@@ -25,6 +25,7 @@ import { FakeAIHandler } from "./providers/fake-ai"
 import { XAIHandler } from "./providers/xai"
 import { GroqHandler } from "./providers/groq"
 import { ChutesHandler } from "./providers/chutes"
+import { CerebrasHandler } from "./providers/cerebras"
 
 export interface SingleCompletionHandler {
 	completePrompt(prompt: string): Promise<string>
@@ -47,7 +48,7 @@ export interface ApiHandler {
 }
 
 export function buildApiHandler(configuration: ApiConfiguration): ApiHandler {
-	const { apiProvider, ...options } = configuration
+	const { apiProvider, ...options } = configuration as { apiProvider?: ProviderName } & ApiConfiguration
 
 	switch (apiProvider) {
 		case "anthropic":
@@ -94,6 +95,8 @@ export function buildApiHandler(configuration: ApiConfiguration): ApiHandler {
 			return new GroqHandler(options)
 		case "chutes":
 			return new ChutesHandler(options)
+		case "cerebras":
+			return new CerebrasHandler(options)
 		default:
 			return new AnthropicHandler(options)
 	}
