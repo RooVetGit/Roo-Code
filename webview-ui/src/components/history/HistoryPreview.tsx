@@ -9,7 +9,8 @@ import { useTaskSearch } from "./useTaskSearch"
 import { Coins } from "lucide-react"
 
 const HistoryPreview = () => {
-	const { tasks, showAllWorkspaces } = useTaskSearch()
+	// Force the hook to only return tasks from the current workspace
+	const { tasks } = useTaskSearch({ forceWorkspaceFilter: "current" })
 
 	return (
 		<>
@@ -49,12 +50,6 @@ const HistoryPreview = () => {
 											</span>
 										)}
 									</div>
-									{showAllWorkspaces && item.workspace && (
-										<div className="flex flex-row gap-1 text-vscode-descriptionForeground text-xs mt-1">
-											<span className="codicon codicon-folder scale-80" />
-											<span>{item.workspace}</span>
-										</div>
-									)}
 								</div>
 							</div>
 						))}

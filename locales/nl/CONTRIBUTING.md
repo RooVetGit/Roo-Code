@@ -131,27 +131,32 @@ code --install-extension bin/roo-cline-<versie>.vsix
 Iedereen kan code bijdragen aan Roo Code, maar we vragen je deze richtlijnen te volgen zodat je bijdrage soepel kan worden geïntegreerd:
 
 1. **Houd Pull Requests gefocust**
+
     - Beperk PR's tot één functie of bugfix
     - Splits grotere wijzigingen op in kleinere, gerelateerde PR's
     - Maak logische commits die onafhankelijk kunnen worden beoordeeld
 
 2. **Codekwaliteit**
+
     - Alle PR's moeten slagen voor CI-checks, inclusief linting en formatting
     - Los alle ESLint-waarschuwingen of -fouten op voor je indient
     - Reageer op alle feedback van Ellipsis, onze geautomatiseerde code-reviewtool
     - Volg TypeScript best practices en behoud typesafety
 
 3. **Testen**
+
     - Voeg tests toe voor nieuwe functies
     - Voer `npm test` uit om te controleren of alle tests slagen
     - Werk bestaande tests bij als je wijzigingen ze beïnvloeden
     - Voeg waar mogelijk zowel unit- als integratietests toe
 
 4. **Commitrichtlijnen**
+
     - Schrijf duidelijke, beschrijvende commitberichten
     - Verwijs naar relevante issues in commits met #issue-nummer
 
 5. **Voor het indienen**
+
     - Rebase je branch op de laatste main
     - Controleer of je branch succesvol bouwt
     - Controleer of alle tests slagen
