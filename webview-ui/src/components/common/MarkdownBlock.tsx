@@ -1,10 +1,12 @@
 import React, { memo, useEffect } from "react"
 import { useRemark } from "react-remark"
-import rehypeHighlight, { Options } from "rehype-highlight"
 import styled from "styled-components"
 import { visit } from "unist-util-visit"
+
+import { vscode } from "@src/utils/vscode"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
-import { CODE_BLOCK_BG_COLOR } from "./CodeBlock"
+
+import CodeBlock from "./CodeBlock"
 import MermaidBlock from "./MermaidBlock"
 
 interface MarkdownBlockProps {
@@ -25,19 +27,21 @@ const remarkUrlToLink = () => {
 		visit(tree, "text", (node: any, index, parent) => {
 			const urlRegex = /https?:\/\/[^\s<>)"]+/g
 			const matches = node.value.match(urlRegex)
-			if (!matches) return
+
+			if (!matches) {
+				return
+			}
 
 			const parts = node.value.split(urlRegex)
 			const children: any[] = []
 
 			parts.forEach((part: string, i: number) => {
-				if (part) children.push({ type: "text", value: part })
+				if (part) {
+					children.push({ type: "text", value: part })
+				}
+
 				if (matches[i]) {
-					children.push({
-						type: "link",
-						url: matches[i],
-						children: [{ type: "text", value: matches[i] }],
-					})
+					children.push({ type: "link", url: matches[i], children: [{ type: "text", value: matches[i] }] })
 				}
 			})
 
@@ -52,52 +56,12 @@ const remarkUrlToLink = () => {
 }
 
 const StyledMarkdown = styled.div`
-	pre {
-		background-color: ${CODE_BLOCK_BG_COLOR};
-		border-radius: 3px;
-		margin: 13x 0;
-		padding: 10px 10px;
-		max-width: calc(100vw - 20px);
-		overflow-x: auto;
-		overflow-y: hidden;
-		white-space: pre-wrap;
-	}
-
-	:where(h1, h2, h3, h4, h5, h6):has(code) code {
-		font-size: inherit;
-	}
-
-	pre > code {
-		.hljs-deletion {
-			background-color: var(--vscode-diffEditor-removedTextBackground);
-			display: inline-block;
-			width: 100%;
-		}
-		.hljs-addition {
-			background-color: var(--vscode-diffEditor-insertedTextBackground);
-			display: inline-block;
-			width: 100%;
-		}
-	}
-
-	code {
-		span.line:empty {
-			display: none;
-		}
-		word-wrap: break-word;
-		border-radius: 3px;
-		background-color: ${CODE_BLOCK_BG_COLOR};
-		font-size: var(--vscode-editor-font-size, var(--vscode-font-size, 12px));
-		font-family: var(--vscode-editor-font-family);
-	}
-
 	code:not(pre > code) {
 		font-family: var(--vscode-editor-font-family, monospace);
-		color: var(--vscode-textPreformat-foreground, #f78383);
-		background-color: var(--vscode-textCodeBlock-background, #1e1e1e);
+		filter: saturation(110%) brightness(95%);
+		color: var(--vscode-textPreformat-foreground) !important;
+		background-color: var(--vscode-textPreformat-background) !important;
 		padding: 0px 2px;
-		border-radius: 3px;
-		border: 1px solid var(--vscode-textSeparator-foreground, #424242);
 		white-space: pre-line;
 		word-break: break-word;
 		overflow-wrap: anywhere;
@@ -124,6 +88,7 @@ const StyledMarkdown = styled.div`
 		"Open Sans",
 		"Helvetica Neue",
 		sans-serif;
+
 	font-size: var(--vscode-font-size, 13px);
 
 	p,
@@ -144,30 +109,16 @@ const StyledMarkdown = styled.div`
 	}
 
 	a {
-		text-decoration: none;
-	}
-	a {
+		color: var(--vscode-textLink-foreground);
+		text-decoration-line: underline;
+		text-decoration-style: dotted;
+		text-decoration-color: var(--vscode-textLink-foreground);
 		&:hover {
-			text-decoration: underline;
+			color: var(--vscode-textLink-activeForeground);
+			text-decoration-style: solid;
+			text-decoration-color: var(--vscode-textLink-activeForeground);
 		}
 	}
-`
-
-const StyledPre = styled.pre<{ theme: any }>`
-	& .hljs {
-		color: var(--vscode-editor-foreground, #fff);
-	}
-
-	${(props) =>
-		Object.keys(props.theme)
-			.map((key) => {
-				return `
-      & ${key} {
-        color: ${props.theme[key]};
-      }
-    `
-			})
-			.join("")}
 `
 
 const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
@@ -179,7 +130,7 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 				return (tree) => {
 					visit(tree, "code", (node: any) => {
 						if (!node.lang) {
-							node.lang = "javascript"
+							node.lang = "text"
 						} else if (node.lang.includes(".")) {
 							node.lang = node.lang.split(".").slice(-1)[0]
 						}
@@ -187,33 +138,85 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 				}
 			},
 		],
-		rehypePlugins: [
-			rehypeHighlight as any,
-			{
-				// languages: {},
-			} as Options,
-		],
+		rehypePlugins: [],
 		rehypeReactOptions: {
 			components: {
-				pre: ({ node: _, children, ...preProps }: any) => {
+				a: ({ href, children }: any) => {
+					return (
+						<a
+							href={href}
+							title={href}
+							onClick={(e) => {
+								// Only process file:// protocol or local file paths
+								const isLocalPath =
+									href.startsWith("file://") || href.startsWith("/") || !href.includes("://")
+
+								if (!isLocalPath) {
+									return
+								}
+
+								e.preventDefault()
+
+								// Handle absolute vs project-relative paths
+								let filePath = href.replace("file://", "")
+
+								// Extract line number if present
+								const match = filePath.match(/(.*):(\d+)(-\d+)?$/)
+								let values = undefined
+								if (match) {
+									filePath = match[1]
+									values = { line: parseInt(match[2]) }
+								}
+
+								// Add ./ prefix if needed
+								if (!filePath.startsWith("/") && !filePath.startsWith("./")) {
+									filePath = "./" + filePath
+								}
+
+								vscode.postMessage({
+									type: "openFile",
+									text: filePath,
+									values,
+								})
+							}}>
+							{children}
+						</a>
+					)
+				},
+				pre: ({ node: _, children }: any) => {
+					// Check for Mermaid diagrams first
 					if (Array.isArray(children) && children.length === 1 && React.isValidElement(children[0])) {
 						const child = children[0] as React.ReactElement<{ className?: string }>
+
 						if (child.props?.className?.includes("language-mermaid")) {
 							return child
 						}
 					}
-					return (
-						<StyledPre {...preProps} theme={theme}>
-							{children}
-						</StyledPre>
-					)
+
+					// For all other code blocks, use CodeBlock with copy button
+					const codeNode = children?.[0]
+
+					if (!codeNode?.props?.children) {
+						return null
+					}
+
+					const language =
+						(Array.isArray(codeNode.props?.className)
+							? codeNode.props.className
+							: [codeNode.props?.className]
+						).map((c: string) => c?.replace("language-", ""))[0] || "javascript"
+
+					const rawText = codeNode.props.children[0] || ""
+					return <CodeBlock source={rawText} language={language} />
 				},
 				code: (props: any) => {
 					const className = props.className || ""
+
 					if (className.includes("language-mermaid")) {
 						const codeText = String(props.children || "")
 						return <MermaidBlock code={codeText} />
 					}
+
 					return <code {...props} />
 				},
 			},

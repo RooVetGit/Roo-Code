@@ -90,6 +90,7 @@
 		}
 	},
 	"selectMode": "Selecciona el mode d'interacció",
+	"selectApiConfig": "Seleccioneu la configuració de l'API",
 	"enhancePrompt": "Millora la sol·licitud amb context addicional",
 	"addImages": "Afegeix imatges al missatge",
 	"sendMessage": "Envia el missatge",
@@ -185,13 +186,6 @@
 		"hasQuestion": "Roo té una pregunta:"
 	},
 	"taskCompleted": "Tasca completada",
-	"shellIntegration": {
-		"unavailable": "Integració de shell no disponible",
-		"troubleshooting": "Encara tens problemes? Fes clic aquí per a la documentació d'integració de shell.",
-		"checkSettings": "Comprova les solucions alternatives del terminal a la pàgina de configuració",
-		"updateVSCode": "Actualitza VSCode",
-		"supportedShell": "Assegura't d'utilitzar un shell compatible: zsh, bash, fish o PowerShell"
-	},
 	"powershell": {
 		"issues": "Sembla que estàs tenint problemes amb Windows PowerShell, si us plau consulta aquesta documentació per a més informació."
 	},
@@ -208,12 +202,12 @@
 		"copyToInput": "Copiar a l'entrada (o Shift + clic)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.14 publicat",
-		"description": "Roo Code 3.14 porta noves funcionalitats i millores basades en els teus comentaris.",
+		"title": "🎉 Roo Code 3.16 publicat",
+		"description": "Roo Code 3.16 porta noves funcionalitats i millores basades en els teus comentaris.",
 		"whatsNew": "Novetats",
-		"feature1": "<bold>Eines d'edició millorades</bold>: Les eines <code>search_and_replace</code> i <code>insert_content</code> han estat millorades i ja no són experimentals",
-		"feature2": "<bold>Millores a apply_diff</bold>: Continuem treballant per millorar l'eina <code>apply_diff</code>",
-		"feature3": "<bold>Moltes altres millores</bold>: Nombroses correccions i optimitzacions a tota l'extensió",
+		"feature1": "<bold>Proveïdors d'API Groq i Chutes</bold>: S'ha afegit suport per als proveïdors d'API Groq i Chutes (gràcies @shariqriazz!)",
+		"feature2": "<bold>Referències de codi clicables</bold>: Les referències de codi a les respostes del model ara naveguen directament a les línies de codi font (gràcies @KJ7LNW!)",
+		"feature3": "<bold>Millores d'estabilitat MCP</bold>: S'han corregit diversos errors per millorar l'estabilitat de les integracions MCP",
 		"hideButton": "Amagar anunci",
 		"detailsDiscussLinks": "Obtingues més detalls i participa a <discordLink>Discord</discordLink> i <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -239,6 +233,19 @@
 			"close": "Tancar navegador"
 		}
 	},
+	"codeblock": {
+		"tooltips": {
+			"expand": "Expandir bloc de codi",
+			"collapse": "Contraure bloc de codi",
+			"enable_wrap": "Activar ajustament de línia",
+			"disable_wrap": "Desactivar ajustament de línia",
+			"copy_code": "Copiar codi"
+		}
+	},
 	"systemPromptWarning": "ADVERTÈNCIA: S'ha activat una substitució personalitzada d'instruccions del sistema. Això pot trencar greument la funcionalitat i causar un comportament impredictible.",
-	"selectApiConfig": "Seleccioneu la configuració de l'API"
+	"shellIntegration": {
+		"title": "Advertència d'execució d'ordres",
+		"description": "La teva ordre s'està executant sense la integració de shell del terminal VSCode. Per suprimir aquest advertiment, pots desactivar la integració de shell a la secció <strong>Terminal</strong> de la <settingsLink>configuració de Roo Code</settingsLink> o solucionar problemes d'integració del terminal VSCode utilitzant l'enllaç a continuació.",
+		"troubleshooting": "Fes clic aquí per a la documentació d'integració de shell."
+	}
 }

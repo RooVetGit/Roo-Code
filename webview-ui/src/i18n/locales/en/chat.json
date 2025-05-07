@@ -186,13 +186,6 @@
 		"title": "Edit Unsuccessful"
 	},
 	"troubleMessage": "Roo is having trouble...",
-	"shellIntegration": {
-		"unavailable": "Shell Integration Unavailable",
-		"troubleshooting": "Still having trouble? Click here for shell integration documentation.",
-		"checkSettings": "Check terminal workarounds in the settings page",
-		"updateVSCode": "Update VSCode",
-		"supportedShell": "Make sure you're using a supported shell: zsh, bash, fish, or PowerShell"
-	},
 	"powershell": {
 		"issues": "It seems like you're having Windows PowerShell issues, please see this"
 	},
@@ -202,12 +195,12 @@
 		"description": "Auto-approve allows Roo Code to perform actions without asking for permission. Only enable for actions you fully trust. More detailed configuration available in <settingsLink>Settings</settingsLink>."
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.14 Released",
-		"description": "Roo Code 3.14 brings new features and improvements based on your feedback.",
+		"title": "🎉 Roo Code 3.16 Released",
+		"description": "Roo Code 3.16 brings new features and improvements based on your feedback.",
 		"whatsNew": "What's New",
-		"feature1": "<bold>Improved Editing Tools</bold>: The <code>search_and_replace</code> and <code>insert_content</code> tools have been improved and graduated from experimental status",
-		"feature2": "<bold>Diff Apply Fixes</bold>: We continue to work on improving the <code>apply_diff</code> tool",
-		"feature3": "<bold>Tons of Other Improvements</bold>: Numerous fixes and enhancements throughout the extension",
+		"feature1": "<bold>Groq and Chutes API Providers</bold>: Added support for Groq and Chutes API providers (thanks @shariqriazz!)",
+		"feature2": "<bold>Clickable Code References</bold>: Code references in model responses now navigate to source lines (thanks @KJ7LNW!)",
+		"feature3": "<bold>MCP Stability Improvements</bold>: Fixed several bugs to enhance the stability of MCP integrations",
 		"hideButton": "Hide announcement",
 		"detailsDiscussLinks": "Get more details and discuss in <discordLink>Discord</discordLink> and <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -240,5 +233,19 @@
 			"close": "Close browser"
 		}
 	},
-	"systemPromptWarning": "WARNING: Custom system prompt override active. This can severely break functionality and cause unpredictable behavior."
+	"codeblock": {
+		"tooltips": {
+			"expand": "Expand code block",
+			"collapse": "Collapse code block",
+			"enable_wrap": "Enable word wrap",
+			"disable_wrap": "Disable word wrap",
+			"copy_code": "Copy code"
+		}
+	},
+	"systemPromptWarning": "WARNING: Custom system prompt override active. This can severely break functionality and cause unpredictable behavior.",
+	"shellIntegration": {
+		"title": "Command Execution Warning",
+		"description": "Your command is being executed without VSCode terminal shell integration. To suppress this warning you can disable shell integration in the <strong>Terminal</strong> section of the <settingsLink>Roo Code settings</settingsLink> or troubleshoot VSCode terminal integration using the link below.",
+		"troubleshooting": "Click here for shell integration documentation."
+	}
 }

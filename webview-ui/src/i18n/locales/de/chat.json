@@ -90,6 +90,7 @@
 		}
 	},
 	"selectMode": "Interaktionsmodus auswählen",
+	"selectApiConfig": "API-Konfiguration auswählen",
 	"enhancePrompt": "Prompt mit zusätzlichem Kontext verbessern",
 	"addImages": "Bilder zur Nachricht hinzufügen",
 	"sendMessage": "Nachricht senden",
@@ -185,13 +186,6 @@
 		"hasQuestion": "Roo hat eine Frage:"
 	},
 	"taskCompleted": "Aufgabe abgeschlossen",
-	"shellIntegration": {
-		"unavailable": "Shell-Integration nicht verfügbar",
-		"troubleshooting": "Immer noch Probleme? Klicke hier für die Shell-Integrationsdokumentation.",
-		"checkSettings": "Überprüfe die Terminal-Workarounds in den Einstellungen",
-		"updateVSCode": "VSCode aktualisieren",
-		"supportedShell": "Stelle sicher, dass du eine unterstützte Shell verwendest: zsh, bash, fish oder PowerShell"
-	},
 	"powershell": {
 		"issues": "Es scheint, dass du Probleme mit Windows PowerShell hast, bitte sieh dir dies an"
 	},
@@ -208,12 +202,12 @@
 		"copyToInput": "In Eingabefeld kopieren (oder Shift + Klick)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.14 veröffentlicht",
-		"description": "Roo Code 3.14 bringt neue Funktionen und Verbesserungen basierend auf deinem Feedback.",
+		"title": "🎉 Roo Code 3.16 veröffentlicht",
+		"description": "Roo Code 3.16 bringt neue Funktionen und Verbesserungen basierend auf deinem Feedback.",
 		"whatsNew": "Was ist neu",
-		"feature1": "<bold>Verbesserte Bearbeitungswerkzeuge</bold>: Die <code>search_and_replace</code> und <code>insert_content</code> Tools wurden verbessert und sind nicht mehr experimentell",
-		"feature2": "<bold>Diff Apply Fixes</bold>: Wir arbeiten weiterhin an der Verbesserung des <code>apply_diff</code> Tools",
-		"feature3": "<bold>Zahlreiche andere Verbesserungen</bold>: Viele Fehlerbehebungen und Optimierungen in der gesamten Erweiterung",
+		"feature1": "<bold>Groq und Chutes API-Provider</bold>: Unterstützung für Groq und Chutes API-Provider hinzugefügt (danke @shariqriazz!)",
+		"feature2": "<bold>Klickbare Code-Referenzen</bold>: Code-Referenzen in Modellantworten navigieren jetzt direkt zu Quellzeilen (danke @KJ7LNW!)",
+		"feature3": "<bold>MCP-Stabilitätsverbesserungen</bold>: Mehrere Fehler behoben, um die Stabilität von MCP-Integrationen zu verbessern",
 		"hideButton": "Ankündigung ausblenden",
 		"detailsDiscussLinks": "Erhalte mehr Details und diskutiere auf <discordLink>Discord</discordLink> und <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -239,6 +233,19 @@
 			"close": "Browser schließen"
 		}
 	},
+	"codeblock": {
+		"tooltips": {
+			"expand": "Code-Block erweitern",
+			"collapse": "Code-Block reduzieren",
+			"enable_wrap": "Zeilenumbruch aktivieren",
+			"disable_wrap": "Zeilenumbruch deaktivieren",
+			"copy_code": "Code kopieren"
+		}
+	},
 	"systemPromptWarning": "WARNUNG: Benutzerdefinierte Systemaufforderung aktiv. Dies kann die Funktionalität erheblich beeinträchtigen und zu unvorhersehbarem Verhalten führen.",
-	"selectApiConfig": "API-Konfiguration auswählen"
+	"shellIntegration": {
+		"title": "Befehlsausführungswarnung",
+		"description": "Dein Befehl wird ohne VSCode Terminal-Shell-Integration ausgeführt. Um diese Warnung zu unterdrücken, kannst du die Shell-Integration im Abschnitt <strong>Terminal</strong> der <settingsLink>Roo Code Einstellungen</settingsLink> deaktivieren oder die VSCode Terminal-Integration mit dem Link unten beheben.",
+		"troubleshooting": "Klicke hier für die Shell-Integrationsdokumentation."
+	}
 }

@@ -90,6 +90,7 @@
 		}
 	},
 	"selectMode": "Chọn chế độ tương tác",
+	"selectApiConfig": "Chọn cấu hình API",
 	"enhancePrompt": "Nâng cao yêu cầu với ngữ cảnh bổ sung",
 	"addImages": "Thêm hình ảnh vào tin nhắn",
 	"sendMessage": "Gửi tin nhắn",
@@ -185,13 +186,6 @@
 		"hasQuestion": "Roo có một câu hỏi:"
 	},
 	"taskCompleted": "Nhiệm vụ hoàn thành",
-	"shellIntegration": {
-		"unavailable": "Tích hợp shell không khả dụng",
-		"troubleshooting": "Vẫn gặp vấn đề? Nhấp vào đây để xem tài liệu tích hợp shell.",
-		"checkSettings": "Kiểm tra các giải pháp thay thế cho terminal trong trang cài đặt",
-		"updateVSCode": "Cập nhật VSCode",
-		"supportedShell": "Đảm bảo bạn đang sử dụng shell được hỗ trợ: zsh, bash, fish hoặc PowerShell"
-	},
 	"powershell": {
 		"issues": "Có vẻ như bạn đang gặp vấn đề với Windows PowerShell, vui lòng xem"
 	},
@@ -208,12 +202,12 @@
 		"copyToInput": "Sao chép vào ô nhập liệu (hoặc Shift + nhấp chuột)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.14 Đã phát hành",
-		"description": "Roo Code 3.14 mang đến các tính năng và cải tiến mới dựa trên phản hồi của bạn.",
+		"title": "🎉 Roo Code 3.16 Đã phát hành",
+		"description": "Roo Code 3.16 mang đến các tính năng và cải tiến mới dựa trên phản hồi của bạn.",
 		"whatsNew": "Có gì mới",
-		"feature1": "<bold>Công cụ chỉnh sửa được cải thiện</bold>: Các công cụ <code>search_and_replace</code> và <code>insert_content</code> đã được cải thiện và chuyển từ trạng thái thử nghiệm thành chính thức",
-		"feature2": "<bold>Sửa lỗi apply_diff</bold>: Chúng tôi tiếp tục cải thiện công cụ <code>apply_diff</code>",
-		"feature3": "<bold>Rất nhiều cải tiến khác</bold>: Vô số sửa lỗi và cải tiến trong toàn bộ tiện ích mở rộng",
+		"feature1": "<bold>Nhà cung cấp API Groq và Chutes</bold>: Đã thêm hỗ trợ cho nhà cung cấp API Groq và Chutes (cảm ơn @shariqriazz!)",
+		"feature2": "<bold>Tham chiếu mã có thể nhấp</bold>: Tham chiếu mã trong phản hồi của mô hình giờ đây có thể điều hướng trực tiếp đến dòng mã nguồn (cảm ơn @KJ7LNW!)",
+		"feature3": "<bold>Cải thiện độ ổn định MCP</bold>: Đã sửa nhiều lỗi để nâng cao độ ổn định của tích hợp MCP",
 		"hideButton": "Ẩn thông báo",
 		"detailsDiscussLinks": "Nhận thêm chi tiết và thảo luận tại <discordLink>Discord</discordLink> và <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -239,6 +233,19 @@
 			"close": "Đóng trình duyệt"
 		}
 	},
+	"codeblock": {
+		"tooltips": {
+			"expand": "Mở rộng khối mã",
+			"collapse": "Thu gọn khối mã",
+			"enable_wrap": "Bật tự động xuống dòng",
+			"disable_wrap": "Tắt tự động xuống dòng",
+			"copy_code": "Sao chép mã"
+		}
+	},
 	"systemPromptWarning": "CẢNH BÁO: Đã kích hoạt ghi đè lệnh nhắc hệ thống tùy chỉnh. Điều này có thể phá vỡ nghiêm trọng chức năng và gây ra hành vi không thể dự đoán.",
-	"selectApiConfig": "Chọn cấu hình API"
+	"shellIntegration": {
+		"title": "Cảnh báo thực thi lệnh",
+		"description": "Lệnh của bạn đang được thực thi mà không có tích hợp shell terminal VSCode. Để ẩn cảnh báo này, bạn có thể vô hiệu hóa tích hợp shell trong phần <strong>Terminal</strong> của <settingsLink>cài đặt Roo Code</settingsLink> hoặc khắc phục sự cố tích hợp terminal VSCode bằng liên kết bên dưới.",
+		"troubleshooting": "Nhấp vào đây để xem tài liệu tích hợp shell."
+	}
 }

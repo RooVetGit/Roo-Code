@@ -3,7 +3,7 @@
 	"displayName": "%extension.displayName%",
 	"description": "%extension.description%",
 	"publisher": "RooVeterinaryInc",
-	"version": "3.14.3",
+	"version": "3.16.0",
 	"icon": "assets/icons/icon.png",
 	"galleryBanner": {
 		"color": "#617A91",
@@ -111,11 +111,6 @@
 				"icon": "$(settings-gear)"
 			},
 			{
-				"command": "roo-cline.helpButtonClicked",
-				"title": "%command.documentation.title%",
-				"icon": "$(question)"
-			},
-			{
 				"command": "roo-cline.openInNewTab",
 				"title": "%command.openInNewTab.title%",
 				"category": "%configuration.title%"
@@ -161,16 +156,6 @@
 				"category": "Terminal"
 			},
 			{
-				"command": "roo-cline.terminalFixCommandInCurrentTask",
-				"title": "%command.terminal.fixCommandInCurrentTask.title%",
-				"category": "Terminal"
-			},
-			{
-				"command": "roo-cline.terminalExplainCommandInCurrentTask",
-				"title": "%command.terminal.explainCommandInCurrentTask.title%",
-				"category": "Terminal"
-			},
-			{
 				"command": "roo-cline.setCustomStoragePath",
 				"title": "%command.setCustomStoragePath.title%",
 				"category": "%configuration.title%"
@@ -203,12 +188,8 @@
 					"group": "1_actions@2"
 				},
 				{
-					"command": "roo-cline.fixCode",
-					"group": "1_actions@3"
-				},
-				{
 					"command": "roo-cline.improveCode",
-					"group": "1_actions@4"
+					"group": "1_actions@3"
 				}
 			],
 			"terminal/context": [
@@ -229,14 +210,6 @@
 				{
 					"command": "roo-cline.terminalExplainCommand",
 					"group": "1_actions@3"
-				},
-				{
-					"command": "roo-cline.terminalFixCommandInCurrentTask",
-					"group": "1_actions@5"
-				},
-				{
-					"command": "roo-cline.terminalExplainCommandInCurrentTask",
-					"group": "1_actions@6"
 				}
 			],
 			"view/title": [
@@ -269,11 +242,6 @@
 					"command": "roo-cline.settingsButtonClicked",
 					"group": "navigation@6",
 					"when": "view == roo-cline.SidebarProvider"
-				},
-				{
-					"command": "roo-cline.helpButtonClicked",
-					"group": "navigation@7",
-					"when": "view == roo-cline.SidebarProvider"
 				}
 			],
 			"editor/title": [
@@ -305,11 +273,6 @@
 				{
 					"command": "roo-cline.settingsButtonClicked",
 					"group": "navigation@6",
-					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
-				},
-				{
-					"command": "roo-cline.helpButtonClicked",
-					"group": "navigation@7",
 					"when": "activeWebviewPanelId == roo-cline.TabPanelProvider"
 				}
 			]
@@ -359,7 +322,7 @@
 		"build:webview": "cd webview-ui && npm run build",
 		"build:esbuild": "node esbuild.js --production",
 		"compile": "tsc -p . --outDir out && node esbuild.js",
-		"install:all": "npm install npm-run-all && npm-run-all -l -p install-*",
+		"install:all": "npm install -D npm-run-all2@8.0.1 && npm-run-all -l -p install-*",
 		"install-extension": "npm install",
 		"install-webview": "cd webview-ui && npm install",
 		"install-e2e": "cd e2e && npm install",
@@ -374,8 +337,9 @@
 		"package": "npm-run-all -l -p build:webview build:esbuild check-types lint",
 		"pretest": "npm run compile",
 		"dev": "cd webview-ui && npm run dev",
-		"test": "node scripts/run-tests.js",
+		"test": "npm-run-all test:*",
 		"test:extension": "jest -w=40%",
+		"test:extension-esm": "vitest run",
 		"test:webview": "cd webview-ui && npm run test",
 		"prepare": "husky",
 		"publish:marketplace": "vsce publish && ovsx publish",
@@ -404,10 +368,9 @@
 		"@anthropic-ai/sdk": "^0.37.0",
 		"@anthropic-ai/vertex-sdk": "^0.7.0",
 		"@aws-sdk/client-bedrock-runtime": "^3.779.0",
-		"@google-cloud/vertexai": "^1.9.3",
-		"@google/genai": "^0.9.0",
+		"@google/genai": "^0.12.0",
 		"@mistralai/mistralai": "^1.3.6",
-		"@modelcontextprotocol/sdk": "^1.7.0",
+		"@modelcontextprotocol/sdk": "^1.9.0",
 		"@types/clone-deep": "^4.0.4",
 		"@types/pdf-parse": "^1.1.4",
 		"@types/tmp": "^0.2.6",
@@ -440,6 +403,7 @@
 		"pkce-challenge": "^4.1.0",
 		"posthog-node": "^4.7.0",
 		"pretty-bytes": "^6.1.1",
+		"ps-tree": "^1.2.0",
 		"puppeteer-chromium-resolver": "^23.0.0",
 		"puppeteer-core": "^23.4.0",
 		"reconnecting-eventsource": "^1.6.4",
@@ -456,6 +420,7 @@
 		"turndown": "^7.2.0",
 		"vscode-material-icons": "^0.1.1",
 		"web-tree-sitter": "^0.22.6",
+		"workerpool": "^9.2.0",
 		"zod": "^3.23.8"
 	},
 	"devDependencies": {
@@ -469,7 +434,9 @@
 		"@types/jest": "^29.5.14",
 		"@types/mocha": "^10.0.10",
 		"@types/node": "20.x",
+		"@types/node-cache": "^4.1.3",
 		"@types/node-ipc": "^9.2.3",
+		"@types/ps-tree": "^1.1.6",
 		"@types/string-similarity": "^4.0.2",
 		"@typescript-eslint/eslint-plugin": "^7.14.1",
 		"@typescript-eslint/parser": "^7.11.0",
@@ -486,13 +453,14 @@
 		"lint-staged": "^15.2.11",
 		"mkdirp": "^3.0.1",
 		"nock": "^14.0.4",
-		"npm-run-all": "^4.1.5",
+		"npm-run-all2": "^8.0.1",
 		"prettier": "^3.4.2",
 		"rimraf": "^6.0.1",
 		"ts-jest": "^29.2.5",
 		"tsup": "^8.4.0",
 		"tsx": "^4.19.3",
 		"typescript": "^5.4.5",
+		"vitest": "^3.1.3",
 		"zod-to-ts": "^1.2.0"
 	},
 	"lint-staged": {

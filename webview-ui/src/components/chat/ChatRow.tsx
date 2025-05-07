@@ -5,10 +5,10 @@ import deepEqual from "fast-deep-equal"
 import { VSCodeBadge, VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 
 import { ClineApiReqInfo, ClineAskUseMcpServer, ClineMessage, ClineSayTool } from "@roo/shared/ExtensionMessage"
-import { splitCommandOutput, COMMAND_OUTPUT_STRING } from "@roo/shared/combineCommandSequences"
+import { COMMAND_OUTPUT_STRING } from "@roo/shared/combineCommandSequences"
+import { safeJsonParse } from "@roo/shared/safeJsonParse"
 
 import { useCopyToClipboard } from "@src/utils/clipboard"
-import { safeJsonParse } from "@src/utils/json"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { findMatchingResourceOrTemplate } from "@src/utils/mcp"
 import { vscode } from "@src/utils/vscode"
@@ -28,6 +28,7 @@ import { FollowUpSuggest } from "./FollowUpSuggest"
 import { ProgressIndicator } from "./ProgressIndicator"
 import { Markdown } from "./Markdown"
 import { CommandExecution } from "./CommandExecution"
+import { CommandExecutionError } from "./CommandExecutionError"
 
 interface ChatRowProps {
 	message: ClineMessage
@@ -253,12 +254,10 @@ export const ChatRowContent = ({
 		overflowWrap: "anywhere",
 	}
 
-	const tool = useMemo(() => {
-		if (message.ask === "tool" || message.say === "tool") {
-			return safeJsonParse<ClineSayTool>(message.text)
-		}
-		return null
-	}, [message.ask, message.say, message.text])
+	const tool = useMemo(
+		() => (message.ask === "tool" ? safeJsonParse<ClineSayTool>(message.text) : null),
+		[message.ask, message.text],
+	)
 
 	const followUpData = useMemo(() => {
 		if (message.type === "ask" && message.ask === "followup" && !message.partial) {
@@ -513,7 +512,7 @@ export const ChatRowContent = ({
 						<CodeAccordian
 							code={tool.content!}
 							path={tool.path! + (tool.filePattern ? `/(${tool.filePattern})` : "")}
-							language="plaintext"
+							language="log"
 							isExpanded={isExpanded}
 							onToggleExpand={onToggleExpand}
 						/>
@@ -733,10 +732,7 @@ export const ChatRowContent = ({
 											backgroundColor: "var(--vscode-editor-background)",
 											borderTop: "none",
 										}}>
-										<CodeBlock
-											source={`${"```"}plaintext\n${message.text || ""}\n${"```"}`}
-											forceWrap={true}
-										/>
+										<CodeBlock source={`${"```"}plaintext\n${message.text || ""}\n${"```"}`} />
 									</div>
 								)}
 							</div>
@@ -923,51 +919,7 @@ export const ChatRowContent = ({
 						</>
 					)
 				case "shell_integration_warning":
-					return (
-						<>
-							<div
-								style={{
-									display: "flex",
-									flexDirection: "column",
-									backgroundColor: "rgba(255, 191, 0, 0.1)",
-									padding: 8,
-									borderRadius: 3,
-									fontSize: 12,
-								}}>
-								<div style={{ display: "flex", alignItems: "center", marginBottom: 4 }}>
-									<i
-										className="codicon codicon-warning"
-										style={{
-											marginRight: 8,
-											fontSize: 18,
-											color: "#FFA500",
-										}}></i>
-									<span style={{ fontWeight: 500, color: "#FFA500" }}>
-										{t("chat:shellIntegration.unavailable")}
-									</span>
-								</div>
-								<div>
-									<strong>{message.text}</strong>
-									<br />
-									<div>
-										&bull; {t("chat:shellIntegration.checkSettings")}
-										<br />
-										&bull; {t("chat:shellIntegration.updateVSCode")} (
-										<code>CMD/CTRL + Shift + P</code> → "Update")
-										<br />
-										&bull; {t("chat:shellIntegration.supportedShell")} (
-										<code>CMD/CTRL + Shift + P</code> → "Terminal: Select Default Profile")
-									</div>
-									<br />
-									<a
-										href="http://docs.roocode.com/troubleshooting/shell-integration/"
-										style={{ color: "inherit", textDecoration: "underline" }}>
-										{t("chat:shellIntegration.troubleshooting")}
-									</a>
-								</div>
-							</div>
-						</>
-					)
+					return <CommandExecutionError />
 				case "mcp_server_response":
 					return (
 						<>
@@ -1027,15 +979,13 @@ export const ChatRowContent = ({
 						</>
 					)
 				case "command":
-					const { command, output } = splitCommandOutput(message.text || "")
-
 					return (
 						<>
 							<div style={headerStyle}>
 								{icon}
 								{title}
 							</div>
-							<CommandExecution command={command} output={output} />
+							<CommandExecution executionId={message.ts.toString()} text={message.text} />
 						</>
 					)
 				case "use_mcp_server":
@@ -1113,7 +1063,6 @@ export const ChatRowContent = ({
 													language="json"
 													isExpanded={true}
 													onToggleExpand={onToggleExpand}
-													forceWrap={true}
 												/>
 											</div>
 										)}

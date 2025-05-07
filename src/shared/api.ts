@@ -1,6 +1,6 @@
 import { ModelInfo, ProviderName, ProviderSettings } from "../schemas"
 
-export type { ModelInfo, ProviderName as ApiProvider }
+export type { ModelInfo, ProviderName }
 
 export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider" | "id">
 
@@ -437,7 +437,7 @@ export const glamaDefaultModelInfo: ModelInfo = {
 
 // Requesty
 // https://requesty.ai/router-2
-export const requestyDefaultModelId = "anthropic/claude-3-7-sonnet-latest"
+export const requestyDefaultModelId = "coding/claude-3-7-sonnet"
 export const requestyDefaultModelInfo: ModelInfo = {
 	maxTokens: 8192,
 	contextWindow: 200_000,
@@ -449,7 +449,7 @@ export const requestyDefaultModelInfo: ModelInfo = {
 	cacheWritesPrice: 3.75,
 	cacheReadsPrice: 0.3,
 	description:
-		"Claude 3.7 Sonnet is an advanced large language model with improved reasoning, coding, and problem-solving capabilities. It introduces a hybrid reasoning approach, allowing users to choose between rapid responses and extended, step-by-step processing for complex tasks. The model demonstrates notable improvements in coding, particularly in front-end development and full-stack updates, and excels in agentic workflows, where it can autonomously navigate multi-step processes. Claude 3.7 Sonnet maintains performance parity with its predecessor in standard mode while offering an extended reasoning mode for enhanced accuracy in math, coding, and instruction-following tasks. Read more at the [blog post here](https://www.anthropic.com/news/claude-3-7-sonnet)",
+		"The best coding model, optimized by Requesty, and automatically routed to the fastest provider. Claude 3.7 Sonnet is an advanced large language model with improved reasoning, coding, and problem-solving capabilities. It introduces a hybrid reasoning approach, allowing users to choose between rapid responses and extended, step-by-step processing for complex tasks. The model demonstrates notable improvements in coding, particularly in front-end development and full-stack updates, and excels in agentic workflows, where it can autonomously navigate multi-step processes. Claude 3.7 Sonnet maintains performance parity with its predecessor in standard mode while offering an extended reasoning mode for enhanced accuracy in math, coding, and instruction-following tasks. Read more at the [blog post here](https://www.anthropic.com/news/claude-3-7-sonnet)",
 }
 
 // OpenRouter
@@ -497,7 +497,17 @@ export const vertexModels = {
 		maxTokens: 65_535,
 		contextWindow: 1_048_576,
 		supportsImages: true,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
+		isPromptCacheOptional: true,
+		inputPrice: 2.5,
+		outputPrice: 15,
+	},
+	"gemini-2.5-pro-preview-05-06": {
+		maxTokens: 65_535,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: true,
+		isPromptCacheOptional: true,
 		inputPrice: 2.5,
 		outputPrice: 15,
 	},
@@ -521,7 +531,8 @@ export const vertexModels = {
 		maxTokens: 8192,
 		contextWindow: 1_048_576,
 		supportsImages: true,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
+		isPromptCacheOptional: true,
 		inputPrice: 0.15,
 		outputPrice: 0.6,
 	},
@@ -545,7 +556,8 @@ export const vertexModels = {
 		maxTokens: 8192,
 		contextWindow: 1_048_576,
 		supportsImages: true,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
+		isPromptCacheOptional: true,
 		inputPrice: 0.075,
 		outputPrice: 0.3,
 	},
@@ -676,6 +688,31 @@ export const geminiModels = {
 		outputPrice: 0,
 	},
 	"gemini-2.5-pro-preview-03-25": {
+		maxTokens: 65_535,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: true,
+		isPromptCacheOptional: true,
+		inputPrice: 2.5, // This is the pricing for prompts above 200k tokens.
+		outputPrice: 15,
+		cacheReadsPrice: 0.625,
+		cacheWritesPrice: 4.5,
+		tiers: [
+			{
+				contextWindow: 200_000,
+				inputPrice: 1.25,
+				outputPrice: 10,
+				cacheReadsPrice: 0.31,
+			},
+			{
+				contextWindow: Infinity,
+				inputPrice: 2.5,
+				outputPrice: 15,
+				cacheReadsPrice: 0.625,
+			},
+		],
+	},
+	"gemini-2.5-pro-preview-05-06": {
 		maxTokens: 65_535,
 		contextWindow: 1_048_576,
 		supportsImages: true,
@@ -1397,6 +1434,251 @@ export const vscodeLlmModels = {
 	}
 >
 
+// Groq
+// https://console.groq.com/docs/models
+export type GroqModelId =
+	| "llama-3.1-8b-instant"
+	| "llama-3.3-70b-versatile"
+	| "meta-llama/llama-4-scout-17b-16e-instruct"
+	| "meta-llama/llama-4-maverick-17b-128e-instruct"
+	| "mistral-saba-24b"
+	| "qwen-qwq-32b"
+	| "deepseek-r1-distill-llama-70b"
+export const groqDefaultModelId: GroqModelId = "llama-3.3-70b-versatile" // Defaulting to Llama3 70B Versatile
+export const groqModels = {
+	// Models based on API response: https://api.groq.com/openai/v1/models
+	"llama-3.1-8b-instant": {
+		maxTokens: 131072,
+		contextWindow: 131072,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Meta Llama 3.1 8B Instant model, 128K context.",
+	},
+	"llama-3.3-70b-versatile": {
+		maxTokens: 32768,
+		contextWindow: 131072,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Meta Llama 3.3 70B Versatile model, 128K context.",
+	},
+	"meta-llama/llama-4-scout-17b-16e-instruct": {
+		maxTokens: 8192,
+		contextWindow: 131072,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Meta Llama 4 Scout 17B Instruct model, 128K context.",
+	},
+	"meta-llama/llama-4-maverick-17b-128e-instruct": {
+		maxTokens: 8192,
+		contextWindow: 131072,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Meta Llama 4 Maverick 17B Instruct model, 128K context.",
+	},
+	"mistral-saba-24b": {
+		maxTokens: 32768,
+		contextWindow: 32768,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Mistral Saba 24B model, 32K context.",
+	},
+	"qwen-qwq-32b": {
+		maxTokens: 131072,
+		contextWindow: 131072,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Alibaba Qwen QwQ 32B model, 128K context.",
+	},
+	"deepseek-r1-distill-llama-70b": {
+		maxTokens: 131072,
+		contextWindow: 131072,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "DeepSeek R1 Distill Llama 70B model, 128K context.",
+	},
+} as const satisfies Record<string, ModelInfo>
+
+// Chutes AI
+// https://llm.chutes.ai/v1 (OpenAI compatible)
+export type ChutesModelId =
+	| "deepseek-ai/DeepSeek-R1"
+	| "deepseek-ai/DeepSeek-V3"
+	| "unsloth/Llama-3.3-70B-Instruct"
+	| "chutesai/Llama-4-Scout-17B-16E-Instruct"
+	| "unsloth/Mistral-Nemo-Instruct-2407"
+	| "unsloth/gemma-3-12b-it"
+	| "NousResearch/DeepHermes-3-Llama-3-8B-Preview"
+	| "unsloth/gemma-3-4b-it"
+	| "nvidia/Llama-3_3-Nemotron-Super-49B-v1"
+	| "nvidia/Llama-3_1-Nemotron-Ultra-253B-v1"
+	| "chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8"
+	| "deepseek-ai/DeepSeek-V3-Base"
+	| "deepseek-ai/DeepSeek-R1-Zero"
+	| "deepseek-ai/DeepSeek-V3-0324"
+	| "microsoft/MAI-DS-R1-FP8"
+	| "tngtech/DeepSeek-R1T-Chimera"
+export const chutesDefaultModelId: ChutesModelId = "deepseek-ai/DeepSeek-R1"
+export const chutesModels = {
+	"deepseek-ai/DeepSeek-R1": {
+		maxTokens: 32768,
+		contextWindow: 163840,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "DeepSeek R1 model.",
+	},
+	"deepseek-ai/DeepSeek-V3": {
+		maxTokens: 32768,
+		contextWindow: 163840,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "DeepSeek V3 model.",
+	},
+	"unsloth/Llama-3.3-70B-Instruct": {
+		maxTokens: 32768, // From Groq
+		contextWindow: 131072, // From Groq
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Unsloth Llama 3.3 70B Instruct model.",
+	},
+	"chutesai/Llama-4-Scout-17B-16E-Instruct": {
+		maxTokens: 32768,
+		contextWindow: 512000,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "ChutesAI Llama 4 Scout 17B Instruct model, 512K context.",
+	},
+	"unsloth/Mistral-Nemo-Instruct-2407": {
+		maxTokens: 32768,
+		contextWindow: 128000,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Unsloth Mistral Nemo Instruct model.",
+	},
+	"unsloth/gemma-3-12b-it": {
+		maxTokens: 32768,
+		contextWindow: 131072,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Unsloth Gemma 3 12B IT model.",
+	},
+	"NousResearch/DeepHermes-3-Llama-3-8B-Preview": {
+		maxTokens: 32768,
+		contextWindow: 131072,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Nous DeepHermes 3 Llama 3 8B Preview model.",
+	},
+	"unsloth/gemma-3-4b-it": {
+		maxTokens: 32768,
+		contextWindow: 131072,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Unsloth Gemma 3 4B IT model.",
+	},
+	"nvidia/Llama-3_3-Nemotron-Super-49B-v1": {
+		maxTokens: 32768,
+		contextWindow: 131072,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Nvidia Llama 3.3 Nemotron Super 49B model.",
+	},
+	"nvidia/Llama-3_1-Nemotron-Ultra-253B-v1": {
+		maxTokens: 32768,
+		contextWindow: 131072,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Nvidia Llama 3.1 Nemotron Ultra 253B model.",
+	},
+	"chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8": {
+		maxTokens: 32768,
+		contextWindow: 256000,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "ChutesAI Llama 4 Maverick 17B Instruct FP8 model.",
+	},
+	"deepseek-ai/DeepSeek-V3-Base": {
+		maxTokens: 32768,
+		contextWindow: 163840,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "DeepSeek V3 Base model.",
+	},
+	"deepseek-ai/DeepSeek-R1-Zero": {
+		maxTokens: 32768,
+		contextWindow: 163840,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "DeepSeek R1 Zero model.",
+	},
+	"deepseek-ai/DeepSeek-V3-0324": {
+		maxTokens: 32768,
+		contextWindow: 163840,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "DeepSeek V3 (0324) model.",
+	},
+	"microsoft/MAI-DS-R1-FP8": {
+		maxTokens: 32768,
+		contextWindow: 163840,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Microsoft MAI-DS-R1 FP8 model.",
+	},
+	"tngtech/DeepSeek-R1T-Chimera": {
+		maxTokens: 32768,
+		contextWindow: 163840,
+		supportsImages: false,
+		supportsPromptCache: false,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "TNGTech DeepSeek R1T Chimera model.",
+	},
+} as const satisfies Record<string, ModelInfo>
+
 /**
  * Constants
  */
@@ -1424,6 +1706,7 @@ export const PROMPT_CACHING_MODELS = new Set([
 	"anthropic/claude-3.7-sonnet:beta",
 	"anthropic/claude-3.7-sonnet:thinking",
 	"google/gemini-2.5-pro-preview-03-25",
+	"google/gemini-2.5-pro-preview-05-06",
 	"google/gemini-2.0-flash-001",
 	"google/gemini-flash-1.5",
 	"google/gemini-flash-1.5-8b",
@@ -1433,6 +1716,7 @@ export const PROMPT_CACHING_MODELS = new Set([
 // in settings).
 export const OPTIONAL_PROMPT_CACHING_MODELS = new Set([
 	"google/gemini-2.5-pro-preview-03-25",
+	"google/gemini-2.5-pro-preview-05-06",
 	"google/gemini-2.0-flash-001",
 	"google/gemini-flash-1.5",
 	"google/gemini-flash-1.5-8b",
@@ -1452,6 +1736,13 @@ const routerNames = ["openrouter", "requesty", "glama", "unbound"] as const
 export type RouterName = (typeof routerNames)[number]
 
 export const isRouterName = (value: string): value is RouterName => routerNames.includes(value as RouterName)
+
+export function toRouterName(value?: string): RouterName {
+	if (value && isRouterName(value)) {
+		return value
+	}
+	throw new Error(`Invalid router name: ${value}`)
+}
 
 export type ModelRecord = Record<string, ModelInfo>
 

@@ -3,6 +3,7 @@ import delay from "delay"
 
 import { ClineProvider } from "../core/webview/ClineProvider"
 import { ContextProxy } from "../core/config/ContextProxy"
+import { telemetryService } from "../services/telemetry/TelemetryService"
 
 import { registerHumanRelayCallback, unregisterHumanRelayCallback, handleHumanRelayResponse } from "./humanRelay"
 import { handleNewTask } from "./handleTask"
@@ -66,35 +67,68 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		"roo-cline.activationCompleted": () => {},
 		"roo-cline.plusButtonClicked": async () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
-			if (!visibleProvider) return
+
+			if (!visibleProvider) {
+				return
+			}
+
+			telemetryService.captureTitleButtonClicked("plus")
+
 			await visibleProvider.removeClineFromStack()
 			await visibleProvider.postStateToWebview()
 			await visibleProvider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		},
 		"roo-cline.mcpButtonClicked": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
-			if (!visibleProvider) return
+
+			if (!visibleProvider) {
+				return
+			}
+
+			telemetryService.captureTitleButtonClicked("mcp")
+
 			visibleProvider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
 		},
 		"roo-cline.promptsButtonClicked": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
-			if (!visibleProvider) return
+
+			if (!visibleProvider) {
+				return
+			}
+
+			telemetryService.captureTitleButtonClicked("prompts")
+
 			visibleProvider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" })
 		},
-		"roo-cline.popoutButtonClicked": () => openClineInNewTab({ context, outputChannel }),
+		"roo-cline.popoutButtonClicked": () => {
+			telemetryService.captureTitleButtonClicked("popout")
+
+			return openClineInNewTab({ context, outputChannel })
+		},
 		"roo-cline.openInNewTab": () => openClineInNewTab({ context, outputChannel }),
 		"roo-cline.settingsButtonClicked": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
-			if (!visibleProvider) return
+
+			if (!visibleProvider) {
+				return
+			}
+
+			telemetryService.captureTitleButtonClicked("settings")
+
 			visibleProvider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
+			// Also explicitly post the visibility message to trigger scroll reliably
+			visibleProvider.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
 		},
 		"roo-cline.historyButtonClicked": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
-			if (!visibleProvider) return
+
+			if (!visibleProvider) {
+				return
+			}
+
+			telemetryService.captureTitleButtonClicked("history")
+
 			visibleProvider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
-		},
-		"roo-cline.helpButtonClicked": () => {
-			vscode.env.openExternal(vscode.Uri.parse("https://docs.roocode.com"))
 		},
 		"roo-cline.showHumanRelayDialog": (params: { requestId: string; promptText: string }) => {
 			const panel = getPanel()
@@ -118,6 +152,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		"roo-cline.focusInput": async () => {
 			try {
 				const panel = getPanel()
+
 				if (!panel) {
 					await vscode.commands.executeCommand("workbench.view.extension.roo-cline-ActivityBar")
 				} else if (panel === tabPanel) {
@@ -132,7 +167,11 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		},
 		"roo.acceptInput": () => {
 			const visibleProvider = getVisibleProviderOrLog(outputChannel)
-			if (!visibleProvider) return
+
+			if (!visibleProvider) {
+				return
+			}
+
 			visibleProvider.postMessageToWebview({ type: "acceptInput" })
 		},
 	}
@@ -175,10 +214,26 @@ export const openClineInNewTab = async ({ context, outputChannel }: Omit<Registe
 
 	await tabProvider.resolveWebviewView(newPanel)
 
+	// Add listener for visibility changes to notify webview
+	newPanel.onDidChangeViewState(
+		(e) => {
+			const panel = e.webviewPanel
+			if (panel.visible) {
+				panel.webview.postMessage({ type: "action", action: "didBecomeVisible" }) // Use the same message type as in SettingsView.tsx
+			}
+		},
+		null, // First null is for `thisArgs`
+		context.subscriptions, // Register listener for disposal
+	)
+
 	// Handle panel closing events.
-	newPanel.onDidDispose(() => {
-		setPanel(undefined, "tab")
-	})
+	newPanel.onDidDispose(
+		() => {
+			setPanel(undefined, "tab")
+		},
+		null,
+		context.subscriptions, // Also register dispose listener
+	)
 
 	// Lock the editor group so clicking on files doesn't open them over the panel.
 	await delay(100)

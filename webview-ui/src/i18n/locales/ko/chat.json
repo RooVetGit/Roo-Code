@@ -90,6 +90,7 @@
 		}
 	},
 	"selectMode": "상호작용 모드 선택",
+	"selectApiConfig": "API 구성 선택",
 	"enhancePrompt": "추가 컨텍스트로 프롬프트 향상",
 	"addImages": "메시지에 이미지 추가",
 	"sendMessage": "메시지 보내기",
@@ -185,13 +186,6 @@
 		"hasQuestion": "Roo에게 질문이 있습니다:"
 	},
 	"taskCompleted": "작업 완료",
-	"shellIntegration": {
-		"unavailable": "쉘 통합 사용 불가",
-		"troubleshooting": "여전히 문제가 있나요? 쉘 통합 문서를 보려면 여기를 클릭하세요.",
-		"checkSettings": "설정 페이지에서 터미널 해결 방법을 확인하세요",
-		"updateVSCode": "VSCode를 업데이트하세요",
-		"supportedShell": "지원되는 쉘을 사용하고 있는지 확인하세요: zsh, bash, fish 또는 PowerShell"
-	},
 	"powershell": {
 		"issues": "Windows PowerShell에 문제가 있는 것 같습니다. 다음을 참조하세요"
 	},
@@ -208,12 +202,12 @@
 		"copyToInput": "입력창에 복사 (또는 Shift + 클릭)"
 	},
 	"announcement": {
-		"title": "🎉 Roo Code 3.14 출시",
-		"description": "Roo Code 3.14는 사용자 피드백을 기반으로 새로운 기능과 개선사항을 제공합니다.",
+		"title": "🎉 Roo Code 3.16 출시",
+		"description": "Roo Code 3.16은 사용자 피드백을 기반으로 새로운 기능과 개선사항을 제공합니다.",
 		"whatsNew": "새로운 기능",
-		"feature1": "<bold>개선된 편집 도구</bold>: <code>search_and_replace</code>와 <code>insert_content</code> 도구가 개선되어 실험 상태에서 정식 기능으로 전환되었습니다",
-		"feature2": "<bold>apply_diff 수정</bold>: <code>apply_diff</code> 도구를 지속적으로 개선하고 있습니다",
-		"feature3": "<bold>수많은 기타 개선사항</bold>: 확장 프로그램 전체에 걸친 다양한 수정 및 향상된 기능",
+		"feature1": "<bold>Groq 및 Chutes API 제공자</bold>: Groq 및 Chutes API 제공자 지원 추가 (감사합니다 @shariqriazz!)",
+		"feature2": "<bold>클릭 가능한 코드 참조</bold>: 모델 응답의 코드 참조가 이제 소스 코드 라인으로 직접 이동 가능 (감사합니다 @KJ7LNW!)",
+		"feature3": "<bold>MCP 안정성 개선</bold>: MCP 통합의 안정성을 향상시키기 위한 여러 버그 수정",
 		"hideButton": "공지 숨기기",
 		"detailsDiscussLinks": "<discordLink>Discord</discordLink>와 <redditLink>Reddit</redditLink>에서 더 자세한 정보를 확인하고 논의하세요 🚀"
 	},
@@ -239,6 +233,19 @@
 			"close": "브라우저 닫기"
 		}
 	},
+	"codeblock": {
+		"tooltips": {
+			"expand": "코드 블록 확장",
+			"collapse": "코드 블록 축소",
+			"enable_wrap": "자동 줄바꿈 활성화",
+			"disable_wrap": "자동 줄바꿈 비활성화",
+			"copy_code": "코드 복사"
+		}
+	},
 	"systemPromptWarning": "경고: 사용자 정의 시스템 프롬프트 재정의가 활성화되었습니다. 이로 인해 기능이 심각하게 손상되고 예측할 수 없는 동작이 발생할 수 있습니다.",
-	"selectApiConfig": "API 구성 선택"
+	"shellIntegration": {
+		"title": "명령 실행 경고",
+		"description": "명령이 VSCode 터미널 쉘 통합 없이 실행되고 있습니다. 이 경고를 숨기려면 <settingsLink>Roo Code 설정</settingsLink>의 <strong>Terminal</strong> 섹션에서 쉘 통합을 비활성화하거나 아래 링크를 사용하여 VSCode 터미널 통합 문제를 해결하세요.",
+		"troubleshooting": "쉘 통합 문서를 보려면 여기를 클릭하세요."
+	}
 }

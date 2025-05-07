@@ -13,8 +13,8 @@ import { GlobalState, ProviderSettings, RooCodeSettings } from "../../schemas"
 import { t } from "../../i18n"
 import { setPanel } from "../../activate/registerCommands"
 import {
+	ProviderName,
 	ApiConfiguration,
-	ApiProvider,
 	requestyDefaultModelId,
 	openRouterDefaultModelId,
 	glamaDefaultModelId,
@@ -41,7 +41,7 @@ import { ContextProxy } from "../config/ContextProxy"
 import { ProviderSettingsManager } from "../config/ProviderSettingsManager"
 import { CustomModesManager } from "../config/CustomModesManager"
 import { buildApiHandler } from "../../api"
-import { ACTION_NAMES } from "../CodeActionProvider"
+import { CodeActionName } from "../CodeActionProvider"
 import { Cline, ClineOptions } from "../Cline"
 import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
@@ -75,7 +75,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
-	public readonly latestAnnouncementId = "apr-23-2025-3-14" // Update for v3.14.0 announcement
+	public readonly latestAnnouncementId = "may-06-2025-3-16" // Update for v3.16.0 announcement
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
 
@@ -262,7 +262,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	public static async handleCodeAction(
 		command: string,
-		promptType: keyof typeof ACTION_NAMES,
+		promptType: CodeActionName,
 		params: Record<string, string | any[]>,
 	): Promise<void> {
 		// Capture telemetry for code action usage
@@ -276,20 +276,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		const { customSupportPrompts } = await visibleProvider.getState()
 
+		// TODO: Improve type safety for promptType.
 		const prompt = supportPrompt.create(promptType, params, customSupportPrompts)
 
 		if (command.endsWith("addToContext")) {
-			await visibleProvider.postMessageToWebview({
-				type: "invoke",
-				invoke: "setChatBoxMessage",
-				text: prompt,
-			})
-
-			return
-		}
-
-		if (visibleProvider.getCurrentCline() && command.endsWith("InCurrentTask")) {
-			await visibleProvider.postMessageToWebview({ type: "invoke", invoke: "sendMessage", text: prompt })
+			await visibleProvider.postMessageToWebview({ type: "invoke", invoke: "setChatBoxMessage", text: prompt })
 			return
 		}
 
@@ -304,6 +295,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		// Capture telemetry for terminal action usage
 		telemetryService.captureCodeActionUsed(promptType)
 		const visibleProvider = await ClineProvider.getInstance()
+
 		if (!visibleProvider) {
 			return
 		}
@@ -313,20 +305,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const prompt = supportPrompt.create(promptType, params, customSupportPrompts)
 
 		if (command.endsWith("AddToContext")) {
-			await visibleProvider.postMessageToWebview({
-				type: "invoke",
-				invoke: "setChatBoxMessage",
-				text: prompt,
-			})
-			return
-		}
-
-		if (visibleProvider.getCurrentCline() && command.endsWith("InCurrentTask")) {
-			await visibleProvider.postMessageToWebview({
-				type: "invoke",
-				invoke: "sendMessage",
-				text: prompt,
-			})
+			await visibleProvider.postMessageToWebview({ type: "invoke", invoke: "setChatBoxMessage", text: prompt })
 			return
 		}
 
@@ -748,7 +727,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
             <meta name="theme-color" content="#000000">
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:; script-src 'nonce-${nonce}' https://us-assets.i.posthog.com; connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com;">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:; script-src ${webview.cspSource} 'wasm-unsafe-eval' 'nonce-${nonce}' https://us-assets.i.posthog.com 'strict-dynamic'; connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com;">
             <link rel="stylesheet" type="text/css" href="${stylesUri}">
 			<link href="${codiconsUri}" rel="stylesheet" />
 			<script nonce="${nonce}">
@@ -1205,6 +1184,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			customSupportPrompts,
 			enhancementApiConfigId,
 			autoApprovalEnabled,
+			customModes,
 			experiments,
 			maxOpenTabsContext,
 			maxWorkspaceFiles,
@@ -1284,7 +1264,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			customSupportPrompts: customSupportPrompts ?? {},
 			enhancementApiConfigId,
 			autoApprovalEnabled: autoApprovalEnabled ?? false,
-			customModes: await this.customModesManager.getCustomModes(),
+			customModes,
 			experiments: experiments ?? experimentDefault,
 			mcpServers: this.mcpHub?.getAllServers() ?? [],
 			maxOpenTabsContext: maxOpenTabsContext ?? 20,
@@ -1317,7 +1297,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const customModes = await this.customModesManager.getCustomModes()
 
 		// Determine apiProvider with the same logic as before.
-		const apiProvider: ApiProvider = stateValues.apiProvider ? stateValues.apiProvider : "anthropic"
+		const apiProvider: ProviderName = stateValues.apiProvider ? stateValues.apiProvider : "anthropic"
 
 		// Build the apiConfiguration object combining state values and secrets.
 		const providerSettings = this.contextProxy.getProviderSettings()
@@ -1496,10 +1476,12 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const appVersion = this.context.extension?.packageJSON?.version
 		const vscodeVersion = vscode.version
 		const platform = process.platform
+		const editorName = vscode.env.appName // Get the editor name (VS Code, Cursor, etc.)
 
 		const properties: Record<string, any> = {
 			vscodeVersion,
 			platform,
+			editorName,
 		}
 
 		// Add extension version
@@ -1524,8 +1506,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		// Add model ID if available
 		const currentCline = this.getCurrentCline()
+
 		if (currentCline?.api) {
 			const { id: modelId } = currentCline.api.getModel()
+
 			if (modelId) {
 				properties.modelId = modelId
 			}
@@ -1533,6 +1517,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		if (currentCline?.diffStrategy) {
 			properties.diffStrategy = currentCline.diffStrategy.getName()
+		}
+
+		// Add isSubtask property that indicates whether this task is a subtask
+		if (currentCline) {
+			properties.isSubtask = !!currentCline.parentTask
 		}
 
 		return properties

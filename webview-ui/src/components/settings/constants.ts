@@ -1,5 +1,5 @@
 import {
-	ApiProvider,
+	ProviderName,
 	ModelInfo,
 	anthropicModels,
 	bedrockModels,
@@ -9,11 +9,15 @@ import {
 	openAiNativeModels,
 	vertexModels,
 	xaiModels,
+	groqModels,
+	chutesModels,
 } from "@roo/shared/api"
 
 export { REASONING_MODELS, PROMPT_CACHING_MODELS } from "@roo/shared/api"
 
-export const MODELS_BY_PROVIDER: Partial<Record<ApiProvider, Record<string, ModelInfo>>> = {
+export { AWS_REGIONS } from "@roo/shared/aws_regions"
+
+export const MODELS_BY_PROVIDER: Partial<Record<ProviderName, Record<string, ModelInfo>>> = {
 	anthropic: anthropicModels,
 	bedrock: bedrockModels,
 	deepseek: deepSeekModels,
@@ -22,6 +26,8 @@ export const MODELS_BY_PROVIDER: Partial<Record<ApiProvider, Record<string, Mode
 	"openai-native": openAiNativeModels,
 	vertex: vertexModels,
 	xai: xaiModels,
+	groq: groqModels,
+	chutes: chutesModels,
 }
 
 export const PROVIDERS = [
@@ -41,7 +47,9 @@ export const PROVIDERS = [
 	{ value: "unbound", label: "Unbound" },
 	{ value: "requesty", label: "Requesty" },
 	{ value: "human-relay", label: "Human Relay" },
-	{ value: "xai", label: "xAI" },
+	{ value: "xai", label: "xAI (Grok)" },
+	{ value: "groq", label: "Groq" },
+	{ value: "chutes", label: "Chutes AI" },
 ].sort((a, b) => a.label.localeCompare(b.label))
 
 export const VERTEX_REGIONS = [
