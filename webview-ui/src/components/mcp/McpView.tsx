@@ -351,7 +351,7 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 						{server.instructions && (
 							<div
 								style={{
-									paddingTop: "5px 0",
+									padding: "5px 0",
 									opacity: 0.8,
 									fontSize: "12px",
 								}}>
