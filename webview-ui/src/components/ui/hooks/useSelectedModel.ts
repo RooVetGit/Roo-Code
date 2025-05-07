@@ -88,7 +88,7 @@ function getSelectedModel({
 			const info = routerModels.litellm[id]
 			return info
 				? { id, info }
-				: { id: litellmDefaultModelId, info: routerModels.unbound[litellmDefaultModelId] }
+				: { id: litellmDefaultModelId, info: routerModels.litellm[litellmDefaultModelId] }
 		}
 		case "xai": {
 			const id = apiConfiguration.apiModelId ?? xaiDefaultModelId
