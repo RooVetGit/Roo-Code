@@ -29,6 +29,25 @@ import {
 import { loadSystemPromptFile } from "./sections/custom-system-prompt"
 import { formatLanguage } from "../../shared/language"
 
+/**
+ * Generate the complete system prompt by assembling all sections
+ * @param context - VSCode extension context
+ * @param cwd - Current workspace directory
+ * @param supportsComputerUse - Whether computer use is supported
+ * @param mode - Current mode identifier
+ * @param mcpHub - MCP Hub instance
+ * @param diffStrategy - Diff strategy for file modifications
+ * @param browserViewportSize - Browser viewport size
+ * @param promptComponent - Custom prompt component
+ * @param customModeConfigs - Custom mode configurations
+ * @param globalCustomInstructions - Global custom instructions
+ * @param diffEnabled - Whether diff is enabled
+ * @param experiments - Experiment flags
+ * @param enableMcpServerCreation - Whether MCP server creation is enabled
+ * @param language - Language preference
+ * @param rooIgnoreInstructions - RooIgnore instructions
+ * @returns Complete system prompt
+ */
 async function generatePrompt(
 	context: vscode.ExtensionContext,
 	cwd: string,
@@ -50,13 +69,14 @@ async function generatePrompt(
 		throw new Error("Extension context is required for generating system prompt")
 	}
 
-	// If diff is disabled, don't pass the diffStrategy
+	// Apply diff strategy only when diffing is enabled
 	const effectiveDiffStrategy = diffEnabled ? diffStrategy : undefined
 
-	// Get the full mode config to ensure we have the role definition
+	// Retrieve complete mode configuration
 	const modeConfig = getModeBySlug(mode, customModeConfigs) || modes.find((m) => m.slug === mode) || modes[0]
 	const roleDefinition = promptComponent?.roleDefinition || modeConfig.roleDefinition
 
+	// Load sections that require async operations in parallel
 	const [modesSection, mcpServersSection] = await Promise.all([
 		getModesSection(context),
 		modeConfig.groups.some((groupEntry) => getGroupName(groupEntry) === "mcp")
@@ -64,7 +84,20 @@ async function generatePrompt(
 			: Promise.resolve(""),
 	])
 
-	const basePrompt = `${roleDefinition}
+	// Process custom instructions with language preference
+	const customInstructions = await addCustomInstructions(
+		promptComponent?.customInstructions || modeConfig.customInstructions || "",
+		globalCustomInstructions || "",
+		cwd,
+		mode,
+		{
+			language: language ?? formatLanguage(vscode.env.language),
+			rooIgnoreInstructions,
+		},
+	)
+
+	// Assemble complete prompt from all sections
+	return `${roleDefinition}
 
 ${markdownFormattingSection()}
 
@@ -91,15 +124,34 @@ ${modesSection}
 
 ${getRulesSection(cwd, supportsComputerUse, effectiveDiffStrategy)}
 
-${getSystemInfoSection(cwd)}
+${getSystemInfoSection(cwd, mode, customModeConfigs)}
 
 ${getObjectiveSection()}
 
-${await addCustomInstructions(promptComponent?.customInstructions || modeConfig.customInstructions || "", globalCustomInstructions || "", cwd, mode, { language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions })}`
-
-	return basePrompt
+${customInstructions}`
 }
 
+/**
+ * Main entry point for generating system prompts
+ * Uses either file-based custom prompt or generates from components
+ *
+ * @param context - VSCode extension context
+ * @param cwd - Current workspace directory
+ * @param supportsComputerUse - Whether computer use is supported
+ * @param mcpHub - MCP Hub instance
+ * @param diffStrategy - Diff strategy for file modifications
+ * @param browserViewportSize - Browser viewport size
+ * @param mode - Current mode identifier
+ * @param customModePrompts - Custom mode prompt overrides
+ * @param customModes - Custom mode configurations
+ * @param globalCustomInstructions - Global custom instructions
+ * @param diffEnabled - Whether diff is enabled
+ * @param experiments - Experiment flags
+ * @param enableMcpServerCreation - Whether MCP server creation is enabled
+ * @param language - Language preference
+ * @param rooIgnoreInstructions - RooIgnore instructions
+ * @returns Complete system prompt
+ */
 export const SYSTEM_PROMPT = async (
 	context: vscode.ExtensionContext,
 	cwd: string,
@@ -121,14 +173,11 @@ export const SYSTEM_PROMPT = async (
 		throw new Error("Extension context is required for generating system prompt")
 	}
 
-	const getPromptComponent = (value: unknown) => {
-		if (typeof value === "object" && value !== null) {
-			return value as PromptComponent
-		}
-		return undefined
-	}
+	// Extract prompt component from custom mode prompts
+	const getPromptComponent = (value: unknown): PromptComponent | undefined =>
+		typeof value === "object" && value !== null ? (value as PromptComponent) : undefined
 
-	// Try to load custom system prompt from file
+	// Prepare variables for prompt interpolation
 	const variablesForPrompt: PromptVariables = {
 		workspace: cwd,
 		mode: mode,
@@ -136,15 +185,13 @@ export const SYSTEM_PROMPT = async (
 		shell: vscode.env.shell,
 		operatingSystem: os.type(),
 	}
+
+	// Try to load custom system prompt from file
 	const fileCustomSystemPrompt = await loadSystemPromptFile(cwd, mode, variablesForPrompt)
-
-	// Check if it's a custom mode
 	const promptComponent = getPromptComponent(customModePrompts?.[mode])
-
-	// Get full mode config from custom modes or fall back to built-in modes
 	const currentMode = getModeBySlug(mode, customModes) || modes.find((m) => m.slug === mode) || modes[0]
 
-	// If a file-based custom system prompt exists, use it
+	// Use file-based custom prompt if available
 	if (fileCustomSystemPrompt) {
 		const roleDefinition = promptComponent?.roleDefinition || currentMode.roleDefinition
 		const customInstructions = await addCustomInstructions(
@@ -155,7 +202,7 @@ export const SYSTEM_PROMPT = async (
 			{ language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions },
 		)
 
-		// For file-based prompts, don't include the tool sections
+		// For file-based prompts, use simplified structure without tool sections
 		return `${roleDefinition}
 
 ${fileCustomSystemPrompt}
@@ -163,16 +210,14 @@ ${fileCustomSystemPrompt}
 ${customInstructions}`
 	}
 
-	// If diff is disabled, don't pass the diffStrategy
-	const effectiveDiffStrategy = diffEnabled ? diffStrategy : undefined
-
+	// Generate complete prompt from components
 	return generatePrompt(
 		context,
 		cwd,
 		supportsComputerUse,
 		currentMode.slug,
 		mcpHub,
-		effectiveDiffStrategy,
+		diffEnabled ? diffStrategy : undefined,
 		browserViewportSize,
 		promptComponent,
 		customModes,

@@ -43,15 +43,16 @@ describe("getCapabilitiesSection", () => {
 	test("includes apply_diff in capabilities when diffStrategy is provided", () => {
 		const result = getCapabilitiesSection(cwd, false, mcpHub, mockDiffStrategy)
 
-		expect(result).toContain("apply_diff or")
-		expect(result).toContain("then use the apply_diff or write_to_file tool")
+		// Check that apply_diff is mentioned alongside write_to_file
+		expect(result).toContain("apply_diff/write_to_file: Apply changes after analysis")
 	})
 
 	test("excludes apply_diff from capabilities when diffStrategy is undefined", () => {
 		const result = getCapabilitiesSection(cwd, false, mcpHub, undefined)
 
 		expect(result).not.toContain("apply_diff or")
-		expect(result).toContain("then use the write_to_file tool")
-		expect(result).not.toContain("apply_diff or write_to_file")
+		// Check that only write_to_file is mentioned for applying changes
+		expect(result).toContain("write_to_file: Apply changes after analysis")
+		expect(result).not.toContain("apply_diff/write_to_file") // Ensure the combined form isn't present
 	})
 })

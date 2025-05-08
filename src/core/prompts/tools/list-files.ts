@@ -1,20 +1,25 @@
 import { ToolArgs } from "./types"
+import { PARAMETER_DESCRIPTIONS } from "../constants"
 
 export function getListFilesDescription(args: ToolArgs): string {
 	return `## list_files
-Description: Request to list files and directories within the specified directory. If recursive is true, it will list all files and directories recursively. If recursive is false or not provided, it will only list the top-level contents. Do not use this tool to confirm the existence of files you may have created, as the user will let you know if the files were created successfully or not.
+Description: List files and directories in the specified location. Shows only top-level contents by default.
 Parameters:
-- path: (required) The path of the directory to list contents for (relative to the current workspace directory ${args.cwd})
-- recursive: (optional) Whether to list files recursively. Use true for recursive listing, false or omit for top-level only.
+- path: (required) ${PARAMETER_DESCRIPTIONS.PATH(args.cwd)}
+- recursive: (optional) Set to "true" to list all nested files and subdirectories
 Usage:
 <list_files>
-<path>Directory path here</path>
+<path>Directory path</path>
 <recursive>true or false (optional)</recursive>
 </list_files>
 
-Example: Requesting to list all files in the current directory
+Examples:
 <list_files>
 <path>.</path>
-<recursive>false</recursive>
+</list_files>
+
+<list_files>
+<path>src</path>
+<recursive>true</recursive>
 </list_files>`
 }

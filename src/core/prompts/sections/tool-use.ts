@@ -1,3 +1,5 @@
+import { TOOL_USE_FORMAT } from "../constants"
+
 export function getSharedToolUseSection(): string {
 	return `====
 
@@ -7,13 +9,7 @@ You have access to a set of tools that are executed upon the user's approval. Yo
 
 # Tool Use Formatting
 
-Tool use is formatted using XML-style tags. The tool name is enclosed in opening and closing tags, and each parameter is similarly enclosed within its own set of tags. Here's the structure:
-
-<tool_name>
-<parameter1_name>value1</parameter1_name>
-<parameter2_name>value2</parameter2_name>
-...
-</tool_name>
+${TOOL_USE_FORMAT}
 
 For example:
 

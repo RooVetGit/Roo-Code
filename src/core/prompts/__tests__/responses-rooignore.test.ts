@@ -50,9 +50,9 @@ describe("RooIgnore Response Formatting", () => {
 			const errorMessage = formatResponse.rooIgnoreError("secrets/api-keys.json")
 
 			// Verify error message format
-			expect(errorMessage).toContain("Access to secrets/api-keys.json is blocked by the .rooignore file settings")
-			expect(errorMessage).toContain("continue in the task without using this file")
-			expect(errorMessage).toContain("ask the user to update the .rooignore file")
+			expect(errorMessage).toContain("Access to secrets/api-keys.json is blocked by .rooignore settings")
+			expect(errorMessage).toContain("Continue without this file")
+			expect(errorMessage).toContain("ask the user to update .rooignore")
 		})
 
 		/**
