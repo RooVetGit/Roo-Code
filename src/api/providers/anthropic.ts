@@ -10,8 +10,9 @@ import {
 } from "../../shared/api"
 import { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
-import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants"
+import { ANTHROPIC_DEFAULT_MAX_TOKENS, CLAUDE_MAX_SAFE_TOKEN_LIMIT } from "./constants"
 import { SingleCompletionHandler, getModelParams } from "../index"
+import { truncateConversation } from "../../core/sliding-window"
 
 export class AnthropicHandler extends BaseProvider implements SingleCompletionHandler {
 	private options: ApiHandlerOptions
@@ -33,7 +34,61 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 	async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
 		let stream: AnthropicStream<Anthropic.Messages.RawMessageStreamEvent>
 		const cacheControl: CacheControlEphemeral = { type: "ephemeral" }
-		let { id: modelId, maxTokens, thinking, temperature, virtualId } = this.getModel()
+		let { id: modelId, maxTokens, thinking, temperature, virtualId, info } = this.getModel()
+
+		// Check token count before sending the request for all Anthropic models
+		// Count tokens for the entire request
+		const tokenCount = await this.countMessageTokens(systemPrompt, messages, modelId)
+
+		// Get the context window size for the current model
+		const contextWindow = info.contextWindow || 200000
+
+		// Calculate a safe token limit (1k tokens below the context window)
+		const safeTokenLimit = Math.min(contextWindow - 1000, CLAUDE_MAX_SAFE_TOKEN_LIMIT)
+
+		// If token count exceeds the safe limit, truncate the conversation
+		if (tokenCount > safeTokenLimit) {
+			console.warn(
+				`Token count (${tokenCount}) exceeds safe limit (${safeTokenLimit}) for model ${modelId}. Truncating conversation.`,
+			)
+
+			// Calculate how much we need to truncate
+			const excessTokens = tokenCount - safeTokenLimit
+			const totalTokens = tokenCount
+
+			// Determine truncation fraction based on excess tokens
+			// Start with 0.5 (50%) and increase if needed
+			let truncationFraction = 0.5
+
+			// If we're significantly over the limit, increase truncation
+			if (excessTokens > totalTokens * 0.3) {
+				truncationFraction = 0.7
+			}
+
+			// Truncate the conversation
+			const originalLength = messages.length
+			messages = truncateConversation(messages, truncationFraction)
+
+			console.log(
+				`Truncated conversation from ${originalLength} to ${messages.length} messages to fit within token limit.`,
+			)
+
+			// Verify token count after truncation
+			const newTokenCount = await this.countMessageTokens(systemPrompt, messages, modelId)
+
+			// If still over limit, truncate again with a higher fraction
+			if (newTokenCount > safeTokenLimit) {
+				console.warn(
+					`After truncation, token count (${newTokenCount}) still exceeds safe limit. Truncating further.`,
+				)
+
+				messages = truncateConversation(messages, 0.8)
+
+				// Final verification
+				const finalTokenCount = await this.countMessageTokens(systemPrompt, messages, modelId)
+				console.log(`Final token count after truncation: ${finalTokenCount}`)
+			}
+		}
 
 		switch (modelId) {
 			case "claude-3-7-sonnet-20250219":
@@ -217,7 +272,32 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 	}
 
 	async completePrompt(prompt: string) {
-		let { id: model, temperature } = this.getModel()
+		let { id: model, temperature, info } = this.getModel()
+
+		// Check token count before sending the request for all Anthropic models
+		// Count tokens for the prompt
+		const tokenCount = await this.countTokens([{ type: "text", text: prompt }])
+
+		// Get the context window size for the current model
+		const contextWindow = info.contextWindow || 200000
+
+		// Calculate a safe token limit (1k tokens below the context window)
+		const safeTokenLimit = Math.min(contextWindow - 1000, CLAUDE_MAX_SAFE_TOKEN_LIMIT)
+
+		// If token count exceeds the safe limit, truncate the prompt
+		if (tokenCount > safeTokenLimit) {
+			console.warn(
+				`Prompt token count (${tokenCount}) exceeds safe limit (${safeTokenLimit}) for model ${model}. Truncating prompt.`,
+			)
+
+			// Calculate how much we need to truncate
+			const ratio = safeTokenLimit / tokenCount
+			const newLength = Math.floor(prompt.length * ratio * 0.9) // 90% of the calculated length for safety
+
+			// Truncate the prompt
+			prompt = prompt.substring(0, newLength)
+			console.log(`Truncated prompt to ${newLength} characters to fit within token limit.`)
+		}
 
 		const message = await this.client.messages.create({
 			model,
@@ -255,6 +335,49 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 
 			// Use the base provider's implementation as fallback
 			return super.countTokens(content)
+		}
+	}
+
+	/**
+	 * Counts tokens for a complete message request using Anthropic's API
+	 *
+	 * @param systemPrompt The system prompt
+	 * @param messages The conversation messages
+	 * @param model The model ID
+	 * @returns A promise resolving to the token count
+	 */
+	async countMessageTokens(
+		systemPrompt: string,
+		messages: Anthropic.Messages.MessageParam[],
+		model: string,
+	): Promise<number> {
+		try {
+			const response = await this.client.messages.countTokens({
+				model,
+				system: systemPrompt,
+				messages: messages,
+			})
+
+			return response.input_tokens
+		} catch (error) {
+			// Log error but fallback to estimating tokens by counting each part separately
+			console.warn("Anthropic message token counting failed, using fallback", error)
+
+			// Fallback: Count system prompt tokens
+			const systemTokens = await this.countTokens([{ type: "text", text: systemPrompt }])
+
+			// Count tokens for each message
+			let messageTokens = 0
+			for (const message of messages) {
+				if (typeof message.content === "string") {
+					messageTokens += await this.countTokens([{ type: "text", text: message.content }])
+				} else {
+					messageTokens += await this.countTokens(message.content)
+				}
+			}
+
+			// Add some overhead for message formatting
+			return systemTokens + messageTokens + messages.length * 5
 		}
 	}
 }

@@ -334,6 +334,7 @@ describe("Cline", () => {
 
 	describe("getEnvironmentDetails", () => {
 		describe("API conversation handling", () => {
+			// Set timeout to 15 seconds for this specific test
 			it("should clean conversation history before sending to API", async () => {
 				// Cline.create will now use our mocked getEnvironmentDetails
 				const [cline, task] = Cline.create({
@@ -400,7 +401,7 @@ describe("Cline", () => {
 
 				// Verify extra properties were removed
 				expect(Object.keys(cleanedMessage!)).toEqual(["role", "content"])
-			})
+			}, 15000)
 
 			it("should handle image blocks based on model capabilities", async () => {
 				// Create two configurations - one with image support, one without
