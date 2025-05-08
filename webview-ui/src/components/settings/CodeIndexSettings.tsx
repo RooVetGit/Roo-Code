@@ -125,7 +125,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 										})
 									}
 								}}>
-								<SelectTrigger className="w-[180px]">
+								<SelectTrigger className="w-full">
 									<SelectValue placeholder="Select provider" />
 								</SelectTrigger>
 								<SelectContent>
@@ -145,7 +145,7 @@ export const CodeIndexSettings: React.FC<CodeIndexSettingsProps> = ({
 										codebaseIndexEmbedderModelId: value,
 									})
 								}>
-								<SelectTrigger className="w-[180px]">
+								<SelectTrigger className="w-full">
 									<SelectValue placeholder="Select model" />
 								</SelectTrigger>
 								<SelectContent>
