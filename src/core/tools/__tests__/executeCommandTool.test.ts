@@ -13,7 +13,7 @@ jest.mock("execa", () => ({
 	execa: jest.fn(),
 }))
 
-jest.mock("../../Cline")
+jest.mock("../../Task")
 jest.mock("../../prompts/responses")
 
 // Create a mock for the executeCommand function
