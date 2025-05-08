@@ -431,6 +431,21 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 		})
 	}
 
+	// keep track the state of the textareas locally because we sync them with the backend
+	// on separate event
+	const [roleDefinitionValue, setRoleDefinitionValue] = useState(() => {
+		const customMode = findModeBySlug(visualMode, customModes)
+		const prompt = customModePrompts?.[visualMode] as PromptComponent
+		return customMode?.roleDefinition ?? prompt?.roleDefinition ?? getRoleDefinition(visualMode)
+	})
+	const [customInstructionsValue, setCustomInstructionsValue] = useState(customInstructions || "")
+	const [globalCustomInstructionsValue, setGlobalCustomInstructionsValue] = useState(() => {
+		const customMode = findModeBySlug(visualMode, customModes)
+		const prompt = customModePrompts?.[visualMode] as PromptComponent
+		return customMode?.customInstructions ?? prompt?.customInstructions ?? getCustomInstructions(mode, customModes)
+	})
+	const [supportPromptValue, setSupportPromptValue] = useState(getSupportPromptValue(activeSupportOption) || "")
+
 	return (
 		<Tab>
 			<TabHeader className="flex justify-between items-center">
@@ -667,19 +682,15 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							{t("prompts:roleDefinition.description")}
 						</div>
 						<Textarea
-							value={(() => {
-								const customMode = findModeBySlug(visualMode, customModes)
-								const prompt = customModePrompts?.[visualMode] as PromptComponent
-								return (
-									customMode?.roleDefinition ??
-									prompt?.roleDefinition ??
-									getRoleDefinition(visualMode)
-								)
-							})()}
+							value={roleDefinitionValue}
 							onChange={(e) => {
 								const value =
 									(e as unknown as CustomEvent)?.detail?.target?.value ||
 									((e as any).target as HTMLTextAreaElement).value
+								setRoleDefinitionValue(value)
+							}}
+							onBlur={() => {
+								const value = roleDefinitionValue
 								const customMode = findModeBySlug(visualMode, customModes)
 								if (customMode) {
 									// For custom modes, update the JSON file
@@ -849,19 +860,15 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							})}
 						</div>
 						<Textarea
-							value={(() => {
-								const customMode = findModeBySlug(visualMode, customModes)
-								const prompt = customModePrompts?.[visualMode] as PromptComponent
-								return (
-									customMode?.customInstructions ??
-									prompt?.customInstructions ??
-									getCustomInstructions(mode, customModes)
-								)
-							})()}
+							value={customInstructionsValue}
 							onChange={(e) => {
 								const value =
 									(e as unknown as CustomEvent)?.detail?.target?.value ||
 									((e as any).target as HTMLTextAreaElement).value
+								setCustomInstructionsValue(value)
+							}}
+							onBlur={() => {
+								const value = customInstructionsValue
 								const customMode = findModeBySlug(visualMode, customModes)
 								if (customMode) {
 									// For custom modes, update the JSON file
@@ -1003,11 +1010,15 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 						})}
 					</div>
 					<Textarea
-						value={customInstructions}
+						value={globalCustomInstructionsValue}
 						onChange={(e) => {
 							const value =
 								(e as unknown as CustomEvent)?.detail?.target?.value ||
 								((e as any).target as HTMLTextAreaElement).value
+							setGlobalCustomInstructionsValue(value)
+						}}
+						onBlur={() => {
+							const value = globalCustomInstructionsValue
 							setCustomInstructions(value || undefined)
 							vscode.postMessage({
 								type: "customInstructions",
@@ -1081,11 +1092,15 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 						</div>
 
 						<Textarea
-							value={getSupportPromptValue(activeSupportOption)}
+							value={supportPromptValue}
 							onChange={(e) => {
 								const value =
 									(e as unknown as CustomEvent)?.detail?.target?.value ||
 									((e as any).target as HTMLTextAreaElement).value
+								setSupportPromptValue(value)
+							}}
+							onBlur={() => {
+								const value = supportPromptValue
 								const trimmedValue = value.trim()
 								updateSupportPrompt(activeSupportOption, trimmedValue || undefined)
 							}}

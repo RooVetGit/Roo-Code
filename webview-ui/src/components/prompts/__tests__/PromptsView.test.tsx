@@ -1,3 +1,5 @@
+// npx jest src/components/prompts/__tests__/PromptsView.test.tsx
+
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import PromptsView from "../PromptsView"
 import { ExtensionStateContext } from "@src/context/ExtensionStateContext"
@@ -122,6 +124,7 @@ describe("PromptsView", () => {
 		fireEvent.change(textarea, {
 			target: { value: "New prompt value" },
 		})
+		fireEvent.blur(textarea)
 
 		expect(vscode.postMessage).toHaveBeenCalledWith({
 			type: "updatePrompt",
@@ -203,6 +206,7 @@ describe("PromptsView", () => {
 		fireEvent.change(textarea, {
 			target: { value: "" },
 		})
+		fireEvent.blur(textarea)
 
 		expect(setCustomInstructions).toHaveBeenCalledWith(undefined)
 		expect(vscode.postMessage).toHaveBeenCalledWith({
