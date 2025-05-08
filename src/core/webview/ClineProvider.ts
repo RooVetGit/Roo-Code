@@ -784,7 +784,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			const config = listApiConfig?.find((c) => c.id === savedConfigId)
 
 			if (config?.name) {
-				const apiConfig = await this.providerSettingsManager.loadConfig(config.name)
+				const { name: _, ...apiConfig } = await this.providerSettingsManager.activateProfile({
+					name: config.name,
+				})
 
 				await Promise.all([
 					this.updateGlobalState("currentApiConfigName", config.name),
@@ -803,6 +805,18 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				}
 			}
 		}
+
+		await this.postStateToWebview()
+	}
+
+	async activateProviderProfile(args: { name: string } | { id: string }) {
+		const { name, ...providerSettings } = await this.providerSettingsManager.activateProfile(args)
+
+		await Promise.all([
+			this.contextProxy.setValue("listApiConfigMeta", await this.providerSettingsManager.listConfig()),
+			this.contextProxy.setValue("currentApiConfigName", name),
+			this.updateApiConfiguration(providerSettings),
+		])
 
 		await this.postStateToWebview()
 	}

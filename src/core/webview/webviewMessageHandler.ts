@@ -88,19 +88,24 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					const currentConfigName = getGlobalState("currentApiConfigName")
 
 					if (currentConfigName) {
-						if (!(await provider.providerSettingsManager.hasConfig(currentConfigName))) {
-							// current config name not valid, get first config in list
+						const manager = provider.providerSettingsManager
+						const hasConfig = await manager.hasConfig(currentConfigName)
+
+						if (!hasConfig) {
+							// Current config name not valid, get first config in list.
 							await updateGlobalState("currentApiConfigName", listApiConfig?.[0]?.name)
+
 							if (listApiConfig?.[0]?.name) {
-								const apiConfig = await provider.providerSettingsManager.loadConfig(
-									listApiConfig?.[0]?.name,
-								)
+								const { name: _, ...providerSettings } = await manager.activateProfile({
+									name: listApiConfig?.[0]?.name,
+								})
 
 								await Promise.all([
 									updateGlobalState("listApiConfigMeta", listApiConfig),
 									provider.postMessageToWebview({ type: "listApiConfig", listApiConfig }),
-									provider.updateApiConfiguration(apiConfig),
+									provider.updateApiConfiguration(providerSettings),
 								])
+
 								await provider.postStateToWebview()
 								return
 							}
@@ -939,12 +944,17 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					const { apiConfiguration, customSupportPrompts, listApiConfigMeta, enhancementApiConfigId } =
 						await provider.getState()
 
-					// Try to get enhancement config first, fall back to current config
+					// Try to get enhancement config first, fall back to current config.
 					let configToUse: ApiConfiguration = apiConfiguration
+
 					if (enhancementApiConfigId) {
 						const config = listApiConfigMeta?.find((c: ApiConfigMeta) => c.id === enhancementApiConfigId)
+
 						if (config?.name) {
-							const loadedConfig = await provider.providerSettingsManager.loadConfig(config.name)
+							const { name: _, ...loadedConfig } = await provider.providerSettingsManager.activateProfile(
+								{ name: config.name },
+							)
+
 							if (loadedConfig.apiProvider) {
 								configToUse = loadedConfig
 							}
@@ -953,31 +963,21 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 
 					const enhancedPrompt = await singleCompletionHandler(
 						configToUse,
-						supportPrompt.create(
-							"ENHANCE",
-							{
-								userInput: message.text,
-							},
-							customSupportPrompts,
-						),
+						supportPrompt.create("ENHANCE", { userInput: message.text }, customSupportPrompts),
 					)
 
 					// Capture telemetry for prompt enhancement
 					const currentCline = provider.getCurrentCline()
 					telemetryService.capturePromptEnhanced(currentCline?.taskId)
 
-					await provider.postMessageToWebview({
-						type: "enhancedPrompt",
-						text: enhancedPrompt,
-					})
+					await provider.postMessageToWebview({ type: "enhancedPrompt", text: enhancedPrompt })
 				} catch (error) {
 					provider.log(
 						`Error enhancing prompt: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 					)
+
 					vscode.window.showErrorMessage(t("common:errors.enhance_prompt"))
-					await provider.postMessageToWebview({
-						type: "enhancedPrompt",
-					})
+					await provider.postMessageToWebview({ type: "enhancedPrompt" })
 				}
 			}
 			break
@@ -1096,22 +1096,19 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 						break
 					}
 
-					// Load the old configuration to get its ID
-					const oldConfig = await provider.providerSettingsManager.loadConfig(oldName)
+					// Load the old configuration to get its ID.
+					const oldConfig = await provider.providerSettingsManager.activateProfile({ name: oldName })
 
-					// Create a new configuration with the same ID
-					const newConfig = {
-						...message.apiConfiguration,
-						id: oldConfig.id, // Preserve the ID
-					}
+					// Create a new configuration with the same ID.
+					const newConfig = { ...message.apiConfiguration, id: oldConfig.id }
 
-					// Save with the new name but same ID
+					// Save with the new name but same ID.
 					await provider.providerSettingsManager.saveConfig(newName, newConfig)
 					await provider.providerSettingsManager.deleteConfig(oldName)
 
 					const listApiConfig = await provider.providerSettingsManager.listConfig()
 
-					// Update listApiConfigMeta first to ensure UI has latest data
+					// Update listApiConfigMeta first to ensure UI has latest data.
 					await updateGlobalState("listApiConfigMeta", listApiConfig)
 					await updateGlobalState("currentApiConfigName", newName)
 
@@ -1127,16 +1124,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "loadApiConfiguration":
 			if (message.text) {
 				try {
-					const apiConfig = await provider.providerSettingsManager.loadConfig(message.text)
-					const listApiConfig = await provider.providerSettingsManager.listConfig()
-
-					await Promise.all([
-						updateGlobalState("listApiConfigMeta", listApiConfig),
-						updateGlobalState("currentApiConfigName", message.text),
-						provider.updateApiConfiguration(apiConfig),
-					])
-
-					await provider.postStateToWebview()
+					await provider.activateProviderProfile({ name: message.text })
 				} catch (error) {
 					provider.log(
 						`Error load api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
@@ -1148,18 +1136,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "loadApiConfigurationById":
 			if (message.text) {
 				try {
-					const { config: apiConfig, name } = await provider.providerSettingsManager.loadConfigById(
-						message.text,
-					)
-					const listApiConfig = await provider.providerSettingsManager.listConfig()
-
-					await Promise.all([
-						updateGlobalState("listApiConfigMeta", listApiConfig),
-						updateGlobalState("currentApiConfigName", name),
-						provider.updateApiConfiguration(apiConfig),
-					])
-
-					await provider.postStateToWebview()
+					await provider.activateProviderProfile({ id: message.text })
 				} catch (error) {
 					provider.log(
 						`Error load api configuration by ID: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
@@ -1184,14 +1161,17 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					await provider.providerSettingsManager.deleteConfig(message.text)
 					const listApiConfig = await provider.providerSettingsManager.listConfig()
 
-					// Update listApiConfigMeta first to ensure UI has latest data
+					// Update listApiConfigMeta first to ensure UI has latest data.
 					await updateGlobalState("listApiConfigMeta", listApiConfig)
 
-					// If this was the current config, switch to first available
+					// If this was the current config, switch to first available.
 					const currentApiConfigName = getGlobalState("currentApiConfigName")
 
 					if (message.text === currentApiConfigName && listApiConfig?.[0]?.name) {
-						const apiConfig = await provider.providerSettingsManager.loadConfig(listApiConfig[0].name)
+						const { name: _, ...apiConfig } = await provider.providerSettingsManager.activateProfile({
+							name: listApiConfig[0].name,
+						})
+
 						await Promise.all([
 							updateGlobalState("currentApiConfigName", listApiConfig[0].name),
 							provider.updateApiConfiguration(apiConfig),

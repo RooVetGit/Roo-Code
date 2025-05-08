@@ -391,17 +391,15 @@ describe("ProviderSettingsManager", () => {
 			mockGlobalState.get.mockResolvedValue(42)
 			mockSecrets.get.mockResolvedValue(JSON.stringify(existingConfig))
 
-			const config = await providerSettingsManager.loadConfig("test")
+			const { name, ...providerSettings } = await providerSettingsManager.activateProfile({ name: "test" })
 
-			expect(config).toEqual({
-				apiProvider: "anthropic",
-				apiKey: "test-key",
-				id: "test-id",
-			})
+			expect(name).toBe("test")
+			expect(providerSettings).toEqual({ apiProvider: "anthropic", apiKey: "test-key", id: "test-id" })
 
-			// Get the stored config to check the structure
+			// Get the stored config to check the structure.
 			const storedConfig = JSON.parse(mockSecrets.store.mock.calls[1][1])
 			expect(storedConfig.currentApiConfigName).toBe("test")
+
 			expect(storedConfig.apiConfigs.test).toEqual({
 				apiProvider: "anthropic",
 				apiKey: "test-key",
@@ -413,17 +411,12 @@ describe("ProviderSettingsManager", () => {
 			mockSecrets.get.mockResolvedValue(
 				JSON.stringify({
 					currentApiConfigName: "default",
-					apiConfigs: {
-						default: {
-							config: {},
-							id: "default",
-						},
-					},
+					apiConfigs: { default: { config: {}, id: "default" } },
 				}),
 			)
 
-			await expect(providerSettingsManager.loadConfig("nonexistent")).rejects.toThrow(
-				"Config 'nonexistent' not found",
+			await expect(providerSettingsManager.activateProfile({ name: "nonexistent" })).rejects.toThrow(
+				"Config with name 'nonexistent' not found",
 			)
 		})
 
@@ -431,19 +424,12 @@ describe("ProviderSettingsManager", () => {
 			mockSecrets.get.mockResolvedValue(
 				JSON.stringify({
 					currentApiConfigName: "default",
-					apiConfigs: {
-						test: {
-							config: {
-								apiProvider: "anthropic",
-							},
-							id: "test-id",
-						},
-					},
+					apiConfigs: { test: { config: { apiProvider: "anthropic" }, id: "test-id" } },
 				}),
 			)
 			mockSecrets.store.mockRejectedValueOnce(new Error("Storage failed"))
 
-			await expect(providerSettingsManager.loadConfig("test")).rejects.toThrow(
+			await expect(providerSettingsManager.activateProfile({ name: "test" })).rejects.toThrow(
 				"Failed to load config: Error: Failed to write provider profiles to secrets: Error: Storage failed",
 			)
 		})
@@ -494,12 +480,7 @@ describe("ProviderSettingsManager", () => {
 			mockSecrets.get.mockResolvedValue(
 				JSON.stringify({
 					currentApiConfigName: "test",
-					apiConfigs: {
-						test: {
-							apiProvider: "anthropic",
-							id: "test-id",
-						},
-					},
+					apiConfigs: { test: { apiProvider: "anthropic", id: "test-id" } },
 				}),
 			)
 
@@ -514,18 +495,8 @@ describe("ProviderSettingsManager", () => {
 		it("should return true for existing config", async () => {
 			const existingConfig: ProviderProfiles = {
 				currentApiConfigName: "default",
-				apiConfigs: {
-					default: {
-						id: "default",
-					},
-					test: {
-						apiProvider: "anthropic",
-						id: "test-id",
-					},
-				},
-				migrations: {
-					rateLimitSecondsMigrated: false,
-				},
+				apiConfigs: { default: { id: "default" }, test: { apiProvider: "anthropic", id: "test-id" } },
+				migrations: { rateLimitSecondsMigrated: false },
 			}
 
 			mockSecrets.get.mockResolvedValue(JSON.stringify(existingConfig))
@@ -536,10 +507,7 @@ describe("ProviderSettingsManager", () => {
 
 		it("should return false for non-existent config", async () => {
 			mockSecrets.get.mockResolvedValue(
-				JSON.stringify({
-					currentApiConfigName: "default",
-					apiConfigs: { default: {} },
-				}),
+				JSON.stringify({ currentApiConfigName: "default", apiConfigs: { default: {} } }),
 			)
 
 			const hasConfig = await providerSettingsManager.hasConfig("nonexistent")

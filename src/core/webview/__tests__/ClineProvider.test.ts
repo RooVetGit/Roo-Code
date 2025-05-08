@@ -603,7 +603,7 @@ describe("ClineProvider", () => {
 		;(provider as any).providerSettingsManager = {
 			getModeConfigId: jest.fn().mockResolvedValue("test-id"),
 			listConfig: jest.fn().mockResolvedValue([{ name: "test-config", id: "test-id", apiProvider: "anthropic" }]),
-			loadConfig: jest.fn().mockResolvedValue({ apiProvider: "anthropic" }),
+			activateProfile: jest.fn().mockResolvedValue({ apiProvider: "anthropic" }),
 			setModeConfig: jest.fn(),
 		} as any
 
@@ -612,7 +612,7 @@ describe("ClineProvider", () => {
 
 		// Should load the saved config for architect mode
 		expect(provider.providerSettingsManager.getModeConfigId).toHaveBeenCalledWith("architect")
-		expect(provider.providerSettingsManager.loadConfig).toHaveBeenCalledWith("test-config")
+		expect(provider.providerSettingsManager.activateProfile).toHaveBeenCalledWith({ name: "test-config" })
 		expect(mockContext.globalState.update).toHaveBeenCalledWith("currentApiConfigName", "test-config")
 	})
 
@@ -642,8 +642,7 @@ describe("ClineProvider", () => {
 		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
 
 		;(provider as any).providerSettingsManager = {
-			loadConfig: jest.fn().mockResolvedValue({ apiProvider: "anthropic", id: "new-id" }),
-			loadConfigById: jest
+			activateProfile: jest
 				.fn()
 				.mockResolvedValue({ config: { apiProvider: "anthropic", id: "new-id" }, name: "new-config" }),
 			listConfig: jest.fn().mockResolvedValue([{ name: "new-config", id: "new-id", apiProvider: "anthropic" }]),
@@ -666,7 +665,7 @@ describe("ClineProvider", () => {
 		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
 
 		;(provider as any).providerSettingsManager = {
-			loadConfigById: jest.fn().mockResolvedValue({
+			activateProfile: jest.fn().mockResolvedValue({
 				config: { apiProvider: "anthropic", id: "config-id-123" },
 				name: "config-by-id",
 			}),
@@ -686,8 +685,8 @@ describe("ClineProvider", () => {
 		// Should save new config as default for architect mode
 		expect(provider.providerSettingsManager.setModeConfig).toHaveBeenCalledWith("architect", "config-id-123")
 
-		// Ensure the loadConfigById method was called with the correct ID
-		expect(provider.providerSettingsManager.loadConfigById).toHaveBeenCalledWith("config-id-123")
+		// Ensure the `activateProfile` method was called with the correct ID
+		expect(provider.providerSettingsManager.activateProfile).toHaveBeenCalledWith({ id: "config-id-123" })
 	})
 
 	test("handles browserToolEnabled setting", async () => {
@@ -1542,13 +1541,13 @@ describe("ClineProvider", () => {
 			await provider.resolveWebviewView(mockWebviewView)
 		})
 
-		test("loads saved API config when switching modes", async () => {
+		it("loads saved API config when switching modes", async () => {
 			;(provider as any).providerSettingsManager = {
 				getModeConfigId: jest.fn().mockResolvedValue("saved-config-id"),
 				listConfig: jest
 					.fn()
 					.mockResolvedValue([{ name: "saved-config", id: "saved-config-id", apiProvider: "anthropic" }]),
-				loadConfig: jest.fn().mockResolvedValue({ apiProvider: "anthropic" }),
+				activateProfile: jest.fn().mockResolvedValue({ apiProvider: "anthropic" }),
 				setModeConfig: jest.fn(),
 			} as any
 
@@ -1560,7 +1559,7 @@ describe("ClineProvider", () => {
 
 			// Verify saved config was loaded
 			expect(provider.providerSettingsManager.getModeConfigId).toHaveBeenCalledWith("architect")
-			expect(provider.providerSettingsManager.loadConfig).toHaveBeenCalledWith("saved-config")
+			expect(provider.providerSettingsManager.activateProfile).toHaveBeenCalledWith({ name: "saved-config" })
 			expect(mockContext.globalState.update).toHaveBeenCalledWith("currentApiConfigName", "saved-config")
 
 			// Verify state was posted to webview
