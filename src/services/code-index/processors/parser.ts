@@ -133,14 +133,7 @@ export class CodeParser implements ICodeParser {
 		if (captures.length === 0) {
 			if (content.length >= MIN_BLOCK_CHARS) {
 				// Perform fallback chunking if content is large enough
-				const blocks = this._performFallbackChunking(
-					filePath,
-					content,
-					fileHash,
-					MIN_BLOCK_CHARS,
-					MAX_BLOCK_CHARS,
-					seenSegmentHashes,
-				)
+				const blocks = this._performFallbackChunking(filePath, content, fileHash, seenSegmentHashes)
 				return blocks
 			} else {
 				// Return empty if content is too small for fallback
@@ -171,7 +164,6 @@ export class CodeParser implements ICodeParser {
 							currentNode,
 							filePath,
 							fileHash,
-							MIN_BLOCK_CHARS, // Pass minChars as requested
 							seenSegmentHashes,
 						)
 						results.push(...chunkedBlocks)
@@ -218,20 +210,19 @@ export class CodeParser implements ICodeParser {
 		lines: string[],
 		filePath: string,
 		fileHash: string,
-		baseStartLine: number, // 1-based start line of the *first* line in the `lines` array
+
 		chunkType: string,
-		minChars: number,
-		maxChars: number,
-		minRemainderChars: number,
 		seenSegmentHashes: Set<string>,
+		baseStartLine: number = 1, // 1-based start line of the *first* line in the `lines` array
 	): CodeBlock[] {
 		const chunks: CodeBlock[] = []
 		let currentChunkLines: string[] = []
 		let currentChunkLength = 0
 		let chunkStartLineIndex = 0 // 0-based index within the `lines` array
+		const effectiveMaxChars = MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR
 
 		const finalizeChunk = (endLineIndex: number) => {
-			if (currentChunkLength >= minChars && currentChunkLines.length > 0) {
+			if (currentChunkLength >= MIN_BLOCK_CHARS && currentChunkLines.length > 0) {
 				const chunkContent = currentChunkLines.join("\n")
 				const startLine = baseStartLine + chunkStartLineIndex
 				const endLine = baseStartLine + endLineIndex
@@ -243,7 +234,7 @@ export class CodeParser implements ICodeParser {
 					seenSegmentHashes.add(segmentHash)
 					chunks.push({
 						file_path: filePath,
-						identifier: null, // Identifier is handled at a higher level if available
+						identifier: null,
 						type: chunkType,
 						start_line: startLine,
 						end_line: endLine,
@@ -253,67 +244,93 @@ export class CodeParser implements ICodeParser {
 					})
 				}
 			}
-			// Reset for the next chunk
 			currentChunkLines = []
 			currentChunkLength = 0
 			chunkStartLineIndex = endLineIndex + 1
 		}
 
+		const createSegmentBlock = (segment: string, originalLineNumber: number) => {
+			const segmentHash = createHash("sha256")
+				.update(`${filePath}-${originalLineNumber}-${originalLineNumber}-${segment}`)
+				.digest("hex")
+
+			if (!seenSegmentHashes.has(segmentHash)) {
+				seenSegmentHashes.add(segmentHash)
+				chunks.push({
+					file_path: filePath,
+					identifier: null,
+					type: `${chunkType}_segment`,
+					start_line: originalLineNumber,
+					end_line: originalLineNumber,
+					content: segment,
+					segmentHash,
+					fileHash,
+				})
+			}
+		}
+
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i]
 			const lineLength = line.length + (i < lines.length - 1 ? 1 : 0) // +1 for newline, except last line
+			const originalLineNumber = baseStartLine + i
 
-			// Check if adding this line exceeds the max limit
-			if (currentChunkLength > 0 && currentChunkLength + lineLength > maxChars) {
-				// --- Re-balancing Logic ---
-				let splitIndex = i - 1 // Default split is *before* the current line
+			// Handle oversized lines (longer than effectiveMaxChars)
+			if (lineLength > effectiveMaxChars) {
+				// Finalize any existing normal chunk before processing the oversized line
+				if (currentChunkLines.length > 0) {
+					finalizeChunk(i - 1)
+				}
 
-				// Estimate remaining text length
+				// Split the oversized line into segments
+				let remainingLineContent = line
+				while (remainingLineContent.length > 0) {
+					const segment = remainingLineContent.substring(0, MAX_BLOCK_CHARS)
+					remainingLineContent = remainingLineContent.substring(MAX_BLOCK_CHARS)
+					createSegmentBlock(segment, originalLineNumber)
+				}
+				continue
+			}
+
+			// Handle normally sized lines
+			if (currentChunkLength > 0 && currentChunkLength + lineLength > effectiveMaxChars) {
+				// Re-balancing Logic
+				let splitIndex = i - 1
 				let remainderLength = 0
 				for (let j = i; j < lines.length; j++) {
 					remainderLength += lines[j].length + (j < lines.length - 1 ? 1 : 0)
 				}
 
-				// Check if remainder is too small and we have a valid current chunk
 				if (
-					currentChunkLength >= minChars &&
-					remainderLength < minRemainderChars &&
+					currentChunkLength >= MIN_BLOCK_CHARS &&
+					remainderLength < MIN_CHUNK_REMAINDER_CHARS &&
 					currentChunkLines.length > 1
 				) {
-					// Try to find a better split point by looking backwards
 					for (let k = i - 2; k >= chunkStartLineIndex; k--) {
 						const potentialChunkLines = lines.slice(chunkStartLineIndex, k + 1)
-						const potentialChunkLength = potentialChunkLines.join("\n").length + 1 // Approx. length
+						const potentialChunkLength = potentialChunkLines.join("\n").length + 1
+						const potentialNextChunkLines = lines.slice(k + 1)
+						const potentialNextChunkLength = potentialNextChunkLines.join("\n").length + 1
 
-						const potentialNextChunkLines = lines.slice(k + 1) // All remaining lines
-						const potentialNextChunkLength = potentialNextChunkLines.join("\n").length + 1 // Approx. length
-
-						// Found a split leaving enough in current and next?
-						if (potentialChunkLength >= minChars && potentialNextChunkLength >= minRemainderChars) {
-							splitIndex = k // Found a better split point
+						if (
+							potentialChunkLength >= MIN_BLOCK_CHARS &&
+							potentialNextChunkLength >= MIN_CHUNK_REMAINDER_CHARS
+						) {
+							splitIndex = k
 							break
 						}
 					}
-					// If no better split found, splitIndex remains i - 1
 				}
-				// --- End Re-balancing ---
 
-				// Finalize the chunk up to the determined split index
 				finalizeChunk(splitIndex)
 
-				// Add the current line to start the *new* chunk (if it wasn't part of the finalized chunk)
 				if (i >= chunkStartLineIndex) {
 					currentChunkLines.push(line)
 					currentChunkLength += lineLength
 				} else {
-					// This case should ideally not happen with the current logic, but as a safeguard:
-					// If the split somehow went *past* the current line index 'i',
-					// we need to reset 'i' to start processing from the beginning of the new chunk.
-					i = chunkStartLineIndex - 1 // Loop increment will make it chunkStartLineIndex
-					continue // Re-process the line that starts the new chunk
+					i = chunkStartLineIndex - 1
+					continue
 				}
 			} else {
-				// Add the current line to the chunk
 				currentChunkLines.push(line)
 				currentChunkLength += lineLength
 			}
@@ -331,29 +348,16 @@ export class CodeParser implements ICodeParser {
 		filePath: string,
 		content: string,
 		fileHash: string,
-		minChars: number,
-		maxChars: number,
 		seenSegmentHashes: Set<string>,
 	): CodeBlock[] {
 		const lines = content.split("\n")
-		return this._chunkTextByLines(
-			lines,
-			filePath,
-			fileHash,
-			1, // Fallback starts from line 1
-			"fallback_chunk",
-			minChars,
-			maxChars,
-			MIN_CHUNK_REMAINDER_CHARS,
-			seenSegmentHashes,
-		)
+		return this._chunkTextByLines(lines, filePath, fileHash, "fallback_chunk", seenSegmentHashes)
 	}
 
 	private _chunkLeafNodeByLines(
 		node: treeSitter.SyntaxNode,
 		filePath: string,
 		fileHash: string,
-		minChars: number, // Note: This was previously used as max, now correctly used as min
 		seenSegmentHashes: Set<string>,
 	): CodeBlock[] {
 		const lines = node.text.split("\n")
@@ -362,12 +366,9 @@ export class CodeParser implements ICodeParser {
 			lines,
 			filePath,
 			fileHash,
-			baseStartLine,
 			node.type, // Use the node's type
-			minChars,
-			MAX_BLOCK_CHARS, // Use the global max
-			MIN_CHUNK_REMAINDER_CHARS,
 			seenSegmentHashes,
+			baseStartLine,
 		)
 	}
 }
