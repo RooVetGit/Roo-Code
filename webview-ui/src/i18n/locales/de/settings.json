@@ -426,6 +426,11 @@
 		"description": "Steuert die Zufälligkeit in den Antworten des Modells.",
 		"rangeDescription": "Höhere Werte machen die Ausgabe zufälliger, niedrigere Werte machen sie deterministischer."
 	},
+	"seed": {
+		"useCustom": "Benutzerdefinierten Seed verwenden",
+		"description": "Steuert die deterministische Natur der Antworten des Modells. Für zufällig leer lassen.",
+		"label": "Einen Seed-Wert eingeben"
+	},
 	"modelInfo": {
 		"supportsImages": "Unterstützt Bilder",
 		"noImages": "Unterstützt keine Bilder",

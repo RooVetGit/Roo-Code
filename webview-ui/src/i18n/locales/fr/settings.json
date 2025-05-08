@@ -426,6 +426,11 @@
 		"description": "Contrôle l'aléatoire dans les réponses du modèle.",
 		"rangeDescription": "Des valeurs plus élevées rendent la sortie plus aléatoire, des valeurs plus basses la rendent plus déterministe."
 	},
+	"seed": {
+		"useCustom": "Utiliser une graine personnalisée",
+		"description": "Contrôle la nature déterministe des réponses du modèle. Laisser vide pour aléatoire.",
+		"label": "Entrez une valeur de graine"
+	},
 	"modelInfo": {
 		"supportsImages": "Prend en charge les images",
 		"noImages": "Ne prend pas en charge les images",

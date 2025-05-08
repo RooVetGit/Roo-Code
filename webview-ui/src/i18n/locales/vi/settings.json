@@ -426,6 +426,11 @@
 		"description": "Kiểm soát tính ngẫu nhiên trong phản hồi của mô hình.",
 		"rangeDescription": "Giá trị cao hơn làm cho đầu ra ngẫu nhiên hơn, giá trị thấp hơn làm cho nó xác định hơn."
 	},
+	"seed": {
+		"useCustom": "Sử dụng hạt giống tùy chỉnh",
+		"description": "Kiểm soát tính xác định của các phản hồi của mô hình. Để trống cho ngẫu nhiên.",
+		"label": "Nhập giá trị hạt giống"
+	},
 	"modelInfo": {
 		"supportsImages": "Hỗ trợ hình ảnh",
 		"noImages": "Không hỗ trợ hình ảnh",

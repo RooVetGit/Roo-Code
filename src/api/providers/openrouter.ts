@@ -78,6 +78,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			maxTokens,
 			thinking,
 			temperature,
+			seed,
 			topP,
 			reasoningEffort,
 			promptCache,
@@ -108,6 +109,7 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 			model: modelId,
 			max_tokens: maxTokens,
 			temperature,
+			seed,
 			thinking, // OpenRouter is temporarily supporting this.
 			top_p: topP,
 			messages: openAiMessages,
@@ -197,13 +199,14 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 	}
 
 	async completePrompt(prompt: string) {
-		let { id: modelId, maxTokens, thinking, temperature } = await this.fetchModel()
+		let { id: modelId, maxTokens, thinking, temperature, seed } = await this.fetchModel()
 
 		const completionParams: OpenRouterChatCompletionParams = {
 			model: modelId,
 			max_tokens: maxTokens,
 			thinking,
 			temperature,
+			seed,
 			messages: [{ role: "user", content: prompt }],
 			stream: false,
 			// Only include provider if openRouterSpecificProvider is not "[default]".

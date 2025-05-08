@@ -426,6 +426,11 @@
 		"description": "モデルの応答のランダム性を制御します。",
 		"rangeDescription": "高い値は出力をよりランダムに、低い値はより決定論的にします。"
 	},
+	"seed": {
+		"useCustom": "カスタムシードを使用",
+		"description": "モデルの応答の決定性を制御します。ランダムの場合は空白のままにします。",
+		"label": "シード値を入力してください"
+	},
 	"modelInfo": {
 		"supportsImages": "画像をサポート",
 		"noImages": "画像をサポートしていません",

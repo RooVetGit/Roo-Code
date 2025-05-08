@@ -426,6 +426,11 @@
 		"description": "Controls randomness in the model's responses.",
 		"rangeDescription": "Higher values make output more random, lower values make it more deterministic."
 	},
+	"seed": {
+		"useCustom": "Use custom seed",
+		"description": "Controls the deterministic nature of the model's responses. Leave blank for random.",
+		"label": "Enter a seed value"
+	},
 	"modelInfo": {
 		"supportsImages": "Supports images",
 		"noImages": "Does not support images",

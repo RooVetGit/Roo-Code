@@ -72,6 +72,7 @@ export abstract class BaseOpenAiCompatibleProvider<ModelName extends string>
 			model,
 			max_tokens,
 			temperature,
+			seed: this.options.modelSeed,
 			messages: [{ role: "system", content: systemPrompt }, ...convertToOpenAiMessages(messages)],
 			stream: true,
 			stream_options: { include_usage: true },
