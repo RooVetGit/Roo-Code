@@ -89,6 +89,7 @@ import { validateToolUse } from "./mode-validator"
 import { MultiSearchReplaceDiffStrategy } from "./diff/strategies/multi-search-replace"
 import { readApiMessages, saveApiMessages, readTaskMessages, saveTaskMessages, taskMetadata } from "./task-persistence"
 import { getEnvironmentDetails } from "./environment/getEnvironmentDetails"
+import { LogManager } from "./logging"
 
 type UserContent = Array<Anthropic.Messages.ContentBlockParam>
 
@@ -152,6 +153,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 	diffStrategy?: DiffStrategy
 	diffEnabled: boolean = false
 	fuzzyMatchThreshold: number
+	private logManager: LogManager
 
 	apiConversationHistory: (Anthropic.MessageParam & { ts?: number })[] = []
 	clineMessages: ClineMessage[] = []
@@ -236,7 +238,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 		this.rooIgnoreController = new RooIgnoreController(this.cwd)
 		this.fileContextTracker = new FileContextTracker(provider, this.taskId)
-
+		this.logManager = new LogManager(provider)
 		this.rooIgnoreController.initialize().catch((error) => {
 			console.error("Failed to initialize RooIgnoreController:", error)
 		})
@@ -1627,6 +1629,12 @@ export class Cline extends EventEmitter<ClineEvents> {
 		const block = cloneDeep(this.assistantMessageContent[this.currentStreamingContentIndex]) // need to create copy bc while stream is updating the array, it could be updating the reference block properties too
 
 		switch (block.type) {
+			case "log_message": {
+				// Log messages are processed immediately without requiring approval
+				// and don't count as a tool use
+				this.logManager.processLogEntry(block.message, block.level, block.partial)
+				break
+			}
 			case "text": {
 				if (this.didRejectTool || this.didAlreadyUseTool) {
 					break

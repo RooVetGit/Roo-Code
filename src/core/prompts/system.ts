@@ -19,6 +19,7 @@ import {
 	getSystemInfoSection,
 	getObjectiveSection,
 	getSharedToolUseSection,
+	getLogMessageSection,
 	getMcpServersSection,
 	getToolUseGuidelinesSection,
 	getCapabilitiesSection,
@@ -69,6 +70,8 @@ async function generatePrompt(
 ${markdownFormattingSection()}
 
 ${getSharedToolUseSection()}
+
+${getLogMessageSection()}
 
 ${getToolDescriptionsForMode(
 	mode,
