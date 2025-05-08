@@ -54,13 +54,6 @@ export class CacheManager implements ICacheManager {
 	}
 
 	/**
-	 * Saves the cache to disk (immediately)
-	 */
-	async saveCache(): Promise<void> {
-		await this._performSave()
-	}
-
-	/**
 	 * Clears the cache file by deleting it
 	 */
 	async clearCacheFile(): Promise<void> {
