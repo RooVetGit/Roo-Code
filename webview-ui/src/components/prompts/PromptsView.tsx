@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { VSCodeCheckbox, VSCodeRadioGroup, VSCodeRadio } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeCheckbox, VSCodeRadioGroup, VSCodeRadio, VSCodeTextArea } from "@vscode/webview-ui-toolkit/react"
 
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import {
@@ -27,7 +27,6 @@ import {
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-	Textarea,
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
@@ -431,21 +430,6 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 		})
 	}
 
-	// keep track the state of the textareas locally because we sync them with the backend
-	// on separate event
-	const [roleDefinitionValue, setRoleDefinitionValue] = useState(() => {
-		const customMode = findModeBySlug(visualMode, customModes)
-		const prompt = customModePrompts?.[visualMode] as PromptComponent
-		return customMode?.roleDefinition ?? prompt?.roleDefinition ?? getRoleDefinition(visualMode)
-	})
-	const [customInstructionsValue, setCustomInstructionsValue] = useState(customInstructions || "")
-	const [globalCustomInstructionsValue, setGlobalCustomInstructionsValue] = useState(() => {
-		const customMode = findModeBySlug(visualMode, customModes)
-		const prompt = customModePrompts?.[visualMode] as PromptComponent
-		return customMode?.customInstructions ?? prompt?.customInstructions ?? getCustomInstructions(mode, customModes)
-	})
-	const [supportPromptValue, setSupportPromptValue] = useState(getSupportPromptValue(activeSupportOption) || "")
-
 	return (
 		<Tab>
 			<TabHeader className="flex justify-between items-center">
@@ -681,16 +665,20 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 						<div className="text-sm text-vscode-descriptionForeground mb-2">
 							{t("prompts:roleDefinition.description")}
 						</div>
-						<Textarea
-							value={roleDefinitionValue}
+						<VSCodeTextArea
+							value={(() => {
+								const customMode = findModeBySlug(visualMode, customModes)
+								const prompt = customModePrompts?.[visualMode] as PromptComponent
+								return (
+									customMode?.roleDefinition ??
+									prompt?.roleDefinition ??
+									getRoleDefinition(visualMode)
+								)
+							})()}
 							onChange={(e) => {
 								const value =
 									(e as unknown as CustomEvent)?.detail?.target?.value ||
 									((e as any).target as HTMLTextAreaElement).value
-								setRoleDefinitionValue(value)
-							}}
-							onBlur={() => {
-								const value = roleDefinitionValue
 								const customMode = findModeBySlug(visualMode, customModes)
 								if (customMode) {
 									// For custom modes, update the JSON file
@@ -859,16 +847,20 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 								modeName: getCurrentMode()?.name || "Code",
 							})}
 						</div>
-						<Textarea
-							value={customInstructionsValue}
+						<VSCodeTextArea
+							value={(() => {
+								const customMode = findModeBySlug(visualMode, customModes)
+								const prompt = customModePrompts?.[visualMode] as PromptComponent
+								return (
+									customMode?.customInstructions ??
+									prompt?.customInstructions ??
+									getCustomInstructions(mode, customModes)
+								)
+							})()}
 							onChange={(e) => {
 								const value =
 									(e as unknown as CustomEvent)?.detail?.target?.value ||
 									((e as any).target as HTMLTextAreaElement).value
-								setCustomInstructionsValue(value)
-							}}
-							onBlur={() => {
-								const value = customInstructionsValue
 								const customMode = findModeBySlug(visualMode, customModes)
 								if (customMode) {
 									// For custom modes, update the JSON file
@@ -1009,16 +1001,12 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							language: i18next.language,
 						})}
 					</div>
-					<Textarea
-						value={globalCustomInstructionsValue}
+					<VSCodeTextArea
+						value={customInstructions}
 						onChange={(e) => {
 							const value =
 								(e as unknown as CustomEvent)?.detail?.target?.value ||
 								((e as any).target as HTMLTextAreaElement).value
-							setGlobalCustomInstructionsValue(value)
-						}}
-						onBlur={() => {
-							const value = globalCustomInstructionsValue
 							setCustomInstructions(value || undefined)
 							vscode.postMessage({
 								type: "customInstructions",
@@ -1091,16 +1079,12 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							</Button>
 						</div>
 
-						<Textarea
-							value={supportPromptValue}
+						<VSCodeTextArea
+							value={getSupportPromptValue(activeSupportOption)}
 							onChange={(e) => {
 								const value =
 									(e as unknown as CustomEvent)?.detail?.target?.value ||
 									((e as any).target as HTMLTextAreaElement).value
-								setSupportPromptValue(value)
-							}}
-							onBlur={() => {
-								const value = supportPromptValue
 								const trimmedValue = value.trim()
 								updateSupportPrompt(activeSupportOption, trimmedValue || undefined)
 							}}
@@ -1155,7 +1139,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 								</div>
 
 								<div className="mt-4">
-									<Textarea
+									<VSCodeTextArea
 										value={testPrompt}
 										onChange={(e) => setTestPrompt((e.target as HTMLTextAreaElement).value)}
 										placeholder={t("prompts:supportPrompts.enhance.testPromptPlaceholder")}
@@ -1260,10 +1244,10 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 									}}>
 									{t("prompts:createModeDialog.roleDefinition.description")}
 								</div>
-								<Textarea
+								<VSCodeTextArea
 									value={newModeRoleDefinition}
 									onChange={(e) => {
-										setNewModeRoleDefinition(e.target.value)
+										setNewModeRoleDefinition((e.target as HTMLTextAreaElement).value)
 									}}
 									rows={4}
 									className="w-full resize-y"
@@ -1311,10 +1295,10 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 								<div className="text-[13px] text-vscode-descriptionForeground mb-2">
 									{t("prompts:createModeDialog.customInstructions.description")}
 								</div>
-								<Textarea
+								<VSCodeTextArea
 									value={newModeCustomInstructions}
 									onChange={(e) => {
-										setNewModeCustomInstructions(e.target.value)
+										setNewModeCustomInstructions((e.target as HTMLTextAreaElement).value)
 									}}
 									rows={4}
 									className="w-full resize-y"

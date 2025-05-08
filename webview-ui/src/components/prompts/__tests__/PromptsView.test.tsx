@@ -124,7 +124,6 @@ describe("PromptsView", () => {
 		fireEvent.change(textarea, {
 			target: { value: "New prompt value" },
 		})
-		fireEvent.blur(textarea)
 
 		expect(vscode.postMessage).toHaveBeenCalledWith({
 			type: "updatePrompt",
@@ -206,7 +205,6 @@ describe("PromptsView", () => {
 		fireEvent.change(textarea, {
 			target: { value: "" },
 		})
-		fireEvent.blur(textarea)
 
 		expect(setCustomInstructions).toHaveBeenCalledWith(undefined)
 		expect(vscode.postMessage).toHaveBeenCalledWith({
