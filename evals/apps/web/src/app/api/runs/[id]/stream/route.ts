@@ -26,7 +26,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 	console.log(`[stream#${requestId}] connect`)
 	client.on(IpcMessageType.Connect, () => write("connect"))
-	client.on(IpcMessageType.Disconnect, () => write("disconnect"))
 	client.on(IpcMessageType.TaskEvent, write)
 
 	request.signal.addEventListener("abort", () => {

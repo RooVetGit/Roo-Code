@@ -1,13 +1,13 @@
 "use client"
 
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useRef, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { z } from "zod"
 import { useForm, FormProvider } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import fuzzysort from "fuzzysort"
 import { toast } from "sonner"
-import { X, Rocket, Check, ChevronsUpDown, HardDriveUpload, CircleCheck } from "lucide-react"
+import { X, Rocket, Check, ChevronsUpDown, HardDriveUpload, CircleCheck, Save, ArrowLeft } from "lucide-react"
 
 import { globalSettingsSchema, providerSettingsSchema, rooCodeDefaults } from "@evals/types"
 
@@ -48,11 +48,31 @@ import {
 } from "@/components/ui"
 
 import { SettingsDiff } from "./settings-diff"
+import { SettingsProfiles } from "./settings-profiles"
+import { AgentRunConfiguration } from "./agent-run-configuration" // Renamed import
 
 export function NewRun() {
 	const router = useRouter()
 
+	// Check for saved profiles on mount and set mode accordingly
 	const [mode, setMode] = useState<"openrouter" | "settings">("openrouter")
+	const [savedProfilesExist, setSavedProfilesExist] = useState(false)
+
+	// Check if there are saved profiles on component mount
+	useEffect(() => {
+		try {
+			const savedProfiles = localStorage.getItem("settingsProfiles")
+			if (savedProfiles) {
+				const profiles = JSON.parse(savedProfiles)
+				if (profiles && Array.isArray(profiles) && profiles.length > 0) {
+					setSavedProfilesExist(true)
+					// Don't automatically switch to settings mode to allow OpenRouter model selection
+				}
+			}
+		} catch (error) {
+			console.error("Error checking for saved profiles:", error)
+		}
+	}, [])
 
 	const [modelSearchValue, setModelSearchValue] = useState("")
 	const [modelPopoverOpen, setModelPopoverOpen] = useState(false)
@@ -81,7 +101,7 @@ export function NewRun() {
 		formState: { isSubmitting },
 	} = form
 
-	const [model, suite, settings] = watch(["model", "suite", "settings", "concurrency"])
+	const [model, suite, settings, concurrency] = watch(["model", "suite", "settings", "concurrency"])
 
 	const onSubmit = useCallback(
 		async (values: FormValues) => {
@@ -90,11 +110,35 @@ export function NewRun() {
 					const openRouterModel = models.data?.find(({ id }) => id === model)
 
 					if (!openRouterModel) {
-						throw new Error("Model not found.")
+						console.error(
+							`Model not found: ${model}. Available models:`,
+							models.data?.map((m) => m.id),
+						)
+						throw new Error(`Model not found: ${model}. Please try importing the profile again.`)
 					}
 
 					const openRouterModelId = openRouterModel.id
-					values.settings = { ...(values.settings || {}), openRouterModelId }
+					// Ensure settings object exists and merge defaults, existing form settings, and OpenRouter specifics
+					const currentFormSettings = form.getValues("settings") || {}
+					values.settings = {
+						...rooCodeDefaults, // Start with base defaults
+						...currentFormSettings, // Merge any user-configured settings
+						apiProvider: "openrouter", // Set the provider
+						openRouterModelId, // Set the specific model
+						// Add necessary OpenRouter specific defaults if not already present
+						openRouterUseMiddleOutTransform:
+							currentFormSettings.openRouterUseMiddleOutTransform ??
+							rooCodeDefaults.openRouterUseMiddleOutTransform ?? // Use schema default
+							false, // Final fallback
+					}
+				} else {
+					// For "Settings Profiles" mode, ensure defaults are merged if settings exist
+					if (values.settings) {
+						values.settings = {
+							...rooCodeDefaults,
+							...values.settings,
+						}
+					}
 				}
 
 				const { id } = await createRun(values)
@@ -206,7 +250,8 @@ export function NewRun() {
 						throw new Error(`Unsupported API provider: ${apiProvider}`)
 				}
 
-				setValue("settings", { ...rooCodeDefaults, ...providerSettings, ...globalSettings })
+				const mergedSettings = { ...rooCodeDefaults, ...providerSettings, ...globalSettings }
+				setValue("settings", mergedSettings)
 				setMode("settings")
 
 				event.target.value = ""
@@ -220,76 +265,174 @@ export function NewRun() {
 
 	return (
 		<>
+			<div className="flex justify-between items-center mb-4">
+				<Button variant="outline" size="sm" onClick={() => router.push("/")} title="Back to runs">
+					<ArrowLeft className="mr-2 h-4 w-4" />
+					Back to Runs
+				</Button>
+				<h1 className="text-2xl font-bold">New Evaluation Run</h1>
+			</div>
+
+			<div className="mb-6">
+				<Tabs value={mode} onValueChange={(value) => setMode(value as "openrouter" | "settings")}>
+					<TabsList>
+						<TabsTrigger value="openrouter">OpenRouter Model</TabsTrigger>
+						<TabsTrigger value="settings">Settings Profiles</TabsTrigger>
+					</TabsList>
+				</Tabs>
+			</div>
 			<FormProvider {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
 					className="flex flex-col justify-center divide-y divide-primary *:py-5">
 					<div className="flex flex-row justify-between gap-4">
 						{mode === "openrouter" && (
-							<FormField
-								control={form.control}
-								name="model"
-								render={() => (
-									<FormItem className="flex-1">
-										<Popover open={modelPopoverOpen} onOpenChange={setModelPopoverOpen}>
-											<PopoverTrigger asChild>
-												<Button
-													variant="input"
-													role="combobox"
-													aria-expanded={modelPopoverOpen}
-													className="flex items-center justify-between">
-													<div>
-														{models.data?.find(({ id }) => id === model)?.name ||
-															model ||
-															"Select OpenRouter Model"}
-													</div>
-													<ChevronsUpDown className="opacity-50" />
-												</Button>
-											</PopoverTrigger>
-											<PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)]">
-												<Command filter={onFilterModels}>
-													<CommandInput
-														placeholder="Search"
-														value={modelSearchValue}
-														onValueChange={setModelSearchValue}
-														className="h-9"
-													/>
-													<CommandList>
-														<CommandEmpty>No model found.</CommandEmpty>
-														<CommandGroup>
-															{models.data?.map(({ id, name }) => (
-																<CommandItem
-																	key={id}
-																	value={id}
-																	onSelect={onSelectModel}>
-																	{name}
-																	<Check
-																		className={cn(
-																			"ml-auto text-accent group-data-[selected=true]:text-accent-foreground size-4",
-																			id === model ? "opacity-100" : "opacity-0",
-																		)}
-																	/>
-																</CommandItem>
-															))}
-														</CommandGroup>
-													</CommandList>
-												</Command>
-											</PopoverContent>
-										</Popover>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
+							<div className="flex-1">
+								<FormField
+									control={form.control}
+									name="model"
+									render={() => (
+										<FormItem className="flex-1">
+											<Popover open={modelPopoverOpen} onOpenChange={setModelPopoverOpen}>
+												<PopoverTrigger asChild>
+													<Button
+														variant="input"
+														role="combobox"
+														aria-expanded={modelPopoverOpen}
+														className="flex items-center justify-between">
+														<div>
+															{models.data?.find(({ id }) => id === model)?.name ||
+																model ||
+																"Select OpenRouter Model"}
+														</div>
+														<ChevronsUpDown className="opacity-50" />
+													</Button>
+												</PopoverTrigger>
+												<PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)]">
+													<Command filter={onFilterModels}>
+														<CommandInput
+															placeholder="Search"
+															value={modelSearchValue}
+															onValueChange={setModelSearchValue}
+															className="h-9"
+														/>
+														<CommandList>
+															<CommandEmpty>No model found.</CommandEmpty>
+															<CommandGroup>
+																{models.data?.map(({ id, name }) => (
+																	<CommandItem
+																		key={id}
+																		value={id}
+																		onSelect={onSelectModel}>
+																		{name}
+																		<Check
+																			className={cn(
+																				"ml-auto text-accent group-data-[selected=true]:text-accent-foreground size-4",
+																				id === model
+																					? "opacity-100"
+																					: "opacity-0",
+																			)}
+																		/>
+																	</CommandItem>
+																))}
+															</CommandGroup>
+														</CommandList>
+													</Command>
+												</PopoverContent>
+											</Popover>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+
+								{/* AdvancedSettings moved below */}
+							</div>
 						)}
 
 						<FormItem className="flex-1">
-							<Button
-								type="button"
-								variant="secondary"
-								onClick={() => document.getElementById("json-upload")?.click()}>
-								<HardDriveUpload />
-								Import Settings
-							</Button>
+							{/* Always show SettingsProfiles if saved profiles exist */}
+							{(mode === "settings" || savedProfilesExist) && (
+								<div className="mb-4">
+									<SettingsProfiles
+										currentSettings={settings}
+										onSelectProfile={(profileSettings) => {
+											setValue("settings", profileSettings)
+
+											// Try to set the model based on the profile settings
+											const {
+												apiProvider,
+												apiModelId,
+												openRouterModelId,
+												glamaModelId,
+												requestyModelId,
+												unboundModelId,
+												ollamaModelId,
+												lmStudioModelId,
+												openAiModelId,
+											} = profileSettings || {}
+
+											// Set the model ID based on provider
+											let modelId = ""
+											switch (apiProvider) {
+												case "anthropic":
+												case "bedrock":
+												case "deepseek":
+												case "gemini":
+												case "mistral":
+												case "openai-native":
+												case "xai":
+												case "vertex":
+													modelId = apiModelId || ""
+													break
+												case "openrouter":
+													modelId = openRouterModelId || ""
+													break
+												case "glama":
+													modelId = glamaModelId || ""
+													break
+												case "requesty":
+													modelId = requestyModelId || ""
+													break
+												case "unbound":
+													modelId = unboundModelId || ""
+													break
+												case "openai":
+													modelId = openAiModelId || ""
+													break
+												case "ollama":
+													modelId = ollamaModelId || ""
+													break
+												case "lmstudio":
+													modelId = lmStudioModelId || ""
+													break
+											}
+
+											// Set the model and switch to the appropriate mode
+											setValue("model", modelId)
+											if (apiProvider === "openrouter") {
+												setMode("openrouter")
+											} else {
+												setMode("settings")
+											}
+										}}
+									/>
+								</div>
+							)}
+							<div className="flex flex-wrap gap-2 items-center">
+								<Button
+									type="button"
+									variant="secondary"
+									onClick={() => document.getElementById("json-upload")?.click()}>
+									<HardDriveUpload className="mr-2 h-4 w-4" />
+									Import Settings
+								</Button>
+
+								{savedProfilesExist && !settings && (
+									<div className="text-sm text-muted-foreground ml-2">
+										You have saved profiles available. Click "Load Profile" to use them.
+									</div>
+								)}
+							</div>
 							<input
 								id="json-upload"
 								type="file"
@@ -314,6 +457,8 @@ export function NewRun() {
 							<FormMessage />
 						</FormItem>
 					</div>
+					{/* Render AgentRunConfiguration below the main row if in openrouter mode */}
+					{mode === "openrouter" && <AgentRunConfiguration />}
 
 					<FormField
 						control={form.control}

@@ -1,4 +1,4 @@
-import { sqliteTable, text, real, integer, blob, uniqueIndex } from "drizzle-orm/sqlite-core"
+import { sqliteTable, text, real, integer, blob, uniqueIndex, index } from "drizzle-orm/sqlite-core"
 import { relations } from "drizzle-orm"
 import { createInsertSchema } from "drizzle-zod"
 
@@ -15,19 +15,27 @@ import {
  * runs
  */
 
-export const runs = sqliteTable("runs", {
-	id: integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
-	taskMetricsId: integer({ mode: "number" }).references(() => taskMetrics.id),
-	model: text().notNull(),
-	description: text(),
-	settings: blob({ mode: "json" }).$type<RooCodeSettings>(),
-	pid: integer({ mode: "number" }),
-	socketPath: text().notNull(),
-	concurrency: integer({ mode: "number" }).default(2).notNull(),
-	passed: integer({ mode: "number" }).default(0).notNull(),
-	failed: integer({ mode: "number" }).default(0).notNull(),
-	createdAt: integer({ mode: "timestamp" }).notNull(),
-})
+export const runs = sqliteTable(
+	"runs",
+	{
+		id: integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
+		taskMetricsId: integer({ mode: "number" }).references(() => taskMetrics.id),
+		model: text().notNull(),
+		description: text(),
+		settings: blob({ mode: "json" }).$type<RooCodeSettings>(),
+		pid: integer({ mode: "number" }),
+		socketPath: text().notNull(),
+		concurrency: integer({ mode: "number" }).default(2).notNull(),
+		passed: integer({ mode: "number" }).default(0).notNull(),
+		failed: integer({ mode: "number" }).default(0).notNull(),
+		createdAt: integer({ mode: "timestamp" }).notNull(),
+	},
+	(table) => [
+		// Add indexes for common queries
+		index("runs_model_idx").on(table.model),
+		index("runs_created_at_idx").on(table.createdAt),
+	],
+)
 
 export const runsRelations = relations(runs, ({ one }) => ({
 	taskMetrics: one(taskMetrics, { fields: [runs.taskMetricsId], references: [taskMetrics.id] }),
@@ -62,7 +70,16 @@ export const tasks = sqliteTable(
 		finishedAt: integer({ mode: "timestamp" }),
 		createdAt: integer({ mode: "timestamp" }).notNull(),
 	},
-	(table) => [uniqueIndex("tasks_language_exercise_idx").on(table.runId, table.language, table.exercise)],
+	(table) => [
+		// Existing index
+		uniqueIndex("tasks_language_exercise_idx").on(table.runId, table.language, table.exercise),
+		// New indexes for common queries
+		index("tasks_language_idx").on(table.language),
+		index("tasks_exercise_idx").on(table.exercise),
+		index("tasks_passed_idx").on(table.passed),
+		index("tasks_started_at_idx").on(table.startedAt),
+		index("tasks_finished_at_idx").on(table.finishedAt),
+	],
 )
 
 export const tasksRelations = relations(tasks, ({ one }) => ({
@@ -137,4 +154,4 @@ export type UpdateToolError = Partial<Omit<ToolError, "id" | "createdAt">>
  * schema
  */
 
-export const schema = { runs, runsRelations, tasks, tasksRelations, taskMetrics }
+export const schema = { runs, runsRelations, tasks, tasksRelations, taskMetrics, toolErrors, toolErrorsRelations }
