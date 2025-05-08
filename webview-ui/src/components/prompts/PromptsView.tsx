@@ -661,13 +661,13 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 									// For custom modes, update the JSON file
 									updateCustomMode(visualMode, {
 										...customMode,
-										roleDefinition: value.trim() || "",
+										roleDefinition: value || "",
 										source: customMode.source || "global",
 									})
 								} else {
 									// For built-in modes, update the prompts
 									updateAgentPrompt(visualMode, {
-										roleDefinition: value.trim() || undefined,
+										roleDefinition: value || undefined,
 									})
 								}
 							}}
@@ -843,7 +843,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 									// For custom modes, update the JSON file
 									updateCustomMode(visualMode, {
 										...customMode,
-										customInstructions: value.trim() || undefined,
+										customInstructions: value || undefined,
 										source: customMode.source || "global",
 									})
 								} else {
@@ -851,7 +851,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 									const existingPrompt = customModePrompts?.[visualMode] as PromptComponent
 									updateAgentPrompt(visualMode, {
 										...existingPrompt,
-										customInstructions: value.trim(),
+										customInstructions: value,
 									})
 								}
 							}}
@@ -987,7 +987,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							setCustomInstructions(value || undefined)
 							vscode.postMessage({
 								type: "customInstructions",
-								text: value.trim() || undefined,
+								text: value || undefined,
 							})
 						}}
 						rows={4}
@@ -1062,8 +1062,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 								const value =
 									(e as unknown as CustomEvent)?.detail?.target?.value ||
 									((e as any).target as HTMLTextAreaElement).value
-								const trimmedValue = value.trim()
-								updateSupportPrompt(activeSupportOption, trimmedValue || undefined)
+								updateSupportPrompt(activeSupportOption, value || undefined)
 							}}
 							rows={6}
 							className="resize-y w-full"

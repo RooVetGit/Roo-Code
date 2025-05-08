@@ -82,7 +82,10 @@ export const AutosizeTextarea = React.forwardRef<AutosizeTextAreaRef, AutosizeTe
 		}))
 
 		React.useEffect(() => {
-			setTriggerAutoSize(value as string)
+			// Don't trim the value when setting the trigger
+			if (typeof value === "string") {
+				setTriggerAutoSize(value)
+			}
 		}, [props?.defaultValue, value])
 
 		return (
@@ -98,6 +101,7 @@ export const AutosizeTextarea = React.forwardRef<AutosizeTextAreaRef, AutosizeTe
 					className,
 				)}
 				onChange={(e) => {
+					// Ensure we're not trimming the value
 					setTriggerAutoSize(e.target.value)
 					onChange?.(e)
 				}}
