@@ -30,7 +30,7 @@ import { newTaskTool } from "../tools/newTaskTool"
 import { checkpointSave } from "../checkpoints"
 
 import { formatResponse } from "../prompts/responses"
-import { validateToolUse } from "../mode-validator"
+import { validateToolUse } from "../tools/validateToolUse"
 import { Cline } from "../Cline"
 
 /**

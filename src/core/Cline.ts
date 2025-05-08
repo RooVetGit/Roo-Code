@@ -38,7 +38,6 @@ import { DiffStrategy } from "../shared/tools"
 import { UrlContentFetcher } from "../services/browser/UrlContentFetcher"
 import { BrowserSession } from "../services/browser/BrowserSession"
 import { McpHub } from "../services/mcp/McpHub"
-import { ToolRepetitionDetector } from "./ToolRepetitionDetector"
 import { McpServerManager } from "../services/mcp/McpServerManager"
 import { telemetryService } from "../services/telemetry/TelemetryService"
 import { RepoPerTaskCheckpointService } from "../services/checkpoints"
@@ -57,7 +56,8 @@ import { getWorkspacePath } from "../utils/path"
 import { formatResponse } from "./prompts/responses"
 import { SYSTEM_PROMPT } from "./prompts/system"
 
-// ... everything else
+// core modules
+import { ToolRepetitionDetector } from "./tools/ToolRepetitionDetector"
 import { FileContextTracker } from "./context-tracking/FileContextTracker"
 import { RooIgnoreController } from "./ignore/RooIgnoreController"
 import { type AssistantMessageContent, parseAssistantMessage, presentAssistantMessage } from "./assistant-message"
