@@ -1,0 +1,14 @@
+{
+	"name": "@evals/swe-bench",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "tsx src/index.ts",
+		"dataset": "uv run scripts/dataset.py"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"@evals/eslint-config": "workspace:^",
+		"@evals/typescript-config": "workspace:^"
+	}
+}

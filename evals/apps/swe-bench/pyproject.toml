@@ -1,0 +1,7 @@
+[project]
+name = "swe-bench"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "datasets>=3.5.1",
+]
