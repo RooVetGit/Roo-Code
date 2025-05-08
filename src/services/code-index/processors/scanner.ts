@@ -17,7 +17,7 @@ export class DirectoryScanner implements IDirectoryScanner {
 	private static readonly QDRANT_CODE_BLOCK_NAMESPACE = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 	private static readonly MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024 // 1MB
 	private static readonly MAX_LIST_FILES_LIMIT = 2_000
-	private static readonly BATCH_SEGMENT_THRESHOLD = 30 // Number of code segments to batch for embeddings/upserts
+	private static readonly BATCH_SEGMENT_THRESHOLD = 60 // Number of code segments to batch for embeddings/upserts
 	private static readonly MAX_BATCH_RETRIES = 3
 	private static readonly INITIAL_RETRY_DELAY_MS = 500
 	private static readonly PARSING_CONCURRENCY = 10
@@ -142,8 +142,11 @@ export class DirectoryScanner implements IDirectoryScanner {
 										})
 									}
 
-									// Check if batch threshold is met
-									if (currentBatchBlocks.length >= DirectoryScanner.BATCH_SEGMENT_THRESHOLD) {
+									// Check if batch threshold is met and not for Ollama
+									if (
+										currentBatchBlocks.length >= DirectoryScanner.BATCH_SEGMENT_THRESHOLD &&
+										this.embedder.embedderInfo.name !== "ollama"
+									) {
 										// Copy current batch data and clear accumulators
 										const batchBlocks = [...currentBatchBlocks]
 										const batchTexts = [...currentBatchTexts]

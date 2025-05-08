@@ -1,7 +1,7 @@
 import { OpenAI } from "openai"
 import { OpenAiNativeHandler } from "../../../api/providers/openai-native"
 import { ApiHandlerOptions } from "../../../shared/api"
-import { IEmbedder, EmbeddingResponse } from "../interfaces"
+import { IEmbedder, EmbeddingResponse, EmbedderInfo } from "../interfaces"
 
 /**
  * OpenAI implementation of the embedder interface with batching and rate limiting
@@ -125,5 +125,11 @@ export class OpenAiEmbedder extends OpenAiNativeHandler implements IEmbedder {
 		}
 
 		throw new Error(`Failed to create embeddings after ${OpenAiEmbedder.MAX_RETRIES} attempts`)
+	}
+
+	get embedderInfo(): EmbedderInfo {
+		return {
+			name: "openai",
+		}
 	}
 }

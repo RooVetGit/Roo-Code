@@ -1,5 +1,5 @@
 import { ApiHandlerOptions } from "../../../shared/api"
-import { EmbeddingResponse, IEmbedder } from "../interfaces"
+import { EmbedderInfo, EmbeddingResponse, IEmbedder } from "../interfaces"
 
 /**
  * Implements the IEmbedder interface using a local Ollama instance.
@@ -68,6 +68,12 @@ export class CodeIndexOllamaEmbedder implements IEmbedder {
 			console.error("Ollama embedding failed:", error)
 			// Re-throw a more specific error for the caller
 			throw new Error(`Ollama embedding failed: ${error.message}`)
+		}
+	}
+
+	get embedderInfo(): EmbedderInfo {
+		return {
+			name: "ollama",
 		}
 	}
 }

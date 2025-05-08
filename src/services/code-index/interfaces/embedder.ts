@@ -10,6 +10,7 @@ export interface IEmbedder {
 	 * @returns Promise resolving to an EmbeddingResponse
 	 */
 	createEmbeddings(texts: string[], model?: string): Promise<EmbeddingResponse>
+	get embedderInfo(): EmbedderInfo
 }
 
 export interface EmbeddingResponse {
@@ -18,4 +19,10 @@ export interface EmbeddingResponse {
 		promptTokens: number
 		totalTokens: number
 	}
+}
+
+export type AvailableEmbedders = "openai" | "ollama"
+
+export interface EmbedderInfo {
+	name: AvailableEmbedders
 }
