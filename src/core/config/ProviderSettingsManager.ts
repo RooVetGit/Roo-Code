@@ -6,6 +6,9 @@ import { Mode, modes } from "../../shared/modes"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
 
 const providerSettingsWithIdSchema = providerSettingsSchema.extend({ id: z.string().optional() })
+const discriminatedProviderSettingsWithIdSchema = providerSettingsSchemaDiscriminated.and(
+	z.object({ id: z.string().optional() }),
+)
 
 type ProviderSettingsWithId = z.infer<typeof providerSettingsWithIdSchema>
 
@@ -385,7 +388,15 @@ export class ProviderSettingsManager {
 
 	public async export() {
 		try {
-			return await this.lock(async () => providerProfilesSchema.parse(await this.load()))
+			return await this.lock(async () => {
+				const profiles = providerProfilesSchema.parse(await this.load())
+				const configs = profiles.apiConfigs
+				for (const name in configs) {
+					// Avoid leaking properties from other providers.
+					configs[name] = discriminatedProviderSettingsWithIdSchema.parse(configs[name])
+				}
+				return profiles
+			})
 		} catch (error) {
 			throw new Error(`Failed to export provider profiles: ${error}`)
 		}
