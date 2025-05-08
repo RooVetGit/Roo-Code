@@ -486,7 +486,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const handleBlur = useCallback(() => {
 			// Only hide the context menu if the user didn't click on it.
 			if (!isMouseDownOnMenu) {
-				setShowContextMenu(false)import React, { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+				setShowContextMenu(false)
 				import { useEvent } from "react-use"
 				import DynamicTextArea from "react-textarea-autosize"
 				
