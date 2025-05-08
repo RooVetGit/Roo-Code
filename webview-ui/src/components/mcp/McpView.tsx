@@ -261,6 +261,16 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 			{server.status === "connected" ? (
 				isExpanded && (
 					<div className="bg-vscode-textCodeBlock-background px-[10px] pb-[10px] text-[13px] rounded-b-[4px]">
+            {server.instructions && (
+							<div
+								style={{
+									padding: "5px 0",
+									opacity: 0.8,
+									fontSize: "12px",
+								}}>
+								{server.instructions}
+							</div>
+						)}
 						<VSCodePanels className="mb-[10px]">
 							<VSCodePanelTab id="tools">
 								{t("mcp:tabs.tools")} ({server.tools?.length || 0})
