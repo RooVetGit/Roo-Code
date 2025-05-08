@@ -115,7 +115,8 @@
 		"failed": "APIリクエスト失敗",
 		"streaming": "APIリクエスト...",
 		"cancelled": "APIリクエストキャンセル",
-		"streamingFailed": "APIストリーミング失敗"
+		"streamingFailed": "APIストリーミング失敗",
+		"viewDetailsTooltip": "APIリクエストの詳細を表示"
 	},
 	"checkpoint": {
 		"initial": "初期チェックポイント",
@@ -135,7 +136,8 @@
 		"current": "現在"
 	},
 	"instructions": {
-		"wantsToFetch": "Rooは現在のタスクを支援するための詳細な指示を取得したい"
+		"wantsToFetch": "Rooは現在のタスクを支援するための詳細な指示を取得したい",
+		"viewInstructions": "指示を表示"
 	},
 	"fileOperations": {
 		"wantsToRead": "Rooはこのファイルを読みたい:",
@@ -148,7 +150,10 @@
 		"didSearchReplace": "Rooはこのファイルで検索と置換を実行しました:",
 		"wantsToInsert": "Rooはこのファイルにコンテンツを挿入したい:",
 		"wantsToInsertWithLineNumber": "Rooはこのファイルの{{lineNumber}}行目にコンテンツを挿入したい:",
-		"wantsToInsertAtEnd": "Rooはこのファイルの末尾にコンテンツを追加したい:"
+		"wantsToInsertAtEnd": "Rooはこのファイルの末尾にコンテンツを追加したい:",
+		"viewDefinitions": "定義を表示",
+		"viewFileList": "ファイル一覧を表示",
+		"viewSearchResults": "検索結果を表示"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Rooはこのディレクトリのトップレベルファイルを表示したい:",
@@ -158,7 +163,10 @@
 		"wantsToViewDefinitions": "Rooはこのディレクトリで使用されているソースコード定義名を表示したい:",
 		"didViewDefinitions": "Rooはこのディレクトリで使用されているソースコード定義名を表示しました:",
 		"wantsToSearch": "Rooはこのディレクトリで <code>{{regex}}</code> を検索したい:",
-		"didSearch": "Rooはこのディレクトリで <code>{{regex}}</code> を検索しました:"
+		"didSearch": "Rooはこのディレクトリで <code>{{regex}}</code> を検索しました:",
+		"viewDefinitions": "定義を表示",
+		"viewFileList": "ファイル一覧を表示",
+		"viewSearchResults": "検索結果を表示"
 	},
 	"commandOutput": "コマンド出力",
 	"response": "応答",
@@ -186,6 +194,17 @@
 		"hasQuestion": "Rooは質問があります:"
 	},
 	"taskCompleted": "タスク完了",
+<<<<<<< HEAD
+=======
+	"shellIntegration": {
+		"unavailable": "シェル統合が利用できません",
+		"troubleshooting": "まだ問題がありますか？シェル統合のドキュメントはこちらをクリックしてください。",
+		"checkSettings": "設定ページでターミナルの回避策を確認してください",
+		"updateVSCode": "VSCodeを更新してください",
+		"supportedShell": "サポートされているシェルを使用していることを確認してください：zsh、bash、fish、またはPowerShell",
+		"troubleshootingGuide": "まだ問題がありますか？シェル統合のドキュメントはこちらをクリックしてください。"
+	},
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 	"powershell": {
 		"issues": "Windows PowerShellに問題があるようです。こちらを参照してください"
 	},
@@ -243,9 +262,20 @@
 		}
 	},
 	"systemPromptWarning": "警告：カスタムシステムプロンプトの上書きが有効です。これにより機能が深刻に損なわれ、予測不可能な動作が発生する可能性があります。",
+<<<<<<< HEAD
 	"shellIntegration": {
 		"title": "コマンド実行警告",
 		"description": "コマンドはVSCodeターミナルシェル統合なしで実行されています。この警告を非表示にするには、<settingsLink>Roo Code設定</settingsLink>の<strong>Terminal</strong>セクションでシェル統合を無効にするか、以下のリンクを使用してVSCodeターミナル統合のトラブルシューティングを行ってください。",
 		"troubleshooting": "シェル統合のドキュメントはこちらをクリック"
 	}
+=======
+	"selectApiConfig": "API構成を選択",
+	"copyAsMarkdown": "マークダウンとしてコピー",
+	"filePathFormat": " ({{filePath}})",
+	"viewCommandOutput": "コマンド出力を表示",
+	"viewFeedbackDiff": "フィードバックの差分を表示",
+	"viewChanges": "変更を表示",
+	"viewDiff": "差分を表示",
+	"viewFileContent": "ファイルの内容を表示"
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 }

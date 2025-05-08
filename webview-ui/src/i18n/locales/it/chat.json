@@ -106,7 +106,8 @@
 	"edit": "Modifica...",
 	"forNextMode": "per la prossima modalità",
 	"instructions": {
-		"wantsToFetch": "Roo vuole recuperare istruzioni dettagliate per aiutare con l'attività corrente"
+		"wantsToFetch": "Roo vuole recuperare istruzioni dettagliate per aiutare con l'attività corrente",
+		"viewInstructions": "Visualizza istruzioni"
 	},
 	"error": "Errore",
 	"diffError": {
@@ -118,7 +119,8 @@
 		"failed": "Richiesta API fallita",
 		"streaming": "Richiesta API...",
 		"cancelled": "Richiesta API annullata",
-		"streamingFailed": "Streaming API fallito"
+		"streamingFailed": "Streaming API fallito",
+		"viewDetailsTooltip": "Visualizza dettagli richiesta API"
 	},
 	"checkpoint": {
 		"initial": "Checkpoint iniziale",
@@ -151,6 +153,9 @@
 		"wantsToInsertAtEnd": "Roo vuole aggiungere contenuto alla fine di questo file:"
 	},
 	"directoryOperations": {
+		"viewDefinitions": "Visualizza definizioni",
+		"viewFileList": "Visualizza elenco file",
+		"viewSearchResults": "Visualizza risultati ricerca",
 		"wantsToViewTopLevel": "Roo vuole visualizzare i file di primo livello in questa directory:",
 		"didViewTopLevel": "Roo ha visualizzato i file di primo livello in questa directory:",
 		"wantsToViewRecursive": "Roo vuole visualizzare ricorsivamente tutti i file in questa directory:",
@@ -186,6 +191,17 @@
 		"hasQuestion": "Roo ha una domanda:"
 	},
 	"taskCompleted": "Attività completata",
+<<<<<<< HEAD
+=======
+	"shellIntegration": {
+		"unavailable": "Integrazione shell non disponibile",
+		"troubleshooting": "Ancora problemi? Clicca qui per la documentazione sull'integrazione della shell.",
+		"checkSettings": "Controlla le soluzioni alternative del terminale nella pagina delle impostazioni",
+		"updateVSCode": "Aggiorna VSCode",
+		"supportedShell": "Assicurati di utilizzare una shell supportata: zsh, bash, fish o PowerShell",
+		"troubleshootingGuide": "Ancora problemi? Clicca qui per la documentazione sull'integrazione della shell."
+	},
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 	"powershell": {
 		"issues": "Sembra che tu stia avendo problemi con Windows PowerShell, consulta questa"
 	},
@@ -243,9 +259,20 @@
 		}
 	},
 	"systemPromptWarning": "ATTENZIONE: Sovrascrittura personalizzata delle istruzioni di sistema attiva. Questo può compromettere gravemente le funzionalità e causare comportamenti imprevedibili.",
+<<<<<<< HEAD
 	"shellIntegration": {
 		"title": "Avviso di esecuzione comando",
 		"description": "Il tuo comando viene eseguito senza l'integrazione shell del terminale VSCode. Per sopprimere questo avviso puoi disattivare l'integrazione shell nella sezione <strong>Terminal</strong> delle <settingsLink>impostazioni di Roo Code</settingsLink> o risolvere i problemi di integrazione del terminale VSCode utilizzando il link qui sotto.",
 		"troubleshooting": "Clicca qui per la documentazione sull'integrazione shell."
 	}
+=======
+	"selectApiConfig": "Seleziona la configurazione API",
+	"copyAsMarkdown": "Copia come markdown",
+	"filePathFormat": " ({{filePath}})",
+	"viewCommandOutput": "Visualizza output comando",
+	"viewFeedbackDiff": "Visualizza differenza feedback",
+	"viewChanges": "Visualizza modifiche",
+	"viewDiff": "Visualizza differenza",
+	"viewFileContent": "Visualizza contenuto file"
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 }

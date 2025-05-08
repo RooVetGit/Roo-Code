@@ -90,10 +90,21 @@
 		"task_prompt": "Что должен сделать Roo?",
 		"task_placeholder": "Введите вашу задачу здесь"
 	},
+<<<<<<< HEAD
 	"settings": {
 		"providers": {
 			"groqApiKey": "Ключ API Groq",
 			"getGroqApiKey": "Получить ключ API Groq"
 		}
+=======
+	"chat": {
+		"shellIntegration": {
+			"troubleshootingGuide": "руководство по устранению неполадок"
+		},
+		"copyAsMarkdown": "Копировать как Markdown",
+		"response": "Ответ",
+		"arguments": "Аргументы",
+		"filePathFormat": " ({{filePath}})"
+>>>>>>> ac8700e57 (WIP: d28e1262 Catch all code accordions, highlight them, consolidate into ViewOutputBlock)
 	}
 }

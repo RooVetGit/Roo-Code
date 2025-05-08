@@ -115,7 +115,8 @@
 		"failed": "Solicitud API falló",
 		"streaming": "Solicitud API...",
 		"cancelled": "Solicitud API cancelada",
-		"streamingFailed": "Transmisión API falló"
+		"streamingFailed": "Transmisión API falló",
+		"viewDetailsTooltip": "Ver detalles de la solicitud API"
 	},
 	"checkpoint": {
 		"initial": "Punto de control inicial",
@@ -135,7 +136,8 @@
 		"current": "Actual"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo quiere obtener instrucciones detalladas para ayudar con la tarea actual"
+		"wantsToFetch": "Roo quiere obtener instrucciones detalladas para ayudar con la tarea actual",
+		"viewInstructions": "Ver instrucciones"
 	},
 	"fileOperations": {
 		"wantsToRead": "Roo quiere leer este archivo:",
@@ -148,7 +150,10 @@
 		"didSearchReplace": "Roo realizó búsqueda y reemplazo en este archivo:",
 		"wantsToInsert": "Roo quiere insertar contenido en este archivo:",
 		"wantsToInsertWithLineNumber": "Roo quiere insertar contenido en este archivo en la línea {{lineNumber}}:",
-		"wantsToInsertAtEnd": "Roo quiere añadir contenido al final de este archivo:"
+		"wantsToInsertAtEnd": "Roo quiere añadir contenido al final de este archivo:",
+		"viewDefinitions": "Ver definiciones",
+		"viewFileList": "Ver lista de archivos",
+		"viewSearchResults": "Ver resultados de búsqueda"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo quiere ver los archivos de nivel superior en este directorio:",
@@ -158,7 +163,10 @@
 		"wantsToViewDefinitions": "Roo quiere ver nombres de definiciones de código fuente utilizados en este directorio:",
 		"didViewDefinitions": "Roo vio nombres de definiciones de código fuente utilizados en este directorio:",
 		"wantsToSearch": "Roo quiere buscar en este directorio <code>{{regex}}</code>:",
-		"didSearch": "Roo buscó en este directorio <code>{{regex}}</code>:"
+		"didSearch": "Roo buscó en este directorio <code>{{regex}}</code>:",
+		"viewDefinitions": "Ver definiciones",
+		"viewFileList": "Ver lista de archivos",
+		"viewSearchResults": "Ver resultados de búsqueda"
 	},
 	"commandOutput": "Salida del comando",
 	"response": "Respuesta",
@@ -186,6 +194,17 @@
 		"hasQuestion": "Roo tiene una pregunta:"
 	},
 	"taskCompleted": "Tarea completada",
+<<<<<<< HEAD
+=======
+	"shellIntegration": {
+		"unavailable": "Integración de shell no disponible",
+		"troubleshooting": "¿Sigues teniendo problemas? Haz clic aquí para ver la documentación de integración de shell.",
+		"checkSettings": "Revisa los ajustes alternativos de terminal en la página de configuración",
+		"updateVSCode": "Actualiza VSCode",
+		"supportedShell": "Asegúrate de usar un shell compatible: zsh, bash, fish o PowerShell",
+		"troubleshootingGuide": "¿Sigues teniendo problemas? Haz clic aquí para ver la documentación de integración de shell."
+	},
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 	"powershell": {
 		"issues": "Parece que estás teniendo problemas con Windows PowerShell, por favor consulta esta"
 	},
@@ -243,9 +262,20 @@
 		}
 	},
 	"systemPromptWarning": "ADVERTENCIA: Anulación de instrucciones del sistema personalizada activa. Esto puede romper gravemente la funcionalidad y causar un comportamiento impredecible.",
+<<<<<<< HEAD
 	"shellIntegration": {
 		"title": "Advertencia de ejecución de comandos",
 		"description": "Tu comando se está ejecutando sin la integración de shell de terminal de VSCode. Para suprimir esta advertencia, puedes desactivar la integración de shell en la sección <strong>Terminal</strong> de la <settingsLink>configuración de Roo Code</settingsLink> o solucionar problemas de integración de terminal de VSCode usando el enlace de abajo.",
 		"troubleshooting": "Haz clic aquí para ver la documentación de integración de shell."
 	}
+=======
+	"selectApiConfig": "Seleccionar configuración de API",
+	"copyAsMarkdown": "Copiar como markdown",
+	"filePathFormat": " ({{filePath}})",
+	"viewCommandOutput": "Ver salida del comando",
+	"viewFeedbackDiff": "Ver diferencia de feedback",
+	"viewChanges": "Ver cambios",
+	"viewDiff": "Ver diferencia",
+	"viewFileContent": "Ver contenido del archivo"
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 }

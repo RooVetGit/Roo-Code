@@ -28,6 +28,74 @@ import { migrateSettings } from "./utils/migrateSettings"
 import { handleUri, registerCommands, registerCodeActions, registerTerminalActions } from "./activate"
 import { formatLanguage } from "./shared/language"
 
+// Define the scheme for API request virtual documents
+export const API_REQUEST_VIEW_URI_SCHEME = "roo-api-request"
+export const TOOL_OUTPUT_VIEW_URI_SCHEME = "roo-fragment"
+
+// Define the scheme for generic tool output virtual documents
+interface ToolOutputData {
+	content: string
+	language: string
+}
+
+// Simple in-memory storage for tool output content and language
+// Simple in-memory storage for API request content
+const apiRequestContentStore = new Map<string, string>()
+const toolOutputContentStore = new Map<string, ToolOutputData>()
+
+class ApiRequestContentProvider implements vscode.TextDocumentContentProvider {
+	// Optional: Add an event emitter if you need to signal updates
+	// private _onDidChange = new vscode.EventEmitter<vscode.Uri>();
+	// readonly onDidChange = this._onDidChange.event;
+
+	provideTextDocumentContent(uri: vscode.Uri): string {
+		const contentId = uri.path // Assuming ID is stored in the query part
+		return (
+			apiRequestContentStore.get(contentId) || `// Error: Could not find API request details for ID: ${contentId}`
+		)
+	}
+
+	// Helper to add content and return the URI
+	static addContent(content: string): vscode.Uri {
+		const id = Date.now().toString() // Simple unique ID
+		const path = `api-request-${id}.md`
+		apiRequestContentStore.set(path, content)
+		// Optional: Clean up old entries after a while
+		setTimeout(() => apiRequestContentStore.delete(id), 60 * 1000 * 5) // Clear after 5 minutes
+		return vscode.Uri.parse(`${API_REQUEST_VIEW_URI_SCHEME}:${path}`)
+	}
+}
+
+// Content provider for generic tool outputs
+class ToolOutputContentProvider implements vscode.TextDocumentContentProvider {
+	provideTextDocumentContent(uri: vscode.Uri): string {
+		const contentId = uri.path
+		return (
+			toolOutputContentStore.get(contentId)?.content ||
+			`// Error: Could not find tool output for ID: ${contentId}`
+		)
+	}
+
+	// Helper to add content and return the URI
+	static addContent(content: string, language: string): vscode.Uri {
+		const id = Date.now().toString()
+		// Include language in the path for potential hints, though we don't use it in provideTextDocumentContent directly
+		const path = `fragment-${id}.${language || "txt"}`
+
+		toolOutputContentStore.set(path, { content, language })
+		// Optional: Clean up old entries after a while
+		setTimeout(() => toolOutputContentStore.delete(path), 60 * 1000 * 5) // Clear after 5 minutes
+
+		return vscode.Uri.parse(`${TOOL_OUTPUT_VIEW_URI_SCHEME}:${path}`)
+		// Use a fixed path instead of dynamic one based on language
+		// const fixedPath = "output.txt" // Example fixed path
+		// return vscode.Uri.parse(`${TOOL_OUTPUT_VIEW_URI_SCHEME}:${fixedPath}?${id}`)
+	}
+}
+
+// Export the static method for use in the message handler
+export { ApiRequestContentProvider, ToolOutputContentProvider }
+
 /**
  * Built using https://github.com/microsoft/vscode-webview-ui-toolkit
  *
@@ -71,12 +139,14 @@ export async function activate(context: vscode.ExtensionContext) {
 	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy)
 	telemetryService.setProvider(provider)
 
+	// Register the webview view provider
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(ClineProvider.sideBarId, provider, {
 			webviewOptions: { retainContextWhenHidden: true },
 		}),
-	)
+	) // Add missing closing parenthesis
 
+	// Register commands (should be outside the push call)
 	registerCommands({ context, outputChannel, provider })
 
 	/**
@@ -95,14 +165,27 @@ export async function activate(context: vscode.ExtensionContext) {
 	 *
 	 * https://code.visualstudio.com/api/extension-guides/virtual-documents
 	 */
+	// Content provider for diff view
 	const diffContentProvider = new (class implements vscode.TextDocumentContentProvider {
 		provideTextDocumentContent(uri: vscode.Uri): string {
+			// Content is expected to be base64 encoded in the query parameter
 			return Buffer.from(uri.query, "base64").toString("utf-8")
 		}
 	})()
-
 	context.subscriptions.push(
 		vscode.workspace.registerTextDocumentContentProvider(DIFF_VIEW_URI_SCHEME, diffContentProvider),
+	)
+
+	// Register the content provider for generic tool outputs
+	const toolOutputProvider = new ToolOutputContentProvider()
+	context.subscriptions.push(
+		vscode.workspace.registerTextDocumentContentProvider(TOOL_OUTPUT_VIEW_URI_SCHEME, toolOutputProvider),
+	)
+
+	// Register the content provider for API request details
+	const apiRequestProvider = new ApiRequestContentProvider()
+	context.subscriptions.push(
+		vscode.workspace.registerTextDocumentContentProvider(API_REQUEST_VIEW_URI_SCHEME, apiRequestProvider),
 	)
 
 	context.subscriptions.push(vscode.window.registerUriHandler({ handleUri }))

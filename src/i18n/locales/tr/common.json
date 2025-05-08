@@ -90,10 +90,21 @@
 		"task_prompt": "Roo ne yapsın?",
 		"task_placeholder": "Görevini buraya yaz"
 	},
+<<<<<<< HEAD
 	"settings": {
 		"providers": {
 			"groqApiKey": "Groq API Anahtarı",
 			"getGroqApiKey": "Groq API Anahtarı Al"
 		}
+=======
+	"chat": {
+		"shellIntegration": {
+			"troubleshootingGuide": "sorun giderme kılavuzu"
+		},
+		"copyAsMarkdown": "Markdown olarak kopyala",
+		"response": "Yanıt",
+		"arguments": "Argümanlar",
+		"filePathFormat": " ({{filePath}})"
+>>>>>>> ac8700e57 (WIP: d28e1262 Catch all code accordions, highlight them, consolidate into ViewOutputBlock)
 	}
 }

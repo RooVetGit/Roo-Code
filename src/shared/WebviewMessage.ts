@@ -131,7 +131,12 @@ export interface WebviewMessage {
 		| "searchFiles"
 		| "toggleApiConfigPin"
 		| "setHistoryPreviewCollapsed"
+		| "showApiRequestDetails"
+		| "showToolOutput"
 	text?: string
+	details?: string
+	content?: string // Add property for tool output content
+	language?: string // Add property for tool output language hint
 	disabled?: boolean
 	askResponse?: ClineAskResponse
 	apiConfiguration?: ApiConfiguration

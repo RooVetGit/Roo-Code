@@ -14,9 +14,15 @@ import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { findMatchingResourceOrTemplate } from "@src/utils/mcp"
 import { vscode } from "@src/utils/vscode"
 import { Button } from "@src/components/ui"
+<<<<<<< HEAD
 
 import CodeAccordian, { removeLeadingNonAlphanumeric } from "../common/CodeAccordian"
+=======
+import CodeAccordian, { removeLeadingNonAlphanumeric } from "../common/CodeAccordian" // Restore CodeAccordian import
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 import CodeBlock from "../common/CodeBlock"
+import ApiRequestDetailsBlock from "./ApiRequestDetailsBlock"
+
 import MarkdownBlock from "../common/MarkdownBlock"
 import { ReasoningBlock } from "./ReasoningBlock"
 import Thumbnails from "../common/Thumbnails"
@@ -30,6 +36,7 @@ import { ProgressIndicator } from "./ProgressIndicator"
 import { Markdown } from "./Markdown"
 import { CommandExecution } from "./CommandExecution"
 import { CommandExecutionError } from "./CommandExecutionError"
+import ViewOutputBlock from "../common/ViewOutputBlock"
 
 interface ChatRowProps {
 	message: ClineMessage
@@ -82,7 +89,7 @@ export default ChatRow
 export const ChatRowContent = ({
 	message,
 	lastModifiedMessage,
-	isExpanded,
+	// isExpanded, // Removed unused prop
 	isLast,
 	isStreaming,
 	onToggleExpand,
@@ -119,6 +126,7 @@ export const ChatRowContent = ({
 
 	const type = message.type === "ask" ? message.ask : message.say
 
+<<<<<<< HEAD
 	const [icon, title] = useMemo((): [React.ReactNode | null, React.ReactNode | null] => {
 		switch (type) {
 			case "error":
@@ -130,15 +138,38 @@ export const ChatRowContent = ({
 				return [
 					<span className="codicon codicon-error text-vscode-errorForeground mb-[-1.5px]" />, // Self-closing
 					<span className="font-bold text-vscode-errorForeground">{t("chat:troubleMessage")}</span>,
+=======
+	const errorColor = "var(--vscode-errorForeground)"
+	const successColor = "var(--vscode-charts-green)"
+	const cancelledColor = "var(--vscode-descriptionForeground)"
+
+	const [icon, title] = useMemo(() => {
+		switch (type) {
+			case "error":
+				return [
+					<span className="codicon codicon-error text-[var(--vscode-errorForeground)] mb-[-1.5px]"></span>,
+					<span className="text-[var(--vscode-errorForeground)] font-bold">{t("chat:error")}</span>,
+				]
+			case "mistake_limit_reached":
+				return [
+					<span className="codicon codicon-error text-[var(--vscode-errorForeground)] mb-[-1.5px]"></span>,
+					<span className="text-[var(--vscode-errorForeground)] font-bold">{t("chat:troubleMessage")}</span>,
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 				]
 			case "command":
 				return [
 					isCommandExecuting ? (
 						<ProgressIndicator />
 					) : (
+<<<<<<< HEAD
 						<span className="codicon codicon-terminal text-vscode-foreground mb-[-1.5px]" /> // Self-closing
 					),
 					<span className="font-bold text-vscode-foreground">{t("chat:runCommand.title")}:</span>,
+=======
+						<span className="codicon codicon-terminal text-[var(--vscode-foreground)] mb-[-1.5px]"></span>
+					),
+					<span className="text-[var(--vscode-foreground)] font-bold">{t("chat:runCommand.title")}:</span>,
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 				]
 			case "use_mcp_server":
 				const mcpServerUse = safeJsonParse<ClineAskUseMcpServer>(message.text)
@@ -149,9 +180,15 @@ export const ChatRowContent = ({
 					isMcpServerResponding ? (
 						<ProgressIndicator />
 					) : (
+<<<<<<< HEAD
 						<span className="codicon codicon-server text-vscode-foreground mb-[-1.5px]" /> // Self-closing
 					),
 					<span className="font-bold text-vscode-foreground">
+=======
+						<span className="codicon codicon-server text-[var(--vscode-foreground)] mb-[-1.5px]"></span>
+					),
+					<span className="text-[var(--vscode-foreground)] font-bold">
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 						{mcpServerUse.type === "use_mcp_tool"
 							? t("chat:mcp.wantsToUseTool", { serverName: mcpServerUse.serverName })
 							: t("chat:mcp.wantsToAccessResource", { serverName: mcpServerUse.serverName })}
@@ -159,15 +196,26 @@ export const ChatRowContent = ({
 				]
 			case "completion_result":
 				return [
+<<<<<<< HEAD
 					<span className="codicon codicon-check text-vscode-charts-green mb-[-1.5px]" />, // Self-closing
 					<span className="font-bold text-vscode-charts-green">{t("chat:taskCompleted")}</span>,
+=======
+					<span className="codicon codicon-verified text-[var(--vscode-charts-green)] mb-[-1.5px]"></span>,
+					<span className="text-[var(--vscode-charts-green)] font-bold">{t("chat:taskCompleted")}</span>,
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 				]
 			case "api_req_retry_delayed":
 				return [null, null] // Explicitly return [null, null] for this case
 			case "api_req_started":
+<<<<<<< HEAD
 				const getIconSpan = (iconName: string, colorClassName: string) => (
 					<div className="w-4 h-4 flex items-center justify-center">
 						<span className={`codicon codicon-${iconName} ${colorClassName} text-[16px] mb-[-1.5px]`} />
+=======
+				const getIconSpan = (iconName: string, color: string) => (
+					<div className="w-4 h-4 flex items-center justify-center">
+						<span className={`codicon codicon-${iconName} text-[${color}] text-base mb-[-1.5px]`}></span>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 					</div>
 				)
 				return [
@@ -186,32 +234,72 @@ export const ChatRowContent = ({
 					),
 					apiReqCancelReason !== null && apiReqCancelReason !== undefined ? (
 						apiReqCancelReason === "user_cancelled" ? (
+<<<<<<< HEAD
 							<span className="font-bold text-vscode-foreground">{t("chat:apiRequest.cancelled")}</span>
 						) : (
 							<span className="font-bold text-vscode-errorForeground">
+=======
+							<span className="text-[var(--vscode-foreground)] font-bold">
+								{t("chat:apiRequest.cancelled")}
+							</span>
+						) : (
+							<span className="text-[var(--vscode-errorForeground)] font-bold">
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 								{t("chat:apiRequest.streamingFailed")}
 							</span>
 						)
 					) : cost !== null && cost !== undefined ? (
+<<<<<<< HEAD
 						<span className="font-bold text-vscode-foreground">{t("chat:apiRequest.title")}</span>
 					) : apiRequestFailedMessage ? (
 						<span className="font-bold text-vscode-errorForeground">{t("chat:apiRequest.failed")}</span>
 					) : (
 						<span className="font-bold text-vscode-foreground">{t("chat:apiRequest.streaming")}</span>
+=======
+						<span className="text-[var(--vscode-foreground)] font-bold">{t("chat:apiRequest.title")}</span>
+					) : apiRequestFailedMessage ? (
+						<span className="text-[var(--vscode-errorForeground)] font-bold">
+							{t("chat:apiRequest.failed")}
+						</span>
+					) : (
+						<span className="text-[var(--vscode-foreground)] font-bold">
+							{t("chat:apiRequest.streaming")}
+						</span>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 					),
 				]
 			case "followup":
 				return [
+<<<<<<< HEAD
 					<span className="codicon codicon-question text-vscode-foreground mb-[-1.5px]" />,
 					<span className="font-bold text-vscode-foreground">{t("chat:questions.hasQuestion")}</span>,
+=======
+					<span className="codicon codicon-question text-[var(--vscode-foreground)] mb-[-1.5px]" />,
+					<span className="text-[var(--vscode-foreground)] font-bold">
+						{t("chat:questions.hasQuestion")}
+					</span>,
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 				]
 			default:
 				return [null, null] // Explicitly return [null, null] for default case
 		}
 	}, [type, isCommandExecuting, message, isMcpServerResponding, apiReqCancelReason, cost, apiRequestFailedMessage, t])
 
+<<<<<<< HEAD
 	const headerClasses = "flex items-center gap-[10px] mb-[10px] break-words"
 	const pClasses = "m-0 whitespace-pre-wrap break-words overflow-anywhere"
+=======
+	const headerClassName = "flex items-center gap-[10px] mb-[10px] break-words"
+
+	const pStyle: React.CSSProperties = {
+		// Keep overflowWrap: "anywhere" as style
+		margin: 0,
+		whiteSpace: "pre-wrap",
+		wordBreak: "break-word",
+		overflowWrap: "anywhere",
+	}
+	const pClassName = "m-0 whitespace-pre-wrap break-words"
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 
 	const tool = useMemo(
 		() => (message.ask === "tool" ? safeJsonParse<ClineSayTool>(message.text) : null),
@@ -227,7 +315,11 @@ export const ChatRowContent = ({
 
 	if (tool) {
 		const toolIcon = (name: string) => (
+<<<<<<< HEAD
 			<span className={`codicon codicon-${name} text-vscode-foreground mb-[-1.5px]`} /> // Converted to Tailwind & self-closing
+=======
+			<span className={`codicon codicon-${name} text-vscode-foreground mb-[-1.5px]`}></span>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 		)
 
 		switch (tool.tool) {
@@ -235,7 +327,11 @@ export const ChatRowContent = ({
 			case "appliedDiff":
 				return (
 					<>
+<<<<<<< HEAD
 						<div className={headerClasses}>
+=======
+						<div className={headerClassName}>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 							{toolIcon(tool.tool === "appliedDiff" ? "diff" : "edit")}
 							<span className="font-bold">
 								{tool.isOutsideWorkspace
@@ -243,20 +339,24 @@ export const ChatRowContent = ({
 									: t("chat:fileOperations.wantsToEdit")}
 							</span>
 						</div>
-						<CodeAccordian
-							progressStatus={message.progressStatus}
-							isLoading={message.partial}
-							diff={tool.diff!}
-							path={tool.path!}
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+						<ViewOutputBlock
+							iconName={tool.tool === "appliedDiff" ? "diff" : "edit"}
+							title={t("chat:viewDiff") ?? "View Diff"}
+							content={tool.diff || ""}
+							language="diff"
+							filePath={tool.path}
+							tooltip={t("chat:viewDiff") ?? "View Diff"}
 						/>
 					</>
 				)
 			case "insertContent":
 				return (
 					<>
+<<<<<<< HEAD
 						<div className={headerClasses}>
+=======
+						<div className={headerClassName}>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 							{toolIcon("insert")}
 							<span className="font-bold">
 								{tool.isOutsideWorkspace
@@ -268,20 +368,24 @@ export const ChatRowContent = ({
 											})}
 							</span>
 						</div>
-						<CodeAccordian
-							progressStatus={message.progressStatus}
-							isLoading={message.partial}
-							diff={tool.diff!}
-							path={tool.path!}
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+						<ViewOutputBlock
+							iconName="insert"
+							title={t("chat:viewChanges") ?? "View Changes"}
+							content={tool.diff || ""}
+							language="diff"
+							filePath={tool.path}
+							tooltip={t("chat:viewChanges") ?? "View Changes"}
 						/>
 					</>
 				)
 			case "searchAndReplace":
 				return (
 					<>
+<<<<<<< HEAD
 						<div className={headerClasses}>
+=======
+						<div className={headerClassName}>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 							{toolIcon("replace")}
 							<span className="font-bold">
 								{message.type === "ask"
@@ -289,36 +393,45 @@ export const ChatRowContent = ({
 									: t("chat:fileOperations.didSearchReplace")}
 							</span>
 						</div>
-						<CodeAccordian
-							progressStatus={message.progressStatus}
-							isLoading={message.partial}
-							diff={tool.diff!}
-							path={tool.path!}
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+						<ViewOutputBlock
+							iconName="replace"
+							title={t("chat:viewDiff") ?? "View Diff"}
+							content={tool.diff || ""}
+							language="diff"
+							filePath={tool.path}
+							tooltip={t("chat:viewDiff") ?? "View Diff"}
 						/>
 					</>
 				)
 			case "newFileCreated":
 				return (
 					<>
+<<<<<<< HEAD
 						<div className={headerClasses}>
+=======
+						<div className={headerClassName}>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 							{toolIcon("new-file")}
 							<span className="font-bold">{t("chat:fileOperations.wantsToCreate")}</span>
 						</div>
-						<CodeAccordian
-							isLoading={message.partial}
-							code={tool.content!}
-							path={tool.path!}
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+						<ViewOutputBlock
+							iconName="new-file"
+							title={t("chat:viewFileContent") ?? "View File Content"}
+							content={tool.content || ""}
+							language={tool.path?.split(".").pop() || "txt"}
+							filePath={tool.path}
+							tooltip={t("chat:viewFileContent") ?? "View File Content"}
 						/>
 					</>
 				)
 			case "readFile":
 				return (
 					<>
+<<<<<<< HEAD
 						<div className={headerClasses}>
+=======
+						<div className={headerClassName}>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 							{toolIcon("file-code")}
 							<span className="font-bold">
 								{message.type === "ask"
@@ -328,19 +441,38 @@ export const ChatRowContent = ({
 									: t("chat:fileOperations.didRead")}
 							</span>
 						</div>
+<<<<<<< HEAD
 						<div className="rounded-[3px] overflow-hidden border border-vscode-editorGroup-border bg-vscode-code-block-background">
 							<div
 								className="text-vscode-descriptionForeground flex items-center p-[9px_10px] cursor-pointer select-none"
+=======
+						<div className="roo-tool-use border-sky-300/50">
+							{/* Keep userSelect styles for cross-browser compatibility */}
+							<div
+								className="flex items-center gap-4 cursor-pointer select-none rounded"
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 								onClick={() => {
 									vscode.postMessage({ type: "openFile", text: tool.content })
 								}}>
 								{tool.path?.startsWith(".") && <span>.</span>}
+<<<<<<< HEAD
 								<span className="whitespace-nowrap overflow-hidden text-ellipsis mr-2 rtl text-left">
+=======
+								{/* Keep direction: rtl as style */}
+								<span className={`codicon codicon-file  text-sky-300/70`}></span>
+								<span
+									className="whitespace-nowrap overflow-hidden text-ellipsis mr-2 text-left"
+									style={{ direction: "rtl" }}>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 									{removeLeadingNonAlphanumeric(tool.path ?? "") + "\u200E"}
 									{tool.reason}
 								</span>
 								<div className="flex-grow"></div>
+<<<<<<< HEAD
 								<span className="codicon codicon-link-external text-[13.5px] m-[1px_0]"></span>
+=======
+								<span className={`codicon codicon-link-external text-[13.5px] my-[1px]`}></span>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 							</div>
 						</div>
 					</>
@@ -348,22 +480,31 @@ export const ChatRowContent = ({
 			case "fetchInstructions":
 				return (
 					<>
+<<<<<<< HEAD
 						<div className={headerClasses}>
+=======
+						<div className={headerClassName}>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 							{toolIcon("file-code")}
 							<span className="font-bold">{t("chat:instructions.wantsToFetch")}</span>
 						</div>
-						<CodeAccordian
-							isLoading={message.partial}
-							code={tool.content!}
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+						<ViewOutputBlock
+							iconName="book"
+							title={t("chat:instructions.viewInstructions") ?? "View Instructions"}
+							content={tool.content || ""}
+							language="markdown"
+							tooltip={t("chat:instructions.viewInstructions") ?? "View Instructions"}
 						/>
 					</>
 				)
 			case "listFilesTopLevel":
 				return (
 					<>
+<<<<<<< HEAD
 						<div className={headerClasses}>
+=======
+						<div className={headerClassName}>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 							{toolIcon("folder-opened")}
 							<span className="font-bold">
 								{message.type === "ask"
@@ -371,19 +512,24 @@ export const ChatRowContent = ({
 									: t("chat:directoryOperations.didViewTopLevel")}
 							</span>
 						</div>
-						<CodeAccordian
-							code={tool.content!}
-							path={tool.path!}
-							language="shell-session"
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+						<ViewOutputBlock
+							iconName="folder-opened"
+							title={t("chat:directoryOperations.viewFileList") ?? "View File List"}
+							content={tool.content || ""}
+							language="plaintext"
+							filePath={tool.path}
+							tooltip={t("chat:directoryOperations.viewFileList") ?? "View File List"}
 						/>
 					</>
 				)
 			case "listFilesRecursive":
 				return (
 					<>
+<<<<<<< HEAD
 						<div className={headerClasses}>
+=======
+						<div className={headerClassName}>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 							{toolIcon("folder-opened")}
 							<span className="font-bold">
 								{message.type === "ask"
@@ -391,19 +537,24 @@ export const ChatRowContent = ({
 									: t("chat:directoryOperations.didViewRecursive")}
 							</span>
 						</div>
-						<CodeAccordian
-							code={tool.content!}
-							path={tool.path!}
-							language="shell-session"
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+						<ViewOutputBlock
+							iconName="folder-opened"
+							title={t("chat:directoryOperations.viewFileList") ?? "View File List"}
+							content={tool.content || ""}
+							language="plaintext"
+							filePath={tool.path}
+							tooltip={t("chat:directoryOperations.viewFileList") ?? "View File List"}
 						/>
 					</>
 				)
 			case "listCodeDefinitionNames":
 				return (
 					<>
+<<<<<<< HEAD
 						<div className={headerClasses}>
+=======
+						<div className={headerClassName}>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 							{toolIcon("file-code")}
 							<span className="font-bold">
 								{message.type === "ask"
@@ -411,18 +562,24 @@ export const ChatRowContent = ({
 									: t("chat:directoryOperations.didViewDefinitions")}
 							</span>
 						</div>
-						<CodeAccordian
-							code={tool.content!}
-							path={tool.path!}
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+						<ViewOutputBlock
+							iconName="symbol-class"
+							title={t("chat:directoryOperations.viewDefinitions") ?? "View Definitions"}
+							content={tool.content || ""}
+							language="plaintext"
+							filePath={tool.path}
+							tooltip={t("chat:directoryOperations.viewDefinitions") ?? "View Definitions"}
 						/>
 					</>
 				)
 			case "searchFiles":
 				return (
 					<>
+<<<<<<< HEAD
 						<div className={headerClasses}>
+=======
+						<div className={headerClassName}>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 							{toolIcon("search")}
 							<span className="font-bold">
 								{message.type === "ask" ? (
@@ -440,19 +597,24 @@ export const ChatRowContent = ({
 								)}
 							</span>
 						</div>
-						<CodeAccordian
-							code={tool.content!}
-							path={tool.path! + (tool.filePattern ? `/(${tool.filePattern})` : "")}
-							language="log"
-							isExpanded={isExpanded}
-							onToggleExpand={onToggleExpand}
+						<ViewOutputBlock
+							iconName="search"
+							title={t("chat:directoryOperations.viewSearchResults") ?? "View Search Results"}
+							content={tool.content || ""}
+							language="plaintext"
+							filePath={tool.path}
+							tooltip={t("chat:directoryOperations.viewSearchResults") ?? "View Search Results"}
 						/>
 					</>
 				)
 			case "switchMode":
 				return (
 					<>
+<<<<<<< HEAD
 						<div className={headerClasses}>
+=======
+						<div className={headerClassName}>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 							{toolIcon("symbol-enum")}
 							<span className="font-bold">
 								{message.type === "ask" ? (
@@ -495,7 +657,11 @@ export const ChatRowContent = ({
 			case "newTask":
 				return (
 					<>
+<<<<<<< HEAD
 						<div className={headerClasses}>
+=======
+						<div className={headerClassName}>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 							{toolIcon("tasklist")}
 							<span className="font-bold">
 								<Trans
@@ -505,31 +671,12 @@ export const ChatRowContent = ({
 								/>
 							</span>
 						</div>
-						<div
-							style={{
-								marginTop: "4px",
-								backgroundColor: "var(--vscode-badge-background)",
-								border: "1px solid var(--vscode-badge-background)",
-								borderRadius: "4px 4px 0 0",
-								overflow: "hidden",
-								marginBottom: "2px",
-							}}>
-							<div
-								style={{
-									padding: "9px 10px 9px 14px",
-									backgroundColor: "var(--vscode-badge-background)",
-									borderBottom: "1px solid var(--vscode-editorGroup-border)",
-									fontWeight: "bold",
-									fontSize: "var(--vscode-font-size)",
-									color: "var(--vscode-badge-foreground)",
-									display: "flex",
-									alignItems: "center",
-									gap: "6px",
-								}}>
+						<div className="mt-1 bg-vscode-badge-background border border-vscode-badge-background rounded-t-[4px] overflow-hidden mb-[2px]">
+							<div className="py-[9px] pl-[14px] pr-[10px] bg-vscode-badge-background border-b border-vscode-editorGroup-border font-bold text-vscode-font-size text-vscode-badge-foreground flex items-center gap-[6px]">
 								<span className="codicon codicon-arrow-right"></span>
 								{t("chat:subtasks.newTaskContent")}
 							</div>
-							<div style={{ padding: "12px 16px", backgroundColor: "var(--vscode-editor-background)" }}>
+							<div className="px-4 py-3 bg-vscode-editor-background">
 								<MarkdownBlock markdown={tool.content} />
 							</div>
 						</div>
@@ -538,35 +685,20 @@ export const ChatRowContent = ({
 			case "finishTask":
 				return (
 					<>
+<<<<<<< HEAD
 						<div className={headerClasses}>
+=======
+						<div className={headerClassName}>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 							{toolIcon("check-all")}
 							<span className="font-bold">{t("chat:subtasks.wantsToFinish")}</span>
 						</div>
-						<div
-							style={{
-								marginTop: "4px",
-								backgroundColor: "var(--vscode-editor-background)",
-								border: "1px solid var(--vscode-badge-background)",
-								borderRadius: "4px",
-								overflow: "hidden",
-								marginBottom: "8px",
-							}}>
-							<div
-								style={{
-									padding: "9px 10px 9px 14px",
-									backgroundColor: "var(--vscode-badge-background)",
-									borderBottom: "1px solid var(--vscode-editorGroup-border)",
-									fontWeight: "bold",
-									fontSize: "var(--vscode-font-size)",
-									color: "var(--vscode-badge-foreground)",
-									display: "flex",
-									alignItems: "center",
-									gap: "6px",
-								}}>
+						<div className="mt-1 bg-vscode-editor-background border border-vscode-badge-background rounded-[4px] overflow-hidden mb-2">
+							<div className="py-[9px] pl-[14px] pr-[10px] bg-vscode-badge-background border-b border-vscode-editorGroup-border font-bold text-vscode-font-size text-vscode-badge-foreground flex items-center gap-[6px]">
 								<span className="codicon codicon-check"></span>
 								{t("chat:subtasks.completionContent")}
 							</div>
-							<div style={{ padding: "12px 16px", backgroundColor: "var(--vscode-editor-background)" }}>
+							<div className="px-4 py-3 bg-vscode-editor-background">
 								<MarkdownBlock markdown={t("chat:subtasks.completionInstructions")} />
 							</div>
 						</div>
@@ -582,127 +714,57 @@ export const ChatRowContent = ({
 			switch (message.say) {
 				case "diff_error":
 					return (
-						<div>
+						<div className="mt-0 overflow-hidden mb-2">
 							<div
-								style={{
-									marginTop: "0px",
-									overflow: "hidden",
-									marginBottom: "8px",
-								}}>
-								<div
-									style={{
-										borderBottom: isDiffErrorExpanded
-											? "1px solid var(--vscode-editorGroup-border)"
-											: "none",
-										fontWeight: "normal",
-										fontSize: "var(--vscode-font-size)",
-										color: "var(--vscode-editor-foreground)",
-										display: "flex",
-										alignItems: "center",
-										justifyContent: "space-between",
-										cursor: "pointer",
-									}}
-									onClick={() => setIsDiffErrorExpanded(!isDiffErrorExpanded)}>
-									<div
-										style={{
-											display: "flex",
-											alignItems: "center",
-											gap: "10px",
-											flexGrow: 1,
-										}}>
-										<span
-											className="codicon codicon-warning"
-											style={{
-												color: "var(--vscode-editorWarning-foreground)",
-												opacity: 0.8,
-												fontSize: 16,
-												marginBottom: "-1.5px",
-											}}></span>
-										<span style={{ fontWeight: "bold" }}>{t("chat:diffError.title")}</span>
-									</div>
-									<div style={{ display: "flex", alignItems: "center" }}>
-										<VSCodeButton
-											appearance="icon"
-											style={{
-												padding: "3px",
-												height: "24px",
-												marginRight: "4px",
-												color: "var(--vscode-editor-foreground)",
-												display: "flex",
-												alignItems: "center",
-												justifyContent: "center",
-												background: "transparent",
-											}}
-											onClick={(e) => {
-												e.stopPropagation()
-
-												// Call copyWithFeedback and handle the Promise
-												copyWithFeedback(message.text || "").then((success) => {
-													if (success) {
-														// Show checkmark
-														setShowCopySuccess(true)
-
-														// Reset after a brief delay
-														setTimeout(() => {
-															setShowCopySuccess(false)
-														}, 1000)
-													}
-												})
-											}}>
-											<span
-												className={`codicon codicon-${showCopySuccess ? "check" : "copy"}`}></span>
-										</VSCodeButton>
-										<span
-											className={`codicon codicon-chevron-${isDiffErrorExpanded ? "up" : "down"}`}></span>
-									</div>
+								className={`font-normal text-vscode-font-size text-vscode-editor-foreground flex items-center justify-between cursor-pointer ${isDiffErrorExpanded ? "border-b border-vscode-editorGroup-border" : ""}`}
+								onClick={() => setIsDiffErrorExpanded(!isDiffErrorExpanded)}>
+								<div className="flex items-center gap-[10px] flex-grow">
+									<span className="codicon codicon-warning text-vscode-editorWarning-foreground opacity-80 text-base mb-[-1.5px]"></span>
+									<span className="font-bold">{t("chat:diffError.title")}</span>
 								</div>
-								{isDiffErrorExpanded && (
-									<div
-										style={{
-											padding: "8px",
-											backgroundColor: "var(--vscode-editor-background)",
-											borderTop: "none",
+								<div className="flex items-center">
+									<VSCodeButton
+										appearance="icon"
+										className="p-[3px] h-6 mr-1 text-vscode-editor-foreground flex items-center justify-center bg-transparent"
+										onClick={(e) => {
+											e.stopPropagation()
+
+											// Call copyWithFeedback and handle the Promise
+											copyWithFeedback(message.text || "").then((success) => {
+												if (success) {
+													// Show checkmark
+													setShowCopySuccess(true)
+
+													// Reset after a brief delay
+													setTimeout(() => {
+														setShowCopySuccess(false)
+													}, 1000)
+												}
+											})
 										}}>
-										<CodeBlock source={`${"```"}plaintext\n${message.text || ""}\n${"```"}`} />
-									</div>
-								)}
+										<span
+											className={`codicon codicon-${showCopySuccess ? "check" : "copy"}`}></span>
+									</VSCodeButton>
+									<span
+										className={`codicon codicon-chevron-${isDiffErrorExpanded ? "up" : "down"}`}></span>
+								</div>
 							</div>
+							{isDiffErrorExpanded && (
+								<div className="p-2 bg-vscode-editor-background border-t-0">
+									<CodeBlock source={`${"```"}plaintext\n${message.text || ""}\n${"```"}`} />
+								</div>
+							)}
 						</div>
 					)
 				case "subtask_result":
 					return (
-						<div>
-							<div
-								style={{
-									marginTop: "0px",
-									backgroundColor: "var(--vscode-badge-background)",
-									border: "1px solid var(--vscode-badge-background)",
-									borderRadius: "0 0 4px 4px",
-									overflow: "hidden",
-									marginBottom: "8px",
-								}}>
-								<div
-									style={{
-										padding: "9px 10px 9px 14px",
-										backgroundColor: "var(--vscode-badge-background)",
-										borderBottom: "1px solid var(--vscode-editorGroup-border)",
-										fontWeight: "bold",
-										fontSize: "var(--vscode-font-size)",
-										color: "var(--vscode-badge-foreground)",
-										display: "flex",
-										alignItems: "center",
-										gap: "6px",
-									}}>
-									<span className="codicon codicon-arrow-left"></span>
-									{t("chat:subtasks.resultContent")}
-								</div>
-								<div
-									style={{
-										padding: "12px 16px",
-										backgroundColor: "var(--vscode-editor-background)",
-									}}>
-									<MarkdownBlock markdown={message.text} />
-								</div>
+						<div className="mt-0 bg-vscode-badge-background border border-vscode-badge-background rounded-b-[4px] overflow-hidden mb-2">
+							<div className="py-[9px] pl-[14px] pr-[10px] bg-vscode-badge-background border-b border-vscode-editorGroup-border font-bold text-vscode-font-size text-vscode-badge-foreground flex items-center gap-[6px]">
+								<span className="codicon codicon-arrow-left"></span>
+								{t("chat:subtasks.resultContent")}
+							</div>
+							<div className="px-4 py-3 bg-vscode-editor-background">
+								<MarkdownBlock markdown={message.text} />
 							</div>
 						</div>
 					)
@@ -736,12 +798,21 @@ export const ChatRowContent = ({
 										${Number(cost || 0)?.toFixed(4)}
 									</VSCodeBadge>
 								</div>
-								<span className={`codicon codicon-chevron-${isExpanded ? "up" : "down"}`}></span>
 							</div>
 							{(((cost === null || cost === undefined) && apiRequestFailedMessage) ||
 								apiReqStreamingFailedMessage) && (
 								<>
+<<<<<<< HEAD
 									<p className={cn(pClasses, "text-vscode-errorForeground")}>
+=======
+									{/* Display the original icon and title for context when there's an error */}
+									<div className={`${headerClassName} mb-[10px]`}>
+										{icon}
+										{title}
+									</div>
+									{/* Keep pStyle for overflowWrap */}
+									<p style={pStyle} className={`${pClassName} text-vscode-errorForeground mb-[10px]`}>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 										{apiRequestFailedMessage || apiReqStreamingFailedMessage}
 										{apiRequestFailedMessage?.toLowerCase().includes("powershell") && (
 											<>
@@ -750,8 +821,8 @@ export const ChatRowContent = ({
 												{t("chat:powershell.issues")}{" "}
 												<a
 													href="https://github.com/cline/cline/wiki/TroubleShooting-%E2%80%90-%22PowerShell-is-not-recognized-as-an-internal-or-external-command%22"
-													style={{ color: "inherit", textDecoration: "underline" }}>
-													troubleshooting guide
+													className="text-inherit underline">
+													{t("chat:shellIntegration.troubleshootingGuide")}
 												</a>
 												.
 											</>
@@ -760,16 +831,13 @@ export const ChatRowContent = ({
 								</>
 							)}
 
-							{isExpanded && (
-								<div style={{ marginTop: "10px" }}>
-									<CodeAccordian
-										code={safeJsonParse<any>(message.text)?.request}
-										language="markdown"
-										isExpanded={true}
-										onToggleExpand={onToggleExpand}
-									/>
-								</div>
-							)}
+							<ApiRequestDetailsBlock
+								message={message}
+								icon={icon}
+								cost={cost}
+								apiRequestFailedMessage={apiRequestFailedMessage}
+								apiReqStreamingFailedMessage={apiReqStreamingFailedMessage}
+							/>
 						</>
 					)
 				case "api_req_finished":
@@ -806,16 +874,13 @@ export const ChatRowContent = ({
 				case "user_feedback_diff":
 					const tool = safeJsonParse<ClineSayTool>(message.text)
 					return (
-						<div
-							style={{
-								marginTop: -10,
-								width: "100%",
-							}}>
-							<CodeAccordian
-								diff={tool?.diff!}
-								isFeedback={true}
-								isExpanded={isExpanded}
-								onToggleExpand={onToggleExpand}
+						<div className="-mt-[10px] w-full">
+							<ViewOutputBlock
+								iconName="diff"
+								title={t("chat:viewFeedbackDiff") ?? "View Feedback Diff"}
+								content={tool?.diff || ""}
+								language="diff"
+								tooltip={t("chat:viewFeedbackDiff") ?? "View Feedback Diff"}
 							/>
 						</div>
 					)
@@ -823,18 +888,33 @@ export const ChatRowContent = ({
 					return (
 						<>
 							{title && (
+<<<<<<< HEAD
 								<div className={headerClasses}>
+=======
+								<div className={headerClassName}>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 									{icon}
 									{title}
 								</div>
 							)}
+<<<<<<< HEAD
 							<p className={cn(pClasses, "text-vscode-errorForeground")}>{message.text}</p>
+=======
+							{/* Keep pStyle for overflowWrap */}
+							<p style={pStyle} className={`${pClassName} text-vscode-errorForeground`}>
+								{message.text}
+							</p>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 						</>
 					)
 				case "completion_result":
 					return (
 						<>
+<<<<<<< HEAD
 							<div className={headerClasses}>
+=======
+							<div className={headerClassName}>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 								{icon}
 								{title}
 							</div>
@@ -844,7 +924,41 @@ export const ChatRowContent = ({
 						</>
 					)
 				case "shell_integration_warning":
+<<<<<<< HEAD
 					return <CommandExecutionError />
+=======
+					return (
+						<>
+							<div className="flex flex-col bg-[rgba(255,191,0,0.1)] p-2 rounded-[3px] text-xs">
+								<div className="flex items-center mb-1">
+									<i className="codicon codicon-warning mr-2 text-lg text-[#FFA500]"></i>
+									<span className="font-medium text-[#FFA500]">
+										{t("chat:shellIntegration.unavailable")}
+									</span>
+								</div>
+								<div>
+									<strong>{message.text}</strong>
+									<br />
+									<div>
+										&bull; {t("chat:shellIntegration.checkSettings")}
+										<br />
+										&bull; {t("chat:shellIntegration.updateVSCode")} (
+										<code>CMD/CTRL + Shift + P</code> → "Update")
+										<br />
+										&bull; {t("chat:shellIntegration.supportedShell")} (
+										<code>CMD/CTRL + Shift + P</code> → "Terminal: Select Default Profile")
+									</div>
+									<br />
+									<a
+										href="http://docs.roocode.com/troubleshooting/shell-integration/"
+										className="text-inherit underline">
+										{t("chat:shellIntegration.troubleshooting")}
+									</a>
+								</div>
+							</div>
+						</>
+					)
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 				case "mcp_server_response":
 					return (
 						<>
@@ -872,7 +986,11 @@ export const ChatRowContent = ({
 					return (
 						<>
 							{title && (
+<<<<<<< HEAD
 								<div className={headerClasses}>
+=======
+								<div className={headerClassName}>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 									{icon}
 									{title}
 								</div>
@@ -888,17 +1006,32 @@ export const ChatRowContent = ({
 				case "mistake_limit_reached":
 					return (
 						<>
+<<<<<<< HEAD
 							<div className={headerClasses}>
 								{icon}
 								{title}
 							</div>
 							<p className={cn(pClasses, "text-vscode-errorForeground")}>{message.text}</p>
+=======
+							<div className={headerClassName}>
+								{icon}
+								{title}
+							</div>
+							{/* Keep pStyle for overflowWrap */}
+							<p style={pStyle} className={`${pClassName} text-vscode-errorForeground`}>
+								{message.text}
+							</p>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 						</>
 					)
 				case "command":
 					return (
 						<>
+<<<<<<< HEAD
 							<div className={headerClasses}>
+=======
+							<div className={headerClassName}>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 								{icon}
 								{title}
 							</div>
@@ -916,11 +1049,20 @@ export const ChatRowContent = ({
 
 					return (
 						<>
+<<<<<<< HEAD
 							<div className={headerClasses}>
 								{icon}
 								{title}
 							</div>
 							<div className="bg-vscode-textCodeBlock-background rounded-[3px] p-[8px_10px] mt-2">
+=======
+							<div className={headerClassName}>
+								{icon}
+								{title}
+							</div>
+
+							<div className="bg-vscode-textCodeBlock-background rounded-lg px-4 py-2 mt-4">
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 								{useMcpServer.type === "access_mcp_resource" && (
 									<McpResourceRow
 										item={{
@@ -980,7 +1122,11 @@ export const ChatRowContent = ({
 					if (message.text) {
 						return (
 							<div>
+<<<<<<< HEAD
 								<div className={headerClasses}>
+=======
+								<div className={headerClassName}>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 									{icon}
 									{title}
 								</div>
@@ -996,15 +1142,25 @@ export const ChatRowContent = ({
 					return (
 						<>
 							{title && (
+<<<<<<< HEAD
 								<div className={headerClasses}>
+=======
+								<div className={headerClassName}>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 									{icon}
 									{title}
 								</div>
 							)}
 							<div className="pt-[10px] pb-[15px]">
+<<<<<<< HEAD
 								<p className={pClasses}>
 									{message.partial === true ? message?.text : followUpData?.question}
 								</p>
+=======
+								<Markdown
+									markdown={message.partial === true ? message?.text : followUpData?.question}
+								/>
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 							</div>
 							<FollowUpSuggest
 								suggestions={followUpData?.suggest}

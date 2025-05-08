@@ -90,10 +90,21 @@
 		"task_prompt": "Rooにどんなことをさせますか？",
 		"task_placeholder": "タスクをここに入力してください"
 	},
+<<<<<<< HEAD
 	"settings": {
 		"providers": {
 			"groqApiKey": "Groq APIキー",
 			"getGroqApiKey": "Groq APIキーを取得"
 		}
+=======
+	"chat": {
+		"shellIntegration": {
+			"troubleshootingGuide": "トラブルシューティングガイド"
+		},
+		"copyAsMarkdown": "マークダウンとしてコピー",
+		"response": "応答",
+		"arguments": "引数",
+		"filePathFormat": " ({{filePath}})"
+>>>>>>> ac8700e57 (WIP: d28e1262 Catch all code accordions, highlight them, consolidate into ViewOutputBlock)
 	}
 }

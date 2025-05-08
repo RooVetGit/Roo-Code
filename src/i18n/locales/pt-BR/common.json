@@ -90,10 +90,21 @@
 		"enter_absolute_path": "Por favor, digite um caminho absoluto (ex: D:\\RooCodeStorage ou /home/user/storage)",
 		"enter_valid_path": "Por favor, digite um caminho válido"
 	},
+<<<<<<< HEAD
 	"settings": {
 		"providers": {
 			"groqApiKey": "Chave de API Groq",
 			"getGroqApiKey": "Obter chave de API Groq"
 		}
+=======
+	"chat": {
+		"shellIntegration": {
+			"troubleshootingGuide": "guia de solução de problemas"
+		},
+		"copyAsMarkdown": "Copiar como markdown",
+		"response": "Resposta",
+		"arguments": "Argumentos",
+		"filePathFormat": " ({{filePath}})"
+>>>>>>> ac8700e57 (WIP: d28e1262 Catch all code accordions, highlight them, consolidate into ViewOutputBlock)
 	}
 }

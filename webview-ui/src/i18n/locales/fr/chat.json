@@ -115,7 +115,8 @@
 		"failed": "Échec de la requête API",
 		"streaming": "Requête API...",
 		"cancelled": "Requête API annulée",
-		"streamingFailed": "Échec du streaming API"
+		"streamingFailed": "Échec du streaming API",
+		"viewDetailsTooltip": "Voir les détails de la requête API"
 	},
 	"checkpoint": {
 		"initial": "Point de contrôle initial",
@@ -145,10 +146,14 @@
 		"didSearchReplace": "Roo a effectué une recherche et remplacement sur ce fichier :",
 		"wantsToInsert": "Roo veut insérer du contenu dans ce fichier :",
 		"wantsToInsertWithLineNumber": "Roo veut insérer du contenu dans ce fichier à la ligne {{lineNumber}} :",
-		"wantsToInsertAtEnd": "Roo veut ajouter du contenu à la fin de ce fichier :"
+		"wantsToInsertAtEnd": "Roo veut ajouter du contenu à la fin de ce fichier :",
+		"viewDefinitions": "Voir les définitions",
+		"viewFileList": "Voir la liste des fichiers",
+		"viewSearchResults": "Voir les résultats de la recherche"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo veut récupérer des instructions détaillées pour aider à la tâche actuelle"
+		"wantsToFetch": "Roo veut récupérer des instructions détaillées pour aider à la tâche actuelle",
+		"viewInstructions": "Voir les instructions"
 	},
 	"directoryOperations": {
 		"wantsToViewTopLevel": "Roo veut voir les fichiers de premier niveau dans ce répertoire :",
@@ -158,7 +163,10 @@
 		"wantsToViewDefinitions": "Roo veut voir les noms de définitions de code source utilisés dans ce répertoire :",
 		"didViewDefinitions": "Roo a vu les noms de définitions de code source utilisés dans ce répertoire :",
 		"wantsToSearch": "Roo veut rechercher dans ce répertoire <code>{{regex}}</code> :",
-		"didSearch": "Roo a recherché dans ce répertoire <code>{{regex}}</code> :"
+		"didSearch": "Roo a recherché dans ce répertoire <code>{{regex}}</code> :",
+		"viewDefinitions": "Voir les définitions",
+		"viewFileList": "Voir la liste des fichiers",
+		"viewSearchResults": "Voir les résultats de la recherche"
 	},
 	"commandOutput": "Sortie de commande",
 	"response": "Réponse",
@@ -186,6 +194,17 @@
 		"hasQuestion": "Roo a une question :"
 	},
 	"taskCompleted": "Tâche terminée",
+<<<<<<< HEAD
+=======
+	"shellIntegration": {
+		"unavailable": "Intégration du shell indisponible",
+		"troubleshooting": "Toujours des problèmes ? Cliquez ici pour la documentation d'intégration du shell.",
+		"checkSettings": "Vérifie les solutions de contournement du terminal dans les paramètres",
+		"updateVSCode": "Mets à jour VSCode",
+		"supportedShell": "Assure-toi d'utiliser un shell supporté : zsh, bash, fish ou PowerShell",
+		"troubleshootingGuide": "Toujours des problèmes ? Cliquez ici pour la documentation d'intégration du shell."
+	},
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 	"powershell": {
 		"issues": "Il semble que vous rencontriez des problèmes avec Windows PowerShell, veuillez consulter ce"
 	},
@@ -243,9 +262,20 @@
 		}
 	},
 	"systemPromptWarning": "AVERTISSEMENT : Remplacement d'instructions système personnalisées actif. Cela peut gravement perturber la fonctionnalité et provoquer un comportement imprévisible.",
+<<<<<<< HEAD
 	"shellIntegration": {
 		"title": "Avertissement d'exécution de commande",
 		"description": "Votre commande est exécutée sans l'intégration shell du terminal VSCode. Pour supprimer cet avertissement, vous pouvez désactiver l'intégration shell dans la section <strong>Terminal</strong> des <settingsLink>paramètres de Roo Code</settingsLink> ou résoudre les problèmes d'intégration du terminal VSCode en utilisant le lien ci-dessous.",
 		"troubleshooting": "Cliquez ici pour la documentation d'intégration shell."
 	}
+=======
+	"selectApiConfig": "Sélectionner la configuration de l’API",
+	"copyAsMarkdown": "Copier en tant que markdown",
+	"filePathFormat": " ({{filePath}})",
+	"viewCommandOutput": "Voir la sortie de la commande",
+	"viewFeedbackDiff": "Voir la différence de feedback",
+	"viewChanges": "Voir les modifications",
+	"viewDiff": "Voir la différence",
+	"viewFileContent": "Voir le contenu du fichier"
+>>>>>>> f21cfc2e3 (Tailwind transition + tweaks.)
 }
