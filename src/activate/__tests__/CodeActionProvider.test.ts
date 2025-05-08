@@ -28,7 +28,7 @@ jest.mock("vscode", () => ({
 	},
 }))
 
-jest.mock("../../core/editor/EditorUtils", () => ({
+jest.mock("../../integrations/editor/EditorUtils", () => ({
 	EditorUtils: {
 		getEffectiveRange: jest.fn(),
 		getFilePath: jest.fn(),
