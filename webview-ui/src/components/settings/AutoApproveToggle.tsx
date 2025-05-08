@@ -25,7 +25,6 @@ type AutoApproveConfig = {
 	descriptionKey: string
 	icon: string
 	testId: string
-	order?: number
 }
 
 export const autoApproveSettingsConfig: Record<AutoApproveSetting, AutoApproveConfig> = {
@@ -35,7 +34,6 @@ export const autoApproveSettingsConfig: Record<AutoApproveSetting, AutoApproveCo
 		descriptionKey: "settings:autoApprove.readOnly.description",
 		icon: "eye",
 		testId: "always-allow-readonly-toggle",
-		order: 1,
 	},
 	alwaysAllowWrite: {
 		key: "alwaysAllowWrite",
@@ -43,7 +41,6 @@ export const autoApproveSettingsConfig: Record<AutoApproveSetting, AutoApproveCo
 		descriptionKey: "settings:autoApprove.write.description",
 		icon: "edit",
 		testId: "always-allow-write-toggle",
-		order: 2,
 	},
 	alwaysAllowBrowser: {
 		key: "alwaysAllowBrowser",
@@ -51,7 +48,6 @@ export const autoApproveSettingsConfig: Record<AutoApproveSetting, AutoApproveCo
 		descriptionKey: "settings:autoApprove.browser.description",
 		icon: "globe",
 		testId: "always-allow-browser-toggle",
-		order: 3,
 	},
 	alwaysApproveResubmit: {
 		key: "alwaysApproveResubmit",
@@ -59,7 +55,6 @@ export const autoApproveSettingsConfig: Record<AutoApproveSetting, AutoApproveCo
 		descriptionKey: "settings:autoApprove.retry.description",
 		icon: "refresh",
 		testId: "always-approve-resubmit-toggle",
-		order: 4,
 	},
 	alwaysAllowMcp: {
 		key: "alwaysAllowMcp",
@@ -67,7 +62,6 @@ export const autoApproveSettingsConfig: Record<AutoApproveSetting, AutoApproveCo
 		descriptionKey: "settings:autoApprove.mcp.description",
 		icon: "plug",
 		testId: "always-allow-mcp-toggle",
-		order: 5,
 	},
 	alwaysAllowExtTools: {
 		key: "alwaysAllowExtTools",
@@ -75,7 +69,6 @@ export const autoApproveSettingsConfig: Record<AutoApproveSetting, AutoApproveCo
 		descriptionKey: "settings:autoApprove.ext.description",
 		icon: "extensions",
 		testId: "always-allow-ext-tools-toggle",
-		order: 6,
 	},
 	alwaysAllowModeSwitch: {
 		key: "alwaysAllowModeSwitch",
@@ -83,7 +76,6 @@ export const autoApproveSettingsConfig: Record<AutoApproveSetting, AutoApproveCo
 		descriptionKey: "settings:autoApprove.modeSwitch.description",
 		icon: "sync",
 		testId: "always-allow-mode-switch-toggle",
-		order: 7,
 	},
 	alwaysAllowSubtasks: {
 		key: "alwaysAllowSubtasks",
@@ -91,7 +83,6 @@ export const autoApproveSettingsConfig: Record<AutoApproveSetting, AutoApproveCo
 		descriptionKey: "settings:autoApprove.subtasks.description",
 		icon: "list-tree",
 		testId: "always-allow-subtasks-toggle",
-		order: 8,
 	},
 	alwaysAllowExecute: {
 		key: "alwaysAllowExecute",
@@ -99,7 +90,6 @@ export const autoApproveSettingsConfig: Record<AutoApproveSetting, AutoApproveCo
 		descriptionKey: "settings:autoApprove.execute.description",
 		icon: "terminal",
 		testId: "always-allow-execute-toggle",
-		order: 9,
 	},
 }
 
@@ -110,9 +100,6 @@ type AutoApproveToggleProps = AutoApproveToggles & {
 export const AutoApproveToggle = ({ onToggle, ...props }: AutoApproveToggleProps) => {
 	const { t } = useAppTranslation()
 
-	// Sort buttons by order property
-	const orderedSettings = Object.values(autoApproveSettingsConfig).sort((a, b) => (a.order || 0) - (b.order || 0))
-
 	return (
 		<div
 			className={cn(
@@ -121,7 +108,7 @@ export const AutoApproveToggle = ({ onToggle, ...props }: AutoApproveToggleProps
 				"[@media(min-width:800px)]:grid-cols-5",
 				"[@media(min-width:1200px)]:grid-cols-5",
 			)}>
-			{orderedSettings.map(({ key, descriptionKey, labelKey, icon, testId }) => (
+			{Object.values(autoApproveSettingsConfig).map(({ key, descriptionKey, labelKey, icon, testId }) => (
 				<Button
 					key={key}
 					variant={props[key] ? "default" : "outline"}
