@@ -33,6 +33,7 @@ import { getTheme } from "../../integrations/theme/getTheme"
 import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
+import { ExtensionToolManager } from "../../services/extensions/ExtensionToolManager"
 import { ShadowCheckpointService } from "../../services/checkpoints/ShadowCheckpointService"
 import { fileExistsAtPath } from "../../utils/fs"
 import { setSoundEnabled } from "../../utils/sound"
@@ -72,6 +73,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		return this._workspaceTracker
 	}
 	protected mcpHub?: McpHub // Change from private to protected
+	protected extensionToolManager?: ExtensionToolManager // Manage extension tools similar to mcpHub
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
@@ -110,6 +112,15 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			})
 			.catch((error) => {
 				this.log(`Failed to initialize MCP Hub: ${error}`)
+			})
+
+		// Initialize ExtensionToolManager from the singleton
+		ExtensionToolManager.getInstance(this.context, this)
+			.then((manager) => {
+				this.extensionToolManager = manager
+			})
+			.catch((error) => {
+				this.log(`Failed to initialize ExtensionToolManager: ${error}`)
 			})
 	}
 
@@ -711,7 +722,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		content security policy of your webview to only allow scripts that have a specific nonce
 		create a content security policy meta tag so that only loading scripts with a nonce is allowed
 		As your extension grows you will likely want to add custom styles, fonts, and/or images to your webview. If you do, you will need to update the content security policy meta tag to explicity allow for these resources. E.g.
-				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; font-src ${webview.cspSource}; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}';">
+				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; font-src ${webview.cspSource}; img-src ${webview.cspSource} https:; script-src 'nonce-${nonce}' https://us-assets.i.posthog.com; connect-src https://openrouter.ai https://api.requesty.ai https://us.i.posthog.com https://us-assets.i.posthog.com;">
 		- 'unsafe-inline' is required for styles due to vscode-webview-toolkit's dynamic style injection
 		- since we pass base64 images to the webview, we need to specify img-src ${webview.cspSource} data:;
 
@@ -1147,6 +1158,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			alwaysAllowExecute,
 			alwaysAllowBrowser,
 			alwaysAllowMcp,
+			alwaysAllowExtTools,
 			alwaysAllowModeSwitch,
 			alwaysAllowSubtasks,
 			soundEnabled,
@@ -1217,6 +1229,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			alwaysAllowExecute: alwaysAllowExecute ?? false,
 			alwaysAllowBrowser: alwaysAllowBrowser ?? false,
 			alwaysAllowMcp: alwaysAllowMcp ?? false,
+			alwaysAllowExtTools: alwaysAllowExtTools ?? false,
 			alwaysAllowModeSwitch: alwaysAllowModeSwitch ?? false,
 			alwaysAllowSubtasks: alwaysAllowSubtasks ?? false,
 			uriScheme: vscode.env.uriScheme,
@@ -1320,6 +1333,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			alwaysAllowExecute: stateValues.alwaysAllowExecute ?? false,
 			alwaysAllowBrowser: stateValues.alwaysAllowBrowser ?? false,
 			alwaysAllowMcp: stateValues.alwaysAllowMcp ?? false,
+			alwaysAllowExtTools: stateValues.alwaysAllowExtTools ?? false,
 			alwaysAllowModeSwitch: stateValues.alwaysAllowModeSwitch ?? false,
 			alwaysAllowSubtasks: stateValues.alwaysAllowSubtasks ?? false,
 			taskHistory: stateValues.taskHistory,
@@ -1464,6 +1478,28 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	// Add public getter
 	public getMcpHub(): McpHub | undefined {
 		return this.mcpHub
+	}
+
+	// Get the extension tool manager instance
+	public getExtensionToolManager(): ExtensionToolManager {
+		// If we already have an instance, return it
+		if (this.extensionToolManager) {
+			return this.extensionToolManager
+		}
+
+		// This is not ideal, but needed for backwards compatibility until all code is updated to use async
+		throw new Error("ExtensionToolManager not initialized yet. Wait for initialization to complete.")
+	}
+
+	// Async version of getExtensionToolManager that waits for initialization if needed
+	public async getExtensionToolManagerAsync(): Promise<ExtensionToolManager> {
+		if (this.extensionToolManager) {
+			return this.extensionToolManager
+		}
+
+		// If not initialized yet, initialize it
+		this.extensionToolManager = await ExtensionToolManager.getInstance(this.context, this)
+		return this.extensionToolManager
 	}
 
 	/**

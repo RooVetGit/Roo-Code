@@ -170,6 +170,10 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await updateGlobalState("alwaysAllowMcp", message.bool)
 			await provider.postStateToWebview()
 			break
+		case "alwaysAllowExtTools":
+			await updateGlobalState("alwaysAllowExtTools", message.bool)
+			await provider.postStateToWebview()
+			break
 		case "alwaysAllowModeSwitch":
 			await updateGlobalState("alwaysAllowModeSwitch", message.bool)
 			await provider.postStateToWebview()
