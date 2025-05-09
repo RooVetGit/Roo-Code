@@ -6,7 +6,14 @@ import * as path from "path"
 import { getWorkspacePath } from "../utils/path"
 import { ClineProvider } from "../core/webview/ClineProvider"
 import { openClineInNewTab } from "../activate/registerCommands"
-import { RooCodeSettings, RooCodeEvents, RooCodeEventName, ProviderSettings, ProviderSettingsEntry } from "../schemas"
+import {
+	RooCodeSettings,
+	RooCodeEvents,
+	RooCodeEventName,
+	ProviderSettings,
+	ProviderSettingsEntry,
+	isSecretStateKey,
+} from "../schemas"
 import { IpcOrigin, IpcMessageType, TaskCommandName, TaskEvent } from "../schemas/ipc"
 
 import { RooCodeAPI } from "./interface"
@@ -246,8 +253,10 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 
 	// Global Settings Management
 
-	public getConfiguration() {
-		return this.sidebarProvider.getValues()
+	public getConfiguration(): RooCodeSettings {
+		return Object.fromEntries(
+			Object.entries(this.sidebarProvider.getValues()).filter(([key]) => !isSecretStateKey(key)),
+		)
 	}
 
 	public async setConfiguration(values: RooCodeSettings) {
@@ -264,10 +273,6 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 
 	public getProfileEntry(name: string): ProviderSettingsEntry | undefined {
 		return this.sidebarProvider.getProviderProfileEntry(name)
-	}
-
-	public async getProfile(name: string): Promise<ProviderSettings | undefined> {
-		return this.sidebarProvider.providerSettingsManager.getProfile({ name })
 	}
 
 	public async createProfile(name: string, profile?: ProviderSettings, activate: boolean = true) {
