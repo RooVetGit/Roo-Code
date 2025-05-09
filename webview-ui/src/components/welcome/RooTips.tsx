@@ -3,18 +3,23 @@ import { useTranslation } from "react-i18next"
 import { useState, useEffect } from "react"
 import clsx from "clsx"
 
+import { buildDocLink } from "@src/utils/docLinks"
+import { vscode } from "@/utils/vscode"
+
 const tips = [
 	{
 		icon: "codicon-account",
-		href: "https://docs.roocode.com/basic-usage/using-modes",
+		href: buildDocLink("basic-usage/using-modes", "tips"),
 		titleKey: "rooTips.customizableModes.title",
 		descriptionKey: "rooTips.customizableModes.description",
+		page: "/basic-usage/using-modes",
 	},
 	{
 		icon: "codicon-list-tree",
-		href: "https://docs.roocode.com/features/boomerang-tasks",
+		href: buildDocLink("features/boomerang-tasks", "tips"),
 		titleKey: "rooTips.boomerangTasks.title",
 		descriptionKey: "rooTips.boomerangTasks.description",
+		page: "/features/boomerang-tasks",
 	},
 ]
 
@@ -62,8 +67,21 @@ const RooTips = ({ cycle = false }: RooTipsProps) => {
 						{" "}
 						<span className={`codicon ${currentTip.icon}`}></span>
 						<span>
-							<VSCodeLink href={currentTip.href}>{t(currentTip.titleKey)}</VSCodeLink>:{" "}
-							{t(currentTip.descriptionKey)}
+							<VSCodeLink
+								href={currentTip.href}
+								onClick={() =>
+									vscode.postMessage({
+										type: "telemetry",
+										event: "docs_link_clicked",
+										properties: {
+											campaign: "tips",
+											page: currentTip.page,
+										},
+									} as any)
+								}>
+								{t(currentTip.titleKey)}
+							</VSCodeLink>
+							: {t(currentTip.descriptionKey)}
 						</span>
 					</div>
 				</>
@@ -74,7 +92,21 @@ const RooTips = ({ cycle = false }: RooTipsProps) => {
 						className="flex items-center gap-2 text-vscode-editor-foreground font-vscode max-w-[250px]">
 						<span className={`codicon ${tip.icon}`}></span>
 						<span>
-							<VSCodeLink href={tip.href}>{t(tip.titleKey)}</VSCodeLink>: {t(tip.descriptionKey)}
+							<VSCodeLink
+								href={tip.href}
+								onClick={() =>
+									vscode.postMessage({
+										type: "telemetry",
+										event: "docs_link_clicked",
+										properties: {
+											campaign: "tips",
+											page: tip.page,
+										},
+									} as any)
+								}>
+								{t(tip.titleKey)}
+							</VSCodeLink>
+							: {t(tip.descriptionKey)}
 						</span>
 					</div>
 				))
