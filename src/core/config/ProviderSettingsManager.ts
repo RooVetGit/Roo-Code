@@ -291,7 +291,7 @@ export class ProviderSettingsManager {
 				return { name, ...providerSettings }
 			})
 		} catch (error) {
-			throw new Error(`Failed to get profile: ${error}`)
+			throw new Error(`Failed to get profile: ${error instanceof Error ? error.message : error}`)
 		}
 	}
 
