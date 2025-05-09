@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useEvent } from "react-use"
 import { Checkbox } from "vscrui"
 import { VSCodeButton, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
@@ -66,6 +66,31 @@ export const OpenAICompatible = ({ apiConfiguration, setApiConfigurationField }:
 	const handleRemoveCustomHeader = useCallback((index: number) => {
 		setCustomHeaders((prev) => prev.filter((_, i) => i !== index))
 	}, [])
+
+	// Helper to convert array of tuples to object
+	const convertHeadersToObject = (headers: [string, string][]): Record<string, string> => {
+		const result: Record<string, string> = {}
+
+		for (const [key, value] of headers) {
+			const trimmedKey = key.trim()
+			if (!trimmedKey) {
+				continue
+			}
+			result[trimmedKey] = value.trim()
+		}
+
+		return result
+	}
+
+	// Add effect to update the parent component's state when local headers change
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			const headerObject = convertHeadersToObject(customHeaders)
+			setApiConfigurationField("openAiHeaders", headerObject)
+		}, 300)
+
+		return () => clearTimeout(timer)
+	}, [customHeaders, setApiConfigurationField])
 
 	const handleInputChange = useCallback(
 		<K extends keyof ProviderSettings, E>(
