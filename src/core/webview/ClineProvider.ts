@@ -809,20 +809,43 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		return !!this.getProviderProfileEntry(name)
 	}
 
-	async upsertProviderProfile(name: string, providerSettings: ProviderSettings): Promise<string | undefined> {
+	async upsertProviderProfile(
+		name: string,
+		providerSettings: ProviderSettings,
+		activate: boolean = true,
+	): Promise<string | undefined> {
 		try {
 			const id = await this.providerSettingsManager.saveConfig(name, providerSettings)
-			const { mode } = await this.getState()
 
-			await Promise.all([
-				this.updateGlobalState("listApiConfigMeta", await this.providerSettingsManager.listConfig()),
-				this.updateGlobalState("currentApiConfigName", name),
-				this.providerSettingsManager.setModeConfig(mode, id),
-				this.contextProxy.setProviderSettings(providerSettings),
-			])
+			if (activate) {
+				const { mode } = await this.getState()
 
-			if (this.getCurrentCline()) {
-				this.getCurrentCline()!.api = buildApiHandler(providerSettings)
+				// These promises do the following:
+				// 1. Adds or updates the list of provider profiles.
+				// 2. Sets the current provider profile.
+				// 3. Sets the current mode's provider profile.
+				// 4. Copies the provider settings to the context.
+				//
+				// Note: 1, 2, and 4 can be done in one `ContextProxy` call:
+				// this.contextProxy.setValues({ ...providerSettings, listApiConfigMeta: ..., currentApiConfigName: ... })
+				// We should probably switch to that and verify that it works.
+				// I left the original implementation in just to be safe.
+				await Promise.all([
+					this.updateGlobalState("listApiConfigMeta", await this.providerSettingsManager.listConfig()),
+					this.updateGlobalState("currentApiConfigName", name),
+					this.providerSettingsManager.setModeConfig(mode, id),
+					this.contextProxy.setProviderSettings(providerSettings),
+				])
+
+				// Change the provider for the current task.
+				// TODO: We should rename `buildApiHandler` for clarity (e.g. `getProviderClient`).
+				const task = this.getCurrentCline()
+
+				if (task) {
+					task.api = buildApiHandler(providerSettings)
+				}
+			} else {
+				await this.updateGlobalState("listApiConfigMeta", await this.providerSettingsManager.listConfig())
 			}
 
 			await this.postStateToWebview()

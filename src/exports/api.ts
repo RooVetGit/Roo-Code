@@ -270,14 +270,14 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		return this.sidebarProvider.providerSettingsManager.getProfile({ name })
 	}
 
-	public async createProfile(name: string, profile?: ProviderSettings) {
+	public async createProfile(name: string, profile?: ProviderSettings, activate: boolean = true) {
 		const entry = this.getProfileEntry(name)
 
 		if (entry) {
 			throw new Error(`Profile with name "${name}" already exists`)
 		}
 
-		const id = await this.sidebarProvider.upsertProviderProfile(name, profile ?? {})
+		const id = await this.sidebarProvider.upsertProviderProfile(name, profile ?? {}, activate)
 
 		if (!id) {
 			throw new Error(`Failed to create profile with name "${name}"`)
@@ -286,14 +286,18 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		return id
 	}
 
-	public async updateProfile(name: string, profile: ProviderSettings): Promise<string | undefined> {
+	public async updateProfile(
+		name: string,
+		profile: ProviderSettings,
+		activate: boolean = true,
+	): Promise<string | undefined> {
 		const entry = this.getProfileEntry(name)
 
 		if (!entry) {
 			throw new Error(`Profile with name "${name}" does not exist`)
 		}
 
-		const id = await this.sidebarProvider.upsertProviderProfile(name, profile)
+		const id = await this.sidebarProvider.upsertProviderProfile(name, profile, activate)
 
 		if (!id) {
 			throw new Error(`Failed to update profile with name "${name}"`)
@@ -302,8 +306,12 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		return id
 	}
 
-	public async upsertProfile(name: string, profile: ProviderSettings): Promise<string | undefined> {
-		const id = await this.sidebarProvider.upsertProviderProfile(name, profile)
+	public async upsertProfile(
+		name: string,
+		profile: ProviderSettings,
+		activate: boolean = true,
+	): Promise<string | undefined> {
+		const id = await this.sidebarProvider.upsertProviderProfile(name, profile, activate)
 
 		if (!id) {
 			throw new Error(`Failed to upsert profile with name "${name}"`)
