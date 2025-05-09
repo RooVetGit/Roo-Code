@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react"
 import { useEvent } from "react-use"
 import { Checkbox } from "vscrui"
 import { VSCodeButton, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
+import { convertHeadersToObject } from "../utils/headers"
 
 import { ModelInfo, ReasoningEffort as ReasoningEffortType } from "@roo/schemas"
 import { ProviderSettings, azureOpenAiDefaultApiVersion, openAiModelInfoSaneDefaults } from "@roo/shared/api"
@@ -68,19 +69,6 @@ export const OpenAICompatible = ({ apiConfiguration, setApiConfigurationField }:
 	}, [])
 
 	// Helper to convert array of tuples to object
-	const convertHeadersToObject = (headers: [string, string][]): Record<string, string> => {
-		const result: Record<string, string> = {}
-
-		for (const [key, value] of headers) {
-			const trimmedKey = key.trim()
-			if (!trimmedKey) {
-				continue
-			}
-			result[trimmedKey] = value.trim()
-		}
-
-		return result
-	}
 
 	// Add effect to update the parent component's state when local headers change
 	useEffect(() => {
