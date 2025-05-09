@@ -86,7 +86,7 @@ export class MigrationService {
 
 			// Get commit history
 			const log = await git.log()
-			const commits = log.all.reverse() // Oldest first
+			const commits = [...log.all].reverse() // Oldest first
 
 			if (commits.length === 0) {
 				this.log(`[MigrationService#migrateTask] no commits found for task ${taskId}, skipping`)

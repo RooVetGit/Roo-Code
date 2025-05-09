@@ -301,6 +301,11 @@ export class PatchCheckpointService extends EventEmitter {
 			from = this.baseSnapshot
 		}
 
+		// Ensure from is defined (TypeScript safety)
+		if (!from) {
+			throw new Error("Unable to determine source checkpoint")
+		}
+
 		// Get the source state
 		const sourceState =
 			from === this.baseSnapshot ? await this.getBaseSnapshotState() : await this.getCheckpointState(from)
