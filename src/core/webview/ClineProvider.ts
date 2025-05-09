@@ -246,7 +246,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			return false
 		}
 
-		// check if there is a cline instance in the stack (if this provider has an active task)
+		// Check if there is a cline instance in the stack (if this provider has an active task)
 		if (visibleProvider.getCurrentCline()) {
 			return true
 		}
