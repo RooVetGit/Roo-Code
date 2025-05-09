@@ -9,7 +9,7 @@ import { openClineInNewTab } from "../activate/registerCommands"
 import { RooCodeSettings, RooCodeEvents, RooCodeEventName } from "../schemas"
 import { IpcOrigin, IpcMessageType, TaskCommandName, TaskEvent } from "../schemas/ipc"
 
-import { RooCodeAPI } from "./interface"
+import { ProviderSettings, RooCodeAPI } from "./interface"
 import { IpcServer } from "./ipc"
 import { outputChannelLog } from "./log"
 
@@ -239,6 +239,24 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 
 	public getActiveProfile() {
 		return this.getConfiguration().currentApiConfigName
+	}
+
+	async getProfile(name: string): Promise<ProviderSettings> {
+		const { name: _, ...settings } = await this.sidebarProvider.providerSettingsManager.getProfile({ name })
+		return settings
+	}
+
+	public async upsertProfile(name: string, settings: ProviderSettings): Promise<void> {
+		await this.sidebarProvider.providerSettingsManager.saveConfig(name, settings)
+
+		if (name === this.getConfiguration().currentApiConfigName) {
+			this.sidebarProvider.activateProviderProfile({ name })
+		} else {
+			// We still need to update the webview with the new state, but we don't want to change the active provider.
+			const listApiConfig = await this.sidebarProvider.providerSettingsManager.listConfig()
+			this.sidebarProvider.contextProxy.setValue("listApiConfigMeta", listApiConfig)
+			await this.sidebarProvider.postStateToWebview()
+		}
 	}
 
 	public async deleteProfile(name: string) {

@@ -616,6 +616,19 @@ interface RooCodeAPI extends EventEmitter<RooCodeEvents> {
 	 */
 	getActiveProfile(): string | undefined
 	/**
+	 * Gets a profile by name.
+	 * @param name The name of the profile to get
+	 * @returns The profile
+	 * @throws Error if the profile does not exist
+	 */
+	getProfile(name: string): Promise<ProviderSettings>
+	/**
+	 * Updates a profile by name, creating it if it does not already exist.
+	 * @param name The profile name.
+	 * @param settings The profile settings
+	 */
+	upsertProfile(name: string, settings: ProviderSettings): Promise<void>
+	/**
 	 * Deletes a profile by name
 	 * @param name The name of the profile to delete
 	 * @throws Error if the profile does not exist
