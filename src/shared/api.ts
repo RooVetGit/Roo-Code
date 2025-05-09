@@ -1759,3 +1759,27 @@ export function toRouterName(value?: string): RouterName {
 export type ModelRecord = Record<string, ModelInfo>
 
 export type RouterModels = Record<RouterName, ModelRecord>
+
+/**
+ * Interface for token usage information returned by providers
+ */
+export interface TokenUsageInfo {
+	/** Number of input/prompt tokens */
+	inputTokens: number
+	/** Number of output/completion tokens */
+	outputTokens: number
+	/** Number of tokens read from cache (if applicable) */
+	cachedTokens?: number
+	/** Number of reasoning tokens (if applicable) */
+	reasoningTokens?: number
+	/** Number of tokens written to cache (if applicable) */
+	cacheWriteTokens?: number
+	/** Number of tokens read from cache (if applicable) */
+	cacheReadTokens?: number
+	/** Total cost of the request in provider's currency units */
+	totalCost: number
+	/** Provider name */
+	provider: string
+	/** Method used to estimate tokens ('api' or 'estimated') */
+	estimationMethod?: "api" | "estimated"
+}
