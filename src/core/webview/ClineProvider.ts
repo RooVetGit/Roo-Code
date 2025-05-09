@@ -762,7 +762,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	 * @param newMode The mode to switch to
 	 */
 	public async handleModeSwitch(newMode: Mode) {
-		// Capture mode switch telemetry event
 		const cline = this.getCurrentCline()
 
 		if (cline) {
@@ -781,17 +780,17 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		// If this mode has a saved config, use it.
 		if (savedConfigId) {
-			const hasConfig = !!listApiConfig.find(({ id }) => id === savedConfigId)
+			const profile = listApiConfig.find(({ id }) => id === savedConfigId)
 
-			if (hasConfig) {
-				await this.activateProviderProfile({ id: savedConfigId })
+			if (profile?.name) {
+				await this.activateProviderProfile({ name: profile.name })
 			}
 		} else {
 			// If no saved config for this mode, save current config as default.
 			const currentApiConfigName = this.getGlobalState("currentApiConfigName")
 
 			if (currentApiConfigName) {
-				const config = listApiConfig?.find((c) => c.name === currentApiConfigName)
+				const config = listApiConfig.find((c) => c.name === currentApiConfigName)
 
 				if (config?.id) {
 					await this.providerSettingsManager.setModeConfig(newMode, config.id)

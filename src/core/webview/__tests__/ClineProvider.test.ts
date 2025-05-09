@@ -5,7 +5,7 @@ import * as vscode from "vscode"
 import axios from "axios"
 
 import { ClineProvider } from "../ClineProvider"
-import { ClineMessage, ExtensionMessage, ExtensionState } from "../../../shared/ExtensionMessage"
+import { ApiConfigMeta, ClineMessage, ExtensionMessage, ExtensionState } from "../../../shared/ExtensionMessage"
 import { setSoundEnabled } from "../../../utils/sound"
 import { setTtsEnabled } from "../../../utils/tts"
 import { defaultModeSlug } from "../../../shared/modes"
@@ -226,12 +226,6 @@ jest.mock("../../../integrations/misc/extract-text", () => ({
 		return lines.map((line, index) => `${index + 1} | ${line}`).join("\n")
 	}),
 }))
-
-// Spy on console.error and console.log to suppress expected messages
-beforeAll(() => {
-	jest.spyOn(console, "error").mockImplementation(() => {})
-	jest.spyOn(console, "log").mockImplementation(() => {})
-})
 
 afterAll(() => {
 	jest.restoreAllMocks()
@@ -596,14 +590,16 @@ describe("ClineProvider", () => {
 		expect(state.alwaysApproveResubmit).toBe(false)
 	})
 
-	test("loads saved API config when switching modes", async () => {
+	it("loads saved API config when switching modes", async () => {
 		await provider.resolveWebviewView(mockWebviewView)
 		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
 
+		const profile: ApiConfigMeta = { name: "test-config", id: "test-id", apiProvider: "anthropic" }
+
 		;(provider as any).providerSettingsManager = {
 			getModeConfigId: jest.fn().mockResolvedValue("test-id"),
-			listConfig: jest.fn().mockResolvedValue([{ name: "test-config", id: "test-id", apiProvider: "anthropic" }]),
-			activateProfile: jest.fn().mockResolvedValue({ apiProvider: "anthropic" }),
+			listConfig: jest.fn().mockResolvedValue([profile]),
+			activateProfile: jest.fn().mockResolvedValue(profile),
 			setModeConfig: jest.fn(),
 		} as any
 
@@ -1542,12 +1538,12 @@ describe("ClineProvider", () => {
 		})
 
 		it("loads saved API config when switching modes", async () => {
+			const profile: ApiConfigMeta = { name: "saved-config", id: "saved-config-id", apiProvider: "anthropic" }
+
 			;(provider as any).providerSettingsManager = {
 				getModeConfigId: jest.fn().mockResolvedValue("saved-config-id"),
-				listConfig: jest
-					.fn()
-					.mockResolvedValue([{ name: "saved-config", id: "saved-config-id", apiProvider: "anthropic" }]),
-				activateProfile: jest.fn().mockResolvedValue({ apiProvider: "anthropic" }),
+				listConfig: jest.fn().mockResolvedValue([profile]),
+				activateProfile: jest.fn().mockResolvedValue(profile),
 				setModeConfig: jest.fn(),
 			} as any
 
