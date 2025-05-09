@@ -52,6 +52,7 @@ import { DiffSettingsControl } from "./DiffSettingsControl"
 import { TemperatureControl } from "./TemperatureControl"
 import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
 import { BedrockCustomArn } from "./providers/BedrockCustomArn"
+import { MaxOutputTokensControl } from "./MaxOutputTokensControl"
 
 export interface ApiOptionsProps {
 	uriScheme: string | undefined
@@ -471,12 +472,24 @@ const ApiOptions = ({
 						setIsDescriptionExpanded={setIsDescriptionExpanded}
 					/>
 
-					<ThinkingBudget
-						key={`${selectedProvider}-${selectedModelId}`}
-						apiConfiguration={apiConfiguration}
-						setApiConfigurationField={setApiConfigurationField}
-						modelInfo={selectedModelInfo}
-					/>
+					{selectedModelInfo &&
+						typeof selectedModelInfo.maxTokens === "number" &&
+						selectedModelInfo.maxTokens > 0 && (
+							<MaxOutputTokensControl
+								apiConfiguration={apiConfiguration}
+								setApiConfigurationField={setApiConfigurationField}
+								modelInfo={selectedModelInfo}
+							/>
+						)}
+
+					{selectedModelInfo && selectedModelInfo.thinking && (
+						<ThinkingBudget
+							key={`${selectedProvider}-${selectedModelId}`}
+							apiConfiguration={apiConfiguration}
+							setApiConfigurationField={setApiConfigurationField}
+							modelInfo={selectedModelInfo}
+						/>
+					)}
 				</>
 			)}
 

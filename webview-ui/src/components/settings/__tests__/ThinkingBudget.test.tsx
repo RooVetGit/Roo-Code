@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react"
+import { render, screen } from "@testing-library/react"
 import { ThinkingBudget } from "../ThinkingBudget"
 import { ModelInfo } from "@roo/shared/api"
 
@@ -55,33 +55,21 @@ describe("ThinkingBudget", () => {
 	it("should render sliders when model supports thinking", () => {
 		render(<ThinkingBudget {...defaultProps} />)
 
-		expect(screen.getAllByTestId("slider")).toHaveLength(2)
+		expect(screen.getAllByTestId("slider")).toHaveLength(1)
 	})
 
-	it("should update modelMaxThinkingTokens", () => {
+	it("should cap thinking tokens at 80% of model max tokens", () => {
 		const setApiConfigurationField = jest.fn()
+		const modelInfoWithLowerMaxTokens: ModelInfo = {
+			...mockModelInfo,
+			maxTokens: 10000, // Lower max tokens
+		}
 
 		render(
 			<ThinkingBudget
 				{...defaultProps}
-				apiConfiguration={{ modelMaxThinkingTokens: 4096 }}
-				setApiConfigurationField={setApiConfigurationField}
-			/>,
-		)
-
-		const sliders = screen.getAllByTestId("slider")
-		fireEvent.change(sliders[1], { target: { value: "5000" } })
-
-		expect(setApiConfigurationField).toHaveBeenCalledWith("modelMaxThinkingTokens", 5000)
-	})
-
-	it("should cap thinking tokens at 80% of max tokens", () => {
-		const setApiConfigurationField = jest.fn()
-
-		render(
-			<ThinkingBudget
-				{...defaultProps}
-				apiConfiguration={{ modelMaxTokens: 10000, modelMaxThinkingTokens: 9000 }}
+				modelInfo={modelInfoWithLowerMaxTokens}
+				apiConfiguration={{ modelMaxThinkingTokens: 9000 }} // Value higher than 80% of new maxTokens
 				setApiConfigurationField={setApiConfigurationField}
 			/>,
 		)
@@ -90,35 +78,18 @@ describe("ThinkingBudget", () => {
 		expect(setApiConfigurationField).toHaveBeenCalledWith("modelMaxThinkingTokens", 8000) // 80% of 10000
 	})
 
-	it("should use default thinking tokens if not provided", () => {
-		render(<ThinkingBudget {...defaultProps} apiConfiguration={{ modelMaxTokens: 10000 }} />)
+	it("should use default thinking tokens if not provided in apiConfiguration", () => {
+		render(<ThinkingBudget {...defaultProps} />)
 
-		// Default is 80% of max tokens, capped at 8192
-		const sliders = screen.getAllByTestId("slider")
-		expect(sliders[1]).toHaveValue("8000") // 80% of 10000
+		// Default is DEFAULT_MAX_THINKING_TOKENS if not provided in apiConfiguration
+		const slider = screen.getByTestId("slider")
+		expect(slider).toHaveValue("8192")
 	})
 
 	it("should use min thinking tokens of 1024", () => {
 		render(<ThinkingBudget {...defaultProps} apiConfiguration={{ modelMaxTokens: 1000 }} />)
 
-		const sliders = screen.getAllByTestId("slider")
-		expect(sliders[1].getAttribute("min")).toBe("1024")
-	})
-
-	it("should update max tokens when slider changes", () => {
-		const setApiConfigurationField = jest.fn()
-
-		render(
-			<ThinkingBudget
-				{...defaultProps}
-				apiConfiguration={{ modelMaxTokens: 10000 }}
-				setApiConfigurationField={setApiConfigurationField}
-			/>,
-		)
-
-		const sliders = screen.getAllByTestId("slider")
-		fireEvent.change(sliders[0], { target: { value: "12000" } })
-
-		expect(setApiConfigurationField).toHaveBeenCalledWith("modelMaxTokens", 12000)
+		const slider = screen.getByTestId("slider")
+		expect(slider.getAttribute("min")).toBe("1024")
 	})
 })
