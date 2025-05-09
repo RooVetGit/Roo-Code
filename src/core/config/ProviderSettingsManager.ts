@@ -258,12 +258,7 @@ export class ProviderSettingsManager {
 		}
 	}
 
-	/**
-	 * Activate a profile by name or ID.
-	 */
-	public async activateProfile(
-		params: { name: string } | { id: string },
-	): Promise<ProviderSettingsWithId & { name: string }> {
+	public async getProfile(params: { name: string } | { id: string }) {
 		try {
 			return await this.lock(async () => {
 				const providerProfiles = await this.load()
@@ -293,13 +288,30 @@ export class ProviderSettingsManager {
 					providerSettings = entry[1]
 				}
 
-				providerProfiles.currentApiConfigName = name
-				await this.store(providerProfiles)
-
 				return { name, ...providerSettings }
 			})
 		} catch (error) {
-			throw new Error(`Failed to load config: ${error}`)
+			throw new Error(`Failed to get profile profile: ${error}`)
+		}
+	}
+
+	/**
+	 * Activate a profile by name or ID.
+	 */
+	public async activateProfile(
+		params: { name: string } | { id: string },
+	): Promise<ProviderSettingsWithId & { name: string }> {
+		const { name, ...providerSettings } = await this.getProfile(params)
+
+		try {
+			return await this.lock(async () => {
+				const providerProfiles = await this.load()
+				providerProfiles.currentApiConfigName = name
+				await this.store(providerProfiles)
+				return { name, ...providerSettings }
+			})
+		} catch (error) {
+			throw new Error(`Failed to activate profile profile: ${error}`)
 		}
 	}
 

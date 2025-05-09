@@ -808,9 +808,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		await Promise.all([
 			this.contextProxy.setValue("listApiConfigMeta", await this.providerSettingsManager.listConfig()),
 			this.contextProxy.setValue("currentApiConfigName", name),
-			this.updateApiConfiguration(providerSettings),
 		])
 
+		await this.updateApiConfiguration(providerSettings)
 		await this.postStateToWebview()
 	}
 

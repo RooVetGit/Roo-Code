@@ -4,9 +4,9 @@ import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 
 import { ClineProvider } from "./ClineProvider"
-import { Language, ApiConfigMeta } from "../../schemas"
+import { Language, ApiConfigMeta, ProviderSettings } from "../../schemas"
 import { changeLanguage, t } from "../../i18n"
-import { ApiConfiguration, RouterName, toRouterName } from "../../shared/api"
+import { RouterName, toRouterName } from "../../shared/api"
 import { supportPrompt } from "../../shared/support-prompt"
 
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
@@ -933,19 +933,18 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 						await provider.getState()
 
 					// Try to get enhancement config first, fall back to current config.
-					let configToUse: ApiConfiguration = apiConfiguration
+					let configToUse: ProviderSettings = apiConfiguration
 
-					if (enhancementApiConfigId) {
-						const config = listApiConfigMeta?.find((c: ApiConfigMeta) => c.id === enhancementApiConfigId)
+					if (
+						enhancementApiConfigId &&
+						!!listApiConfigMeta.find((c: ApiConfigMeta) => c.id === enhancementApiConfigId)
+					) {
+						const { name: _, ...providerSettings } = await provider.providerSettingsManager.getProfile({
+							id: enhancementApiConfigId,
+						})
 
-						if (config?.name) {
-							const { name: _, ...loadedConfig } = await provider.providerSettingsManager.activateProfile(
-								{ name: config.name },
-							)
-
-							if (loadedConfig.apiProvider) {
-								configToUse = loadedConfig
-							}
+						if (providerSettings.apiProvider) {
+							configToUse = providerSettings
 						}
 					}
 
@@ -954,7 +953,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 						supportPrompt.create("ENHANCE", { userInput: message.text }, customSupportPrompts),
 					)
 
-					// Capture telemetry for prompt enhancement
+					// Capture telemetry for prompt enhancement.
 					const currentCline = provider.getCurrentCline()
 					telemetryService.capturePromptEnhanced(currentCline?.taskId)
 
