@@ -810,8 +810,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	}
 
 	async upsertProviderProfile(name: string, providerSettings: ProviderSettings): Promise<string | undefined> {
-		console.log("upsertProviderProfile", { name, providerSettings })
-
 		try {
 			const id = await this.providerSettingsManager.saveConfig(name, providerSettings)
 			const { mode } = await this.getState()
@@ -871,8 +869,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		])
 
 		const { mode } = await this.getState()
-
-		console.log("activateProviderProfile", { name, id, mode })
 
 		if (id) {
 			await this.providerSettingsManager.setModeConfig(mode, id)
