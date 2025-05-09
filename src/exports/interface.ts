@@ -121,13 +121,6 @@ export interface RooCodeAPI extends EventEmitter<RooCodeEvents> {
 	getProfileEntry(name: string): ProviderSettingsEntry | undefined
 
 	/**
-	 * Returns the profile for a given name
-	 * @param name The name of the profile
-	 * @returns The profile, or undefined if the profile does not exist
-	 */
-	getProfile(name: string): Promise<ProviderSettings | undefined>
-
-	/**
 	 * Creates a new API configuration profile
 	 * @param name The name of the profile
 	 * @param profile The profile to create; defaults to an empty object
