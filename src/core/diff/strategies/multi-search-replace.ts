@@ -163,7 +163,7 @@ def calculate_sum(items):
     return total
 =======
         sum += item
-    return sum 
+    return sum
 >>>>>>> REPLACE
 \`\`\`
 
@@ -296,6 +296,219 @@ Only use a single line of '=======' between search and replacement content, beca
 				}
 	}
 
+	/**
+	 * Applies a single search/replace block to the content
+	 * @param content The current content to apply the diff to
+	 * @param replacement The search/replace block to apply
+	 * @param delta The current line number delta from previous replacements
+	 * @param lineEnding The line ending to use (\n or \r\n)
+	 * @returns An object containing the result of applying the diff
+	 */
+	private async applySingleDiffBlock(
+		content: string,
+		replacement: { startLine: number; searchContent: string; replaceContent: string },
+		delta: number,
+		lineEnding: string,
+	): Promise<{
+		success: boolean
+		content?: string
+		error?: string
+		delta?: number
+		appliedCount?: number
+	}> {
+		let { searchContent, replaceContent } = replacement
+		let startLine = replacement.startLine + (replacement.startLine === 0 ? 0 : delta)
+		let resultLines = content.split(/\r?\n/)
+
+		// First unescape any escaped markers in the content
+		searchContent = this.unescapeMarkers(searchContent)
+		replaceContent = this.unescapeMarkers(replaceContent)
+
+		// Strip line numbers from search and replace content if every line starts with a line number
+		const hasAllLineNumbers =
+			(everyLineHasLineNumbers(searchContent) && everyLineHasLineNumbers(replaceContent)) ||
+			(everyLineHasLineNumbers(searchContent) && replaceContent.trim() === "")
+
+		if (hasAllLineNumbers) {
+			searchContent = stripLineNumbers(searchContent)
+			replaceContent = stripLineNumbers(replaceContent)
+		}
+
+		// Validate that search and replace content are not identical
+		if (searchContent === replaceContent) {
+			return {
+				success: false,
+				error:
+					`Search and replace content are identical - no changes would be made\n\n` +
+					`Debug Info:\n` +
+					`- Search and replace must be different to make changes\n` +
+					`- Use read_file to verify the content you want to change`,
+			}
+		}
+
+		// Split content into lines, handling both \n and \r\n
+		let searchLines = searchContent === "" ? [] : searchContent.split(/\r?\n/)
+		let replaceLines = replaceContent === "" ? [] : replaceContent.split(/\r?\n/)
+
+		// Validate that search content is not empty
+		if (searchLines.length === 0) {
+			return {
+				success: false,
+				error: `Empty search content is not allowed\n\nDebug Info:\n- Search content cannot be empty\n- For insertions, provide a specific line using :start_line: and include content to search for\n- For example, match a single line to insert before/after it`,
+			}
+		}
+
+		let endLine = replacement.startLine + searchLines.length - 1
+
+		// Initialize search variables
+		let matchIndex = -1
+		let bestMatchScore = 0
+		let bestMatchContent = ""
+		let searchChunk = searchLines.join("\n")
+
+		// Determine search bounds
+		let searchStartIndex = 0
+		let searchEndIndex = resultLines.length
+
+		// Validate and handle line range if provided
+		if (startLine) {
+			// Convert to 0-based index
+			const exactStartIndex = startLine - 1
+			const searchLen = searchLines.length
+			const exactEndIndex = exactStartIndex + searchLen - 1
+
+			// Try exact match first
+			const originalChunk = resultLines.slice(exactStartIndex, exactEndIndex + 1).join("\n")
+			const similarity = getSimilarity(originalChunk, searchChunk)
+			if (similarity >= this.fuzzyThreshold) {
+				matchIndex = exactStartIndex
+				bestMatchScore = similarity
+				bestMatchContent = originalChunk
+			} else {
+				// Set bounds for buffered search
+				searchStartIndex = Math.max(0, startLine - (this.bufferLines + 1))
+				searchEndIndex = Math.min(resultLines.length, startLine + searchLines.length + this.bufferLines)
+			}
+		}
+
+		// If no match found yet, try middle-out search within bounds
+		if (matchIndex === -1) {
+			const {
+				bestScore,
+				bestMatchIndex,
+				bestMatchContent: midContent,
+			} = fuzzySearch(resultLines, searchChunk, searchStartIndex, searchEndIndex)
+			matchIndex = bestMatchIndex
+			bestMatchScore = bestScore
+			bestMatchContent = midContent
+		}
+
+		// Try aggressive line number stripping as a fallback if regular matching fails
+		if (matchIndex === -1 || bestMatchScore < this.fuzzyThreshold) {
+			// Strip both search and replace content once (simultaneously)
+			const aggressiveSearchContent = stripLineNumbers(searchContent, true)
+			const aggressiveReplaceContent = stripLineNumbers(replaceContent, true)
+
+			const aggressiveSearchLines = aggressiveSearchContent ? aggressiveSearchContent.split(/\r?\n/) : []
+			const aggressiveSearchChunk = aggressiveSearchLines.join("\n")
+
+			// Try middle-out search again with aggressive stripped content (respecting the same search bounds)
+			const {
+				bestScore,
+				bestMatchIndex,
+				bestMatchContent: aggContent,
+			} = fuzzySearch(resultLines, aggressiveSearchChunk, searchStartIndex, searchEndIndex)
+			if (bestMatchIndex !== -1 && bestScore >= this.fuzzyThreshold) {
+				matchIndex = bestMatchIndex
+				bestMatchScore = bestScore
+				bestMatchContent = aggContent
+				// Replace the original search/replace with their stripped versions
+				searchContent = aggressiveSearchContent
+				replaceContent = aggressiveReplaceContent
+				searchLines = aggressiveSearchLines
+				replaceLines = replaceContent ? replaceContent.split(/\r?\n/) : []
+			} else {
+				// No match found with either method
+				const originalContentSection =
+					startLine !== undefined && endLine !== undefined
+						? `\n\nOriginal Content:\n${addLineNumbers(
+								resultLines
+									.slice(
+										Math.max(0, startLine - 1 - this.bufferLines),
+										Math.min(resultLines.length, endLine + this.bufferLines),
+									)
+									.join("\n"),
+								Math.max(1, startLine - this.bufferLines),
+							)}`
+						: `\n\nOriginal Content:\n${addLineNumbers(resultLines.join("\n"))}`
+
+				const bestMatchSection = bestMatchContent
+					? `\n\nBest Match Found:\n${addLineNumbers(bestMatchContent, matchIndex + 1)}`
+					: `\n\nBest Match Found:\n(no match)`
+
+				const lineRange = startLine ? ` at line: ${startLine}` : ""
+
+				return {
+					success: false,
+					error: `No sufficiently similar match found${lineRange} (${Math.floor(bestMatchScore * 100)}% similar, needs ${Math.floor(this.fuzzyThreshold * 100)}%)\n\nDebug Info:\n- Similarity Score: ${Math.floor(bestMatchScore * 100)}%\n- Required Threshold: ${Math.floor(this.fuzzyThreshold * 100)}%\n- Search Range: ${startLine ? `starting at line ${startLine}` : "start to end"}\n- Tried both standard and aggressive line number stripping\n- Tip: Use the read_file tool to get the latest content of the file before attempting to use the apply_diff tool again, as the file content may have changed\n\nSearch Content:\n${searchChunk}${bestMatchSection}${originalContentSection}`,
+				}
+			}
+		}
+
+		// Get the matched lines from the original content
+		const matchedLines = resultLines.slice(matchIndex, matchIndex + searchLines.length)
+
+		// Get the exact indentation (preserving tabs/spaces) of each line
+		const originalIndents = matchedLines.map((line) => {
+			const match = line.match(/^[\t ]*/)
+			return match ? match[0] : ""
+		})
+
+		// Get the exact indentation of each line in the search block
+		const searchIndents = searchLines.map((line) => {
+			const match = line.match(/^[\t ]*/)
+			return match ? match[0] : ""
+		})
+
+		// Apply the replacement while preserving exact indentation
+		const indentedReplaceLines = replaceLines.map((line) => {
+			// Get the matched line's exact indentation
+			const matchedIndent = originalIndents[0] || ""
+
+			// Get the current line's indentation relative to the search content
+			const currentIndentMatch = line.match(/^[\t ]*/)
+			const currentIndent = currentIndentMatch ? currentIndentMatch[0] : ""
+			const searchBaseIndent = searchIndents[0] || ""
+
+			// Calculate the relative indentation level
+			const searchBaseLevel = searchBaseIndent.length
+			const currentLevel = currentIndent.length
+			const relativeLevel = currentLevel - searchBaseLevel
+
+			// If relative level is negative, remove indentation from matched indent
+			// If positive, add to matched indent
+			const finalIndent =
+				relativeLevel < 0
+					? matchedIndent.slice(0, Math.max(0, matchedIndent.length + relativeLevel))
+					: matchedIndent + currentIndent.slice(searchBaseLevel)
+
+			return finalIndent + line.trim()
+		})
+
+		// Construct the final content
+		const beforeMatch = resultLines.slice(0, matchIndex)
+		const afterMatch = resultLines.slice(matchIndex + searchLines.length)
+		resultLines = [...beforeMatch, ...indentedReplaceLines, ...afterMatch]
+		const newDelta = delta - matchedLines.length + replaceLines.length
+
+		return {
+			success: true,
+			content: resultLines.join(lineEnding),
+			delta: newDelta,
+			appliedCount: 1,
+		}
+	}
+
 	async applyDiff(
 		originalContent: string,
 		diffContent: string,
@@ -312,32 +525,32 @@ Only use a single line of '=======' between search and replacement content, beca
 
 		/*
 			Regex parts:
-			
-			1. (?:^|\n)  
+
+			1. (?:^|\n)
 			  Ensures the first marker starts at the beginning of the file or right after a newline.
 
-			2. (?<!\\)<<<<<<< SEARCH\s*\n  
+			2. (?<!\\)<<<<<<< SEARCH\s*\n
 			  Matches the line “<<<<<<< SEARCH” (ignoring any trailing spaces) – the negative lookbehind makes sure it isn’t escaped.
 
-			3. ((?:\:start_line:\s*(\d+)\s*\n))?  
+			3. ((?:\:start_line:\s*(\d+)\s*\n))?
 			  Optionally matches a “:start_line:” line. The outer capturing group is group 1 and the inner (\d+) is group 2.
 
-			4. ((?:\:end_line:\s*(\d+)\s*\n))?  
+			4. ((?:\:end_line:\s*(\d+)\s*\n))?
 			  Optionally matches a “:end_line:” line. Group 3 is the whole match and group 4 is the digits.
 
-			5. ((?<!\\)-------\s*\n)?  
+			5. ((?<!\\)-------\s*\n)?
 			  Optionally matches the “-------” marker line (group 5).
 
-			6. ([\s\S]*?)(?:\n)?  
+			6. ([\s\S]*?)(?:\n)?
 			  Non‐greedy match for the “search content” (group 6) up to the next marker.
 
-			7. (?:(?<=\n)(?<!\\)=======\s*\n)  
+			7. (?:(?<=\n)(?<!\\)=======\s*\n)
 			  Matches the “=======” marker on its own line.
 
-			8. ([\s\S]*?)(?:\n)?  
+			8. ([\s\S]*?)(?:\n)?
 			  Non‐greedy match for the “replace content” (group 7).
 
-			9. (?:(?<=\n)(?<!\\)>>>>>>> REPLACE)(?=\n|$)  
+			9. (?:(?<=\n)(?<!\\)>>>>>>> REPLACE)(?=\n|$)
 			  Matches the final “>>>>>>> REPLACE” marker on its own line (and requires a following newline or the end of file).
 		*/
 
@@ -355,10 +568,12 @@ Only use a single line of '=======' between search and replacement content, beca
 		}
 		// Detect line ending from original content
 		const lineEnding = originalContent.includes("\r\n") ? "\r\n" : "\n"
-		let resultLines = originalContent.split(/\r?\n/)
+		let currentContent = originalContent
 		let delta = 0
 		let diffResults: DiffResult[] = []
 		let appliedCount = 0
+
+		// Sort replacements by start line to apply them in order
 		const replacements = matches
 			.map((match) => ({
 				startLine: Number(match[2] ?? 0),
@@ -367,205 +582,36 @@ Only use a single line of '=======' between search and replacement content, beca
 			}))
 			.sort((a, b) => a.startLine - b.startLine)
 
+		// Apply each diff block sequentially, updating the content after each application
 		for (const replacement of replacements) {
-			let { searchContent, replaceContent } = replacement
-			let startLine = replacement.startLine + (replacement.startLine === 0 ? 0 : delta)
+			const result = await this.applySingleDiffBlock(currentContent, replacement, delta, lineEnding)
 
-			// First unescape any escaped markers in the content
-			searchContent = this.unescapeMarkers(searchContent)
-			replaceContent = this.unescapeMarkers(replaceContent)
-
-			// Strip line numbers from search and replace content if every line starts with a line number
-			const hasAllLineNumbers =
-				(everyLineHasLineNumbers(searchContent) && everyLineHasLineNumbers(replaceContent)) ||
-				(everyLineHasLineNumbers(searchContent) && replaceContent.trim() === "")
-
-			if (hasAllLineNumbers) {
-				searchContent = stripLineNumbers(searchContent)
-				replaceContent = stripLineNumbers(replaceContent)
-			}
-
-			// Validate that search and replace content are not identical
-			if (searchContent === replaceContent) {
+			if (!result.success) {
+				// If this block failed, add the error to diffResults and continue with the next block
 				diffResults.push({
 					success: false,
-					error:
-						`Search and replace content are identical - no changes would be made\n\n` +
-						`Debug Info:\n` +
-						`- Search and replace must be different to make changes\n` +
-						`- Use read_file to verify the content you want to change`,
+					error: result.error,
+					failParts: [],
 				})
 				continue
 			}
 
-			// Split content into lines, handling both \n and \r\n
-			let searchLines = searchContent === "" ? [] : searchContent.split(/\r?\n/)
-			let replaceLines = replaceContent === "" ? [] : replaceContent.split(/\r?\n/)
-
-			// Validate that search content is not empty
-			if (searchLines.length === 0) {
-				diffResults.push({
-					success: false,
-					error: `Empty search content is not allowed\n\nDebug Info:\n- Search content cannot be empty\n- For insertions, provide a specific line using :start_line: and include content to search for\n- For example, match a single line to insert before/after it`,
-				})
-				continue
-			}
-
-			let endLine = replacement.startLine + searchLines.length - 1
-
-			// Initialize search variables
-			let matchIndex = -1
-			let bestMatchScore = 0
-			let bestMatchContent = ""
-			let searchChunk = searchLines.join("\n")
-
-			// Determine search bounds
-			let searchStartIndex = 0
-			let searchEndIndex = resultLines.length
-
-			// Validate and handle line range if provided
-			if (startLine) {
-				// Convert to 0-based index
-				const exactStartIndex = startLine - 1
-				const searchLen = searchLines.length
-				const exactEndIndex = exactStartIndex + searchLen - 1
-
-				// Try exact match first
-				const originalChunk = resultLines.slice(exactStartIndex, exactEndIndex + 1).join("\n")
-				const similarity = getSimilarity(originalChunk, searchChunk)
-				if (similarity >= this.fuzzyThreshold) {
-					matchIndex = exactStartIndex
-					bestMatchScore = similarity
-					bestMatchContent = originalChunk
-				} else {
-					// Set bounds for buffered search
-					searchStartIndex = Math.max(0, startLine - (this.bufferLines + 1))
-					searchEndIndex = Math.min(resultLines.length, startLine + searchLines.length + this.bufferLines)
-				}
-			}
-
-			// If no match found yet, try middle-out search within bounds
-			if (matchIndex === -1) {
-				const {
-					bestScore,
-					bestMatchIndex,
-					bestMatchContent: midContent,
-				} = fuzzySearch(resultLines, searchChunk, searchStartIndex, searchEndIndex)
-				matchIndex = bestMatchIndex
-				bestMatchScore = bestScore
-				bestMatchContent = midContent
-			}
-
-			// Try aggressive line number stripping as a fallback if regular matching fails
-			if (matchIndex === -1 || bestMatchScore < this.fuzzyThreshold) {
-				// Strip both search and replace content once (simultaneously)
-				const aggressiveSearchContent = stripLineNumbers(searchContent, true)
-				const aggressiveReplaceContent = stripLineNumbers(replaceContent, true)
-
-				const aggressiveSearchLines = aggressiveSearchContent ? aggressiveSearchContent.split(/\r?\n/) : []
-				const aggressiveSearchChunk = aggressiveSearchLines.join("\n")
-
-				// Try middle-out search again with aggressive stripped content (respecting the same search bounds)
-				const {
-					bestScore,
-					bestMatchIndex,
-					bestMatchContent: aggContent,
-				} = fuzzySearch(resultLines, aggressiveSearchChunk, searchStartIndex, searchEndIndex)
-				if (bestMatchIndex !== -1 && bestScore >= this.fuzzyThreshold) {
-					matchIndex = bestMatchIndex
-					bestMatchScore = bestScore
-					bestMatchContent = aggContent
-					// Replace the original search/replace with their stripped versions
-					searchContent = aggressiveSearchContent
-					replaceContent = aggressiveReplaceContent
-					searchLines = aggressiveSearchLines
-					replaceLines = replaceContent ? replaceContent.split(/\r?\n/) : []
-				} else {
-					// No match found with either method
-					const originalContentSection =
-						startLine !== undefined && endLine !== undefined
-							? `\n\nOriginal Content:\n${addLineNumbers(
-									resultLines
-										.slice(
-											Math.max(0, startLine - 1 - this.bufferLines),
-											Math.min(resultLines.length, endLine + this.bufferLines),
-										)
-										.join("\n"),
-									Math.max(1, startLine - this.bufferLines),
-								)}`
-							: `\n\nOriginal Content:\n${addLineNumbers(resultLines.join("\n"))}`
-
-					const bestMatchSection = bestMatchContent
-						? `\n\nBest Match Found:\n${addLineNumbers(bestMatchContent, matchIndex + 1)}`
-						: `\n\nBest Match Found:\n(no match)`
-
-					const lineRange = startLine ? ` at line: ${startLine}` : ""
-
-					diffResults.push({
-						success: false,
-						error: `No sufficiently similar match found${lineRange} (${Math.floor(bestMatchScore * 100)}% similar, needs ${Math.floor(this.fuzzyThreshold * 100)}%)\n\nDebug Info:\n- Similarity Score: ${Math.floor(bestMatchScore * 100)}%\n- Required Threshold: ${Math.floor(this.fuzzyThreshold * 100)}%\n- Search Range: ${startLine ? `starting at line ${startLine}` : "start to end"}\n- Tried both standard and aggressive line number stripping\n- Tip: Use the read_file tool to get the latest content of the file before attempting to use the apply_diff tool again, as the file content may have changed\n\nSearch Content:\n${searchChunk}${bestMatchSection}${originalContentSection}`,
-					})
-					continue
-				}
-			}
-
-			// Get the matched lines from the original content
-			const matchedLines = resultLines.slice(matchIndex, matchIndex + searchLines.length)
-
-			// Get the exact indentation (preserving tabs/spaces) of each line
-			const originalIndents = matchedLines.map((line) => {
-				const match = line.match(/^[\t ]*/)
-				return match ? match[0] : ""
-			})
-
-			// Get the exact indentation of each line in the search block
-			const searchIndents = searchLines.map((line) => {
-				const match = line.match(/^[\t ]*/)
-				return match ? match[0] : ""
-			})
-
-			// Apply the replacement while preserving exact indentation
-			const indentedReplaceLines = replaceLines.map((line) => {
-				// Get the matched line's exact indentation
-				const matchedIndent = originalIndents[0] || ""
-
-				// Get the current line's indentation relative to the search content
-				const currentIndentMatch = line.match(/^[\t ]*/)
-				const currentIndent = currentIndentMatch ? currentIndentMatch[0] : ""
-				const searchBaseIndent = searchIndents[0] || ""
-
-				// Calculate the relative indentation level
-				const searchBaseLevel = searchBaseIndent.length
-				const currentLevel = currentIndent.length
-				const relativeLevel = currentLevel - searchBaseLevel
-
-				// If relative level is negative, remove indentation from matched indent
-				// If positive, add to matched indent
-				const finalIndent =
-					relativeLevel < 0
-						? matchedIndent.slice(0, Math.max(0, matchedIndent.length + relativeLevel))
-						: matchedIndent + currentIndent.slice(searchBaseLevel)
-
-				return finalIndent + line.trim()
-			})
-
-			// Construct the final content
-			const beforeMatch = resultLines.slice(0, matchIndex)
-			const afterMatch = resultLines.slice(matchIndex + searchLines.length)
-			resultLines = [...beforeMatch, ...indentedReplaceLines, ...afterMatch]
-			delta = delta - matchedLines.length + replaceLines.length
-			appliedCount++
+			// Update the current content and delta for the next block
+			currentContent = result.content!
+			delta = result.delta!
+			appliedCount += result.appliedCount!
 		}
-		const finalContent = resultLines.join(lineEnding)
+
 		if (appliedCount === 0) {
 			return {
 				success: false,
 				failParts: diffResults,
 			}
 		}
+
 		return {
 			success: true,
-			content: finalContent,
+			content: currentContent,
 			failParts: diffResults,
 		}
 	}
