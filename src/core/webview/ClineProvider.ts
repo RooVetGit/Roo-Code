@@ -779,22 +779,15 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		// Update listApiConfigMeta first to ensure UI has latest data
 		await this.updateGlobalState("listApiConfigMeta", listApiConfig)
 
-		// If this mode has a saved config, use it
+		// If this mode has a saved config, use it.
 		if (savedConfigId) {
-			const config = listApiConfig?.find((c) => c.id === savedConfigId)
+			const hasConfig = !!listApiConfig.find(({ id }) => id === savedConfigId)
 
-			if (config?.name) {
-				const { name: _, ...apiConfig } = await this.providerSettingsManager.activateProfile({
-					name: config.name,
-				})
-
-				await Promise.all([
-					this.updateGlobalState("currentApiConfigName", config.name),
-					this.updateApiConfiguration(apiConfig),
-				])
+			if (hasConfig) {
+				await this.activateProviderProfile({ id: savedConfigId })
 			}
 		} else {
-			// If no saved config for this mode, save current config as default
+			// If no saved config for this mode, save current config as default.
 			const currentApiConfigName = this.getGlobalState("currentApiConfigName")
 
 			if (currentApiConfigName) {

@@ -88,25 +88,13 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					const currentConfigName = getGlobalState("currentApiConfigName")
 
 					if (currentConfigName) {
-						const manager = provider.providerSettingsManager
-						const hasConfig = await manager.hasConfig(currentConfigName)
-
-						if (!hasConfig) {
+						if (!(await provider.providerSettingsManager.hasConfig(currentConfigName))) {
 							// Current config name not valid, get first config in list.
-							await updateGlobalState("currentApiConfigName", listApiConfig?.[0]?.name)
+							const name = listApiConfig[0]?.name
+							await updateGlobalState("currentApiConfigName", name)
 
-							if (listApiConfig?.[0]?.name) {
-								const { name: _, ...providerSettings } = await manager.activateProfile({
-									name: listApiConfig?.[0]?.name,
-								})
-
-								await Promise.all([
-									updateGlobalState("listApiConfigMeta", listApiConfig),
-									provider.postMessageToWebview({ type: "listApiConfig", listApiConfig }),
-									provider.updateApiConfiguration(providerSettings),
-								])
-
-								await provider.postStateToWebview()
+							if (name) {
+								await provider.activateProviderProfile({ name })
 								return
 							}
 						}
