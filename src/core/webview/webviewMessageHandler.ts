@@ -1084,26 +1084,22 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					}
 
 					// Load the old configuration to get its ID.
-					const oldConfig = await provider.providerSettingsManager.activateProfile({ name: oldName })
+					const { id } = await provider.providerSettingsManager.getProfile({ name: oldName })
 
-					// Create a new configuration with the same ID.
-					const newConfig = { ...message.apiConfiguration, id: oldConfig.id }
+					// Create a new configuration with the new name and old ID.
+					await provider.providerSettingsManager.saveConfig(newName, { ...message.apiConfiguration, id })
 
-					// Save with the new name but same ID.
-					await provider.providerSettingsManager.saveConfig(newName, newConfig)
+					// Delete the old configuration.
 					await provider.providerSettingsManager.deleteConfig(oldName)
 
-					const listApiConfig = await provider.providerSettingsManager.listConfig()
-
-					// Update listApiConfigMeta first to ensure UI has latest data.
-					await updateGlobalState("listApiConfigMeta", listApiConfig)
-					await updateGlobalState("currentApiConfigName", newName)
-
-					await provider.postStateToWebview()
+					// Re-activate to update the global settings related to the
+					// currently activated provider profile.
+					await provider.activateProviderProfile({ name: newName })
 				} catch (error) {
 					provider.log(
 						`Error rename api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 					)
+
 					vscode.window.showErrorMessage(t("common:errors.rename_api_config"))
 				}
 			}
@@ -1144,32 +1140,25 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					break
 				}
 
+				const oldName = message.text
+
+				const newName = (await provider.providerSettingsManager.listConfig()).filter(
+					(c) => c.name !== oldName,
+				)[0]?.name
+
+				if (!newName) {
+					vscode.window.showErrorMessage(t("common:errors.delete_api_config"))
+					return
+				}
+
 				try {
-					await provider.providerSettingsManager.deleteConfig(message.text)
-					const listApiConfig = await provider.providerSettingsManager.listConfig()
-
-					// Update listApiConfigMeta first to ensure UI has latest data.
-					await updateGlobalState("listApiConfigMeta", listApiConfig)
-
-					// If this was the current config, switch to first available.
-					const currentApiConfigName = getGlobalState("currentApiConfigName")
-
-					if (message.text === currentApiConfigName && listApiConfig?.[0]?.name) {
-						const { name: _, ...apiConfig } = await provider.providerSettingsManager.activateProfile({
-							name: listApiConfig[0].name,
-						})
-
-						await Promise.all([
-							updateGlobalState("currentApiConfigName", listApiConfig[0].name),
-							provider.updateApiConfiguration(apiConfig),
-						])
-					}
-
-					await provider.postStateToWebview()
+					await provider.providerSettingsManager.deleteConfig(oldName)
+					await provider.activateProviderProfile({ name: newName })
 				} catch (error) {
 					provider.log(
 						`Error delete api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
 					)
+
 					vscode.window.showErrorMessage(t("common:errors.delete_api_config"))
 				}
 			}
