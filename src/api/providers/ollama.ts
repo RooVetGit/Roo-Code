@@ -37,6 +37,7 @@ export class OllamaHandler extends BaseProvider implements SingleCompletionHandl
 			messages: openAiMessages,
 			temperature: this.options.modelTemperature ?? 0,
 			stream: true,
+			stream_options: { include_usage: true },
 		})
 		const matcher = new XmlMatcher(
 			"think",
@@ -46,17 +47,29 @@ export class OllamaHandler extends BaseProvider implements SingleCompletionHandl
 					text: chunk.data,
 				}) as const,
 		)
+		let lastUsage: any | undefined
 		for await (const chunk of stream) {
 			const delta = chunk.choices[0]?.delta
 
 			if (delta?.content) {
-				for (const chunk of matcher.update(delta.content)) {
-					yield chunk
+				for (const matcherChunk of matcher.update(delta.content)) {
+					yield matcherChunk
 				}
+			}
+			if (chunk.usage) {
+				lastUsage = chunk.usage
 			}
 		}
 		for (const chunk of matcher.final()) {
 			yield chunk
+		}
+
+		if (lastUsage) {
+			yield {
+				type: "usage",
+				inputTokens: lastUsage.prompt_tokens || 0,
+				outputTokens: lastUsage.completion_tokens || 0,
+			}
 		}
 	}
 
