@@ -63,8 +63,8 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 				{ type: "text", text: systemPrompt },
 				...toContentBlocks(messages),
 			])
-		} catch {
-			// Fallback to 0 if counting fails
+		} catch (err) {
+			console.error("[LmStudio] Failed to count input tokens:", err)
 			inputTokens = 0
 		}
 
@@ -103,7 +103,8 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 			let outputTokens = 0
 			try {
 				outputTokens = await this.countTokens([{ type: "text", text: assistantText }])
-			} catch {
+			} catch (err) {
+				console.error("[LmStudio] Failed to count output tokens:", err)
 				outputTokens = 0
 			}
 

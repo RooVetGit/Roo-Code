@@ -11,6 +11,9 @@ import { DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
 import { XmlMatcher } from "../../utils/xml-matcher"
 import { BaseProvider } from "./base-provider"
 
+// Alias for the usage object returned in streaming chunks
+type CompletionUsage = OpenAI.Chat.Completions.ChatCompletionChunk["usage"]
+
 export class OllamaHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
 	private client: OpenAI
@@ -47,7 +50,7 @@ export class OllamaHandler extends BaseProvider implements SingleCompletionHandl
 					text: chunk.data,
 				}) as const,
 		)
-		let lastUsage: any | undefined
+		let lastUsage: CompletionUsage | undefined
 		for await (const chunk of stream) {
 			const delta = chunk.choices[0]?.delta
 
@@ -67,8 +70,8 @@ export class OllamaHandler extends BaseProvider implements SingleCompletionHandl
 		if (lastUsage) {
 			yield {
 				type: "usage",
-				inputTokens: lastUsage.prompt_tokens || 0,
-				outputTokens: lastUsage.completion_tokens || 0,
+				inputTokens: lastUsage?.prompt_tokens || 0,
+				outputTokens: lastUsage?.completion_tokens || 0,
 			}
 		}
 	}
