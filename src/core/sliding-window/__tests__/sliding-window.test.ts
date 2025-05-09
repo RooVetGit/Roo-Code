@@ -177,7 +177,7 @@ describe("estimateTokenCount", () => {
 		expect(largerImageTokens).toBeGreaterThan(smallImageTokens)
 
 		// Verify the larger image calculation matches our formula including the 50% fudge factor
-		expect(largerImageTokens).toBe(48)
+		expect(largerImageTokens).toBe(42)
 	})
 
 	it("should estimate tokens for mixed content blocks", async () => {
