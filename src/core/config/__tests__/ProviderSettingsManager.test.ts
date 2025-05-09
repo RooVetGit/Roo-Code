@@ -430,7 +430,7 @@ describe("ProviderSettingsManager", () => {
 			mockSecrets.store.mockRejectedValueOnce(new Error("Storage failed"))
 
 			await expect(providerSettingsManager.activateProfile({ name: "test" })).rejects.toThrow(
-				"Failed to activate profile: Error: Failed to write provider profiles to secrets: Error: Storage failed",
+				"Failed to activate profile: Failed to write provider profiles to secrets: Error: Storage failed",
 			)
 		})
 

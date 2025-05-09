@@ -311,7 +311,7 @@ export class ProviderSettingsManager {
 				return { name, ...providerSettings }
 			})
 		} catch (error) {
-			throw new Error(`Failed to activate: ${error instanceof Error ? error.message : error}`)
+			throw new Error(`Failed to activate profile: ${error instanceof Error ? error.message : error}`)
 		}
 	}
 
