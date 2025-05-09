@@ -312,6 +312,11 @@ function processFileLocale(
 		return
 	}
 
+	// For non-JSON files, only check existence
+	if (!sourceFile.endsWith(".json")) {
+		return
+	}
+
 	const targetContent = parseJsonContent(loadFileContent(targetFile), targetFile)
 	if (!targetContent) {
 		results[mapping.area][locale][sourceFile].error = `Failed to load or parse target file: ${targetFile}`
@@ -444,6 +449,15 @@ function formatResults(results: Results, checkTypes: string[], options: LintOpti
 							keys.forEach((key) => bufferLog(`        ${key}`))
 						}
 					})
+				})
+			}
+
+			// Show extra translations if any
+			if (areaBuffer.length > 0) {
+				bufferLog(`  ⚠️ Extra translations:`)
+				areaBuffer.forEach((line) => {
+					const indentedLine = "  " + line
+					bufferLog(indentedLine)
 				})
 			}
 
@@ -639,8 +653,7 @@ describe("Translation Linting", () => {
 			check: ["all"],
 			verbose: process.argv.includes("--verbose"),
 		})
-		expect(typeof exitCode).toBe("number")
-		expect(exitCode).toBeGreaterThanOrEqual(0)
+		expect(exitCode).toBe(0)
 	})
 
 	test("Filters mappings by area correctly", () => {
