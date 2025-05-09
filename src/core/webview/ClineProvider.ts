@@ -9,7 +9,7 @@ import axios from "axios"
 import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 
-import type { GlobalState, ProviderName, ProviderSettings, RooCodeSettings } from "../../schemas"
+import type { GlobalState, ProviderName, ProviderSettings, RooCodeSettings, ProviderSettingsEntry } from "../../schemas"
 import { t } from "../../i18n"
 import { setPanel } from "../../activate/registerCommands"
 import { requestyDefaultModelId, openRouterDefaultModelId, glamaDefaultModelId } from "../../shared/api"
@@ -795,30 +795,87 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		await this.postStateToWebview()
 	}
 
+	// Provider Profile Management
+
+	getProviderProfileEntries(): ProviderSettingsEntry[] {
+		return this.contextProxy.getValues().listApiConfigMeta || []
+	}
+
+	getProviderProfileEntry(name: string): ProviderSettingsEntry | undefined {
+		return this.getProviderProfileEntries().find((profile) => profile.name === name)
+	}
+
+	public hasProviderProfileEntry(name: string): boolean {
+		return !!this.getProviderProfileEntry(name)
+	}
+
+	async upsertProviderProfile(name: string, providerSettings: ProviderSettings): Promise<string | undefined> {
+		console.log("upsertProviderProfile", { name, providerSettings })
+
+		try {
+			const id = await this.providerSettingsManager.saveConfig(name, providerSettings)
+			const { mode } = await this.getState()
+
+			await Promise.all([
+				this.updateGlobalState("listApiConfigMeta", await this.providerSettingsManager.listConfig()),
+				this.updateGlobalState("currentApiConfigName", name),
+				this.providerSettingsManager.setModeConfig(mode, id),
+				this.contextProxy.setProviderSettings(providerSettings),
+			])
+
+			if (this.getCurrentCline()) {
+				this.getCurrentCline()!.api = buildApiHandler(providerSettings)
+			}
+
+			await this.postStateToWebview()
+			return id
+		} catch (error) {
+			this.log(
+				`Error create new api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+			)
+
+			vscode.window.showErrorMessage(t("common:errors.create_api_config"))
+			return undefined
+		}
+	}
+
+	async deleteProviderProfile(profileToDelete: ProviderSettingsEntry) {
+		const globalSettings = this.contextProxy.getValues()
+		let profileToActivate: string | undefined = globalSettings.currentApiConfigName
+
+		if (profileToDelete.name === profileToActivate) {
+			profileToActivate = this.getProviderProfileEntries().find(({ name }) => name !== profileToDelete.name)?.name
+		}
+
+		if (!profileToActivate) {
+			throw new Error("You cannot delete the last profile")
+		}
+
+		const entries = this.getProviderProfileEntries().filter(({ name }) => name !== profileToDelete.name)
+
+		await this.contextProxy.setValues({
+			...globalSettings,
+			currentApiConfigName: profileToActivate,
+			listApiConfigMeta: entries,
+		})
+
+		await this.postStateToWebview()
+	}
+
 	async activateProviderProfile(args: { name: string } | { id: string }) {
-		const { name, ...providerSettings } = await this.providerSettingsManager.activateProfile(args)
+		const { name, id, ...providerSettings } = await this.providerSettingsManager.activateProfile(args)
 
 		await Promise.all([
 			this.contextProxy.setValue("listApiConfigMeta", await this.providerSettingsManager.listConfig()),
 			this.contextProxy.setValue("currentApiConfigName", name),
 		])
 
-		await this.updateApiConfiguration(providerSettings)
-		await this.postStateToWebview()
-	}
-
-	async updateApiConfiguration(providerSettings: ProviderSettings) {
-		// Update mode's default config.
 		const { mode } = await this.getState()
 
-		if (mode) {
-			const currentApiConfigName = this.getGlobalState("currentApiConfigName")
-			const listApiConfig = await this.providerSettingsManager.listConfig()
-			const config = listApiConfig?.find((c) => c.name === currentApiConfigName)
+		console.log("activateProviderProfile", { name, id, mode })
 
-			if (config?.id) {
-				await this.providerSettingsManager.setModeConfig(mode, config.id)
-			}
+		if (id) {
+			await this.providerSettingsManager.setModeConfig(mode, id)
 		}
 
 		await this.contextProxy.setProviderSettings(providerSettings)
@@ -826,7 +883,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		if (this.getCurrentCline()) {
 			this.getCurrentCline()!.api = buildApiHandler(providerSettings)
 		}
+
+		await this.postStateToWebview()
 	}
+
+	// Task Management
 
 	async cancelTask() {
 		const cline = this.getCurrentCline()
@@ -943,7 +1004,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			openRouterModelId: apiConfiguration?.openRouterModelId || openRouterDefaultModelId,
 		}
 
-		await this.upsertApiConfiguration(currentApiConfigName, newConfiguration)
+		await this.upsertProviderProfile(currentApiConfigName, newConfiguration)
 	}
 
 	// Glama
@@ -973,7 +1034,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			glamaModelId: apiConfiguration?.glamaModelId || glamaDefaultModelId,
 		}
 
-		await this.upsertApiConfiguration(currentApiConfigName, newConfiguration)
+		await this.upsertProviderProfile(currentApiConfigName, newConfiguration)
 	}
 
 	// Requesty
@@ -988,29 +1049,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			requestyModelId: apiConfiguration?.requestyModelId || requestyDefaultModelId,
 		}
 
-		await this.upsertApiConfiguration(currentApiConfigName, newConfiguration)
-	}
-
-	// Save configuration
-
-	async upsertApiConfiguration(configName: string, apiConfiguration: ProviderSettings) {
-		try {
-			await this.providerSettingsManager.saveConfig(configName, apiConfiguration)
-			const listApiConfig = await this.providerSettingsManager.listConfig()
-
-			await Promise.all([
-				this.updateGlobalState("listApiConfigMeta", listApiConfig),
-				this.updateApiConfiguration(apiConfiguration),
-				this.updateGlobalState("currentApiConfigName", configName),
-			])
-
-			await this.postStateToWebview()
-		} catch (error) {
-			this.log(
-				`Error create new api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
-			)
-			vscode.window.showErrorMessage(t("common:errors.create_api_config"))
-		}
+		await this.upsertProviderProfile(currentApiConfigName, newConfiguration)
 	}
 
 	// Task history
