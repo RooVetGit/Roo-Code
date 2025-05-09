@@ -288,35 +288,7 @@ const ApiOptions = ({
 					<label className="block font-medium mb-1">{t("settings:providers.apiProvider")}</label>
 					{docs && (
 						<div className="text-xs text-vscode-descriptionForeground">
-							<VSCodeLink
-								href={docs.url}
-								className="hover:text-vscode-foreground"
-								target="_blank"
-								onClick={() => {
-									const url = docs.url
-									const event = "docs_link_clicked"
-									const properties = { campaign: "provider_docs", page: docs.page }
-									// TEMP LOGGING: UTM Telemetry Event
-									// eslint-disable-next-line no-console
-									console.log(
-										"%c[Telemetry]%c Event: %c%s%c | Properties: %c%o%c | URL: %c%s",
-										"background: #222; color: #fff; padding:2px 4px; border-radius:2px;",
-										"",
-										"color: #4FC3F7; font-weight:bold;",
-										event,
-										"",
-										"color: #81C784;",
-										properties,
-										"",
-										"color: #FFD54F;",
-										url,
-									)
-									vscode.postMessage({
-										type: "telemetry",
-										event,
-										properties,
-									} as any)
-								}}>
+							<VSCodeLink href={docs.url} className="hover:text-vscode-foreground" target="_blank">
 								{t("settings:providers.providerDocumentation", { provider: docs.name })}
 							</VSCodeLink>
 						</div>

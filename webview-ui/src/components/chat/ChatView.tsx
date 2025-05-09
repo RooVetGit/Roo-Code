@@ -1259,35 +1259,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 								i18nKey="chat:about"
 								components={{
 									DocsLink: (
-										<a
-											href={buildDocLink("", "welcome")}
-											target="_blank"
-											rel="noopener noreferrer"
-											onClick={() => {
-												const url = buildDocLink("", "welcome")
-												const event = "docs_link_clicked"
-												const properties = { campaign: "welcome", page: "/" }
-												// TEMP LOGGING: UTM Telemetry Event
-												// eslint-disable-next-line no-console
-												console.log(
-													"%c[Telemetry]%c Event: %c%s%c | Properties: %c%o%c | URL: %c%s",
-													"background: #222; color: #fff; padding:2px 4px; border-radius:2px;",
-													"",
-													"color: #4FC3F7; font-weight:bold;",
-													event,
-													"",
-													"color: #81C784;",
-													properties,
-													"",
-													"color: #FFD54F;",
-													url,
-												)
-												vscode.postMessage({
-													type: "telemetry",
-													event,
-													properties,
-												} as any)
-											}}>
+										<a href={buildDocLink("", "welcome")} target="_blank" rel="noopener noreferrer">
 											the docs
 										</a>
 									),
