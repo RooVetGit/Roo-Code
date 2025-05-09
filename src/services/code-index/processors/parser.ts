@@ -249,9 +249,9 @@ export class CodeParser implements ICodeParser {
 			chunkStartLineIndex = endLineIndex + 1
 		}
 
-		const createSegmentBlock = (segment: string, originalLineNumber: number) => {
+		const createSegmentBlock = (segment: string, originalLineNumber: number, startCharIndex: number) => {
 			const segmentHash = createHash("sha256")
-				.update(`${filePath}-${originalLineNumber}-${originalLineNumber}-${segment}`)
+				.update(`${filePath}-${originalLineNumber}-${originalLineNumber}-${startCharIndex}-${segment}`)
 				.digest("hex")
 
 			if (!seenSegmentHashes.has(segmentHash)) {
@@ -283,10 +283,12 @@ export class CodeParser implements ICodeParser {
 
 				// Split the oversized line into segments
 				let remainingLineContent = line
+				let currentSegmentStartChar = 0
 				while (remainingLineContent.length > 0) {
 					const segment = remainingLineContent.substring(0, MAX_BLOCK_CHARS)
 					remainingLineContent = remainingLineContent.substring(MAX_BLOCK_CHARS)
-					createSegmentBlock(segment, originalLineNumber)
+					createSegmentBlock(segment, originalLineNumber, currentSegmentStartChar)
+					currentSegmentStartChar += MAX_BLOCK_CHARS
 				}
 				continue
 			}
