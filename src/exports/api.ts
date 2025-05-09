@@ -250,7 +250,7 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		await this.sidebarProvider.providerSettingsManager.saveConfig(name, settings)
 
 		if (name === this.getConfiguration().currentApiConfigName) {
-			this.sidebarProvider.activateProviderProfile({ name })
+			await this.sidebarProvider.activateProviderProfile({ name })
 		} else {
 			// We still need to update the webview with the new state, but we don't want to change the active provider.
 			const listApiConfig = await this.sidebarProvider.providerSettingsManager.listConfig()
