@@ -41,7 +41,7 @@ module.exports = {
 	transformIgnorePatterns: [
 		"node_modules/(?!(@modelcontextprotocol|delay|p-wait-for|serialize-error|strip-ansi|default-shell|os-name|strip-bom)/)",
 	],
-	roots: ["<rootDir>/src", "<rootDir>/webview-ui/src"],
+	roots: ["<rootDir>/src", "<rootDir>/webview-ui/src", "<rootDir>/locales"],
 	modulePathIgnorePatterns: [".vscode-test"],
 	reporters: [["jest-simple-dot-reporter", {}]],
 	setupFiles: ["<rootDir>/src/__mocks__/jest.setup.ts"],
