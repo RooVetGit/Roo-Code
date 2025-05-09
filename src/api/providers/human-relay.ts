@@ -90,16 +90,25 @@ export class HumanRelayHandler implements ApiHandler, SingleCompletionHandler {
 }
 
 /**
- * Extract text content from message object
+ * Removes <model>...</model> tags from a string.
+ * @param text The input string.
+ * @returns The string with model tags removed.
+ */
+function removeModelTags(text: string): string {
+	return text.replace(/<model>.*?<\/model>/gs, "")
+}
+
+/**
+ * Extract text content from message object and remove model tags.
  * @param message
  */
 function getMessageContent(message: Anthropic.Messages.MessageParam): string {
 	if (typeof message.content === "string") {
-		return message.content
+		return removeModelTags(message.content)
 	} else if (Array.isArray(message.content)) {
 		return message.content
 			.filter((item) => item.type === "text")
-			.map((item) => (item.type === "text" ? item.text : ""))
+			.map((item) => (item.type === "text" ? removeModelTags(item.text) : ""))
 			.join("\n")
 	}
 	return ""
