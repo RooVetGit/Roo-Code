@@ -141,10 +141,7 @@
 				"label": "Computergebruik",
 				"description": "Kan dit model met een browser werken? (bijv. Claude 3.7 Sonnet)."
 			},
-			"promptCache": {
-				"label": "Prompt caching",
-				"description": "Kan dit model prompts cachen?"
-			},
+			"promptCache": { "label": "Prompt caching", "description": "Kan dit model prompts cachen?" },
 			"pricing": {
 				"input": {
 					"label": "Invoerprijs",
@@ -165,16 +162,8 @@
 			},
 			"resetDefaults": "Standaardwaarden herstellen"
 		},
-		"rateLimitSeconds": {
-			"label": "Snelheidslimiet",
-			"description": "Minimale tijd tussen API-verzoeken."
-		},
-		"reasoningEffort": {
-			"label": "Model redeneervermogen",
-			"high": "Hoog",
-			"medium": "Middel",
-			"low": "Laag"
-		},
+		"rateLimitSeconds": { "label": "Snelheidslimiet", "description": "Minimale tijd tussen API-verzoeken." },
+		"reasoningEffort": { "label": "Model redeneervermogen", "high": "Hoog", "medium": "Middel", "low": "Laag" },
 		"setReasoningLevel": "Redeneervermogen inschakelen"
 	},
 	"header": {
@@ -237,10 +226,7 @@
 			"label": "Modus",
 			"description": "Automatisch tussen verschillende modi schakelen zonder goedkeuring"
 		},
-		"subtasks": {
-			"label": "Subtaken",
-			"description": "Subtaken aanmaken en afronden zonder goedkeuring"
-		},
+		"subtasks": { "label": "Subtaken", "description": "Subtaken aanmaken en afronden zonder goedkeuring" },
 		"execute": {
 			"label": "Uitvoeren",
 			"description": "Automatisch toegestane terminalcommando's uitvoeren zonder goedkeuring",
@@ -318,10 +304,7 @@
 		}
 	},
 	"terminal": {
-		"basic": {
-			"label": "Terminalinstellingen: Basis",
-			"description": "Basis terminalinstellingen"
-		},
+		"basic": { "label": "Terminalinstellingen: Basis", "description": "Basis terminalinstellingen" },
 		"advanced": {
 			"label": "Terminalinstellingen: Geavanceerd",
 			"description": "De volgende opties vereisen mogelijk een herstart van de terminal om de instelling toe te passen."
@@ -391,6 +374,14 @@
 			"matchPrecision": {
 				"label": "Matchnauwkeurigheid",
 				"description": "Deze schuifregelaar bepaalt hoe nauwkeurig codeblokken moeten overeenkomen bij het toepassen van diffs. Lagere waarden laten flexibelere matching toe maar verhogen het risico op verkeerde vervangingen. Gebruik waarden onder 100% met uiterste voorzichtigheid."
+			},
+			"autoFocus": {
+				"label": "Diff-tabblad automatisch focussen bij het tonen van bestandswijzigingen",
+				"description": "Indien uitgeschakeld, wordt het diff-tabblad op de achtergrond geopend zonder de focus over te nemen."
+			},
+			"autoClose": {
+				"label": "Door Roo geopende tabbladen automatisch sluiten",
+				"description": "Indien ingeschakeld, sluit Roo automatisch alle tabbladen die het zelf heeft geopend (zoals diff-weergaven, geopende bestanden) wanneer een taak met bestandswijzigingen wordt voltooid of teruggedraaid."
 			}
 		}
 	},
@@ -462,16 +453,9 @@
 			"label": "Anonieme fout- en gebruiksrapportage toestaan",
 			"description": "Help Roo Code te verbeteren door anonieme gebruiksgegevens en foutmeldingen te verzenden. Er worden nooit code, prompts of persoonlijke gegevens verzonden. Zie ons privacybeleid voor meer informatie."
 		},
-		"settings": {
-			"import": "Importeren",
-			"export": "Exporteren",
-			"reset": "Resetten"
-		}
+		"settings": { "import": "Importeren", "export": "Exporteren", "reset": "Resetten" }
 	},
-	"thinkingBudget": {
-		"maxTokens": "Max tokens",
-		"maxThinkingTokens": "Max denk-tokens"
-	},
+	"thinkingBudget": { "maxTokens": "Max tokens", "maxThinkingTokens": "Max denk-tokens" },
 	"validation": {
 		"apiKey": "Je moet een geldige API-sleutel opgeven.",
 		"awsRegion": "Je moet een regio kiezen om Amazon Bedrock te gebruiken.",
@@ -514,8 +498,5 @@
 		"lmStudioUrl": "Standaard: http://localhost:1234",
 		"geminiUrl": "Standaard: https://generativelanguage.googleapis.com"
 	},
-	"labels": {
-		"customArn": "Aangepaste ARN",
-		"useCustomArn": "Aangepaste ARN gebruiken..."
-	}
+	"labels": { "customArn": "Aangepaste ARN", "useCustomArn": "Aangepaste ARN gebruiken..." }
 }

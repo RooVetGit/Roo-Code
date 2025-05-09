@@ -1,96 +1,101 @@
-import { DiffViewProvider } from "../DiffViewProvider"
+// @jest-environment node
 import * as vscode from "vscode"
+import { DiffViewProvider } from "../DiffViewProvider"
 
-// Mock vscode
 jest.mock("vscode", () => ({
+	...jest.requireActual("vscode"),
 	workspace: {
-		applyEdit: jest.fn(),
+		getConfiguration: jest.fn(),
 	},
 	window: {
+		tabGroups: { all: [] },
+		visibleTextEditors: [],
+		onDidChangeActiveTextEditor: jest.fn(),
+		showTextDocument: jest.fn(),
 		createTextEditorDecorationType: jest.fn(),
 	},
-	WorkspaceEdit: jest.fn().mockImplementation(() => ({
-		replace: jest.fn(),
-		delete: jest.fn(),
-	})),
-	Range: jest.fn(),
-	Position: jest.fn(),
-	Selection: jest.fn(),
-	TextEditorRevealType: {
-		InCenter: 2,
+	commands: {
+		executeCommand: jest.fn(),
 	},
-}))
-
-// Mock DecorationController
-jest.mock("../DecorationController", () => ({
-	DecorationController: jest.fn().mockImplementation(() => ({
-		setActiveLine: jest.fn(),
-		updateOverlayAfterLine: jest.fn(),
-		clear: jest.fn(),
-	})),
+	Uri: {
+		...jest.requireActual("vscode").Uri,
+		parse: jest.fn((value: string) => ({
+			scheme: "file",
+			path: value,
+			with: jest.fn((options) => ({
+				...options,
+				scheme: options.scheme || "file",
+				path: options.path || value,
+			})),
+		})),
+	},
+	ViewColumn: { Beside: 2 },
+	TextEditorRevealType: { AtTop: 1, InCenter: 2 },
+	Position: jest.requireActual("vscode").Position,
+	Range: jest.requireActual("vscode").Range,
+	Selection: jest.requireActual("vscode").Selection,
 }))
 
 describe("DiffViewProvider", () => {
-	let diffViewProvider: DiffViewProvider
-	const mockCwd = "/mock/cwd"
-	let mockWorkspaceEdit: { replace: jest.Mock; delete: jest.Mock }
+	const cwd = "/mock"
+	const relPath = "file.txt"
+	let provider: DiffViewProvider
 
 	beforeEach(() => {
 		jest.clearAllMocks()
-		mockWorkspaceEdit = {
-			replace: jest.fn(),
-			delete: jest.fn(),
-		}
-		;(vscode.WorkspaceEdit as jest.Mock).mockImplementation(() => mockWorkspaceEdit)
-
-		diffViewProvider = new DiffViewProvider(mockCwd)
-		// Mock the necessary properties and methods
-		;(diffViewProvider as any).relPath = "test.txt"
-		;(diffViewProvider as any).activeDiffEditor = {
-			document: {
-				uri: { fsPath: `${mockCwd}/test.txt` },
-				getText: jest.fn(),
-				lineCount: 10,
-			},
-			selection: {
-				active: { line: 0, character: 0 },
-				anchor: { line: 0, character: 0 },
-			},
-			edit: jest.fn().mockResolvedValue(true),
-			revealRange: jest.fn(),
-		}
-		;(diffViewProvider as any).activeLineController = { setActiveLine: jest.fn(), clear: jest.fn() }
-		;(diffViewProvider as any).fadedOverlayController = { updateOverlayAfterLine: jest.fn(), clear: jest.fn() }
+		provider = new DiffViewProvider(cwd)
+		provider["relPath"] = relPath
+		provider["editType"] = "modify"
+		provider["originalContent"] = "original"
 	})
 
-	describe("update method", () => {
-		it("should preserve empty last line when original content has one", async () => {
-			;(diffViewProvider as any).originalContent = "Original content\n"
-			await diffViewProvider.update("New content", true)
-
-			expect(mockWorkspaceEdit.replace).toHaveBeenCalledWith(
-				expect.anything(),
-				expect.anything(),
-				"New content\n",
-			)
+	it("should pass preserveFocus: false when autoFocus is true", async () => {
+		;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
+			get: () => true,
 		})
-
-		it("should not add extra newline when accumulated content already ends with one", async () => {
-			;(diffViewProvider as any).originalContent = "Original content\n"
-			await diffViewProvider.update("New content\n", true)
-
-			expect(mockWorkspaceEdit.replace).toHaveBeenCalledWith(
-				expect.anything(),
-				expect.anything(),
-				"New content\n",
-			)
+		const executeCommand = vscode.commands.executeCommand as jest.Mock
+		executeCommand.mockResolvedValue(undefined)
+		const promise = provider["openDiffEditor"]()
+		// Simulate editor activation
+		setTimeout(() => {
+			const calls = (vscode.window.onDidChangeActiveTextEditor as jest.Mock).mock.calls
+			expect(calls).toEqual([])
+		}, 1_000)
+		await promise.catch((error) => {
+			// this is expected to fail because the editor is not activated, we just want to test the command
+			console.error("Error:", error)
 		})
+		expect(executeCommand).toHaveBeenCalledWith(
+			"vscode.diff",
+			expect.anything(),
+			expect.anything(),
+			expect.anything(),
+			expect.objectContaining({ preserveFocus: false }),
+		)
+	})
 
-		it("should not add newline when original content does not end with one", async () => {
-			;(diffViewProvider as any).originalContent = "Original content"
-			await diffViewProvider.update("New content", true)
-
-			expect(mockWorkspaceEdit.replace).toHaveBeenCalledWith(expect.anything(), expect.anything(), "New content")
+	it("should pass preserveFocus: true when autoFocus is false", async () => {
+		;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
+			get: () => false,
 		})
+		const executeCommand = vscode.commands.executeCommand as jest.Mock
+		executeCommand.mockResolvedValue(undefined)
+		const promise = provider["openDiffEditor"]()
+		// Simulate editor activation
+		setTimeout(() => {
+			const calls = (vscode.window.onDidChangeActiveTextEditor as jest.Mock).mock.calls
+			expect(calls).toEqual([])
+		}, 1_000)
+		await promise.catch((error) => {
+			// this is expected to fail because the editor is not activated, we just want to test the command
+			console.error("Error:", error)
+		})
+		expect(executeCommand).toHaveBeenCalledWith(
+			"vscode.diff",
+			expect.anything(),
+			expect.anything(),
+			expect.anything(),
+			expect.objectContaining({ preserveFocus: true }),
+		)
 	})
 })

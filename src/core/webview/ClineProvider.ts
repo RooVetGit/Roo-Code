@@ -1153,6 +1153,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			ttsEnabled,
 			ttsSpeed,
 			diffEnabled,
+			diffViewAutoFocus,
+			autoCloseRooTabs,
 			enableCheckpoints,
 			taskHistory,
 			soundVolume,
@@ -1231,6 +1233,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			ttsEnabled: ttsEnabled ?? false,
 			ttsSpeed: ttsSpeed ?? 1.0,
 			diffEnabled: diffEnabled ?? true,
+			diffViewAutoFocus: diffViewAutoFocus ?? true,
+			autoCloseRooTabs: autoCloseRooTabs ?? false,
 			enableCheckpoints: enableCheckpoints ?? true,
 			shouldShowAnnouncement:
 				telemetrySetting !== "unset" && lastShownAnnouncementId !== this.latestAnnouncementId,
@@ -1328,6 +1332,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			ttsEnabled: stateValues.ttsEnabled ?? false,
 			ttsSpeed: stateValues.ttsSpeed ?? 1.0,
 			diffEnabled: stateValues.diffEnabled ?? true,
+			diffViewAutoFocus: stateValues.diffViewAutoFocus ?? false,
+			autoCloseRooTabs: stateValues.autoCloseRooTabs ?? false,
 			enableCheckpoints: stateValues.enableCheckpoints ?? true,
 			soundVolume: stateValues.soundVolume,
 			browserViewportSize: stateValues.browserViewportSize ?? "900x600",
@@ -1525,5 +1531,13 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		}
 
 		return properties
+	}
+
+	// add getter for view
+	public getViewColumn(): vscode.ViewColumn {
+		// If the view is a WebviewPanel, return its viewColumn.
+		// This property is only set if the webview is in one of the editor view columns.
+		// Therefore, we can safely return it or default to beside.
+		return (this.view as vscode.WebviewPanel).viewColumn ?? vscode.ViewColumn.Active
 	}
 }

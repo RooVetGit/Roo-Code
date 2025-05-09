@@ -391,6 +391,14 @@
 			"matchPrecision": {
 				"label": "Précision de correspondance",
 				"description": "Ce curseur contrôle la précision avec laquelle les sections de code doivent correspondre lors de l'application des diffs. Des valeurs plus basses permettent des correspondances plus flexibles mais augmentent le risque de remplacements incorrects. Utilisez des valeurs inférieures à 100 % avec une extrême prudence."
+			},
+			"autoFocus": {
+				"label": "Mettre automatiquement le focus sur l'onglet de comparaison lors de l'affichage des modifications de fichiers",
+				"description": "Si désactivé, l'onglet de comparaison s'ouvrira en arrière-plan sans prendre le focus."
+			},
+			"autoClose": {
+				"label": "Fermer automatiquement les onglets Roo",
+				"description": "Lorsqu'activé, Roo fermera automatiquement les onglets qu'il a ouverts (vues de différences, fichiers ouverts) lorsqu'une tâche impliquant une modification de fichiers est terminée ou annulée."
 			}
 		}
 	},

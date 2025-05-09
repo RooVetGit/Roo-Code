@@ -391,6 +391,14 @@
 			"matchPrecision": {
 				"label": "Precyzja dopasowania",
 				"description": "Ten suwak kontroluje, jak dokładnie sekcje kodu muszą pasować podczas stosowania różnic. Niższe wartości umożliwiają bardziej elastyczne dopasowywanie, ale zwiększają ryzyko nieprawidłowych zamian. Używaj wartości poniżej 100% z najwyższą ostrożnością."
+			},
+			"autoFocus": {
+				"label": "Automatycznie ustaw fokus na zakładce różnic przy wyświetlaniu zmian w plikach",
+				"description": "Jeśli wyłączone, zakładka różnic otworzy się w tle i nie przejmie fokusu."
+			},
+			"autoClose": {
+				"label": "Automatycznie zamykaj karty Roo",
+				"description": "Gdy włączone, Roo automatycznie zamknie karty, które otworzyło (takie jak widoki różnic i otwarte pliki), gdy zadanie obejmujące modyfikację plików zostanie zakończone lub cofnięte."
 			}
 		}
 	},

@@ -1,4 +1,5 @@
 import * as vscode from "vscode"
+import { TextDocument, TextDocumentShowOptions, ViewColumn } from "vscode"
 import * as path from "path"
 import * as fs from "fs/promises"
 import { createDirectoriesForFile } from "../../utils/fs"
@@ -8,6 +9,7 @@ import { DecorationController } from "./DecorationController"
 import * as diff from "diff"
 import { diagnosticsToProblemsString, getNewDiagnostics } from "../diagnostics"
 import stripBom from "strip-bom"
+import { ClineProvider } from "../../core/webview/ClineProvider"
 
 export const DIFF_VIEW_URI_SCHEME = "cline-diff"
 
@@ -24,10 +26,150 @@ export class DiffViewProvider {
 	private activeLineController?: DecorationController
 	private streamedLines: string[] = []
 	private preDiagnostics: [vscode.Uri, vscode.Diagnostic[]][] = []
+	private rooOpenedTabs: Set<string> = new Set()
+	private preserveFocus: boolean | undefined = undefined
+	private autoApproval: boolean | undefined = undefined
+	private autoFocus: boolean | undefined = undefined
+	private autoCloseTabs: boolean = false
+	// have to set the default view column to -1 since we need to set it in the initialize method and during initialization the enum ViewColumn is undefined
+	private viewColumn: ViewColumn = -1 // ViewColumn.Active
+	private userInteractionListeners: vscode.Disposable[] = []
+	private suppressInteractionFlag: boolean = false
 
 	constructor(private cwd: string) {}
 
-	async open(relPath: string): Promise<void> {
+	public async initialize() {
+		const provider = ClineProvider.getVisibleInstance()
+		// If autoApproval is enabled, we want to preserve focus if autoFocus is disabled
+		// AutoApproval is enabled when the user has set "alwaysAllowWrite" and "autoApprovalEnabled" to true
+		// AutoFocus is enabled when the user has set "diffView.autoFocus" to true, this is the default.
+		// If autoFocus is disabled, we want to preserve focus on the diff editor we are working on.
+		// we have to check for null values for the first initialization
+		if (this.autoApproval === undefined) {
+			this.autoApproval =
+				(provider?.getValue("autoApprovalEnabled") && provider?.getValue("alwaysAllowWrite")) ?? false
+		}
+		if (this.autoFocus === undefined) {
+			this.autoFocus = vscode.workspace.getConfiguration("roo-cline").get<boolean>("diffViewAutoFocus", true)
+		}
+		this.preserveFocus = this.autoApproval && !this.autoFocus
+		this.autoCloseTabs = vscode.workspace.getConfiguration("roo-cline").get<boolean>("autoCloseRooTabs", false)
+		// Track currently visible editors and active editor for focus restoration and tab cleanup
+		this.rooOpenedTabs.clear()
+	}
+
+	private async showTextDocumentSafe({
+		uri,
+		textDocument,
+		options,
+	}: {
+		uri?: vscode.Uri
+		textDocument?: TextDocument
+		options?: TextDocumentShowOptions
+	}) {
+		this.suppressInteractionFlag = true
+		// If the uri is already open, we want to focus it
+		if (uri) {
+			const editor = await vscode.window.showTextDocument(uri, options)
+			this.suppressInteractionFlag = false
+			return editor
+		}
+		// If the textDocument is already open, we want to focus it
+		if (textDocument) {
+			const editor = await vscode.window.showTextDocument(textDocument, options)
+			this.suppressInteractionFlag = false
+			return editor
+		}
+		// If the textDocument is not open and not able to be opened, we just reset the suppressInteractionFlag
+		this.suppressInteractionFlag = false
+		return null
+	}
+
+	/**
+	 * Resets the auto-focus listeners to prevent memory leaks.
+	 * This is called when the diff editor is closed or when the user interacts with other editors.
+	 */
+	private resetAutoFocusListeners() {
+		this.userInteractionListeners.forEach((listener) => listener.dispose())
+		this.userInteractionListeners = []
+	}
+
+	/**
+	 * Disables auto-focus on the diff editor after user interaction.
+	 * This is to prevent the diff editor from stealing focus when the user interacts with other editors or tabs.
+	 */
+	public disableAutoFocusAfterUserInteraction() {
+		this.resetAutoFocusListeners()
+		// if auto approval is disabled or auto focus is disabled, we don't need to add listeners
+		if (!this.autoApproval || !this.autoFocus) {
+			return
+		}
+		// then add new listeners
+		const changeTextEditorSelectionListener = vscode.window.onDidChangeTextEditorSelection((_e) => {
+			// If the change was done programmatically, or if there is actually no editor or the user did not allow auto approval, we don't want to suppress focus
+			if (this.suppressInteractionFlag) {
+				// If the user is interacting with the diff editor, we don't want to suppress focus
+				// If the user is interacting with another editor, we want to suppress focus
+				return
+			}
+			// Consider this a "user interaction"
+			this.preserveFocus = true
+			this.autoFocus = false
+			// remove the listeners since we don't need them anymore
+			this.resetAutoFocusListeners()
+		}, this)
+		const changeActiveTextEditorListener = vscode.window.onDidChangeActiveTextEditor((editor) => {
+			// If the change was done programmatically, or if there is actually no editor or the user did not allow auto approval, we don't want to suppress focus
+			if (this.suppressInteractionFlag || !editor) {
+				// If the user is interacting with the diff editor, we don't want to suppress focus
+				// If the user is interacting with another editor, we want to suppress focus
+				return
+			}
+			// Consider this a "user interaction"
+			this.preserveFocus = true
+			this.autoFocus = false
+			// remove the listeners since we don't need them anymore
+			this.resetAutoFocusListeners()
+		}, this)
+		const changeTabListener = vscode.window.tabGroups.onDidChangeTabs((_e) => {
+			// Some tab was added/removed/changed
+			// If the change was done programmatically, or the user did not allow auto approval, we don't want to suppress focus
+			if (this.suppressInteractionFlag) {
+				return
+			}
+			this.preserveFocus = true
+			this.autoFocus = false
+			// remove the listeners since we don't need them anymore
+			this.resetAutoFocusListeners()
+		}, this)
+		const changeTabGroupListener = vscode.window.tabGroups.onDidChangeTabGroups((_e) => {
+			// Tab group layout changed (e.g., split view)
+			// If the change was done programmatically, or the user did not allow auto approval, we don't want to suppress focus
+			if (this.suppressInteractionFlag) {
+				return
+			}
+			this.preserveFocus = true
+			this.autoFocus = false
+			// remove the listeners since we don't need them anymore
+			this.resetAutoFocusListeners()
+		}, this)
+		this.userInteractionListeners.push(
+			changeTextEditorSelectionListener,
+			changeActiveTextEditorListener,
+			changeTabListener,
+			changeTabGroupListener,
+		)
+	}
+
+	/**
+	 * Opens a diff editor for the given relative path, optionally in a specific viewColumn.
+	 * @param relPath The relative file path to open.
+	 * @param viewColumn (Optional) The VSCode editor group to open the diff in.
+	 */
+	async open(relPath: string, viewColumn: ViewColumn): Promise<void> {
+		this.viewColumn = viewColumn
+		this.disableAutoFocusAfterUserInteraction()
+		// Set the edit type based on the file existence
 		this.relPath = relPath
 		const fileExists = this.editType === "modify"
 		const absolutePath = path.resolve(this.cwd, relPath)
@@ -78,6 +220,17 @@ export class DiffViewProvider {
 		this.fadedOverlayController.addLines(0, this.activeDiffEditor.document.lineCount)
 		this.scrollEditorToLine(0) // will this crash for new files?
 		this.streamedLines = []
+	}
+
+	/**
+	 * Opens a file editor and tracks it as opened by Roo if not already open.
+	 */
+	private async showAndTrackEditor(uri: vscode.Uri, options: vscode.TextDocumentShowOptions = {}) {
+		const editor = await this.showTextDocumentSafe({ uri, options })
+		if (this.autoCloseTabs && !this.documentWasOpen) {
+			this.rooOpenedTabs.add(uri.toString())
+		}
+		return editor
 	}
 
 	async update(accumulatedContent: string, isFinal: boolean) {
@@ -149,16 +302,12 @@ export class DiffViewProvider {
 		if (!this.relPath || !this.newContent || !this.activeDiffEditor) {
 			return { newProblemsMessage: undefined, userEdits: undefined, finalContent: undefined }
 		}
-		const absolutePath = path.resolve(this.cwd, this.relPath)
 		const updatedDocument = this.activeDiffEditor.document
 		const editedContent = updatedDocument.getText()
 		if (updatedDocument.isDirty) {
 			await updatedDocument.save()
 		}
-
-		await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), { preview: false })
-		await this.closeAllDiffViews()
-
+		await this.closeAllRooOpenedViews()
 		/*
 		Getting diagnostics before and after the file edit is a better approach than
 		automatically tracking problems in real-time. This method ensures we only
@@ -217,7 +366,7 @@ export class DiffViewProvider {
 			if (updatedDocument.isDirty) {
 				await updatedDocument.save()
 			}
-			await this.closeAllDiffViews()
+			await this.closeAllRooOpenedViews()
 			await fs.unlink(absolutePath)
 			// Remove only the directories we created, in reverse order
 			for (let i = this.createdDirs.length - 1; i >= 0; i--) {
@@ -238,38 +387,36 @@ export class DiffViewProvider {
 			await updatedDocument.save()
 			console.log(`File ${absolutePath} has been reverted to its original content.`)
 			if (this.documentWasOpen) {
-				await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
-					preview: false,
-				})
+				await this.showTextDocumentSafe({ uri: vscode.Uri.file(absolutePath), options: { preview: false } })
 			}
-			await this.closeAllDiffViews()
+			await this.closeAllRooOpenedViews()
 		}
 
 		// edit is done
-		await this.reset()
+		this.resetWithListeners()
 	}
 
-	private async closeAllDiffViews() {
+	private async closeAllRooOpenedViews() {
 		const tabs = vscode.window.tabGroups.all
 			.flatMap((tg) => tg.tabs)
 			.filter(
 				(tab) =>
-					tab.input instanceof vscode.TabInputTextDiff &&
-					tab.input?.original?.scheme === DIFF_VIEW_URI_SCHEME,
+					(tab.input instanceof vscode.TabInputTextDiff &&
+						tab.input?.original?.scheme === DIFF_VIEW_URI_SCHEME) ||
+					// close if in rooOpenedTabs and autoCloseTabs is enabled
+					(this.autoCloseTabs &&
+						tab.input instanceof vscode.TabInputText &&
+						this.rooOpenedTabs.has(tab.input.uri.toString())),
 			)
 		for (const tab of tabs) {
 			// trying to close dirty views results in save popup
 			if (!tab.isDirty) {
-				await vscode.window.tabGroups.close(tab)
+				await vscode.window.tabGroups.close(tab, true)
 			}
 		}
 	}
 
-	private async openDiffEditor(): Promise<vscode.TextEditor> {
-		if (!this.relPath) {
-			throw new Error("No file path set")
-		}
-		const uri = vscode.Uri.file(path.resolve(this.cwd, this.relPath))
+	private async getEditorFromDiffTab(uri: vscode.Uri): Promise<vscode.TextEditor | null> {
 		// If this diff editor is already open (ie if a previous write file was interrupted) then we should activate that instead of opening a new diff
 		const diffTab = vscode.window.tabGroups.all
 			.flatMap((group) => group.tabs)
@@ -279,31 +426,99 @@ export class DiffViewProvider {
 					tab.input?.original?.scheme === DIFF_VIEW_URI_SCHEME &&
 					arePathsEqual(tab.input.modified.fsPath, uri.fsPath),
 			)
-		if (diffTab && diffTab.input instanceof vscode.TabInputTextDiff) {
-			const editor = await vscode.window.showTextDocument(diffTab.input.modified)
+		if (!(diffTab && diffTab.input instanceof vscode.TabInputTextDiff)) {
+			return null
+		}
+		// Only focus if autoFocus is true
+		if (this.autoFocus) {
+			const editor = await this.showAndTrackEditor(diffTab.input.modified)
+			return editor
+		}
+		// Try to find the editor without focusing
+		const editor = vscode.window.visibleTextEditors.find((ed) => arePathsEqual(ed.document.uri.fsPath, uri.fsPath))
+		if (editor) return editor
+		// Otherwise, open without focusing
+		await this.showAndTrackEditor(diffTab.input.modified, {
+			preview: false,
+			preserveFocus: this.preserveFocus,
+			viewColumn: this.viewColumn,
+		})
+		const newEditor = vscode.window.visibleTextEditors.find((ed) =>
+			arePathsEqual(ed.document.uri.fsPath, uri.fsPath),
+		)
+		if (newEditor) return newEditor
+		return null
+	}
+
+	/**
+	 * Opens the diff editor, optionally in a specific viewColumn.
+	 */
+	private async openDiffEditor(): Promise<vscode.TextEditor> {
+		if (!this.relPath) {
+			throw new Error("No file path set")
+		}
+		// right uri = the file path
+		const rightUri = vscode.Uri.file(path.resolve(this.cwd, this.relPath))
+		const editor = await this.getEditorFromDiffTab(rightUri)
+		if (editor) {
 			return editor
 		}
 		// Open new diff editor
 		return new Promise<vscode.TextEditor>((resolve, reject) => {
-			const fileName = path.basename(uri.fsPath)
+			const fileName = path.basename(rightUri.fsPath)
 			const fileExists = this.editType === "modify"
-			const disposable = vscode.window.onDidChangeActiveTextEditor((editor) => {
-				if (editor && arePathsEqual(editor.document.uri.fsPath, uri.fsPath)) {
-					disposable.dispose()
-					resolve(editor)
-				}
+
+			const leftUri = vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${fileName}`).with({
+				query: Buffer.from(this.originalContent ?? "").toString("base64"),
 			})
-			vscode.commands.executeCommand(
-				"vscode.diff",
-				vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${fileName}`).with({
-					query: Buffer.from(this.originalContent ?? "").toString("base64"),
-				}),
-				uri,
-				`${fileName}: ${fileExists ? "Original ↔ Roo's Changes" : "New File"} (Editable)`,
-			)
+			const title = `${fileName}: ${fileExists ? "Original ↔ Roo's Changes" : "New File"} (Editable)`
+			const previousEditor = vscode.window.activeTextEditor
+			const textDocumentShowOptions: TextDocumentShowOptions = {
+				preview: false,
+				preserveFocus: this.preserveFocus,
+				viewColumn: this.viewColumn,
+			}
+			// set interaction flag to true to prevent autoFocus from being triggered
+			this.suppressInteractionFlag = true
+			vscode.commands
+				.executeCommand("vscode.diff", leftUri, rightUri, title, textDocumentShowOptions)
+				.then(() => {
+					// set interaction flag to false to allow autoFocus to be triggered
+					this.suppressInteractionFlag = false
+					if (this.autoCloseTabs && !this.documentWasOpen) {
+						// If the diff tab is not already open, add it to the set
+						this.rooOpenedTabs.add(rightUri.toString())
+					}
+					// If autoFocus is true, we don't need to do anything
+					if (this.autoFocus) {
+						return
+					}
+					// if there is no previous editor, we don't need to do anything
+					if (!previousEditor) {
+						return
+					}
+					// if there is, we need to focus it
+					this.showTextDocumentSafe({
+						textDocument: previousEditor.document,
+						options: {
+							preview: false,
+							preserveFocus: false,
+							selection: previousEditor.selection,
+							viewColumn: previousEditor.viewColumn,
+						},
+					})
+				})
+				.then(() => {
+					this.getEditorFromDiffTab(rightUri).then((editor) => {
+						if (editor) {
+							resolve(editor)
+						} else {
+							reject(new Error("Failed to open diff editor, please try again..."))
+						}
+					})
+				})
 			// This may happen on very slow machines ie project idx
 			setTimeout(() => {
-				disposable.dispose()
 				reject(new Error("Failed to open diff editor, please try again..."))
 			}, 10_000)
 		})
@@ -352,7 +567,7 @@ export class DiffViewProvider {
 	}
 
 	// close editor if open?
-	async reset() {
+	reset() {
 		this.editType = undefined
 		this.isEditing = false
 		this.originalContent = undefined
@@ -363,5 +578,12 @@ export class DiffViewProvider {
 		this.activeLineController = undefined
 		this.streamedLines = []
 		this.preDiagnostics = []
+		this.rooOpenedTabs.clear()
+		this.autoCloseTabs = false
+	}
+
+	resetWithListeners() {
+		this.reset()
+		this.resetAutoFocusListeners()
 	}
 }

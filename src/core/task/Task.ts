@@ -572,13 +572,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		console.log(`[subtasks] task ${this.taskId}.${this.instanceId} starting`)
 
-		await this.initiateTaskLoop([
-			{
-				type: "text",
-				text: `<task>\n${task}\n</task>`,
-			},
-			...imageBlocks,
-		])
+		await this.initiateTaskLoop([{ type: "text", text: `<task>\n${task}\n</task>` }, ...imageBlocks])
 	}
 
 	public async resumePausedTask(lastMessage: string) {
@@ -593,12 +587,7 @@ export class Task extends EventEmitter<ClineEvents> {
 
 			await this.addToApiConversationHistory({
 				role: "user",
-				content: [
-					{
-						type: "text",
-						text: `[new_task completed] Result: ${lastMessage}`,
-					},
-				],
+				content: [{ type: "text", text: `[new_task completed] Result: ${lastMessage}` }],
 			})
 		} catch (error) {
 			this.providerRef
@@ -900,6 +889,9 @@ export class Task extends EventEmitter<ClineEvents> {
 	private async initiateTaskLoop(userContent: Anthropic.Messages.ContentBlockParam[]): Promise<void> {
 		// Kicks off the checkpoints initialization process in the background.
 		getCheckpointService(this)
+		// Lets track if the user is interacting with the editor after we start our task loop.
+		this.diffViewProvider.initialize()
+		this.diffViewProvider.disableAutoFocusAfterUserInteraction()
 
 		let nextUserContent = userContent
 		let includeFileDetails = true
@@ -1480,10 +1472,7 @@ export class Task extends EventEmitter<ClineEvents> {
 							// Convert image blocks to text descriptions.
 							// Note: We can't access the actual image content/url due to API limitations,
 							// but we can indicate that an image was present in the conversation.
-							return {
-								type: "text",
-								text: "[Referenced image in conversation]",
-							}
+							return { type: "text", text: "[Referenced image in conversation]" }
 						}
 						return block
 					})

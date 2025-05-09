@@ -498,6 +498,8 @@ const ApiOptions = ({
 				<>
 					<DiffSettingsControl
 						diffEnabled={apiConfiguration.diffEnabled}
+						diffViewAutoFocus={apiConfiguration.diffViewAutoFocus}
+						autoCloseRooTabs={apiConfiguration.autoCloseRooTabs}
 						fuzzyMatchThreshold={apiConfiguration.fuzzyMatchThreshold}
 						onChange={(field, value) => setApiConfigurationField(field, value)}
 					/>

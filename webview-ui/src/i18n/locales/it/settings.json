@@ -391,6 +391,14 @@
 			"matchPrecision": {
 				"label": "Precisione corrispondenza",
 				"description": "Questo cursore controlla quanto precisamente le sezioni di codice devono corrispondere quando si applicano i diff. Valori più bassi consentono corrispondenze più flessibili ma aumentano il rischio di sostituzioni errate. Usa valori inferiori al 100% con estrema cautela."
+			},
+			"autoFocus": {
+				"label": "Metti automaticamente a fuoco la scheda diff quando vengono mostrati cambiamenti ai file",
+				"description": "Se disabilitato, la scheda diff si aprirà in background senza prendere il focus."
+			},
+			"autoClose": {
+				"label": "Chiudi automaticamente le schede Roo",
+				"description": "Quando abilitato, Roo chiuderà automaticamente le schede che ha aperto (come viste diff e file aperti) quando un'attività che coinvolge la modifica di file viene completata o annullata."
 			}
 		}
 	},

@@ -12,6 +12,7 @@ import { addLineNumbers } from "../../integrations/misc/extract-text"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
+import { ViewColumn } from "vscode"
 
 export async function applyDiffTool(
 	cline: Task,
@@ -138,7 +139,9 @@ export async function applyDiffTool(
 
 			// Show diff view before asking for approval
 			cline.diffViewProvider.editType = "modify"
-			await cline.diffViewProvider.open(relPath)
+			const clineRef = cline.providerRef.deref()
+			const viewColumn = clineRef?.getViewColumn() ?? ViewColumn.Active
+			await cline.diffViewProvider.open(relPath, viewColumn)
 			await cline.diffViewProvider.update(diffResult.content, true)
 			await cline.diffViewProvider.scrollToFirstDiff()
 
@@ -204,13 +207,13 @@ export async function applyDiffTool(
 				)
 			}
 
-			await cline.diffViewProvider.reset()
+			await cline.diffViewProvider.resetWithListeners()
 
 			return
 		}
 	} catch (error) {
 		await handleError("applying diff", error)
-		await cline.diffViewProvider.reset()
+		await cline.diffViewProvider.resetWithListeners()
 		return
 	}
 }

@@ -391,6 +391,14 @@
 			"matchPrecision": {
 				"label": "Eşleşme hassasiyeti",
 				"description": "Bu kaydırıcı, diff'ler uygulanırken kod bölümlerinin ne kadar hassas bir şekilde eşleşmesi gerektiğini kontrol eder. Daha düşük değerler daha esnek eşleşmeye izin verir ancak yanlış değiştirme riskini artırır. %100'ün altındaki değerleri son derece dikkatli kullanın."
+			},
+			"autoFocus": {
+				"label": "Dosya değişiklikleri gösterildiğinde diff sekmesine otomatik odaklan",
+				"description": "Devre dışı bırakılırsa, diff sekmesi arka planda açılır ve odağı almaz."
+			},
+			"autoClose": {
+				"label": "Roo'nun açtığı sekmeleri otomatik kapat",
+				"description": "Etkinleştirildiğinde, Roo dosya değişikliği içeren bir görev tamamlandığında veya geri alındığında açtığı sekmeleri (ör. diff görünümleri, açılan dosyalar) otomatik olarak kapatacaktır."
 			}
 		}
 	},

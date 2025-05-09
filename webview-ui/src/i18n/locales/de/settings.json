@@ -391,6 +391,14 @@
 			"matchPrecision": {
 				"label": "Übereinstimmungsgenauigkeit",
 				"description": "Dieser Schieberegler steuert, wie genau Codeabschnitte beim Anwenden von Diffs übereinstimmen müssen. Niedrigere Werte ermöglichen flexiblere Übereinstimmungen, erhöhen aber das Risiko falscher Ersetzungen. Verwende Werte unter 100% mit äußerster Vorsicht."
+			},
+			"autoFocus": {
+				"label": "Diff-Tab beim Anzeigen von Dateiänderungen automatisch fokussieren",
+				"description": "Wenn deaktiviert, wird der Diff-Tab im Hintergrund geöffnet und stiehlt nicht den Fokus."
+			},
+			"autoClose": {
+				"label": "Roo-Tabs automatisch schließen",
+				"description": "Wenn aktiviert, schließt Roo automatisch alle Tabs, die es selbst geöffnet hat (wie Diff-Ansichten und geöffnete Dateien), wenn eine Aufgabe mit Dateiänderungen abgeschlossen oder zurückgesetzt wird."
 			}
 		}
 	},

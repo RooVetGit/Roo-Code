@@ -391,6 +391,14 @@
 			"matchPrecision": {
 				"label": "Match precision",
 				"description": "This slider controls how precisely code sections must match when applying diffs. Lower values allow more flexible matching but increase the risk of incorrect replacements. Use values below 100% with extreme caution."
+			},
+			"autoFocus": {
+				"label": "Automatically focus the diff tab when showing file changes",
+				"description": "If disabled, the diff tab will open in the background instead of stealing focus."
+			},
+			"autoClose": {
+				"label": "Automatically close Roo tabs",
+				"description": "When enabled, Roo will automatically close any tabs it has opened itself (like diff views, opened files) when a task involving file modification is completed or reverted."
 			}
 		}
 	},
