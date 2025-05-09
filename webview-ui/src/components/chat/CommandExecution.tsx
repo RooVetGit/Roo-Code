@@ -1,6 +1,5 @@
-import { HTMLAttributes, useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useState, memo } from "react"
 import { useEvent } from "react-use"
-import { Virtuoso } from "react-virtuoso"
 import { ChevronDown, Skull } from "lucide-react"
 
 import { CommandExecutionStatus, commandExecutionStatusSchema } from "@roo/schemas"
@@ -30,11 +29,6 @@ export const CommandExecution = ({ executionId, text }: CommandExecutionProps) =
 	const [output, setOutput] = useState("")
 	const [command, setCommand] = useState(text)
 
-	const lines = useMemo(
-		() => [`$ ${command}`, ...output.split("\n").filter((line) => line.trim() !== "")],
-		[output, command],
-	)
-
 	const onMessage = useCallback(
 		(event: MessageEvent) => {
 			const message: ExtensionMessage = event.data
@@ -55,7 +49,7 @@ export const CommandExecution = ({ executionId, text }: CommandExecutionProps) =
 							setStatus(data)
 							break
 						case "output":
-							setOutput((output) => output + data.output)
+							setOutput(data.output)
 							break
 						case "fallback":
 							setIsExpanded(true)
@@ -116,7 +110,7 @@ export const CommandExecution = ({ executionId, text }: CommandExecutionProps) =
 							<div className="whitespace-nowrap">Exited ({status.exitCode})</div>
 						</div>
 					)}
-					{lines.length > 0 && (
+					{output.length > 0 && (
 						<Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)}>
 							<ChevronDown
 								className={cn("size-4 transition-transform duration-300", {
@@ -127,31 +121,21 @@ export const CommandExecution = ({ executionId, text }: CommandExecutionProps) =
 					)}
 				</div>
 			</div>
-			<div
-				className={cn("mt-1 pt-1 border-t border-border/25", { hidden: !isExpanded })}
-				style={{ height: Math.min((lines.length + 1) * 16, 200) }}>
-				{lines.length > 0 && (
-					<Virtuoso
-						className="h-full"
-						totalCount={lines.length}
-						itemContent={(i) => <Line className="text-sm">{lines[i]}</Line>}
-						followOutput="auto"
-					/>
-				)}
-			</div>
+			<MemoizedOutputContainer isExpanded={isExpanded} output={output} />
 		</div>
 	)
 }
 
-type LineProps = HTMLAttributes<HTMLDivElement>
-
-const Line = ({ className, ...props }: LineProps) => {
-	return (
-		<div
-			className={cn("font-mono text-vscode-editor-foreground whitespace-pre-wrap break-words", className)}
-			{...props}
-		/>
-	)
-}
-
 CommandExecution.displayName = "CommandExecution"
+
+const OutputContainer = ({ isExpanded, output }: { isExpanded: boolean; output: string }) => (
+	<div
+		className={cn("mt-1 pt-1 border-t border-border/25 overflow-hidden transition-[max-height] duration-300", {
+			"max-h-0": !isExpanded,
+			"max-h-[100%]": isExpanded,
+		})}>
+		{output.length > 0 && <CodeBlock source={output} language="log" />}
+	</div>
+)
+
+const MemoizedOutputContainer = memo(OutputContainer)
