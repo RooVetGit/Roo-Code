@@ -815,6 +815,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		activate: boolean = true,
 	): Promise<string | undefined> {
 		try {
+			// TODO: Do we need to be calling `activateProfile`? It's not
+			// clear to me what the source of truth should be; in some cases
+			// we rely on the `ContextProxy`'s data store and in other cases
+			// we rely on the `ProviderSettingsManager`'s data store. It might
+			// be simpler to unify these two.
 			const id = await this.providerSettingsManager.saveConfig(name, providerSettings)
 
 			if (activate) {
@@ -886,9 +891,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	async activateProviderProfile(args: { name: string } | { id: string }) {
 		const { name, id, ...providerSettings } = await this.providerSettingsManager.activateProfile(args)
 
+		// See `upsertProviderProfile` for a description of what this is doing.
 		await Promise.all([
 			this.contextProxy.setValue("listApiConfigMeta", await this.providerSettingsManager.listConfig()),
 			this.contextProxy.setValue("currentApiConfigName", name),
+			this.contextProxy.setProviderSettings(providerSettings),
 		])
 
 		const { mode } = await this.getState()
@@ -897,10 +904,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			await this.providerSettingsManager.setModeConfig(mode, id)
 		}
 
-		await this.contextProxy.setProviderSettings(providerSettings)
+		// Change the provider for the current task.
+		const task = this.getCurrentCline()
 
-		if (this.getCurrentCline()) {
-			this.getCurrentCline()!.api = buildApiHandler(providerSettings)
+		if (task) {
+			task.api = buildApiHandler(providerSettings)
 		}
 
 		await this.postStateToWebview()
