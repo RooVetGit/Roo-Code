@@ -8,17 +8,15 @@ import { buildDocLink } from "@src/utils/docLinks"
 const tips = [
 	{
 		icon: "codicon-account",
-		href: buildDocLink("basic-usage/using-modes", "tips_custom_modes"),
+		href: buildDocLink("basic-usage/using-modes", "tips"),
 		titleKey: "rooTips.customizableModes.title",
 		descriptionKey: "rooTips.customizableModes.description",
-		page: "/basic-usage/using-modes",
 	},
 	{
 		icon: "codicon-list-tree",
-		href: buildDocLink("features/boomerang-tasks", "tips_boomerang"),
+		href: buildDocLink("features/boomerang-tasks", "tips"),
 		titleKey: "rooTips.boomerangTasks.title",
 		descriptionKey: "rooTips.boomerangTasks.description",
-		page: "/features/boomerang-tasks",
 	},
 ]
 

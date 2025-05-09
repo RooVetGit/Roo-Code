@@ -277,7 +277,6 @@ const ApiOptions = ({
 		return {
 			url: buildDocLink(`providers/${slug}`, "provider_docs"),
 			name,
-			page: `/providers/${slug}`,
 		}
 	}, [selectedProvider])
 
