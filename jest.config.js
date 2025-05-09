@@ -4,7 +4,7 @@ module.exports = {
 	testEnvironment: "node",
 	moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
 	transform: {
-		"^.+\\.tsx?$": [
+		"^.+\\.(t|j)sx?$": [
 			"ts-jest",
 			{
 				tsconfig: {
@@ -40,7 +40,7 @@ module.exports = {
 		"^@src/(.*)$": "<rootDir>/webview-ui/src/$1",
 	},
 	transformIgnorePatterns: [
-		"node_modules/(?!(@modelcontextprotocol|delay|p-wait-for|serialize-error|strip-ansi|default-shell|os-name|strip-bom)/)",
+		"node_modules/(?!(@modelcontextprotocol|delay|p-wait-for|serialize-error|strip-ansi|default-shell|os-name|strip-bom|yocto-queue|p-limit)/)",
 	],
 	roots: ["<rootDir>/src", "<rootDir>/webview-ui/src"],
 	modulePathIgnorePatterns: [".vscode-test"],
