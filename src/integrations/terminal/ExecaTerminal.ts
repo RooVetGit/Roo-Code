@@ -23,6 +23,7 @@ export class ExecaTerminal extends BaseTerminal {
 		this.process = process
 
 		process.on("line", (line) => callbacks.onLine(line, process))
+		process.on("input_required", () => callbacks.onInputRequired?.(process))
 		process.once("completed", (output) => callbacks.onCompleted(output, process))
 		process.once("shell_execution_started", (pid) => callbacks.onShellExecutionStarted(pid, process))
 		process.once("shell_execution_complete", (details) => callbacks.onShellExecutionComplete(details, process))
@@ -34,5 +35,13 @@ export class ExecaTerminal extends BaseTerminal {
 		})
 
 		return mergePromise(process, promise)
+	}
+
+	public override sendInput(input: string): boolean {
+		return this.process?.sendInput(input) ?? false
+	}
+
+	public override isWaitingForInput(): boolean {
+		return this.process?.isWaitingForInput() ?? false
 	}
 }

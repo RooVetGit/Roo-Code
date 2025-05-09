@@ -131,6 +131,20 @@ export abstract class BaseTerminalProcess extends EventEmitter<RooTerminalProces
 	abstract hasUnretrievedOutput(): boolean
 
 	/**
+	 * Writes `input` to the subprocess stdin.
+	 * @param input The input string to write
+	 */
+	public sendInput(_input: string): void {}
+
+	/**
+	 * Checks if the process is waiting for input.
+	 * @returns true if the process is waiting for input
+	 */
+	public isWaitingForInput(): boolean {
+		return false
+	}
+
+	/**
 	 * Returns complete lines with their carriage returns.
 	 * The final line may lack a carriage return if the program didn't send one.
 	 * @returns The unretrieved output

@@ -149,6 +149,14 @@ export abstract class BaseTerminal implements RooTerminal {
 		return output
 	}
 
+	public sendInput(_input: string): boolean {
+		return false
+	}
+
+	public isWaitingForInput(): boolean {
+		return false
+	}
+
 	public static defaultShellIntegrationTimeout = 5_000
 	private static shellIntegrationTimeout: number = BaseTerminal.defaultShellIntegrationTimeout
 	private static shellIntegrationDisabled: boolean = false

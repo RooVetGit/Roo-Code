@@ -1,4 +1,4 @@
-import { execa, ExecaError } from "execa"
+import { execa, ExecaError, ResultPromise } from "execa"
 import psTree from "ps-tree"
 import process from "process"
 
@@ -9,6 +9,17 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 	private terminalRef: WeakRef<RooTerminal>
 	private aborted = false
 	private pid?: number
+
+	private subprocess?: ResultPromise<{
+		shell: true
+		cwd: string
+		all: true
+		stdin: "pipe"
+	}>
+
+	private waitingForInput = false
+	private lastOutputAt = 0
+	private inputDetectionTimer?: NodeJS.Timeout
 
 	constructor(terminal: RooTerminal) {
 		super()
@@ -35,21 +46,21 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 
 		try {
 			this.isHot = true
+			this.lastOutputAt = Date.now()
 
-			const subprocess = execa({
-				shell: true,
-				cwd: this.terminal.getCurrentWorkingDirectory(),
-				all: true,
-			})`${command}`
-
-			this.pid = subprocess.pid
-			const stream = subprocess.iterable({ from: "all", preserveNewlines: true })
-			this.terminal.setActiveStream(stream, subprocess.pid)
+			const cwd = this.terminal.getCurrentWorkingDirectory()
+			this.subprocess = execa({ shell: true, cwd, all: true, stdin: "pipe" })`${command}`
+			this.pid = this.subprocess.pid
+			const stream = this.subprocess.iterable({ from: "all", preserveNewlines: true })
+			this.terminal.setActiveStream(stream, this.subprocess.pid)
 
 			for await (const line of stream) {
 				if (this.aborted) {
 					break
 				}
+
+				this.lastOutputAt = Date.now()
+				this.waitingForInput = false
 
 				this.fullOutput += line
 
@@ -61,6 +72,7 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 				}
 
 				this.startHotTimer(line)
+				this.startInputDetectionTimer()
 			}
 
 			if (this.aborted) {
@@ -69,7 +81,9 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 				const kill = new Promise<void>((resolve) => {
 					timeoutId = setTimeout(() => {
 						try {
-							subprocess.kill("SIGKILL")
+							if (this.subprocess) {
+								this.subprocess.kill("SIGKILL")
+							}
 						} catch (e) {}
 
 						resolve()
@@ -77,7 +91,7 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 				})
 
 				try {
-					await Promise.race([subprocess, kill])
+					await Promise.race([this.subprocess, kill])
 				} catch (error) {
 					console.log(
 						`[ExecaTerminalProcess] subprocess termination error: ${error instanceof Error ? error.message : String(error)}`,
@@ -105,6 +119,7 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 		this.terminal.setActiveStream(undefined)
 		this.emitRemainingBufferIfListening()
 		this.stopHotTimer()
+		this.stopInputDetectionTimer()
 		this.emit("completed", this.fullOutput)
 		this.emit("continue")
 	}
@@ -113,6 +128,7 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 		this.isListening = false
 		this.removeAllListeners("line")
 		this.emit("continue")
+		this.stopInputDetectionTimer()
 	}
 
 	public override abort() {
@@ -148,6 +164,8 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 				)
 			}
 		}
+
+		this.stopInputDetectionTimer()
 	}
 
 	public override hasUnretrievedOutput() {
@@ -165,11 +183,6 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 		index++
 		this.lastRetrievedIndex += index
 
-		// console.log(
-		// 	`[ExecaTerminalProcess#getUnretrievedOutput] fullOutput.length=${this.fullOutput.length} lastRetrievedIndex=${this.lastRetrievedIndex}`,
-		// 	output.slice(0, index),
-		// )
-
 		return output.slice(0, index)
 	}
 
@@ -183,5 +196,41 @@ export class ExecaTerminalProcess extends BaseTerminalProcess {
 		if (output !== "") {
 			this.emit("line", output)
 		}
+	}
+
+	private startInputDetectionTimer() {
+		this.stopInputDetectionTimer()
+
+		this.inputDetectionTimer = setInterval(() => {
+			const now = Date.now()
+
+			if (now - this.lastOutputAt > 500 && this.subprocess && !this.subprocess.killed) {
+				if (!this.waitingForInput) {
+					this.waitingForInput = true
+					this.emit("input_required")
+				}
+			}
+		}, 100)
+	}
+
+	private stopInputDetectionTimer() {
+		if (this.inputDetectionTimer) {
+			clearInterval(this.inputDetectionTimer)
+			this.inputDetectionTimer = undefined
+		}
+	}
+
+	public override sendInput(input: string): void {
+		if (this.subprocess && this.subprocess.stdin) {
+			this.subprocess.stdin.write(input + "\n")
+			this.waitingForInput = false
+			this.lastOutputAt = Date.now()
+		} else {
+			console.error("[ExecaTerminalProcess] Cannot write to stdin: subprocess or stdin not available")
+		}
+	}
+
+	public override isWaitingForInput(): boolean {
+		return this.waitingForInput
 	}
 }
