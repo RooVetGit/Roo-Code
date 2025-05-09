@@ -291,7 +291,7 @@ export class ProviderSettingsManager {
 				return { name, ...providerSettings }
 			})
 		} catch (error) {
-			throw new Error(`Failed to get profile profile: ${error}`)
+			throw new Error(`Failed to get profile: ${error}`)
 		}
 	}
 
@@ -311,7 +311,7 @@ export class ProviderSettingsManager {
 				return { name, ...providerSettings }
 			})
 		} catch (error) {
-			throw new Error(`Failed to activate profile profile: ${error}`)
+			throw new Error(`Failed to activate profile: ${error}`)
 		}
 	}
 
