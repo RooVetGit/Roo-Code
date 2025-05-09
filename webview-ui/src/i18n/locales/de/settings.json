@@ -117,6 +117,7 @@
 		"noCustomHeaders": "Keine benutzerdefinierten Headers definiert. Klicke auf die + Schaltfläche, um einen hinzuzufügen.",
 		"requestyApiKey": "Requesty API-Schlüssel",
 		"getRequestyApiKey": "Requesty API-Schlüssel erhalten",
+		"getShengSuanYunApiKey": "Sheng Suan Yun API-Schlüssel erhalten",
 		"refreshModels": {
 			"label": "Modelle aktualisieren",
 			"hint": "Bitte öffne die Einstellungen erneut, um die neuesten Modelle zu sehen."

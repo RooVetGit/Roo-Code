@@ -117,6 +117,7 @@
 		"noCustomHeaders": "尚未定義自訂標頭。點擊 + 按鈕以新增。",
 		"requestyApiKey": "Requesty API 金鑰",
 		"getRequestyApiKey": "取得 Requesty API 金鑰",
+		"getShengSuanYunApiKey": "取得勝算雲 API 金鑰",
 		"refreshModels": {
 			"label": "重新整理模型",
 			"hint": "請重新開啟設定以查看最新模型。"

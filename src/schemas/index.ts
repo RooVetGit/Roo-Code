@@ -32,6 +32,7 @@ export const providerNames = [
 	"groq",
 	"chutes",
 	"litellm",
+	"shengsuanyun",
 ] as const
 
 export const providerNamesSchema = z.enum(providerNames)
@@ -493,6 +494,11 @@ const defaultSchema = z.object({
 	apiProvider: z.undefined(),
 })
 
+const shengSuanYunSchema = z.object({
+	shengSuanYunApiKey: z.string().optional(),
+	shengSuanYunModelId: z.string().optional(),
+})
+
 export const providerSettingsSchemaDiscriminated = z
 	.discriminatedUnion("apiProvider", [
 		anthropicSchema.merge(z.object({ apiProvider: z.literal("anthropic") })),
@@ -516,6 +522,7 @@ export const providerSettingsSchemaDiscriminated = z
 		groqSchema.merge(z.object({ apiProvider: z.literal("groq") })),
 		chutesSchema.merge(z.object({ apiProvider: z.literal("chutes") })),
 		litellmSchema.merge(z.object({ apiProvider: z.literal("litellm") })),
+		shengSuanYunSchema.merge(z.object({ apiProvider: z.literal("shengsuanyun") })),
 		defaultSchema,
 	])
 	.and(genericProviderSettingsSchema)
@@ -546,6 +553,7 @@ export const providerSettingsSchema = z
 	.merge(chutesSchema)
 	.merge(litellmSchema)
 	.merge(genericProviderSettingsSchema)
+	.merge(shengSuanYunSchema)
 
 export type ProviderSettings = z.infer<typeof providerSettingsSchema>
 
@@ -645,6 +653,9 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	litellmBaseUrl: undefined,
 	litellmApiKey: undefined,
 	litellmModelId: undefined,
+	// Sheng Suan Yun
+	shengSuanYunApiKey: undefined,
+	shengSuanYunModelId: undefined,
 }
 
 export const PROVIDER_SETTINGS_KEYS = Object.keys(providerSettingsRecord) as Keys<ProviderSettings>[]
@@ -837,6 +848,7 @@ export type SecretState = Pick<
 	| "unboundApiKey"
 	| "requestyApiKey"
 	| "xaiApiKey"
+	| "shengSuanYunApiKey"
 	| "groqApiKey"
 	| "chutesApiKey"
 	| "litellmApiKey"
@@ -859,6 +871,7 @@ const secretStateRecord: SecretStateRecord = {
 	unboundApiKey: undefined,
 	requestyApiKey: undefined,
 	xaiApiKey: undefined,
+	shengSuanYunApiKey: undefined,
 	groqApiKey: undefined,
 	chutesApiKey: undefined,
 	litellmApiKey: undefined,

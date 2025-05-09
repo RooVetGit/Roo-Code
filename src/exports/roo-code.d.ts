@@ -29,6 +29,7 @@ type GlobalSettings = {
 							| "groq"
 							| "chutes"
 							| "litellm"
+							| "shengsuanyun"
 					  )
 					| undefined
 		  }[]
@@ -194,6 +195,7 @@ type ProviderSettings = {
 				| "groq"
 				| "chutes"
 				| "litellm"
+				| "shengsuanyun"
 		  )
 		| undefined
 	apiModelId?: string | undefined
@@ -307,6 +309,8 @@ type ProviderSettings = {
 	rateLimitSeconds?: number | undefined
 	modelMaxTokens?: number | undefined
 	modelMaxThinkingTokens?: number | undefined
+	shengSuanYunApiKey?: string | undefined
+	shengSuanYunModelId?: string | undefined
 }
 
 type ProviderSettingsEntry = {
@@ -335,6 +339,7 @@ type ProviderSettingsEntry = {
 				| "groq"
 				| "chutes"
 				| "litellm"
+				| "shengsuanyun"
 		  )
 		| undefined
 }

@@ -116,6 +116,8 @@
 		"headerValue": "Значение заголовка",
 		"noCustomHeaders": "Пользовательские заголовки не определены. Нажмите кнопку +, чтобы добавить.",
 		"requestyApiKey": "Requesty API-ключ",
+		"shengSuanYunApiKey": "Sheng Suan Yun API-ключ",
+		"getShengSuanYunApiKey": "Получить Sheng Suan Yun API-ключ",
 		"getRequestyApiKey": "Получить Requesty API-ключ",
 		"refreshModels": {
 			"label": "Обновить модели",

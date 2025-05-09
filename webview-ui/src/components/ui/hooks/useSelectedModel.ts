@@ -31,6 +31,7 @@ import {
 	glamaDefaultModelId,
 	unboundDefaultModelId,
 	litellmDefaultModelId,
+	shengSuanYunDefaultModelId,
 } from "@roo/shared/api"
 
 import { useRouterModels } from "./useRouterModels"
@@ -168,6 +169,13 @@ function getSelectedModel({
 			const modelFamily = apiConfiguration?.vsCodeLmModelSelector?.family ?? vscodeLlmDefaultModelId
 			const info = vscodeLlmModels[modelFamily as keyof typeof vscodeLlmModels]
 			return { id, info: { ...openAiModelInfoSaneDefaults, ...info, supportsImages: false } } // VSCode LM API currently doesn't support images.
+		}
+		case "shengsuanyun": {
+			const id = apiConfiguration.shengSuanYunModelId ?? shengSuanYunDefaultModelId
+			const info = routerModels.shengsuanyun[id]
+			return info
+				? { id, info }
+				: { id: shengSuanYunDefaultModelId, info: routerModels.shengsuanyun[shengSuanYunDefaultModelId] }
 		}
 		// case "anthropic":
 		// case "human-relay":

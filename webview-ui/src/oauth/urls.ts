@@ -13,3 +13,7 @@ export function getOpenRouterAuthUrl(uriScheme?: string) {
 export function getRequestyAuthUrl(uriScheme?: string) {
 	return `https://app.requesty.ai/oauth/authorize?callback_url=${getCallbackUrl("requesty", uriScheme)}`
 }
+
+export function getShengSuanYunAuthUrl(uriScheme?: string) {
+	return `https://router.shengsuanyun.com/auth?callback_url=${getCallbackUrl("shengsuanyun", uriScheme)}`
+}

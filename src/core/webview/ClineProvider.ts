@@ -12,7 +12,12 @@ import * as vscode from "vscode"
 import type { GlobalState, ProviderName, ProviderSettings, RooCodeSettings } from "../../schemas"
 import { t } from "../../i18n"
 import { setPanel } from "../../activate/registerCommands"
-import { requestyDefaultModelId, openRouterDefaultModelId, glamaDefaultModelId } from "../../shared/api"
+import {
+	requestyDefaultModelId,
+	openRouterDefaultModelId,
+	glamaDefaultModelId,
+	shengSuanYunDefaultModelId,
+} from "../../shared/api"
 import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
@@ -986,6 +991,35 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			apiProvider: "requesty",
 			requestyApiKey: code,
 			requestyModelId: apiConfiguration?.requestyModelId || requestyDefaultModelId,
+		}
+
+		await this.upsertApiConfiguration(currentApiConfigName, newConfiguration)
+	}
+
+	// ShengSuanYun
+
+	async handleShengSuanYunCallback(code: string) {
+		let { apiConfiguration, currentApiConfigName } = await this.getState()
+		let apiKey: string
+		try {
+			const response = await axios.post("https://api.shengsuanyun.com/auth/keys", { code })
+			if (response.data && response.data.data && response.data.data.api_key) {
+				apiKey = response.data.data.api_key
+			} else {
+				throw new Error("Invalid response from ShengSuanYun API")
+			}
+		} catch (error) {
+			this.log(
+				`Error exchanging code for API key: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+			)
+			throw error
+		}
+
+		const newConfiguration: ProviderSettings = {
+			...apiConfiguration,
+			apiProvider: "shengsuanyun",
+			shengSuanYunApiKey: apiKey,
+			shengSuanYunModelId: apiConfiguration?.shengSuanYunModelId || shengSuanYunDefaultModelId,
 		}
 
 		await this.upsertApiConfiguration(currentApiConfigName, newConfiguration)

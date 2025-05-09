@@ -128,6 +128,7 @@
 		"getGroqApiKey": "Lấy khóa API Groq",
 		"groqApiKey": "Khóa API Groq",
 		"getGeminiApiKey": "Lấy khóa API Gemini",
+		"getShengSuanYunApiKey": "Lấy khóa API Sheng Suan Yun",
 		"openAiApiKey": "Khóa API OpenAI",
 		"openAiBaseUrl": "URL cơ sở",
 		"getOpenAiApiKey": "Lấy khóa API OpenAI",

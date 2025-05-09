@@ -117,6 +117,7 @@
 		"noCustomHeaders": "Nessuna intestazione personalizzata definita. Fai clic sul pulsante + per aggiungerne una.",
 		"requestyApiKey": "Chiave API Requesty",
 		"getRequestyApiKey": "Ottieni chiave API Requesty",
+		"getShengSuanYunApiKey": "Ottieni chiave API Sheng Suan Yun",
 		"refreshModels": {
 			"label": "Aggiorna modelli",
 			"hint": "Riapri le impostazioni per vedere i modelli più recenti."

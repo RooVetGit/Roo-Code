@@ -117,6 +117,7 @@
 		"noCustomHeaders": "정의된 사용자 정의 헤더가 없습니다. + 버튼을 클릭하여 추가하세요.",
 		"requestyApiKey": "Requesty API 키",
 		"getRequestyApiKey": "Requesty API 키 받기",
+		"getShengSuanYunApiKey": "Sheng Suan Yun  API 키 받기",
 		"refreshModels": {
 			"label": "모델 새로고침",
 			"hint": "최신 모델을 보려면 설정을 다시 열어주세요."

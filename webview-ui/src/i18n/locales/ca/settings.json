@@ -118,6 +118,7 @@
 		"getGlamaApiKey": "Obtenir clau API de Glama",
 		"requestyApiKey": "Clau API de Requesty",
 		"getRequestyApiKey": "Obtenir clau API de Requesty",
+		"getShengSuanYunApiKey": "Obtenir clau API de Sheng Suan Yun",
 		"refreshModels": {
 			"label": "Actualitzar models",
 			"hint": "Si us plau, torneu a obrir la configuració per veure els models més recents."

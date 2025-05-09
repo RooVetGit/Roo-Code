@@ -10,6 +10,7 @@ import {
 	glamaDefaultModelId,
 	unboundDefaultModelId,
 	litellmDefaultModelId,
+	shengSuanYunDefaultModelId,
 } from "@roo/shared/api"
 
 import { vscode } from "@src/utils/vscode"
@@ -39,6 +40,7 @@ import {
 	Vertex,
 	VSCodeLM,
 	XAI,
+	ShengSuanYun,
 } from "./providers"
 
 import { MODELS_BY_PROVIDER, PROVIDERS, REASONING_MODELS } from "./constants"
@@ -244,6 +246,11 @@ const ApiOptions = ({
 						setApiConfigurationField("litellmModelId", litellmDefaultModelId)
 					}
 					break
+				case "shengsuanyun":
+					if (!apiConfiguration.shengSuanYunModelId) {
+						setApiConfigurationField("shengSuanYunModelId", shengSuanYunDefaultModelId)
+					}
+					break
 			}
 
 			setApiConfigurationField("apiProvider", value)
@@ -255,6 +262,7 @@ const ApiOptions = ({
 			apiConfiguration.unboundModelId,
 			apiConfiguration.requestyModelId,
 			apiConfiguration.litellmModelId,
+			apiConfiguration.shengSuanYunModelId,
 		],
 	)
 
@@ -341,6 +349,15 @@ const ApiOptions = ({
 					apiConfiguration={apiConfiguration}
 					setApiConfigurationField={setApiConfigurationField}
 					routerModels={routerModels}
+				/>
+			)}
+
+			{selectedProvider === "shengsuanyun" && (
+				<ShengSuanYun
+					apiConfiguration={apiConfiguration}
+					setApiConfigurationField={setApiConfigurationField}
+					routerModels={routerModels}
+					refetchRouterModels={refetchRouterModels}
 				/>
 			)}
 

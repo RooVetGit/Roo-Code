@@ -282,13 +282,15 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "requestRouterModels":
 			const { apiConfiguration } = await provider.getState()
 
-			const [openRouterModels, requestyModels, glamaModels, unboundModels, litellmModels] = await Promise.all([
-				getModels("openrouter", apiConfiguration.openRouterApiKey),
-				getModels("requesty", apiConfiguration.requestyApiKey),
-				getModels("glama", apiConfiguration.glamaApiKey),
-				getModels("unbound", apiConfiguration.unboundApiKey),
-				getModels("litellm", apiConfiguration.litellmApiKey, apiConfiguration.litellmBaseUrl),
-			])
+			const [openRouterModels, requestyModels, glamaModels, unboundModels, litellmModels, shengSuanYunModels] =
+				await Promise.all([
+					getModels("openrouter", apiConfiguration.openRouterApiKey),
+					getModels("requesty", apiConfiguration.requestyApiKey),
+					getModels("glama", apiConfiguration.glamaApiKey),
+					getModels("unbound", apiConfiguration.unboundApiKey),
+					getModels("litellm", apiConfiguration.litellmApiKey, apiConfiguration.litellmBaseUrl),
+					getModels("shengsuanyun", apiConfiguration.shengSuanYunApiKey),
+				])
 
 			provider.postMessageToWebview({
 				type: "routerModels",
@@ -298,6 +300,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 					glama: glamaModels,
 					unbound: unboundModels,
 					litellm: litellmModels,
+					shengsuanyun: shengSuanYunModels,
 				},
 			})
 			break

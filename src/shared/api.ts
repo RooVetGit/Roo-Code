@@ -1446,6 +1446,22 @@ export const vscodeLlmModels = {
 	}
 >
 
+// ShengSuanYun
+// https://router.shengsuanyun.com/model
+export const shengSuanYunDefaultModelId: string = "anthropic/claude-3.7-sonnet"
+export const shengSuanYunDefaultModelInfo: ModelInfo = {
+	maxTokens: 128_000,
+	contextWindow: 200_000,
+	supportsImages: true,
+	supportsComputerUse: true,
+	supportsPromptCache: true,
+	inputPrice: 3.0,
+	outputPrice: 15.0,
+	cacheWritesPrice: 3.0,
+	cacheReadsPrice: 0.3,
+	description:
+		"Claude 3.7 Sonnet 是一款先进的大型语言模型，具备增强的推理、编码和问题解决能力。它引入了混合推理方法，允许用户在快速响应和针对复杂任务的逐步处理之间进行选择。 查看更多详情 [博客](https://www.anthropic.com/news/claude-3-7-sonnet)",
+}
 // Groq
 // https://console.groq.com/docs/models
 export type GroqModelId =
@@ -1743,7 +1759,7 @@ export const COMPUTER_USE_MODELS = new Set([
 	"anthropic/claude-3.7-sonnet:thinking",
 ])
 
-const routerNames = ["openrouter", "requesty", "glama", "unbound", "litellm"] as const
+const routerNames = ["openrouter", "requesty", "glama", "unbound", "litellm", "shengsuanyun"] as const
 
 export type RouterName = (typeof routerNames)[number]
 

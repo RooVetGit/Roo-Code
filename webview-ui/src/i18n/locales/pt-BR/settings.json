@@ -135,6 +135,7 @@
 		"getGeminiApiKey": "Obter chave de API Gemini",
 		"openAiApiKey": "Chave de API OpenAI",
 		"openAiBaseUrl": "URL Base",
+		"getShengSuanYunApiKey": "Obter chave de API Sheng Suan Yun",
 		"getOpenAiApiKey": "Obter chave de API OpenAI",
 		"mistralApiKey": "Chave de API Mistral",
 		"getMistralApiKey": "Obter chave de API Mistral / Codestral",

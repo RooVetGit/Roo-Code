@@ -133,6 +133,7 @@
 		"getGroqApiKey": "Groq API कुंजी प्राप्त करें",
 		"groqApiKey": "Groq API कुंजी",
 		"getGeminiApiKey": "Gemini API कुंजी प्राप्त करें",
+		"getShengSuanYunApiKey": "Sheng Suan Yun API कुंजी",
 		"openAiApiKey": "OpenAI API कुंजी",
 		"openAiBaseUrl": "बेस URL",
 		"getOpenAiApiKey": "OpenAI API कुंजी प्राप्त करें",

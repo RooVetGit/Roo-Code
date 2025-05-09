@@ -12,6 +12,7 @@ import { getOpenRouterModels } from "./openrouter"
 import { getRequestyModels } from "./requesty"
 import { getGlamaModels } from "./glama"
 import { getUnboundModels } from "./unbound"
+import { getShengSuanYunModels } from "./shengsuanyun"
 import { getLiteLLMModels } from "./litellm"
 
 const memoryCache = new NodeCache({ stdTTL: 5 * 60, checkperiod: 5 * 60 })
@@ -65,6 +66,9 @@ export const getModels = async (
 			break
 		case "unbound":
 			models = await getUnboundModels()
+			break
+		case "shengsuanyun":
+			models = await getShengSuanYunModels()
 			break
 		case "litellm":
 			if (apiKey && baseUrl) {
