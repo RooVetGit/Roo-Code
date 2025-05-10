@@ -1,4 +1,5 @@
-import { useCallback, useState, memo, useMemo } from "react"
+import { memo, useCallback, useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { useEvent } from "react-use"
 import { ChevronDown, Skull } from "lucide-react"
 
@@ -19,9 +20,39 @@ interface CommandExecutionProps {
 	text?: string
 	icon?: JSX.Element | null
 	title?: JSX.Element | null
+
+	metadata?: {
+		risk?: string
+		risk_analysis?: string
+	}
 }
 
-export const CommandExecution = ({ executionId, text, icon, title }: CommandExecutionProps) => {
+const riskStyles = {
+	readOnly: {
+		color: "var(--vscode-testing-iconPassed)",
+		icon: "pass",
+	},
+	reversibleChanges: {
+		color: "var(--vscode-notificationsInfoIcon-foreground)",
+		icon: "sync",
+	},
+	complexChanges: {
+		color: "var(--vscode-editorWarning-foreground)",
+		icon: "warning",
+	},
+	serviceInterruptingChanges: {
+		color: "var(--vscode-editorError-foreground)",
+		icon: "bell",
+	},
+	destructiveChanges: {
+		color: "var(--vscode-problemsErrorIcon-foreground)",
+		icon: "error",
+	},
+}
+export const CommandExecution = ({ executionId, text, icon, title, metadata }: CommandExecutionProps) => {
+	const risk = metadata?.risk || ""
+	const riskAnalysis = metadata?.risk_analysis || ""
+	const riskStyle = risk ? riskStyles[risk as keyof typeof riskStyles] : null
 	const { terminalShellIntegrationDisabled = false } = useExtensionState()
 
 	const { command, output: parsedOutput } = useMemo(() => parseCommandAndOutput(text), [text])
@@ -124,6 +155,7 @@ export const CommandExecution = ({ executionId, text, icon, title }: CommandExec
 			<div className="w-full bg-vscode-editor-background border border-vscode-border rounded-xs p-2">
 				<CodeBlock source={command} language="shell" />
 				<OutputContainer isExpanded={isExpanded} output={output} />
+				<RiskDisplay risk={risk} riskAnalysis={riskAnalysis} riskStyle={riskStyle} />
 			</div>
 		</>
 	)
@@ -142,6 +174,45 @@ const OutputContainerInternal = ({ isExpanded, output }: { isExpanded: boolean; 
 )
 
 const OutputContainer = memo(OutputContainerInternal)
+
+interface RiskDisplayProps {
+	risk: string
+	riskAnalysis: string
+	riskStyle: { color: string; icon: string } | null
+}
+
+const RiskDisplayInternal = ({ risk, riskAnalysis, riskStyle }: RiskDisplayProps) => {
+	const { t } = useTranslation()
+	
+	if (!riskAnalysis && !risk) {
+		return null
+	}
+	
+	return (
+		<div className="p-2 text-sm bg-vscode-editor-background border-t border-vscode-editorGroup-border">
+			<span
+				className="inline-flex items-center gap-1"
+				title={t(`settings:autoApprove.commandRiskLevel.${risk}Desc`)}>
+				{risk && (
+					<i
+						className={`codicon codicon-${riskStyle?.icon || "warning"}`}
+						style={{ color: riskStyle?.color }}
+					/>
+				)}
+				<span>
+					{risk && (
+						<span style={{ color: riskStyle?.color, cursor: "help" }}>
+							{t(`settings:autoApprove.commandRiskLevel.${risk}`)}
+						</span>
+					)}
+					{riskAnalysis && (risk ? ": " : "") + String(riskAnalysis)}
+				</span>
+			</span>
+		</div>
+	)
+}
+
+const RiskDisplay = memo(RiskDisplayInternal)
 
 const parseCommandAndOutput = (text: string | undefined) => {
 	if (!text) {

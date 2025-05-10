@@ -14,8 +14,12 @@ import { unescapeHtmlEntities } from "../../utils/text-normalization"
 import { ExitCodeDetails, RooTerminalCallbacks, RooTerminalProcess } from "../../integrations/terminal/types"
 import { TerminalRegistry } from "../../integrations/terminal/TerminalRegistry"
 import { Terminal } from "../../integrations/terminal/Terminal"
-import { CommandRiskLevel, commandRiskLevels } from "../../schemas"
-import { isValidRiskLevel } from "../../../webview-ui/src/utils/commandRiskUtils"
+import { CommandRiskLevel, commandRiskLevels } from "@roo-code/types"
+
+// Local implementation of isValidRiskLevel to avoid importing from outside rootDir
+function isValidRiskLevel(risk: string): boolean {
+	return risk !== undefined && risk !== "none" && commandRiskLevels.includes(risk as CommandRiskLevel)
+}
 
 class ShellIntegrationError extends Error {}
 
@@ -36,7 +40,7 @@ export async function executeCommandTool(
 	try {
 		if (block.partial) {
 			await cline
-				.ask("command", removeClosingTag("command", command), block.partial, undefined, metadata)
+				.ask("command", removeClosingTag("command", command), block.partial, undefined)
 				.catch(() => {})
 			return
 		} else {
@@ -77,7 +81,7 @@ export async function executeCommandTool(
 			cline.consecutiveMistakeCount = 0
 
 			command = unescapeHtmlEntities(command) // Unescape HTML entities.
-			const didApprove = await askApproval("command", command, undefined, metadata)
+			const didApprove = await askApproval("command", command, undefined, undefined, metadata)
 
 			if (!didApprove) {
 				return

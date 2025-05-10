@@ -1123,7 +1123,8 @@ export const ChatRowContent = ({
 							text={message.text}
 							icon={icon}
 							title={title}
-						/>
+							metadata={message.metadata}
+							/>
 					)
 				case "use_mcp_server":
 					// Parse the message text to get the MCP server request

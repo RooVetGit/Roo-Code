@@ -1,14 +1,4 @@
-import { CommandRiskLevel } from "../../../src/schemas"
-
-// Re-implement the risk validation functions that were being imported from the extension code
-export const commandRiskLevels: CommandRiskLevel[] = [
-	"none",
-	"readOnly",
-	"reversibleChanges",
-	"complexChanges",
-	"serviceInterruptingChanges",
-	"destructiveChanges",
-]
+import { CommandRiskLevel, commandRiskLevels } from "@roo-code/types"
 
 // Function to validate risk level
 export const isValidRiskLevel = (risk: string): boolean => {
