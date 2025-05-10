@@ -11,6 +11,9 @@ import { SectionHeader } from "./SectionHeader"
 import { Section } from "./Section"
 import { AutoApproveToggle } from "./AutoApproveToggle"
 
+// Default allowed commands from package.json
+const DEFAULT_ALLOWED_COMMANDS = ["npm test", "npm install", "tsc", "git log", "git diff", "git show"]
+
 type AutoApproveSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	alwaysAllowReadOnly?: boolean
 	alwaysAllowReadOnlyOutsideWorkspace?: boolean
@@ -67,8 +70,22 @@ export const AutoApproveSettings = ({
 
 		if (commandInput && !currentCommands.includes(commandInput)) {
 			const newCommands = [...currentCommands, commandInput]
-			setCachedStateField("allowedCommands", newCommands)
+
+			// Only update if the new commands list differs from defaults
+			if (newCommands.sort().join(",") !== DEFAULT_ALLOWED_COMMANDS.sort().join(",")) {
+				setCachedStateField("allowedCommands", newCommands)
+				vscode.postMessage({ type: "allowedCommands", commands: newCommands })
+			}
 			setCommandInput("")
+		}
+	}
+
+	const handleRemoveCommand = (index: number) => {
+		const newCommands = (allowedCommands ?? []).filter((_, i) => i !== index)
+
+		// Only update if the new commands list differs from defaults
+		if (newCommands.sort().join(",") !== DEFAULT_ALLOWED_COMMANDS.sort().join(",")) {
+			setCachedStateField("allowedCommands", newCommands)
 			vscode.postMessage({ type: "allowedCommands", commands: newCommands })
 		}
 	}
@@ -227,11 +244,7 @@ export const AutoApproveSettings = ({
 									key={index}
 									variant="secondary"
 									data-testid={`remove-command-${index}`}
-									onClick={() => {
-										const newCommands = (allowedCommands ?? []).filter((_, i) => i !== index)
-										setCachedStateField("allowedCommands", newCommands)
-										vscode.postMessage({ type: "allowedCommands", commands: newCommands })
-									}}>
+									onClick={() => handleRemoveCommand(index)}>
 									<div className="flex flex-row items-center gap-1">
 										<div>{cmd}</div>
 										<X className="text-foreground scale-75" />
