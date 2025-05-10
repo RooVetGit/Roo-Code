@@ -328,7 +328,7 @@
 	"uiSettings": {
 		"description": "使用者界面相關設定",
 		"markdownBlockLineheight": {
-			"label": "使用者介面相關設定",
+			"label": "面板內容行間距",
 			"description": "調整面板內容行間距，以改善可讀性。"
 		}
 	},
