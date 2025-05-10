@@ -10,7 +10,16 @@
 		"contextWindow": "Context Length:",
 		"closeAndStart": "Close task and start a new one",
 		"export": "Export task history",
-		"delete": "Delete Task (Shift + Click to skip confirmation)"
+		"delete": "Delete Task (Shift + Click to skip confirmation)",
+		"requestCostChartTitle": "Request Cost",
+		"totalCostChartTitle": "Total Cost",
+		"tokensInChartTitle": "Input Tokens",
+		"tokensOutChartTitle": "Output Tokens",
+		"tokensUnit": "tokens",
+		"costOverviewTitle": "Cost Overview",
+		"requestShort": "Request {{index}}",
+		"clickToEnlarge": "Click to enlarge",
+		"clickToGoBack": "Click to go back to grid view"
 	},
 	"unpin": "Unpin",
 	"pin": "Pin",

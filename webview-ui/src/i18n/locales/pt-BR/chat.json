@@ -10,7 +10,16 @@
 		"contextWindow": "Janela de contexto:",
 		"closeAndStart": "Fechar tarefa e iniciar nova",
 		"export": "Exportar histórico de tarefas",
-		"delete": "Excluir tarefa (Shift + Clique para pular confirmação)"
+		"delete": "Excluir tarefa (Shift + Clique para pular confirmação)",
+		"requestCostChartTitle": "Custo da Solicitação",
+		"totalCostChartTitle": "Custo Total",
+		"tokensInChartTitle": "Tokens de Entrada",
+		"tokensOutChartTitle": "Tokens de Saída",
+		"tokensUnit": "tokens",
+		"costOverviewTitle": "Visão Geral de Custos",
+		"requestShort": "Solicitação {{index}}",
+		"clickToEnlarge": "Clique para ampliar",
+		"clickToGoBack": "Clique para voltar à visualização em grade"
 	},
 	"unpin": "Desfixar",
 	"pin": "Fixar",

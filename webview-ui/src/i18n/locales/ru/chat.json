@@ -10,7 +10,16 @@
 		"contextWindow": "Длина контекста:",
 		"closeAndStart": "Закрыть задачу и начать новую",
 		"export": "Экспортировать историю задач",
-		"delete": "Удалить задачу (Shift + клик для пропуска подтверждения)"
+		"delete": "Удалить задачу (Shift + клик для пропуска подтверждения)",
+		"requestCostChartTitle": "Стоимость Запроса",
+		"totalCostChartTitle": "Общая Стоимость",
+		"tokensInChartTitle": "Входные Токены",
+		"tokensOutChartTitle": "Выходные Токены",
+		"tokensUnit": "токены",
+		"costOverviewTitle": "Обзор Затрат",
+		"requestShort": "Запрос {{index}}",
+		"clickToEnlarge": "Нажмите, чтобы увеличить",
+		"clickToGoBack": "Нажмите, чтобы вернуться к виду сетки"
 	},
 	"unpin": "Открепить",
 	"pin": "Закрепить",

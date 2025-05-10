@@ -10,7 +10,16 @@
 		"contextWindow": "Finestra de context:",
 		"closeAndStart": "Tancar tasca i iniciar-ne una de nova",
 		"export": "Exportar historial de tasques",
-		"delete": "Eliminar tasca (Shift + Clic per ometre confirmació)"
+		"delete": "Eliminar tasca (Shift + Clic per ometre confirmació)",
+		"requestCostChartTitle": "Cost de la Sol·licitud",
+		"totalCostChartTitle": "Cost Total",
+		"tokensInChartTitle": "Tokens d'Entrada",
+		"tokensOutChartTitle": "Tokens de Sortida",
+		"tokensUnit": "tokens",
+		"costOverviewTitle": "Resum de Costos",
+		"requestShort": "Sol·licitud {{index}}",
+		"clickToEnlarge": "Feu clic per ampliar",
+		"clickToGoBack": "Feu clic per tornar a la vista de graella"
 	},
 	"unpin": "Desfixar",
 	"pin": "Fixar",

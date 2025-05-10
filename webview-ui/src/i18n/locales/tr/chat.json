@@ -10,7 +10,16 @@
 		"contextWindow": "Bağlam Uzunluğu:",
 		"closeAndStart": "Görevi kapat ve yeni bir görev başlat",
 		"export": "Görev geçmişini dışa aktar",
-		"delete": "Görevi sil (Onayı atlamak için Shift + Tıkla)"
+		"delete": "Görevi sil (Onayı atlamak için Shift + Tıkla)",
+		"requestCostChartTitle": "İstek Maliyeti",
+		"totalCostChartTitle": "Toplam Maliyet",
+		"tokensInChartTitle": "Giriş Tokenları",
+		"tokensOutChartTitle": "Çıkış Tokenları",
+		"tokensUnit": "token",
+		"costOverviewTitle": "Maliyet Genel Bakışı",
+		"requestShort": "İstek {{index}}",
+		"clickToEnlarge": "Büyütmek için tıklayın",
+		"clickToGoBack": "Izgara görünümüne geri dönmek için tıklayın"
 	},
 	"unpin": "Sabitlemeyi iptal et",
 	"pin": "Sabitle",

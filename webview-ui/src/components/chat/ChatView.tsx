@@ -32,6 +32,7 @@ import { useTaskSearch } from "../history/useTaskSearch"
 import HistoryPreview from "../history/HistoryPreview"
 import RooHero from "@src/components/welcome/RooHero"
 import RooTips from "@src/components/welcome/RooTips"
+import { calculateCostHistory } from "@src/utils/costUtils"
 import Announcement from "./Announcement"
 import BrowserSessionRow from "./BrowserSessionRow"
 import ChatRow from "./ChatRow"
@@ -109,6 +110,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	// Has to be after api_req_finished are all reduced into api_req_started messages.
 	const apiMetrics = useMemo(() => getApiMetrics(modifiedMessages), [modifiedMessages])
+
+	const costHistory = useMemo(() => calculateCostHistory(modifiedMessages), [modifiedMessages])
 
 	const [inputValue, setInputValue] = useState("")
 	const textAreaRef = useRef<HTMLTextAreaElement>(null)
@@ -1218,6 +1221,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						totalCost={apiMetrics.totalCost}
 						contextTokens={apiMetrics.contextTokens}
 						onClose={handleTaskCloseButtonClick}
+						costHistory={costHistory} // Pass the calculated cost history
 					/>
 
 					{hasSystemPromptOverride && (

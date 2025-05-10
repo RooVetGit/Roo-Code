@@ -1,4 +1,4 @@
-import { memo, useRef, useState } from "react"
+import { memo, useRef, useState } from "react" // Removed useCallback
 import { useWindowSize } from "react-use"
 import { useTranslation } from "react-i18next"
 import { VSCodeBadge } from "@vscode/webview-ui-toolkit/react"
@@ -11,13 +11,14 @@ import { formatLargeNumber } from "@src/utils/format"
 import { cn } from "@src/lib/utils"
 import { Button } from "@src/components/ui"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
-import { useSelectedModel } from "@/components/ui/hooks/useSelectedModel"
+import { useSelectedModel } from "@src/components/ui/hooks/useSelectedModel" // Corrected path
 
 import Thumbnails from "../common/Thumbnails"
 
 import { TaskActions } from "./TaskActions"
 import { ContextWindowProgress } from "./ContextWindowProgress"
 import { Mention } from "./Mention"
+import TaskCostChartSection from "./TaskCostChartSection" // Import the new component
 
 export interface TaskHeaderProps {
 	task: ClineMessage
@@ -29,6 +30,16 @@ export interface TaskHeaderProps {
 	totalCost: number
 	contextTokens: number
 	onClose: () => void
+	// Update costHistory prop to expect the extended structure with optional token/cache data
+	costHistory?: {
+		requestIndex: number
+		cumulativeCost: number
+		costDelta: number
+		tokensIn?: number
+		tokensOut?: number
+		cacheReads?: number
+		cacheWrites?: number
+	}[]
 }
 
 const TaskHeader = ({
@@ -41,17 +52,21 @@ const TaskHeader = ({
 	totalCost,
 	contextTokens,
 	onClose,
+	costHistory,
 }: TaskHeaderProps) => {
 	const { t } = useTranslation()
 	const { apiConfiguration, currentTaskItem } = useExtensionState()
 	const { info: model } = useSelectedModel(apiConfiguration)
 	const [isTaskExpanded, setIsTaskExpanded] = useState(false)
+	// Removed chartHoverData state
 
 	const textContainerRef = useRef<HTMLDivElement>(null)
 	const textRef = useRef<HTMLDivElement>(null)
 	const contextWindow = model?.contextWindow || 1
 
 	const { width: windowWidth } = useWindowSize()
+
+	// Removed handleChartHoverChange callback
 
 	return (
 		<div className="py-2 px-3">
@@ -109,7 +124,7 @@ const TaskHeader = ({
 							className="-mt-0.5 text-vscode-font-size overflow-y-auto break-words break-anywhere relative">
 							<div
 								ref={textRef}
-								className="overflow-auto max-h-80 whitespace-pre-wrap break-words break-anywhere"
+								className="overflow-auto max-h-20 whitespace-pre-wrap break-words break-anywhere"
 								style={{
 									display: "-webkit-box",
 									WebkitLineClamp: "unset",
@@ -184,6 +199,9 @@ const TaskHeader = ({
 									<TaskActions item={currentTaskItem} />
 								</div>
 							)}
+
+							{/* Use the new TaskCostChartSection component, only show if there's a cost */}
+							{!!totalCost && <TaskCostChartSection costHistory={costHistory} />}
 						</div>
 					</>
 				)}

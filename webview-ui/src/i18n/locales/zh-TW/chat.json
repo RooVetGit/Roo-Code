@@ -10,7 +10,16 @@
 		"contextWindow": "上下文長度：",
 		"closeAndStart": "關閉現有工作並開始一項新的工作",
 		"export": "匯出工作紀錄",
-		"delete": "刪除工作（按住 Shift 並點選可跳過確認）"
+		"delete": "刪除工作（按住 Shift 並點選可跳過確認）",
+		"requestCostChartTitle": "請求成本",
+		"totalCostChartTitle": "總成本",
+		"tokensInChartTitle": "輸入權杖",
+		"tokensOutChartTitle": "輸出權杖",
+		"tokensUnit": "權杖",
+		"costOverviewTitle": "成本概觀",
+		"requestShort": "請求 {{index}}",
+		"clickToEnlarge": "點擊放大",
+		"clickToGoBack": "點擊返回網格檢視"
 	},
 	"unpin": "取消置頂",
 	"pin": "置頂",

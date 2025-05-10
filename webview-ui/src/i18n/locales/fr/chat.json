@@ -10,7 +10,16 @@
 		"contextWindow": "Durée du contexte :",
 		"closeAndStart": "Fermer la tâche et en commencer une nouvelle",
 		"export": "Exporter l'historique des tâches",
-		"delete": "Supprimer la tâche (Shift + Clic pour ignorer la confirmation)"
+		"delete": "Supprimer la tâche (Shift + Clic pour ignorer la confirmation)",
+		"requestCostChartTitle": "Coût de la Requête",
+		"totalCostChartTitle": "Coût Total",
+		"tokensInChartTitle": "Jetons d'Entrée",
+		"tokensOutChartTitle": "Jetons de Sortie",
+		"tokensUnit": "jetons",
+		"costOverviewTitle": "Aperçu des Coûts",
+		"requestShort": "Requête {{index}}",
+		"clickToEnlarge": "Cliquer pour agrandir",
+		"clickToGoBack": "Cliquer pour revenir à la vue grille"
 	},
 	"unpin": "Désépingler",
 	"pin": "Épingler",
