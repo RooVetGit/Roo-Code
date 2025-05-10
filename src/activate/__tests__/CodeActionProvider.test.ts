@@ -26,6 +26,12 @@ jest.mock("vscode", () => ({
 		Information: 2,
 		Hint: 3,
 	},
+	languages: {
+		getDiagnostics: jest.fn().mockReturnValue([]),
+	},
+	window: {
+		activeTextEditor: undefined,
+	},
 }))
 
 jest.mock("../../integrations/editor/EditorUtils", () => ({
