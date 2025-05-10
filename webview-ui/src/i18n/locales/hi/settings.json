@@ -327,7 +327,7 @@
 	},
 	"uiSettings": {
 		"description": "उपयोगकर्ता इंटरफ़ेस संबंधित कॉन्फ़िगरेशन",
-		"markdownBlockLineheight": {
+		"markdownBlockLineHeight": {
 			"label": "पैनल सामग्री पंक्ति रिक्ति",
 			"description": "पठनीयता में सुधार के लिए पैनल सामग्री की पंक्ति रिक्ति समायोजित करें."
 		}

@@ -327,7 +327,7 @@
 	},
 	"uiSettings": {
 		"description": "Configuration liée à l'interface utilisateur",
-		"markdownBlockLineheight": {
+		"markdownBlockLineHeight": {
 			"label": "Espacement des lignes du contenu du panneau",
 			"description": "Ajustez l'espacement des lignes de contenu du panneau pour améliorer la lisibilité."
 		}

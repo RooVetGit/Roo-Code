@@ -122,7 +122,7 @@ const StyledMarkdown = styled.div<{ lineheight: number | string }>`
 `
 
 const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
-	const { theme, markdownBlockLineheight } = useExtensionState()
+	const { theme, markdownBlockLineHeight } = useExtensionState()
 	const [reactContent, setMarkdown] = useRemark({
 		remarkPlugins: [
 			remarkUrlToLink,
@@ -229,7 +229,7 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 
 	return (
 		<div style={{}}>
-			<StyledMarkdown lineheight={markdownBlockLineheight || 1.25}>{reactContent}</StyledMarkdown>
+			<StyledMarkdown lineheight={markdownBlockLineHeight || 1.25}>{reactContent}</StyledMarkdown>
 		</div>
 	)
 })

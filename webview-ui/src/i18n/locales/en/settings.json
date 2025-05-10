@@ -327,7 +327,7 @@
 	},
 	"uiSettings": {
 		"description": "UI related configuration",
-		"markdownBlockLineheight": {
+		"markdownBlockLineHeight": {
 			"label": "Content vertical spacing",
 			"description": "Adjust content vertical line spacing to improve readability."
 		}

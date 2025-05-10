@@ -163,7 +163,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		remoteBrowserEnabled,
 		maxReadFileLine,
 		terminalCompressProgressBar,
-		markdownBlockLineheight,
+		markdownBlockLineHeight,
 	} = cachedState
 
 	const apiConfiguration = useMemo(() => cachedState.apiConfiguration ?? {}, [cachedState.apiConfiguration])
@@ -288,7 +288,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "alwaysAllowSubtasks", bool: alwaysAllowSubtasks })
 			vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
 			vscode.postMessage({ type: "telemetrySetting", text: telemetrySetting })
-			vscode.postMessage({ type: "markdownBlockLineheight", value: markdownBlockLineheight })
+			vscode.postMessage({ type: "markdownBlockLineHeight", value: markdownBlockLineHeight })
 			setChangeDetected(false)
 		}
 	}
@@ -556,7 +556,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 					{/* UISettings Section */}
 					{activeTab === "uiSettings" && (
 						<UISettings
-							markdownBlockLineheight={cachedState.markdownBlockLineheight ?? 1.25}
+							markdownBlockLineHeight={cachedState.markdownBlockLineHeight ?? 1.25}
 							setCachedStateField={setCachedStateField}
 						/>
 					)}

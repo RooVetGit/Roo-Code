@@ -327,7 +327,7 @@
 	},
 	"uiSettings": {
 		"description": "用户界面相关配置",
-		"markdownBlockLineheight": {
+		"markdownBlockLineHeight": {
 			"label": "面板内容行间距",
 			"description": "调整面板内容行间距，以改善可读性。"
 		}

@@ -327,7 +327,7 @@
 	},
 	"uiSettings": {
 		"description": "Configuración relacionada con la interfaz de usuario",
-		"markdownBlockLineheight": {
+		"markdownBlockLineHeight": {
 			"label": "Interlineado del contenido del panel",
 			"description": "Ajuste el espaciado entre líneas del contenido del panel para mejorar la legibilidad."
 		}

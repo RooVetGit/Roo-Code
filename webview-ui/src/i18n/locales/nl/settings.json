@@ -327,7 +327,7 @@
 	},
 	"uiSettings": {
 		"description": "Gebruikersinterfacegerelateerde configuratie",
-		"markdownBlockLineheight": {
+		"markdownBlockLineHeight": {
 			"label": "Regelafstand van paneelinhoud",
 			"description": "Pas de regelafstand van de paneelinhoud aan om de leesbaarheid te verbeteren."
 		}

@@ -327,7 +327,7 @@
 	},
 	"uiSettings": {
 		"description": "Konfiguracja związana z interfejsem użytkownika",
-		"markdownBlockLineheight": {
+		"markdownBlockLineHeight": {
 			"label": "Odstęp między wierszami zawartości panelu",
 			"description": "Aby poprawić czytelność, dostosuj odstępy między wierszami zawartości panelu."
 		}

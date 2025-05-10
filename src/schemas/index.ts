@@ -735,7 +735,7 @@ export const globalSettingsSchema = z.object({
 	customInstructions: z.string().optional(),
 	taskHistory: z.array(historyItemSchema).optional(),
 
-	markdownBlockLineheight: z.number().optional(),
+	markdownBlockLineHeight: z.number().optional(),
 	autoApprovalEnabled: z.boolean().optional(),
 	alwaysAllowReadOnly: z.boolean().optional(),
 	alwaysAllowReadOnlyOutsideWorkspace: z.boolean().optional(),
@@ -816,7 +816,7 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 	customInstructions: undefined,
 	taskHistory: undefined,
 
-	markdownBlockLineheight: undefined,
+	markdownBlockLineHeight: undefined,
 	autoApprovalEnabled: undefined,
 	alwaysAllowReadOnly: undefined,
 	alwaysAllowReadOnlyOutsideWorkspace: undefined,

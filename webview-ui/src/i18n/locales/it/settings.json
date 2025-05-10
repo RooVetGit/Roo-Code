@@ -327,7 +327,7 @@
 	},
 	"uiSettings": {
 		"description": "Configurazione relativa all'interfaccia utente",
-		"markdownBlockLineheight": {
+		"markdownBlockLineHeight": {
 			"label": "Interlinea del contenuto del pannello",
 			"description": "Regola la spaziatura delle righe del contenuto del pannello per migliorarne la leggibilità."
 		}

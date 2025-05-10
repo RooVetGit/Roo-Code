@@ -894,8 +894,8 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await updateGlobalState("maxReadFileLine", message.value)
 			await provider.postStateToWebview()
 			break
-		case "markdownBlockLineheight":
-			await updateGlobalState("markdownBlockLineheight", message.value ?? 1.25)
+		case "markdownBlockLineHeight":
+			await updateGlobalState("markdownBlockLineHeight", message.value ?? 1.25)
 			await provider.postStateToWebview()
 			break
 		case "setHistoryPreviewCollapsed": // Add the new case handler

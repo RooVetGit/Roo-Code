@@ -327,7 +327,7 @@
 	},
 	"uiSettings": {
 		"description": "ユーザーインターフェース関連の設定",
-		"markdownBlockLineheight": {
+		"markdownBlockLineHeight": {
 			"label": "パネルコンテンツの行間隔",
 			"description": "読みやすさを向上させるために、パネル コンテンツの行間隔を調整します。"
 		}

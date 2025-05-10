@@ -327,7 +327,7 @@
 	},
 	"uiSettings": {
 		"description": "Kullanıcı arayüzü ile ilgili konfigürasyon",
-		"markdownBlockLineheight": {
+		"markdownBlockLineHeight": {
 			"label": "Panel içerik satır aralığı",
 			"description": "Okunabilirliği artırmak için panel içeriği satır aralığını ayarlayın."
 		}

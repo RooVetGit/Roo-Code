@@ -327,7 +327,7 @@
 	},
 	"uiSettings": {
 		"description": "Cấu hình liên quan đến giao diện người dùng",
-		"markdownBlockLineheight": {
+		"markdownBlockLineHeight": {
 			"label": "Khoảng cách dòng nội dung bảng điều khiển",
 			"description": "Điều chỉnh khoảng cách giữa các dòng nội dung bảng điều khiển để dễ đọc hơn."
 		}

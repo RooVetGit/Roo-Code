@@ -327,7 +327,7 @@
 	},
 	"uiSettings": {
 		"description": "Configuració relacionada amb la interfície d'usuari",
-		"markdownBlockLineheight": {
+		"markdownBlockLineHeight": {
 			"label": "Espaiat entre línies del contingut del panell",
 			"description": "Ajusteu l'interlineat del contingut del panell per millorar la llegibilitat."
 		}

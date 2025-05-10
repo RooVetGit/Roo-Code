@@ -327,7 +327,7 @@
 	},
 	"uiSettings": {
 		"description": "사용자 인터페이스 관련 구성",
-		"markdownBlockLineheight": {
+		"markdownBlockLineHeight": {
 			"label": "패널 콘텐츠 줄 간격",
 			"description": "가독성을 높이려면 패널 콘텐츠 줄 간격을 조정하세요."
 		}

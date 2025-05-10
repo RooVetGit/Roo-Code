@@ -327,7 +327,7 @@
 	},
 	"uiSettings": {
 		"description": "Configuração relacionada à interface do usuário",
-		"markdownBlockLineheight": {
+		"markdownBlockLineHeight": {
 			"label": "Espaçamento entre linhas do conteúdo do painel",
 			"description": "Ajuste o espaçamento entre linhas do conteúdo do painel para melhorar a legibilidade."
 		}

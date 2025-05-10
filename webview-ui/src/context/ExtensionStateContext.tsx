@@ -161,7 +161,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		customSupportPrompts: {},
 		experiments: experimentDefault,
 		enhancementApiConfigId: "",
-		markdownBlockLineheight: 1.25,
+		markdownBlockLineHeight: 1.25,
 		autoApprovalEnabled: false,
 		customModes: [],
 		maxOpenTabsContext: 20,
@@ -269,9 +269,9 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		fuzzyMatchThreshold: state.fuzzyMatchThreshold,
 		writeDelayMs: state.writeDelayMs,
 		screenshotQuality: state.screenshotQuality,
-		markdownBlockLineheight: state.markdownBlockLineheight,
-		setMarkdownBlockLineheight: (value) =>
-			setState((prevState) => ({ ...prevState, markdownBlockLineheight: value })),
+		markdownBlockLineHeight: state.markdownBlockLineHeight,
+		setMarkdownBlockLineHeight: (value) =>
+			setState((prevState) => ({ ...prevState, markdownBlockLineHeight: value })),
 		setExperimentEnabled: (id, enabled) =>
 			setState((prevState) => ({ ...prevState, experiments: { ...prevState.experiments, [id]: enabled } })),
 		setApiConfiguration: (value) =>
