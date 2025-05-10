@@ -36,36 +36,34 @@ function checkKeyInLocales(key: string, localesDir: string): Array<[string, bool
 	const jsonPath = pathParts.join(".")
 	const missingLocales = new Map<string, boolean>() // true = file missing, false = key missing
 
-	// Check all official languages except English (source)
-	languages
-		.filter((lang) => lang !== "en")
-		.forEach((locale) => {
-			const filePath = path.join(localesDir, locale, `${file}.json`)
-			const localePath = `${locale}/${file}.json`
+	// Check all official languages including English
+	languages.forEach((locale) => {
+		const filePath = path.join(localesDir, locale, `${file}.json`)
+		const localePath = `${locale}/${file}.json`
 
-			// If file doesn't exist or can't be loaded, mark entire file as missing
-			if (!fileExists(filePath)) {
-				missingLocales.set(localePath, true)
-				return
-			}
+		// If file doesn't exist or can't be loaded, mark entire file as missing
+		if (!fileExists(filePath)) {
+			missingLocales.set(localePath, true)
+			return
+		}
 
-			const content = loadFileContent(filePath)
-			if (!content) {
-				missingLocales.set(localePath, true)
-				return
-			}
+		const content = loadFileContent(filePath)
+		if (!content) {
+			missingLocales.set(localePath, true)
+			return
+		}
 
-			const json = parseJsonContent(content, filePath)
-			if (!json) {
-				missingLocales.set(localePath, true)
-				return
-			}
+		const json = parseJsonContent(content, filePath)
+		if (!json) {
+			missingLocales.set(localePath, true)
+			return
+		}
 
-			// Only check for missing key if file exists and is valid
-			if (getValueAtPath(json, jsonPath) === undefined) {
-				missingLocales.set(localePath, false)
-			}
-		})
+		// Only check for missing key if file exists and is valid
+		if (getValueAtPath(json, jsonPath) === undefined) {
+			missingLocales.set(localePath, false)
+		}
+	})
 
 	return Array.from(missingLocales.entries())
 }
