@@ -29,6 +29,47 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 			...convertToOpenAiMessages(messages),
 		]
 
+		// -------------------------
+		// Track token usage
+		// -------------------------
+		// Build content blocks so we can estimate prompt token count using the shared utility.
+		const toContentBlocks = (
+			blocks: Anthropic.Messages.MessageParam[] | string,
+		): Anthropic.Messages.ContentBlockParam[] => {
+			if (typeof blocks === "string") {
+				return [{ type: "text", text: blocks }]
+			}
+
+			const result: Anthropic.Messages.ContentBlockParam[] = []
+			for (const msg of blocks) {
+				if (typeof msg.content === "string") {
+					result.push({ type: "text", text: msg.content })
+				} else if (Array.isArray(msg.content)) {
+					// Filter out text blocks only for counting purposes
+					for (const part of msg.content) {
+						if (part.type === "text") {
+							result.push({ type: "text", text: part.text })
+						}
+					}
+				}
+			}
+			return result
+		}
+
+		// Count prompt/input tokens (system prompt + user/assistant history)
+		let inputTokens = 0
+		try {
+			inputTokens = await this.countTokens([
+				{ type: "text", text: systemPrompt },
+				...toContentBlocks(messages),
+			])
+		} catch (err) {
+			console.error("[LmStudio] Failed to count input tokens:", err)
+			inputTokens = 0
+		}
+
+		let assistantText = ""
+
 		try {
 			// Create params object with optional draft model
 			const params: any = {
@@ -50,12 +91,28 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 			for await (const chunk of results) {
 				const delta = chunk.choices[0]?.delta
 				if (delta?.content) {
+					assistantText += delta.content
 					yield {
 						type: "text",
 						text: delta.content,
 					}
 				}
 			}
+
+			// After streaming completes, estimate output tokens and yield usage metrics
+			let outputTokens = 0
+			try {
+				outputTokens = await this.countTokens([{ type: "text", text: assistantText }])
+			} catch (err) {
+				console.error("[LmStudio] Failed to count output tokens:", err)
+				outputTokens = 0
+			}
+
+			yield {
+				type: "usage",
+				inputTokens,
+				outputTokens,
+			} as const
 		} catch (error) {
 			// LM Studio doesn't return an error code/body for now
 			throw new Error(
