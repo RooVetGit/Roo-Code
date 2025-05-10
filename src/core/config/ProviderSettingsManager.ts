@@ -1,14 +1,11 @@
 import { ExtensionContext } from "vscode"
 import { z, ZodError } from "zod"
 
-import { providerSettingsSchema, ApiConfigMeta, providerSettingsSchemaDiscriminated } from "../../schemas"
+import { providerSettingsSchema, ApiConfigMeta } from "../../schemas"
 import { Mode, modes } from "../../shared/modes"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
 
 const providerSettingsWithIdSchema = providerSettingsSchema.extend({ id: z.string().optional() })
-const discriminatedProviderSettingsWithIdSchema = providerSettingsSchemaDiscriminated.and(
-	z.object({ id: z.string().optional() }),
-)
 
 type ProviderSettingsWithId = z.infer<typeof providerSettingsWithIdSchema>
 
@@ -253,11 +250,7 @@ export class ProviderSettingsManager {
 				const providerProfiles = await this.load()
 				// Preserve the existing ID if this is an update to an existing config.
 				const existingId = providerProfiles.apiConfigs[name]?.id
-				const id = config.id || existingId || this.generateId()
-
-				// Filter out settings from other providers.
-				const filteredConfig = providerSettingsSchemaDiscriminated.parse(config)
-				providerProfiles.apiConfigs[name] = { ...filteredConfig, id }
+				providerProfiles.apiConfigs[name] = { ...config, id: config.id || existingId || this.generateId() }
 				await this.store(providerProfiles)
 			})
 		} catch (error) {
@@ -388,15 +381,7 @@ export class ProviderSettingsManager {
 
 	public async export() {
 		try {
-			return await this.lock(async () => {
-				const profiles = providerProfilesSchema.parse(await this.load())
-				const configs = profiles.apiConfigs
-				for (const name in configs) {
-					// Avoid leaking properties from other providers.
-					configs[name] = discriminatedProviderSettingsWithIdSchema.parse(configs[name])
-				}
-				return profiles
-			})
+			return await this.lock(async () => providerProfilesSchema.parse(await this.load()))
 		} catch (error) {
 			throw new Error(`Failed to export provider profiles: ${error}`)
 		}

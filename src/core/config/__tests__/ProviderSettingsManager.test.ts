@@ -247,58 +247,10 @@ describe("ProviderSettingsManager", () => {
 				},
 			}
 
-			expect(mockSecrets.store.mock.calls[0][0]).toEqual("roo_cline_config_api_config")
-			expect(storedConfig).toEqual(expectedConfig)
-		})
-
-		it("should only save provider relevant settings", async () => {
-			mockSecrets.get.mockResolvedValue(
-				JSON.stringify({
-					currentApiConfigName: "default",
-					apiConfigs: {
-						default: {},
-					},
-					modeApiConfigs: {
-						code: "default",
-						architect: "default",
-						ask: "default",
-					},
-				}),
+			expect(mockSecrets.store).toHaveBeenCalledWith(
+				"roo_cline_config_api_config",
+				JSON.stringify(expectedConfig, null, 2),
 			)
-
-			const newConfig: ProviderSettings = {
-				apiProvider: "anthropic",
-				apiKey: "test-key",
-			}
-			const newConfigWithExtra: ProviderSettings = {
-				...newConfig,
-				openRouterApiKey: "another-key",
-			}
-
-			await providerSettingsManager.saveConfig("test", newConfigWithExtra)
-
-			// Get the actual stored config to check the generated ID
-			const storedConfig = JSON.parse(mockSecrets.store.mock.lastCall[1])
-			const testConfigId = storedConfig.apiConfigs.test.id
-
-			const expectedConfig = {
-				currentApiConfigName: "default",
-				apiConfigs: {
-					default: {},
-					test: {
-						...newConfig,
-						id: testConfigId,
-					},
-				},
-				modeApiConfigs: {
-					code: "default",
-					architect: "default",
-					ask: "default",
-				},
-			}
-
-			expect(mockSecrets.store.mock.calls[0][0]).toEqual("roo_cline_config_api_config")
-			expect(storedConfig).toEqual(expectedConfig)
 		})
 
 		it("should update existing config", async () => {
@@ -339,9 +291,10 @@ describe("ProviderSettingsManager", () => {
 				},
 			}
 
-			const storedConfig = JSON.parse(mockSecrets.store.mock.lastCall[1])
-			expect(mockSecrets.store.mock.lastCall[0]).toEqual("roo_cline_config_api_config")
-			expect(storedConfig).toEqual(expectedConfig)
+			expect(mockSecrets.store).toHaveBeenCalledWith(
+				"roo_cline_config_api_config",
+				JSON.stringify(expectedConfig, null, 2),
+			)
 		})
 
 		it("should throw error if secrets storage fails", async () => {
