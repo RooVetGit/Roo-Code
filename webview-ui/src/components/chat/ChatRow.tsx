@@ -985,7 +985,11 @@ export const ChatRowContent = ({
 								{icon}
 								{title}
 							</div>
-							<CommandExecution executionId={message.ts.toString()} text={message.text} />
+							<CommandExecution
+								executionId={message.ts.toString()}
+								text={message.text}
+								metadata={message.metadata}
+							/>
 						</>
 					)
 				case "use_mcp_server":

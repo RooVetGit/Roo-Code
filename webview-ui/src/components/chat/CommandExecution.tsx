@@ -1,4 +1,5 @@
 import { HTMLAttributes, useCallback, useEffect, useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { useEvent } from "react-use"
 import { Virtuoso } from "react-virtuoso"
 import { ChevronDown, Skull } from "lucide-react"
@@ -17,9 +18,40 @@ import CodeBlock from "../common/CodeBlock"
 interface CommandExecutionProps {
 	executionId: string
 	text?: string
+	metadata?: {
+		risk?: string
+		risk_analysis?: string
+	}
 }
 
-export const CommandExecution = ({ executionId, text }: CommandExecutionProps) => {
+const riskStyles = {
+	readOnly: {
+		color: "var(--vscode-testing-iconPassed)",
+		icon: "pass",
+	},
+	reversibleChanges: {
+		color: "var(--vscode-notificationsInfoIcon-foreground)",
+		icon: "sync",
+	},
+	complexChanges: {
+		color: "var(--vscode-editorWarning-foreground)",
+		icon: "warning",
+	},
+	serviceInterruptingChanges: {
+		color: "var(--vscode-editorError-foreground)",
+		icon: "bell",
+	},
+	destructiveChanges: {
+		color: "var(--vscode-problemsErrorIcon-foreground)",
+		icon: "error",
+	},
+}
+
+export const CommandExecution = ({ executionId, text, metadata }: CommandExecutionProps) => {
+	const { t } = useTranslation()
+	const risk = metadata?.risk || ""
+	const riskAnalysis = metadata?.risk_analysis || ""
+	const riskStyle = risk ? riskStyles[risk as keyof typeof riskStyles] : null
 	const { terminalShellIntegrationDisabled = false } = useExtensionState()
 
 	// If we aren't opening the VSCode terminal for this command then we default
@@ -88,6 +120,28 @@ export const CommandExecution = ({ executionId, text }: CommandExecutionProps) =
 	return (
 		<div className="w-full bg-vscode-editor-background border border-vscode-border rounded-xs p-2">
 			<CodeBlock source={command} language="shell" />
+			{(riskAnalysis || risk) && (
+				<div className="p-2 text-sm bg-vscode-editor-background border-t border-vscode-editorGroup-border">
+					<span
+						className="inline-flex items-center gap-1"
+						title={t(`settings:autoApprove.commandRiskLevel.${risk}Desc`)}>
+						{risk && (
+							<i
+								className={`codicon codicon-${riskStyle?.icon || "warning"}`}
+								style={{ color: riskStyle?.color }}
+							/>
+						)}
+						<span>
+							{risk && (
+								<span style={{ color: riskStyle?.color, cursor: "help" }}>
+									{t(`settings:autoApprove.commandRiskLevel.${risk}`)}
+								</span>
+							)}
+							{riskAnalysis && (risk ? ": " : "") + String(riskAnalysis)}
+						</span>
+					</span>
+				</div>
+			)}
 			<div className="flex flex-row items-center justify-between gap-2 px-1">
 				<div className="flex flex-row items-center gap-1">
 					{status?.status === "started" && (
