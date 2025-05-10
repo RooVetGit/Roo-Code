@@ -174,6 +174,10 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 
 			visibleProvider.postMessageToWebview({ type: "acceptInput" })
 		},
+		"roo-cline.migrateCheckpoints": async () => {
+			const { migrateCheckpoints } = await import("../commands/migrateCheckpoints")
+			await migrateCheckpoints(context)
+		},
 	}
 }
 

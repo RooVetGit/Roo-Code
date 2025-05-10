@@ -11,7 +11,7 @@ import { getApiMetrics } from "../../shared/getApiMetrics"
 import { DIFF_VIEW_URI_SCHEME } from "../../integrations/editor/DiffViewProvider"
 
 import { telemetryService } from "../../services/telemetry/TelemetryService"
-import { CheckpointServiceOptions, RepoPerTaskCheckpointService } from "../../services/checkpoints"
+import { CheckpointServiceOptions, PatchCheckpointServiceFactory } from "../../services/checkpoints"
 
 export function getCheckpointService(cline: Task) {
 	if (!cline.enableCheckpoints) {
@@ -65,7 +65,7 @@ export function getCheckpointService(cline: Task) {
 			log,
 		}
 
-		const service = RepoPerTaskCheckpointService.create(options)
+		const service = PatchCheckpointServiceFactory.create(options)
 
 		cline.checkpointServiceInitializing = true
 
@@ -104,11 +104,11 @@ export function getCheckpointService(cline: Task) {
 			}
 		})
 
-		log("[Cline#getCheckpointService] initializing shadow git")
+		log("[Cline#getCheckpointService] initializing checkpoint service")
 
-		service.initShadowGit().catch((err) => {
+		service.initialize().catch((err) => {
 			log(
-				`[Cline#getCheckpointService] caught unexpected error in initShadowGit, disabling checkpoints (${err.message})`,
+				`[Cline#getCheckpointService] caught unexpected error in initialize, disabling checkpoints (${err.message})`,
 			)
 
 			console.error(err)
