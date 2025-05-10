@@ -69,6 +69,17 @@
 				"group": "watch",
 				"reveal": "always"
 			}
+		},
+		{
+			"label": "build:esbuild",
+			"type": "npm",
+			"script": "build:esbuild",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": [],
+			"isBackground": false
 		}
 	]
 }

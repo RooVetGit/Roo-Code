@@ -29,6 +29,15 @@ function getSimilarity(original: string, search: string): number {
 	return 1 - dist / maxLength
 }
 
+export function getWeightedThreshold(baseThreshold: number, textLength: number): number {
+	if (baseThreshold === 1) return 1
+	const MIN_THRESHOLD = 0.8
+	const lengthFactor = 1 - 1 / (1 + Math.log(Math.max(textLength, 2)) / Math.log(10))
+	const flex = (1 - baseThreshold) * (1 - lengthFactor)
+	const threshold = Math.max(baseThreshold + flex, MIN_THRESHOLD)
+	return Math.min(threshold, 1)
+}
+
 /**
  * Performs a "middle-out" search of `lines` (between [startIndex, endIndex]) to find
  * the slice that is most similar to `searchChunk`. Returns the best score, index, and matched text.
@@ -37,6 +46,8 @@ function fuzzySearch(lines: string[], searchChunk: string, startIndex: number, e
 	let bestScore = 0
 	let bestMatchIndex = -1
 	let bestMatchContent = ""
+	// Normalize searchChunk by removing any trailing newline
+	searchChunk = searchChunk.replace(/\r?\n$/, "")
 	const searchLen = searchChunk.split(/\r?\n/).length
 
 	// Middle-out from the midpoint
@@ -96,24 +107,30 @@ Only a single operation is allowed per tool use.
 The SEARCH section must exactly match existing content including whitespace and indentation.
 If you're not confident in the exact content to search for, use the read_file tool first to get the exact content.
 When applying the diffs, be extra careful to remember to change any closing brackets or other syntax that may be affected by the diff farther down in the file.
-ALWAYS make as many changes in a single 'apply_diff' request as possible using multiple SEARCH/REPLACE blocks
+ALWAYS make as many changes in a single 'apply_diff' request as possible using multiple SEARCH/REPLACE blocks.
 
 Parameters:
 - path: (required) The path of the file to modify (relative to the current workspace directory ${args.cwd})
 - diff: (required) The search/replace block defining the changes.
 
-Diff format:
+Diff format (EXACTLY follow this format with correct markers and line breaks):
 \`\`\`
-<<<<<<< SEARCH
-:start_line: (required) The line number of original content where the search block starts.
--------
+<<<<<<< SEARCH 
+:start_line: N     (Replace N with the actual line number where the search should begin)
+-------            (This divider line is required after the start_line)
 [exact content to find including whitespace]
 =======
 [new content to replace with]
->>>>>>> REPLACE
-
+>>>>>>> REPLACE    (This exact closing marker is required)
 \`\`\`
 
+IMPORTANT FORMATTING RULES:
+1. Each marker MUST be on its own line
+2. The ":start_line:" is REQUIRED and must contain a valid line number
+3. The "-------" divider after start_line is REQUIRED
+4. Use EXACTLY one line with 7 equal signs (=======) to separate search from replace content
+5. EVERY search/replace block MUST start with "<<<<<<< SEARCH" and end with ">>>>>>> REPLACE"
+6. When including multiple blocks, each block follows the same format in sequence
 
 Example:
 
@@ -126,7 +143,7 @@ Original file:
 5 |     return total
 \`\`\`
 
-Search/Replace content:
+Search/Replace content (note the exact format):
 \`\`\`
 <<<<<<< SEARCH
 :start_line:1
@@ -144,7 +161,7 @@ def calculate_total(items):
 
 \`\`\`
 
-Search/Replace content with multi edits:
+Multiple edits example (note each block follows the exact same format):
 \`\`\`
 <<<<<<< SEARCH
 :start_line:1
@@ -167,6 +184,13 @@ def calculate_sum(items):
 >>>>>>> REPLACE
 \`\`\`
 
+COMMON ERRORS TO AVOID:
+- Do NOT forget the ":start_line:" indicator and line number in the SEARCH section
+- Do NOT put a ":start_line:" indicator in the REPLACE section
+- Do NOT use multiple "=======" separator lines, ONLY ONE between search and replace
+- Do NOT put content on the same line as any of the markers
+- Do NOT alter the format of the markers (exact number of < or = characters matters)
+- Do NOT omit any of the required markers or dividers
 
 Usage:
 <apply_diff>
@@ -310,42 +334,21 @@ Only use a single line of '=======' between search and replacement content, beca
 			}
 		}
 
-		/*
-			Regex parts:
-			
-			1. (?:^|\n)  
-			  Ensures the first marker starts at the beginning of the file or right after a newline.
-
-			2. (?<!\\)<<<<<<< SEARCH\s*\n  
-			  Matches the line “<<<<<<< SEARCH” (ignoring any trailing spaces) – the negative lookbehind makes sure it isn’t escaped.
-
-			3. ((?:\:start_line:\s*(\d+)\s*\n))?  
-			  Optionally matches a “:start_line:” line. The outer capturing group is group 1 and the inner (\d+) is group 2.
-
-			4. ((?:\:end_line:\s*(\d+)\s*\n))?  
-			  Optionally matches a “:end_line:” line. Group 3 is the whole match and group 4 is the digits.
-
-			5. ((?<!\\)-------\s*\n)?  
-			  Optionally matches the “-------” marker line (group 5).
-
-			6. ([\s\S]*?)(?:\n)?  
-			  Non‐greedy match for the “search content” (group 6) up to the next marker.
-
-			7. (?:(?<=\n)(?<!\\)=======\s*\n)  
-			  Matches the “=======” marker on its own line.
-
-			8. ([\s\S]*?)(?:\n)?  
-			  Non‐greedy match for the “replace content” (group 7).
-
-			9. (?:(?<=\n)(?<!\\)>>>>>>> REPLACE)(?=\n|$)  
-			  Matches the final “>>>>>>> REPLACE” marker on its own line (and requires a following newline or the end of file).
-		*/
-
-		let matches = [
-			...diffContent.matchAll(
-				/(?:^|\n)(?<!\\)<<<<<<< SEARCH\s*\n((?:\:start_line:\s*(\d+)\s*\n))?((?:\:end_line:\s*(\d+)\s*\n))?((?<!\\)-------\s*\n)?([\s\S]*?)(?:\n)?(?:(?<=\n)(?<!\\)=======\s*\n)([\s\S]*?)(?:\n)?(?:(?<=\n)(?<!\\)>>>>>>> REPLACE)(?=\n|$)/g,
-			),
+		const regexPatterns = [
+			/(?:^|\n)/, // 1. the first marker is preceded by start-of-file or one or more newlines, but does not include them in the match.
+			/(?<!\\)<<<<<<< SEARCH\s*\n/, // 2. Matches the line “<<<<<<< SEARCH” (ignoring any trailing spaces) – the negative lookbehind makes sure it isn’t escaped.
+			/((?:\:start_line:\s*(\d+)\s*\n))?/, // 3. Optionally matches a “:start_line:” line. The outer capturing group is group 1 and the inner (\d+) is group 2.
+			/((?:\:end_line:\s*(\d+)\s*\n))?/, // 4. Optionally matches a “:end_line:” line. Group 3 is the whole match and group 4 is the digits.
+			/((?<!\\)-------\s*\n)?/, // 5. Optionally matches the “-------” marker line (group 5).
+			/([\s\S]*?)(?:\n)?/, // 6. Non‐greedy match for the “search content” (group 6) up to the next marker.
+			/(?:(?<!\\)=======\s*\n)/, // 7. Matches the “=======” marker on its own line.
+			/([\s\S]*?)(?:\n)?/, // 8. Non‐greedy match for the “replace content” (group 7).
+			/(?:(?<=\n)(?<!\\)>>>>>>> REPLACE)(?=\n|$)/, // 9. Matches the final “>>>>>>> REPLACE” marker on its own line (and requires a following newline or the end of file).
 		]
+
+		const diffRegex = new RegExp(regexPatterns.map((pattern) => pattern.source).join(""), "g")
+
+		let matches = [...diffContent.matchAll(diffRegex)]
 
 		if (matches.length === 0) {
 			return {
@@ -353,10 +356,10 @@ Only use a single line of '=======' between search and replacement content, beca
 				error: `Invalid diff format - missing required sections\n\nDebug Info:\n- Expected Format: <<<<<<< SEARCH\\n:start_line: start line\\n-------\\n[search content]\\n=======\\n[replace content]\\n>>>>>>> REPLACE\n- Tip: Make sure to include start_line/SEARCH/=======/REPLACE sections with correct markers on new lines`,
 			}
 		}
+
 		// Detect line ending from original content
 		const lineEnding = originalContent.includes("\r\n") ? "\r\n" : "\n"
 		let resultLines = originalContent.split(/\r?\n/)
-		let delta = 0
 		let diffResults: DiffResult[] = []
 		let appliedCount = 0
 		const replacements = matches
@@ -365,11 +368,21 @@ Only use a single line of '=======' between search and replacement content, beca
 				searchContent: match[6],
 				replaceContent: match[7],
 			}))
-			.sort((a, b) => a.startLine - b.startLine)
+			.map((replacement) => {
+				if (replacement.replaceContent) {
+					replacement.replaceContent = replacement.replaceContent.replace(
+						/(^|\n)(\s*)\:start_line\:\s*\d+\s*\n/g,
+						"$1",
+					)
+					replacement.replaceContent = replacement.replaceContent.replace(/(^|\n)(\s*)-------\s*\n/g, "$1")
+				}
+				return replacement
+			})
+			.sort((a, b) => b.startLine - a.startLine)
 
 		for (const replacement of replacements) {
 			let { searchContent, replaceContent } = replacement
-			let startLine = replacement.startLine + (replacement.startLine === 0 ? 0 : delta)
+			let startLine = replacement.startLine
 
 			// First unescape any escaped markers in the content
 			searchContent = this.unescapeMarkers(searchContent)
@@ -432,8 +445,10 @@ Only use a single line of '=======' between search and replacement content, beca
 
 				// Try exact match first
 				const originalChunk = resultLines.slice(exactStartIndex, exactEndIndex + 1).join("\n")
+				const textLength = originalChunk.length
+				const weightedThreshold = getWeightedThreshold(this.fuzzyThreshold, textLength)
 				const similarity = getSimilarity(originalChunk, searchChunk)
-				if (similarity >= this.fuzzyThreshold) {
+				if (similarity >= weightedThreshold) {
 					matchIndex = exactStartIndex
 					bestMatchScore = similarity
 					bestMatchContent = originalChunk
@@ -450,7 +465,7 @@ Only use a single line of '=======' between search and replacement content, beca
 					bestScore,
 					bestMatchIndex,
 					bestMatchContent: midContent,
-				} = fuzzySearch(resultLines, searchChunk, searchStartIndex, searchEndIndex)
+				} = fuzzySearch(resultLines, searchChunk, searchStartIndex, searchEndIndex) // resultLines is an array of lines without carriage returns. searchChunk contains the search content with carriage returns.
 				matchIndex = bestMatchIndex
 				bestMatchScore = bestScore
 				bestMatchContent = midContent
@@ -471,7 +486,10 @@ Only use a single line of '=======' between search and replacement content, beca
 					bestMatchIndex,
 					bestMatchContent: aggContent,
 				} = fuzzySearch(resultLines, aggressiveSearchChunk, searchStartIndex, searchEndIndex)
-				if (bestMatchIndex !== -1 && bestScore >= this.fuzzyThreshold) {
+				if (
+					bestMatchIndex !== -1 &&
+					bestScore >= getWeightedThreshold(this.fuzzyThreshold, aggressiveSearchChunk.length)
+				) {
 					matchIndex = bestMatchIndex
 					bestMatchScore = bestScore
 					bestMatchContent = aggContent
@@ -503,7 +521,7 @@ Only use a single line of '=======' between search and replacement content, beca
 
 					diffResults.push({
 						success: false,
-						error: `No sufficiently similar match found${lineRange} (${Math.floor(bestMatchScore * 100)}% similar, needs ${Math.floor(this.fuzzyThreshold * 100)}%)\n\nDebug Info:\n- Similarity Score: ${Math.floor(bestMatchScore * 100)}%\n- Required Threshold: ${Math.floor(this.fuzzyThreshold * 100)}%\n- Search Range: ${startLine ? `starting at line ${startLine}` : "start to end"}\n- Tried both standard and aggressive line number stripping\n- Tip: Use the read_file tool to get the latest content of the file before attempting to use the apply_diff tool again, as the file content may have changed\n\nSearch Content:\n${searchChunk}${bestMatchSection}${originalContentSection}`,
+						error: `No sufficiently similar match found${lineRange} (${Math.floor(bestMatchScore * 100)}% similar, needs ${Math.floor(getWeightedThreshold(this.fuzzyThreshold, searchChunk.length) * 100)}%)\n\nDebug Info:\n- Similarity Score: ${Math.floor(bestMatchScore * 100)}%\n- Required Threshold: ${Math.floor(getWeightedThreshold(this.fuzzyThreshold, searchChunk.length) * 100)}%\n- Search Range: ${startLine ? `starting at line ${startLine}` : "start to end"}\n- Tried both standard and aggressive line number stripping\n- Tip: Use the read_file tool to get the latest content of the file before attempting to use the apply_diff tool again, as the file content may have changed\n\nSearch Content:\n${searchChunk}${bestMatchSection}${originalContentSection}`,
 					})
 					continue
 				}
@@ -553,7 +571,6 @@ Only use a single line of '=======' between search and replacement content, beca
 			const beforeMatch = resultLines.slice(0, matchIndex)
 			const afterMatch = resultLines.slice(matchIndex + searchLines.length)
 			resultLines = [...beforeMatch, ...indentedReplaceLines, ...afterMatch]
-			delta = delta - matchedLines.length + replaceLines.length
 			appliedCount++
 		}
 		const finalContent = resultLines.join(lineEnding)

@@ -10,10 +10,10 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
-			"args": ["--extensionDevelopmentPath=${workspaceFolder}"],
+			"args": ["--disable-extensions", "--extensionDevelopmentPath=${workspaceFolder}"],
 			"sourceMaps": true,
 			"outFiles": ["${workspaceFolder}/dist/**/*.js"],
-			"preLaunchTask": "${defaultBuildTask}",
+			"preLaunchTask": "build:esbuild",
 			"env": {
 				"NODE_ENV": "development",
 				"VSCODE_DEBUG_MODE": "true"
@@ -23,7 +23,9 @@
 				"hidden": false,
 				"group": "tasks",
 				"order": 1
-			}
+			},
+			"sourceMapRenames": true,
+			"trace": true
 		}
 	]
 }
