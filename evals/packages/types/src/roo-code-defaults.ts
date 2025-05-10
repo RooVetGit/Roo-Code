@@ -8,6 +8,7 @@ export const rooCodeDefaults: RooCodeSettings = {
 
 	pinnedApiConfigs: {},
 
+	markdownBlockLineheight: 1.25,
 	autoApprovalEnabled: true,
 	alwaysAllowReadOnly: true,
 	alwaysAllowReadOnlyOutsideWorkspace: false,

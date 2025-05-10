@@ -132,6 +132,7 @@ export interface WebviewMessage {
 		| "toggleApiConfigPin"
 		| "setHistoryPreviewCollapsed"
 		| "condenseTaskContextRequest"
+		| "markdownBlockLineheight"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse

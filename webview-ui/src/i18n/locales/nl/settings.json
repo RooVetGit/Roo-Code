@@ -22,6 +22,7 @@
 	},
 	"sections": {
 		"providers": "Providers",
+		"uiSettings": "Interface-instellingen",
 		"autoApprove": "Auto-goedkeuren",
 		"browser": "Browser",
 		"checkpoints": "Checkpoints",
@@ -322,6 +323,13 @@
 			"description": "Roo leest dit aantal regels wanneer het model geen begin/eindwaarden opgeeft. Als dit aantal lager is dan het totaal, genereert Roo een index van codelijnen. Speciale gevallen: -1 laat Roo het hele bestand lezen (zonder indexering), 0 leest geen regels en geeft alleen een minimale index. Lagere waarden minimaliseren het initiële contextgebruik en maken precieze vervolg-leesopdrachten mogelijk. Expliciete begin/eind-aanvragen worden niet door deze instelling beperkt.",
 			"lines": "regels",
 			"always_full_read": "Altijd volledig bestand lezen"
+		}
+	},
+	"uiSettings": {
+		"description": "Gebruikersinterfacegerelateerde configuratie",
+		"markdownBlockLineheight": {
+			"label": "Regelafstand van paneelinhoud",
+			"description": "Pas de regelafstand van de paneelinhoud aan om de leesbaarheid te verbeteren."
 		}
 	},
 	"terminal": {

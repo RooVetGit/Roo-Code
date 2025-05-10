@@ -22,6 +22,7 @@
 	},
 	"sections": {
 		"providers": "Proveedores",
+		"uiSettings": "界面设置",
 		"autoApprove": "Auto-aprobación",
 		"browser": "Acceso al ordenador",
 		"checkpoints": "Puntos de control",
@@ -322,6 +323,13 @@
 			"description": "Roo lee este número de líneas cuando el modelo omite valores de inicio/fin. Si este número es menor que el total del archivo, Roo genera un índice de números de línea de las definiciones de código. Casos especiales: -1 indica a Roo que lea el archivo completo (sin indexación), y 0 indica que no lea líneas y proporcione solo índices de línea para un contexto mínimo. Valores más bajos minimizan el uso inicial de contexto, permitiendo lecturas posteriores de rangos de líneas precisos. Las solicitudes con inicio/fin explícitos no están limitadas por esta configuración.",
 			"lines": "líneas",
 			"always_full_read": "Siempre leer el archivo completo"
+		}
+	},
+	"uiSettings": {
+		"description": "Configuración relacionada con la interfaz de usuario",
+		"markdownBlockLineheight": {
+			"label": "Interlineado del contenido del panel",
+			"description": "Ajuste el espaciado entre líneas del contenido del panel para mejorar la legibilidad."
 		}
 	},
 	"terminal": {

@@ -22,6 +22,7 @@
 	},
 	"sections": {
 		"providers": "Anbieter",
+		"uiSettings": "界面设置",
 		"autoApprove": "Auto-Genehmigung",
 		"browser": "Computerzugriff",
 		"checkpoints": "Kontrollpunkte",
@@ -324,6 +325,13 @@
 			"always_full_read": "Immer die gesamte Datei lesen"
 		}
 	},
+	"uiSettings": {
+		"description": "Benutzeroberflächenbezogene Konfiguration",
+		"markdownBlockLineheight": {
+			"label": "Zeilenabstand des Panelinhalts",
+			"description": "Passen Sie den Zeilenabstand des Panel-Inhalts an, um die Lesbarkeit zu verbessern."
+		}
+	},
 	"terminal": {
 		"basic": {
 			"label": "Terminal-Einstellungen: Grundlegend",
@@ -331,7 +339,7 @@
 		},
 		"advanced": {
 			"label": "Terminal-Einstellungen: Erweitert",
-			"description": "Die folgenden Optionen erfordern möglicherweise einen Terminal-Neustart, um die Einstellung zu übernehmen."
+			"descrip调整tion": "Die folgenden Optionen erfordern möglicherweise einen Terminal-Neustart, um die Einstellung zu übernehmen."
 		},
 		"outputLineLimit": {
 			"label": "Terminal-Ausgabelimit",

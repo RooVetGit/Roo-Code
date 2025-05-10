@@ -22,6 +22,7 @@
 	},
 	"sections": {
 		"providers": "Providers",
+		"uiSettings": "UI Settings",
 		"autoApprove": "Auto-Approve",
 		"browser": "Browser",
 		"checkpoints": "Checkpoints",
@@ -322,6 +323,13 @@
 			"description": "Roo reads this number of lines when the model omits start/end values. If this number is less than the file's total, Roo generates a line number index of code definitions. Special cases: -1 instructs Roo to read the entire file (without indexing), and 0 instructs it to read no lines and provides line indexes only for minimal context. Lower values minimize initial context usage, enabling precise subsequent line-range reads. Explicit start/end requests are not limited by this setting.",
 			"lines": "lines",
 			"always_full_read": "Always read entire file"
+		}
+	},
+	"uiSettings": {
+		"description": "UI related configuration",
+		"markdownBlockLineheight": {
+			"label": "Content vertical spacing",
+			"description": "Adjust content vertical line spacing to improve readability."
 		}
 	},
 	"terminal": {

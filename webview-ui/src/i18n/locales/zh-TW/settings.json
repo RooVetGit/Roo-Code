@@ -22,6 +22,7 @@
 	},
 	"sections": {
 		"providers": "供應商",
+		"uiSettings": "界面設置",
 		"autoApprove": "自動核准",
 		"browser": "電腦存取",
 		"checkpoints": "檢查點",
@@ -322,6 +323,13 @@
 			"description": "當模型未指定起始/結束值時，Roo 讀取的行數。如果此數值小於檔案總行數，Roo 將產生程式碼定義的行號索引。特殊情況：-1 指示 Roo 讀取整個檔案（不建立索引），0 指示不讀取任何行並僅提供行索引以取得最小上下文。較低的值可最小化初始上下文使用，允許後續精確的行範圍讀取。明確指定起始/結束的請求不受此設定限制。 <0>瞭解更多</0>",
 			"lines": "行",
 			"always_full_read": "始終讀取整個檔案"
+		}
+	},
+	"uiSettings": {
+		"description": "使用者界面相關設定",
+		"markdownBlockLineheight": {
+			"label": "使用者介面相關設定",
+			"description": "調整面板內容行間距，以改善可讀性。"
 		}
 	},
 	"terminal": {
