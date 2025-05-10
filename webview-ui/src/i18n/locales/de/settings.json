@@ -22,7 +22,7 @@
 	},
 	"sections": {
 		"providers": "Anbieter",
-		"uiSettings": "界面设置",
+		"uiSettings": "UI-Einstellungen",
 		"autoApprove": "Auto-Genehmigung",
 		"browser": "Computerzugriff",
 		"checkpoints": "Kontrollpunkte",
