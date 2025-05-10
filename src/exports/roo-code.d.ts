@@ -56,6 +56,7 @@ type GlobalSettings = {
 				workspace?: string | undefined
 		  }[]
 		| undefined
+	markdownBlockLineheight: number | undefined
 	autoApprovalEnabled?: boolean | undefined
 	alwaysAllowReadOnly?: boolean | undefined
 	alwaysAllowReadOnlyOutsideWorkspace?: boolean | undefined
