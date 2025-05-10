@@ -247,5 +247,10 @@
 		"title": "명령 실행 경고",
 		"description": "명령이 VSCode 터미널 쉘 통합 없이 실행되고 있습니다. 이 경고를 숨기려면 <settingsLink>Roo Code 설정</settingsLink>의 <strong>Terminal</strong> 섹션에서 쉘 통합을 비활성화하거나 아래 링크를 사용하여 VSCode 터미널 통합 문제를 해결하세요.",
 		"troubleshooting": "쉘 통합 문서를 보려면 여기를 클릭하세요."
+	},
+	"warning": {
+		"contextLimit": "컨텍스트 창 사용량이 {{percent}}%에 도달했습니다. 제한에 도달하지 않도록 새 작업을 시작하는 것을 고려하세요.",
+		"tokenLimit": "토큰 사용량이 {{tokens}} 토큰에 도달했습니다. 비용을 관리하기 위해 새 작업을 시작하는 것을 고려하세요.",
+		"costLimit": "비용이 ${{cost}}에 도달했습니다. 지출을 관리하기 위해 새 작업을 시작하는 것을 고려하세요."
 	}
 }

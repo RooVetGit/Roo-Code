@@ -248,7 +248,16 @@
 			"medium": "Médio",
 			"low": "Baixo"
 		},
-		"setReasoningLevel": "Habilitar esforço de raciocínio"
+		"setReasoningLevel": "Habilitar esforço de raciocínio",
+		"warningThreshold": {
+			"label": "Limites de aviso",
+			"context": "Limite de aviso de uso da janela de contexto",
+			"contextDescription": "Mostrar um aviso quando o uso da janela de contexto exceder esta porcentagem. Defina como -1 para desativar.",
+			"tokens": "Limite de aviso de uso de tokens",
+			"tokensDescription": "Mostrar um aviso quando o uso total de tokens exceder esta quantidade. Defina como -1 para desativar.",
+			"cost": "Limite de aviso de custo",
+			"costDescription": "Mostrar um aviso quando o custo total exceder este valor em USD. Defina como -1 para desativar."
+		}
 	},
 	"browser": {
 		"enable": {

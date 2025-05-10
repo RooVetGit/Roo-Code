@@ -305,6 +305,13 @@ type ProviderSettings = {
 	fuzzyMatchThreshold?: number | undefined
 	modelTemperature?: (number | null) | undefined
 	rateLimitSeconds?: number | undefined
+	warningThreshold?:
+		| {
+				context?: number | undefined
+				tokens?: number | undefined
+				cost?: number | undefined
+		  }
+		| undefined
 	modelMaxTokens?: number | undefined
 	modelMaxThinkingTokens?: number | undefined
 }

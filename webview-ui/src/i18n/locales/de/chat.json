@@ -247,5 +247,10 @@
 		"title": "Befehlsausführungswarnung",
 		"description": "Dein Befehl wird ohne VSCode Terminal-Shell-Integration ausgeführt. Um diese Warnung zu unterdrücken, kannst du die Shell-Integration im Abschnitt <strong>Terminal</strong> der <settingsLink>Roo Code Einstellungen</settingsLink> deaktivieren oder die VSCode Terminal-Integration mit dem Link unten beheben.",
 		"troubleshooting": "Klicke hier für die Shell-Integrationsdokumentation."
+	},
+	"warning": {
+		"contextLimit": "Die Kontextfensternutzung liegt bei {{percent}}%. Erwägen Sie eine neue Aufgabe zu starten, um Limits zu vermeiden.",
+		"tokenLimit": "Die Token-Nutzung hat {{tokens}} Token erreicht. Erwägen Sie eine neue Aufgabe zu starten, um Kosten zu kontrollieren.",
+		"costLimit": "Die Kosten haben ${{cost}} erreicht. Erwägen Sie eine neue Aufgabe zu starten, um Ausgaben zu kontrollieren."
 	}
 }

@@ -247,5 +247,10 @@
 		"title": "命令执行警告",
 		"description": "您的命令正在没有 VSCode 终端 shell 集成的情况下执行。要隐藏此警告，您可以在 <settingsLink>Roo Code 设置</settingsLink>的 <strong>Terminal</strong> 部分禁用 shell 集成，或使用下方链接排查 VSCode 终端集成问题。",
 		"troubleshooting": "点击此处查看 shell 集成文档。"
+	},
+	"warning": {
+		"contextLimit": "上下文窗口使用率已达到 {{percent}}%。建议开始新任务以避免达到限制。",
+		"tokenLimit": "Token 使用量已达到 {{tokens}} 个。建议开始新任务以控制成本。",
+		"costLimit": "费用已达到 ${{cost}}。建议开始新任务以控制开支。"
 	}
 }

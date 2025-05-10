@@ -247,5 +247,10 @@
 		"title": "Ostrzeżenie wykonania polecenia",
 		"description": "Twoje polecenie jest wykonywane bez integracji powłoki terminala VSCode. Aby ukryć to ostrzeżenie, możesz wyłączyć integrację powłoki w sekcji <strong>Terminal</strong> w <settingsLink>ustawieniach Roo Code</settingsLink> lub rozwiązać problemy z integracją terminala VSCode korzystając z poniższego linku.",
 		"troubleshooting": "Kliknij tutaj, aby zobaczyć dokumentację integracji powłoki."
+	},
+	"warning": {
+		"contextLimit": "Wykorzystanie okna kontekstu wynosi {{percent}}%. Rozważ rozpoczęcie nowego zadania, aby uniknąć przekroczenia limitów.",
+		"tokenLimit": "Wykorzystanie tokenów osiągnęło {{tokens}} tokenów. Rozważ rozpoczęcie nowego zadania, aby zarządzać kosztami.",
+		"costLimit": "Koszt osiągnął ${{cost}}. Rozważ rozpoczęcie nowego zadania, aby zarządzać wydatkami."
 	}
 }

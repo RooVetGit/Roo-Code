@@ -248,7 +248,16 @@
 			"medium": "中",
 			"low": "低"
 		},
-		"setReasoningLevel": "推論労力を有効にする"
+		"setReasoningLevel": "推論労力を有効にする",
+		"warningThreshold": {
+			"label": "警告しきい値",
+			"context": "コンテキストウィンドウ使用量の警告しきい値",
+			"contextDescription": "コンテキストウィンドウの使用量がこの割合を超えた場合に警告を表示。-1を設定すると無効化されます。",
+			"tokens": "トークン使用量の警告しきい値",
+			"tokensDescription": "トークンの総使用量がこの値を超えた場合に警告を表示。-1を設定すると無効化されます。",
+			"cost": "コストの警告しきい値",
+			"costDescription": "総コストがこのUSD金額を超えた場合に警告を表示。-1を設定すると無効化されます。"
+		}
 	},
 	"browser": {
 		"enable": {

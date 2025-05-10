@@ -248,7 +248,16 @@
 			"medium": "중간",
 			"low": "낮음"
 		},
-		"setReasoningLevel": "추론 노력 활성화"
+		"setReasoningLevel": "추론 노력 활성화",
+		"warningThreshold": {
+			"label": "경고 임계값",
+			"context": "컨텍스트 창 사용량 경고 임계값",
+			"contextDescription": "컨텍스트 창 사용량이 이 비율을 초과할 때 경고 표시. -1로 설정하여 비활성화.",
+			"tokens": "토큰 사용량 경고 임계값",
+			"tokensDescription": "총 토큰 사용량이 이 값을 초과할 때 경고 표시. -1로 설정하여 비활성화.",
+			"cost": "비용 경고 임계값",
+			"costDescription": "총 비용이 이 USD 금액을 초과할 때 경고 표시. -1로 설정하여 비활성화."
+		}
 	},
 	"browser": {
 		"enable": {

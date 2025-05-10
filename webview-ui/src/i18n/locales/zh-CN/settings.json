@@ -248,7 +248,16 @@
 			"medium": "中",
 			"low": "低"
 		},
-		"setReasoningLevel": "启用推理工作量"
+		"setReasoningLevel": "启用推理工作量",
+		"warningThreshold": {
+			"label": "警告阈值",
+			"context": "上下文窗口使用警告阈值",
+			"contextDescription": "当上下文窗口使用超过此百分比时显示警告。设置为 -1 可禁用此警告。",
+			"tokens": "Token使用警告阈值",
+			"tokensDescription": "当总Token使用量超过此数值时显示警告。设置为 -1 可禁用此警告。",
+			"cost": "费用警告阈值",
+			"costDescription": "当总费用超过此美元金额时显示警告。设置为 -1 可禁用此警告。"
+		}
 	},
 	"browser": {
 		"enable": {

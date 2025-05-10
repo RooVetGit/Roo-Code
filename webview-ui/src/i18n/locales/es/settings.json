@@ -248,7 +248,16 @@
 			"medium": "Medio",
 			"low": "Bajo"
 		},
-		"setReasoningLevel": "Habilitar esfuerzo de razonamiento"
+		"setReasoningLevel": "Habilitar esfuerzo de razonamiento",
+		"warningThreshold": {
+			"label": "Umbrales de Advertencia",
+			"context": "Umbral de advertencia de uso de ventana de contexto",
+			"contextDescription": "Mostrar una advertencia cuando el uso de la ventana de contexto exceda este porcentaje. Establecer a -1 para deshabilitar.",
+			"tokens": "Umbral de advertencia de uso de tokens",
+			"tokensDescription": "Mostrar una advertencia cuando el uso total de tokens exceda esta cantidad. Establecer a -1 para deshabilitar.",
+			"cost": "Umbral de advertencia de costo",
+			"costDescription": "Mostrar una advertencia cuando el costo total exceda esta cantidad en USD. Establecer a -1 para deshabilitar."
+		}
 	},
 	"browser": {
 		"enable": {

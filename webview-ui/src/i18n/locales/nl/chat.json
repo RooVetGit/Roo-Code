@@ -247,5 +247,10 @@
     "title": "Waarschuwing commando-uitvoering",
     "description": "Je commando wordt uitgevoerd zonder VSCode-terminal shell-integratie. Om deze waarschuwing te onderdrukken kun je shell-integratie uitschakelen in het gedeelte <strong>Terminal</strong> van de <settingsLink>Roo Code-instellingen</settingsLink> of de VSCode-terminalintegratie oplossen via de onderstaande link.",
     "troubleshooting": "Klik hier voor shell-integratie documentatie."
+  },
+  "warning": {
+    "contextLimit": "Contextvenstergebruik is {{percent}}%. Overweeg een nieuwe taak te starten om limieten te voorkomen.",
+    "tokenLimit": "Tokengebruik heeft {{tokens}} tokens bereikt. Overweeg een nieuwe taak te starten om kosten te beheren.",
+    "costLimit": "Kosten hebben ${{cost}} bereikt. Overweeg een nieuwe taak te starten om uitgaven te beheren."
   }
 }
