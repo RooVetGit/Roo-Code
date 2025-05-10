@@ -131,6 +131,7 @@ export interface WebviewMessage {
 		| "searchFiles"
 		| "toggleApiConfigPin"
 		| "setHistoryPreviewCollapsed"
+		| "markdownBlockLineHeight"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse

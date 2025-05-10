@@ -23,6 +23,7 @@ import {
 	Globe,
 	Info,
 	LucideIcon,
+	Brush,
 } from "lucide-react"
 
 import { ExperimentId } from "@roo/shared/experiments"
@@ -49,6 +50,7 @@ import {
 
 import { Tab, TabContent, TabHeader, TabList, TabTrigger } from "../common/Tab"
 import { SetCachedStateField, SetExperimentEnabled } from "./types"
+import { UISettings } from "./UISettings"
 import { SectionHeader } from "./SectionHeader"
 import ApiConfigManager from "./ApiConfigManager"
 import ApiOptions from "./ApiOptions"
@@ -77,6 +79,7 @@ export interface SettingsViewRef {
 
 const sectionNames = [
 	"providers",
+	"uiSettings",
 	"autoApprove",
 	"browser",
 	"checkpoints",
@@ -159,6 +162,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 		remoteBrowserEnabled,
 		maxReadFileLine,
 		terminalCompressProgressBar,
+		markdownBlockLineHeight,
 	} = cachedState
 
 	const apiConfiguration = useMemo(() => cachedState.apiConfiguration ?? {}, [cachedState.apiConfiguration])
@@ -282,6 +286,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 			vscode.postMessage({ type: "alwaysAllowSubtasks", bool: alwaysAllowSubtasks })
 			vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
 			vscode.postMessage({ type: "telemetrySetting", text: telemetrySetting })
+			vscode.postMessage({ type: "markdownBlockLineHeight", value: markdownBlockLineHeight })
 			setChangeDetected(false)
 		}
 	}
@@ -352,6 +357,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 	const sections: { id: SectionName; icon: LucideIcon }[] = useMemo(
 		() => [
 			{ id: "providers", icon: Webhook },
+			{ id: "uiSettings", icon: Brush },
 			{ id: "autoApprove", icon: CheckCheck },
 			{ id: "browser", icon: SquareMousePointer },
 			{ id: "checkpoints", icon: GitBranch },
@@ -543,6 +549,14 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 								/>
 							</Section>
 						</div>
+					)}
+
+					{/* UISettings Section */}
+					{activeTab === "uiSettings" && (
+						<UISettings
+							markdownBlockLineHeight={cachedState.markdownBlockLineHeight ?? 1.25}
+							setCachedStateField={setCachedStateField}
+						/>
 					)}
 
 					{/* Auto-Approve Section */}

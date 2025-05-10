@@ -69,6 +69,7 @@ export interface ExtensionMessage {
 		| "setHistoryPreviewCollapsed"
 		| "commandExecutionStatus"
 		| "vsCodeSetting"
+		| "markdownBlockLineHeight"
 	text?: string
 	action?:
 		| "chatButtonClicked"
@@ -168,6 +169,7 @@ export type ExtensionState = Pick<
 	| "customModePrompts"
 	| "customSupportPrompts"
 	| "enhancementApiConfigId"
+	| "markdownBlockLineHeight"
 > & {
 	version: string
 	clineMessages: ClineMessage[]
