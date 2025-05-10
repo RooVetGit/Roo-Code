@@ -171,6 +171,229 @@
         vscode.postMessage({ type: "preferredLanguage", text: preferredLanguage })
         ```
 
+For enum/compound data types, additional type-safety steps are needed:
+
+1. **Define Central Types (schemas/index.ts)**
+
+    ```typescript
+    // Define the enum values
+    export const displayModes = ["compact", "comfortable", "detailed"] as const
+
+    // Create the schema and type
+    export const displayModeSchema = z.enum(displayModes)
+    export type DisplayMode = z.infer<typeof displayModeSchema>
+
+    // Add to global settings schema
+    export const globalSettingsSchema = z.object({
+    	displayMode: displayModeSchema.optional(),
+    })
+    ```
+
+2. **Type Definitions Chain**
+
+    ```typescript
+    // In ExtensionMessage.ts
+    export type ExtensionState = Pick<GlobalSettings, "displayMode" | "otherSettings">
+
+    // In WebviewMessage.ts
+    export type WebviewMessage = {
+    	type: "displayMode" | "otherTypes"
+    	text?: string
+    }
+    ```
+
+3. **State Management**
+
+    ```typescript
+    // In webviewMessageHandler.ts
+    case "displayMode":
+      const mode = (message.text ?? "compact") as DisplayMode
+      await provider.contextProxy.updateGlobalState("displayMode", mode)
+      await provider.postStateToWebview()
+      break
+
+    // In ClineProvider.ts
+    return {
+      displayMode: (this.contextProxy.getGlobalState("displayMode") ?? "compact") as DisplayMode,
+    }
+    ```
+
+4. **UI State Context**
+
+    ```typescript
+    // In ExtensionStateContext.tsx
+    interface ExtensionStateContextType extends ExtensionState {
+    	displayMode: DisplayMode
+    	setDisplayMode: (value: DisplayMode) => void
+    }
+
+    const contextValue: ExtensionStateContextType = {
+    	displayMode: state.displayMode ?? "compact",
+    	setDisplayMode: (value: DisplayMode) => setState((prev) => ({ ...prev, displayMode: value })),
+    }
+    ```
+
+5. **UI Component**
+    ```typescript
+    // In settings component
+    <Select
+      value={displayMode}
+      onValueChange={(value: DisplayMode) => setCachedStateField("displayMode", value)}>
+      <SelectContent>
+        <SelectGroup>
+          <SelectItem value="compact">{t("settings:display.mode.compact")}</SelectItem>
+          <SelectItem value="comfortable">{t("settings:display.mode.comfortable")}</SelectItem>
+          <SelectItem value="detailed">{t("settings:display.mode.detailed")}</SelectItem>
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+    ```
+
+For enum/compound data types, additional type-safety steps are needed:
+
+1. **Define Central Types (schemas/index.ts)**
+
+    ```typescript
+    // Define the enum values
+    export const displayModes = ["compact", "comfortable", "detailed"] as const
+
+    // Create the schema and type
+    export const displayModeSchema = z.enum(displayModes)
+    export type DisplayMode = z.infer<typeof displayModeSchema>
+
+    // Add to global settings schema
+    export const globalSettingsSchema = z.object({
+    	displayMode: displayModeSchema.optional(),
+    })
+    ```
+
+2. **Type Definitions Chain**
+
+    ```typescript
+    // In ExtensionMessage.ts
+    export type ExtensionState = Pick<GlobalSettings, "displayMode" | "otherSettings">
+
+    // In WebviewMessage.ts
+    export type WebviewMessage = {
+    	type: "displayMode" | "otherTypes"
+    	text?: string
+    }
+    ```
+
+3. **State Management & Type Casting**
+
+    ```typescript
+    // In webviewMessageHandler.ts
+    case "displayMode":
+      const mode = (message.text ?? "compact") as DisplayMode
+      await provider.contextProxy.updateGlobalState("displayMode", mode)
+      await provider.postStateToWebview()
+      break
+
+    // In ClineProvider.ts
+    return {
+      displayMode: (this.contextProxy.getGlobalState("displayMode") ?? "compact") as DisplayMode,
+    }
+
+    // In ExtensionStateContextProvider initial state
+    const [state, setState] = useState<ExtensionState>({
+      displayMode: ("compact" as DisplayMode),
+    })
+
+    // In SettingsView cached state
+    const [cachedState, setCachedState] = useState({
+      displayMode: (extensionState.displayMode ?? "compact") as DisplayMode,
+    })
+
+    // When sending messages from UI
+    vscode.postMessage({
+      type: "displayMode",
+      text: (value as DisplayMode)
+    })
+
+    // When handling state updates
+    await updateGlobalState(
+      "displayMode",
+      (newValue ?? "compact") as DisplayMode
+    )
+    ```
+
+4. **UI State Context**
+
+    ```typescript
+    // In ExtensionStateContext.tsx
+    interface ExtensionStateContextType extends ExtensionState {
+    	displayMode: DisplayMode
+    	setDisplayMode: (value: DisplayMode) => void
+    }
+
+    const contextValue: ExtensionStateContextType = {
+    	displayMode: state.displayMode ?? "compact",
+    	setDisplayMode: (value: DisplayMode) => setState((prev) => ({ ...prev, displayMode: value })),
+    }
+    ```
+
+5. **UI Component**
+    ```typescript
+    // In settings component
+    <Select
+      value={displayMode}
+      onValueChange={(value: DisplayMode) => setCachedStateField("displayMode", value)}>
+      <SelectContent>
+        <SelectGroup>
+          <SelectItem value="compact">{t("settings:display.mode.compact")}</SelectItem>
+          <SelectItem value="comfortable">{t("settings:display.mode.comfortable")}</SelectItem>
+          <SelectItem value="detailed">{t("settings:display.mode.detailed")}</SelectItem>
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+    ```
+
+Additionally, there are several special considerations when implementing dropdown/enum settings:
+
+1. **Auto-Generated Type Files**:
+
+    - Files like exports/types.ts and roo-code.d.ts are auto-generated
+    - They'll list out the enum values explicitly rather than reference your type
+    - Don't manually edit these files - modify the schema definition instead
+
+2. **Translation Requirements**:
+
+    - Each enum value needs a dedicated translation key
+    - Create entries in webview-ui/src/i18n/locales/en/settings.json:
+
+    ```json
+    "displayMode": {
+      "label": "Display Mode",
+      "description": "Controls how items are displayed in the UI",
+      "compact": "Compact: Minimal spacing and information",
+      "comfortable": "Comfortable: Balanced spacing and details",
+      "detailed": "Detailed: Maximum information and spacing"
+    }
+    ```
+
+3. **Explicit UI Rendering**:
+
+    - Each possible enum value needs an explicit SelectItem entry
+    - This makes UI maintenance and type safety connected
+    - When adding new enum values, update both schema and UI
+
+4. **Default Value Consistency**:
+
+    - Use the same default value in all locations:
+        - Initial state in ExtensionStateContextProvider
+        - Default value in ClineProvider.getStateToPostToWebview
+        - Default value when handling messages
+        - Default value when updating state
+    - Inconsistent defaults cause unpredictable behavior
+
+5. **Type Safety Chain**:
+    - Message Passing: When passing messages between webview and extension, the type information is lost and values are treated as strings
+    - State Initialization: Default values need explicit typing to match the enum type
+    - Optional Handling: When dealing with optional values, the default must be cast to maintain type safety
+    - UI Events: Event handlers receive string values that must be cast to the enum type
+    - Global State: VSCode's storage APIs work with basic types and need casting when retrieving values
+
 These steps ensure that:
 
 - The setting's state is properly typed throughout the application
