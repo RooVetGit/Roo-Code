@@ -45,8 +45,9 @@ export class FileWatcher implements IFileWatcher {
 		private readonly cacheManager: CacheManager,
 		private embedder?: IEmbedder,
 		private vectorStore?: IVectorStore,
+		ignoreController?: RooIgnoreController,
 	) {
-		this.ignoreController = new RooIgnoreController(workspacePath)
+		this.ignoreController = ignoreController || new RooIgnoreController(workspacePath)
 	}
 
 	/**
@@ -212,6 +213,7 @@ export class FileWatcher implements IFileWatcher {
 			this._onDidFinishProcessing.fire(result)
 			return result
 		} catch (error) {
+			console.error("[FileWatcher] processFile error in test:", error)
 			const result = {
 				path: filePath,
 				status: "error" as const,
