@@ -66,17 +66,19 @@ export class CodeIndexManager {
 	}
 
 	public get state(): IndexingState {
+		if (!this.isFeatureEnabled) {
+			return "Standby"
+		}
 		this.assertInitialized()
 		return this._orchestrator!.state
 	}
 
 	public get isFeatureEnabled(): boolean {
-		this.assertInitialized()
-		return this._configManager!.isFeatureEnabled
+		return this._configManager?.isFeatureEnabled ?? false
 	}
 
 	public get isFeatureConfigured(): boolean {
-		return this._configManager!.isFeatureConfigured
+		return this._configManager?.isFeatureConfigured ?? false
 	}
 
 	/**
@@ -86,18 +88,25 @@ export class CodeIndexManager {
 	 */
 	public async initialize(contextProxy: ContextProxy): Promise<{ requiresRestart: boolean }> {
 		// 1. ConfigManager Initialization and Configuration Loading
-		if (!this._configManager) {
-			this._configManager = new CodeIndexConfigManager(contextProxy)
-		}
+		this._configManager = new CodeIndexConfigManager(contextProxy)
 		const { requiresRestart, requiresClear } = await this._configManager.loadConfiguration()
 
-		// 2. CacheManager Initialization
+		// 2. Check if feature is enabled
+		if (!this.isFeatureEnabled) {
+			console.log("[CodeIndexManager] Feature disabled - skipping service initialization")
+			if (this._orchestrator) {
+				this._orchestrator.stopWatcher()
+			}
+			return { requiresRestart }
+		}
+
+		// 3. CacheManager Initialization
 		if (!this._cacheManager) {
 			this._cacheManager = new CacheManager(this.context, this.workspacePath)
 			await this._cacheManager.initialize()
 		}
 
-		// 3. Determine if Core Services Need Recreation
+		// 4. Determine if Core Services Need Recreation
 		const needsServiceRecreation = !this._serviceFactory || requiresRestart
 		console.log(
 			`[CodeIndexManager] ${needsServiceRecreation ? "Initial setup or restart required" : "Configuration loaded, no full re-initialization needed"}`,
@@ -153,41 +162,26 @@ export class CodeIndexManager {
 			console.log("[CodeIndexManager] Core services (re)initialized")
 		}
 
-		// 4. Handle Data Clearing
+		// 5. Handle Data Clearing
 		if (requiresClear) {
 			console.log("[CodeIndexManager] Configuration requires clearing data")
-			await this.clearIndexData()
+			if (this._orchestrator) {
+				await this._orchestrator.clearIndexData()
+			}
+			if (this._cacheManager) {
+				await this._cacheManager.clearCacheFile()
+			}
 		}
 
-		// 5. Handle Indexing Start/Restart
-		if (this._configManager.isFeatureEnabled && this._configManager.isFeatureConfigured) {
-			const shouldStartOrRestartIndexing =
-				requiresRestart ||
-				requiresClear ||
-				(needsServiceRecreation && (!this._orchestrator || this._orchestrator.state !== "Indexing"))
+		// Handle Indexing Start/Restart
+		const shouldStartOrRestartIndexing =
+			requiresRestart ||
+			requiresClear ||
+			(needsServiceRecreation && (!this._orchestrator || this._orchestrator.state !== "Indexing"))
 
-			if (shouldStartOrRestartIndexing) {
-				console.log("[CodeIndexManager] Starting/restarting indexing due to configuration changes")
-				this.startIndexing()
-			} else {
-				console.log(
-					"[CodeIndexManager] Indexing not started/restarted (requiresRestart:",
-					requiresRestart,
-					"requiresClear:",
-					requiresClear,
-					"currentState:",
-					this._orchestrator?.state,
-					"needsServiceRecreation:",
-					needsServiceRecreation,
-					")",
-				)
-			}
-		} else {
-			console.log("[CodeIndexManager] Feature not enabled or not configured")
-			if (this._orchestrator && this._orchestrator.state !== "Standby") {
-				this.stopWatcher()
-				console.log("[CodeIndexManager] Stopped watcher as feature is disabled")
-			}
+		if (shouldStartOrRestartIndexing) {
+			console.log("[CodeIndexManager] Starting/restarting indexing due to configuration changes")
+			await this._orchestrator?.startIndexing()
 		}
 
 		return { requiresRestart }
@@ -198,6 +192,10 @@ export class CodeIndexManager {
 	 */
 
 	public async startIndexing(): Promise<void> {
+		if (!this.isFeatureEnabled) {
+			console.log("[CodeIndexManager] Feature disabled - skipping startIndexing")
+			return
+		}
 		this.assertInitialized()
 		await this._orchestrator!.startIndexing()
 	}
@@ -206,8 +204,13 @@ export class CodeIndexManager {
 	 * Stops the file watcher and potentially cleans up resources.
 	 */
 	public stopWatcher(): void {
-		this.assertInitialized()
-		this._orchestrator!.stopWatcher()
+		if (!this.isFeatureEnabled) {
+			console.log("[CodeIndexManager] Feature disabled - skipping stopWatcher")
+			return
+		}
+		if (this._orchestrator) {
+			this._orchestrator.stopWatcher()
+		}
 	}
 
 	/**
@@ -226,6 +229,10 @@ export class CodeIndexManager {
 	 * and deleting the cache file.
 	 */
 	public async clearIndexData(): Promise<void> {
+		if (!this.isFeatureEnabled) {
+			console.log("[CodeIndexManager] Feature disabled - skipping clearIndexData")
+			return
+		}
 		this.assertInitialized()
 		await this._orchestrator!.clearIndexData()
 		await this._cacheManager!.clearCacheFile()
@@ -246,6 +253,10 @@ export class CodeIndexManager {
 		limit: number,
 		directoryPrefix?: string,
 	): Promise<VectorStoreSearchResult[]> {
+		if (!this.isFeatureEnabled) {
+			console.log("[CodeIndexManager] Feature disabled - returning empty search results")
+			return []
+		}
 		this.assertInitialized()
 		return this._searchService!.searchIndex(query, limit, directoryPrefix)
 	}
