@@ -39,12 +39,19 @@ export async function askFollowupQuestionTool(
 				}
 
 				try {
-					parsedSuggest = parseXml(follow_up, ["suggest"]) as { suggest: Suggest[] | Suggest }
+					// Ensure we have well-formed XML by wrapping in a root element
+					// This handles XML fragments that lack a single root
+					const wrappedXml = `<suggestions>${follow_up}</suggestions>`
+					parsedSuggest = parseXml(wrappedXml, ["suggest"]) as { suggest: Suggest[] | Suggest }
 				} catch (error) {
 					cline.consecutiveMistakeCount++
 					cline.recordToolError("ask_followup_question")
-					await cline.say("error", `Failed to parse operations: ${error.message}`)
-					pushToolResult(formatResponse.toolError("Invalid operations xml format"))
+					await cline.say("error", `Failed to parse follow-up suggestions: ${error.message}`)
+					pushToolResult(
+						formatResponse.toolError(
+							"Invalid suggestions format. Please provide well-formed XML with <suggest> tags.",
+						),
+					)
 					return
 				}
 
