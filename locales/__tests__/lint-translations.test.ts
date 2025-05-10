@@ -111,6 +111,10 @@ function resolveTargetPath(sourceFile: string, targetTemplate: string, locale: s
 		return sourceFile.replace(".json", `.${locale}.json`)
 	}
 
+	if (!targetTemplate.endsWith("/")) {
+		return targetPath
+	}
+
 	const fileName = path.basename(sourceFile)
 	return path.join(targetPath, fileName)
 }
@@ -164,6 +168,10 @@ function findKeys(obj: any, parentKey: string = ""): string[] {
 }
 
 function getValueAtPath(obj: any, path: string): any {
+	if (obj && typeof obj === "object" && Object.prototype.hasOwnProperty.call(obj, path)) {
+		return obj[path]
+	}
+
 	const parts = path.split(".")
 	let current = obj
 
@@ -218,8 +226,10 @@ function checkExtraTranslations(sourceContent: any, targetContent: any): Transla
 }
 
 function getFilteredLocales(localeArgs?: string[]): Language[] {
+	const baseLocales = languages.filter((locale) => locale !== "en")
+
 	if (!localeArgs || localeArgs.includes("all")) {
-		return [...languages]
+		return baseLocales
 	}
 
 	const invalidLocales = localeArgs.filter((locale) => !languages.includes(locale as Language))
@@ -227,7 +237,7 @@ function getFilteredLocales(localeArgs?: string[]): Language[] {
 		throw new Error(`Error: The following locales are not officially supported: ${invalidLocales.join(", ")}`)
 	}
 
-	return languages.filter((locale) => localeArgs.includes(locale))
+	return baseLocales.filter((locale) => localeArgs.includes(locale))
 }
 
 function filterMappingsByArea(mappings: PathMapping[], areaArgs?: string[]): PathMapping[] {
@@ -261,13 +271,13 @@ function processFileLocale(
 
 	results[mapping.area] = results[mapping.area] || {}
 	results[mapping.area][locale] = results[mapping.area][locale] || {}
-	results[mapping.area][locale][sourceFile] = {
+	results[mapping.area][locale][targetFile] = {
 		missing: [],
 		extra: [],
 	}
 
 	if (!fileExists(targetFile)) {
-		results[mapping.area][locale][sourceFile].error = `Target file does not exist: ${targetFile}`
+		results[mapping.area][locale][targetFile].error = `Target file does not exist: ${targetFile}`
 		return
 	}
 
@@ -278,16 +288,16 @@ function processFileLocale(
 
 	const targetContent = parseJsonContent(loadFileContent(targetFile), targetFile)
 	if (!targetContent) {
-		results[mapping.area][locale][sourceFile].error = `Failed to load or parse target file: ${targetFile}`
+		results[mapping.area][locale][targetFile].error = `Failed to load or parse target file: ${targetFile}`
 		return
 	}
 
 	if (checksToRun.includes("missing") || checksToRun.includes("all")) {
-		results[mapping.area][locale][sourceFile].missing = checkMissingTranslations(sourceContent, targetContent)
+		results[mapping.area][locale][targetFile].missing = checkMissingTranslations(sourceContent, targetContent)
 	}
 
 	if (checksToRun.includes("extra") || checksToRun.includes("all")) {
-		results[mapping.area][locale][sourceFile].extra = checkExtraTranslations(sourceContent, targetContent)
+		results[mapping.area][locale][targetFile].extra = checkExtraTranslations(sourceContent, targetContent)
 	}
 }
 
@@ -422,14 +432,16 @@ function formatResults(results: Results, checkTypes: string[], options: LintOpti
 						bufferLog("") // Add blank line between locales
 					}
 					isFirstLocale = false
-					bufferLog(`    ${locale}:`)
 					let isFirstFile = true
 					for (const [file, extras] of fileMap) {
 						if (!isFirstFile) {
 							bufferLog("") // Add blank line between files
 						}
 						isFirstFile = false
-						bufferLog(`      ${file}: ${extras.length} extra translations`)
+						const mapping = mappings.find((m) => m.area === area)
+						if (!mapping) continue
+						const targetPath = resolveTargetPath(file, mapping.targetTemplate, locale)
+						bufferLog(`    ${locale}: ${targetPath}: ${extras.length} extra translations`)
 						for (const { key, localeValue } of extras) {
 							bufferLog(`        ${key}: "${localeValue}"`)
 						}
@@ -483,11 +495,26 @@ function formatSummary(results: Results): void {
 		bufferLog("\n⚠️ Some translation issues were found.")
 
 		if (totalMissing > 0) {
-			bufferLog("- Add the missing translations to the corresponding locale files")
+			bufferLog("- For .md files: Create the missing translation files in the appropriate locale directory")
+			bufferLog(
+				"- For .json files: Add the missing translations that exist in English but are missing in other locales",
+			)
+			bufferLog("  Example adding translations:")
+			bufferLog("    node scripts/manage-translations.js --stdin settings.json << EOF")
+			bufferLog('    {"some.new.key1.label": "First Value"}')
+			bufferLog('    {"some.new.key2.label": "Second Value"}')
+			bufferLog("    EOF")
 		}
 
 		if (totalExtra > 0) {
-			bufferLog("- Consider removing extra translations or adding them to the source files")
+			bufferLog(
+				"- Remove translations that exist in other locales but not in English (English is the source of truth)",
+			)
+			bufferLog("  Example removing translations:")
+			bufferLog("    node scripts/manage-translations.js -d --stdin settings.json << EOF")
+			bufferLog('    ["the.extra.key1.label"]')
+			bufferLog('    ["the.extra.key2.label"]')
+			bufferLog("    EOF")
 		}
 
 		if (totalErrors > 0) {
