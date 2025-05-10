@@ -17,6 +17,9 @@ export class DiffViewProvider {
 	originalContent: string | undefined
 	private createdDirs: string[] = []
 	private documentWasOpen = false
+	private originalViewColumn?: vscode.ViewColumn // Store the original view column
+	private userFocusedEditorInfo?: { uri: vscode.Uri; viewColumn: vscode.ViewColumn } // Store user's focus before diff
+	private originalTabState?: { uri: vscode.Uri; isPinned: boolean; viewColumn: vscode.ViewColumn; index: number } // Store original tab state if open
 	private relPath?: string
 	private newContent?: string
 	private activeDiffEditor?: vscode.TextEditor
@@ -24,7 +27,6 @@ export class DiffViewProvider {
 	private activeLineController?: DecorationController
 	private streamedLines: string[] = []
 	private preDiagnostics: [vscode.Uri, vscode.Diagnostic[]][] = []
-
 	constructor(private cwd: string) {}
 
 	async open(relPath: string): Promise<void> {
@@ -66,11 +68,38 @@ export class DiffViewProvider {
 				(tab) => tab.input instanceof vscode.TabInputText && arePathsEqual(tab.input.uri.fsPath, absolutePath),
 			)
 		for (const tab of tabs) {
+			// Store state BEFORE closing
+			if (tab.input instanceof vscode.TabInputText) {
+				// Ensure it's a text tab to access URI safely
+				this.originalTabState = {
+					uri: tab.input.uri,
+					isPinned: tab.isPinned,
+					viewColumn: tab.group.viewColumn,
+					index: tab.group.tabs.indexOf(tab), // Correct way to get the index
+				}
+				this.documentWasOpen = true // Set flag indicating we found an open tab state
+				console.log("Original tab state saved:", this.originalTabState) // Optional: for debugging
+			}
+
 			if (!tab.isDirty) {
 				await vscode.window.tabGroups.close(tab)
 			}
-			this.documentWasOpen = true
+			// Removed this.documentWasOpen = true from here as it's set when state is saved
 		}
+
+		// Store the currently focused editor before opening the diff
+		const activeEditor = vscode.window.activeTextEditor
+		if (activeEditor && activeEditor.viewColumn !== undefined) {
+			// Check if viewColumn is defined
+			this.userFocusedEditorInfo = {
+				uri: activeEditor.document.uri,
+				viewColumn: activeEditor.viewColumn, // Now guaranteed to be defined
+			}
+		} else {
+			// If no active editor or viewColumn is undefined, reset the info
+			this.userFocusedEditorInfo = undefined
+		}
+
 		this.activeDiffEditor = await this.openDiffEditor()
 		this.fadedOverlayController = new DecorationController("fadedOverlay", this.activeDiffEditor)
 		this.activeLineController = new DecorationController("activeLine", this.activeDiffEditor)
@@ -159,6 +188,14 @@ export class DiffViewProvider {
 		await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), { preview: false })
 		await this.closeAllDiffViews()
 
+		// Restore original tab state if it existed, otherwise handle focus normally
+		if (this.originalTabState) {
+			await this._restoreOriginalTabState()
+		} else {
+			// Fallback to old focus logic only if no original tab state was saved (e.g., new file)
+			await this._focusOriginalDocument(absolutePath, undefined) // Pass undefined as viewColumn is part of originalTabState now
+		}
+
 		/*
 		Getting diagnostics before and after the file edit is a better approach than
 		automatically tracking problems in real-time. This method ensures we only
@@ -237,14 +274,18 @@ export class DiffViewProvider {
 			await vscode.workspace.applyEdit(edit)
 			await updatedDocument.save()
 			console.log(`File ${absolutePath} has been reverted to its original content.`)
-			if (this.documentWasOpen) {
-				await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
-					preview: false,
-				})
-			}
-			await this.closeAllDiffViews()
-		}
 
+			// Close the diff view first
+			await this.closeAllDiffViews()
+
+			// Restore original tab state if it existed, otherwise handle focus normally
+			if (this.originalTabState) {
+				await this._restoreOriginalTabState()
+			} else {
+				// Fallback to old focus logic only if no original tab state was saved (e.g., new file)
+				await this._focusOriginalDocument(absolutePath, undefined) // Pass undefined as viewColumn is part of originalTabState now
+			}
+		}
 		// edit is done
 		await this.reset()
 	}
@@ -290,9 +331,61 @@ export class DiffViewProvider {
 			const disposable = vscode.window.onDidChangeActiveTextEditor((editor) => {
 				if (editor && arePathsEqual(editor.document.uri.fsPath, uri.fsPath)) {
 					disposable.dispose()
-					resolve(editor)
+					// Diff editor is now active
+					// Pin the diff editor if the original tab was pinned
+					const pinAndMoveIfNeeded = async () => {
+						if (this.originalTabState?.isPinned) {
+							try {
+								await vscode.commands.executeCommand("workbench.action.pinEditor")
+								console.log("Diff editor pinned.")
+								// Add a small delay after pinning before moving
+								await new Promise((resolve) => setTimeout(resolve, 50))
+
+								// Move the pinned diff editor to the original index
+								const targetGroup = vscode.window.tabGroups.all.find(
+									(group) => group.viewColumn === this.originalTabState?.viewColumn,
+								)
+								const index = this.originalTabState.index
+								if (targetGroup && index >= 0) {
+									// Check if index is still valid after potential async operations
+									if (index < targetGroup.tabs.length) {
+										await vscode.commands.executeCommand("moveActiveEditor", {
+											to: "position",
+											value: index + 1, // 1-based index
+										})
+										console.log(`Diff editor moved to index ${index}.`)
+									} else {
+										console.warn(
+											`Diff editor move skipped: Index ${index} out of bounds after pinning/delay.`,
+										)
+									}
+								} else {
+									console.warn(
+										`Could not move diff editor: Invalid index (${index}) or target group not found.`,
+									)
+								}
+							} catch (err) {
+								console.error("Failed to pin or move diff editor:", err)
+							}
+						}
+						// Resolve the promise regardless of pin/move success
+						resolve(editor)
+					}
+					pinAndMoveIfNeeded() // Execute async pin/move logic
 				}
 			})
+			const options: vscode.TextDocumentShowOptions = {
+				// preserveFocus: true, // Removed to prevent focus issues
+			}
+			// Use viewColumn from originalTabState if available
+			if (this.originalTabState?.viewColumn !== undefined) {
+				options.viewColumn = this.originalTabState.viewColumn
+			} else if (this.originalViewColumn !== undefined) {
+				// Fallback to originalViewColumn if originalTabState is not set (e.g., file wasn't open)
+				options.viewColumn = this.originalViewColumn
+			}
+
+			// Execute the diff command first
 			vscode.commands.executeCommand(
 				"vscode.diff",
 				vscode.Uri.parse(`${DIFF_VIEW_URI_SCHEME}:${fileName}`).with({
@@ -300,6 +393,7 @@ export class DiffViewProvider {
 				}),
 				uri,
 				`${fileName}: ${fileExists ? "Original ↔ Roo's Changes" : "New File"} (Editable)`,
+				options, // Add options here
 			)
 			// This may happen on very slow machines ie project idx
 			setTimeout(() => {
@@ -351,6 +445,131 @@ export class DiffViewProvider {
 		return result
 	}
 
+	private async _focusOriginalDocument(
+		absolutePath: string,
+		_viewColumn: vscode.ViewColumn | undefined, // Prefixed as unused now
+	): Promise<void> {
+		let focusRestoredOrHandled = false
+
+		// Priority 1: Try to restore focus to the editor the user had focused *before* the diff started
+		if (this.userFocusedEditorInfo) {
+			try {
+				await vscode.window.showTextDocument(this.userFocusedEditorInfo.uri, {
+					viewColumn: this.userFocusedEditorInfo.viewColumn,
+					preserveFocus: false, // Force focus back
+				})
+				console.log("Focus restored to originally focused editor:", this.userFocusedEditorInfo.uri.fsPath)
+				focusRestoredOrHandled = true // Mark as handled
+			} catch (error) {
+				console.warn("Failed to restore focus to originally focused editor, proceeding with fallbacks:", error)
+				// Focus restoration failed, fallbacks might be needed below
+			}
+		} else {
+			// If no editor was focused initially, we still might need to handle new files
+			console.log("No initial editor focus detected, checking for new file case.")
+			// Let the new file logic below handle it.
+		}
+
+		// Handle newly created files *regardless* of initial focus state or restoration success
+		if (!this.documentWasOpen) {
+			try {
+				await vscode.window.showTextDocument(vscode.Uri.file(absolutePath), {
+					preview: false, // Ensure it's not a preview tab
+					viewColumn: vscode.ViewColumn.Active, // Open in the active column
+					preserveFocus: false, // Force focus
+				})
+				console.log("Opened and focused newly created file:", absolutePath)
+				focusRestoredOrHandled = true // Mark as handled
+			} catch (error) {
+				console.error("Failed to show newly created document:", error)
+				// Even if it fails, we consider the attempt 'handled' for new files.
+				focusRestoredOrHandled = true
+			}
+		}
+
+		// Fallback logic for existing documents is now handled by _restoreOriginalTabState
+		// Keep the final log message for clarity
+		else if (!focusRestoredOrHandled) {
+			console.log(
+				"No specific focus action taken by _focusOriginalDocument (focus restore might have succeeded, or it was a new file handled above).",
+			)
+		}
+	}
+
+	private async _restoreOriginalTabState(): Promise<void> {
+		if (!this.originalTabState) {
+			console.log("No original tab state to restore.")
+			return
+		}
+
+		console.log("Attempting to restore original tab state:", this.originalTabState)
+		const { uri, viewColumn, isPinned, index } = this.originalTabState
+
+		try {
+			// 1. Show the document in the correct view column
+			// Prefix 'editor' as it's not directly used after assignment (focus happens implicitly)
+			const _editor = await vscode.window.showTextDocument(uri, {
+				viewColumn: viewColumn,
+				preview: false, // Ensure it's not a preview tab
+				preserveFocus: false, // Ensure this editor gets focus initially for commands
+			})
+			console.log("Document shown:", uri.fsPath)
+
+			// Small delay to allow VS Code to potentially update tab state after showing
+			await new Promise((resolve) => setTimeout(resolve, 100)) // 100ms delay
+
+			// 2. Pin the editor if necessary
+			if (isPinned) {
+				await vscode.commands.executeCommand("workbench.action.pinEditor")
+				console.log("Editor pinned.")
+				// Another small delay might be needed after pinning before moving
+				await new Promise((resolve) => setTimeout(resolve, 50))
+			}
+
+			// 3. Move the editor to the original index
+			// Ensure the target index is valid. VS Code's move command is 1-based.
+			// We need to find the current group to check tab count.
+			const targetGroup = vscode.window.tabGroups.all.find((group) => group.viewColumn === viewColumn)
+			if (targetGroup && index >= 0 && index < targetGroup.tabs.length) {
+				// The 'moveActiveEditor' command uses 1-based index for 'value'
+				await vscode.commands.executeCommand("moveActiveEditor", { to: "position", value: index + 1 })
+				console.log(`Editor moved to index ${index}.`)
+			} else {
+				console.warn(`Could not move editor: Invalid index (${index}) or target group not found.`)
+			}
+
+			// 4. Restore original user focus if it was different from the restored tab
+			if (this.userFocusedEditorInfo && !arePathsEqual(this.userFocusedEditorInfo.uri.fsPath, uri.fsPath)) {
+				try {
+					await vscode.window.showTextDocument(this.userFocusedEditorInfo.uri, {
+						viewColumn: this.userFocusedEditorInfo.viewColumn,
+						preserveFocus: false, // Force focus back
+					})
+					console.log(
+						"Focus restored to originally focused editor (after tab state restore):",
+						this.userFocusedEditorInfo.uri.fsPath,
+					)
+				} catch (focusError) {
+					console.warn("Failed to restore original user focus after tab state restore:", focusError)
+					// If restoring original focus fails, at least the target tab should be focused.
+					await vscode.window.showTextDocument(uri, { viewColumn: viewColumn, preserveFocus: false })
+				}
+			} else {
+				// Ensure the restored tab keeps focus if no other editor was focused or if it was the focused one
+				await vscode.window.showTextDocument(uri, { viewColumn: viewColumn, preserveFocus: false })
+				console.log("Focus kept on restored tab:", uri.fsPath)
+			}
+		} catch (error) {
+			console.error("Error restoring original tab state:", error)
+			// Fallback: Just try to show the document without state restoration
+			try {
+				await vscode.window.showTextDocument(uri, { viewColumn: viewColumn, preview: false })
+			} catch (fallbackError) {
+				console.error("Fallback showTextDocument also failed:", fallbackError)
+			}
+		}
+	}
+
 	// close editor if open?
 	async reset() {
 		this.editType = undefined
@@ -358,6 +577,9 @@ export class DiffViewProvider {
 		this.originalContent = undefined
 		this.createdDirs = []
 		this.documentWasOpen = false
+		this.originalViewColumn = undefined // Reset stored view column - Keep for potential fallback? Replaced by originalTabState.viewColumn mostly.
+		this.originalTabState = undefined // Reset stored tab state
+		this.userFocusedEditorInfo = undefined // Reset stored user focus info
 		this.activeDiffEditor = undefined
 		this.fadedOverlayController = undefined
 		this.activeLineController = undefined
