@@ -509,37 +509,48 @@ function formatSummary(results: Results): void {
 		bufferLog("\n⚠️ Some translation issues were found.")
 
 		if (totalMissing > 0) {
-			bufferLog("- For .md files: ")
+			bufferLog("\nFor missing translations:")
+			bufferLog("1. For .md files:")
+			bufferLog("   Create the missing translation files in the appropriate locale directory")
+			bufferLog("   from the English sources in the root of the repository.")
+			bufferLog("   Use <new_task> for each file to maintain clear translation context.")
+			bufferLog("\n2. For .json files:")
+			bufferLog("   Add missing translations using manage-translations.js.")
+			bufferLog("\n   Key Path Format:")
+			bufferLog("   - Use single dots (.) for nested paths: command.newTask.title")
+			bufferLog("   - Use double dots (..) for literal dots: settings..path.name")
+			bufferLog("\n   Example adding translations:")
+			bufferLog("   # Using here document  for volume changes to one file:")
+			bufferLog("   node scripts/manage-translations.js [-v] --stdin relative/path/to/settings.json << EOF")
+			bufferLog('   {"command.newTask.title": "Create New Task"}')
+			bufferLog('   {"settings..path.name": "Custom Path Setting"}')
+			bufferLog("   EOF")
+			bufferLog("\n   # Or single key-value pairs:")
 			bufferLog(
-				"    Create the missing translation files in the appropriate locale directory from the English sources in the root of the repository",
+				'   node scripts/manage-translations.js [-v] relative/path/to/settings.json "command.newTask.title" "Create New Task" [key2 value2 ...]',
 			)
-			bufferLog(
-				"    Use <new_task> for each single file translation to keep translation context absolutely clear",
-			)
-			bufferLog(
-				"- For .json files: Add the missing translations that exist in English but are missing in other locales",
-			)
-			bufferLog("  Example adding translations (one JSONL/NDJSON record per line):")
-			bufferLog("    node scripts/manage-translations.js --stdin relative/path/to/settings.json << EOF")
-			bufferLog('    {"some.new.key1.label": "First Value"}')
-			bufferLog('    {"some.new.key2.label": "Second Value"}')
-			bufferLog("    EOF")
 		}
 
 		if (totalExtra > 0) {
+			bufferLog("\nFor extra translations:")
+			bufferLog("Remove translations not present in English (source of truth):")
+			bufferLog("\n# Using here document for volume changes:")
 			bufferLog(
-				"- Remove translations that exist in other locales but not in English (English is the source of truth)",
+				"node scripts/manage-translations.js [-v] -d --stdin relative/path/to/settings.json [file2.json ...] << EOF",
 			)
-			bufferLog("  Example removing translations:")
-			bufferLog("    node scripts/manage-translations.js -d --stdin relative/path/to/settings.json << EOF")
-			bufferLog('    ["the.extra.key1.label"]')
-			bufferLog('    ["the.extra.key2.label"]')
-			bufferLog("    EOF")
+			bufferLog('["command.oldTask.title"]')
+			bufferLog('["settings..old.path"]')
+			bufferLog("EOF")
+			bufferLog("\n# Or multiple files with specific keys:")
+			bufferLog(
+				'node scripts/manage-translations.js [-v] -d file1.json file2.json -- "command.oldTask.title" "settings..old.path"',
+			)
 		}
 
+		bufferLog("\nNotes:")
 		bufferLog("- Always translate from the original English source documents")
-		bufferLog("- Fix the errors based on the instructions above reading this test script")
-		bufferLog("- AI NOTICE: You MUST fix the language issues, do not modify the test script")
+		bufferLog("- Use -v flag for verbose output showing each operation")
+		bufferLog("- Run manage-translations.js without arguments for full usage details")
 	}
 }
 
