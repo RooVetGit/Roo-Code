@@ -360,6 +360,7 @@ export const providerSettingsSchema = z.object({
 	openRouterModelId: z.string().optional(),
 	openRouterBaseUrl: z.string().optional(),
 	openRouterSpecificProvider: z.string().optional(),
+	openRouterSelectedProviderInfo: modelInfoSchema.optional(),
 	openRouterUseMiddleOutTransform: z.boolean().optional(),
 	// Amazon Bedrock
 	awsAccessKey: z.string().optional(),
@@ -468,6 +469,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	openRouterModelId: undefined,
 	openRouterBaseUrl: undefined,
 	openRouterSpecificProvider: undefined,
+	openRouterSelectedProviderInfo: undefined,
 	openRouterUseMiddleOutTransform: undefined,
 	// Amazon Bedrock
 	awsAccessKey: undefined,
