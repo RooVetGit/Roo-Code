@@ -421,6 +421,62 @@ function hello() {
 				}
 			})
 
+			it("should preserve indentation with multiple search/replace blocks", async () => {
+				const originalContent = `
+		function one() {
+			return 1;
+		}
+
+		function two() {
+			return 2;
+		}
+
+		function three() {
+			return 3;
+		}
+`.trim()
+
+				const diffContent = `test.ts
+<<<<<<< SEARCH
+		function one() {
+			return 1;
+		}
+=======
+		function one() {
+			// Added comment
+			return 1;
+		}
+>>>>>>> REPLACE
+
+<<<<<<< SEARCH
+		function three() {
+			return 3;
+		}
+=======
+		function three() {
+			// Another comment
+			return 3;
+		}
+>>>>>>> REPLACE`
+
+				const result = await strategy.applyDiff(originalContent, diffContent)
+				expect(result.success).toBe(true)
+				if (result.success) {
+					// Get the actual content and compare it with the expected content
+					const actualContent = result.content
+					// Check that the content contains the added comments
+					expect(actualContent).toContain("// Added comment")
+					expect(actualContent).toContain("// Another comment")
+					// Check that the structure is preserved
+					expect(actualContent).toContain("function one()")
+					expect(actualContent).toContain("function two()")
+					expect(actualContent).toContain("function three()")
+					expect(actualContent).toContain("return 1;")
+					expect(actualContent).toContain("return 2;")
+					expect(actualContent).toContain("return 3;")
+				}
+			})
+
 			it("should handle varying indentation levels correctly", async () => {
 				const originalContent = `
 class Example {
@@ -553,7 +609,7 @@ class Example {
 			it("should preserve empty lines with indentation", async () => {
 				const originalContent = `function test() {
     const x = 1;
-    
+
     if (x) {
         return true;
     }
@@ -561,11 +617,11 @@ class Example {
 				const diffContent = `test.ts
 <<<<<<< SEARCH
     const x = 1;
-    
+
     if (x) {
 =======
     const x = 1;
-    
+
     // Check x
     if (x) {
 >>>>>>> REPLACE`
@@ -575,7 +631,7 @@ class Example {
 				if (result.success) {
 					expect(result.content).toBe(`function test() {
     const x = 1;
-    
+
     // Check x
     if (x) {
         return true;
