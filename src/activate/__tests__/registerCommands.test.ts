@@ -40,7 +40,7 @@ describe("getVisibleProviderOrLog", () => {
 
 	it("returns the visible provider if found", () => {
 		const mockProvider = {} as ClineProvider
-		;(ClineProvider.getVisibleInstance as jest.Mock).mockReturnValue(mockProvider)
+		;(ClineProvider.getActiveProvider as jest.Mock).mockReturnValue(mockProvider)
 
 		const result = getVisibleProviderOrLog(mockOutputChannel)
 
@@ -49,11 +49,13 @@ describe("getVisibleProviderOrLog", () => {
 	})
 
 	it("logs and returns undefined if no provider found", () => {
-		;(ClineProvider.getVisibleInstance as jest.Mock).mockReturnValue(undefined)
+		;(ClineProvider.getActiveProvider as jest.Mock).mockReturnValue(undefined)
 
 		const result = getVisibleProviderOrLog(mockOutputChannel)
 
 		expect(result).toBeUndefined()
-		expect(mockOutputChannel.appendLine).toHaveBeenCalledWith("Cannot find any visible Roo Code instances.")
+		expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
+			"Cannot find any active and visible Roo Code provider instances.",
+		)
 	})
 })

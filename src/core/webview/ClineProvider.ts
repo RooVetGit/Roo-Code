@@ -11,9 +11,8 @@ import * as vscode from "vscode"
 
 import type { GlobalState, ProviderName, ProviderSettings, RooCodeSettings, ProviderSettingsEntry } from "../../schemas"
 import { t } from "../../i18n"
-import { setPanel } from "../../activate/registerCommands"
+import { getPanel, setPanel } from "../../activate/registerCommands"
 import { requestyDefaultModelId, openRouterDefaultModelId, glamaDefaultModelId } from "../../shared/api"
-import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { HistoryItem } from "../../shared/HistoryItem"
@@ -57,7 +56,7 @@ export type ClineProviderEvents = {
 export class ClineProvider extends EventEmitter<ClineProviderEvents> implements vscode.WebviewViewProvider {
 	public static readonly sideBarId = "roo-cline.SidebarProvider" // used in package.json as the view's id. This value cannot be changed due to how vscode caches views based on their id, and updating the id would break existing instances of the extension.
 	public static readonly tabPanelId = "roo-cline.TabPanelProvider"
-	private static activeInstances: Set<ClineProvider> = new Set()
+	private static _instances: Set<ClineProvider> = new Set()
 	private disposables: vscode.Disposable[] = []
 	private view?: vscode.WebviewView | vscode.WebviewPanel
 	private clineStack: Task[] = []
@@ -76,13 +75,13 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	constructor(
 		readonly context: vscode.ExtensionContext,
 		private readonly outputChannel: vscode.OutputChannel,
-		private readonly renderContext: "sidebar" | "editor" = "sidebar",
+		private readonly viewType: "sidebar" | "editor" = "sidebar",
 		public readonly contextProxy: ContextProxy,
 	) {
 		super()
 
-		this.log("ClineProvider instantiated")
-		ClineProvider.activeInstances.add(this)
+		this.log(`ClineProvider instantiated for ${this.viewType}`)
+		ClineProvider._instances.add(this)
 
 		// Register this provider with the telemetry service to enable it to add
 		// properties like mode and provider.
@@ -188,7 +187,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	- https://github.com/microsoft/vscode-extension-samples/blob/main/webview-sample/src/extension.ts
 	*/
 	async dispose() {
-		this.log("Disposing ClineProvider...")
+		this.log(`Disposing ClineProvider for ${this.viewType}...`)
 		await this.removeClineFromStack()
 		this.log("Cleared task")
 
@@ -211,33 +210,54 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		this.mcpHub = undefined
 		this.customModesManager?.dispose()
 		this.log("Disposed all disposables")
-		ClineProvider.activeInstances.delete(this)
+		ClineProvider._instances.delete(this)
 
 		// Unregister from McpServerManager
 		McpServerManager.unregisterProvider(this)
 	}
 
-	public static getVisibleInstance(): ClineProvider | undefined {
-		return findLast(Array.from(this.activeInstances), (instance) => instance.view?.visible === true)
+	public static getActiveProvider(): ClineProvider | undefined {
+		const activeVSCodePanel = getPanel()
+		if (!activeVSCodePanel) {
+			return undefined
+		}
+
+		for (const instance of ClineProvider._instances) {
+			if (instance.view === activeVSCodePanel && instance.view.visible) {
+				return instance
+			}
+		}
+
+		// Fallback if visibility check is too strict or panel reference is slightly off
+		// This panel is active but not visible, we still want to return it because
+		// it's still an active instance, just not visible at the moment.
+		for (const instance of ClineProvider._instances) {
+			if (instance.view === activeVSCodePanel) {
+				return instance
+			}
+		}
+
+		return undefined
 	}
 
 	public static async getInstance(): Promise<ClineProvider | undefined> {
-		let visibleProvider = ClineProvider.getVisibleInstance()
+		let activeProvider = ClineProvider.getActiveProvider()
 
-		// If no visible provider, try to show the sidebar view
-		if (!visibleProvider) {
-			await vscode.commands.executeCommand("roo-cline.SidebarProvider.focus")
-			// Wait briefly for the view to become visible
-			await delay(100)
-			visibleProvider = ClineProvider.getVisibleInstance()
+		// If no active provider, try to show the sidebar view
+		if (!activeProvider) {
+			// Try to focus the sidebar, which should trigger resolveWebviewView for it
+			await vscode.commands.executeCommand(`${ClineProvider.sideBarId}.focus`)
+			// Wait briefly for the view to become visible and resolve
+			await delay(200)
+			activeProvider = ClineProvider.getActiveProvider()
 		}
 
-		// If still no visible provider, return
-		if (!visibleProvider) {
-			return
+		// If still no active provider, return
+		if (!activeProvider) {
+			return undefined
 		}
 
-		return visibleProvider
+		return activeProvider
 	}
 
 	public static async isActiveTask(): Promise<boolean> {
@@ -315,13 +335,19 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		this.view = webviewView
 
-		// Set panel reference according to webview type
-		if ("onDidChangeViewState" in webviewView) {
-			// Tag page type
-			setPanel(webviewView, "tab")
+		// Set panel reference according to this provider's viewType and the actual type of webviewView
+		if (this.viewType === "sidebar" && "onDidChangeVisibility" in webviewView) {
+			// Characteristic of WebviewView
+			setPanel(webviewView as vscode.WebviewView, "sidebar")
+		} else if (this.viewType === "editor" && "onDidChangeViewState" in webviewView && "viewColumn" in webviewView) {
+			// Characteristics of WebviewPanel
+			setPanel(webviewView as vscode.WebviewPanel, "tab")
 		} else if ("onDidChangeVisibility" in webviewView) {
-			// Sidebar Type
-			setPanel(webviewView, "sidebar")
+			// Fallback for sidebar if viewType was mismatched
+			setPanel(webviewView as vscode.WebviewView, "sidebar")
+		} else if ("onDidChangeViewState" in webviewView && "viewColumn" in webviewView) {
+			// Fallback for tab if viewType was mismatched
+			setPanel(webviewView as vscode.WebviewPanel, "tab")
 		}
 
 		// Initialize out-of-scope variables that need to recieve persistent global state values
@@ -407,11 +433,28 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		// Listen for when the view is disposed
 		// This happens when the user closes the view or when the view is closed programmatically
 		webviewView.onDidDispose(
-			async () => {
-				await this.dispose()
+			() => {
+				this.log(`Webview for ${this.viewType} disposed.`)
+				if (this.view === webviewView) {
+					// Ensure we are acting on the correct view instance
+					if (this.viewType === "sidebar") {
+						const currentSidebarPanel = getPanel()
+						if (currentSidebarPanel === this.view) {
+							setPanel(undefined, "sidebar")
+							this.log("Cleared sidebarPanel reference due to webview disposal.")
+						}
+					}
+					// For tab panels, their onDidDispose is handled where they are created
+					// (see: openClineInNewTab, which calls setPanel(undefined, "tab"))
+					this.view = undefined
+					this.log("Cleared this.view reference due to webview disposal.")
+				}
+				// Do NOT call this.dispose() for the provider instance here.
+				// Provider-level disposables are managed by the main dispose() method.
+				// This should only handle the disposal of the webview view itself.
 			},
 			null,
-			this.disposables,
+			this.context.subscriptions,
 		)
 
 		// Listen for when color changes
@@ -538,7 +581,13 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	}
 
 	public async postMessageToWebview(message: ExtensionMessage) {
-		await this.view?.webview.postMessage(message)
+		if (this.view && this.view.webview) {
+			await this.view.webview.postMessage(message)
+		} else {
+			this.outputChannel.appendLine(
+				`Cannot post message to webview (${this.viewType}): Webview is not available. Message type: ${message.type}`,
+			)
+		}
 	}
 
 	private async getHMRHtmlContent(webview: vscode.Webview): Promise<string> {
@@ -1342,7 +1391,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			machineId,
 			showRooIgnoredFiles: showRooIgnoredFiles ?? true,
 			language: language ?? formatLanguage(vscode.env.language),
-			renderContext: this.renderContext,
+			renderContext: this.viewType,
 			maxReadFileLine: maxReadFileLine ?? 500,
 			settingsImportedAt: this.settingsImportedAt,
 			terminalCompressProgressBar: terminalCompressProgressBar ?? true,

@@ -328,10 +328,9 @@ describe("ClineProvider", () => {
 
 	test("constructor initializes correctly", () => {
 		expect(provider).toBeInstanceOf(ClineProvider)
-		// Since getVisibleInstance returns the last instance where view.visible is true
 		// @ts-ignore - accessing private property for testing
 		provider.view = mockWebviewView
-		expect(ClineProvider.getVisibleInstance()).toBe(provider)
+		expect(ClineProvider.getActiveProvider()).toBe(provider)
 	})
 
 	test("resolveWebviewView sets up webview correctly", async () => {
