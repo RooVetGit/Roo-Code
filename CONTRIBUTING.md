@@ -178,7 +178,8 @@ Follow these steps for coding and submitting your work.
 3.  **Run Webview (Dev Mode)**: `npm run dev` (for Vite/React app with HMR)
 4.  **Debug Extension**: Press `F5` in VS Code (or **Run** → **Start Debugging**) to open a new Extension Development Host window with Roo Code loaded.
 
-Webview changes (in `webview-ui`) will appear immediately with Hot Module Replacement. Changes to the core extension (in `src`) will require a restart of the Extension Development Host.
+Webview changes (in `webview-ui`) will appear immediately with Hot Module Replacement. 
+In development mode (NODE_ENV="development"), changing the core code (in `src`) will trigger a `workbench.action.reloadWindow` command, so it is no longer necessary to manually restart the Extension Development Host.
 
 Alternatively, to build and install a `.vsix` package:
 
