@@ -497,6 +497,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			// Only hide the context menu if the user didn't click on it.
 			if (!isMouseDownOnMenu) {
 				setShowContextMenu(false)
+
 			}
 
 			setIsFocused(false)
