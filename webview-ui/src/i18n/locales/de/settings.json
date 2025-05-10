@@ -320,7 +320,7 @@
 	},
 	"uiSettings": {
 		"description": "Benutzeroberflächenbezogene Konfiguration",
-		"markdownBlockLineheight": {
+		"markdownBlockLineHeight": {
 			"label": "Zeilenabstand des Panelinhalts",
 			"description": "Passen Sie den Zeilenabstand des Panel-Inhalts an, um die Lesbarkeit zu verbessern."
 		}

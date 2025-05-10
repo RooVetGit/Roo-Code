@@ -10,11 +10,11 @@ import { SectionHeader } from "./SectionHeader"
 import { Section } from "./Section"
 
 type UISettingsProps = HTMLAttributes<HTMLDivElement> & {
-	markdownBlockLineheight: number
-	setCachedStateField: SetCachedStateField<"markdownBlockLineheight">
+	markdownBlockLineHeight: number
+	setCachedStateField: SetCachedStateField<"markdownBlockLineHeight">
 }
 
-export const UISettings = ({ markdownBlockLineheight, setCachedStateField, className, ...props }: UISettingsProps) => {
+export const UISettings = ({ markdownBlockLineHeight, setCachedStateField, className, ...props }: UISettingsProps) => {
 	const { t } = useAppTranslation()
 	return (
 		<div className={cn("flex flex-col gap-2", className)} {...props}>
@@ -28,21 +28,21 @@ export const UISettings = ({ markdownBlockLineheight, setCachedStateField, class
 			<Section>
 				<div>
 					<span className="block font-medium mb-1">
-						{t("settings:uiSettings.markdownBlockLineheight.label")}
+						{t("settings:uiSettings.markdownBlockLineHeight.label")}
 					</span>
 					<div className="flex items-center gap-2">
 						<Slider
 							min={1.25}
 							max={2}
 							step={0.01}
-							value={[markdownBlockLineheight ?? 1.25]}
-							onValueChange={([value]) => setCachedStateField("markdownBlockLineheight", value)}
+							value={[markdownBlockLineHeight ?? 1.25]}
+							onValueChange={([value]) => setCachedStateField("markdownBlockLineHeight", value)}
 							data-testid="markdown-lineheight-slider"
 						/>
-						<span className="w-10">{markdownBlockLineheight ?? 1.25}</span>
+						<span className="w-10">{markdownBlockLineHeight ?? 1.25}</span>
 					</div>
 					<div className="text-vscode-descriptionForeground text-sm mt-1">
-						{t("settings:uiSettings.markdownBlockLineheight.description")}
+						{t("settings:uiSettings.markdownBlockLineHeight.description")}
 					</div>
 				</div>
 			</Section>
