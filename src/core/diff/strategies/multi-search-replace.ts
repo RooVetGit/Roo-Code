@@ -30,28 +30,79 @@ function getSimilarity(original: string, search: string): number {
 }
 
 /**
- * Performs a "middle-out" search of `lines` (between [startIndex, endIndex]) to find
+ * Performs a search of `lines` (between [startIndex, endIndex]) to find
  * the slice that is most similar to `searchChunk`. Returns the best score, index, and matched text.
  */
-function fuzzySearch(lines: string[], searchChunk: string, startIndex: number, endIndex: number) {
+/**
+ * Performs a search in `lines` (between [startIndex, endIndex]) to find
+ * the slice that is most similar to `searchChunk`.
+ *
+ * When preferredStartIndex is provided and prioritizePreferredStart is true,
+ * the search starts from the preferred index and prioritizes matches closer
+ * to the preferred index over those with the same similarity score but farther away.
+ *
+ * Returns the best score, index, and matched text.
+ */
+function fuzzySearch(
+	lines: string[],
+	searchChunk: string,
+	startIndex: number,
+	endIndex: number,
+	preferredStartIndex?: number,
+	prioritizePreferredStart: boolean = false
+) {
 	let bestScore = 0
 	let bestMatchIndex = -1
 	let bestMatchContent = ""
+	// Track the smallest distance from preferred start index for similarly scored matches
+	let bestMatchDistance = Number.MAX_SAFE_INTEGER
 	const searchLen = searchChunk.split(/\r?\n/).length
 
-	// Middle-out from the midpoint
+	// Calculate the starting point for search
 	const midPoint = Math.floor((startIndex + endIndex) / 2)
-	let leftIndex = midPoint
-	let rightIndex = midPoint + 1
+	
+	// Determine the reference point for calculating distance
+	// This is the point we want matches to be close to
+	const referencePoint = (prioritizePreferredStart && preferredStartIndex !== undefined)
+		? preferredStartIndex
+		: midPoint
+	
+	// Determine the search starting position
+	let searchStartPosition: number
+	if (prioritizePreferredStart && preferredStartIndex !== undefined) {
+		// Constrain preferredStartIndex to be within valid bounds
+		searchStartPosition = Math.min(
+			Math.max(preferredStartIndex, startIndex),
+			endIndex - searchLen
+		)
+	} else {
+		// Use middle-out approach (original behavior)
+		searchStartPosition = midPoint
+	}
+	
+	let leftIndex = searchStartPosition
+	let rightIndex = searchStartPosition + 1
 
 	while (leftIndex >= startIndex || rightIndex <= endIndex - searchLen) {
 		if (leftIndex >= startIndex) {
 			const originalChunk = lines.slice(leftIndex, leftIndex + searchLen).join("\n")
 			const similarity = getSimilarity(originalChunk, searchChunk)
-			if (similarity > bestScore) {
-				bestScore = similarity
+			
+			const distanceFromReference = Math.abs(leftIndex - referencePoint)
+			
+			// Small boost for matches very close to preferred position when prioritizing by location
+			const proximityBoost = (prioritizePreferredStart && distanceFromReference <= 2) ? 0.02 : 0
+			const effectiveScore = similarity + proximityBoost
+			
+			// Update best match if:
+			// 1. This match has a better effective score, or
+			// 2. This match has the same effective score but is closer to the reference point
+			if (effectiveScore > bestScore ||
+				(effectiveScore === bestScore && distanceFromReference < bestMatchDistance)) {
+				bestScore = effectiveScore
 				bestMatchIndex = leftIndex
 				bestMatchContent = originalChunk
+				bestMatchDistance = distanceFromReference
 			}
 			leftIndex--
 		}
@@ -59,10 +110,22 @@ function fuzzySearch(lines: string[], searchChunk: string, startIndex: number, e
 		if (rightIndex <= endIndex - searchLen) {
 			const originalChunk = lines.slice(rightIndex, rightIndex + searchLen).join("\n")
 			const similarity = getSimilarity(originalChunk, searchChunk)
-			if (similarity > bestScore) {
-				bestScore = similarity
+			
+			const distanceFromReference = Math.abs(rightIndex - referencePoint)
+			
+			// Small boost for matches very close to preferred position when prioritizing by location
+			const proximityBoost = (prioritizePreferredStart && distanceFromReference <= 2) ? 0.02 : 0
+			const effectiveScore = similarity + proximityBoost
+			
+			// Update best match if:
+			// 1. This match has a better effective score, or
+			// 2. This match has the same effective score but is closer to the reference point
+			if (effectiveScore > bestScore ||
+				(effectiveScore === bestScore && distanceFromReference < bestMatchDistance)) {
+				bestScore = effectiveScore
 				bestMatchIndex = rightIndex
 				bestMatchContent = originalChunk
+				bestMatchDistance = distanceFromReference
 			}
 			rightIndex++
 		}
@@ -438,19 +501,35 @@ Only use a single line of '=======' between search and replacement content, beca
 					bestMatchScore = similarity
 					bestMatchContent = originalChunk
 				} else {
-					// Set bounds for buffered search
-					searchStartIndex = Math.max(0, startLine - (this.bufferLines + 1))
-					searchEndIndex = Math.min(resultLines.length, startLine + searchLines.length + this.bufferLines)
+					// If startLine comes from the diff itself (not from a parameter in the API)
+					// then we set a much smaller buffer to prioritize matches near the specified line
+					// This fixes issues where line-constrained searches find wrong matches far away
+					const bufferSize = _paramStartLine === undefined ? 5 : this.bufferLines
+					
+					// Set bounds for buffered search biased toward the specified start line
+					searchStartIndex = Math.max(0, startLine - bufferSize)
+					searchEndIndex = Math.min(resultLines.length, startLine + searchLines.length + bufferSize)
 				}
 			}
 
 			// If no match found yet, try middle-out search within bounds
 			if (matchIndex === -1) {
+				const prioritizePreferredStart = _paramStartLine === undefined
+				
 				const {
 					bestScore,
 					bestMatchIndex,
 					bestMatchContent: midContent,
-				} = fuzzySearch(resultLines, searchChunk, searchStartIndex, searchEndIndex)
+				} = fuzzySearch(
+					resultLines,
+					searchChunk,
+					searchStartIndex,
+					searchEndIndex,
+					startLine - 1,  // Preferred starting point is the line specified in the diff
+					prioritizePreferredStart
+				)
+				
+				// Update match results from fuzzy search
 				matchIndex = bestMatchIndex
 				bestMatchScore = bestScore
 				bestMatchContent = midContent
@@ -458,19 +537,35 @@ Only use a single line of '=======' between search and replacement content, beca
 
 			// Try aggressive line number stripping as a fallback if regular matching fails
 			if (matchIndex === -1 || bestMatchScore < this.fuzzyThreshold) {
-				// Strip both search and replace content once (simultaneously)
 				const aggressiveSearchContent = stripLineNumbers(searchContent, true)
 				const aggressiveReplaceContent = stripLineNumbers(replaceContent, true)
 
 				const aggressiveSearchLines = aggressiveSearchContent ? aggressiveSearchContent.split(/\r?\n/) : []
 				const aggressiveSearchChunk = aggressiveSearchLines.join("\n")
 
-				// Try middle-out search again with aggressive stripped content (respecting the same search bounds)
+				const prioritizePreferredStart = _paramStartLine === undefined
+				
+				// Use a tighter search range for real-world use cases
+				// This helps to find matches near the specified start line
+				const bufferSize = _paramStartLine === undefined ? 5 : this.bufferLines;
+				
+				// Recalculate search indices to handle potential mismatches in line-constrained searches
+				searchStartIndex = Math.max(0, startLine - bufferSize);
+				searchEndIndex = Math.min(resultLines.length, startLine + searchLines.length + bufferSize);
+				
+				// Try search again with aggressive stripped content (same search bounds)
 				const {
 					bestScore,
 					bestMatchIndex,
 					bestMatchContent: aggContent,
-				} = fuzzySearch(resultLines, aggressiveSearchChunk, searchStartIndex, searchEndIndex)
+				} = fuzzySearch(
+					resultLines,
+					aggressiveSearchChunk,
+					searchStartIndex,
+					searchEndIndex,
+					startLine - 1,  // Preferred starting point is the line specified in the diff
+					prioritizePreferredStart
+				)
 				if (bestMatchIndex !== -1 && bestScore >= this.fuzzyThreshold) {
 					matchIndex = bestMatchIndex
 					bestMatchScore = bestScore

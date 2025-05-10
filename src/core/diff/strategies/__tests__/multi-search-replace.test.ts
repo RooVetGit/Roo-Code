@@ -783,7 +783,6 @@ function five() {
 		})
 
 		describe("line number stripping", () => {
-			describe("line number stripping", () => {
 				let strategy: MultiSearchReplaceDiffStrategy
 
 				beforeEach(() => {
@@ -2335,6 +2334,196 @@ function three() {
 }`)
 			}
 		})
+
+		// This test verifies that the fix for issue #2556 works correctly
+		it("should correctly handle CSS insertion with nearby start_line", async () => {
+			const originalContent = `.overlay {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0, 0, 0, 0.5);
+z-index: 999;
+}`
+
+			// Create a diff that should target the .overlay class
+			const diffContent = [
+				"<<<<<<< SEARCH",
+				":start_line:1",
+				"-------",
+				".overlay {",
+				"=======",
+				".piece {",
+				"will-change: transform;",
+				"}",
+				"",
+				".overlay {",
+				">>>>>>> REPLACE"
+			].join("\n");
+
+			const testStrategy = new MultiSearchReplaceDiffStrategy(0.8, 10);
+			const result = await testStrategy.applyDiff(originalContent, diffContent);
+			
+			expect(result.success).toBe(true);
+			
+			// Verify the content was properly replaced
+			if (result.success) {
+				expect(result.content).toContain(".piece {\nwill-change: transform;\n}\n\n.overlay {");
+			}
+		})
+
+		it("should prioritize matches close to specified start_line over higher similarity matches further away", async () => {
+		const originalContent = `
+function helper() {
+	// Some comment
+	return 42;
+}
+
+// Many lines in between
+function otherCode() {
+	return true;
+}
+
+function helperFunc() {
+	// Some comments
+	return 42;
+}
+`.trim();
+
+			// Create a diff that should target the second helper function starting at line 11
+			const diffContent = [
+				"<<<<<<< SEARCH",
+				":start_line:11",
+				"-------",
+				"function helperFunc() {",
+				"	// Some comments",
+				"	return 42;",
+				"}",
+				"=======",
+				"function helperFunc() {",
+				"	// Modified comments",
+				"	return 42;",
+				"}",
+				">>>>>>> REPLACE"
+			].join("\n");
+
+			const testStrategy = new MultiSearchReplaceDiffStrategy(0.9, 10);
+			const result = await testStrategy.applyDiff(originalContent, diffContent);
+			
+			expect(result.success).toBe(true);
+			
+			if (result.success) {
+				// Check that the second function was modified, not the first one
+				expect(result.content).toContain("function helper() {\n\t// Some comment\n\treturn 42;\n}");
+				expect(result.content).toContain("function helperFunc() {\n\t// Modified comments\n\treturn 42;\n}");
+			}
+		})
+		
+		// Test for the issue with CSS insertions and line matching precision
+		it("should correctly handle CSS insertions before a class definition", async () => {
+			// Original content from the GitHub issue
+			const originalContent = `
+.game-container {
+		  display: flex;
+		  flex-direction: column;
+		  gap: 1rem;
+}
+
+.chess-board-container {
+		  display: flex;
+		  gap: 1rem;
+		  align-items: center;
+}
+
+.overlay {
+		  position: absolute;
+		  top: 0;
+		  left: 0;
+		  width: 100%;
+		  height: 100%;
+		  background-color: rgba(0, 0, 0, 0.5);
+		  z-index: 999; /* Ensure it's above the board but below the promotion dialog */
+}
+`.trim();
+
+			// Test the first diff scenario that was causing issues
+			const diffContent1 = [
+				"<<<<<<< SEARCH",
+				":start_line:12",
+				":end_line:13",
+				"-------",
+				".overlay {",
+				"=======",
+				"",
+				".piece {",
+				"    will-change: transform;",
+				"}",
+				"",
+				".overlay {",
+				">>>>>>> REPLACE"
+			].join("\n");
+
+			const testStrategy = new MultiSearchReplaceDiffStrategy(0.9, 5);
+			const result1 = await testStrategy.applyDiff(originalContent, diffContent1);
+			
+			expect(result1.success).toBe(true);
+			
+			if (result1.success) {
+				// Should have added the piece class without duplicating .overlay or removing content
+				expect(result1.content).toContain(".piece {\n    will-change: transform;\n}");
+				
+				// Should not have duplicated .overlay
+				const overlayMatches1 = result1.content.match(/\.overlay {/g);
+				expect(overlayMatches1).not.toBeNull();
+				expect(overlayMatches1?.length).toBe(1);
+				
+				// The position: absolute line should still be there
+				expect(result1.content).toContain("position: absolute");
+				
+				// The structure should be preserved correctly
+				expect(result1.content).toMatch(/\.piece[\s\S]*?will-change[\s\S]*?\.overlay[\s\S]*?position: absolute/);
+			}
+			
+			// Test the second diff scenario
+			const diffContent2 = [
+				"<<<<<<< SEARCH",
+				":start_line:11",
+				":end_line:13",
+				"-------",
+				"}",
+				"",
+				".overlay {",
+				"=======",
+				"}",
+				".piece {",
+				"    will-change: transform;",
+				"}",
+				"",
+				".overlay {",
+				">>>>>>> REPLACE"
+			].join("\n");
+
+			const result2 = await testStrategy.applyDiff(originalContent, diffContent2);
+			
+			expect(result2.success).toBe(true);
+			
+			if (result2.success) {
+				// Should have added the piece class
+				expect(result2.content).toContain(".piece {\n    will-change: transform;\n}");
+				
+				// Should not have duplicated .overlay
+				const overlayMatches2 = result2.content.match(/\.overlay {/g);
+				expect(overlayMatches2).not.toBeNull();
+				expect(overlayMatches2?.length).toBe(1);
+				
+				// The position: absolute line should still be there
+				expect(result2.content).toContain("position: absolute");
+				
+				// The structure should be preserved correctly
+				expect(result2.content).toMatch(/\.piece[\s\S]*?will-change[\s\S]*?\.overlay[\s\S]*?position: absolute/);
+			}
+		})
 	})
 
 	describe("getToolDescription", () => {
@@ -2359,4 +2548,3 @@ function three() {
 			expect(description).toContain("</apply_diff>")
 		})
 	})
-})
