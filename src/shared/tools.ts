@@ -49,7 +49,6 @@ export const toolParamNames = [
 	"end_line",
 	"mode_slug",
 	"reason",
-	"operations",
 	"line",
 	"mode",
 	"message",
@@ -61,6 +60,7 @@ export const toolParamNames = [
 	"replace",
 	"use_regex",
 	"ignore_case",
+	"args",
 	"start_line",
 	"end_line",
 ] as const
@@ -83,7 +83,7 @@ export interface ExecuteCommandToolUse extends ToolUse {
 
 export interface ReadFileToolUse extends ToolUse {
 	name: "read_file"
-	params: Partial<Pick<Record<ToolParamName, string>, "path" | "start_line" | "end_line">>
+	params: Partial<Pick<Record<ToolParamName, string>, "args">>
 }
 
 export interface FetchInstructionsToolUse extends ToolUse {

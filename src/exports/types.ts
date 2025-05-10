@@ -85,6 +85,7 @@ type GlobalSettings = {
 	maxWorkspaceFiles?: number | undefined
 	showRooIgnoredFiles?: boolean | undefined
 	maxReadFileLine?: number | undefined
+	maxConcurrentFileReads?: number | undefined
 	terminalOutputLineLimit?: number | undefined
 	terminalShellIntegrationTimeout?: number | undefined
 	terminalShellIntegrationDisabled?: boolean | undefined

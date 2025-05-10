@@ -2,44 +2,67 @@ import { ToolArgs } from "./types"
 
 export function getReadFileDescription(args: ToolArgs): string {
 	return `## read_file
-Description: Request to read the contents of a file at the specified path. Use this when you need to examine the contents of an existing file you do not know the contents of, for example to analyze code, review text files, or extract information from configuration files. The output includes line numbers prefixed to each line (e.g. "1 | const x = 1"), making it easier to reference specific lines when creating diffs or discussing code. By specifying start_line and end_line parameters, you can efficiently read specific portions of large files without loading the entire file into memory. Automatically extracts raw text from PDF and DOCX files. May not be suitable for other types of binary files, as it returns the raw content as a string.
+Description: Request to read the contents of one or more files. The tool outputs line-numbered content (e.g. "1 | const x = 1") for easy reference when creating diffs or discussing code. Use line ranges to efficiently read specific portions of large files. Supports text extraction from PDF and DOCX files, but may not handle other binary files properly.
+
+${args.settings?.maxConcurrentFileReads ? `**IMPORTANT: You can read a maximum of ${args.settings?.maxConcurrentFileReads} files in a single request.** If you need to read more files, use multiple sequential read_file requests.` : ""}
+
 Parameters:
-- path: (required) The path of the file to read (relative to the current workspace directory ${args.cwd})
-- start_line: (optional) The starting line number to read from (1-based). If not provided, it starts from the beginning of the file.
-- end_line: (optional) The ending line number to read to (1-based, inclusive). If not provided, it reads to the end of the file.
+- args: Contains one or more file elements, where each file contains:
+  - path: (required) File path (relative to workspace directory ${args.cwd})
+  - line_range: (optional) One or more line range elements in format "start-end" (1-based, inclusive)
+
 Usage:
 <read_file>
-<path>File path here</path>
-<start_line>Starting line number (optional)</start_line>
-<end_line>Ending line number (optional)</end_line>
+<args>
+  <file>
+    <path>path/to/file</path>
+    <line_range>1-100</line_range>
+    <line_range>200-300</line_range>
+  </file>
+</args>
 </read_file>
 
 Examples:
 
-1. Reading an entire file:
+1. Reading a single file with one line range:
 <read_file>
-<path>frontend-config.json</path>
+<args>
+  <file>
+    <path>src/app.ts</path>
+    <line_range>1-1000</line_range>
+  </file>
+</args>
 </read_file>
 
-2. Reading the first 1000 lines of a large log file:
+2. Reading multiple files with different line ranges${args.settings?.maxConcurrentFileReads ? ` (within the ${args.settings?.maxConcurrentFileReads}-file limit)` : ""}:
 <read_file>
-<path>logs/application.log</path>
-<end_line>1000</end_line>
+<args>
+  <file>
+    <path>src/app.ts</path>
+    <line_range>1-50</line_range>
+    <line_range>100-150</line_range>
+  </file>
+  <file>
+    <path>src/utils.ts</path>
+    <line_range>10-20</line_range>
+  </file>
+</args>
 </read_file>
 
-3. Reading lines 500-1000 of a CSV file:
+3. Reading an entire file (omitting line ranges):
 <read_file>
-<path>data/large-dataset.csv</path>
-<start_line>500</start_line>
-<end_line>1000</end_line>
+<args>
+  <file>
+    <path>config.json</path>
+  </file>
+</args>
 </read_file>
 
-4. Reading a specific function in a source file:
-<read_file>
-<path>src/app.ts</path>
-<start_line>46</start_line>
-<end_line>68</end_line>
-</read_file>
-
-Note: When both start_line and end_line are provided, this tool efficiently streams only the requested lines, making it suitable for processing large files like logs, CSV files, and other large datasets without memory issues.`
+IMPORTANT: You MUST use this Efficient Reading Strategy:
+- You MUST read all related files and implementations together in a single operation${args.settings?.maxConcurrentFileReads ? ` (up to ${args.settings?.maxConcurrentFileReads} files at once)` : ""}
+- You MUST obtain all necessary context before proceeding with changes
+- You MUST combine adjacent line ranges (<10 lines apart)
+- You MUST use multiple ranges for content separated by >10 lines
+- You MUST include sufficient line context for planned modifications while keeping ranges minimal
+${args.settings?.maxConcurrentFileReads ? `- When you need to read more than ${args.settings?.maxConcurrentFileReads} files, prioritize the most critical files first, then use subsequent read_file requests for additional files` : ""}`
 }
