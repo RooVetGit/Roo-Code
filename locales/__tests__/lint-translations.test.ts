@@ -283,6 +283,15 @@ function processFileLocale(
 
 	// For non-JSON files, only check existence
 	if (!sourceFile.endsWith(".json")) {
+		// For markdown files, we still want to track which ones are missing
+		if (sourceFile.endsWith(".md")) {
+			results[mapping.area][locale][targetFile].missing = [
+				{
+					key: sourceFile,
+					englishValue: "File missing",
+				},
+			]
+		}
 		return
 	}
 
@@ -412,13 +421,24 @@ function formatResults(results: Results, checkTypes: string[], options: LintOpti
 					byFile.get(file)?.set(lang, keys)
 				})
 
-				byFile.forEach((langMap, file) => {
-					bufferLog(`    ${file}:`)
-					langMap.forEach((keys, lang) => {
-						bufferLog(`      ${lang}: ${keys.size} keys missing`)
-						if (options?.verbose) {
-							keys.forEach((key) => bufferLog(`        ${key}`))
-						}
+				// Group by locale first
+				const byLocale = new Map<string, string[]>()
+				missingByFile.forEach((keys, fileAndLang) => {
+					const [file, lang] = fileAndLang.split(":")
+					if (!byLocale.has(lang)) {
+						byLocale.set(lang, [])
+					}
+					const mapping = mappings.find((m) => m.area === area)
+					if (mapping) {
+						const targetPath = resolveTargetPath(file, mapping.targetTemplate, lang)
+						byLocale.get(lang)?.push(targetPath)
+					}
+				})
+
+				byLocale.forEach((files, lang) => {
+					bufferLog(`    ${lang}: missing ${files.length} files`)
+					files.sort().forEach((file) => {
+						bufferLog(`      ${file}`)
 					})
 				})
 			}
@@ -499,8 +519,8 @@ function formatSummary(results: Results): void {
 			bufferLog(
 				"- For .json files: Add the missing translations that exist in English but are missing in other locales",
 			)
-			bufferLog("  Example adding translations:")
-			bufferLog("    node scripts/manage-translations.js --stdin settings.json << EOF")
+			bufferLog("  Example adding translations (one JSONL/NDJSON record per line):")
+			bufferLog("    node scripts/manage-translations.js --stdin relative/path/to/settings.json << EOF")
 			bufferLog('    {"some.new.key1.label": "First Value"}')
 			bufferLog('    {"some.new.key2.label": "Second Value"}')
 			bufferLog("    EOF")
@@ -511,7 +531,7 @@ function formatSummary(results: Results): void {
 				"- Remove translations that exist in other locales but not in English (English is the source of truth)",
 			)
 			bufferLog("  Example removing translations:")
-			bufferLog("    node scripts/manage-translations.js -d --stdin settings.json << EOF")
+			bufferLog("    node scripts/manage-translations.js -d --stdin relative/path/to/settings.json << EOF")
 			bufferLog('    ["the.extra.key1.label"]')
 			bufferLog('    ["the.extra.key2.label"]')
 			bufferLog("    EOF")
