@@ -156,7 +156,14 @@ describe("OpenRouterHandler", () => {
 			// Verify stream chunks
 			expect(chunks).toHaveLength(2) // One text chunk and one usage chunk
 			expect(chunks[0]).toEqual({ type: "text", text: "test response" })
-			expect(chunks[1]).toEqual({ type: "usage", inputTokens: 10, outputTokens: 20, totalCost: 0.001 })
+			expect(chunks[1]).toEqual({
+				type: "usage",
+				inputTokens: 10,
+				outputTokens: 20,
+				totalCost: 0.001,
+				cacheReadTokens: 0,
+				reasoningTokens: 0,
+			})
 
 			// Verify OpenAI client was called with correct parameters.
 			expect(mockCreate).toHaveBeenCalledWith(

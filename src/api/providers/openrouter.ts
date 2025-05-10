@@ -41,23 +41,23 @@ type OpenRouterChatCompletionParams = OpenAI.Chat.ChatCompletionCreateParams & {
 // See `OpenAI.Chat.Completions.ChatCompletionChunk["usage"]`
 // `CompletionsAPI.CompletionUsage`
 // See also: https://openrouter.ai/docs/use-cases/usage-accounting
-interface CompletionUsage {
-	completion_tokens?: number
-	completion_tokens_details?: {
-		reasoning_tokens?: number
-	}
-	prompt_tokens?: number
+interface CompletionUsage extends OpenAI.CompletionUsage {
+	// Proprietary OpenRouter properties
 	prompt_tokens_details?: {
 		cached_tokens?: number
 	}
-	total_tokens?: number
 	cost?: number
+	// Additional OpenRouter properties that may be present
+	system_tokens?: number
+	cached_tokens?: number
 }
 
 export class OpenRouterHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
 	private client: OpenAI
 	protected models: ModelRecord = {}
+	// Token usage cache for the last API call
+	// Use base class property for token usage information
 
 	constructor(options: ApiHandlerOptions) {
 		super()
@@ -155,15 +155,24 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		}
 
 		if (lastUsage) {
-			yield {
-				type: "usage",
+			// Save token usage for future reference
+			this.lastTokenUsage = {
 				inputTokens: lastUsage.prompt_tokens || 0,
 				outputTokens: lastUsage.completion_tokens || 0,
-				// Waiting on OpenRouter to figure out what this represents in the Gemini case
-				// and how to best support it.
-				// cacheReadTokens: lastUsage.prompt_tokens_details?.cached_tokens,
-				reasoningTokens: lastUsage.completion_tokens_details?.reasoning_tokens,
+				cachedTokens: lastUsage.prompt_tokens_details?.cached_tokens || 0,
+				reasoningTokens: lastUsage.completion_tokens_details?.reasoning_tokens || 0,
 				totalCost: lastUsage.cost || 0,
+				provider: "openrouter",
+				estimationMethod: "api",
+			}
+
+			yield {
+				type: "usage",
+				inputTokens: this.lastTokenUsage.inputTokens,
+				outputTokens: this.lastTokenUsage.outputTokens,
+				cacheReadTokens: this.lastTokenUsage.cachedTokens,
+				reasoningTokens: this.lastTokenUsage.reasoningTokens,
+				totalCost: this.lastTokenUsage.totalCost,
 			}
 		}
 	}
@@ -193,6 +202,62 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 				supported: PROMPT_CACHING_MODELS.has(id),
 				optional: OPTIONAL_PROMPT_CACHING_MODELS.has(id),
 			},
+		}
+	}
+
+	/**
+	 * OpenRouter-specific token counting implementation
+	 * @param content Content to count tokens for
+	 * @returns Estimated token count from OpenRouter API
+	 */
+	override async countTokens(content: Array<Anthropic.Messages.ContentBlockParam>): Promise<number> {
+		try {
+			const { id: modelId, info: modelInfo } = this.getModel()
+			// Convert content blocks to a simple text message for token counting
+			let textContent = ""
+			for (const block of content) {
+				if (block.type === "text") {
+					textContent += block.text || ""
+				} else if (block.type === "image") {
+					textContent += "[IMAGE]"
+				}
+			}
+			const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [{ role: "user", content: textContent }]
+			const response = await this.client.chat.completions.create({
+				model: modelId,
+				messages,
+				stream: false,
+				max_tokens: 0, // Don't generate any tokens, just count them
+			})
+			if (response.usage) {
+				const usage = response.usage as CompletionUsage
+				const inputTokens = usage.prompt_tokens || 0
+				const reasoningTokens = usage.system_tokens || 0
+				const cachedTokens = usage.cached_tokens || 0
+
+				// Calculate cost based on token usage and model rates
+				const inputRate = modelInfo.inputPrice || 0 // Price per 1K tokens
+				const totalCost = (inputTokens * inputRate) / 1000
+
+				// Store token usage for UI display
+				this.lastTokenUsage = {
+					inputTokens,
+					outputTokens: 0, // No output tokens for counting-only request
+					reasoningTokens,
+					cachedTokens,
+					totalCost,
+					provider: "openrouter",
+					estimationMethod: "api",
+				}
+				return inputTokens // Ensure we return a number, not undefined
+			}
+
+			// Fallback to base implementation if the response doesn't include usage info
+			console.warn("OpenRouter token counting didn't return usage info, using fallback")
+			return super.countTokens(content)
+		} catch (error) {
+			console.warn("OpenRouter token counting failed, using fallback", error)
+			return super.countTokens(content)
 		}
 	}
 
