@@ -94,6 +94,10 @@
 				"label": "Terminal-Befehl erklären",
 				"description": "Erhalten Sie detaillierte Erklärungen zu Terminal-Befehlen und deren Ausgaben. Verfügbar im Kontextmenü des Terminals (Rechtsklick auf ausgewählten Terminal-Inhalt)."
 			},
+			"SUMMARY_AND_START_NEW_TASK": {
+				"label": "Zusammenfassen und neue Aufgabe starten",
+				"description": "Fasst die aktuelle Aufgabe zusammen und startet eine neue mit der Zusammenfassung als Kontext. Dies hilft bei der Verwaltung komplexer Aufgaben, indem sie in kleinere, fokussierte Teilaufgaben aufgeteilt werden."
+			},
 			"NEW_TASK": {
 				"label": "Neue Aufgabe starten",
 				"description": "Starte eine neue Aufgabe mit deiner Eingabe. Verfügbar in der Befehlspalette."

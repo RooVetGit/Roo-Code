@@ -248,7 +248,16 @@
 			"medium": "Mitjà",
 			"low": "Baix"
 		},
-		"setReasoningLevel": "Activa l'esforç de raonament"
+		"setReasoningLevel": "Activa l'esforç de raonament",
+		"warningThreshold": {
+			"label": "Llindars d'advertència",
+			"context": "Llindar d'advertència d'ús de finestra de context",
+			"contextDescription": "Mostra una advertència quan l'ús de la finestra de context supera aquest percentatge. Establiu -1 per desactivar.",
+			"tokens": "Llindar d'advertència d'ús de tokens",
+			"tokensDescription": "Mostra una advertència quan l'ús total de tokens supera aquesta quantitat. Establiu -1 per desactivar.",
+			"cost": "Llindar d'advertència de cost",
+			"costDescription": "Mostra una advertència quan el cost total supera aquesta quantitat en USD. Establiu -1 per desactivar."
+		}
 	},
 	"browser": {
 		"enable": {

@@ -97,6 +97,10 @@
       "NEW_TASK": {
         "label": "Nieuwe taak starten",
         "description": "Start een nieuwe taak met gebruikersinvoer. Beschikbaar via de Command Palette."
+      },
+      "SUMMARY_AND_START_NEW_TASK": {
+        "label": "Samenvatten en Nieuwe Taak Starten",
+        "description": "Vat de huidige taak samen en start een nieuwe met de samenvatting als context. Dit helpt bij het beheren van complexe taken door ze op te splitsen in kleinere, gerichte subtaken."
       }
     }
   },

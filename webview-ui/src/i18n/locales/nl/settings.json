@@ -175,7 +175,16 @@
 			"medium": "Middel",
 			"low": "Laag"
 		},
-		"setReasoningLevel": "Redeneervermogen inschakelen"
+		"setReasoningLevel": "Redeneervermogen inschakelen",
+		"warningThreshold": {
+			"label": "Waarschuwingsdrempels",
+			"context": "Waarschuwingsdrempel voor contextvenstergebruik",
+			"contextDescription": "Toon een waarschuwing wanneer het contextvenstergebruik dit percentage overschrijdt. Stel in op -1 om uit te schakelen.",
+			"tokens": "Waarschuwingsdrempel voor tokengebruik",
+			"tokensDescription": "Toon een waarschuwing wanneer het totale tokengebruik dit aantal overschrijdt. Stel in op -1 om uit te schakelen.",
+			"cost": "Waarschuwingsdrempel voor kosten",
+			"costDescription": "Toon een waarschuwing wanneer de totale kosten dit bedrag in USD overschrijden. Stel in op -1 om uit te schakelen."
+		}
 	},
 	"header": {
 		"title": "Instellingen",

@@ -248,7 +248,16 @@
 			"medium": "Medio",
 			"low": "Basso"
 		},
-		"setReasoningLevel": "Abilita sforzo di ragionamento"
+		"setReasoningLevel": "Abilita sforzo di ragionamento",
+		"warningThreshold": {
+			"label": "Soglie di avviso",
+			"context": "Soglia di avviso per l'utilizzo della finestra di contesto",
+			"contextDescription": "Mostra un avviso quando l'utilizzo della finestra di contesto supera questa percentuale. Imposta a -1 per disabilitare.",
+			"tokens": "Soglia di avviso per l'utilizzo dei token",
+			"tokensDescription": "Mostra un avviso quando l'utilizzo totale dei token supera questo valore. Imposta a -1 per disabilitare.",
+			"cost": "Soglia di avviso per il costo",
+			"costDescription": "Mostra un avviso quando il costo totale supera questo importo in USD. Imposta a -1 per disabilitare."
+		}
 	},
 	"browser": {
 		"enable": {

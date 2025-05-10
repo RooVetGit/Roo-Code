@@ -52,6 +52,7 @@ import { PromptCachingControl } from "./PromptCachingControl"
 import { DiffSettingsControl } from "./DiffSettingsControl"
 import { TemperatureControl } from "./TemperatureControl"
 import { RateLimitSecondsControl } from "./RateLimitSecondsControl"
+import { WarningThresholdControl } from "./WarningThresholdControl"
 import { BedrockCustomArn } from "./providers/BedrockCustomArn"
 
 export interface ApiOptionsProps {
@@ -491,6 +492,10 @@ const ApiOptions = ({
 					<RateLimitSecondsControl
 						value={apiConfiguration.rateLimitSeconds || 0}
 						onChange={(value) => setApiConfigurationField("rateLimitSeconds", value)}
+					/>
+					<WarningThresholdControl
+						value={apiConfiguration.warningThreshold || {}}
+						onChange={(value) => setApiConfigurationField("warningThreshold", value)}
 					/>
 				</>
 			)}

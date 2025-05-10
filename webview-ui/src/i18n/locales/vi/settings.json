@@ -248,7 +248,16 @@
 			"medium": "Trung bình",
 			"low": "Thấp"
 		},
-		"setReasoningLevel": "Kích hoạt nỗ lực suy luận"
+		"setReasoningLevel": "Kích hoạt nỗ lực suy luận",
+		"warningThreshold": {
+			"label": "Ngưỡng cảnh báo",
+			"context": "Ngưỡng cảnh báo sử dụng cửa sổ ngữ cảnh",
+			"contextDescription": "Hiển thị cảnh báo khi việc sử dụng cửa sổ ngữ cảnh vượt quá phần trăm này. Đặt thành -1 để tắt.",
+			"tokens": "Ngưỡng cảnh báo sử dụng token",
+			"tokensDescription": "Hiển thị cảnh báo khi tổng số token sử dụng vượt quá số lượng này. Đặt thành -1 để tắt.",
+			"cost": "Ngưỡng cảnh báo chi phí",
+			"costDescription": "Hiển thị cảnh báo khi tổng chi phí vượt quá số tiền này tính bằng USD. Đặt thành -1 để tắt."
+		}
 	},
 	"browser": {
 		"enable": {

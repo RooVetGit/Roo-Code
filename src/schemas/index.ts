@@ -345,6 +345,14 @@ export type ProviderSettingsEntry = z.infer<typeof providerSettingsEntrySchema>
  * ProviderSettings
  */
 
+export const warningThresholdSchema = z.object({
+	context: z.number().optional(), // Context window warning threshold
+	tokens: z.number().optional(), // Total tokens warning threshold
+	cost: z.number().optional(), // Cost warning threshold
+})
+
+export type WarningThreshold = z.infer<typeof warningThresholdSchema>
+
 const genericProviderSettingsSchema = z.object({
 	includeMaxTokens: z.boolean().optional(),
 	reasoningEffort: reasoningEffortsSchema.optional(),
@@ -353,6 +361,7 @@ const genericProviderSettingsSchema = z.object({
 	fuzzyMatchThreshold: z.number().optional(),
 	modelTemperature: z.number().nullish(),
 	rateLimitSeconds: z.number().optional(),
+	warningThreshold: warningThresholdSchema.optional(),
 	// Claude 3.7 Sonnet Thinking
 	modelMaxTokens: z.number().optional(),
 	modelMaxThinkingTokens: z.number().optional(),
@@ -633,6 +642,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	fuzzyMatchThreshold: undefined,
 	modelTemperature: undefined,
 	rateLimitSeconds: undefined,
+	warningThreshold: undefined,
 	// Fake AI
 	fakeAi: undefined,
 	// X.AI (Grok)

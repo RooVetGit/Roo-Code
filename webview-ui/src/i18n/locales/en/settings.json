@@ -242,6 +242,15 @@
 			"label": "Rate limit",
 			"description": "Minimum time between API requests."
 		},
+		"warningThreshold": {
+			"label": "Warning Thresholds",
+			"context": "Context window usage warning threshold",
+			"contextDescription": "Show a warning when context window usage exceeds this percentage. Set to -1 to disable.",
+			"tokens": "Token usage warning threshold",
+			"tokensDescription": "Show a warning when total token usage exceeds this amount. Set to -1 to disable.",
+			"cost": "Cost warning threshold",
+			"costDescription": "Show a warning when total cost exceeds this amount in USD. Set to -1 to disable."
+		},
 		"reasoningEffort": {
 			"label": "Model Reasoning Effort",
 			"high": "High",

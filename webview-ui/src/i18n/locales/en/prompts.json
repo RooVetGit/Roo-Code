@@ -94,6 +94,10 @@
 				"label": "Explain Terminal Command",
 				"description": "Get detailed explanations of terminal commands and their outputs. Available in the terminal context menu (right-click on selected terminal content)."
 			},
+			"SUMMARY_AND_START_NEW_TASK": {
+				"label": "Summarize and Start New Task",
+				"description": "Summarize the current task and start a new one with the summary as context. This helps manage complex tasks by breaking them into smaller, focused subtasks."
+			},
 			"NEW_TASK": {
 				"label": "Start New Task",
 				"description": "Start a new task with user input. Available in the Command Palette."

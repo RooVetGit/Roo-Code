@@ -247,5 +247,10 @@
 		"title": "Advertencia de ejecución de comandos",
 		"description": "Tu comando se está ejecutando sin la integración de shell de terminal de VSCode. Para suprimir esta advertencia, puedes desactivar la integración de shell en la sección <strong>Terminal</strong> de la <settingsLink>configuración de Roo Code</settingsLink> o solucionar problemas de integración de terminal de VSCode usando el enlace de abajo.",
 		"troubleshooting": "Haz clic aquí para ver la documentación de integración de shell."
+	},
+	"warning": {
+		"contextLimit": "El uso de la ventana de contexto está al {{percent}}%. Considera iniciar una nueva tarea para evitar alcanzar los límites.",
+		"tokenLimit": "El uso de tokens ha alcanzado {{tokens}} tokens. Considera iniciar una nueva tarea para gestionar los costos.",
+		"costLimit": "El costo ha alcanzado ${{cost}}. Considera iniciar una nueva tarea para gestionar los gastos."
 	}
 }

@@ -122,6 +122,20 @@ Please provide:
 	NEW_TASK: {
 		template: `\${userInput}`,
 	},
+	SUMMARY_AND_START_NEW_TASK: {
+		template: `STOP CURRENT TASK AND Provide a concise summary of the current task status and progress then create a new task using new_task tool.
+  Create a follow-up task that:
+  - Continues from the current progress point
+  - Maintains context from previous work
+  - Clearly defines next objectives
+  - Links to relevant artifacts and dependencies
+
+Please include:
+- Key decisions and outcomes from current task
+- Blocking issues or dependencies
+- Suggested next steps
+- Related @-mentions and code references`,
+	},
 } as const
 
 type SupportPromptType = keyof typeof supportPromptConfigs

@@ -94,6 +94,10 @@
 				"label": "Terminal Komutunu Açıkla",
 				"description": "Terminal komutları ve çıktıları hakkında ayrıntılı açıklamalar alın. Terminal bağlam menüsünde (seçili terminal içeriğine sağ tıklayın) kullanılabilir."
 			},
+			"SUMMARY_AND_START_NEW_TASK": {
+				"label": "Özetle ve yeni görev başlat",
+				"description": "Mevcut görevi özetler ve özeti bağlam olarak kullanarak yeni bir görev başlatır. Bu, karmaşık görevleri daha küçük, odaklanmış alt görevlere bölerek yönetmeye yardımcı olur."
+			},
 			"NEW_TASK": {
 				"label": "Yeni Görev Başlat",
 				"description": "Girdiyle yeni bir görev başlat. Komut paletinde kullanılabilir."

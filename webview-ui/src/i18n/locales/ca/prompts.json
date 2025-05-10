@@ -94,6 +94,10 @@
 				"label": "Explicar comanda del terminal",
 				"description": "Obtingueu explicacions detallades de les comandes del terminal i les seves sortides. Disponible al menú contextual del terminal (clic dret al contingut seleccionat del terminal)."
 			},
+			"SUMMARY_AND_START_NEW_TASK": {
+				"label": "Resumeix i inicia una nova tasca",
+				"description": "Resumeix la tasca actual i comença una de nova amb el resum com a context. Això ajuda a gestionar tasques complexes dividint-les en subtasques més petites i enfocades."
+			},
 			"NEW_TASK": {
 				"label": "Iniciar nova tasca",
 				"description": "Inicieu una nova tasca amb l'entrada proporcionada. Disponible a la paleta de comandes."

@@ -248,7 +248,16 @@
 			"medium": "Mittel",
 			"low": "Niedrig"
 		},
-		"setReasoningLevel": "Denkaufwand aktivieren"
+		"setReasoningLevel": "Denkaufwand aktivieren",
+		"warningThreshold": {
+			"label": "Warnschwellen",
+			"context": "Warnschwelle für Kontextfensternutzung",
+			"contextDescription": "Zeigt eine Warnung an, wenn die Kontextfensternutzung diesen Prozentsatz überschreitet. Auf -1 setzen zum Deaktivieren.",
+			"tokens": "Warnschwelle für Token-Nutzung",
+			"tokensDescription": "Zeigt eine Warnung an, wenn die Gesamttoken-Nutzung diesen Wert überschreitet. Auf -1 setzen zum Deaktivieren.",
+			"cost": "Warnschwelle für Kosten",
+			"costDescription": "Zeigt eine Warnung an, wenn die Gesamtkosten diesen Betrag in USD überschreiten. Auf -1 setzen zum Deaktivieren."
+		}
 	},
 	"browser": {
 		"enable": {

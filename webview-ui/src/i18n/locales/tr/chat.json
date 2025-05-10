@@ -247,5 +247,10 @@
 		"title": "Komut Çalıştırma Uyarısı",
 		"description": "Komutunuz VSCode terminal kabuk entegrasyonu olmadan çalıştırılıyor. Bu uyarıyı gizlemek için <settingsLink>Roo Code ayarları</settingsLink>'nın <strong>Terminal</strong> bölümünden kabuk entegrasyonunu devre dışı bırakabilir veya aşağıdaki bağlantıyı kullanarak VSCode terminal entegrasyonu sorunlarını giderebilirsiniz.",
 		"troubleshooting": "Kabuk entegrasyonu belgelerini görmek için buraya tıklayın."
+	},
+	"warning": {
+		"contextLimit": "Bağlam penceresi kullanımı %{{percent}} seviyesinde. Limitlere ulaşmamak için yeni bir görev başlatmayı düşünün.",
+		"tokenLimit": "Token kullanımı {{tokens}} tokena ulaştı. Maliyetleri yönetmek için yeni bir görev başlatmayı düşünün.",
+		"costLimit": "Maliyet ${{cost}} seviyesine ulaştı. Harcamaları yönetmek için yeni bir görev başlatmayı düşünün."
 	}
 }

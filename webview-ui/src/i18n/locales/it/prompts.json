@@ -94,6 +94,10 @@
 				"label": "Spiega comando del terminale",
 				"description": "Ottieni spiegazioni dettagliate sui comandi del terminale e sui loro output. Disponibile nel menu contestuale del terminale (clic destro sul contenuto selezionato del terminale)."
 			},
+			"SUMMARY_AND_START_NEW_TASK": {
+				"label": "Riassumi e inizia nuovo task",
+				"description": "Riassume il task corrente e ne inizia uno nuovo utilizzando il riassunto come contesto. Questo aiuta a gestire task complessi suddividendoli in subtask più piccoli e mirati."
+			},
 			"NEW_TASK": {
 				"label": "Avvia nuova attività",
 				"description": "Avvia una nuova attività con il tuo input. Disponibile nella palette dei comandi."

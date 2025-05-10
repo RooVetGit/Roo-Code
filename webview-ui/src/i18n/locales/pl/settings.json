@@ -248,7 +248,16 @@
 			"medium": "Średni",
 			"low": "Niski"
 		},
-		"setReasoningLevel": "Włącz wysiłek rozumowania"
+		"setReasoningLevel": "Włącz wysiłek rozumowania",
+		"warningThreshold": {
+			"label": "Progi ostrzeżeń",
+			"context": "Próg ostrzeżenia o wykorzystaniu okna kontekstu",
+			"contextDescription": "Pokaż ostrzeżenie, gdy wykorzystanie okna kontekstu przekroczy ten procent. Ustaw na -1, aby wyłączyć.",
+			"tokens": "Próg ostrzeżenia o wykorzystaniu tokenów",
+			"tokensDescription": "Pokaż ostrzeżenie, gdy całkowite wykorzystanie tokenów przekroczy tę wartość. Ustaw na -1, aby wyłączyć.",
+			"cost": "Próg ostrzeżenia o koszcie",
+			"costDescription": "Pokaż ostrzeżenie, gdy całkowity koszt przekroczy tę kwotę w USD. Ustaw na -1, aby wyłączyć."
+		}
 	},
 	"browser": {
 		"enable": {

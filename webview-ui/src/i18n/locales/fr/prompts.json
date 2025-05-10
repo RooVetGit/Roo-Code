@@ -94,6 +94,10 @@
 				"label": "Expliquer la commande du terminal",
 				"description": "Obtenez des explications détaillées sur les commandes du terminal et leurs sorties. Disponible dans le menu contextuel du terminal (clic droit sur le contenu sélectionné du terminal)."
 			},
+			"SUMMARY_AND_START_NEW_TASK": {
+				"label": "Résumer et démarrer une nouvelle tâche",
+				"description": "Résume la tâche actuelle et en démarre une nouvelle avec le résumé comme contexte. Cela aide à gérer les tâches complexes en les divisant en sous-tâches plus petites et ciblées."
+			},
 			"NEW_TASK": {
 				"label": "Démarrer une nouvelle tâche",
 				"description": "Démarre une nouvelle tâche avec ton entrée. Disponible dans la palette de commandes."

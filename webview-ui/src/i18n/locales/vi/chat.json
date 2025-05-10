@@ -247,5 +247,10 @@
 		"title": "Cảnh báo thực thi lệnh",
 		"description": "Lệnh của bạn đang được thực thi mà không có tích hợp shell terminal VSCode. Để ẩn cảnh báo này, bạn có thể vô hiệu hóa tích hợp shell trong phần <strong>Terminal</strong> của <settingsLink>cài đặt Roo Code</settingsLink> hoặc khắc phục sự cố tích hợp terminal VSCode bằng liên kết bên dưới.",
 		"troubleshooting": "Nhấp vào đây để xem tài liệu tích hợp shell."
+	},
+	"warning": {
+		"contextLimit": "Việc sử dụng cửa sổ ngữ cảnh đã đạt {{percent}}%. Hãy cân nhắc bắt đầu một nhiệm vụ mới để tránh chạm giới hạn.",
+		"tokenLimit": "Việc sử dụng token đã đạt {{tokens}} tokens. Hãy cân nhắc bắt đầu một nhiệm vụ mới để quản lý chi phí.",
+		"costLimit": "Chi phí đã đạt ${{cost}}. Hãy cân nhắc bắt đầu một nhiệm vụ mới để quản lý chi phí."
 	}
 }

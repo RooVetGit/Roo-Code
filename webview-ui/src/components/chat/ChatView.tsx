@@ -20,6 +20,7 @@ import { combineCommandSequences } from "@roo/shared/combineCommandSequences"
 import { getApiMetrics } from "@roo/shared/getApiMetrics"
 import { AudioType } from "@roo/shared/WebviewMessage"
 import { getAllModes } from "@roo/shared/modes"
+import { supportPrompt } from "@roo/shared/support-prompt"
 
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { vscode } from "@src/utils/vscode"
@@ -40,6 +41,7 @@ import TaskHeader from "./TaskHeader"
 import AutoApproveMenu from "./AutoApproveMenu"
 import SystemPromptWarning from "./SystemPromptWarning"
 import { CheckpointWarning } from "./CheckpointWarning"
+import TokenUsageWarning from "./TokenUsageWarning"
 
 export interface ChatViewProps {
 	isHidden: boolean
@@ -130,6 +132,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const lastTtsRef = useRef<string>("")
 	const [wasStreaming, setWasStreaming] = useState<boolean>(false)
 	const [showCheckpointWarning, setShowCheckpointWarning] = useState<boolean>(false)
+	const [forceShowTokenWarning, setForceShowTokenWarning] = useState<boolean>(false)
 
 	// UI layout depends on the last 2 messages
 	// (since it relies on the content of these messages, we are deep comparing. i.e. the button state after hitting button sets enableButtons to false, and this effect otherwise would have to true again even if messages didn't change
@@ -158,6 +161,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							setTextAreaDisabled(true)
 							setClineAsk("api_req_failed")
 							setEnableButtons(true)
+							setForceShowTokenWarning(true)
 							setPrimaryButtonText(t("chat:retry.title"))
 							setSecondaryButtonText(t("chat:startNewTask.title"))
 							break
@@ -166,6 +170,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							setTextAreaDisabled(false)
 							setClineAsk("mistake_limit_reached")
 							setEnableButtons(true)
+							setForceShowTokenWarning(true)
 							setPrimaryButtonText(t("chat:proceedAnyways.title"))
 							setSecondaryButtonText(t("chat:startNewTask.title"))
 							break
@@ -380,6 +385,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		setSelectedImages([])
 		setClineAsk(undefined)
 		setEnableButtons(false)
+		setForceShowTokenWarning(false)
 		// Do not reset mode here as it should persist.
 		// setPrimaryButtonText(undefined)
 		// setSecondaryButtonText(undefined)
@@ -393,6 +399,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			if (text || images.length > 0) {
 				if (messages.length === 0) {
 					vscode.postMessage({ type: "newTask", text, images })
+					setForceShowTokenWarning(false)
 				} else if (clineAsk) {
 					switch (clineAsk) {
 						case "followup":
@@ -432,7 +439,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		[inputValue, selectedImages],
 	)
 
-	const startNewTask = useCallback(() => vscode.postMessage({ type: "clearTask" }), [])
+	const startNewTask = useCallback(() => {
+		vscode.postMessage({ type: "clearTask" })
+		setForceShowTokenWarning(false)
+	}, [])
 
 	// This logic depends on the useEffect[messages] above to set clineAsk,
 	// after which buttons are shown and we then send an askResponse to the
@@ -443,6 +453,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 			switch (clineAsk) {
 				case "api_req_failed":
+				// fallthrough
 				case "command":
 				case "tool":
 				case "browser_action_launch":
@@ -463,6 +474,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					// Clear input state after sending
 					setInputValue("")
 					setSelectedImages([])
+					setForceShowTokenWarning(false)
 					break
 				case "completion_result":
 				case "resume_completed_task":
@@ -493,8 +505,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 			switch (clineAsk) {
 				case "api_req_failed":
+				// fallthrough
 				case "mistake_limit_reached":
 				case "resume_task":
+					setForceShowTokenWarning(false)
 					startNewTask()
 					break
 				case "command":
@@ -528,7 +542,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		[clineAsk, startNewTask, isStreaming],
 	)
 
-	const handleTaskCloseButtonClick = useCallback(() => startNewTask(), [startNewTask])
+	const handleTaskCloseButtonClick = useCallback(() => {
+		startNewTask()
+		setForceShowTokenWarning(false)
+	}, [startNewTask])
 
 	const { info: model } = useSelectedModel(apiConfiguration)
 
@@ -1316,6 +1333,22 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							initialTopMostItemIndex={groupedMessages.length - 1}
 						/>
 					</div>
+					<TokenUsageWarning
+						contextTokens={apiMetrics.contextTokens}
+						tokensIn={apiMetrics.totalTokensIn}
+						tokensOut={apiMetrics.totalTokensOut}
+						totalCost={apiMetrics.totalCost}
+						onStartNewTask={() => {
+							if (isStreaming) {
+								vscode.postMessage({ type: "cancelTask" })
+								setDidClickCancel(true)
+							}
+							let prompt = supportPrompt.create("SUMMARY_AND_START_NEW_TASK", {})
+							handleSendMessage(prompt, [])
+							setForceShowTokenWarning(false)
+						}}
+						forceShow={forceShowTokenWarning}
+					/>
 					<AutoApproveMenu />
 					{showScrollToBottom ? (
 						<div className="flex px-[15px] pt-[10px]">

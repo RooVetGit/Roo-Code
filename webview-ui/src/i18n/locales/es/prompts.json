@@ -94,6 +94,10 @@
 				"label": "Explicar comando de terminal",
 				"description": "Obtén explicaciones detalladas de comandos de terminal y sus salidas. Disponible en el menú contextual de la terminal (clic derecho en el contenido seleccionado de la terminal)."
 			},
+			"SUMMARY_AND_START_NEW_TASK": {
+				"label": "Resumir e iniciar nueva tarea",
+				"description": "Resume la tarea actual e inicia una nueva con el resumen como contexto. Esto ayuda a gestionar tareas complejas dividiéndolas en subtareas más pequeñas y enfocadas."
+			},
 			"NEW_TASK": {
 				"label": "Iniciar nueva tarea",
 				"description": "Inicia una nueva tarea con entrada del usuario. Disponible en la Paleta de comandos."

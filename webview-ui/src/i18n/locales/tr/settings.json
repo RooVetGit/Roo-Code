@@ -248,7 +248,16 @@
 			"medium": "Orta",
 			"low": "Düşük"
 		},
-		"setReasoningLevel": "Akıl Yürütme Çabasını Etkinleştir"
+		"setReasoningLevel": "Akıl Yürütme Çabasını Etkinleştir",
+		"warningThreshold": {
+			"label": "Uyarı Eşikleri",
+			"context": "Bağlam penceresi kullanım uyarı eşiği",
+			"contextDescription": "Bağlam penceresi kullanımı bu yüzdeyi aştığında uyarı göster. Devre dışı bırakmak için -1 olarak ayarlayın.",
+			"tokens": "Token kullanım uyarı eşiği",
+			"tokensDescription": "Toplam token kullanımı bu miktarı aştığında uyarı göster. Devre dışı bırakmak için -1 olarak ayarlayın.",
+			"cost": "Maliyet uyarı eşiği",
+			"costDescription": "Toplam maliyet bu USD miktarını aştığında uyarı göster. Devre dışı bırakmak için -1 olarak ayarlayın."
+		}
 	},
 	"browser": {
 		"enable": {
