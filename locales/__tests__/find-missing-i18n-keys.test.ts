@@ -1,21 +1,15 @@
 const fs = require("fs")
 const path = require("path")
-import { languages as schemaLanguages } from "../../src/schemas/index"
-import { fileExists, loadFileContent, parseJsonContent, getValueAtPath } from "./lint-translations.test"
-
-const languages = schemaLanguages
-
-let logBuffer: string[] = []
-
-function bufferLog(message: string) {
-	logBuffer.push(message)
-}
-
-function printLogs(): string {
-	const output = logBuffer.join("\n")
-	logBuffer = []
-	return output
-}
+import {
+	languages,
+	bufferLog,
+	printLogs,
+	clearLogs,
+	fileExists,
+	loadFileContent,
+	parseJsonContent,
+	getValueAtPath,
+} from "./utils"
 
 // findMissingI18nKeys: Directories to traverse and their corresponding locales
 const SCAN_SOURCE_DIRS = {
@@ -78,7 +72,7 @@ function checkKeyInLocales(key: string, localesDir: string): Array<[string, bool
 
 // Recursively traverse the directory
 export function findMissingI18nKeys(): { output: string } {
-	logBuffer = [] // Clear buffer at start
+	clearLogs() // Clear buffer at start
 	let results: Array<{ key: string; file: string; missingLocales: Array<{ path: string; isFileMissing: boolean }> }> =
 		[]
 

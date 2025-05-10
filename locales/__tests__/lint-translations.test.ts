@@ -1,17 +1,19 @@
 const fs = require("fs")
 const path = require("path")
-import { languages as schemaLanguages } from "../../src/schemas/index"
+import {
+	languages,
+	type Language,
+	bufferLog,
+	printLogs,
+	clearLogs,
+	fileExists,
+	loadFileContent,
+	parseJsonContent,
+	getValueAtPath,
+} from "./utils"
 
-let logBuffer: string[] = []
-const bufferLog = (msg: string) => logBuffer.push(msg)
-const printLogs = () => {
-	const output = logBuffer.join("\n")
-	logBuffer = []
-	return output
-}
-
-const languages = schemaLanguages
-type Language = (typeof languages)[number]
+// Track unique errors to avoid duplication
+const seenErrors = new Set<string>()
 
 interface PathMapping {
 	name: string
@@ -119,38 +121,6 @@ function resolveTargetPath(sourceFile: string, targetTemplate: string, locale: s
 	return path.join(targetPath, fileName)
 }
 
-function loadFileContent(filePath: string): string | null {
-	try {
-		const fullPath = path.join("./", filePath)
-		return fs.readFileSync(fullPath, "utf8")
-	} catch (error) {
-		return null
-	}
-}
-
-// Track unique errors to avoid duplication
-const seenErrors = new Set<string>()
-
-function parseJsonContent(content: string | null, filePath: string): any | null {
-	if (!content) return null
-
-	try {
-		return JSON.parse(content)
-	} catch (error) {
-		// Only log first occurrence of each unique error
-		const errorKey = `${filePath}:${(error as Error).message}`
-		if (!seenErrors.has(errorKey)) {
-			seenErrors.add(errorKey)
-			bufferLog(`Error parsing ${path.basename(filePath)}: ${(error as Error).message}`)
-		}
-		return null
-	}
-}
-
-function fileExists(filePath: string): boolean {
-	return fs.existsSync(path.join("./", filePath))
-}
-
 function findKeys(obj: any, parentKey: string = ""): string[] {
 	let keys: string[] = []
 
@@ -164,24 +134,6 @@ function findKeys(obj: any, parentKey: string = ""): string[] {
 	}
 
 	return keys
-}
-
-function getValueAtPath(obj: any, path: string): any {
-	if (obj && typeof obj === "object" && Object.prototype.hasOwnProperty.call(obj, path)) {
-		return obj[path]
-	}
-
-	const parts = path.split(".")
-	let current = obj
-
-	for (const part of parts) {
-		if (current === undefined || current === null) {
-			return undefined
-		}
-		current = current[part]
-	}
-
-	return current
 }
 
 function checkMissingTranslations(sourceContent: any, targetContent: any): TranslationIssue[] {
@@ -307,7 +259,7 @@ function processFileLocale(
 function formatResults(results: Results, checkTypes: string[], options: LintOptions, mappings: PathMapping[]): boolean {
 	let hasIssues = false
 
-	logBuffer = [] // Clear buffer at start
+	clearLogs() // Clear buffer at start
 	seenErrors.clear() // Clear error tracking
 	bufferLog("=== Translation Results ===")
 
@@ -613,7 +565,7 @@ function parseArgs(): LintOptions {
 }
 
 function lintTranslations(args?: LintOptions): { output: string } {
-	logBuffer = [] // Clear the buffer at the start
+	clearLogs() // Clear the buffer at the start
 	const options = args || parseArgs() || { area: ["all"], check: ["all"] }
 	const checksToRun = options.check?.includes("all") ? ["missing", "extra"] : options.check || ["all"]
 
