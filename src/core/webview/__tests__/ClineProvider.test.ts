@@ -612,7 +612,7 @@ describe("ClineProvider", () => {
 		expect(mockContext.globalState.update).toHaveBeenCalledWith("currentApiConfigName", "test-config")
 	})
 
-	it("saves current config when switching to mode without config", async () => {
+	test("saves current config when switching to mode without config", async () => {
 		await provider.resolveWebviewView(mockWebviewView)
 		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
 
@@ -633,15 +633,15 @@ describe("ClineProvider", () => {
 		expect(provider.providerSettingsManager.setModeConfig).toHaveBeenCalledWith("architect", "current-id")
 	})
 
-	it("saves config as default for current mode when loading config", async () => {
+	test("saves config as default for current mode when loading config", async () => {
 		await provider.resolveWebviewView(mockWebviewView)
 		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
 
-		const profile: ProviderSettingsEntry = { apiProvider: "anthropic", id: "new-id", name: "new-config" }
-
 		;(provider as any).providerSettingsManager = {
-			activateProfile: jest.fn().mockResolvedValue(profile),
-			listConfig: jest.fn().mockResolvedValue([profile]),
+			activateProfile: jest
+				.fn()
+				.mockResolvedValue({ config: { apiProvider: "anthropic", id: "new-id" }, name: "new-config" }),
+			listConfig: jest.fn().mockResolvedValue([{ name: "new-config", id: "new-id", apiProvider: "anthropic" }]),
 			setModeConfig: jest.fn(),
 			getModeConfigId: jest.fn().mockResolvedValue(undefined),
 		} as any
@@ -656,19 +656,18 @@ describe("ClineProvider", () => {
 		expect(provider.providerSettingsManager.setModeConfig).toHaveBeenCalledWith("architect", "new-id")
 	})
 
-	it("load API configuration by ID works and updates mode config", async () => {
+	test("load API configuration by ID works and updates mode config", async () => {
 		await provider.resolveWebviewView(mockWebviewView)
 		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
 
-		const profile: ProviderSettingsEntry = {
-			name: "config-by-id",
-			id: "config-id-123",
-			apiProvider: "anthropic",
-		}
-
 		;(provider as any).providerSettingsManager = {
-			activateProfile: jest.fn().mockResolvedValue(profile),
-			listConfig: jest.fn().mockResolvedValue([profile]),
+			activateProfile: jest.fn().mockResolvedValue({
+				config: { apiProvider: "anthropic", id: "config-id-123" },
+				name: "config-by-id",
+			}),
+			listConfig: jest
+				.fn()
+				.mockResolvedValue([{ name: "config-by-id", id: "config-id-123", apiProvider: "anthropic" }]),
 			setModeConfig: jest.fn(),
 			getModeConfigId: jest.fn().mockResolvedValue(undefined),
 		} as any
@@ -882,7 +881,7 @@ describe("ClineProvider", () => {
 		})
 	})
 
-	it("saves mode config when updating API configuration", async () => {
+	test("saves mode config when updating API configuration", async () => {
 		// Setup mock context with mode and config name
 		mockContext = {
 			...mockContext,
@@ -908,14 +907,12 @@ describe("ClineProvider", () => {
 
 		;(provider as any).providerSettingsManager = {
 			listConfig: jest.fn().mockResolvedValue([{ name: "test-config", id: "test-id", apiProvider: "anthropic" }]),
-			saveConfig: jest.fn().mockResolvedValue("test-id"),
 			setModeConfig: jest.fn(),
 		} as any
 
 		// Update API configuration
 		await messageHandler({
-			type: "upsertApiConfiguration",
-			text: "test-config",
+			type: "apiConfiguration",
 			apiConfiguration: { apiProvider: "anthropic" },
 		})
 
@@ -1678,11 +1675,14 @@ describe("ClineProvider", () => {
 				currentApiConfigName: "test-config",
 			} as any)
 
-			// Trigger upsertApiConfiguration
+			// Trigger updateApiConfiguration
 			await messageHandler({
 				type: "upsertApiConfiguration",
 				text: "test-config",
-				apiConfiguration: { apiProvider: "anthropic", apiKey: "test-key" },
+				apiConfiguration: {
+					apiProvider: "anthropic",
+					apiKey: "test-key",
+				},
 			})
 
 			// Verify error was logged and user was notified

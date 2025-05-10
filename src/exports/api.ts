@@ -6,14 +6,7 @@ import * as path from "path"
 import { getWorkspacePath } from "../utils/path"
 import { ClineProvider } from "../core/webview/ClineProvider"
 import { openClineInNewTab } from "../activate/registerCommands"
-import {
-	RooCodeSettings,
-	RooCodeEvents,
-	RooCodeEventName,
-	ProviderSettings,
-	ProviderSettingsEntry,
-	isSecretStateKey,
-} from "../schemas"
+import { RooCodeSettings, RooCodeEvents, RooCodeEventName } from "../schemas"
 import { IpcOrigin, IpcMessageType, TaskCommandName, TaskEvent } from "../schemas/ipc"
 
 import { RooCodeAPI } from "./interface"
@@ -253,10 +246,8 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 
 	// Global Settings Management
 
-	public getConfiguration(): RooCodeSettings {
-		return Object.fromEntries(
-			Object.entries(this.sidebarProvider.getValues()).filter(([key]) => !isSecretStateKey(key)),
-		)
+	public getConfiguration() {
+		return this.sidebarProvider.getValues()
 	}
 
 	public async setConfiguration(values: RooCodeSettings) {
@@ -267,86 +258,77 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 
 	// Provider Profile Management
 
-	public getProfiles(): string[] {
-		return this.sidebarProvider.getProviderProfileEntries().map(({ name }) => name)
+	private getProfilesMeta() {
+		return this.getConfiguration().listApiConfigMeta || []
 	}
 
-	public getProfileEntry(name: string): ProviderSettingsEntry | undefined {
-		return this.sidebarProvider.getProviderProfileEntry(name)
+	public getProfiles() {
+		return this.getProfilesMeta().map((profile) => profile.name)
 	}
 
-	public async createProfile(name: string, profile?: ProviderSettings, activate: boolean = true) {
-		const entry = this.getProfileEntry(name)
+	public hasProfile(name: string): boolean {
+		return !!(this.getConfiguration().listApiConfigMeta || []).find((profile) => profile.name === name)
+	}
 
-		if (entry) {
-			throw new Error(`Profile with name "${name}" already exists`)
+	public async createProfile(name: string) {
+		if (!name || !name.trim()) {
+			throw new Error("Profile name cannot be empty")
 		}
 
-		const id = await this.sidebarProvider.upsertProviderProfile(name, profile ?? {}, activate)
+		const currentSettings = this.getConfiguration()
+		const profiles = currentSettings.listApiConfigMeta || []
 
-		if (!id) {
-			throw new Error(`Failed to create profile with name "${name}"`)
+		if (profiles.some((profile) => profile.name === name)) {
+			throw new Error(`A profile with the name "${name}" already exists`)
 		}
+
+		const id = this.sidebarProvider.providerSettingsManager.generateId()
+
+		await this.setConfiguration({
+			...currentSettings,
+			listApiConfigMeta: [
+				...profiles,
+				{
+					id,
+					name: name.trim(),
+					apiProvider: "openai" as const,
+				},
+			],
+		})
 
 		return id
 	}
 
-	public async updateProfile(
-		name: string,
-		profile: ProviderSettings,
-		activate: boolean = true,
-	): Promise<string | undefined> {
-		const entry = this.getProfileEntry(name)
+	public async deleteProfile(name: string) {
+		const currentSettings = this.getConfiguration()
+		const listApiConfigMeta = this.getProfilesMeta()
+		const targetIndex = listApiConfigMeta.findIndex((p) => p.name === name)
 
-		if (!entry) {
+		if (targetIndex === -1) {
 			throw new Error(`Profile with name "${name}" does not exist`)
 		}
 
-		const id = await this.sidebarProvider.upsertProviderProfile(name, profile, activate)
+		const profileToDelete = listApiConfigMeta[targetIndex]
+		listApiConfigMeta.splice(targetIndex, 1)
 
-		if (!id) {
-			throw new Error(`Failed to update profile with name "${name}"`)
-		}
+		// If we're deleting the active profile, clear the currentApiConfigName.
+		const currentApiConfigName =
+			currentSettings.currentApiConfigName === profileToDelete.name
+				? undefined
+				: currentSettings.currentApiConfigName
 
-		return id
-	}
-
-	public async upsertProfile(
-		name: string,
-		profile: ProviderSettings,
-		activate: boolean = true,
-	): Promise<string | undefined> {
-		const id = await this.sidebarProvider.upsertProviderProfile(name, profile, activate)
-
-		if (!id) {
-			throw new Error(`Failed to upsert profile with name "${name}"`)
-		}
-
-		return id
-	}
-
-	public async deleteProfile(name: string): Promise<void> {
-		const entry = this.getProfileEntry(name)
-
-		if (!entry) {
-			throw new Error(`Profile with name "${name}" does not exist`)
-		}
-
-		await this.sidebarProvider.deleteProviderProfile(entry)
+		await this.setConfiguration({ ...currentSettings, listApiConfigMeta, currentApiConfigName })
 	}
 
 	public getActiveProfile(): string | undefined {
 		return this.getConfiguration().currentApiConfigName
 	}
 
-	public async setActiveProfile(name: string): Promise<string | undefined> {
-		const entry = this.getProfileEntry(name)
-
-		if (!entry) {
+	public async setActiveProfile(name: string) {
+		if (!this.hasProfile(name)) {
 			throw new Error(`Profile with name "${name}" does not exist`)
 		}
 
 		await this.sidebarProvider.activateProviderProfile({ name })
-		return this.getActiveProfile()
 	}
 }
