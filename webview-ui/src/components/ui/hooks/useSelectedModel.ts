@@ -58,10 +58,30 @@ function getSelectedModel({
 }): { id: string; info: ModelInfo } {
 	switch (provider) {
 		case "openrouter": {
-			const id = apiConfiguration.openRouterModelId ?? openRouterDefaultModelId
-			const info = routerModels.openrouter[id]
-			return info
-				? { id, info }
+			const modelId = apiConfiguration.openRouterModelId ?? openRouterDefaultModelId
+			let baseModelInfo = routerModels.openrouter[modelId]
+			let finalModelInfo = baseModelInfo
+
+			if (apiConfiguration.openRouterSelectedProviderInfo && baseModelInfo) {
+				finalModelInfo = {
+					...baseModelInfo,
+					contextWindow: apiConfiguration.openRouterSelectedProviderInfo.contextWindow,
+					maxTokens: apiConfiguration.openRouterSelectedProviderInfo.maxTokens ?? baseModelInfo.maxTokens,
+					inputPrice: apiConfiguration.openRouterSelectedProviderInfo.inputPrice ?? baseModelInfo.inputPrice,
+					outputPrice:
+						apiConfiguration.openRouterSelectedProviderInfo.outputPrice ?? baseModelInfo.outputPrice,
+					supportsImages:
+						apiConfiguration.openRouterSelectedProviderInfo.supportsImages ?? baseModelInfo.supportsImages,
+					supportsPromptCache:
+						apiConfiguration.openRouterSelectedProviderInfo.supportsPromptCache ??
+						baseModelInfo.supportsPromptCache,
+				}
+			} else if (!baseModelInfo) {
+				finalModelInfo = routerModels.openrouter[openRouterDefaultModelId]
+			}
+
+			return finalModelInfo
+				? { id: modelId, info: finalModelInfo }
 				: { id: openRouterDefaultModelId, info: routerModels.openrouter[openRouterDefaultModelId] }
 		}
 		case "requesty": {

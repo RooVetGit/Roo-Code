@@ -144,7 +144,10 @@ export const OpenRouter = ({
 					</div>
 					<Select
 						value={apiConfiguration?.openRouterSpecificProvider || OPENROUTER_DEFAULT_PROVIDER_NAME}
-						onValueChange={(value) => setApiConfigurationField("openRouterSpecificProvider", value)}>
+						onValueChange={(value) => {
+							setApiConfigurationField("openRouterSpecificProvider", value)
+							setApiConfigurationField("openRouterSelectedProviderInfo", openRouterModelProviders[value])
+						}}>
 						<SelectTrigger className="w-full">
 							<SelectValue placeholder={t("settings:common.select")} />
 						</SelectTrigger>
