@@ -60,7 +60,13 @@ import { SYSTEM_PROMPT } from "../prompts/system"
 import { ToolRepetitionDetector } from "../tools/ToolRepetitionDetector"
 import { FileContextTracker } from "../context-tracking/FileContextTracker"
 import { RooIgnoreController } from "../ignore/RooIgnoreController"
-import { type AssistantMessageContent, parseAssistantMessage, presentAssistantMessage } from "../assistant-message"
+import {
+	type AssistantMessageContent,
+	presentAssistantMessage,
+	parseAssistantMessageChunk,
+	createInitialParserState,
+	type ParserState,
+} from "../assistant-message"
 import { truncateConversationIfNeeded } from "../sliding-window"
 import { ClineProvider } from "../webview/ClineProvider"
 import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
@@ -177,6 +183,7 @@ export class Task extends EventEmitter<ClineEvents> {
 	isStreaming = false
 	currentStreamingContentIndex = 0
 	assistantMessageContent: AssistantMessageContent[] = []
+	parserState: ParserState = createInitialParserState()
 	presentAssistantMessageLocked = false
 	presentAssistantMessageHasPendingUpdates = false
 	userMessageContent: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[] = []
@@ -1114,6 +1121,7 @@ export class Task extends EventEmitter<ClineEvents> {
 			// Reset streaming state.
 			this.currentStreamingContentIndex = 0
 			this.assistantMessageContent = []
+			this.parserState = createInitialParserState()
 			this.didCompleteReadingStream = false
 			this.userMessageContent = []
 			this.userMessageContentReady = false
@@ -1155,17 +1163,22 @@ export class Task extends EventEmitter<ClineEvents> {
 						case "text":
 							assistantMessage += chunk.text
 
-							// Parse raw assistant message into content blocks.
-							const prevLength = this.assistantMessageContent.length
-							this.assistantMessageContent = parseAssistantMessage(assistantMessage)
+							// Incrementally parse only the new chunk.
+							const newBlocks = parseAssistantMessageChunk(this.parserState, chunk.text)
 
-							if (this.assistantMessageContent.length > prevLength) {
-								// New content we need to present, reset to
-								// false in case previous content set this to true.
-								this.userMessageContentReady = false
+							if (newBlocks.length > 0) {
+								const prevLength = this.assistantMessageContent.length
+								this.assistantMessageContent.push(...newBlocks)
+
+								if (this.assistantMessageContent.length > prevLength) {
+									// New blocks added, reset readiness so presentAssistantMessage will stream them.
+									this.userMessageContentReady = false
+								}
 							}
 
-							// Present content to user.
+							// Always present so that partial blocks (which are
+							// updated in-place by the parser) are reflected in
+							// the UI.
 							presentAssistantMessage(this)
 							break
 					}
