@@ -1,7 +1,7 @@
 import { ExtensionContext } from "vscode"
 import { z, ZodError } from "zod"
 
-import { providerSettingsSchema, ProviderSettingsEntry, providerSettingsSchemaDiscriminated } from "../../schemas"
+import { providerSettingsSchema, ApiConfigMeta, providerSettingsSchemaDiscriminated } from "../../schemas"
 import { Mode, modes } from "../../shared/modes"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
 
@@ -226,7 +226,7 @@ export class ProviderSettingsManager {
 	/**
 	 * List all available configs with metadata.
 	 */
-	public async listConfig(): Promise<ProviderSettingsEntry[]> {
+	public async listConfig(): Promise<ApiConfigMeta[]> {
 		try {
 			return await this.lock(async () => {
 				const providerProfiles = await this.load()
