@@ -12,7 +12,6 @@
 	},
 	"editGlobalMCP": "编辑全局配置",
 	"editProjectMCP": "编辑项目配置",
-	"editSettings": "参数设置",
 	"tool": {
 		"alwaysAllow": "始终允许",
 		"parameters": "参数",

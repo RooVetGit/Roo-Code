@@ -8,7 +8,8 @@
 		"editGlobalModes": "Globale Modi bearbeiten",
 		"editProjectModes": "Projektmodi bearbeiten (.roomodes)",
 		"createModeHelpText": "Klicke auf +, um einen neuen benutzerdefinierten Modus zu erstellen, oder bitte Roo einfach im Chat, einen für dich zu erstellen!",
-		"selectMode": "Modi suchen"
+		"selectMode": "Modi suchen",
+		"noMatchFound": "Keine passenden Modi gefunden"
 	},
 	"apiConfiguration": {
 		"title": "API-Konfiguration",

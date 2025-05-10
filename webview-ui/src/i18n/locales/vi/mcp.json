@@ -12,7 +12,6 @@
 	},
 	"editGlobalMCP": "Chỉnh sửa MCP toàn cục",
 	"editProjectMCP": "Chỉnh sửa MCP dự án",
-	"editSettings": "Chỉnh sửa cài đặt MCP",
 	"tool": {
 		"alwaysAllow": "Luôn cho phép",
 		"parameters": "Tham số",

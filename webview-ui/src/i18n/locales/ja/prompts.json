@@ -8,7 +8,8 @@
 		"editGlobalModes": "グローバルモードを編集",
 		"editProjectModes": "プロジェクトモードを編集 (.roomodes)",
 		"createModeHelpText": "+ をクリックして新しいカスタムモードを作成するか、チャットで Roo に作成を依頼してください！",
-		"selectMode": "モードを検索"
+		"selectMode": "モードを検索",
+		"noMatchFound": "一致するモードが見つかりません"
 	},
 	"apiConfiguration": {
 		"title": "API設定",
